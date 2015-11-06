@@ -413,7 +413,7 @@ class ScalaSuite extends InferSuite {
     val Term.Match(_, case1 :: case2 :: Nil) = templStatForceInfer("??? match { case x => x; case List(x, y) => println(x); println(y) }")
     assert(case1.toString === """
       |case x =>
-      |  x
+      |  x;
     """.trim.stripMargin)
     assert(case2.toString === """
       |case List(x, y) =>
@@ -432,5 +432,12 @@ class ScalaSuite extends InferSuite {
     val tree = term("foo.toString()")
     assert(tree.show[Structure] === "Term.Apply(Term.Select(Term.Name(\"foo\"), Term.Name(\"toString\")), Nil)")
     assert(forceInferAll(tree).show[Syntax] === "foo.toString()")
+  }
+
+  test("type parameters with type bounds") {
+    import scala.meta.internal.ast._
+    val Defn.Def(_, _, List(tree), _, _, _) = templStatForceInfer("def foo[T <: Int] = ???")
+    assert(tree.show[Structure] === "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, Some(Type.Name(\"Int\"))), Nil, Nil)")
+    assert(forceInferAll(tree).show[Syntax] === "T <: Int")
   }
 }

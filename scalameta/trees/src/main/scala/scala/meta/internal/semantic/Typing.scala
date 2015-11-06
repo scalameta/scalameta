@@ -13,7 +13,6 @@ object Typing {
   @noneLeaf object Zero extends Typing
   @noneLeaf object Recursive extends Typing
   @someLeaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing {
-    protected def onTpeLoaded(tpe: Type.Arg) = require(tpe.isTypechecked && debug(tpe.show[Attributes]))
     protected def writeReplace(): AnyRef = new Nonrecursive.SerializationProxy(this)
     override def canEqual(other: Any): Boolean = other.isInstanceOf[Nonrecursive]
     override def equals(that: Any): Boolean = that match {
@@ -23,13 +22,15 @@ object Typing {
     override def hashCode: Int = equality.Semantic.hashCode(tpe)
   }
   object Nonrecursive {
+    def apply(tpe: => Type.Arg): Typing = new Nonrecursive(() => tpe.setTypechecked)
+
     @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Nonrecursive) extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
         out.writeObject(orig.tpe)
       }
       private def readObject(in: java.io.ObjectInputStream): Unit = {
         val tpe = in.readObject.asInstanceOf[Type.Arg]
-        orig = Nonrecursive(tpe)
+        orig = new Nonrecursive(() => tpe)
         val _ = orig.tpe
         require(orig.isTpeLoaded)
       }

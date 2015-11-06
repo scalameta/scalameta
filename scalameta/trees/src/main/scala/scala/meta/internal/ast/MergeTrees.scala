@@ -48,12 +48,7 @@ object mergeTrees {
         else {
           require(se.isTypechecked)
 
-          import scala.language.implicitConversions
-          case class PartialResult(partialMe: Tree, expansion: Option[Term])
-          object PartialResult { implicit def treeToPartialResult(partialMe: Tree) = PartialResult(partialMe, None) }
-          implicit class XtensionTree(tree: Tree) { def inferringExpansion(expansion: Term) = PartialResult(tree, Some(expansion)) }
-
-          val PartialResult(partialMe, inferredExpansion): PartialResult = (sy, se) match {
+          val partialMe = (sy, se) match {
             // ============ NAMES ============
 
             case (sy: m.Name.Anonymous, se: m.Name.Anonymous) =>
@@ -62,38 +57,27 @@ object mergeTrees {
               if (sy.value != se.value) failCorrelate(sy, se, "incompatible names")
               sy.copy()
 
-            // ============ TERMS ============
+            // ============ STRUCTURALLY EQUAL TERMS ============
 
             case (sy: m.Term.This, se: m.Term.This) =>
               sy.copy(loop(sy.qual, se.qual))
             case (sy: m.Term.Name, se: m.Term.Name) =>
               if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
               sy.copy() // (E2)
-            case (sy: m.Term.Name, se: m.Term.Select) =>
-              sy.copy().inheritAttrs(se.name) inferringExpansion se // (E1, E2)
-            case (sy: m.Term.Name, seOuter @ m.Term.Apply(seInner: m.Term.Name, Nil)) =>
-              loop(sy, seInner) inferringExpansion seOuter // (E7)
-            case (sy: m.Term.Name, seOuter @ m.Term.Apply(m.Term.Select(_, seInner), Nil)) =>
-              loop(sy, seInner) inferringExpansion seOuter // (E7)
             case (sy: m.Term.Select, se: m.Term.Select) =>
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
-            case (sy: m.Term.Select, seOuter @ m.Term.Apply(seInner: m.Term.Select, Nil)) =>
-              loop(sy, seInner) inferringExpansion seOuter // (E7)
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
             case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
-              val (selhs, seop, setargs) = sefun match {
+              val (selhs, seop, seTargs) = sefun match {
                 case m.Term.Select(selhs, seop) => (selhs, seop, Nil)
-                case m.Type.Apply(m.Term.Select(selhs, seop), setargs) => (selhs, seop, setargs)
+                case m.Type.Apply(m.Term.Select(selhs, seop), seTargs) => (selhs, seop, seTargs)
               }
               require(seop.isLeftAssoc && debug(sy, se)) // TODO: right-associative operators aren't supported yet
-              sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, setargs), loop(sy.args, seargs))
+              sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, seTargs), loop(sy.args, seargs))
             case (sy: m.Term.ApplyInfix, se: m.Term.ApplyInfix) =>
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
-            case (sy: m.Term.ApplyUnary, se: m.Term.Select) =>
-              require(se.name.value.startsWith("unary_"))
-              sy.copy(loop(sy.op, se.name), loop(sy.arg, se.qual)) inferringExpansion se // (E8)
             case (sy: m.Term.ApplyUnary, se: m.Term.ApplyUnary) =>
               sy.copy(loop(sy.op, se.op), loop(sy.arg, se.arg))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
@@ -104,13 +88,34 @@ object mergeTrees {
                 case _ => loop(sy.stats, se.stats)
               }
               sy.copy(mestats)
+            case (sy: m.Term.If, se: m.Term.If) =>
+              sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(se.thenp, se.thenp))
+            case (sy: m.Term.Match, se: m.Term.Match) =>
+              sy.copy(loop(sy.scrut, se.scrut), loop(sy.cases, se.cases))
+            case (sy: m.Term.Param, se: m.Term.Param) =>
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
+
+            // ============ STRUCTURALLY UNEQUAL TERMS ============
+
+            case (sy: m.Term.Name, se: m.Term.Select) =>
+               sy.inheritAttrs(se.name).withExpansion(se) // (E1, E2)
             case (sy @ m.Term.Block(Seq(syStat)), seStat: m.Stat) =>
               val syTyping = seStat match { case seStat: Term => seStat.typing; case _ => typingUnit }
               sy.copy(Seq(loop(syStat, seStat))).withAttrs(syTyping) // (E3)
-            case (sy: m.Term.If, se: m.Term.If) =>
-              sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(se.thenp, se.thenp))
-            case (sy: m.Term.Param, se: m.Term.Param) =>
-              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.decltpe, se.decltpe), loop(sy.default, se.default))
+            case (sy: m.Term, se @ m.Term.Apply(seInner, Nil)) =>
+               val me = loop(sy, seInner).resetTypechecked
+               val expansion = se.copy(fun = me).inheritAttrs(se)
+               me.withExpansion(expansion) // (E7)
+            case (sy: m.Term.ApplyUnary, se: m.Term.Select) =>
+              require(se.name.value.startsWith("unary_"))
+              val meArg = loop(sy.arg, se.qual).resetTypechecked
+              val me = sy.copy(loop(sy.op, se.name), meArg).inheritAttrs(se)
+              val expansion = se.copy(qual = meArg).inheritAttrs(se)
+              me.withExpansion(expansion) // (E8)
+            case (sy: m.Term, se @ m.Term.ApplyType(seInner, _)) =>
+               val me = loop(sy, seInner).resetTypechecked
+               val expansion = se.copy(fun = me).inheritAttrs(se)
+               me.withExpansion(expansion) // (E9)
 
             // ============ TYPES ============
 
@@ -121,11 +126,45 @@ object mergeTrees {
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Type.Apply, se: m.Type.Apply) =>
               sy.copy(loop(sy.tpe, se.tpe), loop(sy.args, se.args))
+            case (sy: m.Type.Bounds, se: m.Type.Bounds) =>
+              val melo = (sy.lo, se.lo) match {
+                case (None, Some(nothing: Type.Name)) if nothing.refersTo(denotNothing) => None // (M9)
+                case (sylo, selo) => loop(sylo, selo)
+              }
+              val mehi = (sy.hi, se.hi) match {
+                case (None, Some(any: Type.Name)) if any.refersTo(denotAny) => None // (M9)
+                case (syhi, sehi) => loop(syhi, sehi)
+              }
+              sy.copy(melo, mehi)
+            case (sy: m.Type.Param, se: m.Type.Param) =>
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams),
+                loop(sy.tbounds, se.tbounds), loop(sy.vbounds, se.vbounds), loop(sy.cbounds, se.cbounds))
 
             // ============ PATTERNS ============
 
             case (sy: m.Pat.Var.Term, se: m.Pat.Var.Term) =>
               sy.copy(loop(sy.name, se.name))
+            case (sy: m.Pat.Var.Term, se @ m.Pat.Bind(seInner: m.Pat.Var.Term, Pat.Wildcard())) =>
+              loop(sy, seInner) // (X1)
+            case (sy: m.Pat.Wildcard, se: m.Pat.Wildcard) =>
+              sy.copy()
+            case (sy: m.Pat.Bind, se: m.Pat.Bind) =>
+              sy.copy(loop(sy.lhs, se.lhs), loop(sy.rhs, se.rhs))
+            case (sy: m.Pat.Extract, se: m.Pat.Extract) =>
+              val metargs = (sy.targs, se.targs) match {
+                case (Nil, seTargs) => seTargs // (E9)
+                case (syTargs, seTargs) => loop(syTargs, seTargs)
+              }
+              sy.copy(loop(sy.ref, se.ref), metargs, loop(sy.args, se.args))
+            case (sy: m.Pat.Typed, se: m.Pat.Typed) =>
+              sy.copy(loop(sy.lhs, se.lhs), loop(sy.rhs, se.rhs))
+            case (sy: m.Pat.Typed, se @ m.Pat.Bind(seLhs: m.Pat.Var.Term, Pat.Typed(Pat.Wildcard(), seRhs))) =>
+              sy.copy(loop(sy.lhs, seLhs), loop(sy.rhs, seRhs)) // (X2)
+
+            // ============ PATTERNS TYPES ============
+
+            case (sy: m.Pat.Type.Apply, se: m.Pat.Type.Apply) =>
+              sy.copy(loop(sy.tpe, se.tpe), loop(sy.args, se.args))
 
             // ============ LITERALS ============
 
@@ -206,6 +245,9 @@ object mergeTrees {
 
             // ============ ODDS & ENDS ============
 
+            case (sy: m.Case, se: m.Case) =>
+              sy.copy(loop(sy.pat, se.pat), loop(sy.cond, se.cond), loop(sy.body, se.body))
+
             case _ =>
               failCorrelate(sy, se, "unexpected trees")
           }
@@ -216,7 +258,8 @@ object mergeTrees {
 
           // NOTE: In most cases, the partial result will not be attributed and will be meant to inherit attrs from se.
           // However, when we deal with desugarings, we might pre-attribute the result in advance,
-          // and therefore we should avoid calling inheritAttrs if that was the case.
+          // and therefore we should avoid calling inheritAttrs if that was the case,
+          // because we might've decided to assign different attrs to the partial result.
           val attributedMe = {
             if (syntacticMe.isUnattributed) syntacticMe.inheritAttrs(se)
             else syntacticMe
@@ -224,18 +267,19 @@ object mergeTrees {
 
           // NOTE: Explicitly specified expansion (already present in the semantic tree) takes precedence,
           // because the converter really knows better in cases like constant folding, macro expansion, etc.
+          val inferredExpansion = attributedMe.internalExpansion
           val explicitExpansion = se.internalExpansion
           val expansion = explicitExpansion match {
-            case Some(Expansion.Desugaring(explicitExpansion)) => Some(explicitExpansion)
+            case Some(_: Expansion.Desugaring) => explicitExpansion
             case Some(Expansion.Zero | Expansion.Identity) => inferredExpansion
             case None => require(inferredExpansion.isEmpty && debug(sy, se)); None
           }
           val expandedMe = (attributedMe, expansion) match {
-            case (attributedMe: Term, Some(expansion: Term)) => attributedMe.withExpansion(expansion)
+            case (attributedMe: Term, Some(expansion: Expansion)) => attributedMe.withExpansion(expansion)
             case _ => attributedMe
           }
 
-          val me = expandedMe.withTypechecked(se.isTypechecked)
+          val me = expandedMe.setTypechecked
           if (sy.parent.isEmpty) {
             Debug.logMerge {
               println("======= SYNTACTIC TREE =======")
@@ -283,6 +327,8 @@ object mergeTrees {
   private lazy val denotObjectInit = denot(typeOf[Object].member(u.TermName("<init>")))
   private lazy val denotUnit = denot(symbolOf[Unit])
   private lazy val typingUnit = Typing.Nonrecursive(Type.Name("Unit").withAttrs(denotUnit).setTypechecked)
+  private lazy val denotNothing = denot(symbolOf[Nothing])
+  private lazy val denotAny = denot(symbolOf[Any])
 
   // NOTE: We can't use =:= here, because it requires a semantic context,
   // and we can't have a semantic context in MergeTrees.

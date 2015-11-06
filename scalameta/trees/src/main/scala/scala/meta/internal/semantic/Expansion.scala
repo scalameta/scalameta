@@ -7,19 +7,26 @@ import org.scalameta.adt._
 import org.scalameta.show._
 import org.scalameta.invariants._
 import scala.meta.internal.prettyprinters._
+import scala.meta.internal.{ast => impl}
 
 @monadicRoot trait Expansion
 object Expansion {
   @noneLeaf object Zero extends Expansion
   @noneLeaf object Identity extends Expansion
   @someLeaf class Desugaring(term: Term) extends Expansion {
-    require(term.isTypechecked && debug(term.show[Attributes]))
     override def canEqual(other: Any): Boolean = other.isInstanceOf[Desugaring]
     override def equals(that: Any): Boolean = that match {
       case that: Desugaring => equality.Semantic.equals(this.term, that.term)
       case _ => false
     }
     override def hashCode: Int = equality.Semantic.hashCode(this.term)
+  }
+  object Desugaring {
+    def apply(term: Term): Expansion = {
+      val expansionOfExpansion = term.asInstanceOf[impl.Term].expansion
+      require(!expansionOfExpansion.isInstanceOf[Desugaring])
+      new Desugaring(term.setTypechecked)
+    }
   }
 }
 

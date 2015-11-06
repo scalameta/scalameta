@@ -241,7 +241,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1 match { case 1 => true }") {
-    val Match(Lit(1), Case(Lit(1), None, Term.Block(Lit(true) :: Nil)) :: Nil) =
+    val Match(Lit(1), Case(Lit(1), None, Lit(true)) :: Nil) =
       term("1 match { case 1 => true }")
   }
 
@@ -273,7 +273,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("{ case 1 => () }") {
-    val PartialFunction(Case(Lit(1), None, Term.Block(Lit(()) :: Nil)) :: Nil) =
+    val PartialFunction(Case(Lit(1), None, Lit(())) :: Nil) =
       term("{ case 1 => () }")
   }
 

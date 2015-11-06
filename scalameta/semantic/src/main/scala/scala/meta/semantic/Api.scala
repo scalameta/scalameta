@@ -361,8 +361,8 @@ private[meta] trait Api {
   implicit class XtensionSemanticTypeParam(tree: Type.Param) {
     @hosted def source: Type.Param = new XtensionSemanticMember(tree).name.require[Type.Param]
     @hosted def name: Type.Param.Name = new XtensionSemanticMember(tree).name.require[Type.Param.Name]
-    @hosted def contextBounds: Seq[Type] = tree.require[impl.Type.Param].contextBounds
-    @hosted def viewBounds: Seq[Type] = tree.require[impl.Type.Param].viewBounds
+    @hosted def contextBounds: Seq[Type] = tree.require[impl.Type.Param].cbounds
+    @hosted def viewBounds: Seq[Type] = tree.require[impl.Type.Param].vbounds
     @hosted def lo: Type = tree.require[impl.Type.Param].lo
     @hosted def hi: Type = tree.require[impl.Type.Param].hi
   }

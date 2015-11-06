@@ -55,8 +55,9 @@ object Input {
     }
   }
   object File {
-    def apply(path: Predef.String): Input.File = Input.File(new java.io.File(path))
-    def apply(file: java.io.File): Input.File = Input.File(file, Charset.forName("UTF-8"))
+    def apply(path: Predef.String): Input.File = new Input.File(new java.io.File(path), Charset.forName("UTF-8"))
+    def apply(file: java.io.File): Input.File = new Input.File(file, Charset.forName("UTF-8"))
+    def apply(file: java.io.File, charset: Charset): Input.File = new Input.File(file, charset)
 
     @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: File) extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {

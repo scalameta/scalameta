@@ -285,7 +285,6 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Pat.Var.Term
       |scala.meta.internal.ast.Template
       |scala.meta.internal.ast.Term
-      |scala.meta.internal.ast.Term.Block
       |scala.meta.internal.ast.Term.Name
       |scala.meta.internal.ast.Term.Param
       |scala.meta.internal.ast.Term.Param.Name
@@ -322,14 +321,13 @@ class ReflectionSuite extends AstSuite {
       }
     })
     // NOTE: if something in this report changes, you must update requirements in @ast impl (see "step 10: finish codegen for Quasi")
+    // NOTE: I think that I'm now finally okay with this list. Of course, it's still suboptimal that we have it non-empty,
+    // but at least noone can extract these components from the corresponding owning trees.
     assert(report.mkString(EOL) === """
-      |scala.meta.internal.ast.Term.Block -> scala.meta.Term with scala.meta.Scope
-      |field Case.body: scala.meta.internal.ast.Term.Block
-      |
       |scala.meta.internal.ast.Type.Bounds -> scala.meta.Tree
       |field Decl.Type.bounds: scala.meta.internal.ast.Type.Bounds
       |field Pat.Type.Placeholder.bounds: scala.meta.internal.ast.Type.Bounds
-      |field Type.Param.typeBounds: scala.meta.internal.ast.Type.Bounds
+      |field Type.Param.tbounds: scala.meta.internal.ast.Type.Bounds
       |field Type.Placeholder.bounds: scala.meta.internal.ast.Type.Bounds
       |
       |scala.meta.internal.ast.Ctor.Primary -> scala.meta.Ctor

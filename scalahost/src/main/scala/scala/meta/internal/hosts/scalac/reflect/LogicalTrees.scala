@@ -124,6 +124,7 @@ trait LogicalTrees {
     object TermIdent {
       def unapply(tree: g.Ident): Option[l.TermName] = tree match {
         case tree @ g.Ident(g.TermName(value)) =>
+          if (tree.hasMetadata("isLpat") && tree.name == nme.WILDCARD) return None
           Some(l.TermName(tree.denot, value).setParent(tree).setType(tree.tpe))
         case _ =>
           None
@@ -141,6 +142,7 @@ trait LogicalTrees {
     object TermApply {
       def unapply(tree: g.Apply): Option[(g.Tree, List[g.Tree])] = {
         if (tree.hasMetadata("isLparent")) return None
+        if (tree.hasMetadata("isLpat")) return None
         Some((tree.fun, tree.args))
       }
     }
@@ -160,6 +162,13 @@ trait LogicalTrees {
     object TermIf {
       def unapply(tree: g.If): Option[(g.Tree, g.Tree, g.Tree)] = {
         Some((tree.cond, tree.thenp, tree.elsep))
+      }
+    }
+
+    object TermMatch {
+      def unapply(tree: g.Match): Option[(g.Tree, List[g.Tree])] = {
+        val g.Match(scrut, cases) = tree
+        Some((scrut, cases))
       }
     }
 
@@ -214,12 +223,35 @@ trait LogicalTrees {
       }
     }
 
+    object TypeBounds {
+      def unapply(tree: g.TypeBoundsTree): Option[(Option[g.Tree], Option[g.Tree])] = {
+        val g.TypeBoundsTree(glo, ghi) = tree
+        val llo = if (glo.nonEmpty) Some(glo) else None
+        val lhi = if (ghi.nonEmpty) Some(ghi) else None
+        Some((llo, lhi))
+      }
+    }
+
     trait TypeParamName extends Name
 
     object TypeParamDef {
-      // mods, name, tparams, typeBounds, viewBounds, contextBounds
-      def unapply(tree: g.TypeDef): Option[(List[l.Modifier], l.TypeName, List[g.TypeDef], g.TypeBoundsTree, g.Tree, g.Tree)] = {
-        ???
+      // mods, name, tparams, tbounds, vbounds, cbounds
+      def unapply(tree: g.TypeDef): Option[(List[l.Modifier], l.TypeName, List[g.TypeDef], g.TypeBoundsTree, List[g.Tree], List[g.Tree])] = {
+        if (!tree.hasMetadata("isLtparam")) return None
+        val g.TypeDef(_, name, tparams, rhs) = tree
+        val ltparams = tparams.map(_.appendMetadata("isLtparam" -> true))
+        val ltbounds = {
+          rhs match {
+            case rhs: g.TypeBoundsTree =>
+              rhs
+            case rhs: g.TypeTree =>
+              val g.TypeBounds(lo, hi) = rhs.tpe
+              g.TypeBoundsTree(g.TypeTree(lo), g.TypeTree(hi))
+          }
+        }
+        val lvbounds = tree.metadata.getOrElse("lvbounds", Nil)
+        val lcbounds = tree.metadata.getOrElse("lcbounds", Nil)
+        Some((l.Modifiers(tree), l.TypeName(tree).setParent(tree), ltparams, ltbounds, lvbounds, lcbounds))
       }
     }
 
@@ -247,7 +279,7 @@ trait LogicalTrees {
     }
 
     object AbstractTypeDef {
-      // mods, name, tparams, typeBounds
+      // mods, name, tparams, tbounds
       def unapply(tree: g.TypeDef): Option[(List[l.Modifier], l.TypeName, List[g.TypeDef], g.TypeBoundsTree)] = {
         ???
       }
@@ -261,6 +293,52 @@ trait LogicalTrees {
         if (!tree.hasMetadata("isLpatvar")) return None
         if (tree.name.isTypeName) return None
         Some(l.TermName(tree).setParent(tree).setType(tree.tpe))
+      }
+    }
+
+    object PatWildcard {
+      def unapply(tree: g.Ident): Boolean = {
+        if (!tree.hasMetadata("isLpat")) return false
+        tree.name == nme.WILDCARD
+      }
+    }
+
+    object PatBind {
+      def unapply(tree: g.Bind): Option[(g.Tree, g.Tree)] = {
+        if (tree.hasMetadata("isLpatvar")) return None
+        if (tree.name.isTypeName) return None
+        val g.Bind(name, body) = tree
+        val llhs = {
+          val core = g.Bind(name, Ident(nme.WILDCARD)).setParent(tree)
+          core.setSymbol(tree.symbol).appendMetadata("isLpatvar" -> true)
+          core
+        }
+        val lrhs = body.appendMetadata("isLpat" -> true)
+        Some((llhs, lrhs))
+      }
+    }
+
+    object PatExtract {
+      def unapply(tree: g.Tree): Option[(g.Tree, List[g.Tree], List[g.Tree])] = {
+        if (!tree.hasMetadata("isLpat")) return None
+        val (fun, targs, args) = tree match {
+          case g.Apply(g.TypeApply(fun, targs), args) => (fun, targs, args)
+          case g.Apply(fun, args) => (fun, Nil, args)
+          case g.UnApply(g.Apply(g.TypeApply(fun, targs), List(unapplySelector)), args) => (fun, targs, args)
+          case g.UnApply(g.Apply(fun, List(unapplySelector)), args) => (fun, Nil, args)
+          case _ => return None
+        }
+        val largs = args.map(_.appendMetadata("isLpat" -> true))
+        Some((fun, targs, largs))
+      }
+    }
+
+    object PatTyped {
+      def unapply(tree: g.Typed): Option[(g.Tree, g.Tree)] = {
+        if (!tree.hasMetadata("isLpat")) return None
+        val g.Typed(lhs, rhs) = tree
+        val llhs = lhs.appendMetadata("isLpat" -> true)
+        Some((llhs, rhs))
       }
     }
 
@@ -306,7 +384,7 @@ trait LogicalTrees {
       def unapply(tree: g.DefDef): Option[(List[l.Modifier], l.TermName, List[g.TypeDef], List[List[g.ValDef]], g.Tree, g.Tree)] = {
         val g.DefDef(_, _, tparams, paramss, tpt, rhs) = tree
         if (tree.name == g.nme.CONSTRUCTOR || rhs.isEmpty || tree.mods.hasFlag(MACRO)) return None
-        val ltparams = applyBounds(tparams, paramss)
+        val ltparams = applyBounds(tparams, paramss).map(_.appendMetadata("isLtparam" -> true))
         val lparamss = removeBounds(paramss).map(_.map(_.appendMetadata("isLparam" -> true)))
         Some((l.Modifiers(tree), l.TermName(tree).setParent(tree), ltparams, lparamss, tpt, rhs))
       }
@@ -707,6 +785,15 @@ trait LogicalTrees {
 
     // ============ ODDS & ENDS ============
 
+    object CaseDef {
+      def unapply(tree: g.CaseDef): Option[(g.Tree, Option[g.Tree], g.Tree)] = {
+        val g.CaseDef(pat, guard, body) = tree
+        val lpat = pat.appendMetadata("isLpat" -> true)
+        val lguard = if (guard.nonEmpty) Some(guard) else None
+        Some((lpat, lguard, body))
+      }
+    }
+
     // ============ HELPERS ============
 
     private def applyBounds(tparams: List[g.TypeDef], paramss: List[List[g.ValDef]]): List[g.TypeDef] = {
@@ -757,9 +844,9 @@ trait LogicalTrees {
       val (explicitss, implicitss) = paramss.partition(_.exists(_.mods.hasFlag(IMPLICIT)))
       val (bounds, implicits) = implicitss.flatten.partition(_.name.startsWith(nme.EVIDENCE_PARAM_PREFIX))
       tparams.map(tparam => {
-        val viewBounds = bounds.flatMap(ViewBound.unapply).filter(_._1.name == tparam.name).map(_._2)
-        val contextBounds = bounds.flatMap(ContextBound.unapply).filter(_._1.name == tparam.name).map(_._2)
-        tparam.appendMetadata("viewBounds" -> viewBounds, "contextBounds" -> contextBounds)
+        val vbounds = bounds.flatMap(ViewBound.unapply).filter(_._1.name == tparam.name).map(_._2)
+        val cbounds = bounds.flatMap(ContextBound.unapply).filter(_._1.name == tparam.name).map(_._2)
+        tparam.appendMetadata("lvbounds" -> vbounds, "lcbounds" -> cbounds)
       })
     }
 

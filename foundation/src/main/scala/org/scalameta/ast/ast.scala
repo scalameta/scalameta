@@ -400,11 +400,11 @@ class AstMacros(val c: Context) extends AstReflection {
         val dandtMods = PrivateMeta
         val termOrCtorName = q"this.isInstanceOf[_root_.scala.meta.Term.Name] || this.isInstanceOf[_root_.scala.meta.Ctor.Name]"
         val termOrCtorNameCheck = q"""if ($termOrCtorName) throw new UnsupportedOperationException("need to simultaneously set both denotation and typing for a " + this.productPrefix)"""
-        val stateMessage = "can only call withAttrs on unattributed trees; if necessary, call .copy() to unattribute and then do .withAttrs(...)"
+        val stateMessage = "can only call withAttrs on unattributed or partially attributed trees; if necessary, call .copy() to unattribute and then do .withAttrs(...)"
         var attrPrinter = q"$Prettyprinters.Attributes.attributesTree[_root_.scala.meta.Tree]"
         attrPrinter = q"$attrPrinter($Prettyprinters.Attributes.Recursion.Deep, $Prettyprinters.Attributes.Force.Never)"
         val stateDetails = q"$attrPrinter.apply(this).toString"
-        val stateCheck = q"if (!isUnattributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
+        val stateCheck = q"if (isAttributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
         val withAttrsD = q"""
           $dortMods def withAttrs($paramDenot): $iname = {
             $termOrCtorNameCheck
@@ -414,7 +414,7 @@ class AstMacros(val c: Context) extends AstReflection {
               env = $InternalSemantic.Environment.Zero,
               denot = denot,
               typing = this.privateTyping,
-              expansion = $InternalSemantic.Expansion.Identity
+              expansion = if (!this.isExpansionEmpty) this.privateExpansion else $InternalSemantic.Expansion.Identity
             )
           }
         """
@@ -428,7 +428,7 @@ class AstMacros(val c: Context) extends AstReflection {
               env = $InternalSemantic.Environment.Zero,
               denot = this.privateDenot,
               typing = typing,
-              expansion = $InternalSemantic.Expansion.Identity
+              expansion = if (!this.isExpansionEmpty) this.privateExpansion else $InternalSemantic.Expansion.Identity
             )
           }
         """
@@ -441,7 +441,7 @@ class AstMacros(val c: Context) extends AstReflection {
               env = $InternalSemantic.Environment.Zero,
               denot = denot,
               typing = typing,
-              expansion = $InternalSemantic.Expansion.Identity
+              expansion = if (!this.isExpansionEmpty) this.privateExpansion else $InternalSemantic.Expansion.Identity
             )
           }
         """
@@ -460,14 +460,11 @@ class AstMacros(val c: Context) extends AstReflection {
       }
       if (hasExpansion) {
         val paramExpansionLike = q"val expansionLike: $InternalSemantic.ExpansionLike"
-        val commonMessage = "can only call withExpansion on partially attributed trees"
-        val unattributedMessage = commonMessage + ", call .withAttrs first and only then .withExpansion(...)"
-        val fullyAttributedMessage = commonMessage + ", if necessary, call .copy() to unattribute, then .withAttrs(...) and only then .withExpansion(...)"
-        val stateMessage = q"if (isUnattributed) $unattributedMessage else $fullyAttributedMessage"
+        val stateMessage = "can only call withExpansion on unattributed or partially attributed trees; if necessary, call .copy() to unattribute and then do .withExpansion(...)"
         var attrPrinter = q"$Prettyprinters.Attributes.attributesTree[_root_.scala.meta.Tree]"
         attrPrinter = q"$attrPrinter($Prettyprinters.Attributes.Recursion.Deep, $Prettyprinters.Attributes.Force.Never)"
         val stateDetails = q"$attrPrinter.apply(this).toString"
-        val stateCheck = q"if (!isPartiallyAttributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
+        val stateCheck = q"if (isAttributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
         astats1 += q"""
           private[meta] def withExpansion($paramExpansionLike): $iname = {
             $stateCheck
@@ -624,7 +621,7 @@ class AstMacros(val c: Context) extends AstReflection {
           }
         """
       }
-      if (is("Term.Block.Quasi") || is("Type.Bounds.Quasi") || is("Ctor.Primary.Quasi")) {
+      if (is("Type.Bounds.Quasi") || is("Ctor.Primary.Quasi")) {
         // NOTE: before you remove one or all of these throws, you must know what's going on in the "allFields.unquote" test
         stats1 += q"""throw new _root_.scala.NotImplementedError("implementation restriction: dangerous quasi, see the sources of @ast for more information")"""
       }

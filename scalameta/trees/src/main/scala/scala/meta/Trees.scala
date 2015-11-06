@@ -296,9 +296,9 @@ package scala.meta.internal.ast {
     @ast class Param(mods: Seq[Mod],
                      name: Param.Name,
                      tparams: Seq[impl.Type.Param],
-                     typeBounds: impl.Type.Bounds,
-                     viewBounds: Seq[impl.Type],
-                     contextBounds: Seq[impl.Type]) extends api.Type.Param with Member
+                     tbounds: impl.Type.Bounds,
+                     vbounds: Seq[impl.Type],
+                     cbounds: Seq[impl.Type]) extends api.Type.Param with Member
     object Param {
       @branch trait Name extends impl.Name with api.Type.Param.Name
     }
@@ -614,7 +614,7 @@ package scala.meta.internal.ast {
     }
   }
 
-  @ast class Case(pat: Pat, cond: Option[Term], body: Term.Block) extends api.Case with Tree with Scope {
+  @ast class Case(pat: Pat, cond: Option[Term], body: Term) extends api.Case with Tree with Scope {
     require(pat.isLegal)
   }
 
