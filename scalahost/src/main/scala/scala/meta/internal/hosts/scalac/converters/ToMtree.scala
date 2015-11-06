@@ -138,6 +138,9 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
             val mname = lname.toMtree[m.Term.Name]
             m.Pat.Var.Term(mname)
 
+          case l.PatWildcard() =>
+            m.Pat.Wildcard()
+
           // ============ LITERALS ============
 
           case l.Literal(lvalue) =>

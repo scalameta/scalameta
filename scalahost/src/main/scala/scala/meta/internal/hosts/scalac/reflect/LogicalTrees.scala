@@ -124,6 +124,7 @@ trait LogicalTrees {
     object TermIdent {
       def unapply(tree: g.Ident): Option[l.TermName] = tree match {
         case tree @ g.Ident(g.TermName(value)) =>
+          if (tree.hasMetadata("isLpat") && tree.name == nme.WILDCARD) return None
           Some(l.TermName(tree.denot, value).setParent(tree).setType(tree.tpe))
         case _ =>
           None
@@ -291,6 +292,13 @@ trait LogicalTrees {
         if (!tree.hasMetadata("isLpatvar")) return None
         if (tree.name.isTypeName) return None
         Some(l.TermName(tree).setParent(tree).setType(tree.tpe))
+      }
+    }
+
+    object PatWildcard {
+      def unapply(tree: g.Ident): Boolean = {
+        if (!tree.hasMetadata("isLpat")) return false
+        tree.name == nme.WILDCARD
       }
     }
 
@@ -740,8 +748,9 @@ trait LogicalTrees {
     object CaseDef {
       def unapply(tree: g.CaseDef): Option[(g.Tree, Option[g.Tree], g.Tree)] = {
         val g.CaseDef(pat, guard, body) = tree
+        val lpat = pat.appendMetadata("isLpat" -> true)
         val lguard = if (guard.nonEmpty) Some(guard) else None
-        Some((pat, lguard, body))
+        Some((lpat, lguard, body))
       }
     }
 
