@@ -79,12 +79,13 @@ trait LogicalTrees {
       def nonEmpty = !isEmpty
     }
     implicit class RichDenotationTree(tree: g.NameTree) {
-      def denot = tree match {
-        case tree @ g.RefTree(g.EmptyTree, _) => l.Denotation(tree.symbol.prefix, tree.symbol.toLogical)
-        case tree @ g.RefTree(qual, _) => l.Denotation(if (qual.tpe != null) qual.tpe else g.NoType, tree.symbol.toLogical)
-        case tree: g.DefTree => l.Denotation(tree.symbol.prefix, tree.symbol.toLogical)
+      def prefix = tree match {
+        case tree @ g.RefTree(qual, _) if qual.tpe != null && qual.tpe != g.NoType => qual.tpe
+        case tree @ g.RefTree(_, _) => tree.symbol.prefix
+        case tree: g.DefTree => tree.symbol.prefix
         case _ => unreachable(debug(tree, showRaw(tree)))
       }
+      def denot = l.Denotation(tree.prefix, tree.symbol.toLogical)
     }
 
     trait Name extends Tree { def denot: l.Denotation }
@@ -169,6 +170,14 @@ trait LogicalTrees {
       def unapply(tree: g.Match): Option[(g.Tree, List[g.Tree])] = {
         val g.Match(scrut, cases) = tree
         Some((scrut, cases))
+      }
+    }
+
+    object TermFunction {
+      def unapply(tree: g.Function): Option[(List[g.Tree], g.Tree)] = {
+        val g.Function(params, body) = tree
+        val lparams = params.map(_.appendMetadata("isLparam" -> true))
+        Some((lparams, body))
       }
     }
 
