@@ -5,6 +5,7 @@ import org.scalatest._
 import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.internal.{ast => m}
+import scala.meta.internal.prettyprinters._
 import scala.meta.dialects.Scala211
 
 class SemanticSuite extends FunSuite {
@@ -98,5 +99,38 @@ class SemanticSuite extends FunSuite {
       |{13} Type.Singleton(Term.Name("_root_")[20]{13}<>)
       |<1> Term.Select(Term.Select(Term.This(Name.Indeterminate("scala")[13]){9}<>, Term.Name("Predef")[14]{10}<>){10}<>, Term.Name("println")[12]{7}<>){7}<>
     """))
+  }
+
+  test("toolbox") {
+    def Toolbox(options: String, artifacts: Artifact*)(implicit resolver: Resolver): Context = {
+      import scala.meta.internal.hosts.scalac.contexts.{Compiler => Compiler}
+      import scala.meta.internal.hosts.scalac.contexts.{Adapter => AdapterImpl}
+      new AdapterImpl(Compiler(options), Domain(artifacts: _*)) {
+        override def toString = s"""Toolbox("$options", ${artifacts.mkString(", ")})"""
+      }
+    }
+    val options = "-cp " + sys.props("sbt.paths.scalalibrary.classes")
+    val artifact = Artifact(sys.props("sbt.paths.scalalibrary.classes"))
+    implicit val c = Toolbox(options, artifact)
+    val loaded = c.load("class C { def x = 2 }".parse[Source])
+    assert(loaded.show[Attributes] === """
+      |Source(Seq(Defn.Class(Nil, Type.Name("C")[1], Nil, Ctor.Primary(Nil, Ctor.Ref.Name("this")[2]{1}<>, Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous()[3], None, None){2}, Some(Seq(Defn.Def(Nil, Term.Name("x")[4]{3}<>, Nil, Nil, None, Lit(2){4}<>)))))))
+      |[1] {5}::_empty_#C
+      |[2] {5}::_empty_#C.<init>()V
+      |[3] {6}::_empty_#C.this
+      |[4] {6}::_empty_#C.x()I
+      |[5] {7}::scala#Int
+      |[6] {8}::_empty_
+      |[7] {8}::scala
+      |[8] {0}::_root_
+      |{1} Type.Method(Seq(Seq()), Type.Name("C")[1])
+      |{2} Type.Name("C")[1]
+      |{3} Type.Method(Nil, Type.Name("Int")[5])
+      |{4} Type.Name("Int")[5]
+      |{5} Type.Singleton(Term.Name("_empty_")[6]{5}<>)
+      |{6} Type.Singleton(Term.This(Name.Indeterminate("C")[1]){2}<>)
+      |{7} Type.Singleton(Term.Name("scala")[7]{7}<>)
+      |{8} Type.Singleton(Term.Name("_root_")[8]{8}<>)
+    """.trim.stripMargin)
   }
 }
