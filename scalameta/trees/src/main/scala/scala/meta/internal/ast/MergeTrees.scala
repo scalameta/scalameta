@@ -148,6 +148,8 @@ object mergeTrees {
               loop(sy, seInner) // (X1)
             case (sy: m.Pat.Wildcard, se: m.Pat.Wildcard) =>
               sy.copy()
+            case (sy: m.Pat.Bind, se: m.Pat.Bind) =>
+              sy.copy(loop(sy.lhs, se.lhs), loop(sy.rhs, se.rhs))
 
             // ============ LITERALS ============
 
