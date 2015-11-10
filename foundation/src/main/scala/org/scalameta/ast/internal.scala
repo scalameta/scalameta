@@ -205,6 +205,9 @@ object internal {
         case OptionTree(_) =>
           val acc1 = flushStreak(acc)
           q"$acc1 ++ this.${f.sym}.toList"
+        case OptionSeqTree(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}.getOrElse(_root_.scala.collection.immutable.Nil)"
         case _ =>
           acc
       })
