@@ -122,6 +122,12 @@ object mergeTrees {
               val me = loop(sy, seInner).resetTypechecked
               val expansion = se.copy(fun = me).inheritAttrs(se)
               me.withExpansion(expansion) // (E9)
+            case (sy: m.Term, seBlk @ m.Term.Block(Seq(seFun @ m.Term.Function(_, seApp @ m.Term.Apply(seInner, _))))) =>
+              val me = loop(sy, seInner).resetTypechecked
+              val seApp1 = seApp.copy(fun = me).inheritAttrs(seApp)
+              val seFun1 = seFun.copy(body = seApp1).inheritAttrs(seApp1)
+              val expansion = seBlk.copy(stats = List(seFun1)).inheritAttrs(seBlk)
+              me.withExpansion(expansion) // (E10)
 
             // ============ TYPES ============
 
