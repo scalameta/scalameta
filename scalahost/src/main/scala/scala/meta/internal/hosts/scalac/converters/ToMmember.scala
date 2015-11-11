@@ -226,7 +226,8 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
           }
           lsym match {
             case l.AbstractVal(gsym) if gsym.hasFlag(EXISTENTIAL) =>
-              val name = g.Ident(gsym.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).displayName
+              import g.AnyNameOps
+              val name = gsym.name.stripSuffix(g.nme.SINGLETON_SUFFIX).displayName
               m.Term.Name(name).withMattrs(gpre, gsym)
             case l.AbstractVal(gsym) =>
               gsym.toMname(gpre)
