@@ -104,14 +104,14 @@ object mergeTrees {
             // ============ STRUCTURALLY UNEQUAL TERMS ============
 
             case (sy: m.Term.Name, se: m.Term.Select) =>
-               sy.inheritAttrs(se.name).withExpansion(se) // (E1, E2)
+              sy.inheritAttrs(se.name).withExpansion(se) // (E1, E2)
             case (sy @ m.Term.Block(Seq(syStat)), seStat: m.Stat) =>
               val syTyping = seStat match { case seStat: Term => seStat.typing; case _ => typingUnit }
               sy.copy(Seq(loop(syStat, seStat))).withAttrs(syTyping) // (E3)
             case (sy: m.Term, se @ m.Term.Apply(seInner, Nil)) =>
-               val me = loop(sy, seInner).resetTypechecked
-               val expansion = se.copy(fun = me).inheritAttrs(se)
-               me.withExpansion(expansion) // (E7)
+              val me = loop(sy, seInner).resetTypechecked
+              val expansion = se.copy(fun = me).inheritAttrs(se)
+              me.withExpansion(expansion) // (E7)
             case (sy: m.Term.ApplyUnary, se: m.Term.Select) =>
               require(se.name.value.startsWith("unary_"))
               val meArg = loop(sy.arg, se.qual).resetTypechecked
@@ -119,9 +119,9 @@ object mergeTrees {
               val expansion = se.copy(qual = meArg).inheritAttrs(se)
               me.withExpansion(expansion) // (E8)
             case (sy: m.Term, se @ m.Term.ApplyType(seInner, _)) =>
-               val me = loop(sy, seInner).resetTypechecked
-               val expansion = se.copy(fun = me).inheritAttrs(se)
-               me.withExpansion(expansion) // (E9)
+              val me = loop(sy, seInner).resetTypechecked
+              val expansion = se.copy(fun = me).inheritAttrs(se)
+              me.withExpansion(expansion) // (E9)
 
             // ============ TYPES ============
 

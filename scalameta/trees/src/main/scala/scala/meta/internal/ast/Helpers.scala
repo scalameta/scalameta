@@ -16,10 +16,12 @@ import scala.{meta => api}
 private[meta] object Helpers {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
   private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
+
   implicit class XtensionSyntacticName(name: Name) {
     def isBinder: Boolean = name.parent.map(_.isInstanceOf[Member]).getOrElse(false)
     def isReference: Boolean = !isBinder
   }
+
   implicit class XtensionSyntacticTermName(name: Term.Name) {
     import name._
     // some heuristic is needed to govern associativity and precedence of unquoted operators
@@ -71,6 +73,7 @@ private[meta] object Helpers {
       case c => isSpecial(c)
     }
   }
+
   implicit class XtensionTermOps(tree: Term) {
     def isCtorCall: Boolean = tree match {
       case _: Term.Quasi => true
@@ -117,6 +120,7 @@ private[meta] object Helpers {
       }
     }
   }
+
   implicit class XtensionTermRefOps(tree: Term.Ref) {
     def isPath: Boolean = tree.isStableId || tree.isInstanceOf[Term.This]
     def isQualId: Boolean = tree match {
@@ -131,6 +135,7 @@ private[meta] object Helpers {
       case _                                            => false
     }
   }
+
   implicit class XtensionMod(mod: Mod) {
     def hasAccessBoundary: Boolean = mod match {
       case _: Mod.Private         => true
@@ -138,6 +143,7 @@ private[meta] object Helpers {
       case _                      => false
     }
   }
+
   implicit class XtensionMods(mods: List[Mod]) {
     def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
       mods.exists { _.getClass == tag.runtimeClass }
@@ -145,6 +151,7 @@ private[meta] object Helpers {
       mods.collect { case m if m.getClass == tag.runtimeClass => m.require[T] }
     def accessBoundary: Option[Name.Qualifier] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
   }
+
   implicit class XtensionStat(stat: Stat) {
     def isTopLevelStat: Boolean = stat match {
       case _: Stat.Quasi => true
@@ -192,12 +199,14 @@ private[meta] object Helpers {
       case _ => false
     }
   }
+
   implicit class XtensionCase(tree: Case) {
     def stats: Seq[Stat] = tree.body match {
       case Term.Block(stats) => stats
       case body => List(body)
     }
   }
+
   implicit class XtensionPatArg(tree: Pat.Arg) {
     // NOTE: see comments to Pat.Var.Term for explanation why this method is necessary
     def isIllegal: Boolean = tree match {
@@ -213,6 +222,7 @@ private[meta] object Helpers {
       }
     }
   }
+
   def tpeToPattpe(tpe: api.Type): api.Pat.Type = {
     def loop(tpe: Type): Pat.Type = tpe match {
       case tpe: Type.Name => tpe
@@ -232,6 +242,7 @@ private[meta] object Helpers {
     }
     loop(tpe.require[Type]).withTypechecked(tpe.isTypechecked)
   }
+
   def pattpeToTpe(pattpe: api.Pat.Type): api.Type = {
     def loop(tpe: Pat.Type): Type = tpe match {
       case tpe: Type.Name => tpe
@@ -253,6 +264,7 @@ private[meta] object Helpers {
     }
     loop(pattpe.require[Pat.Type]).withTypechecked(pattpe.isTypechecked)
   }
+
   def tpeToCtorref(tpe: api.Type, ctor: api.Ctor.Name): api.Ctor.Call = {
     val tpe0 = tpe
     def loop(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
