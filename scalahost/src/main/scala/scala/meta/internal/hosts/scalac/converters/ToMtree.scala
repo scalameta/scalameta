@@ -23,7 +23,7 @@ import scala.meta.internal.hosts.scalac.reflect._
 import scala.meta.internal.prettyprinters.Attributes
 import scala.meta.internal.ast.XtensionConvertDebug
 
-// This module exposes a method that can convert scala.reflect trees
+// This module exposes a method that can wrap scala.reflect trees
 // into equivalent scala.meta trees.
 //
 // Unlike in the previous implementation, we don't care
@@ -46,15 +46,8 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
   private def toMtree[T <: mapi.Tree : ClassTag](gtree: g.Tree): T = {
     object toMtree {
       implicit class XtensionGtreeToMtree(gtree0: g.Tree) {
-        backtrace = gtree0 +: backtrace
-
-        private val (gtree, gexpansion) = gtree0 match {
-          case UninferrableDesugaring(goriginal, gexpansion) => (goriginal, gexpansion)
-          case _ => (gtree0, g.EmptyTree)
-        }
-
         def toMtree[T <: mapi.Tree : ClassTag]: T = {
-          try {
+          wrap[T](gtree0, (gtree, gexpansion) => {
             val maybeDenotedMtree = gtree match {
               // ============ NAMES ============
 
@@ -103,8 +96,8 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
               case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
                 val mmods = lmods.toMtrees[m.Mod]
                 val mname = lname.toMtree[m.Term.Param.Name]
-                val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
-                val mdefault = if (ldefault.nonEmpty) Some(ldefault.toMtree[m.Term]) else None
+                val mtpt = ltpt.toMtreeopt[m.Type]
+                val mdefault = ldefault.toMtreeopt[m.Term]
                 m.Term.Param(mmods, mname, mtpt, mdefault).tryMattrs(gtree.symbol.tpe)
 
               // ============ TYPES ============
@@ -169,7 +162,7 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
               case l.ValDef(lmods, lpats, ltpt, lrhs) =>
                 val mmods = lmods.toMtrees[m.Mod]
                 val mpats = lpats.toMtrees[m.Pat]
-                val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
+                val mtpt = ltpt.toMtreeopt[m.Type]
                 val mrhs = lrhs.toMtree[m.Term]
                 m.Defn.Val(mmods, mpats, mtpt, mrhs)
               case l.DefDef(lmods, lname, ltparams, lparamss, ltpt, lrhs) =>
@@ -177,7 +170,7 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
                 val mname = lname.toMtree[m.Term.Name]
                 val mtparams = ltparams.toMtrees[m.Type.Param]
                 val mparamss = lparamss.toMtreess[m.Term.Param]
-                val mtpt = if (ltpt.nonEmpty) Some(ltpt.toMtree[m.Type]) else None
+                val mtpt = ltpt.toMtreeopt[m.Type]
                 val mrhs = lrhs.toMtree[m.Term]
                 m.Defn.Def(mmods, mname, mtparams, mparamss, mtpt, mrhs)
               case l.ClassDef(lmods, lname, ltparams, lctor, limpl) =>
@@ -187,7 +180,7 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
                 val mctor = lctor.toMtree[m.Ctor.Primary]
                 val mimpl = limpl.toMtree[m.Template]
                 m.Defn.Class(mmods, mname, mtparams, mctor, mimpl)
-              case l.TraitDef(lmods, lname, ltparams, limpl) =>
+              case l.TraitDef(lmods, lname, ltparams, lctor, limpl) =>
                 val mmods = lmods.toMtrees[m.Mod]
                 val mname = lname.toMtree[m.Type.Name]
                 val mtparams = ltparams.toMtrees[m.Type.Param]
@@ -202,14 +195,7 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
 
               // ============ PKGS ============
 
-              case l.EmptyPackageDef(lstats) =>
-                val mstats = lstats.toMtrees[m.Stat]
-                m.Source(mstats)
-              case l.ToplevelPackageDef(lname, lstats) =>
-                val mname = lname.toMtree[m.Term.Name]
-                val mstats = lstats.toMtrees[m.Stat]
-                m.Source(List(m.Pkg(mname, mstats)))
-              case l.NestedPackageDef(lname, lstats) =>
+              case l.PackageDef(lname, lstats) =>
                 val mname = lname.toMtree[m.Term.Name]
                 val mstats = lstats.toMtrees[m.Stat]
                 m.Pkg(mname, mstats)
@@ -285,37 +271,8 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
                   fail("unsupported original")
               }
             }
-            val maybeTypecheckedMtree = {
-              // TODO: Trying to force our way in is kinda lame.
-              // In the future, we could remember whether any nested toMtree calls failed to attribute itself,
-              // and then, based on that, decide whether we need to call setTypechecked or not.
-              try maybeExpandedMtree.forceTypechecked
-              catch { case ex: Exception => maybeExpandedMtree }
-            }
-            val maybeIndexedMtree = {
-              if (maybeTypecheckedMtree.isTypechecked) indexOne(maybeTypecheckedMtree)
-              else maybeTypecheckedMtree
-            }
-            if (classTag[T].runtimeClass.isAssignableFrom(maybeIndexedMtree.getClass)) {
-              maybeIndexedMtree.asInstanceOf[T]
-            } else {
-              var expected = classTag[T].runtimeClass.getName
-              expected = expected.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.")
-              expected = expected.stripSuffix("$Impl")
-              expected = expected.replace("$", ".")
-              val actual = maybeIndexedMtree.productPrefix
-              val summary = s"expected = $expected, actual = $actual"
-              val details = s"${g.showRaw(gtree)}$EOL${maybeIndexedMtree.show[Structure]}"
-              fail(s"unexpected result: $summary$EOL$details")
-            }
-          } catch {
-            case ex: ConvertException =>
-              throw ex
-            case ex: Exception =>
-              fail(s"unexpected error (scroll down the stacktrace to see the cause):", ex)
-            case ex: NotImplementedError =>
-              fail(s"unexpected error (scroll down the stacktrace to see the cause):", ex)
-          }
+            maybeExpandedMtree
+          })
         }
       }
 
@@ -332,6 +289,50 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
       }
 
       var backtrace = List[g.Tree]()
+      def wrap[T <: mapi.Tree : ClassTag](gtree0: g.Tree, converter: (g.Tree, g.Tree) => mapi.Tree): T = {
+        val isDuplicate = backtrace.nonEmpty && backtrace.head == gtree0
+        if (!isDuplicate) backtrace = gtree0 +: backtrace
+        try {
+          val (gtree, gexpansion) = gtree0 match {
+            case UninferrableDesugaring(goriginal, gexpansion) => (goriginal, gexpansion)
+            case _ => (gtree0, g.EmptyTree)
+          }
+          val convertedTree = converter(gtree, gexpansion).asInstanceOf[m.Tree]
+          val maybeTypecheckedMtree = {
+            // TODO: Trying to force our way in is kinda lame.
+            // In the future, we could remember whether any nested toMtree calls failed to attribute itself,
+            // and then, based on that, decide whether we need to call setTypechecked or not.
+            try convertedTree.forceTypechecked
+            catch { case ex: Exception => convertedTree }
+          }
+          val maybeIndexedMtree = {
+            if (maybeTypecheckedMtree.isTypechecked) indexOne(maybeTypecheckedMtree)
+            else maybeTypecheckedMtree
+          }
+          if (classTag[T].runtimeClass.isAssignableFrom(maybeIndexedMtree.getClass)) {
+            maybeIndexedMtree.asInstanceOf[T]
+          } else {
+            var expected = classTag[T].runtimeClass.getName
+            expected = expected.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.")
+            expected = expected.stripSuffix("$Impl")
+            expected = expected.replace("$", ".")
+            val actual = maybeIndexedMtree.productPrefix
+            val summary = s"expected = $expected, actual = $actual"
+            val details = s"${g.showRaw(gtree)}$EOL${maybeIndexedMtree.show[Structure]}"
+            fail(s"unexpected result: $summary$EOL$details")
+          }
+        } catch {
+          case ex: ConvertException =>
+            throw ex
+          case ex: Exception =>
+            fail(s"unexpected error (scroll down the stacktrace to see the cause):", ex)
+          case ex: NotImplementedError =>
+            fail(s"unexpected error (scroll down the stacktrace to see the cause):", ex)
+        } finally {
+          if (!isDuplicate) backtrace = backtrace.tail
+        }
+      }
+
       def fail(diagnostics: String, ex: Param[Throwable] = Default): Nothing = {
         val s_backtrace = backtrace.map(gtree => {
           def briefPrettyprint(gtree: g.Tree): String = {
@@ -354,7 +355,18 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
       }
 
       def apply[T <: mapi.Tree : ClassTag](gtree: g.Tree): T = {
-        val mtree = gtree.toMtree[T]
+        val mtree = wrap[T](gtree, (gtree, gexpansion) => {
+          gtree match {
+            case g.PackageDef(g.Ident(g.nme.EMPTY_PACKAGE_NAME), gstats) =>
+              val mstats = gstats.toMtrees[m.Stat]
+              m.Source(mstats)
+            case g.PackageDef(_, _) =>
+              val mstats = List(gtree.toMtree[m.Pkg])
+              m.Source(mstats)
+            case _ =>
+              gtree.toMtree[T]
+          }
+        })
         Debug.logConvert {
           println("======= SCALA.REFLECT TREE =======")
           println(gtree)
