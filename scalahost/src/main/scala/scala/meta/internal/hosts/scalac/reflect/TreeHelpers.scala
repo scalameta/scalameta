@@ -18,27 +18,7 @@ trait TreeHelpers {
   import analyzer._
 
   implicit class RichFoundationSymbol(sym: Symbol) {
-    def displayName: String = Ident(sym).displayName
-  }
-
-  implicit class RichFoundationNameTree(tree: Tree) {
-    // NOTE: scala.reflect's tree don't have parent links, so we have to approximate if we encounter an unattributed package object
-    def displayName: String = {
-      def packageName(tree: ModuleDef): Name = {
-        if (tree.symbol != NoSymbol) tree.symbol.owner.name
-        else tree.parent match {
-          case _: PackageDef => TermName(tree.parent.displayName)
-          case _ => TermName("package")
-        }
-      }
-      tree match {
-        case tree: ModuleDef if tree.name == nme.PACKAGE => packageName(tree).displayName
-        case tree: NameTree => tree.name.displayName
-        case This(name) => name.displayName // NOTE: This(tpnme.EMPTY) is also accounted for
-        case Super(_, name) => name.displayName
-        case _ => unreachable(debug(tree, showRaw(tree)))
-      }
-    }
+    def displayName: String = sym.name.displayName
   }
 
   implicit class RichFoundationHelperName(name: Name) {

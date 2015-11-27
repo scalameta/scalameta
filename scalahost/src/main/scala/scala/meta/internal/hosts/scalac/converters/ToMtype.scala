@@ -56,8 +56,9 @@ trait ToMtype extends ReflectToolkit with MetaToolkit {
               val m.Type.Singleton(preref) = pre.toMtype
               m.Term.Select(preref, name).inheritAttrs(name)
             case pre @ g.TypeRef(g.NoPrefix, quant, Nil) if quant.hasFlag(DEFERRED | EXISTENTIAL) =>
+              import g.AnyNameOps
               require(quant.name.endsWith(g.nme.SINGLETON_SUFFIX))
-              val prename = g.Ident(quant.name.toString.stripSuffix(g.nme.SINGLETON_SUFFIX)).displayName
+              val prename = quant.name.stripSuffix(g.nme.SINGLETON_SUFFIX).displayName
               val preref = m.Term.Name(prename).withMattrs(g.DefaultPrefix, quant)
               m.Term.Select(preref, name).inheritAttrs(name)
             case pre: g.TypeRef =>
