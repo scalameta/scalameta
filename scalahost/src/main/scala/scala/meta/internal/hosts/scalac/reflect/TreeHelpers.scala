@@ -38,7 +38,8 @@ trait TreeHelpers {
       // NOTE: "<empty>", the internal name for empty package, isn't a valid Scala identifier, so we hack around
       if (name == rootMirror.EmptyPackage.name) "_empty_"
       else if (name == rootMirror.EmptyPackageClass.name) "_empty_"
-      else if (name.isAnonymous) "_"
+      // TODO: why did we need this in the past?
+      // else if (name.isAnonymous) "_"
       else name.decodedName.toString
     }
   }
