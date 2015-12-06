@@ -89,7 +89,7 @@ object mergeTrees {
               }
               sy.copy(mestats)
             case (sy: m.Term.If, se: m.Term.If) =>
-              sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(se.thenp, se.thenp))
+              sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(sy.elsep, se.elsep))
             case (sy: m.Term.Match, se: m.Term.Match) =>
               sy.copy(loop(sy.scrut, se.scrut), loop(sy.cases, se.cases))
             case (sy: m.Term.Function, se: m.Term.Function) =>

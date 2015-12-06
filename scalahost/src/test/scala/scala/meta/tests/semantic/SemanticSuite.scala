@@ -101,6 +101,11 @@ class SemanticSuite extends FunSuite {
     """))
   }
 
+  test("easy 3") {
+    val x = q"if (true) { 1 } else { 0 }".desugar
+    assert(x.show[Structure] === "Term.If(Lit(true), Term.Block(Seq(Lit(1))), Term.Block(Seq(Lit(0))))")
+  }
+
   test("toolbox") {
     def Toolbox(options: String, artifacts: Artifact*)(implicit resolver: Resolver): Context = {
       import scala.meta.internal.hosts.scalac.contexts.{Compiler => Compiler}
