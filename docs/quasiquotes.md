@@ -39,7 +39,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Do While          | `q"do $expr while($expr)"`
  For               | `q"for (..$enumeratorsnel) $expr"`
  For Yield         | `q"for (..$enumeratorsnel) yield $expr"`
- New               | `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }`
+ New               | `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }"`
  Placeholder       | `q"_"`
  Eta Expansion     | `q"$expr _"`
  Literal           | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
