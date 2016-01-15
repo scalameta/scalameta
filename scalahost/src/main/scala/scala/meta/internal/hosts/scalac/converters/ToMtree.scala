@@ -77,6 +77,10 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
                 val mfun = lfun.toMtree[m.Term]
                 val mtargs = ltargs.toMtrees[m.Type]
                 m.Term.ApplyType(mfun, mtargs)
+              case l.TermAssign(llhs, lrhs) =>
+                val mlhs = llhs.toMtree[m.Term.Ref]
+                val mrhs = lrhs.toMtree[m.Term]
+                m.Term.Assign(mlhs, mrhs)
               case l.TermBlock(lstats) =>
                 val mstats = lstats.toMtrees[m.Stat]
                 m.Term.Block(mstats)
@@ -93,6 +97,10 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
                 val mparams = lparams.toMtrees[m.Term.Param]
                 val mbody = lbody.toMtree[m.Term]
                 m.Term.Function(mparams, mbody)
+              case l.TermWhile(lcond, lbody) =>
+                val mcond = lcond.toMtree[m.Term]
+                val mbody = lbody.toMtree[m.Term]
+                m.Term.While(mcond, mbody)
               case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
                 val mmods = lmods.toMtrees[m.Mod]
                 val mname = lname.toMtree[m.Term.Param.Name]
@@ -165,6 +173,12 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
                 val mtpt = ltpt.toMtreeopt[m.Type]
                 val mrhs = lrhs.toMtree[m.Term]
                 m.Defn.Val(mmods, mpats, mtpt, mrhs)
+              case l.VarDef(lmods, lpats, ltpt, lrhs) =>
+                val mmods = lmods.toMtrees[m.Mod]
+                val mpats = lpats.toMtrees[m.Pat]
+                val mtpt = ltpt.toMtreeopt[m.Type]
+                val mrhs = lrhs.toMtreeopt[m.Term]
+                m.Defn.Var(mmods, mpats, mtpt, mrhs)
               case l.DefDef(lmods, lname, ltparams, lparamss, ltpt, lrhs) =>
                 val mmods = lmods.toMtrees[m.Mod]
                 val mname = lname.toMtree[m.Term.Name]
