@@ -205,6 +205,18 @@ trait LogicalTrees {
       }
     }
 
+    object TermWhile {
+      def unapply(tree: g.LabelDef): Option[(g.Tree, g.Tree)] = {
+        tree match {
+          case g.LabelDef(name1, Nil, g.If(cond, g.Block(List(body), g.Apply(Ident(name2), Nil)), g.Literal(g.Constant(()))))
+          if name1 == name2 && name1.startsWith(nme.WHILE_PREFIX) =>
+            Some((cond, body))
+          case _ =>
+            None
+        }
+      }
+    }
+
     trait TermParamName extends Name
 
     object TermParamDef {

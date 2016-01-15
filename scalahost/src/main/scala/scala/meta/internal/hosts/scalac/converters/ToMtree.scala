@@ -93,6 +93,10 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
                 val mparams = lparams.toMtrees[m.Term.Param]
                 val mbody = lbody.toMtree[m.Term]
                 m.Term.Function(mparams, mbody)
+              case l.TermWhile(lcond, lbody) =>
+                val mcond = lcond.toMtree[m.Term]
+                val mbody = lbody.toMtree[m.Term]
+                m.Term.While(mcond, mbody)
               case l.TermParamDef(lmods, lname, ltpt, ldefault) =>
                 val mmods = lmods.toMtrees[m.Mod]
                 val mname = lname.toMtree[m.Term.Param.Name]
