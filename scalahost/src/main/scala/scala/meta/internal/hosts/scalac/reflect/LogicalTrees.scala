@@ -388,8 +388,16 @@ trait LogicalTrees {
     }
 
     object VarDef {
-      def unapply(tree: g.ValDef): Option[(List[l.Modifier], List[g.Tree], g.Tree, g.Tree)] = {
-        ???
+      def unapply(tree: g.ValDef): Option[(List[l.Modifier], List[g.Tree], Option[g.Tree], Option[g.Tree])] = {
+        // TODO: fix the duplication wrt ValDef
+        if (!tree.is(FieldRole)) return None
+        val g.ValDef(_, name, tpt, rhs) = tree
+        if (!tree.mods.hasFlag(MUTABLE)) return None
+        // TODO: support multi-pat valdefs
+        val lpats = List(l.PatVarTerm(tree))
+        val ltpt = if (tpt.nonEmpty) Some(tpt) else None
+        val lrhs = if (rhs.nonEmpty) Some(rhs) else None
+        Some((l.Modifiers(tree), lpats, ltpt, lrhs))
       }
     }
 

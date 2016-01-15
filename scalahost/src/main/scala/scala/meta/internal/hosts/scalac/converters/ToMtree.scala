@@ -165,6 +165,12 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
                 val mtpt = ltpt.toMtreeopt[m.Type]
                 val mrhs = lrhs.toMtree[m.Term]
                 m.Defn.Val(mmods, mpats, mtpt, mrhs)
+              case l.VarDef(lmods, lpats, ltpt, lrhs) =>
+                val mmods = lmods.toMtrees[m.Mod]
+                val mpats = lpats.toMtrees[m.Pat]
+                val mtpt = ltpt.toMtreeopt[m.Type]
+                val mrhs = lrhs.toMtreeopt[m.Term]
+                m.Defn.Var(mmods, mpats, mtpt, mrhs)
               case l.DefDef(lmods, lname, ltparams, lparamss, ltpt, lrhs) =>
                 val mmods = lmods.toMtrees[m.Mod]
                 val mname = lname.toMtree[m.Term.Name]
