@@ -77,6 +77,10 @@ trait ToMtree extends ReflectToolkit with MetaToolkit {
                 val mfun = lfun.toMtree[m.Term]
                 val mtargs = ltargs.toMtrees[m.Type]
                 m.Term.ApplyType(mfun, mtargs)
+              case l.TermAssign(llhs, lrhs) =>
+                val mlhs = llhs.toMtree[m.Term.Ref]
+                val mrhs = lrhs.toMtree[m.Term]
+                m.Term.Assign(mlhs, mrhs)
               case l.TermBlock(lstats) =>
                 val mstats = lstats.toMtrees[m.Stat]
                 m.Term.Block(mstats)

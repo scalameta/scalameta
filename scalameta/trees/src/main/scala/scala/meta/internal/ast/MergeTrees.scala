@@ -128,6 +128,10 @@ object mergeTrees {
               val seFun1 = seFun.copy(body = seApp1).inheritAttrs(seApp1)
               val expansion = seBlk.copy(stats = List(seFun1)).inheritAttrs(seBlk)
               me.withExpansion(expansion) // (E10)
+            case (sy: m.Term.Assign, se: m.Term.Assign) =>
+              sy.copy(loop(sy.lhs, se.lhs), loop(sy.rhs, se.rhs))
+            case (sy: m.Term.While, se: m.Term.While) =>
+              sy.copy(loop(sy.expr, se.expr), loop(sy.body, se.body))
 
             // ============ TYPES ============
 
@@ -190,6 +194,12 @@ object mergeTrees {
             // ============ DEFNS ============
 
             case (sy: m.Defn.Val, se: m.Defn.Val) =>
+              val medecltpe = (sy.decltpe, se.decltpe) match { // (M1)
+                case (None, Some(se)) => None
+                case (sy, se) => loop(sy, se)
+              }
+              sy.copy(loop(sy.mods, se.mods), loop(sy.pats, se.pats), medecltpe, loop(sy.rhs, se.rhs))
+            case (sy: m.Defn.Var, se: m.Defn.Var) =>
               val medecltpe = (sy.decltpe, se.decltpe) match { // (M1)
                 case (None, Some(se)) => None
                 case (sy, se) => loop(sy, se)

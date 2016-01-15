@@ -178,6 +178,12 @@ trait LogicalTrees {
       }
     }
 
+    object TermAssign {
+      def unapply(tree: g.Assign): Option[(g.Tree, g.Tree)] = {
+        Some((tree.lhs, tree.rhs))
+      }
+    }
+
     object TermBlock {
       def unapply(tree: g.Block): Option[List[g.Tree]] = {
         val lstats = blockStats(tree.stats :+ tree.expr)
