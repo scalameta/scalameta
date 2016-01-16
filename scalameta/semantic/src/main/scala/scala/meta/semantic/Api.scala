@@ -72,7 +72,7 @@ private[meta] trait Api {
       val ttree = implicitly[SemanticContext].typecheck(tree).require[impl.Term]
       ttree.typing match {
         case s.Typing.Zero => unreachable
-        case s.Typing.Recursive => impl.Type.Singleton(tree.require[impl.Term.Ref]).setTypechecked
+        case s.Typing.Recursive => impl.Type.Singleton(ttree.require[impl.Term.Ref]).setTypechecked
         case s.Typing.Nonrecursive(tpe) => tpe.require[impl.Type]
       }
     }
