@@ -64,32 +64,25 @@ object mergeTrees {
             case (sy: m.Term.Name, se: m.Term.Name) =>
               if (sy.value != se.value && sy.isBinder) failCorrelate(sy, se, "incompatible definitions")
               sy.copy() // (E2)
-            case (sy: m.Term.Select, se: m.Term.Select) =>
+            // TODO: This kind of stuff is why we're going to need at least the SYNTHETIC bit in semantic trees
+            // Checks like this one: a) are very easy to miss, b) are flaky (imagine sth like `foo.apply.apply(bar)`).
+            case (sy: m.Term.Select, se: m.Term.Select) if se.name.value != "apply" || sy.name.value == "apply" =>
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
-            case (sy: m.Term.Apply, se: m.Term.Apply) =>
-              val meFun = (sy.fun, se.fun) match {
-                case (m.Term.Select(_, m.Term.Name("apply")), m.Term.Select(_, m.Term.Name("apply"))) =>
-                  // TODO: This kind of stuff is why we're going to need at least the SYNTHETIC bit in semantic trees.
-                  // Checks like this one: a) are very easy to miss, b) are flaky (imagine sth like `foo.apply.apply(bar)`).
-                  loop(sy.fun, se.fun)
-                case (syFun, se @ m.Term.Select(seFun, m.Term.Name("apply"))) =>
-                  val expansion = se.copy(qual = loop(syFun, seFun)).inheritAttrs(se)
-                  val meFun = loop(syFun, seFun).resetTypechecked
-                  meFun.withExpansion(expansion) // (E11)
-                case _ =>
-                  loop(sy.fun, se.fun)
-              }
-              sy.copy(meFun, loop(sy.args, se.args))
+            // TODO: This is another thing that requires SYNTHETIC.
+            case (sy: m.Term.Apply, se: m.Term.Apply) if sy.argsc == se.argsc =>
+              sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
             case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
               sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
-            case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(seFun, seArgs)) =>
+            // TODO: moar SYNTHETIC
+            case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(seFun, seArgs)) if se.argsc == 1 =>
               val (seLhs, seOp, seTargs) = seFun match {
                 case m.Term.Select(seLhs, seOp) => (seLhs, seOp, Nil)
-                case m.Type.Apply(m.Term.Select(seLhs, seOp), seTargs) => (seLhs, seOp, seTargs)
+                case m.Term.ApplyType(m.Term.Select(seLhs, seOp), seTargs) => (seLhs, seOp, seTargs)
               }
+              val meTargs = if (sy.targs.isEmpty) Nil else loop(sy.targs, seTargs)
               require(seOp.isLeftAssoc && debug(sy, se)) // TODO: right-associative operators aren't supported yet
-              sy.copy(loop(sy.lhs, seLhs), loop(sy.op, seOp), loop(sy.targs, seTargs), loop(sy.args, seArgs))
+              sy.copy(loop(sy.lhs, seLhs), loop(sy.op, seOp), meTargs, loop(sy.args, seArgs))
             case (sy: m.Term.ApplyInfix, se: m.Term.ApplyInfix) =>
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
             case (sy: m.Term.ApplyUnary, se: m.Term.ApplyUnary) =>
@@ -118,7 +111,11 @@ object mergeTrees {
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), meDecltpe, loop(sy.default, se.default))
 
             // ============ STRUCTURALLY UNEQUAL TERMS ============
-
+            case (sy: m.Term, se @ m.Term.Select(seQual, Term.Name("apply"))) =>
+              val me = loop(sy, seQual).resetTypechecked
+              val exQual = me.setTypechecked
+              val expansion = se.copy(qual = exQual).inheritAttrs(se)
+              me.withExpansion(expansion) // (E11)
             case (sy: m.Term.Name, se @ m.Term.Select(seQual, seName)) =>
               val expansion = se.copy(seQual, loop(sy, seName)).inheritAttrs(se)
               sy.inheritAttrs(seName).withExpansion(expansion) // (E1, E2)
@@ -153,6 +150,11 @@ object mergeTrees {
               val meRhs = loop(syRhs, seRhs)
               val expansion = se.copy(fun = exFun, args = Seq(meArg, meRhs)).inheritAttrs(se)
               sy.copy(fun = meFun, argss = Seq(Seq(meArg)), rhs = meRhs).inheritAttrs(se).withExpansion(expansion) // (E12)
+            case (sy: m.Term, se @ m.Term.Apply(seFun, seArgs)) =>
+              val me = loop(sy, seFun).resetTypechecked
+              val exFun = me.setTypechecked
+              val expansion = se.copy(fun = exFun).inheritAttrs(se)
+              me.withExpansion(expansion) // (E13)
 
             // ============ TYPES ============
 

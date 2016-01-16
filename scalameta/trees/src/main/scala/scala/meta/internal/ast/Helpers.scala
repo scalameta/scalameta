@@ -223,6 +223,10 @@ private[meta] object Helpers {
     }
   }
 
+  implicit class XtensionApply(tree: Term.Apply) {
+    def argsc: Int = 1 + (tree.fun match { case fun: Term.Apply => fun.argsc; case _ => 0 })
+  }
+
   def tpeToPattpe(tpe: api.Type): api.Pat.Type = {
     def loop(tpe: Type): Pat.Type = tpe match {
       case tpe: Type.Name => tpe

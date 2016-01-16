@@ -327,9 +327,18 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
             mtpe.ctorRef(mctor).require[m.Ctor.Call]
           })
           // TODO: apply gpre to mselftpe
-          val mselftpe = if (gsym.thisSym != gsym) Some(gsym.thisSym.tpe.toMtype) else None
-          val mself = m.Term.Param(Nil, m.Name.Anonymous(), mselftpe, None)
-          m.Template(mearly, mparents, mself, Some(mlate))
+          val mselftpe = gsym.thisSym.tpe.toMtype
+          val mselfdecltpe = if (gsym.thisSym != gsym) Some(mselftpe) else None
+          val mselfname = {
+            val lselfdenot = l.Denotation(gsym.thisPrefix, l.Self(gsym))
+            val mselfname = {
+              if (gsym.thisSym != gsym) m.Term.Name(gsym.thisSym.displayName).withMattrs(lselfdenot, mselftpe)
+              else m.Name.Anonymous().withMattrs(lselfdenot)
+            }
+            mselfname.setTypechecked
+          }
+          val mself = m.Term.Param(Nil, mselfname, mselfdecltpe, None).withMattrs(gsym.thisSym.tpe.toMtype).setTypechecked
+          m.Template(mearly, mparents, mself, Some(mlate)).setTypechecked
         }
         lazy val mstats = LazySeq({
           val gstatowner = gsym match { case gclass: g.ClassSymbol => gclass; case gmodule: g.ModuleSymbol => gmodule.moduleClass.asClass }
@@ -396,7 +405,7 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
       val ssym = symbolTable.convert(lsym)
       val maybeCachedMmember = ssymToMmemberIndex.get(ssym)
       val maybePrefixedCachedMmember = maybeCachedMmember.map(applyPrefix(gpre, _))
-      maybePrefixedCachedMmember.getOrElse(approximateSymbol(lsym)).forceTypechecked
+      maybePrefixedCachedMmember.getOrElse(approximateSymbol(lsym)).setTypechecked
     })
   }
 

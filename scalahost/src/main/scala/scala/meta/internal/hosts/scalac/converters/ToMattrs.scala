@@ -192,6 +192,7 @@ trait ToMattrs extends ReflectToolkit with MetaToolkit {
   protected trait TypingLike { def styping: s.Typing }
   protected object TypingLike {
     implicit def gtpeIsTypingLike(gtpe: g.Type): TypingLike = new TypingLike { def styping = typing(gtpe) }
+    implicit def mtpeIsTypingLike(mtpe: m.Type): TypingLike = new TypingLike { def styping = s.Typing.Nonrecursive(mtpe) }
     implicit def stypingIsTypingLike(styping0: s.Typing): TypingLike = new TypingLike { def styping = styping0 }
   }
 }
