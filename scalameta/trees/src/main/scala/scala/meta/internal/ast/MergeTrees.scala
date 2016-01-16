@@ -69,6 +69,10 @@ object mergeTrees {
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
               val mefun = (sy.fun, se.fun) match {
+                case (m.Term.Select(_, m.Term.Name("apply")), m.Term.Select(_, m.Term.Name("apply"))) =>
+                  // TODO: This kind of stuff is why we're going to need at least the SYNTHETIC bit in semantic trees.
+                  // Checks like this one: a) are very easy to miss, b) are flaky (imagine sth like `foo.apply.apply(bar)`).
+                  loop(sy.fun, se.fun)
                 case (syfun, se @ m.Term.Select(sefun, m.Term.Name("apply"))) =>
                   val expansion = se.copy(qual = loop(syfun, sefun)).inheritAttrs(se)
                   val mefun = loop(syfun, sefun).resetTypechecked
