@@ -68,7 +68,15 @@ object mergeTrees {
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
-              sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
+              val mefun = (sy.fun, se.fun) match {
+                case (syfun, se @ m.Term.Select(sefun, m.Term.Name("apply"))) =>
+                  val expansion = se.copy(qual = loop(syfun, sefun)).inheritAttrs(se)
+                  val mefun = loop(syfun, sefun).resetTypechecked
+                  mefun.withExpansion(expansion) // (E11)
+                case _ =>
+                  loop(sy.fun, se.fun)
+              }
+              sy.copy(mefun, loop(sy.args, se.args))
             case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
               val (selhs, seop, seTargs) = sefun match {
                 case m.Term.Select(selhs, seop) => (selhs, seop, Nil)
@@ -103,8 +111,9 @@ object mergeTrees {
 
             // ============ STRUCTURALLY UNEQUAL TERMS ============
 
-            case (sy: m.Term.Name, se: m.Term.Select) =>
-              sy.inheritAttrs(se.name).withExpansion(se) // (E1, E2)
+            case (sy: m.Term.Name, se @ m.Term.Select(sequal, sename)) =>
+              val expansion = se.copy(sequal, loop(sy, sename)).inheritAttrs(se)
+              sy.inheritAttrs(sename).withExpansion(expansion) // (E1, E2)
             case (sy @ m.Term.Block(Seq(syStat)), seStat: m.Stat) =>
               val syTyping = seStat match { case seStat: Term => seStat.typing; case _ => typingUnit }
               sy.copy(Seq(loop(syStat, seStat))).withAttrs(syTyping) // (E3)
