@@ -338,8 +338,7 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
             mselfname.setTypechecked
           }
           val mself = m.Term.Param(Nil, mselfname, mselfdecltpe, None).withMattrs(gsym.thisSym.tpe.toMtype).setTypechecked
-          // m.Template(mearly, mparents, mself, Some(mlate))
-          m.Template(mearly, Nil, mself, None).setTypechecked
+          m.Template(mearly, mparents, mself, Some(mlate)).setTypechecked
         }
         lazy val mstats = LazySeq({
           val gstatowner = gsym match { case gclass: g.ClassSymbol => gclass; case gmodule: g.ModuleSymbol => gmodule.moduleClass.asClass }
