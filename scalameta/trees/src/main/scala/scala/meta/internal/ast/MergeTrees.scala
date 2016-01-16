@@ -68,43 +68,60 @@ object mergeTrees {
               if (sy.name.value != se.name.value) failCorrelate(sy, se, "incompatible names")
               sy.copy(loop(sy.qual, se.qual), loop(sy.name, se.name))
             case (sy: m.Term.Apply, se: m.Term.Apply) =>
-              sy.copy(loop(sy.fun, se.fun), loop(sy.args, se.args))
-            case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(sefun, seargs)) =>
-              val (selhs, seop, seTargs) = sefun match {
-                case m.Term.Select(selhs, seop) => (selhs, seop, Nil)
-                case m.Type.Apply(m.Term.Select(selhs, seop), seTargs) => (selhs, seop, seTargs)
+              val meFun = (sy.fun, se.fun) match {
+                case (m.Term.Select(_, m.Term.Name("apply")), m.Term.Select(_, m.Term.Name("apply"))) =>
+                  // TODO: This kind of stuff is why we're going to need at least the SYNTHETIC bit in semantic trees.
+                  // Checks like this one: a) are very easy to miss, b) are flaky (imagine sth like `foo.apply.apply(bar)`).
+                  loop(sy.fun, se.fun)
+                case (syFun, se @ m.Term.Select(seFun, m.Term.Name("apply"))) =>
+                  val expansion = se.copy(qual = loop(syFun, seFun)).inheritAttrs(se)
+                  val meFun = loop(syFun, seFun).resetTypechecked
+                  meFun.withExpansion(expansion) // (E11)
+                case _ =>
+                  loop(sy.fun, se.fun)
               }
-              require(seop.isLeftAssoc && debug(sy, se)) // TODO: right-associative operators aren't supported yet
-              sy.copy(loop(sy.lhs, selhs), loop(sy.op, seop), loop(sy.targs, seTargs), loop(sy.args, seargs))
+              sy.copy(meFun, loop(sy.args, se.args))
+            case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
+              sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
+            case (sy: m.Term.ApplyInfix, se @ m.Term.Apply(seFun, seArgs)) =>
+              val (seLhs, seOp, seTargs) = seFun match {
+                case m.Term.Select(seLhs, seOp) => (seLhs, seOp, Nil)
+                case m.Type.Apply(m.Term.Select(seLhs, seOp), seTargs) => (seLhs, seOp, seTargs)
+              }
+              require(seOp.isLeftAssoc && debug(sy, se)) // TODO: right-associative operators aren't supported yet
+              sy.copy(loop(sy.lhs, seLhs), loop(sy.op, seOp), loop(sy.targs, seTargs), loop(sy.args, seArgs))
             case (sy: m.Term.ApplyInfix, se: m.Term.ApplyInfix) =>
               sy.copy(loop(sy.lhs, se.lhs), loop(sy.op, se.op), loop(sy.targs, se.targs), loop(sy.args, se.args))
             case (sy: m.Term.ApplyUnary, se: m.Term.ApplyUnary) =>
               sy.copy(loop(sy.op, se.op), loop(sy.arg, se.arg))
-            case (sy: m.Term.ApplyType, se: m.Term.ApplyType) =>
-              sy.copy(loop(sy.fun, se.fun), loop(sy.targs, se.targs))
+            case (sy: m.Term.Assign, se: m.Term.Assign) =>
+              sy.copy(loop(sy.lhs, se.lhs), loop(sy.rhs, se.rhs))
             case (sy: m.Term.Block, se: m.Term.Block) =>
-              val mestats = (sy.stats, se.stats) match {
-                case (systats, sestats :+ m.Lit(())) if systats.length == sestats.length => loop(systats, sestats) // (E4)
+              val meStats = (sy.stats, se.stats) match {
+                case (syStats, seStats :+ m.Lit(())) if syStats.length == seStats.length => loop(syStats, seStats) // (E4)
                 case _ => loop(sy.stats, se.stats)
               }
-              sy.copy(mestats)
+              sy.copy(meStats)
             case (sy: m.Term.If, se: m.Term.If) =>
               sy.copy(loop(sy.cond, se.cond), loop(sy.thenp, se.thenp), loop(sy.elsep, se.elsep))
             case (sy: m.Term.Match, se: m.Term.Match) =>
               sy.copy(loop(sy.scrut, se.scrut), loop(sy.cases, se.cases))
             case (sy: m.Term.Function, se: m.Term.Function) =>
               sy.copy(loop(sy.params, se.params), loop(sy.body, se.body))
+            case (sy: m.Term.While, se: m.Term.While) =>
+              sy.copy(loop(sy.expr, se.expr), loop(sy.body, se.body))
             case (sy: m.Term.Param, se: m.Term.Param) =>
-              val medecltpe = (sy.decltpe, se.decltpe) match { // (M1)
+              val meDecltpe = (sy.decltpe, se.decltpe) match { // (M1)
                 case (None, Some(se)) => None
                 case (sy, se) => loop(sy, se)
               }
-              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), medecltpe, loop(sy.default, se.default))
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), meDecltpe, loop(sy.default, se.default))
 
             // ============ STRUCTURALLY UNEQUAL TERMS ============
 
-            case (sy: m.Term.Name, se: m.Term.Select) =>
-              sy.inheritAttrs(se.name).withExpansion(se) // (E1, E2)
+            case (sy: m.Term.Name, se @ m.Term.Select(seQual, seName)) =>
+              val expansion = se.copy(seQual, loop(sy, seName)).inheritAttrs(se)
+              sy.inheritAttrs(seName).withExpansion(expansion) // (E1, E2)
             case (sy @ m.Term.Block(Seq(syStat)), seStat: m.Stat) =>
               val syTyping = seStat match { case seStat: Term => seStat.typing; case _ => typingUnit }
               sy.copy(Seq(loop(syStat, seStat))).withAttrs(syTyping) // (E3)
@@ -124,14 +141,18 @@ object mergeTrees {
               me.withExpansion(expansion) // (E9)
             case (sy: m.Term, seBlk @ m.Term.Block(Seq(seFun @ m.Term.Function(_, seApp @ m.Term.Apply(seInner, _))))) =>
               val me = loop(sy, seInner).resetTypechecked
-              val seApp1 = seApp.copy(fun = me).inheritAttrs(seApp)
-              val seFun1 = seFun.copy(body = seApp1).inheritAttrs(seApp1)
-              val expansion = seBlk.copy(stats = List(seFun1)).inheritAttrs(seBlk)
+              val exApp = seApp.copy(fun = me).inheritAttrs(seApp)
+              val exFun = seFun.copy(body = exApp).inheritAttrs(exApp)
+              val expansion = seBlk.copy(stats = List(exFun)).inheritAttrs(seBlk)
               me.withExpansion(expansion) // (E10)
-            case (sy: m.Term.Assign, se: m.Term.Assign) =>
-              sy.copy(loop(sy.lhs, se.lhs), loop(sy.rhs, se.rhs))
-            case (sy: m.Term.While, se: m.Term.While) =>
-              sy.copy(loop(sy.expr, se.expr), loop(sy.body, se.body))
+            case (sy @ m.Term.Update(syFun, Seq(Seq(syArg)), syRhs),
+                  se @ m.Term.Apply(seFun @ m.Term.Select(seQual, m.Term.Name("update")), Seq(seArg, seRhs))) =>
+              val meFun = loop(syFun, seQual)
+              val exFun = seFun.copy(qual = meFun).inheritAttrs(seFun)
+              val meArg = loop(syArg, seArg)
+              val meRhs = loop(syRhs, seRhs)
+              val expansion = se.copy(fun = exFun, args = Seq(meArg, meRhs)).inheritAttrs(se)
+              sy.copy(fun = meFun, argss = Seq(Seq(meArg)), rhs = meRhs).inheritAttrs(se).withExpansion(expansion) // (E12)
 
             // ============ TYPES ============
 
@@ -194,23 +215,23 @@ object mergeTrees {
             // ============ DEFNS ============
 
             case (sy: m.Defn.Val, se: m.Defn.Val) =>
-              val medecltpe = (sy.decltpe, se.decltpe) match { // (M1)
+              val meDecltpe = (sy.decltpe, se.decltpe) match { // (M1)
                 case (None, Some(se)) => None
                 case (sy, se) => loop(sy, se)
               }
-              sy.copy(loop(sy.mods, se.mods), loop(sy.pats, se.pats), medecltpe, loop(sy.rhs, se.rhs))
+              sy.copy(loop(sy.mods, se.mods), loop(sy.pats, se.pats), meDecltpe, loop(sy.rhs, se.rhs))
             case (sy: m.Defn.Var, se: m.Defn.Var) =>
-              val medecltpe = (sy.decltpe, se.decltpe) match { // (M1)
+              val meDecltpe = (sy.decltpe, se.decltpe) match { // (M1)
                 case (None, Some(se)) => None
                 case (sy, se) => loop(sy, se)
               }
-              sy.copy(loop(sy.mods, se.mods), loop(sy.pats, se.pats), medecltpe, loop(sy.rhs, se.rhs))
+              sy.copy(loop(sy.mods, se.mods), loop(sy.pats, se.pats), meDecltpe, loop(sy.rhs, se.rhs))
             case (sy: m.Defn.Def, se: m.Defn.Def) =>
-              val medecltpe = (sy.decltpe, se.decltpe) match { // (M1)
+              val meDecltpe = (sy.decltpe, se.decltpe) match { // (M1)
                 case (None, Some(se)) => None
                 case (sy, se) => loop(sy, se)
               }
-              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.paramss, se.paramss), medecltpe, loop(sy.body, se.body))
+              sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.paramss, se.paramss), meDecltpe, loop(sy.body, se.body))
             case (sy: m.Defn.Class, se: m.Defn.Class) =>
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), loop(sy.tparams, se.tparams), loop(sy.ctor, se.ctor), loop(sy.templ, se.templ))
             case (sy: m.Defn.Trait, se: m.Defn.Trait) =>
@@ -259,11 +280,11 @@ object mergeTrees {
                 case (syss, sess) =>
                   mergeParents(syss, sess)
               }
-              val mestats = (sy.stats, se.stats) match {
+              val meStats = (sy.stats, se.stats) match {
                 case (None, Some(Nil)) => None
                 case (sys, ses) => loop(sys, ses)
               }
-              sy.copy(loop(sy.early, se.early), meparents, loop(sy.self, se.self), mestats)
+              sy.copy(loop(sy.early, se.early), meparents, loop(sy.self, se.self), meStats)
 
             // ============ MODIFIERS ============
 
