@@ -405,7 +405,7 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
       val ssym = symbolTable.convert(lsym)
       val maybeCachedMmember = ssymToMmemberIndex.get(ssym)
       val maybePrefixedCachedMmember = maybeCachedMmember.map(applyPrefix(gpre, _))
-      maybePrefixedCachedMmember.getOrElse(approximateSymbol(lsym)).forceTypechecked
+      maybePrefixedCachedMmember.getOrElse(approximateSymbol(lsym)).setTypechecked
     })
   }
 
