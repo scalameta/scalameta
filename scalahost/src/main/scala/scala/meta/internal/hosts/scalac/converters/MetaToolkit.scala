@@ -11,6 +11,7 @@ import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.semantic._
 import scala.meta.{SemanticException, Semantics}
 import scala.meta.internal.prettyprinters._
+import scala.meta.prettyprinters.Syntax
 
 trait MetaToolkit {
   implicit class RichMetaToolkitDenotation(denot: Denotation) {
@@ -77,7 +78,11 @@ trait MetaToolkit {
         tree.setTypechecked.asInstanceOf[T]
       } catch {
         case ex: UnsupportedOperationException =>
-          throw new UnsupportedOperationException("failed to force TYPECHECKED for " + tree.show[Attributes], ex)
+          val details = {
+            try tree.show[Attributes]
+            catch { case ex: Exception => tree.show[Syntax] }
+          }
+          throw new UnsupportedOperationException("failed to force TYPECHECKED for " + details, ex)
       }
     }
   }
