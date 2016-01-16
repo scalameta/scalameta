@@ -53,7 +53,7 @@ trait ToMannot extends ReflectToolkit with MetaToolkit {
         val msector = msyctor.withMattrs(gatp, gctor)
         val mctorname = matp.ctorRef(msector).require[m.Term]
         val mannot = m.Term.Apply(mctorname, margs).withMattrs(gannot.atp)
-        if (margs.isEmpty) mctorname.withExpansion(mannot)
+        if (margs.isEmpty) mctorname.resetTypechecked.withExpansion(mannot).setTypechecked
         else mannot
       }
       m.Mod.Annot(mannotcore(gannot)).forceTypechecked
