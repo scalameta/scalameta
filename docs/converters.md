@@ -109,6 +109,13 @@ scroll down to the "Theory" & "Practice" sections in the end of the document.
     <td valign="top">+</td>
     <td valign="top">Implicit arguments.</td>
   </tr>
+  <tr>
+    <td valign="top">E14</td>
+    <td valign="top">Y</td>
+    <td valign="top">+</td>
+    <td valign="top">+</td>
+    <td valign="top">`for` loops.</td>
+  </tr>
 </table>
 
 <sup>1</sup> Original tracked by scalahost, reached a preliminary agreement with Jason to submit a pull request to scala/scala.<br/>

@@ -111,6 +111,47 @@ object mergeTrees {
               sy.copy(loop(sy.mods, se.mods), loop(sy.name, se.name), meDecltpe, loop(sy.default, se.default))
 
             // ============ STRUCTURALLY UNEQUAL TERMS ============
+            case (sy: m.Term.ForYield, se: m.Term.Apply) =>
+              val syEnums @ Seq(syEnum @ m.Enumerator.Generator(syPat @ m.Pat.Var.Term(syName), syRhs)) = sy.enums
+              val syBody = sy.body
+              val (seName, seRhs, seBody) = {
+                def extract(se: m.Term): (m.Term.Name, m.Term, m.Term) = se match {
+                  case m.Term.Apply(se: m.Term.Apply, _) =>
+                    extract(se)
+                  case m.Term.Apply(
+                      m.Term.Select(seRhs, m.Term.Name("map")),
+                      Seq(m.Term.Function(Seq(m.Term.Param(_, seName: m.Term.Name, _, _)), seBody))) =>
+                    (seName, seRhs, seBody)
+                  case se @ m.Term.Apply(m.Term.ApplyType(seFun, _), seArgs) =>
+                    extract(se.copy(seFun, seArgs))
+                }
+                extract(se)
+              }
+              val meRhs = loop(syRhs, seRhs)
+              val meEnums = Seq(syEnum.copy(syPat.copy(loop(syName, seName)), meRhs))
+              val meBody = loop(syBody, seBody)
+              val me = sy.copy(meEnums, meBody).inheritAttrs(se)
+              val expansion = {
+                def repack(se: m.Term): m.Term = se match {
+                  case se @ m.Term.Apply(seFun: m.Term.Apply, _) =>
+                    se.copy(fun = repack(seFun)).inheritAttrs(se)
+                  case se @ m.Term.Apply(
+                      seFun @ m.Term.Select(seRhs, m.Term.Name("map")),
+                      Seq(seLam @ m.Term.Function(_, seBody))) =>
+                    val exFun = seFun.copy(qual = meRhs).inheritAttrs(seFun)
+                    val exLam = seLam.copy(body = meBody).inheritAttrs(seLam)
+                    se.copy(exFun, Seq(exLam)).inheritAttrs(se)
+                  case se @ m.Term.Apply(
+                      seFun1 @ m.Term.ApplyType(seFun2 @ m.Term.Select(seRhs, m.Term.Name("map")), _),
+                      Seq(seLam @ m.Term.Function(_, seBody))) =>
+                    val exFun2 = seFun2.copy(qual = meRhs).inheritAttrs(seFun2)
+                    val exFun1 = seFun1.copy(fun = exFun2).inheritAttrs(seFun1)
+                    val exLam = seLam.copy(body = meBody).inheritAttrs(seLam)
+                    se.copy(exFun1, Seq(exLam)).inheritAttrs(se)
+                }
+                repack(se)
+              }
+              me.withExpansion(expansion) // (E14)
             case (sy: m.Term, se @ m.Term.Select(seQual, Term.Name("apply"))) =>
               val me = loop(sy, seQual).resetTypechecked
               val exQual = me.setTypechecked
