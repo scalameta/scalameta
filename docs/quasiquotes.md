@@ -189,7 +189,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 
            | Quasiquote
 -----------|--------------------
- Template  | `template"{ ..$stats } with ..$ctorcalls { $param => ..$stats }"`
+ Template  | `template"{ ..$stats } with ..$ctorcalls { $param => ..$stats }"` (first `stats` is early initializers, second `stats` is regular statements in the body of the template).
 
 ## Modifiers (meta.Mod)
 
