@@ -1908,7 +1908,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  }}}
    */
   def guard(): Option[Term] =
-    if (token.is[`if`]) { next(); Some(postfixExpr()) }
+    if (token.is[`if`]) { next(); Some(autoPos(postfixExpr())) }
     else None
 
   /** {{{
