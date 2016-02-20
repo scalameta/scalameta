@@ -38,4 +38,10 @@ class PositionSuite extends ParseSuite {
         | Term.Name[8..11]("foo"))
     """.trim.stripMargin.split("\n").mkString)
   }
+  test("#333") {
+    val tree = blockStat(""" def shortInfo: String = s"created=$x" """)
+    val interp = tree.children(2)
+    val id = interp.children(0)
+    assert(id.tokens.toList.toString == "List(s (25..26))")
+  }
 }
