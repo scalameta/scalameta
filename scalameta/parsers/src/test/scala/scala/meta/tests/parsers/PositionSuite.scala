@@ -44,4 +44,9 @@ class PositionSuite extends ParseSuite {
     val id = interp.children(0)
     assert(id.tokens.toList.toString == "List(s (25..26))")
   }
+  test("#331") {
+    val tree = caseClause("foo if bar || baz => ")
+    val cond = tree.children(1)
+    assert(cond.tokens.toList.toString == "List(bar (7..10),   (10..11), || (11..13),   (13..14), baz (14..17))")
+  }
 }
