@@ -1343,7 +1343,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit], List[Ctx]) => Ret): Ret = autoPos {
     val interpolator = {
       if (token.is[Xml.Start]) atPos(in.tokenPos, in.tokenPos)(Term.Name("xml"))
-      else atPos(in.prevTokenPos, in.prevTokenPos)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
+      else atPos(in.tokenPos, in.tokenPos)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
     }
     if (token.is[Interpolation.Id]) next()
     val partsBuf = new ListBuffer[Lit]
