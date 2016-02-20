@@ -6,16 +6,14 @@ Scala.meta is based on a principle that metaprogramming should be completely dec
 This project is a clean-room implementation of a metaprogramming toolkit for Scala, designed to be simple, robust and portable.
 We are striving for scala.meta to become a successor of scala.reflect, the current de facto standard in Scala ecosystem.
 
+### Why scala.meta
+
+Based on our experiences with developing scala.tools.nsc and scala.reflect, we have designed scala.meta to have a comprehensive data model that supports all syntactic and semantic details of Scala. As a result, scala.meta has a unique architecture that allows it to implement functionality that is very hard or outright impossible to achieve with existing metaprogramming solutions. Check out [our ScalaDays 2015 presentation](http://scalamacros.org/paperstalks/2015-06-09-StateOfTheMetaSummer2015.pdf) for more details.
+
 ### How to use
 
-This project is still in alpha stage, so it's not supposed to be immediately usable just yet.
-Nevertheless, we are regularly publishing snapshot builds to Sonatype, so it is already possible to experiment with scala.meta
-as described at [https://github.com/scalameta/example](https://github.com/scalameta/example).
-
-As with any snapshot software, things may crash and burn and APIs may noticeably change overnight,
-but if you're brave enough, proceed using the instructions, and you may find hidden treasures!
-If you have any comments or suggestions during your journey, let us know at
-[https://gitter.im/scalameta/scalameta](https://gitter.im/scalameta/scalameta).
+Even though scala.meta hasn't yet reached 0.1, there is a number of early adopters who have successfully used our project to solve real-life metaprogramming problems.
+Consult [https://github.com/scalameta/tutorial](https://github.com/scalameta/tutorial) to learn about fundamental concepts and principal use cases for scala.meta in a series of practical step-by-step guides.
 
 ### How to contribute
 
