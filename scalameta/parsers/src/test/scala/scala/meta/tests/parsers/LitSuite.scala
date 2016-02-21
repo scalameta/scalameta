@@ -85,5 +85,10 @@ class LitSuite extends ParseSuite {
   test("()") {
     val Lit(()) = term("()")
   }
+
+  test("0xCAFEBABE") {
+    val Lit(-889275714) = term("0xCAFEBABE")
+    val Lit(889275714) = term("-0xCAFEBABE")
+  }
 }
 
