@@ -1300,29 +1300,34 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  }}}
    */
   def literal(isNegated: Boolean = false): Lit = autoPos {
+    def isHex = token.code.startsWith("0x") || token.code.startsWith("0X")
     val res = token match {
       case token: Literal.Char =>
         Lit(token.value)
       case token: Literal.Int =>
         val value = if (isNegated) -token.value else token.value
-        if (value > Int.MaxValue) syntaxError("integer number too large", at = token)
-        else if (value < Int.MinValue) syntaxError("integer number too small", at = token)
-        else Lit(value.toInt)
+        val min = if (isHex) BigInt(Int.MinValue) * 2 + 1 else BigInt(Int.MinValue)
+        val max = if (isHex) BigInt(Int.MaxValue) * 2 + 1 else BigInt(Int.MaxValue)
+        if (value > max) syntaxError("integer number too large", at = token)
+        else if (value < min) syntaxError("integer number too small", at = token)
+        Lit(value.toInt)
       case token: Literal.Long =>
         val value = if (isNegated) -token.value else token.value
-        if (value > Long.MaxValue) syntaxError("integer number too large", at = token)
-        else if (value < Long.MinValue) syntaxError("integer number too small", at = token)
-        else Lit(value.toLong)
+        val min = if (isHex) BigInt(Long.MinValue) * 2 + 1 else BigInt(Long.MinValue)
+        val max = if (isHex) BigInt(Long.MaxValue) * 2 + 1 else BigInt(Long.MaxValue)
+        if (value > max) syntaxError("integer number too large", at = token)
+        else if (value < min) syntaxError("integer number too small", at = token)
+        Lit(value.toLong)
       case token: Literal.Float =>
         val value = if (isNegated) -token.value else token.value
         if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
-        else Lit(value.toFloat)
+        Lit(value.toFloat)
       case token: Literal.Double  =>
         val value = if (isNegated) -token.value else token.value
         if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
-        else Lit(value.toDouble)
+        Lit(value.toDouble)
       case token: Literal.String =>
         Lit(token.value)
       case token: Literal.Symbol =>
