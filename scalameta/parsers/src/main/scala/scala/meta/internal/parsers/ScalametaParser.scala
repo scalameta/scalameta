@@ -1028,18 +1028,25 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     }
 
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = atPos(t, auto) {
-      if (isIdentExcept("*") || token.is[Unquote]) {
-        val name = termName(advance = false)
-        val leftAssoc = name.isLeftAssoc
-        if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
-        val op = typeName()
-        newLineOptWhenFollowing(_.is[TypeIntro])
-        def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
-        if (leftAssoc)
-          infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
-        else
-          mkOp(infixType(InfixMode.RightOp))
-      } else t
+      if (isIdent || token.is[Unquote]) {
+        if (isRawStar && ahead(token.is[`)`] || token.is[`,`] || token.is[`=`] || token.is[`}`] || token.is[EOF])) {
+          // we assume that this is a type specification for a vararg parameter
+          t
+        } else {
+          val name = termName(advance = false)
+          val leftAssoc = name.isLeftAssoc
+          if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
+          val op = typeName()
+          newLineOptWhenFollowing(_.is[TypeIntro])
+          def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
+          if (leftAssoc)
+            infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
+          else
+            mkOp(infixType(InfixMode.RightOp))
+        }
+      } else {
+        t
+      }
     }
 
     /** {{{
@@ -1800,12 +1807,14 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     if (token.isNot[`{`] && token.isNot[`(`]) prefixExpr() :: Nil
     else {
       def argsToTerm(args: List[Term.Arg], openParenPos: Int, closeParenPos: Int): Term = {
+        def badRep(rep: Term.Arg.Repeated) = syntaxError("repeated argument not allowed here", at = rep)
         def loop(args: List[Term.Arg]): List[Term] = args match {
-          case Nil                              => Nil
-          case (t: Term) :: rest                => t :: loop(rest)
-          case (nmd: Term.Arg.Named) :: rest    => atPos(nmd, nmd)(Term.Assign(nmd.name, nmd.rhs)) :: loop(rest)
-          case (rep: Term.Arg.Repeated) :: rest => syntaxError("repeated argument not allowed here", at = rep)
-          case _                                => unreachable(debug(args))
+          case Nil                                                 => Nil
+          case (t: Term) :: rest                                   => t :: loop(rest)
+          case (nmd @ Term.Arg.Named(name, rhs: Term)) :: rest     => atPos(nmd, nmd)(Term.Assign(name, rhs)) :: loop(rest)
+          case (Term.Arg.Named(_, rep: Term.Arg.Repeated)) :: rest => badRep(rep)
+          case (rep: Term.Arg.Repeated) :: rest                    => badRep(rep)
+          case _                                                   => unreachable(debug(args))
         }
         atPos(openParenPos, closeParenPos)(makeTupleTerm(loop(args)))
       }
@@ -1825,11 +1834,14 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     expr() match {
       case q: Quasi =>
         q.become[Term.Arg.Quasi]
-      case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
+      case Term.Ascribe(t1, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
         next()
-        atPos(t, auto)(Term.Arg.Repeated(t))
-      case Term.Assign(t: Term.Name, rhs) =>
-        atPos(t, auto)(Term.Arg.Named(t, rhs))
+        atPos(t1, auto)(Term.Arg.Repeated(t1))
+      case Term.Assign(t1: Term.Name, Term.Ascribe(t2, Type.Placeholder(Type.Bounds(None, None)))) if isIdentOf("*") =>
+        next()
+        atPos(t1, auto)(Term.Arg.Named(t1, atPos(t2, auto)(Term.Arg.Repeated(t2))))
+      case Term.Assign(t2: Term.Name, rhs) =>
+        atPos(t2, auto)(Term.Arg.Named(t2, rhs))
       case other =>
         other
     }
@@ -3046,12 +3058,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     case v: Stat.Quasi => v
     case v: Defn.Val => v
     case v: Defn.Var => v
-    case t: Defn.Type =>
-      syntaxError("early type members are not allowed any longer. " +
-                  "Move them to the regular body: the semantics are the same.",
-                  at = t)
-    case other =>
-      syntaxError("not a valid early definition", at = other)
+    case t: Defn.Type => t
+    case other => syntaxError("not a valid early definition", at = other)
   }
 
   /** {{{
@@ -3061,7 +3069,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  }}}
    */
   def templateOpt(owner: TemplateOwner): Template = {
-    if (token.is[`extends`] /* || token.is[`<:`] && mods.isTrait */) {
+    if (token.is[`extends`] || (token.is[`<:`] && owner.isTrait)) {
       next()
       template()
     } else {

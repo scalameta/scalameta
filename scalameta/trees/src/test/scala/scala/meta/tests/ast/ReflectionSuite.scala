@@ -285,6 +285,7 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.internal.ast.Pat.Var.Term
       |scala.meta.internal.ast.Template
       |scala.meta.internal.ast.Term
+      |scala.meta.internal.ast.Term.Arg
       |scala.meta.internal.ast.Term.Name
       |scala.meta.internal.ast.Term.Param
       |scala.meta.internal.ast.Term.Param.Name

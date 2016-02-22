@@ -74,6 +74,10 @@ class TermSuite extends ParseSuite {
     val Apply(TermName("f"), Arg.Repeated(TermName("x")) :: Nil) = term("f(x: _*)")
   }
 
+  test("f(x = xs: _*)") {
+    val Term.Apply(Term.Name("f"), Seq(Term.Arg.Named(Term.Name("x"), Term.Arg.Repeated(Term.Name("xs"))))) = term("f(x = xs: _*)")
+  }
+
   test("a + ()") {
     val ApplyInfix(TermName("a"), TermName("+"), Nil, Nil) = term("a + ()")
   }
@@ -407,5 +411,14 @@ class TermSuite extends ParseSuite {
       val x = yz: (Y, Z)
       (x, x)
     }""")
+  }
+
+  test("spawn { var v: Int = _; ??? }") {
+    val Term.Apply(
+      Term.Name("spawn"),
+      Seq(
+        Term.Block(Seq(
+          Defn.Var(Nil, Seq(Pat.Var.Term(Term.Name("v"))), Some(Type.Name("Int")), None), Term.Name("???"))))) =
+    term("spawn { var v: Int = _; ??? }")
   }
 }

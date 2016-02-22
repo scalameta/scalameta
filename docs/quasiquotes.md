@@ -48,7 +48,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 
             | Quasiquote
 ------------|------------------------------
- Named      | `arg"$name = $expr"`
+ Named      | `arg"$name = $aexpr"`
  Repeated   | `arg"$expr: _*"`
  Expression | `arg"$expr"` (construction only), `arg"${expr: Term}"` (also deconstruction)
 
