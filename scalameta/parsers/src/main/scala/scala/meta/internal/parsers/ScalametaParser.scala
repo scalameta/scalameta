@@ -2189,7 +2189,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         val sid = stableId()
         val isVarPattern = sid match {
           case _: Term.Name.Quasi => false
-          case Term.Name(value) => !isBackquoted && value.head.isLower && value.head.isLetter
+          case Term.Name(value) => !isBackquoted && ((value.head.isLower && value.head.isLetter) || value.head == '_')
           case _ => false
         }
         if (token.is[NumericLiteral]) {

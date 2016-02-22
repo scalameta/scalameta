@@ -54,6 +54,10 @@ class PatSuite extends ParseSuite {
     intercept[ParseException] { pat("_: T forSome { type U }") }
   }
 
+  test("x@(__ : Y)") {
+    val Pat.Bind(Pat.Var.Term(Term.Name("x")), Pat.Typed(Pat.Var.Term(Term.Name("__")), Type.Name("Y"))) = pat("x@(__ : Y)")
+  }
+
   test("foo(x)") {
     val Extract(Term.Name("foo"), Nil, Var.Term(Term.Name("x")) :: Nil) = pat("foo(x)")
   }
