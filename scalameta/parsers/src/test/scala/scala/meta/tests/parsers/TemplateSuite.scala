@@ -30,6 +30,13 @@ class TemplateSuite extends ParseSuite {
       templStat("trait A extends B")
   }
 
+  test("trait Inner <: { val x : Int = 3 }") {
+    val Trait(Nil, Type.Name("Inner"), Nil, EmptyCtor(),
+              Template(Nil, Nil, EmptySelf(), Some(Seq(
+                Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit(3)))))) =
+    templStat("trait Inner <: { val x : Int = 3 }")
+  }
+
   test("trait A extends { val x: Int } with B") {
     val Trait(Nil, Type.Name("A"), Nil, EmptyCtor(),
               Template(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,

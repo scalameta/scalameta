@@ -3062,7 +3062,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  }}}
    */
   def templateOpt(owner: TemplateOwner): Template = {
-    if (token.is[`extends`] /* || token.is[`<:`] && mods.isTrait */) {
+    if (token.is[`extends`] || (token.is[`<:`] && owner.isTrait)) {
       next()
       template()
     } else {
