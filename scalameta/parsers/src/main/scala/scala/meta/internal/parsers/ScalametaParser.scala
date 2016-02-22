@@ -854,7 +854,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           }
           closeParenPos = in.tokenPos
           accept[`)`]
-          newLineOptWhenFollowedBy[`(`]
+          // NOTE: can't have this, because otherwise we run into #312
+          // newLineOptWhenFollowedBy[`(`]
           rawtss += rawts.toList
         }
         rawtss.toList
