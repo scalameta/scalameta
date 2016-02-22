@@ -59,6 +59,11 @@ class ImportSuite extends ParseSuite {
       templStat("import foo.{bar => _}")
   }
 
+  test("import foo.{_ => _}") {
+    val Import(Clause(TermName("foo"), Wildcard() :: Nil) :: Nil) =
+      templStat("import foo.{_ => _}")
+  }
+
   test("import foo.{bar => _, _}") {
     val Import(Clause(TermName("foo"), Unimport(Indeterminate("bar")) :: Wildcard() :: Nil) :: Nil) =
       templStat("import foo.{bar => _, _}")

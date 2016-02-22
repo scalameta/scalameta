@@ -2616,7 +2616,12 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           case to: Import.Selector.Wildcard => Import.Selector.Unimport(from.value)
           case other                        => unreachable(debug(other, other.show[Structure]))
         }
-      case other => other
+      // NOTE: this is completely nuts
+      case from: Import.Selector.Wildcard if token.is[`=>`] && ahead(token.is[`_ `]) =>
+        nextTwice()
+        from
+      case other =>
+        other
     }
   }
 
