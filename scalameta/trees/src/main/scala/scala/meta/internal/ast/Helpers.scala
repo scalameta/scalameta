@@ -176,7 +176,6 @@ private[meta] object Helpers {
       case _: Stat.Quasi => true
       case _: Import => true
       case _: Term => true
-      case stat: Defn.Var => stat.rhs.isDefined
       case _: Defn => true
       case _ => false
     }

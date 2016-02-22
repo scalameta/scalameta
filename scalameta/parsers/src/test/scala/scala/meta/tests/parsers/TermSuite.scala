@@ -412,4 +412,13 @@ class TermSuite extends ParseSuite {
       (x, x)
     }""")
   }
+
+  test("spawn { var v: Int = _; ??? }") {
+    val Term.Apply(
+      Term.Name("spawn"),
+      Seq(
+        Term.Block(Seq(
+          Defn.Var(Nil, Seq(Pat.Var.Term(Term.Name("v"))), Some(Type.Name("Int")), None), Term.Name("???"))))) =
+    term("spawn { var v: Int = _; ??? }")
+  }
 }
