@@ -196,6 +196,7 @@ private[meta] object Helpers {
       case _: Stat.Quasi => true
       case _: Defn.Val => true
       case _: Defn.Var => true
+      case _: Defn.Type => true
       case _ => false
     }
   }

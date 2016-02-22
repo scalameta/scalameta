@@ -3051,12 +3051,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     case v: Stat.Quasi => v
     case v: Defn.Val => v
     case v: Defn.Var => v
-    case t: Defn.Type =>
-      syntaxError("early type members are not allowed any longer. " +
-                  "Move them to the regular body: the semantics are the same.",
-                  at = t)
-    case other =>
-      syntaxError("not a valid early definition", at = other)
+    case t: Defn.Type => t
+    case other => syntaxError("not a valid early definition", at = other)
   }
 
   /** {{{
