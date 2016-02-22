@@ -596,7 +596,7 @@ private[meta] object inferTokens {
       case t: Defn.Trait =>    toks"${t.mods.`o_o_`}trait ${t.name.tks}${t.tparams.`[o,o]`}${t.ctor.tks}${apndTempl(t.templ)}"
       case t: Defn.Object =>   toks"${t.mods.`o_o_`}object ${t.name.tks}${apndTempl(t.templ)}"
       case t: Defn.Def =>      toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}${apndDeclTpe(t.decltpe)} = ${t.body.tks}"
-      case t: Defn.Macro =>    toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}: ${t.decltpe.tks} = macro ${t.body.tks}"
+      case t: Defn.Macro =>    toks"${t.mods.`o_o_`}def ${t.name.tks}${t.tparams.`[o,o]`}${apndTermParamss(t.paramss)}${apndDeclTpe(t.decltpe)} = macro ${t.body.tks}"
       case t: Pkg =>
         proto match {
           case Some(original: Pkg) =>

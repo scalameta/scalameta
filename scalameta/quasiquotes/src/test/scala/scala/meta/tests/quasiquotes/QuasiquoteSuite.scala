@@ -1530,7 +1530,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("1 q\"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr\"") { // TODO check for ... when #221 resolved
-  val q"..$mods def $name[..$tparams](..$paramss): $tpeopt = $expr" = q"private final def m[T, W](x: X, y: Y): R = r"
+    val q"..$mods def $name[..$tparams](..$paramss): $tpeopt = $expr" = q"private final def m[T, W](x: X, y: Y): R = r"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).show[Structure] === "Mod.Private(Name.Anonymous())")
     assert(mods(1).show[Structure] === "Mod.Final()")
@@ -1546,7 +1546,7 @@ class QuasiquoteSuite extends FunSuite {
   }
 
   test("2 q\"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr\"") { // TODO check for ... when #221 resolved
-  val mods = List(mod"private", mod"final")
+    val mods = List(mod"private", mod"final")
     val name = q"m"
     val tparams = List(tparam"T", tparam"W")
     val paramss = List(param"x: X", param"x: Y")
@@ -1555,8 +1555,8 @@ class QuasiquoteSuite extends FunSuite {
     assert(q"..$mods def $name[..$tparams](..$paramss): $tpeopt = $expr".show[Structure] === "Defn.Def(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Term.Name(\"m\"), Seq(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Some(Type.Name(\"R\")), Term.Name(\"r\"))")
   }
 
-  test("1 q\"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr\"") { // TODO check for ... when #221 resolved
-  val q"..$mods def $name[..$tparams](..$paramss): $tpe = macro $expr" = q"private final def m[T, W](x: X, y: Y): R = macro r"
+  test("1 q\"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr\"") { // TODO check for ... when #221 resolved
+    val q"..$mods def $name[..$tparams](..$paramss): $tpeopt = macro $expr" = q"private final def m[T, W](x: X, y: Y): R = macro r"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).show[Structure] === "Mod.Private(Name.Anonymous())")
     assert(mods(1).show[Structure] === "Mod.Final()")
@@ -1567,18 +1567,18 @@ class QuasiquoteSuite extends FunSuite {
     assert(paramss.toString === "List(x: X, y: Y)")
     assert(paramss(0).show[Structure] === "Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None)")
     assert(paramss(1).show[Structure] === "Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"Y\")), None)")
-    assert(tpe.show[Structure] === "Type.Name(\"R\")")
+    assert(tpeopt.show[Structure] === "Some(Type.Name(\"R\"))")
     assert(expr.show[Structure] === "Term.Name(\"r\")")
   }
 
-  test("2 q\"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr\"") { // TODO check for ... when #221 resolved
-  val mods = List(mod"private", mod"final")
+  test("2 q\"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr\"") { // TODO check for ... when #221 resolved
+    val mods = List(mod"private", mod"final")
     val name = q"m"
     val tparams = List(tparam"T", tparam"W")
     val paramss = List(param"x: X", param"x: Y")
-    val tpe = t"R"
+    val tpeopt = Some(t"R")
     val expr = q"r"
-    assert(q"..$mods def $name[..$tparams](..$paramss): $tpe = macro $expr".show[Structure] === "Defn.Macro(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Term.Name(\"m\"), Seq(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Type.Name(\"R\"), Term.Name(\"r\"))")
+    assert(q"..$mods def $name[..$tparams](..$paramss): $tpeopt = macro $expr".show[Structure] === "Defn.Macro(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Term.Name(\"m\"), Seq(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Some(Type.Name(\"R\")), Term.Name(\"r\"))")
   }
 
   test("1 q\"..$mods type $tname[..$tparams] = $tpe\"") {

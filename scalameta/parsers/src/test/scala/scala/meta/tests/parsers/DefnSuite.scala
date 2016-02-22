@@ -86,9 +86,15 @@ class DefnSuite extends ParseSuite {
     // assert(ret.hasExpr === true)
   }
 
+  test("def f(x: Int) = macro impl") {
+    val Defn.Macro(Nil, Term.Name("f"), Nil,
+                   (Term.Param(List(), Term.Name(x), Some(Type.Name("Int")), None) :: Nil) :: Nil,
+                   None, Term.Name("impl")) = templStat("def f(x: Int) = macro impl")
+  }
+
   test("def f(x: Int): Int = macro impl") {
     val Defn.Macro(Nil, Term.Name("f"), Nil,
                    (Term.Param(List(), Term.Name(x), Some(Type.Name("Int")), None) :: Nil) :: Nil,
-                   Type.Name("Int"), Term.Name("impl")) = templStat("def f(x: Int): Int = macro impl")
+                   Some(Type.Name("Int")), Term.Name("impl")) = templStat("def f(x: Int): Int = macro impl")
   }
 }

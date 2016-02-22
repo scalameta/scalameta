@@ -398,4 +398,14 @@ class TermSuite extends ParseSuite {
           Term.Block(List(Term.Name("Ok")))))))) =
       term("Action { implicit request: Request[AnyContent] => Ok }")
   }
+
+  test("#312") {
+    val Term.Block(Seq(
+      Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Term.Ascribe(Term.Name("yz"), Type.Tuple(Seq(Type.Name("Y"), Type.Name("Z"))))),
+      Term.Tuple(Seq(Term.Name("x"), Term.Name("x"))))) =
+    term("""{
+      val x = yz: (Y, Z)
+      (x, x)
+    }""")
+  }
 }

@@ -20,6 +20,7 @@
   1. `x + ()` is `x.+()` but not `x.+(())`
   1. `A.super[B]` could very well be allow to be an expression on its own
   1. Anonymous top-level type parameters
+  1. `import M.{_ => _}`
 
 ## Syntax spec bugs
 

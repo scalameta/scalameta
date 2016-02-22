@@ -118,7 +118,7 @@ private[meta] trait Api {
       case tree: impl.Decl.Def => methodType(tree.tparams, tree.paramss, tree.decltpe)
       case tree: impl.Decl.Type => tree.name
       case tree: impl.Defn.Def => methodType(tree.tparams, tree.paramss, tree.decltpe.getOrElse(tree.body.tpe))
-      case tree: impl.Defn.Macro => methodType(tree.tparams, tree.paramss, tree.decltpe)
+      case tree: impl.Defn.Macro => methodType(tree.tparams, tree.paramss, tree.decltpe.getOrElse(???))
       case tree: impl.Defn.Type => tree.name
       case tree: impl.Defn.Class => tree.name
       case tree: impl.Defn.Trait => tree.name

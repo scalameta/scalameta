@@ -854,7 +854,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           }
           closeParenPos = in.tokenPos
           accept[`)`]
-          newLineOptWhenFollowedBy[`(`]
+          // NOTE: can't have this, because otherwise we run into #312
+          // newLineOptWhenFollowedBy[`(`]
           rawtss += rawts.toList
         }
         rawtss.toList
@@ -1056,7 +1057,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
     // TODO: I have a feeling that we no longer need PatternContextSensitive
     // now that we have Pat.Type separate from Type
-    def patternTyp(allowImmediateTypevars: Boolean): Pat.Type = {
+    def patternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Pat.Type = {
       def loop(tpe: Type, convertTypevars: Boolean): Pat.Type = tpe match {
         case q: Type.Quasi =>
           q.become[Pat.Type.Quasi]
@@ -1112,18 +1113,22 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           tpe
       }
       val t: Type = {
-        val t = if (token.is[`(`]) tupleInfixType() else compoundType()
-        def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, typeName(), t1))
-        token match {
-          case _: `forSome` => next(); atPos(t, t)(Type.Existential(t, existentialStats()))
-          case _: Unquote | _: Ident if !isRawBar => infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
-          case _ => t
+        if (allowInfix) {
+          val t = if (token.is[`(`]) tupleInfixType() else compoundType()
+          def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, typeName(), t1))
+          token match {
+            case _: `forSome` => next(); atPos(t, t)(Type.Existential(t, existentialStats()))
+            case _: Unquote | _: Ident if !isRawBar => infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
+            case _ => t
+          }
+        } else {
+          compoundType()
         }
       }
       loop(t, convertTypevars = allowImmediateTypevars)
     }
 
-    def quasiquotePatternTyp(allowImmediateTypevars: Boolean): Pat.Type = autoPos {
+    def quasiquotePatternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Pat.Type = autoPos {
       // NOTE: As per quasiquotes.md
       // * pt"_" => Pat.Type.Wildcard (doesn't parse)
       // * pt"x" => Pat.Var.Type (needs postprocessing, parsed as Type.Name)
@@ -1137,7 +1142,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         case _ =>
           val bqIdent = isIdent && isBackquoted
           val nonbqIdent = isIdent && !isBackquoted
-          val ptpe = patternTyp(allowImmediateTypevars)
+          val ptpe = patternTyp(allowInfix = true, allowImmediateTypevars = false)
           ptpe match {
             case ptpe: Type.Name if nonbqIdent =>
               if (ptpe.value.head.isLower) atPos(ptpe, ptpe)(Pat.Var.Type(ptpe))
@@ -1150,7 +1155,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       }
     }
 
-    def patternTypeArgs() = inBrackets(commaSeparated(patternTyp(allowImmediateTypevars = true)))
+    def patternTypeArgs() = inBrackets(commaSeparated(patternTyp(allowInfix = true, allowImmediateTypevars = true)))
   }
 
   private trait AllowedName[T]
@@ -2053,20 +2058,20 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         p match {
           case p: Pat.Quasi =>
             nextOnce()
-            Pat.Typed(p, patternTyp(allowImmediateTypevars = false))
+            Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
           case p: Pat.Var.Term if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
             nextOnce()
             val wildcard = autoPos({ nextTwice(); Pat.Arg.SeqWildcard() })
             Pat.Bind(p, wildcard)
           case p: Pat.Var.Term =>
             nextOnce()
-            Pat.Typed(p, patternTyp(allowImmediateTypevars = false))
+            Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
           case p: Pat.Wildcard if dialect.bindToSeqWildcardDesignator == ":" && isColonWildcardStar =>
             nextThrice()
             Pat.Arg.SeqWildcard()
           case p: Pat.Wildcard =>
             nextOnce()
-            Pat.Typed(p, patternTyp(allowImmediateTypevars = false))
+            Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
           case p =>
             p
         }
@@ -2185,7 +2190,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         val sid = stableId()
         val isVarPattern = sid match {
           case _: Term.Name.Quasi => false
-          case Term.Name(value) => !isBackquoted && value.head.isLower && value.head.isLetter
+          case Term.Name(value) => !isBackquoted && ((value.head.isLower && value.head.isLetter) || value.head == '_')
           case _ => false
         }
         if (token.is[NumericLiteral]) {
@@ -2266,8 +2271,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     else seqPatterns()
   }
   def xmlLiteralPattern(): Pat = syntaxError("XML literals are not supported", at = in.token)
-  def patternTyp() = noSeq.patternTyp(allowImmediateTypevars = false)
-  def quasiquotePatternTyp() = noSeq.quasiquotePatternTyp(allowImmediateTypevars = false)
+  def patternTyp() = noSeq.patternTyp(allowInfix = true, allowImmediateTypevars = false)
+  def quasiquotePatternTyp() = noSeq.quasiquotePatternTyp(allowInfix = true, allowImmediateTypevars = false)
   def patternTypeArgs() = noSeq.patternTypeArgs()
 
 /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
@@ -2612,7 +2617,12 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           case to: Import.Selector.Wildcard => Import.Selector.Unimport(from.value)
           case other                        => unreachable(debug(other, other.show[Structure]))
         }
-      case other => other
+      // NOTE: this is completely nuts
+      case from: Import.Selector.Wildcard if token.is[`=>`] && ahead(token.is[`_ `]) =>
+        nextTwice()
+        from
+      case other =>
+        other
     }
   }
 
@@ -2735,10 +2745,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         }
         expr()
       }
-      if (isMacro) restype match {
-        case Some(restype) => Defn.Macro(mods, name, tparams, paramss, restype, rhs)
-        case None          => syntaxError("macros must have explicitly specified return types", at = name)
-      } else Defn.Def(mods, name, tparams, paramss, restype, rhs)
+      if (isMacro) Defn.Macro(mods, name, tparams, paramss, restype, rhs)
+      else Defn.Def(mods, name, tparams, paramss, restype, rhs)
     }
   }
 
