@@ -1028,18 +1028,25 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     }
 
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = atPos(t, auto) {
-      if (isIdentExcept("*") || token.is[Unquote]) {
-        val name = termName(advance = false)
-        val leftAssoc = name.isLeftAssoc
-        if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
-        val op = typeName()
-        newLineOptWhenFollowing(_.is[TypeIntro])
-        def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
-        if (leftAssoc)
-          infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
-        else
-          mkOp(infixType(InfixMode.RightOp))
-      } else t
+      if (isIdent || token.is[Unquote]) {
+        if (isRawStar && ahead(token.is[`)`] || token.is[`,`] || token.is[`=`] || token.is[`}`] || token.is[EOF])) {
+          // we assume that this is a type specification for a vararg parameter
+          t
+        } else {
+          val name = termName(advance = false)
+          val leftAssoc = name.isLeftAssoc
+          if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
+          val op = typeName()
+          newLineOptWhenFollowing(_.is[TypeIntro])
+          def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
+          if (leftAssoc)
+            infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
+          else
+            mkOp(infixType(InfixMode.RightOp))
+        }
+      } else {
+        t
+      }
     }
 
     /** {{{
