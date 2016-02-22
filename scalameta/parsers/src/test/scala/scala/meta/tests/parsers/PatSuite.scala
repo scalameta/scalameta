@@ -3,6 +3,7 @@ package parsers
 
 import scala.meta.internal.ast._, Pat.{Type => _, _}
 import scala.meta.dialects.Scala211
+import scala.meta.parsers.common.ParseException
 
 class PatSuite extends ParseSuite {
   test("_") {
@@ -43,6 +44,14 @@ class PatSuite extends ParseSuite {
 
   test("_: (t Map u)") {
     val Typed(Wildcard(), Pat.Type.ApplyInfix(Type.Name("t"), Type.Name("Map"), Type.Name("u"))) = pat("_: (t Map u)")
+  }
+
+  test("_: T Map U") {
+    intercept[ParseException] { pat("_: T Map U") }
+  }
+
+  test("_: T forSome { type U }") {
+    intercept[ParseException] { pat("_: T forSome { type U }") }
   }
 
   test("foo(x)") {
