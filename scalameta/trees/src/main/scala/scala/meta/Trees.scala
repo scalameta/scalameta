@@ -246,7 +246,7 @@ package scala.meta.internal.ast {
     @ast class Eta(term: Term) extends Term
     @branch trait Arg extends api.Term.Arg with Tree
     object Arg {
-      @ast class Named(name: Name, rhs: Term) extends Arg
+      @ast class Named(name: Name, rhs: Term.Arg) extends Arg
       @ast class Repeated(arg: Term) extends Arg
     }
     @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends api.Term.Param with Member

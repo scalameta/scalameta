@@ -1800,12 +1800,14 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     if (token.isNot[`{`] && token.isNot[`(`]) prefixExpr() :: Nil
     else {
       def argsToTerm(args: List[Term.Arg], openParenPos: Int, closeParenPos: Int): Term = {
+        def badRep(rep: Term.Arg.Repeated) = syntaxError("repeated argument not allowed here", at = rep)
         def loop(args: List[Term.Arg]): List[Term] = args match {
-          case Nil                              => Nil
-          case (t: Term) :: rest                => t :: loop(rest)
-          case (nmd: Term.Arg.Named) :: rest    => atPos(nmd, nmd)(Term.Assign(nmd.name, nmd.rhs)) :: loop(rest)
-          case (rep: Term.Arg.Repeated) :: rest => syntaxError("repeated argument not allowed here", at = rep)
-          case _                                => unreachable(debug(args))
+          case Nil                                                 => Nil
+          case (t: Term) :: rest                                   => t :: loop(rest)
+          case (nmd @ Term.Arg.Named(name, rhs: Term)) :: rest     => atPos(nmd, nmd)(Term.Assign(name, rhs)) :: loop(rest)
+          case (Term.Arg.Named(_, rep: Term.Arg.Repeated)) :: rest => badRep(rep)
+          case (rep: Term.Arg.Repeated) :: rest                    => badRep(rep)
+          case _                                                   => unreachable(debug(args))
         }
         atPos(openParenPos, closeParenPos)(makeTupleTerm(loop(args)))
       }
@@ -1825,11 +1827,14 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     expr() match {
       case q: Quasi =>
         q.become[Term.Arg.Quasi]
-      case Term.Ascribe(t, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
+      case Term.Ascribe(t1, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
         next()
-        atPos(t, auto)(Term.Arg.Repeated(t))
-      case Term.Assign(t: Term.Name, rhs) =>
-        atPos(t, auto)(Term.Arg.Named(t, rhs))
+        atPos(t1, auto)(Term.Arg.Repeated(t1))
+      case Term.Assign(t1: Term.Name, Term.Ascribe(t2, Type.Placeholder(Type.Bounds(None, None)))) if isIdentOf("*") =>
+        next()
+        atPos(t1, auto)(Term.Arg.Named(t1, atPos(t2, auto)(Term.Arg.Repeated(t2))))
+      case Term.Assign(t2: Term.Name, rhs) =>
+        atPos(t2, auto)(Term.Arg.Named(t2, rhs))
       case other =>
         other
     }
