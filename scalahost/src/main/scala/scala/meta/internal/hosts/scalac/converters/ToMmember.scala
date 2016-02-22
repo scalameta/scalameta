@@ -376,7 +376,7 @@ trait ToMmember extends ReflectToolkit with MetaToolkit {
           case _: l.Val => m.Defn.Val(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), Some(mtpe), mbody).member
           case _: l.Var => m.Defn.Var(mmods, List(m.Pat.Var.Term(mname.require[m.Term.Name])), Some(mtpe), mmaybeBody).member
           case _: l.Def => m.Defn.Def(mmods, mname.require[m.Term.Name], mtparams, mvparamss, Some(mtpe), mbody)
-          case _: l.Macro => m.Defn.Macro(mmods, mname.require[m.Term.Name], mtparams, mvparamss, mtpe, mbody)
+          case _: l.Macro => m.Defn.Macro(mmods, mname.require[m.Term.Name], mtparams, mvparamss, Some(mtpe), mbody)
           case _: l.Type => m.Defn.Type(mmods, mname.require[m.Type.Name], mtparams, mtpe)
           case _: l.Clazz => m.Defn.Class(mmods, mname.require[m.Type.Name], mtparams, mctor, mtemplate)
           case _: l.Trait => m.Defn.Trait(mmods, mname.require[m.Type.Name], mtparams, mctor, mtemplate)

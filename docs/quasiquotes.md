@@ -151,7 +151,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Val            | `q"..$mods val ..$patsnel: $tpeopt = $expr"`
  Var            | `q"..$mods var ..$patsnel: $tpeopt = $expropt"`
  Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
- Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpe = macro $expr"`
+ Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
  Class          | `q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`

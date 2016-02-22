@@ -484,7 +484,7 @@ package scala.meta.internal.ast {
                      name: Term.Name,
                      tparams: Seq[impl.Type.Param],
                      paramss: Seq[Seq[Term.Param]],
-                     decltpe: impl.Type,
+                     decltpe: Option[impl.Type],
                      body: Term) extends Defn with Member.Term
     @ast class Type(mods: Seq[Mod],
                     name: impl.Type.Name,

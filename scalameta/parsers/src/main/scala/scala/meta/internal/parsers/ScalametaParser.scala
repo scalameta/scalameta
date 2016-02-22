@@ -2739,10 +2739,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         }
         expr()
       }
-      if (isMacro) restype match {
-        case Some(restype) => Defn.Macro(mods, name, tparams, paramss, restype, rhs)
-        case None          => syntaxError("macros must have explicitly specified return types", at = name)
-      } else Defn.Def(mods, name, tparams, paramss, restype, rhs)
+      if (isMacro) Defn.Macro(mods, name, tparams, paramss, restype, rhs)
+      else Defn.Def(mods, name, tparams, paramss, restype, rhs)
     }
   }
 
