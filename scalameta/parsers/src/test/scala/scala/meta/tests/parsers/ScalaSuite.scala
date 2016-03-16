@@ -413,7 +413,7 @@ class ScalaSuite extends InferSuite {
     val Term.Match(_, case1 :: case2 :: Nil) = templStatForceInfer("??? match { case x => x; case List(x, y) => println(x); println(y) }")
     assert(case1.toString === """
       |case x =>
-      |  x;
+      |  x
     """.trim.stripMargin)
     assert(case2.toString === """
       |case List(x, y) =>
