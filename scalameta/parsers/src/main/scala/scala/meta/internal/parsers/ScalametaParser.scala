@@ -1892,11 +1892,13 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     require(token.isNot[`case`] && debug(token))
     Case(pattern().require[Pat], guard(), {
       accept[`=>`]
-      autoPos(blockStatSeq() match {
+      val start = in.tokenPos
+      def end = in.prevTokenPos
+      blockStatSeq() match {
         case List(q: Quasi) => q.become[Term.Quasi]
         case List(term: Term) => term
-        case other => Term.Block(other)
-      })
+        case other => atPos(start, end)(Term.Block(other))
+      }
     })
   }
 

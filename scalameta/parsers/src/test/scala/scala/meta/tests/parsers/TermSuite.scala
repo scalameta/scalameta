@@ -421,4 +421,13 @@ class TermSuite extends ParseSuite {
           Defn.Var(Nil, Seq(Pat.Var.Term(Term.Name("v"))), Some(Type.Name("Int")), None), Term.Name("???"))))) =
     term("spawn { var v: Int = _; ??? }")
   }
+
+  test("#345") {
+    val Term.Match(_, Seq(Case(_, _, rhs), _)) = term("""x match {
+      case x => true
+      // sobaka
+      case y => y
+    }""")
+    assert(rhs.tokens.toList.toString === "List(true (26..30))")
+  }
 }

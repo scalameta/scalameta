@@ -6,6 +6,8 @@ import org.scalameta.show._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.internal.{ast => impl}
 import scala.meta.prettyprinters.{Syntax, Structure}
+import scala.meta.tokens.Token
+import scala.meta.tokens.Token._
 
 object TreeStructure {
   def apply[T <: Tree]: Structure[T] = {
@@ -24,10 +26,15 @@ object TreeStructure {
         r(x.productIterator.map(showRaw).toList, ", ")
       }
       x match {
-        case x: impl.Quasi => default
-        case x @ impl.Lit(value: String) => s(enquote(value, DoubleQuotes))
-        case x @ impl.Lit(_) => import scala.meta.dialects.Scala211; s(x.show[Syntax])
-        case x => default
+        case x: impl.Quasi =>
+          default
+        case x @ impl.Lit(value: String) =>
+          s(enquote(value, DoubleQuotes))
+        case x @ impl.Lit(_) =>
+          def isRelevantToken(tok: Token) = tok.isInstanceOf[Literal] || (tok.isInstanceOf[Ident] && tok.code == "-")
+          s(x.tokens.filter(isRelevantToken).map(_.show[Syntax]).mkString)
+        case x =>
+          default
       }
     }, ")"))
   }
