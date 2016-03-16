@@ -1724,7 +1724,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     else {
       val op = termName()
       if (op.value == "-" && token.is[NumericLiteral])
-        simpleExprRest(literal(isNegated = true), canApply = true)
+        simpleExprRest(atPos(op, auto)(literal(isNegated = true)), canApply = true)
       else
         atPos(op, auto)(Term.ApplyUnary(op, simpleExpr()))
     }
@@ -2208,7 +2208,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         if (token.is[NumericLiteral]) {
           sid match {
             case Term.Name("-") =>
-              return literal(isNegated = true)
+              return atPos(sid, auto)(literal(isNegated = true))
             case _ =>
           }
         }

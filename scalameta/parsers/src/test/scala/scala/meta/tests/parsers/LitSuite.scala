@@ -90,5 +90,10 @@ class LitSuite extends ParseSuite {
     val Lit(-889275714) = term("0xCAFEBABE")
     val Lit(889275714) = term("-0xCAFEBABE")
   }
+
+  test("#344") {
+    val Term.ApplyInfix(_, _, _, Seq(minusOne)) = term("1 + -1")
+    assert(minusOne.tokens.toList.toString === "List(- (4..5), 1 (5..6))")
+  }
 }
 
