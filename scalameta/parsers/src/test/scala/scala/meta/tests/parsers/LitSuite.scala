@@ -95,5 +95,10 @@ class LitSuite extends ParseSuite {
     val Term.ApplyInfix(_, _, _, Seq(minusOne)) = term("1 + -1")
     assert(minusOne.tokens.toList.toString === "List(- (4..5), 1 (5..6))")
   }
+
+  test("#342") {
+    import scala.meta.prettyprinters._
+    assert(term("""( 50).toString""").show[Structure] === "Term.Select(Lit(50), Term.Name(\"toString\"))")
+  }
 }
 
