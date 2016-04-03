@@ -3,8 +3,6 @@ package inputs
 
 import java.nio.charset.Charset
 import org.scalameta.convert._
-import scala.meta.tokens._
-import scala.meta.tokenizers.common._
 
 trait Content extends Input {
   def chars: Array[Char]

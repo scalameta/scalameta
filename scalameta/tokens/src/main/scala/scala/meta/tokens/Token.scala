@@ -17,7 +17,7 @@ import scala.meta.internal.prettyprinters._
   def dialect: Dialect
   def start: Int
   def end: Int
-  def position: Position = Position.Range(this)
+  def position: Position = new Position.Range(content, Point.Offset(content, start), Point.Offset(content, start), Point.Offset(content, end))
   def adjust(
     content: Content = this.content,
     dialect: Dialect = this.dialect,

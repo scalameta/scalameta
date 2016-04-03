@@ -8,7 +8,8 @@ import scala.meta.tokens._
 import scala.meta.internal.tokenizers._
 
 trait Tokenize {
-  def apply(content: Content)(implicit dialect: Dialect): Tokens
+  // TODO: see whether it's possible to make the return type less specific
+  def apply(content: Content)(implicit dialect: Dialect): Tokens.Tokenized
 }
 
 object Tokenize {

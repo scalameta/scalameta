@@ -172,13 +172,13 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         // To do that, we create InputSlice over the `wholeFileSource` and fixup positions to account for $$s.
         crudeTokens.map(crudeToken => {
           val delta = partOffsetToSourceOffset(crudeToken.start) - (start + crudeToken.start)
-          crudeToken.adjust(content = sliceFileContent(start, end), delta = delta)
+          crudeToken.adjust(content = sliceFileContent(start, end + 1), delta = delta)
         })
       case (part, arg) =>
         c.abort(part.pos, "quasiquotes can only be used with literal strings")
     }
     def merge(index: Int, parttokens: MetaTokens, arg: ReflectTree): MetaTokens = {
-      implicit class RichMetaToken(token: MetaToken) { def absoluteStart = token.start + token.content.require[SliceContent].start }
+      implicit class RichMetaToken(token: MetaToken) { def absoluteStart = token.start + token.content.require[MetaInput.Slice].from }
       val part: MetaTokens = {
         val bof +: payload :+ eof = parttokens
         require(bof.isInstanceOf[MetaToken.BOF] && eof.isInstanceOf[MetaToken.EOF] && debug(parttokens))
@@ -192,7 +192,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         } else {
           val unquoteStart = parttokens.last.absoluteStart
           val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
-          val unquoteContent = sliceFileContent(unquoteStart, unquoteEnd)
+          val unquoteContent = sliceFileContent(unquoteStart, unquoteEnd + 1)
           val unquoteDialect = scala.meta.dialects.Quasiquote(metaDialect)
           MetaTokens(MetaToken.Unquote(unquoteContent, unquoteDialect, 0, unquoteEnd - unquoteStart + 1, arg))
         }
@@ -217,17 +217,14 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
     if (wholeFileSource.file.file != null) MetaInput.File(wholeFileSource.file.file)
     else MetaInput.String(new String(wholeFileSource.content)) // NOTE: can happen in REPL or in custom Global
   }
-  private final case class SliceContent(content: MetaContent, start: Int, end: Int) extends MetaContent {
-    require(0 <= start && start <= content.chars.length)
-    require(-1 <= end && end < content.chars.length)
-    lazy val chars = content.chars.slice(start, end + 1)
-  }
-  private def sliceFileContent(start: Int, end: Int) = SliceContent(wholeFileContent, start, end)
+  private def sliceFileContent(from: Int, until: Int) = MetaInput.Slice(wholeFileContent, from, until)
   implicit def metaPositionToReflectPosition(pos: MetaPosition): ReflectPosition = {
-    val SliceContent(content, start, end) = pos.point.input
-    require(content == wholeFileContent && debug(pos))
-    val sourceOffset = start + pos.point.offset
-    c.macroApplication.pos.focus.withPoint(sourceOffset)
+    val (content, contentStart) = pos.content match {
+      case MetaInput.Slice(content, contentStart, _) => (content, contentStart)
+      case content => (content, 0)
+    }
+    require(content == wholeFileContent && debug(pos, content, wholeFileContent))
+    c.macroApplication.pos.focus.withPoint(contentStart + pos.point.offset)
   }
 
   private def hygienifySkeleton(meta: MetaTree): MetaTree = {

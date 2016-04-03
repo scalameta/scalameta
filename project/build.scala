@@ -24,6 +24,7 @@ object build extends Build {
     artifacts,
     dialects,
     exceptions,
+    inputs,
     interactive,
     parsers,
     prettyprinters,
@@ -76,6 +77,15 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's baseline exceptions"
   ) dependsOn (foundation)
+
+  lazy val inputs = Project(
+    id   = "inputs",
+    base = file("scalameta/inputs")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's APIs for source code in textual format"
+  ) dependsOn (foundation, exceptions)
 
   lazy val interactive = Project(
     id   = "interactive",
@@ -152,7 +162,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's tokens and token-based abstractions (inputs and positions)",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
-  ) dependsOn (foundation, exceptions, prettyprinters, dialects)
+  ) dependsOn (foundation, exceptions, prettyprinters, dialects, inputs)
 
   lazy val tql = Project(
     id   = "tql",
@@ -172,7 +182,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's abstract syntax trees",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
-  ) dependsOn (foundation, exceptions, prettyprinters, tokens, tokenquasiquotes)
+  ) dependsOn (foundation, exceptions, prettyprinters, inputs, tokens, tokenquasiquotes)
 
   lazy val scalameta = Project(
     id   = "scalameta",

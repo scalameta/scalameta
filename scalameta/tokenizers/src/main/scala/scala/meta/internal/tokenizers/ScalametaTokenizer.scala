@@ -12,7 +12,7 @@ import scala.meta.tokens._
 import scala.meta.tokenizers._
 
 private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialect: Dialect) {
-  def tokenize(): Tokens = {
+  def tokenize(): Tokens.Tokenized = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER       => Token.Ident(content, dialect, curr.offset, curr.endOffset + 1)
@@ -274,7 +274,7 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
 
 object ScalametaTokenizer {
   def toTokenize: Tokenize = new Tokenize {
-    def apply(content: Content)(implicit dialect: Dialect): Tokens = {
+    def apply(content: Content)(implicit dialect: Dialect): Tokens.Tokenized = {
       val tokenizer = new ScalametaTokenizer(content)(dialect)
       tokenizer.tokenize()
     }

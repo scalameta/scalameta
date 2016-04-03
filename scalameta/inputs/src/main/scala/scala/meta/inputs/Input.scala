@@ -6,11 +6,9 @@ import org.scalameta.data._
 import org.scalameta.convert._
 import org.scalameta.invariants._
 import scala.collection.{immutable, mutable}
-import scala.meta.tokens._
-import scala.meta.tokenizers.common._
 
 // TODO: Input is really sealed, with the only two direct subclasses being Content and Tokens
-// however, I don't really feel like mixing all the three concepts in a single file
+// however, I don't really feel like mixing all the three concepts in a single file and a single project
 trait Input extends Serializable
 
 object Input {
@@ -70,6 +68,11 @@ object Input {
       private def readResolve(): AnyRef = orig
       override def toString = s"Proxy($orig)"
     }
+  }
+
+  @data class Slice(content: Content, from: Int, until: Int) extends Content {
+    lazy val chars = content.chars.slice(from, until)
+    override def toString = s"Input.Slice($content, $from, $until)"
   }
 
   implicit val charsToInput: Convert[Array[Char], Input] = Convert(chars => Input.String(new scala.Predef.String(chars)))

@@ -39,23 +39,27 @@ package scala.meta {
       def input: Input = tree.tokens.input
       def dialect: Dialect = tree.tokens.dialect
       def position: Position = {
-        // NOTE: can't do Position(tree.tokens.head, tree.tokens.last) because of two reasons:
-        // 1) a tree can have no tokens (e.g. a synthetic primary constructor), but we still need to compute a position from it
-        // 2) if a tree is parsed from Input.Virtual, then we can't really say that it has any position
-        // TODO: compute something sensible for Position.point
-        tree.tokens match {
-          case Tokens.Slice(Tokens.Tokenized(content, _, tokens @ _*), from, until) =>
-            Position.Range(content, tokens(from).position.start, tokens(from).position.start, tokens(until - 1).position.end)
-          case other @ Tokens.Slice(basis, from, _) =>
-            Position.Assorted(other, basis(from).position.start)
-          case Tokens.Tokenized(content, _, tokens @ _*) =>
-            Position.Range(content, tokens.head.position.start, tokens.head.position.start, tokens.last.position.end)
-          case other =>
-            Position.Assorted(other, other.head.position.start)
+        val (first, last) = tree.tokens match {
+          case Tokens.Slice(tokens, from, until) => (tokens(from), tokens(until - 1))
+          case other => (other.head, other.last)
+        }
+        if (first.content == last.content && !first.content.isInstanceOf[Input.Slice]) {
+          val content = first.content
+          Position.Range(content, first.position.start, first.position.start, last.position.end)
+        } else {
+          // NOTE: we assume that tree.tokens represent a contiguous excerpt from a content.
+          // While it is true that Tokens(...) is general enough to break this assumption,
+          // that never happens at the moment, so let's not complicate things.
+          val Input.Slice(cf, sf, _) = first.content
+          val Input.Slice(cl, sl, _) = last.content
+          val content = { require(cf == cl); cf }
+          val start = Point.Offset(content, first.start + sf)
+          val end = Point.Offset(content, last.end + sl)
+          Position.Range(content, start, start, end)
         }
       }
       def start: Point = tree.position.start
-      def point: Point = tree.position.point
+      def point: Point = tree.position.point // TODO: at the moment, Tree.point is always equal to Tree.start;
       def end: Point = tree.position.end
     }
   }

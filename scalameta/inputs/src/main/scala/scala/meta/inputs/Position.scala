@@ -3,32 +3,17 @@ package inputs
 
 import org.scalameta.adt._
 import org.scalameta.invariants._
-import scala.meta.tokens._
 
 @root trait Position {
-  def input: Input
+  def content: Content
   def start: Point
   def point: Point
   def end: Point
 }
 
 object Position {
-  @leaf class Assorted(tokens: Tokens, point: Point) extends Position {
-    def input = tokens
-    def start = Point.Assorted(tokens)
-    def end = Point.Assorted(tokens)
-  }
-  @leaf class Range(content: Content, start: Point, point: Point, end: Point) extends Position {
-    def input = content
-  }
+  @leaf class Range(content: Content, start: Point, point: Point, end: Point) extends Position
   object Range {
-    def apply(token: Token): Position = {
-      val content = token.content
-      val start = Point.Offset(token.content, token.start)
-      val point = start
-      val end = Point.Offset(token.content, token.end)
-      new Position.Range(content, start, point, end)
-    }
     def apply(content: Content, start: Point, point: Point, end: Point): Position = {
       new Position.Range(content, start, point, end)
     }
@@ -36,21 +21,14 @@ object Position {
 }
 
 @root trait Point {
-  def input: Input
+  def content: Content
   def offset: Int
   def line: Int
   def column: Int
 }
 
 object Point {
-  @leaf class Assorted(tokens: Tokens) extends Point {
-    def input = tokens
-    def offset = -1
-    def line = -1
-    def column = -1
-  }
   @leaf class Offset(content: Content, offset: Int) extends Point {
-    def input = content
     private lazy val (eolCount, eolPos) = {
       var i = 0
       var eolCount = 0
