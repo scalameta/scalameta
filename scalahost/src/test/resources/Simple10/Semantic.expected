@@ -1,8 +1,0 @@
-package Simple10
-object M extends scala.AnyRef() {
-  {
-    immutable.this.List.apply[Int](1, 2, 3, 4)
-    immutable.this.List.apply[Int](1, 2, 3, 4)
-    immutable.this.List.apply[Int](1, 2, 3, 4)
-  }
-}

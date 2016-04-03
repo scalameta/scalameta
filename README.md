@@ -12,7 +12,7 @@ Based on our experiences with developing scala.tools.nsc and scala.reflect, we h
 
 ### How to use
 
-Even though scala.meta hasn't yet reached 0.1, there is a number of early adopters who have successfully used our project to solve real-life metaprogramming problems.
+Even though scala.meta hasn't yet reached 1.0, there is a number of early adopters who have successfully used our project to solve real-life metaprogramming problems.
 Consult [https://github.com/scalameta/tutorial](https://github.com/scalameta/tutorial) to learn about fundamental concepts and principal use cases for scala.meta in a series of practical step-by-step guides.
 
 ### How to contribute

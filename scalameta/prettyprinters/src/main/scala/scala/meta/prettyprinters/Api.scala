@@ -17,6 +17,4 @@ private[meta] trait Aliases {
 
   @deprecated("use show[Syntax] instead", "0.0.3") type Code[T] = scala.meta.prettyprinters.Syntax[T]
   type Syntax[T] = scala.meta.prettyprinters.Syntax[T]
-
-  type Semantics[T] = scala.meta.prettyprinters.Semantics[T]
 }
