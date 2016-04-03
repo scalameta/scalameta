@@ -34,7 +34,7 @@ class QuasiquoteMacros(val c: Context) {
       }
       val qparser = {
         val qunsafeResults = qtypes.map(qtype => q"""
-          type Parse[T] = _root_.scala.meta.parsers.common.Parse[T]
+          type Parse[T] = _root_.scala.meta.parsers.Parse[T]
           val parse = _root_.scala.Predef.implicitly[Parse[$qtype]]
           parse(input)(dialect)
         """)

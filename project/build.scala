@@ -92,7 +92,7 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's default implementation of the Parse[T] typeclass"
+    description := "Scala.meta's API for parsing and its baseline implementation"
   ) dependsOn (foundation, exceptions, trees, tokens, tokenizers % "test", tql % "test")
 
   lazy val prettyprinters = Project(

@@ -16,7 +16,6 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import org.scalameta.debug._
 import scala.meta.parsers._
-import scala.meta.parsers.common.ParseException
 import scala.meta.tokenizers._
 import scala.meta.tokenizers.common.TokenizeException
 import scala.meta.prettyprinters._

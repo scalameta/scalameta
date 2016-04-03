@@ -1,6 +1,5 @@
 package scala.meta
 package parsers
-package common
 
 import org.scalameta.data._
 import org.scalameta.unreachable

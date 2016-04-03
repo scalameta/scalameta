@@ -1,7 +1,7 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta.parsers.common.ParseException
+import scala.meta.parsers.ParseException
 import scala.meta.internal.ast._
 import scala.meta.dialects.Scala211
 

@@ -3,7 +3,7 @@ package parsers
 
 import scala.meta.internal.ast._, Pat.{Type => _, _}
 import scala.meta.dialects.Scala211
-import scala.meta.parsers.common.ParseException
+import scala.meta.parsers.ParseException
 
 class PatSuite extends ParseSuite {
   test("_") {
