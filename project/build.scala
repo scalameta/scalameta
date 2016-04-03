@@ -6,7 +6,7 @@ import sbtunidoc.Plugin._
 import UnidocKeys._
 
 object build extends Build {
-  lazy val ScalaVersion = "2.11.7"
+  lazy val ScalaVersion = "2.11.8"
   lazy val LibraryVersion = "0.1.0-SNAPSHOT"
 
   lazy val root = Project(
@@ -191,7 +191,7 @@ object build extends Build {
     organization := "org.scalameta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     publishMavenStyle := true,
