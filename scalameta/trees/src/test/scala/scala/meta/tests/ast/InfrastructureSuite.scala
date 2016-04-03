@@ -51,16 +51,13 @@ class InfrastructureSuite extends FunSuite {
   }
 
   // NOTE: This situation is impossible as long as we validate state transitions,
-  // i.e. when we require that withAttrs can only be called on unattributed trees
-  // and withExpansion can only be called on partially attributed trees.
+  // i.e. when we require that withAttrs can only be called on unattributed trees.
   //
   // test("TYPECHECKED resets when attributes are touched") {
   //   val x1 = foo.setTypechecked
   //   val x2 = x1.withAttrs(Denotation.Zero, Typing.Zero)
-  //   val x3 = x1.withExpansion(Expansion.Zero)
   //   assert(x1.isTypechecked == true)
   //   assert(x2.isTypechecked == false)
-  //   assert(x3.isTypechecked == false)
   // }
 
   test("TYPECHECKED resets when the tree is copied") {
@@ -109,11 +106,6 @@ class InfrastructureSuite extends FunSuite {
     intercept[UnsupportedOperationException] { x1.setTypechecked }
   }
 
-  test("TYPECHECKED crashes when expansion is zero") {
-    val x1 = foo.privateCopy(expansion = Expansion.Zero)
-    intercept[UnsupportedOperationException] { x1.setTypechecked }
-  }
-
   test("Typing.Nonrecursive is really lazy") {
     val x1 = Typing.Nonrecursive(??? : Type)
     val x2 = x1.map(_ => ??? : Type)
@@ -123,12 +115,9 @@ class InfrastructureSuite extends FunSuite {
 
   private def denot = Denotation.Single(Prefix.Zero, Symbol.RootPackage)
   private def typing = Foo.setTypechecked
-  private def expansion = u.withAttrs(denot, typing).setTypechecked
   private def u = Term.Name("u")
-  private def pa1 = u.withAttrs(denot, typing)
-  private def pa2 = u.withExpansion(expansion)
-  private def pa3 = u.withAttrs(denot, typing).withExpansion(expansion)
-  private def a = pa3.setTypechecked
+  private def pa = u.withAttrs(denot, typing)
+  private def a = pa.setTypechecked
 
   implicit class XtensionStateTree(tree: Tree) {
     private def invoke(name: String): Boolean = {
@@ -146,15 +135,9 @@ class InfrastructureSuite extends FunSuite {
     assert(u.isPA === false)
     assert(u.isA === false)
 
-    assert(pa1.isU === false)
-    assert(pa1.isPA === true)
-    assert(pa1.isA === false)
-    assert(pa2.isU === false)
-    assert(pa2.isPA === true)
-    assert(pa2.isA === false)
-    assert(pa3.isU === false)
-    assert(pa3.isPA === true)
-    assert(pa3.isA === false)
+    assert(pa.isU === false)
+    assert(pa.isPA === true)
+    assert(pa.isA === false)
 
     assert(a.isU === false)
     assert(a.isPA === false)
@@ -165,12 +148,8 @@ class InfrastructureSuite extends FunSuite {
     val Term.Select(u1, _) = Term.Select(u, Term.Name("bar"))
     assert(u1.isU === true)
 
-    val Term.Select(pa11, _) = Term.Select(pa1, Term.Name("bar"))
-    val Term.Select(pa21, _) = Term.Select(pa2, Term.Name("bar"))
-    val Term.Select(pa31, _) = Term.Select(pa3, Term.Name("bar"))
-    assert(pa11.isPA === true)
-    assert(pa21.isPA === true)
-    assert(pa31.isPA === true)
+    val Term.Select(pa1, _) = Term.Select(pa, Term.Name("bar"))
+    assert(pa1.isPA === true)
 
     val Term.Select(a1, _) = Term.Select(a, Term.Name("bar"))
     assert(a1.isA === true)
@@ -180,12 +159,8 @@ class InfrastructureSuite extends FunSuite {
     val u1 = u.copy()
     assert(u1.isU === true)
 
-    val pa11 = pa1.copy()
-    val pa21 = pa2.copy()
-    val pa31 = pa3.copy()
-    assert(pa11.isU === true)
-    assert(pa21.isU === true)
-    assert(pa31.isU === true)
+    val pa1 = pa.copy()
+    assert(pa1.isU == true)
 
     val a1 = a.copy()
     assert(a1.isU === true)
@@ -195,38 +170,17 @@ class InfrastructureSuite extends FunSuite {
     val u1 = u.withAttrs(denot, typing)
     assert(u1.isPA === true)
 
-    val pa11 = pa1.withAttrs(denot, typing)
-    val pa21 = pa2.withAttrs(denot, typing)
-    val pa31 = pa3.withAttrs(denot, typing)
-    assert(pa11.isPA === true)
-    assert(pa21.isPA === true)
-    assert(pa31.isPA === true)
+    val pa1 = pa.withAttrs(denot, typing)
+    assert(pa1.isPA === true)
 
     intercept[UnsupportedOperationException] { a.withAttrs(denot, typing) }
-  }
-
-  test("withExpansion transitions") {
-    val u1 = u.withExpansion(expansion)
-    assert(u1.isPA === true)
-
-    val pa11 = pa1.withExpansion(expansion)
-    val pa21 = pa2.withExpansion(expansion)
-    val pa31 = pa3.withExpansion(expansion)
-    assert(pa11.isPA === true)
-    assert(pa21.isPA === true)
-    assert(pa31.isPA === true)
-
-    intercept[UnsupportedOperationException] { a.withExpansion(expansion) }
   }
 
   test("setTypechecked transitions") {
     intercept[UnsupportedOperationException] { u.setTypechecked }
 
-    val pa11 = pa1.setTypechecked
-    assert(pa11.isA === true)
-    intercept[UnsupportedOperationException] { pa2.setTypechecked }
-    val pa31 = pa3.setTypechecked
-    assert(pa31.isA === true)
+    val pa1 = pa.setTypechecked
+    assert(pa1.isA === true)
 
     val a1 = a.setTypechecked
     assert(a1.isA === true)

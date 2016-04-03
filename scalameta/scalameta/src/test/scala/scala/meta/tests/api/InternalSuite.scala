@@ -104,35 +104,4 @@ class InternalSuite extends FunSuite {
       val x1: s.Typing = x.flatMap(tpe => ??? : s.Typing)
     """) === "")
   }
-
-  test("Expansion.ContentType") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      import scala.meta.internal.{semantic => s}
-      def test[T >: Term <: Term] = ???
-      test[s.Expansion.ContentType]
-      test[s.Expansion#ContentType]
-    """) === "")
-  }
-
-  test("Expansion.map") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      import scala.meta.internal.{semantic => s}
-      val x: s.Expansion = ???
-      val x1: s.Expansion = x.map(term => term: Term)
-    """) === "")
-  }
-
-  test("Expansion.flatMap") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      import scala.meta.internal.{semantic => s}
-      val x: s.Expansion = ???
-      val x1: s.Expansion = x.flatMap(term => ??? : s.Expansion)
-    """) === "")
-  }
 }

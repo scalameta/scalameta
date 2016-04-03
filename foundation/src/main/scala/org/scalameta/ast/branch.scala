@@ -89,15 +89,12 @@ class BranchMacros(val c: Context) extends AstReflection {
         if (isTerm) {
           qstats :+= quasigetter(PrivateMeta, "env")
           qstats :+= quasigetter(PrivateMeta, "typing")
-          qstats :+= quasigetter(PrivateMeta, "expansion")
           qstats :+= quasisetter(PrivateMeta, "withEnv", q"val env: $SemanticInternal.Environment")
           qstats :+= quasisetter(PrivateMeta, "withAttrs", q"val typingLike: $SemanticInternal.TypingLike")
-          qstats :+= quasisetter(PrivateMeta, "withExpansion", q"val expansionLike: $SemanticInternal.ExpansionLike")
         }
         qstats :+= q"protected def privateEnv: $SemanticInternal.Environment = null"
         qstats :+= q"protected def privateDenot: $SemanticInternal.Denotation = null"
         qstats :+= q"protected def privateTyping: $SemanticInternal.Typing = null"
-        qstats :+= q"protected def privateExpansion: $SemanticInternal.Expansion = null"
         qstats :+= q"protected def privateFfi: $FfiInternal.Ffi = null"
         mstats1 += q"$qmods class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents { ..$qstats }"
       }

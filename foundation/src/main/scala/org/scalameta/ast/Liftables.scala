@@ -27,7 +27,6 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   lazy val TokensClass = c.mirror.staticClass("scala.meta.tokens.Tokens")
   lazy val DenotClass = c.mirror.staticClass("scala.meta.internal.semantic.Denotation")
   lazy val TypingClass = c.mirror.staticClass("scala.meta.internal.semantic.Typing")
-  lazy val ExpansionClass = c.mirror.staticClass("scala.meta.internal.semantic.Expansion")
   override def customAdts(root: Root): Option[List[Adt]] = {
     val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiClass.toType))
     Some(QuasiClass.asBranch +: nonQuasis)
@@ -41,15 +40,13 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       // because I've no idea how to do that:
       // * tokens should probably be ignored anyway
       // * denots should somehow be hygienically matched, but we don't have the technology for that
-      // * typings and expansions are transient caches anyway, so probably we should ignore them, but I'm not sure
+      // * typings are transient caches anyway, so probably we should ignore them, but I'm not sure
       val coreTypes = Map(
         "denot" -> DenotClass.toType,
-        "typing" -> TypingClass.toType,
-        "expansion" -> ExpansionClass.toType)
+        "typing" -> TypingClass.toType)
       val coreDefaults = Map(
         "denot" -> q"_root_.scala.meta.internal.semantic.Denotation.Zero",
-        "typing" -> q"_root_.scala.meta.internal.semantic.Typing.Zero",
-        "expansion" -> q"_root_.scala.meta.internal.semantic.Expansion.Zero")
+        "typing" -> q"_root_.scala.meta.internal.semantic.Typing.Zero")
       def withCoreFields(body: Tree, fields: String*): Tree = {
         fields.foldLeft(body)((curr, field) => {
           val fieldSelector = q"$localName.${TermName(field)}"
@@ -89,10 +86,10 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     }
     def customize(body: Tree): Option[Tree] = {
       if (adt.tpe <:< QuasiClass.toType) Some(q"Lifts.liftQuasi($localName)")
-      else if (adt.tpe <:< TermNameClass.toType) Some(reifyCoreFields(body, "denot", "typing", "expansion"))
-      else if (adt.tpe <:< CtorRefNameClass.toType) Some(reifyCoreFields(body, "denot", "typing", "expansion"))
+      else if (adt.tpe <:< TermNameClass.toType) Some(reifyCoreFields(body, "denot", "typing"))
+      else if (adt.tpe <:< CtorRefNameClass.toType) Some(reifyCoreFields(body, "denot", "typing"))
       else if (adt.tpe <:< NameClass.toType) Some(reifyCoreFields(body, "denot"))
-      else if (adt.tpe <:< TermClass.toType) Some(reifyCoreFields(body, "typing", "expansion"))
+      else if (adt.tpe <:< TermClass.toType) Some(reifyCoreFields(body, "typing"))
       else if (adt.tpe <:< TermParamClass.toType) Some(reifyCoreFields(body, "typing"))
       else if (adt.tpe <:< DefnValClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
       else if (adt.tpe <:< DefnVarClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")

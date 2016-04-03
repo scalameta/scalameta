@@ -45,13 +45,7 @@ package object semantic {
             case _ => false
           }).getOrElse(true)
 
-          def checkExpansion(tree: Tree): Boolean = tree.internalExpansion.map(_ match {
-            case Expansion.Identity => true
-            case Expansion.Desugaring(_) => true
-            case _ => false
-          }).getOrElse(true)
-
-          checkEnv(tree) && checkDenot(tree) && checkTyping(tree) && checkExpansion(tree)
+          checkEnv(tree) && checkDenot(tree) && checkTyping(tree)
         }
         def loop(x: Any): Unit = x match {
           case x: Tree => traverse(x, path :+ tree.productPrefix)
@@ -112,11 +106,5 @@ package object semantic {
   object TypingLike {
     implicit def typeIsTypingLike(tpe: => api.Type.Arg): TypingLike = new TypingLike { def typing = Typing.Nonrecursive(tpe) }
     implicit def typingIsTypingLike(typing0: Typing): TypingLike = new TypingLike { def typing = typing0 }
-  }
-
-  trait ExpansionLike { def expansion: Expansion }
-  object ExpansionLike {
-    implicit def termIsExpansionLike(term: api.Term): ExpansionLike = new ExpansionLike { def expansion = Expansion.Desugaring(term) }
-    implicit def expansionIsExpansionLike(expansion0: Expansion): ExpansionLike = new ExpansionLike { def expansion = expansion0 }
   }
 }

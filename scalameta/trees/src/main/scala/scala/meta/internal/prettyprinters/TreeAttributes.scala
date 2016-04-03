@@ -110,15 +110,6 @@ object Attributes {
             case Typing.Nonrecursive(tpe) => if (deep) body(tpe) else tpe.show[Structure]
           }
         }
-        implicit def statusExpansion(expansion: Expansion): Footnote = new Footnote {
-          def entity = expansion
-          def tag = classOf[Expansion]
-          def prettyprint() = expansion match {
-            case Expansion.Zero => unreachable
-            case Expansion.Identity => unreachable
-            case Expansion.Desugaring(term) => if (deep) body(term) else term.show[Structure]
-          }
-        }
       }
 
       private var size = 0
@@ -155,8 +146,7 @@ object Attributes {
         (
           byType(classOf[Environment], "[", "]") ++
           byType(classOf[Denotation], "[", "]") ++
-          byType(classOf[Typing], "{", "}") ++
-          byType(classOf[Expansion], "<", ">")
+          byType(classOf[Typing], "{", "}")
         ).mkString(EOL)
       }
     }
@@ -220,26 +210,12 @@ object Attributes {
             else s"{...}"
         }).getOrElse("")
 
-        val expansionPart = x.internalExpansion.map({
-          case Expansion.Zero =>
-            ""
-          case expansion @ Expansion.Identity =>
-            s"<>"
-          case expansion @ Expansion.Desugaring(term: Term) =>
-            val isTpeLoaded = term.typing match {
-              case typing: Typing.Nonrecursive => typing.isTpeLoaded
-              case _ => true
-            }
-            if (forceTypes || isTpeLoaded) s"<${footnotes.insert(expansion)}>"
-            else s"<...>"
-        }).getOrElse("")
-
         val typecheckedPart = {
           if (!x.isTypechecked) "*"
           else ""
         }
 
-        envPart + denotPart + typingPart + expansionPart + typecheckedPart
+        envPart + denotPart + typingPart + typecheckedPart
       }
       syntax + attributes
     }

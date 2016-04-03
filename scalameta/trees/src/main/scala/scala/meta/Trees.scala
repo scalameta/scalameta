@@ -189,10 +189,8 @@ package scala.meta.internal.ast {
   @branch trait Term extends api.Term with Stat with Term.Arg {
     private[meta] def env: Environment
     private[meta] def typing: Typing
-    private[meta] def expansion: Expansion
     private[meta] def withEnv(env: Environment): ThisType
     private[meta] def withAttrs(typingLike: TypingLike): ThisType
-    private[meta] def withExpansion(expansionLike: ExpansionLike): ThisType
   }
   object Term {
     @branch trait Ref extends api.Term.Ref with Term with impl.Ref

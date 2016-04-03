@@ -426,8 +426,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       }
     }
     object Liftables extends s.DenotationLiftables
-                        with s.TypingLiftables
-                        with s.ExpansionLiftables {
+                        with s.TypingLiftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
       override lazy val u: c.universe.type = c.universe
