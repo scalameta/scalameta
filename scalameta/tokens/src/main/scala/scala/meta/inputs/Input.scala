@@ -11,9 +11,7 @@ import scala.meta.tokenizers.common._
 
 // TODO: Input is really sealed, with the only two direct subclasses being Content and Tokens
 // however, I don't really feel like mixing all the three concepts in a single file
-trait Input extends Serializable {
-  def tokens(implicit dialect: Dialect, tokenize: Tokenize): Tokens
-}
+trait Input extends Serializable
 
 object Input {
   @data class String(s: scala.Predef.String) extends Content {

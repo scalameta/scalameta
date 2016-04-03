@@ -9,7 +9,7 @@ import Chars.{CR, LF, FF}
 import LegacyToken._
 import scala.meta.inputs._
 import scala.meta.tokens._
-import scala.meta.tokenizers.common._
+import scala.meta.tokenizers._
 
 private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialect: Dialect) {
   def tokenize(): Tokens = {

@@ -8,11 +8,6 @@ import scala.meta.tokenizers.common._
 
 trait Content extends Input {
   def chars: Array[Char]
-
-  private val tokenCache = scala.collection.mutable.Map[Dialect, Tokens]()
-  final override def tokens(implicit dialect: Dialect, tokenize: Tokenize): Tokens = {
-    tokenCache.getOrElseUpdate(dialect, tokenize(this))
-  }
 }
 
 object Content {

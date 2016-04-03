@@ -3,7 +3,7 @@ package internal
 package tokenizers
 
 import scala.meta.inputs._
-import scala.meta.tokenizers.common._
+import scala.meta.tokenizers._
 
 // TODO: when I grow up I want to become a monad, just like my daddy
 // TODO: distinguish flavors of errors with exception types

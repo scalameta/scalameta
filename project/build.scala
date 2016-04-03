@@ -128,7 +128,7 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's default implementation of the Tokenize typeclass",
+    description := "Scala.meta's APIs for tokenization and its baseline implementation",
     // TODO: This is a major embarassment: we need scalac's parser to parse xml literals,
     // because it was too hard to implement the xml literal parser from scratch.
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)

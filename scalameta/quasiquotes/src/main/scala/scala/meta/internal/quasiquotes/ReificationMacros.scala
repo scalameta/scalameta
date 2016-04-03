@@ -17,7 +17,6 @@ import org.scalameta.unreachable
 import org.scalameta.debug._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
-import scala.meta.tokenizers.common.TokenizeException
 import scala.meta.prettyprinters._
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}

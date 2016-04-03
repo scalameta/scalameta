@@ -19,6 +19,7 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
 import scala.meta.parsers._
+import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
 import org.scalameta.ast.AstMetadata
 import org.scalameta.tokens._

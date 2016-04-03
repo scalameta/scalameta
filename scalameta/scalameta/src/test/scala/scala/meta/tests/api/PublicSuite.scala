@@ -399,7 +399,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       1.tokens
-    """) === "don't know how to convert Int to scala.meta.inputs.Content")
+    """) === "don't know how to convert Int to scala.meta.inputs.Input")
   }
 
   test("tokens when everything's correct (static dialect)") {

@@ -5,7 +5,7 @@ import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Dotty
 import scala.meta.prettyprinters._
-import scala.meta.tokenizers.common._
+import scala.meta.tokenizers._
 
 class DottySuite extends ParseSuite {
   test("case List(xs: _*)") {

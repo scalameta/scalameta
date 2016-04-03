@@ -10,8 +10,10 @@ import scala.meta.prettyprinters._
 
 class TokenizerSuite extends FunSuite {
   def tokenize(code: String): Tokens = {
-    val tokenize = scala.meta.tokenizers.scalametaTokenize
-    Input.String(code).tokens(Scala211, tokenize)
+    val convert = scala.meta.inputs.Input.stringToInput
+    val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
+    val dialect = Scala211
+    code.tokens(convert, tokenize, dialect)
   }
 
   test("showCode without comments - simple") {
