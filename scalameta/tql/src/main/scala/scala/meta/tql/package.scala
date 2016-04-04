@@ -1,6 +1,5 @@
 package scala.meta
 
-import org.scalameta.algebra._
 import scala.language.implicitConversions
 import scala.meta.internal.tql._
 import scala.meta.internal.{ast => impl}

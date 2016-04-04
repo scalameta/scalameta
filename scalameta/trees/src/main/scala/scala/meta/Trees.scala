@@ -160,7 +160,6 @@ package scala.meta {
 
 package scala.meta.internal.ast {
   import org.scalameta.invariants._
-  import org.scalameta.annotations._
   import org.scalameta.unreachable
   import scala.runtime.ScalaRunTime.isAnyVal
   import scala.meta.internal.semantic._

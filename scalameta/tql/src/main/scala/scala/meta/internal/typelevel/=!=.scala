@@ -1,4 +1,6 @@
-package org.scalameta.typelevel
+package scala.meta
+package internal
+package typelevel
 
 /**
  * Allows to specify that the type A must be different from type B.

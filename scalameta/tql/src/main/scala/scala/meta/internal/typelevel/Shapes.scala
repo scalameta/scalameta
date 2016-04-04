@@ -1,4 +1,6 @@
-package org.scalameta.typelevel
+package scala.meta
+package internal
+package typelevel
 
 @annotation.implicitNotFound(msg = "${A} is a tuple.")
 trait NotTuple[A]

@@ -7,8 +7,7 @@ import scala.language.experimental.macros
 import scala.reflect.ClassTag
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import org.scalameta.algebra._
-import org.scalameta.typelevel._
+import scala.meta.internal.typelevel._
 import scala.meta.internal.tql._
 
 /**

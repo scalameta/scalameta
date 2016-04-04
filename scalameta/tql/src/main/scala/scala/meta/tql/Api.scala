@@ -1,7 +1,6 @@
 package scala.meta
 package tql
 
-import org.scalameta.algebra._
 import scala.language.implicitConversions
 import scala.{Seq => _}
 import scala.collection.immutable.Seq

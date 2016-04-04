@@ -1,8 +1,6 @@
 package scala.meta
 package tql
 
-import org.scalameta.algebra._
-
 trait Traverser[T] {
 
   type MatchResult[A] = Option[(T, A)]

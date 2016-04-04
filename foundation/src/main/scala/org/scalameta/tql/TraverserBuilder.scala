@@ -53,7 +53,7 @@ class TraverserBuilderMacros(val c: Context) extends AstReflection {
     q"""
         ($parameter: ${implicitly[c.WeakTypeTag[T]]}) => $parameter match {
           case ..$cases
-          case v => Some((v, implicitly[_root_.org.scalameta.algebra.Monoid[${implicitly[c.WeakTypeTag[A]]}]].zero))
+          case v => Some((v, implicitly[_root_.scala.meta.tql.Monoid[${implicitly[c.WeakTypeTag[A]]}]].zero))
         }
     """
   }
@@ -70,7 +70,7 @@ class TraverserBuilderMacros(val c: Context) extends AstReflection {
     q"""
       $parameter match {
         case ..$cases
-        case v => Some((v, implicitly[_root_.org.scalameta.algebra.Monoid[${implicitly[c.WeakTypeTag[A]]}]].zero))
+        case v => Some((v, implicitly[_root_.scala.meta.tql.Monoid[${implicitly[c.WeakTypeTag[A]]}]].zero))
       }
      """
   }
@@ -123,7 +123,7 @@ class TraverserBuilderMacros(val c: Context) extends AstReflection {
     val results: List[TermName] = enums.flatMap(_.map(_._2))
 
     if (!results.isEmpty){
-      val addResults = results.tail.foldLeft[c.Tree](q"${results.head}")((a, b) => q"$a + $b")
+      val addResults = results.tail.foldLeft[c.Tree](q"${results.head}")((a, b) => q"implicitly[_root_.scala.meta.tql.Monoid[${implicitly[c.WeakTypeTag[A]]}]].append($a, $b)")
       val paramsWithNewParams = parameters.unzip._1.zip(enums.map(_.map(_._1)))
       val reconstructParams = paramsWithNewParams.map(x => x._2.getOrElse(x._1))
       val reconstruct = q"$constructor(..$reconstructParams).withTokens(_root_.scala.meta.internal.tokens.TransformedTokens($origin))"

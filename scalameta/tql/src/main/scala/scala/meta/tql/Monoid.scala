@@ -1,7 +1,9 @@
-package org.scalameta.algebra
+package scala.meta
+package tql
 
 import scala.language.higherKinds
 import scala.collection.generic._
+import Monoid.syntax._
 
 /**
  * https://en.wikipedia.org/wiki/Monoid
@@ -63,21 +65,9 @@ object Monoid {
     def append(a: (A, B), b: (A, B)) = (a._1 + b._1, a._2 + b._2)
   }
 
-  //State monoid, from https://hackage.haskell.org/package/monoid-transformer-0.0.2/docs/src/Data-Monoid-State.html#T
-  case class Cons[S, A](run: S => (A, S))
-
-  def pure[S, A](a: A) = Cons((s: S) => (a, s))
-  def evaluate[S, A](s: S, m: Cons[S, A]) = m.run(s)._1
-  def execute [S, A](s: S, m: Cons[S, A]) = m.run(s)._2
-  def put[S, A: Monoid](s: S) = Cons((_: S) => (implicitly[Monoid[A]].zero, s))
-  def modify[S, A: Monoid](f: S => S) = Cons((s: S) => (implicitly[Monoid[A]].zero, f(s)))
-
-  implicit def stateMonoid[S, A : Monoid] = new Monoid[Cons[S, A]] {
-    def zero = pure[S, A](implicitly[Monoid[A]].zero)
-    def append(x: Cons[S, A], y: Cons[S, A]) = Cons(s0 => {
-      val (xr, s1) = x.run(s0)
-      val (yr, s2) = y.run(s1)
-      (implicitly[Monoid[A]].append(xr, yr), s2)
-    })
+  object syntax {
+    implicit class XtensionMonoid[A : Monoid](a: A){
+      def + (b: A): A = implicitly[Monoid[A]].append(a, b)
+    }
   }
 }
