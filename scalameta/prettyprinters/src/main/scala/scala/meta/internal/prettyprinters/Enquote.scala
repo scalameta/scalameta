@@ -1,4 +1,6 @@
-package org.scalameta.show
+package scala.meta
+package internal
+package prettyprinters
 
 sealed trait QuoteStyle
 case object SingleQuotes extends QuoteStyle { override def toString = "'" }

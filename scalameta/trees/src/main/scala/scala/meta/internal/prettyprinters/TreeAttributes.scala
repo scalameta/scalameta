@@ -2,11 +2,9 @@ package scala.meta
 package internal
 package prettyprinters
 
-import org.scalameta.show.{Show, enquote, SingleQuotes, DoubleQuotes, TripleQuotes}
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.ast._
@@ -19,6 +17,7 @@ import scala.meta.internal.{equality => e}
 import scala.compat.Platform.EOL
 import scala.language.implicitConversions
 import scala.meta.prettyprinters._
+import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 
 @implicitNotFound(msg = "don't know how to show[Attributes] for ${T}")
 trait Attributes[T] extends Show[T]

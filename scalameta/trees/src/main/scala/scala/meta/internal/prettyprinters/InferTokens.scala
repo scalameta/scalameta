@@ -3,7 +3,6 @@ package internal
 package prettyprinters
 
 import org.scalameta.invariants._
-import org.scalameta.show.{enquote, SingleQuotes, DoubleQuotes, TripleQuotes}
 import org.scalameta.unreachable
 import scala.reflect.macros.blackbox.Context
 import scala.reflect.macros.Universe
@@ -15,6 +14,7 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokenquasiquotes._
 import scala.meta.prettyprinters._
+import scala.meta.internal.prettyprinters._
 import scala.meta.dialects.Scala211
 import scala.meta.internal.{ffi => f}
 

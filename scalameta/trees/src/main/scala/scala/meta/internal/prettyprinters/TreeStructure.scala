@@ -2,10 +2,9 @@ package scala.meta
 package internal
 package prettyprinters
 
-import org.scalameta.show._
-import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.internal.{ast => impl}
-import scala.meta.prettyprinters.{Syntax, Structure}
+import scala.meta.prettyprinters._
+import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
 

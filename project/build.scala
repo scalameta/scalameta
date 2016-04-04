@@ -88,7 +88,8 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's baseline prettyprinters"
+    description := "Scala.meta's baseline prettyprinters",
+    enableMacros
   ) dependsOn (foundation, exceptions)
 
   lazy val quasiquotes = Project(

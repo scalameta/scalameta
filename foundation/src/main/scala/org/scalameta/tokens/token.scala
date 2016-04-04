@@ -4,7 +4,6 @@ import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
-import org.scalameta.show.escape
 
 class token extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro TokenMacros.impl
@@ -52,7 +51,13 @@ class TokenMacros(val c: Context) {
       if (code == "_ ") code = "_" // NOTE: can't call a class `_`, so have to use `_ `
       if (code == "class ") code = "class" // TODO: wat?
       if (code == "package ") code = "package" // TODO: wat?
-      if (needsName) stats1 += q"def name: _root_.scala.Predef.String = ${escape(code)}"
+      if (needsName) {
+        // TODO: deduplicate with scala.meta.internal.prettyprinters.escape
+        // NOTE: can be removed altogether once tokens are renamed
+        val codepage = Map("\t" -> "\\t", "\b" -> "\\b", "\n" -> "\\n", "\r" -> "\\r", "\f" -> "\\f", "\\" -> "\\\\")
+        val name = code.flatMap(c => codepage.getOrElse(c.toString, c.toString))
+        stats1 += q"def name: _root_.scala.Predef.String = $name"
+      }
       if (needsEnd) {
         val codeRef = if (hasCustomCode) q"this.code.length" else q"${code.length}"
         stats1 += q"def end: _root_.scala.Int = this.start + $codeRef"
@@ -75,9 +80,9 @@ class TokenMacros(val c: Context) {
           else q"this.copy(content = content, dialect = dialect, start = startValue, end = endValue)"
         }
         val adjustError = {
-          if (code == "BOF" || code == "EOF") s"position-changing adjust on Token.${escape(code)}"
-          else if (isStaticToken) s"end-changing adjust on Tokens.${escape(code)}"
-          else "fatal error in the token infrastructure"
+          if (code == "BOF" || code == "EOF") q""" "position-changing adjust on Token." + this.name """
+          else if (isStaticToken) q""" "end-changing adjust on Tokens." + this.name """
+          else q""" "fatal error in the token infrastructure" """
         }
         val body = q"""
           (start.nonEmpty || end.nonEmpty, delta.nonEmpty) match {

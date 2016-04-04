@@ -1,4 +1,6 @@
-package org.scalameta.show
+package scala.meta
+package internal
+package prettyprinters
 
 object escape {
   def apply(s: String): String = {

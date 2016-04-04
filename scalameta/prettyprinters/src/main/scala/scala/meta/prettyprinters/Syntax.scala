@@ -1,7 +1,6 @@
 package scala.meta
 package prettyprinters
 
-import org.scalameta.show._
 import scala.annotation.implicitNotFound
 
 @implicitNotFound(msg = "don't know how to show[Syntax] for ${T}")

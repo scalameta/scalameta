@@ -3,12 +3,11 @@ package internal
 package prettyprinters
 
 import scala.annotation.implicitNotFound
-import org.scalameta.show._
-import Show.{sequence => s, repeat => r, indent => i, newline => n}
 import scala.meta.internal.{ast => m}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-import scala.meta.prettyprinters.Structure
+import scala.meta.prettyprinters._
+import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 
 @implicitNotFound(msg = "don't know how to show[TopLevel] for ${T}")
 private[meta] trait TopLevel[T] extends Show[T]

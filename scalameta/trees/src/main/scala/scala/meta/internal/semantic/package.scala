@@ -5,13 +5,13 @@ import scala.language.implicitConversions
 import org.scalameta.default._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
-import org.scalameta.show._
 import scala.collection.mutable
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.{meta => api}
 import scala.meta.internal.ast._
 import scala.meta.internal.prettyprinters._
+import scala.meta.prettyprinters._
 
 package object semantic {
   implicit class XtensionAttributedTree[T <: api.Tree](tree: T) {
