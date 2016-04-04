@@ -15,7 +15,6 @@ class TokenMacros(val c: Context) {
   val Adt = q"_root_.org.scalameta.adt"
   val TokenInternal = q"_root_.org.scalameta.tokens.internal"
   val Invariants = q"_root_.org.scalameta.invariants.`package`"
-  val Default = q"_root_.org.scalameta.default"
   val Unsupported = tq"_root_.scala.`package`.UnsupportedOperationException"
   val Content = tq"_root_.scala.meta.inputs.Content"
   val Dialect = tq"_root_.scala.meta.Dialect"
@@ -71,13 +70,13 @@ class TokenMacros(val c: Context) {
       if (needsAdjust) {
         val paramContent = q"val content: $Content = this.content"
         val paramDialect = q"val dialect: $Dialect = this.dialect"
-        val paramStart = q"val start: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
-        val paramEnd = q"val end: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
-        val paramDelta = q"val delta: $Default.Param[_root_.scala.Int] = $Default.Param.Default"
+        val paramStart = q"val start: _root_.scala.Int = this.start"
+        val paramEnd = q"val end: _root_.scala.Int = this.end"
+        val paramDelta = q"val delta: _root_.scala.Int = 0"
         val adjustResult = {
           if (code == "BOF" || code == "EOF") q"this.copy(content = content, dialect = dialect)"
-          else if (isStaticToken) q"this.copy(content = content, dialect = dialect, start = startValue)"
-          else q"this.copy(content = content, dialect = dialect, start = startValue, end = endValue)"
+          else if (isStaticToken) q"this.copy(content = content, dialect = dialect, start = start)"
+          else q"this.copy(content = content, dialect = dialect, start = start, end = end)"
         }
         val adjustError = {
           if (code == "BOF" || code == "EOF") q""" "position-changing adjust on Token." + this.name """
@@ -85,22 +84,20 @@ class TokenMacros(val c: Context) {
           else q""" "fatal error in the token infrastructure" """
         }
         val body = q"""
-          (start.nonEmpty || end.nonEmpty, delta.nonEmpty) match {
+          (start != this.start || end != this.end, delta != 0) match {
             case (false, false) =>
               this.copy(content = content, dialect = dialect)
             case (true, false) =>
-              val startValue = start.getOrElse(this.start)
-              val endValue = end.getOrElse(this.end)
               val result = $adjustResult
-              if (result.start != startValue || result.end != endValue) {
+              if (result.start != start || result.end != end) {
                 var message = $adjustError
                 message += (": expected " + result.start + ".." + result.end)
-                message += (", actual " + startValue + ".." + endValue)
+                message += (", actual " + start + ".." + end)
                 throw new $Unsupported(message)
               }
               result
             case (false, true) =>
-              this.adjust(content = content, dialect = dialect, start = this.start + delta.get, end = this.end + delta.get)
+              this.adjust(content = content, dialect = dialect, start = this.start + delta, end = this.end + delta)
             case (true, true) =>
               throw new _root_.scala.`package`.UnsupportedOperationException("you can specify either start/end or delta, but not both")
           }

@@ -3,8 +3,6 @@ package tokens
 
 import org.scalameta.tokens // NOTE: no underscore import!
 import org.scalameta.tokens._
-import org.scalameta.default._
-import org.scalameta.default.Param._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
@@ -21,9 +19,9 @@ import scala.meta.internal.prettyprinters._
   def adjust(
     content: Content = this.content,
     dialect: Dialect = this.dialect,
-    start: Param[Int] = Default,
-    end: Param[Int] = Default,
-    delta: Param[Int] = Default): Token
+    start: Int = this.start,
+    end: Int = this.end,
+    delta: Int = 0): Token
 
   final override def toString = {
     import Token._
