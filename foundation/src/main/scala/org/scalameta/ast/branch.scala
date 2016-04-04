@@ -20,6 +20,7 @@ class BranchMacros(val c: Context) extends AstReflection {
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   val FfiInternal = q"_root_.scala.meta.internal.ffi"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
+  val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
@@ -68,7 +69,7 @@ class BranchMacros(val c: Context) extends AstReflection {
           val DefDef(mods1, termName, tparams, _, tpt, rhs) = quasigetter(mods, name)
           DefDef(mods1, termName, tparams, List(params.toList), tpt, rhs)
         }
-        var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
+        var qstats = List(q"def pt: _root_.java.lang.Class[_] = $ArrayClassMethod(_root_.scala.Predef.classOf[$name], this.rank)")
         if (isLit) {
           qstats :+= quasigetter(NoMods, "value")
         }

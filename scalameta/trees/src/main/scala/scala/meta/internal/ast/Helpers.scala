@@ -299,4 +299,11 @@ private[meta] object Helpers {
     }
     loop(tpe.require[Type], ctor.require[Ctor.Name]).withTypechecked(tpe.isTypechecked)
   }
+
+  def arrayClass(clazz: Class[_], rank: Int): Class[_] = {
+    import scala.runtime.ScalaRunTime
+    Predef.require(rank >= 0)
+    if (rank == 0) clazz
+    else arrayClass(ScalaRunTime.arrayClass(clazz), rank - 1)
+  }
 }

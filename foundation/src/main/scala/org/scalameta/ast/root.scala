@@ -30,6 +30,7 @@ class RootMacros(val c: Context) extends AstReflection {
   lazy val AstInternal = q"_root_.org.scalameta.ast.internal"
   lazy val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   lazy val FfiInternal = q"_root_.scala.meta.internal.ffi"
+  lazy val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
@@ -141,7 +142,7 @@ class RootMacros(val c: Context) extends AstReflection {
       val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
       val qname = TypeName("Quasi")
       val qparents = List(tq"_root_.scala.meta.internal.ast.Quasi")
-      var qstats = List(q"def pt: _root_.java.lang.Class[_] = _root_.org.scalameta.runtime.arrayClass(_root_.scala.Predef.classOf[$name], this.rank)")
+      var qstats = List(q"def pt: _root_.java.lang.Class[_] = $ArrayClassMethod(_root_.scala.Predef.classOf[$name], this.rank)")
       qstats :+= q"protected def privateEnv: $Environment = null"
       qstats :+= q"protected def privateDenot: $Denotation = null"
       qstats :+= q"protected def privateTyping: $Typing = null"
