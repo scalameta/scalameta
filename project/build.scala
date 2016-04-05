@@ -129,6 +129,8 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's abstract syntax trees",
+    // NOTE: uncomment this to update ast.md
+    // scalacOptions += "-Xprint:typer",
     enableMacros
   ) dependsOn (foundation, prettyprinters, inputs, tokens, tokenizers)
 
