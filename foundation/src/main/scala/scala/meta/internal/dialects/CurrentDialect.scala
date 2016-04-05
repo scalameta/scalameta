@@ -1,7 +1,9 @@
-package org.scalameta
+package scala.meta
+package internal
 package dialects
 
 import scala.reflect.macros.whitebox.Context
+import scala.language.experimental.macros
 
 class CurrentDialect(val c: Context) {
   import c.universe._

@@ -1,11 +1,13 @@
-package org.scalameta.ast
+package scala.meta
+package internal
+package ast
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
-import org.scalameta.ast.internal.Ast
 import org.scalameta.adt.{LiftableMacros => AdtLiftableMacros}
-import org.scalameta.ast.{Reflection => AstReflection}
+import scala.meta.internal.ast.{Reflection => AstReflection}
+import scala.meta.internal.ast.internal.Ast
 
 trait Liftables {
   val u: scala.reflect.macros.Universe

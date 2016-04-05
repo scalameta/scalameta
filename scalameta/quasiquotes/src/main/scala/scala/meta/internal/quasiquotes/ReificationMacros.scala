@@ -11,10 +11,9 @@ import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
 import org.scalameta.data._
 import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
-import org.scalameta.ast.{Liftables => AstLiftables, Reflection => AstReflection}
+import scala.meta.internal.ast.{Liftables => AstLiftables, Reflection => AstReflection}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-import org.scalameta.debug._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
@@ -23,6 +22,7 @@ import scala.meta.internal.{semantic => s}
 import scala.meta.internal.semantic.{Denotation => MetaDenotation, Converters => SemanticConverters, _}
 import scala.meta.internal.semantic.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.debug._
 import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta

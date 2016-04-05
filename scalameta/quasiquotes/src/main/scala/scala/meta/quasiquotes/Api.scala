@@ -1,7 +1,7 @@
 package scala.meta
 package quasiquotes
 
-import org.scalameta.ast._
+import scala.meta.internal.ast.quasiquote
 
 private[meta] trait Api {
   // TODO: it would be ideal to have these as annotations on corresponding AST nodes

@@ -1,4 +1,6 @@
-package org.scalameta.ast
+package scala.meta
+package internal
+package ast
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
@@ -23,14 +25,14 @@ class AstMetadataMacros(val c: Context) {
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     if (T.tpe <:< QuasiClass.toType) {
       q"""
-        new _root_.org.scalameta.ast.AstMetadata[$T] {
+        new _root_.scala.meta.internal.ast.AstMetadata[$T] {
           def runtimeClass: _root_.java.lang.Class[$T] = implicitly[_root_.scala.reflect.ClassTag[$T]].runtimeClass.asInstanceOf[_root_.java.lang.Class[$T]]
           def quasi(rank: Int, tree: Any): $T = ${T.tpe.typeSymbol.companion}.apply(rank, tree)
         }
       """
     } else if (T.tpe <:< TreeClass.toType) {
       q"""
-        new _root_.org.scalameta.ast.AstMetadata[$T] {
+        new _root_.scala.meta.internal.ast.AstMetadata[$T] {
           def runtimeClass: _root_.java.lang.Class[$T] = implicitly[_root_.scala.reflect.ClassTag[$T]].runtimeClass.asInstanceOf[_root_.java.lang.Class[$T]]
           def quasi(rank: Int, tree: Any): $T = ${T.tpe.typeSymbol.companion}.Quasi.apply(rank, tree)
         }

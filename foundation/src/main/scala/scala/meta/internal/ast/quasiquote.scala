@@ -1,4 +1,6 @@
-package org.scalameta.ast
+package scala.meta
+package internal
+package ast
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation

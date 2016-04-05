@@ -6,8 +6,8 @@ import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
 import org.scalameta.adt.Internal.Adt
 import org.scalameta.adt.{Reflection => AdtReflection}
-import org.scalameta.debug._
-import org.scalameta.ast.XtensionAstDebug
+import scala.meta.internal.debug._
+import scala.meta.internal.ast.XtensionAstDebug
 
 trait Liftables {
   val u: scala.reflect.macros.Universe

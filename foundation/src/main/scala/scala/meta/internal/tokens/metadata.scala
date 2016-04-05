@@ -1,4 +1,6 @@
-package org.scalameta.tokens
+package scala.meta
+package internal
+package tokens
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
@@ -19,7 +21,7 @@ class TokenMetadataMacros(val c: Context) {
   import c.universe._
   import c.internal._
   lazy val TokenClass = rootMirror.staticClass("scala.meta.tokens.Token")
-  lazy val TokenMarkerClass = rootMirror.staticModule("org.scalameta.tokens.internal.package").info.decl(TypeName("tokenClass")).asClass
+  lazy val TokenMarkerClass = rootMirror.staticModule("scala.meta.internal.tokens.internal.package").info.decl(TypeName("tokenClass")).asClass
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     if ((T.tpe <:< TokenClass.toType) && T.tpe.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == TokenMarkerClass)) {
       val nameBody = {
@@ -37,7 +39,7 @@ class TokenMetadataMacros(val c: Context) {
         q"new $T(...$argss).name"
       }
       q"""
-        new _root_.org.scalameta.tokens.TokenMetadata[$T] {
+        new _root_.scala.meta.internal.tokens.TokenMetadata[$T] {
           def name: _root_.scala.Predef.String = $nameBody
           def runtimeClass: _root_.java.lang.Class[$T] = implicitly[_root_.scala.reflect.ClassTag[$T]].runtimeClass.asInstanceOf[_root_.java.lang.Class[$T]]
         }

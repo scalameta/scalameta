@@ -1,4 +1,6 @@
-package org.scalameta.tokens
+package scala.meta
+package internal
+package tokens
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
@@ -13,7 +15,7 @@ class TokenMacros(val c: Context) {
   import c.universe._
   import Flag._
   val Adt = q"_root_.org.scalameta.adt"
-  val TokenInternal = q"_root_.org.scalameta.tokens.internal"
+      val TokenInternal = q"_root_.scala.meta.internal.tokens.internal"
   val Invariants = q"_root_.org.scalameta.invariants.`package`"
   val Unsupported = tq"_root_.scala.`package`.UnsupportedOperationException"
   val Content = tq"_root_.scala.meta.inputs.Content"

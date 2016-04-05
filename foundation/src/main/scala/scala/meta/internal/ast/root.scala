@@ -1,10 +1,12 @@
-package org.scalameta.ast
+package scala.meta
+package internal
+package ast
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
-import org.scalameta.ast.{Reflection => AstReflection}
+import scala.meta.internal.ast.{Reflection => AstReflection}
 
 class root extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro RootMacros.impl
@@ -27,7 +29,7 @@ class RootMacros(val c: Context) extends AstReflection {
   lazy val Typing = tq"_root_.scala.meta.internal.semantic.Typing"
   lazy val Ffi = tq"_root_.scala.meta.internal.ffi.Ffi"
   lazy val AdtInternal = q"_root_.org.scalameta.adt.Internal"
-  lazy val AstInternal = q"_root_.org.scalameta.ast.internal"
+  lazy val AstInternal = q"_root_.scala.meta.internal.ast.internal"
   lazy val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   lazy val FfiInternal = q"_root_.scala.meta.internal.ffi"
   lazy val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
@@ -139,7 +141,7 @@ class RootMacros(val c: Context) extends AstReflection {
         }
       """
 
-      val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
+      val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.scala.meta.internal.ast.ast"))
       val qname = TypeName("Quasi")
       val qparents = List(tq"_root_.scala.meta.internal.ast.Quasi")
       var qstats = List(q"def pt: _root_.java.lang.Class[_] = $ArrayClassMethod(_root_.scala.Predef.classOf[$name], this.rank)")

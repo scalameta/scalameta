@@ -1,10 +1,12 @@
-package org.scalameta.ast
+package scala.meta
+package internal
+package ast
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
-import org.scalameta.ast.{Reflection => AstReflection}
+import scala.meta.internal.ast.{Reflection => AstReflection}
 
 class branch extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro BranchMacros.impl
@@ -16,7 +18,7 @@ class BranchMacros(val c: Context) extends AstReflection {
   import c.universe._
   import Flag._
   val AdtInternal = q"_root_.org.scalameta.adt.Internal"
-  val AstInternal = q"_root_.org.scalameta.ast.internal"
+  val AstInternal = q"_root_.scala.meta.internal.ast.internal"
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   val FfiInternal = q"_root_.scala.meta.internal.ffi"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
@@ -49,7 +51,7 @@ class BranchMacros(val c: Context) extends AstReflection {
       val anns1 = anns :+ q"new $AdtInternal.branch" :+ q"new $AstInternal.branch"
 
       if (!isQuasi) {
-        val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.org.scalameta.ast.ast"))
+        val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.scala.meta.internal.ast.ast"))
         val qname = TypeName("Quasi")
         val qparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi" +: parents.map({
           case Ident(name) => Select(Ident(name.toTermName), TypeName("Quasi"))

@@ -1,8 +1,8 @@
 package scala.meta
 package tokens
 
-import org.scalameta.tokens // NOTE: no underscore import!
-import org.scalameta.tokens._
+import scala.meta.internal.tokens // NOTE: no underscore import!
+import scala.meta.internal.tokens._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._

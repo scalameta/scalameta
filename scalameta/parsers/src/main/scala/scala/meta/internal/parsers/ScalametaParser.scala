@@ -18,11 +18,11 @@ import scala.meta.internal.ast.Helpers._
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
+import scala.meta.internal.tokens._
+import scala.meta.internal.ast.AstMetadata
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
-import org.scalameta.ast.AstMetadata
-import org.scalameta.tokens._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
 import org.scalameta.reflection._

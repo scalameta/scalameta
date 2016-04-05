@@ -1,4 +1,6 @@
-package org.scalameta.tokens
+package scala.meta
+package internal
+package tokens
 
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context

@@ -1,4 +1,6 @@
-package org.scalameta.tokens
+package scala.meta
+package internal
+package tokens
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
@@ -15,7 +17,7 @@ class RootMacros(val c: Context) {
     def transform(cdef: ClassDef): ClassDef = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       val Adt = q"_root_.org.scalameta.adt"
-      val TokenInternal = q"_root_.org.scalameta.tokens.internal"
+      val TokenInternal = q"_root_.scala.meta.internal.tokens.internal"
       val anns1 = q"new $TokenInternal.root" +: q"new $Adt.root" +: anns
       val parents1 = parents :+ tq"$TokenInternal.Token" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
       ClassDef(Modifiers(flags, privateWithin, anns1), name, tparams, Template(parents1, self, stats))

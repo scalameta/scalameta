@@ -1,7 +1,7 @@
 package scala.meta
 package tokenquasiquotes
 
-import org.scalameta.tokens._
+import scala.meta.internal.tokens.quasiquote
 
 private[meta] trait Api {
   @quasiquote('toks) implicit class XtensionQuasiquoteTokens(ctx: StringContext)

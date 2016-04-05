@@ -2,8 +2,8 @@ package scala.meta
 
 import scala.annotation.implicitNotFound
 import org.scalameta.adt._
-import org.scalameta.dialects._
 import scala.meta.dialects._
+import scala.meta.internal.dialects._
 import scala.language.experimental.macros
 
 // NOTE: can't put Dialect into scala.meta.Dialects

@@ -3,8 +3,8 @@ package internal
 package equality
 
 import scala.language.experimental.macros
-import org.scalameta.ast.{Reflection => AstReflection}
 import scala.reflect.macros.blackbox.{Context => BlackboxContext}
+import scala.meta.internal.ast.{Reflection => AstReflection}
 
 trait AllowEquality[T1, T2]
 object AllowEquality {

@@ -1,8 +1,8 @@
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import org.scalameta.ast._
 import org.scalameta.invariants._
 import scala.{meta => api}
+import scala.meta.internal.ast.{root, branch, ast}
 import scala.meta.internal.{ast => impl}
 import scala.meta.inputs._
 import scala.meta.tokens._

@@ -41,7 +41,7 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Internal helpers and utilities shared between projects constituting scala.meta",
+    description := "Internal helpers shared between projects constituting scala.meta",
     enableMacros
   )
 

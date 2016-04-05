@@ -1,4 +1,6 @@
-package org.scalameta.tokens
+package scala.meta
+package internal
+package tokens
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
@@ -15,7 +17,7 @@ class BranchMacros(val c: Context) {
     def transform(cdef: ClassDef): ClassDef = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, templ) = cdef
       val Adt = q"_root_.org.scalameta.adt"
-      val TokenInternal = q"_root_.org.scalameta.tokens.internal"
+      val TokenInternal = q"_root_.scala.meta.internal.tokens.internal"
       val anns1 = q"new $TokenInternal.branch" +: q"new $Adt.branch" +: anns
       ClassDef(Modifiers(flags, privateWithin, anns1), name, tparams, templ)
     }

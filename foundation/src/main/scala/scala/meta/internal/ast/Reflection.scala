@@ -1,10 +1,12 @@
-package org.scalameta.ast
+package scala.meta
+package internal
+package ast
 
 import scala.language.implicitConversions
 import scala.collection.mutable
 import org.scalameta.invariants._
 import org.scalameta.adt.{Reflection => AdtReflection}
-import org.scalameta.ast.{Reflection => AstReflection}
+import scala.meta.internal.ast.{Reflection => AstReflection}
 
 trait Reflection extends AdtReflection {
   import u._
@@ -27,7 +29,7 @@ trait Reflection extends AdtReflection {
   lazy val PatTypeClass = mirror.staticModule("scala.meta.Pat").info.decl(TypeName("Type")).asClass
   lazy val PatTypeRefClass = mirror.staticModule("scala.meta.Pat").info.decl(TermName("Type")).info.decl(TypeName("Ref")).asClass
   lazy val RegistryModule = mirror.staticModule("scala.meta.internal.ast.Registry")
-  lazy val RegistryAnnotation = mirror.staticModule("org.scalameta.ast.internal").info.member(TypeName("registry")).asClass
+  lazy val RegistryAnnotation = mirror.staticModule("scala.meta.internal.ast.internal").info.member(TypeName("registry")).asClass
 
   private implicit class PrivateXtensionAstSymbol(sym: Symbol) {
     def isPublicTree = sym.isClass && (sym.asClass.toType <:< ApiTreeClass.toType) && !sym.isInternalTree

@@ -7,7 +7,7 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.meta.internal.ast._
+import scala.meta.internal.ast.{root => _, branch => _, ast => _, _}
 import scala.{meta => api}
 import scala.meta.tokens._
 import scala.annotation.implicitNotFound
