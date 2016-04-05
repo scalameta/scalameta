@@ -22,7 +22,6 @@ object build extends Build {
   ) aggregate (
     foundation,
     dialects,
-    exceptions,
     inputs,
     parsers,
     prettyprinters,
@@ -52,15 +51,6 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's dialects",
     enableMacros
-  ) dependsOn (foundation, exceptions)
-
-  lazy val exceptions = Project(
-    id   = "exceptions",
-    base = file("scalameta/exceptions")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's baseline exceptions"
   ) dependsOn (foundation)
 
   lazy val inputs = Project(
@@ -70,7 +60,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's APIs for source code in textual format"
-  ) dependsOn (foundation, exceptions)
+  ) dependsOn (foundation)
 
   lazy val parsers = Project(
     id   = "parsers",
@@ -79,7 +69,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's API for parsing and its baseline implementation"
-  ) dependsOn (foundation, exceptions, trees, tokens, tokenizers % "test", tql % "test")
+  ) dependsOn (foundation, trees, tokens, tokenizers % "test", tql % "test")
 
   lazy val prettyprinters = Project(
     id   = "prettyprinters",
@@ -89,7 +79,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's baseline prettyprinters",
     enableMacros
-  ) dependsOn (foundation, exceptions)
+  ) dependsOn (foundation)
 
   lazy val quasiquotes = Project(
     id   = "quasiquotes",
@@ -98,7 +88,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's quasiquotes for abstract syntax trees"
-  ) dependsOn (foundation, exceptions, tokens, trees, parsers)
+  ) dependsOn (foundation, tokens, trees, parsers)
 
   lazy val tokenizers = Project(
     id   = "tokenizers",
@@ -110,7 +100,7 @@ object build extends Build {
     // TODO: This is a major embarassment: we need scalac's parser to parse xml literals,
     // because it was too hard to implement the xml literal parser from scratch.
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)
-  ) dependsOn (foundation, exceptions, tokens)
+  ) dependsOn (foundation, tokens)
 
   lazy val tokens = Project(
     id   = "tokens",
@@ -120,7 +110,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's tokens and token-based abstractions (inputs and positions)",
     enableMacros
-  ) dependsOn (foundation, exceptions, prettyprinters, dialects, inputs)
+  ) dependsOn (foundation, prettyprinters, dialects, inputs)
 
   lazy val tql = Project(
     id   = "tql",
@@ -130,7 +120,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's tree query language (basic and extended APIs)",
     enableMacros
-  ) dependsOn (foundation, exceptions, trees)
+  ) dependsOn (foundation, trees)
 
   lazy val trees = Project(
     id   = "trees",
@@ -140,7 +130,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's abstract syntax trees",
     enableMacros
-  ) dependsOn (foundation, exceptions, prettyprinters, inputs, tokens, tokenizers)
+  ) dependsOn (foundation, prettyprinters, inputs, tokens, tokenizers)
 
   lazy val scalameta = Project(
     id   = "scalameta",
@@ -149,7 +139,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's metaprogramming APIs"
-  ) dependsOn (foundation, exceptions, dialects, parsers, prettyprinters, quasiquotes, tokenizers, tql, trees)
+  ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, tql, trees)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := ScalaVersions.max,

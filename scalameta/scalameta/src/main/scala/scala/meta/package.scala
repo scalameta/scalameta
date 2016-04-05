@@ -1,7 +1,6 @@
 package scala
 
 package object meta extends dialects.Api with dialects.Aliases
-                       with exceptions.Api with exceptions.Aliases
                        with parsers.Api with parsers.Aliases
                        with prettyprinters.Api with prettyprinters.Aliases
                        with quasiquotes.Api with quasiquotes.Aliases
