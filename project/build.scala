@@ -29,7 +29,6 @@ object build extends Build {
     quasiquotes,
     scalameta,
     tokenizers,
-    tokenquasiquotes,
     tokens,
     tql,
     trees
@@ -113,16 +112,6 @@ object build extends Build {
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)
   ) dependsOn (foundation, exceptions, tokens)
 
-  lazy val tokenquasiquotes = Project(
-    id   = "tokenquasiquotes",
-    base = file("scalameta/tokenquasiquotes")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's quasiquotes for tokens",
-    enableMacros
-  ) dependsOn (foundation, exceptions, tokens, tokenizers)
-
   lazy val tokens = Project(
     id   = "tokens",
     base = file("scalameta/tokens")
@@ -151,7 +140,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's abstract syntax trees",
     enableMacros
-  ) dependsOn (foundation, exceptions, prettyprinters, inputs, tokens, tokenquasiquotes)
+  ) dependsOn (foundation, exceptions, prettyprinters, inputs, tokens, tokenizers)
 
   lazy val scalameta = Project(
     id   = "scalameta",
@@ -160,7 +149,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's metaprogramming APIs"
-  ) dependsOn (foundation, exceptions, dialects, parsers, prettyprinters, quasiquotes, tokenizers, tokenquasiquotes, tql, trees)
+  ) dependsOn (foundation, exceptions, dialects, parsers, prettyprinters, quasiquotes, tokenizers, tql, trees)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := ScalaVersions.max,

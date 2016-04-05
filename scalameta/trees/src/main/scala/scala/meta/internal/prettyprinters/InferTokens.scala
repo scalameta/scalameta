@@ -12,11 +12,11 @@ import scala.language.implicitConversions
 import scala.annotation.tailrec
 import scala.meta.inputs._
 import scala.meta.tokens._
-import scala.meta.tokenquasiquotes._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
 import scala.meta.dialects.Scala211
 import scala.meta.internal.{ffi => f}
+import scala.meta.internal.tokenquasiquotes._
 
 // TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
 // TODO: fix occasional incorrectness when semicolons are omitted
