@@ -12,11 +12,11 @@ private[meta] trait Api {
   }
 
   implicit class XtensionTokenizeInputLike[T](inputLike: T) {
-    def tokens(implicit convert: Convert[T, Input], tokenize: Tokenize, dialect: Dialect): Tokens = {
+    def tokenize(implicit convert: Convert[T, Input], tokenize: Tokenize, dialect: Dialect): Tokenized = {
       val input = convert(inputLike)
       input match {
         case content: Content => tokenize(content)(dialect)
-        case tokens: Tokens => tokens
+        case tokens: Tokens => Tokenized.Success(tokens)
         case _ => unreachable
       }
     }
@@ -24,6 +24,9 @@ private[meta] trait Api {
 }
 
 private[meta] trait Aliases {
+  type Tokenized = scala.meta.tokenizers.Tokenized
+  val Tokenized = scala.meta.tokenizers.Tokenized
+
   type TokenizeException = scala.meta.tokenizers.TokenizeException
   val TokenizeException = scala.meta.tokenizers.TokenizeException
 }

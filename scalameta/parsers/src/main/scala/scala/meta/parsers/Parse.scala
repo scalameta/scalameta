@@ -7,7 +7,7 @@ import scala.meta.internal.parsers.ScalametaParser._
 
 @implicitNotFound(msg = "don't know how to parse into ${T}")
 trait Parse[T] {
-  def apply(input: Input)(implicit dialect: Dialect): T
+  def apply(input: Input)(implicit dialect: Dialect): Parsed[T]
 }
 
 object Parse {

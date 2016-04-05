@@ -274,9 +274,10 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
 
 object ScalametaTokenizer {
   def toTokenize: Tokenize = new Tokenize {
-    def apply(content: Content)(implicit dialect: Dialect): Tokens.Tokenized = {
+    def apply(content: Content)(implicit dialect: Dialect): Tokenized = {
       val tokenizer = new ScalametaTokenizer(content)(dialect)
-      tokenizer.tokenize()
+      try Tokenized.Success(tokenizer.tokenize())
+      catch { case details @ TokenizeException(pos, message) => Tokenized.Error(pos, message, details) }
     }
   }
 }

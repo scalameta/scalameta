@@ -27,7 +27,7 @@ class InferPartialSuite extends FunSuite {
         |  }
         |}
       """.stripMargin
-    val testTree = testCode.parse[Source]
+    val testTree = testCode.parse[Source].get
 
     // Forcing synthetic tokens using TQL
     val trans = (transform {

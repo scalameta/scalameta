@@ -292,9 +292,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
   // However, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted.
   // This leads to extremely dirty and seriously crazy code, which I'd like to replace in the future.
-  // NOTE: Therefore, `tokens` here mean `input.tokens` that are filtered out to match the expectations of Scala's parser.
-  // Correspondingly, `tokenPositions` here mean positions (i.e. indices) of individual elements in `tokens` within `input.tokens`.
-  lazy val scannerTokens = input.tokens
+  lazy val scannerTokens = input.tokenize match {
+    case Tokenized.Success(tokens) => tokens
+    case Tokenized.Error(pos, message, _) => reporter.syntaxError(message, at = pos)
+  }
   lazy val (parserTokens, parserTokenPositions) = {
     val parserTokens = new immutable.VectorBuilder[Token]()
     val parserTokenPositions = mutable.ArrayBuilder.make[Int]()
@@ -490,7 +491,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
 /* ------------- ERROR HANDLING ------------------------------------------- */
 
-  val reporter = Reporter()
+  lazy val reporter = Reporter()
   import reporter._
 
   private var inFunReturnType = false
@@ -3363,9 +3364,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
 object ScalametaParser {
   def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
-    def apply(input: Input)(implicit dialect: Dialect): T = {
+    def apply(input: Input)(implicit dialect: Dialect): Parsed[T] = {
       val parser = new ScalametaParser(input)(dialect)
-      fn(parser)
+      try Parsed.Success(fn(parser))
+      catch { case details @ ParseException(pos, message) => Parsed.Error(pos, message, details) }
     }
   }
 }

@@ -50,6 +50,11 @@ class ReificationMacros(val c: Context) extends TokenLiftables
   private lazy val toks: Tokens = {
     implicit val dialect: Dialect = scala.meta.dialects.Quasiquote(instantiateDialect(dialectTree))
 
+    def tokens(part: String): Tokens = part.tokenize match {
+      case Tokenized.Success(tokens) => tokens
+      case Tokenized.Error(pos, message, _) => c.abort(c.enclosingPosition, message) // TODO: better position
+    }
+
     /** Removes the heading BOF and trailing EOF from a sequence of tokens */
     def trim(toks: Tokens): Tokens = toks match {
       case (_: Token.BOF) +: toks :+ (_: Token.EOF) => Tokens(toks: _*)
@@ -62,8 +67,8 @@ class ReificationMacros(val c: Context) extends TokenLiftables
           // TODO: Ugh, creating synthetic inputs with semi-meaningless text just to satisfy the framework.
           // This really shows the need in virtual tokens...
           val argAsString = arg(i).toString
-          trim(part.tokens) :+ Token.Unquote(Input.String(argAsString), dialect, 0, argAsString.length - 1, arg(i))
-      } ++ trim(parts.last.tokens)
+          trim(tokens(part)) :+ Token.Unquote(Input.String(argAsString), dialect, 0, argAsString.length - 1, arg(i))
+      } ++ trim(tokens(parts.last))
 
     Tokens(result: _*)
   }

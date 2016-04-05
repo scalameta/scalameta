@@ -152,7 +152,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         // Output tokens will be bound to a synthetic Input.String, which isn't yet correlated with `wholeFileSource`.
         val crudeTokens = {
           implicit val tokenizationDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-          try part.tokens
+          try part.tokenize.get
           catch {
             case TokenizeException(partPos, message) =>
               if (message.startsWith("unclosed ") && arg.nonEmpty) {

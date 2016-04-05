@@ -13,7 +13,7 @@ class TokenizerSuite extends FunSuite {
     val convert = scala.meta.inputs.Input.stringToInput
     val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
     val dialect = Scala211
-    code.tokens(convert, tokenize, dialect)
+    code.tokenize(convert, tokenize, dialect).get
   }
 
   test("showCode without comments - simple") {

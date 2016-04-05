@@ -76,44 +76,44 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
-  test("tokens without import") {
+  test("tokenize without import") {
     assert(typecheckError("""
-      "".tokens
-    """) === "value tokens is not a member of String")
+      "".tokenize
+    """) === "value tokenize is not a member of String")
   }
 
-  test("tokens without input-likeness") {
+  test("tokenize without input-likeness") {
     assert(typecheckError("""
       import scala.meta._
-      1.tokens
+      1.tokenize
     """) === "don't know how to convert Int to scala.meta.inputs.Input")
   }
 
-  test("tokens when everything's correct (static dialect)") {
+  test("tokenize when everything's correct (static dialect)") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      "".tokens
+      "".tokenize
     """) === "")
   }
 
-  test("tokens when everything's correct (dynamic dialect)") {
+  test("tokenize when everything's correct (dynamic dialect)") {
     assert(typecheckError("""
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
-      "".tokens
+      "".tokenize
     """) === "")
   }
 
-  test("tokens with various input types") {
+  test("tokenize with various input types") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      (??? : Input).tokens
-      (??? : String).tokens
-      (??? : java.io.File).tokens
-      (??? : Tokens).tokens
-      (??? : Array[Char]).tokens
+      (??? : Input).tokenize
+      (??? : String).tokenize
+      (??? : java.io.File).tokenize
+      (??? : Tokens).tokenize
+      (??? : Array[Char]).tokenize
     """) === "")
   }
 
