@@ -15,7 +15,9 @@ import scala.meta.inputs._
 
 object Tokenized {
   @leaf class Success(tokens: Tokens) extends Tokenized
-  @leaf class Error(pos: Position, message: String, details: TokenizeException) extends Tokenized
+  @leaf class Error(pos: Position, message: String, details: TokenizeException) extends Tokenized {
+    override def toString = s"Error($details)"
+  }
 }
 
 @data class TokenizeException(pos: Position, message: String)

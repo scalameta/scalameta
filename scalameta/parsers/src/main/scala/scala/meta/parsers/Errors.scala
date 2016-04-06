@@ -14,7 +14,9 @@ import scala.meta.inputs._
 
 object Parsed {
   @leaf class Success[+T](tree: T) extends Parsed[T]
-  @leaf class Error(pos: Position, message: String, details: ParseException) extends Parsed[Nothing]
+  @leaf class Error(pos: Position, message: String, details: ParseException) extends Parsed[Nothing] {
+    override def toString = s"Error($details)"
+  }
 }
 
 @data class ParseException(pos: Position, message: String)

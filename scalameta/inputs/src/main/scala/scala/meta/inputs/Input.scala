@@ -14,7 +14,7 @@ trait Input extends Serializable
 object Input {
   @data class String(s: scala.Predef.String) extends Content {
     lazy val chars = s.toArray
-    override def toString = "Input.Content(\"" + s + "\")"
+    override def toString = "Input.String(\"" + s + "\")"
   }
 
   @data class Stream(stream: java.io.InputStream, charset: Charset) extends Content {

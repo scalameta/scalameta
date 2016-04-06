@@ -87,7 +87,8 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's quasiquotes for abstract syntax trees"
+    description := "Scala.meta's quasiquotes for abstract syntax trees",
+    enableHardcoreMacros
   ) dependsOn (foundation, tokens, trees, parsers)
 
   lazy val tokenizers = Project(
@@ -97,9 +98,8 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's APIs for tokenization and its baseline implementation",
-    // TODO: This is a major embarassment: we need scalac's parser to parse xml literals,
-    // because it was too hard to implement the xml literal parser from scratch.
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)
+    libraryDependencies += "com.lihaoyi" %% "scalaparse" % "0.3.7",
+    enableMacros
   ) dependsOn (foundation, tokens)
 
   lazy val tokens = Project(
@@ -119,7 +119,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's tree query language (basic and extended APIs)",
-    enableMacros
+    enableHardcoreMacros
   ) dependsOn (foundation, trees)
 
   lazy val trees = Project(
@@ -311,15 +311,19 @@ object build extends Build {
     )
   }
 
-  lazy val enableMacros = libraryDependencies ++= {
-    val compilerInternals = Seq(
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
-    )
+  def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
+    val scalaReflect = Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided")
+    val scalaCompiler = {
+      if (hardcore) Seq("org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided")
+      else Nil
+    }
     val backwardCompat210 = {
       if (scalaVersion.value.startsWith("2.10")) Seq("org.scalamacros" %% "quasiquotes" % "2.1.0")
       else Seq()
     }
-    compilerInternals ++ backwardCompat210
+    scalaReflect ++ scalaCompiler ++ backwardCompat210
   }
+
+  lazy val enableMacros = macroDependencies(hardcore = false)
+  lazy val enableHardcoreMacros = macroDependencies(hardcore = true)
 }

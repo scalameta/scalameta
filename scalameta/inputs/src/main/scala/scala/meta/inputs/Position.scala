@@ -12,11 +12,8 @@ import org.scalameta.invariants._
 }
 
 object Position {
-  @leaf class Range(content: Content, start: Point, point: Point, end: Point) extends Position
-  object Range {
-    def apply(content: Content, start: Point, point: Point, end: Point): Position = {
-      new Position.Range(content, start, point, end)
-    }
+  @leaf class Range(content: Content, start: Point, point: Point, end: Point) extends Position {
+    override def toString = s"${start.offset}..${end.offset} in $content"
   }
 }
 
@@ -44,5 +41,6 @@ object Point {
     }
     def line: Int = eolCount
     def column: Int = offset - eolPos + 1
+    override def toString = s"$offset in $content"
   }
 }
