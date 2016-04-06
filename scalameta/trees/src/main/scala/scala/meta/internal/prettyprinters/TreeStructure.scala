@@ -2,12 +2,11 @@ package scala.meta
 package internal
 package prettyprinters
 
-import org.scalameta.show._
+import scala.meta.prettyprinters._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
-import scala.meta.internal.{ast => impl}
-import scala.meta.prettyprinters.{Syntax, Structure}
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
+import scala.meta.internal.ast.Quasi
 
 object TreeStructure {
   def apply[T <: Tree]: Structure[T] = {
@@ -26,11 +25,11 @@ object TreeStructure {
         r(x.productIterator.map(showRaw).toList, ", ")
       }
       x match {
-        case x: impl.Quasi =>
+        case x: Quasi =>
           default
-        case x @ impl.Lit(value: String) =>
+        case x @ Lit(value: String) =>
           s(enquote(value, DoubleQuotes))
-        case x @ impl.Lit(_) =>
+        case x @ Lit(_) =>
           def isRelevantToken(tok: Token) = tok.isInstanceOf[Literal] || (tok.isInstanceOf[Ident] && tok.code == "-")
           s(x.tokens.filter(isRelevantToken).map(_.show[Syntax]).mkString)
         case x =>

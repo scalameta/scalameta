@@ -2,7 +2,7 @@ package org.scalameta.adt
 
 import scala.reflect.api.Universe
 import org.scalameta.adt.{Internal => AdtInternal}
-import org.scalameta.ast.{internal => AstInternal}
+import scala.meta.internal.ast.{internal => AstInternal}
 import scala.reflect.{classTag, ClassTag}
 import scala.collection.mutable
 

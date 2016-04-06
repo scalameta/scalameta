@@ -2,10 +2,6 @@ package scala.meta
 package internal
 package equality
 
-import scala.{meta => api}
-import scala.meta.internal.{ast => impl}
-import impl._
-
 private[meta] object NonRef {
   def unapply(tree: Tree): Option[Tree] = {
     if (tree.isInstanceOf[Ref]) None else Some(tree)

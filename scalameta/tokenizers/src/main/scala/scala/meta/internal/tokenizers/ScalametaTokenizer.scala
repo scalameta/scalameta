@@ -9,10 +9,10 @@ import Chars.{CR, LF, FF}
 import LegacyToken._
 import scala.meta.inputs._
 import scala.meta.tokens._
-import scala.meta.tokenizers.common._
+import scala.meta.tokenizers._
 
 private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialect: Dialect) {
-  def tokenize(): Tokens = {
+  def tokenize(): Tokens.Tokenized = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER       => Token.Ident(content, dialect, curr.offset, curr.endOffset + 1)
@@ -121,51 +121,22 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
 
     var legacyTokenBuf = mutable.ArrayBuilder.make[LegacyTokenData]()
     var xmlLiteralBuf = new mutable.ListBuffer[String]
-    lazy val xmlLiteralGlobal = {
-      import scala.tools.reflect._
-      import scala.tools.nsc._
-      import scala.tools.nsc.settings._
-      import scala.tools.nsc.reporters._
-      val settings = new Settings(msg => sys.error(s"fatal error parsing xml literal: $msg"))
-      settings.Yrangepos.value = true
-      val reporter = new StoreReporter()
-      val result = new ReflectGlobal(settings, reporter, classOf[List[_]].getClassLoader)
-      result.globalPhase = new result.Run().parserPhase
-      result
-    }
     scanner.foreach(curr => {
       val currCopy = new LegacyTokenData{}.copyFrom(curr)
       if (currCopy.token == XMLSTART) {
-        val slice = content.chars.drop(Math.max(currCopy.offset, 0))
-        def probe(): Either[String, Int] = {
-          import scala.reflect.io._
-          import scala.reflect.internal.util._
-          import xmlLiteralGlobal._
-          val abstractFile = new VirtualFile("<scalameta-tokenizing-xmlliteral>")
-          val sourceFile = new BatchSourceFile(abstractFile, slice)
-          val unit = new CompilationUnit(sourceFile)
-          def tryParse(action: syntaxAnalyzer.Parser => Tree): Either[(Int, String), Int] = {
-            reporter.reset()
-            val parser = newUnitParser(unit)
-            val result = action(parser)
-            if (reporter.hasErrors) {
-              import scala.language.existentials
-              val infos = reporter.asInstanceOf[scala.tools.nsc.reporters.StoreReporter].infos
-              val error = infos.filter(_.severity == reporter.ERROR).toList.head
-              Left((error.pos.point, error.msg))
-            } else {
-              Right(result.pos.end)
-            }
-          }
-          tryParse(_.xmlLiteral()).fold(_ => tryParse(_.xmlLiteralPattern()).left.map(_._2), result => Right(result))
-        }
-        probe() match {
-          case Left(error) =>
-            scanner.reporter.syntaxError("unexpected shape of xml literal", at = currCopy.offset)
-          case Right(length) =>
-            xmlLiteralBuf += new String(slice.take(length))
+        // TODO: replace this with honest XML support via #356
+        import fastparse.core.Parsed
+        import scalaparse.Scala.XmlExpr
+        val start = currCopy.offset
+        val result = XmlExpr.parse(new String(content.chars), index = start)
+        result match {
+          case Parsed.Success(_, end) =>
+            val length = end - start
+            xmlLiteralBuf += new String(content.chars, start, length)
             scanner.reader.charOffset = scanner.curr.offset + length
             scanner.reader.nextChar()
+          case Parsed.Failure(_, _, _) =>
+            scanner.reporter.syntaxError("malformed xml literal", at = currCopy.offset)
         }
       }
       if (currCopy.token == EOF) {
@@ -274,9 +245,10 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
 
 object ScalametaTokenizer {
   def toTokenize: Tokenize = new Tokenize {
-    def apply(content: Content)(implicit dialect: Dialect): Tokens = {
+    def apply(content: Content)(implicit dialect: Dialect): Tokenized = {
       val tokenizer = new ScalametaTokenizer(content)(dialect)
-      tokenizer.tokenize()
+      try Tokenized.Success(tokenizer.tokenize())
+      catch { case details @ TokenizeException(pos, message) => Tokenized.Error(pos, message, details) }
     }
   }
 }

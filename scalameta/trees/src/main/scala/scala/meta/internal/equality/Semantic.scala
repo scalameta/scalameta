@@ -3,10 +3,9 @@ package internal
 package equality
 
 import scala.meta.internal.semantic._
-import scala.meta.internal.{ast => impl}
 
 // NOTE: Semantic comparison operates almost like structural comparison,
-// but also taking into account envs, denots, typings and expansions.
+// but also taking into account envs, denots and typings.
 
 // The difference with structural comparison is refs being treated differently, namely:
 // 1) some structurally unequal refs (even having different types!) may compare equal when they refer to same defns
@@ -58,18 +57,13 @@ object Semantic {
         case (Typing.Nonrecursive(x), Typing.Nonrecursive(y)) => customEquals(x, y)
         case _ => x == y
       }
-    case (x: Expansion, y: Expansion) =>
-      (x, y) match {
-        case (Expansion.Desugaring(x), Expansion.Desugaring(y)) => customEquals(x, y)
-        case _ => x == y
-      }
     case (x: Tree, y: Tree) =>
       def syntaxPart = {
         def compareStructure(x: Tree, y: Tree) = {
           x.productPrefix == y.productPrefix &&
           customEquals(x.productIterator.toList, y.productIterator.toList)
         }
-        def compareSemantics(x: impl.Name, y: impl.Name) = {
+        def compareSemantics(x: Name, y: Name) = {
           x.denot != Denotation.Zero && y.denot != Denotation.Zero && x.denot == y.denot
         }
         (x, y) match {
@@ -83,8 +77,7 @@ object Semantic {
       def envPart = customEquals(x.internalEnv, y.internalEnv)
       def denotPart = customEquals(x.internalDenot, y.internalDenot)
       def typingPart = customEquals(x.internalTyping, y.internalTyping)
-      def expansionPart = customEquals(x.internalExpansion, y.internalExpansion)
-      syntaxPart && envPart && denotPart && typingPart && expansionPart
+      syntaxPart && envPart && denotPart && typingPart
     case _ =>
       x == y
   }
@@ -115,16 +108,10 @@ object Semantic {
         case Typing.Recursive => 1
         case Typing.Nonrecursive(tpe) => customHashcode(tpe)
       }
-    case x: Expansion =>
-      x match {
-        case Expansion.Zero => 0
-        case Expansion.Identity => 1
-        case Expansion.Desugaring(term) => customHashcode(term)
-      }
     case x: Tree =>
       def syntaxPart = {
         def hashStructure(x: Tree) = customHashcode(x.productPrefix) * 37 + customHashcode(x.productIterator.toList)
-        def hashSemantics(x: impl.Name) = customHashcode(x.denot)
+        def hashSemantics(x: Name) = customHashcode(x.denot)
         x match {
           case NameRef(namex, tagx) => hashSemantics(namex) * 37 + tagx
           case OpaqueRef(namex, tagx) => hashSemantics(namex) * 37 + tagx
@@ -134,8 +121,7 @@ object Semantic {
       def envPart = customHashcode(x.internalEnv)
       def denotPart = customHashcode(x.internalDenot)
       def typingPart = customHashcode(x.internalTyping)
-      def expansionPart = customHashcode(x.internalExpansion)
-      customHashcode(List(syntaxPart, envPart, denotPart, typingPart, expansionPart))
+      customHashcode(List(syntaxPart, envPart, denotPart, typingPart))
     case _ =>
       x.hashCode
   }

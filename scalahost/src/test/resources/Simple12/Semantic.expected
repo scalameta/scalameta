@@ -1,2 +1,0 @@
-package Simple12
-object M extends scala.AnyRef() { immutable.this.List.apply[Int](1, 2, 3).map[Int, List[Int]]((x: Int) => x.*(x))(immutable.this.List.canBuildFrom[Int]) }

@@ -1,9 +1,0 @@
-package Simple11
-object M extends scala.AnyRef() {
-  {
-    def sobaka(x: Int) = x
-    val x = List(2)
-    x.map(x => x)
-    x.map(sobaka)
-  }
-}

@@ -6,7 +6,6 @@ import scala.collection.generic._
 import scala.collection.mutable.{Builder, ArrayBuilder, ListBuffer}
 import scala.collection.immutable.VectorBuilder
 import scala.meta.inputs._
-import scala.meta.tokenizers.common._
 
 // TODO: We should really give up on trying to use the standard IndexedSeq machinery,
 // because it doesn't give us a good way to load the elements lazily, which is necessary for Tokens.Slice
@@ -18,15 +17,6 @@ abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with Inp
   def dialect: Dialect
   def isAuthentic: Boolean
   def isSynthetic: Boolean = !isAuthentic
-
-  // NOTE: This Input is really special in the sense that
-  // doing `input.tokens.head.input` won't return `input`.
-  // Previously, I tried to do Token.adjust on every token in the payload,
-  // so that they point back to the newly created Input.Tokens.
-  // Unfortunately, this runs into performance problems - we really can't afford
-  // to clone an entire token stream every time when a tree undergoes a slight change.
-  // Therefore, I'm letting this inconsistency alone, and we'll see how it pans out.
-  def tokens(implicit dialect: Dialect, tokenize: Tokenize) = this
 
   // TODO: having to override all these methods just to change the return type feels kind of stupid
   // why weren't they implemented on top of CanBuildFrom as well?

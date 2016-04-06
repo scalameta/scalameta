@@ -1,7 +1,7 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta.internal.ast._
+import scala.meta._
 
 class ModSuite extends ParseSuite {
   // TODO: implicit

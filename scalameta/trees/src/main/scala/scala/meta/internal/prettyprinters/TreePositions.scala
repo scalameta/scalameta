@@ -2,15 +2,14 @@ package scala.meta
 package internal
 package prettyprinters
 
-import org.scalameta.show.{Show, enquote, SingleQuotes, DoubleQuotes, TripleQuotes}
 import org.scalameta.adt._
 import org.scalameta.unreachable
-import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.compat.Platform.EOL
 import scala.annotation.implicitNotFound
 import scala.collection.mutable.StringBuilder
 import scala.Console._
 import scala.meta.prettyprinters._
+import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 
 @root trait PositionStyle
 object PositionStyle {

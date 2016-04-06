@@ -2,8 +2,8 @@ package scala.meta
 
 import scala.annotation.implicitNotFound
 import org.scalameta.adt._
-import org.scalameta.dialects._
 import scala.meta.dialects._
+import scala.meta.internal.dialects._
 import scala.language.experimental.macros
 
 // NOTE: can't put Dialect into scala.meta.Dialects
@@ -82,7 +82,7 @@ object Dialect {
     case "Scala211" => scala.meta.dialects.Scala211
     case "Dotty" => scala.meta.dialects.Dotty
     case QuasiquoteRx(name) => Quasiquote(Dialect.forName(name))
-    case _ => throw new DialectException(name, s"unknown dialect $name")
+    case _ => throw new IllegalArgumentException(s"unknown dialect $name")
   }
 
   @SerialVersionUID(1L) private[meta] class SerializationProxy(@transient private var orig: Dialect) extends Serializable {

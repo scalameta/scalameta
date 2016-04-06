@@ -1,7 +1,7 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta.internal.ast._, Defn.Class
+import scala.meta._, Defn.Class
 import scala.meta.dialects.Scala211
 
 class PackageSuite extends ParseSuite {
@@ -75,7 +75,7 @@ class PackageSuite extends ParseSuite {
   }
 
   test("import foo.bar; package object baz") {
-    val Source(Import(Import.Clause(Term.Name("foo"), Import.Selector.Name(Name.Indeterminate("bar")) :: Nil) :: Nil) ::
+    val Source(Import(Importer(Term.Name("foo"), Importee.Name(Name.Indeterminate("bar")) :: Nil) :: Nil) ::
                  Pkg.Object(Nil, Term.Name("baz"), EmptyTemplate()) :: Nil) =
       source("import foo.bar; package object baz")
   }

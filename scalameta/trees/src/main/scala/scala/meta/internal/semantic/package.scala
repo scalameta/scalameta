@@ -2,19 +2,16 @@ package scala.meta
 package internal
 
 import scala.language.implicitConversions
-import org.scalameta.default._
 import org.scalameta.unreachable
 import org.scalameta.invariants._
-import org.scalameta.show._
 import scala.collection.mutable
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.{meta => api}
-import scala.meta.internal.ast._
 import scala.meta.internal.prettyprinters._
+import scala.meta.prettyprinters._
 
 package object semantic {
-  implicit class XtensionAttributedTree[T <: api.Tree](tree: T) {
+  implicit class XtensionAttributedTree[T <: Tree](tree: T) {
     def requireAttributed(): Unit = {
       val offenders = mutable.ListBuffer[(Tree, List[String])]()
       def traverse(tree: Tree, path: List[String]): Unit = {
@@ -45,13 +42,7 @@ package object semantic {
             case _ => false
           }).getOrElse(true)
 
-          def checkExpansion(tree: Tree): Boolean = tree.internalExpansion.map(_ match {
-            case Expansion.Identity => true
-            case Expansion.Desugaring(_) => true
-            case _ => false
-          }).getOrElse(true)
-
-          checkEnv(tree) && checkDenot(tree) && checkTyping(tree) && checkExpansion(tree)
+          checkEnv(tree) && checkDenot(tree) && checkTyping(tree)
         }
         def loop(x: Any): Unit = x match {
           case x: Tree => traverse(x, path :+ tree.productPrefix)
@@ -110,13 +101,7 @@ package object semantic {
 
   trait TypingLike { def typing: Typing }
   object TypingLike {
-    implicit def typeIsTypingLike(tpe: => api.Type.Arg): TypingLike = new TypingLike { def typing = Typing.Nonrecursive(tpe) }
+    implicit def typeIsTypingLike(tpe: => Type.Arg): TypingLike = new TypingLike { def typing = Typing.Nonrecursive(tpe) }
     implicit def typingIsTypingLike(typing0: Typing): TypingLike = new TypingLike { def typing = typing0 }
-  }
-
-  trait ExpansionLike { def expansion: Expansion }
-  object ExpansionLike {
-    implicit def termIsExpansionLike(term: api.Term): ExpansionLike = new ExpansionLike { def expansion = Expansion.Desugaring(term) }
-    implicit def expansionIsExpansionLike(expansion0: Expansion): ExpansionLike = new ExpansionLike { def expansion = expansion0 }
   }
 }

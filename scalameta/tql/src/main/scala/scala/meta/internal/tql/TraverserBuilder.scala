@@ -4,7 +4,6 @@ package tql
 
 import scala.language.experimental.macros
 import org.scalameta.adt._
-import org.scalameta.tql._
 import scala.meta.tql._
 
 object TraverserBuilder {

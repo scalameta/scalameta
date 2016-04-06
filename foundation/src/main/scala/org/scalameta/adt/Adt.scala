@@ -39,10 +39,22 @@ class AdtMacros(val c: Context) {
   val Internal = q"_root_.org.scalameta.adt.Internal"
   val Data = q"_root_.org.scalameta.data"
 
+  def nameref(name: TypeName, tparams: List[TypeDef]) = tq"$name[..${tparams.map(_.name)}]"
+  def wildcardedNameref(name: TypeName, tparams: List[TypeDef]) = {
+    if (tparams.length == 0) tq"$name"
+    else {
+      val quantrefs = tparams.map(_ => c.freshName(TypeName("_")))
+      val quantdefs = quantrefs.map(name => q"type $name")
+      tq"$name[..$quantrefs] forSome { ..$quantdefs }"
+    }
+  }
+
   def root(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
+      val nameref = this.nameref(name, tparams)
+      val wildcardedNameref = this.wildcardedNameref(name, tparams)
       val stats1 = ListBuffer[Tree]() ++ stats
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
@@ -50,9 +62,9 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
       val flags1 = flags | SEALED
       val needsThisType = stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty
-      if (needsThisType) stats1 += q"type ThisType <: $name"
+      if (needsThisType) stats1 += q"type ThisType <: $wildcardedNameref"
       stats1 += q"def privateTag: _root_.scala.Int"
-      mstats1 += q"$Internal.hierarchyCheck[$name]"
+      mstats1 += q"$Internal.hierarchyCheck[$wildcardedNameref]"
       val anns1 = anns :+ q"new $Internal.root"
       val parents1 = parents :+ tq"$Internal.Adt" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
 
@@ -72,12 +84,16 @@ class AdtMacros(val c: Context) {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
+      val nameref = this.nameref(name, tparams)
+      val wildcardedNameref = this.wildcardedNameref(name, tparams)
       val stats1 = ListBuffer[Tree]() ++ stats
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
       val anns1 = anns :+ q"new $Public.root" :+ q"new $Internal.monadicRoot"
-      stats1 += q"def map(fn: this.ContentType => this.ContentType): $name"
-      stats1 += q"def flatMap(fn: this.ContentType => $name): $name"
+      stats1 += q"def map(fn: this.ContentType => this.ContentType): $nameref"
+      stats1 += q"def flatMap(fn: this.ContentType => $nameref): $nameref"
+      stats1 += q"def get: this.ContentType"
+      stats1 += q"def getOrElse[B >: this.ContentType](default: => B): B"
 
       val contentTypes = mstats.collect {
         case q"${Modifiers(_, _, anns)} class $_[..$_] $_($_: $tpt) extends { ..$_ } with ..$_ { $_ => ..$_ }"
@@ -112,14 +128,16 @@ class AdtMacros(val c: Context) {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
+      val nameref = this.nameref(name, tparams)
+      val wildcardedNameref = this.wildcardedNameref(name, tparams)
       val stats1 = ListBuffer[Tree]() ++ stats
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @branch traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
       val flags1 = flags | SEALED
-      stats1 += q"type ThisType <: $name"
-      mstats1 += q"$Internal.hierarchyCheck[$name]"
+      stats1 += q"type ThisType <: $wildcardedNameref"
+      mstats1 += q"$Internal.hierarchyCheck[$wildcardedNameref]"
       val anns1 = anns :+ q"new $Internal.branch"
 
       val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))
@@ -139,6 +157,8 @@ class AdtMacros(val c: Context) {
       val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
+      val nameref = this.nameref(name, tparams)
+      val wildcardedNameref = this.wildcardedNameref(name, tparams)
       val parents1 = ListBuffer[Tree]() ++ parents
       val stats1 = ListBuffer[Tree]() ++ stats
       val anns1 = ListBuffer[Tree]() ++ mods.annotations
@@ -148,11 +168,11 @@ class AdtMacros(val c: Context) {
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
       // step 1: generate boilerplate required by the @adt infrastructure
-      stats1 += q"override type ThisType = $name"
+      stats1 += q"override type ThisType = $wildcardedNameref"
       stats1 += q"override def privateTag: _root_.scala.Int = $mname.privateTag"
-      mstats1 += q"def privateTag: _root_.scala.Int = $Internal.calculateTag[$name]"
-      mstats1 += q"$Internal.hierarchyCheck[$name]"
-      mstats1 += q"$Internal.immutabilityCheck[$name]"
+      mstats1 += q"def privateTag: _root_.scala.Int = $Internal.calculateTag[$wildcardedNameref]"
+      mstats1 += q"$Internal.hierarchyCheck[$wildcardedNameref]"
+      mstats1 += q"$Internal.immutabilityCheck[$wildcardedNameref]"
       anns1 += q"new $Internal.leafClass"
       manns1 += q"new $Internal.leafCompanion"
       parents1 += tq"_root_.scala.Product"
@@ -206,11 +226,12 @@ class AdtMacros(val c: Context) {
       def mods1 = mods.mapAnnotations(_ => anns1.toList)
       val stats1 = ListBuffer[Tree]() ++ stats
 
-      if (paramss.flatten.nonEmpty) c.abort(cdef.pos, "noneLeafs can't have parameters")
       anns1 += q"new $Public.leaf"
       anns1 += q"new $Internal.noneLeaf"
-      stats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = $mname()"
-      stats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = $mname()"
+      stats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = this"
+      stats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = this"
+      stats1 += q"override def get: this.ContentType = throw new _root_.scala.`package`.NoSuchElementException(${"None.get"})"
+      stats1 += q"override def getOrElse[B >: this.ContentType](default: => B): B = default"
 
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       List(cdef1, mdef)
@@ -226,8 +247,10 @@ class AdtMacros(val c: Context) {
 
       manns1 += q"new $Public.leaf"
       manns1 += q"new $Internal.noneLeaf"
-      mstats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = $mname"
-      mstats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = $mname"
+      mstats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = this"
+      mstats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = this"
+      mstats1 += q"override def get: this.ContentType = throw new _root_.scala.`package`.NoSuchElementException(${"None.get"})"
+      mstats1 += q"override def getOrElse[B >: this.ContentType](default: => B): B = default"
 
       q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
     }
@@ -257,6 +280,8 @@ class AdtMacros(val c: Context) {
       anns1 += q"new $Internal.someLeaf"
       stats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = $mname(fn(this.${param.name}))"
       stats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = fn(this.${param.name})"
+      stats1 += q"override def get: this.ContentType = this.${param.name}"
+      stats1 += q"override def getOrElse[B >: this.ContentType](default: => B): B = this.${param.name}"
 
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       List(cdef1, mdef)

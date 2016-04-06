@@ -89,6 +89,9 @@ class DataMacros(val c: Context) {
         }
       }
       val isVararg = paramss.flatten.lastOption.flatMap(p => Vararg.unapply(p.tpt)).nonEmpty
+      def unvariate(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.COVARIANT) & (~scala.reflect.internal.Flags.CONTRAVARIANT)).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
+      val itparams = tparams.map{ case q"$mods type $name[..$tparams] >: $low <: $high" => q"${unvariate(mods)} type $name[..$tparams] >: $low <: $high" }
+      val tparamrefs = tparams.map(tparam => Ident(tparam.name))
 
       // step 1: validate the shape of the class
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @data classes")
@@ -143,7 +146,7 @@ class DataMacros(val c: Context) {
         stats1 += q"override def hashCode: _root_.scala.Int = _root_.scala.runtime.ScalaRunTime._hashCode(this)"
       }
       if (needs(TermName("equals"), companion = false)) {
-        stats1 += q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = other.isInstanceOf[$name]"
+        stats1 += q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = true"
         stats1 += q"""
           override def equals(other: _root_.scala.Any): _root_.scala.Boolean = (
             this.canEqual(other) && _root_.scala.runtime.ScalaRunTime._equals(this, other)
@@ -181,7 +184,7 @@ class DataMacros(val c: Context) {
           case VarargParam(mods, name, tpt, default) => q"$name: _*"
           case ByNeedParam(mods, name, tpt, default) => q"(() => $name)"
         }))
-        stats1 += q"def copy(...$copyParamss): $name = new $name(...$copyArgss)"
+        stats1 += q"def copy[..$itparams](...$copyParamss): $name[..$tparamrefs] = new $name[..$tparamrefs](...$copyArgss)"
       }
 
       // step 6: generate Companion.apply
@@ -196,7 +199,7 @@ class DataMacros(val c: Context) {
           case VarargParam(mods, name, tpt, default) => q"$name: _*"
           case ByNeedParam(mods, name, tpt, default) => q"(() => $name)"
         }))
-        mstats1 += q"def apply(...$applyParamss): $name = new $name(...$applyArgss)"
+        mstats1 += q"def apply[..$itparams](...$applyParamss): $name[..$tparamrefs] = new $name[..$tparamrefs](...$applyArgss)"
       }
 
       // step 7: generate Companion.unapply
@@ -214,7 +217,7 @@ class DataMacros(val c: Context) {
           val successTpe = tq"(..$successTargs)"
           val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
           mstats1 += q"""
-            def $unapplyName(x: $name): Option[$successTpe] = {
+            def $unapplyName[..$itparams](x: $name[..$tparamrefs]): Option[$successTpe] = {
               if (x == null) _root_.scala.None
               else _root_.scala.Some($successArgs)
             }

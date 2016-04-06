@@ -2,15 +2,11 @@ package scala.meta
 package internal
 package prettyprinters
 
-import org.scalameta.show.{Show, enquote, SingleQuotes, DoubleQuotes, TripleQuotes}
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.meta.internal.ast._
-import scala.{meta => api}
 import scala.meta.tokens._
 import scala.annotation.implicitNotFound
 import scala.collection.mutable
@@ -19,6 +15,7 @@ import scala.meta.internal.{equality => e}
 import scala.compat.Platform.EOL
 import scala.language.implicitConversions
 import scala.meta.prettyprinters._
+import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 
 @implicitNotFound(msg = "don't know how to show[Attributes] for ${T}")
 trait Attributes[T] extends Show[T]
@@ -42,7 +39,7 @@ object Attributes {
   }
 
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
-  implicit def attributesTree[T <: api.Tree](implicit recursion: Recursion, force: Force): Attributes[T] = new Attributes[T] {
+  implicit def attributesTree[T <: Tree](implicit recursion: Recursion, force: Force): Attributes[T] = new Attributes[T] {
     private def deep = recursion == Recursion.Deep
     private def forceTypes = force == Force.Always
 
@@ -110,15 +107,6 @@ object Attributes {
             case Typing.Nonrecursive(tpe) => if (deep) body(tpe) else tpe.show[Structure]
           }
         }
-        implicit def statusExpansion(expansion: Expansion): Footnote = new Footnote {
-          def entity = expansion
-          def tag = classOf[Expansion]
-          def prettyprint() = expansion match {
-            case Expansion.Zero => unreachable
-            case Expansion.Identity => unreachable
-            case Expansion.Desugaring(term) => if (deep) body(term) else term.show[Structure]
-          }
-        }
       }
 
       private var size = 0
@@ -155,17 +143,16 @@ object Attributes {
         (
           byType(classOf[Environment], "[", "]") ++
           byType(classOf[Denotation], "[", "]") ++
-          byType(classOf[Typing], "{", "}") ++
-          byType(classOf[Expansion], "<", ">")
+          byType(classOf[Typing], "{", "}")
         ).mkString(EOL)
       }
     }
 
     val recursions = CustomMap[Term, Int]()
-    def body(x: api.Tree): String = {
+    def body(x: Tree): String = {
       def whole(x: Any): String = x match {
         case x: String => enquote(x, DoubleQuotes)
-        case x: api.Tree => body(x)
+        case x: Tree => body(x)
         case x: Nil.type => "Nil"
         case el @ Seq(Seq()) => "Seq(Seq())"
         case x: Seq[_] => "Seq(" + x.map(whole).mkString(", ") + ")"
@@ -173,7 +160,7 @@ object Attributes {
         case x: Some[_] => "Some(" + whole(x.get) + ")"
         case x => x.toString
       }
-      def contents(x: api.Tree): String = x match {
+      def contents(x: Tree): String = x match {
         case x @ Lit(s: String) => enquote(s, DoubleQuotes)
         case x @ Lit(_) => import scala.meta.dialects.Scala211; x.show[Syntax]
         case x => x.productIterator.map(whole).mkString(", ")
@@ -220,26 +207,12 @@ object Attributes {
             else s"{...}"
         }).getOrElse("")
 
-        val expansionPart = x.internalExpansion.map({
-          case Expansion.Zero =>
-            ""
-          case expansion @ Expansion.Identity =>
-            s"<>"
-          case expansion @ Expansion.Desugaring(term: Term) =>
-            val isTpeLoaded = term.typing match {
-              case typing: Typing.Nonrecursive => typing.isTpeLoaded
-              case _ => true
-            }
-            if (forceTypes || isTpeLoaded) s"<${footnotes.insert(expansion)}>"
-            else s"<...>"
-        }).getOrElse("")
-
         val typecheckedPart = {
           if (!x.isTypechecked) "*"
           else ""
         }
 
-        envPart + denotPart + typingPart + expansionPart + typecheckedPart
+        envPart + denotPart + typingPart + typecheckedPart
       }
       syntax + attributes
     }

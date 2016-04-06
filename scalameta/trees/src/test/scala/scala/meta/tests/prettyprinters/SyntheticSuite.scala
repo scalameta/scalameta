@@ -6,7 +6,7 @@ package prettyprinters
 // We need to investigate and fix this unfortunate problem.
 //
 // import org.scalatest._
-// import scala.meta.internal.ast._
+// import scala.meta._
 // import scala.meta.internal.semantic._
 // import scala.meta.internal.ui.Attributes
 // import scala.meta.internal.semantic.Typing.Recursive
@@ -34,8 +34,7 @@ package prettyprinters
 //     val prefixx = Prefix.Zero
 //     val denotx = Denotation.Single(prefixx, symbolx)
 //     val typex = typeBar
-//     val expansionx = termbar
-//     val x = Term.Name("x").withAttrs(denotx, typex, expansionx)
+//     val x = Term.Name("x").withAttrs(denotx, typex)
 //
 //     assert(x.show[Attributes] === """
 //       |Term.Name("x")[1]{1}<1>*
@@ -44,8 +43,7 @@ package prettyprinters
 //       |[3] {2}::_root_#Bar
 //       |[4] {0}::_root_
 //       |{1} Type.Name("Bar")[3]
-//       |{2} Type.Singleton(Term.Name("_root_")[4]{3}<>)
-//       |<1> Term.Name("bar")[2]{1}<>
+//       |{2} Type.Singleton(Term.Name("_root_")[4]{3})
 //     """.trim.stripMargin)
 //   }
 // }

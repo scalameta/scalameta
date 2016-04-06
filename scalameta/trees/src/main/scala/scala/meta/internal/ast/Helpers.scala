@@ -9,9 +9,7 @@ import scala.reflect.ClassTag
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.annotation.switch
-import scala.meta.internal.ast._
 import scala.meta.prettyprinters._
-import scala.{meta => api}
 
 private[meta] object Helpers {
   private[meta] val unaryOps = Set("-", "+", "~", "!")
@@ -227,7 +225,7 @@ private[meta] object Helpers {
     def argsc: Int = 1 + (tree.fun match { case fun: Term.Apply => fun.argsc; case _ => 0 })
   }
 
-  def tpeToPattpe(tpe: api.Type): api.Pat.Type = {
+  def tpeToPattpe(tpe: Type): Pat.Type = {
     def loop(tpe: Type): Pat.Type = tpe match {
       case tpe: Type.Name => tpe
       case tpe: Type.Select => tpe
@@ -247,7 +245,7 @@ private[meta] object Helpers {
     loop(tpe.require[Type]).withTypechecked(tpe.isTypechecked)
   }
 
-  def pattpeToTpe(pattpe: api.Pat.Type): api.Type = {
+  def pattpeToTpe(pattpe: Pat.Type): Type = {
     def loop(tpe: Pat.Type): Type = tpe match {
       case tpe: Type.Name => tpe
       case tpe: Type.Select => tpe
@@ -269,7 +267,7 @@ private[meta] object Helpers {
     loop(pattpe.require[Pat.Type]).withTypechecked(pattpe.isTypechecked)
   }
 
-  def tpeToCtorref(tpe: api.Type, ctor: api.Ctor.Name): api.Ctor.Call = {
+  def tpeToCtorref(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
     val tpe0 = tpe
     def loop(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
       object Types {
@@ -298,5 +296,12 @@ private[meta] object Helpers {
       }
     }
     loop(tpe.require[Type], ctor.require[Ctor.Name]).withTypechecked(tpe.isTypechecked)
+  }
+
+  def arrayClass(clazz: Class[_], rank: Int): Class[_] = {
+    import scala.runtime.ScalaRunTime
+    Predef.require(rank >= 0)
+    if (rank == 0) clazz
+    else arrayClass(ScalaRunTime.arrayClass(clazz), rank - 1)
   }
 }

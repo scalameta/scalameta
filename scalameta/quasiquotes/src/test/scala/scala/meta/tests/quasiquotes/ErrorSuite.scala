@@ -460,7 +460,7 @@ class ErrorSuite extends FunSuite {
 //      import scala.meta.quasiquotes._
 //      import scala.meta.dialects.Scala211
 //      val pt"..$ptpes { ..$stats }" = pt"x with y { val a: A; val b: B }"
-//    """).contains("found that tpes.forall(((tpe: scala.meta.internal.ast.Pat.Type) => tpe.isInstanceOf[Pat.Var.Type].`unary_!`.&&(tpe.isInstanceOf[Pat.Type.Wildcard].`unary_!`))) is false"))
+//    """).contains("found that tpes.forall(((tpe: Pat.Type) => tpe.isInstanceOf[Pat.Var.Type].`unary_!`.&&(tpe.isInstanceOf[Pat.Type.Wildcard].`unary_!`))) is false"))
 //  }
 
 //  test("""pt"$ptpe forSome { ..$stats }"""") { // TODO review after #216 resolved
@@ -535,7 +535,7 @@ class ErrorSuite extends FunSuite {
       q"class C { $stats }"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : List[scala.meta.Member.Term with scala.meta.Stat]
+      | found   : List[scala.meta.Defn.Def]
       | required: scala.meta.Stat
       |      q"class C { $stats }"
       |                  ^
@@ -550,7 +550,7 @@ class ErrorSuite extends FunSuite {
       q"class C { $stats }"
     """) === """
       |<macro>:5: type mismatch when unquoting;
-      | found   : Some[List[scala.meta.Member.Term with scala.meta.Stat]]
+      | found   : Some[List[scala.meta.Defn.Def]]
       | required: scala.meta.Stat
       |      q"class C { $stats }"
       |                  ^

@@ -7,7 +7,6 @@ import scala.language.experimental.macros
 import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.collection.generic.CanBuildFrom
-import org.scalameta.algebra._
 import scala.meta.internal.tql._
 
 /**

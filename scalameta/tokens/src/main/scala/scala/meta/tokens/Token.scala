@@ -1,10 +1,8 @@
 package scala.meta
 package tokens
 
-import org.scalameta.tokens // NOTE: no underscore import!
-import org.scalameta.tokens._
-import org.scalameta.default._
-import org.scalameta.default.Param._
+import scala.meta.internal.tokens // NOTE: no underscore import!
+import scala.meta.internal.tokens._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
@@ -17,13 +15,13 @@ import scala.meta.internal.prettyprinters._
   def dialect: Dialect
   def start: Int
   def end: Int
-  def position: Position = Position.Range(this)
+  def position: Position = new Position.Range(content, Point.Offset(content, start), Point.Offset(content, start), Point.Offset(content, end))
   def adjust(
     content: Content = this.content,
     dialect: Dialect = this.dialect,
-    start: Param[Int] = Default,
-    end: Param[Int] = Default,
-    delta: Param[Int] = Default): Token
+    start: Int = this.start,
+    end: Int = this.end,
+    delta: Int = 0): Token
 
   final override def toString = {
     import Token._

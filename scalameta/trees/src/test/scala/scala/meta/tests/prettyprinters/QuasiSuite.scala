@@ -4,8 +4,8 @@ package prettyprinters
 
 import org.scalatest._
 import scala.reflect.runtime.universe._
+import scala.meta._
 import scala.meta.prettyprinters._
-import scala.meta.internal.ast._
 import scala.meta.dialects.Scala211
 
 class QuasiSuite extends FunSuite {

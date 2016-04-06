@@ -1,7 +1,7 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta.internal.ast._, Defn.{Trait, Object, Class}
+import scala.meta._, Defn.{Trait, Object, Class}
 import scala.meta.dialects.Scala211
 
 class TemplateSuite extends ParseSuite {

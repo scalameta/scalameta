@@ -1,12 +1,12 @@
 package scala.meta.tests
 package ast
 
+import scala.meta._
 import scala.meta.tests.parsers.ParseSuite
-import scala.meta.internal.{ast => impl}
 
 class ChildrenSuite extends ParseSuite {
   test("Template.children") {
-    val impl.Defn.Class(_, _, _, _, impl.Template(_, _, _, Some(imports))) = topStat("""class Foo {
+    val Defn.Class(_, _, _, _, Template(_, _, _, Some(imports))) = topStat("""class Foo {
       import bar.baz.one
       import bar.baz.two
     }""")

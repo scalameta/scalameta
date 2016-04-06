@@ -26,55 +26,56 @@ class InferParensSuite extends InferSuite {
     assert(t1 == t2)
   }
 
-  private def test(name: String)(tree: Tree) {
+  private def test(name: String)(code: String) {
     super.test(name) {
+      val tree = code.stripMargin.parse[Term].get
       compareTokenCodes(tree, forceInferAll(tree))
     }
   }
 
   test("SameOpSucc1") {
-    """x1 :: x2 :: xs""".stripMargin.parse[Term]
+    """x1 :: x2 :: xs"""
   }
   test("SameOpSucc2") {
-    """x1 :: x2 :: x3 :: xs""".stripMargin.parse[Term]
+    """x1 :: x2 :: x3 :: xs"""
   }
   test("CheckMixedAssoc1") {
-    """(x :+ y) :: xs""".stripMargin.parse[Term]
+    """(x :+ y) :: xs"""
   }
   test("CheckMixedAssoc2") {
-    """x :+ (y :: xs)""".stripMargin.parse[Term]
+    """x :+ (y :: xs)"""
   }
   test("CheckMixedAssoc3") {
-    """x :: y +: z""".stripMargin.parse[Term]
+    """x :: y +: z"""
   }
   test("CheckMixedAssoc4") {
-    """(x :: y) +: z""".stripMargin.parse[Term]
+    """(x :: y) +: z"""
   }
   test("CheckMixedAssoc5") {
-    """x :+ y :+ z""".stripMargin.parse[Term]
+    """x :+ y :+ z"""
   }
   test("CheckMixedAssoc6") {
-    """x :+ (y :+ z)""".stripMargin.parse[Term]
+    """x :+ (y :+ z)"""
   }
   test("CheckMixedAssoc7") {
-    """x eq (y :: xs)""".stripMargin.parse[Term]
+    """x eq (y :: xs)"""
   }
   test("CheckMixedAssoc8") {
-    """(x eq y) :: xs""".stripMargin.parse[Term]
+    """(x eq y) :: xs"""
   }
   test("CheckMixedAssoc9") {
-    """a == b || c == d || y && d""".stripMargin.parse[Term]
+    """a == b || c == d || y && d"""
   }
   test("CheckMixedAssoc10") {
-    """a && (b || c)""".stripMargin.parse[Term]
+    """a && (b || c)"""
   }
   test("CheckMixedAssoc11") {
-    """a && b || c""".stripMargin.parse[Term]
+    """a && b || c"""
   }
   test("CheckMixedAssoc12") {
-    """x :+ y :+ z""".stripMargin.parse[Term]
+    """x :+ y :+ z"""
   }
   test("CheckMixedAssoc14") {
-    """(x + y) / z""".stripMargin.parse[Term]
+    """(x + y) / z"""
   }
 }

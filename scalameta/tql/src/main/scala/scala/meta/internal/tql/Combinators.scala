@@ -68,7 +68,7 @@ private[meta] class CombinatorMacros(val c: Context) {
 
     def setTuplesForEveryOne(clauses: List[CaseDef]): List[CaseDef] = {
       def setTupleTo(rhs: c.Tree) = {
-        if (rhs.tpe.typeSymbol != TupleClass(2)) q"($rhs, _root_.org.scalameta.algebra.Monoid.Void)"
+        if (rhs.tpe.typeSymbol != TupleClass(2)) q"($rhs, _root_.scala.meta.tql.Monoid.Void)"
         else rhs
       }
       clauses.map{_ match {

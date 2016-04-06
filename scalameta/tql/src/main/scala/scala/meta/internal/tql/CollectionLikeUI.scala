@@ -48,7 +48,7 @@ private[meta] class CollectionLikeUIMacros(override val c: Context) extends Comb
           }
         }
       }
-      implicit def withRes[A: _root_.org.scalameta.algebra.Monoid](implicit ev: _root_.org.scalameta.typelevel.=!=[A, Unit]): _root_.scala.meta.tql.TransformResultTr[A, ($V, A)] = {
+      implicit def withRes[A: _root_.scala.meta.tql.Monoid](implicit ev: _root_.scala.meta.internal.typelevel.=!=[A, Unit]): _root_.scala.meta.tql.TransformResultTr[A, ($V, A)] = {
         new _root_.scala.meta.tql.TransformResultTr[A, ($V, A)] {
           def get(t: $T, x: _root_.scala.meta.tql.MatchResult[A]): ($V, A) = {
             val richX = _root_.scala.meta.tql.`package`.MatcherResultEnhancer[A](x)

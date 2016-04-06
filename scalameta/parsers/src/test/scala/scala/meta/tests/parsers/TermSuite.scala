@@ -1,9 +1,9 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta.internal.ast._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Name.{Anonymous, Indeterminate}
+import scala.meta._, Term.{Name => TermName, _}, Type.{Name => TypeName}, Name.{Anonymous, Indeterminate}
 import scala.meta.dialects.Scala211
-import scala.meta.parsers.common.ParseException
+import scala.meta.parsers.ParseException
 
 class TermSuite extends ParseSuite {
   test("x") {

@@ -5,8 +5,8 @@ package tql
 import scala.collection.immutable.Seq
 import scala.collection.mutable.ListBuffer
 import scala.reflect._
-import org.scalameta.algebra._
 import scala.meta.tql._
+import Monoid.syntax._
 
 object TraverserHelper {
   def traverseSeq[U, T <: U with AnyRef : ClassTag, A : Monoid](

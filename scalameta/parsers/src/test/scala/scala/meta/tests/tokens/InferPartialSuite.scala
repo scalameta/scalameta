@@ -27,16 +27,16 @@ class InferPartialSuite extends FunSuite {
         |  }
         |}
       """.stripMargin
-    val testTree = testCode.parse[Source]
+    val testTree = testCode.parse[Source].get
 
     // Forcing synthetic tokens using TQL
     val trans = (transform {
-      case t: impl.Defn.Def if t.name.value == "funToReplace" =>
-        t.copy(name = impl.Term.Name("aNewName"))
-      case t: impl.Defn.Val =>
+      case t: Defn.Def if t.name.value == "funToReplace" =>
+        t.copy(name = Term.Name("aNewName"))
+      case t: Defn.Val =>
         t.copy()
-      case t: impl.Defn.Object if t.name.value == "Test" =>
-        t.copy(name = impl.Term.Name("Test2"))
+      case t: Defn.Object if t.name.value == "Test" =>
+        t.copy(name = Term.Name("Test2"))
     }).topDown
 
     val transformed = trans(testTree)

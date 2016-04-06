@@ -1,8 +1,0 @@
-package Simple3
-class C() extends scala.AnyRef() {
-  def loop(x: Int): Int = {
-    def helper(x: Int): String = x.toString()
-    if (helper(x).==("0")) 0 else C.this.loop(x.-(1))
-  }
-  C.this.loop(42)
-}

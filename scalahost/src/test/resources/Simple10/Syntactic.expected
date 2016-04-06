@@ -1,8 +1,0 @@
-package Simple10
-object M extends scala.AnyRef() {
-  {
-    List(1, 2, 3, 4)
-    List.apply(1, 2, 3, 4)
-    List.apply(1, 2, 3, 4)
-  }
-}

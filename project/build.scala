@@ -6,7 +6,7 @@ import sbtunidoc.Plugin._
 import UnidocKeys._
 
 object build extends Build {
-  lazy val ScalaVersion = "2.11.7"
+  lazy val ScalaVersions = Seq("2.11.8")
   lazy val LibraryVersion = "0.1.0-SNAPSHOT"
 
   lazy val root = Project(
@@ -21,21 +21,16 @@ object build extends Build {
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(foundation)
   ) aggregate (
     foundation,
-    artifacts,
     dialects,
-    exceptions,
-    interactive,
+    inputs,
     parsers,
     prettyprinters,
     quasiquotes,
     scalameta,
-    semantic,
     tokenizers,
-    tokenquasiquotes,
     tokens,
     tql,
-    trees,
-    scalahost
+    trees
   )
 
   lazy val foundation = Project(
@@ -44,19 +39,9 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's fundamental helpers and utilities",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
+    description := "Internal helpers shared between projects constituting scala.meta",
+    enableMacros
   )
-
-  lazy val artifacts = Project(
-    id   = "artifacts",
-    base = file("scalameta/artifacts")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's APIs for reflecting artifacts of Scala ecosystem",
-    libraryDependencies += "org.apache.ivy" % "ivy" % "2.4.0"
-  ) dependsOn (foundation, exceptions, trees, parsers)
 
   lazy val dialects = Project(
     id   = "dialects",
@@ -65,26 +50,17 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's dialects",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
-  ) dependsOn (foundation, exceptions)
-
-  lazy val exceptions = Project(
-    id   = "exceptions",
-    base = file("scalameta/exceptions")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's baseline exceptions"
+    enableMacros
   ) dependsOn (foundation)
 
-  lazy val interactive = Project(
-    id   = "interactive",
-    base = file("scalameta/interactive")
+  lazy val inputs = Project(
+    id   = "inputs",
+    base = file("scalameta/inputs")
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's APIs for interactive environments (REPLs, IDEs, ...)"
-  ) dependsOn (foundation, exceptions, artifacts)
+    description := "Scala.meta's APIs for source code in textual format"
+  ) dependsOn (foundation)
 
   lazy val parsers = Project(
     id   = "parsers",
@@ -92,8 +68,8 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's default implementation of the Parse[T] typeclass"
-  ) dependsOn (foundation, exceptions, trees, tokens, tokenizers % "test", tql % "test")
+    description := "Scala.meta's API for parsing and its baseline implementation"
+  ) dependsOn (foundation, trees, tokens, tokenizers % "test", tql % "test")
 
   lazy val prettyprinters = Project(
     id   = "prettyprinters",
@@ -101,8 +77,9 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's baseline prettyprinters"
-  ) dependsOn (foundation, exceptions)
+    description := "Scala.meta's baseline prettyprinters",
+    enableMacros
+  ) dependsOn (foundation)
 
   lazy val quasiquotes = Project(
     id   = "quasiquotes",
@@ -110,17 +87,9 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's quasiquotes for abstract syntax trees"
-  ) dependsOn (foundation, exceptions, tokens, trees, parsers)
-
-  lazy val semantic = Project(
-    id   = "semantic",
-    base = file("scalameta/semantic")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's APIs for traversing semantic structure of Scala programs"
-  ) dependsOn (foundation, exceptions, prettyprinters, tokens, trees, artifacts)
+    description := "Scala.meta's quasiquotes for abstract syntax trees",
+    enableHardcoreMacros
+  ) dependsOn (foundation, tokens, trees, parsers)
 
   lazy val tokenizers = Project(
     id   = "tokenizers",
@@ -128,21 +97,10 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's default implementation of the Tokenize typeclass",
-    // TODO: This is a major embarassment: we need scalac's parser to parse xml literals,
-    // because it was too hard to implement the xml literal parser from scratch.
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _)
-  ) dependsOn (foundation, exceptions, tokens)
-
-  lazy val tokenquasiquotes = Project(
-    id   = "tokenquasiquotes",
-    base = file("scalameta/tokenquasiquotes")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's quasiquotes for tokens",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
-  ) dependsOn (foundation, exceptions, tokens, tokenizers)
+    description := "Scala.meta's APIs for tokenization and its baseline implementation",
+    libraryDependencies += "com.lihaoyi" %% "scalaparse" % "0.3.7",
+    enableMacros
+  ) dependsOn (foundation, tokens)
 
   lazy val tokens = Project(
     id   = "tokens",
@@ -151,8 +109,8 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's tokens and token-based abstractions (inputs and positions)",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
-  ) dependsOn (foundation, exceptions, prettyprinters, dialects)
+    enableMacros
+  ) dependsOn (foundation, prettyprinters, dialects, inputs)
 
   lazy val tql = Project(
     id   = "tql",
@@ -161,8 +119,8 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's tree query language (basic and extended APIs)",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "provided")
-  ) dependsOn (foundation, exceptions, trees)
+    enableHardcoreMacros
+  ) dependsOn (foundation, trees)
 
   lazy val trees = Project(
     id   = "trees",
@@ -171,8 +129,10 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's abstract syntax trees",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "provided")
-  ) dependsOn (foundation, exceptions, prettyprinters, tokens, tokenquasiquotes)
+    // NOTE: uncomment this to update ast.md
+    // scalacOptions += "-Xprint:typer",
+    enableMacros
+  ) dependsOn (foundation, prettyprinters, inputs, tokens, tokenizers)
 
   lazy val scalameta = Project(
     id   = "scalameta",
@@ -180,39 +140,18 @@ object build extends Build {
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's metaprogramming and hosting APIs"
-  ) dependsOn (foundation, exceptions, dialects, interactive, parsers, prettyprinters, quasiquotes, semantic, artifacts, tokenizers, tokenquasiquotes, tql, trees)
-
-  lazy val scalahost = Project(
-    id   = "scalahost",
-    base = file("scalahost")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    mergeSettings: _*
-  ) settings (
-    crossVersion := CrossVersion.full,
-    description := "Scalac-based host that implements scala.meta's hosting APIs",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
-    scalacOptions in Test := {
-      val defaultValue = (scalacOptions in Test).value
-      val scalahostJar = (Keys.`package` in Compile).value
-      System.setProperty("sbt.paths.scalahost.compile.jar", scalahostJar.getAbsolutePath)
-      val addPlugin = "-Xplugin:" + scalahostJar.getAbsolutePath
-      defaultValue ++ Seq("-Jdummy=" + scalahostJar.lastModified)
-    }
-  ) settings (
-    exposePaths("scalahost", Test): _*
-  ) dependsOn (scalameta)
+    description := "Scala.meta's metaprogramming APIs"
+  ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, tql, trees)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
-    scalaVersion := ScalaVersion,
+    scalaVersion := ScalaVersions.max,
+    crossScalaVersions := ScalaVersions,
     crossVersion := CrossVersion.binary,
     version := LibraryVersion,
     organization := "org.scalameta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     publishMavenStyle := true,
@@ -371,4 +310,20 @@ object build extends Build {
       }
     )
   }
+
+  def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
+    val scalaReflect = Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided")
+    val scalaCompiler = {
+      if (hardcore) Seq("org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided")
+      else Nil
+    }
+    val backwardCompat210 = {
+      if (scalaVersion.value.startsWith("2.10")) Seq("org.scalamacros" %% "quasiquotes" % "2.1.0")
+      else Seq()
+    }
+    scalaReflect ++ scalaCompiler ++ backwardCompat210
+  }
+
+  lazy val enableMacros = macroDependencies(hardcore = false)
+  lazy val enableHardcoreMacros = macroDependencies(hardcore = true)
 }

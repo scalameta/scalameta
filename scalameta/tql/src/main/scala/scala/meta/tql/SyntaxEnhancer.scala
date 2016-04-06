@@ -3,7 +3,6 @@ package tql
 
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
-import org.scalameta.algebra._
 
 trait SyntaxEnhancer[T] { self: Combinators[T] with Traverser[T] =>
 

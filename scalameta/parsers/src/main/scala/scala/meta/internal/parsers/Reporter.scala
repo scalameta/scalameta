@@ -4,7 +4,7 @@ package parsers
 
 import scala.meta.inputs._
 import scala.meta.tokens._
-import scala.meta.parsers.common._
+import scala.meta.parsers._
 
 // TODO: when I grow up I want to become a monad, just like my daddy
 private[meta] trait Reporter {

@@ -5,7 +5,7 @@ package semantic
 import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
-import org.scalameta.show._
+import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
 
 @monadicRoot trait Typing

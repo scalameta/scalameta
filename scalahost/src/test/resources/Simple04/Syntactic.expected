@@ -1,5 +1,0 @@
-package Simple4
-object M extends scala.AnyRef() {
-  def foo[T](x: T) = ???
-  foo(42)
-}
