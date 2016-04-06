@@ -5,7 +5,7 @@ package semantic
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.reflect.api.Universe
-import scala.meta.internal.{ast => m}
+import scala.{meta => m}
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.semantic.Typing.Recursive
 

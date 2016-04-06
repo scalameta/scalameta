@@ -1,7 +1,7 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta.internal.ast._
+import scala.meta._
 import scala.meta.dialects.Scala211
 
 class DefnSuite extends ParseSuite {

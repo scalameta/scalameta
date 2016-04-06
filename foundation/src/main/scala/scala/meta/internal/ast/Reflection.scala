@@ -19,35 +19,15 @@ trait Reflection extends AdtReflection {
   def PrivateMeta: Modifiers = PrivateMeta(NoFlags)
   def PrivateMeta(flags: FlagSet): Modifiers = Modifiers(flags, TypeName("meta"), Nil)
 
-  lazy val ApiTreeClass = mirror.staticClass("scala.meta.Tree")
-  lazy val ImplTreeClass = mirror.staticClass("scala.meta.internal.ast.Tree")
-  lazy val ImplQuasiClass = mirror.staticClass("scala.meta.internal.ast.Quasi")
-  lazy val ApiNameQualifierClass = mirror.staticModule("scala.meta.Name").info.decl(TypeName("Qualifier")).asClass
-  lazy val ApiStatClass = mirror.staticClass("scala.meta.Stat")
-  lazy val ApiScopeClass = mirror.staticClass("scala.meta.Scope")
-  lazy val PatClass = mirror.staticClass("scala.meta.Pat")
-  lazy val PatTypeClass = mirror.staticModule("scala.meta.Pat").info.decl(TypeName("Type")).asClass
-  lazy val PatTypeRefClass = mirror.staticModule("scala.meta.Pat").info.decl(TermName("Type")).info.decl(TypeName("Ref")).asClass
+  lazy val TreeClass = mirror.staticClass("scala.meta.Tree")
+  lazy val QuasiClass = mirror.staticClass("scala.meta.internal.ast.Quasi")
   lazy val RegistryModule = mirror.staticModule("scala.meta.internal.ast.Registry")
   lazy val RegistryAnnotation = mirror.staticModule("scala.meta.internal.ast.internal").info.member(TypeName("registry")).asClass
-
-  private implicit class PrivateXtensionAstSymbol(sym: Symbol) {
-    def isPublicTree = sym.isClass && (sym.asClass.toType <:< ApiTreeClass.toType) && !sym.isInternalTree
-    def isInternalTree = sym.isClass && (sym.asClass.toType <:< ImplTreeClass.toType)
-    def isBottomTree = sym.isClass && (sym.asClass.toType <:< ImplQuasiClass.toType)
-    def weight = {
-      val moveToRight = Set[Symbol](ApiNameQualifierClass, ApiStatClass, ApiScopeClass, PatTypeClass, PatTypeRefClass)
-      val nudgeToRight = Set[Symbol](PatClass)
-      if (moveToRight(sym)) 100
-      else if (nudgeToRight(sym)) 1
-      else 0
-    }
-  }
 
   override protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
     def fail = sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
     if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
-    else if (sym.baseClasses.contains(ApiTreeClass)) scalaMetaRegistry.getOrElse(sym, fail)
+    else if (sym.baseClasses.contains(TreeClass)) scalaMetaRegistry.getOrElse(sym, fail)
     else fail
   }
 
@@ -66,36 +46,22 @@ trait Reflection extends AdtReflection {
         })
         val entireHierarchy = {
           var result = astClasses.flatMap(_.baseClasses.map(_.asClass))
-          result = result.filter(sym => sym.toType <:< ApiTreeClass.toType)
+          result = result.filter(sym => sym.toType <:< TreeClass.toType)
           result = result.flatMap(sym => List(sym, sym.companion.info.member(TypeName("Quasi")).asClass))
-          result :+= ImplQuasiClass
+          result :+= QuasiClass
           result.distinct
         }
         val registry = mutable.Map[Symbol, List[Symbol]]()
         entireHierarchy.foreach(sym => registry(sym) = Nil)
         entireHierarchy.foreach(sym => {
           val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
-          val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(ApiTreeClass))
+          val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(TreeClass))
           relevantParents.foreach(parent => registry(parent) :+= sym)
         })
         registry.toMap
       case _ =>
         sys.error("failed to figure out meta trees")
     }
-  }
-
-  implicit class XtensionAstType(tpe: Type) {
-    def publish: Type = tpe.map({
-      case TypeRef(_, sym, Nil) if sym.isBottomTree =>
-        // TODO: I've no idea what this thing was for, so I'm putting a crasher here to figure it out
-        NothingTpe
-      case TypeRef(_, sym, Nil) if sym.isInternalTree =>
-        val publicParents = sym.asClass.baseClasses.filter(_.isPublicTree)
-        val minimalParents = publicParents.filter(p1 => !publicParents.exists(p2 => p1 != p2 && p2.asClass.toType <:< p1.asClass.toType))
-        intersectionType(minimalParents.sortBy(_.weight).map(_.asClass.toType))
-      case tpe =>
-        tpe
-    })
   }
 
   implicit class XtensionAstTree(tree: Tree) {

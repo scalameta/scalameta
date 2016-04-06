@@ -3,7 +3,6 @@ package internal
 package equality
 
 import scala.meta.internal.semantic._
-import scala.meta.internal.{ast => impl}
 
 // NOTE: Semantic comparison operates almost like structural comparison,
 // but also taking into account envs, denots and typings.
@@ -64,7 +63,7 @@ object Semantic {
           x.productPrefix == y.productPrefix &&
           customEquals(x.productIterator.toList, y.productIterator.toList)
         }
-        def compareSemantics(x: impl.Name, y: impl.Name) = {
+        def compareSemantics(x: Name, y: Name) = {
           x.denot != Denotation.Zero && y.denot != Denotation.Zero && x.denot == y.denot
         }
         (x, y) match {
@@ -112,7 +111,7 @@ object Semantic {
     case x: Tree =>
       def syntaxPart = {
         def hashStructure(x: Tree) = customHashcode(x.productPrefix) * 37 + customHashcode(x.productIterator.toList)
-        def hashSemantics(x: impl.Name) = customHashcode(x.denot)
+        def hashSemantics(x: Name) = customHashcode(x.denot)
         x match {
           case NameRef(namex, tagx) => hashSemantics(namex) * 37 + tagx
           case OpaqueRef(namex, tagx) => hashSemantics(namex) * 37 + tagx

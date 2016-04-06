@@ -16,16 +16,15 @@ trait Liftables {
 
 class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with AstReflection {
   import c.universe._
-  lazy val QuasiClass = c.mirror.staticClass("scala.meta.internal.ast.Quasi")
-  lazy val TermNameClass = c.mirror.staticModule("scala.meta.internal.ast.Term").info.member(TypeName("Name")).asClass
-  lazy val CtorRefNameClass = c.mirror.staticModule("scala.meta.internal.ast.Ctor").info.member(TermName("Ref")).asModule.info.member(TypeName("Name")).asClass
-  lazy val NameClass = c.mirror.staticClass("scala.meta.internal.ast.Name")
-  lazy val TermClass = c.mirror.staticClass("scala.meta.internal.ast.Term")
-  lazy val TermParamClass = c.mirror.staticModule("scala.meta.internal.ast.Term").info.member(TypeName("Param")).asClass
-  lazy val DefnValClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Val")).asClass
-  lazy val DefnVarClass = c.mirror.staticModule("scala.meta.internal.ast.Defn").info.member(TypeName("Var")).asClass
-  lazy val PatTypedClass = c.mirror.staticModule("scala.meta.internal.ast.Pat").info.member(TypeName("Typed")).asClass
-  lazy val LitClass = c.mirror.staticClass("scala.meta.internal.ast.Lit")
+  lazy val TermNameClass = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Name")).asClass
+  lazy val CtorRefNameClass = c.mirror.staticModule("scala.meta.Ctor").info.member(TermName("Ref")).asModule.info.member(TypeName("Name")).asClass
+  lazy val NameClass = c.mirror.staticClass("scala.meta.Name")
+  lazy val TermClass = c.mirror.staticClass("scala.meta.Term")
+  lazy val TermParamClass = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Param")).asClass
+  lazy val DefnValClass = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val")).asClass
+  lazy val DefnVarClass = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Var")).asClass
+  lazy val PatTypedClass = c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Typed")).asClass
+  lazy val LitClass = c.mirror.staticClass("scala.meta.Lit")
   lazy val TokensClass = c.mirror.staticClass("scala.meta.tokens.Tokens")
   lazy val DenotClass = c.mirror.staticClass("scala.meta.internal.semantic.Denotation")
   lazy val TypingClass = c.mirror.staticClass("scala.meta.internal.semantic.Typing")
@@ -71,13 +70,13 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     // so I'd like that potential mistake to receive extra attention in form of quality error reporting.
     def prohibitName(pat: Tree): Tree = {
       q"""
-        def prohibitName(pat: scala.meta.Tree): _root_.scala.Unit = {
-          def unquotesName(q: scala.meta.internal.ast.Quasi): Boolean = q.tree match {
+        def prohibitName(pat: _root_.scala.meta.Tree): _root_.scala.Unit = {
+          def unquotesName(q: _root_.scala.meta.internal.ast.Quasi): Boolean = q.tree match {
             case tree: c.universe.Tree => tree.tpe != null && tree.tpe <:< typeOf[scala.meta.Term.Name]
-            case tree: scala.meta.internal.ast.Quasi => unquotesName(tree)
+            case tree: _root_.scala.meta.internal.ast.Quasi => unquotesName(tree)
           }
           pat match {
-            case q: scala.meta.internal.ast.Quasi if unquotesName(q) =>
+            case q: _root_.scala.meta.internal.ast.Quasi if unquotesName(q) =>
               val action = if (q.rank == 0) "unquote" else "splice"
               c.abort(q.position, "can't " + action + " a name here, use a pattern instead")
             case _ =>

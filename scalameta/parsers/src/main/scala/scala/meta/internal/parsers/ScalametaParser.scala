@@ -10,10 +10,8 @@ import mutable.{ ListBuffer, StringBuilder }
 import scala.annotation.tailrec
 import scala.{Seq => _}
 import scala.collection.immutable._
-import scala.meta.internal.ast._
-import scala.{meta => api}
-import scala.meta.internal.{ast => impl}
 import scala.meta.internal.parsers.Location._
+import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
 import scala.meta.inputs._
 import scala.meta.tokens._
@@ -119,8 +117,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case other => unreachable(debug(input, dialect, other))
     })
   }
-  def parseImporter(): Importer = parseRule(_.importClause())
-  def parseImportee(): Importee = parseRule(_.importSelector())
+  def parseImporter(): Importer = parseRule(_.importer())
+  def parseImportee(): Importee = parseRule(_.importee())
   def parseSource(): Source = parseRule(_.compilationUnit())
 
 /* ------------- PARSER-SPECIFIC TOKEN CLASSIFIERS -------------------------------------------- */
@@ -1167,7 +1165,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   }
 
   private trait AllowedName[T]
-  private object AllowedName { implicit object Term extends AllowedName[impl.Term.Name]; implicit object Type extends AllowedName[impl.Type.Name] }
+  private object AllowedName {
+    implicit object AllowedTermName extends AllowedName[Term.Name]
+    implicit object AllowedTypeName extends AllowedName[Type.Name]
+  }
   private def name[T <: Tree : AllowedName : AstMetadata](ctor: String => T, advance: Boolean): T = token match {
     case token: Ident =>
       val name = token.code.stripPrefix("`").stripSuffix("`")
@@ -2586,20 +2587,20 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    */
   def importStmt(): Import = autoPos {
     accept[`import`]
-    Import(commaSeparated(importClause()))
+    Import(commaSeparated(importer()))
   }
 
   /** {{{
    *  ImportExpr ::= StableId `.' (Id | `_' | ImportSelectors)
    *  }}}
    */
-  def importClause(): Import.Clause = autoPos {
+  def importer(): Importer = autoPos {
     val sid = stableId()
-    def dotselectors = { accept[`.`]; Import.Clause(sid, importSelectors()) }
+    def dotselectors = { accept[`.`]; Importer(sid, importees()) }
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
         if (token.is[`.`]) dotselectors
-        else Import.Clause(sid, atPos(name, name)(Import.Selector.Name(atPos(name, name)(Name.Indeterminate(name.value)))) :: Nil)
+        else Importer(sid, atPos(name, name)(Importee.Name(atPos(name, name)(Name.Indeterminate(name.value)))) :: Nil)
       case _ =>
         dotselectors
     }
@@ -2609,31 +2610,31 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  ImportSelectors ::= `{' {ImportSelector `,'} (ImportSelector | `_') `}'
    *  }}}
    */
-  def importSelectors(): List[Import.Selector] =
+  def importees(): List[Importee] =
     if (token.isNot[`{`]) List(importWildcardOrName())
-    else inBraces(commaSeparated(importSelector()))
+    else inBraces(commaSeparated(importee()))
 
-  def importWildcardOrName(): Import.Selector = autoPos {
-    if (token.is[`_ `]) { next(); Import.Selector.Wildcard() }
-    else if (token.is[Unquote]) Import.Selector.Name(unquote[Name.Indeterminate.Quasi])
-    else { val name = termName(); Import.Selector.Name(atPos(name, name)(Name.Indeterminate(name.value))) }
+  def importWildcardOrName(): Importee = autoPos {
+    if (token.is[`_ `]) { next(); Importee.Wildcard() }
+    else if (token.is[Unquote]) Importee.Name(unquote[Name.Indeterminate.Quasi])
+    else { val name = termName(); Importee.Name(atPos(name, name)(Name.Indeterminate(name.value))) }
   }
 
   /** {{{
    *  ImportSelector ::= Id [`=>' Id | `=>' `_']
    *  }}}
    */
-  def importSelector(): Import.Selector = autoPos {
+  def importee(): Importee = autoPos {
     importWildcardOrName() match {
-      case from: Import.Selector.Name if token.is[`=>`] =>
+      case from: Importee.Name if token.is[`=>`] =>
         next()
         importWildcardOrName() match {
-          case to: Import.Selector.Name     => Import.Selector.Rename(from.value, to.value)
-          case to: Import.Selector.Wildcard => Import.Selector.Unimport(from.value)
-          case other                        => unreachable(debug(other, other.show[Structure]))
+          case to: Importee.Name     => Importee.Rename(from.value, to.value)
+          case to: Importee.Wildcard => Importee.Unimport(from.value)
+          case other                 => unreachable(debug(other, other.show[Structure]))
         }
       // NOTE: this is completely nuts
-      case from: Import.Selector.Wildcard if token.is[`=>`] && ahead(token.is[`_ `]) =>
+      case from: Importee.Wildcard if token.is[`=>`] && ahead(token.is[`_ `]) =>
         nextTwice()
         from
       case other =>

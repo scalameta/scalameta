@@ -5,7 +5,6 @@ import scala.language.implicitConversions
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.internal.tql._
-import scala.meta.internal.{ast => impl}
 
 // TODO: The current incarnation of the traversal/transformation API is very generic (that is interesting)
 // but also contains a lot of moving parts, e.g. see things like EvaluatorMetaCollector (that is daunting).

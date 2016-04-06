@@ -1,7 +1,6 @@
 package scala.meta
 package tql
 
-import scala.meta.internal.{ast => impl}
 import scala.meta.internal.tql._
 import scala.language.experimental.macros
 
@@ -21,5 +20,5 @@ object AllowedTransformation {
    *  Branch, Leaf  in the Adt scala.meta sense of the term
    */
   implicit def materialize[I <: Tree, O <: Tree]: AllowedTransformation[I, O] =
-    macro AllowedTransformationMacros.materialize[impl.Tree, I, O]
+    macro AllowedTransformationMacros.materialize[Tree, I, O]
 }

@@ -26,13 +26,12 @@ class BranchMacros(val c: Context) extends AstReflection {
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
-      def abbrevName = fullName.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.")
-      def isInternal = fullName.startsWith("scala.meta.internal.ast.")
+      def abbrevName = fullName.stripPrefix("scala.meta.")
       def is(abbrev: String) = abbrevName == abbrev
       def isQuasi = cdef.name.toString == "Quasi"
       def isLit = is("Lit")
-      def isName = isInternal && (is("Name") || is("Term.Param.Name") || is("Type.Param.Name"))
-      def isTerm = isInternal && (is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref") || is("Ctor.Call"))
+      def isName = is("Name") || is("Term.Param.Name") || is("Type.Param.Name")
+      def isTerm = is("Term") || is("Lit") || is("Term.Ref") || is("Ctor.Ref") || is("Ctor.Call")
       def isMember = is("Term.Param") || is("Type.Param") || is("Pat.Var.Term") || is("Pat.Var.Type") ||
                      is("Member") || is("Member.Term") || is("Member.Type") ||
                      is("Ctor") || is("Ctor.Primary") || is("Ctor.Secondary")
@@ -78,7 +77,7 @@ class BranchMacros(val c: Context) extends AstReflection {
         if (isMember) {
           qstats :+= quasigetter(NoMods, "name")
         }
-        if (isMember && isInternal) {
+        if (isMember) {
           qstats :+= quasigetter(PrivateMeta, "ffi")
           qstats :+= quasisetter(PrivateMeta, "withFfi", q"val ffi: $FfiInternal.Ffi")
         }

@@ -4,7 +4,6 @@ package parsers
 import org.scalatest._
 import scala.meta._
 import scala.meta.inputs._
-import scala.meta.internal.{ast => impl}
 import scala.meta.internal.parsers._
 import MoreHelpers._
 
@@ -23,7 +22,7 @@ class ParseSuite extends FunSuite with CommonTrees {
 
 object MoreHelpers {
   implicit class XtensionCode(code: String) {
-    def parseRule[T <: impl.Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
+    def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
       new ScalametaParser(Input.String(code)).parseRule(rule)
     }
   }

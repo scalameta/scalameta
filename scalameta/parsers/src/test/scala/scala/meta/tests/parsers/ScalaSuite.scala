@@ -4,7 +4,6 @@ package parsers
 import org.scalatest._
 import scala.meta._
 import scala.meta.prettyprinters._
-import scala.meta.internal.{ ast => impl }
 import scala.meta.dialects.Scala211
 
 class ScalaSuite extends InferSuite {
@@ -25,7 +24,7 @@ class ScalaSuite extends InferSuite {
 
   test("~(1 + 2) + ~x.y(z) + (~x).y(z)") {
     val tree = templStatForceInfer("~(1 + 2) + ~x.y(z) + (~x).y(z)")
-    assert(forceInferAll(tree.asInstanceOf[impl.Tree]).show[Syntax] === "~(1 + 2) + ~x.y(z) + (~x).y(z)")
+    assert(forceInferAll(tree).show[Syntax] === "~(1 + 2) + ~x.y(z) + (~x).y(z)")
   }
 
   /*test("(a + b + c) && (a + (b + c)) && (a :: b :: c) && ((a :: b) :: c)") {
@@ -374,7 +373,6 @@ class ScalaSuite extends InferSuite {
   }
 
   test("constructors") {
-    import scala.meta.internal.ast._
     val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, Some(secondary :: Nil))) = templStatForceInfer("class C(x: Int) { def this() = this(42) }")
     assert(forceInferAll(tree).show[Syntax] === "class C(x: Int) { def this() = this(42) }")
     assert(primary.show[Syntax] === "(x: Int)")
@@ -386,7 +384,6 @@ class ScalaSuite extends InferSuite {
 
   // TODO: commenting lazy printing, it is not yet supported by InferToken
   /*test("lazy printing") {
-    import scala.meta.internal.ast._
     val emptyCtor = Ctor.Primary(Nil, Ctor.Name("this"), Nil)
     val lazyStats = templStatForceInfer("class C") #:: ??? #:: Stream.empty
     val lazyTemplate = Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(lazyStats))
@@ -403,13 +400,11 @@ class ScalaSuite extends InferSuite {
   }*/
 
   test("smart case printing - oneliner in one line") {
-    import scala.meta.internal.ast._
     val Term.Match(_, case1 :: Nil) = templStatForceInfer("??? match { case x => x }")
     assert(case1.toString === "case x => x")
   }
 
   test("smart case printing - oneliner in multiple lines") {
-    import scala.meta.internal.ast._
     val Term.Match(_, case1 :: case2 :: Nil) = templStatForceInfer("??? match { case x => x; case List(x, y) => println(x); println(y) }")
     assert(case1.toString === """
       |case x =>
@@ -435,7 +430,6 @@ class ScalaSuite extends InferSuite {
   }
 
   test("type parameters with type bounds") {
-    import scala.meta.internal.ast._
     val Defn.Def(_, _, List(tree), _, _, _) = templStatForceInfer("def foo[T <: Int] = ???")
     assert(tree.show[Structure] === "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, Some(Type.Name(\"Int\"))), Nil, Nil)")
     assert(forceInferAll(tree).show[Syntax] === "T <: Int")

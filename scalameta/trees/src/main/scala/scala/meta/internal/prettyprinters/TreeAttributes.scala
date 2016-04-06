@@ -7,8 +7,6 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.meta.internal.ast.{root => _, branch => _, ast => _, _}
-import scala.{meta => api}
 import scala.meta.tokens._
 import scala.annotation.implicitNotFound
 import scala.collection.mutable
@@ -41,7 +39,7 @@ object Attributes {
   }
 
   // TODO: would be nice to generate this with a macro for all tree nodes that we have
-  implicit def attributesTree[T <: api.Tree](implicit recursion: Recursion, force: Force): Attributes[T] = new Attributes[T] {
+  implicit def attributesTree[T <: Tree](implicit recursion: Recursion, force: Force): Attributes[T] = new Attributes[T] {
     private def deep = recursion == Recursion.Deep
     private def forceTypes = force == Force.Always
 
@@ -151,10 +149,10 @@ object Attributes {
     }
 
     val recursions = CustomMap[Term, Int]()
-    def body(x: api.Tree): String = {
+    def body(x: Tree): String = {
       def whole(x: Any): String = x match {
         case x: String => enquote(x, DoubleQuotes)
-        case x: api.Tree => body(x)
+        case x: Tree => body(x)
         case x: Nil.type => "Nil"
         case el @ Seq(Seq()) => "Seq(Seq())"
         case x: Seq[_] => "Seq(" + x.map(whole).mkString(", ") + ")"
@@ -162,7 +160,7 @@ object Attributes {
         case x: Some[_] => "Some(" + whole(x.get) + ")"
         case x => x.toString
       }
-      def contents(x: api.Tree): String = x match {
+      def contents(x: Tree): String = x match {
         case x @ Lit(s: String) => enquote(s, DoubleQuotes)
         case x @ Lit(_) => import scala.meta.dialects.Scala211; x.show[Syntax]
         case x => x.productIterator.map(whole).mkString(", ")

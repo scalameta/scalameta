@@ -21,6 +21,7 @@ import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.semantic.{Denotation => MetaDenotation, Converters => SemanticConverters, _}
 import scala.meta.internal.semantic.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
+import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.debug._
 import scala.compat.Platform.EOL
@@ -40,8 +41,6 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
   import scala.meta.tokens.{Token => MetaToken, Tokens => MetaTokens}
   import scala.meta.Term.{Name => MetaTermName}
   type MetaParser = (MetaInput, MetaDialect) => MetaTree
-  import scala.{meta => api}
-  import scala.meta.internal.{ast => impl}
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
   // NOTE: only Mode.Pattern needs holes, and that's only because of Scala's limitations
@@ -236,7 +235,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
   }
 
   private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
-    val pendingQuasis = mutable.Stack[impl.Quasi]()
+    val pendingQuasis = mutable.Stack[Quasi]()
     implicit class XtensionRankedClazz(clazz: Class[_]) {
       def unwrap: Class[_] = {
         if (clazz.isArray) clazz.getComponentType.unwrap
@@ -272,20 +271,20 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       }
     }
     object Lifts {
-      def liftTree(tree: api.Tree): u.Tree = {
+      def liftTree(tree: MetaTree): ReflectTree = {
         Liftables.liftableSubTree(tree)
       }
-      def liftOptionTree(maybeTree: Option[api.Tree]): u.Tree = {
+      def liftOptionTree(maybeTree: Option[MetaTree]): ReflectTree = {
         maybeTree match {
-          case Some(tree: impl.Quasi) => liftQuasi(tree, optional = true)
+          case Some(tree: Quasi) => liftQuasi(tree, optional = true)
           case Some(otherTree) => q"_root_.scala.Some(${liftTree(otherTree)})"
           case None => q"_root_.scala.None"
         }
       }
-      def liftTrees(trees: Seq[api.Tree]): u.Tree = {
-        def loop(trees: List[api.Tree], acc: u.Tree, prefix: List[api.Tree]): u.Tree = trees match {
+      def liftTrees(trees: Seq[MetaTree]): ReflectTree = {
+        def loop(trees: List[MetaTree], acc: ReflectTree, prefix: List[MetaTree]): ReflectTree = trees match {
           // TODO: instead of checking against 1, we should also take pendingQuasis into account
-          case (quasi: impl.Quasi) +: rest if quasi.rank == 1 =>
+          case (quasi: Quasi) +: rest if quasi.rank == 1 =>
             if (acc.isEmpty) {
               if (prefix.isEmpty) loop(rest, liftQuasi(quasi), Nil)
               else loop(rest, prefix.foldRight(acc)((curr, acc) => {
@@ -324,11 +323,11 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         }
         loop(trees.toList, EmptyTree, Nil)
       }
-      def liftOptionTrees(maybeTrees: Option[Seq[api.Tree]]): u.Tree = {
+      def liftOptionTrees(maybeTrees: Option[Seq[MetaTree]]): ReflectTree = {
         maybeTrees match {
-          case Some(Seq(quasi: impl.Quasi)) if quasi.rank == 0 =>
+          case Some(Seq(quasi: Quasi)) if quasi.rank == 0 =>
             q"_root_.scala.Some(${liftTrees(Seq(quasi))})"
-          case Some(Seq(quasi: impl.Quasi)) if quasi.rank > 0 =>
+          case Some(Seq(quasi: Quasi)) if quasi.rank > 0 =>
             liftQuasi(quasi, optional = true)
           case Some(otherTrees) =>
             q"_root_.scala.Some(${liftTrees(otherTrees)})"
@@ -336,16 +335,16 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
             q"_root_.scala.None"
         }
       }
-      def liftTreess(treess: Seq[Seq[api.Tree]]): u.Tree = {
+      def liftTreess(treess: Seq[Seq[MetaTree]]): ReflectTree = {
         // TODO: implement support for ... mixed with .., $ and normal code
         treess match {
-          case Seq(Seq(quasi: impl.Quasi)) if quasi.rank == 2 =>
+          case Seq(Seq(quasi: Quasi)) if quasi.rank == 2 =>
             liftQuasi(quasi)
           case _ =>
-            Liftable.liftList[Seq[api.Tree]](Liftables.liftableSubTrees).apply(treess.toList)
+            Liftable.liftList[Seq[MetaTree]](Liftables.liftableSubTrees).apply(treess.toList)
         }
       }
-      def liftQuasi(quasi: impl.Quasi, optional: Boolean = false): u.Tree = {
+      def liftQuasi(quasi: Quasi, optional: Boolean = false): ReflectTree = {
         try {
           pendingQuasis.push(quasi)
           if (quasi.rank == 0) {
@@ -380,7 +379,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
             atPos(quasi.position)(realWorldReifier)
           } else {
             quasi.tree match {
-              case quasi: impl.Quasi if quasi.rank == 0 =>
+              case quasi: Quasi if quasi.rank == 0 =>
                 // NOTE: Option[Seq[T]] exists only in one instance in our tree API: Template.stats.
                 // Unfortunately, there is a semantic difference between an empty template and a template
                 // without any stats, so we can't just replace it with Seq[T] and rely on tokens
@@ -430,11 +429,11 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
       override lazy val u: c.universe.type = c.universe
-      implicit def liftableSubTree[T <: api.Tree]: Liftable[T] = Liftable((tree: T) => materializeAst[api.Tree].apply(tree))
-      implicit def liftableSubTrees[T <: api.Tree]: Liftable[Seq[T]] = Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
-      implicit def liftableSubTreess[T <: api.Tree]: Liftable[Seq[Seq[T]]] = Liftable((treess: Seq[Seq[T]]) => Lifts.liftTreess(treess))
-      implicit def liftableOptionSubTree[T <: api.Tree]: Liftable[Option[T]] = Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
-      implicit def liftableOptionSubTrees[T <: api.Tree]: Liftable[Option[Seq[T]]] = Liftable((x: Option[Seq[T]]) => Lifts.liftOptionTrees(x))
+      implicit def liftableSubTree[T <: MetaTree]: Liftable[T] = Liftable((tree: T) => materializeAst[MetaTree].apply(tree))
+      implicit def liftableSubTrees[T <:MetaTree]: Liftable[Seq[T]] = Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
+      implicit def liftableSubTreess[T <: MetaTree]: Liftable[Seq[Seq[T]]] = Liftable((treess: Seq[Seq[T]]) => Lifts.liftTreess(treess))
+      implicit def liftableOptionSubTree[T <: MetaTree]: Liftable[Option[T]] = Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
+      implicit def liftableOptionSubTrees[T <: MetaTree]: Liftable[Option[Seq[T]]] = Liftable((x: Option[Seq[T]]) => Lifts.liftOptionTrees(x))
     }
     mode match {
       case Mode.Term =>

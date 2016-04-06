@@ -18,7 +18,6 @@ class Macros(val c: BlackboxContext) extends AstReflection {
   import c.universe._
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
-  lazy val TreeClass = rootMirror.staticClass("scala.meta.Tree")
   lazy val StatClass = rootMirror.staticClass("scala.meta.Stat")
   lazy val ScopeClass = rootMirror.staticClass("scala.meta.Scope")
   lazy val isTooGeneral = Set[Symbol](TreeClass, StatClass, ScopeClass)

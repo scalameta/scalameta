@@ -6,6 +6,7 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.reflect.macros.blackbox.Context
 import scala.reflect.macros.Universe
+import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
 import scala.compat.Platform.EOL
 import scala.language.implicitConversions
@@ -63,7 +64,6 @@ private[meta] object inferTokens {
 
   /* Global infering function */
   private def infer(tree: Tree, proto: Option[Tree])(implicit dialect: Dialect): Tokens = {
-    import scala.meta.internal.ast._
     import scala.meta.tokenizers._
 
     /* partial token vectors used in various constructions */
@@ -345,7 +345,7 @@ private[meta] object inferTokens {
     }
 
     def ffi(tree: Tree): Tokens = tree match {
-      case tree: scala.meta.internal.ast.Member if tree.ffi != f.Ffi.Zero =>
+      case tree: Member if tree.ffi != f.Ffi.Zero =>
         val str = "/* " + tree.ffi + " */ "
         val input = Input.String(str)
         Tokens(Token.Comment(input, dialect, 0, str.length - 1), Token.` `(input, dialect, str.length - 1))
@@ -679,15 +679,19 @@ private[meta] object inferTokens {
       case t: Enumerator.Guard =>     toks"if ${t.cond.tks}"
 
       // Import
-      case t: Import.Selector.Name =>     toks"${t.value.tks}"
-      case t: Import.Selector.Rename =>   toks"${t.from.tks} => ${t.to.tks}"
-      case t: Import.Selector.Unimport => toks"${t.name.tks} => _"
-      case _: Import.Selector.Wildcard => toks"_"
-      case t: Import.Clause =>
-        if (t.sels.size == 1 && !t.sels.head.isInstanceOf[Import.Selector.Rename]
-          && !t.sels.head.isInstanceOf[Import.Selector.Unimport]) toks"${t.ref.tks}.${t.sels.`oo`}"
-        else toks"${t.ref.tks}.${t.sels.`{{o,o}}`}"
-      case t: Import =>                   toks"import ${t.clauses.`o,o`}"
+      case t: Importee.Name =>     toks"${t.value.tks}"
+      case t: Importee.Rename =>   toks"${t.from.tks} => ${t.to.tks}"
+      case t: Importee.Unimport => toks"${t.name.tks} => _"
+      case _: Importee.Wildcard => toks"_"
+      case t: Importer =>
+        val needsBraces = t.importees match {
+          case Seq(_: Importee.Name) => false
+          case Seq(_: Importee.Wildcard) => false
+          case _ => true
+        }
+        if (needsBraces) toks"${t.ref.tks}.${t.importees.`{{o,o}}`}"
+        else toks"${t.ref.tks}.${t.importees.`oo`}"
+      case t: Import => toks"import ${t.importers.`o,o`}"
 
       // Case
       case t: Case =>
@@ -716,8 +720,8 @@ private[meta] object inferTokens {
         }
     }
 
-    val ffiTokens = ffi(tree.asInstanceOf[scala.meta.internal.ast.Tree])
-    val payloadTokens = tkz(tree.asInstanceOf[scala.meta.internal.ast.Tree])
+    val ffiTokens = ffi(tree)
+    val payloadTokens = tkz(tree)
     ffiTokens ++ payloadTokens
   }
 

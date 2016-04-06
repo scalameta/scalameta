@@ -30,7 +30,7 @@ class AstMacros(val c: Context) extends AstReflection {
   def impl(annottees: Tree*): Tree = {
     def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
-      def abbrevName = fullName.stripPrefix("scala.meta.internal.ast.")
+      def abbrevName = fullName.stripPrefix("scala.meta.")
       def is(abbrev: String) = abbrevName == abbrev
       def isQuasi = cdef.name.toString == "Quasi"
       def isName = is("Name.Anonymous") || is("Name.Indeterminate") || is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name")
@@ -59,7 +59,7 @@ class AstMacros(val c: Context) extends AstReflection {
       // and:
       //  class NameAnonymousImpl needs to be abstract, since method withDenot in trait Name
       //  of type (denot: scala.meta.internal.semantic.Denotation)NameAnonymousImpl.this.ThisType is not defined
-      // val descriptivePrefix = fullName.stripPrefix("scala.meta.internal.ast.").stripPrefix("scala.meta.").replace(".", "")
+      // val descriptivePrefix = fullName.stripPrefix("scala.meta.").replace(".", "")
       // val aname = TypeName(descriptivePrefix.replace(".", "") + "Api")
       // val name = TypeName(descriptivePrefix.replace(".", "") + "Impl")
       val aname = TypeName("Api")
@@ -511,7 +511,7 @@ class AstMacros(val c: Context) extends AstReflection {
             (validators, q"$local.map($validateLocal)")
           } else if ((is("Defn.Trait") || is("Defn.Object") || is("Pkg.Object")) && local.toString == "templ") {
             val validators = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(!stat.isInstanceOf[Ctor]); stat })")
-            (validators, q"{ if (!$local.isInstanceOf[impl.Quasi]) $local.stats.map($validateLocal); $local }")
+            (validators, q"{ if (!$local.isInstanceOf[_root_.scala.meta.internal.ast.Quasi]) $local.stats.map($validateLocal); $local }")
           } else if (is("Template") && local.toString == "early") {
             val validators = List(q"def $validateLocal(stat: Stat) = { require(stat.isEarlyStat && parents.nonEmpty); stat }")
             (validators, q"$local.map($validateLocal)")

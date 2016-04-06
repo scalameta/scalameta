@@ -4,7 +4,7 @@ package ast
 import org.scalatest._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
-import scala.meta.internal.ast._
+import scala.meta._
 import scala.meta.internal.tokenquasiquotes._
 import scala.meta.internal.semantic._
 import scala.meta.dialects.Scala211

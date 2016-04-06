@@ -6,7 +6,7 @@ package prettyprinters
 // We need to investigate and fix this unfortunate problem.
 //
 // import org.scalatest._
-// import scala.meta.internal.ast._
+// import scala.meta._
 // import scala.meta.internal.semantic._
 // import scala.meta.internal.ui.Attributes
 // import scala.meta.internal.semantic.Typing.Recursive

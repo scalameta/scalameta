@@ -35,25 +35,26 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
 
   private def foundReqMsg(found: c.Type, req: c.Type): String = {
     val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
-    g.analyzer.foundReqMsg(found.asInstanceOf[g.Type], req.asInstanceOf[g.Type])
+    val msg = g.analyzer.foundReqMsg(found.asInstanceOf[g.Type], req.asInstanceOf[g.Type])
+    // TODO: somehow, error reporting facilities are now printing
+    // some types as `meta.XXX` and some types as `scala.meta.XXX`
+    // find out why and fix this ugliness
+    msg.replace("meta.", "scala.meta.").replace("scala.scala.", "scala.")
   }
 
   def liftApply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {
     val outsideTpe = outside.tpe
     val insideTpe = I.tpe
-    if (outsideTpe <:< insideTpe.publish) {
+    if (outsideTpe <:< insideTpe) {
       val needsCast = !(outsideTpe <:< insideTpe)
       if (needsCast) q"$outside.asInstanceOf[$insideTpe]"
       else outside
     } else {
-      val liftable = c.inferImplicitValue(appliedType(MetaLift, outsideTpe, insideTpe.publish), silent = true)
+      val liftable = c.inferImplicitValue(appliedType(MetaLift, outsideTpe, insideTpe), silent = true)
       if (liftable.nonEmpty) {
-        val lifted = q"$liftable.apply($outside)"
-        val needsCast = !(insideTpe.publish =:= insideTpe)
-        if (needsCast) q"$lifted.asInstanceOf[$insideTpe]"
-        else lifted
+        q"$liftable.apply($outside)"
       } else {
-        val errorMessage = "type mismatch when unquoting" + foundReqMsg(outsideTpe, insideTpe.publish)
+        val errorMessage = "type mismatch when unquoting" + foundReqMsg(outsideTpe, insideTpe)
         c.abort(c.enclosingPosition, errorMessage)
       }
     }
@@ -70,20 +71,20 @@ private[meta] class ConversionMacros(val c: Context) extends AstReflection {
   def unliftApply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {
     // TODO: here we just disregard the expected outside type, because I can't find uses for it
     // duality is a fun thing, but it looks like here it just led me into a dead-end
-    q"$inside: ${inside.tpe.publish}"
+    q"$inside: ${inside.tpe}"
   }
 
   def unliftUnapply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {
     val insideTpe = inside.tpe
     val outsideTpe = O.tpe
-    if (insideTpe.publish <:< outsideTpe) {
-      q"_root_.scala.Some($inside: ${insideTpe.publish})"
+    if (insideTpe <:< outsideTpe) {
+      q"_root_.scala.Some($inside: $insideTpe)"
     } else {
-      val unliftable = c.inferImplicitValue(appliedType(MetaUnlift, insideTpe.publish, outsideTpe), silent = true)
+      val unliftable = c.inferImplicitValue(appliedType(MetaUnlift, insideTpe, outsideTpe), silent = true)
       if (unliftable.nonEmpty) {
         q"$unliftable.apply($inside)"
       } else {
-        val errorMessage = "type mismatch when unquoting" + foundReqMsg(insideTpe.publish, outsideTpe)
+        val errorMessage = "type mismatch when unquoting" + foundReqMsg(insideTpe, outsideTpe)
         c.abort(c.enclosingPosition, errorMessage)
       }
     }
