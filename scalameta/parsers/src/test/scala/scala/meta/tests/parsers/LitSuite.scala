@@ -100,5 +100,11 @@ class LitSuite extends ParseSuite {
     import scala.meta.prettyprinters._
     assert(term("""( 50).toString""").show[Structure] === "Term.Select(Lit(50), Term.Name(\"toString\"))")
   }
+
+  test("#360") {
+    import scala.meta.parsers._
+    val result = """ "sobaka """.parse[Stat]
+    assert(result.isInstanceOf[Parsed.Error])
+  }
 }
 
