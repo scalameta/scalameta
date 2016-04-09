@@ -3366,9 +3366,12 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 object ScalametaParser {
   def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
     def apply(input: Input)(implicit dialect: Dialect): Parsed[T] = {
-      val parser = new ScalametaParser(input)(dialect)
-      try Parsed.Success(fn(parser))
-      catch { case details @ ParseException(pos, message) => Parsed.Error(pos, message, details) }
+      try {
+        val parser = new ScalametaParser(input)(dialect)
+        Parsed.Success(fn(parser))
+      } catch {
+        case details @ ParseException(pos, message) => Parsed.Error(pos, message, details)
+      }
     }
   }
 }
