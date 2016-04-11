@@ -25,6 +25,7 @@ trait ImplTransformers {
       val allowClasses = isImplemented(transformClass(null, null))
       val allowTraits = isImplemented(transformTrait(null, null))
       val allowModules = isImplemented(transformModule(null))
+      if (!allowClasses && !allowTraits && !allowModules) sys.error("invalid ImplTransformer")
 
       def failUexpectedAnnottees() = {
         var allowed = List[String]()
@@ -36,7 +37,7 @@ trait ImplTransformers {
           else allowed.mkString
         }
         val q"new $s_name(...$_).macroTransform(..$_)" = c.macroApplication
-        c.abort(annottees.head.pos, s"only $s_allowed can be @s_name")
+        c.abort(annottees.head.pos, s"only $s_allowed can be $s_name")
       }
 
       val expanded = annottees match {
