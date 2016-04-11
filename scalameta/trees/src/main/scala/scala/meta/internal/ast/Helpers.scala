@@ -6,8 +6,8 @@ import java.lang.{ Character => JCharacter }
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.reflect.ClassTag
+import org.scalameta._
 import org.scalameta.invariants._
-import org.scalameta.unreachable
 import scala.annotation.switch
 import scala.meta.prettyprinters._
 

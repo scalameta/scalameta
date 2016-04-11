@@ -7,8 +7,9 @@ import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
 import org.scalameta.adt.{LiftableMacros => AdtLiftableMacros}
 import scala.meta.internal.ast.{Reflection => AstReflection}
-import scala.meta.internal.ast.internal.Ast
+import scala.meta.internal.ast.Metadata.Ast
 
+// Implementation of the scala.reflect.api.Universe#Liftable interface for asts.
 trait Liftables {
   val u: scala.reflect.macros.Universe
   implicit def materializeAst[T <: Ast]: u.Liftable[T] = macro LiftableMacros.impl[T]

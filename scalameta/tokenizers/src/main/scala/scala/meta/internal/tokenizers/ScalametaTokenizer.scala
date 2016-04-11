@@ -3,7 +3,7 @@ package internal
 package tokenizers
 
 import scala.collection.{immutable, mutable}
-import org.scalameta.unreachable
+import org.scalameta._
 import org.scalameta.invariants._
 import Chars.{CR, LF, FF}
 import LegacyToken._

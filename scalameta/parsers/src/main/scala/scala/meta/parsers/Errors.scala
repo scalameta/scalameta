@@ -7,8 +7,16 @@ import scala.meta.inputs._
 
 @root trait Parsed[+T] {
   def get: T = this match {
-    case Parsed.Success(tokens) => tokens
+    case Parsed.Success(tree) => tree
     case Parsed.Error(_, _, details) => throw details
+  }
+  def orElse[U >: T](alt: => Parsed[U]): Parsed[U] = this match {
+    case Parsed.Success(_) => this
+    case _ => alt
+  }
+  def getOrElse[U >: T](alt: => U): U = this match {
+    case Parsed.Success(tree) => tree
+    case _ => alt
   }
 }
 

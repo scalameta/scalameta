@@ -3,31 +3,59 @@ package org.scalameta
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import scala.reflect.{ClassTag, classTag}
+import org.scalameta.internal.MacroHelpers
 
 package object invariants {
-  def require(x: Boolean): Unit = macro Macros.require
-  def abort(xs: Any*): Nothing = macro Macros.abort
-  def debug(xs: Any*): Boolean = true
-  // TODO: add pretty printed support for implication
+  // This macro behaves like `Predef.require` with an additional twist
+  // of taking apart `requirement` and generating out an informative exception message
+  // if things does wrong.
+  //
+  // Things that end up on an error message:
+  // 1) Values of local variables.
+  // 2) Calls to `org.scalameta.debug` as explained in documentation to that method.
+  def require(requirement: Boolean): Unit = macro Macros.require
+
+  implicit class XtensionRequireCast[T](x: T) {
+    // Equivalent to requiring that `x.getClass` is assignable from `U`.
+    // Implemented as a macro, because there's no other way to delegate to another macro.
+    def require[U: ClassTag]: U = macro Macros.requireCast[U]
+  }
+
+  // Provides pretty notation for implications of different kinds.
+  // This is surprisingly helpful when writing certain complex `require` calls.
   implicit class XtensionImplication(left: Boolean) {
     def ==>(right: Boolean) = !left || right
     def <==(right: Boolean) = (right ==> left)
     def <==>(right: Boolean) = (left ==> right) && (right ==> left)
   }
-  implicit class XtensionRequireCast[T](x: T) {
-    def require[U: ClassTag]: U = macro Macros.requireCast[U]
-  }
-  implicit class XtensionRequireGet[T](x: Option[T]) {
-    def requireGet: T = macro Macros.requireGet
-  }
 }
 
 package invariants {
-  class Macros(val c: Context) {
+  class Macros(val c: Context) extends MacroHelpers {
     import c.universe._
-    import c.internal._
-    import decorators._
-    def require(x: Tree): Tree = {
+
+    def require(requirement: Tree): Tree = {
+      val failures = c.freshName(TermName("failures"))
+      val allDebuggees = freeLocals(requirement) ++ debuggees(requirement)
+      q"""
+        ${instrument(requirement)} match {
+          case (true, _) => ()
+          case (false, $failures) => $InvariantFailedRaiseMethod(${showCode(requirement)}, $failures, $allDebuggees)
+        }
+      """
+    }
+
+    def requireCast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
+      val q"$_($x)" = c.prefix.tree
+      q"""
+        val temp = ${c.untypecheck(x)}
+        val tempClass = if (temp != null) temp.getClass else null
+        $InvariantsRequireMethod(tempClass != null && _root_.scala.reflect.classTag[$U].unapply(temp).isDefined)
+        temp.asInstanceOf[$U]
+      """
+    }
+
+    private def instrument(tree: Tree): Tree = {
       sealed abstract class Prop {
         lazy val result = c.freshName(TermName("result"))
         lazy val failures = c.freshName(TermName("failures"))
@@ -169,84 +197,12 @@ package invariants {
           prop
       }
 
-      val prop = simplify(propify(x))
-      // println(x)
+      val prop = simplify(propify(tree))
+      // println(tree)
       // println(prop)
       // println(prop.emit)
       // println("=======")
-
-      val failures = c.freshName(TermName("failures"))
-      object freeLocalFinder extends Traverser {
-        private val localRefs = scala.collection.mutable.ListBuffer[Tree]()
-        private val localLocals = scala.collection.mutable.Set[Symbol]()
-        def registerLocalLocal(sym: Symbol) {
-          if (sym != null && sym != NoSymbol) localLocals += sym
-        }
-        def markLocalLocal(tree: Tree) {
-          if (tree.symbol != null && tree.symbol != NoSymbol) {
-            val sym = tree.symbol
-            registerLocalLocal(sym)
-            registerLocalLocal(sym.deSkolemize)
-            registerLocalLocal(sym.companion)
-            sym match {
-              case sym: ClassSymbol => registerLocalLocal(sym.module)
-              case sym: ModuleSymbol => registerLocalLocal(sym.moduleClass)
-              case _ => ;
-            }
-          }
-        }
-        override def traverse(tree: Tree): Unit = {
-          val sym = tree.symbol
-          tree match {
-            case tree: Ident if !sym.owner.isClass && tree.name != termNames.WILDCARD && !sym.isMethod => localRefs += tree
-            case tree: This if !sym.isPackageClass => localRefs += tree
-            case _: DefTree | Function(_, _) | Template(_, _, _) => markLocalLocal(tree); super.traverse(tree)
-            case _ => super.traverse(tree)
-          }
-        }
-        def freeLocals = localRefs.filter(ref => !localLocals.contains(ref.symbol))
-      }
-      freeLocalFinder.traverse(x)
-      val freeLocals = freeLocalFinder.freeLocals.map(tree => tree.symbol.name.toString -> tree.duplicate).toMap
-      object debugFinder extends Traverser {
-        private val invariantsPackageObject = c.mirror.staticPackage("org.scalameta.invariants").info.member(termNames.PACKAGE).asModule
-        private val invariantsDebug = invariantsPackageObject.info.member(TermName("debug")).asMethod
-        val debuggees = scala.collection.mutable.ListBuffer[Tree]()
-        override def traverse(tree: Tree): Unit = tree match {
-          case Apply(fun, args) if fun.symbol == invariantsDebug => debuggees ++= args
-          case tree => super.traverse(tree)
-        }
-      }
-      debugFinder.traverse(x)
-      val allDebuggees = freeLocals ++ debugFinder.debuggees.map(tree => tree.toString -> tree.duplicate).toMap
-      // println(x -> freeLocals)
-      q"""
-        ${c.untypecheck(prop.emit)} match {
-          case (true, _) => ()
-          case (false, $failures) => _root_.org.scalameta.invariants.InvariantFailedException.raise(${showCode(x)}, $failures, $allDebuggees)
-        }
-      """
-    }
-    def abort(xs: Tree*): Tree = {
-      val debug = q"_root_.org.scalameta.invariants.`package`.debug(..$xs)"
-      q"_root_.org.scalameta.invariants.`package`.require(false && $debug).asInstanceOf[_root_.scala.Nothing]"
-    }
-    def requireCast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
-      val q"$_($x)" = c.prefix.tree
-      q"""
-        val temp = ${c.untypecheck(x)}
-        val tempClass = if (temp != null) temp.getClass else null
-        _root_.org.scalameta.invariants.require(tempClass != null && _root_.scala.reflect.classTag[$U].unapply(temp).isDefined)
-        temp.asInstanceOf[$U]
-      """
-    }
-    def requireGet: c.Tree = {
-      val q"$_($x)" = c.prefix.tree
-      q"""
-        val temp = ${c.untypecheck(x)}
-        _root_.org.scalameta.invariants.require(temp != null && temp.isDefined)
-        temp.get
-      """
+      c.untypecheck(prop.emit)
     }
   }
 }

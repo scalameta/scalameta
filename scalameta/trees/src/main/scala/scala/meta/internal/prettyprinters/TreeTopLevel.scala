@@ -3,8 +3,8 @@ package internal
 package prettyprinters
 
 import scala.annotation.implicitNotFound
+import org.scalameta._
 import org.scalameta.invariants._
-import org.scalameta.unreachable
 import scala.meta.prettyprinters._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 

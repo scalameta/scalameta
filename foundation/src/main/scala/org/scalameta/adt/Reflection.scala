@@ -1,8 +1,8 @@
 package org.scalameta.adt
 
 import scala.reflect.api.Universe
-import org.scalameta.adt.{Internal => AdtInternal}
-import scala.meta.internal.ast.{internal => AstInternal}
+import org.scalameta.adt.{Metadata => AdtMetadata}
+import scala.meta.internal.ast.{Metadata => AstMetadata}
 import scala.reflect.{classTag, ClassTag}
 import scala.collection.mutable
 
@@ -15,23 +15,23 @@ trait Reflection {
 
   implicit class XtensionAdtSymbol(sym: Symbol) {
     def isAdt: Boolean = {
-      def inheritsFromAdt = sym.isClass && (sym.asClass.toType <:< typeOf[AdtInternal.Adt])
-      def isBookkeeping = sym.asClass == symbolOf[AdtInternal.Adt] || sym.asClass == symbolOf[AstInternal.Ast]
+      def inheritsFromAdt = sym.isClass && (sym.asClass.toType <:< typeOf[AdtMetadata.Adt])
+      def isBookkeeping = sym.asClass == symbolOf[AdtMetadata.Adt] || sym.asClass == symbolOf[AstMetadata.Ast]
       inheritsFromAdt && !isBookkeeping
     }
     private def hasAnnotation[T: ClassTag] = { sym.initialize; sym.annotations.exists(_.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName) }
-    def isRoot: Boolean = hasAnnotation[AdtInternal.root]
-    def isBranch: Boolean = hasAnnotation[AdtInternal.branch]
-    def isLeaf: Boolean = hasAnnotation[AdtInternal.leafClass]
+    def isRoot: Boolean = hasAnnotation[AdtMetadata.root]
+    def isBranch: Boolean = hasAnnotation[AdtMetadata.branch]
+    def isLeaf: Boolean = hasAnnotation[AdtMetadata.leafClass]
     def isField: Boolean = {
       val isMethodInLeafClass = sym.isMethod && sym.owner.isLeaf
       val isParamGetter = sym.isTerm && sym.asTerm.isParamAccessor && sym.asTerm.isGetter && sym.isPublic
-      val isAstField = hasAnnotation[AstInternal.astField]
+      val isAstField = hasAnnotation[AstMetadata.astField]
       isMethodInLeafClass && (isParamGetter || isAstField)
     }
     def isPayload: Boolean = sym.isField && !sym.isAuxiliary
-    def isAuxiliary: Boolean = sym.isField && hasAnnotation[AstInternal.auxiliary]
-    def isByNeed: Boolean = sym.isField && hasAnnotation[AdtInternal.byNeedField]
+    def isAuxiliary: Boolean = sym.isField && hasAnnotation[AstMetadata.auxiliary]
+    def isByNeed: Boolean = sym.isField && hasAnnotation[AdtMetadata.byNeedField]
     def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt: " + sym)
     def asRoot: Root = new Root(sym)
     def asBranch: Branch = new Branch(sym)

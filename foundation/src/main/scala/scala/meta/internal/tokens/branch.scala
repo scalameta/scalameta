@@ -5,26 +5,20 @@ package tokens
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
+import org.scalameta.internal.MacroHelpers
 
+// @branch is a specialized version of @org.scalameta.adt.branch for scala.meta tokens.
 class branch extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro BranchMacros.impl
+  def macroTransform(annottees: Any*): Any = macro BranchNamerMacros.impl
 }
 
-class BranchMacros(val c: Context) {
+class BranchNamerMacros(val c: Context) extends MacroHelpers {
   import c.universe._
-  import Flag._
-  def impl(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef): ClassDef = {
+  def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, templ) = cdef
-      val Adt = q"_root_.org.scalameta.adt"
-      val TokenInternal = q"_root_.scala.meta.internal.tokens.internal"
-      val anns1 = q"new $TokenInternal.branch" +: q"new $Adt.branch" +: anns
-      ClassDef(Modifiers(flags, privateWithin, anns1), name, tparams, templ)
+      val anns1 = q"new $TokenMetadataModule.branch" +: q"new $AdtPackage.branch" +: anns
+      List(ClassDef(Modifiers(flags, privateWithin, anns1), name, tparams, templ), mdef)
     }
-    val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef) :: rest
-      case annottee :: rest => c.abort(annottee.pos, "only traits can be @branch")
-    }
-    q"{ ..$expanded; () }"
-  }
+  })
 }

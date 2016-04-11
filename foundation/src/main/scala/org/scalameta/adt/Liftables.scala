@@ -4,11 +4,10 @@ import scala.collection.mutable
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
-import org.scalameta.adt.Internal.Adt
+import org.scalameta.adt.Metadata.Adt
 import org.scalameta.adt.{Reflection => AdtReflection}
-import scala.meta.internal.debug._
-import scala.meta.internal.ast.XtensionAstDebug
 
+// Implementation of the scala.reflect.api.Universe#Liftable interface for adts.
 trait Liftables {
   val u: scala.reflect.macros.Universe
   implicit def materializeAdt[T <: Adt]: u.Liftable[T] = macro LiftableMacros.impl[T]
@@ -81,7 +80,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val clauses = adts.zip(defNames).map({ case (adt, name) =>
       cq"$localName: ${adt.tpe} => $name($localName.asInstanceOf[${adt.tpe}])"
     })
-    val result = q"""
+    q"""
       $u.Liftable(($mainParam: ${weakTypeOf[T]}) => {
         object $mainModule {
           val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
@@ -96,7 +95,5 @@ class LiftableMacros(val c: Context) extends AdtReflection {
         $mainModule.$mainMethod.apply($mainParam)
       })
     """
-    Debug.logAst(println(result))
-    result
   }
 }

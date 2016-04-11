@@ -2,8 +2,8 @@ package scala.meta.tests
 package invariants
 
 import org.scalatest._
+import org.scalameta._
 import org.scalameta.invariants._
-import org.scalameta.{unreachable, UnreachableError}
 
 class InvariantSuite extends FunSuite {
   test("more informative error messages") {
@@ -29,7 +29,7 @@ class InvariantSuite extends FunSuite {
       case ex: InvariantFailedException =>
         assert(ex.getMessage === """
           |invariant failed:
-          |when verifying C.this.x.!=(3).&&(org.scalameta.invariants.`package`.debug(C.this.x, y))
+          |when verifying C.this.x.!=(3).&&(org.scalameta.`package`.debug(C.this.x, y))
           |found that C.this.x is equal to 3
           |where C = C(3)
           |where C.this.x = 3
