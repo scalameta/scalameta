@@ -14,13 +14,13 @@ class quasiquote[T](qname: scala.Symbol) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro QuasiquoteMacros.impl
 }
 
-class QuasiquoteMacros(val c: Context) with MacroHelpers {
+class QuasiquoteMacros(val c: Context) extends MacroHelpers {
   import c.universe._
   import Flag._
   val ReificationMacros = q"_root_.scala.meta.internal.quasiquotes.ReificationMacros"
   def impl(annottees: c.Tree*): c.Tree = annottees.transformAnnottees(new ImplTransformer {
     val q"new $_[..$qtypes](scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication
-    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+    override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val mparents1 = mparents ++ parents // TODO: this is kinda weird

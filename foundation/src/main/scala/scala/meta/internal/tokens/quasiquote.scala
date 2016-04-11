@@ -23,7 +23,7 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
   val Tokens = tq"_root_.scala.meta.tokens.Tokens"
   def impl(annottees: c.Tree*): c.Tree = annottees.transformAnnottees(new ImplTransformer {
     val q"new $_[..$qtypes](scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication
-    def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+    override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val stats1 = stats :+ q"""
         object ${TermName(qname)} {
