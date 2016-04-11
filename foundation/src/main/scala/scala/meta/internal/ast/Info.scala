@@ -8,14 +8,15 @@ import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
 import java.lang.Class
 import org.scalameta.internal.MacroHelpers
+import scala.meta.internal.ast.Metadata.Ast
 
 @implicitNotFound(msg = "${T} is not an ast class and can't be used here.")
-trait AstInfo[T] extends ClassTag[T] {
+trait AstInfo[T <: Ast] extends ClassTag[T] {
   def runtimeClass: Class[T]
   def quasi(rank: Int, tree: Any): T
 }
 object AstInfo {
-  implicit def materialize[T]: AstInfo[T] = macro AstInfoMacros.materialize[T]
+  implicit def materialize[T <: Ast]: AstInfo[T] = macro AstInfoMacros.materialize[T]
 }
 
 class AstInfoMacros(val c: Context) extends MacroHelpers {

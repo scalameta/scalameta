@@ -7,14 +7,15 @@ import scala.reflect.macros.blackbox.Context
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
 import java.lang.Class
+import scala.meta.internal.tokens.Metadata.Token
 
 @implicitNotFound(msg = "${T} is not a token class and can't be used here.")
-trait TokenInfo[T] extends ClassTag[T] {
+trait TokenInfo[T <: Token] extends ClassTag[T] {
   def name: String
   def runtimeClass: Class[T]
 }
 object TokenInfo {
-  implicit def materialize[T]: TokenInfo[T] = macro TokenInfoMacros.materialize[T]
+  implicit def materialize[T <: Token]: TokenInfo[T] = macro TokenInfoMacros.materialize[T]
 }
 
 class TokenInfoMacros(val c: Context) {
