@@ -11,6 +11,14 @@ import scala.meta.inputs._
     case Tokenized.Success(tokens) => tokens
     case Tokenized.Error(_, _, details) => throw details
   }
+  def orElse(alt: => Tokenized): Tokenized = this match {
+    case Tokenized.Success(_) => this
+    case _ => alt
+  }
+  def getOrElse(alt: => Tokens): Tokens = this match {
+    case Tokenized.Success(tokens) => tokens
+    case _ => alt
+  }
 }
 
 object Tokenized {

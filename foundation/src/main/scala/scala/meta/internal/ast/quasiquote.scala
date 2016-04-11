@@ -35,22 +35,19 @@ class QuasiquoteMacros(val c: Context) {
         """
       }
       val qparser = {
-        val qunsafeResults = qtypes.map(qtype => q"""
+        val qmonadicResults = qtypes.map(qtype => q"""
           type Parse[T] = _root_.scala.meta.parsers.Parse[T]
           val parse = _root_.scala.Predef.implicitly[Parse[$qtype]]
-          parse(input)(dialect).get
+          parse(input)(dialect)
         """)
-        val qsafeResults = qunsafeResults.map(qunsafeParser => q"_root_.scala.util.Try($qunsafeParser)")
-        val gsafeResultsWithLogging = qsafeResults.map(qsafeResult => q"""
-          $qsafeResult.recover({
-            case ex: _root_.scala.Exception =>
-              if (_root_.scala.sys.`package`.props("quasiquote.debug") != null) ex.printStackTrace()
-              throw ex
-          })
-        """)
-        var qsafeResult = gsafeResultsWithLogging.reduce((acc, curr) => q"$acc.orElse($curr)")
-        val qparseResult = if (qunsafeResults.length == 1) qunsafeResults.head else q"$qsafeResult.get"
-        q"private[meta] def parse(input: _root_.scala.meta.inputs.Input)(implicit dialect: _root_.scala.meta.Dialect) = $qparseResult"
+        var qmonadicResult = qmonadicResults.reduce((acc, curr) => q"$acc.orElse($curr)")
+        val qresult = q"""
+          $qmonadicResult match {
+            case _root_.scala.meta.parsers.Parsed.Success(result) => result
+            case _root_.scala.meta.parsers.Parsed.Error(_, _, details) => throw details
+          }
+        """
+        q"private[meta] def parse(input: _root_.scala.meta.inputs.Input)(implicit dialect: _root_.scala.meta.Dialect) = $qresult"
       }
       val stats1 = stats :+ qmodule
       val mstats1 = mstats :+ qparser
