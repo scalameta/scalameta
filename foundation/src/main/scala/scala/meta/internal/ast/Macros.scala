@@ -9,6 +9,7 @@ import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.{Reflection => AdtReflection}
 import org.scalameta.internal.MacroHelpers
 
+// Parts of @root, @branch and @ast logic that need a typer context and can't be run in a macro annotation.
 object AstTyperMacros {
   def hierarchyCheck[T]: Unit = macro AstTyperMacrosBundle.hierarchyCheck[T]
   def productPrefix[T]: String = macro AstTyperMacrosBundle.productPrefix[T]

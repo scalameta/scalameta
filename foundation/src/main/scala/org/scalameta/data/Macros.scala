@@ -5,6 +5,7 @@ import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.{Reflection => AdtReflection, Metadata => AdtMetadata}
 import org.scalameta.internal.MacroHelpers
 
+// Parts of @data logic that need a typer context and can't be run in a macro annotation.
 object DataTyperMacros {
   def nullCheck[T](x: T): Unit = macro DataTyperMacrosBundle.nullCheck
   def emptyCheck[T](x: T): Unit = macro DataTyperMacrosBundle.emptyCheck

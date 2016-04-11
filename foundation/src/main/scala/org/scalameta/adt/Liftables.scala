@@ -7,6 +7,7 @@ import org.scalameta.unreachable
 import org.scalameta.adt.Metadata.Adt
 import org.scalameta.adt.{Reflection => AdtReflection}
 
+// Implementation of the scala.reflect.api.Universe#Liftable interface for adts.
 trait Liftables {
   val u: scala.reflect.macros.Universe
   implicit def materializeAdt[T <: Adt]: u.Liftable[T] = macro LiftableMacros.impl[T]

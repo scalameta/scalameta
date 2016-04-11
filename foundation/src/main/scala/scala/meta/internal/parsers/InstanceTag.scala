@@ -8,6 +8,7 @@ import scala.reflect.ClassTag
 import scala.annotation.implicitNotFound
 import org.scalameta.internal.MacroHelpers
 
+// See comments to `instanceOf[T]` declared in the nearby package object.
 @implicitNotFound(msg = "${T} is not a trivially instantiable class or an object.")
 trait InstanceTag[T] extends ClassTag[T] {
   def instantiate: T

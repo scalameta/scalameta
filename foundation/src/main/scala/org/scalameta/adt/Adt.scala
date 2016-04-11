@@ -136,6 +136,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
   })
 }
 
+// Parts of @root, @branch and @leaf logic that need a typer context and can't be run in a macro annotation.
 object AdtTyperMacros {
   case class TagAttachment(counter: Int)
   def calculateTag[T]: Int = macro AdtTyperMacrosBundle.calculateTag[T]

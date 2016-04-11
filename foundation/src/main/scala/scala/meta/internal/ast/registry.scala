@@ -9,6 +9,8 @@ import scala.reflect.macros.whitebox.Context
 import scala.meta.internal.ast.{Reflection => AstReflection}
 import org.scalameta.internal.MacroHelpers
 
+// Detects scala.meta ASTs defined in the current compilation unit
+// and then saves them in a runtime annotation on the annottee.
 class registry extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro RegistryMacros.impl
 }

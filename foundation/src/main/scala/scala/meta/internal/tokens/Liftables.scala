@@ -8,6 +8,7 @@ import org.scalameta.unreachable
 import org.scalameta.adt.{LiftableMacros => AdtLiftableMacros}
 import scala.meta.internal.tokens.Metadata.Token
 
+// Implementation of the scala.reflect.api.Universe#Liftable interface for tokens.
 trait Liftables {
   val u: scala.reflect.macros.Universe
   implicit def materializeToken[T <: Token]: u.Liftable[T] = macro LiftableMacros.impl[T]

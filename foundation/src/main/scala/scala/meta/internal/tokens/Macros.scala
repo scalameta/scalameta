@@ -5,6 +5,7 @@ package tokens
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
+// Parts of @token logic that need a typer context and can't be run in a macro annotation.
 object TokenTyperMacros {
   def staticDynamicCheck[T]: Unit = macro TokenTyperMacrosBundle.staticDynamicCheck[T]
 }
