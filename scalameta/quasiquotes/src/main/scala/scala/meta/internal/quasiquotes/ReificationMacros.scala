@@ -12,24 +12,23 @@ import scala.collection.{immutable, mutable}
 import org.scalameta.data._
 import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
 import scala.meta.internal.ast.{Liftables => AstLiftables, Reflection => AstReflection}
+import org.scalameta._
 import org.scalameta.invariants._
-import org.scalameta.unreachable
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
-import scala.meta.internal.semantic.{Denotation => MetaDenotation, Converters => SemanticConverters, _}
+import scala.meta.internal.semantic.{Denotation => MetaDenotation, _}
 import scala.meta.internal.semantic.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
-import scala.meta.internal.debug._
 import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
 private[meta] class ReificationMacros(val c: Context)
-extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialect with SemanticConverters {
+extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialect {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.internal._
@@ -102,7 +101,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         }
       } catch {
         case ex: Exception =>
-          Debug.logQuasiquote(println(ex.toString))
+          log(println(ex.toString))
           c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
       }
     }
@@ -199,12 +198,12 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       part ++ unquote
     }
     val tokens: MetaTokens = MetaTokens(parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) }): _*)
-    Debug.logQuasiquote(println(tokens))
+    log(println(tokens))
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-      Debug.logQuasiquote({ println(tokens); println(parsingDialect) })
+      log({ println(tokens); println(parsingDialect) })
       val syntax = metaParse(tokens, parsingDialect)
-      Debug.logQuasiquote({ println(syntax.show[Syntax]); println(syntax.show[Structure]) })
+      log({ println(syntax.show[Syntax]); println(syntax.show[Structure]) })
       (syntax, mode)
     } catch {
       case ParseException(position, message) => c.abort(position, message)
@@ -472,5 +471,9 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         }
         internalResult // TODO: q"InternalLift[${dummy.tpe}]($internalResult)"
     }
+  }
+
+  def log(op: => Unit): Unit = {
+    if (sys.props("quasiquote.debug") != null) println(op)
   }
 }

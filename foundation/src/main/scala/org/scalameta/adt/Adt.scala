@@ -5,56 +5,41 @@ import scala.annotation.StaticAnnotation
 import org.scalameta.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
-import org.scalameta.adt.{Reflection => AdtReflection}
+import org.scalameta.adt.{Reflection => AdtReflection, Metadata => AdtMetadata}
+import org.scalameta.internal.MacroHelpers
+
+// The @root, @branch and @leaf macros implement the ADT pattern in a formulation that we found useful.
+//
+// More precisely a single @root trait, multiple @branch traits and a bunch of @leaf classes
+// define an ADT hierarchy. Unlike the traditional understanding of ADTs with a sealed root trait
+// and several final classes, we introduce intermediate branch traits, all of which inherit from the root
+// (or each other) and are ultimately inherited by one or more final leaf classes.
+//
+// Much as with the @data annotation, we use macro annotations to codify a well-known pattern
+// and tailor it to our needs with the extensibility that macro annotations provide.
 
 class root extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro AdtMacros.root
-}
-
-class monadicRoot extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro AdtMacros.monadicRoot
+  def macroTransform(annottees: Any*): Any = macro AdtNamerMacros.root
 }
 
 class branch extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro AdtMacros.branch
+  def macroTransform(annottees: Any*): Any = macro AdtNamerMacros.branch
 }
 
 class leaf extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro AdtMacros.leaf
+  def macroTransform(annottees: Any*): Any = macro AdtNamerMacros.leaf
 }
 
-class noneLeaf extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro AdtMacros.noneLeaf
-}
-
-class someLeaf extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro AdtMacros.someLeaf
-}
-
-class AdtMacros(val c: Context) {
+class AdtNamerMacros(val c: Context) extends MacroHelpers {
   import c.universe._
   import definitions._
   import Flag._
-  val Public = q"_root_.org.scalameta.adt"
-  val Internal = q"_root_.org.scalameta.adt.Internal"
-  val Data = q"_root_.org.scalameta.data"
 
-  def nameref(name: TypeName, tparams: List[TypeDef]) = tq"$name[..${tparams.map(_.name)}]"
-  def wildcardedNameref(name: TypeName, tparams: List[TypeDef]) = {
-    if (tparams.length == 0) tq"$name"
-    else {
-      val quantrefs = tparams.map(_ => c.freshName(TypeName("_")))
-      val quantdefs = quantrefs.map(name => q"type $name")
-      tq"$name[..$quantrefs] forSome { ..$quantdefs }"
-    }
-  }
-
-  def root(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+  def root(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
-      val nameref = this.nameref(name, tparams)
-      val wildcardedNameref = this.wildcardedNameref(name, tparams)
+      val classRef = typeRef(cdef, requireHk = false, requireWildcards = true)
       val stats1 = ListBuffer[Tree]() ++ stats
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
@@ -62,103 +47,45 @@ class AdtMacros(val c: Context) {
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
       val flags1 = flags | SEALED
       val needsThisType = stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty
-      if (needsThisType) stats1 += q"type ThisType <: $wildcardedNameref"
+      if (needsThisType) stats1 += q"type ThisType <: $classRef"
       stats1 += q"def privateTag: _root_.scala.Int"
-      mstats1 += q"$Internal.hierarchyCheck[$wildcardedNameref]"
-      val anns1 = anns :+ q"new $Internal.root"
-      val parents1 = parents :+ tq"$Internal.Adt" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
+      mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
+      val anns1 = anns :+ q"new $AdtMetadataModule.root"
+      val parents1 = parents :+ tq"$AdtMetadataModule.Adt" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
 
       val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents1, self, stats1.toList))
       val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))
       List(cdef1, mdef1)
     }
-    val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef: ModuleDef) :: rest if mods.hasFlag(TRAIT) => transform(cdef, mdef) ++ rest
-      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef, q"object ${cdef.name.toTermName}") ++ rest
-      case annottee :: rest => c.abort(annottee.pos, "only traits can be @root")
-    }
-    q"{ ..$expanded; () }"
-  }
+  })
 
-  def monadicRoot(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+  def branch(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
       val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
-      val nameref = this.nameref(name, tparams)
-      val wildcardedNameref = this.wildcardedNameref(name, tparams)
-      val stats1 = ListBuffer[Tree]() ++ stats
-      val mstats1 = ListBuffer[Tree]() ++ mstats
-
-      val anns1 = anns :+ q"new $Public.root" :+ q"new $Internal.monadicRoot"
-      stats1 += q"def map(fn: this.ContentType => this.ContentType): $nameref"
-      stats1 += q"def flatMap(fn: this.ContentType => $nameref): $nameref"
-      stats1 += q"def get: this.ContentType"
-      stats1 += q"def getOrElse[B >: this.ContentType](default: => B): B"
-
-      val contentTypes = mstats.collect {
-        case q"${Modifiers(_, _, anns)} class $_[..$_] $_($_: $tpt) extends { ..$_ } with ..$_ { $_ => ..$_ }"
-        if anns.exists({ case q"new someLeaf" => true; case _ => false }) =>
-          tpt
-      }
-      var contentType = contentTypes match {
-        case Nil => c.abort(cdef.pos, s"no @someLeaf classes found in $name's companion object")
-        case List(contentType) => contentType
-        case _ => c.abort(cdef.pos, s"multiple @someLeaf classes found in $name's companion object")
-      }
-      contentType = contentType match {
-        case Annotated(_, contentType) => contentType
-        case contentType => contentType
-      }
-      stats1 += q"type ContentType = $mname.ContentType"
-      mstats1 += q"type ContentType = $contentType"
-
-      val cdef1 = ClassDef(Modifiers(flags, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))
-      val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))
-      List(cdef1, mdef1)
-    }
-    val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef: ModuleDef) :: rest if mods.hasFlag(TRAIT) => transform(cdef, mdef) ++ rest
-      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef, q"object ${cdef.name.toTermName}") ++ rest
-      case annottee :: rest => c.abort(annottee.pos, "only traits can be @root")
-    }
-    q"{ ..$expanded; () }"
-  }
-
-  def branch(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-      val ClassDef(mods @ Modifiers(flags, privateWithin, anns), name, tparams, Template(parents, self, stats)) = cdef
-      val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
-      val nameref = this.nameref(name, tparams)
-      val wildcardedNameref = this.wildcardedNameref(name, tparams)
+      val classRef = typeRef(cdef, requireHk = false, requireWildcards = true)
       val stats1 = ListBuffer[Tree]() ++ stats
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @branch traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
       val flags1 = flags | SEALED
-      stats1 += q"type ThisType <: $wildcardedNameref"
-      mstats1 += q"$Internal.hierarchyCheck[$wildcardedNameref]"
-      val anns1 = anns :+ q"new $Internal.branch"
+      stats1 += q"type ThisType <: $classRef"
+      mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
+      val anns1 = anns :+ q"new $AdtMetadataModule.branch"
 
       val cdef1 = ClassDef(Modifiers(flags1, privateWithin, anns1), name, tparams, Template(parents, self, stats1.toList))
       val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))
       List(cdef1, mdef1)
     }
-    val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef: ModuleDef) :: rest if mods.hasFlag(TRAIT) => transform(cdef, mdef) ++ rest
-      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef, q"object ${cdef.name.toTermName}") ++ rest
-      case annottee :: rest => c.abort(annottee.pos, "only traits can be @branch")
-    }
-    q"{ ..$expanded; () }"
-  }
+  })
 
-  def leaf(annottees: Tree*): Tree = {
-    def transformLeafClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+  def leaf(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
-      val nameref = this.nameref(name, tparams)
-      val wildcardedNameref = this.wildcardedNameref(name, tparams)
+      val classRef = typeRef(cdef, requireHk = false, requireWildcards = true)
       val parents1 = ListBuffer[Tree]() ++ parents
       val stats1 = ListBuffer[Tree]() ++ stats
       val anns1 = ListBuffer[Tree]() ++ mods.annotations
@@ -168,24 +95,24 @@ class AdtMacros(val c: Context) {
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
       // step 1: generate boilerplate required by the @adt infrastructure
-      stats1 += q"override type ThisType = $wildcardedNameref"
+      stats1 += q"override type ThisType = $classRef"
       stats1 += q"override def privateTag: _root_.scala.Int = $mname.privateTag"
-      mstats1 += q"def privateTag: _root_.scala.Int = $Internal.calculateTag[$wildcardedNameref]"
-      mstats1 += q"$Internal.hierarchyCheck[$wildcardedNameref]"
-      mstats1 += q"$Internal.immutabilityCheck[$wildcardedNameref]"
-      anns1 += q"new $Internal.leafClass"
-      manns1 += q"new $Internal.leafCompanion"
+      mstats1 += q"def privateTag: _root_.scala.Int = $AdtTyperMacrosModule.calculateTag[$classRef]"
+      mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
+      mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[$classRef]"
+      anns1 += q"new $AdtMetadataModule.leafClass"
+      manns1 += q"new $AdtMetadataModule.leafCompanion"
       parents1 += tq"_root_.scala.Product"
 
       // step 2: do everything else via @data
-      anns1 += q"new $Data.data(...$argss)"
+      anns1 += q"new $DataAnnotation(...$argss)"
 
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
 
-    def transformLeafModule(mdef: ModuleDef): ModuleDef = {
+    override def transformModule(mdef: ModuleDef): ModuleDef = {
       val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
@@ -195,145 +122,36 @@ class AdtMacros(val c: Context) {
 
       // step 1: generate boilerplate required by the @adt infrastructure
       mstats1 += q"override type ThisType = $mname.type"
-      mstats1 += q"override def privateTag: _root_.scala.Int = $Internal.calculateTag[ThisType]"
-      mstats1 += q"$Internal.hierarchyCheck[ThisType]"
-      mstats1 += q"$Internal.immutabilityCheck[ThisType]"
-      manns1 += q"new $Internal.leafClass"
+      mstats1 += q"override def privateTag: _root_.scala.Int = $AdtTyperMacrosModule.calculateTag[ThisType]"
+      mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[ThisType]"
+      mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[ThisType]"
+      manns1 += q"new $AdtMetadataModule.leafClass"
       mparents1 += tq"_root_.scala.Product"
 
       // step 2: do everything else via @data
-      manns1 += q"new $Data.data(...$argss)"
+      manns1 += q"new $DataAnnotation(...$argss)"
 
       q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
     }
-
-    val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef @ ModuleDef(_, _, _)) :: rest if !(mods hasFlag TRAIT) => transformLeafClass(cdef, mdef) ++ rest
-      case (cdef @ ClassDef(mods, name, _, _)) :: rest if !mods.hasFlag(TRAIT) => transformLeafClass(cdef, q"object ${name.toTermName}") ++ rest
-      case (mdef @ ModuleDef(_, _, _)) :: rest => transformLeafModule(mdef) +: rest
-      case annottee :: rest => c.abort(annottee.pos, "only classes and objects can be @leaf")
-    }
-    q"{ ..$expanded; () }"
-  }
-
-  def noneLeaf(annottees: Tree*): Tree = {
-    def transformLeafClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-      val rname = TypeName(c.internal.enclosingOwner.name.toString)
-      val rmname = rname.toTermName
-      val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
-      val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
-      val anns1 = ListBuffer[Tree]() ++ mods.annotations
-      def mods1 = mods.mapAnnotations(_ => anns1.toList)
-      val stats1 = ListBuffer[Tree]() ++ stats
-
-      anns1 += q"new $Public.leaf"
-      anns1 += q"new $Internal.noneLeaf"
-      stats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = this"
-      stats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = this"
-      stats1 += q"override def get: this.ContentType = throw new _root_.scala.`package`.NoSuchElementException(${"None.get"})"
-      stats1 += q"override def getOrElse[B >: this.ContentType](default: => B): B = default"
-
-      val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
-      List(cdef1, mdef)
-    }
-
-    def transformLeafModule(mdef: ModuleDef): ModuleDef = {
-      val rname = TypeName(c.internal.enclosingOwner.name.toString)
-      val rmname = rname.toTermName
-      val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
-      val manns1 = ListBuffer[Tree]() ++ mmods.annotations
-      def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
-      val mstats1 = ListBuffer[Tree]() ++ mstats
-
-      manns1 += q"new $Public.leaf"
-      manns1 += q"new $Internal.noneLeaf"
-      mstats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = this"
-      mstats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = this"
-      mstats1 += q"override def get: this.ContentType = throw new _root_.scala.`package`.NoSuchElementException(${"None.get"})"
-      mstats1 += q"override def getOrElse[B >: this.ContentType](default: => B): B = default"
-
-      q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
-    }
-
-    val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef @ ModuleDef(_, _, _)) :: rest if !(mods hasFlag TRAIT) => transformLeafClass(cdef, mdef) ++ rest
-      case (cdef @ ClassDef(mods, name, _, _)) :: rest if !mods.hasFlag(TRAIT) => transformLeafClass(cdef, q"object ${name.toTermName}") ++ rest
-      case (mdef @ ModuleDef(_, _, _)) :: rest => transformLeafModule(mdef) +: rest
-      case annottee :: rest => c.abort(annottee.pos, "only classes and objects can be @leaf")
-    }
-    q"{ ..$expanded; () }"
-  }
-
-  def someLeaf(annottees: Tree*): Tree = {
-    def transformLeafClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-      val rname = TypeName(c.internal.enclosingOwner.name.toString)
-      val rmname = rname.toTermName
-      val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
-      val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
-      val anns1 = ListBuffer[Tree]() ++ mods.annotations
-      def mods1 = mods.mapAnnotations(_ => anns1.toList)
-      val stats1 = ListBuffer[Tree]() ++ stats
-
-      if (paramss.flatten.length != 1) c.abort(cdef.pos, "someLeafs must have exactly one parameter")
-      val param = paramss.flatten.head
-      anns1 += q"new $Public.leaf"
-      anns1 += q"new $Internal.someLeaf"
-      stats1 += q"override def map(fn: this.ContentType => this.ContentType): $rname = $mname(fn(this.${param.name}))"
-      stats1 += q"override def flatMap(fn: this.ContentType => $rname): $rname = fn(this.${param.name})"
-      stats1 += q"override def get: this.ContentType = this.${param.name}"
-      stats1 += q"override def getOrElse[B >: this.ContentType](default: => B): B = this.${param.name}"
-
-      val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
-      List(cdef1, mdef)
-    }
-
-    val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef @ ModuleDef(_, _, _)) :: rest if !(mods hasFlag TRAIT) => transformLeafClass(cdef, mdef) ++ rest
-      case (cdef @ ClassDef(mods, name, _, _)) :: rest if !mods.hasFlag(TRAIT) => transformLeafClass(cdef, q"object ${name.toTermName}") ++ rest
-      case (mdef @ ModuleDef(_, _, _)) :: rest => c.abort(mdef.pos, "someLeafs must have parameters")
-      case annottee :: rest => c.abort(annottee.pos, "only classes and objects can be @leaf")
-    }
-    q"{ ..$expanded; () }"
-  }
+  })
 }
 
-object Internal {
-  trait Adt
-  class root extends StaticAnnotation
-  class monadicRoot extends StaticAnnotation
-  class branch extends StaticAnnotation
-  class leafClass extends StaticAnnotation
-  class leafCompanion extends StaticAnnotation
-  class noneLeaf extends StaticAnnotation
-  class someLeaf extends StaticAnnotation
-  class byNeedField extends StaticAnnotation
+object AdtTyperMacros {
   case class TagAttachment(counter: Int)
-  def calculateTag[T]: Int = macro AdtHelperMacros.calculateTag[T]
-  def nullCheck[T](x: T): Unit = macro AdtHelperMacros.nullCheck
-  def emptyCheck[T](x: T): Unit = macro AdtHelperMacros.emptyCheck
-  def hierarchyCheck[T]: Unit = macro AdtHelperMacros.hierarchyCheck[T]
-  def immutabilityCheck[T]: Unit = macro AdtHelperMacros.immutabilityCheck[T]
+  def calculateTag[T]: Int = macro AdtTyperMacrosBundle.calculateTag[T]
+  def hierarchyCheck[T]: Unit = macro AdtTyperMacrosBundle.hierarchyCheck[T]
+  def immutabilityCheck[T]: Unit = macro AdtTyperMacrosBundle.immutabilityCheck[T]
 }
 
-class AdtHelperMacros(val c: Context) extends AdtReflection {
+// NOTE: can't call this `AdtTyperMacros`, because then typechecking the macro defs will produce spurious cyclic errors
+class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpers {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._
   import definitions._
   import c.internal._
   import decorators._
-  import Internal.TagAttachment
-
-  implicit class XtensionSymbol(sym: Symbol) {
-    def nonEmpty = {
-      val tptAnns = sym.info match {
-        case AnnotatedType(anns, _) => anns
-        case _ => Nil
-      }
-      def hasNonEmpty(anns: List[Annotation]) = anns.exists(_.tree.tpe =:= typeOf[nonEmpty])
-      hasNonEmpty(sym.annotations) || hasNonEmpty(tptAnns)
-    }
-  }
+  import AdtTyperMacros.TagAttachment
 
   def calculateTag[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     val sym = T.tpe.typeSymbol.asClass
@@ -345,19 +163,6 @@ class AdtHelperMacros(val c: Context) extends AdtReflection {
       att.counter
     }
     q"$tag"
-  }
-
-  def nullCheck(x: c.Tree): c.Tree = {
-    if (x.tpe.baseClasses.contains(ObjectClass)) q"_root_.org.scalameta.invariants.require($x != null)"
-    else q"()"
-  }
-
-  def emptyCheck(x: c.Tree): c.Tree = {
-    val emptyCheckRequested =
-      try x.symbol.asTerm.accessed.nonEmpty
-      catch { case _: AssertionError => x.symbol.nonEmpty }
-    if (emptyCheckRequested) q"_root_.org.scalameta.invariants.require($x != null && $x.nonEmpty)"
-    else q"()"
   }
 
   def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
@@ -386,7 +191,7 @@ class AdtHelperMacros(val c: Context) extends AdtReflection {
   def immutabilityCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     def check(sym: Symbol): Unit = {
       var vars = sym.info.members.collect { case x: TermSymbol if !x.isMethod && x.isVar => x }
-      vars = vars.filter(!_.annotations.exists(_.tree.tpe =:= typeOf[Internal.byNeedField]))
+      vars = vars.filter(!_.annotations.exists(_.tree.tpe =:= typeOf[AdtMetadata.byNeedField]))
       vars.foreach(v => c.abort(c.enclosingPosition, "leafs can't have mutable state: " + v.owner.fullName + "." + v.name))
       val vals = sym.info.members.collect { case x: TermSymbol if !x.isMethod && !x.isVar => x }
       vals.foreach(v => ()) // TODO: deep immutability check

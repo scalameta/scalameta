@@ -9,26 +9,29 @@ import scala.collection.mutable.{ListBuffer, ListMap}
 import org.scalameta.unreachable
 import scala.compat.Platform.EOL
 import scala.meta.internal.ast.{Reflection => AstReflection}
+import org.scalameta.internal.MacroHelpers
 
+// @ast is a specialized version of @org.scalameta.adt.leaf for scala.meta ASTs.
+// TODO: The amount of cruft that's accumulated over dozens of prototype milestones is staggering.
 class ast extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro AstMacros.impl
+  def macroTransform(annottees: Any*): Any = macro AstNamerMacros.impl
 }
 
-class AstMacros(val c: Context) extends AstReflection {
+class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
   lazy val u: c.universe.type = c.universe
   lazy val mirror = c.mirror
   import c.universe._
   import Flag._
-  val AdtInternal = q"_root_.org.scalameta.adt.Internal"
-  val AstInternal = q"_root_.scala.meta.internal.ast.internal"
+
   val InternalSemantic = q"_root_.scala.meta.internal.semantic"
   val InternalFfi = q"_root_.scala.meta.internal.ffi"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   val Tokens = q"_root_.scala.meta.tokens"
   val Prettyprinters = q"_root_.scala.meta.internal.prettyprinters"
   val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
-  def impl(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+
+  def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
       def abbrevName = fullName.stripPrefix("scala.meta.")
       def is(abbrev: String) = abbrevName == abbrev
@@ -90,11 +93,6 @@ class AstMacros(val c: Context) extends AstReflection {
       val mstats1 = ListBuffer[Tree]() ++ mstats
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
-      def unprivatize(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.PRIVATE) & (~scala.reflect.internal.Flags.LOCAL)).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
-      def unoverride(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.OVERRIDE)).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
-      def undefault(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.DEFAULTPARAM)).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
-      def varify(mods: Modifiers) = Modifiers(mods.flags | MUTABLE, mods.privateWithin, mods.annotations)
-      def finalize(mods: Modifiers) = Modifiers(mods.flags | FINAL, mods.privateWithin, mods.annotations)
 
       // step 1: validate the shape of the class
       if (imods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @ast classes")
@@ -128,7 +126,7 @@ class AstMacros(val c: Context) extends AstReflection {
             else _root_.scala.None
           }
         """
-        stats1 += q"def children: Seq[_root_.scala.meta.Tree] = $AstInternal.children[ThisType, _root_.scala.meta.Tree]"
+        stats1 += q"def children: Seq[_root_.scala.meta.Tree] = $AstTyperMacrosModule.children[ThisType, _root_.scala.meta.Tree]"
       }
       if (hasTokens) {
         bparams1 += q"@_root_.scala.transient protected var privateTokens: $Tokens.Tokens"
@@ -216,10 +214,14 @@ class AstMacros(val c: Context) extends AstReflection {
       // step 5: turn all parameters into vars, create getters and setters
       def internalize(name: TermName) = TermName("_" + name.toString)
       val fieldParamss = paramss
-      paramss1 ++= fieldParamss.map(_.map{ case p @ q"$mods val $name: $tpt = $default" => q"${undefault(unoverride(unprivatize(varify(mods))))} val ${internalize(p.name)}: $tpt" })
+      paramss1 ++= fieldParamss.map(_.map{
+        case p @ q"$mods val $name: $tpt = $default" =>
+          val mods1 = mods.mkMutable.unPrivate.unOverride.unDefault
+          q"$mods1 val ${internalize(p.name)}: $tpt"
+      })
       istats1 ++= fieldParamss.flatten.map(p => {
-        var getterAnns = List(q"new $AstInternal.astField")
-        if (p.mods.annotations.exists(_.toString.contains("auxiliary"))) getterAnns :+= q"new $AstInternal.auxiliary"
+        var getterAnns = List(q"new $AstMetadataModule.astField")
+        if (p.mods.annotations.exists(_.toString.contains("auxiliary"))) getterAnns :+= q"new $AstMetadataModule.auxiliary"
         val getterMods = Modifiers(DEFERRED, typeNames.EMPTY, getterAnns)
         q"$getterMods def ${p.name}: ${p.tpt}"
       })
@@ -228,7 +230,7 @@ class AstMacros(val c: Context) extends AstReflection {
         val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
         q"""
           $pmods def ${p.name}: ${p.tpt} = {
-            $AstInternal.loadField(this.$pinternal)
+            $AstTyperMacrosModule.loadField(this.$pinternal)
             this.$pinternal
           }
         """
@@ -282,7 +284,7 @@ class AstMacros(val c: Context) extends AstReflection {
       if (hasDenot) privateCopyInternals += q"denot"
       if (hasTyping) privateCopyInternals += q"typing"
       if (hasFfi) privateCopyInternals += q"ffi"
-      val privateCopyInitss = paramss.map(_.map(p => q"$AstInternal.initField(this.${internalize(p.name)})"))
+      val privateCopyInitss = paramss.map(_.map(p => q"$AstTyperMacrosModule.initField(this.${internalize(p.name)})"))
       val privateCopyBody = q"new $name(..$privateCopyInternals)(...$privateCopyInitss)"
       stats1 += q"""
         private[meta] def privateCopy(
@@ -449,17 +451,17 @@ class AstMacros(val c: Context) extends AstReflection {
       istats1 += q"override type ThisType <: $iname"
       astats1 += q"override type ThisType = $iname"
       astats1 += q"override def privateTag: _root_.scala.Int = $mname.privateTag"
-      mstats1 += q"def privateTag: _root_.scala.Int = $AdtInternal.calculateTag[$iname]"
+      mstats1 += q"def privateTag: _root_.scala.Int = $AdtTyperMacrosModule.calculateTag[$iname]"
       // TODO: remove leafClass and leafCompanion from here
-      ianns1 += q"new $AstInternal.astClass"
-      ianns1 += q"new $AdtInternal.leafClass"
-      manns1 += q"new $AstInternal.astCompanion"
-      manns1 += q"new $AdtInternal.leafCompanion"
+      ianns1 += q"new $AstMetadataModule.astClass"
+      ianns1 += q"new $AdtMetadataModule.leafClass"
+      manns1 += q"new $AstMetadataModule.astCompanion"
+      manns1 += q"new $AdtMetadataModule.leafCompanion"
 
       // step 10: implement Product
       val productParamss = rawparamss.map(_.map(_.duplicate))
       iparents1 += tq"_root_.scala.Product"
-      astats1 += q"override def productPrefix: _root_.scala.Predef.String = $AstInternal.productPrefix[ThisType]"
+      astats1 += q"override def productPrefix: _root_.scala.Predef.String = $AstTyperMacrosModule.productPrefix[ThisType]"
       astats1 += q"override def productArity: _root_.scala.Int = ${productParamss.head.length}"
       val pelClauses = ListBuffer[Tree]()
       pelClauses ++= 0.to(productParamss.head.length - 1).map(i => cq"$i => this.${productParamss.head(i).name}")
@@ -468,7 +470,7 @@ class AstMacros(val c: Context) extends AstReflection {
       astats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"
 
       // step 11: generate serialization logic
-      val fieldInits = fieldParamss.flatten.map(p => q"$AstInternal.loadField(this.${internalize(p.name)})")
+      val fieldInits = fieldParamss.flatten.map(p => q"$AstTyperMacrosModule.loadField(this.${internalize(p.name)})")
       stats1 += q"protected def writeReplace(): _root_.scala.AnyRef = { ..$fieldInits; this }"
 
       // step 12: generate Companion.apply
@@ -476,10 +478,10 @@ class AstMacros(val c: Context) extends AstReflection {
       val internalParamss = paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
       val internalBody = ListBuffer[Tree]()
       val internalLocalss = paramss.map(_.map(p => (p.name, internalize(p.name))))
-      internalBody += q"$AstInternal.hierarchyCheck[$iname]"
-      // internalBody += q"$AdtInternal.immutabilityCheck[$iname]"
-      internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.nullCheck($local)" }
-      internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$AdtInternal.emptyCheck($local)" }
+      internalBody += q"$AstTyperMacrosModule.hierarchyCheck[$iname]"
+      // internalBody += q"$AdtTyperMacros.immutabilityCheck[$iname]"
+      internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$DataTyperMacrosModule.nullCheck($local)" }
+      internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$DataTyperMacrosModule.emptyCheck($local)" }
       internalBody ++= aimports
       internalBody ++= requires.map(require => {
         var hasErrors = false
@@ -500,7 +502,7 @@ class AstMacros(val c: Context) extends AstReflection {
       if (hasTyping) internalInitCount += 1
       if (hasFfi) internalInitCount += 1
       val internalInitss = 1.to(internalInitCount).map(_ => q"null")
-      val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstInternal.initParam($local)" })
+      val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstTyperMacrosModule.initParam($local)" })
       internalBody += q"val node = new $name($FlagsPackage.ZERO, ..$internalInitss)(...$paramInitss)"
       internalBody ++= internalLocalss.flatten.flatMap{ case (local, internal) =>
         val (validators, assignee) = {
@@ -522,7 +524,7 @@ class AstMacros(val c: Context) extends AstReflection {
             (Nil, q"$local")
           }
         }
-        validators :+ q"$AstInternal.storeField(node.$internal, $assignee)"
+        validators :+ q"$AstTyperMacrosModule.storeField(node.$internal, $assignee)"
       }
       internalBody += q"node"
       val internalArgss = paramss.map(_.map(p => q"${p.name}"))
@@ -563,7 +565,7 @@ class AstMacros(val c: Context) extends AstReflection {
       }
       if (isQuasi) {
         stats1 += q"""
-          def become[T <: _root_.scala.meta.internal.ast.Quasi](implicit ev: _root_.scala.meta.internal.ast.AstMetadata[T]): T = {
+          def become[T <: _root_.scala.meta.internal.ast.Quasi](implicit ev: _root_.scala.meta.internal.ast.AstInfo[T]): T = {
             this match {
               case $mname(0, tree) =>
                 ev.quasi(0, tree).withTokens(this.tokens).asInstanceOf[T]
@@ -582,7 +584,7 @@ class AstMacros(val c: Context) extends AstReflection {
 
       mstats1 += q"import _root_.scala.language.experimental.{macros => prettyPlease}"
       mstats1 += q"import _root_.scala.language.implicitConversions"
-      mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstInternal.Macros.interfaceToApi[$iname, $aname]"
+      mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstTyperMacrosBundle.interfaceToApi[$iname, $aname]"
       mstats1 += q"trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
       mstats1 += q"$cmods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       if (!isQuasi) mstats1 += q"$qmods1 class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents1 { ..$qstats1 }"
@@ -591,11 +593,5 @@ class AstMacros(val c: Context) extends AstReflection {
       if (c.compilerSettings.contains("-Xprint:typer")) { println(cdef1); println(mdef1) }
       List(cdef1, mdef1)
     }
-    val expanded = annottees match {
-      case (cdef: ClassDef) :: (mdef: ModuleDef) :: rest => transform(cdef, mdef) ++ rest
-      case (cdef: ClassDef) :: rest => transform(cdef, q"object ${cdef.name.toTermName}") ++ rest
-      case annottee :: rest => c.abort(annottee.pos, "only classes can be @ast")
-    }
-    q"{ ..$expanded; () }"
-  }
+  })
 }

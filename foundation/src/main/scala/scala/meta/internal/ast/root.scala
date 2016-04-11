@@ -7,16 +7,20 @@ import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.ast.{Reflection => AstReflection}
+import org.scalameta.internal.MacroHelpers
 
+// @root is a specialized version of @org.scalameta.adt.root for scala.meta ASTs.
+// TODO: The amount of cruft that's accumulated over dozens of prototype milestones is staggering.
 class root extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro RootMacros.impl
+  def macroTransform(annottees: Any*): Any = macro RootNamerMacros.impl
 }
 
-class RootMacros(val c: Context) extends AstReflection {
+class RootNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
   lazy val u: c.universe.type = c.universe
   lazy val mirror = c.mirror
   import c.universe._
   import Flag._
+
   lazy val Tree = tq"_root_.scala.meta.Tree"
   lazy val Datum = tq"_root_.scala.Any"
   lazy val Data = tq"_root_.scala.collection.immutable.Seq[$Datum]"
@@ -28,13 +32,12 @@ class RootMacros(val c: Context) extends AstReflection {
   lazy val Denotation = tq"_root_.scala.meta.internal.semantic.Denotation"
   lazy val Typing = tq"_root_.scala.meta.internal.semantic.Typing"
   lazy val Ffi = tq"_root_.scala.meta.internal.ffi.Ffi"
-  lazy val AdtInternal = q"_root_.org.scalameta.adt.Internal"
-  lazy val AstInternal = q"_root_.scala.meta.internal.ast.internal"
   lazy val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   lazy val FfiInternal = q"_root_.scala.meta.internal.ffi"
   lazy val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
-  def impl(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+
+  def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"${mods @ Modifiers(flags, privateWithin, anns)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val stats1 = ListBuffer[Tree]() ++ stats
@@ -48,9 +51,9 @@ class RootMacros(val c: Context) extends AstReflection {
       val needsThisType = stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty
       if (needsThisType) stats1 += q"type ThisType <: $name"
       stats1 += q"def privateTag: _root_.scala.Int"
-      mstats1 += q"$AstInternal.hierarchyCheck[$name]"
-      val anns1 = anns :+ q"new $AdtInternal.root" :+ q"new $AstInternal.root"
-      val parents1 = parents :+ tq"$AstInternal.Ast" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
+      mstats1 += q"$AstTyperMacrosModule.hierarchyCheck[$name]"
+      val anns1 = anns :+ q"new $AdtMetadataModule.root" :+ q"new $AstMetadataModule.root"
+      val parents1 = parents :+ tq"$AstMetadataModule.Ast" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
 
       // TODO: think of better ways to hide this from the public API
       val q"..$infrastructure" = q"""
@@ -155,11 +158,5 @@ class RootMacros(val c: Context) extends AstReflection {
       val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
-    val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef: ModuleDef) :: rest if mods.hasFlag(TRAIT) => transform(cdef, mdef) ++ rest
-      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef, q"object ${cdef.name.toTermName}") ++ rest
-      case annottee :: rest => c.abort(annottee.pos, "only traits can be @root")
-    }
-    q"{ ..$expanded; () }"
-  }
+  })
 }

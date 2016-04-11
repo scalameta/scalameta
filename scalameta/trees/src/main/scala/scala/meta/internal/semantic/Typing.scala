@@ -8,11 +8,11 @@ import org.scalameta.invariants._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
 
-@monadicRoot trait Typing
+@root trait Typing
 object Typing {
-  @noneLeaf object Zero extends Typing
-  @noneLeaf object Recursive extends Typing
-  @someLeaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing {
+  @leaf object Zero extends Typing
+  @leaf object Recursive extends Typing
+  @leaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing {
     protected def writeReplace(): AnyRef = new Nonrecursive.SerializationProxy(this)
     override def canEqual(other: Any): Boolean = other.isInstanceOf[Nonrecursive]
     override def equals(that: Any): Boolean = that match {

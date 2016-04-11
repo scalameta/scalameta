@@ -22,7 +22,7 @@ trait Reflection extends AdtReflection {
   lazy val TreeClass = mirror.staticClass("scala.meta.Tree")
   lazy val QuasiClass = mirror.staticClass("scala.meta.internal.ast.Quasi")
   lazy val RegistryModule = mirror.staticModule("scala.meta.internal.ast.Registry")
-  lazy val RegistryAnnotation = mirror.staticModule("scala.meta.internal.ast.internal").info.member(TypeName("registry")).asClass
+  lazy val RegistryAnnotation = mirror.staticModule("scala.meta.internal.ast.Metadata").info.member(TypeName("registry")).asClass
 
   override protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
     def fail = sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")

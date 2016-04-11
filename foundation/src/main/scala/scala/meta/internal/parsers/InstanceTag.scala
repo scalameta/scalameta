@@ -1,10 +1,12 @@
-package org.scalameta
-package reflection
+package scala.meta
+package internal
+package parsers
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import scala.reflect.ClassTag
 import scala.annotation.implicitNotFound
+import org.scalameta.internal.MacroHelpers
 
 @implicitNotFound(msg = "${T} is not a trivially instantiable class or an object.")
 trait InstanceTag[T] extends ClassTag[T] {
@@ -15,7 +17,7 @@ object InstanceTag {
   implicit def materialize[T]: InstanceTag[T] = macro InstanceMetadataMacros.materialize[T]
 }
 
-class InstanceMetadataMacros(val c: Context) {
+class InstanceMetadataMacros(val c: Context) extends MacroHelpers {
   import c.universe._
   import c.internal._
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
@@ -33,7 +35,7 @@ class InstanceMetadataMacros(val c: Context) {
       }
     }
     q"""
-      new _root_.org.scalameta.reflection.InstanceTag[$T] {
+      new $InstanceTagClass[$T] {
         override def runtimeClass: _root_.java.lang.Class[$T] = _root_.scala.reflect.classTag[$T].runtimeClass.asInstanceOf[_root_.java.lang.Class[$T]]
         override def instantiate: $T = $body
       }

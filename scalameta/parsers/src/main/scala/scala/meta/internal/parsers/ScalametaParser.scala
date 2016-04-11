@@ -17,13 +17,12 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
 import scala.meta.internal.tokens._
-import scala.meta.internal.ast.AstMetadata
+import scala.meta.internal.ast.AstInfo
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
-import org.scalameta.unreachable
+import org.scalameta._
 import org.scalameta.invariants._
-import org.scalameta.reflection._
 
 private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dialect) { parser =>
   // implementation restrictions wrt various dialect properties
@@ -500,17 +499,17 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     finally inFunReturnType = saved
   }
 
-  def syntaxErrorExpected[T <: Token : TokenMetadata]: Nothing =
-    syntaxError(s"${implicitly[TokenMetadata[T]].name} expected but ${token.name} found", at = token)
+  def syntaxErrorExpected[T <: Token : TokenInfo]: Nothing =
+    syntaxError(s"${implicitly[TokenInfo[T]].name} expected but ${token.name} found", at = token)
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
-  def accept[T <: Token : TokenMetadata]: Unit =
+  def accept[T <: Token : TokenInfo]: Unit =
     if (token.is[T]) {
       if (token.isNot[EOF]) next()
     } else syntaxErrorExpected[T]
 
   /** If current token is T consume it. */
-  def acceptOpt[T <: Token : TokenMetadata]: Unit =
+  def acceptOpt[T <: Token : TokenInfo]: Unit =
     if (token.is[T]) next()
 
   /** {{{
@@ -545,7 +544,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
-  def ellipsis[T <: Tree : AstMetadata](rank: Int, body: => T, extraSkip: => Unit = {}): T = autoPos {
+  def ellipsis[T <: Tree : AstInfo](rank: Int, body: => T, extraSkip: => Unit = {}): T = autoPos {
     token match {
       case ellipsis: Ellipsis =>
         if (inQuasiquote) {
@@ -568,12 +567,12 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
                   // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
                   // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
                   require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.show[Structure]))
-                  atPos(quasi, quasi)(implicitly[AstMetadata[T]].quasi(quasi.rank, quasi.tree))
+                  atPos(quasi, quasi)(implicitly[AstInfo[T]].quasi(quasi.rank, quasi.tree))
                 case other =>
                   other
               }
             }
-            implicitly[AstMetadata[T]].quasi(rank, tree)
+            implicitly[AstInfo[T]].quasi(rank, tree)
           }
         } else {
           syntaxError(s"unexpected token for $dialect", at = ellipsis)
@@ -583,15 +582,15 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     }
   }
 
-  def unquote[T <: Tree : AstMetadata](advance: Boolean = true): T = autoPos {
+  def unquote[T <: Tree : AstInfo](advance: Boolean = true): T = autoPos {
     token match {
       case unquote: Unquote =>
         if (inQuasiquote) {
           if (advance) {
             next()
-            implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+            implicitly[AstInfo[T]].quasi(0, unquote.tree)
           } else ahead {
-            implicitly[AstMetadata[T]].quasi(0, unquote.tree)
+            implicitly[AstInfo[T]].quasi(0, unquote.tree)
           }
         } else {
           syntaxError(s"unexpected token for $dialect", at = unquote)
@@ -601,7 +600,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     }
   }
 
-  def unquote[T <: Tree : AstMetadata]: T = unquote[T](advance = true) // to write `unquote[T]` without round braces
+  def unquote[T <: Tree : AstInfo]: T = unquote[T](advance = true) // to write `unquote[T]` without round braces
 
   /** Convert tree to formal parameter list. */
   def convertToParams(tree: Term): List[Term.Param] = tree match {
@@ -646,7 +645,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   /** {{{ part { `sep` part } }}}, or if sepFirst is true, {{{ { `sep` part } }}}.
     * if useUnquoteForEllipsis = true, uses direct unquote instead of `part`
     * */
-  final def tokenSeparated[Sep <: Token : TokenMetadata, T <: Tree : AstMetadata](sepFirst: Boolean, part: => T): List[T] = {
+  final def tokenSeparated[Sep <: Token : TokenInfo, T <: Tree : AstInfo](sepFirst: Boolean, part: => T): List[T] = {
     def partOrEllipsis =
       if (token.is[Ellipsis]) ellipsis(1, unquote[T])
       else part
@@ -660,7 +659,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     ts.toList
   }
 
-  @inline final def commaSeparated[T <: Tree : AstMetadata](part: => T): List[T] =
+  @inline final def commaSeparated[T <: Tree : AstInfo](part: => T): List[T] =
     tokenSeparated[`,`, T](sepFirst = false, part)
 
   def makeTuple[T <: Tree](body: List[T], zero: () => T, tuple: List[T] => T): T = body match {
@@ -1169,7 +1168,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     implicit object AllowedTermName extends AllowedName[Term.Name]
     implicit object AllowedTypeName extends AllowedName[Type.Name]
   }
-  private def name[T <: Tree : AllowedName : AstMetadata](ctor: String => T, advance: Boolean): T = token match {
+  private def name[T <: Tree : AllowedName : AstInfo](ctor: String => T, advance: Boolean): T = token match {
     case token: Ident =>
       val name = token.code.stripPrefix("`").stripSuffix("`")
       val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
@@ -1428,7 +1427,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       next()
   }
 
-  def newLineOptWhenFollowedBy[T <: Token : TokenMetadata]: Unit = {
+  def newLineOptWhenFollowedBy[T <: Token : TokenInfo]: Unit = {
     // note: next is defined here because current is token.`\n`
     if (token.is[`\n`] && ahead { token.is[T] }) newLineOpt()
   }
@@ -2575,7 +2574,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def typeBounds() =
     autoPos(Type.Bounds(bound[`>:`], bound[`<:`]))
 
-  def bound[T <: Token : TokenMetadata]: Option[Type] =
+  def bound[T <: Token : TokenInfo]: Option[Type] =
     if (token.is[T]) { next(); Some(typ()) } else None
 
 /* -------- DEFS ------------------------------------------- */
@@ -3118,7 +3117,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
 /* -------- STATSEQS ------------------------------------------- */
 
-  def statSeq[T <: Tree: AstMetadata](statpf: PartialFunction[Token, T],
+  def statSeq[T <: Tree: AstInfo](statpf: PartialFunction[Token, T],
                                       errorMsg: String = "illegal start of definition"): List[T] = {
     val stats = new ListBuffer[T]
     while (!token.is[StatSeqEnd]) {

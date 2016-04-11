@@ -7,7 +7,7 @@ import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
 import org.scalameta.adt.{LiftableMacros => AdtLiftableMacros}
 import scala.meta.internal.ast.{Reflection => AstReflection}
-import scala.meta.internal.ast.internal.Ast
+import scala.meta.internal.ast.Metadata.Ast
 
 trait Liftables {
   val u: scala.reflect.macros.Universe

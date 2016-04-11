@@ -15,7 +15,25 @@ object Style {
 }
 
 object typecheckError {
+  // Typechecks the enclosed code at compile time
+  // and expands into a string literal that contains an error message.
+  // Returns an empty string if there's no typecheck error.
+  //
+  // The style parameter determines whether to print just the error message
+  // or also the original code with a familiar-looking caret pointing to the error.
+  // Here's an example from the quasiquote suite:
+  //
+  //   assert(typecheckError("""
+  //     import scala.meta.quasiquotes._
+  //     import scala.meta.dialects.Scala211
+  //     val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
+  //   """) === """
+  //     |<macro>:4: not found: value X
+  //     |      val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
+  //     |                        ^
+  //   """.trim.stripMargin)
   def apply(code: String)(implicit style: Style): String = macro impl
+
   def impl(c: Context)(code: c.Tree)(style: c.Tree): c.Tree = {
     import c.universe.{Position => _, _}
     val s_code = code match {

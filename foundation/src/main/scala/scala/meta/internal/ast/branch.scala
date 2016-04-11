@@ -7,24 +7,27 @@ import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.ast.{Reflection => AstReflection}
+import org.scalameta.internal.MacroHelpers
 
+// @branch is a specialized version of @org.scalameta.adt.branch for scala.meta ASTs.
+// TODO: The amount of cruft that's accumulated over dozens of prototype milestones is staggering.
 class branch extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro BranchMacros.impl
+  def macroTransform(annottees: Any*): Any = macro BranchNamerMacros.impl
 }
 
-class BranchMacros(val c: Context) extends AstReflection {
+class BranchNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
   lazy val u: c.universe.type = c.universe
   lazy val mirror = c.mirror
   import c.universe._
   import Flag._
-  val AdtInternal = q"_root_.org.scalameta.adt.Internal"
-  val AstInternal = q"_root_.scala.meta.internal.ast.internal"
+
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   val FfiInternal = q"_root_.scala.meta.internal.ffi"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
-  def impl(annottees: Tree*): Tree = {
-    def transform(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+
+  def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
       def abbrevName = fullName.stripPrefix("scala.meta.")
       def is(abbrev: String) = abbrevName == abbrev
@@ -46,8 +49,8 @@ class BranchMacros(val c: Context) extends AstReflection {
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
       val flags1 = flags // TODO: flags | SEALED
       stats1 += q"type ThisType <: $name"
-      mstats1 += q"$AstInternal.hierarchyCheck[$name]"
-      val anns1 = anns :+ q"new $AdtInternal.branch" :+ q"new $AstInternal.branch"
+      mstats1 += q"$AstTyperMacrosModule.hierarchyCheck[$name]"
+      val anns1 = anns :+ q"new $AdtMetadataModule.branch" :+ q"new $AstMetadataModule.branch"
 
       if (!isQuasi) {
         val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.scala.meta.internal.ast.ast"))
@@ -105,11 +108,5 @@ class BranchMacros(val c: Context) extends AstReflection {
       val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))
       List(cdef1, mdef1)
     }
-    val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef: ModuleDef) :: rest if mods.hasFlag(TRAIT) => transform(cdef, mdef) ++ rest
-      case (cdef @ ClassDef(mods, _, _, _)) :: rest if mods.hasFlag(TRAIT) => transform(cdef, q"object ${cdef.name.toTermName}") ++ rest
-      case annottee :: rest => c.abort(annottee.pos, "only traits can be @branch")
-    }
-    q"{ ..$expanded; () }"
-  }
+  })
 }

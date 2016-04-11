@@ -4,20 +4,31 @@ import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
+import org.scalameta.internal.MacroHelpers
 
+// Virtually the same as the `case` modifier:
+// can be used on both classes and objects with very similar effect.
+//
+// The main different is customizability - we can stuff any extensions we want into @data.
+// Currently it's just two things:
+//    1) Support for lazy parameters (implemented via a @byNeed marker annotation),
+//       as in e.g.: `@leaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing`.
+//       NOTE: @byNeed isn't defined anywhere - it's just a syntactic marker.
+//    2) Support for on-demand member generation via named parameters to @data,
+//       as in e.g. `@data(toString = false) class ...`.
+//
+// Performance of pattern matching may be subpar until SI-9029 is fixed,
+// as well as some minor semantic details may differ.
 class data extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro DataMacros.data
 }
 
-class DataMacros(val c: Context) {
+class DataMacros(val c: Context) extends MacroHelpers {
   import c.universe._
-  import definitions._
   import Flag._
-  val Public = q"_root_.org.scalameta.data"
-  val Internal = q"_root_.org.scalameta.adt.Internal"
 
-  def data(annottees: Tree*): Tree = {
-    def transformDataClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+  def data(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val parents1 = ListBuffer[Tree]() ++ parents
@@ -27,11 +38,10 @@ class DataMacros(val c: Context) {
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
       val mstats1 = ListBuffer[Tree]() ++ mstats
-      def unprivatize(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.LOCAL) & (~scala.reflect.internal.Flags.PRIVATE)).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
-      def privatize(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] | scala.reflect.internal.Flags.LOCAL & scala.reflect.internal.Flags.PRIVATE).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
-      def byNeed(mods: Modifiers) = Modifiers(mods.flags, mods.privateWithin, mods.annotations :+ q"new $Internal.byNeedField")
-      def finalize(mods: Modifiers) = Modifiers(mods.flags | FINAL, mods.privateWithin, mods.annotations)
-      def varify(mods: Modifiers) = Modifiers(mods.flags | MUTABLE, mods.privateWithin, mods.annotations)
+
+      implicit class XtensionDataModifiers(mods: Modifiers) {
+        def mkByneed = Modifiers(mods.flags, mods.privateWithin, mods.annotations :+ q"new $AdtMetadataModule.byNeedField")
+      }
       def needs(name: Name, companion: Boolean) = {
         val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
         val banIndicator = argss.flatten.find {
@@ -89,8 +99,7 @@ class DataMacros(val c: Context) {
         }
       }
       val isVararg = paramss.flatten.lastOption.flatMap(p => Vararg.unapply(p.tpt)).nonEmpty
-      def unvariate(mods: Modifiers) = Modifiers((mods.flags.asInstanceOf[Long] & (~scala.reflect.internal.Flags.COVARIANT) & (~scala.reflect.internal.Flags.CONTRAVARIANT)).asInstanceOf[FlagSet], mods.privateWithin, mods.annotations)
-      val itparams = tparams.map{ case q"$mods type $name[..$tparams] >: $low <: $high" => q"${unvariate(mods)} type $name[..$tparams] >: $low <: $high" }
+      val itparams = tparams.map{ case q"$mods type $name[..$tparams] >: $low <: $high" => q"${mods.unVariant} type $name[..$tparams] >: $low <: $high" }
       val tparamrefs = tparams.map(tparam => Ident(tparam.name))
 
       // step 1: validate the shape of the class
@@ -104,13 +113,13 @@ class DataMacros(val c: Context) {
       // step 2: create parameters, generate getters and validation checks
       val paramss1 = paramss.map(_.map{
         case VanillaParam(mods, name, tpt, default) =>
-          stats1 += q"$Internal.nullCheck(this.$name)"
-          stats1 += q"$Internal.emptyCheck(this.$name)"
-          q"${unprivatize(mods)} val $name: $tpt = $default"
+          stats1 += q"$DataTyperMacrosModule.nullCheck(this.$name)"
+          stats1 += q"$DataTyperMacrosModule.emptyCheck(this.$name)"
+          q"${mods.unPrivate} val $name: $tpt = $default"
         case VarargParam(mods, name, tpt, default) =>
-          stats1 += q"$Internal.nullCheck(this.$name)"
-          stats1 += q"$Internal.emptyCheck(this.$name)"
-          q"${unprivatize(mods)} val $name: $tpt = $default"
+          stats1 += q"$DataTyperMacrosModule.nullCheck(this.$name)"
+          stats1 += q"$DataTyperMacrosModule.emptyCheck(this.$name)"
+          q"${mods.unPrivate} val $name: $tpt = $default"
         case ByNeedParam(mods, name, tpt, default) =>
           val flagName = TermName(name + "Flag")
           val statusName = TermName("is" + name.toString.capitalize + "Loaded")
@@ -119,15 +128,15 @@ class DataMacros(val c: Context) {
           val getterName = name
           val paramName = TermName("_" + name)
           val paramTpt = tq"_root_.scala.Function0[$tpt]"
-          stats1 += q"@$Internal.byNeedField private[this] var $flagName: _root_.scala.Boolean = false"
+          stats1 += q"@$AdtMetadataModule.byNeedField private[this] var $flagName: _root_.scala.Boolean = false"
           stats1 += q"def $statusName: _root_.scala.Boolean = this.$flagName"
-          stats1 += q"@$Internal.byNeedField private[this] var $storageName: $tpt = _"
+          stats1 += q"@$AdtMetadataModule.byNeedField private[this] var $storageName: $tpt = _"
           stats1 += q"""
             def $getterName = {
               if (!this.$flagName) {
                 val $valueName = this.$paramName()
-                $Internal.nullCheck($valueName)
-                $Internal.emptyCheck($valueName)
+                $DataTyperMacrosModule.nullCheck($valueName)
+                $DataTyperMacrosModule.emptyCheck($valueName)
                 this.$paramName = null
                 this.$storageName = $valueName
                 this.$flagName = true
@@ -135,7 +144,7 @@ class DataMacros(val c: Context) {
               this.$storageName
             }
           """
-          q"${varify(byNeed(privatize(mods)))} val $paramName: $paramTpt = $default"
+          q"${mods.mkPrivate.mkByneed.mkMutable} val $paramName: $paramTpt = $default"
       })
 
       // step 3: implement Object
@@ -227,32 +236,23 @@ class DataMacros(val c: Context) {
         }
       }
 
-      val cdef1 = q"${finalize(mods1)} class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      val cdef1 = q"${mods1.mkFinal} class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
 
-    def transformDataModule(mdef: ModuleDef): ModuleDef = {
+    override def transformModule(mdef: ModuleDef): ModuleDef = {
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
-      def casify(mods: Modifiers) = Modifiers(mods.flags | CASE, mods.privateWithin, mods.annotations)
 
       // step 1: validate the shape of the module
-      if (mmods.hasFlag(FINAL)) c.abort(mdef.pos, "final is redundant for @leaf classes")
-      if (mmods.hasFlag(CASE)) c.abort(mdef.pos, "case is redundant for @leaf classes")
+      if (mmods.hasFlag(FINAL)) c.abort(mdef.pos, "final is redundant for @data objects")
+      if (mmods.hasFlag(CASE)) c.abort(mdef.pos, "case is redundant for @data objects")
 
       // TODO: later on we could migrate data modules to hand-rolled codegen, much like data classes.
       // However, for now it's quite fine to implement them as case objects.
 
-      q"${casify(mmods)} object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }"
+      q"${mmods.mkCase} object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }"
     }
-
-    val expanded = annottees match {
-      case (cdef @ ClassDef(mods, _, _, _)) :: (mdef @ ModuleDef(_, _, _)) :: rest if !(mods hasFlag TRAIT) => transformDataClass(cdef, mdef) ++ rest
-      case (cdef @ ClassDef(mods, name, _, _)) :: rest if !mods.hasFlag(TRAIT) => transformDataClass(cdef, q"object ${name.toTermName}") ++ rest
-      case (mdef @ ModuleDef(_, _, _)) :: rest => transformDataModule(mdef) +: rest
-      case annottee :: rest => c.abort(annottee.pos, "only classes and objects can be @data")
-    }
-    q"{ ..$expanded; () }"
-  }
+  })
 }
 

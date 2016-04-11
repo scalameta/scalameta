@@ -108,9 +108,8 @@ class InfrastructureSuite extends FunSuite {
 
   test("Typing.Nonrecursive is really lazy") {
     val x1 = Typing.Nonrecursive(??? : Type)
-    val x2 = x1.map(_ => ??? : Type)
-    val x3 = Term.Name("foo").withAttrs(foo.denot, ??? : Type)
-    assert(x3.isTypechecked === false)
+    val x2 = Term.Name("foo").withAttrs(foo.denot, ??? : Type)
+    assert(x2.isTypechecked === false)
   }
 
   private def denot = Denotation.Single(Prefix.Zero, Symbol.RootPackage)

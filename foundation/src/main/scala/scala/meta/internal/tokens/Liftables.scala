@@ -6,10 +6,11 @@ import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
 import org.scalameta.adt.{LiftableMacros => AdtLiftableMacros}
+import scala.meta.internal.tokens.Metadata.Token
 
 trait Liftables {
   val u: scala.reflect.macros.Universe
-  implicit def materializeToken[T <: internal.Token]: u.Liftable[T] = macro LiftableMacros.impl[T]
+  implicit def materializeToken[T <: Token]: u.Liftable[T] = macro LiftableMacros.impl[T]
 }
 
 class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) {
