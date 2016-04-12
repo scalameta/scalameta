@@ -85,13 +85,13 @@ class AstTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
       """
     }
     f.tpe.finalResultType match {
-      case Any(tpe) => q"()"
-      case Primitive(tpe) => q"()"
-      case Tree(tpe) => lazyLoad(pf => q"${copySubtree(pf)}")
-      case OptionTree(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el")})")
-      case OptionSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el")}))")
-      case SeqTree(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el")})")
-      case SeqSeqTree(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el")}))")
+      case AnyTpe(tpe) => q"()"
+      case PrimitiveTpe(tpe) => q"()"
+      case TreeTpe(tpe) => lazyLoad(pf => q"${copySubtree(pf)}")
+      case OptionTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el")})")
+      case SeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el")})")
+      case OptionSeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el")}))")
+      case SeqSeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el")}))")
     }
   }
 
@@ -100,89 +100,26 @@ class AstTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
       q"$subtree.privateCopy(prototype = $subtree, parent = node)"
     }
     f.tpe.finalResultType match {
-      case Any(tpe) => q"()"
-      case Primitive(tpe) => q"()"
-      case Tree(tpe) => q"$f = ${copySubtree(v)}"
-      case OptionTree(tpe) => q"$f = $v.map(el => ${copySubtree(q"el")})"
-      case OptionSeqTree(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el")}))"
-      case SeqTree(tpe) => q"$f = $v.map(el => ${copySubtree(q"el")})"
-      case SeqSeqTree(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el")}))"
+      case AnyTpe(tpe) => q"()"
+      case PrimitiveTpe(tpe) => q"()"
+      case TreeTpe(tpe) => q"$f = ${copySubtree(v)}"
+      case OptionTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el")})"
+      case SeqTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el")})"
+      case OptionSeqTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el")}))"
+      case SeqSeqTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el")}))"
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
   def initField(f: c.Tree): c.Tree = {
     f.tpe.finalResultType match {
-      case Any(tpe) => q"$f"
-      case Primitive(tpe) => q"$f"
-      case Tree(tpe) => q"null"
-      case OptionTree(tpe) => q"null"
-      case OptionSeqTree(tpe) => q"null"
-      case SeqTree(tpe) => q"null"
-      case SeqSeqTree(tpe) => q"null"
+      case AnyTpe(tpe) => q"$f"
+      case PrimitiveTpe(tpe) => q"$f"
+      case TreeTpe(tpe) => q"null"
+      case OptionTreeTpe(tpe) => q"null"
+      case SeqTreeTpe(tpe) => q"null"
+      case OptionSeqTreeTpe(tpe) => q"null"
+      case SeqSeqTreeTpe(tpe) => q"null"
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
-    }
-  }
-
-  private object Any {
-    def unapply(tpe: Type): Option[Type] = {
-      if (tpe =:= AnyTpe) Some(tpe)
-      else None
-    }
-  }
-  private object Primitive {
-    def unapply(tpe: Type): Option[Type] = {
-      if (tpe =:= typeOf[String] ||
-          tpe =:= typeOf[scala.Symbol] ||
-          ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
-      else if (tpe.typeSymbol == OptionClass && Primitive.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
-      else if (tpe.typeSymbol == ClassClass) Some(tpe)
-      else None
-    }
-  }
-  private object Tree {
-    def unapply(tpe: Type): Option[Type] = {
-      if (tpe <:< c.mirror.staticClass("scala.meta.Tree").asType.toType) Some(tpe)
-      else None
-    }
-  }
-  private object SeqTree {
-    def unapply(tpe: Type): Option[Type] = {
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.Seq")) {
-        tpe.typeArgs match {
-          case Tree(tpe) :: Nil => Some(tpe)
-          case _ => None
-        }
-      } else None
-    }
-  }
-  private object SeqSeqTree {
-    def unapply(tpe: Type): Option[Type] = {
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.Seq")) {
-        tpe.typeArgs match {
-          case SeqTree(tpe) :: Nil => Some(tpe)
-          case _ => None
-        }
-      } else None
-    }
-  }
-  private object OptionTree {
-    def unapply(tpe: Type): Option[Type] = {
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) {
-        tpe.typeArgs match {
-          case Tree(tpe) :: Nil => Some(tpe)
-          case _ => None
-        }
-      } else None
-    }
-  }
-  private object OptionSeqTree {
-    def unapply(tpe: Type): Option[Type] = {
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) {
-        tpe.typeArgs match {
-          case SeqTree(tpe) :: Nil => Some(tpe)
-          case _ => None
-        }
-      } else None
     }
   }
 
@@ -194,21 +131,21 @@ class AstTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
       result
     }
     val acc = T.tpe.typeSymbol.asLeaf.fields.foldLeft(q"": Tree)((acc, f) => f.tpe match {
-      case Tree(_) =>
+      case TreeTpe(_) =>
         streak :+= q"this.${f.sym}"
         acc
-      case SeqTree(_) =>
-        val acc1 = flushStreak(acc)
-        q"$acc1 ++ this.${f.sym}"
-      case SeqSeqTree(_) =>
-        val acc1 = flushStreak(acc)
-        q"$acc1 ++ this.${f.sym}.flatten"
-      case OptionTree(_) =>
+      case OptionTreeTpe(_) =>
         val acc1 = flushStreak(acc)
         q"$acc1 ++ this.${f.sym}.toList"
-      case OptionSeqTree(_) =>
+      case SeqTreeTpe(_) =>
+        val acc1 = flushStreak(acc)
+        q"$acc1 ++ this.${f.sym}"
+      case OptionSeqTreeTpe(_) =>
         val acc1 = flushStreak(acc)
         q"$acc1 ++ this.${f.sym}.getOrElse(_root_.scala.collection.immutable.Nil)"
+      case SeqSeqTreeTpe(_) =>
+        val acc1 = flushStreak(acc)
+        q"$acc1 ++ this.${f.sym}.flatten"
       case _ =>
         acc
     })

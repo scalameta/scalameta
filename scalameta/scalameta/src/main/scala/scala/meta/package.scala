@@ -7,3 +7,4 @@ package object meta extends dialects.Api with dialects.Aliases
                        with inputs.Api with inputs.Aliases
                        with tokenizers.Api with tokenizers.Aliases
                        with tokens.Api with tokens.Aliases
+                       with transversers.Api with transversers.Aliases

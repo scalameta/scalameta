@@ -29,6 +29,7 @@ object build extends Build {
     scalameta,
     tokenizers,
     tokens,
+    transversers,
     trees
   )
 
@@ -111,6 +112,16 @@ object build extends Build {
     enableMacros
   ) dependsOn (foundation, prettyprinters, dialects, inputs)
 
+  lazy val transversers = Project(
+    id   = "transversers",
+    base = file("scalameta/transversers")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's traversal and transformation infrastructure for abstract syntax trees",
+    enableMacros
+  ) dependsOn (foundation, trees)
+
   lazy val trees = Project(
     id   = "trees",
     base = file("scalameta/trees")
@@ -130,7 +141,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's metaprogramming APIs"
-  ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, trees)
+  ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, transversers, trees)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := ScalaVersions.max,
