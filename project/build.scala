@@ -29,7 +29,6 @@ object build extends Build {
     scalameta,
     tokenizers,
     tokens,
-    tql,
     trees
   )
 
@@ -69,7 +68,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's API for parsing and its baseline implementation"
-  ) dependsOn (foundation, trees, tokens, tokenizers % "test", tql % "test")
+  ) dependsOn (foundation, trees, tokens, tokenizers % "test")
 
   lazy val prettyprinters = Project(
     id   = "prettyprinters",
@@ -112,16 +111,6 @@ object build extends Build {
     enableMacros
   ) dependsOn (foundation, prettyprinters, dialects, inputs)
 
-  lazy val tql = Project(
-    id   = "tql",
-    base = file("scalameta/tql")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's tree query language (basic and extended APIs)",
-    enableHardcoreMacros
-  ) dependsOn (foundation, trees)
-
   lazy val trees = Project(
     id   = "trees",
     base = file("scalameta/trees")
@@ -141,7 +130,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's metaprogramming APIs"
-  ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, tql, trees)
+  ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, trees)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := ScalaVersions.max,
