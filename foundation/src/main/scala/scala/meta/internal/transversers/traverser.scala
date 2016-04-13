@@ -15,11 +15,7 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
 
   def leafHandler(l: Leaf): Tree = {
     val relevantFields = l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
-    val recursiveTraversals = relevantFields.map(f => {
-      val fieldName = f.name
-      val traverserName = TermName("traverse" + suffix(f))
-      q"this.$traverserName($fieldName)"
-    })
+    val recursiveTraversals = relevantFields.map(f => q"this.traverse(${f.name})")
     q"..$recursiveTraversals"
   }
 
@@ -29,27 +25,27 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
         tree match { case ..$cases }
       }
 
-      def traverseOpt(treeopt: $OptionClass[$TreeClass]): $UnitClass = treeopt match {
+      def traverse(treeopt: $OptionClass[$TreeClass]): $UnitClass = treeopt match {
         case $SomeModule(tree) => traverse(tree)
         case $NoneModule => // do nothing
       }
 
-      def traverseSeq(trees: $SeqClass[$TreeClass]): $UnitClass = {
+      def traverse(trees: $SeqClass[$TreeClass]): $UnitClass = {
         val it = trees.iterator
         while (it.hasNext) {
           traverse(it.next)
         }
       }
 
-      def traverseOptSeq(treesopt: $OptionClass[$SeqClass[$TreeClass]]): $UnitClass = treesopt match {
-        case $SomeModule(trees) => traverseSeq(trees)
+      def traverse(treesopt: $OptionClass[$SeqClass[$TreeClass]])(implicit hack: $Hack1Class): $UnitClass = treesopt match {
+        case $SomeModule(trees) => traverse(trees)
         case $NoneModule => // do nothing
       }
 
-      def traverseSeqSeq(treess: $SeqClass[$SeqClass[$TreeClass]]): $UnitClass = {
+      def traverse(treess: $SeqClass[$SeqClass[$TreeClass]])(implicit hack: $Hack2Class): $UnitClass = {
         val it = treess.iterator
         while (it.hasNext) {
-          traverseSeq(it.next)
+          traverse(it.next)
         }
       }
     """

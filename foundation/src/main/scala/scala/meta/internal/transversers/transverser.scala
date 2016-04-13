@@ -22,16 +22,13 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
   lazy val SeqClass = hygienicRef[scala.collection.immutable.Seq[_]]
   lazy val ListBufferModule = hygienicRef(scala.collection.mutable.ListBuffer)
   lazy val UnitClass = hygienicRef[scala.Unit]
+  lazy val Hack1Class = hygienicRef[org.scalameta.overload.Hack1]
+  lazy val Hack2Class = hygienicRef[org.scalameta.overload.Hack2]
+  lazy val Hack3Class = hygienicRef[org.scalameta.overload.Hack3]
+  lazy val Hack4Class = hygienicRef[org.scalameta.overload.Hack4]
 
   def leafHandler(l: Leaf): Tree
   def generatedMethods(cases: List[CaseDef]): Tree
-  def suffix(f: Field): String = f.tpe match {
-    case TreeTpe(_) => ""
-    case OptionTreeTpe(_) => "Opt"
-    case SeqTreeTpe(_) => "Seq"
-    case OptionSeqTreeTpe(_) => "OptSeq"
-    case SeqSeqTreeTpe(_) => "SeqSeq"
-  }
 
   def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
     override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {

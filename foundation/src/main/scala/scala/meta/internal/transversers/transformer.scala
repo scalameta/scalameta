@@ -23,7 +23,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         tree match { case ..$cases }
       }
 
-      def transformOpt(treeopt: $OptionClass[$TreeClass]): $OptionClass[$TreeClass] = treeopt match {
+      def transform(treeopt: $OptionClass[$TreeClass]): $OptionClass[$TreeClass] = treeopt match {
         case $SomeModule(tree) =>
           val tree1 = transform(tree)
           if (tree eq tree1) treeopt
@@ -32,7 +32,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           $NoneModule
       }
 
-      def transformSeq(trees: $SeqClass[$TreeClass]): $SeqClass[$TreeClass] = {
+      def transform(trees: $SeqClass[$TreeClass]): $SeqClass[$TreeClass] = {
         var same = true
         val buf = $ListBufferModule[$TreeClass]()
         val it = trees.iterator
@@ -46,22 +46,22 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         else buf.toList
       }
 
-      def transformOptSeq(treesopt: $OptionClass[$SeqClass[$TreeClass]]): $OptionClass[$SeqClass[$TreeClass]] = treesopt match {
+      def transform(treesopt: $OptionClass[$SeqClass[$TreeClass]])(implicit hack: $Hack1Class): $OptionClass[$SeqClass[$TreeClass]] = treesopt match {
         case $SomeModule(trees) =>
-          val trees1 = transformSeq(trees)
+          val trees1 = transform(trees)
           if (trees eq trees1) treesopt
           else $SomeModule(trees1)
         case $NoneModule =>
           $NoneModule
       }
 
-      def transformSeqSeq(treess: $SeqClass[$SeqClass[$TreeClass]]): $SeqClass[$SeqClass[$TreeClass]] = {
+      def transform(treess: $SeqClass[$SeqClass[$TreeClass]])(implicit hack: $Hack2Class): $SeqClass[$SeqClass[$TreeClass]] = {
         var same = true
         val buf = $ListBufferModule[$SeqClass[$TreeClass]]()
         val it = treess.iterator
         while (it.hasNext) {
           val trees = it.next
-          val trees1 = transformSeq(trees)
+          val trees1 = transform(trees)
           if (trees ne trees1) same = false
           buf += trees1
         }
