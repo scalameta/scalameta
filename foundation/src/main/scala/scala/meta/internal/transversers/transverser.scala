@@ -26,6 +26,7 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
   lazy val Hack2Class = hygienicRef[org.scalameta.overload.Hack2]
   lazy val Hack3Class = hygienicRef[org.scalameta.overload.Hack3]
   lazy val Hack4Class = hygienicRef[org.scalameta.overload.Hack4]
+  lazy val NothingClass = tq"_root_.scala.Nothing"
 
   def leafHandler(l: Leaf): Tree
   def generatedMethods(cases: List[CaseDef]): Tree
@@ -53,7 +54,7 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
         val extractor = hygienicRef(l.sym.companion)
         val binders = l.fields.map(f => pq"${f.name}")
         val relevantFields = l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
-        cq"$extractor(..$binders) => ${leafHandler(l)}"
+        cq"tree @ $extractor(..$binders) => ${leafHandler(l)}"
       })
       val generatedMethods = TransverserMacros.this.generatedMethods(cases)
 

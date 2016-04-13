@@ -14,7 +14,84 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
   import c.universe._
 
   def leafHandler(l: Leaf): Tree = {
-    q"???"
+    val constructor = hygienicRef(l.sym.companion)
+    val relevantFields = l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
+    if (relevantFields.isEmpty) return q"tree"
+    val transformedFields: List[ValDef] = relevantFields.map(f => {
+      def treeTransformer(input: Tree, tpe: Type): Tree = {
+        val from = c.freshName(TermName("from"))
+        val to = c.freshName(TermName("to"))
+        q"""
+          val $from = $input
+          val $to = apply($from)
+          $to match {
+            case $to: ${hygienicRef(tpe.typeSymbol)} =>
+              if ($from ne $to) {
+                same = false
+                $to.withTokens(_root_.scala.meta.internal.tokens.TransformedTokens($from))
+              } else {
+                $from
+              }
+            case $to =>
+              this.fail(${f.owner.prefix + "." + f.name}, $from, $to)
+          }
+        """
+      }
+      def optionTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
+        val fromopt = c.freshName(TermName("fromopt"))
+        val from = c.freshName(TermName("from"))
+        val to = c.freshName(TermName("to"))
+        q"""
+          val $fromopt = $input
+          $fromopt match {
+            case $SomeModule($from) =>
+              val $to = ${nested(q"$from", tpe.typeArgs.head)}
+              if ($from ne $to) $SomeModule($to)
+              else $fromopt
+            case $NoneModule =>
+              $NoneModule
+          }
+        """
+      }
+      def seqTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
+        val fromseq = c.freshName(TermName("fromseq"))
+        val from = c.freshName(TermName("from"))
+        val to = c.freshName(TermName("to"))
+        q"""
+          val $fromseq = $input
+          var sameseq = true
+          val buf = $ListBufferModule[${tpe.typeArgs.head}]()
+          val it = $fromseq.iterator
+          while (it.hasNext) {
+            val $from = it.next
+            val $to = ${nested(q"$from", tpe.typeArgs.head)}
+            if ($from ne $to) sameseq = false
+            buf += $to
+          }
+          if (sameseq) $fromseq
+          else buf.toList
+        """
+      }
+      val rhs = f.tpe match {
+        case tpe @ TreeTpe(_) =>
+          treeTransformer(q"${f.name}", tpe)
+        case tpe @ OptionTreeTpe(_) =>
+          optionTransformer(q"${f.name}", tpe, treeTransformer)
+        case tpe @ SeqTreeTpe(_) =>
+          seqTransformer(q"${f.name}", tpe, treeTransformer)
+        case tpe @ OptionSeqTreeTpe(_) =>
+          optionTransformer(q"${f.name}", tpe, seqTransformer(_, _, treeTransformer))
+        case tpe @ SeqSeqTreeTpe(_) =>
+          seqTransformer(q"${f.name}", tpe, seqTransformer(_, _, treeTransformer))
+      }
+      q"val ${TermName(f.name + "1")} = $rhs"
+    })
+    q"""
+      var same = true
+      ..$transformedFields
+      if (same) tree
+      else $constructor(..${transformedFields.map(_.name)})
+    """
   }
 
   def generatedMethods(cases: List[CaseDef]): Tree = {
@@ -67,6 +144,14 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         }
         if (same) treess
         else buf.toList
+      }
+
+      private def fail(field: String, from: $TreeClass, to: $TreeClass): $NothingClass = {
+        import scala.meta.prettyprinters._
+        val errorPrefix = "Invalid transformation of " + field + ": "
+        val errorHeader = errorPrefix + from.productPrefix + " -> " + to.productPrefix + ". "
+        val errorDetails = "From: " + from.show[Structure] + ", to: " + to.show[Structure]
+        throw new UnsupportedOperationException(errorHeader + errorDetails)
       }
     """
   }

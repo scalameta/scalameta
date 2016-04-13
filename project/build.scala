@@ -120,7 +120,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's traversal and transformation infrastructure for abstract syntax trees",
     enableMacros
-  ) dependsOn (foundation, trees)
+  ) dependsOn (foundation, trees, quasiquotes % "test")
 
   lazy val trees = Project(
     id   = "trees",

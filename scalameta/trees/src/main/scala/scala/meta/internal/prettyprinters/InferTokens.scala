@@ -25,7 +25,7 @@ import scala.meta.internal.tokenquasiquotes._
 // TODO: review https://github.com/scalameta/scalameta/pull/141 and apply fixes from there to here
 private[meta] object inferTokens {
   def apply(tree: Tree, proto: Option[Tree]): Tokens = {
-    infer(tree, proto)(scala.meta.dialects.Scala211) // as explained above, forcing dialect.
+    Tokens.Synthetic(infer(tree, proto)(scala.meta.dialects.Scala211): _*) // as explained above, forcing dialect.
   }
 
   /* Generate a single token for a literal */
