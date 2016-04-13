@@ -82,12 +82,12 @@ object Attributes {
                 case Symbol.Zero => "0"
                 case Symbol.RootPackage => "_root_"
                 case Symbol.EmptyPackage => "_empty_"
-                case Symbol.Global(owner, name, Signature.Type) => loop(owner) + "#" + name
-                case Symbol.Global(owner, name, Signature.Term) => loop(owner) + "." + name
-                case Symbol.Global(owner, name, Signature.Method(jvmSignature)) => loop(owner) + "." + name + jvmSignature
-                case Symbol.Global(owner, name, Signature.TypeParameter) => loop(owner) + "[" + name + "]"
-                case Symbol.Global(owner, name, Signature.TermParameter) => loop(owner) + "(" + name + ")"
-                case Symbol.Global(owner, name, Signature.Self) => loop(owner) + ".this"
+                case Symbol.Global(owner, ScalaSig.Type(name), _) => loop(owner) + "#" + name
+                case Symbol.Global(owner, ScalaSig.Term(name), _) => loop(owner) + "." + name
+                case Symbol.Global(owner, ScalaSig.Method(name, jvmSignature), _) => loop(owner) + "." + name + jvmSignature
+                case Symbol.Global(owner, ScalaSig.TypeParameter(name), _) => loop(owner) + "[" + name + "]"
+                case Symbol.Global(owner, ScalaSig.TermParameter(name), _) => loop(owner) + "(" + name + ")"
+                case Symbol.Global(owner, ScalaSig.Self(_), _) => loop(owner) + ".this"
                 case Symbol.Local(id) => "local#" + id
               }
               var result = loop(sym)

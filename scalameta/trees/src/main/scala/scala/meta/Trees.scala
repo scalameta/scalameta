@@ -11,7 +11,6 @@ import scala.meta.prettyprinters._
 import scala.meta.internal.{equality => e}
 import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
-import scala.meta.internal.ffi._
 import scala.meta.internal.semantic._
 
 @root trait Tree extends Product with Serializable {
@@ -346,8 +345,6 @@ object Pat {
 
 @branch trait Member extends Tree with Scope {
   def name: Name
-  private[meta] def ffi: Ffi
-  private[meta] def withFfi(ffi: Ffi): ThisType
 }
 object Member {
   @branch trait Term extends Member {

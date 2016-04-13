@@ -24,7 +24,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
   import Flag._
 
   val InternalSemantic = q"_root_.scala.meta.internal.semantic"
-  val InternalFfi = q"_root_.scala.meta.internal.ffi"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   val Tokens = q"_root_.scala.meta.tokens"
   val Prettyprinters = q"_root_.scala.meta.internal.prettyprinters"
@@ -51,7 +50,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       def hasEnv = isName || isTerm
       def hasDenot = isName
       def hasTyping = isTerm || isTermParam
-      def hasFfi = isMember
       val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$astats }" = cdef
       // TODO: For stack traces, we'd like to have short class names, because stack traces print full names anyway.
       // However debugging macro expansion errors is much-much easier with full names for Api and Impl classes
@@ -194,22 +192,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
           // NOTE: generated elsewhere, grep for `quasigetter`
         }
       }
-      if (hasFfi) {
-        bparams1 += q"protected val privateFfi: $InternalFfi.Ffi"
-        astats1 += q"private[meta] def ffi: $InternalFfi.Ffi"
-        stats1 += q"""
-          private[meta] def ffi: $InternalFfi.Ffi = {
-            if (privateFfi != null) privateFfi
-            else $InternalFfi.Ffi.Zero
-          }
-        """
-      } else {
-        if (!isQuasi) {
-          stats1 += q"protected def privateFfi: $InternalFfi.Ffi = null"
-        } else {
-          // NOTE: generated elsewhere, grep for `quasigetter`
-        }
-      }
 
       // step 5: turn all parameters into vars, create getters and setters
       def internalize(name: TermName) = TermName("_" + name.toString)
@@ -260,8 +242,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       qstats1 += q"override protected def privateDenot: $InternalSemantic.Denotation = null"
       if (hasTyping) qstats1 += quasigetter(PrivateMeta, "typing")
       qstats1 += q"override protected def privateTyping: $InternalSemantic.Typing = null"
-      if (hasFfi) qstats1 += quasigetter(PrivateMeta, "ffi")
-      qstats1 += q"override protected def privateFfi: $InternalFfi.Ffi = null"
       qstats1 ++= fieldParamss.flatten.map(p => quasigetter(NoMods, p.name.toString))
       if (is("Name.Anonymous")) qstats1 += quasigetter(NoMods, "value")
 
@@ -283,7 +263,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       if (hasEnv) privateCopyInternals += q"env"
       if (hasDenot) privateCopyInternals += q"denot"
       if (hasTyping) privateCopyInternals += q"typing"
-      if (hasFfi) privateCopyInternals += q"ffi"
       val privateCopyInitss = paramss.map(_.map(p => q"$AstTyperMacrosModule.initField(this.${internalize(p.name)})"))
       val privateCopyBody = q"new $name(..$privateCopyInternals)(...$privateCopyInitss)"
       stats1 += q"""
@@ -294,8 +273,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
             tokens: $Tokens.Tokens = privateTokens,
             env: $InternalSemantic.Environment = privateEnv,
             denot: $InternalSemantic.Denotation = privateDenot,
-            typing: $InternalSemantic.Typing = privateTyping,
-            ffi: $InternalFfi.Ffi = privateFfi): ThisType = {
+            typing: $InternalSemantic.Typing = privateTyping): ThisType = {
           $privateCopyBody
         }
       """
@@ -437,15 +415,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
           qstats1 += quasisetter(PrivateMeta, "withAttrs", paramDenot, paramTypingLike)
         }
       }
-      if (hasFfi) {
-        val paramFfi = q"val ffi: $InternalFfi.Ffi"
-        astats1 += q"""
-          private[meta] def withFfi($paramFfi): $iname = {
-            this.privateCopy(ffi = ffi)
-          }
-        """
-        qstats1 += quasisetter(PrivateMeta, "withFfi", paramFfi)
-      }
 
       // step 9: generate boilerplate required by the @ast infrastructure
       istats1 += q"override type ThisType <: $iname"
@@ -500,7 +469,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       if (hasEnv) internalInitCount += 1
       if (hasDenot) internalInitCount += 1
       if (hasTyping) internalInitCount += 1
-      if (hasFfi) internalInitCount += 1
       val internalInitss = 1.to(internalInitCount).map(_ => q"null")
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$AstTyperMacrosModule.initParam($local)" })
       internalBody += q"val node = new $name($FlagsPackage.ZERO, ..$internalInitss)(...$paramInitss)"

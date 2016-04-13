@@ -17,14 +17,24 @@ import scala.meta.internal.prettyprinters._
 // For local symbols, things are much simpler - we require unique ids, whose generation is feasible,
 // because everyone who can create those symbols is localized to the same compilation unit.
 
-@root trait Signature
-object Signature {
-  @leaf object Type extends Signature
-  @leaf object Term extends Signature
-  @leaf class Method(jvmSignature: String) extends Signature
-  @leaf object TypeParameter extends Signature
-  @leaf object TermParameter extends Signature
-  @leaf object Self extends Signature
+@root trait ScalaSig
+object ScalaSig {
+  @leaf class Type(name: String) extends ScalaSig
+  @leaf class Term(name: String) extends ScalaSig
+  @leaf class Method(name: String, jvmSignature: String) extends ScalaSig
+  @leaf class TypeParameter(name: String) extends ScalaSig
+  @leaf class TermParameter(name: String) extends ScalaSig
+  @leaf class Self(name: String) extends ScalaSig
+}
+
+@root trait BinarySig
+object BinarySig {
+  @leaf object Zero extends BinarySig
+  @leaf class Intrinsic(className: String, methodName: String, signature: String) extends BinarySig
+  @leaf class JvmField(className: String, fieldName: String, signature: String) extends BinarySig
+  @leaf class JvmMethod(className: String, fieldName: String, signature: String) extends BinarySig
+  @leaf class JvmErasure(className: String) extends BinarySig
+  @leaf class JvmPackage(packageName: String) extends BinarySig
 }
 
 @root trait Symbol
@@ -32,8 +42,8 @@ object Symbol {
   @leaf object Zero extends Symbol
   @leaf object RootPackage extends Symbol
   @leaf object EmptyPackage extends Symbol
-  @leaf class Global(owner: Symbol, name: String, signature: Signature) extends Symbol
-  @leaf class Local(id: String) extends Symbol
+  @leaf class Global(owner: Symbol, scalaSig: ScalaSig, binarySig: BinarySig) extends Symbol
+  @leaf class Local(id: String) extends Symbol // TODO: also keep signatures?
 }
 
 // upd. It should've been obvious from the very beginning, but symbols alone don't cut it.

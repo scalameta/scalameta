@@ -22,7 +22,6 @@ class BranchNamerMacros(val c: Context) extends AstReflection with MacroHelpers 
   import Flag._
 
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
-  val FfiInternal = q"_root_.scala.meta.internal.ffi"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
 
@@ -80,10 +79,6 @@ class BranchNamerMacros(val c: Context) extends AstReflection with MacroHelpers 
         if (isMember) {
           qstats :+= quasigetter(NoMods, "name")
         }
-        if (isMember) {
-          qstats :+= quasigetter(PrivateMeta, "ffi")
-          qstats :+= quasisetter(PrivateMeta, "withFfi", q"val ffi: $FfiInternal.Ffi")
-        }
         if (isName) {
           qstats :+= quasigetter(NoMods, "value")
           qstats :+= quasigetter(PrivateMeta, "env")
@@ -100,7 +95,6 @@ class BranchNamerMacros(val c: Context) extends AstReflection with MacroHelpers 
         qstats :+= q"protected def privateEnv: $SemanticInternal.Environment = null"
         qstats :+= q"protected def privateDenot: $SemanticInternal.Denotation = null"
         qstats :+= q"protected def privateTyping: $SemanticInternal.Typing = null"
-        qstats :+= q"protected def privateFfi: $FfiInternal.Ffi = null"
         mstats1 += q"$qmods class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents { ..$qstats }"
       }
 
