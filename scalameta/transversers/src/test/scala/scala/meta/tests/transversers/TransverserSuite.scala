@@ -13,7 +13,7 @@ import scala.meta.internal.prettyprinters._
 
 class TransverserSuite extends FunSuite {
   test("Traverser Ok") {
-    val tree = q"""
+    val tree0 = q"""
       def foo(x: x)(x: Int) = x + x
       class C(x: x) {
         def bar(x: x) = ???
@@ -26,7 +26,7 @@ class TransverserSuite extends FunSuite {
         super.apply(tree)
       }
     }
-    traverser(tree)
+    traverser(tree0)
     assert(log.mkString(EOL) === """
       |{   def foo(x: x)(x: Int) = x + x   class C(x: x) { def bar(x: x) = ??? } }
       |def foo(x: x)(x: Int) = x + x
@@ -61,7 +61,7 @@ class TransverserSuite extends FunSuite {
   }
 
   test("Transformer Ok") {
-    val tree = q"""
+    val tree0 = q"""
       def foo(x: x)(x: Int) = x + x
       class C(x: x) {
         def bar(x: x) = ???
@@ -75,7 +75,7 @@ class TransverserSuite extends FunSuite {
         case _ => super.apply(tree)
       }
     }
-    val tree1 = transformer(tree)
+    val tree1 = transformer(tree0)
     assert(tree1.toString === """
       |{
       |  def foo(y: y)(y: Int) = y + y
@@ -85,7 +85,7 @@ class TransverserSuite extends FunSuite {
   }
 
   test("Transformer Fail") {
-    val tree = q"""
+    val tree0 = q"""
       def foo(x: x)(x: Int) = x + x
       class C(x: x) {
         def bar(x: x) = ???
@@ -98,7 +98,7 @@ class TransverserSuite extends FunSuite {
         else super.apply(tree)
       }
     }
-    intercept[UnsupportedOperationException]{ transformer(tree) }
+    intercept[UnsupportedOperationException]{ transformer(tree0) }
   }
 
   test("Transformed Tokens") {
@@ -167,5 +167,24 @@ class TransverserSuite extends FunSuite {
       |[2] {0}::_root_
       |{1} Type.Name("Foo")[2]
     """.trim.stripMargin)
+  }
+
+  test("Tree.transform") {
+    val tree0 = q"x + y"
+    val tree1 = tree0.transform { case Term.Name(s) => Term.Name(s + s) }
+    assert(tree1.toString == "xx ++ yy")
+  }
+
+  test("Tree.traverse") {
+    var cnt = 0
+    val tree0 = q"x + y"
+    tree0.traverse { case Term.Name(s) => cnt += 1 }
+    assert(cnt == 3)
+  }
+
+  test("Tree.collect") {
+    val tree0 = q"x + y"
+    val result1 = tree0.collect { case Term.Name(s) => s }
+    assert(result1.toString == "List(x, +, y)")
   }
 }
