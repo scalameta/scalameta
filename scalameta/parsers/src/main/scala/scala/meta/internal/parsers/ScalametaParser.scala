@@ -696,100 +696,6 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     }
   }
 
-/* --------- OPERAND/OPERATOR STACK --------------------------------------- */
-
-  /** Modes for infix types. */
-  object InfixMode extends Enumeration {
-    val FirstOp, LeftOp, RightOp = Value
-  }
-
-  // TODO: couldn't make this final, because of a patmat warning
-  case class OpInfo[T: OpCtx](startPos: Pos, lhs: T, endPos: Pos, operator: Term.Name, targs: List[Type]) {
-    def precedence = operator.precedence
-  }
-
-  sealed abstract class OpCtx[T] {
-    def opinfo(startPos: Pos, tree: T, endPos: Pos): OpInfo[T]
-    def binop(opinfo: OpInfo[T], rhs: T, endPos: Pos): T
-    var stack: List[OpInfo[T]] = Nil
-    def head = stack.head
-    def push(startPos: Pos, top: T, endPos: Pos): Unit = stack ::= opinfo(startPos, top, endPos)
-    def pop(): OpInfo[T] = try head finally stack = stack.tail
-  }
-  object OpCtx {
-    implicit object `List Term.Arg Context` extends OpCtx[List[Term.Arg]] {
-      def opinfo(startPos: Pos, tree: List[Term.Arg], endPos: Pos): OpInfo[List[Term.Arg]] = {
-        val name = termName()
-        val targs = if (token.is[`[`]) exprTypeArgs() else Nil
-        OpInfo(startPos, tree, endPos, name, targs)
-      }
-      def binop(opinfo: OpInfo[List[Term.Arg]], rhs: List[Term.Arg], endPos: Pos): List[Term.Arg] = {
-        val lhs = atPos(opinfo.startPos, opinfo.endPos)(makeTupleTerm(opinfo.lhs map {
-          case t: Term => t
-          case other   => unreachable(debug(other, other.show[Structure]))
-        }))
-        atPos(opinfo.startPos, endPos)(Term.ApplyInfix(lhs, opinfo.operator, opinfo.targs, rhs)) :: Nil
-      }
-    }
-    implicit object `Pat Context` extends OpCtx[Pat] {
-      def opinfo(startPos: Pos, tree: Pat, endPos: Pos): OpInfo[Pat] = {
-        val name = termName()
-        if (token.is[`[`]) syntaxError("infix patterns cannot have type arguments", at = token)
-        OpInfo(startPos, tree, endPos, name, Nil)
-      }
-      def binop(opinfo: OpInfo[Pat], rhs: Pat, endPos: Pos): Pat = {
-        val args = rhs match {
-          case Pat.Tuple(args) => args.toList
-          case _               => List(rhs)
-        }
-        atPos(opinfo.startPos, endPos)(Pat.ExtractInfix(opinfo.lhs, opinfo.operator, args))
-      }
-    }
-  }
-
-  def opctx[T](implicit ctx: OpCtx[T]) = ctx
-
-  def checkHeadAssoc[T: OpCtx](leftAssoc: Boolean) = checkAssoc(opctx.head.operator, leftAssoc)
-
-  def checkAssoc(op: Term.Name, leftAssoc: Boolean): Unit = (
-    if (op.isLeftAssoc != leftAssoc)
-      syntaxError("left- and right-associative operators with same precedence may not be mixed", at = op)
-  )
-
-  def finishPostfixOp(base: List[OpInfo[List[Term.Arg]]], opinfo: OpInfo[List[Term.Arg]], endPos: Pos): List[Term.Arg] = {
-    val qual = reduceStack(base, opinfo.lhs, endPos) match {
-      case (t: Term) :: Nil => t
-      case other => unreachable(debug(other))
-    }
-    atPos(qual, opinfo.operator)(Term.Select(qual, opinfo.operator)) :: Nil
-  }
-
-  def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T, endPos: Pos): T = {
-    val opPrecedence = if (token.is[Ident]) termName(advance = false).precedence else 0
-    val leftAssoc    = !token.is[Ident] || termName(advance = false).isLeftAssoc
-
-    reduceStack(base, top, opPrecedence, leftAssoc, endPos)
-  }
-
-  def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T, opPrecedence: Int, leftAssoc: Boolean, endPos: Pos): T = {
-    def isDone          = opctx.stack == base
-    def lowerPrecedence = !isDone && (opPrecedence < opctx.head.precedence)
-    def samePrecedence  = !isDone && (opPrecedence == opctx.head.precedence)
-    def canReduce       = lowerPrecedence || leftAssoc && samePrecedence
-
-    if (samePrecedence)
-      checkHeadAssoc(leftAssoc)
-
-    def loop(top: T): T =
-      if (!canReduce) top
-      else {
-        val info = opctx.pop()
-        loop(opctx.binop(info, top, endPos))
-      }
-
-    loop(top)
-  }
-
 /* -------- IDENTIFIERS AND LITERALS ------------------------------------------- */
 
   /** Methods which implicitly propagate the context in which they were
@@ -1677,6 +1583,124 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     atPos(implicitPos, auto)(Term.Function(List(param), if (location != InBlock) expr() else block()))
   }
 
+  // Encapsulates state and behavior of parsing infix syntax.
+  // See `postfixExpr` for an involved usage example.
+  // Another, much less involved usage, lives in `pattern3`.
+  sealed abstract class InfixContext {
+    // Lhs is the type of the left-hand side of an infix expression.
+    // (Lhs, op and targs form UnfinishedInfix).
+    // Rhs if the type of the right-hand side.
+    // FinishedInfix is the type of an infix expression.
+    // The conversions are necessary to push the output of finishInfixExpr on stack.
+    type Lhs
+    type Rhs
+    // type UnfinishedInfix (see below)
+    type FinishedInfix
+    def toLhs(rhs: Rhs): Lhs
+    def toRhs(fin: FinishedInfix): Rhs
+
+    // Represents an unfinished infix expression, e.g. [a * b +] in `a * b + c`.
+    // 1) T is either Term for infix syntax in expressions or Pat for infix syntax in patterns.
+    // 2) We need to carry startPos/endPos separately from lhs.position
+    //    because their extent may be bigger than lhs because of parentheses or whatnot.
+    case class UnfinishedInfix(startPos: Pos, lhs: Lhs, endPos: Pos, op: Term.Name, targs: List[Type]) {
+      def precedence = op.precedence
+    }
+
+    // The stack of unfinished infix expressions, e.g. Stack([a + ]) in `a + b [*] c`.
+    // `push` takes `b`, reads `*`, checks for type arguments and adds [b *] on the top of the stack.
+    // Other methods working on the stack are self-explanatory.
+    var stack: List[UnfinishedInfix] = Nil
+    def head = stack.head
+    def push(startPos: Pos, lhs: Lhs, endPos: Pos, op: Term.Name, targs: List[Type]): Unit = stack ::= UnfinishedInfix(startPos, lhs, endPos, op, targs)
+    def pop(): UnfinishedInfix = try head finally stack = stack.tail
+
+    def reduceStack(stack: List[UnfinishedInfix], curr: Rhs, endPos: Pos): Lhs = {
+      val opPrecedence = if (token.is[Ident]) termName(advance = false).precedence else 0
+      val leftAssoc    = !token.is[Ident] || termName(advance = false).isLeftAssoc
+
+      def isDone          = this.stack == stack
+      def lowerPrecedence = !isDone && (opPrecedence < this.head.precedence)
+      def samePrecedence  = !isDone && (opPrecedence == this.head.precedence)
+      def canReduce       = lowerPrecedence || leftAssoc && samePrecedence
+
+      if (samePrecedence) {
+        checkAssoc(this.head.op, leftAssoc)
+      }
+
+      // Pop off an unfinished infix expression off the stack and finish it with the rhs.
+      // Then convert the result, so that it can become someone else's rhs.
+      // Repeat while precedence and associativity allow.
+      def loop(rhs: Rhs): Lhs = {
+        if (!canReduce) {
+          toLhs(rhs)
+        } else {
+          val lhs = pop()
+          val fin = finishInfixExpr(lhs, rhs, endPos)
+          val rhs1 = toRhs(fin)
+          loop(rhs1)
+        }
+      }
+
+      loop(curr)
+    }
+
+    // Takes the unfinished infix expression, e.g. `[x +]`,
+    // then takes the right-hand side (which can have multiple args), e.g. ` (y, z)`,
+    // and creates `x + (y, z)`.
+    // We need to carry endPos explicitly because its extent may be bigger than rhs because of parent of whatnot.
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, endPos: Pos): FinishedInfix
+  }
+
+  // Infix syntax in terms is borderline crazy.
+  //
+  // For example, did you know that `a * b + (c, d) * (f, g: _*)` means:
+  // a.$times(b).$plus(scala.Tuple2(c, d).$times(f, g: _*))?!
+  //
+  // Therefore, Lhs = List[Term], Rhs = List[Term.Arg], FinishedInfix = Term.
+  //
+  // Actually there's even crazier stuff in scala-compiler.jar.
+  // Apparently you can parse and typecheck `a + (bs: _*) * c`,
+  // however I'm going to error out on this.
+  object termInfixContext extends InfixContext {
+    type Lhs = List[Term]
+    type Rhs = List[Term.Arg]
+    type FinishedInfix = Term
+
+    def toRhs(fin: FinishedInfix): Rhs = List(fin)
+    def toLhs(rhs: Rhs): Lhs = rhs.map({
+      case term: Term => term
+      case arg => syntaxError("`: _*' annotations are only allowed in arguments to *-parameters", at = arg)
+    })
+
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, endPos: Pos): FinishedInfix = {
+      val UnfinishedInfix(startPos, lhses, halfPos, op, targs) = unf
+      val lhs = atPos(startPos, halfPos)(makeTupleTerm(lhses)) // `a + (b, c) * d` leads to creation of a tuple!
+      atPos(startPos, endPos)(Term.ApplyInfix(lhs, op, targs, rhs))
+    }
+  }
+
+  // In comparison with terms, patterns are trivial.
+  implicit object patInfixContext extends InfixContext {
+    type Lhs = Pat
+    type Rhs = Pat
+    type FinishedInfix = Pat
+
+    def toRhs(fin: FinishedInfix): Rhs = fin
+    def toLhs(rhs: Rhs): Lhs = rhs
+
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, endPos: Pos): FinishedInfix = {
+      val UnfinishedInfix(startPos, lhs, _, op, _) = unf
+      val args = rhs match { case Pat.Tuple(args) => args.toList; case _ => List(rhs) }
+      atPos(startPos, endPos)(Pat.ExtractInfix(lhs, op, args))
+    }
+  }
+
+  def checkAssoc(op: Term.Name, leftAssoc: Boolean): Unit = (
+    if (op.isLeftAssoc != leftAssoc)
+      syntaxError("left- and right-associative operators with same precedence may not be mixed", at = op)
+  )
+
   /** {{{
    *  PostfixExpr   ::= InfixExpr [Id [nl]]
    *  InfixExpr     ::= PrefixExpr
@@ -1684,34 +1708,73 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  }}}
    */
   def postfixExpr(): Term = {
-    val ctx  = opctx[List[Term.Arg]]
+    val ctx  = termInfixContext
     val base = ctx.stack
 
-    def loop(startPos: Pos, top: List[Term.Arg], endPos: Pos): List[Term.Arg] = {
-      if (!token.is[Ident] && !token.is[Unquote]) top
-      else {
-        ctx.push(startPos, reduceStack(base, top, endPos), endPos)
+    // Skip to later in the method to start mental debugging.
+    def loop(startPos: Pos, rhsK: ctx.Rhs, endPos: Pos): ctx.Rhs = {
+      if (!token.is[Ident] && !token.is[Unquote]) {
+        // Infix chain has ended.
+        // In the running example, we're at `a + b[]`
+        // with base = List([a +]), rhsK = List([b]).
+        rhsK
+      } else {
         newLineOptWhenFollowing(_.is[ExprIntro])
         if (token.is[ExprIntro]) {
-          val startToken1 = in.token
-          var startPos1: Pos = IndexPos(in.tokenPos)
-          val top1 = argumentExprsOrPrefixExpr()
-          var endPos1: Pos = IndexPos(in.prevTokenPos)
-          if (startToken1.isNot[`{`] && startToken1.isNot[`(`]) startPos1 = TreePos(top1.head)
-          if (startToken1.isNot[`{`] && startToken1.isNot[`(`]) endPos1 = TreePos(top1.head)
-          loop(startPos1, top1, endPos1)
+          // Infix chain continues.
+          // In the running example, we're at `a [+] b`
+          // with base = List(), rhsK = [a].
+          val lhsK = ctx.reduceStack(base, rhsK, endPos) // lhsK = [a]
+          val op = termName() // op = [+]
+          val targs = if (token.is[`[`]) exprTypeArgs() else Nil // targs = Nil
+          ctx.push(startPos, lhsK, endPos, op, targs) // afterwards, ctx.stack = List([a +])
+
+          // startPos/endPos may be bigger than then extent of rhsKplus1,
+          // so we really have to track them separately.
+          val startTokKplus1 = in.token
+          var startPosKplus1: Pos = IndexPos(in.tokenPos)
+          val rhsKplus1 = argumentExprsOrPrefixExpr()
+          var endPosKplus1: Pos = IndexPos(in.prevTokenPos)
+          if (startTokKplus1.isNot[`{`] && startTokKplus1.isNot[`(`]) {
+            startPosKplus1 = TreePos(rhsKplus1.head)
+            endPosKplus1 = TreePos(rhsKplus1.head)
+          }
+
+          // Try to continue the infix chain.
+          loop(startPosKplus1, rhsKplus1, endPosKplus1) // base = List([a +]), rhsKplus1 = List([b])
         } else {
-          finishPostfixOp(base, ctx.pop(), endPos)
+          // Infix chain has ended with a postfix expression.
+          // This never happens in the running example.
+          ???
+          // val lhs = ctx.toLhs(reduceStack(base, rhsK, endPos))
+          // val op = termName()
+          // if (token.is[`[`]) syntaxError("type application is not allowed for postfix operators", at = token)
+          // val qual = reduceStack(stack, lhs, endPos)
+          // atPos(qual, op)(Term.Select(qual, op))
         }
       }
     }
-    val top0 = prefixExpr() :: Nil
-    val top = loop(top0.head.pos, top0, top0.head.pos)
 
-    reduceStack(base, top, in.prevTokenPos) match {
-      case (t: Term) :: Nil => t
-      case other            => unreachable(debug(other))
-    }
+    // Start the infix chain.
+    // We'll use `a + b` as our running example.
+    val rhs0 = ctx.toRhs(prefixExpr())
+
+    // Iteratively read the infix chain via `loop`.
+    // rhs0 is now [a]
+    // Also see some comments above UnfinishedInfix for a more complicated example.
+    // If the next token is not an ident or an unquote, the infix chain ends immediately,
+    // and this method becomes a fallthrough.
+    val rhsN = loop(rhs0.head.pos, rhs0, rhs0.head.pos)
+
+    // Infix chain has ended.
+    // base contains pending UnfinishedInfix parts and rhsN is the final rhs.
+    // For our running example, this'll be List([a +]) and [b].
+    // Afterwards, `lhsResult` will be List([a + b]).
+    val lhsResult = ctx.reduceStack(base, rhsN, in.prevTokenPos)
+
+    // This is something not captured by the type system.
+    // When applied to a result of `loop`, `reduceStack` will produce a singleton list.
+    lhsResult match { case List(finResult) => finResult; case _ => unreachable(debug(lhsResult)) }
   }
 
   /** {{{
@@ -2132,8 +2195,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
      *  }}}
      */
     def pattern3(): Pat.Arg = {
-      val top: Pat = simplePattern(badPattern3)
-      val ctx = opctx[Pat]
+      val ctx = patInfixContext
+      val lhs = simplePattern(badPattern3)
       val base = ctx.stack
       // See SI-3189, SI-4832 for motivation. Cf SI-3480 for counter-motivation.
       def isCloseDelim = token match {
@@ -2141,31 +2204,35 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         case _: `)` => !isXML
         case _      => false
       }
-      def checkWildStar: Option[Pat.Arg.SeqWildcard] = top match {
+      def checkWildStar: Option[Pat.Arg.SeqWildcard] = lhs match {
         case Pat.Wildcard() if isSequenceOK && isRawStar && dialect.bindToSeqWildcardDesignator == "@" => peekingAhead (
-          // TODO: used to be Star(top) | EmptyTree, why start had param?
-          if (isCloseDelim) Some(atPos(top, auto)(Pat.Arg.SeqWildcard()))
+          // TODO: used to be Star(lhs) | EmptyTree, why start had param?
+          if (isCloseDelim) Some(atPos(lhs, auto)(Pat.Arg.SeqWildcard()))
           else None
         )
         case _ => None
       }
-      def loop(top: Pat): Pat = reduceStack(base, top, top.pos) match {
-        case next if isIdentExcept("|") || token.is[Unquote] =>
-          ctx.push(next.pos, next, next.pos)
-          loop(simplePattern(badPattern3))
-        case next =>
-          next
+      def loop(rhs: ctx.Rhs): ctx.Rhs = ctx.reduceStack(base, rhs, rhs.pos) match {
+        case lhs1 if isIdentExcept("|") || token.is[Unquote] =>
+          val op = termName()
+          if (token.is[`[`]) syntaxError("infix patterns cannot have type arguments", at = token)
+          ctx.push(lhs1.pos, lhs1, lhs1.pos, op, Nil)
+          val rhs1 = simplePattern(badPattern3)
+          loop(rhs1)
+        case lhs1 =>
+          lhs1 // TODO: more rigorous type discipline
       }
-      checkWildStar getOrElse loop(top)
+      checkWildStar getOrElse loop(lhs) // TODO: more rigorous type discipline
     }
 
     def badPattern3(token: Token): Nothing = {
+      import patInfixContext._
       def isComma                = token.is[`,`]
       def isDelimiter            = token.is[`)`] || token.is[`}`]
       def isCommaOrDelimiter     = isComma || isDelimiter
-      val (isUnderscore, isStar) = opctx[Pat].stack match {
-        case OpInfo(_, Pat.Wildcard(), _, Term.Name("*"), _) :: _ => (true,   true)
-        case OpInfo(_, _, _, Term.Name("*"), _) :: _              => (false,  true)
+      val (isUnderscore, isStar) = stack match {
+        case UnfinishedInfix(_, Pat.Wildcard(), _, Term.Name("*"), _) :: _ => (true,   true)
+        case UnfinishedInfix(_, _, _, Term.Name("*"), _) :: _              => (false,  true)
         case _                                                    => (false, false)
       }
       def isSeqPatternClose = isUnderscore && isStar && isSequenceOK && isDelimiter
@@ -3381,4 +3448,8 @@ object Location {
   val Local      = new Location(0)
   val InBlock    = new Location(1)
   val InTemplate = new Location(2)
+}
+
+object InfixMode extends Enumeration {
+  val FirstOp, LeftOp, RightOp = Value
 }
