@@ -764,8 +764,6 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     atPos(qual, opinfo.operator)(Term.Select(qual, opinfo.operator)) :: Nil
   }
 
-  def finishBinaryOp[T: OpCtx](opinfo: OpInfo[T], rhs: T, endPos: Pos): T = opctx.binop(opinfo, rhs, endPos)
-
   def reduceStack[T: OpCtx](base: List[OpInfo[T]], top: T, endPos: Pos): T = {
     val opPrecedence = if (token.is[Ident]) termName(advance = false).precedence else 0
     val leftAssoc    = !token.is[Ident] || termName(advance = false).isLeftAssoc
@@ -786,7 +784,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       if (!canReduce) top
       else {
         val info = opctx.pop()
-        loop(finishBinaryOp(info, top, endPos))
+        loop(opctx.binop(info, top, endPos))
       }
 
     loop(top)
