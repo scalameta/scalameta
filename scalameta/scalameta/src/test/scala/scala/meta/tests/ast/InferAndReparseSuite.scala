@@ -32,7 +32,7 @@ package tokens
 //           case Success(reparsed) =>
 //             /* Parsing and re-comparing output. It should have reached a fixed point. */
 //             val newNewCode = forceInferAll(reparsed).tokens.map(_.show[Syntax]).mkString
-//             if (newCode != newNewCode) printCodes(content, newCode, newNewCode)(None)
+//             if (newCode != newNewCode) List(content, newCode, newNewCode).foreach(println)
 //             assert(newCode == newNewCode)
 //           case Failure(err) =>
 //             printCodes(content, newCode)(Some(err))

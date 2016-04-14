@@ -7,7 +7,6 @@ import java.io._
 import scala.meta._
 import scala.meta.dialects.Scala211
 
-// TODO: find a way to move this test back to trees
 class SerializationSuite extends FunSuite {
   private def tryRoundtrip(x: Any): Unit = {
     val baos = new ByteArrayOutputStream()

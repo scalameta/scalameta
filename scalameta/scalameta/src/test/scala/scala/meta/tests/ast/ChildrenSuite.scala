@@ -1,11 +1,11 @@
 package scala.meta.tests
 package ast
 
+import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.tests.parsers.ParseSuite
 
-class ChildrenSuite extends ParseSuite {
+class ChildrenSuite extends FunSuite {
   test("Template.children") {
     val tree = q"""
       class Foo {

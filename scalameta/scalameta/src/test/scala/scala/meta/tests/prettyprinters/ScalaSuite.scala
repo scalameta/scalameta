@@ -1,15 +1,15 @@
-// TODO: uncomment once we reimplement Tree.transform
+// TODO: tree.transform
 
 // package scala.meta.tests
-// package parsers
+// package prettyprinters
 
 // import org.scalatest._
 // import scala.meta._
 // import scala.meta.prettyprinters._
 // import scala.meta.dialects.Scala211
+// import scala.meta.internal.ast.InferTokensSuite
 
-// class ScalaSuite extends InferSuite {
-
+// class ScalaSuite extends InferTokensSuite {
 //   def templStatForceInfer(code: String)(implicit dialect: Dialect) = forceInferAll(super.templStat(code))
 //   def tpeForceInfer(code: String)(implicit dialect: Dialect) = forceInferAll(super.tpe(code))
 //   def sourceForceInfer(code: String)(implicit dialect: Dialect) = forceInferAll(super.source(code))
