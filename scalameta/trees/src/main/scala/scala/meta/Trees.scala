@@ -562,5 +562,5 @@ package internal.ast {
   }
 
   // TODO: since trees are no longer sealed, we need a mechanism that would keep track of all of them
-  @registry object Registry
+  @registry object All
 }

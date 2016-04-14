@@ -143,6 +143,8 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's metaprogramming APIs"
+  ) settings (
+    exposePaths("scalameta", Test): _*
   ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, transversers, trees)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(

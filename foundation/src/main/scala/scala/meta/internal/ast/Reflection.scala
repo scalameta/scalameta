@@ -21,7 +21,7 @@ trait Reflection extends AdtReflection {
 
   lazy val TreeClass = mirror.staticClass("scala.meta.Tree")
   lazy val QuasiClass = mirror.staticClass("scala.meta.internal.ast.Quasi")
-  lazy val RegistryModule = mirror.staticModule("scala.meta.internal.ast.Registry")
+  lazy val AllModule = mirror.staticModule("scala.meta.internal.ast.All")
   lazy val RegistryAnnotation = mirror.staticModule("scala.meta.internal.ast.Metadata").info.member(TypeName("registry")).asClass
 
   override protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
@@ -33,7 +33,7 @@ trait Reflection extends AdtReflection {
 
   // NOTE: this is supposed to map root/branch/ast classes to their direct subclasses
   private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] = {
-    RegistryModule.initialize.annotations match {
+    AllModule.initialize.annotations match {
       case List(ann) if ann.tree.tpe =:= RegistryAnnotation.toType =>
         val q"new $_($_.$_[..$_](..${astPaths: List[String]}))" = ann.tree
         val astClasses = astPaths.map(astPath => {
