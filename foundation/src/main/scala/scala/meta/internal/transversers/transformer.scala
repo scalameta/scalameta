@@ -26,12 +26,8 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           val $to = apply($from)
           $to match {
             case $to: ${hygienicRef(tpe.typeSymbol)} =>
-              if ($from ne $to) {
-                same = false
-                $to.withTokens(_root_.scala.meta.internal.tokens.TransformedTokens($from))
-              } else {
-                $from
-              }
+              if ($from ne $to) same = false
+              $from
             case $to =>
               this.fail(${f.owner.prefix + "." + f.name}, $from, $to)
           }
@@ -46,8 +42,8 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           $fromopt match {
             case $SomeModule($from) =>
               val $to = ${nested(q"$from", tpe.typeArgs.head)}
-              if ($from ne $to) $SomeModule($to)
-              else $fromopt
+              if ($from eq $to) $fromopt
+              else $SomeModule($to)
             case $NoneModule =>
               $NoneModule
           }
@@ -97,7 +93,9 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
   def generatedMethods(cases: List[CaseDef]): Tree = {
     q"""
       def apply(tree: $TreeClass): $TreeClass = {
-        tree match { case ..$cases }
+        val tree1 = tree match { case ..$cases }
+        if (tree eq tree1) tree
+        else tree1.withTokens(_root_.scala.meta.internal.tokens.TransformedTokens(tree))
       }
 
       def apply(treeopt: $OptionClass[$TreeClass]): $OptionClass[$TreeClass] = treeopt match {
