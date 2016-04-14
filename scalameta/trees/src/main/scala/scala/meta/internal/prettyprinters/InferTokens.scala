@@ -279,7 +279,7 @@ private[meta] object inferTokens {
         case _: Term.Match =>     true
         case _ =>                 false
       }
-      val withParents = (tree, tree.parent) match {
+      val needsParens = (tree, tree.parent) match {
         /* Covering cases for calls on Term.Match  */
         case (_: Term.Match, Some(_: Term.Select)) =>     true
         case (t1, Some(t2: Term.Match)) if t2.scrut eq t1 => impNeedsParens(t1)
@@ -315,7 +315,9 @@ private[meta] object inferTokens {
         case (_: Term.ApplyUnary, Some(_: Term.Select)) => true
         case _ =>                                         false
       }
-      if (withParents) toks"(${deindent(tree.tokens)})" else deindent(tree.tokens)
+      def hasParens = tree.tokens.head.isInstanceOf[Token.`(`] && tree.tokens.last.isInstanceOf[Token.`)`]
+      if (needsParens && !hasParens) toks"(${deindent(tree.tokens)})"
+      else deindent(tree.tokens)
     }
 
     def reconstructTokens(toks0: Tokens, stats0: Seq[Stat], stats1: Seq[Stat]): Tokens = {

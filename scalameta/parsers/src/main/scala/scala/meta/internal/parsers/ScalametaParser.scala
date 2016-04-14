@@ -1826,7 +1826,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         case _: `.` | _: `[` | _: `(` | _: `{` | _: `_ ` =>
           simpleExprRest(argsToTerm(args, openParenPos, closeParenPos), canApply = true) :: Nil
         case _ =>
-          args
+          args match {
+            case arg :: Nil => atPos(openParenPos, closeParenPos)(arg) :: Nil
+            case other => other
+          }
       }
     }
   }
