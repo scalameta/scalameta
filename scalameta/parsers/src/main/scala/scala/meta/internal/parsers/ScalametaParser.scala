@@ -2,6 +2,7 @@ package scala.meta
 package internal
 package parsers
 
+import scala.language.implicitConversions
 import scala.compat.Platform.EOL
 import scala.reflect.{ClassTag, classTag}
 import scala.runtime.ScalaRunTime
@@ -358,6 +359,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     (Tokens(parserTokens.result: _*), parserTokenPositions.result)
   }
 
+  // NOTE: public methods of TokenIterator return scannerTokens-based positions
   trait TokenIterator extends Iterator[Token] { def prevTokenPos: Int; def tokenPos: Int; def token: Token; def fork: TokenIterator }
   var in: TokenIterator = new SimpleTokenIterator()
   private class SimpleTokenIterator(var i: Int = -1) extends TokenIterator {
@@ -441,46 +443,45 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
 /* ------------- POSITION HANDLING ------------------------------------------- */
 
-  import scala.language.implicitConversions
-  sealed trait Pos
-  case class IndexPos(index: Int) extends Pos
+  sealed trait Pos {
+    def startTokenPos: Int
+    def endTokenPos: Int
+  }
+  case class IndexPos(index: Int) extends Pos {
+    def startTokenPos = index
+    def endTokenPos = startTokenPos
+  }
+  case class TokenPos(token: Token) extends Pos {
+    def startTokenPos = token.index
+    def endTokenPos = startTokenPos
+  }
+  case class TreePos(tree: Tree) extends Pos {
+    // NOTE: if a tree has synthetic tokens produced by inferTokens,
+    // then their input will be synthetic as well, and here we verify that it's not the case
+    private def requirePositioned() = {
+      def fail() = throw new Exception(
+        s"internal error: unpositioned prototype tree " +
+        s"${tree.show[Syntax]}: ${tree.show[Structure]}")
+      if (!tree.tokens.isAuthentic) fail()
+    }
+    def startTokenPos = { requirePositioned(); tree.tokens.require[Tokens.Slice].from }
+    def endTokenPos = { requirePositioned(); tree.tokens.require[Tokens.Slice].until - 1 }
+  }
+  case object AutoPos extends Pos {
+    def startTokenPos = in.tokenPos
+    def endTokenPos = in.prevTokenPos
+  }
   implicit def intToIndexPos(index: Int): IndexPos = IndexPos(index)
-  case class TokenPos(token: Token) extends Pos
-  implicit def intToTokenPos(token: Token): TokenPos = TokenPos(token)
-  case class TreePos(tree: Tree) extends Pos
+  implicit def tokenToTokenPos(token: Token): TokenPos = TokenPos(token)
   implicit def treeToTreePos(tree: Tree): TreePos = TreePos(tree)
   implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.map(TreePos).getOrElse(AutoPos)
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption.map(TreePos).getOrElse(AutoPos)
-  implicit class XtensionTreePos(tree: Tree) { def pos = treeToTreePos(tree) }
-  case object AutoPos extends Pos
   def auto = AutoPos
 
   def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
-    implicit class XtensionTree(tree: Tree) {
-      // NOTE: if a tree has synthetic tokens produced by inferTokens,
-      // then their input will be synthetic as well, and here we verify that it's not the case
-      private def requirePositioned() = {
-        def fail() = throw new Exception(
-          s"internal error: unpositioned prototype tree " +
-          s"${tree.show[Syntax]}: ${tree.show[Structure]}")
-        if (!tree.tokens.isAuthentic) fail()
-      }
-      def startTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].from }
-      def endTokenPos: Int = { requirePositioned(); tree.tokens.require[Tokens.Slice].until - 1 }
-    }
-    val startTokenPos = start match {
-      case IndexPos(index) => index
-      case TokenPos(token) => token.index
-      case TreePos(tree) => tree.startTokenPos
-      case AutoPos => in.tokenPos
-    }
+    val startTokenPos = start.startTokenPos
     val result = body
-    var endTokenPos = end match {
-      case IndexPos(index) => index
-      case TokenPos(token) => token.index
-      case TreePos(tree) => tree.endTokenPos
-      case AutoPos => in.prevTokenPos
-    }
+    var endTokenPos = end.endTokenPos
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
     result.withTokens(scannerTokens.slice(startTokenPos, endTokenPos + 1)).asInstanceOf[T]
   }
@@ -1761,10 +1762,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
     // Iteratively read the infix chain via `loop`.
     // rhs0 is now [a]
-    // Also see some comments above UnfinishedInfix for a more complicated example.
     // If the next token is not an ident or an unquote, the infix chain ends immediately,
-    // and this method becomes a fallthrough.
-    val rhsN = loop(rhs0.head.pos, rhs0, rhs0.head.pos)
+    // and `postfixExpr` becomes a fallthrough.
+    val rhsN = loop(rhs0.head, rhs0, rhs0.head)
 
     // Infix chain has ended.
     // base contains pending UnfinishedInfix parts and rhsN is the final rhs.
@@ -2212,11 +2212,11 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         )
         case _ => None
       }
-      def loop(rhs: ctx.Rhs): ctx.Rhs = ctx.reduceStack(base, rhs, rhs.pos) match {
+      def loop(rhs: ctx.Rhs): ctx.Rhs = ctx.reduceStack(base, rhs, rhs) match {
         case lhs1 if isIdentExcept("|") || token.is[Unquote] =>
           val op = termName()
           if (token.is[`[`]) syntaxError("infix patterns cannot have type arguments", at = token)
-          ctx.push(lhs1.pos, lhs1, lhs1.pos, op, Nil)
+          ctx.push(lhs1, lhs1, lhs1, op, Nil)
           val rhs1 = simplePattern(badPattern3)
           loop(rhs1)
         case lhs1 =>
