@@ -1712,8 +1712,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     val ctx  = termInfixContext
     val base = ctx.stack
 
-    // Skip to later in the method to start mental debugging.
-    def loop(startPos: Pos, rhsK: ctx.Rhs, endPos: Pos): ctx.Rhs = {
+    // Skip to later in the `postfixExpr` method to start mental debugging.
+    def loop(startPosK: Pos, rhsK: ctx.Rhs, endPosK: Pos): ctx.Rhs = {
       if (!token.is[Ident] && !token.is[Unquote]) {
         // Infix chain has ended.
         // In the running example, we're at `a + b[]`
@@ -1725,12 +1725,12 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           // Infix chain continues.
           // In the running example, we're at `a [+] b`
           // with base = List(), rhsK = [a].
-          val lhsK = ctx.reduceStack(base, rhsK, endPos) // lhsK = [a]
+          val lhsK = ctx.reduceStack(base, rhsK, endPosK) // lhsK = [a]
           val op = termName() // op = [+]
           val targs = if (token.is[`[`]) exprTypeArgs() else Nil // targs = Nil
           ctx.push(startPos, lhsK, endPos, op, targs) // afterwards, ctx.stack = List([a +])
 
-          // startPos/endPos may be bigger than then extent of rhsKplus1,
+          // startPosKplus1/endPosKplus1 may be bigger than then extent of rhsKplus1,
           // so we really have to track them separately.
           val startTokKplus1 = in.token
           var startPosKplus1: Pos = IndexPos(in.tokenPos)
