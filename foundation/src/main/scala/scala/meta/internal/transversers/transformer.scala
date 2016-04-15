@@ -27,7 +27,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           $to match {
             case $to: ${hygienicRef(tpe.typeSymbol)} =>
               if ($from ne $to) same = false
-              $from
+              $to
             case $to =>
               this.fail(${f.owner.prefix + "." + f.name}, $from, $to)
           }
