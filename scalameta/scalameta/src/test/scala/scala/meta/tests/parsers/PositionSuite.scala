@@ -48,4 +48,18 @@ class PositionSuite extends ParseSuite {
     val cond = tree.children(1)
     assert(cond.tokens.toList.toString == "List(bar (7..10),   (10..11), || (11..13),   (13..14), baz (14..17))")
   }
+  test("a + b + c") {
+    val tree = term("a + b + c")
+    assert(tree.show[Positions] === """
+      |Term.ApplyInfix[0..9](
+        |Term.ApplyInfix[0..5](
+          |Term.Name[0..1]("a"),
+          | Term.Name[2..3]("+"),
+          | Nil,
+          | List(Term.Name[4..5]("b"))),
+        | Term.Name[6..7]("+"),
+        | Nil,
+        | List(Term.Name[8..9]("c")))
+    """.trim.stripMargin.split("\n").mkString)
+  }
 }

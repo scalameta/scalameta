@@ -1728,7 +1728,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           val lhsK = ctx.reduceStack(base, rhsK, endPosK) // lhsK = [a]
           val op = termName() // op = [+]
           val targs = if (token.is[`[`]) exprTypeArgs() else Nil // targs = Nil
-          ctx.push(startPos, lhsK, endPos, op, targs) // afterwards, ctx.stack = List([a +])
+          val lhsStartPosK = Math.min(startPosK.startTokenPos, lhsK.head.startTokenPos)
+          ctx.push(lhsStartPosK, lhsK, endPosK, op, targs) // afterwards, ctx.stack = List([a +])
 
           // startPosKplus1/endPosKplus1 may be bigger than then extent of rhsKplus1,
           // so we really have to track them separately.
