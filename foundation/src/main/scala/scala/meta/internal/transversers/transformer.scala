@@ -56,16 +56,16 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         q"""
           val $fromseq = $input
           var sameseq = true
-          val buf = $ListBufferModule[${tpe.typeArgs.head}]()
+          val toseq = $ListBufferModule[${tpe.typeArgs.head}]()
           val it = $fromseq.iterator
           while (it.hasNext) {
             val $from = it.next
             val $to = ${nested(q"$from", tpe.typeArgs.head)}
             if ($from ne $to) sameseq = false
-            buf += $to
+            toseq += $to
           }
           if (sameseq) $fromseq
-          else buf.toList
+          else toseq.toList
         """
       }
       val rhs = f.tpe match {
