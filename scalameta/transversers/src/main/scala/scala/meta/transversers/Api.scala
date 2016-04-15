@@ -6,8 +6,20 @@ private[meta] trait Api {
     def transform(fn: PartialFunction[Tree, Tree]): Tree = {
       object transformer extends Transformer {
         override def apply(tree: Tree): Tree = {
-          if (fn.isDefinedAt(tree)) super.apply(fn(tree))
-          else super.apply(tree)
+          if (fn.isDefinedAt(tree)) {
+            // TODO: Who should be tree2's prototype?
+            // Is it `tree`, the untransformed original?
+            // Or is it `tree1`, the a little bit transformed original?
+            // Note that `super.apply(tree1)` may further transform the tree.
+            // I've no idea what's the right choice, so I'm going with `tree`,
+            // and later we can revise this decision.
+            val tree1 = fn(tree)
+            val tree2 = super.apply(tree1)
+            if (tree eq tree2) tree
+            else tree2.withTokens(scala.meta.internal.tokens.TransformedTokens(tree))
+          } else {
+            super.apply(tree)
+          }
         }
       }
       transformer(tree)
