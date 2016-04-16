@@ -1606,6 +1606,15 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     //    because their extent may be bigger than lhs because of parentheses or whatnot.
     case class UnfinishedInfix(lhsStart: Pos, lhs: Lhs, lhsEnd: Pos, op: Term.Name, targs: List[Type]) {
       def precedence = op.precedence
+      override def toString = {
+        val s_lhs = lhs match {
+          case tree: Tree => tree.toString
+          case List(tree) => tree.toString
+          case List(trees @ _*) => "(" + trees.mkString(", ") + ")"
+        }
+        val s_targs = if (targs.nonEmpty) "[" + targs.mkString(", ") + "]" else ""
+        s"[$s_lhs $op$s_targs]"
+      }
     }
 
     // The stack of unfinished infix expressions, e.g. Stack([a + ]) in `a + b [*] c`.
