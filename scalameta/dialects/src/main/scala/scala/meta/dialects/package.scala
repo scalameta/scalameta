@@ -26,19 +26,6 @@ import scala.language.experimental.macros
   // Permission to tokenize repeated dots as ellipses.
   // Necessary to support quasiquotes, e.g. `q"foo(..$args)"`.
   def allowEllipses: Boolean
-
-  // Are type lambdas supported in this dialect?
-  // At the moment, this is exclusive for quasiquotes.
-  // For more info, see https://github.com/scalameta/scalameta/commit/e2317e8655ead8a2a391355ed91bccf98eadb2c7
-  def allowTypeLambdas: Boolean
-
-  // Are method types supported in this dialect?
-  // Only supported in quasiquotes, and even that's too much.
-  // The original idea of scala.meta was to enable metaprogramming with existing syntax,
-  // but supporting `Term.tpe` for all terms, including method references, presents a difficult situation.
-  // After some deliberation, I decided to give up the aforementioned idea and make quasiquotes support
-  // more than just standard syntax of Scala.
-  def allowMethodTypes: Boolean
 }
 
 package object dialects {
@@ -47,8 +34,6 @@ package object dialects {
     def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
     def allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
     def allowEllipses = false // Vanilla Scala doesn't support ellipses, somewhat similar concept is varargs and _*
-    def allowTypeLambdas = false // Vanilla Scala doesn't support type lambdas
-    def allowMethodTypes = false // Vanilla Scala doesn't support method types
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -57,8 +42,6 @@ package object dialects {
     def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
     def allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
     def allowEllipses = false // Vanilla Dotty doesn't support ellipses, somewhat similar concept is varargs and _*
-    def allowTypeLambdas = false // Vanilla Dotty doesn't support type lambdas
-    def allowMethodTypes = false // Vanilla Dotty doesn't support method types
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -67,8 +50,6 @@ package object dialects {
     def bindToSeqWildcardDesignator = dialect.bindToSeqWildcardDesignator
     def allowXmlLiterals = dialect.allowXmlLiterals
     def allowEllipses = true
-    def allowTypeLambdas = true
-    def allowMethodTypes = true
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 }

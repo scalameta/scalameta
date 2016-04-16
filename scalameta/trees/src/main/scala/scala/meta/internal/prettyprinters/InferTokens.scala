@@ -16,7 +16,6 @@ import scala.meta.tokens._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
 import scala.meta.dialects.Scala211
-import scala.meta.internal.{ffi => f}
 import scala.meta.internal.tokenquasiquotes._
 
 // TODO: this infers tokens for the Scala211 dialect due to token quasiquotes (the dialect needs to be explicitly imported). It should be changed in the future.
@@ -26,7 +25,9 @@ import scala.meta.internal.tokenquasiquotes._
 // TODO: review https://github.com/scalameta/scalameta/pull/141 and apply fixes from there to here
 private[meta] object inferTokens {
   def apply(tree: Tree, proto: Option[Tree]): Tokens = {
-    infer(tree, proto)(scala.meta.dialects.Scala211) // as explained above, forcing dialect.
+    val tokens = infer(tree, proto)(scala.meta.dialects.Scala211) // as explained above, forcing dialect.
+    if (tokens.isInstanceOf[Tokens.Synthetic]) tokens
+    else Tokens.Synthetic(tokens: _*)
   }
 
   /* Generate a single token for a literal */
@@ -278,7 +279,7 @@ private[meta] object inferTokens {
         case _: Term.Match =>     true
         case _ =>                 false
       }
-      val withParents = (tree, tree.parent) match {
+      val needsParens = (tree, tree.parent) match {
         /* Covering cases for calls on Term.Match  */
         case (_: Term.Match, Some(_: Term.Select)) =>     true
         case (t1, Some(t2: Term.Match)) if t2.scrut eq t1 => impNeedsParens(t1)
@@ -314,7 +315,9 @@ private[meta] object inferTokens {
         case (_: Term.ApplyUnary, Some(_: Term.Select)) => true
         case _ =>                                         false
       }
-      if (withParents) toks"(${deindent(tree.tokens)})" else deindent(tree.tokens)
+      def hasParens = tree.tokens.head.isInstanceOf[Token.`(`] && tree.tokens.last.isInstanceOf[Token.`)`]
+      if (needsParens && !hasParens) toks"(${deindent(tree.tokens)})"
+      else deindent(tree.tokens)
     }
 
     def reconstructTokens(toks0: Tokens, stats0: Seq[Stat], stats1: Seq[Stat]): Tokens = {
@@ -342,15 +345,6 @@ private[meta] object inferTokens {
         else loop(toks0.repr, zipped ++ oStatsTail)
       val newStats = stats1.drop(zipped.length).`->o->`
       Tokens(patchedTokens ++ newStats: _*)
-    }
-
-    def ffi(tree: Tree): Tokens = tree match {
-      case tree: Member if tree.ffi != f.Ffi.Zero =>
-        val str = "/* " + tree.ffi + " */ "
-        val input = Input.String(str)
-        Tokens(Token.Comment(input, dialect, 0, str.length - 1), Token.` `(input, dialect, str.length - 1))
-      case _ =>
-        toks""
     }
 
     /* Infer tokens for a given tree, making use of the helpers above. */
@@ -511,8 +505,6 @@ private[meta] object inferTokens {
       case t: Type.Existential =>  toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
       case t: Type.Annotate =>     toks"${t.tpe.tks} ${t.annots.`o_o`}"
       case t: Type.Placeholder =>  toks"_ ${t.bounds.tks}"
-      case t: Type.Lambda =>       toks"${t.quants.`[[o,o]]`}${t.tpe.tks}"
-      case t: Type.Method =>       toks"${apndTermParamss(t.paramss)}: ${t.tpe.tks}"
       case t: Type.Bounds =>
         val loOpt = t.lo.map(lo => toks">: ${lo.tks}")
         val hiOpt = t.hi.map(hi => toks"<: ${hi.tks}")
@@ -577,7 +569,6 @@ private[meta] object inferTokens {
       case t: Pat.Type.Existential => toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
       case t: Pat.Type.Annotate =>    toks"${t.tpe.tks} ${t.annots.`o_o`}"
       case t: Pat.Type.Placeholder => toks"_ ${t.bounds.tks}"
-      case t: Pat.Type.Lambda =>      toks"${t.quants.`[[o,o]]`} => ${t.tpe.tks}"
 
       // Lit
       case t: Lit => mineLitTk(t.value)
@@ -720,9 +711,7 @@ private[meta] object inferTokens {
         }
     }
 
-    val ffiTokens = ffi(tree)
-    val payloadTokens = tkz(tree)
-    ffiTokens ++ payloadTokens
+    tkz(tree)
   }
 
   implicit class RichTokens(tks: Tokens) {

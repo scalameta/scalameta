@@ -7,24 +7,8 @@ trait MacroHelpers extends DebugFinder
                       with FreeLocalFinder
                       with ImplTransformers {
   import c.universe._
+  import definitions._
   import scala.reflect.internal.Flags._
-
-  val InvariantFailedRaiseMethod = q"${hygienicRef(org.scalameta.invariants.InvariantFailedException)}.raise"
-  val InvariantsRequireMethod = q"${hygienicRef(org.scalameta.invariants.`package`)}.require"
-  val UnreachableErrorModule = hygienicRef(org.scalameta.UnreachableError)
-  val DataAnnotation = tq"_root_.org.scalameta.data.data"
-  val DataTyperMacrosModule = hygienicRef(org.scalameta.data.DataTyperMacros)
-  val AdtPackage = q"_root_.org.scalameta.adt"
-  val AdtMetadataModule = hygienicRef(org.scalameta.adt.Metadata)
-  val AdtTyperMacrosModule = hygienicRef(org.scalameta.adt.AdtTyperMacros)
-  val AstMetadataModule = hygienicRef(scala.meta.internal.ast.Metadata)
-  val AstTyperMacrosModule = hygienicRef(scala.meta.internal.ast.AstTyperMacros)
-  val AstTyperMacrosBundle = hygienicRef[scala.meta.internal.ast.AstTyperMacrosBundle]
-  val AstInfoClass = hygienicRef[scala.meta.internal.ast.AstInfo[_]]
-  val TokenMetadataModule = hygienicRef(scala.meta.internal.tokens.Metadata)
-  val TokenTyperMacrosModule = hygienicRef(scala.meta.internal.tokens.TokenTyperMacros)
-  val TokenInfoClass = hygienicRef[scala.meta.internal.tokens.TokenInfo[_]]
-  val InstanceTagClass = hygienicRef[scala.meta.internal.parsers.InstanceTag[_]]
 
   implicit class XtensionModifiers(mods: Modifiers) {
     def transformFlags(fn: Long => Long): Modifiers = {
@@ -53,6 +37,23 @@ trait MacroHelpers extends DebugFinder
     }
   }
 
+  val InvariantFailedRaiseMethod = q"${hygienicRef(org.scalameta.invariants.InvariantFailedException)}.raise"
+  val InvariantsRequireMethod = q"${hygienicRef(org.scalameta.invariants.`package`)}.require"
+  val UnreachableErrorModule = hygienicRef(org.scalameta.UnreachableError)
+  val DataAnnotation = tq"_root_.org.scalameta.data.data"
+  val DataTyperMacrosModule = hygienicRef(org.scalameta.data.DataTyperMacros)
+  val AdtPackage = q"_root_.org.scalameta.adt"
+  val AdtMetadataModule = hygienicRef(org.scalameta.adt.Metadata)
+  val AdtTyperMacrosModule = hygienicRef(org.scalameta.adt.AdtTyperMacros)
+  val AstMetadataModule = hygienicRef(scala.meta.internal.ast.Metadata)
+  val AstTyperMacrosModule = hygienicRef(scala.meta.internal.ast.AstTyperMacros)
+  val AstTyperMacrosBundle = hygienicRef[scala.meta.internal.ast.AstTyperMacrosBundle]
+  val AstInfoClass = hygienicRef[scala.meta.internal.ast.AstInfo[_]]
+  val TokenMetadataModule = hygienicRef(scala.meta.internal.tokens.Metadata)
+  val TokenTyperMacrosModule = hygienicRef(scala.meta.internal.tokens.TokenTyperMacros)
+  val TokenInfoClass = hygienicRef[scala.meta.internal.tokens.TokenInfo[_]]
+  val InstanceTagClass = hygienicRef[scala.meta.internal.parsers.InstanceTag[_]]
+
   private def fqRef(fqName: String, isTerm: Boolean): Tree = {
     def loop(parts: List[String]): Tree = parts match {
       case Nil :+ part => q"${TermName(part)}"
@@ -61,8 +62,9 @@ trait MacroHelpers extends DebugFinder
     val prefix :+ last = fqName.split("\\.").toList
     if (isTerm) q"${loop(prefix)}.${TermName(last)}" else tq"${loop(prefix)}.${TypeName(last)}"
   }
-  def hygienicRef[T: TypeTag]: Tree = fqRef("_root_." + symbolOf[T].fullName, isTerm = false)
-  def hygienicRef[T <: Singleton : TypeTag](x: T): Tree = fqRef("_root_." + symbolOf[T].fullName, isTerm = true)
+  def hygienicRef(sym: Symbol): Tree = fqRef("_root_." + sym.fullName, isTerm = sym.isTerm || sym.isModuleClass)
+  def hygienicRef[T: TypeTag]: Tree = hygienicRef(symbolOf[T])
+  def hygienicRef[T <: Singleton : TypeTag](x: T): Tree = hygienicRef(symbolOf[T])
 
   def typeRef(cdef: ClassDef, requireHk: Boolean, requireWildcards: Boolean): Tree = {
     if (requireWildcards && requireHk) sys.error("invalid combination of arguments")
@@ -77,6 +79,75 @@ trait MacroHelpers extends DebugFinder
       } else {
         tq"$name[..${tparams.map(_.name)}]"
       }
+    }
+  }
+
+  object AnyTpe {
+    def unapply(tpe: Type): Option[Type] = {
+      if (tpe =:= definitions.AnyTpe) Some(tpe)
+      else None
+    }
+  }
+
+  object PrimitiveTpe {
+    def unapply(tpe: Type): Option[Type] = {
+      if (tpe =:= typeOf[String] ||
+          tpe =:= typeOf[scala.Symbol] ||
+          ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
+      else if (tpe.typeSymbol == OptionClass && PrimitiveTpe.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
+      else if (tpe.typeSymbol == ClassClass) Some(tpe)
+      else None
+    }
+  }
+
+  object TreeTpe {
+    def unapply(tpe: Type): Option[Type] = {
+      if (tpe <:< c.mirror.staticClass("scala.meta.Tree").asType.toType) Some(tpe)
+      else None
+    }
+  }
+
+  object OptionTreeTpe {
+    def unapply(tpe: Type): Option[Type] = {
+      if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) {
+        tpe.typeArgs match {
+          case TreeTpe(tpe) :: Nil => Some(tpe)
+          case _ => None
+        }
+      } else None
+    }
+  }
+
+  object SeqTreeTpe {
+    def unapply(tpe: Type): Option[Type] = {
+      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.Seq")) {
+        tpe.typeArgs match {
+          case TreeTpe(tpe) :: Nil => Some(tpe)
+          case _ => None
+        }
+      } else None
+    }
+  }
+
+  object OptionSeqTreeTpe {
+    def unapply(tpe: Type): Option[Type] = {
+      if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) {
+        tpe.typeArgs match {
+          case SeqTreeTpe(tpe) :: Nil => Some(tpe)
+          case _ => None
+        }
+      } else None
+    }
+  }
+
+  object SeqSeqTreeTpe {
+    def unapply(tpe: Type): Option[Type] = {
+      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.Seq")) {
+        tpe.typeArgs match {
+          case SeqTreeTpe(tpe) :: Nil => Some(tpe)
+          case _ => None
+        }
+      } else None
     }
   }
 }

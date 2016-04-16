@@ -18,7 +18,9 @@ object build extends Build {
     unidocSettings : _*
   ) settings (
     packagedArtifacts := Map.empty,
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(foundation)
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(foundation),
+    aggregate in test := false,
+    test := (test in scalameta in Test).value
   ) aggregate (
     foundation,
     dialects,
@@ -29,7 +31,7 @@ object build extends Build {
     scalameta,
     tokenizers,
     tokens,
-    tql,
+    transversers,
     trees
   )
 
@@ -69,7 +71,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's API for parsing and its baseline implementation"
-  ) dependsOn (foundation, trees, tokens, tokenizers % "test", tql % "test")
+  ) dependsOn (foundation, dialects, inputs, trees)
 
   lazy val prettyprinters = Project(
     id   = "prettyprinters",
@@ -89,7 +91,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's quasiquotes for abstract syntax trees",
     enableHardcoreMacros
-  ) dependsOn (foundation, tokens, trees, parsers)
+  ) dependsOn (foundation, trees, parsers)
 
   lazy val tokenizers = Project(
     id   = "tokenizers",
@@ -100,7 +102,7 @@ object build extends Build {
     description := "Scala.meta's APIs for tokenization and its baseline implementation",
     libraryDependencies += "com.lihaoyi" %% "scalaparse" % "0.3.7",
     enableMacros
-  ) dependsOn (foundation, tokens)
+  ) dependsOn (foundation, dialects, inputs, tokens)
 
   lazy val tokens = Project(
     id   = "tokens",
@@ -112,14 +114,14 @@ object build extends Build {
     enableMacros
   ) dependsOn (foundation, prettyprinters, dialects, inputs)
 
-  lazy val tql = Project(
-    id   = "tql",
-    base = file("scalameta/tql")
+  lazy val transversers = Project(
+    id   = "transversers",
+    base = file("scalameta/transversers")
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Scala.meta's tree query language (basic and extended APIs)",
-    enableHardcoreMacros
+    description := "Scala.meta's traversal and transformation infrastructure for abstract syntax trees",
+    enableMacros
   ) dependsOn (foundation, trees)
 
   lazy val trees = Project(
@@ -132,7 +134,7 @@ object build extends Build {
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
     enableMacros
-  ) dependsOn (foundation, prettyprinters, inputs, tokens, tokenizers)
+  ) dependsOn (foundation, prettyprinters, dialects, tokens, tokenizers) // TODO: get rid of tokenizers
 
   lazy val scalameta = Project(
     id   = "scalameta",
@@ -141,7 +143,9 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's metaprogramming APIs"
-  ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, tql, trees)
+  ) settings (
+    exposePaths("scalameta", Test): _*
+  ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, transversers, trees)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := ScalaVersions.max,

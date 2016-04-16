@@ -11,7 +11,6 @@ import scala.meta.prettyprinters._
 import scala.meta.internal.{equality => e}
 import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
-import scala.meta.internal.ffi._
 import scala.meta.internal.semantic._
 
 @root trait Tree extends Product with Serializable {
@@ -186,8 +185,6 @@ object Type {
   }
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
   @ast class Placeholder(bounds: Bounds) extends Type
-  @ast class Lambda(quants: Seq[Type.Param] @nonEmpty, tpe: Type) extends Type
-  @ast class Method(paramss: Seq[Seq[Term.Param]], tpe: Type) extends Type
   @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
   @branch trait Arg extends Tree
   object Arg {
@@ -327,9 +324,6 @@ object Pat {
     @ast class Placeholder(bounds: scala.meta.Type.Bounds) extends Pat.Type {
       require(bounds.lo.nonEmpty || bounds.hi.nonEmpty)
     }
-    @ast class Lambda(quants: Seq[scala.meta.Type.Param], tpe: Pat.Type) extends Pat.Type {
-      require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
-    }
     def fresh(): Pat.Var.Type = Pat.Var.Type(scala.meta.Type.fresh())
     def fresh(prefix: String): Pat.Var.Type = Pat.Var.Type(scala.meta.Type.fresh(prefix))
     implicit class XtensionPatType(pattpe: Pat.Type) {
@@ -346,8 +340,6 @@ object Pat {
 
 @branch trait Member extends Tree with Scope {
   def name: Name
-  private[meta] def ffi: Ffi
-  private[meta] def withFfi(ffi: Ffi): ThisType
 }
 object Member {
   @branch trait Term extends Member {
@@ -565,5 +557,5 @@ package internal.ast {
   }
 
   // TODO: since trees are no longer sealed, we need a mechanism that would keep track of all of them
-  @registry object Registry
+  @registry object All
 }

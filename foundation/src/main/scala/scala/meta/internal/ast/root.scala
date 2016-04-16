@@ -31,9 +31,7 @@ class RootNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
   lazy val Environment = tq"_root_.scala.meta.internal.semantic.Environment"
   lazy val Denotation = tq"_root_.scala.meta.internal.semantic.Denotation"
   lazy val Typing = tq"_root_.scala.meta.internal.semantic.Typing"
-  lazy val Ffi = tq"_root_.scala.meta.internal.ffi.Ffi"
   lazy val SemanticInternal = q"_root_.scala.meta.internal.semantic"
-  lazy val FfiInternal = q"_root_.scala.meta.internal.ffi"
   lazy val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
 
   def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
@@ -97,7 +95,6 @@ class RootNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
         protected def privateEnv: $Environment
         protected def privateDenot: $Denotation
         protected def privateTyping: $Typing
-        protected def privateFfi: $Ffi
         private[meta] def privateCopy(
           flags: $Flags = $ZERO,
           prototype: $Tree = this,
@@ -105,8 +102,7 @@ class RootNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
           tokens: $Tokens = privateTokens,
           env: $Environment = privateEnv,
           denot: $Denotation = privateDenot,
-          typing: $Typing = privateTyping,
-          ffi: $Ffi = privateFfi): ThisType
+          typing: $Typing = privateTyping): ThisType
 
         protected def isEnvEmpty: _root_.scala.Boolean = this.privateEnv == null || this.privateEnv == _root_.scala.meta.internal.semantic.Environment.Zero
         protected def isDenotEmpty: _root_.scala.Boolean = this.privateDenot == null || this.privateDenot == _root_.scala.meta.internal.semantic.Denotation.Zero
@@ -151,7 +147,6 @@ class RootNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       qstats :+= q"protected def privateEnv: $Environment = null"
       qstats :+= q"protected def privateDenot: $Denotation = null"
       qstats :+= q"protected def privateTyping: $Typing = null"
-      qstats :+= q"protected def privateFfi: $Ffi = null"
       mstats1 += q"$qmods class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents { ..$qstats }"
 
       val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"

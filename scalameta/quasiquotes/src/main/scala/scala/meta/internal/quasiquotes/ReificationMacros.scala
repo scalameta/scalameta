@@ -19,8 +19,6 @@ import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
-import scala.meta.internal.semantic.{Denotation => MetaDenotation, _}
-import scala.meta.internal.semantic.{Symbol => MetaSymbol, Prefix => MetaPrefix, Signature => MetaSignature, _}
 import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
 import scala.compat.Platform.EOL
@@ -424,7 +422,8 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       }
     }
     object Liftables extends s.DenotationLiftables
-                        with s.TypingLiftables {
+                        with s.TypingLiftables
+                        with s.EnvironmentLiftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
       override lazy val u: c.universe.type = c.universe
