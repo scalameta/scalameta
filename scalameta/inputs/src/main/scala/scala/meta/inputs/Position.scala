@@ -4,6 +4,9 @@ package inputs
 import org.scalameta.adt._
 import org.scalameta.invariants._
 
+// NOTE: `start` and `end` are String.substring-style,
+// i.e. `start` is inclusive and `end` is not.
+// Therefore Position.end can point to the last character plus one.
 @root trait Position {
   def content: Content
   def start: Point
