@@ -1602,9 +1602,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
     // Represents an unfinished infix expression, e.g. [a * b +] in `a * b + c`.
     // 1) T is either Term for infix syntax in expressions or Pat for infix syntax in patterns.
-    // 2) We need to carry startPos/endPos separately from lhs.position
+    // 2) We need to carry lhsStart/lhsEnd separately from lhs.position
     //    because their extent may be bigger than lhs because of parentheses or whatnot.
-    case class UnfinishedInfix(startPos: Pos, lhs: Lhs, endPos: Pos, op: Term.Name, targs: List[Type]) {
+    case class UnfinishedInfix(lhsStart: Pos, lhs: Lhs, lhsEnd: Pos, op: Term.Name, targs: List[Type]) {
       def precedence = op.precedence
     }
 
@@ -1613,10 +1613,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     // Other methods working on the stack are self-explanatory.
     var stack: List[UnfinishedInfix] = Nil
     def head = stack.head
-    def push(startPos: Pos, lhs: Lhs, endPos: Pos, op: Term.Name, targs: List[Type]): Unit = stack ::= UnfinishedInfix(startPos, lhs, endPos, op, targs)
+    def push(lhsStart: Pos, lhs: Lhs, lhsEnd: Pos, op: Term.Name, targs: List[Type]): Unit = stack ::= UnfinishedInfix(lhsStart, lhs, lhsEnd, op, targs)
     def pop(): UnfinishedInfix = try head finally stack = stack.tail
 
-    def reduceStack(stack: List[UnfinishedInfix], curr: Rhs, endPos: Pos): Lhs = {
+    def reduceStack(stack: List[UnfinishedInfix], curr: Rhs, currEnd: Pos): Lhs = {
       val opPrecedence = if (token.is[Ident]) termName(advance = false).precedence else 0
       val leftAssoc    = !token.is[Ident] || termName(advance = false).isLeftAssoc
 
@@ -1637,7 +1637,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           toLhs(rhs)
         } else {
           val lhs = pop()
-          val fin = finishInfixExpr(lhs, rhs, endPos)
+          val fin = finishInfixExpr(lhs, rhs, currEnd)
           val rhs1 = toRhs(fin)
           loop(rhs1)
         }
@@ -1650,7 +1650,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     // then takes the right-hand side (which can have multiple args), e.g. ` (y, z)`,
     // and creates `x + (y, z)`.
     // We need to carry endPos explicitly because its extent may be bigger than rhs because of parent of whatnot.
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, endPos: Pos): FinishedInfix
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix
   }
 
   // Infix syntax in terms is borderline crazy.
@@ -1674,10 +1674,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case arg => syntaxError("`: _*' annotations are only allowed in arguments to *-parameters", at = arg)
     })
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, endPos: Pos): FinishedInfix = {
-      val UnfinishedInfix(startPos, lhses, halfPos, op, targs) = unf
-      val lhs = atPos(startPos, halfPos)(makeTupleTerm(lhses)) // `a + (b, c) * d` leads to creation of a tuple!
-      atPos(startPos, endPos)(Term.ApplyInfix(lhs, op, targs, rhs))
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
+      val UnfinishedInfix(lhsStart, lhses, lhsEnd, op, targs) = unf
+      val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses)) // `a + (b, c) * d` leads to creation of a tuple!
+      atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, rhs))
     }
   }
 
@@ -1690,10 +1690,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     def toRhs(fin: FinishedInfix): Rhs = fin
     def toLhs(rhs: Rhs): Lhs = rhs
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, endPos: Pos): FinishedInfix = {
-      val UnfinishedInfix(startPos, lhs, _, op, _) = unf
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
+      val UnfinishedInfix(lhsStart, lhs, _, op, _) = unf
       val args = rhs match { case Pat.Tuple(args) => args.toList; case _ => List(rhs) }
-      atPos(startPos, endPos)(Pat.ExtractInfix(lhs, op, args))
+      atPos(lhsStart, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
     }
   }
 
@@ -1713,7 +1713,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     val base = ctx.stack
 
     // Skip to later in the `postfixExpr` method to start mental debugging.
-    def loop(startPosK: Pos, rhsK: ctx.Rhs, endPosK: Pos): ctx.Rhs = {
+    // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
+    // so we really have to track them separately.
+    def loop(rhsStartK: Pos, rhsK: ctx.Rhs, rhsEndK: Pos): ctx.Rhs = {
       if (!token.is[Ident] && !token.is[Unquote]) {
         // Infix chain has ended.
         // In the running example, we're at `a + b[]`
@@ -1732,29 +1734,27 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         if (token.is[ExprIntro]) {
           // Infix chain continues, so we need to reduce the stack.
           // In the running example, base = List(), rhsK = [a].
-          val lhsK = ctx.reduceStack(base, rhsK, endPosK) // lhsK = [a]
-          val lhsStartPosK = Math.min(startPosK.startTokenPos, lhsK.head.startTokenPos)
-          ctx.push(lhsStartPosK, lhsK, endPosK, op, targs) // afterwards, ctx.stack = List([a +])
+          val lhsK = ctx.reduceStack(base, rhsK, rhsEndK) // lhsK = [a]
+          val lhsStartK = Math.min(rhsStartK.startTokenPos, lhsK.head.startTokenPos)
+          ctx.push(lhsStartK, lhsK, rhsEndK, op, targs) // afterwards, ctx.stack = List([a +])
 
-          // startPosKplus1/endPosKplus1 may be bigger than then extent of rhsKplus1,
-          // so we really have to track them separately.
-          val startTokKplus1 = in.token
-          var startPosKplus1: Pos = IndexPos(in.tokenPos)
+          val preRhsKplus1 = in.token
+          var rhsStartKplus1: Pos = IndexPos(in.tokenPos)
           val rhsKplus1 = argumentExprsOrPrefixExpr()
-          var endPosKplus1: Pos = IndexPos(in.prevTokenPos)
-          if (startTokKplus1.isNot[`{`] && startTokKplus1.isNot[`(`]) {
-            startPosKplus1 = TreePos(rhsKplus1.head)
-            endPosKplus1 = TreePos(rhsKplus1.head)
+          var rhsEndKplus1: Pos = IndexPos(in.prevTokenPos)
+          if (preRhsKplus1.isNot[`{`] && preRhsKplus1.isNot[`(`]) {
+            rhsStartKplus1 = TreePos(rhsKplus1.head)
+            rhsEndKplus1 = TreePos(rhsKplus1.head)
           }
 
           // Try to continue the infix chain.
-          loop(startPosKplus1, rhsKplus1, endPosKplus1) // base = List([a +]), rhsKplus1 = List([b])
+          loop(rhsStartKplus1, rhsKplus1, rhsEndKplus1) // base = List([a +]), rhsKplus1 = List([b])
         } else {
           // Infix chain has ended with a postfix expression.
           // This never happens in the running example.
           // TODO: The two type conversions that I have to do here are unfortunate,
           // but I don't have time to figure our an elegant way of approaching this
-          val lhsQual = ctx.reduceStack(base, rhsK, endPosK)
+          val lhsQual = ctx.reduceStack(base, rhsK, rhsEndK)
           val finQual = lhsQual match { case List(finQual) => finQual; case _ => unreachable(debug(lhsQual)) }
           if (targs.nonEmpty) syntaxError("type application is not allowed for postfix operators", at = token)
           ctx.toRhs(atPos(finQual, op)(Term.Select(finQual, op)))
