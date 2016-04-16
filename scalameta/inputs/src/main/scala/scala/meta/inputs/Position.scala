@@ -17,6 +17,10 @@ object Position {
   }
 }
 
+// NOTE: All numbers here are zero-based, namely:
+// * Offset 0 is the first character in the content.
+// * Line 0 is the first line in the content.
+// * Column 0 is the first character in the line.
 @root trait Point {
   def content: Content
   def offset: Int
@@ -40,7 +44,7 @@ object Point {
       (eolCount, eolPos)
     }
     def line: Int = eolCount
-    def column: Int = offset - eolPos + 1
+    def column: Int = offset - eolPos
     override def toString = s"$offset in $content"
   }
 }
