@@ -16,7 +16,11 @@ import org.scalameta.invariants._
 
 object Position {
   @leaf class Range(content: Content, start: Point, point: Point, end: Point) extends Position {
-    override def toString = s"${start.offset}..${end.offset} in $content"
+    if (!((start.offset <= end.offset) && (start.offset <= point.offset) && (point.offset <= end.offset))) {
+      throw new IllegalArgumentException(s"$rangeString is not a valid range")
+    }
+    private def rangeString = s"${start.offset}..${point.offset}..${end.offset}"
+    override def toString = s"$rangeString in $content"
   }
 }
 
@@ -33,21 +37,12 @@ object Position {
 
 object Point {
   @leaf class Offset(content: Content, offset: Int) extends Point {
-    private lazy val (eolCount, eolPos) = {
-      var i = 0
-      var eolCount = 0
-      var eolPos = -1
-      while (i < Math.min(offset, content.chars.length)) {
-        if (content.chars(i) == '\n') {
-          eolCount += 1
-          eolPos = i
-        }
-        i += 1
-      }
-      (eolCount, eolPos)
+    if (!(0 <= offset && offset <= content.chars.length)) {
+      val message = s"$offset is not a valid offset, allowed 0..${content.chars.length}"
+      throw new IllegalArgumentException(message)
     }
-    def line: Int = eolCount
-    def column: Int = offset - eolPos
+    def line: Int = content.offsetToLine(offset)
+    def column: Int = offset - content.lineToOffset(line)
     override def toString = s"$offset in $content"
   }
 }
