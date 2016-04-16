@@ -1625,9 +1625,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     def push(lhsStart: Pos, lhs: Lhs, lhsEnd: Pos, op: Term.Name, targs: List[Type]): Unit = stack ::= UnfinishedInfix(lhsStart, lhs, lhsEnd, op, targs)
     def pop(): UnfinishedInfix = try head finally stack = stack.tail
 
-    def reduceStack(stack: List[UnfinishedInfix], curr: Rhs, currEnd: Pos): Lhs = {
-      val opPrecedence = if (token.is[Ident]) termName(advance = false).precedence else 0
-      val leftAssoc    = !token.is[Ident] || termName(advance = false).isLeftAssoc
+    def reduceStack(stack: List[UnfinishedInfix], curr: Rhs, currEnd: Pos, op: Option[Term.Name]): Lhs = {
+      val opPrecedence = op.map(_.precedence).getOrElse(0)
+      val leftAssoc    = op.map(_.isLeftAssoc).getOrElse(true)
 
       def isDone          = this.stack == stack
       def lowerPrecedence = !isDone && (opPrecedence < this.head.precedence)
@@ -1743,7 +1743,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         if (token.is[ExprIntro]) {
           // Infix chain continues, so we need to reduce the stack.
           // In the running example, base = List(), rhsK = [a].
-          val lhsK = ctx.reduceStack(base, rhsK, rhsEndK) // lhsK = [a]
+          val lhsK = ctx.reduceStack(base, rhsK, rhsEndK, Some(op)) // lhsK = [a]
           val lhsStartK = Math.min(rhsStartK.startTokenPos, lhsK.head.startTokenPos)
           ctx.push(lhsStartK, lhsK, rhsEndK, op, targs) // afterwards, ctx.stack = List([a +])
 
@@ -1763,7 +1763,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           // This never happens in the running example.
           // TODO: The two type conversions that I have to do here are unfortunate,
           // but I don't have time to figure our an elegant way of approaching this
-          val lhsQual = ctx.reduceStack(base, rhsK, rhsEndK)
+          val lhsQual = ctx.reduceStack(base, rhsK, rhsEndK, Some(op))
           val finQual = lhsQual match { case List(finQual) => finQual; case _ => unreachable(debug(lhsQual)) }
           if (targs.nonEmpty) syntaxError("type application is not allowed for postfix operators", at = token)
           ctx.toRhs(atPos(finQual, op)(Term.Select(finQual, op)))
@@ -1785,7 +1785,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     // base contains pending UnfinishedInfix parts and rhsN is the final rhs.
     // For our running example, this'll be List([a +]) and [b].
     // Afterwards, `lhsResult` will be List([a + b]).
-    val lhsResult = ctx.reduceStack(base, rhsN, in.prevTokenPos)
+    val lhsResult = ctx.reduceStack(base, rhsN, in.prevTokenPos, None)
 
     // This is something not captured by the type system.
     // When applied to a result of `loop`, `reduceStack` will produce a singleton list.
@@ -2227,15 +2227,18 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         )
         case _ => None
       }
-      def loop(rhs: ctx.Rhs): ctx.Rhs = ctx.reduceStack(base, rhs, rhs) match {
-        case lhs1 if isIdentExcept("|") || token.is[Unquote] =>
-          val op = termName()
-          if (token.is[`[`]) syntaxError("infix patterns cannot have type arguments", at = token)
-          ctx.push(lhs1, lhs1, lhs1, op, Nil)
-          val rhs1 = simplePattern(badPattern3)
-          loop(rhs1)
-        case lhs1 =>
-          lhs1 // TODO: more rigorous type discipline
+      def loop(rhs: ctx.Rhs): ctx.Rhs = {
+        val op = if (isIdentExcept("|") || token.is[Unquote]) Some(termName()) else None
+        val lhs1 = ctx.reduceStack(base, rhs, rhs, op)
+        op match {
+          case Some(op) =>
+            if (token.is[`[`]) syntaxError("infix patterns cannot have type arguments", at = token)
+            ctx.push(lhs1, lhs1, lhs1, op, Nil)
+            val rhs1 = simplePattern(badPattern3)
+            loop(rhs1)
+          case None =>
+            lhs1 // TODO: more rigorous type discipline
+        }
       }
       checkWildStar getOrElse loop(lhs) // TODO: more rigorous type discipline
     }
