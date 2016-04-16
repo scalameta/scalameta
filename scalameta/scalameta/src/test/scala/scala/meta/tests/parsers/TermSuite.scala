@@ -429,4 +429,36 @@ class TermSuite extends ParseSuite {
     }""")
     assert(rhs.tokens.toList.toString === "List(true (26..30))")
   }
+
+  test("a + (bs: _*) * c") {
+    intercept[ParseException] { term("a + (bs: _*) * c") }
+  }
+
+  test("a + (c, d) * e") {
+    val Term.ApplyInfix(
+      Term.Name("a"), Term.Name("+"), Nil, Seq(
+        Term.ApplyInfix(
+          Term.Tuple(Seq(Term.Name("c"), Term.Name("d"))), Term.Name("*"), Nil,
+          Seq(Term.Name("e"))))) =
+    term("a + (c, d) * e")
+  }
+
+  test("a * (c, d) + e") {
+    val Term.ApplyInfix(
+      Term.ApplyInfix(
+        Term.Name("a"), Term.Name("*"), Nil,
+        Seq(Term.Name("c"), Term.Name("d"))),
+      Term.Name("+"), Nil, Seq(Term.Name("e"))) =
+    term("a * (c, d) + e")
+  }
+
+  test("(a + b) c") {
+    val Term.Select(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Seq(Term.Name("b"))), Term.Name("c")) =
+      term("(a + b) c")
+  }
+
+  test("a + b c") {
+    val Term.Select(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Seq(Term.Name("b"))), Term.Name("c")) =
+      term("a + b c")
+  }
 }
