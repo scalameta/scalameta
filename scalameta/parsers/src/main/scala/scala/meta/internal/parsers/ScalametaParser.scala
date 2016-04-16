@@ -787,10 +787,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       if (hasParams && !token.is[`:`]) syntaxError("can't mix function type and method type syntaxes", at = token)
       if (hasTypes && token.is[`:`]) accept[`=>`]
 
-      if (token.is[`:`]) {
-        next()
-        Type.Method(pss, typ())
-      } else if (token.is[`=>`]) {
+      if (token.is[`=>`]) {
         next()
         Type.Function(ts, typ())
       } else {
@@ -810,15 +807,6 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       }
     }
 
-    private def typeLambda(): Type =
-      if (dialect.allowTypeLambdas) {
-        val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-        val tpe = typ()
-        Type.Lambda(quants, tpe)
-      } else {
-        syntaxError(s"type lambdas are not allowed for the $dialect dialect", at = token)
-      }
-
     /** {{{
      *  Type ::= InfixType `=>' Type
      *         | `(' [`=>' Type] `)' `=>' Type
@@ -829,20 +817,14 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
      *  }}}
      */
     def typ(): Type = autoPos {
-      if (token.is[`:`]) {
-        next()
-        Type.Method(Nil, typ())
-      } else {
-        val t: Type =
-          if (token.is[`(`]) tupleInfixType()
-          else if (token.is[`[`]) typeLambda()
-          else infixType(InfixMode.FirstOp)
+      val t: Type =
+        if (token.is[`(`]) tupleInfixType()
+        else infixType(InfixMode.FirstOp)
 
-        token match {
-          case _: `=>`      => next(); Type.Function(List(t), typ())
-          case _: `forSome` => next(); Type.Existential(t, existentialStats())
-          case _            => t
-        }
+      token match {
+        case _: `=>`      => next(); Type.Function(List(t), typ())
+        case _: `forSome` => next(); Type.Existential(t, existentialStats())
+        case _            => t
       }
     }
 

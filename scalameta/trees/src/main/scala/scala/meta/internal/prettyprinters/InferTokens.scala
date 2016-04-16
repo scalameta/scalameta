@@ -505,8 +505,6 @@ private[meta] object inferTokens {
       case t: Type.Existential =>  toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
       case t: Type.Annotate =>     toks"${t.tpe.tks} ${t.annots.`o_o`}"
       case t: Type.Placeholder =>  toks"_ ${t.bounds.tks}"
-      case t: Type.Lambda =>       toks"${t.quants.`[[o,o]]`}${t.tpe.tks}"
-      case t: Type.Method =>       toks"${apndTermParamss(t.paramss)}: ${t.tpe.tks}"
       case t: Type.Bounds =>
         val loOpt = t.lo.map(lo => toks">: ${lo.tks}")
         val hiOpt = t.hi.map(hi => toks"<: ${hi.tks}")
@@ -571,7 +569,6 @@ private[meta] object inferTokens {
       case t: Pat.Type.Existential => toks"${t.tpe.tks} forSome { ${t.quants.`o;o`} }"
       case t: Pat.Type.Annotate =>    toks"${t.tpe.tks} ${t.annots.`o_o`}"
       case t: Pat.Type.Placeholder => toks"_ ${t.bounds.tks}"
-      case t: Pat.Type.Lambda =>      toks"${t.quants.`[[o,o]]`} => ${t.tpe.tks}"
 
       // Lit
       case t: Lit => mineLitTk(t.value)

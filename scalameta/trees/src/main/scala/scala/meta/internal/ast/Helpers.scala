@@ -239,7 +239,6 @@ private[meta] object Helpers {
       case Type.Existential(tpe, quants) => Pat.Type.Existential(loop(tpe), quants)
       case Type.Annotate(tpe, annots) => Pat.Type.Annotate(loop(tpe), annots)
       case Type.Placeholder(bounds) => Pat.Type.Placeholder(bounds)
-      case Type.Lambda(tparams, tpe) => Pat.Type.Lambda(tparams, loop(tpe))
       case tpe: Lit => tpe
     }
     loop(tpe.require[Type]).withTypechecked(tpe.isTypechecked)
@@ -261,7 +260,6 @@ private[meta] object Helpers {
       case Pat.Type.Existential(tpe, quants) => Type.Existential(loop(tpe), quants)
       case Pat.Type.Annotate(tpe, annots) => Type.Annotate(loop(tpe), annots)
       case Pat.Type.Placeholder(bounds) => Type.Placeholder(bounds)
-      case Pat.Type.Lambda(tparams, tpe) => Type.Lambda(tparams, loop(tpe))
       case tpe: Lit => tpe
     }
     loop(pattpe.require[Pat.Type]).withTypechecked(pattpe.isTypechecked)

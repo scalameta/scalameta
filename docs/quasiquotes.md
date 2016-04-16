@@ -68,8 +68,6 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Existential       | `t"$tpe forSome { ..$statsnel }"`
  Annotate          | `t"$tpe ..@$annotsnel"`
  Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`
- Lambda            | `t"[..$tparamsnel]$tpe"`
- Method            | `t"(...$paramss): $tpe"`
  Literal           | `t"$lit"` (construction only), `t"${lit: Lit}"` (also deconstruction)
 
 ## Argument Types (meta.Type.Arg)
@@ -122,7 +120,6 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Existential       | `pt"$ptpe forSome { ..$statsnel }"`
  Annotate          | `pt"$ptpe ..@$annotsnel"`
  Placeholder       | `pt"_ >: $tpeopt <: $tpeopt"`
- Lambda            | `pt"[..$tparamsnel] => $tpe"`
  Literal           | `pt"$lit"` (construction only), `pt"${lit: Lit}"` (also deconstruction)
 
 ## Statements (meta.Stat)

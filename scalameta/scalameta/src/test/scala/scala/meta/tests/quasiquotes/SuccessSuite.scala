@@ -890,51 +890,6 @@ class SuccessSuite extends FunSuite {
     assert(t"_ >: $tpe1 <: $tpe2".show[Structure] === "Type.Placeholder(Type.Bounds(Some(Type.Name(\"X\")), Some(Type.Name(\"Y\"))))")
   }
 
-  test("1 t\"[..$tparams] => $tpe\"") {
-    val t"[..$tparams]$tpe" = t"[X, Y](X, Int) => Y"
-    assert(tparams.toString === "List(X, Y)")
-    assert(tparams(0).show[Structure] === "Type.Param(Nil, Type.Name(\"X\"), Nil, Type.Bounds(None, None), Nil, Nil)")
-    assert(tparams(1).show[Structure] === "Type.Param(Nil, Type.Name(\"Y\"), Nil, Type.Bounds(None, None), Nil, Nil)")
-    assert(tpe.show[Structure] === "Type.Function(Seq(Type.Name(\"X\"), Type.Name(\"Int\")), Type.Name(\"Y\"))")
-  }
-
-  test("2 t\"[..$tparams] => $tpe\"") {
-    val tparams = List(tparam"X", tparam"Y")
-    val tpe = t"Z"
-    assert(t"[..$tparams]$tpe".show[Structure] === "Type.Lambda(Seq(Type.Param(Nil, Type.Name(\"X\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"Y\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"Z\"))")
-  }
-
-  test("1 t\"(..$params): $tpe\"") {
-    val t"(..$params): $tpe" = t"(x: T, y: U): Map[x.U, U]"
-    assert(params.toString === "List(x: T, y: U)")
-    assert(params(0).show[Structure] === "Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"T\")), None)")
-    assert(params(1).show[Structure] === "Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"U\")), None)")
-    assert(tpe.show[Structure] === "Type.Apply(Type.Name(\"Map\"), Seq(Type.Select(Term.Name(\"x\"), Type.Name(\"U\")), Type.Name(\"U\")))")
-  }
-
-  test("2 t\"(..$params): $tpe\"") {
-    val params = List(param"x: T", param"y: U")
-    val tpe = t"Z"
-    assert(t"(..$params): $tpe".show[Structure] === "Type.Method(Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"T\")), None), Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"U\")), None))), Type.Name(\"Z\"))")
-  }
-
-  test("3 t\": $tpe\"") {
-    // TODO: uncomment this once https://github.com/scalameta/scalameta/issues/233 is fixed
-    // val t"(..$params1): $tpe1" = t": Z"
-    val t": $tpe2" = t": Z"
-    // assert(params1.toString === "List()")
-    // assert(tpe1.show[Structure] === "Type.Name(\"Z\")")
-    assert(tpe2.show[Structure] === "Type.Name(\"Z\")")
-  }
-
-  test("4 t\"(): $tpe\"") {
-    val t"(..$params1): $tpe1" = t"(): Z"
-    val t"(): $tpe2" = t"(): Z"
-    assert(params1.toString === "List()")
-    assert(tpe1.show[Structure] === "Type.Name(\"Z\")")
-    assert(tpe2.show[Structure] === "Type.Name(\"Z\")")
-  }
-
   test("t\"$lit\"") {
     val lit = q"1"
     assert(t"$lit".show[Structure] === "Lit(1)")
