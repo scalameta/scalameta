@@ -1720,14 +1720,19 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         // with base = List([a +]), rhsK = List([b]).
         rhsK
       } else {
+        // Infix chain continues.
+        // In the running example, we're at `a [+] b`.
+        val op = termName() // op = [+]
+        val targs = if (token.is[`[`]) exprTypeArgs() else Nil // targs = Nil
+
+        // Check whether we're still infix or already postfix by testing the current token.
+        // In the running example, we're at `a + [b]` (infix).
+        // If we were parsing `val c = a b`, then we'd be at `val c = a b[]` (postfix).
         newLineOptWhenFollowing(_.is[ExprIntro])
         if (token.is[ExprIntro]) {
-          // Infix chain continues.
-          // In the running example, we're at `a [+] b`
-          // with base = List(), rhsK = [a].
+          // Infix chain continues, so we need to reduce the stack.
+          // In the running example, base = List(), rhsK = [a].
           val lhsK = ctx.reduceStack(base, rhsK, endPosK) // lhsK = [a]
-          val op = termName() // op = [+]
-          val targs = if (token.is[`[`]) exprTypeArgs() else Nil // targs = Nil
           val lhsStartPosK = Math.min(startPosK.startTokenPos, lhsK.head.startTokenPos)
           ctx.push(lhsStartPosK, lhsK, endPosK, op, targs) // afterwards, ctx.stack = List([a +])
 
@@ -1747,12 +1752,12 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         } else {
           // Infix chain has ended with a postfix expression.
           // This never happens in the running example.
-          ???
-          // val lhs = ctx.toLhs(reduceStack(base, rhsK, endPos))
-          // val op = termName()
-          // if (token.is[`[`]) syntaxError("type application is not allowed for postfix operators", at = token)
-          // val qual = reduceStack(stack, lhs, endPos)
-          // atPos(qual, op)(Term.Select(qual, op))
+          // TODO: The two type conversions that I have to do here are unfortunate,
+          // but I don't have time to figure our an elegant way of approaching this
+          val lhsQual = ctx.reduceStack(base, rhsK, endPosK)
+          val finQual = lhsQual match { case List(finQual) => finQual; case _ => unreachable(debug(lhsQual)) }
+          if (targs.nonEmpty) syntaxError("type application is not allowed for postfix operators", at = token)
+          ctx.toRhs(atPos(finQual, op)(Term.Select(finQual, op)))
         }
       }
     }
