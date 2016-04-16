@@ -18,16 +18,23 @@ object PositionStyle {
   implicit val default: PositionStyle = BlackAndWhite
 }
 
+@root trait SliceStyle
+object SliceStyle {
+  @leaf object Hide extends SliceStyle
+  @leaf object Show extends SliceStyle
+  implicit val default: SliceStyle = Hide
+}
+
 @implicitNotFound(msg = "don't know how to show[Positions] for ${T}")
 trait Positions[T] extends Show[T]
 object Positions {
   def apply[T](f: T => Show.Result): Positions[T] = new Positions[T] { def apply(input: T) = f(input) }
-  implicit val Colorful: PositionStyle = PositionStyle.Colorful
 
-  implicit def positionsTree[T <: Tree : Syntax](implicit style: PositionStyle): Positions[T] = Positions { x =>
+  implicit def positionsTree[T <: Tree : Syntax](implicit positionStyle: PositionStyle, sliceStyle: SliceStyle): Positions[T] = Positions { x =>
     def loopTree(x: Tree): Show.Result = {
       implicit class XtensionString(s: String) {
-        def colored(color: String) = if (style == PositionStyle.Colorful) (color + s + RESET) else s
+        def colored(color: String) = if (positionStyle == PositionStyle.Colorful) (color + s + RESET) else s
+        def sliced(slice: => String) = if (sliceStyle == SliceStyle.Show) (s + "<" + slice + ">") else s
       }
       def loopField(x: Any, color: String): Show.Result = x match {
         case el: String => s(enquote(el, DoubleQuotes).colored(color))
@@ -40,9 +47,12 @@ object Positions {
         case el => s(el.toString.colored(color))
       }
       def position(x: Tree): String = {
-        if (x.tokens.isAuthentic) s"[${x.start.offset}..${x.end.offset}]" else ""
+        if (x.tokens.isAuthentic) s"[${x.start.offset}..${x.end.offset}]".sliced(x.toString)
+        else ""
       }
-      def color(x: Tree): String = if (x.tokens.isAuthentic) GREEN else RED
+      def color(x: Tree): String = {
+        if (x.tokens.isAuthentic) GREEN else RED
+      }
       val prefix = (x.productPrefix + position(x) + "(").colored(color(x))
       val fields = r(x.productIterator.toList.map(el => loopField(el, color(x))), ", ".colored(color(x)))
       val suffix = ")".colored(color(x))
