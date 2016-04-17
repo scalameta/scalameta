@@ -5,6 +5,8 @@ import org.scalameta.adt._
 import org.scalameta.data._
 import scala.meta.tokens._
 import scala.meta.inputs._
+import scala.meta.internal.inputs._
+import scala.compat.Platform.EOL
 
 @root trait Tokenized {
   def get: Tokens = this match {
@@ -24,11 +26,12 @@ import scala.meta.inputs._
 object Tokenized {
   @leaf class Success(tokens: Tokens) extends Tokenized
   @leaf class Error(pos: Position, message: String, details: TokenizeException) extends Tokenized {
-    override def toString = s"Error($details)"
+    override def toString = s"Error(${details.getMessage})"
   }
 }
 
-@data class TokenizeException(pos: Position, message: String)
-extends Exception(s"$message at ${pos.start.offset}..${pos.end.offset}") {
+@data class TokenizeException(pos: Position, shortMessage: String)
+extends Exception(pos.formatMessage("error", shortMessage)) {
+  def fullMessage = getMessage
   override def toString = super.toString
 }

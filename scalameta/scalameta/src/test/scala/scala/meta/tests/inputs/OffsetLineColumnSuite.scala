@@ -5,9 +5,9 @@ import org.scalatest._
 import scala.compat.Platform.EOL
 import scala.meta._
 
-class PositionSuite extends FunSuite {
-  private def testOffsets(s: String)(expected: String): Unit = {
-    val testName = "offsets for " + (if (s != "") s.replace("\n", "\\n") else "empty string")
+class OffsetLineColumnSuite extends FunSuite {
+  private def test(s: String)(expected: String): Unit = {
+    val testName = (if (s != "") s.replace("\n", "\\n") else "empty string")
     super.test(testName) {
       val content = Input.String(s)
       val points = 0.to(content.chars.length).map(i => Point.Offset(content, i))
@@ -19,23 +19,23 @@ class PositionSuite extends FunSuite {
     }
   }
 
-  testOffsets("")("""
+  test("")("""
     |0 0 0
   """.trim.stripMargin)
 
-  testOffsets("\n")("""
+  test("\n")("""
     |0 0 0
     |1 1 0
   """.trim.stripMargin)
 
-  testOffsets("foo")("""
+  test("foo")("""
     |0 0 0
     |1 0 1
     |2 0 2
     |3 0 3
   """.trim.stripMargin)
 
-  testOffsets("foo\n")("""
+  test("foo\n")("""
     |0 0 0
     |1 0 1
     |2 0 2
@@ -43,7 +43,7 @@ class PositionSuite extends FunSuite {
     |4 1 0
   """.trim.stripMargin)
 
-  testOffsets("foo\nbar")("""
+  test("foo\nbar")("""
     |0 0 0
     |1 0 1
     |2 0 2

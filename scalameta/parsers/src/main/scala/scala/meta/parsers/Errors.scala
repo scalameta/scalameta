@@ -4,6 +4,8 @@ package parsers
 import org.scalameta.adt._
 import org.scalameta.data._
 import scala.meta.inputs._
+import scala.meta.internal.inputs._
+import scala.compat.Platform.EOL
 
 @root trait Parsed[+T] {
   def get: T = this match {
@@ -23,11 +25,12 @@ import scala.meta.inputs._
 object Parsed {
   @leaf class Success[+T](tree: T) extends Parsed[T]
   @leaf class Error(pos: Position, message: String, details: ParseException) extends Parsed[Nothing] {
-    override def toString = s"Error($details)"
+    override def toString = s"Error(${details.getMessage})"
   }
 }
 
-@data class ParseException(pos: Position, message: String)
-extends Exception(s"$message at ${pos.start.offset}..${pos.end.offset}") {
-  override def toString = super.toString
+@data class ParseException(pos: Position, shortMessage: String)
+extends Exception(pos.formatMessage("error", shortMessage)) {
+  def fullMessage = getMessage
+  override def toString = fullMessage
 }
