@@ -1,6 +1,8 @@
 package scala.meta
 
 import scala.annotation.implicitNotFound
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import org.scalameta.adt._
 import scala.meta.dialects._
 import scala.meta.internal.dialects._
@@ -55,15 +57,18 @@ package object dialects {
 }
 
 object Dialect {
-  // NOTE: See https://github.com/scalameta/scalameta/issues/253 for discussion.
-  implicit def current: Dialect = macro CurrentDialect.impl
+  lazy val all: Seq[Dialect] = scala.meta.internal.dialects.all
 
-  private val QuasiquoteRx = "^Quasiquote\\((.*?)\\)$".r
-  def forName(name: String): Dialect = name match {
-    case "Scala211" => scala.meta.dialects.Scala211
-    case "Dotty" => scala.meta.dialects.Dotty
-    case QuasiquoteRx(name) => Quasiquote(Dialect.forName(name))
-    case _ => throw new IllegalArgumentException(s"unknown dialect $name")
+  // NOTE: See https://github.com/scalameta/scalameta/issues/253 for discussion.
+  implicit def current: Dialect = macro Macros.current
+
+  def forName(name: String): Dialect = {
+    def maybeVanilla = all.find(_.name == name)
+    def maybeQuasiquote = "^Quasiquote\\((.*?)\\)$".r.unapplySeq(name).map {
+      case List(subname) => Quasiquote(Dialect.forName(subname))
+    }
+    def fail = throw new IllegalArgumentException(s"unknown dialect $name")
+    maybeVanilla.orElse(maybeQuasiquote).getOrElse(fail)
   }
 
   @SerialVersionUID(1L) private[meta] class SerializationProxy(@transient private var orig: Dialect) extends Serializable {
