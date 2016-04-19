@@ -56,7 +56,7 @@ package object dialects {
 
 object Dialect {
   // NOTE: See https://github.com/scalameta/scalameta/issues/253 for discussion.
-  implicit def currentDialect: Dialect = macro CurrentDialect.impl
+  implicit def current: Dialect = macro CurrentDialect.impl
 
   private val QuasiquoteRx = "^Quasiquote\\((.*?)\\)$".r
   def forName(name: String): Dialect = name match {
