@@ -147,7 +147,7 @@ object build extends Build {
     exposePaths("scalameta", Test): _*
   ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, transversers, trees)
 
-  lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
+  lazy val sharedSettings = Defaults.defaultSettings ++ crossVersionSharedSources ++ Seq(
     scalaVersion := ScalaVersions.max,
     crossScalaVersions := ScalaVersions,
     crossVersion := CrossVersion.binary,
@@ -330,4 +330,17 @@ object build extends Build {
 
   lazy val enableMacros = macroDependencies(hardcore = false)
   lazy val enableHardcoreMacros = macroDependencies(hardcore = true)
+
+  lazy val crossVersionSharedSources: Seq[Setting[_]] =
+    Seq(Compile, Test).map { sc =>
+      (unmanagedSourceDirectories in sc) ++= {
+        (unmanagedSourceDirectories in sc).value.map { dir =>
+          CrossVersion.partialVersion(scalaVersion.value) match {
+            case Some((2, y)) if y == 10 => new File(dir.getPath + "_2.10")
+            case Some((2, y)) if y == 11 => new File(dir.getPath + "_2.11")
+            case other => sys.error("unsupported Scala version " + other)
+          }
+        }
+      }
+    }
 }

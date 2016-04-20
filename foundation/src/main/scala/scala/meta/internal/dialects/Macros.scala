@@ -12,16 +12,21 @@ class Macros(val c: Context) extends MacroHelpers with AdtReflection {
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._
 
+  lazy val DialectClass = mirror.staticClass("scala.meta.Dialect")
+  lazy val Scala210 = mirror.staticModule("scala.meta.dialects.Scala210")
+  lazy val Scala211 = mirror.staticModule("scala.meta.dialects.Scala211")
+  lazy val Dotty = mirror.staticModule("scala.meta.dialects.Dotty")
+
   def all: c.Tree = {
-    val dialects = mirror.staticClass("scala.meta.Dialect").asRoot.allLeafs
+    val dialects = DialectClass.asRoot.allLeafs
     val relevantDialects = dialects.filter(_.sym.name.toString != "Quasiquote")
     q"${relevantDialects.map(leaf => hygienicRef(leaf.sym)).toList}"
   }
 
   def current: c.Tree = {
-    // TODO: We'll have to expand this in the future,
-    // but for now the only other supported dialect is Dotty,
-    // and we don't yet have a dottyhost, so yolo.
-    q"_root_.scala.meta.dialects.Scala211"
+    val version = scala.util.Properties.versionNumberString
+    if (version.startsWith("2.10")) hygienicRef(Scala210)
+    else if (version.startsWith("2.11")) hygienicRef(Scala211)
+    else c.abort(c.enclosingPosition, "unsupported Scala version " + version)
   }
 }
