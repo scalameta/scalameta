@@ -28,6 +28,7 @@ import org.scalameta.invariants._
 private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dialect) { parser =>
   // implementation restrictions wrt various dialect properties
   require(Set("@", ":").contains(dialect.bindToSeqWildcardDesignator))
+  require(Set("", EOL).contains(dialect.toplevelSeparator))
   def inQuasiquote = dialect.isInstanceOf[scala.meta.dialects.Quasiquote]
 
 /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
@@ -51,19 +52,35 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   // because it needs to support a wide range of constructs, from expressions to top-level definitions.
   // Note the expr(Local) part, which means that we're going to parse lambda expressions in the mode that
   // precludes ambiguities with self-type annotations.
-  def parseStat(): Stat = parseRule(parser => parser.statSeq[Stat] {
+  private val consumeStat: PartialFunction[Token, Stat] = {
     case token if token.is[`import`] => importStmt()
-    case token if token.is[`package `] => packageOrPackageObjectDef()
+    case token if token.is[`package `] && !dialect.allowToplevelTerms => packageOrPackageObjectDef()
     case token if token.is[TokenClass.DefIntro] || token.is[Ellipsis] => nonLocalDefOrDcl()
     case token if token.is[TokenClass.ExprIntro] => expr(Local)
-  } match {
-    case Nil => reporter.syntaxError("unexpected end of input", at = token)
-    case stat :: Nil => stat
-    case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
-    case stats if stats.forall(_.isTopLevelStat) => Source(stats)
-    case other => reporter.syntaxError("these statements can't be mixed together", at = parserTokens.head)
-  })
-  def parseQuasiquoteStat(): Stat = parseStat() // NOTE: special treatment for q"super" and likes is implemented directly in `path`
+  }
+  def parseStat(): Stat = {
+    parseRule(parser => {
+      val maybeStat = consumeStat.lift(token)
+      maybeStat.getOrElse(reporter.syntaxError("unexpected start of statement", at = token))
+    })
+  }
+  def parseQuasiquoteStat(): Stat = {
+    def failEmpty() = {
+      reporter.syntaxError("unexpected end of input", at = token)
+    }
+    def failMix(advice: Option[String]) = {
+      val message = "these statements can't be mixed together"
+      val addendum = advice.map(", " + _).getOrElse("")
+      reporter.syntaxError(message + addendum, at = parserTokens.head)
+    }
+    parseRule(parser => parser.statSeq(consumeStat) match {
+      case Nil => failEmpty()
+      case stat :: Nil => stat
+      case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
+      case stats if stats.forall(_.isTopLevelStat) => failMix(Some("try source\"...\" instead"))
+      case other => failMix(None)
+    })
+  }
   def parseQuasiquoteCtor(): Ctor = parseRule(_.quasiquoteCtor())
   def parseTerm(): Term = parseRule(_.expr())
   def parseTermArg(): Term.Arg = parseRule(_.argumentExpr())
@@ -119,7 +136,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   }
   def parseImporter(): Importer = parseRule(_.importer())
   def parseImportee(): Importee = parseRule(_.importee())
-  def parseSource(): Source = parseRule(_.compilationUnit())
+  def parseSource(): Source = parseRule(_.source())
 
 /* ------------- PARSER-SPECIFIC TOKEN CLASSIFIERS -------------------------------------------- */
 
@@ -3395,7 +3412,24 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  CompilationUnit ::= {package QualId semi} TopStatSeq
    *  }}}
    */
-  def compilationUnit(): Source = autoPos {
+  def source(): Source = autoPos {
+    if (dialect.allowToplevelTerms) scriptSource()
+    else batchSource()
+  }
+
+  def scriptSource(): Source = autoPos {
+    // TODO: Faithfully reimplement the logic in SBT (see #368 in details).
+    // So far, our use case is to reformat already valid programs,
+    // so we can afford accepting more than necessary.
+    if (dialect.toplevelSeparator == "") {
+      Source(parser.statSeq(consumeStat))
+    } else {
+      require(dialect.toplevelSeparator == EOL)
+      Source(parser.statSeq(consumeStat))
+    }
+  }
+
+  def batchSource(): Source = autoPos {
     def inBracelessPackage() = token.is[`package `] && !ahead(token.is[`object`]) && ahead{ qualId(); token.isNot[`{`] }
     def bracelessPackageStats(): Seq[Stat] = {
       if (token.is[EOF]) {

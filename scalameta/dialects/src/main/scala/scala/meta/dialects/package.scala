@@ -1,10 +1,13 @@
 package scala.meta
 
 import scala.annotation.implicitNotFound
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import org.scalameta.adt._
 import scala.meta.dialects._
 import scala.meta.internal.dialects._
 import scala.language.experimental.macros
+import scala.compat.Platform.EOL
 
 // NOTE: can't put Dialect into scala.meta.Dialects
 // because then implicit scope for Dialect lookups will contain members of the package object
@@ -26,14 +29,54 @@ import scala.language.experimental.macros
   // Permission to tokenize repeated dots as ellipses.
   // Necessary to support quasiquotes, e.g. `q"foo(..$args)"`.
   def allowEllipses: Boolean
+
+  // Are terms on the top level supported by this dialect?
+  // Necessary to support popular script-like DSLs.
+  def allowToplevelTerms: Boolean
+
+  // What kind of separator is necessary to split top-level statements?
+  // Normally none is required, but scripts may have their own rules.
+  def toplevelSeparator: String
 }
 
 package object dialects {
-  @leaf implicit object Scala211 extends Dialect {
-    def name = "Scala211"
+  @leaf implicit object Scala210 extends Dialect {
+    def name = "Scala210"
     def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
     def allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
     def allowEllipses = false // Vanilla Scala doesn't support ellipses, somewhat similar concept is varargs and _*
+    def allowToplevelTerms = false
+    def toplevelSeparator = ""
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
+  @leaf implicit object Sbt0136 extends Dialect {
+    def name = "Sbt0136"
+    def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
+    def allowXmlLiterals = Scala210.allowXmlLiterals
+    def allowEllipses = Scala210.allowEllipses
+    def allowToplevelTerms = false
+    def toplevelSeparator = EOL
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
+  @leaf implicit object Sbt0137 extends Dialect {
+    def name = "Sbt0137"
+    def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
+    def allowXmlLiterals = Scala210.allowXmlLiterals
+    def allowEllipses = Scala210.allowEllipses
+    def allowToplevelTerms = true
+    def toplevelSeparator = ""
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
+  @leaf implicit object Scala211 extends Dialect {
+    def name = "Scala211"
+    def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
+    def allowXmlLiterals = Scala210.allowXmlLiterals
+    def allowEllipses = Scala210.allowEllipses
+    def allowToplevelTerms = Scala210.allowToplevelTerms
+    def toplevelSeparator = Scala210.toplevelSeparator
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -42,6 +85,8 @@ package object dialects {
     def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
     def allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
     def allowEllipses = false // Vanilla Dotty doesn't support ellipses, somewhat similar concept is varargs and _*
+    def allowToplevelTerms = false
+    def toplevelSeparator = ""
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -50,20 +95,25 @@ package object dialects {
     def bindToSeqWildcardDesignator = dialect.bindToSeqWildcardDesignator
     def allowXmlLiterals = dialect.allowXmlLiterals
     def allowEllipses = true
+    def allowToplevelTerms = dialect.allowToplevelTerms
+    def toplevelSeparator = dialect.toplevelSeparator
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 }
 
 object Dialect {
-  // NOTE: See https://github.com/scalameta/scalameta/issues/253 for discussion.
-  implicit def currentDialect: Dialect = macro CurrentDialect.impl
+  lazy val all: Seq[Dialect] = scala.meta.internal.dialects.all
 
-  private val QuasiquoteRx = "^Quasiquote\\((.*?)\\)$".r
-  def forName(name: String): Dialect = name match {
-    case "Scala211" => scala.meta.dialects.Scala211
-    case "Dotty" => scala.meta.dialects.Dotty
-    case QuasiquoteRx(name) => Quasiquote(Dialect.forName(name))
-    case _ => throw new IllegalArgumentException(s"unknown dialect $name")
+  // NOTE: See https://github.com/scalameta/scalameta/issues/253 for discussion.
+  implicit def current: Dialect = macro Macros.current
+
+  def forName(name: String): Dialect = {
+    def maybeVanilla = all.find(_.name == name)
+    def maybeQuasiquote = "^Quasiquote\\((.*?)\\)$".r.unapplySeq(name).map {
+      case List(subname) => Quasiquote(Dialect.forName(subname))
+    }
+    def fail = throw new IllegalArgumentException(s"unknown dialect $name")
+    maybeVanilla.orElse(maybeQuasiquote).getOrElse(fail)
   }
 
   @SerialVersionUID(1L) private[meta] class SerializationProxy(@transient private var orig: Dialect) extends Serializable {

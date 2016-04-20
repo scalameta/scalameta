@@ -26,7 +26,7 @@ import scala.compat.Platform.EOL
 object Tokenized {
   @leaf class Success(tokens: Tokens) extends Tokenized
   @leaf class Error(pos: Position, message: String, details: TokenizeException) extends Tokenized {
-    override def toString = s"Error(${details.getMessage})"
+    override def toString = details.fullMessage
   }
 }
 

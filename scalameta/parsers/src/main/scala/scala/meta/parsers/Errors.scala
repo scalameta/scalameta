@@ -25,7 +25,7 @@ import scala.compat.Platform.EOL
 object Parsed {
   @leaf class Success[+T](tree: T) extends Parsed[T]
   @leaf class Error(pos: Position, message: String, details: ParseException) extends Parsed[Nothing] {
-    override def toString = s"Error(${details.getMessage})"
+    override def toString = details.fullMessage
   }
 }
 

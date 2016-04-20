@@ -556,4 +556,16 @@ class ErrorSuite extends FunSuite {
       |                  ^
     """.trim.stripMargin)
   }
+
+  test("q\"package foo {}; package bar {}\"") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      q"package foo {}; package bar {}"
+    """) === """
+      |<macro>:4: these statements can't be mixed together, try source"..." instead
+      |      q"package foo {}; package bar {}"
+      |        ^
+    """.trim.stripMargin)
+  }
 }
