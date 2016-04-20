@@ -461,4 +461,8 @@ class TermSuite extends ParseSuite {
     val Term.Select(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Seq(Term.Name("b"))), Term.Name("c")) =
       term("a + b c")
   }
+
+  test("disallow parse[Stat] on statseqs") {
+    intercept[ParseException]{ stat("hello; world") }
+  }
 }

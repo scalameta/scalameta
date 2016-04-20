@@ -531,7 +531,7 @@ object Importee {
   require(pat.isLegal)
 }
 
-@ast class Source(stats: Seq[Stat]) extends Tree with Stat {
+@ast class Source(stats: Seq[Stat]) extends Tree {
   require(stats.forall(_.isTopLevelStat))
 }
 
