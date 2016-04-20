@@ -76,6 +76,7 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
+  // NOTE: this works because implicit scope for Scala211 includes meta.`package`
   test("Dialect.parse without import") {
     assert(typecheckError("""
       scala.meta.dialects.Scala211("").parse[scala.meta.Term]
@@ -84,26 +85,23 @@ class PublicSuite extends FunSuite {
 
   test("Dialect.parse without input-likeness") {
     assert(typecheckError("""
-      import scala.meta._
       scala.meta.dialects.Scala211(1).parse[scala.meta.Term]
     """) === "don't know how to convert Int to scala.meta.inputs.Input")
   }
 
   test("Dialect.parse without parseability") {
     assert(typecheckError("""
-      import scala.meta._
       scala.meta.dialects.Scala211("").parse[Int]
     """) === "don't know how to parse into Int")
   }
 
   test("Dialect.parse with various input types") {
     assert(typecheckError("""
-      import scala.meta._
-      scala.meta.dialects.Scala211(??? : Input).parse[Term]
-      scala.meta.dialects.Scala211(??? : String).parse[Term]
-      scala.meta.dialects.Scala211(??? : java.io.File).parse[Term]
-      scala.meta.dialects.Scala211(??? : Tokens).parse[Term]
-      scala.meta.dialects.Scala211(??? : Array[Char]).parse[Term]
+      scala.meta.dialects.Scala211(??? : scala.meta.Input).parse[scala.meta.Term]
+      scala.meta.dialects.Scala211(??? : String).parse[scala.meta.Term]
+      scala.meta.dialects.Scala211(??? : java.io.File).parse[scala.meta.Term]
+      scala.meta.dialects.Scala211(??? : scala.meta.Tokens).parse[scala.meta.Term]
+      scala.meta.dialects.Scala211(??? : Array[Char]).parse[scala.meta.Term]
     """) === "")
   }
 
