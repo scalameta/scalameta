@@ -532,7 +532,9 @@ object Importee {
 }
 
 @ast class Source(stats: Seq[Stat]) extends Tree {
-  require(stats.forall(_.isTopLevelStat))
+  // NOTE: This validation has been removed to allow dialects with top-level terms.
+  // Ideally, we should push the validation into a dialect-specific prettyprinter when #220 is fixed.
+  // require(stats.forall(_.isTopLevelStat))
 }
 
 package internal.ast {
