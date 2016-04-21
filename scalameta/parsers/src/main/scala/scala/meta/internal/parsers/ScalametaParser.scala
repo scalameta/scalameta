@@ -48,7 +48,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
   // Entry points for Parse[T]
   // Used for quasiquotes as well as for ad-hoc parsing
-  // parseStat is used to implement q"..." and surprisingly can't be reduced to anything that's already in the parser,
+  // parseQuasiquoteStat is used to implement q"..." and surprisingly can't be reduced to anything that's already in the parser,
   // because it needs to support a wide range of constructs, from expressions to top-level definitions.
   // Note the expr(Local) part, which means that we're going to parse lambda expressions in the mode that
   // precludes ambiguities with self-type annotations.
@@ -60,8 +60,16 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   }
   def parseStat(): Stat = {
     parseRule(parser => {
+      def skipStatementSeparators(): Unit = {
+        if (token.is[EOF]) return
+        if (!token.is[TokenClass.StatSep]) accept[EOF]
+        next()
+        skipStatementSeparators()
+      }
       val maybeStat = consumeStat.lift(token)
-      maybeStat.getOrElse(reporter.syntaxError("unexpected start of statement", at = token))
+      val stat = maybeStat.getOrElse(reporter.syntaxError("unexpected start of statement", at = token))
+      skipStatementSeparators()
+      stat
     })
   }
   def parseQuasiquoteStat(): Stat = {

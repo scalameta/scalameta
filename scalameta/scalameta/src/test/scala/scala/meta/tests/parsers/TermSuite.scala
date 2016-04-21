@@ -465,4 +465,12 @@ class TermSuite extends ParseSuite {
   test("disallow parse[Stat] on statseqs") {
     intercept[ParseException]{ stat("hello; world") }
   }
+
+  test("\"stat;\".parse[Stat]") {
+    val Term.Name("stat") = stat("stat;")
+  }
+
+  test("\"stat;\".parse[Term]") {
+    intercept[ParseException]{ term("stat;") }
+  }
 }
