@@ -6,6 +6,8 @@ import scala.collection.generic._
 import scala.collection.mutable.{Builder, ArrayBuilder, ListBuffer}
 import scala.collection.immutable.VectorBuilder
 import scala.meta.inputs._
+import scala.meta.prettyprinters._
+import scala.meta.internal.prettyprinters._
 
 // TODO: We should really give up on trying to use the standard IndexedSeq machinery,
 // because it doesn't give us a good way to load the elements lazily, which is necessary for Tokens.Slice
@@ -94,4 +96,7 @@ object Tokens {
     override def drop(n: Int): Tokens = new Slice(tokens, Math.min(from + n, until), until)
     override def toString = s"Slice($tokens, $from, $until)"
   }
+
+  implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
+  implicit def showSyntax[T <: Tokens]: Syntax[T] = TokensSyntax.apply[T]
 }

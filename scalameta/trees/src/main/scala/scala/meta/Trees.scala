@@ -23,7 +23,7 @@ import scala.meta.internal.semantic._
   final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def hashCode: Int = System.identityHashCode(this)
-  final override def toString = scala.meta.internal.prettyprinters.toString(this)
+  final override def toString = scala.meta.internal.prettyprinters.TreeToString(this)
 }
 
 object Tree {

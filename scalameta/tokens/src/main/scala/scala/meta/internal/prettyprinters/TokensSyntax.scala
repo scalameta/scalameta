@@ -6,8 +6,8 @@ import scala.meta.prettyprinters._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.tokens._
 
-object TokenSyntax {
-  def apply[T <: Token]: Syntax[T] = {
-    Syntax { x => s(x.code) }
+object TokensSyntax {
+  def apply[T <: Tokens]: Syntax[T] = {
+    Syntax { xs => r(xs.toList.map(TokenSyntax[Token].apply), "") }
   }
 }

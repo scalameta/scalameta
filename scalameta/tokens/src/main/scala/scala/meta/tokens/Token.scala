@@ -23,11 +23,7 @@ import scala.meta.internal.prettyprinters._
     end: Int = this.end,
     delta: Int = 0): Token
 
-  final override def toString = {
-    import Token._
-    val prefix = this match { case x: BOF => "BOF"; case x: EOF => "EOF"; case x: Dynamic => x.code; case x: Static => x.name }
-    prefix + " (" + start.toString + ".." + end.toString + ")"
-  }
+  final override def toString = scala.meta.internal.prettyprinters.TokenToString(this)
 }
 
 object Token {
@@ -163,7 +159,7 @@ object Token {
   }
 
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
-  implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = TokenSyntax.apply[T](dialect)
+  implicit def showSyntax[T <: Token]: Syntax[T] = TokenSyntax.apply[T]
 }
 
 // NOTE: We have this unrelated code here, because of how materializeAdt works.

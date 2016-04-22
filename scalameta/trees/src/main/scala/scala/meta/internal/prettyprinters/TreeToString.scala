@@ -4,7 +4,7 @@ package prettyprinters
 
 import scala.meta.internal.ast.Quasi
 
-private[meta] object toString {
+private[meta] object TreeToString {
   def apply(tree: Tree) = {
     val prettyprinter = TreeSyntax[Tree](scala.meta.dialects.`package`.Scala211)
     val code = prettyprinter(tree).toString

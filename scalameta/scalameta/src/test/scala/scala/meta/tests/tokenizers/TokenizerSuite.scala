@@ -832,6 +832,7 @@ class TokenizerSuite extends FunSuite {
   test("prettyprinting for Token.Unquote") {
     val arg = "$x"
     val token = Token.Unquote(Input.String(arg), Scala211, 0, arg.length, arg)
-    assert(token.toString === "$x (0..2)")
+    assert(token.toString === "$x")
+    assert(token.show[Structure] === "$x (0..2)")
   }
 }
