@@ -641,9 +641,9 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
       val isUnclosedLiteral = !isUnicodeEscape && (ch == SU || (!multiLine && (ch == CR || ch == LF)))
       if (isUnclosedLiteral) {
         if (multiLine)
-          incompleteInputError("unclosed multi-line string literal", at = offset)
+          incompleteInputError("unclosed multi-line string interpolation", at = offset)
         else
-          syntaxError("unclosed string literal", at = offset)
+          syntaxError("unclosed string interpolation", at = offset)
       }
       else {
         putChar(ch)

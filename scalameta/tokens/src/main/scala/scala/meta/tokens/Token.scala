@@ -53,7 +53,7 @@ object Token {
   object Interpolation {
     @token class Id(start: Int, end: Int) extends Dynamic { def name = "interpolation id" }
     @token class Start(start: Int, end: Int) extends Dynamic { def name = "interpolation start" }
-    @token class Part(start: Int, end: Int) extends Dynamic { def name = "interpolation part" }
+    @token class Part(start: Int, end: Int, value: Predef.String) extends Dynamic { def name = "interpolation part" }
     @token class SpliceStart(start: Int) extends Static { def name = "splice start"; override def code = "$" }
     @token class SpliceEnd(start: Int) extends Static { def name = "splice end"; override def code = "" }
     @token class End(start: Int, end: Int) extends Dynamic { def name = "interpolation end" }
@@ -61,7 +61,7 @@ object Token {
 
   object Xml {
     @token class Start(start: Int) extends Static { def name = "xml start"; override def code = "" }
-    @token class Part(start: Int, end: Int) extends Dynamic { def name = "xml part" }
+    @token class Part(start: Int, end: Int, value: Predef.String) extends Dynamic { def name = "xml part" }
     @token class SpliceStart(start: Int) extends Static { def name = "xml splice start"; override def code = "" }
     @token class SpliceEnd(start: Int) extends Static { def name = "xml splice end"; override def code = "" }
     @token class End(start: Int) extends Static { def name = "xml end"; override def code = "" }

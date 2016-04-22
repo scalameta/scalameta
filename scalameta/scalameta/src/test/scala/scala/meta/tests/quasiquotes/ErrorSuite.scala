@@ -568,4 +568,119 @@ class ErrorSuite extends FunSuite {
       |        ^
     """.trim.stripMargin)
   }
+
+  test("unquote into character literals") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val foo = 'f'
+      q"'$foo'"
+    """) === """
+      |<macro>:5: can't unquote into character literals
+      |      q"'$foo'"
+      |         ^
+    """.trim.stripMargin)
+  }
+
+  test("unquote into single-line string literals") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val foo = "foo"
+      qQQQ "$foo" QQQ
+    """) === """
+      |<macro>:5: can't unquote into string literals
+      |      qQQQ "$foo" QQQ
+      |            ^
+    """.replace("QQQ", "\"\"\"").trim.stripMargin)
+  }
+
+  test("unquote into multi-line string literals") {
+    // TODO: no idea how to test this
+    // assert(typecheckError("""
+    //   import scala.meta._
+    //   import scala.meta.dialects.Scala211
+    //   val foo = "foo"
+    //   qQQQ QQQ$fooQQQ QQQ
+    // """) === """
+    // """.trim.stripMargin)
+  }
+
+  test("unquote into single-line string interpolations") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val foo = "foo"
+      qQQQ s"$foo" QQQ
+    """) === """
+      |<macro>:5: can't unquote into string interpolations
+      |      qQQQ s"$foo" QQQ
+      |             ^
+    """.replace("QQQ", "\"\"\"").trim.stripMargin)
+  }
+
+  test("unquote into multiline string interpolations") {
+    // TODO: no idea how to test this
+    // assert(typecheckError("""
+    //   import scala.meta._
+    //   import scala.meta.dialects.Scala211
+    //   val foo = "foo"
+    //   qQQQ QQQ$fooQQQ QQQ
+    // """) === """
+    // """.trim.stripMargin)
+  }
+
+  test("unquote into xml literals") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val foo = "foo"
+      q"<$foo></foo>"
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : String
+      | required: scala.meta.Term.Name
+      |      q"<$foo></foo>"
+      |         ^
+    """.trim.stripMargin)
+  }
+
+  test("unquote into backquoted identifiers") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val foo = "foo"
+      q"`$foo`"
+    """) === """
+      |<macro>:5: can't unquote into quoted identifiers
+      |      q"`$foo`"
+      |         ^
+    """.trim.stripMargin)
+  }
+
+  test("unquote into single-line comments") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val content = "content"
+      q"// $content has been unquoted"
+    """) === """
+      |<macro>:5: can't unquote into single-line comments
+      |      q"// $content has been unquoted"
+      |           ^
+    """.trim.stripMargin)
+  }
+
+  test("unquote into multiline comments") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val content = "content"
+      q"/* $content has been unquoted */"
+    """) === """
+      |<macro>:5: can't unquote into multi-line comments
+      |      q"/* $content has been unquoted */"
+      |           ^
+    """.trim.stripMargin)
+  }
 }
