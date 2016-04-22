@@ -181,7 +181,7 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
         def emitContents(): Unit = {
           require(curr.token == STRINGPART || curr.token == STRINGLIT)
           if (curr.token == STRINGPART) {
-            tokens += Token.Interpolation.Part(content, dialect, curr.offset, curr.endOffset + 1)
+            tokens += Token.Interpolation.Part(content, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
             require(buf(curr.endOffset + 1) == '$')
             val dollarOffset = curr.endOffset + 1
             def emitSpliceStart(offset: Offset) = tokens += Token.Interpolation.SpliceStart(content, dialect, offset)
@@ -212,7 +212,7 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
             }
           } else {
             curr.endOffset -= numQuotes
-            tokens += Token.Interpolation.Part(content, dialect, curr.offset, curr.endOffset + 1)
+            tokens += Token.Interpolation.Part(content, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
             require(buf(curr.endOffset + 1) == '\"')
             nextToken()
           }
@@ -231,7 +231,7 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
 
       if (prev.token == XMLSTART) {
         val raw = xmlLiteralBuf.remove(0)
-        tokens += Token.Xml.Part(content, dialect, prev.offset, curr.offset)
+        tokens += Token.Xml.Part(content, dialect, prev.offset, curr.offset, raw)
         tokens += Token.Xml.End(content, dialect, curr.offset)
       }
 
