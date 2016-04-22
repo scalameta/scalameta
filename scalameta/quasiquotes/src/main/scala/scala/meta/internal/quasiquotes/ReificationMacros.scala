@@ -146,16 +146,24 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
 
         // Step 2: Tokenize the part translating tokenization exceptions.
         // Output tokens will be bound to a synthetic Input.String, which isn't yet correlated with `wholeFileSource`.
+        def failUnclosed(what: String): Nothing = {
+          // NOTE: arg.pos is not precise enough
+          // val unquotePosition = arg.pos
+          val unquotePosition = partlit.pos.focus.withPoint(end + 1)
+          c.abort(unquotePosition, "can't unquote into " + what + "s")
+        }
         val crudeTokens = {
           implicit val tokenizationDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
-          try part.tokenize.get
-          catch {
+          try {
+            val tokens = part.tokenize.get
+            if (tokens.init.last.isInstanceOf[MetaToken.Comment]) failUnclosed("single-line comment")
+            tokens
+          } catch {
             case TokenizeException(partPos, message) =>
               if (message.startsWith("unclosed ") && arg.nonEmpty) {
-                // NOTE: arg.pos is not precise enough
-                // val unquotePosition = arg.pos
-                val unquotePosition = partlit.pos.focus.withPoint(end + 1)
-                c.abort(unquotePosition, "can't unquote into " + message.stripPrefix("unclosed ") + "s")
+                var what = message.stripPrefix("unclosed ")
+                if (what == "comment") what = "multi-line comment"
+                failUnclosed(what)
               } else {
                 val sourceOffset = partOffsetToSourceOffset(partPos.start.offset)
                 val sourcePosition = partlit.pos.focus.withPoint(sourceOffset)
