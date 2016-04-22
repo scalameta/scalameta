@@ -53,6 +53,7 @@ trait MacroHelpers extends DebugFinder
   val TokenTyperMacrosModule = hygienicRef(scala.meta.internal.tokens.TokenTyperMacros)
   val TokenInfoClass = hygienicRef[scala.meta.internal.tokens.TokenInfo[_]]
   val InstanceTagClass = hygienicRef[scala.meta.internal.parsers.InstanceTag[_]]
+  val BooleanClass = hygienicRef[scala.Boolean]
 
   private def fqRef(fqName: String, isTerm: Boolean): Tree = {
     def loop(parts: List[String]): Tree = parts match {

@@ -23,6 +23,7 @@ object build extends Build {
     test := (test in scalameta in Test).value
   ) aggregate (
     foundation,
+    classifiers,
     dialects,
     inputs,
     parsers,
@@ -44,6 +45,16 @@ object build extends Build {
     description := "Internal helpers shared between projects constituting scala.meta",
     enableMacros
   )
+
+  lazy val classifiers = Project(
+    id   = "classifiers",
+    base = file("scalameta/classifiers")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's baseline classifiers",
+    enableMacros
+  ) dependsOn (foundation)
 
   lazy val dialects = Project(
     id   = "dialects",
@@ -145,7 +156,7 @@ object build extends Build {
     description := "Scala.meta's metaprogramming APIs"
   ) settings (
     exposePaths("scalameta", Test): _*
-  ) dependsOn (foundation, dialects, parsers, prettyprinters, quasiquotes, tokenizers, transversers, trees)
+  ) dependsOn (foundation, classifiers, dialects, parsers, prettyprinters, quasiquotes, tokenizers, transversers, trees)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ crossVersionSharedSources ++ Seq(
     scalaVersion := ScalaVersions.max,
