@@ -38,7 +38,7 @@ import scala.meta.internal.prettyprinters._
 
 object Token {
   // Identifiers
-  @freeform("identifier") class Ident extends Token
+  @freeform("identifier") class Ident(value: String) extends Token
 
   // Keywords
   @fixed("abstract") class `abstract` extends Token

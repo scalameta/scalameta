@@ -38,6 +38,7 @@ class TokenInfoMacros(val c: Context) extends MacroHelpers {
           else if (p.name == TermName("dialect")) q"""_root_.scala.meta.dialects.Scala211"""
           else if (p.name == TermName("start")) q"0"
           else if (p.name == TermName("end")) q"-1"
+          else if (p.name == TermName("value") && p.info =:= typeOf[String]) q""" "" """
           else if (p.name == TermName("value")) gen.mkZero(p.info)
           else if (p.name == TermName("rank")) q"0"
           else if (p.name == TermName("tree")) q"null"

@@ -58,7 +58,7 @@ private[meta] object inferTokens {
   }
 
   /* Generate a single token for ident */
-  private def mineIdentTk(value: String)(implicit dialect: Dialect): Tokens = Tokens(Token.Ident(Input.String(value), dialect, 0, value.length))
+  private def mineIdentTk(value: String)(implicit dialect: Dialect): Tokens = Tokens(Token.Ident(Input.String(value), dialect, 0, value.length, value))
 
   /* Checking if a token is a potential indentation */
   val isIndent = (t: Token) => t.show[Syntax] == " " || t.show[Syntax] == "\t" || t.show[Syntax] == "\r"

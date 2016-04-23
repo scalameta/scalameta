@@ -15,8 +15,8 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
   def tokenize(): Tokens.Tokenized = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
-        case IDENTIFIER       => Token.Ident(content, dialect, curr.offset, curr.endOffset + 1)
-        case BACKQUOTED_IDENT => Token.Ident(content, dialect, curr.offset, curr.endOffset + 1)
+        case IDENTIFIER       => Token.Ident(content, dialect, curr.offset, curr.endOffset + 1, curr.name)
+        case BACKQUOTED_IDENT => Token.Ident(content, dialect, curr.offset, curr.endOffset + 1, "`" + curr.name + "`")
 
         case INTLIT          => Token.Literal(content, dialect, curr.offset, curr.endOffset + 1, Constant.Int(curr.intVal))
         case LONGLIT         => Token.Literal(content, dialect, curr.offset, curr.endOffset + 1, Constant.Long(curr.longVal))
