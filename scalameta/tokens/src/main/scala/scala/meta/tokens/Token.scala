@@ -33,136 +33,120 @@ import scala.meta.internal.prettyprinters._
 }
 
 object Token {
-  @token class Ident(start: Int, end: Int) extends Token { def name = "identifier" }
+  @token("identifier") class Ident(start: Int, end: Int) extends Token
 
-  @token class Literal(start: Int, end: Int, constant: Constant) extends Token { def name = constant.name + " literal" }
+  @token("literal") class Literal(start: Int, end: Int, constant: Constant) extends Token
 
   object Interpolation {
-    @token class Id(start: Int, end: Int) extends Token { def name = "interpolation id" }
-    @token class Start(start: Int, end: Int) extends Token { def name = "interpolation start" }
-    @token class Part(start: Int, end: Int, value: Predef.String) extends Token { def name = "interpolation part" }
-    @token class SpliceStart(start: Int) extends Token { def name = "splice start"; override def code = "$" }
-    @token class SpliceEnd(start: Int) extends Token { def name = "splice end"; override def code = "" }
-    @token class End(start: Int, end: Int) extends Token { def name = "interpolation end" }
+    @token("interpolation id") class Id(start: Int, end: Int) extends Token
+    @token("interpolation start") class Start(start: Int, end: Int) extends Token
+    @token("interpolation part") class Part(start: Int, end: Int, value: String) extends Token
+    @token("splice start") class SpliceStart(start: Int, end: Int) extends Token
+    @token("splice end") class SpliceEnd(start: Int, end: Int) extends Token
+    @token("interpolation end") class End(start: Int, end: Int) extends Token
   }
 
   object Xml {
-    @token class Start(start: Int) extends Token { def name = "xml start"; override def code = "" }
-    @token class Part(start: Int, end: Int, value: Predef.String) extends Token { def name = "xml part" }
-    @token class SpliceStart(start: Int) extends Token { def name = "xml splice start"; override def code = "" }
-    @token class SpliceEnd(start: Int) extends Token { def name = "xml splice end"; override def code = "" }
-    @token class End(start: Int) extends Token { def name = "xml end"; override def code = "" }
+    @token("xml start") class Start(start: Int, end: Int) extends Token
+    @token("xml part") class Part(start: Int, end: Int, value: String) extends Token
+    @token("xml splice start") class SpliceStart(start: Int, end: Int) extends Token
+    @token("xml splice end") class SpliceEnd(start: Int, end: Int) extends Token
+    @token("xml end") class End(start: Int, end: Int) extends Token
   }
 
-  @token class `case`(start: Int) extends Token
-  @token class `catch`(start: Int) extends Token
-  @token class `class `(start: Int) extends Token
-  @token class `def`(start: Int) extends Token
-  @token class `do`(start: Int) extends Token
-  @token class `else`(start: Int) extends Token
-  @token class `extends`(start: Int) extends Token
-  @token class `finally`(start: Int) extends Token
-  @token class `for`(start: Int) extends Token
-  @token class `forSome`(start: Int) extends Token
-  @token class `if`(start: Int) extends Token
-  @token class `import`(start: Int) extends Token
-  @token class `match`(start: Int) extends Token
-  @token class `macro`(start: Int) extends Token
-  @token class `new`(start: Int) extends Token
-  @token class `object`(start: Int) extends Token
-  @token class `package `(start: Int) extends Token
-  @token class `return`(start: Int) extends Token
-  @token class `super`(start: Int) extends Token
-  @token class `this`(start: Int) extends Token
-  @token class `throw`(start: Int) extends Token
-  @token class `trait`(start: Int) extends Token
-  @token class `try`(start: Int) extends Token
-  @token class `type`(start: Int) extends Token
-  @token class `val`(start: Int) extends Token
-  @token class `var`(start: Int) extends Token
-  @token class `while`(start: Int) extends Token
-  @token class `with`(start: Int) extends Token
-  @token class `yield`(start: Int) extends Token
+  @token("case") class `case`(start: Int) extends Token
+  @token("catch") class `catch`(start: Int) extends Token
+  @token("class") class `class `(start: Int) extends Token
+  @token("def") class `def`(start: Int) extends Token
+  @token("do") class `do`(start: Int) extends Token
+  @token("else") class `else`(start: Int) extends Token
+  @token("extends") class `extends`(start: Int) extends Token
+  @token("finally") class `finally`(start: Int) extends Token
+  @token("for") class `for`(start: Int) extends Token
+  @token("forSome") class `forSome`(start: Int) extends Token
+  @token("if") class `if`(start: Int) extends Token
+  @token("import") class `import`(start: Int) extends Token
+  @token("match") class `match`(start: Int) extends Token
+  @token("macro") class `macro`(start: Int) extends Token
+  @token("new") class `new`(start: Int) extends Token
+  @token("object") class `object`(start: Int) extends Token
+  @token("package") class `package `(start: Int) extends Token
+  @token("return") class `return`(start: Int) extends Token
+  @token("super") class `super`(start: Int) extends Token
+  @token("this") class `this`(start: Int) extends Token
+  @token("throw") class `throw`(start: Int) extends Token
+  @token("trait") class `trait`(start: Int) extends Token
+  @token("try") class `try`(start: Int) extends Token
+  @token("type") class `type`(start: Int) extends Token
+  @token("val") class `val`(start: Int) extends Token
+  @token("var") class `var`(start: Int) extends Token
+  @token("while") class `while`(start: Int) extends Token
+  @token("with") class `with`(start: Int) extends Token
+  @token("yield") class `yield`(start: Int) extends Token
 
-  @token class `abstract`(start: Int) extends Token
-  @token class `final`(start: Int) extends Token
-  @token class `sealed`(start: Int) extends Token
-  @token class `implicit`(start: Int) extends Token
-  @token class `lazy`(start: Int) extends Token
-  @token class `private`(start: Int) extends Token
-  @token class `protected`(start: Int) extends Token
-  @token class `override`(start: Int) extends Token
+  @token("abstract") class `abstract`(start: Int) extends Token
+  @token("final") class `final`(start: Int) extends Token
+  @token("sealed") class `sealed`(start: Int) extends Token
+  @token("implicit") class `implicit`(start: Int) extends Token
+  @token("lazy") class `lazy`(start: Int) extends Token
+  @token("private") class `private`(start: Int) extends Token
+  @token("protected") class `protected`(start: Int) extends Token
+  @token("override") class `override`(start: Int) extends Token
 
-  @token class `(`(start: Int) extends Token
-  @token class `)`(start: Int) extends Token
-  @token class `[`(start: Int) extends Token
-  @token class `]`(start: Int) extends Token
-  @token class `{`(start: Int) extends Token
-  @token class `}`(start: Int) extends Token
-  @token class `,`(start: Int) extends Token
-  @token class `;`(start: Int) extends Token
-  @token class `:`(start: Int) extends Token
-  @token class `.`(start: Int) extends Token
-  @token class `=`(start: Int) extends Token
-  @token class `@`(start: Int) extends Token
-  @token class `#`(start: Int) extends Token
-  @token class `_ `(start: Int) extends Token
-  @token class `=>`(start: Int, end: Int) extends Token { def name = "right arrow" }
-  @token class `<-`(start: Int, end: Int) extends Token { def name = "left arrow" }
-  @token class `<:`(start: Int) extends Token
-  @token class `>:`(start: Int) extends Token
-  @token class `<%`(start: Int) extends Token
+  @token("(") class `(`(start: Int) extends Token
+  @token(")") class `)`(start: Int) extends Token
+  @token("[") class `[`(start: Int) extends Token
+  @token("]") class `]`(start: Int) extends Token
+  @token("{") class `{`(start: Int) extends Token
+  @token("}") class `}`(start: Int) extends Token
+  @token(",") class `,`(start: Int) extends Token
+  @token(";") class `;`(start: Int) extends Token
+  @token(":") class `:`(start: Int) extends Token
+  @token(".") class `.`(start: Int) extends Token
+  @token("=") class `=`(start: Int) extends Token
+  @token("@") class `@`(start: Int) extends Token
+  @token("#") class `#`(start: Int) extends Token
+  @token("_") class `_ `(start: Int) extends Token
+  @token("=>") class `=>`(start: Int, end: Int) extends Token
+  @token("<-") class `<-`(start: Int, end: Int) extends Token
+  @token("<:") class `<:`(start: Int) extends Token
+  @token(">:") class `>:`(start: Int) extends Token
+  @token("<%") class `<%`(start: Int) extends Token
 
-  @token class ` `(start: Int) extends Token
-  @token class `\t`(start: Int) extends Token
-  @token class `\r`(start: Int) extends Token
-  @token class `\n`(start: Int) extends Token
-  // TODO: \n\n is a virtual token emitted by TokIterator to appease the semi-ported scalac parser
-  // it will never occur in a token stream produced by XtensionInputLike.tokens
-  @token class `\n\n`(start: Int) extends Token
-  @token class `\f`(start: Int) extends Token
-  @token class Comment(start: Int, end: Int) extends Token { def name = "comment" }
+  @token(" ") class ` `(start: Int) extends Token
+  @token("\t") class `\t`(start: Int) extends Token
+  @token("\r") class `\r`(start: Int) extends Token
+  @token("\n") class `\n`(start: Int) extends Token
+  @token("\n\n") private[meta] class `\n\n`(start: Int) extends Token // TODO: rewrite the parser so that it doesn't need this
+  @token("\f") class `\f`(start: Int) extends Token
+  @token("comment") class Comment(start: Int, end: Int) extends Token
 
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Token { def name = "ellipsis" }
-  @token class Unquote(start: Int, end: Int, tree: Any) extends Token { def name = "unquote" }
+  @token("ellipsis") class Ellipsis(start: Int, end: Int, rank: Int) extends Token
+  @token("unquote") class Unquote(start: Int, end: Int, tree: Any) extends Token
 
-  @token class BOF() extends Token {
-    def name = "beginning of file"
-    override def code = ""
-    def start = 0
-    def end = 0
-  }
-
-  @token class EOF() extends Token {
-    def name = "end of file"
-    override def code = ""
-    def start = content.chars.length
-    def end = content.chars.length
-  }
+  @token("beginning of file") class BOF() extends Token { def start = 0; def end = 0 }
+  @token("end of file") class EOF() extends Token { def start = content.chars.length; def end = content.chars.length }
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
   implicit def showSyntax[T <: Token]: Syntax[T] = TokenSyntax.apply[T]
 }
 
-@adt.root trait Constant {
-  def name: String
-  def value: Any
-}
+@adt.root trait Constant { def value: Any }
 object Constant {
-  @adt.leaf class Int(value: scala.BigInt) extends Constant { def name = "integer" }
-  @adt.leaf class Long(value: scala.BigInt) extends Constant { def name = "long" }
-  @adt.leaf class Float(value: scala.BigDecimal) extends Constant { def name = "float" }
-  @adt.leaf class Double(value: scala.BigDecimal) extends Constant { def name = "double" }
-  @adt.leaf class Char(value: scala.Char) extends Constant { def name = "character" }
-  @adt.leaf class Symbol(value: scala.Symbol) extends Constant { def name = "symbol" }
-  @adt.leaf class String(value: Predef.String) extends Constant { def name = "string" }
-  @adt.leaf class Boolean(value: scala.Boolean) extends Constant { def name = "boolean" }
-  @adt.leaf object Null extends Constant { def value = null; def name = "null" }
+  @adt.leaf class Int(value: scala.BigInt) extends Constant
+  @adt.leaf class Long(value: scala.BigInt) extends Constant
+  @adt.leaf class Float(value: scala.BigDecimal) extends Constant
+  @adt.leaf class Double(value: scala.BigDecimal) extends Constant
+  @adt.leaf class Char(value: scala.Char) extends Constant
+  @adt.leaf class Symbol(value: scala.Symbol) extends Constant
+  @adt.leaf class String(value: Predef.String) extends Constant
+  @adt.leaf class Boolean(value: scala.Boolean) extends Constant
+  @adt.leaf object Null extends Constant { def value = null }
 }
 
 // NOTE: We have this unrelated code here, because of how materializeAdt works.

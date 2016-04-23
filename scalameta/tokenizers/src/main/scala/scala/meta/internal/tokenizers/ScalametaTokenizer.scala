@@ -30,7 +30,7 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
         case NULL            => Token.Literal(content, dialect, curr.offset, curr.endOffset + 1, Constant.Null)
 
         case INTERPOLATIONID => Token.Interpolation.Id(content, dialect, curr.offset, curr.endOffset + 1)
-        case XMLSTART        => Token.Xml.Start(content, dialect, curr.offset)
+        case XMLSTART        => Token.Xml.Start(content, dialect, curr.offset, curr.offset)
 
         case NEW   => Token.`new`(content, dialect, curr.offset)
         case THIS  => Token.`this`(content, dialect, curr.offset)
@@ -184,8 +184,8 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
             tokens += Token.Interpolation.Part(content, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
             require(buf(curr.endOffset + 1) == '$')
             val dollarOffset = curr.endOffset + 1
-            def emitSpliceStart(offset: Offset) = tokens += Token.Interpolation.SpliceStart(content, dialect, offset)
-            def emitSpliceEnd(offset: Offset) = tokens += Token.Interpolation.SpliceEnd(content, dialect, offset)
+            def emitSpliceStart(offset: Offset) = tokens += Token.Interpolation.SpliceStart(content, dialect, offset, offset + 1)
+            def emitSpliceEnd(offset: Offset) = tokens += Token.Interpolation.SpliceEnd(content, dialect, offset, offset)
             def requireExpectedToken(expected: LegacyToken) = { require(curr.token == expected) }
             def emitExpectedToken(expected: LegacyToken) = { require(curr.token == expected); emitToken() }
             if (buf(dollarOffset + 1) == '{') {
@@ -232,7 +232,7 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
       if (prev.token == XMLSTART) {
         val raw = xmlLiteralBuf.remove(0)
         tokens += Token.Xml.Part(content, dialect, prev.offset, curr.offset, raw)
-        tokens += Token.Xml.End(content, dialect, curr.offset)
+        tokens += Token.Xml.End(content, dialect, curr.offset, curr.offset)
       }
 
       loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)

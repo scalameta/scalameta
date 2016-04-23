@@ -9,7 +9,7 @@ import scala.collection.mutable.ListBuffer
 import org.scalameta.internal.MacroHelpers
 
 // @token is a specialized version of @org.scalameta.adt.leaf for scala.meta tokens.
-class token extends StaticAnnotation {
+class token(name: String) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro TokenNamerMacros.impl
 }
 
@@ -24,6 +24,12 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
 
   def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
     override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+      val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
+      val providedTokenName = argss match {
+        case List(List(Literal(Constant(tokenName: String)))) => tokenName
+        case _ => c.abort(c.enclosingPosition, "@token annotation takes a literal string argument")
+      }
+
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val stats1 = ListBuffer[Tree]() ++ stats
@@ -50,28 +56,27 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       """
       mstats1 ++= classifierBoilerplate
 
-      // step 3: generate implementation of `def name: String` and `def end: String` for static tokens
+      // step 3: generate implementation of `def name: String`
+      // TODO: deduplicate with scala.meta.internal.prettyprinters.escape
+      // NOTE: can be removed altogether once tokens are renamed
+      val codepage = Map("\t" -> "\\t", "\b" -> "\\b", "\n" -> "\\n", "\r" -> "\\r", "\f" -> "\\f", "\\" -> "\\\\")
+      val tokenName = providedTokenName.flatMap(c => codepage.getOrElse(c.toString, c.toString))
+      stats1 += q"def name: _root_.scala.Predef.String = $tokenName"
+
+      // step 4: generate implementation of  `def end: String` for static tokens
       val isStaticToken = !paramss.flatten.exists(_.name.toString == "end")
-      val needsName = isStaticToken && !stats.exists{ case DefDef(_, TermName("name"), _, _, _, _) => true; case _ => false }
       val needsEnd = isStaticToken && !stats.exists{ case DefDef(_, TermName("end"), _, _, _, _) => true; case _ => false }
-      val hasCustomCode = isStaticToken && stats.exists{ case DefDef(_, TermName("code"), _, _, _, _) => true; case _ => false }
-      var code = name.decodedName.toString
-      if (code == "_ ") code = "_" // NOTE: can't call a class `_`, so have to use `_ `
-      if (code == "class ") code = "class" // TODO: wat?
-      if (code == "package ") code = "package" // TODO: wat?
-      if (needsName) {
-        // TODO: deduplicate with scala.meta.internal.prettyprinters.escape
-        // NOTE: can be removed altogether once tokens are renamed
-        val codepage = Map("\t" -> "\\t", "\b" -> "\\b", "\n" -> "\\n", "\r" -> "\\r", "\f" -> "\\f", "\\" -> "\\\\")
-        val name = code.flatMap(c => codepage.getOrElse(c.toString, c.toString))
-        stats1 += q"def name: _root_.scala.Predef.String = $name"
-      }
       if (needsEnd) {
+        var code = name.decodedName.toString
+        if (code == "_ ") code = "_" // NOTE: can't call a class `_`, so have to use `_ `
+        if (code == "class ") code = "class" // TODO: wat?
+        if (code == "package ") code = "package" // TODO: wat?
+        val hasCustomCode = isStaticToken && stats.exists{ case DefDef(_, TermName("code"), _, _, _, _) => true; case _ => false }
         val codeRef = if (hasCustomCode) q"this.code.length" else q"${code.length}"
         stats1 += q"def end: _root_.scala.Int = this.start + $codeRef"
       }
 
-      // step 4: generate implementation of `def adjust`
+      // step 5: generate implementation of `def adjust`
       val needsAdjust = !stats.exists{ case DefDef(_, TermName("adjust"), _, _, _, _) => true; case _ => false }
       if (needsAdjust) {
         val paramContent = q"val content: $Content = this.content"
@@ -80,12 +85,12 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         val paramEnd = q"val end: _root_.scala.Int = this.end"
         val paramDelta = q"val delta: _root_.scala.Int = 0"
         val adjustResult = {
-          if (code == "BOF" || code == "EOF") q"this.copy(content = content, dialect = dialect)"
+          if (name.toString == "BOF" || name.toString == "EOF") q"this.copy(content = content, dialect = dialect)"
           else if (isStaticToken) q"this.copy(content = content, dialect = dialect, start = start)"
           else q"this.copy(content = content, dialect = dialect, start = start, end = end)"
         }
         val adjustError = {
-          if (code == "BOF" || code == "EOF") q""" "position-changing adjust on Token." + this.name """
+          if (name.toString == "BOF" || name.toString == "EOF") q""" "position-changing adjust on Token." + this.name """
           else if (isStaticToken) q""" "end-changing adjust on Tokens." + this.name """
           else q""" "fatal error in the token infrastructure" """
         }
@@ -111,7 +116,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         stats1 += q"def adjust($paramContent, $paramDialect, $paramStart, $paramEnd, $paramDelta): $Token = $body"
       }
 
-      // step 5: generate the boilerplate fields
+      // step 6: generate the boilerplate fields
       var paramss1 = (q"val content: $Content" +: q"val dialect: $Dialect" +: paramss.head) +: paramss.tail
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
