@@ -54,14 +54,14 @@ class ClassifierSuite extends FunSuite {
       import scala.meta._
       (??? : MyToken).is[MyIdent]
     """) === """
-      |don't know how to classify org.scalameta.tests.classifiers.MyToken as org.scalameta.tests.classifiers.MyIdent
+      |don't know how to check whether org.scalameta.tests.classifiers.MyToken is org.scalameta.tests.classifiers.MyIdent
     """.trim.stripMargin)
 
     assert(typecheckError("""
       import scala.meta._
       (??? : MyIdent).is[MyIdent]
     """) === """
-      |don't know how to classify org.scalameta.tests.classifiers.MyIdent as org.scalameta.tests.classifiers.MyIdent
+      |don't know how to check whether org.scalameta.tests.classifiers.MyIdent is org.scalameta.tests.classifiers.MyIdent
     """.trim.stripMargin)
   }
 
