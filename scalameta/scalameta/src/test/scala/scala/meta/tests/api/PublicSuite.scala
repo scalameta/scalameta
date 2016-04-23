@@ -1,3 +1,4 @@
+// NOTE: commented out in order to avoid scope pollution for typecheckError
 // package scala.meta.tests
 // package api
 
