@@ -35,5 +35,5 @@ object Tokenized {
 @data class TokenizeException(pos: Position, shortMessage: String)
 extends Exception(pos.formatMessage("error", shortMessage)) {
   def fullMessage = getMessage
-  override def toString = super.toString
+  override def toString = fullMessage
 }

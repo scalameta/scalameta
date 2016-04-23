@@ -156,7 +156,9 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
           implicit val tokenizationDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
           try {
             val tokens = part.tokenize.get
-            if (tokens.init.last.isInstanceOf[MetaToken.Comment]) failUnclosed("single-line comment")
+            if (tokens.init.last.isInstanceOf[MetaToken.Comment] && arg.nonEmpty) {
+              failUnclosed("single-line comment")
+            }
             tokens
           } catch {
             case TokenizeException(partPos, message) =>

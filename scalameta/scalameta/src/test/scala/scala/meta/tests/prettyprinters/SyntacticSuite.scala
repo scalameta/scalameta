@@ -5,7 +5,7 @@ import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Scala211
 
-class ScalaSuite extends scala.meta.tests.parsers.ParseSuite {
+class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   override def term(code: String)(implicit dialect: Dialect) = super.term(code).resetAllTokens
   override def pat(code: String)(implicit dialect: Dialect) = super.pat(code).resetAllTokens
   override def tpe(code: String)(implicit dialect: Dialect) = super.tpe(code).resetAllTokens
@@ -437,5 +437,17 @@ class ScalaSuite extends scala.meta.tests.parsers.ParseSuite {
     val Defn.Def(_, _, List(tree), _, _, _) = templStat("def foo[T <: Int] = ???")
     assert(tree.show[Structure] === "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, Some(Type.Name(\"Int\"))), Nil, Nil)")
     assert(tree.show[Syntax] === "T <: Int")
+  }
+
+  test("$x") {
+    val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
+    import scala.reflect.runtime.universe._
+    assert(Term.Quasi(0, q"x").show[Syntax] === "${x @ Term}")
+  }
+
+  test("..$xs") {
+    val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
+    import scala.reflect.runtime.universe._
+    assert(Term.Quasi(1, Term.Quasi(0, q"xs")).show[Syntax] === "..${xs @ Term}")
   }
 }

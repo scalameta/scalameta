@@ -11,7 +11,7 @@ package prettyprinters
 // import scala.meta.internal.ui.Attributes
 // import scala.meta.internal.semantic.Typing.Recursive
 //
-// class AttributeSuite extends ParseSuite {
+// class SemanticSuite extends ParseSuite {
 //   test("comprehensive show[Attributes]") {
 //     val symbolroot = Symbol.RootPackage
 //     val prefixroot = Prefix.Zero

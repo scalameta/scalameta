@@ -20,10 +20,7 @@ object Input {
   @data class Stream(stream: java.io.InputStream, charset: Charset) extends Content {
     lazy val chars = scala.io.Source.fromInputStream(stream)(scala.io.Codec(charset)).mkString.toArray
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
-    override def toString = {
-      if (charset.name == "UTF-8") "Input.Stream(<stream>)"
-      else "Input.Stream(<stream>, Charset.forName(\"" + charset.name + "\"))"
-    }
+    override def toString = "Input.Stream(<stream>, Charset.forName(\"" + charset.name + "\"))"
   }
   object Stream {
     @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Stream) extends Serializable {
@@ -45,10 +42,7 @@ object Input {
   @data class File(file: java.io.File, charset: Charset) extends Content {
     lazy val chars = scala.io.Source.fromFile(file)(scala.io.Codec(charset)).mkString.toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
-    override def toString = {
-      if (charset.name == "UTF-8") "Input.File(new File(\"" + file + "\"))"
-      else "Input.File(new File(\"" + file + "\"), Charset.forName(\"" + charset.name + "\"))"
-    }
+    override def toString = "Input.File(new File(\"" + file + "\"), Charset.forName(\"" + charset.name + "\"))"
   }
   object File {
     def apply(path: Predef.String): Input.File = new Input.File(new java.io.File(path), Charset.forName("UTF-8"))
