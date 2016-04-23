@@ -10,6 +10,10 @@ import scala.meta.classifiers._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
 
+// NOTE: `start` and `end` are String.substring-style,
+// i.e. `start` is inclusive and `end` is not.
+// Therefore Token.end can point to the last character plus one.
+// Btw, Token.start can also point to the last character plus one if it's an EOF token.
 @root trait Token {
   def name: String
   def code: String = new String(content.chars.slice(start, end))
