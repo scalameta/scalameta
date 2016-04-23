@@ -71,10 +71,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         stats1 += q"def end: _root_.scala.Int = this.start + $codeRef"
       }
 
-      // step 4: ensure that the token is correctly classified as either static or dynamic
-      stats1 += q"$TokenTyperMacrosModule.staticDynamicCheck[$name]"
-
-      // step 5: generate implementation of `def adjust`
+      // step 4: generate implementation of `def adjust`
       val needsAdjust = !stats.exists{ case DefDef(_, TermName("adjust"), _, _, _, _) => true; case _ => false }
       if (needsAdjust) {
         val paramContent = q"val content: $Content = this.content"
@@ -114,7 +111,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         stats1 += q"def adjust($paramContent, $paramDialect, $paramStart, $paramEnd, $paramDelta): $Token = $body"
       }
 
-      // step 6: generate the boilerplate fields
+      // step 5: generate the boilerplate fields
       var paramss1 = (q"val content: $Content" +: q"val dialect: $Dialect" +: paramss.head) +: paramss.tail
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"

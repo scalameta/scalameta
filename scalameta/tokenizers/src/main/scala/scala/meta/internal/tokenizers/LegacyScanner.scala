@@ -226,7 +226,7 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
 
     // NOTE: endOffset is used to determine range positions for certain tokens.
     // Most tokens (e.g. `(` or `;`) have constant widths, so their range positions can be calculated trivially from their offsets,
-    // however some tokens (see who extends Tok.Dynamic for an exhaustive list) have variable widths,
+    // however some tokens have variable widths,
     // and for them we need to remember where their parsing ended in order to calculate their positions.
     // That's what endOffset does (indirectly): each token's position should be [curr.offset, curr.endOffset]
     //

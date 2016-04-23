@@ -12,8 +12,12 @@ object TokenStructure {
       val prefix = (x: Token) match {
         case x: Token.BOF => "BOF"
         case x: Token.EOF => "EOF"
-        case x: Token.Dynamic => x.code
-        case x: Token.Static => x.name
+        case x: Token.`\t` => "\\t"
+        case x: Token.`\r` => "\\r"
+        case x: Token.`\n` => "\\n"
+        case x: Token.`\n\n` => "\\n\\n"
+        case x: Token.`\f` => "\\f"
+        case x => x.code
       }
       s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
     })

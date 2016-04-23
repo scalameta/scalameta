@@ -33,114 +33,111 @@ import scala.meta.internal.prettyprinters._
 }
 
 object Token {
-  @branch trait Static extends Token
-  @branch trait Dynamic extends Token
+  @token class Ident(start: Int, end: Int) extends Token { def name = "identifier" }
 
-  @token class Ident(start: Int, end: Int) extends Dynamic { def name = "identifier" }
-
-  @token class Literal(start: Int, end: Int, constant: Constant) extends Dynamic { def name = constant.name + " literal" }
+  @token class Literal(start: Int, end: Int, constant: Constant) extends Token { def name = constant.name + " literal" }
 
   object Interpolation {
-    @token class Id(start: Int, end: Int) extends Dynamic { def name = "interpolation id" }
-    @token class Start(start: Int, end: Int) extends Dynamic { def name = "interpolation start" }
-    @token class Part(start: Int, end: Int, value: Predef.String) extends Dynamic { def name = "interpolation part" }
-    @token class SpliceStart(start: Int) extends Static { def name = "splice start"; override def code = "$" }
-    @token class SpliceEnd(start: Int) extends Static { def name = "splice end"; override def code = "" }
-    @token class End(start: Int, end: Int) extends Dynamic { def name = "interpolation end" }
+    @token class Id(start: Int, end: Int) extends Token { def name = "interpolation id" }
+    @token class Start(start: Int, end: Int) extends Token { def name = "interpolation start" }
+    @token class Part(start: Int, end: Int, value: Predef.String) extends Token { def name = "interpolation part" }
+    @token class SpliceStart(start: Int) extends Token { def name = "splice start"; override def code = "$" }
+    @token class SpliceEnd(start: Int) extends Token { def name = "splice end"; override def code = "" }
+    @token class End(start: Int, end: Int) extends Token { def name = "interpolation end" }
   }
 
   object Xml {
-    @token class Start(start: Int) extends Static { def name = "xml start"; override def code = "" }
-    @token class Part(start: Int, end: Int, value: Predef.String) extends Dynamic { def name = "xml part" }
-    @token class SpliceStart(start: Int) extends Static { def name = "xml splice start"; override def code = "" }
-    @token class SpliceEnd(start: Int) extends Static { def name = "xml splice end"; override def code = "" }
-    @token class End(start: Int) extends Static { def name = "xml end"; override def code = "" }
+    @token class Start(start: Int) extends Token { def name = "xml start"; override def code = "" }
+    @token class Part(start: Int, end: Int, value: Predef.String) extends Token { def name = "xml part" }
+    @token class SpliceStart(start: Int) extends Token { def name = "xml splice start"; override def code = "" }
+    @token class SpliceEnd(start: Int) extends Token { def name = "xml splice end"; override def code = "" }
+    @token class End(start: Int) extends Token { def name = "xml end"; override def code = "" }
   }
 
-  @token class `case`(start: Int) extends Static
-  @token class `catch`(start: Int) extends Static
-  @token class `class `(start: Int) extends Static
-  @token class `def`(start: Int) extends Static
-  @token class `do`(start: Int) extends Static
-  @token class `else`(start: Int) extends Static
-  @token class `extends`(start: Int) extends Static
-  @token class `finally`(start: Int) extends Static
-  @token class `for`(start: Int) extends Static
-  @token class `forSome`(start: Int) extends Static
-  @token class `if`(start: Int) extends Static
-  @token class `import`(start: Int) extends Static
-  @token class `match`(start: Int) extends Static
-  @token class `macro`(start: Int) extends Static
-  @token class `new`(start: Int) extends Static
-  @token class `object`(start: Int) extends Static
-  @token class `package `(start: Int) extends Static
-  @token class `return`(start: Int) extends Static
-  @token class `super`(start: Int) extends Static
-  @token class `this`(start: Int) extends Static
-  @token class `throw`(start: Int) extends Static
-  @token class `trait`(start: Int) extends Static
-  @token class `try`(start: Int) extends Static
-  @token class `type`(start: Int) extends Static
-  @token class `val`(start: Int) extends Static
-  @token class `var`(start: Int) extends Static
-  @token class `while`(start: Int) extends Static
-  @token class `with`(start: Int) extends Static
-  @token class `yield`(start: Int) extends Static
+  @token class `case`(start: Int) extends Token
+  @token class `catch`(start: Int) extends Token
+  @token class `class `(start: Int) extends Token
+  @token class `def`(start: Int) extends Token
+  @token class `do`(start: Int) extends Token
+  @token class `else`(start: Int) extends Token
+  @token class `extends`(start: Int) extends Token
+  @token class `finally`(start: Int) extends Token
+  @token class `for`(start: Int) extends Token
+  @token class `forSome`(start: Int) extends Token
+  @token class `if`(start: Int) extends Token
+  @token class `import`(start: Int) extends Token
+  @token class `match`(start: Int) extends Token
+  @token class `macro`(start: Int) extends Token
+  @token class `new`(start: Int) extends Token
+  @token class `object`(start: Int) extends Token
+  @token class `package `(start: Int) extends Token
+  @token class `return`(start: Int) extends Token
+  @token class `super`(start: Int) extends Token
+  @token class `this`(start: Int) extends Token
+  @token class `throw`(start: Int) extends Token
+  @token class `trait`(start: Int) extends Token
+  @token class `try`(start: Int) extends Token
+  @token class `type`(start: Int) extends Token
+  @token class `val`(start: Int) extends Token
+  @token class `var`(start: Int) extends Token
+  @token class `while`(start: Int) extends Token
+  @token class `with`(start: Int) extends Token
+  @token class `yield`(start: Int) extends Token
 
-  @token class `abstract`(start: Int) extends Static
-  @token class `final`(start: Int) extends Static
-  @token class `sealed`(start: Int) extends Static
-  @token class `implicit`(start: Int) extends Static
-  @token class `lazy`(start: Int) extends Static
-  @token class `private`(start: Int) extends Static
-  @token class `protected`(start: Int) extends Static
-  @token class `override`(start: Int) extends Static
+  @token class `abstract`(start: Int) extends Token
+  @token class `final`(start: Int) extends Token
+  @token class `sealed`(start: Int) extends Token
+  @token class `implicit`(start: Int) extends Token
+  @token class `lazy`(start: Int) extends Token
+  @token class `private`(start: Int) extends Token
+  @token class `protected`(start: Int) extends Token
+  @token class `override`(start: Int) extends Token
 
-  @token class `(`(start: Int) extends Static
-  @token class `)`(start: Int) extends Static
-  @token class `[`(start: Int) extends Static
-  @token class `]`(start: Int) extends Static
-  @token class `{`(start: Int) extends Static
-  @token class `}`(start: Int) extends Static
-  @token class `,`(start: Int) extends Static
-  @token class `;`(start: Int) extends Static
-  @token class `:`(start: Int) extends Static
-  @token class `.`(start: Int) extends Static
-  @token class `=`(start: Int) extends Static
-  @token class `@`(start: Int) extends Static
-  @token class `#`(start: Int) extends Static
-  @token class `_ `(start: Int) extends Static
-  @token class `=>`(start: Int, end: Int) extends Dynamic { def name = "right arrow" }
-  @token class `<-`(start: Int, end: Int) extends Dynamic { def name = "left arrow" }
-  @token class `<:`(start: Int) extends Static
-  @token class `>:`(start: Int) extends Static
-  @token class `<%`(start: Int) extends Static
+  @token class `(`(start: Int) extends Token
+  @token class `)`(start: Int) extends Token
+  @token class `[`(start: Int) extends Token
+  @token class `]`(start: Int) extends Token
+  @token class `{`(start: Int) extends Token
+  @token class `}`(start: Int) extends Token
+  @token class `,`(start: Int) extends Token
+  @token class `;`(start: Int) extends Token
+  @token class `:`(start: Int) extends Token
+  @token class `.`(start: Int) extends Token
+  @token class `=`(start: Int) extends Token
+  @token class `@`(start: Int) extends Token
+  @token class `#`(start: Int) extends Token
+  @token class `_ `(start: Int) extends Token
+  @token class `=>`(start: Int, end: Int) extends Token { def name = "right arrow" }
+  @token class `<-`(start: Int, end: Int) extends Token { def name = "left arrow" }
+  @token class `<:`(start: Int) extends Token
+  @token class `>:`(start: Int) extends Token
+  @token class `<%`(start: Int) extends Token
 
-  @token class ` `(start: Int) extends Static
-  @token class `\t`(start: Int) extends Static
-  @token class `\r`(start: Int) extends Static
-  @token class `\n`(start: Int) extends Static
+  @token class ` `(start: Int) extends Token
+  @token class `\t`(start: Int) extends Token
+  @token class `\r`(start: Int) extends Token
+  @token class `\n`(start: Int) extends Token
   // TODO: \n\n is a virtual token emitted by TokIterator to appease the semi-ported scalac parser
   // it will never occur in a token stream produced by XtensionInputLike.tokens
-  @token class `\n\n`(start: Int) extends Static
-  @token class `\f`(start: Int) extends Static
-  @token class Comment(start: Int, end: Int) extends Dynamic { def name = "comment" }
+  @token class `\n\n`(start: Int) extends Token
+  @token class `\f`(start: Int) extends Token
+  @token class Comment(start: Int, end: Int) extends Token { def name = "comment" }
 
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic { def name = "ellipsis" }
-  @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic { def name = "unquote" }
+  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Token { def name = "ellipsis" }
+  @token class Unquote(start: Int, end: Int, tree: Any) extends Token { def name = "unquote" }
 
-  @token class BOF() extends Static {
+  @token class BOF() extends Token {
     def name = "beginning of file"
     override def code = ""
     def start = 0
     def end = 0
   }
 
-  @token class EOF() extends Static {
+  @token class EOF() extends Token {
     def name = "end of file"
     override def code = ""
     def start = content.chars.length
