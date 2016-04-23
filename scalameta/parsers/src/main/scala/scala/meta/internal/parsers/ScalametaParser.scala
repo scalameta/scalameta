@@ -609,10 +609,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   @classifier
   trait NumericLiteral {
     def unapply(token: Token): Boolean = token match {
-      case Literal(_, _, _, _, Constant.Int(_)) => true
-      case Literal(_, _, _, _, Constant.Long(_)) => true
-      case Literal(_, _, _, _, Constant.Float(_)) => true
-      case Literal(_, _, _, _, Constant.Double(_)) => true
+      case Literal(Constant.Int(_)) => true
+      case Literal(Constant.Long(_)) => true
+      case Literal(Constant.Float(_)) => true
+      case Literal(Constant.Double(_)) => true
       case _ => false
     }
   }
@@ -1292,39 +1292,39 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def literal(isNegated: Boolean = false): Lit = autoPos {
     def isHex = token.code.startsWith("0x") || token.code.startsWith("0X")
     val res = token match {
-      case Literal(_, _, _, _, Constant.Int(rawValue)) =>
+      case Literal(Constant.Int(rawValue)) =>
         val value = if (isNegated) -rawValue else rawValue
         val min = if (isHex) BigInt(Int.MinValue) * 2 + 1 else BigInt(Int.MinValue)
         val max = if (isHex) BigInt(Int.MaxValue) * 2 + 1 else BigInt(Int.MaxValue)
         if (value > max) syntaxError("integer number too large", at = token)
         else if (value < min) syntaxError("integer number too small", at = token)
         Lit(value.toInt)
-      case Literal(_, _, _, _, Constant.Long(rawValue)) =>
+      case Literal(Constant.Long(rawValue)) =>
         val value = if (isNegated) -rawValue else rawValue
         val min = if (isHex) BigInt(Long.MinValue) * 2 + 1 else BigInt(Long.MinValue)
         val max = if (isHex) BigInt(Long.MaxValue) * 2 + 1 else BigInt(Long.MaxValue)
         if (value > max) syntaxError("integer number too large", at = token)
         else if (value < min) syntaxError("integer number too small", at = token)
         Lit(value.toLong)
-      case Literal(_, _, _, _, Constant.Float(rawValue)) =>
+      case Literal(Constant.Float(rawValue)) =>
         val value = if (isNegated) -rawValue else rawValue
         if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
         Lit(value.toFloat)
-      case Literal(_, _, _, _, Constant.Double(rawValue)) =>
+      case Literal(Constant.Double(rawValue)) =>
         val value = if (isNegated) -rawValue else rawValue
         if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
         Lit(value.toDouble)
-      case Literal(_, _, _, _, Constant.Char(value)) =>
+      case Literal(Constant.Char(value)) =>
         Lit(value)
-      case Literal(_, _, _, _, Constant.String(value)) =>
+      case Literal(Constant.String(value)) =>
         Lit(value)
-      case Literal(_, _, _, _, Constant.Symbol(value)) =>
+      case Literal(Constant.Symbol(value)) =>
         Lit(value)
-      case Literal(_, _, _, _, Constant.Boolean(value)) =>
+      case Literal(Constant.Boolean(value)) =>
         Lit(value)
-      case Literal(_, _, _, _, Constant.Null) =>
+      case Literal(Constant.Null) =>
         Lit(null)
       case _ =>
         unreachable(debug(token))

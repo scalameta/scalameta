@@ -53,7 +53,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
 
       // step 1: generate boilerplate required by the @adt infrastructure
       // NOTE: toString is inherited from Token, unapply is customized.
-      anns1 += q"new $AdtPackage.leaf(toString = false)"
+      anns1 += q"new $AdtPackage.leaf(toString = false, unapply = false)"
       anns1 += q"new $TokenMetadataModule.tokenClass"
       manns1 += q"new $TokenMetadataModule.tokenCompanion"
 
@@ -123,7 +123,24 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         stats1 += q"def adjust($paramContent, $paramDialect, $paramStart, $paramEnd, $paramDelta): $Token = $body"
       }
 
-      // step 6: generate boilerplate parameters
+      // step 6: generate implementation of `Companion.unapply`
+      // TODO: deduplicate wrt @data
+      val unapplyParams = paramss.head
+      if (unapplyParams.length != 0) {
+        val successTargs = unapplyParams.map(_.tpt)
+        val successTpe = tq"(..$successTargs)"
+        val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
+        mstats1 += q"""
+          def unapply(x: $name): Option[$successTpe] = {
+            if (x == null) _root_.scala.None
+            else _root_.scala.Some($successArgs)
+          }
+        """
+      } else {
+        mstats1 += q"def unapply(x: $name): Boolean = true"
+      }
+
+      // step 7: generate boilerplate parameters
       var boilerplateParams = List(q"val content: $Content", q"val dialect: $Dialect")
       if (!hasMethod("start")) boilerplateParams :+= q"val start: $Int"
       if (!hasMethod("end")) boilerplateParams :+= q"val end: $Int"
