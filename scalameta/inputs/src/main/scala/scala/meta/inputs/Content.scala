@@ -26,7 +26,7 @@ trait Content extends Input {
   private[meta] def lineToOffset(line: Int): Int = {
     // NOTE: The length-1 part is not a typo, it's to accommodate the sentinel value.
     if (!(0 <= line && line <= lineIndices.length - 1)) {
-      val message = s"$line is not a valid line number, allowed 0..${lineIndices.length - 1}"
+      val message = s"$line is not a valid line number, allowed [0..${lineIndices.length - 1}]"
       throw new IllegalArgumentException(message)
     }
     lineIndices(line)
@@ -37,7 +37,7 @@ trait Content extends Input {
     val a = lineIndices
     // NOTE: We allow chars.length, because it's a valid value for an offset.
     if (!(0 <= offset && offset <= chars.length)) {
-      val message = s"$offset is not a valid offset, allowed 0..${chars.length}"
+      val message = s"$offset is not a valid offset, allowed [0..${chars.length}]"
       throw new IllegalArgumentException(message)
     }
     // NOTE: chars.length requires a really ugly special case.

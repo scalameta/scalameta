@@ -19,7 +19,7 @@ object TokenStructure {
         case x: Token.`\f` => "\\f"
         case x => x.code
       }
-      s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
+      s(prefix, " [", x.start.toString, "..", x.end.toString, ")")
     })
   }
 }
