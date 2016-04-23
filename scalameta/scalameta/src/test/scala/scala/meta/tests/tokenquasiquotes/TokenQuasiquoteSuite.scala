@@ -179,9 +179,9 @@ class TokenQuasiquoteSuite extends FunSuite {
       case _              => false
     }
 
-    def isWhitespace: Boolean = t.isInstanceOf[Whitespace]
+    def isWhitespace: Boolean = t.is[` `] || t.is[`\t`] || t.is[`\r`] || t.is[`\n`] || t.is[`\f`]
 
-    def isComma: Boolean = t.isInstanceOf[`,`]
+    def isComma: Boolean = t.is[`,`]
   }
 
   implicit class checkSingleTokenQuasiquote(token: Token) extends CheckTokenQuasiquote(Tokens(token))

@@ -22,6 +22,7 @@ import scala.meta.internal.ast.AstInfo
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
+import scala.meta.classifiers._
 import org.scalameta._
 import org.scalameta.invariants._
 
@@ -55,14 +56,14 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   private val consumeStat: PartialFunction[Token, Stat] = {
     case token if token.is[`import`] => importStmt()
     case token if token.is[`package `] && !dialect.allowToplevelTerms => packageOrPackageObjectDef()
-    case token if token.is[TokenClass.DefIntro] || token.is[Ellipsis] => nonLocalDefOrDcl()
-    case token if token.is[TokenClass.ExprIntro] => expr(Local)
+    case token if token.is[DefIntro] || token.is[Ellipsis] => nonLocalDefOrDcl()
+    case token if token.is[ExprIntro] => expr(Local)
   }
   def parseStat(): Stat = {
     parseRule(parser => {
       def skipStatementSeparators(): Unit = {
         if (token.is[EOF]) return
-        if (!token.is[TokenClass.StatSep]) accept[EOF]
+        if (!token.is[StatSep]) accept[EOF]
         next()
         skipStatementSeparators()
       }
@@ -146,105 +147,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def parseImportee(): Importee = parseRule(_.importee())
   def parseSource(): Source = parseRule(_.source())
 
-/* ------------- PARSER-SPECIFIC TOKEN CLASSIFIERS -------------------------------------------- */
-
-  abstract class TokenClass(fn: Token => Boolean) { def contains(token: Token): Boolean = fn(token) }
-  object TokenClass {
-    private implicit class XtensionTokenClass(token: Token) {
-      def isCaseClassOrObject = token.isInstanceOf[`case`] && (token.next.is[`class `] || token.next.is[`object`])
-    }
-    class TypeIntro extends TokenClass(token => {
-      token.isInstanceOf[Ident] || token.isInstanceOf[`super`] || token.isInstanceOf[`this`] ||
-      token.isInstanceOf[`(`] || token.isInstanceOf[`@`] || token.isInstanceOf[`_ `] ||
-      token.isInstanceOf[Unquote]
-    })
-    class ExprIntro extends TokenClass(token => {
-      token.isInstanceOf[Ident] || token.isInstanceOf[Literal] ||
-      token.isInstanceOf[Interpolation.Id] || token.isInstanceOf[Xml.Start] ||
-      token.isInstanceOf[`do`] || token.isInstanceOf[`for`] || token.isInstanceOf[`if`] ||
-      token.isInstanceOf[`new`] || token.isInstanceOf[`return`] || token.isInstanceOf[`super`] ||
-      token.isInstanceOf[`this`] || token.isInstanceOf[`throw`] || token.isInstanceOf[`try`] || token.isInstanceOf[`while`] ||
-      token.isInstanceOf[`(`] || token.isInstanceOf[`{`] || token.isInstanceOf[`_ `] ||
-      token.isInstanceOf[`Unquote`]
-    })
-    class CaseIntro extends TokenClass(token => {
-      token.isInstanceOf[`case`] && !token.isCaseClassOrObject
-    })
-    class DefIntro extends TokenClass(token => {
-      token.isInstanceOf[Modifier] || token.isInstanceOf[`@`] ||
-      token.is[TemplateIntro] || token.is[DclIntro] ||
-      (token.isInstanceOf[Unquote] && token.next.is[DefIntro]) ||
-      (token.isInstanceOf[`case`] && token.isCaseClassOrObject)
-    })
-    class TemplateIntro extends TokenClass(token => {
-      token.isInstanceOf[Modifier] || token.isInstanceOf[`@`] ||
-      token.isInstanceOf[`class `] || token.isInstanceOf[`object`] || token.isInstanceOf[`trait`] ||
-      (token.isInstanceOf[Unquote] && token.next.is[TemplateIntro]) ||
-      (token.isInstanceOf[`case`] && token.isCaseClassOrObject)
-    })
-    class DclIntro extends TokenClass(token => {
-      token.isInstanceOf[`def`] || token.isInstanceOf[`type`] ||
-      token.isInstanceOf[`val`] || token.isInstanceOf[`var`] ||
-      (token.isInstanceOf[Unquote] && token.next.is[DclIntro])
-    })
-    class NonlocalModifier extends TokenClass(token => {
-      token.isInstanceOf[`private`] || token.isInstanceOf[`protected`] || token.isInstanceOf[`override`]
-    })
-    class LocalModifier extends TokenClass(token => {
-      token.is[Modifier] && !token.is[NonlocalModifier]
-    })
-    class StatSeqEnd extends TokenClass(token => {
-      token.isInstanceOf[`}`] || token.isInstanceOf[EOF]
-    })
-    class CaseDefEnd extends TokenClass(token => {
-      token.isInstanceOf[`}`] || token.isInstanceOf[EOF] ||
-      (token.isInstanceOf[`case`] && !token.isCaseClassOrObject) ||
-      (token.is[Ellipsis] && token.next.is[`case`])
-    })
-    class CantStartStat extends TokenClass(token => {
-      token.isInstanceOf[`catch`] || token.isInstanceOf[`else`] || token.isInstanceOf[`extends`] ||
-      token.isInstanceOf[`finally`] || token.isInstanceOf[`forSome`] || token.isInstanceOf[`match`] ||
-      token.isInstanceOf[`with`] || token.isInstanceOf[`yield`] ||
-      token.isInstanceOf[`)`] || token.isInstanceOf[`[`] || token.isInstanceOf[`]`] || token.isInstanceOf[`}`] ||
-      token.isInstanceOf[`,`] || token.isInstanceOf[`:`] || token.isInstanceOf[`.`] || token.isInstanceOf[`=`] ||
-      token.isInstanceOf[`;`] || token.isInstanceOf[`#`] || token.isInstanceOf[`=>`] || token.isInstanceOf[`<-`] ||
-      token.isInstanceOf[`<:`] || token.isInstanceOf[`>:`] || token.isInstanceOf[`<%`] ||
-      token.isInstanceOf[`\n`] || token.isInstanceOf[`\n\n`] || token.isInstanceOf[EOF]
-    })
-    class CanEndStat extends TokenClass(token => {
-      token.isInstanceOf[Ident] || token.isInstanceOf[Literal] ||
-      token.isInstanceOf[Interpolation.End] || token.isInstanceOf[Xml.End] ||
-      token.isInstanceOf[`return`] || token.isInstanceOf[`this`] || token.isInstanceOf[`type`] ||
-      token.isInstanceOf[`)`] || token.isInstanceOf[`]`] || token.isInstanceOf[`}`] || token.isInstanceOf[`_ `] ||
-      token.isInstanceOf[Ellipsis] || token.isInstanceOf[Unquote]
-    })
-    class StatSep extends TokenClass(token => {
-      token.isInstanceOf[`;`] || token.isInstanceOf[`\n`] || token.isInstanceOf[`\n\n`] || token.isInstanceOf[EOF]
-    })
-    class NumericLiteral extends TokenClass(token => {
-      token.isInstanceOf[Literal.Int] || token.isInstanceOf[Literal.Long] ||
-      token.isInstanceOf[Literal.Float] || token.isInstanceOf[Literal.Double]
-    })
-  }
-  import TokenClass._
-
-  trait TokenClassifier[T] { def contains(token: Token): Boolean }
-  object TokenClassifier {
-    private def apply[T: ClassTag](fn: Token => Boolean): TokenClassifier[T] = {
-      new TokenClassifier[T] { def contains(token: Token) = fn(token) }
-    }
-    implicit def inheritanceBased[T <: Token : ClassTag]: TokenClassifier[T] = apply(token => {
-      token != null && classTag[T].runtimeClass.isAssignableFrom(token.getClass)
-    })
-    implicit def typeclassBased[T <: TokenClass : InstanceTag]: TokenClassifier[T] = apply(token => {
-      instanceOf[T].contains(token)
-    })
-  }
-
-  implicit class XtensionTokenClassification(val token: Token) {
-    def isNot[T: TokenClassifier]: Boolean = !is[T]
-    def is[T: TokenClassifier]: Boolean = implicitly[TokenClassifier[T]].contains(token)
-  }
+/* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
 
   // NOTE: This is a cache that's necessary for reasonable performance of prev/next for tokens.
   // It maps character positions in input's content into indices in the scannerTokens vector.
@@ -299,12 +202,12 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     }
     def prev: Token = {
       val prev = scannerTokens.apply(Math.max(token.index - 1, 0))
-      if (prev.isInstanceOf[Token.Whitespace] || prev.isInstanceOf[Token.Comment]) prev.prev
+      if (prev.is[Whitespace] || prev.isInstanceOf[Token.Comment]) prev.prev
       else prev
     }
     def next: Token = {
       val next = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
-      if (next.isInstanceOf[Token.Whitespace] || next.isInstanceOf[Token.Comment]) next.next
+      if (next.is[Whitespace] || next.isInstanceOf[Token.Comment]) next.next
       else next
     }
   }
@@ -530,7 +433,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Token : TokenInfo]: Unit =
-    if (token.is[T]) {
+    if (token.is[T](implicitly[TokenInfo[T]])) {
       if (token.isNot[EOF]) next()
     } else syntaxErrorExpected[T]
 
@@ -567,6 +470,176 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def isSpliceFollowedBy(check: => Boolean): Boolean
                                     = token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
   def isBackquoted: Boolean         = token.code.startsWith("`") && token.code.endsWith("`")
+
+  private implicit class XtensionTokenClass(token: Token) {
+    def isCaseClassOrObject = token.isInstanceOf[`case`] && (token.next.is[`class `] || token.next.is[`object`])
+  }
+
+  @classifier
+  trait TypeIntro {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[Ident] || token.isInstanceOf[`super`] || token.isInstanceOf[`this`] ||
+      token.isInstanceOf[`(`] || token.isInstanceOf[`@`] || token.isInstanceOf[`_ `] ||
+      token.isInstanceOf[Unquote]
+    }
+  }
+
+  @classifier
+  trait ExprIntro {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[Ident] || token.is[Literal] ||
+      token.isInstanceOf[Interpolation.Id] || token.isInstanceOf[Xml.Start] ||
+      token.isInstanceOf[`do`] || token.isInstanceOf[`for`] || token.isInstanceOf[`if`] ||
+      token.isInstanceOf[`new`] || token.isInstanceOf[`return`] || token.isInstanceOf[`super`] ||
+      token.isInstanceOf[`this`] || token.isInstanceOf[`throw`] || token.isInstanceOf[`try`] || token.isInstanceOf[`while`] ||
+      token.isInstanceOf[`(`] || token.isInstanceOf[`{`] || token.isInstanceOf[`_ `] ||
+      token.isInstanceOf[`Unquote`]
+    }
+  }
+
+  @classifier
+  trait CaseIntro {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[`case`] && !token.isCaseClassOrObject
+    }
+  }
+
+  @classifier
+  trait DefIntro {
+    def unapply(token: Token): Boolean = {
+      token.is[Modifier] || token.isInstanceOf[`@`] ||
+      token.is[TemplateIntro] || token.is[DclIntro] ||
+      (token.isInstanceOf[Unquote] && token.next.is[DefIntro]) ||
+      (token.isInstanceOf[`case`] && token.isCaseClassOrObject)
+    }
+  }
+
+  @classifier
+  trait TemplateIntro {
+    def unapply(token: Token): Boolean = {
+      token.is[Modifier] || token.isInstanceOf[`@`] ||
+      token.isInstanceOf[`class `] || token.isInstanceOf[`object`] || token.isInstanceOf[`trait`] ||
+      (token.isInstanceOf[Unquote] && token.next.is[TemplateIntro]) ||
+      (token.isInstanceOf[`case`] && token.isCaseClassOrObject)
+    }
+  }
+
+  @classifier
+  trait DclIntro {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[`def`] || token.isInstanceOf[`type`] ||
+      token.isInstanceOf[`val`] || token.isInstanceOf[`var`] ||
+      (token.isInstanceOf[Unquote] && token.next.is[DclIntro])
+    }
+  }
+
+  @classifier
+  trait Modifier {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[`abstract`] || token.isInstanceOf[`final`] ||
+      token.isInstanceOf[`sealed`] || token.isInstanceOf[`implicit`] ||
+      token.isInstanceOf[`lazy`] || token.isInstanceOf[`private`] ||
+      token.isInstanceOf[`protected`] || token.isInstanceOf[`override`]
+    }
+  }
+
+  @classifier
+  trait NonlocalModifier {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[`private`] || token.isInstanceOf[`protected`] ||
+      token.isInstanceOf[`override`]
+    }
+  }
+
+  @classifier
+  trait LocalModifier {
+    def unapply(token: Token): Boolean = {
+      token.is[Modifier] && !token.is[NonlocalModifier]
+    }
+  }
+
+  @classifier
+  trait StatSeqEnd {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[`}`] || token.isInstanceOf[EOF]
+    }
+  }
+
+  @classifier
+  trait CaseDefEnd {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[`}`] || token.isInstanceOf[EOF] ||
+      (token.isInstanceOf[`case`] && !token.isCaseClassOrObject) ||
+      (token.is[Ellipsis] && token.next.is[`case`])
+    }
+  }
+
+  @classifier
+  trait CantStartStat {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[`catch`] || token.isInstanceOf[`else`] || token.isInstanceOf[`extends`] ||
+      token.isInstanceOf[`finally`] || token.isInstanceOf[`forSome`] || token.isInstanceOf[`match`] ||
+      token.isInstanceOf[`with`] || token.isInstanceOf[`yield`] ||
+      token.isInstanceOf[`)`] || token.isInstanceOf[`[`] || token.isInstanceOf[`]`] || token.isInstanceOf[`}`] ||
+      token.isInstanceOf[`,`] || token.isInstanceOf[`:`] || token.isInstanceOf[`.`] || token.isInstanceOf[`=`] ||
+      token.isInstanceOf[`;`] || token.isInstanceOf[`#`] || token.isInstanceOf[`=>`] || token.isInstanceOf[`<-`] ||
+      token.isInstanceOf[`<:`] || token.isInstanceOf[`>:`] || token.isInstanceOf[`<%`] ||
+      token.isInstanceOf[`\n`] || token.isInstanceOf[`\n\n`] || token.isInstanceOf[EOF]
+    }
+  }
+
+  @classifier
+  trait CanEndStat {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[Ident] || token.is[Literal] ||
+      token.isInstanceOf[Interpolation.End] || token.isInstanceOf[Xml.End] ||
+      token.isInstanceOf[`return`] || token.isInstanceOf[`this`] || token.isInstanceOf[`type`] ||
+      token.isInstanceOf[`)`] || token.isInstanceOf[`]`] || token.isInstanceOf[`}`] || token.isInstanceOf[`_ `] ||
+      token.isInstanceOf[Ellipsis] || token.isInstanceOf[Unquote]
+    }
+  }
+
+  @classifier
+  trait StatSep {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[`;`] || token.isInstanceOf[`\n`] || token.isInstanceOf[`\n\n`] || token.isInstanceOf[EOF]
+    }
+  }
+
+  @classifier
+  trait Literal {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[Token.Literal.Int] || token.isInstanceOf[Token.Literal.Long] ||
+      token.isInstanceOf[Token.Literal.Float] || token.isInstanceOf[Token.Literal.Double] ||
+      token.isInstanceOf[Token.Literal.Char] || token.isInstanceOf[Token.Literal.Symbol] ||
+      token.isInstanceOf[Token.Literal.String] || token.isInstanceOf[Token.Literal.`null`] ||
+      token.isInstanceOf[Token.Literal.`true`] || token.isInstanceOf[Token.Literal.`false`]
+    }
+  }
+
+  @classifier
+  trait NumericLiteral {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[Token.Literal.Int] || token.isInstanceOf[Token.Literal.Long] ||
+      token.isInstanceOf[Token.Literal.Float] || token.isInstanceOf[Token.Literal.Double]
+    }
+  }
+
+  @classifier
+  trait Whitespace {
+    def unapply(token: Token): Boolean = {
+      token.isInstanceOf[` `] || token.isInstanceOf[`\t`] ||
+      token.isInstanceOf[`\r`] || token.isInstanceOf[`\n`] ||
+      token.isInstanceOf[`\n\n`] || token.isInstanceOf[`\f`]
+    }
+  }
+
+  @classifier
+  trait Trivia {
+    def unapply(token: Token): Boolean = {
+      token.is[Whitespace] || token.isInstanceOf[Comment]
+    }
+  }
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
@@ -1227,41 +1300,41 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def literal(isNegated: Boolean = false): Lit = autoPos {
     def isHex = token.code.startsWith("0x") || token.code.startsWith("0X")
     val res = token match {
-      case token: Literal.Char =>
+      case token: Token.Literal.Char =>
         Lit(token.value)
-      case token: Literal.Int =>
+      case token: Token.Literal.Int =>
         val value = if (isNegated) -token.value else token.value
         val min = if (isHex) BigInt(Int.MinValue) * 2 + 1 else BigInt(Int.MinValue)
         val max = if (isHex) BigInt(Int.MaxValue) * 2 + 1 else BigInt(Int.MaxValue)
         if (value > max) syntaxError("integer number too large", at = token)
         else if (value < min) syntaxError("integer number too small", at = token)
         Lit(value.toInt)
-      case token: Literal.Long =>
+      case token: Token.Literal.Long =>
         val value = if (isNegated) -token.value else token.value
         val min = if (isHex) BigInt(Long.MinValue) * 2 + 1 else BigInt(Long.MinValue)
         val max = if (isHex) BigInt(Long.MaxValue) * 2 + 1 else BigInt(Long.MaxValue)
         if (value > max) syntaxError("integer number too large", at = token)
         else if (value < min) syntaxError("integer number too small", at = token)
         Lit(value.toLong)
-      case token: Literal.Float =>
+      case token: Token.Literal.Float =>
         val value = if (isNegated) -token.value else token.value
         if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
         Lit(value.toFloat)
-      case token: Literal.Double  =>
+      case token: Token.Literal.Double  =>
         val value = if (isNegated) -token.value else token.value
         if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
         Lit(value.toDouble)
-      case token: Literal.String =>
+      case token: Token.Literal.String =>
         Lit(token.value)
-      case token: Literal.Symbol =>
+      case token: Token.Literal.Symbol =>
         Lit(token.value)
-      case token: Literal.`true` =>
+      case token: Token.Literal.`true` =>
         Lit(true)
-      case token: Literal.`false` =>
+      case token: Token.Literal.`false` =>
         Lit(false)
-      case token: Literal.`null` =>
+      case token: Token.Literal.`null` =>
         Lit(null)
       case _ =>
         unreachable(debug(token))
@@ -1830,7 +1903,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     var canApply = true
     val t: Term = {
       token match {
-        case _: Literal =>
+        case token if token.is[Literal] =>
           literal()
         case _: Interpolation.Id =>
           interpolateTerm()
@@ -2324,7 +2397,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case _: `_ ` =>
         next()
         Pat.Wildcard()
-      case _: Literal =>
+      case token if token.is[Literal] =>
         literal()
       case _: Interpolation.Id =>
         interpolatePat()
@@ -2458,10 +2531,11 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     // but in the case of the latter, we need to take care to not hastily parse those names as modifiers
     def continueLoop = ahead(token.is[`:`] || token.is[`=`] || token.is[EOF] || token.is[`[`] || token.is[`<:`] || token.is[`>:`] || token.is[`<%`])
     def loop(mods: List[Mod]): List[Mod] = token match {
-      case _: Unquote => if (continueLoop) mods else loop(appendMod(mods, modifier()))
-      case _: Modifier | _: Ellipsis => loop(appendMod(mods, modifier()))
-      case _: `\n` if !isLocal => next(); loop(mods)
-      case _                   => mods
+      case _: Unquote                   => if (continueLoop) mods else loop(appendMod(mods, modifier()))
+      case _: Ellipsis                 => loop(appendMod(mods, modifier()))
+      case token if token.is[Modifier] => loop(appendMod(mods, modifier()))
+      case _: `\n` if !isLocal         => next(); loop(mods)
+      case _                           => mods
     }
     loop(Nil)
   }

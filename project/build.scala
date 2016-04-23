@@ -123,7 +123,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's tokens and token-based abstractions (inputs and positions)",
     enableMacros
-  ) dependsOn (foundation, prettyprinters, dialects, inputs)
+  ) dependsOn (foundation, prettyprinters, classifiers, dialects, inputs)
 
   lazy val transversers = Project(
     id   = "transversers",
