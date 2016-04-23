@@ -373,7 +373,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.BOF
       |scala.meta.tokens.Token.Comment
       |scala.meta.tokens.Token.EOF
-      |scala.meta.tokens.Token.Ellipsis
       |scala.meta.tokens.Token.Ident
       |scala.meta.tokens.Token.Interpolation
       |scala.meta.tokens.Token.Interpolation.End
@@ -383,7 +382,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.Interpolation.SpliceStart
       |scala.meta.tokens.Token.Interpolation.Start
       |scala.meta.tokens.Token.Literal
-      |scala.meta.tokens.Token.Unquote
       |scala.meta.tokens.Token.WHITESPACE
       |scala.meta.tokens.Token.Xml
       |scala.meta.tokens.Token.Xml.End

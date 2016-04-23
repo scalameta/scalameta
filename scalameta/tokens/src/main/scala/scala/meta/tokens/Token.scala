@@ -37,27 +37,11 @@ import scala.meta.internal.prettyprinters._
 }
 
 object Token {
+  // Identifiers
   @token("identifier") class Ident(start: Int, end: Int) extends Token
 
-  @token("literal") class Literal(start: Int, end: Int, constant: Constant) extends Token
-
-  object Interpolation {
-    @token("interpolation id") class Id(start: Int, end: Int) extends Token
-    @token("interpolation start") class Start(start: Int, end: Int) extends Token
-    @token("interpolation part") class Part(start: Int, end: Int, value: String) extends Token
-    @token("splice start") class SpliceStart(start: Int, end: Int) extends Token
-    @token("splice end") class SpliceEnd(start: Int, end: Int) extends Token
-    @token("interpolation end") class End(start: Int, end: Int) extends Token
-  }
-
-  object Xml {
-    @token("xml start") class Start(start: Int, end: Int) extends Token
-    @token("xml part") class Part(start: Int, end: Int, value: String) extends Token
-    @token("xml splice start") class SpliceStart(start: Int, end: Int) extends Token
-    @token("xml splice end") class SpliceEnd(start: Int, end: Int) extends Token
-    @token("xml end") class End(start: Int, end: Int) extends Token
-  }
-
+  // Keywords
+  @token("abstract") class `abstract`(start: Int) extends Token
   @token("case") class `case`(start: Int) extends Token
   @token("catch") class `catch`(start: Int) extends Token
   @token("class") class `class `(start: Int) extends Token
@@ -65,17 +49,24 @@ object Token {
   @token("do") class `do`(start: Int) extends Token
   @token("else") class `else`(start: Int) extends Token
   @token("extends") class `extends`(start: Int) extends Token
+  @token("final") class `final`(start: Int) extends Token
   @token("finally") class `finally`(start: Int) extends Token
   @token("for") class `for`(start: Int) extends Token
   @token("forSome") class `forSome`(start: Int) extends Token
   @token("if") class `if`(start: Int) extends Token
+  @token("implicit") class `implicit`(start: Int) extends Token
   @token("import") class `import`(start: Int) extends Token
+  @token("lazy") class `lazy`(start: Int) extends Token
   @token("match") class `match`(start: Int) extends Token
   @token("macro") class `macro`(start: Int) extends Token
   @token("new") class `new`(start: Int) extends Token
   @token("object") class `object`(start: Int) extends Token
+  @token("override") class `override`(start: Int) extends Token
   @token("package") class `package `(start: Int) extends Token
+  @token("private") class `private`(start: Int) extends Token
+  @token("protected") class `protected`(start: Int) extends Token
   @token("return") class `return`(start: Int) extends Token
+  @token("sealed") class `sealed`(start: Int) extends Token
   @token("super") class `super`(start: Int) extends Token
   @token("this") class `this`(start: Int) extends Token
   @token("throw") class `throw`(start: Int) extends Token
@@ -87,53 +78,64 @@ object Token {
   @token("while") class `while`(start: Int) extends Token
   @token("with") class `with`(start: Int) extends Token
   @token("yield") class `yield`(start: Int) extends Token
+  @token("#") class `#`(start: Int) extends Token
+  @token(":") class `:`(start: Int) extends Token
+  @token("<%") class `<%`(start: Int) extends Token
+  @token("<-") class `<-`(start: Int, end: Int) extends Token
+  @token("<:") class `<:`(start: Int) extends Token
+  @token("=") class `=`(start: Int) extends Token
+  @token("=>") class `=>`(start: Int, end: Int) extends Token
+  @token(">:") class `>:`(start: Int) extends Token
+  @token("@") class `@`(start: Int) extends Token
+  @token("_") class `_ `(start: Int) extends Token
 
-  @token("abstract") class `abstract`(start: Int) extends Token
-  @token("final") class `final`(start: Int) extends Token
-  @token("sealed") class `sealed`(start: Int) extends Token
-  @token("implicit") class `implicit`(start: Int) extends Token
-  @token("lazy") class `lazy`(start: Int) extends Token
-  @token("private") class `private`(start: Int) extends Token
-  @token("protected") class `protected`(start: Int) extends Token
-  @token("override") class `override`(start: Int) extends Token
-
+  // Delimiters
   @token("(") class `(`(start: Int) extends Token
   @token(")") class `)`(start: Int) extends Token
+  @token(",") class `,`(start: Int) extends Token
+  @token(".") class `.`(start: Int) extends Token
+  @token(";") class `;`(start: Int) extends Token
   @token("[") class `[`(start: Int) extends Token
   @token("]") class `]`(start: Int) extends Token
   @token("{") class `{`(start: Int) extends Token
   @token("}") class `}`(start: Int) extends Token
-  @token(",") class `,`(start: Int) extends Token
-  @token(";") class `;`(start: Int) extends Token
-  @token(":") class `:`(start: Int) extends Token
-  @token(".") class `.`(start: Int) extends Token
-  @token("=") class `=`(start: Int) extends Token
-  @token("@") class `@`(start: Int) extends Token
-  @token("#") class `#`(start: Int) extends Token
-  @token("_") class `_ `(start: Int) extends Token
-  @token("=>") class `=>`(start: Int, end: Int) extends Token
-  @token("<-") class `<-`(start: Int, end: Int) extends Token
-  @token("<:") class `<:`(start: Int) extends Token
-  @token(">:") class `>:`(start: Int) extends Token
-  @token("<%") class `<%`(start: Int) extends Token
 
+  // Literals
+  @token("literal") class Literal(start: Int, end: Int, constant: Constant) extends Token
+  object Interpolation {
+    @token("interpolation id") class Id(start: Int, end: Int) extends Token
+    @token("interpolation start") class Start(start: Int, end: Int) extends Token
+    @token("interpolation part") class Part(start: Int, end: Int, value: String) extends Token
+    @token("splice start") class SpliceStart(start: Int, end: Int) extends Token
+    @token("splice end") class SpliceEnd(start: Int, end: Int) extends Token
+    @token("interpolation end") class End(start: Int, end: Int) extends Token
+  }
+  object Xml {
+    @token("xml start") class Start(start: Int, end: Int) extends Token
+    @token("xml part") class Part(start: Int, end: Int, value: String) extends Token
+    @token("xml splice start") class SpliceStart(start: Int, end: Int) extends Token
+    @token("xml splice end") class SpliceEnd(start: Int, end: Int) extends Token
+    @token("xml end") class End(start: Int, end: Int) extends Token
+  }
+
+  // Trivia
   @token(" ") class ` `(start: Int) extends Token
   @token("\t") class `\t`(start: Int) extends Token
   @token("\r") class `\r`(start: Int) extends Token
   @token("\n") class `\n`(start: Int) extends Token
-  @token("\n\n") private[meta] class `\n\n`(start: Int) extends Token // TODO: rewrite the parser so that it doesn't need this
   @token("\f") class `\f`(start: Int) extends Token
   @token("comment") class Comment(start: Int, end: Int) extends Token
+  @token("beginning of file") class BOF() extends Token { def start = 0; def end = 0 }
+  @token("end of file") class EOF() extends Token { def start = content.chars.length; def end = content.chars.length }
 
+  // TODO: Rewrite the parser so that it doesn't need `\n\n` anymore.
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @token("ellipsis") class Ellipsis(start: Int, end: Int, rank: Int) extends Token
-  @token("unquote") class Unquote(start: Int, end: Int, tree: Any) extends Token
-
-  @token("beginning of file") class BOF() extends Token { def start = 0; def end = 0 }
-  @token("end of file") class EOF() extends Token { def start = content.chars.length; def end = content.chars.length }
+  @token("\n\n") private[meta] class `\n\n`(start: Int) extends Token
+  @token("ellipsis") private[meta] class Ellipsis(start: Int, end: Int, rank: Int) extends Token
+  @token("unquote") private[meta] class Unquote(start: Int, end: Int, tree: Any) extends Token
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
