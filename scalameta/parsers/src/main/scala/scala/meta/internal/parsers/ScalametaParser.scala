@@ -274,7 +274,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
             next != null && next.isNot[CantStartStat] &&
             (sepRegions.isEmpty || sepRegions.head == '}')) {
           var token = scannerTokens(lastNewlinePos)
-          if (newlines) token = `\n\n`(token.content, token.dialect, token.start)
+          if (newlines) token = `\n\n`(token.content, token.dialect, token.start, token.end)
           parserTokens += token
           parserTokenPositions += lastNewlinePos
           loop(lastNewlinePos, currPos + 1, sepRegions)

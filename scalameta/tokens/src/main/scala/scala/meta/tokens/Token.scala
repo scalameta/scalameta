@@ -38,104 +38,104 @@ import scala.meta.internal.prettyprinters._
 
 object Token {
   // Identifiers
-  @token("identifier") class Ident(start: Int, end: Int) extends Token
+  @freeform("identifier") class Ident extends Token
 
   // Keywords
-  @token("abstract") class `abstract`(start: Int) extends Token
-  @token("case") class `case`(start: Int) extends Token
-  @token("catch") class `catch`(start: Int) extends Token
-  @token("class") class `class `(start: Int) extends Token
-  @token("def") class `def`(start: Int) extends Token
-  @token("do") class `do`(start: Int) extends Token
-  @token("else") class `else`(start: Int) extends Token
-  @token("extends") class `extends`(start: Int) extends Token
-  @token("final") class `final`(start: Int) extends Token
-  @token("finally") class `finally`(start: Int) extends Token
-  @token("for") class `for`(start: Int) extends Token
-  @token("forSome") class `forSome`(start: Int) extends Token
-  @token("if") class `if`(start: Int) extends Token
-  @token("implicit") class `implicit`(start: Int) extends Token
-  @token("import") class `import`(start: Int) extends Token
-  @token("lazy") class `lazy`(start: Int) extends Token
-  @token("match") class `match`(start: Int) extends Token
-  @token("macro") class `macro`(start: Int) extends Token
-  @token("new") class `new`(start: Int) extends Token
-  @token("object") class `object`(start: Int) extends Token
-  @token("override") class `override`(start: Int) extends Token
-  @token("package") class `package `(start: Int) extends Token
-  @token("private") class `private`(start: Int) extends Token
-  @token("protected") class `protected`(start: Int) extends Token
-  @token("return") class `return`(start: Int) extends Token
-  @token("sealed") class `sealed`(start: Int) extends Token
-  @token("super") class `super`(start: Int) extends Token
-  @token("this") class `this`(start: Int) extends Token
-  @token("throw") class `throw`(start: Int) extends Token
-  @token("trait") class `trait`(start: Int) extends Token
-  @token("try") class `try`(start: Int) extends Token
-  @token("type") class `type`(start: Int) extends Token
-  @token("val") class `val`(start: Int) extends Token
-  @token("var") class `var`(start: Int) extends Token
-  @token("while") class `while`(start: Int) extends Token
-  @token("with") class `with`(start: Int) extends Token
-  @token("yield") class `yield`(start: Int) extends Token
-  @token("#") class `#`(start: Int) extends Token
-  @token(":") class `:`(start: Int) extends Token
-  @token("<%") class `<%`(start: Int) extends Token
-  @token("<-") class `<-`(start: Int, end: Int) extends Token
-  @token("<:") class `<:`(start: Int) extends Token
-  @token("=") class `=`(start: Int) extends Token
-  @token("=>") class `=>`(start: Int, end: Int) extends Token
-  @token(">:") class `>:`(start: Int) extends Token
-  @token("@") class `@`(start: Int) extends Token
-  @token("_") class `_ `(start: Int) extends Token
+  @fixed("abstract") class `abstract` extends Token
+  @fixed("case") class `case` extends Token
+  @fixed("catch") class `catch` extends Token
+  @fixed("class") class `class ` extends Token
+  @fixed("def") class `def` extends Token
+  @fixed("do") class `do` extends Token
+  @fixed("else") class `else` extends Token
+  @fixed("extends") class `extends` extends Token
+  @fixed("final") class `final` extends Token
+  @fixed("finally") class `finally` extends Token
+  @fixed("for") class `for` extends Token
+  @fixed("forSome") class `forSome` extends Token
+  @fixed("if") class `if` extends Token
+  @fixed("implicit") class `implicit` extends Token
+  @fixed("import") class `import` extends Token
+  @fixed("lazy") class `lazy` extends Token
+  @fixed("match") class `match` extends Token
+  @fixed("macro") class `macro` extends Token
+  @fixed("new") class `new` extends Token
+  @fixed("object") class `object` extends Token
+  @fixed("override") class `override` extends Token
+  @fixed("package") class `package ` extends Token
+  @fixed("private") class `private` extends Token
+  @fixed("protected") class `protected` extends Token
+  @fixed("return") class `return` extends Token
+  @fixed("sealed") class `sealed` extends Token
+  @fixed("super") class `super` extends Token
+  @fixed("this") class `this` extends Token
+  @fixed("throw") class `throw` extends Token
+  @fixed("trait") class `trait` extends Token
+  @fixed("try") class `try` extends Token
+  @fixed("type") class `type` extends Token
+  @fixed("val") class `val` extends Token
+  @fixed("var") class `var` extends Token
+  @fixed("while") class `while` extends Token
+  @fixed("with") class `with` extends Token
+  @fixed("yield") class `yield` extends Token
+  @fixed("#") class `#` extends Token
+  @fixed(":") class `:` extends Token
+  @fixed("<%") class `<%` extends Token
+  @freeform("<-") class `<-` extends Token
+  @fixed("<:") class `<:` extends Token
+  @fixed("=") class `=` extends Token
+  @freeform("=>") class `=>` extends Token
+  @fixed(">:") class `>:` extends Token
+  @fixed("@") class `@` extends Token
+  @fixed("_") class `_ ` extends Token
 
   // Delimiters
-  @token("(") class `(`(start: Int) extends Token
-  @token(")") class `)`(start: Int) extends Token
-  @token(",") class `,`(start: Int) extends Token
-  @token(".") class `.`(start: Int) extends Token
-  @token(";") class `;`(start: Int) extends Token
-  @token("[") class `[`(start: Int) extends Token
-  @token("]") class `]`(start: Int) extends Token
-  @token("{") class `{`(start: Int) extends Token
-  @token("}") class `}`(start: Int) extends Token
+  @fixed("(") class `(` extends Token
+  @fixed(")") class `)` extends Token
+  @fixed(",") class `,` extends Token
+  @fixed(".") class `.` extends Token
+  @fixed(";") class `;` extends Token
+  @fixed("[") class `[` extends Token
+  @fixed("]") class `]` extends Token
+  @fixed("{") class `{` extends Token
+  @fixed("}") class `}` extends Token
 
   // Literals
-  @token("literal") class Literal(start: Int, end: Int, constant: Constant) extends Token
+  @freeform("literal") class Literal(constant: Constant) extends Token
   object Interpolation {
-    @token("interpolation id") class Id(start: Int, end: Int) extends Token
-    @token("interpolation start") class Start(start: Int, end: Int) extends Token
-    @token("interpolation part") class Part(start: Int, end: Int, value: String) extends Token
-    @token("splice start") class SpliceStart(start: Int, end: Int) extends Token
-    @token("splice end") class SpliceEnd(start: Int, end: Int) extends Token
-    @token("interpolation end") class End(start: Int, end: Int) extends Token
+    @freeform("interpolation id") class Id extends Token
+    @freeform("interpolation start") class Start extends Token
+    @freeform("interpolation part") class Part(value: String) extends Token
+    @freeform("splice start") class SpliceStart extends Token
+    @freeform("splice end") class SpliceEnd extends Token
+    @freeform("interpolation end") class End extends Token
   }
   object Xml {
-    @token("xml start") class Start(start: Int, end: Int) extends Token
-    @token("xml part") class Part(start: Int, end: Int, value: String) extends Token
-    @token("xml splice start") class SpliceStart(start: Int, end: Int) extends Token
-    @token("xml splice end") class SpliceEnd(start: Int, end: Int) extends Token
-    @token("xml end") class End(start: Int, end: Int) extends Token
+    @freeform("xml start") class Start extends Token
+    @freeform("xml part") class Part(value: String) extends Token
+    @freeform("xml splice start") class SpliceStart extends Token
+    @freeform("xml splice end") class SpliceEnd extends Token
+    @freeform("xml end") class End extends Token
   }
 
   // Trivia
-  @token(" ") class ` `(start: Int) extends Token
-  @token("\t") class `\t`(start: Int) extends Token
-  @token("\r") class `\r`(start: Int) extends Token
-  @token("\n") class `\n`(start: Int) extends Token
-  @token("\f") class `\f`(start: Int) extends Token
-  @token("comment") class Comment(start: Int, end: Int) extends Token
-  @token("beginning of file") class BOF() extends Token { def start = 0; def end = 0 }
-  @token("end of file") class EOF() extends Token { def start = content.chars.length; def end = content.chars.length }
+  @fixed(" ") class ` ` extends Token
+  @fixed("\t") class `\t` extends Token
+  @fixed("\r") class `\r` extends Token
+  @fixed("\n") class `\n` extends Token
+  @fixed("\f") class `\f` extends Token
+  @freeform("comment") class Comment extends Token
+  @freeform("beginning of file") class BOF extends Token { def start = 0; def end = 0 }
+  @freeform("end of file") class EOF extends Token { def start = content.chars.length; def end = content.chars.length }
 
   // TODO: Rewrite the parser so that it doesn't need `\n\n` anymore.
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @token("\n\n") private[meta] class `\n\n`(start: Int) extends Token
-  @token("ellipsis") private[meta] class Ellipsis(start: Int, end: Int, rank: Int) extends Token
-  @token("unquote") private[meta] class Unquote(start: Int, end: Int, tree: Any) extends Token
+  @freeform("\n\n") private[meta] class `\n\n` extends Token
+  @freeform("ellipsis") private[meta] class Ellipsis(rank: Int) extends Token
+  @freeform("unquote") private[meta] class Unquote(tree: Any) extends Token
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]

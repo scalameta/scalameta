@@ -8,9 +8,14 @@ import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
 import org.scalameta.internal.MacroHelpers
 
-// @token is a specialized version of @org.scalameta.adt.leaf for scala.meta tokens.
-class token(name: String) extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro TokenNamerMacros.impl
+// @freeform and @fixed are specialized versions of @org.scalameta.adt.leaf for scala.meta tokens.
+
+class freeform(name: String) extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro TokenNamerMacros.freeform
+}
+
+class fixed(name: String) extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro TokenNamerMacros.fixed
 }
 
 class TokenNamerMacros(val c: Context) extends MacroHelpers {
@@ -21,8 +26,13 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
   val Dialect = tq"_root_.scala.meta.Dialect"
   val Token = tq"_root_.scala.meta.tokens.Token"
   val Classifier = tq"_root_.scala.meta.classifiers.Classifier"
+  val Int = tq"_root_.scala.Int"
 
-  def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+  def freeform(annottees: Tree*): Tree = impl(annottees, isFixed = false)
+
+  def fixed(annottees: Tree*): Tree = impl(annottees, isFixed = true)
+
+  private def impl(annottees: Seq[Tree], isFixed: Boolean): Tree = annottees.transformAnnottees(new ImplTransformer {
     override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
       val providedTokenName = argss match {
@@ -39,8 +49,10 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       val mstats1 = ListBuffer[Tree]() ++ mstats
       val manns1 = ListBuffer[Tree]() ++ mmods.annotations
       def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
+      def hasMethod(name: String): Boolean = stats1.exists{ case DefDef(_, TermName(`name`), _, _, _, _) => true; case _ => false }
 
       // step 1: generate boilerplate required by the @adt infrastructure
+      // NOTE: toString is inherited from Token, unapply is customized.
       anns1 += q"new $AdtPackage.leaf(toString = false)"
       anns1 += q"new $TokenMetadataModule.tokenClass"
       manns1 += q"new $TokenMetadataModule.tokenCompanion"
@@ -63,22 +75,17 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       val tokenName = providedTokenName.flatMap(c => codepage.getOrElse(c.toString, c.toString))
       stats1 += q"def name: _root_.scala.Predef.String = $tokenName"
 
-      // step 4: generate implementation of  `def end: String` for static tokens
-      val isStaticToken = !paramss.flatten.exists(_.name.toString == "end")
-      val needsEnd = isStaticToken && !stats.exists{ case DefDef(_, TermName("end"), _, _, _, _) => true; case _ => false }
-      if (needsEnd) {
+      // step 4: generate implementation of `def end: String` for fixed tokens
+      if (isFixed && !hasMethod("end")) {
         var code = name.decodedName.toString
         if (code == "_ ") code = "_" // NOTE: can't call a class `_`, so have to use `_ `
         if (code == "class ") code = "class" // TODO: wat?
         if (code == "package ") code = "package" // TODO: wat?
-        val hasCustomCode = isStaticToken && stats.exists{ case DefDef(_, TermName("code"), _, _, _, _) => true; case _ => false }
-        val codeRef = if (hasCustomCode) q"this.code.length" else q"${code.length}"
-        stats1 += q"def end: _root_.scala.Int = this.start + $codeRef"
+        stats1 += q"def end: _root_.scala.Int = this.start + ${code.length}"
       }
 
       // step 5: generate implementation of `def adjust`
-      val needsAdjust = !stats.exists{ case DefDef(_, TermName("adjust"), _, _, _, _) => true; case _ => false }
-      if (needsAdjust) {
+      if (!hasMethod("adjust")) {
         val paramContent = q"val content: $Content = this.content"
         val paramDialect = q"val dialect: $Dialect = this.dialect"
         val paramStart = q"val start: _root_.scala.Int = this.start"
@@ -86,12 +93,12 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         val paramDelta = q"val delta: _root_.scala.Int = 0"
         val adjustResult = {
           if (name.toString == "BOF" || name.toString == "EOF") q"this.copy(content = content, dialect = dialect)"
-          else if (isStaticToken) q"this.copy(content = content, dialect = dialect, start = start)"
+          else if (isFixed) q"this.copy(content = content, dialect = dialect, start = start)"
           else q"this.copy(content = content, dialect = dialect, start = start, end = end)"
         }
         val adjustError = {
           if (name.toString == "BOF" || name.toString == "EOF") q""" "position-changing adjust on Token." + this.name """
-          else if (isStaticToken) q""" "end-changing adjust on Tokens." + this.name """
+          else if (isFixed) q""" "end-changing adjust on Tokens." + this.name """
           else q""" "fatal error in the token infrastructure" """
         }
         val body = q"""
@@ -116,8 +123,12 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         stats1 += q"def adjust($paramContent, $paramDialect, $paramStart, $paramEnd, $paramDelta): $Token = $body"
       }
 
-      // step 6: generate the boilerplate fields
-      var paramss1 = (q"val content: $Content" +: q"val dialect: $Dialect" +: paramss.head) +: paramss.tail
+      // step 6: generate boilerplate parameters
+      var boilerplateParams = List(q"val content: $Content", q"val dialect: $Dialect")
+      if (!hasMethod("start")) boilerplateParams :+= q"val start: $Int"
+      if (!hasMethod("end")) boilerplateParams :+= q"val end: $Int"
+      var paramss1 = (boilerplateParams ++ paramss.head) +: paramss.tail
+
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
