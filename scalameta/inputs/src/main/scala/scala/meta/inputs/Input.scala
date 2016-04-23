@@ -3,9 +3,9 @@ package inputs
 
 import java.nio.charset.Charset
 import org.scalameta.data._
-import org.scalameta.convert._
 import org.scalameta.invariants._
 import scala.collection.{immutable, mutable}
+import scala.meta.convert._
 
 // TODO: Input is really sealed, with the only two direct subclasses being Content and Tokens
 // however, I don't really feel like mixing all the three concepts in a single file and a single project

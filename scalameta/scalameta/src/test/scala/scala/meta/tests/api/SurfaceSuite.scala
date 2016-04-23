@@ -32,6 +32,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Tree
       |scala.meta.classifier
       |scala.meta.classifiers
+      |scala.meta.convert
       |scala.meta.dialects
       |scala.meta.inputs
       |scala.meta.inputs.Content

@@ -2,7 +2,7 @@ package scala.meta
 package tokenizers
 
 import org.scalameta.unreachable
-import org.scalameta.convert._
+import scala.meta.convert._
 import scala.meta.tokens._
 import scala.meta.inputs._
 

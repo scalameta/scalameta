@@ -2,7 +2,7 @@ package scala.meta
 package inputs
 
 import java.nio.charset.Charset
-import org.scalameta.convert._
+import scala.meta.convert._
 
 trait Content extends Input {
   def chars: Array[Char]

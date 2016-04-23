@@ -18,16 +18,14 @@ object build extends Build {
     unidocSettings : _*
   ) settings (
     packagedArtifacts := Map.empty,
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(foundation),
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject,
     aggregate in test := false,
     test := (test in scalameta in Test).value
   ) aggregate (
-    foundation,
-    classifiers,
+    common,
     dialects,
     inputs,
     parsers,
-    prettyprinters,
     quasiquotes,
     scalameta,
     tokenizers,
@@ -36,25 +34,15 @@ object build extends Build {
     trees
   )
 
-  lazy val foundation = Project(
-    id   = "foundation",
-    base = file("foundation")
+  lazy val common = Project(
+    id   = "common",
+    base = file("scalameta/common")
   ) settings (
     publishableSettings: _*
   ) settings (
-    description := "Internal helpers shared between projects constituting scala.meta",
+    description := "Bag of private and public helpers used in scala.meta's APIs and implementations",
     enableMacros
   )
-
-  lazy val classifiers = Project(
-    id   = "classifiers",
-    base = file("scalameta/classifiers")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's baseline classifiers",
-    enableMacros
-  ) dependsOn (foundation)
 
   lazy val dialects = Project(
     id   = "dialects",
@@ -64,7 +52,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's dialects",
     enableMacros
-  ) dependsOn (foundation)
+  ) dependsOn (common)
 
   lazy val inputs = Project(
     id   = "inputs",
@@ -73,7 +61,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's APIs for source code in textual format"
-  ) dependsOn (foundation)
+  ) dependsOn (common)
 
   lazy val parsers = Project(
     id   = "parsers",
@@ -82,17 +70,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's API for parsing and its baseline implementation"
-  ) dependsOn (foundation, dialects, inputs, trees)
-
-  lazy val prettyprinters = Project(
-    id   = "prettyprinters",
-    base = file("scalameta/prettyprinters")
-  ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's baseline prettyprinters",
-    enableMacros
-  ) dependsOn (foundation)
+  ) dependsOn (common, dialects, inputs, trees)
 
   lazy val quasiquotes = Project(
     id   = "quasiquotes",
@@ -102,7 +80,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's quasiquotes for abstract syntax trees",
     enableHardcoreMacros
-  ) dependsOn (foundation, trees, parsers)
+  ) dependsOn (common, trees, parsers)
 
   lazy val tokenizers = Project(
     id   = "tokenizers",
@@ -113,7 +91,7 @@ object build extends Build {
     description := "Scala.meta's APIs for tokenization and its baseline implementation",
     libraryDependencies += "com.lihaoyi" %% "scalaparse" % "0.3.7",
     enableMacros
-  ) dependsOn (foundation, dialects, inputs, tokens)
+  ) dependsOn (common, dialects, inputs, tokens)
 
   lazy val tokens = Project(
     id   = "tokens",
@@ -123,7 +101,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's tokens and token-based abstractions (inputs and positions)",
     enableMacros
-  ) dependsOn (foundation, prettyprinters, classifiers, dialects, inputs)
+  ) dependsOn (common, dialects, inputs)
 
   lazy val transversers = Project(
     id   = "transversers",
@@ -133,7 +111,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's traversal and transformation infrastructure for abstract syntax trees",
     enableMacros
-  ) dependsOn (foundation, trees)
+  ) dependsOn (common, trees)
 
   lazy val trees = Project(
     id   = "trees",
@@ -145,7 +123,7 @@ object build extends Build {
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
     enableMacros
-  ) dependsOn (foundation, prettyprinters, dialects, tokens, tokenizers) // TODO: get rid of tokenizers
+  ) dependsOn (common, dialects, tokens, tokenizers) // TODO: get rid of tokenizers
 
   lazy val scalameta = Project(
     id   = "scalameta",
@@ -156,7 +134,7 @@ object build extends Build {
     description := "Scala.meta's metaprogramming APIs"
   ) settings (
     exposePaths("scalameta", Test): _*
-  ) dependsOn (foundation, classifiers, dialects, parsers, prettyprinters, quasiquotes, tokenizers, transversers, trees)
+  ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ crossVersionSharedSources ++ Seq(
     scalaVersion := ScalaVersions.max,

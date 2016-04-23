@@ -2,9 +2,9 @@ package scala.meta
 package internal
 package tokenquasiquotes
 
-import org.scalameta.convert._
 import scala.reflect.macros.whitebox.Context
 import scala.meta.internal.dialects.InstantiateDialect
+import scala.meta.convert._
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokenizers._

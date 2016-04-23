@@ -1,4 +1,4 @@
-package org.scalameta
+package scala.meta
 
 import scala.annotation.implicitNotFound
 

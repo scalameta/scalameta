@@ -1,7 +1,7 @@
 package scala.meta
 package parsers
 
-import org.scalameta.convert._
+import scala.meta.convert._
 import scala.meta.inputs._
 
 class InputWithDialect(input: Input, dialect: Dialect) {
