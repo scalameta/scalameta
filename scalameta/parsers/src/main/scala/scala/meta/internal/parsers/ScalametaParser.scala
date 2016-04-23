@@ -607,21 +607,13 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   }
 
   @classifier
-  trait Literal {
-    def unapply(token: Token): Boolean = {
-      token.isInstanceOf[Token.Literal.Int] || token.isInstanceOf[Token.Literal.Long] ||
-      token.isInstanceOf[Token.Literal.Float] || token.isInstanceOf[Token.Literal.Double] ||
-      token.isInstanceOf[Token.Literal.Char] || token.isInstanceOf[Token.Literal.Symbol] ||
-      token.isInstanceOf[Token.Literal.String] || token.isInstanceOf[Token.Literal.`null`] ||
-      token.isInstanceOf[Token.Literal.`true`] || token.isInstanceOf[Token.Literal.`false`]
-    }
-  }
-
-  @classifier
   trait NumericLiteral {
-    def unapply(token: Token): Boolean = {
-      token.isInstanceOf[Token.Literal.Int] || token.isInstanceOf[Token.Literal.Long] ||
-      token.isInstanceOf[Token.Literal.Float] || token.isInstanceOf[Token.Literal.Double]
+    def unapply(token: Token): Boolean = token match {
+      case Literal(_, _, _, _, Constant.Int(_)) => true
+      case Literal(_, _, _, _, Constant.Long(_)) => true
+      case Literal(_, _, _, _, Constant.Float(_)) => true
+      case Literal(_, _, _, _, Constant.Double(_)) => true
+      case _ => false
     }
   }
 
@@ -1300,41 +1292,39 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def literal(isNegated: Boolean = false): Lit = autoPos {
     def isHex = token.code.startsWith("0x") || token.code.startsWith("0X")
     val res = token match {
-      case token: Token.Literal.Char =>
-        Lit(token.value)
-      case token: Token.Literal.Int =>
-        val value = if (isNegated) -token.value else token.value
+      case Literal(_, _, _, _, Constant.Int(rawValue)) =>
+        val value = if (isNegated) -rawValue else rawValue
         val min = if (isHex) BigInt(Int.MinValue) * 2 + 1 else BigInt(Int.MinValue)
         val max = if (isHex) BigInt(Int.MaxValue) * 2 + 1 else BigInt(Int.MaxValue)
         if (value > max) syntaxError("integer number too large", at = token)
         else if (value < min) syntaxError("integer number too small", at = token)
         Lit(value.toInt)
-      case token: Token.Literal.Long =>
-        val value = if (isNegated) -token.value else token.value
+      case Literal(_, _, _, _, Constant.Long(rawValue)) =>
+        val value = if (isNegated) -rawValue else rawValue
         val min = if (isHex) BigInt(Long.MinValue) * 2 + 1 else BigInt(Long.MinValue)
         val max = if (isHex) BigInt(Long.MaxValue) * 2 + 1 else BigInt(Long.MaxValue)
         if (value > max) syntaxError("integer number too large", at = token)
         else if (value < min) syntaxError("integer number too small", at = token)
         Lit(value.toLong)
-      case token: Token.Literal.Float =>
-        val value = if (isNegated) -token.value else token.value
+      case Literal(_, _, _, _, Constant.Float(rawValue)) =>
+        val value = if (isNegated) -rawValue else rawValue
         if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
         Lit(value.toFloat)
-      case token: Token.Literal.Double  =>
-        val value = if (isNegated) -token.value else token.value
+      case Literal(_, _, _, _, Constant.Double(rawValue)) =>
+        val value = if (isNegated) -rawValue else rawValue
         if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
         Lit(value.toDouble)
-      case token: Token.Literal.String =>
-        Lit(token.value)
-      case token: Token.Literal.Symbol =>
-        Lit(token.value)
-      case token: Token.Literal.`true` =>
-        Lit(true)
-      case token: Token.Literal.`false` =>
-        Lit(false)
-      case token: Token.Literal.`null` =>
+      case Literal(_, _, _, _, Constant.Char(value)) =>
+        Lit(value)
+      case Literal(_, _, _, _, Constant.String(value)) =>
+        Lit(value)
+      case Literal(_, _, _, _, Constant.Symbol(value)) =>
+        Lit(value)
+      case Literal(_, _, _, _, Constant.Boolean(value)) =>
+        Lit(value)
+      case Literal(_, _, _, _, Constant.Null) =>
         Lit(null)
       case _ =>
         unreachable(debug(token))

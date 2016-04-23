@@ -1,7 +1,9 @@
 package scala.meta
 package tokens
 
-import scala.meta.internal.tokens // NOTE: no underscore import!
+import org.scalameta.adt
+import org.scalameta.adt.{Liftables => AdtLiftables}
+import scala.meta.internal.tokens
 import scala.meta.internal.tokens._
 import scala.meta.inputs._
 import scala.meta.classifiers._
@@ -36,18 +38,7 @@ object Token {
 
   @token class Ident(start: Int, end: Int) extends Dynamic { def name = "identifier" }
 
-  object Literal {
-    @token class Int(start: scala.Int, end: scala.Int, value: scala.BigInt) extends Dynamic { def name = "integer literal" }
-    @token class Long(start: scala.Int, end: scala.Int, value: scala.BigInt) extends Dynamic { def name = "long literal" }
-    @token class Float(start: scala.Int, end: scala.Int, value: scala.BigDecimal) extends Dynamic { def name = "float literal" }
-    @token class Double(start: scala.Int, end: scala.Int, value: scala.BigDecimal) extends Dynamic { def name = "double literal" }
-    @token class Char(start: scala.Int, end: scala.Int, value: scala.Char) extends Dynamic { def name = "character literal" }
-    @token class Symbol(start: scala.Int, end: scala.Int, value: scala.Symbol) extends Dynamic { def name = "symbol literal" }
-    @token class String(start: scala.Int, end: scala.Int, value: Predef.String) extends Dynamic { def name = "string literal" }
-    @token class `null`(start: scala.Int) extends Static
-    @token class `true`(start: scala.Int) extends Static
-    @token class `false`(start: scala.Int) extends Static
-  }
+  @token class Literal(start: Int, end: Int, constant: Constant) extends Dynamic { def name = constant.name + " literal" }
 
   object Interpolation {
     @token class Id(start: Int, end: Int) extends Dynamic { def name = "interpolation id" }
@@ -161,6 +152,22 @@ object Token {
   implicit def showSyntax[T <: Token]: Syntax[T] = TokenSyntax.apply[T]
 }
 
+@adt.root trait Constant {
+  def name: String
+  def value: Any
+}
+object Constant {
+  @adt.leaf class Int(value: scala.BigInt) extends Constant { def name = "integer" }
+  @adt.leaf class Long(value: scala.BigInt) extends Constant { def name = "long" }
+  @adt.leaf class Float(value: scala.BigDecimal) extends Constant { def name = "float" }
+  @adt.leaf class Double(value: scala.BigDecimal) extends Constant { def name = "double" }
+  @adt.leaf class Char(value: scala.Char) extends Constant { def name = "character" }
+  @adt.leaf class Symbol(value: scala.Symbol) extends Constant { def name = "symbol" }
+  @adt.leaf class String(value: Predef.String) extends Constant { def name = "string" }
+  @adt.leaf class Boolean(value: scala.Boolean) extends Constant { def name = "boolean" }
+  @adt.leaf object Null extends Constant { def value = null; def name = "null" }
+}
+
 // NOTE: We have this unrelated code here, because of how materializeAdt works.
 // TODO: Revisit this since we now have split everything into separate projects.
 //
@@ -172,7 +179,7 @@ object Token {
 // depending on how the file and its enclosing directories are called.
 // To combat that, we have TokenLiftables right here, guaranteeing that there won't be problems
 // if someone wants to refactor/rename something later.
-trait TokenLiftables extends tokens.Liftables {
+trait TokenLiftables extends AdtLiftables with tokens.Liftables {
   val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
 
@@ -186,6 +193,8 @@ trait TokenLiftables extends tokens.Liftables {
   implicit lazy val liftDialect: Liftable[Dialect] = Liftable[Dialect] { dialect =>
     q"_root_.scala.meta.Dialect.forName(${dialect.name})"
   }
+
+  implicit lazy val liftConstant: Liftable[scala.meta.tokens.Constant] = materializeAdt[scala.meta.tokens.Constant]
 
   implicit lazy val liftBigInt: Liftable[BigInt] = Liftable[BigInt] { v =>
     q"_root_.scala.math.BigInt(${v.bigInteger.toString})"
