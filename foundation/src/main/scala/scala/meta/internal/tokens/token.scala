@@ -53,7 +53,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
 
       // step 1: generate boilerplate required by the @adt infrastructure
       // NOTE: toString is inherited from Token, unapply is customized.
-      anns1 += q"new $AdtPackage.leaf(toString = false, unapply = false)"
+      anns1 += q"new $AdtPackage.leaf(toString = false, apply = false, unapply = false)"
       anns1 += q"new $TokenMetadataModule.tokenClass"
       manns1 += q"new $TokenMetadataModule.tokenCompanion"
 
@@ -145,6 +145,12 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       if (!hasMethod("start")) boilerplateParams :+= q"val start: $Int"
       if (!hasMethod("end")) boilerplateParams :+= q"val end: $Int"
       var paramss1 = (boilerplateParams ++ paramss.head) +: paramss.tail
+
+      // step 8: generate implementation of `Companion.apply`
+      // TODO: deduplicate wrt @data
+      val applyParamss = paramss1.map(_.map(_.duplicate))
+      val applyArgss = paramss1.map(_.map(p => q"${p.name}"))
+      mstats1 += q"private[meta] def apply(...$applyParamss): $name = new $name(...$applyArgss)"
 
       val cdef1 = q"$mods1 class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
