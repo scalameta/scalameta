@@ -58,7 +58,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       // step 1: generate boilerplate required by the @adt infrastructure
       // NOTE: toString is inherited from Token, unapply is customized.
       anns1 += q"new $AdtPackage.leaf(toString = false, apply = false, unapply = false)"
-      anns1 += q"new $TokenMetadataModule.tokenClass"
+      anns1 += q"new $TokenMetadataModule.tokenClass($providedTokenName)"
       manns1 += q"new $TokenMetadataModule.tokenCompanion"
 
       // step 2: generate boilerplate required by the classifier infrastructure

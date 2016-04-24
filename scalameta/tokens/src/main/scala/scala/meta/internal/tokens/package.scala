@@ -5,7 +5,7 @@ import scala.meta.inputs.Content
 import scala.meta.tokens.Token
 
 package object tokens {
-  implicit class XtensionAdjust(token: Token) {
+  implicit class XtensionTokenAdjust(token: Token) {
     def adjust(content: Content = token.content, dialect: Dialect = token.dialect, delta: Int = 0): Token = {
       // TODO: This is very ugly. We need to find way to enable GP for tokens and trees.
       val copy = token.getClass.getDeclaredMethods().find(_.getName == "copy").get
@@ -36,6 +36,18 @@ package object tokens {
         case ex: IllegalArgumentException if ex.getMessage == "argument type mismatch" =>
           informativeFail()
       }
+    }
+  }
+
+  implicit class XtensionTokenName(token: Token) {
+    def name: String = {
+      import scala.reflect.runtime.{universe => ru}
+      import scala.reflect.runtime.universe._
+      val mirror = ru.runtimeMirror(classOf[Token].getClassLoader)
+      val sym = mirror.classSymbol(token.getClass)
+      val ann = sym.annotations.map(_.tree).find(_.tpe.typeSymbol == symbolOf[Metadata.tokenClass]).get
+      val q"new $_(${name: String})" = ann
+      name
     }
   }
 }
