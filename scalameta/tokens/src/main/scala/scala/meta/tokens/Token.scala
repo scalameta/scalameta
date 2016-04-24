@@ -32,7 +32,7 @@ object Token {
   // Identifiers
   @freeform("identifier") class Ident(value: String) extends Token
 
-  // Keywords
+  // Alphanumeric keywords
   @fixed("abstract") class Abstract extends Token
   @fixed("case") class Case extends Token
   @fixed("catch") class Catch extends Token
@@ -70,6 +70,8 @@ object Token {
   @fixed("while") class While extends Token
   @fixed("with") class With extends Token
   @fixed("yield") class Yield extends Token
+
+  // Symbolic keywords
   @fixed("#") class Hash extends Token
   @fixed(":") class Colon extends Token
   @fixed("<%") class Viewbound extends Token
