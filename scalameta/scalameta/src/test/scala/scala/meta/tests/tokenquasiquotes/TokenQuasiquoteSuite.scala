@@ -111,7 +111,7 @@ class TokenQuasiquoteSuite extends FunSuite {
   }
 
   test("Pattern extraction with types specified") {
-    val toks"${hello: Token.Ident} ${world: Token.Ident} ${number: Token.Literal}" = toks"hola mundo 123"
+    val toks"${hello: Token.Ident} ${world: Token.Ident} ${number: Token.Constant.Int}" = toks"hola mundo 123"
     assert(hello isIdentNamed "hola")
     assert(world isIdentNamed "mundo")
     assert(number isIntLit 123)
@@ -175,8 +175,8 @@ class TokenQuasiquoteSuite extends FunSuite {
     def isMinus: Boolean = t isIdentNamed "-"
 
     def isIntLit(expected: Int): Boolean = t match {
-      case t: Literal => t.constant.value == BigInt(expected)
-      case _          => false
+      case Token.Constant.Int(value) => value == BigInt(expected)
+      case _                         => false
     }
 
     def isWhitespace: Boolean = t.is[Space] || t.is[Tab] || t.is[CR] || t.is[LF] || t.is[FF]

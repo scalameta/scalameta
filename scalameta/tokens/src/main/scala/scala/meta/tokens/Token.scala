@@ -1,8 +1,6 @@
 package scala.meta
 package tokens
 
-import org.scalameta.adt
-import org.scalameta.adt.{Liftables => AdtLiftables}
 import scala.meta.internal.tokens
 import scala.meta.internal.tokens._
 import scala.meta.inputs._
@@ -39,6 +37,7 @@ object Token {
   @fixed("do") class Do extends Token
   @fixed("else") class Else extends Token
   @fixed("extends") class Extends extends Token
+  @fixed("false") class False extends Token
   @fixed("final") class Final extends Token
   @fixed("finally") class Finally extends Token
   @fixed("for") class For extends Token
@@ -50,6 +49,7 @@ object Token {
   @fixed("match") class Match extends Token
   @fixed("macro") class Macro extends Token
   @fixed("new") class New extends Token
+  @fixed("null") class Null extends Token
   @fixed("object") class Object extends Token
   @fixed("override") class Override extends Token
   @fixed("package") class Package extends Token
@@ -61,6 +61,7 @@ object Token {
   @fixed("this") class This extends Token
   @fixed("throw") class Throw extends Token
   @fixed("trait") class Trait extends Token
+  @fixed("true") class True extends Token
   @fixed("try") class Try extends Token
   @fixed("type") class Type extends Token
   @fixed("val") class Val extends Token
@@ -92,8 +93,16 @@ object Token {
   @fixed("{") class LeftBrace extends Token
   @fixed("}") class RightBrace extends Token
 
-  // Literals
-  @freeform("literal") class Literal(constant: Constant) extends Token
+  // Literals (include some keywords from above, constants, interpolations and xml)
+  object Constant {
+    @freeform("integer constant") class Int(value: scala.BigInt) extends Token
+    @freeform("long constant") class Long(value: scala.BigInt) extends Token
+    @freeform("float constant") class Float(value: scala.BigDecimal) extends Token
+    @freeform("double constant") class Double(value: scala.BigDecimal) extends Token
+    @freeform("character constant") class Char(value: scala.Char) extends Token
+    @freeform("symbol constant") class Symbol(value: scala.Symbol) extends Token
+    @freeform("string constant") class String(value: Predef.String) extends Token
+  }
   object Interpolation {
     @freeform("interpolation id") class Id extends Token
     @freeform("interpolation start") class Start extends Token
@@ -134,19 +143,6 @@ object Token {
   implicit def showSyntax[T <: Token]: Syntax[T] = TokenSyntax.apply[T]
 }
 
-@adt.root trait Constant { def value: Any }
-object Constant {
-  @adt.leaf class Int(value: scala.BigInt) extends Constant
-  @adt.leaf class Long(value: scala.BigInt) extends Constant
-  @adt.leaf class Float(value: scala.BigDecimal) extends Constant
-  @adt.leaf class Double(value: scala.BigDecimal) extends Constant
-  @adt.leaf class Char(value: scala.Char) extends Constant
-  @adt.leaf class Symbol(value: scala.Symbol) extends Constant
-  @adt.leaf class String(value: Predef.String) extends Constant
-  @adt.leaf class Boolean(value: scala.Boolean) extends Constant
-  @adt.leaf object Null extends Constant { def value = null }
-}
-
 // NOTE: We have this unrelated code here, because of how materializeAdt works.
 // TODO: Revisit this since we now have split everything into separate projects.
 //
@@ -158,7 +154,7 @@ object Constant {
 // depending on how the file and its enclosing directories are called.
 // To combat that, we have TokenLiftables right here, guaranteeing that there won't be problems
 // if someone wants to refactor/rename something later.
-trait TokenLiftables extends AdtLiftables with tokens.Liftables {
+trait TokenLiftables extends tokens.Liftables {
   val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
 
@@ -172,8 +168,6 @@ trait TokenLiftables extends AdtLiftables with tokens.Liftables {
   implicit lazy val liftDialect: Liftable[Dialect] = Liftable[Dialect] { dialect =>
     q"_root_.scala.meta.Dialect.forName(${dialect.name})"
   }
-
-  implicit lazy val liftConstant: Liftable[scala.meta.tokens.Constant] = materializeAdt[scala.meta.tokens.Constant]
 
   implicit lazy val liftBigInt: Liftable[BigInt] = Liftable[BigInt] { v =>
     q"_root_.scala.math.BigInt(${v.bigInteger.toString})"

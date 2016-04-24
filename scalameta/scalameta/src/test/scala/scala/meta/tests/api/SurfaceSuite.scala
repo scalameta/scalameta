@@ -371,6 +371,14 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.Colon
       |scala.meta.tokens.Token.Comma
       |scala.meta.tokens.Token.Comment
+      |scala.meta.tokens.Token.Constant
+      |scala.meta.tokens.Token.Constant.Char
+      |scala.meta.tokens.Token.Constant.Double
+      |scala.meta.tokens.Token.Constant.Float
+      |scala.meta.tokens.Token.Constant.Int
+      |scala.meta.tokens.Token.Constant.Long
+      |scala.meta.tokens.Token.Constant.String
+      |scala.meta.tokens.Token.Constant.Symbol
       |scala.meta.tokens.Token.Def
       |scala.meta.tokens.Token.Do
       |scala.meta.tokens.Token.Dot
@@ -379,6 +387,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.Equals
       |scala.meta.tokens.Token.Extends
       |scala.meta.tokens.Token.FF
+      |scala.meta.tokens.Token.False
       |scala.meta.tokens.Token.Final
       |scala.meta.tokens.Token.Finally
       |scala.meta.tokens.Token.For
@@ -401,10 +410,10 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.LeftBrace
       |scala.meta.tokens.Token.LeftBracket
       |scala.meta.tokens.Token.LeftParen
-      |scala.meta.tokens.Token.Literal
       |scala.meta.tokens.Token.Macro
       |scala.meta.tokens.Token.Match
       |scala.meta.tokens.Token.New
+      |scala.meta.tokens.Token.Null
       |scala.meta.tokens.Token.Object
       |scala.meta.tokens.Token.Override
       |scala.meta.tokens.Token.Package
@@ -425,6 +434,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.This
       |scala.meta.tokens.Token.Throw
       |scala.meta.tokens.Token.Trait
+      |scala.meta.tokens.Token.True
       |scala.meta.tokens.Token.Try
       |scala.meta.tokens.Token.Type
       |scala.meta.tokens.Token.Underscore

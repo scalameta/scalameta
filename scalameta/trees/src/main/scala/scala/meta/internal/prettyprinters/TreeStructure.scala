@@ -32,7 +32,16 @@ object TreeStructure {
           s(enquote(value, DoubleQuotes))
         case x @ Lit(_) =>
           def isRelevantToken(tok: Token) = tok match {
-            case Literal(_) => true
+            case Constant.Int(_) => true
+            case Constant.Long(_) => true
+            case Constant.Float(_) => true
+            case Constant.Double(_) => true
+            case Constant.Char(_) => true
+            case Constant.Symbol(_) => true
+            case Constant.String(_) => true
+            case True() => true
+            case False() => true
+            case Null() => true
             case Ident("-") => true
             case _ => false
           }

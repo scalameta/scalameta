@@ -18,7 +18,13 @@ package object tokens {
       boilerplate += dialect
       token match {
         case Token.Ident(value) => payload += value
-        case Token.Literal(constant) => payload += constant
+        case Token.Constant.Int(value) => payload += value
+        case Token.Constant.Long(value) => payload += value
+        case Token.Constant.Float(value) => payload += value
+        case Token.Constant.Double(value) => payload += value
+        case Token.Constant.Char(value) => payload += value
+        case Token.Constant.Symbol(value) => payload += value
+        case Token.Constant.String(value) => payload += value
         case Token.Interpolation.Part(value) => payload += value
         case Token.Xml.Part(value) => payload += value
         case Token.Ellipsis(rank) => payload += rank

@@ -36,23 +36,23 @@ private[meta] object inferTokens {
     implicit def stringToInput(str: String) = Input.String(str)
     val str = if (value != null) value.toString else "null"
     val newTok = value match {
-      case y: Int =>     Token.Literal(str, dialect, 0, str.length, Constant.Int(y))
-      case y: Long =>    Token.Literal(str + "L", dialect, 0, str.length + 1, Constant.Long(y))
-      case y: Float =>   Token.Literal(str + "F", dialect, 0, str.length + 1, Constant.Float(y))
-      case y: Double =>  Token.Literal(str, dialect, 0, str.length, Constant.Double(y))
+      case y: Int =>     Token.Constant.Int(str, dialect, 0, str.length, y)
+      case y: Long =>    Token.Constant.Long(str + "L", dialect, 0, str.length + 1, y)
+      case y: Float =>   Token.Constant.Float(str + "F", dialect, 0, str.length + 1, y)
+      case y: Double =>  Token.Constant.Double(str, dialect, 0, str.length, y)
       case y: Char =>
         val newChar = enquote(str, SingleQuotes)
-        Token.Literal(newChar, dialect, 0, newChar.length, Constant.Char(y))
-      case y: Symbol =>  Token.Literal(str, dialect, 0, str.length, Constant.Symbol(y))
+        Token.Constant.Char(newChar, dialect, 0, newChar.length, y)
+      case y: Symbol =>  Token.Constant.Symbol(str, dialect, 0, str.length, y)
       case y: String =>
         val newStr = {
           if (y.contains(EOL)) enquote(str, TripleQuotes)
           else enquote(str, DoubleQuotes)
         }
-        Token.Literal(newStr, dialect, 0, newStr.length, Constant.String(newStr))
-      case true =>       Token.Literal(str, dialect, 0, str.length, Constant.Boolean(true))
-      case false =>      Token.Literal(str, dialect, 0, str.length, Constant.Boolean(false))
-      case null =>       Token.Literal(str, dialect, 0, str.length, Constant.Null)
+        Token.Constant.String(newStr, dialect, 0, newStr.length, y)
+      case true =>       Token.True(str, dialect, 0)
+      case false =>      Token.False(str, dialect, 0)
+      case null =>       Token.Null(str, dialect, 0)
     }
     Tokens(newTok)
   }
@@ -69,8 +69,8 @@ private[meta] object inferTokens {
 
     /* partial token vectors used in various constructions */
     val indentation =        toks"  " // In the future, this could be inferred
-    val singleDoubleQuotes = Tokens(Token.Literal(Input.String("\""), dialect, 0, 1, Constant.String("\"")))
-    val tripleDoubleQuotes = Tokens(Token.Literal(Input.String("\"\"\""), dialect, 0, 3, Constant.String("\"\"\"")))
+    val singleDoubleQuotes = Tokens(Token.Constant.String(Input.String("\""), dialect, 0, 1, "\""))
+    val tripleDoubleQuotes = Tokens(Token.Constant.String(Input.String("\"\"\""), dialect, 0, 3, "\"\"\""))
     val newline =            Tokens(Token.LF(Input.String("\n"), dialect, 0))
 
     /* Enrichments for token manipulation */
