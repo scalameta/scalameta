@@ -442,7 +442,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     if (token.is[T]) next()
 
   /** {{{
-   *  semi = nl {nl} | `;`
+   *  semi = nl {nl} | `;'
    *  nl  = `\n' // where allowed
    *  }}}
    */
