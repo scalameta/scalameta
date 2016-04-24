@@ -375,7 +375,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.Dot
       |scala.meta.tokens.Token.EOF
       |scala.meta.tokens.Token.Else
-      |scala.meta.tokens.Token.Equal
+      |scala.meta.tokens.Token.Equals
       |scala.meta.tokens.Token.Extends
       |scala.meta.tokens.Token.FF
       |scala.meta.tokens.Token.Final

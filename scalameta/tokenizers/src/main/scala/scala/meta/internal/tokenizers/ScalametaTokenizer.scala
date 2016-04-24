@@ -87,7 +87,7 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
         case SEMI      => Token.Semicolon(content, dialect, curr.offset)
         case DOT       => Token.Dot(content, dialect, curr.offset)
         case COLON     => Token.Colon(content, dialect, curr.offset)
-        case EQUALS    => Token.Equal(content, dialect, curr.offset)
+        case EQUALS    => Token.Equals(content, dialect, curr.offset)
         case AT        => Token.At(content, dialect, curr.offset)
         case HASH      => Token.Hash(content, dialect, curr.offset)
         case USCORE    => Token.Underscore(content, dialect, curr.offset)

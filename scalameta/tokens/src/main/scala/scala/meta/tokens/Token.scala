@@ -77,7 +77,7 @@ object Token {
   @fixed("<%") class Viewbound extends Token
   @freeform("<-") class LeftArrow extends Token
   @fixed("<:") class Subtype extends Token
-  @fixed("=") class Equal extends Token
+  @fixed("=") class Equals extends Token
   @freeform("=>") class RightArrow extends Token
   @fixed(">:") class Supertype extends Token
   @fixed("@") class At extends Token
