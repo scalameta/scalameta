@@ -78,8 +78,8 @@ private[meta] class ScalametaTokenizer(val content: Content)(implicit val dialec
 
         case LPAREN   => Token.LeftParen(content, dialect, curr.offset)
         case RPAREN   => Token.RightParen(content, dialect, curr.offset)
-        case LBRACKET => Token.LeftBrack(content, dialect, curr.offset)
-        case RBRACKET => Token.RightBrack(content, dialect, curr.offset)
+        case LBRACKET => Token.LeftBracket(content, dialect, curr.offset)
+        case RBRACKET => Token.RightBracket(content, dialect, curr.offset)
         case LBRACE   => Token.LeftBrace(content, dialect, curr.offset)
         case RBRACE   => Token.RightBrace(content, dialect, curr.offset)
 

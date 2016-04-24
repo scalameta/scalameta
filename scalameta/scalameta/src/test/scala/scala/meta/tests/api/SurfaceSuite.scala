@@ -398,7 +398,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.Lazy
       |scala.meta.tokens.Token.LeftArrow
       |scala.meta.tokens.Token.LeftBrace
-      |scala.meta.tokens.Token.LeftBrack
+      |scala.meta.tokens.Token.LeftBracket
       |scala.meta.tokens.Token.LeftParen
       |scala.meta.tokens.Token.Literal
       |scala.meta.tokens.Token.Macro
@@ -412,7 +412,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.Return
       |scala.meta.tokens.Token.RightArrow
       |scala.meta.tokens.Token.RightBrace
-      |scala.meta.tokens.Token.RightBrack
+      |scala.meta.tokens.Token.RightBracket
       |scala.meta.tokens.Token.RightParen
       |scala.meta.tokens.Token.Sealed
       |scala.meta.tokens.Token.Semicolon

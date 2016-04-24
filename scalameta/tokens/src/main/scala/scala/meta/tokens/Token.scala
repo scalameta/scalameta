@@ -87,8 +87,8 @@ object Token {
   @fixed(",") class Comma extends Token
   @fixed(".") class Dot extends Token
   @fixed(";") class Semicolon extends Token
-  @fixed("[") class LeftBrack extends Token
-  @fixed("]") class RightBrack extends Token
+  @fixed("[") class LeftBracket extends Token
+  @fixed("]") class RightBracket extends Token
   @fixed("{") class LeftBrace extends Token
   @fixed("}") class RightBrace extends Token
 

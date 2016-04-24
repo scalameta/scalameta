@@ -241,7 +241,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         parserTokenPositions += currPos
         val sepRegions1 = {
           if (curr.is[LeftParen]) ')' :: sepRegions
-          else if (curr.is[LeftBrack]) ']' :: sepRegions
+          else if (curr.is[LeftBracket]) ']' :: sepRegions
           else if (curr.is[LeftBrace]) '}' :: sepRegions
           else if (curr.is[CaseIntro]) '\u21d2' :: sepRegions
           else if (curr.is[RightBrace]) {
@@ -249,7 +249,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
             while (!sepRegions1.isEmpty && sepRegions1.head != '}') sepRegions1 = sepRegions1.tail
             if (!sepRegions1.isEmpty) sepRegions1 = sepRegions1.tail
             sepRegions1
-          } else if (curr.is[RightBrack]) { if (!sepRegions.isEmpty && sepRegions.head == ']') sepRegions.tail else sepRegions }
+          } else if (curr.is[RightBracket]) { if (!sepRegions.isEmpty && sepRegions.head == ']') sepRegions.tail else sepRegions }
           else if (curr.is[RightParen]) { if (!sepRegions.isEmpty && sepRegions.head == ')') sepRegions.tail else sepRegions }
           else if (curr.is[RightArrow]) { if (!sepRegions.isEmpty && sepRegions.head == '\u21d2') sepRegions.tail else sepRegions }
           else sepRegions // do nothing for other tokens
@@ -363,9 +363,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     else body
 
   @inline final def inBrackets[T](body: => T): T = {
-    accept[LeftBrack]
+    accept[LeftBracket]
     val ret = body
-    accept[RightBrack]
+    accept[RightBracket]
     ret
   }
 
@@ -580,7 +580,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       token.is[Catch] || token.is[Else] || token.is[Extends] ||
       token.is[Finally] || token.is[ForSome] || token.is[Match] ||
       token.is[With] || token.is[Yield] ||
-      token.is[RightParen] || token.is[LeftBrack] || token.is[RightBrack] || token.is[RightBrace] ||
+      token.is[RightParen] || token.is[LeftBracket] || token.is[RightBracket] || token.is[RightBrace] ||
       token.is[Comma] || token.is[Colon] || token.is[Dot] || token.is[Equals] ||
       token.is[Semicolon] || token.is[Hash] || token.is[RightArrow] || token.is[LeftArrow] ||
       token.is[Subtype] || token.is[Supertype] || token.is[Viewbound] ||
@@ -594,7 +594,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       token.is[Ident] || token.is[Literal] ||
       token.is[Interpolation.End] || token.is[Xml.End] ||
       token.is[Return] || token.is[This] || token.is[TypeToken] ||
-      token.is[RightParen] || token.is[RightBrack] || token.is[RightBrace] || token.is[Underscore] ||
+      token.is[RightParen] || token.is[RightBracket] || token.is[RightBrace] || token.is[Underscore] ||
       token.is[Ellipsis] || token.is[Unquote]
     }
   }
@@ -957,7 +957,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
     def simpleTypeRest(t: Type): Type = token match {
       case Hash()      => next(); simpleTypeRest(atPos(t, auto)(Type.Project(t, typeName())))
-      case LeftBrack() => simpleTypeRest(atPos(t, auto)(Type.Apply(t, typeArgs())))
+      case LeftBracket() => simpleTypeRest(atPos(t, auto)(Type.Apply(t, typeArgs())))
       case _           => t
     }
 
@@ -1248,7 +1248,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   *   }}}
   */
   def mixinQualifier(): Name.Qualifier = {
-    if (token.is[LeftBrack]) {
+    if (token.is[LeftBracket]) {
       inBrackets {
         typeName() match {
           case q: Type.Name.Quasi => q.become[Name.Qualifier.Quasi]
@@ -1803,7 +1803,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         // Infix chain continues.
         // In the running example, we're at `a [+] b`.
         val op = termName() // op = [+]
-        val targs = if (token.is[LeftBrack]) exprTypeArgs() else Nil // targs = Nil
+        val targs = if (token.is[LeftBracket]) exprTypeArgs() else Nil // targs = Nil
 
         // Check whether we're still infix or already postfix by testing the current token.
         // In the running example, we're at `a + [b]` (infix).
@@ -1928,11 +1928,11 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case Dot() =>
         next()
         simpleExprRest(selector(t), canApply = true)
-      case LeftBrack() =>
+      case LeftBracket() =>
         t match {
           case _: Term.Quasi | _: Term.Name | _: Term.Select | _: Term.Apply =>
             var app: Term = t
-            while (token.is[LeftBrack])
+            while (token.is[LeftBracket])
               app = atPos(t, auto)(Term.ApplyType(app, exprTypeArgs()))
 
             simpleExprRest(app, canApply = true)
@@ -1968,7 +1968,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       val args = argumentExprs()
       val closeParenPos = in.prevTokenPos
       token match {
-        case Dot() | LeftBrack() | LeftParen() | LeftBrace() | Underscore() =>
+        case Dot() | LeftBracket() | LeftParen() | LeftBrace() | Underscore() =>
           simpleExprRest(argsToTerm(args, openParenPos, closeParenPos), canApply = true) :: Nil
         case _ =>
           args match {
@@ -2301,7 +2301,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         val lhs1 = ctx.reduceStack(base, rhs, rhs, op)
         op match {
           case Some(op) =>
-            if (token.is[LeftBrack]) syntaxError("infix patterns cannot have type arguments", at = token)
+            if (token.is[LeftBracket]) syntaxError("infix patterns cannot have type arguments", at = token)
             ctx.push(lhs1, lhs1, lhs1, op, Nil)
             val rhs1 = simplePattern(badPattern3)
             loop(rhs1)
@@ -2371,7 +2371,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           }
         }
         val targs = token match {
-          case LeftBrack() => patternTypeArgs()
+          case LeftBracket() => patternTypeArgs()
           case _        => Nil
         }
         (token, sid) match {
@@ -2454,7 +2454,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case other => unreachable(debug(other, other.show[Structure]))
     }
     next()
-    if (in.token.isNot[LeftBrack]) mod(autoPos(Name.Anonymous()))
+    if (in.token.isNot[LeftBracket]) mod(autoPos(Name.Anonymous()))
     else {
       next()
       val result = {
@@ -2469,7 +2469,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           mod(atPos(name, name)(Name.Indeterminate(name.value)))
         }
       }
-      accept[RightBrack]
+      accept[RightBracket]
       result
     }
   }
@@ -2518,7 +2518,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     }
     // the only things that can come after $mod or $mods are either keywords or $pname/$tpname; the former is easy,
     // but in the case of the latter, we need to take care to not hastily parse those names as modifiers
-    def continueLoop = ahead(token.is[Colon] || token.is[Equals] || token.is[EOF] || token.is[LeftBrack] || token.is[Subtype] || token.is[Supertype] || token.is[Viewbound])
+    def continueLoop = ahead(token.is[Colon] || token.is[Equals] || token.is[EOF] || token.is[LeftBracket] || token.is[Subtype] || token.is[Supertype] || token.is[Viewbound])
     def loop(mods: List[Mod]): List[Mod] = token match {
       case Unquote(_)       => if (continueLoop) mods else loop(appendMod(mods, modifier()))
       case Ellipsis(_)      => loop(appendMod(mods, modifier()))
@@ -2675,8 +2675,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  }}}
    */
   def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[Type.Param] = {
-    newLineOptWhenFollowedBy[LeftBrack]
-    if (token.isNot[LeftBrack]) Nil
+    newLineOptWhenFollowedBy[LeftBracket]
+    if (token.isNot[LeftBracket]) Nil
     else inBrackets(commaSeparated(typeParam(ownerIsType, ctxBoundsAllowed)))
   }
 
@@ -3000,7 +3000,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     // TODO:
     // if (owner == nme.CONSTRUCTOR && (result.isEmpty || (result.head take 1 exists (_.mods.isImplicit)))) {
     //  token match {
-    //    case LeftBrack() => syntaxError("no type parameters allowed here")
+    //    case LeftBracket() => syntaxError("no type parameters allowed here")
     //    case EOF()       => incompleteInputError("auxiliary constructor needs non-implicit parameter list")
     //    case _           => syntaxError(start, "auxiliary constructor needs non-implicit parameter list")
     //  }
