@@ -2,7 +2,7 @@ package org.scalameta.tests
 package classifiers
 
 import org.scalatest._
-import scala.meta.classifier
+import scala.meta.internal.classifiers.classifier
 import scala.meta.classifiers._
 
 trait Unclassifiable

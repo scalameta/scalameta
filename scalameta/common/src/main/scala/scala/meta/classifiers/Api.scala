@@ -18,6 +18,4 @@ private[meta] trait Api {
 }
 
 private[meta] trait Aliases {
-  // NOTE: This doesn't work, see https://github.com/scalamacros/paradise/issues/8.
-  //type classifier = scala.meta.classifiers.classifier
 }

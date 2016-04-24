@@ -23,6 +23,7 @@ import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
 import scala.meta.classifiers._
+import scala.meta.internal.classifiers._
 import org.scalameta._
 import org.scalameta.invariants._
 
