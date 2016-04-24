@@ -70,17 +70,13 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
 
       // step 3: generate implementation of `def name: String`
       // TODO: deduplicate with scala.meta.internal.prettyprinters.escape
-      // NOTE: can be removed altogether once tokens are renamed
       val codepage = Map("\t" -> "\\t", "\b" -> "\\b", "\n" -> "\\n", "\r" -> "\\r", "\f" -> "\\f", "\\" -> "\\\\")
       val tokenName = providedTokenName.flatMap(c => codepage.getOrElse(c.toString, c.toString))
       stats1 += q"def name: _root_.scala.Predef.String = $tokenName"
 
       // step 4: generate implementation of `def end: String` for fixed tokens
       if (isFixed && !hasMethod("end")) {
-        var code = name.decodedName.toString
-        if (code == "_ ") code = "_" // NOTE: can't call a class `_`, so have to use `_ `
-        if (code == "class ") code = "class" // TODO: wat?
-        if (code == "package ") code = "package" // TODO: wat?
+        val code = providedTokenName // as simple as that
         stats1 += q"def end: _root_.scala.Int = this.start + ${code.length}"
       }
 

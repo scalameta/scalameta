@@ -71,7 +71,7 @@ private[meta] object inferTokens {
     val indentation =        toks"  " // In the future, this could be inferred
     val singleDoubleQuotes = Tokens(Token.Literal(Input.String("\""), dialect, 0, 1, Constant.String("\"")))
     val tripleDoubleQuotes = Tokens(Token.Literal(Input.String("\"\"\""), dialect, 0, 3, Constant.String("\"\"\"")))
-    val newline =            Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
+    val newline =            Tokens(Token.LF(Input.String("\n"), dialect, 0))
 
     /* Enrichments for token manipulation */
     implicit class RichTree(tree: Tree) {
@@ -315,7 +315,7 @@ private[meta] object inferTokens {
         case (_: Term.ApplyUnary, Some(_: Term.Select)) => true
         case _ =>                                         false
       }
-      def hasParens = tree.tokens.head.isInstanceOf[Token.`(`] && tree.tokens.last.isInstanceOf[Token.`)`]
+      def hasParens = tree.tokens.head.isInstanceOf[Token.LeftParen] && tree.tokens.last.isInstanceOf[Token.RightParen]
       if (needsParens && !hasParens) toks"(${deindent(tree.tokens)})"
       else deindent(tree.tokens)
     }
