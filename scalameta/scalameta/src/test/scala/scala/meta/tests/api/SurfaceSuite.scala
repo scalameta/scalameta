@@ -27,6 +27,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
   val core = tlds -- trees -- tokens
 
   test("public top-level definitions (core)") {
+    // println(core.toList.sorted.mkString(EOL))
     assert(core.toList.sorted.mkString(EOL) === """
       |scala.meta.Dialect
       |scala.meta.Tree
@@ -83,6 +84,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
   }
 
   test("public top-level definitions (trees)") {
+    // println(trees.toList.sorted.mkString(EOL))
     assert(trees.toList.sorted.mkString(EOL) === """
       |scala.meta.Case
       |scala.meta.Case.Api
@@ -356,25 +358,35 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
 
   test("public top-level definitions (tokens)") {
     def encode(name: String) = name.replace(" ", "WHITESPACE").replace("\n", "\\n").replace("\r", "\\r").replace("\f", "\\f").replace("\t", "\\t")
+    // println(tokens.toList.map(encode).sorted.mkString(EOL))
     assert(tokens.toList.map(encode).sorted.mkString(EOL) === """
-      |scala.meta.tokens.Token.#
-      |scala.meta.tokens.Token.(
-      |scala.meta.tokens.Token.)
-      |scala.meta.tokens.Token.,
-      |scala.meta.tokens.Token..
-      |scala.meta.tokens.Token.:
-      |scala.meta.tokens.Token.;
-      |scala.meta.tokens.Token.<%
-      |scala.meta.tokens.Token.<-
-      |scala.meta.tokens.Token.<:
-      |scala.meta.tokens.Token.=
-      |scala.meta.tokens.Token.=>
-      |scala.meta.tokens.Token.>:
-      |scala.meta.tokens.Token.@
+      |scala.meta.tokens.Token.Abstract
+      |scala.meta.tokens.Token.At
       |scala.meta.tokens.Token.BOF
+      |scala.meta.tokens.Token.CR
+      |scala.meta.tokens.Token.Case
+      |scala.meta.tokens.Token.Catch
+      |scala.meta.tokens.Token.Class
+      |scala.meta.tokens.Token.Colon
+      |scala.meta.tokens.Token.Comma
       |scala.meta.tokens.Token.Comment
+      |scala.meta.tokens.Token.Def
+      |scala.meta.tokens.Token.Do
+      |scala.meta.tokens.Token.Dot
       |scala.meta.tokens.Token.EOF
+      |scala.meta.tokens.Token.Else
+      |scala.meta.tokens.Token.Equal
+      |scala.meta.tokens.Token.Extends
+      |scala.meta.tokens.Token.FF
+      |scala.meta.tokens.Token.Final
+      |scala.meta.tokens.Token.Finally
+      |scala.meta.tokens.Token.For
+      |scala.meta.tokens.Token.ForSome
+      |scala.meta.tokens.Token.Hash
       |scala.meta.tokens.Token.Ident
+      |scala.meta.tokens.Token.If
+      |scala.meta.tokens.Token.Implicit
+      |scala.meta.tokens.Token.Import
       |scala.meta.tokens.Token.Interpolation
       |scala.meta.tokens.Token.Interpolation.End
       |scala.meta.tokens.Token.Interpolation.Id
@@ -382,60 +394,51 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.Interpolation.SpliceEnd
       |scala.meta.tokens.Token.Interpolation.SpliceStart
       |scala.meta.tokens.Token.Interpolation.Start
+      |scala.meta.tokens.Token.LF
+      |scala.meta.tokens.Token.Lazy
+      |scala.meta.tokens.Token.LeftArrow
+      |scala.meta.tokens.Token.LeftBrace
+      |scala.meta.tokens.Token.LeftBrack
+      |scala.meta.tokens.Token.LeftParen
       |scala.meta.tokens.Token.Literal
-      |scala.meta.tokens.Token.WHITESPACE
+      |scala.meta.tokens.Token.Macro
+      |scala.meta.tokens.Token.Match
+      |scala.meta.tokens.Token.New
+      |scala.meta.tokens.Token.Object
+      |scala.meta.tokens.Token.Override
+      |scala.meta.tokens.Token.Package
+      |scala.meta.tokens.Token.Private
+      |scala.meta.tokens.Token.Protected
+      |scala.meta.tokens.Token.Return
+      |scala.meta.tokens.Token.RightArrow
+      |scala.meta.tokens.Token.RightBrace
+      |scala.meta.tokens.Token.RightBrack
+      |scala.meta.tokens.Token.RightParen
+      |scala.meta.tokens.Token.Sealed
+      |scala.meta.tokens.Token.Semicolon
+      |scala.meta.tokens.Token.Space
+      |scala.meta.tokens.Token.Subtype
+      |scala.meta.tokens.Token.Super
+      |scala.meta.tokens.Token.Supertype
+      |scala.meta.tokens.Token.Tab
+      |scala.meta.tokens.Token.This
+      |scala.meta.tokens.Token.Throw
+      |scala.meta.tokens.Token.Trait
+      |scala.meta.tokens.Token.Try
+      |scala.meta.tokens.Token.Type
+      |scala.meta.tokens.Token.Underscore
+      |scala.meta.tokens.Token.Val
+      |scala.meta.tokens.Token.Var
+      |scala.meta.tokens.Token.Viewbound
+      |scala.meta.tokens.Token.While
+      |scala.meta.tokens.Token.With
       |scala.meta.tokens.Token.Xml
       |scala.meta.tokens.Token.Xml.End
       |scala.meta.tokens.Token.Xml.Part
       |scala.meta.tokens.Token.Xml.SpliceEnd
       |scala.meta.tokens.Token.Xml.SpliceStart
       |scala.meta.tokens.Token.Xml.Start
-      |scala.meta.tokens.Token.[
-      |scala.meta.tokens.Token.\f
-      |scala.meta.tokens.Token.\n
-      |scala.meta.tokens.Token.\r
-      |scala.meta.tokens.Token.\t
-      |scala.meta.tokens.Token.]
-      |scala.meta.tokens.Token._WHITESPACE
-      |scala.meta.tokens.Token.abstract
-      |scala.meta.tokens.Token.case
-      |scala.meta.tokens.Token.catch
-      |scala.meta.tokens.Token.classWHITESPACE
-      |scala.meta.tokens.Token.def
-      |scala.meta.tokens.Token.do
-      |scala.meta.tokens.Token.else
-      |scala.meta.tokens.Token.extends
-      |scala.meta.tokens.Token.final
-      |scala.meta.tokens.Token.finally
-      |scala.meta.tokens.Token.for
-      |scala.meta.tokens.Token.forSome
-      |scala.meta.tokens.Token.if
-      |scala.meta.tokens.Token.implicit
-      |scala.meta.tokens.Token.import
-      |scala.meta.tokens.Token.lazy
-      |scala.meta.tokens.Token.macro
-      |scala.meta.tokens.Token.match
-      |scala.meta.tokens.Token.new
-      |scala.meta.tokens.Token.object
-      |scala.meta.tokens.Token.override
-      |scala.meta.tokens.Token.packageWHITESPACE
-      |scala.meta.tokens.Token.private
-      |scala.meta.tokens.Token.protected
-      |scala.meta.tokens.Token.return
-      |scala.meta.tokens.Token.sealed
-      |scala.meta.tokens.Token.super
-      |scala.meta.tokens.Token.this
-      |scala.meta.tokens.Token.throw
-      |scala.meta.tokens.Token.trait
-      |scala.meta.tokens.Token.try
-      |scala.meta.tokens.Token.type
-      |scala.meta.tokens.Token.val
-      |scala.meta.tokens.Token.var
-      |scala.meta.tokens.Token.while
-      |scala.meta.tokens.Token.with
-      |scala.meta.tokens.Token.yield
-      |scala.meta.tokens.Token.{
-      |scala.meta.tokens.Token.}
+      |scala.meta.tokens.Token.Yield
     """.trim.stripMargin)
   }
 }
