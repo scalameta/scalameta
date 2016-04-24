@@ -27,6 +27,10 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
   val Token = tq"_root_.scala.meta.tokens.Token"
   val Classifier = tq"_root_.scala.meta.classifiers.Classifier"
   val Int = tq"_root_.scala.Int"
+  val PositionClass = tq"_root_.scala.meta.inputs.Position"
+  val PositionModule = q"_root_.scala.meta.inputs.Position"
+  val PointClass = tq"_root_.scala.meta.inputs.Point"
+  val PointModule = q"_root_.scala.meta.inputs.Point"
 
   def freeform(annottees: Tree*): Tree = impl(annottees, isFixed = false)
 
@@ -68,55 +72,39 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       """
       mstats1 ++= classifierBoilerplate
 
-      // step 3: generate implementation of `def name: String`
+      // step 3: perform manual mixin composition in order to avoid the creation of Token$class.class.
+      // We kinda have to do that, because we want to have a `Token.Class` class.
+      stats1 += q"""
+        def code: _root_.scala.Predef.String = new _root_.scala.Predef.String(content.chars.slice(start, end))
+      """
+      stats1 += q"""
+        def position: $PositionClass = {
+          val start = $PointModule.Offset(this.content, this.start)
+          val point = $PointModule.Offset(this.content, this.start)
+          val end = $PointModule.Offset(this.content, this.end)
+          new $PositionModule.Range(this.content, start, point, end)
+        }
+      """
+      stats1 += q"""
+        def is[U](implicit classifier: $Classifier[$Token, U]): _root_.scala.Boolean = classifier.apply(this)
+      """
+      stats1 += q"""
+        def isNot[U](implicit classifier: $Classifier[$Token, U]): _root_.scala.Boolean = !classifier.apply(this)
+      """
+      stats1 += q"""
+        final override def toString: _root_.scala.Predef.String = _root_.scala.meta.internal.prettyprinters.TokenToString(this)
+      """
+
+      // step 4: generate implementation of `def name: String`
       // TODO: deduplicate with scala.meta.internal.prettyprinters.escape
       val codepage = Map("\t" -> "\\t", "\b" -> "\\b", "\n" -> "\\n", "\r" -> "\\r", "\f" -> "\\f", "\\" -> "\\\\")
       val tokenName = providedTokenName.flatMap(c => codepage.getOrElse(c.toString, c.toString))
       stats1 += q"def name: _root_.scala.Predef.String = $tokenName"
 
-      // step 4: generate implementation of `def end: String` for fixed tokens
+      // step 5: generate implementation of `def end: String` for fixed tokens
       if (isFixed && !hasMethod("end")) {
         val code = providedTokenName // as simple as that
         stats1 += q"def end: _root_.scala.Int = this.start + ${code.length}"
-      }
-
-      // step 5: generate implementation of `def adjust`
-      if (!hasMethod("adjust")) {
-        val paramContent = q"val content: $Content = this.content"
-        val paramDialect = q"val dialect: $Dialect = this.dialect"
-        val paramStart = q"val start: _root_.scala.Int = this.start"
-        val paramEnd = q"val end: _root_.scala.Int = this.end"
-        val paramDelta = q"val delta: _root_.scala.Int = 0"
-        val adjustResult = {
-          if (name.toString == "BOF" || name.toString == "EOF") q"this.copy(content = content, dialect = dialect)"
-          else if (isFixed) q"this.copy(content = content, dialect = dialect, start = start)"
-          else q"this.copy(content = content, dialect = dialect, start = start, end = end)"
-        }
-        val adjustError = {
-          if (name.toString == "BOF" || name.toString == "EOF") q""" "position-changing adjust on Token." + this.name """
-          else if (isFixed) q""" "end-changing adjust on Tokens." + this.name """
-          else q""" "fatal error in the token infrastructure" """
-        }
-        val body = q"""
-          (start != this.start || end != this.end, delta != 0) match {
-            case (false, false) =>
-              this.copy(content = content, dialect = dialect)
-            case (true, false) =>
-              val result = $adjustResult
-              if (result.start != start || result.end != end) {
-                var message = $adjustError
-                message += (": expected " + result.start + ".." + result.end)
-                message += (", actual " + start + ".." + end)
-                throw new $Unsupported(message)
-              }
-              result
-            case (false, true) =>
-              this.adjust(content = content, dialect = dialect, start = this.start + delta, end = this.end + delta)
-            case (true, true) =>
-              throw new $Unsupported("you can specify either start/end or delta, but not both")
-          }
-        """
-        stats1 += q"def adjust($paramContent, $paramDialect, $paramStart, $paramEnd, $paramDelta): $Token = $body"
       }
 
       // step 6: generate implementation of `Companion.unapply`

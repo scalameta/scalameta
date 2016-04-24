@@ -16,24 +16,16 @@ import scala.meta.internal.prettyprinters._
 // Btw, Token.start can also point to the last character plus one if it's an EOF token.
 @root trait Token {
   def name: String
-  def code: String = new String(content.chars.slice(start, end))
+  def code: String
 
   def content: Content
   def dialect: Dialect
   def start: Int
   def end: Int
-  def position: Position = new Position.Range(content, Point.Offset(content, start), Point.Offset(content, start), Point.Offset(content, end))
-  def adjust(
-    content: Content = this.content,
-    dialect: Dialect = this.dialect,
-    start: Int = this.start,
-    end: Int = this.end,
-    delta: Int = 0): Token
+  def position: Position
 
-  def is[U](implicit classifier: Classifier[Token, U]): Boolean = classifier.apply(this)
-  def isNot[U](implicit classifier: Classifier[Token, U]): Boolean = !this.is[U]
-
-  final override def toString = scala.meta.internal.prettyprinters.TokenToString(this)
+  def is[U](implicit classifier: Classifier[Token, U]): Boolean
+  def isNot[U](implicit classifier: Classifier[Token, U]): Boolean
 }
 
 object Token {

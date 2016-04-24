@@ -21,6 +21,7 @@ import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.tokens._
 import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
