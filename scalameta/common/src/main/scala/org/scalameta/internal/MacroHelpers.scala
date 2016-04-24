@@ -50,7 +50,6 @@ trait MacroHelpers extends DebugFinder
   val AstTyperMacrosBundle = hygienicRef[scala.meta.internal.ast.AstTyperMacrosBundle]
   val AstInfoClass = hygienicRef[scala.meta.internal.ast.AstInfo[_]]
   val TokenMetadataModule = hygienicRef(scala.meta.internal.tokens.Metadata)
-  val InstanceTagClass = hygienicRef[scala.meta.internal.parsers.InstanceTag[_]]
   val BooleanClass = hygienicRef[scala.Boolean]
 
   private def fqRef(fqName: String, isTerm: Boolean): Tree = {
