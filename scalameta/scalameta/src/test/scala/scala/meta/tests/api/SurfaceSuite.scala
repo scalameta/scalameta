@@ -27,7 +27,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
   val core = tlds -- trees -- tokens
 
   test("public top-level definitions (core)") {
-    assert(core.toList.sorted === """
+    assert(core.toList.sorted.mkString(EOL) === """
       |scala.meta.Dialect
       |scala.meta.Tree
       |scala.meta.classifier
@@ -72,7 +72,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.transversers
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
-    """.trim.stripMargin.split(EOL).toList)
+    """.trim.stripMargin)
 
     val prettyprinterTests = new scala.meta.tests.prettyprinters.PublicSuite().testNames
     val nonPackages = core.filter(_.exists(_.isUpper))
@@ -83,7 +83,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
   }
 
   test("public top-level definitions (trees)") {
-    assert(trees.toList.sorted === """
+    assert(trees.toList.sorted.mkString(EOL) === """
       |scala.meta.Case
       |scala.meta.Case.Api
       |scala.meta.Ctor
@@ -351,12 +351,12 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Type.Singleton.Api
       |scala.meta.Type.Tuple
       |scala.meta.Type.Tuple.Api
-    """.trim.stripMargin.split(EOL).toList)
+    """.trim.stripMargin)
   }
 
   test("public top-level definitions (tokens)") {
     def encode(name: String) = name.replace(" ", "WHITESPACE").replace("\n", "\\n").replace("\r", "\\r").replace("\f", "\\f").replace("\t", "\\t")
-    assert(tokens.toList.map(encode).sorted === """
+    assert(tokens.toList.map(encode).sorted.mkString(EOL) === """
       |scala.meta.tokens.Token.#
       |scala.meta.tokens.Token.(
       |scala.meta.tokens.Token.)
@@ -436,6 +436,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.yield
       |scala.meta.tokens.Token.{
       |scala.meta.tokens.Token.}
-    """.trim.stripMargin.split(EOL).toList)
+    """.trim.stripMargin)
   }
 }
