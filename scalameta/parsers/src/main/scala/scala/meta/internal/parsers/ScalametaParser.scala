@@ -16,7 +16,7 @@ import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
 import scala.meta.inputs._
 import scala.meta.tokens._
-import scala.meta.tokens.Token._
+import scala.meta.tokens.Token.{Case => CaseToken, Import => ImportToken, Type => TypeToken, _}
 import scala.meta.internal.tokens._
 import scala.meta.internal.ast.AstInfo
 import scala.meta.parsers._
@@ -54,7 +54,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   // Note the expr(Local) part, which means that we're going to parse lambda expressions in the mode that
   // precludes ambiguities with self-type annotations.
   private val consumeStat: PartialFunction[Token, Stat] = {
-    case token if token.is[Import] => importStmt()
+    case token if token.is[ImportToken] => importStmt()
     case token if token.is[Package] && !dialect.allowToplevelTerms => packageOrPackageObjectDef()
     case token if token.is[DefIntro] || token.is[Ellipsis] => nonLocalDefOrDcl()
     case token if token.is[ExprIntro] => expr(Local)
@@ -103,7 +103,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def parseQuasiquotePatArg(): Pat.Arg = parseRule(_.quasiquotePatternArg())
   def parsePatType(): Pat.Type = parseRule(_.patternTyp())
   def parseQuasiquotePatType(): Pat.Type = parseRule(_.quasiquotePatternTyp())
-  def parseCase(): Case = parseRule{parser => parser.accept[Case]; parser.caseClause()}
+  def parseCase(): Case = parseRule{parser => parser.accept[CaseToken]; parser.caseClause()}
   def parseCtorCall(): Ctor.Call = parseRule(_.constructorCall(typ(), allowArgss = true))
   def parseTemplate(): Template = parseRule(_.template())
   def parseMod(): Mod = {
@@ -124,7 +124,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case Final()                           => parser.next(); Mod.Final()
       case Sealed()                          => parser.next(); Mod.Sealed()
       case Override()                        => parser.next(); Mod.Override()
-      case Case()                            => parser.next(); Mod.Case()
+      case CaseToken()                       => parser.next(); Mod.Case()
       case Abstract()                        => parser.next(); Mod.Abstract()
       case Ident("+")                        => parser.next(); Mod.Covariant()
       case Ident("-")                        => parser.next(); Mod.Contravariant()
@@ -472,7 +472,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def isBackquoted: Boolean         = token.code.startsWith("`") && token.code.endsWith("`")
 
   private implicit class XtensionTokenClass(token: Token) {
-    def isCaseClassOrObject = token.is[Case] && (token.next.is[Class] || token.next.is[Object])
+    def isCaseClassOrObject = token.is[CaseToken] && (token.next.is[Class] || token.next.is[Object])
   }
 
   @classifier
@@ -500,7 +500,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   @classifier
   trait CaseIntro {
     def unapply(token: Token): Boolean = {
-      token.is[Case] && !token.isCaseClassOrObject
+      token.is[CaseToken] && !token.isCaseClassOrObject
     }
   }
 
@@ -510,7 +510,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       token.is[Modifier] || token.is[At] ||
       token.is[TemplateIntro] || token.is[DclIntro] ||
       (token.is[Unquote] && token.next.is[DefIntro]) ||
-      (token.is[Case] && token.isCaseClassOrObject)
+      (token.is[CaseToken] && token.isCaseClassOrObject)
     }
   }
 
@@ -520,14 +520,14 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       token.is[Modifier] || token.is[At] ||
       token.is[Class] || token.is[Object] || token.is[Trait] ||
       (token.is[Unquote] && token.next.is[TemplateIntro]) ||
-      (token.is[Case] && token.isCaseClassOrObject)
+      (token.is[CaseToken] && token.isCaseClassOrObject)
     }
   }
 
   @classifier
   trait DclIntro {
     def unapply(token: Token): Boolean = {
-      token.is[Def] || token.is[Type] ||
+      token.is[Def] || token.is[TypeToken] ||
       token.is[Val] || token.is[Var] ||
       (token.is[Unquote] && token.next.is[DclIntro])
     }
@@ -569,8 +569,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   trait CaseDefEnd {
     def unapply(token: Token): Boolean = {
       token.is[RightBrace] || token.is[EOF] ||
-      (token.is[Case] && !token.isCaseClassOrObject) ||
-      (token.is[Ellipsis] && token.next.is[Case])
+      (token.is[CaseToken] && !token.isCaseClassOrObject) ||
+      (token.is[Ellipsis] && token.next.is[CaseToken])
     }
   }
 
@@ -593,7 +593,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     def unapply(token: Token): Boolean = {
       token.is[Ident] || token.is[Literal] ||
       token.is[Interpolation.End] || token.is[Xml.End] ||
-      token.is[Return] || token.is[This] || token.is[Type] ||
+      token.is[Return] || token.is[This] || token.is[TypeToken] ||
       token.is[RightParen] || token.is[RightBrack] || token.is[RightBrace] || token.is[Underscore] ||
       token.is[Ellipsis] || token.is[Unquote]
     }
@@ -949,7 +949,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
             convertToTypeId(ref) getOrElse { syntaxError("identifier expected", at = ref) }
           else {
             next()
-            accept[Type]
+            accept[TypeToken]
             Type.Singleton(ref)
           }
       }))
@@ -2023,7 +2023,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    */
   def blockExpr(): Term = autoPos {
     inBraces {
-      if (token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[Case]))) Term.PartialFunction(caseClauses())
+      if (token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[CaseToken]))) Term.PartialFunction(caseClauses())
       else block()
     }
   }
@@ -2038,7 +2038,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   }
 
   def caseClause(): Case = atPos(in.prevTokenPos, auto) {
-    require(token.isNot[Case] && debug(token))
+    require(token.isNot[CaseToken] && debug(token))
     Case(pattern().require[Pat], guard(), {
       accept[RightArrow]
       val start = in.tokenPos
@@ -2060,9 +2060,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     val cases = new ListBuffer[Case]
     while (token.is[CaseIntro] || token.is[Ellipsis]) {
       if (token.is[Ellipsis]) {
-        cases += ellipsis(1, unquote[Case], accept[Case])
+        cases += ellipsis(1, unquote[Case], accept[CaseToken])
         while (token.is[StatSep]) next()
-      } else if (token.is[Case] && ahead(token.is[Unquote])) {
+      } else if (token.is[CaseToken] && ahead(token.is[Unquote])) {
         next()
         cases += unquote[Case]
         while (token.is[StatSep]) next()
@@ -2072,7 +2072,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       }
     }
     if (cases.isEmpty)  // trigger error if there are no cases
-      accept[Case]
+      accept[CaseToken]
     cases.toList
   }
 
@@ -2741,7 +2741,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  }}}
    */
   def importStmt(): Import = autoPos {
-    accept[Import]
+    accept[ImportToken]
     Import(commaSeparated(importer()))
   }
 
@@ -2827,7 +2827,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         patDefOrDcl(mods)
       case Def() =>
         funDefOrDclOrSecondaryCtor(mods)
-      case Type() =>
+      case TypeToken() =>
         typeDefOrDcl(mods)
       case _ =>
         tmplDef(mods)
@@ -2928,7 +2928,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  }}}
    */
   def typeDefOrDcl(mods: List[Mod]): Member.Type with Stat = atPos(mods, auto) {
-    accept[Type]
+    accept[TypeToken]
     newLinesOpt()
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
@@ -2959,13 +2959,13 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         traitDef(mods)
       case Class() =>
         classDef(mods)
-      case Case() if ahead(token.is[Class]) =>
+      case CaseToken() if ahead(token.is[Class]) =>
         val casePos = in.tokenPos
         next()
         classDef(mods :+ atPos(casePos, casePos)(Mod.Case()))
       case Object() =>
         objectDef(mods)
-      case Case() if ahead(token.is[Object]) =>
+      case CaseToken() if ahead(token.is[Object]) =>
         val casePos = in.tokenPos
         next()
         objectDef(mods :+ atPos(casePos, casePos)(Mod.Case()))
@@ -3304,7 +3304,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       unquote[Stat]
     case token if token.is[Package]  =>
       packageOrPackageObjectDef()
-    case token if token.is[Import] =>
+    case token if token.is[ImportToken] =>
       importStmt()
     case token if token.is[TemplateIntro] =>
       topLevelTmplDef
@@ -3364,7 +3364,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def templateStat: PartialFunction[Token, Stat] = {
     case token if token.is[Ellipsis] =>
       ellipsis(1, unquote[Stat])
-    case token if token.is[Import] =>
+    case token if token.is[ImportToken] =>
       importStmt()
     case token if token.is[DefIntro] =>
       nonLocalDefOrDcl()
@@ -3429,7 +3429,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def blockStatSeq(): List[Stat] = {
     val stats = new ListBuffer[Stat]
     while (!token.is[StatSeqEnd] && !token.is[CaseDefEnd]) {
-      if (token.is[Import]) {
+      if (token.is[ImportToken]) {
         stats += importStmt()
         acceptStatSepOpt()
       }
