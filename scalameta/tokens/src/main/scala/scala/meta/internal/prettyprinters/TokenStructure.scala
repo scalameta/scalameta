@@ -14,7 +14,7 @@ object TokenStructure {
         case x: Token.CR => "\\r"
         case x: Token.LF => "\\n"
         case x: Token.FF => "\\f"
-        case x: Token.SignificantNewline => "\\n\\n"
+        case x: Token.LFLF => "\\n\\n"
         case x: Token.BOF => "BOF"
         case x: Token.EOF => "EOF"
         case x => x.code

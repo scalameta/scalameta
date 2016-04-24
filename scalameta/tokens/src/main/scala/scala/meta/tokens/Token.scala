@@ -120,12 +120,12 @@ object Token {
   @freeform("beginning of file") class BOF extends Token { def start = 0; def end = 0 }
   @freeform("end of file") class EOF extends Token { def start = content.chars.length; def end = content.chars.length }
 
-  // TODO: Rewrite the parser so that it doesn't need `\n\n` anymore.
+  // TODO: Rewrite the parser so that it doesn't need LFLF anymore.
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @freeform("\n\n") private[meta] class SignificantNewline extends Token
+  @freeform("\n\n") private[meta] class LFLF extends Token
   @freeform("ellipsis") private[meta] class Ellipsis(rank: Int) extends Token
   @freeform("unquote") private[meta] class Unquote(tree: Any) extends Token
 
