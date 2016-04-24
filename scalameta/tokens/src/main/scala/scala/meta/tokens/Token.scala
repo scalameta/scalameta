@@ -41,64 +41,64 @@ object Token {
   @freeform("identifier") class Ident(value: String) extends Token
 
   // Keywords
-  @fixed("abstract") class `abstract` extends Token
-  @fixed("case") class `case` extends Token
-  @fixed("catch") class `catch` extends Token
-  @fixed("class") class `class ` extends Token
-  @fixed("def") class `def` extends Token
-  @fixed("do") class `do` extends Token
-  @fixed("else") class `else` extends Token
-  @fixed("extends") class `extends` extends Token
-  @fixed("final") class `final` extends Token
-  @fixed("finally") class `finally` extends Token
-  @fixed("for") class `for` extends Token
-  @fixed("forSome") class `forSome` extends Token
-  @fixed("if") class `if` extends Token
-  @fixed("implicit") class `implicit` extends Token
-  @fixed("import") class `import` extends Token
-  @fixed("lazy") class `lazy` extends Token
-  @fixed("match") class `match` extends Token
-  @fixed("macro") class `macro` extends Token
-  @fixed("new") class `new` extends Token
-  @fixed("object") class `object` extends Token
-  @fixed("override") class `override` extends Token
-  @fixed("package") class `package ` extends Token
-  @fixed("private") class `private` extends Token
-  @fixed("protected") class `protected` extends Token
-  @fixed("return") class `return` extends Token
-  @fixed("sealed") class `sealed` extends Token
-  @fixed("super") class `super` extends Token
-  @fixed("this") class `this` extends Token
-  @fixed("throw") class `throw` extends Token
-  @fixed("trait") class `trait` extends Token
-  @fixed("try") class `try` extends Token
-  @fixed("type") class `type` extends Token
-  @fixed("val") class `val` extends Token
-  @fixed("var") class `var` extends Token
-  @fixed("while") class `while` extends Token
-  @fixed("with") class `with` extends Token
-  @fixed("yield") class `yield` extends Token
-  @fixed("#") class `#` extends Token
-  @fixed(":") class `:` extends Token
-  @fixed("<%") class `<%` extends Token
-  @freeform("<-") class `<-` extends Token
-  @fixed("<:") class `<:` extends Token
-  @fixed("=") class `=` extends Token
-  @freeform("=>") class `=>` extends Token
-  @fixed(">:") class `>:` extends Token
-  @fixed("@") class `@` extends Token
-  @fixed("_") class `_ ` extends Token
+  @fixed("abstract") class Abstract extends Token
+  @fixed("case") class Case extends Token
+  @fixed("catch") class Catch extends Token
+  @fixed("class") class Class extends Token
+  @fixed("def") class Def extends Token
+  @fixed("do") class Do extends Token
+  @fixed("else") class Else extends Token
+  @fixed("extends") class Extends extends Token
+  @fixed("final") class Final extends Token
+  @fixed("finally") class Finally extends Token
+  @fixed("for") class For extends Token
+  @fixed("forSome") class ForSome extends Token
+  @fixed("if") class If extends Token
+  @fixed("implicit") class Implicit extends Token
+  @fixed("import") class Import extends Token
+  @fixed("lazy") class Lazy extends Token
+  @fixed("match") class Match extends Token
+  @fixed("macro") class Macro extends Token
+  @fixed("new") class New extends Token
+  @fixed("object") class Object extends Token
+  @fixed("override") class Override extends Token
+  @fixed("package") class Package extends Token
+  @fixed("private") class Private extends Token
+  @fixed("protected") class Protected extends Token
+  @fixed("return") class Return extends Token
+  @fixed("sealed") class Sealed extends Token
+  @fixed("super") class Super extends Token
+  @fixed("this") class This extends Token
+  @fixed("throw") class Throw extends Token
+  @fixed("trait") class Trait extends Token
+  @fixed("try") class Try extends Token
+  @fixed("type") class Type extends Token
+  @fixed("val") class Val extends Token
+  @fixed("var") class Var extends Token
+  @fixed("while") class While extends Token
+  @fixed("with") class With extends Token
+  @fixed("yield") class Yield extends Token
+  @fixed("#") class Hash extends Token
+  @fixed(":") class Colon extends Token
+  @fixed("<%") class Viewbound extends Token
+  @freeform("<-") class LeftArrow extends Token
+  @fixed("<:") class Subtype extends Token
+  @fixed("=") class Equal extends Token
+  @freeform("=>") class RightArrow extends Token
+  @fixed(">:") class Supertype extends Token
+  @fixed("@") class At extends Token
+  @fixed("_") class Underscore extends Token
 
   // Delimiters
-  @fixed("(") class `(` extends Token
-  @fixed(")") class `)` extends Token
-  @fixed(",") class `,` extends Token
-  @fixed(".") class `.` extends Token
-  @fixed(";") class `;` extends Token
-  @fixed("[") class `[` extends Token
-  @fixed("]") class `]` extends Token
-  @fixed("{") class `{` extends Token
-  @fixed("}") class `}` extends Token
+  @fixed("(") class LeftParen extends Token
+  @fixed(")") class RightParen extends Token
+  @fixed(",") class Comma extends Token
+  @fixed(".") class Dot extends Token
+  @fixed(";") class Semicolon extends Token
+  @fixed("[") class LeftBrack extends Token
+  @fixed("]") class RightBrack extends Token
+  @fixed("{") class LeftBrace extends Token
+  @fixed("}") class RightBrace extends Token
 
   // Literals
   @freeform("literal") class Literal(constant: Constant) extends Token
@@ -119,11 +119,11 @@ object Token {
   }
 
   // Trivia
-  @fixed(" ") class ` ` extends Token
-  @fixed("\t") class `\t` extends Token
-  @fixed("\r") class `\r` extends Token
-  @fixed("\n") class `\n` extends Token
-  @fixed("\f") class `\f` extends Token
+  @fixed(" ") class Space extends Token
+  @fixed("\t") class Tab extends Token
+  @fixed("\r") class CR extends Token
+  @fixed("\n") class LF extends Token
+  @fixed("\f") class FF extends Token
   @freeform("comment") class Comment extends Token
   @freeform("beginning of file") class BOF extends Token { def start = 0; def end = 0 }
   @freeform("end of file") class EOF extends Token { def start = content.chars.length; def end = content.chars.length }
@@ -133,7 +133,7 @@ object Token {
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @freeform("\n\n") private[meta] class `\n\n` extends Token
+  @freeform("\n\n") private[meta] class SignificantNewline extends Token
   @freeform("ellipsis") private[meta] class Ellipsis(rank: Int) extends Token
   @freeform("unquote") private[meta] class Unquote(tree: Any) extends Token
 
