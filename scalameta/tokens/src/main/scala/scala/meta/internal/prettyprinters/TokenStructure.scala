@@ -10,12 +10,16 @@ object TokenStructure {
   def apply[T <: Token]: Structure[T] = {
     Structure(x => {
       val prefix = (x: Token) match {
+        case x: Token.Tab => "\\t"
+        case x: Token.CR => "\\r"
+        case x: Token.LF => "\\n"
+        case x: Token.FF => "\\f"
+        case x: Token.LFLF => "\\n\\n"
         case x: Token.BOF => "BOF"
         case x: Token.EOF => "EOF"
-        case x: Token.Dynamic => x.code
-        case x: Token.Static => x.name
+        case x => x.show[Syntax]
       }
-      s(prefix, " (", x.start.toString, "..", x.end.toString, ")")
+      s(prefix, " [", x.start.toString, "..", x.end.toString, ")")
     })
   }
 }

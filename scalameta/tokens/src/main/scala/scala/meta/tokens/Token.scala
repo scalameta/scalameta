@@ -1,169 +1,146 @@
 package scala.meta
 package tokens
 
-import scala.meta.internal.tokens // NOTE: no underscore import!
+import scala.meta.internal.tokens
 import scala.meta.internal.tokens._
 import scala.meta.inputs._
+import scala.meta.classifiers._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
 
+// NOTE: `start` and `end` are String.substring-style,
+// i.e. `start` is inclusive and `end` is not.
+// Therefore Token.end can point to the last character plus one.
+// Btw, Token.start can also point to the last character plus one if it's an EOF token.
 @root trait Token {
-  def name: String
-  def code: String = new String(content.chars.slice(start, end))
-
   def content: Content
   def dialect: Dialect
+
   def start: Int
   def end: Int
-  def position: Position = new Position.Range(content, Point.Offset(content, start), Point.Offset(content, start), Point.Offset(content, end))
-  def adjust(
-    content: Content = this.content,
-    dialect: Dialect = this.dialect,
-    start: Int = this.start,
-    end: Int = this.end,
-    delta: Int = 0): Token
+  def position: Position
 
-  final override def toString = {
-    import Token._
-    val prefix = this match { case x: BOF => "BOF"; case x: EOF => "EOF"; case x: Dynamic => x.code; case x: Static => x.name }
-    prefix + " (" + start.toString + ".." + end.toString + ")"
-  }
+  def is[U](implicit classifier: Classifier[Token, U]): Boolean
+  def isNot[U](implicit classifier: Classifier[Token, U]): Boolean
 }
 
 object Token {
-  @branch trait Static extends Token
-  @branch trait Dynamic extends Token
+  // Identifiers
+  @freeform("identifier") class Ident(value: String) extends Token
 
-  @token class Ident(start: Int, end: Int) extends Dynamic { def name = "identifier" }
+  // Alphanumeric keywords
+  @fixed("abstract") class Abstract extends Token
+  @fixed("case") class Case extends Token
+  @fixed("catch") class Catch extends Token
+  @fixed("class") class Class extends Token
+  @fixed("def") class Def extends Token
+  @fixed("do") class Do extends Token
+  @fixed("else") class Else extends Token
+  @fixed("extends") class Extends extends Token
+  @fixed("false") class False extends Token
+  @fixed("final") class Final extends Token
+  @fixed("finally") class Finally extends Token
+  @fixed("for") class For extends Token
+  @fixed("forSome") class ForSome extends Token
+  @fixed("if") class If extends Token
+  @fixed("implicit") class Implicit extends Token
+  @fixed("import") class Import extends Token
+  @fixed("lazy") class Lazy extends Token
+  @fixed("match") class Match extends Token
+  @fixed("macro") class Macro extends Token
+  @fixed("new") class New extends Token
+  @fixed("null") class Null extends Token
+  @fixed("object") class Object extends Token
+  @fixed("override") class Override extends Token
+  @fixed("package") class Package extends Token
+  @fixed("private") class Private extends Token
+  @fixed("protected") class Protected extends Token
+  @fixed("return") class Return extends Token
+  @fixed("sealed") class Sealed extends Token
+  @fixed("super") class Super extends Token
+  @fixed("this") class This extends Token
+  @fixed("throw") class Throw extends Token
+  @fixed("trait") class Trait extends Token
+  @fixed("true") class True extends Token
+  @fixed("try") class Try extends Token
+  @fixed("type") class Type extends Token
+  @fixed("val") class Val extends Token
+  @fixed("var") class Var extends Token
+  @fixed("while") class While extends Token
+  @fixed("with") class With extends Token
+  @fixed("yield") class Yield extends Token
 
-  @branch trait Literal extends Token
-  object Literal {
-    @token class Int(start: scala.Int, end: scala.Int, value: scala.BigInt) extends Literal with Dynamic { def name = "integer literal" }
-    @token class Long(start: scala.Int, end: scala.Int, value: scala.BigInt) extends Literal with Dynamic { def name = "long literal" }
-    @token class Float(start: scala.Int, end: scala.Int, value: scala.BigDecimal) extends Literal with Dynamic { def name = "float literal" }
-    @token class Double(start: scala.Int, end: scala.Int, value: scala.BigDecimal) extends Literal with Dynamic { def name = "double literal" }
-    @token class Char(start: scala.Int, end: scala.Int, value: scala.Char) extends Literal with Dynamic { def name = "character literal" }
-    @token class Symbol(start: scala.Int, end: scala.Int, value: scala.Symbol) extends Literal with Dynamic { def name = "symbol literal" }
-    @token class String(start: scala.Int, end: scala.Int, value: Predef.String) extends Literal with Dynamic { def name = "string literal" }
-    @token class `null`(start: scala.Int) extends Keyword with Literal with Static
-    @token class `true`(start: scala.Int) extends Keyword with Literal with Static
-    @token class `false`(start: scala.Int) extends Keyword with Literal with Static
+  // Symbolic keywords
+  @fixed("#") class Hash extends Token
+  @fixed(":") class Colon extends Token
+  @fixed("<%") class Viewbound extends Token
+  @freeform("<-") class LeftArrow extends Token
+  @fixed("<:") class Subtype extends Token
+  @fixed("=") class Equals extends Token
+  @freeform("=>") class RightArrow extends Token
+  @fixed(">:") class Supertype extends Token
+  @fixed("@") class At extends Token
+  @fixed("_") class Underscore extends Token
+
+  // Delimiters
+  @fixed("(") class LeftParen extends Token
+  @fixed(")") class RightParen extends Token
+  @fixed(",") class Comma extends Token
+  @fixed(".") class Dot extends Token
+  @fixed(";") class Semicolon extends Token
+  @fixed("[") class LeftBracket extends Token
+  @fixed("]") class RightBracket extends Token
+  @fixed("{") class LeftBrace extends Token
+  @fixed("}") class RightBrace extends Token
+
+  // Literals (include some keywords from above, constants, interpolations and xml)
+  object Constant {
+    @freeform("integer constant") class Int(value: scala.BigInt) extends Token
+    @freeform("long constant") class Long(value: scala.BigInt) extends Token
+    @freeform("float constant") class Float(value: scala.BigDecimal) extends Token
+    @freeform("double constant") class Double(value: scala.BigDecimal) extends Token
+    @freeform("character constant") class Char(value: scala.Char) extends Token
+    @freeform("symbol constant") class Symbol(value: scala.Symbol) extends Token
+    @freeform("string constant") class String(value: Predef.String) extends Token
   }
-
   object Interpolation {
-    @token class Id(start: Int, end: Int) extends Dynamic { def name = "interpolation id" }
-    @token class Start(start: Int, end: Int) extends Dynamic { def name = "interpolation start" }
-    @token class Part(start: Int, end: Int, value: Predef.String) extends Dynamic { def name = "interpolation part" }
-    @token class SpliceStart(start: Int) extends Static { def name = "splice start"; override def code = "$" }
-    @token class SpliceEnd(start: Int) extends Static { def name = "splice end"; override def code = "" }
-    @token class End(start: Int, end: Int) extends Dynamic { def name = "interpolation end" }
+    @freeform("interpolation id") class Id extends Token
+    @freeform("interpolation start") class Start extends Token
+    @freeform("interpolation part") class Part(value: String) extends Token
+    @freeform("splice start") class SpliceStart extends Token
+    @freeform("splice end") class SpliceEnd extends Token
+    @freeform("interpolation end") class End extends Token
   }
-
   object Xml {
-    @token class Start(start: Int) extends Static { def name = "xml start"; override def code = "" }
-    @token class Part(start: Int, end: Int, value: Predef.String) extends Dynamic { def name = "xml part" }
-    @token class SpliceStart(start: Int) extends Static { def name = "xml splice start"; override def code = "" }
-    @token class SpliceEnd(start: Int) extends Static { def name = "xml splice end"; override def code = "" }
-    @token class End(start: Int) extends Static { def name = "xml end"; override def code = "" }
+    @freeform("xml start") class Start extends Token
+    @freeform("xml part") class Part(value: String) extends Token
+    @freeform("xml splice start") class SpliceStart extends Token
+    @freeform("xml splice end") class SpliceEnd extends Token
+    @freeform("xml end") class End extends Token
   }
 
-  @branch trait Keyword extends Static
-  @token class `case`(start: Int) extends Keyword
-  @token class `catch`(start: Int) extends Keyword
-  @token class `class `(start: Int) extends Keyword
-  @token class `def`(start: Int) extends Keyword
-  @token class `do`(start: Int) extends Keyword
-  @token class `else`(start: Int) extends Keyword
-  @token class `extends`(start: Int) extends Keyword
-  @token class `finally`(start: Int) extends Keyword
-  @token class `for`(start: Int) extends Keyword
-  @token class `forSome`(start: Int) extends Keyword
-  @token class `if`(start: Int) extends Keyword
-  @token class `import`(start: Int) extends Keyword
-  @token class `match`(start: Int) extends Keyword
-  @token class `macro`(start: Int) extends Keyword
-  @token class `new`(start: Int) extends Keyword
-  @token class `object`(start: Int) extends Keyword
-  @token class `package `(start: Int) extends Keyword
-  @token class `return`(start: Int) extends Keyword
-  @token class `super`(start: Int) extends Keyword
-  @token class `this`(start: Int) extends Keyword
-  @token class `throw`(start: Int) extends Keyword
-  @token class `trait`(start: Int) extends Keyword
-  @token class `try`(start: Int) extends Keyword
-  @token class `type`(start: Int) extends Keyword
-  @token class `val`(start: Int) extends Keyword
-  @token class `var`(start: Int) extends Keyword
-  @token class `while`(start: Int) extends Keyword
-  @token class `with`(start: Int) extends Keyword
-  @token class `yield`(start: Int) extends Keyword
+  // Trivia
+  @fixed(" ") class Space extends Token
+  @fixed("\t") class Tab extends Token
+  @fixed("\r") class CR extends Token
+  @fixed("\n") class LF extends Token
+  @fixed("\f") class FF extends Token
+  @freeform("comment") class Comment extends Token
+  @freeform("beginning of file") class BOF extends Token { def start = 0; def end = 0 }
+  @freeform("end of file") class EOF extends Token { def start = content.chars.length; def end = content.chars.length }
 
-  @branch trait Modifier extends Keyword
-  @token class `abstract`(start: Int) extends Modifier
-  @token class `final`(start: Int) extends Modifier
-  @token class `sealed`(start: Int) extends Modifier
-  @token class `implicit`(start: Int) extends Modifier
-  @token class `lazy`(start: Int) extends Modifier
-  @token class `private`(start: Int) extends Modifier
-  @token class `protected`(start: Int) extends Modifier
-  @token class `override`(start: Int) extends Modifier
-
-  @branch trait Delim extends Token
-  @token class `(`(start: Int) extends Delim with Static
-  @token class `)`(start: Int) extends Delim with Static
-  @token class `[`(start: Int) extends Delim with Static
-  @token class `]`(start: Int) extends Delim with Static
-  @token class `{`(start: Int) extends Delim with Static
-  @token class `}`(start: Int) extends Delim with Static
-  @token class `,`(start: Int) extends Delim with Static
-  @token class `;`(start: Int) extends Delim with Static
-  @token class `:`(start: Int) extends Delim with Static
-  @token class `.`(start: Int) extends Delim with Static
-  @token class `=`(start: Int) extends Delim with Static
-  @token class `@`(start: Int) extends Delim with Static
-  @token class `#`(start: Int) extends Delim with Static
-  @token class `_ `(start: Int) extends Delim with Static
-  @token class `=>`(start: Int, end: Int) extends Delim with Dynamic { def name = "right arrow" }
-  @token class `<-`(start: Int, end: Int) extends Delim with Dynamic { def name = "left arrow" }
-  @token class `<:`(start: Int) extends Delim with Static
-  @token class `>:`(start: Int) extends Delim with Static
-  @token class `<%`(start: Int) extends Delim with Static
-
-  @branch trait Trivia extends Token
-  @branch trait Whitespace extends Trivia with Static
-  @token class ` `(start: Int) extends Whitespace
-  @token class `\t`(start: Int) extends Whitespace
-  @token class `\r`(start: Int) extends Whitespace
-  @token class `\n`(start: Int) extends Whitespace
-  // TODO: \n\n is a virtual token emitted by TokIterator to appease the semi-ported scalac parser
-  // it will never occur in a token stream produced by XtensionInputLike.tokens
-  @token class `\n\n`(start: Int) extends Whitespace
-  @token class `\f`(start: Int) extends Whitespace
-  @token class Comment(start: Int, end: Int) extends Trivia with Dynamic { def name = "comment" }
-
+  // TODO: Rewrite the parser so that it doesn't need LFLF anymore.
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
   // however, for now, we will keep it at Any in order to also support scala.reflect trees
-  @token class Ellipsis(start: Int, end: Int, rank: Int) extends Dynamic { def name = "ellipsis" }
-  @token class Unquote(start: Int, end: Int, tree: Any) extends Dynamic { def name = "unquote" }
+  @freeform("\n\n") private[meta] class LFLF extends Token
+  @freeform("ellipsis") private[meta] class Ellipsis(rank: Int) extends Token
+  @freeform("unquote") private[meta] class Unquote(tree: Any) extends Token
 
-  @token class BOF() extends Static {
-    def name = "beginning of file"
-    override def code = ""
-    def start = 0
-    def end = 0
-  }
-
-  @token class EOF() extends Static {
-    def name = "end of file"
-    override def code = ""
-    def start = content.chars.length
-    def end = content.chars.length
-  }
-
+  implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
-  implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = TokenSyntax.apply[T](dialect)
+  implicit def showSyntax[T <: Token]: Syntax[T] = TokenSyntax.apply[T]
 }
 
 // NOTE: We have this unrelated code here, because of how materializeAdt works.
@@ -220,7 +197,7 @@ trait TokenLiftables extends tokens.Liftables {
       middle match {
         case Tokens() =>
           prepend(pre, q"_root_.scala.meta.tokens.Tokens()")
-        case Token.Unquote(_, _, _, _, tree: Tree) +: rest =>
+        case Token.Unquote(tree: Tree) +: rest =>
           // If we are splicing only a single token we need to wrap it in a Tokens
           // to be able to append and prepend other tokens to it easily.
           val quoted = if (tree.tpe <:< typeOf[Token]) q"_root_.scala.meta.tokens.Tokens($tree)" else tree

@@ -7,8 +7,7 @@ import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.tokens._
 
 object TokenSyntax {
-  def apply[T <: Token](implicit dialect: Dialect): Syntax[T] = {
-    // TODO: Take the dialect into account (#220)
-    Syntax { x => s(x.code) }
+  def apply[T <: Token]: Syntax[T] = {
+    Syntax { x => s(new String(x.content.chars, x.start, x.end - x.start)) }
   }
 }

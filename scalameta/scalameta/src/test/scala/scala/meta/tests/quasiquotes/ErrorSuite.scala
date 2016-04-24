@@ -509,7 +509,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       t"=> T"
     """) === """
-      |<macro>:4: identifier expected but right arrow found
+      |<macro>:4: identifier expected but => found
       |      t"=> T"
       |        ^
     """.trim.stripMargin)

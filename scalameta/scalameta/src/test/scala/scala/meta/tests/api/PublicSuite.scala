@@ -1,3 +1,4 @@
+// NOTE: commented out in order to avoid scope pollution for typecheckError
 // package scala.meta.tests
 // package api
 
@@ -143,6 +144,35 @@ class PublicSuite extends FunSuite {
       (??? : java.io.File).tokenize
       (??? : Tokens).tokenize
       (??? : Array[Char]).tokenize
+    """) === "")
+  }
+
+  // NOTE: this works because implicit scope for Scala211 includes meta.`package`
+  test("Dialect.tokenize without import") {
+    assert(typecheckError("""
+      scala.meta.dialects.Scala211("").tokenize
+    """) === "")
+  }
+
+  test("Dialect.tokenize without input-likeness") {
+    assert(typecheckError("""
+      scala.meta.dialects.Scala211(1).tokenize
+    """) === "don't know how to convert Int to scala.meta.inputs.Input")
+  }
+
+  test("Dialect.tokenize when everything's correct") {
+    assert(typecheckError("""
+      scala.meta.dialects.Scala211("").tokenize
+    """) === "")
+  }
+
+  test("Dialect.tokenize with various input types") {
+    assert(typecheckError("""
+      scala.meta.dialects.Scala211(??? : scala.meta.Input).tokenize
+      scala.meta.dialects.Scala211(??? : String).tokenize
+      scala.meta.dialects.Scala211(??? : java.io.File).tokenize
+      scala.meta.dialects.Scala211(??? : scala.meta.Tokens).tokenize
+      scala.meta.dialects.Scala211(??? : Array[Char]).tokenize
     """) === "")
   }
 

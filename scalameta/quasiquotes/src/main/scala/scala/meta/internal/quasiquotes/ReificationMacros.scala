@@ -21,6 +21,7 @@ import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.tokens._
 import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
@@ -156,7 +157,9 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
           implicit val tokenizationDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
           try {
             val tokens = part.tokenize.get
-            if (tokens.init.last.isInstanceOf[MetaToken.Comment]) failUnclosed("single-line comment")
+            if (tokens.init.last.isInstanceOf[MetaToken.Comment] && arg.nonEmpty) {
+              failUnclosed("single-line comment")
+            }
             tokens
           } catch {
             case TokenizeException(partPos, message) =>

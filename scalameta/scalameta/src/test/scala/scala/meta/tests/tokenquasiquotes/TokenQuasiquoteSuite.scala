@@ -111,7 +111,7 @@ class TokenQuasiquoteSuite extends FunSuite {
   }
 
   test("Pattern extraction with types specified") {
-    val toks"${hello: Token.Ident} ${world: Token.Ident} ${number: Token.Literal.Int}" = toks"hola mundo 123"
+    val toks"${hello: Token.Ident} ${world: Token.Ident} ${number: Token.Constant.Int}" = toks"hola mundo 123"
     assert(hello isIdentNamed "hola")
     assert(world isIdentNamed "mundo")
     assert(number isIntLit 123)
@@ -168,20 +168,20 @@ class TokenQuasiquoteSuite extends FunSuite {
 
   implicit class CheckToken(t: Token) {
     def isIdentNamed(name: String): Boolean = t match {
-      case x: Token.Ident => x.code == name
-      case _                  => false
+      case Token.Ident(`name`) => true
+      case _                   => false
     }
 
     def isMinus: Boolean = t isIdentNamed "-"
 
     def isIntLit(expected: Int): Boolean = t match {
-      case t: Literal.Int => t.value.toInt == expected
-      case _              => false
+      case Token.Constant.Int(value) => value == BigInt(expected)
+      case _                         => false
     }
 
-    def isWhitespace: Boolean = t.isInstanceOf[Whitespace]
+    def isWhitespace: Boolean = t.is[Space] || t.is[Tab] || t.is[CR] || t.is[LF] || t.is[FF]
 
-    def isComma: Boolean = t.isInstanceOf[`,`]
+    def isComma: Boolean = t.is[Comma]
   }
 
   implicit class checkSingleTokenQuasiquote(token: Token) extends CheckTokenQuasiquote(Tokens(token))

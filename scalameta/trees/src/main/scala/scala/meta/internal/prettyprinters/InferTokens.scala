@@ -36,29 +36,29 @@ private[meta] object inferTokens {
     implicit def stringToInput(str: String) = Input.String(str)
     val str = if (value != null) value.toString else "null"
     val newTok = value match {
-      case y: Int =>     Token.Literal.Int(str, dialect, 0, str.length, y)
-      case y: Long =>    Token.Literal.Long(str + "L", dialect, 0, str.length + 1, y)
-      case y: Float =>   Token.Literal.Float(str + "F", dialect, 0, str.length + 1, y)
-      case y: Double =>  Token.Literal.Double(str, dialect, 0, str.length, y)
+      case y: Int =>     Token.Constant.Int(str, dialect, 0, str.length, y)
+      case y: Long =>    Token.Constant.Long(str + "L", dialect, 0, str.length + 1, y)
+      case y: Float =>   Token.Constant.Float(str + "F", dialect, 0, str.length + 1, y)
+      case y: Double =>  Token.Constant.Double(str, dialect, 0, str.length, y)
       case y: Char =>
         val newChar = enquote(str, SingleQuotes)
-        Token.Literal.Char(newChar, dialect, 0, newChar.length, y)
-      case y: Symbol =>  Token.Literal.Symbol(str, dialect, 0, str.length, y)
+        Token.Constant.Char(newChar, dialect, 0, newChar.length, y)
+      case y: Symbol =>  Token.Constant.Symbol(str, dialect, 0, str.length, y)
       case y: String =>
         val newStr = {
           if (y.contains(EOL)) enquote(str, TripleQuotes)
           else enquote(str, DoubleQuotes)
         }
-        Token.Literal.String(newStr, dialect, 0, newStr.length, newStr)
-      case null =>       Token.Literal.`null`(str, dialect, 0)
-      case true =>       Token.Literal.`true`(str, dialect, 0)
-      case false =>      Token.Literal.`false`(str, dialect, 0)
+        Token.Constant.String(newStr, dialect, 0, newStr.length, y)
+      case true =>       Token.True(str, dialect, 0)
+      case false =>      Token.False(str, dialect, 0)
+      case null =>       Token.Null(str, dialect, 0)
     }
     Tokens(newTok)
   }
 
   /* Generate a single token for ident */
-  private def mineIdentTk(value: String)(implicit dialect: Dialect): Tokens = Tokens(Token.Ident(Input.String(value), dialect, 0, value.length))
+  private def mineIdentTk(value: String)(implicit dialect: Dialect): Tokens = Tokens(Token.Ident(Input.String(value), dialect, 0, value.length, value))
 
   /* Checking if a token is a potential indentation */
   val isIndent = (t: Token) => t.show[Syntax] == " " || t.show[Syntax] == "\t" || t.show[Syntax] == "\r"
@@ -69,9 +69,9 @@ private[meta] object inferTokens {
 
     /* partial token vectors used in various constructions */
     val indentation =        toks"  " // In the future, this could be inferred
-    val singleDoubleQuotes = Tokens(Token.Literal.String(Input.String("\""), dialect, 0, 1, "\""))
-    val tripleDoubleQuotes = Tokens(Token.Literal.String(Input.String("\"\"\""), dialect, 0, 3, "\"\"\""))
-    val newline =            Tokens(Token.`\n`(Input.String("\n"), dialect, 0))
+    val singleDoubleQuotes = Tokens(Token.Constant.String(Input.String("\""), dialect, 0, 1, "\""))
+    val tripleDoubleQuotes = Tokens(Token.Constant.String(Input.String("\"\"\""), dialect, 0, 3, "\"\"\""))
+    val newline =            Tokens(Token.LF(Input.String("\n"), dialect, 0))
 
     /* Enrichments for token manipulation */
     implicit class RichTree(tree: Tree) {
@@ -98,7 +98,7 @@ private[meta] object inferTokens {
        */
       val indentFun:          (Tokens => Tokens) = (s: Tokens) => indent(s)(indentation)
       /* In some construction, the line return is already present in the tokens. This prevents to put a second one and break the layout. */
-      val avoidDoubleLineFun: (Tokens => Tokens) = (s: Tokens) => if (s.last.code == "\n") Tokens(s.repr.init: _*) else s
+      val avoidDoubleLineFun: (Tokens => Tokens) = (s: Tokens) => if (s.last.show[Syntax] == "\n") Tokens(s.repr.init: _*) else s
       def `oo` =       flattks()()()
       def `o->o` =     flattks()(newline, avoidDoubleLineFun)()
       def `->o->` =    flattks(newline)(newline, avoidDoubleLineFun)(newline)
@@ -315,7 +315,7 @@ private[meta] object inferTokens {
         case (_: Term.ApplyUnary, Some(_: Term.Select)) => true
         case _ =>                                         false
       }
-      def hasParens = tree.tokens.head.isInstanceOf[Token.`(`] && tree.tokens.last.isInstanceOf[Token.`)`]
+      def hasParens = tree.tokens.head.isInstanceOf[Token.LeftParen] && tree.tokens.last.isInstanceOf[Token.RightParen]
       if (needsParens && !hasParens) toks"(${deindent(tree.tokens)})"
       else deindent(tree.tokens)
     }

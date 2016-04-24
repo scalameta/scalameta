@@ -11,13 +11,13 @@ class InfrastructureSuite extends FunSuite {
   test("become for Quasi-0") {
     val q = Term.Quasi(0, "hello").withTokens(toks"Hello")
     assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(0, "hello")""")
-    assert(q.become[Type.Quasi].tokens.toString === "Synthetic(Vector(Hello (0..5)))")
+    assert(q.become[Type.Quasi].tokens.toString === "Tokens(Hello [0..5))")
   }
 
   test("become for Quasi-1") {
     val q = Term.Quasi(1, Term.Quasi(0, "hello").withTokens(toks"HelloInner")).withTokens(toks"HelloOuter")
     assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(1, Type.Quasi(0, "hello"))""")
-    assert(q.become[Type.Quasi].tokens.toString === "Synthetic(Vector(HelloOuter (0..10)))")
+    assert(q.become[Type.Quasi].tokens.toString === "Tokens(HelloOuter [0..10))")
   }
 
   private def attributeName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage), Foo.setTypechecked)

@@ -2,6 +2,7 @@ package scala.meta
 package internal
 package prettyprinters
 
+import scala.meta.classifiers._
 import scala.meta.prettyprinters._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.tokens.Token
@@ -30,7 +31,20 @@ object TreeStructure {
         case x @ Lit(value: String) =>
           s(enquote(value, DoubleQuotes))
         case x @ Lit(_) =>
-          def isRelevantToken(tok: Token) = tok.isInstanceOf[Literal] || (tok.isInstanceOf[Ident] && tok.code == "-")
+          def isRelevantToken(tok: Token) = tok match {
+            case Constant.Int(_) => true
+            case Constant.Long(_) => true
+            case Constant.Float(_) => true
+            case Constant.Double(_) => true
+            case Constant.Char(_) => true
+            case Constant.Symbol(_) => true
+            case Constant.String(_) => true
+            case True() => true
+            case False() => true
+            case Null() => true
+            case Ident("-") => true
+            case _ => false
+          }
           s(x.tokens.filter(isRelevantToken).map(_.show[Syntax]).mkString)
         case x =>
           default

@@ -1,7 +1,7 @@
 package scala.meta
 package quasiquotes
 
-import org.scalameta.convert._
+import scala.meta.convert._
 import scala.annotation.implicitNotFound
 
 @implicitNotFound(msg = "don't know how to lift ${O} into ${I}")

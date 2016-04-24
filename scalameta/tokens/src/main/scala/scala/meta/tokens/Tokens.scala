@@ -6,6 +6,8 @@ import scala.collection.generic._
 import scala.collection.mutable.{Builder, ArrayBuilder, ListBuffer}
 import scala.collection.immutable.VectorBuilder
 import scala.meta.inputs._
+import scala.meta.prettyprinters._
+import scala.meta.internal.prettyprinters._
 
 // TODO: We should really give up on trying to use the standard IndexedSeq machinery,
 // because it doesn't give us a good way to load the elements lazily, which is necessary for Tokens.Slice
@@ -35,6 +37,8 @@ abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with Inp
   // def unzip[A1, A2](implicit asPair: A => (A1, A2)): (CC[A1], CC[A2]) = {
   // def unzip3[A1, A2, A3](implicit asTriple: A => (A1, A2, A3)): (CC[A1], CC[A2], CC[A3]) = {
   // TODO: have I missed anything else?
+
+  override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 }
 
 object Tokens {
@@ -69,21 +73,18 @@ object Tokens {
   private[meta] case class Tokenized(content: Content, dialect: Dialect, underlying: Token*) extends Tokens(underlying: _*) {
     override def input = content
     override def isAuthentic = true
-    override def toString = s"Tokenized($content, $dialect, $underlying)"
   }
 
   private[meta] case class Adhoc(underlying: Token*) extends Tokens(underlying: _*) {
     override def input = this
     override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = true
-    override def toString = s"Adhoc($underlying)"
   }
 
   private[meta] case class Synthetic(underlying: Token*) extends Tokens(underlying: _*) {
     override def input = this
     override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = false
-    override def toString = s"Synthetic($underlying)"
   }
 
   private[meta] case class Slice(tokens: Tokens, from: Int, until: Int) extends Tokens(tokens.view(from, until): _*) {
@@ -92,6 +93,8 @@ object Tokens {
     override def isAuthentic = true
     override def take(n: Int): Tokens = new Slice(tokens, from, Math.min(from + n, until))
     override def drop(n: Int): Tokens = new Slice(tokens, Math.min(from + n, until), until)
-    override def toString = s"Slice($tokens, $from, $until)"
   }
+
+  implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
+  implicit def showSyntax[T <: Tokens]: Syntax[T] = TokensSyntax.apply[T]
 }

@@ -92,7 +92,7 @@ class LitSuite extends ParseSuite {
 
   test("#344") {
     val Term.ApplyInfix(_, _, _, Seq(minusOne)) = term("1 + -1")
-    assert(minusOne.tokens.toList.toString === "List(- (4..5), 1 (5..6))")
+    assert(minusOne.tokens.show[Structure] === "Tokens(- [4..5), 1 [5..6))")
   }
 
   test("#342") {

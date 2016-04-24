@@ -90,7 +90,7 @@ package object dialects {
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
-  @leaf class Quasiquote(dialect: Dialect) extends Dialect {
+  @leaf private[meta] class Quasiquote(dialect: Dialect) extends Dialect {
     def name = s"Quasiquote(${dialect.name})"
     def bindToSeqWildcardDesignator = dialect.bindToSeqWildcardDesignator
     def allowXmlLiterals = dialect.allowXmlLiterals
