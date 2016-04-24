@@ -6,6 +6,7 @@ import scala.reflect.macros.whitebox.Context
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.convert._
 import scala.meta.inputs._
+import scala.meta.prettyprinters._
 import scala.meta.tokens._
 import scala.meta.tokenizers._
 
@@ -14,7 +15,7 @@ import scala.meta.tokenizers._
  * Two tokens are considered equal (in pattern matching) if they both come from the same code.
  */
 object TokenExtractor {
-  def unapply(t: Token) = Some(t.code)
+  def unapply(t: Token) = Some(t.show[Syntax])
 }
 
 class ReificationMacros(val c: Context) extends TokenLiftables
@@ -94,7 +95,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
 
         def patternForToken(t: Token) = t match {
           case t: Token.Unquote => pq"${t.tree.asInstanceOf[c.Tree]}"
-          case t                    => pq"_root_.scala.meta.internal.tokenquasiquotes.TokenExtractor(${t.code})"
+          case t                    => pq"_root_.scala.meta.internal.tokenquasiquotes.TokenExtractor(${t.show[Syntax]})"
         }
 
         // Split the input in three parts: (before, ..unquote, after).

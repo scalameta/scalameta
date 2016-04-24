@@ -75,9 +75,6 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       // step 3: perform manual mixin composition in order to avoid the creation of Token$class.class.
       // We kinda have to do that, because we want to have a `Token.Class` class.
       stats1 += q"""
-        def code: _root_.scala.Predef.String = new _root_.scala.Predef.String(content.chars.slice(start, end))
-      """
-      stats1 += q"""
         def position: $PositionClass = {
           val start = $PointModule.Offset(this.content, this.start)
           val point = $PointModule.Offset(this.content, this.start)

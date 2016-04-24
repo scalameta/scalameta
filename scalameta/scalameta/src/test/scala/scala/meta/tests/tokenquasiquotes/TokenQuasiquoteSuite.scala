@@ -168,8 +168,8 @@ class TokenQuasiquoteSuite extends FunSuite {
 
   implicit class CheckToken(t: Token) {
     def isIdentNamed(name: String): Boolean = t match {
-      case x: Token.Ident => x.code == name
-      case _                  => false
+      case Token.Ident(`name`) => true
+      case _                   => false
     }
 
     def isMinus: Boolean = t isIdentNamed "-"

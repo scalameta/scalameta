@@ -31,7 +31,11 @@ object TreeStructure {
         case x @ Lit(value: String) =>
           s(enquote(value, DoubleQuotes))
         case x @ Lit(_) =>
-          def isRelevantToken(tok: Token) = tok.isInstanceOf[Literal] || (tok.isInstanceOf[Ident] && tok.code == "-")
+          def isRelevantToken(tok: Token) = tok match {
+            case Literal(_) => true
+            case Ident("-") => true
+            case _ => false
+          }
           s(x.tokens.filter(isRelevantToken).map(_.show[Syntax]).mkString)
         case x =>
           default

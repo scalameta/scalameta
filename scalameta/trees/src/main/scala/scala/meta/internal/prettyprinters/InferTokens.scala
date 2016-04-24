@@ -98,7 +98,7 @@ private[meta] object inferTokens {
        */
       val indentFun:          (Tokens => Tokens) = (s: Tokens) => indent(s)(indentation)
       /* In some construction, the line return is already present in the tokens. This prevents to put a second one and break the layout. */
-      val avoidDoubleLineFun: (Tokens => Tokens) = (s: Tokens) => if (s.last.code == "\n") Tokens(s.repr.init: _*) else s
+      val avoidDoubleLineFun: (Tokens => Tokens) = (s: Tokens) => if (s.last.show[Syntax] == "\n") Tokens(s.repr.init: _*) else s
       def `oo` =       flattks()()()
       def `o->o` =     flattks()(newline, avoidDoubleLineFun)()
       def `->o->` =    flattks(newline)(newline, avoidDoubleLineFun)(newline)

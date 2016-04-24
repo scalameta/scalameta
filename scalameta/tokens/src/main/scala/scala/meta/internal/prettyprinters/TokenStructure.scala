@@ -17,7 +17,7 @@ object TokenStructure {
         case x: Token.LFLF => "\\n\\n"
         case x: Token.BOF => "BOF"
         case x: Token.EOF => "EOF"
-        case x => x.code
+        case x => x.show[Syntax]
       }
       s(prefix, " [", x.start.toString, "..", x.end.toString, ")")
     })

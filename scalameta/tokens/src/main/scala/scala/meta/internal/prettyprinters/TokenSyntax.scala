@@ -8,6 +8,6 @@ import scala.meta.tokens._
 
 object TokenSyntax {
   def apply[T <: Token]: Syntax[T] = {
-    Syntax { x => s(x.code) }
+    Syntax { x => s(new String(x.content.chars, x.start, x.end - x.start)) }
   }
 }

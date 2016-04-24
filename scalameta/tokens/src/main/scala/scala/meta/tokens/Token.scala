@@ -15,10 +15,9 @@ import scala.meta.internal.prettyprinters._
 // Therefore Token.end can point to the last character plus one.
 // Btw, Token.start can also point to the last character plus one if it's an EOF token.
 @root trait Token {
-  def code: String
-
   def content: Content
   def dialect: Dialect
+
   def start: Int
   def end: Int
   def position: Position

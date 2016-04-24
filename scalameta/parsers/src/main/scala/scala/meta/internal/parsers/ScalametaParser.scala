@@ -457,8 +457,8 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 /* -------------- TOKEN CLASSES ------------------------------------------- */
 
   def isIdentAnd(pred: String => Boolean) = token match {
-    case id: Ident if pred(id.code.stripPrefix("`").stripSuffix("`")) => true
-    case _                                                            => false
+    case Ident(value) if pred(value.stripPrefix("`").stripSuffix("`")) => true
+    case _                                                             => false
   }
   def isUnaryOp: Boolean            = isIdentAnd(Helpers.isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
@@ -469,7 +469,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def isColonWildcardStar: Boolean  = token.is[Colon] && ahead(token.is[Underscore] && ahead(isIdentOf("*")))
   def isSpliceFollowedBy(check: => Boolean): Boolean
                                     = token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
-  def isBackquoted: Boolean         = token.code.startsWith("`") && token.code.endsWith("`")
+  def isBackquoted: Boolean         = token.show[Syntax].startsWith("`") && token.show[Syntax].endsWith("`")
 
   private implicit class XtensionTokenClass(token: Token) {
     def isCaseClassOrObject = token.is[CaseToken] && (token.next.is[Class] || token.next.is[Object])
@@ -1146,12 +1146,12 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     implicit object AllowedTypeName extends AllowedName[Type.Name]
   }
   private def name[T <: Tree : AllowedName : AstInfo](ctor: String => T, advance: Boolean): T = token match {
-    case token: Ident =>
-      val name = token.code.stripPrefix("`").stripSuffix("`")
+    case Ident(value) =>
+      val name = value.stripPrefix("`").stripSuffix("`")
       val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
       if (advance) next()
       res
-    case token: Unquote =>
+    case Unquote(_) =>
       unquote[T](advance)
     case _ =>
       syntaxErrorExpected[Ident]
@@ -1290,7 +1290,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    *  }}}
    */
   def literal(isNegated: Boolean = false): Lit = autoPos {
-    def isHex = token.code.startsWith("0x") || token.code.startsWith("0X")
+    def isHex = token.show[Syntax].startsWith("0x") || token.show[Syntax].startsWith("0X")
     val res = token match {
       case Literal(Constant.Int(rawValue)) =>
         val value = if (isNegated) -rawValue else rawValue
@@ -1336,7 +1336,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit], List[Ctx]) => Ret): Ret = autoPos {
     val interpolator = {
       if (token.is[Xml.Start]) atPos(in.tokenPos, in.tokenPos)(Term.Name("xml"))
-      else atPos(in.tokenPos, in.tokenPos)(Term.Name(token.require[Interpolation.Id].code)) // termName() for INTERPOLATIONID
+      else atPos(in.tokenPos, in.tokenPos)(Term.Name(token.require[Interpolation.Id].show[Syntax]))
     }
     if (token.is[Interpolation.Id]) next()
     val partsBuf = new ListBuffer[Lit]
@@ -1346,7 +1346,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         next()
         loop()
       case Interpolation.Part(_) | Xml.Part(_) =>
-        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(token.code))
+        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(token.show[Syntax]))
         next()
         loop()
       case Interpolation.SpliceStart() | Xml.SpliceStart() =>
