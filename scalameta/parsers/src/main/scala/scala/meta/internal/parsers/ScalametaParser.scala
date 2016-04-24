@@ -54,10 +54,10 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   // Note the expr(Local) part, which means that we're going to parse lambda expressions in the mode that
   // precludes ambiguities with self-type annotations.
   private val consumeStat: PartialFunction[Token, Stat] = {
-    case token if token.is[ImportToken] => importStmt()
-    case token if token.is[Package] && !dialect.allowToplevelTerms => packageOrPackageObjectDef()
-    case token if token.is[DefIntro] || token.is[Ellipsis] => nonLocalDefOrDcl()
-    case token if token.is[ExprIntro] => expr(Local)
+    case ImportToken() => importStmt()
+    case Package() if !dialect.allowToplevelTerms => packageOrPackageObjectDef()
+    case DefIntro() | Ellipsis(_) => nonLocalDefOrDcl()
+    case ExprIntro() => expr(Local)
   }
   def parseStat(): Stat = {
     parseRule(parser => {
@@ -2520,11 +2520,11 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     // but in the case of the latter, we need to take care to not hastily parse those names as modifiers
     def continueLoop = ahead(token.is[Colon] || token.is[Equals] || token.is[EOF] || token.is[LeftBrack] || token.is[Subtype] || token.is[Supertype] || token.is[Viewbound])
     def loop(mods: List[Mod]): List[Mod] = token match {
-      case Unquote(_)                  => if (continueLoop) mods else loop(appendMod(mods, modifier()))
-      case Ellipsis(_)                 => loop(appendMod(mods, modifier()))
-      case token if token.is[Modifier] => loop(appendMod(mods, modifier()))
-      case LF() if !isLocal            => next(); loop(mods)
-      case _                           => mods
+      case Unquote(_)       => if (continueLoop) mods else loop(appendMod(mods, modifier()))
+      case Ellipsis(_)      => loop(appendMod(mods, modifier()))
+      case Modifier()       => loop(appendMod(mods, modifier()))
+      case LF() if !isLocal => next(); loop(mods)
+      case _                => mods
     }
     loop(Nil)
   }
@@ -2937,7 +2937,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     token match {
       case Equals() => next(); aliasType()
       case Supertype() | Subtype() | Comma() | RightBrace() => abstractType()
-      case token if token.is[StatSep] => abstractType()
+      case StatSep() => abstractType()
       case _ => syntaxError("`=', `>:', or `<:' expected", at = token)
     }
   }
@@ -3298,15 +3298,15 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    */
   def topStatSeq(): List[Stat] = statSeq(topStat, errorMsg = "expected class or object definition")
   def topStat: PartialFunction[Token, Stat] = {
-    case token if token.is[Ellipsis] =>
+    case Ellipsis(_) =>
       ellipsis(1, unquote[Stat])
-    case token if token.is[Unquote] =>
+    case Unquote(_) =>
       unquote[Stat]
-    case token if token.is[Package]  =>
+    case Package() =>
       packageOrPackageObjectDef()
-    case token if token.is[ImportToken] =>
+    case ImportToken() =>
       importStmt()
-    case token if token.is[TemplateIntro] =>
+    case TemplateIntro() =>
       topLevelTmplDef
   }
 
@@ -3362,13 +3362,13 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
    */
   def templateStats(): List[Stat] = statSeq(templateStat)
   def templateStat: PartialFunction[Token, Stat] = {
-    case token if token.is[Ellipsis] =>
+    case Ellipsis(_) =>
       ellipsis(1, unquote[Stat])
-    case token if token.is[ImportToken] =>
+    case ImportToken() =>
       importStmt()
-    case token if token.is[DefIntro] =>
+    case DefIntro() =>
       nonLocalDefOrDcl()
-    case token if token.is[ExprIntro] =>
+    case ExprIntro() =>
       expr(InTemplate)
   }
 
