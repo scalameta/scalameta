@@ -187,6 +187,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       (??? : Tree).show[Syntax]
+      (??? : Tree).syntax
     """) === "")
   }
 
@@ -195,6 +196,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       (??? : Tree).show[Syntax]
+      (??? : Tree).syntax
     """) === "")
   }
 
@@ -208,6 +210,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : Tree).show[Structure]
+      (??? : Tree).structure
     """) === "")
   }
 }
