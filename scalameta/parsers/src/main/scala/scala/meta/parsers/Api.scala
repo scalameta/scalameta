@@ -14,7 +14,7 @@ private[meta] trait Api {
   implicit class XtensionParseInputLike[T](inputLike: T) {
     def parse[U](implicit convert: Convert[T, Input], parse: Parse[U], dialect: Dialect): Parsed[U] = {
       val input = convert(inputLike)
-      parse.apply(input)(dialect)
+      new InputWithDialect(input, dialect).parse[U]
     }
   }
   implicit class XtensionDialectParseInputLike(dialect: Dialect) {

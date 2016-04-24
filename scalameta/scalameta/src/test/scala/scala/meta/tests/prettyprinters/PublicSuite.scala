@@ -9,6 +9,10 @@ class PublicSuite extends FunSuite {
     Dialect.all.foreach(d => assert(d.name == d.toString))
   }
 
+  test("scala.meta.InputWithDialect.toString") {
+    // n/a
+  }
+
   test("scala.meta.Tree.toString (manual)") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
     assert(tree.toString === "foo + bar")

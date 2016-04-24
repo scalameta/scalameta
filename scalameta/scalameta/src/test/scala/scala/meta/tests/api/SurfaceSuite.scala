@@ -30,6 +30,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     // println(core.toList.sorted.mkString(EOL))
     assert(core.toList.sorted.mkString(EOL) === """
       |scala.meta.Dialect
+      |scala.meta.InputWithDialect
       |scala.meta.Tree
       |scala.meta.classifier
       |scala.meta.classifiers
