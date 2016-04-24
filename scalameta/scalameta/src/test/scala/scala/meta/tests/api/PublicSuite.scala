@@ -176,28 +176,6 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
-  test("show[Code] without import") {
-    assert(typecheckError("""
-      (??? : scala.meta.Tree).show[Code]
-    """) === "not found: type Code")
-  }
-
-  test("show[Code] when everything's correct (static dialect)") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      (??? : Tree).show[Code]
-    """) === "")
-  }
-
-  test("show[Code] when everything's correct (dynamic dialect)") {
-    assert(typecheckError("""
-      import scala.meta._
-      implicit val dialect: scala.meta.Dialect = ???
-      (??? : Tree).show[Code]
-    """) === "")
-  }
-
   test("show[Syntax] without import") {
     assert(typecheckError("""
       (??? : scala.meta.Tree).show[Syntax]
@@ -217,19 +195,6 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       (??? : Tree).show[Syntax]
-    """) === "")
-  }
-
-  test("show[Raw] without import") {
-    assert(typecheckError("""
-      (??? : scala.meta.Tree).show[Raw]
-    """) === "not found: type Raw")
-  }
-
-  test("show[Raw] when everything's correct") {
-    assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Raw]
     """) === "")
   }
 
