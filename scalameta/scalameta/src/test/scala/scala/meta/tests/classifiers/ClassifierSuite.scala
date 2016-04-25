@@ -25,7 +25,13 @@ object Manual {
 }
 
 @classifier
-trait Auto {
+trait Auto1
+object Auto1 {
+  def unapply(x: MyToken): Boolean = x.isInstanceOf[MyIdent]
+}
+
+@classifier
+trait Auto2 {
   def unapply(x: MyToken): Boolean = x.isInstanceOf[MyIdent]
 }
 
@@ -43,7 +49,8 @@ class ClassifierSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : Unclassifiable).is[Manual]
-      (??? : Unclassifiable).is[Auto]
+      (??? : Unclassifiable).is[Auto1]
+      (??? : Unclassifiable).is[Auto2]
     """) === """
       |value is is not a member of org.scalameta.tests.classifiers.Unclassifiable
     """.trim.stripMargin)
@@ -68,10 +75,12 @@ class ClassifierSuite extends FunSuite {
   test("classifiable typeclass") {
     val ident1: MyToken = new MyIdent
     assert(ident1.is[Manual])
-    assert(ident1.is[Auto])
+    assert(ident1.is[Auto1])
+    assert(ident1.is[Auto2])
 
     val ident2: MyIdent = new MyIdent
     assert(ident2.is[Manual])
-    assert(ident2.is[Auto])
+    assert(ident2.is[Auto1])
+    assert(ident2.is[Auto2])
   }
 }
