@@ -420,8 +420,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       // step 9: generate boilerplate required by the @ast infrastructure
       istats1 += q"override type ThisType <: $iname"
       astats1 += q"override type ThisType = $iname"
-      astats1 += q"override def privateTag: _root_.scala.Int = $mname.privateTag"
-      mstats1 += q"def privateTag: _root_.scala.Int = $AdtTyperMacrosModule.calculateTag[$iname]"
       // TODO: remove leafClass and leafCompanion from here
       ianns1 += q"new $AstMetadataModule.astClass"
       ianns1 += q"new $AdtMetadataModule.leafClass"

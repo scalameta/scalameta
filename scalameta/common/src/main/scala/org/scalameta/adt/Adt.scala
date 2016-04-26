@@ -48,7 +48,6 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       val flags1 = flags | SEALED
       val needsThisType = stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty
       if (needsThisType) stats1 += q"type ThisType <: $classRef"
-      stats1 += q"def privateTag: _root_.scala.Int"
       mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
       val anns1 = anns :+ q"new $AdtMetadataModule.root"
       val parents1 = parents :+ tq"$AdtMetadataModule.Adt" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
@@ -96,8 +95,6 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
 
       // step 1: generate boilerplate required by the @adt infrastructure
       stats1 += q"override type ThisType = $classRef"
-      stats1 += q"override def privateTag: _root_.scala.Int = $mname.privateTag"
-      mstats1 += q"def privateTag: _root_.scala.Int = $AdtTyperMacrosModule.calculateTag[$classRef]"
       mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
       mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[$classRef]"
       anns1 += q"new $AdtMetadataModule.leafClass"
@@ -122,7 +119,6 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
 
       // step 1: generate boilerplate required by the @adt infrastructure
       mstats1 += q"override type ThisType = $mname.type"
-      mstats1 += q"override def privateTag: _root_.scala.Int = $AdtTyperMacrosModule.calculateTag[ThisType]"
       mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[ThisType]"
       mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[ThisType]"
       manns1 += q"new $AdtMetadataModule.leafClass"
@@ -138,8 +134,6 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
 
 // Parts of @root, @branch and @leaf logic that need a typer context and can't be run in a macro annotation.
 object AdtTyperMacros {
-  case class TagAttachment(counter: Int)
-  def calculateTag[T]: Int = macro AdtTyperMacrosBundle.calculateTag[T]
   def hierarchyCheck[T]: Unit = macro AdtTyperMacrosBundle.hierarchyCheck[T]
   def immutabilityCheck[T]: Unit = macro AdtTyperMacrosBundle.immutabilityCheck[T]
 }
@@ -152,19 +146,6 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
   import definitions._
   import c.internal._
   import decorators._
-  import AdtTyperMacros.TagAttachment
-
-  def calculateTag[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    val sym = T.tpe.typeSymbol.asClass
-    val tag = sym.attachments.get[TagAttachment].map(_.counter).getOrElse {
-      val root = sym.asAdt.root.sym
-      val att = root.attachments.get[TagAttachment].map(att => att.copy(counter = att.counter + 1)).getOrElse(new TagAttachment(1))
-      root.updateAttachment(att)
-      sym.updateAttachment(att)
-      att.counter
-    }
-    q"$tag"
-  }
 
   def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     val sym = T.tpe.typeSymbol.asClass

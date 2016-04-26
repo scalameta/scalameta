@@ -11,13 +11,13 @@ private[meta] object NonRef {
 private[meta] object NameRef {
   def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
-      case name: Term.Name => Some((name, Term.Name.privateTag))
-      case name: Type.Name => Some((name, Type.Name.privateTag))
-      case name: Ctor.Name => Some((name, Ctor.Name.privateTag))
-      case Term.Select(NameRef(_, _), name) => Some((name, Term.Name.privateTag))
-      case Type.Select(NameRef(_, _), name) => Some((name, Type.Name.privateTag))
-      case Type.Project(NameRef(_, _), name) => Some((name, Type.Name.privateTag))
-      case Ctor.Ref.Select(NameRef(_, _), name) => Some((name, Ctor.Name.privateTag))
+      case name: Term.Name => Some((name, 1))
+      case name: Type.Name => Some((name, 2))
+      case name: Ctor.Name => Some((name, 3))
+      case Term.Select(NameRef(_, _), name) => Some((name, 4))
+      case Type.Select(NameRef(_, _), name) => Some((name, 5))
+      case Type.Project(NameRef(_, _), name) => Some((name, 6))
+      case Ctor.Ref.Select(NameRef(_, _), name) => Some((name, 7))
       case _ => None
     }
   }
@@ -26,7 +26,7 @@ private[meta] object NameRef {
 private[meta] object OpaqueRef {
   def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
-      case tree: Name.Indeterminate => Some((tree, Name.Indeterminate.privateTag))
+      case tree: Name.Indeterminate => Some((tree, 8))
       case _ => None
     }
   }

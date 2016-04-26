@@ -48,7 +48,6 @@ class RootNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       val flags1 = flags // TODO: flags | SEALED
       val needsThisType = stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty
       if (needsThisType) stats1 += q"type ThisType <: $name"
-      stats1 += q"def privateTag: _root_.scala.Int"
       mstats1 += q"$AstTyperMacrosModule.hierarchyCheck[$name]"
       val anns1 = anns :+ q"new $AdtMetadataModule.root" :+ q"new $AstMetadataModule.root"
       val parents1 = parents :+ tq"$AstMetadataModule.Ast" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
