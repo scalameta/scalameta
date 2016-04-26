@@ -40,7 +40,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
               }
             } else {
               val parentIsPackageObject = (parent.isModule || parent.isModuleClass) && parent.name.toString == "package"
-              if (!sym.isImplicit && parentIsPackageObject) visited += sym
+              if (!sym.isImplicit && !sym.isConstructor && parentIsPackageObject) visited += sym
             }
           } else if (sym.isType) {
             val target = sym.info.typeSymbol

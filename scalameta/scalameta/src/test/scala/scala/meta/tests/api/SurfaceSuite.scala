@@ -6,9 +6,6 @@ import org.scalameta.tests._
 import org.scalameta.explore._
 import scala.compat.Platform.EOL
 
-// TODO: What is scala.meta.this???
-// I think it's some kind of scala.reflect's artifact, but I don't have time to dig deeper.
-
 // TODO: Implement datamining and checking of the entire API surface,
 // i.e. not only check names of classes/objects, but also their members.
 // See the unimplemented publicSurface macro for more details.
@@ -61,7 +58,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
       |scala.meta.tests
-      |scala.meta.this
       |scala.meta.tokenizers
       |scala.meta.tokenizers.TokenizeException
       |scala.meta.tokenizers.Tokenized
