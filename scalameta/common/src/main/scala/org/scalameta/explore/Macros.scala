@@ -9,7 +9,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
   import c.universe._
   lazy val m = c.mirror
 
-  def publicToplevelDefinitions(packageName: Tree): Tree = {
+  private def discoverPublicToplevelDefinitions(pkg: Symbol): List[Symbol] = {
     val visited = Set[Symbol]()
     def explore(parent: Symbol): Unit = {
       if (parent == NoSymbol) return
@@ -26,7 +26,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
           } else if (sym.isModule) {
             if (!visited(sym)) explore(sym)
             visited += sym
-            // do recur, because we expect members of modules to be used via full names
+            // do recur, because we expect many members of modules to be used via full names
           } else if (sym.isClass) {
             if (!sym.isImplicit) visited += sym
           } else if (sym.isMethod) {
@@ -58,9 +58,9 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
       })
     }
 
-    val Literal(Constant(s_packageName: String)) = packageName
-    explore(scala.util.Try(m.staticPackage(s_packageName)).getOrElse(NoSymbol))
-    explore(scala.util.Try(m.staticModule(s_packageName + ".package")).getOrElse(NoSymbol))
+    assert(pkg.isPackage)
+    explore(pkg)
+    explore(pkg.info.member(termNames.PACKAGE))
 
     def isVisible(sym: Symbol): Boolean = sym != NoSymbol && sym.isPublic && (sym.isPackage || isVisible(sym.owner))
     val visible = visited.filter(isVisible)
@@ -68,9 +68,48 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     val relevant = nontrivial.filter(sym => !sym.fullName.startsWith("scala.collection.generic"))
     val result = relevant
 
-    val s_result = result.toList.map(sym => scala.reflect.NameTransformer.decode(sym.fullName)).distinct.sorted
+    result.toList
+  }
+
+  private def render(strings: List[String]): Tree = {
+    val s_result = strings.distinct.sorted
     // s_result.foreach(println)
     q"$s_result"
+  }
+
+  def publicToplevelDefinitions(packageName: Tree): Tree = {
+    val Literal(Constant(s_packageName: String)) = packageName
+    val tlds = discoverPublicToplevelDefinitions(m.staticPackage(s_packageName))
+    val names = tlds.map(sym => scala.reflect.NameTransformer.decode(sym.fullName))
+    render(names)
+  }
+
+  def publicExtensionMethods(packageName: Tree): Tree = {
+    val Literal(Constant(s_packageName: String)) = packageName
+    val tlds = discoverPublicToplevelDefinitions(m.staticPackage(s_packageName))
+    val implicitClasses = tlds.flatMap(tld => {
+      if (tld.isModule) tld.info.members.filter(sym => sym.isClass && sym.isImplicit && sym.isPublic)
+      else Seq()
+    })
+    val signatures = implicitClasses.flatMap(cls => {
+      def signature(m: Symbol, wrapFirst: Boolean) = {
+        val pss = m.asMethod.paramLists
+        val s_ps = pss.zipWithIndex.map{ case (ps, i) =>
+          val s_p = ps.map(_.info).mkString(", ")
+          val designator = if (ps.exists(_.isImplicit)) "implicit " else ""
+          val prefix = if (i != 0 || wrapFirst) "(" else ""
+          val suffix = if (i != 0 || wrapFirst) ")" else ""
+          prefix + designator + s_p + suffix
+        }
+        s_ps.mkString("")
+      }
+      val ctor = cls.info.decls.find(sym => sym.isMethod && sym.asMethod.isPrimaryConstructor).get
+      val extendee = signature(ctor, wrapFirst = false)
+      val extensionMethods = cls.info.decls.collect{ case sym if sym.isMethod && !sym.isConstructor => sym.asMethod }
+      val visible = extensionMethods.filter(_.isPublic)
+      visible.map(m => extendee + "." + m.name.decodedName.toString + signature(m, wrapFirst = true))
+    })
+    render(signatures)
   }
 
   def publicSurface(packageName: Tree): Tree = {

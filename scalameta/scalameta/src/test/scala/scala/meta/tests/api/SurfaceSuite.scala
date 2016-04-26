@@ -22,6 +22,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
   }
 
   val tlds = publicToplevelDefinitions("scala.meta").toSet
+  val exts = publicExtensionMethods("scala.meta")
   val trees = tlds.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
   val tokens = tlds.filter(_.startsWith("scala.meta.tokens.Token."))
   val core = tlds -- trees -- tokens
@@ -81,6 +82,38 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       val isTested = prettyprinterTests.exists(testName => testName.startsWith(name))
       assert(isTested, s"$name prettyprinting is not tested")
     })
+  }
+
+  test("public extension methods") {
+    // println(exts.sorted.mkString(EOL))
+    assert(exts.sorted.mkString(EOL) === """
+      |A.convert(implicit scala.meta.convert.Convert[A,B])
+      |A.convertOrElse(=> B)(implicit scala.meta.convert.Convert[A,B])
+      |Seq[scala.meta.tokens.Token].toTokens
+      |T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U])
+      |T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U])
+      |T(implicit scala.meta.classifiers.Classifiable[T]).x
+      |T(implicit scala.meta.prettyprinters.Structure[T]).structure
+      |T(implicit scala.meta.prettyprinters.Syntax[T]).syntax
+      |T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect)
+      |T.resetAllTokens
+      |T.resetTokens
+      |T.show(implicit Style[T])
+      |T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect)
+      |scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input])
+      |scala.meta.Pat.Type.tpe
+      |scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T])
+      |scala.meta.Tree.dialect
+      |scala.meta.Tree.end
+      |scala.meta.Tree.input
+      |scala.meta.Tree.point
+      |scala.meta.Tree.position
+      |scala.meta.Tree.start
+      |scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree])
+      |scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit])
+      |scala.meta.Type.ctorRef(scala.meta.Ctor.Name)
+      |scala.meta.Type.pat
+    """.trim.stripMargin)
   }
 
   test("public top-level definitions (trees)") {
