@@ -60,7 +60,6 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
 
     assert(pkg.isPackage)
     explore(pkg)
-    explore(pkg.info.member(termNames.PACKAGE))
 
     def isVisible(sym: Symbol): Boolean = sym != NoSymbol && sym.isPublic && (sym.isPackage || isVisible(sym.owner))
     val visible = visited.filter(isVisible)
