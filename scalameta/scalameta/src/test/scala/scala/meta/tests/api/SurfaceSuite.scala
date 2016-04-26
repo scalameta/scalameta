@@ -83,8 +83,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
   test("public extension methods") {
     // println(exts.sorted.mkString(EOL))
     assert(exts.sorted.mkString(EOL) === """
-      |A.convert(implicit scala.meta.convert.Convert[A,B])
-      |A.convertOrElse(=> B)(implicit scala.meta.convert.Convert[A,B])
       |Seq[scala.meta.tokens.Token].toTokens
       |T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U])
       |T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U])
