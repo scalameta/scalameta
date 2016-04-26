@@ -151,7 +151,7 @@ object Token {
 // depending on how the file and its enclosing directories are called.
 // To combat that, we have TokenLiftables right here, guaranteeing that there won't be problems
 // if someone wants to refactor/rename something later.
-trait TokenLiftables extends tokens.Liftables {
+private[meta] trait TokenLiftables extends tokens.Liftables {
   val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
 

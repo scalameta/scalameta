@@ -24,7 +24,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
   val tokens = wildcardImportStatics.filter(_.startsWith("scala.meta.tokens.Token."))
   val core = allStatics.diff(trees).diff(tokens).map(fullName => (fullName, wildcardImportStatics.contains(fullName))).toMap
 
-
   test("statics (core)") {
     val diagnostic = core.keys.toList.sorted.map(fullName => {
       val suffix = if (core(fullName)) "" else " *"
@@ -80,7 +79,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.prettyprinters.Syntax
       |scala.meta.quasiquotes
       |scala.meta.quasiquotes.Lift
-      |scala.meta.quasiquotes.QuasiquoteParsers *
       |scala.meta.quasiquotes.Unlift
       |scala.meta.tokenizers
       |scala.meta.tokenizers.InputWithDialect *
@@ -91,7 +89,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokenizers.Tokenized.Success
       |scala.meta.tokens
       |scala.meta.tokens.Token
-      |scala.meta.tokens.TokenLiftables *
       |scala.meta.tokens.Tokens
       |scala.meta.tokens.Tokens.Projection
       |scala.meta.transversers
