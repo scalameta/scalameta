@@ -79,7 +79,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     })
   }
 
-  test("public extension methods") {
+  test("public top-level extension methods") {
     // println(exts.sorted.mkString(EOL))
     assert(exts.sorted.mkString(EOL) === """
       |T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U])

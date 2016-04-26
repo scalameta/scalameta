@@ -87,7 +87,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     render(names)
   }
 
-  def publicExtensionMethods(packageName: Tree): Tree = {
+  def publicToplevelExtensionMethods(packageName: Tree): Tree = {
     val Literal(Constant(s_packageName: String)) = packageName
     val tlds = discoverPublicToplevelDefinitions(m.staticPackage(s_packageName))
     val implicitClasses = tlds.flatMap(tld => {
