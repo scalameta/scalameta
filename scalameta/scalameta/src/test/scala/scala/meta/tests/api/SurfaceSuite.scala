@@ -57,7 +57,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.quasiquotes
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
-      |scala.meta.tests
       |scala.meta.tokenizers
       |scala.meta.tokenizers.TokenizeException
       |scala.meta.tokenizers.Tokenized
@@ -89,8 +88,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |T(implicit scala.meta.prettyprinters.Structure[T]).structure
       |T(implicit scala.meta.prettyprinters.Syntax[T]).syntax
       |T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect)
-      |T.resetAllTokens
-      |T.resetTokens
       |T.show(implicit Style[T])
       |T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect)
       |scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input])

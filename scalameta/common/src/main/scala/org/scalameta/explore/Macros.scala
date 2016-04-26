@@ -65,7 +65,11 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     def isVisible(sym: Symbol): Boolean = sym != NoSymbol && sym.isPublic && (sym.isPackage || isVisible(sym.owner))
     val visible = visited.filter(isVisible)
     val nontrivial = visible.filter(sym => sym.owner != symbolOf[Any] && sym.owner != symbolOf[Object])
-    val relevant = nontrivial.filter(sym => !sym.fullName.startsWith("scala.collection.generic"))
+    val relevant = nontrivial.filter(sym => {
+      val mystery = sym.fullName.startsWith("scala.collection.generic")
+      val tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith("tests")
+      !mystery && !tests
+    })
     val result = relevant
 
     result.toList
