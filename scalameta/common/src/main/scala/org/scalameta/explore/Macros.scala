@@ -9,9 +9,46 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
   import c.universe._
   lazy val m = c.mirror
 
-  private def discoverPublicToplevelDefinitions(pkg: Symbol): List[Symbol] = {
+  private implicit class XtensionExploreSymbol(sym: Symbol) {
+    def isIrrelevant: Boolean = {
+      val trivial = sym.owner == symbolOf[Any] || sym.owner == symbolOf[Object]
+      val arbitrary = sym.fullName.startsWith("scala.collection.generic")
+      val tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith("tests")
+      val internal = sym.fullName.contains(".internal.") // NOTE: don't ignore "internal" itself
+      val invisible = !sym.isPublic
+      trivial || arbitrary || tests || internal || invisible
+    }
+    def isRelevant: Boolean = {
+      !isIrrelevant
+    }
+    def signature: String = {
+      def paramss(m: Symbol, wrapFirst: Boolean): String = {
+        val pss = m.asMethod.paramLists
+        val s_ps = pss.zipWithIndex.map{ case (ps, i) =>
+          val s_p = ps.map(_.info).mkString(", ")
+          val designator = if (ps.exists(_.isImplicit)) "implicit " else ""
+          val prefix = if (i != 0 || wrapFirst) "(" else ""
+          val suffix = if (i != 0 || wrapFirst) ")" else ""
+          prefix + designator + s_p + suffix
+        }
+        s_ps.mkString("")
+      }
+      require(sym.isMethod)
+      val prefix = {
+        if (sym.owner.isImplicit) {
+          val ctor = sym.owner.info.members.find(sym => sym.isMethod && sym.asMethod.isPrimaryConstructor).get
+          paramss(ctor, wrapFirst = false)
+        } else {
+          sym.owner.name.decodedName.toString
+        }
+      }
+      prefix + "." + sym.name.decodedName.toString + paramss(sym, wrapFirst = true) + ": " + sym.info.finalResultType
+    }
+  }
+
+  private def discoverPublicToplevels(pkg: Symbol, onlyImmediatelyAccessible: Boolean): List[Symbol] = {
     val visited = Set[Symbol]()
-    def explore(parent: Symbol): Unit = {
+    def loop(parent: Symbol): Unit = {
       if (parent == NoSymbol) return
       parent.info.members.toList.foreach(sym => {
         def failUnsupported(sym: Symbol): Nothing = {
@@ -21,33 +58,34 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
           // ignore: not worth processing
         } else {
           if (sym.isPackage) {
+            if (!onlyImmediatelyAccessible && !visited(sym)) {
+              visited += sym
+              loop(sym)
+            }
             visited += sym
-            // don't recur, since members of that package won't be visible w/o imports
           } else if (sym.isModule) {
-            if (!visited(sym)) explore(sym)
-            visited += sym
-            // do recur, because we expect many members of modules to be used via full names
+            // don't check onlyImmediatelyAccessible
+            // because we expect many members of modules to be used via full fullNames
+            if (!visited(sym)) {
+              visited += sym
+              loop(sym)
+            }
           } else if (sym.isClass) {
-            if (!sym.isImplicit) visited += sym
+            visited += sym
           } else if (sym.isMethod) {
-            if (sym.asMethod.isAccessor) {
-              if (sym.asMethod.isGetter) {
-                val target = sym.info.finalResultType.typeSymbol
-                if (target.isModuleClass) explore(target.asClass.module)
-                else () // ignore: we're not going into members in this macro
-              } else {
-                // ignore: setters are not worth processing
-              }
-            } else {
-              val parentIsPackageObject = (parent.isModule || parent.isModuleClass) && parent.name.toString == "package"
-              if (!sym.isImplicit && !sym.isConstructor && parentIsPackageObject) visited += sym
+            // handle term aliases
+            if (sym.asMethod.isGetter) {
+              val target = sym.info.finalResultType.typeSymbol
+              if (target.isModuleClass) loop(target.asClass.module)
+              else ()
             }
           } else if (sym.isType) {
+            // handle type aliases
             val target = sym.info.typeSymbol
-            if (!visited(target)) visited += target
+            visited += target
           } else if (sym.isTerm) {
             if (sym.asTerm.getter != NoSymbol) {
-              // ignore: processed in getter
+              // ignore: processed in sym.isMethod
             } else {
               failUnsupported(sym)
             }
@@ -59,19 +97,12 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     }
 
     assert(pkg.isPackage)
-    explore(pkg)
+    loop(pkg)
 
-    def isVisible(sym: Symbol): Boolean = sym != NoSymbol && sym.isPublic && (sym.isPackage || isVisible(sym.owner))
-    val visible = visited.filter(isVisible)
-    val nontrivial = visible.filter(sym => sym.owner != symbolOf[Any] && sym.owner != symbolOf[Object])
-    val relevant = nontrivial.filter(sym => {
-      val mystery = sym.fullName.startsWith("scala.collection.generic")
-      val tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith("tests")
-      !mystery && !tests
-    })
-    val result = relevant
-
-    result.toList
+    var result = visited.toList
+    result = result.filter(sym => sym.isRelevant)
+    result = result.filter(sym => !(sym.isClass && sym.isImplicit)) // NOTE: if we include implicit classes, we'll get overwhelmed
+    result
   }
 
   private def render(strings: List[String]): Tree = {
@@ -80,42 +111,32 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     q"$s_result"
   }
 
-  def publicToplevelDefinitions(packageName: Tree): Tree = {
+  def wildcardImportToplevels(packageName: Tree): Tree = {
     val Literal(Constant(s_packageName: String)) = packageName
-    val tlds = discoverPublicToplevelDefinitions(m.staticPackage(s_packageName))
-    val names = tlds.map(sym => scala.reflect.NameTransformer.decode(sym.fullName))
-    render(names)
+    val toplevels = discoverPublicToplevels(m.staticPackage(s_packageName), onlyImmediatelyAccessible = true)
+    val pkgobjectMethods = m.staticModule(s_packageName + ".package").info.members.toList.collect{
+      case sym: MethodSymbol if !sym.isAccessor && !sym.isImplicit && !sym.isConstructor && sym.isRelevant => sym
+    }
+    val effectiveToplevels = toplevels ++ pkgobjectMethods
+    val fullNames = effectiveToplevels.map(sym => scala.reflect.NameTransformer.decode(sym.fullName))
+    render(fullNames)
   }
 
-  def publicToplevelExtensionMethods(packageName: Tree): Tree = {
+  def wildcardImportExtensions(packageName: Tree): Tree = {
     val Literal(Constant(s_packageName: String)) = packageName
-    val tlds = discoverPublicToplevelDefinitions(m.staticPackage(s_packageName))
-    val implicitClasses = tlds.flatMap(tld => {
-      if (tld.isModule) tld.info.members.filter(sym => sym.isClass && sym.isImplicit && sym.isPublic)
+    val toplevels = discoverPublicToplevels(m.staticPackage(s_packageName), onlyImmediatelyAccessible = true)
+    val implicitClasses = toplevels.flatMap(tl => {
+      if (tl.isModule) tl.info.members.filter(sym => sym.isClass && sym.isImplicit && sym.isRelevant)
       else Seq()
     })
     val signatures = implicitClasses.flatMap(cls => {
-      def signature(m: Symbol, wrapFirst: Boolean) = {
-        val pss = m.asMethod.paramLists
-        val s_ps = pss.zipWithIndex.map{ case (ps, i) =>
-          val s_p = ps.map(_.info).mkString(", ")
-          val designator = if (ps.exists(_.isImplicit)) "implicit " else ""
-          val prefix = if (i != 0 || wrapFirst) "(" else ""
-          val suffix = if (i != 0 || wrapFirst) ")" else ""
-          prefix + designator + s_p + suffix
-        }
-        s_ps.mkString("")
-      }
-      val ctor = cls.info.decls.find(sym => sym.isMethod && sym.asMethod.isPrimaryConstructor).get
-      val extendee = signature(ctor, wrapFirst = false)
       val extensionMethods = cls.info.decls.collect{ case sym if sym.isMethod && !sym.isConstructor => sym.asMethod }
-      val visible = extensionMethods.filter(_.isPublic)
-      visible.map(m => extendee + "." + m.name.decodedName.toString + signature(m, wrapFirst = true))
+      extensionMethods.filter(_.isRelevant).map(_.signature)
     })
     render(signatures)
   }
 
-  def publicSurface(packageName: Tree): Tree = {
+  def entireSurface(packageName: Tree): Tree = {
     ???
   }
 }

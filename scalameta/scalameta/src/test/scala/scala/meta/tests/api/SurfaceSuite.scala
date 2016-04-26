@@ -18,15 +18,15 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     all.map(_.sym.fullName).toSet
   }
 
-  val tlds = publicToplevelDefinitions("scala.meta").toSet
-  val exts = publicExtensionMethods("scala.meta")
-  val trees = tlds.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
-  val tokens = tlds.filter(_.startsWith("scala.meta.tokens.Token."))
-  val core = tlds -- trees -- tokens
+  val wits = wildcardImportToplevels("scala.meta").toSet
+  val wiexts = wildcardImportExtensions("scala.meta")
+  val trees = wits.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
+  val tokens = wits.filter(_.startsWith("scala.meta.tokens.Token."))
+  val wicore = wits -- trees -- tokens
 
-  test("public top-level definitions (core)") {
-    // println(core.toList.sorted.mkString(EOL))
-    assert(core.toList.sorted.mkString(EOL) === """
+  test("wildcard import top-levels (core)") {
+    // println(wicore.toList.sorted.mkString(EOL))
+    assert(wicore.toList.sorted.mkString(EOL) === """
       |scala.meta.Dialect
       |scala.meta.InputWithDialect
       |scala.meta.Tree
@@ -55,6 +55,22 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.prettyprinters.Structure
       |scala.meta.prettyprinters.Syntax
       |scala.meta.quasiquotes
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteCaseOrPattern
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteCtor
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteEnumerator
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteImportee
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteImporter
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteMod
+      |scala.meta.quasiquotes.Api.XtensionQuasiquotePatternArg
+      |scala.meta.quasiquotes.Api.XtensionQuasiquotePatternType
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteSource
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTemplate
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTerm
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTermArg
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTermParam
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteType
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTypeArg
+      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTypeParam
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
       |scala.meta.tokenizers
@@ -72,37 +88,39 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     """.trim.stripMargin)
 
     val prettyprinterTests = new scala.meta.tests.prettyprinters.PublicSuite().testNames
-    val nonPackages = core.filter(_.exists(_.isUpper))
+    val nonPackages = wicore.filter(_.exists(_.isUpper))
     nonPackages.foreach(name => {
       val isTested = prettyprinterTests.exists(testName => testName.startsWith(name))
       assert(isTested, s"$name prettyprinting is not tested")
     })
   }
 
-  test("public top-level extension methods") {
-    // println(exts.sorted.mkString(EOL))
-    assert(exts.sorted.mkString(EOL) === """
-      |T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U])
-      |T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U])
-      |T(implicit scala.meta.prettyprinters.Structure[T]).structure
-      |T(implicit scala.meta.prettyprinters.Syntax[T]).syntax
-      |T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect)
-      |T.show(implicit Style[T])
-      |T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect)
-      |scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input])
-      |scala.meta.Pat.Type.tpe
-      |scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T])
-      |scala.meta.Tree.dialect
-      |scala.meta.Tree.input
-      |scala.meta.Tree.pos
-      |scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree])
-      |scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit])
-      |scala.meta.Type.ctorRef(scala.meta.Ctor.Name)
-      |scala.meta.Type.pat
+  test("wildcard import extensions") {
+    // println(wiexts.sorted.mkString(EOL))
+    assert(wiexts.sorted.mkString(EOL) === """
+      |T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
+      |T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
+      |T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
+      |T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
+      |T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
+      |T.show(implicit Style[T]): String
+      |T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
+      |scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.package.InputWithDialect
+      |scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.parsers.InputWithDialect
+      |scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.tokenizers.InputWithDialect
+      |scala.meta.Pat.Type.tpe: scala.meta.Type
+      |scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
+      |scala.meta.Tree.dialect: scala.meta.Dialect
+      |scala.meta.Tree.input: scala.meta.inputs.Input
+      |scala.meta.Tree.pos: scala.meta.inputs.Position
+      |scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
+      |scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
+      |scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
+      |scala.meta.Type.pat: scala.meta.Pat.Type
     """.trim.stripMargin)
   }
 
-  test("public top-level definitions (trees)") {
+  test("wildcard import top-levels (trees)") {
     // println(trees.toList.sorted.mkString(EOL))
     assert(trees.toList.sorted.mkString(EOL) === """
       |scala.meta.Case
@@ -375,7 +393,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     """.trim.stripMargin)
   }
 
-  test("public top-level definitions (tokens)") {
+  test("wildcard import top-levels (tokens)") {
     def encode(name: String) = name.replace(" ", "WHITESPACE").replace("\n", "\\n").replace("\r", "\\r").replace("\f", "\\f").replace("\t", "\\t")
     // println(tokens.toList.map(encode).sorted.mkString(EOL))
     assert(tokens.toList.map(encode).sorted.mkString(EOL) === """

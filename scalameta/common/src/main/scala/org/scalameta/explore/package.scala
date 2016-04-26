@@ -3,9 +3,9 @@ package org.scalameta
 import scala.language.experimental.macros
 
 package object explore {
-  def publicToplevelDefinitions(packageName: String): List[String] = macro ExploreMacros.publicToplevelDefinitions
+  def wildcardImportToplevels(packageName: String): List[String] = macro ExploreMacros.wildcardImportToplevels
 
-  def publicToplevelExtensionMethods(packageName: String): List[String] = macro ExploreMacros.publicToplevelExtensionMethods
+  def wildcardImportExtensions(packageName: String): List[String] = macro ExploreMacros.wildcardImportExtensions
 
-  def publicSurface(packageName: String): List[String] = macro ExploreMacros.publicSurface
+  def entireSurface(packageName: String): List[String] = macro ExploreMacros.entireSurface
 }
