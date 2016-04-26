@@ -85,6 +85,4 @@ object Show {
 
   implicit def printResult[R <: Result]: Show[R] = apply(identity)
   implicit def printString[T <: String]: Show[T] = apply(Show.Str(_))
-
-  implicit def show2convert[T](show: Show[T]): Convert[T, String] = Convert(show(_).toString)
 }

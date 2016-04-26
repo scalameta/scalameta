@@ -10,11 +10,10 @@ trait Convert[A, B] {
   def apply(a: A): B
 }
 
-// TODO: add default instances
 object Convert {
   def apply[A, B](f: A => B): Convert[A, B] = {
     new Convert[A, B] { def apply(a: A): B = f(a) }
   }
 
-  implicit def implicitToExplicitConversion[A, B](implicit conv: A => B): Convert[A, B] = Convert(conv)
+  implicit def trivial[T, U <: T]: Convert[U, T] = Convert(x => x)
 }
