@@ -78,6 +78,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       val qstats1 = ListBuffer[Tree]()
       val ianns1 = ListBuffer[Tree]() ++ imods.annotations
       def imods1 = imods.mapAnnotations(_ => ianns1.toList)
+      def amods1 = Modifiers(NoFlags, if (isQuasi) TypeName("meta") else typeNames.EMPTY, Nil)
       def cmods1 = Modifiers(FINAL, mname.toTypeName, List(q"new _root_.scala.SerialVersionUID(1L)"))
       def qmods1 = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.scala.meta.internal.ast.ast"))
       val iparents1 = ListBuffer[Tree]() ++ iparents
@@ -553,7 +554,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       mstats1 += q"import _root_.scala.language.experimental.{macros => prettyPlease}"
       mstats1 += q"import _root_.scala.language.implicitConversions"
       mstats1 += q"implicit def interfaceToApi(interface: $iname): $aname = macro $AstTyperMacrosBundle.interfaceToApi[$iname, $aname]"
-      mstats1 += q"trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
+      mstats1 += q"$amods1 trait $aname[..$tparams] extends ..$aparents1 { $aself => ..$astats1 }"
       mstats1 += q"$cmods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
       if (!isQuasi) mstats1 += q"$qmods1 class $qname(rank: _root_.scala.Int, tree: _root_.scala.Any) extends ..$qparents1 { ..$qstats1 }"
       val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"

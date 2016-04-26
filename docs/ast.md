@@ -603,7 +603,7 @@ Here's the same code after typechecking with helper def macros expanded:
     import scala.language.experimental.{macros=>prettyPlease};
     import scala.language.implicitConversions;
     @scala.reflect.macros.internal.macroImpl(`macro`("macroEngine" = "v7.0 (implemented in Scala 2.11.0-M8)", "isBundle" = true, "isBlackbox" = true, "className" = "scala.meta.internal.ast.AstTyperMacrosBundle", "methodName" = "interfaceToApi", "signature" = List(List(-3), List(0, 1)))[scala.meta.Term.If.Quasi, scala.meta.Term.If.Quasi.Api]) implicit <macro> def interfaceToApi(interface: scala.meta.Term.If.Quasi): scala.meta.Term.If.Quasi.Api = new scala.meta.internal.ast.AstTyperMacrosBundle(null).interfaceToApi[scala.meta.Term.If.Quasi, scala.meta.Term.If.Quasi.Api];
-    abstract trait Api extends AnyRef with scala.meta.Term.If.Quasi {
+    private[meta] abstract trait Api extends AnyRef with scala.meta.Term.If.Quasi {
       def /*Api*/$init$(): Unit = {
         ()
       };
