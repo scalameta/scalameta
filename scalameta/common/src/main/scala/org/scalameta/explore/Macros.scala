@@ -11,18 +11,19 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
 
   private implicit class XtensionExploreSymbol(sym: Symbol) {
     def isIrrelevant: Boolean = {
-      val trivial = sym.owner == symbolOf[Any] || sym.owner == symbolOf[Object]
-      val arbitrary = {
+      def artefact = sym.name.decodedName.toString.contains("$")
+      def trivial = sym.owner == symbolOf[Any] || sym.owner == symbolOf[Object]
+      def arbitrary = {
         // TODO: figure out why this is necessary
         val banned = List("scala.collection.generic", "scala.Enumeration", "scala.math", "scala.Int")
         banned.exists(prefix => sym.fullName.startsWith(prefix))
       }
-      val tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith("tests")
-      val internal = sym.fullName.contains(".internal.") // NOTE: don't ignore "internal" itself
-      val invisible = !sym.isPublic
-      val inexistent = !sym.asInstanceOf[scala.reflect.internal.SymbolTable#Symbol].exists // NOTE: wtf
-      val result = trivial || arbitrary || tests || internal || invisible || inexistent
-      // println((sym.fullName, s"$result = $trivial || $arbitrary || $tests || $internal || $invisible || $inexistent"))
+      def tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith("tests")
+      def internal = sym.fullName.contains(".internal.") // NOTE: don't ignore "internal" itself
+      def invisible = !sym.isPublic
+      def inexistent = !sym.asInstanceOf[scala.reflect.internal.SymbolTable#Symbol].exists // NOTE: wtf
+      val result = artefact || trivial || arbitrary || tests || internal || invisible || inexistent
+      // println((sym.fullName, s"$result = $artefact || $trivial || $arbitrary || $tests || $internal || $invisible || $inexistent"))
       result
     }
     def isRelevant: Boolean = {
@@ -31,7 +32,10 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     def isPkgObject: Boolean = {
       sym.owner.isPackage && sym.isModule && sym.name == termNames.PACKAGE
     }
-    def signature: String = {
+    def isImplicitClass: Boolean = {
+      sym.isClass && sym.isImplicit
+    }
+    def signatureIn(owner: Symbol): String = {
       def paramss(m: Symbol, wrapFirst: Boolean): String = {
         val pss = m.asMethod.paramLists
         val s_ps = pss.zipWithIndex.map{ case (ps, i) =>
@@ -43,16 +47,20 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
         }
         s_ps.mkString("")
       }
-      require(sym.isMethod)
       val prefix = {
         if (sym.owner.isImplicit) {
           val ctor = sym.owner.info.members.find(sym => sym.isMethod && sym.asMethod.isPrimaryConstructor).get
-          paramss(ctor, wrapFirst = false)
+          "* " + paramss(ctor, wrapFirst = false)
         } else {
-          sym.owner.name.decodedName.toString
+          scala.reflect.NameTransformer.decode(owner.fullName.toString)
         }
       }
-      prefix + "." + sym.name.decodedName.toString + paramss(sym, wrapFirst = true) + ": " + sym.info.finalResultType
+      val main = sym.name.decodedName.toString
+      val suffix = {
+        if (sym.isConstructor || sym.isMacro || sym.isMethod) paramss(sym, wrapFirst = true) + ": " + sym.info.finalResultType
+        else ""
+      }
+      prefix + "." + main + suffix
     }
   }
 
@@ -110,19 +118,23 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     loop(pkg)
 
     var result = visited.toList
-    result = result.filter(sym => sym.isRelevant)
-    result = result.filter(sym => !(sym.isClass && sym.isImplicit)) // NOTE: if we include implicit classes, we'll get overwhelmed
+    result = result.filter(_.isRelevant)
     result
   }
 
   private def staticsImpl(packageName: Tree, onlyImmediatelyAccessible: Boolean): Tree = {
     val Literal(Constant(s_packageName: String)) = packageName
+
     val statics = staticClassesAndObjects(m.staticPackage(s_packageName), onlyImmediatelyAccessible)
-    val (pkgObjects, nonPkgObjectStatics) = statics.partition(_.isPkgObject)
+    val nonImplicitClassStatics = statics.filter(!_.isImplicitClass)
+    val (pkgObjects, nonPkgObjectStatics) = nonImplicitClassStatics.partition(_.isPkgObject)
     val allowedPkgObjects = pkgObjects.filter(sym => sym.owner.fullName == s_packageName || !onlyImmediatelyAccessible)
     val pkgObjectMethods = allowedPkgObjects.flatMap(_.info.members.toList.collect{
       case sym: MethodSymbol if !sym.isAccessor && !sym.isImplicit && !sym.isConstructor && sym.isRelevant => sym
     })
+
+    // NOTE: We filtered out package objects and implicit classes (hopefully, IDEs and autocompletes will ignore those),
+    // and then we added methods from package objects (because `import scala.meta._` will bring those in).
     val effectiveStatics = nonPkgObjectStatics ++ pkgObjectMethods
     val fullNames = effectiveStatics.map(sym => scala.reflect.NameTransformer.decode(sym.fullName))
     q"${fullNames.distinct.sorted}"
@@ -134,5 +146,32 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
 
   def allStaticsImpl(packageName: Tree): Tree = {
     staticsImpl(packageName, onlyImmediatelyAccessible = false)
+  }
+
+  def allSurfaceImpl(packageName: Tree): Tree = {
+    val Literal(Constant(s_packageName: String)) = packageName
+    val statics = staticClassesAndObjects(m.staticPackage(s_packageName), onlyImmediatelyAccessible = false)
+
+    val directSurface = statics.flatMap(static => {
+      var result = static.info.members.filter(mem => {
+        val relevant = mem.isRelevant
+        val extension = static.isImplicitClass || mem.isImplicitClass
+        val synthetic = mem.isConstructor && ((static.isClass && static.asClass.isTrait) || static.isModule || static.isModuleClass)
+        val unnameable = mem.isMethod && mem.isImplicit // NOTE: this is a big assumption
+        relevant && !extension && !synthetic && !unnameable
+      })
+      result = result.filter(mem => !statics.contains(mem))
+      result.map(sym => (static, sym))
+    })
+    val extensionSurface = {
+      val implicitClasses = statics.filter(_.isImplicitClass)
+      val result = implicitClasses.flatMap(cls => {
+        val extensionMethods = cls.info.decls.collect{ case sym if sym.isMethod && !sym.isConstructor => sym.asMethod }
+        extensionMethods.filter(_.isRelevant)
+      })
+      result.map(sym => (NoSymbol, sym))
+    }
+    val s_surface = (directSurface ++ extensionSurface).map{ case (owner, sym) => sym.signatureIn(owner) }
+    q"${s_surface.distinct.sorted}"
   }
 }

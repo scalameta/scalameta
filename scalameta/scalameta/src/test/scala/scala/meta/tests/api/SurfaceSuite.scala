@@ -6,10 +6,6 @@ import org.scalameta.tests._
 import org.scalameta.explore
 import scala.compat.Platform.EOL
 
-// TODO: Implement datamining and checking of the entire API surface,
-// i.e. not only check names of classes/objects, but also their members.
-// See the unimplemented publicSurface macro for more details.
-
 class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
   import AstReflection._
   val reflectedTrees = {
@@ -18,11 +14,13 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     all.map(_.sym.fullName).toSet
   }
 
-  val wildcardImportStatics = explore.wildcardImportStatics("scala.meta")
-  val allStatics = explore.allStatics("scala.meta")
-  val trees = wildcardImportStatics.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
-  val tokens = wildcardImportStatics.filter(_.startsWith("scala.meta.tokens.Token."))
-  val core = allStatics.diff(trees).diff(tokens).map(fullName => (fullName, wildcardImportStatics.contains(fullName))).toMap
+  lazy val wildcardImportStatics = explore.wildcardImportStatics("scala.meta")
+  lazy val allStatics = explore.allStatics("scala.meta")
+  lazy val trees = wildcardImportStatics.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
+  lazy val tokens = wildcardImportStatics.filter(_.startsWith("scala.meta.tokens.Token."))
+  lazy val core = allStatics.diff(trees).diff(tokens).map(fullName => (fullName, wildcardImportStatics.contains(fullName))).toMap
+  lazy val allSurface = explore.allSurface("scala.meta")
+  lazy val coreSurface = allSurface.filter(entry => !(tokens ++ trees).exists(noncore => entry.startsWith(noncore)))
 
   test("statics (core)") {
     val diagnostic = core.keys.toList.sorted.map(fullName => {
@@ -95,6 +93,35 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       val isTested = prettyprinterTests.exists(testName => testName.startsWith(name))
       assert(isTested, s"$name prettyprinting is not tested")
     })
+  }
+
+  test("surface (core)") {
+    // NOTE: I wanted to print out the entire coreSurface, but it's too big and the benefit is unclear.
+    // If we're worried about binary compatibility, we should go ahead and use mima.
+    // However, extension methods are few enough to digest and interesting enough to warrant printing out.
+
+    // println(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL))
+    assert(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL) === """
+      |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
+      |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
+      |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
+      |* T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
+      |* T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
+      |* T.show(implicit Style[T]): String
+      |* T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
+      |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.package.InputWithDialect
+      |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.parsers.InputWithDialect
+      |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.tokenizers.InputWithDialect
+      |* scala.meta.Pat.Type.tpe: scala.meta.Type
+      |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
+      |* scala.meta.Tree.dialect: scala.meta.Dialect
+      |* scala.meta.Tree.input: scala.meta.inputs.Input
+      |* scala.meta.Tree.pos: scala.meta.inputs.Position
+      |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
+      |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
+      |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
+      |* scala.meta.Type.pat: scala.meta.Pat.Type
+    """.trim.stripMargin)
   }
 
   test("statics (trees)") {
