@@ -213,4 +213,10 @@ class PublicSuite extends FunSuite {
       (??? : Tree).structure
     """) === "")
   }
+
+  test("Token.is[T] without import") {
+    assert(typecheckError("""
+      (??? : scala.meta.Token).is[scala.meta.Token]
+    """) === "")
+  }
 }

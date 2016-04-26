@@ -19,9 +19,6 @@ import scala.meta.internal.prettyprinters._
   def start: Int
   def end: Int
   def position: Position
-
-  def is[U](implicit classifier: Classifier[Token, U]): Boolean
-  def isNot[U](implicit classifier: Classifier[Token, U]): Boolean
 }
 
 object Token {
