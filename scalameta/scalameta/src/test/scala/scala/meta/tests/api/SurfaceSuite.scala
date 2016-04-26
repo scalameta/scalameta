@@ -55,22 +55,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.prettyprinters.Structure
       |scala.meta.prettyprinters.Syntax
       |scala.meta.quasiquotes
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteCaseOrPattern
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteCtor
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteEnumerator
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteImportee
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteImporter
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteMod
-      |scala.meta.quasiquotes.Api.XtensionQuasiquotePatternArg
-      |scala.meta.quasiquotes.Api.XtensionQuasiquotePatternType
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteSource
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTemplate
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTerm
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTermArg
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTermParam
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteType
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTypeArg
-      |scala.meta.quasiquotes.Api.XtensionQuasiquoteTypeParam
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
       |scala.meta.tokenizers

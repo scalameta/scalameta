@@ -71,9 +71,10 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
 
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {
     val parserModule = interpolator.owner.owner.companion
-    val parsersModule = Class.forName("scala.meta.quasiquotes.package", true, this.getClass.getClassLoader)
-    val parserModuleGetter = parsersModule.getDeclaredMethod(parserModule.name.toString)
-    val parserModuleInstance = parserModuleGetter.invoke(null)
+    val parsersModuleClass = Class.forName("scala.meta.quasiquotes.package$", true, this.getClass.getClassLoader)
+    val parsersModule = parsersModuleClass.getField("MODULE$").get(null)
+    val parserModuleGetter = parsersModule.getClass.getDeclaredMethod(parserModule.name.toString)
+    val parserModuleInstance = parserModuleGetter.invoke(parsersModule)
     val parserMethod = parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head
     (input: MetaInput, dialect: MetaDialect) => {
       try parserMethod.invoke(parserModuleInstance, input, dialect).asInstanceOf[MetaTree]

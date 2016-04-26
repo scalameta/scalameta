@@ -24,6 +24,7 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
       val mparents1 = mparents ++ parents // TODO: this is kinda weird
+      val mmods1 = Modifiers(mmods.flags, TypeName("meta"), mmods.annotations)
       if (stats.nonEmpty) c.abort(cdef.pos, "@quasiquote classes must have empty bodies")
       val qmodule = {
         val qtypesLub = lub(qtypes.map(_.duplicate).map(qtype => {
@@ -56,7 +57,7 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
       val stats1 = stats :+ qmodule
       val mstats1 = mstats :+ qparser
       val cdef1 = q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
-      val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
+      val mdef1 = q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
       List(cdef1, mdef1)
     }
   })
