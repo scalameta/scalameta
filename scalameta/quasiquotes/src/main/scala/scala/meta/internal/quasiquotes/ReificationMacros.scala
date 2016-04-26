@@ -185,7 +185,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         c.abort(part.pos, "quasiquotes can only be used with literal strings")
     }
     def merge(index: Int, parttokens: MetaTokens, arg: ReflectTree): MetaTokens = {
-      implicit class RichMetaToken(token: MetaToken) { def absoluteStart = token.start + token.content.require[MetaInput.Slice].from }
+      implicit class XtensionMetaToken(token: MetaToken) { def absoluteStart = token.start + token.content.require[MetaInput.Slice].from }
       val part: MetaTokens = {
         val bof +: payload :+ eof = parttokens
         require(bof.isInstanceOf[MetaToken.BOF] && eof.isInstanceOf[MetaToken.EOF] && debug(parttokens))
