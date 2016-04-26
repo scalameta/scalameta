@@ -39,9 +39,11 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       def isLit = !isQuasi && abbrevName.startsWith("Lit")
       def isCtorRef = !isQuasi && abbrevName.startsWith("Ctor.Ref")
       def isCtorCall = !isQuasi && abbrevName.startsWith("Ctor.Call")
+      def isCtorName = !isQuasi && abbrevName.startsWith("Ctor.Ref.Name")
       def looksLikeTermButNotTerm = is("Term.Param") || is("Term.Arg.Named") || is("Term.Arg.Repeated")
       def isTerm = !isQuasi && (abbrevName.startsWith("Term") || isLit || isCtorRef || isCtorCall) && !looksLikeTermButNotTerm
-      def isTermParam = is("Term.Param")
+      def isTermName = !isQuasi && is("Term.Name")
+      def isTermParam = !isQuasi && is("Term.Param")
       def isMember = !isQuasi && !is("Decl.Val") && !is("Decl.Var") && !is("Defn.Val") && !is("Defn.Var") && {
         abbrevName.startsWith("Decl.") || abbrevName.startsWith("Defn.") || is("Ctor.Primary") || is("Ctor.Secondary") ||
         abbrevName.startsWith("Pkg") || abbrevName.startsWith("Pat.Var.") || is("Term.Param") || is("Type.Param")
@@ -73,7 +75,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       val iself = noSelfType
       val self = aself
       val istats1 = ListBuffer[Tree]()
-      val astats1 = ListBuffer[Tree]()
+      var astats1 = ListBuffer[Tree]()
       val stats1 = ListBuffer[Tree]()
       val qstats1 = ListBuffer[Tree]()
       val ianns1 = ListBuffer[Tree]() ++ imods.annotations
@@ -116,6 +118,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       locally {
         bparams1 += q"protected val privateFlags: $FlagsPackage.Flags"
       }
+      istats1 += q"protected override def privatePrototype: $iname"
       bparams1 += q"@_root_.scala.transient protected val privatePrototype: $iname"
       locally {
         bparams1 += q"protected val privateParent: _root_.scala.meta.Tree"
@@ -125,13 +128,14 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
             else _root_.scala.None
           }
         """
-        stats1 += q"def children: Seq[_root_.scala.meta.Tree] = $AstTyperMacrosModule.children[ThisType, _root_.scala.meta.Tree]"
+        stats1 += q"def children: Seq[_root_.scala.meta.Tree] = $AstTyperMacrosModule.children[$iname, _root_.scala.meta.Tree]"
       }
       if (hasTokens) {
         bparams1 += q"@_root_.scala.transient protected var privateTokens: $Tokens.Tokens"
-        astats1 += q"def tokens: $Tokens.Tokens"
+        istats1 += q"override def tokens: $Tokens.Tokens"
+        astats1 += q"override def tokens: $Tokens.Tokens"
         stats1 += q"""
-          def tokens: $Tokens.Tokens = {
+          override def tokens: $Tokens.Tokens = {
             privateTokens = privateTokens match {
               case null => $Prettyprinters.inferTokens(this, None)
               case _root_.scala.meta.internal.tokens.TransformedTokens(proto) => $Prettyprinters.inferTokens(this, Some(proto))
@@ -147,9 +151,10 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       }
       if (hasEnv) {
         bparams1 += q"protected val privateEnv: $InternalSemantic.Environment"
-        astats1 += q"private[meta] def env: $InternalSemantic.Environment"
+        istats1 += q"private[meta] override def env: $InternalSemantic.Environment"
+        astats1 += q"private[meta] override def env: $InternalSemantic.Environment"
         stats1 += q"""
-          private[meta] def env: $InternalSemantic.Environment = {
+          private[meta] override def env: $InternalSemantic.Environment = {
             if (privateEnv != null) privateEnv
             else $InternalSemantic.Environment.Zero
           }
@@ -163,9 +168,10 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       }
       if (hasDenot) {
         bparams1 += q"protected val privateDenot: $InternalSemantic.Denotation"
-        astats1 += q"private[meta] def denot: $InternalSemantic.Denotation"
+        istats1 += q"private[meta] override def denot: $InternalSemantic.Denotation"
+        astats1 += q"private[meta] override def denot: $InternalSemantic.Denotation"
         stats1 += q"""
-          private[meta] def denot: $InternalSemantic.Denotation = {
+          private[meta] override def denot: $InternalSemantic.Denotation = {
             if (privateDenot != null) privateDenot
             else $InternalSemantic.Denotation.Zero
           }
@@ -179,9 +185,15 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       }
       if (hasTyping) {
         bparams1 += q"protected val privateTyping: $InternalSemantic.Typing"
-        astats1 += q"private[meta] def typing: $InternalSemantic.Typing"
+        val imods = Modifiers(if (isTermParam) NoFlags else OVERRIDE, TypeName("meta"), Nil)
+        istats1 += q"$imods def typing: $InternalSemantic.Typing"
+        if (isTermParam) {
+          // Term.Param.typing is defined manually and needs to be removed
+          astats1 = astats1.filter{ case DefDef(_, TermName("typing"), _, _, _, _) => false; case _ => true }
+        }
+        astats1 += q"private[meta] override def typing: $InternalSemantic.Typing"
         stats1 += q"""
-          private[meta] def typing: $InternalSemantic.Typing = {
+          private[meta] override def typing: $InternalSemantic.Typing = {
             if (privateTyping != null) privateTyping
             else $InternalSemantic.Typing.Zero
           }
@@ -224,8 +236,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
         val message = q"if (this.rank == 0) $unsupportedUnquotingPosition else $unsupportedSplicingPosition"
         val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
         val Modifiers(flags, privateWithin, anns) = mods
-        var flags1 = flags
-        if (!isTermParam) flags1 |= OVERRIDE // NOTE: crazy, I know...
+        val flags1 = flags | OVERRIDE
         val mods1 = Modifiers(flags1, privateWithin, anns)
         q"$mods1 def ${TermName(name)}: _root_.scala.Nothing = $impl"
       }
@@ -258,7 +269,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       // by the users of the framework.
       val privateCopyInternals = ListBuffer[Tree]()
       privateCopyInternals += q"flags"
-      privateCopyInternals += q"prototype.asInstanceOf[ThisType]"
+      privateCopyInternals += q"prototype.asInstanceOf[$iname]"
       privateCopyInternals += q"parent"
       if (hasTokens) privateCopyInternals += q"tokens"
       if (hasEnv) privateCopyInternals += q"env"
@@ -266,6 +277,16 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       if (hasTyping) privateCopyInternals += q"typing"
       val privateCopyInitss = paramss.map(_.map(p => q"$AstTyperMacrosModule.initField(this.${internalize(p.name)})"))
       val privateCopyBody = q"new $name(..$privateCopyInternals)(...$privateCopyInitss)"
+      istats1 += q"""
+        private[meta] override def privateCopy(
+            flags: $FlagsPackage.Flags = privateFlags,
+            prototype: _root_.scala.meta.Tree = this,
+            parent: _root_.scala.meta.Tree = privateParent,
+            tokens: $Tokens.Tokens = privateTokens,
+            env: $InternalSemantic.Environment = privateEnv,
+            denot: $InternalSemantic.Denotation = privateDenot,
+            typing: $InternalSemantic.Typing = privateTyping): $iname
+      """
       stats1 += q"""
         private[meta] def privateCopy(
             flags: $FlagsPackage.Flags = privateFlags,
@@ -274,7 +295,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
             tokens: $Tokens.Tokens = privateTokens,
             env: $InternalSemantic.Environment = privateEnv,
             denot: $InternalSemantic.Denotation = privateDenot,
-            typing: $InternalSemantic.Typing = privateTyping): ThisType = {
+            typing: $InternalSemantic.Typing = privateTyping): $iname = {
           $privateCopyBody
         }
       """
@@ -289,6 +310,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       val copyCore = q"$mname.apply(...$copyArgss)"
       val copyBody = q"$copyCore.withTokens(tokens = _root_.scala.meta.internal.tokens.TransformedTokens(this))"
       // TODO: would be useful to turn copy into a macro, so that its calls are guaranteed to be inlined
+      // istats1 += q"def copy(...$copyParamss): $iname"
       astats1 += q"def copy(...$copyParamss): $iname = $copyBody"
 
       // step 8: create the withXXX methods
@@ -313,6 +335,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
             EmptyTree
           }
         }
+        istats1 += q"override protected def privateWithFlags(flags: $FlagsPackage.Flags): $iname"
         astats1 += q"""
           protected def privateWithFlags(flags: $FlagsPackage.Flags): $iname = {
             $attributeValidator
@@ -321,11 +344,13 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
         """
       }
       if (hasTokens) {
+        istats1 += q"override def withTokens(tokens: $Tokens.Tokens): $iname"
         astats1 += q"""
           def withTokens(tokens: $Tokens.Tokens): $iname = {
             this.privateCopy(tokens = tokens)
           }
         """
+        istats1 += q"override def inheritTokens(other: _root_.scala.meta.Tree): $iname"
         astats1 += q"""
           def inheritTokens(other: _root_.scala.meta.Tree): $iname = {
             // TODO: use other.privateTokens to avoid forcing tokens at all
@@ -336,12 +361,13 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
         // we don't create a quasisetter for withTokens.
       }
       if (hasEnv) {
+        val paramEnv = q"val env: $InternalSemantic.Environment"
         // NOTE: We shouldn't clean up denots when setting env,
         // because that would destroy links between defs and refs,
         // which may irreversibly hamper subsequent retypechecks.
-        val paramEnv = q"val env: $InternalSemantic.Environment"
         // NOTE: No state validation here, because withEnv can be called on U, PA and FA.
         // Hygiene (embodied by envs in scala.meta) applies to unattributed and attributed trees alike.
+        istats1 += q"private[meta] override def withEnv($paramEnv): $iname"
         astats1 += q"""
           private[meta] def withEnv($paramEnv): $iname = {
             this.privateCopy(
@@ -357,8 +383,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       if (hasDenot || hasTyping) {
         val paramDenot = q"val denot: $InternalSemantic.Denotation"
         val paramTypingLike = q"val typingLike: $InternalSemantic.TypingLike"
-        val dortMods = if (!isTermParam) PrivateMeta(OVERRIDE) else PrivateMeta
-        val dandtMods = PrivateMeta
         val termOrCtorName = q"this.isInstanceOf[_root_.scala.meta.Term.Name] || this.isInstanceOf[_root_.scala.meta.Ctor.Name]"
         val termOrCtorNameCheck = q"""if ($termOrCtorName) throw new UnsupportedOperationException("need to simultaneously set both denotation and typing for a " + this.productPrefix)"""
         val stateMessage = "can only call withAttrs on unattributed or partially attributed trees; if necessary, call .copy() to unattribute and then do .withAttrs(...)"
@@ -367,7 +391,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
         val stateDetails = q"$attrPrinter.apply(this).toString"
         val stateCheck = q"if (isAttributed) throw new UnsupportedOperationException($stateMessage + $EOL + $stateDetails)"
         val withAttrsD = q"""
-          $dortMods def withAttrs($paramDenot): $iname = {
+          private[meta] override def withAttrs($paramDenot): $iname = {
             $termOrCtorNameCheck
             $stateCheck
             this.privateCopy(
@@ -379,7 +403,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
           }
         """
         val withAttrsT = q"""
-          $dortMods def withAttrs($paramTypingLike): $iname = {
+          private[meta] override def withAttrs($paramTypingLike): $iname = {
             $termOrCtorNameCheck
             $stateCheck
             val typing = typingLike.typing
@@ -392,7 +416,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
           }
         """
         val withAttrsDT = q"""
-          $dandtMods def withAttrs($paramDenot, $paramTypingLike): $iname = {
+          private[meta] override def withAttrs($paramDenot, $paramTypingLike): $iname = {
             $stateCheck
             val typing = typingLike.typing
             this.privateCopy(
@@ -404,22 +428,41 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
           }
         """
         if (hasDenot) {
+          istats1 += q"private[meta] override def withAttrs($paramDenot): $iname"
           astats1 += withAttrsD
           qstats1 += quasisetter(PrivateMeta, "withAttrs", paramDenot)
         }
         if (hasTyping) {
+          val imods = Modifiers(if (isTermParam) NoFlags else OVERRIDE, TypeName("meta"), Nil)
+          istats1 += q"$imods def withAttrs($paramTypingLike): $iname"
+          if (isTermParam) {
+            // Term.Param.withAttrs is defined manually and needs to be removed
+            astats1 = astats1.filter{ case DefDef(_, TermName("withAttrs"), _, List(List(_)), _, _) => false; case _ => true }
+          }
           astats1 += withAttrsT
           qstats1 += quasisetter(PrivateMeta, "withAttrs", paramTypingLike)
         }
         if (hasDenot && hasTyping) {
-          istats1 += withAttrsDT
+          val imods = Modifiers(if (isTermName || isCtorName) NoFlags else OVERRIDE, TypeName("meta"), Nil)
+          istats1 += q"$imods def withAttrs($paramDenot, $paramTypingLike): $iname"
+          if (isTermName || isCtorName) {
+            // Term/Ctor.Name.withAttrs is defined manually and needs to be removed
+            astats1 = astats1.filter{ case tree @ DefDef(_, TermName("withAttrs"), _, List(List(_, _)), _, _) => false; case _ => true }
+          }
+          astats1 += withAttrsDT
           qstats1 += quasisetter(PrivateMeta, "withAttrs", paramDenot, paramTypingLike)
         }
       }
+      val paramTree = q"val tree: Tree"
+      istats1 += q"private[meta] override def inheritAttrs($paramTree): $iname"
+      astats1 += q"""
+        private[meta] override def inheritAttrs($paramTree): $iname = {
+          val helper = scala.meta.internal.semantic.`package`.XtensionAttributedTree(this)
+          helper.inheritAttrs(tree)
+        }
+      """
 
       // step 9: generate boilerplate required by the @ast infrastructure
-      istats1 += q"override type ThisType <: $iname"
-      astats1 += q"override type ThisType = $iname"
       // TODO: remove leafClass and leafCompanion from here
       ianns1 += q"new $AstMetadataModule.astClass"
       ianns1 += q"new $AdtMetadataModule.leafClass"
@@ -429,7 +472,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       // step 10: implement Product
       val productParamss = rawparamss.map(_.map(_.duplicate))
       iparents1 += tq"_root_.scala.Product"
-      astats1 += q"override def productPrefix: _root_.scala.Predef.String = $AstTyperMacrosModule.productPrefix[ThisType]"
+      astats1 += q"override def productPrefix: _root_.scala.Predef.String = $AstTyperMacrosModule.productPrefix[$iname]"
       astats1 += q"override def productArity: _root_.scala.Int = ${productParamss.head.length}"
       val pelClauses = ListBuffer[Tree]()
       pelClauses ++= 0.to(productParamss.head.length - 1).map(i => cq"$i => this.${productParamss.head(i).name}")

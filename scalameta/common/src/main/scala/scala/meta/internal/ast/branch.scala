@@ -21,6 +21,14 @@ class BranchNamerMacros(val c: Context) extends AstReflection with MacroHelpers 
   import c.universe._
   import Flag._
 
+  val Tree = tq"_root_.scala.meta.Tree"
+  val Flags = tq"_root_.scala.meta.internal.flags.`package`.Flags"
+  val TYPECHECKED = q"_root_.scala.meta.internal.flags.`package`.TYPECHECKED"
+  val ZERO = q"_root_.scala.meta.internal.flags.`package`.ZERO"
+  val Tokens = tq"_root_.scala.meta.tokens.Tokens"
+  val Environment = tq"_root_.scala.meta.internal.semantic.Environment"
+  val Denotation = tq"_root_.scala.meta.internal.semantic.Denotation"
+  val Typing = tq"_root_.scala.meta.internal.semantic.Typing"
   val SemanticInternal = q"_root_.scala.meta.internal.semantic"
   val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
   val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
@@ -47,11 +55,37 @@ class BranchNamerMacros(val c: Context) extends AstReflection with MacroHelpers 
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "@branch traits cannot be sealed")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
       val flags1 = flags // TODO: flags | SEALED
-      stats1 += q"type ThisType <: $name"
       mstats1 += q"$AstTyperMacrosModule.hierarchyCheck[$name]"
       val anns1 = anns :+ q"new $AdtMetadataModule.branch" :+ q"new $AstMetadataModule.branch"
 
       if (!isQuasi) {
+        // NOTE: we need to have this bunch of boilerplate here because we removed ThisType
+        stats1 += q"override def withTokens(tokens: $Tokens): $name"
+        stats1 += q"override def inheritTokens(other:  $Tree): $name"
+        if (isName && !is("Name")) { // signatures written manually for Name
+          stats1 += q"private[meta] override def withEnv(env: $SemanticInternal.Environment): $name"
+          stats1 += q"private[meta] override def withAttrs(denot: $SemanticInternal.Denotation): $name"
+        }
+        if (isTerm && !is("Term")) { // signatures written manually for Term
+          stats1 += q"private[meta] override def withEnv(env: $SemanticInternal.Environment): $name"
+          stats1 += q"private[meta] override def withAttrs(typingLike: $SemanticInternal.TypingLike): $name"
+        }
+        if (isName || isTerm) {
+          stats1 += q"private[meta] override def inheritAttrs(tree: Tree): $name"
+        }
+        stats1 += q"protected override def privateWithFlags(flags: $Flags): $name"
+        stats1 += q"protected override def privatePrototype: $name"
+        stats1 += q"""
+          private[meta] override def privateCopy(
+            flags: $Flags = $ZERO,
+            prototype: $Tree = this,
+            parent: $Tree = privateParent,
+            tokens: $Tokens = privateTokens,
+            env: $Environment = privateEnv,
+            denot: $Denotation = privateDenot,
+            typing: $Typing = privateTyping): $name
+        """
+
         val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new _root_.scala.meta.internal.ast.ast"))
         val qname = TypeName("Quasi")
         val qparents = tq"$name" +: tq"_root_.scala.meta.internal.ast.Quasi" +: parents.map({

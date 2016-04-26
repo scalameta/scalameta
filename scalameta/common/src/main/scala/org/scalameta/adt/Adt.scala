@@ -46,8 +46,6 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @root traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
       val flags1 = flags | SEALED
-      val needsThisType = stats.collect{ case TypeDef(_, TypeName("ThisType"), _, _) => () }.isEmpty
-      if (needsThisType) stats1 += q"type ThisType <: $classRef"
       mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
       val anns1 = anns :+ q"new $AdtMetadataModule.root"
       val parents1 = parents :+ tq"$AdtMetadataModule.Adt" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
@@ -69,7 +67,6 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @branch traits")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
       val flags1 = flags | SEALED
-      stats1 += q"type ThisType <: $classRef"
       mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
       val anns1 = anns :+ q"new $AdtMetadataModule.branch"
 
@@ -94,7 +91,6 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
       // step 1: generate boilerplate required by the @adt infrastructure
-      stats1 += q"override type ThisType = $classRef"
       mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
       mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[$classRef]"
       anns1 += q"new $AdtMetadataModule.leafClass"
@@ -118,9 +114,8 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
       // step 1: generate boilerplate required by the @adt infrastructure
-      mstats1 += q"override type ThisType = $mname.type"
-      mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[ThisType]"
-      mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[ThisType]"
+      mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$mname.type]"
+      mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[$mname.type]"
       manns1 += q"new $AdtMetadataModule.leafClass"
       mparents1 += tq"_root_.scala.Product"
 

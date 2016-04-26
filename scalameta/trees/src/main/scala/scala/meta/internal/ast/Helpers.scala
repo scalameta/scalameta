@@ -274,7 +274,7 @@ private[meta] object Helpers {
           else None
         }
       }
-      def merge(tpe: Type.Name, ctor: Ctor.Name) = {
+      def merge(tpe: Type.Name, ctor: Ctor.Name): Ctor.Name = {
         ctor.copy(value = tpe.value).withTokens(tpe.tokens).inheritAttrs(ctor)
       }
       tpe match {
@@ -290,7 +290,9 @@ private[meta] object Helpers {
             case Type.ApplyInfix(lhs, op, rhs) => Term.ApplyType(loop(op, ctor), List(lhs, rhs))
             case _ => unreachable(debug(tpe0, tpe0.show[Structure], tpe, tpe.show[Structure]))
           }
-          result.withAttrs(ctor.typing)
+          val x: scala.meta.internal.semantic.TypingLike = ctor.typing
+          val y: Ctor.Call = result.withAttrs(x: scala.meta.internal.semantic.TypingLike)
+          y
       }
     }
     loop(tpe.require[Type], ctor.require[Ctor.Name]).withTypechecked(tpe.isTypechecked)

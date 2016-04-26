@@ -13,13 +13,19 @@ import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.semantic._
 
+// NOTE: A lot of stuff in this file is generated under the covers with scala.meta.internal.ast._ annotations.
+// For example, @root defines a whole bunch of helper methods that support the internal AST infrastructure.
+//
+// However, everything that is in the public API or in the host API is written down explicitly.
+// The only exception to this rule is caseclass-like functionality provided by the @ast annotation,
+// i.e. auto-generated getters for fields, apply/unapply, copy, etc.
+
 @root trait Tree extends Product with Serializable {
-  type ThisType <: Tree
   def parent: Option[Tree]
   def children: Seq[Tree]
   def tokens: Tokens
-  def withTokens(tokens: Tokens): ThisType
-  def inheritTokens(other: Tree): ThisType
+  def withTokens(tokens: Tokens): Tree
+  def inheritTokens(other: Tree): Tree
   final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def hashCode: Int = System.identityHashCode(this)
@@ -70,8 +76,8 @@ object Tree {
   def value: String
   private[meta] def env: Environment
   private[meta] def denot: Denotation
-  private[meta] def withEnv(env: Environment): ThisType
-  private[meta] def withAttrs(denot: Denotation): ThisType
+  private[meta] def withEnv(env: Environment): Name
+  private[meta] def withAttrs(denot: Denotation): Name
 }
 object Name {
   @ast class Anonymous extends Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
@@ -82,8 +88,8 @@ object Name {
 @branch trait Term extends Stat with Term.Arg {
   private[meta] def env: Environment
   private[meta] def typing: Typing
-  private[meta] def withEnv(env: Environment): ThisType
-  private[meta] def withAttrs(typingLike: TypingLike): ThisType
+  private[meta] def withEnv(env: Environment): Term
+  private[meta] def withAttrs(typingLike: TypingLike): Term
 }
 object Term {
   @branch trait Ref extends Term with scala.meta.Ref
@@ -96,6 +102,7 @@ object Term {
   @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat with Param.Name with scala.meta.Name.Qualifier {
     // TODO: revisit this once we have trivia in place
     // require(keywords.contains(value) ==> isBackquoted)
+    private[meta] def withAttrs(denot: Denotation, typingLike: TypingLike): Term.Name
   }
   @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
@@ -144,7 +151,10 @@ object Term {
     @ast class Named(name: Name, rhs: Term.Arg) extends Arg
     @ast class Repeated(arg: Term) extends Arg
   }
-  @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Member
+  @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Member {
+    private[meta] def typing: Typing
+    private[meta] def withAttrs(typingLike: TypingLike): Term.Param
+  }
   object Param {
     @branch trait Name extends scala.meta.Name
   }
@@ -460,7 +470,9 @@ object Ctor {
     // an alternative design might reintroduce the Ctor.Ref ast node that would have the structure of:
     // Ctor.Ref(tpe: Type, ctor: Ctor.Name), where Ctor.Name would be Ctor.Name()
     // in that design, we also won't have to convert between Type and Ctor.Ref hierarchies, which is a definite plus
-    @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Ref
+    @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Ref {
+      private[meta] def withAttrs(denot: Denotation, typingLike: TypingLike): Ctor.Name
+    }
     @ast class Select(qual: Term.Ref, name: Name) extends Ref
     @ast class Project(qual: Type, name: Name) extends Ref
     @ast class Function(name: Name) extends Ref
