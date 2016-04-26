@@ -6,7 +6,7 @@ import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 
 private[meta] trait Api {
-  implicit class XtensionClassifiable[T: Classifiable](val x: T) {
+  implicit class XtensionClassifiable[T: Classifiable](x: T) {
     def is[U](implicit classifier: Classifier[T, U]): Boolean = {
       classifier.apply(x)
     }

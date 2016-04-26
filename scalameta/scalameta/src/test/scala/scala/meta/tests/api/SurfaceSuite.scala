@@ -86,7 +86,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |Seq[scala.meta.tokens.Token].toTokens
       |T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U])
       |T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U])
-      |T(implicit scala.meta.classifiers.Classifiable[T]).x
       |T(implicit scala.meta.prettyprinters.Structure[T]).structure
       |T(implicit scala.meta.prettyprinters.Syntax[T]).syntax
       |T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect)
