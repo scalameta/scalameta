@@ -215,7 +215,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       log({ println(syntax.show[Syntax]); println(syntax.show[Structure]) })
       (syntax, mode)
     } catch {
-      case ParseException(position, message) => c.abort(position, message)
+      case ParseException(pos, message) => c.abort(pos, message)
     }
   }
 
@@ -314,7 +314,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
                   "it just cannot follow another sequence either directly or indirectly."
                 }
                 val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (quasi.rank + 1)}$EOL required: no dots$EOL$hint"
-                c.abort(quasi.position, errorMessage)
+                c.abort(quasi.pos, errorMessage)
               }
             }
           case other +: rest =>
@@ -381,10 +381,10 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
                     if (optional) inferredPt = tq"_root_.scala.Option[$inferredPt]"
                     inferredPt
                 }
-                hole.reifier = atPos(quasi.position)(q"$InternalUnlift.unapply[$inferredPt](${hole.name})") // TODO: make `reifier`a immutable somehow
+                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$inferredPt](${hole.name})") // TODO: make `reifier`a immutable somehow
                 pq"${hole.name}"
             }
-            atPos(quasi.position)(realWorldReifier)
+            atPos(quasi.pos)(realWorldReifier)
           } else {
             quasi.tree match {
               case quasi: Quasi if quasi.rank == 0 =>
@@ -417,14 +417,14 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
                           case tree => super.transform(tree)
                         }
                       }).transform(hole.reifier)
-                      hole.reifier = atPos(quasi.position)(q"$flattened.flatMap(tree => $unlifted)")
+                      hole.reifier = atPos(quasi.pos)(q"$flattened.flatMap(tree => $unlifted)")
                       reified
                   }
                 } else {
                   liftQuasi(quasi)
                 }
               case _ =>
-                c.abort(quasi.position, "complex ellipses are not supported yet")
+                c.abort(quasi.pos, "complex ellipses are not supported yet")
             }
           }
         } finally {

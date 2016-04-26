@@ -97,11 +97,8 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Pat.Type.tpe
       |scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T])
       |scala.meta.Tree.dialect
-      |scala.meta.Tree.end
       |scala.meta.Tree.input
-      |scala.meta.Tree.point
-      |scala.meta.Tree.position
-      |scala.meta.Tree.start
+      |scala.meta.Tree.pos
       |scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree])
       |scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit])
       |scala.meta.Type.ctorRef(scala.meta.Ctor.Name)

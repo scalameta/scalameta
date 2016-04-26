@@ -103,8 +103,8 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Point.Offset.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    assert(lhs.position.start.toString === """0 in Input.String("foo + bar")""")
-    assert(lhs.position.end.toString === """3 in Input.String("foo + bar")""")
+    assert(lhs.pos.start.toString === """0 in Input.String("foo + bar")""")
+    assert(lhs.pos.end.toString === """3 in Input.String("foo + bar")""")
   }
 
   test("scala.meta.inputs.Position.toString") {
@@ -113,7 +113,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Position.Range.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    assert(lhs.position.toString === """[0..0..3) in Input.String("foo + bar")""")
+    assert(lhs.pos.toString === """[0..0..3) in Input.String("foo + bar")""")
   }
 
   test("scala.meta.parsers.ParseException.toString") {

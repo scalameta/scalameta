@@ -39,14 +39,14 @@ object Tree {
   implicit class XtensionSyntacticTree(tree: Tree) {
     def input: Input = tree.tokens.input
     def dialect: Dialect = tree.tokens.dialect
-    def position: Position = {
+    def pos: Position = {
       val (first, last) = tree.tokens match {
         case Tokens.Slice(tokens, from, until) => (tokens(from), tokens(until - 1))
         case other => (other.head, other.last)
       }
       if (first.content == last.content && !first.content.isInstanceOf[Input.Slice]) {
         val content = first.content
-        Position.Range(content, first.position.start, first.position.start, last.position.end)
+        Position.Range(content, first.pos.start, first.pos.start, last.pos.end)
       } else {
         // NOTE: we assume that tree.tokens represent a contiguous excerpt from a content.
         // While it is true that Tokens(...) is general enough to break this assumption,
@@ -59,9 +59,6 @@ object Tree {
         Position.Range(content, start, start, end)
       }
     }
-    def start: Point = tree.position.start
-    def point: Point = tree.position.point // TODO: at the moment, Tree.point is always equal to Tree.start;
-    def end: Point = tree.position.end
   }
 }
 

@@ -18,7 +18,7 @@ import scala.meta.internal.prettyprinters._
 
   def start: Int
   def end: Int
-  def position: Position
+  def pos: Position
 }
 
 object Token {

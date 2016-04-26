@@ -1691,7 +1691,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 
     // Represents an unfinished infix expression, e.g. [a * b +] in `a * b + c`.
     // 1) T is either Term for infix syntax in expressions or Pat for infix syntax in patterns.
-    // 2) We need to carry lhsStart/lhsEnd separately from lhs.position
+    // 2) We need to carry lhsStart/lhsEnd separately from lhs.pos
     //    because their extent may be bigger than lhs because of parentheses or whatnot.
     case class UnfinishedInfix(lhsStart: Pos, lhs: Lhs, lhsEnd: Pos, op: Term.Name, targs: List[Type]) {
       def precedence = op.precedence
