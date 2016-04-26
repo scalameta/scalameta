@@ -12,14 +12,24 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
   private implicit class XtensionExploreSymbol(sym: Symbol) {
     def isIrrelevant: Boolean = {
       val trivial = sym.owner == symbolOf[Any] || sym.owner == symbolOf[Object]
-      val arbitrary = sym.fullName.startsWith("scala.collection.generic")
+      val arbitrary = {
+        // TODO: figure out why this is necessary
+        val banned = List("scala.collection.generic", "scala.Enumeration", "scala.math", "scala.Int")
+        banned.exists(prefix => sym.fullName.startsWith(prefix))
+      }
       val tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith("tests")
       val internal = sym.fullName.contains(".internal.") // NOTE: don't ignore "internal" itself
       val invisible = !sym.isPublic
-      trivial || arbitrary || tests || internal || invisible
+      val inexistent = !sym.asInstanceOf[scala.reflect.internal.SymbolTable#Symbol].exists // NOTE: wtf
+      val result = trivial || arbitrary || tests || internal || invisible || inexistent
+      // println((sym.fullName, s"$result = $trivial || $arbitrary || $tests || $internal || $invisible || $inexistent"))
+      result
     }
     def isRelevant: Boolean = {
       !isIrrelevant
+    }
+    def isPkgObject: Boolean = {
+      sym.owner.isPackage && sym.isModule && sym.name == termNames.PACKAGE
     }
     def signature: String = {
       def paramss(m: Symbol, wrapFirst: Boolean): String = {
@@ -46,7 +56,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     }
   }
 
-  private def discoverPublicToplevels(pkg: Symbol, onlyImmediatelyAccessible: Boolean): List[Symbol] = {
+  private def staticClassesAndObjects(pkg: Symbol, onlyImmediatelyAccessible: Boolean): List[Symbol] = {
     val visited = Set[Symbol]()
     def loop(parent: Symbol): Unit = {
       if (parent == NoSymbol) return
@@ -84,7 +94,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
             val target = sym.info.typeSymbol
             visited += target
           } else if (sym.isTerm) {
-            if (sym.asTerm.getter != NoSymbol) {
+            if (sym.asTerm.getter != NoSymbol || sym.isPrivateThis) {
               // ignore: processed in sym.isMethod
             } else {
               failUnsupported(sym)
@@ -105,38 +115,24 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     result
   }
 
-  private def render(strings: List[String]): Tree = {
-    val s_result = strings.distinct.sorted
-    // s_result.foreach(println)
-    q"$s_result"
-  }
-
-  def wildcardImportToplevels(packageName: Tree): Tree = {
+  private def staticsImpl(packageName: Tree, onlyImmediatelyAccessible: Boolean): Tree = {
     val Literal(Constant(s_packageName: String)) = packageName
-    val toplevels = discoverPublicToplevels(m.staticPackage(s_packageName), onlyImmediatelyAccessible = true)
-    val pkgobjectMethods = m.staticModule(s_packageName + ".package").info.members.toList.collect{
+    val statics = staticClassesAndObjects(m.staticPackage(s_packageName), onlyImmediatelyAccessible)
+    val (pkgObjects, nonPkgObjectStatics) = statics.partition(_.isPkgObject)
+    val allowedPkgObjects = pkgObjects.filter(sym => sym.owner.fullName == s_packageName || !onlyImmediatelyAccessible)
+    val pkgObjectMethods = allowedPkgObjects.flatMap(_.info.members.toList.collect{
       case sym: MethodSymbol if !sym.isAccessor && !sym.isImplicit && !sym.isConstructor && sym.isRelevant => sym
-    }
-    val effectiveToplevels = toplevels ++ pkgobjectMethods
-    val fullNames = effectiveToplevels.map(sym => scala.reflect.NameTransformer.decode(sym.fullName))
-    render(fullNames)
+    })
+    val effectiveStatics = nonPkgObjectStatics ++ pkgObjectMethods
+    val fullNames = effectiveStatics.map(sym => scala.reflect.NameTransformer.decode(sym.fullName))
+    q"${fullNames.distinct.sorted}"
   }
 
-  def wildcardImportExtensions(packageName: Tree): Tree = {
-    val Literal(Constant(s_packageName: String)) = packageName
-    val toplevels = discoverPublicToplevels(m.staticPackage(s_packageName), onlyImmediatelyAccessible = true)
-    val implicitClasses = toplevels.flatMap(tl => {
-      if (tl.isModule) tl.info.members.filter(sym => sym.isClass && sym.isImplicit && sym.isRelevant)
-      else Seq()
-    })
-    val signatures = implicitClasses.flatMap(cls => {
-      val extensionMethods = cls.info.decls.collect{ case sym if sym.isMethod && !sym.isConstructor => sym.asMethod }
-      extensionMethods.filter(_.isRelevant).map(_.signature)
-    })
-    render(signatures)
+  def wildcardImportStaticsImpl(packageName: Tree): Tree = {
+    staticsImpl(packageName, onlyImmediatelyAccessible = true)
   }
 
-  def entireSurface(packageName: Tree): Tree = {
-    ???
+  def allStaticsImpl(packageName: Tree): Tree = {
+    staticsImpl(packageName, onlyImmediatelyAccessible = false)
   }
 }

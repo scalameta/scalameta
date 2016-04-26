@@ -3,7 +3,7 @@ package api
 
 import org.scalatest._
 import org.scalameta.tests._
-import org.scalameta.explore._
+import org.scalameta.explore
 import scala.compat.Platform.EOL
 
 // TODO: Implement datamining and checking of the entire API surface,
@@ -18,21 +18,34 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     all.map(_.sym.fullName).toSet
   }
 
-  val wits = wildcardImportToplevels("scala.meta").toSet
-  val wiexts = wildcardImportExtensions("scala.meta")
-  val trees = wits.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
-  val tokens = wits.filter(_.startsWith("scala.meta.tokens.Token."))
-  val wicore = wits -- trees -- tokens
+  val wildcardImportStatics = explore.wildcardImportStatics("scala.meta")
+  val allStatics = explore.allStatics("scala.meta")
+  val trees = wildcardImportStatics.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
+  val tokens = wildcardImportStatics.filter(_.startsWith("scala.meta.tokens.Token."))
+  val core = allStatics.diff(trees).diff(tokens).map(fullName => (fullName, wildcardImportStatics.contains(fullName))).toMap
 
-  test("wildcard import top-levels (core)") {
-    // println(wicore.toList.sorted.mkString(EOL))
-    assert(wicore.toList.sorted.mkString(EOL) === """
+
+  test("statics (core)") {
+    val diagnostic = core.keys.toList.sorted.map(fullName => {
+      val suffix = if (core(fullName)) "" else " *"
+      s"$fullName$suffix"
+    }).mkString(EOL)
+    // println(diagnostic)
+    assert(diagnostic === """
       |scala.meta.Dialect
       |scala.meta.InputWithDialect
       |scala.meta.Tree
       |scala.meta.classifiers
+      |scala.meta.classifiers.Classifiable *
+      |scala.meta.classifiers.Classifier *
       |scala.meta.convert
+      |scala.meta.convert.Convert *
       |scala.meta.dialects
+      |scala.meta.dialects.Dotty *
+      |scala.meta.dialects.Sbt0136 *
+      |scala.meta.dialects.Sbt0137 *
+      |scala.meta.dialects.Scala210 *
+      |scala.meta.dialects.Scala211 *
       |scala.meta.inputs
       |scala.meta.inputs.Content
       |scala.meta.inputs.Input
@@ -45,66 +58,58 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.inputs.Position
       |scala.meta.inputs.Position.Range
       |scala.meta.internal
-      |scala.meta.package
       |scala.meta.parsers
+      |scala.meta.parsers.InputWithDialect *
+      |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException
       |scala.meta.parsers.Parsed
       |scala.meta.parsers.Parsed.Error
       |scala.meta.parsers.Parsed.Success
       |scala.meta.prettyprinters
+      |scala.meta.prettyprinters.Show *
+      |scala.meta.prettyprinters.Show.Adorn *
+      |scala.meta.prettyprinters.Show.Function *
+      |scala.meta.prettyprinters.Show.Indent *
+      |scala.meta.prettyprinters.Show.Meta *
+      |scala.meta.prettyprinters.Show.Newline *
+      |scala.meta.prettyprinters.Show.Repeat *
+      |scala.meta.prettyprinters.Show.Result *
+      |scala.meta.prettyprinters.Show.Sequence *
+      |scala.meta.prettyprinters.Show.Str *
       |scala.meta.prettyprinters.Structure
       |scala.meta.prettyprinters.Syntax
       |scala.meta.quasiquotes
       |scala.meta.quasiquotes.Lift
+      |scala.meta.quasiquotes.QuasiquoteParsers *
       |scala.meta.quasiquotes.Unlift
       |scala.meta.tokenizers
+      |scala.meta.tokenizers.InputWithDialect *
+      |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException
       |scala.meta.tokenizers.Tokenized
       |scala.meta.tokenizers.Tokenized.Error
       |scala.meta.tokenizers.Tokenized.Success
       |scala.meta.tokens
       |scala.meta.tokens.Token
+      |scala.meta.tokens.TokenLiftables *
       |scala.meta.tokens.Tokens
       |scala.meta.tokens.Tokens.Projection
       |scala.meta.transversers
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
     """.trim.stripMargin)
+  }
 
+  test("prettyprinters for statics (core)") {
     val prettyprinterTests = new scala.meta.tests.prettyprinters.PublicSuite().testNames
-    val nonPackages = wicore.filter(_.exists(_.isUpper))
-    nonPackages.foreach(name => {
+    val nonPackageStatics = core.keys.filter(_.exists(_.isUpper))
+    nonPackageStatics.foreach(name => {
       val isTested = prettyprinterTests.exists(testName => testName.startsWith(name))
       assert(isTested, s"$name prettyprinting is not tested")
     })
   }
 
-  test("wildcard import extensions") {
-    // println(wiexts.sorted.mkString(EOL))
-    assert(wiexts.sorted.mkString(EOL) === """
-      |T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
-      |T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
-      |T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
-      |T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
-      |T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
-      |T.show(implicit Style[T]): String
-      |T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
-      |scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.package.InputWithDialect
-      |scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.parsers.InputWithDialect
-      |scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.tokenizers.InputWithDialect
-      |scala.meta.Pat.Type.tpe: scala.meta.Type
-      |scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
-      |scala.meta.Tree.dialect: scala.meta.Dialect
-      |scala.meta.Tree.input: scala.meta.inputs.Input
-      |scala.meta.Tree.pos: scala.meta.inputs.Position
-      |scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
-      |scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
-      |scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
-      |scala.meta.Type.pat: scala.meta.Pat.Type
-    """.trim.stripMargin)
-  }
-
-  test("wildcard import top-levels (trees)") {
+  test("statics (trees)") {
     // println(trees.toList.sorted.mkString(EOL))
     assert(trees.toList.sorted.mkString(EOL) === """
       |scala.meta.Case
@@ -377,7 +382,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     """.trim.stripMargin)
   }
 
-  test("wildcard import top-levels (tokens)") {
+  test("statics (tokens)") {
     def encode(name: String) = name.replace(" ", "WHITESPACE").replace("\n", "\\n").replace("\r", "\\r").replace("\f", "\\f").replace("\t", "\\t")
     // println(tokens.toList.map(encode).sorted.mkString(EOL))
     assert(tokens.toList.map(encode).sorted.mkString(EOL) === """

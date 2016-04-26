@@ -3,9 +3,7 @@ package org.scalameta
 import scala.language.experimental.macros
 
 package object explore {
-  def wildcardImportToplevels(packageName: String): List[String] = macro ExploreMacros.wildcardImportToplevels
+  def wildcardImportStatics(packageName: String): List[String] = macro ExploreMacros.wildcardImportStaticsImpl
 
-  def wildcardImportExtensions(packageName: String): List[String] = macro ExploreMacros.wildcardImportExtensions
-
-  def entireSurface(packageName: String): List[String] = macro ExploreMacros.entireSurface
+  def allStatics(packageName: String): List[String] = macro ExploreMacros.allStaticsImpl
 }
