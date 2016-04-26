@@ -8,6 +8,7 @@ class InputWithDialect(input: Input, dialect: Dialect) {
   def parse[U](implicit parse: Parse[U]): Parsed[U] = {
     parse.apply(input)(dialect)
   }
+  override def toString = s"$dialect($input)"
 }
 
 private[meta] trait Api {

@@ -14,6 +14,7 @@ class InputWithDialect(input: Input, dialect: Dialect) {
       case _ => unreachable
     }
   }
+  override def toString = s"$dialect($input)"
 }
 
 private[meta] trait Api {

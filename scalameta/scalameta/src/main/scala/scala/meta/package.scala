@@ -20,6 +20,7 @@ package object meta extends classifiers.Api with classifiers.Aliases
     def tokenize(implicit tokenize: scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized = {
       new scala.meta.tokenizers.InputWithDialect(input, dialect).tokenize
     }
+    override def toString = s"$dialect($input)"
   }
 
   implicit class XtensionDialectApply(dialect: scala.meta.Dialect) {

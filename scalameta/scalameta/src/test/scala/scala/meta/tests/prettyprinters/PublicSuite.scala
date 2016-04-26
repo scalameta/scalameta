@@ -10,7 +10,8 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.InputWithDialect.toString") {
-    // n/a
+    val inputWithDialect = new scala.meta.InputWithDialect(Input.String("foo"), scala.meta.dialects.Scala211)
+    assert(inputWithDialect.toString === """Scala211(Input.String("foo"))""")
   }
 
   test("scala.meta.Tree.toString (manual)") {
@@ -56,6 +57,38 @@ class PublicSuite extends FunSuite {
   test("scala.meta.Tree.show[Syntax] (quasiquoted)") {
     val tree = q"foo + bar // baz"
     assert(tree.show[Syntax] === "foo + bar")
+  }
+
+  test("scala.meta.classifiers.Classifiable.toString") {
+    // n/a
+  }
+
+  test("scala.meta.classifiers.Classifier.toString") {
+    // n/a
+  }
+
+  test("scala.meta.convert.Convert.toString") {
+    // n/a
+  }
+
+  test("scala.meta.dialects.Dotty.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.Sbt0136.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.Sbt0137.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.Scala210.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.Scala211.toString") {
+    // covered above
   }
 
   test("scala.meta.inputs.Content.toString") {
@@ -116,6 +149,15 @@ class PublicSuite extends FunSuite {
     assert(lhs.pos.toString === """[0..0..3) in Input.String("foo + bar")""")
   }
 
+  test("scala.meta.parsers.InputWithDialect.toString") {
+    val inputWithDialect = new scala.meta.parsers.InputWithDialect(Input.String("foo"), scala.meta.dialects.Scala211)
+    assert(inputWithDialect.toString === """Scala211(Input.String("foo"))""")
+  }
+
+  test("scala.meta.parsers.Parse.toString") {
+    // n/a
+  }
+
   test("scala.meta.parsers.ParseException.toString") {
     intercept[ParseException] {
       try "foo + class".parse[Term].get
@@ -149,6 +191,10 @@ class PublicSuite extends FunSuite {
     assert(parsed.toString === "foo + bar")
   }
 
+  test("scala.meta.prettyprinters.Show") {
+    // n/a
+  }
+
   test("scala.meta.prettyprinters.Structure") {
     // n/a
   }
@@ -162,6 +208,15 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.quasiquotes.Unlift") {
+    // n/a
+  }
+
+  test("scala.meta.tokenizers.InputWithDialect.toString") {
+    val inputWithDialect = new scala.meta.tokenizers.InputWithDialect(Input.String("foo"), scala.meta.dialects.Scala211)
+    assert(inputWithDialect.toString === """Scala211(Input.String("foo"))""")
+  }
+
+  test("scala.meta.tokenizers.Tokenize.toString") {
     // n/a
   }
 
