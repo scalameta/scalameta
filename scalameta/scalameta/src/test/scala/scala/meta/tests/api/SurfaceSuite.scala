@@ -66,15 +66,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.parsers.Parsed.Success
       |scala.meta.prettyprinters
       |scala.meta.prettyprinters.Show *
-      |scala.meta.prettyprinters.Show.Adorn *
-      |scala.meta.prettyprinters.Show.Function *
-      |scala.meta.prettyprinters.Show.Indent *
-      |scala.meta.prettyprinters.Show.Meta *
-      |scala.meta.prettyprinters.Show.Newline *
-      |scala.meta.prettyprinters.Show.Repeat *
-      |scala.meta.prettyprinters.Show.Result *
-      |scala.meta.prettyprinters.Show.Sequence *
-      |scala.meta.prettyprinters.Show.Str *
       |scala.meta.prettyprinters.Structure
       |scala.meta.prettyprinters.Syntax
       |scala.meta.quasiquotes

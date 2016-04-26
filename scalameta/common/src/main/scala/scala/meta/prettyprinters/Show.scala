@@ -11,7 +11,7 @@ import scala.compat.Platform.EOL
 
 trait Show[T] { def apply(t: T): Show.Result }
 object Show {
-  sealed abstract class Result {
+  private[meta] sealed abstract class Result {
     override def toString = {
       val sb = new StringBuilder
       var indentation = 0
@@ -51,37 +51,37 @@ object Show {
       sb.toString
     }
   }
-  final case class Str(value: String) extends Result
-  final case class Sequence(xs: Result*) extends Result
-  final case class Repeat(xs: Seq[Result], sep: String) extends Result
-  final case class Indent(res: Result) extends Result
-  final case class Newline(res: Result) extends Result
-  final case class Meta(data: Any, res: Result) extends Result
-  final case class Adorn(prefix: String, res: Result, suffix: String, cond: String => Boolean) extends Result
-  final case class Function(fn: StringBuilder => Result) extends Result
+  private[meta] final case class Str(value: String) extends Result
+  private[meta] final case class Sequence(xs: Result*) extends Result
+  private[meta] final case class Repeat(xs: Seq[Result], sep: String) extends Result
+  private[meta] final case class Indent(res: Result) extends Result
+  private[meta] final case class Newline(res: Result) extends Result
+  private[meta] final case class Meta(data: Any, res: Result) extends Result
+  private[meta] final case class Adorn(prefix: String, res: Result, suffix: String, cond: String => Boolean) extends Result
+  private[meta] final case class Function(fn: StringBuilder => Result) extends Result
 
   def apply[T](f: T => Result): Show[T] =
     new Show[T] { def apply(input: T): Result = f(input) }
 
   def sequence[T](xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.seq
 
-  def indent[T](x: T)(implicit show: Show[T]): Indent = Indent(show(x))
+  def indent[T](x: T)(implicit show: Show[T]): Result = Indent(show(x))
 
-  def repeat[T](xs: Seq[T], sep: String = "")(implicit show: Show[T]): Repeat =
+  def repeat[T](xs: Seq[T], sep: String = "")(implicit show: Show[T]): Result =
     Repeat(xs.map(show(_)), sep)
 
-  def newline[T](x: T)(implicit show: Show[T]): Newline = Newline(show(x))
+  def newline[T](x: T)(implicit show: Show[T]): Result = Newline(show(x))
 
-  def meta[T](data: Any, xs: T*): Meta = macro scala.meta.internal.prettyprinters.ShowMacros.meta
+  def meta[T](data: Any, xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.meta
 
-  def adorn[T](x: T, suffix: String)(implicit show: Show[T]): Adorn = Adorn("", show(x), suffix, _.nonEmpty)
-  def adorn[T](x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Adorn = Adorn("", show(x), suffix, _ => cond)
-  def adorn[T](prefix: String, x: T)(implicit show: Show[T]): Adorn = Adorn(prefix, show(x), "", _.nonEmpty)
-  def adorn[T](prefix: String, x: T, cond: Boolean)(implicit show: Show[T]): Adorn = Adorn(prefix, show(x), "", _ => cond)
-  def adorn[T](prefix: String, x: T, suffix: String)(implicit show: Show[T]): Adorn = Adorn(prefix, show(x), suffix, _.nonEmpty)
-  def adorn[T](prefix: String, x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Adorn = Adorn(prefix, show(x), suffix, _ => cond)
+  def adorn[T](x: T, suffix: String)(implicit show: Show[T]): Result = Adorn("", show(x), suffix, _.nonEmpty)
+  def adorn[T](x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Result = Adorn("", show(x), suffix, _ => cond)
+  def adorn[T](prefix: String, x: T)(implicit show: Show[T]): Result = Adorn(prefix, show(x), "", _.nonEmpty)
+  def adorn[T](prefix: String, x: T, cond: Boolean)(implicit show: Show[T]): Result = Adorn(prefix, show(x), "", _ => cond)
+  def adorn[T](prefix: String, x: T, suffix: String)(implicit show: Show[T]): Result = Adorn(prefix, show(x), suffix, _.nonEmpty)
+  def adorn[T](prefix: String, x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Result = Adorn(prefix, show(x), suffix, _ => cond)
 
-  def function(fn: StringBuilder => Result): Function = Function(fn)
+  def function(fn: StringBuilder => Result): Result = Function(fn)
 
   implicit def printResult[R <: Result]: Show[R] = apply(identity)
   implicit def printString[T <: String]: Show[T] = apply(Show.Str(_))
