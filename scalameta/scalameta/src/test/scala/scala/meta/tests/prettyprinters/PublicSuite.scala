@@ -9,11 +9,6 @@ class PublicSuite extends FunSuite {
     Dialect.all.foreach(d => assert(d.name == d.toString))
   }
 
-  test("scala.meta.InputWithDialect.toString") {
-    val inputWithDialect = new scala.meta.InputWithDialect(Input.String("foo"), scala.meta.dialects.Scala211)
-    assert(inputWithDialect.toString === """Scala211(Input.String("foo"))""")
-  }
-
   test("scala.meta.Tree.toString (manual)") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
     assert(tree.toString === "foo + bar")
@@ -149,11 +144,6 @@ class PublicSuite extends FunSuite {
     assert(lhs.pos.toString === """[0..0..3) in Input.String("foo + bar")""")
   }
 
-  test("scala.meta.parsers.InputWithDialect.toString") {
-    val inputWithDialect = new scala.meta.parsers.InputWithDialect(Input.String("foo"), scala.meta.dialects.Scala211)
-    assert(inputWithDialect.toString === """Scala211(Input.String("foo"))""")
-  }
-
   test("scala.meta.parsers.Parse.toString") {
     // n/a
   }
@@ -209,11 +199,6 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.quasiquotes.Unlift") {
     // n/a
-  }
-
-  test("scala.meta.tokenizers.InputWithDialect.toString") {
-    val inputWithDialect = new scala.meta.tokenizers.InputWithDialect(Input.String("foo"), scala.meta.dialects.Scala211)
-    assert(inputWithDialect.toString === """Scala211(Input.String("foo"))""")
   }
 
   test("scala.meta.tokenizers.Tokenize.toString") {

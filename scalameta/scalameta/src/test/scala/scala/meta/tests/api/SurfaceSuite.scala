@@ -30,7 +30,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     // println(diagnostic)
     assert(diagnostic === """
       |scala.meta.Dialect
-      |scala.meta.InputWithDialect
       |scala.meta.Tree
       |scala.meta.classifiers
       |scala.meta.classifiers.Classifiable *
@@ -56,7 +55,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.inputs.Position.Range
       |scala.meta.internal
       |scala.meta.parsers
-      |scala.meta.parsers.InputWithDialect *
       |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException
       |scala.meta.parsers.Parsed
@@ -70,7 +68,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
       |scala.meta.tokenizers
-      |scala.meta.tokenizers.InputWithDialect *
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException
       |scala.meta.tokenizers.Tokenized
@@ -102,6 +99,10 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
 
     // println(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL))
     assert(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL) === """
+      |* (scala.meta.Dialect, scala.meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
+      |* (scala.meta.Dialect, scala.meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
+      |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
+      |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
@@ -114,9 +115,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* T.show(implicit Style[T]): String
       |* T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
       |* T.withTokens(scala.meta.tokens.Tokens): T
-      |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.package.InputWithDialect
-      |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.parsers.InputWithDialect
-      |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.tokenizers.InputWithDialect
+      |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): (scala.meta.Dialect, scala.meta.inputs.Input)
       |* scala.meta.Pat.Type.tpe: scala.meta.Type
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
