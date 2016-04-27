@@ -62,11 +62,11 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       // and:
       //  class NameAnonymousImpl needs to be abstract, since method withDenot in trait Name
       //  of type (denot: scala.meta.internal.semantic.Denotation)NameAnonymousImpl.this.ThisType is not defined
-      // val descriptivePrefix = fullName.stripPrefix("scala.meta.").replace(".", "")
-      // val aname = TypeName(descriptivePrefix.replace(".", "") + "Api")
-      // val name = TypeName(descriptivePrefix.replace(".", "") + "Impl")
-      val aname = TypeName("Api")
-      val name = TypeName("Impl")
+      val descriptivePrefix = fullName.stripPrefix("scala.meta.").replace(".", "")
+      val aname = TypeName(descriptivePrefix.replace(".", "") + "Api")
+      val name = TypeName(descriptivePrefix.replace(".", "") + "Impl")
+      // val aname = TypeName("Api")
+      // val name = TypeName("Impl")
       val qname = TypeName("Quasi")
       val qmname = TermName("Quasi")
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
@@ -185,13 +185,13 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
       }
       if (hasTyping) {
         bparams1 += q"protected val privateTyping: $InternalSemantic.Typing"
-        val imods = Modifiers(if (isTermParam) NoFlags else OVERRIDE, TypeName("meta"), Nil)
-        istats1 += q"$imods def typing: $InternalSemantic.Typing"
+        // val imods = Modifiers(if (isTermParam) NoFlags else OVERRIDE, TypeName("meta"), Nil)
+        // istats1 += q"$imods def typing: $InternalSemantic.Typing"
         if (isTermParam) {
           // Term.Param.typing is defined manually and needs to be removed
           astats1 = astats1.filter{ case DefDef(_, TermName("typing"), _, _, _, _) => false; case _ => true }
         }
-        astats1 += q"private[meta] override def typing: $InternalSemantic.Typing"
+        astats1 += q"private[meta] def typing: $InternalSemantic.Typing"
         stats1 += q"""
           private[meta] override def typing: $InternalSemantic.Typing = {
             if (privateTyping != null) privateTyping
@@ -236,7 +236,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
         val message = q"if (this.rank == 0) $unsupportedUnquotingPosition else $unsupportedSplicingPosition"
         val impl = q"throw new _root_.scala.`package`.UnsupportedOperationException($message)"
         val Modifiers(flags, privateWithin, anns) = mods
-        val flags1 = flags | OVERRIDE
+        val flags1 = if (isTermParam) flags else flags | OVERRIDE
         val mods1 = Modifiers(flags1, privateWithin, anns)
         q"$mods1 def ${TermName(name)}: _root_.scala.Nothing = $impl"
       }
@@ -440,7 +440,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with MacroHelpers {
             astats1 = astats1.filter{ case DefDef(_, TermName("withAttrs"), _, List(List(_)), _, _) => false; case _ => true }
           }
           astats1 += withAttrsT
-          qstats1 += quasisetter(PrivateMeta, "withAttrs", paramTypingLike)
+          qstats1 += quasisetter(Modifiers(OVERRIDE, TypeName("meta"), Nil), "withAttrs", paramTypingLike)
         }
         if (hasDenot && hasTyping) {
           val imods = Modifiers(if (isTermName || isCtorName) NoFlags else OVERRIDE, TypeName("meta"), Nil)
