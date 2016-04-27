@@ -8,41 +8,25 @@ import org.scalameta.unreachable
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
-import scala.meta.internal.{equality => e}
 import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
-import scala.meta.internal.semantic._
 
-// NOTE: A lot of stuff in this file is generated under the covers with scala.meta.internal.ast._ annotations.
-// For example, @root defines a whole bunch of helper methods that support the internal AST infrastructure.
-//
-// However, everything that is in the public API or in the host API is written down explicitly.
-// The only exception to this rule is caseclass-like functionality provided by the @ast annotation,
-// i.e. auto-generated getters for fields, apply/unapply, copy, etc.
-
-@root trait Tree extends Product with Serializable {
+@root trait Tree extends InternalTree with Product with Serializable {
   def parent: Option[Tree]
   def children: Seq[Tree]
   def tokens: Tokens
-  def withTokens(tokens: Tokens): Tree
-  def inheritTokens(other: Tree): Tree
   final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def hashCode: Int = System.identityHashCode(this)
   final override def toString = scala.meta.internal.prettyprinters.TreeToString(this)
 }
 
-object Tree {
+object Tree extends InternalTreeXtensions {
   implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T]
   implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect)
   // implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.prettyprinters.TreeSemantics.apply[T](c)
 
-  private[meta] implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
-    def ===[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
-    def =/=[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
-  }
-
-  implicit class XtensionSyntacticTree(tree: Tree) {
+  implicit class XtensionSyntacticTree[T <: Tree](tree: T) {
     def input: Input = tree.tokens.input
     def dialect: Dialect = tree.tokens.dialect
     def pos: Position = {
@@ -65,6 +49,13 @@ object Tree {
         Position.Range(content, start, start, end)
       }
     }
+    def withTokens(tokens: Tokens): T = {
+      tree.privateWithTokens(tokens).asInstanceOf[T]
+    }
+    def inheritTokens(other: Tree): T = {
+      // TODO: use other.privateTokens instead of eagerly triggering other.tokens
+      tree.withTokens(other.tokens)
+    }
   }
 }
 
@@ -72,25 +63,14 @@ object Tree {
 @branch trait Stat extends Tree
 @branch trait Scope extends Tree
 
-@branch trait Name extends Ref {
-  def value: String
-  private[meta] def env: Environment
-  private[meta] def denot: Denotation
-  private[meta] def withEnv(env: Environment): Name
-  private[meta] def withAttrs(denot: Denotation): Name
-}
+@branch trait Name extends Ref { def value: String }
 object Name {
   @ast class Anonymous extends Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
   @ast class Indeterminate(value: Predef.String @nonEmpty) extends Name with Qualifier
   @branch trait Qualifier extends Ref
 }
 
-@branch trait Term extends Stat with Term.Arg {
-  private[meta] def env: Environment
-  private[meta] def typing: Typing
-  private[meta] def withEnv(env: Environment): Term
-  private[meta] def withAttrs(typingLike: TypingLike): Term
-}
+@branch trait Term extends Stat with Term.Arg
 object Term {
   @branch trait Ref extends Term with scala.meta.Ref
   @ast class This(qual: scala.meta.Name.Qualifier) extends Term.Ref with scala.meta.Name.Qualifier {
@@ -99,11 +79,7 @@ object Term {
   @ast class Super(thisp: scala.meta.Name.Qualifier, superp: scala.meta.Name.Qualifier) extends Term.Ref {
     require(!thisp.isInstanceOf[Term.This] && !superp.isInstanceOf[Term.This])
   }
-  @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat with Param.Name with scala.meta.Name.Qualifier {
-    // TODO: revisit this once we have trivia in place
-    // require(keywords.contains(value) ==> isBackquoted)
-    private[meta] def withAttrs(denot: Denotation, typingLike: TypingLike): Term.Name
-  }
+  @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat with Param.Name with scala.meta.Name.Qualifier
   @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
     require(parts.length == args.length + 1)
@@ -151,10 +127,7 @@ object Term {
     @ast class Named(name: Name, rhs: Term.Arg) extends Arg
     @ast class Repeated(arg: Term) extends Arg
   }
-  @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Member {
-    private[meta] def typing: Typing
-    private[meta] def withAttrs(typingLike: TypingLike): Term.Param
-  }
+  @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Member
   object Param {
     @branch trait Name extends scala.meta.Name
   }
@@ -470,9 +443,7 @@ object Ctor {
     // an alternative design might reintroduce the Ctor.Ref ast node that would have the structure of:
     // Ctor.Ref(tpe: Type, ctor: Ctor.Name), where Ctor.Name would be Ctor.Name()
     // in that design, we also won't have to convert between Type and Ctor.Ref hierarchies, which is a definite plus
-    @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Ref {
-      private[meta] def withAttrs(denot: Denotation, typingLike: TypingLike): Ctor.Name
-    }
+    @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Ref
     @ast class Select(qual: Term.Ref, name: Name) extends Ref
     @ast class Project(qual: Type, name: Name) extends Ref
     @ast class Function(name: Name) extends Ref

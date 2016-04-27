@@ -46,8 +46,8 @@ trait MacroHelpers extends DebugFinder
   val AdtMetadataModule = hygienicRef(org.scalameta.adt.Metadata)
   val AdtTyperMacrosModule = hygienicRef(org.scalameta.adt.AdtTyperMacros)
   val AstMetadataModule = hygienicRef(scala.meta.internal.ast.Metadata)
-  val AstTyperMacrosModule = hygienicRef(scala.meta.internal.ast.AstTyperMacros)
-  val AstTyperMacrosBundle = hygienicRef[scala.meta.internal.ast.AstTyperMacrosBundle]
+  val CommonTyperMacrosModule = hygienicRef(scala.meta.internal.ast.CommonTyperMacros)
+  val CommonTyperMacrosBundle = hygienicRef[scala.meta.internal.ast.CommonTyperMacrosBundle]
   val AstInfoClass = hygienicRef[scala.meta.internal.ast.AstInfo[_]]
   val TokenMetadataModule = hygienicRef(scala.meta.internal.tokens.Metadata)
   val BooleanClass = hygienicRef[scala.Boolean]

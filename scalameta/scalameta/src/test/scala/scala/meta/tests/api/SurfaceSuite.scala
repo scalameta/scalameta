@@ -106,17 +106,19 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
       |* T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
+      |* T.dialect: scala.meta.Dialect
+      |* T.inheritTokens(scala.meta.Tree): T
+      |* T.input: scala.meta.inputs.Input
       |* T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
+      |* T.pos: scala.meta.inputs.Position
       |* T.show(implicit Style[T]): String
       |* T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
+      |* T.withTokens(scala.meta.tokens.Tokens): T
       |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.package.InputWithDialect
       |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.parsers.InputWithDialect
       |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): scala.meta.tokenizers.InputWithDialect
       |* scala.meta.Pat.Type.tpe: scala.meta.Type
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
-      |* scala.meta.Tree.dialect: scala.meta.Dialect
-      |* scala.meta.Tree.input: scala.meta.inputs.Input
-      |* scala.meta.Tree.pos: scala.meta.inputs.Position
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
       |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
@@ -128,272 +130,153 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     // println(trees.toList.sorted.mkString(EOL))
     assert(trees.toList.sorted.mkString(EOL) === """
       |scala.meta.Case
-      |scala.meta.Case.Api
       |scala.meta.Ctor
       |scala.meta.Ctor.Call
       |scala.meta.Ctor.Primary
-      |scala.meta.Ctor.Primary.Api
       |scala.meta.Ctor.Ref
       |scala.meta.Ctor.Ref.Function
-      |scala.meta.Ctor.Ref.Function.Api
       |scala.meta.Ctor.Ref.Name
-      |scala.meta.Ctor.Ref.Name.Api
       |scala.meta.Ctor.Ref.Project
-      |scala.meta.Ctor.Ref.Project.Api
       |scala.meta.Ctor.Ref.Select
-      |scala.meta.Ctor.Ref.Select.Api
       |scala.meta.Ctor.Secondary
-      |scala.meta.Ctor.Secondary.Api
       |scala.meta.Decl
       |scala.meta.Decl.Def
-      |scala.meta.Decl.Def.Api
       |scala.meta.Decl.Type
-      |scala.meta.Decl.Type.Api
       |scala.meta.Decl.Val
-      |scala.meta.Decl.Val.Api
       |scala.meta.Decl.Var
-      |scala.meta.Decl.Var.Api
       |scala.meta.Defn
       |scala.meta.Defn.Class
-      |scala.meta.Defn.Class.Api
       |scala.meta.Defn.Def
-      |scala.meta.Defn.Def.Api
       |scala.meta.Defn.Macro
-      |scala.meta.Defn.Macro.Api
       |scala.meta.Defn.Object
-      |scala.meta.Defn.Object.Api
       |scala.meta.Defn.Trait
-      |scala.meta.Defn.Trait.Api
       |scala.meta.Defn.Type
-      |scala.meta.Defn.Type.Api
       |scala.meta.Defn.Val
-      |scala.meta.Defn.Val.Api
       |scala.meta.Defn.Var
-      |scala.meta.Defn.Var.Api
       |scala.meta.Enumerator
       |scala.meta.Enumerator.Generator
-      |scala.meta.Enumerator.Generator.Api
       |scala.meta.Enumerator.Guard
-      |scala.meta.Enumerator.Guard.Api
       |scala.meta.Enumerator.Val
-      |scala.meta.Enumerator.Val.Api
       |scala.meta.Import
-      |scala.meta.Import.Api
       |scala.meta.Importee
       |scala.meta.Importee.Name
-      |scala.meta.Importee.Name.Api
       |scala.meta.Importee.Rename
-      |scala.meta.Importee.Rename.Api
       |scala.meta.Importee.Unimport
-      |scala.meta.Importee.Unimport.Api
       |scala.meta.Importee.Wildcard
-      |scala.meta.Importee.Wildcard.Api
       |scala.meta.Importer
-      |scala.meta.Importer.Api
       |scala.meta.Lit
-      |scala.meta.Lit.Api
       |scala.meta.Member
       |scala.meta.Member.Term
       |scala.meta.Member.Type
       |scala.meta.Mod
       |scala.meta.Mod.Abstract
-      |scala.meta.Mod.Abstract.Api
       |scala.meta.Mod.Annot
-      |scala.meta.Mod.Annot.Api
       |scala.meta.Mod.Case
-      |scala.meta.Mod.Case.Api
       |scala.meta.Mod.Contravariant
-      |scala.meta.Mod.Contravariant.Api
       |scala.meta.Mod.Covariant
-      |scala.meta.Mod.Covariant.Api
       |scala.meta.Mod.Final
-      |scala.meta.Mod.Final.Api
       |scala.meta.Mod.Implicit
-      |scala.meta.Mod.Implicit.Api
       |scala.meta.Mod.Lazy
-      |scala.meta.Mod.Lazy.Api
       |scala.meta.Mod.Override
-      |scala.meta.Mod.Override.Api
       |scala.meta.Mod.Private
-      |scala.meta.Mod.Private.Api
       |scala.meta.Mod.Protected
-      |scala.meta.Mod.Protected.Api
       |scala.meta.Mod.Sealed
-      |scala.meta.Mod.Sealed.Api
       |scala.meta.Mod.ValParam
-      |scala.meta.Mod.ValParam.Api
       |scala.meta.Mod.VarParam
-      |scala.meta.Mod.VarParam.Api
       |scala.meta.Name
       |scala.meta.Name.Anonymous
-      |scala.meta.Name.Anonymous.Api
       |scala.meta.Name.Indeterminate
-      |scala.meta.Name.Indeterminate.Api
       |scala.meta.Name.Qualifier
       |scala.meta.Pat
       |scala.meta.Pat.Alternative
-      |scala.meta.Pat.Alternative.Api
       |scala.meta.Pat.Arg
       |scala.meta.Pat.Arg.SeqWildcard
-      |scala.meta.Pat.Arg.SeqWildcard.Api
       |scala.meta.Pat.Bind
-      |scala.meta.Pat.Bind.Api
       |scala.meta.Pat.Extract
-      |scala.meta.Pat.Extract.Api
       |scala.meta.Pat.ExtractInfix
-      |scala.meta.Pat.ExtractInfix.Api
       |scala.meta.Pat.Interpolate
-      |scala.meta.Pat.Interpolate.Api
       |scala.meta.Pat.Tuple
-      |scala.meta.Pat.Tuple.Api
       |scala.meta.Pat.Type
       |scala.meta.Pat.Type.Annotate
-      |scala.meta.Pat.Type.Annotate.Api
       |scala.meta.Pat.Type.Apply
-      |scala.meta.Pat.Type.Apply.Api
       |scala.meta.Pat.Type.ApplyInfix
-      |scala.meta.Pat.Type.ApplyInfix.Api
       |scala.meta.Pat.Type.Compound
-      |scala.meta.Pat.Type.Compound.Api
       |scala.meta.Pat.Type.Existential
-      |scala.meta.Pat.Type.Existential.Api
       |scala.meta.Pat.Type.Function
-      |scala.meta.Pat.Type.Function.Api
       |scala.meta.Pat.Type.Placeholder
-      |scala.meta.Pat.Type.Placeholder.Api
       |scala.meta.Pat.Type.Project
-      |scala.meta.Pat.Type.Project.Api
       |scala.meta.Pat.Type.Ref
       |scala.meta.Pat.Type.Tuple
-      |scala.meta.Pat.Type.Tuple.Api
       |scala.meta.Pat.Type.Wildcard
-      |scala.meta.Pat.Type.Wildcard.Api
       |scala.meta.Pat.Typed
-      |scala.meta.Pat.Typed.Api
       |scala.meta.Pat.Var
       |scala.meta.Pat.Var.Term
-      |scala.meta.Pat.Var.Term.Api
       |scala.meta.Pat.Var.Type
-      |scala.meta.Pat.Var.Type.Api
       |scala.meta.Pat.Wildcard
-      |scala.meta.Pat.Wildcard.Api
       |scala.meta.Pkg
-      |scala.meta.Pkg.Api
       |scala.meta.Pkg.Object
-      |scala.meta.Pkg.Object.Api
       |scala.meta.Ref
       |scala.meta.Scope
       |scala.meta.Source
-      |scala.meta.Source.Api
       |scala.meta.Stat
       |scala.meta.Template
-      |scala.meta.Template.Api
       |scala.meta.Term
       |scala.meta.Term.Annotate
-      |scala.meta.Term.Annotate.Api
       |scala.meta.Term.Apply
-      |scala.meta.Term.Apply.Api
       |scala.meta.Term.ApplyInfix
-      |scala.meta.Term.ApplyInfix.Api
       |scala.meta.Term.ApplyType
-      |scala.meta.Term.ApplyType.Api
       |scala.meta.Term.ApplyUnary
-      |scala.meta.Term.ApplyUnary.Api
       |scala.meta.Term.Arg
       |scala.meta.Term.Arg.Named
-      |scala.meta.Term.Arg.Named.Api
       |scala.meta.Term.Arg.Repeated
-      |scala.meta.Term.Arg.Repeated.Api
       |scala.meta.Term.Ascribe
-      |scala.meta.Term.Ascribe.Api
       |scala.meta.Term.Assign
-      |scala.meta.Term.Assign.Api
       |scala.meta.Term.Block
-      |scala.meta.Term.Block.Api
       |scala.meta.Term.Do
-      |scala.meta.Term.Do.Api
       |scala.meta.Term.Eta
-      |scala.meta.Term.Eta.Api
       |scala.meta.Term.For
-      |scala.meta.Term.For.Api
       |scala.meta.Term.ForYield
-      |scala.meta.Term.ForYield.Api
       |scala.meta.Term.Function
-      |scala.meta.Term.Function.Api
       |scala.meta.Term.If
-      |scala.meta.Term.If.Api
       |scala.meta.Term.Interpolate
-      |scala.meta.Term.Interpolate.Api
       |scala.meta.Term.Match
-      |scala.meta.Term.Match.Api
       |scala.meta.Term.Name
-      |scala.meta.Term.Name.Api
       |scala.meta.Term.New
-      |scala.meta.Term.New.Api
       |scala.meta.Term.Param
-      |scala.meta.Term.Param.Api
       |scala.meta.Term.Param.Name
       |scala.meta.Term.PartialFunction
-      |scala.meta.Term.PartialFunction.Api
       |scala.meta.Term.Placeholder
-      |scala.meta.Term.Placeholder.Api
       |scala.meta.Term.Ref
       |scala.meta.Term.Return
-      |scala.meta.Term.Return.Api
       |scala.meta.Term.Select
-      |scala.meta.Term.Select.Api
       |scala.meta.Term.Super
-      |scala.meta.Term.Super.Api
       |scala.meta.Term.This
-      |scala.meta.Term.This.Api
       |scala.meta.Term.Throw
-      |scala.meta.Term.Throw.Api
       |scala.meta.Term.TryWithCases
-      |scala.meta.Term.TryWithCases.Api
       |scala.meta.Term.TryWithTerm
-      |scala.meta.Term.TryWithTerm.Api
       |scala.meta.Term.Tuple
-      |scala.meta.Term.Tuple.Api
       |scala.meta.Term.Update
-      |scala.meta.Term.Update.Api
       |scala.meta.Term.While
-      |scala.meta.Term.While.Api
       |scala.meta.Type
       |scala.meta.Type.Annotate
-      |scala.meta.Type.Annotate.Api
       |scala.meta.Type.Apply
-      |scala.meta.Type.Apply.Api
       |scala.meta.Type.ApplyInfix
-      |scala.meta.Type.ApplyInfix.Api
       |scala.meta.Type.Arg
       |scala.meta.Type.Arg.ByName
-      |scala.meta.Type.Arg.ByName.Api
       |scala.meta.Type.Arg.Repeated
-      |scala.meta.Type.Arg.Repeated.Api
       |scala.meta.Type.Bounds
-      |scala.meta.Type.Bounds.Api
       |scala.meta.Type.Compound
-      |scala.meta.Type.Compound.Api
       |scala.meta.Type.Existential
-      |scala.meta.Type.Existential.Api
       |scala.meta.Type.Function
-      |scala.meta.Type.Function.Api
       |scala.meta.Type.Name
-      |scala.meta.Type.Name.Api
       |scala.meta.Type.Param
-      |scala.meta.Type.Param.Api
       |scala.meta.Type.Param.Name
       |scala.meta.Type.Placeholder
-      |scala.meta.Type.Placeholder.Api
       |scala.meta.Type.Project
-      |scala.meta.Type.Project.Api
       |scala.meta.Type.Ref
       |scala.meta.Type.Select
-      |scala.meta.Type.Select.Api
       |scala.meta.Type.Singleton
-      |scala.meta.Type.Singleton.Api
       |scala.meta.Type.Tuple
-      |scala.meta.Type.Tuple.Api
     """.trim.stripMargin)
   }
 
