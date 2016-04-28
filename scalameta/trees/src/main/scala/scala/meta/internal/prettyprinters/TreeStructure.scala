@@ -39,9 +39,9 @@ object TreeStructure {
             case Constant.Char(_) => true
             case Constant.Symbol(_) => true
             case Constant.String(_) => true
-            case True() => true
-            case False() => true
-            case Null() => true
+            case KwTrue() => true
+            case KwFalse() => true
+            case KwNull() => true
             case Ident("-") => true
             case _ => false
           }

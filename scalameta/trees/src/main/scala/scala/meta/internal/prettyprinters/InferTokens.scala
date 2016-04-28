@@ -51,9 +51,9 @@ private[meta] object inferTokens {
           else enquote(str, DoubleQuotes)
         }
         Token.Constant.String(newStr, dialect, 0, newStr.length, y)
-      case true =>       Token.True(str, dialect, 0)
-      case false =>      Token.False(str, dialect, 0)
-      case null =>       Token.Null(str, dialect, 0)
+      case true =>       Token.KwTrue(str, dialect, 0)
+      case false =>      Token.KwFalse(str, dialect, 0)
+      case null =>       Token.KwNull(str, dialect, 0)
     }
     Tokens(newTok)
   }
