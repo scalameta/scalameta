@@ -14,6 +14,7 @@ import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection
 import scala.meta.internal.ast.{Liftables => AstLiftables, Reflection => AstReflection}
 import org.scalameta._
 import org.scalameta.invariants._
+import scala.meta.classifiers._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
@@ -158,7 +159,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
           implicit val tokenizationDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
           try {
             val tokens = part.tokenize.get
-            if (tokens.init.last.isInstanceOf[MetaToken.Comment] && arg.nonEmpty) {
+            if (tokens.init.last.is[MetaToken.Comment] && arg.nonEmpty) {
               failUnclosed("single-line comment")
             }
             tokens
@@ -189,7 +190,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       implicit class XtensionMetaToken(token: MetaToken) { def absoluteStart = token.start + token.content.require[MetaInput.Slice].from }
       val part: MetaTokens = {
         val bof +: payload :+ eof = parttokens
-        require(bof.isInstanceOf[MetaToken.BOF] && eof.isInstanceOf[MetaToken.EOF] && debug(parttokens))
+        require(bof.is[MetaToken.BOF] && eof.is[MetaToken.EOF] && debug(parttokens))
         val prefix = if (index == 0) MetaTokens(bof) else MetaTokens()
         val suffix = if (index == parttokenss.length - 1) MetaTokens(eof) else MetaTokens()
         prefix ++ payload ++ suffix

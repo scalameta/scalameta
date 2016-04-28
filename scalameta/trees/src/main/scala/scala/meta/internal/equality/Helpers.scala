@@ -2,9 +2,11 @@ package scala.meta
 package internal
 package equality
 
+import scala.meta.classifiers._
+
 private[meta] object NonRef {
   def unapply(tree: Tree): Option[Tree] = {
-    if (tree.isInstanceOf[Ref]) None else Some(tree)
+    if (tree.is[Ref]) None else Some(tree)
   }
 }
 

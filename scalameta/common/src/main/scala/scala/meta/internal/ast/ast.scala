@@ -239,8 +239,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
             val validators = List(q"def $validateLocal(stat: Stat) = { require(stat.isTopLevelStat); stat }")
             (validators, q"$local.map($validateLocal)")
           } else if ((is("Defn.Trait") || is("Defn.Object") || is("Pkg.Object")) && local.toString == "templ") {
-            val validators = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(!stat.isInstanceOf[Ctor]); stat })")
-            (validators, q"{ if (!$local.isInstanceOf[$QuasiClass]) $local.stats.map($validateLocal); $local }")
+            val validators = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(!stat.is[Ctor]); stat })")
+            (validators, q"{ if (!$local.is[$QuasiClass]) $local.stats.map($validateLocal); $local }")
           } else if (is("Template") && local.toString == "early") {
             val validators = List(q"def $validateLocal(stat: Stat) = { require(stat.isEarlyStat && parents.nonEmpty); stat }")
             (validators, q"$local.map($validateLocal)")

@@ -240,27 +240,27 @@ class InferShallowSuite extends FunSuite {
   }
   test("InferArgs1") {
     val tree = """A(x = 34, 343)(x :: y: _*)""".parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Term.Arg.Named]).asInstanceOf[Term.Arg.Named]
+    val t1 = find(tree)(_.is[Term.Arg.Named]).asInstanceOf[Term.Arg.Named]
     assertShallowRoundtrip(t1)
   }
   test("InferArgs2") {
     val tree = """A(x = 34, 343)(x :: y: _*)""".parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Term.Arg.Repeated]).asInstanceOf[Term.Arg.Repeated]
+    val t1 = find(tree)(_.is[Term.Arg.Repeated]).asInstanceOf[Term.Arg.Repeated]
     assertShallowRoundtrip(t1)
   }
   test("InferParam1") {
     val tree = """def test(a: Int) = ???""".parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Term.Param]).asInstanceOf[Term.Param]
+    val t1 = find(tree)(_.is[Term.Param]).asInstanceOf[Term.Param]
     assertShallowRoundtrip(t1)
   }
   test("InferParam2") {
     val tree = """def test(a: Int = 0) = ???""".parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Term.Param]).asInstanceOf[Term.Param]
+    val t1 = find(tree)(_.is[Term.Param]).asInstanceOf[Term.Param]
     assertShallowRoundtrip(t1)
   }
   test("InferParam3") {
     val tree = """def test(implicit a: Int = 0) = ???""".parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Term.Param]).asInstanceOf[Term.Param]
+    val t1 = find(tree)(_.is[Term.Param]).asInstanceOf[Term.Param]
     assertShallowRoundtrip(t1)
   }
 
@@ -326,17 +326,17 @@ class InferShallowSuite extends FunSuite {
   }
   test("InferTypeBounds1") {
     val tree = """_ <: A""".parse[Type].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Type.Bounds]).asInstanceOf[Type.Bounds]
+    val t1 = find(tree)(_.is[Type.Bounds]).asInstanceOf[Type.Bounds]
     assertShallowRoundtrip(t1)
   }
   test("InferTypeBounds2") {
     val tree = """_ >: B <: A """.parse[Type].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Type.Bounds]).asInstanceOf[Type.Bounds]
+    val t1 = find(tree)(_.is[Type.Bounds]).asInstanceOf[Type.Bounds]
     assertShallowRoundtrip(t1)
   }
   test("InferTypeBounds3") {
     val tree = """_ >: B""".parse[Type].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Type.Bounds]).asInstanceOf[Type.Bounds]
+    val t1 = find(tree)(_.is[Type.Bounds]).asInstanceOf[Type.Bounds]
     assertShallowRoundtrip(t1)
   }
   test("InferTypeArgRepeated1") {
@@ -777,7 +777,7 @@ class InferShallowSuite extends FunSuite {
     val tree = """package test
                  |case class test
                  |""".stripMargin.parse[Source].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Pkg]).asInstanceOf[Pkg]
+    val t1 = find(tree)(_.is[Pkg]).asInstanceOf[Pkg]
     assertShallowRoundtrip(t1)
   }
   /* Infering Pkg.Object */
@@ -795,14 +795,14 @@ class InferShallowSuite extends FunSuite {
 
   test("CtorPrimary1") {
     val tree = "class Test(x: Int, val y: String)".parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Ctor.Primary]).asInstanceOf[Ctor.Primary]
+    val t1 = find(tree)(_.is[Ctor.Primary]).asInstanceOf[Ctor.Primary]
     assertShallowRoundtrip(t1)
   }
   test("CtorSecondary1") {
     val tree = """class Test(x: Int, val y: String) {
                  |  def this(x: Int, y: Int) = this(x, y.toString)
                  |}""".stripMargin.parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Ctor.Secondary]).asInstanceOf[Ctor.Secondary]
+    val t1 = find(tree)(_.is[Ctor.Secondary]).asInstanceOf[Ctor.Secondary]
     assertShallowRoundtrip(t1)
   }
   test("CtorSecondary2") {
@@ -812,7 +812,7 @@ class InferShallowSuite extends FunSuite {
                  |    /* this is a comment */
                  |  }
                  |}""".stripMargin.parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Ctor.Secondary]).asInstanceOf[Ctor.Secondary]
+    val t1 = find(tree)(_.is[Ctor.Secondary]).asInstanceOf[Ctor.Secondary]
     assertShallowRoundtrip(t1, ignoreSpaces = true)
   }
 
@@ -827,17 +827,17 @@ class InferShallowSuite extends FunSuite {
   }
   test("Mods2") {
     val tree = """@test(url = "http://www.something.com") def x = 4""".parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Mod.Annot]).asInstanceOf[Mod.Annot]
+    val t1 = find(tree)(_.is[Mod.Annot]).asInstanceOf[Mod.Annot]
     assertShallowRoundtrip(t1)
   }
   test("Mods3") {
     val tree = """@test(url = "http://www.something.com", v = Seq(1,2,3,4)) def x = 4""".parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Mod.Annot]).asInstanceOf[Mod.Annot]
+    val t1 = find(tree)(_.is[Mod.Annot]).asInstanceOf[Mod.Annot]
     assertShallowRoundtrip(t1)
   }
   test("Mods4") {
     val tree = """@test case class Test(x: Int)""".parse[Stat].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Mod.Annot]).asInstanceOf[Mod.Annot]
+    val t1 = find(tree)(_.is[Mod.Annot]).asInstanceOf[Mod.Annot]
     assertShallowRoundtrip(t1)
   }
 
@@ -846,18 +846,18 @@ class InferShallowSuite extends FunSuite {
 
   test("Enum1") {
     val tree = "for (x <- 0 to 10) yield x".parse[Term].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Enumerator.Generator]).asInstanceOf[Enumerator.Generator]
+    val t1 = find(tree)(_.is[Enumerator.Generator]).asInstanceOf[Enumerator.Generator]
     assertShallowRoundtrip(t1)
   }
   test("Enum2") {
     val tree = "for (x <- 0 to 10; y = 10) yield x".parse[Term].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Enumerator.Val]).asInstanceOf[Enumerator.Val]
+    val t1 = find(tree)(_.is[Enumerator.Val]).asInstanceOf[Enumerator.Val]
     assertShallowRoundtrip(t1)
   }
   test("Enum3") {
     val tree = "for (x <- 0 to 10 if x == 0) yield x".parse[Term].get
     // val tree = "for (x <- 0 to 10 if x % 2 == 0) yield x".parse[Term].get // TODO: dunno why this does not pass
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Enumerator.Guard]).asInstanceOf[Enumerator.Guard]
+    val t1 = find(tree)(_.is[Enumerator.Guard]).asInstanceOf[Enumerator.Guard]
     assertShallowRoundtrip(t1)
   }
 
@@ -884,14 +884,14 @@ class InferShallowSuite extends FunSuite {
     val tree = """x match {
                  |  case x: Int => x
                  |}""".stripMargin.parse[Term].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Case]).asInstanceOf[Case]
+    val t1 = find(tree)(_.is[Case]).asInstanceOf[Case]
     assertShallowRoundtrip(t1)
   }
   test("InferCase2") {
     val tree = """x match {
                  |  case _ => x
                  |}""".stripMargin.parse[Term].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Case]).asInstanceOf[Case]
+    val t1 = find(tree)(_.is[Case]).asInstanceOf[Case]
     assertShallowRoundtrip(t1)
   }
   test("InferCase3") {
@@ -900,7 +900,7 @@ class InferShallowSuite extends FunSuite {
                  |  val yy = x * y
                  |  yy
                  |}""".stripMargin.parse[Term].get
-    val t1 = find(tree)((p: Tree) => p.isInstanceOf[Case]).asInstanceOf[Case]
+    val t1 = find(tree)(_.is[Case]).asInstanceOf[Case]
     assertShallowRoundtrip(t1)
   }
   /* Infering Source */
@@ -917,7 +917,7 @@ class InferShallowSuite extends FunSuite {
   /* -----------------------------------------------------------------------*/
 
   private def trimLetterbox(tks: Tokens) = {
-    tks.filterNot(tk => tk.isInstanceOf[Token.BOF] || tk.isInstanceOf[Token.EOF])
+    tks.filterNot(tk => tk.is[Token.BOF] || tk.is[Token.EOF])
   }
 
   private def assertShallowInfer(tree: Tree, s_expected: String): Unit = {

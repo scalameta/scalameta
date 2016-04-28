@@ -3,6 +3,7 @@ package internal
 package ast
 
 import scala.compat.Platform.EOL
+import scala.meta.classifiers._
 import scala.meta.prettyprinters._
 import scala.meta.tokens._
 import scala.meta.internal.equality._
@@ -42,9 +43,9 @@ trait InternalTree {
     denot: Denotation = privateDenot,
     typing: Typing = privateTyping): Tree
 
-  private[meta] def privateHasEnv: Boolean = this.isInstanceOf[Term] || this.isInstanceOf[Name]
-  private[meta] def privateHasDenot: Boolean = this.isInstanceOf[Name]
-  private[meta] def privateHasTyping: Boolean = this.isInstanceOf[Term] || this.isInstanceOf[Term.Param]
+  private[meta] def privateHasEnv: Boolean = this.is[Term] || this.is[Name]
+  private[meta] def privateHasDenot: Boolean = this.is[Name]
+  private[meta] def privateHasTyping: Boolean = this.is[Term] || this.is[Term.Param]
 
   // =============================================================================================
   // Getters for pieces of internal state defined above.
@@ -115,7 +116,7 @@ trait InternalTree {
   }
 
   private def partialCheckWithAttrs(): Unit = {
-    if (this.isInstanceOf[Term.Name] || this.isInstanceOf[Ctor.Name]) {
+    if (this.is[Term.Name] || this.is[Ctor.Name]) {
       throw new UnsupportedOperationException("need to simultaneously set both denotation and typing for " + this.productPrefix)
     }
   }

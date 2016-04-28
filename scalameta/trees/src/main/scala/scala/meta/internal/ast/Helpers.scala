@@ -9,6 +9,7 @@ import scala.reflect.ClassTag
 import org.scalameta._
 import org.scalameta.invariants._
 import scala.annotation.switch
+import scala.meta.classifiers._
 import scala.meta.prettyprinters._
 
 private[meta] object Helpers {
@@ -16,14 +17,14 @@ private[meta] object Helpers {
   private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
 
   implicit class XtensionSyntacticName(name: Name) {
-    def isBinder: Boolean = name.parent.map(_.isInstanceOf[Member]).getOrElse(false)
+    def isBinder: Boolean = name.parent.map(_.is[Member]).getOrElse(false)
     def isReference: Boolean = !isBinder
   }
 
   implicit class XtensionSyntacticTermName(name: Term.Name) {
     import name._
     // some heuristic is needed to govern associativity and precedence of unquoted operators
-    def isLeftAssoc: Boolean = if (name.isInstanceOf[Term.Name.Quasi]) true
+    def isLeftAssoc: Boolean = if (name.is[Term.Name.Quasi]) true
                                else value.last != ':'
     def isUnaryOp: Boolean = Helpers.isUnaryOp(value)
     def isAssignmentOp = value match {
@@ -33,7 +34,7 @@ private[meta] object Helpers {
     }
     // opPrecedence?
     def precedence: Int =
-      if (name.isInstanceOf[Term.Name.Quasi]) 1
+      if (name.is[Term.Name.Quasi]) 1
       else if (isAssignmentOp) 0
       else if (isScalaLetter(value.head)) 1
       else (value.head: @scala.annotation.switch) match {
@@ -120,7 +121,7 @@ private[meta] object Helpers {
   }
 
   implicit class XtensionTermRefOps(tree: Term.Ref) {
-    def isPath: Boolean = tree.isStableId || tree.isInstanceOf[Term.This]
+    def isPath: Boolean = tree.isStableId || tree.is[Term.This]
     def isQualId: Boolean = tree match {
       case _: Term.Name                   => true
       case Term.Select(qual: Term.Ref, _) => qual.isQualId
@@ -270,7 +271,7 @@ private[meta] object Helpers {
     def loop(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
       object Types {
         def unapply(tpes: Seq[Type.Arg]): Option[Seq[Type]] = {
-          if (tpes.forall(_.isInstanceOf[Type])) Some(tpes.map(_.require[Type]))
+          if (tpes.forall(_.is[Type])) Some(tpes.map(_.require[Type]))
           else None
         }
       }

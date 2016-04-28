@@ -190,7 +190,7 @@ private[meta] trait TokenLiftables extends tokens.Liftables {
       q"$t ++ ${insertTokens(tokens)}"
 
     def insertTokens(tokens: Tokens): Tree = {
-      val (pre, middle) = tokens span (!_.isInstanceOf[Token.Unquote])
+      val (pre, middle) = tokens span (!_.is[Token.Unquote])
       middle match {
         case Tokens() =>
           prepend(pre, q"_root_.scala.meta.tokens.Tokens()")

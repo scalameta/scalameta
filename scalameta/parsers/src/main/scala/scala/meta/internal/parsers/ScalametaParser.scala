@@ -1629,7 +1629,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
         val looksLikeLambda = {
           val inParens = t.tokens.nonEmpty && t.tokens.head.is[LeftParen] && t.tokens.last.is[RightParen]
-          object NameLike { def unapply(tree: Tree): Boolean = tree.isInstanceOf[Term.Name] || tree.isInstanceOf[Term.Placeholder] }
+          object NameLike { def unapply(tree: Tree): Boolean = tree.is[Term.Name] || tree.is[Term.Placeholder] }
           object ParamLike {
             def unapply(tree: Tree): Boolean = tree match {
               case Term.Quasi(0, _) => true
@@ -2530,7 +2530,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     def appendMod(mods: List[Mod], mod: Mod): List[Mod] = {
       def validate() = {
         if (isLocal && !mod.tokens.head.is[LocalModifier]) syntaxError("illegal modifier for a local definition", at = mod)
-        if (!mod.isInstanceOf[Mod.Quasi]) mods.foreach(m => if (m.productPrefix == mod.productPrefix) syntaxError("repeated modifier", at = mod))
+        if (!mod.is[Mod.Quasi]) mods.foreach(m => if (m.productPrefix == mod.productPrefix) syntaxError("repeated modifier", at = mod))
         if (mod.hasAccessBoundary) mods.filter(_.hasAccessBoundary).foreach(mod => syntaxError("duplicate access qualifier", at = mod))
       }
       validate()
@@ -2650,7 +2650,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       case x => x
     }
     val tpt =
-      if (token.isNot[Colon] && name.isInstanceOf[Term.Param.Name.Quasi])
+      if (token.isNot[Colon] && name.is[Term.Param.Name.Quasi])
         None
       else {
         accept[Colon]
@@ -2658,11 +2658,11 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
           case q: Type.Quasi => q.become[Type.Arg.Quasi]
           case x => x
         }
-        if (tpt.isInstanceOf[Type.Arg.ByName]) {
+        if (tpt.is[Type.Arg.ByName]) {
           def mayNotBeByName(subj: String) =
             syntaxError(s"$subj parameters may not be call-by-name", at = name)
           val isLocalToThis: Boolean = {
-            val isExplicitlyLocal = mods.accessBoundary.exists(_.isInstanceOf[Term.This])
+            val isExplicitlyLocal = mods.accessBoundary.exists(_.is[Term.This])
             if (ownerIsCase) isExplicitlyLocal
             else isExplicitlyLocal || (!isValParam && !isVarParam)
           }
@@ -2873,7 +2873,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     if (tp.isEmpty || token.is[Equals]) {
       accept[Equals]
       val rhs =
-        if (token.is[Underscore] && tp.nonEmpty && isMutable && lhs.forall(_.isInstanceOf[Pat.Var.Term])) {
+        if (token.is[Underscore] && tp.nonEmpty && isMutable && lhs.forall(_.is[Pat.Var.Term])) {
           next()
           None
         } else Some(expr())
@@ -3138,7 +3138,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def constructorCall(tpe: Type, allowArgss: Boolean = true): Ctor.Call = {
     object Types {
       def unapply(tpes: Seq[Type.Arg]): Option[Seq[Type]] = {
-        if (tpes.forall(t => t.isInstanceOf[Type] || t.isInstanceOf[Type.Arg.Quasi])) Some(tpes.map {
+        if (tpes.forall(t => t.is[Type] || t.is[Type.Arg.Quasi])) Some(tpes.map {
           case q: Type.Arg.Quasi => q.become[Type.Quasi]
           case t: Type => t.require[Type]
         })
@@ -3215,7 +3215,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
     if (token.is[LeftBrace]) {
       // @S: pre template body cannot stub like post body can!
       val (self, body) = templateBody(isPre = true)
-      if (token.is[With] && self.name.isInstanceOf[Name.Anonymous] && self.decltpe.isEmpty) {
+      if (token.is[With] && self.name.is[Name.Anonymous] && self.decltpe.isEmpty) {
         val edefs = body.map(ensureEarlyDef)
         next()
         val parents = templateParents()
