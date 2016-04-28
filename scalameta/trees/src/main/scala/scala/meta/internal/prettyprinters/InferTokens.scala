@@ -477,7 +477,8 @@ private[meta] object inferTokens {
       case t: Term.Arg.Named =>       toks"${t.name.tks} = ${t.rhs.tks}"
       case t: Term.Arg.Repeated =>    toks"${t.arg.tks}: _*"
       case t: Term.Param =>
-        val mods = t.mods.filter(!_.is[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+        // NOTE: `implicit' in parameters is skipped in favor of `implicit' in the enclosing parameter list
+        val mods = t.mods.filter(!_.is[Mod.Implicit])
         val tname = apndBindedName(t.name)
         val tpe = t.decltpe.map(v => toks": ${v.tks}").getOrElse(toks"")
         val default = t.default.map(v => toks" = ${v.tks}").getOrElse(toks"")

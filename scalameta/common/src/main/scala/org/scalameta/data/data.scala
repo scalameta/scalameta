@@ -6,7 +6,7 @@ import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
 import org.scalameta.internal.MacroHelpers
 
-// Virtually the same as the `case` modifier:
+// Virtually the same as the `case' modifier:
 // can be used on both classes and objects with very similar effect.
 //
 // The main different is customizability - we can stuff any extensions we want into @data.
