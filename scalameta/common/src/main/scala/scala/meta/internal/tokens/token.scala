@@ -83,6 +83,15 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         }
       """
       stats1 += q"""
+        def syntax: _root_.scala.Predef.String = this.show[Syntax]
+      """
+      stats1 += q"""
+        def is[U](implicit classifier: $Classifier[$Token, U]): _root_.scala.Boolean = classifier.apply(this)
+      """
+      stats1 += q"""
+        def isNot[U](implicit classifier: $Classifier[$Token, U]): _root_.scala.Boolean = !classifier.apply(this)
+      """
+      stats1 += q"""
         final override def toString: _root_.scala.Predef.String = _root_.scala.meta.internal.prettyprinters.TokenToString(this)
       """
 

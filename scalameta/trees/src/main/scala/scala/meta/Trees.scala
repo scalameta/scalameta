@@ -16,10 +16,14 @@ import scala.meta.internal.ast.Helpers._
   def parent: Option[Tree]
   def children: Seq[Tree]
 
-  def pos: Position = tokens.pos
   def tokens: Tokens
   def withTokens(tokens: Tokens): this.type = privateWithTokens(tokens).asInstanceOf[this.type]
   def inheritTokens(other: Tree): this.type = withTokens(other.tokens)
+  def pos: Position = tokens.pos
+  def syntax: String = this.show[Syntax]
+
+  def is[U](implicit classifier: Classifier[Tree, U]): Boolean = classifier(this)
+  def isNot[U](implicit classifier: Classifier[Tree, U]): Boolean = !classifier(this)
 
   final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
