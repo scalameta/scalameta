@@ -107,14 +107,9 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
       |* T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
-      |* T.dialect: scala.meta.Dialect
-      |* T.inheritTokens(scala.meta.Tree): T
-      |* T.input: scala.meta.inputs.Input
       |* T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
-      |* T.pos: scala.meta.inputs.Position
       |* T.show(implicit Style[T]): String
       |* T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
-      |* T.withTokens(scala.meta.tokens.Tokens): T
       |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): (scala.meta.Dialect, scala.meta.inputs.Input)
       |* scala.meta.Pat.Type.tpe: scala.meta.Type
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]

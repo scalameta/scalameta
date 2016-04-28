@@ -14,7 +14,12 @@ import scala.meta.internal.ast.Helpers._
 @root trait Tree extends InternalTree with Product with Serializable {
   def parent: Option[Tree]
   def children: Seq[Tree]
+
+  def pos: Position = tokens.pos
   def tokens: Tokens
+  def withTokens(tokens: Tokens): this.type = privateWithTokens(tokens).asInstanceOf[this.type]
+  def inheritTokens(other: Tree): this.type = withTokens(other.tokens)
+
   final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def hashCode: Int = System.identityHashCode(this)
@@ -25,38 +30,6 @@ object Tree extends InternalTreeXtensions {
   implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T]
   implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect)
   // implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.prettyprinters.TreeSemantics.apply[T](c)
-
-  implicit class XtensionSyntacticTree[T <: Tree](tree: T) {
-    def input: Input = tree.tokens.input
-    def dialect: Dialect = tree.tokens.dialect
-    def pos: Position = {
-      val (first, last) = tree.tokens match {
-        case Tokens.Slice(tokens, from, until) => (tokens(from), tokens(until - 1))
-        case other => (other.head, other.last)
-      }
-      if (first.content == last.content && !first.content.isInstanceOf[Input.Slice]) {
-        val content = first.content
-        Position.Range(content, first.pos.start, first.pos.start, last.pos.end)
-      } else {
-        // NOTE: we assume that tree.tokens represent a contiguous excerpt from a content.
-        // While it is true that Tokens(...) is general enough to break this assumption,
-        // that never happens at the moment, so let's not complicate things.
-        val Input.Slice(cf, sf, _) = first.content
-        val Input.Slice(cl, sl, _) = last.content
-        val content = { require(cf == cl); cf }
-        val start = Point.Offset(content, first.start + sf)
-        val end = Point.Offset(content, last.end + sl)
-        Position.Range(content, start, start, end)
-      }
-    }
-    def withTokens(tokens: Tokens): T = {
-      tree.privateWithTokens(tokens).asInstanceOf[T]
-    }
-    def inheritTokens(other: Tree): T = {
-      // TODO: use other.privateTokens instead of eagerly triggering other.tokens
-      tree.withTokens(other.tokens)
-    }
-  }
 }
 
 @branch trait Ref extends Tree

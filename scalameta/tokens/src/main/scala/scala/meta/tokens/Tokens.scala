@@ -15,10 +15,31 @@ import scala.meta.internal.prettyprinters._
 // TODO: https://www.dropbox.com/s/5xmjr755tnlqcwk/2015-05-04%2013.50.48.jpg?dl=0
 // TODO: not sealed because TransformedTokens is declared in a different project
 abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with Input {
-  def input: Input
-  def dialect: Dialect
   def isAuthentic: Boolean
   def isSynthetic: Boolean = !isAuthentic
+
+  def input: Input
+  def dialect: Dialect
+  def pos: Position = {
+    val (first, last) = this match {
+      case Tokens.Slice(tokens, from, until) => (tokens(from), tokens(until - 1))
+      case other => (other.head, other.last)
+    }
+    if (first.content == last.content && !first.content.isInstanceOf[Input.Slice]) {
+      val content = first.content
+      Position.Range(content, first.pos.start, first.pos.start, last.pos.end)
+    } else {
+      // NOTE: we assume that tokens represent a contiguous excerpt from a content.
+      // While it is true that Tokens(...) is general enough to break this assumption,
+      // that never happens at the moment, so let's not complicate things.
+      val Input.Slice(cf, sf, _) = first.content
+      val Input.Slice(cl, sl, _) = last.content
+      val content = { require(cf == cl); cf }
+      val start = Point.Offset(content, first.start + sf)
+      val end = Point.Offset(content, last.end + sl)
+      Position.Range(content, start, start, end)
+    }
+  }
 
   // TODO: having to override all these methods just to change the return type feels kind of stupid
   // why weren't they implemented on top of CanBuildFrom as well?
