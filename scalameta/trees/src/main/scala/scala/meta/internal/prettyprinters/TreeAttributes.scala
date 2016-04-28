@@ -167,12 +167,14 @@ object Attributes {
       }
       val syntax = x.productPrefix + "(" + contents(x) + ")"
       val attributes = {
-        val envPart = x.internalEnv.map({
+        val envPart = x.privateEnv match {
           case env @ Environment.Zero =>
             ""
-        }).getOrElse("")
+          case null =>
+            ""
+        }
 
-        val denotPart = x.internalDenot.map({
+        val denotPart = x.privateDenot match {
           case Denotation.Zero =>
             ""
           case denot @ Denotation.Single(prefix, symbol) =>
@@ -180,9 +182,11 @@ object Attributes {
           case denot @ Denotation.Multi(prefix, symbols) =>
             val symbolFootnotes = symbols.map(symbol => footnotes.insert(Denotation.Single(prefix, symbol)))
             s"[${symbolFootnotes.mkString(", ")}]"
-        }).getOrElse("")
+          case null =>
+            ""
+        }
 
-        val typingPart = x.internalTyping.map({
+        val typingPart = x.privateTyping match {
           case Typing.Zero =>
             ""
           case Typing.Recursive =>
@@ -205,7 +209,9 @@ object Attributes {
           case typing: Typing.Nonrecursive =>
             if (forceTypes || typing.isTpeLoaded) s"{${footnotes.insert(typing)}}"
             else s"{...}"
-        }).getOrElse("")
+          case null =>
+            ""
+        }
 
         val typecheckedPart = {
           if (!x.isTypechecked) "*"

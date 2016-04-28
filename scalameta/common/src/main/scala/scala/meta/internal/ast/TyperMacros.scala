@@ -10,17 +10,17 @@ import org.scalameta.adt.{Reflection => AdtReflection}
 import org.scalameta.internal.MacroHelpers
 
 // Parts of @root, @branch and @ast logic that need a typer context and can't be run in a macro annotation.
-object AstTyperMacros {
-  def hierarchyCheck[T]: Unit = macro AstTyperMacrosBundle.hierarchyCheck[T]
-  def productPrefix[T]: String = macro AstTyperMacrosBundle.productPrefix[T]
-  def loadField[T](f: T): Unit = macro AstTyperMacrosBundle.loadField
-  def storeField[T](f: T, v: T): Unit = macro AstTyperMacrosBundle.storeField
-  def initField[T](f: T): T = macro AstTyperMacrosBundle.initField
-  def initParam[T](f: T): T = macro AstTyperMacrosBundle.initField
-  def children[T, U]: Seq[U] = macro AstTyperMacrosBundle.children[T]
+object CommonTyperMacros {
+  def hierarchyCheck[T]: Unit = macro CommonTyperMacrosBundle.hierarchyCheck[T]
+  def productPrefix[T]: String = macro CommonTyperMacrosBundle.productPrefix[T]
+  def loadField[T](f: T): Unit = macro CommonTyperMacrosBundle.loadField
+  def storeField[T](f: T, v: T): Unit = macro CommonTyperMacrosBundle.storeField
+  def initField[T](f: T): T = macro CommonTyperMacrosBundle.initField
+  def initParam[T](f: T): T = macro CommonTyperMacrosBundle.initField
+  def children[T, U]: Seq[U] = macro CommonTyperMacrosBundle.children[T]
 }
 
-class AstTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpers {
+class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpers {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._
@@ -38,8 +38,8 @@ class AstTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
     sym.baseClasses.map(_.asClass).foreach{bsym =>
       val exempt =
         bsym.isModuleClass ||
-        bsym == ObjectClass ||
-        bsym == AnyClass ||
+        bsym == symbolOf[Object] ||
+        bsym == symbolOf[Any] ||
         bsym == symbolOf[scala.Serializable] ||
         bsym == symbolOf[java.io.Serializable] ||
         bsym == symbolOf[scala.Product] ||
@@ -76,10 +76,10 @@ class AstTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
         }
       """
     }
-    def copySubtree(subtree: c.Tree) = {
+    def copySubtree(subtree: c.Tree, subtp: c.Type) = {
       val tempName = c.freshName(TermName("copy" + fname.toString.capitalize))
       q"""
-        val $tempName = $subtree.privateCopy(prototype = $subtree, parent = this)
+        val $tempName = $subtree.privateCopy(prototype = $subtree, parent = this).asInstanceOf[$subtp]
         if (this.privatePrototype.isTypechecked != this.isTypechecked) $tempName.withTypechecked(this.isTypechecked)
         else $tempName
       """
@@ -87,26 +87,26 @@ class AstTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
     f.tpe.finalResultType match {
       case AnyTpe(tpe) => q"()"
       case PrimitiveTpe(tpe) => q"()"
-      case TreeTpe(tpe) => lazyLoad(pf => q"${copySubtree(pf)}")
-      case OptionTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el")})")
-      case SeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el")})")
-      case OptionSeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el")}))")
-      case SeqSeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el")}))")
+      case TreeTpe(tpe) => lazyLoad(pf => q"${copySubtree(pf, tpe)}")
+      case OptionTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
+      case SeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
+      case OptionSeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
+      case SeqSeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
     }
   }
 
   def storeField(f: c.Tree, v: c.Tree): c.Tree = {
-    def copySubtree(subtree: c.Tree) = {
-      q"$subtree.privateCopy(prototype = $subtree, parent = node)"
+    def copySubtree(subtree: c.Tree, subtp: c.Type) = {
+      q"$subtree.privateCopy(prototype = $subtree, parent = node).asInstanceOf[$subtp]"
     }
     f.tpe.finalResultType match {
       case AnyTpe(tpe) => q"()"
       case PrimitiveTpe(tpe) => q"()"
-      case TreeTpe(tpe) => q"$f = ${copySubtree(v)}"
-      case OptionTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el")})"
-      case SeqTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el")})"
-      case OptionSeqTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el")}))"
-      case SeqSeqTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el")}))"
+      case TreeTpe(tpe) => q"$f = ${copySubtree(v, tpe)}"
+      case OptionTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
+      case SeqTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
+      case OptionSeqTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
+      case SeqSeqTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }

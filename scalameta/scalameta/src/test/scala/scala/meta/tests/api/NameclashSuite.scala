@@ -20,6 +20,6 @@ class NameclashSuite extends FunSuite {
     val tlTrees = TreeRoot.all.map(_.prefix)
     val tlTokens = TokenRoot.all.map(_.prefix).map(_.stripPrefix("Token."))
     val nameClashes = tlTrees.intersect(tlTokens).sorted
-    assert(nameClashes.mkString(", ") === "Case, Import, Type")
+    assert(nameClashes.mkString(", ") === "")
   }
 }

@@ -9,7 +9,7 @@ import scala.meta.internal.prettyprinters.inferTokens
 class InferParensSuite extends FunSuite {
   private def test(name: String)(code: String) {
     def compareTokenCodes(a: Tree, b: Tree): Unit = {
-      def trimTokens(tks: Tokens) = tks.filterNot(tk => tk.isInstanceOf[Token.BOF] || tk.isInstanceOf[Token.EOF])
+      def trimTokens(tks: Tokens) = tks.filterNot(tk => tk.is[Token.BOF] || tk.is[Token.EOF])
       val (t1, t2) = (trimTokens(a.tokens).map(_.show[Syntax]), trimTokens(b.tokens).map(_.show[Syntax]))
       if (t1 != t2) {
         println(a.show[Syntax] + "\n" + b.show[Syntax])

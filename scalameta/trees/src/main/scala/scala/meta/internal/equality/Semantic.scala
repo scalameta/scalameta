@@ -37,6 +37,8 @@ object Semantic {
   def equals(x1: Any, x2: Any): Boolean = customEquals(x1, x2)
 
   private def customEquals(x: Any, y: Any): Boolean = (x, y) match {
+    case (x, y) if x == null || y == null =>
+      x == null && y == null
     case (x: Some[_], y: Some[_]) =>
       customEquals(x.get, y.get)
     case (x: None.type, y: None.type) =>
@@ -74,9 +76,9 @@ object Semantic {
           case _ => false
         }
       }
-      def envPart = customEquals(x.internalEnv, y.internalEnv)
-      def denotPart = customEquals(x.internalDenot, y.internalDenot)
-      def typingPart = customEquals(x.internalTyping, y.internalTyping)
+      def envPart = customEquals(x.privateEnv, y.privateEnv)
+      def denotPart = customEquals(x.privateDenot, y.privateDenot)
+      def typingPart = customEquals(x.privateTyping, y.privateTyping)
       syntaxPart && envPart && denotPart && typingPart
     case _ =>
       x == y
@@ -85,6 +87,8 @@ object Semantic {
   def hashCode(x: Any): Int = customHashcode(x)
 
   private def customHashcode(x: Any): Int = x match {
+    case null =>
+      0
     case x: Option[_] =>
       x.map(customHashcode).getOrElse(0)
     case xs: Seq[_] =>
@@ -118,9 +122,9 @@ object Semantic {
           case _ => hashStructure(x)
         }
       }
-      def envPart = customHashcode(x.internalEnv)
-      def denotPart = customHashcode(x.internalDenot)
-      def typingPart = customHashcode(x.internalTyping)
+      def envPart = customHashcode(x.privateEnv)
+      def denotPart = customHashcode(x.privateDenot)
+      def typingPart = customHashcode(x.privateTyping)
       customHashcode(List(syntaxPart, envPart, denotPart, typingPart))
     case _ =>
       x.hashCode

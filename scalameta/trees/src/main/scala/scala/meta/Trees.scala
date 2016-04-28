@@ -5,101 +5,61 @@ import scala.collection.immutable.Seq
 import scala.runtime.ScalaRunTime.isAnyVal
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
-import scala.meta.internal.{equality => e}
 import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
-import scala.meta.internal.semantic._
 
-@root trait Tree extends Product with Serializable {
-  type ThisType <: Tree
+@root trait Tree extends InternalTree with Product with Serializable {
   def parent: Option[Tree]
   def children: Seq[Tree]
+
   def tokens: Tokens
-  def withTokens(tokens: Tokens): ThisType
-  def inheritTokens(other: Tree): ThisType
+  def withTokens(tokens: Tokens): this.type = privateWithTokens(tokens).asInstanceOf[this.type]
+  def inheritTokens(other: Tree): this.type = withTokens(other.tokens)
+  def pos: Position = tokens.pos
+  def syntax: String = this.show[Syntax]
+
+  def is[U](implicit classifier: Classifier[Tree, U]): Boolean = classifier(this)
+  def isNot[U](implicit classifier: Classifier[Tree, U]): Boolean = !classifier(this)
+  def structure: String = this.show[Structure]
+
   final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def hashCode: Int = System.identityHashCode(this)
   final override def toString = scala.meta.internal.prettyprinters.TreeToString(this)
 }
 
-object Tree {
+object Tree extends InternalTreeXtensions {
+  implicit def classifiable[T <: Tree]: Classifiable[T] = null
   implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T]
   implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect)
   // implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.prettyprinters.TreeSemantics.apply[T](c)
-
-  private[meta] implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
-    def ===[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = e.Semantic.equals(tree1, tree2)
-    def =/=[T2 <: Tree](tree2: T2)(implicit ev: e.AllowEquality[T1, T2]): Boolean = !e.Semantic.equals(tree1, tree2)
-  }
-
-  implicit class XtensionSyntacticTree(tree: Tree) {
-    def input: Input = tree.tokens.input
-    def dialect: Dialect = tree.tokens.dialect
-    def position: Position = {
-      val (first, last) = tree.tokens match {
-        case Tokens.Slice(tokens, from, until) => (tokens(from), tokens(until - 1))
-        case other => (other.head, other.last)
-      }
-      if (first.content == last.content && !first.content.isInstanceOf[Input.Slice]) {
-        val content = first.content
-        Position.Range(content, first.position.start, first.position.start, last.position.end)
-      } else {
-        // NOTE: we assume that tree.tokens represent a contiguous excerpt from a content.
-        // While it is true that Tokens(...) is general enough to break this assumption,
-        // that never happens at the moment, so let's not complicate things.
-        val Input.Slice(cf, sf, _) = first.content
-        val Input.Slice(cl, sl, _) = last.content
-        val content = { require(cf == cl); cf }
-        val start = Point.Offset(content, first.start + sf)
-        val end = Point.Offset(content, last.end + sl)
-        Position.Range(content, start, start, end)
-      }
-    }
-    def start: Point = tree.position.start
-    def point: Point = tree.position.point // TODO: at the moment, Tree.point is always equal to Tree.start;
-    def end: Point = tree.position.end
-  }
 }
 
 @branch trait Ref extends Tree
 @branch trait Stat extends Tree
 @branch trait Scope extends Tree
 
-@branch trait Name extends Ref {
-  def value: String
-  private[meta] def env: Environment
-  private[meta] def denot: Denotation
-  private[meta] def withEnv(env: Environment): ThisType
-  private[meta] def withAttrs(denot: Denotation): ThisType
-}
+@branch trait Name extends Ref { def value: String }
 object Name {
   @ast class Anonymous extends Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
   @ast class Indeterminate(value: Predef.String @nonEmpty) extends Name with Qualifier
   @branch trait Qualifier extends Ref
 }
 
-@branch trait Term extends Stat with Term.Arg {
-  private[meta] def env: Environment
-  private[meta] def typing: Typing
-  private[meta] def withEnv(env: Environment): ThisType
-  private[meta] def withAttrs(typingLike: TypingLike): ThisType
-}
+@branch trait Term extends Stat with Term.Arg
 object Term {
   @branch trait Ref extends Term with scala.meta.Ref
   @ast class This(qual: scala.meta.Name.Qualifier) extends Term.Ref with scala.meta.Name.Qualifier {
-    require(!qual.isInstanceOf[Term.This])
+    require(!qual.is[Term.This])
   }
   @ast class Super(thisp: scala.meta.Name.Qualifier, superp: scala.meta.Name.Qualifier) extends Term.Ref {
-    require(!thisp.isInstanceOf[Term.This] && !superp.isInstanceOf[Term.This])
+    require(!thisp.is[Term.This] && !superp.is[Term.This])
   }
-  @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat with Param.Name with scala.meta.Name.Qualifier {
-    // TODO: revisit this once we have trivia in place
-    // require(keywords.contains(value) ==> isBackquoted)
-  }
+  @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat with Param.Name with scala.meta.Name.Qualifier
   @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
     require(parts.length == args.length + 1)
@@ -119,7 +79,7 @@ object Term {
   @ast class Tuple(elements: Seq[Term] @nonEmpty) extends Term {
     // tuple must have more than one element
     // however, this element may be Quasi with "hidden" list of elements inside
-    require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[scala.meta.internal.ast.Quasi]))
+    require(elements.length > 1 || (elements.length == 1 && elements.head.is[scala.meta.internal.ast.Quasi]))
   }
   @ast class Block(stats: Seq[Stat]) extends Term with Scope {
     require(stats.forall(_.isBlockStat))
@@ -129,14 +89,14 @@ object Term {
   @ast class TryWithCases(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithTerm(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
   @ast class Function(params: Seq[Term.Param], body: Term) extends Term with Scope {
-    require(params.forall(param => param.isInstanceOf[Term.Param.Quasi] || (param.name.isInstanceOf[scala.meta.Name.Anonymous] ==> param.default.isEmpty)))
-    require(params.exists(_.isInstanceOf[Term.Param.Quasi]) || params.exists(_.mods.exists(_.isInstanceOf[Mod.Implicit])) ==> (params.length == 1))
+    require(params.forall(param => param.is[Term.Param.Quasi] || (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)))
+    require(params.exists(_.is[Term.Param.Quasi]) || params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class PartialFunction(cases: Seq[Case] @nonEmpty) extends Term
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
   @ast class For(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope {
-    require(enums.head.isInstanceOf[Enumerator.Generator])
+    require(enums.head.is[Enumerator.Generator])
   }
   @ast class ForYield(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope
   @ast class New(templ: Template) extends Term
@@ -163,17 +123,17 @@ object Type {
     // require(keywords.contains(value) ==> isBackquoted)
   }
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref with Pat.Type.Ref {
-    require(qual.isPath || qual.isInstanceOf[Term.Super] || qual.isInstanceOf[Term.Ref.Quasi])
+    require(qual.isPath || qual.is[Term.Super] || qual.is[Term.Ref.Quasi])
   }
   @ast class Project(qual: Type, name: Type.Name) extends Type.Ref
   @ast class Singleton(ref: Term.Ref) extends Type.Ref with Pat.Type.Ref {
-    require(ref.isPath || ref.isInstanceOf[Term.Super])
+    require(ref.isPath || ref.is[Term.Super])
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
   @ast class Function(params: Seq[Type.Arg], res: Type) extends Type
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
-    require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[scala.meta.internal.ast.Quasi]))
+    require(elements.length > 1 || (elements.length == 1 && elements.head.is[scala.meta.internal.ast.Quasi]))
   }
   @ast class Compound(tpes: Seq[Type], refinement: Seq[Stat]) extends Type {
     // TODO: revisit this once we have trivia in place
@@ -269,7 +229,7 @@ object Pat {
     require(lhs.isLegal && rhs.isLegal)
   }
   @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat {
-    require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[scala.meta.internal.ast.Quasi]))
+    require(elements.length > 1 || (elements.length == 1 && elements.head.is[scala.meta.internal.ast.Quasi]))
     require(elements.forall(_.isLegal))
   }
   @ast class Extract(ref: Term.Ref, targs: Seq[scala.meta.Pat.Type], args: Seq[Pat.Arg]) extends Pat {
@@ -285,9 +245,9 @@ object Pat {
     require(args.forall(_.isLegal))
   }
   @ast class Typed(lhs: Pat, rhs: Pat.Type) extends Pat {
-    require(lhs.isInstanceOf[Pat.Wildcard] || lhs.isInstanceOf[Pat.Var.Term] || lhs.isInstanceOf[Pat.Quasi])
+    require(lhs.is[Pat.Wildcard] || lhs.is[Pat.Var.Term] || lhs.is[Pat.Quasi])
     require(lhs.isLegal)
-    require(!rhs.isInstanceOf[Pat.Var.Type] && !rhs.isInstanceOf[Pat.Type.Wildcard])
+    require(!rhs.is[Pat.Var.Type] && !rhs.is[Pat.Type.Wildcard])
   }
   @branch trait Arg extends Tree
   object Arg {
@@ -298,28 +258,28 @@ object Pat {
     @branch trait Ref extends Pat.Type with scala.meta.Ref
     @ast class Wildcard() extends Pat.Type
     @ast class Project(qual: Pat.Type, name: scala.meta.Type.Name) extends Pat.Type with Pat.Type.Ref {
-      require(!qual.isInstanceOf[Pat.Var.Type] && !qual.isInstanceOf[Pat.Type.Wildcard])
+      require(!qual.is[Pat.Var.Type] && !qual.is[Pat.Type.Wildcard])
     }
     @ast class Apply(tpe: Pat.Type, args: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
-      require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
+      require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
     }
     @ast class ApplyInfix(lhs: Pat.Type, op: scala.meta.Type.Name, rhs: Pat.Type) extends Pat.Type
     @ast class Function(params: Seq[Pat.Type], res: Pat.Type) extends Pat.Type
     @ast class Tuple(elements: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
-      require(elements.length > 1 || (elements.length == 1 && elements.head.isInstanceOf[scala.meta.internal.ast.Quasi]))
+      require(elements.length > 1 || (elements.length == 1 && elements.head.is[scala.meta.internal.ast.Quasi]))
     }
     @ast class Compound(tpes: Seq[Pat.Type], refinement: Seq[Stat]) extends Pat.Type {
       // TODO: revisit this once we have trivia in place
       // require(tpes.length == 1 ==> hasRefinement)
       require(refinement.forall(_.isRefineStat))
-      require(tpes.forall(tpe => !tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard]))
+      require(tpes.forall(tpe => !tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard]))
     }
     @ast class Existential(tpe: Pat.Type, quants: Seq[Stat] @nonEmpty) extends Pat.Type {
-      require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
+      require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
       require(quants.forall(_.isExistentialStat))
     }
     @ast class Annotate(tpe: Pat.Type, annots: Seq[Mod.Annot] @nonEmpty) extends Pat.Type {
-      require(!tpe.isInstanceOf[Pat.Var.Type] && !tpe.isInstanceOf[Pat.Type.Wildcard])
+      require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
     }
     @ast class Placeholder(bounds: scala.meta.Type.Bounds) extends Pat.Type {
       require(bounds.lo.nonEmpty || bounds.hi.nonEmpty)
@@ -375,15 +335,15 @@ object Defn {
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[scala.meta.Type],
                  rhs: Term) extends Defn {
-    require(pats.forall(!_.isInstanceOf[Term.Name]))
+    require(pats.forall(!_.is[Term.Name]))
   }
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[scala.meta.Type],
                  rhs: Option[Term]) extends Defn {
-    require(pats.forall(!_.isInstanceOf[Term.Name]))
+    require(pats.forall(!_.is[Term.Name]))
     require(decltpe.nonEmpty || rhs.nonEmpty)
-    require(rhs.isEmpty ==> pats.forall(_.isInstanceOf[Pat.Var.Term]))
+    require(rhs.isEmpty ==> pats.forall(_.is[Pat.Var.Term]))
   }
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
@@ -412,14 +372,14 @@ object Defn {
                    ctor: Ctor.Primary,
                    templ: Template) extends Defn with Member.Type {
     // TODO: hardcoded in the @ast macro, find out a better way
-    // require(templ.stats.getOrElse(Nil).forall(!_.isInstanceOf[Ctor]))
+    // require(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
     require(ctor.mods.isEmpty && ctor.paramss.isEmpty)
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
                     templ: Template) extends Defn with Member.Term {
     // TODO: hardcoded in the @ast macro, find out a better way
-    // require(templ.stats.getOrElse(Nil).forall(!_.isInstanceOf[Ctor]))
+    // require(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
   }
 }
 
@@ -437,7 +397,7 @@ object Pkg {
   @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Template)
        extends Member.Term with Stat {
     // TODO: hardcoded in the @ast macro, find out a better way
-    // require(templ.stats.getOrElse(Nil).forall(!_.isInstanceOf[Ctor]))
+    // require(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
   }
 }
 

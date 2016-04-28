@@ -176,28 +176,6 @@ class PublicSuite extends FunSuite {
     """) === "")
   }
 
-  test("show[Code] without import") {
-    assert(typecheckError("""
-      (??? : scala.meta.Tree).show[Code]
-    """) === "not found: type Code")
-  }
-
-  test("show[Code] when everything's correct (static dialect)") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      (??? : Tree).show[Code]
-    """) === "")
-  }
-
-  test("show[Code] when everything's correct (dynamic dialect)") {
-    assert(typecheckError("""
-      import scala.meta._
-      implicit val dialect: scala.meta.Dialect = ???
-      (??? : Tree).show[Code]
-    """) === "")
-  }
-
   test("show[Syntax] without import") {
     assert(typecheckError("""
       (??? : scala.meta.Tree).show[Syntax]
@@ -209,6 +187,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       (??? : Tree).show[Syntax]
+      (??? : Tree).syntax
     """) === "")
   }
 
@@ -217,19 +196,7 @@ class PublicSuite extends FunSuite {
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       (??? : Tree).show[Syntax]
-    """) === "")
-  }
-
-  test("show[Raw] without import") {
-    assert(typecheckError("""
-      (??? : scala.meta.Tree).show[Raw]
-    """) === "not found: type Raw")
-  }
-
-  test("show[Raw] when everything's correct") {
-    assert(typecheckError("""
-      import scala.meta._
-      (??? : Tree).show[Raw]
+      (??? : Tree).syntax
     """) === "")
   }
 
@@ -243,6 +210,21 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : Tree).show[Structure]
+      (??? : Tree).structure
+    """) === "")
+  }
+
+  test("Token.is[T] without import") {
+    assert(typecheckError("""
+      (??? : scala.meta.Token).is[scala.meta.Token]
+      (??? : scala.meta.Token).is[scala.meta.Token.Ident]
+    """) === "")
+  }
+
+  test("Tree.is[T] without import") {
+    assert(typecheckError("""
+      (??? : scala.meta.Tree).is[scala.meta.Tree]
+      (??? : scala.meta.Tree).is[scala.meta.Type]
     """) === "")
   }
 }

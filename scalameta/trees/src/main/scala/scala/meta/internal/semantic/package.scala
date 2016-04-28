@@ -16,31 +16,43 @@ package object semantic {
       val offenders = mutable.ListBuffer[(Tree, List[String])]()
       def traverse(tree: Tree, path: List[String]): Unit = {
         def check(tree: Tree): Boolean = {
-          def checkEnv(tree: Tree): Boolean = tree.internalEnv.map(_ match {
-            case Environment.Zero => true
-            case _ => false
-          }).getOrElse(true)
+          def checkEnv(tree: Tree): Boolean = {
+            // always valid at the moment
+            true
+          }
 
-          def checkDenot(tree: Tree): Boolean = tree.internalDenot.map(_ match {
-            case Denotation.Single(Prefix.Zero, _) =>
+          def checkDenot(tree: Tree): Boolean = {
+            if (tree.privateHasDenot) {
+              tree.privateDenot match {
+                case Denotation.Single(Prefix.Zero, _) =>
+                  true
+                case Denotation.Single(Prefix.Type(prefix: Tree), _) =>
+                  traverse(prefix, path :+ "Denotation")
+                  true
+                case Denotation.Multi(Prefix.Zero, _) =>
+                  true
+                case Denotation.Multi(Prefix.Type(prefix: Tree), _) =>
+                  traverse(prefix, path :+ "Denotation")
+                  true
+                case _ =>
+                  false
+              }
+            } else {
               true
-            case Denotation.Single(Prefix.Type(prefix: Tree), _) =>
-              traverse(prefix, path :+ "Denotation")
-              true
-            case Denotation.Multi(Prefix.Zero, _) =>
-              true
-            case Denotation.Multi(Prefix.Type(prefix: Tree), _) =>
-              traverse(prefix, path :+ "Denotation")
-              true
-            case _ =>
-              false
-          }).getOrElse(true)
+            }
+          }
 
-          def checkTyping(tree: Tree): Boolean = tree.internalTyping.map(_ match {
-            case Typing.Recursive => true
-            case Typing.Nonrecursive(_) => true
-            case _ => false
-          }).getOrElse(true)
+          def checkTyping(tree: Tree): Boolean = {
+            if (tree.privateHasTyping) {
+              tree.privateTyping match {
+                case Typing.Recursive => true
+                case Typing.Nonrecursive(_) => true
+                case _ => false
+              }
+            } else {
+              true
+            }
+          }
 
           checkEnv(tree) && checkDenot(tree) && checkTyping(tree)
         }
@@ -79,23 +91,6 @@ package object semantic {
           |${tree.show[Attributes]}
         """.stripMargin)
       }
-    }
-
-    def inheritAttrs(other: Tree): T = {
-      def areCompatible = (
-        !(tree.internalDenot.isEmpty ^ other.internalDenot.isEmpty) &&
-        !(tree.internalTyping.isEmpty ^ other.internalTyping.isEmpty)
-      )
-      if (!areCompatible) sys.error(s"${tree.productPrefix} can't inherit attrs from ${other.productPrefix}")
-      val result = tree match {
-        case tree: Term.Name => tree.withAttrs(other.internalDenot.get, other.internalTyping.get)
-        case tree: Ctor.Name => tree.withAttrs(other.internalDenot.get, other.internalTyping.get)
-        case tree: Name => tree.withAttrs(other.internalDenot.get)
-        case tree: Term => tree.withAttrs(other.internalTyping.get)
-        case tree: Term.Param => tree.withAttrs(other.internalTyping.get)
-        case _ => tree // do nothing
-      }
-      result.asInstanceOf[T]
     }
   }
 

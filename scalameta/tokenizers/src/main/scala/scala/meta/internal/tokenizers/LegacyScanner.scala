@@ -109,7 +109,7 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
   }
 
   /** Determines whether this scanner should emit identifier deprecation warnings,
-   *  e.g. when seeing `macro` or `then`, which are planned to become keywords in future versions of Scala.
+   *  e.g. when seeing `macro' or `then', which are planned to become keywords in future versions of Scala.
    */
   protected def emitIdentifierDeprecationWarnings = true
 
@@ -225,7 +225,7 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
     }
 
     // NOTE: endOffset is used to determine range positions for certain tokens.
-    // Most tokens (e.g. `(` or `;`) have constant widths, so their range positions can be calculated trivially from their offsets,
+    // Most tokens (e.g. `(' or `;') have constant widths, so their range positions can be calculated trivially from their offsets,
     // however some tokens have variable widths,
     // and for them we need to remember where their parsing ended in order to calculate their positions.
     // That's what endOffset does (indirectly): each token's position should be [curr.offset, curr.endOffset]

@@ -7,14 +7,15 @@ private[meta] trait Api {
   implicit class XtensionShow[T](x: T) {
     def show[Style[X] <: Show[X]](implicit style: Style[T]): String = style(x).toString
   }
+  implicit class XtensionSyntax[T](x: T)(implicit style: Syntax[T]) {
+    def syntax: String = style(x).toString
+  }
+  implicit class XtensionStructure[T](x: T)(implicit style: Structure[T]) {
+    def structure: String = style(x).toString
+  }
 }
 
 private[meta] trait Aliases {
-  @deprecated("use show[Structure] instead", "0.0.3")
-  type Raw[T] = scala.meta.prettyprinters.Structure[T]
   type Structure[T] = scala.meta.prettyprinters.Structure[T]
-
-  @deprecated("use show[Syntax] instead", "0.0.3")
-  type Code[T] = scala.meta.prettyprinters.Syntax[T]
   type Syntax[T] = scala.meta.prettyprinters.Syntax[T]
 }

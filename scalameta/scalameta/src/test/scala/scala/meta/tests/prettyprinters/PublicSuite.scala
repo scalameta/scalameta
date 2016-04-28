@@ -9,10 +9,6 @@ class PublicSuite extends FunSuite {
     Dialect.all.foreach(d => assert(d.name == d.toString))
   }
 
-  test("scala.meta.InputWithDialect.toString") {
-    // n/a
-  }
-
   test("scala.meta.Tree.toString (manual)") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
     assert(tree.toString === "foo + bar")
@@ -56,6 +52,38 @@ class PublicSuite extends FunSuite {
   test("scala.meta.Tree.show[Syntax] (quasiquoted)") {
     val tree = q"foo + bar // baz"
     assert(tree.show[Syntax] === "foo + bar")
+  }
+
+  test("scala.meta.classifiers.Classifiable.toString") {
+    // n/a
+  }
+
+  test("scala.meta.classifiers.Classifier.toString") {
+    // n/a
+  }
+
+  test("scala.meta.convert.Convert.toString") {
+    // n/a
+  }
+
+  test("scala.meta.dialects.Dotty.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.Sbt0136.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.Sbt0137.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.Scala210.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.Scala211.toString") {
+    // covered above
   }
 
   test("scala.meta.inputs.Content.toString") {
@@ -103,8 +131,8 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Point.Offset.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    assert(lhs.position.start.toString === """0 in Input.String("foo + bar")""")
-    assert(lhs.position.end.toString === """3 in Input.String("foo + bar")""")
+    assert(lhs.pos.start.toString === """0 in Input.String("foo + bar")""")
+    assert(lhs.pos.end.toString === """3 in Input.String("foo + bar")""")
   }
 
   test("scala.meta.inputs.Position.toString") {
@@ -113,7 +141,11 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Position.Range.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    assert(lhs.position.toString === """[0..0..3) in Input.String("foo + bar")""")
+    assert(lhs.pos.toString === """[0..0..3) in Input.String("foo + bar")""")
+  }
+
+  test("scala.meta.parsers.Parse.toString") {
+    // n/a
   }
 
   test("scala.meta.parsers.ParseException.toString") {
@@ -149,6 +181,10 @@ class PublicSuite extends FunSuite {
     assert(parsed.toString === "foo + bar")
   }
 
+  test("scala.meta.prettyprinters.Show") {
+    // n/a
+  }
+
   test("scala.meta.prettyprinters.Structure") {
     // n/a
   }
@@ -162,6 +198,10 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.quasiquotes.Unlift") {
+    // n/a
+  }
+
+  test("scala.meta.tokenizers.Tokenize.toString") {
     // n/a
   }
 

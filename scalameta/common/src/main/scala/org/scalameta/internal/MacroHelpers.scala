@@ -37,20 +37,41 @@ trait MacroHelpers extends DebugFinder
     }
   }
 
-  val InvariantFailedRaiseMethod = q"${hygienicRef(org.scalameta.invariants.InvariantFailedException)}.raise"
-  val InvariantsRequireMethod = q"${hygienicRef(org.scalameta.invariants.`package`)}.require"
-  val UnreachableErrorModule = hygienicRef(org.scalameta.UnreachableError)
-  val DataAnnotation = tq"_root_.org.scalameta.data.data"
-  val DataTyperMacrosModule = hygienicRef(org.scalameta.data.DataTyperMacros)
-  val AdtPackage = q"_root_.org.scalameta.adt"
-  val AdtMetadataModule = hygienicRef(org.scalameta.adt.Metadata)
-  val AdtTyperMacrosModule = hygienicRef(org.scalameta.adt.AdtTyperMacros)
-  val AstMetadataModule = hygienicRef(scala.meta.internal.ast.Metadata)
-  val AstTyperMacrosModule = hygienicRef(scala.meta.internal.ast.AstTyperMacros)
-  val AstTyperMacrosBundle = hygienicRef[scala.meta.internal.ast.AstTyperMacrosBundle]
-  val AstInfoClass = hygienicRef[scala.meta.internal.ast.AstInfo[_]]
-  val TokenMetadataModule = hygienicRef(scala.meta.internal.tokens.Metadata)
-  val BooleanClass = hygienicRef[scala.Boolean]
+  lazy val InvariantFailedRaiseMethod = q"${hygienicRef(org.scalameta.invariants.InvariantFailedException)}.raise"
+  lazy val InvariantsRequireMethod = q"${hygienicRef(org.scalameta.invariants.`package`)}.require"
+  lazy val UnreachableErrorModule = hygienicRef(org.scalameta.UnreachableError)
+  lazy val DataAnnotation = tq"_root_.org.scalameta.data.data"
+  lazy val DataTyperMacrosModule = hygienicRef(org.scalameta.data.DataTyperMacros)
+  lazy val AdtPackage = q"_root_.org.scalameta.adt"
+  lazy val AdtMetadataModule = hygienicRef(org.scalameta.adt.Metadata)
+  lazy val AdtTyperMacrosModule = hygienicRef(org.scalameta.adt.AdtTyperMacros)
+  lazy val AstMetadataModule = hygienicRef(scala.meta.internal.ast.Metadata)
+  lazy val CommonTyperMacrosModule = hygienicRef(scala.meta.internal.ast.CommonTyperMacros)
+  lazy val CommonTyperMacrosBundle = hygienicRef[scala.meta.internal.ast.CommonTyperMacrosBundle]
+  lazy val AstInfoClass = hygienicRef[scala.meta.internal.ast.AstInfo[_]]
+  lazy val TokenMetadataModule = hygienicRef(scala.meta.internal.tokens.Metadata)
+  lazy val BooleanClass = hygienicRef[scala.Boolean]
+  lazy val IntClass = hygienicRef[scala.Int]
+  lazy val AnyClass = hygienicRef[scala.Any]
+  lazy val AnyRefClass = hygienicRef[scala.AnyRef]
+  lazy val NothingClass = tq"_root_.scala.Nothing"
+  lazy val OptionClass = hygienicRef[scala.Option[_]]
+  lazy val SomeClass = hygienicRef[scala.Some[_]]
+  lazy val SomeModule = hygienicRef(Some)
+  lazy val NoneModule = hygienicRef(scala.None)
+  def SerialVersionUIDAnnotation(uid: Long) = q"new ${hygienicRef[SerialVersionUID]}($uid)"
+  def TransientAnnotation = q"new ${hygienicRef[transient]}"
+  def InlineAnnotation = q"new ${hygienicRef[inline]}"
+  lazy val ProductClass = hygienicRef[Product]
+  lazy val SerializableClass = hygienicRef[Serializable]
+  lazy val StringClass = hygienicRef[String]
+  lazy val ScalaRunTimeModule = hygienicRef(scala.runtime.ScalaRunTime)
+  lazy val UnsupportedOperationException = hygienicRef[UnsupportedOperationException]
+  lazy val IndexOutOfBoundsException = hygienicRef[IndexOutOfBoundsException]
+  lazy val IteratorClass = hygienicRef[Iterator[_]]
+  lazy val SeqClass = hygienicRef[scala.collection.immutable.Seq[_]]
+  lazy val ListBufferModule = hygienicRef(scala.collection.mutable.ListBuffer)
+  lazy val UnitClass = hygienicRef[scala.Unit]
 
   private def fqRef(fqName: String, isTerm: Boolean): Tree = {
     def loop(parts: List[String]): Tree = parts match {
@@ -92,8 +113,8 @@ trait MacroHelpers extends DebugFinder
       if (tpe =:= typeOf[String] ||
           tpe =:= typeOf[scala.Symbol] ||
           ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
-      else if (tpe.typeSymbol == OptionClass && PrimitiveTpe.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
-      else if (tpe.typeSymbol == ClassClass) Some(tpe)
+      else if (tpe.typeSymbol == symbolOf[Option[_]] && PrimitiveTpe.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
+      else if (tpe.typeSymbol == symbolOf[Class[_]]) Some(tpe)
       else None
     }
   }

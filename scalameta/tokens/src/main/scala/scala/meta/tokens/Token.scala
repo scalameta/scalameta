@@ -18,10 +18,12 @@ import scala.meta.internal.prettyprinters._
 
   def start: Int
   def end: Int
-  def position: Position
+  def pos: Position
+  def syntax: String
 
   def is[U](implicit classifier: Classifier[Token, U]): Boolean
   def isNot[U](implicit classifier: Classifier[Token, U]): Boolean
+  def structure: String
 }
 
 object Token {
@@ -29,46 +31,46 @@ object Token {
   @freeform("identifier") class Ident(value: String) extends Token
 
   // Alphanumeric keywords
-  @fixed("abstract") class Abstract extends Token
-  @fixed("case") class Case extends Token
-  @fixed("catch") class Catch extends Token
-  @fixed("class") class Class extends Token
-  @fixed("def") class Def extends Token
-  @fixed("do") class Do extends Token
-  @fixed("else") class Else extends Token
-  @fixed("extends") class Extends extends Token
-  @fixed("false") class False extends Token
-  @fixed("final") class Final extends Token
-  @fixed("finally") class Finally extends Token
-  @fixed("for") class For extends Token
-  @fixed("forSome") class ForSome extends Token
-  @fixed("if") class If extends Token
-  @fixed("implicit") class Implicit extends Token
-  @fixed("import") class Import extends Token
-  @fixed("lazy") class Lazy extends Token
-  @fixed("match") class Match extends Token
-  @fixed("macro") class Macro extends Token
-  @fixed("new") class New extends Token
-  @fixed("null") class Null extends Token
-  @fixed("object") class Object extends Token
-  @fixed("override") class Override extends Token
-  @fixed("package") class Package extends Token
-  @fixed("private") class Private extends Token
-  @fixed("protected") class Protected extends Token
-  @fixed("return") class Return extends Token
-  @fixed("sealed") class Sealed extends Token
-  @fixed("super") class Super extends Token
-  @fixed("this") class This extends Token
-  @fixed("throw") class Throw extends Token
-  @fixed("trait") class Trait extends Token
-  @fixed("true") class True extends Token
-  @fixed("try") class Try extends Token
-  @fixed("type") class Type extends Token
-  @fixed("val") class Val extends Token
-  @fixed("var") class Var extends Token
-  @fixed("while") class While extends Token
-  @fixed("with") class With extends Token
-  @fixed("yield") class Yield extends Token
+  @fixed("abstract") class KwAbstract extends Token
+  @fixed("case") class KwCase extends Token
+  @fixed("catch") class KwCatch extends Token
+  @fixed("class") class KwClass extends Token
+  @fixed("def") class KwDef extends Token
+  @fixed("do") class KwDo extends Token
+  @fixed("else") class KwElse extends Token
+  @fixed("extends") class KwExtends extends Token
+  @fixed("false") class KwFalse extends Token
+  @fixed("final") class KwFinal extends Token
+  @fixed("finally") class KwFinally extends Token
+  @fixed("for") class KwFor extends Token
+  @fixed("forSome") class KwForsome extends Token
+  @fixed("if") class KwIf extends Token
+  @fixed("implicit") class KwImplicit extends Token
+  @fixed("import") class KwImport extends Token
+  @fixed("lazy") class KwLazy extends Token
+  @fixed("match") class KwMatch extends Token
+  @fixed("macro") class KwMacro extends Token
+  @fixed("new") class KwNew extends Token
+  @fixed("null") class KwNull extends Token
+  @fixed("object") class KwObject extends Token
+  @fixed("override") class KwOverride extends Token
+  @fixed("package") class KwPackage extends Token
+  @fixed("private") class KwPrivate extends Token
+  @fixed("protected") class KwProtected extends Token
+  @fixed("return") class KwReturn extends Token
+  @fixed("sealed") class KwSealed extends Token
+  @fixed("super") class KwSuper extends Token
+  @fixed("this") class KwThis extends Token
+  @fixed("throw") class KwThrow extends Token
+  @fixed("trait") class KwTrait extends Token
+  @fixed("true") class KwTrue extends Token
+  @fixed("try") class KwTry extends Token
+  @fixed("type") class KwType extends Token
+  @fixed("val") class KwVal extends Token
+  @fixed("var") class KwVar extends Token
+  @fixed("while") class KwWhile extends Token
+  @fixed("with") class KwWith extends Token
+  @fixed("yield") class KwYield extends Token
 
   // Symbolic keywords
   @fixed("#") class Hash extends Token
@@ -154,7 +156,7 @@ object Token {
 // depending on how the file and its enclosing directories are called.
 // To combat that, we have TokenLiftables right here, guaranteeing that there won't be problems
 // if someone wants to refactor/rename something later.
-trait TokenLiftables extends tokens.Liftables {
+private[meta] trait TokenLiftables extends tokens.Liftables {
   val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
 
@@ -193,7 +195,7 @@ trait TokenLiftables extends tokens.Liftables {
       q"$t ++ ${insertTokens(tokens)}"
 
     def insertTokens(tokens: Tokens): Tree = {
-      val (pre, middle) = tokens span (!_.isInstanceOf[Token.Unquote])
+      val (pre, middle) = tokens span (!_.is[Token.Unquote])
       middle match {
         case Tokens() =>
           prepend(pre, q"_root_.scala.meta.tokens.Tokens()")

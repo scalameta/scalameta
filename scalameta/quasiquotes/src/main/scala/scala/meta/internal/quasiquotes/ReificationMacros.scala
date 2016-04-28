@@ -14,6 +14,7 @@ import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection
 import scala.meta.internal.ast.{Liftables => AstLiftables, Reflection => AstReflection}
 import org.scalameta._
 import org.scalameta.invariants._
+import scala.meta.classifiers._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
@@ -71,9 +72,10 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
 
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {
     val parserModule = interpolator.owner.owner.companion
-    val parsersModule = Class.forName("scala.meta.quasiquotes.package", true, this.getClass.getClassLoader)
-    val parserModuleGetter = parsersModule.getDeclaredMethod(parserModule.name.toString)
-    val parserModuleInstance = parserModuleGetter.invoke(null)
+    val parsersModuleClass = Class.forName("scala.meta.quasiquotes.package$", true, this.getClass.getClassLoader)
+    val parsersModule = parsersModuleClass.getField("MODULE$").get(null)
+    val parserModuleGetter = parsersModule.getClass.getDeclaredMethod(parserModule.name.toString)
+    val parserModuleInstance = parserModuleGetter.invoke(parsersModule)
     val parserMethod = parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head
     (input: MetaInput, dialect: MetaDialect) => {
       try parserMethod.invoke(parserModuleInstance, input, dialect).asInstanceOf[MetaTree]
@@ -157,7 +159,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
           implicit val tokenizationDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
           try {
             val tokens = part.tokenize.get
-            if (tokens.init.last.isInstanceOf[MetaToken.Comment] && arg.nonEmpty) {
+            if (tokens.init.last.is[MetaToken.Comment] && arg.nonEmpty) {
               failUnclosed("single-line comment")
             }
             tokens
@@ -185,10 +187,10 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         c.abort(part.pos, "quasiquotes can only be used with literal strings")
     }
     def merge(index: Int, parttokens: MetaTokens, arg: ReflectTree): MetaTokens = {
-      implicit class RichMetaToken(token: MetaToken) { def absoluteStart = token.start + token.content.require[MetaInput.Slice].from }
+      implicit class XtensionMetaToken(token: MetaToken) { def absoluteStart = token.start + token.content.require[MetaInput.Slice].from }
       val part: MetaTokens = {
         val bof +: payload :+ eof = parttokens
-        require(bof.isInstanceOf[MetaToken.BOF] && eof.isInstanceOf[MetaToken.EOF] && debug(parttokens))
+        require(bof.is[MetaToken.BOF] && eof.is[MetaToken.EOF] && debug(parttokens))
         val prefix = if (index == 0) MetaTokens(bof) else MetaTokens()
         val suffix = if (index == parttokenss.length - 1) MetaTokens(eof) else MetaTokens()
         prefix ++ payload ++ suffix
@@ -215,7 +217,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
       log({ println(syntax.show[Syntax]); println(syntax.show[Structure]) })
       (syntax, mode)
     } catch {
-      case ParseException(position, message) => c.abort(position, message)
+      case ParseException(pos, message) => c.abort(pos, message)
     }
   }
 
@@ -314,7 +316,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
                   "it just cannot follow another sequence either directly or indirectly."
                 }
                 val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (quasi.rank + 1)}$EOL required: no dots$EOL$hint"
-                c.abort(quasi.position, errorMessage)
+                c.abort(quasi.pos, errorMessage)
               }
             }
           case other +: rest =>
@@ -381,10 +383,10 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
                     if (optional) inferredPt = tq"_root_.scala.Option[$inferredPt]"
                     inferredPt
                 }
-                hole.reifier = atPos(quasi.position)(q"$InternalUnlift.unapply[$inferredPt](${hole.name})") // TODO: make `reifier`a immutable somehow
+                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$inferredPt](${hole.name})") // TODO: make `reifier`a immutable somehow
                 pq"${hole.name}"
             }
-            atPos(quasi.position)(realWorldReifier)
+            atPos(quasi.pos)(realWorldReifier)
           } else {
             quasi.tree match {
               case quasi: Quasi if quasi.rank == 0 =>
@@ -417,14 +419,14 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
                           case tree => super.transform(tree)
                         }
                       }).transform(hole.reifier)
-                      hole.reifier = atPos(quasi.position)(q"$flattened.flatMap(tree => $unlifted)")
+                      hole.reifier = atPos(quasi.pos)(q"$flattened.flatMap(tree => $unlifted)")
                       reified
                   }
                 } else {
                   liftQuasi(quasi)
                 }
               case _ =>
-                c.abort(quasi.position, "complex ellipses are not supported yet")
+                c.abort(quasi.pos, "complex ellipses are not supported yet")
             }
           }
         } finally {

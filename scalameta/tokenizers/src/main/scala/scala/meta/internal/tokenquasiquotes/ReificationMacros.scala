@@ -5,6 +5,7 @@ package tokenquasiquotes
 import scala.reflect.macros.whitebox.Context
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.convert._
+import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import scala.meta.tokens._
@@ -154,7 +155,7 @@ class ReificationMacros(val c: Context) extends TokenLiftables
         // would get a Token.Projected[Token])
         val dottedUnquote =
           splitted match {
-            case (before, Some(_), _) => before count (_.isInstanceOf[Token.Unquote])
+            case (before, Some(_), _) => before count (_.is[Token.Unquote])
             case _ => -1
           }
 

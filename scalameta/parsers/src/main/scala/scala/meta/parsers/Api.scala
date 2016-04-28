@@ -4,23 +4,27 @@ package parsers
 import scala.meta.convert._
 import scala.meta.inputs._
 
-class InputWithDialect(input: Input, dialect: Dialect) {
-  def parse[U](implicit parse: Parse[U]): Parsed[U] = {
-    parse.apply(input)(dialect)
-  }
-}
-
 private[meta] trait Api {
   implicit class XtensionParseInputLike[T](inputLike: T) {
     def parse[U](implicit convert: Convert[T, Input], parse: Parse[U], dialect: Dialect): Parsed[U] = {
-      val input = convert(inputLike)
-      new InputWithDialect(input, dialect).parse[U]
+      (dialect, convert(inputLike)).parse[U]
     }
   }
-  implicit class XtensionDialectParseInputLike(dialect: Dialect) {
-    def apply[T](inputLike: T)(implicit convert: Convert[T, Input]): InputWithDialect = {
-      val input = convert(inputLike)
-      new InputWithDialect(input, dialect)
+  implicit class XtensionParsersDialectInput(dialect: Dialect) {
+    def apply[T](inputLike: T)(implicit convert: Convert[T, Input]): (Dialect, Input) = {
+      (dialect, convert(inputLike))
+    }
+  }
+  implicit class XtensionParseDialectInput(dialectInput: (Dialect, Input)) {
+    def parse[U](implicit parse: Parse[U]): Parsed[U] = {
+      val (dialect, input) = dialectInput
+      parse.apply(input)(dialect)
+    }
+  }
+  implicit class XtensionParseInputDialect(inputDialect: (Input, Dialect)) {
+    def parse[U](implicit parse: Parse[U]): Parsed[U] = {
+      val (input, dialect) = inputDialect
+      (dialect, input).parse[U]
     }
   }
 }

@@ -5,9 +5,9 @@ import scala.compat.Platform.EOL
 import scala.meta.inputs._
 
 package object inputs {
-  implicit class XtensionPositionFormatMessage(position: Position) {
+  implicit class XtensionPositionFormatMessage(pos: Position) {
     def formatMessage(severity: String, message: String): String = {
-      position.point.formatMessage(severity, message)
+      pos.point.formatMessage(severity, message)
     }
   }
 
