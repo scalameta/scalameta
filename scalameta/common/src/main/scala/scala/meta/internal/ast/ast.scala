@@ -22,12 +22,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
   import c.universe._
   import Flag._
 
-  val InternalSemantic = q"_root_.scala.meta.internal.semantic"
-  val FlagsPackage = q"_root_.scala.meta.internal.flags.`package`"
-  val Tokens = q"_root_.scala.meta.tokens"
-  val Prettyprinters = q"_root_.scala.meta.internal.prettyprinters"
-  val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
-
   def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
     override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
       def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
@@ -70,7 +64,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       val stats1 = ListBuffer[Tree]()
       val ianns1 = ListBuffer[Tree]() ++ imods.annotations
       def imods1 = imods.mapAnnotations(_ => ianns1.toList)
-      def mods1 = Modifiers(FINAL, mname.toTypeName, List(q"new _root_.scala.SerialVersionUID(1L)"))
+      def mods1 = Modifiers(FINAL, mname.toTypeName, List(SerialVersionUIDAnnotation(1L)))
       val iparents1 = ListBuffer[Tree]() ++ iparents
       def parents1 = List(tq"$iname")
       val mstats1 = ListBuffer[Tree]() ++ mstats
@@ -122,13 +116,13 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       })
 
       // step 5: implement the unimplemented methods in InternalTree (part 1)
-      bparams1 += q"private[meta] val privateFlags: $FlagsPackage.Flags"
-      bparams1 += q"@_root_.scala.transient private[meta] val privatePrototype: $iname"
-      bparams1 += q"private[meta] val privateParent: _root_.scala.meta.Tree"
-      bparams1 += q"@_root_.scala.transient private[meta] var privateTokens: $Tokens.Tokens"
-      if (hasEnv) bparams1 += q"private[meta] override val privateEnv: $InternalSemantic.Environment"
-      if (hasDenot) bparams1 += q"private[meta] override val privateDenot: $InternalSemantic.Denotation"
-      if (hasTyping) bparams1 += q"private[meta] override val privateTyping: $InternalSemantic.Typing"
+      bparams1 += q"private[meta] val privateFlags: $FlagsClass"
+      bparams1 += q"@$TransientAnnotation private[meta] val privatePrototype: $iname"
+      bparams1 += q"private[meta] val privateParent: $TreeClass"
+      bparams1 += q"@$TransientAnnotation private[meta] var privateTokens: $TokensClass"
+      if (hasEnv) bparams1 += q"private[meta] override val privateEnv: $EnvironmentClass"
+      if (hasDenot) bparams1 += q"private[meta] override val privateDenot: $DenotationClass"
+      if (hasTyping) bparams1 += q"private[meta] override val privateTyping: $TypingClass"
 
       // step 6: implement the unimplemented methods in InternalTree (part 1)
       // The purpose of privateCopy is to provide extremely cheap cloning
@@ -152,13 +146,13 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       val privateCopyBody = q"new $name(..$privateCopyBargs)(...$privateCopyArgs)"
       stats1 += q"""
         private[meta] def privateCopy(
-            flags: $FlagsPackage.Flags = privateFlags,
-            prototype: _root_.scala.meta.Tree = this,
-            parent: _root_.scala.meta.Tree = privateParent,
-            tokens: $Tokens.Tokens = privateTokens,
-            env: $InternalSemantic.Environment = privateEnv,
-            denot: $InternalSemantic.Denotation = privateDenot,
-            typing: $InternalSemantic.Typing = privateTyping): Tree = {
+            flags: $FlagsClass = privateFlags,
+            prototype: $TreeClass = this,
+            parent: $TreeClass = privateParent,
+            tokens: $TokensClass = privateTokens,
+            env: $EnvironmentClass = privateEnv,
+            denot: $DenotationClass = privateDenot,
+            typing: $TypingClass = privateTyping): Tree = {
           $privateCopyBody
         }
       """
@@ -175,13 +169,13 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         val copyParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
         val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
         val copyCore = q"$mname.apply(...$copyArgss)"
-        val copyBody = q"$copyCore.withTokens(tokens = _root_.scala.meta.internal.tokens.TransformedTokens(this))"
+        val copyBody = q"$copyCore.withTokens(tokens = new $TransformedTokensClass(this))"
         istats1 += q"def copy(...$copyParamss): $iname"
         stats1 += q"def copy(...$copyParamss): $iname = $copyBody"
       }
 
       // step 8: create the children method
-      stats1 += q"def children: Seq[_root_.scala.meta.Tree] = $CommonTyperMacrosModule.children[$iname, _root_.scala.meta.Tree]"
+      stats1 += q"def children: Seq[$TreeClass] = $CommonTyperMacrosModule.children[$iname, $TreeClass]"
 
       // step 9: generate boilerplate required by the @ast infrastructure
       // TODO: remove leafClass and leafCompanion from here
@@ -190,22 +184,25 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       manns1 += q"new $AstMetadataModule.astCompanion"
       manns1 += q"new $AdtMetadataModule.leafCompanion"
 
-      // step 10: implement Product
+      // step 10: generate boilerplate required by the classifier infrastructure
+      mstats1 ++= mkClassifier(iname)
+
+      // step 11: implement Product
       val productParamss = rawparamss.map(_.map(_.duplicate))
-      iparents1 += tq"_root_.scala.Product"
-      stats1 += q"override def productPrefix: _root_.scala.Predef.String = $CommonTyperMacrosModule.productPrefix[$iname]"
-      stats1 += q"override def productArity: _root_.scala.Int = ${productParamss.head.length}"
+      iparents1 += tq"$ProductClass"
+      stats1 += q"override def productPrefix: $StringClass = $CommonTyperMacrosModule.productPrefix[$iname]"
+      stats1 += q"override def productArity: $IntClass = ${productParamss.head.length}"
       val pelClauses = ListBuffer[Tree]()
       pelClauses ++= 0.to(productParamss.head.length - 1).map(i => cq"$i => this.${productParamss.head(i).name}")
-      pelClauses += cq"_ => throw new _root_.scala.IndexOutOfBoundsException(n.toString)"
-      stats1 += q"override def productElement(n: _root_.scala.Int): Any = n match { case ..$pelClauses }"
-      stats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"
+      pelClauses += cq"_ => throw new $IndexOutOfBoundsException(n.toString)"
+      stats1 += q"override def productElement(n: $IntClass): Any = n match { case ..$pelClauses }"
+      stats1 += q"override def productIterator: $IteratorClass[$AnyClass] = $ScalaRunTimeModule.typedProductIterator(this)"
 
-      // step 11: generate serialization logic
+      // step 12: generate serialization logic
       val fieldInits = fieldParamss.flatten.map(p => q"$CommonTyperMacrosModule.loadField(this.${internalize(p.name)})")
-      stats1 += q"protected def writeReplace(): _root_.scala.AnyRef = { ..$fieldInits; this }"
+      stats1 += q"protected def writeReplace(): $AnyRefClass = { ..$fieldInits; this }"
 
-      // step 12: generate Companion.apply
+      // step 13: generate Companion.apply
       val applyParamss = paramss.map(_.map(_.duplicate))
       val internalParamss = paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
       val internalBody = ListBuffer[Tree]()
@@ -233,7 +230,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       if (hasTyping) internalInitCount += 1
       val internalInitss = 1.to(internalInitCount).map(_ => q"null")
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$CommonTyperMacrosModule.initParam($local)" })
-      internalBody += q"val node = new $name($FlagsPackage.ZERO, ..$internalInitss)(...$paramInitss)"
+      internalBody += q"val node = new $name($FlagsZeroField, ..$internalInitss)(...$paramInitss)"
       internalBody ++= internalLocalss.flatten.flatMap{ case (local, internal) =>
         val (validators, assignee) = {
           // TODO: this is totally ugly. we need to come up with a way to express this in a sane way.
@@ -243,7 +240,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
             (validators, q"$local.map($validateLocal)")
           } else if ((is("Defn.Trait") || is("Defn.Object") || is("Pkg.Object")) && local.toString == "templ") {
             val validators = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(!stat.isInstanceOf[Ctor]); stat })")
-            (validators, q"{ if (!$local.isInstanceOf[_root_.scala.meta.internal.ast.Quasi]) $local.stats.map($validateLocal); $local }")
+            (validators, q"{ if (!$local.isInstanceOf[$QuasiClass]) $local.stats.map($validateLocal); $local }")
           } else if (is("Template") && local.toString == "early") {
             val validators = List(q"def $validateLocal(stat: Stat) = { require(stat.isEarlyStat && parents.nonEmpty); stat }")
             (validators, q"$local.map($validateLocal)")
@@ -267,31 +264,31 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         }
       """
 
-      // step 13: generate Companion.unapply
+      // step 14: generate Companion.unapply
       val unapplyParamss = rawparamss.map(_.map(_.duplicate))
       val unapplyParams = unapplyParamss.head
       val needsUnapply = !mstats.exists(stat => stat match { case DefDef(_, TermName("unapply"), _, _, _, _) => true; case _ => false })
       if (needsUnapply) {
         if (unapplyParams.length != 0) {
           // TODO: re-enable name-based pattern matching once https://issues.scala-lang.org/browse/SI-9029 is fixed
-          // stats1 += q"@_root_.scala.inline final def isDefined = !isEmpty"
-          // stats1 += q"@_root_.scala.inline final def isEmpty = false"
+          // stats1 += q"@$InlineAnnotation final def isDefined = !isEmpty"
+          // stats1 += q"@$InlineAnnotation final def isEmpty = false"
           // val getBody = if (unapplyParams.length == 1) q"this.${unapplyParams.head.name}" else q"this"
-          // stats1 += q"@_root_.scala.inline final def get = $getBody"
-          // unapplyParams.zipWithIndex.foreach({ case (p, i) => stats1 += q"@_root_.scala.inline final def ${TermName("_" + (i + 1))} = this.${p.name}" })
-          // mstats1 += q"@_root_.scala.inline final def unapply(x: $name): $name = x"
+          // stats1 += q"@$InlineAnnotation final def get = $getBody"
+          // unapplyParams.zipWithIndex.foreach({ case (p, i) => stats1 += q"@$InlineAnnotation final def ${TermName("_" + (i + 1))} = this.${p.name}" })
+          // mstats1 += q"@$InlineAnnotation final def unapply(x: $name): $name = x"
           val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
           val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
-          mstats1 += q"@_root_.scala.inline final def unapply(x: $iname): Option[$successTargs] = if (x == null) _root_.scala.None else _root_.scala.Some($successArgs)"
+          mstats1 += q"@$InlineAnnotation final def unapply(x: $iname): $OptionClass[$successTargs] = if (x == null) $NoneModule else $SomeModule($successArgs)"
         } else {
-          mstats1 += q"@_root_.scala.inline final def unapply(x: $iname): Boolean = true"
+          mstats1 += q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
         }
       }
 
-      // step 14: finish codegen for Quasi
+      // step 15: finish codegen for Quasi
       if (isQuasi) {
         stats1 += q"""
-          def become[T <: _root_.scala.meta.internal.ast.Quasi](implicit ev: _root_.scala.meta.internal.ast.AstInfo[T]): T = {
+          def become[T <: $QuasiClass](implicit ev: $AstInfoClass[T]): T = {
             this match {
               case $mname(0, tree) =>
                 ev.quasi(0, tree).withTokens(this.tokens).asInstanceOf[T]

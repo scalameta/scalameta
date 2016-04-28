@@ -38,8 +38,8 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     sym.baseClasses.map(_.asClass).foreach{bsym =>
       val exempt =
         bsym.isModuleClass ||
-        bsym == ObjectClass ||
-        bsym == AnyClass ||
+        bsym == symbolOf[Object] ||
+        bsym == symbolOf[Any] ||
         bsym == symbolOf[scala.Serializable] ||
         bsym == symbolOf[java.io.Serializable] ||
         bsym == symbolOf[scala.Product] ||

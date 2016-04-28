@@ -19,15 +19,15 @@ trait Reflection extends AdtReflection {
   def PrivateMeta: Modifiers = PrivateMeta(NoFlags)
   def PrivateMeta(flags: FlagSet): Modifiers = Modifiers(flags, TypeName("meta"), Nil)
 
-  lazy val TreeClass = mirror.staticClass("scala.meta.Tree")
-  lazy val QuasiClass = mirror.staticClass("scala.meta.internal.ast.Quasi")
+  lazy val TreeSymbol = mirror.staticClass("scala.meta.Tree")
+  lazy val QuasiSymbol = mirror.staticClass("scala.meta.internal.ast.Quasi")
   lazy val AllModule = mirror.staticModule("scala.meta.internal.ast.All")
   lazy val RegistryAnnotation = mirror.staticModule("scala.meta.internal.ast.Metadata").info.member(TypeName("registry")).asClass
 
   override protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
     def fail = sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
     if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
-    else if (sym.baseClasses.contains(TreeClass)) scalaMetaRegistry.getOrElse(sym, fail)
+    else if (sym.baseClasses.contains(TreeSymbol)) scalaMetaRegistry.getOrElse(sym, fail)
     else fail
   }
 
@@ -46,16 +46,16 @@ trait Reflection extends AdtReflection {
         })
         val entireHierarchy = {
           var result = astClasses.flatMap(_.baseClasses.map(_.asClass))
-          result = result.filter(sym => sym.toType <:< TreeClass.toType)
+          result = result.filter(sym => sym.toType <:< TreeSymbol.toType)
           result = result.flatMap(sym => List(sym, sym.companion.info.member(TypeName("Quasi")).asClass))
-          result :+= QuasiClass
+          result :+= QuasiSymbol
           result.distinct
         }
         val registry = mutable.Map[Symbol, List[Symbol]]()
         entireHierarchy.foreach(sym => registry(sym) = Nil)
         entireHierarchy.foreach(sym => {
           val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
-          val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(TreeClass))
+          val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(TreeSymbol))
           relevantParents.foreach(parent => registry(parent) :+= sym)
         })
         registry.toMap

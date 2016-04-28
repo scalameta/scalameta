@@ -5,6 +5,7 @@ import scala.collection.immutable.Seq
 import scala.runtime.ScalaRunTime.isAnyVal
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
@@ -27,6 +28,7 @@ import scala.meta.internal.ast.Helpers._
 }
 
 object Tree extends InternalTreeXtensions {
+  implicit def classifiable[T <: Tree]: Classifiable[T] = null
   implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T]
   implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect)
   // implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.prettyprinters.TreeSemantics.apply[T](c)

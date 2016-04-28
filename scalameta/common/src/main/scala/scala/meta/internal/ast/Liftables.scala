@@ -17,21 +17,23 @@ trait Liftables {
 
 class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with AstReflection {
   import c.universe._
-  lazy val TermNameClass = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Name")).asClass
-  lazy val CtorRefNameClass = c.mirror.staticModule("scala.meta.Ctor").info.member(TermName("Ref")).asModule.info.member(TypeName("Name")).asClass
-  lazy val NameClass = c.mirror.staticClass("scala.meta.Name")
-  lazy val TermClass = c.mirror.staticClass("scala.meta.Term")
-  lazy val TermParamClass = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Param")).asClass
-  lazy val DefnValClass = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val")).asClass
-  lazy val DefnVarClass = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Var")).asClass
-  lazy val PatTypedClass = c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Typed")).asClass
-  lazy val LitClass = c.mirror.staticClass("scala.meta.Lit")
-  lazy val TokensClass = c.mirror.staticClass("scala.meta.tokens.Tokens")
-  lazy val DenotClass = c.mirror.staticClass("scala.meta.internal.semantic.Denotation")
-  lazy val TypingClass = c.mirror.staticClass("scala.meta.internal.semantic.Typing")
+
+  lazy val TermNameSymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Name")).asClass
+  lazy val CtorRefNameSymbol = c.mirror.staticModule("scala.meta.Ctor").info.member(TermName("Ref")).asModule.info.member(TypeName("Name")).asClass
+  lazy val NameSymbol = c.mirror.staticClass("scala.meta.Name")
+  lazy val TermSymbol = c.mirror.staticClass("scala.meta.Term")
+  lazy val TermParamSymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Param")).asClass
+  lazy val DefnValSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val")).asClass
+  lazy val DefnVarSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Var")).asClass
+  lazy val PatTypedSymbol = c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Typed")).asClass
+  lazy val LitSymbol = c.mirror.staticClass("scala.meta.Lit")
+  lazy val TokensSymbol = c.mirror.staticClass("scala.meta.tokens.Tokens")
+  lazy val DenotSymbol = c.mirror.staticClass("scala.meta.internal.semantic.Denotation")
+  lazy val TypingSymbol = c.mirror.staticClass("scala.meta.internal.semantic.Typing")
+
   override def customAdts(root: Root): Option[List[Adt]] = {
-    val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiClass.toType))
-    Some(QuasiClass.asBranch +: nonQuasis)
+    val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiSymbol.toType))
+    Some(QuasiSymbol.asBranch +: nonQuasis)
   }
   override def customWrapper(adt: Adt, defName: TermName, localName: TermName, body: Tree): Option[Tree] = {
     // TODO: it should be possible to customize liftable codegen by providing implicit instances on the outside
@@ -44,8 +46,8 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       // * denots should somehow be hygienically matched, but we don't have the technology for that
       // * typings are transient caches anyway, so probably we should ignore them, but I'm not sure
       val coreTypes = Map(
-        "denot" -> DenotClass.toType,
-        "typing" -> TypingClass.toType)
+        "denot" -> DenotSymbol.toType,
+        "typing" -> TypingSymbol.toType)
       val coreDefaults = Map(
         "denot" -> q"_root_.scala.meta.internal.semantic.Denotation.Zero",
         "typing" -> q"_root_.scala.meta.internal.semantic.Typing.Zero")
@@ -87,20 +89,20 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       """
     }
     def customize(body: Tree): Option[Tree] = {
-      if (adt.tpe <:< QuasiClass.toType) Some(q"Lifts.liftQuasi($localName)")
-      else if (adt.tpe <:< TermNameClass.toType) Some(reifyCoreFields(body, "denot", "typing"))
-      else if (adt.tpe <:< CtorRefNameClass.toType) Some(reifyCoreFields(body, "denot", "typing"))
-      else if (adt.tpe <:< NameClass.toType) Some(reifyCoreFields(body, "denot"))
-      else if (adt.tpe <:< TermClass.toType) Some(reifyCoreFields(body, "typing"))
-      else if (adt.tpe <:< TermParamClass.toType) Some(reifyCoreFields(body, "typing"))
-      else if (adt.tpe <:< DefnValClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
-      else if (adt.tpe <:< DefnVarClass.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
-      else if (adt.tpe <:< PatTypedClass.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
+      if (adt.tpe <:< QuasiSymbol.toType) Some(q"Lifts.liftQuasi($localName)")
+      else if (adt.tpe <:< TermNameSymbol.toType) Some(reifyCoreFields(body, "denot", "typing"))
+      else if (adt.tpe <:< CtorRefNameSymbol.toType) Some(reifyCoreFields(body, "denot", "typing"))
+      else if (adt.tpe <:< NameSymbol.toType) Some(reifyCoreFields(body, "denot"))
+      else if (adt.tpe <:< TermSymbol.toType) Some(reifyCoreFields(body, "typing"))
+      else if (adt.tpe <:< TermParamSymbol.toType) Some(reifyCoreFields(body, "typing"))
+      else if (adt.tpe <:< DefnValSymbol.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
+      else if (adt.tpe <:< DefnVarSymbol.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
+      else if (adt.tpe <:< PatTypedSymbol.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
       else None
     }
     // NOTE: we ignore tokens here for the time being
     val body1 = {
-      if (adt.tpe <:< LitClass.toType) {
+      if (adt.tpe <:< LitSymbol.toType) {
         q"""
           implicit object LiftableAny extends c.universe.Liftable[_root_.scala.Any] {
             def apply(value: _root_.scala.Any): c.universe.Tree = value match {

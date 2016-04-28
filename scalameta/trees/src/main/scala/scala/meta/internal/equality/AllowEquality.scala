@@ -18,13 +18,13 @@ class Macros(val c: BlackboxContext) extends AstReflection {
   import c.universe._
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
-  lazy val StatClass = rootMirror.staticClass("scala.meta.Stat")
-  lazy val ScopeClass = rootMirror.staticClass("scala.meta.Scope")
-  lazy val isTooGeneral = Set[Symbol](TreeClass, StatClass, ScopeClass)
+  lazy val StatSymbol = rootMirror.staticClass("scala.meta.Stat")
+  lazy val ScopeSymbol = rootMirror.staticClass("scala.meta.Scope")
+  lazy val isTooGeneral = Set[Symbol](TreeSymbol, StatSymbol, ScopeSymbol)
 
   def allow[T1, T2](implicit T1: WeakTypeTag[T1], T2: WeakTypeTag[T2]): Tree = {
     def fail() = c.abort(c.enclosingPosition, s"can't compare ${T1.tpe} and ${T2.tpe}")
-    if ((T1.tpe <:< TreeClass.toType) && (T2.tpe <:< TreeClass.toType)) {
+    if ((T1.tpe <:< TreeSymbol.toType) && (T2.tpe <:< TreeSymbol.toType)) {
       def extractAdts(t: Type): List[Adt] = t match {
         case RefinedType(parents, _) => parents.flatMap(extractAdts)
         case tpe if tpe.typeSymbol.isAdt => List(tpe.typeSymbol.asAdt)

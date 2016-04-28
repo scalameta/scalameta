@@ -14,19 +14,14 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
   val c: Context
   import c.universe._
 
-  lazy val TreeAdt = TreeClass.asRoot
-  lazy val QuasiAdt = QuasiClass.asAdt
-  lazy val OptionClass = hygienicRef[Option[_]]
-  lazy val SomeModule = hygienicRef(Some)
-  lazy val NoneModule = hygienicRef(None)
-  lazy val SeqClass = hygienicRef[scala.collection.immutable.Seq[_]]
-  lazy val ListBufferModule = hygienicRef(scala.collection.mutable.ListBuffer)
-  lazy val UnitClass = hygienicRef[scala.Unit]
+  lazy val TreeClass = tq"_root_.scala.meta.Tree"
+  lazy val TreeAdt = TreeSymbol.asRoot
+  lazy val QuasiClass = tq"_root_.scala.meta.internal.ast.Quasi"
+  lazy val QuasiAdt = QuasiSymbol.asAdt
   lazy val Hack1Class = hygienicRef[org.scalameta.overload.Hack1]
   lazy val Hack2Class = hygienicRef[org.scalameta.overload.Hack2]
   lazy val Hack3Class = hygienicRef[org.scalameta.overload.Hack3]
   lazy val Hack4Class = hygienicRef[org.scalameta.overload.Hack4]
-  lazy val NothingClass = tq"_root_.scala.Nothing"
 
   def leafHandler(l: Leaf): Tree
   def generatedMethods(cases: List[CaseDef]): Tree

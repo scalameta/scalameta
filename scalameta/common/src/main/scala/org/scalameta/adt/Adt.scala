@@ -138,7 +138,6 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._
-  import definitions._
   import c.internal._
   import decorators._
 
@@ -152,8 +151,8 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
     sym.baseClasses.map(_.asClass).foreach{bsym =>
       val exempt =
         bsym.isModuleClass ||
-        bsym == ObjectClass ||
-        bsym == AnyClass ||
+        bsym == symbolOf[Object] ||
+        bsym == symbolOf[Any] ||
         bsym == symbolOf[scala.Serializable] ||
         bsym == symbolOf[java.io.Serializable] ||
         bsym == symbolOf[scala.Product] ||
