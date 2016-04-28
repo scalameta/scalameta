@@ -59,6 +59,8 @@ abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with Inp
   // def unzip3[A1, A2, A3](implicit asTriple: A => (A1, A2, A3)): (CC[A1], CC[A2], CC[A3]) = {
   // TODO: have I missed anything else?
 
+  def syntax: String = this.show[Syntax]
+  def structure: String = this.show[Structure]
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 }
 
