@@ -92,6 +92,9 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         def isNot[U](implicit classifier: $Classifier[$Token, U]): _root_.scala.Boolean = !classifier.apply(this)
       """
       stats1 += q"""
+        def structure: _root_.scala.Predef.String = this.show[Structure]
+      """
+      stats1 += q"""
         final override def toString: _root_.scala.Predef.String = _root_.scala.meta.internal.prettyprinters.TokenToString(this)
       """
 
