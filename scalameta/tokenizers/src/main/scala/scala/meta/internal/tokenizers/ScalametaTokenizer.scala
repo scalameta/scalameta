@@ -12,7 +12,7 @@ import scala.meta.tokens._
 import scala.meta.tokenizers._
 import scala.meta.internal.inputs.InputTokens
 
-private[meta] class ScalametaTokenizer(val input: Input)(implicit val dialect: Dialect) {
+private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
   def tokenize(): Tokens = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
@@ -119,7 +119,7 @@ private[meta] class ScalametaTokenizer(val input: Input)(implicit val dialect: D
     }
 
     input match { case InputTokens(tokens) => return tokens; case _ => }
-    val scanner = new LegacyScanner(input)
+    val scanner = new LegacyScanner(input, dialect)
     val buf = scanner.reader.buf
 
     var legacyTokenBuf = mutable.ArrayBuilder.make[LegacyTokenData]()
@@ -248,9 +248,9 @@ private[meta] class ScalametaTokenizer(val input: Input)(implicit val dialect: D
 
 object ScalametaTokenizer {
   def toTokenize: Tokenize = new Tokenize {
-    def apply(input: Input)(implicit dialect: Dialect): Tokenized = {
+    def apply(input: Input, dialect: Dialect): Tokenized = {
       try {
-        val tokenizer = new ScalametaTokenizer(input)(dialect)
+        val tokenizer = new ScalametaTokenizer(input, dialect)
         Tokenized.Success(tokenizer.tokenize())
       } catch {
         case details @ TokenizeException(pos, message) => Tokenized.Error(pos, message, details)

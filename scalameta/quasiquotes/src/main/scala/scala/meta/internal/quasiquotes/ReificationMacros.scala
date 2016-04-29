@@ -42,6 +42,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
   import scala.meta.Term.{Name => MetaTermName}
   type MetaParser = (MetaInput, MetaDialect) => MetaTree
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
+  val XtensionParsersDialectInput = "shadow extension method conflict"
 
   // NOTE: only Mode.Pattern needs holes, and that's only because of Scala's limitations
   // read a comment in liftUnquote for more information on that
@@ -157,9 +158,9 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
           c.abort(unquotePosition, "can't unquote into " + what + "s")
         }
         val crudeTokens = {
-          implicit val tokenizationDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
           try {
-            val tokens = part.tokenize.get
+            val tokenizationDialect = scala.meta.dialects.Quasiquote(metaDialect)
+            val tokens = tokenizationDialect(part).tokenize.get
             if (tokens.init.last.is[MetaToken.Comment] && arg.nonEmpty) {
               failUnclosed("single-line comment")
             }
@@ -212,7 +213,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
     val tokens: MetaTokens = MetaTokens(parttokenss.zip(args :+ EmptyTree).zipWithIndex.flatMap({ case ((ts, a), i) => merge(i, ts, a) }): _*)
     log(println(tokens))
     try {
-      implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
+      val parsingDialect = scala.meta.dialects.Quasiquote(metaDialect)
       log({ println(tokens); println(parsingDialect) })
       val syntax = metaParse(InputTokens(tokens), parsingDialect)
       log({ println(syntax.show[Syntax]); println(syntax.show[Structure]) })

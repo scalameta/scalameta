@@ -20,7 +20,7 @@ private[meta] trait Api {
   implicit class XtensionTokenizeDialectInput(dialectInput: (Dialect, Input)) {
     def tokenize(implicit tokenize: Tokenize): Tokenized = {
       val (dialect, input) = dialectInput
-      tokenize.apply(input)(dialect)
+      tokenize.apply(input, dialect)
     }
   }
   implicit class XtensionTokenizeInputDialect(inputDialect: (Input, Dialect)) {

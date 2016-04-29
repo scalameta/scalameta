@@ -27,7 +27,7 @@ import scala.meta.internal.classifiers._
 import org.scalameta._
 import org.scalameta.invariants._
 
-private[meta] class ScalametaParser(tokens: Tokens)(implicit dialect: Dialect) { parser =>
+private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =>
   // implementation restrictions wrt various dialect properties
   require(Set("@", ":").contains(dialect.bindToSeqWildcardDesignator))
   require(Set("", EOL).contains(dialect.toplevelSeparator))
@@ -3555,11 +3555,11 @@ private[meta] class ScalametaParser(tokens: Tokens)(implicit dialect: Dialect) {
 
 object ScalametaParser {
   def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
-    def apply(input: Input)(implicit dialect: Dialect): Parsed[T] = {
+    def apply(input: Input, dialect: Dialect): Parsed[T] = {
       input.tokenize match {
         case Tokenized.Success(tokens) =>
           try {
-            val parser = new ScalametaParser(tokens)(dialect)
+            val parser = new ScalametaParser(tokens, dialect)
             Parsed.Success(fn(parser))
           } catch {
             case details @ ParseException(pos, message) =>

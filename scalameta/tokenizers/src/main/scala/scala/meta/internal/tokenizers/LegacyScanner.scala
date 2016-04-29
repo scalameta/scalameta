@@ -11,7 +11,7 @@ import Chars._
 import LegacyToken._
 import scala.meta.inputs._
 
-private[meta] class LegacyScanner(val input: Input, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
+private[meta] class LegacyScanner(input: Input, dialect: Dialect, decodeUni: Boolean = true) {
   val curr: LegacyTokenData   = new LegacyTokenData {}
   val next: LegacyTokenData   = new LegacyTokenData {}
   val prev: LegacyTokenData   = new LegacyTokenData {}
