@@ -19,76 +19,76 @@ class FormatMessageSuite extends FunSuite {
   }
 
   test("")("""
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |
     |^
   """.trim.stripMargin)
 
   test("\n")("""
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |
     |^
-    |<content>:2: error: foo
+    |<input>:2: error: foo
     |
     |^
   """.trim.stripMargin)
 
   test("foo")("""
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     |^
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     | ^
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     |  ^
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     |   ^
   """.trim.stripMargin)
 
   test("foo\n")("""
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     |^
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     | ^
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     |  ^
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     |   ^
-    |<content>:2: error: foo
+    |<input>:2: error: foo
     |
     |^
   """.trim.stripMargin)
 
   test("foo\nbar")("""
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     |^
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     | ^
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     |  ^
-    |<content>:1: error: foo
+    |<input>:1: error: foo
     |foo
     |   ^
-    |<content>:2: error: foo
+    |<input>:2: error: foo
     |bar
     |^
-    |<content>:2: error: foo
+    |<input>:2: error: foo
     |bar
     | ^
-    |<content>:2: error: foo
+    |<input>:2: error: foo
     |bar
     |  ^
-    |<content>:2: error: foo
+    |<input>:2: error: foo
     |bar
     |   ^
   """.trim.stripMargin)

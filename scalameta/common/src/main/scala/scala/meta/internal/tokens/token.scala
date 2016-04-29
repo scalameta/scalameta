@@ -22,8 +22,8 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
   import c.universe._
 
   val Unsupported = tq"_root_.scala.`package`.UnsupportedOperationException"
-  val Content = tq"_root_.scala.meta.inputs.Content"
   val Dialect = tq"_root_.scala.meta.Dialect"
+  val Input = tq"_root_.scala.meta.inputs.Input"
   val Token = tq"_root_.scala.meta.tokens.Token"
   val Classifier = tq"_root_.scala.meta.classifiers.Classifier"
   val Int = tq"_root_.scala.Int"
@@ -76,10 +76,10 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       // We kinda have to do that, because we want to have a `Token.Class` class.
       stats1 += q"""
         def pos: $PositionClass = {
-          val start = $PointModule.Offset(this.content, this.start)
-          val point = $PointModule.Offset(this.content, this.start)
-          val end = $PointModule.Offset(this.content, this.end)
-          new $PositionModule.Range(this.content, start, point, end)
+          val start = $PointModule.Offset(this.input, this.start)
+          val point = $PointModule.Offset(this.input, this.start)
+          val end = $PointModule.Offset(this.input, this.end)
+          new $PositionModule.Range(this.input, start, point, end)
         }
       """
       stats1 += q"""
@@ -128,7 +128,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       }
 
       // step 7: generate boilerplate parameters
-      var boilerplateParams = List(q"val content: $Content", q"val dialect: $Dialect")
+      var boilerplateParams = List(q"val input: $Input", q"val dialect: $Dialect")
       if (!hasMethod("start")) boilerplateParams :+= q"val start: $Int"
       if (!hasMethod("end")) boilerplateParams :+= q"val end: $Int"
       var paramss1 = (boilerplateParams ++ paramss.head) +: paramss.tail

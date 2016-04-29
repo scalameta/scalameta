@@ -86,10 +86,6 @@ class PublicSuite extends FunSuite {
     // covered above
   }
 
-  test("scala.meta.inputs.Content.toString") {
-    // covered below
-  }
-
   test("scala.meta.inputs.Input.toString") {
     // covered below
   }
@@ -154,7 +150,7 @@ class PublicSuite extends FunSuite {
       catch {
         case ex: ParseException =>
           assert(ex.toString === """
-            |<content>:1: error: end of file expected but class found
+            |<input>:1: error: end of file expected but class found
             |foo + class
             |      ^
           """.trim.stripMargin)
@@ -170,7 +166,7 @@ class PublicSuite extends FunSuite {
   test("scala.meta.parsers.Parsed.Error.toString") {
     val parsed = "foo + class".parse[Term]
     assert(parsed.toString === """
-      |<content>:1: error: end of file expected but class found
+      |<input>:1: error: end of file expected but class found
       |foo + class
       |      ^
     """.trim.stripMargin)
@@ -211,7 +207,7 @@ class PublicSuite extends FunSuite {
       catch {
         case ex: TokenizeException =>
           assert(ex.toString === """
-            |<content>:1: error: unclosed string literal
+            |<input>:1: error: unclosed string literal
             |"c
             |^
           """.trim.stripMargin)
@@ -223,7 +219,7 @@ class PublicSuite extends FunSuite {
   test("scala.meta.tokenizers.Tokenized.Error.toString") {
     val tokenized = """"c""".tokenize
     assert(tokenized.toString === """
-      |<content>:1: error: unclosed string literal
+      |<input>:1: error: unclosed string literal
       |"c
       |^
     """.trim.stripMargin)

@@ -1,20 +1,21 @@
 package scala.meta
 package internal
 
-import scala.meta.inputs.Content
+import scala.meta.inputs.Input
 import scala.meta.tokens.Token
 
 package object tokens {
   implicit class XtensionTokenAdjust(token: Token) {
-    def adjust(content: Content = token.content, dialect: Dialect = token.dialect, delta: Int = 0): Token = {
+    def adjust(input: Input = token.input, dialect: Dialect = token.dialect, delta: Int = 0): Token = {
       // TODO: This is very ugly. We need to find way to enable GP for tokens and trees.
+      // Luckily, this ugliness is only used internally - inside quasiquoting macros.
       val copy = token.getClass.getDeclaredMethods().find(_.getName == "copy").get
       val params = copy.getParameterTypes
 
       val boilerplate = scala.collection.mutable.ListBuffer[Any]()
       val payload = scala.collection.mutable.ListBuffer[Any]()
       def args = boilerplate ++ payload
-      boilerplate += content
+      boilerplate += input
       boilerplate += dialect
       token match {
         case Token.Ident(value) => payload += value

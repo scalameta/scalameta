@@ -12,6 +12,6 @@ class DottySuite extends ParseSuite {
     assert(tree.show[Syntax] === "List(xs: _*)")
   }
   test("xml literals") {
-    intercept[ParseException]{ term("<foo>{bar}</foo>") }
+    intercept[TokenizeException]{ term("<foo>{bar}</foo>") }
   }
 }

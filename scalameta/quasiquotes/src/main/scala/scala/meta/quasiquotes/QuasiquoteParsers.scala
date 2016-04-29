@@ -2,7 +2,7 @@ package scala.meta
 package quasiquotes
 
 import scala.meta.parsers._
-import scala.meta.internal.parsers.ScalametaParser._
+import scala.meta.internal.parsers.ScalametaParser.toParse
 
 // NOTE: It would be nice to have quasiquotes delegate to regular parser routines,
 // but for some corner cases of the language this doesn't quite work,

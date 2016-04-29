@@ -13,7 +13,7 @@ import scala.meta.internal.prettyprinters._
 // Therefore Token.end can point to the last character plus one.
 // Btw, Token.start can also point to the last character plus one if it's an EOF token.
 @root trait Token {
-  def content: Content
+  def input: Input
   def dialect: Dialect
 
   def start: Int
@@ -129,7 +129,7 @@ object Token {
   @fixed("\f") class FF extends Token
   @freeform("comment") class Comment extends Token
   @freeform("beginning of file") class BOF extends Token { def start = 0; def end = 0 }
-  @freeform("end of file") class EOF extends Token { def start = content.chars.length; def end = content.chars.length }
+  @freeform("end of file") class EOF extends Token { def start = input.chars.length; def end = input.chars.length }
 
   // TODO: Rewrite the parser so that it doesn't need LFLF anymore.
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
@@ -163,8 +163,8 @@ private[meta] trait TokenLiftables extends tokens.Liftables {
   import c.universe._
   private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
-  implicit lazy val liftContent: Liftable[Content] = Liftable[Content] { content =>
-    q"_root_.scala.meta.inputs.Input.String(${new String(content.chars)})"
+  implicit lazy val liftInput: Liftable[Input] = Liftable[Input] { input =>
+    q"_root_.scala.meta.inputs.Input.String(${new String(input.chars)})"
   }
 
   implicit lazy val liftDialect: Liftable[Dialect] = Liftable[Dialect] { dialect =>

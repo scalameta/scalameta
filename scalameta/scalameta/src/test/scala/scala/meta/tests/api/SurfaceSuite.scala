@@ -43,7 +43,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.dialects.Scala210 *
       |scala.meta.dialects.Scala211 *
       |scala.meta.inputs
-      |scala.meta.inputs.Content
       |scala.meta.inputs.Input
       |scala.meta.inputs.Input.File
       |scala.meta.inputs.Input.Slice

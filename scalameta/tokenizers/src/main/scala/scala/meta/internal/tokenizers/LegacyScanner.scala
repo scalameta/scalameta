@@ -11,17 +11,17 @@ import Chars._
 import LegacyToken._
 import scala.meta.inputs._
 
-private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
+private[meta] class LegacyScanner(val input: Input, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
   val curr: LegacyTokenData   = new LegacyTokenData {}
   val next: LegacyTokenData   = new LegacyTokenData {}
   val prev: LegacyTokenData   = new LegacyTokenData {}
-  val reader: CharArrayReader = new CharArrayReader(content.chars, reporter.readerError, decodeUni)
-  val reporter: Reporter      = Reporter(content)
+  val reader: CharArrayReader = new CharArrayReader(input.chars, reporter.readerError, decodeUni)
+  val reporter: Reporter      = Reporter(input)
 
   import curr._, reader._, reporter._
-  curr.content = this.content
-  next.content = this.content
-  prev.content = this.content
+  curr.input = this.input
+  next.input = this.input
+  prev.input = this.input
 
   private def isDigit(c: Char) = java.lang.Character isDigit c
   private var openComments = 0

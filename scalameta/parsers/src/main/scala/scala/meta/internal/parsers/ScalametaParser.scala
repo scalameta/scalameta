@@ -27,7 +27,7 @@ import scala.meta.internal.classifiers._
 import org.scalameta._
 import org.scalameta.invariants._
 
-private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dialect) { parser =>
+private[meta] class ScalametaParser(tokens: Tokens)(implicit dialect: Dialect) { parser =>
   // implementation restrictions wrt various dialect properties
   require(Set("@", ":").contains(dialect.bindToSeqWildcardDesignator))
   require(Set("", EOL).contains(dialect.toplevelSeparator))
@@ -112,7 +112,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
       def annot() = parser.annots(skipNewLines = false) match {
         case annot :: Nil => annot
         case annot :: other :: _ => parser.reporter.syntaxError(s"end of file expected but ${token.name} found", at = other)
-        case Nil => unreachable(debug(input, dialect))
+        case Nil => unreachable
       }
     }
     def fail() = parser.reporter.syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
@@ -141,7 +141,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   def parseEnumerator(): Enumerator = {
     parseRule(_.enumerator(isFirst = false, allowNestedIf = false) match {
       case enumerator :: Nil => enumerator
-      case other => unreachable(debug(input, dialect, other))
+      case other => unreachable(debug(other))
     })
   }
   def parseImporter(): Importer = parseRule(_.importer())
@@ -166,9 +166,9 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   //    (4..3)
   //   " (4..4)
   //   EOF (5..4)
-  private val scannerTokenCache: Array[Int] = input match {
-    case content: Content =>
-      val result = new Array[Int](content.chars.length)
+  private val scannerTokenCache: Array[Int] = tokens match {
+    case Tokens.Tokenized(input, _, _) =>
+      val result = new Array[Int](input.chars.length)
       var i = 0
       while (i < scannerTokens.length) {
         val token = scannerTokens(i)
@@ -180,7 +180,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
         i += 1
       }
       result
-    case tokens: Tokens =>
+    case _ =>
       new Array[Int](0)
   }
   implicit class XtensionTokenIndex(token: Token) {
@@ -219,10 +219,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
   // However, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted.
   // This leads to extremely dirty and seriously crazy code, which I'd like to replace in the future.
-  lazy val scannerTokens = input.tokenize match {
-    case Tokenized.Success(tokens) => tokens
-    case Tokenized.Error(pos, message, _) => reporter.syntaxError(message, at = pos)
-  }
+  lazy val scannerTokens = tokens
   lazy val (parserTokens, parserTokenPositions) = {
     val parserTokens = new immutable.VectorBuilder[Token]()
     val parserTokenPositions = mutable.ArrayBuilder.make[Int]()
@@ -275,7 +272,7 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
             next != null && next.isNot[CantStartStat] &&
             (sepRegions.isEmpty || sepRegions.head == '}')) {
           var token = scannerTokens(lastNewlinePos)
-          if (newlines) token = LFLF(token.content, token.dialect, token.start, token.end)
+          if (newlines) token = LFLF(token.input, token.dialect, token.start, token.end)
           parserTokens += token
           parserTokenPositions += lastNewlinePos
           loop(lastNewlinePos, currPos + 1, sepRegions)
@@ -3559,11 +3556,17 @@ private[meta] class ScalametaParser(val input: Input)(implicit val dialect: Dial
 object ScalametaParser {
   def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
     def apply(input: Input)(implicit dialect: Dialect): Parsed[T] = {
-      try {
-        val parser = new ScalametaParser(input)(dialect)
-        Parsed.Success(fn(parser))
-      } catch {
-        case details @ ParseException(pos, message) => Parsed.Error(pos, message, details)
+      input.tokenize match {
+        case Tokenized.Success(tokens) =>
+          try {
+            val parser = new ScalametaParser(tokens)(dialect)
+            Parsed.Success(fn(parser))
+          } catch {
+            case details @ ParseException(pos, message) =>
+              Parsed.Error(pos, message, details)
+          }
+        case Tokenized.Error(pos, message, details) =>
+          Parsed.Error(pos, message, details)
       }
     }
   }

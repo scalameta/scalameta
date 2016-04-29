@@ -22,6 +22,7 @@ import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.inputs.InputTokens
 import scala.meta.internal.tokens._
 import scala.compat.Platform.EOL
 
@@ -36,7 +37,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
   import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
   import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType, Position => ReflectPosition, Bind => ReflectBind}
   import scala.meta.{Tree => MetaTree, Type => MetaType, Dialect => MetaDialect}
-  import scala.meta.inputs.{Input => MetaInput, Content => MetaContent, Position => MetaPosition}
+  import scala.meta.inputs.{Input => MetaInput, Position => MetaPosition}
   import scala.meta.tokens.{Token => MetaToken, Tokens => MetaTokens}
   import scala.meta.Term.{Name => MetaTermName}
   type MetaParser = (MetaInput, MetaDialect) => MetaTree
@@ -181,13 +182,13 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         // To do that, we create InputSlice over the `wholeFileSource` and fixup positions to account for $$s.
         crudeTokens.map(crudeToken => {
           val delta = partOffsetToSourceOffset(crudeToken.start) - (start + crudeToken.start)
-          crudeToken.adjust(content = sliceFileContent(start, end + 1), delta = delta)
+          crudeToken.adjust(input = sliceFileInput(start, end + 1), delta = delta)
         })
       case (part, arg) =>
         c.abort(part.pos, "quasiquotes can only be used with literal strings")
     }
     def merge(index: Int, parttokens: MetaTokens, arg: ReflectTree): MetaTokens = {
-      implicit class XtensionMetaToken(token: MetaToken) { def absoluteStart = token.start + token.content.require[MetaInput.Slice].from }
+      implicit class XtensionMetaToken(token: MetaToken) { def absoluteStart = token.start + token.input.require[MetaInput.Slice].from }
       val part: MetaTokens = {
         val bof +: payload :+ eof = parttokens
         require(bof.is[MetaToken.BOF] && eof.is[MetaToken.EOF] && debug(parttokens))
@@ -201,7 +202,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
         } else {
           val unquoteStart = parttokens.last.absoluteStart
           val unquoteEnd = parttokenss(index + 1).head.absoluteStart - 1
-          val unquoteContent = sliceFileContent(unquoteStart, unquoteEnd + 1)
+          val unquoteContent = sliceFileInput(unquoteStart, unquoteEnd + 1)
           val unquoteDialect = scala.meta.dialects.Quasiquote(metaDialect)
           MetaTokens(MetaToken.Unquote(unquoteContent, unquoteDialect, 0, unquoteEnd - unquoteStart + 1, arg))
         }
@@ -213,7 +214,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
     try {
       implicit val parsingDialect: MetaDialect = scala.meta.dialects.Quasiquote(metaDialect)
       log({ println(tokens); println(parsingDialect) })
-      val syntax = metaParse(tokens, parsingDialect)
+      val syntax = metaParse(InputTokens(tokens), parsingDialect)
       log({ println(syntax.show[Syntax]); println(syntax.show[Structure]) })
       (syntax, mode)
     } catch {
@@ -222,18 +223,18 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
   }
 
   private lazy val wholeFileSource = c.macroApplication.pos.source
-  private lazy val wholeFileContent = {
+  private lazy val wholeFileInput = {
     if (wholeFileSource.file.file != null) MetaInput.File(wholeFileSource.file.file)
     else MetaInput.String(new String(wholeFileSource.content)) // NOTE: can happen in REPL or in custom Global
   }
-  private def sliceFileContent(from: Int, until: Int) = MetaInput.Slice(wholeFileContent, from, until)
+  private def sliceFileInput(from: Int, until: Int) = MetaInput.Slice(wholeFileInput, from, until)
   implicit def metaPositionToReflectPosition(pos: MetaPosition): ReflectPosition = {
-    val (content, contentStart) = pos.content match {
-      case MetaInput.Slice(content, contentStart, _) => (content, contentStart)
-      case content => (content, 0)
+    val (input, inputStart) = pos.input match {
+      case MetaInput.Slice(input, inputStart, _) => (input, inputStart)
+      case input => (input, 0)
     }
-    require(content == wholeFileContent && debug(pos, content, wholeFileContent))
-    c.macroApplication.pos.focus.withPoint(contentStart + pos.point.offset)
+    require(input == wholeFileInput && debug(pos, input, wholeFileInput))
+    c.macroApplication.pos.focus.withPoint(inputStart + pos.point.offset)
   }
 
   private def hygienifySkeleton(meta: MetaTree): MetaTree = {

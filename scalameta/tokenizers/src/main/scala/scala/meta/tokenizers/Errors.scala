@@ -27,8 +27,8 @@ object Tokenized {
   @leaf class Success(tokens: Tokens) extends Tokenized {
     override def toString = tokens.toString
   }
-  @leaf class Error(pos: Position, message: String, details: TokenizeException) extends Tokenized {
-    override def toString = details.fullMessage
+  @leaf class Error(pos: Position, message: String, details: Exception) extends Tokenized {
+    override def toString = details.toString
   }
 }
 

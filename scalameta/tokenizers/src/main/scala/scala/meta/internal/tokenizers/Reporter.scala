@@ -11,11 +11,11 @@ private[meta] trait Reporter {
   // NOTE: not making this public, e.g. by exposing Position.Offset
   // because I don't want to advertise this style of positioning
   private implicit class XtensionOffsetPosition(offset: Offset) {
-    private val point = Point.Offset(content, offset)
-    def pos = Position.Range(content, point, point, point)
+    private val point = Point.Offset(input, offset)
+    def pos = Position.Range(input, point, point, point)
   }
 
-  def content: Content
+  def input: Input
   def deprecationWarning(msg: String, at: Position): Unit      = ()
   def deprecationWarning(msg: String, at: Offset): Unit        = deprecationWarning(msg, at.pos)
   def readerError(msg: String, at: Position): Nothing          = throw new TokenizeException(at, msg)
@@ -27,5 +27,5 @@ private[meta] trait Reporter {
 }
 
 private[meta] object Reporter {
-  def apply(content0: Content) = new Reporter { def content = content0 }
+  def apply(content0: Input) = new Reporter { def input = content0 }
 }

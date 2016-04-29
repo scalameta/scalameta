@@ -8,36 +8,38 @@ import scala.collection.immutable.VectorBuilder
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
+import scala.meta.internal.inputs._
 
 // TODO: We should really give up on trying to use the standard IndexedSeq machinery,
 // because it doesn't give us a good way to load the elements lazily, which is necessary for Tokens.Slice
 // and would obviate the need for the very existence of Tokens.Prototype.
 // TODO: https://www.dropbox.com/s/5xmjr755tnlqcwk/2015-05-04%2013.50.48.jpg?dl=0
 // TODO: not sealed because TransformedTokens is declared in a different project
-abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with Input {
+abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) {
   def isAuthentic: Boolean
   def isSynthetic: Boolean = !isAuthentic
 
   def input: Input
   def dialect: Dialect
   def pos: Position = {
+    // NOTE: can't just do this.head and this.last, because we may be empty
     val (first, last) = this match {
       case Tokens.Slice(tokens, from, until) => (tokens(from), tokens(until - 1))
       case other => (other.head, other.last)
     }
-    if (first.content == last.content && !first.content.isInstanceOf[Input.Slice]) {
-      val content = first.content
-      Position.Range(content, first.pos.start, first.pos.start, last.pos.end)
+    if (first.input == last.input && !first.input.isInstanceOf[Input.Slice]) {
+      val input = first.input
+      Position.Range(input, first.pos.start, first.pos.start, last.pos.end)
     } else {
-      // NOTE: we assume that tokens represent a contiguous excerpt from a content.
+      // NOTE: we assume that tokens represent a contiguous excerpt from an input.
       // While it is true that Tokens(...) is general enough to break this assumption,
       // that never happens at the moment, so let's not complicate things.
-      val Input.Slice(cf, sf, _) = first.content
-      val Input.Slice(cl, sl, _) = last.content
-      val content = { require(cf == cl); cf }
-      val start = Point.Offset(content, first.start + sf)
-      val end = Point.Offset(content, last.end + sl)
-      Position.Range(content, start, start, end)
+      val Input.Slice(cf, sf, _) = first.input
+      val Input.Slice(cl, sl, _) = last.input
+      val input = { require(cf == cl); cf }
+      val start = Point.Offset(input, first.start + sf)
+      val end = Point.Offset(input, last.end + sl)
+      Position.Range(input, start, start, end)
     }
   }
 
@@ -93,19 +95,18 @@ object Tokens {
     }
   }
 
-  private[meta] case class Tokenized(content: Content, dialect: Dialect, underlying: Token*) extends Tokens(underlying: _*) {
-    override def input = content
+  private[meta] case class Tokenized(input: Input, dialect: Dialect, underlying: Token*) extends Tokens(underlying: _*) {
     override def isAuthentic = true
   }
 
   private[meta] case class Adhoc(underlying: Token*) extends Tokens(underlying: _*) {
-    override def input = this
+    override def input = InputTokens(this)
     override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = true
   }
 
   private[meta] case class Synthetic(underlying: Token*) extends Tokens(underlying: _*) {
-    override def input = this
+    override def input = InputTokens(this)
     override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = false
   }
