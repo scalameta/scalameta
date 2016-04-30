@@ -23,6 +23,10 @@ class data extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro DataMacros.data
 }
 
+class none extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro DataMacros.none
+}
+
 class DataMacros(val c: Context) extends MacroHelpers {
   import c.universe._
   import Flag._
@@ -252,6 +256,21 @@ class DataMacros(val c: Context) extends MacroHelpers {
       // However, for now it's quite fine to implement them as case objects.
 
       q"${mmods.mkCase} object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }"
+    }
+  })
+
+  def none(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformModule(mdef: ModuleDef): ModuleDef = {
+      val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
+      val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
+      val manns1 = ListBuffer[Tree]() ++ mmods.annotations
+      def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
+      val mstats1 = ListBuffer[Tree]() ++ mstats
+
+      manns1 += q"new $DataAnnotation"
+      mstats1 += q"override def isEmpty: $BooleanClass = true"
+
+      q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
     }
   })
 }

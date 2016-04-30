@@ -3,11 +3,12 @@ package inputs
 
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import scala.meta.common._
 
 // NOTE: `start` and `end` are String.substring-style,
 // i.e. `start` is inclusive and `end` is not.
 // Therefore Position.end can point to the last character plus one.
-@root trait Position {
+@root trait Position extends Optional {
   def input: Input
   def start: Point
   def point: Point
@@ -15,6 +16,14 @@ import org.scalameta.invariants._
 }
 
 object Position {
+  @none object None extends Position {
+    def input = Input.None
+    def start = Point.None
+    def point = Point.None
+    def end = Point.None
+    override def toString = "Position.None"
+  }
+
   @leaf class Range(input: Input, start: Point, point: Point, end: Point) extends Position {
     if (!((start.offset <= end.offset) && (start.offset <= point.offset) && (point.offset <= end.offset))) {
       throw new IllegalArgumentException(s"$rangeString is not a valid range")

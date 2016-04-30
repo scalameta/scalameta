@@ -7,7 +7,7 @@ import org.scalameta.invariants._
 import scala.collection.{immutable, mutable}
 import scala.meta.common._
 
-trait Input extends Serializable {
+trait Input extends Optional with Product with Serializable {
   def chars: Array[Char]
 
   // TODO: It's regrettable that we need to taint the pure abstraction of Input.
@@ -62,6 +62,11 @@ trait Input extends Serializable {
 }
 
 object Input {
+  @none object None extends Input {
+    lazy val chars = new Array[Char](0)
+    override def toString = "Input.None"
+  }
+
   @data class String(s: scala.Predef.String) extends Input {
     lazy val chars = s.toArray
     override def toString = "Input.String(\"" + s + "\")"

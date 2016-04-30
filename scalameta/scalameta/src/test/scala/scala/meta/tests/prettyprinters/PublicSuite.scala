@@ -94,6 +94,10 @@ class PublicSuite extends FunSuite {
     // covered below
   }
 
+  test("scala.meta.inputs.Input.None.toString") {
+    assert(Input.None.toString == "Input.None")
+  }
+
   test("scala.meta.inputs.Input.File.toString") {
     import java.io._
     import java.nio.charset.Charset
@@ -129,6 +133,10 @@ class PublicSuite extends FunSuite {
     // covered below
   }
 
+  test("scala.meta.inputs.Point.None.toString") {
+    assert(Point.None.toString == "Point.None")
+  }
+
   test("scala.meta.inputs.Point.Offset.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
     assert(lhs.pos.start.toString === """0 in Input.String("foo + bar")""")
@@ -137,6 +145,10 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Position.toString") {
     // covered below
+  }
+
+  test("scala.meta.inputs.Position.None.toString") {
+    assert(Position.None.toString == "Position.None")
   }
 
   test("scala.meta.inputs.Position.Range.toString") {
