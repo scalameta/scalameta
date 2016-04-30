@@ -98,6 +98,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       // step 1: generate boilerplate required by the @adt infrastructure
       mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
       mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[$classRef]"
+      mstats1 += q"$AdtTyperMacrosModule.consistencyCheck[$mname.type]"
       anns1 += q"new $AdtMetadataModule.leafClass"
       manns1 += q"new $AdtMetadataModule.leafCompanion"
       parents1 += tq"_root_.scala.Product"
@@ -121,6 +122,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       // step 1: generate boilerplate required by the @adt infrastructure
       mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$mname.type]"
       mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[$mname.type]"
+      mstats1 += q"$AdtTyperMacrosModule.consistencyCheck[$mname.type]"
       manns1 += q"new $AdtMetadataModule.leafClass"
       mparents1 += tq"_root_.scala.Product"
 
@@ -140,7 +142,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       val mstats1 = ListBuffer[Tree]() ++ mstats
 
       manns1 += q"new $AdtPackage.leaf"
-      mstats1 += q"$AdtTyperMacrosModule.optionalityCheck[$mname.type]"
+      manns1 += q"new $AdtMetadataModule.noneClass"
       mstats1 += q"override def isEmpty: $BooleanClass = true"
 
       q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
@@ -152,7 +154,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
 object AdtTyperMacros {
   def hierarchyCheck[T]: Unit = macro AdtTyperMacrosBundle.hierarchyCheck[T]
   def immutabilityCheck[T]: Unit = macro AdtTyperMacrosBundle.immutabilityCheck[T]
-  def optionalityCheck[T]: Unit = macro AdtTyperMacrosBundle.optionalityCheck[T]
+  def consistencyCheck[T]: Unit = macro AdtTyperMacrosBundle.consistencyCheck[T]
 }
 
 // NOTE: can't call this `AdtTyperMacros`, because then typechecking the macro defs will produce spurious cyclic errors
@@ -162,6 +164,10 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
   import c.universe._
   import c.internal._
   import decorators._
+
+  private def fail(message: String): Nothing = {
+    c.abort(c.enclosingPosition, message)
+  }
 
   def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     val sym = T.tpe.typeSymbol.asClass
@@ -180,8 +186,8 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
         bsym == symbolOf[scala.Product] ||
         bsym == symbolOf[scala.Equals] ||
         root.info.baseClasses.contains(bsym)
-      if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf) c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
-      if (!exempt && !bsym.isSealed && !bsym.isFinal) c.abort(c.enclosingPosition, s"unsealed parent of a $designation: ${bsym.fullName}")
+      if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf) fail(s"outsider parent of a $designation: ${bsym.fullName}")
+      if (!exempt && !bsym.isSealed && !bsym.isFinal) fail(s"unsealed parent of a $designation: ${bsym.fullName}")
     }
     q"()"
   }
@@ -189,8 +195,8 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
   def immutabilityCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     def check(sym: Symbol): Unit = {
       var vars = sym.info.members.collect { case x: TermSymbol if !x.isMethod && x.isVar => x }
-      vars = vars.filter(!_.annotations.exists(_.tree.tpe =:= typeOf[AdtMetadata.byNeedField]))
-      vars.foreach(v => c.abort(c.enclosingPosition, "leafs can't have mutable state: " + v.owner.fullName + "." + v.name))
+      vars = vars.filter(!_.hasAnnotation[AdtMetadata.byNeedField])
+      vars.foreach(v => fail("leafs can't have mutable state: " + v.owner.fullName + "." + v.name))
       val vals = sym.info.members.collect { case x: TermSymbol if !x.isMethod && !x.isVar => x }
       vals.foreach(v => ()) // TODO: deep immutability check
     }
@@ -199,7 +205,31 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
   }
 
   def optionalityCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    if (!(T.tpe <:< typeOf[Optional])) c.abort(c.enclosingPosition, s"@none objects must be in an ADT family that inherits from Optional")
+    if (!(T.tpe <:< typeOf[Optional])) fail(s"@none objects must be in an ADT family that inherits from Optional")
+    q"()"
+  }
+
+  def consistencyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
+    lazy val sym = T.tpe.typeSymbol
+    lazy val root = sym.asLeaf.root
+
+    case class FailOnceAttachment()
+    implicit class XtensionOptional(sym: Symbol) { def isNone = sym.hasAnnotation[AdtMetadata.noneClass] }
+    def failOnce(message: String): Unit = {
+      if (!root.sym.attachments.contains[FailOnceAttachment]) {
+        root.sym.attachments.update(FailOnceAttachment())
+        fail(message)
+      }
+    }
+
+    if (sym.asType.toType <:< typeOf[Optional]) {
+      val nones = root.allLeafs.map(_.sym).filter(_.isNone)
+      if (nones.length == 0) failOnce("an ADT family that inherits from Optional must define a @none object")
+      else if (nones.length > 1) failOnce("an ADT family that inherits from Optional can't have multiple @none objects")
+    } else {
+      if (sym.isNone) fail(s"@none objects must be in an ADT family that inherits from Optional")
+    }
+
     q"()"
   }
 }

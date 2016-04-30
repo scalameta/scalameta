@@ -35,6 +35,9 @@ trait MacroHelpers extends DebugFinder
       def hasNonEmpty(anns: List[Annotation]) = anns.exists(_.tree.tpe =:= typeOf[org.scalameta.invariants.nonEmpty])
       hasNonEmpty(sym.annotations) || hasNonEmpty(tptAnns)
     }
+    def hasAnnotation[T: TypeTag] = {
+      sym.annotations.exists(_.tree.tpe.typeSymbol == symbolOf[T])
+    }
   }
 
   lazy val InvariantFailedRaiseMethod = q"${hygienicRef(org.scalameta.invariants.InvariantFailedException)}.raise"

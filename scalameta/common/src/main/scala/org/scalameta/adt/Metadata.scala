@@ -8,5 +8,6 @@ object Metadata {
   class branch extends StaticAnnotation
   class leafClass extends StaticAnnotation
   class leafCompanion extends StaticAnnotation
+  class noneClass extends StaticAnnotation
   class byNeedField extends StaticAnnotation
 }

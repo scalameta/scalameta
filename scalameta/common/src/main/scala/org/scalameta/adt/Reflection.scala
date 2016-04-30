@@ -19,19 +19,19 @@ trait Reflection {
       def isBookkeeping = sym.asClass == symbolOf[AdtMetadata.Adt] || sym.asClass == symbolOf[AstMetadata.Ast]
       inheritsFromAdt && !isBookkeeping
     }
-    private def hasAnnotation[T: ClassTag] = { sym.initialize; sym.annotations.exists(_.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName) }
-    def isRoot: Boolean = hasAnnotation[AdtMetadata.root]
-    def isBranch: Boolean = hasAnnotation[AdtMetadata.branch]
-    def isLeaf: Boolean = hasAnnotation[AdtMetadata.leafClass]
+    private def unsafeHasAnnotation[T: ClassTag] = { sym.initialize; sym.annotations.exists(_.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName) }
+    def isRoot: Boolean = unsafeHasAnnotation[AdtMetadata.root]
+    def isBranch: Boolean = unsafeHasAnnotation[AdtMetadata.branch]
+    def isLeaf: Boolean = unsafeHasAnnotation[AdtMetadata.leafClass]
     def isField: Boolean = {
       val isMethodInLeafClass = sym.isMethod && sym.owner.isLeaf
       val isParamGetter = sym.isTerm && sym.asTerm.isParamAccessor && sym.asTerm.isGetter && sym.isPublic
-      val isAstField = hasAnnotation[AstMetadata.astField]
+      val isAstField = unsafeHasAnnotation[AstMetadata.astField]
       isMethodInLeafClass && (isParamGetter || isAstField)
     }
     def isPayload: Boolean = sym.isField && !sym.isAuxiliary
-    def isAuxiliary: Boolean = sym.isField && hasAnnotation[AstMetadata.auxiliary]
-    def isByNeed: Boolean = sym.isField && hasAnnotation[AdtMetadata.byNeedField]
+    def isAuxiliary: Boolean = sym.isField && unsafeHasAnnotation[AstMetadata.auxiliary]
+    def isByNeed: Boolean = sym.isField && unsafeHasAnnotation[AdtMetadata.byNeedField]
     def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt: " + sym)
     def asRoot: Root = new Root(sym)
     def asBranch: Branch = new Branch(sym)
