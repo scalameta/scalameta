@@ -20,9 +20,6 @@ abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) {
   def isAuthentic: Boolean
   def isSynthetic: Boolean = !isAuthentic
 
-  def input: Input
-  def dialect: Dialect
-
   // TODO: having to override all these methods just to change the return type feels kind of stupid
   // why weren't they implemented on top of CanBuildFrom as well?
   override def filter(pred: Token => Boolean): Tokens = Tokens(super.filter(pred): _*)
@@ -80,20 +77,14 @@ object Tokens {
   }
 
   private[meta] case class Adhoc(underlying: Token*) extends Tokens(underlying: _*) {
-    override def input = InputTokens(this)
-    override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = true
   }
 
   private[meta] case class Synthetic(underlying: Token*) extends Tokens(underlying: _*) {
-    override def input = InputTokens(this)
-    override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = false
   }
 
   private[meta] case class Slice(tokens: Tokens, from: Int, until: Int) extends Tokens(tokens.view(from, until): _*) {
-    override def input = tokens.input
-    override def dialect = tokens.dialect
     override def isAuthentic = true
     override def take(n: Int): Tokens = new Slice(tokens, from, Math.min(from + n, until))
     override def drop(n: Int): Tokens = new Slice(tokens, Math.min(from + n, until), until)
