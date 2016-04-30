@@ -47,7 +47,7 @@ object Positions {
         case el => s(el.toString.colored(color))
       }
       def pos(x: Tree): String = {
-        if (x.tokens.isAuthentic) s"[${x.pos.start.offset}..${x.pos.end.offset}]".sliced(x.toString)
+        if (x.tokens.isAuthentic) s"{${x.pos.start.offset}..${x.pos.end.offset}}".sliced(x.toString)
         else ""
       }
       def color(x: Tree): String = {

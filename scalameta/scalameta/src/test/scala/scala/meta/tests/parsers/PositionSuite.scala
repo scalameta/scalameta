@@ -9,32 +9,32 @@ class PositionSuite extends ParseSuite {
   test("1 + (2 / 3) * 4") {
     val tree = term("1 + (2 / 3) * 4")
     assert(tree.show[Positions] === """
-      |Term.ApplyInfix[0..15](
-        |Lit[0..1](1),
-        | Term.Name[2..3]("+"),
+      |Term.ApplyInfix{0..15}(
+        |Lit{0..1}(1),
+        | Term.Name{2..3}("+"),
         | Nil,
         | List(
-          |Term.ApplyInfix[4..15](
-            |Term.ApplyInfix[4..11](
-              |Lit[5..6](2),
-              | Term.Name[7..8]("/"),
+          |Term.ApplyInfix{4..15}(
+            |Term.ApplyInfix{4..11}(
+              |Lit{5..6}(2),
+              | Term.Name{7..8}("/"),
               | Nil,
-              | List(Lit[9..10](3))),
-            | Term.Name[12..13]("*"),
+              | List(Lit{9..10}(3))),
+            | Term.Name{12..13}("*"),
             | Nil,
-            | List(Lit[14..15](4)))))
+            | List(Lit{14..15}(4)))))
     """.trim.stripMargin.split("\n").mkString)
   }
   test("(1 + 2).foo") {
     val tree = term("(1 + 2).foo")
     assert(tree.show[Positions] === """
-      |Term.Select[0..11](
-        |Term.ApplyInfix[0..7](
-          |Lit[1..2](1),
-          | Term.Name[3..4]("+"),
+      |Term.Select{0..11}(
+        |Term.ApplyInfix{0..7}(
+          |Lit{1..2}(1),
+          | Term.Name{3..4}("+"),
           | Nil,
-          | List(Lit[5..6](2))),
-        | Term.Name[8..11]("foo"))
+          | List(Lit{5..6}(2))),
+        | Term.Name{8..11}("foo"))
     """.trim.stripMargin.split("\n").mkString)
   }
   test("#333") {
@@ -51,15 +51,15 @@ class PositionSuite extends ParseSuite {
   test("a + b + c") {
     val tree = term("a + b + c")
     assert(tree.show[Positions] === """
-      |Term.ApplyInfix[0..9](
-        |Term.ApplyInfix[0..5](
-          |Term.Name[0..1]("a"),
-          | Term.Name[2..3]("+"),
+      |Term.ApplyInfix{0..9}(
+        |Term.ApplyInfix{0..5}(
+          |Term.Name{0..1}("a"),
+          | Term.Name{2..3}("+"),
           | Nil,
-          | List(Term.Name[4..5]("b"))),
-        | Term.Name[6..7]("+"),
+          | List(Term.Name{4..5}("b"))),
+        | Term.Name{6..7}("+"),
         | Nil,
-        | List(Term.Name[8..9]("c")))
+        | List(Term.Name{8..9}("c")))
     """.trim.stripMargin.split("\n").mkString)
   }
 }
