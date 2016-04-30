@@ -12,7 +12,7 @@ import org.scalameta.invariants._
 
 @root trait Environment
 object Environment {
-  @leaf object Zero extends Environment
+  @leaf object None extends Environment
 }
 
 // TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.

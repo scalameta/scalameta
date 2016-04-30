@@ -20,8 +20,8 @@ class InfrastructureSuite extends FunSuite {
     assert(q.become[Type.Quasi].tokens.toString === "Tokens(HelloOuter [0..10))")
   }
 
-  private def attributeName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage), Foo.setTypechecked)
-  private def attributeName(name: Type.Name): Type.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage))
+  private def attributeName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.None, Symbol.RootPackage), Foo.setTypechecked)
+  private def attributeName(name: Type.Name): Type.Name = name.withAttrs(Denotation.Single(Prefix.None, Symbol.RootPackage))
   private def attributeTerm(term: Term): Term = term.withAttrs(Foo.setTypechecked)
   private def Foo = attributeName(Type.Name("Foo"))
   private def foo = attributeName(Term.Name("foo"))
@@ -53,7 +53,7 @@ class InfrastructureSuite extends FunSuite {
   //
   // test("TYPECHECKED resets when attributes are touched") {
   //   val x1 = foo.setTypechecked
-  //   val x2 = x1.withAttrs(Denotation.Zero, Typing.Zero)
+  //   val x2 = x1.withAttrs(Denotation.None, Typing.None)
   //   assert(x1.isTypechecked == true)
   //   assert(x2.isTypechecked == false)
   // }
@@ -95,12 +95,12 @@ class InfrastructureSuite extends FunSuite {
   }
 
   test("TYPECHECKED crashes when denot is zero") {
-    val x1 = foo.privateCopy(denot = Denotation.Zero)
+    val x1 = foo.privateCopy(denot = Denotation.None)
     intercept[UnsupportedOperationException] { x1.setTypechecked }
   }
 
   test("TYPECHECKED crashes when typing is zero") {
-    val x1 = foo.privateCopy(typing = Typing.Zero)
+    val x1 = foo.privateCopy(typing = Typing.None)
     intercept[UnsupportedOperationException] { x1.setTypechecked }
   }
 
@@ -110,7 +110,7 @@ class InfrastructureSuite extends FunSuite {
     assert(x2.isTypechecked === false)
   }
 
-  private def denot = Denotation.Single(Prefix.Zero, Symbol.RootPackage)
+  private def denot = Denotation.Single(Prefix.None, Symbol.RootPackage)
   private def typing = Foo.setTypechecked
   private def u = Term.Name("u")
   private def pa = u.withAttrs(denot, typing)

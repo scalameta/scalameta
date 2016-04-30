@@ -73,8 +73,8 @@ trait InternalTree {
 
   private[meta] def privateWithFlags(flags: Flags): Tree = {
     if ((flags & TYPECHECKED) == TYPECHECKED) {
-      val violatesDenot = privateHasDenot && (this.privateDenot == null || this.privateDenot == Denotation.Zero)
-      val violatesTyping = privateHasTyping && (this.privateTyping == null || this.privateTyping == Typing.Zero)
+      val violatesDenot = privateHasDenot && (this.privateDenot == null || this.privateDenot == Denotation.None)
+      val violatesTyping = privateHasTyping && (this.privateTyping == null || this.privateTyping == Typing.None)
       if (violatesDenot || violatesTyping) {
         implicit val recursion = Attributes.Recursion.Deep
         implicit val force = Attributes.Force.Never
@@ -100,7 +100,7 @@ trait InternalTree {
       flags = this.privateFlags & ~TYPECHECKED,
       env = env,
       denot = this.privateDenot,
-      typing = Typing.Zero
+      typing = Typing.None
     )
   }
 
@@ -129,7 +129,7 @@ trait InternalTree {
     partialCheckWithAttrs()
     this.privateCopy(
       flags = privateFlags & ~TYPECHECKED,
-      env = Environment.Zero,
+      env = Environment.None,
       denot = denot,
       typing = privateTyping
     )
@@ -140,7 +140,7 @@ trait InternalTree {
     partialCheckWithAttrs()
     this.privateCopy(
       flags = privateFlags & ~TYPECHECKED,
-      env = Environment.Zero,
+      env = Environment.None,
       denot = privateDenot,
       typing = typing
     )
@@ -150,7 +150,7 @@ trait InternalTree {
     stateCheckWithAttrs()
     this.privateCopy(
       flags = privateFlags & ~TYPECHECKED,
-      env = Environment.Zero,
+      env = Environment.None,
       denot = denot,
       typing = typing
     )
@@ -180,9 +180,9 @@ trait InternalTree {
   // =============================================================================================
 
   private[meta] def isUnattributed: _root_.scala.Boolean = {
-    val isEnvEmpty = privateEnv == null || privateEnv == Environment.Zero
-    val isDenotEmpty = privateDenot == null || privateDenot == Denotation.Zero
-    val isTypingEmpty = privateTyping == null || privateTyping == Denotation.Zero
+    val isEnvEmpty = privateEnv == null || privateEnv == Environment.None
+    val isDenotEmpty = privateDenot == null || privateDenot == Denotation.None
+    val isTypingEmpty = privateTyping == null || privateTyping == Denotation.None
     this match {
       case tree: Term.Name => isEnvEmpty && isDenotEmpty && isTypingEmpty
       case tree: Ctor.Name => isEnvEmpty && isDenotEmpty && isTypingEmpty
@@ -205,21 +205,21 @@ trait InternalTree {
 
 trait InternalTreeXtensions {
   private[meta] implicit class XtensionAttributedName[T <: Name](tree: T) {
-    def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.Zero
-    def denot: Denotation = if (tree.privateDenot != null) tree.privateDenot else Denotation.Zero
+    def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.None
+    def denot: Denotation = if (tree.privateDenot != null) tree.privateDenot else Denotation.None
     def withEnv(env: Environment): T = tree.privateWithEnv(env).asInstanceOf[T]
     def withAttrs(denot: Denotation): T = tree.privateWithAttrs(denot).asInstanceOf[T]
   }
 
   private[meta] implicit class XtensionAttributedTerm[T <: Term](tree: T) {
-    def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.Zero
-    def typing: Typing = if (tree.privateTyping != null) tree.privateTyping else Typing.Zero
+    def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.None
+    def typing: Typing = if (tree.privateTyping != null) tree.privateTyping else Typing.None
     def withEnv(env: Environment): T = tree.privateWithEnv(env).asInstanceOf[T]
     def withAttrs(typingLike: TypingLike): T = tree.privateWithAttrs(typingLike.typing).asInstanceOf[T]
   }
 
   private[meta] implicit class XtensionAttributedTermParam(tree: Term.Param) {
-    def typing: Typing = if (tree.privateTyping != null) tree.privateTyping else Typing.Zero
+    def typing: Typing = if (tree.privateTyping != null) tree.privateTyping else Typing.None
     def withAttrs(typingLike: TypingLike): Term.Param = tree.privateWithAttrs(typingLike.typing).asInstanceOf[Term.Param]
   }
 

@@ -242,7 +242,7 @@ extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialec
     // TODO: Implement this (https://github.com/scalameta/scalameta/issues/156)
     // by setting Tree.env of appropriate trees (names, apply-like nodes) to appropriate values.
     // So far, we don't have to set anything to anything,
-    // because Environment.Zero (the only possible value for environments at the moment) is the default.
+    // because Environment.None (the only possible value for environments at the moment) is the default.
     meta
   }
 

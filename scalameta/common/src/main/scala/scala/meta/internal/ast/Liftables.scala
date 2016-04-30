@@ -49,8 +49,8 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
         "denot" -> DenotSymbol.toType,
         "typing" -> TypingSymbol.toType)
       val coreDefaults = Map(
-        "denot" -> q"_root_.scala.meta.internal.semantic.Denotation.Zero",
-        "typing" -> q"_root_.scala.meta.internal.semantic.Typing.Zero")
+        "denot" -> q"_root_.scala.meta.internal.semantic.Denotation.None",
+        "typing" -> q"_root_.scala.meta.internal.semantic.Typing.None")
       def withCoreFields(body: Tree, fields: String*): Tree = {
         fields.foldLeft(body)((curr, field) => {
           val fieldSelector = q"$localName.${TermName(field)}"

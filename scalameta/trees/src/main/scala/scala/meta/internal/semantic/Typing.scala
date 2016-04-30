@@ -10,7 +10,7 @@ import scala.meta.internal.prettyprinters._
 
 @root trait Typing
 object Typing {
-  @leaf object Zero extends Typing
+  @leaf object None extends Typing
   @leaf object Recursive extends Typing
   @leaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing {
     protected def writeReplace(): AnyRef = new Nonrecursive.SerializationProxy(this)

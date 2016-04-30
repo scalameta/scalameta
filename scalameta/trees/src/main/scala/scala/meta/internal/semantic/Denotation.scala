@@ -29,7 +29,7 @@ object ScalaSig {
 
 @root trait BinarySig
 object BinarySig {
-  @leaf object Zero extends BinarySig
+  @leaf object None extends BinarySig
   @leaf class Intrinsic(className: String, methodName: String, signature: String) extends BinarySig
   @leaf class JvmField(className: String, fieldName: String, signature: String) extends BinarySig
   @leaf class JvmMethod(className: String, fieldName: String, signature: String) extends BinarySig
@@ -39,7 +39,7 @@ object BinarySig {
 
 @root trait Symbol
 object Symbol {
-  @leaf object Zero extends Symbol
+  @leaf object None extends Symbol
   @leaf object RootPackage extends Symbol
   @leaf object EmptyPackage extends Symbol
   @leaf class Global(owner: Symbol, scalaSig: ScalaSig, binarySig: BinarySig) extends Symbol
@@ -55,7 +55,7 @@ object Symbol {
 
 @root trait Prefix
 object Prefix {
-  @leaf object Zero extends Prefix
+  @leaf object None extends Prefix
   @leaf class Type(tpe: scala.meta.Type) extends Prefix {
     override def canEqual(other: Any): Boolean = other.isInstanceOf[Type]
     override def equals(that: Any): Boolean = that match {
@@ -85,8 +85,8 @@ object Prefix {
   override def hashCode: Int = equality.Semantic.hashCode(prefix) * 37 + symbols.hashCode
 }
 object Denotation {
-  @leaf object Zero extends Denotation {
-    def prefix = Prefix.Zero
+  @leaf object None extends Denotation {
+    def prefix = Prefix.None
     def symbols = Nil
     override def equals(that: Any): Boolean = super.equals(that)
     override def hashCode: Int = super.hashCode

@@ -131,12 +131,12 @@ class TransverserSuite extends FunSuite {
   }
 
   test("Transformed Attributes") {
-    def attributeTypeName(name: Type.Name): Type.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage))
+    def attributeTypeName(name: Type.Name): Type.Name = name.withAttrs(Denotation.Single(Prefix.None, Symbol.RootPackage))
     val Foo = attributeTypeName(Type.Name("Foo"))
-    def attributeTermName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage), Foo.setTypechecked)
+    def attributeTermName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.None, Symbol.RootPackage), Foo.setTypechecked)
     def attributeTerm(term: Term): Term = term.withAttrs(Foo.setTypechecked)
-    val denot1 = Denotation.Single(Prefix.Zero, Symbol.RootPackage)
-    val denot2 = Denotation.Single(Prefix.Zero, Symbol.EmptyPackage)
+    val denot1 = Denotation.Single(Prefix.None, Symbol.RootPackage)
+    val denot2 = Denotation.Single(Prefix.None, Symbol.EmptyPackage)
     val typing = Foo.setTypechecked
     val x = q"x".withAttrs(denot1, typing).setTypechecked
     val z = q"z".withAttrs(denot2, typing).setTypechecked

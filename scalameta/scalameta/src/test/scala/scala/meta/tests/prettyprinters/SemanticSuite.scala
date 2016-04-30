@@ -14,7 +14,7 @@ package prettyprinters
 // class SemanticSuite extends ParseSuite {
 //   test("comprehensive show[Attributes]") {
 //     val symbolroot = Symbol.RootPackage
-//     val prefixroot = Prefix.Zero
+//     val prefixroot = Prefix.None
 //     val denotroot = Denotation.Single(prefixroot, symbolroot)
 //     val termroot = Term.Name("_root_").withAttrs(denotroot, Recursive).setTypechecked
 //     val typeroot = Type.Singleton(termroot).setTypechecked
@@ -25,13 +25,13 @@ package prettyprinters
 //     val typeBar = Type.Name("Bar").withAttrs(denotBar).setTypechecked
 //
 //     val symbolbar = Symbol.Local("bar")
-//     val prefixbar = Prefix.Zero
+//     val prefixbar = Prefix.None
 //     val denotbar = Denotation.Single(prefixbar, symbolbar)
 //     val typebar = typeBar
 //     val termbar = Term.Name("bar").withAttrs(denotbar, typebar).setTypechecked
 //
 //     val symbolx = Symbol.Local("x")
-//     val prefixx = Prefix.Zero
+//     val prefixx = Prefix.None
 //     val denotx = Denotation.Single(prefixx, symbolx)
 //     val typex = typeBar
 //     val x = Term.Name("x").withAttrs(denotx, typex)
