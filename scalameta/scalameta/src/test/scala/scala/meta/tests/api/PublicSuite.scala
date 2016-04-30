@@ -72,6 +72,7 @@ class PublicSuite extends FunSuite {
       (??? : Input).parse[Term]
       (??? : String).parse[Term]
       (??? : java.io.File).parse[Term]
+      (??? : Tokens).parse[Term]
       (??? : Array[Char]).parse[Term]
     """) === "")
   }
@@ -100,6 +101,7 @@ class PublicSuite extends FunSuite {
       scala.meta.dialects.Scala211(??? : scala.meta.Input).parse[scala.meta.Term]
       scala.meta.dialects.Scala211(??? : String).parse[scala.meta.Term]
       scala.meta.dialects.Scala211(??? : java.io.File).parse[scala.meta.Term]
+      scala.meta.dialects.Scala211(??? : scala.meta.Tokens).parse[scala.meta.Term]
       scala.meta.dialects.Scala211(??? : Array[Char]).parse[scala.meta.Term]
     """) === "")
   }
@@ -140,6 +142,7 @@ class PublicSuite extends FunSuite {
       (??? : Input).tokenize
       (??? : String).tokenize
       (??? : java.io.File).tokenize
+      (??? : Tokens).tokenize
       (??? : Array[Char]).tokenize
     """) === "")
   }
@@ -168,6 +171,7 @@ class PublicSuite extends FunSuite {
       scala.meta.dialects.Scala211(??? : scala.meta.Input).tokenize
       scala.meta.dialects.Scala211(??? : String).tokenize
       scala.meta.dialects.Scala211(??? : java.io.File).tokenize
+      scala.meta.dialects.Scala211(??? : scala.meta.Tokens).tokenize
       scala.meta.dialects.Scala211(??? : Array[Char]).tokenize
     """) === "")
   }

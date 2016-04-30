@@ -5,6 +5,7 @@ import scala.collection._
 import scala.collection.generic._
 import scala.collection.mutable.{Builder, ArrayBuilder, ListBuffer}
 import scala.collection.immutable.VectorBuilder
+import scala.meta.convert._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
@@ -119,6 +120,8 @@ object Tokens {
     override def drop(n: Int): Tokens = new Slice(tokens, Math.min(from + n, until), until)
   }
 
+  implicit val tokensToInput: Convert[Tokens, Input] = Convert(tokens => Input.String(tokens.syntax))
+  implicit val seqTokenToInput: Convert[Seq[Token], Input] = Convert(tokens => Input.String(Tokens(tokens: _*).syntax))
   implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
   implicit def showSyntax[T <: Tokens]: Syntax[T] = TokensSyntax.apply[T]
 }
