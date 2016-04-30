@@ -34,8 +34,9 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.classifiers
       |scala.meta.classifiers.Classifiable *
       |scala.meta.classifiers.Classifier *
-      |scala.meta.convert
-      |scala.meta.convert.Convert *
+      |scala.meta.common
+      |scala.meta.common.Convert *
+      |scala.meta.common.Optional *
       |scala.meta.dialects
       |scala.meta.dialects.Dotty *
       |scala.meta.dialects.Sbt0136 *
@@ -106,10 +107,10 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
       |* T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
-      |* T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
+      |* T.parse(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
       |* T.show(implicit Style[T]): String
-      |* T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
-      |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): (scala.meta.Dialect, scala.meta.inputs.Input)
+      |* T.tokenize(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
+      |* scala.meta.Dialect.apply(T)(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input]): (scala.meta.Dialect, scala.meta.inputs.Input)
       |* scala.meta.Pat.Type.tpe: scala.meta.Type
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree

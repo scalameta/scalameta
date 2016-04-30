@@ -5,7 +5,7 @@ import java.nio.charset.Charset
 import org.scalameta.data._
 import org.scalameta.invariants._
 import scala.collection.{immutable, mutable}
-import scala.meta.convert._
+import scala.meta.common._
 
 trait Input extends Serializable {
   def chars: Array[Char]

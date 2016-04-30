@@ -6,7 +6,7 @@ import scala.language.implicitConversions
 import scala.language.higherKinds
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.meta.convert._
+import scala.meta.common._
 import scala.compat.Platform.EOL
 
 trait Show[T] { def apply(t: T): Show.Result }

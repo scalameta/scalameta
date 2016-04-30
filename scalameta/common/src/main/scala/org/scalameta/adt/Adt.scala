@@ -7,6 +7,7 @@ import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
 import org.scalameta.adt.{Reflection => AdtReflection, Metadata => AdtMetadata}
 import org.scalameta.internal.MacroHelpers
+import scala.meta.common.Optional
 
 // The @root, @branch and @leaf macros implement the ADT pattern in a formulation that we found useful.
 //
@@ -28,6 +29,10 @@ class branch extends StaticAnnotation {
 
 class leaf extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AdtNamerMacros.leaf
+}
+
+class none extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro AdtNamerMacros.none
 }
 
 class AdtNamerMacros(val c: Context) extends MacroHelpers {
@@ -125,12 +130,29 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
     }
   })
+
+  def none(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformModule(mdef: ModuleDef): ModuleDef = {
+      val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
+      val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
+      val manns1 = ListBuffer[Tree]() ++ mmods.annotations
+      def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
+      val mstats1 = ListBuffer[Tree]() ++ mstats
+
+      manns1 += q"new $AdtPackage.leaf"
+      mstats1 += q"$AdtTyperMacrosModule.optionalityCheck[$mname.type]"
+      mstats1 += q"override def isEmpty: $BooleanClass = true"
+
+      q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
+    }
+  })
 }
 
 // Parts of @root, @branch and @leaf logic that need a typer context and can't be run in a macro annotation.
 object AdtTyperMacros {
   def hierarchyCheck[T]: Unit = macro AdtTyperMacrosBundle.hierarchyCheck[T]
   def immutabilityCheck[T]: Unit = macro AdtTyperMacrosBundle.immutabilityCheck[T]
+  def optionalityCheck[T]: Unit = macro AdtTyperMacrosBundle.optionalityCheck[T]
 }
 
 // NOTE: can't call this `AdtTyperMacros`, because then typechecking the macro defs will produce spurious cyclic errors
@@ -173,6 +195,11 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
       vals.foreach(v => ()) // TODO: deep immutability check
     }
     check(T.tpe.typeSymbol.asClass)
+    q"()"
+  }
+
+  def optionalityCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
+    if (!(T.tpe <:< typeOf[Optional])) c.abort(c.enclosingPosition, s"@none objects must be in an ADT family that inherits from Optional")
     q"()"
   }
 }

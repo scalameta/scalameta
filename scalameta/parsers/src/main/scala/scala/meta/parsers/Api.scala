@@ -1,7 +1,7 @@
 package scala.meta
 package parsers
 
-import scala.meta.convert._
+import scala.meta.common._
 import scala.meta.inputs._
 
 private[meta] trait Api {

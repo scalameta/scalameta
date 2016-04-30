@@ -5,14 +5,15 @@ package semantic
 import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import scala.meta.common._
 
 // TODO: Expand this accordingly to evolve into a full-fledged hygiene system for Scala.
 // The most promising approach to hygiene at the moment is the new development in the Racketland:
 // http://www.cs.utah.edu/~mflatt/scope-sets-5/index.html.
 
-@root trait Environment
+@root trait Environment extends Optional
 object Environment {
-  @leaf object None extends Environment
+  @none object None extends Environment
 }
 
 // TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.

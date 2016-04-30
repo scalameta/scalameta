@@ -4,7 +4,7 @@ package tokenquasiquotes
 
 import scala.reflect.macros.whitebox.Context
 import scala.meta.internal.dialects.InstantiateDialect
-import scala.meta.convert._
+import scala.meta.common._
 import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._

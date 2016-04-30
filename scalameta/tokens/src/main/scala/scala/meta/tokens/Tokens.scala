@@ -5,7 +5,7 @@ import scala.collection._
 import scala.collection.generic._
 import scala.collection.mutable.{Builder, ArrayBuilder, ListBuffer}
 import scala.collection.immutable.VectorBuilder
-import scala.meta.convert._
+import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
