@@ -26,7 +26,7 @@ object Point {
     override def toString = "Point.None"
   }
 
-  @leaf class Offset(input: Input, offset: Int) extends Point {
+  @leaf class Offset(input: Input @nonEmpty, offset: Int) extends Point {
     if (!(0 <= offset && offset <= input.chars.length)) {
       val message = s"$offset is not a valid offset, allowed [0..${input.chars.length}]"
       throw new IllegalArgumentException(message)

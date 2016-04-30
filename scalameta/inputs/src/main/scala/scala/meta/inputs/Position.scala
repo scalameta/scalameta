@@ -24,7 +24,7 @@ object Position {
     override def toString = "Position.None"
   }
 
-  @leaf class Range(input: Input, start: Point, point: Point, end: Point) extends Position {
+  @leaf class Range(input: Input @nonEmpty, start: Point @nonEmpty, point: Point @nonEmpty, end: Point @nonEmpty) extends Position {
     if (!((start.offset <= end.offset) && (start.offset <= point.offset) && (point.offset <= end.offset))) {
       throw new IllegalArgumentException(s"$rangeString is not a valid range")
     }
