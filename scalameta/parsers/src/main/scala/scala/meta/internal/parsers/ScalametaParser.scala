@@ -1369,8 +1369,12 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
 
   def interpolate[Ctx <: Tree, Ret <: Tree](arg: () => Ctx, result: (Term.Name, List[Lit], List[Ctx]) => Ret): Ret = autoPos {
     val interpolator = {
-      if (token.is[Xml.Start]) atPos(in.tokenPos, in.tokenPos)(Term.Name("xml"))
-      else atPos(in.tokenPos, in.tokenPos)(Term.Name(token.require[Interpolation.Id].show[Syntax]))
+      val name = token match {
+        case Xml.Start() => Term.Name("xml")
+        case Interpolation.Id(value) => Term.Name(value)
+        case _ => unreachable(debug(token))
+      }
+      atPos(in.tokenPos, in.tokenPos)(name)
     }
     if (token.is[Interpolation.Id]) next()
     val partsBuf = new ListBuffer[Lit]
@@ -1928,7 +1932,7 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
       token match {
         case Literal() =>
           literal()
-        case Interpolation.Id() =>
+        case Interpolation.Id(_) =>
           interpolateTerm()
         case Xml.Start() =>
           xmlTerm()
@@ -2422,7 +2426,7 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
         Pat.Wildcard()
       case Literal() =>
         literal()
-      case Interpolation.Id() =>
+      case Interpolation.Id(_) =>
         interpolatePat()
       case Xml.Start() =>
         xmlPat()

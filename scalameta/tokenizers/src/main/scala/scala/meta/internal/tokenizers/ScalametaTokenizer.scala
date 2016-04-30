@@ -30,7 +30,7 @@ private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case FALSE           => Token.KwFalse(input, dialect, curr.offset)
         case NULL            => Token.KwNull(input, dialect, curr.offset)
 
-        case INTERPOLATIONID => Token.Interpolation.Id(input, dialect, curr.offset, curr.endOffset + 1)
+        case INTERPOLATIONID => Token.Interpolation.Id(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
         case XMLSTART        => Token.Xml.Start(input, dialect, curr.offset, curr.offset)
 
         case NEW   => Token.KwNew(input, dialect, curr.offset)

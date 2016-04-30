@@ -105,8 +105,11 @@ object Token {
     @freeform("symbol constant") class Symbol(value: scala.Symbol) extends Token
     @freeform("string constant") class String(value: Predef.String) extends Token
   }
+  // NOTE: Here's example tokenization of q"${foo}bar".
+  // BOF, Id(q)<"q">, Start<"\"">, Part("")<"">, SpliceStart<"$">, {, foo, }, SpliceEnd<"">, Part("bar")<"bar">, End(""), EOF.
+  // As you can see, SpliceEnd is always empty, but I still decided to expose it.
   object Interpolation {
-    @freeform("interpolation id") class Id extends Token
+    @freeform("interpolation id") class Id(value: String) extends Token
     @freeform("interpolation start") class Start extends Token
     @freeform("interpolation part") class Part(value: String) extends Token
     @freeform("splice start") class SpliceStart extends Token
