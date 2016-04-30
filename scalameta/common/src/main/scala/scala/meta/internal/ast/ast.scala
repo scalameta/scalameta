@@ -119,6 +119,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       bparams1 += q"private[meta] val privateFlags: $FlagsClass"
       bparams1 += q"@$TransientAnnotation private[meta] val privatePrototype: $iname"
       bparams1 += q"private[meta] val privateParent: $TreeClass"
+      bparams1 += q"private[meta] val privatePos: $PositionClass"
       bparams1 += q"@$TransientAnnotation private[meta] var privateTokens: $TokensClass"
       if (hasEnv) bparams1 += q"private[meta] override val privateEnv: $EnvironmentClass"
       if (hasDenot) bparams1 += q"private[meta] override val privateDenot: $DenotationClass"
@@ -138,6 +139,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       privateCopyBargs += q"flags"
       privateCopyBargs += q"prototype.asInstanceOf[$iname]"
       privateCopyBargs += q"parent"
+      privateCopyBargs += q"pos"
       privateCopyBargs += q"tokens"
       if (hasEnv) privateCopyBargs += q"env"
       if (hasDenot) privateCopyBargs += q"denot"
@@ -149,6 +151,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
             flags: $FlagsClass = privateFlags,
             prototype: $TreeClass = this,
             parent: $TreeClass = privateParent,
+            pos: $PositionClass = privatePos,
             tokens: $TokensClass = privateTokens,
             env: $EnvironmentClass = privateEnv,
             denot: $DenotationClass = privateDenot,
@@ -224,7 +227,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         if (hasErrors) q"()"
         else require
       })
-      var internalInitCount = 3 // privatePrototype, privateParent, privateTokens
+      var internalInitCount = 4 // privatePrototype, privateParent, privatePos, privateTokens
       if (hasEnv) internalInitCount += 1
       if (hasDenot) internalInitCount += 1
       if (hasTyping) internalInitCount += 1
@@ -291,9 +294,9 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
           def become[T <: $QuasiClass](implicit ev: $AstInfoClass[T]): T = {
             this match {
               case $mname(0, tree) =>
-                ev.quasi(0, tree).withTokens(this.tokens).asInstanceOf[T]
+                ev.quasi(0, tree).withPos(this.pos).withTokens(this.tokens).asInstanceOf[T]
               case $mname(1, nested @ $mname(0, tree)) =>
-                ev.quasi(1, nested.become[T]).withTokens(this.tokens).asInstanceOf[T]
+                ev.quasi(1, nested.become[T]).withPos(this.pos).withTokens(this.tokens).asInstanceOf[T]
               case _ =>
                 throw new Exception("complex ellipses are not supported yet")
             }

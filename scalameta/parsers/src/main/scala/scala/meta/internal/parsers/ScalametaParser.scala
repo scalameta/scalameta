@@ -409,7 +409,23 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
     val result = body
     var endTokenPos = end.endTokenPos
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    result.withTokens(scannerTokens.slice(startTokenPos, endTokenPos + 1)).asInstanceOf[T]
+    val pos = {
+      val startToken = scannerTokens(startTokenPos)
+      val endToken = scannerTokens(endTokenPos)
+      if (startToken.input == endToken.input && !startToken.input.isInstanceOf[Input.Slice]) {
+        Position.Range(startToken.input, startToken.start, startToken.start, endToken.end)
+      } else {
+        // NOTE: we assume that tokens represent a contiguous excerpt from an input.
+        // While it is true that InputTokens(...) is general enough to break this assumption,
+        // that never happens at the moment, so let's not complicate things.
+        val Input.Slice(cf, sf, _) = startToken.input
+        val Input.Slice(cl, sl, _) = endToken.input
+        val input = { require(cf == cl); cf }
+        Position.Range(input, startToken.start + sf, startToken.start + sf, endToken.end + sl)
+      }
+    }
+    val tokens = scannerTokens.slice(startTokenPos, endTokenPos + 1)
+    result.withPos(pos).withTokens(tokens).asInstanceOf[T]
   }
   def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
 

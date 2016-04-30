@@ -26,6 +26,10 @@ trait CommonNamerMacros extends MacroHelpers {
   lazy val DenotationClass = tq"_root_.scala.meta.internal.semantic.Denotation"
   lazy val TypingClass = tq"_root_.scala.meta.internal.semantic.Typing"
   lazy val AstAnnotation = tq"_root_.scala.meta.internal.ast.ast"
+  lazy val PositionClass = tq"_root_.scala.meta.inputs.Position"
+  lazy val PositionModule = q"_root_.scala.meta.inputs.Position"
+  lazy val PointClass = tq"_root_.scala.meta.inputs.Point"
+  lazy val PointModule = q"_root_.scala.meta.inputs.Point"
 
   def mkClassifier(name: TypeName): List[Tree] = {
     val q"..$classifierBoilerplate" = q"""

@@ -16,9 +16,10 @@ import scala.meta.internal.ast.Helpers._
   def parent: Option[Tree]
   def children: Seq[Tree]
 
+  def pos: Position
+  def withPos(pos: Position): this.type = privateWithPos(pos).asInstanceOf[this.type]
   def tokens: Tokens
   def withTokens(tokens: Tokens): this.type = privateWithTokens(tokens).asInstanceOf[this.type]
-  def pos: Position = tokens.pos
   def syntax: String = this.show[Syntax]
 
   def is[U](implicit classifier: Classifier[Tree, U]): Boolean = classifier(this)

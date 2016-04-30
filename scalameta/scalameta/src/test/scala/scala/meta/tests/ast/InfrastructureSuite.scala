@@ -9,20 +9,70 @@ import scala.meta.dialects.Scala211
 
 class InfrastructureSuite extends FunSuite {
   test("become for Quasi-0") {
-    val q = Term.Quasi(0, "hello").withTokens(toks"Hello")
+    val pos = Position.Range(Input.String("Hello"), 0, 0, 5)
+    val q = Term.Quasi(0, "hello").withTokens(toks"Hello").withPos(pos)
     assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(0, "hello")""")
+    assert(q.become[Type.Quasi].pos.toString === """[0..0..5) in Input.String("Hello")""")
     assert(q.become[Type.Quasi].tokens.toString === "Tokens(Hello [0..5))")
   }
 
   test("become for Quasi-1") {
-    val q = Term.Quasi(1, Term.Quasi(0, "hello").withTokens(toks"HelloInner")).withTokens(toks"HelloOuter")
+    val pos = Position.Range(Input.String("HelloOuter"), 0, 0, 10)
+    val q = Term.Quasi(1, Term.Quasi(0, "hello").withTokens(toks"HelloInner")).withTokens(toks"HelloOuter").withPos(pos)
     assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(1, Type.Quasi(0, "hello"))""")
+    assert(q.become[Type.Quasi].pos.toString === """[0..0..10) in Input.String("HelloOuter")""")
     assert(q.become[Type.Quasi].tokens.toString === "Tokens(HelloOuter [0..10))")
+  }
+
+  test("copy flags") {
+    val x1 = foobar.setTypechecked
+    val x2 = x1.copy()
+    assert(x1.isTypechecked === true)
+    assert(x2.isTypechecked === false)
+  }
+
+  test("copy parent") {
+    val Term.Select(x1: Term.Name, _) = foobar
+    val x2 = x1.copy()
+    assert(x1.parent.nonEmpty === true)
+    assert(x2.parent.nonEmpty === false)
+  }
+
+  test("copy pos") {
+    val x1 = "foo".parse[Term].get.asInstanceOf[Term.Name]
+    val x2 = x1.copy()
+    assert(x1.pos.nonEmpty === true)
+    assert(x2.pos.nonEmpty === false)
+  }
+
+  test("copy tokens") {
+    val x1 = "foo".parse[Term].get.asInstanceOf[Term.Name]
+    val x2 = x1.copy()
+    assert(x1.tokens.nonEmpty === true)
+    assert(x2.tokens.nonEmpty === true)
+  }
+
+  test("copy env") {
+    // TODO: fill this in when environments are implemented
+  }
+
+  test("copy denot") {
+    val x1 = foo
+    val x2 = x1.copy()
+    assert(x1.denot.nonEmpty === true)
+    assert(x2.denot.nonEmpty === false)
+  }
+
+  test("copy typing") {
+    val x1 = foo
+    val x2 = x1.copy()
+    assert(x1.typing.nonEmpty === true)
+    assert(x2.typing.nonEmpty === false)
   }
 
   private def attributeName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.None, Symbol.RootPackage), Foo.setTypechecked)
   private def attributeName(name: Type.Name): Type.Name = name.withAttrs(Denotation.Single(Prefix.None, Symbol.RootPackage))
-  private def attributeTerm(term: Term): Term = term.withAttrs(Foo.setTypechecked)
+  private def attributeTerm[T <: Term](term: T): T = term.withAttrs(Foo.setTypechecked)
   private def Foo = attributeName(Type.Name("Foo"))
   private def foo = attributeName(Term.Name("foo"))
   private def bar = attributeName(Term.Name("bar"))

@@ -276,7 +276,7 @@ private[meta] object Helpers {
         }
       }
       def merge(tpe: Type.Name, ctor: Ctor.Name): Ctor.Name = {
-        ctor.copy(value = tpe.value).withTokens(tpe.tokens).inheritAttrs(ctor)
+        ctor.copy(value = tpe.value).withPos(tpe.pos).withTokens(tpe.tokens).inheritAttrs(ctor)
       }
       tpe match {
         case tpe @ Type.Name(value) =>

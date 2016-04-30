@@ -22,27 +22,6 @@ abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) {
 
   def input: Input
   def dialect: Dialect
-  def pos: Position = {
-    // NOTE: can't just do this.head and this.last, because we may be empty
-    val (first, last) = this match {
-      case Tokens.Slice(tokens, from, until) => (tokens(from), tokens(until - 1))
-      case other => (other.head, other.last)
-    }
-    if (first.input == last.input && !first.input.isInstanceOf[Input.Slice]) {
-      val input = first.input
-      Position.Range(input, first.pos.start, first.pos.start, last.pos.end)
-    } else {
-      // NOTE: we assume that tokens represent a contiguous excerpt from an input.
-      // While it is true that Tokens(...) is general enough to break this assumption,
-      // that never happens at the moment, so let's not complicate things.
-      val Input.Slice(cf, sf, _) = first.input
-      val Input.Slice(cl, sl, _) = last.input
-      val input = { require(cf == cl); cf }
-      val start = Point.Offset(input, first.start + sf)
-      val end = Point.Offset(input, last.end + sl)
-      Position.Range(input, start, start, end)
-    }
-  }
 
   // TODO: having to override all these methods just to change the return type feels kind of stupid
   // why weren't they implemented on top of CanBuildFrom as well?

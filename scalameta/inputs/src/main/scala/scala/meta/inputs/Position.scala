@@ -31,4 +31,12 @@ object Position {
     private def rangeString = s"[${start.offset}..${point.offset}..${end.offset})"
     override def toString = s"$rangeString in $input"
   }
+  object Range {
+    def apply(input: Input, start: Point, point: Point, end: Point): Position = {
+      new Range(input, start, point, end)
+    }
+    def apply(input: Input, start: Int, point: Int, end: Int): Position = {
+      new Range(input, Point.Offset(input, start), Point.Offset(input, point), Point.Offset(input, end))
+    }
+  }
 }

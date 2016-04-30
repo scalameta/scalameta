@@ -5,6 +5,7 @@ package ast
 import scala.compat.Platform.EOL
 import scala.meta.classifiers._
 import scala.meta.prettyprinters._
+import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.internal.equality._
 import scala.meta.internal.flags._
@@ -29,6 +30,7 @@ trait InternalTree {
   private[meta] def privateFlags: Flags
   private[meta] def privatePrototype: Tree
   private[meta] def privateParent: Tree
+  private[meta] def privatePos: Position
   private[meta] def privateTokens: Tokens
   private[meta] def privateTokens_=(tokens: Tokens): Unit
   private[meta] def privateEnv: Environment = null
@@ -38,6 +40,7 @@ trait InternalTree {
     flags: Flags = ZERO,
     prototype: Tree = this,
     parent: Tree = privateParent,
+    pos: Position = privatePos,
     tokens: Tokens = privateTokens,
     env: Environment = privateEnv,
     denot: Denotation = privateDenot,
@@ -53,6 +56,10 @@ trait InternalTree {
 
   def parent: Option[Tree] = {
     if (privateParent != null) scala.Some(privateParent) else None
+  }
+
+  def pos: Position = {
+    if (privatePos != null) privatePos else Position.None
   }
 
   def tokens: Tokens = {
@@ -83,6 +90,10 @@ trait InternalTree {
       }
     }
     this.privateCopy(flags = flags)
+  }
+
+  private[meta] def privateWithPos(pos: Position): Tree = {
+    this.privateCopy(pos = pos)
   }
 
   private[meta] def privateWithTokens(tokens: Tokens): Tree = {
