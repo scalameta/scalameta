@@ -30,25 +30,12 @@ class TokenInfoMacros(val c: Context) extends MacroHelpers {
   lazy val TokenInfoClass = hygienicRef[scala.meta.internal.tokens.TokenInfo[_]]
 
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    if ((T.tpe <:< TokenClass.toType) && T.tpe.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == TokenMarkerClass)) {
-      val nameBody = {
-        val ctor = T.tpe.typeSymbol.info.decls.collect{case m: MethodSymbol if m.isPrimaryConstructor => m}.head
-        val argss = ctor.paramLists.map(_.map(p => {
-          if (p.name == TermName("input")) q"""_root_.scala.meta.inputs.Input.String("")"""
-          else if (p.name == TermName("dialect")) q"""_root_.scala.meta.dialects.Scala211"""
-          else if (p.name == TermName("start")) q"0"
-          else if (p.name == TermName("end")) q"-1"
-          else if (p.name == TermName("value") && p.info =:= typeOf[String]) q""" "" """
-          else if (p.name == TermName("value")) gen.mkZero(p.info)
-          else if (p.name == TermName("rank")) q"0"
-          else if (p.name == TermName("tree")) q"null"
-          else c.abort(c.enclosingPosition, s"unsupported parameter: $p")
-        }))
-        q"new $T(...$argss).name"
-      }
+    val tokenMarkerAnn = T.tpe.typeSymbol.annotations.map(_.tree).find(_.tpe.typeSymbol == TokenMarkerClass)
+    if ((T.tpe <:< TokenClass.toType) && tokenMarkerAnn.nonEmpty) {
+      val q"new $_(${name: String})" = tokenMarkerAnn.get
       q"""
         new _root_.scala.meta.internal.tokens.TokenInfo[$T] {
-          def name: _root_.scala.Predef.String = $nameBody
+          def name: _root_.scala.Predef.String = $name
           def runtimeClass: _root_.java.lang.Class[$T] = implicitly[_root_.scala.reflect.ClassTag[$T]].runtimeClass.asInstanceOf[_root_.java.lang.Class[$T]]
         }
       """
