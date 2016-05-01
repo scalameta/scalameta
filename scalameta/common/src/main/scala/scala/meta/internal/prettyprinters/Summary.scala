@@ -8,8 +8,8 @@ import scala.compat.Platform.EOL
 import scala.annotation.implicitNotFound
 
 @implicitNotFound(msg = "don't know how to show[Summary] for ${T}")
-private[meta] trait Summary[T] extends Show[T]
-private[meta] object Summary {
+trait Summary[T] extends Show[T]
+object Summary {
   def apply[T](f: T => Show.Result): Summary[T] = new Summary[T] { def apply(input: T) = f(input) }
 
   implicit def summary[T: Syntax]: Summary[T] = Summary { x =>

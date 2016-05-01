@@ -7,7 +7,7 @@ import LegacyToken._
 import Chars._
 import scala.meta.inputs._
 
-private[meta] trait LegacyTokenData {
+trait LegacyTokenData {
   /** the input that is currently being tokenized */
   var input: Input = null
 

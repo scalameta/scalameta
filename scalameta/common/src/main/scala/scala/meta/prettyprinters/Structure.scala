@@ -16,7 +16,7 @@ object Structure {
   }
 
   implicit def structureOption[T: Structure]: Structure[Option[T]] = Structure {
-    case Some(x) => Sequence(Str("Some("), implicitly[Structure[T]].apply(x), Str(")"))
-    case None => Str("None")
+    case scala.Some(x) => Sequence(Str("Some("), implicitly[Structure[T]].apply(x), Str(")"))
+    case scala.None => Str("None")
   }
 }

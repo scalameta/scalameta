@@ -7,7 +7,7 @@ import java.lang.{ Character => JCharacter }
 import scala.language.postfixOps
 
 /** Contains constants and classifier methods for characters */
-private[meta] object Chars {
+object Chars {
   // Be very careful touching these.
   // Apparently trivial changes to the way you write these constants
   // will cause Scanners.scala to go from a nice efficient switch to

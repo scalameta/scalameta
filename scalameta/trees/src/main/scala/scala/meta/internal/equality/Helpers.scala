@@ -4,13 +4,13 @@ package equality
 
 import scala.meta.classifiers._
 
-private[meta] object NonRef {
+object NonRef {
   def unapply(tree: Tree): Option[Tree] = {
     if (tree.is[Ref]) None else Some(tree)
   }
 }
 
-private[meta] object NameRef {
+object NameRef {
   def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
       case name: Term.Name => Some((name, 1))
@@ -25,7 +25,7 @@ private[meta] object NameRef {
   }
 }
 
-private[meta] object OpaqueRef {
+object OpaqueRef {
   def unapply(tree: Tree): Option[(Name, Int)] = {
     tree match {
       case tree: Name.Indeterminate => Some((tree, 8))
@@ -34,7 +34,7 @@ private[meta] object OpaqueRef {
   }
 }
 
-private[meta] object StructuralRef {
+object StructuralRef {
   def unapply(tree: Tree): Option[Tree] = {
     tree match {
       case NameRef(_, _) => None

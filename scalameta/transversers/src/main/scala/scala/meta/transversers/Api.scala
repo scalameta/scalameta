@@ -6,29 +6,8 @@ private[meta] trait Api {
     def transform(fn: PartialFunction[Tree, Tree]): Tree = {
       object transformer extends Transformer {
         override def apply(tree: Tree): Tree = {
-          if (fn.isDefinedAt(tree)) {
-            // NOTE: I've been thinking hard about
-            // who should be linked to who with TransformedTokens in this case.
-            //
-            // By the virtue of @transformer codegen, super.apply will link tree2 to tree1.
-            // But should we link tree1 to tree?
-            // On the one hand, yes, because we kinda want to link tree2 to tree, after all.
-            // On the other hand, so far we've only installed TransformedTokens after
-            // a copy-like transformation, i.e. in Tree.copy and super.apply.
-            //
-            // My current thinking is that we shouldn't link tree1 to tree, because
-            // that'll actually do damage if the trees are unrelated, e.g. in a
-            // ClassDef -[fn]-> ModuleDef transformation. If the user wants linking,
-            // they can do it themselves. Not very friendly, but at least not harmful.
-            //
-            // This begs for a more principled way of transforming tokens.
-            // I've summarized my further thoughts on the matter in #149.
-            val tree1 = fn(tree)
-            val tree2 = super.apply(tree1)
-            tree2
-          } else {
-            super.apply(tree)
-          }
+          if (fn.isDefinedAt(tree)) super.apply(fn(tree))
+          else super.apply(tree)
         }
       }
       transformer(tree)

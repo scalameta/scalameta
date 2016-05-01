@@ -39,6 +39,9 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.common.Optional *
       |scala.meta.dialects
       |scala.meta.dialects.Dotty *
+      |scala.meta.dialects.Metalevel *
+      |scala.meta.dialects.Metalevel.Normal *
+      |scala.meta.dialects.Metalevel.Quoted *
       |scala.meta.dialects.Sbt0136 *
       |scala.meta.dialects.Sbt0137 *
       |scala.meta.dialects.Scala210 *
@@ -67,6 +70,9 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.prettyprinters.Show *
       |scala.meta.prettyprinters.Structure
       |scala.meta.prettyprinters.Syntax
+      |scala.meta.prettyprinters.Syntax.LowPriorityOptions.Lazy *
+      |scala.meta.prettyprinters.Syntax.Options *
+      |scala.meta.prettyprinters.Syntax.Options.Eager *
       |scala.meta.quasiquotes
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift

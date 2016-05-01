@@ -5,7 +5,7 @@ package tokenizers
 // NOTE: moved to the package object
 // type LegacyToken = Int
 
-private[meta] object LegacyToken {
+object LegacyToken {
   def isIdentifier(code: LegacyToken) = code == IDENTIFIER || code == BACKQUOTED_IDENT // used by ide
   def isLiteral(code: LegacyToken) = code >= CHARLIT && code <= INTERPOLATIONID
 
@@ -25,6 +25,7 @@ private[meta] object LegacyToken {
   final val STRINGPART = 7 // a part of an interpolated string
   final val SYMBOLLIT = 8
   final val INTERPOLATIONID = 9 // the lead identifier of an interpolated string
+  final val XMLLIT = 1000
 
   /** identifiers */
   final val IDENTIFIER = 10
@@ -105,12 +106,12 @@ private[meta] object LegacyToken {
   final val SUBTYPE = 134
   final val SUPERTYPE = 135
   final val VIEWBOUND = 136
-  final val XMLSTART = 139
 
   final val WHITESPACE = 201
   final val COMMENT = 300
 
-  final val ELLIPSIS = 400
+  final val UNQUOTE = 400
+  final val ELLIPSIS = 401
 
   val kw2legacytoken = Map[String, LegacyToken](
     "abstract"  -> ABSTRACT,

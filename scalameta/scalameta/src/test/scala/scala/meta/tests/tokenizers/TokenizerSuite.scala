@@ -828,11 +828,4 @@ class TokenizerSuite extends FunSuite {
       |EOF [15..15)
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
-
-  test("prettyprinting for Token.Unquote") {
-    val arg = "$x"
-    val token = Token.Unquote(Input.String(arg), Scala211, 0, arg.length, arg)
-    assert(token.toString === "$x")
-    assert(token.show[Structure] === "$x [0..2)")
-  }
 }

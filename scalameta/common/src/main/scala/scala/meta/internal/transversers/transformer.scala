@@ -93,9 +93,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
   def generatedMethods(cases: List[CaseDef]): Tree = {
     q"""
       def apply(tree: $TreeClass): $TreeClass = {
-        val tree1 = tree match { case ..$cases }
-        if (tree eq tree1) tree
-        else tree1.withTokens(_root_.scala.meta.internal.tokens.TransformedTokens(tree))
+        tree match { case ..$cases }
       }
 
       def apply(treeopt: $OptionClass[$TreeClass]): $OptionClass[$TreeClass] = treeopt match {

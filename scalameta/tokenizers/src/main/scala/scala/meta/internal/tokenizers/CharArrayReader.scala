@@ -4,7 +4,7 @@ package tokenizers
 
 import Chars._
 
-private[meta] trait CharArrayReaderData {
+trait CharArrayReaderData {
   /** the last read character */
   var ch: Char = _
 
@@ -20,9 +20,7 @@ private[meta] trait CharArrayReaderData {
   protected var lastUnicodeOffset = -1
 }
 
-private[meta] class CharArrayReader(val buf: Array[Char],
-                      error: (String, Offset) => Unit,
-                      decodeUni: Boolean = true) extends CharArrayReaderData { self =>
+class CharArrayReader(val buf: Array[Char], error: (String, Offset) => Unit, decodeUni: Boolean) extends CharArrayReaderData { self =>
   /** Is last character a unicode escape \\uxxxx? */
   def isUnicodeEscape = charOffset == lastUnicodeOffset
 

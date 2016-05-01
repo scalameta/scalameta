@@ -1,11 +1,14 @@
 package scala.meta
 package tokens
 
+import org.scalameta.adt.{Liftables => AdtLiftables}
 import scala.meta.internal.tokens
 import scala.meta.internal.tokens._
 import scala.meta.inputs._
 import scala.meta.classifiers._
+import scala.meta.dialects.Metalevel
 import scala.meta.prettyprinters._
+import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.internal.prettyprinters._
 
 // NOTE: `start` and `end` are String.substring-style,
@@ -19,7 +22,7 @@ import scala.meta.internal.prettyprinters._
   def start: Int
   def end: Int
   def pos: Position
-  def syntax: String
+  def syntax(implicit dialect: Dialect, options: Options = Options.Eager): String
 
   def is[U](implicit classifier: Classifier[Token, U]): Boolean
   def isNot[U](implicit classifier: Classifier[Token, U]): Boolean
@@ -106,8 +109,8 @@ object Token {
     @freeform("string constant") class String(value: Predef.String) extends Token
   }
   // NOTE: Here's example tokenization of q"${foo}bar".
-  // BOF, Id(q)<"q">, Start<"\"">, Part("")<"">, SpliceStart<"$">, {, foo, }, SpliceEnd<"">, Part("bar")<"bar">, End(""), EOF.
-  // As you can see, SpliceEnd is always empty, but I still decided to expose it.
+  // BOF, Id(q)<"q">, Start<"\"">, Part("")<"">, SpliceStart<"$">, {, foo, }, SpliceEnd<"">, Part("bar")<"bar">, End("\""), EOF.
+  // As you can see, SpliceEnd is always empty, but I still decided to expose it for consistency reasons.
   object Interpolation {
     @freeform("interpolation id") class Id(value: String) extends Token
     @freeform("interpolation start") class Start extends Token
@@ -137,15 +140,13 @@ object Token {
   // TODO: Rewrite the parser so that it doesn't need LFLF anymore.
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
-  // TODO: after we bootstrap, Unquote.tree will become scala.meta.Tree
-  // however, for now, we will keep it at Any in order to also support scala.reflect trees
   @freeform("\n\n") private[meta] class LFLF extends Token
   @freeform("ellipsis") private[meta] class Ellipsis(rank: Int) extends Token
-  @freeform("unquote") private[meta] class Unquote(tree: Any) extends Token
+  @freeform("unquote") private[meta] class Unquote(metalevel: Metalevel) extends Token
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
-  implicit def showSyntax[T <: Token]: Syntax[T] = TokenSyntax.apply[T]
+  implicit def showSyntax[T <: Token](implicit dialect: Dialect, options: Syntax.Options): Syntax[T] = TokenSyntax.apply[T](dialect, options)
 }
 
 // NOTE: We have this unrelated code here, because of how materializeAdt works.
@@ -159,7 +160,7 @@ object Token {
 // depending on how the file and its enclosing directories are called.
 // To combat that, we have TokenLiftables right here, guaranteeing that there won't be problems
 // if someone wants to refactor/rename something later.
-private[meta] trait TokenLiftables extends tokens.Liftables {
+private[meta] trait TokenLiftables extends AdtLiftables {
   val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
 
@@ -170,10 +171,6 @@ private[meta] trait TokenLiftables extends tokens.Liftables {
     q"_root_.scala.meta.inputs.Input.String(${new String(input.chars)})"
   }
 
-  implicit lazy val liftDialect: Liftable[Dialect] = Liftable[Dialect] { dialect =>
-    q"_root_.scala.meta.Dialect.forName(${dialect.name})"
-  }
-
   implicit lazy val liftBigInt: Liftable[BigInt] = Liftable[BigInt] { v =>
     q"_root_.scala.math.BigInt(${v.bigInteger.toString})"
   }
@@ -182,34 +179,6 @@ private[meta] trait TokenLiftables extends tokens.Liftables {
     q"_root_.scala.math.BigDecimal(${v.bigDecimal.toString})"
   }
 
-  lazy implicit val liftUnquote: Liftable[Token.Unquote] = Liftable[Token.Unquote] { u =>
-    c.abort(c.macroApplication.pos, "fatal error: this shouldn't have happened")
-  }
-
   // TODO: this can't be `implicit val`, because then the materialization macro will crash in GenICode
-  implicit def liftToken: Liftable[Token] = materializeToken[Token]
-
-  implicit lazy val liftTokens: Liftable[Tokens] = Liftable[Tokens] { tokens =>
-    def prepend(tokens: Tokens, t: Tree): Tree =
-      (tokens foldRight t) { case (token, acc) => q"$token +: $acc" }
-
-    def append(t: Tree, tokens: Tokens): Tree =
-      // We call insert tokens again because there may be things that need to be spliced in it
-      q"$t ++ ${insertTokens(tokens)}"
-
-    def insertTokens(tokens: Tokens): Tree = {
-      val (pre, middle) = tokens span (!_.is[Token.Unquote])
-      middle match {
-        case Tokens() =>
-          prepend(pre, q"_root_.scala.meta.tokens.Tokens()")
-        case Token.Unquote(tree: Tree) +: rest =>
-          // If we are splicing only a single token we need to wrap it in a Tokens
-          // to be able to append and prepend other tokens to it easily.
-          val quoted = if (tree.tpe <:< typeOf[Token]) q"_root_.scala.meta.tokens.Tokens($tree)" else tree
-          append(prepend(pre, quoted), Tokens(rest: _*))
-      }
-    }
-
-    insertTokens(tokens)
-  }
+  implicit def liftToken: Liftable[Token] = materializeAdt[Token]
 }

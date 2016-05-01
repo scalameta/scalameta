@@ -10,6 +10,7 @@ import java.lang.Class
 import scala.meta.tokens.Token
 import scala.meta.classifiers._
 import org.scalameta.internal.MacroHelpers
+import scala.meta.internal.tokens.{Reflection => TokenReflection}
 
 @implicitNotFound(msg = "${T} is not a token class and can't be used here.")
 trait TokenInfo[T <: Token] extends ClassTag[T] with Classifier[Token, T] {
@@ -21,22 +22,18 @@ object TokenInfo {
   implicit def materialize[T <: Token]: TokenInfo[T] = macro TokenInfoMacros.materialize[T]
 }
 
-class TokenInfoMacros(val c: Context) extends MacroHelpers {
-  import c.universe._
-  import c.internal._
-
-  lazy val TokenClass = rootMirror.staticClass("scala.meta.tokens.Token")
-  lazy val TokenMarkerClass = rootMirror.staticModule("scala.meta.internal.tokens.Metadata").info.decl(TypeName("tokenClass")).asClass
-  lazy val TokenInfoClass = hygienicRef[scala.meta.internal.tokens.TokenInfo[_]]
-
+class TokenInfoMacros(val c: Context) extends MacroHelpers with TokenReflection {
+  lazy val u: c.universe.type = c.universe
+  lazy val mirror: u.Mirror = c.mirror
+  import u._
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    val tokenMarkerAnn = T.tpe.typeSymbol.annotations.map(_.tree).find(_.tpe.typeSymbol == TokenMarkerClass)
-    if ((T.tpe <:< TokenClass.toType) && tokenMarkerAnn.nonEmpty) {
-      val q"new $_(${name: String})" = tokenMarkerAnn.get
+    val TokenInfoClass = hygienicRef[scala.meta.internal.tokens.TokenInfo[_]]
+    val sym = T.tpe.typeSymbol
+    if (sym.isToken) {
       q"""
-        new _root_.scala.meta.internal.tokens.TokenInfo[$T] {
-          def name: _root_.scala.Predef.String = $name
-          def runtimeClass: _root_.java.lang.Class[$T] = implicitly[_root_.scala.reflect.ClassTag[$T]].runtimeClass.asInstanceOf[_root_.java.lang.Class[$T]]
+        new $TokenInfoClass[$T] {
+          def name: $StringClass = ${sym.tokenName}
+          def runtimeClass: $ClassClass[$T] = $ImplicitlyMethod[$ClassTagClass[$T]].runtimeClass.asInstanceOf[$ClassClass[$T]]
         }
       """
     } else {

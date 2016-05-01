@@ -25,6 +25,8 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
   val Dialect = tq"_root_.scala.meta.Dialect"
   val Input = tq"_root_.scala.meta.inputs.Input"
   val Token = tq"_root_.scala.meta.tokens.Token"
+  val OptionsClass = tq"_root_.scala.meta.prettyprinters.Syntax.Options"
+  val OptionsModule = q"_root_.scala.meta.prettyprinters.Syntax.Options"
   val Classifier = tq"_root_.scala.meta.classifiers.Classifier"
   val Int = tq"_root_.scala.Int"
   val PositionClass = tq"_root_.scala.meta.inputs.Position"
@@ -58,7 +60,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       // step 1: generate boilerplate required by the @adt infrastructure
       // NOTE: toString is inherited from Token, unapply is customized.
       anns1 += q"new $AdtPackage.leaf(toString = false, apply = false, unapply = false)"
-      anns1 += q"new $TokenMetadataModule.tokenClass($providedTokenName)"
+      anns1 += q"new $TokenMetadataModule.tokenClass(name = $providedTokenName, freeform = ${!isFixed})"
       manns1 += q"new $TokenMetadataModule.tokenCompanion"
 
       // step 2: generate boilerplate required by the classifier infrastructure
@@ -78,7 +80,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         def pos: $PositionClass = $PositionModule.Range(this.input, this.start, this.start, this.end)
       """
       stats1 += q"""
-        def syntax: _root_.scala.Predef.String = this.show[Syntax]
+        def syntax(implicit dialect: $Dialect, options: $OptionsClass = $OptionsModule.Eager): $StringClass = Token.showSyntax[$Token](dialect, options).apply(this).toString
       """
       stats1 += q"""
         def is[U](implicit classifier: $Classifier[$Token, U]): _root_.scala.Boolean = classifier.apply(this)
@@ -87,10 +89,10 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         def isNot[U](implicit classifier: $Classifier[$Token, U]): _root_.scala.Boolean = !classifier.apply(this)
       """
       stats1 += q"""
-        def structure: _root_.scala.Predef.String = this.show[Structure]
+        def structure: $StringClass = this.show[Structure]
       """
       stats1 += q"""
-        final override def toString: _root_.scala.Predef.String = _root_.scala.meta.internal.prettyprinters.TokenToString(this)
+        final override def toString: $StringClass = _root_.scala.meta.internal.prettyprinters.TokenToString(this)
       """
 
       // step 4: generate implementation of `def name: String`

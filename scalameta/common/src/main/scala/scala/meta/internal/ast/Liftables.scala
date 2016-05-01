@@ -74,9 +74,9 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     def prohibitName(pat: Tree): Tree = {
       q"""
         def prohibitName(pat: _root_.scala.meta.Tree): _root_.scala.Unit = {
-          def unquotesName(q: _root_.scala.meta.internal.ast.Quasi): Boolean = q.tree match {
-            case tree: c.universe.Tree => tree.tpe != null && tree.tpe <:< typeOf[scala.meta.Term.Name]
-            case tree: _root_.scala.meta.internal.ast.Quasi => unquotesName(tree)
+          def unquotesName(q: _root_.scala.meta.internal.ast.Quasi): Boolean = {
+            val tpe = q.hole.arg.tpe // NOTE: no easy way to find this out without holes
+            tpe != null && tpe <:< typeOf[scala.meta.Term.Name]
           }
           pat match {
             case q: _root_.scala.meta.internal.ast.Quasi if unquotesName(q) =>

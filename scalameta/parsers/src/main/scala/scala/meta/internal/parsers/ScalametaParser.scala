@@ -11,9 +11,11 @@ import mutable.{ ListBuffer, StringBuilder }
 import scala.annotation.tailrec
 import scala.{Seq => _}
 import scala.collection.immutable._
+import scala.meta.dialects.{Quasiquote, QuasiquoteTerm, QuasiquotePat, Metalevel}
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.parsers.Absolutize._
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
@@ -27,11 +29,11 @@ import scala.meta.internal.classifiers._
 import org.scalameta._
 import org.scalameta.invariants._
 
-private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =>
-  // implementation restrictions wrt various dialect properties
+class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   require(Set("@", ":").contains(dialect.bindToSeqWildcardDesignator))
   require(Set("", EOL).contains(dialect.toplevelSeparator))
-  def inQuasiquote = dialect.isInstanceOf[scala.meta.dialects.Quasiquote]
+  implicit val currentDialect: Dialect = dialect
+  def inQuasiquote = dialect.metalevel.isQuoted
 
 /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
@@ -45,7 +47,9 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
     // because we need to subsume all the trailing trivia
     val end = in.tokenPos
     accept[EOF]
-    atPos(start, end)(t)
+    // NOTE: we no longer include BOF and EOF in positions
+    // in order to be consistent with badToken in InternalTokens.slice
+    atPos(start + 1, end - 1)(t)
   }
 
   // Entry points for Parse[T]
@@ -57,8 +61,9 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
   private val consumeStat: PartialFunction[Token, Stat] = {
     case KwImport() => importStmt()
     case KwPackage() if !dialect.allowToplevelTerms => packageOrPackageObjectDef()
-    case DefIntro() | Ellipsis(_) => nonLocalDefOrDcl()
+    case DefIntro() => nonLocalDefOrDcl()
     case ExprIntro() => expr(Local)
+    case Ellipsis(_) => Term.Block(List(ellipsis(1, unquote[Stat])))
   }
   def parseStat(): Stat = {
     parseRule(parser => {
@@ -93,6 +98,7 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
   }
   def parseQuasiquoteCtor(): Ctor = parseRule(_.quasiquoteCtor())
   def parseTerm(): Term = parseRule(_.expr())
+  def parseUnquoteTerm(): Term = parseRule(_.unquoteExpr())
   def parseTermArg(): Term.Arg = parseRule(_.argumentExpr())
   def parseTermParam(): Term.Param = parseRule(_.param(ownerIsCase = false, ownerIsType = true, isImplicit = false))
   def parseType(): Type = parseRule(_.typ())
@@ -100,6 +106,7 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
   def parseTypeParam(): Type.Param = parseRule(_.typeParam(ownerIsType = true, ctxBoundsAllowed = true))
   def parsePat(): Pat = parseRule(_.pattern()).require[Pat]
   def parseQuasiquotePat(): Pat = parseRule(_.quasiquotePattern()).require[Pat]
+  def parseUnquotePat(): Pat = parseRule(_.unquotePattern())
   def parsePatArg(): Pat.Arg = parseRule(_.argumentPattern())
   def parseQuasiquotePatArg(): Pat.Arg = parseRule(_.quasiquotePatternArg())
   def parsePatType(): Pat.Type = parseRule(_.patternTyp())
@@ -154,52 +161,28 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
   // It maps character positions in input's content into indices in the scannerTokens vector.
   // One complication here is that there can be multiple tokens that sort of occupy a given position,
   // so the clients of this cache need to be wary of that!
-  //   17:09 ~/Projects/alt/core/sandbox (master)$ tokenize 'q"$x"'
-  //   // Scala source: /var/folders/n4/39sn1y_d1hn3qjx6h1z3jk8m0000gn/T/tmpeIwaZ8
-  //   BOF (0..-1)
-  //   q (0..0)
-  //   " (1..1)
-  //    (2..1)
-  //   splice start (2..2)
-  //   x (3..3)
-  //   splice end (3..2)
-  //    (4..3)
-  //   " (4..4)
-  //   EOF (5..4)
-  private val scannerTokenCache: Array[Int] = tokens match {
-    case Tokens.Tokenized(input, _, _) =>
-      val result = new Array[Int](input.chars.length)
-      var i = 0
-      while (i < scannerTokens.length) {
-        val token = scannerTokens(i)
-        var j = token.start
-        while (j < token.end) {
-          result(j) = i
-          j += 1
-        }
-        i += 1
+  private val scannerTokenCache: Array[Int] = {
+    val result = new Array[Int](input.chars.length)
+    var i = 0
+    while (i < scannerTokens.length) {
+      val token = scannerTokens(i)
+      var j = token.start
+      while (j < token.end) {
+        result(j) = i
+        j += 1
       }
-      result
-    case _ =>
-      new Array[Int](0)
+      i += 1
+    }
+    result
   }
   implicit class XtensionTokenIndex(token: Token) {
     def index: Int = {
-      def fast() = {
-        def lurk(roughIndex: Int): Int = {
-          require(roughIndex >= 0 && debug(token))
-          if (scannerTokens(roughIndex) eq token) roughIndex
-          else lurk(roughIndex - 1)
-        }
-        lurk(scannerTokenCache(token.start))
+      def lurk(roughIndex: Int): Int = {
+        require(roughIndex >= 0 && debug(token))
+        if (scannerTokens(roughIndex) eq token) roughIndex
+        else lurk(roughIndex - 1)
       }
-      def slow() = {
-        val result = scannerTokens.indexWhere(_ eq token)
-        require(result != -1 && debug(token))
-        result
-      }
-      if (scannerTokenCache.length != 0) fast()
-      else slow()
+      lurk(scannerTokenCache(token.start))
     }
     def prev: Token = {
       val prev = scannerTokens.apply(Math.max(token.index - 1, 0))
@@ -219,7 +202,11 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
   // However, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted.
   // This leads to extremely dirty and seriously crazy code, which I'd like to replace in the future.
-  lazy val scannerTokens = tokens
+  private val XtensionParsersDialectInput = "shadow conflicting implicit"
+  lazy val scannerTokens = input.tokenize match {
+    case Tokenized.Success(tokens) => tokens
+    case Tokenized.Error(_, _, details) => throw details
+  }
   lazy val (parserTokens, parserTokenPositions) = {
     val parserTokens = new immutable.VectorBuilder[Token]()
     val parserTokenPositions = mutable.ArrayBuilder.make[Int]()
@@ -382,16 +369,10 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
     def endTokenPos = startTokenPos
   }
   case class TreePos(tree: Tree) extends Pos {
-    // NOTE: if a tree has synthetic tokens produced by inferTokens,
-    // then their input will be synthetic as well, and here we verify that it's not the case
-    private def requirePositioned() = {
-      def fail() = throw new Exception(
-        s"internal error: unpositioned prototype tree " +
-        s"${tree.show[Syntax]}: ${tree.show[Structure]}")
-      if (!tree.tokens.isAuthentic) fail()
-    }
-    def startTokenPos = { requirePositioned(); tree.tokens.require[Tokens.Slice].from }
-    def endTokenPos = { requirePositioned(); tree.tokens.require[Tokens.Slice].until - 1 }
+    if (tree.pos.isEmpty) sys.error("internal error: unpositioned prototype ${tree.syntax}: ${tree.structure}")
+    private val Tokens.Slice(`scannerTokens`, fromTokenPos, untilTokenPos) = scannerTokens.slice(tree.pos)
+    def startTokenPos = fromTokenPos
+    def endTokenPos = untilTokenPos - 1
   }
   case object AutoPos extends Pos {
     def startTokenPos = in.tokenPos
@@ -412,20 +393,10 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
     val pos = {
       val startToken = scannerTokens(startTokenPos)
       val endToken = scannerTokens(endTokenPos)
-      if (startToken.input == endToken.input && !startToken.input.isInstanceOf[Input.Slice]) {
-        Position.Range(startToken.input, startToken.start, startToken.start, endToken.end)
-      } else {
-        // NOTE: we assume that tokens represent a contiguous excerpt from an input.
-        // While it is true that InputTokens(...) is general enough to break this assumption,
-        // that never happens at the moment, so let's not complicate things.
-        val Input.Slice(cf, sf, _) = startToken.input
-        val Input.Slice(cl, sl, _) = endToken.input
-        val input = { require(cf == cl); cf }
-        Position.Range(input, startToken.start + sf, startToken.start + sf, endToken.end + sl)
-      }
+      Position.Range(startToken.input, startToken.start, startToken.start, endToken.end)
     }
     val tokens = scannerTokens.slice(startTokenPos, endTokenPos + 1)
-    result.withPos(pos).withTokens(tokens).asInstanceOf[T]
+    result.withOrigin(Origin.Parsed(input, dialect, pos)).asInstanceOf[T]
   }
   def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
 
@@ -524,6 +495,7 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
       token.is[Modifier] || token.is[At] ||
       token.is[TemplateIntro] || token.is[DclIntro] ||
       (token.is[Unquote] && token.next.is[DefIntro]) ||
+      (token.is[Ellipsis] && token.next.is[DefIntro]) ||
       (token.is[KwCase] && token.isCaseClassOrObject)
     }
   }
@@ -669,7 +641,7 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
   def ellipsis[T <: Tree : AstInfo](rank: Int, body: => T, extraSkip: => Unit = {}): T = autoPos {
     token match {
       case ellipsis: Ellipsis =>
-        if (inQuasiquote) {
+        if (dialect.allowEllipses) {
           if (ellipsis.rank != rank) {
             val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: ${"." * (rank + 1)}"
             syntaxError(errorMessage, at = ellipsis)
@@ -697,7 +669,7 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
             implicitly[AstInfo[T]].quasi(rank, tree)
           }
         } else {
-          syntaxError(s"unexpected token for $dialect", at = ellipsis)
+          syntaxError(s"$dialect doesn't support ellipses", at = ellipsis)
         }
       case _ =>
         unreachable(debug(token))
@@ -707,15 +679,34 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
   def unquote[T <: Tree : AstInfo](advance: Boolean = true): T = autoPos {
     token match {
       case unquote: Unquote =>
-        if (inQuasiquote) {
-          if (advance) {
-            next()
-            implicitly[AstInfo[T]].quasi(0, unquote.tree)
-          } else ahead {
-            implicitly[AstInfo[T]].quasi(0, unquote.tree)
-          }
-        } else {
-          syntaxError(s"unexpected token for $dialect", at = unquote)
+        require(unquote.metalevel.nesting == 0)
+        require(unquote.input.chars(unquote.start + 1) != '$')
+        dialect match {
+          case dialect: Quasiquote =>
+            // TODO: The necessity to do position fixup for error messages is unsatisfying.
+            // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
+            // but then such positions wouldn't be usable with Input.Slice.chars.
+            val unquotedTree = {
+              try {
+                val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
+                val unquoteDialect = dialect.underlying
+                val unquoteParser = new ScalametaParser(unquoteInput, unquoteDialect)
+                dialect match {
+                  case dialect: QuasiquoteTerm => unquoteParser.parseUnquoteTerm()
+                  case dialect: QuasiquotePat => unquoteParser.parseUnquotePat()
+                }
+              } catch {
+                case ex: Exception => throw ex.absolutize
+              }
+            }
+            if (advance) {
+              next()
+              implicitly[AstInfo[T]].quasi(0, unquotedTree)
+            } else ahead {
+              implicitly[AstInfo[T]].quasi(0, unquotedTree)
+            }
+          case _ =>
+            syntaxError(s"$dialect doesn't support unquotes", at = unquote)
         }
       case _ =>
         unreachable(debug(token))
@@ -1404,25 +1395,14 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
   }
 
   def interpolateTerm(): Term.Interpolate = {
-    def dropTrivialBlock(term: Term): Term = term match {
-      case Term.Block((stat: Term) :: Nil) => stat
-      case _ => term
-    }
-    interpolate[Term, Term.Interpolate](arg = { () =>
-      token match {
-        case Ident(_)    => termName()
-        case LeftBrace() => dropTrivialBlock(expr()) // dropAnyBraces(expr0(Local))
-        case KwThis()    => val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous()); next(); atPos(in.prevTokenPos, auto)(Term.This(qual))
-        case _           => syntaxError("error in interpolated string: identifier or block expected", at = token)
-      }
-    }, result = Term.Interpolate(_, _, _))
+    interpolate[Term, Term.Interpolate](unquoteExpr _, Term.Interpolate.apply _)
   }
 
   def xmlTerm(): Term.Interpolate =
     interpolateTerm()
 
   def interpolatePat(): Pat.Interpolate =
-    interpolate[Pat, Pat.Interpolate](arg = () => dropAnyBraces(pattern().require[Pat]), result = Pat.Interpolate(_, _, _))
+    interpolate[Pat, Pat.Interpolate](unquotePattern _, Pat.Interpolate.apply _)
 
   def xmlPat(): Pat.Interpolate =
     // TODO: probably should switch into XML pattern mode here
@@ -1502,6 +1482,19 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
    *  }}}
    */
   def expr(): Term = expr(Local)
+
+  def unquoteExpr(): Term = {
+    def dropTrivialBlock(term: Term): Term = term match {
+      case Term.Block((stat: Term) :: Nil) => stat
+      case _ => term
+    }
+    token match {
+      case Ident(_)    => termName()
+      case LeftBrace() => dropTrivialBlock(expr())
+      case KwThis()    => val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous()); next(); atPos(in.prevTokenPos, auto)(Term.This(qual))
+      case _           => syntaxError("error in interpolated string: identifier or block expected", at = token)
+    }
+  }
 
   // TODO: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
   // if yes, then nothing has to change here
@@ -2239,6 +2232,10 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
       topLevelNamesToPats(pattern())
     }
 
+    def unquotePattern(): Pat = {
+      dropAnyBraces(pattern().require[Pat])
+    }
+
     def quasiquotePatternArg(): Pat.Arg = {
       topLevelNamesToPats(argumentPattern())
     }
@@ -2470,6 +2467,7 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
   /** Default entry points into some pattern contexts. */
   def pattern(): Pat.Arg = noSeq.pattern()
   def quasiquotePattern(): Pat.Arg = noSeq.quasiquotePattern()
+  def unquotePattern(): Pat = noSeq.unquotePattern()
   def quasiquotePatternArg(): Pat.Arg = seqOK.quasiquotePatternArg()
   def seqPatterns(): List[Pat.Arg] = seqOK.patterns()
   def xmlSeqPatterns(): List[Pat.Arg] = xmlSeqOK.patterns() // Called from xml parser
@@ -3576,16 +3574,13 @@ private[meta] class ScalametaParser(tokens: Tokens, dialect: Dialect) { parser =
 object ScalametaParser {
   def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
     def apply(input: Input, dialect: Dialect): Parsed[T] = {
-      input.tokenize match {
-        case Tokenized.Success(tokens) =>
-          try {
-            val parser = new ScalametaParser(tokens, dialect)
-            Parsed.Success(fn(parser))
-          } catch {
-            case details @ ParseException(pos, message) =>
-              Parsed.Error(pos, message, details)
-          }
-        case Tokenized.Error(pos, message, details) =>
+      try {
+        val parser = new ScalametaParser(input, dialect)
+        Parsed.Success(fn(parser))
+      } catch {
+        case details @ TokenizeException(pos, message) =>
+          Parsed.Error(pos, message, details)
+        case details @ ParseException(pos, message) =>
           Parsed.Error(pos, message, details)
       }
     }

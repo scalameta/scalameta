@@ -119,8 +119,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       bparams1 += q"private[meta] val privateFlags: $FlagsClass"
       bparams1 += q"@$TransientAnnotation private[meta] val privatePrototype: $iname"
       bparams1 += q"private[meta] val privateParent: $TreeClass"
-      bparams1 += q"private[meta] val privatePos: $PositionClass"
-      bparams1 += q"@$TransientAnnotation private[meta] var privateTokens: $TokensClass"
+      bparams1 += q"private[meta] val privateOrigin: $OriginClass"
       if (hasEnv) bparams1 += q"private[meta] override val privateEnv: $EnvironmentClass"
       if (hasDenot) bparams1 += q"private[meta] override val privateDenot: $DenotationClass"
       if (hasTyping) bparams1 += q"private[meta] override val privateTyping: $TypingClass"
@@ -139,8 +138,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       privateCopyBargs += q"flags"
       privateCopyBargs += q"prototype.asInstanceOf[$iname]"
       privateCopyBargs += q"parent"
-      privateCopyBargs += q"pos"
-      privateCopyBargs += q"tokens"
+      privateCopyBargs += q"origin"
       if (hasEnv) privateCopyBargs += q"env"
       if (hasDenot) privateCopyBargs += q"denot"
       if (hasTyping) privateCopyBargs += q"typing"
@@ -151,8 +149,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
             flags: $FlagsClass = privateFlags,
             prototype: $TreeClass = this,
             parent: $TreeClass = privateParent,
-            pos: $PositionClass = privatePos,
-            tokens: $TokensClass = privateTokens,
+            origin: $OriginClass = privateOrigin,
             env: $EnvironmentClass = privateEnv,
             denot: $DenotationClass = privateDenot,
             typing: $TypingClass = privateTyping): Tree = {
@@ -171,8 +168,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         val fieldDefaultss = fieldParamss.map(_.map(p => q"this.${p.name}"))
         val copyParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
         val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
-        val copyCore = q"$mname.apply(...$copyArgss)"
-        val copyBody = q"$copyCore.withTokens(tokens = new $TransformedTokensClass(this))"
+        val copyBody = q"$mname.apply(...$copyArgss)"
         istats1 += q"def copy(...$copyParamss): $iname"
         stats1 += q"def copy(...$copyParamss): $iname = $copyBody"
       }
@@ -227,7 +223,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         if (hasErrors) q"()"
         else require
       })
-      var internalInitCount = 4 // privatePrototype, privateParent, privatePos, privateTokens
+      var internalInitCount = 3 // privatePrototype, privateParent, privateOrigin
       if (hasEnv) internalInitCount += 1
       if (hasDenot) internalInitCount += 1
       if (hasTyping) internalInitCount += 1
@@ -294,9 +290,9 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
           def become[T <: $QuasiClass](implicit ev: $AstInfoClass[T]): T = {
             this match {
               case $mname(0, tree) =>
-                ev.quasi(0, tree).withPos(this.pos).withTokens(this.tokens).asInstanceOf[T]
+                ev.quasi(0, tree).withOrigin(this.origin).asInstanceOf[T]
               case $mname(1, nested @ $mname(0, tree)) =>
-                ev.quasi(1, nested.become[T]).withPos(this.pos).withTokens(this.tokens).asInstanceOf[T]
+                ev.quasi(1, nested.become[T]).withOrigin(this.origin).asInstanceOf[T]
               case _ =>
                 throw new Exception("complex ellipses are not supported yet")
             }

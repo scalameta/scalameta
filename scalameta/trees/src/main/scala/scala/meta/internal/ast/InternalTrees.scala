@@ -2,11 +2,15 @@ package scala.meta
 package internal
 package ast
 
+import org.scalameta.debug
+import org.scalameta.invariants._
 import scala.compat.Platform.EOL
 import scala.meta.classifiers._
 import scala.meta.prettyprinters._
 import scala.meta.inputs._
 import scala.meta.tokens._
+import scala.meta.tokens.Token._
+import scala.meta.tokenizers._
 import scala.meta.internal.equality._
 import scala.meta.internal.flags._
 import scala.meta.internal.prettyprinters._
@@ -30,9 +34,7 @@ trait InternalTree {
   private[meta] def privateFlags: Flags
   private[meta] def privatePrototype: Tree
   private[meta] def privateParent: Tree
-  private[meta] def privatePos: Position
-  private[meta] def privateTokens: Tokens
-  private[meta] def privateTokens_=(tokens: Tokens): Unit
+  private[meta] def privateOrigin: Origin
   private[meta] def privateEnv: Environment = null
   private[meta] def privateDenot: Denotation = null
   private[meta] def privateTyping: Typing = null
@@ -40,8 +42,7 @@ trait InternalTree {
     flags: Flags = ZERO,
     prototype: Tree = this,
     parent: Tree = privateParent,
-    pos: Position = privatePos,
-    tokens: Tokens = privateTokens,
+    origin: Origin = privateOrigin,
     env: Environment = privateEnv,
     denot: Denotation = privateDenot,
     typing: Typing = privateTyping): Tree
@@ -58,18 +59,22 @@ trait InternalTree {
     if (privateParent != null) scala.Some(privateParent) else None
   }
 
-  def pos: Position = {
-    if (privatePos != null) privatePos else Position.None
+  private[meta] def origin: Origin = {
+    if (privateOrigin != null) privateOrigin else Origin.None
   }
 
-  def tokens: Tokens = {
-    val tokens = privateTokens match {
-      case null => inferTokens(this, None)
-      case TransformedTokens(proto) => inferTokens(this, Some(proto))
-      case other => other
+  def pos: Position = {
+    origin match { case Origin.Parsed(_, _, pos) => pos; case _ => Position.None }
+  }
+
+  def tokens(implicit dialect: Dialect): Tokens = {
+    if (pos.nonEmpty) {
+      val inputTokens = pos.input.tokenize.get
+      inputTokens.slice(pos)
+    } else {
+      val syntheticTokens = dialect(syntax).tokenize.get
+      syntheticTokens.slice(1, syntheticTokens.length - 1) // drop BOF and EOF
     }
-    this.privateTokens = tokens
-    tokens
   }
 
   // =============================================================================================
@@ -92,12 +97,8 @@ trait InternalTree {
     this.privateCopy(flags = flags)
   }
 
-  private[meta] def privateWithPos(pos: Position): Tree = {
-    this.privateCopy(pos = pos)
-  }
-
-  private[meta] def privateWithTokens(tokens: Tokens): Tree = {
-    this.privateCopy(tokens = tokens)
+  private[meta] def privateWithOrigin(origin: Origin): Tree = {
+    this.privateCopy(origin = origin)
   }
 
   // NOTE: No state validation in withEnv, because withEnv can be called on U, PA and A.
@@ -215,6 +216,11 @@ trait InternalTree {
 }
 
 trait InternalTreeXtensions {
+  private[meta] implicit class XtensionOriginTree[T <: Tree](tree: T) {
+    def origin: Origin = if (tree.privateOrigin != null) tree.privateOrigin else Origin.None
+    def withOrigin(origin: Origin): T = tree.privateWithOrigin(origin).asInstanceOf[T]
+  }
+
   private[meta] implicit class XtensionAttributedName[T <: Name](tree: T) {
     def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.None
     def denot: Denotation = if (tree.privateDenot != null) tree.privateDenot else Denotation.None

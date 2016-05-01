@@ -3,25 +3,23 @@ package ast
 
 import org.scalatest._
 import scala.meta._
-import scala.meta.internal.tokenquasiquotes._
+import scala.meta.internal.ast._
 import scala.meta.internal.semantic._
-import scala.meta.dialects.Scala211
+import scala.meta.dialects.{Scala211, QuasiquoteTerm}
 
 class InfrastructureSuite extends FunSuite {
   test("become for Quasi-0") {
-    val pos = Position.Range(Input.String("Hello"), 0, 0, 5)
-    val q = Term.Quasi(0, "hello").withTokens(toks"Hello").withPos(pos)
-    assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(0, "hello")""")
-    assert(q.become[Type.Quasi].pos.toString === """[0..0..5) in Input.String("Hello")""")
-    assert(q.become[Type.Quasi].tokens.toString === "Tokens(Hello [0..5))")
+    val dialect = QuasiquoteTerm(Scala211, multiline = false)
+    val q = dialect("$hello").parse[Term].get.asInstanceOf[Term.Quasi]
+    assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(0, Term.Name("hello"))""")
+    assert(q.become[Type.Quasi].pos.toString === """[0..0..6) in Input.String("$hello")""")
   }
 
   test("become for Quasi-1") {
-    val pos = Position.Range(Input.String("HelloOuter"), 0, 0, 10)
-    val q = Term.Quasi(1, Term.Quasi(0, "hello").withTokens(toks"HelloInner")).withTokens(toks"HelloOuter").withPos(pos)
-    assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(1, Type.Quasi(0, "hello"))""")
-    assert(q.become[Type.Quasi].pos.toString === """[0..0..10) in Input.String("HelloOuter")""")
-    assert(q.become[Type.Quasi].tokens.toString === "Tokens(HelloOuter [0..10))")
+    val dialect = QuasiquoteTerm(Scala211, multiline = false)
+    val Term.Block(Seq(q: Stat.Quasi)) = dialect("..$hello").parse[Stat].get
+    assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(1, Type.Quasi(0, Term.Name("hello")))""")
+    assert(q.become[Type.Quasi].pos.toString === """[0..0..8) in Input.String("..$hello")""")
   }
 
   test("copy flags") {
@@ -91,9 +89,9 @@ class InfrastructureSuite extends FunSuite {
     assert(x5.isTypechecked === false)
   }
 
-  test("TYPECHECKED doesn't reset when tokens are touched") {
+  test("TYPECHECKED doesn't reset when origins are touched") {
     val x1 = foo.setTypechecked
-    val x2 = x1.withTokens(Tokens())
+    val x2 = x1.withOrigin(Origin.None)
     assert(x1.isTypechecked == true)
     assert(x2.isTypechecked == true)
   }

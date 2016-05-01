@@ -4,7 +4,7 @@ package prettyprinters
 
 import scala.meta.tokens.Tokens
 
-private[meta] object TokensToString {
+object TokensToString {
   def apply(tokens: Tokens) = {
     val prettyprinter = TokensStructure[Tokens]
     prettyprinter(tokens).toString

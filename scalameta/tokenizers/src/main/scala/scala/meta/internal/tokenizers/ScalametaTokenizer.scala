@@ -2,18 +2,42 @@ package scala.meta
 package internal
 package tokenizers
 
+import java.lang.ref.WeakReference
+import java.util.{concurrent => juc}
 import scala.collection.{immutable, mutable}
 import org.scalameta._
 import org.scalameta.invariants._
 import Chars.{CR, LF, FF}
 import LegacyToken._
+import scala.meta.dialects.Metalevel
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokenizers._
-import scala.meta.internal.inputs.InputTokens
 
-private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
+class ScalametaTokenizer(input: Input, dialect: Dialect) {
   def tokenize(): Tokens = {
+    import ScalametaTokenizer._
+    val miniCache = {
+      var result = megaCache.get(dialect)
+      if (result == null) {
+        val unsyncResult = mutable.WeakHashMap[Input, Tokens]()
+        val syncResult = megaCache.putIfAbsent(dialect, unsyncResult)
+        result = if (syncResult != null) syncResult else unsyncResult
+      }
+      result
+    }
+    val entry = miniCacheSyncRoot.synchronized { miniCache.get(input) }
+    entry match {
+      case Some(tokens) =>
+        tokens
+      case None =>
+        val tokens = uncachedTokenize()
+        miniCacheSyncRoot.synchronized { miniCache.update(input, tokens) }
+        tokens
+    }
+  }
+
+  private def uncachedTokenize(): Tokens = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER       => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
@@ -31,7 +55,7 @@ private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case NULL            => Token.KwNull(input, dialect, curr.offset)
 
         case INTERPOLATIONID => Token.Interpolation.Id(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
-        case XMLSTART        => Token.Xml.Start(input, dialect, curr.offset, curr.offset)
+        case XMLLIT          => Token.Xml.Start(input, dialect, curr.offset, curr.offset)
 
         case NEW   => Token.KwNew(input, dialect, curr.offset)
         case THIS  => Token.KwThis(input, dialect, curr.offset)
@@ -109,6 +133,7 @@ private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case COMMENT   => Token.Comment(input, dialect, curr.offset, curr.endOffset + 1)
 
         case ELLIPSIS  => Token.Ellipsis(input, dialect, curr.offset, curr.endOffset + 1, curr.base)
+        case UNQUOTE   => Token.Unquote(input, dialect, curr.offset, curr.endOffset + 1, Metalevel.Normal)
 
         case EOF       => Token.EOF(input, dialect)
 
@@ -118,39 +143,13 @@ private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
       }
     }
 
-    input match { case InputTokens(tokens) => return tokens; case _ => }
-    val scanner = new LegacyScanner(input, dialect)
-    val buf = scanner.reader.buf
-
-    var legacyTokenBuf = mutable.ArrayBuilder.make[LegacyTokenData]()
-    var xmlLiteralBuf = new mutable.ListBuffer[String]
-    scanner.foreach(curr => {
-      val currCopy = new LegacyTokenData{}.copyFrom(curr)
-      if (currCopy.token == XMLSTART) {
-        // TODO: replace this with honest XML support via #356
-        import fastparse.core.Parsed
-        import scalaparse.Scala.XmlExpr
-        val start = currCopy.offset
-        val result = XmlExpr.parse(new String(input.chars), index = start)
-        result match {
-          case Parsed.Success(_, end) =>
-            val length = end - start
-            xmlLiteralBuf += new String(input.chars, start, length)
-            scanner.reader.charOffset = scanner.curr.offset + length
-            scanner.reader.nextChar()
-          case Parsed.Failure(_, _, _) =>
-            scanner.reporter.syntaxError("malformed xml literal", at = currCopy.offset)
-        }
-      }
-      if (currCopy.token == EOF) {
-        // NOTE: sometimes EOF's offset is `buf.length - 1`, and that might mess things up
-        currCopy.offset = buf.length
-      }
-      legacyTokenBuf += currCopy
-    })
-    val legacyTokens = legacyTokenBuf.result
-
-    var tokens = new immutable.VectorBuilder[Token]
+    val legacyTokens = {
+      val scanner = new LegacyScanner(input, dialect, decodeUni = true)
+      val legacyTokenBuf = mutable.ArrayBuilder.make[LegacyTokenData]()
+      scanner.foreach(curr => legacyTokenBuf += new LegacyTokenData{}.copyFrom(curr))
+      legacyTokenBuf.result
+    }
+    val tokens = new immutable.VectorBuilder[Token]
     tokens += Token.BOF(input, dialect)
 
     def loop(startingFrom: Int, braceBalance: Int = 0, returnWhenBraceBalanceHitsZero: Boolean = false): Int = {
@@ -176,7 +175,7 @@ private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
         // Now we need to do the same for our new token stream, but I don't really feel like going through the pain again.
         // Therefore, I'm giving up the 1-to-1 legacy-to-new token correspondence and will be trying to reverse engineer sane tokens here rather than in scanner.
         var startEnd = prev.endOffset + 1
-        while (startEnd < buf.length && buf(startEnd) == '\"') startEnd += 1
+        while (startEnd < input.chars.length && input.chars(startEnd) == '\"') startEnd += 1
         val numStartQuotes = startEnd - prev.endOffset - 1
         val numQuotes = if (numStartQuotes <= 2) 1 else 3
         def emitStart(offset: Offset) = tokens += Token.Interpolation.Start(input, dialect, offset, offset + numQuotes)
@@ -185,19 +184,19 @@ private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
           require(curr.token == STRINGPART || curr.token == STRINGLIT)
           if (curr.token == STRINGPART) {
             tokens += Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
-            require(buf(curr.endOffset + 1) == '$')
+            require(input.chars(curr.endOffset + 1) == '$')
             val dollarOffset = curr.endOffset + 1
             def emitSpliceStart(offset: Offset) = tokens += Token.Interpolation.SpliceStart(input, dialect, offset, offset + 1)
             def emitSpliceEnd(offset: Offset) = tokens += Token.Interpolation.SpliceEnd(input, dialect, offset, offset)
             def requireExpectedToken(expected: LegacyToken) = { require(curr.token == expected) }
             def emitExpectedToken(expected: LegacyToken) = { require(curr.token == expected); emitToken() }
-            if (buf(dollarOffset + 1) == '{') {
+            if (input.chars(dollarOffset + 1) == '{') {
               emitSpliceStart(dollarOffset)
               nextToken()
               legacyIndex = loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
               emitSpliceEnd(curr.offset)
               emitContents()
-            } else if (buf(dollarOffset + 1) == '_') {
+            } else if (input.chars(dollarOffset + 1) == '_') {
               emitSpliceStart(dollarOffset)
               nextToken()
               emitExpectedToken(USCORE)
@@ -216,7 +215,7 @@ private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
           } else {
             curr.endOffset -= numQuotes
             tokens += Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
-            require(buf(curr.endOffset + 1) == '\"')
+            require(input.chars(curr.endOffset + 1) == '\"')
             nextToken()
           }
         }
@@ -232,9 +231,8 @@ private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
         }
       }
 
-      if (prev.token == XMLSTART) {
-        val raw = xmlLiteralBuf.remove(0)
-        tokens += Token.Xml.Part(input, dialect, prev.offset, curr.offset, raw)
+      if (prev.token == XMLLIT) {
+        tokens += Token.Xml.Part(input, dialect, prev.offset, curr.offset, prev.strVal)
         tokens += Token.Xml.End(input, dialect, curr.offset, curr.offset)
       }
 
@@ -247,6 +245,11 @@ private[meta] class ScalametaTokenizer(input: Input, dialect: Dialect) {
 }
 
 object ScalametaTokenizer {
+  // NOTE: Manipulated by tokenization code in the ScalametaTokenizer class.
+  // Caching just in toTokenize wouldn't be enough, because someone could call the tokenizer directly.
+  private val megaCache = new juc.ConcurrentHashMap[Dialect, mutable.WeakHashMap[Input, Tokens]]()
+  private val miniCacheSyncRoot = new Object
+
   def toTokenize: Tokenize = new Tokenize {
     def apply(input: Input, dialect: Dialect): Tokenized = {
       try {

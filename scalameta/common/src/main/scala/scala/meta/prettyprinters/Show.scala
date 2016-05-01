@@ -21,6 +21,7 @@ object Show {
         loop(res)
       }
       def loop(result: Result): Unit = result match {
+        case None => // do nothing
         case Str(value) => sb.append(value)
         case Sequence(xs @ _*) => xs.foreach(loop)
         case Repeat(Nil, sep) => ()
@@ -51,6 +52,7 @@ object Show {
       sb.toString
     }
   }
+  private[meta] final case object None extends Result
   private[meta] final case class Str(value: String) extends Result
   private[meta] final case class Sequence(xs: Result*) extends Result
   private[meta] final case class Repeat(xs: Seq[Result], sep: String) extends Result

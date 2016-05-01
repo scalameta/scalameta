@@ -74,6 +74,18 @@ class PublicSuite extends FunSuite {
     // covered above
   }
 
+  test("scala.meta.dialects.Metalevel.toString") {
+    // covered below
+  }
+
+  test("scala.meta.dialects.Metalevel.Normal.toString") {
+    assert(dialects.Metalevel.Normal.toString === "Normal")
+  }
+
+  test("scala.meta.dialects.Metalevel.Quoted.toString") {
+    assert(dialects.Metalevel.Quoted(1).toString === "Quoted(1)")
+  }
+
   test("scala.meta.dialects.Sbt0136.toString") {
     // covered above
   }
@@ -193,23 +205,35 @@ class PublicSuite extends FunSuite {
     assert(parsed.toString === "foo + bar")
   }
 
-  test("scala.meta.prettyprinters.Show") {
+  test("scala.meta.prettyprinters.Show.toString") {
     // n/a
   }
 
-  test("scala.meta.prettyprinters.Structure") {
+  test("scala.meta.prettyprinters.Structure.toString") {
     // n/a
   }
 
-  test("scala.meta.prettyprinters.Syntax") {
+  test("scala.meta.prettyprinters.Syntax.toString") {
     // n/a
   }
 
-  test("scala.meta.quasiquotes.Lift") {
+  test("scala.meta.prettyprinters.Syntax.LowPriorityOptions.Lazy.toString") {
+    assert(scala.meta.prettyprinters.Syntax.Options.Lazy.toString == "Lazy")
+  }
+
+  test("scala.meta.prettyprinters.Syntax.Options.toString") {
+    // covered above and below
+  }
+
+  test("scala.meta.prettyprinters.Syntax.Options.Eager.toString") {
+    assert(scala.meta.prettyprinters.Syntax.Options.Eager.toString == "Eager")
+  }
+
+  test("scala.meta.quasiquotes.Lift.toString") {
     // n/a
   }
 
-  test("scala.meta.quasiquotes.Unlift") {
+  test("scala.meta.quasiquotes.Unlift.toString") {
     // n/a
   }
 
@@ -280,11 +304,11 @@ class PublicSuite extends FunSuite {
     // covered above
   }
 
-  test("scala.meta.transversers.Transformer") {
+  test("scala.meta.transversers.Transformer.toString") {
     // n/a
   }
 
-  test("scala.meta.transversers.Traverser") {
+  test("scala.meta.transversers.Traverser.toString") {
     // n/a
   }
 }

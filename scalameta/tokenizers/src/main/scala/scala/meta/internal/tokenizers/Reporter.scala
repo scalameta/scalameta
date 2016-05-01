@@ -7,7 +7,7 @@ import scala.meta.tokenizers._
 
 // TODO: when I grow up I want to become a monad, just like my daddy
 // TODO: distinguish flavors of errors with exception types
-private[meta] trait Reporter {
+trait Reporter {
   // NOTE: not making this public, e.g. by exposing Position.Offset
   // because I don't want to advertise this style of positioning
   private implicit class XtensionOffsetPosition(offset: Offset) {
@@ -26,6 +26,6 @@ private[meta] trait Reporter {
   def incompleteInputError(msg: String, at: Offset): Nothing   = incompleteInputError(msg, at.pos)
 }
 
-private[meta] object Reporter {
+object Reporter {
   def apply(content0: Input) = new Reporter { def input = content0 }
 }

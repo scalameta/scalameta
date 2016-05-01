@@ -12,9 +12,9 @@ import scala.annotation.switch
 import scala.meta.classifiers._
 import scala.meta.prettyprinters._
 
-private[meta] object Helpers {
-  private[meta] val unaryOps = Set("-", "+", "~", "!")
-  private[meta] def isUnaryOp(s: String): Boolean = unaryOps contains s
+object Helpers {
+  val unaryOps = Set("-", "+", "~", "!")
+  def isUnaryOp(s: String): Boolean = unaryOps contains s
 
   implicit class XtensionSyntacticName(name: Name) {
     def isBinder: Boolean = name.parent.map(_.is[Member]).getOrElse(false)
@@ -276,7 +276,7 @@ private[meta] object Helpers {
         }
       }
       def merge(tpe: Type.Name, ctor: Ctor.Name): Ctor.Name = {
-        ctor.copy(value = tpe.value).withPos(tpe.pos).withTokens(tpe.tokens).inheritAttrs(ctor)
+        ctor.copy(value = tpe.value).inheritAttrs(ctor)
       }
       tpe match {
         case tpe @ Type.Name(value) =>

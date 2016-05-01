@@ -26,9 +26,13 @@ import scala.compat.Platform.EOL
   // might go ahead and drop support completely.
   def allowXmlLiterals: Boolean
 
-  // Permission to tokenize repeated dots as ellipses.
+  // Permission to parse unquotes.
+  // Necessary to support quasiquotes, e.g. `q"$x + $y"`.
+  def allowUnquotes: Boolean = metalevel.isQuoted
+
+  // Permission to tokenize repeated dots as ellipses and to parse ellipses.
   // Necessary to support quasiquotes, e.g. `q"foo(..$args)"`.
-  def allowEllipses: Boolean
+  def allowEllipses: Boolean = metalevel.isQuoted
 
   // Are terms on the top level supported by this dialect?
   // Necessary to support popular script-like DSLs.
@@ -37,6 +41,10 @@ import scala.compat.Platform.EOL
   // What kind of separator is necessary to split top-level statements?
   // Normally none is required, but scripts may have their own rules.
   def toplevelSeparator: String
+
+  // What level of quoting are we at?
+  // The underlying data structure captures additional information necessary for parsing.
+  def metalevel: Metalevel
 }
 
 package object dialects {
@@ -44,9 +52,9 @@ package object dialects {
     def name = "Scala210"
     def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
     def allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
-    def allowEllipses = false // Vanilla Scala doesn't support ellipses, somewhat similar concept is varargs and _*
     def allowToplevelTerms = false
     def toplevelSeparator = ""
+    def metalevel = Metalevel.Normal
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -54,9 +62,9 @@ package object dialects {
     def name = "Sbt0136"
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
-    def allowEllipses = Scala210.allowEllipses
     def allowToplevelTerms = false
     def toplevelSeparator = EOL
+    def metalevel = Metalevel.Normal
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -64,9 +72,9 @@ package object dialects {
     def name = "Sbt0137"
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
-    def allowEllipses = Scala210.allowEllipses
     def allowToplevelTerms = true
     def toplevelSeparator = ""
+    def metalevel = Metalevel.Normal
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -74,9 +82,9 @@ package object dialects {
     def name = "Scala211"
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
-    def allowEllipses = Scala210.allowEllipses
     def allowToplevelTerms = Scala210.allowToplevelTerms
     def toplevelSeparator = Scala210.toplevelSeparator
+    def metalevel = Metalevel.Normal
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -84,20 +92,52 @@ package object dialects {
     def name = "Dotty"
     def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
     def allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
-    def allowEllipses = false // Vanilla Dotty doesn't support ellipses, somewhat similar concept is varargs and _*
     def allowToplevelTerms = false
     def toplevelSeparator = ""
+    def metalevel = Metalevel.Normal
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
-  @leaf private[meta] class Quasiquote(dialect: Dialect) extends Dialect {
-    def name = s"Quasiquote(${dialect.name})"
-    def bindToSeqWildcardDesignator = dialect.bindToSeqWildcardDesignator
-    def allowXmlLiterals = dialect.allowXmlLiterals
-    def allowEllipses = true
-    def allowToplevelTerms = dialect.allowToplevelTerms
-    def toplevelSeparator = dialect.toplevelSeparator
+  @branch private[meta] trait Quasiquote extends Dialect {
+    def name = s"$qualifier(${underlying.name}, ${if (multiline) "Multi" else "Single"})"
+    def qualifier: String
+    def underlying: Dialect
+    def multiline: Boolean
+    def metalevel = Metalevel.Quoted(1)
+    def bindToSeqWildcardDesignator = underlying.bindToSeqWildcardDesignator
+    def allowXmlLiterals = underlying.allowXmlLiterals
+    def allowToplevelTerms = underlying.allowToplevelTerms
+    def toplevelSeparator = underlying.toplevelSeparator
+  }
+
+  @leaf private[meta] class QuasiquoteTerm(underlying: Dialect, multiline: Boolean) extends Quasiquote {
+    require(!underlying.isInstanceOf[Quasiquote])
+    def qualifier = s"QuasiquoteTerm"
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+    override def toString = name
+  }
+
+  @leaf private[meta] class QuasiquotePat(underlying: Dialect, multiline: Boolean) extends Quasiquote {
+    require(!underlying.isInstanceOf[Quasiquote])
+    def qualifier = s"QuasiquotePat"
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+    override def toString = name
+  }
+
+  @root trait Metalevel {
+    def isQuoted: Boolean = nesting > 0
+    def nesting: Int
+  }
+  object Metalevel {
+    @leaf object Normal extends Metalevel { def nesting: Int = 0 }
+    @leaf class Quoted(nesting: Int) extends Metalevel {
+      // NOTE: The syntax for nested interpolation is ugly to the point of being impractical.
+      // That's why we won't implement support for it for the time being.
+      // However, it'd have been reasonably simple:
+      //  * For 0..nesting-1, 2^n dollars in a row drop us to a level-n unquote.
+      //  * 2^nesting dollars in a row represent a dollar character itself.
+      require(nesting == 1)
+    }
   }
 }
 
@@ -109,11 +149,29 @@ object Dialect {
 
   def forName(name: String): Dialect = {
     def maybeVanilla = all.find(_.name == name)
-    def maybeQuasiquote = "^Quasiquote\\((.*?)\\)$".r.unapplySeq(name).map {
-      case List(subname) => Quasiquote(Dialect.forName(subname))
+    def maybeQuasiquote = """^Quasiquote(.+?)\((.*?)\)$""".r.unapplySeq(name).map {
+      case List(qualifier, props) =>
+        def failQualifier() = {
+          val message = s"unexpected quasiquote qualifier: expected = Term|Pat, actual = $qualifier"
+          throw new IllegalArgumentException(message)
+        }
+        def failProps() = {
+          val expected = """QuasiquoteTerm|QuasiquotePat(.*?, Single|Multi)"""
+          val message = s"unexpected quasiquote properties: expected = $expected, actual = Quasiquote$qualifier($props)"
+          throw new IllegalArgumentException(message)
+        }
+        val (underlying, multiline) = """^\s*(.*?)\s*,\s*(Single|Multi)\s*$""".r.unapplySeq(props) match {
+          case Some(List(s_underlying, s_multiline)) => (Dialect.forName(s_underlying), s_multiline == "Multi")
+          case _ => failProps()
+        }
+        qualifier match {
+          case "Term" => QuasiquoteTerm(underlying, multiline)
+          case "Pat" => QuasiquotePat(underlying, multiline)
+          case other => failQualifier()
+        }
     }
-    def fail = throw new IllegalArgumentException(s"unknown dialect $name")
-    maybeVanilla.orElse(maybeQuasiquote).getOrElse(fail)
+    def fail() = throw new IllegalArgumentException(s"unknown dialect $name")
+    maybeVanilla.orElse(maybeQuasiquote).getOrElse(fail())
   }
 
   @SerialVersionUID(1L) private[meta] class SerializationProxy(@transient private var orig: Dialect) extends Serializable {

@@ -35,9 +35,6 @@ trait MacroHelpers extends DebugFinder
       def hasNonEmpty(anns: List[Annotation]) = anns.exists(_.tree.tpe =:= typeOf[org.scalameta.invariants.nonEmpty])
       hasNonEmpty(sym.annotations) || hasNonEmpty(tptAnns)
     }
-    def hasAnnotation[T: TypeTag] = {
-      sym.annotations.exists(_.tree.tpe.typeSymbol == symbolOf[T])
-    }
   }
 
   lazy val InvariantFailedRaiseMethod = q"${hygienicRef(org.scalameta.invariants.InvariantFailedException)}.raise"
@@ -51,7 +48,7 @@ trait MacroHelpers extends DebugFinder
   lazy val AstMetadataModule = hygienicRef(scala.meta.internal.ast.Metadata)
   lazy val CommonTyperMacrosModule = hygienicRef(scala.meta.internal.ast.CommonTyperMacros)
   lazy val CommonTyperMacrosBundle = hygienicRef[scala.meta.internal.ast.CommonTyperMacrosBundle]
-  lazy val AstInfoClass = hygienicRef[scala.meta.internal.ast.AstInfo[_]]
+  lazy val AstInfoClass = tq"_root_.scala.meta.internal.ast.AstInfo"
   lazy val TokenMetadataModule = hygienicRef(scala.meta.internal.tokens.Metadata)
   lazy val BooleanClass = hygienicRef[scala.Boolean]
   lazy val IntClass = hygienicRef[scala.Int]
@@ -75,6 +72,9 @@ trait MacroHelpers extends DebugFinder
   lazy val SeqClass = hygienicRef[scala.collection.immutable.Seq[_]]
   lazy val ListBufferModule = hygienicRef(scala.collection.mutable.ListBuffer)
   lazy val UnitClass = hygienicRef[scala.Unit]
+  lazy val ClassClass = hygienicRef[java.lang.Class[_]]
+  lazy val ClassTagClass = hygienicRef[scala.reflect.ClassTag[_]]
+  lazy val ImplicitlyMethod = q"${hygienicRef(scala.Predef)}.implicitly"
 
   private def fqRef(fqName: String, isTerm: Boolean): Tree = {
     def loop(parts: List[String]): Tree = parts match {

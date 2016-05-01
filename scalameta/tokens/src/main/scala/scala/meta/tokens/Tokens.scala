@@ -8,15 +8,16 @@ import scala.collection.immutable.VectorBuilder
 import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
+import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.internal.prettyprinters._
 import scala.meta.internal.inputs._
+import scala.meta.internal.tokens._
 
 // TODO: We should really give up on trying to use the standard IndexedSeq machinery,
 // because it doesn't give us a good way to load the elements lazily, which is necessary for Tokens.Slice
 // and would obviate the need for the very existence of Tokens.Prototype.
 // TODO: https://www.dropbox.com/s/5xmjr755tnlqcwk/2015-05-04%2013.50.48.jpg?dl=0
-// TODO: not sealed because TransformedTokens is declared in a different project
-abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) {
+sealed abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with InternalTokens {
   def isAuthentic: Boolean
   def isSynthetic: Boolean = !isAuthentic
 
@@ -38,7 +39,7 @@ abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) {
   // def unzip3[A1, A2, A3](implicit asTriple: A => (A1, A2, A3)): (CC[A1], CC[A2], CC[A3]) = {
   // TODO: have I missed anything else?
 
-  def syntax: String = this.show[Syntax]
+  def syntax(implicit dialect: Dialect, options: Options = Options.Eager): String = Tokens.showSyntax[Tokens](dialect, options).apply(this).toString
   def structure: String = this.show[Structure]
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 }
@@ -93,5 +94,5 @@ object Tokens {
   implicit val tokensToInput: Convert[Tokens, Input] = Convert(tokens => Input.String(tokens.syntax))
   implicit val seqTokenToInput: Convert[Seq[Token], Input] = Convert(tokens => Input.String(Tokens(tokens: _*).syntax))
   implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
-  implicit def showSyntax[T <: Tokens]: Syntax[T] = TokensSyntax.apply[T]
+  implicit def showSyntax[T <: Tokens](implicit dialect: Dialect, options: Options): Syntax[T] = TokensSyntax.apply[T](dialect, options)
 }
