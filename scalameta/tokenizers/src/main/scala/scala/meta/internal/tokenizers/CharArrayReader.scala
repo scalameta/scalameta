@@ -3,6 +3,8 @@ package internal
 package tokenizers
 
 import Chars._
+import scala.meta.inputs._
+import scala.meta.dialects.Quasiquote
 
 trait CharArrayReaderData {
   /** the last read character */
@@ -20,7 +22,11 @@ trait CharArrayReaderData {
   protected var lastUnicodeOffset = -1
 }
 
-class CharArrayReader(val buf: Array[Char], error: (String, Offset) => Unit, decodeUni: Boolean) extends CharArrayReaderData { self =>
+class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter, decodeUni: Boolean) extends CharArrayReaderData { self =>
+  val buf = input.chars
+  private val singleline = dialect match { case dialect: Quasiquote => !dialect.multiline; case _ => false }
+  import reporter._
+
   /** Is last character a unicode escape \\uxxxx? */
   def isUnicodeEscape = charOffset == lastUnicodeOffset
 
@@ -36,6 +42,9 @@ class CharArrayReader(val buf: Array[Char], error: (String, Offset) => Unit, dec
       if (ch < ' ') {
         skipCR()
         potentialLineEnd()
+      }
+      if (ch == '"' && singleline) {
+        readerError("double quotes are not allowed in single-line quasiquotes", at = charOffset - 1)
       }
     }
   }
@@ -67,13 +76,13 @@ class CharArrayReader(val buf: Array[Char], error: (String, Offset) => Unit, dec
         // Since the positioning code is very insistent about throwing exceptions,
         // we have to decrement the position so our error message can be seen, since
         // we are one past EOF.  This happens with e.g. val x = \ u 1 <EOF>
-        error("incomplete unicode escape", charOffset - 1)
+        readerError("incomplete unicode escape", at = charOffset - 1)
         SU
       }
       else {
         val d = digit2int(buf(charOffset), 16)
         if (d >= 0) charOffset += 1
-        else error("error in unicode escape", charOffset)
+        else readerError("error in unicode escape", at = charOffset)
         d
       }
     }
@@ -102,6 +111,9 @@ class CharArrayReader(val buf: Array[Char], error: (String, Offset) => Unit, dec
   /** Handle line ends */
   private def potentialLineEnd() {
     if (ch == LF || ch == FF) {
+      if (singleline) {
+        readerError("line breaks are not allowed in single-line quasiquotes", at = charOffset - 1)
+      }
       lastLineStartOffset = lineStartOffset
       lineStartOffset = charOffset
     }
@@ -110,7 +122,7 @@ class CharArrayReader(val buf: Array[Char], error: (String, Offset) => Unit, dec
   /** A new reader that takes off at the current character position */
   def lookaheadReader = new CharArrayLookaheadReader
 
-  class CharArrayLookaheadReader extends CharArrayReader(buf, error, decodeUni) {
+  class CharArrayLookaheadReader extends CharArrayReader(input, dialect, reporter, decodeUni) {
     charOffset = self.charOffset
     ch = self.ch
     /** A mystery why CharArrayReader.nextChar() returns Unit */

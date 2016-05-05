@@ -15,11 +15,11 @@ import scala.meta.dialects.Quasiquote
 import scala.meta.tokenizers.TokenizeException
 
 class LegacyScanner(input: Input, dialect: Dialect, decodeUni: Boolean) {
+  val reporter: Reporter      = Reporter(input)
   val curr: LegacyTokenData   = new LegacyTokenData {}
   val next: LegacyTokenData   = new LegacyTokenData {}
   val prev: LegacyTokenData   = new LegacyTokenData {}
-  val reader: CharArrayReader = new CharArrayReader(input.chars, reporter.readerError, decodeUni)
-  val reporter: Reporter      = Reporter(input)
+  val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter, decodeUni)
 
   import curr._, reader._, reporter._
   curr.input = this.input
