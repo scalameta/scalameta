@@ -828,4 +828,16 @@ class TokenizerSuite extends FunSuite {
       |EOF [15..15)
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
+
+  test("parsed trees don't have BOF/EOF in their tokens") {
+    val tree = "foo + bar".parse[Term].get
+    assert(tree.pos.nonEmpty)
+    assert(tree.tokens.show[Structure] === "Tokens(foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9))")
+  }
+
+  test("synthetic trees don't have BOF/EOF in their tokens") {
+    val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
+    assert(tree.pos.isEmpty)
+    assert(tree.tokens.show[Structure] === "Tokens(foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9))")
+  }
 }
