@@ -57,4 +57,9 @@ class TokensSuite extends FunSuite {
     assert(tree.tokens.syntax === "foo + bar")
     assert(tree.tokens.forall(_.input.isInstanceOf[scala.meta.internal.inputs.VirtualInput]))
   }
+
+  test("wat") {
+    // NOTE: if this test fails, then we'll get ScalametaTokenizer.megaCache corruptions
+    assert(scala.meta.internal.inputs.VirtualInput("abcdefgh") != Input.String("abcdefgh"))
+  }
 }
