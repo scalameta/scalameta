@@ -7,12 +7,14 @@ import org.scalameta.invariants._
 import scala.compat.Platform.EOL
 import scala.meta.classifiers._
 import scala.meta.prettyprinters._
+import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
 import scala.meta.tokenizers._
 import scala.meta.internal.equality._
 import scala.meta.internal.flags._
+import scala.meta.internal.inputs._
 import scala.meta.internal.prettyprinters._
 import scala.meta.internal.semantic._
 import scala.meta.internal.tokens._
@@ -72,7 +74,8 @@ trait InternalTree {
       val inputTokens = pos.input.tokenize.get
       inputTokens.slice(pos)
     } else {
-      val syntheticTokens = dialect(syntax).tokenize.get
+      val virtualInput = VirtualInput(this.syntax(dialect, Options.Eager))
+      val syntheticTokens = dialect(virtualInput).tokenize.get
       syntheticTokens.slice(1, syntheticTokens.length - 1) // drop BOF and EOF
     }
   }

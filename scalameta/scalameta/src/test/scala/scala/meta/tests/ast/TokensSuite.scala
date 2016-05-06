@@ -55,5 +55,6 @@ class TokensSuite extends FunSuite {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
     assert(tree.syntax === "foo + bar")
     assert(tree.tokens.syntax === "foo + bar")
+    assert(tree.tokens.forall(_.input.isInstanceOf[scala.meta.internal.inputs.VirtualInput]))
   }
 }
