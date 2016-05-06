@@ -197,6 +197,7 @@ class PublicSuite extends FunSuite {
       implicit val dialect: scala.meta.Dialect = ???
       (??? : Tree).show[Syntax]
       (??? : Tree).syntax
+      dialect(??? : Tree).syntax
     """) === "")
   }
 
