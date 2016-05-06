@@ -151,20 +151,18 @@ class ErrorSuite extends FunSuite {
   }
 
   test("q\"foo[..$terms]\"") {
-    // FIXME: looks our new scheme of ast reification breaks quasiquote error reporting
-    // the failure doesn't look severe, so I'm just going to comment out this test for the time being
-    // assert(typecheckError("""
-    //   import scala.meta._
-    //   import scala.meta.dialects.Scala211
-    //   val terms = List(q"T", q"U")
-    //   q"foo[..$terms]"
-    // """) === """
-    //   |<macro>:5: type mismatch when unquoting;
-    //   | found   : List[scala.meta.Term.Name]
-    //   | required: scala.collection.immutable.Seq[scala.meta.Type]
-    //   |      q"foo[..$terms]"
-    //   |              ^
-    // """.trim.stripMargin)
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val terms = List(q"T", q"U")
+      q"foo[..$terms]"
+    """) === """
+      |<macro>:5: type mismatch when unquoting;
+      | found   : List[scala.meta.Term.Name]
+      | required: scala.collection.immutable.Seq[scala.meta.Type]
+      |      q"foo[..$terms]"
+      |              ^
+    """.trim.stripMargin)
   }
 
   test("q\"foo($x, ..$ys, $z, ..$ts)\"") {
