@@ -14,12 +14,12 @@ import scala.meta.inputs._
 import scala.meta.dialects.Quasiquote
 import scala.meta.tokenizers.TokenizeException
 
-class LegacyScanner(input: Input, dialect: Dialect, decodeUni: Boolean) {
+class LegacyScanner(input: Input, dialect: Dialect) {
   val reporter: Reporter      = Reporter(input)
   val curr: LegacyTokenData   = new LegacyTokenData {}
   val next: LegacyTokenData   = new LegacyTokenData {}
   val prev: LegacyTokenData   = new LegacyTokenData {}
-  val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter, decodeUni)
+  val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter)
 
   import curr._, reader._, reporter._
   curr.input = this.input
@@ -973,7 +973,7 @@ class LegacyScanner(input: Input, dialect: Dialect, decodeUni: Boolean) {
       // but that's too much hassle at the moment.
       val exploratoryInput = Input.Slice(input, start, input.chars.length)
       val exploratoryDialect = this.dialect match { case dialect: Quasiquote => dialect.underlying; case _ => unreachable }
-      val exploratoryScanner = new LegacyScanner(exploratoryInput, exploratoryDialect, decodeUni)
+      val exploratoryScanner = new LegacyScanner(exploratoryInput, exploratoryDialect)
       exploratoryScanner.reader.nextChar()
       exploratoryScanner.nextToken()
       exploratoryScanner.curr.token match {

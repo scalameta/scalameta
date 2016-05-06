@@ -22,7 +22,7 @@ trait CharArrayReaderData {
   protected var lastUnicodeOffset = -1
 }
 
-class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter, decodeUni: Boolean) extends CharArrayReaderData { self =>
+class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extends CharArrayReaderData { self =>
   val buf = input.chars
   private val singleline = dialect match { case dialect: Quasiquote => !dialect.multiline; case _ => false }
   import reporter._
@@ -86,7 +86,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter, decode
         d
       }
     }
-    if (charOffset < buf.length && buf(charOffset) == 'u' && decodeUni && evenSlashPrefix) {
+    if (charOffset < buf.length && buf(charOffset) == 'u' && evenSlashPrefix) {
       do charOffset += 1
       while (charOffset < buf.length && buf(charOffset) == 'u')
       val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
@@ -122,7 +122,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter, decode
   /** A new reader that takes off at the current character position */
   def lookaheadReader = new CharArrayLookaheadReader
 
-  class CharArrayLookaheadReader extends CharArrayReader(input, dialect, reporter, decodeUni) {
+  class CharArrayLookaheadReader extends CharArrayReader(input, dialect, reporter) {
     charOffset = self.charOffset
     ch = self.ch
     /** A mystery why CharArrayReader.nextChar() returns Unit */

@@ -144,7 +144,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     }
 
     val legacyTokens = {
-      val scanner = new LegacyScanner(input, dialect, decodeUni = true)
+      val scanner = new LegacyScanner(input, dialect)
       val legacyTokenBuf = mutable.ArrayBuilder.make[LegacyTokenData]()
       scanner.foreach(curr => legacyTokenBuf += new LegacyTokenData{}.copyFrom(curr))
       legacyTokenBuf.result
