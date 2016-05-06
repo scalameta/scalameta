@@ -159,7 +159,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
         stats1 += q"override def hashCode: _root_.scala.Int = _root_.scala.runtime.ScalaRunTime._hashCode(this)"
       }
       if (needs(TermName("equals"), companion = false, duplicate = false)) {
-        stats1 += q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = true"
+        stats1 += q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = other.isInstanceOf[$name[..$tparamrefs]]"
         stats1 += q"""
           override def equals(other: _root_.scala.Any): _root_.scala.Boolean = (
             this.canEqual(other) && _root_.scala.runtime.ScalaRunTime._equals(this, other)
