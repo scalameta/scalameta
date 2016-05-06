@@ -1492,7 +1492,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case Ident(_)    => termName()
       case LeftBrace() => dropTrivialBlock(expr())
       case KwThis()    => val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous()); next(); atPos(in.prevTokenPos, auto)(Term.This(qual))
-      case _           => syntaxError("error in interpolated string: identifier or block expected", at = token)
+      case _           => syntaxError("error in interpolated string: identifier, `this' or block expected", at = token)
     }
   }
 

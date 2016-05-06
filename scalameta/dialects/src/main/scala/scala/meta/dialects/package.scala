@@ -21,6 +21,9 @@ import scala.compat.Platform.EOL
   // to a sequence wildcard pattern.
   def bindToSeqWildcardDesignator: String
 
+  // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
+  def allowSpliceUnderscore: Boolean
+
   // Are XML literals supported by this dialect?
   // We plan to deprecate XML literal syntax, and some dialects
   // might go ahead and drop support completely.
@@ -52,6 +55,7 @@ package object dialects {
     def name = "Scala210"
     def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
     def allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
+    def allowSpliceUnderscore = false // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = false
     def toplevelSeparator = ""
     def metalevel = Metalevel.Normal
@@ -62,6 +66,7 @@ package object dialects {
     def name = "Sbt0136"
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
+    def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = false
     def toplevelSeparator = EOL
     def metalevel = Metalevel.Normal
@@ -72,6 +77,7 @@ package object dialects {
     def name = "Sbt0137"
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
+    def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
     def toplevelSeparator = ""
     def metalevel = Metalevel.Normal
@@ -82,6 +88,7 @@ package object dialects {
     def name = "Scala211"
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
+    def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = Scala210.allowToplevelTerms
     def toplevelSeparator = Scala210.toplevelSeparator
     def metalevel = Metalevel.Normal
@@ -92,6 +99,7 @@ package object dialects {
     def name = "Dotty"
     def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
     def allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+    def allowSpliceUnderscore = true
     def allowToplevelTerms = false
     def toplevelSeparator = ""
     def metalevel = Metalevel.Normal
@@ -106,6 +114,7 @@ package object dialects {
     def metalevel = Metalevel.Quoted(1)
     def bindToSeqWildcardDesignator = underlying.bindToSeqWildcardDesignator
     def allowXmlLiterals = underlying.allowXmlLiterals
+    def allowSpliceUnderscore = underlying.allowSpliceUnderscore
     def allowToplevelTerms = underlying.allowToplevelTerms
     def toplevelSeparator = underlying.toplevelSeparator
   }

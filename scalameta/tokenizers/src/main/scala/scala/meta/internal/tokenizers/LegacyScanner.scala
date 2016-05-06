@@ -674,7 +674,7 @@ class LegacyScanner(input: Input, dialect: Dialect, decodeUni: Boolean) {
           endOffset = charOffset - 3
           nextRawChar()
           next.token = LBRACE
-        } else if (ch == '_') {
+        } else if (ch == '_' && dialect.allowSpliceUnderscore) {
           finishStringPart()
           endOffset = charOffset - 3
           nextRawChar()
@@ -693,7 +693,10 @@ class LegacyScanner(input: Input, dialect: Dialect, decodeUni: Boolean) {
             next.token = kw2legacytoken(next.name)
           }
         } else {
-          syntaxError("invalid string interpolation: `$$', `$'ident, `$'BlockExpr, `$'this or `$'_ expected", at = offset)
+          var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
+          if (dialect.allowSpliceUnderscore) supportedCombos = supportedCombos :+ "`$'_"
+          val s_supportedCombos = supportedCombos.init.mkString(", ") + supportedCombos.last
+          syntaxError(s_supportedCombos, at = offset)
         }
       }
     } else {

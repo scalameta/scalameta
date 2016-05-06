@@ -473,4 +473,8 @@ class TermSuite extends ParseSuite {
   test("\"stat;\".parse[Term]") {
     intercept[ParseException]{ term("stat;") }
   }
+
+  test("$_") {
+    intercept[ParseException](term(""" q"x + $_" """))
+  }
 }
