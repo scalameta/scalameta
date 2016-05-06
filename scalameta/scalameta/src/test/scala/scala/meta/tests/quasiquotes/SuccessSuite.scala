@@ -2147,4 +2147,10 @@ class SuccessSuite extends FunSuite {
     val arg = arg"${expr: Term}"
     assert(arg.show[Structure] === "Term.Name(\"x\")")
   }
+
+  test("ellipses in template stats") {
+    val mods = List(mod"private")
+    val tree = q"class C { ..$mods def x = 2 }"
+    assert(tree.show[Structure] === """Defn.Class(Nil, Type.Name("C"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(Seq(Defn.Def(Seq(Mod.Private(Name.Anonymous())), Term.Name("x"), Nil, Nil, None, Lit(2))))))""")
+  }
 }

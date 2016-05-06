@@ -3398,14 +3398,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def templateStats(): List[Stat] = statSeq(templateStat)
   def templateStat: PartialFunction[Token, Stat] = {
-    case Ellipsis(_) =>
-      ellipsis(1, unquote[Stat])
     case KwImport() =>
       importStmt()
     case DefIntro() =>
       nonLocalDefOrDcl()
     case ExprIntro() =>
       expr(InTemplate)
+    case Ellipsis(_) =>
+      ellipsis(1, unquote[Stat])
   }
 
   /** {{{
