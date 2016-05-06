@@ -21,7 +21,7 @@ trait InternalTokens {
     def failDoesntLineUp() = fail(s"tokens in $this don't line up according to $pos")
     def failWrongInput(badInput: Input) = fail(s"tokens in $this have wrong input according to $pos: expected = ${pos.input}, actual = $badInput")
     pos match {
-      case Position.Range(input, start, _, end) =>
+      case Position.Range(input, start, end) =>
         def validateTokens(): Unit = {
           if (this.length < 2 || !this.head.is[BOF] || !this.last.is[EOF]) failMissingLetterbox()
           if (this.forall(token => token.start == token.end)) failEmptySyntax()

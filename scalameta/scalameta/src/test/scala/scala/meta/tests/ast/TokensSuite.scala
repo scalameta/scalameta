@@ -10,23 +10,23 @@ class TokensSuite extends FunSuite {
     val input = Input.String("")
     val tokens = input.tokenize.get.slice(0, 0)
     assert(tokens.structure === "Tokens()")
-    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 0, 0)))
+    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 0)))
   }
 
   test("Tokens.slice: (BOF, EOF)") {
     val input = Input.String("")
     val tokens = input.tokenize.get
     assert(tokens.structure === "Tokens(BOF [0..0), EOF [0..0))")
-    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 0, 0)))
+    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 0)))
   }
 
   test("Tokens.slice: (BOF, foo, EOF)") {
     val input = Input.String("foo")
     val tokens = input.tokenize.get
     assert(tokens.structure === "Tokens(BOF [0..0), foo [0..3), EOF [3..3))")
-    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 0, 0)))
-    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 0, 1)))
-    assert(tokens.slice(Position.Range(input, 0, 0, 3)).structure === "Tokens(foo [0..3))")
+    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 0)))
+    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 1)))
+    assert(tokens.slice(Position.Range(input, 0, 3)).structure === "Tokens(foo [0..3))")
   }
 
   test("Tokens.slice: wrong input") {
@@ -34,9 +34,9 @@ class TokensSuite extends FunSuite {
     val tokens = input.tokenize.get
     assert(tokens.structure === "Tokens(BOF [0..0), foo [0..3), EOF [3..3))")
     val input2 = Input.String("foo")
-    assert(tokens.slice(Position.Range(input2, 0, 0, 3)).structure === "Tokens(foo [0..3))")
+    assert(tokens.slice(Position.Range(input2, 0, 3)).structure === "Tokens(foo [0..3))")
     val input3 = Input.String("bar")
-    intercept[IllegalArgumentException](tokens.slice(Position.Range(input3, 0, 0, 3)))
+    intercept[IllegalArgumentException](tokens.slice(Position.Range(input3, 0, 3)))
   }
 
   test("Tree.tokens: parsed, same dialect") {

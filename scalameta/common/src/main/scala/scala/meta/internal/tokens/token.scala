@@ -77,7 +77,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       // step 3: perform manual mixin composition in order to avoid the creation of Token$class.class.
       // We kinda have to do that, because we want to have a `Token.Class` class.
       stats1 += q"""
-        def pos: $PositionClass = $PositionModule.Range(this.input, this.start, this.start, this.end)
+        def pos: $PositionClass = $PositionModule.Range(this.input, this.start, this.end)
       """
       stats1 += q"""
         def syntax(implicit dialect: $Dialect, options: $OptionsClass = $OptionsModule.Eager): $StringClass = Token.showSyntax[$Token](dialect, options).apply(this).toString

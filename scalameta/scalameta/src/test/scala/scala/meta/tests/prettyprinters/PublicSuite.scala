@@ -165,7 +165,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Position.Range.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    assert(lhs.pos.toString === """[0..0..3) in Input.String("foo + bar")""")
+    assert(lhs.pos.toString === """[0..3) in Input.String("foo + bar")""")
   }
 
   test("scala.meta.parsers.Parse.toString") {

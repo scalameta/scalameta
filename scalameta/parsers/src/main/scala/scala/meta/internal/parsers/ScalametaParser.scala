@@ -390,11 +390,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val result = body
     var endTokenPos = end.endTokenPos
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    val pos = {
-      val startToken = scannerTokens(startTokenPos)
-      val endToken = scannerTokens(endTokenPos)
-      Position.Range(startToken.input, startToken.start, startToken.start, endToken.end)
-    }
+    val pos = Position.Range(input, scannerTokens(startTokenPos).start, scannerTokens(endTokenPos).end)
     val tokens = scannerTokens.slice(startTokenPos, endTokenPos + 1)
     result.withOrigin(Origin.Parsed(input, dialect, pos)).asInstanceOf[T]
   }

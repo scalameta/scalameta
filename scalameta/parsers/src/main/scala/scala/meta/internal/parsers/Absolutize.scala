@@ -12,13 +12,12 @@ object Absolutize {
   implicit class XtensionPositionAbsolutize(pos: Position) {
     def absolutize: Position = {
       pos match {
-        case Position.Range(input, start, point, end) =>
-          require(start.input == point.input && point.input == end.input)
+        case Position.Range(input, start, end) =>
+          require(start.input == end.input)
           val start1 = start.absolutize
-          val point1 = point.absolutize
           val end1 = end.absolutize
           val input1 = start1.input
-          Position.Range(input1, start1, point1, end1)
+          Position.Range(input1, start1, end1)
         case other =>
           other
       }

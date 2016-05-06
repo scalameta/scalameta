@@ -24,19 +24,20 @@ object Position {
     override def toString = "Position.None"
   }
 
-  @leaf class Range(input: Input @nonEmpty, start: Point @nonEmpty, point: Point @nonEmpty, end: Point @nonEmpty) extends Position {
-    if (!((start.offset <= end.offset) && (start.offset <= point.offset) && (point.offset <= end.offset))) {
+  @leaf class Range(input: Input @nonEmpty, start: Point @nonEmpty, end: Point @nonEmpty) extends Position {
+    def point = start // TODO: either implement this like in scalac or go full clang, see #383
+    if (!((start.offset <= end.offset) && (point.offset <= end.offset))) {
       throw new IllegalArgumentException(s"$rangeString is not a valid range")
     }
-    private def rangeString = s"[${start.offset}..${point.offset}..${end.offset})"
+    private def rangeString = s"[${start.offset}..${end.offset})"
     override def toString = s"$rangeString in $input"
   }
   object Range {
-    def apply(input: Input, start: Point, point: Point, end: Point): Position = {
-      new Range(input, start, point, end)
+    def apply(input: Input, start: Point, end: Point): Position = {
+      new Range(input, start, end)
     }
-    def apply(input: Input, start: Int, point: Int, end: Int): Position = {
-      new Range(input, Point.Offset(input, start), Point.Offset(input, point), Point.Offset(input, end))
+    def apply(input: Input, start: Int, end: Int): Position = {
+      new Range(input, Point.Offset(input, start), Point.Offset(input, end))
     }
   }
 }
