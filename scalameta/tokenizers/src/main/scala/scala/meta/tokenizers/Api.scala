@@ -12,7 +12,7 @@ private[meta] trait Api {
       (dialect, convert(inputLike)).tokenize
     }
   }
-  implicit class XtensionTokenizersDialectInput(dialect: Dialect) {
+  implicit class XtensionTokenizersDialectApply(dialect: Dialect) {
     def apply[T](inputLike: T)(implicit convert: Convert[T, Input]): (Dialect, Input) = {
       (dialect, convert(inputLike))
     }

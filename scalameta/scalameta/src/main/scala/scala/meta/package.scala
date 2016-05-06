@@ -10,9 +10,9 @@ package object meta extends classifiers.Api with classifiers.Aliases
                        with tokens.Api with tokens.Aliases
                        with transversers.Api with transversers.Aliases {
 
-  type XtensionParsersDialectInput // shadow conflicting implicit class
-  type XtensionTokenizersDialectInput // shadow conflicting implicit class
-  implicit class XtensionDialectInput(dialect: scala.meta.Dialect) {
+  type XtensionParsersDialectApply // shadow conflicting implicit class
+  type XtensionTokenizersDialectApply // shadow conflicting implicit class
+  implicit class XtensionDialectApply(dialect: scala.meta.Dialect) {
     def apply[T](inputLike: T)(implicit convert: scala.meta.common.Convert[T, scala.meta.inputs.Input]): (scala.meta.Dialect, scala.meta.inputs.Input) = {
       (dialect, convert(inputLike))
     }

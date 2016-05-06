@@ -202,7 +202,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
   // However, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted.
   // This leads to extremely dirty and seriously crazy code, which I'd like to replace in the future.
-  private val XtensionParsersDialectInput = "shadow conflicting implicit"
+  private val XtensionParsersDialectApply = "shadow conflicting implicit"
   lazy val scannerTokens = input.tokenize match {
     case Tokenized.Success(tokens) => tokens
     case Tokenized.Error(_, _, details) => throw details
