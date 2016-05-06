@@ -71,8 +71,12 @@ trait InternalTree {
 
   def tokens(implicit dialect: Dialect): Tokens = {
     if (pos.nonEmpty) {
-      val inputTokens = pos.input.tokenize.get
-      inputTokens.slice(pos)
+      if (pos.start != pos.end) {
+        val inputTokens = pos.input.tokenize.get
+        inputTokens.slice(pos)
+      } else {
+        Tokens()
+      }
     } else {
       val virtualInput = VirtualInput(this.syntax(dialect, Options.Eager))
       val syntheticTokens = dialect(virtualInput).tokenize.get

@@ -62,4 +62,10 @@ class TokensSuite extends FunSuite {
     // NOTE: if this test fails, then we'll get ScalametaTokenizer.megaCache corruptions
     assert(scala.meta.internal.inputs.VirtualInput("abcdefgh") != Input.String("abcdefgh"))
   }
+
+  test("Tree.tokens: empty") {
+    val emptySelf = "class C".parse[Stat].get.children(2)
+    assert(emptySelf.structure === "Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)")
+    assert(emptySelf.tokens.structure === "Tokens()")
+  }
 }
