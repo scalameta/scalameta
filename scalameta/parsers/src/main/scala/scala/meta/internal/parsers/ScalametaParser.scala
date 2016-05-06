@@ -450,7 +450,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def isColonWildcardStar: Boolean  = token.is[Colon] && ahead(token.is[Underscore] && ahead(isIdentOf("*")))
   def isSpliceFollowedBy(check: => Boolean): Boolean
                                     = token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
-  def isBackquoted: Boolean         = token.show[Syntax].startsWith("`") && token.show[Syntax].endsWith("`")
+  def isBackquoted: Boolean         = token.syntax.startsWith("`") && token.syntax.endsWith("`")
 
   private implicit class XtensionTokenClass(token: Token) {
     def isCaseClassOrObject = token.is[KwCase] && (token.next.is[KwClass] || token.next.is[KwObject])
@@ -656,7 +656,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                   // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
                   // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
                   // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
-                  require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.show[Structure]))
+                  require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.structure))
                   atPos(quasi, quasi)(implicitly[AstInfo[T]].quasi(quasi.rank, quasi.tree))
                 case other =>
                   other
@@ -881,7 +881,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         rawtss.head.map({
           case q: Tree.Quasi => q.become[Type.Arg.Quasi]
           case t: Type.Arg => t
-          case other => unreachable(debug(other.show[Syntax], other.show[Structure]))
+          case other => unreachable(debug(other.syntax, other.structure))
         })
       }
       def pss: List[List[Term.Param]] = {
@@ -889,7 +889,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         rawtss.map(_.map({
           case q: Tree.Quasi => q.become[Term.Param.Quasi]
           case t: Term.Param => t
-          case other => unreachable(debug(other.show[Syntax], other.show[Structure]))
+          case other => unreachable(debug(other.syntax, other.structure))
         }))
       }
 
@@ -1309,7 +1309,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def literal(isNegated: Boolean = false): Lit = autoPos {
-    def isHex = token.show[Syntax].startsWith("0x") || token.show[Syntax].startsWith("0X")
+    def isHex = token.syntax.startsWith("0x") || token.syntax.startsWith("0X")
     val res = token match {
       case Constant.Int(rawValue) =>
         val value = if (isNegated) -rawValue else rawValue
@@ -1371,7 +1371,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         next()
         loop()
       case Interpolation.Part(_) | Xml.Part(_) =>
-        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(token.show[Syntax]))
+        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(token.syntax))
         next()
         loop()
       case Interpolation.SpliceStart() | Xml.SpliceStart() =>
@@ -1384,7 +1384,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case Interpolation.End() | Xml.End() =>
         next(); // simply return
       case _ =>
-        unreachable(debug(token, token.show[Structure]))
+        unreachable(debug(token, token.structure))
     }
     loop()
     result(interpolator, partsBuf.toList, argsBuf.toList)
@@ -2421,7 +2421,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case (_, name: Term.Name) if isVarPattern => Pat.Var.Term(name)
           case (_, name: Term.Name)                 => name
           case (_, select: Term.Select)             => select
-          case _                                    => unreachable(debug(token, token.show[Structure], sid, sid.show[Structure]))
+          case _                                    => unreachable(debug(token, token.structure, sid, sid.structure))
         }
       case Underscore() =>
         next()
@@ -2493,7 +2493,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val mod = in.token match {
       case KwPrivate() => (name: Name.Qualifier) => Mod.Private(name)
       case KwProtected() => (name: Name.Qualifier) => Mod.Protected(name)
-      case other => unreachable(debug(other, other.show[Structure]))
+      case other => unreachable(debug(other, other.structure))
     }
     next()
     if (in.token.isNot[LeftBracket]) mod(autoPos(Name.Anonymous()))
@@ -2828,7 +2828,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         importWildcardOrName() match {
           case to: Importee.Name     => Importee.Rename(from.value, to.value)
           case to: Importee.Wildcard => Importee.Unimport(from.value)
-          case other                 => unreachable(debug(other, other.show[Structure]))
+          case other                 => unreachable(debug(other, other.structure))
         }
       // NOTE: this is completely nuts
       case from: Importee.Wildcard if token.is[RightArrow] && ahead(token.is[Underscore]) =>
