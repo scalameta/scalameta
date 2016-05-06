@@ -1,5 +1,5 @@
 package scala.meta
-package convert
+package common
 
 // NOTE: neither A nor B can have variance annotations
 // we can't turn A into -A because contravariant implicits don't work

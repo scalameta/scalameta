@@ -5,41 +5,21 @@ import scala.collection._
 import scala.collection.generic._
 import scala.collection.mutable.{Builder, ArrayBuilder, ListBuffer}
 import scala.collection.immutable.VectorBuilder
+import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
+import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.internal.prettyprinters._
+import scala.meta.internal.inputs._
+import scala.meta.internal.tokens._
 
 // TODO: We should really give up on trying to use the standard IndexedSeq machinery,
 // because it doesn't give us a good way to load the elements lazily, which is necessary for Tokens.Slice
 // and would obviate the need for the very existence of Tokens.Prototype.
 // TODO: https://www.dropbox.com/s/5xmjr755tnlqcwk/2015-05-04%2013.50.48.jpg?dl=0
-// TODO: not sealed because TransformedTokens is declared in a different project
-abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with Input {
+sealed abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with InternalTokens {
   def isAuthentic: Boolean
   def isSynthetic: Boolean = !isAuthentic
-
-  def input: Input
-  def dialect: Dialect
-  def pos: Position = {
-    val (first, last) = this match {
-      case Tokens.Slice(tokens, from, until) => (tokens(from), tokens(until - 1))
-      case other => (other.head, other.last)
-    }
-    if (first.content == last.content && !first.content.isInstanceOf[Input.Slice]) {
-      val content = first.content
-      Position.Range(content, first.pos.start, first.pos.start, last.pos.end)
-    } else {
-      // NOTE: we assume that tokens represent a contiguous excerpt from a content.
-      // While it is true that Tokens(...) is general enough to break this assumption,
-      // that never happens at the moment, so let's not complicate things.
-      val Input.Slice(cf, sf, _) = first.content
-      val Input.Slice(cl, sl, _) = last.content
-      val content = { require(cf == cl); cf }
-      val start = Point.Offset(content, first.start + sf)
-      val end = Point.Offset(content, last.end + sl)
-      Position.Range(content, start, start, end)
-    }
-  }
 
   // TODO: having to override all these methods just to change the return type feels kind of stupid
   // why weren't they implemented on top of CanBuildFrom as well?
@@ -59,7 +39,7 @@ abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with Inp
   // def unzip3[A1, A2, A3](implicit asTriple: A => (A1, A2, A3)): (CC[A1], CC[A2], CC[A3]) = {
   // TODO: have I missed anything else?
 
-  def syntax: String = this.show[Syntax]
+  def syntax(implicit dialect: Dialect, options: Options = Options.Eager): String = Tokens.showSyntax[Tokens](dialect, options).apply(this).toString
   def structure: String = this.show[Structure]
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 }
@@ -93,31 +73,26 @@ object Tokens {
     }
   }
 
-  private[meta] case class Tokenized(content: Content, dialect: Dialect, underlying: Token*) extends Tokens(underlying: _*) {
-    override def input = content
+  private[meta] case class Tokenized(input: Input, dialect: Dialect, underlying: Token*) extends Tokens(underlying: _*) {
     override def isAuthentic = true
   }
 
   private[meta] case class Adhoc(underlying: Token*) extends Tokens(underlying: _*) {
-    override def input = this
-    override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = true
   }
 
   private[meta] case class Synthetic(underlying: Token*) extends Tokens(underlying: _*) {
-    override def input = this
-    override def dialect = scala.meta.dialects.Scala211
     override def isAuthentic = false
   }
 
   private[meta] case class Slice(tokens: Tokens, from: Int, until: Int) extends Tokens(tokens.view(from, until): _*) {
-    override def input = tokens.input
-    override def dialect = tokens.dialect
     override def isAuthentic = true
     override def take(n: Int): Tokens = new Slice(tokens, from, Math.min(from + n, until))
     override def drop(n: Int): Tokens = new Slice(tokens, Math.min(from + n, until), until)
   }
 
+  implicit val tokensToInput: Convert[Tokens, Input] = Convert(tokens => Input.String(tokens.syntax))
+  implicit val seqTokenToInput: Convert[Seq[Token], Input] = Convert(tokens => Input.String(Tokens(tokens: _*).syntax))
   implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
-  implicit def showSyntax[T <: Tokens]: Syntax[T] = TokensSyntax.apply[T]
+  implicit def showSyntax[T <: Tokens](implicit dialect: Dialect, options: Options): Syntax[T] = TokensSyntax.apply[T](dialect, options)
 }

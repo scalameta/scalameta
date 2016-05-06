@@ -97,4 +97,8 @@ class PatSuite extends ParseSuite {
   test("foo\"${b @ foo()}\"") {
     val Interpolate(Term.Name("foo"), Lit("") :: Lit("") :: Nil, Bind(Var.Term(Term.Name("b")), Extract(Term.Name("foo"), Nil, Nil)) :: Nil) = pat("foo\"${b @ foo()}\"")
   }
+
+  test("$_") {
+    val Pat.Interpolate(Term.Name("q"), Seq(Lit("x + "), Lit("")), Seq(Pat.Wildcard())) = pat(""" q"x + $_" """)
+  }
 }

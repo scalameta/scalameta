@@ -2,12 +2,19 @@ package scala.meta
 package internal
 package ast
 
+import org.scalameta.debug
+import org.scalameta.invariants._
 import scala.compat.Platform.EOL
 import scala.meta.classifiers._
 import scala.meta.prettyprinters._
+import scala.meta.prettyprinters.Syntax.Options
+import scala.meta.inputs._
 import scala.meta.tokens._
+import scala.meta.tokens.Token._
+import scala.meta.tokenizers._
 import scala.meta.internal.equality._
 import scala.meta.internal.flags._
+import scala.meta.internal.inputs._
 import scala.meta.internal.prettyprinters._
 import scala.meta.internal.semantic._
 import scala.meta.internal.tokens._
@@ -29,8 +36,7 @@ trait InternalTree {
   private[meta] def privateFlags: Flags
   private[meta] def privatePrototype: Tree
   private[meta] def privateParent: Tree
-  private[meta] def privateTokens: Tokens
-  private[meta] def privateTokens_=(tokens: Tokens): Unit
+  private[meta] def privateOrigin: Origin
   private[meta] def privateEnv: Environment = null
   private[meta] def privateDenot: Denotation = null
   private[meta] def privateTyping: Typing = null
@@ -38,7 +44,7 @@ trait InternalTree {
     flags: Flags = ZERO,
     prototype: Tree = this,
     parent: Tree = privateParent,
-    tokens: Tokens = privateTokens,
+    origin: Origin = privateOrigin,
     env: Environment = privateEnv,
     denot: Denotation = privateDenot,
     typing: Typing = privateTyping): Tree
@@ -55,14 +61,27 @@ trait InternalTree {
     if (privateParent != null) scala.Some(privateParent) else None
   }
 
-  def tokens: Tokens = {
-    val tokens = privateTokens match {
-      case null => inferTokens(this, None)
-      case TransformedTokens(proto) => inferTokens(this, Some(proto))
-      case other => other
+  private[meta] def origin: Origin = {
+    if (privateOrigin != null) privateOrigin else Origin.None
+  }
+
+  def pos: Position = {
+    origin match { case Origin.Parsed(_, _, pos) => pos; case _ => Position.None }
+  }
+
+  def tokens(implicit dialect: Dialect): Tokens = {
+    if (pos.nonEmpty) {
+      if (pos.start != pos.end) {
+        val inputTokens = pos.input.tokenize.get
+        inputTokens.slice(pos)
+      } else {
+        Tokens()
+      }
+    } else {
+      val virtualInput = VirtualInput(this.syntax(dialect, Options.Eager))
+      val syntheticTokens = dialect(virtualInput).tokenize.get
+      syntheticTokens.slice(1, syntheticTokens.length - 1) // drop BOF and EOF
     }
-    this.privateTokens = tokens
-    tokens
   }
 
   // =============================================================================================
@@ -73,8 +92,8 @@ trait InternalTree {
 
   private[meta] def privateWithFlags(flags: Flags): Tree = {
     if ((flags & TYPECHECKED) == TYPECHECKED) {
-      val violatesDenot = privateHasDenot && (this.privateDenot == null || this.privateDenot == Denotation.Zero)
-      val violatesTyping = privateHasTyping && (this.privateTyping == null || this.privateTyping == Typing.Zero)
+      val violatesDenot = privateHasDenot && (this.privateDenot == null || this.privateDenot == Denotation.None)
+      val violatesTyping = privateHasTyping && (this.privateTyping == null || this.privateTyping == Typing.None)
       if (violatesDenot || violatesTyping) {
         implicit val recursion = Attributes.Recursion.Deep
         implicit val force = Attributes.Force.Never
@@ -85,8 +104,8 @@ trait InternalTree {
     this.privateCopy(flags = flags)
   }
 
-  private[meta] def privateWithTokens(tokens: Tokens): Tree = {
-    this.privateCopy(tokens = tokens)
+  private[meta] def privateWithOrigin(origin: Origin): Tree = {
+    this.privateCopy(origin = origin)
   }
 
   // NOTE: No state validation in withEnv, because withEnv can be called on U, PA and A.
@@ -100,7 +119,7 @@ trait InternalTree {
       flags = this.privateFlags & ~TYPECHECKED,
       env = env,
       denot = this.privateDenot,
-      typing = Typing.Zero
+      typing = Typing.None
     )
   }
 
@@ -129,7 +148,7 @@ trait InternalTree {
     partialCheckWithAttrs()
     this.privateCopy(
       flags = privateFlags & ~TYPECHECKED,
-      env = Environment.Zero,
+      env = Environment.None,
       denot = denot,
       typing = privateTyping
     )
@@ -140,7 +159,7 @@ trait InternalTree {
     partialCheckWithAttrs()
     this.privateCopy(
       flags = privateFlags & ~TYPECHECKED,
-      env = Environment.Zero,
+      env = Environment.None,
       denot = privateDenot,
       typing = typing
     )
@@ -150,7 +169,7 @@ trait InternalTree {
     stateCheckWithAttrs()
     this.privateCopy(
       flags = privateFlags & ~TYPECHECKED,
-      env = Environment.Zero,
+      env = Environment.None,
       denot = denot,
       typing = typing
     )
@@ -180,9 +199,9 @@ trait InternalTree {
   // =============================================================================================
 
   private[meta] def isUnattributed: _root_.scala.Boolean = {
-    val isEnvEmpty = privateEnv == null || privateEnv == Environment.Zero
-    val isDenotEmpty = privateDenot == null || privateDenot == Denotation.Zero
-    val isTypingEmpty = privateTyping == null || privateTyping == Denotation.Zero
+    val isEnvEmpty = privateEnv == null || privateEnv == Environment.None
+    val isDenotEmpty = privateDenot == null || privateDenot == Denotation.None
+    val isTypingEmpty = privateTyping == null || privateTyping == Denotation.None
     this match {
       case tree: Term.Name => isEnvEmpty && isDenotEmpty && isTypingEmpty
       case tree: Ctor.Name => isEnvEmpty && isDenotEmpty && isTypingEmpty
@@ -204,22 +223,27 @@ trait InternalTree {
 }
 
 trait InternalTreeXtensions {
+  private[meta] implicit class XtensionOriginTree[T <: Tree](tree: T) {
+    def origin: Origin = if (tree.privateOrigin != null) tree.privateOrigin else Origin.None
+    def withOrigin(origin: Origin): T = tree.privateWithOrigin(origin).asInstanceOf[T]
+  }
+
   private[meta] implicit class XtensionAttributedName[T <: Name](tree: T) {
-    def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.Zero
-    def denot: Denotation = if (tree.privateDenot != null) tree.privateDenot else Denotation.Zero
+    def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.None
+    def denot: Denotation = if (tree.privateDenot != null) tree.privateDenot else Denotation.None
     def withEnv(env: Environment): T = tree.privateWithEnv(env).asInstanceOf[T]
     def withAttrs(denot: Denotation): T = tree.privateWithAttrs(denot).asInstanceOf[T]
   }
 
   private[meta] implicit class XtensionAttributedTerm[T <: Term](tree: T) {
-    def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.Zero
-    def typing: Typing = if (tree.privateTyping != null) tree.privateTyping else Typing.Zero
+    def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.None
+    def typing: Typing = if (tree.privateTyping != null) tree.privateTyping else Typing.None
     def withEnv(env: Environment): T = tree.privateWithEnv(env).asInstanceOf[T]
     def withAttrs(typingLike: TypingLike): T = tree.privateWithAttrs(typingLike.typing).asInstanceOf[T]
   }
 
   private[meta] implicit class XtensionAttributedTermParam(tree: Term.Param) {
-    def typing: Typing = if (tree.privateTyping != null) tree.privateTyping else Typing.Zero
+    def typing: Typing = if (tree.privateTyping != null) tree.privateTyping else Typing.None
     def withAttrs(typingLike: TypingLike): Term.Param = tree.privateWithAttrs(typingLike.typing).asInstanceOf[Term.Param]
   }
 

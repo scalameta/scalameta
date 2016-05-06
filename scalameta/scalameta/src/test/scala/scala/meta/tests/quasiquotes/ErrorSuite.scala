@@ -3,10 +3,9 @@
 
 import org.scalatest._
 import org.scalameta.tests._
+import typecheckError.Options.WithPositions
 
 class ErrorSuite extends FunSuite {
-  implicit val errorsWithPositionsPlease = Style.WithPositions
-
   test("val q\"type $name[$A] = $B\"") {
     assert(typecheckError("""
       import scala.meta._
@@ -136,19 +135,6 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("q\"..$xss\"") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      val xss = List(List(q"x"))
-      q"..$xss"
-    """) === """
-      |<macro>:5: expected start of definition
-      |      q"..$xss"
-      |              ^
-    """.trim.stripMargin)
-  }
-
   test("q\"$xss\"") {
     assert(typecheckError("""
       import scala.meta._
@@ -165,32 +151,17 @@ class ErrorSuite extends FunSuite {
   }
 
   test("q\"foo[..$terms]\"") {
-    // FIXME: looks our new scheme of ast reification breaks quasiquote error reporting
-    // the failure doesn't look severe, so I'm just going to comment out this test for the time being
-    // assert(typecheckError("""
-    //   import scala.meta._
-    //   import scala.meta.dialects.Scala211
-    //   val terms = List(q"T", q"U")
-    //   q"foo[..$terms]"
-    // """) === """
-    //   |<macro>:5: type mismatch when unquoting;
-    //   | found   : List[scala.meta.Term.Name]
-    //   | required: scala.collection.immutable.Seq[scala.meta.Type]
-    //   |      q"foo[..$terms]"
-    //   |              ^
-    // """.trim.stripMargin)
-  }
-
-  test("tuple unquoting does not work without parentheses") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      val l = List(q"x: Int", q"y: Y")
-      q"..$l"
+      val terms = List(q"T", q"U")
+      q"foo[..$terms]"
     """) === """
-      |<macro>:5: expected start of definition
-      |      q"..$l"
-      |            ^
+      |<macro>:5: type mismatch when unquoting;
+      | found   : List[scala.meta.Term.Name]
+      | required: scala.collection.immutable.Seq[scala.meta.Type]
+      |      q"foo[..$terms]"
+      |              ^
     """.trim.stripMargin)
   }
 

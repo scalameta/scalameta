@@ -66,7 +66,7 @@ object Semantic {
           customEquals(x.productIterator.toList, y.productIterator.toList)
         }
         def compareSemantics(x: Name, y: Name) = {
-          x.denot != Denotation.Zero && y.denot != Denotation.Zero && x.denot == y.denot
+          x.denot != Denotation.None && y.denot != Denotation.None && x.denot == y.denot
         }
         (x, y) match {
           case (NonRef(x), NonRef(y)) => compareStructure(x, y)
@@ -97,18 +97,18 @@ object Semantic {
       x.hashCode
     case x: Prefix =>
       x match {
-        case Prefix.Zero => 0
+        case Prefix.None => 0
         case Prefix.Type(tpe) => customHashcode(tpe)
       }
     case x: Denotation =>
       x match {
-        case Denotation.Zero => 0
+        case Denotation.None => 0
         case Denotation.Single(prefix, symbol) => customHashcode(prefix) * 37 + customHashcode(symbol)
         case Denotation.Multi(prefix, symbols) => customHashcode(prefix) * 37 + customHashcode(symbols)
       }
     case x: Typing =>
       x match {
-        case Typing.Zero => 0
+        case Typing.None => 0
         case Typing.Recursive => 1
         case Typing.Nonrecursive(tpe) => customHashcode(tpe)
       }

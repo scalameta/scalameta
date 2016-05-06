@@ -43,7 +43,7 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
         val qmonadicResults = qtypes.map(qtype => q"""
           type Parse[T] = _root_.scala.meta.parsers.Parse[T]
           val parse = _root_.scala.Predef.implicitly[Parse[$qtype]]
-          parse(input)(dialect)
+          parse(input, dialect)
         """)
         var qmonadicResult = qmonadicResults.reduce((acc, curr) => q"$acc.orElse($curr)")
         val qresult = q"""
@@ -52,7 +52,7 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
             case _root_.scala.meta.parsers.Parsed.Error(_, _, details) => throw details
           }
         """
-        q"private[meta] def parse(input: _root_.scala.meta.inputs.Input)(implicit dialect: _root_.scala.meta.Dialect) = $qresult"
+        q"private[meta] def parse(input: _root_.scala.meta.inputs.Input, dialect: _root_.scala.meta.Dialect) = $qresult"
       }
       val stats1 = stats :+ qmodule
       val mstats1 = mstats :+ qparser

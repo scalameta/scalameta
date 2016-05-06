@@ -23,7 +23,7 @@ object Unlift {
   def unapply[O](inside: Any): Option[O] = macro ConversionMacros.unliftUnapply[O]
 }
 
-private[meta] class ConversionMacros(val c: Context) extends AstReflection {
+class ConversionMacros(val c: Context) extends AstReflection {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"

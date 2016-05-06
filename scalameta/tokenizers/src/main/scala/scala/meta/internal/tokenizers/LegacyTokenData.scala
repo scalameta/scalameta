@@ -7,9 +7,9 @@ import LegacyToken._
 import Chars._
 import scala.meta.inputs._
 
-private[meta] trait LegacyTokenData {
+trait LegacyTokenData {
   /** the input that is currently being tokenized */
-  var content: Content = null
+  var input: Input = null
 
   /** the next token */
   var token: LegacyToken = EMPTY
@@ -33,7 +33,7 @@ private[meta] trait LegacyTokenData {
   var base: Int = 0
 
   def copyFrom(td: LegacyTokenData): this.type = {
-    this.content = td.content
+    this.input = td.input
     this.token = td.token
     this.offset = td.offset
     this.lastOffset = td.lastOffset
@@ -46,7 +46,7 @@ private[meta] trait LegacyTokenData {
 
   override def toString = s"{token = $token, position = $offset..$endOffset, lastOffset = $lastOffset, name = $name, strVal = $strVal, base = $base}"
 
-  lazy val reporter: Reporter = Reporter(content)
+  lazy val reporter: Reporter = Reporter(input)
   import reporter._
 
   /** Convert current strVal to char value

@@ -8,6 +8,7 @@ import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+import scala.meta.common._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
 
@@ -27,9 +28,9 @@ object ScalaSig {
   @leaf class Self(name: String) extends ScalaSig
 }
 
-@root trait BinarySig
+@root trait BinarySig extends Optional
 object BinarySig {
-  @leaf object Zero extends BinarySig
+  @none object None extends BinarySig
   @leaf class Intrinsic(className: String, methodName: String, signature: String) extends BinarySig
   @leaf class JvmField(className: String, fieldName: String, signature: String) extends BinarySig
   @leaf class JvmMethod(className: String, fieldName: String, signature: String) extends BinarySig
@@ -37,9 +38,9 @@ object BinarySig {
   @leaf class JvmPackage(packageName: String) extends BinarySig
 }
 
-@root trait Symbol
+@root trait Symbol extends Optional
 object Symbol {
-  @leaf object Zero extends Symbol
+  @none object None extends Symbol
   @leaf object RootPackage extends Symbol
   @leaf object EmptyPackage extends Symbol
   @leaf class Global(owner: Symbol, scalaSig: ScalaSig, binarySig: BinarySig) extends Symbol
@@ -53,9 +54,9 @@ object Symbol {
 // However, when comparing trees, we don't have a typechecker, so we need to figure out what else is necessary.
 // Another essential thing apart from symbols is prefixes. Let's hope that this is it.
 
-@root trait Prefix
+@root trait Prefix extends Optional
 object Prefix {
-  @leaf object Zero extends Prefix
+  @none object None extends Prefix
   @leaf class Type(tpe: scala.meta.Type) extends Prefix {
     override def canEqual(other: Any): Boolean = other.isInstanceOf[Type]
     override def equals(that: Any): Boolean = that match {
@@ -74,7 +75,7 @@ object Prefix {
 // Also, hopefully, it's only necessary to define denotations for all names in a tree
 // to guarantee hygienic comparisons and name lookups.
 
-@root trait Denotation {
+@root trait Denotation extends Optional {
   def prefix: Prefix
   def symbols: List[Symbol]
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Denotation]
@@ -85,8 +86,8 @@ object Prefix {
   override def hashCode: Int = equality.Semantic.hashCode(prefix) * 37 + symbols.hashCode
 }
 object Denotation {
-  @leaf object Zero extends Denotation {
-    def prefix = Prefix.Zero
+  @none object None extends Denotation {
+    def prefix = Prefix.None
     def symbols = Nil
     override def equals(that: Any): Boolean = super.equals(that)
     override def hashCode: Int = super.hashCode

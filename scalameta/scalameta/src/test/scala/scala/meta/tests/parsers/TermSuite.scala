@@ -385,7 +385,7 @@ class TermSuite extends ParseSuite {
 
   test("xml literal - 1") {
     val Term.Block(List(
-      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("xml"), List(Lit("<p/>")), Nil)),
+      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Xml(List(Lit("<p/>")), Nil)),
       Defn.Val(Nil, List(Pat.Var.Term(Term.Name("y"))), None, Term.Name("x")))) =
     term("""{
       val x = <p/>
@@ -472,5 +472,9 @@ class TermSuite extends ParseSuite {
 
   test("\"stat;\".parse[Term]") {
     intercept[ParseException]{ term("stat;") }
+  }
+
+  test("$_") {
+    intercept[ParseException](term(""" q"x + $_" """))
   }
 }

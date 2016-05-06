@@ -21,11 +21,16 @@ trait CommonNamerMacros extends MacroHelpers {
   lazy val FlagsClass = tq"_root_.scala.meta.internal.flags.Flags"
   lazy val FlagsZeroField = q"_root_.scala.meta.internal.flags.ZERO"
   lazy val TokensClass = tq"_root_.scala.meta.tokens.Tokens"
-  lazy val TransformedTokensClass = tq"_root_.scala.meta.internal.tokens.TransformedTokens"
   lazy val EnvironmentClass = tq"_root_.scala.meta.internal.semantic.Environment"
   lazy val DenotationClass = tq"_root_.scala.meta.internal.semantic.Denotation"
   lazy val TypingClass = tq"_root_.scala.meta.internal.semantic.Typing"
   lazy val AstAnnotation = tq"_root_.scala.meta.internal.ast.ast"
+  lazy val PositionClass = tq"_root_.scala.meta.inputs.Position"
+  lazy val PositionModule = q"_root_.scala.meta.inputs.Position"
+  lazy val PointClass = tq"_root_.scala.meta.inputs.Point"
+  lazy val PointModule = q"_root_.scala.meta.inputs.Point"
+  lazy val OriginClass = tq"_root_.scala.meta.internal.ast.Origin"
+  lazy val OriginModule = q"_root_.scala.meta.internal.ast.Origin"
 
   def mkClassifier(name: TypeName): List[Tree] = {
     val q"..$classifierBoilerplate" = q"""
@@ -66,6 +71,6 @@ trait CommonNamerMacros extends MacroHelpers {
     val qcopyParamss = paramss.map(_.map{ case ValDef(mods, name, tpt, _) => q"val $name: $tpt = this.$name" })
     qstats += q"def copy(...$qcopyParamss): $name = ${stub()}"
 
-    q"$qmods class $qname(rank: $IntClass, tree: $AnyClass) extends ..$qparents { ..$qstats }"
+    q"$qmods class $qname(rank: $IntClass, tree: $TreeClass) extends ..$qparents { ..$qstats }"
   }
 }

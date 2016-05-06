@@ -10,6 +10,7 @@ import java.lang.Class
 import scala.meta.tokens.Token
 import scala.meta.classifiers._
 import org.scalameta.internal.MacroHelpers
+import scala.meta.internal.tokens.{Reflection => TokenReflection}
 
 @implicitNotFound(msg = "${T} is not a token class and can't be used here.")
 trait TokenInfo[T <: Token] extends ClassTag[T] with Classifier[Token, T] {
@@ -21,35 +22,18 @@ object TokenInfo {
   implicit def materialize[T <: Token]: TokenInfo[T] = macro TokenInfoMacros.materialize[T]
 }
 
-class TokenInfoMacros(val c: Context) extends MacroHelpers {
-  import c.universe._
-  import c.internal._
-
-  lazy val TokenClass = rootMirror.staticClass("scala.meta.tokens.Token")
-  lazy val TokenMarkerClass = rootMirror.staticModule("scala.meta.internal.tokens.Metadata").info.decl(TypeName("tokenClass")).asClass
-  lazy val TokenInfoClass = hygienicRef[scala.meta.internal.tokens.TokenInfo[_]]
-
+class TokenInfoMacros(val c: Context) extends MacroHelpers with TokenReflection {
+  lazy val u: c.universe.type = c.universe
+  lazy val mirror: u.Mirror = c.mirror
+  import u._
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    if ((T.tpe <:< TokenClass.toType) && T.tpe.typeSymbol.annotations.exists(_.tree.tpe.typeSymbol == TokenMarkerClass)) {
-      val nameBody = {
-        val ctor = T.tpe.typeSymbol.info.decls.collect{case m: MethodSymbol if m.isPrimaryConstructor => m}.head
-        val argss = ctor.paramLists.map(_.map(p => {
-          if (p.name == TermName("content")) q"""_root_.scala.meta.inputs.Input.String("")"""
-          else if (p.name == TermName("dialect")) q"""_root_.scala.meta.dialects.Scala211"""
-          else if (p.name == TermName("start")) q"0"
-          else if (p.name == TermName("end")) q"-1"
-          else if (p.name == TermName("value") && p.info =:= typeOf[String]) q""" "" """
-          else if (p.name == TermName("value")) gen.mkZero(p.info)
-          else if (p.name == TermName("rank")) q"0"
-          else if (p.name == TermName("tree")) q"null"
-          else c.abort(c.enclosingPosition, s"unsupported parameter: $p")
-        }))
-        q"new $T(...$argss).name"
-      }
+    val TokenInfoClass = hygienicRef[scala.meta.internal.tokens.TokenInfo[_]]
+    val sym = T.tpe.typeSymbol
+    if (sym.isToken) {
       q"""
-        new _root_.scala.meta.internal.tokens.TokenInfo[$T] {
-          def name: _root_.scala.Predef.String = $nameBody
-          def runtimeClass: _root_.java.lang.Class[$T] = implicitly[_root_.scala.reflect.ClassTag[$T]].runtimeClass.asInstanceOf[_root_.java.lang.Class[$T]]
+        new $TokenInfoClass[$T] {
+          def name: $StringClass = ${sym.tokenName}
+          def runtimeClass: $ClassClass[$T] = $ImplicitlyMethod[$ClassTagClass[$T]].runtimeClass.asInstanceOf[$ClassClass[$T]]
         }
       """
     } else {

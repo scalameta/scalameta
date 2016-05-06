@@ -13,13 +13,13 @@ package object inputs {
 
   implicit class XtensionPointFormatMessage(point: Point) {
     def formatMessage(severity: String, message: String): String = {
-      val content = point.content
-      val shortContent = content match { case Input.File(file, _) => file.getName; case _ => "<content>" }
+      val input = point.input
+      val shortContent = input match { case Input.File(file, _) => file.getName; case _ => "<input>" }
       val header = s"$shortContent:${point.line + 1}: $severity: $message"
       val line = {
-        val start = content.lineToOffset(point.line)
-        val end = if (start < content.chars.length) content.lineToOffset(point.line + 1) else start
-        new String(content.chars, start, end - start).trim
+        val start = input.lineToOffset(point.line)
+        val end = if (start < input.chars.length) input.lineToOffset(point.line + 1) else start
+        new String(input.chars, start, end - start).trim
       }
       var caret = " " * point.column + "^"
       header + EOL + line + EOL + caret

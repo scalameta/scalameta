@@ -62,12 +62,28 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("scala.meta.convert.Convert.toString") {
+  test("scala.meta.common.Convert.toString") {
+    // n/a
+  }
+
+  test("scala.meta.common.Optional.toString") {
     // n/a
   }
 
   test("scala.meta.dialects.Dotty.toString") {
     // covered above
+  }
+
+  test("scala.meta.dialects.Metalevel.toString") {
+    // covered below
+  }
+
+  test("scala.meta.dialects.Metalevel.Normal.toString") {
+    assert(dialects.Metalevel.Normal.toString === "Normal")
+  }
+
+  test("scala.meta.dialects.Metalevel.Quoted.toString") {
+    assert(dialects.Metalevel.Quoted(1).toString === "Quoted(1)")
   }
 
   test("scala.meta.dialects.Sbt0136.toString") {
@@ -86,12 +102,12 @@ class PublicSuite extends FunSuite {
     // covered above
   }
 
-  test("scala.meta.inputs.Content.toString") {
+  test("scala.meta.inputs.Input.toString") {
     // covered below
   }
 
-  test("scala.meta.inputs.Input.toString") {
-    // covered below
+  test("scala.meta.inputs.Input.None.toString") {
+    assert(Input.None.toString == "Input.None")
   }
 
   test("scala.meta.inputs.Input.File.toString") {
@@ -129,6 +145,10 @@ class PublicSuite extends FunSuite {
     // covered below
   }
 
+  test("scala.meta.inputs.Point.None.toString") {
+    assert(Point.None.toString == "Point.None")
+  }
+
   test("scala.meta.inputs.Point.Offset.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
     assert(lhs.pos.start.toString === """0 in Input.String("foo + bar")""")
@@ -139,9 +159,13 @@ class PublicSuite extends FunSuite {
     // covered below
   }
 
+  test("scala.meta.inputs.Position.None.toString") {
+    assert(Position.None.toString == "Position.None")
+  }
+
   test("scala.meta.inputs.Position.Range.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    assert(lhs.pos.toString === """[0..0..3) in Input.String("foo + bar")""")
+    assert(lhs.pos.toString === """[0..3) in Input.String("foo + bar")""")
   }
 
   test("scala.meta.parsers.Parse.toString") {
@@ -154,7 +178,7 @@ class PublicSuite extends FunSuite {
       catch {
         case ex: ParseException =>
           assert(ex.toString === """
-            |<content>:1: error: end of file expected but class found
+            |<input>:1: error: end of file expected but class found
             |foo + class
             |      ^
           """.trim.stripMargin)
@@ -170,7 +194,7 @@ class PublicSuite extends FunSuite {
   test("scala.meta.parsers.Parsed.Error.toString") {
     val parsed = "foo + class".parse[Term]
     assert(parsed.toString === """
-      |<content>:1: error: end of file expected but class found
+      |<input>:1: error: end of file expected but class found
       |foo + class
       |      ^
     """.trim.stripMargin)
@@ -181,23 +205,35 @@ class PublicSuite extends FunSuite {
     assert(parsed.toString === "foo + bar")
   }
 
-  test("scala.meta.prettyprinters.Show") {
+  test("scala.meta.prettyprinters.Show.toString") {
     // n/a
   }
 
-  test("scala.meta.prettyprinters.Structure") {
+  test("scala.meta.prettyprinters.Structure.toString") {
     // n/a
   }
 
-  test("scala.meta.prettyprinters.Syntax") {
+  test("scala.meta.prettyprinters.Syntax.toString") {
     // n/a
   }
 
-  test("scala.meta.quasiquotes.Lift") {
+  test("scala.meta.prettyprinters.Syntax.LowPriorityOptions.Lazy.toString") {
+    assert(scala.meta.prettyprinters.Syntax.Options.Lazy.toString == "Lazy")
+  }
+
+  test("scala.meta.prettyprinters.Syntax.Options.toString") {
+    // covered above and below
+  }
+
+  test("scala.meta.prettyprinters.Syntax.Options.Eager.toString") {
+    assert(scala.meta.prettyprinters.Syntax.Options.Eager.toString == "Eager")
+  }
+
+  test("scala.meta.quasiquotes.Lift.toString") {
     // n/a
   }
 
-  test("scala.meta.quasiquotes.Unlift") {
+  test("scala.meta.quasiquotes.Unlift.toString") {
     // n/a
   }
 
@@ -211,7 +247,7 @@ class PublicSuite extends FunSuite {
       catch {
         case ex: TokenizeException =>
           assert(ex.toString === """
-            |<content>:1: error: unclosed string literal
+            |<input>:1: error: unclosed string literal
             |"c
             |^
           """.trim.stripMargin)
@@ -223,7 +259,7 @@ class PublicSuite extends FunSuite {
   test("scala.meta.tokenizers.Tokenized.Error.toString") {
     val tokenized = """"c""".tokenize
     assert(tokenized.toString === """
-      |<content>:1: error: unclosed string literal
+      |<input>:1: error: unclosed string literal
       |"c
       |^
     """.trim.stripMargin)
@@ -268,11 +304,11 @@ class PublicSuite extends FunSuite {
     // covered above
   }
 
-  test("scala.meta.transversers.Transformer") {
+  test("scala.meta.transversers.Transformer.toString") {
     // n/a
   }
 
-  test("scala.meta.transversers.Traverser") {
+  test("scala.meta.transversers.Traverser.toString") {
     // n/a
   }
 }

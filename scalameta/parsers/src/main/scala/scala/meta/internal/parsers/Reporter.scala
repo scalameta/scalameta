@@ -7,7 +7,7 @@ import scala.meta.tokens._
 import scala.meta.parsers._
 
 // TODO: when I grow up I want to become a monad, just like my daddy
-private[meta] trait Reporter {
+trait Reporter {
   def deprecationWarning(msg: String, at: Position): Unit = ()
   def deprecationWarning(msg: String, at: Token): Unit = deprecationWarning(msg, at.pos)
   def deprecationWarning(msg: String, at: Tree): Unit = deprecationWarning(msg, at.pos)
@@ -19,6 +19,6 @@ private[meta] trait Reporter {
   def syntaxError(msg: String, at: Tree): Nothing = syntaxError(msg, at.pos)
 }
 
-private[meta] object Reporter {
+object Reporter {
   def apply() = new Reporter {}
 }

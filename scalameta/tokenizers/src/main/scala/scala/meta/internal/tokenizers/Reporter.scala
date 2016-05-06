@@ -7,15 +7,15 @@ import scala.meta.tokenizers._
 
 // TODO: when I grow up I want to become a monad, just like my daddy
 // TODO: distinguish flavors of errors with exception types
-private[meta] trait Reporter {
+trait Reporter {
   // NOTE: not making this public, e.g. by exposing Position.Offset
   // because I don't want to advertise this style of positioning
   private implicit class XtensionOffsetPosition(offset: Offset) {
-    private val point = Point.Offset(content, offset)
-    def pos = Position.Range(content, point, point, point)
+    private val point = Point.Offset(input, offset)
+    def pos = Position.Range(input, point, point)
   }
 
-  def content: Content
+  def input: Input
   def deprecationWarning(msg: String, at: Position): Unit      = ()
   def deprecationWarning(msg: String, at: Offset): Unit        = deprecationWarning(msg, at.pos)
   def readerError(msg: String, at: Position): Nothing          = throw new TokenizeException(at, msg)
@@ -26,6 +26,6 @@ private[meta] trait Reporter {
   def incompleteInputError(msg: String, at: Offset): Nothing   = incompleteInputError(msg, at.pos)
 }
 
-private[meta] object Reporter {
-  def apply(content0: Content) = new Reporter { def content = content0 }
+object Reporter {
+  def apply(content0: Input) = new Reporter { def input = content0 }
 }

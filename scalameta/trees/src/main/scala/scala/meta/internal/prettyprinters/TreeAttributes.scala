@@ -64,7 +64,7 @@ object Attributes {
           def entity = env
           def tag = classOf[Environment]
           def prettyprint() = env match {
-            case Environment.Zero => unreachable
+            case Environment.None => unreachable
           }
         }
         implicit def denotFootnote(denot: Denotation): Footnote = new Footnote {
@@ -73,13 +73,13 @@ object Attributes {
           def prettyprint() = {
             def prettyprintPrefix(pre: Prefix): String = {
               pre match {
-                case Prefix.Zero => "{0}"
+                case Prefix.None => "{0}"
                 case Prefix.Type(tpe) => s"{${footnotes.insert(Typing.Nonrecursive(tpe))}}"
               }
             }
             def prettyprintSymbol(sym: Symbol): String = {
               def loop(sym: Symbol): String = sym match {
-                case Symbol.Zero => "0"
+                case Symbol.None => "0"
                 case Symbol.RootPackage => "_root_"
                 case Symbol.EmptyPackage => "_empty_"
                 case Symbol.Global(owner, ScalaSig.Type(name), _) => loop(owner) + "#" + name
@@ -102,7 +102,7 @@ object Attributes {
           def entity = typing
           def tag = classOf[Typing]
           def prettyprint() = typing match {
-            case Typing.Zero => unreachable
+            case Typing.None => unreachable
             case Typing.Recursive => unreachable
             case Typing.Nonrecursive(tpe) => if (deep) body(tpe) else tpe.show[Structure]
           }
@@ -168,14 +168,14 @@ object Attributes {
       val syntax = x.productPrefix + "(" + contents(x) + ")"
       val attributes = {
         val envPart = x.privateEnv match {
-          case env @ Environment.Zero =>
+          case env @ Environment.None =>
             ""
           case null =>
             ""
         }
 
         val denotPart = x.privateDenot match {
-          case Denotation.Zero =>
+          case Denotation.None =>
             ""
           case denot @ Denotation.Single(prefix, symbol) =>
             s"[${footnotes.insert(denot)}]"
@@ -187,7 +187,7 @@ object Attributes {
         }
 
         val typingPart = x.privateTyping match {
-          case Typing.Zero =>
+          case Typing.None =>
             ""
           case Typing.Recursive =>
             val xkey = new CustomWrapper(x.require[Term])

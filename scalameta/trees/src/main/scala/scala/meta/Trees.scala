@@ -9,6 +9,7 @@ import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
+import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
 
@@ -16,11 +17,9 @@ import scala.meta.internal.ast.Helpers._
   def parent: Option[Tree]
   def children: Seq[Tree]
 
-  def tokens: Tokens
-  def withTokens(tokens: Tokens): this.type = privateWithTokens(tokens).asInstanceOf[this.type]
-  def inheritTokens(other: Tree): this.type = withTokens(other.tokens)
-  def pos: Position = tokens.pos
-  def syntax: String = this.show[Syntax]
+  def pos: Position
+  def tokens(implicit dialect: Dialect): Tokens
+  def syntax(implicit dialect: Dialect, options: Options = Options.Eager): String = Tree.showSyntax[Tree](dialect, options).apply(this).toString
 
   def is[U](implicit classifier: Classifier[Tree, U]): Boolean = classifier(this)
   def isNot[U](implicit classifier: Classifier[Tree, U]): Boolean = !classifier(this)
@@ -35,7 +34,7 @@ import scala.meta.internal.ast.Helpers._
 object Tree extends InternalTreeXtensions {
   implicit def classifiable[T <: Tree]: Classifiable[T] = null
   implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T]
-  implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect)
+  implicit def showSyntax[T <: Tree](implicit dialect: Dialect, options: Options): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect, options)
   // implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.prettyprinters.TreeSemantics.apply[T](c)
 }
 
@@ -62,6 +61,9 @@ object Term {
   @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat with Param.Name with scala.meta.Name.Qualifier
   @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
+    require(parts.length == args.length + 1)
+  }
+  @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
     require(parts.length == args.length + 1)
   }
   @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
@@ -241,6 +243,10 @@ object Pat {
     require(lhs.isLegal && rhs.forall(_.isLegal))
   }
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
+    require(parts.length == args.length + 1)
+    require(args.forall(_.isLegal))
+  }
+  @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
     require(parts.length == args.length + 1)
     require(args.forall(_.isLegal))
   }
@@ -502,18 +508,15 @@ package internal.ast {
   // Every root, branch and ast trait/class among scala.meta trees (except for quasis themselves)
   // has a corresponding quasi, e.g. Term.Quasi or Type.Arg.Quasi.
   //
-  // Here's how quasis represent quasiquotes:
-  // * q"$x" => Term.Quasi(0, <scala.reflect tree representing x>)
-  // * q"..$xs" => Term.Quasi(1, Term.Quasi(0, <scala.reflect tree representing xs>))
-  // * q"..{$fs($args)}" => Term.Quasi(1, Term.Apply(Term.Quasi(0, <fs>), List(Term.Quasi(0, <args>))))
-  // * q"...$xss" => not sure, because we don't support ... yet
-  //
-  // TODO: After we bootstrap, Quasi.tree will become scala.meta.Tree.
-  // However, for now, we will keep it at Any in order implement quasiquotes via scala.reflect macros
-  // (because in that case, Quasi.tree has to store scala.reflect trees).
+  // Here's how quasis represent unquotes
+  // (XXX below depends on the position where the unquote occurs, e.g. q"$x" will result in Term.Quasi):
+  //   * $x => XXX.Quasi(0, Term.Name("x"))
+  //   * ..$xs => XXX.Quasi(1, XXX.Quasi(0, Term.Name("xs"))
+  //   * ...$xss => XXX.Quasi(2, XXX.Quasi(0, Term.Name("xss"))
+  //   * ..{$fs($args)} => Complex ellipses aren't supported yet
   @branch trait Quasi extends Tree {
     def rank: Int
-    def tree: Any
+    def tree: Tree
     def pt: Class[_]
     def become[T <: Quasi : AstInfo]: T
   }

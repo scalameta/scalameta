@@ -34,24 +34,30 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.classifiers
       |scala.meta.classifiers.Classifiable *
       |scala.meta.classifiers.Classifier *
-      |scala.meta.convert
-      |scala.meta.convert.Convert *
+      |scala.meta.common
+      |scala.meta.common.Convert *
+      |scala.meta.common.Optional *
       |scala.meta.dialects
       |scala.meta.dialects.Dotty *
+      |scala.meta.dialects.Metalevel *
+      |scala.meta.dialects.Metalevel.Normal *
+      |scala.meta.dialects.Metalevel.Quoted *
       |scala.meta.dialects.Sbt0136 *
       |scala.meta.dialects.Sbt0137 *
       |scala.meta.dialects.Scala210 *
       |scala.meta.dialects.Scala211 *
       |scala.meta.inputs
-      |scala.meta.inputs.Content
       |scala.meta.inputs.Input
       |scala.meta.inputs.Input.File
+      |scala.meta.inputs.Input.None
       |scala.meta.inputs.Input.Slice
       |scala.meta.inputs.Input.Stream
       |scala.meta.inputs.Input.String
       |scala.meta.inputs.Point
+      |scala.meta.inputs.Point.None
       |scala.meta.inputs.Point.Offset
       |scala.meta.inputs.Position
+      |scala.meta.inputs.Position.None
       |scala.meta.inputs.Position.Range
       |scala.meta.internal
       |scala.meta.parsers
@@ -64,6 +70,9 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.prettyprinters.Show *
       |scala.meta.prettyprinters.Structure
       |scala.meta.prettyprinters.Syntax
+      |scala.meta.prettyprinters.Syntax.LowPriorityOptions.Lazy *
+      |scala.meta.prettyprinters.Syntax.Options *
+      |scala.meta.prettyprinters.Syntax.Options.Eager *
       |scala.meta.quasiquotes
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
@@ -99,18 +108,26 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
 
     // println(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL))
     assert(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL) === """
+      |* (scala.meta.Dialect, scala.meta.Tree).syntax(implicit meta.prettyprinters.Syntax.Options): String
       |* (scala.meta.Dialect, scala.meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.Dialect, scala.meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
+      |* (scala.meta.Dialect, scala.meta.tokens.Token).syntax(implicit meta.prettyprinters.Syntax.Options): String
+      |* (scala.meta.Dialect, scala.meta.tokens.Tokens).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
+      |* (scala.meta.Dialect, scala.meta.tokens.Tokens).syntax(implicit meta.prettyprinters.Syntax.Options): String
+      |* (scala.meta.Dialect, scala.meta.tokens.Tokens).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
       |* T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
-      |* T.parse(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
+      |* T.parse(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
       |* T.show(implicit Style[T]): String
-      |* T.tokenize(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
-      |* scala.meta.Dialect.apply(T)(implicit scala.meta.convert.Convert[T,scala.meta.inputs.Input]): (scala.meta.Dialect, scala.meta.inputs.Input)
+      |* T.tokenize(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
+      |* scala.meta.Dialect.apply(T)(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input]): (scala.meta.Dialect, scala.meta.inputs.Input)
+      |* scala.meta.Dialect.apply(scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree)
+      |* scala.meta.Dialect.apply(scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token)
+      |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
       |* scala.meta.Pat.Type.tpe: scala.meta.Type
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
@@ -207,6 +224,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Pat.Var.Term
       |scala.meta.Pat.Var.Type
       |scala.meta.Pat.Wildcard
+      |scala.meta.Pat.Xml
       |scala.meta.Pkg
       |scala.meta.Pkg.Object
       |scala.meta.Ref
@@ -251,6 +269,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Term.Tuple
       |scala.meta.Term.Update
       |scala.meta.Term.While
+      |scala.meta.Term.Xml
       |scala.meta.Type
       |scala.meta.Type.Annotate
       |scala.meta.Type.Apply

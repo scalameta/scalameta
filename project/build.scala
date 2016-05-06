@@ -70,7 +70,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's API for parsing and its baseline implementation"
-  ) dependsOn (common, dialects, inputs, trees)
+  ) dependsOn (common, dialects, inputs, tokens, tokenizers, trees)
 
   lazy val quasiquotes = Project(
     id   = "quasiquotes",
@@ -80,7 +80,7 @@ object build extends Build {
   ) settings (
     description := "Scala.meta's quasiquotes for abstract syntax trees",
     enableHardcoreMacros
-  ) dependsOn (common, trees, parsers)
+  ) dependsOn (common, dialects, inputs, trees, parsers)
 
   lazy val tokenizers = Project(
     id   = "tokenizers",
@@ -123,7 +123,7 @@ object build extends Build {
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
     enableMacros
-  ) dependsOn (common, dialects, tokens, tokenizers) // TODO: get rid of tokenizers
+  ) dependsOn (common, dialects, inputs, tokens, tokenizers) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 
   lazy val scalameta = Project(
     id   = "scalameta",

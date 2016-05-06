@@ -3,10 +3,12 @@ package internal
 package prettyprinters
 
 import scala.meta.tokens.Token
+import scala.meta.dialects.Scala211
+import scala.meta.prettyprinters.Syntax.Options.Lazy
 
-private[meta] object TokenToString {
+object TokenToString {
   def apply(token: Token) = {
-    val prettyprinter = TokenSyntax[Token]
+    val prettyprinter = TokenSyntax[Token](token.dialect, Lazy)
     prettyprinter(token).toString
   }
 }

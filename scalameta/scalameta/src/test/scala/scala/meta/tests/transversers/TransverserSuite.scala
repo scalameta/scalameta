@@ -97,46 +97,13 @@ class TransverserSuite extends FunSuite {
     intercept[UnsupportedOperationException]{ transformer(tree0) }
   }
 
-  test("Transformed Tokens") {
-    implicit class XtensionTree(tree: Tree) {
-      def foreach(fn: Tree => Unit): Unit = {
-        object forall extends Traverser {
-          override def apply(tree: Tree): Unit = {
-            fn(tree)
-            super.apply(tree)
-          }
-        }
-        forall(tree)
-      }
-    }
-
-    object transformer extends Transformer {
-      override def apply(tree: Tree): Tree = tree match {
-        case Term.Name("x") => Term.Name("y")
-        case Type.Name("x") => Type.Name("y")
-        case _ => super.apply(tree)
-      }
-    }
-
-    val tok0 = "x + z".parse[Term].get
-    tok0.foreach(tree => assert(tree.tokens.isAuthentic))
-
-    val tok1 = transformer(tok0)
-    assert(tok1.toString == "y + z")
-    tok1.foreach(tree => {
-      val s = tree.toString
-      if (s == "y" || s == "y + z") assert(!tree.tokens.isAuthentic)
-      else assert(tree.tokens.isAuthentic)
-    })
-  }
-
   test("Transformed Attributes") {
-    def attributeTypeName(name: Type.Name): Type.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage))
+    def attributeTypeName(name: Type.Name): Type.Name = name.withAttrs(Denotation.Single(Prefix.None, Symbol.RootPackage))
     val Foo = attributeTypeName(Type.Name("Foo"))
-    def attributeTermName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage), Foo.setTypechecked)
+    def attributeTermName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.None, Symbol.RootPackage), Foo.setTypechecked)
     def attributeTerm(term: Term): Term = term.withAttrs(Foo.setTypechecked)
-    val denot1 = Denotation.Single(Prefix.Zero, Symbol.RootPackage)
-    val denot2 = Denotation.Single(Prefix.Zero, Symbol.EmptyPackage)
+    val denot1 = Denotation.Single(Prefix.None, Symbol.RootPackage)
+    val denot2 = Denotation.Single(Prefix.None, Symbol.EmptyPackage)
     val typing = Foo.setTypechecked
     val x = q"x".withAttrs(denot1, typing).setTypechecked
     val z = q"z".withAttrs(denot2, typing).setTypechecked

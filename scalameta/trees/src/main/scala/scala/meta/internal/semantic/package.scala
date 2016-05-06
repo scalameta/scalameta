@@ -24,12 +24,12 @@ package object semantic {
           def checkDenot(tree: Tree): Boolean = {
             if (tree.privateHasDenot) {
               tree.privateDenot match {
-                case Denotation.Single(Prefix.Zero, _) =>
+                case Denotation.Single(Prefix.None, _) =>
                   true
                 case Denotation.Single(Prefix.Type(prefix: Tree), _) =>
                   traverse(prefix, path :+ "Denotation")
                   true
-                case Denotation.Multi(Prefix.Zero, _) =>
+                case Denotation.Multi(Prefix.None, _) =>
                   true
                 case Denotation.Multi(Prefix.Type(prefix: Tree), _) =>
                   traverse(prefix, path :+ "Denotation")

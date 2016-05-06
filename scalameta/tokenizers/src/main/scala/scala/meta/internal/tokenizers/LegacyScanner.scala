@@ -9,27 +9,32 @@ import scala.language.postfixOps
 import mutable.{ ListBuffer, ArrayBuffer }
 import Chars._
 import LegacyToken._
+import org.scalameta._
 import scala.meta.inputs._
+import scala.meta.dialects.Quasiquote
+import scala.meta.tokenizers.TokenizeException
 
-private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = true)(implicit val dialect: Dialect) {
+class LegacyScanner(input: Input, dialect: Dialect) {
+  val reporter: Reporter      = Reporter(input)
   val curr: LegacyTokenData   = new LegacyTokenData {}
   val next: LegacyTokenData   = new LegacyTokenData {}
   val prev: LegacyTokenData   = new LegacyTokenData {}
-  val reader: CharArrayReader = new CharArrayReader(content.chars, reporter.readerError, decodeUni)
-  val reporter: Reporter      = Reporter(content)
+  val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter)
 
   import curr._, reader._, reporter._
-  curr.content = this.content
-  next.content = this.content
-  prev.content = this.content
+  curr.input = this.input
+  next.input = this.input
+  prev.input = this.input
 
+  private def metalevel = dialect.metalevel
   private def isDigit(c: Char) = java.lang.Character isDigit c
   private var openComments = 0
   protected def putCommentChar(): Unit = nextChar()
 
   @tailrec private def skipLineComment(): Unit = ch match {
-    case SU | CR | LF =>
-    case _            => nextChar() ; skipLineComment()
+    case SU | CR | LF        =>
+    case '$' if !getDollar() => syntaxError("can't unquote into single-line comments", at = charOffset - 1)
+    case _                   => nextChar() ; skipLineComment()
   }
   private def maybeOpen() {
     putCommentChar()
@@ -47,10 +52,11 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
     }
   }
   @tailrec final def skipNestedComments(): Unit = ch match {
-    case '/' => maybeOpen() ; skipNestedComments()
-    case '*' => if (!maybeClose()) skipNestedComments()
-    case SU  => incompleteInputError("unclosed comment", at = offset)
-    case _   => putCommentChar() ; skipNestedComments()
+    case '/'                 => maybeOpen() ; skipNestedComments()
+    case '*'                 => if (!maybeClose()) skipNestedComments()
+    case SU                  => incompleteInputError("unclosed comment", at = offset)
+    case '$' if !getDollar() => syntaxError("can't unquote into multi-line comments", at = charOffset - 1)
+    case _                   => putCommentChar() ; skipNestedComments()
   }
   def skipDocComment(): Unit = skipNestedComments()
   def skipBlockComment(): Unit = skipNestedComments()
@@ -127,6 +133,16 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
         }
       }
     }
+  }
+
+  /* much like endOffset, end is inclusive */
+  private def finishComposite(token: LegacyToken, end: Offset) {
+    val start = offset
+    curr.token = token
+    curr.strVal = new String(input.chars, start, end - start + 1)
+    curr.endOffset = end
+    reader.charOffset = end + 1
+    reader.nextChar()
   }
 
   /** Clear buffer and set string */
@@ -300,18 +316,22 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
            'p' | 'q' | 'r' | 's' | 't' |
            'u' | 'v' | 'w' | 'x' | 'y' |  // scala-mode: need to understand multi-line case patterns
            'z' =>
-        putChar(ch)
-        nextChar()
-        getIdentRest()
-        if (ch == '"' && token == IDENTIFIER)
-          token = INTERPOLATIONID
+        if (ch == '$' && !getDollar()) {
+          getUnquote()
+        } else {
+          putChar(ch)
+          nextChar()
+          getIdentRest()
+          if (ch == '"' && token == IDENTIFIER)
+            token = INTERPOLATIONID
+        }
       case '<' => // is XMLSTART?
         def fetchLT() = {
           val last = if (charOffset >= 2) buf(charOffset - 2) else ' '
           nextChar()
           last match {
             case ' ' | '\t' | '\n' | '{' | '(' | '>' if isNameStart(ch) || ch == '!' || ch == '?' =>
-              if (dialect.allowXmlLiterals) token = XMLSTART
+              if (dialect.allowXmlLiterals) getXml()
               else syntaxError("xml literals are not supported", at = offset)
             case _ =>
               // Console.println("found '<', but last is '"+in.last+"'"); // DEBUG
@@ -398,7 +418,9 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
       case '\'' =>
         def fetchSingleQuote() = {
           nextChar()
-          if (isIdentifierStart(ch))
+          if (ch == '$' && !getDollar())
+            syntaxError("can't unquote into character literals", at = charOffset - 1)
+          else if (isIdentifierStart(ch))
             charLitOr(getIdentRest)
           else if (isOperatorPart(ch) && (ch != '\\'))
             charLitOr(getOperatorRest)
@@ -445,8 +467,11 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
       case ']' =>
         nextChar(); token = RBRACKET
       case SU =>
-        if (isAtEnd) token = EOF
-        else {
+        if (isAtEnd) {
+          // NOTE: sometimes EOF's offset is `input.chars.length - 1`, and that might mess things up
+          offset = input.chars.length
+          token = EOF
+        } else {
           syntaxError("illegal character", at = offset)
           nextChar()
         }
@@ -482,8 +507,11 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
       nextChar()
       finishNamed(BACKQUOTED_IDENT)
       if (name.length == 0) syntaxError("empty quoted identifier", at = offset)
+    } else if (ch == '$') {
+      syntaxError("can't unquote into quoted identifiers", at = charOffset - 1)
+    } else {
+      syntaxError("unclosed quoted identifier", at = offset)
     }
-    else syntaxError("unclosed quoted identifier", at = offset)
   }
 
   private def getIdentRest(): Unit = (ch: @switch) match {
@@ -501,6 +529,7 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
          'z' |
          '0' | '1' | '2' | '3' | '4' |
          '5' | '6' | '7' | '8' | '9' =>
+      if (ch == '$' && !getDollar()) { finishNamed(); return }
       putChar(ch)
       nextChar()
       getIdentRest()
@@ -556,6 +585,26 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
     }
   }
 
+  // True means that we have successfully read '$'
+  // False means that we need to switch into unquote reading mode.
+  private def getDollar(): Boolean = {
+    if (metalevel.isQuoted) {
+      require(metalevel.nesting == 1)
+      val lookahead = lookaheadReader
+      lookahead.nextChar()
+      if (lookahead.ch == '$') {
+        // Skip the first dollar and move on to whatever we've been doing:
+        // starting or continuing tokenization of an identifier,
+        // or continuing reading a string literal, or whatever.
+        nextChar()
+      } else {
+        // Don't do anything - our caller should know what to do.
+        return false
+      }
+    }
+    return true
+  }
+
 
 // Literals -----------------------------------------------------------------
 
@@ -565,7 +614,11 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
       setStrVal()
       nextChar()
       token = STRINGLIT
-    } else syntaxError("unclosed string literal", at = offset)
+    } else if (ch == '$') {
+      syntaxError("can't unquote into string literals", at = charOffset - 1)
+    } else  {
+      syntaxError("unclosed string literal", at = offset)
+    }
   }
 
   private def getRawStringLit(): Unit = {
@@ -578,6 +631,8 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
         getRawStringLit()
     } else if (ch == SU) {
       incompleteInputError("unclosed multi-line string literal", at = offset)
+    } else if (ch == '$' && !getDollar()) {
+      syntaxError("can't unquote into string literals", at = charOffset - 1)
     } else {
       putChar(ch)
       nextRawChar()
@@ -606,36 +661,43 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
         token = STRINGLIT
       }
     } else if (ch == '$') {
-      nextRawChar()
-      if (ch == '$') {
-        putChar(ch)
+      if (!getDollar()) {
+        syntaxError("can't unquote into string interpolations", at = charOffset - 1)
+      } else {
         nextRawChar()
-        getStringPart(multiLine)
-      } else if (ch == '{') {
-        finishStringPart()
-        endOffset = charOffset - 3
-        nextRawChar()
-        next.token = LBRACE
-      } else if (ch == '_') {
-        finishStringPart()
-        endOffset = charOffset - 3
-        nextRawChar()
-        next.token = USCORE
-      } else if (Character.isUnicodeIdentifierStart(ch)) {
-        finishStringPart()
-        endOffset = charOffset - 3
-        do {
+        if (ch == '$') {
           putChar(ch)
           nextRawChar()
-        } while (ch != SU && Character.isUnicodeIdentifierPart(ch))
-        next.token = IDENTIFIER
-        next.name = cbuf.toString
-        cbuf.clear()
-        if (kw2legacytoken contains next.name) {
-          next.token = kw2legacytoken(next.name)
+          getStringPart(multiLine)
+        } else if (ch == '{') {
+          finishStringPart()
+          endOffset = charOffset - 3
+          nextRawChar()
+          next.token = LBRACE
+        } else if (ch == '_' && dialect.allowSpliceUnderscore) {
+          finishStringPart()
+          endOffset = charOffset - 3
+          nextRawChar()
+          next.token = USCORE
+        } else if (Character.isUnicodeIdentifierStart(ch)) {
+          finishStringPart()
+          endOffset = charOffset - 3
+          do {
+            putChar(ch)
+            nextRawChar()
+          } while (ch != SU && Character.isUnicodeIdentifierPart(ch))
+          next.token = IDENTIFIER
+          next.name = cbuf.toString
+          cbuf.clear()
+          if (kw2legacytoken contains next.name) {
+            next.token = kw2legacytoken(next.name)
+          }
+        } else {
+          var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
+          if (dialect.allowSpliceUnderscore) supportedCombos = supportedCombos :+ "`$'_"
+          val s_supportedCombos = supportedCombos.init.mkString(", ") + supportedCombos.last
+          syntaxError(s_supportedCombos, at = offset)
         }
-      } else {
-        syntaxError("invalid string interpolation: `$$', `$'ident or `$'BlockExpr expected", at = offset)
       }
     } else {
       val isUnclosedLiteral = !isUnicodeEscape && (ch == SU || (!multiLine && (ch == CR || ch == LF)))
@@ -719,6 +781,8 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
         }
         nextChar()
       }
+    } else if (ch == '$' && !getDollar()) {
+      // bail and let the caller handle this
     } else  {
       putChar(ch)
       nextChar()
@@ -730,8 +794,13 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
   }
 
   private def getLitChars(delimiter: Char) = {
-    while (ch != delimiter && !isAtEnd && (ch != SU && ch != CR && ch != LF || isUnicodeEscape))
-      getLitChar()
+    def stop = {
+      def success = ch == delimiter
+      def naturalBreak = (ch == SU || ch == CR || ch == LF) && !isUnicodeEscape
+      def unquote = ch == '$' && !getDollar()
+      success || naturalBreak || unquote
+    }
+    while (!isAtEnd && !stop) getLitChar()
   }
 
   /** read fractional part and exponent of floating point number
@@ -877,6 +946,64 @@ private[meta] class LegacyScanner(val content: Content, decodeUni: Boolean = tru
       token = SYMBOLLIT
       strVal = name.toString
     }
+  }
+
+  def getXml() {
+    // TODO: replace this with honest XML support via #356
+    val start = offset
+    val endInclusive = {
+      import fastparse.core.Parsed
+      import scalaparse.Scala.XmlExpr
+      XmlExpr.parse(new String(input.chars), index = start) match {
+        case Parsed.Success(_, endExclusive) => endExclusive - 1
+        case Parsed.Failure(_, _, _) => syntaxError("malformed xml literal", at = start)
+      }
+    }
+    finishComposite(XMLLIT, endInclusive)
+  }
+
+// Unquotes -----------------------------------------------------------------
+
+  def getUnquote() {
+    require(ch == '$')
+    val start = charOffset
+    val endInclusive = {
+      // TODO: It's a bit unsatisfying that we kinda duplicate the logic of string interpolation tokenizer.
+      // Ideally we would move it from ScalametaTokenizer to here and then reuse it,
+      // but that's too much hassle at the moment.
+      val exploratoryInput = Input.Slice(input, start, input.chars.length)
+      val exploratoryDialect = this.dialect match { case dialect: Quasiquote => dialect.underlying; case _ => unreachable }
+      val exploratoryScanner = new LegacyScanner(exploratoryInput, exploratoryDialect)
+      exploratoryScanner.reader.nextChar()
+      exploratoryScanner.nextToken()
+      exploratoryScanner.curr.token match {
+        case LBRACE =>
+          def loop(balance: Int): Unit = {
+            exploratoryScanner.nextToken()
+            exploratoryScanner.curr.token match {
+              case LBRACE =>
+                loop(balance + 1)
+              case RBRACE =>
+                if (balance == 1) () // do nothing, this is the end of the unquote
+                else loop(balance - 1)
+              case _ =>
+                loop(balance)
+            }
+          }
+          try {
+            loop(balance = 1)
+          } catch {
+            case TokenizeException(pos, message) =>
+              syntaxError(s"invalid unquote: $message", at = start + pos.point.offset)
+          }
+        case IDENTIFIER | THIS | USCORE =>
+          // do nothing, this is the end of the unquote
+        case _ =>
+          syntaxError("invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected", at = start)
+      }
+      start + exploratoryScanner.curr.endOffset
+    }
+    finishComposite(UNQUOTE, endInclusive)
   }
 
 // Errors -----------------------------------------------------------------

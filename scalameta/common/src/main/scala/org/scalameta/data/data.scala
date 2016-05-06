@@ -23,6 +23,10 @@ class data extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro DataMacros.data
 }
 
+class none extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro DataMacros.none
+}
+
 class DataMacros(val c: Context) extends MacroHelpers {
   import c.universe._
   import Flag._
@@ -42,7 +46,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
       implicit class XtensionDataModifiers(mods: Modifiers) {
         def mkByneed = Modifiers(mods.flags, mods.privateWithin, mods.annotations :+ q"new $AdtMetadataModule.byNeedField")
       }
-      def needs(name: Name, companion: Boolean) = {
+      def needs(name: Name, companion: Boolean, duplicate: Boolean) = {
         val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
         val banIndicator = argss.flatten.find {
           case AssignOrNamedArg(Ident(TermName(param)), Literal(Constant(false))) => param == name.toString
@@ -54,7 +58,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
           where.collectFirst { case mdef: MemberDef if mdef.name == name => mdef }
         }
         val present = presenceIndicator.map(_ => true).getOrElse(false)
-        !ban && !present
+        !ban && (duplicate || !present)
       }
 
       object VanillaParam {
@@ -148,14 +152,14 @@ class DataMacros(val c: Context) extends MacroHelpers {
       })
 
       // step 3: implement Object
-      if (needs(TermName("toString"), companion = false)) {
+      if (needs(TermName("toString"), companion = false, duplicate = false)) {
         stats1 += q"override def toString: _root_.scala.Predef.String = _root_.scala.runtime.ScalaRunTime._toString(this)"
       }
-      if (needs(TermName("hashCode"), companion = false)) {
+      if (needs(TermName("hashCode"), companion = false, duplicate = false)) {
         stats1 += q"override def hashCode: _root_.scala.Int = _root_.scala.runtime.ScalaRunTime._hashCode(this)"
       }
-      if (needs(TermName("equals"), companion = false)) {
-        stats1 += q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = true"
+      if (needs(TermName("equals"), companion = false, duplicate = false)) {
+        stats1 += q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = other.isInstanceOf[$name[..$tparamrefs]]"
         stats1 += q"""
           override def equals(other: _root_.scala.Any): _root_.scala.Boolean = (
             this.canEqual(other) && _root_.scala.runtime.ScalaRunTime._equals(this, other)
@@ -165,7 +169,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
 
       // step 4: implement Product
       parents1 += tq"_root_.scala.Product"
-      if (needs(TermName("product"), companion = false)) {
+      if (needs(TermName("product"), companion = false, duplicate = false)) {
         val productParamss = paramss.map(_.map(_.duplicate))
         stats1 += q"override def productPrefix: _root_.scala.Predef.String = ${name.toString}"
         stats1 += q"override def productArity: _root_.scala.Int = ${paramss.head.length}"
@@ -177,7 +181,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
       }
 
       // step 5: generate copy
-      if (needs(TermName("copy"), companion = false) && !isVararg) {
+      if (needs(TermName("copy"), companion = false, duplicate = false) && !isVararg) {
         val copyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
           case VarargParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
@@ -197,7 +201,8 @@ class DataMacros(val c: Context) extends MacroHelpers {
       }
 
       // step 6: generate Companion.apply
-      if (needs(TermName("apply"), companion = true)) {
+      // TODO: try change this to duplicate=true and see what happens
+      if (needs(TermName("apply"), companion = true, duplicate = false)) {
         val applyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
           case VarargParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
@@ -214,7 +219,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
       // step 7: generate Companion.unapply
       // TODO: go for name-based pattern matching once blocking bugs (e.g. SI-9029) are fixed
       val unapplyName = if (isVararg) TermName("unapplySeq") else TermName("unapply")
-      if (needs(unapplyName, companion = true)) {
+      if (needs(unapplyName, companion = true, duplicate = false)) {
         val unapplyParamss = paramss.map(_.map(unByNeed))
         val unapplyParams = unapplyParamss.head
         if (unapplyParams.length != 0) {
@@ -252,6 +257,21 @@ class DataMacros(val c: Context) extends MacroHelpers {
       // However, for now it's quite fine to implement them as case objects.
 
       q"${mmods.mkCase} object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }"
+    }
+  })
+
+  def none(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformModule(mdef: ModuleDef): ModuleDef = {
+      val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
+      val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" = mdef
+      val manns1 = ListBuffer[Tree]() ++ mmods.annotations
+      def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
+      val mstats1 = ListBuffer[Tree]() ++ mstats
+
+      manns1 += q"new $DataAnnotation"
+      mstats1 += q"override def isEmpty: $BooleanClass = true"
+
+      q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
     }
   })
 }

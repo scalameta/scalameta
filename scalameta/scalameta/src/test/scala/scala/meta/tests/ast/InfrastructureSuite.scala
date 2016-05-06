@@ -3,26 +3,74 @@ package ast
 
 import org.scalatest._
 import scala.meta._
-import scala.meta.internal.tokenquasiquotes._
+import scala.meta.internal.ast._
 import scala.meta.internal.semantic._
-import scala.meta.dialects.Scala211
+import scala.meta.dialects.{Scala211, QuasiquoteTerm}
 
 class InfrastructureSuite extends FunSuite {
   test("become for Quasi-0") {
-    val q = Term.Quasi(0, "hello").withTokens(toks"Hello")
-    assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(0, "hello")""")
-    assert(q.become[Type.Quasi].tokens.toString === "Tokens(Hello [0..5))")
+    val dialect = QuasiquoteTerm(Scala211, multiline = false)
+    val q = dialect("$hello").parse[Term].get.asInstanceOf[Term.Quasi]
+    assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(0, Term.Name("hello"))""")
+    assert(q.become[Type.Quasi].pos.toString === """[0..6) in Input.String("$hello")""")
   }
 
   test("become for Quasi-1") {
-    val q = Term.Quasi(1, Term.Quasi(0, "hello").withTokens(toks"HelloInner")).withTokens(toks"HelloOuter")
-    assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(1, Type.Quasi(0, "hello"))""")
-    assert(q.become[Type.Quasi].tokens.toString === "Tokens(HelloOuter [0..10))")
+    val dialect = QuasiquoteTerm(Scala211, multiline = false)
+    val Term.Block(Seq(q: Stat.Quasi)) = dialect("..$hello").parse[Stat].get
+    assert(q.become[Type.Quasi].show[Structure] === """Type.Quasi(1, Type.Quasi(0, Term.Name("hello")))""")
+    assert(q.become[Type.Quasi].pos.toString === """[0..8) in Input.String("..$hello")""")
   }
 
-  private def attributeName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage), Foo.setTypechecked)
-  private def attributeName(name: Type.Name): Type.Name = name.withAttrs(Denotation.Single(Prefix.Zero, Symbol.RootPackage))
-  private def attributeTerm(term: Term): Term = term.withAttrs(Foo.setTypechecked)
+  test("copy flags") {
+    val x1 = foobar.setTypechecked
+    val x2 = x1.copy()
+    assert(x1.isTypechecked === true)
+    assert(x2.isTypechecked === false)
+  }
+
+  test("copy parent") {
+    val Term.Select(x1: Term.Name, _) = foobar
+    val x2 = x1.copy()
+    assert(x1.parent.nonEmpty === true)
+    assert(x2.parent.nonEmpty === false)
+  }
+
+  test("copy pos") {
+    val x1 = "foo".parse[Term].get.asInstanceOf[Term.Name]
+    val x2 = x1.copy()
+    assert(x1.pos.nonEmpty === true)
+    assert(x2.pos.nonEmpty === false)
+  }
+
+  test("copy tokens") {
+    val x1 = "foo".parse[Term].get.asInstanceOf[Term.Name]
+    val x2 = x1.copy()
+    assert(x1.tokens.nonEmpty === true)
+    assert(x2.tokens.nonEmpty === true)
+  }
+
+  test("copy env") {
+    // TODO: fill this in when environments are implemented
+  }
+
+  test("copy denot") {
+    val x1 = foo
+    val x2 = x1.copy()
+    assert(x1.denot.nonEmpty === true)
+    assert(x2.denot.nonEmpty === false)
+  }
+
+  test("copy typing") {
+    val x1 = foo
+    val x2 = x1.copy()
+    assert(x1.typing.nonEmpty === true)
+    assert(x2.typing.nonEmpty === false)
+  }
+
+  private def attributeName(name: Term.Name): Term.Name = name.withAttrs(Denotation.Single(Prefix.None, Symbol.RootPackage), Foo.setTypechecked)
+  private def attributeName(name: Type.Name): Type.Name = name.withAttrs(Denotation.Single(Prefix.None, Symbol.RootPackage))
+  private def attributeTerm[T <: Term](term: T): T = term.withAttrs(Foo.setTypechecked)
   private def Foo = attributeName(Type.Name("Foo"))
   private def foo = attributeName(Term.Name("foo"))
   private def bar = attributeName(Term.Name("bar"))
@@ -41,9 +89,9 @@ class InfrastructureSuite extends FunSuite {
     assert(x5.isTypechecked === false)
   }
 
-  test("TYPECHECKED doesn't reset when tokens are touched") {
+  test("TYPECHECKED doesn't reset when origins are touched") {
     val x1 = foo.setTypechecked
-    val x2 = x1.withTokens(Tokens())
+    val x2 = x1.withOrigin(Origin.None)
     assert(x1.isTypechecked == true)
     assert(x2.isTypechecked == true)
   }
@@ -53,7 +101,7 @@ class InfrastructureSuite extends FunSuite {
   //
   // test("TYPECHECKED resets when attributes are touched") {
   //   val x1 = foo.setTypechecked
-  //   val x2 = x1.withAttrs(Denotation.Zero, Typing.Zero)
+  //   val x2 = x1.withAttrs(Denotation.None, Typing.None)
   //   assert(x1.isTypechecked == true)
   //   assert(x2.isTypechecked == false)
   // }
@@ -95,12 +143,12 @@ class InfrastructureSuite extends FunSuite {
   }
 
   test("TYPECHECKED crashes when denot is zero") {
-    val x1 = foo.privateCopy(denot = Denotation.Zero)
+    val x1 = foo.privateCopy(denot = Denotation.None)
     intercept[UnsupportedOperationException] { x1.setTypechecked }
   }
 
   test("TYPECHECKED crashes when typing is zero") {
-    val x1 = foo.privateCopy(typing = Typing.Zero)
+    val x1 = foo.privateCopy(typing = Typing.None)
     intercept[UnsupportedOperationException] { x1.setTypechecked }
   }
 
@@ -110,7 +158,7 @@ class InfrastructureSuite extends FunSuite {
     assert(x2.isTypechecked === false)
   }
 
-  private def denot = Denotation.Single(Prefix.Zero, Symbol.RootPackage)
+  private def denot = Denotation.Single(Prefix.None, Symbol.RootPackage)
   private def typing = Foo.setTypechecked
   private def u = Term.Name("u")
   private def pa = u.withAttrs(denot, typing)

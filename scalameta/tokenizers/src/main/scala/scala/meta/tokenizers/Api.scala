@@ -2,7 +2,7 @@ package scala.meta
 package tokenizers
 
 import org.scalameta.unreachable
-import scala.meta.convert._
+import scala.meta.common._
 import scala.meta.tokens._
 import scala.meta.inputs._
 
@@ -12,7 +12,7 @@ private[meta] trait Api {
       (dialect, convert(inputLike)).tokenize
     }
   }
-  implicit class XtensionTokenizersDialectInput(dialect: Dialect) {
+  implicit class XtensionTokenizersDialectApply(dialect: Dialect) {
     def apply[T](inputLike: T)(implicit convert: Convert[T, Input]): (Dialect, Input) = {
       (dialect, convert(inputLike))
     }
@@ -20,11 +20,7 @@ private[meta] trait Api {
   implicit class XtensionTokenizeDialectInput(dialectInput: (Dialect, Input)) {
     def tokenize(implicit tokenize: Tokenize): Tokenized = {
       val (dialect, input) = dialectInput
-      input match {
-        case content: Content => tokenize.apply(content)(dialect)
-        case tokens: Tokens => Tokenized.Success(tokens)
-        case _ => unreachable
-      }
+      tokenize.apply(input, dialect)
     }
   }
   implicit class XtensionTokenizeInputDialect(inputDialect: (Input, Dialect)) {

@@ -6,7 +6,7 @@ import scala.meta.inputs._
 import scala.meta.internal.tokenizers._
 
 trait Tokenize {
-  def apply(content: Content)(implicit dialect: Dialect): Tokenized
+  def apply(input: Input, dialect: Dialect): Tokenized
 }
 
 object Tokenize {

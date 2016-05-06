@@ -5,12 +5,13 @@ package semantic
 import org.scalameta.adt
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import scala.meta.common._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
 
-@root trait Typing
+@root trait Typing extends Optional
 object Typing {
-  @leaf object Zero extends Typing
+  @none object None extends Typing
   @leaf object Recursive extends Typing
   @leaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing {
     protected def writeReplace(): AnyRef = new Nonrecursive.SerializationProxy(this)

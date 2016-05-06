@@ -3,11 +3,11 @@ package parsers
 
 import scala.annotation.implicitNotFound
 import scala.meta.inputs._
-import scala.meta.internal.parsers.ScalametaParser._
+import scala.meta.internal.parsers.ScalametaParser.toParse
 
 @implicitNotFound(msg = "don't know how to parse into ${T}")
 trait Parse[T] {
-  def apply(input: Input)(implicit dialect: Dialect): Parsed[T]
+  def apply(input: Input, dialect: Dialect): Parsed[T]
 }
 
 object Parse {

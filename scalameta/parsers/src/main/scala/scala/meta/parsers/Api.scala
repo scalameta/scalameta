@@ -1,7 +1,7 @@
 package scala.meta
 package parsers
 
-import scala.meta.convert._
+import scala.meta.common._
 import scala.meta.inputs._
 
 private[meta] trait Api {
@@ -18,7 +18,7 @@ private[meta] trait Api {
   implicit class XtensionParseDialectInput(dialectInput: (Dialect, Input)) {
     def parse[U](implicit parse: Parse[U]): Parsed[U] = {
       val (dialect, input) = dialectInput
-      parse.apply(input)(dialect)
+      parse.apply(input, dialect)
     }
   }
   implicit class XtensionParseInputDialect(inputDialect: (Input, Dialect)) {

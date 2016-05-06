@@ -26,8 +26,8 @@ object Parsed {
   @leaf class Success[+T](tree: T) extends Parsed[T] {
     override def toString = tree.toString
   }
-  @leaf class Error(pos: Position, message: String, details: ParseException) extends Parsed[Nothing] {
-    override def toString = details.fullMessage
+  @leaf class Error(pos: Position, message: String, details: Exception) extends Parsed[Nothing] {
+    override def toString = details.toString
   }
 }
 

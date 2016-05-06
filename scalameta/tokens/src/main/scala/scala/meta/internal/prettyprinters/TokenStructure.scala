@@ -3,6 +3,7 @@ package internal
 package prettyprinters
 
 import scala.meta.prettyprinters._
+import scala.meta.prettyprinters.Syntax.Options
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.tokens._
 
@@ -17,7 +18,7 @@ object TokenStructure {
         case x: Token.LFLF => "\\n\\n"
         case x: Token.BOF => "BOF"
         case x: Token.EOF => "EOF"
-        case x => x.show[Syntax]
+        case x => TokenSyntax.apply[Token](x.dialect, Options.Lazy).apply(x).toString
       }
       s(prefix, " [", x.start.toString, "..", x.end.toString, ")")
     })
