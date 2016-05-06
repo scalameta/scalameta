@@ -225,6 +225,10 @@ object TreeSyntax {
           }
           val quote = if (parts.exists(s => s.contains(EOL) || s.contains("\""))) "\"\"\"" else "\""
           m(SimpleExpr1, s(t.prefix, quote, r(zipped), parts.last, quote))
+        case t: Term.Xml             =>
+          val parts = t.parts.map{ case Lit(part: String) => part }
+          val zipped = parts.zip(t.args).map{ case (part, arg) => s(part, "{", p(Expr, arg), "}") }
+          m(SimpleExpr1, s(r(zipped), parts.last))
         case t: Term.Apply           => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), t.args))
         case t: Term.ApplyType       => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
         case t: Term.ApplyInfix      =>
@@ -332,12 +336,15 @@ object TreeSyntax {
             case pat :: Nil => s(p(Pattern3(t.ref.value), pat, right = true))
             case pats       => s(pats)
           }))
-        case t: Pat.Interpolate =>
+        case t: Pat.Interpolate      =>
           val zipped = t.parts.zip(t.args).map {
             case (part, id: Name) if !guessIsBackquoted(id) => s(part, "$", id.value)
             case (part, arg)                                => s(part, "${", arg, "}")
           }
           m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
+        case t: Pat.Xml              =>
+          val zipped = t.parts.zip(t.args).map{ case (part, arg) => s(part, "${", arg, "}") }
+          m(SimplePattern, s(r(zipped), t.parts.last))
         case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(CompoundTyp, t.rhs)))
         case _: Pat.Arg.SeqWildcard  => m(SimplePattern, kw("_*"))
 

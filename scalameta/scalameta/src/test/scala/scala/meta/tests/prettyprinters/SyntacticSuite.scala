@@ -423,8 +423,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("xml literals") {
     val tree = term("<foo>{bar}</foo>")
-    assert(tree.show[Structure] === """Term.Interpolate(Term.Name("xml"), Seq(Lit("<foo>{bar}</foo>")), Nil)""")
-    assert(tree.show[Syntax] === """xml"<foo>{bar}</foo>"""".trim)
+    assert(tree.show[Structure] === """Term.Xml(Seq(Lit("<foo>{bar}</foo>")), Nil)""")
+    assert(tree.show[Syntax] === "<foo>{bar}</foo>")
   }
 
   test("empty-arglist application") {

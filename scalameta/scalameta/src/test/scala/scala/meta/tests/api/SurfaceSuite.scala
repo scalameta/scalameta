@@ -216,6 +216,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Pat.Var.Term
       |scala.meta.Pat.Var.Type
       |scala.meta.Pat.Wildcard
+      |scala.meta.Pat.Xml
       |scala.meta.Pkg
       |scala.meta.Pkg.Object
       |scala.meta.Ref
@@ -260,6 +261,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Term.Tuple
       |scala.meta.Term.Update
       |scala.meta.Term.While
+      |scala.meta.Term.Xml
       |scala.meta.Type
       |scala.meta.Type.Annotate
       |scala.meta.Type.Apply

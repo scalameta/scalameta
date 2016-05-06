@@ -1398,15 +1398,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     interpolate[Term, Term.Interpolate](unquoteExpr _, Term.Interpolate.apply _)
   }
 
-  def xmlTerm(): Term.Interpolate =
-    interpolateTerm()
+  def xmlTerm(): Term.Xml =
+    interpolate[Term, Term.Xml](unquoteXmlExpr _, (_, parts, args) => Term.Xml.apply(parts, args))
 
   def interpolatePat(): Pat.Interpolate =
     interpolate[Pat, Pat.Interpolate](unquotePattern _, Pat.Interpolate.apply _)
 
-  def xmlPat(): Pat.Interpolate =
-    // TODO: probably should switch into XML pattern mode here
-    interpolatePat()
+  def xmlPat(): Pat.Xml =
+    interpolate[Pat, Pat.Xml](unquoteXmlPattern _, (_, parts, args) => Pat.Xml.apply(parts, args))
 
 /* ------------- NEW LINES ------------------------------------------------- */
 
@@ -1494,6 +1493,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwThis()    => val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous()); next(); atPos(in.prevTokenPos, auto)(Term.This(qual))
       case _           => syntaxError("error in interpolated string: identifier, `this' or block expected", at = token)
     }
+  }
+
+  def unquoteXmlExpr(): Term = {
+    // TODO: verify this
+    dropAnyBraces(expr())
   }
 
   // TODO: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
@@ -2236,6 +2240,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       dropAnyBraces(pattern().require[Pat])
     }
 
+    def unquoteXmlPattern(): Pat = {
+      // TODO: verify this
+      dropAnyBraces(pattern().require[Pat])
+    }
+
     def quasiquotePatternArg(): Pat.Arg = {
       topLevelNamesToPats(argumentPattern())
     }
@@ -2468,6 +2477,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def pattern(): Pat.Arg = noSeq.pattern()
   def quasiquotePattern(): Pat.Arg = noSeq.quasiquotePattern()
   def unquotePattern(): Pat = noSeq.unquotePattern()
+  def unquoteXmlPattern(): Pat = xmlSeqOK.unquoteXmlPattern()
   def quasiquotePatternArg(): Pat.Arg = seqOK.quasiquotePatternArg()
   def seqPatterns(): List[Pat.Arg] = seqOK.patterns()
   def xmlSeqPatterns(): List[Pat.Arg] = xmlSeqOK.patterns() // Called from xml parser

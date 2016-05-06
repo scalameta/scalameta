@@ -63,6 +63,9 @@ object Term {
   @ast class Interpolate(prefix: Name, parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
     require(parts.length == args.length + 1)
   }
+  @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
+    require(parts.length == args.length + 1)
+  }
   @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
   @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term with Ctor.Call
   @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
@@ -240,6 +243,10 @@ object Pat {
     require(lhs.isLegal && rhs.forall(_.isLegal))
   }
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
+    require(parts.length == args.length + 1)
+    require(args.forall(_.isLegal))
+  }
+  @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
     require(parts.length == args.length + 1)
     require(args.forall(_.isLegal))
   }
