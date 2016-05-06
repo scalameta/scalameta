@@ -3,6 +3,7 @@ package tokenizers
 
 import org.scalatest._
 import scala.meta._
+import scala.meta.tokens.Token._
 import scala.meta.dialects.Scala211
 
 class TokenizerSuite extends FunSuite {
@@ -839,5 +840,35 @@ class TokenizerSuite extends FunSuite {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
     assert(tree.pos.isEmpty)
     assert(tree.tokens.show[Structure] === "Tokens(foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9))")
+  }
+
+  test("Ident.value for normal") {
+    val Tokens(foo: Ident) = "foo".parse[Term].get.tokens
+    assert(foo.value === "foo")
+  }
+
+  test("Ident.value for backquoted") {
+    val Tokens(foo: Ident) = "`foo`".parse[Term].get.tokens
+    assert(foo.value === "foo")
+    assert(foo.syntax === "`foo`")
+  }
+
+  test("Interpolation.Id.value") {
+    val Tokens(bof, _, id: Interpolation.Id, _, _, _, _, eof) = """ q"" """.tokenize.get
+    assert(id.value === "q")
+  }
+
+  test("Interpolation.Part.value") {
+    val Tokens(bof, _, _, _, part: Interpolation.Part, _, _, eof) = """ q"foo" """.tokenize.get
+    assert(part.value === "foo")
+  }
+
+  test("Xml.Part.value") {
+    // TODO: not implemented yet
+  }
+
+  test("Comment.value") {
+    val Tokens(bof, comment: Comment, eof) = "//foo".tokenize.get
+    assert(comment.value === "foo")
   }
 }

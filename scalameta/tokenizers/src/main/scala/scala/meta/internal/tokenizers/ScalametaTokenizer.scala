@@ -41,7 +41,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER       => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
-        case BACKQUOTED_IDENT => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, "`" + curr.name + "`")
+        case BACKQUOTED_IDENT => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
 
         case INTLIT          => Token.Constant.Int(input, dialect, curr.offset, curr.endOffset + 1, curr.intVal)
         case LONGLIT         => Token.Constant.Long(input, dialect, curr.offset, curr.endOffset + 1, curr.longVal)
@@ -130,7 +130,11 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           else if (curr.strVal == "\f") Token.FF(input, dialect, curr.offset)
           else unreachable(debug(curr.strVal))
 
-        case COMMENT   => Token.Comment(input, dialect, curr.offset, curr.endOffset + 1)
+        case COMMENT   =>
+          var value = new String(input.chars, curr.offset, curr.endOffset - curr.offset + 1)
+          if (value.startsWith("//")) value = value.stripPrefix("//")
+          if (value.startsWith("/*")) value = value.stripPrefix("/*").stripSuffix("*/")
+          Token.Comment(input, dialect, curr.offset, curr.endOffset + 1, value)
 
         case ELLIPSIS  => Token.Ellipsis(input, dialect, curr.offset, curr.endOffset + 1, curr.base)
         case UNQUOTE   => Token.Unquote(input, dialect, curr.offset, curr.endOffset + 1, Metalevel.Normal)

@@ -1370,8 +1370,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case Interpolation.Start() | Xml.Start() =>
         next()
         loop()
-      case Interpolation.Part(_) | Xml.Part(_) =>
-        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(token.syntax))
+      case Interpolation.Part(value) =>
+        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(value))
+        next()
+        loop()
+      case Xml.Part(value) =>
+        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(value))
         next()
         loop()
       case Interpolation.SpliceStart() | Xml.SpliceStart() =>
