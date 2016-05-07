@@ -73,10 +73,6 @@ object Tokens {
     }
   }
 
-  private[meta] case class Tokenized(input: Input, dialect: Dialect, underlying: Token*) extends Tokens(underlying: _*) {
-    override def isAuthentic = true
-  }
-
   private[meta] case class Adhoc(underlying: Token*) extends Tokens(underlying: _*) {
     override def isAuthentic = true
   }

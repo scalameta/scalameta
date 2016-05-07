@@ -244,7 +244,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     }
 
     loop(startingFrom = 0)
-    Tokens.Tokenized(input, dialect, tokens.result: _*)
+    Tokens.Adhoc(tokens.result: _*)
   }
 }
 
