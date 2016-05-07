@@ -18,9 +18,6 @@ import scala.meta.internal.tokens._
 // and would obviate the need for the very existence of Tokens.Prototype.
 // TODO: https://www.dropbox.com/s/5xmjr755tnlqcwk/2015-05-04%2013.50.48.jpg?dl=0
 sealed abstract class Tokens(repr: Token*) extends Tokens.Projection(repr: _*) with InternalTokens {
-  def isAuthentic: Boolean
-  def isSynthetic: Boolean = !isAuthentic
-
   // TODO: having to override all these methods just to change the return type feels kind of stupid
   // why weren't they implemented on top of CanBuildFrom as well?
   override def filter(pred: Token => Boolean): Tokens = Tokens(super.filter(pred): _*)
@@ -73,16 +70,11 @@ object Tokens {
     }
   }
 
-  private[meta] case class Adhoc(underlying: Token*) extends Tokens(underlying: _*) {
-    override def isAuthentic = true
-  }
+  private[meta] case class Adhoc(underlying: Token*) extends Tokens(underlying: _*)
 
-  private[meta] case class Synthetic(underlying: Token*) extends Tokens(underlying: _*) {
-    override def isAuthentic = false
-  }
+  private[meta] case class Synthetic(underlying: Token*) extends Tokens(underlying: _*)
 
   private[meta] case class Slice(tokens: Tokens, from: Int, until: Int) extends Tokens(tokens.view(from, until): _*) {
-    override def isAuthentic = true
     override def take(n: Int): Tokens = new Slice(tokens, from, Math.min(from + n, until))
     override def drop(n: Int): Tokens = new Slice(tokens, Math.min(from + n, until), until)
   }
