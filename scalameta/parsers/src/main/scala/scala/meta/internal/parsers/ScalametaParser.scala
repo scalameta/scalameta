@@ -356,6 +356,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
 /* ------------- POSITION HANDLING ------------------------------------------- */
 
+  // TODO: `startTokenPos` and `endTokenPos` are BOTH INCLUSIVE.
+  // This is at odds with the rest of scala.meta, where ends are non-inclusive.
   sealed trait Pos {
     def startTokenPos: Int
     def endTokenPos: Int
@@ -370,7 +372,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
   case class TreePos(tree: Tree) extends Pos {
     if (tree.pos.isEmpty) sys.error("internal error: unpositioned prototype ${tree.syntax}: ${tree.structure}")
-    private val Tokens.Slice(`scannerTokens`, fromTokenPos, untilTokenPos) = scannerTokens.slice(tree.pos)
+    private val TokenStreamPosition(_, fromTokenPos, untilTokenPos) = scannerTokens.translatePosition(tree.pos)
     def startTokenPos = fromTokenPos
     def endTokenPos = untilTokenPos - 1
   }

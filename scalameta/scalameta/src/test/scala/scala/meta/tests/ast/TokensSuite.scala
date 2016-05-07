@@ -6,37 +6,37 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 
 class TokensSuite extends FunSuite {
-  test("Tokens.slice: ()") {
+  test("Tokens.translatePosition: ()") {
     val input = Input.String("")
-    val tokens = input.tokenize.get.slice(0, 0)
+    val tokens = Tokens(input.tokenize.get.slice(0, 0): _*)
     assert(tokens.structure === "Tokens()")
-    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 0)))
+    intercept[IllegalArgumentException](tokens.translatePosition(Position.Range(input, 0, 0)))
   }
 
-  test("Tokens.slice: (BOF, EOF)") {
+  test("Tokens.translatePosition: (BOF, EOF)") {
     val input = Input.String("")
     val tokens = input.tokenize.get
     assert(tokens.structure === "Tokens(BOF [0..0), EOF [0..0))")
-    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 0)))
+    intercept[IllegalArgumentException](tokens.translatePosition(Position.Range(input, 0, 0)))
   }
 
-  test("Tokens.slice: (BOF, foo, EOF)") {
+  test("Tokens.translatePosition: (BOF, foo, EOF)") {
     val input = Input.String("foo")
     val tokens = input.tokenize.get
     assert(tokens.structure === "Tokens(BOF [0..0), foo [0..3), EOF [3..3))")
-    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 0)))
-    intercept[IllegalArgumentException](tokens.slice(Position.Range(input, 0, 1)))
-    assert(tokens.slice(Position.Range(input, 0, 3)).structure === "Tokens(foo [0..3))")
+    intercept[IllegalArgumentException](tokens.translatePosition(Position.Range(input, 0, 0)))
+    intercept[IllegalArgumentException](tokens.translatePosition(Position.Range(input, 0, 1)))
+    assert(tokens.translatePosition(Position.Range(input, 0, 3)).toString === """TokenStreamPosition(Input.String("foo"),1,2)""")
   }
 
-  test("Tokens.slice: wrong input") {
+  test("Tokens.translatePosition: wrong input") {
     val input = Input.String("foo")
     val tokens = input.tokenize.get
     assert(tokens.structure === "Tokens(BOF [0..0), foo [0..3), EOF [3..3))")
     val input2 = Input.String("foo")
-    assert(tokens.slice(Position.Range(input2, 0, 3)).structure === "Tokens(foo [0..3))")
+    assert(tokens.translatePosition(Position.Range(input2, 0, 3)).toString === """TokenStreamPosition(Input.String("foo"),1,2)""")
     val input3 = Input.String("bar")
-    intercept[IllegalArgumentException](tokens.slice(Position.Range(input3, 0, 3)))
+    intercept[IllegalArgumentException](tokens.translatePosition(Position.Range(input3, 0, 3)))
   }
 
   test("Tree.tokens: parsed, same dialect") {

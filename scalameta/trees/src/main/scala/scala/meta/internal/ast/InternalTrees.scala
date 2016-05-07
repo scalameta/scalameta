@@ -73,14 +73,15 @@ trait InternalTree {
     if (pos.nonEmpty) {
       if (pos.start != pos.end) {
         val inputTokens = pos.input.tokenize.get
-        inputTokens.slice(pos)
+        val TokenStreamPosition(_, start, end) = inputTokens.translatePosition(pos)
+        Tokens(inputTokens.slice(start, end): _*)
       } else {
         Tokens()
       }
     } else {
       val virtualInput = VirtualInput(this.syntax(dialect, Options.Eager))
       val syntheticTokens = dialect(virtualInput).tokenize.get
-      syntheticTokens.slice(1, syntheticTokens.length - 1) // drop BOF and EOF
+      Tokens(syntheticTokens.slice(1, syntheticTokens.length - 1): _*) // drop BOF and EOF
     }
   }
 

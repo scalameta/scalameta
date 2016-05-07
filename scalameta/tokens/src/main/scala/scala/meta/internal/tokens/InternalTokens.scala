@@ -13,7 +13,7 @@ trait InternalTokens {
 
   // NOTE: If this method changes, go and change the "freeform tokens" test.
   // TODO: I don't like the number of special cases and validations inside this method.
-  private[meta] def slice(pos: Position): Tokens = {
+  private[meta] def translatePosition(pos: Position): TokenStreamPosition = {
     def fail(message: String) = throw new IllegalArgumentException("internal error: " + message)
     def failPositionEmpty() = fail("can't slice according to an empty position")
     def failMissingLetterbox() = fail("can't slice without the BOF .. EOF letterbox")
@@ -81,7 +81,7 @@ trait InternalTokens {
         val lo = find(start.offset, start = true)
         val hi = find(end.offset, start = false)
         validateResult(lo, hi)
-        this.slice(lo, hi + 1)
+        TokenStreamPosition(pos.input, lo, hi + 1)
       case _ =>
         failPositionEmpty()
     }

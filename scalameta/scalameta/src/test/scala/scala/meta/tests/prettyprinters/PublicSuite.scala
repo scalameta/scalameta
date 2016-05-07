@@ -300,10 +300,6 @@ class PublicSuite extends FunSuite {
     assert(tokens.show[Syntax] === "foo + bar")
   }
 
-  test("scala.meta.tokens.Tokens.Projection.toString") {
-    // covered above
-  }
-
   test("scala.meta.transversers.Transformer.toString") {
     // n/a
   }

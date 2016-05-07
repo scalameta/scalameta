@@ -85,7 +85,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens
       |scala.meta.tokens.Token
       |scala.meta.tokens.Tokens
-      |scala.meta.tokens.Tokens.Projection
       |scala.meta.transversers
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
