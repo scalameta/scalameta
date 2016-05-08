@@ -33,8 +33,8 @@ private[meta] trait Api {
 
 private[meta] trait Aliases {
   type Tokenized = scala.meta.tokenizers.Tokenized
-  val Tokenized = scala.meta.tokenizers.Tokenized
+  lazy val Tokenized = scala.meta.tokenizers.Tokenized
 
   type TokenizeException = scala.meta.tokenizers.TokenizeException
-  val TokenizeException = scala.meta.tokenizers.TokenizeException
+  lazy val TokenizeException = scala.meta.tokenizers.TokenizeException
 }

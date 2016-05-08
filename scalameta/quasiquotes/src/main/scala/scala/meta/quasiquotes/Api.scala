@@ -32,8 +32,8 @@ private[meta] trait Api {
 
 private[meta] trait Aliases {
   type Lift[O, I] = scala.meta.quasiquotes.Lift[O, I]
-  val Lift = scala.meta.quasiquotes.Lift
+  lazy val Lift = scala.meta.quasiquotes.Lift
 
   type Unlift[I, O] = scala.meta.quasiquotes.Unlift[I, O]
-  val Unlift = scala.meta.quasiquotes.Unlift
+  lazy val Unlift = scala.meta.quasiquotes.Unlift
 }
