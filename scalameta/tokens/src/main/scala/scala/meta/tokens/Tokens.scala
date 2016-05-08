@@ -11,7 +11,6 @@ import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.internal.prettyprinters._
 import scala.meta.internal.tokens._
 
-// TODO: https://www.dropbox.com/s/5xmjr755tnlqcwk/2015-05-04%2013.50.48.jpg?dl=0
 @data class Tokens(private val tokens: Token*) extends Seq[Token] with InternalTokens {
   def iterator: Iterator[Token] = tokens.iterator
   def apply(idx: Int): Token = tokens(idx)
