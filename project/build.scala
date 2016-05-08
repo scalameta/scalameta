@@ -33,7 +33,8 @@ object build extends Build {
     tokenizers,
     tokens,
     transversers,
-    trees
+    trees,
+    readme
   )
 
   lazy val common = Project(
@@ -146,6 +147,21 @@ object build extends Build {
   ) settings (
     exposePaths("scalameta", Test): _*
   ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline)
+
+  lazy val readme = scalatex.ScalatexReadme(
+    projectId = "readme",
+    wd = file(""),
+    url = "https://github.com/scalameta/scalameta/tree/master",
+    source = "Readme"
+  ).settings(
+    libraryDependencies ++= Seq(
+      "com.twitter" %% "util-eval" % "6.34.0",
+      "org.pegdown" % "pegdown" % "1.6.0"
+    ),
+    // Workaround for https://github.com/lihaoyi/Scalatex/issues/25
+    dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
+    sources in Compile += baseDirectory.value / "../project/Version.scala"
+  ).dependsOn(scalameta)
 
   lazy val sharedSettings = crossVersionSharedSources ++ Seq(
     scalaVersion := ScalaVersions.max,
