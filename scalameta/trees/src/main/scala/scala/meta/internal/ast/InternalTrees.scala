@@ -79,7 +79,7 @@ trait InternalTree {
         Tokens()
       }
     } else {
-      val virtualInput = VirtualInput(this.syntax(dialect, Options.Eager))
+      val virtualInput = VirtualInput({ implicit val eagerPrettyprinting = Options.Eager; this.syntax })
       val syntheticTokens = dialect(virtualInput).tokenize.get
       Tokens(syntheticTokens.slice(1, syntheticTokens.length - 1): _*) // drop BOF and EOF
     }

@@ -2,6 +2,7 @@ package scala.meta
 package internal
 package prettyprinters
 
+import scala.meta.classifiers._
 import scala.meta.dialects.Quasiquote
 import scala.meta.prettyprinters._
 import scala.meta.prettyprinters.Syntax._
@@ -198,8 +199,9 @@ object TreeSyntax {
             s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
           } else {
             val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var.Term] || t.tree.is[Term.This] || t.tree.is[Pat.Wildcard]
-            val underlyingDialect = dialect match { case dialect: Quasiquote => dialect.underlying; case _ => unreachable }
-            s("$", w("{", t.tree.syntax(underlyingDialect, options), "}", !allowBraceless))
+            implicit val syntaxOptions = options
+            implicit val syntaxDialect = dialect match { case dialect: Quasiquote => dialect.underlying; case _ => unreachable }
+            s("$", w("{", t.tree.syntax, "}", !allowBraceless))
           }
 
         // Name

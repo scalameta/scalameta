@@ -17,8 +17,6 @@ import scala.meta.internal.tokens._
   def iterator: Iterator[Token] = tokens.iterator
   def apply(idx: Int): Token = tokens(idx)
   def length: Int = tokens.length
-  def syntax(implicit dialect: Dialect, options: Options = Options.Eager): String = Tokens.showSyntax[Tokens](dialect, options).apply(this).toString
-  def structure: String = this.show[Structure]
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 }
 

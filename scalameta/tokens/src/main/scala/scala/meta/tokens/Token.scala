@@ -18,15 +18,9 @@ import scala.meta.internal.prettyprinters._
 @root trait Token {
   def input: Input
   def dialect: Dialect
-
   def start: Int
   def end: Int
   def pos: Position
-  def syntax(implicit dialect: Dialect, options: Options = Options.Eager): String
-
-  def is[U](implicit classifier: Classifier[Token, U]): Boolean
-  def isNot[U](implicit classifier: Classifier[Token, U]): Boolean
-  def structure: String
 }
 
 object Token {

@@ -19,11 +19,6 @@ import scala.meta.internal.ast.Helpers._
 
   def pos: Position
   def tokens(implicit dialect: Dialect): Tokens
-  def syntax(implicit dialect: Dialect, options: Options = Options.Eager): String = Tree.showSyntax[Tree](dialect, options).apply(this).toString
-
-  def is[U](implicit classifier: Classifier[Tree, U]): Boolean = classifier(this)
-  def isNot[U](implicit classifier: Classifier[Tree, U]): Boolean = !classifier(this)
-  def structure: String = this.show[Structure]
 
   final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
