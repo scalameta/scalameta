@@ -1,0 +1,64 @@
+@import scala.meta.Readme._
+@import Main._
+@import scala.meta._
+
+@sect("scala.meta", s"Latest release:  ${Version.latestRelease}")
+
+  @markdown
+    ## Simple, robust and portable metaprogramming toolkit for Scala
+
+    Scala 2.10 was the first language release that provided a public native API
+    for metaprogramming Scala, introducing facilities for compile-time (macros)
+    and runtime (Java-like reflection) metaprogramming.
+    These facilities have brought a lot of feedback, and we've been thinking
+    hard how to make sense of it.
+
+    It is clear that dedicated support for metaprogramming is useful.
+    Previously, one had to deal with ad-hoc solutions like textual code
+    generation and command-line scalap invocations. However, since Scala 2.10
+    there is a full-fledged model of Scala that accounts for the variety of
+    language constructs and includes a comprehensive, backward-compatible API.
+    Nevertheless, there's still quite some work to be done in order to make our
+    metaprogramming tools enjoyable. The main issues that remain to be
+    addressed are verbosity and brittleness of the underlying API, difficulties
+    with tool integration, tight coupling with scalac, and potential for
+    confusion caused by leaking implementation details and cryptic error messages.
+
+    The goal of scala.meta is to make metaprogramming easy, ensuring that it
+    doesn't require knowledge of compiler internals, is safe from compiler crashes
+    by construction and is portable across a wide range of implementors.
+    Towards that end, we have rethought the metaprogramming APIs along with the
+    accompanying macro engine, keeping existing functionality in place and at
+    the same time fixing fundamental problems intrinsic to the original
+    implementation.
+
+    **Tutorial**: [http://github.com/scalameta/tutorial](http://github.com/scalameta/tutorial).
+
+    **Source code**: [http://github.com/scalameta/scalameta](http://github.com/scalameta/scalameta).
+
+    **Latest presentation**: [State of the Meta, Summer 2015](http://scalamacros.org/paperstalks/2015-06-09-StateOfTheMetaSummer2015.pdf),
+    Amsterdam, Jun 2015. ([click here for the video](https://www.parleys.com/tutorial/state-meta-summer-2015)).
+
+  @sect{Getting started}
+    Add scala.meta to your dependencies:
+    @hl.scala
+      libraryDependencies += "org.scalameta" %% "scalameta" % "@Version.latestRelease"
+
+
+    To parse a string into @code("scala.meta.Tree"):
+    @repl
+      import scala.meta._
+      """object HelloWorld { self =>
+           println(s"Hello $self!")
+         }
+      """.parse[Stat].get.structure
+
+  @sect{Changelog}
+
+    @sect{0.1.0-RC6}
+
+      @markdown
+        * features a change to how `Tokens` look like, abandoning our experiments
+          with `CanBuildFrom`. As a result, methods like `Tokens.filter`,
+          `Tokens.slice`, etc no longer return Tokens, but return `Seq[Token]`
+          instead. Take a look at @issue(385) for more details.
