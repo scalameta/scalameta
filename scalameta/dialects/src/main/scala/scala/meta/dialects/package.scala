@@ -58,7 +58,7 @@ package object dialects {
     def allowSpliceUnderscore = false // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = false
     def toplevelSeparator = ""
-    def metalevel = Metalevel.Normal
+    def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -69,7 +69,7 @@ package object dialects {
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = false
     def toplevelSeparator = EOL
-    def metalevel = Metalevel.Normal
+    def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -80,7 +80,7 @@ package object dialects {
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
     def toplevelSeparator = ""
-    def metalevel = Metalevel.Normal
+    def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -91,7 +91,7 @@ package object dialects {
     def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = Scala210.allowToplevelTerms
     def toplevelSeparator = Scala210.toplevelSeparator
-    def metalevel = Metalevel.Normal
+    def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -102,7 +102,7 @@ package object dialects {
     def allowSpliceUnderscore = true
     def allowToplevelTerms = false
     def toplevelSeparator = ""
-    def metalevel = Metalevel.Normal
+    def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -111,7 +111,7 @@ package object dialects {
     def qualifier: String
     def underlying: Dialect
     def multiline: Boolean
-    def metalevel = Metalevel.Quoted(1)
+    def metalevel = Metalevel.Quoted
     def bindToSeqWildcardDesignator = underlying.bindToSeqWildcardDesignator
     def allowXmlLiterals = underlying.allowXmlLiterals
     def allowSpliceUnderscore = underlying.allowSpliceUnderscore
@@ -133,20 +133,18 @@ package object dialects {
     override def toString = name
   }
 
+  // NOTE: The syntax for nested interpolation is ugly to the point of being impractical.
+  // That's why we won't implement support for it for the time being.
+  // However, it'd have been reasonably simple:
+  //  * For 0..nesting-1, 2^n dollars in a row drop us to a level-n unquote.
+  //  * 2^nesting dollars in a row represent a dollar character itself.
   @root trait Metalevel {
     def isQuoted: Boolean = nesting > 0
     def nesting: Int
   }
   object Metalevel {
-    @leaf object Normal extends Metalevel { def nesting: Int = 0 }
-    @leaf class Quoted(nesting: Int) extends Metalevel {
-      // NOTE: The syntax for nested interpolation is ugly to the point of being impractical.
-      // That's why we won't implement support for it for the time being.
-      // However, it'd have been reasonably simple:
-      //  * For 0..nesting-1, 2^n dollars in a row drop us to a level-n unquote.
-      //  * 2^nesting dollars in a row represent a dollar character itself.
-      require(nesting == 1)
-    }
+    @leaf object Zero extends Metalevel { def nesting: Int = 0 }
+    @leaf object Quoted extends Metalevel { def nesting: Int = 1 }
   }
 }
 

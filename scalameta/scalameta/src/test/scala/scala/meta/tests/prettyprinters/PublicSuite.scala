@@ -78,12 +78,12 @@ class PublicSuite extends FunSuite {
     // covered below
   }
 
-  test("scala.meta.dialects.Metalevel.Normal.toString") {
-    assert(dialects.Metalevel.Normal.toString === "Normal")
+  test("scala.meta.dialects.Metalevel.Quoted.toString") {
+    assert(dialects.Metalevel.Quoted.toString === "Quoted")
   }
 
-  test("scala.meta.dialects.Metalevel.Quoted.toString") {
-    assert(dialects.Metalevel.Quoted(1).toString === "Quoted(1)")
+  test("scala.meta.dialects.Metalevel.Zero.toString") {
+    assert(dialects.Metalevel.Zero.toString === "Zero")
   }
 
   test("scala.meta.dialects.Sbt0136.toString") {
