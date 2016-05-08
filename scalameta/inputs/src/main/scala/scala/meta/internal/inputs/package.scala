@@ -7,7 +7,9 @@ import scala.meta.inputs._
 package object inputs {
   implicit class XtensionPositionFormatMessage(pos: Position) {
     def formatMessage(severity: String, message: String): String = {
-      pos.point.formatMessage(severity, message)
+      // TODO: In order to be completely compatible with scalac, we need to support Position.point.
+      // On the other hand, do we really need to? Let's try without it. See #383 for discussion.
+      pos.start.formatMessage(severity, message)
     }
   }
 
