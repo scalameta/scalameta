@@ -11,6 +11,8 @@ import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.internal.prettyprinters._
 import scala.meta.internal.tokens._
 
+// TODO: better API for the Tokens collection (#385)
+// TODO: better internal representation for tokens (#150)
 @data class Tokens(private val tokens: Token*) extends Seq[Token] with InternalTokens {
   def iterator: Iterator[Token] = tokens.iterator
   def apply(idx: Int): Token = tokens(idx)
