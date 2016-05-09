@@ -3,13 +3,13 @@ package internal
 package prettyprinters
 
 import scala.meta.prettyprinters._
-import scala.meta.prettyprinters.Syntax.Options
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.tokens._
 
 object TokenStructure {
-  def apply[T <: Token]: Structure[T] = {
+  def apply[T <: Token](implicit options: Options): Structure[T] = {
     Structure(x => {
+      implicit val dialect = x.dialect
       val prefix = (x: Token) match {
         case x: Token.Tab => "\\t"
         case x: Token.CR => "\\r"
@@ -18,7 +18,7 @@ object TokenStructure {
         case x: Token.LFLF => "\\n\\n"
         case x: Token.BOF => "BOF"
         case x: Token.EOF => "EOF"
-        case x => TokenSyntax.apply[Token](x.dialect, Options.Lazy).apply(x).toString
+        case x => x.syntax
       }
       s(prefix, " [", x.start.toString, "..", x.end.toString, ")")
     })

@@ -2,6 +2,9 @@ package scala.meta
 package internal
 package prettyprinters
 
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
+import org.scalameta.collections._
 import scala.meta.classifiers._
 import scala.meta.prettyprinters._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
@@ -10,20 +13,26 @@ import scala.meta.tokens.Token._
 import scala.meta.internal.ast.Quasi
 
 object TreeStructure {
-  def apply[T <: Tree]: Structure[T] = {
+  def apply[T <: Tree](implicit options: Options): Structure[T] = {
     Structure(x => s(x.productPrefix, "(", {
       def default = {
-        def showRaw(x: Any): String = x match {
+        def anyStructure(x: Any): String = x match {
           case el: String => enquote(el, DoubleQuotes)
           case el: Tree => el.show[Structure]
-          case el: Nil.type => "Nil"
-          case el @ Seq(Seq()) => "Seq(Seq())"
-          case el: Seq[_] => "Seq(" + el.map(showRaw).mkString(", ") + ")"
+          case el: Seq[_] => seqStructure(el)
           case el: None.type => "None"
-          case el: Some[_] => "Some(" + showRaw(el.get) + ")"
+          case el: Some[_] => "Some(" + anyStructure(el.get) + ")"
           case el => el.toString
         }
-        r(x.productIterator.map(showRaw).toList, ", ")
+        def seqStructure(xs: Seq[_]): String = {
+          if (options.isLazy && xs.isLazy) "Seq(...)"
+          else xs match {
+            case xs: Nil.type => "Nil"
+            case xs @ Seq(Seq()) => "Seq(Seq())"
+            case xs => "Seq(" + xs.map(anyStructure).mkString(", ") + ")"
+          }
+        }
+        r(x.productIterator.map(anyStructure).toList, ", ")
       }
       x match {
         case x: Quasi =>

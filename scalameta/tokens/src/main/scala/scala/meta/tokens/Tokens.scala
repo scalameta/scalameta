@@ -7,7 +7,6 @@ import org.scalameta.data._
 import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
-import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.internal.prettyprinters._
 import scala.meta.internal.tokens._
 
@@ -23,6 +22,6 @@ import scala.meta.internal.tokens._
 object Tokens {
   implicit val tokensToInput: Convert[Tokens, Input] = Convert(tokens => Input.String(tokens.syntax))
   implicit val seqTokenToInput: Convert[Seq[Token], Input] = Convert(tokens => Input.String(Tokens(tokens: _*).syntax))
-  implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
+  implicit def showStructure[T <: Tokens](implicit options: Options): Structure[T] = TokensStructure.apply[T](options)
   implicit def showSyntax[T <: Tokens](implicit dialect: Dialect, options: Options): Syntax[T] = TokensSyntax.apply[T](dialect, options)
 }

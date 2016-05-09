@@ -9,7 +9,6 @@ import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
-import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
 
@@ -28,7 +27,7 @@ import scala.meta.internal.ast.Helpers._
 
 object Tree extends InternalTreeXtensions {
   implicit def classifiable[T <: Tree]: Classifiable[T] = null
-  implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T]
+  implicit def showStructure[T <: Tree](implicit options: Options): Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T](options)
   implicit def showSyntax[T <: Tree](implicit dialect: Dialect, options: Options): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect, options)
   // implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.prettyprinters.TreeSemantics.apply[T](c)
 }

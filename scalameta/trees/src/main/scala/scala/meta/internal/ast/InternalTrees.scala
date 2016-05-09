@@ -7,7 +7,6 @@ import org.scalameta.invariants._
 import scala.compat.Platform.EOL
 import scala.meta.classifiers._
 import scala.meta.prettyprinters._
-import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._

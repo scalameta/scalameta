@@ -29,13 +29,13 @@ package object meta extends classifiers.Api with classifiers.Aliases
     }
   }
   implicit class XtensionDialectTokenSyntax(dialectToken: (scala.meta.Dialect, scala.meta.tokens.Token)) {
-    def syntax(implicit options: scala.meta.prettyprinters.Syntax.Options): String = {
+    def syntax(implicit options: scala.meta.prettyprinters.Options): String = {
       implicit val (dialect, token) = dialectToken
       token.syntax
     }
   }
   implicit class XtensionDialectTokensSyntax(dialectTokens: (scala.meta.Dialect, scala.meta.tokens.Tokens)) {
-    def syntax(implicit options: scala.meta.prettyprinters.Syntax.Options): String = {
+    def syntax(implicit options: scala.meta.prettyprinters.Options): String = {
       implicit val (dialect, tokens) = dialectTokens
       tokens.syntax
     }
@@ -51,7 +51,7 @@ package object meta extends classifiers.Api with classifiers.Aliases
     }
   }
   implicit class XtensionDialectTreeSyntax(dialectTree: (scala.meta.Dialect, scala.meta.Tree)) {
-    def syntax(implicit options: scala.meta.prettyprinters.Syntax.Options): String = {
+    def syntax(implicit options: scala.meta.prettyprinters.Options): String = {
       implicit val (dialect, tree) = dialectTree
       tree.syntax
     }
