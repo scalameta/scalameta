@@ -3414,10 +3414,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       importStmt()
     case DefIntro() =>
       nonLocalDefOrDcl()
-    case ExprIntro() =>
-      expr(InTemplate)
+    case Unquote(_) =>
+      unquote[Stat]
     case Ellipsis(_) =>
       ellipsis(1, unquote[Stat])
+    case ExprIntro() =>
+      expr(InTemplate)
   }
 
   /** {{{
