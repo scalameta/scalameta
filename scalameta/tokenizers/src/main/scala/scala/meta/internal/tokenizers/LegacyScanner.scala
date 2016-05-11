@@ -994,7 +994,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             loop(balance = 1)
           } catch {
             case TokenizeException(pos, message) =>
-              syntaxError(s"invalid unquote: $message", at = start + pos.point.offset)
+              syntaxError(s"invalid unquote: $message", at = start + pos.start.offset)
           }
         case IDENTIFIER | THIS | USCORE =>
           // do nothing, this is the end of the unquote

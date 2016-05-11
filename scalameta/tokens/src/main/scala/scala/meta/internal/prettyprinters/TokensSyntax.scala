@@ -3,7 +3,6 @@ package internal
 package prettyprinters
 
 import scala.meta.prettyprinters._
-import scala.meta.prettyprinters.Syntax.Options
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.tokens._
 

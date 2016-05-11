@@ -31,8 +31,8 @@ private[meta] trait Api {
 
 private[meta] trait Aliases {
   type Parsed[+T] = scala.meta.parsers.Parsed[T]
-  val Parsed = scala.meta.parsers.Parsed
+  lazy val Parsed = scala.meta.parsers.Parsed
 
   type ParseException = scala.meta.parsers.ParseException
-  val ParseException = scala.meta.parsers.ParseException
+  lazy val ParseException = scala.meta.parsers.ParseException
 }

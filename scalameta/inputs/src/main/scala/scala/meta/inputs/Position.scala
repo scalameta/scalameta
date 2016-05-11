@@ -11,7 +11,6 @@ import scala.meta.common._
 @root trait Position extends Optional {
   def input: Input
   def start: Point
-  def point: Point
   def end: Point
 }
 
@@ -19,16 +18,12 @@ object Position {
   @none object None extends Position {
     def input = Input.None
     def start = Point.None
-    def point = Point.None
     def end = Point.None
     override def toString = "Position.None"
   }
 
   @leaf class Range(input: Input @nonEmpty, start: Point @nonEmpty, end: Point @nonEmpty) extends Position {
-    def point = start // TODO: either implement this like in scalac or go full clang, see #383
-    if (!((start.offset <= end.offset) && (point.offset <= end.offset))) {
-      throw new IllegalArgumentException(s"$rangeString is not a valid range")
-    }
+    if (!(start.offset <= end.offset)) throw new IllegalArgumentException(s"$rangeString is not a valid range")
     private def rangeString = s"[${start.offset}..${end.offset})"
     override def toString = s"$rangeString in $input"
   }

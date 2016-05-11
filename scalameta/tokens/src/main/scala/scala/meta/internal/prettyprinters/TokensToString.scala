@@ -2,11 +2,10 @@ package scala.meta
 package internal
 package prettyprinters
 
-import scala.meta.tokens.Tokens
+import scala.meta.tokens._
 
 object TokensToString {
   def apply(tokens: Tokens) = {
-    val prettyprinter = TokensStructure[Tokens]
-    prettyprinter(tokens).toString
+    tokens.mkString("")
   }
 }

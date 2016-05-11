@@ -4,7 +4,7 @@ package prettyprinters
 
 import scala.meta.internal.ast.{Quasi, Origin}
 import scala.meta.dialects.{Scala211, QuasiquoteTerm}
-import scala.meta.prettyprinters.Syntax.Options.Lazy
+import scala.meta.prettyprinters.Options.Lazy
 
 object TreeToString {
   def apply(tree: Tree) = {

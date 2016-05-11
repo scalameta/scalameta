@@ -8,7 +8,6 @@ import scala.meta.inputs._
 import scala.meta.classifiers._
 import scala.meta.dialects.Metalevel
 import scala.meta.prettyprinters._
-import scala.meta.prettyprinters.Syntax.Options
 import scala.meta.internal.prettyprinters._
 
 // NOTE: `start` and `end` are String.substring-style,
@@ -18,15 +17,9 @@ import scala.meta.internal.prettyprinters._
 @root trait Token {
   def input: Input
   def dialect: Dialect
-
   def start: Int
   def end: Int
   def pos: Position
-  def syntax(implicit dialect: Dialect, options: Options = Options.Eager): String
-
-  def is[U](implicit classifier: Classifier[Token, U]): Boolean
-  def isNot[U](implicit classifier: Classifier[Token, U]): Boolean
-  def structure: String
 }
 
 object Token {
@@ -145,8 +138,8 @@ object Token {
   @freeform("unquote") private[meta] class Unquote(metalevel: Metalevel) extends Token
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
-  implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
-  implicit def showSyntax[T <: Token](implicit dialect: Dialect, options: Syntax.Options): Syntax[T] = TokenSyntax.apply[T](dialect, options)
+  implicit def showStructure[T <: Token](implicit options: Options): Structure[T] = TokenStructure.apply[T](options)
+  implicit def showSyntax[T <: Token](implicit dialect: Dialect, options: Options): Syntax[T] = TokenSyntax.apply[T](dialect, options)
 }
 
 // NOTE: We have this unrelated code here, because of how materializeAdt works.

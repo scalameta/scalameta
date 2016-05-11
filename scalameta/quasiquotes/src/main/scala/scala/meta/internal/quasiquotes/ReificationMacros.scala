@@ -133,7 +133,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   }
 
   private implicit def metaPositionToReflectPosition(pos: MetaPosition): ReflectPosition = {
-    c.macroApplication.pos.focus.withPoint(pos.point.absolutize.offset)
+    // TODO: this is another instance of #383
+    c.macroApplication.pos.focus.withPoint(pos.start.absolutize.offset)
   }
 
   private def instantiateDialect(dialectTree: ReflectTree, mode: Mode): Dialect = {

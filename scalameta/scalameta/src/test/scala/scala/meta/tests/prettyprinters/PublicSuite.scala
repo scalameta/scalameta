@@ -78,12 +78,12 @@ class PublicSuite extends FunSuite {
     // covered below
   }
 
-  test("scala.meta.dialects.Metalevel.Normal.toString") {
-    assert(dialects.Metalevel.Normal.toString === "Normal")
+  test("scala.meta.dialects.Metalevel.Quoted.toString") {
+    assert(dialects.Metalevel.Quoted.toString === "Quoted")
   }
 
-  test("scala.meta.dialects.Metalevel.Quoted.toString") {
-    assert(dialects.Metalevel.Quoted(1).toString === "Quoted(1)")
+  test("scala.meta.dialects.Metalevel.Zero.toString") {
+    assert(dialects.Metalevel.Zero.toString === "Zero")
   }
 
   test("scala.meta.dialects.Sbt0136.toString") {
@@ -205,6 +205,18 @@ class PublicSuite extends FunSuite {
     assert(parsed.toString === "foo + bar")
   }
 
+  test("scala.meta.prettyprinters.LowPriorityOptions.Lazy.toString") {
+    assert(scala.meta.prettyprinters.Options.Lazy.toString == "Lazy")
+  }
+
+  test("scala.meta.prettyprinters.Options.toString") {
+    // covered above and below
+  }
+
+  test("scala.meta.prettyprinters.Options.Eager.toString") {
+    assert(scala.meta.prettyprinters.Options.Eager.toString == "Eager")
+  }
+
   test("scala.meta.prettyprinters.Show.toString") {
     // n/a
   }
@@ -215,18 +227,6 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.prettyprinters.Syntax.toString") {
     // n/a
-  }
-
-  test("scala.meta.prettyprinters.Syntax.LowPriorityOptions.Lazy.toString") {
-    assert(scala.meta.prettyprinters.Syntax.Options.Lazy.toString == "Lazy")
-  }
-
-  test("scala.meta.prettyprinters.Syntax.Options.toString") {
-    // covered above and below
-  }
-
-  test("scala.meta.prettyprinters.Syntax.Options.Eager.toString") {
-    assert(scala.meta.prettyprinters.Syntax.Options.Eager.toString == "Eager")
   }
 
   test("scala.meta.quasiquotes.Lift.toString") {
@@ -267,7 +267,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.tokenizers.Tokenized.Success.toString") {
     val tokenized = "foo + bar".tokenize
-    assert(tokenized.toString === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
+    assert(tokenized.toString === "foo + bar")
   }
 
   test("scala.meta.tokens.Token.toString") {
@@ -287,7 +287,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.tokens.Tokens.toString") {
     val tokens = "foo + bar".tokenize.get
-    assert(tokens.toString === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
+    assert(tokens.toString === "foo + bar")
   }
 
   test("scala.meta.tokens.Tokens.show[Structure]") {

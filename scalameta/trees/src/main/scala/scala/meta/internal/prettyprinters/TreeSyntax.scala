@@ -2,10 +2,11 @@ package scala.meta
 package internal
 package prettyprinters
 
+import scala.meta.classifiers._
 import scala.meta.dialects.Quasiquote
 import scala.meta.prettyprinters._
 import scala.meta.prettyprinters.Syntax._
-import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, adorn => a, function => fn }
+import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, wrap => w, function => fn }
 import scala.meta.internal.ast.Origin
 import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
@@ -195,11 +196,12 @@ object TreeSyntax {
         case t: Quasi =>
           if (!dialect.metalevel.isQuoted) throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
           if (t.rank > 0) {
-            s("." * (t.rank + 1), a("{", t.tree, "}", !t.tree.is[Quasi]))
+            s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
           } else {
             val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var.Term] || t.tree.is[Term.This] || t.tree.is[Pat.Wildcard]
-            val underlyingDialect = dialect match { case dialect: Quasiquote => dialect.underlying; case _ => unreachable }
-            s("$", a("{", t.tree.syntax(underlyingDialect, options), "}", !allowBraceless))
+            implicit val syntaxOptions = options
+            implicit val syntaxDialect = dialect match { case dialect: Quasiquote => dialect.underlying; case _ => unreachable }
+            s("$", w("{", t.tree.syntax, "}", !allowBraceless))
           }
 
         // Name
@@ -291,7 +293,7 @@ object TreeSyntax {
         case t: Term.Arg.Repeated    => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
         case t: Term.Param           =>
           val mods = t.mods.filter(!_.is[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-          s(a(mods, " "), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+          s(w(mods, " "), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
 
         // Type
         case t: Type.Name         => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
@@ -304,7 +306,7 @@ object TreeSyntax {
           val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
           m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
         case t: Type.Tuple        => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
-        case t: Type.Compound     => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), a(" {", a(" ", r(t.refinement, "; "), " "), "}", guessHasRefinement(t))))
+        case t: Type.Compound     => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), w(" {", w(" ", r(t.refinement, "; "), " "), "}", guessHasRefinement(t))))
         case t: Type.Existential  => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.quants, "; "), " }"))
         case t: Type.Annotate     => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
         case t: Type.Placeholder  => m(SimpleTyp, s(kw("_"), t.bounds))
@@ -319,7 +321,7 @@ object TreeSyntax {
           val tbounds = s(t.tbounds)
           val vbounds = r(t.vbounds.map { s(" ", kw("<%"), " ", _) })
           val cbounds = r(t.cbounds.map { s(kw(":"), " ", _) })
-          s(a(mods, " "), variance, t.name, t.tparams, tbounds, vbounds, cbounds)
+          s(w(mods, " "), variance, t.name, t.tparams, tbounds, vbounds, cbounds)
 
         // Pat
         case t: Pat.Var.Term         => m(SimplePattern, s(t.name.value))
@@ -359,7 +361,7 @@ object TreeSyntax {
           val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
           m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
         case t: Pat.Type.Tuple       => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
-        case t: Pat.Type.Compound    => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), a(" {", a(" ", r(t.refinement, "; "), " "), "}", guessHasRefinement(t))))
+        case t: Pat.Type.Compound    => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), w(" {", w(" ", r(t.refinement, "; "), " "), "}", guessHasRefinement(t))))
         case t: Pat.Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.quants, "; "), " }"))
         case t: Pat.Type.Annotate    => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
 
@@ -378,25 +380,25 @@ object TreeSyntax {
         case Lit(())             => m(Literal, s("()"))
 
         // Member
-        case t: Decl.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
-        case t: Decl.Var       => s(a(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
-        case t: Decl.Type      => s(a(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds)
-        case t: Decl.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
-        case t: Defn.Val       => s(a(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
-        case t: Defn.Var       => s(a(t.mods, " "), kw("var"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs.map(s(_)).getOrElse(s(kw("_"))))
-        case t: Defn.Type      => s(a(t.mods, " "), kw("type"), " ", t.name, t.tparams, " ", kw("="), " ", t.body)
-        case t: Defn.Class     => s(a(t.mods, " "), kw("class"), " ", t.name, t.tparams, a(" ", t.ctor, t.ctor.mods.nonEmpty), templ(t.templ))
-        case t: Defn.Trait     => s(a(t.mods, " "), kw("trait"), " ", t.name, t.tparams, templ(t.templ))
-        case t: Defn.Object    => s(a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
-        case t: Defn.Def       => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
-        case t: Defn.Macro     => s(a(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe, " ", kw("="), " ", kw("macro"), " ", t.body)
+        case t: Decl.Val       => s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
+        case t: Decl.Var       => s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
+        case t: Decl.Type      => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds)
+        case t: Decl.Def       => s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
+        case t: Defn.Val       => s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
+        case t: Defn.Var       => s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs.map(s(_)).getOrElse(s(kw("_"))))
+        case t: Defn.Type      => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparams, " ", kw("="), " ", t.body)
+        case t: Defn.Class     => s(w(t.mods, " "), kw("class"), " ", t.name, t.tparams, w(" ", t.ctor, t.ctor.mods.nonEmpty), templ(t.templ))
+        case t: Defn.Trait     => s(w(t.mods, " "), kw("trait"), " ", t.name, t.tparams, templ(t.templ))
+        case t: Defn.Object    => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
+        case t: Defn.Def       => s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
+        case t: Defn.Macro     => s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe, " ", kw("="), " ", kw("macro"), " ", t.body)
         case t: Pkg            =>
           if (options.isLazy && t.stats.isLazy) s(kw("package"), " ", t.ref, " { ... }")
           else if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
           else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
-        case t: Pkg.Object     => s(kw("package"), " ", a(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
-        case t: Ctor.Primary   => s(a(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
-        case t: Ctor.Secondary => s(a(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, if (t.body.is[Term.Block]) " " else " = ", t.body)
+        case t: Pkg.Object     => s(kw("package"), " ", w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
+        case t: Ctor.Primary   => s(w(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
+        case t: Ctor.Secondary => s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, if (t.body.is[Term.Block]) " " else " = ", t.body)
 
         // Template
         case t: Template =>
@@ -407,7 +409,7 @@ object TreeSyntax {
           if (isTemplateEmpty) s()
           else {
             val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
-            val pparents = a(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
+            val pparents = w(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
             val pbody = {
               if (options.isLazy && t.stats.getOrElse(Nil).isLazy) {
                 if (isSelfNonEmpty) s("{ ", t.self, " => ... }")
@@ -516,7 +518,7 @@ object TreeSyntax {
       }
       implicit def syntaxParamss[P <: Term.Param]: Syntax[Seq[Seq[P]]] = Syntax { paramss =>
         r(paramss.map(params => {
-          s("(", a("implicit ", r(params, ", "), params.exists(_.mods.exists(_.is[Mod.Implicit]))), ")")
+          s("(", w("implicit ", r(params, ", "), params.exists(_.mods.exists(_.is[Mod.Implicit]))), ")")
         }), "")
       }
       implicit def syntaxTparams: Syntax[Seq[Type.Param]] = Syntax { tparams =>

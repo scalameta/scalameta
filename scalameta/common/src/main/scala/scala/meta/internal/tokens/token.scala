@@ -80,18 +80,6 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         def pos: $PositionClass = $PositionModule.Range(this.input, this.start, this.end)
       """
       stats1 += q"""
-        def syntax(implicit dialect: $Dialect, options: $OptionsClass = $OptionsModule.Eager): $StringClass = Token.showSyntax[$Token](dialect, options).apply(this).toString
-      """
-      stats1 += q"""
-        def is[U](implicit classifier: $Classifier[$Token, U]): _root_.scala.Boolean = classifier.apply(this)
-      """
-      stats1 += q"""
-        def isNot[U](implicit classifier: $Classifier[$Token, U]): _root_.scala.Boolean = !classifier.apply(this)
-      """
-      stats1 += q"""
-        def structure: $StringClass = this.show[Structure]
-      """
-      stats1 += q"""
         final override def toString: $StringClass = _root_.scala.meta.internal.prettyprinters.TokenToString(this)
       """
 

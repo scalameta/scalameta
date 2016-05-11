@@ -40,8 +40,8 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.dialects
       |scala.meta.dialects.Dotty *
       |scala.meta.dialects.Metalevel *
-      |scala.meta.dialects.Metalevel.Normal *
       |scala.meta.dialects.Metalevel.Quoted *
+      |scala.meta.dialects.Metalevel.Zero *
       |scala.meta.dialects.Sbt0136 *
       |scala.meta.dialects.Sbt0137 *
       |scala.meta.dialects.Scala210 *
@@ -67,12 +67,12 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.parsers.Parsed.Error
       |scala.meta.parsers.Parsed.Success
       |scala.meta.prettyprinters
+      |scala.meta.prettyprinters.LowPriorityOptions.Lazy *
+      |scala.meta.prettyprinters.Options *
+      |scala.meta.prettyprinters.Options.Eager *
       |scala.meta.prettyprinters.Show *
       |scala.meta.prettyprinters.Structure
       |scala.meta.prettyprinters.Syntax
-      |scala.meta.prettyprinters.Syntax.LowPriorityOptions.Lazy *
-      |scala.meta.prettyprinters.Syntax.Options *
-      |scala.meta.prettyprinters.Syntax.Options.Eager *
       |scala.meta.quasiquotes
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
@@ -107,12 +107,12 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
 
     // println(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL))
     assert(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL) === """
-      |* (scala.meta.Dialect, scala.meta.Tree).syntax(implicit meta.prettyprinters.Syntax.Options): String
+      |* (scala.meta.Dialect, scala.meta.Tree).syntax(implicit scala.meta.prettyprinters.Options): String
       |* (scala.meta.Dialect, scala.meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.Dialect, scala.meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
-      |* (scala.meta.Dialect, scala.meta.tokens.Token).syntax(implicit meta.prettyprinters.Syntax.Options): String
+      |* (scala.meta.Dialect, scala.meta.tokens.Token).syntax(implicit scala.meta.prettyprinters.Options): String
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
-      |* (scala.meta.Dialect, scala.meta.tokens.Tokens).syntax(implicit meta.prettyprinters.Syntax.Options): String
+      |* (scala.meta.Dialect, scala.meta.tokens.Tokens).syntax(implicit scala.meta.prettyprinters.Options): String
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
