@@ -833,22 +833,22 @@ class TokenizerSuite extends FunSuite {
   test("parsed trees don't have BOF/EOF in their tokens") {
     val tree = "foo + bar".parse[Term].get
     assert(tree.pos.nonEmpty)
-    assert(tree.tokens.show[Structure] === "Tokens(foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9))")
+    assert(tree.tokens.show[Structure] === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
   }
 
   test("synthetic trees don't have BOF/EOF in their tokens") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
     assert(tree.pos.isEmpty)
-    assert(tree.tokens.show[Structure] === "Tokens(foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9))")
+    assert(tree.tokens.show[Structure] === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
   }
 
   test("Ident.value for normal") {
-    val Tokens(foo: Ident) = "foo".parse[Term].get.tokens
+    val Tokens(bof, foo: Ident, eof) = "foo".parse[Term].get.tokens
     assert(foo.value === "foo")
   }
 
   test("Ident.value for backquoted") {
-    val Tokens(foo: Ident) = "`foo`".parse[Term].get.tokens
+    val Tokens(bof, foo: Ident, eof) = "`foo`".parse[Term].get.tokens
     assert(foo.value === "foo")
     assert(foo.syntax === "`foo`")
   }

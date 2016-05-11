@@ -44,23 +44,25 @@ trait InternalTokens {
             return -1
           }
           def disambiguate(idx0: Int): Int = {
-            def badToken(idx: Int) = {
+            def rangeCheck(idx: Int) = {
+              0 <= idx && idx < this.length
+            }
+            def badToken(idx: Int): Boolean = {
               // These are tokens that are empty (i.e. of zero length)
               // and that can't be first/last tokens of an abstract syntax tree.
-              if (idx < 0 || idx >= this.length) failDoesntLineUp();
-              this(idx).is[BOF] || this(idx).is[EOF] || // NOTE: if BOF/EOF here changes, go and change ScalametaParser.parseRule
               this(idx).is[Interpolation.SpliceEnd] || this(idx).is[Xml.SpliceStart] || this(idx).is[Xml.SpliceEnd]
             }
             var idx = idx0
             if (badToken(idx)) {
               val step = if (start) +1 else -1
-              while (badToken(idx)) idx += step
+              while (rangeCheck(idx) && badToken(idx)) idx += step
+              if (!rangeCheck(idx)) idx -= step
             } else {
               val step = if (start) -1 else +1
-              while (!badToken(idx) && coord(idx) == offset) idx += step
+              while (rangeCheck(idx) && !badToken(idx) && coord(idx) == offset) idx += step
               idx -= step
             }
-            require(!badToken(idx) && debug(self, pos, idx0, idx))
+            if (badToken(idx)) failDoesntLineUp()
             idx
           }
           // Find a token that starts/ends at a given offset
@@ -79,8 +81,14 @@ trait InternalTokens {
           }
         }
         validateTokens()
-        val lo = find(start.offset, start = true)
-        val hi = find(end.offset, start = false)
+        var lo = find(start.offset, start = true)
+        var hi = find(end.offset, start = false)
+        // NOTE: need to cut out BOF/EOF if the position doesn't cover the entire range
+        val wasEmpty = lo > hi
+        def isEmpty = lo > hi
+        if (hi == this.length - 1 && start.offset != 0) hi -= 1
+        if (lo == 0 && end.offset != this(this.length - 1).end) lo += 1
+        if (!wasEmpty && isEmpty) failDoesntLineUp()
         validateResult(lo, hi)
         TokenStreamPosition(pos.input, lo, hi + 1)
       case _ =>
