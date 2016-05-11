@@ -47,9 +47,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // because we need to subsume all the trailing trivia
     val end = in.tokenPos
     accept[EOF]
-    // NOTE: we no longer include BOF and EOF in positions
-    // in order to be consistent with badToken in InternalTokens.slice
-    atPos(start + 1, end - 1)(t)
+    atPos(start, end)(t)
   }
 
   // Entry points for Parse[T]
