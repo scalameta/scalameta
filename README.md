@@ -8,12 +8,11 @@ We are striving for scala.meta to become a successor of scala.reflect, the curre
 
 ### Why scala.meta
 
-Based on our experiences with developing scala.tools.nsc and scala.reflect, we have designed scala.meta to have a comprehensive data model that supports all syntactic and semantic details of Scala. As a result, scala.meta has a unique architecture that allows it to implement functionality that is very hard or outright impossible to achieve with existing metaprogramming solutions. Check out [our ScalaDays 2015 presentation](http://scalamacros.org/paperstalks/2015-06-09-StateOfTheMetaSummer2015.pdf) for more details.
+Based on our experiences with developing scala.tools.nsc and scala.reflect, we have designed scala.meta to have a comprehensive data model that supports all syntactic and semantic details of Scala. As a result, scala.meta has a unique architecture that allows it to implement functionality that is very hard or outright impossible to achieve with existing metaprogramming solutions.
 
 ### How to use
 
-Even though scala.meta hasn't yet reached 1.0, there is a number of early adopters who have successfully used our project to solve real-life metaprogramming problems.
-Consult [https://github.com/scalameta/tutorial](https://github.com/scalameta/tutorial) to learn about fundamental concepts and principal use cases for scala.meta in a series of practical step-by-step guides.
+Even though scala.meta hasn't yet reached 1.0, there is a number of early adopters who have successfully used our project to solve real-life metaprogramming problems. We're happy to see that scala.meta is genuinely useful and are currently preparing detailed documentation to share its power with everyone.
 
 ### How to contribute
 
