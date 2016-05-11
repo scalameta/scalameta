@@ -8,6 +8,7 @@ Big thanks to everyone who helped turning scala.meta into reality!
   * Eugene Burmako ([@xeno-by](https://github.com/xeno-by))
   * Mathieu Demarne ([@mdemarne](https://github.com/mdemarne))
   * Martin Duhem ([@duhemm](https://github.com/duhemm))
+  * Johann Egger ([@johannegger](https://github.com/johannegger))
   * Ólafur Páll Geirsson ([@olafurpg](https://github.com/olafurpg))
   * Adrien Ghosn ([@aghosn](https://github.com/aghosn))
   * Zhivka Gucevska ([@zhi-g](https://github.com/zhi-g))
