@@ -24,6 +24,7 @@ object build extends Build {
   ) aggregate (
     common,
     dialects,
+    inline,
     inputs,
     parsers,
     quasiquotes,
@@ -53,6 +54,15 @@ object build extends Build {
     description := "Scala.meta's dialects",
     enableMacros
   ) dependsOn (common)
+
+  lazy val inline = Project(
+    id   = "inline",
+    base = file("scalameta/inline")
+  ) settings (
+    publishableSettings: _*
+  ) settings (
+    description := "Scala.meta's APIs for new-style (\"inline\") macros"
+  ) dependsOn ()
 
   lazy val inputs = Project(
     id   = "inputs",
@@ -134,7 +144,7 @@ object build extends Build {
     description := "Scala.meta's metaprogramming APIs"
   ) settings (
     exposePaths("scalameta", Test): _*
-  ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees)
+  ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline)
 
   lazy val sharedSettings = Defaults.defaultSettings ++ crossVersionSharedSources ++ Seq(
     scalaVersion := ScalaVersions.max,
