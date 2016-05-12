@@ -20,7 +20,8 @@ object build extends Build {
     packagedArtifacts := Map.empty,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject,
     aggregate in test := false,
-    test := (test in scalameta in Test).value
+    test := (test in scalameta in Test).value,
+    console := (console in scalameta in Compile).value
   ) aggregate (
     common,
     dialects,
@@ -136,7 +137,7 @@ object build extends Build {
     exposePaths("scalameta", Test): _*
   ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees)
 
-  lazy val sharedSettings = Defaults.defaultSettings ++ crossVersionSharedSources ++ Seq(
+  lazy val sharedSettings = crossVersionSharedSources ++ Seq(
     scalaVersion := ScalaVersions.max,
     crossScalaVersions := ScalaVersions,
     crossVersion := CrossVersion.binary,
