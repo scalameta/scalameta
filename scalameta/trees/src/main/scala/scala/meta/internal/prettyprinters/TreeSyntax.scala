@@ -547,9 +547,9 @@ object TreeSyntax {
       x.origin match {
         // NOTE: Options don't really matter,
         // because if we've parsed a tree, it's not gonna contain lazy seqs anyway.
-        // case Origin.Parsed(originalInput, originalDialect, pos) if dialect == originalDialect && options == Options.Eager =>
-        case Origin.Parsed(originalInput, originalDialect, pos) if dialect == originalDialect =>
-          s(new String(originalInput.chars, pos.start.offset, pos.end.offset - pos.start.offset))
+        // case Origin.Parsed(_, originalDialect, _) if dialect == originalDialect && options == Options.Eager =>
+        case Origin.Parsed(_, originalDialect, _) if dialect == originalDialect =>
+          s(new String(x.pos.input.chars, x.pos.start.offset, x.pos.end.offset - x.pos.start.offset))
         case _ =>
           syntaxInstances.syntaxTree[T].apply(x)
       }

@@ -12,7 +12,7 @@ import scala.meta.internal.tokens._
 
 // TODO: better API for the Tokens collection (#385)
 // TODO: better internal representation for tokens (#150)
-@data class Tokens(private val tokens: Token*) extends Seq[Token] with InternalTokens {
+@data class Tokens(private val tokens: Token*) extends Seq[Token] {
   def iterator: Iterator[Token] = tokens.iterator
   def apply(idx: Int): Token = tokens(idx)
   def length: Int = tokens.length

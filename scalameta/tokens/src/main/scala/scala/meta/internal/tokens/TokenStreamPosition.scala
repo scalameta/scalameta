@@ -10,4 +10,4 @@ import scala.meta.inputs._
 // Also `start` and `end` are String.substring-style,
 // i.e. `start` is inclusive and `end` is not.
 // Therefore TokenStreamPosition.end can point to the last token plus one.
-@data class TokenStreamPosition(input: Input, start: Int, end: Int)
+@data class TokenStreamPosition(start: Int, end: Int) extends Serializable
