@@ -15,7 +15,6 @@ class ReflectionSuite extends FunSuite {
   import TokenReflection._
   val tokens = symbolOf[scala.meta.tokens.Token].asRoot.allLeafs
 
-  // NOTE: If this test changes, go and change skip in InternalTokens.translatePosition to be consistent.
   test("freeform tokens") {
     // tokens.filter(_.isFreeform).map(_.prefix).foreach(println)
     assert(tokens.filter(_.isFreeform).map(_.prefix).mkString(EOL) === """

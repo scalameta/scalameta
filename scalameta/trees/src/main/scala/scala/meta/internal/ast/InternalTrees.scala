@@ -65,21 +65,25 @@ trait InternalTree {
   }
 
   def pos: Position = {
-    origin match { case Origin.Parsed(_, _, pos) => pos; case _ => Position.None }
+    origin match {
+      case Origin.Parsed(input, dialect, pos) =>
+        val tokens = dialect(input).tokenize.get
+        val startToken = tokens(pos.start)
+        val endToken = tokens(pos.end - 1)
+        Position.Range(input, startToken.start, endToken.end)
+      case _ =>
+        Position.None
+    }
   }
 
   def tokens(implicit dialect: Dialect): Tokens = {
-    if (pos.nonEmpty) {
-      if (pos.start != pos.end) {
-        val inputTokens = pos.input.tokenize.get
-        val TokenStreamPosition(_, start, end) = inputTokens.translatePosition(pos)
-        Tokens(inputTokens.slice(start, end): _*)
-      } else {
-        Tokens()
-      }
-    } else {
-      val virtualInput = VirtualInput({ implicit val eagerPrettyprinting = Options.Eager; this.syntax })
-      dialect(virtualInput).tokenize.get
+    origin match {
+      case Origin.Parsed(input, dialect, pos) =>
+        val tokens = dialect(input).tokenize.get
+        Tokens(tokens.slice(pos.start, pos.end): _*)
+      case _ =>
+        val virtualInput = VirtualInput({ implicit val eagerPrettyprinting = Options.Eager; this.syntax })
+        dialect(virtualInput).tokenize.get
     }
   }
 

@@ -369,10 +369,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def endTokenPos = startTokenPos
   }
   case class TreePos(tree: Tree) extends Pos {
-    if (tree.pos.isEmpty) sys.error("internal error: unpositioned prototype ${tree.syntax}: ${tree.structure}")
-    private val TokenStreamPosition(_, fromTokenPos, untilTokenPos) = scannerTokens.translatePosition(tree.pos)
-    def startTokenPos = fromTokenPos
-    def endTokenPos = untilTokenPos - 1
+    val (startTokenPos, endTokenPos) = tree.origin match {
+      case Origin.Parsed(_, _, pos) => (pos.start, pos.end - 1)
+      case _ => sys.error("internal error: unpositioned prototype ${tree.syntax}: ${tree.structure}")
+    }
   }
   case object AutoPos extends Pos {
     def startTokenPos = in.tokenPos
@@ -390,8 +390,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val result = body
     var endTokenPos = end.endTokenPos
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    val pos = Position.Range(input, scannerTokens(startTokenPos).start, scannerTokens(endTokenPos).end)
-    val tokens = scannerTokens.slice(startTokenPos, endTokenPos + 1)
+    val pos = TokenStreamPosition(startTokenPos, endTokenPos + 1)
     result.withOrigin(Origin.Parsed(input, dialect, pos)).asInstanceOf[T]
   }
   def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
