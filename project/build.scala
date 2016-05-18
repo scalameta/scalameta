@@ -7,7 +7,7 @@ import UnidocKeys._
 
 object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
-  lazy val LibraryVersion = "0.1.0-SNAPSHOT"
+  lazy val LibraryVersion = "1.0.0-SNAPSHOT"
 
   lazy val root = Project(
     id = "root",
