@@ -539,6 +539,269 @@ object TreeSyntax {
         case importees                     => s("{ ", r(importees, ", "), " }")
       }
     }
+
+    def printTransformedTree[T <: Tree](orig: T, transformed: T): Show.Result = {
+      // This method aims to pretty-print transformed tree by retaining every
+      // bit of formatting specified from the parsed tree it was obtained from.
+      // *This is a prototype, and is not perfect by any means.*
+
+      // In order to achieve this, we compute tree-diffs and print the
+      // diffs as they are, and print the modified children of the tree
+      // as required. 
+
+      // The underlying approach followed here is as follows:
+      // 1) Foreach child of my original tree, print upto my original child.
+      // 2) Print the new child.
+      // 3) Repeat steps 1) and 2) until there are no children.
+
+      // This is trivial to implement for trees which have an Origin.Parsed.
+      // i.e. since "parsed" trees have positions set sequentially starting
+      // from some initial offset (mostly 0).
+
+      // For trees which have an Origin.Transformed, this isn't that staightforward.
+      // Reason being we're introducing a new tree with positions starting from the
+      // new offset (mostly 0) into my original tree and hence the positions aren't
+      // sequential as we had before, but this implementation covers most of the
+      // language features.
+      val sb = new StringBuilder
+      var pos = 0
+      var seqFlag = true
+      var leafFlag = true
+
+      def updatePos(t: Tree): Unit = t.origin match {
+        case Origin.Transformed(from, to) => updatePos(from)
+        case _ => pos = t.pos.start.offset
+      }
+
+      updatePos(orig)
+
+      def updateTree(t: Tree): Tree = t.origin match {
+        case Origin.Transformed(from, to) => updateTree(from)
+        case _ => t
+      }
+
+      def appendTillChar(sb: StringBuilder, charList: Array[Char], mChar: Char) = {
+        if (pos < charList.length) {
+          while (charList(pos) != mChar) { sb.append(charList(pos)); pos += 1 }
+          sb.append(charList(pos))
+        }
+      }
+
+      def appendResultTree(sb: StringBuilder, t1: Tree, t2: Tree): Unit = {
+        val x = updateTree(t1)
+
+        if (x.pos.start.offset - pos >= 0) sb.appendAll(x.pos.input.chars, pos, x.pos.start.offset - pos)
+        else sb.appendAll(x.pos.input.chars, 0, x.pos.start.offset)
+
+        t2.origin match {
+          case Origin.Transformed(from, to) => sb.append(to)
+          case _ => sb.append(t2)            
+        }
+
+        pos = x.pos.end.offset
+      }
+
+      def appendResultSeqTree(sb: StringBuilder, t1: Seq[Any], t2: Seq[Any]): Unit = {
+        if (t1.nonEmpty) {
+          for ((x0, x1) <- (t1 zip t2)) {
+            (x0, x1) match {
+              case (y0: Tree, y1: Tree) =>
+                val y0Chars = updateTree(y0).pos.input.chars
+                val y0Start = updateTree(y0).pos.start.offset
+                val y0End = updateTree(y0).pos.end.offset
+
+                // this prints upto the start of the tree for already transformed trees exactly once
+                // (i.e. for trees having an Origin.Transformed)
+                if (seqFlag && (y0Chars != updateTree(orig).pos.input.chars) && orig.pos.isEmpty) {
+                  (y0, y0.parent) match {
+                    case (_, Some(_: Term.Block)) =>
+                      sb.appendAll(y0Chars, 0, y0Start)
+                      pos += (y0Start - pos)
+                    case (_, Some(_: Defn.Val)) =>
+                      pos += y0Start
+                    case (_, Some(_: Defn.Var)) =>
+                      pos += y0Start
+                    case _ =>
+                  }
+                  seqFlag = false
+                }
+
+                appendResultTree(sb, y0, y1)
+
+                // The remaining section of this branch handles printing the remainder of
+                // trees for already transformed trees.
+
+                // If there's a bug in the result, its most likely here.
+                // For each failing node, take a look at the structure of the AST, and
+                // modify what gets appended accordingly. Unfortunately, this is the
+                // best I could think of, a more generic solution seems almost impossible
+                // without re-parsing the original tree.
+                (y0.parent, t1.last) match {
+                  case (Some(_: Term.Block), (x: Tree)) =>
+                    if ((x eq y0) && orig.pos.isEmpty) {
+                      val xChars = updateTree(x).pos.input.chars
+                      pos = updateTree(x).pos.end.offset
+                      x match {
+                        case (t: Defn.Class) => sb.appendAll(xChars, pos + 1, xChars.length - (pos + 1))
+                        case _ => 
+                          if (updateTree(x).parent.get.pos.isEmpty) {
+                            sb.appendAll(xChars, pos, xChars.length - pos)
+                            pos = xChars.length
+                          } else {
+                            sb.appendAll(xChars, pos, updateTree(x.parent.get).pos.end.offset - pos)
+                            pos = updateTree(x.parent.get).pos.end.offset
+                          }
+                      }
+                    }
+                  case (_, (x: Tree)) =>
+                    if ((x eq y0) && orig.pos.isEmpty) {
+                      val xChars = updateTree(x).pos.input.chars
+                      pos = updateTree(x).pos.end.offset
+                      x match {
+                        case (t: Term.Param) =>
+                        case (t: Type.Param) => 
+                        case (t: Pat.Var.Term) =>
+                        case (t: Term.Name) =>
+                          x.parent match {
+                            case Some(_: Term.ApplyInfix) =>
+                              if (xChars(0) == '(') sb.appendAll(xChars, pos, xChars.length - pos)
+                              else {
+                                x.parent.get.parent match {
+                                  case Some(_: Term.ApplyInfix) =>                                   
+                                    if (updateTree(x.parent.get.parent.get).pos.input.chars(0) != '{') sb.appendAll(xChars, pos, xChars.length - pos)
+                                  case _ =>
+                                }
+                              }
+                            case Some(_: Term.Tuple) => sb.appendAll(xChars, pos, xChars.length - pos)
+                            case Some(_: Term.Apply) => appendTillChar(sb, xChars, ')')
+                            case _ =>
+                          }
+                        case (t: Term.ApplyInfix) => sb.appendAll(xChars, pos, y0End - pos + 1)
+                        case Case(_, _, expr) =>
+                          expr match {
+                            case (t: Term.Block) =>
+                            case _ => if (xChars(0) != '{') sb.appendAll(xChars, pos, xChars.length - pos)
+                          }
+                        case (t: Type.Name) =>
+                          x.parent match {
+                            case Some(_: Term.Param) =>
+                              x.parent.get.parent match {
+                                case Some(_: Ctor.Primary) =>
+                                case Some(_: Defn.Def) => 
+                                case _ => appendTillChar(sb, xChars, ')')
+                              }
+                            case _ =>
+                          }
+                        case (t: Type.Tuple) => appendTillChar(sb, xChars, ')')
+                        case (t: Lit) =>
+                          x.parent match {
+                            case Some(_: Term.Apply) => appendTillChar(sb, xChars, ')')
+                            case _ => 
+                              sb.appendAll(xChars, pos, y0End - pos)
+                              if (xChars.last == ')') sb.append(')')
+                          }
+                        case (t: Term.Select) => if (sb.startsWith("(")) sb.appendAll(xChars, pos, y0End - pos + 1)
+                        case (t: Defn.Val) =>
+                          x.parent match {
+                            case Some(_: Template) => sb.appendAll(xChars, pos, updateTree(y0.parent.get).pos.end.offset - pos)
+                            case _ => sb.appendAll(xChars, pos, xChars.length - pos)
+                          }
+                        case (t: Defn.Var) =>
+                          x.parent match {
+                            case Some(_: Template) => sb.appendAll(xChars, pos, updateTree(y0.parent.get).pos.end.offset - pos)
+                            case _ => sb.appendAll(xChars, pos, xChars.length - pos)
+                          }
+                        case (t: Defn.Def) =>
+                          x.parent match {
+                            case Some(_: Template) => sb.appendAll(xChars, pos, updateTree(y0.parent.get).pos.end.offset - pos)
+                            case _ => sb.appendAll(xChars, pos, xChars.length - pos)
+                          }
+                        case (t: Pat.Typed) => appendTillChar(sb, xChars, ')')
+                        case _ => if (xChars(0) != '{') sb.appendAll(xChars, pos, xChars.length - pos)
+                      }
+                    }
+                  case _ => 
+                }
+              case (y0: Seq[_], y1: Seq[_]) => appendResultSeqTree(sb, y0, y1)
+              case (y0: Option[_], y1: Option[_]) => appendResultSeqTree(sb, y0.toList, y1.toList)
+              case _ =>
+            }
+          }
+        }
+      }
+      
+      def appendRemainder(sb: StringBuilder, t: Tree): Unit = {
+        if (t.pos.nonEmpty && (t.pos.end.offset >= pos)) sb.appendAll(t.pos.input.chars, pos, t.pos.end.offset - pos)
+        else {
+          val x = updateTree(t)
+          x match {
+            case (t: Case) => sb.appendAll(x.pos.input.chars, pos, x.pos.end.offset - pos)
+            case _ =>
+          }
+        }
+      }
+
+      val l1 = orig.productIterator.toList
+      val l2 = transformed.productIterator.toList  
+
+      (l1 zip l2) foreach {
+        /* put weird cases here first */
+        case (Lit(()), Lit(())) =>
+        case (Ctor.Primary(mods0, _, paramss0), Ctor.Primary(mods1, _, paramss1)) =>
+          appendResultSeqTree(sb, mods0, mods1)
+          appendResultSeqTree(sb, paramss0, paramss1)
+        case (x: Tree, y: Tree) =>
+          val xChars = updateTree(x).pos.input.chars
+          if (leafFlag && orig.pos.isEmpty) {
+            (x, x.parent) match {
+              case (_, Some(_: Defn.Def)) =>
+                // only if I replace with a Defn.Def node.
+                if ((xChars.take(3).foldLeft("")(_ + _) == "def") || xChars(0) == '/') {
+                  if ((pos < xChars.length) && (xChars(pos) != 'd')) sb.appendAll(xChars, 0, updateTree(x).pos.start.offset)
+                  else if (updateTree(x).pos.start.offset >= pos) sb.appendAll(xChars, pos, updateTree(x).pos.start.offset - pos)
+                  else sb.appendAll(xChars, 0, updateTree(x).pos.start.offset)
+                  pos += (updateTree(x).pos.start.offset - pos)
+                }
+              case (_, Some(_: Term.Throw)) =>
+                sb.appendAll(xChars, 0, updateTree(x).pos.start.offset)
+                pos += (updateTree(x).pos.start.offset - pos)
+              case (_, Some(_: Term.Return)) =>
+                sb.appendAll(xChars, 0, updateTree(x).pos.start.offset)
+                pos += (updateTree(x).pos.start.offset - pos)
+              case _ => 
+            }            
+            leafFlag = false
+          }
+
+          appendResultTree(sb, x, y)
+
+          // append remainder for multiply transformed trees.
+          // This is for plain trees. (i.e. those which aren't a part of a Seq/Option)
+          if (orig.pos.isEmpty) {
+            (x, x.parent) match {
+              case ((t: Term.Name), Some(_: Term.Select)) => if (xChars(0) != '{' && xChars(0) != '(') appendTillChar(sb, xChars, ')')
+              case (_, Some(_: Term.Throw)) => appendTillChar(sb, xChars, ')')              
+              case (_, Some(_: Term.Return)) => appendTillChar(sb, xChars, ')')
+              case ((t: Term.Apply), _) => if (!(sb.endsWith(")"))) appendTillChar(sb, xChars, ')')
+              case ((t: Pat.Typed), _) => appendTillChar(sb, xChars, ')')
+              case _ =>
+            }
+          }
+
+          l1.last match {
+            case (lastNode: Tree) => if ((x eq lastNode) && (xChars.last == '/') && orig.pos.isEmpty) sb.appendAll(xChars, pos, xChars.length - pos)
+            case _ =>
+          }
+        case (x: Seq[_], y: Seq[_]) =>
+          appendResultSeqTree(sb, x, y)
+        case (x: Option[_], y: Option[_]) =>
+          appendResultSeqTree(sb, x.toList, y.toList)
+        case _ => 
+      }
+      
+      appendRemainder(sb, orig)
+      s(sb.toString)
+    }
     // NOTE: This is the current state of the art of smart prettyprinting.
     // If we prettyprint a tree that's just been parsed with the same dialect,
     // then we retain formatting. Otherwise, we don't, even in the tiniest.
@@ -550,6 +813,8 @@ object TreeSyntax {
         // case Origin.Parsed(_, originalDialect, _) if dialect == originalDialect && options == Options.Eager =>
         case Origin.Parsed(_, originalDialect, _) if dialect == originalDialect =>
           s(new String(x.pos.input.chars, x.pos.start.offset, x.pos.end.offset - x.pos.start.offset))
+        case Origin.Transformed(from, to) =>
+          printTransformedTree(from, x)
         case _ =>
           syntaxInstances.syntaxTree[T].apply(x)
       }

@@ -411,13 +411,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("smart case printing - oneliner in multiple lines") {
     val Term.Match(_, case1 :: case2 :: Nil) = templStat("??? match { case x => x; case List(x, y) => println(x); println(y) }")
     assert(case1.toString === """
-      |case x =>
-      |  x
+      |case x => x;
     """.trim.stripMargin)
     assert(case2.toString === """
-      |case List(x, y) =>
-      |  println(x)
-      |  println(y)
+      |case List(x, y) => println(x); println(y)
     """.trim.stripMargin)
   }
 
