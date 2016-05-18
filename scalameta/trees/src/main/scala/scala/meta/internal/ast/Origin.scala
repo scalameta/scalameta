@@ -10,4 +10,5 @@ import scala.meta.inputs._
 object Origin {
   @adt.none object None extends Origin
   @adt.leaf class Parsed(input: Input, dialect: Dialect, pos: Position) extends Origin
+  @adt.leaf class Transformed(tree: Tree) extends Origin
 }
