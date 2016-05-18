@@ -26,8 +26,12 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           val $to = apply($from)
           $to match {
             case $to: ${hygienicRef(tpe.typeSymbol)} =>
-              if ($from ne $to) same = false
-              $to
+              if ($from ne $to) {
+                same = false
+                $to.withOrigin(_root_.scala.meta.internal.ast.Origin.Transformed($from))
+              } else {
+                $to
+              }
             case $to =>
               this.fail(${f.owner.prefix + "." + f.name}, $from, $to)
           }
