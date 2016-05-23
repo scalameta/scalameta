@@ -7,7 +7,6 @@ build:
   commands:
     - git log | head -n 20
     - host `curl -s http://httpbin.org/ip | jq -r '.origin'` || true ;
-    - sbt ++$SCALA_VERSION clean test:compile ;
     - sbt ++$SCALA_VERSION test
     - if [ -z "$CI_PULL_REQUEST" ] ; then
         sbt ++$SCALA_VERSION publish ;
