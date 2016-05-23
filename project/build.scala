@@ -176,7 +176,6 @@ object build extends Build {
       } else None
     },
     publishMavenStyle := true,
-    publishOnlyWhenOnMaster := publishOnlyWhenOnMasterImpl.value,
     publishTo <<= version { v: String =>
       val nexus = "https://oss.sonatype.org/"
       if (v.trim.endsWith("SNAPSHOT"))
@@ -222,6 +221,9 @@ object build extends Build {
     publishArtifact in Compile := true,
     publishArtifact in Test := false,
     credentials ++= {
+      def mkCredentials(username: String, password: String) = {
+        Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)
+      }
       val mavenSettingsFile = System.getProperty("maven.settings.file")
       if (mavenSettingsFile != null) {
         println("Loading Sonatype credentials from " + mavenSettingsFile)
@@ -229,12 +231,7 @@ object build extends Build {
           import scala.xml._
           val settings = XML.loadFile(mavenSettingsFile)
           def readServerConfig(key: String) = (settings \\ "settings" \\ "servers" \\ "server" \\ key).head.text
-          Some(Credentials(
-            "Sonatype Nexus Repository Manager",
-            "oss.sonatype.org",
-            readServerConfig("username"),
-            readServerConfig("password")
-          ))
+          Some(mkCredentials(readServerConfig("username"), readServerConfig("password")))
         } catch {
           case ex: Exception =>
             println("Failed to load Maven settings from " + mavenSettingsFile + ": " + ex)
@@ -242,31 +239,15 @@ object build extends Build {
         }
       } else {
         for {
-          realm <- sys.env.get("SCALAMETA_MAVEN_REALM")
-          domain <- sys.env.get("SCALAMETA_MAVEN_DOMAIN")
-          user <- sys.env.get("SCALAMETA_MAVEN_USER")
-          password <- sys.env.get("SCALAMETA_MAVEN_PASSWORD")
+          username <- sys.env.get("SONATYPE_USERNAME")
+          password <- sys.env.get("SONATYPE_PASSWORD")
         } yield {
           println("Loading Sonatype credentials from environment variables")
-          Credentials(realm, domain, user, password)
+          mkCredentials(username, password)
         }
       }
     }.toList
   )
-
-  // http://stackoverflow.com/questions/20665007/how-to-publish-only-when-on-master-branch-under-travis-and-sbt-0-13
-  lazy val publishOnlyWhenOnMaster = taskKey[Unit]("publish task for Travis (don't publish when building pull requests, only publish when the build is triggered by merge into master)")
-  def publishOnlyWhenOnMasterImpl = Def.taskDyn {
-    import scala.util.Try
-    val travis   = Try(sys.env("TRAVIS")).getOrElse("false") == "true"
-    val pr       = Try(sys.env("TRAVIS_PULL_REQUEST")).getOrElse("false") != "false"
-    val branch   = Try(sys.env("TRAVIS_BRANCH")).getOrElse("??")
-    val snapshot = version.value.trim.endsWith("SNAPSHOT")
-    (travis, pr, branch, snapshot) match {
-      case (true, false, "master", true) => publish
-      case _                             => Def.task ()
-    }
-  }
 
   lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
     test in assembly := {},
