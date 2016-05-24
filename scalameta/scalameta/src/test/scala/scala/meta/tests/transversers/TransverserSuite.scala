@@ -6,6 +6,7 @@ import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.internal.semantic._
 import scala.meta.internal.prettyprinters._
+import scala.meta.internal.ast.Origin
 
 class TransverserSuite extends FunSuite {
   test("Traverser Ok") {
@@ -150,4 +151,15 @@ class TransverserSuite extends FunSuite {
     val result1 = tree0.collect { case Term.Name(s) => s }
     assert(result1.toString == "List(x, +, y)")
   }
+
+  test("origin preserving transforms") {
+    val tree0 = "{ /* hello */ def foo(bar: Int) = bar }".parse[Term].get
+    val result1 = tree0 transform { case q"bar" => q"baz" }
+    assert(tree0.pos eq result1.pos)
+    result1.origin match {
+      case Origin.Transformed(tree) => assert(tree.origin eq tree0.origin)
+      case _ => assert(false)
+
+    }
+  }   
 }

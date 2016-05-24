@@ -18,6 +18,8 @@ import org.scalameta.collections._
 import org.scalameta.invariants._
 import org.scalameta.{unreachable, debug}
 import scala.compat.Platform.EOL
+import scala.meta.prettyprinters.Syntax.Options.Lazy
+import scala.meta.dialects.{Scala211}
 
 object TreeSyntax {
   def apply[T <: Tree](dialect: Dialect, options: Options): Syntax[T] = {
@@ -548,6 +550,8 @@ object TreeSyntax {
         // case Origin.Parsed(originalInput, originalDialect, pos) if dialect == originalDialect && options == Options.Eager =>
         case Origin.Parsed(originalInput, originalDialect, pos) if dialect == originalDialect =>
           s(new String(originalInput.chars, pos.start.offset, pos.end.offset - pos.start.offset))
+        case Origin.Transformed(tree) =>
+          s("Trying to print transformed tree (???)")
         case _ =>
           syntaxInstances.syntaxTree[T].apply(x)
       }
