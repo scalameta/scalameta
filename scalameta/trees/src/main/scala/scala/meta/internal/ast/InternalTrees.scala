@@ -66,7 +66,10 @@ trait InternalTree {
   }
 
   def pos: Position = {
-    origin match { case Origin.Parsed(_, _, pos) => pos; case _ => Position.None }
+    origin match {
+      case Origin.Parsed(_, _, pos) => pos
+      case _ => Position.None
+    }
   }
 
   def tokens(implicit dialect: Dialect): Tokens = {

@@ -152,12 +152,14 @@ class TransverserSuite extends FunSuite {
     assert(result1.toString == "List(x, +, y)")
   }
 
-  test("origin preserving transforms") {
+  test("Origin preserving transforms") {
     val tree0 = "{ /* hello */ def foo(bar: Int) = bar }".parse[Term].get
     val result1 = tree0 transform { case q"bar" => q"baz" }
-    assert(tree0.pos eq result1.pos)
     result1.origin match {
-      case Origin.Transformed(tree) => assert(tree.origin eq tree0.origin)
+      case Origin.Transformed(tree) =>
+        assert(tree0 eq tree)
+        assert(tree.origin eq tree0.origin)
+        assert(tree0.children.map(_.origin) == tree.children.map(_.origin))
       case _ => assert(false)
 
     }

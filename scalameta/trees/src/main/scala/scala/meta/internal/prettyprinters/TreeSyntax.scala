@@ -549,9 +549,7 @@ object TreeSyntax {
         // because if we've parsed a tree, it's not gonna contain lazy seqs anyway.
         // case Origin.Parsed(originalInput, originalDialect, pos) if dialect == originalDialect && options == Options.Eager =>
         case Origin.Parsed(originalInput, originalDialect, pos) if dialect == originalDialect =>
-          s(new String(originalInput.chars, pos.start.offset, pos.end.offset - pos.start.offset))
-        case Origin.Transformed(tree) =>
-          s("Trying to print transformed tree (???)")
+          s(new String(originalInput.chars, pos.start.offset, pos.end.offset - pos.start.offset))        
         case _ =>
           syntaxInstances.syntaxTree[T].apply(x)
       }
