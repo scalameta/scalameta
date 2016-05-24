@@ -1,0 +1,17 @@
+build:
+  image: ensime/ensime:v1.x-cache
+  pull: true
+  environment:
+    - SONATYPE_USERNAME=$$SONATYPE_USERNAME
+    - SONATYPE_PASSWORD=$$SONATYPE_PASSWORD
+  commands:
+    - git log | head -n 20
+    - host `curl -s http://httpbin.org/ip | jq -r '.origin'` || true ;
+    - sbt ++$SCALA_VERSION test
+    - if [ -z "$CI_PULL_REQUEST" ] ; then
+        sbt ++$SCALA_VERSION publish ;
+      fi
+
+matrix:
+  SCALA_VERSION:
+    - 2.11.8
