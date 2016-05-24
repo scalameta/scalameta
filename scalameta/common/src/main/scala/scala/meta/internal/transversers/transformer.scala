@@ -21,22 +21,24 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
       def treeTransformer(input: Tree, tpe: Type): Tree = {
         val from = c.freshName(TermName("from"))
         val to = c.freshName(TermName("to"))
+        
         q"""
           val $from = $input
           val $to = apply($from)
           $to match {
-            case $to: ${hygienicRef(tpe.typeSymbol)} =>
-              if ($from ne $to) {
-                same = false
-                $to.withOrigin(_root_.scala.meta.internal.ast.Origin.Transformed($from))
-              } else {
-                $to
-              }
-            case $to =>
-              this.fail(${f.owner.prefix + "." + f.name}, $from, $to)
+           case $to: ${hygienicRef(tpe.typeSymbol)} =>
+             if ($from ne $to) {
+               same = false
+               $to.withOrigin(_root_.scala.meta.internal.ast.Origin.Transformed($from))
+             } else {
+               $to
+             }
+           case $to =>
+             this.fail(${f.owner.prefix + "." + f.name}, $from, $to)
           }
         """
       }
+
       def optionTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
         val fromopt = c.freshName(TermName("fromopt"))
         val from = c.freshName(TermName("from"))
@@ -86,11 +88,12 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
       }
       q"val ${TermName(f.name + "1")} = $rhs"
     })
+    
     q"""
       var same = true
       ..$transformedFields
       if (same) tree
-      else $constructor(..${transformedFields.map(_.name)})
+      else $constructor(..${transformedFields.map(_.name)}).withOrigin(_root_.scala.meta.internal.ast.Origin.Transformed(tree))
     """
   }
 
