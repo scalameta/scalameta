@@ -248,18 +248,18 @@ object TreeSyntax {
         case t: Term.Tuple           => m(SimpleExpr1, s("(", r(t.elements, ", "), ")"))
         case t: Term.Block           =>
           import Term.{Block, Function}
-          def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
+          def pstats(s: Seq[Stat]) = r(s, "")
           t match {
             case Block(Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.is[Mod.Implicit]) =>
-              m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
+              m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), " }"))
             case Block(Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, Block(stats)) :: Nil) =>
-              m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
+              m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), " }"))
             case Block(Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, Block(stats)) :: Nil) =>
-              m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
+              m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), " }"))
             case Block(Function(params, Block(stats)) :: Nil) =>
-              m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
+              m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), " }"))
             case _ =>
-              m(SimpleExpr, if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}")))
+              m(SimpleExpr, if (t.stats.isEmpty) s("{}") else s("{ ", pstats(t.stats), " }"))
           }
         case t: Term.If              => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
         case t: Term.Match           => m(Expr1, s(p(PostfixExpr, t.scrut), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}")))
@@ -549,7 +549,7 @@ object TreeSyntax {
         // because if we've parsed a tree, it's not gonna contain lazy seqs anyway.
         // case Origin.Parsed(originalInput, originalDialect, pos) if dialect == originalDialect && options == Options.Eager =>
         case Origin.Parsed(originalInput, originalDialect, pos) if dialect == originalDialect =>
-          s(new String(originalInput.chars, pos.start.offset, pos.end.offset - pos.start.offset))        
+          s(new String(originalInput.chars, pos.start.offset, pos.end.offset - pos.start.offset))
         case _ =>
           syntaxInstances.syntaxTree[T].apply(x)
       }
