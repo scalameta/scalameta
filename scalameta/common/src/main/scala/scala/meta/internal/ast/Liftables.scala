@@ -99,14 +99,27 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
         q"_root_.scala.Predef.implicitly[c.universe.Liftable[$tpe]].apply($value)"
       }
       q"""
+        object ApplyToTripleDots {
+          def unapply(tree: _root_.scala.meta.Tree): Option[(_root_.scala.meta.Term, _root_.scala.meta.Term.Arg.Quasi)] = tree match {
+            case _root_.scala.meta.Term.Apply(fn, _root_.scala.collection.immutable.Seq(arg: _root_.scala.meta.Term.Arg.Quasi))
+            if arg.rank == 2 => _root_.scala.Some((fn, arg))
+            case _ => _root_.scala.None
+          }
+        }
         $localName match {
-          case _root_.scala.meta.Term.Apply(fn, _root_.scala.collection.immutable.Seq(arg: _root_.scala.meta.Term.Arg.Quasi))
-          if arg.rank == 2 =>
+          case ApplyToTripleDots(fn, tripleQuasi) =>
+            def checkNoTripleDots(fn: _root_.scala.meta.Term): Unit = fn match {
+              case ApplyToTripleDots(fn, previousTripleQuasi) => c.abort(tripleQuasi.pos, _root_.scala.meta.internal.parsers.Messages.QuasiquoteAdjacentEllipsesInPattern(tripleQuasi.rank))
+              case _root_.scala.meta.Term.Apply(fn, _) => checkNoTripleDots(fn)
+              case _ => // do nothing
+            }
+            checkNoTripleDots(fn)
+
             c.universe.Apply(
               ${liftPath("scala.meta.internal.ast.Syntactic.Term.Apply")},
               _root_.scala.collection.immutable.List(
                 ${liftField(q"fn", tq"_root_.scala.meta.Term")},
-                ${liftField(q"Seq(Seq(arg))", tq"Seq[Seq[_root_.scala.meta.Term.Arg.Quasi]]")}))
+                ${liftField(q"Seq(Seq(tripleQuasi))", tq"Seq[Seq[_root_.scala.meta.Term.Arg.Quasi]]")}))
           case _ =>
             $body
         }

@@ -738,4 +738,41 @@ class ErrorSuite extends FunSuite {
       |                   ^
     """.trim.stripMargin)
   }
+
+  test("...$ inside ...$ (1)") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      ??? match {
+        case q"$_(...$argss)(...$_)" =>
+        case q"$_(...$argss)(foo)(...$_)" =>
+      }
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |Note that you can extract a sequence into an unquote when pattern matching,
+      |it just cannot follow another sequence either directly or indirectly.
+      |        case q"$_(...$argss)(...$_)" =>
+      |                             ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ inside ...$ (2)") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      ??? match {
+        case q"$_(...$argss)(foo)(...$_)" =>
+      }
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |Note that you can extract a sequence into an unquote when pattern matching,
+      |it just cannot follow another sequence either directly or indirectly.
+      |        case q"$_(...$argss)(foo)(...$_)" =>
+      |                                  ^
+    """.trim.stripMargin)
+  }
 }

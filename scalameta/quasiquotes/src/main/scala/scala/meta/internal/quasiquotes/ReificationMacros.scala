@@ -23,6 +23,7 @@ import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.tokens._
 import scala.compat.Platform.EOL
@@ -246,14 +247,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             } else {
               require(prefix.isEmpty && debug(trees, acc, prefix))
               if (mode.isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
-              else {
-                val hint = {
-                  "Note that you can extract a sequence into an unquote when pattern matching," + EOL+
-                  "it just cannot follow another sequence either directly or indirectly."
-                }
-                val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (quasi.rank + 1) + "$"}$EOL required: ${"$"}$EOL$hint"
-                c.abort(quasi.pos, errorMessage)
-              }
+              else c.abort(quasi.pos, Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
             }
           case other +: rest =>
             if (acc.isEmpty) loop(rest, acc, prefix :+ other)

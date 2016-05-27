@@ -638,10 +638,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case ellipsis: Ellipsis =>
         if (dialect.allowEllipses) {
           if (ellipsis.rank != rank) {
-            val found = "." * (ellipsis.rank + 1) + "$"
-            val required = 0.to(rank + 1).filter(_ != 1).map(i => "." * i + "$").mkString(" or ")
-            val errorMessage = s"rank mismatch when unquoting;$EOL found   : $found$EOL required: $required"
-            syntaxError(errorMessage, at = ellipsis)
+            syntaxError(Messages.QuasiquoteRankMismatch(ellipsis.rank, rank), at = ellipsis)
           } else {
             next()
             extraSkip
