@@ -128,8 +128,8 @@ class ErrorSuite extends FunSuite {
       q"...$xss"
     """) === """
       |<macro>:5: rank mismatch when unquoting;
-      | found   : ...
-      | required: ..
+      | found   : ...$
+      | required: $ or ..$
       |      q"...$xss"
       |        ^
     """.trim.stripMargin)
@@ -178,8 +178,8 @@ class ErrorSuite extends FunSuite {
       }
     """) === """
       |<macro>:6: rank mismatch when unquoting;
-      | found   : ..
-      | required: no dots
+      | found   : ..$
+      | required: $
       |Note that you can extract a sequence into an unquote when pattern matching,
       |it just cannot follow another sequence either directly or indirectly.
       |        case q"$_($x, ..$ys, $z, ..$ts)" =>
@@ -687,8 +687,8 @@ class ErrorSuite extends FunSuite {
       q"foo(x, ...$xss)"
     """) === """
       |<macro>:5: rank mismatch when unquoting;
-      | found   : ...
-      | required: ..
+      | found   : ...$
+      | required: $ or ..$
       |      q"foo(x, ...$xss)"
       |               ^
     """.trim.stripMargin)
@@ -703,8 +703,8 @@ class ErrorSuite extends FunSuite {
       q"foo($x, ...$xss)"
     """) === """
       |<macro>:6: rank mismatch when unquoting;
-      | found   : ...
-      | required: ..
+      | found   : ...$
+      | required: $ or ..$
       |      q"foo($x, ...$xss)"
       |                ^
     """.trim.stripMargin)
@@ -719,8 +719,8 @@ class ErrorSuite extends FunSuite {
       q"foo(..$xs, ...$xss)"
     """) === """
       |<macro>:6: rank mismatch when unquoting;
-      | found   : ...
-      | required: ..
+      | found   : ...$
+      | required: $ or ..$
       |      q"foo(..$xs, ...$xss)"
       |                   ^
     """.trim.stripMargin)

@@ -251,7 +251,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                   "Note that you can extract a sequence into an unquote when pattern matching," + EOL+
                   "it just cannot follow another sequence either directly or indirectly."
                 }
-                val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (quasi.rank + 1)}$EOL required: no dots$EOL$hint"
+                val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (quasi.rank + 1) + "$"}$EOL required: ${"$"}$EOL$hint"
                 c.abort(quasi.pos, errorMessage)
               }
             }
