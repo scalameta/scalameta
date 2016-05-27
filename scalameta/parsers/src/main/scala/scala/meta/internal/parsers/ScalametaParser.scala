@@ -1789,7 +1789,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
       val UnfinishedInfix(lhsStart, lhses, lhsEnd, op, targs) = unf
       val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses)) // `a + (b, c) * d` leads to creation of a tuple!
-      atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, rhs))
+      atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, checkNoTripleDots(rhs)))
     }
   }
 
@@ -1805,7 +1805,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
       val UnfinishedInfix(lhsStart, lhs, _, op, _) = unf
       val args = rhs match { case Pat.Tuple(args) => args.toList; case _ => List(rhs) }
-      atPos(lhsStart, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
+      atPos(lhsStart, rhsEnd)(Pat.ExtractInfix(lhs, op, checkNoTripleDots(args)))
     }
   }
 
@@ -2049,6 +2049,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       })
     case _ =>
       Nil
+  }
+
+  private def checkNoTripleDots[T <: Tree](trees: Seq[T]): Seq[T] = {
+    val illegalQuasis = trees.collect{ case q: Quasi if q.rank == 2 => q }
+    illegalQuasis.foreach(q => syntaxError(Messages.QuasiquoteRankMismatch(q.rank, 1), at = q))
+    trees
   }
 
   /** {{{
@@ -2418,7 +2424,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case _        => Nil
         }
         (token, sid) match {
-          case (LeftParen(), _)                     => Pat.Extract(sid, targs, argumentPatterns())
+          case (LeftParen(), _)                     => Pat.Extract(sid, targs, checkNoTripleDots(argumentPatterns()))
           case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value", at = token)
           case (_, name: Term.Name.Quasi)           => name.become[Pat.Quasi]
           case (_, name: Term.Name) if isVarPattern => Pat.Var.Term(name)

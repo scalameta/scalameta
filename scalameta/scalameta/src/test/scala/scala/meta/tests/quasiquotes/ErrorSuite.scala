@@ -789,4 +789,49 @@ class ErrorSuite extends FunSuite {
       |                ^
     """.trim.stripMargin)
   }
+
+  test("...$ in Term.ApplyInfix") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val argss = List(List("y"))
+      q"x + (...$argss)"
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |      q"x + (...$argss)"
+      |            ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ in Pat.Extract") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val patss = List(List("x"))
+      p"Foo(...$patss)"
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |      p"Foo(...$patss)"
+      |            ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ in Pat.ExtractInfix") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val patss = List(List("x"))
+      p"x Foo (...$patss)"
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |      p"x Foo (...$patss)"
+      |               ^
+    """.trim.stripMargin)
+  }
 }
