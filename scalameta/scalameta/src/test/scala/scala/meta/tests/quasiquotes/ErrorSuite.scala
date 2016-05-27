@@ -678,4 +678,64 @@ class ErrorSuite extends FunSuite {
       |               ^
     """.trim.stripMargin)
   }
+
+  test("x before ...$") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xss = List(List(q"x"))
+      q"foo(x, ...$xss)"
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...
+      | required: ..
+      |      q"foo(x, ...$xss)"
+      |               ^
+    """.trim.stripMargin)
+  }
+
+  test("$ before ...$") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val x = q"x"
+      val xss = List(List(q"x"))
+      q"foo($x, ...$xss)"
+    """) === """
+      |<macro>:6: rank mismatch when unquoting;
+      | found   : ...
+      | required: ..
+      |      q"foo($x, ...$xss)"
+      |                ^
+    """.trim.stripMargin)
+  }
+
+  test("..$ before ...$") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xs = List(q"x")
+      val xss = List(List(q"x"))
+      q"foo(..$xs, ...$xss)"
+    """) === """
+      |<macro>:6: rank mismatch when unquoting;
+      | found   : ...
+      | required: ..
+      |      q"foo(..$xs, ...$xss)"
+      |                   ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ before ...$") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xss = List(List(q"x"))
+      q"foo(...$xss, ...$xss)"
+    """) === """
+      |<macro>:5: ) expected but , found
+      |      q"foo(...$xss, ...$xss)"
+      |                   ^
+    """.trim.stripMargin)
+  }
 }
