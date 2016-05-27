@@ -654,4 +654,28 @@ class ErrorSuite extends FunSuite {
       |           ^
     """.trim.stripMargin)
   }
+
+  test("weirdness after ..") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      q"..x${???}"
+    """) === """
+      |<macro>:4: $, ( or { expected but identifier found
+      |      q"..x${???}"
+      |          ^
+    """.trim.stripMargin)
+  }
+
+  test("weirdness after ...") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      q"foo(...x${???})"
+    """) === """
+      |<macro>:4: $, ( or { expected but identifier found
+      |      q"foo(...x${???})"
+      |               ^
+    """.trim.stripMargin)
+  }
 }
