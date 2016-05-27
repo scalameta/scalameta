@@ -276,12 +276,16 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         }
       }
       def liftTreess(treess: Seq[Seq[MetaTree]]): ReflectTree = {
-        // TODO: implement support for ... mixed with .., $ and normal code
-        treess match {
-          case Seq(Seq(quasi: Quasi)) if quasi.rank == 2 =>
-            liftQuasi(quasi)
-          case _ =>
-            Liftable.liftList[Seq[MetaTree]](Liftables.liftableSubTrees).apply(treess.toList)
+        val tripleDotQuasis = treess.flatten.collect{ case quasi: Quasi if quasi.rank == 2 => quasi }
+        if (tripleDotQuasis.length == 0) {
+          Liftable.liftList[Seq[MetaTree]](Liftables.liftableSubTrees).apply(treess.toList)
+        } else if (tripleDotQuasis.length == 1) {
+          if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
+          else c.abort(tripleDotQuasis(0).pos,
+            "implementation restriction: can't mix ...$ with anything else in parameter lists." + EOL +
+            "See https://github.com/scalameta/scalameta/issues/406 for details.")
+        } else {
+          c.abort(tripleDotQuasis(1).pos, Messages.QuasiquoteAdjacentEllipsesInPattern(2))
         }
       }
       def liftQuasi(quasi: Quasi, optional: Boolean = false): ReflectTree = {

@@ -775,4 +775,18 @@ class ErrorSuite extends FunSuite {
       |                                  ^
     """.trim.stripMargin)
   }
+
+  test("...$ mixes with something else in parameter lists") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val paramss = List(List(param"x: Int"))
+      q"def foo(...$paramss)(y: Int) = ???"
+    """) === """
+      |<macro>:5: implementation restriction: can't mix ...$ with anything else in parameter lists.
+      |See https://github.com/scalameta/scalameta/issues/406 for details.
+      |      q"def foo(...$paramss)(y: Int) = ???"
+      |                ^
+    """.trim.stripMargin)
+  }
 }
