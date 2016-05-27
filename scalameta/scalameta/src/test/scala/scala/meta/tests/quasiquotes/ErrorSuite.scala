@@ -128,8 +128,8 @@ class ErrorSuite extends FunSuite {
       q"...$xss"
     """) === """
       |<macro>:5: rank mismatch when unquoting;
-      | found   : ...
-      | required: ..
+      | found   : ...$
+      | required: $ or ..$
       |      q"...$xss"
       |        ^
     """.trim.stripMargin)
@@ -178,8 +178,8 @@ class ErrorSuite extends FunSuite {
       }
     """) === """
       |<macro>:6: rank mismatch when unquoting;
-      | found   : ..
-      | required: no dots
+      | found   : ..$
+      | required: $
       |Note that you can extract a sequence into an unquote when pattern matching,
       |it just cannot follow another sequence either directly or indirectly.
       |        case q"$_($x, ..$ys, $z, ..$ts)" =>
@@ -652,6 +652,186 @@ class ErrorSuite extends FunSuite {
       |<macro>:5: can't unquote into multi-line comments
       |      q"/* $content has been unquoted */"
       |           ^
+    """.trim.stripMargin)
+  }
+
+  test("weirdness after ..") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      q"..x${???}"
+    """) === """
+      |<macro>:4: $, ( or { expected but identifier found
+      |      q"..x${???}"
+      |          ^
+    """.trim.stripMargin)
+  }
+
+  test("weirdness after ...") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      q"foo(...x${???})"
+    """) === """
+      |<macro>:4: $, ( or { expected but identifier found
+      |      q"foo(...x${???})"
+      |               ^
+    """.trim.stripMargin)
+  }
+
+  test("x before ...$") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xss = List(List(q"x"))
+      q"foo(x, ...$xss)"
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |      q"foo(x, ...$xss)"
+      |               ^
+    """.trim.stripMargin)
+  }
+
+  test("$ before ...$") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val x = q"x"
+      val xss = List(List(q"x"))
+      q"foo($x, ...$xss)"
+    """) === """
+      |<macro>:6: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |      q"foo($x, ...$xss)"
+      |                ^
+    """.trim.stripMargin)
+  }
+
+  test("..$ before ...$") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xs = List(q"x")
+      val xss = List(List(q"x"))
+      q"foo(..$xs, ...$xss)"
+    """) === """
+      |<macro>:6: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |      q"foo(..$xs, ...$xss)"
+      |                   ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ before ...$") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val xss = List(List(q"x"))
+      q"foo(...$xss, ...$xss)"
+    """) === """
+      |<macro>:5: ) expected but , found
+      |      q"foo(...$xss, ...$xss)"
+      |                   ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ inside ...$ (1)") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      ??? match {
+        case q"$_(...$argss)(...$_)" =>
+        case q"$_(...$argss)(foo)(...$_)" =>
+      }
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |Note that you can extract a sequence into an unquote when pattern matching,
+      |it just cannot follow another sequence either directly or indirectly.
+      |        case q"$_(...$argss)(...$_)" =>
+      |                             ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ inside ...$ (2)") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      ??? match {
+        case q"$_(...$argss)(foo)(...$_)" =>
+      }
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |Note that you can extract a sequence into an unquote when pattern matching,
+      |it just cannot follow another sequence either directly or indirectly.
+      |        case q"$_(...$argss)(foo)(...$_)" =>
+      |                                  ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ mixes with something else in parameter lists") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val paramss = List(List(param"x: Int"))
+      q"def foo(...$paramss)(y: Int) = ???"
+    """) === """
+      |<macro>:5: implementation restriction: can't mix ...$ with anything else in parameter lists.
+      |See https://github.com/scalameta/scalameta/issues/406 for details.
+      |      q"def foo(...$paramss)(y: Int) = ???"
+      |                ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ in Term.ApplyInfix") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val argss = List(List("y"))
+      q"x + (...$argss)"
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |      q"x + (...$argss)"
+      |            ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ in Pat.Extract") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val patss = List(List("x"))
+      p"Foo(...$patss)"
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |      p"Foo(...$patss)"
+      |            ^
+    """.trim.stripMargin)
+  }
+
+  test("...$ in Pat.ExtractInfix") {
+    assert(typecheckError("""
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val patss = List(List("x"))
+      p"x Foo (...$patss)"
+    """) === """
+      |<macro>:5: rank mismatch when unquoting;
+      | found   : ...$
+      | required: $ or ..$
+      |      p"x Foo (...$patss)"
+      |               ^
     """.trim.stripMargin)
   }
 }

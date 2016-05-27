@@ -23,6 +23,7 @@ import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
 import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.tokens._
 import scala.compat.Platform.EOL
@@ -246,14 +247,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             } else {
               require(prefix.isEmpty && debug(trees, acc, prefix))
               if (mode.isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
-              else {
-                val hint = {
-                  "Note that you can extract a sequence into an unquote when pattern matching," + EOL+
-                  "it just cannot follow another sequence either directly or indirectly."
-                }
-                val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (quasi.rank + 1)}$EOL required: no dots$EOL$hint"
-                c.abort(quasi.pos, errorMessage)
-              }
+              else c.abort(quasi.pos, Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
             }
           case other +: rest =>
             if (acc.isEmpty) loop(rest, acc, prefix :+ other)
@@ -282,12 +276,16 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         }
       }
       def liftTreess(treess: Seq[Seq[MetaTree]]): ReflectTree = {
-        // TODO: implement support for ... mixed with .., $ and normal code
-        treess match {
-          case Seq(Seq(quasi: Quasi)) if quasi.rank == 2 =>
-            liftQuasi(quasi)
-          case _ =>
-            Liftable.liftList[Seq[MetaTree]](Liftables.liftableSubTrees).apply(treess.toList)
+        val tripleDotQuasis = treess.flatten.collect{ case quasi: Quasi if quasi.rank == 2 => quasi }
+        if (tripleDotQuasis.length == 0) {
+          Liftable.liftList[Seq[MetaTree]](Liftables.liftableSubTrees).apply(treess.toList)
+        } else if (tripleDotQuasis.length == 1) {
+          if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
+          else c.abort(tripleDotQuasis(0).pos,
+            "implementation restriction: can't mix ...$ with anything else in parameter lists." + EOL +
+            "See https://github.com/scalameta/scalameta/issues/406 for details.")
+        } else {
+          c.abort(tripleDotQuasis(1).pos, Messages.QuasiquoteAdjacentEllipsesInPattern(2))
         }
       }
       def liftQuasi(quasi: Quasi, optional: Boolean = false): ReflectTree = {

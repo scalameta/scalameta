@@ -71,7 +71,7 @@ class ConversionMacros(val c: Context) extends AstReflection {
   def unliftApply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {
     // TODO: here we just disregard the expected outside type, because I can't find uses for it
     // duality is a fun thing, but it looks like here it just led me into a dead-end
-    q"$inside: ${inside.tpe}"
+    q"$inside"
   }
 
   def unliftUnapply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {

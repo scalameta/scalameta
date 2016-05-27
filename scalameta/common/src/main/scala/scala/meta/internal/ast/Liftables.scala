@@ -21,6 +21,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   lazy val TermNameSymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Name")).asClass
   lazy val CtorRefNameSymbol = c.mirror.staticModule("scala.meta.Ctor").info.member(TermName("Ref")).asModule.info.member(TypeName("Name")).asClass
   lazy val NameSymbol = c.mirror.staticClass("scala.meta.Name")
+  lazy val TermApplySymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply")).asClass
   lazy val TermSymbol = c.mirror.staticClass("scala.meta.Term")
   lazy val TermParamSymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Param")).asClass
   lazy val DefnValSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val")).asClass
@@ -88,11 +89,48 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
         prohibitName($pat)
       """
     }
+    // NOTE: See #277 and #405 to understand why this special-casing is necessary.
+    def specialcaseTermApply(body: Tree): Tree = {
+      def liftPath(path: String) = {
+        val init = q"""c.universe.Ident(c.universe.TermName("_root_"))""": Tree
+        path.split('.').foldLeft(init)((acc, part) => q"c.universe.Select($acc, c.universe.TermName($part))")
+      }
+      def liftField(value: Tree, tpe: Tree) = {
+        q"_root_.scala.Predef.implicitly[c.universe.Liftable[$tpe]].apply($value)"
+      }
+      q"""
+        object ApplyToTripleDots {
+          def unapply(tree: _root_.scala.meta.Tree): Option[(_root_.scala.meta.Term, _root_.scala.meta.Term.Arg.Quasi)] = tree match {
+            case _root_.scala.meta.Term.Apply(fn, _root_.scala.collection.immutable.Seq(arg: _root_.scala.meta.Term.Arg.Quasi))
+            if arg.rank == 2 => _root_.scala.Some((fn, arg))
+            case _ => _root_.scala.None
+          }
+        }
+        $localName match {
+          case ApplyToTripleDots(fn, tripleQuasi) =>
+            def checkNoTripleDots(fn: _root_.scala.meta.Term): Unit = fn match {
+              case ApplyToTripleDots(fn, previousTripleQuasi) => c.abort(tripleQuasi.pos, _root_.scala.meta.internal.parsers.Messages.QuasiquoteAdjacentEllipsesInPattern(tripleQuasi.rank))
+              case _root_.scala.meta.Term.Apply(fn, _) => checkNoTripleDots(fn)
+              case _ => // do nothing
+            }
+            checkNoTripleDots(fn)
+
+            c.universe.Apply(
+              ${liftPath("scala.meta.internal.ast.Syntactic.Term.Apply")},
+              _root_.scala.collection.immutable.List(
+                ${liftField(q"fn", tq"_root_.scala.meta.Term")},
+                ${liftField(q"Seq(Seq(tripleQuasi))", tq"Seq[Seq[_root_.scala.meta.Term.Arg.Quasi]]")}))
+          case _ =>
+            $body
+        }
+      """
+    }
     def customize(body: Tree): Option[Tree] = {
       if (adt.tpe <:< QuasiSymbol.toType) Some(q"Lifts.liftQuasi($localName)")
       else if (adt.tpe <:< TermNameSymbol.toType) Some(reifyCoreFields(body, "denot", "typing"))
       else if (adt.tpe <:< CtorRefNameSymbol.toType) Some(reifyCoreFields(body, "denot", "typing"))
       else if (adt.tpe <:< NameSymbol.toType) Some(reifyCoreFields(body, "denot"))
+      else if (adt.tpe <:< TermApplySymbol.toType) Some(reifyCoreFields(specialcaseTermApply(body), "typing"))
       else if (adt.tpe <:< TermSymbol.toType) Some(reifyCoreFields(body, "typing"))
       else if (adt.tpe <:< TermParamSymbol.toType) Some(reifyCoreFields(body, "typing"))
       else if (adt.tpe <:< DefnValSymbol.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")

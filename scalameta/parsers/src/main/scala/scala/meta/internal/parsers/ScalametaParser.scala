@@ -20,7 +20,7 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
 import scala.meta.internal.tokens._
-import scala.meta.internal.ast.AstInfo
+import scala.meta.internal.ast.{AstInfo, astInfo}
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
@@ -61,7 +61,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     case KwPackage() if !dialect.allowToplevelTerms => packageOrPackageObjectDef()
     case DefIntro() => nonLocalDefOrDcl()
     case ExprIntro() => expr(Local)
-    case Ellipsis(_) => Term.Block(List(ellipsis(1, unquote[Stat])))
+    case Ellipsis(_) => Term.Block(List(ellipsis(1, astInfo[Stat])))
   }
   def parseStat(): Stat = {
     parseRule(parser => {
@@ -633,21 +633,21 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
 /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
-  def ellipsis[T <: Tree : AstInfo](rank: Int, body: => T, extraSkip: => Unit = {}): T = autoPos {
+  def ellipsis[T <: Tree : AstInfo](rank: Int, astInfo: AstInfo[T], extraSkip: => Unit = {}): T = autoPos {
     token match {
       case ellipsis: Ellipsis =>
         if (dialect.allowEllipses) {
           if (ellipsis.rank != rank) {
-            val errorMessage = s"rank mismatch when unquoting;$EOL found   : ${"." * (ellipsis.rank + 1)}$EOL required: ${"." * (rank + 1)}"
-            syntaxError(errorMessage, at = ellipsis)
+            syntaxError(Messages.QuasiquoteRankMismatch(ellipsis.rank, rank), at = ellipsis)
           } else {
             next()
             extraSkip
             val tree = {
               val result = token match {
-                case LeftParen() => inParens(body)
-                case LeftBrace() => inBraces(body)
-                case _ => body
+                case LeftParen() => inParens(unquote[T])
+                case LeftBrace() => inBraces(unquote[T])
+                case Unquote(_) => unquote[T]
+                case _ => syntaxError(s"$$, ( or { expected but ${token.name} found", at = token)
               }
               result match {
                 case quasi: Quasi =>
@@ -656,12 +656,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                   // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
                   // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
                   require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.structure))
-                  atPos(quasi, quasi)(implicitly[AstInfo[T]].quasi(quasi.rank, quasi.tree))
+                  atPos(quasi, quasi)(astInfo.quasi(quasi.rank, quasi.tree))
                 case other =>
                   other
               }
             }
-            implicitly[AstInfo[T]].quasi(rank, tree)
+            astInfo.quasi(rank, tree)
           }
         } else {
           syntaxError(s"$dialect doesn't support ellipses", at = ellipsis)
@@ -755,7 +755,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     * */
   final def tokenSeparated[Sep <: Token : TokenInfo, T <: Tree : AstInfo](sepFirst: Boolean, part: => T): List[T] = {
     def partOrEllipsis =
-      if (token.is[Ellipsis]) ellipsis(1, unquote[T])
+      if (token.is[Ellipsis]) ellipsis(1, astInfo[T])
       else part
     val ts = new ListBuffer[T]
     if (!sepFirst)
@@ -835,7 +835,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         def paramOrType() = {
           def looksLikeParam = token.is[KwImplicit] || (token.is[Ident] && ahead(token.is[Colon]))
           if (token.is[Ellipsis]) {
-            ellipsis(1, unquote[Tree])
+            ellipsis(1, astInfo[Tree])
           } else if (token.is[Unquote]) {
             unquote[Tree]
           } else if (looksLikeParam) {
@@ -989,7 +989,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (token.is[LeftBrace])
         None
       else if (isSpliceFollowedBy(token.is[KwWith] || token.is[LeftBrace] || (token.is[LF] && ahead (token.is[LeftBrace]))))
-        Some(ellipsis(1, unquote[Type]))
+        Some(ellipsis(1, astInfo[Type]))
       else
         Some(annotType())
     }
@@ -999,7 +999,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val ts = new ListBuffer[Type] ++ t
       while (token.is[KwWith]) {
         next()
-        if (token.is[Ellipsis]) ts += ellipsis(1, unquote[Type])
+        if (token.is[Ellipsis]) ts += ellipsis(1, astInfo[Type])
         else ts += annotType()
       }
       newLineOptWhenFollowedBy[LeftBrace]
@@ -1789,7 +1789,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
       val UnfinishedInfix(lhsStart, lhses, lhsEnd, op, targs) = unf
       val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses)) // `a + (b, c) * d` leads to creation of a tuple!
-      atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, rhs))
+      atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, checkNoTripleDots(rhs)))
     }
   }
 
@@ -1805,7 +1805,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
       val UnfinishedInfix(lhsStart, lhs, _, op, _) = unf
       val args = rhs match { case Pat.Tuple(args) => args.toList; case _ => List(rhs) }
-      atPos(lhsStart, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
+      atPos(lhsStart, rhsEnd)(Pat.ExtractInfix(lhs, op, checkNoTripleDots(args)))
     }
   }
 
@@ -2043,12 +2043,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case RightParen() =>
           Nil
         case tok: Ellipsis if tok.rank == 2 =>
-          List(ellipsis(2, unquote[Term.Arg]))
+          List(ellipsis(2, astInfo[Term.Arg]))
         case _ =>
           commaSeparated(argumentExpr)
       })
     case _ =>
       Nil
+  }
+
+  private def checkNoTripleDots[T <: Tree](trees: Seq[T]): Seq[T] = {
+    val illegalQuasis = trees.collect{ case q: Quasi if q.rank == 2 => q }
+    illegalQuasis.foreach(q => syntaxError(Messages.QuasiquoteRankMismatch(q.rank, 1), at = q))
+    trees
   }
 
   /** {{{
@@ -2094,7 +2100,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val cases = new ListBuffer[Case]
     while (token.is[CaseIntro] || token.is[Ellipsis]) {
       if (token.is[Ellipsis]) {
-        cases += ellipsis(1, unquote[Case], accept[KwCase])
+        cases += ellipsis(1, astInfo[Case], accept[KwCase])
         while (token.is[StatSep]) next()
       } else if (token.is[KwCase] && ahead(token.is[Unquote])) {
         next()
@@ -2138,7 +2144,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] =
     if (token.is[KwIf] && !isFirst) autoPos(Enumerator.Guard(guard().get)) :: Nil
     else if (token.is[Ellipsis]) {
-      ellipsis(1, unquote[Enumerator.Generator]) :: Nil
+      ellipsis(1, astInfo[Enumerator.Generator]) :: Nil
     } else if (token.is[Unquote] && ahead(!token.is[Equals] && !token.is[LeftArrow])) { // support for q"for ($enum1; ..$enums; $enum2)"
       unquote[Enumerator.Generator] :: Nil
     }
@@ -2418,7 +2424,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case _        => Nil
         }
         (token, sid) match {
-          case (LeftParen(), _)                     => Pat.Extract(sid, targs, argumentPatterns())
+          case (LeftParen(), _)                     => Pat.Extract(sid, targs, checkNoTripleDots(argumentPatterns()))
           case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value", at = token)
           case (_, name: Term.Name.Quasi)           => name.become[Pat.Quasi]
           case (_, name: Term.Name) if isVarPattern => Pat.Var.Term(name)
@@ -2532,7 +2538,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def modifier(): Mod = autoPos(token match {
     case Unquote(_)    => unquote[Mod]
-    case Ellipsis(_)   => ellipsis(1, unquote[Mod])
+    case Ellipsis(_)   => ellipsis(1, astInfo[Mod])
     case KwAbstract()  => next(); Mod.Abstract()
     case KwFinal()     => next(); Mod.Final()
     case KwSealed()    => next(); Mod.Sealed()
@@ -2590,7 +2596,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val annots = new ListBuffer[Mod.Annot]
     while (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
       if (token.is[Ellipsis]) {
-        annots += ellipsis(1, unquote[Mod.Annot], accept[At])
+        annots += ellipsis(1, astInfo[Mod.Annot], accept[At])
       } else {
         next()
         if (token.is[Unquote]) annots += unquote[Mod.Annot]
@@ -2622,7 +2628,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case RightParen() =>
         Nil
       case tok: Ellipsis if tok.rank == 2 =>
-        List(ellipsis(2, unquote[Term.Param]))
+        List(ellipsis(2, astInfo[Term.Param]))
       case _ =>
         if (token.is[KwImplicit]) {
           next()
@@ -2727,7 +2733,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def typeParam(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Type.Param = autoPos {
     if (token.is[Unquote]) return unquote[Type.Param]
-    var mods: List[Mod] = if (token.is[Ellipsis]) List(ellipsis(1, unquote[Mod])) else annots(skipNewLines = true)
+    var mods: List[Mod] = if (token.is[Ellipsis]) List(ellipsis(1, astInfo[Mod])) else annots(skipNewLines = true)
     if (ownerIsType && token.is[Ident]) {
       if (isIdentOf("+")) {
         next()
@@ -2756,12 +2762,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         //   deprecationWarning(s"View bounds are deprecated. $msg")
         // }
         next()
-        if (token.is[Ellipsis]) vbounds += ellipsis(1, unquote[Type])
+        if (token.is[Ellipsis]) vbounds += ellipsis(1, astInfo[Type])
         else vbounds += typ()
       }
       while (token.is[Colon]) {
         next()
-        if (token.is[Ellipsis]) cbounds += ellipsis(1, unquote[Type])
+        if (token.is[Ellipsis]) cbounds += ellipsis(1, astInfo[Type])
         else cbounds += typ()
       }
     }
@@ -3221,7 +3227,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def templateParents(): List[Ctor.Call] = {
     val parents = new ListBuffer[Ctor.Call]
     def readAppliedParent() =
-      if (token.is[Ellipsis]) parents += ellipsis(1, unquote[Ctor.Call])
+      if (token.is[Ellipsis]) parents += ellipsis(1, astInfo[Ctor.Call])
       else parents += constructorCall(startModType())
     readAppliedParent()
     while (token.is[KwWith]) { next(); readAppliedParent() }
@@ -3344,7 +3350,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def topStatSeq(): List[Stat] = statSeq(topStat, errorMsg = "expected class or object definition")
   def topStat: PartialFunction[Token, Stat] = {
     case Ellipsis(_) =>
-      ellipsis(1, unquote[Stat])
+      ellipsis(1, astInfo[Stat])
     case Unquote(_) =>
       unquote[Stat]
     case KwPackage() =>
@@ -3414,7 +3420,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     case Unquote(_) =>
       unquote[Stat]
     case Ellipsis(_) =>
-      ellipsis(1, unquote[Stat])
+      ellipsis(1, astInfo[Stat])
     case ExprIntro() =>
       expr(InTemplate)
   }
@@ -3437,7 +3443,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def refineStat(): Option[Stat] =
     if (token.is[Ellipsis]) {
-      Some(ellipsis(1, unquote[Stat]))
+      Some(ellipsis(1, astInfo[Stat]))
     } else if (token.is[DclIntro]) {
       defOrDclOrSecondaryCtor(Nil) match {
         case stat if stat.isRefineStat => Some(stat)
@@ -3499,7 +3505,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         next()
       }
       else if (token.is[Ellipsis]) {
-        stats += ellipsis(1, unquote[Stat])
+        stats += ellipsis(1, astInfo[Stat])
       }
       else {
         syntaxError("illegal start of statement", at = token)
