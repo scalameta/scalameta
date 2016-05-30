@@ -111,7 +111,6 @@ class DataMacros(val c: Context) extends MacroHelpers {
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "final is redundant for @data classes")
       if (mods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @data classes")
       if (mods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@data classes cannot be abstract")
-      if (ctorMods.flags != NoFlags) c.abort(cdef.pos, "@data classes must define a public primary constructor")
       if (paramss.length == 0) c.abort(cdef.pos, "@data classes must define a non-empty parameter list")
 
       // step 2: create parameters, generate getters and validation checks
@@ -219,7 +218,8 @@ class DataMacros(val c: Context) extends MacroHelpers {
       // step 7: generate Companion.unapply
       // TODO: go for name-based pattern matching once blocking bugs (e.g. SI-9029) are fixed
       val unapplyName = if (isVararg) TermName("unapplySeq") else TermName("unapply")
-      if (needs(unapplyName, companion = true, duplicate = false)) {
+      if (needs(TermName("unapply"), companion = true, duplicate = false) &&
+          needs(TermName("unapplySeq"), companion = true, duplicate = false)) {
         val unapplyParamss = paramss.map(_.map(unByNeed))
         val unapplyParams = unapplyParamss.head
         if (unapplyParams.length != 0) {
