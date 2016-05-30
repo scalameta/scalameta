@@ -153,7 +153,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       scanner.foreach(curr => legacyTokenBuf += new LegacyTokenData{}.copyFrom(curr))
       legacyTokenBuf.result
     }
-    val tokens = new immutable.VectorBuilder[Token]
+    val tokens = mutable.ArrayBuilder.make[Token]()
     tokens += Token.BOF(input, dialect)
 
     def loop(startingFrom: Int, braceBalance: Int = 0, returnWhenBraceBalanceHitsZero: Boolean = false): Int = {
@@ -244,7 +244,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     }
 
     loop(startingFrom = 0)
-    Tokens(tokens.result: _*)
+    val underlying = tokens.result
+    Tokens(underlying, 0, underlying.length)
   }
 }
 
