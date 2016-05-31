@@ -160,7 +160,7 @@ object build extends Build {
     ),
     // Workaround for https://github.com/lihaoyi/Scalatex/issues/25
     dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
-    sources in Compile += baseDirectory.value / "../project/Version.scala"
+    sources in Compile += baseDirectory.value / "../project/version.scala"
   ).dependsOn(scalameta)
 
   lazy val sharedSettings = crossVersionSharedSources ++ Seq(
