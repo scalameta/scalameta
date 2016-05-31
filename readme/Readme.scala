@@ -59,4 +59,33 @@ object Readme {
 
   def sideBySide(left: String, right: String) =
     pairs(List(left, right).map(x => half(hl.scala(x))): _*)
+
+  def versionBadge = {
+    def timestampOfTag(tag: String): String = {
+      import java.io._
+      import java.text._
+      import scala.sys.process._
+      import scala.compat.Platform.EOL
+      val stdoutStream = new ByteArrayOutputStream
+      val stderrStream = new ByteArrayOutputStream
+      val stdoutWriter = new PrintWriter(stdoutStream)
+      val stderrWriter = new PrintWriter(stderrStream)
+      val exitValue = s"/usr/bin/env git show $tag --pretty=%aD".!(ProcessLogger(stdoutWriter.println, stderrWriter.println))
+      stdoutWriter.close()
+      stderrWriter.close()
+      if (exitValue == 0) {
+        val original_dateOfTag = stdoutStream.toString.split(EOL).last
+        val rfc2822 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z")
+        val dateOfTag = rfc2822.parse(original_dateOfTag)
+        val pretty = new SimpleDateFormat("dd MMM yyyy")
+        val pretty_dateOfTag = pretty.format(dateOfTag)
+        s" (released on $pretty_dateOfTag)"
+      } else {
+        ""
+      }
+    }
+    val version = Versions.stable
+    val timestamp = timestampOfTag("v" + version)
+    version + timestamp
+  }
 }

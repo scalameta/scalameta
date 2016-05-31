@@ -2,7 +2,7 @@
 @import Main._
 @import scala.meta._
 
-@sect("scala.meta", s"${Versions.stable}")
+@sect("scala.meta", versionBadge)
 
   @p
     Scala.meta is a clean-room implementation of a metaprogramming toolkit for Scala,
