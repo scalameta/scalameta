@@ -7,7 +7,7 @@ import UnidocKeys._
 
 object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
-  lazy val LibraryVersion = "1.0.0-SNAPSHOT"
+  lazy val LibraryVersion = scala.meta.Versions.nightly
 
   lazy val root = Project(
     id = "root",
@@ -158,7 +158,7 @@ object build extends Build {
     libraryDependencies += "com.twitter" %% "util-eval" % "6.34.0",
     // Workaround for https://github.com/lihaoyi/Scalatex/issues/25
     dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
-    sources in Compile += baseDirectory.value / "../project/version.scala",
+    sources in Compile += baseDirectory.value / "../project/versions.scala",
     watchSources ++= baseDirectory.value.listFiles.toList
   ).dependsOn(scalameta)
 
