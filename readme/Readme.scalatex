@@ -27,3 +27,11 @@
     ga('create', 'UA-78566375-1', 'auto');
     ga('send', 'pageview');
   </script>
+  <script>
+    // NOTE: Disables the sidebar because we don't really have anything to show there yet.
+    // Gonna re-enable it back by deleting this <script/> block once we have something interesting.
+    (function() {
+      controller = scalatex.scrollspy.Controller();
+      controller.main = function(config) {}
+    })()
+  </script>
