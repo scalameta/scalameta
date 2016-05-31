@@ -155,10 +155,7 @@ object build extends Build {
     source = "Readme"
   ).settings(
     publish := {},
-    libraryDependencies ++= Seq(
-      "com.twitter" %% "util-eval" % "6.34.0",
-      "org.pegdown" % "pegdown" % "1.6.0"
-    ),
+    libraryDependencies += "com.twitter" %% "util-eval" % "6.34.0",
     // Workaround for https://github.com/lihaoyi/Scalatex/issues/25
     dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
     sources in Compile += baseDirectory.value / "../project/version.scala",

@@ -2,15 +2,12 @@ package scala.meta
 
 import scala.util.Try
 import scalatags.Text.all._
-
 import com.twitter.util.Eval
-import org.pegdown.PegDownProcessor
 
 object Readme {
   import scalatex.Main._
 
   val eval = new Eval()
-  val pegdown = new PegDownProcessor
 
   def url(src: String) = a(href := src, src)
 
@@ -23,9 +20,6 @@ object Readme {
             .min).getOrElse(0)
     frag.lines.map(_.stripPrefix(toStrip)).mkString("\n")
   }
-
-  def markdown(code: Frag*) =
-    raw(pegdown.markdownToHtml(unindent(code.render)))
 
   /**
     * repl session, inspired by tut.
