@@ -154,6 +154,7 @@ object build extends Build {
     url = "https://github.com/scalameta/scalameta/tree/master",
     source = "Readme"
   ).settings(
+    publish := {},
     libraryDependencies ++= Seq(
       "com.twitter" %% "util-eval" % "6.34.0",
       "org.pegdown" % "pegdown" % "1.6.0"
