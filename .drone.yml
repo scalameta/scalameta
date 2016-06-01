@@ -1,5 +1,5 @@
 build:
-  image: ensime/ensime:v1.x-cache
+  image: ensime/ensime:v2.x-cache
   pull: true
   environment:
     - SONATYPE_USERNAME=$$SONATYPE_USERNAME
