@@ -5,6 +5,7 @@ import scala.util.Try
 import scalatags.Text.all._
 import com.twitter.util.Eval
 import org.scalameta.os._
+import scala.compat.Platform.EOL
 
 object Readme {
   import scalatex.Main._
@@ -64,7 +65,7 @@ object Readme {
 
   def versionBadge = {
     def timestampOfTag(tag: String): String = {
-      val (exitcode, stdout, _) = shell.exec("/usr/bin/env git show $tag --pretty=%aD")
+      val (exitcode, stdout, _) = shell.exec("git show $tag --pretty=%aD")
       if (exitcode == 0) {
         val original_dateOfTag = stdout.split(EOL).last
         val rfc2822 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z")

@@ -4,7 +4,9 @@ import sbtassembly.Plugin._
 import AssemblyKeys._
 import sbtunidoc.Plugin._
 import UnidocKeys._
+import java.io._
 import org.scalameta.os._
+import scala.compat.Platform.EOL
 
 object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
@@ -155,12 +157,41 @@ object build extends Build {
     url = "https://github.com/scalameta/scalameta/tree/master",
     source = "Readme"
   ).settings(
-    publish := {},
     libraryDependencies += "com.twitter" %% "util-eval" % "6.34.0",
     // Workaround for https://github.com/lihaoyi/Scalatex/issues/25
     dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
-    sources in Compile += baseDirectory.value / "../project/versions.scala",
-    watchSources ++= baseDirectory.value.listFiles.toList
+    sources in Compile ++= List("os.scala", "versions.scala").map(f => baseDirectory.value / "../project" / f),
+    watchSources ++= baseDirectory.value.listFiles.toList,
+    publish := {
+      // generate the scalatex readme into `website`
+      val _ = (run in Compile).toTask("").value
+      val website = new File(target.value.getAbsolutePath + File.separator + "scalatex")
+
+      // import the scalatex readme into `repo`
+      val repo = new File(temp.mkdir.getAbsolutePath + File.separator + "scalameta.org")
+      shell.call(s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
+      println(s"erasing everything in ${repo.getAbsolutePath}...")
+      repo.listFiles.filter(f => f.getName != ".git").foreach(shutil.rmtree)
+      println(s"importing website from ${website.getAbsolutePath} to ${repo.getAbsolutePath}...")
+      new PrintWriter(new File(repo.getAbsolutePath + File.separator + "CNAME")) { write("scalameta.org"); close }
+      website.listFiles.foreach(src => shutil.copytree(src, new File(repo.getAbsolutePath + File.separator + src.getName)))
+
+      // commit and push the changes if any
+      val (_, currentSha, _) = shell.exec("git rev-parse HEAD", cwd = ".")
+      val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + currentSha.trim
+      shell.call(s"git add -A", cwd = repo.getAbsolutePath)
+      val nothingToCommit = "nothing to commit, working directory clean"
+      try {
+        shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
+        val httpAuthentication = secret.obtain("github").map{ case (username, password) => s"$username:$password" }.getOrElse("")
+        val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
+        shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
+      } catch {
+        case ex: Exception if ex.getMessage.contains(nothingToCommit) => println(nothingToCommit)
+      }
+    },
+    publishLocal := {},
+    publishM2 := {}
   ).dependsOn(scalameta)
 
   lazy val sharedSettings = crossVersionSharedSources ++ Seq(
@@ -238,7 +269,7 @@ object build extends Build {
     publishArtifact in Test := false,
     credentials ++= secret.obtain("sonatype").map({
       case (username, password) => Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)
-    })
+    }).toList
   )
 
   lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
