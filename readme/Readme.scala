@@ -65,6 +65,7 @@ object Readme {
 
   def versionBadge = {
     def timestampOfTag(tag: String): String = {
+      shell.call(s"git fetch origin refs/tags/$tag:refs/tags/$tag")
       val stdout = shell.check_output(s"git show $tag --pretty=%aD")
       val original_dateOfTag = stdout.split(EOL).last
       val rfc2822 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z")
