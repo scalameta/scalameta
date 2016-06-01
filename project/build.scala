@@ -164,8 +164,10 @@ object build extends Build {
     watchSources ++= baseDirectory.value.listFiles.toList,
     publish := {
       // generate the scalatex readme into `website`
-      val _ = (run in Compile).toTask("").value
       val website = new File(target.value.getAbsolutePath + File.separator + "scalatex")
+      if (website.exists) website.delete
+      val _ = (run in Compile).toTask("").value
+      if (!website.exists) sys.error("failed to generate the scalatex website")
 
       // import the scalatex readme into `repo`
       val repo = new File(temp.mkdir.getAbsolutePath + File.separator + "scalameta.org")
