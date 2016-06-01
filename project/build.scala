@@ -194,6 +194,8 @@ object build extends Build {
       val nothingToCommit = "nothing to commit, working directory clean"
       try {
         val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + currentSha.trim
+        shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
+        shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
         shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
         val httpAuthentication = secret.obtain("github").map{ case (username, password) => s"$username:$password" }.getOrElse("")
         val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
