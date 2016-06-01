@@ -4,6 +4,7 @@ import sbtassembly.Plugin._
 import AssemblyKeys._
 import sbtunidoc.Plugin._
 import UnidocKeys._
+import org.scalameta.os._
 
 object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
@@ -235,33 +236,9 @@ object build extends Build {
   lazy val publishableSettings = sharedSettings ++ Seq(
     publishArtifact in Compile := true,
     publishArtifact in Test := false,
-    credentials ++= {
-      def mkCredentials(username: String, password: String) = {
-        Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)
-      }
-      val mavenSettingsFile = System.getProperty("maven.settings.file")
-      if (mavenSettingsFile != null) {
-        println("Loading Sonatype credentials from " + mavenSettingsFile)
-        try {
-          import scala.xml._
-          val settings = XML.loadFile(mavenSettingsFile)
-          def readServerConfig(key: String) = (settings \\ "settings" \\ "servers" \\ "server" \\ key).head.text
-          Some(mkCredentials(readServerConfig("username"), readServerConfig("password")))
-        } catch {
-          case ex: Exception =>
-            println("Failed to load Maven settings from " + mavenSettingsFile + ": " + ex)
-            None
-        }
-      } else {
-        for {
-          username <- sys.env.get("SONATYPE_USERNAME")
-          password <- sys.env.get("SONATYPE_PASSWORD")
-        } yield {
-          println("Loading Sonatype credentials from environment variables")
-          mkCredentials(username, password)
-        }
-      }
-    }.toList
+    credentials ++= secret.obtain("sonatype").map({
+      case (username, password) => Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)
+    })
   )
 
   lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
