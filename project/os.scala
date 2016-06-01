@@ -2,7 +2,6 @@ package org.scalameta
 package os
 
 import java.io._
-import java.nio.file._
 import scala.sys.process._
 import scala.compat.Platform.EOL
 
@@ -88,7 +87,23 @@ object shutil {
         copytree(srcsub, destsub)
       })
     } else {
-      Files.copy(src.toPath, dest.toPath)
+      val in = new FileInputStream(src)
+      try {
+        val out = new FileOutputStream(dest)
+        try {
+          val buf = new Array[Byte](1024)
+          var done = false
+          while (!done) {
+            val len = in.read(buf)
+            if (len > 0) out.write(buf, 0, len)
+            else done = true
+          }
+        } finally {
+          out.close()
+        }
+      } finally {
+        in.close();
+      }
     }
   }
 }
