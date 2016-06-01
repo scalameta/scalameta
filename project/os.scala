@@ -32,6 +32,14 @@ object shell {
     val (exitcode, stdout, stderr) = shell.exec(command, cwd)
     if (exitcode != 0) sys.error(s"$command returned $exitcode:$EOL$stdout$EOL$stderr")
   }
+
+  def check_output(command: String, cwd: String = "."): String = {
+    val sfwCommand = command.replaceAll("https://(.*?):(.*)@", "https://***:***@");
+    println("running " + sfwCommand + " in " + new File(cwd).getAbsolutePath)
+    val (exitcode, stdout, stderr) = shell.exec(command, cwd)
+    if (exitcode != 0) sys.error(s"$command returned $exitcode:$EOL$stdout$EOL$stderr")
+    stdout
+  }
 }
 
 object secret {

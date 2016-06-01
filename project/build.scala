@@ -176,12 +176,22 @@ object build extends Build {
       new PrintWriter(new File(repo.getAbsolutePath + File.separator + "CNAME")) { write("scalameta.org"); close }
       website.listFiles.foreach(src => shutil.copytree(src, new File(repo.getAbsolutePath + File.separator + src.getName)))
 
+      // make sure that we have a stable reference to the working copy that produced the website
+      val currentSha = shell.check_output("git rev-parse HEAD", cwd = ".")
+      val changed = shell.check_output("git diff --name-status", cwd = ".")
+      if (changed.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has modified files)")
+      val staged = shell.check_output("git diff --staged --name-status", cwd = ".")
+      if (staged.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has staged files)")
+      val untracked = shell.check_output("git ls-files --others --exclude-standard", cwd = ".")
+      if (untracked.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has untracked files)")
+      val (exitcode, stdout, stderr) = shell.exec(s"git branch -r --contains $currentSha")
+      if (exitcode != 0 || stdout.isEmpty) sys.error("repository " + new File(".").getAbsolutePath + " doesn't contain commit " + currentSha)
+
       // commit and push the changes if any
-      val (_, currentSha, _) = shell.exec("git rev-parse HEAD", cwd = ".")
-      val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + currentSha.trim
       shell.call(s"git add -A", cwd = repo.getAbsolutePath)
       val nothingToCommit = "nothing to commit, working directory clean"
       try {
+        val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + currentSha.trim
         shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
         val httpAuthentication = secret.obtain("github").map{ case (username, password) => s"$username:$password" }.getOrElse("")
         val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
