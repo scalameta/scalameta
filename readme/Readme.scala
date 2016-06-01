@@ -65,17 +65,13 @@ object Readme {
 
   def versionBadge = {
     def timestampOfTag(tag: String): String = {
-      val (exitcode, stdout, _) = shell.exec("git show $tag --pretty=%aD")
-      if (exitcode == 0) {
-        val original_dateOfTag = stdout.split(EOL).last
-        val rfc2822 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z")
-        val dateOfTag = rfc2822.parse(original_dateOfTag)
-        val pretty = new SimpleDateFormat("dd MMM yyyy")
-        val pretty_dateOfTag = pretty.format(dateOfTag)
-        s" (released on $pretty_dateOfTag)"
-      } else {
-        ""
-      }
+      val stdout = shell.check_output(s"git show $tag --pretty=%aD")
+      val original_dateOfTag = stdout.split(EOL).last
+      val rfc2822 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z")
+      val dateOfTag = rfc2822.parse(original_dateOfTag)
+      val pretty = new SimpleDateFormat("dd MMM yyyy")
+      val pretty_dateOfTag = pretty.format(dateOfTag)
+      s" (released on $pretty_dateOfTag)"
     }
     val version = Versions.stable
     val timestamp = timestampOfTag("v" + version)
