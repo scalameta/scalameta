@@ -4,10 +4,13 @@ import sbtassembly.Plugin._
 import AssemblyKeys._
 import sbtunidoc.Plugin._
 import UnidocKeys._
+import java.io._
+import org.scalameta.os._
+import scala.compat.Platform.EOL
 
 object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
-  lazy val LibraryVersion = "1.0.0-SNAPSHOT"
+  lazy val LibraryVersion = scala.meta.Versions.nightly
 
   lazy val root = Project(
     id = "root",
@@ -33,7 +36,8 @@ object build extends Build {
     tokenizers,
     tokens,
     transversers,
-    trees
+    trees,
+    readme
   )
 
   lazy val common = Project(
@@ -147,6 +151,61 @@ object build extends Build {
     exposePaths("scalameta", Test): _*
   ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline)
 
+  lazy val readme = scalatex.ScalatexReadme(
+    projectId = "readme",
+    wd = file(""),
+    url = "https://github.com/scalameta/scalameta/tree/master",
+    source = "Readme"
+  ).settings(
+    libraryDependencies += "com.twitter" %% "util-eval" % "6.34.0",
+    // Workaround for https://github.com/lihaoyi/Scalatex/issues/25
+    dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
+    sources in Compile ++= List("os.scala", "versions.scala").map(f => baseDirectory.value / "../project" / f),
+    watchSources ++= baseDirectory.value.listFiles.toList,
+    publish := {
+      // generate the scalatex readme into `website`
+      val website = new File(target.value.getAbsolutePath + File.separator + "scalatex")
+      if (website.exists) website.delete
+      val _ = (run in Compile).toTask("").value
+      if (!website.exists) sys.error("failed to generate the scalatex website")
+
+      // import the scalatex readme into `repo`
+      val repo = new File(temp.mkdir.getAbsolutePath + File.separator + "scalameta.org")
+      shell.call(s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
+      println(s"erasing everything in ${repo.getAbsolutePath}...")
+      repo.listFiles.filter(f => f.getName != ".git").foreach(shutil.rmtree)
+      println(s"importing website from ${website.getAbsolutePath} to ${repo.getAbsolutePath}...")
+      new PrintWriter(new File(repo.getAbsolutePath + File.separator + "CNAME")) { write("scalameta.org"); close }
+      website.listFiles.foreach(src => shutil.copytree(src, new File(repo.getAbsolutePath + File.separator + src.getName)))
+
+      // make sure that we have a stable reference to the working copy that produced the website
+      val currentSha = shell.check_output("git rev-parse HEAD", cwd = ".")
+      val changed = shell.check_output("git diff --name-status", cwd = ".")
+      if (changed.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has modified files)")
+      val staged = shell.check_output("git diff --staged --name-status", cwd = ".")
+      if (staged.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has staged files)")
+      val untracked = shell.check_output("git ls-files --others --exclude-standard", cwd = ".")
+      if (untracked.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has untracked files)")
+      val (exitcode, stdout, stderr) = shell.exec(s"git branch -r --contains $currentSha")
+      if (exitcode != 0 || stdout.isEmpty) sys.error("repository " + new File(".").getAbsolutePath + " doesn't contain commit " + currentSha)
+
+      // commit and push the changes if any
+      shell.call(s"git add -A", cwd = repo.getAbsolutePath)
+      val nothingToCommit = "nothing to commit, working directory clean"
+      try {
+        val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + currentSha.trim
+        shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
+        val httpAuthentication = secret.obtain("github").map{ case (username, password) => s"$username:$password" }.getOrElse("")
+        val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
+        shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
+      } catch {
+        case ex: Exception if ex.getMessage.contains(nothingToCommit) => println(nothingToCommit)
+      }
+    },
+    publishLocal := {},
+    publishM2 := {}
+  ).dependsOn(scalameta)
+
   lazy val sharedSettings = crossVersionSharedSources ++ Seq(
     scalaVersion := ScalaVersions.max,
     crossScalaVersions := ScalaVersions,
@@ -220,33 +279,9 @@ object build extends Build {
   lazy val publishableSettings = sharedSettings ++ Seq(
     publishArtifact in Compile := true,
     publishArtifact in Test := false,
-    credentials ++= {
-      def mkCredentials(username: String, password: String) = {
-        Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)
-      }
-      val mavenSettingsFile = System.getProperty("maven.settings.file")
-      if (mavenSettingsFile != null) {
-        println("Loading Sonatype credentials from " + mavenSettingsFile)
-        try {
-          import scala.xml._
-          val settings = XML.loadFile(mavenSettingsFile)
-          def readServerConfig(key: String) = (settings \\ "settings" \\ "servers" \\ "server" \\ key).head.text
-          Some(mkCredentials(readServerConfig("username"), readServerConfig("password")))
-        } catch {
-          case ex: Exception =>
-            println("Failed to load Maven settings from " + mavenSettingsFile + ": " + ex)
-            None
-        }
-      } else {
-        for {
-          username <- sys.env.get("SONATYPE_USERNAME")
-          password <- sys.env.get("SONATYPE_PASSWORD")
-        } yield {
-          println("Loading Sonatype credentials from environment variables")
-          mkCredentials(username, password)
-        }
-      }
-    }.toList
+    credentials ++= secret.obtain("sonatype").map({
+      case (username, password) => Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)
+    }).toList
   )
 
   lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(

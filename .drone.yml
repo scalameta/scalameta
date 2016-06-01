@@ -4,6 +4,8 @@ build:
   environment:
     - SONATYPE_USERNAME=$$SONATYPE_USERNAME
     - SONATYPE_PASSWORD=$$SONATYPE_PASSWORD
+    - GITHUB_USERNAME=$$GITHUB_USERNAME
+    - GITHUB_PASSWORD=$$GITHUB_PASSWORD
   commands:
     - git log | head -n 20
     - host `curl -s http://httpbin.org/ip | jq -r '.origin'` || true ;
