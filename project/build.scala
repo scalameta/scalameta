@@ -156,8 +156,10 @@ object build extends Build {
     wd = file(""),
     url = "https://github.com/scalameta/scalameta/tree/master",
     source = "Readme"
-  ).settings(
-    libraryDependencies += "com.twitter" %% "util-eval" % "6.34.0",
+  ) settings (
+    exposePaths("readme", Runtime): _*
+  ) settings (
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     // Workaround for https://github.com/lihaoyi/Scalatex/issues/25
     dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
     sources in Compile ++= List("os.scala", "versions.scala").map(f => baseDirectory.value / "../project" / f),
@@ -166,7 +168,7 @@ object build extends Build {
       // generate the scalatex readme into `website`
       val website = new File(target.value.getAbsolutePath + File.separator + "scalatex")
       if (website.exists) website.delete
-      val _ = (run in Compile).toTask("").value
+      val _ = (run in Compile).toTask(" --validate").value
       if (!website.exists) sys.error("failed to generate the scalatex website")
 
       // import the scalatex readme into `repo`
@@ -206,7 +208,7 @@ object build extends Build {
     },
     publishLocal := {},
     publishM2 := {}
-  ).dependsOn(scalameta)
+  ) dependsOn (scalameta)
 
   lazy val sharedSettings = crossVersionSharedSources ++ Seq(
     scalaVersion := ScalaVersions.max,

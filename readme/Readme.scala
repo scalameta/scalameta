@@ -3,14 +3,13 @@ package scala.meta
 import java.text._
 import scala.util.Try
 import scalatags.Text.all._
-import com.twitter.util.Eval
 import org.scalameta.os._
 import scala.compat.Platform.EOL
+import scala.tools.nsc.interpreter._
+import scala.tools.nsc.{Settings, MainGenericRunner}
 
 object Readme {
   import scalatex.Main._
-
-  val eval = new Eval()
 
   def url(src: String) = a(href := src, src)
 
@@ -24,6 +23,31 @@ object Readme {
     frag.lines.map(_.stripPrefix(toStrip)).mkString("\n")
   }
 
+  private def executeInRepl(code: String): String = {
+    case class RedFlag(pattern: String, directive: String, message: String)
+    val redFlags = List(
+      RedFlag("Abandoning crashed session.", "compilation crash", "crash in repl invocation"),
+      RedFlag("error:", "compilation error", "compilation error in repl invocation"),
+      RedFlag("Exception", "runtime exception", "runtime exception in repl invocation"),
+      RedFlag("Error", "runtime exception", "runtime exception in repl invocation")
+    )
+    def validatePrintout(printout: String): Unit = {
+      redFlags.foreach{ case RedFlag(pat, directive, msg) =>
+        if (printout.contains(pat) && !code.contains("// " + directive)) {
+          sys.error(msg + ": " + printout)
+        }
+      }
+    }
+    val s = new Settings
+    s.Xnojline.value = true
+    s.usejavacp.value = false
+    s.classpath.value = sys.props("sbt.paths.readme.runtime.classes")
+    val postprocessedCode = redFlags.foldLeft(code)((acc, curr) => acc.replace("// " + curr.directive, ""))
+    val lines = ILoop.runForTranscript(postprocessedCode, s).lines.toList
+    validatePrintout(lines.mkString(EOL))
+    lines.drop(3).dropRight(2).map(_.replaceAll("\\s+$","")).mkString(EOL).trim
+  }
+
   /**
     * repl session, inspired by tut.
     *
@@ -32,20 +56,17 @@ object Readme {
     * res0: Int = 2"
     */
   def repl(code: String) = {
-    val expressions = s"{$code}".parse[Stat].get.asInstanceOf[Term.Block].stats
-    val evaluated = eval[Any](code)
-    val output = evaluated match {
-      case s: String =>
-        s"""
-           |"$s"""".stripMargin
-      case x => x.toString
-    }
-    val result = s"""${expressions
-                      .map(x => s"scala> ${x.toString().trim}")
-                      .mkString("\n")}
-                    |res0: ${evaluated.getClass.getName} = $output
-                    |""".stripMargin
-    hl.scala(result)
+    hl.scala(executeInRepl(unindent(code)))
+  }
+
+  /**
+    * repl session that has an invisible "import scala.meta._" attached to it.
+    */
+  def meta(code0: String) = {
+    val code1 = s"import scala.meta._$EOL${unindent(code0).trim}"
+    val result0 = executeInRepl(code1)
+    val result1 = result0.split(EOL).drop(3).mkString(EOL)
+    hl.scala(result1)
   }
 
   def note = b("NOTE")

@@ -11,14 +11,133 @@
     the current de facto standard in the Scala ecosystem.
 
   @p
-    At this point, we are feature-complete for the 1.0.0 release that will include
-    APIs for parsing, tokenization, prettyprinting and tree traversal/transformation.
-    While we're polishing the release and writing the docs, you can learn more about
-    the status of the project from our ScalaDays 2016 presentation:
-    @lnk("Metaprogramming 2.0 (slides)", "http://scalamacros.org/paperstalks/2016-05-11-Metaprogramming20.pdf").
+    Scala.meta provides functionality that's unprecedented in the Scala ecosystem.
+    Our killer feature is abstract syntax trees that capture the code exactly as it is written -
+    with all the original formatting and attention to minor syntactic details.
+
+  @p
+    With scala.meta, we are building a community of next-generation tooling for Scala.
+    @lnk("Codacy", "https://codacy.com/")'s Scala engine and @lnk("Scalafmt", "http://scalafmt.org")
+    take advantage of our unique features and deliver user experiences
+    that have been unreachable for the most of the traditional Scala tools.
+
+  @sect{Getting started}
+    @p
+      To get started with scala.meta, add the following to your @code("build.sbt"):
+
+    @hl.scala
+      libraryDependencies += "org.scalameta" %% "scalameta" % "@Versions.stable"
+
+    @p
+      Next, you'll need to add a single wildcard import to the files where you'll
+      be using scala.meta. Unlike with scala.reflect, the metaprogramming
+      library from the standard distribution, no complicated setup is necessary.
+
+    @hl.scala
+      import scala.meta._
+
+  @sect{Features}
+    @p
+      @b
+        High-fidelity parsing.
+      Note how the abstract syntax trees in the printout below
+      contain comprehensive information about formatting and comments.
+      This is an exclusive feature of scala.meta.
+
+    @meta
+      "x + y /* adds x and y */".parse[Term]
+      "List[ Int ]".parse[Type]
+
+    @p
+      @b
+        Dialects.
+      Scala.meta is designed from the ground up to be platform-independent.
+      This means that we understand different versions of the base language:
+      Scala 2.10, Scala 2.11 and even Dotty. We also support Sbt build files
+      to make sure we cover as much Scala code as possible.
+
+    @meta
+      import scala.meta.dialects.Sbt0137
+      Sbt0137("""
+        lazy val root = (project in file(".")).
+        settings(name := "hello")
+      """).parse[Source]
+
+    @p
+      @b
+        Quasiquotes.
+      Scala.reflect is notorious for being obscure and user-unfriendly,
+      but it has its moments.
+      Quasiquotes have proven to be an amazing productivity booster,
+      so we implemented them in scala.meta, and now they are better than ever.
+      Note how the precise types for @code("x") and @code("y")
+      prevent the programmer from generating invalid code.
+      Learn more about quasiquotes in
+      @lnk("our documentation", "https://github.com/scalameta/scalameta/blob/master/notes/quasiquotes.md").
+
+    @meta
+      val addition = q"x + y"
+      val q"$x + $y" = addition
+      q"$y + $x" // compilation error
+
+    @p
+      @b
+        Tokens.
+      Scala.meta takes even the finest details of Scala code into account.
+      We achieve this by attaching tokens, data structures representing atomic
+      units of Scala syntax, to our abstract syntax trees. Note that the
+      abstract syntax tree in the printout doesn't have the comment per se -
+      it is stored in tokens instead.
+
+    @meta
+      val tree = "x + y /* adds x and y */".parse[Term].get
+      tree.syntax
+      tree.structure
+      tree.tokens.structure
+
+  @sect{Roadmap}
+    @p
+      @b
+        Semantic API.
+      Our first priority is to come up with an API that will provide
+      functionality to perform typechecking, name resolution, implicit inference, etc.
+      It is crucial to fully model the language and
+      achieve feature parity with scala.reflect.
+
+    @p
+      @b
+        New-style ("inline") macros.
+      As announced at ScalaDays NYC 2016,
+      macros based on scala.reflect are going to be dropped from the future versions of Scala.
+      We are now working on the replacement, so-called inline macros, under the banner of Macro Paradise 3.0.
+      You may be interested in visiting @lnk("https://github.com/scalameta/paradise", "https://github.com/scalameta/paradise")
+      to check out the state of the art.
+
+    @p
+      @b
+        Prettyprinting.
+      At the moment, scala.meta only remembers whitespace and comments for freshly parsed trees.
+      If such a tree gets transformed, even a little bit, all bets are off.
+      We are investigating ways to prevent transformations from destroying formatting
+      in unrelated trees. Take a look @lnk("#379", "https://github.com/scalameta/scalameta/issues/379")
+      in our issue tracker if you're interested in details.
+
+    @p
+      @b
+        Scala 2.10.
+      The current version of scala.meta can only be run with Scala 2.11.
+      This means that execution environments based on Scala 2.10 (for example, sbt 0.13.x)
+      can't use scala.meta without @lnk("complicated workarounds", "https://github.com/olafurpg/scalafmt/blob/406caaaf1738a1d7a6cdd0d6606ac67c5c928327/scalafmtSbt/src/main/scala/org/scalafmt/sbt/ScalaFmtPlugin.scala#L93").
+      Vote for @lnk("#295", "https://github.com/scalameta/scalameta/issues/295")
+      on our issue tracker if that's important for you.
 
 @raw
   <a href="https://github.com/scalameta/scalameta"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
+
+  <div style="margin: 0px;color: #ccc;text-align: center;padding: 0.5em 2em 0.5em 0em;border-top: 1px solid #eee;display: block;">
+    (c) 2014-2016 scala.meta contributors
+  </div>
+
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -27,6 +146,7 @@
     ga('create', 'UA-78566375-1', 'auto');
     ga('send', 'pageview');
   </script>
+
   <script>
     // NOTE: Disables the sidebar because we don't really have anything to show there yet.
     // Gonna re-enable it back by deleting this <script/> block once we have something interesting.
