@@ -38,6 +38,11 @@
 
 @raw
   <a href="https://github.com/scalameta/scalameta"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
+
+  <div style="margin: 0px;color: #ccc;text-align: center;padding: 0.5em 2em 0.5em 0em;border-top: 1px solid #eee;display: block;">
+    (c) 2014-2016 scala.meta contributors
+  </div>
+
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -46,6 +51,7 @@
     ga('create', 'UA-78566375-1', 'auto');
     ga('send', 'pageview');
   </script>
+
   <script>
     // NOTE: Disables the sidebar because we don't really have anything to show there yet.
     // Gonna re-enable it back by deleting this <script/> block once we have something interesting.
