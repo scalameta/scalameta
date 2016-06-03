@@ -168,7 +168,7 @@ object build extends Build {
       // generate the scalatex readme into `website`
       val website = new File(target.value.getAbsolutePath + File.separator + "scalatex")
       if (website.exists) website.delete
-      val _ = (run in Compile).toTask("").value
+      val _ = (run in Compile).toTask(" --validate").value
       if (!website.exists) sys.error("failed to generate the scalatex website")
 
       // import the scalatex readme into `repo`
