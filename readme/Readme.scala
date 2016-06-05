@@ -87,6 +87,8 @@ object Readme {
   def versionString = {
     val stdout = shell.check_output(s"git tag -l v*")
     val latestTag = stdout.split(EOL).last
+    val status = """^v(\d+)\.(\d+)\.(\d+)$""".r.unapplySeq(latestTag)
+    if (status.isEmpty) sys.error(s"unexpected shape of tag $latestTag in$EOL$stdout")
     latestTag.stripPrefix("v")
   }
 
