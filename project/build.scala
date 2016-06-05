@@ -2,6 +2,7 @@ import sbt._
 import Keys._
 import sbtassembly.Plugin._
 import AssemblyKeys._
+import com.typesafe.sbt.pgp.PgpKeys._
 import sbtunidoc.Plugin._
 import UnidocKeys._
 import java.io._
@@ -206,7 +207,10 @@ object build extends Build {
         case ex: Exception if ex.getMessage.contains(nothingToCommit) => println(nothingToCommit)
       }
     },
+    // TODO: doesn't work at the moment, see https://github.com/sbt/sbt-pgp/issues/42
+    publishSigned := publish.value,
     publishLocal := {},
+    publishLocalSigned := {},
     publishM2 := {}
   ) dependsOn (scalameta)
 
