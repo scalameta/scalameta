@@ -10,7 +10,7 @@ import scala.compat.Platform.EOL
 
 object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
-  lazy val LibraryVersion = scala.meta.Versions.nightly
+  lazy val LibraryVersion = "1.0.0-SNAPSHOT"
 
   lazy val root = Project(
     id = "root",
@@ -162,7 +162,7 @@ object build extends Build {
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     // Workaround for https://github.com/lihaoyi/Scalatex/issues/25
     dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
-    sources in Compile ++= List("os.scala", "versions.scala").map(f => baseDirectory.value / "../project" / f),
+    sources in Compile ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
     watchSources ++= baseDirectory.value.listFiles.toList,
     publish := {
       // generate the scalatex readme into `website`
