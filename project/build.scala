@@ -207,8 +207,10 @@ object build extends Build {
         case ex: Exception if ex.getMessage.contains(nothingToCommit) => println(nothingToCommit)
       }
     },
+    // TODO: doesn't work at the moment, see https://github.com/sbt/sbt-pgp/issues/42
     publishSigned := publish.value,
     publishLocal := {},
+    publishLocalSigned := {},
     publishM2 := {}
   ) dependsOn (scalameta)
 
