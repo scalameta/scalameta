@@ -24,7 +24,16 @@ object build extends Build {
     packagedArtifacts := Map.empty,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject,
     aggregate in test := false,
-    test := (test in scalameta in Test).value,
+    test := {
+      val runTests = (test in scalameta in Test).value
+      val runDocs = (run in readme in Compile).toTask(" --validate").value
+    },
+    publish := {
+      // Others projects are published automatically because we aggregate.
+      val publishDocs = (publish in readme).value
+    },
+    // TODO: The same thing for publishSigned doesn't work.
+    // SBT calls publishSigned on aggregated projects, but ignores everything else.
     console := (console in scalameta in Compile).value
   ) aggregate (
     common,
@@ -37,8 +46,7 @@ object build extends Build {
     tokenizers,
     tokens,
     transversers,
-    trees,
-    readme
+    trees
   )
 
   lazy val common = Project(
