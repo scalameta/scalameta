@@ -1,3 +1,8 @@
+clone:
+  depth: 50
+  tags: true
+  recursive: true
+
 build:
   image: ensime/ensime:v2.x-cache
   pull: true
@@ -6,9 +11,6 @@ build:
     - SONATYPE_PASSWORD=$$SONATYPE_PASSWORD
     - GITHUB_USERNAME=$$GITHUB_USERNAME
     - GITHUB_PASSWORD=$$GITHUB_PASSWORD
-  clone:
-    depth: 50
-    tags: true
   commands:
     - git log | head -n 20
     - host `curl -s http://httpbin.org/ip | jq -r '.origin'` || true ;
