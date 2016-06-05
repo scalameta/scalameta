@@ -1,3 +1,8 @@
+clone:
+  depth: 50
+  tags: true
+  recursive: true
+
 build:
   image: ensime/ensime:v2.x-cache
   pull: true
