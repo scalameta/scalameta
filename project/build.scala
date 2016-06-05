@@ -67,7 +67,7 @@ object build extends Build {
     publishableSettings: _*
   ) settings (
     description := "Scala.meta's APIs for new-style (\"inline\") macros"
-  ) dependsOn ()
+  ) dependsOn (inputs)
 
   lazy val inputs = Project(
     id   = "inputs",

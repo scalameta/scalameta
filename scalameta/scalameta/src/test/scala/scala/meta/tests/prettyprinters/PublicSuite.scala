@@ -102,10 +102,6 @@ class PublicSuite extends FunSuite {
     // covered above
   }
 
-  test("scala.meta.inline.Api.apply.toString") {
-    // n/a
-  }
-
   test("scala.meta.inputs.Input.toString") {
     // covered below
   }
