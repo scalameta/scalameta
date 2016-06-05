@@ -2,6 +2,7 @@ import sbt._
 import Keys._
 import sbtassembly.Plugin._
 import AssemblyKeys._
+import com.typesafe.sbt.pgp.PgpKeys._
 import sbtunidoc.Plugin._
 import UnidocKeys._
 import java.io._
@@ -206,6 +207,7 @@ object build extends Build {
         case ex: Exception if ex.getMessage.contains(nothingToCommit) => println(nothingToCommit)
       }
     },
+    publishSigned := publish.value,
     publishLocal := {},
     publishM2 := {}
   ) dependsOn (scalameta)
