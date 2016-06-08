@@ -240,7 +240,7 @@ object build extends Build {
     scalacOptions in (Compile, doc) ++= Seq("-skip-packages", ""),
     scalacOptions in (Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
     scalacOptions in (Compile, doc) ++= Seq("-groups"),
-    scalacOptions in Test ++= Seq("-Xfatal-warnings"),
+    scalacOptions ++= Seq("-Xfatal-warnings"),
     parallelExecution in Test := false, // hello, reflection sync!!
     logBuffered := false,
     scalaHome := {
