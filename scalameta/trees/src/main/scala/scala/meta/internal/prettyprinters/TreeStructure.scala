@@ -39,6 +39,8 @@ object TreeStructure {
           default
         case x @ Lit(value: String) =>
           s(enquote(value, DoubleQuotes))
+        case x @ Lit(()) =>
+          s("()")
         case x @ Lit(_) =>
           def isRelevantToken(tok: Token) = tok match {
             case Constant.Int(_) => true

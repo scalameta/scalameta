@@ -438,4 +438,16 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tree.show[Structure] === "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, Some(Type.Name(\"Int\"))), Nil, Nil)")
     assert(tree.show[Syntax] === "T <: Int")
   }
+
+  test("Lit(()) - 1") {
+    val lit @ Lit(()) = term("()")
+    assert(lit.show[Structure] === "Lit(())")
+    assert(lit.show[Syntax] === "()")
+  }
+
+  test("Lit(()) - 2") {
+    val Term.If(Term.Name("cond"), Lit(42), lit @ Lit(())) = super.term("if (cond) 42")
+    assert(lit.show[Structure] === "Lit(())")
+    assert(lit.show[Syntax] === "")
+  }
 }
