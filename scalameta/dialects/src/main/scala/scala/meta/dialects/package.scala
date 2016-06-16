@@ -67,7 +67,7 @@ package object dialects {
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
-    def allowToplevelTerms = false
+    def allowToplevelTerms = true
     def toplevelSeparator = EOL
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
