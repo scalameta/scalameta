@@ -123,6 +123,19 @@
       and @lnk("#359", "https://github.com/scalameta/scalameta/issues/359")
       on our issue tracker if that's important for you.
 
+  @sect("Supporters")
+    @p
+      @raw
+        <center>
+          <a href="https://twitter.com/"><img width="112" height="90" src="https://g.twimg.com/Twitter_logo_blue.png" /></a>
+          &nbsp; &nbsp;
+          <a href="https://www.jetbrains.com/"><img width="95" height="95" src="http://resources.jetbrains.com/assets/media/open-graph/jetbrains_250x250.png" /></a>
+          &nbsp; &nbsp;
+          <a href="https://www.codacy.com/"><img width="95" height="95" src="https://pbs.twimg.com/profile_images/531743109319651328/SyZuYA39_400x400.png" /></a>
+          &nbsp; &nbsp;
+          <a href="https://scala.epfl.ch/"><img width="95" height="95" src="https://scala.epfl.ch/resources/img/scala-center-swirl.png"/></a>
+        </center>
+
 @copyrightBadge
 
 @raw
