@@ -78,7 +78,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
-  /** @pre ch == '/'
+  /** Precondition: ch == '/'
    *  Returns true if a comment was skipped.
    */
   def skipComment(): Boolean = ch match {
