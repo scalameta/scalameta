@@ -115,15 +115,6 @@
 
     @p
       @b
-        Prettyprinting.
-      At the moment, scala.meta only remembers whitespace and comments for freshly parsed trees.
-      If such a tree gets transformed, even a little bit, all bets are off.
-      We are investigating ways to prevent transformations from destroying formatting
-      in unrelated trees. Take a look @lnk("#379", "https://github.com/scalameta/scalameta/issues/379")
-      in our issue tracker if you're interested in details.
-
-    @p
-      @b
         Other execution environments.
       The current version of scala.meta can only be run with Scala 2.11.
       This means that it is very hard or outright impossible to write scala.meta-based tools
