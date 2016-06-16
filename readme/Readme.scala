@@ -1,6 +1,7 @@
 package scala.meta
 
 import java.text._
+import java.util.Calendar
 import scala.util.Try
 import scalatags.Text.all._
 import org.scalameta.os._
@@ -105,5 +106,11 @@ object Readme {
     val version = versionString
     val timestamp = timestampOfTag("v" + version)
     version + timestamp
+  }
+
+  def copyrightBadge = {
+    val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+    val text = s"(c) 2014 - $currentYear scala.meta contributors"
+    div(style := "margin: 0px;color: #ccc;text-align: center;padding: 0.5em 2em 0.5em 0em;border-top: 1px solid #eee;display: block;")(text)
   }
 }
