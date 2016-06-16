@@ -50,6 +50,21 @@
 
     @p
       @b
+        Tokens.
+      Scala.meta takes even the finest details of Scala code into account.
+      We achieve this by attaching tokens, data structures representing atomic
+      units of Scala syntax, to our abstract syntax trees. Note that the
+      abstract syntax tree in the printout doesn't have the comment per se -
+      it is stored in tokens instead.
+
+    @meta
+      val tree = "x + y /* adds x and y */".parse[Term].get
+      tree.syntax
+      tree.structure
+      tree.tokens.structure
+
+    @p
+      @b
         Dialects.
       Scala.meta is designed from the ground up to be platform-independent.
       This means that we understand different versions of the base language:
@@ -79,21 +94,6 @@
       val addition = q"x + y"
       val q"$x + $y" = addition
       q"$y + $x" // compilation error
-
-    @p
-      @b
-        Tokens.
-      Scala.meta takes even the finest details of Scala code into account.
-      We achieve this by attaching tokens, data structures representing atomic
-      units of Scala syntax, to our abstract syntax trees. Note that the
-      abstract syntax tree in the printout doesn't have the comment per se -
-      it is stored in tokens instead.
-
-    @meta
-      val tree = "x + y /* adds x and y */".parse[Term].get
-      tree.syntax
-      tree.structure
-      tree.tokens.structure
 
   @sect{Roadmap}
     @p
