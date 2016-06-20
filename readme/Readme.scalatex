@@ -127,8 +127,8 @@
     @p
       @b
         Metaprogramming 2.0
-      (ScalaDays New York City / Berlin 2016). These talks explains the status of scala.meta, demonstrates key features,
-      talks about the early adopters and publishes our plans for the future. Of special interest is the extensive
+      (ScalaDays New York City / Berlin 2016). These talks explain the status of scala.meta, demonstrate key features,
+      cover the early adopters and publish our plans for the future. Of special interest is the extensive
       story of what's going to happen to macros and live demos of new-style ("inline") macros.
 
     @p
