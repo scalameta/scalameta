@@ -123,6 +123,26 @@
       and @lnk("#359", "https://github.com/scalameta/scalameta/issues/359")
       on our issue tracker if that's important for you.
 
+  @sect("Talks")
+    @p
+      @b
+        Metaprogramming 2.0
+      (ScalaDays New York City / Berlin 2016). These talks explains the status of scala.meta, demonstrates key features,
+      talks about the early adopters and publishes our plans for the future. Of special interest is the extensive
+      story of what's going to happen to macros and live demos of new-style ("inline") macros.
+
+    @p
+      The talk in Berlin happened a month after the talk in New York City. It features a clearer explanation of
+      how new-style macros are going to work and adds live demos of IntelliJ integration for new-style macros, Codacy and Scalafmt.
+      At the moment, the video of Berlin's talk is not available, but slides also provide a lot of information.
+
+    @p
+      Video from New York City (May 2016):
+      @lnk("https://www.youtube.com/watch?v=wii5UPtu1_g", "https://www.youtube.com/watch?v=wii5UPtu1_g")
+      @br
+      Slides from Berlin (Jun 2016):
+      @lnk("http://scalamacros.org/paperstalks/2016-06-17-Metaprogramming20.pdf", "http://scalamacros.org/paperstalks/2016-06-17-Metaprogramming20.pdf")
+
   @sect("Supporters")
     @p
       @raw
