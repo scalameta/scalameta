@@ -2531,10 +2531,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  AccessQualifier ::= `[' (Id | this) `]'
    *  }}}
    */
-  def accessModifierOpt(): Option[Mod] = {
-    if (token.is[KwPrivate] || token.is[KwProtected]) Some(accessModifier())
-    else if (token.is[Unquote]) Some(unquote[Mod])
-    else None
+  def accessModifierOpt(): Option[Mod] = token match {
+    case Unquote(_)    => Some(unquote[Mod])
+    case Ellipsis(_)   => Some(ellipsis(1, astInfo[Mod]))
+    case KwPrivate()   => Some(accessModifier())
+    case KwProtected() => Some(accessModifier())
+    case _             => None
   }
 
   def modifier(): Mod = autoPos(token match {
