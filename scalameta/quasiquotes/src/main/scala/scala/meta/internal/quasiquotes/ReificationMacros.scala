@@ -293,7 +293,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           pendingQuasis.push(quasi)
           if (quasi.rank == 0) {
             var inferredPt = quasi.pt.wrap(pendingQuasis.map(_.rank).sum).toTpe
-            if (optional) inferredPt = appliedType(typeOf[Option[_]], inferredPt)
+            if (optional) inferredPt = appliedType(definitions.OptionClass, inferredPt)
             val lifted = mode match {
               case Mode.Term(_, _) =>
                 q"$InternalLift[$inferredPt](${quasi.hole.arg})"

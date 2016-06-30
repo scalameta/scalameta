@@ -8,7 +8,7 @@ import scala.meta.prettyprinters._
 
 class ShowMacros(val c: Context) {
   import c.universe._
-  val ShowTpe = typeOf[Show[_]]
+  val ShowClass = c.mirror.staticClass("scala.meta.prettyprinters.Show")
   val ShowObj = q"_root_.scala.meta.prettyprinters.Show"
 
   private def mkResults(xs: List[c.Tree]): List[c.Tree] = {
@@ -16,7 +16,7 @@ class ShowMacros(val c: Context) {
       if (x.tpe <:< typeOf[Show.Result])
         x
       else {
-        val printer = c.inferImplicitValue(appliedType(ShowTpe, x.tpe :: Nil), silent = true)
+        val printer = c.inferImplicitValue(appliedType(ShowClass, x.tpe :: Nil), silent = true)
         if (printer.nonEmpty)
           q"$printer($x)"
         else

@@ -11,7 +11,7 @@ import scala.meta.classifiers.Classifier
 class ClassifierMacros(val c: Context) extends MacroHelpers {
   import c.universe._
 
-  lazy val ClassifierClass = hygienicRef[Classifier[_, _]]
+  lazy val ClassifierClass = tq"_root_.scala.meta.classifiers.Classifier"
 
   def classifier(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
     override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {

@@ -55,8 +55,8 @@ trait MacroHelpers extends DebugFinder
   lazy val AnyClass = hygienicRef[scala.Any]
   lazy val AnyRefClass = hygienicRef[scala.AnyRef]
   lazy val NothingClass = tq"_root_.scala.Nothing"
-  lazy val OptionClass = hygienicRef[scala.Option[_]]
-  lazy val SomeClass = hygienicRef[scala.Some[_]]
+  lazy val OptionClass = tq"_root_.scala.Option"
+  lazy val SomeClass = tq"_root_.scala.Some"
   lazy val SomeModule = hygienicRef(Some)
   lazy val NoneModule = hygienicRef(scala.None)
   def SerialVersionUIDAnnotation(uid: Long) = q"new ${hygienicRef[SerialVersionUID]}($uid)"
@@ -68,12 +68,12 @@ trait MacroHelpers extends DebugFinder
   lazy val ScalaRunTimeModule = hygienicRef(scala.runtime.ScalaRunTime)
   lazy val UnsupportedOperationException = hygienicRef[UnsupportedOperationException]
   lazy val IndexOutOfBoundsException = hygienicRef[IndexOutOfBoundsException]
-  lazy val IteratorClass = hygienicRef[Iterator[_]]
-  lazy val SeqClass = hygienicRef[scala.collection.immutable.Seq[_]]
+  lazy val IteratorClass = tq"_root_.scala.collection.Iterator"
+  lazy val SeqClass = tq"_root_.scala.collection.immutable.Seq"
   lazy val ListBufferModule = hygienicRef(scala.collection.mutable.ListBuffer)
   lazy val UnitClass = hygienicRef[scala.Unit]
-  lazy val ClassClass = hygienicRef[java.lang.Class[_]]
-  lazy val ClassTagClass = hygienicRef[scala.reflect.ClassTag[_]]
+  lazy val ClassClass = tq"_root_.java.lang.Class"
+  lazy val ClassTagClass = tq"_root_.scala.reflect.ClassTag"
   lazy val ImplicitlyMethod = q"${hygienicRef(scala.Predef)}.implicitly"
 
   private def fqRef(fqName: String, isTerm: Boolean): Tree = {
@@ -116,8 +116,8 @@ trait MacroHelpers extends DebugFinder
       if (tpe =:= typeOf[String] ||
           tpe =:= typeOf[scala.Symbol] ||
           ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
-      else if (tpe.typeSymbol == symbolOf[Option[_]] && PrimitiveTpe.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
-      else if (tpe.typeSymbol == symbolOf[Class[_]]) Some(tpe)
+      else if (tpe.typeSymbol == definitions.OptionClass && PrimitiveTpe.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
+      else if (tpe.typeSymbol == definitions.ClassClass) Some(tpe)
       else None
     }
   }
