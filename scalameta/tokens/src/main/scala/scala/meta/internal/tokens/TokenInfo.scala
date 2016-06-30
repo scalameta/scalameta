@@ -27,7 +27,7 @@ class TokenInfoMacros(val c: Context) extends MacroHelpers with TokenReflection 
   lazy val mirror: u.Mirror = c.mirror
   import u._
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    val TokenInfoClass = hygienicRef[scala.meta.internal.tokens.TokenInfo[_]]
+    val TokenInfoClass = tq"_root_.scala.meta.internal.tokens.TokenInfo"
     val sym = T.tpe.typeSymbol
     if (sym.isToken) {
       q"""
