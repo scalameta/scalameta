@@ -477,4 +477,25 @@ class TermSuite extends ParseSuite {
   test("$_") {
     intercept[ParseException](term(""" q"x + $_" """))
   }
+
+  test("!x = y") {
+    val Term.Assign(Term.ApplyUnary(Term.Name("!"), Term.Name("x")), Term.Name("y")) = term("!x = y")
+  }
+
+  test("!(arr.cast[Ptr[Byte]] + sizeof[Ptr[_]]).cast[Ptr[Int]] = length") {
+    val Term.Assign(
+      Term.ApplyUnary(
+        Term.Name("!"),
+        Term.ApplyType(
+          Term.Select(
+            Term.ApplyInfix(
+              Term.ApplyType(Term.Select(Term.Name("arr"), Term.Name("cast")), Seq(Type.Apply(Type.Name("Ptr"), Seq(Type.Name("Byte"))))),
+              Term.Name("+"),
+              Nil,
+              Seq(Term.ApplyType(Term.Name("sizeof"), Seq(Type.Apply(Type.Name("Ptr"), Seq(Type.Placeholder(Type.Bounds(None, None)))))))),
+            Term.Name("cast")),
+          Seq(Type.Apply(Type.Name("Ptr"), Seq(Type.Name("Int")))))),
+      Term.Name("length")) =
+    term("!(arr.cast[Ptr[Byte]] + sizeof[Ptr[_]]).cast[Ptr[Int]] = length")
+  }
 }

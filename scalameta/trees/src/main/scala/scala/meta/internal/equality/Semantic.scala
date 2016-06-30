@@ -12,9 +12,9 @@ import scala.meta.internal.semantic._
 // 2) some structurally equal refs may compare unequal when they refer to different defns
 
 // Now let's go through all of our refs and see how we should compare them.
-// At the moment, we have 16 different AST nodes that are subtype of Ref:
+// At the moment, we have 17 different AST nodes that are subtype of Ref:
 // Name.Indeterminate,
-// Term.Name, Term.Select,
+// Term.Name, Term.Select, Term.ApplyUnary,
 // Type.Name, Type.Select, Type.Project, Type.Singleton,
 // Pat.Type.Project,
 // Ctor.Ref.Name, Ctor.Ref.Select, Ctor.Ref.Project, Ctor.Ref.Function,

@@ -63,7 +63,7 @@ object Term {
   @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
   @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term with Ctor.Call
   @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
-  @ast class ApplyUnary(op: Name, arg: Term) extends Term {
+  @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
     require(op.isUnaryOp)
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
