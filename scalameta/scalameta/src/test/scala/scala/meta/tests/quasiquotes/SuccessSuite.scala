@@ -14,7 +14,7 @@ class SuccessSuite extends FunSuite {
   }
 
   test("rank-1 liftables") {
-    implicit def custom[U >: List[Term]]: Lift[List[Int], U] = Lift(_.map(x => q"$x"))
+    implicit def custom[U >: List[Term]]: Lift[List[Int], U] = Lift(_.map(x => q"$x".asInstanceOf[Term]))
     assert(q"foo(..${List(1, 2, 3)})".show[Structure] === "Term.Apply(Term.Name(\"foo\"), Seq(Lit(1), Lit(2), Lit(3)))")
   }
 
@@ -2166,5 +2166,19 @@ class SuccessSuite extends FunSuite {
     assert(q"class C extends $parent with $parent".syntax === "class C extends _root_.scala.AnyVal with _root_.scala.AnyVal")
     assert(q"class C extends $parent(arg)".syntax === "class C extends _root_.scala.AnyVal(arg)")
     assert(q"class C extends $parent[targ]".syntax === "class C extends _root_.scala.AnyVal[targ]")
+  }
+
+  test("#452") {
+    val stat = q"class C"
+    assert(q"$stat; $stat".syntax === """
+    |{
+    |  class C
+    |  class C
+    |}""".trim.stripMargin)
+    assert(q"{ $stat; $stat }".syntax === """
+    |{
+    |  class C
+    |  class C
+    |}""".trim.stripMargin)
   }
 }
