@@ -2158,4 +2158,13 @@ class SuccessSuite extends FunSuite {
     val q"class $tname2 ..$mods2" = q"class C private"
     assert(q"class $tname2 ..$mods2".syntax === "class C private")
   }
+
+  test("#448") {
+    val parent = ctor"_root_.scala.AnyVal"
+    val template = template"$parent"
+    assert(q"class C extends $template".syntax === "class C extends _root_.scala.AnyVal")
+    assert(q"class C extends $parent with $parent".syntax === "class C extends _root_.scala.AnyVal with _root_.scala.AnyVal")
+    assert(q"class C extends $parent(arg)".syntax === "class C extends _root_.scala.AnyVal(arg)")
+    assert(q"class C extends $parent[targ]".syntax === "class C extends _root_.scala.AnyVal[targ]")
+  }
 }

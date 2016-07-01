@@ -112,6 +112,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def parseCase(): Case = parseRule{parser => parser.accept[KwCase]; parser.caseClause()}
   def parseCtorCall(): Ctor.Call = parseRule(_.constructorCall(typ(), allowArgss = true))
   def parseTemplate(): Template = parseRule(_.template())
+  def parseQuasiquoteTemplate(): Template = parseRule(_.quasiquoteTemplate())
   def parseMod(): Mod = {
     implicit class XtensionParser(parser: this.type) {
       def annot() = parser.annots(skipNewLines = false) match {
@@ -3188,7 +3189,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         atPos(arrow, arrow)(Ctor.Ref.Function(atPos(arrow, arrow)(Ctor.Name("=>"))))
       }
       atPos(tpe, tpe)(tpe match {
-        case q: Type.Quasi => q.become[Ctor.Ref.Name.Quasi]
+        case q: Type.Quasi => q.become[Ctor.Call.Quasi]
         case Type.Name(value) => Ctor.Name(value)
         case Type.Select(qual, name: Type.Name.Quasi) => Ctor.Ref.Select(qual, atPos(name, name)(name.become[Ctor.Name.Quasi]))
         case Type.Select(qual, name) => Ctor.Ref.Select(qual, atPos(name, name)(Ctor.Name(name.value)))
@@ -3229,9 +3230,21 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def templateParents(): List[Ctor.Call] = {
     val parents = new ListBuffer[Ctor.Call]
-    def readAppliedParent() =
-      if (token.is[Ellipsis]) parents += ellipsis(1, astInfo[Ctor.Call])
-      else parents += constructorCall(startModType())
+    def readAppliedParent() = {
+      val parent = token match {
+        case Unquote(_) =>
+          val parent = constructorCall(startModType())
+          parent match {
+            case parent: Ctor.Ref.Name.Quasi => parent.become[Ctor.Call.Quasi]
+            case other => other
+          }
+        case Ellipsis(_) =>
+          ellipsis(1, astInfo[Ctor.Call])
+        case _ =>
+          constructorCall(startModType())
+      }
+      parents += parent
+    }
     readAppliedParent()
     while (token.is[KwWith]) { next(); readAppliedParent() }
     parents.toList
@@ -3258,12 +3271,26 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       } else {
         Template(Nil, Nil, self, Some(body))
       }
-    } else if (token.is[Unquote]) {
+    } else if (token.is[Unquote] && ahead(
+      !token.is[Dot] && !token.is[Hash] && !token.is[At] && !token.is[Ellipsis] &&
+      !token.is[LeftParen] && !token.is[LeftBracket] && !token.is[LeftBrace] && !token.is[KwWith]
+    )) {
       unquote[Template]
     } else {
       val parents = templateParents()
       val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
       Template(Nil, parents, self, body)
+    }
+  }
+
+  def quasiquoteTemplate(): Template = autoPos {
+    token match {
+      case Unquote(_) if ahead(token.is[EOF]) =>
+        val parents = List(unquote[Ctor.Call])
+        val self = autoPos(Term.Param(Nil, autoPos(Name.Anonymous()), None, None))
+        Template(Nil, parents, self, None)
+      case _ =>
+        template()
     }
   }
 
