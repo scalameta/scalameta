@@ -241,8 +241,10 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                 // because that still wouldn't work in pattern mode.
                 // Finally, we can't do something like q"+:(${liftQuasi(quasi)}, (${liftTree(curr)}))",
                 // because would violate evaluation order guarantees that we must keep.
-                if (mode.isTerm) q"${liftTree(curr)} +: ${liftQuasi(quasi)}"
-                else pq"${liftTree(curr)} +: ${liftQuasi(quasi)}"
+                val currElement = liftTree(curr)
+                val alreadyLiftedSeq = acc.orElse(liftQuasi(quasi))
+                if (mode.isTerm) q"$currElement +: $alreadyLiftedSeq"
+                else pq"$currElement +: $alreadyLiftedSeq"
               }), Nil)
             } else {
               require(prefix.isEmpty && debug(trees, acc, prefix))
