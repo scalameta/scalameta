@@ -2,6 +2,7 @@ package scala.meta
 package internal
 package quasiquotes
 
+import scala.compat.Platform.EOL
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import org.scalameta.invariants._
@@ -32,14 +33,23 @@ class ConversionMacros(val c: Context) extends AstReflection {
 
   val MetaLift = mirror.staticClass("scala.meta.quasiquotes.Lift")
   val MetaUnlift = mirror.staticClass("scala.meta.quasiquotes.Unlift")
+  val MetaTemplate = mirror.staticClass("scala.meta.Template")
 
-  private def foundReqMsg(found: c.Type, req: c.Type): String = {
+  private def typeMismatchMessage(found: c.Type, req: c.Type): String = {
     val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
     val msg = g.analyzer.foundReqMsg(found.asInstanceOf[g.Type], req.asInstanceOf[g.Type])
     // TODO: somehow, error reporting facilities are now printing
     // some types as `meta.XXX` and some types as `scala.meta.XXX`
     // find out why and fix this ugliness
-    msg.replace("meta.", "scala.meta.").replace("scala.scala.", "scala.")
+    val foundReqMessage = msg.replace("meta.", "scala.meta.").replace("scala.scala.", "scala.")
+    var wholeMessage = "type mismatch when unquoting" + foundReqMessage
+    if (req.typeSymbol == MetaTemplate) {
+      var hint = "Note: This shape of a quasiquote tells scala.meta that you're unquoting a template."
+      hint += (EOL + "If you'd like to unquote a parent reference, add {} immediately after the unquote.")
+      hint += (EOL + "For more details, see https://github.com/scalameta/scalameta/issues/223.")
+      wholeMessage = wholeMessage + EOL + hint
+    }
+    wholeMessage
   }
 
   def liftApply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {
@@ -54,8 +64,7 @@ class ConversionMacros(val c: Context) extends AstReflection {
       if (liftable.nonEmpty) {
         q"$liftable.apply($outside)"
       } else {
-        val errorMessage = "type mismatch when unquoting" + foundReqMsg(outsideTpe, insideTpe)
-        c.abort(c.enclosingPosition, errorMessage)
+        c.abort(c.enclosingPosition, typeMismatchMessage(outsideTpe, insideTpe))
       }
     }
   }
@@ -84,8 +93,7 @@ class ConversionMacros(val c: Context) extends AstReflection {
       if (unliftable.nonEmpty) {
         q"$unliftable.apply($inside)"
       } else {
-        val errorMessage = "type mismatch when unquoting" + foundReqMsg(insideTpe, outsideTpe)
-        c.abort(c.enclosingPosition, errorMessage)
+        c.abort(c.enclosingPosition, typeMismatchMessage(insideTpe, outsideTpe))
       }
     }
   }

@@ -834,4 +834,21 @@ class ErrorSuite extends FunSuite {
       |               ^
     """.trim.stripMargin)
   }
+
+  test("#448") {
+    assert(typecheckError("""
+      import scala.meta._
+      val notReallyAParent = t"_root_.scala.AnyVal"
+      q"class C extends $notReallyAParent"
+    """) === """
+      |<macro>:4: type mismatch when unquoting;
+      | found   : scala.meta.Type.Select
+      | required: scala.meta.Template
+      |Note: This shape of a quasiquote tells scala.meta that you're unquoting a template.
+      |If you'd like to unquote a parent reference, add {} immediately after the unquote.
+      |For more details, see https://github.com/scalameta/scalameta/issues/223.
+      |      q"class C extends $notReallyAParent"
+      |                        ^
+    """.trim.stripMargin)
+  }
 }
