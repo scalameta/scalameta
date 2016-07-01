@@ -2181,4 +2181,22 @@ class SuccessSuite extends FunSuite {
     |  class C
     |}""".trim.stripMargin)
   }
+
+  test("#450") {
+    val defDefns = List(q"def baz {}")
+    val objectDefn = q"""
+      object M {
+        def foo = bar
+        println("another stat")
+        ..$defDefns
+      }
+    """
+    assert(objectDefn.syntax === """
+      |object M {
+      |  def foo = bar
+      |  println("another stat")
+      |  def baz: Unit = {}
+      |}
+    """.trim.stripMargin)
+  }
 }
