@@ -68,7 +68,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:6: type mismatch when unquoting;
       | found   : Dummy
-      | required: scala.meta.Term
+      | required: scala.meta.Stat
       |      q"$x"
       |        ^
     """.trim.stripMargin)
@@ -114,7 +114,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Term.Name]
-      | required: scala.meta.Term
+      | required: scala.meta.Stat
       |      q"$xs"
       |        ^
     """.trim.stripMargin)
@@ -144,7 +144,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[List[scala.meta.Term.Name]]
-      | required: scala.meta.Term
+      | required: scala.meta.Stat
       |      q"$xss"
       |        ^
     """.trim.stripMargin)
@@ -248,7 +248,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:5: type mismatch when unquoting;
       | found   : scala.meta.Type.Name
-      | required: scala.meta.Term
+      | required: scala.meta.Stat
       |      q"$name"
       |        ^
     """.trim.stripMargin)
