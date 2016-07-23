@@ -127,20 +127,16 @@
     @p
       @b
         Metaprogramming 2.0
-      (ScalaDays New York City / Berlin 2016). These talks explain the status of scala.meta, demonstrate key features,
-      cover the early adopters and publish our plans for the future. Of special interest is the extensive
-      story of what's going to happen to macros and live demos of new-style ("inline") macros.
+      (ScalaDays Berlin 2016). This talk explains the status of scala.meta, demonstrates key features,
+      presents the early adopters and publishes our plans for the future. In Berlin, we provided an extensive
+      story of what's going to happen to compile-time metaprogramming in Scala,
+      featuring a live demo of new-style ("inline") macros that support integration with IntelliJ IDEA.
 
     @p
-      The talk in Berlin happened a month after the talk in New York City. It features a clearer explanation of
-      how new-style macros are going to work and adds live demos of IntelliJ integration for new-style macros, Codacy and Scalafmt.
-      At the moment, the video of Berlin's talk is not available, but slides also provide a lot of information.
-
-    @p
-      Video from New York City (May 2016):
-      @lnk("https://www.youtube.com/watch?v=wii5UPtu1_g", "https://www.youtube.com/watch?v=wii5UPtu1_g")
+      Video:
+      @lnk("https://www.youtube.com/watch?v=IPnd_SZJ1nM", "https://www.youtube.com/watch?v=IPnd_SZJ1nM")
       @br
-      Slides from Berlin (Jun 2016):
+      Slides:
       @lnk("http://scalamacros.org/paperstalks/2016-06-17-Metaprogramming20.pdf", "http://scalamacros.org/paperstalks/2016-06-17-Metaprogramming20.pdf")
 
   @sect("Supporters")
