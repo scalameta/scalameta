@@ -1684,7 +1684,7 @@ class SuccessSuite extends FunSuite {
   }
 
   /*
-   Issue #472
+   Issue #462
    */
   test("3 q\"package $ref { ..$stats }\"") {
     val ref = q"p.a"
