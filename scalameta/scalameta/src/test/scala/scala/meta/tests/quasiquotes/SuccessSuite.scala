@@ -1683,6 +1683,15 @@ class SuccessSuite extends FunSuite {
     assert(q"package $ref { ..$stats }".show[Structure] === "Pkg(Term.Name(\"p\"), Seq(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))")
   }
 
+  /*
+   Issue #472
+   */
+  test("3 q\"package $ref { ..$stats }\"") {
+    val ref = q"p.a"
+    val stats = List(q"class A", q"object B")
+    assert(q"package $ref { ..$stats }".show[Structure] === """Pkg(Term.Select(Term.Name("p"), Term.Name("a")), Seq(Defn.Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)), Defn.Object(Nil, Term.Name("B"), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))""")
+  }
+
   test("1 q\"..$mods def this(...$paramss)\"") {
     val q"..$mods def this(...$paramss)" = q"private def this(x: X, y: Y)"
     assert(mods.toString === "List(private)")
