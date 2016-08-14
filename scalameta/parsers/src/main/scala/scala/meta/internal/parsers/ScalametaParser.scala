@@ -1295,7 +1295,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   *   }}}
   */
   def qualId(): Term.Ref = {
-    val name = termName()
+    /*
+      Issue #472
+      If name is an unquote (Quasi) return the Term.Ref.Quasi type
+     */
+    val name = termName() match {
+      case quasi: Term.Name.Quasi =>
+        quasi.become[Term.Ref.Quasi]
+      case ref@_ => ref
+    }
     if (token.isNot[Dot]) name
     else {
       next()
