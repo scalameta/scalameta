@@ -775,6 +775,13 @@ class SuccessSuite extends FunSuite {
     val ref = q"X"
     assert(t"$ref.type".show[Structure] === "Type.Singleton(Term.Name(\"X\"))")
   }
+  /*
+   Issue #462
+   */
+  test("3 t\"$ref.type\"") {
+    val ref = q"X.a"
+    assert(t"$ref.type".show[Structure] === "Type.Singleton(Term.Select(Term.Name(\"X\"), Term.Name(\"a\")))")
+  }
 
   test("1 t\"$tpe[..$tpes]") {
     val t"$tpe[..$tpes]" = t"X[Y, Z]"
@@ -1026,6 +1033,16 @@ class SuccessSuite extends FunSuite {
     val tpes = List(t"`A`", t"B")
     val apats = List(p"`Q`", q"W")
     assert(p"$ref[..$tpes](..$apats)".show[Structure] === "Pat.Extract(Term.Name(\"x\"), Seq(Type.Name(\"A\"), Type.Name(\"B\")), Seq(Term.Name(\"Q\"), Term.Name(\"W\")))")
+  }
+
+  /*
+   Issue #462
+   */
+  test("5 p\"$ref[..$tpes](..$apats)\"") {
+    val ref = q"x.a"
+    val tpes = List(t"A", t"B")
+    val apats = List(q"Q", q"W")
+    assert(p"$ref[..$tpes](..$apats)".show[Structure] === "Pat.Extract(Term.Select(Term.Name(\"x\"), Term.Name(\"a\")), Seq(Type.Name(\"A\"), Type.Name(\"B\")), Seq(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
   test("1 p\"$pat $name (..$apats)\"") {
@@ -1683,6 +1700,15 @@ class SuccessSuite extends FunSuite {
     assert(q"package $ref { ..$stats }".show[Structure] === "Pkg(Term.Name(\"p\"), Seq(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))")
   }
 
+  /*
+   Issue #462
+   */
+  test("3 q\"package $ref { ..$stats }\"") {
+    val ref = q"p.a"
+    val stats = List(q"class A", q"object B")
+    assert(q"package $ref { ..$stats }".show[Structure] === """Pkg(Term.Select(Term.Name("p"), Term.Name("a")), Seq(Defn.Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Ctor.Ref.Name("this"), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)), Defn.Object(Nil, Term.Name("B"), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))""")
+  }
+
   test("1 q\"..$mods def this(...$paramss)\"") {
     val q"..$mods def this(...$paramss)" = q"private def this(x: X, y: Y)"
     assert(mods.toString === "List(private)")
@@ -2027,6 +2053,15 @@ class SuccessSuite extends FunSuite {
     assert(importees.length == 2)
     assert(importees(0).show[Syntax] === "baz")
     assert(importees(1).show[Syntax] === "_")
+  }
+
+  /*
+   Issue #462
+   */
+  test("3 importer\"$ref.{..$importees}\"") {
+    val ref = q"bar.a"
+    val importees = List(importee"baz", importee"_")
+    assert(importer"$ref.{..$importees}".show[Syntax] === "bar.a.{ baz, _ }")
   }
 
   test("1 importee\"$iname\"") {

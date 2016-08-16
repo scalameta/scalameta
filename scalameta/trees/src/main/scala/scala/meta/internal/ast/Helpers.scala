@@ -123,11 +123,13 @@ object Helpers {
   implicit class XtensionTermRefOps(tree: Term.Ref) {
     def isPath: Boolean = tree.isStableId || tree.is[Term.This]
     def isQualId: Boolean = tree match {
+      case _: Term.Ref.Quasi              => true
       case _: Term.Name                   => true
       case Term.Select(qual: Term.Ref, _) => qual.isQualId
       case _                              => false
     }
     def isStableId: Boolean = tree match {
+      case _: Term.Ref.Quasi              => true
       case _: Term.Name | Term.Select(_: Term.Super, _) => true
       case Term.Select(qual: Term.Quasi, _)             => true
       case Term.Select(qual: Term.Ref, _)               => qual.isPath

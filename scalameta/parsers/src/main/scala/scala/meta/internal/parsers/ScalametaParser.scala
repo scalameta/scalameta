@@ -970,7 +970,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           else {
             next()
             accept[KwType]
-            Type.Singleton(ref)
+            val refOrQuasi = ref match {
+              case quasi: Term.Name.Quasi =>
+                quasi.become[Term.Ref.Quasi]
+              case ref => ref
+            }
+            Type.Singleton(refOrQuasi)
           }
       }))
     }
@@ -1295,7 +1300,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   *   }}}
   */
   def qualId(): Term.Ref = {
-    val name = termName()
+    val name = termName() match {
+      case quasi: Term.Name.Quasi =>
+        quasi.become[Term.Ref.Quasi]
+      case ref => ref
+    }
     if (token.isNot[Dot]) name
     else {
       next()
@@ -2426,7 +2435,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case _        => Nil
         }
         (token, sid) match {
-          case (LeftParen(), _)                     => Pat.Extract(sid, targs, checkNoTripleDots(argumentPatterns()))
+          case (LeftParen(), _)                     =>
+            val quasiOrSid = sid match {
+              case quasi: Term.Name.Quasi => quasi.become[Term.Ref.Quasi]
+              case path => path
+            }
+            Pat.Extract(quasiOrSid, targs, checkNoTripleDots(argumentPatterns()))
           case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value", at = token)
           case (_, name: Term.Name.Quasi)           => name.become[Pat.Quasi]
           case (_, name: Term.Name) if isVarPattern => Pat.Var.Term(name)
@@ -2805,7 +2819,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def importer(): Importer = autoPos {
-    val sid = stableId()
+    val sid = stableId() match {
+      case quasi: Term.Name.Quasi => quasi.become[Term.Ref.Quasi]
+      case path => path
+    }
     def dotselectors = { accept[Dot]; Importer(sid, importees()) }
     sid match {
       case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
