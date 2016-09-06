@@ -52,6 +52,8 @@ object build extends Build {
     base = file("scalameta/common")
   ) settings (
     publishableSettings,
+    // used by a debug logger, not needed for the published library.
+    libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.2" % "provided",
     description := "Bag of private and public helpers used in scala.meta's APIs and implementations",
     enableMacros
   )
@@ -104,7 +106,7 @@ object build extends Build {
   ) settings (
     publishableSettings,
     description := "Scala.meta's APIs for tokenization and its baseline implementation",
-    libraryDependencies += "com.lihaoyi" %% "scalaparse" % "0.3.7",
+    libraryDependencies += "com.lihaoyi" %% "fastparse" % "0.3.7", // to parse xml literals.
     enableMacros
   ) dependsOn (common, dialects, inputs, tokens)
 
@@ -155,7 +157,7 @@ object build extends Build {
     exposePaths("readme", Runtime),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     // Workaround for https://github.com/lihaoyi/Scalatex/issues/25
-    dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
+    dependencyOverrides += "com.lihaoyi" %% "fastparse" % "0.3.1",
     sources in Compile ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
     watchSources ++= baseDirectory.value.listFiles.toList,
     publish := {
@@ -216,6 +218,8 @@ object build extends Build {
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+    // to produce meaningful diffs in multiline string equality checks.
+    libraryDependencies += "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % "test",
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     publishMavenStyle := true,
