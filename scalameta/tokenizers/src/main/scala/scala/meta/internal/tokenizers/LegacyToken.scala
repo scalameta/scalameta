@@ -49,6 +49,7 @@ object LegacyToken {
   final val SEALED = 45
   final val LAZY = 55
   final val MACRO = 57
+  final val INLINE = 58
 
   /** templates */
   final val PACKAGE = 60

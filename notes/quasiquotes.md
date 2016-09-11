@@ -206,6 +206,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Lazy             | `mod"lazy"`
  Val Param        | `mod"valparam"`
  Var Param        | `mod"varparam"`
+ Inline           | `mod"inline"`
 
 ## Enumerators (meta.Enum)
 

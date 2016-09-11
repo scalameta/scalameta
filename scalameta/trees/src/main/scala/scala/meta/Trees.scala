@@ -464,6 +464,7 @@ object Mod {
   // and that has proven to be very clunky (e.g. such XXX.Param type has to be a supertype for Term.Param)
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod
+  @ast class Inline() extends Mod
 }
 
 @branch trait Enumerator extends Tree

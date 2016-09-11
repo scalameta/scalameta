@@ -34,6 +34,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
   implicit val currentDialect: Dialect = dialect
   def inQuasiquote = dialect.metalevel.isQuoted
+  def allowInline = dialect.allowInline
 
 /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
@@ -140,6 +141,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwVar() if !inQuasiquote          => parser.next(); Mod.VarParam()
       case Ident("valparam") if inQuasiquote => parser.next(); Mod.ValParam()
       case Ident("varparam") if inQuasiquote => parser.next(); Mod.VarParam()
+      case KwInline() if allowInline         => parser.next(); Mod.Inline()
       case _                                 => fail()
     }))
   }
@@ -522,7 +524,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwAbstract] || token.is[KwFinal] ||
       token.is[KwSealed] || token.is[KwImplicit] ||
       token.is[KwLazy] || token.is[KwPrivate] ||
-      token.is[KwProtected] || token.is[KwOverride]
+      token.is[KwProtected] || token.is[KwOverride] ||
+      token.is[KwInline]
     }
   }
 
@@ -2559,17 +2562,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def modifier(): Mod = autoPos(token match {
-    case Unquote(_)    => unquote[Mod]
-    case Ellipsis(_)   => ellipsis(1, astInfo[Mod])
-    case KwAbstract()  => next(); Mod.Abstract()
-    case KwFinal()     => next(); Mod.Final()
-    case KwSealed()    => next(); Mod.Sealed()
-    case KwImplicit()  => next(); Mod.Implicit()
-    case KwLazy()      => next(); Mod.Lazy()
-    case KwOverride()  => next(); Mod.Override()
-    case KwPrivate()   => accessModifier()
-    case KwProtected() => accessModifier()
-    case _             => syntaxError(s"modifier expected but ${token.name} found", at = token)
+    case Unquote(_)                  => unquote[Mod]
+    case Ellipsis(_)                 => ellipsis(1, astInfo[Mod])
+    case KwAbstract()                => next(); Mod.Abstract()
+    case KwFinal()                   => next(); Mod.Final()
+    case KwSealed()                  => next(); Mod.Sealed()
+    case KwImplicit()                => next(); Mod.Implicit()
+    case KwLazy()                    => next(); Mod.Lazy()
+    case KwOverride()                => next(); Mod.Override()
+    case KwPrivate()                 => accessModifier()
+    case KwProtected()               => accessModifier()
+    case KwInline() if allowInline   => next(); Mod.Inline()
+    case _                           => syntaxError(s"modifier expected but ${token.name} found", at = token)
   })
 
   /** {{{
@@ -3509,7 +3513,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
     val mods = (implicitMod ++: annots(skipNewLines = true)) ++ localModifiers()
-    if (mods forall { case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Annot => true; case _ => false })
+    if (mods forall { case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Inline | _: Mod.Annot => true; case _ => false })
       (defOrDclOrSecondaryCtor(mods) match {
         case stat if stat.isBlockStat => stat
         case other                    => syntaxError("is not a valid block statement", at = other)

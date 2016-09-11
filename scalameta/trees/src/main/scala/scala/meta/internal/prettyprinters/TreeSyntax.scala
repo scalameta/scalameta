@@ -448,6 +448,7 @@ object TreeSyntax {
         case _: Mod.Lazy                     => kw("lazy")
         case _: Mod.ValParam                 => kw("val")
         case _: Mod.VarParam                 => kw("var")
+        case _: Mod.Inline                   => kw("inline")
 
         // Enumerator
         case t: Enumerator.Val           => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))
