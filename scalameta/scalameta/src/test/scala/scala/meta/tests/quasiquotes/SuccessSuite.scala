@@ -2234,4 +2234,19 @@ class SuccessSuite extends FunSuite {
       |}
     """.trim.stripMargin)
   }
+
+  test("#455 - unquote None") {
+    val defnopt: Option[Stat] = None
+    assert(q"..$defnopt".show[Structure] === "Term.Block(Nil)")
+  }
+
+  test("#455 - unquote Some") {
+    val defnoptSomeOption: Some[Stat] = Some(q"val x = 42")
+    assert(q"..$defnoptSomeOption".show[Structure] === "Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"x\"))), None, Lit(42))))")
+  }
+
+  test("#455 - unquote Option") {
+    val defnopt: Option[Stat] = Option(q"val x = 42")
+    assert(q"..$defnopt".show[Structure] === "Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"x\"))), None, Lit(42))))")
+  }
 }
