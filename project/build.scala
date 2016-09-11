@@ -13,8 +13,8 @@ object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
   lazy val LibraryVersion = "1.1.0-SNAPSHOT"
 
-  lazy val root = Project(
-    id = "root",
+  lazy val scalametaRoot = Project(
+    id = "scalametaRoot",
     base = file(".")
   ) settings (
     sharedSettings : _*
