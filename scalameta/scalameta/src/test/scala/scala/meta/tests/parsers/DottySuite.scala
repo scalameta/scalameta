@@ -39,6 +39,6 @@ class DottySuite extends ParseSuite {
   }
 
   test("A & B") {
-    val comp @ Intersection(TypeName("A"), TypeName("B")) = tpe("A & B")
+    val comp @ And(TypeName("A"), TypeName("B")) = tpe("A & B")
   }
 }

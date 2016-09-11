@@ -1048,7 +1048,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             next()
             newLineOptWhenFollowing(_.is[TypeIntro])
             val t1 = compoundType()
-            infixTypeRest(atPos(t, t1)(Type.Intersection(t, t1)), InfixMode.LeftOp)
+            infixTypeRest(atPos(t, t1)(Type.And(t, t1)), InfixMode.LeftOp)
           } else {
             val op = typeName()
             newLineOptWhenFollowing(_.is[TypeIntro])
