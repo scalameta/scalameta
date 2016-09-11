@@ -1044,7 +1044,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           val name = termName(advance = false)
           val leftAssoc = name.isLeftAssoc
           if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
-          if (isRawAmpersand) {
+          if (isRawAmpersand && dialect.allowAndTypes) {
             next()
             newLineOptWhenFollowing(_.is[TypeIntro])
             val t1 = compoundType()
