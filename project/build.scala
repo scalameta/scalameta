@@ -13,14 +13,12 @@ object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
   lazy val LibraryVersion = "1.1.0-SNAPSHOT"
 
-  lazy val root = Project(
-    id = "root",
-    base = file("root")
+  lazy val scalametaRoot = Project(
+    id = "scalametaRoot",
+    base = file(".")
   ) settings (
-    sharedSettings : _*
-  ) settings (
-    unidocSettings : _*
-  ) settings (
+    sharedSettings,
+    unidocSettings,
     packagedArtifacts := Map.empty,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject,
     aggregate in test := false,
@@ -53,8 +51,7 @@ object build extends Build {
     id   = "common",
     base = file("scalameta/common")
   ) settings (
-    publishableSettings: _*
-  ) settings (
+    publishableSettings,
     description := "Bag of private and public helpers used in scala.meta's APIs and implementations",
     enableMacros
   )
@@ -63,8 +60,7 @@ object build extends Build {
     id   = "dialects",
     base = file("scalameta/dialects")
   ) settings (
-    publishableSettings: _*
-  ) settings (
+    publishableSettings,
     description := "Scala.meta's dialects",
     enableMacros
   ) dependsOn (common)
@@ -73,8 +69,7 @@ object build extends Build {
     id   = "inline",
     base = file("scalameta/inline")
   ) settings (
-    publishableSettings: _*
-  ) settings (
+    publishableSettings,
     description := "Scala.meta's APIs for new-style (\"inline\") macros"
   ) dependsOn (inputs)
 
@@ -82,8 +77,7 @@ object build extends Build {
     id   = "inputs",
     base = file("scalameta/inputs")
   ) settings (
-    publishableSettings: _*
-  ) settings (
+    publishableSettings,
     description := "Scala.meta's APIs for source code in textual format"
   ) dependsOn (common)
 
@@ -91,8 +85,7 @@ object build extends Build {
     id   = "parsers",
     base = file("scalameta/parsers")
   ) settings (
-    publishableSettings: _*
-  ) settings (
+    publishableSettings,
     description := "Scala.meta's API for parsing and its baseline implementation"
   ) dependsOn (common, dialects, inputs, tokens, tokenizers, trees)
 
@@ -100,8 +93,7 @@ object build extends Build {
     id   = "quasiquotes",
     base = file("scalameta/quasiquotes")
   ) settings (
-    publishableSettings: _*
-  ) settings (
+    publishableSettings,
     description := "Scala.meta's quasiquotes for abstract syntax trees",
     enableHardcoreMacros
   ) dependsOn (common, dialects, inputs, trees, parsers)
@@ -110,8 +102,7 @@ object build extends Build {
     id   = "tokenizers",
     base = file("scalameta/tokenizers")
   ) settings (
-    publishableSettings: _*
-  ) settings (
+    publishableSettings,
     description := "Scala.meta's APIs for tokenization and its baseline implementation",
     libraryDependencies += "com.lihaoyi" %% "scalaparse" % "0.3.7",
     enableMacros
@@ -121,8 +112,7 @@ object build extends Build {
     id   = "tokens",
     base = file("scalameta/tokens")
   ) settings (
-    publishableSettings: _*
-  ) settings (
+    publishableSettings,
     description := "Scala.meta's tokens and token-based abstractions (inputs and positions)",
     enableMacros
   ) dependsOn (common, dialects, inputs)
@@ -131,8 +121,7 @@ object build extends Build {
     id   = "transversers",
     base = file("scalameta/transversers")
   ) settings (
-    publishableSettings: _*
-  ) settings (
+    publishableSettings,
     description := "Scala.meta's traversal and transformation infrastructure for abstract syntax trees",
     enableMacros
   ) dependsOn (common, trees)
@@ -141,8 +130,7 @@ object build extends Build {
     id   = "trees",
     base = file("scalameta/trees")
   ) settings (
-    publishableSettings: _*
-  ) settings (
+    publishableSettings,
     description := "Scala.meta's abstract syntax trees",
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
@@ -153,11 +141,9 @@ object build extends Build {
     id   = "scalameta",
     base = file("scalameta/scalameta")
   ) settings (
-    publishableSettings: _*
-  ) settings (
-    description := "Scala.meta's metaprogramming APIs"
-  ) settings (
-    exposePaths("scalameta", Test): _*
+    publishableSettings,
+    description := "Scala.meta's metaprogramming APIs",
+    exposePaths("scalameta", Test)
   ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline)
 
   lazy val readme = scalatex.ScalatexReadme(
@@ -166,8 +152,7 @@ object build extends Build {
     url = "https://github.com/scalameta/scalameta/tree/master",
     source = "Readme"
   ) settings (
-    exposePaths("readme", Runtime): _*
-  ) settings (
+    exposePaths("readme", Runtime),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     // Workaround for https://github.com/lihaoyi/Scalatex/issues/25
     dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
@@ -222,7 +207,7 @@ object build extends Build {
     publishM2 := {}
   ) dependsOn (scalameta)
 
-  lazy val sharedSettings = crossVersionSharedSources ++ Seq(
+  lazy val sharedSettings = Def.settings(
     scalaVersion := ScalaVersions.max,
     crossScalaVersions := ScalaVersions,
     crossVersion := CrossVersion.binary,
@@ -292,7 +277,8 @@ object build extends Build {
     )
   )
 
-  lazy val publishableSettings = sharedSettings ++ Seq(
+  lazy val publishableSettings = Def.settings(
+    sharedSettings,
     publishArtifact in Compile := true,
     publishArtifact in Test := false,
     credentials ++= secret.obtain("sonatype").map({
@@ -300,7 +286,8 @@ object build extends Build {
     }).toList
   )
 
-  lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = assemblySettings ++ Seq(
+  lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = Def.settings(
+    assemblySettings,
     test in assembly := {},
     logLevel in assembly := Level.Error,
     jarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
@@ -362,17 +349,4 @@ object build extends Build {
 
   lazy val enableMacros = macroDependencies(hardcore = false)
   lazy val enableHardcoreMacros = macroDependencies(hardcore = true)
-
-  lazy val crossVersionSharedSources: Seq[Setting[_]] =
-    Seq(Compile, Test).map { sc =>
-      (unmanagedSourceDirectories in sc) ++= {
-        (unmanagedSourceDirectories in sc).value.map { dir =>
-          CrossVersion.partialVersion(scalaVersion.value) match {
-            case Some((2, y)) if y == 10 => new File(dir.getPath + "_2.10")
-            case Some((2, y)) if y == 11 => new File(dir.getPath + "_2.11")
-            case other => sys.error("unsupported Scala version " + other)
-          }
-        }
-      }
-    }
 }
