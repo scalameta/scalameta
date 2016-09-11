@@ -97,4 +97,10 @@ class DefnSuite extends ParseSuite {
                    (Term.Param(List(), Term.Name(x), Some(Type.Name("Int")), None) :: Nil) :: Nil,
                    Some(Type.Name("Int")), Term.Name("impl")) = templStat("def f(x: Int): Int = macro impl")
   }
+
+  test("inline is not allowed") {
+    intercept[parsers.ParseException] {
+      blockStat("inline def x = 42")
+    }
+  }
 }

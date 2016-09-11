@@ -70,6 +70,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case SEALED    => Token.KwSealed(input, dialect, curr.offset)
         case LAZY      => Token.KwLazy(input, dialect, curr.offset)
         case MACRO     => Token.KwMacro(input, dialect, curr.offset)
+        case INLINE    => Token.KwInline(input, dialect, curr.offset)
 
         case PACKAGE    => Token.KwPackage(input, dialect, curr.offset)
         case IMPORT     => Token.KwImport(input, dialect, curr.offset)

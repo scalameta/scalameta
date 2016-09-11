@@ -29,6 +29,9 @@ import scala.compat.Platform.EOL
   // might go ahead and drop support completely.
   def allowXmlLiterals: Boolean
 
+  // Are inline vals and defs supported by this dialect?
+  def allowInline: Boolean
+
   // Permission to parse unquotes.
   // Necessary to support quasiquotes, e.g. `q"$x + $y"`.
   def allowUnquotes: Boolean = metalevel.isQuoted
@@ -55,6 +58,7 @@ package object dialects {
     def name = "Scala210"
     def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
     def allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
+    def allowInline = false
     def allowSpliceUnderscore = false // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = false
     def toplevelSeparator = ""
@@ -66,6 +70,7 @@ package object dialects {
     def name = "Sbt0136"
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
+    def allowInline = false
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
     def toplevelSeparator = EOL
@@ -77,6 +82,7 @@ package object dialects {
     def name = "Sbt0137"
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
+    def allowInline = false
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
     def toplevelSeparator = ""
@@ -88,9 +94,22 @@ package object dialects {
     def name = "Scala211"
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
+    def allowInline = false
     def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = Scala210.allowToplevelTerms
     def toplevelSeparator = Scala210.toplevelSeparator
+    def metalevel = Metalevel.Zero
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
+  @leaf implicit object Paradise extends Dialect {
+    def name = "Paradise"
+    def bindToSeqWildcardDesignator = Scala211.bindToSeqWildcardDesignator
+    def allowXmlLiterals = Scala211.allowXmlLiterals
+    def allowInline = true
+    def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
+    def allowToplevelTerms = Scala211.allowToplevelTerms
+    def toplevelSeparator = Scala211.toplevelSeparator
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
@@ -99,6 +118,7 @@ package object dialects {
     def name = "Dotty"
     def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
     def allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+    def allowInline = true
     def allowSpliceUnderscore = true
     def allowToplevelTerms = false
     def toplevelSeparator = ""
@@ -114,6 +134,7 @@ package object dialects {
     def metalevel = Metalevel.Quoted
     def bindToSeqWildcardDesignator = underlying.bindToSeqWildcardDesignator
     def allowXmlLiterals = underlying.allowXmlLiterals
+    def allowInline = underlying.allowInline
     def allowSpliceUnderscore = underlying.allowSpliceUnderscore
     def allowToplevelTerms = underlying.allowToplevelTerms
     def toplevelSeparator = underlying.toplevelSeparator

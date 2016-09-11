@@ -35,4 +35,9 @@ class TokensSuite extends FunSuite {
     assert(emptySelf.structure === "Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)")
     assert(emptySelf.tokens.structure === "Tokens()")
   }
+
+  test("inline is not a token") {
+    val tree = dialects.Scala211("{ val inline = 42 }").parse[Term].get
+    assert(tree.syntax === "{ val inline = 42 }")
+  }
 }
