@@ -1,6 +1,7 @@
 package scala.meta
 package quasiquotes
 
+import scala.collection.immutable.Seq
 import scala.meta.common._
 import scala.annotation.implicitNotFound
 
@@ -25,4 +26,12 @@ object Lift {
 
   implicit def liftIdentity[O, I >: O]: Lift[O, I] = Lift { x => x }
   implicit def liftOption[O, I](implicit lift: Lift[O, I]): Lift[O, Option[I]] = Lift { x => Some(lift(x)) }
+
+  implicit def liftSomeToSeq[O, I](implicit lift: Lift[O, I]): Lift[Some[O], Seq[I]] =
+    Lift { opt => opt.toList map (x => lift(x)) }
+
+  implicit def liftNoneToSeq[O, I](implicit lift: Lift[O, I]): Lift[None.type, Seq[I]] = Lift { _ => Nil }
+
+  implicit def liftOptionToSeq[O, I](implicit lift: Lift[O, I]): Lift[Option[O], Seq[I]] =
+    Lift { opt => opt.toList map (x => lift(x)) }
 }
