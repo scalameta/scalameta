@@ -102,8 +102,8 @@ package object dialects {
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
-  @leaf implicit object Paradise extends Dialect {
-    def name = "Paradise"
+  @leaf implicit object Paradise211 extends Dialect {
+    def name = "Paradise211"
     def bindToSeqWildcardDesignator = Scala211.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala211.allowXmlLiterals
     def allowInline = true
