@@ -450,6 +450,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def isIdent: Boolean              = isIdentAnd(_ => true)
   def isRawStar: Boolean            = isIdentOf("*")
   def isRawBar: Boolean             = isIdentOf("|")
+  def isRawAmpersand: Boolean       = isIdentOf("&")
+
   def isColonWildcardStar: Boolean  = token.is[Colon] && ahead(token.is[Underscore] && ahead(isIdentOf("*")))
   def isSpliceFollowedBy(check: => Boolean): Boolean
                                     = token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
@@ -1042,13 +1044,20 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           val name = termName(advance = false)
           val leftAssoc = name.isLeftAssoc
           if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
-          val op = typeName()
-          newLineOptWhenFollowing(_.is[TypeIntro])
-          def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
-          if (leftAssoc)
-            infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
-          else
-            mkOp(infixType(InfixMode.RightOp))
+          if (isRawAmpersand) {
+            next()
+            newLineOptWhenFollowing(_.is[TypeIntro])
+            val t1 = compoundType()
+            infixTypeRest(atPos(t, t1)(Type.Intersection(t, t1)), InfixMode.LeftOp)
+          } else {
+            val op = typeName()
+            newLineOptWhenFollowing(_.is[TypeIntro])
+            def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
+            if (leftAssoc)
+              infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
+            else
+              mkOp(infixType(InfixMode.RightOp))
+          }
         }
       } else {
         t
