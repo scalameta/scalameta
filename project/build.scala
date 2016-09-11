@@ -15,7 +15,7 @@ object build extends Build {
 
   lazy val root = Project(
     id = "root",
-    base = file("root")
+    base = file(".")
   ) settings (
     sharedSettings : _*
   ) settings (
