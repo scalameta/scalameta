@@ -42,6 +42,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.dialects.Metalevel *
       |scala.meta.dialects.Metalevel.Quoted *
       |scala.meta.dialects.Metalevel.Zero *
+      |scala.meta.dialects.Paradise *
       |scala.meta.dialects.Sbt0136 *
       |scala.meta.dialects.Sbt0137 *
       |scala.meta.dialects.Scala210 *
@@ -187,6 +188,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Mod.Covariant
       |scala.meta.Mod.Final
       |scala.meta.Mod.Implicit
+      |scala.meta.Mod.Inline
       |scala.meta.Mod.Lazy
       |scala.meta.Mod.Override
       |scala.meta.Mod.Private
@@ -340,6 +342,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.KwIf
       |scala.meta.tokens.Token.KwImplicit
       |scala.meta.tokens.Token.KwImport
+      |scala.meta.tokens.Token.KwInline
       |scala.meta.tokens.Token.KwLazy
       |scala.meta.tokens.Token.KwMacro
       |scala.meta.tokens.Token.KwMatch
