@@ -2234,4 +2234,17 @@ class SuccessSuite extends FunSuite {
       |}
     """.trim.stripMargin)
   }
+
+  test("#458") {
+    val name = q"x"
+    val tpe = t"T"
+    val lambda = q"($name: $tpe) => ???"
+    assert(lambda.syntax === "(x: T) => ???")
+  }
+
+  test("#458 II") {
+    val name = q"x"
+    val lambda = q"($name: T) => ???"
+    assert(lambda.syntax === "(x: T) => ???")
+  }
 }
