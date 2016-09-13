@@ -2234,4 +2234,8 @@ class SuccessSuite extends FunSuite {
       |}
     """.trim.stripMargin)
   }
+  test("#476") {
+    val q"case class A($arg)" = q"case class A(a: Int)"
+    assert(arg.syntax === "a: Int")
+  }
 }
