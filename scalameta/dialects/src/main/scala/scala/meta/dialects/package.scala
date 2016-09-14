@@ -78,7 +78,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
-    def allowAndTypes = false
+    def allowAndTypes = Scala210.allowAndTypes
     def toplevelSeparator = EOL
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
@@ -91,7 +91,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
-    def allowAndTypes = false
+    def allowAndTypes = Scala210.allowAndTypes
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
@@ -104,7 +104,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = Scala210.allowToplevelTerms
-    def allowAndTypes = false
+    def allowAndTypes = Scala210.allowAndTypes
     def toplevelSeparator = Scala210.toplevelSeparator
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
@@ -117,6 +117,7 @@ package object dialects {
     def allowInline = true
     def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
     def allowToplevelTerms = Scala211.allowToplevelTerms
+    def allowAndTypes = Scala211.allowAndTypes
     def toplevelSeparator = Scala211.toplevelSeparator
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)

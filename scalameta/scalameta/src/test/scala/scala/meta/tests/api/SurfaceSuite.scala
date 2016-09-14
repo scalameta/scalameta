@@ -273,6 +273,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Term.While
       |scala.meta.Term.Xml
       |scala.meta.Type
+      |scala.meta.Type.And
       |scala.meta.Type.Annotate
       |scala.meta.Type.Apply
       |scala.meta.Type.ApplyInfix
