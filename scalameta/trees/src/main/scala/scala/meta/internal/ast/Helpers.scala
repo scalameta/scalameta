@@ -146,10 +146,11 @@ object Helpers {
   }
 
   implicit class XtensionMods(mods: List[Mod]) {
-    def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
-      mods.exists { _.getClass == tag.runtimeClass }
-    def getAll[T <: Mod](implicit tag: ClassTag[T]): List[T] =
-      mods.collect { case m if m.getClass == tag.runtimeClass => m.require[T] }
+    def has[T <: Mod](implicit classifier: Classifier[Mod, T]): Boolean =
+      mods.exists(classifier.apply)
+    def getAll[T <: Mod](implicit tag: ClassTag[T],
+                         classifier: Classifier[Mod, T]): List[T] =
+      mods.collect { case m if classifier.apply(m) => m.require[T] }
     def accessBoundary: Option[Name.Qualifier] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
   }
 
