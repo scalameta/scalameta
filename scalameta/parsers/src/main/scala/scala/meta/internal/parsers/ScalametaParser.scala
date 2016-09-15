@@ -3060,6 +3060,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def traitDef(mods: List[Mod]): Defn.Trait = atPos(mods, auto) {
     accept[KwTrait]
+    mods.getAll[Mod.Implicit].foreach { m =>
+      syntaxError("traits cannot be implicit", at = m)
+    }
     Defn.Trait(mods, typeName(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
                primaryCtor(OwnedByTrait),
@@ -3073,6 +3076,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def classDef(mods: List[Mod]): Defn.Class = atPos(mods, auto) {
     accept[KwClass]
+    if (mods.has[Mod.Case]) {
+      mods.getAll[Mod.Implicit].foreach { m =>
+        syntaxError("traits cannot be implicit", at = m)
+      }
+    }
     // TODO:
     // if (ofCaseClass && token.isNot[LeftParen])
     //  syntaxError(token.offset, "case classes without a parameter list are not allowed;\n"+
