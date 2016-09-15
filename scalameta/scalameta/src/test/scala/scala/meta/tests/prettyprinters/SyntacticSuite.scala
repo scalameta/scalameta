@@ -7,14 +7,14 @@ import scala.meta.dialects.Scala211
 import scala.meta.internal.ast._
 
 class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
-  override def term(code: String)(implicit dialect: Dialect) = super.term(code).resetAllOrigins
-  override def pat(code: String)(implicit dialect: Dialect) = super.pat(code).resetAllOrigins
-  override def tpe(code: String)(implicit dialect: Dialect) = super.tpe(code).resetAllOrigins
-  override def topStat(code: String)(implicit dialect: Dialect) = super.topStat(code).resetAllOrigins
-  override def templStat(code: String)(implicit dialect: Dialect) = super.templStat(code).resetAllOrigins
-  override def blockStat(code: String)(implicit dialect: Dialect) = super.blockStat(code).resetAllOrigins
-  override def caseClause(code: String)(implicit dialect: Dialect) = super.caseClause(code).resetAllOrigins
-  override def source(code: String)(implicit dialect: Dialect) = super.source(code).resetAllOrigins
+  override def term(code: String)(implicit dialect: Dialect)       = super.term(code)(dialect).resetAllOrigins
+  override def pat(code: String)(implicit dialect: Dialect)        = super.pat(code)(dialect).resetAllOrigins
+  override def tpe(code: String)(implicit dialect: Dialect)        = super.tpe(code)(dialect).resetAllOrigins
+  override def topStat(code: String)(implicit dialect: Dialect)    = super.topStat(code)(dialect).resetAllOrigins
+  override def templStat(code: String)(implicit dialect: Dialect)  = super.templStat(code)(dialect).resetAllOrigins
+  override def blockStat(code: String)(implicit dialect: Dialect)  = super.blockStat(code)(dialect).resetAllOrigins
+  override def caseClause(code: String)(implicit dialect: Dialect) = super.caseClause(code)(dialect).resetAllOrigins
+  override def source(code: String)(implicit dialect: Dialect)     = super.source(code)(dialect).resetAllOrigins
   implicit class XtensionResetOrigin[T <: Tree](tree: T) {
     // NOTE: Ensures that neither the given tree nor its subtrees have their origins set.
     // This is necessary to force prettyprinting as opposed to reusing original syntax.
@@ -160,6 +160,16 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tpe("Foo with Bar {}").show[Syntax] === "Foo with Bar")
     assert(tpe("Foo with Bar { type T = Int }").show[Syntax] === "Foo with Bar { type T = Int }")
     assert(tpe("Foo with Bar { type T = Int; type U <: String }").show[Syntax] === "Foo with Bar { type T = Int; type U <: String }")
+  }
+
+  test("infix types") {
+    assert(tpe("Foo + Bar").show[Syntax] === "Foo + Bar")
+    assert(tpe("Foo & Bar").show[Syntax] === "Foo & Bar")
+
+  }
+
+  test("and types - Dotty") {
+    assert(tpe("Foo & Bar")(dialects.Dotty).show[Syntax] === "Foo & Bar")
   }
 
   test("packages") {
