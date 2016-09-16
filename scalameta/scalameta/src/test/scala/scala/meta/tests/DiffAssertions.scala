@@ -23,10 +23,10 @@ import org.scalautils.Equality
   * Before:
   * {{{
   *   [info]   "...ar</foo> [0..14)
-  *   [info]    [1[5..15])
+  *   [info]    [15..15)
   *   [info]     [14..15)
   *   [info]   EOF [15..." did not equal "...ar</foo> [0..14)
-  *   [info]    [1[4..14])
+  *   [info]    [14..14)
   *   [info]     [14..15)
   *   [info]   EOF [15..." (TokenizerSuite.scala:824)
   *

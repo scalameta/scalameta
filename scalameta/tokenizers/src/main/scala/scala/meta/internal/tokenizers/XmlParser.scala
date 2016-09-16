@@ -7,6 +7,7 @@ import scala.annotation.switch
 
 import fastparse.all._
 
+
 class XmlParser(Block: P0,
                 Patterns: P0 = Fail,
                 WL: P0 = CharIn("\n ").rep(),

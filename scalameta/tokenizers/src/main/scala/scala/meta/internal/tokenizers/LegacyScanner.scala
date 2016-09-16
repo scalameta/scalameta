@@ -181,7 +181,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def inStringInterpolation =
     sepRegions.nonEmpty && sepRegions.head == STRINGLIT
 
-  private def inXmlLiteralPart: Boolean = {
+  private def inXmlLiteral: Boolean = {
     upcomingXmlLiteralParts.contains(offset)
   }
 
@@ -243,7 +243,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         lastOffset -= 1
       }
       if (inStringInterpolation) fetchStringPart()
-      else if (inXmlLiteralPart) fetchXmlPart()
+      else if (inXmlLiteral) fetchXmlPart()
       else fetchToken()
       if(token == ERROR) {
         if (inMultiLineInterpolation)
@@ -731,7 +731,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   private def fetchXmlPart(): Unit = {
-    require(inXmlLiteralPart, "must be at the start of an xml literal part")
+    require(inXmlLiteral, "must be at the start of an xml literal part")
     val end = upcomingXmlLiteralParts(offset)
     finishComposite(XMLLIT, end - 1)
     // Clean up map, should be empty at EOF.
