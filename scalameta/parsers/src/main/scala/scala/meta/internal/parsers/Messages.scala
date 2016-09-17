@@ -22,4 +22,7 @@ object Messages {
     }
     QuasiquoteRankMismatch(rank, rank - 1, hint)
   }
+
+  def IllegalCombinationModifiers(mod1: Mod, mod2: Mod): String =
+    s"illegal combination of modifiers: $mod1 and $mod2"
 }

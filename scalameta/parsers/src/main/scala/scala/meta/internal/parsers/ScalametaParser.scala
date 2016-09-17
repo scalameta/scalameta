@@ -3059,10 +3059,20 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def traitDef(mods: List[Mod]): Defn.Trait = atPos(mods, auto) {
-    accept[KwTrait]
-    mods.getAll[Mod.Implicit].foreach { m =>
-      syntaxError("traits cannot be implicit", at = m)
+    def validateMods(mods: List[Mod]) = {
+      mods.getAll[Mod.Implicit].foreach { m =>
+        syntaxError("traits cannot be implicit", at = m)
+      }
+      mods.getIncompatible[Mod.Final, Mod.Abstract].foreach { p =>
+        val (mod1, mod2) = p
+        val msg = Messages.IllegalCombinationModifiers(mod1, mod2)
+        syntaxError(msg, at = mod1)
+      }
     }
+    accept[KwTrait]
+    val traitPos = in.tokenPos
+    val fullMods = mods :+ atPos(traitPos, traitPos)(Mod.Abstract())
+    validateMods(fullMods)
     Defn.Trait(mods, typeName(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
                primaryCtor(OwnedByTrait),

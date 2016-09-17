@@ -1612,10 +1612,10 @@ class SuccessSuite extends FunSuite {
   }
 
   test("1 q\"..$mods trait $tname[..$tparams] extends $template\"") {
-    val q"..$mods trait $tname[..$tparams] extends $template" = q"private final trait Q[T, W] extends Y"
-    assert(mods.toString === "List(private, final)")
+    val q"..$mods trait $tname[..$tparams] extends $template" = q"private sealed trait Q[T, W] extends Y"
+    assert(mods.toString === "List(private, sealed)")
     assert(mods(0).show[Structure] === "Mod.Private(Name.Anonymous())")
-    assert(mods(1).show[Structure] === "Mod.Final()")
+    assert(mods(1).show[Structure] === "Mod.Sealed()")
     assert(tname.show[Structure] === "Type.Name(\"Q\")")
     assert(tparams.toString === "List(T, W)")
     assert(tparams(0).show[Structure] === "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)")
@@ -1624,10 +1624,10 @@ class SuccessSuite extends FunSuite {
   }
 
   test("2 q\"..$mods trait $tname[..$tparams] extends $template\"") {
-    val q"..$mods trait $tname[..$tparams] extends $template" = q"private final trait Q[T, W] extends { def m1 = 42; def m2 = 666 }"
-    assert(mods.toString === "List(private, final)")
+    val q"..$mods trait $tname[..$tparams] extends $template" = q"private sealed trait Q[T, W] extends { def m1 = 42; def m2 = 666 }"
+    assert(mods.toString === "List(private, sealed)")
     assert(mods(0).show[Structure] === "Mod.Private(Name.Anonymous())")
-    assert(mods(1).show[Structure] === "Mod.Final()")
+    assert(mods(1).show[Structure] === "Mod.Sealed()")
     assert(tname.show[Structure] === "Type.Name(\"Q\")")
     assert(tparams.toString === "List(T, W)")
     assert(tparams(0).show[Structure] === "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)")
@@ -1636,11 +1636,11 @@ class SuccessSuite extends FunSuite {
   }
 
   test("3 q\"..$mods trait $tname[..$tparams] extends $template\"") {
-    val mods = List(mod"private", mod"final")
+    val mods = List(mod"private", mod"sealed")
     val tname = t"Q"
     val tparams = List(tparam"T", tparam"W")
     val template = template"F { def m = 42 }"
-    assert(q"..$mods trait $tname[..$tparams] extends $template".show[Structure] === "Defn.Trait(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Type.Name(\"Q\"), Seq(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Seq(Ctor.Ref.Name(\"F\")), Term.Param(Nil, Name.Anonymous(), None, None), Some(Seq(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit(42))))))")
+    assert(q"..$mods trait $tname[..$tparams] extends $template".show[Structure] === "Defn.Trait(Seq(Mod.Private(Name.Anonymous()), Mod.Sealed()), Type.Name(\"Q\"), Seq(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Ctor.Primary(Nil, Ctor.Ref.Name(\"this\"), Nil), Template(Nil, Seq(Ctor.Ref.Name(\"F\")), Term.Param(Nil, Name.Anonymous(), None, None), Some(Seq(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit(42))))))")
   }
 
   test("1 q\"..$mods object $name extends $template\"") {

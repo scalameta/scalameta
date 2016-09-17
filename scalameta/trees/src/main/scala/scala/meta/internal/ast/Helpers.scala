@@ -152,6 +152,10 @@ object Helpers {
                          classifier: Classifier[Mod, T]): List[T] =
       mods.collect { case m if classifier.apply(m) => m.require[T] }
     def accessBoundary: Option[Name.Qualifier] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
+    def getIncompatible[T <: Mod, U <: Mod]
+      (implicit classifier1: Classifier[Mod, T], tag1: ClassTag[T],
+                classifier2: Classifier[Mod, U], tag2: ClassTag[U]): List[(Mod, Mod)] =
+      getAll[T].zip(getAll[U])
   }
 
   implicit class XtensionStat(stat: Stat) {
