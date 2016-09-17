@@ -457,6 +457,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     } else throw new Exception(s"rejectMod token ${tokenInfo.name} not found")
   }
 
+  def rejectModCombination[M1 <: Mod, M2 <: Mod](mods: List[Mod])
+      (implicit invalidMod: InvalidModCombination[M1, M2],
+                classifier1: Classifier[Mod, M1],
+                tag1: ClassTag[M1],
+                classifier2: Classifier[Mod, M2],
+                tag2: ClassTag[M2]) = {
+    val errorMsg = invalidMod.getErrorMessage
+    mods.getIncompatible[M1, M2].foreach { m =>
+      syntaxError(errorMsg, at = m._1)
+    }
+  }
+
   def onlyAcceptMod[M <: Mod, T <: Token](mods: List[Mod])
      (implicit validMod: ValidModifier[M, T],
                classifier: Classifier[Mod, M],
@@ -473,7 +485,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   implicit object ValidLazyInVal extends ValidModifier[Mod.Lazy, KwVal] {
-    def getErrorMessage = "lazy not allowed here. Only vals can be lazy"
+    val getErrorMessage = "lazy not allowed here. Only vals can be lazy"
   }
 
   trait InvalidModifier[M <: Mod, T <: Token] {
@@ -481,21 +493,31 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   implicit object InvalidImplicitInTrait extends InvalidModifier[Mod.Implicit, KwTrait] {
-    def getErrorMessage = "traits cannot be implicit"
+    val getErrorMessage = "traits cannot be implicit"
   }
 
   implicit object InvalidImplicitInType extends InvalidModifier[Mod.Implicit, KwType] {
-    def getErrorMessage = "`implicit' modifier can be used only for values, variables, methods and classes"
+    val getErrorMessage = "`implicit' modifier can be used only for values, variables, methods and classes"
   }
 
   class InvalidSealed[M <: Mod, T <: Token] extends InvalidModifier[M, T] {
-    def getErrorMessage = "`sealed' modifier can be used only for classes"
+    val getErrorMessage = "`sealed' modifier can be used only for classes"
   }
   implicit object InvalidSealedInVal extends InvalidSealed[Mod.Sealed, KwVal]
   implicit object InvalidSealedInVar extends InvalidSealed[Mod.Sealed, KwVar]
   implicit object InvalidSealedInDef extends InvalidSealed[Mod.Sealed, KwDef]
   implicit object InvalidSealedInType extends InvalidSealed[Mod.Sealed, KwType]
   implicit object InvalidSealedInObj extends InvalidSealed[Mod.Sealed, KwObject]
+
+  trait InvalidModCombination[M1 <: Mod, M2 <: Mod] {
+    def getErrorMessage: String
+    def illegalCombination(m1: M1, m2: M2): String =
+      Messages.IllegalCombinationModifiers(m1, m2)
+  }
+
+  implicit object InvalidFinalAbstract extends InvalidModCombination[Mod.Final, Mod.Abstract] {
+    val getErrorMessage: String = illegalCombination(Mod.Final(), Mod.Abstract())
+  }
 
 /* -------------- TOKEN CLASSES ------------------------------------------- */
 
@@ -3121,18 +3143,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def traitDef(mods: List[Mod]): Defn.Trait = atPos(mods, auto) {
-    def validateMods(mods: List[Mod]) = {
-      mods.getIncompatible[Mod.Final, Mod.Abstract].foreach { p =>
-        val (mod1, mod2) = p
-        val msg = Messages.IllegalCombinationModifiers(mod1, mod2)
-        syntaxError(msg, at = mod1)
-      }
-    }
-    rejectMod[Mod.Implicit, KwTrait](mods)
-    accept[KwTrait]
     val traitPos = in.tokenPos
-    val fullMods = mods :+ atPos(traitPos, traitPos)(Mod.Abstract())
-    validateMods(fullMods)
+    val abstractMod = atPos(traitPos, traitPos)(Mod.Abstract())
+    rejectMod[Mod.Implicit, KwTrait](mods)
+    rejectModCombination[Mod.Final, Mod.Abstract](mods :+ abstractMod)
+    accept[KwTrait]
     Defn.Trait(mods, typeName(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
                primaryCtor(OwnedByTrait),
