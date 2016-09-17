@@ -41,11 +41,17 @@ class ModSuite extends ParseSuite {
     interceptParseErrors(
       "implicit implicit var a: Int",
       "implicit implicit val a: Int",
+      "implicit implicit var a: Int = 1",
+      "implicit implicit val a: Int = 1",
       "implicit implicit class A",
       "implicit implicit object A",
       "implicit implicit trait A",
       "implicit implicit case class A",
+      "implicit implicit type A",
+      "implicit implicit type A = Int",
       "implicit trait A",
+      "implicit type A",
+      "implicit type A = Int",
       "implicit case class A(a: Int)"
     )
   }
@@ -62,20 +68,52 @@ class ModSuite extends ParseSuite {
 
     val Defn.Var(Seq(Mod.Final()), _, _, _) = templStat("final var a: Int = 1")
     val Decl.Var(Seq(Mod.Final()), _, _) = templStat("final var a: Int")
+    val Defn.Type(Seq(Mod.Final()), _, _, _) = templStat("final type A = Int")
 
     interceptParseErrors(
       "final final var a: Int",
       "final final val a: Int",
+      "final final var a: Int = 1",
+      "final final val a: Int = 1",
       "final final class A",
       "final final object A",
       "final final trait A",
       "final final case class A",
+      "final final type A",
       "final trait A",
       "def foo(final val a: Int): Int = a"
     )
   }
 
-  // TODO: sealed
+  test("sealed") {
+    val Defn.Trait(Seq(Mod.Sealed()), _, _, _, _) = templStat("sealed trait A")
+    val Defn.Class(Seq(Mod.Sealed()), _, _, _, _) = templStat("sealed class A")
+    val Defn.Class(Seq(Mod.Sealed(), Mod.Abstract()), _, _, _, _) = templStat("sealed abstract class A")
+    val Defn.Class(Seq(Mod.Sealed(), Mod.Case()), _, _, _, _) = templStat("sealed case class A(a: Int)")
+
+    interceptParseErrors(
+      "sealed sealed var a: Int",
+      "sealed sealed val a: Int",
+      "sealed sealed var a: Int = 1",
+      "sealed sealed val a: Int = 1",
+      "sealed sealed class A",
+      "sealed sealed object A",
+      "sealed sealed trait A",
+      "sealed sealed case class A",
+      "sealed sealed type A",
+      "sealed object A",
+      "sealed case object A",
+      "sealed def foo(a: Int): Int = a",
+      "sealed val a: Int = 1",
+      "sealed val a: Int",
+      "sealed var a: Int = 1",
+      "sealed var a: Int",
+      "sealed type A",
+      "sealed type A = Int",
+      "def foo(sealed val a: Int): Int = a"
+    )
+  }
+
   // TODO: override
   // TODO: case
   // TODO: abstract
