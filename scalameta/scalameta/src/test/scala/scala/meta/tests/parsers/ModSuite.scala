@@ -26,6 +26,12 @@ class ModSuite extends ParseSuite {
     val Defn.Object(Seq(Mod.Implicit()), _, _) = templStat("implicit object A")
     val Defn.Class(Seq(Mod.Implicit()), _, _, _, _) = templStat("implicit class A")
     val Defn.Object(Seq(Mod.Implicit(), Mod.Case()), _, _) = templStat("implicit case object A")
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.Implicit(), Mod.ValParam()), _, _, _)))
+    ), _) = templStat("case class A(implicit val a: Int)")
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.Implicit(), Mod.VarParam()), _, _, _)))
+    ), _) = templStat("case class A(implicit var a: Int)")
 
     val Defn.Def(_, _, _, Seq(Seq(Term.Param(Seq(Mod.Implicit()), _, _, _))), _, _) =
       templStat("def foo(implicit a: Int): Int = a")
@@ -61,6 +67,9 @@ class ModSuite extends ParseSuite {
     val Defn.Class(Seq(Mod.Final()), _, _, _, _) = templStat("final class A")
     val Defn.Class(Seq(Mod.Final(), Mod.Case()), _, _, _, _) = templStat("final case class A(a: Int)")
     val Defn.Object(Seq(Mod.Final(), Mod.Case()), _, _) = templStat("final case object A")
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.Final(), Mod.ValParam()), _, _, _)))
+    ), _) = templStat("case class A(final val a: Int)")
 
     val Defn.Def(Seq(Mod.Final()), _, _, _, _, _) = templStat("final def foo(a: Int): Int = a")
     val Defn.Val(Seq(Mod.Final()), _, _, _) = templStat("final val a: Int = 1")
@@ -110,7 +119,8 @@ class ModSuite extends ParseSuite {
       "sealed var a: Int",
       "sealed type A",
       "sealed type A = Int",
-      "def foo(sealed val a: Int): Int = a"
+      "def foo(sealed val a: Int): Int = a",
+      "class A(sealed val a: Int)"
     )
   }
 

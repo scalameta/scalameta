@@ -2776,9 +2776,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (isImplicit) mods ++= List(atPos(in.tokenPos, in.prevTokenPos)(Mod.Implicit()))
     if (ownerIsType) {
       mods ++= modifiers()
-      mods.getAll[Mod.Lazy].foreach { m =>
-        syntaxError("lazy modifier not allowed here. Use call-by-name parameters instead", at = m)
-      }
+      rejectMod[Mod.Lazy](mods, "lazy modifier not allowed here. Use call-by-name parameters instead.")
+      rejectMod[Mod.Sealed](mods, "`sealed' modifier can be used only for classes")
     }
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
     if (isValParam) { mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.ValParam()); next() }
