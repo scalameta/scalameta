@@ -202,6 +202,7 @@ class ModSuite extends ParseSuite {
       "abstract def foo(a: Int): Int",
       "abstract type A",
       "abstract type A = Int",
+      "class A(abstract val a: Int)",
       "def foo(abstract val a: Int): Int = a",
       "abstract def foo(val a: Int): Int = a",
       "abstract case object A",
@@ -209,9 +210,37 @@ class ModSuite extends ParseSuite {
     )
   }
 
+  test("lazy") {
+    val Defn.Val(Seq(Mod.Lazy()), _, _, _) = templStat("lazy val a: Int = 1")
+
+    interceptParseErrors(
+      "lazy lazy var a: Int",
+      "lazy lazy val a: Int",
+      "lazy lazy var a: Int = 1",
+      "lazy lazy val a: Int = 1",
+      "lazy lazy class A",
+      "lazy lazy object A",
+      "lazy lazy trait A",
+      "lazy lazy case class A(a: Int)",
+      "lazy lazy type A",
+      "lazy val a: Int",
+      "lazy var a: Int",
+      "lazy var a: Int = 1",
+      "lazy def foo(a: Int): Int",
+      "lazy type A",
+      "lazy type A = Int",
+      "def foo(lazy val a: Int): Int = a",
+      "class A(lazy val a: Int)",
+      "lazy def foo(val a: Int): Int = a",
+      "lazy case object A",
+      "lazy case class A(a: Int)",
+      "lazy class A",
+      "lazy object A"
+    )
+  }
+
   // TODO: covariant
   // TODO: contravariant
-  // TODO: lazy
   // TODO: abstract override
   // TODO: macro
   // TODO: val param
