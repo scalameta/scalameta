@@ -181,7 +181,34 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  // TODO: abstract
+  test("abstract") {
+    val Defn.Class(Seq(Mod.Abstract()), _, _, _, _) = templStat("abstract class A")
+    val Defn.Class(Seq(Mod.Abstract(), Mod.Case()), _, _, _, _) = templStat("abstract case class A(a: Int)")
+
+    interceptParseErrors(
+      "abstract abstract var a: Int",
+      "abstract abstract val a: Int",
+      "abstract abstract var a: Int = 1",
+      "abstract abstract val a: Int = 1",
+      "abstract abstract class A",
+      "abstract abstract object A",
+      "abstract abstract trait A",
+      "abstract abstract case class A(a: Int)",
+      "abstract abstract type A",
+      "abstract val a: Int",
+      "abstract var a: Int",
+      "abstract val a: Int = 1",
+      "abstract var a: Int = 1",
+      "abstract def foo(a: Int): Int",
+      "abstract type A",
+      "abstract type A = Int",
+      "def foo(abstract val a: Int): Int = a",
+      "abstract def foo(val a: Int): Int = a",
+      "abstract case object A",
+      "abstract object A"
+    )
+  }
+
   // TODO: covariant
   // TODO: contravariant
   // TODO: lazy

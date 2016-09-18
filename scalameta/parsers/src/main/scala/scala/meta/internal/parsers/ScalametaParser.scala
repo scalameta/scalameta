@@ -2778,6 +2778,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       mods ++= modifiers()
       rejectMod[Mod.Lazy](mods, "lazy modifier not allowed here. Use call-by-name parameters instead.")
       rejectMod[Mod.Sealed](mods, "`sealed' modifier can be used only for classes")
+      rejectMod[Mod.Abstract](mods, "`abstract' modifier can be used only for classes")
     }
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
     if (isValParam) { mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.ValParam()); next() }
@@ -3002,6 +3003,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val isMutable = token.is[KwVar]
     if (isMutable) rejectMod[Mod.Sealed, KwVar](mods)
     else rejectMod[Mod.Sealed, KwVal](mods)
+    rejectMod[Mod.Abstract](mods, "`abstract' modifier can be used only for classes")
     next()
     val lhs: List[Pat] = commaSeparated(noSeq.pattern2().require[Pat]).map {
       case q: Pat.Quasi => q.become[Pat.Var.Term.Quasi]
@@ -3049,6 +3051,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {
     rejectMod[Mod.Sealed, KwDef](mods)
     accept[KwDef]
+    rejectMod[Mod.Abstract](mods, "`abstract' modifier can be used only for classes")
     val name = termName()
     def warnProcedureDeprecation =
       deprecationWarning(s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.", at = name)
@@ -3092,6 +3095,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     rejectMod[Mod.Sealed, KwType](mods)
     rejectMod[Mod.Implicit, KwType](mods)
     accept[KwType]
+    rejectMod[Mod.Abstract](mods, "`abstract' modifier can be used only for classes")
     newLinesOpt()
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
@@ -3191,6 +3195,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def objectDef(mods: List[Mod]): Defn.Object = atPos(mods, auto) {
     rejectMod[Mod.Sealed, KwObject](mods)
     accept[KwObject]
+    rejectMod[Mod.Abstract](mods, "`abstract' modifier can be used only for classes")
     Defn.Object(mods, termName(), templateOpt(OwnedByObject))
   }
 
