@@ -2702,44 +2702,56 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
     if (isValParam) { mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.ValParam()); next() }
     if (isVarParam) { mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.VarParam()); next() }
-    val name = termName() match {
-      case q: Term.Name.Quasi => q.become[Term.Param.Name.Quasi]
-      case x => x
-    }
-    val tpt =
-      if (token.isNot[Colon] && name.is[Term.Param.Name.Quasi])
-        None
-      else {
-        accept[Colon]
-        val tpt = paramType() match {
-          case q: Type.Quasi => q.become[Type.Arg.Quasi]
+    def endParamQuasi = token.is[RightParen] || token.is[Comma]
+    mods.headOption match {
+      case Some(q: Mod.Quasi) if endParamQuasi =>
+        // Quasi param recognised in primary constructor
+        q.become[Term.Param.Quasi]
+      case _ =>
+        val name = termName() match {
+          case q: Term.Name.Quasi => q.become[Term.Param.Name.Quasi]
           case x => x
         }
-        if (tpt.is[Type.Arg.ByName]) {
-          def mayNotBeByName(subj: String) =
-            syntaxError(s"$subj parameters may not be call-by-name", at = name)
-          val isLocalToThis: Boolean = {
-            val isExplicitlyLocal = mods.accessBoundary.exists(_.is[Term.This])
-            if (ownerIsCase) isExplicitlyLocal
-            else isExplicitlyLocal || (!isValParam && !isVarParam)
-          }
-          if (ownerIsType && !isLocalToThis) {
-            if (isVarParam)
-              mayNotBeByName("`var'")
-            else
-              mayNotBeByName("`val'")
-          } else if (isImplicit)
-            mayNotBeByName("implicit")
+        name match {
+          case q: Term.Param.Name.Quasi if endParamQuasi =>
+            q.become[Term.Param.Quasi]
+          case _ =>
+            val tpt =
+              if (token.isNot[Colon] && name.is[Term.Param.Name.Quasi])
+                None
+              else {
+                accept[Colon]
+                val tpt = paramType() match {
+                  case q: Type.Quasi => q.become[Type.Arg.Quasi]
+                  case x => x
+                }
+                if (tpt.is[Type.Arg.ByName]) {
+                  def mayNotBeByName(subj: String) =
+                    syntaxError(s"$subj parameters may not be call-by-name", at = name)
+                  val isLocalToThis: Boolean = {
+                    val isExplicitlyLocal = mods.accessBoundary.exists(_.is[Term.This])
+                    if (ownerIsCase) isExplicitlyLocal
+                    else isExplicitlyLocal || (!isValParam && !isVarParam)
+                  }
+                  if (ownerIsType && !isLocalToThis) {
+                    if (isVarParam)
+                      mayNotBeByName("`var'")
+                    else
+                      mayNotBeByName("`val'")
+                  } else if (isImplicit)
+                    mayNotBeByName("implicit")
+                }
+                Some(tpt)
+              }
+            val default =
+              if (token.isNot[Equals]) None
+              else {
+                next()
+                Some(expr())
+              }
+            Term.Param(mods, name, tpt, default)
         }
-        Some(tpt)
-      }
-    val default =
-      if (token.isNot[Equals]) None
-      else {
-        next()
-        Some(expr())
-      }
-    Term.Param(mods, name, tpt, default)
+    }
   }
 
   /** {{{
