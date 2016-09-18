@@ -154,7 +154,33 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  // TODO: case
+  test("case") {
+    val Defn.Object(Seq(Mod.Case()), _, _) = templStat("case object A")
+    val Defn.Class(Seq(Mod.Case()), _, _, _, _) = templStat("case class A(a: Int)")
+
+    interceptParseErrors(
+      "case case var a: Int",
+      "case case val a: Int",
+      "case case var a: Int = 1",
+      "case case val a: Int = 1",
+      "case case class A",
+      "case case object A",
+      "case case trait A",
+      "case case case class A(a: Int)",
+      "case case type A",
+      "case val a: Int",
+      "case var a: Int",
+      "case val a: Int = 1",
+      "case var a: Int = 1",
+      "case def foo(a: Int): Int",
+      "case type A",
+      "case type A = Int",
+      "def foo(case val a: Int): Int = a",
+      "case def foo(val a: Int): Int = a",
+      "class A(case a: Int)"
+    )
+  }
+
   // TODO: abstract
   // TODO: covariant
   // TODO: contravariant
