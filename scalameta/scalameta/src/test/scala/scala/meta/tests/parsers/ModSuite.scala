@@ -114,7 +114,36 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  // TODO: override
+  test("override") {
+    val Defn.Object(Seq(Mod.Override()), _, _) = templStat("override object A")
+    val Defn.Class(Seq(Mod.Override()), _, _, _, _) = templStat("override class A")
+    val Defn.Class(Seq(Mod.Override(), Mod.Case()), _, _, _, _) = templStat("override case class A(a: Int)")
+    val Defn.Object(Seq(Mod.Override(), Mod.Case()), _, _) = templStat("override case object A")
+
+    val Defn.Def(Seq(Mod.Override()), _, _, _, _, _) = templStat("override def foo(a: Int): Int = a")
+    val Defn.Val(Seq(Mod.Override()), _, _, _) = templStat("override val a: Int = 1")
+    val Defn.Var(Seq(Mod.Override()), _, _, _) = templStat("override var a: Int = 1")
+    val Defn.Type(Seq(Mod.Override()), _, _, _) = templStat("override type A = Int")
+
+    val Decl.Def(Seq(Mod.Override()), _, _, _, _) = templStat("override def foo(a: Int): Int")
+    val Decl.Val(Seq(Mod.Override()), _, _) = templStat("override val a: Int")
+    val Decl.Var(Seq(Mod.Override()), _, _) = templStat("override var a: Int")
+    val Decl.Type(Seq(Mod.Override()), _, _, _) = templStat("override type A")
+
+    interceptParseErrors(
+      "override override var a: Int",
+      "override override val a: Int",
+      "override override var a: Int = 1",
+      "override override val a: Int = 1",
+      "override override class A",
+      "override override object A",
+      "override override trait A",
+      "override override case class A",
+      "override override type A",
+      "def foo(override val a: Int): Int = a"
+    )
+  }
+
   // TODO: case
   // TODO: abstract
   // TODO: covariant

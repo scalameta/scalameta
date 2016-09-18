@@ -3097,7 +3097,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
     def aliasType() = Defn.Type(mods, name, tparams, typ())
-    def abstractType() = Decl.Type(mods, name, tparams, typeBounds())
+    def abstractType() = {
+      Decl.Type(mods, name, tparams, typeBounds())
+    }
     token match {
       case Equals() => next(); aliasType()
       case Supertype() | Subtype() | Comma() | RightBrace() => abstractType()
