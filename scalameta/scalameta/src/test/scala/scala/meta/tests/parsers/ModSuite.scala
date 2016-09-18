@@ -52,7 +52,7 @@ class ModSuite extends ParseSuite {
       "implicit implicit class A",
       "implicit implicit object A",
       "implicit implicit trait A",
-      "implicit implicit case class A",
+      "implicit implicit case class A(a: Int)",
       "implicit implicit type A",
       "implicit implicit type A = Int",
       "implicit trait A",
@@ -87,7 +87,7 @@ class ModSuite extends ParseSuite {
       "final final class A",
       "final final object A",
       "final final trait A",
-      "final final case class A",
+      "final final case class A(a: Int)",
       "final final type A",
       "final trait A",
       "def foo(final val a: Int): Int = a"
@@ -108,7 +108,7 @@ class ModSuite extends ParseSuite {
       "sealed sealed class A",
       "sealed sealed object A",
       "sealed sealed trait A",
-      "sealed sealed case class A",
+      "sealed sealed case class A(a: Int)",
       "sealed sealed type A",
       "sealed object A",
       "sealed case object A",
@@ -148,7 +148,7 @@ class ModSuite extends ParseSuite {
       "override override class A",
       "override override object A",
       "override override trait A",
-      "override override case class A",
+      "override override case class A(a: Int)",
       "override override type A",
       "def foo(override val a: Int): Int = a"
     )
