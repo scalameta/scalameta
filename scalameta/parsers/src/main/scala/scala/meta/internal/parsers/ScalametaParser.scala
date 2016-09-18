@@ -446,17 +446,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
   }
 
-  def rejectMod[M <: Mod, T <: Token](mods: List[Mod])
-     (implicit invalidMod: InvalidModifier[M, T],
-               classifier: Classifier[Mod, M],
-               tag: ClassTag[M],
-               tokenInfo: TokenInfo[T]) = {
-    if (token.is[T]) {
-      val errorMsg = invalidMod.getErrorMessage
-      mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
-    } else throw new Exception(s"rejectMod token ${tokenInfo.name} not found")
-  }
-
   def rejectModCombination[M1 <: Mod, M2 <: Mod](mods: List[Mod])
       (implicit invalidMod: InvalidModCombination[M1, M2],
                 classifier1: Classifier[Mod, M1],
@@ -469,54 +458,25 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def onlyAcceptMod[M <: Mod, T <: Token](mods: List[Mod])
-     (implicit validMod: ValidModifier[M, T],
-               classifier: Classifier[Mod, M],
+  def onlyAcceptMod[M <: Mod, T <: Token](mods: List[Mod], errorMsg: String)
+     (implicit classifier: Classifier[Mod, M],
                tag: ClassTag[M],
                tokenInfo: TokenInfo[T]) = {
     if (token.isNot[T]) {
-      val errorMsg = validMod.getErrorMessage
       mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
     }
   }
 
-  trait ValidModifier[M <: Mod, T <: Token] {
-    def getErrorMessage: String
-  }
-
-  implicit object ValidLazyInVal extends ValidModifier[Mod.Lazy, KwVal] {
-    val getErrorMessage = "lazy not allowed here. Only vals can be lazy"
-  }
-
-  trait InvalidModifier[M <: Mod, T <: Token] {
-    def getErrorMessage: String
-  }
-
-  implicit object InvalidImplicitInTrait extends InvalidModifier[Mod.Implicit, KwTrait] {
-    val getErrorMessage = "traits cannot be implicit"
-  }
-
-  implicit object InvalidImplicitInType extends InvalidModifier[Mod.Implicit, KwType] {
-    val getErrorMessage = "`implicit' modifier can be used only for values, variables, methods and classes"
-  }
-
-  class InvalidSealed[M <: Mod, T <: Token] extends InvalidModifier[M, T] {
-    val getErrorMessage = "`sealed' modifier can be used only for classes"
-  }
-  implicit object InvalidSealedInVal extends InvalidSealed[Mod.Sealed, KwVal]
-  implicit object InvalidSealedInVar extends InvalidSealed[Mod.Sealed, KwVar]
-  implicit object InvalidSealedInDef extends InvalidSealed[Mod.Sealed, KwDef]
-  implicit object InvalidSealedInType extends InvalidSealed[Mod.Sealed, KwType]
-  implicit object InvalidSealedInObj extends InvalidSealed[Mod.Sealed, KwObject]
-
   trait InvalidModCombination[M1 <: Mod, M2 <: Mod] {
-    def getErrorMessage: String
-    def illegalCombination(m1: M1, m2: M2): String =
+    val m1: M1
+    val m2: M2
+    def getErrorMessage: String =
       Messages.IllegalCombinationModifiers(m1, m2)
   }
 
   implicit object InvalidFinalAbstract extends InvalidModCombination[Mod.Final, Mod.Abstract] {
-    val getErrorMessage: String = illegalCombination(Mod.Final(), Mod.Abstract())
+    val m1 = Mod.Final()
+    val m2 = Mod.Abstract()
   }
 
 /* -------------- TOKEN CLASSES ------------------------------------------- */
@@ -2980,7 +2940,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def defOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
-    onlyAcceptMod[Mod.Lazy, KwVal](mods)
+    onlyAcceptMod[Mod.Lazy, KwVal](mods, "lazy not allowed here. Only vals can be lazy")
     token match {
       case KwVal() | KwVar() =>
         patDefOrDcl(mods)
@@ -3001,9 +2961,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def patDefOrDcl(mods: List[Mod]): Stat = atPos(mods, auto) {
     val isMutable = token.is[KwVar]
-    if (isMutable) rejectMod[Mod.Sealed, KwVar](mods)
-    else rejectMod[Mod.Sealed, KwVal](mods)
-    rejectMod[Mod.Abstract](mods, "`abstract' modifier can be used only for classes")
+    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
+    rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     next()
     val lhs: List[Pat] = commaSeparated(noSeq.pattern2().require[Pat]).map {
       case q: Pat.Quasi => q.become[Pat.Var.Term.Quasi]
@@ -3049,9 +3008,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {
-    rejectMod[Mod.Sealed, KwDef](mods)
     accept[KwDef]
-    rejectMod[Mod.Abstract](mods, "`abstract' modifier can be used only for classes")
+    rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
+    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     val name = termName()
     def warnProcedureDeprecation =
       deprecationWarning(s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.", at = name)
@@ -3092,17 +3051,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def typeDefOrDcl(mods: List[Mod]): Member.Type with Stat = atPos(mods, auto) {
-    rejectMod[Mod.Sealed, KwType](mods)
-    rejectMod[Mod.Implicit, KwType](mods)
     accept[KwType]
-    rejectMod[Mod.Abstract](mods, "`abstract' modifier can be used only for classes")
+    rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
+    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
+    rejectMod[Mod.Implicit](mods, Messages.InvalidImplicit)
     newLinesOpt()
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
     def aliasType() = Defn.Type(mods, name, tparams, typ())
-    def abstractType() = {
-      Decl.Type(mods, name, tparams, typeBounds())
-    }
+    def abstractType() = Decl.Type(mods, name, tparams, typeBounds())
     token match {
       case Equals() => next(); aliasType()
       case Supertype() | Subtype() | Comma() | RightBrace() => abstractType()
@@ -3122,7 +3079,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def tmplDef(mods: List[Mod]): Member with Stat = {
-    rejectMod[Mod.Lazy](mods, "classes cannot be lazy")
+    rejectMod[Mod.Lazy](mods, Messages.InvalidLazyClasses)
     token match {
       case KwTrait() =>
         traitDef(mods)
@@ -3150,9 +3107,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def traitDef(mods: List[Mod]): Defn.Trait = atPos(mods, auto) {
     val traitPos = in.tokenPos
     val abstractMod = atPos(traitPos, traitPos)(Mod.Abstract())
-    rejectMod[Mod.Implicit, KwTrait](mods)
-    rejectModCombination[Mod.Final, Mod.Abstract](mods :+ abstractMod)
     accept[KwTrait]
+    rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitTrait)
+    rejectModCombination[Mod.Final, Mod.Abstract](mods :+ abstractMod)
     Defn.Trait(mods, typeName(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
                primaryCtor(OwnedByTrait),
@@ -3167,9 +3124,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def classDef(mods: List[Mod]): Defn.Class = atPos(mods, auto) {
     accept[KwClass]
     if (mods.has[Mod.Case]) {
-      mods.getAll[Mod.Implicit].foreach { m =>
-        syntaxError("traits cannot be implicit", at = m)
-      }
+      rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitClass)
     }
     // TODO:
     // if (ofCaseClass && token.isNot[LeftParen])
@@ -3193,9 +3148,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def objectDef(mods: List[Mod]): Defn.Object = atPos(mods, auto) {
-    rejectMod[Mod.Sealed, KwObject](mods)
     accept[KwObject]
-    rejectMod[Mod.Abstract](mods, "`abstract' modifier can be used only for classes")
+    rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
+    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     Defn.Object(mods, termName(), templateOpt(OwnedByObject))
   }
 
@@ -3221,8 +3176,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def secondaryCtor(mods: List[Mod]): Ctor.Secondary = atPos(mods, auto) {
-    rejectMod[Mod.Sealed, KwDef](mods)
     accept[KwDef]
+    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     val thisPos = in.tokenPos
     accept[KwThis]
     // TODO: ownerIsType = true is most likely a bug here

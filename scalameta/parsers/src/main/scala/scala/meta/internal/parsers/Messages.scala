@@ -25,4 +25,13 @@ object Messages {
 
   def IllegalCombinationModifiers(mod1: Mod, mod2: Mod): String =
     s"illegal combination of modifiers: $mod1 and $mod2"
+
+
+  val InvalidSealed = "`sealed' modifier can be used only for classes"
+  val InvalidImplicit ="`implicit' modifier can be used only for values, variables, methods and classes"
+  val InvalidImplicitTrait = "traits cannot be implicit"
+  val InvalidImplicitClass = "classes cannot be implicit"
+  val InvalidAbstract = "`abstract' modifier can be used only for classes"
+  val InvalidOverride = "overridden values may not be abstract"
+  val InvalidLazyClasses = "classes cannot be lazy"
 }
