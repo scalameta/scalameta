@@ -182,6 +182,7 @@ class ModSuite extends ParseSuite {
   }
 
   test("abstract") {
+    val Defn.Trait(Seq(Mod.Abstract()), _, _, _, _) = templStat("abstract trait A")
     val Defn.Class(Seq(Mod.Abstract()), _, _, _, _) = templStat("abstract class A")
     val Defn.Class(Seq(Mod.Abstract(), Mod.Case()), _, _, _, _) = templStat("abstract case class A(a: Int)")
 
@@ -356,5 +357,39 @@ class ModSuite extends ParseSuite {
 
   test("macro") {
     val Defn.Macro(_, _, _, _, _, _) = templStat("def foo(a: Int): Int = macro myMacroImpl(a)")
+  }
+
+  test("final and abstract") {
+    // Only check these because abstract cannot only be used for classes
+    val Defn.Class(Seq(Mod.Final(), Mod.Abstract()), _, _, _, _) = templStat("final abstract class A")
+    val Defn.Class(Seq(Mod.Final(), Mod.Abstract(), Mod.Case()), _, _, _, _) = templStat("final abstract case class A(a: Int)")
+
+    interceptParseErrors(
+      "final abstract trait A",
+      // Abstract should be inferred
+      "final trait A"
+    )
+  }
+
+  test("final and sealed") {
+    // Only check these because sealed can only be used for classes
+    interceptParseErrors(
+      "final sealed class A(a: Int)",
+      "final sealed case class A(a: Int)",
+      "final sealed trait A"
+    )
+  }
+
+  test("invalid private and protected") {
+    interceptParseErrors(
+      "private protected class A",
+      "protected private class A",
+      "private[something] protected class A",
+      "protected private[something] class A",
+      "protected[something] private class A",
+      "private protected[something] class A",
+      "protected protected class A",
+      "private private class A"
+    )
   }
 }

@@ -467,17 +467,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  trait InvalidModCombination[M1 <: Mod, M2 <: Mod] {
-    val m1: M1
-    val m2: M2
+  class InvalidModCombination[M1 <: Mod, M2 <: Mod](m1: M1, m2: M2) {
     def getErrorMessage: String =
       Messages.IllegalCombinationModifiers(m1, m2)
   }
 
-  implicit object InvalidFinalAbstract extends InvalidModCombination[Mod.Final, Mod.Abstract] {
-    val m1 = Mod.Final()
-    val m2 = Mod.Abstract()
-  }
+  implicit object InvalidFinalAbstract extends InvalidModCombination(Mod.Final(), Mod.Abstract())
+  implicit object InvalidFinalSealed extends InvalidModCombination(Mod.Final(), Mod.Sealed())
 
 /* -------------- TOKEN CLASSES ------------------------------------------- */
 
@@ -3128,6 +3124,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def classDef(mods: List[Mod]): Defn.Class = atPos(mods, auto) {
     accept[KwClass]
     rejectMod[Mod.Override](mods, Messages.InvalidOverrideClass)
+    rejectModCombination[Mod.Final, Mod.Sealed](mods)
     if (mods.has[Mod.Case]) {
       rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitClass)
     }
