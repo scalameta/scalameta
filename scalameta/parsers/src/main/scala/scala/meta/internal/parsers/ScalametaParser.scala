@@ -474,6 +474,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   implicit object InvalidFinalAbstract extends InvalidModCombination(Mod.Final(), Mod.Abstract())
   implicit object InvalidFinalSealed extends InvalidModCombination(Mod.Final(), Mod.Sealed())
+  implicit object InvalidOverrideAbstract extends InvalidModCombination(Mod.Override(), Mod.Abstract())
 
 /* -------------- TOKEN CLASSES ------------------------------------------- */
 
@@ -3106,10 +3107,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def traitDef(mods: List[Mod]): Defn.Trait = atPos(mods, auto) {
     val traitPos = in.tokenPos
-    val abstractMod = atPos(traitPos, traitPos)(Mod.Abstract())
+    val implicitMod = atPos(traitPos, traitPos)(Mod.Abstract())
+    val fullMods = mods :+ implicitMod
     accept[KwTrait]
     rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitTrait)
-    rejectModCombination[Mod.Final, Mod.Abstract](mods :+ abstractMod)
+    rejectModCombination[Mod.Final, Mod.Abstract](fullMods)
+    rejectModCombination[Mod.Override, Mod.Abstract](fullMods)
     Defn.Trait(mods, typeName(),
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
                primaryCtor(OwnedByTrait),
