@@ -270,9 +270,89 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  // TODO: covariant
-  // TODO: contravariant
+  test("covariant") {
+    val Defn.Class(_, _,
+      Seq(Type.Param(Seq(Mod.Covariant()), _, _, _, _, _)),
+    _, _) = templStat("case class A[+T](t: T)")
+
+    val Defn.Class(_, _,
+      Seq(Type.Param(Seq(Mod.Covariant()), _, _, _, _, _)),
+    _, _) = templStat("class A[+T](t: T)")
+
+    val Defn.Type(_, _,
+      Seq(Type.Param(Seq(Mod.Covariant()), _, _, _, _, _)),
+    _) = templStat("type A[+T] = B[T]")
+
+    interceptParseErrors(
+      "def foo[+T](t: T): Int"
+    )
+  }
+
+  test("contravariant") {
+    val Defn.Class(_, _,
+      Seq(Type.Param(Seq(Mod.Contravariant()), _, _, _, _, _)),
+    _, _) = templStat("case class A[-T](t: T)")
+
+    val Defn.Class(_, _,
+      Seq(Type.Param(Seq(Mod.Contravariant()), _, _, _, _, _)),
+    _, _) = templStat("class A[-T](t: T)")
+
+    val Defn.Type(_, _,
+      Seq(Type.Param(Seq(Mod.Contravariant()), _, _, _, _, _)),
+    _) = templStat("type A[-T] = B[T]")
+
+    interceptParseErrors(
+      "def foo[-T](t: T): Int"
+    )
+  }
+
+  test("val param") {
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.ValParam()), _, _, _)))
+    ), _) = templStat("case class A(val a: Int)")
+
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.ValParam()), _, _, _)))
+    ), _) = templStat("class A(val a: Int)")
+
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.Implicit(), Mod.ValParam()), _, _, _)))
+    ), _) = templStat("case class A(implicit val a: Int)")
+
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.Implicit(), Mod.ValParam()), _, _, _)))
+    ), _) = templStat("class A(implicit val a: Int)")
+
+    // No ValParam detected inside parameter list
+    val Defn.Def(_, _, _, Seq(Seq(Term.Param(Seq(), _, _, _))), _, _) =
+      templStat("def foo(a: Int): Int = a")
+
+    interceptParseErrors(
+      "def foo(val a: Int): Int"
+    )
+  }
+
+  test("var param") {
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.VarParam()), _, _, _)))
+    ), _) = templStat("case class A(var a: Int)")
+
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.VarParam()), _, _, _)))
+    ), _) = templStat("class A(var a: Int)")
+
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.Implicit(), Mod.VarParam()), _, _, _)))
+    ), _) = templStat("case class A(implicit var a: Int)")
+
+    val Defn.Class(_, _, _, Ctor.Primary(_, _,
+      Seq(Seq(Term.Param(Seq(Mod.Implicit(), Mod.VarParam()), _, _, _)))
+    ), _) = templStat("class A(implicit var a: Int)")
+
+    interceptParseErrors(
+      "def foo(var a: Int): Int"
+    )
+  }
+
   // TODO: macro
-  // TODO: val param
-  // TODO: var param
 }
