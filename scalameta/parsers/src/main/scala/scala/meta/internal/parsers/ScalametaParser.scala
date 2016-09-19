@@ -2738,7 +2738,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       mods ++= modifiers()
       rejectMod[Mod.Lazy](mods, "lazy modifier not allowed here. Use call-by-name parameters instead.")
       rejectMod[Mod.Sealed](mods, "`sealed' modifier can be used only for classes")
-      rejectMod[Mod.Abstract](mods, "`abstract' modifier can be used only for classes")
+      if (!mods.has[Mod.Override])
+        rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     }
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
     if (isValParam) { mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.ValParam()); next() }
@@ -2962,7 +2963,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def patDefOrDcl(mods: List[Mod]): Stat = atPos(mods, auto) {
     val isMutable = token.is[KwVar]
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
-    rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
+    if (!mods.has[Mod.Override])
+      rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     next()
     val lhs: List[Pat] = commaSeparated(noSeq.pattern2().require[Pat]).map {
       case q: Pat.Quasi => q.become[Pat.Var.Term.Quasi]
@@ -3009,8 +3011,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {
     accept[KwDef]
-    rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
+    if (!mods.has[Mod.Override])
+      rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     val name = termName()
     def warnProcedureDeprecation =
       deprecationWarning(s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.", at = name)
@@ -3052,9 +3055,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def typeDefOrDcl(mods: List[Mod]): Member.Type with Stat = atPos(mods, auto) {
     accept[KwType]
-    rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     rejectMod[Mod.Implicit](mods, Messages.InvalidImplicit)
+    if (!mods.has[Mod.Override])
+      rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     newLinesOpt()
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
@@ -3123,6 +3127,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def classDef(mods: List[Mod]): Defn.Class = atPos(mods, auto) {
     accept[KwClass]
+    rejectMod[Mod.Override](mods, Messages.InvalidOverrideClass)
     if (mods.has[Mod.Case]) {
       rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitClass)
     }
@@ -3149,8 +3154,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def objectDef(mods: List[Mod]): Defn.Object = atPos(mods, auto) {
     accept[KwObject]
-    rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
+    if (!mods.has[Mod.Override])
+      rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     Defn.Object(mods, termName(), templateOpt(OwnedByObject))
   }
 

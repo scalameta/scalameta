@@ -126,8 +126,6 @@ class ModSuite extends ParseSuite {
 
   test("override") {
     val Defn.Object(Seq(Mod.Override()), _, _) = templStat("override object A")
-    val Defn.Class(Seq(Mod.Override()), _, _, _, _) = templStat("override class A")
-    val Defn.Class(Seq(Mod.Override(), Mod.Case()), _, _, _, _) = templStat("override case class A(a: Int)")
     val Defn.Object(Seq(Mod.Override(), Mod.Case()), _, _) = templStat("override case object A")
 
     val Defn.Def(Seq(Mod.Override()), _, _, _, _, _) = templStat("override def foo(a: Int): Int = a")
@@ -150,7 +148,9 @@ class ModSuite extends ParseSuite {
       "override override trait A",
       "override override case class A(a: Int)",
       "override override type A",
-      "def foo(override val a: Int): Int = a"
+      "def foo(override val a: Int): Int = a",
+      "override class A",
+      "override case class A(a: Int)"
     )
   }
 
@@ -239,9 +239,39 @@ class ModSuite extends ParseSuite {
     )
   }
 
+  test("abstract override") {
+    /* Non-trait members modified by `abstract override` receive a typechecking error */
+    val Defn.Object(Seq(Mod.Abstract(), Mod.Override()), _, _) = templStat("abstract override object A")
+    val Defn.Object(Seq(Mod.Abstract(), Mod.Override(), Mod.Case()), _, _) = templStat("abstract override case object A")
+
+    val Defn.Def(Seq(Mod.Abstract(), Mod.Override()), _, _, _, _, _) = templStat("abstract override def foo(a: Int): Int = a")
+    val Defn.Val(Seq(Mod.Abstract(), Mod.Override()), _, _, _) = templStat("abstract override val a: Int = 1")
+    val Defn.Var(Seq(Mod.Abstract(), Mod.Override()), _, _, _) = templStat("abstract override var a: Int = 1")
+    val Defn.Type(Seq(Mod.Abstract(), Mod.Override()), _, _, _) = templStat("abstract override type A = Int")
+
+    val Decl.Def(Seq(Mod.Abstract(), Mod.Override()), _, _, _, _) = templStat("abstract override def foo(a: Int): Int")
+    val Decl.Val(Seq(Mod.Abstract(), Mod.Override()), _, _) = templStat("abstract override val a: Int")
+    val Decl.Var(Seq(Mod.Abstract(), Mod.Override()), _, _) = templStat("abstract override var a: Int")
+    val Decl.Type(Seq(Mod.Abstract(), Mod.Override()), _, _, _) = templStat("abstract override type A")
+
+    interceptParseErrors(
+      "abstract override abstract override var a: Int",
+      "abstract override abstract override val a: Int",
+      "abstract override abstract override var a: Int = 1",
+      "abstract override abstract override val a: Int = 1",
+      "abstract override abstract override class A",
+      "abstract override abstract override object A",
+      "abstract override abstract override trait A",
+      "abstract override abstract override case class A(a: Int)",
+      "abstract override abstract override type A",
+      "def foo(abstract override val a: Int): Int = a",
+      "abstract override class A",
+      "abstract override case class A(a: Int)"
+    )
+  }
+
   // TODO: covariant
   // TODO: contravariant
-  // TODO: abstract override
   // TODO: macro
   // TODO: val param
   // TODO: var param
