@@ -354,5 +354,7 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  // TODO: macro
+  test("macro") {
+    val Defn.Macro(_, _, _, _, _, _) = templStat("def foo(a: Int): Int = macro myMacroImpl(a)")
+  }
 }
