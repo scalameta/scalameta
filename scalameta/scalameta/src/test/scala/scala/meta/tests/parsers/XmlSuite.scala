@@ -2,6 +2,7 @@ package scala.meta.tests.parsers
 
 import scala.meta._
 import scala.meta.dialects.Scala211
+import scala.meta.internal.tokenizers.LegacyScanner
 import scala.meta.tests.DiffAssertions
 
 class XmlSuite extends ParseSuite with DiffAssertions {
@@ -32,7 +33,7 @@ class XmlSuite extends ParseSuite with DiffAssertions {
 
   test("simple xml literal - 2") {
     assert(
-      tokensStructure(tokenize("<foo>bar</foo> ")) ===
+      tokensStructure(tokenize("<foo>{bar}</foo> ")) ===
         """|
            |            BOF [0..0) ----> class scala.meta.tokens.Token$BOF
            |                [0..0) ----> class scala.meta.tokens.Token$Xml$Start
@@ -43,11 +44,10 @@ class XmlSuite extends ParseSuite with DiffAssertions {
            |""".stripMargin.trim.replace("QQQ", "\"\"\""))
   }
 
-  // TODO(olafur) currently crashes, see https://github.com/scalameta/scalameta/pull/469/files/e2324548b3896d5e7b0993f4063316602d9583ff#r78293500
-  ignore("curlies inside scala expr") {
+  test("curlies inside scala expr") {
     assert(
       tokensStructure(tokenize("""<foo>{"{" + `{`}</foo>""")) ===
-          """|
+        """|
              |            BOF [0..0) ----> class scala.meta.tokens.Token$BOF
              |                [0..0) ----> class scala.meta.tokens.Token$Xml$Start
              |<foo>bar</foo> [0..14) ----> class scala.meta.tokens.Token$Xml$Part

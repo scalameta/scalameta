@@ -975,7 +975,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     // 1. Collect positions of scala expressions inside this xml literal.
     import fastparse.core.Parsed
     val start = offset
-    val embeddedScalaExprPositions = new ScalaExprPositionParser
+    val embeddedScalaExprPositions = new ScalaExprPositionParser(input, dialect)
     val xmlParser = new XmlParser(embeddedScalaExprPositions)
     val result: Int = xmlParser.XmlExpr.parse(new String(input.chars), index = start) match {
       case Parsed.Success(_, endExclusive) => endExclusive - 1

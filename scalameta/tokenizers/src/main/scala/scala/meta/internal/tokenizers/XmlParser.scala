@@ -4,9 +4,10 @@ package scala.meta.internal.tokenizers
   * Copy-pasta from this lihaoyi comment:
   * https://github.com/scalameta/fastparse/pull/1#issuecomment-244940542*/
 import scala.annotation.switch
+import scala.meta.Dialect
+import scala.meta.inputs.Input
 
 import fastparse.all._
-
 
 class XmlParser(Block: P0,
                 Patterns: P0 = Fail,
@@ -141,21 +142,27 @@ case class RangePosition(from: Int, to: Int)
   * Doesn't really parse scala expressions, only reads until the curly brace
   * balance hits 0.
   */
-class ScalaExprPositionParser extends fastparse.all.Parser[Unit] {
+class ScalaExprPositionParser(input: Input, dialect: Dialect)
+    extends fastparse.all.Parser[Unit] {
   private val splicePositions = Set.newBuilder[RangePosition]
   def getSplicePositions = splicePositions.result()
 
   def parseRec(cfg: fastparse.core.ParseCtx, index: Int) = {
     var current = 0
     var curlyBraceCount = 1
+    val scanner =
+      new LegacyScanner(Input.Slice(input, index, input.chars.length), dialect)
+    scanner.reader.nextChar()
     while (curlyBraceCount > 0) {
-      current += 1
-      (cfg.input(index + current): @switch) match {
-        case '}' => curlyBraceCount -= 1
-        case '{' => curlyBraceCount += 1
+      scanner.nextToken()
+      current += scanner.curr.endOffset - scanner.curr.offset + 1
+      (scanner.curr.token: @switch) match {
+        case LegacyToken.LBRACE =>curlyBraceCount += 1
+        case LegacyToken.RBRACE =>curlyBraceCount -= 1
         case _ =>
       }
     }
+    current -= 1 // account for }
     splicePositions += RangePosition(index, index + current)
     success(cfg.success, (), index + current, Set.empty, false)
   }
