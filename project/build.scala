@@ -37,6 +37,7 @@ object build extends Build {
     // SBT calls publishSigned on aggregated projects, but ignores everything else.
     console := (console in scalameta in Compile).value
   ) aggregate (
+    artifacts,
     common,
     dialects,
     inline,
@@ -44,11 +45,23 @@ object build extends Build {
     parsers,
     quasiquotes,
     scalameta,
+    semantic,
     tokenizers,
     tokens,
     transversers,
     trees
   )
+
+  lazy val artifacts = Project(
+    id   = "artifacts",
+    base = file("scalameta/artifacts")
+  ) settings (
+    publishableSettings,
+    description := "Scala.meta's APIs for reflecting artifacts of Scala ecosystem",
+    libraryDependencies += "org.apache.ivy" % "ivy" % "2.4.0",
+    libraryDependencies += "org.scala-lang.modules" % "scala-asm" % "5.1.0-scala-1",
+    enableMacros
+  ) dependsOn (common, parsers, trees)
 
   lazy val common = Project(
     id   = "common",
@@ -147,7 +160,15 @@ object build extends Build {
     publishableSettings,
     description := "Scala.meta's metaprogramming APIs",
     exposePaths("scalameta", Test)
-  ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline)
+  ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline, artifacts, semantic)
+
+  lazy val semantic = Project(
+    id   = "semantic",
+    base = file("scalameta/semantic")
+  ) settings (
+    publishableSettings,
+    description := "Scala.meta's semantic APIs"
+  ) dependsOn (common, trees, artifacts)
 
   lazy val readme = scalatex.ScalatexReadme(
     projectId = "readme",

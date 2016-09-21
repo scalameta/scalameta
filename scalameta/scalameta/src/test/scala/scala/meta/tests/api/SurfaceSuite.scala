@@ -31,6 +31,25 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     assert(diagnostic === """
       |scala.meta.Dialect
       |scala.meta.Tree
+      |scala.meta.artifacts
+      |scala.meta.artifacts.Artifact
+      |scala.meta.artifacts.Artifact.Adhoc
+      |scala.meta.artifacts.Artifact.Maven
+      |scala.meta.artifacts.Artifact.Unmanaged
+      |scala.meta.artifacts.ArtifactException *
+      |scala.meta.artifacts.CrossVersion
+      |scala.meta.artifacts.CrossVersion.binary
+      |scala.meta.artifacts.CrossVersion.full
+      |scala.meta.artifacts.CrossVersion.none
+      |scala.meta.artifacts.Domain
+      |scala.meta.artifacts.Ecosystem
+      |scala.meta.artifacts.IncompleteMavenId *
+      |scala.meta.artifacts.MavenId *
+      |scala.meta.artifacts.Multipath *
+      |scala.meta.artifacts.Path *
+      |scala.meta.artifacts.Resolver
+      |scala.meta.artifacts.Resolver.BlessedEcosystem
+      |scala.meta.artifacts.Resource
       |scala.meta.classifiers
       |scala.meta.classifiers.Classifiable *
       |scala.meta.classifiers.Classifier *
@@ -78,6 +97,8 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.quasiquotes
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
+      |scala.meta.semantic
+      |scala.meta.semantic.Mirror
       |scala.meta.tokenizers
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException
@@ -96,10 +117,11 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
   test("prettyprinters for statics (core)") {
     val prettyprinterTests = new scala.meta.tests.prettyprinters.PublicSuite().testNames
     val nonPackageStatics = core.keys.filter(_.exists(_.isUpper))
-    nonPackageStatics.foreach(name => {
-      val isTested = prettyprinterTests.exists(testName => testName.startsWith(name))
-      assert(isTested, s"$name prettyprinting is not tested")
-    })
+    val untested = nonPackageStatics.filter(name => !prettyprinterTests.exists(testName => testName.startsWith(name))).toList
+
+    // println(untested.sorted.mkString(EOL))
+    assert(untested.sorted.mkString(EOL) === """
+    """.trim.stripMargin)
   }
 
   test("surface (core)") {
@@ -118,6 +140,8 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
+      |* String.%%(String): scala.meta.artifacts.IncompleteMavenId
+      |* String.%(String): scala.meta.artifacts.IncompleteMavenId
       |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
@@ -135,6 +159,13 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
       |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
       |* scala.meta.Type.pat: scala.meta.Pat.Type
+      |* scala.meta.artifacts.Artifact.Maven.cross(scala.meta.artifacts.CrossVersion): scala.meta.artifacts.Artifact.Maven
+      |* scala.meta.artifacts.Artifact.binaries(implicit scala.meta.artifacts.Resolver): scala.collection.immutable.Seq[scala.meta.artifacts.Path]
+      |* scala.meta.artifacts.Artifact.deps(implicit scala.meta.artifacts.Resolver): scala.collection.immutable.Seq[scala.meta.artifacts.Artifact]
+      |* scala.meta.artifacts.Artifact.resources(implicit scala.meta.artifacts.Resolver): scala.collection.immutable.Seq[scala.meta.artifacts.Resource]
+      |* scala.meta.artifacts.Artifact.sources(implicit scala.meta.artifacts.Resolver): scala.collection.immutable.Seq[scala.meta.Source]
+      |* scala.meta.artifacts.IncompleteMavenId.%(String): scala.meta.artifacts.MavenId
+      |* scala.meta.artifacts.MavenId.cross(scala.meta.artifacts.CrossVersion): scala.meta.artifacts.MavenId
     """.trim.stripMargin)
   }
 
