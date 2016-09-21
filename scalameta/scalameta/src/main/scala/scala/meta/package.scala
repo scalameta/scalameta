@@ -1,12 +1,14 @@
 package scala
 
-package object meta extends classifiers.Api with classifiers.Aliases
+package object meta extends artifacts.Api with artifacts.Aliases
+                       with classifiers.Api with classifiers.Aliases
                        with dialects.Api with dialects.Aliases
                        with parsers.Api with parsers.Aliases
                        with prettyprinters.Api with prettyprinters.Aliases
                        with quasiquotes.Api with quasiquotes.Aliases
                        with inline.Api with inline.Aliases
                        with inputs.Api with inputs.Aliases
+                       with semantic.Api with semantic.Aliases
                        with tokenizers.Api with tokenizers.Aliases
                        with tokens.Api with tokens.Aliases
                        with transversers.Api with transversers.Aliases {
