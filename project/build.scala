@@ -11,7 +11,7 @@ import scala.compat.Platform.EOL
 
 object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
-  lazy val LibraryVersion = "1.2.0-SNAPSHOT"
+  lazy val LibraryVersion = "2.0.0-SNAPSHOT"
 
   lazy val scalametaRoot = Project(
     id = "scalametaRoot",
