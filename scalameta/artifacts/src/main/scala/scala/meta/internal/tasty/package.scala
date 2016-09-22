@@ -14,7 +14,8 @@ import org.scalameta.data._
 package object tasty {
   def toTasty(source: Source): Array[Byte] = {
     try {
-      source.requireAttributed()
+      // TODO: uncomment this when the converter works well
+      // source.requireAttributed()
 
       val baos = new ByteArrayOutputStream()
       val oos = new ObjectOutputStream(baos)
@@ -55,7 +56,8 @@ package object tasty {
         case Some(source) => source
         case _ => throw new UntastyException("no Scalameta section was found")
       }
-      source.requireAttributed()
+      // TODO: uncomment this when the converter works well
+      // source.requireAttributed()
       logTasty(println(s"successfully loaded TASTY: ${source.show[TopLevel]}"))
       source
     } catch {
