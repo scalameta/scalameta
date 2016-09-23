@@ -3,6 +3,8 @@ package internal
 package parsers
 
 import scala.compat.Platform.EOL
+import scala.meta.tokens.Token
+import scala.meta.tokens.Token.KwTrait
 
 // TODO: Would be nice to take all errors/warnings in tokenization and parsing,
 // and then externalize them into dedicated objects.
@@ -25,7 +27,6 @@ object Messages {
 
   def IllegalCombinationModifiers(mod1: Mod, mod2: Mod): String =
     s"illegal combination of modifiers: $mod1 and $mod2"
-
 
   val InvalidSealed = "`sealed' modifier can be used only for classes"
   val InvalidImplicit ="`implicit' modifier can be used only for values, variables, methods and classes"

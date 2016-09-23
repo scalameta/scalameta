@@ -6,22 +6,6 @@ import org.scalatest.exceptions.TestFailedException
 import scala.meta._
 
 class ModSuite extends ParseSuite {
-  def interceptParseErrors(stats: String*) = {
-    stats.foreach { stat =>
-      try {
-        intercept[parsers.ParseException] {
-          templStat(stat)
-        }
-      } catch {
-        case t: TestFailedException =>
-          val msg = "no exception was thrown"
-          val richFeedback = t.message.map(_.replace(msg, s"$msg for '$stat'"))
-          throw new TestFailedException(richFeedback.get,
-                                        t.failedCodeStackDepth)
-      }
-    }
-  }
-
   test("implicit") {
     val Defn.Object(Seq(Mod.Implicit()), _, _) = templStat("implicit object A")
     val Defn.Class(Seq(Mod.Implicit()), _, _, _, _) = templStat("implicit class A")

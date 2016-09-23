@@ -440,21 +440,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
 /* ------------- MODIFIER VALIDATOR --------------------------------------- */
 
-
   def rejectMod[M <: Mod](mods: List[Mod], errorMsg: String)
       (implicit classifier: Classifier[Mod, M], tag: ClassTag[M]) = {
     mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
   }
 
-  def rejectModCombination[M1 <: Mod, M2 <: Mod](mods: List[Mod])
+  def rejectModCombination[M1 <: Mod, M2 <: Mod](mods: List[Mod], culprit: String)
       (implicit invalidMod: InvalidModCombination[M1, M2],
                 classifier1: Classifier[Mod, M1],
                 tag1: ClassTag[M1],
                 classifier2: Classifier[Mod, M2],
                 tag2: ClassTag[M2]) = {
-    val errorMsg = invalidMod.getErrorMessage
+    val errorMsg = invalidMod.errorMessage
+    val forCulprit = if (culprit.nonEmpty) s" for: $culprit" else ""
+    val enrichedErrorMsg = errorMsg + forCulprit
     mods.getIncompatible[M1, M2].foreach { m =>
-      syntaxError(errorMsg, at = m._1)
+      syntaxError(enrichedErrorMsg, at = m._1)
     }
   }
 
@@ -468,8 +469,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   class InvalidModCombination[M1 <: Mod, M2 <: Mod](m1: M1, m2: M2) {
-    def getErrorMessage: String =
-      Messages.IllegalCombinationModifiers(m1, m2)
+    def errorMessage: String = Messages.IllegalCombinationModifiers(m1, m2)
   }
 
   implicit object InvalidFinalAbstract extends InvalidModCombination(Mod.Final(), Mod.Abstract())
@@ -3107,13 +3107,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def traitDef(mods: List[Mod]): Defn.Trait = atPos(mods, auto) {
     val traitPos = in.tokenPos
-    val implicitMod = atPos(traitPos, traitPos)(Mod.Abstract())
-    val fullMods = mods :+ implicitMod
+    val assumedAbstract = atPos(traitPos, traitPos)(Mod.Abstract())
+    // Add `abstract` to traits for error reporting
+    val fullMods = mods :+ assumedAbstract
     accept[KwTrait]
     rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitTrait)
-    rejectModCombination[Mod.Final, Mod.Abstract](fullMods)
-    rejectModCombination[Mod.Override, Mod.Abstract](fullMods)
-    Defn.Trait(mods, typeName(),
+    val traitName = typeName()
+    val culpritError = s"trait $traitName"
+    rejectModCombination[Mod.Final, Mod.Abstract](fullMods, culpritError)
+    rejectModCombination[Mod.Override, Mod.Abstract](fullMods, culpritError)
+    Defn.Trait(mods, traitName,
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
                primaryCtor(OwnedByTrait),
                templateOpt(OwnedByTrait))
@@ -3127,10 +3130,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def classDef(mods: List[Mod]): Defn.Class = atPos(mods, auto) {
     accept[KwClass]
     rejectMod[Mod.Override](mods, Messages.InvalidOverrideClass)
-    rejectModCombination[Mod.Final, Mod.Sealed](mods)
     if (mods.has[Mod.Case]) {
       rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitClass)
     }
+    val className = typeName()
+    val culpritError = s"class $className"
+    rejectModCombination[Mod.Final, Mod.Sealed](mods, culpritError)
     // TODO:
     // if (ofCaseClass && token.isNot[LeftParen])
     //  syntaxError(token.offset, "case classes without a parameter list are not allowed;\n"+
@@ -3143,7 +3148,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     //    case _           => syntaxError(start, "auxiliary constructor needs non-implicit parameter list")
     //  }
     // }
-    Defn.Class(mods, typeName(),
+    Defn.Class(mods, className,
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true),
                primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass), templateOpt(OwnedByClass))
   }

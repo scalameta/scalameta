@@ -2,6 +2,7 @@ package scala.meta.tests
 package parsers
 
 import org.scalatest._
+import org.scalatest.exceptions.TestFailedException
 import scala.meta._
 import scala.meta.internal.parsers._
 import MoreHelpers._
@@ -18,6 +19,21 @@ class ParseSuite extends FunSuite with CommonTrees {
   def blockStat(code: String)(implicit dialect: Dialect) = code.parseRule(_.blockStatSeq().head)
   def caseClause(code: String)(implicit dialect: Dialect) = code.parseRule(_.caseClause())
   def source(code: String)(implicit dialect: Dialect) = code.parseRule(_.source())
+  def interceptParseErrors(stats: String*) = {
+    stats.foreach { stat =>
+      try {
+        intercept[parsers.ParseException] {
+          templStat(stat)
+        }
+      } catch {
+        case t: TestFailedException =>
+          val msg = "no exception was thrown"
+          val richFeedback = t.message.map(_.replace(msg, s"$msg for '$stat'"))
+          throw new TestFailedException(richFeedback.get,
+            t.failedCodeStackDepth)
+      }
+    }
+  }
 }
 
 object MoreHelpers {
