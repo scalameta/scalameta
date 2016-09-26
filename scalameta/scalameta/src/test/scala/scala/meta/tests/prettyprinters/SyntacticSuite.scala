@@ -162,6 +162,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tpe("Foo with Bar { type T = Int; type U <: String }").show[Syntax] === "Foo with Bar { type T = Int; type U <: String }")
   }
 
+  test("infix types") {
+    assert(tpe("Foo + Bar").show[Syntax] === "Foo + Bar")
+    assert(tpe("Foo | Bar").show[Syntax] === "Foo | Bar")
+  }
+
+  test("or types - Dotty") {
+    assert(tpe("Foo | Bar")(dialects.Dotty).show[Syntax] === "Foo | Bar")
+  }
+
   test("packages") {
     assert(source("package foo.bar; class C").show[Syntax] === s"package foo.bar${EOL}class C")
     assert(source("package foo.bar; class C; class D").show[Syntax] === s"package foo.bar${EOL}class C${EOL}class D")

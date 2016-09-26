@@ -44,6 +44,9 @@ import scala.compat.Platform.EOL
   // Necessary to support popular script-like DSLs.
   def allowToplevelTerms: Boolean
 
+  // Are `|` (union types) supported by this dialect?
+  def allowOrTypes: Boolean
+
   // What kind of separator is necessary to split top-level statements?
   // Normally none is required, but scripts may have their own rules.
   def toplevelSeparator: String
@@ -61,6 +64,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = false // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = false
+    def allowOrTypes = false
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
@@ -74,6 +78,7 @@ package object dialects {
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
     def toplevelSeparator = EOL
+    def allowOrTypes = Scala210.allowOrTypes
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
@@ -85,6 +90,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
+    def allowOrTypes = Scala210.allowOrTypes
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
@@ -97,6 +103,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = Scala210.allowToplevelTerms
+    def allowOrTypes = Scala210.allowOrTypes
     def toplevelSeparator = Scala210.toplevelSeparator
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
@@ -109,6 +116,7 @@ package object dialects {
     def allowInline = true
     def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
     def allowToplevelTerms = Scala211.allowToplevelTerms
+    def allowOrTypes = Scala211.allowOrTypes
     def toplevelSeparator = Scala211.toplevelSeparator
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
@@ -121,6 +129,7 @@ package object dialects {
     def allowInline = true
     def allowSpliceUnderscore = true
     def allowToplevelTerms = false
+    def allowOrTypes = true
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
@@ -137,6 +146,7 @@ package object dialects {
     def allowInline = underlying.allowInline
     def allowSpliceUnderscore = underlying.allowSpliceUnderscore
     def allowToplevelTerms = underlying.allowToplevelTerms
+    def allowOrTypes = underlying.allowOrTypes
     def toplevelSeparator = underlying.toplevelSeparator
   }
 

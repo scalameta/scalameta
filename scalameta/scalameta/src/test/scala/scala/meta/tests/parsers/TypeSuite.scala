@@ -118,4 +118,9 @@ class TypeSuite extends ParseSuite {
                     Decl.Val(Nil, Pat.Var.Term(TermName("a")) :: Nil, TypeName("A")) :: Nil) =
       tpe("a.T forSome { val a: A }")
   }
+
+  test("A | B is not a special type") {
+    val comp@ApplyInfix(TypeName("A"), TypeName("|"), TypeName("B")) = tpe("A | B")
+  }
+
 }

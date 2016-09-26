@@ -1042,13 +1042,21 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           val name = termName(advance = false)
           val leftAssoc = name.isLeftAssoc
           if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
-          val op = typeName()
-          newLineOptWhenFollowing(_.is[TypeIntro])
-          def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
-          if (leftAssoc)
-            infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
-          else
-            mkOp(infixType(InfixMode.RightOp))
+          if (isRawBar && dialect.allowOrTypes) {
+            next()
+            newLineOptWhenFollowing(_.is[TypeIntro])
+            val t1 = compoundType()
+            infixTypeRest(atPos(t, t1)(Type.Or(t, t1)), InfixMode.LeftOp)
+          }
+          else {
+            val op = typeName()
+            newLineOptWhenFollowing(_.is[TypeIntro])
+            def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
+            if (leftAssoc)
+              infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
+            else
+              mkOp(infixType(InfixMode.RightOp))
+          }
         }
       } else {
         t
