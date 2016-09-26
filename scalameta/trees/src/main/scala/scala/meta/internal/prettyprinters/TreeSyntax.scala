@@ -302,6 +302,7 @@ object TreeSyntax {
         case t: Type.Singleton    => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
         case t: Type.Apply        => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
         case t: Type.ApplyInfix   => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
+        case t: Type.Or           => m(InfixTyp("|"), s(p(InfixTyp("|"), t.lhs, left = true), " ", "|", " ", p(InfixTyp("|"), t.rhs, right = true)))
         case t: Type.Function     =>
           val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
           m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
