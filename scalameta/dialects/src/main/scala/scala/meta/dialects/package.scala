@@ -80,7 +80,7 @@ package object dialects {
     def allowToplevelTerms = true
     def toplevelSeparator = EOL
     def metalevel = Metalevel.Zero
-    def allowTraitParameters = false
+    def allowTraitParameters = Scala210.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -93,7 +93,7 @@ package object dialects {
     def allowToplevelTerms = true
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
-    def allowTraitParameters = false
+    def allowTraitParameters = Scala210.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -106,7 +106,7 @@ package object dialects {
     def allowToplevelTerms = Scala210.allowToplevelTerms
     def toplevelSeparator = Scala210.toplevelSeparator
     def metalevel = Metalevel.Zero
-    def allowTraitParameters = false
+    def allowTraitParameters = Scala210.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -119,7 +119,7 @@ package object dialects {
     def allowToplevelTerms = Scala211.allowToplevelTerms
     def toplevelSeparator = Scala211.toplevelSeparator
     def metalevel = Metalevel.Zero
-    def allowTraitParameters = false
+    def allowTraitParameters = Scala211.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
