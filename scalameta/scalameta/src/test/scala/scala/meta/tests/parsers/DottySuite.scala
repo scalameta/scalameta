@@ -36,4 +36,9 @@ class DottySuite extends ParseSuite {
       dialects.Dotty("{ val inline = 42 }").parse[Term].get
     }
   }
+
+  test("trait parameters are allowed") {
+    val tree = dialects.Dotty("trait Foo(bar: Int)").parse[Stat].get
+    assert(tree.syntax === "trait Foo(bar: Int)")
+  }
 }

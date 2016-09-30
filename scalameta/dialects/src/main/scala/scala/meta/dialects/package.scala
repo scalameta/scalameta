@@ -51,6 +51,10 @@ import scala.compat.Platform.EOL
   // What level of quoting are we at?
   // The underlying data structure captures additional information necessary for parsing.
   def metalevel: Metalevel
+
+  // Are trait allowed to have parameters?
+  // They are in Dotty, but not in Scala 2.12 or older.
+  def allowTraitParameters: Boolean
 }
 
 package object dialects {
@@ -63,6 +67,7 @@ package object dialects {
     def allowToplevelTerms = false
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
+    def allowTraitParameters = false
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -75,6 +80,7 @@ package object dialects {
     def allowToplevelTerms = true
     def toplevelSeparator = EOL
     def metalevel = Metalevel.Zero
+    def allowTraitParameters = false
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -87,6 +93,7 @@ package object dialects {
     def allowToplevelTerms = true
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
+    def allowTraitParameters = false
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -99,6 +106,7 @@ package object dialects {
     def allowToplevelTerms = Scala210.allowToplevelTerms
     def toplevelSeparator = Scala210.toplevelSeparator
     def metalevel = Metalevel.Zero
+    def allowTraitParameters = false
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -111,6 +119,7 @@ package object dialects {
     def allowToplevelTerms = Scala211.allowToplevelTerms
     def toplevelSeparator = Scala211.toplevelSeparator
     def metalevel = Metalevel.Zero
+    def allowTraitParameters = false
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -123,6 +132,7 @@ package object dialects {
     def allowToplevelTerms = false
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
+    def allowTraitParameters = true
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -138,6 +148,7 @@ package object dialects {
     def allowSpliceUnderscore = underlying.allowSpliceUnderscore
     def allowToplevelTerms = underlying.allowToplevelTerms
     def toplevelSeparator = underlying.toplevelSeparator
+    def allowTraitParameters = underlying.allowTraitParameters
   }
 
   @leaf private[meta] class QuasiquoteTerm(underlying: Dialect, multiline: Boolean) extends Quasiquote {

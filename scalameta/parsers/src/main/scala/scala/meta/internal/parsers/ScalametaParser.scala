@@ -3108,7 +3108,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   // therefore, I'm going to use `Term.Name("this")` here for the time being
 
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
-    if (owner.isClass) {
+    if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters)) {
       val mods = constructorAnnots() ++ accessModifierOpt()
       val name = atPos(in.tokenPos, in.prevTokenPos)(Ctor.Name("this"))
       val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)

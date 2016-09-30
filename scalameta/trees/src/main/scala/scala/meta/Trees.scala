@@ -373,7 +373,14 @@ object Defn {
                    templ: Template) extends Defn with Member.Type {
     // TODO: hardcoded in the @ast macro, find out a better way
     // require(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
-    require(ctor.mods.isEmpty && ctor.paramss.isEmpty)
+
+    // TODO this doesn't work because the Dialect in implicit
+    // scope is the dialect of the host Scala environment
+    // (i.e. Scala211), not the parser's dialect.
+    //require (
+    //  implicitly[Dialect].allowTraitParameters ||
+    //    (ctor.mods.isEmpty && ctor.paramss.isEmpty)
+    //)
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,
