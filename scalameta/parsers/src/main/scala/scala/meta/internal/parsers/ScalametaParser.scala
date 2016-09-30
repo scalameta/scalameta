@@ -3108,7 +3108,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   // therefore, I'm going to use `Term.Name("this")` here for the time being
 
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
-    if (owner.isClass) {
+    if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters)) {
       val mods = constructorAnnots() ++ accessModifierOpt()
       val name = atPos(in.tokenPos, in.prevTokenPos)(Ctor.Name("this"))
       val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
@@ -3359,8 +3359,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       (self, Some(body))
     } else {
       if (token.is[LeftParen]) {
-        if (parenMeansSyntaxError) syntaxError("traits or objects may not have parameters", at = token)
-        else syntaxError("unexpected opening parenthesis", at = token)
+        if (parenMeansSyntaxError) {
+          val what = if (dialect.allowTraitParameters) "objects" else "traits or objects"
+          syntaxError(s"$what may not have parameters", at = token)
+        } else syntaxError("unexpected opening parenthesis", at = token)
       }
       (autoPos(Term.Param(Nil, autoPos(Name.Anonymous()), None, None)), None)
     }
