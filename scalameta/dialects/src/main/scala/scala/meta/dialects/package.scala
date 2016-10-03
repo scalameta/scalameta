@@ -44,6 +44,10 @@ import scala.compat.Platform.EOL
   // Necessary to support popular script-like DSLs.
   def allowToplevelTerms: Boolean
 
+  // Are view bounds supported by this dialect?
+  // Removed in Dotty.
+  def allowViewBounds: Boolean
+
   // What kind of separator is necessary to split top-level statements?
   // Normally none is required, but scripts may have their own rules.
   def toplevelSeparator: String
@@ -65,6 +69,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = false // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = false
+    def allowViewBounds = true
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
     def allowTraitParameters = false
@@ -78,6 +83,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
+    def allowViewBounds = Scala210.allowViewBounds
     def toplevelSeparator = EOL
     def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala210.allowTraitParameters
@@ -91,6 +97,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
+    def allowViewBounds = Scala210.allowViewBounds
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala210.allowTraitParameters
@@ -104,6 +111,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = Scala210.allowToplevelTerms
+    def allowViewBounds = Scala210.allowViewBounds
     def toplevelSeparator = Scala210.toplevelSeparator
     def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala210.allowTraitParameters
@@ -117,6 +125,7 @@ package object dialects {
     def allowInline = true
     def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
     def allowToplevelTerms = Scala211.allowToplevelTerms
+    def allowViewBounds = Scala211.allowViewBounds
     def toplevelSeparator = Scala211.toplevelSeparator
     def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala211.allowTraitParameters
@@ -130,6 +139,7 @@ package object dialects {
     def allowInline = true
     def allowSpliceUnderscore = true
     def allowToplevelTerms = false
+    def allowViewBounds = false // View bounds have been removed in Dotty
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
     def allowTraitParameters = true
@@ -149,6 +159,7 @@ package object dialects {
     def allowToplevelTerms = underlying.allowToplevelTerms
     def toplevelSeparator = underlying.toplevelSeparator
     def allowTraitParameters = underlying.allowTraitParameters
+    def allowViewBounds = underlying.allowViewBounds
   }
 
   @leaf private[meta] class QuasiquoteTerm(underlying: Dialect, multiline: Boolean) extends Quasiquote {
