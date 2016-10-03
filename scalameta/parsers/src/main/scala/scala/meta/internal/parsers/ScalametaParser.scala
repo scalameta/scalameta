@@ -2780,13 +2780,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val cbounds = new ListBuffer[Type]
     if (ctxBoundsAllowed) {
       while (token.is[Viewbound]) {
-        // TODO: dialect?
-        // if (settings.future) {
-        //   val msg = ("Use an implicit parameter instead.\n" +
-        //              "Example: Instead of `def f[A <% Int](a: A)` " +
-        //              "use `def f[A](a: A)(implicit ev: A => Int)`.")
-        //   deprecationWarning(s"View bounds are deprecated. $msg")
-        // }
+        if (!dialect.allowViewBounds) {
+          val msg = ("Use an implicit parameter instead.\n" +
+                     "Example: Instead of `def f[A <% Int](a: A)` " +
+                     "use `def f[A](a: A)(implicit ev: A => Int)`.")
+          syntaxError(s"View bounds are not supported. $msg", at = token)
+        }
         next()
         if (token.is[Ellipsis]) vbounds += ellipsis(1, astInfo[Type])
         else vbounds += typ()

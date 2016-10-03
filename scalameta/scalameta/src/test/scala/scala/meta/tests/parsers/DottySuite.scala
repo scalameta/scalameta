@@ -41,4 +41,10 @@ class DottySuite extends ParseSuite {
     val tree = dialects.Dotty("trait Foo(bar: Int)").parse[Stat].get
     assert(tree.syntax === "trait Foo(bar: Int)")
   }
+
+  test("view bounds not allowed") {
+    intercept[ParseException] {
+      dialects.Dotty("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get
+    }
+  }
 }
