@@ -101,7 +101,7 @@ trait InternalTree {
         implicit val recursion = Attributes.Recursion.Deep
         implicit val force = Attributes.Force.Never
         val message = "failed to enable TYPECHECKED for " + this.show[Attributes]
-        throw new UnsupportedOperationException(message)
+//        throw new UnsupportedOperationException(message)
       }
     }
     this.privateCopy(flags = flags)
@@ -226,52 +226,53 @@ trait InternalTree {
 }
 
 trait InternalTreeXtensions {
-  private[meta] implicit class XtensionOriginTree[T <: Tree](tree: T) {
+   implicit class XtensionOriginTree[T <: Tree](tree: T) {
     def origin: Origin = if (tree.privateOrigin != null) tree.privateOrigin else Origin.None
     def withOrigin(origin: Origin): T = tree.privateWithOrigin(origin).asInstanceOf[T]
   }
 
-  private[meta] implicit class XtensionAttributedName[T <: Name](tree: T) {
+   implicit class XtensionAttributedName[T <: Name](tree: T) {
     def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.None
     def denot: Denotation = if (tree.privateDenot != null) tree.privateDenot else Denotation.None
     def withEnv(env: Environment): T = tree.privateWithEnv(env).asInstanceOf[T]
     def withAttrs(denot: Denotation): T = tree.privateWithAttrs(denot).asInstanceOf[T]
   }
 
-  private[meta] implicit class XtensionAttributedTerm[T <: Term](tree: T) {
+   implicit class XtensionAttributedTerm[T <: Term](tree: T) {
     def env: Environment = if (tree.privateEnv != null) tree.privateEnv else Environment.None
     def typing: Typing = if (tree.privateTyping != null) tree.privateTyping else Typing.None
     def withEnv(env: Environment): T = tree.privateWithEnv(env).asInstanceOf[T]
     def withAttrs(typingLike: TypingLike): T = tree.privateWithAttrs(typingLike.typing).asInstanceOf[T]
   }
 
-  private[meta] implicit class XtensionAttributedTermParam(tree: Term.Param) {
+   implicit class XtensionAttributedTermParam(tree: Term.Param) {
     def typing: Typing = if (tree.privateTyping != null) tree.privateTyping else Typing.None
     def withAttrs(typingLike: TypingLike): Term.Param = tree.privateWithAttrs(typingLike.typing).asInstanceOf[Term.Param]
   }
 
-  private[meta] implicit class XtensionAttributedTermName(tree: Term.Name) {
+   implicit class XtensionAttributedTermName(tree: Term.Name) {
+     def withAttrs(denot: Denotation): Term.Name = this.withAttrs(denot, TypingLike.typingIsTypingLike(Typing.None))
     def withAttrs(denot: Denotation, typingLike: TypingLike): Term.Name = tree.privateWithAttrs(denot, typingLike.typing).asInstanceOf[Term.Name]
   }
 
-  private[meta] implicit class XtensionAttributedCtorName(tree: Ctor.Name) {
+   implicit class XtensionAttributedCtorName(tree: Ctor.Name) {
     def withAttrs(denot: Denotation, typingLike: TypingLike): Ctor.Name = tree.privateWithAttrs(denot, typingLike.typing).asInstanceOf[Ctor.Name]
   }
 
-  private[meta] implicit class XtensionInheritedTree[T <: Tree](tree: T) {
+   implicit class XtensionInheritedTree[T <: Tree](tree: T) {
     def inheritAttrs(other: Tree): T = {
       tree.privateInheritAttrs(other).asInstanceOf[T]
     }
   }
 
-  private[meta] implicit class XtensionTypecheckableTree[T <: Tree](tree: T) {
+   implicit class XtensionTypecheckableTree[T <: Tree](tree: T) {
     def isTypechecked: Boolean = (tree.privateFlags & TYPECHECKED) == TYPECHECKED
-    def setTypechecked: T = tree.privateWithFlags(tree.privateFlags | TYPECHECKED).asInstanceOf[T]
+     def setTypechecked: T = tree.privateWithFlags(tree.privateFlags | TYPECHECKED).asInstanceOf[T]
     def resetTypechecked: T = tree.privateWithFlags(tree.privateFlags & ~TYPECHECKED).asInstanceOf[T]
     def withTypechecked(value: Boolean): T = if (value) tree.setTypechecked else tree.resetTypechecked
   }
 
-  private[meta] implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
+   implicit class XtensionSemanticEquality[T1 <: Tree](tree1: T1) {
     def ===[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = Semantic.equals(tree1, tree2)
     def =/=[T2 <: Tree](tree2: T2)(implicit ev: AllowEquality[T1, T2]): Boolean = !Semantic.equals(tree1, tree2)
   }
