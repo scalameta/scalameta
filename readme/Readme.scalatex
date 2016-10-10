@@ -21,21 +21,6 @@
     take advantage of our unique features and deliver user experiences
     that have been unreachable for the most of the traditional Scala tools.
 
-  @sect{Getting started}
-    @p
-      To get started with scala.meta, add the following to your @code("build.sbt"):
-
-    @hl.scala
-      libraryDependencies += "org.scalameta" %% "scalameta" % "@versionString"
-
-    @p
-      Next, you'll need to add a single wildcard import to the files where you'll
-      be using scala.meta. Unlike with scala.reflect, the metaprogramming
-      library from the standard distribution, no complicated setup is necessary.
-
-    @hl.scala
-      import scala.meta._
-
   @sect{Features}
     @p
       @b
@@ -95,6 +80,26 @@
       val q"$x + $y" = addition
       q"$y + $x" // compilation error
 
+  @sect{Getting started}
+    @p
+      To get started with scala.meta, add the following to your @code("build.sbt"):
+
+    @hl.scala
+      libraryDependencies += "org.scalameta" %% "scalameta" % "@versionString"
+
+    @p
+      Next, you'll need to add a single wildcard import to the files where you'll
+      be using scala.meta. Unlike with scala.reflect, the metaprogramming
+      library from the standard distribution, no complicated setup is necessary.
+
+    @hl.scala
+      import scala.meta._
+
+    @p
+      To learn more about practical aspects of using scala.meta, take a look at
+      @lnk("A Whirlwind Tour of Scala.Meta", "https://olafurpg.github.io/scala.meta-workshop/"),
+      a workshop given by Ólafur Pall Geirsson at Scala World 2016.
+
   @sect{Roadmap}
     @p
       @b
@@ -150,6 +155,8 @@
           <a href="https://www.codacy.com/"><img width="95" height="95" src="https://pbs.twimg.com/profile_images/531743109319651328/SyZuYA39_400x400.png" /></a>
           &nbsp; &nbsp;
           <a href="https://scala.epfl.ch/"><img width="95" height="95" src="https://scala.epfl.ch/resources/img/scala-center-swirl.png"/></a>
+          &nbsp; &nbsp;
+          <a href="https://www.evolutiongaming.com/"><img width="75" height="95" src="https://dl.dropboxusercontent.com/u/10497693/evolution_gaming.png"/></a>
         </center>
 
 @copyrightBadge
