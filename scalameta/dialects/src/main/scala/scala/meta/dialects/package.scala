@@ -17,6 +17,18 @@ import scala.compat.Platform.EOL
   // Can be used to uniquely identify the dialect, e.g. during serialization/deserialization.
   def name: String
 
+  // What level of quoting are we at?
+  // The underlying data structure captures additional information necessary for parsing.
+  def metalevel: Metalevel
+
+  // Permission to parse unquotes.
+  // Necessary to support quasiquotes, e.g. `q"$x + $y"`.
+  def allowUnquotes: Boolean = metalevel.isQuoted
+
+  // Permission to tokenize repeated dots as ellipses and to parse ellipses.
+  // Necessary to support quasiquotes, e.g. `q"foo(..$args)"`.
+  def allowEllipses: Boolean = metalevel.isQuoted
+
   // The sequence of characters that's used to express a bind
   // to a sequence wildcard pattern.
   def bindToSeqWildcardDesignator: String
@@ -32,17 +44,13 @@ import scala.compat.Platform.EOL
   // Are inline vals and defs supported by this dialect?
   def allowInline: Boolean
 
-  // Permission to parse unquotes.
-  // Necessary to support quasiquotes, e.g. `q"$x + $y"`.
-  def allowUnquotes: Boolean = metalevel.isQuoted
-
-  // Permission to tokenize repeated dots as ellipses and to parse ellipses.
-  // Necessary to support quasiquotes, e.g. `q"foo(..$args)"`.
-  def allowEllipses: Boolean = metalevel.isQuoted
-
   // Are terms on the top level supported by this dialect?
   // Necessary to support popular script-like DSLs.
   def allowToplevelTerms: Boolean
+
+  // What kind of separator is necessary to split top-level statements?
+  // Normally none is required, but scripts may have their own rules.
+  def toplevelSeparator: String
 
   // Are view bounds supported by this dialect?
   // Removed in Dotty.
@@ -50,15 +58,6 @@ import scala.compat.Platform.EOL
 
   // Are `&` intersection types supported by this dialect?
   def allowAndTypes: Boolean
-
-  // What kind of separator is necessary to split top-level statements?
-  // Normally none is required, but scripts may have their own rules.
-  def toplevelSeparator: String
-
-
-  // What level of quoting are we at?
-  // The underlying data structure captures additional information necessary for parsing.
-  def metalevel: Metalevel
 
   // Are trait allowed to have parameters?
   // They are in Dotty, but not in Scala 2.12 or older.
@@ -68,107 +67,107 @@ import scala.compat.Platform.EOL
 package object dialects {
   @leaf implicit object Scala210 extends Dialect {
     def name = "Scala210"
+    def metalevel = Metalevel.Zero
     def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
     def allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
     def allowInline = false
     def allowSpliceUnderscore = false // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = false
+    def toplevelSeparator = ""
     def allowViewBounds = true
     def allowAndTypes = false
-    def toplevelSeparator = ""
-    def metalevel = Metalevel.Zero
     def allowTraitParameters = false
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
   @leaf implicit object Sbt0136 extends Dialect {
     def name = "Sbt0136"
+    def metalevel = Metalevel.Zero
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
     def allowInline = false
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
+    def toplevelSeparator = EOL
     def allowViewBounds = Scala210.allowViewBounds
     def allowAndTypes = Scala210.allowAndTypes
-    def toplevelSeparator = EOL
-    def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala210.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
   @leaf implicit object Sbt0137 extends Dialect {
     def name = "Sbt0137"
+    def metalevel = Metalevel.Zero
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
     def allowInline = false
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
+    def toplevelSeparator = ""
     def allowViewBounds = Scala210.allowViewBounds
     def allowAndTypes = Scala210.allowAndTypes
-    def toplevelSeparator = ""
-    def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala210.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
   @leaf implicit object Scala211 extends Dialect {
     def name = "Scala211"
+    def metalevel = Metalevel.Zero
     def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala210.allowXmlLiterals
     def allowInline = false
     def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = Scala210.allowToplevelTerms
+    def toplevelSeparator = Scala210.toplevelSeparator
     def allowViewBounds = Scala210.allowViewBounds
     def allowAndTypes = Scala210.allowAndTypes
-    def toplevelSeparator = Scala210.toplevelSeparator
-    def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala210.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
   @leaf implicit object Paradise211 extends Dialect {
     def name = "Paradise211"
+    def metalevel = Metalevel.Zero
     def bindToSeqWildcardDesignator = Scala211.bindToSeqWildcardDesignator
     def allowXmlLiterals = Scala211.allowXmlLiterals
     def allowInline = true
     def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
     def allowToplevelTerms = Scala211.allowToplevelTerms
+    def toplevelSeparator = Scala211.toplevelSeparator
     def allowViewBounds = Scala211.allowViewBounds
     def allowAndTypes = Scala211.allowAndTypes
-    def toplevelSeparator = Scala211.toplevelSeparator
-    def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala211.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
   @leaf implicit object Dotty extends Dialect {
     def name = "Dotty"
+    def metalevel = Metalevel.Zero
     def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
     def allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
     def allowInline = true
     def allowSpliceUnderscore = true
     def allowToplevelTerms = false
+    def toplevelSeparator = ""
     def allowViewBounds = false // View bounds have been removed in Dotty
     def allowAndTypes = true
-    def toplevelSeparator = ""
-    def metalevel = Metalevel.Zero
     def allowTraitParameters = true
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
   @branch private[meta] trait Quasiquote extends Dialect {
     def name = s"$qualifier(${underlying.name}, ${if (multiline) "Multi" else "Single"})"
+    def multiline: Boolean
     def qualifier: String
     def underlying: Dialect
-    def multiline: Boolean
     def metalevel = Metalevel.Quoted
     def bindToSeqWildcardDesignator = underlying.bindToSeqWildcardDesignator
     def allowXmlLiterals = underlying.allowXmlLiterals
     def allowInline = underlying.allowInline
     def allowSpliceUnderscore = underlying.allowSpliceUnderscore
     def allowToplevelTerms = underlying.allowToplevelTerms
-    def allowAndTypes = underlying.allowAndTypes
     def toplevelSeparator = underlying.toplevelSeparator
+    def allowAndTypes = underlying.allowAndTypes
     def allowTraitParameters = underlying.allowTraitParameters
     def allowViewBounds = underlying.allowViewBounds
   }
