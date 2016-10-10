@@ -13,7 +13,7 @@ import scala.meta.internal.prettyprinters._
 // i.e. `start` is inclusive and `end` is not.
 // Therefore Token.end can point to the last character plus one.
 // Btw, Token.start can also point to the last character plus one if it's an EOF token.
-@root trait Token {
+@root trait Token extends InternalToken {
   def input: Input
   def dialect: Dialect
   def start: Int
