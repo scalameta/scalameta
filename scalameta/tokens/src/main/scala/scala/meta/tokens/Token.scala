@@ -2,7 +2,6 @@ package scala.meta
 package tokens
 
 import org.scalameta.adt.{Liftables => AdtLiftables}
-import scala.meta.internal.tokens
 import scala.meta.internal.tokens._
 import scala.meta.inputs._
 import scala.meta.classifiers._
