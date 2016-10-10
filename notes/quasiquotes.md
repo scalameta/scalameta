@@ -62,6 +62,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Singleton         | `t"$ref.type"`
  Application       | `t"$tpe[..$tpesnel]`
  Infix Application | `t"$tpe $tname $tpe"`
+ OrType            | `t"$tpe | $tpe"`
  Function          | `t"(..$atpes) => $tpe"`
  Tuple             | `t"(..$tpesnel)"`
  Compound          | `t"..$tpes { ..$stats }"`

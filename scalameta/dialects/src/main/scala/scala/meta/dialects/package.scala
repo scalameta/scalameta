@@ -48,6 +48,9 @@ import scala.compat.Platform.EOL
   // Necessary to support popular script-like DSLs.
   def allowToplevelTerms: Boolean
 
+  // Are `|` (union types) supported by this dialect?
+  def allowOrTypes: Boolean
+
   // What kind of separator is necessary to split top-level statements?
   // Normally none is required, but scripts may have their own rules.
   def toplevelSeparator: String
@@ -73,6 +76,7 @@ package object dialects {
     def allowInline = false
     def allowSpliceUnderscore = false // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = false
+    def allowOrTypes = false
     def toplevelSeparator = ""
     def allowViewBounds = true
     def allowAndTypes = false
@@ -91,6 +95,7 @@ package object dialects {
     def toplevelSeparator = EOL
     def allowViewBounds = Scala210.allowViewBounds
     def allowAndTypes = Scala210.allowAndTypes
+    def allowOrTypes = Scala210.allowOrTypes
     def allowTraitParameters = Scala210.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
@@ -106,6 +111,7 @@ package object dialects {
     def toplevelSeparator = ""
     def allowViewBounds = Scala210.allowViewBounds
     def allowAndTypes = Scala210.allowAndTypes
+    def allowOrTypes = Scala210.allowOrTypes
     def allowTraitParameters = Scala210.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
@@ -121,6 +127,7 @@ package object dialects {
     def toplevelSeparator = Scala210.toplevelSeparator
     def allowViewBounds = Scala210.allowViewBounds
     def allowAndTypes = Scala210.allowAndTypes
+    def allowOrTypes = Scala210.allowOrTypes
     def allowTraitParameters = Scala210.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
@@ -136,6 +143,7 @@ package object dialects {
     def toplevelSeparator = Scala211.toplevelSeparator
     def allowViewBounds = Scala211.allowViewBounds
     def allowAndTypes = Scala211.allowAndTypes
+    def allowOrTypes = Scala211.allowOrTypes
     def allowTraitParameters = Scala211.allowTraitParameters
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
@@ -151,6 +159,7 @@ package object dialects {
     def toplevelSeparator = ""
     def allowViewBounds = false // View bounds have been removed in Dotty
     def allowAndTypes = true
+    def allowOrTypes = true
     def allowTraitParameters = true
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
@@ -167,9 +176,10 @@ package object dialects {
     def allowSpliceUnderscore = underlying.allowSpliceUnderscore
     def allowToplevelTerms = underlying.allowToplevelTerms
     def toplevelSeparator = underlying.toplevelSeparator
-    def allowAndTypes = underlying.allowAndTypes
-    def allowTraitParameters = underlying.allowTraitParameters
     def allowViewBounds = underlying.allowViewBounds
+    def allowAndTypes = underlying.allowAndTypes
+    def allowOrTypes = underlying.allowOrTypes
+    def allowTraitParameters = underlying.allowTraitParameters
   }
 
   @leaf private[meta] class QuasiquoteTerm(underlying: Dialect, multiline: Boolean) extends Quasiquote {
