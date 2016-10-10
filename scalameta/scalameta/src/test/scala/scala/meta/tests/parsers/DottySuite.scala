@@ -1,7 +1,8 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta._
+import org.scalatest._
+import scala.meta._, Type.{Name => TypeName, _}
 import scala.meta.dialects.Dotty
 
 class DottySuite extends ParseSuite {
@@ -46,5 +47,9 @@ class DottySuite extends ParseSuite {
     intercept[ParseException] {
       dialects.Dotty("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get
     }
+  }
+
+  test("A & B") {
+    val comp @ And(TypeName("A"), TypeName("B")) = tpe("A & B")
   }
 }

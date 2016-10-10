@@ -48,9 +48,13 @@ import scala.compat.Platform.EOL
   // Removed in Dotty.
   def allowViewBounds: Boolean
 
+  // Are `&` intersection types supported by this dialect?
+  def allowAndTypes: Boolean
+
   // What kind of separator is necessary to split top-level statements?
   // Normally none is required, but scripts may have their own rules.
   def toplevelSeparator: String
+
 
   // What level of quoting are we at?
   // The underlying data structure captures additional information necessary for parsing.
@@ -70,6 +74,7 @@ package object dialects {
     def allowSpliceUnderscore = false // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = false
     def allowViewBounds = true
+    def allowAndTypes = false
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
     def allowTraitParameters = false
@@ -84,6 +89,7 @@ package object dialects {
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
     def allowViewBounds = Scala210.allowViewBounds
+    def allowAndTypes = Scala210.allowAndTypes
     def toplevelSeparator = EOL
     def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala210.allowTraitParameters
@@ -98,6 +104,7 @@ package object dialects {
     def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
     def allowToplevelTerms = true
     def allowViewBounds = Scala210.allowViewBounds
+    def allowAndTypes = Scala210.allowAndTypes
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala210.allowTraitParameters
@@ -112,6 +119,7 @@ package object dialects {
     def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
     def allowToplevelTerms = Scala210.allowToplevelTerms
     def allowViewBounds = Scala210.allowViewBounds
+    def allowAndTypes = Scala210.allowAndTypes
     def toplevelSeparator = Scala210.toplevelSeparator
     def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala210.allowTraitParameters
@@ -126,6 +134,7 @@ package object dialects {
     def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
     def allowToplevelTerms = Scala211.allowToplevelTerms
     def allowViewBounds = Scala211.allowViewBounds
+    def allowAndTypes = Scala211.allowAndTypes
     def toplevelSeparator = Scala211.toplevelSeparator
     def metalevel = Metalevel.Zero
     def allowTraitParameters = Scala211.allowTraitParameters
@@ -140,6 +149,7 @@ package object dialects {
     def allowSpliceUnderscore = true
     def allowToplevelTerms = false
     def allowViewBounds = false // View bounds have been removed in Dotty
+    def allowAndTypes = true
     def toplevelSeparator = ""
     def metalevel = Metalevel.Zero
     def allowTraitParameters = true
@@ -157,6 +167,7 @@ package object dialects {
     def allowInline = underlying.allowInline
     def allowSpliceUnderscore = underlying.allowSpliceUnderscore
     def allowToplevelTerms = underlying.allowToplevelTerms
+    def allowAndTypes = underlying.allowAndTypes
     def toplevelSeparator = underlying.toplevelSeparator
     def allowTraitParameters = underlying.allowTraitParameters
     def allowViewBounds = underlying.allowViewBounds

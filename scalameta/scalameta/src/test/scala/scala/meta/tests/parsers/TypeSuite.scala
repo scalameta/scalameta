@@ -1,8 +1,12 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta._, Term.{Name => TermName, Super}, Type.{Name => TypeName, _}, Name.{Anonymous, Indeterminate}
+import scala.meta._
+import Term.{Super, Name => TermName}
+import Type.{Name => TypeName, _}
+import Name.{Anonymous, Indeterminate}
 import scala.meta.dialects.Scala211
+import scala.meta.parsers.ParseException
 
 class TypeSuite extends ParseSuite {
   test("T") {
@@ -61,6 +65,10 @@ class TypeSuite extends ParseSuite {
     val comp @ Compound(TypeName("A") :: TypeName("B") :: Nil, Nil) = tpe("A with B")
     // TODO: revisit this once we have trivia in place
     // assert(comp.hasRefinement == false)
+  }
+
+  test("A & B is not a special type") {
+    val comp @ ApplyInfix(TypeName("A"), TypeName("&"), TypeName("B")) = tpe("A & B")
   }
 
   test("A with B {}") {
