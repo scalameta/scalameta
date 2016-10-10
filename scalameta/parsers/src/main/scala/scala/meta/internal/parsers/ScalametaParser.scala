@@ -441,7 +441,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 /* ------------- MODIFIER VALIDATOR --------------------------------------- */
 
   def rejectMod[M <: Mod](mods: List[Mod], errorMsg: String)
-      (implicit classifier: Classifier[Mod, M], tag: ClassTag[M]) = {
+      (implicit classifier: Classifier[Mod, M],
+                tag: ClassTag[M]) = {
     mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
   }
 
@@ -3138,9 +3139,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     accept[KwTrait]
     rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitTrait)
     val traitName = typeName()
-    val culpritError = s"trait $traitName"
-    rejectModCombination[Mod.Final, Mod.Abstract](fullMods, culpritError)
-    rejectModCombination[Mod.Override, Mod.Abstract](fullMods, culpritError)
+    rejectModCombination[Mod.Final, Mod.Abstract](fullMods, s"trait $traitName")
+    rejectModCombination[Mod.Override, Mod.Abstract](fullMods, s"trait $traitName")
     Defn.Trait(mods, traitName,
                typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
                primaryCtor(OwnedByTrait),
@@ -3159,8 +3159,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitClass)
     }
     val className = typeName()
-    val culpritError = s"class $className"
-    rejectModCombination[Mod.Final, Mod.Sealed](mods, culpritError)
+    rejectModCombination[Mod.Final, Mod.Sealed](mods, s"class $className")
     // TODO:
     // if (ofCaseClass && token.isNot[LeftParen])
     //  syntaxError(token.offset, "case classes without a parameter list are not allowed;\n"+

@@ -3,8 +3,6 @@ package internal
 package parsers
 
 import scala.compat.Platform.EOL
-import scala.meta.tokens.Token
-import scala.meta.tokens.Token.KwTrait
 
 // TODO: Would be nice to take all errors/warnings in tokenization and parsing,
 // and then externalize them into dedicated objects.
