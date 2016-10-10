@@ -139,6 +139,15 @@
       Slides:
       @lnk("http://scalamacros.org/paperstalks/2016-06-17-Metaprogramming20.pdf", "http://scalamacros.org/paperstalks/2016-06-17-Metaprogramming20.pdf")
 
+  @sect{Links}
+    @p
+      Curious to learn more about scala.meta? These links might be of interest to you.
+      @ul
+        @li
+          Tutorial: @lnk("Whirlwind tour of scala.meta", "http://olafurpg.github.io/scala.meta-workshop")
+        @li
+          Code examples: @lnk("Elysium", "https://github.com/DavidDudson/Elysium")
+
   @sect("Supporters")
     @p
       @raw
