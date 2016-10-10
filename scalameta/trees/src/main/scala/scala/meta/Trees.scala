@@ -137,6 +137,7 @@ object Type {
     require(refinement.forall(_.isRefineStat))
   }
   @ast class And(lhs: Type, rhs: Type) extends Type
+  @ast class Or(lhs: Type, rhs: Type) extends Type
   @ast class Existential(tpe: Type, quants: Seq[Stat] @nonEmpty) extends Type {
     require(quants.forall(_.isExistentialStat))
   }

@@ -285,6 +285,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Type.Existential
       |scala.meta.Type.Function
       |scala.meta.Type.Name
+      |scala.meta.Type.Or
       |scala.meta.Type.Param
       |scala.meta.Type.Param.Name
       |scala.meta.Type.Placeholder

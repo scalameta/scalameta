@@ -165,11 +165,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("infix types") {
     assert(tpe("Foo + Bar").show[Syntax] === "Foo + Bar")
     assert(tpe("Foo & Bar").show[Syntax] === "Foo & Bar")
-
+    assert(tpe("Foo | Bar").show[Syntax] === "Foo | Bar")
   }
 
   test("and types - Dotty") {
     assert(tpe("Foo & Bar")(dialects.Dotty).show[Syntax] === "Foo & Bar")
+  }
+
+  test("or types - Dotty") {
+    assert(tpe("Foo | Bar")(dialects.Dotty).show[Syntax] === "Foo | Bar")
   }
 
   test("packages") {
