@@ -11,7 +11,7 @@ import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
 import org.scalameta.data._
 import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
-import scala.meta.internal.ast.{Liftables => AstLiftables, Reflection => AstReflection}
+import scala.meta.internal.ast.{Origin, Quasi, Liftables => AstLiftables, Reflection => AstReflection}
 import org.scalameta._
 import org.scalameta.invariants._
 import scala.meta.dialects // no underscore import
@@ -21,17 +21,17 @@ import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
 import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.{semantic => s}
-import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.tokens._
 import scala.compat.Platform.EOL
+import scala.meta.tokens.TokenLiftables
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialect {
-  lazy val u: c.universe.type = c.universe
+class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables with TokenLiftables with InstantiateDialect {
+  override lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.internal._
   import decorators._
@@ -73,10 +73,11 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   def expand(dialectTree: ReflectTree): ReflectTree = {
     val (input, mode) = extractQuasiquotee()
     val dialect = instantiateDialect(dialectTree, mode)
+    val origin = instantiateOrigin(input, dialect)
     val parser = instantiateParser(c.macroApplication.symbol)
     val skeleton = parseSkeleton(parser, input, dialect)
     val hygienicSkeleton = hygienifySkeleton(skeleton)
-    reifySkeleton(hygienicSkeleton, mode)
+    reifySkeleton(skeleton, mode, origin)
   }
 
   private def extractQuasiquotee(): (Input, Mode) = {
@@ -144,6 +145,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     else dialects.QuasiquotePat(underlyingDialect, mode.multiline)
   }
 
+  private def instantiateOrigin(input: Input, dialect: Dialect): Origin = {
+    val tokens = XtensionTokenizersDialectApply(dialect).apply(input).tokenize.get
+    val posRange = TokenStreamPosition(0, tokens.length)
+    Origin.Parsed(input, dialect, posRange)
+  }
+
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {
     val parserModule = interpolator.owner.owner.companion
     val parsersModuleClass = Class.forName("scala.meta.quasiquotes.package$", true, this.getClass.getClassLoader)
@@ -174,7 +181,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     meta
   }
 
-  private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
+  private def reifySkeleton(meta: MetaTree, mode: Mode, origin: Origin): ReflectTree = {
     val pendingQuasis = mutable.Stack[Quasi]()
     implicit class XtensionRankedClazz(clazz: Class[_]) {
       def unwrap: Class[_] = {
@@ -385,7 +392,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           println(internalResult)
           // println(showRaw(internalResult))
         }
-        q"$InternalUnlift[${c.macroApplication.tpe}]($internalResult)"
+        q"$InternalUnlift[${c.macroApplication.tpe}]($internalResult).withOrigin($origin)"
       case Mode.Pattern(_, holes, unapplySelector) =>
         // inspired by https://github.com/densh/joyquote/blob/master/src/main/scala/JoyQuote.scala
         val pattern = Lifts.liftTree(meta)

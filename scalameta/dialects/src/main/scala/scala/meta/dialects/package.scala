@@ -140,14 +140,14 @@ package object dialects {
     def toplevelSeparator = underlying.toplevelSeparator
   }
 
-  @leaf private[meta] class QuasiquoteTerm(underlying: Dialect, multiline: Boolean) extends Quasiquote {
+  @leaf class QuasiquoteTerm(underlying: Dialect, multiline: Boolean) extends Quasiquote {
     require(!underlying.isInstanceOf[Quasiquote])
     def qualifier = s"QuasiquoteTerm"
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
     override def toString = name
   }
 
-  @leaf private[meta] class QuasiquotePat(underlying: Dialect, multiline: Boolean) extends Quasiquote {
+  @leaf class QuasiquotePat(underlying: Dialect, multiline: Boolean) extends Quasiquote {
     require(!underlying.isInstanceOf[Quasiquote])
     def qualifier = s"QuasiquotePat"
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)

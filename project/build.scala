@@ -78,7 +78,8 @@ object build extends Build {
     base = file("scalameta/inputs")
   ) settings (
     publishableSettings,
-    description := "Scala.meta's APIs for source code in textual format"
+    description := "Scala.meta's APIs for source code in textual format",
+    enableMacros
   ) dependsOn (common)
 
   lazy val parsers = Project(

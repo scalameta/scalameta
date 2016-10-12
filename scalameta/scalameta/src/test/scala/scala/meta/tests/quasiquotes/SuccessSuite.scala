@@ -9,6 +9,7 @@ import scala.meta.dialects.Scala211
 
 class SuccessSuite extends FunSuite {
   test("rank-0 liftables") {
+    assert(q"foo[${42}]" === "Term.ApplyType(Term.Name(\"foo\"), Seq(Lit(42)))")
     assert(q"foo[${42}]".show[Structure] === "Term.ApplyType(Term.Name(\"foo\"), Seq(Lit(42)))")
     assert(q"${42}".show[Structure] === "Lit(42)")
   }
@@ -1372,6 +1373,8 @@ class SuccessSuite extends FunSuite {
 
   test("pt\"$lit\"") {
     val lit = q"1"
+    println(lit.structure)
+    println(pt"$lit".structure)
     assert(pt"$lit".show[Structure] === "Lit(1)")
   }
 
@@ -2261,5 +2264,29 @@ class SuccessSuite extends FunSuite {
   test("#455 - unquote Option") {
     val defnopt: Option[Stat] = Option(q"val x = 42")
     assert(q"..$defnopt".show[Structure] === "Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"x\"))), None, Lit(42))))")
+  }
+
+  test("add single-line comments to quasiquotes") {
+    assert(q"1 // comment".tokens.toString == "1 // comment")
+    assert(q"val a = 1 // comment".tokens.toString == "val a = 1 // comment")
+    assert(q"class A // comment".tokens.toString == "class A // comment")
+    assert(q"def foo: Int = ??? // comment".tokens.toString == "def foo: Int = ??? // comment")
+    assert(q"${42} // comment".tokens.toString == """${42} // comment""")
+    val stats = List(q"val a = 1", q"val b = 1")
+    assert(q"..$stats // comment".tokens.toString == "..$stats // comment")
+    val stats2 = List(List(param"a: Int"), List(param"implicit val c: Int"))
+    assert(q"def foo(...$stats2): Int = ??? // comment".tokens.toString == "def foo(...$stats2): Int = ??? // comment")
+  }
+
+  test("add multi-line comments to quasiquotes") {
+    assert(q"1 /* comment */".tokens.toString == "1 /* comment */")
+    assert(q"val a = 1 /* comment */".tokens.toString == "val a = 1 /* comment */")
+    assert(q"class A /* comment */".tokens.toString == "class A /* comment */")
+    assert(q"def foo: Int = ??? /* comment */".tokens.toString == "def foo: Int = ??? /* comment */")
+    assert(q"${42} /* comment */".tokens.toString == """${42} /* comment */""")
+    val stats = List(q"val a = 1", q"val b = 1")
+    assert(q"..$stats /* comment */".tokens.toString == "..$stats /* comment */")
+    val stats2 = List(List(param"a: Int"), List(param"implicit val c: Int"))
+    assert(q"def foo(...$stats2): Int = ??? /* comment */".tokens.toString == "def foo(...$stats2): Int = ??? /* comment */")
   }
 }

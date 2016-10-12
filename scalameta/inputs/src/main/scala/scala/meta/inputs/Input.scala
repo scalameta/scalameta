@@ -82,3 +82,11 @@ object Input {
   implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] = Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
   implicit val fileToInput: Convert[java.io.File, Input] = Convert(f => Input.File(f, Charset.forName("UTF-8")))
 }
+
+private[meta] trait InputLiftables {
+  val c: scala.reflect.macros.blackbox.Context
+  import c.universe._
+  implicit lazy val liftInput: Liftable[Input] = Liftable[Input] { input =>
+    q"_root_.scala.meta.inputs.Input.String(${new String(input.chars)})"
+  }
+}

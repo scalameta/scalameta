@@ -226,7 +226,7 @@ trait InternalTree {
 }
 
 trait InternalTreeXtensions {
-  private[meta] implicit class XtensionOriginTree[T <: Tree](tree: T) {
+  implicit class XtensionOriginTree[T <: Tree](tree: T) {
     def origin: Origin = if (tree.privateOrigin != null) tree.privateOrigin else Origin.None
     def withOrigin(origin: Origin): T = tree.privateWithOrigin(origin).asInstanceOf[T]
   }

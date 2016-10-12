@@ -154,15 +154,14 @@ object Token {
 // depending on how the file and its enclosing directories are called.
 // To combat that, we have TokenLiftables right here, guaranteeing that there won't be problems
 // if someone wants to refactor/rename something later.
-private[meta] trait TokenLiftables extends AdtLiftables {
-  val c: scala.reflect.macros.blackbox.Context
+private[meta] trait TokenLiftables extends AdtLiftables with InputLiftables {
   override lazy val u: c.universe.type = c.universe
 
   import c.universe._
   private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
-  implicit lazy val liftInput: Liftable[Input] = Liftable[Input] { input =>
-    q"_root_.scala.meta.inputs.Input.String(${new String(input.chars)})"
+  implicit lazy val liftTokenStreamPosition = Liftable[TokenStreamPosition] { v =>
+    q"_root_.scala.meta.internal.tokens.TokenStreamPosition(${v.start}, ${v.end})"
   }
 
   implicit lazy val liftBigInt: Liftable[BigInt] = Liftable[BigInt] { v =>

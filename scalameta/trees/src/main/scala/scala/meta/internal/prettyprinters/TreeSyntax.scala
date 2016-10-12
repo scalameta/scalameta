@@ -544,12 +544,15 @@ object TreeSyntax {
     // If we prettyprint a tree that's just been parsed with the same dialect,
     // then we retain formatting. Otherwise, we don't, even in the tiniest.
     // I expect to improve on this in the nearest future, because we had it much better until recently.
+    import scala.meta.dialects.QuasiquoteTerm
     Syntax { (x: T) =>
       x.origin match {
         // NOTE: Options don't really matter,
         // because if we've parsed a tree, it's not gonna contain lazy seqs anyway.
         // case Origin.Parsed(_, originalDialect, _) if dialect == originalDialect && options == Options.Eager =>
         case Origin.Parsed(_, originalDialect, _) if dialect == originalDialect =>
+          s(new String(x.pos.input.chars, x.pos.start.offset, x.pos.end.offset - x.pos.start.offset))
+        case Origin.Parsed(_, QuasiquoteTerm(originalDialect, _), _) if dialect == originalDialect =>
           s(new String(x.pos.input.chars, x.pos.start.offset, x.pos.end.offset - x.pos.start.offset))
         case _ =>
           syntaxInstances.syntaxTree[T].apply(x)
