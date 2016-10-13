@@ -8,10 +8,13 @@ import UnidocKeys._
 import java.io._
 import org.scalameta.os._
 import scala.compat.Platform.EOL
+import scala.util.Try
+import bintray.BintrayPlugin.autoImport._
 
 object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
   lazy val LibraryVersion = "1.3.0-SNAPSHOT"
+  lazy val isSnapshot = LibraryVersion.endsWith("SNAPSHOT")
 
   lazy val scalametaRoot = Project(
     id = "scalametaRoot",
@@ -211,14 +214,13 @@ object build extends Build {
     scalaVersion := ScalaVersions.max,
     crossScalaVersions := ScalaVersions,
     crossVersion := CrossVersion.binary,
-    version := LibraryVersion,
+    version := latestPullRequestVersion().getOrElse(LibraryVersion),
     organization := "org.scalameta",
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
     libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-    publishMavenStyle := true,
     publishArtifact in Compile := false,
     publishArtifact in Test := false,
     scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
@@ -235,15 +237,16 @@ object build extends Build {
         Some(file(scalaHome))
       } else None
     },
-    publishMavenStyle := true,
-    publishTo <<= version { v: String =>
+    publishMavenStyle := !isSnapshot,
+    publishTo := {
       val nexus = "https://oss.sonatype.org/"
-      if (v.trim.endsWith("SNAPSHOT"))
-        Some("snapshots" at nexus + "content/repositories/snapshots")
-      else
-        Some("releases" at nexus + "service/local/staging/deploy/maven2")
+      if (latestPullRequestVersion().isDefined) (publishTo in bintray).value
+      else if (isSnapshot) Some("snapshots" at nexus + "content/repositories/snapshots")
+      else Some("releases" at nexus + "service/local/staging/deploy/maven2")
     },
     pomIncludeRepository := { x => false },
+    licenses +=
+      "BSD" -> url("https://github.com/scalameta/scalameta/blob/master/LICENSE.md"),
     pomExtra := (
       <url>https://github.com/scalameta/scalameta</url>
       <inceptionYear>2014</inceptionYear>
@@ -279,6 +282,7 @@ object build extends Build {
 
   lazy val publishableSettings = Def.settings(
     sharedSettings,
+    bintrayOrganization := Some("scalameta"),
     publishArtifact in Compile := true,
     publishArtifact in Test := false,
     credentials ++= secret.obtain("sonatype").map({
@@ -345,6 +349,29 @@ object build extends Build {
       else Seq()
     }
     scalaReflect ++ scalaCompiler ++ backwardCompat210
+  }
+
+  def parsePullRequestFromCommitMessage: Option[String] = {
+    import sys.process._
+    val PullRequest = "\\s+Merge pull request #(\\d+).*".r
+    for {
+      commitMsg <- Try(Seq("git", "log", "-1").!!.trim).toOption
+      pr <- augmentString(commitMsg).lines.collectFirst {
+        case PullRequest(pr) => pr
+      }
+    } yield pr
+  }
+
+  /** Replaces -SNAPSHOT with latest pull request number, if it exists.j */
+  def latestPullRequestVersion(): Option[String] = {
+    for {
+      _ <- sys.env.get("BINTRAY_API_KEY")
+      if isSnapshot
+      if !sys.env.contains("CI_PULL_REQUEST")
+      pullRequest <- parsePullRequestFromCommitMessage
+    } yield {
+      LibraryVersion.replace("-SNAPSHOT", s".$pullRequest")
+    }
   }
 
   lazy val enableMacros = macroDependencies(hardcore = false)
