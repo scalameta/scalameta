@@ -13,7 +13,7 @@ import bintray.BintrayPlugin.autoImport._
 
 object build extends Build {
   lazy val ScalaVersions = Seq("2.11.8")
-  lazy val LibraryVersion = "1.3.0-SNAPSHOT"
+  lazy val LibraryVersion = "2.0.0-SNAPSHOT"
   lazy val isSnapshot = LibraryVersion.endsWith("SNAPSHOT")
 
   lazy val scalametaRoot = Project(
