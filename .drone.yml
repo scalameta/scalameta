@@ -11,6 +11,8 @@ build:
     - SONATYPE_PASSWORD=$$SONATYPE_PASSWORD
     - GITHUB_USERNAME=$$GITHUB_USERNAME
     - GITHUB_PASSWORD=$$GITHUB_PASSWORD
+    - BINTRAY_USERNAME=$$BINTRAY_USERNAME
+    - BINTRAY_API_KEY=$$BINTRAY_API_KEY
   commands:
     - git log | head -n 20
     - host `curl -s http://httpbin.org/ip | jq -r '.origin'` || true ;
@@ -31,9 +33,7 @@ build:
         fi;
       fi
     - sbt ++$SCALA_VERSION test
-    - if [ -z "$CI_PULL_REQUEST" ] ; then
-        sbt ++$SCALA_VERSION publish ;
-      fi
+    - ./bin/bintray.sh
 
 matrix:
   SCALA_VERSION:
