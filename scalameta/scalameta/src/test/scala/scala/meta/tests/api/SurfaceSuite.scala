@@ -210,12 +210,14 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Pat.Interpolate
       |scala.meta.Pat.Tuple
       |scala.meta.Pat.Type
+      |scala.meta.Pat.Type.And
       |scala.meta.Pat.Type.Annotate
       |scala.meta.Pat.Type.Apply
       |scala.meta.Pat.Type.ApplyInfix
       |scala.meta.Pat.Type.Compound
       |scala.meta.Pat.Type.Existential
       |scala.meta.Pat.Type.Function
+      |scala.meta.Pat.Type.Or
       |scala.meta.Pat.Type.Placeholder
       |scala.meta.Pat.Type.Project
       |scala.meta.Pat.Type.Ref

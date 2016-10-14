@@ -276,6 +276,8 @@ object Pat {
       require(refinement.forall(_.isRefineStat))
       require(tpes.forall(tpe => !tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard]))
     }
+    @ast class And(lhs: Pat.Type, rhs: Pat.Type) extends Pat.Type
+    @ast class Or(lhs: Pat.Type, rhs: Pat.Type) extends Pat.Type
     @ast class Existential(tpe: Pat.Type, quants: Seq[Stat] @nonEmpty) extends Pat.Type {
       require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
       require(quants.forall(_.isExistentialStat))
