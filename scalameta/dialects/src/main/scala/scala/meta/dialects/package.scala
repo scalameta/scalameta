@@ -62,6 +62,9 @@ import scala.compat.Platform.EOL
   // Are `&` intersection types supported by this dialect?
   def allowAndTypes: Boolean
 
+  // Are `with` intersection types supported by this dialect?
+  def allowWithTypes: Boolean = !allowAndTypes
+
   // Are trait allowed to have parameters?
   // They are in Dotty, but not in Scala 2.12 or older.
   def allowTraitParameters: Boolean

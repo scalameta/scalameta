@@ -131,15 +131,14 @@ object Type {
   @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
     require(elements.length > 1 || (elements.length == 1 && elements.head.is[scala.meta.internal.ast.Quasi]))
   }
-  @ast class Compound(tpes: Seq[Type], refinement: Seq[Stat]) extends Type {
-    // TODO: revisit this once we have trivia in place
-    // require(tpes.length == 1 ==> hasRefinement)
-    require(refinement.forall(_.isRefineStat))
-  }
+  @ast class With(lhs: Type, rhs: Type) extends Type
   @ast class And(lhs: Type, rhs: Type) extends Type
   @ast class Or(lhs: Type, rhs: Type) extends Type
-  @ast class Existential(tpe: Type, quants: Seq[Stat] @nonEmpty) extends Type {
-    require(quants.forall(_.isExistentialStat))
+  @ast class Refine(tpe: Option[Type], stats: Seq[Stat]) extends Type {
+    require(stats.forall(_.isRefineStat))
+  }
+  @ast class Existential(tpe: Type, stats: Seq[Stat] @nonEmpty) extends Type {
+    require(stats.forall(_.isExistentialStat))
   }
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
   @ast class Placeholder(bounds: Bounds) extends Type
@@ -270,15 +269,16 @@ object Pat {
     @ast class Tuple(elements: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
       require(elements.length > 1 || (elements.length == 1 && elements.head.is[scala.meta.internal.ast.Quasi]))
     }
-    @ast class Compound(tpes: Seq[Pat.Type], refinement: Seq[Stat]) extends Pat.Type {
-      // TODO: revisit this once we have trivia in place
-      // require(tpes.length == 1 ==> hasRefinement)
-      require(refinement.forall(_.isRefineStat))
-      require(tpes.forall(tpe => !tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard]))
+    @ast class With(lhs: Pat.Type, rhs: Pat.Type) extends Pat.Type
+    @ast class And(lhs: Pat.Type, rhs: Pat.Type) extends Pat.Type
+    @ast class Or(lhs: Pat.Type, rhs: Pat.Type) extends Pat.Type
+    @ast class Refine(tpe: Option[Pat.Type], stats: Seq[Stat]) extends Pat.Type {
+      require(tpe.isEmpty || (!tpe.get.is[Pat.Var.Type] && !tpe.get.is[Pat.Type.Wildcard]))
+      require(stats.forall(_.isRefineStat))
     }
-    @ast class Existential(tpe: Pat.Type, quants: Seq[Stat] @nonEmpty) extends Pat.Type {
+    @ast class Existential(tpe: Pat.Type, stats: Seq[Stat] @nonEmpty) extends Pat.Type {
       require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
-      require(quants.forall(_.isExistentialStat))
+      require(stats.forall(_.isExistentialStat))
     }
     @ast class Annotate(tpe: Pat.Type, annots: Seq[Mod.Annot] @nonEmpty) extends Pat.Type {
       require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])

@@ -210,17 +210,20 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Pat.Interpolate
       |scala.meta.Pat.Tuple
       |scala.meta.Pat.Type
+      |scala.meta.Pat.Type.And
       |scala.meta.Pat.Type.Annotate
       |scala.meta.Pat.Type.Apply
       |scala.meta.Pat.Type.ApplyInfix
-      |scala.meta.Pat.Type.Compound
       |scala.meta.Pat.Type.Existential
       |scala.meta.Pat.Type.Function
+      |scala.meta.Pat.Type.Or
       |scala.meta.Pat.Type.Placeholder
       |scala.meta.Pat.Type.Project
       |scala.meta.Pat.Type.Ref
+      |scala.meta.Pat.Type.Refine
       |scala.meta.Pat.Type.Tuple
       |scala.meta.Pat.Type.Wildcard
+      |scala.meta.Pat.Type.With
       |scala.meta.Pat.Typed
       |scala.meta.Pat.Var
       |scala.meta.Pat.Var.Term
@@ -281,7 +284,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Type.Arg.ByName
       |scala.meta.Type.Arg.Repeated
       |scala.meta.Type.Bounds
-      |scala.meta.Type.Compound
       |scala.meta.Type.Existential
       |scala.meta.Type.Function
       |scala.meta.Type.Name
@@ -291,9 +293,11 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Type.Placeholder
       |scala.meta.Type.Project
       |scala.meta.Type.Ref
+      |scala.meta.Type.Refine
       |scala.meta.Type.Select
       |scala.meta.Type.Singleton
       |scala.meta.Type.Tuple
+      |scala.meta.Type.With
     """.trim.stripMargin)
   }
 

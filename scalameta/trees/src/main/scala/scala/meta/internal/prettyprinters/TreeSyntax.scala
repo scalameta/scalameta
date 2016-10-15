@@ -40,7 +40,8 @@ object TreeSyntax {
           @leaf object Typ extends Type { def precedence = 1 }
           @leaf object AnyInfixTyp extends Type { def precedence = 1.5 }
           @leaf class InfixTyp(op: String) extends Type { def precedence = 2 }
-          @leaf object CompoundTyp extends Type { def precedence = 3 }
+          @leaf object RefineTyp extends Type { def precedence = 3 }
+          @leaf object WithTyp extends Type { def precedence = 3.5 }
           @leaf object AnnotTyp extends Type { def precedence = 4 }
           @leaf object SimpleTyp extends Type { def precedence = 6 }
         }
@@ -173,8 +174,6 @@ object TreeSyntax {
           case _ => cantBeWrittenWithoutBackquotes(t)
         }
       }
-      def guessHasRefinement(t: Type.Compound): Boolean = t.refinement.nonEmpty
-      def guessHasRefinement(t: Pat.Type.Compound): Boolean = t.refinement.nonEmpty
       def guessIsPostfix(t: Term.Select): Boolean = false
       def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit(()) => false; case _ => true }
       def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit(()) => false; case _ => true }
@@ -228,6 +227,7 @@ object TreeSyntax {
           val quote = if (parts.exists(s => s.contains(EOL) || s.contains("\""))) "\"\"\"" else "\""
           m(SimpleExpr1, s(t.prefix, quote, r(zipped), parts.last, quote))
         case t: Term.Xml             =>
+          if (!dialect.allowXmlLiterals) throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
           val parts = t.parts.map{ case Lit(part: String) => part }
           val zipped = parts.zip(t.args).map{ case (part, arg) => s(part, "{", p(Expr, arg), "}") }
           m(SimpleExpr1, s(r(zipped), parts.last))
@@ -302,14 +302,21 @@ object TreeSyntax {
         case t: Type.Singleton    => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
         case t: Type.Apply        => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
         case t: Type.ApplyInfix   => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
-        case t: Type.And          => m(InfixTyp("&"), s(p(InfixTyp("&"), t.lhs, left = true), " ", "&", " ", p(InfixTyp("&"), t.rhs, right = true)))
-        case t: Type.Or           => m(InfixTyp("|"), s(p(InfixTyp("|"), t.lhs, left = true), " ", "|", " ", p(InfixTyp("|"), t.rhs, right = true)))
         case t: Type.Function     =>
           val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
           m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
         case t: Type.Tuple        => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
-        case t: Type.Compound     => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), w(" {", w(" ", r(t.refinement, "; "), " "), "}", guessHasRefinement(t))))
-        case t: Type.Existential  => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.quants, "; "), " }"))
+        case t: Type.With         =>
+          if (!dialect.allowWithTypes) throw new UnsupportedOperationException(s"$dialect doesn't support with types")
+          m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
+        case t: Type.And          =>
+          if (!dialect.allowAndTypes) throw new UnsupportedOperationException(s"$dialect doesn't support and types")
+          m(InfixTyp("&"), s(p(InfixTyp("&"), t.lhs, left = true), " ", "&", " ", p(InfixTyp("&"), t.rhs, right = true)))
+        case t: Type.Or           =>
+          if (!dialect.allowOrTypes) throw new UnsupportedOperationException(s"$dialect doesn't support or types")
+          m(InfixTyp("|"), s(p(InfixTyp("|"), t.lhs, left = true), " ", "|", " ", p(InfixTyp("|"), t.rhs, right = true)))
+        case t: Type.Refine       => m(RefineTyp, t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), "{", w(" ", r(t.stats, "; "), " ", t.stats.nonEmpty), "}")
+        case t: Type.Existential  => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.stats, "; "), " }"))
         case t: Type.Annotate     => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
         case t: Type.Placeholder  => m(SimpleTyp, s(kw("_"), t.bounds))
         case t: Type.Bounds =>
@@ -321,7 +328,10 @@ object TreeSyntax {
           require(t.mods.length - mods.length <= 1)
           val variance = t.mods.foldLeft("")((curr, m) => if (m.is[Mod.Covariant]) "+" else if (m.is[Mod.Contravariant]) "-" else curr)
           val tbounds = s(t.tbounds)
-          val vbounds = r(t.vbounds.map { s(" ", kw("<%"), " ", _) })
+          val vbounds = {
+            if (t.vbounds.nonEmpty && !dialect.allowViewBounds) throw new UnsupportedOperationException(s"$dialect doesn't support view bounds")
+            r(t.vbounds.map { s(" ", kw("<%"), " ", _) })
+          }
           val cbounds = r(t.cbounds.map { s(kw(":"), " ", _) })
           s(w(mods, " "), variance, t.name, t.tparams, tbounds, vbounds, cbounds)
 
@@ -349,7 +359,7 @@ object TreeSyntax {
         case t: Pat.Xml              =>
           val zipped = t.parts.zip(t.args).map{ case (part, arg) => s(part, "${", arg, "}") }
           m(SimplePattern, s(r(zipped), t.parts.last))
-        case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(CompoundTyp, t.rhs)))
+        case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(RefineTyp, t.rhs)))
         case _: Pat.Arg.SeqWildcard  => m(SimplePattern, kw("_*"))
 
         // Pat.Type
@@ -363,8 +373,17 @@ object TreeSyntax {
           val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
           m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
         case t: Pat.Type.Tuple       => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
-        case t: Pat.Type.Compound    => m(CompoundTyp, s(r(t.tpes.map(tpe => p(AnnotTyp, tpe)), " with "), w(" {", w(" ", r(t.refinement, "; "), " "), "}", guessHasRefinement(t))))
-        case t: Pat.Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.quants, "; "), " }"))
+        case t: Pat.Type.With        =>
+          if (!dialect.allowWithTypes) throw new UnsupportedOperationException(s"$dialect doesn't support with types")
+          m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
+        case t: Pat.Type.And         =>
+          if (!dialect.allowAndTypes) throw new UnsupportedOperationException(s"$dialect doesn't support and types")
+          m(InfixTyp("&"), s(p(InfixTyp("&"), t.lhs, left = true), " ", "&", " ", p(InfixTyp("&"), t.rhs, right = true)))
+        case t: Pat.Type.Or          =>
+          if (!dialect.allowOrTypes) throw new UnsupportedOperationException(s"$dialect doesn't support or types")
+          m(InfixTyp("|"), s(p(InfixTyp("|"), t.lhs, left = true), " ", "|", " ", p(InfixTyp("|"), t.rhs, right = true)))
+        case t: Pat.Type.Refine      => m(RefineTyp, t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), "{", w(" ", r(t.stats, "; "), " ", t.stats.nonEmpty), "}")
+        case t: Pat.Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.stats, "; "), " }"))
         case t: Pat.Type.Annotate    => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
 
         // Lit
@@ -450,7 +469,9 @@ object TreeSyntax {
         case _: Mod.Lazy                     => kw("lazy")
         case _: Mod.ValParam                 => kw("val")
         case _: Mod.VarParam                 => kw("var")
-        case _: Mod.Inline                   => kw("inline")
+        case _: Mod.Inline                   =>
+          if (!dialect.allowInline) throw new UnsupportedOperationException(s"$dialect doesn't support inline")
+          kw("inline")
 
         // Enumerator
         case t: Enumerator.Val           => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))

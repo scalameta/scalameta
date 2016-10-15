@@ -62,33 +62,27 @@ class TypeSuite extends ParseSuite {
   }
 
   test("A with B") {
-    val comp @ Compound(TypeName("A") :: TypeName("B") :: Nil, Nil) = tpe("A with B")
-    // TODO: revisit this once we have trivia in place
-    // assert(comp.hasRefinement == false)
+    val With(TypeName("A"), TypeName("B")) = tpe("A with B")
   }
 
   test("A & B is not a special type") {
-    val comp @ ApplyInfix(TypeName("A"), TypeName("&"), TypeName("B")) = tpe("A & B")
+    val ApplyInfix(TypeName("A"), TypeName("&"), TypeName("B")) = tpe("A & B")
   }
 
   test("A with B {}") {
-    val comp @ Compound(TypeName("A") :: TypeName("B") :: Nil, Nil) = tpe("A with B {}")
-    // TODO: revisit this once we have trivia in place
-    // assert(comp.hasRefinement == true)
+    val Refine(Some(With(TypeName("A"), TypeName("B"))), Nil) = tpe("A with B {}")
   }
 
   test("{}") {
-    val comp @ Compound(Nil, Nil) = tpe("{}")
-    // TODO: revisit this once we have trivia in place
-    // assert(comp.hasRefinement == true)
+    val Refine(None, Nil) = tpe("{}")
   }
 
   test("A { def x: A; val y: B; type C }") {
-    val Compound(TypeName("A") :: Nil,
-                 Decl.Def(Nil, TermName("x"),
-                          Nil, Nil, TypeName("Int")) ::
-                 Decl.Val(Nil, List(Pat.Var.Term(TermName("y"))), TypeName("B")) ::
-                 Decl.Type(Nil, TypeName("C"), Nil, Type.Bounds(None, None)) :: Nil) =
+    val Refine(Some(TypeName("A")),
+               Decl.Def(Nil, TermName("x"),
+                        Nil, Nil, TypeName("Int")) ::
+               Decl.Val(Nil, List(Pat.Var.Term(TermName("y"))), TypeName("B")) ::
+               Decl.Type(Nil, TypeName("C"), Nil, Type.Bounds(None, None)) :: Nil) =
       tpe("A { def x: Int; val y: B; type C }")
   }
 

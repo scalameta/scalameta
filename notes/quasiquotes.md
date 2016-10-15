@@ -62,11 +62,12 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Singleton         | `t"$ref.type"`
  Application       | `t"$tpe[..$tpesnel]`
  Infix Application | `t"$tpe $tname $tpe"`
+ With              | `t"$tpe with $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
  And               | `t"$tpe & $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
  Or                | `t"$tpe | $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
  Function          | `t"(..$atpes) => $tpe"`
  Tuple             | `t"(..$tpesnel)"`
- Compound          | `t"..$tpes { ..$stats }"`
+ Refine            | `t"$tpeopt { ..$stats }"`
  Existential       | `t"$tpe forSome { ..$statsnel }"`
  Annotate          | `t"$tpe ..@$annotsnel"`
  Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`

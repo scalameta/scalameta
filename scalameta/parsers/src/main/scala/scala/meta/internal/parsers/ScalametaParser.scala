@@ -992,87 +992,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def typeArgs(): List[Type] = inBrackets(types())
 
     /** {{{
-     *  ModType        ::=  SimpleType {Annotation}
+     *  InfixType ::= CompoundType {id [nl] CompoundType}
      *  }}}
      */
-    def annotType(): Type = annotTypeRest(simpleType())
-
-    /** {{{
-     *  SimpleType       ::=  SimpleType TypeArgs
-     *                     |  SimpleType `#' Id
-     *                     |  StableId
-     *                     |  Path `.' type
-     *                     |  `(' Types `)'
-     *                     |  WildcardType
-     *  }}}
-     */
-    def simpleType(): Type = {
-      simpleTypeRest(autoPos(token match {
-        case LeftParen()  => autoPos(makeTupleType(inParens(types())))
-        case Underscore() => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
-        case _       =>
-          val ref: Term.Ref = path()
-          if (token.isNot[Dot])
-            convertToTypeId(ref) getOrElse { syntaxError("identifier expected", at = ref) }
-          else {
-            next()
-            accept[KwType]
-            val refOrQuasi = ref match {
-              case quasi: Term.Name.Quasi =>
-                quasi.become[Term.Ref.Quasi]
-              case ref => ref
-            }
-            Type.Singleton(refOrQuasi)
-          }
-      }))
-    }
-
-    def simpleTypeRest(t: Type): Type = token match {
-      case Hash()      => next(); simpleTypeRest(atPos(t, auto)(Type.Project(t, typeName())))
-      case LeftBracket() => simpleTypeRest(atPos(t, auto)(Type.Apply(t, typeArgs())))
-      case _           => t
-    }
-
-
-    /** {{{
-     *  CompoundType ::= ModType {with ModType} [Refinement]
-     *                |  Refinement
-     *  }}}
-     */
-    def compoundType(): Type = compoundTypeRest {
-      if (token.is[LeftBrace])
-        None
-      else if (isSpliceFollowedBy(token.is[KwWith] || token.is[LeftBrace] || (token.is[LF] && ahead (token.is[LeftBrace]))))
-        Some(ellipsis(1, astInfo[Type]))
-      else
-        Some(annotType())
-    }
-
-    // TODO: warn about def f: Unit { } case?
-    def compoundTypeRest(t: Option[Type]): Type = atPos(t, auto) {
-      val ts = new ListBuffer[Type] ++ t
-      while (token.is[KwWith]) {
-        next()
-        if (token.is[Ellipsis]) ts += ellipsis(1, astInfo[Type])
-        else ts += annotType()
-      }
-      newLineOptWhenFollowedBy[LeftBrace]
-      val types = ts.toList
-      if (token.is[LeftBrace]) {
-        val refinements = refinement()
-        val hasQuasi = t match {
-          case q @ Some(Type.Quasi(1, _)) => true
-          case _ => false
-        }
-        (types, refinements) match {
-          case (typ :: Nil, Nil) if !hasQuasi => typ
-          case _  => Type.Compound(types, refinements)
-        }
-      } else {
-        if (types.length == 1) types.head
-        else Type.Compound(types, Nil)
-      }
-    }
+    def infixType(mode: InfixMode.Value): Type =
+      infixTypeRest(compoundType(), mode)
 
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = atPos(t, auto) {
       if (isIdent || token.is[Unquote]) {
@@ -1109,11 +1033,84 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
 
     /** {{{
-     *  InfixType ::= CompoundType {id [nl] CompoundType}
+     *  CompoundType ::= ModType {with ModType} [Refinement]
+     *                |  Refinement
      *  }}}
      */
-    def infixType(mode: InfixMode.Value): Type =
-      infixTypeRest(compoundType(), mode)
+    def compoundType(): Type = compoundTypeRest {
+      if (token.is[LeftBrace])
+        None
+      else
+        Some(annotType())
+    }
+
+    def compoundTypeRest(t0: Option[Type]): Type = atPos(t0, auto) {
+      t0 match {
+        case Some(t0) =>
+          var t = t0
+          while (token.is[KwWith]) {
+            next()
+            val rhs = annotType()
+            t = atPos(t, rhs)({
+              if (dialect.allowWithTypes) Type.With(t, rhs)
+              else Type.And(t, rhs)
+            })
+          }
+          newLineOptWhenFollowedBy[LeftBrace]
+          if (token.is[LeftBrace]) Type.Refine(Some(t), refinement())
+          else t
+        case None =>
+          Type.Refine(None, refinement())
+      }
+    }
+
+    /** {{{
+     *  ModType        ::=  SimpleType {Annotation}
+     *  }}}
+     */
+    def annotType(): Type = annotTypeRest(simpleType())
+
+    def annotTypeRest(t: Type): Type = atPos(t, auto) {
+      val annots = ScalametaParser.this.annots(skipNewLines = false)
+      if (annots.isEmpty) t
+      else Type.Annotate(t, annots)
+    }
+
+    /** {{{
+     *  SimpleType       ::=  SimpleType TypeArgs
+     *                     |  SimpleType `#' Id
+     *                     |  StableId
+     *                     |  Path `.' type
+     *                     |  `(' Types `)'
+     *                     |  WildcardType
+     *  }}}
+     */
+    def simpleType(): Type = {
+      simpleTypeRest(autoPos(token match {
+        case LeftParen()  => autoPos(makeTupleType(inParens(types())))
+        case Underscore() => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
+        case _       =>
+          val ref: Term.Ref = path()
+          if (token.isNot[Dot])
+            convertToTypeId(ref) getOrElse { syntaxError("identifier expected", at = ref) }
+          else {
+            next()
+            accept[KwType]
+            val refOrQuasi = ref match {
+              case quasi: Term.Name.Quasi =>
+                quasi.become[Term.Ref.Quasi]
+              case ref => ref
+            }
+            Type.Singleton(refOrQuasi)
+          }
+      }))
+    }
+
+    def simpleTypeRest(t: Type): Type = token match {
+      case Hash()      => next(); simpleTypeRest(atPos(t, auto)(Type.Project(t, typeName())))
+      case LeftBracket() => simpleTypeRest(atPos(t, auto)(Type.Apply(t, typeArgs())))
+      case _           => t
+    }
 
     /** {{{
      *  Types ::= Type {`,' Type}
@@ -1158,14 +1155,26 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case Type.Tuple(elements) =>
           val elements1 = elements.map(el => loop(el, convertTypevars = true))
           atPos(tpe, tpe)(Pat.Type.Tuple(elements1))
-        case Type.Compound(tpes, refinement) =>
-          val tpes1 = tpes.map(tpe => loop(tpe, convertTypevars = false))
-          val refinement1 = refinement
-          atPos(tpe, tpe)(Pat.Type.Compound(tpes1, refinement1))
-        case Type.Existential(underlying, quants) =>
+        case Type.With(lhs, rhs) =>
+          val lhs1 = loop(lhs, convertTypevars = false)
+          val rhs1 = loop(rhs, convertTypevars = false)
+          atPos(tpe, tpe)(Pat.Type.With(lhs1, rhs1))
+        case Type.And(lhs, rhs) =>
+          val lhs1 = loop(lhs, convertTypevars = false)
+          val rhs1 = loop(rhs, convertTypevars = false)
+          atPos(tpe, tpe)(Pat.Type.And(lhs1, rhs1))
+        case Type.Or(lhs, rhs) =>
+          val lhs1 = loop(lhs, convertTypevars = false)
+          val rhs1 = loop(rhs, convertTypevars = false)
+          atPos(tpe, tpe)(Pat.Type.Or(lhs1, rhs1))
+        case Type.Refine(tpe, stats) =>
+          val tpe1 = tpe.map(tpe => loop(tpe, convertTypevars = false))
+          val stats1 = stats
+          atPos(tpe, tpe)(Pat.Type.Refine(tpe1, stats1))
+        case Type.Existential(underlying, stats) =>
           val underlying1 = loop(underlying, convertTypevars = false)
-          val quants1 = quants
-          atPos(tpe, tpe)(Pat.Type.Existential(underlying1, quants1))
+          val stats1 = stats
+          atPos(tpe, tpe)(Pat.Type.Existential(underlying1, stats1))
         case Type.Annotate(underlying, annots) =>
           val underlying1 = loop(underlying, convertTypevars = false)
           val annots1 = annots
@@ -1510,12 +1519,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def typeOrInfixType(location: Location): Type =
     if (location == Local) typ()
     else startInfixType()
-
-  def annotTypeRest(t: Type): Type = atPos(t, auto) {
-    val annots = this.annots(skipNewLines = false)
-    if (annots.isEmpty) t
-    else Type.Annotate(t, annots)
-  }
 
 /* ----------- EXPRESSIONS ------------------------------------------------ */
 

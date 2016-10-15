@@ -151,13 +151,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("compound types") {
     assert(tpe("Foo").show[Syntax] === "Foo")
-    assert(tpe("Foo {}").show[Syntax] === "Foo")
+    assert(tpe("Foo {}").show[Syntax] === "Foo {}")
     assert(tpe("Foo { type T = Int }").show[Syntax] === "Foo { type T = Int }")
     assert(tpe("Foo { type T = Int; type U <: String }").show[Syntax] === "Foo { type T = Int; type U <: String }")
     assert(tpe("Foo with Bar").show[Syntax] === "Foo with Bar")
-    // TODO: revisit this once we have trivia in place
-    // assert(tpe("Foo with Bar {}").show[Syntax] === "Foo with Bar {}")
-    assert(tpe("Foo with Bar {}").show[Syntax] === "Foo with Bar")
+    assert(tpe("Foo with Bar {}").show[Syntax] === "Foo with Bar {}")
     assert(tpe("Foo with Bar { type T = Int }").show[Syntax] === "Foo with Bar { type T = Int }")
     assert(tpe("Foo with Bar { type T = Int; type U <: String }").show[Syntax] === "Foo with Bar { type T = Int; type U <: String }")
   }
@@ -169,11 +167,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("and types - Dotty") {
-    assert(tpe("Foo & Bar")(dialects.Dotty).show[Syntax] === "Foo & Bar")
+    val Scala211 = null // TODO: #389
+    import scala.meta.dialects.Dotty
+    assert(tpe("Foo & Bar").show[Syntax] === "Foo & Bar")
   }
 
   test("or types - Dotty") {
-    assert(tpe("Foo | Bar")(dialects.Dotty).show[Syntax] === "Foo | Bar")
+    val Scala211 = null // TODO: #389
+    import scala.meta.dialects.Dotty
+    assert(tpe("Foo | Bar").show[Syntax] === "Foo | Bar")
   }
 
   test("packages") {
