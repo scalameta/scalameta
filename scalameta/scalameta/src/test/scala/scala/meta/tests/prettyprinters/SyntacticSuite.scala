@@ -167,11 +167,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("and types - Dotty") {
-    assert(tpe("Foo & Bar")(dialects.Dotty).show[Syntax] === "Foo & Bar")
+    val Scala211 = null // TODO: #389
+    import scala.meta.dialects.Dotty
+    assert(tpe("Foo & Bar").show[Syntax] === "Foo & Bar")
   }
 
   test("or types - Dotty") {
-    assert(tpe("Foo | Bar")(dialects.Dotty).show[Syntax] === "Foo | Bar")
+    val Scala211 = null // TODO: #389
+    import scala.meta.dialects.Dotty
+    assert(tpe("Foo | Bar").show[Syntax] === "Foo | Bar")
   }
 
   test("packages") {

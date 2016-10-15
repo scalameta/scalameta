@@ -227,6 +227,7 @@ object TreeSyntax {
           val quote = if (parts.exists(s => s.contains(EOL) || s.contains("\""))) "\"\"\"" else "\""
           m(SimpleExpr1, s(t.prefix, quote, r(zipped), parts.last, quote))
         case t: Term.Xml             =>
+          if (!dialect.allowXmlLiterals) throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
           val parts = t.parts.map{ case Lit(part: String) => part }
           val zipped = parts.zip(t.args).map{ case (part, arg) => s(part, "{", p(Expr, arg), "}") }
           m(SimpleExpr1, s(r(zipped), parts.last))
@@ -305,9 +306,15 @@ object TreeSyntax {
           val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
           m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
         case t: Type.Tuple        => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
-        case t: Type.With         => m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
-        case t: Type.And          => m(InfixTyp("&"), s(p(InfixTyp("&"), t.lhs, left = true), " ", "&", " ", p(InfixTyp("&"), t.rhs, right = true)))
-        case t: Type.Or           => m(InfixTyp("|"), s(p(InfixTyp("|"), t.lhs, left = true), " ", "|", " ", p(InfixTyp("|"), t.rhs, right = true)))
+        case t: Type.With         =>
+          if (!dialect.allowWithTypes) throw new UnsupportedOperationException(s"$dialect doesn't support with types")
+          m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
+        case t: Type.And          =>
+          if (!dialect.allowAndTypes) throw new UnsupportedOperationException(s"$dialect doesn't support and types")
+          m(InfixTyp("&"), s(p(InfixTyp("&"), t.lhs, left = true), " ", "&", " ", p(InfixTyp("&"), t.rhs, right = true)))
+        case t: Type.Or           =>
+          if (!dialect.allowOrTypes) throw new UnsupportedOperationException(s"$dialect doesn't support or types")
+          m(InfixTyp("|"), s(p(InfixTyp("|"), t.lhs, left = true), " ", "|", " ", p(InfixTyp("|"), t.rhs, right = true)))
         case t: Type.Refine       => m(RefineTyp, t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), "{", w(" ", r(t.stats, "; "), " ", t.stats.nonEmpty), "}")
         case t: Type.Existential  => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.stats, "; "), " }"))
         case t: Type.Annotate     => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
@@ -321,7 +328,10 @@ object TreeSyntax {
           require(t.mods.length - mods.length <= 1)
           val variance = t.mods.foldLeft("")((curr, m) => if (m.is[Mod.Covariant]) "+" else if (m.is[Mod.Contravariant]) "-" else curr)
           val tbounds = s(t.tbounds)
-          val vbounds = r(t.vbounds.map { s(" ", kw("<%"), " ", _) })
+          val vbounds = {
+            if (t.vbounds.nonEmpty && !dialect.allowViewBounds) throw new UnsupportedOperationException(s"$dialect doesn't support view bounds")
+            r(t.vbounds.map { s(" ", kw("<%"), " ", _) })
+          }
           val cbounds = r(t.cbounds.map { s(kw(":"), " ", _) })
           s(w(mods, " "), variance, t.name, t.tparams, tbounds, vbounds, cbounds)
 
@@ -363,9 +373,15 @@ object TreeSyntax {
           val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
           m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
         case t: Pat.Type.Tuple       => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
-        case t: Pat.Type.With        => m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
-        case t: Pat.Type.And         => m(InfixTyp("&"), s(p(InfixTyp("&"), t.lhs, left = true), " ", "&", " ", p(InfixTyp("&"), t.rhs, right = true)))
-        case t: Pat.Type.Or          => m(InfixTyp("|"), s(p(InfixTyp("|"), t.lhs, left = true), " ", "|", " ", p(InfixTyp("|"), t.rhs, right = true)))
+        case t: Pat.Type.With        =>
+          if (!dialect.allowWithTypes) throw new UnsupportedOperationException(s"$dialect doesn't support with types")
+          m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
+        case t: Pat.Type.And         =>
+          if (!dialect.allowAndTypes) throw new UnsupportedOperationException(s"$dialect doesn't support and types")
+          m(InfixTyp("&"), s(p(InfixTyp("&"), t.lhs, left = true), " ", "&", " ", p(InfixTyp("&"), t.rhs, right = true)))
+        case t: Pat.Type.Or          =>
+          if (!dialect.allowOrTypes) throw new UnsupportedOperationException(s"$dialect doesn't support or types")
+          m(InfixTyp("|"), s(p(InfixTyp("|"), t.lhs, left = true), " ", "|", " ", p(InfixTyp("|"), t.rhs, right = true)))
         case t: Pat.Type.Refine      => m(RefineTyp, t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), "{", w(" ", r(t.stats, "; "), " ", t.stats.nonEmpty), "}")
         case t: Pat.Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.stats, "; "), " }"))
         case t: Pat.Type.Annotate    => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
@@ -453,7 +469,9 @@ object TreeSyntax {
         case _: Mod.Lazy                     => kw("lazy")
         case _: Mod.ValParam                 => kw("val")
         case _: Mod.VarParam                 => kw("var")
-        case _: Mod.Inline                   => kw("inline")
+        case _: Mod.Inline                   =>
+          if (!dialect.allowInline) throw new UnsupportedOperationException(s"$dialect doesn't support inline")
+          kw("inline")
 
         // Enumerator
         case t: Enumerator.Val           => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))
