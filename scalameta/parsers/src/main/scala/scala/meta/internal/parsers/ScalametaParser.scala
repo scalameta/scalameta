@@ -1166,10 +1166,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           val tpe1 = tpe.map(tpe => loop(tpe, convertTypevars = false))
           val stats1 = stats
           atPos(tpe, tpe)(Pat.Type.Refine(tpe1, stats1))
-        case Type.Existential(underlying, quants) =>
+        case Type.Existential(underlying, stats) =>
           val underlying1 = loop(underlying, convertTypevars = false)
-          val quants1 = quants
-          atPos(tpe, tpe)(Pat.Type.Existential(underlying1, quants1))
+          val stats1 = stats
+          atPos(tpe, tpe)(Pat.Type.Existential(underlying1, stats1))
         case Type.Annotate(underlying, annots) =>
           val underlying1 = loop(underlying, convertTypevars = false)
           val annots1 = annots

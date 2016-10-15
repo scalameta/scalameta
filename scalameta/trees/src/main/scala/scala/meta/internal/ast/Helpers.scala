@@ -247,7 +247,7 @@ object Helpers {
       case Type.And(lhs, rhs) => Pat.Type.And(loop(lhs), loop(rhs))
       case Type.Or(lhs, rhs) => Pat.Type.Or(loop(lhs), loop(rhs))
       case Type.Refine(tpe, stats) => Pat.Type.Refine(tpe.map(loop), stats)
-      case Type.Existential(tpe, quants) => Pat.Type.Existential(loop(tpe), quants)
+      case Type.Existential(tpe, stats) => Pat.Type.Existential(loop(tpe), stats)
       case Type.Annotate(tpe, annots) => Pat.Type.Annotate(loop(tpe), annots)
       case Type.Placeholder(bounds) => Pat.Type.Placeholder(bounds)
       case tpe: Lit => tpe
@@ -271,7 +271,7 @@ object Helpers {
       case Pat.Type.And(lhs, rhs) => Type.And(loop(lhs), loop(rhs))
       case Pat.Type.Or(lhs, rhs) => Type.Or(loop(lhs), loop(rhs))
       case Pat.Type.Refine(tpe, stats) => Type.Refine(tpe.map(loop), stats)
-      case Pat.Type.Existential(tpe, quants) => Type.Existential(loop(tpe), quants)
+      case Pat.Type.Existential(tpe, stats) => Type.Existential(loop(tpe), stats)
       case Pat.Type.Annotate(tpe, annots) => Type.Annotate(loop(tpe), annots)
       case Pat.Type.Placeholder(bounds) => Type.Placeholder(bounds)
       case tpe: Lit => tpe

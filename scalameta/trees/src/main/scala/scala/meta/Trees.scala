@@ -137,8 +137,8 @@ object Type {
   @ast class Refine(tpe: Option[Type], stats: Seq[Stat]) extends Type {
     require(stats.forall(_.isRefineStat))
   }
-  @ast class Existential(tpe: Type, quants: Seq[Stat] @nonEmpty) extends Type {
-    require(quants.forall(_.isExistentialStat))
+  @ast class Existential(tpe: Type, stats: Seq[Stat] @nonEmpty) extends Type {
+    require(stats.forall(_.isExistentialStat))
   }
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
   @ast class Placeholder(bounds: Bounds) extends Type
@@ -276,9 +276,9 @@ object Pat {
       require(tpe.isEmpty || (!tpe.get.is[Pat.Var.Type] && !tpe.get.is[Pat.Type.Wildcard]))
       require(stats.forall(_.isRefineStat))
     }
-    @ast class Existential(tpe: Pat.Type, quants: Seq[Stat] @nonEmpty) extends Pat.Type {
+    @ast class Existential(tpe: Pat.Type, stats: Seq[Stat] @nonEmpty) extends Pat.Type {
       require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
-      require(quants.forall(_.isExistentialStat))
+      require(stats.forall(_.isExistentialStat))
     }
     @ast class Annotate(tpe: Pat.Type, annots: Seq[Mod.Annot] @nonEmpty) extends Pat.Type {
       require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
