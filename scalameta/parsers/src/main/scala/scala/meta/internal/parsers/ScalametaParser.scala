@@ -1042,35 +1042,24 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def compoundType(): Type = compoundTypeRest {
       if (token.is[LeftBrace])
         None
-      else if (isSpliceFollowedBy(token.is[KwWith] || token.is[LeftBrace] || (token.is[LF] && ahead (token.is[LeftBrace]))))
-        Some(ellipsis(1, astInfo[Type]))
       else
         Some(annotType())
     }
 
-    // TODO: warn about def f: Unit { } case?
-    def compoundTypeRest(t: Option[Type]): Type = atPos(t, auto) {
-      val ts = new ListBuffer[Type] ++ t
-      while (token.is[KwWith]) {
-        next()
-        if (token.is[Ellipsis]) ts += ellipsis(1, astInfo[Type])
-        else ts += annotType()
-      }
-      newLineOptWhenFollowedBy[LeftBrace]
-      val types = ts.toList
-      if (token.is[LeftBrace]) {
-        val refinements = refinement()
-        val hasQuasi = t match {
-          case q @ Some(Type.Quasi(1, _)) => true
-          case _ => false
-        }
-        (types, refinements) match {
-          case (typ :: Nil, Nil) if !hasQuasi => typ
-          case _  => Type.Compound(types, refinements)
-        }
-      } else {
-        if (types.length == 1) types.head
-        else Type.Compound(types, Nil)
+    def compoundTypeRest(t0: Option[Type]): Type = atPos(t0, auto) {
+      t0 match {
+        case Some(t0) =>
+          var t = t0
+          while (token.is[KwWith]) {
+            next()
+            val rhs = annotType()
+            t = atPos(t, rhs)(Type.With(t, rhs))
+          }
+          newLineOptWhenFollowedBy[LeftBrace]
+          if (token.is[LeftBrace]) Type.Refine(Some(t), refinement())
+          else t
+        case None =>
+          Type.Refine(None, refinement())
       }
     }
 
@@ -1158,10 +1147,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case Type.Tuple(elements) =>
           val elements1 = elements.map(el => loop(el, convertTypevars = true))
           atPos(tpe, tpe)(Pat.Type.Tuple(elements1))
-        case Type.Compound(tpes, refinement) =>
-          val tpes1 = tpes.map(tpe => loop(tpe, convertTypevars = false))
-          val refinement1 = refinement
-          atPos(tpe, tpe)(Pat.Type.Compound(tpes1, refinement1))
+        case Type.With(lhs, rhs) =>
+          val lhs1 = loop(lhs, convertTypevars = false)
+          val rhs1 = loop(rhs, convertTypevars = false)
+          atPos(tpe, tpe)(Pat.Type.With(lhs1, rhs1))
+        case Type.And(lhs, rhs) =>
+          val lhs1 = loop(lhs, convertTypevars = false)
+          val rhs1 = loop(rhs, convertTypevars = false)
+          atPos(tpe, tpe)(Pat.Type.And(lhs1, rhs1))
+        case Type.Or(lhs, rhs) =>
+          val lhs1 = loop(lhs, convertTypevars = false)
+          val rhs1 = loop(rhs, convertTypevars = false)
+          atPos(tpe, tpe)(Pat.Type.Or(lhs1, rhs1))
+        case Type.Refine(tpe, stats) =>
+          val tpe1 = tpe.map(tpe => loop(tpe, convertTypevars = false))
+          val stats1 = stats
+          atPos(tpe, tpe)(Pat.Type.Refine(tpe1, stats1))
         case Type.Existential(underlying, quants) =>
           val underlying1 = loop(underlying, convertTypevars = false)
           val quants1 = quants

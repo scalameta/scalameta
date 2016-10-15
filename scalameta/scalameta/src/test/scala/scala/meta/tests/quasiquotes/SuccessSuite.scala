@@ -837,21 +837,19 @@ class SuccessSuite extends FunSuite {
     assert(t"(..$tpes)".show[Structure] === "Type.Tuple(Seq(Type.Name(\"X\"), Type.Name(\"Y\")))")
   }
 
-  test("1 t\"..$tpes { ..$stats }\"") {
-    val t"..$tpes {..$stats}" = t"A with B with C { val a: A; val b: B }"
-    assert(tpes.toString === "List(A, B, C)")
-    assert(tpes(0).show[Structure] === "Type.Name(\"A\")")
-    assert(tpes(1).show[Structure] === "Type.Name(\"B\")")
-    assert(tpes(2).show[Structure] === "Type.Name(\"C\")")
+  test("1 t\"$tpe { ..$stats }\"") {
+    val t"$tpe {..$stats}" = t"A with B with C { val a: A; val b: B }"
+    assert(tpe.toString === "Some(A with B with C)")
+    assert(tpe.show[Structure] === "Some(Type.With(Type.With(Type.Name(\"A\"), Type.Name(\"B\")), Type.Name(\"C\")))")
     assert(stats.toString === "List(val a: A, val b: B)")
     assert(stats(0).show[Structure] === "Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\"))")
     assert(stats(1).show[Structure] === "Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"b\"))), Type.Name(\"B\"))")
   }
 
-  test("2 t\"..$tpes { ..$stats }\"") {
-    val tpes = List(t"X", t"Y")
+  test("2 t\"$tpe { ..$stats }\"") {
+    val tpe = t"X with Y"
     val stats = List(q"val a: A", q"val b: B")
-    assert(t"..$tpes { ..$stats }".show[Structure] === "Type.Compound(Seq(Type.Name(\"X\"), Type.Name(\"Y\")), Seq(Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\")), Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"b\"))), Type.Name(\"B\"))))")
+    assert(t"$tpe { ..$stats }".show[Structure] === "Type.Refine(Some(Type.With(Type.Name(\"X\"), Type.Name(\"Y\"))), Seq(Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\")), Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"b\"))), Type.Name(\"B\"))))")
   }
 
   test("1 t\"$tpe forSome { ..$stats }\"") {
@@ -1307,11 +1305,10 @@ class SuccessSuite extends FunSuite {
     assert(pt"(..$ptpes)".show[Structure] === "Pat.Type.Tuple(Seq(Pat.Var.Type(Type.Name(\"x\")), Pat.Var.Type(Type.Name(\"y\"))))")
   }
 
-  test("1 pt\"..$ptpes { ..$stats }\"") {
-    val pt"..$ptpes { ..$stats }" = pt"x with y { val a: A }"
-    assert(ptpes.toString === "List(x, y)")
-    assert(ptpes(0).show[Structure] === "Type.Name(\"x\")")
-    assert(ptpes(1).show[Structure] === "Type.Name(\"y\")")
+  test("1 pt\"$ptpe { ..$stats }\"") {
+    val pt"$ptpe { ..$stats }" = pt"x with y { val a: A }"
+    assert(ptpe.toString === "Some(x with y)")
+    assert(ptpe.show[Structure] === "Some(Pat.Type.With(Type.Name(\"x\"), Type.Name(\"y\")))")
     assert(stats.toString === "List(val a: A)")
     assert(stats(0).show[Structure] === "Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"a\"))), Type.Name(\"A\"))")
   }
@@ -1771,9 +1768,9 @@ class SuccessSuite extends FunSuite {
     assert(tpeopt1.show[Structure] === "Some(Type.Name(\"E\"))")
     assert(tpeopt2.show[Structure] === "Some(Type.Name(\"R\"))")
     assert(tpes1.toString === "List(T with Y)")
-    assert(tpes1(0).show[Structure] === "Type.Compound(Seq(Type.Name(\"T\"), Type.Name(\"Y\")), Nil)")
+    assert(tpes1(0).show[Structure] === "Type.With(Type.Name(\"T\"), Type.Name(\"Y\"))")
     assert(tpes2.toString === "List(U with I)")
-    assert(tpes2(0).show[Structure] === "Type.Compound(Seq(Type.Name(\"U\"), Type.Name(\"I\")), Nil)")
+    assert(tpes2(0).show[Structure] === "Type.With(Type.Name(\"U\"), Type.Name(\"I\"))")
   }
 
   test("2 tparam\"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes\"") {
@@ -1784,7 +1781,7 @@ class SuccessSuite extends FunSuite {
     val tpeopt2 = t"R"
     val tpes1 = List(t"T with Y")
     val tpes2 = List(t"U with I")
-    assert(tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2".show[Structure] === "Type.Param(Seq(Mod.Covariant()), Type.Name(\"Z\"), Seq(Type.Param(Nil, Type.Name(\"Q\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(Some(Type.Name(\"E\")), Some(Type.Name(\"R\"))), Seq(Type.Compound(Seq(Type.Name(\"T\"), Type.Name(\"Y\")), Nil)), Seq(Type.Compound(Seq(Type.Name(\"U\"), Type.Name(\"I\")), Nil)))")
+    assert(tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2".show[Structure] === "Type.Param(Seq(Mod.Covariant()), Type.Name(\"Z\"), Seq(Type.Param(Nil, Type.Name(\"Q\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(Some(Type.Name(\"E\")), Some(Type.Name(\"R\"))), Seq(Type.With(Type.Name(\"T\"), Type.Name(\"Y\"))), Seq(Type.With(Type.Name(\"U\"), Type.Name(\"I\"))))")
   }
 
   test("1 ctor\"$ctorname\"") {

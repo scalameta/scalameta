@@ -151,13 +151,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("compound types") {
     assert(tpe("Foo").show[Syntax] === "Foo")
-    assert(tpe("Foo {}").show[Syntax] === "Foo")
+    assert(tpe("Foo {}").show[Syntax] === "Foo {}")
     assert(tpe("Foo { type T = Int }").show[Syntax] === "Foo { type T = Int }")
     assert(tpe("Foo { type T = Int; type U <: String }").show[Syntax] === "Foo { type T = Int; type U <: String }")
     assert(tpe("Foo with Bar").show[Syntax] === "Foo with Bar")
-    // TODO: revisit this once we have trivia in place
-    // assert(tpe("Foo with Bar {}").show[Syntax] === "Foo with Bar {}")
-    assert(tpe("Foo with Bar {}").show[Syntax] === "Foo with Bar")
+    assert(tpe("Foo with Bar {}").show[Syntax] === "Foo with Bar {}")
     assert(tpe("Foo with Bar { type T = Int }").show[Syntax] === "Foo with Bar { type T = Int }")
     assert(tpe("Foo with Bar { type T = Int; type U <: String }").show[Syntax] === "Foo with Bar { type T = Int; type U <: String }")
   }
