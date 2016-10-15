@@ -48,11 +48,15 @@ class DottySuite extends ParseSuite {
     }
   }
 
+  test("A with B") {
+    val And(TypeName("A"), TypeName("B")) = tpe("A with B")
+  }
+
   test("A & B") {
-    val comp @ And(TypeName("A"), TypeName("B")) = tpe("A & B")
+    val And(TypeName("A"), TypeName("B")) = tpe("A & B")
   }
 
   test("A | B") {
-    val comp @ Or(TypeName("A"), TypeName("B")) = tpe("A | B")
+    val Or(TypeName("A"), TypeName("B")) = tpe("A | B")
   }
 }

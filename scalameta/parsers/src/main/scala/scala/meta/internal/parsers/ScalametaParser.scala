@@ -1053,7 +1053,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           while (token.is[KwWith]) {
             next()
             val rhs = annotType()
-            t = atPos(t, rhs)(Type.With(t, rhs))
+            t = atPos(t, rhs)({
+              if (dialect.allowWithTypes) Type.With(t, rhs)
+              else Type.And(t, rhs)
+            })
           }
           newLineOptWhenFollowedBy[LeftBrace]
           if (token.is[LeftBrace]) Type.Refine(Some(t), refinement())
