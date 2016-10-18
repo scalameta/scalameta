@@ -2,39 +2,32 @@ clone:
   depth: 50
   tags: true
   recursive: true
-
 build:
-  image: ensime/ensime:v2.x-cache
-  pull: true
-  environment:
-    - SONATYPE_USERNAME=$$SONATYPE_USERNAME
-    - SONATYPE_PASSWORD=$$SONATYPE_PASSWORD
-    - GITHUB_USERNAME=$$GITHUB_USERNAME
-    - GITHUB_PASSWORD=$$GITHUB_PASSWORD
-    - BINTRAY_USERNAME=$$BINTRAY_USERNAME
-    - BINTRAY_API_KEY=$$BINTRAY_API_KEY
-  commands:
-    - git log | head -n 20
-    - host `curl -s http://httpbin.org/ip | jq -r '.origin'` || true ;
-    - if [ -n "$CI_PULL_REQUEST" ] ; then
-        echo "Incoming pull request from https://github.com/$CI_REPO/pull/$CI_PULL_REQUEST";
-        author=$(curl -s "https://api.github.com/repos/$CI_REPO/pulls/$CI_PULL_REQUEST" | jq -r ".user.login");
-        if [ $? -ne 0 ] ; then exit 1; fi;
-        echo "Pull request submitted by $author";
-        signed=$(curl -s http://www.lightbend.com/contribute/cla/scala/check/$author | jq -r ".signed");
-        if [ $? -ne 0 ] ; then exit 1; fi;
-        if [ "$signed" = "true" ] ; then
-          echo "CLA check for $author successful";
-        else
-          echo "CLA check for $author failed";
-          echo "Please sign the Scala CLA to contribute to scala.meta";
-          echo "Go to https://www.lightbend.com/contribute/cla/scala and then resubmit this pull request";
-          exit 1;
-        fi;
-      fi
-    - sbt ++$SCALA_VERSION test
-    - ./bin/bintray.sh
-
+  tests:
+    image: ensime/ensime:v2.x-cache
+    pull: true
+    environment:
+      - COURSIER_CACHE=/drone/cache/coursier
+    commands:
+      - ./bin/checkCLA.sh
+      - sbt -Dsbt.ivy.home=/drone/cache/ivy2 ++$SCALA_VERSION test
+  publish:
+    image: ensime/ensime:v2.x-cache
+    environment:
+      - SONATYPE_USERNAME=$$SONATYPE_USERNAME
+      - SONATYPE_PASSWORD=$$SONATYPE_PASSWORD
+      - GITHUB_USERNAME=$$GITHUB_USERNAME
+      - GITHUB_PASSWORD=$$GITHUB_PASSWORD
+      - BINTRAY_USERNAME=$$BINTRAY_USERNAME
+      - BINTRAY_API_KEY=$$BINTRAY_API_KEY
+    commands:
+      - ./bin/bintray.sh
+    when:
+      event: push
+      branch: [master, 2.x]
 matrix:
   SCALA_VERSION:
     - 2.11.8
+cache:
+  mount:
+    - /drone/cache
