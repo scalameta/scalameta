@@ -70,18 +70,18 @@ object Term {
   @ast class Update(fun: Term, argss: Seq[Seq[Arg]] @nonEmpty, rhs: Term) extends Term
   @ast class Return(expr: Term) extends Term
   @ast class Throw(expr: Term) extends Term
-  @ast class Ascribe(expr: Term, decltpe: Type) extends Term
+  @ast class Ascribe(expr: Term, tpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: Seq[Mod.Annot] @nonEmpty) extends Term with Ctor.Call
-  @ast class Tuple(elements: Seq[Term] @nonEmpty) extends Term {
+  @ast class Tuple(args: Seq[Term] @nonEmpty) extends Term {
     // tuple must have more than one element
     // however, this element may be Quasi with "hidden" list of elements inside
-    require(elements.length > 1 || (elements.length == 1 && elements.head.is[scala.meta.internal.ast.Quasi]))
+    require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
   }
   @ast class Block(stats: Seq[Stat]) extends Term with Scope {
     require(stats.forall(_.isBlockStat))
   }
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
-  @ast class Match(scrut: Term, cases: Seq[Case] @nonEmpty) extends Term
+  @ast class Match(expr: Term, cases: Seq[Case] @nonEmpty) extends Term
   @ast class TryWithCases(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithTerm(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
   @ast class Function(params: Seq[Term.Param], body: Term) extends Term with Scope {
@@ -97,11 +97,11 @@ object Term {
   @ast class ForYield(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope
   @ast class New(templ: Template) extends Term
   @ast class Placeholder() extends Term
-  @ast class Eta(term: Term) extends Term
+  @ast class Eta(expr: Term) extends Term
   @branch trait Arg extends Tree
   object Arg {
-    @ast class Named(name: Name, rhs: Term.Arg) extends Arg
-    @ast class Repeated(arg: Term) extends Arg
+    @ast class Named(name: Name, expr: Term.Arg) extends Arg
+    @ast class Repeated(expr: Term) extends Arg
   }
   @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Member
   object Param {
@@ -128,8 +128,8 @@ object Type {
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
   @ast class Function(params: Seq[Type.Arg], res: Type) extends Type
-  @ast class Tuple(elements: Seq[Type] @nonEmpty) extends Type {
-    require(elements.length > 1 || (elements.length == 1 && elements.head.is[scala.meta.internal.ast.Quasi]))
+  @ast class Tuple(args: Seq[Type] @nonEmpty) extends Type {
+    require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
   }
   @ast class With(lhs: Type, rhs: Type) extends Type
   @ast class And(lhs: Type, rhs: Type) extends Type
@@ -225,16 +225,15 @@ object Pat {
   @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat {
     require(lhs.isLegal && rhs.isLegal)
   }
-  @ast class Tuple(elements: Seq[Pat] @nonEmpty) extends Pat {
-    require(elements.length > 1 || (elements.length == 1 && elements.head.is[scala.meta.internal.ast.Quasi]))
-    require(elements.forall(_.isLegal))
+  @ast class Tuple(args: Seq[Pat] @nonEmpty) extends Pat {
+    require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
+    require(args.forall(_.isLegal))
   }
   @ast class Extract(ref: Term.Ref, targs: Seq[scala.meta.Pat.Type], args: Seq[Pat.Arg]) extends Pat {
     require(ref.isStableId)
     require(args.forall(_.isLegal))
   }
-  @ast class ExtractInfix(lhs: Pat, ref: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat {
-    require(ref.isStableId)
+  @ast class ExtractInfix(lhs: Pat, op: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat {
     require(lhs.isLegal && rhs.forall(_.isLegal))
   }
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
@@ -266,8 +265,8 @@ object Pat {
     }
     @ast class ApplyInfix(lhs: Pat.Type, op: scala.meta.Type.Name, rhs: Pat.Type) extends Pat.Type
     @ast class Function(params: Seq[Pat.Type], res: Pat.Type) extends Pat.Type
-    @ast class Tuple(elements: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
-      require(elements.length > 1 || (elements.length == 1 && elements.head.is[scala.meta.internal.ast.Quasi]))
+    @ast class Tuple(args: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
+      require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
     }
     @ast class With(lhs: Pat.Type, rhs: Pat.Type) extends Pat.Type
     @ast class And(lhs: Pat.Type, rhs: Pat.Type) extends Pat.Type
