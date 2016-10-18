@@ -2932,8 +2932,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case from: Importee.Name if token.is[RightArrow] =>
         next()
         importWildcardOrName() match {
-          case to: Importee.Name     => Importee.Rename(from.value, to.value)
-          case to: Importee.Wildcard => Importee.Unimport(from.value)
+          case to: Importee.Name     => Importee.Rename(from.name, to.name)
+          case to: Importee.Wildcard => Importee.Unimport(from.name)
           case other                 => unreachable(debug(other, other.structure))
         }
       // NOTE: this is completely nuts

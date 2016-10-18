@@ -492,8 +492,8 @@ object Enumerator {
 @branch trait Importee extends Tree with Ref
 object Importee {
   @ast class Wildcard() extends Importee
-  @ast class Name(value: scala.meta.Name.Indeterminate) extends Importee
-  @ast class Rename(from: scala.meta.Name.Indeterminate, to: scala.meta.Name.Indeterminate) extends Importee
+  @ast class Name(name: scala.meta.Name.Indeterminate) extends Importee
+  @ast class Rename(name: scala.meta.Name.Indeterminate, rename: scala.meta.Name.Indeterminate) extends Importee
   @ast class Unimport(name: scala.meta.Name.Indeterminate) extends Importee
 }
 

@@ -479,8 +479,8 @@ object TreeSyntax {
         case t: Enumerator.Guard         => s(kw("if"), " ", p(PostfixExpr, t.cond))
 
         // Import
-        case t: Importee.Name     => s(t.value)
-        case t: Importee.Rename   => s(t.from, " ", kw("=>"), " ", t.to)
+        case t: Importee.Name     => s(t.name)
+        case t: Importee.Rename   => s(t.name, " ", kw("=>"), " ", t.rename)
         case t: Importee.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
         case _: Importee.Wildcard => kw("_")
         case t: Importer          => s(t.ref, ".", t.importees)
