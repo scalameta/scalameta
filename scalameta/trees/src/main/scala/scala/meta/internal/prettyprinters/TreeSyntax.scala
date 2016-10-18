@@ -243,9 +243,9 @@ object TreeSyntax {
         case t: Term.Update          => m(Expr1, s(p(SimpleExpr1, t.fun), t.argss, " ", kw("="), " ", p(Expr, t.rhs)))
         case t: Term.Return          => m(Expr1, s(kw("return"), if (guessHasExpr(t)) s(" ", p(Expr, t.expr)) else s()))
         case t: Term.Throw           => m(Expr1, s(kw("throw"), " ", p(Expr, t.expr)))
-        case t: Term.Ascribe         => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.decltpe))
+        case t: Term.Ascribe         => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.tpe))
         case t: Term.Annotate        => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
-        case t: Term.Tuple           => m(SimpleExpr1, s("(", r(t.elements, ", "), ")"))
+        case t: Term.Tuple           => m(SimpleExpr1, s("(", r(t.args, ", "), ")"))
         case t: Term.Block           =>
           import Term.{Block, Function}
           def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
@@ -262,7 +262,7 @@ object TreeSyntax {
               m(SimpleExpr, if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}")))
           }
         case t: Term.If              => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
-        case t: Term.Match           => m(Expr1, s(p(PostfixExpr, t.scrut), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}")))
+        case t: Term.Match           => m(Expr1, s(p(PostfixExpr, t.expr), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}")))
         case t: Term.TryWithCases    =>
           m(Expr1, s(kw("try"), " ", p(Expr, t.expr),
             if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", r(t.catchp.map(i(_)), ""), n("}")) else s(""),
@@ -288,9 +288,9 @@ object TreeSyntax {
         case t: Term.ForYield        => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
         case t: Term.New             => m(SimpleExpr, s(kw("new"), " ", t.templ))
         case _: Term.Placeholder     => m(SimpleExpr1, kw("_"))
-        case t: Term.Eta             => m(SimpleExpr, s(p(SimpleExpr1, t.term), " ", kw("_")))
-        case t: Term.Arg.Named       => s(t.name, " ", kw("="), " ", p(Expr, t.rhs))
-        case t: Term.Arg.Repeated    => s(p(PostfixExpr, t.arg), kw(":"), " ", kw("_*"))
+        case t: Term.Eta             => m(SimpleExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
+        case t: Term.Arg.Named       => s(t.name, " ", kw("="), " ", p(Expr, t.expr))
+        case t: Term.Arg.Repeated    => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
         case t: Term.Param           =>
           val mods = t.mods.filter(!_.is[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
           s(w(mods, " "), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
@@ -305,7 +305,7 @@ object TreeSyntax {
         case t: Type.Function     =>
           val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
           m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
-        case t: Type.Tuple        => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
+        case t: Type.Tuple        => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
         case t: Type.With         =>
           if (!dialect.allowWithTypes) throw new UnsupportedOperationException(s"$dialect doesn't support with types")
           m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
@@ -343,11 +343,11 @@ object TreeSyntax {
           val designator = if (t.rhs.is[Pat.Arg.SeqWildcard]) dialect.bindToSeqWildcardDesignator else "@"
           m(Pattern2, s(p(SimplePattern, t.lhs), separator, kw(designator), " ", p(AnyPattern3, t.rhs)))
         case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
-        case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.elements, ", "), ")"))
+        case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.args, ", "), ")"))
         case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.args))
         case t: Pat.ExtractInfix     =>
-          m(Pattern3(t.ref.value), s(p(Pattern3(t.ref.value), t.lhs, left = true), " ", t.ref, " ", t.rhs match {
-            case pat :: Nil => s(p(Pattern3(t.ref.value), pat, right = true))
+          m(Pattern3(t.op.value), s(p(Pattern3(t.op.value), t.lhs, left = true), " ", t.op, " ", t.rhs match {
+            case pat :: Nil => s(p(Pattern3(t.op.value), pat, right = true))
             case pats       => s(pats)
           }))
         case t: Pat.Interpolate      =>
@@ -372,7 +372,7 @@ object TreeSyntax {
         case t: Pat.Type.Function    =>
           val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
           m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
-        case t: Pat.Type.Tuple       => m(SimpleTyp, s("(", r(t.elements, ", "), ")"))
+        case t: Pat.Type.Tuple       => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
         case t: Pat.Type.With        =>
           if (!dialect.allowWithTypes) throw new UnsupportedOperationException(s"$dialect doesn't support with types")
           m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
@@ -479,8 +479,8 @@ object TreeSyntax {
         case t: Enumerator.Guard         => s(kw("if"), " ", p(PostfixExpr, t.cond))
 
         // Import
-        case t: Importee.Name     => s(t.value)
-        case t: Importee.Rename   => s(t.from, " ", kw("=>"), " ", t.to)
+        case t: Importee.Name     => s(t.name)
+        case t: Importee.Rename   => s(t.name, " ", kw("=>"), " ", t.rename)
         case t: Importee.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
         case _: Importee.Wildcard => kw("_")
         case t: Importer          => s(t.ref, ".", t.importees)
