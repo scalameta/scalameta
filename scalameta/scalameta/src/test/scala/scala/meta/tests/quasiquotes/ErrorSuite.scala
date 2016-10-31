@@ -207,7 +207,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       q"val $name = foo"
     """) === """
-      |<macro>:5: can't unquote a name here, use a pattern instead
+      |<macro>:5: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
       |      q"val $name = foo"
       |            ^
     """.trim.stripMargin)
@@ -220,7 +220,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       q"var $name = foo"
     """) === """
-      |<macro>:5: can't unquote a name here, use a pattern instead
+      |<macro>:5: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
       |      q"var $name = foo"
       |            ^
     """.trim.stripMargin)
@@ -233,7 +233,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       p"$name: T"
     """) === """
-      |<macro>:5: can't unquote a name here, use a pattern instead
+      |<macro>:5: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
       |      p"$name: T"
       |        ^
     """.trim.stripMargin)
@@ -376,7 +376,7 @@ class ErrorSuite extends FunSuite {
       val ptpe = pt"y"
       p"$pat: $ptpe"
     """) === """
-      |<macro>:6: can't unquote a name here, use a pattern instead
+      |<macro>:6: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
       |      p"$pat: $ptpe"
       |        ^
     """.trim.stripMargin)
