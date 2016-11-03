@@ -82,7 +82,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
           pat match {
             case q: _root_.scala.meta.internal.ast.Quasi if unquotesName(q) =>
               val action = if (q.rank == 0) "unquote" else "splice"
-              c.abort(q.pos, "can't " + action + " a name here, use a pattern instead")
+              c.abort(q.pos, "can't " + action + " a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)")
             case _ =>
           }
         }
