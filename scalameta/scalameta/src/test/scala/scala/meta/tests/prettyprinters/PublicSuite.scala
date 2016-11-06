@@ -5,6 +5,82 @@ import org.scalatest._
 import scala.meta._
 
 class PublicSuite extends FunSuite {
+  test("scala.meta.artifacts.Artifact") {
+    // covered below
+  }
+
+  test("scala.meta.artifacts.Artifact.Adhoc") {
+    assert(scala.meta.artifacts.Artifact.Adhoc(List(source"object M")).toString === "Artifact(object M)")
+    assert(scala.meta.artifacts.Artifact.Adhoc(List(), List(), List(Artifact())).toString === "Artifact(List(), List(), List(Artifact()))")
+  }
+
+  test("scala.meta.artifacts.Artifact.Maven") {
+    assert(scala.meta.artifacts.Artifact.Maven("org.scalameta" %% "scalameta" % "1.1.0").toString === """Artifact("org.scalameta" %% "scalameta" % "1.1.0")""")
+  }
+
+  test("scala.meta.artifacts.Artifact.Unmanaged") {
+    assert(scala.meta.artifacts.Artifact.Unmanaged("class:path").toString === """Artifact("class:path")""")
+  }
+
+  test("scala.meta.artifacts.ArtifactException") {
+    // n/a
+  }
+
+  test("scala.meta.artifacts.CrossVersion") {
+    // covered below
+  }
+
+  test("scala.meta.artifacts.CrossVersion.binary") {
+    assert(scala.meta.artifacts.CrossVersion.binary.toString == "binary")
+  }
+
+  test("scala.meta.artifacts.CrossVersion.full") {
+    assert(scala.meta.artifacts.CrossVersion.full.toString == "full")
+  }
+
+  test("scala.meta.artifacts.CrossVersion.none") {
+    assert(scala.meta.artifacts.CrossVersion.none.toString == "none")
+  }
+
+  test("scala.meta.artifacts.Domain") {
+    assert(scala.meta.artifacts.Domain(Artifact("class:path")).toString === """Domain(Artifact("class:path"))(BlessedEcosystem)""")
+  }
+
+  test("scala.meta.artifacts.Ecosystem") {
+    // n/a
+  }
+
+  test("scala.meta.artifacts.IncompleteMavenId") {
+    assert(("org.scalameta" % "scalameta").toString === """ "org.scalameta" % "scalameta" """.trim)
+    assert(("org.scalameta" %% "scalameta").toString === """ "org.scalameta" %% "scalameta" """.trim)
+  }
+
+  test("scala.meta.artifacts.MavenId") {
+    assert(("org.scalameta" % "scalameta" % "1.1.0").toString === """ "org.scalameta" % "scalameta" % "1.1.0" """.trim)
+    assert(("org.scalameta" %% "scalameta" % "1.1.0").toString === """ "org.scalameta" %% "scalameta" % "1.1.0" """.trim)
+    assert(("org.scalameta" % "scalameta" % "1.1.0" cross CrossVersion.full).toString === """ "org.scalameta" % "scalameta" % "1.1.0" cross CrossVersion.full """.trim)
+  }
+
+  test("scala.meta.artifacts.Multipath") {
+    assert(scala.meta.artifacts.Multipath("hello:world").toString === """Multipath("hello:world")""")
+  }
+
+  test("scala.meta.artifacts.Path") {
+    assert(scala.meta.artifacts.Path("/hello/world").toString === """Path("/hello/world")""")
+  }
+
+  test("scala.meta.artifacts.Resolver") {
+    // n/a
+  }
+
+  test("scala.meta.artifacts.Resolver.BlessedEcosystem") {
+    assert(scala.meta.artifacts.Resolver.BlessedEcosystem.toString === "BlessedEcosystem")
+  }
+
+  test("scala.meta.artifacts.Resource") {
+    assert(scala.meta.artifacts.Resource("test", new java.net.URI("test")).toString === """Resource("test", new URI("test"))""")
+  }
+
   test("scala.meta.Dialect.toString") {
     Dialect.all.foreach(d => assert(d.name == d.toString))
   }
@@ -238,6 +314,10 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.quasiquotes.Unlift.toString") {
+    // n/a
+  }
+
+  test("scala.meta.semantic.Mirror") {
     // n/a
   }
 

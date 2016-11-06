@@ -17,8 +17,8 @@ private[meta] trait Api {
 
 private[meta] trait Aliases {
   type Structure[T] = scala.meta.prettyprinters.Structure[T]
-  // there's no term Structure, so we don't have a term alias here
+  val Structure = scala.meta.prettyprinters.Structure
 
   type Syntax[T] = scala.meta.prettyprinters.Syntax[T]
-  // there's no term Syntax, so we don't have a term alias here
+  val Syntax = scala.meta.prettyprinters.Syntax
 }
