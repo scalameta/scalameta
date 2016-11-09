@@ -97,7 +97,7 @@
 
     @p
       To learn more about practical aspects of using scala.meta, take a look at
-      @lnk("A Whirlwind Tour of Scala.Meta", "https://olafurpg.github.io/scala.meta-workshop/"),
+      @lnk("our tutorial", "http://scalameta.org/tutorial"), which is based on
       a workshop given by Ólafur Pall Geirsson at Scala World 2016.
 
   @sect{Roadmap}
