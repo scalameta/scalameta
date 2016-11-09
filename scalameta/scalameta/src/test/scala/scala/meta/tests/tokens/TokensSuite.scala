@@ -4,6 +4,9 @@ package tokens
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta._
+import scala.meta.dialects.Scala211
+import scala.meta.Token._
+import org.scalatest._
 
 // NOTE: don't run anything, just make sure that stuff compiles
 class TokensSuite {
@@ -21,5 +24,63 @@ class TokensSuite {
   val d6b: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.map{ case ((x, y), _) => newToken }
   val d6c: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.flatMap{ case ((x, y), _) => d }
   val d7a: Seq[(Token, Int)] = d.zipWithIndex
-  val d8: Seq[Token] = d.slice(0, 1)
+
+  //Return Tokens where possible when using collections API
+  val slice: Tokens = d.slice(0, 1)
+  val segmentLengthRight = d.segmentLengthRight(_.isNot[LeftParen], 0)
+  val take: Tokens = d.take(2)
+  val takeRight: Tokens = d.takeRight(2)
+  val drop: Tokens = d.drop(2)
+  val dropRight: Tokens = d.dropRight(2)
+  val takeWhile: Tokens = d.takeWhile(_.isNot[RightParen])
+  val takeRightWhile: Tokens = d.takeRightWhile(_.isNot[LeftParen])
+  val dropWhile: Tokens = d.dropWhile(_.isNot[RightParen])
+  val dropRightWhile: Tokens = d.dropRightWhile(_.isNot[LeftParen])
+  val splitAt: (Tokens, Tokens) = d.splitAt(1)
+  def span: (Tokens, Tokens) = d.span(_.isNot[RightParen])
+  def spanRight: (Tokens, Tokens) = d.spanRight(_.isNot[LeftParen])
+}
+
+
+
+class TokensApiSuite extends FunSuite {
+  def tokenize(code: String): Tokens = {
+    val convert = scala.meta.inputs.Input.stringToInput
+    val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
+    val dialect = Scala211
+    code.tokenize(convert, tokenize, dialect).get
+  }
+
+  test("Maintains Tokens type when implementing collections API methods") {
+    //Drop BOF and EOF to make tests more readable
+    var tokens = tokenize("((1 + 1) == 2)").drop(1).dropRight(1)
+
+    assert(tokens.length == 13)
+    assert(tokens.segmentLength(_.is[LeftParen]) === 2)
+    assert(tokens.segmentLengthRight(_.is[RightParen]) === 1)
+    assert(tokens.take(2).show[Syntax] === "((")
+    assert(tokens.slice(11, 13).show[Syntax] === "2)")
+    assert(tokens.slice(11, 13).show[Syntax] === "2)")
+    assert(tokens.takeRight(2).show[Syntax] === "2)")
+    assert(tokens.drop(11).show[Syntax] === "2)")
+    assert(tokens.dropRight(11).show[Syntax] === "((")
+    assert(tokens.takeWhile(_.is[LeftParen]).show[Syntax] === "((")
+    assert(tokens.segmentLengthRight(_.is[RightParen]) == 1)
+    assert(tokens.takeRightWhile(_.is[RightParen]).show[Syntax] === ")")
+    assert(tokens.segmentLength(_.is[LeftParen]) == 2)
+    assert(tokens.dropWhile(_.is[LeftParen]).show[Syntax] === "1 + 1) == 2)")
+    assert(tokens.dropRightWhile(_.is[RightParen]).show[Syntax] === "((1 + 1) == 2")
+    assert{
+      val (front, back) = tokens.splitAt(8)
+      front.show[Syntax] === "((1 + 1)" && back.show[Syntax] === " == 2)"
+    }
+    assert{
+      val (front, back) = tokens.span(_.isNot[RightParen])
+      front.show[Syntax] === "((1 + 1" && back.show[Syntax] === ") == 2)"
+    }
+    assert{
+      val (front, back) = tokens.spanRight(_.isNot[LeftParen])
+      front.show[Syntax] === "((" && back.show[Syntax] === "1 + 1) == 2)"
+    }
+  }
 }
