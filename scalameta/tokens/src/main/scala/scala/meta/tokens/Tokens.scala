@@ -32,6 +32,32 @@ extends immutable.IndexedSeq[Token] with collection.IndexedSeqOptimized[Token, i
   def length: Int = end - start
   override def slice(from: Int, until: Int): Tokens = Tokens(tokens, start + math.max(from, 0), start + math.min(math.max(until, 0), length))
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
+
+  override def segmentLength(p: Token => Boolean, from: Int = 0): Int = super.segmentLength(p, from)
+
+  def segmentLengthRight(p: Token => Boolean, from: Int = 0): Int = reverseIterator.drop(from).takeWhile(p).length
+
+  override def take(n: Int): Tokens = slice(0, n)
+
+  override def takeRight(n: Int): Tokens = slice(length - n, length)
+
+  override def drop(n: Int): Tokens = slice(n, length)
+
+  override def dropRight(n: Int): Tokens = slice(0, length - n)
+
+  override def takeWhile(p: Token => Boolean): Tokens = take(segmentLength(p))
+
+  def takeRightWhile(p: Token => Boolean): Tokens = takeRight(segmentLengthRight(p))
+
+  override def dropWhile(p: Token => Boolean): Tokens = drop(segmentLength(p, 0))
+
+  def dropRightWhile(p: Token => Boolean): Tokens = dropRight(segmentLengthRight(p))
+
+  override def splitAt(n: Int): (Tokens, Tokens) = (take(n), drop(n))
+
+  override def span(p: Token => Boolean): (Tokens, Tokens) = splitAt(indexWhere(!p.apply(_)))
+
+  def spanRight(p: Token => Boolean): (Tokens, Tokens) = splitAt(length - reverseIterator.indexWhere(!p.apply(_)))
 }
 
 object Tokens {
