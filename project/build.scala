@@ -250,13 +250,6 @@ object build extends Build {
     pomExtra := (
       <url>https://github.com/scalameta/scalameta</url>
       <inceptionYear>2014</inceptionYear>
-      <licenses>
-        <license>
-          <name>BSD-like</name>
-          <url>https://github.com/scalameta/scalameta/blob/master/LICENSE.md</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
       <scm>
         <url>git://github.com/scalameta/scalameta.git</url>
         <connection>scm:git:git://github.com/scalameta/scalameta.git</connection>
