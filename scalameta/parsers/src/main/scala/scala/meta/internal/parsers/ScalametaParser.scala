@@ -3002,9 +3002,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (tp.isEmpty || token.is[Equals]) {
       accept[Equals]
       val rhs =
-        if (token.is[Underscore] && tp.nonEmpty && isMutable && lhs.forall(_.is[Pat.Var.Term])) {
-          next()
-          None
+        if (token.is[Underscore]) {
+          if (tp.nonEmpty && isMutable && lhs.forall(_.is[Pat.Var.Term])) {
+            next()
+            None
+          } else syntaxError("unbound placeholder parameter", at = token)
         } else Some(expr())
 
       if (isMutable) Defn.Var(mods, lhs, tp, rhs)
