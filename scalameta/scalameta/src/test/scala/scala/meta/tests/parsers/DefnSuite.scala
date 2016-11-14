@@ -33,6 +33,18 @@ class DefnSuite extends ParseSuite {
                  Some(Type.Name("Int")), None) = templStat("var x: Int = _")
   }
 
+  test("var x = _ is not allowed") {
+    intercept[parsers.ParseException] {
+      templStat("var x = _")
+    }
+  }
+
+  test("val x: Int = _ is not allowed") {
+    intercept[parsers.ParseException] {
+      templStat("val x: Int = _")
+    }
+  }
+
   test("val (x: Int) = 2") {
     val Defn.Val(Nil, Pat.Typed(Pat.Var.Term(Term.Name("x")), Type.Name("Int")) :: Nil,
                  None, Lit(2)) = templStat("val (x: Int) = 2")
