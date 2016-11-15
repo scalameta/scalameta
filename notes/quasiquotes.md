@@ -153,7 +153,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
  Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
- Class          | `q"..$mods class $tname[..$tparams] ..$mods (...$paramss) extends $template"`
+ Class          | `q"..$mods class $tname[..$tparams] $ctorMods (...$paramss) extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
  Object         | `q"..$mods object $name extends $template"`
  Package Object | `q"package object $name extends $template"`
