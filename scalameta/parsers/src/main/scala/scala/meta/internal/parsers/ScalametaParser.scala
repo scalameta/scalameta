@@ -3307,7 +3307,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       // the Type.ApplyInfix => Term.ApplyType conversion is weird as well
       def mkCtorRefFunction(tpe: Type) = {
         val arrow = scannerTokens.slice(tpe.tokens.head.index, tpe.tokens.last.index + 1).find(_.is[RightArrow]).get
-        atPos(arrow, arrow)(Ctor.Ref.Function(atPos(arrow, arrow)(Ctor.Name("=>"))))
+        atPos(arrow, arrow)(Ctor.Ref.Function(atPos(arrow, arrow)(Ctor.Name("Function1"))))
       }
       atPos(tpe, tpe)(tpe match {
         case q: Type.Quasi => q.become[Ctor.Call.Quasi]
