@@ -1828,7 +1828,7 @@ class SuccessSuite extends FunSuite {
   test("2 ctor\"(..$tpes) => $tpe\"") {
     val tpes = List(t"x", t"y")
     val tpe = t"z"
-    assert(ctor"(x, ..$tpes) => $tpe".show[Structure] === "Term.ApplyType(Ctor.Ref.Function(Ctor.Ref.Name(\"=>\")), Seq(Type.Name(\"x\"), Type.Name(\"x\"), Type.Name(\"y\"), Type.Name(\"z\")))")
+    assert(ctor"(x, ..$tpes) => $tpe".show[Structure] === "Term.ApplyType(Ctor.Ref.Function(Ctor.Ref.Name(\"Function1\")), Seq(Type.Name(\"x\"), Type.Name(\"x\"), Type.Name(\"y\"), Type.Name(\"z\")))")
   }
 
   test("1 ctor\"$ctorname ..@annots\"") {
