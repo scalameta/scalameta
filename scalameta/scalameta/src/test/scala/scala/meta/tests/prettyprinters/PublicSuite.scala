@@ -102,7 +102,15 @@ class PublicSuite extends FunSuite {
     // covered above
   }
 
+  test("scala.meta.dialects.Scala212.toString") {
+    // covered above
+  }
+
   test("scala.meta.dialects.Paradise211.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.Paradise212.toString") {
     // covered above
   }
 

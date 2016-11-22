@@ -13,11 +13,12 @@ class PublicSuite extends FunSuite {
   }
 
   test("quasiquotes without static dialect") {
+    val currentDialect = scala.meta.Dialect.current
     assert(typecheckError("""
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       q"hello"
-    """) === "dialect does not have precise enough type to be used in quasiquotes (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211)")
+    """) === s"dialect does not have precise enough type to be used in quasiquotes (to fix this, import something from scala.dialects, e.g. scala.meta.dialects.${currentDialect.name})")
   }
 
   test("quasiquotes when everything's correct") {
