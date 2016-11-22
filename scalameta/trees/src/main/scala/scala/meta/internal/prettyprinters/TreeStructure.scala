@@ -56,7 +56,7 @@ object TreeStructure {
             case Ident("-") => true
             case _ => false
           }
-          s(x.tokens.filter(isRelevantToken).map(_.show[Syntax]).mkString)
+          s(x.tokens.filter(isRelevantToken _).map(_.show[Syntax]).mkString)
         case x =>
           default
       }
