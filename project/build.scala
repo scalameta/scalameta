@@ -107,7 +107,7 @@ object build extends Build {
   ) settings (
     publishableSettings,
     description := "Scala.meta's APIs for tokenization and its baseline implementation",
-    libraryDependencies += "com.lihaoyi" %% "scalaparse" % "0.3.7",
+    libraryDependencies += "com.lihaoyi" %% "scalaparse" % "0.4.2",
     enableMacros
   ) dependsOn (common, dialects, inputs, tokens)
 
