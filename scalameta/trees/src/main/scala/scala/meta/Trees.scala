@@ -2,7 +2,6 @@ package scala.meta
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.runtime.ScalaRunTime.isAnyVal
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.classifiers._
@@ -296,7 +295,10 @@ object Pat {
 }
 
 @ast class Lit(value: Any) extends Term with Pat with Type with Pat.Type {
-  require(value == null || isAnyVal(value) || value.isInstanceOf[String] || value.isInstanceOf[scala.Symbol])
+  require(value == null || value.isInstanceOf[Byte] || value.isInstanceOf[Short] ||
+  value.isInstanceOf[Char] || value.isInstanceOf[Int] || value.isInstanceOf[Long] ||
+  value.isInstanceOf[Float] || value.isInstanceOf[Double] || value.isInstanceOf[Boolean] ||
+  value.isInstanceOf[Unit] || value.isInstanceOf[String] || value.isInstanceOf[scala.Symbol])
 }
 
 @branch trait Member extends Tree with Scope {

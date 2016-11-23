@@ -161,7 +161,12 @@ class DataMacros(val c: Context) extends MacroHelpers {
         stats1 += q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = other.isInstanceOf[$name[..$tparamrefs]]"
         stats1 += q"""
           override def equals(other: _root_.scala.Any): _root_.scala.Boolean = (
-            this.canEqual(other) && _root_.scala.runtime.ScalaRunTime._equals(this, other)
+            this.canEqual(other) && (other match {
+              case other: Product if this.productArity == other.productArity =>
+                this.productIterator sameElements other.productIterator
+              case _ =>
+                false
+            })
           )
         """
       }

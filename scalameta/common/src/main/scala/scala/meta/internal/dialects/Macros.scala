@@ -15,6 +15,7 @@ class Macros(val c: Context) extends MacroHelpers with AdtReflection {
   lazy val Dialect = mirror.staticClass("scala.meta.Dialect")
   lazy val Scala210 = mirror.staticModule("scala.meta.dialects.Scala210")
   lazy val Scala211 = mirror.staticModule("scala.meta.dialects.Scala211")
+  lazy val Scala212 = mirror.staticModule("scala.meta.dialects.Scala212")
   lazy val Dotty = mirror.staticModule("scala.meta.dialects.Dotty")
 
   def all: c.Tree = {
@@ -27,6 +28,7 @@ class Macros(val c: Context) extends MacroHelpers with AdtReflection {
     val version = scala.util.Properties.versionNumberString
     if (version.startsWith("2.10")) hygienicRef(Scala210)
     else if (version.startsWith("2.11")) hygienicRef(Scala211)
+    else if (version.startsWith("2.12")) hygienicRef(Scala212)
     else c.abort(c.enclosingPosition, "unsupported Scala version " + version)
   }
 }

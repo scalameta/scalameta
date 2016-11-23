@@ -24,7 +24,8 @@ trait InstantiateDialect {
       Dialect.all.map(d => (dialectDef(d.name), d)).toMap
     }
     dialects.getOrElse(dialectTree.tpe.termSymbol, {
-      val suggestion = "to fix this, import something from scala.dialects, e.g. scala.meta.dialects.Scala211"
+      val currentDialect = new Macros(c.asInstanceOf[scala.reflect.macros.whitebox.Context]).current.toString.stripPrefix("_root_.")
+      val suggestion = s"to fix this, import something from scala.dialects, e.g. $currentDialect"
       val message = s"$dialectTree does not have precise enough type to be used in quasiquotes ($suggestion)"
       c.abort(c.enclosingPosition, message)
     })

@@ -151,6 +151,38 @@ package object dialects {
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
+  @leaf implicit object Scala212 extends Dialect {
+    def name = "Scala212"
+    def metalevel = Metalevel.Zero
+    def bindToSeqWildcardDesignator = Scala211.bindToSeqWildcardDesignator
+    def allowXmlLiterals = Scala211.allowXmlLiterals
+    def allowInline = false
+    def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
+    def allowToplevelTerms = Scala211.allowToplevelTerms
+    def toplevelSeparator = Scala211.toplevelSeparator
+    def allowViewBounds = Scala211.allowViewBounds
+    def allowAndTypes = Scala211.allowAndTypes
+    def allowOrTypes = Scala211.allowOrTypes
+    def allowTraitParameters = Scala211.allowTraitParameters
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
+  @leaf implicit object Paradise212 extends Dialect {
+    def name = "Paradise212"
+    def metalevel = Metalevel.Zero
+    def bindToSeqWildcardDesignator = Scala212.bindToSeqWildcardDesignator
+    def allowXmlLiterals = Scala212.allowXmlLiterals
+    def allowInline = true
+    def allowSpliceUnderscore = Scala212.allowSpliceUnderscore
+    def allowToplevelTerms = Scala212.allowToplevelTerms
+    def toplevelSeparator = Scala212.toplevelSeparator
+    def allowViewBounds = Scala212.allowViewBounds
+    def allowAndTypes = Scala212.allowAndTypes
+    def allowOrTypes = Scala212.allowOrTypes
+    def allowTraitParameters = Scala212.allowTraitParameters
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
   @leaf implicit object Dotty extends Dialect {
     def name = "Dotty"
     def metalevel = Metalevel.Zero

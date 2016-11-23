@@ -423,9 +423,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           if (ch == '$' && !getDollar())
             syntaxError("can't unquote into character literals", at = charOffset - 1)
           else if (isIdentifierStart(ch))
-            charLitOr(getIdentRest)
+            charLitOr(getIdentRest _)
           else if (isOperatorPart(ch) && (ch != '\\'))
-            charLitOr(getOperatorRest)
+            charLitOr(getOperatorRest _)
           else {
             getLitChar()
             if (ch == '\'') {

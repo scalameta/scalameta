@@ -43,10 +43,12 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.dialects.Metalevel.Quoted *
       |scala.meta.dialects.Metalevel.Zero *
       |scala.meta.dialects.Paradise211 *
+      |scala.meta.dialects.Paradise212 *
       |scala.meta.dialects.Sbt0136 *
       |scala.meta.dialects.Sbt0137 *
       |scala.meta.dialects.Scala210 *
       |scala.meta.dialects.Scala211 *
+      |scala.meta.dialects.Scala212 *
       |scala.meta.inline
       |scala.meta.inputs
       |scala.meta.inputs.Input
