@@ -12,7 +12,8 @@ import scala.util.Try
 import bintray.BintrayPlugin.autoImport._
 
 object build extends Build {
-  lazy val ScalaVersions = Seq("2.11.8")
+  lazy val ScalaVersion = "2.11.8"
+  lazy val ScalaVersions = Seq("2.11.8, 2.12.0")
   lazy val LibraryVersion = "1.4.0-SNAPSHOT"
   lazy val isSnapshot = LibraryVersion.endsWith("SNAPSHOT")
 
@@ -25,14 +26,28 @@ object build extends Build {
     packagedArtifacts := Map.empty,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject,
     aggregate in test := false,
-    test := {
-      val runTests = (test in scalameta in Test).value
-      val runDocs = (run in readme in Compile).toTask(" --validate").value
-    },
-    publish := {
-      // Others projects are published automatically because we aggregate.
-      val publishDocs = (publish in readme).value
-    },
+    test := (Def.taskDyn {
+      if (scalaVersion.value.startsWith("2.11")) {
+        Def.task {
+          val runTests = (test in scalameta in Test).value
+          val runDocs = (run in readme in Compile).toTask(" --validate").value
+        }
+      } else {
+        Def.task {
+          val runTests = (test in scalameta in Test).value
+        }
+      }
+    }).value,
+    publish := (Def.taskDyn {
+      if (scalaVersion.value.startsWith("2.11")) {
+        Def.task {
+          // Other projects are published automatically because we aggregate.
+          val publishDocs = (publish in readme).value
+        }
+      } else {
+        Def.task {}
+      }
+    }).value,
     // TODO: The same thing for publishSigned doesn't work.
     // SBT calls publishSigned on aggregated projects, but ignores everything else.
     console := (console in scalameta in Compile).value
@@ -211,7 +226,7 @@ object build extends Build {
   ) dependsOn (scalameta)
 
   lazy val sharedSettings = Def.settings(
-    scalaVersion := ScalaVersions.max,
+    scalaVersion := ScalaVersion,
     crossScalaVersions := ScalaVersions,
     crossVersion := CrossVersion.binary,
     version := latestPullRequestVersion().getOrElse(LibraryVersion),
