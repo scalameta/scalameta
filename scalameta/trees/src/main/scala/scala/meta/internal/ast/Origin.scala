@@ -11,4 +11,5 @@ import scala.meta.internal.tokens._
 object Origin {
   @adt.none object None extends Origin
   @adt.leaf class Parsed(input: Input, dialect: Dialect, pos: TokenStreamPosition) extends Origin
+  @adt.leaf class Transformed(from: Tree, to: Tree) extends Origin
 }
