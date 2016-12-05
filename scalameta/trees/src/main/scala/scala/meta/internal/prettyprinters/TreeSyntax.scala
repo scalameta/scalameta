@@ -303,7 +303,10 @@ object TreeSyntax {
         case t: Type.Apply        => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
         case t: Type.ApplyInfix   => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
         case t: Type.Function     =>
-          val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
+          val params = t.params match {
+            case param +: Nil if !param.is[Type.Tuple] => s(p(AnyInfixTyp, param))
+            case params => s("(", r(params.map(param => p(ParamTyp, param)), ", "), ")")
+          }
           m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
         case t: Type.Tuple        => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
         case t: Type.With         =>
