@@ -466,4 +466,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(lit.show[Structure] === "Lit(())")
     assert(lit.show[Syntax] === "")
   }
+
+  test("Type.Function(Tuple, _) #557") {
+    assert(t"((a, b)) => c".syntax    == "((a, b)) => c")
+    assert(t"((a, b), c) => c".syntax == "((a, b), c) => c")
+  }
 }
