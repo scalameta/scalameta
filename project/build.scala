@@ -14,7 +14,7 @@ import bintray.BintrayPlugin.autoImport._
 object build extends Build {
   lazy val ScalaVersion = "2.11.8"
   lazy val ScalaVersions = Seq("2.11.8, 2.12.0")
-  lazy val LibraryVersion = "1.4.0-SNAPSHOT"
+  lazy val LibraryVersion = "1.5.0-SNAPSHOT"
   lazy val isSnapshot = LibraryVersion.endsWith("SNAPSHOT")
 
   lazy val scalametaRoot = Project(
