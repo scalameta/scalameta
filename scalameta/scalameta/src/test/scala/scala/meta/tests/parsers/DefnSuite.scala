@@ -37,6 +37,16 @@ class DefnSuite extends ParseSuite {
         templStat("val f: Int => String = _.toString")
   }
 
+  test("var f: Int => String = _.toString") {
+    val Defn.Var(
+      Nil, 
+      Pat.Var.Term(Term.Name("f")) :: Nil, 
+      Some(Type.Function(Type.Name("Int") :: Nil, Type.Name("String"))), 
+      Some(Term.Select(Term.Placeholder(), Term.Name("toString")))) = 
+        templStat("var f: Int => String = _.toString")
+  }
+
+
   test("var x: Int = _") {
     val Defn.Var(Nil, Pat.Var.Term(Term.Name("x")) :: Nil,
                  Some(Type.Name("Int")), None) = templStat("var x: Int = _")
