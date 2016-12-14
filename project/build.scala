@@ -59,6 +59,7 @@ object build extends Build {
     parsers,
     quasiquotes,
     scalameta,
+    testkit,
     tokenizers,
     tokens,
     transversers,
@@ -163,6 +164,15 @@ object build extends Build {
     description := "Scala.meta's metaprogramming APIs",
     exposePaths("scalameta", Test)
   ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline)
+
+  lazy val testkit = Project(
+    id   = "testkit",
+    base = file("scalameta/testkit")
+  ) settings (
+    publishableSettings,
+    libraryDependencies += "com.lihaoyi" %% "geny" % "0.1.1",
+    description := "Testing utilities for scala.meta's metaprogramming APIs"
+  ) dependsOn (scalameta)
 
   lazy val readme = scalatex.ScalatexReadme(
     projectId = "readme",
