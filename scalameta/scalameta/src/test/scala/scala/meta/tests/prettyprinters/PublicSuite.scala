@@ -249,6 +249,10 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.semantic.Mirror") {
+    // n/a
+  }
+
   test("scala.meta.tokenizers.Tokenize.toString") {
     // n/a
   }
