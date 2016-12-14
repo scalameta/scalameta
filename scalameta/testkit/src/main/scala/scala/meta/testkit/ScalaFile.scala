@@ -12,7 +12,8 @@ case class ScalaFile(filename: String, projectUrl: String, commit: String) {
   def jFile: File =
     new File(FileOps.getFile("target", "repos", repo), filename)
   def read: String = FileOps.readFile(jFile)
-  def githubUrlAtLine(line: Int): String = s"$githubUrl#L$line"
+  private def link(url: String) = s"[$repo/${url.replaceFirst(".*/", "")}]($url)"
+  def githubUrlAtLine(line: Int): String = link(s"$githubUrl#L$line")
   def githubUrl = s"$projectUrl/blob/$commit$filename"
   def userRepo: String = projectUrl.stripPrefix("https://github.com/")
   def repo: String = userRepo.split("/")(1)
