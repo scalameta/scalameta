@@ -249,7 +249,23 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.semantic.Completed.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.Completed.Error.toString") {
+    // n/a
+  }
+
+  test("scala.meta.semantic.Completed.Success.toString") {
+    // n/a
+  }
+
   test("scala.meta.semantic.Mirror") {
+    // n/a
+  }
+
+  test("scala.meta.semantic.SemanticException.toString") {
     // n/a
   }
 
