@@ -39,6 +39,7 @@ lazy val scalametaRoot = Project(
   quasiquotes,
   scalahost,
   scalameta,
+  semantic,
   testkit,
   tokenizers,
   tokens,
@@ -137,6 +138,14 @@ lazy val trees = Project(
   enableMacros
 ) dependsOn (common, dialects, inputs, tokens, tokenizers) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 
+lazy val semantic = Project(
+  id   = "semantic",
+  base = file("scalameta/semantic")
+) settings (
+  publishableSettings,
+  description := "Scala.meta's semantic APIs"
+) dependsOn (common, trees)
+
 lazy val scalameta = Project(
   id   = "scalameta",
   base = file("scalameta/scalameta")
@@ -144,7 +153,7 @@ lazy val scalameta = Project(
   publishableSettings,
   description := "Scala.meta's metaprogramming APIs",
   exposePaths("scalameta", Test)
-) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline)
+) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline, semantic)
 
 lazy val scalahost = Project(
   id   = "scalahost",

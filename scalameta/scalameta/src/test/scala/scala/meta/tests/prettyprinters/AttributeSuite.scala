@@ -7,7 +7,7 @@ import scala.meta.internal.semantic._
 import scala.meta.internal.prettyprinters.Attributes
 import scala.meta.internal.semantic.Typing.Recursive
 
-class SemanticSuite extends FunSuite {
+class AttributeSuite extends FunSuite {
   test("comprehensive show[Attributes]") {
     val symbolroot = Symbol.RootPackage
     val prefixroot = Prefix.None
