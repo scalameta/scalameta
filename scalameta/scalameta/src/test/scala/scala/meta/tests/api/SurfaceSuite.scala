@@ -81,7 +81,11 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
       |scala.meta.semantic
+      |scala.meta.semantic.Completed
+      |scala.meta.semantic.Completed.Error
+      |scala.meta.semantic.Completed.Success
       |scala.meta.semantic.Mirror
+      |scala.meta.semantic.SemanticException
       |scala.meta.tokenizers
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException
