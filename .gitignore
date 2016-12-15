@@ -27,3 +27,6 @@ project/plugins/project/
 .worksheet
 *.actual
 secrets.yml
+
+repos.tar.gz
+
