@@ -171,7 +171,6 @@ object build extends Build {
   ) settings (
     publishableSettings,
     libraryDependencies += "com.lihaoyi" %% "geny" % "0.1.1",
-    // Used for property tests.
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
     description := "Testing utilities for scala.meta's metaprogramming APIs"
   ) dependsOn (scalameta)

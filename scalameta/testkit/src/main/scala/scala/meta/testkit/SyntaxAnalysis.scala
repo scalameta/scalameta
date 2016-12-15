@@ -12,16 +12,16 @@ import java.util.concurrent.atomic.AtomicInteger
 
 object SyntaxAnalysis {
 
-  /** Run custom analysis on a corpus of [[ScalaFile]].
+  /** Run syntactic analysis on a corpus of [[ScalaFile]].
     *
-    * @param corpus         The corpus to run analysis on.
+    * @param corpus         The corpus to run analysis on. Has type [[GenIterable]]
+    *                       to support both parallel and synchronous collections.
     * @param onParseSuccess callback when file successfully parsed.
     * @param onParseError   callback when file failed to parse. Default does nothing.
     * @tparam T The kind of analysis we want to collect.
     * @return The aggregate sum of all analysis results.
     */
-  def run[T](corpus: GenIterable[ScalaFile])(
-      onParseSuccess: Source => Seq[T],
+  def run[T](corpus: GenIterable[ScalaFile])(onParseSuccess: Source => Seq[T])(
       onParseError: (ScalaFile, Parsed.Error) => Seq[T] =
         (_: ScalaFile, _: Parsed.Error) => Nil
   ): mutable.Buffer[(ScalaFile, T)] = {
@@ -42,6 +42,7 @@ object SyntaxAnalysis {
           results.add(file -> t)
         }
       } catch {
+        // TODO(olafur) investigate these scala.meta errors.
         case _: org.scalameta.UnreachableError => // scala.meta error
         case _: org.scalameta.invariants.InvariantFailedException => // scala.meta error
         case _: java.nio.charset.MalformedInputException => // scala.meta error
@@ -50,12 +51,12 @@ object SyntaxAnalysis {
           // unexpected errors are printed in the console.
           println(s"Unexpected error analysing file: $file")
           println(s"Error: ${e.getClass.getName} $e")
-          val stack = e.getStackTrace.take(10)
+          val stack = e.getStackTrace.take(10) // print small stacktrace
           stack.foreach(println)
           val i = errors.incrementAndGet()
           if (i > 10) {
             throw new IllegalStateException(
-              "Too many unexpected errors, fix your analysis.")
+              "Too many unexpected errors (printed to console), fix your analysis.")
           }
       }
     }
