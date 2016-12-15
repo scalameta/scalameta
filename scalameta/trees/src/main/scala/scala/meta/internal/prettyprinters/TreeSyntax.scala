@@ -494,7 +494,11 @@ object TreeSyntax {
           val ppat = p(Pattern, t.pat)
           val pcond = t.cond.map(cond => s(" ", kw("if"), " ", p(PostfixExpr, cond))).getOrElse(s())
           val isOneLiner = {
-            def isOneLiner(t: Case) = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
+            def isOneLiner(t: Case) = t.stats match {
+              case Nil => true
+              case head :: Nil => head.is[Lit] || head.is[Term.Name]
+              case _ => false
+            }
             t.parent match {
               case Some(Term.Match(_, cases)) => cases.forall(isOneLiner)
               case Some(Term.PartialFunction(cases)) => cases.forall(isOneLiner)
