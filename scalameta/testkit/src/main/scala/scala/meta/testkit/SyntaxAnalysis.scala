@@ -16,15 +16,12 @@ object SyntaxAnalysis {
     *
     * @param corpus         The corpus to run analysis on. Has type [[GenIterable]]
     *                       to support both parallel and synchronous collections.
-    * @param onParseSuccess callback when file successfully parsed.
-    * @param onParseError   callback when file failed to parse. Default does nothing.
+    * @param f Callback to analyse a single [[ScalaFile]].
     * @tparam T The kind of analysis we want to collect.
     * @return The aggregate sum of all analysis results.
     */
-  def run[T](corpus: GenIterable[ScalaFile])(onParseSuccess: Source => Seq[T])(
-      onParseError: (ScalaFile, Parsed.Error) => Seq[T] =
-        (_: ScalaFile, _: Parsed.Error) => Nil
-  ): mutable.Buffer[(ScalaFile, T)] = {
+  def run[T](corpus: GenIterable[ScalaFile])(
+      f: ScalaFile => Seq[T]): mutable.Buffer[(ScalaFile, T)] = {
     val results = new CopyOnWriteArrayList[(ScalaFile, T)]
     val counter = new AtomicInteger()
     val errors = new AtomicInteger()
@@ -34,13 +31,7 @@ object SyntaxAnalysis {
         println(n)
       }
       try {
-        val ts: Seq[T] = file.jFile.parse[Source] match {
-          case Parsed.Success(ast) => onParseSuccess(ast)
-          case err: Parsed.Error => onParseError(file, err)
-        }
-        ts.foreach { t =>
-          results.add(file -> t)
-        }
+        f(file).foreach(t => results.add(file -> t))
       } catch {
         // TODO(olafur) investigate these scala.meta errors.
         case _: org.scalameta.UnreachableError => // scala.meta error

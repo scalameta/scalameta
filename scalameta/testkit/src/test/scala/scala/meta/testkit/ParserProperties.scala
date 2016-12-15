@@ -44,9 +44,18 @@ object ParserProperties {
 
   def runAndPrintAnalysis(): Unit = {
     val corpus =
-      MillionsOfLinesOfScalaCode.files().take(100).toBuffer.par
+      MillionsOfLinesOfScalaCode
+        .files()
+        .take(100000) // configure size of experiment
+        .toBuffer
+        .par
     val result =
-      SyntaxAnalysis.run[ParserBug](corpus)(onParseSuccess)(onParseError)
+      SyntaxAnalysis.run[ParserBug](corpus) { file =>
+        file.jFile.parse[Source] match {
+          case Parsed.Success(s) => onParseSuccess(s)
+          case e: Parsed.Error => onParseError(file, e)
+        }
+      }
     val markdown = Observation.markdownTable(result)
     println(markdown)
   }
