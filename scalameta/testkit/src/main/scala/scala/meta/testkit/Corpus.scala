@@ -1,9 +1,21 @@
 package scala.meta.testkit
 
+import java.io.File
+
+import geny.Generator
+
 /** A collection of Scala source files to run [[SyntaxAnalysis]].
   *
-  * @param url A zip file that matches the structure of this directory:
-  *            https://github.com/olafurpg/scala-repos/tree/master/repos
+  * @param url A zip file that matches the following structure:
+  *            repos/
+  *              project1/
+  *                COMMIT // <- git commit hash of project1 snapshot
+  *                URL    // <- Github project url
+  *                src/main/...
+  *                Code.scala
+  *              project2/
+  *              ...
+  *              projectN/
   *            In particular, each project directory must contain a
   *            `COMMIT` and `URL` file. These files are used to construct
   *            links to the source files on Github.
@@ -54,4 +66,49 @@ object Corpus {
         "target/repos/scala/src/scaladoc/scala/tools/nsc/doc/html/page/Template.scala"
       ).exists(x.startsWith)
   )
+
+  private def downloadReposTar(url: String): Unit = {
+    import sys.process._
+    // Easier and less awkward than dealing with scala.io.Source
+    Seq("wget", url).!
+  }
+
+  private def extractReposTar(): Unit = {
+    import sys.process._
+    Seq("tar", "xf", "repos.tar.gz").!
+  }
+
+  /** Downloads the zip file, extracts it and parses into a sequence of [[CorpusFile]].
+ *
+    * @param corpus See [[Corpus]].
+    * @return A generator of [[CorpusFile]]. Use [[Generator.take]] to limit the
+    *         size of your experiment and [[Generator.toBuffer.par]] to run
+    *         analysis using all available cores on the machine.
+    */
+  def files(corpus: Corpus): Generator[CorpusFile] = {
+
+    if (!FileOps.getFile("repos.tar.gz").isFile) {
+      downloadReposTar(corpus.url)
+    }
+    if (!FileOps.getFile("target", "repos").isDirectory) {
+      extractReposTar()
+    }
+    val repos = FileOps.getFile("target", "repos")
+    val files = Option(repos.listFiles()).getOrElse {
+      throw new IllegalStateException(
+        s"${repos.getAbsolutePath} is not a directory! Please delete if it's a file and retry.")
+    }
+    Generator.fromIterable(files.toIterable).flatMap { repo =>
+      val commit = FileOps.readFile(new File(repo, "COMMIT")).trim
+      val url = FileOps.readFile(new File(repo, "URL")).trim
+      FileOps
+        .listFiles(repo)
+        .filter(sourceFile => sourceFile.endsWith(".scala"))
+        .filter(corpus.filter)
+        .map { sourceFile =>
+          val filename = sourceFile.stripPrefix(repo.getPath)
+          CorpusFile(filename.trim, url, commit)
+        }
+    }
+  }
 }

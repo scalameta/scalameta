@@ -12,20 +12,20 @@ import java.util.concurrent.atomic.AtomicInteger
 
 object SyntaxAnalysis {
 
-  /** Run syntactic analysis on a corpus of [[ScalaFile]].
+  /** Run syntactic analysis on a corpus of [[CorpusFile]].
     *
-    * @param corpus         The corpus to run analysis on. Has type [[GenIterable]]
-    *                       to support both parallel and synchronous collections.
-    * @param f Callback to analyse a single [[ScalaFile]].
+    * @param corpus The corpus to run analysis on. Has type [[GenIterable]]
+    *               to support both parallel and synchronous collections.
+    * @param f      Callback to analyse a single [[CorpusFile]].
     * @tparam T The kind of analysis we want to collect.
     * @return The aggregate sum of all analysis results.
     */
-  def run[T](corpus: GenIterable[ScalaFile])(
-      f: ScalaFile => Seq[T]): mutable.Buffer[(ScalaFile, T)] = {
-    val results = new CopyOnWriteArrayList[(ScalaFile, T)]
+  def run[T](corpus: GenIterable[CorpusFile])(
+      f: CorpusFile => Seq[T]): mutable.Buffer[(CorpusFile, T)] = {
+    val results = new CopyOnWriteArrayList[(CorpusFile, T)]
     val counter = new AtomicInteger()
     val errors = new AtomicInteger()
-    def analyze(file: ScalaFile): Unit = {
+    def analyze(file: CorpusFile): Unit = {
       val n = counter.incrementAndGet()
       if (n % 1000 == 0) {
         println(n)

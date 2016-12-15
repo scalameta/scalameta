@@ -3,7 +3,7 @@ package scala.meta.testkit
 import scala.meta._
 import scala.meta.parsers.Parsed
 
-object ParserProperties {
+object ScalametaParserProperties {
 
   type ParserBug = Observation[BugKind]
   private val ParserBug = Observation.apply[BugKind] _
@@ -37,16 +37,16 @@ object ParserProperties {
     }
   }
 
-  def onParseError(scalaFile: ScalaFile, err: Parsed.Error): Seq[ParserBug] =
+  def onParseError(scalaFile: CorpusFile, err: Parsed.Error): Seq[ParserBug] =
     if (ScalacParser.canParseInput(scalaFile.read))
       Seq(ParserBug(err.details.getMessage, err.pos.start.line, ParserBroken))
     else Nil
 
   def runAndPrintAnalysis(): Unit = {
     val corpus =
-      MillionsOfLinesOfScalaCode
-        .files()
-        .take(100000) // configure size of experiment
+      Corpus
+        .files(Corpus.fastparse)
+        .take(100) // configure size of experiment
         .toBuffer
         .par
     val result =
