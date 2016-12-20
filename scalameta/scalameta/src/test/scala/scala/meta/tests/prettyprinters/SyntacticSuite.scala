@@ -472,11 +472,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(t"((a, b), c) => c".syntax == "((a, b), c) => c")
   }
 
-  test("Term.Apply(_, Seq(Term.Function(...))) #572") {
+  test("Term.Apply(_, Seq(Term.Function(...))) #572, #574") {
     import scala.collection.immutable.Seq
-    val tree1= Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(), Term.Name("i"), Some(Type.Name("Int")), None)), Lit(()))))
-    val tree2= Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(Mod.Implicit()), Term.Name("i"), Some(Type.Name("Int")), None)), Lit(()))))
-    assert(tree1.toString == "foo { (i: Int) => () }")
-    assert(tree2.toString == "foo { implicit i: Int => () }")
+    val tree1 = Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(), Term.Name("i"), Some(Type.Name("Int")), None)), Lit(()))))
+    val tree2 = Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(Mod.Implicit()), Term.Name("i"), Some(Type.Name("Int")), None)), Lit(()))))
+    val tree3 = Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(), Term.Name("i"), None, None)), Lit(()))))
+    assert(tree1.syntax == "foo { (i: Int) => () }")
+    assert(tree2.syntax == "foo { implicit i: Int => () }")
+    assert(tree3.syntax == "foo(i => ())")
   }
 }
