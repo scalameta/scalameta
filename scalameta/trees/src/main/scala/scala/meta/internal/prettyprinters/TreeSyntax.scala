@@ -518,8 +518,9 @@ object TreeSyntax {
 
       // Multiples and optionals
       implicit def syntaxArgs: Syntax[Seq[Term.Arg]] = Syntax {
-        case (b: Term.Block) :: Nil => s(" ", b)
-        case args                   => s("(", r(args, ", "), ")")
+        case (b: Term.Block) :: Nil    => s(" ", b)
+        case (f: Term.Function) :: Nil => s(" { ", f, " }")
+        case args                      => s("(", r(args, ", "), ")")
       }
       implicit def syntaxArgss: Syntax[Seq[Seq[Term.Arg]]] = Syntax {
         r(_)
