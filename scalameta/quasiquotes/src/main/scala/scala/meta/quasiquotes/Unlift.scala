@@ -6,7 +6,9 @@ import scala.reflect.ClassTag
 import scala.meta.common._
 
 @implicitNotFound(msg = "don't know how to unlift ${I} into ${O}")
-trait Unlift[I, O] extends Convert[I, Option[O]]
+trait Unlift[I, O] extends Convert[I, Option[O]] {
+  def unapply(x: I): Option[O] = apply(x)
+}
 
 object Unlift {
   def apply[I, O](pf: PartialFunction[I, O]): Unlift[I, O] = new Unlift[I, O] { def apply(x: I): Option[O] = pf.lift(x) }
