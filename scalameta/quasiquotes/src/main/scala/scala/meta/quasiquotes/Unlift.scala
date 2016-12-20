@@ -26,6 +26,8 @@ object Unlift {
   implicit def unliftNull[I >: Lit]: Unlift[I, Null]     = Unlift{ case Lit(null) => null }
   implicit def unliftUnit[I >: Lit]: Unlift[I, Unit]     = Unlift{ case Lit(()) => () }
 
+  implicit def unliftName2String[O <: Name]: Unlift[O, String] = Unlift{ case Term.Name(name) => name }
+
   // TODO: what are the dual of liftOption?
   implicit def unliftIdentity[I, O <: I : ClassTag]: Unlift[I, O] = Unlift { case x: O => x }
 }
