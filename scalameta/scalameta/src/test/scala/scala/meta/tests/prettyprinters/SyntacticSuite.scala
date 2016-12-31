@@ -481,4 +481,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tree2.syntax == "foo { implicit i: Int => () }")
     assert(tree3.syntax == "foo(i => ())")
   }
+
+  test("macro defs #581") {
+    assert(q"def f = macro g".syntax == "def f = macro g")
+    assert(q"def f: Int = macro g".syntax == "def f: Int = macro g")
+  }
 }

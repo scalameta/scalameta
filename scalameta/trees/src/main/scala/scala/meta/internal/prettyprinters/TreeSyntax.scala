@@ -415,7 +415,7 @@ object TreeSyntax {
         case t: Defn.Trait     => s(w(t.mods, " "), kw("trait"), " ", t.name, t.tparams, templ(t.templ))
         case t: Defn.Object    => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
         case t: Defn.Def       => s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
-        case t: Defn.Macro     => s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe, " ", kw("="), " ", kw("macro"), " ", t.body)
+        case t: Defn.Macro     => s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " ", kw("="), " ", kw("macro"), " ", t.body)
         case t: Pkg            =>
           if (options.isLazy && t.stats.isLazy) s(kw("package"), " ", t.ref, " { ... }")
           else if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
