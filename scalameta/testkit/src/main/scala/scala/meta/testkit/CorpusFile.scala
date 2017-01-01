@@ -16,7 +16,7 @@ case class CorpusFile(filename: String, projectUrl: String, commit: String) {
     s"$raw/$commit$filename"
   }
 
-  /** [[java.io.File]] for this file on local filesystem */
+  /** File on local filesystem */
   def jFile: File =
     new File(FileOps.getFile("target", "repos", repo), filename)
 
