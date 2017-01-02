@@ -372,11 +372,13 @@ object build extends Build {
 
   def parsePullRequestFromCommitMessage: Option[String] = {
     import sys.process._
-    val PullRequest = "\\s+Merge pull request #(\\d+).*".r
+    val Merge = "\\s+Merge pull request #(\\d+).*".r
+    val Squash = ".*\\(#(\\d+)\\)".r
     for {
       commitMsg <- Try(Seq("git", "log", "-1").!!.trim).toOption
       pr <- augmentString(commitMsg).lines.collectFirst {
-        case PullRequest(pr) => pr
+        case Merge(pr) => pr
+        case Squash(pr) => pr
       }
     } yield pr
   }

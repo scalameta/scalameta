@@ -81,8 +81,8 @@ object Corpus {
   /** Downloads the zip file, extracts it and parses into a sequence of [[CorpusFile]].
  *
     * @param corpus See [[Corpus]].
-    * @return A generator of [[CorpusFile]]. Use [[Generator.take]] to limit the
-    *         size of your experiment and [[Generator.toBuffer.par]] to run
+    * @return A generator of [[CorpusFile]]. Use Generator.take to limit the
+    *         size of your experiment and Generator.toBuffer.par to run
     *         analysis using all available cores on the machine.
     */
   def files(corpus: Corpus): Generator[CorpusFile] = {

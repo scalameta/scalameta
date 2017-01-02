@@ -14,7 +14,7 @@ object SyntaxAnalysis {
 
   /** Run syntactic analysis on a corpus of [[CorpusFile]].
     *
-    * @param corpus The corpus to run analysis on. Has type [[GenIterable]]
+    * @param corpus The corpus to run analysis on. Has type GenIterable
     *               to support both parallel and synchronous collections.
     * @param f      Callback to analyse a single [[CorpusFile]].
     * @tparam T The kind of analysis we want to collect.

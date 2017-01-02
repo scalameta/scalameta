@@ -10,7 +10,7 @@ build:
       - COURSIER_CACHE=/drone/cache/coursier
     commands:
       - ./bin/checkCLA.sh
-      - sbt -Dsbt.ivy.home=/drone/cache/ivy2 ++$SCALA_VERSION test
+      - sbt -Dsbt.ivy.home=/drone/cache/ivy2 ++$SCALA_VERSION test doc
   publish:
     image: ensime/ensime:v2.x-cache
     environment:
