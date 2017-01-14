@@ -318,4 +318,20 @@ object Helpers {
     if (rank == 0) clazz
     else arrayClass(ScalaRunTime.arrayClass(clazz), rank - 1)
   }
+
+  object TermApply {
+    def apply(fun: Term, argss: List[List[Term]]): Term = argss match {
+      case args :: rest => rest.foldLeft(Term.Apply(fun, args)) { (acc, args) => Term.Apply(acc, args) }
+      case _ => Term.Apply(fun, Nil)
+    }
+
+    def unapply(call: Term.Apply): Option[(Term, Seq[Seq[Term.Arg]])] = {
+      def recur(acc: Seq[Seq[Term.Arg]], term: Term): (Term, Seq[Seq[Term.Arg]])  = term match {
+        case Term.Apply(fun, args) => recur(args +: acc, fun) // inner-most is in the front
+        case fun => (fun, acc)
+      }
+
+      Some(recur(Nil, call))
+    }
+  }
 }
