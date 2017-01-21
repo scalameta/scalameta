@@ -354,11 +354,13 @@ object TreeSyntax {
             case pats       => s(pats)
           }))
         case t: Pat.Interpolate      =>
-          val zipped = t.parts.zip(t.args).map {
+          val parts = t.parts.map{ case Lit(part: String) => part }
+          val zipped = parts.zip(t.args).map {
             case (part, id: Name) if !guessIsBackquoted(id) => s(part, "$", id.value)
-            case (part, arg)                                => s(part, "${", arg, "}")
+            case (part, arg)                                =>
+              s(part, "${", arg, "}")
           }
-          m(SimplePattern, s(t.prefix, "\"", r(zipped), t.parts.last, "\""))
+          m(SimplePattern, s(t.prefix, "\"", r(zipped), parts.last, "\""))
         case t: Pat.Xml              =>
           val zipped = t.parts.zip(t.args).map{ case (part, arg) => s(part, "${", arg, "}") }
           m(SimplePattern, s(r(zipped), t.parts.last))

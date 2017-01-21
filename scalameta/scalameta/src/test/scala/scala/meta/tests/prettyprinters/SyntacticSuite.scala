@@ -486,4 +486,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"def f = macro g".syntax == "def f = macro g")
     assert(q"def f: Int = macro g".syntax == "def f: Int = macro g")
   }
+
+  test("Pat.Interpolate syntax is correct #587") {
+    val interpolate = Pat.Interpolate(
+      Term.Name("q"),
+      List(Lit("object "), Lit(" { .."), Lit(" }")),
+      List(Pat.Var.Term(Term.Name("name")), Pat.Var.Term(Term.Name("stats")))
+    )
+    assert(interpolate.show[Syntax] === """q"object ${name} { ..${stats} }"""")
+  }
 }
