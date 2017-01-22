@@ -6,7 +6,7 @@ import UnidocKeys._
 
 lazy val ScalaVersion = "2.11.8"
 lazy val ScalaVersions = Seq("2.11.8, 2.12.0")
-lazy val LibrarySeries = "1.5.0"
+lazy val LibrarySeries = "1.6.0"
 lazy val LibraryVersion = computePreReleaseVersion(LibrarySeries)
 
 // ==========================================
