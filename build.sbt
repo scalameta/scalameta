@@ -1,12 +1,13 @@
 import java.io._
+import scala.util.Try
 import org.scalameta.os._
 import PgpKeys._
 import UnidocKeys._
 
 lazy val ScalaVersion = "2.11.8"
 lazy val ScalaVersions = Seq("2.11.8, 2.12.0")
-lazy val LibraryVersion = "1.5.0-SNAPSHOT"
-lazy val isSnapshot = LibraryVersion.endsWith("SNAPSHOT")
+lazy val LibrarySeries = "1.5.0"
+lazy val LibraryVersion = computePreReleaseVersion(LibrarySeries)
 
 // ==========================================
 // Projects
@@ -31,6 +32,7 @@ lazy val scalametaRoot = Project(
   },
   // TODO: The same thing for publishSigned doesn't work.
   // SBT calls publishSigned on aggregated projects, but ignores everything else.
+  publishSigned := {},
   console := (console in scalameta in Compile).value
 ) aggregate (
   common,
@@ -167,6 +169,8 @@ lazy val readme = scalatex.ScalatexReadme(
   sources in Compile ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
   watchSources ++= baseDirectory.value.listFiles.toList,
   publish := {
+    if (sys.props("sbt.prohibit.publish") != null) sys.error("Undefined publishing strategy")
+
     // generate the scalatex readme into `website`
     val website = new File(target.value.getAbsolutePath + File.separator + "scalatex")
     if (website.exists) website.delete
@@ -182,22 +186,11 @@ lazy val readme = scalatex.ScalatexReadme(
     new PrintWriter(new File(repo.getAbsolutePath + File.separator + "CNAME")) { write("scalameta.org"); close }
     website.listFiles.foreach(src => shutil.copytree(src, new File(repo.getAbsolutePath + File.separator + src.getName)))
 
-    // make sure that we have a stable reference to the working copy that produced the website
-    val currentSha = shell.check_output("git rev-parse HEAD", cwd = ".")
-    val changed = shell.check_output("git diff --name-status", cwd = ".")
-    if (changed.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has modified files)")
-    val staged = shell.check_output("git diff --staged --name-status", cwd = ".")
-    if (staged.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has staged files)")
-    val untracked = shell.check_output("git ls-files --others --exclude-standard", cwd = ".")
-    if (untracked.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has untracked files)")
-    val (exitcode, stdout, stderr) = shell.exec(s"git branch -r --contains $currentSha")
-    if (exitcode != 0 || stdout.isEmpty) sys.error("repository " + new File(".").getAbsolutePath + " doesn't contain commit " + currentSha)
-
     // commit and push the changes if any
     shell.call(s"git add -A", cwd = repo.getAbsolutePath)
     val nothingToCommit = "nothing to commit, working directory clean"
     try {
-      val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + currentSha.trim
+      val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + git.stableSha()
       shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
       shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
       shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
@@ -223,15 +216,13 @@ lazy val sharedSettings = Def.settings(
   scalaVersion := ScalaVersion,
   crossScalaVersions := ScalaVersions,
   crossVersion := CrossVersion.binary,
-  version := latestPullRequestVersion().getOrElse(LibraryVersion),
+  version := LibraryVersion,
   organization := "org.scalameta",
   resolvers += Resolver.sonatypeRepo("snapshots"),
   resolvers += Resolver.sonatypeRepo("releases"),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test",
   libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
-  publishArtifact in Compile := false,
-  publishArtifact in Test := false,
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
   scalacOptions in (Compile, doc) ++= Seq("-skip-packages", ""),
   scalacOptions in (Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
@@ -239,17 +230,97 @@ lazy val sharedSettings = Def.settings(
   scalacOptions ++= Seq("-Xfatal-warnings"),
   parallelExecution in Test := false, // hello, reflection sync!!
   logBuffered := false,
-  triggeredMessage in ThisBuild := Watched.clearWhenTriggered,
-  publishMavenStyle := !isSnapshot,
+  triggeredMessage in ThisBuild := Watched.clearWhenTriggered
+)
+
+def computePreReleaseVersion(LibrarySeries: String): String = {
+  val preReleaseSuffix = {
+    import sys.process._
+    val stableSha = Try(git.stableSha()).toOption
+    val commitSubjects = Try(augmentString(shell.check_output("git log -10 --pretty=%s", cwd = ".")).lines.toList).getOrElse(Nil)
+    val prNumbers = commitSubjects.map(commitSubject => {
+      val Merge = "Merge pull request #(\\d+).*".r
+      val Squash = ".*\\(#(\\d+)\\)".r
+      commitSubject match {
+        case Merge(prNumber) => Some(prNumber)
+        case Squash(prNumber) => Some(prNumber)
+        case _ => None
+      }
+    })
+    val mostRecentPrNumber = prNumbers.flatMap(_.toList).headOption
+    (stableSha, prNumbers, mostRecentPrNumber) match {
+      case (Some(_), Some(prNumber) +: _, _) => prNumber
+      case (_, _, Some(prNumber)) => prNumber + "." + System.currentTimeMillis()
+      case _ => "unknown" + "." + System.currentTimeMillis()
+    }
+  }
+  LibrarySeries + "-" + preReleaseSuffix
+}
+
+// Pre-release versions go to bintray and should be published via `publish`.
+// This is the default behavior that you get without modifying the build.
+// The only exception is that we take extra care to not publish on pull request validation jobs in Drone.
+def shouldPublishToBintray: Boolean = {
+  if (!new File(sys.props("user.home") + "/.bintray/.credentials").exists) return false
+  if (sys.props("sbt.prohibit.publish") != null) return false
+  if (sys.env.contains("CI_PULL_REQUEST")) return false
+  LibraryVersion.contains("-")
+}
+
+// Release versions go to sonatype and then get synced to maven central.
+// They should be published via `publish-signed` and signed by someone from <developers>.
+// In order to publish a release version, change LibraryVersion to be equal to LibrarySeries.
+def shouldPublishToSonatype: Boolean = {
+  if (!secret.obtain("sonatype").isDefined) return false
+  if (sys.props("sbt.prohibit.publish") != null) return false
+  !LibraryVersion.contains("-")
+}
+
+lazy val publishableSettings = Def.settings(
+  sharedSettings,
+  bintrayOrganization := Some("scalameta"),
+  publishArtifact in Compile := true,
+  publishArtifact in Test := false,
+  {
+    val publishingStatus = {
+      if (shouldPublishToBintray) "publishing to Bintray"
+      else if (shouldPublishToSonatype) "publishing to Sonatype"
+      else "publishing disabled"
+    }
+    println(s"[info] Welcome to scala.meta $LibraryVersion ($publishingStatus)")
+    publish in Compile := (Def.taskDyn {
+      if (shouldPublishToBintray) Def.task { publish.value }
+      else if (shouldPublishToSonatype) Def.task { sys.error("Use publish-signed to publish release versions"); () }
+      else Def.task { sys.error("Undefined publishing strategy"); () }
+    }).value
+  },
+  publishSigned in Compile := (Def.taskDyn {
+    if (shouldPublishToBintray) Def.task { sys.error("Use publish to publish pre-release versions"); () }
+    else if (shouldPublishToSonatype) Def.task { publishSigned.value }
+    else Def.task { sys.error("Undefined publishing strategy"); () }
+  }).value,
   publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (latestPullRequestVersion().isDefined) (publishTo in bintray).value
-    else if (isSnapshot) Some("snapshots" at nexus + "content/repositories/snapshots")
-    else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+    if (shouldPublishToBintray) (publishTo in bintray).value
+    else if (shouldPublishToSonatype) Some("releases" at "https://oss.sonatype.org/" + "service/local/staging/deploy/maven2")
+    else publishTo.value
+  },
+  credentials ++= {
+    if (shouldPublishToBintray) {
+      // NOTE: Bintray credentials are automatically loaded by the sbt-bintray plugin
+      Nil
+    } else if (shouldPublishToSonatype) {
+      secret.obtain("sonatype").map({
+        case (username, password) => Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)
+      }).toList
+    } else Nil
+  },
+  publishMavenStyle := {
+    if (shouldPublishToBintray) false
+    else if (shouldPublishToSonatype) true
+    else publishMavenStyle.value
   },
   pomIncludeRepository := { x => false },
-  licenses +=
-    "BSD" -> url("https://github.com/scalameta/scalameta/blob/master/LICENSE.md"),
+  licenses += "BSD" -> url("https://github.com/scalameta/scalameta/blob/master/LICENSE.md"),
   pomExtra := (
     <url>https://github.com/scalameta/scalameta</url>
     <inceptionYear>2014</inceptionYear>
@@ -274,16 +345,6 @@ lazy val sharedSettings = Def.settings(
       </developer>
     </developers>
   )
-)
-
-lazy val publishableSettings = Def.settings(
-  sharedSettings,
-  bintrayOrganization := Some("scalameta"),
-  publishArtifact in Compile := true,
-  publishArtifact in Test := false,
-  credentials ++= secret.obtain("sonatype").map({
-    case (username, password) => Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)
-  }).toList
 )
 
 lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = Def.settings(
@@ -348,29 +409,4 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
     else Seq()
   }
   scalaReflect ++ scalaCompiler ++ backwardCompat210
-}
-
-def parsePullRequestFromCommitMessage: Option[String] = {
-  import sys.process._
-  val Merge = "\\s+Merge pull request #(\\d+).*".r
-  val Squash = ".*\\(#(\\d+)\\)".r
-  for {
-    commitMsg <- scala.util.Try(Seq("git", "log", "-1").!!.trim).toOption
-    pr <- augmentString(commitMsg).lines.collectFirst {
-      case Merge(pr) => pr
-      case Squash(pr) => pr
-    }
-  } yield pr
-}
-
-/** Replaces -SNAPSHOT with latest pull request number, if it exists. */
-def latestPullRequestVersion(): Option[String] = {
-  for {
-    _ <- sys.env.get("BINTRAY_API_KEY")
-    if isSnapshot
-    if !sys.env.contains("CI_PULL_REQUEST")
-    pullRequest <- parsePullRequestFromCommitMessage
-  } yield {
-    LibraryVersion.replace("-SNAPSHOT", s".$pullRequest")
-  }
 }
