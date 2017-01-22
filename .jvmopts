@@ -1,5 +1,4 @@
 -XX:-TieredCompilation
--XX:MaxPermSize=256m
 -Xss2m
 -Xms725m
 -Xmx725m
