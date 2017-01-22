@@ -11,7 +11,7 @@ import scala.meta.dialects.Scala211
 
 class BootstrapSuite extends ParseSuite {
   var dir = new File(new File(System.getProperty("sbt.paths.scalameta.test.sources")).getAbsolutePath)
-  def isProjectRoot(dir: File) = dir != null && new File(dir.getAbsolutePath + File.separatorChar + "project" + File.separatorChar + "build.scala").exists
+  def isProjectRoot(dir: File) = dir != null && new File(dir.getAbsolutePath + File.separatorChar + "build.sbt").exists
   while (dir != null && !isProjectRoot(dir)) dir = dir.getParentFile
   test("ProjectDir (" + dir.getAbsolutePath + ")")(assert(isProjectRoot(dir)))
 
