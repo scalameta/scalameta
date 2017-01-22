@@ -26,12 +26,7 @@ lazy val scalametaRoot = Project(
     val runTests = (test in scalameta in Test).value
     val runDocs = (run in readme in Compile).toTask(" --validate").value
   },
-  publish := {
-    // Other projects are published automatically because we aggregate.
-    val publishDocs = (publish in readme).value
-  },
-  // TODO: The same thing for publishSigned doesn't work.
-  // SBT calls publishSigned on aggregated projects, but ignores everything else.
+  publish := {},
   publishSigned := {},
   console := (console in scalameta in Compile).value
 ) aggregate (
