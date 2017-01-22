@@ -362,6 +362,11 @@ lazy val publishableSettings = Def.settings(
         <name>Denys Shabalin</name>
         <url>http://den.sh</url>
       </developer>
+      <developer>
+        <id>olafurpg</id>
+        <name>Ólafur Páll Geirsson</name>
+        <url>https://geirsson.com/</url>
+      </developer>
     </developers>
   )
 )
