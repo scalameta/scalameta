@@ -570,6 +570,7 @@ object TreeSyntax {
       implicit def syntaxImportee: Syntax[Seq[Importee]] = Syntax {
         case (t: Importee.Name) :: Nil     => s(t)
         case (t: Importee.Wildcard) :: Nil => s(t)
+        case (t: Importee.Rename) :: Nil   => s("{", t, "}")
         case importees                     => s("{ ", r(importees, ", "), " }")
       }
     }

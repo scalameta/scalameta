@@ -495,4 +495,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
     assert(interpolate.show[Syntax] === """q"object ${name} { ..${stats} }"""")
   }
+
+  test("Importee.Rename") {
+    assert(q"import a.{b=>c}".syntax == "import a.{b => c}")
+  }
 }
