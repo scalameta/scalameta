@@ -1,6 +1,6 @@
 import java.io._
 import scala.util.Try
-import org.scalameta.os._
+import org.scalameta.os
 import PgpKeys._
 import UnidocKeys._
 
@@ -193,25 +193,25 @@ lazy val readme = scalatex.ScalatexReadme(
         if (!website.exists) sys.error("failed to generate the scalatex website")
 
         // import the scalatex readme into `repo`
-        val repo = new File(temp.mkdir.getAbsolutePath + File.separator + "scalameta.org")
-        shell.call(s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
+        val repo = new File(os.temp.mkdir.getAbsolutePath + File.separator + "scalameta.org")
+        os.shell.call(s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
         println(s"erasing everything in ${repo.getAbsolutePath}...")
-        repo.listFiles.filter(f => f.getName != ".git").foreach(shutil.rmtree)
+        repo.listFiles.filter(f => f.getName != ".git").foreach(os.shutil.rmtree)
         println(s"importing website from ${website.getAbsolutePath} to ${repo.getAbsolutePath}...")
         new PrintWriter(new File(repo.getAbsolutePath + File.separator + "CNAME")) { write("scalameta.org"); close }
-        website.listFiles.foreach(src => shutil.copytree(src, new File(repo.getAbsolutePath + File.separator + src.getName)))
+        website.listFiles.foreach(src => os.shutil.copytree(src, new File(repo.getAbsolutePath + File.separator + src.getName)))
 
         // commit and push the changes if any
-        shell.call(s"git add -A", cwd = repo.getAbsolutePath)
+        os.shell.call(s"git add -A", cwd = repo.getAbsolutePath)
         val nothingToCommit = "nothing to commit, working directory clean"
         try {
-          val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + git.stableSha()
-          shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
-          shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
-          shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
-          val httpAuthentication = secret.obtain("github").map{ case (username, password) => s"$username:$password@" }.getOrElse("")
+          val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + os.git.stableSha()
+          os.shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
+          os.shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
+          os.shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
+          val httpAuthentication = os.secret.obtain("github").map{ case (username, password) => s"$username:$password@" }.getOrElse("")
           val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
-          shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
+          os.shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
         } catch {
           case ex: Exception if ex.getMessage.contains(nothingToCommit) => println(nothingToCommit)
         }
@@ -255,8 +255,8 @@ lazy val sharedSettings = Def.settings(
 def computePreReleaseVersion(LibrarySeries: String): String = {
   val preReleaseSuffix = {
     import sys.process._
-    val stableSha = Try(git.stableSha()).toOption
-    val commitSubjects = Try(augmentString(shell.check_output("git log -10 --pretty=%s", cwd = ".")).lines.toList).getOrElse(Nil)
+    val stableSha = Try(os.git.stableSha()).toOption
+    val commitSubjects = Try(augmentString(os.shell.check_output("git log -10 --pretty=%s", cwd = ".")).lines.toList).getOrElse(Nil)
     val prNumbers = commitSubjects.map(commitSubject => {
       val Merge = "Merge pull request #(\\d+).*".r
       val Squash = ".*\\(#(\\d+)\\)".r
@@ -290,7 +290,7 @@ def shouldPublishToBintray: Boolean = {
 // They should be published via `publish-signed` and signed by someone from <developers>.
 // In order to publish a release version, change LibraryVersion to be equal to LibrarySeries.
 def shouldPublishToSonatype: Boolean = {
-  if (!secret.obtain("sonatype").isDefined) return false
+  if (!os.secret.obtain("sonatype").isDefined) return false
   if (sys.props("sbt.prohibit.publish") != null) return false
   !LibraryVersion.contains("-")
 }
@@ -328,7 +328,7 @@ lazy val publishableSettings = Def.settings(
       // NOTE: Bintray credentials are automatically loaded by the sbt-bintray plugin
       Nil
     } else if (shouldPublishToSonatype) {
-      secret.obtain("sonatype").map({
+      os.secret.obtain("sonatype").map({
         case (username, password) => Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)
       }).toList
     } else Nil
