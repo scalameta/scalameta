@@ -21,7 +21,8 @@ object SyntaxAnalysis {
     * @return The aggregate sum of all analysis results.
     */
   def run[T](corpus: GenIterable[CorpusFile])(
-      f: CorpusFile => Seq[T]): mutable.Buffer[(CorpusFile, T)] = {
+      f: CorpusFile => Seq[T]
+  ): mutable.Buffer[(CorpusFile, T)] = Phase.run("syntax analysis") {
     val results = new CopyOnWriteArrayList[(CorpusFile, T)]
     val counter = new AtomicInteger()
     val errors = new AtomicInteger()

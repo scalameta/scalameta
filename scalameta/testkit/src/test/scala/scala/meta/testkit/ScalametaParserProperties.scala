@@ -3,6 +3,8 @@ package scala.meta.testkit
 import scala.meta._
 import scala.meta.parsers.Parsed
 
+import org.scalatest.FunSuiteLike
+
 object ScalametaParserProperties {
 
   type ParserBug = Observation[BugKind]
@@ -42,25 +44,41 @@ object ScalametaParserProperties {
       Seq(ParserBug(err.details.getMessage, err.pos.start.line, ParserBroken))
     else Nil
 
-  def runAndPrintAnalysis(): Unit = {
+  def runAnalysis(corpusSize: Int = Int.MaxValue) = {
     val corpus =
       Corpus
         .files(Corpus.fastparse)
-        .take(100) // configure size of experiment
+        .take(corpusSize)
         .toBuffer
         .par
-    val result =
-      SyntaxAnalysis.run[ParserBug](corpus) { file =>
-        file.jFile.parse[Source] match {
-          case Parsed.Success(s) => onParseSuccess(s)
-          case e: Parsed.Error => onParseError(file, e)
-        }
+    SyntaxAnalysis.run[ParserBug](corpus) { file =>
+      file.jFile.parse[Source] match {
+        case Parsed.Success(s) => onParseSuccess(s)
+        case e: Parsed.Error => onParseError(file, e)
       }
+    }
+  }
+
+  def runAndPrintAnalysis(): Unit = {
+    val result = runAnalysis(100)
     val markdown = Observation.markdownTable(result)
     println(markdown)
   }
 
   def main(args: Array[String]): Unit = {
     runAndPrintAnalysis()
+  }
+}
+
+object ScalametaParserPropertyTest extends FunSuiteLike {
+  import ScalametaParserProperties._
+  def main(args: Array[String]): Unit = {
+    val result = runAnalysis()
+    val parserProken = result.count(_._2.kind == ParserBroken)
+    val prettyPrinterBroken = result.count(_._2.kind == PrettyPrinterBroken)
+    println(s"""Parser broken: $parserProken
+               |Pretty printer broken: $prettyPrinterBroken""".stripMargin)
+    assert(parserProken <= 9)
+    assert(prettyPrinterBroken <= 2201)
   }
 }

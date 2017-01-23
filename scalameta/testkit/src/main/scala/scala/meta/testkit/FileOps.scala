@@ -7,6 +7,7 @@ import java.nio.file.Paths
 import geny.Generator
 
 object FileOps {
+  def workingDirectory: File = new File(".")
   def getFile(first: String, str: String*): File =
     Paths.get(first, str: _*).toFile
   def readFile(file: File): String =

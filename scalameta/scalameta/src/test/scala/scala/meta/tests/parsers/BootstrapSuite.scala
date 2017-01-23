@@ -17,6 +17,7 @@ class BootstrapSuite extends ParseSuite {
 
   if (isProjectRoot(dir)) {
     def loop(dir: File): Unit = {
+      if (dir.isDirectory && dir.getName == "target") return
       def bootstrapTest(src: File): Unit = {
         test("tokenize " + src.getAbsolutePath) {
           val tokens = src.tokenize.get
