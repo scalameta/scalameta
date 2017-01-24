@@ -1,8 +1,11 @@
 package scala.meta.testkit
 
 import java.io.File
+import java.net.URL
 
 import geny.Generator
+import org.apache.commons.io.FileUtils
+import org.rauschig.jarchivelib.ArchiverFactory
 
 /** A collection of Scala source files to run [[SyntaxAnalysis]].
   *
@@ -67,33 +70,42 @@ object Corpus {
       ).exists(x.startsWith)
   )
 
-  private def downloadReposTar(url: String): Unit = {
-    import sys.process._
-    // Easier and less awkward than dealing with scala.io.Source
-    Seq("wget", url).!
+  /** If necessary, downloads and extracts the corpus files */
+  private def createReposDir(corpus: Corpus): File = {
+    val name = "repos"
+    val localTarball = FileOps.getFile(s"$name.tar.gz")
+    if (!localTarball.isFile) {
+      downloadReposTar(corpus, destination = localTarball)
+    }
+    val localDirectory = FileOps.getFile("target", name)
+    if (!localDirectory.isDirectory) {
+      extractReposTar(localTarball, destination = FileOps.workingDirectory)
+    }
+    FileOps.getFile("target", name)
   }
 
-  private def extractReposTar(): Unit = {
-    import sys.process._
-    Seq("tar", "xf", "repos.tar.gz").!
+  private def extractReposTar(tarball: File, destination: File): Unit = {
+    Phase.run(s"extract $tarball") {
+      val archiver = ArchiverFactory.createArchiver("tar", "gz")
+      archiver.extract(tarball, destination)
+    }
+  }
+
+  private def downloadReposTar(corpus: Corpus, destination: File): Unit = {
+    Phase.run(s"download ${corpus.url}") {
+      FileUtils.copyURLToFile(new URL(corpus.url), destination)
+    }
   }
 
   /** Downloads the zip file, extracts it and parses into a sequence of [[CorpusFile]].
- *
+    *
     * @param corpus See [[Corpus]].
     * @return A generator of [[CorpusFile]]. Use Generator.take to limit the
     *         size of your experiment and Generator.toBuffer.par to run
     *         analysis using all available cores on the machine.
     */
   def files(corpus: Corpus): Generator[CorpusFile] = {
-
-    if (!FileOps.getFile("repos.tar.gz").isFile) {
-      downloadReposTar(corpus.url)
-    }
-    if (!FileOps.getFile("target", "repos").isDirectory) {
-      extractReposTar()
-    }
-    val repos = FileOps.getFile("target", "repos")
+    val repos = createReposDir(corpus)
     val files = Option(repos.listFiles()).getOrElse {
       throw new IllegalStateException(
         s"${repos.getAbsolutePath} is not a directory! Please delete if it's a file and retry.")

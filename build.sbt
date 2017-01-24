@@ -160,7 +160,12 @@ lazy val testkit = Project(
   base = file("scalameta/testkit")
 ) settings (
   publishableSettings,
-  libraryDependencies += "com.lihaoyi" %% "geny" % "0.1.1",
+  libraryDependencies ++= Seq(
+    "com.lihaoyi" %% "geny" % "0.1.1",
+    // These are used to download and extract a corpus tar.gz
+    "org.rauschig" % "jarchivelib" % "0.7.1",
+    "org.apache.commons" % "commons-io"  % "1.3.2"
+  ),
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
   description := "Testing utilities for scala.meta's metaprogramming APIs"
 ) dependsOn (scalameta)
