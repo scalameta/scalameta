@@ -1,7 +1,6 @@
 -Xms4000m
 -Xmx55g
 -Xss4m
--XX:MaxPermSize=2000m
 -XX:ReservedCodeCacheSize=1024m
 -XX:+TieredCompilation
 -XX:+CMSClassUnloadingEnabled
