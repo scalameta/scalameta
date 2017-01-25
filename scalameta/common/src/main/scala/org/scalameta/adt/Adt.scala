@@ -98,7 +98,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       // step 1: generate boilerplate required by the @adt infrastructure
       mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
       mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[$classRef]"
-      mstats1 += q"$AdtTyperMacrosModule.consistencyCheck[$mname.type]"
+      // mstats1 += q"$AdtTyperMacrosModule.consistencyCheck[$mname.type]"
       anns1 += q"new $AdtMetadataModule.leafClass"
       manns1 += q"new $AdtMetadataModule.leafCompanion"
       parents1 += tq"_root_.scala.Product"
@@ -122,7 +122,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
       // step 1: generate boilerplate required by the @adt infrastructure
       mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$mname.type]"
       mstats1 += q"$AdtTyperMacrosModule.immutabilityCheck[$mname.type]"
-      mstats1 += q"$AdtTyperMacrosModule.consistencyCheck[$mname.type]"
+      // mstats1 += q"$AdtTyperMacrosModule.consistencyCheck[$mname.type]"
       manns1 += q"new $AdtMetadataModule.leafClass"
       mparents1 += tq"_root_.scala.Product"
 

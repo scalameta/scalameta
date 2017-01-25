@@ -1,6 +1,7 @@
 package scala.meta
 package inputs
 
+import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import scala.meta.common._
@@ -35,4 +36,10 @@ object Point {
     def column: Int = offset - input.lineToOffset(line)
     override def toString = s"$offset in $input"
   }
+}
+
+// NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
+// Without this, compilation order may unexpectedly affect compilation success.
+private[meta] trait PointLiftables extends AdtLiftables with InputLiftables {
+  lazy implicit val liftablePoint: u.Liftable[Point] = materializeAdt[Point]
 }

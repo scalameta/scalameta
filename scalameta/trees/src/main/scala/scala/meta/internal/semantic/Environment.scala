@@ -16,9 +16,8 @@ object Environment {
   @none object None extends Environment
 }
 
-// TODO: This unrelated code is here because of the limitation of knownDirectSubclasses.
-// We would like move it to scala/meta/internal/quasiquotes/ast/ReificationMacros.scala where it belongs,
-// but then we have problems with compilation order.
+// NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
+// Without this, compilation order may unexpectedly affect compilation success.
 trait EnvironmentLiftables extends adt.Liftables {
   lazy implicit val liftableEnvironment: u.Liftable[Environment] = materializeAdt[Environment]
 }
