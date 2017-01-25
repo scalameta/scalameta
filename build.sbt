@@ -369,28 +369,6 @@ lazy val publishableSettings = Def.settings(
   )
 )
 
-lazy val mergeSettings: Seq[sbt.Def.Setting[_]] = Def.settings(
-  test in assembly := {},
-  logLevel in assembly := Level.Error,
-  assemblyJarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
-  assemblyOption in assembly ~= { _.copy(includeScala = false) },
-  Keys.`package` in Compile := {
-    val slimJar = (Keys.`package` in Compile).value
-    val fatJar = new File(crossTarget.value + "/" + (assemblyJarName in assembly).value)
-    val _ = assembly.value
-    IO.copy(List(fatJar -> slimJar), overwrite = true)
-    slimJar
-  },
-  packagedArtifact in Compile in packageBin := {
-    val temp = (packagedArtifact in Compile in packageBin).value
-    val (art, slimJar) = temp
-    val fatJar = new File(crossTarget.value + "/" + (assemblyJarName in assembly).value)
-    val _ = assembly.value
-    IO.copy(List(fatJar -> slimJar), overwrite = true)
-    (art, slimJar)
-  }
-)
-
 def exposePaths(projectName: String, config: Configuration) = {
   def uncapitalize(s: String) = if (s.length == 0) "" else { val chars = s.toCharArray; chars(0) = chars(0).toLower; new String(chars) }
   val prefix = "sbt.paths." + projectName + "." + uncapitalize(config.name) + "."
