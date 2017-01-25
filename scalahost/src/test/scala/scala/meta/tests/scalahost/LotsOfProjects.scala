@@ -2,12 +2,10 @@ package scala.meta.tests
 package scalahost
 
 import scala.collection.mutable
+import scala.meta.internal.converters.ConvertException
+import scala.meta.testkit._
 import scala.util.Try
 
-import java.util.concurrent.atomic.AtomicInteger
-import scala.collection.JavaConverters._
-
-import scala.meta.internal.converters.ConvertException
 import org.scalatest.exceptions.TestFailedException
 
 object LotsOfProjects extends ConverterSuite {
@@ -18,7 +16,8 @@ object LotsOfProjects extends ConverterSuite {
       e match {
         case e: ConvertException if e.getMessage.startsWith("unsupported") =>
           s"${e.culprit.getClass.getSimpleName}"
-        case e: TestFailedException if e.getMessage().startsWith("scalac parse err") =>
+        case e: TestFailedException
+            if e.getMessage().startsWith("scalac parse err") =>
           "parse error"
         case e =>
           e.getMessage.lines.take(1).toSeq.mkString
@@ -26,30 +25,29 @@ object LotsOfProjects extends ConverterSuite {
     s"${e.getClass.getSimpleName}: $details"
   }
 
-  def getResults: mutable.Buffer[String] = {
-    val files   = ScalaFile.getAll
-    val counter = new AtomicInteger()
-    val results = new java.util.concurrent.CopyOnWriteArrayList[String]()
-
-    files.toArray.foreach { file =>
-      val code = file.read
-      val n    = counter.incrementAndGet()
-      if (n % 1000 == 0) println(s"$n...")
-      Try(getConvertedMetaTree(code)) match {
-        // Uncomment to investigate a specific error further.
-        //          case scala.util.Failure(e: ConvertException)
-        //              if e.culprit.getClass.getSimpleName == "EmptyTree$" =>
-        //            println(file.githubUrl)
-        //            val culprit = e.culprit.toString.lines.take(1).mkString
-        //            e.printStackTrace()
-        //            results.add(err2message(e))
-        case scala.util.Failure(e) =>
-          results.add(err2message(e))
-        case _ =>
-          results.add("Success")
-      }
+  def handleFile(file: CorpusFile): Seq[String] = {
+    val code = file.read
+    val result = Try(getConvertedMetaTree(code)) match {
+      // Uncomment to investigate a specific error further.
+      //          case scala.util.Failure(e: ConvertException)
+      //              if e.culprit.getClass.getSimpleName == "EmptyTree$" =>
+      //            println(file.githubUrl)
+      //            val culprit = e.culprit.toString.lines.take(1).mkString
+      //            e.printStackTrace()
+      //            results.add(err2message(e))
+      case scala.util.Failure(e) =>
+        err2message(e)
+      case _ =>
+        "Success"
     }
-    results.asScala
+    Seq(result)
+  }
+
+  def getResults: mutable.Buffer[String] = {
+    val corpus = Corpus
+      .files(Corpus.fastparse.copy(filter = _ => true))
+      .toBuffer
+    SyntaxAnalysis.run(corpus)(handleFile).map(_._2)
   }
 
   def printResults(results: mutable.Buffer[String]): Unit = {

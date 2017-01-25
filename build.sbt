@@ -165,7 +165,7 @@ lazy val scalahost = Project(
   exposePaths("scalahost", Test),
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   libraryDependencies += "com.lihaoyi" %% "geny" % "0.1.0" % "test"
-) dependsOn (scalameta)
+) dependsOn (scalameta, testkit % Test)
 
 lazy val testkit = Project(
   id   = "testkit",
