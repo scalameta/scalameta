@@ -25,12 +25,14 @@ lazy val scalametaRoot = Project(
   test := (Def.taskDyn {
     if (scalaVersion.value.startsWith("2.11")) {
       Def.task {
-        val runTests = (test in scalameta in Test).value
+        val runScalametaTests = (test in scalameta in Test).value
+        val runScalahostTests = (test in scalahost in Test).value
         val runDocs = (run in readme in Compile).toTask(" --validate").value
       }
     } else {
       Def.task {
-        val runTests = (test in scalameta in Test).value
+        val runScalametaTests = (test in scalameta in Test).value
+        val runScalahostTests = (test in scalahost in Test).value
         // NOTE: scalatex-sbt-plugin 0.3.5 doesn't work with Scala 2.12
         // (https://github.com/lihaoyi/Scalatex/pull/43)
         // scalatex-sbt-plugin 0.3.7 does work with Scala 2.12, but incorrectly handles dependsOn
