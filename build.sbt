@@ -151,6 +151,7 @@ lazy val scalahost = Project(
 ) settings (
   publishableSettings,
   description := "Scala.meta's connector to the Scala compiler",
+  crossVersion := CrossVersion.full,
   exposePaths("scalahost", Test),
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   libraryDependencies += "com.lihaoyi" %% "geny" % "0.1.0" % "test"
