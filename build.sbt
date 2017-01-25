@@ -48,6 +48,7 @@ lazy val scalametaRoot = Project(
   inputs,
   parsers,
   quasiquotes,
+  scalahost,
   scalameta,
   testkit,
   tokenizers,
@@ -154,6 +155,17 @@ lazy val scalameta = Project(
   description := "Scala.meta's metaprogramming APIs",
   exposePaths("scalameta", Test)
 ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline)
+
+lazy val scalahost = Project(
+  id   = "scalahost",
+  base = file("scalahost")
+) settings (
+  publishableSettings,
+  description := "Scala.meta's connector to the Scala compiler",
+  exposePaths("scalahost", Test),
+  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+  libraryDependencies += "com.lihaoyi" %% "geny" % "0.1.0" % "test"
+) dependsOn (scalameta)
 
 lazy val testkit = Project(
   id   = "testkit",
