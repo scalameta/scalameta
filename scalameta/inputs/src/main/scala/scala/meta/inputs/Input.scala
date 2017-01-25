@@ -2,6 +2,7 @@ package scala.meta
 package inputs
 
 import java.nio.charset.Charset
+import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.data._
 import org.scalameta.invariants._
 import scala.meta.common._
@@ -81,4 +82,14 @@ object Input {
   implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String(_))
   implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] = Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
   implicit val fileToInput: Convert[java.io.File, Input] = Convert(f => Input.File(f, Charset.forName("UTF-8")))
+}
+
+// NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
+// Without this, compilation order may unexpectedly affect compilation success.
+private[meta] trait InputLiftables extends AdtLiftables {
+  implicit lazy val liftInput: u.Liftable[Input] = u.Liftable[Input] { input =>
+    import u._
+    val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
+    q"_root_.scala.meta.inputs.Input.String(${new String(input.chars)})"
+  }
 }

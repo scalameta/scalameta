@@ -1277,6 +1277,8 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
           (gvdefs.zip(lvdefs).map {
             case (gvdef @ g.ValDef(_, _, tpt, _), g.ValDef(_, _, _, rhs)) =>
               copyValDef(gvdef)(tpt = tpt, rhs = rhs)
+            case _ =>
+              unreachable
           }, bodyWithSecondaryCtors)
         case (Nil, body) if body.forall(isInterfaceMember) =>
           (Nil, body)

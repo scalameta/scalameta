@@ -1,6 +1,7 @@
 package scala.meta
 package inputs
 
+import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import scala.meta.common._
@@ -35,4 +36,10 @@ object Position {
       new Range(input, Point.Offset(input, start), Point.Offset(input, end))
     }
   }
+}
+
+// NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
+// Without this, compilation order may unexpectedly affect compilation success.
+private[meta] trait PositionLiftables extends AdtLiftables with InputLiftables with PointLiftables {
+  lazy implicit val liftablePosition: u.Liftable[Position] = materializeAdt[Position]
 }

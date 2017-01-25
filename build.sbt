@@ -5,7 +5,7 @@ import PgpKeys._
 import UnidocKeys._
 
 lazy val ScalaVersion = "2.11.8"
-lazy val ScalaVersions = Seq("2.11.8", "2.12.0")
+lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
 lazy val LibrarySeries = "1.6.0"
 lazy val LibraryVersion = computePreReleaseVersion(LibrarySeries)
 
@@ -77,7 +77,8 @@ lazy val inputs = Project(
   base = file("scalameta/inputs")
 ) settings (
   publishableSettings,
-  description := "Scala.meta's APIs for source code in textual format"
+  description := "Scala.meta's APIs for source code in textual format",
+  enableMacros
 ) dependsOn (common)
 
 lazy val parsers = Project(

@@ -142,27 +142,14 @@ object Token {
   implicit def showSyntax[T <: Token](implicit dialect: Dialect, options: Options): Syntax[T] = TokenSyntax.apply[T](dialect, options)
 }
 
-// NOTE: We have this unrelated code here, because of how materializeAdt works.
-// TODO: Revisit this since we now have split everything into separate projects.
-//
-// Due to an unfortunate limitation of knownDirectSubclasses,
-// all macro applications that depend on that API
-// must come after the classes that they call the API on.
-//
-// That's why if we put TokenLiftables elsewhere, we might run into troubles
-// depending on how the file and its enclosing directories are called.
-// To combat that, we have TokenLiftables right here, guaranteeing that there won't be problems
-// if someone wants to refactor/rename something later.
-private[meta] trait TokenLiftables extends AdtLiftables {
+// NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
+// Without this, compilation order may unexpectedly affect compilation success.
+private[meta] trait TokenLiftables extends AdtLiftables with InputLiftables {
   val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
 
   import c.universe._
   private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
-
-  implicit lazy val liftInput: Liftable[Input] = Liftable[Input] { input =>
-    q"_root_.scala.meta.inputs.Input.String(${new String(input.chars)})"
-  }
 
   implicit lazy val liftBigInt: Liftable[BigInt] = Liftable[BigInt] { v =>
     q"_root_.scala.math.BigInt(${v.bigInteger.toString})"
