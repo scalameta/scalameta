@@ -10,6 +10,7 @@ build:
       - COURSIER_CACHE=/drone/cache/coursier
     commands:
       - ./bin/checkCLA.sh
+      - ./scalafmt --test
       - sbt -Dsbt.ivy.home=/drone/cache/ivy2 ++$SCALA_VERSION test doc "scalahost/test:runMain scala.meta.tests.scalahost.LotsOfProjects" "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest"
   publish:
     image: ensime/ensime:v2.x-cache

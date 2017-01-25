@@ -9,8 +9,7 @@ import scala.compat.Platform.EOL
 import scala.meta.prettyprinters._
 import scala.{meta => m}
 
-trait ToMtree {
-  self: Converter =>
+trait ToMtree { self: Converter =>
 
   protected implicit class XtensionGtreeToMtree(gtree: g.Tree) {
     def toMtree[T <: m.Tree: ClassTag]: T = self.toMtree[T](gtree)

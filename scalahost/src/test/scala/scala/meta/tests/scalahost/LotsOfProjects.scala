@@ -16,8 +16,7 @@ object LotsOfProjects extends ConverterSuite {
       e match {
         case e: ConvertException if e.getMessage.startsWith("unsupported") =>
           s"${e.culprit.getClass.getSimpleName}"
-        case e: TestFailedException
-            if e.getMessage().startsWith("scalac parse err") =>
+        case e: TestFailedException if e.getMessage().startsWith("scalac parse err") =>
           "parse error"
         case e =>
           e.getMessage.lines.take(1).toSeq.mkString

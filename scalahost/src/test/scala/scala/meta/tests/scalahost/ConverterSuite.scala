@@ -77,15 +77,15 @@ trait ConverterSuite extends FunSuiteLike {
                   true
                 case (q"{ $xstat }", q"$ystat") =>
                   loop(xstat, ystat)
-                case (ctor"$xctor(...${ Seq() })", ctor"$yctor(...${ Seq(Seq()) })") =>
+                case (ctor"$xctor(...${Seq()})", ctor"$yctor(...${Seq(Seq())})") =>
                   loop(xctor, yctor)
-                case (ctor"$xctor(...${ Seq(Seq()) })", ctor"$yctor(...${ Seq() })") =>
+                case (ctor"$xctor(...${Seq(Seq())})", ctor"$yctor(...${Seq()})") =>
                   loop(xctor, yctor)
                 case (p"$xpat @ _", p"$ypat") =>
                   loop(xpat, ypat)
                 case (p"$xlhs @ (_: $xtpe)", p"$ylhs: $ytpe") =>
                   loop(xlhs, ylhs) && loop(xtpe, ytpe)
-                case (t"${ Some(xtpe) } {}", t"$ytpe") =>
+                case (t"${Some(xtpe)} {}", t"$ytpe") =>
                   loop(xtpe, ytpe)
                 case (t"$xop[$xlhs, $xrhs]", t"$ylhs $yop $yrhs") =>
                   loop(xlhs, ylhs) && loop(xop, yop) && loop(xrhs, yrhs)
