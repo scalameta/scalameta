@@ -22,24 +22,11 @@ lazy val scalametaRoot = Project(
   packagedArtifacts := Map.empty,
   unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject,
   aggregate in test := false,
-  test := (Def.taskDyn {
-    if (scalaVersion.value.startsWith("2.11")) {
-      Def.task {
-        val runScalametaTests = (test in scalameta in Test).value
-        val runScalahostTests = (test in scalahost in Test).value
-        val runDocs = (run in readme in Compile).toTask(" --validate").value
-      }
-    } else {
-      Def.task {
-        val runScalametaTests = (test in scalameta in Test).value
-        val runScalahostTests = (test in scalahost in Test).value
-        // NOTE: scalatex-sbt-plugin 0.3.5 doesn't work with Scala 2.12
-        // (https://github.com/lihaoyi/Scalatex/pull/43)
-        // scalatex-sbt-plugin 0.3.7 does work with Scala 2.12, but incorrectly handles dependsOn
-        // (https://github.com/lihaoyi/Scalatex/issues/41)
-      }
-    }
-  }).value,
+  test := {
+    val runScalametaTests = (test in scalameta in Test).value
+    val runScalahostTests = (test in scalahost in Test).value
+    val runDocs = (run in readme in Compile).toTask(" --validate").value
+  },
   publish := {},
   publishSigned := {},
   console := (console in scalameta in Compile).value
@@ -191,54 +178,44 @@ lazy val readme = scalatex.ScalatexReadme(
   source = "Readme"
 ) settings (
   exposePaths("readme", Runtime),
+  scalaVersion := (scalaVersion in scalameta).value,
+  crossScalaVersions := ScalaVersions,
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-  // NOTE: workaround for https://github.com/lihaoyi/Scalatex/issues/25
-  dependencyOverrides += "com.lihaoyi" %% "scalaparse" % "0.3.1",
   sources in Compile ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
   watchSources ++= baseDirectory.value.listFiles.toList,
-  publish := (Def.taskDyn {
-    // NOTE: scalatex-sbt-plugin 0.3.5 doesn't work with Scala 2.12
-    // (https://github.com/lihaoyi/Scalatex/pull/43)
-    // scalatex-sbt-plugin 0.3.7 does work with Scala 2.12, but incorrectly handles dependsOn
-    // (https://github.com/lihaoyi/Scalatex/issues/41)
-    if (scalaVersion.value.startsWith("2.11")) {
-      Def.task {
-        if (sys.props("sbt.prohibit.publish") != null) sys.error("Undefined publishing strategy")
+  publish := {
+    if (sys.props("sbt.prohibit.publish") != null) sys.error("Undefined publishing strategy")
 
-        // generate the scalatex readme into `website`
-        val website = new File(target.value.getAbsolutePath + File.separator + "scalatex")
-        if (website.exists) website.delete
-        val _ = (run in Compile).toTask(" --validate").value
-        if (!website.exists) sys.error("failed to generate the scalatex website")
+    // generate the scalatex readme into `website`
+    val website = new File(target.value.getAbsolutePath + File.separator + "scalatex")
+    if (website.exists) website.delete
+    val _ = (run in Compile).toTask(" --validate").value
+    if (!website.exists) sys.error("failed to generate the scalatex website")
 
-        // import the scalatex readme into `repo`
-        val repo = new File(os.temp.mkdir.getAbsolutePath + File.separator + "scalameta.org")
-        os.shell.call(s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
-        println(s"erasing everything in ${repo.getAbsolutePath}...")
-        repo.listFiles.filter(f => f.getName != ".git").foreach(os.shutil.rmtree)
-        println(s"importing website from ${website.getAbsolutePath} to ${repo.getAbsolutePath}...")
-        new PrintWriter(new File(repo.getAbsolutePath + File.separator + "CNAME")) { write("scalameta.org"); close }
-        website.listFiles.foreach(src => os.shutil.copytree(src, new File(repo.getAbsolutePath + File.separator + src.getName)))
+    // import the scalatex readme into `repo`
+    val repo = new File(os.temp.mkdir.getAbsolutePath + File.separator + "scalameta.org")
+    os.shell.call(s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
+    println(s"erasing everything in ${repo.getAbsolutePath}...")
+    repo.listFiles.filter(f => f.getName != ".git").foreach(os.shutil.rmtree)
+    println(s"importing website from ${website.getAbsolutePath} to ${repo.getAbsolutePath}...")
+    new PrintWriter(new File(repo.getAbsolutePath + File.separator + "CNAME")) { write("scalameta.org"); close }
+    website.listFiles.foreach(src => os.shutil.copytree(src, new File(repo.getAbsolutePath + File.separator + src.getName)))
 
-        // commit and push the changes if any
-        os.shell.call(s"git add -A", cwd = repo.getAbsolutePath)
-        val nothingToCommit = "nothing to commit, working directory clean"
-        try {
-          val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + os.git.stableSha()
-          os.shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
-          os.shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
-          os.shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
-          val httpAuthentication = os.secret.obtain("github").map{ case (username, password) => s"$username:$password@" }.getOrElse("")
-          val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
-          os.shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
-        } catch {
-          case ex: Exception if ex.getMessage.contains(nothingToCommit) => println(nothingToCommit)
-        }
-      }
-    } else {
-      Def.task {}
+    // commit and push the changes if any
+    os.shell.call(s"git add -A", cwd = repo.getAbsolutePath)
+    val nothingToCommit = "nothing to commit, working directory clean"
+    try {
+      val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + os.git.stableSha()
+      os.shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
+      os.shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
+      os.shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
+      val httpAuthentication = os.secret.obtain("github").map{ case (username, password) => s"$username:$password@" }.getOrElse("")
+      val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
+      os.shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
+    } catch {
+      case ex: Exception if ex.getMessage.contains(nothingToCommit) => println(nothingToCommit)
     }
-  }).value,
+  },
   // TODO: doesn't work at the moment, see https://github.com/sbt/sbt-pgp/issues/42
   publishSigned := publish.value,
   publishLocal := {},
