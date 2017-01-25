@@ -536,6 +536,9 @@ trait ToMtree { self: Converter =>
               case l.VarParam() =>
                 m.Mod.VarParam()
 
+              case l.Inline() =>
+                m.Mod.Inline()
+
               // ============ ODDS & ENDS ============
 
               case l.Importer(lref, limportees) =>

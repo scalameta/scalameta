@@ -1340,6 +1340,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
   case class Lazy()                    extends Modifier
   case class ValParam()                extends Modifier
   case class VarParam()                extends Modifier
+  case class Inline()                  extends Modifier
 
   object Modifiers {
     def apply(tree: g.MemberDef): List[l.Modifier] = {
@@ -1384,12 +1385,34 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
         syntactically.orElse(semantically)
       }
 
+      object InlineExtractor {
+        def unapply(tree: g.Tree): Option[l.Inline] = tree match {
+          case g.Apply(Select(New(TypeTree(tpt)), _), Nil)
+              if tpt.typeSymbol == rootMirror.staticClass("scala.meta.internal.inline.inline") =>
+            Some(l.Inline())
+          case _ => None
+        }
+      }
+
+      // We have to keep this separate from annots
+      // as we don't want it wrapped in Annotation()
+      val linlineMods: List[l.Modifier] = {
+        tree.mods.annotations
+          .collect({
+            case InlineExtractor(i) => i
+          })
+          .headOption
+          .toList
+      }
+
       val lannotationMods: List[l.Modifier] = {
-        val trimmedAnnots = tree.mods.annotations.map({
-          case tree @ g.Apply(_: g.Apply, _) => tree
-          case g.Apply(tpt, Nil)             => tpt
-          case annot                         => annot
-        })
+        val trimmedAnnots = tree.mods.annotations
+          .filter(InlineExtractor.unapply(_).isEmpty)
+          .map({
+            case tree @ g.Apply(_: g.Apply, _) => tree
+            case g.Apply(tpt, Nil)             => tpt
+            case annot                         => annot
+          })
         trimmedAnnots.map(Annotation.apply)
       }
 
@@ -1444,7 +1467,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
         lmods.toList
       }
 
-      val result = lannotationMods ++ laccessQualifierMods ++ lotherMods ++ lvalVarParamMods
+      val result = linlineMods ++ lannotationMods ++ laccessQualifierMods ++ lotherMods ++ lvalVarParamMods
 
       // NOTE: we can't discern `class C(x: Int)` and `class C(private[this] val x: Int)`
       // so let's err on the side of the more popular option

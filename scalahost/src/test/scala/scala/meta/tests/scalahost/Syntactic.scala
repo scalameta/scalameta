@@ -280,4 +280,8 @@ class Syntactic extends ConverterSuite {
   syntactic("def add(a: Int)(implicit z: Int = 0) = a + z")
   syntactic("def f(x: => T) = ???")
   syntactic("def f(x: Int*) = ???")
+
+  // TODO: Uncomment once syntactic support inline
+  // https://github.com/scalameta/paradise/issues/150
+  //syntactic("inline def apply(a: Any) = meta { ??? }")
 }
