@@ -18,6 +18,9 @@ import scala.meta.internal.ast.Helpers._
   def pos: Position
   def tokens(implicit dialect: Dialect): Tokens
 
+  // TODO have a proper Success/Failure result type?
+  def validate(implicit dialect: Dialect): Seq[String] = Nil
+
   final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   final override def hashCode: Int = System.identityHashCode(this)
@@ -377,13 +380,11 @@ object Defn {
     // TODO: hardcoded in the @ast macro, find out a better way
     // require(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
 
-    // TODO this doesn't work because the Dialect in implicit
-    // scope is the dialect of the host Scala environment
-    // (i.e. Scala211), not the parser's dialect.
-    //require (
-    //  implicitly[Dialect].allowTraitParameters ||
-    //    (ctor.mods.isEmpty && ctor.paramss.isEmpty)
-    //)
+    override def validate(implicit dialect: Dialect): Seq[String] = {
+      if (!dialect.allowTraitParameters && (ctor.mods.nonEmpty || ctor.paramss.nonEmpty))
+        Seq("Trait parameters are not allowed in this dialect")
+      else Nil
+    }
   }
   @ast class Object(mods: Seq[Mod],
                     name: Term.Name,

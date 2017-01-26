@@ -40,6 +40,8 @@ class DottySuite extends ParseSuite {
   test("trait parameters are allowed") {
     val tree = dialects.Dotty("trait Foo(bar: Int)").parse[Stat].get
     assert(tree.syntax === "trait Foo(bar: Int)")
+    assert(tree.validate(dialects.Dotty).isEmpty)
+    assert(tree.validate(dialects.Scala211).nonEmpty)
   }
 
   test("view bounds not allowed") {
