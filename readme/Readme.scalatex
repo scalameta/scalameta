@@ -17,7 +17,8 @@
 
   @p
     With scala.meta, we are building a community of next-generation tooling for Scala.
-    @lnk("Codacy", "https://codacy.com/")'s Scala engine and @lnk("Scalafmt", "http://scalafmt.org")
+    @lnk("Codacy", "https://codacy.com/")'s Scala engine, @lnk("Scalafmt", "http://scalafmt.org")
+    and @lnk("Scalafix", "https://github.com/scalacenter/scalafix")
     take advantage of our unique features and deliver user experiences
     that have been unreachable for the most of the traditional Scala tools.
 
@@ -107,7 +108,8 @@
       Our first priority is to come up with an API that will provide
       functionality to perform typechecking, name resolution, implicit inference, etc.
       It is crucial to fully model the language and
-      achieve feature parity with scala.reflect.
+      achieve feature parity with scala.reflect. Visit @link("#604", "https://github.com/scalameta/scalameta/issues/604")
+      to check out our roadmap and provide feedback.
 
     @p
       @b
