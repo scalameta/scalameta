@@ -56,7 +56,13 @@ object TreeStructure {
             case Ident("-") => true
             case _ => false
           }
-          s(x.tokens.filter(isRelevantToken _).map(_.show[Syntax]).mkString)
+          def showToken(tok: Token) = tok match {
+            case Constant.Long(v) => Show.Str(v.toString + "L")
+            case Constant.Float(v) => Show.Str(v.toString + "f")
+            case Constant.Double(v) => Show.Str(v.toString + "d")
+            case _ => tok.show[Syntax]
+          }
+          s(x.tokens.filter(isRelevantToken _).map(showToken _).mkString)
         case x =>
           default
       }

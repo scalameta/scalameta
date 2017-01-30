@@ -253,11 +253,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(templStat("0").show[Syntax] === "0")
     assert(templStat("0l").show[Syntax] === "0L")
     assert(templStat("0L").show[Syntax] === "0L")
-    assert(templStat("0f").show[Syntax] === "0.0F")
-    assert(templStat("0F").show[Syntax] === "0.0F")
-    assert(templStat("0.0").show[Syntax] === "0.0")
-    assert(templStat("0d").show[Syntax] === "0.0")
-    assert(templStat("0D").show[Syntax] === "0.0")
+    assert(templStat("0f").show[Syntax] === "0.0f")
+    assert(templStat("0F").show[Syntax] === "0.0f")
+    assert(templStat("0.0").show[Syntax] === "0.0d")
+    assert(templStat("0d").show[Syntax] === "0.0d")
+    assert(templStat("0D").show[Syntax] === "0.0d")
     assert(templStat("'0'").show[Syntax] === "'0'")
     assert(templStat("\"0\"").show[Syntax] === "\"0\"")
     assert(templStat("'zero").show[Syntax] === "'zero")
@@ -498,5 +498,27 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("Importee.Rename") {
     assert(q"import a.{b=>c}".syntax == "import a.{b => c}")
+  }
+
+  test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'") {
+    val longLiterals = """foo(1l, 1L)""".parse[Stat].get.structure
+    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit(1L), Lit(1L)))"""
+    assert(longLiterals.equals(expectation))
+    assert(q"val x = 1l".structure == q"val x = 1L".structure)
+  }
+
+  test("show[Structure] should lowercase float literals suffix: '0.01F' -> '0.01f'") {
+    val floatLiterals = """foo(0.01f, 0.01F)""".parse[Stat].get.structure
+    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit(0.01f), Lit(0.01f)))"""
+    assert(floatLiterals.equals(expectation))
+    assert(q"val x = 1f".structure == q"val x = 1F".structure)
+  }
+
+  test("show[Structure] should lowercase double literals suffix: '0.01D' -> '0.01d'") {
+    val doubleLiterals = """foo(0.02d, 0.02D, 0.02)""".parse[Stat].get.structure
+    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit(0.02d), Lit(0.02d), Lit(0.02d)))"""
+    assert(doubleLiterals.equals(expectation))
+    assert(q"val x = 1d".structure == q"val x = 1D".structure)
+    assert(q"val x = 1d".structure == q"val x = 1.0".structure)
   }
 }
