@@ -1,5 +1,6 @@
 package scala.meta.tests
 package scalahost
+package converters
 
 // NOTE: a lot of these tests are taken from https://github.com/liufengyun/eden/blob/master/src/test/scala/dotty/eden/UntpdSuite.scala
 class Syntactic extends ConverterSuite {

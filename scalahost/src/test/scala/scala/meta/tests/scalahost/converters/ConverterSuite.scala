@@ -1,5 +1,6 @@
 package scala.meta.tests
 package scalahost
+package converters
 
 import scala.collection.immutable.Seq
 import scala.{meta => m}
