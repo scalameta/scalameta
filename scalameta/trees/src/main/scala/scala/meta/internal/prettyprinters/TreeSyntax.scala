@@ -414,7 +414,12 @@ object TreeSyntax {
         case t: Defn.Var       => s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs.map(s(_)).getOrElse(s(kw("_"))))
         case t: Defn.Type      => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparams, " ", kw("="), " ", t.body)
         case t: Defn.Class     => s(w(t.mods, " "), kw("class"), " ", t.name, t.tparams, w(" ", t.ctor, t.ctor.mods.nonEmpty), templ(t.templ))
-        case t: Defn.Trait     => s(w(t.mods, " "), kw("trait"), " ", t.name, t.tparams, templ(t.templ))
+        case t: Defn.Trait     =>
+          if (dialect.allowTraitParameters || t.ctor.mods.isEmpty) {
+            s(w(t.mods, " "), kw("trait"), " ", t.name, t.tparams, w(" ", t.ctor, t.ctor.mods.nonEmpty), templ(t.templ))
+          } else {
+            throw new UnsupportedOperationException(s"$dialect doesn't support trait parameters")
+          }
         case t: Defn.Object    => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
         case t: Defn.Def       => s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
         case t: Defn.Macro     => s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " ", kw("="), " ", kw("macro"), " ", t.body)
