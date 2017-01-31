@@ -31,7 +31,7 @@ class XtensionTreeOpsTest extends FunSuite {
 
   test("parents") {
     val lit: Tree = q"val x = { 2 + 3 }".find(_.equal[Structural](q"3")).get
-    assert(lit.parents.length == 3)
+    assert(lit.ancestors.length == 3)
   }
 
 }
