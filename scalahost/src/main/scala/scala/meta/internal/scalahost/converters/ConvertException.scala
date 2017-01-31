@@ -1,5 +1,6 @@
 package scala.meta
 package internal
+package scalahost
 package converters
 
 import org.scalameta.data._
