@@ -78,11 +78,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     }
     def copySubtree(subtree: c.Tree, subtp: c.Type) = {
       val tempName = c.freshName(TermName("copy" + fname.toString.capitalize))
-      q"""
-        val $tempName = $subtree.privateCopy(prototype = $subtree, parent = this).asInstanceOf[$subtp]
-        if (this.privatePrototype.isTypechecked != this.isTypechecked) $tempName.withTypechecked(this.isTypechecked)
-        else $tempName
-      """
+      q"$subtree.privateCopy(prototype = $subtree, parent = this).asInstanceOf[$subtp]"
     }
     f.tpe.finalResultType match {
       case AnyTpe(tpe) => q"()"

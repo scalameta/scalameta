@@ -252,7 +252,7 @@ object Helpers {
       case Type.Placeholder(bounds) => Pat.Type.Placeholder(bounds)
       case tpe: Lit => tpe
     }
-    loop(tpe.require[Type]).withTypechecked(tpe.isTypechecked)
+    loop(tpe.require[Type])
   }
 
   def pattpeToTpe(pattpe: Pat.Type): Type = {
@@ -276,7 +276,7 @@ object Helpers {
       case Pat.Type.Placeholder(bounds) => Type.Placeholder(bounds)
       case tpe: Lit => tpe
     }
-    loop(pattpe.require[Pat.Type]).withTypechecked(pattpe.isTypechecked)
+    loop(pattpe.require[Pat.Type])
   }
 
   def tpeToCtorref(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
@@ -288,28 +288,22 @@ object Helpers {
           else None
         }
       }
-      def merge(tpe: Type.Name, ctor: Ctor.Name): Ctor.Name = {
-        ctor.copy(value = tpe.value).inheritAttrs(ctor)
-      }
       tpe match {
         case tpe @ Type.Name(value) =>
-          merge(tpe, ctor)
+          ctor.copy(value = tpe.value)
         case tpe =>
-          val result = tpe match {
-            case Type.Select(qual, tpe @ Type.Name(value)) => Ctor.Ref.Select(qual, merge(tpe, ctor))
-            case Type.Project(qual, tpe @ Type.Name(value)) => Ctor.Ref.Project(qual, merge(tpe, ctor))
+          tpe match {
+            case Type.Select(qual, tpe @ Type.Name(value)) => Ctor.Ref.Select(qual, ctor.copy(value = tpe.value))
+            case Type.Project(qual, tpe @ Type.Name(value)) => Ctor.Ref.Project(qual, ctor.copy(value = tpe.value))
             case Type.Function(Types(params), ret) => Term.ApplyType(Ctor.Ref.Function(ctor), params :+ ret)
             case Type.Annotate(tpe, annots) => Term.Annotate(loop(tpe, ctor), annots)
             case Type.Apply(tpe, args) => Term.ApplyType(loop(tpe, ctor), args)
             case Type.ApplyInfix(lhs, op, rhs) => Term.ApplyType(loop(op, ctor), List(lhs, rhs))
             case _ => unreachable(debug(tpe0, tpe0.show[Structure], tpe, tpe.show[Structure]))
           }
-          val x: scala.meta.internal.semantic.TypingLike = ctor.typing
-          val y: Ctor.Call = result.withAttrs(x: scala.meta.internal.semantic.TypingLike)
-          y
       }
     }
-    loop(tpe.require[Type], ctor.require[Ctor.Name]).withTypechecked(tpe.isTypechecked)
+    loop(tpe.require[Type], ctor.require[Ctor.Name])
   }
 
   def arrayClass(clazz: Class[_], rank: Int): Class[_] = {
