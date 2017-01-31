@@ -162,11 +162,27 @@ lazy val scalahost = Project(
   base = file("scalahost")
 ) settings (
   publishableSettings,
+  mergeSettings,
   description := "Scala.meta's connector to the Scala compiler",
   crossVersion := CrossVersion.full,
+  unmanagedSourceDirectories in Compile += {
+    // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
+    // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
+    // Unfortunately, it only includes directories like "scala_2.11" or "scala_2.12",
+    // not "scala_2.11.8" or "scala_2.12.1" that we need.
+    // That's why we have to work around here.
+    val base = (sourceDirectory in Compile).value
+    base / ("scala-" + scalaVersion.value)
+  },
   exposePaths("scalahost", Test),
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-  libraryDependencies += "com.lihaoyi" %% "geny" % "0.1.0" % "test"
+  scalacOptions in Test := {
+    val defaultValue = (scalacOptions in Test).value
+    val scalahostJar = (Keys.`package` in Compile).value
+    System.setProperty("sbt.paths.scalahost.compile.jar", scalahostJar.getAbsolutePath)
+    val addPlugin = "-Xplugin:" + scalahostJar.getAbsolutePath
+    defaultValue ++ Seq("-Jdummy=" + scalahostJar.lastModified)
+  }
 ) dependsOn (scalameta, testkit % Test)
 
 lazy val testkit = Project(
@@ -267,6 +283,29 @@ lazy val sharedSettings = Def.settings(
   parallelExecution in Test := false, // hello, reflection sync!!
   logBuffered := false,
   triggeredMessage in ThisBuild := Watched.clearWhenTriggered
+)
+
+lazy val mergeSettings = Def.settings(
+  sharedSettings,
+  test in assembly := {},
+  logLevel in assembly := Level.Error,
+  assemblyJarName in assembly := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
+  assemblyOption in assembly ~= { _.copy(includeScala = false) },
+  Keys.`package` in Compile := {
+    val slimJar = (Keys.`package` in Compile).value
+    val fatJar  = new File(crossTarget.value + "/" + (assemblyJarName in assembly).value)
+    val _       = assembly.value
+    IO.copy(List(fatJar -> slimJar), overwrite = true)
+    slimJar
+  },
+  packagedArtifact in Compile in packageBin := {
+    val temp           = (packagedArtifact in Compile in packageBin).value
+    val (art, slimJar) = temp
+    val fatJar         = new File(crossTarget.value + "/" + (assemblyJarName in assembly).value)
+    val _              = assembly.value
+    IO.copy(List(fatJar -> slimJar), overwrite = true)
+    (art, slimJar)
+  }
 )
 
 def computePreReleaseVersion(LibrarySeries: String): String = {
