@@ -51,6 +51,7 @@ lazy val common = Project(
   base = file("scalameta/common")
 ) settings (
   publishableSettings,
+  libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.3",
   description := "Bag of private and public helpers used in scala.meta's APIs and implementations",
   enableMacros
 )
