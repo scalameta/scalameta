@@ -166,16 +166,22 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tpe("Foo | Bar").show[Syntax] === "Foo | Bar")
   }
 
-  test("and types - Dotty") {
+  test("and types") {
     val Scala211 = null // TODO: #389
     import scala.meta.dialects.Dotty
     assert(tpe("Foo & Bar").show[Syntax] === "Foo & Bar")
   }
 
-  test("or types - Dotty") {
+  test("or types") {
     val Scala211 = null // TODO: #389
     import scala.meta.dialects.Dotty
     assert(tpe("Foo | Bar").show[Syntax] === "Foo | Bar")
+  }
+
+  test("trait parameters") {
+    val Scala211 = null // TODO: #389
+    import scala.meta.dialects.Dotty
+    assert(Dotty(q"trait T(a: Int)").syntax === "trait T(a: Int)")
   }
 
   test("packages") {
