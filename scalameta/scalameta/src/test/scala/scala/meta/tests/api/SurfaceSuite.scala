@@ -80,6 +80,16 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.quasiquotes
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
+      |scala.meta.semantic
+      |scala.meta.semantic.v1 *
+      |scala.meta.semantic.v1.Completed *
+      |scala.meta.semantic.v1.Completed.Error *
+      |scala.meta.semantic.v1.Completed.Success *
+      |scala.meta.semantic.v1.Database *
+      |scala.meta.semantic.v1.Location *
+      |scala.meta.semantic.v1.Mirror
+      |scala.meta.semantic.v1.SemanticException
+      |scala.meta.semantic.v1.Symbol
       |scala.meta.tokenizers
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException
@@ -132,6 +142,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Dialect.apply(scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
       |* scala.meta.Pat.Type.tpe: scala.meta.Type
+      |* scala.meta.Ref(implicit scala.meta.semantic.v1.Mirror).symbol: scala.meta.semantic.v1.Symbol
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit

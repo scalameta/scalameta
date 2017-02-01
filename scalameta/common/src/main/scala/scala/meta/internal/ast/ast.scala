@@ -28,18 +28,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       def abbrevName = fullName.stripPrefix("scala.meta.")
       def is(abbrev: String) = abbrevName == abbrev
       def isQuasi = cdef.name.toString == "Quasi"
-      def isName = is("Name.Anonymous") || is("Name.Indeterminate") || is("Term.Name") || is("Type.Name") || is("Ctor.Ref.Name")
-      def isLit = !isQuasi && abbrevName.startsWith("Lit")
-      def isCtorRef = !isQuasi && abbrevName.startsWith("Ctor.Ref")
-      def isCtorCall = !isQuasi && abbrevName.startsWith("Ctor.Call")
-      def isCtorName = !isQuasi && abbrevName.startsWith("Ctor.Ref.Name")
-      def looksLikeTermButNotTerm = is("Term.Param") || is("Term.Arg.Named") || is("Term.Arg.Repeated")
-      def isTerm = !isQuasi && (abbrevName.startsWith("Term") || isLit || isCtorRef || isCtorCall) && !looksLikeTermButNotTerm
-      def isTermName = !isQuasi && is("Term.Name")
-      def isTermParam = !isQuasi && is("Term.Param")
-      def hasEnv = isName || isTerm
-      def hasDenot = isName
-      def hasTyping = isTerm || isTermParam
       val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$stats }" = cdef
       // TODO: For stack traces, we'd like to have short class names, because stack traces print full names anyway.
       // However debugging macro expansion errors is much-much easier with full names for Api and Impl classes
@@ -116,13 +104,9 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       })
 
       // step 5: implement the unimplemented methods in InternalTree (part 1)
-      bparams1 += q"private[meta] val privateFlags: $FlagsClass"
       bparams1 += q"@$TransientAnnotation private[meta] val privatePrototype: $iname"
       bparams1 += q"private[meta] val privateParent: $TreeClass"
       bparams1 += q"private[meta] val privateOrigin: $OriginClass"
-      if (hasEnv) bparams1 += q"private[meta] override val privateEnv: $EnvironmentClass"
-      if (hasDenot) bparams1 += q"private[meta] override val privateDenot: $DenotationClass"
-      if (hasTyping) bparams1 += q"private[meta] override val privateTyping: $TypingClass"
 
       // step 6: implement the unimplemented methods in InternalTree (part 1)
       // The purpose of privateCopy is to provide extremely cheap cloning
@@ -135,24 +119,16 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       // This method is private[meta] because the state that it's managing is not supposed to be touched
       // by the users of the framework.
       val privateCopyBargs = ListBuffer[Tree]()
-      privateCopyBargs += q"flags"
       privateCopyBargs += q"prototype.asInstanceOf[$iname]"
       privateCopyBargs += q"parent"
       privateCopyBargs += q"origin"
-      if (hasEnv) privateCopyBargs += q"env"
-      if (hasDenot) privateCopyBargs += q"denot"
-      if (hasTyping) privateCopyBargs += q"typing"
       val privateCopyArgs = paramss.map(_.map(p => q"$CommonTyperMacrosModule.initField(this.${internalize(p.name)})"))
       val privateCopyBody = q"new $name(..$privateCopyBargs)(...$privateCopyArgs)"
       stats1 += q"""
         private[meta] def privateCopy(
-            flags: $FlagsClass = privateFlags,
             prototype: $TreeClass = this,
             parent: $TreeClass = privateParent,
-            origin: $OriginClass = privateOrigin,
-            env: $EnvironmentClass = privateEnv,
-            denot: $DenotationClass = privateDenot,
-            typing: $TypingClass = privateTyping): Tree = {
+            origin: $OriginClass = privateOrigin): Tree = {
           $privateCopyBody
         }
       """
@@ -223,13 +199,10 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         if (hasErrors) q"()"
         else require
       })
-      var internalInitCount = 3 // privatePrototype, privateParent, privateOrigin
-      if (hasEnv) internalInitCount += 1
-      if (hasDenot) internalInitCount += 1
-      if (hasTyping) internalInitCount += 1
+      val internalInitCount = 3 // privatePrototype, privateParent, privateOrigin
       val internalInitss = 1.to(internalInitCount).map(_ => q"null")
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$CommonTyperMacrosModule.initParam($local)" })
-      internalBody += q"val node = new $name($FlagsZeroField, ..$internalInitss)(...$paramInitss)"
+      internalBody += q"val node = new $name(..$internalInitss)(...$paramInitss)"
       internalBody ++= internalLocalss.flatten.flatMap{ case (local, internal) =>
         val (validators, assignee) = {
           // TODO: this is totally ugly. we need to come up with a way to express this in a sane way.
