@@ -1,8 +1,9 @@
 package scala.meta.tests
 package scalahost
+package converters
 
 import scala.collection.mutable
-import scala.meta.internal.converters.ConvertException
+import scala.meta.internal.scalahost.converters.ConvertException
 import scala.meta.testkit._
 import scala.util.Try
 

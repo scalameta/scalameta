@@ -1,5 +1,6 @@
 package scala.meta.tests
 package scalahost
+package converters
 
 import scala.collection.immutable.Seq
 import scala.{meta => m}
@@ -7,7 +8,7 @@ import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{Global, CompilerCommand, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import org.scalatest._
-import scala.meta.internal.converters.Converter
+import scala.meta.internal.scalahost.converters.Converter
 
 trait ConverterSuite extends FunSuiteLike {
 
