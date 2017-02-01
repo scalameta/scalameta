@@ -298,7 +298,7 @@ object TreeSyntax {
         // Type
         case t: Type.Name         => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
         case t: Type.Select       => m(SimpleTyp, s(t.qual, kw("."), t.name))
-        case t: Type.Project      => m(SimpleTyp, s(t.qual, kw("#"), t.name))
+        case t: Type.Project      => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
         case t: Type.Singleton    => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
         case t: Type.Apply        => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
         case t: Type.ApplyInfix   => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
@@ -371,7 +371,7 @@ object TreeSyntax {
         // TODO: fix copy/paste with Type
         case t: Pat.Type.Wildcard    => m(SimpleTyp, s("_"))
         case t: Pat.Var.Type         => m(SimpleTyp, s(t.name.value))
-        case t: Pat.Type.Project     => m(SimpleTyp, s(t.qual, kw("#"), t.name))
+        case t: Pat.Type.Project     => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
         case t: Pat.Type.Apply       => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
         case t: Pat.Type.ApplyInfix  => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
         case t: Pat.Type.Function    =>
