@@ -9,6 +9,7 @@ build:
     environment:
       - COURSIER_CACHE=/drone/cache/coursier
     commands:
+      - git log | head -n 20
       - ./bin/checkCLA.sh
       - ./bin/scalafmt --test
       - sbt -Dsbt.ivy.home=/drone/cache/ivy2 ++$SCALA_VERSION test doc "scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest"

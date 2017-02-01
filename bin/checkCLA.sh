@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-git log | head -n 20
-host `curl -s http://httpbin.org/ip | jq -r '.origin'` || true ;
 if [ -n "$CI_PULL_REQUEST" ] ; then
   echo "Incoming pull request from https://github.com/$CI_REPO/pull/$CI_PULL_REQUEST";
   author=$(curl -s "https://api.github.com/repos/$CI_REPO/pulls/$CI_PULL_REQUEST" | jq -r ".user.login");
