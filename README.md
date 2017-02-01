@@ -12,6 +12,7 @@ The current maintainers (people who can merge pull requests) are:
 * Eugene Burmako - [`@xeno-by`](https://github.com/xeno-by)
 * Denys Shabalin - [`@densh`](https://github.com/densh)
 * Ólafur Páll Geirsson - [`@olafurpg`](https://github.com/olafurpg)
+* David Dudson - [`@DavidDudson`](https://github.com/DavidDudson)
 
 An up-to-date list of contributors is available here: https://github.com/scalameta/scalameta/graphs/contributors.
 
