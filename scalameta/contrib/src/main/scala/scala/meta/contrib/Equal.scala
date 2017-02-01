@@ -2,8 +2,7 @@ package scala.meta.contrib
 
 /** Type class used to determine equality.
   *
-  *
-  * For examples, see [[Structural]] or [[Syntactic]].
+  * For examples, see [[Structurally]] or [[Syntactically]].
   *
   * Inspired by cats.Eq and scalaz.Equal.
   */

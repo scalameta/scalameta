@@ -12,21 +12,21 @@ class EqualSuite extends FunSuite {
   val e: Defn.Class = q"class Foo { val x = 2 }"
 
   test("syntactic") {
-    assert(!a.equal[Syntactic](b))
-    assert(b.equal[Syntactic](c))
-    assert(!e.contains[Syntactic](a))
-    assert(e.contains[Syntactic](b))
-    assert(!e.contains[Structural](d))
-    assert(Set[Syntactic[Tree]](a, b, c, d).size == 3)
+    assert(!a.equal[Syntactically](b))
+    assert(b.equal[Syntactically](c))
+    assert(!e.contains[Syntactically](a))
+    assert(e.contains[Syntactically](b))
+    assert(!e.contains[Structurally](d))
+    assert(Set[Syntactically[Tree]](a, b, c, d).size == 3)
   }
 
   test("structural") {
-    assert(a.equal[Structural](b))
-    assert(b.equal[Structural](c))
-    assert(e.contains[Structural](a))
-    assert(e.contains[Structural](b))
-    assert(!e.contains[Structural](d))
-    assert(Set[Structural[Tree]](a, b, c, d).size == 2)
+    assert(a.equal[Structurally](b))
+    assert(b.equal[Structurally](c))
+    assert(e.contains[Structurally](a))
+    assert(e.contains[Structurally](b))
+    assert(!e.contains[Structurally](d))
+    assert(Set[Structurally[Tree]](a, b, c, d).size == 2)
   }
 
   test("structural property") {
@@ -35,7 +35,7 @@ class EqualSuite extends FunSuite {
       val a               = ast.transform { case Term.Name(x) => Term.Name(x) }
       val b               = ast.transform { case Type.Name(x) => Type.Name(x) }
       val refEqual        = a.equals(b) // should be false
-      val structuralEqual = a.equal[Structural](b) // should be true
+      val structuralEqual = a.equal[Structurally](b) // should be true
       if (refEqual || !structuralEqual) Seq(a)
       else Nil
     }

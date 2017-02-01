@@ -4,17 +4,28 @@ import scala.language.implicitConversions
 
 import scala.meta.Tree
 
-/** Represents structural equality between trees */
-class Structural[+A <: Tree](val tree: A) {
-  // TODO(olafur) more efficient impl.
+/** Represents structural equality between trees
+  *
+  * Two trees are structurally equal if their .show[Structure] is equal.
+  * This implementation is however more efficient that doing
+  * a.structure == b.structure.
+  */
+class Structurally[+A <: Tree](val tree: A) {
+  // TODO(olafur) more efficient hashCode
   private lazy val hash: Int   = tree.structure.hashCode
   override def hashCode(): Int = hash
   override def equals(obj: scala.Any): Boolean = {
     obj match {
-      case e2: Structural[_] => loopStructure(tree, e2.tree)
-      case _                 => false
+      case e2: Structurally[_] => Structurally.equal(tree, e2.tree)
+      case _                   => false
     }
   }
+}
+
+object Structurally {
+
+  def equal(a: Tree, b: Tree): Boolean = loopStructure(a, b)
+
   private def loopStructure(x: Any, y: Any): Boolean = (x, y) match {
     case (x, y) if x == null || y == null => x == null && y == null
     case (Some(x), Some(y))               => loopStructure(x, y)
@@ -26,15 +37,15 @@ class Structural[+A <: Tree](val tree: A) {
       def sameStructure =
         x.productPrefix == y.productPrefix &&
           loopStructure(x.productIterator.toList, y.productIterator.toList)
+
       sameStructure
     case _ => x == y
   }
-}
 
-object Structural {
-  implicit def StructuralEq[A <: Tree]: Equal[Structural[A]] =
-    new Equal[Structural[A]] {
-      override def equal(a: Structural[A], b: Structural[A]): Boolean = a.equals(b)
+  implicit def StructuralEq[A <: Tree]: Equal[Structurally[A]] =
+    new Equal[Structurally[A]] {
+      override def equal(a: Structurally[A], b: Structurally[A]): Boolean = a.equals(b)
     }
-  implicit def toStructural[A <: Tree](e: A): Structural[A] = new Structural[A](e)
+
+  implicit def toStructural[A <: Tree](e: A): Structurally[A] = new Structurally[A](e)
 }
