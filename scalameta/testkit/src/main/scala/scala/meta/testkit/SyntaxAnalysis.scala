@@ -25,7 +25,7 @@ object SyntaxAnalysis {
   ): mutable.Buffer[(CorpusFile, T)] = Phase.run("syntax analysis") {
     val results = new CopyOnWriteArrayList[(CorpusFile, T)]
     val counter = new AtomicInteger()
-    val errors = new AtomicInteger()
+    val errors  = new AtomicInteger()
     def analyze(file: CorpusFile): Unit = {
       val n = counter.incrementAndGet()
       if (n % 1000 == 0) {
@@ -35,11 +35,11 @@ object SyntaxAnalysis {
         f(file).foreach(t => results.add(file -> t))
       } catch {
         // TODO(olafur) investigate these scala.meta errors.
-        case _: org.scalameta.UnreachableError => // scala.meta error
+        case _: org.scalameta.UnreachableError                    => // scala.meta error
         case _: org.scalameta.invariants.InvariantFailedException => // scala.meta error
-        case _: java.nio.charset.MalformedInputException => // scala.meta error
-        case _: java.util.NoSuchElementException => // scala.meta error
-        case NonFatal(e) =>
+        case _: java.nio.charset.MalformedInputException          => // scala.meta error
+        case _: java.util.NoSuchElementException                  => // scala.meta error
+        case NonFatal(e)                                          =>
           // unexpected errors are printed in the console.
           println(s"Unexpected error analysing file: $file")
           println(s"Error: ${e.getClass.getName} $e")
@@ -56,4 +56,10 @@ object SyntaxAnalysis {
     results.asScala
   }
 
+  def onParsed[A](corpus: GenIterable[CorpusFile])(
+      f: Source => Seq[A]): mutable.Buffer[(CorpusFile, A)] =
+    SyntaxAnalysis.run[A](corpus)(_.jFile.parse[Source] match {
+      case parsers.Parsed.Success(ast: Source) => f(ast)
+      case _                                   => Nil
+    })
 }

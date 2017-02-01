@@ -32,6 +32,7 @@ lazy val scalametaRoot = Project(
   console := (console in scalameta in Compile).value
 ) aggregate (
   common,
+  contrib,
   dialects,
   inline,
   inputs,
@@ -173,6 +174,14 @@ lazy val testkit = Project(
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
   description := "Testing utilities for scala.meta's metaprogramming APIs"
 ) dependsOn (scalameta)
+
+lazy val contrib = Project(
+  id   = "contrib",
+  base = file("scalameta/contrib")
+) settings (
+  publishableSettings,
+  description := "Utilities for scala.meta"
+) dependsOn (scalameta, testkit % Test)
 
 lazy val readme = scalatex.ScalatexReadme(
   projectId = "readme",
