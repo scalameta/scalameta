@@ -18,16 +18,16 @@ import scala.meta.internal.scalahost.v1.OnlineMirror
 abstract class OnlineMirrorSuite extends FunSuite {
   lazy val g: Global = {
     def fail(msg: String) = sys.error(s"OnlineMirrorSuite initialization failed: $msg")
-    val classpath = System.getProperty("sbt.paths.scalahost.test.classes")
-    val pluginpath = System.getProperty("sbt.paths.scalahost.compile.jar")
-    val options = "-Yrangepos -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:scalahost"
-    val args = CommandLineParser.tokenize(options)
-    val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
-    val reporter = new StoreReporter()
-    val command = new CompilerCommand(args, emptySettings)
-    val settings = command.settings
-    val g = new Global(settings, reporter)
-    val run = new g.Run
+    val classpath         = System.getProperty("sbt.paths.scalahost.test.classes")
+    val pluginpath        = System.getProperty("sbt.paths.scalahost.compile.jar")
+    val options           = "-Yrangepos -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:scalahost"
+    val args              = CommandLineParser.tokenize(options)
+    val emptySettings     = new Settings(error => fail(s"couldn't apply settings because $error"))
+    val reporter          = new StoreReporter()
+    val command           = new CompilerCommand(args, emptySettings)
+    val settings          = command.settings
+    val g                 = new Global(settings, reporter)
+    val run               = new g.Run
     g.phase = run.parserPhase
     g.globalPhase = run.parserPhase
     g
@@ -38,13 +38,14 @@ abstract class OnlineMirrorSuite extends FunSuite {
 
   private def computeDatabaseFromSnippet(code: String): Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
-    val writer = new PrintWriter(javaFile)
-    try writer.write(code) finally writer.close()
+    val writer   = new PrintWriter(javaFile)
+    try writer.write(code)
+    finally writer.close()
 
-    val run = new g.Run
+    val run          = new g.Run
     val abstractFile = AbstractFile.getFile(javaFile)
-    val sourceFile = g.getSourceFile(abstractFile)
-    val unit = new g.CompilationUnit(sourceFile)
+    val sourceFile   = g.getSourceFile(abstractFile)
+    val unit         = new g.CompilationUnit(sourceFile)
     run.compileUnits(List(unit), run.phaseNamed("terminal"))
 
     g.phase = run.parserPhase
@@ -56,7 +57,7 @@ abstract class OnlineMirrorSuite extends FunSuite {
     errors.foreach(error => fail(s"scalac parse error: ${error.msg} at ${error.pos}"))
 
     val packageobjectsPhase = run.phaseNamed("packageobjects")
-    val phases = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
+    val phases              = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
     reporter.reset()
 
     phases.foreach(phase => {
@@ -76,11 +77,13 @@ abstract class OnlineMirrorSuite extends FunSuite {
 
     test(name) {
       val database = computeDatabaseFromSnippet(code)
-      val lines = database.symbols.keys.toList.sortBy(_.start).map(k => {
-        val snippet = code.substring(k.start, k.end)
-        val symbol = database.symbols(k)
-        s"[${k.start}..${k.end}): $snippet => ${symbol.id}"
-      })
+      val lines = database.symbols.keys.toList
+        .sortBy(_.start)
+        .map(k => {
+          val snippet = code.substring(k.start, k.end)
+          val symbol  = database.symbols(k)
+          s"[${k.start}..${k.end}): $snippet => ${symbol.id}"
+        })
       lines.mkString(EOL)
     }
   }

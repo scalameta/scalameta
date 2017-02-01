@@ -9,27 +9,29 @@ import scala.{meta => m}
 import scala.meta.semantic.v1.{Location, Database}
 import scala.compat.Platform.EOL
 
-trait DatabaseOps extends DialectOps
-                     with GlobalOps
-                     with LocationOps
-                     with SymbolOps {
+trait DatabaseOps extends DialectOps with GlobalOps with LocationOps with SymbolOps {
 
   implicit class XtensionCompilationUnit(unit: g.CompilationUnit) {
     def toDatabase: Database = {
       def uncachedComputeDatabase(): Database = {
-        if (!g.settings.Yrangepos.value) sys.error("The compiler instance must have -Yrangepos enabled")
+        if (!g.settings.Yrangepos.value)
+          sys.error("The compiler instance must have -Yrangepos enabled")
         if (g.useOffsetPositions) sys.error("The compiler instance must use range positions")
-        if (!g.settings.plugin.value.exists(_.contains("scalahost"))) sys.error("The compiler instance must use the scalahost plugin")
-        if (!g.analyzer.getClass.getName.contains("scalahost")) sys.error("The compiler instance must use a hijacked analyzer")
-        if (g.phase.id < g.currentRun.phaseNamed("typer").id) sys.error("The compiler phase must be not earlier than typer")
-        if (g.phase.id > g.currentRun.phaseNamed("patmat").id) sys.error("The compiler phase must be not later than patmat")
+        if (!g.settings.plugin.value.exists(_.contains("scalahost")))
+          sys.error("The compiler instance must use the scalahost plugin")
+        if (!g.analyzer.getClass.getName.contains("scalahost"))
+          sys.error("The compiler instance must use a hijacked analyzer")
+        if (g.phase.id < g.currentRun.phaseNamed("typer").id)
+          sys.error("The compiler phase must be not earlier than typer")
+        if (g.phase.id > g.currentRun.phaseNamed("patmat").id)
+          sys.error("The compiler phase must be not later than patmat")
 
-        val symbols = mutable.Map[Location, m.Symbol]()
-        val todo = mutable.Set[m.Name]() // names to map to global trees
-        val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
-        val mends = mutable.Map[Int, m.Name]() // end offset -> tree
-        val margnames = mutable.Map[Int, List[m.Name]]() // start offset of enclosing apply -> its arg names
-        val mwithins = mutable.Map[m.Tree, m.Name]() // name of enclosing member -> name of private/protected within
+        val symbols      = mutable.Map[Location, m.Symbol]()
+        val todo         = mutable.Set[m.Name]() // names to map to global trees
+        val mstarts      = mutable.Map[Int, m.Name]() // start offset -> tree
+        val mends        = mutable.Map[Int, m.Name]() // end offset -> tree
+        val margnames    = mutable.Map[Int, List[m.Name]]() // start offset of enclosing apply -> its arg names
+        val mwithins     = mutable.Map[m.Tree, m.Name]() // name of enclosing member -> name of private/protected within
         val mwithinctors = mutable.Map[m.Tree, m.Name]() // name of enclosing class -> name of private/protected within for primary ctor
 
         locally {
@@ -37,11 +39,14 @@ trait DatabaseOps extends DialectOps
             private def indexName(mname: m.Name): Unit = {
               todo += mname
               // TODO: also drop trivia (no idea how to formulate this concisely)
-              val tok = mname.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption
+              val tok     = mname.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption
               val mstart1 = tok.map(_.start).getOrElse(-1)
-              val mend1 = tok.map(_.end).getOrElse(-1)
-              if (mstarts.contains(mstart1)) sys.error(s"ambiguous mstart ${syntaxAndPos(mname)} ${syntaxAndPos(mstarts(mstart1))}")
-              if (mends.contains(mend1)) sys.error(s"ambiguous mend ${syntaxAndPos(mname)} ${syntaxAndPos(mends(mend1))}")
+              val mend1   = tok.map(_.end).getOrElse(-1)
+              if (mstarts.contains(mstart1))
+                sys.error(
+                  s"ambiguous mstart ${syntaxAndPos(mname)} ${syntaxAndPos(mstarts(mstart1))}")
+              if (mends.contains(mend1))
+                sys.error(s"ambiguous mend ${syntaxAndPos(mname)} ${syntaxAndPos(mends(mend1))}")
               mstarts(mstart1) = mname
               mends(mend1) = mname
             }
@@ -49,8 +54,14 @@ trait DatabaseOps extends DialectOps
               if (mnames.isEmpty) return
               todo ++= mnames
               // TODO: also drop trivia (no idea how to formulate this concisely)
-              val mstart1 = mapp.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption.map(_.start).getOrElse(-1)
-              if (margnames.contains(mstart1)) sys.error(s"ambiguous margnames ${mnames.map(syntaxAndPos)} ${margnames(mstart1).map(syntaxAndPos)}")
+              val mstart1 = mapp.tokens
+                .dropWhile(_.is[m.Token.LeftParen])
+                .headOption
+                .map(_.start)
+                .getOrElse(-1)
+              if (margnames.contains(mstart1))
+                sys.error(
+                  s"ambiguous margnames ${mnames.map(syntaxAndPos)} ${margnames(mstart1).map(syntaxAndPos)}")
               margnames(mstart1) = mnames
             }
             private def indexWithin(mname: m.Name.Indeterminate): Unit = {
@@ -60,29 +71,36 @@ trait DatabaseOps extends DialectOps
                 case menclosing: m.Ctor.Primary =>
                   val menclosingDefn = menclosing.parent.get.asInstanceOf[m.Member]
                   val menclosingName = menclosingDefn.name
-                  if (mwithinctors.contains(menclosingName)) sys.error(s"ambiguous mwithinctors ${syntaxAndPos(mname)} ${syntaxAndPos(mwithinctors(menclosingName))}")
+                  if (mwithinctors.contains(menclosingName))
+                    sys.error(
+                      s"ambiguous mwithinctors ${syntaxAndPos(mname)} ${syntaxAndPos(mwithinctors(menclosingName))}")
                   mwithinctors(menclosingName) = mname
                 case _ =>
-                  def findBinder(pat: m.Pat) = pat.collect{ case m.Pat.Var.Term(name) => name }.head
+                  def findBinder(pat: m.Pat) =
+                    pat.collect { case m.Pat.Var.Term(name) => name }.head
                   val menclosingName = menclosing match {
-                    case mtree: m.Member => mtree.name
-                    case m.Decl.Val(_, pat :: Nil, _) => findBinder(pat)
-                    case m.Decl.Var(_, pat :: Nil, _) => findBinder(pat)
+                    case mtree: m.Member                 => mtree.name
+                    case m.Decl.Val(_, pat :: Nil, _)    => findBinder(pat)
+                    case m.Decl.Var(_, pat :: Nil, _)    => findBinder(pat)
                     case m.Defn.Val(_, pat :: Nil, _, _) => findBinder(pat)
                     case m.Defn.Var(_, pat :: Nil, _, _) => findBinder(pat)
                   }
-                  if (mwithins.contains(menclosingName)) sys.error(s"ambiguous mwithins ${syntaxAndPos(mname)} ${syntaxAndPos(mwithins(menclosingName))}")
+                  if (mwithins.contains(menclosingName))
+                    sys.error(
+                      s"ambiguous mwithins ${syntaxAndPos(mname)} ${syntaxAndPos(mwithins(menclosingName))}")
                   mwithins(menclosingName) = mname
               }
             }
             override def apply(mtree: m.Tree): Unit = {
               val mstart = mtree.pos.start.offset
-              val mend = mtree.pos.end.offset
+              val mend   = mtree.pos.end.offset
               if (mstart != mend) {
                 mtree match {
                   case mtree @ m.Term.Apply(_, margs) =>
                     def loop(term: m.Term): List[m.Term.Name] = term match {
-                      case m.Term.Apply(mfn, margs) => (margs.toList.collect { case m.Term.Arg.Named(mname, _) => mname }) ++ loop(mfn)
+                      case m.Term.Apply(mfn, margs) =>
+                        (margs.toList
+                          .collect { case m.Term.Arg.Named(mname, _) => mname }) ++ loop(mfn)
                       case _ => Nil
                     }
                     indexArgNames(mtree, loop(mtree))
@@ -94,11 +112,11 @@ trait DatabaseOps extends DialectOps
                     indexName(mname)
                     return // NOTE: ignore mrename for now, we may decide to make it a binder
                   case mtree @ m.Name.Anonymous() =>
-                    // do nothing
+                  // do nothing
                   case mtree: m.Name =>
                     indexName(mtree)
                   case _ =>
-                    // do nothing
+                  // do nothing
                 }
               }
               super.apply(mtree)
@@ -106,7 +124,8 @@ trait DatabaseOps extends DialectOps
           }
 
           val jfile = unit.source.file.file
-          if (jfile == null) sys.error("Unsupported compilation unit with abstract file ${unit.source.file}")
+          if (jfile == null)
+            sys.error("Unsupported compilation unit with abstract file ${unit.source.file}")
           val msource = dialect(jfile).parse[m.Source].get
           traverser(msource)
         }
@@ -129,8 +148,11 @@ trait DatabaseOps extends DialectOps
                     val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
                     if (!gsym.hasAccessBoundary) return
                     val within1 = gsym.privateWithin
-                    val within2 = within1.owner.info.member(if (within1.name.isTermName) within1.name.toTypeName else within1.name.toTermName)
-                    success(map(mtree), wrapAlternatives("<within " + symbol + ">", within1, within2))
+                    val within2 = within1.owner.info.member(
+                      if (within1.name.isTermName) within1.name.toTypeName
+                      else within1.name.toTermName)
+                    success(map(mtree),
+                            wrapAlternatives("<within " + symbol + ">", within1, within2))
                   }
                 }
                 tryWithin(mwithins, gsym)
@@ -157,7 +179,7 @@ trait DatabaseOps extends DialectOps
               if (gtree.pos == null || gtree.pos == NoPosition) return
               val gstart = gtree.pos.start
               val gpoint = gtree.pos.point
-              val gend = gtree.pos.end
+              val gend   = gtree.pos.end
 
               if (margnames.contains(gstart) || margnames.contains(gpoint)) {
                 (margnames.get(gstart) ++ margnames.get(gpoint)).flatten.foreach(margname => {
@@ -176,9 +198,9 @@ trait DatabaseOps extends DialectOps
                 case gtree: g.ValDef if gtree.symbol == gtree.symbol.owner.thisSym =>
                   tryMstart(gstart)
                 case gtree: g.MemberDef if gtree.symbol.isSynthetic =>
-                  // NOTE: never interested in synthetics except for the ones above
+                // NOTE: never interested in synthetics except for the ones above
                 case gtree: g.PackageDef =>
-                  // NOTE: capture PackageDef.pid instead
+                // NOTE: capture PackageDef.pid instead
                 case gtree: g.ModuleDef if gtree.name == g.nme.PACKAGE =>
                   // TODO: if a package object comes first in the compilation unit
                   // then its positions are completely mental, so we just hack around
@@ -202,11 +224,16 @@ trait DatabaseOps extends DialectOps
                 case gtree: g.RefTree =>
                   tryMstart(gpoint)
                 case gtree: g.Import =>
-                  val sels = gtree.selectors.flatMap(sel => mstarts.get(sel.namePos).map(mname => (sel.name, mname)))
-                  sels.foreach { case (gname, mname) =>
-                    val import1 = gtree.expr.tpe.member(gname.toTermName)
-                    val import2 = gtree.expr.tpe.member(gname.toTypeName)
-                    success(mname, wrapAlternatives("<import " + gtree.expr + "." + gname + ">", import1, import2))
+                  val sels = gtree.selectors.flatMap(sel =>
+                    mstarts.get(sel.namePos).map(mname => (sel.name, mname)))
+                  sels.foreach {
+                    case (gname, mname) =>
+                      val import1 = gtree.expr.tpe.member(gname.toTermName)
+                      val import2 = gtree.expr.tpe.member(gname.toTypeName)
+                      success(mname,
+                              wrapAlternatives("<import " + gtree.expr + "." + gname + ">",
+                                               import1,
+                                               import2))
                   }
                 case _ =>
               }
@@ -251,19 +278,23 @@ trait DatabaseOps extends DialectOps
         if (todo.nonEmpty && Configuration.strictMode) {
           val buf = new StringBuilder
           buf ++= ("Unmapped names in " + unit.source.file.file + EOL)
-          todo.toList.sortBy(_.pos.start.offset).foreach(mtree => buf ++= (syntaxAndPos(mtree) + EOL))
+          todo.toList
+            .sortBy(_.pos.start.offset)
+            .foreach(mtree => buf ++= (syntaxAndPos(mtree) + EOL))
           sys.error(buf.toString)
         }
 
         Database(symbols.toMap)
       }
 
-      val dummyName = g.TermName("<cachedDatabaseCarrier>")
+      val dummyName   = g.TermName("<cachedDatabaseCarrier>")
       val dummySymbol = unit.checkedFeatures.find(_.name == dummyName)
-      val cachedDatabase = dummySymbol.flatMap(_.metadata.get("database").map(_.asInstanceOf[Database]))
+      val cachedDatabase =
+        dummySymbol.flatMap(_.metadata.get("database").map(_.asInstanceOf[Database]))
       cachedDatabase.getOrElse({
         val computedDatabase = uncachedComputeDatabase()
-        val dummySymbol = g.NoSymbol.newValue(dummyName).appendMetadata("database" -> computedDatabase)
+        val dummySymbol =
+          g.NoSymbol.newValue(dummyName).appendMetadata("database" -> computedDatabase)
         unit.checkedFeatures += dummySymbol
         computedDatabase
       })

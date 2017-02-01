@@ -9,7 +9,8 @@ trait SymbolOps extends ReflectionToolkit {
     def toSemantic: m.Symbol = {
       def symbolId(sym: g.Symbol): String = {
         if (sym == null || sym == g.NoSymbol) return null
-        if (sym.isOverloaded) return sym.alternatives.flatMap(alt => Option(symbolId(alt))).mkString(";")
+        if (sym.isOverloaded)
+          return sym.alternatives.flatMap(alt => Option(symbolId(alt))).mkString(";")
         if (sym.isModuleClass) return symbolId(sym.asClass.module)
         if (sym.isRootPackage) return "_root_."
         if (sym.isEmptyPackage) return "_empty_."
@@ -18,20 +19,20 @@ trait SymbolOps extends ReflectionToolkit {
           def definitelyGlobal = sym.hasPackageFlag
           def definitelyLocal =
             sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
-            sym.name.decoded == g.tpnme.REFINE_CLASS_NAME ||
-            (sym.owner.isMethod && !sym.isParameter) ||
-            ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter)
+              sym.name.decoded == g.tpnme.REFINE_CLASS_NAME ||
+              (sym.owner.isMethod && !sym.isParameter) ||
+              ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter)
           !definitelyGlobal && (definitelyLocal || isLocal(sym.owner))
         }
         if (isLocal(sym)) {
           val jfile = sym.pos.source.file.file
           if (jfile == null) return null
-          val uri = jfile.toURI.toString
+          val uri   = jfile.toURI.toString
           val point = sym.pos.point
           return s"$uri@$point"
         }
 
-        var result = symbolId(sym.owner)
+        var result                = symbolId(sym.owner)
         def pretty(sym: g.Symbol) = sym.name.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
         result += {
           def encodeType(sym: g.Symbol): String = pretty(sym) + "#"
@@ -57,12 +58,14 @@ trait SymbolOps extends ReflectionToolkit {
               else "L" + sym.fullName.replace(".", "/") + ";"
             }
             val g.MethodType(params, ret) = sym.info.erasure
-            val jvmRet = if (!sym.isConstructor) ret else g.definitions.UnitClass.toType
-            s"${pretty(sym)}(" + params.map(param => jvmSignature(param.info)).mkString("") + ")" + jvmSignature(jvmRet) + "."
+            val jvmRet                    = if (!sym.isConstructor) ret else g.definitions.UnitClass.toType
+            s"${pretty(sym)}(" + params
+              .map(param => jvmSignature(param.info))
+              .mkString("") + ")" + jvmSignature(jvmRet) + "."
           }
           def encodeTparam(sym: g.Symbol): String = "[" + pretty(sym) + "]"
-          def encodeParam(sym: g.Symbol): String = "(" + pretty(sym) + ")"
-          def encodeSelf(sym: g.Symbol): String = pretty(sym) + "=>"
+          def encodeParam(sym: g.Symbol): String  = "(" + pretty(sym) + ")"
+          def encodeSelf(sym: g.Symbol): String   = pretty(sym) + "=>"
 
           if (sym.isMethod && !sym.asMethod.isGetter) encodeMethod(sym)
           else if (sym.isTypeParameter) encodeTparam(sym)

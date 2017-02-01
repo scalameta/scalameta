@@ -3,14 +3,16 @@ package scalahost
 package v1
 
 class Integration extends OnlineMirrorSuite {
-  database("""
+  database(
+    """
     |object Test {
     |  def main(args: Array[String]): Unit = {
     |    val list = List(1, 2, 3)
     |    println(list)
     |  }
     |}
-  """.trim.stripMargin, """
+  """.trim.stripMargin,
+    """
     |[7..11): Test => _empty_.Test.
     |[20..24): main => _empty_.Test.main([Ljava/lang/String;)V.
     |[25..29): args => _empty_.Test.main([Ljava/lang/String;)V.(args)

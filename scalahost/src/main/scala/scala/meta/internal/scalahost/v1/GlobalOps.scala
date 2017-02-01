@@ -12,7 +12,10 @@ trait GlobalOps extends ReflectionToolkit {
 
   def syntaxAndPos(gtree: g.Tree): String = {
     if (gtree == g.EmptyTree) "\u001b[1;31mEmptyTree\u001b[0m"
-    else s"${gtree.toString.substring(0, Math.min(45, gtree.toString.length)).replace("\n", " ")} [${gtree.pos.start}..${gtree.pos.end})"
+    else
+      s"${gtree.toString
+        .substring(0, Math.min(45, gtree.toString.length))
+        .replace("\n", " ")} [${gtree.pos.start}..${gtree.pos.end})"
   }
   def syntaxAndPos(mtree: m.Tree): String = {
     s"$mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"

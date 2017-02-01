@@ -19,16 +19,20 @@ trait ReflectionToolkit {
   object Attachable {
     implicit object TreeAttachable extends Attachable[Tree] {
       def attachments(carrier: Tree): Attachments { type Pos = Position } = carrier.attachments
-      def updateAttachment[U: ClassTag](carrier: Tree, attachment: U): Unit = carrier.updateAttachment(attachment)
+      def updateAttachment[U: ClassTag](carrier: Tree, attachment: U): Unit =
+        carrier.updateAttachment(attachment)
     }
     implicit object SymbolAttachable extends Attachable[Symbol] {
       def attachments(carrier: Symbol): Attachments { type Pos = Position } = carrier.attachments
-      def updateAttachment[U: ClassTag](carrier: Symbol, attachment: U): Unit = carrier.updateAttachment(attachment)
+      def updateAttachment[U: ClassTag](carrier: Symbol, attachment: U): Unit =
+        carrier.updateAttachment(attachment)
     }
   }
   implicit class XtensionAttachable[T: Attachable](carrier: T) {
-    def attachments: Attachments { type Pos = Position } = implicitly[Attachable[T]].attachments(carrier)
-    def updateAttachment[U: ClassTag](attachment: U): Unit = implicitly[Attachable[T]].updateAttachment(carrier, attachment)
+    def attachments: Attachments { type Pos = Position } =
+      implicitly[Attachable[T]].attachments(carrier)
+    def updateAttachment[U: ClassTag](attachment: U): Unit =
+      implicitly[Attachable[T]].updateAttachment(carrier, attachment)
   }
 
   // NOTE: the mechanism of attachments is too low-level for our purposes
@@ -38,34 +42,45 @@ trait ReflectionToolkit {
   // why Java's HashMap and not a native Scala Map? because prior to 2.11.2 attachments don't work  with subtyping and Map has a bunch of specific subclasses
   implicit class XtensionMetadataAttachable[T: Attachable](carrier: T) {
     def metadata: Metadata[T] = new Metadata(carrier)
-    def appendMetadata(kvps: (String, Any)*): T = { kvps.foreach(kvp => carrier.metadata += kvp); carrier }
-    def removeMetadata(keys: String*): T = { keys.foreach(key => carrier.metadata -= key); carrier }
+    def appendMetadata(kvps: (String, Any)*): T = {
+      kvps.foreach(kvp => carrier.metadata += kvp); carrier
+    }
+    def removeMetadata(keys: String*): T = {
+      keys.foreach(key => carrier.metadata -= key); carrier
+    }
     def hasMetadata(key: String): Boolean = metadata.get(key).isDefined
   }
 
   class Metadata[T: Attachable](carrier: T) {
-    def toMap: Map[String, Any] = carrier.attachments.get[java.util.HashMap[String, Any]].map(_.toScalaMap).getOrElse(Map[String, Any]())
-    def toOption: Option[Map[String, Any]] = carrier.attachments.get[java.util.HashMap[String, Any]].map(_.toScalaMap)
-    def transform(f: Map[String, Any] => Map[String, Any]): Unit = carrier.updateAttachment(f(toMap).toJavaMap)
+    def toMap: Map[String, Any] =
+      carrier.attachments
+        .get[java.util.HashMap[String, Any]]
+        .map(_.toScalaMap)
+        .getOrElse(Map[String, Any]())
+    def toOption: Option[Map[String, Any]] =
+      carrier.attachments.get[java.util.HashMap[String, Any]].map(_.toScalaMap)
+    def transform(f: Map[String, Any] => Map[String, Any]): Unit =
+      carrier.updateAttachment(f(toMap).toJavaMap)
     def contains(key: String): Boolean = toMap.contains(key)
-    def apply(key: String): Any = toMap(key)
-    def get(key: String): Option[Any] = toMap.get(key)
-    def getOrElse[T: ClassTag](key: String, value: => T): T = toMap.get(key).map(_.asInstanceOf[T]).getOrElse(value)
+    def apply(key: String): Any        = toMap(key)
+    def get(key: String): Option[Any]  = toMap.get(key)
+    def getOrElse[T: ClassTag](key: String, value: => T): T =
+      toMap.get(key).map(_.asInstanceOf[T]).getOrElse(value)
     def getOrElseUpdate[T: ClassTag](key: String, default: => T): T = {
       val valueopt = toMap.get(key).map(_.asInstanceOf[T])
-      val value = valueopt.getOrElse(default)
+      val value    = valueopt.getOrElse(default)
       if (valueopt.isEmpty) update(key, value)
       value
     }
     def update(key: String, value: Any): Unit = transform(_ + (key -> value))
-    def remove(key: String): Unit = transform(_ - key)
-    def +=(kvp: (String, Any)): Unit = update(kvp._1, kvp._2)
-    def ++=(other: Map[String, Any]): Unit = transform(_ ++ other)
-    def ++=(other: Metadata[T]): Unit = transform(_ ++ other.toMap)
-    def -=(key: String): Unit = remove(key)
-    def --=(other: List[String]): Unit = transform(_ -- other)
-    def --=(other: Metadata[T]): Unit = transform(_ -- other.toMap.keys)
-    override def toString = toMap.toString
+    def remove(key: String): Unit             = transform(_ - key)
+    def +=(kvp: (String, Any)): Unit          = update(kvp._1, kvp._2)
+    def ++=(other: Map[String, Any]): Unit    = transform(_ ++ other)
+    def ++=(other: Metadata[T]): Unit         = transform(_ ++ other.toMap)
+    def -=(key: String): Unit                 = remove(key)
+    def --=(other: List[String]): Unit        = transform(_ -- other)
+    def --=(other: Metadata[T]): Unit         = transform(_ -- other.toMap.keys)
+    override def toString                     = toMap.toString
   }
 
   implicit class XtensionDesugarings[T: Attachable](carrier: T) {
@@ -74,29 +89,35 @@ trait ReflectionToolkit {
       else carrier.appendMetadata(designation -> original)
     }
     def rememberConstfoldOf(original: Tree) = rememberOriginal("constantFoldingOriginal", original)
-    def rememberClassOf(original: Tree) = rememberOriginal("classOfOriginal", original)
-    def rememberNewArrayOf(original: Tree) = rememberOriginal("newArrayOriginal", original)
-    def rememberSingletonTypeTreeOf(original: Tree) = rememberOriginal("singletonTypeTreeOriginal", original)
+    def rememberClassOf(original: Tree)     = rememberOriginal("classOfOriginal", original)
+    def rememberNewArrayOf(original: Tree)  = rememberOriginal("newArrayOriginal", original)
+    def rememberSingletonTypeTreeOf(original: Tree) =
+      rememberOriginal("singletonTypeTreeOriginal", original)
     // def rememberCompoundTypeTreeOf(original: Tree) = rememberOriginal("compoundTypeTreeOriginal", original)
-    def rememberExistentialTypeTreeOf(original: Tree) = rememberOriginal("existentialTypeTreeOriginal", original)
+    def rememberExistentialTypeTreeOf(original: Tree) =
+      rememberOriginal("existentialTypeTreeOriginal", original)
     def rememberAnnotatedOf(original: Tree) = rememberOriginal("annotatedOriginal", original)
-    def rememberSelfTypeOf(original: Tree) = rememberOriginal("selfTypeOriginal", original)
+    def rememberSelfTypeOf(original: Tree)  = rememberOriginal("selfTypeOriginal", original)
   }
 
   object ConstfoldOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("constantFoldingOriginal").map(_.asInstanceOf[Tree])
+    def unapply[T: Attachable](carrier: T) =
+      carrier.metadata.get("constantFoldingOriginal").map(_.asInstanceOf[Tree])
   }
 
   object ClassOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("classOfOriginal").map(_.asInstanceOf[Tree])
+    def unapply[T: Attachable](carrier: T) =
+      carrier.metadata.get("classOfOriginal").map(_.asInstanceOf[Tree])
   }
 
   object NewArrayOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("newArrayOriginal").map(_.asInstanceOf[Tree])
+    def unapply[T: Attachable](carrier: T) =
+      carrier.metadata.get("newArrayOriginal").map(_.asInstanceOf[Tree])
   }
 
   object SingletonTypeTreeOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("singletonTypeTreeOriginal").map(_.asInstanceOf[Tree])
+    def unapply[T: Attachable](carrier: T) =
+      carrier.metadata.get("singletonTypeTreeOriginal").map(_.asInstanceOf[Tree])
   }
 
   object CompoundTypeTreeOf {
@@ -104,21 +125,25 @@ trait ReflectionToolkit {
       case CompoundTypeTree(templ) =>
         val att = templ.attachments.get[CompoundTypeTreeOriginalAttachment]
         templ.removeAttachment[CompoundTypeTreeOriginalAttachment]
-        att.map(att => CompoundTypeTree(treeCopy.Template(templ, att.parents, templ.self, att.stats)))
+        att.map(att =>
+          CompoundTypeTree(treeCopy.Template(templ, att.parents, templ.self, att.stats)))
       case _ =>
         None
     }
   }
 
   object ExistentialTypeTreeOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("existentialTypeTreeOriginal").map(_.asInstanceOf[Tree])
+    def unapply[T: Attachable](carrier: T) =
+      carrier.metadata.get("existentialTypeTreeOriginal").map(_.asInstanceOf[Tree])
   }
 
   object AnnotatedOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("annotatedOriginal").map(_.asInstanceOf[Tree])
+    def unapply[T: Attachable](carrier: T) =
+      carrier.metadata.get("annotatedOriginal").map(_.asInstanceOf[Tree])
   }
 
   object SelfTypeOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("selfTypeOriginal").map(_.asInstanceOf[Tree])
+    def unapply[T: Attachable](carrier: T) =
+      carrier.metadata.get("selfTypeOriginal").map(_.asInstanceOf[Tree])
   }
 }

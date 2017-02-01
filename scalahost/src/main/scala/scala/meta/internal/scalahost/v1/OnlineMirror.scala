@@ -13,10 +13,11 @@ import scala.tools.nsc.Global
 import scala.{meta => m}
 import scala.meta.semantic.{v1 => mv1}
 
-class OnlineMirror(val global: Global) extends mv1.Mirror
-                                          with DatabaseOps
-                                          with DialectOps
-                                          with GlobalOps {
+class OnlineMirror(val global: Global)
+    extends mv1.Mirror
+    with DatabaseOps
+    with DialectOps
+    with GlobalOps {
 
   override def toString: String = {
     val compiler = s"the Scala compiler ${Properties.versionString}"
@@ -27,7 +28,8 @@ class OnlineMirror(val global: Global) extends mv1.Mirror
   lazy val sources: Seq[m.Source] = {
     g.currentRun.units.toList.map(unit => {
       val jfile = unit.source.file.file
-      if (jfile == null) sys.error("Unsupported compilation unit with abstract file ${unit.source.file}")
+      if (jfile == null)
+        sys.error("Unsupported compilation unit with abstract file ${unit.source.file}")
       dialect(jfile).parse[m.Source].get
     })
   }
@@ -49,22 +51,22 @@ class OnlineMirror(val global: Global) extends mv1.Mirror
 
   def symbol(ref: m.Ref): mv1.Completed[mv1.Symbol] = {
     def relevantPosition(ref: m.Ref): m.Position = ref match {
-      case name: m.Name => ref.pos
-      case _: m.Term.This => ???
-      case _: m.Term.Super => ???
-      case m.Term.Select(_, name) => name.pos
-      case m.Term.ApplyUnary(_, name) => name.pos
-      case m.Type.Select(_, name) => name.pos
-      case m.Type.Project(_, name) => name.pos
-      case m.Type.Singleton(ref) => relevantPosition(ref)
-      case m.Ctor.Ref.Select(_, name) => name.pos
+      case name: m.Name                => ref.pos
+      case _: m.Term.This              => ???
+      case _: m.Term.Super             => ???
+      case m.Term.Select(_, name)      => name.pos
+      case m.Term.ApplyUnary(_, name)  => name.pos
+      case m.Type.Select(_, name)      => name.pos
+      case m.Type.Project(_, name)     => name.pos
+      case m.Type.Singleton(ref)       => relevantPosition(ref)
+      case m.Ctor.Ref.Select(_, name)  => name.pos
       case m.Ctor.Ref.Project(_, name) => name.pos
-      case m.Ctor.Ref.Function(name) => ???
-      case _: m.Importee.Wildcard => ???
-      case m.Importee.Name(name) => name.pos
-      case m.Importee.Rename(name, _) => name.pos
-      case m.Importee.Unimport(name) => name.pos
-      case _ => unreachable(debug(ref.syntax, ref.structure))
+      case m.Ctor.Ref.Function(name)   => ???
+      case _: m.Importee.Wildcard      => ???
+      case m.Importee.Name(name)       => name.pos
+      case m.Importee.Rename(name, _)  => name.pos
+      case m.Importee.Unimport(name)   => name.pos
+      case _                           => unreachable(debug(ref.syntax, ref.structure))
     }
     val position = relevantPosition(ref)
     val location = position.toSemantic
