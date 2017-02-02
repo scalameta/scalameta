@@ -1,8 +1,10 @@
 package scala.meta.internal
 package scalahost
 
+import java.io._
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
+import scala.compat.Platform.EOL
 
 trait ScalahostPipeline { self: ScalahostPlugin =>
 
@@ -22,23 +24,29 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
       override def run(): Unit = {
         super.run()
 
-        if (Configuration.dumpDatabase) {
-          val database = new v1.OnlineMirror(global).database
-          val grouped  = database.symbols.groupBy(_._1.uri)
-          grouped.keys.toList.sorted.foreach(uri => {
-            println(uri.stripPrefix("file:"))
-            val codec = scala.io.Codec(java.nio.charset.Charset.forName("UTF-8"))
-            val content =
-              scala.io.Source.fromFile(new java.io.File(uri.stripPrefix("file:")))(codec).mkString
-            grouped(uri).keys.toList
-              .sortBy(_.start)
-              .foreach(k => {
-                val snippet = content.substring(k.start, k.end)
-                println(s"[${k.start}..${k.end}): $snippet => ${grouped(uri)(k).id}")
-              })
-            println()
-          })
-        }
+        val databaseBuf = new StringBuilder
+        val database    = new v1.OnlineMirror(global).database
+        val grouped     = database.symbols.groupBy(_._1.uri)
+        grouped.keys.toList.sorted.foreach(uri => {
+          databaseBuf ++= (uri.stripPrefix("file:") + EOL)
+          val codec = scala.io.Codec(java.nio.charset.Charset.forName("UTF-8"))
+          val content =
+            scala.io.Source.fromFile(new java.io.File(uri.stripPrefix("file:")))(codec).mkString
+          grouped(uri).keys.toList
+            .sortBy(_.start)
+            .foreach(k => {
+              val snippet = content.substring(k.start, k.end)
+              databaseBuf ++= (s"[${k.start}..${k.end}): $snippet => ${grouped(uri)(k).id}" + EOL)
+            })
+          databaseBuf ++= EOL
+        })
+
+        val databasePayload = databaseBuf.toString
+        val databaseFile = global.settings.d.value + "/" + System
+            .currentTimeMillis() + ".semanticdb"
+        val printWriter = new PrintWriter(databaseFile)
+        try printWriter.write(databaseBuf.toString.trim + EOL)
+        finally { printWriter.close }
       }
     }
   }
