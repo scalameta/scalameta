@@ -5,6 +5,7 @@ import java.io._
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
 import scala.compat.Platform.EOL
+import scala.meta.semantic.v1.Database
 
 trait ScalahostPipeline { self: ScalahostPlugin =>
 
@@ -23,30 +24,12 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
 
       override def run(): Unit = {
         super.run()
-
-        val databaseBuf = new StringBuilder
-        val database    = new v1.OnlineMirror(global).database
-        val grouped     = database.symbols.groupBy(_._1.uri)
-        grouped.keys.toList.sorted.foreach(uri => {
-          databaseBuf ++= (uri.stripPrefix("file:") + EOL)
-          val codec = scala.io.Codec(java.nio.charset.Charset.forName("UTF-8"))
-          val content =
-            scala.io.Source.fromFile(new java.io.File(uri.stripPrefix("file:")))(codec).mkString
-          grouped(uri).keys.toList
-            .sortBy(_.start)
-            .foreach(k => {
-              val snippet = content.substring(k.start, k.end)
-              databaseBuf ++= (s"[${k.start}..${k.end}): $snippet => ${grouped(uri)(k).id}" + EOL)
-            })
-          databaseBuf ++= EOL
-        })
-
-        val databasePayload = databaseBuf.toString
-        val databaseFile = global.settings.d.value + "/" + System
-            .currentTimeMillis() + ".semanticdb"
-        val printWriter = new PrintWriter(databaseFile)
-        try printWriter.write(databaseBuf.toString.trim + EOL)
-        finally { printWriter.close }
+        val databaseFile = new File(global.settings.d.value + "/semanticdb")
+        val prevDatabase =
+          if (databaseFile.exists) Database.readFile(databaseFile) else Database(Map())
+        val database       = new v1.OnlineMirror(global).database
+        val mergedDatabase = prevDatabase.append(database)
+        Database.writeFile(databaseFile, mergedDatabase)
       }
     }
   }
