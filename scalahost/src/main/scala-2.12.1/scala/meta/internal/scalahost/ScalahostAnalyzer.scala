@@ -828,7 +828,9 @@ trait ScalahostAnalyzer extends NscAnalyzer with ReflectionToolkit {
           adapt(tree setType restpe, mode, pt, original)
         case TypeRef(_, ByNameParamClass, arg :: Nil) if mode.inExprMode => // (2)
           adapt(tree setType arg, mode, pt, original)
-        case tp if mode.typingExprNotLhs && isExistentialType(tp) && !isSyntheticAccessor(context.owner) =>
+        case tp if mode.typingExprNotLhs && isExistentialType(tp) &&
+             // TODO: this is a private method, unfortunately: !isSyntheticAccessor(context.owner) =>
+             !(context.owner.isAccessor && (!context.owner.isLazy || isPastTyper)) =>
           adapt(tree setType tp.dealias.skolemizeExistential(context.owner, tree), mode, pt, original)
         case PolyType(tparams, restpe) if mode.inNone(TAPPmode | PATTERNmode) && !context.inTypeConstructorAllowed => // (3)
           // assert((mode & HKmode) == 0) //@M a PolyType in HKmode represents an anonymous type function,
