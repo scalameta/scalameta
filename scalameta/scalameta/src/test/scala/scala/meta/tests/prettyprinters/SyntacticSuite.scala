@@ -304,6 +304,30 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(templStat("foo match { case _: A | _: B | _: C => }").show[Syntax] === s"foo match {${EOL}  case _: A | _: B | _: C =>${EOL}}")
   }
 
+  test("Type projections") {
+    // Without lambda trick
+    assert(
+      q"""class A { class B }
+          type C = A#B
+        """.show[Syntax] ===
+        """{
+            |  class A { class B }
+            |  type C = A#B
+            |}""".stripMargin
+    )
+    // With lambda trick
+    assert(
+      q"""
+      def foo[F[_]]: Unit = ???
+      foo[({ type T[A] = Either[Int, A] })#T]
+        """.show[Syntax] ===
+        """{
+            |  def foo[F[_]]: Unit = ???
+            |  foo[({ type T[A] = Either[Int, A] })#T]
+            |}""".stripMargin
+    )
+  }
+
   test("more trickiness") {
     assert(templStat("def foo(bar_ : Int) = ???").show[Syntax] === "def foo(bar_ : Int) = ???")
     assert(templStat("class C[T_ : Foo]").show[Syntax] === "class C[T_ : Foo]")
