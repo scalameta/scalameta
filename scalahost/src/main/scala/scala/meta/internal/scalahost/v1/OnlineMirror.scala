@@ -2,8 +2,6 @@ package scala.meta.internal
 package scalahost
 package v1
 
-import org.scalameta.unreachable
-import org.scalameta.debug
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.compat.Platform.EOL
@@ -17,7 +15,8 @@ class OnlineMirror(val global: Global)
     extends mv1.Mirror
     with DatabaseOps
     with DialectOps
-    with GlobalOps {
+    with GlobalOps
+    with MirrorOps {
 
   override def toString: String = {
     val compiler = s"the Scala compiler ${Properties.versionString}"
@@ -47,35 +46,5 @@ class OnlineMirror(val global: Global)
     if (unmappedNames != "") sys.error(unmappedNames.trim)
     val symbols = databases.flatMap(_.symbols).toMap
     mv1.Database(symbols)
-  }
-
-  def symbol(ref: m.Ref): mv1.Completed[mv1.Symbol] = {
-    def relevantPosition(ref: m.Ref): m.Position = ref match {
-      case name: m.Name                => ref.pos
-      case _: m.Term.This              => ???
-      case _: m.Term.Super             => ???
-      case m.Term.Select(_, name)      => name.pos
-      case m.Term.ApplyUnary(_, name)  => name.pos
-      case m.Type.Select(_, name)      => name.pos
-      case m.Type.Project(_, name)     => name.pos
-      case m.Type.Singleton(ref)       => relevantPosition(ref)
-      case m.Ctor.Ref.Select(_, name)  => name.pos
-      case m.Ctor.Ref.Project(_, name) => name.pos
-      case m.Ctor.Ref.Function(name)   => ???
-      case _: m.Importee.Wildcard      => ???
-      case m.Importee.Name(name)       => name.pos
-      case m.Importee.Rename(name, _)  => name.pos
-      case m.Importee.Unimport(name)   => name.pos
-      case _                           => unreachable(debug(ref.syntax, ref.structure))
-    }
-    val position = relevantPosition(ref)
-    val location = position.toSemantic
-    database.symbols.get(location) match {
-      case Some(symbol) =>
-        mv1.Completed.Success(symbol)
-      case _ =>
-        val message = s"failed to resolve $ref in $this"
-        mv1.Completed.Error(m.SemanticException(ref.pos, message))
-    }
   }
 }

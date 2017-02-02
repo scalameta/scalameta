@@ -6,7 +6,7 @@ import scala.{meta => m}
 import scala.reflect.internal.util.{Position => GPosition}
 import scala.meta.semantic.v1.Location
 
-trait LocationOps extends ReflectionToolkit {
+trait LocationOps {
   implicit class XtensionGPosition(pos: GPosition) {
     def toSemantic = {
       assert(pos.isRange)
