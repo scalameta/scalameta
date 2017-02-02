@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 import scala.meta._
 import scala.meta.contrib._
 
-// TODO: Add replaceStat tests
+// TODO: Add withStat tests
 class StatementsInstancesSuite extends FunSuite {
 
   test("class instance") {
@@ -45,5 +45,6 @@ class StatementsInstancesSuite extends FunSuite {
     assert(q"package foo { }".getStats.isEmpty)
     assert(q"package foo { class foo }".getStats.size === 1)
     assert(q"package foo { class foo; class bar }".getStats.size === 2)
+    assert(q"package foo { package bar { class foo; class bar } }".getStats.size === 2)
   }
 }

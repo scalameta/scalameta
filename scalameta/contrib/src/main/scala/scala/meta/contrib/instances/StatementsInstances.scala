@@ -9,27 +9,37 @@ trait StatementsInstances {
   implicit val termBlockStats: Statements[Term.Block] = new Statements[Term.Block] {
     override def getStats(block: Term.Block): Seq[Stat] = block.stats
 
-    override def replaceStats(block: Term.Block, newStats: Seq[Stat]): Term.Block =
+    override def withStats(block: Term.Block, newStats: Seq[Stat]): Term.Block =
       block.copy(stats = newStats)
   }
 
+  implicit val sourceStats: Statements[Source] = new Statements[Source] {
+    override def getStats(source: Source): Seq[Stat] = source.stats
+
+    override def withStats(source: Source, newStats: Seq[Stat]): Source =
+      source.copy(stats = newStats)
+  }
+
   implicit val packageStats: Statements[Pkg] = new Statements[Pkg] {
-    override def getStats(pkg: Pkg): Seq[Stat] = pkg.stats
+    override def getStats(pkg: Pkg): Seq[Stat] =
+      pkg.stats match {
+        case (p @ Pkg(_, _)) :: Nil =>
+          p.stats
+        case s =>
+          s
+      }
 
     // TODO: Packages have restrictions that all others dont.
-    // aka top level stats only
-    override def replaceStats(pkg: Pkg, newStats: Seq[Stat]): Pkg =
+    // aka top level stats only. But do we care if people break this??
+    override def withStats(pkg: Pkg, newStats: Seq[Stat]): Pkg =
       pkg.copy(stats = newStats)
   }
 
   implicit val templStats: Statements[Template] = new Statements[Template] {
     override def getStats(templ: Template): Seq[Stat] =
-      templ.stats match {
-        case Some(stats) => stats
-        case None => Nil
-      }
+      templ.stats.getOrElse(Nil)
 
-    override def replaceStats(templ: Template, newStats: Seq[Stat]): Template = {
+    override def withStats(templ: Template, newStats: Seq[Stat]): Template = {
       newStats match {
         case Nil => templ.copy(stats = None)
         case s => templ.copy(stats = Some(s))
@@ -41,8 +51,8 @@ trait StatementsInstances {
     override def getStats(clazz: Defn.Class): Seq[Stat] =
       clazz.templ.getStats
 
-    override def replaceStats(clazz: Defn.Class, newStats: Seq[Stat]): Defn.Class = {
-      clazz.copy(templ = clazz.templ.replaceStats(newStats))
+    override def withStats(clazz: Defn.Class, newStats: Seq[Stat]): Defn.Class = {
+      clazz.copy(templ = clazz.templ.withStats(newStats))
     }
   }
 
@@ -50,16 +60,16 @@ trait StatementsInstances {
     override def getStats(obj: Defn.Object): Seq[Stat] =
       obj.templ.getStats
 
-    override def replaceStats(obj: Defn.Object, newStats: Seq[Stat]): Defn.Object =
-      obj.copy(templ = obj.templ.replaceStats(newStats))
+    override def withStats(obj: Defn.Object, newStats: Seq[Stat]): Defn.Object =
+      obj.copy(templ = obj.templ.withStats(newStats))
   }
 
   implicit val traitStats: Statements[Defn.Trait] = new Statements[Defn.Trait] {
     override def getStats(trat: Defn.Trait): Seq[Stat] =
       trat.templ.getStats
 
-    override def replaceStats(trat: Defn.Trait, newStats: Seq[Stat]): Defn.Trait =
-      trat.copy(templ = trat.templ.replaceStats(newStats))
+    override def withStats(trat: Defn.Trait, newStats: Seq[Stat]): Defn.Trait =
+      trat.copy(templ = trat.templ.withStats(newStats))
   }
 
   // All terms are stats, but not all stats are terms
@@ -73,7 +83,7 @@ trait StatementsInstances {
       }
     }
 
-    override def replaceStats(varr: Defn.Var, newStats: Seq[Stat]): Defn.Var = {
+    override def withStats(varr: Defn.Var, newStats: Seq[Stat]): Defn.Var = {
       val maybeTerm = newStats match {
         case Nil => None
         case s => Some(createTermFromStats(s))
@@ -86,7 +96,7 @@ trait StatementsInstances {
     override def getStats(vall: Defn.Val): Seq[Stat] =
       extractStatsFromTerm(vall.rhs)
 
-    override def replaceStats(vall: Defn.Val, newStats: Seq[Stat]): Defn.Val =
+    override def withStats(vall: Defn.Val, newStats: Seq[Stat]): Defn.Val =
       vall.copy(rhs = createTermFromStats(newStats))
   }
 
@@ -94,7 +104,7 @@ trait StatementsInstances {
     override def getStats(deff: Defn.Def): Seq[Stat] =
       extractStatsFromTerm(deff.body)
 
-    override def replaceStats(deff: Defn.Def, newStats: Seq[Stat]): Defn.Def =
+    override def withStats(deff: Defn.Def, newStats: Seq[Stat]): Defn.Def =
       deff.copy(body = createTermFromStats(newStats))
   }
 
