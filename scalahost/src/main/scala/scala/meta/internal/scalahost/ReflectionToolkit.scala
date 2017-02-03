@@ -83,6 +83,24 @@ trait ReflectionToolkit {
     override def toString                     = toMap.toString
   }
 
+  class CompilationUnitCache(unit: CompilationUnit) {
+    def getOrElse[T](key: String, op: => T): T = {
+      val dummyName   = g.TermName("<" + key + "Carrier>")
+      val dummySymbol = unit.checkedFeatures.find(_.name == dummyName)
+      val cached      = dummySymbol.flatMap(_.metadata.get(key).map(_.asInstanceOf[T]))
+      cached.getOrElse({
+        val computed    = op
+        val dummySymbol = g.NoSymbol.newValue(dummyName).appendMetadata(key -> computed)
+        unit.checkedFeatures += dummySymbol
+        computed
+      })
+    }
+  }
+
+  implicit class XtensionCompilationUnitCache(unit: CompilationUnit) {
+    def cache: CompilationUnitCache = new CompilationUnitCache(unit)
+  }
+
   implicit class XtensionDesugarings[T: Attachable](carrier: T) {
     private def rememberOriginal(designation: String, original: Tree): T = {
       if (carrier == original) carrier

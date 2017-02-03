@@ -16,6 +16,7 @@ class OfflineMirror(classpath: String, sourcepath: String)
     with DialectOps
     with MirrorOps
     with PathOps {
+
   if (classpath == "") sys.error("Classpath must be non-empty")
   if (sourcepath == "") sys.error("Sourcepath must be non-empty")
 

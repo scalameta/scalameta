@@ -11,9 +11,9 @@ import scala.compat.Platform.EOL
 
 trait DatabaseOps extends DialectOps with GlobalOps with LocationOps with SymbolOps {
 
-  implicit class XtensionCompilationUnit(unit: g.CompilationUnit) {
+  implicit class XtensionCompilationUnitDatabase(unit: g.CompilationUnit) {
     def toDatabase: Database = {
-      def uncachedComputeDatabase(): Database = {
+      unit.cache.getOrElse("database", {
         if (!g.settings.Yrangepos.value)
           sys.error("The compiler instance must have -Yrangepos enabled")
         if (g.useOffsetPositions) sys.error("The compiler instance must use range positions")
@@ -285,18 +285,6 @@ trait DatabaseOps extends DialectOps with GlobalOps with LocationOps with Symbol
         }
 
         Database(symbols.toMap)
-      }
-
-      val dummyName   = g.TermName("<cachedDatabaseCarrier>")
-      val dummySymbol = unit.checkedFeatures.find(_.name == dummyName)
-      val cachedDatabase =
-        dummySymbol.flatMap(_.metadata.get("database").map(_.asInstanceOf[Database]))
-      cachedDatabase.getOrElse({
-        val computedDatabase = uncachedComputeDatabase()
-        val dummySymbol =
-          g.NoSymbol.newValue(dummyName).appendMetadata("database" -> computedDatabase)
-        unit.checkedFeatures += dummySymbol
-        computedDatabase
       })
     }
   }

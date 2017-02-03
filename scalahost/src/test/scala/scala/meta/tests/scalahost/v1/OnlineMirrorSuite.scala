@@ -13,10 +13,16 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.meta.semantic.v1.Mirror
 import scala.meta.semantic.v1.Database
-import scala.meta.internal.scalahost.v1.OnlineMirror
+import scala.meta.internal.scalahost.v1._
 
-abstract class OnlineMirrorSuite extends FunSuite {
-  lazy val g: Global = {
+abstract class OnlineMirrorSuite extends FunSuite with ParseOps {
+  private def test(code: String)(fn: => Unit): Unit = {
+    var name = code.trim.replace(EOL, " ")
+    if (name.length > 50) name = name.take(50) + "..."
+    super.test(name)(fn)
+  }
+
+  override lazy val global: Global = {
     def fail(msg: String) = sys.error(s"OnlineMirrorSuite initialization failed: $msg")
     val classpath         = System.getProperty("sbt.paths.scalahost.test.classes")
     val pluginpath        = System.getProperty("sbt.paths.scalahost.compile.jar")
@@ -71,11 +77,8 @@ abstract class OnlineMirrorSuite extends FunSuite {
     unit.asInstanceOf[mirror.g.CompilationUnit].toDatabase
   }
 
-  def database(code: String, dump: String): Unit = {
-    var name = code.trim.replace(EOL, " ")
-    if (name.length > 50) name = name.take(50) + "..."
-
-    test(name) {
+  def database(code: String, expected: String): Unit = {
+    test(code) {
       val database = computeDatabaseFromSnippet(code)
       val lines = database.symbols.keys.toList
         .sortBy(_.start)
@@ -84,7 +87,80 @@ abstract class OnlineMirrorSuite extends FunSuite {
           val symbol  = database.symbols(k)
           s"[${k.start}..${k.end}): $snippet => ${symbol.id}"
         })
-      lines.mkString(EOL)
+      val path   = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
+      val actual = lines.mkString(EOL).replace(path, "<...>")
+      assert(expected === actual)
+    }
+  }
+
+  private def computeDatabaseFromMarkup(markup: String): List[m.Name] = {
+    val chevrons = "<<(.*?)>>".r
+    val ps0      = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList
+    val ps       = ps0.zipWithIndex.map { case ((s, e), i) => (s - 4 * i, e - 4 * i - 4) }
+    val code     = chevrons.replaceAllIn(markup, "$1")
+    val database = computeDatabaseFromSnippet(code)
+    val source   = XtensionCompilationUnitSource(g.currentRun.units.toList.last).toSource
+    ps.map {
+      case (s, e) =>
+        val names = source.collect {
+          case name: m.Name if name.pos.start.offset == s && name.pos.end.offset == e => name
+        }
+        val chevron = "<<" + code.substring(s, e) + ">>"
+        names match {
+          case Nil        => sys.error(chevron + " does not wrap a name")
+          case List(name) => name
+          case _          => sys.error("fatal error processing " + chevron)
+        }
+    }
+  }
+
+  def targeted(markup: String, fn: () => Unit): Unit = {
+    test(markup) {
+      val names = computeDatabaseFromMarkup(markup)
+      names match {
+        case List() => fn()
+        case _      => sys.error(s"0 chevrons expected, ${names.length} chevrons found")
+      }
+    }
+  }
+
+  def targeted(markup: String, fn: m.Name => Unit): Unit = {
+    test(markup) {
+      val names = computeDatabaseFromMarkup(markup)
+      names match {
+        case List(name1) => fn(name1)
+        case _           => sys.error(s"1 chevron expected, ${names.length} chevrons found")
+      }
+    }
+  }
+
+  def targeted(markup: String, fn: (m.Name, m.Name) => Unit): Unit = {
+    test(markup) {
+      val names = computeDatabaseFromMarkup(markup)
+      names match {
+        case List(name1, name2) => fn(name1, name2)
+        case _                  => sys.error(s"2 chevrons expected, ${names.length} chevrons found")
+      }
+    }
+  }
+
+  def targeted(markup: String, fn: (m.Name, m.Name, m.Name) => Unit): Unit = {
+    test(markup) {
+      val names = computeDatabaseFromMarkup(markup)
+      names match {
+        case List(name1, name2, name3) => fn(name1, name2, name3)
+        case _                         => sys.error(s"3 chevrons expected, ${names.length} chevrons found")
+      }
+    }
+  }
+
+  def targeted(markup: String, fn: (m.Name, m.Name, m.Name, m.Name) => Unit): Unit = {
+    test(markup) {
+      val names = computeDatabaseFromMarkup(markup)
+      names match {
+        case List(name1, name2, name3, name4) => fn(name1, name2, name3, name4)
+        case _                                => sys.error(s"4 chevrons expected, ${names.length} chevrons found")
+      }
     }
   }
 }

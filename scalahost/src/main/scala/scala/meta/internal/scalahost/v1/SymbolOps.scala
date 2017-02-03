@@ -5,7 +5,7 @@ package v1
 import scala.{meta => m}
 
 trait SymbolOps extends ReflectionToolkit {
-  implicit class XtensionGSymbol(sym: g.Symbol) {
+  implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     def toSemantic: m.Symbol = {
       def symbolId(sym: g.Symbol): String = {
         if (sym == null || sym == g.NoSymbol) return null

@@ -16,7 +16,8 @@ class OnlineMirror(val global: Global)
     with DatabaseOps
     with DialectOps
     with GlobalOps
-    with MirrorOps {
+    with MirrorOps
+    with ParseOps {
 
   override def toString: String = {
     val compiler = s"the Scala compiler ${Properties.versionString}"
@@ -24,16 +25,11 @@ class OnlineMirror(val global: Global)
     s"online mirror for $compiler running with $settings"
   }
 
-  lazy val sources: Seq[m.Source] = {
-    g.currentRun.units.toList.map(unit => {
-      val jfile = unit.source.file.file
-      if (jfile == null)
-        sys.error("Unsupported compilation unit with abstract file ${unit.source.file}")
-      dialect(jfile).parse[m.Source].get
-    })
+  def sources: Seq[m.Source] = {
+    g.currentRun.units.toList.map(_.toSource)
   }
 
-  lazy val database: mv1.Database = {
+  def database: mv1.Database = {
     var unmappedNames = ""
     val databases = g.currentRun.units.toList.map(unit => {
       try unit.toDatabase

@@ -8,8 +8,6 @@ import scala.{meta => m}
 trait GlobalOps extends ReflectionToolkit {
   import global._
 
-  // ============ PRETTYPRINTING ============
-
   def syntaxAndPos(gtree: g.Tree): String = {
     if (gtree == g.EmptyTree) "\u001b[1;31mEmptyTree\u001b[0m"
     else
@@ -20,8 +18,6 @@ trait GlobalOps extends ReflectionToolkit {
   def syntaxAndPos(mtree: m.Tree): String = {
     s"$mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
   }
-
-  // ============ SYMBOLS ============
 
   def wrapAlternatives(name: String, alts: Symbol*): Symbol = {
     val normalizedAlts = {
