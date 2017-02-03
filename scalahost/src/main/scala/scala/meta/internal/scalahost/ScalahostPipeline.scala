@@ -29,7 +29,10 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
           if (databaseFile.exists) Database.readFile(databaseFile) else Database(Map())
         val database       = new v1.OnlineMirror(global).database
         val mergedDatabase = prevDatabase.append(database)
-        Database.writeFile(databaseFile, mergedDatabase)
+        val allowedUris    = global.currentRun.units.map(_.source.file.file.toURI.toString).toSet
+        val trimmedDatabase = Database(
+          mergedDatabase.symbols.filterKeys(k => allowedUris.contains(k.uri.toString)))
+        Database.writeFile(databaseFile, trimmedDatabase)
       }
     }
   }
