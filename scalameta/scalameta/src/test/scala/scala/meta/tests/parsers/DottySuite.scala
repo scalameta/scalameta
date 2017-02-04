@@ -60,4 +60,9 @@ class DottySuite extends ParseSuite {
   test("A | B") {
     val Or(TypeName("A"), TypeName("B")) = tpe("A | B")
   }
+
+  test("literal types are allowed") {
+    val tree = dialects.Dotty("val a: 42 = 42").parse[Stat].get
+    assert(tree.syntax === "val a: 42 = 42")
+  }
 }

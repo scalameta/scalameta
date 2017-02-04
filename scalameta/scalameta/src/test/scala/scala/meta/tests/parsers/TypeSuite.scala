@@ -125,4 +125,16 @@ class TypeSuite extends ParseSuite {
     val comp@ApplyInfix(TypeName("A"), TypeName("|"), TypeName("B")) = tpe("A | B")
   }
 
+  test("42.type") {
+    intercept[ParseException] {
+      tpe("42")(dialects.Scala211)
+    }
+    val Lit(42) = tpe("42")(dialects.Dotty)
+    val Lit(42L) = tpe("42L")(dialects.Dotty)
+    val Lit(42f) = tpe("42f")(dialects.Dotty)
+    val Lit(42d) = tpe("42d")(dialects.Dotty)
+    val Lit("42") = tpe("\"42\"")(dialects.Dotty)
+    val Lit(false) = tpe("false")(dialects.Dotty)
+    val Lit(true) = tpe("true")(dialects.Dotty)
+  }
 }
