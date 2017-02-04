@@ -11,6 +11,7 @@ The current maintainers (people who can merge pull requests) are:
 
 * Eugene Burmako - [`@xeno-by`](https://github.com/xeno-by)
 * Denys Shabalin - [`@densh`](https://github.com/densh)
+* Mikhail Mutcianko - [`@mutcianm`](https://github.com/mutcianm)
 * Ólafur Páll Geirsson - [`@olafurpg`](https://github.com/olafurpg)
 * David Dudson - [`@DavidDudson`](https://github.com/DavidDudson)
 
