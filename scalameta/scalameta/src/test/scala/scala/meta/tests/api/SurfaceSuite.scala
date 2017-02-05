@@ -143,6 +143,8 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
       |* scala.meta.Pat.Type.tpe: scala.meta.Type
       |* scala.meta.Ref(implicit scala.meta.semantic.v1.Mirror).symbol: scala.meta.semantic.v1.Symbol
+      |* scala.meta.Tree(implicit scala.meta.semantic.v1.Mirror).=!=(scala.meta.Tree): Boolean
+      |* scala.meta.Tree(implicit scala.meta.semantic.v1.Mirror).===(scala.meta.Tree): Boolean
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit

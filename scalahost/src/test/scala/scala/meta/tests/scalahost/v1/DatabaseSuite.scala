@@ -37,4 +37,20 @@ class DatabaseSuite extends OnlineMirrorSuite {
            second => {
              assert(second.symbol === Symbol("_empty_.Second."))
            })
+
+  targeted("""
+    |object Third {
+    |  val x1: scala.<<Int>> = ???
+    |  val x2: <<Int>> = ???
+    |  locally {
+    |    type Int = String
+    |    val x3: <<Int>> = ???
+    |  }
+    |}
+  """.trim.stripMargin,
+           (intname1, int2, int3) => {
+             val int1 = intname1.parent.get.asInstanceOf[Type.Select]
+             assert(int1 === int2)
+             assert(int1 =!= int3)
+           })
 }

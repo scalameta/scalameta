@@ -8,6 +8,11 @@ package v1
 // and only then will approach really tricky tasks (https://github.com/scalameta/scalameta/issues/623).
 
 private[meta] trait Api {
+  implicit class XtensionSemanticEquality(tree1: Tree)(implicit m: Mirror) {
+    def ===(tree2: Tree): Boolean = scala.meta.internal.semantic.v1.Equality.equals(tree1, tree2)
+    def =!=(tree2: Tree): Boolean = !(tree1 === tree2)
+  }
+
   implicit class XtensionRefSymbol(ref: Ref)(implicit m: Mirror) {
     def symbol: Symbol = m.symbol(ref).get
   }
