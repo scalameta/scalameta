@@ -36,8 +36,8 @@ object Completed {
   }
 }
 
-@data class SemanticException(pos: Position, shortMessage: String)
-extends Exception(pos.formatMessage("error", shortMessage)) {
+@data class SemanticException(pos: Position, shortMessage: String, cause: Option[Throwable] = None)
+extends Exception(pos.formatMessage("error", shortMessage), cause.orNull) {
   def fullMessage = getMessage
   override def toString = fullMessage
 }

@@ -53,4 +53,13 @@ class DatabaseSuite extends OnlineMirrorSuite {
              assert(int1 === int2)
              assert(int1 =!= int3)
            })
+
+  targeted("""
+    |object Fourth {
+    |  val x: <<Int>> = ???
+    |}
+  """.trim.stripMargin,
+           (int) => {
+             assert(int === t"Int")
+           })
 }

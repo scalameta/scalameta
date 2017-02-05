@@ -13,16 +13,16 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.meta.semantic.v1.Mirror
 import scala.meta.semantic.v1.Database
-import scala.meta.internal.scalahost.v1._
+import scala.meta.internal.scalahost.v1.online.{Mirror => OnlineMirror, _}
 
-abstract class OnlineMirrorSuite extends FunSuite with ParseOps {
+abstract class OnlineMirrorSuite extends FunSuite {
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
     super.test(name)(fn)
   }
 
-  override lazy val global: Global = {
+  lazy val g: Global = {
     def fail(msg: String) = sys.error(s"OnlineMirrorSuite initialization failed: $msg")
     val classpath         = System.getProperty("sbt.paths.scalahost.test.classes")
     val pluginpath        = System.getProperty("sbt.paths.scalahost.compile.jar")
@@ -73,6 +73,8 @@ abstract class OnlineMirrorSuite extends FunSuite with ParseOps {
       val errors = reporter.infos.filter(_.severity == reporter.ERROR)
       errors.foreach(error => fail(s"scalac ${phase.name} error: ${error.msg} at ${error.pos}"))
     })
+    g.phase = run.phaseNamed("patmat")
+    g.globalPhase = run.phaseNamed("patmat")
 
     unit.asInstanceOf[mirror.g.CompilationUnit].toDatabase
   }
@@ -99,7 +101,8 @@ abstract class OnlineMirrorSuite extends FunSuite with ParseOps {
     val ps       = ps0.zipWithIndex.map { case ((s, e), i) => (s - 4 * i, e - 4 * i - 4) }
     val code     = chevrons.replaceAllIn(markup, "$1")
     val database = computeDatabaseFromSnippet(code)
-    val source   = XtensionCompilationUnitSource(g.currentRun.units.toList.last).toSource
+    val unit     = g.currentRun.units.toList.last.asInstanceOf[mirror.g.CompilationUnit]
+    val source   = unit.toSource
     ps.map {
       case (s, e) =>
         val names = source.collect {

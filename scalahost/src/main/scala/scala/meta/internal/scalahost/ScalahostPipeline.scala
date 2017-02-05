@@ -6,6 +6,7 @@ import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
 import scala.compat.Platform.EOL
 import scala.meta.semantic.v1.Database
+import scala.meta.internal.scalahost.v1.online.{Mirror => OnlineMirror}
 
 trait ScalahostPipeline { self: ScalahostPlugin =>
 
@@ -27,7 +28,7 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
         val databaseFile = new File(global.settings.d.value + "/semanticdb")
         val prevDatabase =
           if (databaseFile.exists) Database.readFile(databaseFile) else Database(Map())
-        val database       = new v1.OnlineMirror(global).database
+        val database       = new OnlineMirror(global).database
         val mergedDatabase = prevDatabase.append(database)
         val allowedUris    = global.currentRun.units.map(_.source.file.file.toURI.toString).toSet
         val trimmedDatabase = Database(

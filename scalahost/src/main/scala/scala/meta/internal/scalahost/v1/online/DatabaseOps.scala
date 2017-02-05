@@ -1,30 +1,34 @@
 package scala.meta.internal
 package scalahost
 package v1
+package online
 
 import scala.collection.mutable
 import scala.reflect.internal.util._
+import scala.reflect.internal.Flags._
 import scala.tools.nsc.Global
 import scala.{meta => m}
 import scala.meta.semantic.v1.{Location, Database}
 import scala.compat.Platform.EOL
 
-trait DatabaseOps extends DialectOps with GlobalOps with LocationOps with SymbolOps {
+trait DatabaseOps { self: Mirror =>
 
   implicit class XtensionCompilationUnitDatabase(unit: g.CompilationUnit) {
     def toDatabase: Database = {
       unit.cache.getOrElse("database", {
         if (!g.settings.Yrangepos.value)
-          sys.error("The compiler instance must have -Yrangepos enabled")
+          sys.error("the compiler instance must have -Yrangepos enabled")
         if (g.useOffsetPositions) sys.error("The compiler instance must use range positions")
         if (!g.settings.plugin.value.exists(_.contains("scalahost")))
-          sys.error("The compiler instance must use the scalahost plugin")
-        if (!g.analyzer.getClass.getName.contains("scalahost"))
-          sys.error("The compiler instance must use a hijacked analyzer")
+          sys.error("the compiler instance must use the scalahost plugin")
+        if (!g.analyzer.getClass.getName.contains("scalahost")) {
+          println(g.analyzer.getClass.getName)
+          sys.error("the compiler instance must use a hijacked analyzer")
+        }
         if (g.phase.id < g.currentRun.phaseNamed("typer").id)
-          sys.error("The compiler phase must be not earlier than typer")
+          sys.error("the compiler phase must be not earlier than typer")
         if (g.phase.id > g.currentRun.phaseNamed("patmat").id)
-          sys.error("The compiler phase must be not later than patmat")
+          sys.error("the compiler phase must be not later than patmat")
 
         val symbols      = mutable.Map[Location, m.Symbol]()
         val todo         = mutable.Set[m.Name]() // names to map to global trees
@@ -122,12 +126,7 @@ trait DatabaseOps extends DialectOps with GlobalOps with LocationOps with Symbol
               super.apply(mtree)
             }
           }
-
-          val jfile = unit.source.file.file
-          if (jfile == null)
-            sys.error("Unsupported compilation unit with abstract file ${unit.source.file}")
-          val msource = dialect(jfile).parse[m.Source].get
-          traverser(msource)
+          traverser(unit.toSource)
         }
 
         locally {
@@ -286,6 +285,34 @@ trait DatabaseOps extends DialectOps with GlobalOps with LocationOps with Symbol
 
         Database(symbols.toMap)
       })
+    }
+  }
+
+  private def syntaxAndPos(gtree: g.Tree): String = {
+    if (gtree == g.EmptyTree) "\u001b[1;31mEmptyTree\u001b[0m"
+    else
+      s"${gtree.toString
+        .substring(0, Math.min(45, gtree.toString.length))
+        .replace("\n", " ")} [${gtree.pos.start}..${gtree.pos.end})"
+  }
+
+  private def syntaxAndPos(mtree: m.Tree): String = {
+    s"$mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
+  }
+
+  private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
+    val normalizedAlts = {
+      val alts1 = alts.toList.filter(_.exists)
+      val alts2 = alts1.map(alt => if (alt.isModuleClass) alt.asClass.module else alt)
+      alts2.distinct
+    }
+    normalizedAlts match {
+      case List(sym) =>
+        sym
+      case normalizedAlts =>
+        val wrapper = g.NoSymbol.newTermSymbol(g.TermName(name))
+        wrapper.setFlag(OVERLOADED)
+        wrapper.setInfo(g.OverloadedType(g.NoType, normalizedAlts))
     }
   }
 }

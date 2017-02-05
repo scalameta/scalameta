@@ -1,13 +1,15 @@
 package scala.meta.internal
 package scalahost
 package v1
+package offline
 
 import java.io._
 import java.net.URI
 import java.util.zip._
 import scala.collection.mutable
 
-trait PathOps {
+trait PathOps { self: Mirror =>
+
   implicit class XtensionMultipath(s: String) {
     def paths: List[URI] = {
       s.split(File.pathSeparatorChar).map(s => new File(s).toURI).toList

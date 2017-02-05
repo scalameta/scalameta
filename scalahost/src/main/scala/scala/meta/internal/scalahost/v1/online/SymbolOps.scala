@@ -1,10 +1,12 @@
 package scala.meta.internal
 package scalahost
 package v1
+package online
 
 import scala.{meta => m}
 
-trait SymbolOps extends ReflectionToolkit {
+trait SymbolOps { self: Mirror =>
+
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     def toSemantic: m.Symbol = {
       def symbolId(sym: g.Symbol): String = {

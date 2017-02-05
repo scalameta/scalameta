@@ -328,4 +328,11 @@ object Helpers {
       Some(recur(Nil, call))
     }
   }
+
+  implicit class XtensionTreeRoot(tree: Tree) {
+    def root: Tree = tree.parent match {
+      case Some(parent) => parent.root
+      case None => tree
+    }
+  }
 }
