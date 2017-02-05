@@ -169,7 +169,7 @@ lazy val testkit = Project(
     "com.lihaoyi" %% "geny" % "0.1.1",
     // These are used to download and extract a corpus tar.gz
     "org.rauschig" % "jarchivelib" % "0.7.1",
-    "org.apache.commons" % "commons-io"  % "1.3.2"
+    "commons-io" % "commons-io"  % "2.5"
   ),
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
   description := "Testing utilities for scala.meta's metaprogramming APIs"
