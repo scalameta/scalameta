@@ -67,19 +67,19 @@ trait Mirror extends MirrorApi with LocationOps {
   }
 
   private def isTypechecked(tree: Tree): Boolean = {
-    val indexedUris = database.symbols.keys.map(_.uri.toString).toSet
-    var allIndexed  = true
+    val indexedAddrs = database.symbols.keys.map(_.addr).toSet
+    var allIndexed   = true
     object traverser extends Traverser {
       override def apply(tree: Tree): Unit = {
-        val uri = {
-          try tree.root.pos.toSemantic.uri
+        val addr = {
+          try tree.pos.toSemantic.addr
           catch {
             case ex: Exception =>
               allIndexed = false
               return
           }
         }
-        if (indexedUris(uri)) {
+        if (indexedAddrs(addr)) {
           super.apply(tree)
         } else {
           allIndexed = false

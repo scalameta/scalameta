@@ -82,6 +82,9 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.quasiquotes.Unlift
       |scala.meta.semantic
       |scala.meta.semantic.v1 *
+      |scala.meta.semantic.v1.Address *
+      |scala.meta.semantic.v1.Address.File *
+      |scala.meta.semantic.v1.Address.Snippet *
       |scala.meta.semantic.v1.Completed *
       |scala.meta.semantic.v1.Completed.Error *
       |scala.meta.semantic.v1.Completed.Success *
@@ -89,7 +92,18 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.semantic.v1.Location *
       |scala.meta.semantic.v1.Mirror
       |scala.meta.semantic.v1.SemanticException
+      |scala.meta.semantic.v1.Signature *
+      |scala.meta.semantic.v1.Signature.Method *
+      |scala.meta.semantic.v1.Signature.Self *
+      |scala.meta.semantic.v1.Signature.Term *
+      |scala.meta.semantic.v1.Signature.TermParameter *
+      |scala.meta.semantic.v1.Signature.Type *
+      |scala.meta.semantic.v1.Signature.TypeParameter *
       |scala.meta.semantic.v1.Symbol
+      |scala.meta.semantic.v1.Symbol.Global
+      |scala.meta.semantic.v1.Symbol.Local
+      |scala.meta.semantic.v1.Symbol.Multi
+      |scala.meta.semantic.v1.Symbol.None
       |scala.meta.tokenizers
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException

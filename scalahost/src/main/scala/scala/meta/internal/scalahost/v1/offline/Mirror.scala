@@ -42,8 +42,8 @@ class Mirror(classpath: String, sourcepath: String)
         else Nil
       })
       .sortBy(_.getName)
-    val databases = databaseFiles.map(Database.readFile)
-    databases.foldLeft(Database(Map()))(_ append _)
+    val databases = databaseFiles.map(Database.apply)
+    databases.foldLeft(Database())(_ append _)
   }
 
   def database: Database = {

@@ -4,10 +4,12 @@ package scalahost
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.typechecker.ScalahostAnalyzer
+import scala.meta.internal.scalahost.v1.LocationOps
 
 class ScalahostPlugin(val global: Global)
     extends Plugin
     with HijackAnalyzer
+    with LocationOps
     with ReflectionToolkit
     with ScalahostAnalyzer
     with ScalahostPipeline {

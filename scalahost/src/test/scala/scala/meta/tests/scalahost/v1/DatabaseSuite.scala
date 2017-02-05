@@ -21,10 +21,10 @@ class DatabaseSuite extends OnlineMirrorSuite {
     |[32..37): Array => _root_.scala.Array#
     |[38..44): String => _root_.scala.Predef.String#
     |[48..52): Unit => _root_.scala.Unit#
-    |[65..69): list => file:<...>@65
+    |[65..69): list => file:<...>@61..85
     |[72..76): List => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
     |[90..97): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
-    |[98..102): list => file:<...>@65
+    |[98..102): list => file:<...>@61..85
   """.trim.stripMargin)
 
   targeted("""

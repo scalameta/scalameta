@@ -137,7 +137,7 @@ trait DatabaseOps { self: Mirror =>
                 if (symbols.contains(loc)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
                 val symbol = gsym.toSemantic
-                if (symbol == null) return
+                if (symbol == m.Symbol.None) return
 
                 symbols(loc) = symbol
                 todo -= mtree

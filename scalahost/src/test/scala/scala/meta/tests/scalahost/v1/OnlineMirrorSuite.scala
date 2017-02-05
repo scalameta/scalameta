@@ -82,15 +82,8 @@ abstract class OnlineMirrorSuite extends FunSuite {
   def database(code: String, expected: String): Unit = {
     test(code) {
       val database = computeDatabaseFromSnippet(code)
-      val lines = database.symbols.keys.toList
-        .sortBy(_.start)
-        .map(k => {
-          val snippet = code.substring(k.start, k.end)
-          val symbol  = database.symbols(k)
-          s"[${k.start}..${k.end}): $snippet => ${symbol.id}"
-        })
-      val path   = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
-      val actual = lines.mkString(EOL).replace(path, "<...>")
+      val path     = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
+      val actual   = database.toString.split(EOL).drop(1).mkString(EOL).replace(path, "<...>")
       assert(expected === actual)
     }
   }
