@@ -83,6 +83,7 @@ object Database extends DatabaseOps {
             sys.error(s"$i:${ex.getMessage}$EOL$line")
         }
       }
+      i += 1
 
       section.toMap
     }
