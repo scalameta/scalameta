@@ -169,7 +169,7 @@ lazy val scalahost = Project(
     // Until this bug is fixed, we work around.
     if (shouldPublishToBintray) false
     else if (shouldPublishToSonatype) true
-    else sys.error("Undefined publishing strategy")
+    else (publishArtifact in (Compile, packageSrc)).value
   },
   mergeSettings,
   description := "Scala.meta's connector to the Scala compiler",
