@@ -162,6 +162,15 @@ lazy val scalahost = Project(
   base = file("scalahost")
 ) settings (
   publishableSettings,
+  publishArtifact in (Compile, packageSrc) := {
+    // TODO: addCompilerPlugin for ivy repos is kinda broken.
+    // If sbt finds a sources jar for a compiler plugin, it tries to add it to -Xplugin,
+    // leading to nonsensical scalac invocations like `-Xplugin:...-sources.jar -Xplugin:...jar`.
+    // Until this bug is fixed, we work around.
+    if (shouldPublishToBintray) false
+    else if (shouldPublishToSonatype) true
+    else sys.error("Undefined publishing strategy")
+  },
   mergeSettings,
   description := "Scala.meta's connector to the Scala compiler",
   crossVersion := CrossVersion.full,
