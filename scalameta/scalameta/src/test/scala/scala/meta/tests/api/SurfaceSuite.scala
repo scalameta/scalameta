@@ -88,7 +88,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.semantic.v1.Completed *
       |scala.meta.semantic.v1.Completed.Error *
       |scala.meta.semantic.v1.Completed.Success *
-      |scala.meta.semantic.v1.Database *
+      |scala.meta.semantic.v1.Database
       |scala.meta.semantic.v1.Location *
       |scala.meta.semantic.v1.Mirror
       |scala.meta.semantic.v1.SemanticException

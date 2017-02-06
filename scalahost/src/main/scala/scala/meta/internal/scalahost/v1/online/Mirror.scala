@@ -14,10 +14,9 @@ import scala.reflect.internal.util.{BatchSourceFile => GBatchSourceFile}
 import scala.tools.nsc.reporters.{StoreReporter => GStoreReporter}
 import scala.tools.nsc.Global
 import scala.meta._
-import scala.meta.semantic.v1.{Mirror => MirrorApi, _}
+import scala.meta.semantic.v1.{Mirror => MirrorApi}
 import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.scalahost.v1.{Mirror => BaseMirror}
-import scala.meta.internal.semantic.v1._
 
 class Mirror(val global: Global)
     extends MirrorApi
@@ -33,13 +32,18 @@ class Mirror(val global: Global)
     s"online mirror for $compiler running with $settings"
   }
 
+  private val adhocUnits = mutable.ListBuffer[g.CompilationUnit]()
+  private def compilerUnits: Seq[g.CompilationUnit] = {
+    g.currentRun.units.filter(!_.source.file.name.endsWith(".java")).toList
+  }
+
   def sources: Seq[Source] = {
-    g.currentRun.units.toList.map(_.toSource)
+    compilerUnits.toList.map(_.toSource)
   }
 
   def database: Database = {
     var unmappedNames = ""
-    val units         = g.currentRun.units.toList ++ adhocUnits.toList
+    val units         = compilerUnits ++ adhocUnits
     val databases = units.map(unit => {
       try unit.toDatabase
       catch {
@@ -53,7 +57,6 @@ class Mirror(val global: Global)
     Database(symbols)
   }
 
-  private val adhocUnits = mutable.ListBuffer[g.CompilationUnit]()
   def typecheck(tree: Tree): Tree = {
     if (isUnpositioned(tree)) {
       def typecheckRoot(tree: Tree): Tree = {
@@ -68,7 +71,7 @@ class Mirror(val global: Global)
               // That's done because semantic APIs don't work without positions.
               val objectName = Term.fresh("scalahost$")
               val wrapper    = q"object $objectName { $member }".syntax.parse[Source].get
-              val addr       = Address.Snippet(wrapper.syntax)
+              val addr       = scala.meta.semantic.v1.Address.Snippet(wrapper.syntax)
               minputMap(wrapper.pos.input) = addr
               val member1 = wrapper.children(0).children(1).children(1)
 
