@@ -20,7 +20,6 @@ import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
 import scala.meta.internal.dialects.InstantiateDialect
-import scala.meta.internal.{semantic => s}
 import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.parsers.Messages
@@ -366,12 +365,9 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         }
       }
     }
-    object Liftables extends s.DenotationLiftables
-                        with s.TypingLiftables
-                        with s.EnvironmentLiftables {
+    object Liftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
-      override lazy val u: c.universe.type = c.universe
       implicit def liftableSubTree[T <: MetaTree]: Liftable[T] = Liftable((tree: T) => materializeAst[MetaTree].apply(tree))
       implicit def liftableSubTrees[T <:MetaTree]: Liftable[Seq[T]] = Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
       implicit def liftableSubTreess[T <: MetaTree]: Liftable[Seq[Seq[T]]] = Liftable((treess: Seq[Seq[T]]) => Lifts.liftTreess(treess))

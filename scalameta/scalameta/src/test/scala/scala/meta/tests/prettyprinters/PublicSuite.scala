@@ -249,6 +249,140 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.semantic.v1.Address.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.v1.Address.File.toString") {
+    val syntax = "file:source.scala"
+    val address = scala.meta.semantic.v1.Address(syntax)
+    val scala.meta.semantic.v1.Address.File("source.scala") = address
+    assert(address.toString === syntax)
+  }
+
+  test("scala.meta.semantic.v1.Address.Snippet.toString") {
+    val syntax = "snippet:Int"
+    val address = scala.meta.semantic.v1.Address(syntax)
+    val scala.meta.semantic.v1.Address.Snippet("Int") = address
+    assert(address.toString === syntax)
+  }
+
+  test("scala.meta.semantic.v1.Completed.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.v1.Completed.Error.toString") {
+    // n/a
+  }
+
+  test("scala.meta.semantic.v1.Completed.Success.toString") {
+    // n/a
+  }
+
+  test("scala.meta.semantic.v1.Database.toString") {
+    // n/a
+  }
+
+  test("scala.meta.semantic.v1.Location.toString") {
+    val location = scala.meta.semantic.v1.Location(scala.meta.semantic.v1.Address("file:source.scala"), 40, 42)
+    assert(location.toString === """Location(Address("file:source.scala"), 40, 42)""")
+  }
+
+  test("scala.meta.semantic.v1.Mirror.toString") {
+    // n/a
+  }
+
+  test("scala.meta.semantic.v1.SemanticException.toString") {
+    // n/a
+  }
+
+  test("scala.meta.semantic.v1.Signature.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.v1.Signature.Method.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.v1.Signature.Self.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.v1.Signature.Term.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.v1.Signature.TermParameter.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.v1.Signature.Type.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.v1.Signature.TypeParameter.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.v1.Symbol.toString") {
+    import scala.meta.semantic.v1.Address
+    import scala.meta.semantic.v1.Symbol
+    import scala.meta.semantic.v1.Signature
+
+    val syntaxNone = ""
+    val none @ Symbol.None = Symbol(syntaxNone)
+    assert(none.toString === syntaxNone)
+
+    val syntaxGlobalTerm = "_root_.scala."
+    val globalTerm @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("scala")) = Symbol(syntaxGlobalTerm)
+    assert(globalTerm.toString === syntaxGlobalTerm)
+
+    val syntaxGlobalType = "_root_.C#"
+    val globalType @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Type("C")) = Symbol(syntaxGlobalType)
+    assert(globalType.toString === syntaxGlobalType)
+
+    val syntaxGlobalMethod = "_root_.m(I)I."
+    val globalMethod @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Method("m", "(I)I")) = Symbol(syntaxGlobalMethod)
+    assert(globalMethod.toString === syntaxGlobalMethod)
+
+    val syntaxGlobalTermParameter = "_root_.(x)"
+    val globalTermParameter @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.TermParameter("x")) = Symbol(syntaxGlobalTermParameter)
+    assert(globalTermParameter.toString === syntaxGlobalTermParameter)
+
+    val syntaxGlobalTypeParameter = "_root_.[T]"
+    val globalTypeParameter @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.TypeParameter("T")) = Symbol(syntaxGlobalTypeParameter)
+    assert(globalTypeParameter.toString === syntaxGlobalTypeParameter)
+
+    val syntaxGlobalSelf = "_root_.self=>"
+    val globalSelf @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Self("self")) = Symbol(syntaxGlobalSelf)
+    assert(globalSelf.toString === syntaxGlobalSelf)
+
+    val syntaxLocal = "file:source.scala@40..42"
+    val local @ Symbol.Local(Address.File("source.scala"), 40, 42) = Symbol(syntaxLocal)
+    assert(local.toString === syntaxLocal)
+
+    // TODO: implement this
+    // val syntaxMulti = "_root_.C#;_root.C."
+    // val multi @ Symbol.Multi(List(Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Type("C")), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root")), Signature.Term("C")))) = Symbol(syntaxMulti)
+    // assert(multi.toString === syntaxMulti)
+  }
+
+  test("scala.meta.semantic.v1.Symbol.Global.toString") {
+    // covered above
+  }
+
+  test("scala.meta.semantic.v1.Symbol.Local.toString") {
+    // covered above
+  }
+
+  test("scala.meta.semantic.v1.Symbol.Multi.toString") {
+    // covered above
+  }
+
+  test("scala.meta.semantic.v1.Symbol.None.toString") {
+    // covered above
+  }
+
   test("scala.meta.tokenizers.Tokenize.toString") {
     // n/a
   }
