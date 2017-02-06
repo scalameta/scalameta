@@ -33,13 +33,18 @@ class Mirror(val global: Global)
     s"online mirror for $compiler running with $settings"
   }
 
+  private val adhocUnits = mutable.ListBuffer[g.CompilationUnit]()
+  private def compilerUnits: Seq[g.CompilationUnit] = {
+    g.currentRun.units.filter(!_.source.file.name.endsWith(".java")).toList
+  }
+
   def sources: Seq[Source] = {
-    g.currentRun.units.toList.map(_.toSource)
+    compilerUnits.toList.map(_.toSource)
   }
 
   def database: Database = {
     var unmappedNames = ""
-    val units         = g.currentRun.units.toList ++ adhocUnits.toList
+    val units         = compilerUnits ++ adhocUnits
     val databases = units.map(unit => {
       try unit.toDatabase
       catch {
@@ -53,7 +58,6 @@ class Mirror(val global: Global)
     Database(symbols)
   }
 
-  private val adhocUnits = mutable.ListBuffer[g.CompilationUnit]()
   def typecheck(tree: Tree): Tree = {
     if (isUnpositioned(tree)) {
       def typecheckRoot(tree: Tree): Tree = {
