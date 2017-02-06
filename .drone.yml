@@ -22,6 +22,7 @@ build:
       - GITHUB_PASSWORD=$$GITHUB_PASSWORD
       - BINTRAY_USERNAME=$$BINTRAY_USERNAME
       - BINTRAY_API_KEY=$$BINTRAY_API_KEY
+      - MAILGUN_PASSWORD=$$MAILGUN_PASSWORD
     commands:
       - ./bin/bintray.sh
     when:
@@ -34,3 +35,11 @@ matrix:
 cache:
   mount:
     - /drone/cache
+notify:
+  email:
+    from: noreply@drone.geirsson.com
+    host: smtp.mailgun.org
+    username: noreply@drone.geirsson.com
+    password: $MAILGUN_PASSWORD
+    recipients:
+      - olafurpg+scalameta-ci@gmail.com
