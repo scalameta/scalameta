@@ -19,6 +19,9 @@ private[meta] trait Api {
 }
 
 private[meta] trait Aliases {
+  type Database = scala.meta.semantic.v1.Database
+  val Database = scala.meta.semantic.v1.Database
+
   type Mirror = scala.meta.semantic.v1.Mirror
   // there's no companion for Mirror, so we don't have a term alias here
 
