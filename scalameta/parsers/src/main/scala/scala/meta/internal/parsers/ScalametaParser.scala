@@ -505,7 +505,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def unapply(token: Token): Boolean = {
       token.is[Ident] || token.is[KwSuper] || token.is[KwThis] ||
       token.is[LeftParen] || token.is[At] || token.is[Underscore] ||
-      token.is[Unquote]
+      token.is[Unquote] || (token.is[Literal] && dialect.allowLiteralTypes)
     }
   }
 
@@ -1089,7 +1089,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       simpleTypeRest(autoPos(token match {
         case LeftParen()  => autoPos(makeTupleType(inParens(types())))
         case Underscore() => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
-        case _       =>
+        case Literal() =>
+          if (dialect.allowLiteralTypes) literal()
+          else syntaxError(s"$dialect doesn't support literal types", at = path())
+        case _ =>
           val ref: Term.Ref = path()
           if (token.isNot[Dot])
             convertToTypeId(ref) getOrElse { syntaxError("identifier expected", at = ref) }
