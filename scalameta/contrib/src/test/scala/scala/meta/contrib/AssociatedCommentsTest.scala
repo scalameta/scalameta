@@ -17,8 +17,8 @@ class AssociatedCommentsTest extends FunSuite {
   val comments = AssociatedComments(input)
   test("leading") {
     val defnObject = input.find(_.is[Defn.Object]).get
-    val defnVal    = input.find(_.is[Defn.Val]).get
-    val lit        = input.find(_.is[Lit]).get
+    val defnVal = input.find(_.is[Defn.Val]).get
+    val lit = input.find(_.is[Lit]).get
     comments.leading(defnVal).head match {
       case Token.Comment(a) =>
         println(s"'$a'")

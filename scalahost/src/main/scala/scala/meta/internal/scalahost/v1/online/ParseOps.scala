@@ -15,7 +15,7 @@ trait ParseOps { self: Mirror =>
         // always ensures a newline at the end of its compilation units.
         val input = unit.source.file match {
           case gplainFile: GPlainFile => m.Input.File(gplainFile.file)
-          case _                      => m.Input.String(new String(unit.source.content).trim)
+          case _ => m.Input.String(new String(unit.source.content).trim)
         }
         dialect(input).parse[m.Source].get
       })

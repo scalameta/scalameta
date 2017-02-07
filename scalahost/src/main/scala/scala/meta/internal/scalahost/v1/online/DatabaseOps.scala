@@ -30,12 +30,12 @@ trait DatabaseOps { self: Mirror =>
         if (g.phase.id > g.currentRun.phaseNamed("patmat").id)
           sys.error("the compiler phase must be not later than patmat")
 
-        val symbols      = mutable.Map[Location, m.Symbol]()
-        val todo         = mutable.Set[m.Name]() // names to map to global trees
-        val mstarts      = mutable.Map[Int, m.Name]() // start offset -> tree
-        val mends        = mutable.Map[Int, m.Name]() // end offset -> tree
-        val margnames    = mutable.Map[Int, List[m.Name]]() // start offset of enclosing apply -> its arg names
-        val mwithins     = mutable.Map[m.Tree, m.Name]() // name of enclosing member -> name of private/protected within
+        val symbols = mutable.Map[Location, m.Symbol]()
+        val todo = mutable.Set[m.Name]() // names to map to global trees
+        val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
+        val mends = mutable.Map[Int, m.Name]() // end offset -> tree
+        val margnames = mutable.Map[Int, List[m.Name]]() // start offset of enclosing apply -> its arg names
+        val mwithins = mutable.Map[m.Tree, m.Name]() // name of enclosing member -> name of private/protected within
         val mwithinctors = mutable.Map[m.Tree, m.Name]() // name of enclosing class -> name of private/protected within for primary ctor
 
         locally {
@@ -43,9 +43,9 @@ trait DatabaseOps { self: Mirror =>
             private def indexName(mname: m.Name): Unit = {
               todo += mname
               // TODO: also drop trivia (no idea how to formulate this concisely)
-              val tok     = mname.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption
+              val tok = mname.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption
               val mstart1 = tok.map(_.start).getOrElse(-1)
-              val mend1   = tok.map(_.end).getOrElse(-1)
+              val mend1 = tok.map(_.end).getOrElse(-1)
               if (mstarts.contains(mstart1))
                 sys.error(
                   s"ambiguous mstart ${syntaxAndPos(mname)} ${syntaxAndPos(mstarts(mstart1))}")
@@ -83,9 +83,9 @@ trait DatabaseOps { self: Mirror =>
                   def findBinder(pat: m.Pat) =
                     pat.collect { case m.Pat.Var.Term(name) => name }.head
                   val menclosingName = menclosing match {
-                    case mtree: m.Member                 => mtree.name
-                    case m.Decl.Val(_, pat :: Nil, _)    => findBinder(pat)
-                    case m.Decl.Var(_, pat :: Nil, _)    => findBinder(pat)
+                    case mtree: m.Member => mtree.name
+                    case m.Decl.Val(_, pat :: Nil, _) => findBinder(pat)
+                    case m.Decl.Var(_, pat :: Nil, _) => findBinder(pat)
                     case m.Defn.Val(_, pat :: Nil, _, _) => findBinder(pat)
                     case m.Defn.Var(_, pat :: Nil, _, _) => findBinder(pat)
                   }
@@ -97,7 +97,7 @@ trait DatabaseOps { self: Mirror =>
             }
             override def apply(mtree: m.Tree): Unit = {
               val mstart = mtree.pos.start.offset
-              val mend   = mtree.pos.end.offset
+              val mend = mtree.pos.end.offset
               if (mstart != mend) {
                 mtree match {
                   case mtree @ m.Term.Apply(_, margs) =>
@@ -178,7 +178,7 @@ trait DatabaseOps { self: Mirror =>
               if (gtree.pos == null || gtree.pos == NoPosition) return
               val gstart = gtree.pos.start
               val gpoint = gtree.pos.point
-              val gend   = gtree.pos.end
+              val gend = gtree.pos.end
 
               if (margnames.contains(gstart) || margnames.contains(gpoint)) {
                 (margnames.get(gstart) ++ margnames.get(gpoint)).flatten.foreach(margname => {

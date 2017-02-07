@@ -15,16 +15,16 @@ trait ReflectToolkit {
 
   implicit class XtensionName(name: g.Name) {
     def isAnonymous = {
-      val isTermPlaceholder        = name.isTermName && name.startsWith(nme.FRESH_TERM_NAME_PREFIX)
-      val isTypePlaceholder        = name.isTypeName && name.startsWith("_$")
-      val isAnonymousSelf          = name.isTermName && (name.startsWith(nme.FRESH_TERM_NAME_PREFIX) || name == nme.this_)
+      val isTermPlaceholder = name.isTermName && name.startsWith(nme.FRESH_TERM_NAME_PREFIX)
+      val isTypePlaceholder = name.isTypeName && name.startsWith("_$")
+      val isAnonymousSelf = name.isTermName && (name.startsWith(nme.FRESH_TERM_NAME_PREFIX) || name == nme.this_)
       val isAnonymousTypeParameter = name == tpnme.WILDCARD
       isTermPlaceholder || isTypePlaceholder || isAnonymousSelf || isAnonymousTypeParameter
     }
     def looksLikeInfix = {
       val hasSymbolicName =
         !name.decoded.forall(c => Character.isLetter(c) || Character.isDigit(c) || c == '_')
-      val idiomaticallyUsedAsInfix    = name == nme.eq || name == nme.ne
+      val idiomaticallyUsedAsInfix = name == nme.eq || name == nme.ne
       val idiomaticallyNotUsedAsInfix = name == nme.CONSTRUCTOR
       (hasSymbolicName || idiomaticallyUsedAsInfix) && !idiomaticallyNotUsedAsInfix
     }

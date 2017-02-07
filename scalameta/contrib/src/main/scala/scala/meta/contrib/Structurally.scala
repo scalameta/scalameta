@@ -12,12 +12,12 @@ import scala.meta.Tree
   */
 class Structurally[+A <: Tree](val tree: A) {
   // TODO(olafur) more efficient hashCode
-  private lazy val hash: Int   = tree.structure.hashCode
+  private lazy val hash: Int = tree.structure.hashCode
   override def hashCode(): Int = hash
   override def equals(obj: scala.Any): Boolean = {
     obj match {
       case e2: Structurally[_] => Structurally.equal(tree, e2.tree)
-      case _                   => false
+      case _ => false
     }
   }
 }
@@ -28,8 +28,8 @@ object Structurally {
 
   private def loopStructure(x: Any, y: Any): Boolean = (x, y) match {
     case (x, y) if x == null || y == null => x == null && y == null
-    case (Some(x), Some(y))               => loopStructure(x, y)
-    case (None, None)                     => true
+    case (Some(x), Some(y)) => loopStructure(x, y)
+    case (None, None) => true
     case (xs: Seq[_], ys: Seq[_]) =>
       xs.length == ys.length &&
         xs.zip(ys).forall { case (x, y) => loopStructure(x, y) }

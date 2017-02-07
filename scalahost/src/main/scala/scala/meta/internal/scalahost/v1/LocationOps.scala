@@ -19,14 +19,14 @@ trait LocationOps {
   implicit class XtensionGFileAddr(gfile: GFile) {
     def toAddr: Address = gfile match {
       case gfile: GPlainFile => Address.File(gfile.file.getAbsolutePath)
-      case other             => sys.error(s"unsupported file " + other)
+      case other => sys.error(s"unsupported file " + other)
     }
   }
 
   implicit class XtensionMInputAddr(minput: m.Input) {
     def toAddr: Address = minput match {
       case scala.meta.inputs.Input.File(file, _) => Address.File(file.getAbsolutePath)
-      case other                                 => sys.error(s"unsupported input " + other)
+      case other => sys.error(s"unsupported input " + other)
     }
   }
 

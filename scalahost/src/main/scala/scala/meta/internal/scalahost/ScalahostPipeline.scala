@@ -13,11 +13,11 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
 
   object ScalahostComponent extends PluginComponent {
     val global: ScalahostPipeline.this.global.type = ScalahostPipeline.this.global
-    val runsAfter                                  = List("typer")
-    override val runsRightAfter                    = Some("typer")
-    val phaseName                                  = "scalameta"
-    override val description                       = "compute the scala.meta semantic database"
-    def newPhase(_prev: Phase)                     = new ScalahostPhase(_prev)
+    val runsAfter = List("typer")
+    override val runsRightAfter = Some("typer")
+    val phaseName = "scalameta"
+    override val description = "compute the scala.meta semantic database"
+    def newPhase(_prev: Phase) = new ScalahostPhase(_prev)
 
     class ScalahostPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
@@ -26,11 +26,11 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
 
       override def run(): Unit = {
         super.run()
-        val databaseFile   = new File(global.settings.d.value + "/semanticdb")
-        val prevDatabase   = if (databaseFile.exists) Database(databaseFile) else Database()
-        val database       = new OnlineMirror(global).database
+        val databaseFile = new File(global.settings.d.value + "/semanticdb")
+        val prevDatabase = if (databaseFile.exists) Database(databaseFile) else Database()
+        val database = new OnlineMirror(global).database
         val mergedDatabase = prevDatabase.append(database)
-        val allowedAddrs   = global.currentRun.units.map(_.source.toAddr).toSet
+        val allowedAddrs = global.currentRun.units.map(_.source.toAddr).toSet
         val trimmedDatabase = Database(
           mergedDatabase.symbols.filterKeys(k => allowedAddrs.contains(k.addr)))
         trimmedDatabase.toFile(databaseFile)

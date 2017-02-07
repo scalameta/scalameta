@@ -13,7 +13,7 @@ class ScalahostPlugin(val global: Global)
     with ReflectionToolkit
     with ScalahostAnalyzer
     with ScalahostPipeline {
-  val name        = "scalahost"
+  val name = "scalahost"
   val description = "scala.meta's connector to the Scala compiler"
   hijackAnalyzer()
   val components = List[PluginComponent](ScalahostComponent)

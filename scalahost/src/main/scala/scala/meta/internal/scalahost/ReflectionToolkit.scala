@@ -62,34 +62,34 @@ trait ReflectionToolkit {
     def transform(f: Map[String, Any] => Map[String, Any]): Unit =
       carrier.updateAttachment(f(toMap).toJavaMap)
     def contains(key: String): Boolean = toMap.contains(key)
-    def apply(key: String): Any        = toMap(key)
-    def get(key: String): Option[Any]  = toMap.get(key)
+    def apply(key: String): Any = toMap(key)
+    def get(key: String): Option[Any] = toMap.get(key)
     def getOrElse[T: ClassTag](key: String, value: => T): T =
       toMap.get(key).map(_.asInstanceOf[T]).getOrElse(value)
     def getOrElseUpdate[T: ClassTag](key: String, default: => T): T = {
       val valueopt = toMap.get(key).map(_.asInstanceOf[T])
-      val value    = valueopt.getOrElse(default)
+      val value = valueopt.getOrElse(default)
       if (valueopt.isEmpty) update(key, value)
       value
     }
     def update(key: String, value: Any): Unit = transform(_ + (key -> value))
-    def remove(key: String): Unit             = transform(_ - key)
-    def +=(kvp: (String, Any)): Unit          = update(kvp._1, kvp._2)
-    def ++=(other: Map[String, Any]): Unit    = transform(_ ++ other)
-    def ++=(other: Metadata[T]): Unit         = transform(_ ++ other.toMap)
-    def -=(key: String): Unit                 = remove(key)
-    def --=(other: List[String]): Unit        = transform(_ -- other)
-    def --=(other: Metadata[T]): Unit         = transform(_ -- other.toMap.keys)
-    override def toString                     = toMap.toString
+    def remove(key: String): Unit = transform(_ - key)
+    def +=(kvp: (String, Any)): Unit = update(kvp._1, kvp._2)
+    def ++=(other: Map[String, Any]): Unit = transform(_ ++ other)
+    def ++=(other: Metadata[T]): Unit = transform(_ ++ other.toMap)
+    def -=(key: String): Unit = remove(key)
+    def --=(other: List[String]): Unit = transform(_ -- other)
+    def --=(other: Metadata[T]): Unit = transform(_ -- other.toMap.keys)
+    override def toString = toMap.toString
   }
 
   class CompilationUnitCache(unit: CompilationUnit) {
     def getOrElse[T](key: String, op: => T): T = {
-      val dummyName   = g.TermName("<" + key + "Carrier>")
+      val dummyName = g.TermName("<" + key + "Carrier>")
       val dummySymbol = unit.checkedFeatures.find(_.name == dummyName)
-      val cached      = dummySymbol.flatMap(_.metadata.get(key).map(_.asInstanceOf[T]))
+      val cached = dummySymbol.flatMap(_.metadata.get(key).map(_.asInstanceOf[T]))
       cached.getOrElse({
-        val computed    = op
+        val computed = op
         val dummySymbol = g.NoSymbol.newValue(dummyName).appendMetadata(key -> computed)
         unit.checkedFeatures += dummySymbol
         computed
@@ -107,15 +107,15 @@ trait ReflectionToolkit {
       else carrier.appendMetadata(designation -> original)
     }
     def rememberConstfoldOf(original: Tree) = rememberOriginal("constantFoldingOriginal", original)
-    def rememberClassOf(original: Tree)     = rememberOriginal("classOfOriginal", original)
-    def rememberNewArrayOf(original: Tree)  = rememberOriginal("newArrayOriginal", original)
+    def rememberClassOf(original: Tree) = rememberOriginal("classOfOriginal", original)
+    def rememberNewArrayOf(original: Tree) = rememberOriginal("newArrayOriginal", original)
     def rememberSingletonTypeTreeOf(original: Tree) =
       rememberOriginal("singletonTypeTreeOriginal", original)
     // def rememberCompoundTypeTreeOf(original: Tree) = rememberOriginal("compoundTypeTreeOriginal", original)
     def rememberExistentialTypeTreeOf(original: Tree) =
       rememberOriginal("existentialTypeTreeOriginal", original)
     def rememberAnnotatedOf(original: Tree) = rememberOriginal("annotatedOriginal", original)
-    def rememberSelfTypeOf(original: Tree)  = rememberOriginal("selfTypeOriginal", original)
+    def rememberSelfTypeOf(original: Tree) = rememberOriginal("selfTypeOriginal", original)
   }
 
   object ConstfoldOf {

@@ -58,6 +58,6 @@ object TreeOps {
   final def ancestors(tree: Tree, accum: Seq[Tree] = Seq.empty[Tree]): Seq[Tree] =
     tree.parent match {
       case Some(parent) => ancestors(parent, parent +: accum)
-      case _            => accum
+      case _ => accum
     }
 }
