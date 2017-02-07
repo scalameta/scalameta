@@ -100,14 +100,14 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
     def displayName: String = tree match {
       case tree: ModuleDef if tree.name == nme.PACKAGE =>
         unreachable(debug(tree, showRaw(tree))) // dveim was abort(tree)
-      case tree: NameTree            => tree.name.displayName
-      case This(name)                => name.displayName // NOTE: This(tpnme.EMPTY) is also accounted for
-      case Super(_, name)            => name.displayName
+      case tree: NameTree => tree.name.displayName
+      case This(name) => name.displayName // NOTE: This(tpnme.EMPTY) is also accounted for
+      case Super(_, name) => name.displayName
       case tree: l.IndeterminateName => tree.value
-      case tree: l.TermName          => tree.value
-      case tree: l.TypeName          => tree.value
-      case tree: l.CtorName          => tree.value
-      case _                         => unreachable(debug(tree, showRaw(tree)))
+      case tree: l.TermName => tree.value
+      case tree: l.TypeName => tree.value
+      case tree: l.CtorName => tree.value
+      case _ => unreachable(debug(tree, showRaw(tree)))
     }
   }
 
@@ -243,7 +243,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
               synthetic1.decodedName.toString.contains("$") =>
           val args = rhs match {
             case q"$tuple(..$args)" if tuple.toString.startsWith("scala.Tuple") => args
-            case arg                                                            => List(arg)
+            case arg => List(arg)
           }
           Some((lhs, l.TermName(op.displayName), targs, args))
         case _ =>
@@ -385,11 +385,11 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
     def unapply(tree: g.Tree): Option[l.Template] = tree match {
       case g.Apply(g.Select(g.New(tpt), nme.CONSTRUCTOR), args) =>
         val lparent = l.Parent(g.Apply(tpt, args))
-        val lself   = l.Self(l.AnonymousName(), g.TypeTree())
+        val lself = l.Self(l.AnonymousName(), g.TypeTree())
         Some(l.Template(Nil, List(lparent), lself, None))
       case g.Select(g.New(tpt), nme.CONSTRUCTOR) =>
         val lparent = l.Parent(tpt)
-        val lself   = l.Self(l.AnonymousName(), g.TypeTree())
+        val lself = l.Self(l.AnonymousName(), g.TypeTree())
         Some(l.Template(Nil, List(lparent), lself, None))
       case g.Block(
           List(
@@ -406,7 +406,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
   object EtaExpansion {
     def unapply(tree: g.Tree): Boolean = tree match {
       case g.Function(Nil, g.EmptyTree) => true
-      case _                            => false
+      case _ => false
     }
   }
 
@@ -425,14 +425,14 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
     object Named {
       def unapply(tree: g.Tree): Option[(g.Tree, g.Tree)] = tree match {
         case g.AssignOrNamedArg(lhs, rhs) => Some((lhs, rhs))
-        case _                            => None
+        case _ => None
       }
     }
 
     object Repeated {
       def unapply(tree: g.Tree): Option[g.Ident] = tree match {
         case g.Typed(ident: g.Ident, g.Ident(g.typeNames.WILDCARD_STAR)) => Some(ident)
-        case _                                                           => None
+        case _ => None
       }
     }
   }
@@ -448,8 +448,8 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
   object TermParamDef {
     def apply(tree: g.ValDef): l.TermParamDef = {
       val g.ValDef(_, _, tpt, default) = tree
-      val ltpt                         = if (tpt.nonEmpty) Some(tpt) else None
-      val ldefault                     = if (default.nonEmpty) Some(default) else None
+      val ltpt = if (tpt.nonEmpty) Some(tpt) else None
+      val ldefault = if (default.nonEmpty) Some(default) else None
       val lname =
         if (tree.name.startsWith(nme.FRESH_TERM_NAME_PREFIX) ||
             tree.name == nme.WILDCARD) l.AnonymousName()
@@ -507,7 +507,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
     def unapply(tree: g.AppliedTypeTree): Option[g.Tree] = {
       tree match {
         case TypeApply(TypeSelect(_, TypeName("<byname>")), Seq(tpe)) => Some(tpe)
-        case _                                                        => None
+        case _ => None
       }
     }
   }
@@ -516,7 +516,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
     def unapply(tree: g.AppliedTypeTree): Option[g.Tree] = {
       tree match {
         case TypeApply(TypeSelect(_, TypeName("<repeated>")), Seq(tpe)) => Some(tpe)
-        case _                                                          => None
+        case _ => None
       }
     }
   }
@@ -571,8 +571,8 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
       case tree @ g.CompoundTypeTree(g.Template(parents0, _, Nil)) =>
         val parents = parents0.filter(_.toString != "scala.AnyRef")
         parents match {
-          case Nil               => None
-          case List(tpe)         => None
+          case Nil => None
+          case List(tpe) => None
           case List(left, right) => Some((left, right))
           case lefts :+ right =>
             Some((g.CompoundTypeTree(g.Template(lefts, noSelfType, Nil)), right))
@@ -592,7 +592,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
   object TypeRefine {
     def unapply(tree: g.CompoundTypeTree): Option[(Option[g.Tree], List[g.Tree])] = {
       val g.Template(parents0, _, stats) = tree.templ
-      val parents                        = parents0.filter(_.toString != "scala.AnyRef")
+      val parents = parents0.filter(_.toString != "scala.AnyRef")
       parents match {
         case Nil =>
           Some((None, stats))
@@ -629,8 +629,8 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
   object TypeBounds {
     def unapply(tree: g.TypeBoundsTree): Option[(Option[g.Tree], Option[g.Tree])] = {
       val g.TypeBoundsTree(glo, ghi) = tree
-      val llo                        = if (glo.nonEmpty) Some(glo) else None
-      val lhi                        = if (ghi.nonEmpty) Some(ghi) else None
+      val llo = if (glo.nonEmpty) Some(glo) else None
+      val lhi = if (ghi.nonEmpty) Some(ghi) else None
       Some((llo, lhi))
     }
   }
@@ -733,10 +733,10 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
   object PatAlternative {
     def unapply(tree: g.Alternative): Option[(g.Tree, g.Tree)] = {
       val g.Alternative(head :: tail) = tree
-      val llhs                        = head
+      val llhs = head
       val lrhs = tail match {
-        case Nil                    => return None
-        case head :: Nil            => head
+        case Nil => return None
+        case head :: Nil => head
         case trees @ (head :: tail) => g.Alternative(trees)
       }
       Some((llhs, lrhs))
@@ -767,11 +767,11 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
       if (TermOrPatInterpolate.unapply(tree).isDefined) return None
       val (fun, targs, args) = tree match {
         case g.Apply(g.TypeApply(fun, targs), args) => (fun, targs, args)
-        case g.Apply(fun, args)                     => (fun, Nil, args)
+        case g.Apply(fun, args) => (fun, Nil, args)
         case g.UnApply(g.Apply(g.TypeApply(fun, targs), List(unapplySelector)), args) =>
           (fun, targs, args)
         case g.UnApply(g.Apply(fun, List(unapplySelector)), args) => (fun, Nil, args)
-        case _                                                    => return None
+        case _ => return None
       }
       Some((fun, targs, args))
     }
@@ -802,7 +802,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
     def unapply(tree: g.Star): Boolean = {
       tree match {
         case g.Star(g.Ident(g.termNames.WILDCARD)) => true
-        case _                                     => false
+        case _ => false
       }
     }
   }
@@ -812,7 +812,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
       if (!patterns(tree)) return false
       tree match {
         case g.Bind(typeNames.WILDCARD, g.EmptyTree) => true
-        case _                                       => false
+        case _ => false
       }
     }
   }
@@ -828,10 +828,10 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
 
   object Literal {
     def unapply(tree: g.Literal): Option[Any] = tree match {
-      case g.Literal(g.Constant(_: g.Type))   => None
+      case g.Literal(g.Constant(_: g.Type)) => None
       case g.Literal(g.Constant(_: g.Symbol)) => None
-      case g.Literal(g.Constant(value))       => Some(value)
-      case _                                  => None
+      case g.Literal(g.Constant(value)) => Some(value)
+      case _ => None
     }
   }
 
@@ -863,7 +863,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
     def unapply(tree: ValOrVarDefs): Option[g.Tree] = Some(tree.pats.head)
 
     def apply(tree: g.ValDef, pat: List[g.Tree], tpt: Option[Tree], rhs: g.Tree): l.ValOrVarDefs = {
-      val ltpt  = tpt.filterNot(_.isEmpty)
+      val ltpt = tpt.filterNot(_.isEmpty)
       val lmods = l.Modifiers(tree)
       tree match {
         case g.ValDef(mods, _, _, g.EmptyTree) if mods.hasAllFlags(DEFERRED | MUTABLE) =>
@@ -950,7 +950,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
               !nme.isConstructorName(tree.name) =>
           val ltparams = mkTparams(tparams, paramss)
           val lparamss = mkVparamss(paramss)
-          val ltpt     = if (tpt.nonEmpty) Some(tpt) else None
+          val ltpt = if (tpt.nonEmpty) Some(tpt) else None
           Some((l.Modifiers(tree), l.TermName(tree), ltparams, lparamss, ltpt, rhs))
         case _ =>
           None
@@ -1015,7 +1015,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
         case g.ClassDef(mods, _, tparams, templ @ g.Template(_, _, body))
             if !mods.hasFlag(TRAIT) =>
           var lprimaryctor = l.PrimaryCtorDef(tree)
-          val ltparams     = mkTparams(tparams, tree.primaryCtor.vparamss)
+          val ltparams = mkTparams(tparams, tree.primaryCtor.vparamss)
           Some((l.Modifiers(tree), l.TypeName(tree), ltparams, lprimaryctor, l.Template(tree)))
         case _ =>
           None
@@ -1087,7 +1087,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
         case PackageObject(_) :: _ =>
           None
         case _ =>
-          val lpid   = tree.pid
+          val lpid = tree.pid
           val lstats = tree.stats
           Some((lpid, lstats))
       }
@@ -1121,13 +1121,13 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
         List[g.Tree]
     )] = {
       val g.DefDef(_, _, _, vparamss, _, body) = tree
-      val lname                                = l.CtorName(tree)
-      val lparamss                             = mkVparamss(tree.vparamss)
-      val g.Block(binit, UnitConstant())       = body
+      val lname = l.CtorName(tree)
+      val lparamss = mkVparamss(tree.vparamss)
+      val g.Block(binit, UnitConstant()) = body
       val lstats = binit.dropWhile {
         case g.pendingSuperCall => true
-        case _: DefnVal         => true
-        case _                  => false
+        case _: DefnVal => true
+        case _ => false
       }
       Some((l.Modifiers(tree), lname, lparamss, lstats))
     }
@@ -1172,7 +1172,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
       }.toMap
       val lparamss = paramss match {
         case List(List()) if !tree.mods.hasFlag(CASE) => Nil
-        case paramss                                  =>
+        case paramss =>
           // consolidate paramAccessorMods with <init> constructor parameters.
           paramss.map(_.map { param =>
             val newMods = paramAccessorMods.getOrElse(param.name.displayName, Nil)
@@ -1193,12 +1193,12 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
   object SecondaryCtorDef {
     def replaceInitWithCtorName(tree: g.Tree): g.Tree = tree match {
       case g.Ident(nme.CONSTRUCTOR) => l.CtorName("this")
-      case g.Apply(fun, args)       => g.Apply(replaceInitWithCtorName(fun), args)
-      case _                        => tree
+      case g.Apply(fun, args) => g.Apply(replaceInitWithCtorName(fun), args)
+      case _ => tree
     }
     def apply(tree: g.DefDef): l.SecondaryCtorDef = {
       val CtorDef(lmods, lname, lparamss, gbody :: _) = tree
-      val lbody                                       = replaceInitWithCtorName(gbody)
+      val lbody = replaceInitWithCtorName(gbody)
       SecondaryCtorDef(lmods, lname, lparamss, lbody)
     }
   }
@@ -1265,15 +1265,15 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
         }
       }
       val g.Template(parents, self, stats) = template
-      val lself                            = l.Self(self)
-      val (rawEdefs, rest)                 = stats.span(isEarlyDef)
-      val (gvdefs, etdefs)                 = rawEdefs.partition(isEarlyValDef)
+      val lself = l.Self(self)
+      val (rawEdefs, rest) = stats.span(isEarlyDef)
+      val (gvdefs, etdefs) = rawEdefs.partition(isEarlyValDef)
       val (evdefs, userDefinedStats) = rest.splitAt(indexOfFirstCtor(rest)) match {
         // TODO: superArgss are non-empty only in semantic mode
         case (fieldDefs, ctor @ LowlevelCtor(_, lvdefs, superArgss) :: body) =>
           val bodyWithSecondaryCtors = body.map {
             case t @ g.DefDef(_, nme.CONSTRUCTOR, _, _, _, _) => l.SecondaryCtorDef.apply(t)
-            case x                                            => x
+            case x => x
           }
           (gvdefs.zip(lvdefs).map {
             case (gvdef @ g.ValDef(_, _, tpt, _), g.ValDef(_, _, _, rhs)) =>
@@ -1288,7 +1288,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
       val edefs = evdefs ::: etdefs
       val lparents = parents.zipWithIndex.map {
         case (parent, i) =>
-          val applied        = dissectApplied(parent)
+          val applied = dissectApplied(parent)
           val syntacticArgss = applied.argss
           val argss =
             if (syntacticArgss.isEmpty)
@@ -1322,28 +1322,28 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
       val isAnonymous = tree.name == g.nme.WILDCARD || tree.name.startsWith(
           g.nme.FRESH_TERM_NAME_PREFIX)
       val lvalue = if (isAnonymous) "this" else tree.displayName
-      val lname  = if (isAnonymous) l.AnonymousName() else l.TermName(lvalue)
+      val lname = if (isAnonymous) l.AnonymousName() else l.TermName(lvalue)
       Self(lname, tree.tpt)
     }
   }
 
   // ============ MODIFIERS ============
 
-  trait Modifier                       extends Tree
-  case class Private(within: g.Tree)   extends Modifier // TODO: `within: l.QualifierName`
+  trait Modifier extends Tree
+  case class Private(within: g.Tree) extends Modifier // TODO: `within: l.QualifierName`
   case class Protected(within: g.Tree) extends Modifier // TODO: `within: l.QualifierName`
-  case class Implicit()                extends Modifier
-  case class Final()                   extends Modifier
-  case class Sealed()                  extends Modifier
-  case class Override()                extends Modifier
-  case class Case()                    extends Modifier
-  case class Abstract()                extends Modifier
-  case class Covariant()               extends Modifier
-  case class Contravariant()           extends Modifier
-  case class Lazy()                    extends Modifier
-  case class ValParam()                extends Modifier
-  case class VarParam()                extends Modifier
-  case class Inline()                  extends Modifier
+  case class Implicit() extends Modifier
+  case class Final() extends Modifier
+  case class Sealed() extends Modifier
+  case class Override() extends Modifier
+  case class Case() extends Modifier
+  case class Abstract() extends Modifier
+  case class Covariant() extends Modifier
+  case class Contravariant() extends Modifier
+  case class Lazy() extends Modifier
+  case class ValParam() extends Modifier
+  case class VarParam() extends Modifier
+  case class Inline() extends Modifier
 
   object Modifiers {
     def apply(tree: g.MemberDef): List[l.Modifier] = {
@@ -1374,14 +1374,14 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
         }
         val semantically = {
           if (tree.symbol.owner.isPrimaryConstructor) {
-            val param     = tree.require[g.ValDef]
-            val ctorSym   = param.symbol.owner
-            val ctor      = g.DefDef(ctorSym, g.EmptyTree)
-            val classSym  = ctorSym.owner
-            val cdef      = g.ClassDef(classSym, g.Template(Nil, g.noSelfType, Nil))
+            val param = tree.require[g.ValDef]
+            val ctorSym = param.symbol.owner
+            val ctor = g.DefDef(ctorSym, g.EmptyTree)
+            val classSym = ctorSym.owner
+            val cdef = g.ClassDef(classSym, g.Template(Nil, g.noSelfType, Nil))
             val getterSym = classSym.info.member(param.name)
-            val fieldSym  = getterSym.map(_.owner.info.member(getterSym.localName))
-            val field     = if (fieldSym != g.NoSymbol) Some(g.ValDef(fieldSym)) else None
+            val fieldSym = getterSym.map(_.owner.info.member(getterSym.localName))
+            val field = if (fieldSym != g.NoSymbol) Some(g.ValDef(fieldSym)) else None
             Some(ClassParameterInfo(param, field, ctor, cdef))
           } else None
         }
@@ -1413,8 +1413,8 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
           .filter(InlineExtractor.unapply(_).isEmpty)
           .map({
             case tree @ g.Apply(_: g.Apply, _) => tree
-            case g.Apply(tpt, Nil)             => tpt
-            case annot                         => annot
+            case g.Apply(tpt, Nil) => tpt
+            case annot => annot
           })
         trimmedAnnots.map(Annotation.apply)
       }
@@ -1460,11 +1460,11 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
       }
 
       val lvalVarParamMods: List[l.Modifier] = {
-        val lmods            = scala.collection.mutable.ListBuffer[l.Modifier]()
-        val field            = cpinfo.flatMap(_.field)
+        val lmods = scala.collection.mutable.ListBuffer[l.Modifier]()
+        val field = cpinfo.flatMap(_.field)
         val isImmutableField = field.map(!_.mods.hasFlag(MUTABLE)).getOrElse(false)
-        val isMutableField   = field.map(_.mods.hasFlag(MUTABLE)).getOrElse(false)
-        val inCaseClass      = cpinfo.map(_.cdef).map(_.mods.hasFlag(CASE)).getOrElse(false)
+        val isMutableField = field.map(_.mods.hasFlag(MUTABLE)).getOrElse(false)
+        val inCaseClass = cpinfo.map(_.cdef).map(_.mods.hasFlag(CASE)).getOrElse(false)
         if (isMutableField) lmods += l.VarParam()
         if (isImmutableField && !inCaseClass) lmods += l.ValParam()
         lmods.toList
@@ -1485,16 +1485,16 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
 
   // ============ ODDS & ENDS ============
 
-  trait Importee                                                                extends Tree
-  case class ImporteeWildcard()                                                 extends Importee
-  case class ImporteeName(value: l.IndeterminateName)                           extends Importee
+  trait Importee extends Tree
+  case class ImporteeWildcard() extends Importee
+  case class ImporteeName(value: l.IndeterminateName) extends Importee
   case class ImporteeRename(from: l.IndeterminateName, to: l.IndeterminateName) extends Importee
-  case class ImporteeUnimport(name: l.IndeterminateName)                        extends Importee
+  case class ImporteeUnimport(name: l.IndeterminateName) extends Importee
 
   object Importer {
     def unapply(tree: g.Import): Option[(g.Tree, List[l.Importee])] = {
       val g.Import(expr, selectors) = tree
-      val lname                     = expr
+      val lname = expr
       val lselectors = selectors.map {
         case g.ImportSelector(nme.WILDCARD, _, _, _) =>
           l.ImporteeWildcard()
@@ -1537,7 +1537,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
           val (fromTpe, toTpe) = targs match {
             case List(from, to) => (from, to); case _ => (g.NoType, g.NoType)
           }
-          val fromSym      = fromTpe.typeSymbol
+          val fromSym = fromTpe.typeSymbol
           val tyconMatches = tycon == g.definitions.FunctionClass(1)
           if (tyconMatches) tparam(Ident(fromSym)).map(tparam => (tparam, g.TypeTree(toTpe)))
           else None
@@ -1548,7 +1548,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
             case g.Select(pre, g.TypeName("Function1")) =>
               pre.symbol == g.definitions.ScalaPackage
             case tycon: g.RefTree => tycon.symbol == g.definitions.FunctionClass(1)
-            case _                => false
+            case _ => false
           }
           if (tyconMatches) tparam(from).map(tparam => (tparam, to))
           else None
@@ -1589,10 +1589,10 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
     if (paramss.isEmpty) return Nil
     val init :+ last = paramss
     val hasImplicits = last.exists(_.mods.hasFlag(IMPLICIT))
-    val explicitss   = if (hasImplicits) init else init :+ last
-    val implicits    = if (hasImplicits) last else Nil
-    val limplicits   = implicits.filter(!_.name.startsWith(nme.EVIDENCE_PARAM_PREFIX))
-    val lparamss     = if (limplicits.nonEmpty) explicitss :+ limplicits else explicitss
+    val explicitss = if (hasImplicits) init else init :+ last
+    val implicits = if (hasImplicits) last else Nil
+    val limplicits = implicits.filter(!_.name.startsWith(nme.EVIDENCE_PARAM_PREFIX))
+    val lparamss = if (limplicits.nonEmpty) explicitss :+ limplicits else explicitss
     lparamss.map(_.map(l.TermParamDef.apply))
   }
 
@@ -1601,15 +1601,15 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
     // * subclasses of MultiEnsugarer: DefaultGetter, VanillaAccessor, AbstractAccessor, LazyAccessor
     // * ToMtree.mstats: PatDef, InlinableHoistedTemporaryVal
     val lresult = mutable.ListBuffer[g.Tree]()
-    var i       = 0
+    var i = 0
     while (i < stats.length) {
       val stat = stats(i)
       i += 1
       stat match {
-        case g.DefDef(_, nme.MIXIN_CONSTRUCTOR, _, _, _, _)         => // and this
+        case g.DefDef(_, nme.MIXIN_CONSTRUCTOR, _, _, _, _) => // and this
         case g.ValDef(mods, _, _, _) if mods.hasFlag(PARAMACCESSOR) => // and this
-        case g.EmptyTree                                            => // and this
-        case _                                                      => lresult += stat
+        case g.EmptyTree => // and this
+        case _ => lresult += stat
       }
     }
     undoValDefDesugarings(lresult).toList
@@ -1654,7 +1654,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
   private object UnitConstant {
     def unapply(tree: g.Tree): Boolean = tree match {
       case g.Literal(g.Constant(())) => true
-      case _                         => false
+      case _ => false
     }
   }
 
@@ -1664,7 +1664,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
 
   // Transforms g.ValDef into l.ValOrValDef. See l.ValOrVarDef for more explanations.
   def undoValDefDesugarings(stats: Seq[g.Tree]): Seq[g.Tree] = {
-    val toCollapse         = mutable.Set.empty[g.Tree]
+    val toCollapse = mutable.Set.empty[g.Tree]
     val valDefFingerprints = mutable.Map.empty[g.Tree, (g.Position, String)]
     def addFingerprint(valDefPattern: g.Tree, mods: g.Modifiers, rhs: g.Tree): Unit = {
       mods.positions.headOption.foreach {
@@ -1683,14 +1683,14 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
           if syntheticMods.hasFlag(PRIVATE | LOCAL | SYNTHETIC | ARTIFACT) =>
         val statsToRemove = stats.drop(i + 1).takeWhile {
           case g.ValDef(_, _, _, g.Select(g.Ident(`name`), _)) => true
-          case UnitConstant()                                  => true
-          case _                                               => false
+          case UnitConstant() => true
+          case _ => false
         }
         addFingerprint(pat, syntheticMods, rhs)
         toCollapse ++= statsToRemove
         val mods: g.Modifiers = statsToRemove.headOption match {
           case Some(g.ValDef(mods, _, _, _)) => mods
-          case _                             => g.Modifiers()
+          case _ => g.Modifiers()
         }
         l.ValOrVarDefs(origin.copy(mods = mods | syntheticMods.flags), List(pat), tpt, rhs)
       // case: val Foo(a) = rhs
@@ -1699,7 +1699,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
         addFingerprint(pat, mods, rhs)
         stats.drop(i + 1).headOption match {
           case Some(remove @ UnitConstant()) => toCollapse += remove
-          case _                             =>
+          case _ =>
         }
         l.ValOrVarDefs(origin, List(pat), tpt, rhs)
       // case: val a = rhs
@@ -1719,8 +1719,8 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
       case (v1 @ ValOrVarDefs(pat1), i) if !toCollapse(v1) =>
         val toMerge = allValOrValDefs.drop(i + 1).takeWhile {
           case ValOrVarDefs(pat2) if fingerprintsMatch(pat1, pat2) => true
-          case l.UnitConstant()                                    => true
-          case _                                                   => false
+          case l.UnitConstant() => true
+          case _ => false
         }
         toCollapse ++= toMerge
         val newPatterns = toMerge.collect { case v2: l.ValOrVarDefs => v2.pats }.flatten
@@ -1742,7 +1742,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
   private def flattenAnnotated(gtree: g.Tree, accum: List[g.Tree] = Nil): (g.Tree, List[g.Tree]) = {
     gtree match {
       case g.Annotated(annot, arg) => flattenAnnotated(arg, annot :: accum)
-      case tree                    => (tree, accum)
+      case tree => (tree, accum)
     }
   }
 }

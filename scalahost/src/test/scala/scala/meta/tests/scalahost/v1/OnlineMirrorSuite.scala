@@ -24,16 +24,16 @@ abstract class OnlineMirrorSuite extends FunSuite {
 
   lazy val g: Global = {
     def fail(msg: String) = sys.error(s"OnlineMirrorSuite initialization failed: $msg")
-    val classpath         = System.getProperty("sbt.paths.scalahost.test.classes")
-    val pluginpath        = System.getProperty("sbt.paths.scalahost.compile.jar")
-    val options           = "-Yrangepos -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:scalahost"
-    val args              = CommandLineParser.tokenize(options)
-    val emptySettings     = new Settings(error => fail(s"couldn't apply settings because $error"))
-    val reporter          = new StoreReporter()
-    val command           = new CompilerCommand(args, emptySettings)
-    val settings          = command.settings
-    val g                 = new Global(settings, reporter)
-    val run               = new g.Run
+    val classpath = System.getProperty("sbt.paths.scalahost.test.classes")
+    val pluginpath = System.getProperty("sbt.paths.scalahost.compile.jar")
+    val options = "-Yrangepos -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:scalahost"
+    val args = CommandLineParser.tokenize(options)
+    val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
+    val reporter = new StoreReporter()
+    val command = new CompilerCommand(args, emptySettings)
+    val settings = command.settings
+    val g = new Global(settings, reporter)
+    val run = new g.Run
     g.phase = run.parserPhase
     g.globalPhase = run.parserPhase
     g
@@ -44,14 +44,14 @@ abstract class OnlineMirrorSuite extends FunSuite {
 
   private def computeDatabaseFromSnippet(code: String): Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
-    val writer   = new PrintWriter(javaFile)
+    val writer = new PrintWriter(javaFile)
     try writer.write(code)
     finally writer.close()
 
-    val run          = new g.Run
+    val run = new g.Run
     val abstractFile = AbstractFile.getFile(javaFile)
-    val sourceFile   = g.getSourceFile(abstractFile)
-    val unit         = new g.CompilationUnit(sourceFile)
+    val sourceFile = g.getSourceFile(abstractFile)
+    val unit = new g.CompilationUnit(sourceFile)
     run.compileUnits(List(unit), run.phaseNamed("terminal"))
 
     g.phase = run.parserPhase
@@ -63,7 +63,7 @@ abstract class OnlineMirrorSuite extends FunSuite {
     errors.foreach(error => fail(s"scalac parse error: ${error.msg} at ${error.pos}"))
 
     val packageobjectsPhase = run.phaseNamed("packageobjects")
-    val phases              = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
+    val phases = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
     reporter.reset()
 
     phases.foreach(phase => {
@@ -82,20 +82,20 @@ abstract class OnlineMirrorSuite extends FunSuite {
   def database(code: String, expected: String): Unit = {
     test(code) {
       val database = computeDatabaseFromSnippet(code)
-      val path     = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
-      val actual   = database.toString.split(EOL).drop(1).mkString(EOL).replace(path, "<...>")
+      val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
+      val actual = database.toString.split(EOL).drop(1).mkString(EOL).replace(path, "<...>")
       assert(expected === actual)
     }
   }
 
   private def computeDatabaseFromMarkup(markup: String): List[m.Name] = {
     val chevrons = "<<(.*?)>>".r
-    val ps0      = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList
-    val ps       = ps0.zipWithIndex.map { case ((s, e), i) => (s - 4 * i, e - 4 * i - 4) }
-    val code     = chevrons.replaceAllIn(markup, "$1")
+    val ps0 = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList
+    val ps = ps0.zipWithIndex.map { case ((s, e), i) => (s - 4 * i, e - 4 * i - 4) }
+    val code = chevrons.replaceAllIn(markup, "$1")
     val database = computeDatabaseFromSnippet(code)
-    val unit     = g.currentRun.units.toList.last.asInstanceOf[mirror.g.CompilationUnit]
-    val source   = unit.toSource
+    val unit = g.currentRun.units.toList.last.asInstanceOf[mirror.g.CompilationUnit]
+    val source = unit.toSource
     ps.map {
       case (s, e) =>
         val names = source.collect {
@@ -103,9 +103,9 @@ abstract class OnlineMirrorSuite extends FunSuite {
         }
         val chevron = "<<" + code.substring(s, e) + ">>"
         names match {
-          case Nil        => sys.error(chevron + " does not wrap a name")
+          case Nil => sys.error(chevron + " does not wrap a name")
           case List(name) => name
-          case _          => sys.error("fatal error processing " + chevron)
+          case _ => sys.error("fatal error processing " + chevron)
         }
     }
   }
@@ -115,7 +115,7 @@ abstract class OnlineMirrorSuite extends FunSuite {
       val names = computeDatabaseFromMarkup(markup)
       names match {
         case List() => fn()
-        case _      => sys.error(s"0 chevrons expected, ${names.length} chevrons found")
+        case _ => sys.error(s"0 chevrons expected, ${names.length} chevrons found")
       }
     }
   }
@@ -125,7 +125,7 @@ abstract class OnlineMirrorSuite extends FunSuite {
       val names = computeDatabaseFromMarkup(markup)
       names match {
         case List(name1) => fn(name1)
-        case _           => sys.error(s"1 chevron expected, ${names.length} chevrons found")
+        case _ => sys.error(s"1 chevron expected, ${names.length} chevrons found")
       }
     }
   }
@@ -135,7 +135,7 @@ abstract class OnlineMirrorSuite extends FunSuite {
       val names = computeDatabaseFromMarkup(markup)
       names match {
         case List(name1, name2) => fn(name1, name2)
-        case _                  => sys.error(s"2 chevrons expected, ${names.length} chevrons found")
+        case _ => sys.error(s"2 chevrons expected, ${names.length} chevrons found")
       }
     }
   }
@@ -145,7 +145,7 @@ abstract class OnlineMirrorSuite extends FunSuite {
       val names = computeDatabaseFromMarkup(markup)
       names match {
         case List(name1, name2, name3) => fn(name1, name2, name3)
-        case _                         => sys.error(s"3 chevrons expected, ${names.length} chevrons found")
+        case _ => sys.error(s"3 chevrons expected, ${names.length} chevrons found")
       }
     }
   }
@@ -155,7 +155,7 @@ abstract class OnlineMirrorSuite extends FunSuite {
       val names = computeDatabaseFromMarkup(markup)
       names match {
         case List(name1, name2, name3, name4) => fn(name1, name2, name3, name4)
-        case _                                => sys.error(s"4 chevrons expected, ${names.length} chevrons found")
+        case _ => sys.error(s"4 chevrons expected, ${names.length} chevrons found")
       }
     }
   }

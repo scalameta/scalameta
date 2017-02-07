@@ -43,7 +43,7 @@ class Mirror(val global: Global)
 
   def database: Database = {
     var unmappedNames = ""
-    val units         = compilerUnits ++ adhocUnits
+    val units = compilerUnits ++ adhocUnits
     val databases = units.map(unit => {
       try unit.toDatabase
       catch {
@@ -62,7 +62,7 @@ class Mirror(val global: Global)
       def typecheckRoot(tree: Tree): Tree = {
         tree.parent match {
           case Some(parent) =>
-            val index   = parent.children.indexOf(tree)
+            val index = parent.children.indexOf(tree)
             val parent1 = typecheckRoot(parent)
             parent1.children(index)
           case _ =>
@@ -70,17 +70,17 @@ class Mirror(val global: Global)
               // NOTE: We stringify and reparse to obtain unique positions.
               // That's done because semantic APIs don't work without positions.
               val objectName = Term.fresh("scalahost$")
-              val wrapper    = q"object $objectName { $member }".syntax.parse[Source].get
-              val addr       = scala.meta.semantic.v1.Address.Snippet(wrapper.syntax)
+              val wrapper = q"object $objectName { $member }".syntax.parse[Source].get
+              val addr = scala.meta.semantic.v1.Address.Snippet(wrapper.syntax)
               minputMap(wrapper.pos.input) = addr
               val member1 = wrapper.children(0).children(1).children(1)
 
               val abstractFile = new GVirtualFile(randomUUID.toString)
               gfileMap(abstractFile) = addr
-              val sourceFile  = new GBatchSourceFile(abstractFile, wrapper.syntax)
-              val unit        = new g.CompilationUnit(sourceFile)
+              val sourceFile = new GBatchSourceFile(abstractFile, wrapper.syntax)
+              val unit = new g.CompilationUnit(sourceFile)
               val oldReporter = g.reporter
-              val reporter    = new GStoreReporter()
+              val reporter = new GStoreReporter()
               g.reporter = reporter
               try g.currentRun.compileLate(unit)
               finally g.reporter = oldReporter
@@ -120,15 +120,15 @@ class Mirror(val global: Global)
             }
             tree match {
               case tree: Term =>
-                val member  = q"val ${Pat.fresh("scalahost$")} = { $tree }"
+                val member = q"val ${Pat.fresh("scalahost$")} = { $tree }"
                 val member1 = wrapAndTypecheck(member)
                 member1.children(1).children(0)
               case tree: Type =>
-                val member  = q"type ${Type.fresh("scalahost$")} = $tree"
+                val member = q"type ${Type.fresh("scalahost$")} = $tree"
                 val member1 = wrapAndTypecheck(member)
                 member1.children(1)
               case _ =>
-                val what        = "quasiquotes that are neither terms nor types"
+                val what = "quasiquotes that are neither terms nor types"
                 val restriction = s"implementation restriction: semantic API doesn't support $what"
                 throw new SemanticException(tree.pos, restriction)
             }

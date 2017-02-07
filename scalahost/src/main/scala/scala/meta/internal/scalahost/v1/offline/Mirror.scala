@@ -71,7 +71,7 @@ class Mirror(classpath: String, sourcepath: String)
       }
       def autodetectFromProperties: Option[String] = {
         val customPath = Option(sys.props("scalahost.jar"))
-        val sbtPath    = Option(sys.props("sbt.paths.scalahost.compile.jar"))
+        val sbtPath = Option(sys.props("sbt.paths.scalahost.compile.jar"))
         customPath.orElse(sbtPath)
       }
       def fail(): Nothing = {
@@ -82,14 +82,14 @@ class Mirror(classpath: String, sourcepath: String)
     }
     val global: Global = {
       def fail(msg: String) = sys.error(s"mirror initialization failed: $msg")
-      val options           = "-Yrangepos -cp " + classpath + " -Xplugin:" + pluginpath + " -Xplugin-require:scalahost"
-      val args              = CommandLineParser.tokenize(options)
-      val emptySettings     = new Settings(error => fail(s"couldn't apply settings because $error"))
-      val reporter          = new StoreReporter()
-      val command           = new CompilerCommand(args, emptySettings)
-      val settings          = command.settings
-      val g                 = new Global(settings, reporter)
-      val run               = new g.Run
+      val options = "-Yrangepos -cp " + classpath + " -Xplugin:" + pluginpath + " -Xplugin-require:scalahost"
+      val args = CommandLineParser.tokenize(options)
+      val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
+      val reporter = new StoreReporter()
+      val command = new CompilerCommand(args, emptySettings)
+      val settings = command.settings
+      val g = new Global(settings, reporter)
+      val run = new g.Run
       if (reporter.hasErrors) reporter.infos.foreach(info => fail(info.msg))
       g.phase = run.phaseNamed("patmat")
       g.globalPhase = run.phaseNamed("patmat")

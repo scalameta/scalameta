@@ -7,11 +7,11 @@ import scala.meta.Tree
   * Two trees are syntactically equal if their .show[Syntax] is equal.
   **/
 class Syntactically[+A <: Tree](val tree: A) {
-  private lazy val syntax      = tree.syntax
+  private lazy val syntax = tree.syntax
   override def hashCode(): Int = syntax.hashCode
   override def equals(obj: scala.Any): Boolean = obj match {
     case e2: Syntactically[_] => syntax == e2.syntax
-    case _                    => false
+    case _ => false
   }
 }
 

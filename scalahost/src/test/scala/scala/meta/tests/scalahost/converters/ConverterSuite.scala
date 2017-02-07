@@ -17,16 +17,16 @@ trait ConverterSuite extends FunSuiteLike {
 
   private lazy val g: Global = {
     def fail(msg: String) = sys.error(s"ReflectToMeta initialization failed: $msg")
-    val classpath         = System.getProperty("sbt.paths.scalahost.test.classes")
-    val pluginpath        = System.getProperty("sbt.paths.plugin.jar")
-    val options           = "-cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:macroparadise"
-    val args              = CommandLineParser.tokenize(options)
-    val emptySettings     = new Settings(error => fail(s"couldn't apply settings because $error"))
-    val reporter          = new StoreReporter()
-    val command           = new CompilerCommand(args, emptySettings)
-    val settings          = command.settings
-    val g                 = new Global(settings, reporter)
-    val run               = new g.Run
+    val classpath = System.getProperty("sbt.paths.scalahost.test.classes")
+    val pluginpath = System.getProperty("sbt.paths.plugin.jar")
+    val options = "-cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:macroparadise"
+    val args = CommandLineParser.tokenize(options)
+    val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
+    val reporter = new StoreReporter()
+    val command = new CompilerCommand(args, emptySettings)
+    val settings = command.settings
+    val g = new Global(settings, reporter)
+    val run = new g.Run
     g.phase = run.parserPhase
     g.globalPhase = run.parserPhase
     g
@@ -52,19 +52,19 @@ trait ConverterSuite extends FunSuiteLike {
               def unapply(tree: Tree): Option[(Term, Seq[Seq[Type]], Seq[Seq[Term.Arg]])] =
                 tree match {
                   case q"$fun[..$targs](...$argss)" => Some((fun, Seq(targs), argss))
-                  case q"$fun(...$argss)"           => Some((fun, Nil, argss))
-                  case _                            => None
+                  case q"$fun(...$argss)" => Some((fun, Nil, argss))
+                  case _ => None
                 }
             }
             object NestedTermAnnotated {
               def flatTerm(t: Term, accum: Seq[Mod.Annot] = Nil): (Term, Seq[Mod.Annot]) =
                 t match {
                   case Term.Annotate(t2, as) => flatTerm(t2, as ++ accum)
-                  case _                     => (t, accum)
+                  case _ => (t, accum)
                 }
               def unapply(tree: Tree): Option[(Term, Seq[Mod.Annot])] = tree match {
                 case t: Term.Annotate => Some(flatTerm(t))
-                case _                => None
+                case _ => None
               }
             }
 
@@ -123,7 +123,7 @@ trait ConverterSuite extends FunSuiteLike {
     g.reporter = reporter
     val tree = {
       if (parseAsCompilationUnit) {
-        val cu     = new g.CompilationUnit(g.newSourceFile(code))
+        val cu = new g.CompilationUnit(g.newSourceFile(code))
         val parser = new g.syntaxAnalyzer.UnitParser(cu, Nil)
         parser.parse()
       } else {
@@ -158,7 +158,7 @@ trait ConverterSuite extends FunSuiteLike {
   def getConvertedMetaTree(code: String): m.Tree = {
     object converter extends Converter {
       lazy val global: ConverterSuite.this.g.type = ConverterSuite.this.g
-      def apply(gtree: g.Tree): m.Tree            = gtree.toMtree[m.Tree]
+      def apply(gtree: g.Tree): m.Tree = gtree.toMtree[m.Tree]
     }
     converter(getParsedScalacTree(code))
   }
@@ -166,7 +166,7 @@ trait ConverterSuite extends FunSuiteLike {
   def syntactic(code: String): Unit = {
     test(code.trim) {
       val convertedMetaTree = getConvertedMetaTree(code)
-      val parsedMetaTree    = getParsedMetaTree(code)
+      val parsedMetaTree = getParsedMetaTree(code)
       try {
         checkMismatchesModuloDesugarings(parsedMetaTree, convertedMetaTree)
       } catch {

@@ -37,7 +37,7 @@ trait PathOps { self: Mirror =>
           } else if (file.getName.endsWith(".jar")) {
             val stream = new FileInputStream(file)
             try {
-              val zip   = new ZipInputStream(stream)
+              val zip = new ZipInputStream(stream)
               var entry = zip.getNextEntry()
               while (entry != null) {
                 addZipEntry(file, entry)

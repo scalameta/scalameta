@@ -51,7 +51,7 @@ trait SymbolOps { self: Mirror =>
             else "L" + sym.fullName.replace(".", "/") + ";"
           }
           val g.MethodType(params, ret) = sym.info.erasure
-          val jvmRet                    = if (!sym.isConstructor) ret else g.definitions.UnitClass.toType
+          val jvmRet = if (!sym.isConstructor) ret else g.definitions.UnitClass.toType
           "(" + params.map(param => encode(param.info)).mkString("") + ")" + encode(jvmRet)
         }
 
