@@ -62,4 +62,21 @@ class DatabaseSuite extends OnlineMirrorSuite {
            (int) => {
              assert(int === t"Int")
            })
+
+  database("""
+    |import _root_.scala.List
+    |
+    |class C {
+    |  _root_.scala.List
+    |}
+  """.trim.stripMargin,
+           """
+    |[7..13): _root_ => _root_.
+    |[14..19): scala => _root_.scala.
+    |[20..24): List => _root_.scala.package.List.;_root_.scala.package.List#
+    |[32..33): C => _empty_.C#
+    |[38..44): _root_ => _root_.
+    |[45..50): scala => _root_.scala.
+    |[51..55): List => _root_.scala.collection.immutable.
+  """.trim.stripMargin)
 }

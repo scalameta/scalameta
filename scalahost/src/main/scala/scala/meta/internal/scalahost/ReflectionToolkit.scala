@@ -116,6 +116,7 @@ trait ReflectionToolkit {
       rememberOriginal("existentialTypeTreeOriginal", original)
     def rememberAnnotatedOf(original: Tree) = rememberOriginal("annotatedOriginal", original)
     def rememberSelfTypeOf(original: Tree) = rememberOriginal("selfTypeOriginal", original)
+    def rememberSelectOf(original: Tree) = rememberOriginal("selectOriginal", original)
   }
 
   object ConstfoldOf {
@@ -163,5 +164,10 @@ trait ReflectionToolkit {
   object SelfTypeOf {
     def unapply[T: Attachable](carrier: T) =
       carrier.metadata.get("selfTypeOriginal").map(_.asInstanceOf[Tree])
+  }
+
+  object SelectOf {
+    def unapply[T: Attachable](carrier: T) =
+      carrier.metadata.get("selectOriginal").map(_.asInstanceOf[Tree])
   }
 }
