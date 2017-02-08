@@ -256,6 +256,8 @@ trait DatabaseOps { self: Mirror =>
                   traverse(original)
                 case SelfTypeOf(original) =>
                   traverse(original)
+                case SelectOf(original) =>
+                  traverse(original)
                 case g.Function(params, body) if params.exists(_.name.decoded.startsWith("x$")) =>
                   traverse(body)
                 case gtree: g.TypeTree if gtree.original != null =>
