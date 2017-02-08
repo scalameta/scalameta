@@ -63,10 +63,9 @@ trait DatabaseOps { self: Mirror =>
                 .headOption
                 .map(_.start)
                 .getOrElse(-1)
-              if (margnames.contains(mstart1))
-                sys.error(
-                  s"ambiguous margnames ${mnames.map(syntaxAndPos)} ${margnames(mstart1).map(syntaxAndPos)}")
-              margnames(mstart1) = mnames
+              // only add names for the top-level term.apply of a curried function application.
+              if (!margnames.contains(mstart1))
+                margnames(mstart1) = mnames
             }
             private def indexWithin(mname: m.Name.Indeterminate): Unit = {
               todo += mname
@@ -103,8 +102,9 @@ trait DatabaseOps { self: Mirror =>
                   case mtree @ m.Term.Apply(_, margs) =>
                     def loop(term: m.Term): List[m.Term.Name] = term match {
                       case m.Term.Apply(mfn, margs) =>
-                        (margs.toList
-                          .collect { case m.Term.Arg.Named(mname, _) => mname }) ++ loop(mfn)
+                        margs.toList.collect {
+                          case m.Term.Arg.Named(mname, _) => mname
+                        } ++ loop(mfn)
                       case _ => Nil
                     }
                     indexArgNames(mtree, loop(mtree))
@@ -299,7 +299,7 @@ trait DatabaseOps { self: Mirror =>
   }
 
   private def syntaxAndPos(mtree: m.Tree): String = {
-    s"$mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
+    s"${mtree.pos.toSemantic.addr.syntax} $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
   }
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
