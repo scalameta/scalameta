@@ -18,6 +18,14 @@ object logger {
     println(s"$fileLine $x")
   }
 
+  /** Replaces whitespace characters with non-whitespace characters */
+  def revealWhitespace(s: String): String = s.map {
+    case '\t' => '†'
+    case '\n' => '¶'
+    case ' ' => '∙'
+    case ch => ch
+  }
+
   /** Prints out the value with and it's source code representation
     *
     * Example: logger.elem(x) // prints "MyFile:24 [x]: 42"

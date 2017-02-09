@@ -222,7 +222,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         i
       }
       val next = if (nextPos != -1) scannerTokens(nextPos) else null
-      if (curr.isNot[Trivia]) {
+      def nextScannerToken: Option[Token] =
+        if (currPos + 1 < scannerTokens.length) Some(scannerTokens(currPos + 1))
+        else None
+      // SIP-27 Trailing comma (multi-line only) support.
+      // If a comma is followed by a new line & then a closing paren, bracket or brace
+      // then it is a trailing comma and is ignored.
+      def isTrailingComma: Boolean =
+        dialect.allowTrailingComma &&
+          curr.is[Comma] &&
+          next.is[CloseDelim] &&
+          nextScannerToken.exists(_.is[LineEnd])
+      if (curr.isNot[Trivia] && !isTrailingComma) {
         parserTokens += curr
         parserTokenPositions += currPos
         val sepRegions1 = {
@@ -501,6 +512,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   @classifier
+  trait CloseDelim {
+    def unapply(token: Token): Boolean = {
+      token.is[RightBrace] || token.is[RightBracket] || token.is[RightParen]
+    }
+  }
+
+  @classifier
   trait TypeIntro {
     def unapply(token: Token): Boolean = {
       token.is[Ident] || token.is[KwSuper] || token.is[KwThis] ||
@@ -665,8 +683,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   trait Whitespace {
     def unapply(token: Token): Boolean = {
       token.is[Space] || token.is[Tab] ||
-      token.is[CR] || token.is[LF] ||
-      token.is[LFLF] || token.is[FF]
+      token.is[LineEnd] || token.is[FF]
+    }
+  }
+
+  @classifier
+  trait LineEnd {
+    def unapply(token: Token): Boolean = {
+      token.is[LF] || token.is[LFLF] || token.is[CR]
     }
   }
 
@@ -3005,11 +3029,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (tp.isEmpty || token.is[Equals]) {
       accept[Equals]
       val rhsExpr = expr()
-      val rhs = 
+      val rhs =
         if (rhsExpr.is[Term.Placeholder]) {
           if (tp.nonEmpty && isMutable && lhs.forall(_.is[Pat.Var.Term]))
             None
-          else 
+          else
             syntaxError("unbound placeholder parameter", at = token)
         } else Some(rhsExpr)
 

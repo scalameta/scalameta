@@ -7,6 +7,8 @@ import scala.meta._
 import scala.meta.internal.parsers._
 import MoreHelpers._
 
+import org.scalameta.logger
+
 class ParseSuite extends FunSuite with CommonTrees {
   val EOL = scala.compat.Platform.EOL
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""
@@ -34,6 +36,10 @@ class ParseSuite extends FunSuite with CommonTrees {
       }
     }
   }
+  def checkError(stat: String)(implicit dialect: Dialect) =
+    test(logger.revealWhitespace(stat).take(50)) { interceptParseErrors(stat) }
+  def checkOK(stat: String)(implicit dialect: Dialect) =
+    test(logger.revealWhitespace(stat).take(50)) { templStat(stat) }
 }
 
 object MoreHelpers {
