@@ -159,6 +159,40 @@ package object dialects {
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
+  @leaf implicit object TypelevelScala211 extends Dialect {
+    def name = "TypelevelScala211"
+    def metalevel = Metalevel.Zero
+    def bindToSeqWildcardDesignator = Scala211.bindToSeqWildcardDesignator
+    def allowXmlLiterals = Scala211.allowXmlLiterals
+    def allowInline = Scala211.allowInline
+    def allowSpliceUnderscore = true
+    def allowToplevelTerms = Scala211.allowToplevelTerms
+    def toplevelSeparator = Scala211.toplevelSeparator
+    def allowViewBounds = Scala211.allowViewBounds
+    def allowAndTypes = Scala211.allowAndTypes
+    def allowOrTypes = Scala211.allowOrTypes
+    def allowTraitParameters = Scala211.allowTraitParameters
+    def allowLiteralTypes: Boolean = true // Needs the compiler flag: `-Yliteral-types`
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
+  @leaf implicit object ParadiseTypelevelScala211 extends Dialect {
+    def name = "ParadiseTypelevelScala211"
+    def metalevel = Metalevel.Zero
+    def bindToSeqWildcardDesignator = TypelevelScala211.bindToSeqWildcardDesignator
+    def allowXmlLiterals = TypelevelScala211.allowXmlLiterals
+    def allowInline = true
+    def allowSpliceUnderscore = TypelevelScala211.allowSpliceUnderscore
+    def allowToplevelTerms = TypelevelScala211.allowToplevelTerms
+    def toplevelSeparator = TypelevelScala211.toplevelSeparator
+    def allowViewBounds = TypelevelScala211.allowViewBounds
+    def allowAndTypes = TypelevelScala211.allowAndTypes
+    def allowOrTypes = TypelevelScala211.allowOrTypes
+    def allowTraitParameters = TypelevelScala211.allowTraitParameters
+    def allowLiteralTypes: Boolean = TypelevelScala211.allowLiteralTypes
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
   @leaf implicit object Scala212 extends Dialect {
     def name = "Scala212"
     def metalevel = Metalevel.Zero
@@ -190,6 +224,40 @@ package object dialects {
     def allowOrTypes = Scala212.allowOrTypes
     def allowTraitParameters = Scala212.allowTraitParameters
     def allowLiteralTypes: Boolean = Scala212.allowLiteralTypes
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
+  @leaf implicit object TypelevelScala212 extends Dialect {
+    def name = "TypelevelScala212"
+    def metalevel = Metalevel.Zero
+    def bindToSeqWildcardDesignator = Scala212.bindToSeqWildcardDesignator
+    def allowXmlLiterals = Scala212.allowXmlLiterals
+    def allowInline = Scala212.allowInline
+    def allowSpliceUnderscore = true
+    def allowToplevelTerms = Scala212.allowToplevelTerms
+    def toplevelSeparator = Scala212.toplevelSeparator
+    def allowViewBounds = Scala212.allowViewBounds
+    def allowAndTypes = Scala212.allowAndTypes
+    def allowOrTypes = Scala212.allowOrTypes
+    def allowTraitParameters = Scala212.allowTraitParameters
+    def allowLiteralTypes: Boolean = true // Needs the compiler flag: `-Yliteral-types`
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
+  @leaf implicit object ParadiseTypelevelScala212 extends Dialect {
+    def name = "ParadiseTypelevelScala212"
+    def metalevel = Metalevel.Zero
+    def bindToSeqWildcardDesignator = TypelevelScala212.bindToSeqWildcardDesignator
+    def allowXmlLiterals = TypelevelScala212.allowXmlLiterals
+    def allowInline = true
+    def allowSpliceUnderscore = TypelevelScala212.allowSpliceUnderscore
+    def allowToplevelTerms = TypelevelScala212.allowToplevelTerms
+    def toplevelSeparator = TypelevelScala212.toplevelSeparator
+    def allowViewBounds = TypelevelScala212.allowViewBounds
+    def allowAndTypes = TypelevelScala212.allowAndTypes
+    def allowOrTypes = TypelevelScala212.allowOrTypes
+    def allowTraitParameters = TypelevelScala212.allowTraitParameters
+    def allowLiteralTypes: Boolean = TypelevelScala212.allowLiteralTypes
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
