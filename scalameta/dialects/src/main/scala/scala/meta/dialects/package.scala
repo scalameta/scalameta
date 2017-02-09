@@ -120,7 +120,6 @@ package object dialects {
     def name = "Sbt0137"
     def delegate = Scala210
     override def allowToplevelTerms = true
-    override def toplevelSeparator = ""
   }
 
   @leaf implicit object Scala211 extends DelegatingDialect {
