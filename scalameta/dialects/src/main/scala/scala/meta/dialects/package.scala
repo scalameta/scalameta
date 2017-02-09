@@ -109,7 +109,7 @@ package object dialects {
     def allowOrTypes = Scala210.allowOrTypes
     def allowTraitParameters = Scala210.allowTraitParameters
     def allowLiteralTypes: Boolean = Scala210.allowLiteralTypes
-    def allowTrailingComma: Boolean = Scala210.allowLiteralTypes
+    def allowTrailingComma: Boolean = Scala210.allowTrailingComma
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -127,7 +127,7 @@ package object dialects {
     def allowOrTypes = Scala210.allowOrTypes
     def allowTraitParameters = Scala210.allowTraitParameters
     def allowLiteralTypes: Boolean = Scala210.allowLiteralTypes
-    def allowTrailingComma: Boolean = Scala210.allowLiteralTypes
+    def allowTrailingComma: Boolean = Scala210.allowTrailingComma
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -145,7 +145,7 @@ package object dialects {
     def allowOrTypes = Scala210.allowOrTypes
     def allowTraitParameters = Scala210.allowTraitParameters
     def allowLiteralTypes: Boolean = Scala210.allowLiteralTypes
-    def allowTrailingComma: Boolean = Scala210.allowLiteralTypes
+    def allowTrailingComma: Boolean = Scala210.allowTrailingComma
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -163,7 +163,7 @@ package object dialects {
     def allowOrTypes = Scala211.allowOrTypes
     def allowTraitParameters = Scala211.allowTraitParameters
     def allowLiteralTypes: Boolean = Scala211.allowLiteralTypes
-    def allowTrailingComma: Boolean = Scala211.allowLiteralTypes
+    def allowTrailingComma: Boolean = Scala211.allowTrailingComma
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -199,7 +199,7 @@ package object dialects {
     def allowOrTypes = Scala212.allowOrTypes
     def allowTraitParameters = Scala212.allowTraitParameters
     def allowLiteralTypes: Boolean = Scala212.allowLiteralTypes
-    def allowTrailingComma: Boolean = Scala212.allowLiteralTypes
+    def allowTrailingComma: Boolean = Scala212.allowTrailingComma
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -238,7 +238,7 @@ package object dialects {
     def allowOrTypes = underlying.allowOrTypes
     def allowTraitParameters = underlying.allowTraitParameters
     def allowLiteralTypes = underlying.allowLiteralTypes
-    def allowTrailingComma = underlying.allowLiteralTypes
+    def allowTrailingComma = underlying.allowTrailingComma
   }
 
   @leaf private[meta] class QuasiquoteTerm(underlying: Dialect, multiline: Boolean) extends Quasiquote {
