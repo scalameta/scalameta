@@ -25,20 +25,24 @@ class DatabaseSuite extends OnlineMirrorSuite {
     |[72..76): List => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
     |[90..97): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
     |[98..102): list => file:<...>@61..85
-  """.trim.stripMargin)
+  """.trim.stripMargin
+  )
 
-  targeted("""
+  targeted(
+    """
     |object <<Second>> {
     |  def doSomething = {
     |    42
     |  }
     |}
   """.trim.stripMargin,
-           second => {
-             assert(second.symbol === Symbol("_empty_.Second."))
-           })
+    second => {
+      assert(second.symbol === Symbol("_empty_.Second."))
+    }
+  )
 
-  targeted("""
+  targeted(
+    """
     |object Third {
     |  val x1: scala.<<Int>> = ???
     |  val x2: <<Int>> = ???
@@ -48,11 +52,12 @@ class DatabaseSuite extends OnlineMirrorSuite {
     |  }
     |}
   """.trim.stripMargin,
-           (intname1, int2, int3) => {
-             val int1 = intname1.parent.get.asInstanceOf[Type.Select]
-             assert(int1 === int2)
-             assert(int1 =!= int3)
-           })
+    (intname1, int2, int3) => {
+      val int1 = intname1.parent.get.asInstanceOf[Type.Select]
+      assert(int1 === int2)
+      assert(int1 =!= int3)
+    }
+  )
 
   targeted("""
     |object Fourth {
@@ -63,14 +68,15 @@ class DatabaseSuite extends OnlineMirrorSuite {
              assert(int === t"Int")
            })
 
-  database("""
+  database(
+    """
     |import _root_.scala.List
     |
     |class C {
     |  _root_.scala.List
     |}
   """.trim.stripMargin,
-           """
+    """
     |[7..13): _root_ => _root_.
     |[14..19): scala => _root_.scala.
     |[20..24): List => _root_.scala.package.List.;_root_.scala.package.List#
@@ -78,5 +84,19 @@ class DatabaseSuite extends OnlineMirrorSuite {
     |[38..44): _root_ => _root_.
     |[45..50): scala => _root_.scala.
     |[51..55): List => _root_.scala.collection.immutable.
-  """.trim.stripMargin)
+  """.trim.stripMargin
+  )
+
+  targeted(
+    // curried function application with named args, #648
+    """
+      |object Foo {
+      |  def bar(children: Int)(x: Int) = children + x
+      |  <<bar>>(children = 4)(3)
+      |}
+    """.trim.stripMargin,
+    second => {
+      assert(second.symbol === Symbol("_empty_.Foo.bar(II)I."))
+    }
+  )
 }

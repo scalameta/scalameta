@@ -184,14 +184,7 @@ lazy val scalahost = Project(
     base / ("scala-" + scalaVersion.value)
   },
   exposePaths("scalahost", Test),
-  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-  scalacOptions in Test := {
-    val defaultValue = (scalacOptions in Test).value
-    val scalahostJar = (Keys.`package` in Compile).value
-    System.setProperty("sbt.paths.scalahost.compile.jar", scalahostJar.getAbsolutePath)
-    val addPlugin = "-Xplugin:" + scalahostJar.getAbsolutePath
-    defaultValue ++ Seq("-Jdummy=" + scalahostJar.lastModified)
-  }
+  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
 ) dependsOn (scalameta, testkit % Test)
 
 lazy val testkit = Project(
