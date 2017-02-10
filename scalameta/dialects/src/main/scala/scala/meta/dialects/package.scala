@@ -181,7 +181,7 @@ package object dialects {
     def allowOrTypes = Scala211.allowOrTypes
     def allowTraitParameters = Scala211.allowTraitParameters
     def allowLiteralTypes: Boolean = false // Scheduled to be included in 2.12.2
-    def allowTrailingComma: Boolean = true // Schedule to be included in 2.12.2
+    def allowTrailingComma: Boolean = false // Schedule to be included in 2.12.2
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
@@ -218,6 +218,27 @@ package object dialects {
     def allowTraitParameters = true
     def allowLiteralTypes: Boolean = true
     def allowTrailingComma: Boolean = false
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
+  // Useful for testing fields that are pending to be included in an official dialect.
+  // Also useful when you care about parsing as much as possible, for example in
+  // code formatters, user documentation and repl sessions.
+  @leaf implicit object AllowEverything extends Dialect {
+    def name = "AllowEverything"
+    def metalevel = Metalevel.Zero
+    def bindToSeqWildcardDesignator = "@"
+    def allowXmlLiterals = true
+    def allowInline = true
+    def allowSpliceUnderscore = true
+    def allowToplevelTerms = true
+    def toplevelSeparator = ""
+    def allowViewBounds = true
+    def allowAndTypes = true
+    def allowOrTypes = true
+    def allowTraitParameters = true
+    def allowLiteralTypes: Boolean = true
+    def allowTrailingComma: Boolean = true
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 

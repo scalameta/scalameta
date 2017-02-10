@@ -3,7 +3,7 @@ package tests
 package parsers
 
 import scala.collection.immutable.Seq
-import scala.meta.dialects.Scala212
+import scala.meta.dialects.AllowEverything
 
 import scala.meta.tokenizers.TokenizeException
 
