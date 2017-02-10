@@ -6,5 +6,5 @@ import scala.collection.immutable.Seq
 import scala.language.experimental.macros
 
 package object dialects {
-  def all: Seq[_] = macro Macros.all
+//  def all: Seq[_] = macro Macros.all
 }

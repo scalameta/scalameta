@@ -18,11 +18,10 @@ class Macros(val c: Context) extends MacroHelpers with AdtReflection {
   lazy val Scala212 = mirror.staticModule("scala.meta.dialects.Scala212")
   lazy val Dotty = mirror.staticModule("scala.meta.dialects.Dotty")
 
-  def all: c.Tree = {
-    val dialects = Dialect.asRoot.allLeafs
-    val relevantDialects = dialects.filter(!_.prefix.startsWith("Quasiquote"))
-    q"${relevantDialects.map(leaf => hygienicRef(leaf.sym)).toList}"
-  }
+//  def all: c.Tree = {
+//    val dialects = Dialect.asAdt.allVals
+//    q"${dialects.map(dialect => hygienicRef(dialect.sym)).toList}"
+//  }
 
   def current: c.Tree = {
     val version = scala.util.Properties.versionNumberString
