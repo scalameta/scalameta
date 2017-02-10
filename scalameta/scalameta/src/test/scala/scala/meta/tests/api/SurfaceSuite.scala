@@ -38,6 +38,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.common.Convert *
       |scala.meta.common.Optional *
       |scala.meta.dialects
+      |scala.meta.dialects.AllowEverything *
       |scala.meta.dialects.Dotty *
       |scala.meta.dialects.Metalevel *
       |scala.meta.dialects.Metalevel.Quoted *
