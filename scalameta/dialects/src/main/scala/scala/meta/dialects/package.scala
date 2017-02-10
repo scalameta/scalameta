@@ -74,6 +74,24 @@ import scala.compat.Platform.EOL
 }
 
 package object dialects {
+  @branch private[meta] trait DelegatingDialect extends Dialect {
+    def delegate: Dialect
+    def metalevel                   = delegate.metalevel
+    def bindToSeqWildcardDesignator = delegate.bindToSeqWildcardDesignator
+    def allowXmlLiterals            = delegate.allowXmlLiterals
+    def allowInline                 = delegate.allowInline
+    def allowSpliceUnderscore       = delegate.allowSpliceUnderscore
+    def allowToplevelTerms          = delegate.allowToplevelTerms
+    def allowOrTypes                = delegate.allowOrTypes
+    def toplevelSeparator           = delegate.toplevelSeparator
+    def allowViewBounds             = delegate.allowViewBounds
+    def allowAndTypes               = delegate.allowAndTypes
+    def allowTraitParameters        = delegate.allowTraitParameters
+    def allowLiteralTypes           = delegate.allowLiteralTypes
+
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
   @leaf implicit object Scala210 extends Dialect {
     def name = "Scala210"
     def metalevel = Metalevel.Zero
@@ -91,106 +109,41 @@ package object dialects {
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
-  @leaf implicit object Sbt0136 extends Dialect {
+  @leaf implicit object Sbt0136 extends DelegatingDialect {
     def name = "Sbt0136"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala210.allowXmlLiterals
-    def allowInline = false
-    def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
-    def allowToplevelTerms = true
-    def toplevelSeparator = EOL
-    def allowViewBounds = Scala210.allowViewBounds
-    def allowAndTypes = Scala210.allowAndTypes
-    def allowOrTypes = Scala210.allowOrTypes
-    def allowTraitParameters = Scala210.allowTraitParameters
-    def allowLiteralTypes: Boolean = Scala210.allowLiteralTypes
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+    def delegate = Scala210
+    override def allowToplevelTerms = true
+    override def toplevelSeparator = EOL
   }
 
-  @leaf implicit object Sbt0137 extends Dialect {
+  @leaf implicit object Sbt0137 extends DelegatingDialect {
     def name = "Sbt0137"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala210.allowXmlLiterals
-    def allowInline = false
-    def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
-    def allowToplevelTerms = true
-    def toplevelSeparator = ""
-    def allowViewBounds = Scala210.allowViewBounds
-    def allowAndTypes = Scala210.allowAndTypes
-    def allowOrTypes = Scala210.allowOrTypes
-    def allowTraitParameters = Scala210.allowTraitParameters
-    def allowLiteralTypes: Boolean = Scala210.allowLiteralTypes
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+    def delegate = Scala210
+    override def allowToplevelTerms = true
   }
 
-  @leaf implicit object Scala211 extends Dialect {
+  @leaf implicit object Scala211 extends DelegatingDialect {
     def name = "Scala211"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala210.allowXmlLiterals
-    def allowInline = false
-    def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
-    def allowToplevelTerms = Scala210.allowToplevelTerms
-    def toplevelSeparator = Scala210.toplevelSeparator
-    def allowViewBounds = Scala210.allowViewBounds
-    def allowAndTypes = Scala210.allowAndTypes
-    def allowOrTypes = Scala210.allowOrTypes
-    def allowTraitParameters = Scala210.allowTraitParameters
-    def allowLiteralTypes: Boolean = Scala210.allowLiteralTypes
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+    def delegate = Scala210
+    override def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
   }
 
-  @leaf implicit object Paradise211 extends Dialect {
+  @leaf implicit object Paradise211 extends DelegatingDialect {
     def name = "Paradise211"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala211.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala211.allowXmlLiterals
-    def allowInline = true
-    def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
-    def allowToplevelTerms = Scala211.allowToplevelTerms
-    def toplevelSeparator = Scala211.toplevelSeparator
-    def allowViewBounds = Scala211.allowViewBounds
-    def allowAndTypes = Scala211.allowAndTypes
-    def allowOrTypes = Scala211.allowOrTypes
-    def allowTraitParameters = Scala211.allowTraitParameters
-    def allowLiteralTypes: Boolean = Scala211.allowLiteralTypes
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+    def delegate = Scala211
+    override def allowInline = true
   }
 
-  @leaf implicit object Scala212 extends Dialect {
+  @leaf implicit object Scala212 extends DelegatingDialect {
     def name = "Scala212"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala211.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala211.allowXmlLiterals
-    def allowInline = false
-    def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
-    def allowToplevelTerms = Scala211.allowToplevelTerms
-    def toplevelSeparator = Scala211.toplevelSeparator
-    def allowViewBounds = Scala211.allowViewBounds
-    def allowAndTypes = Scala211.allowAndTypes
-    def allowOrTypes = Scala211.allowOrTypes
-    def allowTraitParameters = Scala211.allowTraitParameters
-    def allowLiteralTypes: Boolean = false // Scheduled to be included in 2.12.2
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+    def delegate = Scala211
+    override def allowLiteralTypes = false // Scheduled to be included in 2.12.2
   }
 
-  @leaf implicit object Paradise212 extends Dialect {
+  @leaf implicit object Paradise212 extends DelegatingDialect {
     def name = "Paradise212"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala212.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala212.allowXmlLiterals
-    def allowInline = true
-    def allowSpliceUnderscore = Scala212.allowSpliceUnderscore
-    def allowToplevelTerms = Scala212.allowToplevelTerms
-    def toplevelSeparator = Scala212.toplevelSeparator
-    def allowViewBounds = Scala212.allowViewBounds
-    def allowAndTypes = Scala212.allowAndTypes
-    def allowOrTypes = Scala212.allowOrTypes
-    def allowTraitParameters = Scala212.allowTraitParameters
-    def allowLiteralTypes: Boolean = Scala212.allowLiteralTypes
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+    def delegate = Scala212
+    override def allowInline = true
   }
 
   @leaf implicit object Dotty extends Dialect {
