@@ -4,7 +4,6 @@ Essential:
   * Quasiquotes (string interpolators, auxiliary Lift/Unlift macros)
 
 Convenience:
-  * `Dialect.current`
   * Materializer of `AllowEquality`
 
 ### Macros used when compiling scala.meta
@@ -19,7 +18,6 @@ Convenience:
   * `require`
   * `@quasiquote`
   * `@classifier`
-  * `dialects.all`
   * Some implementation details of `Show`
   * Materializers of `Liftable` for core data structures
 

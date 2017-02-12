@@ -19,8 +19,8 @@ object TokenSyntax {
       case Xml.SpliceStart() if !dialect.allowXmlLiterals => failXml()
       case Xml.SpliceEnd() if !dialect.allowXmlLiterals => failXml()
       case Xml.End() if !dialect.allowXmlLiterals => failXml()
-      case Unquote(_) if !dialect.allowUnquotes => failQuasiquote()
-      case Ellipsis(_) if !dialect.allowEllipses => failQuasiquote()
+      case Unquote() if !dialect.allowUnquoting => failQuasiquote()
+      case Ellipsis(_) if !dialect.allowUnquoting => failQuasiquote()
       case KwInline() if !dialect.allowInline => failInline()
       case Viewbound() if !dialect.allowViewBounds => failViewBound()
       case _ => // do nothing, check passed

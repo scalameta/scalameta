@@ -11,7 +11,6 @@ import Chars._
 import LegacyToken._
 import org.scalameta._
 import scala.meta.inputs._
-import scala.meta.dialects.Quasiquote
 import scala.meta.tokenizers.TokenizeException
 
 class LegacyScanner(input: Input, dialect: Dialect) {
@@ -26,7 +25,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   next.input = this.input
   prev.input = this.input
 
-  private def metalevel = dialect.metalevel
   private def isDigit(c: Char) = java.lang.Character isDigit c
   private var openComments = 0
   protected def putCommentChar(): Unit = nextChar()
@@ -442,7 +440,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         nextChar()
         if ('0' <= ch && ch <= '9') {
           putChar('.'); getFraction()
-        } else if (dialect.allowEllipses && ch == '.') {
+        } else if (dialect.allowUnquoting && ch == '.') {
           base = 0
           while (ch == '.') {
             base += 1
@@ -590,8 +588,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   // True means that we have successfully read '$'
   // False means that we need to switch into unquote reading mode.
   private def getDollar(): Boolean = {
-    if (metalevel.isQuoted) {
-      require(metalevel.nesting == 1)
+    if (dialect.allowUnquoting) {
       val lookahead = lookaheadReader
       lookahead.nextChar()
       if (lookahead.ch == '$') {
@@ -974,7 +971,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       // Ideally we would move it from ScalametaTokenizer to here and then reuse it,
       // but that's too much hassle at the moment.
       val exploratoryInput = Input.Slice(input, start, input.chars.length)
-      val exploratoryDialect = this.dialect match { case dialect: Quasiquote => dialect.underlying; case _ => unreachable }
+      val exploratoryDialect = this.dialect.copy(allowTermUnquoting = false, allowPatUnquoting = false, allowMultiline = true)
       val exploratoryScanner = new LegacyScanner(exploratoryInput, exploratoryDialect)
       exploratoryScanner.reader.nextChar()
       exploratoryScanner.nextToken()

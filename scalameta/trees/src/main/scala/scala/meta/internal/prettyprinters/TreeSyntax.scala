@@ -3,7 +3,6 @@ package internal
 package prettyprinters
 
 import scala.meta.classifiers._
-import scala.meta.dialects.Quasiquote
 import scala.meta.prettyprinters._
 import scala.meta.prettyprinters.Syntax._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, wrap => w, function => fn }
@@ -193,13 +192,13 @@ object TreeSyntax {
       implicit def syntaxTree[T <: Tree]: Syntax[T] = Syntax {
         // Bottom
         case t: Quasi =>
-          if (!dialect.metalevel.isQuoted) throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
+          if (!dialect.allowUnquoting) throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
           if (t.rank > 0) {
             s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
           } else {
             val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var.Term] || t.tree.is[Term.This] || t.tree.is[Pat.Wildcard]
             implicit val syntaxOptions = options
-            implicit val syntaxDialect = dialect match { case dialect: Quasiquote => dialect.underlying; case _ => unreachable }
+            implicit val syntaxDialect = dialect.copy(allowTermUnquoting = false, allowPatUnquoting = false, allowMultiline = true)
             s("$", w("{", t.tree.syntax, "}", !allowBraceless))
           }
 

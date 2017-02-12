@@ -64,7 +64,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     }
   }
 
-  private def staticClassesAndObjects(pkg: Symbol, onlyImmediatelyAccessible: Boolean): List[Symbol] = {
+  private def staticClassesObjectsAndVals(pkg: Symbol, onlyImmediatelyAccessible: Boolean): List[Symbol] = {
     val visited = Set[Symbol]()
     def loop(parent: Symbol): Unit = {
       if (parent == NoSymbol) return
@@ -91,11 +91,15 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
           } else if (sym.isClass) {
             visited += sym
           } else if (sym.isMethod) {
-            // handle term aliases
             if (sym.asMethod.isGetter) {
-              val target = sym.info.finalResultType.typeSymbol
-              if (target.isModuleClass) loop(target.asClass.module)
-              else ()
+              val isInPackageClass = sym.owner.isModuleClass && sym.owner.name == typeNames.PACKAGE
+              if (isInPackageClass) visited += sym
+              else {
+                // handle term aliases
+                val target = sym.info.finalResultType.typeSymbol
+                if (target.isModuleClass) loop(target.asClass.module)
+                else ()
+              }
             }
           } else if (sym.isType) {
             // handle type aliases
@@ -125,7 +129,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
   private def staticsImpl(packageName: Tree, onlyImmediatelyAccessible: Boolean): Tree = {
     val Literal(Constant(s_packageName: String)) = packageName
 
-    val statics = staticClassesAndObjects(m.staticPackage(s_packageName), onlyImmediatelyAccessible)
+    val statics = staticClassesObjectsAndVals(m.staticPackage(s_packageName), onlyImmediatelyAccessible)
     val nonImplicitClassStatics = statics.filter(!_.isImplicitClass)
     val (pkgObjects, nonPkgObjectStatics) = nonImplicitClassStatics.partition(_.isPkgObject)
     val allowedPkgObjects = pkgObjects.filter(sym => sym.owner.fullName == s_packageName || !onlyImmediatelyAccessible)
@@ -150,7 +154,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
 
   def allSurfaceImpl(packageName: Tree): Tree = {
     val Literal(Constant(s_packageName: String)) = packageName
-    val statics = staticClassesAndObjects(m.staticPackage(s_packageName), onlyImmediatelyAccessible = false)
+    val statics = staticClassesObjectsAndVals(m.staticPackage(s_packageName), onlyImmediatelyAccessible = false)
 
     val directSurface = statics.flatMap(static => {
       var result = static.info.members.filter(mem => {

@@ -4,7 +4,6 @@ package tokenizers
 
 import Chars._
 import scala.meta.inputs._
-import scala.meta.dialects.Quasiquote
 
 trait CharArrayReaderData {
   /** the last read character */
@@ -24,7 +23,6 @@ trait CharArrayReaderData {
 
 class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extends CharArrayReaderData { self =>
   val buf = input.chars
-  private val singleline = dialect match { case dialect: Quasiquote => !dialect.multiline; case _ => false }
   import reporter._
 
   /** Is last character a unicode escape \\uxxxx? */
@@ -43,7 +41,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
         skipCR()
         potentialLineEnd()
       }
-      if (ch == '"' && singleline) {
+      if (ch == '"' && !dialect.allowMultiline) {
         readerError("double quotes are not allowed in single-line quasiquotes", at = charOffset - 1)
       }
     }
@@ -111,7 +109,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
   /** Handle line ends */
   private def potentialLineEnd() {
     if (ch == LF || ch == FF) {
-      if (singleline) {
+      if (!dialect.allowMultiline) {
         readerError("line breaks are not allowed in single-line quasiquotes", at = charOffset - 1)
       }
       lastLineStartOffset = lineStartOffset

@@ -11,7 +11,6 @@ import mutable.{ ListBuffer, StringBuilder }
 import scala.annotation.tailrec
 import scala.{Seq => _}
 import scala.collection.immutable._
-import scala.meta.dialects.{Quasiquote, QuasiquoteTerm, QuasiquotePat, Metalevel}
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
@@ -33,8 +32,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   require(Set("@", ":").contains(dialect.bindToSeqWildcardDesignator))
   require(Set("", EOL).contains(dialect.toplevelSeparator))
   implicit val currentDialect: Dialect = dialect
-  def inQuasiquote = dialect.metalevel.isQuoted
-  def allowInline = dialect.allowInline
 
 /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
@@ -124,25 +121,25 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     def fail() = parser.reporter.syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
     parseRule(parser => parser.autoPos(parser.token match {
-      case Unquote(_)                        => unquote[Mod.Quasi]
-      case At()                              => parser.annot()
-      case KwPrivate()                       => parser.accessModifier()
-      case KwProtected()                     => parser.accessModifier()
-      case KwImplicit()                      => parser.next(); Mod.Implicit()
-      case KwFinal()                         => parser.next(); Mod.Final()
-      case KwSealed()                        => parser.next(); Mod.Sealed()
-      case KwOverride()                      => parser.next(); Mod.Override()
-      case KwCase()                          => parser.next(); Mod.Case()
-      case KwAbstract()                      => parser.next(); Mod.Abstract()
-      case Ident("+")                        => parser.next(); Mod.Covariant()
-      case Ident("-")                        => parser.next(); Mod.Contravariant()
-      case KwLazy()                          => parser.next(); Mod.Lazy()
-      case KwVal() if !inQuasiquote          => parser.next(); Mod.ValParam()
-      case KwVar() if !inQuasiquote          => parser.next(); Mod.VarParam()
-      case Ident("valparam") if inQuasiquote => parser.next(); Mod.ValParam()
-      case Ident("varparam") if inQuasiquote => parser.next(); Mod.VarParam()
-      case KwInline() if allowInline         => parser.next(); Mod.Inline()
-      case _                                 => fail()
+      case Unquote()                                   => unquote[Mod.Quasi]
+      case At()                                        => parser.annot()
+      case KwPrivate()                                 => parser.accessModifier()
+      case KwProtected()                               => parser.accessModifier()
+      case KwImplicit()                                => parser.next(); Mod.Implicit()
+      case KwFinal()                                   => parser.next(); Mod.Final()
+      case KwSealed()                                  => parser.next(); Mod.Sealed()
+      case KwOverride()                                => parser.next(); Mod.Override()
+      case KwCase()                                    => parser.next(); Mod.Case()
+      case KwAbstract()                                => parser.next(); Mod.Abstract()
+      case Ident("+")                                  => parser.next(); Mod.Covariant()
+      case Ident("-")                                  => parser.next(); Mod.Contravariant()
+      case KwLazy()                                    => parser.next(); Mod.Lazy()
+      case KwVal() if !dialect.allowUnquoting          => parser.next(); Mod.ValParam()
+      case KwVar() if !dialect.allowUnquoting          => parser.next(); Mod.VarParam()
+      case Ident("valparam") if dialect.allowUnquoting => parser.next(); Mod.ValParam()
+      case Ident("varparam") if dialect.allowUnquoting => parser.next(); Mod.VarParam()
+      case KwInline() if dialect.allowInline           => parser.next(); Mod.Inline()
+      case _                                           => fail()
     }))
   }
   def parseQuasiquoteMod(): Mod = parseMod() // NOTE: special treatment for mod"valparam" and likes is implemented directly in `parseMod`
@@ -706,7 +703,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def ellipsis[T <: Tree : AstInfo](rank: Int, astInfo: AstInfo[T], extraSkip: => Unit = {}): T = autoPos {
     token match {
       case ellipsis: Ellipsis =>
-        if (dialect.allowEllipses) {
+        if (dialect.allowUnquoting) {
           if (ellipsis.rank != rank) {
             syntaxError(Messages.QuasiquoteRankMismatch(ellipsis.rank, rank), at = ellipsis)
           } else {
@@ -716,7 +713,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
               val result = token match {
                 case LeftParen() => inParens(unquote[T])
                 case LeftBrace() => inBraces(unquote[T])
-                case Unquote(_) => unquote[T]
+                case Unquote() => unquote[T]
                 case _ => syntaxError(s"$$, ( or { expected but ${token.name} found", at = token)
               }
               result match {
@@ -744,34 +741,31 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def unquote[T <: Tree : AstInfo](advance: Boolean = true): T = autoPos {
     token match {
       case unquote: Unquote =>
-        require(unquote.metalevel.nesting == 0)
         require(unquote.input.chars(unquote.start + 1) != '$')
-        dialect match {
-          case dialect: Quasiquote =>
-            // TODO: The necessity to do position fixup for error messages is unsatisfying.
-            // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
-            // but then such positions wouldn't be usable with Input.Slice.chars.
-            val unquotedTree = {
-              try {
-                val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
-                val unquoteDialect = dialect.underlying
-                val unquoteParser = new ScalametaParser(unquoteInput, unquoteDialect)
-                dialect match {
-                  case dialect: QuasiquoteTerm => unquoteParser.parseUnquoteTerm()
-                  case dialect: QuasiquotePat => unquoteParser.parseUnquotePat()
-                }
-              } catch {
-                case ex: Exception => throw ex.absolutize
-              }
+        if (dialect.allowUnquoting) {
+          // TODO: The necessity to do position fixup for error messages is unsatisfying.
+          // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
+          // but then such positions wouldn't be usable with Input.Slice.chars.
+          val unquotedTree = {
+            try {
+              val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
+              val unquoteDialect = dialect.copy(allowTermUnquoting = false, allowPatUnquoting = false, allowMultiline = true)
+              val unquoteParser = new ScalametaParser(unquoteInput, unquoteDialect)
+              if (dialect.allowTermUnquoting) unquoteParser.parseUnquoteTerm()
+              else if (dialect.allowPatUnquoting) unquoteParser.parseUnquotePat()
+              else unreachable
+            } catch {
+              case ex: Exception => throw ex.absolutize
             }
-            if (advance) {
-              next()
-              implicitly[AstInfo[T]].quasi(0, unquotedTree)
-            } else ahead {
-              implicitly[AstInfo[T]].quasi(0, unquotedTree)
-            }
-          case _ =>
-            syntaxError(s"$dialect doesn't support unquotes", at = unquote)
+          }
+          if (advance) {
+            next()
+            implicitly[AstInfo[T]].quasi(0, unquotedTree)
+          } else ahead {
+            implicitly[AstInfo[T]].quasi(0, unquotedTree)
+          }
+        } else {
+          syntaxError(s"$dialect doesn't support unquotes", at = unquote)
         }
       case _ =>
         unreachable(debug(token))
@@ -1220,7 +1214,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, typeName(), t1))
           token match {
             case KwForsome() => next(); atPos(t, t)(Type.Existential(t, existentialStats()))
-            case Unquote(_) | Ident(_) if !isRawBar => infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
+            case Unquote() | Ident(_) if !isRawBar => infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
             case _ => t
           }
         } else {
@@ -1271,7 +1265,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
       if (advance) next()
       res
-    case Unquote(_) =>
+    case Unquote() =>
       unquote[T](advance)
     case _ =>
       syntaxErrorExpected[Ident]
@@ -1303,7 +1297,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
       next()
       val superp = atPos(in.prevTokenPos, auto)(Term.Super(anonqual, mixinQualifier()))
-      if (startsAtBof && endsAtEof && inQuasiquote) return superp
+      if (startsAtBof && endsAtEof && dialect.allowUnquoting) return superp
       accept[Dot]
       val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
       if (stop) supersel
@@ -1335,7 +1329,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             case name => atPos(name, name)(Name.Indeterminate(name.value))
           }
           val superp = atPos(name, auto)(Term.Super(qual, mixinQualifier()))
-          if (startsAtBof && endsAtEof && inQuasiquote) return superp
+          if (startsAtBof && endsAtEof && dialect.allowUnquoting) return superp
           accept[Dot]
           val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
           if (stop) supersel
@@ -2033,7 +2027,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           interpolateTerm()
         case Xml.Start() =>
           xmlTerm()
-        case Ident(_) | KwThis() | KwSuper() | Unquote(_) =>
+        case Ident(_) | KwThis() | KwSuper() | Unquote() =>
           path() match {
             case q: Term.Ref.Quasi => q.become[Term.Quasi]
             case path => path
@@ -2505,7 +2499,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       // simple diagnostics for this entry point
       simplePattern(token => syntaxError("illegal start of simple pattern", at = token))
     def simplePattern(onError: Token => Nothing): Pat = autoPos(token match {
-      case Ident(_) | KwThis() | Unquote(_) =>
+      case Ident(_) | KwThis() | Unquote() =>
         val isBackquoted = parser.isBackquoted
         val sid = stableId()
         val isVarPattern = sid match {
@@ -2637,7 +2631,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def accessModifierOpt(): Option[Mod] = token match {
-    case Unquote(_)    => Some(unquote[Mod])
+    case Unquote()     => Some(unquote[Mod])
     case Ellipsis(_)   => Some(ellipsis(1, astInfo[Mod]))
     case KwPrivate()   => Some(accessModifier())
     case KwProtected() => Some(accessModifier())
@@ -2645,18 +2639,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def modifier(): Mod = autoPos(token match {
-    case Unquote(_)                  => unquote[Mod]
-    case Ellipsis(_)                 => ellipsis(1, astInfo[Mod])
-    case KwAbstract()                => next(); Mod.Abstract()
-    case KwFinal()                   => next(); Mod.Final()
-    case KwSealed()                  => next(); Mod.Sealed()
-    case KwImplicit()                => next(); Mod.Implicit()
-    case KwLazy()                    => next(); Mod.Lazy()
-    case KwOverride()                => next(); Mod.Override()
-    case KwPrivate()                 => accessModifier()
-    case KwProtected()               => accessModifier()
-    case KwInline() if allowInline   => next(); Mod.Inline()
-    case _                           => syntaxError(s"modifier expected but ${token.name} found", at = token)
+    case Unquote()                         => unquote[Mod]
+    case Ellipsis(_)                       => ellipsis(1, astInfo[Mod])
+    case KwAbstract()                      => next(); Mod.Abstract()
+    case KwFinal()                         => next(); Mod.Final()
+    case KwSealed()                        => next(); Mod.Sealed()
+    case KwImplicit()                      => next(); Mod.Implicit()
+    case KwLazy()                          => next(); Mod.Lazy()
+    case KwOverride()                      => next(); Mod.Override()
+    case KwPrivate()                       => accessModifier()
+    case KwProtected()                     => accessModifier()
+    case KwInline() if dialect.allowInline => next(); Mod.Inline()
+    case _                                 => syntaxError(s"modifier expected but ${token.name} found", at = token)
   })
 
   /** {{{
@@ -2680,7 +2674,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // but in the case of the latter, we need to take care to not hastily parse those names as modifiers
     def continueLoop = ahead(token.is[Colon] || token.is[Equals] || token.is[EOF] || token.is[LeftBracket] || token.is[Subtype] || token.is[Supertype] || token.is[Viewbound])
     def loop(mods: List[Mod]): List[Mod] = token match {
-      case Unquote(_)       => if (continueLoop) mods else loop(appendMod(mods, modifier()))
+      case Unquote()        => if (continueLoop) mods else loop(appendMod(mods, modifier()))
       case Ellipsis(_)      => loop(appendMod(mods, modifier()))
       case Modifier()       => loop(appendMod(mods, modifier()))
       case LF() if !isLocal => next(); loop(mods)
@@ -3381,7 +3375,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val parents = new ListBuffer[Ctor.Call]
     def readAppliedParent() = {
       val parent = token match {
-        case Unquote(_) =>
+        case Unquote() =>
           val parent = constructorCall(startModType())
           parent match {
             case parent: Ctor.Ref.Name.Quasi => parent.become[Ctor.Call.Quasi]
@@ -3434,7 +3428,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def quasiquoteTemplate(): Template = autoPos {
     token match {
-      case Unquote(_) if ahead(token.is[EOF]) =>
+      case Unquote() if ahead(token.is[EOF]) =>
         val parents = List(unquote[Ctor.Call])
         val self = autoPos(Term.Param(Nil, autoPos(Name.Anonymous()), None, None))
         Template(Nil, parents, self, None)
@@ -3532,7 +3526,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def topStat: PartialFunction[Token, Stat] = {
     case Ellipsis(_) =>
       ellipsis(1, astInfo[Stat])
-    case Unquote(_) =>
+    case Unquote() =>
       unquote[Stat]
     case KwPackage() =>
       packageOrPackageObjectDef()
@@ -3598,7 +3592,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       importStmt()
     case DefIntro() =>
       nonLocalDefOrDcl()
-    case Unquote(_) =>
+    case Unquote() =>
       unquote[Stat]
     case Ellipsis(_) =>
       ellipsis(1, astInfo[Stat])

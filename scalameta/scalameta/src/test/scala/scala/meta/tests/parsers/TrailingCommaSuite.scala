@@ -2,13 +2,10 @@ package scala.meta
 package tests
 package parsers
 
-import scala.collection.immutable.Seq
-import scala.meta.dialects.AllowEverything
-
-import scala.meta.tokenizers.TokenizeException
-
 // Tests from https://github.com/scala/scala/pull/5245/files
 class TrailingCommaSuite extends ParseSuite {
+  implicit val Scala2122 = scala.meta.dialects.Scala212.copy(allowTrailingComma = true)
+
   // Negative tests
   checkError("""trait ArgumentExprs1 { f(23, "bar", )(Ev0, Ev1) }""")
   checkError("""trait ArgumentExprs2 { f(23, "bar")(Ev0, Ev1, ) }""")
