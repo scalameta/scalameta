@@ -137,22 +137,16 @@ package object dialects {
     allowInlines = true
   )
 
-  implicit val Dotty = Dialect(
-    allowMultilinePrograms = true,
-    allowTermUnquotes = false,
-    allowPatUnquotes = false,
+  implicit val Dotty = Scala212.copy(
     bindToSeqWildcardDesignator = ":", // List(1, 2, 3) match { case List(xs: _*) => ... }
-    allowSpliceUnderscores = true,
     allowXmlLiterals = false, // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
-    allowInlines = true,
-    allowToplevelTerms = false,
-    allowOrTypes = true,
-    toplevelSeparator = "",
+    allowInlines = true, // New feature in Dotty
     allowViewBounds = false, // View bounds have been removed in Dotty
-    allowAndTypes = true,
-    allowTraitParameters = true,
-    allowLiteralTypes = true,
-    allowTrailingCommas = false // Not yet implemented for Dotty
+    allowOrTypes = true, // New feature in Dotty
+    allowAndTypes = true, // New feature in Dotty
+    allowTraitParameters = true, // New feature in Dotty
+    allowLiteralTypes = true, // New feature in Dotty
+    allowTrailingCommas = false // Not yet implemented in Dotty
   )
 
   // TODO: https://github.com/scalameta/scalameta/issues/380
