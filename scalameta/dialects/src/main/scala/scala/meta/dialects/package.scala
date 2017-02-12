@@ -75,6 +75,13 @@ import scala.compat.Platform.EOL
   // Are `with` intersection types supported by this dialect?
   def allowWithTypes: Boolean = !allowAndTypes
 
+  // Dialects have reference equality semantics,
+  // because sometimes dialects representing distinct Scala versions
+  // can be structurally equal to each other.
+  override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
+  override def equals(other: Any): Boolean = this eq other.asInstanceOf[AnyRef]
+  override def hashCode: Int = System.identityHashCode(this)
+
   // Smart prettyprinting that knows about standard dialects.
   override def toString = {
     Dialect.standardByDialect.get(this) match {
