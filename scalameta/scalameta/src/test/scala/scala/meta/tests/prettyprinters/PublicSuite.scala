@@ -114,6 +114,22 @@ class PublicSuite extends FunSuite {
     // covered above
   }
 
+  test("scala.meta.dialects.TypelevelScala211.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.TypelevelScala212.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.ParadiseTypelevelScala211.toString") {
+    // covered above
+  }
+
+  test("scala.meta.dialects.ParadiseTypelevelScala212.toString") {
+    // covered above
+  }
+
   test("scala.meta.inputs.Input.toString") {
     // covered below
   }
