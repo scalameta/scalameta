@@ -242,6 +242,24 @@ package object dialects {
     private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
   }
 
+  // Useful if you want to parse as much as possible, for example in formatting.
+  @leaf implicit object AllowEverything extends Dialect {
+    def name = "AllowEverything"
+    def metalevel = Metalevel.Zero
+    def bindToSeqWildcardDesignator = Scala212.bindToSeqWildcardDesignator
+    def allowXmlLiterals = true
+    def allowInline = true
+    def allowSpliceUnderscore = true
+    def allowToplevelTerms = true
+    def allowOrTypes = true
+    def toplevelSeparator = ""
+    def allowViewBounds = true
+    def allowAndTypes = true
+    def allowTraitParameters = true
+    def allowLiteralTypes: Boolean = true
+    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  }
+
   @branch private[meta] trait Quasiquote extends Dialect {
     def name = s"$qualifier(${underlying.name}, ${if (multiline) "Multi" else "Single"})"
     def multiline: Boolean
