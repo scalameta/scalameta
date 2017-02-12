@@ -73,7 +73,7 @@ import scala.compat.Platform.EOL
   // What kind of separator is necessary to split top-level statements?
   // Normally none is required, but scripts may have their own rules.
   toplevelSeparator: String
-) extends Serializable {
+) {
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
 

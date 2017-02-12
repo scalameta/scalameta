@@ -184,7 +184,10 @@ class DataMacros(val c: Context) extends MacroHelpers {
         stats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"
       }
 
-      // step 5: generate copy
+      // step 5: implement Serializable
+      parents1 += tq"_root_.scala.Serializable"
+
+      // step 6: generate copy
       if (needs(TermName("copy"), companion = false, duplicate = false) && !isVararg) {
         val copyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
@@ -204,7 +207,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
         stats1 += q"def copy[..$itparams](...$copyParamss): $name[..$tparamrefs] = new $name[..$tparamrefs](...$copyArgss)"
       }
 
-      // step 6: generate Companion.apply
+      // step 7: generate Companion.apply
       // TODO: try change this to duplicate=true and see what happens
       if (needs(TermName("apply"), companion = true, duplicate = false)) {
         val applyParamss = paramss.map(_.map({
@@ -220,7 +223,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
         mstats1 += q"def apply[..$itparams](...$applyParamss): $name[..$tparamrefs] = new $name[..$tparamrefs](...$applyArgss)"
       }
 
-      // step 7: generate Companion.unapply
+      // step 8: generate Companion.unapply
       // TODO: go for name-based pattern matching once blocking bugs (e.g. SI-9029) are fixed
       val unapplyName = if (isVararg) TermName("unapplySeq") else TermName("unapply")
       if (needs(TermName("unapply"), companion = true, duplicate = false) &&
