@@ -129,7 +129,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           if (emitIdentifierDeprecationWarnings)
             deprecationWarning(s"$name is now a reserved word; usage as an identifier is deprecated", at = token)
         }
-      } else if (dialect.allowInline && name == "inline") {
+      } else if (dialect.allowInlines && name == "inline") {
         token = INLINE
       }
     }
@@ -440,7 +440,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         nextChar()
         if ('0' <= ch && ch <= '9') {
           putChar('.'); getFraction()
-        } else if (dialect.allowUnquoting && ch == '.') {
+        } else if (dialect.allowUnquotes && ch == '.') {
           base = 0
           while (ch == '.') {
             base += 1
@@ -588,7 +588,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   // True means that we have successfully read '$'
   // False means that we need to switch into unquote reading mode.
   private def getDollar(): Boolean = {
-    if (dialect.allowUnquoting) {
+    if (dialect.allowUnquotes) {
       val lookahead = lookaheadReader
       lookahead.nextChar()
       if (lookahead.ch == '$') {
@@ -673,7 +673,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           endOffset = charOffset - 3
           nextRawChar()
           next.token = LBRACE
-        } else if (ch == '_' && dialect.allowSpliceUnderscore) {
+        } else if (ch == '_' && dialect.allowSpliceUnderscores) {
           finishStringPart()
           endOffset = charOffset - 3
           nextRawChar()
@@ -693,7 +693,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           }
         } else {
           var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
-          if (dialect.allowSpliceUnderscore) supportedCombos = supportedCombos :+ "`$'_"
+          if (dialect.allowSpliceUnderscores) supportedCombos = supportedCombos :+ "`$'_"
           val s_supportedCombos = supportedCombos.init.mkString(", ") + supportedCombos.last
           syntaxError(s_supportedCombos, at = offset)
         }
@@ -971,7 +971,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       // Ideally we would move it from ScalametaTokenizer to here and then reuse it,
       // but that's too much hassle at the moment.
       val exploratoryInput = Input.Slice(input, start, input.chars.length)
-      val exploratoryDialect = this.dialect.copy(allowTermUnquoting = false, allowPatUnquoting = false, allowMultiline = true)
+      val exploratoryDialect = this.dialect.copy(allowTermUnquotes = false, allowPatUnquotes = false, allowMultilinePrograms = true)
       val exploratoryScanner = new LegacyScanner(exploratoryInput, exploratoryDialect)
       exploratoryScanner.reader.nextChar()
       exploratoryScanner.nextToken()

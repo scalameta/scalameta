@@ -41,7 +41,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
         skipCR()
         potentialLineEnd()
       }
-      if (ch == '"' && !dialect.allowMultiline) {
+      if (ch == '"' && !dialect.allowMultilinePrograms) {
         readerError("double quotes are not allowed in single-line quasiquotes", at = charOffset - 1)
       }
     }
@@ -109,7 +109,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
   /** Handle line ends */
   private def potentialLineEnd() {
     if (ch == LF || ch == FF) {
-      if (!dialect.allowMultiline) {
+      if (!dialect.allowMultilinePrograms) {
         readerError("line breaks are not allowed in single-line quasiquotes", at = charOffset - 1)
       }
       lastLineStartOffset = lineStartOffset

@@ -192,13 +192,13 @@ object TreeSyntax {
       implicit def syntaxTree[T <: Tree]: Syntax[T] = Syntax {
         // Bottom
         case t: Quasi =>
-          if (!dialect.allowUnquoting) throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
+          if (!dialect.allowUnquotes) throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
           if (t.rank > 0) {
             s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
           } else {
             val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var.Term] || t.tree.is[Term.This] || t.tree.is[Pat.Wildcard]
             implicit val syntaxOptions = options
-            implicit val syntaxDialect = dialect.copy(allowTermUnquoting = false, allowPatUnquoting = false, allowMultiline = true)
+            implicit val syntaxDialect = dialect.copy(allowTermUnquotes = false, allowPatUnquotes = false, allowMultilinePrograms = true)
             s("$", w("{", t.tree.syntax, "}", !allowBraceless))
           }
 
@@ -482,7 +482,7 @@ object TreeSyntax {
         case _: Mod.ValParam                 => kw("val")
         case _: Mod.VarParam                 => kw("var")
         case _: Mod.Inline                   =>
-          if (!dialect.allowInline) throw new UnsupportedOperationException(s"$dialect doesn't support inline")
+          if (!dialect.allowInlines) throw new UnsupportedOperationException(s"$dialect doesn't support inline")
           kw("inline")
 
         // Enumerator

@@ -134,11 +134,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case Ident("+")                                  => parser.next(); Mod.Covariant()
       case Ident("-")                                  => parser.next(); Mod.Contravariant()
       case KwLazy()                                    => parser.next(); Mod.Lazy()
-      case KwVal() if !dialect.allowUnquoting          => parser.next(); Mod.ValParam()
-      case KwVar() if !dialect.allowUnquoting          => parser.next(); Mod.VarParam()
-      case Ident("valparam") if dialect.allowUnquoting => parser.next(); Mod.ValParam()
-      case Ident("varparam") if dialect.allowUnquoting => parser.next(); Mod.VarParam()
-      case KwInline() if dialect.allowInline           => parser.next(); Mod.Inline()
+      case KwVal() if !dialect.allowUnquotes          => parser.next(); Mod.ValParam()
+      case KwVar() if !dialect.allowUnquotes          => parser.next(); Mod.VarParam()
+      case Ident("valparam") if dialect.allowUnquotes => parser.next(); Mod.ValParam()
+      case Ident("varparam") if dialect.allowUnquotes => parser.next(); Mod.VarParam()
+      case KwInline() if dialect.allowInlines           => parser.next(); Mod.Inline()
       case _                                           => fail()
     }))
   }
@@ -226,7 +226,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       // If a comma is followed by a new line & then a closing paren, bracket or brace
       // then it is a trailing comma and is ignored.
       def isTrailingComma: Boolean =
-        dialect.allowTrailingComma &&
+        dialect.allowTrailingCommas &&
           curr.is[Comma] &&
           next.is[CloseDelim] &&
           nextScannerToken.exists(_.is[LineEnd])
@@ -703,7 +703,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def ellipsis[T <: Tree : AstInfo](rank: Int, astInfo: AstInfo[T], extraSkip: => Unit = {}): T = autoPos {
     token match {
       case ellipsis: Ellipsis =>
-        if (dialect.allowUnquoting) {
+        if (dialect.allowUnquotes) {
           if (ellipsis.rank != rank) {
             syntaxError(Messages.QuasiquoteRankMismatch(ellipsis.rank, rank), at = ellipsis)
           } else {
@@ -742,17 +742,17 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     token match {
       case unquote: Unquote =>
         require(unquote.input.chars(unquote.start + 1) != '$')
-        if (dialect.allowUnquoting) {
+        if (dialect.allowUnquotes) {
           // TODO: The necessity to do position fixup for error messages is unsatisfying.
           // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
           // but then such positions wouldn't be usable with Input.Slice.chars.
           val unquotedTree = {
             try {
               val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
-              val unquoteDialect = dialect.copy(allowTermUnquoting = false, allowPatUnquoting = false, allowMultiline = true)
+              val unquoteDialect = dialect.copy(allowTermUnquotes = false, allowPatUnquotes = false, allowMultilinePrograms = true)
               val unquoteParser = new ScalametaParser(unquoteInput, unquoteDialect)
-              if (dialect.allowTermUnquoting) unquoteParser.parseUnquoteTerm()
-              else if (dialect.allowPatUnquoting) unquoteParser.parseUnquotePat()
+              if (dialect.allowTermUnquotes) unquoteParser.parseUnquoteTerm()
+              else if (dialect.allowPatUnquotes) unquoteParser.parseUnquotePat()
               else unreachable
             } catch {
               case ex: Exception => throw ex.absolutize
@@ -1297,7 +1297,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
       next()
       val superp = atPos(in.prevTokenPos, auto)(Term.Super(anonqual, mixinQualifier()))
-      if (startsAtBof && endsAtEof && dialect.allowUnquoting) return superp
+      if (startsAtBof && endsAtEof && dialect.allowUnquotes) return superp
       accept[Dot]
       val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
       if (stop) supersel
@@ -1329,7 +1329,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             case name => atPos(name, name)(Name.Indeterminate(name.value))
           }
           val superp = atPos(name, auto)(Term.Super(qual, mixinQualifier()))
-          if (startsAtBof && endsAtEof && dialect.allowUnquoting) return superp
+          if (startsAtBof && endsAtEof && dialect.allowUnquotes) return superp
           accept[Dot]
           val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
           if (stop) supersel
@@ -2649,7 +2649,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     case KwOverride()                      => next(); Mod.Override()
     case KwPrivate()                       => accessModifier()
     case KwProtected()                     => accessModifier()
-    case KwInline() if dialect.allowInline => next(); Mod.Inline()
+    case KwInline() if dialect.allowInlines => next(); Mod.Inline()
     case _                                 => syntaxError(s"modifier expected but ${token.name} found", at = token)
   })
 

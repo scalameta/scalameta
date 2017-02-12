@@ -16,22 +16,22 @@ import scala.compat.Platform.EOL
 @data class Dialect(
   // Are multiline programs allowed?
   // Some quasiquotes only support single-line snippets.
-  allowMultiline: Boolean,
+  allowMultilinePrograms: Boolean,
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   // If yes, they will be parsed as terms.
-  allowTermUnquoting: Boolean,
+  allowTermUnquotes: Boolean,
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   // If yes, they will be parsed as patterns.
-  allowPatUnquoting: Boolean,
+  allowPatUnquotes: Boolean,
 
   // The sequence of characters that's used to express a bind
   // to a sequence wildcard pattern.
   bindToSeqWildcardDesignator: String,
 
   // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
-  allowSpliceUnderscore: Boolean,
+  allowSpliceUnderscores: Boolean,
 
   // Are XML literals supported by this dialect?
   // We plan to deprecate XML literal syntax, and some dialects
@@ -39,7 +39,7 @@ import scala.compat.Platform.EOL
   allowXmlLiterals: Boolean,
 
   // Are inline vals and defs supported by this dialect?
-  allowInline: Boolean,
+  allowInlines: Boolean,
 
   // Are terms on the top level supported by this dialect?
   // Necessary to support popular script-like DSLs.
@@ -67,10 +67,10 @@ import scala.compat.Platform.EOL
   allowLiteralTypes: Boolean,
 
   // Are trailing commas allowed? SIP-27.
-  allowTrailingComma: Boolean
+  allowTrailingCommas: Boolean
 ) extends Serializable {
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-  def allowUnquoting: Boolean = allowTermUnquoting || allowPatUnquoting
+  def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
 
   // Are `with` intersection types supported by this dialect?
   def allowWithTypes: Boolean = !allowAndTypes
@@ -93,13 +93,13 @@ import scala.compat.Platform.EOL
 
 package object dialects {
   implicit val Scala210 = Dialect(
-    allowMultiline = true,
-    allowTermUnquoting = false,
-    allowPatUnquoting = false,
+    allowMultilinePrograms = true,
+    allowTermUnquotes = false,
+    allowPatUnquotes = false,
     bindToSeqWildcardDesignator = "@", // List(1, 2, 3) match { case List(xs @ _*) => ... }
-    allowSpliceUnderscore = false, // SI-7715, only fixed in 2.11.0-M5
+    allowSpliceUnderscores = false, // SI-7715, only fixed in 2.11.0-M5
     allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
-    allowInline = false,
+    allowInlines = false,
     allowToplevelTerms = false,
     allowOrTypes = false,
     toplevelSeparator = "",
@@ -107,7 +107,7 @@ package object dialects {
     allowAndTypes = false,
     allowTraitParameters = false,
     allowLiteralTypes = false,
-    allowTrailingComma = false
+    allowTrailingCommas = false
   )
 
   implicit val Sbt0136 = Scala210.copy(
@@ -121,30 +121,30 @@ package object dialects {
   )
 
   implicit val Scala211 = Scala210.copy(
-    allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
+    allowSpliceUnderscores = true // SI-7715, only fixed in 2.11.0-M5
   )
 
   implicit val Paradise211 = Scala211.copy(
-    allowInline = true
+    allowInlines = true
   )
 
   implicit val Scala212 = Scala211.copy(
     allowLiteralTypes = false, // Scheduled to be included in 2.12.2
-    allowTrailingComma = false // Scheduled to be included in 2.12.2
+    allowTrailingCommas = false // Scheduled to be included in 2.12.2
   )
 
   implicit val Paradise212 = Scala212.copy(
-    allowInline = true
+    allowInlines = true
   )
 
   implicit val Dotty = Dialect(
-    allowMultiline = true,
-    allowTermUnquoting = false,
-    allowPatUnquoting = false,
+    allowMultilinePrograms = true,
+    allowTermUnquotes = false,
+    allowPatUnquotes = false,
     bindToSeqWildcardDesignator = ":", // List(1, 2, 3) match { case List(xs: _*) => ... }
-    allowSpliceUnderscore = true,
+    allowSpliceUnderscores = true,
     allowXmlLiterals = false, // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
-    allowInline = true,
+    allowInlines = true,
     allowToplevelTerms = false,
     allowOrTypes = true,
     toplevelSeparator = "",
@@ -152,19 +152,19 @@ package object dialects {
     allowAndTypes = true,
     allowTraitParameters = true,
     allowLiteralTypes = true,
-    allowTrailingComma = false // Not yet implemented for Dotty
+    allowTrailingCommas = false // Not yet implemented for Dotty
   )
 
   // TODO: https://github.com/scalameta/scalameta/issues/380
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
-    require(!underlying.allowUnquoting)
-    underlying.copy(allowTermUnquoting = true, allowMultiline = multiline)
+    require(!underlying.allowUnquotes)
+    underlying.copy(allowTermUnquotes = true, allowMultilinePrograms = multiline)
   }
 
   // TODO: https://github.com/scalameta/scalameta/issues/380
   private[meta] def QuasiquotePat(underlying: Dialect, multiline: Boolean) = {
-    require(!underlying.allowUnquoting)
-    underlying.copy(allowPatUnquoting = true, allowMultiline = multiline)
+    require(!underlying.allowUnquotes)
+    underlying.copy(allowPatUnquotes = true, allowMultilinePrograms = multiline)
   }
 }
 
