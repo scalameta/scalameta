@@ -26,9 +26,11 @@ import scala.compat.Platform.EOL
   // If yes, they will be parsed as patterns.
   allowPatUnquotes: Boolean,
 
-  // The sequence of characters that's used to express a bind
-  // to a sequence wildcard pattern.
-  bindToSeqWildcardDesignator: String,
+  // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
+  allowAtForExtractorVarargs: Boolean,
+
+  // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
+  allowColonForExtractorVarargs: Boolean,
 
   // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
   allowSpliceUnderscores: Boolean,
@@ -96,7 +98,8 @@ package object dialects {
     allowMultilinePrograms = true,
     allowTermUnquotes = false,
     allowPatUnquotes = false,
-    bindToSeqWildcardDesignator = "@", // List(1, 2, 3) match { case List(xs @ _*) => ... }
+    allowAtForExtractorVarargs = true,
+    allowColonForExtractorVarargs = false,
     allowSpliceUnderscores = false, // SI-7715, only fixed in 2.11.0-M5
     allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
     allowInlines = false,
@@ -139,7 +142,8 @@ package object dialects {
   )
 
   implicit val Dotty = Scala212.copy(
-    bindToSeqWildcardDesignator = ":", // List(1, 2, 3) match { case List(xs: _*) => ... }
+    allowAtForExtractorVarargs = false, // New feature in Dotty
+    allowColonForExtractorVarargs = true, // New feature in Dotty
     allowXmlLiterals = false, // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
     allowInlines = true, // New feature in Dotty
     allowViewBounds = false, // View bounds have been removed in Dotty

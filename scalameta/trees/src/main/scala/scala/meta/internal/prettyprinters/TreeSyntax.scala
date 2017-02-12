@@ -341,9 +341,15 @@ object TreeSyntax {
         case t: Pat.Var.Term         => m(SimplePattern, s(t.name.value))
         case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
         case t: Pat.Bind             =>
-          val separator = if (t.rhs.is[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") ""  else " "
-          val designator = if (t.rhs.is[Pat.Arg.SeqWildcard]) dialect.bindToSeqWildcardDesignator else "@"
-          m(Pattern2, s(p(SimplePattern, t.lhs), separator, kw(designator), " ", p(AnyPattern3, t.rhs)))
+          val separator = t.rhs match {
+            case Pat.Arg.SeqWildcard() =>
+              if (dialect.allowAtForExtractorVarargs) s(" ", kw("@"))
+              else if (dialect.allowColonForExtractorVarargs) s(kw(":"))
+              else throw new UnsupportedOperationException(s"$dialect doesn't support extractor varargs")
+            case _ =>
+              s(" ", kw("@"))
+          }
+          m(Pattern2, s(p(SimplePattern, t.lhs), separator, " ", p(AnyPattern3, t.rhs)))
         case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
         case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.args, ", "), ")"))
         case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.args))
