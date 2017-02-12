@@ -14,17 +14,8 @@ import scala.compat.Platform.EOL
 // because then implicit scope for Dialect lookups will contain members of the package object
 // i.e. both Scala211 and Dotty, which is definitely not what we want
 @data class Dialect(
-  // Are multiline programs allowed?
-  // Some quasiquotes only support single-line snippets.
-  allowMultilinePrograms: Boolean,
-
-  // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-  // If yes, they will be parsed as terms.
-  allowTermUnquotes: Boolean,
-
-  // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-  // If yes, they will be parsed as patterns.
-  allowPatUnquotes: Boolean,
+  // Are `&` intersection types supported by this dialect?
+  allowAndTypes: Boolean,
 
   // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
   allowAtForExtractorVarargs: Boolean,
@@ -32,47 +23,56 @@ import scala.compat.Platform.EOL
   // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
   allowColonForExtractorVarargs: Boolean,
 
+  // Are inline vals and defs supported by this dialect?
+  allowInlines: Boolean,
+
+  // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
+  allowLiteralTypes: Boolean,
+
+  // Are multiline programs allowed?
+  // Some quasiquotes only support single-line snippets.
+  allowMultilinePrograms: Boolean,
+
+  // Are `|` (union types) supported by this dialect?
+  allowOrTypes: Boolean,
+
+  // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
+  // If yes, they will be parsed as patterns.
+  allowPatUnquotes: Boolean,
+
   // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
   allowSpliceUnderscores: Boolean,
+
+  // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
+  // If yes, they will be parsed as terms.
+  allowTermUnquotes: Boolean,
+
+  // Are terms on the top level supported by this dialect?
+  // Necessary to support popular script-like DSLs.
+  allowToplevelTerms: Boolean,
+
+  // Are trailing commas allowed? SIP-27.
+  allowTrailingCommas: Boolean,
+
+  // Are trait allowed to have parameters?
+  // They are in Dotty, but not in Scala 2.12 or older.
+  allowTraitParameters: Boolean,
+
+  // Are view bounds supported by this dialect?
+  // Removed in Dotty.
+  allowViewBounds: Boolean,
+
+  // Are `with` intersection types supported by this dialect?
+  allowWithTypes: Boolean,
 
   // Are XML literals supported by this dialect?
   // We plan to deprecate XML literal syntax, and some dialects
   // might go ahead and drop support completely.
   allowXmlLiterals: Boolean,
 
-  // Are inline vals and defs supported by this dialect?
-  allowInlines: Boolean,
-
-  // Are terms on the top level supported by this dialect?
-  // Necessary to support popular script-like DSLs.
-  allowToplevelTerms: Boolean,
-
-  // Are `|` (union types) supported by this dialect?
-  allowOrTypes: Boolean,
-
   // What kind of separator is necessary to split top-level statements?
   // Normally none is required, but scripts may have their own rules.
-  toplevelSeparator: String,
-
-  // Are view bounds supported by this dialect?
-  // Removed in Dotty.
-  allowViewBounds: Boolean,
-
-  // Are `&` intersection types supported by this dialect?
-  allowAndTypes: Boolean,
-
-  // Are `with` intersection types supported by this dialect?
-  allowWithTypes: Boolean,
-
-  // Are trait allowed to have parameters?
-  // They are in Dotty, but not in Scala 2.12 or older.
-  allowTraitParameters: Boolean,
-
-  // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
-  allowLiteralTypes: Boolean,
-
-  // Are trailing commas allowed? SIP-27.
-  allowTrailingCommas: Boolean
+  toplevelSeparator: String
 ) extends Serializable {
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
@@ -95,23 +95,23 @@ import scala.compat.Platform.EOL
 
 package object dialects {
   implicit val Scala210 = Dialect(
-    allowMultilinePrograms = true,
-    allowTermUnquotes = false,
-    allowPatUnquotes = false,
+    allowAndTypes = false,
     allowAtForExtractorVarargs = true,
     allowColonForExtractorVarargs = false,
-    allowSpliceUnderscores = false, // SI-7715, only fixed in 2.11.0-M5
-    allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
     allowInlines = false,
-    allowToplevelTerms = false,
-    allowOrTypes = false,
-    toplevelSeparator = "",
-    allowViewBounds = true,
-    allowAndTypes = false,
-    allowWithTypes = true,
-    allowTraitParameters = false,
     allowLiteralTypes = false,
-    allowTrailingCommas = false
+    allowMultilinePrograms = true,
+    allowOrTypes = false,
+    allowPatUnquotes = false,
+    allowSpliceUnderscores = false, // SI-7715, only fixed in 2.11.0-M5
+    allowTermUnquotes = false,
+    allowToplevelTerms = false,
+    allowTrailingCommas = false,
+    allowTraitParameters = false,
+    allowViewBounds = true,
+    allowWithTypes = true,
+    allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
+    toplevelSeparator = ""
   )
 
   implicit val Sbt0136 = Scala210.copy(
@@ -142,17 +142,17 @@ package object dialects {
   )
 
   implicit val Dotty = Scala212.copy(
+    allowAndTypes = true, // New feature in Dotty
     allowAtForExtractorVarargs = false, // New feature in Dotty
     allowColonForExtractorVarargs = true, // New feature in Dotty
-    allowXmlLiterals = false, // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
     allowInlines = true, // New feature in Dotty
-    allowViewBounds = false, // View bounds have been removed in Dotty
-    allowOrTypes = true, // New feature in Dotty
-    allowAndTypes = true, // New feature in Dotty
-    allowWithTypes = false, // New feature in Dotty
-    allowTraitParameters = true, // New feature in Dotty
     allowLiteralTypes = true, // New feature in Dotty
-    allowTrailingCommas = false // Not yet implemented in Dotty
+    allowOrTypes = true, // New feature in Dotty
+    allowTrailingCommas = false, // Not yet implemented in Dotty
+    allowTraitParameters = true, // New feature in Dotty
+    allowViewBounds = false, // View bounds have been removed in Dotty
+    allowWithTypes = false, // New feature in Dotty
+    allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
   )
 
   // TODO: https://github.com/scalameta/scalameta/issues/380
