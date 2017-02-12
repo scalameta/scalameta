@@ -59,6 +59,9 @@ import scala.compat.Platform.EOL
   // Are `&` intersection types supported by this dialect?
   allowAndTypes: Boolean,
 
+  // Are `with` intersection types supported by this dialect?
+  allowWithTypes: Boolean,
+
   // Are trait allowed to have parameters?
   // They are in Dotty, but not in Scala 2.12 or older.
   allowTraitParameters: Boolean,
@@ -71,9 +74,6 @@ import scala.compat.Platform.EOL
 ) extends Serializable {
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
-
-  // Are `with` intersection types supported by this dialect?
-  def allowWithTypes: Boolean = !allowAndTypes
 
   // Dialects have reference equality semantics,
   // because sometimes dialects representing distinct Scala versions
@@ -105,6 +105,7 @@ package object dialects {
     toplevelSeparator = "",
     allowViewBounds = true,
     allowAndTypes = false,
+    allowWithTypes = true,
     allowTraitParameters = false,
     allowLiteralTypes = false,
     allowTrailingCommas = false
@@ -144,6 +145,7 @@ package object dialects {
     allowViewBounds = false, // View bounds have been removed in Dotty
     allowOrTypes = true, // New feature in Dotty
     allowAndTypes = true, // New feature in Dotty
+    allowWithTypes = false, // New feature in Dotty
     allowTraitParameters = true, // New feature in Dotty
     allowLiteralTypes = true, // New feature in Dotty
     allowTrailingCommas = false // Not yet implemented in Dotty
