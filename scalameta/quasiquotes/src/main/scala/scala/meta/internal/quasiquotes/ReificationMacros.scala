@@ -153,7 +153,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         val dialectsSym = c.mirror.staticModule("scala.meta.dialects.package").moduleClass
         if (dialectsSym != sym.owner) return None
         if (dialectsSym.info.member(sym.name) == NoSymbol) return None
-        Dialect.standardByName.get(sym.name.toString)
+        Dialect.standards.get(sym.name.toString)
       }
       val standardDialectReference = instantiateStandardDialect(dialectTree.symbol) // allow `scala.meta.dialects.Scala211`
       val standardDialectSingleton = instantiateStandardDialect(dialectTree.tpe.termSymbol) // allow `scala.meta.Dialect.current`

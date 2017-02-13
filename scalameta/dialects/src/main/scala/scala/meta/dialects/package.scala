@@ -86,8 +86,8 @@ import scala.compat.Platform.EOL
 
   // Smart prettyprinting that knows about standard dialects.
   override def toString = {
-    Dialect.standardByDialect.get(this) match {
-      case Some(name) => name
+    Dialect.standards.find(_._2 == this) match {
+      case Some((name, _)) => name
       case None => s"Dialect(${this.productIterator.map(_.toString).mkString(", ")})"
     }
   }
@@ -169,16 +169,18 @@ package object dialects {
 }
 
 object Dialect extends InternalDialect {
-  private[meta] lazy val standardByName: Map[String, Dialect] = {
-    val dialects = scala.meta.dialects.`package`
-    def isDialectGetter(m: java.lang.reflect.Method) = m.getParameterTypes.isEmpty && m.getReturnType == classOf[Dialect]
-    val dialectGetters = dialects.getClass.getDeclaredMethods.filter(isDialectGetter)
-    dialectGetters.map(m => (m.getName, m.invoke(dialects).asInstanceOf[Dialect])).toMap
-  }
-
-  private[meta] lazy val standardByDialect: Map[Dialect, String] = {
-    standardByName.map(_.swap)
-  }
+  // NOTE: Spinning up a macro just for this is too hard.
+  // Using JVM reflection won't be portable to Scala.js.
+  private[meta] lazy val standards: Map[String, Dialect] = Map(
+    "Scala210" -> Scala210,
+    "Sbt0136" -> Sbt0136,
+    "Sbt0137" -> Sbt0137,
+    "Scala211" -> Scala211,
+    "Paradise211" -> Paradise211,
+    "Scala212" -> Scala212,
+    "Paradise212" -> Paradise212,
+    "Dotty" -> Dotty
+  )
 }
 
 // NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
@@ -190,8 +192,8 @@ private[meta] trait DialectLiftables {
   private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
   implicit lazy val liftDialect: Liftable[Dialect] = Liftable { dialect =>
-    Dialect.standardByDialect.get(dialect) match {
-      case Some(name) =>
+    Dialect.standards.find(_._2 == dialect) match {
+      case Some((name, _)) =>
         q"_root_.scala.meta.dialects.`package`.${TermName(name)}"
       case _ =>
         val fields = dialect.productIterator.toList.map {
