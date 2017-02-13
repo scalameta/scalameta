@@ -3,7 +3,8 @@ package scala.meta
 import scala.annotation.implicitNotFound
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import org.scalameta.adt._
+import org.scalameta.data._
+import org.scalameta.invariants._
 import scala.meta.dialects._
 import scala.meta.internal.dialects._
 import scala.language.experimental.macros
@@ -12,327 +13,196 @@ import scala.compat.Platform.EOL
 // NOTE: can't put Dialect into scala.meta.Dialects
 // because then implicit scope for Dialect lookups will contain members of the package object
 // i.e. both Scala211 and Dotty, which is definitely not what we want
-@root trait Dialect extends Serializable {
-  // Canonical name for the dialect.
-  // Can be used to uniquely identify the dialect, e.g. during serialization/deserialization.
-  def name: String
+@data class Dialect(
+  // Are `&` intersection types supported by this dialect?
+  allowAndTypes: Boolean,
 
-  // What level of quoting are we at?
-  // The underlying data structure captures additional information necessary for parsing.
-  def metalevel: Metalevel
+  // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
+  allowAtForExtractorVarargs: Boolean,
 
-  // Permission to parse unquotes.
-  // Necessary to support quasiquotes, e.g. `q"$x + $y"`.
-  def allowUnquotes: Boolean = metalevel.isQuoted
+  // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
+  allowColonForExtractorVarargs: Boolean,
 
-  // Permission to tokenize repeated dots as ellipses and to parse ellipses.
-  // Necessary to support quasiquotes, e.g. `q"foo(..$args)"`.
-  def allowEllipses: Boolean = metalevel.isQuoted
+  // Are inline vals and defs supported by this dialect?
+  allowInlines: Boolean,
 
-  // The sequence of characters that's used to express a bind
-  // to a sequence wildcard pattern.
-  def bindToSeqWildcardDesignator: String
+  // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
+  allowLiteralTypes: Boolean,
+
+  // Are multiline programs allowed?
+  // Some quasiquotes only support single-line snippets.
+  allowMultilinePrograms: Boolean,
+
+  // Are `|` (union types) supported by this dialect?
+  allowOrTypes: Boolean,
+
+  // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
+  // If yes, they will be parsed as patterns.
+  allowPatUnquotes: Boolean,
 
   // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
-  def allowSpliceUnderscore: Boolean
+  allowSpliceUnderscores: Boolean,
+
+  // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
+  // If yes, they will be parsed as terms.
+  allowTermUnquotes: Boolean,
+
+  // Are terms on the top level supported by this dialect?
+  // Necessary to support popular script-like DSLs.
+  allowToplevelTerms: Boolean,
+
+  // Are trailing commas allowed? SIP-27.
+  allowTrailingCommas: Boolean,
+
+  // Are trait allowed to have parameters?
+  // They are in Dotty, but not in Scala 2.12 or older.
+  allowTraitParameters: Boolean,
+
+  // Are view bounds supported by this dialect?
+  // Removed in Dotty.
+  allowViewBounds: Boolean,
+
+  // Are `with` intersection types supported by this dialect?
+  allowWithTypes: Boolean,
 
   // Are XML literals supported by this dialect?
   // We plan to deprecate XML literal syntax, and some dialects
   // might go ahead and drop support completely.
-  def allowXmlLiterals: Boolean
-
-  // Are inline vals and defs supported by this dialect?
-  def allowInline: Boolean
-
-  // Are terms on the top level supported by this dialect?
-  // Necessary to support popular script-like DSLs.
-  def allowToplevelTerms: Boolean
-
-  // Are `|` (union types) supported by this dialect?
-  def allowOrTypes: Boolean
+  allowXmlLiterals: Boolean,
 
   // What kind of separator is necessary to split top-level statements?
   // Normally none is required, but scripts may have their own rules.
-  def toplevelSeparator: String
+  toplevelSeparator: String
+) {
+  // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
+  def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
 
-  // Are view bounds supported by this dialect?
-  // Removed in Dotty.
-  def allowViewBounds: Boolean
+  // Dialects have reference equality semantics,
+  // because sometimes dialects representing distinct Scala versions
+  // can be structurally equal to each other.
+  override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
+  override def equals(other: Any): Boolean = this eq other.asInstanceOf[AnyRef]
+  override def hashCode: Int = System.identityHashCode(this)
 
-  // Are `&` intersection types supported by this dialect?
-  def allowAndTypes: Boolean
-
-  // Are `with` intersection types supported by this dialect?
-  def allowWithTypes: Boolean = !allowAndTypes
-
-  // Are trait allowed to have parameters?
-  // They are in Dotty, but not in Scala 2.12 or older.
-  def allowTraitParameters: Boolean
-
-  // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
-  def allowLiteralTypes: Boolean
-
-  // Are trailing commas allowed? SIP-27.
-  def allowTrailingComma: Boolean
+  // Smart prettyprinting that knows about standard dialects.
+  override def toString = {
+    Dialect.standards.find(_._2 == this) match {
+      case Some((name, _)) => name
+      case None => s"Dialect(${this.productIterator.map(_.toString).mkString(", ")})"
+    }
+  }
 }
 
 package object dialects {
-  @leaf implicit object Scala210 extends Dialect {
-    def name = "Scala210"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = "@" // List(1, 2, 3) match { case List(xs @ _*) => ... }
-    def allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
-    def allowInline = false
-    def allowSpliceUnderscore = false // SI-7715, only fixed in 2.11.0-M5
-    def allowToplevelTerms = false
-    def allowOrTypes = false
-    def toplevelSeparator = ""
-    def allowViewBounds = true
-    def allowAndTypes = false
-    def allowTraitParameters = false
-    def allowLiteralTypes: Boolean = false
-    def allowTrailingComma: Boolean = false
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
+  implicit val Scala210 = Dialect(
+    allowAndTypes = false,
+    allowAtForExtractorVarargs = true,
+    allowColonForExtractorVarargs = false,
+    allowInlines = false,
+    allowLiteralTypes = false,
+    allowMultilinePrograms = true,
+    allowOrTypes = false,
+    allowPatUnquotes = false,
+    allowSpliceUnderscores = false, // SI-7715, only fixed in 2.11.0-M5
+    allowTermUnquotes = false,
+    allowToplevelTerms = false,
+    allowTrailingCommas = false,
+    allowTraitParameters = false,
+    allowViewBounds = true,
+    allowWithTypes = true,
+    allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
+    toplevelSeparator = ""
+  )
+
+  implicit val Sbt0136 = Scala210.copy(
+    allowToplevelTerms = true,
+    toplevelSeparator = EOL
+  )
+
+  implicit val Sbt0137 = Scala210.copy(
+    allowToplevelTerms = true,
+    toplevelSeparator = ""
+  )
+
+  implicit val Scala211 = Scala210.copy(
+    allowSpliceUnderscores = true // SI-7715, only fixed in 2.11.0-M5
+  )
+
+  implicit val Paradise211 = Scala211.copy(
+    allowInlines = true
+  )
+
+  implicit val Scala212 = Scala211.copy(
+    allowLiteralTypes = false, // Scheduled to be included in 2.12.2
+    allowTrailingCommas = false // Scheduled to be included in 2.12.2
+  )
+
+  implicit val Paradise212 = Scala212.copy(
+    allowInlines = true
+  )
+
+  implicit val Dotty = Scala211.copy(
+    allowAndTypes = true, // New feature in Dotty
+    allowAtForExtractorVarargs = false, // New feature in Dotty
+    allowColonForExtractorVarargs = true, // New feature in Dotty
+    allowInlines = true, // New feature in Dotty
+    allowLiteralTypes = true, // New feature in Dotty
+    allowOrTypes = true, // New feature in Dotty
+    allowTrailingCommas = false, // Not yet implemented in Dotty
+    allowTraitParameters = true, // New feature in Dotty
+    allowViewBounds = false, // View bounds have been removed in Dotty
+    allowWithTypes = false, // New feature in Dotty
+    allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+  )
+
+  // TODO: https://github.com/scalameta/scalameta/issues/380
+  private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
+    require(!underlying.allowUnquotes)
+    underlying.copy(allowTermUnquotes = true, allowMultilinePrograms = multiline)
   }
 
-  @leaf implicit object Sbt0136 extends Dialect {
-    def name = "Sbt0136"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala210.allowXmlLiterals
-    def allowInline = false
-    def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
-    def allowToplevelTerms = true
-    def toplevelSeparator = EOL
-    def allowViewBounds = Scala210.allowViewBounds
-    def allowAndTypes = Scala210.allowAndTypes
-    def allowOrTypes = Scala210.allowOrTypes
-    def allowTraitParameters = Scala210.allowTraitParameters
-    def allowLiteralTypes: Boolean = Scala210.allowLiteralTypes
-    def allowTrailingComma: Boolean = Scala210.allowTrailingComma
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
-  }
-
-  @leaf implicit object Sbt0137 extends Dialect {
-    def name = "Sbt0137"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala210.allowXmlLiterals
-    def allowInline = false
-    def allowSpliceUnderscore = Scala210.allowSpliceUnderscore
-    def allowToplevelTerms = true
-    def toplevelSeparator = ""
-    def allowViewBounds = Scala210.allowViewBounds
-    def allowAndTypes = Scala210.allowAndTypes
-    def allowOrTypes = Scala210.allowOrTypes
-    def allowTraitParameters = Scala210.allowTraitParameters
-    def allowLiteralTypes: Boolean = Scala210.allowLiteralTypes
-    def allowTrailingComma: Boolean = Scala210.allowTrailingComma
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
-  }
-
-  @leaf implicit object Scala211 extends Dialect {
-    def name = "Scala211"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala210.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala210.allowXmlLiterals
-    def allowInline = false
-    def allowSpliceUnderscore = true // SI-7715, only fixed in 2.11.0-M5
-    def allowToplevelTerms = Scala210.allowToplevelTerms
-    def toplevelSeparator = Scala210.toplevelSeparator
-    def allowViewBounds = Scala210.allowViewBounds
-    def allowAndTypes = Scala210.allowAndTypes
-    def allowOrTypes = Scala210.allowOrTypes
-    def allowTraitParameters = Scala210.allowTraitParameters
-    def allowLiteralTypes: Boolean = Scala210.allowLiteralTypes
-    def allowTrailingComma: Boolean = Scala210.allowTrailingComma
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
-  }
-
-  @leaf implicit object Paradise211 extends Dialect {
-    def name = "Paradise211"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala211.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala211.allowXmlLiterals
-    def allowInline = true
-    def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
-    def allowToplevelTerms = Scala211.allowToplevelTerms
-    def toplevelSeparator = Scala211.toplevelSeparator
-    def allowViewBounds = Scala211.allowViewBounds
-    def allowAndTypes = Scala211.allowAndTypes
-    def allowOrTypes = Scala211.allowOrTypes
-    def allowTraitParameters = Scala211.allowTraitParameters
-    def allowLiteralTypes: Boolean = Scala211.allowLiteralTypes
-    def allowTrailingComma: Boolean = Scala211.allowTrailingComma
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
-  }
-
-  @leaf implicit object Scala212 extends Dialect {
-    def name = "Scala212"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala211.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala211.allowXmlLiterals
-    def allowInline = false
-    def allowSpliceUnderscore = Scala211.allowSpliceUnderscore
-    def allowToplevelTerms = Scala211.allowToplevelTerms
-    def toplevelSeparator = Scala211.toplevelSeparator
-    def allowViewBounds = Scala211.allowViewBounds
-    def allowAndTypes = Scala211.allowAndTypes
-    def allowOrTypes = Scala211.allowOrTypes
-    def allowTraitParameters = Scala211.allowTraitParameters
-    def allowLiteralTypes: Boolean = false // Scheduled to be included in 2.12.2
-    def allowTrailingComma: Boolean = false // Schedule to be included in 2.12.2
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
-  }
-
-  @leaf implicit object Paradise212 extends Dialect {
-    def name = "Paradise212"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = Scala212.bindToSeqWildcardDesignator
-    def allowXmlLiterals = Scala212.allowXmlLiterals
-    def allowInline = true
-    def allowSpliceUnderscore = Scala212.allowSpliceUnderscore
-    def allowToplevelTerms = Scala212.allowToplevelTerms
-    def toplevelSeparator = Scala212.toplevelSeparator
-    def allowViewBounds = Scala212.allowViewBounds
-    def allowAndTypes = Scala212.allowAndTypes
-    def allowOrTypes = Scala212.allowOrTypes
-    def allowTraitParameters = Scala212.allowTraitParameters
-    def allowLiteralTypes: Boolean = Scala212.allowLiteralTypes
-    def allowTrailingComma: Boolean = Scala212.allowTrailingComma
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
-  }
-
-  @leaf implicit object Dotty extends Dialect {
-    def name = "Dotty"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = ":" // // List(1, 2, 3) match { case List(xs: _*) => ... }
-    def allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
-    def allowInline = true
-    def allowSpliceUnderscore = true
-    def allowToplevelTerms = false
-    def toplevelSeparator = ""
-    def allowViewBounds = false // View bounds have been removed in Dotty
-    def allowAndTypes = true
-    def allowOrTypes = true
-    def allowTraitParameters = true
-    def allowLiteralTypes: Boolean = true
-    def allowTrailingComma: Boolean = false
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
-  }
-
-  // Useful for testing fields that are pending to be included in an official dialect.
-  // Also useful when you care about parsing as much as possible, for example in
-  // code formatters, user documentation and repl sessions.
-  @leaf implicit object AllowEverything extends Dialect {
-    def name = "AllowEverything"
-    def metalevel = Metalevel.Zero
-    def bindToSeqWildcardDesignator = "@"
-    def allowXmlLiterals = true
-    def allowInline = true
-    def allowSpliceUnderscore = true
-    def allowToplevelTerms = true
-    def toplevelSeparator = ""
-    def allowViewBounds = true
-    def allowAndTypes = true
-    def allowOrTypes = true
-    def allowTraitParameters = true
-    def allowLiteralTypes: Boolean = true
-    def allowTrailingComma: Boolean = true
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
-  }
-
-  @branch private[meta] trait Quasiquote extends Dialect {
-    def name = s"$qualifier(${underlying.name}, ${if (multiline) "Multi" else "Single"})"
-    def multiline: Boolean
-    def qualifier: String
-    def underlying: Dialect
-    def metalevel = Metalevel.Quoted
-    def bindToSeqWildcardDesignator = underlying.bindToSeqWildcardDesignator
-    def allowXmlLiterals = underlying.allowXmlLiterals
-    def allowInline = underlying.allowInline
-    def allowSpliceUnderscore = underlying.allowSpliceUnderscore
-    def allowToplevelTerms = underlying.allowToplevelTerms
-    def toplevelSeparator = underlying.toplevelSeparator
-    def allowViewBounds = underlying.allowViewBounds
-    def allowAndTypes = underlying.allowAndTypes
-    def allowOrTypes = underlying.allowOrTypes
-    def allowTraitParameters = underlying.allowTraitParameters
-    def allowLiteralTypes = underlying.allowLiteralTypes
-    def allowTrailingComma = underlying.allowTrailingComma
-  }
-
-  @leaf private[meta] class QuasiquoteTerm(underlying: Dialect, multiline: Boolean) extends Quasiquote {
-    require(!underlying.isInstanceOf[Quasiquote])
-    def qualifier = s"QuasiquoteTerm"
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
-    override def toString = name
-  }
-
-  @leaf private[meta] class QuasiquotePat(underlying: Dialect, multiline: Boolean) extends Quasiquote {
-    require(!underlying.isInstanceOf[Quasiquote])
-    def qualifier = s"QuasiquotePat"
-    private def writeReplace(): AnyRef = new Dialect.SerializationProxy(this)
-    override def toString = name
-  }
-
-  // NOTE: The syntax for nested interpolation is ugly to the point of being impractical.
-  // That's why we won't implement support for it for the time being.
-  // However, it'd have been reasonably simple:
-  //  * For 0..nesting-1, 2^n dollars in a row drop us to a level-n unquote.
-  //  * 2^nesting dollars in a row represent a dollar character itself.
-  @root trait Metalevel {
-    def isQuoted: Boolean = nesting > 0
-    def nesting: Int
-  }
-  object Metalevel {
-    @leaf object Zero extends Metalevel { def nesting: Int = 0 }
-    @leaf object Quoted extends Metalevel { def nesting: Int = 1 }
+  // TODO: https://github.com/scalameta/scalameta/issues/380
+  private[meta] def QuasiquotePat(underlying: Dialect, multiline: Boolean) = {
+    require(!underlying.allowUnquotes)
+    underlying.copy(allowPatUnquotes = true, allowMultilinePrograms = multiline)
   }
 }
 
-object Dialect {
-  lazy val all: Seq[Dialect] = scala.meta.internal.dialects.all
+object Dialect extends InternalDialect {
+  // NOTE: Spinning up a macro just for this is too hard.
+  // Using JVM reflection won't be portable to Scala.js.
+  private[meta] lazy val standards: Map[String, Dialect] = Map(
+    "Scala210" -> Scala210,
+    "Sbt0136" -> Sbt0136,
+    "Sbt0137" -> Sbt0137,
+    "Scala211" -> Scala211,
+    "Paradise211" -> Paradise211,
+    "Scala212" -> Scala212,
+    "Paradise212" -> Paradise212,
+    "Dotty" -> Dotty
+  )
+}
 
-  // NOTE: See https://github.com/scalameta/scalameta/issues/253 for discussion.
-  implicit def current: Dialect = macro Macros.current
+// NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
+// Without this, compilation order may unexpectedly affect compilation success.
+private[meta] trait DialectLiftables {
+  val c: scala.reflect.macros.blackbox.Context
 
-  def forName(name: String): Dialect = {
-    def maybeVanilla = all.find(_.name == name)
-    def maybeQuasiquote = """^Quasiquote(.+?)\((.*?)\)$""".r.unapplySeq(name).map {
-      case List(qualifier, props) =>
-        def failQualifier() = {
-          val message = s"unexpected quasiquote qualifier: expected = Term|Pat, actual = $qualifier"
-          throw new IllegalArgumentException(message)
-        }
-        def failProps() = {
-          val expected = """QuasiquoteTerm|QuasiquotePat(.*?, Single|Multi)"""
-          val message = s"unexpected quasiquote properties: expected = $expected, actual = Quasiquote$qualifier($props)"
-          throw new IllegalArgumentException(message)
-        }
-        val (underlying, multiline) = """^\s*(.*?)\s*,\s*(Single|Multi)\s*$""".r.unapplySeq(props) match {
-          case Some(List(s_underlying, s_multiline)) => (Dialect.forName(s_underlying), s_multiline == "Multi")
-          case _ => failProps()
-        }
-        qualifier match {
-          case "Term" => QuasiquoteTerm(underlying, multiline)
-          case "Pat" => QuasiquotePat(underlying, multiline)
-          case other => failQualifier()
-        }
-    }
-    def fail() = throw new IllegalArgumentException(s"unknown dialect $name")
-    maybeVanilla.orElse(maybeQuasiquote).getOrElse(fail())
-  }
+  import c.universe._
+  private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
 
-  @SerialVersionUID(1L) private[meta] class SerializationProxy(@transient private var orig: Dialect) extends Serializable {
-    private def writeObject(out: java.io.ObjectOutputStream): Unit = {
-      out.writeObject(orig.name)
+  implicit lazy val liftDialect: Liftable[Dialect] = Liftable { dialect =>
+    Dialect.standards.find(_._2 == dialect) match {
+      case Some((name, _)) =>
+        q"_root_.scala.meta.dialects.`package`.${TermName(name)}"
+      case _ =>
+        val fields = dialect.productIterator.toList.map {
+          case null => q"null"
+          case f: Boolean => q"$f"
+          case f: String => q"$f"
+          case f => sys.error(s"unsupported field $f of type ${f.getClass}")
+        }
+        q"_root_.scala.meta.Dialect(..$fields)"
     }
-    private def readObject(in: java.io.ObjectInputStream): Unit = {
-      val name = in.readObject.asInstanceOf[String]
-      orig = Dialect.forName(name)
-    }
-    private def readResolve(): AnyRef = orig
-    override def toString = s"Proxy($orig)"
   }
 }

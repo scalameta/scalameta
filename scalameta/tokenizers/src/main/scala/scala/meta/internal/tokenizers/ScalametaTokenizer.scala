@@ -9,7 +9,6 @@ import org.scalameta._
 import org.scalameta.invariants._
 import Chars.{CR, LF, FF}
 import LegacyToken._
-import scala.meta.dialects.Metalevel
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokenizers._
@@ -138,7 +137,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           Token.Comment(input, dialect, curr.offset, curr.endOffset + 1, value)
 
         case ELLIPSIS  => Token.Ellipsis(input, dialect, curr.offset, curr.endOffset + 1, curr.base)
-        case UNQUOTE   => Token.Unquote(input, dialect, curr.offset, curr.endOffset + 1, Metalevel.Zero)
+        case UNQUOTE   => Token.Unquote(input, dialect, curr.offset, curr.endOffset + 1)
 
         case EOF       => Token.EOF(input, dialect)
 

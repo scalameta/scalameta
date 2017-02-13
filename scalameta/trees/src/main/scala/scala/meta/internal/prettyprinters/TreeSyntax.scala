@@ -3,7 +3,6 @@ package internal
 package prettyprinters
 
 import scala.meta.classifiers._
-import scala.meta.dialects.Quasiquote
 import scala.meta.prettyprinters._
 import scala.meta.prettyprinters.Syntax._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, wrap => w, function => fn }
@@ -193,13 +192,13 @@ object TreeSyntax {
       implicit def syntaxTree[T <: Tree]: Syntax[T] = Syntax {
         // Bottom
         case t: Quasi =>
-          if (!dialect.metalevel.isQuoted) throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
+          if (!dialect.allowUnquotes) throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
           if (t.rank > 0) {
             s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
           } else {
             val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var.Term] || t.tree.is[Term.This] || t.tree.is[Pat.Wildcard]
             implicit val syntaxOptions = options
-            implicit val syntaxDialect = dialect match { case dialect: Quasiquote => dialect.underlying; case _ => unreachable }
+            implicit val syntaxDialect = dialect.copy(allowTermUnquotes = false, allowPatUnquotes = false, allowMultilinePrograms = true)
             s("$", w("{", t.tree.syntax, "}", !allowBraceless))
           }
 
@@ -342,9 +341,15 @@ object TreeSyntax {
         case t: Pat.Var.Term         => m(SimplePattern, s(t.name.value))
         case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
         case t: Pat.Bind             =>
-          val separator = if (t.rhs.is[Pat.Arg.SeqWildcard] && dialect.bindToSeqWildcardDesignator == ":") ""  else " "
-          val designator = if (t.rhs.is[Pat.Arg.SeqWildcard]) dialect.bindToSeqWildcardDesignator else "@"
-          m(Pattern2, s(p(SimplePattern, t.lhs), separator, kw(designator), " ", p(AnyPattern3, t.rhs)))
+          val separator = t.rhs match {
+            case Pat.Arg.SeqWildcard() =>
+              if (dialect.allowAtForExtractorVarargs) s(" ", kw("@"))
+              else if (dialect.allowColonForExtractorVarargs) s(kw(":"))
+              else throw new UnsupportedOperationException(s"$dialect doesn't support extractor varargs")
+            case _ =>
+              s(" ", kw("@"))
+          }
+          m(Pattern2, s(p(SimplePattern, t.lhs), separator, " ", p(AnyPattern3, t.rhs)))
         case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
         case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.args, ", "), ")"))
         case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.args))
@@ -483,7 +488,7 @@ object TreeSyntax {
         case _: Mod.ValParam                 => kw("val")
         case _: Mod.VarParam                 => kw("var")
         case _: Mod.Inline                   =>
-          if (!dialect.allowInline) throw new UnsupportedOperationException(s"$dialect doesn't support inline")
+          if (!dialect.allowInlines) throw new UnsupportedOperationException(s"$dialect doesn't support inline")
           kw("inline")
 
         // Enumerator

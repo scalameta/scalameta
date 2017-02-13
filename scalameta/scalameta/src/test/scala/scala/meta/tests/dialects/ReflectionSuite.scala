@@ -1,27 +1,15 @@
 package scala.meta.tests
 package dialects
 
-import org.scalatest.FunSuite
+import org.scalatest._
 import scala.meta.Dialect
-import scala.meta.dialects.{QuasiquoteTerm, QuasiquotePat}
 
 class ReflectionSuite extends FunSuite {
-  test("Dialect.forName") {
-    val regularDialects = Dialect.all
-    val quasiquotingDialects = {
-      for {
-        dialect <- Dialect.all
-        multiline <- List(false, true)
-        unquoteParser <- List("Term", "Pat")
-      } yield {
-        if (unquoteParser == "Term") QuasiquoteTerm(dialect, multiline)
-        else QuasiquotePat(dialect, multiline)
-      }
-    }
-    val comprehensiveDialects = regularDialects ++ quasiquotingDialects
-    comprehensiveDialects.foreach(d => {
-      val d1 = Dialect.forName(d.name)
-      assert(d1 === d)
-    })
+  test("Dialect.standards") {
+    val dialects = scala.meta.dialects.`package`
+    def isDialectGetter(m: java.lang.reflect.Method) = m.getParameterTypes.isEmpty && m.getReturnType == classOf[Dialect]
+    val dialectGetters = dialects.getClass.getDeclaredMethods.filter(isDialectGetter)
+    val reflectiveStandards = dialectGetters.map(m => (m.getName, m.invoke(dialects).asInstanceOf[Dialect])).toMap
+    assert(Dialect.standards === reflectiveStandards)
   }
 }

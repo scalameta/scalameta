@@ -6,7 +6,7 @@ import scala.meta._
 
 class PublicSuite extends FunSuite {
   test("scala.meta.Dialect.toString") {
-    Dialect.all.foreach(d => assert(d.name == d.toString))
+    // covered below
   }
 
   test("scala.meta.Tree.toString (manual)") {
@@ -71,47 +71,35 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.dialects.Dotty.toString") {
-    // covered above
-  }
-
-  test("scala.meta.dialects.Metalevel.toString") {
-    // covered below
-  }
-
-  test("scala.meta.dialects.Metalevel.Quoted.toString") {
-    assert(dialects.Metalevel.Quoted.toString === "Quoted")
-  }
-
-  test("scala.meta.dialects.Metalevel.Zero.toString") {
-    assert(dialects.Metalevel.Zero.toString === "Zero")
+    assert(scala.meta.dialects.Dotty.toString === "Dotty")
   }
 
   test("scala.meta.dialects.Sbt0136.toString") {
-    // covered above
+    assert(scala.meta.dialects.Sbt0136.toString === "Sbt0136")
   }
 
   test("scala.meta.dialects.Sbt0137.toString") {
-    // covered above
+    assert(scala.meta.dialects.Sbt0137.toString === "Sbt0137")
   }
 
   test("scala.meta.dialects.Scala210.toString") {
-    // covered above
+    assert(scala.meta.dialects.Scala210.toString === "Scala210")
   }
 
   test("scala.meta.dialects.Scala211.toString") {
-    // covered above
+    assert(scala.meta.dialects.Scala211.toString === "Scala211")
   }
 
   test("scala.meta.dialects.Scala212.toString") {
-    // covered above
+    assert(scala.meta.dialects.Scala212.toString === "Scala212")
   }
 
   test("scala.meta.dialects.Paradise211.toString") {
-    // covered above
+    assert(scala.meta.dialects.Paradise211.toString === "Paradise211")
   }
 
   test("scala.meta.dialects.Paradise212.toString") {
-    // covered above
+    assert(scala.meta.dialects.Paradise212.toString === "Paradise212")
   }
 
   test("scala.meta.inputs.Input.toString") {

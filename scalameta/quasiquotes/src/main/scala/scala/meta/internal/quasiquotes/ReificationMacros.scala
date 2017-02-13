@@ -19,7 +19,6 @@ import scala.meta.classifiers._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
-import scala.meta.internal.dialects.InstantiateDialect
 import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.parsers.Messages
@@ -29,7 +28,7 @@ import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
-class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables with InstantiateDialect {
+class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.internal._
@@ -138,7 +137,32 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   }
 
   private def instantiateDialect(dialectTree: ReflectTree, mode: Mode): Dialect = {
-    val underlyingDialect = instantiateDialect(dialectTree)
+    // We want to have a higher-order way to abstract over differences in dialects
+    // and we're using implicits for that (implicits are values => values are higher-order => good).
+    //
+    // However, quasiquotes use macros, and macros are first-order, so we have a problem here.
+    // Concretely, here we need to convert an implicit argument to a macro (the `dialectTree` tree)
+    // into an instance of `Dialect` that we'll pass to the parser.
+    //
+    // TODO: For now I'll just prohibit quasiquotes for situations when `dialectTree` doesn't point to one of the predefined dialects.
+    // A natural extension to this would be to allow any static value, not just predefined dialects.
+    // Later on, we could further relax this restriction by doing parsing for a superset of all dialects and then
+    // delaying validation of resulting ASTs until runtime.
+    val underlyingDialect = {
+      def instantiateStandardDialect(sym: ReflectSymbol): Option[Dialect] = {
+        val dialectsSym = c.mirror.staticModule("scala.meta.dialects.package").moduleClass
+        if (dialectsSym != sym.owner) return None
+        if (dialectsSym.info.member(sym.name) == NoSymbol) return None
+        Dialect.standards.get(sym.name.toString)
+      }
+      val standardDialectReference = instantiateStandardDialect(dialectTree.symbol) // allow `scala.meta.dialects.Scala211`
+      val standardDialectSingleton = instantiateStandardDialect(dialectTree.tpe.termSymbol) // allow `scala.meta.Dialect.current`
+      standardDialectReference.orElse(standardDialectSingleton).getOrElse({
+        val suggestion = s"to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${Dialect.current}"
+        val message = s"$dialectTree of type ${dialectTree.tpe} is not supported by quasiquotes ($suggestion)"
+        c.abort(c.enclosingPosition, message)
+      })
+    }
     if (mode.isTerm) dialects.QuasiquoteTerm(underlyingDialect, mode.multiline)
     else dialects.QuasiquotePat(underlyingDialect, mode.multiline)
   }

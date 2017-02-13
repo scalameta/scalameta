@@ -5,7 +5,6 @@ import org.scalameta.adt.{Liftables => AdtLiftables}
 import scala.meta.internal.tokens._
 import scala.meta.inputs._
 import scala.meta.classifiers._
-import scala.meta.dialects.Metalevel
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
 
@@ -135,7 +134,7 @@ object Token {
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   @freeform("\n\n") private[meta] class LFLF extends Token
   @freeform("ellipsis") private[meta] class Ellipsis(rank: Int) extends Token
-  @freeform("unquote") private[meta] class Unquote(metalevel: Metalevel) extends Token
+  @freeform("unquote") private[meta] class Unquote extends Token
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token](implicit options: Options): Structure[T] = TokenStructure.apply[T](options)
@@ -144,7 +143,7 @@ object Token {
 
 // NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
 // Without this, compilation order may unexpectedly affect compilation success.
-private[meta] trait TokenLiftables extends AdtLiftables with InputLiftables {
+private[meta] trait TokenLiftables extends AdtLiftables with InputLiftables with DialectLiftables {
   val c: scala.reflect.macros.blackbox.Context
   override lazy val u: c.universe.type = c.universe
 

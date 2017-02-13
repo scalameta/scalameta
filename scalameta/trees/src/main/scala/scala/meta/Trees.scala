@@ -11,7 +11,7 @@ import scala.meta.prettyprinters._
 import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
 
-@root trait Tree extends InternalTree with Product with Serializable {
+@root trait Tree extends InternalTree {
   def parent: Option[Tree]
   def children: Seq[Tree]
 
