@@ -128,7 +128,16 @@ package object dialects {
     allowSpliceUnderscores = true // SI-7715, only fixed in 2.11.0-M5
   )
 
+  implicit val Typelevel211 = Scala211.copy(
+    allowLiteralTypes = true
+  )
+
   implicit val Paradise211 = Scala211.copy(
+    allowInlines = true
+  )
+
+  implicit val ParadiseTypelevel211 = Scala211.copy(
+    allowLiteralTypes = true,
     allowInlines = true
   )
 
@@ -137,7 +146,18 @@ package object dialects {
     allowTrailingCommas = false // Scheduled to be included in 2.12.2
   )
 
+  implicit val Typelevel212 = Scala212.copy(
+    allowLiteralTypes = true,
+    allowTrailingCommas = true
+  )
+
   implicit val Paradise212 = Scala212.copy(
+    allowInlines = true
+  )
+
+  implicit val ParadiseTypelevel212 = Scala212.copy(
+    allowLiteralTypes = true,
+    allowTrailingCommas = true,
     allowInlines = true
   )
 
@@ -176,9 +196,13 @@ object Dialect extends InternalDialect {
     "Sbt0136" -> Sbt0136,
     "Sbt0137" -> Sbt0137,
     "Scala211" -> Scala211,
+    "Typelevel211" -> Typelevel211,
     "Paradise211" -> Paradise211,
+    "ParadiseTypelevel211" -> ParadiseTypelevel211,
     "Scala212" -> Scala212,
+    "Typelevel212" -> Typelevel212,
     "Paradise212" -> Paradise212,
+    "ParadiseTypelevel212" -> ParadiseTypelevel212,
     "Dotty" -> Dotty
   )
 }
