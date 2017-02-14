@@ -28,11 +28,12 @@ lazy val scalametaRoot = Project(
     "very scalahostSbt/scripted" ::
     state
   },
-  commands += Command.command("testAll") { state =>
+  commands += Command.command("ci") { state =>
     "so scalametaRoot/test" ::
     "much doc" ::
     "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "such testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
+    "scripted" ::
     state
   },
   packagedArtifacts := Map.empty,
@@ -69,7 +70,7 @@ lazy val common = Project(
   id   = "common",
   base = file("scalameta/common")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.3",
   description := "Bag of private and public helpers used in scala.meta's APIs and implementations",
   enableMacros
@@ -79,7 +80,7 @@ lazy val dialects = Project(
   id   = "dialects",
   base = file("scalameta/dialects")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's dialects",
   enableMacros
 ) dependsOn (common)
@@ -88,7 +89,7 @@ lazy val inline = Project(
   id   = "inline",
   base = file("scalameta/inline")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's APIs for new-style (\"inline\") macros"
 ) dependsOn (inputs)
 
@@ -96,7 +97,7 @@ lazy val inputs = Project(
   id   = "inputs",
   base = file("scalameta/inputs")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's APIs for source code in textual format",
   enableMacros
 ) dependsOn (common)
@@ -105,7 +106,7 @@ lazy val parsers = Project(
   id   = "parsers",
   base = file("scalameta/parsers")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's API for parsing and its baseline implementation"
 ) dependsOn (common, dialects, inputs, tokens, tokenizers, trees)
 
@@ -113,7 +114,7 @@ lazy val quasiquotes = Project(
   id   = "quasiquotes",
   base = file("scalameta/quasiquotes")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's quasiquotes for abstract syntax trees",
   enableHardcoreMacros
 ) dependsOn (common, dialects, inputs, trees, parsers)
@@ -122,7 +123,7 @@ lazy val tokenizers = Project(
   id   = "tokenizers",
   base = file("scalameta/tokenizers")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's APIs for tokenization and its baseline implementation",
   libraryDependencies += "com.lihaoyi" %% "scalaparse" % "0.4.2",
   enableMacros
@@ -132,7 +133,7 @@ lazy val tokens = Project(
   id   = "tokens",
   base = file("scalameta/tokens")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's tokens and token-based abstractions (inputs and positions)",
   enableMacros
 ) dependsOn (common, dialects, inputs)
@@ -141,7 +142,7 @@ lazy val transversers = Project(
   id   = "transversers",
   base = file("scalameta/transversers")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's traversal and transformation infrastructure for abstract syntax trees",
   enableMacros
 ) dependsOn (common, trees)
@@ -150,7 +151,7 @@ lazy val trees = Project(
   id   = "trees",
   base = file("scalameta/trees")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's abstract syntax trees",
   // NOTE: uncomment this to update ast.md
   // scalacOptions += "-Xprint:typer",
@@ -161,7 +162,7 @@ lazy val semantic = Project(
   id   = "semantic",
   base = file("scalameta/semantic")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's semantic APIs"
 ) dependsOn (common, trees)
 
@@ -169,7 +170,7 @@ lazy val scalameta = Project(
   id   = "scalameta",
   base = file("scalameta/scalameta")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Scala.meta's metaprogramming APIs",
   exposePaths("scalameta", Test)
 ) dependsOn (common, dialects, parsers, quasiquotes, tokenizers, transversers, trees, inline, semantic)
@@ -178,7 +179,7 @@ lazy val scalahost = Project(
   id   = "scalahost",
   base = file("scalahost")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   publishArtifact in (Compile, packageSrc) := {
     // TODO: addCompilerPlugin for ivy repos is kinda broken.
     // If sbt finds a sources jar for a compiler plugin, it tries to add it to -Xplugin,
@@ -218,7 +219,7 @@ lazy val scalahost = Project(
 
 lazy val scalahostSbt = Project(
   id   = "scalahostSbt",
-  base = file("sbt-plugins/scalahost")
+  base = file("scalahost-sbt")
 ) settings (
   publishableSettings,
   buildInfoSettings,
@@ -229,7 +230,7 @@ lazy val scalahostSbt = Project(
   moduleName := "sbt-scalahost",  // sbt convention is that plugin names start with sbt-
   sbtPlugin := true,
   scalaVersion := "2.10.5",
-  crossScalaVersions := Seq(scalaVersion.value),
+  crossScalaVersions := Seq("2.10.5"), // for some reason, scalaVersion.value does not work.
   scriptedLaunchOpts ++= Seq(
     "-Dplugin.version=" + version.value,
     // .jvmopts is ignored, simulate here
@@ -244,7 +245,7 @@ lazy val testkit = Project(
   id   = "testkit",
   base = file("scalameta/testkit")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "geny" % "0.1.1",
     // These are used to download and extract a corpus tar.gz
@@ -259,7 +260,7 @@ lazy val contrib = Project(
   id   = "contrib",
   base = file("scalameta/contrib")
 ) settings (
-  publishableSettingsWithCrossBuild,
+  publishableSettings,
   description := "Utilities for scala.meta"
 ) dependsOn (scalameta, testkit % Test)
 
@@ -322,6 +323,8 @@ lazy val readme = scalatex.ScalatexReadme(
 lazy val sharedSettings = Def.settings(
   scalaVersion := ScalaVersion,
   version := LibraryVersion,
+  crossScalaVersions := ScalaVersions,
+  crossVersion := CrossVersion.binary,
   organization := "org.scalameta",
   resolvers += Resolver.sonatypeRepo("snapshots"),
   resolvers += Resolver.sonatypeRepo("releases"),
@@ -362,6 +365,8 @@ lazy val mergeSettings = Def.settings(
 )
 
 def computePreReleaseVersion(LibrarySeries: String): String = {
+  // useful to provide custom version number when running sbt scripted tests, to avoid republishing 2.11/2.12
+  if (sys.props.contains("scalameta.version")) return sys.props("scalameta.version")
   val preReleaseSuffix = {
     import sys.process._
     val stableSha = Try(os.git.stableSha()).toOption
@@ -403,16 +408,6 @@ def shouldPublishToSonatype: Boolean = {
   if (sys.props("sbt.prohibit.publish") != null) return false
   !LibraryVersion.contains("-")
 }
-
-lazy val crossBuildSettings = Def.settings(
-  crossScalaVersions := ScalaVersions,
-  crossVersion := CrossVersion.binary
-)
-
-lazy val publishableSettingsWithCrossBuild = Def.settings(
-  crossBuildSettings,
-  publishableSettings
-)
 
 lazy val publishableSettings = Def.settings(
   sharedSettings,

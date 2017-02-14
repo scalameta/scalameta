@@ -12,7 +12,7 @@ build:
       - git log | head -n 20
       - ./bin/checkCLA.sh
       - ./bin/scalafmt --test
-      - sbt -Dsbt.ivy.home=/drone/cache/ivy2 testAll
+      - sbt -Dsbt.ivy.home=/drone/cache/ivy2 ci
   publish:
     image: ensime/ensime:v2.x-cache
     environment:

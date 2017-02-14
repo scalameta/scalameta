@@ -1,5 +1,0 @@
-# compile should not affect scalafix
-> dumpsemanticdb
-# TODO(olafur) verify that 2.11 and 2.12 got dumped
-$ exists semanticdb
-

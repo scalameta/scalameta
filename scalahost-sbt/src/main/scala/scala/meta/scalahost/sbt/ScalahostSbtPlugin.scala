@@ -16,7 +16,6 @@ object ScalahostSbtPlugin extends AutoPlugin {
   // NOTE. Only possible with one scalaVersion, not cross-build projects.
   val scalahostPackageJar: Option[String] = sys.props.get("scalahost.packagejar")
   override def projectSettings = Seq(
-    commands += Command.command("dumpsemanticdb")(s => "test:compile" :: s),
     resolvers += Resolver.bintrayIvyRepo("scalameta", "maven"),
     scalacOptions ++= {
       if (scalaVersion.value.startsWith("2.10")) Nil
