@@ -1,5 +1,7 @@
 import java.io._
 import scala.util.Try
+import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
+import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalameta.os
 import PgpKeys._
 import UnidocKeys._
@@ -184,7 +186,19 @@ lazy val scalahost = Project(
     base / ("scala-" + scalaVersion.value)
   },
   exposePaths("scalahost", Test),
-  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+  pomPostProcess := { node =>
+    new RuleTransformer(new RewriteRule {
+      private def isScalametaDependency(node: XmlNode): Boolean = {
+        def isArtifactId(node: XmlNode, fn: String => Boolean) = node.label == "artifactId" && fn(node.text)
+        node.label == "dependency" && node.child.exists(child => isArtifactId(child, _.startsWith("scalameta_")))
+      }
+      override def transform(node: XmlNode): XmlNodeSeq = node match {
+        case e: Elem if isScalametaDependency(node) => Comment("scalameta dependency has been merged into scalahost via sbt-assembly")
+        case _ => node
+      }
+    }).transform(node).head
+  }
 ) dependsOn (scalameta, testkit % Test)
 
 lazy val testkit = Project(
