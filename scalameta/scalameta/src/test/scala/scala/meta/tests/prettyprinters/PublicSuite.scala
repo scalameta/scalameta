@@ -94,12 +94,28 @@ class PublicSuite extends FunSuite {
     assert(scala.meta.dialects.Scala212.toString === "Scala212")
   }
 
+  test("scala.meta.dialects.Typelevel211.toString") {
+    assert(scala.meta.dialects.Typelevel211.toString === "Typelevel211")
+  }
+
+  test("scala.meta.dialects.Typelevel212.toString") {
+    assert(scala.meta.dialects.Typelevel212.toString === "Typelevel212")
+  }
+
   test("scala.meta.dialects.Paradise211.toString") {
     assert(scala.meta.dialects.Paradise211.toString === "Paradise211")
   }
 
   test("scala.meta.dialects.Paradise212.toString") {
     assert(scala.meta.dialects.Paradise212.toString === "Paradise212")
+  }
+
+  test("scala.meta.dialects.ParadiseTypelevel211.toString") {
+    assert(scala.meta.dialects.ParadiseTypelevel211.toString === "ParadiseTypelevel211")
+  }
+
+  test("scala.meta.dialects.ParadiseTypelevel212.toString") {
+    assert(scala.meta.dialects.ParadiseTypelevel212.toString === "ParadiseTypelevel212")
   }
 
   test("scala.meta.inputs.Input.toString") {
