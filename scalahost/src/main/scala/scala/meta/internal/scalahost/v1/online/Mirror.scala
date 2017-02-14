@@ -41,20 +41,32 @@ class Mirror(val global: Global)
     compilerUnits.toList.map(_.toSource)
   }
 
+  private var cachedDatabaseKey = (g.currentRun, -1, -1)
+  private def recomputeCachedDatabaseKey() = (g.currentRun, g.currentRun.size, adhocUnits.size)
+  private var cachedDatabase: Database = null
   def database: Database = {
-    var unmappedNames = ""
-    val units = compilerUnits ++ adhocUnits
-    val databases = units.map(unit => {
-      try unit.toDatabase
-      catch {
-        case ex: Exception if ex.getMessage.startsWith("Unmapped names in") =>
-          unmappedNames += (ex.getMessage + EOL)
-          Database()
+    // NOTE: We rely on the fact that compilation units change monotonously,
+    // i.e. that we can only add new compilation units, but not remove them.
+    if (cachedDatabaseKey != recomputeCachedDatabaseKey()) {
+      val database = {
+        var unmappedNames = ""
+        val units = compilerUnits ++ adhocUnits
+        val databases = units.map(unit => {
+          try unit.toDatabase
+          catch {
+            case ex: Exception if ex.getMessage.startsWith("Unmapped names in") =>
+              unmappedNames += (ex.getMessage + EOL)
+              Database()
+          }
+        })
+        if (unmappedNames != "") sys.error(unmappedNames.trim)
+        val symbols = databases.flatMap(_.symbols).toMap
+        Database(symbols)
       }
-    })
-    if (unmappedNames != "") sys.error(unmappedNames.trim)
-    val symbols = databases.flatMap(_.symbols).toMap
-    Database(symbols)
+      cachedDatabaseKey = recomputeCachedDatabaseKey()
+      cachedDatabase = database
+    }
+    cachedDatabase
   }
 
   def typecheck(tree: Tree): Tree = {
@@ -137,7 +149,7 @@ class Mirror(val global: Global)
       typecheckRoot(tree)
     } else {
       var message =
-        s"implementation restriction: semantic API doesn't support mixed unattributed/attributed trees.$EOL"
+        s"implementation restriction: semantic API doesn't support this abstract syntax tree.$EOL"
       message += "For more information, visit https://github.com/scalameta/scalameta/issues/621."
       throw new SemanticException(tree.pos, message)
     }

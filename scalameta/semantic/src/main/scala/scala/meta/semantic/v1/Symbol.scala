@@ -8,7 +8,9 @@ import scala.collection.mutable
 import scala.compat.Platform.EOL
 import org.scalameta.adt._
 import org.scalameta.invariants._
+import org.scalameta.unreachable
 import scala.meta.common._
+import scala.meta.inputs._
 import scala.meta.internal.semantic.v1._
 
 // NOTE: This is an initial take on the semantic API.
@@ -19,31 +21,78 @@ import scala.meta.internal.semantic.v1._
 @root trait Symbol extends Optional {
   def syntax: String
   def structure: String
+  def name: Name
+  def fullName: Ref
 }
 
 object Symbol {
+  private def unsupported(sym: Symbol, op: String) = {
+    val receiver = if (sym == None) "Symbol.None" else sym.syntax
+    throw new SemanticException(Position.None, s"Symbol.${op} not supported for $receiver")
+  }
+
   @none object None extends Symbol {
+    override def toString = syntax
     override def syntax = s""
     override def structure = s"""Symbol.None"""
-    override def toString = syntax
+    override def name: Name = unsupported(this, "name")
+    override def fullName: Ref = unsupported(this, "fullName")
   }
 
   @leaf class Local(addr: Address, start: Int, end: Int) extends Symbol {
+    override def toString = syntax
     override def syntax = s"${addr.syntax}@$start..$end"
     override def structure = s"""Symbol.Local(${addr.structure}, $start, $end)"""
-    override def toString = syntax
+    override def name: Name = ???
+    override def fullName: Ref = ???
   }
 
   @leaf class Global(owner: Symbol, signature: Signature) extends Symbol {
+    override def toString = syntax
     override def syntax = s"${owner.syntax}${signature.syntax}"
     override def structure = s"""Symbol.Global(${owner.structure}, ${signature.structure})"""
-    override def toString = syntax
+    override def name: Name = {
+      signature match {
+        case _: Signature.Type | _: Signature.TypeParameter => Type.Name(signature.name)
+        case _ => Term.Name(signature.name)
+      }
+    }
+    override def fullName: Ref = {
+      def pre: Option[Term.Ref] = {
+        def ownerChain(sym: Symbol): List[Symbol] = sym match {
+          case Symbol.Global(Symbol.None, _) => Nil
+          case Symbol.Global(owner, _) => ownerChain(owner) :+ owner
+          case _ => Nil
+        }
+        val nameChain = ownerChain(this).map {
+          case Symbol.Global(_, Signature.Term(name)) => name
+          case _ => return scala.None
+        }
+        def loop(names: List[String]): Option[Term.Ref] = names match {
+          case Nil =>
+            scala.None
+          case init :+ last =>
+            loop(init) match {
+              case scala.None => scala.Some(Term.Name(last))
+              case scala.Some(pre) => scala.Some(Term.Select(pre, Term.Name(last)))
+            }
+        }
+        loop(nameChain)
+      }
+      (pre, signature) match {
+        case (scala.Some(pre), Signature.Term(name)) => Term.Select(pre, Term.Name(name))
+        case (scala.Some(pre), Signature.Type(name)) => Type.Select(pre, Type.Name(name))
+        case _ => name
+      }
+    }
   }
 
   @leaf class Multi(symbols: Seq[Symbol] @nonEmpty) extends Symbol {
+    override def toString = syntax
     override def syntax = symbols.map(_.syntax).mkString(";")
     override def structure = s"""Symbol.Multi(${symbols.map(_.structure).mkString(", ")})"""
-    override def toString = syntax
+    override def name: Name = ???
+    override def fullName: Ref = ???
   }
 
   // TODO: This is obviously a very naive implementation.
