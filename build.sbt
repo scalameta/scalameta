@@ -5,6 +5,7 @@ import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalameta.os
 import PgpKeys._
 import UnidocKeys._
+import sbt.ScriptedPlugin._
 
 lazy val ScalaVersion = "2.11.8"
 lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
@@ -21,6 +22,19 @@ lazy val scalametaRoot = Project(
 ) settings (
   sharedSettings,
   unidocSettings,
+  // needs to be a command since scripted requires publishing across scala-versions
+  commands += Command.command("scripted") { state =>
+    "such publishLocal" ::
+    "very scalahostSbt/scripted" ::
+    state
+  },
+  commands += Command.command("testAll") { state =>
+    "so scalametaRoot/test" ::
+    "much doc" ::
+    "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
+    "such testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
+    state
+  },
   packagedArtifacts := Map.empty,
   unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject,
   aggregate in test := false,
@@ -208,11 +222,22 @@ lazy val scalahostSbt = Project(
 ) settings (
   publishableSettings,
   buildInfoSettings,
+  sbt.ScriptedPlugin.scriptedSettings,
+  sources in (Compile, doc) := Seq.empty,
+  publishArtifact in (Compile, packageDoc) := false,
   description := "sbt plugin to enable the scalahost compiler plugin",
   moduleName := "sbt-scalahost",  // sbt convention is that plugin names start with sbt-
   sbtPlugin := true,
   scalaVersion := "2.10.5",
-  crossScalaVersions := Seq(scalaVersion.value)
+  crossScalaVersions := Seq(scalaVersion.value),
+  scriptedLaunchOpts ++= Seq(
+    "-Dplugin.version=" + version.value,
+    // .jvmopts is ignored, simulate here
+    "-XX:MaxPermSize=256m",
+    "-Xmx2g",
+    "-Xss2m"
+  ),
+  scriptedBufferLog := false
 ) enablePlugins (BuildInfoPlugin)
 
 lazy val testkit = Project(

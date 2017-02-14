@@ -12,7 +12,7 @@ build:
       - git log | head -n 20
       - ./bin/checkCLA.sh
       - ./bin/scalafmt --test
-      - sbt -Dsbt.ivy.home=/drone/cache/ivy2 ++$SCALA_VERSION test doc "scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest"
+      - sbt -Dsbt.ivy.home=/drone/cache/ivy2 testAll
   publish:
     image: ensime/ensime:v2.x-cache
     environment:
@@ -28,10 +28,6 @@ build:
     when:
       event: push
       branch: [master, 2.x]
-matrix:
-  SCALA_VERSION:
-    - 2.11.8
-    - 2.12.1
 cache:
   mount:
     - /drone/cache
