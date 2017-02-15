@@ -1,4 +1,3 @@
-# compile should not affect scalafix
 > test:compile
 # 2.10 projects are ignored
 $ absent p1/target/scala-2.10/classes/semanticdb
