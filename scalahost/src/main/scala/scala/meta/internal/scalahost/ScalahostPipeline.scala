@@ -26,7 +26,9 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
 
       override def run(): Unit = {
         super.run()
-        val databaseFile = new File(global.settings.d.value + "/semanticdb")
+        val outputDir =
+          global.settings.outputDirs.getSingleOutput.getOrElse(global.settings.d.value)
+        val databaseFile = new File(outputDir + File.separator + "semanticdb")
         val prevDatabase = if (databaseFile.exists) Database(databaseFile) else Database()
         val database = new OnlineMirror(global).database
         val mergedDatabase = prevDatabase.append(database)
