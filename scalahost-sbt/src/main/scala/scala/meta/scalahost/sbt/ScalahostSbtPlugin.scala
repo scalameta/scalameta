@@ -1,7 +1,7 @@
 package scala.meta.scalahost.sbt
 
 import sbt._
-import Keys._
+import Keys.{version => _, _}
 import org.scalameta.BuildInfo
 import sbt.plugins.JvmPlugin
 
@@ -15,25 +15,39 @@ object ScalahostSbtPlugin extends AutoPlugin {
   // much faster iteration speed compared to publishLocal.
   // NOTE. Only possible with one scalaVersion, not cross-build projects.
   val scalahostPackageJar: Option[String] = sys.props.get("scalahost.packagejar")
+  // Scalahost only supports the latest patch version of scala minor version, for example
+  // only 2.11.8 and not 2.11.7. If a build is using 2.11.7, we upgrade the dependency to
+  // scalahost 2.11.8. See https://github.com/scalameta/scalameta/issues/681
+  private object SupportedScalaVersion {
+    private val MajorMinor = "(\\d+\\.\\d+)..*".r
+    def unapply(arg: String): Option[String] = arg match {
+      case MajorMinor(v) =>
+        BuildInfo.supportedScalaVersions.find(_.startsWith(v))
+    }
+  }
+  private val MetaConfig = config("scalameta").hide
+
   override def projectSettings = Seq(
+    ivyConfigurations += MetaConfig,
     resolvers += Resolver.bintrayIvyRepo("scalameta", "maven"),
     scalacOptions ++= {
-      if (scalaVersion.value.startsWith("2.10")) Nil
-      else {
-        scalahostPackageJar.map(jar => s"Xplugin:$jar").toList ++ List(
-          "-Yrangepos",
-          "-Xplugin-require:scalahost"
-        )
+      scalaVersion.value match {
+        case SupportedScalaVersion(_) =>
+          scalahostPackageJar.map(jar => s"Xplugin:$jar").toList ++ List(
+            "-Yrangepos",
+            "-Xplugin-require:scalahost"
+          )
+        case _ => Nil
       }
     },
     libraryDependencies ++= {
-      if (scalaVersion.value.startsWith("2.10")) Nil
-      else if (scalahostPackageJar.isDefined) Nil
-      else {
-        List(
-          compilerPlugin(
-            ("org.scalameta" %% "scalahost" % scalahostVersion).cross(CrossVersion.full))
-        )
+      scalaVersion.value match {
+        case _ if scalahostPackageJar.isDefined => Nil
+        case SupportedScalaVersion(version) =>
+          List(
+            compilerPlugin("org.scalameta" % s"scalahost_$version" % scalahostVersion)
+          )
+        case _ => Nil
       }
     }
   )

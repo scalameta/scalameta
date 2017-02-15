@@ -498,7 +498,8 @@ lazy val publishableSettings = Def.settings(
 
 lazy val buildInfoSettings = Def.settings(
   buildInfoKeys := Seq[BuildInfoKey](
-    version
+    version,
+    "supportedScalaVersions" -> crossScalaVersions.in(scalameta).value
   ),
   buildInfoPackage := "org.scalameta",
   buildInfoObject := "BuildInfo"
