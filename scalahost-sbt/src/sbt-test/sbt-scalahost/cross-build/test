@@ -1,0 +1,10 @@
+> test:compile
+# 2.10 projects are ignored
+$ absent p1/target/scala-2.10/classes/semanticdb
+$ absent p1/target/scala-2.10/test-classes/semanticdb
+# 2.11 project dumps database
+$ exists p2/target/scala-2.11/classes/semanticdb
+$ exists p2/target/scala-2.11/test-classes/semanticdb
+# 2.12 project dumps database
+$ exists p3/target/scala-2.12/classes/semanticdb
+$ exists p3/target/scala-2.12/test-classes/semanticdb

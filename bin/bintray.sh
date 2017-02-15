@@ -8,7 +8,7 @@ host = api.bintray.com
 user = $BINTRAY_USERNAME
 password = $BINTRAY_API_KEY
 EOF
-  sbt -Dsbt.ivy.home=/drone/cache/ivy2 ++$SCALA_VERSION publish
+  sbt -Dsbt.ivy.home=/drone/cache/ivy2 "very publish"
 fi
 
 

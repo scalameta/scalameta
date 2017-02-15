@@ -5,11 +5,12 @@ import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalameta.os
 import PgpKeys._
 import UnidocKeys._
+import sbt.ScriptedPlugin._
 
 lazy val ScalaVersion = "2.11.8"
 lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
 lazy val LibrarySeries = "1.6.0"
-lazy val LibraryVersion = computePreReleaseVersion(LibrarySeries)
+lazy val LibraryVersion = sys.props.getOrElse("scalameta.version", computePreReleaseVersion(LibrarySeries))
 
 // ==========================================
 // Projects
@@ -21,6 +22,17 @@ lazy val scalametaRoot = Project(
 ) settings (
   sharedSettings,
   unidocSettings,
+  commands += Command.command("ci") { state =>
+    // NOTE. The so/wow/such/very commands are from sbt-doge and are used to
+    // run commands with the correct scalaVersion in each project.
+    "so scalametaRoot/test" ::
+    // slow tests below
+    "much doc" ::
+    "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
+    "such testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
+    "scalahostSbt/test" ::
+    state
+  },
   packagedArtifacts := Map.empty,
   unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject,
   aggregate in test := false,
@@ -41,6 +53,7 @@ lazy val scalametaRoot = Project(
   parsers,
   quasiquotes,
   scalahost,
+  scalahostSbt,
   scalameta,
   semantic,
   testkit,
@@ -200,6 +213,46 @@ lazy val scalahost = Project(
     }).transform(node).head
   }
 ) dependsOn (scalameta, testkit % Test)
+
+
+lazy val scalahostSbt = Project(
+  id   = "scalahostSbt",
+  base = file("scalahost-sbt")
+) settings (
+  publishableSettings,
+  buildInfoSettings,
+  sbt.ScriptedPlugin.scriptedSettings,
+  testQuick := {
+    // runs tests for 2.11 only, avoiding the need to publish for 2.12
+    RunSbtCommand(
+      "; plz 2.11.8 publishLocal " +
+      "; such scalahostSbt/scripted sbt-scalahost/simple211")(state.value)
+  },
+  test:= {
+    RunSbtCommand(
+      "; such publishLocal " +
+      "; such scalahostSbt/scripted")(state.value)
+  },
+  sources in (Compile, doc) := Seq.empty,
+  publishArtifact in (Compile, packageDoc) := false,
+  description := "sbt plugin to enable the scalahost compiler plugin",
+  moduleName := "sbt-scalahost",  // sbt convention is that plugin names start with sbt-
+  sbtPlugin := true,
+  scalaVersion := "2.10.5",
+  crossScalaVersions := Seq("2.10.5"), // for some reason, scalaVersion.value does not work.
+  scriptedLaunchOpts ++= Seq(
+    "-Dplugin.version=" + version.value,
+    // .jvmopts is ignored, simulate here
+    "-XX:MaxPermSize=256m",
+    "-Xmx2g",
+    "-Xss2m"
+  ) ++ {
+    // pass along custom ivy home if it exists.
+    val ivyHome = "sbt.ivy.home"
+    sys.props.get(ivyHome).map(x => s"-D$ivyHome=$x").toList
+  },
+  scriptedBufferLog := false
+) enablePlugins (BuildInfoPlugin)
 
 lazy val testkit = Project(
   id   = "testkit",
@@ -441,6 +494,15 @@ lazy val publishableSettings = Def.settings(
       </developer>
     </developers>
   )
+)
+
+lazy val buildInfoSettings = Def.settings(
+  buildInfoKeys := Seq[BuildInfoKey](
+    version,
+    "supportedScalaVersions" -> crossScalaVersions.in(scalameta).value
+  ),
+  buildInfoPackage := "org.scalameta",
+  buildInfoObject := "BuildInfo"
 )
 
 def exposePaths(projectName: String, config: Configuration) = {
