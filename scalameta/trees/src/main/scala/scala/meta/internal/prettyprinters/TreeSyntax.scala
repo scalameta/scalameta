@@ -488,7 +488,7 @@ object TreeSyntax {
         case _: Mod.ValParam                 => kw("val")
         case _: Mod.VarParam                 => kw("var")
         case _: Mod.Inline                   =>
-          if (!dialect.allowInlines) throw new UnsupportedOperationException(s"$dialect doesn't support inline")
+          if (!dialect.allowInlineMods) throw new UnsupportedOperationException(s"$dialect doesn't support inline modifiers")
           kw("inline")
 
         // Enumerator

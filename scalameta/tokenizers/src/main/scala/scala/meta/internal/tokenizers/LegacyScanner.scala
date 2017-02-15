@@ -129,8 +129,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           if (emitIdentifierDeprecationWarnings)
             deprecationWarning(s"$name is now a reserved word; usage as an identifier is deprecated", at = token)
         }
-      } else if (dialect.allowInlines && name == "inline") {
-        token = INLINE
       }
     }
   }

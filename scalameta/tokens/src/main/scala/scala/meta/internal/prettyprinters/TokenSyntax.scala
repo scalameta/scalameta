@@ -11,7 +11,6 @@ object TokenSyntax {
   def apply[T <: Token](dialect: Dialect, options: Options): Syntax[T] = Syntax { x =>
     def failXml() = throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
     def failQuasiquote() = throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
-    def failInline() = throw new UnsupportedOperationException(s"$dialect doesn't support inline")
     def failViewBound() = throw new UnsupportedOperationException(s"$dialect doesn't support view bounds")
     x match {
       case Xml.Start() if !dialect.allowXmlLiterals => failXml()
@@ -21,7 +20,6 @@ object TokenSyntax {
       case Xml.End() if !dialect.allowXmlLiterals => failXml()
       case Unquote() if !dialect.allowUnquotes => failQuasiquote()
       case Ellipsis(_) if !dialect.allowUnquotes => failQuasiquote()
-      case KwInline() if !dialect.allowInlines => failInline()
       case Viewbound() if !dialect.allowViewBounds => failViewBound()
       case _ => // do nothing, check passed
     }
