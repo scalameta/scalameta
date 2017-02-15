@@ -30,7 +30,7 @@ lazy val scalametaRoot = Project(
     "much doc" ::
     "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "such testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
-    "scalahostSbt/test" ::
+    "scalahostSbt/testQuick" ::
     state
   },
   packagedArtifacts := Map.empty,
