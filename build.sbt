@@ -10,7 +10,7 @@ import sbt.ScriptedPlugin._
 lazy val ScalaVersion = "2.11.8"
 lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
 lazy val LibrarySeries = "1.6.0"
-lazy val LibraryVersion = computePreReleaseVersion(LibrarySeries)
+lazy val LibraryVersion = sys.props.getOrElse("scalameta.version", computePreReleaseVersion(LibrarySeries))
 
 // ==========================================
 // Projects
@@ -22,18 +22,15 @@ lazy val scalametaRoot = Project(
 ) settings (
   sharedSettings,
   unidocSettings,
-  // needs to be a command since scripted requires publishing across scala-versions
-  commands += Command.command("scripted") { state =>
-    "such publishLocal" ::
-    "very scalahostSbt/scripted" ::
-    state
-  },
   commands += Command.command("ci") { state =>
+    // NOTE. The so/wow/such/very commands are from sbt-doge and are used to
+    // run commands with the correct scalaVersion in each project.
     "so scalametaRoot/test" ::
+    // slow tests below
     "much doc" ::
     "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "such testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
-    "scripted" ::
+    "scalahostSbt/test" ::
     state
   },
   packagedArtifacts := Map.empty,
@@ -217,6 +214,7 @@ lazy val scalahost = Project(
   }
 ) dependsOn (scalameta, testkit % Test)
 
+
 lazy val scalahostSbt = Project(
   id   = "scalahostSbt",
   base = file("scalahost-sbt")
@@ -224,6 +222,17 @@ lazy val scalahostSbt = Project(
   publishableSettings,
   buildInfoSettings,
   sbt.ScriptedPlugin.scriptedSettings,
+  testQuick := {
+    // runs tests for 2.11 only, avoiding the need to publish for 2.12
+    RunSbtCommand(
+      "; plz 2.11.8 publishLocal " +
+      "; such scalahostSbt/scripted sbt-scalahost/simple211")(state.value)
+  },
+  test:= {
+    RunSbtCommand(
+      "; such publishLocal " +
+      "; such scalahostSbt/scripted")(state.value)
+  },
   sources in (Compile, doc) := Seq.empty,
   publishArtifact in (Compile, packageDoc) := false,
   description := "sbt plugin to enable the scalahost compiler plugin",
@@ -322,9 +331,9 @@ lazy val readme = scalatex.ScalatexReadme(
 
 lazy val sharedSettings = Def.settings(
   scalaVersion := ScalaVersion,
-  version := LibraryVersion,
   crossScalaVersions := ScalaVersions,
   crossVersion := CrossVersion.binary,
+  version := LibraryVersion,
   organization := "org.scalameta",
   resolvers += Resolver.sonatypeRepo("snapshots"),
   resolvers += Resolver.sonatypeRepo("releases"),
@@ -365,8 +374,6 @@ lazy val mergeSettings = Def.settings(
 )
 
 def computePreReleaseVersion(LibrarySeries: String): String = {
-  // useful to provide custom version number when running sbt scripted tests, to avoid republishing 2.11/2.12
-  if (sys.props.contains("scalameta.version")) return sys.props("scalameta.version")
   val preReleaseSuffix = {
     import sys.process._
     val stableSha = Try(os.git.stableSha()).toOption
