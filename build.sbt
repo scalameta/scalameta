@@ -222,6 +222,8 @@ lazy val scalahostSbt = Project(
   publishableSettings,
   buildInfoSettings,
   sbt.ScriptedPlugin.scriptedSettings,
+  sbtPlugin := true,
+  bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
   testQuick := {
     // runs tests for 2.11 only, avoiding the need to publish for 2.12
     RunSbtCommand(
@@ -237,7 +239,6 @@ lazy val scalahostSbt = Project(
   publishArtifact in (Compile, packageDoc) := false,
   description := "sbt plugin to enable the scalahost compiler plugin",
   moduleName := "sbt-scalahost",  // sbt convention is that plugin names start with sbt-
-  sbtPlugin := true,
   scalaVersion := "2.10.5",
   crossScalaVersions := Seq("2.10.5"), // for some reason, scalaVersion.value does not work.
   scriptedLaunchOpts ++= Seq(
