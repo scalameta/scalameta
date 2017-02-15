@@ -17,7 +17,8 @@ object RunSbtCommand {
         case head :: tail => runCommand(head, nextState.copy(remainingCommands = tail))
       }
     }
-    runCommand(command, st.copy(remainingCommands = Nil))
+    runCommand(command,
+               st.copy(remainingCommands = Nil, onFailure = Some(s"Failed to run $command")))
       .copy(remainingCommands = st.remainingCommands)
   }
 }

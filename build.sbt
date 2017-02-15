@@ -246,7 +246,11 @@ lazy val scalahostSbt = Project(
     "-XX:MaxPermSize=256m",
     "-Xmx2g",
     "-Xss2m"
-  ),
+  ) ++ {
+    // pass along custom ivy home if it exists.
+    val ivyHome = "sbt.ivy.home"
+    sys.props.get(ivyHome).map(x => s"-D$ivyHome=$x").toList
+  },
   scriptedBufferLog := false
 ) enablePlugins (BuildInfoPlugin)
 
