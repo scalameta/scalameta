@@ -23,8 +23,11 @@ import scala.compat.Platform.EOL
   // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
   allowColonForExtractorVarargs: Boolean,
 
+  // Are `inline` identifiers supported by this dialect?
+  allowInlineIdents: Boolean,
+
   // Are inline vals and defs supported by this dialect?
-  allowInlines: Boolean,
+  allowInlineMods: Boolean,
 
   // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
   allowLiteralTypes: Boolean,
@@ -98,7 +101,8 @@ package object dialects {
     allowAndTypes = false,
     allowAtForExtractorVarargs = true,
     allowColonForExtractorVarargs = false,
-    allowInlines = false,
+    allowInlineIdents = true,
+    allowInlineMods = false,
     allowLiteralTypes = false,
     allowMultilinePrograms = true,
     allowOrTypes = false,
@@ -133,12 +137,13 @@ package object dialects {
   )
 
   implicit val Paradise211 = Scala211.copy(
-    allowInlines = true
+    allowInlineIdents = true,
+    allowInlineMods = true
   )
 
-  implicit val ParadiseTypelevel211 = Scala211.copy(
-    allowLiteralTypes = true,
-    allowInlines = true
+  implicit val ParadiseTypelevel211 = Typelevel211.copy(
+    allowInlineIdents = true,
+    allowInlineMods = true
   )
 
   implicit val Scala212 = Scala211.copy(
@@ -152,20 +157,21 @@ package object dialects {
   )
 
   implicit val Paradise212 = Scala212.copy(
-    allowInlines = true
+    allowInlineIdents = true,
+    allowInlineMods = true
   )
 
-  implicit val ParadiseTypelevel212 = Scala212.copy(
-    allowLiteralTypes = true,
-    allowTrailingCommas = true,
-    allowInlines = true
+  implicit val ParadiseTypelevel212 = Typelevel212.copy(
+    allowInlineIdents = true,
+    allowInlineMods = true
   )
 
   implicit val Dotty = Scala211.copy(
     allowAndTypes = true, // New feature in Dotty
     allowAtForExtractorVarargs = false, // New feature in Dotty
     allowColonForExtractorVarargs = true, // New feature in Dotty
-    allowInlines = true, // New feature in Dotty
+    allowInlineIdents = false, // New feature in Dotty
+    allowInlineMods = true, // New feature in Dotty
     allowLiteralTypes = true, // New feature in Dotty
     allowOrTypes = true, // New feature in Dotty
     allowTrailingCommas = false, // Not yet implemented in Dotty

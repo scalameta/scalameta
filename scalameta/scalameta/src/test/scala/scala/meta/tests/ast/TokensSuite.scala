@@ -36,7 +36,7 @@ class TokensSuite extends FunSuite {
     assert(emptySelf.tokens.structure === "Tokens()")
   }
 
-  test("inline is not a token") {
+  test("inline can be used as an identifier") {
     val tree = dialects.Scala211("{ val inline = 42 }").parse[Term].get
     assert(tree.syntax === "{ val inline = 42 }")
   }

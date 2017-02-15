@@ -120,25 +120,25 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     def fail() = parser.reporter.syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
     parseRule(parser => parser.autoPos(parser.token match {
-      case Unquote()                                   => unquote[Mod.Quasi]
-      case At()                                        => parser.annot()
-      case KwPrivate()                                 => parser.accessModifier()
-      case KwProtected()                               => parser.accessModifier()
-      case KwImplicit()                                => parser.next(); Mod.Implicit()
-      case KwFinal()                                   => parser.next(); Mod.Final()
-      case KwSealed()                                  => parser.next(); Mod.Sealed()
-      case KwOverride()                                => parser.next(); Mod.Override()
-      case KwCase()                                    => parser.next(); Mod.Case()
-      case KwAbstract()                                => parser.next(); Mod.Abstract()
-      case Ident("+")                                  => parser.next(); Mod.Covariant()
-      case Ident("-")                                  => parser.next(); Mod.Contravariant()
-      case KwLazy()                                    => parser.next(); Mod.Lazy()
+      case Unquote()                                  => unquote[Mod.Quasi]
+      case At()                                       => parser.annot()
+      case KwPrivate()                                => parser.accessModifier()
+      case KwProtected()                              => parser.accessModifier()
+      case KwImplicit()                               => parser.next(); Mod.Implicit()
+      case KwFinal()                                  => parser.next(); Mod.Final()
+      case KwSealed()                                 => parser.next(); Mod.Sealed()
+      case KwOverride()                               => parser.next(); Mod.Override()
+      case KwCase()                                   => parser.next(); Mod.Case()
+      case KwAbstract()                               => parser.next(); Mod.Abstract()
+      case Ident("+")                                 => parser.next(); Mod.Covariant()
+      case Ident("-")                                 => parser.next(); Mod.Contravariant()
+      case KwLazy()                                   => parser.next(); Mod.Lazy()
       case KwVal() if !dialect.allowUnquotes          => parser.next(); Mod.ValParam()
       case KwVar() if !dialect.allowUnquotes          => parser.next(); Mod.VarParam()
       case Ident("valparam") if dialect.allowUnquotes => parser.next(); Mod.ValParam()
       case Ident("varparam") if dialect.allowUnquotes => parser.next(); Mod.VarParam()
-      case KwInline() if dialect.allowInlines           => parser.next(); Mod.Inline()
-      case _                                           => fail()
+      case Ident("inline") if dialect.allowInlineMods => parser.next(); Mod.Inline()
+      case _                                          => fail()
     }))
   }
   def parseQuasiquoteMod(): Mod = parseMod() // NOTE: special treatment for mod"valparam" and likes is implemented directly in `parseMod`
@@ -526,8 +526,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   @classifier
   trait ExprIntro {
     def unapply(token: Token): Boolean = {
-      token.is[Ident] || token.is[Literal] ||
-      token.is[Interpolation.Id] || token.is[Xml.Start] ||
+      (token.is[Ident] && !(token.syntax == "inline" && !dialect.allowInlineIdents)) ||
+      token.is[Literal] ||  token.is[Interpolation.Id] || token.is[Xml.Start] ||
       token.is[KwDo] || token.is[KwFor] || token.is[KwIf] ||
       token.is[KwNew] || token.is[KwReturn] || token.is[KwSuper] ||
       token.is[KwThis] || token.is[KwThrow] || token.is[KwTry] || token.is[KwWhile] ||
@@ -580,7 +580,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwSealed] || token.is[KwImplicit] ||
       token.is[KwLazy] || token.is[KwPrivate] ||
       token.is[KwProtected] || token.is[KwOverride] ||
-      token.is[KwInline]
+      (token.is[Ident] && token.syntax == "inline" && dialect.allowInlineMods)
     }
   }
 
@@ -1259,6 +1259,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     implicit object AllowedTypeName extends AllowedName[Type.Name]
   }
   private def name[T <: Tree : AllowedName : AstInfo](ctor: String => T, advance: Boolean): T = token match {
+    case Ident("inline") if !dialect.allowInlineIdents =>
+      syntaxError("`inline` identifiers are not supported by " + dialect, at = token)
     case Ident(value) =>
       val name = value.stripPrefix("`").stripSuffix("`")
       val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
@@ -2638,18 +2640,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def modifier(): Mod = autoPos(token match {
-    case Unquote()                         => unquote[Mod]
-    case Ellipsis(_)                       => ellipsis(1, astInfo[Mod])
-    case KwAbstract()                      => next(); Mod.Abstract()
-    case KwFinal()                         => next(); Mod.Final()
-    case KwSealed()                        => next(); Mod.Sealed()
-    case KwImplicit()                      => next(); Mod.Implicit()
-    case KwLazy()                          => next(); Mod.Lazy()
-    case KwOverride()                      => next(); Mod.Override()
-    case KwPrivate()                       => accessModifier()
-    case KwProtected()                     => accessModifier()
-    case KwInline() if dialect.allowInlines => next(); Mod.Inline()
-    case _                                 => syntaxError(s"modifier expected but ${token.name} found", at = token)
+    case Unquote()                                  => unquote[Mod]
+    case Ellipsis(_)                                => ellipsis(1, astInfo[Mod])
+    case KwAbstract()                               => next(); Mod.Abstract()
+    case KwFinal()                                  => next(); Mod.Final()
+    case KwSealed()                                 => next(); Mod.Sealed()
+    case KwImplicit()                               => next(); Mod.Implicit()
+    case KwLazy()                                   => next(); Mod.Lazy()
+    case KwOverride()                               => next(); Mod.Override()
+    case KwPrivate()                                => accessModifier()
+    case KwProtected()                              => accessModifier()
+    case Ident("inline") if dialect.allowInlineMods => next(); Mod.Inline()
+    case _                                          => syntaxError(s"modifier expected but ${token.name} found", at = token)
   })
 
   /** {{{

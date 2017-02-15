@@ -22,7 +22,7 @@ class DottySuite extends ParseSuite {
     assert(tree2.show[Syntax] === "inline def x = 42")
   }
 
-  test("inline tokens are allowed") {
+  test("inline can be used as a modifier") {
     val tree = dialects.Dotty("{ inline def x = 42 }").parse[Term].get
     assert(tree.syntax === "{ inline def x = 42 }")
   }
@@ -31,7 +31,7 @@ class DottySuite extends ParseSuite {
     assert(mod"inline".show[Structure] === "Mod.Inline()")
   }
 
-  test("a val cannot be called inline") {
+  test("inline cannot be used as an identifier") {
     intercept[ParseException] {
       dialects.Dotty("{ val inline = 42 }").parse[Term].get
     }
