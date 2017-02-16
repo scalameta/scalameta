@@ -312,7 +312,7 @@ lazy val readme = scalatex.ScalatexReadme(
     os.shell.call(s"git add -A", cwd = repo.getAbsolutePath)
     val nothingToCommit = "nothing to commit, working directory clean"
     try {
-      val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + os.git.stableSha()
+      val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + os.git.currentSha()
       os.shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
       os.shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
       os.shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
@@ -380,24 +380,13 @@ lazy val mergeSettings = Def.settings(
 
 def computePreReleaseVersion(LibrarySeries: String): String = {
   val preReleaseSuffix = {
-    import sys.process._
-    val stableSha = Try(os.git.stableSha()).toOption
-    val commitSubjects = Try(augmentString(os.shell.check_output("git log -10 --pretty=%s", cwd = ".")).lines.toList).getOrElse(Nil)
-    val prNumbers = commitSubjects.map(commitSubject => {
-      val Merge = "Merge pull request #(\\d+).*".r
-      val Squash = ".*\\(#(\\d+)\\)".r
-      commitSubject match {
-        case Merge(prNumber) => Some(prNumber)
-        case Squash(prNumber) => Some(prNumber)
-        case _ => None
-      }
-    })
-    val mostRecentPrNumber = prNumbers.flatMap(_.toList).headOption
-    (stableSha, prNumbers, mostRecentPrNumber) match {
-      case (Some(_), Some(prNumber) +: _, _) => prNumber
-      case (_, _, Some(prNumber)) => prNumber + "." + System.currentTimeMillis()
-      case _ => "unknown" + "." + System.currentTimeMillis()
+    val gitDescribeSuffix = {
+      val distance = os.git.distance("v1.0.0", "HEAD")
+      val currentSha = os.git.currentSha().substring(0, 8)
+      s"$distance-$currentSha"
     }
+    if (os.git.isStable()) gitDescribeSuffix
+    else gitDescribeSuffix + "." + System.currentTimeMillis().toString
   }
   LibrarySeries + "-" + preReleaseSuffix
 }

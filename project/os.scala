@@ -109,16 +109,27 @@ object shutil {
 }
 
 object git {
-  def stableSha() = {
-    val currentSha = shell.check_output("git rev-parse HEAD", cwd = ".")
-    val changed = shell.check_output("git diff --name-status", cwd = ".")
-    if (changed.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has modified files)")
-    val staged = shell.check_output("git diff --staged --name-status", cwd = ".")
-    if (staged.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has staged files)")
-    val untracked = shell.check_output("git ls-files --others --exclude-standard", cwd = ".")
-    if (untracked.trim.nonEmpty) sys.error("repository " + new File(".").getAbsolutePath + " is dirty (has untracked files)")
-    val (exitcode, stdout, stderr) = shell.exec(s"git branch -r --contains $currentSha")
-    if (exitcode != 0 || stdout.isEmpty) sys.error("repository " + new File(".").getAbsolutePath + " doesn't contain commit " + currentSha)
-    currentSha.trim
+  def isStable(): Boolean = {
+    def noUntrackedFiles = {
+      val untracked = shell.check_output("git ls-files --others --exclude-standard", cwd = ".")
+      untracked.trim.isEmpty
+    }
+    def noModifiedFiles = {
+      val changed = shell.check_output("git diff --name-status", cwd = ".")
+      changed.trim.isEmpty
+    }
+    def noStagedFiles = {
+      val staged = shell.check_output("git diff --staged --name-status", cwd = ".")
+      staged.trim.isEmpty
+    }
+    noUntrackedFiles && noModifiedFiles && noStagedFiles
+  }
+
+  def distance(from: String, to: String): Int = {
+    shell.check_output(s"git rev-list $to ^$from --count", cwd = ".").trim.toInt
+  }
+
+  def currentSha(): String = {
+    shell.check_output("git rev-parse HEAD", cwd = ".").trim
   }
 }
