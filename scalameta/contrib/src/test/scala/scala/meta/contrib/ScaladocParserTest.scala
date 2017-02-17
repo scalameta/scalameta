@@ -26,14 +26,14 @@ class ScaladocParserTest extends FunSuite {
         | /** Example scaladoc **/
         | case class foo(bar: String)
         """.stripMargin
-      ).toString() === "List(DocText(Example scaladoc))"
+      ).toString() === "List(Description(Example scaladoc))"
     )
   }
 
   test("Indentation checks") {
 
     val expectedBody: String = "BODY"
-    val expectedResult: Seq[DocToken] = Seq(DocToken(DocText, expectedBody))
+    val expectedResult: Seq[DocToken] = Seq(DocToken(Description, expectedBody))
 
     assert(
       parseString(
@@ -125,12 +125,12 @@ class ScaladocParserTest extends FunSuite {
 
     // Expectations
     val expectedStructure = Seq(
-      DocToken(DocText, textPrefix),
-      DocToken(DocConstructor, constructorBody),
-      DocToken(DocParam, paramName, paramBody),
-      DocToken(DocTypeParam, tparamName, tparamBody),
-      DocToken(DocThrows, throwsName, throwsBody),
-      DocToken(DocSee, seeBody)
+      DocToken(Description, textPrefix),
+      DocToken(Constructor, constructorBody),
+      DocToken(Param, paramName, paramBody),
+      DocToken(TypeParam, tparamName, tparamBody),
+      DocToken(Throws, throwsName, throwsBody),
+      DocToken(See, seeBody)
     )
 
     assert(
@@ -138,11 +138,11 @@ class ScaladocParserTest extends FunSuite {
         s"""
         /**
          * $textPrefix
-         * ${DocConstructor.label} $constructorBody
-         * ${DocParam.label} $paramName $paramBody
-         * ${DocTypeParam.label} $tparamName $tparamBody
-         * ${DocThrows.label} $throwsName $throwsBody
-         * ${DocSee.label} $seeBody
+         * ${Constructor.label} $constructorBody
+         * ${Param.label} $paramName $paramBody
+         * ${TypeParam.label} $tparamName $tparamBody
+         * ${Throws.label} $throwsName $throwsBody
+         * ${See.label} $seeBody
          */
          case class foo(bar: String)
          """
