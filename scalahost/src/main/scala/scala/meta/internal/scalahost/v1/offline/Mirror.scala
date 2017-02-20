@@ -23,15 +23,18 @@ class Mirror(classpath: String, sourcepath: String)
     with BaseMirror
     with PathOps {
 
-  if (classpath == "") sys.error("classpath must be non-empty")
-  if (sourcepath == "") sys.error("sourcepath must be non-empty")
+  if (classpath == null || classpath == "") sys.error("classpath must be non-empty")
+  if (sourcepath == null || sourcepath == "") sys.error("sourcepath must be non-empty")
 
   override def toString: String = {
     s"online mirror for $classpath and $sourcepath"
   }
 
   lazy val sources: Seq[Source] = {
-    sourcepath.files.map(uri => dialect(new File(uri)).parse[Source].get)
+    sourcepath
+      .split(",")
+      .flatMap(_.files.map(file => dialect(file).parse[Source].get))
+      .to[Seq]
   }
 
   private lazy val classpathDatabase: Database = {

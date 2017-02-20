@@ -1,3 +1,2 @@
-# compile should not affect scalafix
 > test:compile
 $ exists target/scala-2.11/classes/semanticdb
