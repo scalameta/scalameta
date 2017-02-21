@@ -10,7 +10,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
   object autoImport {
     // use dependsOn(foo % Scalahost) to automatically include the semantic database
     // of foo in the scala.meta.Mirror() constructor.
-    val Scalahost: Configuration = config("scalahost")
+    val Scalameta: Configuration = config("scalameta")
   }
   import autoImport._
   override def requires = JvmPlugin
@@ -23,7 +23,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
       scalahostHasMirrorSettings
 
   lazy val scalahostBaseSettings: Seq[Def.Setting[_]] = Def.settings(
-    ivyConfigurations += Scalahost,
+    ivyConfigurations += Scalameta,
     resolvers += Resolver.bintrayIvyRepo("scalameta", "maven")
   )
 
@@ -32,7 +32,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
       scalaVersion.value match {
         case SupportedScalaVersion(version) =>
           List(
-            "org.scalameta" % s"scalahost_$version" % scalahostVersion % Scalahost
+            "org.scalameta" % s"scalahost_$version" % scalahostVersion % Scalameta
           )
         case _ => Nil
       }
@@ -42,7 +42,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
       scalaVersion.value match {
         case SupportedScalaVersion(version) =>
           val jarRegex = s".*scalahost_$version(-$scalahostVersion)?.jar$$"
-          val allJars = update.value.filter(configurationFilter(Scalahost.name)).allFiles
+          val allJars = update.value.filter(configurationFilter(Scalameta.name)).allFiles
           val scalahostJar = allJars
             .collectFirst {
               case file if file.getAbsolutePath.matches(jarRegex) => file.getAbsolutePath
@@ -69,35 +69,38 @@ object ScalahostSbtPlugin extends AutoPlugin {
   )
 
   lazy val scalahostHasMirrorSettings: Seq[Def.Setting[_]] = Def.settings(
-    // Automatically set scalahostAggregate to projects listed in dependsOn(x % Scalahost)
-    scalahostAggregate := thisProject.value.dependencies.collect {
-      case x if x.configuration.exists(_ == Scalahost.name) => x.project
+    // Automatically set scalametaDependencies to projects listed in dependsOn(x % Scalahost)
+    scalametaDependencies := thisProject.value.dependencies.collect {
+      case x if x.configuration.exists(_ == Scalameta.name) => x.project
     },
     javaOptions ++= {
-      if (scalahostAggregate.value.isEmpty) Nil
+      if (scalametaDependencies.value.isEmpty) Nil
       else {
         val sourcepath =
           scalahostSourcepath.value
             .map(_.getAbsolutePath)
-            .mkString(",")
+            .mkString(java.io.File.pathSeparator)
         val classpath =
           scalahostClasspath.value
             .flatMap(_.files.map(_.getAbsolutePath))
             .mkString(java.io.File.pathSeparator)
+        val projectName = name.value
         List(
-          s"-Dscalameta.mirror.sourcepath=$sourcepath",
-          s"-Dscalameta.mirror.classpath=$classpath"
+          s"-D$projectName.scalameta.sourcepath=$sourcepath",
+          s"-D$projectName.scalameta.classpath=$classpath",
+          s"-Dscalameta.sourcepath=$sourcepath",
+          s"-Dscalameta.classpath=$classpath"
         )
       }
     },
     // fork := true is required to pass along -Dscalameta.mirror.{classpath,sourcepath}
     fork in run := {
-      if (scalahostAggregate.value.isEmpty) fork.in(run).value
+      if (scalametaDependencies.value.isEmpty) fork.in(run).value
       else true
     },
     // automatically depend on scalahost if this project dependsOn(otherProject % Scalahost)
     libraryDependencies ++= {
-      if (scalahostAggregate.value.isEmpty) Nil
+      if (scalametaDependencies.value.isEmpty) Nil
       else
         List(
           ("org.scalameta" % "scalahost" % scalahostVersion).cross(CrossVersion.full)
@@ -119,11 +122,11 @@ object ScalahostSbtPlugin extends AutoPlugin {
   // Defaults to version.value of in scala.meta's build.sbt
   private val scalahostVersion: String =
     sys.props.getOrElse("scalahost.version", BuildInfo.version)
-  private val scalahostAggregate: SettingKey[Seq[ProjectRef]] =
+  private val scalametaDependencies: SettingKey[Seq[ProjectRef]] =
     settingKey[Seq[ProjectRef]](
       "Projects to analyze with scala.meta, automatically set by dependsOn(foo % Scalahost).")
   private def scalahostAggregateFilter: Def.Initialize[ScopeFilter] = Def.setting {
-    ScopeFilter(inProjects(scalahostAggregate.value.map(x => LocalProject(x.project)): _*),
+    ScopeFilter(inProjects(scalametaDependencies.value.map(x => LocalProject(x.project)): _*),
                 inConfigurations(Compile, Test, IntegrationTest))
   }
   private val scalahostSourcepath: Def.Initialize[Seq[File]] =

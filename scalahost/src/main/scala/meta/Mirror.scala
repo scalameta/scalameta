@@ -11,7 +11,6 @@ object Mirror {
   def apply(global: Global): Mirror = new OnlineMirror(global)
   def apply(classpath: String, sourcepath: String): Mirror =
     new OfflineMirror(classpath, sourcepath)
-  def loadFromSysProps(): Try[Mirror] = Try {
-    apply(sys.props("scalameta.mirror.classpath"), sys.props("scalameta.mirror.sourcepath"))
-  }
+  def apply(): Mirror =
+    apply(sys.props("scalameta.classpath"), sys.props("scalameta.sourcepath"))
 }
