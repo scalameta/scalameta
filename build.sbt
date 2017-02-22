@@ -9,7 +9,7 @@ import sbt.ScriptedPlugin._
 
 lazy val ScalaVersion = "2.11.8"
 lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
-lazy val LibrarySeries = "1.6.0"
+lazy val LibrarySeries = "1.7.0"
 lazy val LibraryVersion = sys.props.getOrElse("scalameta.version", computePreReleaseVersion(LibrarySeries))
 
 // ==========================================
