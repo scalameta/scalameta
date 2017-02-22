@@ -15,7 +15,7 @@ trait PathOps { self: Mirror =>
       s.split(File.pathSeparatorChar).map(s => new File(s).toURI).toList
     }
 
-    def files: List[URI] = {
+    def files: List[File] = {
       val result = mutable.ListBuffer[URI]()
       s.paths.foreach(s => {
         def addFile(file: File): Unit = {
@@ -52,7 +52,7 @@ trait PathOps { self: Mirror =>
         }
         explore(new File(s))
       })
-      result.toList
+      result.map(new File(_)).filter(_.isFile).toList
     }
   }
 }

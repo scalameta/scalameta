@@ -23,15 +23,24 @@ class Mirror(classpath: String, sourcepath: String)
     with BaseMirror
     with PathOps {
 
-  if (classpath == "") sys.error("classpath must be non-empty")
-  if (sourcepath == "") sys.error("sourcepath must be non-empty")
+  private def fail(what: String) =
+    sys.error(
+      s"$what must be non-empty. " +
+        s"This may indicate that Mirror is badly configured. " +
+        s"If you use sbt-scalahost, make sure your project defines " +
+        s"`dependsOn(<projectname> % Scalameta)` for at least one <projectname>.")
+  if (classpath == null || classpath == "") fail("classpath")
+  if (sourcepath == null || sourcepath == "") fail("sourcepath")
 
   override def toString: String = {
     s"online mirror for $classpath and $sourcepath"
   }
 
   lazy val sources: Seq[Source] = {
-    sourcepath.files.map(uri => dialect(new File(uri)).parse[Source].get)
+    sourcepath
+      .split(File.pathSeparator)
+      .flatMap(_.files.map(file => dialect(file).parse[Source].get))
+      .to[Seq]
   }
 
   private lazy val classpathDatabase: Database = {
