@@ -235,8 +235,6 @@ lazy val scalahostSbt = Project(
       "; such publishLocal " +
       "; such scalahostSbt/scripted")(state.value)
   },
-  sources in (Compile, doc) := Seq.empty,
-  publishArtifact in (Compile, packageDoc) := false,
   description := "sbt plugin to enable the scalahost compiler plugin",
   moduleName := "sbt-scalahost",  // sbt convention is that plugin names start with sbt-
   scalaVersion := "2.10.5",
