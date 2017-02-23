@@ -2,8 +2,10 @@ package scala.meta
 
 import scala.language.higherKinds
 import scala.language.implicitConversions
+import scala.meta.contrib.implicits.implicits
+import scala.meta.contrib.instances.instances
 
-package object contrib {
+package object contrib extends implicits with instances{
   implicit class XtensionTreeOps[A <: Tree](val a: A) extends AnyVal {
     @inline
     def ancestors: Seq[Tree] =
