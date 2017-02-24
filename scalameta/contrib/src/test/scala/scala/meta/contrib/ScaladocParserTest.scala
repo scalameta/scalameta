@@ -11,7 +11,7 @@ import scala.meta.tokens.Token.Comment
   */
 class ScaladocParserTest extends FunSuite {
 
-  def parseString(commentCode: String): Seq[DocToken] = {
+  private[this] def parseString(commentCode: String): Seq[DocToken] = {
     val code = commentCode.parse[Source].get
     val comments = AssociatedComments(code.tokens)
     val defnClass = code.collectFirst { case t: Defn.Class => t }.get
@@ -19,18 +19,21 @@ class ScaladocParserTest extends FunSuite {
     ScaladocParser.parseScaladoc(comment)
   }
 
+  private[this] def generateTestString(docKind: Kind): String =
+    s"${docKind.label} ${(0 until docKind.numberParameters).map(i => s"Test$docKind$i").mkString(" ")}"
+
   test("example usage") {
     assert(
       parseString(
         """
-        | /** Example scaladoc **/
-        | case class foo(bar: String)
+          | /** Example scaladoc **/
+          | case class foo(bar: String)
         """.stripMargin
       ).toString() === "List(Description(Example scaladoc))"
     )
   }
 
-  test("Indentation checks") {
+  test("indentation checks") {
 
     val expectedBody: String = "BODY"
     val expectedResult: Seq[DocToken] = Seq(DocToken(Description, expectedBody))
@@ -100,7 +103,7 @@ class ScaladocParserTest extends FunSuite {
   }
 
   // TODO: Add the rest of the labels
-  test("Label parsing") {
+  test("label parsing") {
 
     // DocText
     val textPrefix = "Body"
@@ -150,5 +153,25 @@ class ScaladocParserTest extends FunSuite {
     )
   }
 
-  // TODO: Test for multine token merging
+  test("label merging") {
+    val testStringToMerge = "Test DocText"
+    val scaladoc: String =
+      DocToken
+        .labelledTokenKinds
+        .flatMap(token => Seq(generateTestString(token), testStringToMerge))
+        .mkString("/*\n * ", "\n * ", "\n */")
+
+    val codeToParse : String =
+      s"""
+         |$scaladoc
+         |case class Foo(bar: String)
+      """.stripMargin
+
+    println(codeToParse)
+
+    val parsedScaladoc: Seq[DocToken] = parseString(codeToParse)
+
+    assert(parsedScaladoc.size === DocToken.labelledTokenKinds.size)
+    assert(parsedScaladoc.forall(_.body.endsWith(testStringToMerge)))
+  }
 }
