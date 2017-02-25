@@ -1,4 +1,4 @@
-package scala.meta.contrib.conversion
+package scala.meta.contrib.implicits
 
 import scala.meta._
 

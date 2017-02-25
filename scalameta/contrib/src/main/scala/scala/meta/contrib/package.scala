@@ -1,8 +1,6 @@
 package scala.meta
 
-import scala.language.higherKinds
-import scala.language.implicitConversions
-import scala.meta.contrib.conversion.Converters
+import scala.meta.contrib.implicits.{Converters, Equality, TreeExtensions}
 
 package object contrib
   extends TreeExtensions

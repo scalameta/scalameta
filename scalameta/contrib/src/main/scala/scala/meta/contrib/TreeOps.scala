@@ -1,11 +1,10 @@
 package scala.meta
 package contrib
 
-import scala.language.higherKinds
-
 import scala.annotation.tailrec
 import scala.collection.immutable.Seq
-import scala.meta.contrib.Equality._
+import scala.language.higherKinds
+import scala.meta.contrib.implicits.Equality._
 
 object TreeOps {
 
