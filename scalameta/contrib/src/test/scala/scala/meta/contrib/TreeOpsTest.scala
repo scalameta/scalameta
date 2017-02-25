@@ -2,8 +2,9 @@ package scala.meta
 package contrib
 
 import scala.meta.testkit.SyntaxAnalysis
-
 import org.scalatest.FunSuite
+
+import scala.meta.contrib.equality.Structurally
 
 class TreeOpsTest extends FunSuite {
   val a: Defn.Val = q"val x = 2"

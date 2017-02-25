@@ -1,7 +1,6 @@
-package scala.meta.contrib
+package scala.meta.contrib.equality
 
 import scala.language.implicitConversions
-
 import scala.meta.Tree
 
 /** Represents structural equality between trees

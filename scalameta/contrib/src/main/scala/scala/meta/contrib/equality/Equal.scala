@@ -1,4 +1,4 @@
-package scala.meta.contrib
+package scala.meta.contrib.equality
 
 /** Type class used to determine equality.
   *
