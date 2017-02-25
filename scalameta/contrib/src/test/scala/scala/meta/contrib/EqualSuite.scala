@@ -3,8 +3,6 @@ package contrib
 import scala.meta.testkit._
 import org.scalatest.FunSuite
 
-import scala.meta.contrib.equality.{Structurally, Syntactically}
-
 class EqualSuite extends FunSuite {
   val a: Stat = "val x = 2 // foo".parse[Stat].get
   val b: Defn.Val = q"val x = 2"
