@@ -17,9 +17,9 @@ class ConverterSuite extends FunSuite {
     assert(typeName.asTerm.equal[Structurally](Term.Name("Foo")))
   }
 
-  test("asPatVarTerm") {
+  test("asPat") {
     val termName = Term.Name("Foo")
-    assert(termName.asPatVarTerm.equal[Structurally](Pat.Var.Term(Term.Name("Foo"))))
+    assert(termName.asPat.equal[Structurally](Pat.Var.Term(Term.Name("Foo"))))
   }
 
   test("asCtorRef") {
