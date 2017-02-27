@@ -10,7 +10,7 @@ import scala.meta.tokens.Token.Comment
 object ScaladocParser {
 
   /**
-    * Parses a scaladoc [[Comment]].
+    * Parses a scaladoc [[scala.meta.tokens.Token.Comment]].
     */
   def parseScaladoc(comment: Comment): Seq[DocToken] = {
 
