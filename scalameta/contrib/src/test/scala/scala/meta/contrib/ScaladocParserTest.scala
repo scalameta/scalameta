@@ -1,9 +1,8 @@
 package scala.meta.contrib
-
 import org.scalatest.FunSuite
 
-import scala.meta.{Defn, _}
-import scala.meta.contrib.DocToken._
+import scala.meta.contrib._
+import scala.meta.{Defn, Source, _}
 import scala.meta.tokens.Token.Comment
 
 /**
@@ -19,7 +18,7 @@ class ScaladocParserTest extends FunSuite {
     ScaladocParser.parseScaladoc(comment)
   }
 
-  private[this] def generateTestString(docKind: Kind): String =
+  private[this] def generateTestString(docKind: LabelledKind): String =
     s"${docKind.label} ${(0 until docKind.numberParameters).map(i => s"Test$docKind$i").mkString(" ")}"
 
   test("example usage") {
@@ -89,6 +88,7 @@ class ScaladocParserTest extends FunSuite {
     )
     assert(
       parseString(
+        // @formatter:off
         s"""
          /**
           *
@@ -99,6 +99,7 @@ class ScaladocParserTest extends FunSuite {
           case class foo(bar: String)
          """.stripMargin
       ) === expectedResult
+      // @formatter:on
     )
   }
 
@@ -153,25 +154,73 @@ class ScaladocParserTest extends FunSuite {
     )
   }
 
+  test("code blocks") {
+
+    val testDescription = "This is a codeblock:"
+
+    val codeBlock1 = "\"HELLO MARIANO\""
+    val codeBlock2 = "\"HELLO SORAYA\""
+    val complexCodeBlock =
+      """
+        |ggmqwogmwogmqwomgq
+        |gmqwgoiqmgoqmwomw
+      """.stripMargin.trim
+
+    val result: Seq[DocToken] =
+      parseString(
+        s"""
+          /**
+            * $testDescription {{{ $codeBlock1 }}}
+            * $testDescription
+            * {{{ $codeBlock2 }}}
+            *
+            * $testDescription
+            *
+            * {{{
+            *
+            *   $complexCodeBlock
+            *
+            * }}}
+            */
+            case class foo(bar : String)
+       """.stripMargin
+      )
+
+    assert(
+      result.map(_.body.getOrElse("")) === Seq(
+        testDescription,
+        codeBlock1,
+        testDescription,
+        codeBlock2,
+        testDescription,
+        complexCodeBlock
+      )
+    )
+  }
+
   test("label merging") {
     val testStringToMerge = "Test DocText"
     val scaladoc: String =
-      DocToken
-        .labelledTokenKinds
+      DocToken.labelledTokenKinds
         .flatMap(token => Seq(generateTestString(token), testStringToMerge))
         .mkString("/*\n * ", "\n * ", "\n */")
 
-    val codeToParse : String =
+    val codeToParse: String =
       s"""
          |$scaladoc
          |case class Foo(bar: String)
       """.stripMargin
 
-    println(codeToParse)
-
     val parsedScaladoc: Seq[DocToken] = parseString(codeToParse)
 
+    // Inherit doc does not merge
     assert(parsedScaladoc.size === DocToken.labelledTokenKinds.size)
-    assert(parsedScaladoc.forall(_.body.endsWith(testStringToMerge)))
+
+    // Inherit doc does not merge
+    assert(
+      parsedScaladoc
+        .filterNot(_.kind == DocToken.InheritDoc)
+        .forall(_.body.getOrElse("").endsWith(testStringToMerge))
+    )
   }
 }
