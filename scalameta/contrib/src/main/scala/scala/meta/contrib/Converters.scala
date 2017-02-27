@@ -7,7 +7,7 @@ trait Converters {
     def asTerm: Term.Name = Term.Name(n.value)
     def asType: Type.Name = Type.Name(n.value)
     def asCtorRef: Ctor.Ref.Name = Ctor.Ref.Name(n.value)
-    def asPatVarTerm: Pat.Var.Term = Pat.Var.Term(n.asTerm)
+    def asPat: Pat.Var.Term = Pat.Var.Term(n.asTerm)
   }
 }
 
