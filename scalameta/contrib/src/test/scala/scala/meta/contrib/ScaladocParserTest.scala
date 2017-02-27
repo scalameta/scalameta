@@ -2,8 +2,10 @@ package scala.meta.contrib
 
 import org.scalatest.FunSuite
 
-import scala.meta.contrib.{AssociatedComments, _}
-import scala.meta.{Defn, Source, _}
+import scala.meta.contrib._
+import scala.meta.{Defn, _}
+import DocToken._
+
 import scala.meta.tokens.Token.Comment
 
 /**
@@ -77,37 +79,23 @@ class ScaladocParserTest extends FunSuite {
   }
 
   test("paragraph parsing") {
-    val expectedBody = "BODY"
+    val descriptionBody = "Description Body"
     assert(
       parseString(
         s"""
          /**
           *
-          *$expectedBody
+          *$descriptionBody
           *
-          */
-          case class foo(bar: String)
-         """
-      ) === Seq(DocToken(Paragraph), DocToken(Description, expectedBody), DocToken(Paragraph))
-    )
-    assert(
-      parseString(
-        s"""
-         /**
-          *
-          *$expectedBody
-          *
-          *$expectedBody
+          *$descriptionBody
           *
           */
           case class foo(bar: String)
          """
       ) === Seq(
+        DocToken(Description, descriptionBody),
         DocToken(Paragraph),
-        DocToken(Description, expectedBody),
-        DocToken(Paragraph),
-        DocToken(Description, expectedBody),
-        DocToken(Paragraph)
+        DocToken(Description, descriptionBody)
       )
     )
   }
@@ -152,6 +140,28 @@ class ScaladocParserTest extends FunSuite {
       DocToken(Paragraph),
       DocToken(CodeBlock, complexCodeBlock)
     )
+    assert(result === expectation)
+  }
+
+  test("headings") {
+    val headingBody = "Overview"
+    val subHeadingBody = "Of the heading"
+
+    val result: Seq[DocToken] =
+      parseString(
+        s"""
+        /**
+          * =$headingBody=
+          * ==$subHeadingBody==
+          */
+         case class foo(bar : String)
+         """
+      )
+    val expectation = Seq(
+      DocToken(Heading, headingBody),
+      DocToken(SubHeading, subHeadingBody)
+    )
+
     assert(result === expectation)
   }
 

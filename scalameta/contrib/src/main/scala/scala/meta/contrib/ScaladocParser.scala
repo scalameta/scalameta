@@ -13,17 +13,25 @@ object ScaladocParser {
     * Parses a scaladoc [[Comment]].
     */
   def parseScaladoc(comment: Comment): Seq[DocToken] = {
+
     def parseRec(toParse: String): Seq[DocToken] = {
       parsers
         .find(_.parse(toParse).index != 0)
         .map(_.parse(toParse)) match {
         case Some(p: Parsed.Success[DocToken, _, _]) =>
-          // Parse was successful, check the remaining scaladoc
-          val remainingScaladoc = toParse.substring(p.index, toParse.length)
-          // If only paragraphs are missing continue
+          // Parse was successful, check the remaining Scaladoc
+          val remainingScaladoc =
+            toParse
+              .substring(p.index, toParse.length)
+              .dropWhile(c => c == ' ')
+
           if (remainingScaladoc.trim.nonEmpty || remainingScaladoc.contains("\n\n")) {
             // Adds the parsed token to the list of tokens and parse the rest of the string recursively.
-            Seq(p.value) ++ parseRec(remainingScaladoc.dropWhile(_ == " "))
+            if (remainingScaladoc.take(2) == "\n\n") {
+              Seq(p.value, DocToken(Paragraph)) ++ parseRec(remainingScaladoc.dropWhile(_ == '\n'))
+            } else {
+              Seq(p.value) ++ parseRec(remainingScaladoc.dropWhile(c => c == ' ' || c == '\n'))
+            }
           } else {
             // No more elements to parse, end recursion.
             Seq(p.value)
@@ -60,6 +68,7 @@ object ScaladocParser {
       .map(_.trim)
       .toSeq
       .mkString("\n")
+      .trim
   }
 
   /**
@@ -81,6 +90,25 @@ object ScaladocParser {
           ~ ((AnyChar ~ !"}}}").rep ~ AnyChar).!.map(c => DocToken(CodeBlock, c.trim))
         // Code block end
           ~ "}}}"
+      )
+    // Parser for heading instances
+    val headingParser =
+      P(
+        // Code block start
+        "="
+        // Heading description
+          ~ ((AnyChar ~ !"=").rep ~ AnyChar).!.map(c => DocToken(Heading, c.trim))
+        // Code block end
+          ~ "="
+      )
+    val subHeadingParser =
+      P(
+        // Code block start
+        "=="
+        // Heading description
+          ~ ((AnyChar ~ !"==").rep ~ AnyChar).!.map(c => DocToken(SubHeading, c.trim))
+        // Code block end
+          ~ "=="
       )
 
     // Parser for Inheritdoc instances
@@ -110,7 +138,14 @@ object ScaladocParser {
     // Fallback parser(Used when no label or description is provided)
     val descriptionParser = bodyParser.map(DocToken(Description, _))
 
-    // Merges all the parsers in a single list, with the description parser as the fallback one.
-    (Seq(paragraphParser, inheritDocParser, codeBlockParser) ++ labelledParsers) :+ descriptionParser
+    // Merges all the parsers in a single list, with the description parser as the fallback,
+    // in case no valid parser was found for an Scaladoc comment.
+    (Seq(
+      paragraphParser,
+      subHeadingParser,
+      headingParser,
+      inheritDocParser,
+      codeBlockParser
+    ) ++ labelledParsers) :+ descriptionParser
   }
 }
