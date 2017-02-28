@@ -190,4 +190,23 @@ class ScaladocParserTest extends FunSuite {
         .forall(_.body.getOrElse("").endsWith(testStringToMerge))
     )
   }
+
+  test("references") {
+
+    val reference1 = "Scala.some"
+    val reference2 = "java.util.Random"
+
+    val codeToParse: String =
+      s"""
+         |/**
+         | * Random description with references [[$reference1]] and [[$reference2]].
+         | */
+         |case class Foo(bar: String) extends AnyVal
+      """.stripMargin
+
+    assert(
+      parseString(codeToParse).head.references ===
+        Seq(DocToken.Reference(reference1), DocToken.Reference(reference2))
+    )
+  }
 }
