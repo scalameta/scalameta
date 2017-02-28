@@ -192,7 +192,16 @@ class ScaladocParserTest extends FunSuite {
   }
 
   test("references") {
-
+    // Scaladoc without references
+    assert(
+      parseString(
+        """
+          | /** Example scaladoc **/
+          | case class foo(bar: String)
+        """.stripMargin
+      ).head.references === Nil
+    )
+    // Scaladoc with references
     val reference1 = "Scala.some"
     val reference2 = "java.util.Random"
 
