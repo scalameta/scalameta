@@ -13,7 +13,7 @@ object TreeOps {
 
   def contains[F[x <: Tree] <: TreeEquality[x]](tree: Tree)(
       toFind: Tree)(implicit conv: Tree => F[Tree], eqEv: Equal[F[Tree]]): Boolean =
-    find(tree)(_.equal[F](toFind)).nonEmpty
+    find(tree)(_.isEqual[F](toFind)).nonEmpty
 
   def find(tree: Tree)(f: Tree => Boolean): Option[Tree] =
     collectFirst(tree) { case x if f(x) => x }

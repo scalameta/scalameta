@@ -10,22 +10,22 @@ class ConverterSuite extends FunSuite {
 
   test("asType") {
     val termName = Term.Name("Foo")
-    assert(termName.asType.equal[Structurally](Type.Name("Foo")))
+    assert(termName.asType.isEqual(Type.Name("Foo")))
   }
 
   test("asTerm") {
     val typeName = Type.Name("Foo")
-    assert(typeName.asTerm.equal[Structurally](Term.Name("Foo")))
+    assert(typeName.asTerm.isEqual(Term.Name("Foo")))
   }
 
   test("asPat") {
     val termName = Term.Name("Foo")
-    assert(termName.asPat.equal[Structurally](Pat.Var.Term(Term.Name("Foo"))))
+    assert(termName.asPat.isEqual(Pat.Var.Term(Term.Name("Foo"))))
   }
 
   test("asCtorRef") {
     val termName = Term.Name("Foo")
-    assert(termName.asCtorRef.equal[Structurally](Ctor.Ref.Name("Foo")))
+    assert(termName.asCtorRef.isEqual(Ctor.Ref.Name("Foo")))
   }
 
 }

@@ -18,7 +18,7 @@ class Syntactically[+A <: Tree](val tree: A) extends TreeEquality[A] {
 object Syntactically {
   implicit def SyntacticEq[A <: Tree]: Equal[Syntactically[A]] =
     new Equal[Syntactically[A]] {
-      override def equal(a: Syntactically[A], b: Syntactically[A]): Boolean = a.equals(b)
+      override def isEqual(a: Syntactically[A], b: Syntactically[A]): Boolean = a.equals(b)
     }
   implicit def toSyntactic[A <: Tree](e: A): Syntactically[A] = new Syntactically[A](e)
 }

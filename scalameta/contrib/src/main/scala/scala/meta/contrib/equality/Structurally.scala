@@ -43,7 +43,7 @@ object Structurally {
 
   implicit def StructuralEq[A <: Tree]: Equal[Structurally[A]] =
     new Equal[Structurally[A]] {
-      override def equal(a: Structurally[A], b: Structurally[A]): Boolean = a.equals(b)
+      override def isEqual(a: Structurally[A], b: Structurally[A]): Boolean = a.equals(b)
     }
 
   implicit def toStructural[A <: Tree](e: A): Structurally[A] = new Structurally[A](e)
