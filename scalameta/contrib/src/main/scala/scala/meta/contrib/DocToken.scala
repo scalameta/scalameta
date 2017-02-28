@@ -1,7 +1,6 @@
 package scala.meta.contrib
 
-import fastparse.all._
-import fastparse.core.Parsed
+import scala.util.matching.Regex
 
 /**
   * Represents a scaladoc line.
@@ -21,20 +20,13 @@ case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[Stri
     */
   def references: Seq[DocToken.Reference] =
     body
-      .map { b =>
-        {
-          def parseBodyFrom(idx: Int): Seq[DocToken.Reference] = {
-            DocToken.referenceParser
-              .parse(b, idx) match {
-              case p: Parsed.Success[String, _, _] =>
-                Seq(DocToken.Reference(p.value)) ++ parseBodyFrom(p.index)
-              case _ => Seq[DocToken.Reference]()
-            }
-          }
-
-          parseBodyFrom(0)
-        }
-      }
+      .map(
+        DocToken.referenceRegex
+          .findAllMatchIn(_)
+          .map(_.group(1))
+          .map(DocToken.Reference)
+          .toList
+      )
       .getOrElse(Nil)
 }
 
@@ -49,14 +41,7 @@ object DocToken {
   /**
     * Parser that for obtaining a class reference like '[[scala.Some]]' from an scaladoc body.
     */
-  private val referenceParser = P(
-    // Removes the elements previous to the references.
-    ((AnyChar ~ !"[[").rep ~ AnyChar).?
-    // Retrieves the element within a
-      ~ "[[" ~
-      ((AnyChar ~ !"]]").rep ~ AnyChar).!
-      ~ "]]"
-  )
+  private val referenceRegex: Regex = "\\[\\[([^]]+)\\]\\]".r
 
   /**
     * Represents an documentation code reference, like '[[scala.Some]]'.
