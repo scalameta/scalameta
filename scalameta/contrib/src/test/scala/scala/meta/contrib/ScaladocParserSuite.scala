@@ -11,7 +11,7 @@ import scala.meta.tokens.Token.Comment
 /**
   * Test for [[ScaladocParser]]
   */
-class ScaladocParserTest extends FunSuite {
+class ScaladocParserSuite extends FunSuite {
 
   private[this] def parseString(commentCode: String): Seq[DocToken] = {
     val code = commentCode.parse[Source].get
