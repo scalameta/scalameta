@@ -2,7 +2,6 @@ package scala.meta
 package contrib
 
 import scala.meta.testkit.SyntaxAnalysis
-
 import org.scalatest.FunSuite
 
 class TreeOpsTest extends FunSuite {

@@ -4,6 +4,7 @@ import org.scalatest.FunSuite
 
 import scala.meta.contrib._
 import scala.meta._
+import scala.meta.contrib.equality.Structurally
 
 class ConverterSuite extends FunSuite {
 

@@ -1,7 +1,6 @@
 package scala.meta
 package contrib
 import scala.meta.testkit._
-
 import org.scalatest.FunSuite
 
 class EqualSuite extends FunSuite {
