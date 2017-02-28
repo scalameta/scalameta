@@ -16,7 +16,7 @@ case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[Stri
   }
 
   /**
-    * Obtains all the references from a [[DocToken]].
+    * Obtains all the code references from this DocToken.
     */
   def references: Seq[DocToken.Reference] =
     body
@@ -39,12 +39,12 @@ case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[Stri
 object DocToken {
 
   /**
-    * Parser that for obtaining a class reference like '[[scala.Some]]' from an scaladoc body.
+    * Parser that for obtaining a class reference from an scaladoc body.
     */
   private val referenceRegex: Regex = "\\[\\[([^]]+)\\]\\]".r
 
   /**
-    * Represents an documentation code reference, like '[[scala.Some]]'.
+    * Represents an documentation code reference.
     */
   case class Reference(to: String) extends AnyVal {
 
