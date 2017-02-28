@@ -1,10 +1,9 @@
 package scala.meta.contrib
 
-import DocToken._
 import fastparse.all._
 import fastparse.core.Parsed
 
-import scala.meta.Syntax
+import scala.meta.contrib.DocToken._
 import scala.meta.tokens.Token.Comment
 
 object ScaladocParser {
@@ -41,34 +40,7 @@ object ScaladocParser {
       }
     }
 
-    parseRec(prepareScaladoc(comment))
-  }
-
-  /**
-    * List of reserved symbols used on scaladoc documentation.
-    */
-  private[this] val scaladocSymbols = Seq('/', '*', ' ')
-
-  /**
-    * Prepares the scaladoc removing all the notation symbols leaving
-    * only its content, for making it easier to parse it.
-    */
-  private[this] def prepareScaladoc(scaladoc: Comment): String = {
-
-    val trimmedScaladoc: String = scaladoc.show[Syntax].trim
-
-    require(
-      requirement = trimmedScaladoc.startsWith("/*") && trimmedScaladoc.endsWith("*/"),
-      message = "Input comment is not a Scaladoc"
-    )
-
-    trimmedScaladoc.lines
-      .map(_.dropWhile(scaladocSymbols.contains)) // Removes leading comments symbols
-      .map(l => l.take(l.lastIndexWhere(!scaladocSymbols.contains(_)) + 1)) // Remove trailing comments symbols
-      .map(_.trim)
-      .toSeq
-      .mkString("\n")
-      .trim
+    parseRec(comment.content)
   }
 
   /**
