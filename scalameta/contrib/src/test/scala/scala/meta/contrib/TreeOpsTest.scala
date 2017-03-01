@@ -29,7 +29,7 @@ class TreeOpsTest extends FunSuite {
   }
 
   test("ancestors") {
-    val lit: Tree = q"val x = { 2 + 3 }".find(_.equal[Structurally](q"3")).get
+    val lit: Tree = q"val x = { 2 + 3 }".find(_.isEqual(q"3")).get
     assert(lit.ancestors.length == 3)
     assert(q"val x = { 2 + 3 }".ancestors.isEmpty)
   }

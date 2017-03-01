@@ -9,7 +9,7 @@ import scala.meta.Tree
   * This implementation is however more efficient that doing
   * a.structure == b.structure.
   */
-class Structurally[+A <: Tree](val tree: A) {
+class Structurally[+A <: Tree](val tree: A) extends TreeEquality[A] {
   // TODO(olafur) more efficient hashCode
   private lazy val hash: Int = tree.structure.hashCode
   override def hashCode(): Int = hash
@@ -43,7 +43,7 @@ object Structurally {
 
   implicit def StructuralEq[A <: Tree]: Equal[Structurally[A]] =
     new Equal[Structurally[A]] {
-      override def equal(a: Structurally[A], b: Structurally[A]): Boolean = a.equals(b)
+      override def isEqual(a: Structurally[A], b: Structurally[A]): Boolean = a.equals(b)
     }
 
   implicit def toStructural[A <: Tree](e: A): Structurally[A] = new Structurally[A](e)

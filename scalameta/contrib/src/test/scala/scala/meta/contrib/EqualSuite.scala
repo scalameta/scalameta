@@ -11,8 +11,8 @@ class EqualSuite extends FunSuite {
   val e: Defn.Class = q"class Foo { val x = 2 }"
 
   test("syntactic") {
-    assert(!a.equal[Syntactically](b))
-    assert(b.equal[Syntactically](c))
+    assert(!a.isEqual[Syntactically](b))
+    assert(b.isEqual[Syntactically](c))
     assert(!e.contains[Syntactically](a))
     assert(e.contains[Syntactically](b))
     assert(!e.contains[Structurally](d))
@@ -20,11 +20,12 @@ class EqualSuite extends FunSuite {
   }
 
   test("structural") {
-    assert(a.equal[Structurally](b))
-    assert(b.equal[Structurally](c))
-    assert(e.contains[Structurally](a))
-    assert(e.contains[Structurally](b))
-    assert(!e.contains[Structurally](d))
+    assertTypeError("""c.isEqual(d)""") // Defn.Val cannot be Defn.Def
+    assert(a.isEqual(b))
+    assert(b.isEqual(c))
+    assert(e.contains(a))
+    assert(e.contains(b))
+    assert(!e.contains(d))
     assert(Set[Structurally[Tree]](a, b, c, d).size == 2)
   }
 
@@ -42,7 +43,7 @@ class EqualSuite extends FunSuite {
       val b = ast.transform(typeNameTransformer)
 
       val refEqual = a.equals(b) && transformWillChangeRef // should be false
-      val structuralEqual = a.equal[Structurally](b) // should be true
+      val structuralEqual = a.isEqual(b) // should be true
 
       if (refEqual || !structuralEqual) Seq(a)
       else Nil
