@@ -20,6 +20,7 @@ class EqualSuite extends FunSuite {
   }
 
   test("structural") {
+    assertTypeError("""c.isEqual(d)""") // Defn.Val cannot be Defn.Def
     assert(a.isEqual(b))
     assert(b.isEqual(c))
     assert(e.contains(a))

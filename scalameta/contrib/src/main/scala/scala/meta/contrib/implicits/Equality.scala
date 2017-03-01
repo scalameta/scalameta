@@ -20,13 +20,13 @@ trait Equality {
 
     @inline
     @deprecated("Use isEqual instead.", "1.7.0")
-    def equal[F[x <: Tree] <: TreeEquality[x]](b: Tree)(implicit conv: Tree => F[Tree],
-                                                          eqEv: Equal[F[Tree]]): Boolean =
+    def equal[F[x <: Tree] <: TreeEquality[x]](b: A)(implicit conv: Tree => F[Tree],
+                                                     eqEv: Equal[F[Tree]]): Boolean =
       isEqual(b)
 
     @inline
-    def isEqual[F[x <: Tree] <: TreeEquality[x]](b: Tree)(implicit conv: Tree => F[Tree],
-                                                          eqEv: Equal[F[Tree]]): Boolean =
+    def isEqual[F[x <: Tree] <: TreeEquality[x]](b: A)(implicit conv: Tree => F[Tree],
+                                                       eqEv: Equal[F[Tree]]): Boolean =
       eqEv.isEqual(a, b)
   }
 }
