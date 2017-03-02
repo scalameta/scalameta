@@ -99,4 +99,18 @@ class DatabaseSuite extends OnlineMirrorSuite {
       assert(second.symbol === Symbol("_empty_.Foo.bar(II)I."))
     }
   )
+
+  targeted(
+    """
+      |case class User(name: String, age: Int)
+      |object Library {
+      |  val u: User = ???
+      |  u.<<copy>>(<<age>> = 43)
+      |}
+    """.trim.stripMargin,
+    (copy, age) => {
+      assert(copy.symbol === Symbol("_empty_.User#copy(Ljava/lang/String;I)LUser;."))
+      assert(age.symbol === Symbol("_empty_.User#copy(Ljava/lang/String;I)LUser;.(age)"))
+    }
+  )
 }

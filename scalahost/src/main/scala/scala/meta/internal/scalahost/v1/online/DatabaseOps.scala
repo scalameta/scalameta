@@ -196,7 +196,7 @@ trait DatabaseOps { self: Mirror =>
               gtree match {
                 case gtree: g.ValDef if gtree.symbol == gtree.symbol.owner.thisSym =>
                   tryMstart(gstart)
-                case gtree: g.MemberDef if gtree.symbol.isSynthetic =>
+                case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
                 // NOTE: never interested in synthetics except for the ones above
                 case gtree: g.PackageDef =>
                 // NOTE: capture PackageDef.pid instead
@@ -221,6 +221,10 @@ trait DatabaseOps { self: Mirror =>
                   // NOTE: List() gets desugared into mkAttributedRef(NilModule)
                   tryMstart(gstart)
                 case gtree: g.RefTree =>
+                  def prohibited(name: String) = {
+                    name.contains(g.nme.DEFAULT_GETTER_STRING)
+                  }
+                  if (prohibited(gtree.name.decoded)) return
                   tryMstart(gpoint)
                 case gtree: g.Import =>
                   val sels = gtree.selectors.flatMap(sel =>
