@@ -30,3 +30,7 @@ secrets.yml
 
 repos.tar.gz
 
+.classpath
+.settings
+.cache*
+.project
