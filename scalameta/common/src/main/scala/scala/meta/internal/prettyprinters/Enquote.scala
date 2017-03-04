@@ -10,11 +10,26 @@ case object TripleQuotes extends QuoteStyle { override def toString = "\"\"\"" }
 object enquote {
   def apply(s: String, style: QuoteStyle): String = {
     // TODO: comprehensive handling (e.g. escape triple quotes in triple quotes)
-    val codepage = Map(
-      "\"" -> (if (style == DoubleQuotes) "\\\"" else "\""),
-      "\'" -> (if (style == SingleQuotes) "\\\'" else "\'")
-    )
-    val escaped = if (style != TripleQuotes) escape(s).flatMap(c => codepage.getOrElse(c.toString, c.toString)) else s
-    style.toString + escaped + style.toString
+    val sb = new StringBuilder(style.toString)
+    if(style == TripleQuotes)
+      sb.append(s)
+    else {
+      s.foreach {
+        case '\t' => sb.append("\\t")
+        case '\b' => sb.append("\\b")
+        case '\n' => sb.append("\\n")
+        case '\r' => sb.append("\\r")
+        case '\f' => sb.append("\\f")
+        case '\\' => sb.append("\\\\")
+        case '"' if style eq DoubleQuotes =>
+          sb.append("\\\"")
+        case ''' if style eq SingleQuotes =>
+          sb.append("\\\'")
+        case c =>
+          sb.append(c)
+      }
+    }
+    sb.append(style.toString)
+    sb.toString
   }
 }
