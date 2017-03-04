@@ -11,7 +11,7 @@ object ScaladocParser {
   /**
     * Parses a scaladoc comment.
     */
-  def parseScaladoc(comment: Comment): Seq[DocToken] = {
+  def parseScaladoc(comment: Comment): Option[Seq[DocToken]] = {
 
     def parseRec(toParse: String): Seq[DocToken] = {
       parsers
@@ -40,7 +40,7 @@ object ScaladocParser {
       }
     }
 
-    parseRec(comment.content)
+    comment.content.map(parseRec)
   }
 
   /**

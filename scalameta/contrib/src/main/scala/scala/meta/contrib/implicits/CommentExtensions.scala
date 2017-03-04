@@ -11,10 +11,10 @@ trait CommentExtensions {
     def isScaladoc: Boolean = CommentOps.isScaladoc(c)
 
     @inline
-    def content: String = CommentOps.content(c)
+    def content: Option[String] = CommentOps.content(c)
 
     @inline
-    def docTokens: Seq[DocToken] = CommentOps.docTokens(c)
+    def docTokens: Option[Seq[DocToken]] = CommentOps.docTokens(c)
   }
 
 }
