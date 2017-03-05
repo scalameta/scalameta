@@ -1,3 +1,15 @@
+## Ticket Guidelines
+
+- **Bugs**:
+  - Contain steps to reproduce.
+  - Contain a code sample that exhibits the error.
+  - *Ideally* contain your scalameta/scalahost/paradise versions.
+  - *Ideally* contain the scala version you are using.
+  - Inform us if the issue is blocking you with no visible workaround
+    - This will give the ticket priority
+- **Features**
+  - Show a code example of how that feature would be used.
+
 ## Contribution Guidelines
 
 - **All code PRs should**:
