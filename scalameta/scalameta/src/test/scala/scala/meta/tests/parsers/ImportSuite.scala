@@ -4,6 +4,7 @@ package parsers
 import scala.meta.{Name => _, _}, Importee._, Term.{This, Name => TermName, Select, Super}
 import scala.meta.Name.{Anonymous, Indeterminate}
 import scala.meta.dialects.Scala211
+import scala.meta.parsers.ParseException
 
 class ImportSuite extends ParseSuite {
   test("import foo.bar") {
@@ -72,5 +73,11 @@ class ImportSuite extends ParseSuite {
   test("import foo.{bar, baz => _, _}") {
     val Import(Importer(TermName("foo"), (Name(Indeterminate("bar"))) :: Unimport(Indeterminate("baz")) :: Wildcard() :: Nil) :: Nil) =
       templStat("import foo.{bar, baz => _, _}")
+  }
+
+  test("import a.b.{ _, c => _ }") {
+    intercept[ParseException] {
+      templStat("import a.b.{ _, c => _ }")
+    }
   }
 }

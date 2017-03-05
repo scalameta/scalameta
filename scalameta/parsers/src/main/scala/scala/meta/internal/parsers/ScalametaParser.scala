@@ -2936,8 +2936,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def importees(): List[Importee] =
-    if (token.isNot[LeftBrace]) List(importWildcardOrName())
-    else inBraces(commaSeparated(importee()))
+    if (token.isNot[LeftBrace]) {
+      List(importWildcardOrName())
+    } else {
+      val importees = inBraces(commaSeparated(importee()))
+
+      if (importees.nonEmpty) {
+        importees.init.foreach {
+          case importee: Importee.Wildcard =>
+            syntaxError("Wildcard import must be in the last position", importee.pos)
+
+            case _ => ()
+          }
+        }
+
+      importees
+    }
 
   def importWildcardOrName(): Importee = autoPos {
     if (token.is[Underscore]) { next(); Importee.Wildcard() }
