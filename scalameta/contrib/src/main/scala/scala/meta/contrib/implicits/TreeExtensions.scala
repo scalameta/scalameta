@@ -1,11 +1,9 @@
 package scala.meta.contrib.implicits
 
 import scala.language.higherKinds
-
 import scala.meta.Tree
-import scala.meta.contrib.TreeOps
-import scala.meta.contrib.equality.Equal
-import scala.meta.contrib.equality.TreeEquality
+import scala.meta.contrib.{Equal, TreeOps}
+import scala.meta.prettyprinters.Show
 
 trait TreeExtensions {
   implicit class XtensionTreeOps[A <: Tree](a: A) {
@@ -38,8 +36,7 @@ trait TreeExtensions {
       TreeOps.exists(a)(f)
 
     @inline
-    def contains[F[x <: Tree] <: TreeEquality[x]](toFind: Tree)(implicit conv: Tree => F[Tree],
-                                                                eqEv: Equal[F[Tree]]): Boolean =
+    def contains[F[x] <: Show[x]](toFind: A)(ev: Equal[F]): Boolean =
       TreeOps.contains(a)(toFind)
   }
 }

@@ -1,9 +1,11 @@
 package scala.meta
 
-import scala.meta.contrib.implicits.{Converters, Equality, TreeExtensions, CommentExtensions}
+import scala.meta.contrib.implicits.{CommentExtensions, Converters, EqualityImplicits, TreeExtensions}
+import scala.meta.contrib.instances.EqualityInstances
 
 package object contrib
   extends TreeExtensions
   with CommentExtensions
-  with Equality
+  with EqualityImplicits
+  with EqualityInstances
   with Converters
