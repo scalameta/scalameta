@@ -11,5 +11,6 @@ package object contrib
   with ExtractStatInstances
   with ExtractStatSubtypeInstances
   with ExtractModsInstances
+  with ExtractAnnotationInstances
   with ExtractPimps
 
