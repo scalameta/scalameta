@@ -1,16 +1,18 @@
 package scala.meta.contrib
 
 import org.scalatest.FunSuite
-
 import scala.meta.contrib.DocToken._
 import scala.meta.testkit._
 import scala.meta.tokens.Token.Comment
 import scala.meta.{Defn, _}
 import scala.util.Try
 
+import org.scalatest.Ignore
+
 /**
   * Test for [[ScaladocParser]]
   */
+@Ignore
 class ScaladocParserSuite extends FunSuite {
 
   private[this] def parseString(commentCode: String): Option[Seq[DocToken]] = {
@@ -232,7 +234,7 @@ class ScaladocParserSuite extends FunSuite {
     // Checks that the parser does not crash with any input
     val errors = SyntaxAnalysis.onParsed[Tree](ContribSuite.corpus) { ast =>
       val commentTokens: Seq[Comment] = ast.tokens.collect {
-        case c: Token.Comment => c
+        case c: tokens.Token.Comment => c
       }
       if (commentTokens.map(c => Try(ScaladocParser.parseScaladoc(c))).exists(_.isFailure)) {
         Seq(ast)
