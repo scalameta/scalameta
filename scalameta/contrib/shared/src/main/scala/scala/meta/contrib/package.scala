@@ -10,5 +10,6 @@ package object contrib
   with Converters
   with ExtractStatInstances
   with ExtractStatSubtypeInstances
+  with ExtractModsInstances
   with ExtractPimps
 
