@@ -13,23 +13,24 @@ object CommentOps {
     rawSyntax.startsWith("/**") && rawSyntax.endsWith("*/")
   }
 
-  def content(c: Comment): String = {
+  def content(c: Comment): Option[String] = {
     val rawSyntax: String = c.show[Syntax].trim
-    if (isScaladoc(c)) {
-      rawSyntax.lines
-        .map(_.dropWhile(scaladocSymbols.contains)) // Removes leading comments symbols
-        .map(l => l.take(l.lastIndexWhere(!scaladocSymbols.contains(_)) + 1)) // Remove trailing comments symbols
-        .map(_.trim)
-        .toSeq
-        .mkString("\n")
-        .trim
+    if (c.isScaladoc) {
+      Option(
+        rawSyntax
+          .lines
+          .map(_.dropWhile(scaladocSymbols.contains)) // Removes leading comments symbols
+          .map(l => l.take(l.lastIndexWhere(!scaladocSymbols.contains(_)) + 1)) // Remove trailing comments symbols
+          .map(_.trim)
+          .toSeq
+          .mkString("\n")
+          .trim
+      )
     } else {
-      rawSyntax
-        .take(rawSyntax.lastIndexWhere(!scaladocSymbols.contains(_)) + 1) // Remove trailing comments symbols
-        .dropWhile(scaladocSymbols.contains) // Removes leading comments symbols
+      None
     }
   }
 
   @inline
-  def docTokens(c: Comment): Seq[DocToken] = ScaladocParser.parseScaladoc(c)
+  def docTokens(c: Comment): Option[Seq[DocToken]] = ScaladocParser.parseScaladoc(c)
 }

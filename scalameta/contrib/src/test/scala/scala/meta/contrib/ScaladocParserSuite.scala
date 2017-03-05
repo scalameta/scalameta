@@ -13,7 +13,7 @@ import scala.util.Try
   */
 class ScaladocParserSuite extends FunSuite {
 
-  private[this] def parseString(commentCode: String): Seq[DocToken] = {
+  private[this] def parseString(commentCode: String): Option[Seq[DocToken]] = {
     val code = commentCode.parse[Source].get
     val comments = AssociatedComments(code.tokens)
     val defnClass = code.collectFirst { case t: Defn.Class => t }.get
@@ -31,14 +31,14 @@ class ScaladocParserSuite extends FunSuite {
           | /** Example scaladoc **/
           | case class foo(bar: String)
         """.stripMargin
-      ).toString() === "List(Description(Example scaladoc))"
+      ).toString === Option("List(Description(Example scaladoc))")
     )
   }
 
   test("indentation checks") {
 
     val expectedBody: String = "BODY"
-    val expectedResult: Seq[DocToken] = Seq(DocToken(Description, expectedBody))
+    val expectedResult: Option[Seq[DocToken]] = Option(Seq(DocToken(Description, expectedBody)))
 
     assert(
       parseString(
@@ -92,10 +92,12 @@ class ScaladocParserSuite extends FunSuite {
           */
           case class foo(bar: String)
          """
-      ) === Seq(
-        DocToken(Description, descriptionBody),
-        DocToken(Paragraph),
-        DocToken(Description, descriptionBody)
+      ) === Option(
+        Seq(
+          DocToken(Description, descriptionBody),
+          DocToken(Paragraph),
+          DocToken(Description, descriptionBody)
+        )
       )
     )
   }
@@ -112,7 +114,7 @@ class ScaladocParserSuite extends FunSuite {
         |gmqwgoiqmgoqmwomw
       """.stripMargin.trim
 
-    val result: Seq[DocToken] =
+    val result: Option[Seq[DocToken]] =
       parseString(
         s"""
           /**
@@ -130,15 +132,17 @@ class ScaladocParserSuite extends FunSuite {
        """.stripMargin
       )
 
-    val expectation = Seq(
-      DocToken(Description, testDescription),
-      DocToken(CodeBlock, codeBlock1),
-      DocToken(Description, testDescription),
-      DocToken(CodeBlock, codeBlock2),
-      DocToken(Paragraph),
-      DocToken(Description, testDescription),
-      DocToken(Paragraph),
-      DocToken(CodeBlock, complexCodeBlock)
+    val expectation = Option(
+      Seq(
+        DocToken(Description, testDescription),
+        DocToken(CodeBlock, codeBlock1),
+        DocToken(Description, testDescription),
+        DocToken(CodeBlock, codeBlock2),
+        DocToken(Paragraph),
+        DocToken(Description, testDescription),
+        DocToken(Paragraph),
+        DocToken(CodeBlock, complexCodeBlock)
+      )
     )
     assert(result === expectation)
   }
@@ -147,7 +151,7 @@ class ScaladocParserSuite extends FunSuite {
     val headingBody = "Overview"
     val subHeadingBody = "Of the heading"
 
-    val result: Seq[DocToken] =
+    val result: Option[Seq[DocToken]] =
       parseString(
         s"""
         /**
@@ -157,9 +161,11 @@ class ScaladocParserSuite extends FunSuite {
          case class foo(bar : String)
          """
       )
-    val expectation = Seq(
-      DocToken(Heading, headingBody),
-      DocToken(SubHeading, subHeadingBody)
+    val expectation = Option(
+      Seq(
+        DocToken(Heading, headingBody),
+        DocToken(SubHeading, subHeadingBody)
+      )
     )
 
     assert(result === expectation)
@@ -170,7 +176,7 @@ class ScaladocParserSuite extends FunSuite {
     val scaladoc: String =
       DocToken.tagTokenKinds
         .flatMap(token => Seq(generateTestString(token), testStringToMerge))
-        .mkString("/*\n * ", "\n * ", "\n */")
+        .mkString("/**\n * ", "\n * ", "\n */")
 
     val codeToParse: String =
       s"""
@@ -178,16 +184,18 @@ class ScaladocParserSuite extends FunSuite {
          |case class Foo(bar: String)
       """.stripMargin
 
-    val parsedScaladoc: Seq[DocToken] = parseString(codeToParse)
+    val parsedScaladoc: Option[Seq[DocToken]] = parseString(codeToParse)
 
     // Inherit doc does not merge
-    assert(parsedScaladoc.size === DocToken.tagTokenKinds.size)
+    assert(parsedScaladoc.size === Option(DocToken.tagTokenKinds.size))
 
     // Inherit doc does not merge
     assert(
       parsedScaladoc
-        .filterNot(_.kind == DocToken.InheritDoc)
-        .forall(_.body.getOrElse("").endsWith(testStringToMerge))
+        .exists(
+          _.filterNot(_.kind == DocToken.InheritDoc)
+            .forall(_.body.getOrElse("").endsWith(testStringToMerge))
+        )
     )
   }
 
@@ -196,10 +204,10 @@ class ScaladocParserSuite extends FunSuite {
     assert(
       parseString(
         """
-          | /** Example scaladoc **/
-          | case class foo(bar: String)
+          /** Example scaladoc **/
+          case class foo(bar: String)
         """.stripMargin
-      ).head.references === Nil
+      ).exists(_.head.references === Nil)
     )
     // Scaladoc with references
     val reference1 = "Scala.some"
@@ -214,8 +222,9 @@ class ScaladocParserSuite extends FunSuite {
       """.stripMargin
 
     assert(
-      parseString(codeToParse).head.references ===
-        Seq(DocToken.Reference(reference1), DocToken.Reference(reference2))
+      parseString(codeToParse).exists(
+        _.head.references === Seq(DocToken.Reference(reference1), DocToken.Reference(reference2))
+      )
     )
   }
 
