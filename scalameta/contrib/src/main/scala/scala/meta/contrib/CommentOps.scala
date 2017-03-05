@@ -17,8 +17,7 @@ object CommentOps {
     val rawSyntax: String = c.show[Syntax].trim
     if (c.isScaladoc) {
       Option(
-        rawSyntax
-          .lines
+        rawSyntax.lines
           .map(_.dropWhile(scaladocSymbols.contains)) // Removes leading comments symbols
           .map(l => l.take(l.lastIndexWhere(!scaladocSymbols.contains(_)) + 1)) // Remove trailing comments symbols
           .map(_.trim)
