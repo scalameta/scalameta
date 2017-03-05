@@ -9,5 +9,6 @@ package object contrib
   with Equality
   with Converters
   with ExtractStatInstances
+  with ExtractStatSubtypeInstances
   with ExtractPimps
 
