@@ -26,6 +26,7 @@ lazy val scalametaRoot = Project(
     // NOTE. The so/wow/such/very commands are from sbt-doge and are used to
     // run commands with the correct scalaVersion in each project.
     "so scalametaRoot/test" ::
+    "so contrib/test" ::
     // slow tests below
     "much doc" ::
     "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
@@ -39,7 +40,6 @@ lazy val scalametaRoot = Project(
   test := {
     val runScalametaTests = (test in scalameta in Test).value
     val runScalahostTests = (test in scalahost in Test).value
-    val runContribTests = (test in contrib in Test).value
     val runDocs = (run in readme in Compile).toTask(" --validate").value
   },
   publish := {},
