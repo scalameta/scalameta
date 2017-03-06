@@ -173,7 +173,7 @@ class ScaladocParserSuite extends FunSuite {
     assert(result === expectation)
   }
 
-  test("label parsing/merging") {
+  ignore("label parsing/merging") {
     val testStringToMerge = "Test DocText"
     val scaladoc: String =
       DocToken.tagTokenKinds
