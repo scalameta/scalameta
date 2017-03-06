@@ -39,6 +39,7 @@ lazy val scalametaRoot = Project(
   test := {
     val runScalametaTests = (test in scalameta in Test).value
     val runScalahostTests = (test in scalahost in Test).value
+    val runBenchmarkTests = (test in benchmarks in Test).value
     val runContribTests = (test in contrib in Test).value
     val runDocs = (run in readme in Compile).toTask(" --validate").value
   },
@@ -46,6 +47,7 @@ lazy val scalametaRoot = Project(
   publishSigned := {},
   console := (console in scalameta in Compile).value
 ) aggregate (
+  benchmarks,
   common,
   contrib,
   dialects,
@@ -276,6 +278,35 @@ lazy val contrib = Project(
   publishableSettings,
   description := "Utilities for scala.meta"
 ) dependsOn (scalameta, testkit % Test)
+
+lazy val benchmarks = Project(
+    id = "benchmarks",
+    base = file("scalameta/benchmarks")
+  )
+  .settings(
+    sharedSettings,
+    resourceDirectory in Jmh := (resourceDirectory in Compile).value,
+    javaOptions in run ++= Seq(
+      "-Djava.net.preferIPv4Stack=true",
+      "-XX:+AggressiveOpts",
+      "-XX:+UseParNewGC",
+      "-XX:+UseConcMarkSweepGC",
+      "-XX:+CMSParallelRemarkEnabled",
+      "-XX:+CMSClassUnloadingEnabled",
+      "-XX:ReservedCodeCacheSize=128m",
+      "-XX:MaxPermSize=1024m",
+      "-Xss8M",
+      "-Xms512M",
+      "-XX:SurvivorRatio=128",
+      "-XX:MaxTenuringThreshold=0",
+      "-Xss8M",
+      "-Xms512M",
+      "-Xmx2G",
+      "-server"
+    )
+  )
+  .dependsOn(scalameta)
+  .enablePlugins(JmhPlugin)
 
 lazy val readme = scalatex.ScalatexReadme(
   projectId = "readme",
