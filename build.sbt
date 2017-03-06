@@ -288,6 +288,7 @@ lazy val benchmarks = Project(
   )
   .settings(
     sharedSettings,
+    fork in Test := true, // easier to attach to from profilers.
     resourceDirectory in Jmh := (resourceDirectory in Compile).value,
     javaOptions in run ++= Seq(
       "-Djava.net.preferIPv4Stack=true",
@@ -308,7 +309,10 @@ lazy val benchmarks = Project(
       "-server"
     )
   )
-  .dependsOn(scalameta)
+  .dependsOn(
+    scalameta,
+    contrib
+  )
   .enablePlugins(JmhPlugin)
 
 lazy val readme = scalatex.ScalatexReadme(
@@ -384,6 +388,7 @@ lazy val sharedSettings = Def.settings(
   scalacOptions in (Compile, doc) ++= Seq("-groups"),
   scalacOptions ++= Seq("-Xfatal-warnings"),
   parallelExecution in Test := false, // hello, reflection sync!!
+  fork in test := true,
   logBuffered := false,
   triggeredMessage in ThisBuild := Watched.clearWhenTriggered
 )

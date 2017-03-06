@@ -12,6 +12,19 @@ package object meta extends classifiers.Api with classifiers.Aliases
                        with tokens.Api with tokens.Aliases
                        with transversers.Api with transversers.Aliases {
 
+  // Note. This is an optimization. We inline this implicit class in this package
+  // in order to make it extend AnyVal, and thus making it a value class.
+  // JMH  benchmarks show this optimization yields a ~30% speedup in code that
+  // uses `.is` a lot.
+  final implicit class XtensionClassifiable[T](val x: T) extends AnyVal {
+    def is[U](implicit classifier: classifiers.Classifier[T, U]): Boolean = {
+      classifier.apply(x)
+    }
+    def isNot[U](implicit classifier: classifiers.Classifier[T, U]): Boolean = {
+      !this.is(classifier)
+    }
+  }
+
   // TODO: The necessity of scalameta/package.scala being non-empty is unsatisfying.
   // We seriously need to come up with a better way of achieving similar functionality.
   type XtensionParsersDialectApply // shadow conflicting implicit class
