@@ -22,13 +22,16 @@ lazy val scalametaRoot = Project(
 ) settings (
   sharedSettings,
   unidocSettings,
-  commands += Command.command("ci") { state =>
+  commands += Command.command("ci-fast") { state =>
     // NOTE. The so/wow/such/very commands are from sbt-doge and are used to
     // run commands with the correct scalaVersion in each project.
     "so scalametaRoot/test" ::
     "so contrib/test" ::
     // slow tests below
     "much doc" ::
+    state
+  },
+  commands += Command.command("ci-slow") { state =>
     "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "such testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
     "scalahostSbt/test" ::
@@ -40,12 +43,15 @@ lazy val scalametaRoot = Project(
   test := {
     val runScalametaTests = (test in scalameta in Test).value
     val runScalahostTests = (test in scalahost in Test).value
+    val runBenchmarkTests = (test in benchmarks in Test).value
+    val runContribTests = (test in contrib in Test).value
     val runDocs = (run in readme in Compile).toTask(" --validate").value
   },
   publish := {},
   publishSigned := {},
   console := (console in scalameta in Compile).value
 ) aggregate (
+  benchmarks,
   common,
   contrib,
   dialects,
@@ -247,9 +253,9 @@ lazy val scalahostSbt = Project(
     "-Xmx2g",
     "-Xss2m"
   ) ++ {
-    // pass along custom ivy home if it exists.
-    val ivyHome = "sbt.ivy.home"
-    sys.props.get(ivyHome).map(x => s"-D$ivyHome=$x").toList
+    // pass along custom boot properties if specified
+    val bootProps = "sbt.boot.properties"
+    sys.props.get(bootProps).map(x => s"-D$bootProps=$x").toList
   },
   scriptedBufferLog := false
 ) enablePlugins (BuildInfoPlugin)
@@ -276,6 +282,35 @@ lazy val contrib = Project(
   publishableSettings,
   description := "Utilities for scala.meta"
 ) dependsOn (scalameta, testkit % Test)
+
+lazy val benchmarks = Project(
+    id = "benchmarks",
+    base = file("scalameta/benchmarks")
+  )
+  .settings(
+    sharedSettings,
+    resourceDirectory in Jmh := (resourceDirectory in Compile).value,
+    javaOptions in run ++= Seq(
+      "-Djava.net.preferIPv4Stack=true",
+      "-XX:+AggressiveOpts",
+      "-XX:+UseParNewGC",
+      "-XX:+UseConcMarkSweepGC",
+      "-XX:+CMSParallelRemarkEnabled",
+      "-XX:+CMSClassUnloadingEnabled",
+      "-XX:ReservedCodeCacheSize=128m",
+      "-XX:MaxPermSize=1024m",
+      "-Xss8M",
+      "-Xms512M",
+      "-XX:SurvivorRatio=128",
+      "-XX:MaxTenuringThreshold=0",
+      "-Xss8M",
+      "-Xms512M",
+      "-Xmx2G",
+      "-server"
+    )
+  )
+  .dependsOn(scalameta)
+  .enablePlugins(JmhPlugin)
 
 lazy val readme = scalatex.ScalatexReadme(
   projectId = "readme",

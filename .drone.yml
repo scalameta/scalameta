@@ -1,20 +1,25 @@
-clone:
-  depth: 50
-  tags: true
-  recursive: true
-build:
+pipeline:
+  # Fetch folders from distributed cache
+  sftp_cache_restore:
+    image: plugins/sftp-cache
+    restore: true
+    mount:
+      - /drone/.ivy2
+      - /drone/.coursier-cache
+      - /drone/.sbt
+      - /drone/.git
+
   tests:
-    image: ensime/ensime:v2.x-cache
+    image: scalacenter/scala-extras:1.0
     pull: true
-    environment:
-      - COURSIER_CACHE=/drone/cache/coursier
     commands:
-      - git log | head -n 20
+      - git fetch --tags && git log | head -n 20
       - ./bin/checkCLA.sh
       - ./bin/scalafmt --test
-      - sbt -Dsbt.ivy.home=/drone/cache/ivy2 ci
+      - sbt $TEST
+
   publish:
-    image: ensime/ensime:v2.x-cache
+    image: scalacenter/scala-extras:1.0
     environment:
       - SONATYPE_USERNAME=$$SONATYPE_USERNAME
       - SONATYPE_PASSWORD=$$SONATYPE_PASSWORD
@@ -28,14 +33,19 @@ build:
     when:
       event: push
       branch: [master, 2.x]
-cache:
-  mount:
-    - /drone/cache
-notify:
-  email:
-    from: noreply@drone.geirsson.com
-    host: smtp.mailgun.org
-    username: noreply@drone.geirsson.com
-    password: $MAILGUN_PASSWORD
-    recipients:
-      - olafurpg+scalameta-ci@gmail.com
+
+  # Save folders in distributed cache
+  sftp_cache_rebuild:
+    image: plugins/sftp-cache
+    rebuild: true
+    mount:
+      - /drone/.ivy2
+      - /drone/.coursier-cache
+      - /drone/.sbt
+      - /drone/.git
+
+matrix:
+  TEST:
+    - ci-fast
+    - ci-slow
+

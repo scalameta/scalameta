@@ -12,6 +12,8 @@ addSbtPlugin("com.lihaoyi" % "scalatex-sbt-plugin" % "0.3.7")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
 
+addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.2.15")
+
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.6.1")
 
 addSbtPlugin("com.eed3si9n" % "sbt-doge" % "0.1.5")
