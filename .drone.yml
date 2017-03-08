@@ -1,7 +1,3 @@
-clone:
-  - depth: 50
-  - tags: true
-  - recursive: true
 pipeline:
   # Fetch folders from distributed cache
   sftp_cache_restore:
