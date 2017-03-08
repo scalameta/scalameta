@@ -254,7 +254,7 @@ lazy val scalahostSbt = Project(
   ) ++ {
     // pass along custom boot properties if specified
     val bootProps = "sbt.boot.properties"
-    sys.env.get(bootProps).map(x => s"-D$bootProps=$x").toList
+    sys.props.get(bootProps).map(x => s"-D$bootProps=$x").toList
   },
   scriptedBufferLog := false
 ) enablePlugins (BuildInfoPlugin)
