@@ -1,18 +1,16 @@
 package scala.meta.contrib
 
 import org.scalatest.FunSuite
+
 import scala.meta.contrib.DocToken._
 import scala.meta.testkit._
 import scala.meta.tokens.Token.Comment
 import scala.meta.{Defn, _}
 import scala.util.Try
 
-import org.scalatest.Ignore
-
 /**
   * Test for [[ScaladocParser]]
   */
-@Ignore
 class ScaladocParserSuite extends FunSuite {
 
   private[this] def parseString(commentCode: String): Option[Seq[DocToken]] = {
@@ -33,7 +31,7 @@ class ScaladocParserSuite extends FunSuite {
           | /** Example scaladoc **/
           | case class foo(bar: String)
         """.stripMargin
-      ).toString === Option("List(Description(Example scaladoc))")
+      ).toString === "Some(List(Description(Example scaladoc)))"
     )
   }
 
@@ -189,7 +187,7 @@ class ScaladocParserSuite extends FunSuite {
     val parsedScaladoc: Option[Seq[DocToken]] = parseString(codeToParse)
 
     // Inherit doc does not merge
-    assert(parsedScaladoc.size === Option(DocToken.tagTokenKinds.size))
+    assert(parsedScaladoc.map(_.size) === Option(DocToken.tagTokenKinds.size))
 
     // Inherit doc does not merge
     assert(
@@ -234,7 +232,7 @@ class ScaladocParserSuite extends FunSuite {
     // Checks that the parser does not crash with any input
     val errors = SyntaxAnalysis.onParsed[Tree](ContribSuite.corpus) { ast =>
       val commentTokens: Seq[Comment] = ast.tokens.collect {
-        case c: tokens.Token.Comment => c
+        case c: Comment => c
       }
       if (commentTokens.map(c => Try(ScaladocParser.parseScaladoc(c))).exists(_.isFailure)) {
         Seq(ast)
