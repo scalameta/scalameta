@@ -12,6 +12,8 @@ pipeline:
   tests:
     image: scalaplatform/scala:0.6
     pull: true
+    volumes:
+      - /platform:/keys
     commands:
       - git fetch --tags && git log | head -n 20
       - ./bin/checkCLA.sh
@@ -20,6 +22,9 @@ pipeline:
 
   publish:
     image: scalaplatform/scala:0.6
+    pull: true
+    volumes:
+      - /platform:/keys
     environment:
       - SONATYPE_USERNAME=$$SONATYPE_USERNAME
       - SONATYPE_PASSWORD=$$SONATYPE_PASSWORD
@@ -32,7 +37,7 @@ pipeline:
       - ./bin/bintray.sh
     when:
       event: push
-      branch: [master, 2.x]
+      branch: [master]
 
   # Save folders in distributed cache
   sftp_cache_rebuild:
