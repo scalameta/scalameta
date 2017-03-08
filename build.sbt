@@ -22,12 +22,15 @@ lazy val scalametaRoot = Project(
 ) settings (
   sharedSettings,
   unidocSettings,
-  commands += Command.command("ci") { state =>
+  commands += Command.command("ci-fast") { state =>
     // NOTE. The so/wow/such/very commands are from sbt-doge and are used to
     // run commands with the correct scalaVersion in each project.
     "so scalametaRoot/test" ::
     // slow tests below
     "much doc" ::
+    state
+  },
+  commands += Command.command("ci-slow") { state =>
     "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "such testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
     "scalahostSbt/test" ::
@@ -249,9 +252,9 @@ lazy val scalahostSbt = Project(
     "-Xmx2g",
     "-Xss2m"
   ) ++ {
-    // pass along custom ivy home if it exists.
-    val ivyHome = "sbt.ivy.home"
-    sys.props.get(ivyHome).map(x => s"-D$ivyHome=$x").toList
+    // pass along custom boot properties if specified
+    val bootProps = "sbt.boot.properties"
+    sys.props.get(bootProps).map(x => s"-D$bootProps=$x").toList
   },
   scriptedBufferLog := false
 ) enablePlugins (BuildInfoPlugin)
