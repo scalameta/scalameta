@@ -10,7 +10,7 @@ pipeline:
       - /drone/.git
 
   tests:
-    image: scalaplatform/scala:0.5
+    image: scalaplatform/scala:0.6
     pull: true
     commands:
       - git fetch --tags && git log | head -n 20
@@ -19,7 +19,7 @@ pipeline:
       - sbt $TEST
 
   publish:
-    image: scalaplatform/scala:0.5
+    image: scalaplatform/scala:0.6
     environment:
       - SONATYPE_USERNAME=$$SONATYPE_USERNAME
       - SONATYPE_PASSWORD=$$SONATYPE_PASSWORD
