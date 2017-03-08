@@ -22,12 +22,15 @@ lazy val scalametaRoot = Project(
 ) settings (
   sharedSettings,
   unidocSettings,
-  commands += Command.command("ci") { state =>
+  commands += Command.command("ci-fast") { state =>
     // NOTE. The so/wow/such/very commands are from sbt-doge and are used to
     // run commands with the correct scalaVersion in each project.
     "so scalametaRoot/test" ::
     // slow tests below
     "much doc" ::
+    state
+  },
+  commands += Command.command("ci-slow") { state =>
     "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "such testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
     "scalahostSbt/test" ::

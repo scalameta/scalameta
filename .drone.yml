@@ -13,10 +13,10 @@ pipeline:
     image: scalaplatform/scala:0.5
     pull: true
     commands:
-      - git fetch --tags && git rev-parse HEAD v1.0.0 --count &&  git log | head -n 20
+      - git fetch --tags && git log | head -n 20
       - ./bin/checkCLA.sh
       - ./bin/scalafmt --test
-      - sbt -Dsbt.ivy.home=/drone/cache/ivy2 ci
+      - sbt $TEST
 
   publish:
     image: ensime/ensime:v2.x-cache
@@ -43,3 +43,9 @@ pipeline:
       - /drone/.coursier-cache
       - /drone/.sbt
       - /drone/.git
+
+matrix:
+  TEST:
+    - ci-fast
+    - ci-slow
+
