@@ -1,10 +1,16 @@
-clone:
-  depth: 50
-  tags: true
-  recursive: true
-build:
+pipeline:
+  # Fetch folders from distributed cache
+  sftp_cache_restore:
+    image: plugins/sftp-cache
+    restore: true
+    mount:
+      - /drone/.ivy2
+      - /drone/.coursier-cache
+      - /drone/.sbt
+      - /drone/.git
+
   tests:
-    image: ensime/ensime:v2.x-cache
+    image: scalaplatform/scala:0.5
     pull: true
     environment:
       - COURSIER_CACHE=/drone/cache/coursier
@@ -28,14 +34,13 @@ build:
     when:
       event: push
       branch: [master, 2.x]
-cache:
-  mount:
-    - /drone/cache
-notify:
-  email:
-    from: noreply@drone.geirsson.com
-    host: smtp.mailgun.org
-    username: noreply@drone.geirsson.com
-    password: $MAILGUN_PASSWORD
-    recipients:
-      - olafurpg+scalameta-ci@gmail.com
+
+  # Save folders in distributed cache
+  sftp_cache_rebuild:
+    image: plugins/sftp-cache
+    rebuild: true
+    mount:
+      - /drone/.ivy2
+      - /drone/.coursier-cache
+      - /drone/.sbt
+      - /drone/.git
