@@ -1,5 +1,5 @@
 clone:
-  - depth: 100
+  - depth: 50
   - tags: true
   - recursive: true
 pipeline:
@@ -16,8 +16,6 @@ pipeline:
   tests:
     image: scalaplatform/scala:0.5
     pull: true
-    environment:
-      - COURSIER_CACHE=/drone/cache/coursier
     commands:
       - git log | head -n 20
       - ./bin/checkCLA.sh
