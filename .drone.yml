@@ -1,3 +1,7 @@
+clone:
+  - depth: 100
+  - tags: true
+  - recursive: true
 pipeline:
   # Fetch folders from distributed cache
   sftp_cache_restore:
@@ -19,6 +23,7 @@ pipeline:
       - ./bin/checkCLA.sh
       - ./bin/scalafmt --test
       - sbt -Dsbt.ivy.home=/drone/cache/ivy2 ci
+
   publish:
     image: ensime/ensime:v2.x-cache
     environment:
