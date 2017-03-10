@@ -25,6 +25,30 @@ trait ExtractStatSubtypeInstances {
   implicit def extractTypesFromStats[A](implicit ev: Extract[A, Stats]): Extract[A, Types] =
     Extract(a => ev.extract(a).collect { case d: Defn.Type => d })
 
+  implicit def extractTermsFromStats[A](implicit ev: Extract[A, Stats]): Extract[A, Terms] =
+    Extract(a => ev.extract(a).collect { case t: Term => t })
+
+  implicit def extractMembersFromStats[A](implicit ev: Extract[A, Stats]): Extract[A, Members] =
+    Extract(a => ev.extract(a).collect { case d: Member => d })
+
+  implicit def extractDefnsFromStats[A](implicit ev: Extract[A, Stats]): Extract[A, Defns] =
+    Extract(a => ev.extract(a).collect { case d: Defn => d })
+
+  implicit def extractDeclsFromStats[A](implicit ev: Extract[A, Stats]): Extract[A, Decls] =
+    Extract(a => ev.extract(a).collect { case d: Decl => d })
+
+  implicit def extractDeclDefsFromStats[A](implicit ev: Extract[A, Stats]): Extract[A, DeclDefs] =
+    Extract(a => ev.extract(a).collect { case d: Decl.Def => d })
+
+  implicit def extractDeclVarsFromStats[A](implicit ev: Extract[A, Stats]): Extract[A, DeclVars] =
+    Extract(a => ev.extract(a).collect { case v: Decl.Var => v })
+
+  implicit def extractDeclValsFromStats[A](implicit ev: Extract[A, Stats]): Extract[A, DeclVals] =
+    Extract(a => ev.extract(a).collect { case v: Decl.Val => v })
+
+  implicit def extractDeclTypesFromStats[A](
+      implicit ev: Extract[A, Stats]): Extract[A, DeclTypes] =
+    Extract(a => ev.extract(a).collect { case v: Decl.Type => v })
 }
 
 object ExtractStatSubtypeInstances
