@@ -1,16 +1,12 @@
 package scala.meta.contrib.instances
 
-import scala.collection.immutable.Seq
-import scala.meta.Mod
-import scala.meta.contrib.Extract
+import scala.meta._
+import scala.meta.contrib._
 
 trait ExtractAnnotationInstances {
   implicit def extractAnnotationsFromMods[A](
-      implicit ev: Extract[A, Seq[Mod]]): Extract[A, Seq[Mod.Annot]] =
-    new Extract[A, Seq[Mod.Annot]] {
-      override def extract(a: A): Seq[Mod.Annot] =
-        ev.extract(a).collect { case d: Mod.Annot => d }
-    }
+      implicit ev: Extract[A, Mods]): Extract[A, Annotations] =
+    Extract(a => ev.extract(a).collect { case m: Mod.Annot => m })
 }
 
 object ExtractAnnotationInstances

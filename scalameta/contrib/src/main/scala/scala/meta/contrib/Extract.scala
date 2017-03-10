@@ -13,3 +13,9 @@ package scala.meta.contrib
 trait Extract[A, B] {
   def extract(a: A): B
 }
+
+object Extract {
+  def apply[A, B](f: A => B): Extract[A, B] = new Extract[A, B] {
+    @inline override def extract(a: A): B = f(a)
+  }
+}
