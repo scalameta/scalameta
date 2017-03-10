@@ -108,7 +108,7 @@
       Our first priority is to come up with an API that will provide
       functionality to perform typechecking, name resolution, implicit inference, etc.
       It is crucial to fully model the language and
-      achieve feature parity with scala.reflect. Visit @link("#604", "https://github.com/scalameta/scalameta/issues/604")
+      achieve feature parity with scala.reflect. Visit @lnk("#604", "https://github.com/scalameta/scalameta/issues/604")
       to check out our roadmap and provide feedback.
 
     @p
