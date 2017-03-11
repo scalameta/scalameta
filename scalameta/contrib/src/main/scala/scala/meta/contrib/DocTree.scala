@@ -1,11 +1,27 @@
 package scala.meta.contrib
 
+import org.scalameta.adt._
+
 import scala.util.matching.Regex
 
 /**
-  * Represents a scaladoc line.
+  * Represents a scaladoc element.
   */
-case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[String]) {
+@root
+trait DocTree {
+
+  val kind: DocToken.Kind
+  val name: Option[String]
+  val body: Option[String]
+}
+
+/**
+  * Represents a scaladoc token implementation.
+  */
+@leaf
+class DocToken(override val kind: DocToken.Kind,
+               override val name: Option[String],
+               override val body: Option[String]) extends DocTree {
 
   override def toString: String = {
     ((name, body) match {
@@ -89,12 +105,12 @@ object DocToken {
   sealed abstract class TagKind(val label: String, val numberParameters: Int) extends Kind
 
   /**
-    * Helper [[DocToken]] apply method.
+    * Helper [[DocTree]] apply method.
     */
   def apply(kind: Kind): DocToken = new DocToken(kind, None, None)
 
   /**
-    * Helper [[DocToken]] apply method.
+    * Helper [[DocTree]] apply method.
     */
   def apply(kind: Kind, body: String): DocToken = new DocToken(kind, None, Option(body))
 
