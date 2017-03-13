@@ -25,19 +25,25 @@ pipeline:
     pull: true
     volumes:
       - /platform:/keys
-    environment:
-      - SONATYPE_USERNAME=$$SONATYPE_USERNAME
-      - SONATYPE_PASSWORD=$$SONATYPE_PASSWORD
-      - GITHUB_USERNAME=$$GITHUB_USERNAME
-      - GITHUB_PASSWORD=$$GITHUB_PASSWORD
-      - BINTRAY_USERNAME=$$BINTRAY_USERNAME
-      - BINTRAY_API_KEY=$$BINTRAY_API_KEY
-      - MAILGUN_PASSWORD=$$MAILGUN_PASSWORD
     commands:
       - ./bin/bintray.sh
     when:
       event: push
       branch: [master]
+
+  notify:
+    image: drillster/drone-email
+    host: smtp.mailgun.org
+    username: noreply@drone.geirsson.com
+    password: ${MAILGUN_PASSWORD}
+    from: noreply@drone.geirsson.com
+    recipients:
+      - olafurpg@gmail.com
+      - xeno.by@gmail.com
+    when:
+      event: push
+      branch: [master]
+      status: [changed, failure]
 
   # Save folders in distributed cache
   sftp_cache_rebuild:
