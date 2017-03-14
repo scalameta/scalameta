@@ -35,7 +35,7 @@ object Corpus {
     */
   val fastparse = Corpus(
     url =
-      "https://github.com/olafurpg/scalafmt/releases/download/v0.1.4/repos.tar.gz",
+      "https://github.com/scalameta/scalafmt/releases/download/v0.1.4/repos.tar.gz",
     x =>
       !Seq(
         // sbt/sbt
