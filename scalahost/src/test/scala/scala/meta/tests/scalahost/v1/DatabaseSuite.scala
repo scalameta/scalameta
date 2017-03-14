@@ -77,6 +77,7 @@ class DatabaseSuite extends OnlineMirrorSuite {
     |}
   """.trim.stripMargin,
     """
+    |[0..24): import _root_.scala.List => Warning Unused import
     |[7..13): _root_ => _root_.
     |[14..19): scala => _root_.scala.
     |[20..24): List => _root_.scala.package.List.;_root_.scala.package.List#
@@ -113,4 +114,5 @@ class DatabaseSuite extends OnlineMirrorSuite {
       assert(age.symbol === Symbol("_empty_.User#copy(Ljava/lang/String;I)LUser;.(age)"))
     }
   )
+
 }

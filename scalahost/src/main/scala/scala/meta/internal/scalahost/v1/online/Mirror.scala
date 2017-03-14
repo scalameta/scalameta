@@ -24,6 +24,7 @@ class Mirror(val global: Global)
     with DatabaseOps
     with ParseOps
     with SymbolOps
+    with ReporterOps
     with ReflectionToolkit {
 
   override def toString: String = {

@@ -15,6 +15,8 @@ import scala.meta.semantic.v1.Mirror
 import scala.meta.semantic.v1.Database
 import scala.meta.internal.scalahost.v1.online.{Mirror => OnlineMirror, _}
 
+import org.scalameta.logger
+
 abstract class OnlineMirrorSuite extends FunSuite {
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
@@ -26,7 +28,7 @@ abstract class OnlineMirrorSuite extends FunSuite {
     def fail(msg: String) = sys.error(s"OnlineMirrorSuite initialization failed: $msg")
     val classpath = System.getProperty("sbt.paths.scalahost.test.classes")
     val pluginpath = System.getProperty("sbt.paths.scalahost.compile.jar")
-    val options = "-Yrangepos -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:scalahost"
+    val options = "-Yrangepos -Ywarn-unused-import -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:scalahost"
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
     val reporter = new StoreReporter()

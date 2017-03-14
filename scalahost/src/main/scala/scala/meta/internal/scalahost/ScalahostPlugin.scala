@@ -9,6 +9,7 @@ import scala.meta.internal.scalahost.v1.LocationOps
 class ScalahostPlugin(val global: Global)
     extends Plugin
     with HijackAnalyzer
+    with HijackReporter
     with LocationOps
     with ReflectionToolkit
     with ScalahostAnalyzer
@@ -16,5 +17,6 @@ class ScalahostPlugin(val global: Global)
   val name = "scalahost"
   val description = "scala.meta's connector to the Scala compiler"
   hijackAnalyzer()
+  hijackReporter()
   val components = List[PluginComponent](ScalahostComponent)
 }

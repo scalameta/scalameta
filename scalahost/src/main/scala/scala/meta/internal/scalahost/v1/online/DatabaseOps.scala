@@ -8,8 +8,10 @@ import scala.reflect.internal.util._
 import scala.reflect.internal.Flags._
 import scala.tools.nsc.Global
 import scala.{meta => m}
-import scala.meta.semantic.v1.{Location, Database}
+import scala.meta.semantic.v1.{Database, Location}
 import scala.compat.Platform.EOL
+
+import org.scalameta.logger
 
 trait DatabaseOps { self: Mirror =>
 
@@ -289,7 +291,7 @@ trait DatabaseOps { self: Mirror =>
           sys.error(buf.toString)
         }
 
-        Database(symbols.toMap)
+        Database(symbols.toMap, unit.messages)
       })
     }
   }

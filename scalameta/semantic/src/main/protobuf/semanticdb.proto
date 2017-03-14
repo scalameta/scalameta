@@ -16,6 +16,7 @@ message Database {
 message DatabaseFile {
   Address address = 1;
   repeated ResolvedName symbols = 2;
+  repeated CompilerMessage messages = 3;
 }
 
 message Address {
@@ -31,4 +32,16 @@ message ResolvedName {
 message Range {
   int32 start = 2;
   int32 end = 3;
+}
+
+message CompilerMessage {
+  enum Severity {
+    UNKNOWN = 0;
+    INFO = 1;
+    WARNING = 2;
+    ERROR = 3;
+  }
+  Range range = 1;
+  Severity severity = 2;
+  string msg = 3;
 }

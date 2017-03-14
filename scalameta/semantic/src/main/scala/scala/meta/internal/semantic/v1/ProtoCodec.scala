@@ -37,28 +37,51 @@ object ProtoCodec {
         p.ResolvedName(Option(p.Range(start, end)), sym.syntax)
     }
   }
+  implicit val CompilerMessageProto = new ProtoEncoder[CompilerMessage, p.CompilerMessage] {
+    override def toProto(e: CompilerMessage): p.CompilerMessage = e match {
+      case CompilerMessage(Location(addr, start, end), sev, msg) =>
+        p.CompilerMessage(Option(p.Range(start, end)),
+                          p.CompilerMessage.Severity.fromValue(sev.id),
+                          msg)
+    }
+  }
   implicit val DatabaseProto = new ProtoCodec[Database, p.Database] {
-    override def toProto(e: Database): p.Database =
-      p.Database {
-        e.symbols
-          .groupBy(_._1.addr)
-          .map {
-            case (addr, symbols) =>
-              p.DatabaseFile(
-                address = addr.toProtoOpt[p.Address],
-                symbols = symbols.map(_.toProto[p.ResolvedName]).toSeq
-              )
-          }
-          .toSeq
-      }
-    override def fromProto(e: p.Database): Database =
-      Database(e.files.flatMap {
-        case p.DatabaseFile(Some(addr), symbols) =>
+    override def toProto(e: Database): p.Database = {
+      val messagesGrouped = e.messages.groupBy(_.location.addr).withDefaultValue(Nil)
+      val files = e.symbols
+        .groupBy(_._1.addr)
+        .map {
+          case (addr, symbols) =>
+            val messages = messagesGrouped(addr).map(_.toProto[p.CompilerMessage])
+            p.DatabaseFile(
+              address = addr.toProtoOpt[p.Address],
+              symbols = symbols.map(_.toProto[p.ResolvedName]).toSeq,
+              messages = messages
+            )
+        }
+        .toSeq
+      p.Database(files)
+    }
+    override def fromProto(e: p.Database): Database = {
+      val symbols = e.files.flatMap {
+        case p.DatabaseFile(Some(addr), symbols, _) =>
           symbols.map {
             case p.ResolvedName(Some(p.Range(start, end)), Symbol(symbol)) =>
               Location(addr.toMeta[Address], start, end) -> symbol
           }
         case _ => sys.error(s"Invalid protobuf: $e")
-      }.toMap)
+      }.toMap
+      val messages: Seq[CompilerMessage] = e.files.flatMap {
+        case p.DatabaseFile(Some(addr), l, messages) =>
+          messages.map {
+            case p.CompilerMessage(Some(p.Range(start, end)), sev, message) =>
+              CompilerMessage(Location(addr.toMeta[Address], start, end),
+                              Severity.fromId(sev.value),
+                              message)
+
+          }
+      }
+      Database(symbols, messages)
+    }
   }
 }
