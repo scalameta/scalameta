@@ -4,8 +4,16 @@ package v1
 
 import scala.compat.Platform.EOL
 import scala.meta.internal.semantic.v1._
+
+import org.scalameta.semantic.v1.{proto => p}
+import scala.meta.internal.scalahost.v1.ProtoCodec._
 import scala.meta.prettyprinters._
 import scala.meta.semantic.v1._
+import scala.util.Try
+
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 // NOTE: This is an initial take on the semantic API.
 // Instead of immediately implementing the full vision described in my dissertation,
@@ -31,10 +39,21 @@ case class Database(
     })
     buf.toString.trim + EOL
   }
+  def toBinary: Array[Byte] =
+   this.toProto[p.Database].toByteArray
+  def writeDatabaseToFile(file: File): Unit = {
+    val fos = new FileOutputStream(file)
+    try fos.write(toBinary)
+    finally { fos.close() }
+  }
 }
 
 object Database extends DatabaseOps {
   def apply(): Database = {
     Database(Map[Location, Symbol]())
   }
+  def fromBinary(bytes: Array[Byte]): Try[Database] =
+    Try(p.Database.parseFrom(bytes).toMeta[Database])
+  def fromFile(file: File): Try[Database] =
+    Try(p.Database.parseFrom(new FileInputStream(file)).toMeta[Database])
 }

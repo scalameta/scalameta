@@ -11,7 +11,6 @@ import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
-import scala.meta.internal.scalahost.v1.SerializationOps
 import scala.meta.semantic.v1.Mirror
 import scala.meta.semantic.v1.Database
 import scala.meta.internal.scalahost.v1.online.{Mirror => OnlineMirror, _}
@@ -45,8 +44,8 @@ abstract class OnlineMirrorSuite extends FunSuite {
 
   // checks that parse(binary(database)) == database
   def assertDatabaseSerializationIsBijective(database: Database): Unit = {
-    val binary = SerializationOps.toBinary(database)
-    val database2 = SerializationOps.fromBinary(binary).get
+    val binary = database.toBinary
+    val database2 = Database.fromBinary(binary).get
     assert(database.toString === database2.toString)
   }
 

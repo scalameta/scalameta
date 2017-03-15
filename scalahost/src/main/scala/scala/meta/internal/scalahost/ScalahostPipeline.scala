@@ -4,8 +4,6 @@ package scalahost
 import java.io._
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
-import scala.compat.Platform.EOL
-import scala.meta.internal.scalahost.v1.SerializationOps
 import scala.meta.semantic.v1.Database
 import scala.meta.internal.semantic.v1._
 import scala.meta.internal.scalahost.v1.online.{Mirror => OnlineMirror}
@@ -31,14 +29,14 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
           global.settings.outputDirs.getSingleOutput.getOrElse(global.settings.d.value)
         val databaseFile = new File(outputDir + File.separator + "semanticdb")
         val prevDatabase =
-          if (databaseFile.exists) SerializationOps.fromFile(databaseFile).get
+          if (databaseFile.exists) Database.fromFile(databaseFile).get
           else Database()
         val database = new OnlineMirror(global).database
         val mergedDatabase = prevDatabase.append(database)
         val allowedAddrs = global.currentRun.units.map(_.source.toAddr).toSet
         val trimmedDatabase = Database(
           mergedDatabase.symbols.filterKeys(k => allowedAddrs.contains(k.addr)))
-        SerializationOps.writeDatabaseToFile(trimmedDatabase, databaseFile)
+        trimmedDatabase.writeDatabaseToFile(databaseFile)
       }
     }
   }

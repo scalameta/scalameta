@@ -168,7 +168,14 @@ lazy val semantic = Project(
   base = file("scalameta/semantic")
 ) settings (
   publishableSettings,
-  description := "Scala.meta's semantic APIs"
+  description := "Scala.meta's semantic APIs",
+  // Protobuf setup for binary serialization.
+  PB.targets in Compile := Seq(
+    scalapb.gen(
+      flatPackage = true // Don't append filename to package
+    ) -> sourceManaged.in(Compile).value
+  ),
+  libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % scalapbVersion % "protobuf"
 ) dependsOn (common, trees)
 
 lazy val scalameta = Project(
@@ -208,13 +215,6 @@ lazy val scalahost = Project(
   },
   exposePaths("scalahost", Test),
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-  // Protobuf setup
-  PB.targets in Compile := Seq(
-    scalapb.gen(
-      flatPackage = true // Don't append filename to package
-    ) -> sourceManaged.in(Compile).value
-  ),
-  libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % scalapbVersion % "protobuf",
   pomPostProcess := { node =>
     new RuleTransformer(new RewriteRule {
       private def isScalametaDependency(node: XmlNode): Boolean = {

@@ -2,11 +2,6 @@ package scala.meta.internal.scalahost.v1
 
 import scala.meta.semantic.v1.Symbol
 import scala.meta.semantic.v1._
-import scala.util.Try
-
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 
 import org.scalameta.semantic.v1.{proto => p}
 
@@ -20,7 +15,7 @@ trait ProtoCodec[A, B] extends ProtoDecoder[A, B] with ProtoEncoder[A, B]
 trait ProtoEncoder[A, B] { def toProto(e: A): B }
 trait ProtoDecoder[A, B] { def fromProto(e: B): A }
 
-object ProtoEncoder {
+object ProtoCodec {
   implicit class XtensionProtoSerializable[A](val a: A) extends AnyVal {
     def toMeta[B](implicit ev: ProtoDecoder[B, A]): B = ev.fromProto(a)
     def toProto[B](implicit ev: ProtoEncoder[A, B]): B = ev.toProto(a)
@@ -65,20 +60,5 @@ object ProtoEncoder {
           }
         case _ => sys.error(s"Invalid protobuf: $e")
       }.toMap)
-  }
-}
-
-object SerializationOps {
-  import ProtoEncoder._
-  def fromBinary(bytes: Array[Byte]): Try[Database] =
-    Try(p.Database.parseFrom(bytes).toMeta[Database])
-  def fromFile(file: File): Try[Database] =
-    Try(p.Database.parseFrom(new FileInputStream(file)).toMeta[Database])
-  def toBinary(database: Database): Array[Byte] = database.toProto[p.Database].toByteArray
-  def writeDatabaseToFile(database: Database, file: File): Unit = {
-    val binary = toBinary(database)
-    val fos = new FileOutputStream(file)
-    try fos.write(binary)
-    finally { fos.close() }
   }
 }
