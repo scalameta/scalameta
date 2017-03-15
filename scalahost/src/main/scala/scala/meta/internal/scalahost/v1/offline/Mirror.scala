@@ -51,7 +51,9 @@ class Mirror(classpath: String, sourcepath: String)
         else Nil
       })
       .sortBy(_.getName)
-    val databases = databaseFiles.map(Database.apply)
+    val databases = databaseFiles.map(SerializationOps.fromFile).collect {
+      case scala.util.Success(db) => db
+    }
     databases.foldLeft(Database())(_ append _)
   }
 

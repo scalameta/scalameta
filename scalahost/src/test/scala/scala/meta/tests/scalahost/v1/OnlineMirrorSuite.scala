@@ -8,9 +8,10 @@ import scala.collection.immutable.Seq
 import scala.{meta => m}
 import scala.reflect.io._
 import scala.tools.cmd.CommandLineParser
-import scala.tools.nsc.{Global, CompilerCommand, Settings}
+import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
+import scala.meta.internal.scalahost.v1.SerializationOps
 import scala.meta.semantic.v1.Mirror
 import scala.meta.semantic.v1.Database
 import scala.meta.internal.scalahost.v1.online.{Mirror => OnlineMirror, _}
@@ -41,6 +42,13 @@ abstract class OnlineMirrorSuite extends FunSuite {
 
   implicit val mirror: OnlineMirror = new OnlineMirror(g)
   import mirror._
+
+  // checks that parse(binary(database)) == database
+  def assertDatabaseSerializationIsBijective(database: Database): Unit = {
+    val binary = SerializationOps.toBinary(database)
+    val database2 = SerializationOps.fromBinary(binary).get
+    assert(database.toString === database2.toString)
+  }
 
   private def computeDatabaseFromSnippet(code: String): Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
@@ -76,7 +84,9 @@ abstract class OnlineMirrorSuite extends FunSuite {
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    unit.asInstanceOf[mirror.g.CompilationUnit].toDatabase
+    val database = unit.asInstanceOf[mirror.g.CompilationUnit].toDatabase
+    assertDatabaseSerializationIsBijective(database)
+    database
   }
 
   def database(code: String, expected: String): Unit = {

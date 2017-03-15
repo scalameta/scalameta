@@ -7,6 +7,11 @@ import scala.collection.mutable
 import scala.meta.semantic.v1.Database
 import scala.meta.semantic.v1.Location
 import scala.meta.semantic.v1.Symbol
+import scala.util.Try
+
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 trait DatabaseOps {
   private[meta] implicit class XtensionInternalDatabase(db1: Database) {
