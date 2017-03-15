@@ -11,8 +11,6 @@ import scala.{meta => m}
 import scala.meta.semantic.v1.{Database, Location}
 import scala.compat.Platform.EOL
 
-import org.scalameta.logger
-
 trait DatabaseOps { self: Mirror =>
 
   implicit class XtensionCompilationUnitDatabase(unit: g.CompilationUnit) {

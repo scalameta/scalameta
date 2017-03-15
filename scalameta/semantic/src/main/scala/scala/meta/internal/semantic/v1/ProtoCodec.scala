@@ -21,6 +21,9 @@ object ProtoCodec {
     def toProto[B](implicit ev: ProtoEncoder[A, B]): B = ev.toProto(a)
     def toProtoOpt[B](implicit ev: ProtoEncoder[A, B]): Option[B] = Option(toProto[B])
   }
+
+  private def fail(e: Any): Nothing = sys.error(s"Invalid protobuf! $e")
+
   implicit val AddressProto = new ProtoCodec[Address, p.Address] {
     override def toProto(e: Address): p.Address = e match {
       case Address.File(path) => p.Address(path = path)
@@ -69,7 +72,7 @@ object ProtoCodec {
             case p.ResolvedName(Some(p.Range(start, end)), Symbol(symbol)) =>
               Location(addr.toMeta[Address], start, end) -> symbol
           }
-        case _ => sys.error(s"Invalid protobuf: $e")
+        case _ => fail(e)
       }.toMap
       val messages: Seq[CompilerMessage] = e.files.flatMap {
         case p.DatabaseFile(Some(addr), l, messages) =>
@@ -78,8 +81,9 @@ object ProtoCodec {
               CompilerMessage(Location(addr.toMeta[Address], start, end),
                               Severity.fromId(sev.value),
                               message)
-
+            case e => fail(e)
           }
+        case e => fail(e)
       }
       Database(symbols, messages)
     }
