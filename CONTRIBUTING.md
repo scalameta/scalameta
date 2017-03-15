@@ -36,6 +36,10 @@
   than 10 were tried without committing.
 - **Feel free to send Proof-Of-Concept PRs** that you don't intend to get merged.
 
+## Documentation Guidelines
+
+- Prefer the terms `enrichment` and `extension` as opposed to `pimp`
+
 In case of any questions, don't hesitate to ask on our
 [gitter channel](https://gitter.im/scalameta/scalameta).
 
