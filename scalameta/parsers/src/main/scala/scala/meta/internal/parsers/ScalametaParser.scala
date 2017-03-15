@@ -424,7 +424,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Token : TokenInfo]: Unit =
-    if (token.is[T](implicitly[TokenInfo[T]])) {
+    if (token.is[T](implicitly[TokenInfo[T]], implicitly[Classifiable[Token]])) {
       if (token.isNot[EOF]) next()
     } else syntaxErrorExpected[T]
 

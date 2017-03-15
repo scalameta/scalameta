@@ -1,6 +1,8 @@
 package org.scalameta.benchmarks
 
 import scala.meta._
+import contrib._
+import scala.meta.internal.classifiers.classifier
 
 import java.util.concurrent.TimeUnit
 
@@ -12,6 +14,7 @@ import org.openjdk.jmh.annotations.OutputTimeUnit
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.Warmup
+import org.scalameta.logger
 
 /**
   * To run benchmark:
@@ -48,11 +51,46 @@ abstract class MicroBenchmark(path: String) {
     }
   }
 
+  @Benchmark
+  def isToken(): Int = {
+    import scala.meta._
+    val len = code.tokenize.get.collect {
+      case x if x.is[Keyword] => 1
+      case x if x.is[Delim] => 1
+      case x if x.is[Literal] => 1
+    }.sum
+    len
+  }
+
+  @Benchmark
+  def isTree(): Int = {
+    import scala.meta._
+    val len = code.parse[Source].get.collect {
+      case x if x.is[ValOrVar] => 1
+      case x if x.is[Term] => 1
+      case x if x.is[Type] => 1
+      case x if x.is[Pat] => 1
+    }.sum
+    len
+  }
+
   def testMe(): Unit = {
     setup()
     transform()
+    isToken()
+    isTree()
   }
 
+}
+
+
+@classifier
+trait ValOrVar
+object ValOrVar {
+  def unapply(tree: Tree): Boolean = {
+    tree.is[Defn.Val] || tree.is[Decl.Val]||
+    tree.is[Defn.Var] || tree.is[Decl.Var]
+  }
 }
 
 object Micro {

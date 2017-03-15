@@ -41,7 +41,7 @@ class ClassifierSuite extends FunSuite {
       import scala.meta._
       (??? : Unclassifiable).is[Derived]
     """) === """
-      |value is is not a member of org.scalameta.tests.classifiers.Unclassifiable
+      |don't know how to check whether org.scalameta.tests.classifiers.Unclassifiable is org.scalameta.tests.classifiers.Derived
     """.trim.stripMargin)
   }
 
@@ -52,7 +52,7 @@ class ClassifierSuite extends FunSuite {
       (??? : Unclassifiable).is[Auto1]
       (??? : Unclassifiable).is[Auto2]
     """) === """
-      |value is is not a member of org.scalameta.tests.classifiers.Unclassifiable
+      |don't know how to check whether org.scalameta.tests.classifiers.Unclassifiable is org.scalameta.tests.classifiers.Manual
     """.trim.stripMargin)
   }
 
