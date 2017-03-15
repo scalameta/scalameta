@@ -15,7 +15,7 @@ message Database {
 
 message DatabaseFile {
   Address address = 1;
-  repeated SymbolRef symbols = 2;
+  repeated ResolvedName symbols = 2;
 }
 
 message Address {
@@ -23,7 +23,7 @@ message Address {
   string contents = 2; // Address.snippet
 }
 
-message SymbolRef {
+message ResolvedName {
   Range range = 1;
   string symbol = 2;
 }

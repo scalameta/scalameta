@@ -14,7 +14,7 @@ import org.scalameta.semantic.v1.{proto => p}
   *
   * This typeclass is split into encode/decode because the binary protocol mapping
   * is not bijective with the Database encoding. For example, there is no
-  * SymbolRefDecoder.
+  * ResolvedNameDecoder.
   */
 trait ProtoCodec[A, B] extends ProtoDecoder[A, B] with ProtoEncoder[A, B]
 trait ProtoEncoder[A, B] { def toProto(e: A): B }
@@ -36,10 +36,10 @@ object ProtoEncoder {
       else Address.File(e.path)
     }
   }
-  implicit val SymbolRefProto = new ProtoEncoder[(Location, Symbol), p.SymbolRef] {
-    override def toProto(e: (Location, Symbol)): p.SymbolRef = e match {
+  implicit val ResolvedNameProto = new ProtoEncoder[(Location, Symbol), p.ResolvedName] {
+    override def toProto(e: (Location, Symbol)): p.ResolvedName = e match {
       case (Location(_, start, end), sym) =>
-        p.SymbolRef(Option(p.Range(start, end)), sym.syntax)
+        p.ResolvedName(Option(p.Range(start, end)), sym.syntax)
     }
   }
   implicit val DatabaseProto = new ProtoCodec[Database, p.Database] {
@@ -51,7 +51,7 @@ object ProtoEncoder {
             case (addr, symbols) =>
               p.DatabaseFile(
                 address = addr.toProtoOpt[p.Address],
-                symbols = symbols.map(_.toProto[p.SymbolRef]).toSeq
+                symbols = symbols.map(_.toProto[p.ResolvedName]).toSeq
               )
           }
           .toSeq
@@ -60,7 +60,7 @@ object ProtoEncoder {
       Database(e.files.flatMap {
         case p.DatabaseFile(Some(addr), symbols) =>
           symbols.map {
-            case p.SymbolRef(Some(p.Range(start, end)), Symbol(symbol)) =>
+            case p.ResolvedName(Some(p.Range(start, end)), Symbol(symbol)) =>
               Location(addr.toMeta[Address], start, end) -> symbol
           }
         case _ => sys.error(s"Invalid protobuf: $e")
