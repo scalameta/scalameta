@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+username=$1
+api_key=$2
 
 if [[ "$DRONE_BRANCH" == "master" && "$TEST" == "ci-fast" ]]; then
   echo "Running publish from $(pwd)"
@@ -7,8 +9,8 @@ if [[ "$DRONE_BRANCH" == "master" && "$TEST" == "ci-fast" ]]; then
   cat > ~/.bintray/.credentials <<EOF
 realm = Bintray API Realm
 host = api.bintray.com
-user = $BINTRAY_USERNAME
-password = $BINTRAY_API_KEY
+user = $username
+password = $api_key
 EOF
   sbt ci-publish
 else
