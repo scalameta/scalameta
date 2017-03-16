@@ -39,7 +39,6 @@ lazy val scalametaRoot = Project(
     state
   },
   commands += Command.command("ci-publish") { state =>
-    streams.value.log.info("Publishing...")
     "very publish" ::
       state
   },
