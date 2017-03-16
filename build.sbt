@@ -289,6 +289,7 @@ lazy val benchmarks = Project(
   )
   .settings(
     sharedSettings,
+    noPublish,
     resourceDirectory in Jmh := (resourceDirectory in Compile).value,
     javaOptions in run ++= Seq(
       "-Djava.net.preferIPv4Stack=true",
@@ -318,6 +319,7 @@ lazy val readme = scalatex.ScalatexReadme(
   url = "https://github.com/scalameta/scalameta/tree/master",
   source = "Readme"
 ) settings (
+  noPublish,
   exposePaths("readme", Runtime),
   scalaVersion := (scalaVersion in scalameta).value,
   crossScalaVersions := ScalaVersions,
@@ -528,6 +530,12 @@ lazy val buildInfoSettings = Def.settings(
   ),
   buildInfoPackage := "org.scalameta",
   buildInfoObject := "BuildInfo"
+)
+
+lazy val noPublish = Seq(
+  publishArtifact := false,
+  publish := {},
+  publishLocal := {}
 )
 
 def exposePaths(projectName: String, config: Configuration) = {
