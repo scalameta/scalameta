@@ -386,6 +386,7 @@ lazy val sharedSettings = Def.settings(
   scalacOptions ++= Seq("-Xfatal-warnings"),
   parallelExecution in Test := false, // hello, reflection sync!!
   logBuffered := false,
+  updateOptions := updateOptions.value.withCachedResolution(true),
   triggeredMessage in ThisBuild := Watched.clearWhenTriggered
 )
 
