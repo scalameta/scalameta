@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [[ "$DRONE_BRANCH" == "master" ]]; then
+if [[ "$DRONE_BRANCH" == "master" && "$TEST" == "ci-fast" ]]; then
   mkdir -p ~/.bintray
   cat > ~/.bintray/.credentials <<EOF
 realm = Bintray API Realm
