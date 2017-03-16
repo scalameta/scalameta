@@ -2285,4 +2285,12 @@ class SuccessSuite extends FunSuite {
     assert(params.head.syntax === "b: Int")
     assert(params.tail.head.syntax === "c: Int")
   }
+
+  test("lift/unlift Name <-> String") {
+    val name = "f"
+    assert(q"$name(3)".structure === q"f(3)".structure)
+
+    val param"${x: String}: Int" = param"x : Int"
+    assert(x === "x")
+  }
 }

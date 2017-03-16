@@ -24,6 +24,8 @@ object Lift {
   implicit def liftNull[I >: Lit]: Lift[Null, I]             = Lift{ x => Lit(x) }
   implicit def liftUnit[I >: Lit]: Lift[Unit, I]             = Lift{ x => Lit(x) }
 
+  implicit def liftString2Name[O <: String, I >: Name]: Lift[O, I] = Lift{ x => Term.Name(x) }
+
   implicit def liftIdentity[O, I >: O]: Lift[O, I] = Lift { x => x }
   implicit def liftAnyToOption[O, I](implicit lift: Lift[O, I]): Lift[O, Option[I]] = Lift { x => Some(lift(x)) }
   implicit def liftSomeToSeq[O, I](implicit lift: Lift[O, I]): Lift[Some[O], Seq[I]] = Lift { _.toList.map(x => lift(x)) }
