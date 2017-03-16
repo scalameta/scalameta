@@ -21,6 +21,7 @@ lazy val scalametaRoot = Project(
   base = file(".")
 ) settings (
   sharedSettings,
+  noPublish,
   unidocSettings,
   commands += Command.command("ci-fast") { state =>
     // NOTE. The so/wow/such/very commands are from sbt-doge and are used to
@@ -47,8 +48,6 @@ lazy val scalametaRoot = Project(
     val runContribTests = (test in contrib in Test).value
     val runDocs = (run in readme in Compile).toTask(" --validate").value
   },
-  publish := {},
-  publishSigned := {},
   console := (console in scalameta in Compile).value
 ) aggregate (
   benchmarks,
@@ -535,6 +534,7 @@ lazy val buildInfoSettings = Def.settings(
 lazy val noPublish = Seq(
   publishArtifact := false,
   publish := {},
+  publishSigned := {},
   publishLocal := {}
 )
 
