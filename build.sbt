@@ -38,6 +38,11 @@ lazy val scalametaRoot = Project(
     "scalahostSbt/test" ::
     state
   },
+  commands += Command.command("ci-publish") { state =>
+    streams.value.log.info("Publishing...")
+    "very publish" ::
+      state
+  },
   packagedArtifacts := Map.empty,
   unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject,
   aggregate in test := false,

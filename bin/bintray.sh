@@ -10,7 +10,7 @@ host = api.bintray.com
 user = $BINTRAY_USERNAME
 password = $BINTRAY_API_KEY
 EOF
-  sbt "such publish"
+  sbt ci-publish
 else
   echo "Skipping publish, branch=$DRONE_BRANCH test=$TEST"
 fi
