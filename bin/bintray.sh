@@ -9,8 +9,8 @@ if [[ "$DRONE_BRANCH" == "master" && "$TEST" == "ci-fast" ]]; then
   cat > ~/.bintray/.credentials <<EOF
 realm = Bintray API Realm
 host = api.bintray.com
-user = $username
-password = $api_key
+user = ${BINTRAY_USERNAME}
+password = ${BINTRAY_API_KEY}
 EOF
   sbt ci-publish
 else

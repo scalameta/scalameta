@@ -26,7 +26,7 @@ pipeline:
     volumes:
       - /platform:/keys
     commands:
-      - ./bin/bintray.sh ${BINTRAY_USERNAME} ${BINTRAY_API_KEY}
+      - ./bin/bintray.sh
     when:
       event: push
       branch: [master]
