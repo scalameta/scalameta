@@ -11,6 +11,9 @@ object ScalahostSbtPlugin extends AutoPlugin {
     // use dependsOn(foo % Scalahost) to automatically include the semantic database
     // of foo in the scala.meta.Mirror() constructor.
     val Scalameta: Configuration = config("scalameta")
+    val scalametaDependencies: SettingKey[Seq[ProjectRef]] =
+      settingKey[Seq[ProjectRef]](
+        "Projects to analyze with scala.meta, automatically set by dependsOn(foo % Scalahost).")
   }
   import autoImport._
   override def requires = JvmPlugin
@@ -122,9 +125,6 @@ object ScalahostSbtPlugin extends AutoPlugin {
   // Defaults to version.value of in scala.meta's build.sbt
   private val scalahostVersion: String =
     sys.props.getOrElse("scalahost.version", BuildInfo.version)
-  private val scalametaDependencies: SettingKey[Seq[ProjectRef]] =
-    settingKey[Seq[ProjectRef]](
-      "Projects to analyze with scala.meta, automatically set by dependsOn(foo % Scalahost).")
   private def scalahostAggregateFilter: Def.Initialize[ScopeFilter] = Def.setting {
     ScopeFilter(inProjects(scalametaDependencies.value.map(x => LocalProject(x.project)): _*),
                 inConfigurations(Compile, Test, IntegrationTest))
