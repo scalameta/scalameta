@@ -126,7 +126,8 @@ object git {
   }
 
   def distance(from: String, to: String): Int = {
-    shell.check_output(s"git rev-list $to $from --count", cwd = ".").trim.toInt
+    def ncommits(ref: String) = shell.check_output(s"git rev-list $ref --count", cwd = ".").trim.toInt
+    ncommits(to) - ncommits(from)
   }
 
   def currentSha(): String = {
