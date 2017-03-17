@@ -6,6 +6,7 @@ import org.scalameta.os
 import PgpKeys._
 import UnidocKeys._
 import sbt.ScriptedPlugin._
+import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 
 lazy val ScalaVersion = "2.11.8"
 lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
@@ -170,7 +171,14 @@ lazy val semantic = Project(
   base = file("scalameta/semantic")
 ) settings (
   publishableSettings,
-  description := "Scala.meta's semantic APIs"
+  description := "Scala.meta's semantic APIs",
+  // Protobuf setup for binary serialization.
+  PB.targets in Compile := Seq(
+    scalapb.gen(
+      flatPackage = true // Don't append filename to package
+    ) -> sourceManaged.in(Compile).value
+  ),
+  libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % scalapbVersion % "protobuf"
 ) dependsOn (common, trees)
 
 lazy val scalameta = Project(

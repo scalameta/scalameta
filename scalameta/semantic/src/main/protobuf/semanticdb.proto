@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package org.scalameta.semantic.v1.proto;
+
+import "scalapb/scalapb.proto";
+
+// scala.meta.semantic.v1.Database
+message Database {
+  // a database is treated as a sequence of database files to accommodate
+  // - incremental compilation, a database file maps one-to-one with a compilation unit.
+  // - simple merging of two databases, the bytes of two semanticdbs can in
+  //   essence be concatenated.
+  repeated DatabaseFile files = 1;
+}
+
+message DatabaseFile {
+  Address address = 1;
+  repeated ResolvedName symbols = 2;
+}
+
+message Address {
+  string path = 1; // Address.file
+  string contents = 2; // Address.snippet
+}
+
+message ResolvedName {
+  Range range = 1;
+  string symbol = 2;
+}
+
+message Range {
+  int32 start = 2;
+  int32 end = 3;
+}
