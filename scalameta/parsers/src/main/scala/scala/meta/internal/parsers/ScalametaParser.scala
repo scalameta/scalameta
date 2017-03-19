@@ -2728,7 +2728,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Term.Param]] = {
     var parsedImplicits = false
-    def paramClause(): List[Term.Param] = token match {
+    def paramClause(first: Boolean): List[Term.Param] = token match {
       case RightParen() =>
         Nil
       case tok: Ellipsis if tok.rank == 2 =>
@@ -2738,15 +2738,17 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           next()
           parsedImplicits = true
         }
-        commaSeparated(param(ownerIsCase, ownerIsType, isImplicit = parsedImplicits))
+        commaSeparated(param(ownerIsCase && first, ownerIsType, isImplicit = parsedImplicits))
     }
+    var first = true
     val paramss = new ListBuffer[List[Term.Param]]
     newLineOptWhenFollowedBy[LeftParen]
     while (!parsedImplicits && token.is[LeftParen]) {
       next()
-      paramss += paramClause()
+      paramss += paramClause(first)
       accept[RightParen]
       newLineOptWhenFollowedBy[LeftParen]
+      first = false
     }
     paramss.toList
   }

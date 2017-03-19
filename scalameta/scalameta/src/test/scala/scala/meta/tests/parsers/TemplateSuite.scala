@@ -147,6 +147,15 @@ class TemplateSuite extends ParseSuite {
       templStat("class C(override val x: Int)")
   }
 
+  test("case class C(x: Int)(y: => Int)") {
+    val Class(Mod.Case() :: Nil, Type.Name("C"), Nil,
+              Ctor.Primary(Nil, Ctor.Ref.Name("this"),
+                           (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) ::
+                           (Term.Param(Nil, Term.Name("y"), Some(Type.Arg.ByName(Type.Name("Int"))), None) :: Nil) :: Nil),
+              EmptyTemplate()) =
+      templStat("case class C(x: Int)(y: => Int)")
+  }
+
   test("object O") {
     val Object(Nil, Term.Name("O"), EmptyTemplate()) = templStat("object O")
   }
