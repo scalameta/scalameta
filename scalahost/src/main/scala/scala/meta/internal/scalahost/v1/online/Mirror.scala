@@ -23,8 +23,8 @@ class Mirror(val global: Global)
     with BaseMirror
     with DatabaseOps
     with ParseOps
-    with SymbolOps
     with ReporterOps
+    with SymbolOps
     with ReflectionToolkit {
 
   override def toString: String = {
@@ -62,7 +62,8 @@ class Mirror(val global: Global)
         })
         if (unmappedNames != "") sys.error(unmappedNames.trim)
         val symbols = databases.flatMap(_.symbols).toMap
-        Database(symbols)
+        val messages = databases.flatMap(_.messages)
+        Database(symbols, messages)
       }
       cachedDatabaseKey = recomputeCachedDatabaseKey()
       cachedDatabase = database

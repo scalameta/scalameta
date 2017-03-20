@@ -22,7 +22,7 @@ import java.io.FileOutputStream
 
 case class Database(
   symbols: Map[Location, Symbol],
-  messages: Seq[CompilerMessage] = Nil
+  messages: Seq[CompilerMessage]
   // TODO: Additional fields are to be discussed
   // https://github.com/scalameta/scalameta/issues/605
 ) {
@@ -55,7 +55,7 @@ case class Database(
 
 object Database extends DatabaseOps {
   def apply(): Database = {
-    Database(Map[Location, Symbol]())
+    Database(Map[Location, Symbol](), Nil)
   }
   def fromBinary(bytes: Array[Byte]): Try[Database] =
     Try(p.Database.parseFrom(bytes).toMeta[Database])

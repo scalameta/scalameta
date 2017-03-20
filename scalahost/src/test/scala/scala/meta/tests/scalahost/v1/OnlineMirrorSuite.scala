@@ -15,8 +15,6 @@ import scala.meta.semantic.v1.Mirror
 import scala.meta.semantic.v1.Database
 import scala.meta.internal.scalahost.v1.online.{Mirror => OnlineMirror, _}
 
-import org.scalameta.logger
-
 abstract class OnlineMirrorSuite extends FunSuite {
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")

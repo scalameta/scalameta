@@ -289,7 +289,7 @@ trait DatabaseOps { self: Mirror =>
           sys.error(buf.toString)
         }
 
-        Database(symbols.toMap, unit.messages)
+        Database(symbols.toMap, unit.reportedMessages)
       })
     }
   }

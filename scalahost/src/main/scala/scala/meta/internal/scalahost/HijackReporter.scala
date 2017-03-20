@@ -24,7 +24,11 @@ class ScalahostReporter(underlying: Reporter) extends StoreReporter {
 /** Replaces g.reporter with a ScalahostReporter */
 trait HijackReporter { self: ScalahostPlugin =>
   def hijackReporter(): Unit = {
-    val scalahostReporter = new ScalahostReporter(g.reporter)
-    g.reporter = scalahostReporter
+    g.reporter match {
+      case _: ScalahostReporter => // do nothing, already hijacked
+      case underlying =>
+        val scalahostReporter = new ScalahostReporter(underlying)
+        g.reporter = scalahostReporter
+    }
   }
 }

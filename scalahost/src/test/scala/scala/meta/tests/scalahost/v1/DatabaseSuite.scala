@@ -114,5 +114,4 @@ class DatabaseSuite extends OnlineMirrorSuite {
       assert(age.symbol === Symbol("_empty_.User#copy(Ljava/lang/String;I)LUser;.(age)"))
     }
   )
-
 }

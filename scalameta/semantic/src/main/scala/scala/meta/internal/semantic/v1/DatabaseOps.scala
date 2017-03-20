@@ -4,6 +4,7 @@ package semantic
 package v1
 
 import scala.collection.mutable
+import scala.meta.semantic.v1.CompilerMessage
 import scala.meta.semantic.v1.Database
 import scala.meta.semantic.v1.Location
 import scala.meta.semantic.v1.Symbol
@@ -16,7 +17,10 @@ trait DatabaseOps {
       val addrs = db2.symbols.keys.map(_.addr).toSet
       addrs.foreach(addr => symbols2.retain((k, _) => k.addr != addr))
       symbols2 ++= db2.symbols
-      Database(symbols2.toMap)
+      val messages = mutable.LinkedHashSet.empty[CompilerMessage]
+      messages ++= db1.messages
+      messages ++= db2.messages
+      Database(symbols2.toMap, messages.toSeq)
     }
   }
 }
