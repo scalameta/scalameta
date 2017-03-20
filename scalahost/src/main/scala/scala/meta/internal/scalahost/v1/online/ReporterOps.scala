@@ -31,7 +31,7 @@ trait ReporterOps { self: Mirror =>
   }
 
   implicit class XtensionCompilationUnitReporter(unit: g.CompilationUnit) {
-    def reportedMessages: Seq[CompilerMessage] = {
+    def hijackedMessages: Seq[CompilerMessage] = {
       g.reporter match {
         case r: StoreReporter =>
           val path = unit.body.pos.toSemantic.addr.syntax
