@@ -26,7 +26,7 @@ abstract class OnlineMirrorSuite extends FunSuite {
     def fail(msg: String) = sys.error(s"OnlineMirrorSuite initialization failed: $msg")
     val classpath = System.getProperty("sbt.paths.scalahost.test.classes")
     val pluginpath = System.getProperty("sbt.paths.scalahost.compile.jar")
-    val options = "-Yrangepos -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:scalahost"
+    val options = "-Yrangepos -Ywarn-unused-import -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:scalahost"
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
     val reporter = new StoreReporter()

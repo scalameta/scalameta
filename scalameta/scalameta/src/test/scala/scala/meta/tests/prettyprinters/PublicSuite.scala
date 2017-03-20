@@ -460,4 +460,9 @@ class PublicSuite extends FunSuite {
   test("scala.meta.transversers.Traverser.toString") {
     // n/a
   }
+  test("scala.meta.semantic.v1.Severity.Unknown") { }
+  test("scala.meta.semantic.v1.Severity.Error") { }
+  test("scala.meta.semantic.v1.Severity.Info") { }
+  test("scala.meta.semantic.v1.Severity.Warning") { }
+  test("scala.meta.semantic.v1.CompilerMessage") { }
 }

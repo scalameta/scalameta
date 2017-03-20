@@ -86,6 +86,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.semantic.v1.Address *
       |scala.meta.semantic.v1.Address.File *
       |scala.meta.semantic.v1.Address.Snippet *
+      |scala.meta.semantic.v1.CompilerMessage *
       |scala.meta.semantic.v1.Completed *
       |scala.meta.semantic.v1.Completed.Error *
       |scala.meta.semantic.v1.Completed.Success *
@@ -93,6 +94,11 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.semantic.v1.Location *
       |scala.meta.semantic.v1.Mirror
       |scala.meta.semantic.v1.SemanticException
+      |scala.meta.semantic.v1.Severity *
+      |scala.meta.semantic.v1.Severity.Error *
+      |scala.meta.semantic.v1.Severity.Info *
+      |scala.meta.semantic.v1.Severity.Unknown *
+      |scala.meta.semantic.v1.Severity.Warning *
       |scala.meta.semantic.v1.Signature *
       |scala.meta.semantic.v1.Signature.Method *
       |scala.meta.semantic.v1.Signature.Self *
