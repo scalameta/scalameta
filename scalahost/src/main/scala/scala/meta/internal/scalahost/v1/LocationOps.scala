@@ -25,7 +25,7 @@ trait LocationOps {
 
   implicit class XtensionMInputAddr(minput: m.Input) {
     def toAddr: Address = minput match {
-      case scala.meta.inputs.Input.File(file, _) => Address.File(file.getAbsolutePath)
+      case scala.meta.inputs.Input.File(path, _) => Address.File(path)
       case other => sys.error(s"unsupported input " + other)
     }
   }

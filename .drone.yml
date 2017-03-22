@@ -10,8 +10,7 @@ pipeline:
       - /drone/.git
 
   tests:
-    image: scalaplatform/scala:0.6
-    pull: true
+    image: scalacenter/scastie-docker-sbt:0.0.10
     volumes:
       - /platform:/keys
     commands:
@@ -21,8 +20,7 @@ pipeline:
       - sbt $TEST
 
   publish:
-    image: scalaplatform/scala:0.6
-    pull: true
+    image: scalacenter/scastie-docker-sbt:0.0.10
     volumes:
       - /platform:/keys
     commands:
@@ -56,7 +54,26 @@ pipeline:
       - /drone/.git
 
 matrix:
-  TEST:
-    - ci-fast
-    - ci-slow
+  include:
+    # 2.11.8
+    - TEST: ci-fast
+      SCALA_VERSION: 2.11.8
+      SCALA_JS: false
+    - TEST: ci-fast
+      SCALA_VERSION: 2.11.8
+      SCALA_JS: true
+    - TEST: ci-fast
+    # 2.12.1
+      SCALA_VERSION: 2.12.1
+      SCALA_JS: false
+    - TEST: ci-fast
+      SCALA_VERSION: 2.12.1
+      SCALA_JS: true
+    # integration tests
+    - TEST: ci-slow
+      SCALA_VERSION: 2.11.8
+      SCALA_JS: false
+    - TEST: ci-slow
+      SCALA_VERSION: 2.12.1
+      SCALA_JS: false
 
