@@ -12,7 +12,7 @@ import LegacyToken._
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokenizers._
-import scala.meta.internal.tokenizers.ScalametaTokenizerCache._
+import scala.meta.internal.tokenizers.PlatformTokenizerCache._
 
 class ScalametaTokenizer(input: Input, dialect: Dialect) {
   def tokenize(): Tokens = {

@@ -7,14 +7,17 @@ import scala.collection.immutable.Seq
 import scala.runtime.ScalaRunTime
 import scala.language.implicitConversions
 import scala.language.experimental.macros
+
 import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
+
 import org.scalameta.data._
 import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
 import scala.meta.internal.ast.{Liftables => AstLiftables, Reflection => AstReflection}
+
 import org.scalameta._
 import org.scalameta.invariants._
-import scala.meta.dialects // no underscore import
+import scala.meta.dialects
 import scala.meta.classifiers._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
@@ -25,6 +28,7 @@ import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.tokens._
 import scala.compat.Platform.EOL
+import scala.meta.io.AbsolutePath
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
@@ -122,11 +126,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         }
         curr + 1
       }
-      val result = {
-        if (reflectInput.file.file != null)
-          Input.File(reflectInput.file.file)
-        else Input.String(new String(reflectInput.content)) // NOTE: can happen in REPL or in custom Global
-      }
+      val result = Input.String(new String(reflectInput.content))
       Input.Slice(result, start, end)
     }
     (metaInput, mode)

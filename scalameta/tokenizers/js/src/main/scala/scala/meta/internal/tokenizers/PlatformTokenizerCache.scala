@@ -8,7 +8,7 @@ import scala.meta.tokens._
 
 import java.{util => ju}
 
-object ScalametaTokenizerCache {
+object PlatformTokenizerCache {
   // On the JVM, this is a weak hashmap.
   val megaCache = new ju.HashMap[Dialect, mutable.Map[Input, Tokens]]()
   val miniCacheSyncRoot = new Object

@@ -260,8 +260,6 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Address.File") {}
-
   test("scala.meta.semantic.v1.Address.toString") {
     // covered below
   }

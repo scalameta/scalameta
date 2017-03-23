@@ -7,6 +7,10 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.internal.ast._
 
+// TODO: move back into SyntacticSuite. Scala.js does not support runtime checks
+// on primitives like Float/Double/Char/Byte/... See:
+// https://www.scala-js.org/doc/semantics.html#runtime-type-tests-are-based-on-values
+// The TreeSyntax pretty printer relies on runtime type checks.
 class LiteralSyntacticSuite extends SyntacticSuite {
   test("literalTypes") {
     intercept[ParseException] {
@@ -27,6 +31,24 @@ class LiteralSyntacticSuite extends SyntacticSuite {
     assert(pat("_: 42L").show[Syntax] === "_: 42L")
     assert(pat("_: true").show[Syntax] === "_: true")
     assert(pat("_: false").show[Syntax] === "_: false")
+  }
+
+  test("assorted literals") {
+    assert(templStat("true").show[Syntax] === "true")
+    assert(templStat("false").show[Syntax] === "false")
+    assert(templStat("0").show[Syntax] === "0")
+    assert(templStat("0l").show[Syntax] === "0L")
+    assert(templStat("0L").show[Syntax] === "0L")
+    assert(templStat("0f").show[Syntax] === "0.0f")
+    assert(templStat("0F").show[Syntax] === "0.0f")
+    assert(templStat("0.0").show[Syntax] === "0.0d")
+    assert(templStat("0d").show[Syntax] === "0.0d")
+    assert(templStat("0D").show[Syntax] === "0.0d")
+    assert(templStat("'0'").show[Syntax] === "'0'")
+    assert(templStat("\"0\"").show[Syntax] === "\"0\"")
+    assert(templStat("'zero").show[Syntax] === "'zero")
+    assert(templStat("null").show[Syntax] === "null")
+    assert(templStat("()").show[Syntax] === "()")
   }
 }
 
