@@ -118,8 +118,11 @@ class PublicSuite extends FunSuite {
     assert(scala.meta.dialects.ParadiseTypelevel212.toString === "ParadiseTypelevel212")
   }
 
-  test("scala.meta.io.PlatformIO") {}
   test("scala.meta.io.AbsolutePath") {}
+
+  test("scala.meta.io.InputStreamIO") {}
+
+  test("scala.meta.io.PlatformIO") {}
 
   test("scala.meta.inputs.Input.toString") {
     // covered below
