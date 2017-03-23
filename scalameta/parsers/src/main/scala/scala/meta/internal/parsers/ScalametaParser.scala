@@ -337,7 +337,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (token.is[LeftParen]) inParens(body)
     else { accept[LeftParen]; alt }
 
-  @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, Lit(()))
+  @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, LitUnit(()))
   @inline final def inParensOrNil[T](body: => List[T]): List[T] = inParensOrError(body, Nil)
 
   @inline final def inBraces[T](body: => T): T = {
@@ -351,7 +351,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     else { accept[LeftBrace]; alt }
 
   @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOrError(body, Nil)
-  @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit(()))
+  @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, LitUnit(()))
   @inline final def dropAnyBraces[T](body: => T): T =
     if (token.is[LeftBrace]) inBraces(body)
     else body
@@ -794,7 +794,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       Some(atPos(tree, tree)(Term.Param(Nil, name, Some(tpt), None)))
     case Term.Ascribe(name: Term.Placeholder, tpt) =>
       Some(atPos(tree, tree)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)))
-    case Lit(()) =>
+    case LitUnit(()) =>
       None
     case other =>
       syntaxError(s"not a legal formal parameter", at = other)
@@ -850,7 +850,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // see comments to makeTupleType for discussion
     body match {
       case Seq(q @ Term.Quasi(1, _)) => atPos(q, q)(Term.Tuple(body))
-      case _ => makeTuple[Term](body, () => Lit(()), Term.Tuple(_))
+      case _ => makeTuple[Term](body, () => LitUnit(()), Term.Tuple(_))
     }
   }
 
@@ -858,7 +858,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     makeTupleTerm(inParens(if (token.is[RightParen]) Nil else bodyf))
   }
 
-  // TODO: make zero tuple for types Lit.Unit() too?
+  // TODO: make zero tuple for types LitUnit() too?
   def makeTupleType(body: List[Type]): Type = {
     // NOTE: we can't make this autoPos, unlike makeTuplePatParens
     // because, by the time control reaches this method, we're already past the closing parenthesis
@@ -1417,36 +1417,36 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val max = if (isHex) BigInt(Int.MaxValue) * 2 + 1 else BigInt(Int.MaxValue)
         if (value > max) syntaxError("integer number too large", at = token)
         else if (value < min) syntaxError("integer number too small", at = token)
-        Lit(value.toInt)
+        LitInt(value.toInt)
       case Constant.Long(rawValue) =>
         val value = if (isNegated) -rawValue else rawValue
         val min = if (isHex) BigInt(Long.MinValue) * 2 + 1 else BigInt(Long.MinValue)
         val max = if (isHex) BigInt(Long.MaxValue) * 2 + 1 else BigInt(Long.MaxValue)
         if (value > max) syntaxError("integer number too large", at = token)
         else if (value < min) syntaxError("integer number too small", at = token)
-        Lit(value.toLong)
+        LitLong(value.toLong)
       case Constant.Float(rawValue) =>
         val value = if (isNegated) -rawValue else rawValue
         if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
-        Lit(value.toFloat)
+        LitFloat(value.toFloat)
       case Constant.Double(rawValue) =>
         val value = if (isNegated) -rawValue else rawValue
         if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
-        Lit(value.toDouble)
+        LitDouble(value.toDouble)
       case Constant.Char(value) =>
-        Lit(value)
+        LitChar(value)
       case Constant.String(value) =>
-        Lit(value)
+        LitString(value)
       case Constant.Symbol(value) =>
-        Lit(value)
+        LitSymbol(value)
       case KwTrue() =>
-        Lit(true)
+        LitBoolean(true)
       case KwFalse() =>
-        Lit(false)
+        LitBoolean(false)
       case KwNull() =>
-        Lit(null)
+        LitNull(null)
       case _ =>
         unreachable(debug(token))
     }
@@ -1471,11 +1471,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         next()
         loop()
       case Interpolation.Part(value) =>
-        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(value))
+        partsBuf += atPos(in.tokenPos, in.tokenPos)(LitString(value))
         next()
         loop()
       case Xml.Part(value) =>
-        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit(value))
+        partsBuf += atPos(in.tokenPos, in.tokenPos)(LitString(value))
         next()
         loop()
       case Interpolation.SpliceStart() | Xml.SpliceStart() =>
@@ -1605,7 +1605,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val thenp = expr()
       if (token.is[KwElse]) { next(); Term.If(cond, thenp, expr()) }
       else if (token.is[Semicolon] && ahead { token.is[KwElse] }) { next(); next(); Term.If(cond, thenp, expr()) }
-      else { Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit(()))) }
+      else { Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(LitUnit(()))) }
     case KwTry() =>
       next()
       val body: Term = token match {
@@ -1661,7 +1661,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     case KwReturn() =>
       next()
       if (token.is[ExprIntro]) Term.Return(expr())
-      else Term.Return(atPos(in.tokenPos, auto)(Lit(())))
+      else Term.Return(atPos(in.tokenPos, auto)(LitUnit(())))
     case KwThrow() =>
       next()
       Term.Throw(expr())
@@ -1720,7 +1720,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         // Therefore, when we encounter RightArrow, the part in parentheses is already parsed into a Term,
         // and we need to figure out whether that term represents what we expect from a lambda's param list
         // in order to disambiguate. The term that we have at hand might wildly differ from the param list that one would expect.
-        // For example, when parsing `() => x`, we arrive at RightArrow having `Lit.Unit` as the parsed term.
+        // For example, when parsing `() => x`, we arrive at RightArrow having `LitUnit` as the parsed term.
         // That's why we later need `convertToParams` to make sense of what the parser has produced.
         //
         // Rules:
@@ -1750,7 +1750,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             }
           }
           t match {
-            case Lit(()) => true // 1
+            case LitUnit(()) => true // 1
             case NameLike() => location != InTemplate // 2-3
             case ParamLike() => inParens || location == InBlock // 4-5
             case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
@@ -2547,7 +2547,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case q: Pat.Arg.Quasi => q.become[Pat.Quasi]
           case p => p.require[Pat]
         }
-        makeTuple[Pat](patterns, () => Lit(()), Pat.Tuple(_))
+        makeTuple[Pat](patterns, () => LitUnit(()), Pat.Tuple(_))
       case _ =>
         onError(token)
     })
