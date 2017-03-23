@@ -27,7 +27,7 @@ object Input {
   }
 
   @data class Stream(stream: java.io.InputStream, charset: Charset) extends Input {
-    lazy val chars = PlatformIO.read(stream, charset).toArray
+    lazy val chars = InputStreamIO.read(stream, charset).toArray
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
     override def toString = "Input.Stream(<stream>, Charset.forName(\"" + charset.name + "\"))"
   }

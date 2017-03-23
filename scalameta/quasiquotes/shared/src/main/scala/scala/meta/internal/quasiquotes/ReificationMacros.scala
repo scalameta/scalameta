@@ -124,7 +124,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       }
       val result = {
         if (reflectInput.file.file != null)
-          Input.String(scala.io.Source.fromFile(reflectInput.file.file).mkString)
+          Input.File(reflectInput.file.file)
         else Input.String(new String(reflectInput.content)) // NOTE: can happen in REPL or in custom Global
       }
       Input.Slice(result, start, end)

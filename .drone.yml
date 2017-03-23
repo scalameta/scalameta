@@ -10,17 +10,17 @@ pipeline:
       - /drone/.git
 
   tests:
-    image: scalacenter/scastie-docker-sbt:0.0.10
+    image: scalaplatform/scala:0.6
     volumes:
       - /platform:/keys
     commands:
-      - git fetch --tags && git log | head -n 20
+      - apt-get install git && git fetch --tags && git log | head -n 20
       - ./bin/checkCLA.sh
       - ./bin/scalafmt --test
       - sbt $TEST
 
   publish:
-    image: scalacenter/scastie-docker-sbt:0.0.10
+    image: scalaplatform/scala:0.6
     volumes:
       - /platform:/keys
     commands:

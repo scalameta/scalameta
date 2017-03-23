@@ -2,7 +2,6 @@ package scala.meta
 package internal
 package parsers
 
-import java.lang.reflect.InvocationTargetException
 import scala.meta.inputs._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
@@ -42,9 +41,7 @@ object Absolutize {
           TokenizeException(pos.absolutize, message)
         case ParseException(pos, message) =>
           ParseException(pos.absolutize, message)
-        case e => e
-//        case ex: InvocationTargetException => // does not exist in Scala.js
-//          new InvocationTargetException(ex.getTargetException.absolutize, ex.getMessage)
+        case PlatformInvocationTargetException(ex) => ex
       }
       ex1.setStackTrace(ex.getStackTrace)
       ex1
