@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package org.scalameta.semantic.v1.proto;
 
-import "scalapb/scalapb.proto";
-
 // scala.meta.semantic.v1.Database
 message Database {
   // a database is treated as a sequence of database files to accommodate

@@ -177,8 +177,7 @@ lazy val semantic = Project(
     scalapb.gen(
       flatPackage = true // Don't append filename to package
     ) -> sourceManaged.in(Compile).value
-  ),
-  libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % scalapbVersion % "protobuf"
+  )
 ) dependsOn (common, trees)
 
 lazy val scalameta = Project(
