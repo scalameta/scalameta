@@ -2,7 +2,6 @@ package scala.meta
 package inputs
 
 import java.nio.charset.Charset
-
 import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.data._
 import org.scalameta.invariants._

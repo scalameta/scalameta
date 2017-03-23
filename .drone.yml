@@ -11,16 +11,18 @@ pipeline:
 
   tests:
     image: scalaplatform/scala:0.6
+    pull: true
     volumes:
       - /platform:/keys
     commands:
-      - apt-get install git && git fetch --tags && git log | head -n 20
+      - git fetch --tags && git log | head -n 20
       - ./bin/checkCLA.sh
       - ./bin/scalafmt --test
       - sbt $TEST
 
   publish:
     image: scalaplatform/scala:0.6
+    pull: true
     volumes:
       - /platform:/keys
     commands:
