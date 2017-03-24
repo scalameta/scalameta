@@ -66,7 +66,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       // step 2: generate boilerplate required by the classifier infrastructure
       val q"..$classifierBoilerplate" = q"""
         private object sharedClassifier extends $Classifier[$Token, $name] {
-          def apply(x: $Token): Boolean = x.isInstanceOf[$name]
+          def apply(x: $Token): _root_.scala.Boolean = x.isInstanceOf[$name]
         }
         implicit def classifier[T <: $Token]: $Classifier[T, $name] = {
           sharedClassifier.asInstanceOf[$Classifier[T, $name]]

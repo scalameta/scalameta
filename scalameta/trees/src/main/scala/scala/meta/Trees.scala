@@ -297,14 +297,10 @@ object Pat {
 
 @branch trait Lit extends Term with Pat with Type with Pat.Type {
   def value: Any
-  require(value == null || value.isInstanceOf[Byte] || value.isInstanceOf[Short] ||
-  value.isInstanceOf[Char] || value.isInstanceOf[Int] || value.isInstanceOf[Long] ||
-  value.isInstanceOf[Float] || value.isInstanceOf[Double] || value.isInstanceOf[Boolean] ||
-  value.isInstanceOf[Unit] || value.isInstanceOf[String] || value.isInstanceOf[scala.Symbol])
 }
 object Lit {
-  def unapply(arg: Lit): Option[Any] = Option(arg.value)
-  @ast class Null(value: Any) extends Lit
+  def unapply(arg: Lit): Option[scala.Any] = Option(arg.value)
+  @ast class Null(value: scala.Any) extends Lit
   @ast class Int(value: scala.Int) extends Lit
   @ast class Double(value: scala.Double) extends Lit
   @ast class Float(value: scala.Float) extends Lit

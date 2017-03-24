@@ -27,7 +27,7 @@ class RootNamerMacros(val c: Context) extends MacroHelpers {
 
       val q"..$classifierBoilerplate" = q"""
         private object sharedClassifier extends $Classifier[$Token, $Token] {
-          def apply(x: $Token): Boolean = true
+          def apply(x: $Token): _root_.scala.Boolean = true
         }
         implicit def classifier[T <: $Token]: $Classifier[T, $Token] = {
           sharedClassifier.asInstanceOf[$Classifier[T, $Token]]
