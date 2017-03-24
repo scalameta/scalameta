@@ -5,6 +5,12 @@ import java.io._
 import scala.sys.process._
 import scala.compat.Platform.EOL
 
+object time {
+  // cached here to use consistent time stamp across sbt reloads, which happen
+  // for every ++SCALA_VERSION switch in sbt "very publish"
+  val current = System.currentTimeMillis().toString
+}
+
 object shell {
   def exec(command: String, cwd: String = "."): (Int, String, String) = {
     def slurp(stream: InputStream): String = {

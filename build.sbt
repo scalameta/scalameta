@@ -2,6 +2,7 @@ import java.io._
 import scala.util.Try
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
+import org.scalajs.sbtplugin.ScalaJSCrossVersion
 import org.scalameta.os
 import PgpKeys._
 import UnidocKeys._
@@ -405,7 +406,12 @@ lazy val readme = scalatex
 lazy val sharedSettings = Def.settings(
   scalaVersion := ScalaVersion,
   crossScalaVersions := ScalaVersions,
-  crossVersion := CrossVersion.binary,
+  crossVersion := {
+    crossVersion.value match {
+      case old @ ScalaJSCrossVersion.binary => old
+      case _ => CrossVersion.binary
+    }
+  },
   version := LibraryVersion,
   organization := "org.scalameta",
   resolvers += Resolver.sonatypeRepo("snapshots"),
@@ -428,8 +434,8 @@ lazy val mergeSettings = Def.settings(
   sharedSettings,
   test.in(assembly) := {},
   logLevel.in(assembly) := Level.Error,
-  assemblyJarName
-    .in(assembly) := name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
+  assemblyJarName.in(assembly) :=
+    name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
   assemblyOption.in(assembly) ~= { _.copy(includeScala = false) },
   Keys.`package`.in(Compile) := {
     val slimJar = Keys.`package`.in(Compile).value
@@ -458,7 +464,7 @@ def computePreReleaseVersion(LibrarySeries: String): String = {
       s"$distance-$currentSha"
     }
     if (os.git.isStable()) gitDescribeSuffix
-    else gitDescribeSuffix + "." + System.currentTimeMillis().toString
+    else gitDescribeSuffix + "." + os.time.current
   }
   LibrarySeries + "-" + preReleaseSuffix
 }
