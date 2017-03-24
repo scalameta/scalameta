@@ -304,20 +304,19 @@ object Pat {
 }
 object Lit {
   def unapply(arg: Lit): Option[Any] = Option(arg.value)
+  @ast class Null(value: Any) extends Lit
+  @ast class Int(value: scala.Int) extends Lit
+  @ast class Double(value: scala.Double) extends Lit
+  @ast class Float(value: scala.Float) extends Lit
+  @ast class Byte(value: scala.Byte) extends Lit
+  @ast class Short(value: scala.Short) extends Lit
+  @ast class Char(value: scala.Char) extends Lit
+  @ast class Long(value: scala.Long) extends Lit
+  @ast class Boolean(value: scala.Boolean) extends Lit
+  @ast class Unit(value: scala.Unit) extends Lit
+  @ast class String(value: scala.Predef.String) extends Lit
+  @ast class Symbol(value: scala.Symbol) extends Lit
 }
-
-@ast class LitNull(value: Any) extends Lit
-@ast class LitInt(value: scala.Int) extends Lit
-@ast class LitDouble(value: scala.Double) extends Lit
-@ast class LitFloat(value: scala.Float) extends Lit
-@ast class LitByte(value: scala.Byte) extends Lit
-@ast class LitShort(value: scala.Short) extends Lit
-@ast class LitChar(value: scala.Char) extends Lit
-@ast class LitLong(value: scala.Long) extends Lit
-@ast class LitBoolean(value: scala.Boolean) extends Lit
-@ast class LitUnit(value: scala.Unit) extends Lit
-@ast class LitString(value: scala.Predef.String) extends Lit
-@ast class LitSymbol(value: scala.Symbol) extends Lit
 
 @branch trait Member extends Tree with Scope {
   def name: Name
