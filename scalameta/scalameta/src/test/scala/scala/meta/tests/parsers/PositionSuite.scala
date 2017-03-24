@@ -10,19 +10,19 @@ class PositionSuite extends ParseSuite {
     val tree = term("1 + (2 / 3) * 4")
     assert(tree.show[Positions] === """
       |Term.ApplyInfix{0..15}(
-        |Lit{0..1}(1),
+        |Lit.Int{0..1}(1),
         | Term.Name{2..3}("+"),
         | Nil,
         | List(
           |Term.ApplyInfix{4..15}(
             |Term.ApplyInfix{4..11}(
-              |Lit{5..6}(2),
+              |Lit.Int{5..6}(2),
               | Term.Name{7..8}("/"),
               | Nil,
-              | List(Lit{9..10}(3))),
+              | List(Lit.Int{9..10}(3))),
             | Term.Name{12..13}("*"),
             | Nil,
-            | List(Lit{14..15}(4)))))
+            | List(Lit.Int{14..15}(4)))))
     """.trim.stripMargin.split("\n").mkString)
   }
   test("(1 + 2).foo") {
@@ -30,10 +30,10 @@ class PositionSuite extends ParseSuite {
     assert(tree.show[Positions] === """
       |Term.Select{0..11}(
         |Term.ApplyInfix{0..7}(
-          |Lit{1..2}(1),
+          |Lit.Int{1..2}(1),
           | Term.Name{3..4}("+"),
           | Nil,
-          | List(Lit{5..6}(2))),
+          | List(Lit.Int{5..6}(2))),
         | Term.Name{8..11}("foo"))
     """.trim.stripMargin.split("\n").mkString)
   }

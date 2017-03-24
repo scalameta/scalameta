@@ -299,7 +299,7 @@ object Pat {
   def value: Any
 }
 object Lit {
-  def unapply(arg: Lit): Option[scala.Any] = Option(arg.value)
+  def unapply(arg: Lit): Option[scala.Any] = Some(arg.value)
   @ast class Null(value: scala.Any) extends Lit
   @ast class Int(value: scala.Int) extends Lit
   @ast class Double(value: scala.Double) extends Lit

@@ -213,6 +213,18 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Importee.Wildcard
       |scala.meta.Importer
       |scala.meta.Lit
+      |scala.meta.Lit.Boolean
+      |scala.meta.Lit.Byte
+      |scala.meta.Lit.Char
+      |scala.meta.Lit.Double
+      |scala.meta.Lit.Float
+      |scala.meta.Lit.Int
+      |scala.meta.Lit.Long
+      |scala.meta.Lit.Null
+      |scala.meta.Lit.Short
+      |scala.meta.Lit.String
+      |scala.meta.Lit.Symbol
+      |scala.meta.Lit.Unit
       |scala.meta.Member
       |scala.meta.Member.Term
       |scala.meta.Member.Type

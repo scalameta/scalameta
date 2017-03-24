@@ -41,7 +41,7 @@ class QuasiquoteSuite extends ParseSuite {
     }
 
     test("multi-line allow double quotes") {
-      assert(term("\"a\"").structure === """Lit("a")""")
+      assert(term("\"a\"").structure === """Lit.String("a")""")
     }
   }
 }

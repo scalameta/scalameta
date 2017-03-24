@@ -96,7 +96,7 @@ class LitSuite extends ParseSuite {
   }
 
   test("#342") {
-    assert(term("""( 50).toString""").show[Structure] === "Term.Select(Lit(50), Term.Name(\"toString\"))")
+    assert(term("""( 50).toString""").show[Structure] === "Term.Select(Lit.Int(50), Term.Name(\"toString\"))")
   }
 
   test("#360") {

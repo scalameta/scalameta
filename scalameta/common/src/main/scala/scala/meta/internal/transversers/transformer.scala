@@ -79,6 +79,8 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           optionTransformer(q"${f.name}", tpe, seqTransformer(_, _, treeTransformer))
         case tpe @ SeqSeqTreeTpe(_) =>
           seqTransformer(q"${f.name}", tpe, seqTransformer(_, _, treeTransformer))
+        case _ =>
+          q"${f.name}"
       }
       q"val ${TermName(f.name + "1")} = $rhs"
     })
