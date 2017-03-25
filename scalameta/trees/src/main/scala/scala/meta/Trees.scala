@@ -294,11 +294,24 @@ object Pat {
   def fresh(prefix: String): Pat.Var.Term = Pat.Var.Term(Term.fresh(prefix))
 }
 
-@ast class Lit(value: Any) extends Term with Pat with Type with Pat.Type {
-  require(value == null || value.isInstanceOf[Byte] || value.isInstanceOf[Short] ||
-  value.isInstanceOf[Char] || value.isInstanceOf[Int] || value.isInstanceOf[Long] ||
-  value.isInstanceOf[Float] || value.isInstanceOf[Double] || value.isInstanceOf[Boolean] ||
-  value.isInstanceOf[Unit] || value.isInstanceOf[String] || value.isInstanceOf[scala.Symbol])
+
+@branch trait Lit extends Term with Pat with Type with Pat.Type {
+  def value: Any
+}
+object Lit {
+  def unapply(arg: Lit): Option[scala.Any] = Some(arg.value)
+  @ast class Null(value: scala.Any) extends Lit
+  @ast class Int(value: scala.Int) extends Lit
+  @ast class Double(value: scala.Double) extends Lit
+  @ast class Float(value: scala.Float) extends Lit
+  @ast class Byte(value: scala.Byte) extends Lit
+  @ast class Short(value: scala.Short) extends Lit
+  @ast class Char(value: scala.Char) extends Lit
+  @ast class Long(value: scala.Long) extends Lit
+  @ast class Boolean(value: scala.Boolean) extends Lit
+  @ast class Unit(value: scala.Unit) extends Lit
+  @ast class String(value: scala.Predef.String) extends Lit
+  @ast class Symbol(value: scala.Symbol) extends Lit
 }
 
 @branch trait Member extends Tree with Scope {

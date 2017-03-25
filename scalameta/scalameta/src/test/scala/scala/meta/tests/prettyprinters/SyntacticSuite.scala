@@ -55,7 +55,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       QQQ
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Structure] === """Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Lit("%n        x%n      ")), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit("\""))))""".replace("%n", escapedEOL))
+    assert(tree.show[Structure] === """Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", escapedEOL))
     assert(tree.show[Syntax] === """
     |{
     |  val x = QQQ
@@ -75,7 +75,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         ..$z
       QQQ
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Structure] === """Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), Seq(Lit("123 + "), Lit(" + "), Lit(" + 456")), Seq(Term.Name("x"), Term.Apply(Term.Name("foo"), Seq(Lit(123)))))), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
+    assert(tree.show[Structure] === """Term.Block(Seq(Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), Seq(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), Seq(Term.Name("x"), Term.Apply(Term.Name("foo"), Seq(Lit.Int(123)))))), Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
     assert(tree.show[Syntax] === """
     |{
     |  val x = q"123 + $x + ${foo(123)} + 456"
@@ -490,7 +490,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("xml literals") {
     val tree = term("<foo>{bar}</foo>")
-    assert(tree.show[Structure] === """Term.Xml(Seq(Lit("<foo>{bar}</foo>")), Nil)""")
+    assert(tree.show[Structure] === """Term.Xml(Seq(Lit.String("<foo>{bar}</foo>")), Nil)""")
     assert(tree.show[Syntax] === "<foo>{bar}</foo>")
   }
 
@@ -508,13 +508,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("Lit(()) - 1") {
     val lit @ Lit(()) = term("()")
-    assert(lit.show[Structure] === "Lit(())")
+    assert(lit.show[Structure] === "Lit.Unit(())")
     assert(lit.show[Syntax] === "()")
   }
 
   test("Lit(()) - 2") {
     val Term.If(Term.Name("cond"), Lit(42), lit @ Lit(())) = super.term("if (cond) 42")
-    assert(lit.show[Structure] === "Lit(())")
+    assert(lit.show[Structure] === "Lit.Unit(())")
     assert(lit.show[Syntax] === "")
   }
 
@@ -525,9 +525,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("Term.Apply(_, Seq(Term.Function(...))) #572, #574") {
     import scala.collection.immutable.Seq
-    val tree1 = Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(), Term.Name("i"), Some(Type.Name("Int")), None)), Lit(()))))
-    val tree2 = Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(Mod.Implicit()), Term.Name("i"), Some(Type.Name("Int")), None)), Lit(()))))
-    val tree3 = Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(), Term.Name("i"), None, None)), Lit(()))))
+    val tree1 = Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(), Term.Name("i"), Some(Type.Name("Int")), None)), Lit.Unit(()))))
+    val tree2 = Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(Mod.Implicit()), Term.Name("i"), Some(Type.Name("Int")), None)), Lit.Unit(()))))
+    val tree3 = Term.Apply(Term.Name("foo"), Seq(Term.Function(Seq(Term.Param(Seq(), Term.Name("i"), None, None)), Lit.Unit(()))))
     assert(tree1.syntax == "foo { (i: Int) => () }")
     assert(tree2.syntax == "foo { implicit i: Int => () }")
     assert(tree3.syntax == "foo(i => ())")
@@ -541,7 +541,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("Pat.Interpolate syntax is correct #587") {
     val interpolate = Pat.Interpolate(
       Term.Name("q"),
-      List(Lit("object "), Lit(" { .."), Lit(" }")),
+      List(Lit.String("object "), Lit.String(" { .."), Lit.String(" }")),
       List(Pat.Var.Term(Term.Name("name")), Pat.Var.Term(Term.Name("stats")))
     )
     assert(interpolate.show[Syntax] === """q"object ${name} { ..${stats} }"""")
@@ -553,21 +553,21 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'") {
     val longLiterals = """foo(1l, 1L)""".parse[Stat].get.structure
-    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit(1L), Lit(1L)))"""
+    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit.Long(1L), Lit.Long(1L)))"""
     assert(longLiterals.equals(expectation))
     assert(q"val x = 1l".structure == q"val x = 1L".structure)
   }
 
   test("show[Structure] should lowercase float literals suffix: '0.01F' -> '0.01f'") {
     val floatLiterals = """foo(0.01f, 0.01F)""".parse[Stat].get.structure
-    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit(0.01f), Lit(0.01f)))"""
+    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit.Float(0.01f), Lit.Float(0.01f)))"""
     assert(floatLiterals.equals(expectation))
     assert(q"val x = 1f".structure == q"val x = 1F".structure)
   }
 
   test("show[Structure] should lowercase double literals suffix: '0.01D' -> '0.01d'") {
     val doubleLiterals = """foo(0.02d, 0.02D, 0.02)""".parse[Stat].get.structure
-    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit(0.02d), Lit(0.02d), Lit(0.02d)))"""
+    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit.Double(0.02d), Lit.Double(0.02d), Lit.Double(0.02d)))"""
     assert(doubleLiterals.equals(expectation))
     assert(q"val x = 1d".structure == q"val x = 1D".structure)
     assert(q"val x = 1d".structure == q"val x = 1.0".structure)

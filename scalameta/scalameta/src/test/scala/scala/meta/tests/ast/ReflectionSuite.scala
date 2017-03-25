@@ -14,8 +14,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 30)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 286)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 31)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 309)
   }
 
   test("If") {
@@ -47,11 +47,21 @@ class ReflectionSuite extends AstSuite {
     assert(distinctRelevantFieldTpes.sortBy(_.toString).mkString(EOL) === """
       |String
       |scala.Any
+      |scala.Boolean
+      |scala.Byte
+      |scala.Char
+      |scala.Double
+      |scala.Float
+      |scala.Int
+      |scala.Long
       |scala.Option[scala.collection.immutable.Seq[scala.meta.Stat]]
       |scala.Option[scala.meta.Pat.Type]
       |scala.Option[scala.meta.Term]
       |scala.Option[scala.meta.Type.Arg]
       |scala.Option[scala.meta.Type]
+      |scala.Short
+      |scala.Symbol
+      |scala.Unit
       |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.Term.Arg]]
       |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.Term.Param]]
       |scala.collection.immutable.Seq[scala.meta.Case]
