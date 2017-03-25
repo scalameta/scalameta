@@ -174,8 +174,8 @@ object TreeSyntax {
         }
       }
       def guessIsPostfix(t: Term.Select): Boolean = false
-      def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit(()) => false; case _ => true }
-      def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit(()) => false; case _ => true }
+      def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit(()) => false; case _ => true }
+      def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit(()) => false; case e => true }
       def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
       def guessHasBraces(t: Pkg): Boolean = {
         def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
@@ -260,7 +260,11 @@ object TreeSyntax {
             case _ =>
               m(SimpleExpr, if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}")))
           }
-        case t: Term.If              => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
+        case t: Term.If              =>
+          org.scalameta.logger.elem(guessHasElsep(t))
+          m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp),
+            if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep))
+            else s()))
         case t: Term.Match           => m(Expr1, s(p(PostfixExpr, t.expr), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}")))
         case t: Term.TryWithCases    =>
           m(Expr1, s(kw("try"), " ", p(Expr, t.expr),

@@ -284,6 +284,7 @@ class SyntacticSuite extends AbstractSyntacticSuite {
     assert(templStat("0L").show[Syntax] === "0L")
     assert(templStat("0f").show[Syntax] === "0f")
     assert(templStat("0F").show[Syntax] === "0f")
+    assert(templStat("1.4f").show[Syntax] === "1.4f")
     assert(templStat("0.0").show[Syntax] === "0d")
     assert(templStat("0d").show[Syntax] === "0d")
     assert(templStat("0D").show[Syntax] === "0d")
@@ -515,7 +516,7 @@ class SyntacticSuite extends AbstractSyntacticSuite {
   }
 
   test("Lit(()) - 2") {
-    val Term.If(Term.Name("cond"), Lit(42), lit @ Lit(())) = super.term("if (cond) 42")
+    val Term.If(Term.Name("cond"), Lit(42), lit @ Lit.Unit(())) = super.term("if (cond) 42")
     assert(lit.show[Structure] === "Lit.Unit(())")
     assert(lit.show[Syntax] === "")
   }
