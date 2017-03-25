@@ -34,6 +34,7 @@ lazy val scalametaRoot = Project(
     state
   },
   commands += Command.command("ci-slow") { state =>
+    "set fork in run in ThisBuild := true" :: // large integration tests put a lot of memory pressure
     "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "such testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
     "scalahostSbt/test" ::
@@ -217,6 +218,7 @@ lazy val scalahost = Project(
   },
   exposePaths("scalahost", Test),
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+  libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % Test,
   pomPostProcess := { node =>
     new RuleTransformer(new RewriteRule {
       private def isScalametaDependency(node: XmlNode): Boolean = {
