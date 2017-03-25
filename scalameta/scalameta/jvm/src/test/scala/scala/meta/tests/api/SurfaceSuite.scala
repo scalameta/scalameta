@@ -58,6 +58,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.inputs.Input.Slice
       |scala.meta.inputs.Input.Stream
       |scala.meta.inputs.Input.String
+      |scala.meta.inputs.Input.VirtualFile
       |scala.meta.inputs.Point
       |scala.meta.inputs.Point.None
       |scala.meta.inputs.Point.Offset

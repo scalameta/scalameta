@@ -126,7 +126,10 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         }
         curr + 1
       }
-      val result = Input.String(new String(reflectInput.content))
+      val result =
+        if (reflectInput.file.file != null)
+          Input.VirtualFile(AbsolutePath(reflectInput.file.file), new String(reflectInput.content))
+        else Input.String(new String(reflectInput.content))
       Input.Slice(result, start, end)
     }
     (metaInput, mode)

@@ -163,6 +163,10 @@ class PublicSuite extends FunSuite {
     assert(input.toString == """Input.String("foo")""")
   }
 
+  test("scala.meta.inputs.Input.VirtualFile.toString") {
+    // n/a
+  }
+
   test("scala.meta.inputs.Point.toString") {
     // covered below
   }

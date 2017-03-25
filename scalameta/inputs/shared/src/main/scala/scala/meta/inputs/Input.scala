@@ -48,6 +48,12 @@ object Input {
     }
   }
 
+  @data class VirtualFile(path: AbsolutePath, contents: scala.Predef.String) extends Input {
+    override def location = s"<${path.absolute}>"
+    lazy val chars = contents.toArray
+    override def toString = s"""Input.VirtualFile(AbsolutePath("${path.relative}"), "${contents.take(10)}...")""""
+  }
+
   @data class File(path: AbsolutePath, charset: Charset) extends Input {
     @deprecated("Use .path instead", "1.8.0")
     def file: java.io.File = new java.io.File(path.absolute)
