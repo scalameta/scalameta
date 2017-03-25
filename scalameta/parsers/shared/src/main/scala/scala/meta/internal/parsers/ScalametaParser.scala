@@ -1429,12 +1429,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val value = if (isNegated) -rawValue else rawValue
         if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
-        Lit.Float(value.toFloat)
+        Lit.Float(value.toString)
       case Constant.Double(rawValue) =>
         val value = if (isNegated) -rawValue else rawValue
         if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
         else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
-        Lit.Double(value.toDouble)
+        Lit.Double(value.toString)
       case Constant.Char(value) =>
         Lit.Char(value)
       case Constant.String(value) =>
