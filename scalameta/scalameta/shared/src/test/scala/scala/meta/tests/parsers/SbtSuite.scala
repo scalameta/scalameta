@@ -63,9 +63,9 @@ class SbtSuite extends FunSuite {
           | Term.Apply(
               |Term.Name("Seq"),
               | Seq(
-                  |Term.ApplyInfix(Term.Name("organization"), Term.Name(":="), Nil, Seq(Lit("com.example"))),
-                  | Term.ApplyInfix(Term.Name("version"), Term.Name(":="), Nil, Seq(Lit("0.1.0"))),
-                  | Term.ApplyInfix(Term.Name("scalaVersion"), Term.Name(":="), Nil, Seq(Lit("2.11.7")))))),
+                  |Term.ApplyInfix(Term.Name("organization"), Term.Name(":="), Nil, Seq(Lit.String("com.example"))),
+                  | Term.ApplyInfix(Term.Name("version"), Term.Name(":="), Nil, Seq(Lit.String("0.1.0"))),
+                  | Term.ApplyInfix(Term.Name("scalaVersion"), Term.Name(":="), Nil, Seq(Lit.String("2.11.7")))))),
         | Defn.Val(
           |Seq(Mod.Lazy()),
           | Seq(Pat.Var.Term(Term.Name("root"))),
@@ -73,11 +73,11 @@ class SbtSuite extends FunSuite {
           | Term.Apply(
               |Term.Select(
                 |Term.Apply(
-                  |Term.Select(Term.ApplyInfix(Term.Name("project"), Term.Name("in"), Nil, Seq(Term.Apply(Term.Name("file"), Seq(Lit("."))))), Term.Name("settings")),
+                  |Term.Select(Term.ApplyInfix(Term.Name("project"), Term.Name("in"), Nil, Seq(Term.Apply(Term.Name("file"), Seq(Lit.String("."))))), Term.Name("settings")),
                   | Seq(Term.Arg.Repeated(Term.Name("commonSettings")))),
                 | Term.Name("settings")),
               | Seq(
-                  |Term.ApplyInfix(Term.Name("name"), Term.Name(":="), Nil, Seq(Lit("hello"))))))))
+                  |Term.ApplyInfix(Term.Name("name"), Term.Name(":="), Nil, Seq(Lit.String("hello"))))))))
     """.trim.stripMargin.split(EOL).mkString("")
   }
 }

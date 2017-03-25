@@ -327,9 +327,30 @@ trait ToMtree { self: Converter =>
                 m.Pat.Type.With(mlhs, mrhs)
 
               // ============ LITERALS ============
-
-              case l.Literal(lvalue) =>
-                m.Lit(lvalue)
+              case l.Literal(null) =>
+                m.Lit.Null(null)
+              case l.Literal(value: Int) =>
+                m.Lit.Int(value)
+              case l.Literal(value: Double) =>
+                m.Lit.Double(value)
+              case l.Literal(value: Float) =>
+                m.Lit.Float(value)
+              case l.Literal(value: Byte) =>
+                m.Lit.Byte(value)
+              case l.Literal(value: Short) =>
+                m.Lit.Short(value)
+              case l.Literal(value: Char) =>
+                m.Lit.Char(value)
+              case l.Literal(value: Long) =>
+                m.Lit.Long(value)
+              case l.Literal(value: Boolean) =>
+                m.Lit.Boolean(value)
+              case l.Literal(value: Unit) =>
+                m.Lit.Unit(value)
+              case l.Literal(value: String) =>
+                m.Lit.String(value)
+              case l.Literal(value: scala.Symbol) =>
+                m.Lit.Symbol(value)
 
               // ============ DECLS ============
               case l.DeclVal(lmods, lpats, ldecltpe) =>

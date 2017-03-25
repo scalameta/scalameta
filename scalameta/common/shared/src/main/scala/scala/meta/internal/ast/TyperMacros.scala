@@ -88,6 +88,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case SeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
       case OptionSeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
       case SeqSeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
+      case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
 

@@ -30,7 +30,7 @@ trait CommonNamerMacros extends MacroHelpers {
   def mkClassifier(name: TypeName): List[Tree] = {
     val q"..$classifierBoilerplate" = q"""
       private object sharedClassifier extends $ClassifierClass[$TreeClass, $name] {
-        def apply(x: $TreeClass): Boolean = x.isInstanceOf[$name]
+        def apply(x: $TreeClass): _root_.scala.Boolean = x.isInstanceOf[$name]
       }
       implicit def ClassifierClass[T <: $TreeClass]: $ClassifierClass[T, $name] = {
         sharedClassifier.asInstanceOf[$ClassifierClass[T, $name]]
