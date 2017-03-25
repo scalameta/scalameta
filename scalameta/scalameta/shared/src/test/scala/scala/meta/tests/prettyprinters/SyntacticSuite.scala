@@ -6,7 +6,7 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.internal.ast._
 
-class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
+abstract class AbstractSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   override def term(code: String)(implicit dialect: Dialect)       = super.term(code)(dialect).resetAllOrigins
   override def pat(code: String)(implicit dialect: Dialect)        = super.pat(code)(dialect).resetAllOrigins
   override def tpe(code: String)(implicit dialect: Dialect)        = super.tpe(code)(dialect).resetAllOrigins
@@ -22,7 +22,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       tree.transform{ case tree: Tree => tree.withOrigin(Origin.None) }.asInstanceOf[T]
     }
   }
+}
 
+class SyntacticSuite extends AbstractSyntacticSuite {
   test("val x: Int (raw)") {
     val tree = templStat("val x: Int")
     assert(tree.show[Structure] === "Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"x\"))), Type.Name(\"Int\"))")
@@ -184,6 +186,27 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(Dotty(q"trait T(a: Int)").syntax === "trait T(a: Int)")
   }
 
+  test("literalTypes") {
+    intercept[ParseException] {
+      dialects.Scala211("val a : 42 = 42").parse[Stat].get.show[Syntax]
+    }
+    val Scala211 = null // TODO: #389
+    import scala.meta.dialects.Dotty
+    assert(q"val a: 42 = 42".show[Syntax] === "val a: 42 = 42")
+    assert(q"val a: 42L = 42L".show[Syntax] === "val a: 42L = 42L")
+    assert(q"val a: 42d = 42d".show[Syntax] === "val a: 42d = 42d")
+    assert(q"val a: 42f = 42f".show[Syntax] === "val a: 42f = 42f")
+    assert(q"val a: true = true".show[Syntax] === "val a: true = true")
+    assert(q"val a: false = false".show[Syntax] === "val a: false = false")
+    assert(dialects.Dotty("val a: \"42\" = \"42\"").parse[Stat].get.show[Syntax] === "val a: \"42\" = \"42\"")
+    assert(pat("_: 42").show[Syntax] === "_: 42")
+    assert(pat("_: 42.0f").show[Syntax] === "_: 42f")
+    assert(pat("_: 42.0d").show[Syntax] === "_: 42d")
+    assert(pat("_: 42L").show[Syntax] === "_: 42L")
+    assert(pat("_: true").show[Syntax] === "_: true")
+    assert(pat("_: false").show[Syntax] === "_: false")
+  }
+
   test("packages") {
     assert(source("package foo.bar; class C").show[Syntax] === s"package foo.bar${EOL}class C")
     assert(source("package foo.bar; class C; class D").show[Syntax] === s"package foo.bar${EOL}class C${EOL}class D")
@@ -253,7 +276,23 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     """.trim.stripMargin)
   }
 
-  // This is comment
+  test("assorted literals") {
+    assert(templStat("true").show[Syntax] === "true")
+    assert(templStat("false").show[Syntax] === "false")
+    assert(templStat("0").show[Syntax] === "0")
+    assert(templStat("0l").show[Syntax] === "0L")
+    assert(templStat("0L").show[Syntax] === "0L")
+    assert(templStat("0f").show[Syntax] === "0f")
+    assert(templStat("0F").show[Syntax] === "0f")
+    assert(templStat("0.0").show[Syntax] === "0d")
+    assert(templStat("0d").show[Syntax] === "0d")
+    assert(templStat("0D").show[Syntax] === "0d")
+    assert(templStat("'0'").show[Syntax] === "'0'")
+    assert(templStat("\"0\"").show[Syntax] === "\"0\"")
+    assert(templStat("'zero").show[Syntax] === "'zero")
+    assert(templStat("null").show[Syntax] === "null")
+    assert(templStat("()").show[Syntax] === "()")
+  }
 
   test("context and view bounds") {
     assert(templStat("class C[T: List, U <% Int]").show[Syntax] === "class C[T: List, U <% Int]")
