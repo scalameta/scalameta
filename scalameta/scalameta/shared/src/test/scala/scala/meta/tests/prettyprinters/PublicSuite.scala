@@ -118,10 +118,6 @@ class PublicSuite extends FunSuite {
     assert(scala.meta.dialects.ParadiseTypelevel212.toString === "ParadiseTypelevel212")
   }
 
-  test("scala.meta.io.AbsolutePath") {}
-
-  test("scala.meta.io.InputStreamIO") {}
-
   test("scala.meta.io.PlatformIO") {}
 
   test("scala.meta.inputs.Input.toString") {
@@ -139,7 +135,7 @@ class PublicSuite extends FunSuite {
   test("scala.meta.inputs.Input.File.toString") {
     import java.io._
     import java.nio.charset.Charset
-    val path = AbsolutePath("hello.scala")
+    val path = AbsolutePath.fromRelative("hello.scala")
     val input1 = Input.File(path, Charset.forName("latin1"))
     val input2 = Input.File(path, Charset.forName("UTF-8"))
     assert(input1.toString == """Input.File(new File("hello.scala"), Charset.forName("ISO-8859-1"))""")
@@ -192,6 +188,10 @@ class PublicSuite extends FunSuite {
   test("scala.meta.inputs.Position.Range.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
     assert(lhs.pos.toString === """[0..3) in Input.String("foo + bar")""")
+  }
+
+  test("scala.meta.io.AbsolutePath.toString") {
+    // n/a
   }
 
   test("scala.meta.parsers.Parse.toString") {
@@ -270,9 +270,9 @@ class PublicSuite extends FunSuite {
   test("scala.meta.semantic.v1.Address.File.toString") {
     val file = "source.scala"
     val syntax = s"file:$file"
-    val fullPath = AbsolutePath(file).absolute
+    val fullPath = AbsolutePath.fromRelative(file).absolute
     val address = scala.meta.semantic.v1.Address(syntax)
-    val scala.meta.semantic.v1.Address.File(AbsolutePath(path)) = address
+    val scala.meta.semantic.v1.Address.File(AbsolutePath(`fullPath`)) = address
     assert(address.toString === s"file:$fullPath")
   }
 
@@ -301,7 +301,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.semantic.v1.Location.toString") {
     val file = "source.scala"
-    val path = AbsolutePath(file).absolute
+    val path = AbsolutePath.fromRelative(file).absolute
     val location = scala.meta.semantic.v1.Location(scala.meta.semantic.v1.Address(s"file:$file"), 40, 42)
     assert(location.toString === s"""Location(Address("file:$path"), 40, 42)""")
   }
@@ -375,7 +375,7 @@ class PublicSuite extends FunSuite {
     val globalSelf @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Self("self")) = Symbol(syntaxGlobalSelf)
     assert(globalSelf.toString === syntaxGlobalSelf)
 
-    val file =  AbsolutePath("source.scala").absolute
+    val file =  AbsolutePath.fromRelative("source.scala").absolute
     val syntaxLocal = s"file:$file@40..42"
     val local @ Symbol.Local(Address.File(AbsolutePath(path)), 40, 42) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)

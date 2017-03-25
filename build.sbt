@@ -28,24 +28,14 @@ commands += Command.command("ci-fast") { state =>
   else "test" :: "doc" :: state
 }
 commands += Command.command("ci-slow") { state =>
-  if (isScalaJS) state // do nothing
-  else {
-    "scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
-      "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
-      "scalahostSbt/test" ::
-      state
-  }
+  "scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
+    "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
+    "scalahostSbt/test" ::
+    state
 }
 commands += Command.command("ci-publish") { state =>
-  for {
-    v <- sys.env.get("SCALA_VERSION")
-    t <- sys.env.get("TEST")
-    sjs <- sys.env.get("SCALA_VERSION")
-    if v == "2.11.8" && t == "ci-fast" && sjs == "false"
-  } {
-    RunSbtCommand("very publish")
-  }
-  state
+  if (isPublish) "very publish" :: state
+  else state
 }
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
@@ -58,7 +48,7 @@ test := {
   val runContribTests = test.in(contrib, Test).value
   val runDocs = run.in(readme, Compile).toTask(" --validate").value
 }
-console := console.in(scalametaJVM, Compile).in(Compile).value
+console := console.in(scalametaJVM, Compile).value
 
 lazy val common = crossProject
   .in(file("scalameta/common"))
@@ -82,15 +72,21 @@ lazy val ioJS = io.js
 
 lazy val dialects = crossProject
   .in(file("scalameta/dialects"))
-  .settings(publishableSettings, description := "Scala.meta's dialects", enableMacros)
+  .settings(
+    publishableSettings,
+    description := "Scala.meta's dialects",
+    enableMacros
+  )
   .dependsOn(common)
 lazy val dialectsJVM = dialects.jvm
 lazy val dialectsJS = dialects.js
 
 lazy val inline = crossProject
   .in(file("scalameta/inline"))
-  .settings(publishableSettings,
-            description := "Scala.meta's APIs for new-style (\"inline\") macros")
+  .settings(
+    publishableSettings,
+    description := "Scala.meta's APIs for new-style (\"inline\") macros"
+  )
   .dependsOn(inputs)
 lazy val inlineJVM = inline.jvm
 lazy val inlineJS = inline.js
@@ -108,17 +104,21 @@ lazy val inputsJS = inputs.js
 
 lazy val parsers = crossProject
   .in(file("scalameta/parsers"))
-  .settings(publishableSettings,
-            description := "Scala.meta's API for parsing and its baseline implementation")
+  .settings(
+    publishableSettings,
+    description := "Scala.meta's API for parsing and its baseline implementation"
+  )
   .dependsOn(common, dialects, inputs, tokens, tokenizers, trees)
 lazy val parsersJVM = parsers.jvm
 lazy val parsersJS = parsers.js
 
 lazy val quasiquotes = crossProject
   .in(file("scalameta/quasiquotes"))
-  .settings(publishableSettings,
-            description := "Scala.meta's quasiquotes for abstract syntax trees",
-            enableHardcoreMacros)
+  .settings(
+    publishableSettings,
+    description := "Scala.meta's quasiquotes for abstract syntax trees",
+    enableHardcoreMacros
+  )
   .dependsOn(common, dialects, inputs, trees, parsers)
 lazy val quasiquotesJVM = quasiquotes.jvm
 lazy val quasiquotesJS = quasiquotes.js
@@ -140,7 +140,8 @@ lazy val tokens = crossProject
   .settings(
     publishableSettings,
     description := "Scala.meta's tokens and token-based abstractions (inputs and positions)",
-    enableMacros)
+    enableMacros
+  )
   .dependsOn(common, dialects, inputs)
 lazy val tokensJVM = tokens.jvm
 lazy val tokensJS = tokens.js
@@ -150,7 +151,8 @@ lazy val transversers = crossProject
   .settings(
     publishableSettings,
     description := "Scala.meta's traversal and transformation infrastructure for abstract syntax trees",
-    enableMacros)
+    enableMacros
+  )
   .dependsOn(common, trees)
 lazy val traversersJVM = transversers.jvm
 lazy val traversersJS = transversers.js
@@ -188,18 +190,22 @@ lazy val semanticJS = semantic.js
 
 lazy val scalameta = crossProject
   .in(file("scalameta/scalameta"))
-  .settings(publishableSettings,
-            description := "Scala.meta's metaprogramming APIs",
-            exposePaths("scalameta", Test))
-  .dependsOn(common,
-             dialects,
-             parsers,
-             quasiquotes,
-             tokenizers,
-             transversers,
-             trees,
-             inline,
-             semantic)
+  .settings(
+    publishableSettings,
+    description := "Scala.meta's metaprogramming APIs",
+    exposePaths("scalameta", Test)
+  )
+  .dependsOn(
+    common,
+    dialects,
+    parsers,
+    quasiquotes,
+    tokenizers,
+    transversers,
+    trees,
+    inline,
+    semantic
+  )
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
@@ -298,7 +304,10 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   .dependsOn(scalametaJVM)
 
 lazy val contrib = Project(id = "contrib", base = file("scalameta/contrib"))
-  .settings(publishableSettings, description := "Utilities for scala.meta")
+  .settings(
+    publishableSettings,
+    description := "Utilities for scala.meta"
+  )
   .dependsOn(scalametaJVM, testkit % Test)
 
 lazy val benchmarks =
@@ -416,7 +425,7 @@ lazy val sharedSettings = Def.settings(
   organization := "org.scalameta",
   resolvers += Resolver.sonatypeRepo("snapshots"),
   resolvers += Resolver.sonatypeRepo("releases"),
-  addCompilerPlugin(("org.scalamacros" % "paradise" % "2.1.0").cross(CrossVersion.full)),
+  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
   libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.13.5" % "test",
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
@@ -464,12 +473,13 @@ def computePreReleaseVersion(LibrarySeries: String): String = {
       s"$distance-$currentSha"
     }
     if (os.git.isStable()) gitDescribeSuffix
-    else gitDescribeSuffix + "." + os.time.current
+    else gitDescribeSuffix + "." + os.time.stamp
   }
   LibrarySeries + "-" + preReleaseSuffix
 }
 
 def isScalaJS = sys.env.get("SCALA_JS") == Some("true")
+def isPublish = sys.env.get("PUBLISH") == Some("true")
 
 // Pre-release versions go to bintray and should be published via `publish`.
 // This is the default behavior that you get without modifying the build.
@@ -490,14 +500,6 @@ def shouldPublishToSonatype: Boolean = {
   if (sys.props("sbt.prohibit.publish") != null) return false
   !LibraryVersion.contains("-")
 }
-
-lazy val sonatypeCredentials = os.secret
-  .obtain("sonatype")
-  .map {
-    case (username, password) =>
-      Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)
-  }
-  .toList
 
 lazy val publishableSettings = Def.settings(
   sharedSettings,
@@ -525,7 +527,16 @@ lazy val publishableSettings = Def.settings(
       // NOTE: Bintray credentials are automatically loaded by the sbt-bintray plugin
       Nil
     } else if (shouldPublishToSonatype) {
-      sonatypeCredentials
+      os.secret
+        .obtain("sonatype")
+        .map {
+          case (username, password) =>
+            Credentials("Sonatype Nexus Repository Manager",
+                        "oss.sonatype.org",
+                        username,
+                        password)
+        }
+        .toList
     } else {
       Nil
     }

@@ -67,8 +67,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.internal
       |scala.meta.io
       |scala.meta.io.AbsolutePath
-      |scala.meta.io.InputStreamIO *
-      |scala.meta.io.PlatformIO *
       |scala.meta.parsers
       |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException
@@ -175,7 +173,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
       |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
       |* scala.meta.Type.pat: scala.meta.Pat.Type
-      |* scala.meta.io.AbsolutePath.read: String
+      |* scala.meta.io.AbsolutePath.slurp: String
     """.trim.stripMargin)
   }
 

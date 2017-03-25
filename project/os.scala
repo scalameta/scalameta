@@ -8,7 +8,7 @@ import scala.compat.Platform.EOL
 object time {
   // cached here to use consistent time stamp across sbt reloads, which happen
   // for every ++SCALA_VERSION switch in sbt "very publish"
-  val current = System.currentTimeMillis().toString
+  val stamp = System.currentTimeMillis().toString
 }
 
 object shell {

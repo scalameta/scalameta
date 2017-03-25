@@ -6,7 +6,7 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.internal.ast._
 
-abstract class AbstractSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
+class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   override def term(code: String)(implicit dialect: Dialect)       = super.term(code)(dialect).resetAllOrigins
   override def pat(code: String)(implicit dialect: Dialect)        = super.pat(code)(dialect).resetAllOrigins
   override def tpe(code: String)(implicit dialect: Dialect)        = super.tpe(code)(dialect).resetAllOrigins
@@ -22,9 +22,7 @@ abstract class AbstractSyntacticSuite extends scala.meta.tests.parsers.ParseSuit
       tree.transform{ case tree: Tree => tree.withOrigin(Origin.None) }.asInstanceOf[T]
     }
   }
-}
 
-class SyntacticSuite extends AbstractSyntacticSuite {
   test("val x: Int (raw)") {
     val tree = templStat("val x: Int")
     assert(tree.show[Structure] === "Decl.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"x\"))), Type.Name(\"Int\"))")

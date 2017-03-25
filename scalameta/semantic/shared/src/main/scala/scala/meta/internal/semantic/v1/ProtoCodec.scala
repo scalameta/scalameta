@@ -1,5 +1,6 @@
 package scala.meta.internal.scalahost.v1
 
+import scala.meta.io.AbsolutePath
 import scala.meta.semantic.v1.Symbol
 import scala.meta.semantic.v1._
 
@@ -25,8 +26,15 @@ object ProtoCodec {
   private def fail(e: Any): Nothing = sys.error(s"Invalid protobuf! $e")
 
   implicit val AddressProto = new ProtoCodec[Address, p.Address] {
-    override def toProto(e: Address): p.Address = e.toProto
-    def fromProto(e: p.Address): Address = Address.fromProto(e)
+    override def toProto(e: Address): p.Address = e match {
+      case Address.File(AbsolutePath(path)) => p.Address(path = path)
+      case Address.Snippet(code) => p.Address(contents = code)
+    }
+
+    def fromProto(e: p.Address): Address = {
+      if (e.path.isEmpty) Address.Snippet(e.contents)
+      else Address.File(e.path)
+    }
   }
   implicit val ResolvedNameProto = new ProtoEncoder[(Location, Symbol), p.ResolvedName] {
     override def toProto(e: (Location, Symbol)): p.ResolvedName = e match {

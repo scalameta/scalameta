@@ -1,13 +1,15 @@
-package scala.meta.io
+package scala.meta.internal.io
 
 import scala.annotation.tailrec
+
+import scala.meta.io._
 
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.Charset
 
 object InputStreamIO {
-  def read(stream: InputStream, charset: Charset): String = {
+  def slurp(stream: InputStream, charset: Charset): String = {
     val reader = new InputStreamReader(stream, charset)
     val buffer = new Array[Char](4096)
     val builder = new java.lang.StringBuilder
