@@ -128,7 +128,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       }
       val result =
         if (reflectInput.file.file != null)
-          Input.VirtualFile(AbsolutePath(reflectInput.file.file), new String(reflectInput.content))
+          Input.LabeledString(reflectInput.path, new String(reflectInput.content))
         else Input.String(new String(reflectInput.content))
       Input.Slice(result, start, end)
     }

@@ -163,10 +163,10 @@ class PublicSuite extends FunSuite {
     assert(input.toString == """Input.String("foo")""")
   }
 
-  test("scala.meta.inputs.Input.VirtualFile.toString") {
-    val input = Input.VirtualFile(AbsolutePath.fromRelative("foo.scala"), "foo")
+  test("scala.meta.inputs.Input.LabeledString.toString") {
+    val input = Input.LabeledString("foo.scala", "foo")
     org.scalameta.logger.elem(input.toString)
-    assert(input.toString == s"""Input.VirtualFile(${input.path}, "foo")""")
+    assert(input.toString == s"""Input.LabeledString("foo.scala", "foo")""")
   }
 
   test("scala.meta.inputs.Point.toString") {

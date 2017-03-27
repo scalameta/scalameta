@@ -19,7 +19,7 @@ package object inputs {
         val input = point.input
         val shortContent = input match {
           case Input.File(path, _) => path.absolute
-          case Input.VirtualFile(path, _) => path.absolute
+          case Input.LabeledString(label, _) => label
           case _ => "<input>"
         }
         val header = s"$shortContent:${point.line + 1}: $severity: $message"
