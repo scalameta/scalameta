@@ -9,7 +9,7 @@ import UnidocKeys._
 import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 
-lazy val ScalaVersion = sys.env.getOrElse("SCALA_VERSION", "2.11.8")
+lazy val ScalaVersion = sys.env.getOrElse("CI_SCALA_VERSION", "2.11.8")
 lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
 lazy val LibrarySeries = "1.7.0"
 lazy val LibraryVersion =
@@ -24,7 +24,7 @@ sharedSettings
 noPublish
 unidocSettings
 commands += Command.command("ci-fast") { state =>
-  if (isScalaJS) "scalametaJS/test" :: state
+  if (sys.env.contains("SCALA_JS")) "scalametaJS/test" :: state
   else "test" :: "doc" :: state
 }
 commands += Command.command("ci-slow") { state =>
@@ -34,7 +34,7 @@ commands += Command.command("ci-slow") { state =>
     state
 }
 commands += Command.command("ci-publish") { state =>
-  if (isPublish) "very publish" :: state
+  if (sys.env.contains("CI_PUBLISH")) "very publish" :: state
   else state
 }
 packagedArtifacts := Map.empty
@@ -480,9 +480,6 @@ def computePreReleaseVersion(LibrarySeries: String): String = {
   }
   LibrarySeries + "-" + preReleaseSuffix
 }
-
-def isScalaJS = sys.env.get("SCALA_JS") == Some("true")
-def isPublish = sys.env.get("PUBLISH") == Some("true")
 
 // Pre-release versions go to bintray and should be published via `publish`.
 // This is the default behavior that you get without modifying the build.

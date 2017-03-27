@@ -49,15 +49,15 @@ object Input {
   }
 
   @data class VirtualFile(path: AbsolutePath, contents: scala.Predef.String) extends Input {
-    override def location = s"<${path.absolute}>"
+    override def location = path.absolute
     lazy val chars = contents.toArray
-    override def toString = s"""Input.VirtualFile(AbsolutePath("${path.relative}"), "${contents.take(10)}...")""""
+    override def toString = s"""Input.VirtualFile($path, "$contents")"""
   }
 
   @data class File(path: AbsolutePath, charset: Charset) extends Input {
     @deprecated("Use .path instead", "1.8.0")
     def file: java.io.File = new java.io.File(path.absolute)
-    override def location = s"<${path.absolute}>"
+    override def location = path.absolute
     lazy val chars = path.slurp.toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
     override def toString = "Input.File(new File(\"" + path.relative + "\"), Charset.forName(\"" + charset.name + "\"))"

@@ -18,7 +18,7 @@ pipeline:
       - git fetch --tags && git log | head -n 20
       - ./bin/checkCLA.sh
       - ./bin/scalafmt --test
-      - sbt $TEST
+      - sbt $CI_TEST
 
   publish:
     image: scalaplatform/scala:0.6
@@ -57,19 +57,19 @@ pipeline:
 
 matrix:
   include:
-    - TEST: ci-fast
-      SCALA_VERSION: 2.11.8
-      PUBLISH: true
-    - TEST: ci-fast
-      SCALA_VERSION: 2.11.8
+    - CI_TEST: ci-fast
+      CI_SCALA_VERSION: 2.11.8
+      CI_PUBLISH: true
+    - CI_TEST: ci-fast
+      CI_SCALA_VERSION: 2.11.8
       SCALA_JS: true
-    - TEST: ci-fast
-      SCALA_VERSION: 2.12.1
-    - TEST: ci-fast
-      SCALA_VERSION: 2.12.1
+    - CI_TEST: ci-fast
+      CI_SCALA_VERSION: 2.12.1
+    - CI_TEST: ci-fast
+      CI_SCALA_VERSION: 2.12.1
       SCALA_JS: true
-    - TEST: ci-slow
-      SCALA_VERSION: 2.11.8
-    - TEST: ci-slow
-      SCALA_VERSION: 2.12.1
+    - CI_TEST: ci-slow
+      CI_SCALA_VERSION: 2.11.8
+    - CI_TEST: ci-slow
+      CI_SCALA_VERSION: 2.12.1
 

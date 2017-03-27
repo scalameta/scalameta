@@ -164,7 +164,9 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.inputs.Input.VirtualFile.toString") {
-    // n/a
+    val input = Input.VirtualFile(AbsolutePath.fromRelative("foo.scala"), "foo")
+    org.scalameta.logger.elem(input.toString)
+    assert(input.toString == s"""Input.VirtualFile(${input.path}, "foo")""")
   }
 
   test("scala.meta.inputs.Point.toString") {
@@ -195,7 +197,8 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.io.AbsolutePath.toString") {
-    // n/a
+    val path = AbsolutePath.fromRelative("hello.scala")
+    assert(path.toString == s"""AbsolutePath(${path.absolute})""")
   }
 
   test("scala.meta.parsers.Parse.toString") {
