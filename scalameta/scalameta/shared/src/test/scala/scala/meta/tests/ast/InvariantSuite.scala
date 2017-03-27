@@ -18,4 +18,9 @@ class InvariantSuite extends FunSuite {
     intercept[InvariantFailedException] { Pkg(Term.Name("test"), stats) }
     intercept[InvariantFailedException] { Pkg.Object(Nil, Term.Name("test"), template) }
   }
+
+  test("Lit.Float/Double") {
+    intercept[NumberFormatException](Lit.Float("a"))
+    intercept[NumberFormatException](Lit.Double("a"))
+  }
 }

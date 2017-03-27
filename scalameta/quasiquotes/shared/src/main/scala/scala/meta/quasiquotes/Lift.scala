@@ -16,8 +16,8 @@ object Lift {
   implicit def liftShort[O <: Short, I >: Lit]: Lift[O, I]     = Lift{ x => Lit.Short(x) }
   implicit def liftInt[O <: Int, I >: Lit]: Lift[O, I]         = Lift{ x => Lit.Int(x) }
   implicit def liftLong[O <: Long, I >: Lit]: Lift[O, I]       = Lift{ x => Lit.Long(x) }
-  implicit def liftFloat[O <: Float, I >: Lit]: Lift[O, I]     = Lift{ x => Lit.Float(x.toString) }
-  implicit def liftDouble[O <: Double, I >: Lit]: Lift[O, I]   = Lift{ x => Lit.Double(x.toString) }
+  implicit def liftFloat[O <: Float, I >: Lit]: Lift[O, I]     = Lift{ x => Lit.Float(x) }
+  implicit def liftDouble[O <: Double, I >: Lit]: Lift[O, I]   = Lift{ x => Lit.Double(x) }
   implicit def liftChar[O <: Char, I >: Lit]: Lift[O, I]       = Lift{ x => Lit.Char(x) }
   implicit def liftString[O <: String, I >: Lit]: Lift[O, I]   = Lift{ x => Lit.String(x) }
   implicit def liftSymbol[I >: Lit]: Lift[Symbol, I]           = Lift{ x => Lit.Symbol(x) }

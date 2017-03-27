@@ -405,8 +405,28 @@ object TreeSyntax {
         case Lit.Short(value)   => m(Literal, s("ShortLiterals.", if (value == 0) "Zero" else if (value > 0) "Plus" + value else "Minus" + value))
         case Lit.Int(value)     => m(Literal, s(value.toString))
         case Lit.Long(value)    => m(Literal, s(value.toString + "L"))
-        case Lit.Float(value)   => m(Literal, s(String.valueOf(value).stripSuffix(".0"), "f"))
-        case Lit.Double(value)  => m(Literal, s(String.valueOf(value).stripSuffix(".0"), "d"))
+        case t @ Lit.Float(value)  =>
+          val n = value.toFloat
+          if (java.lang.Float.isNaN(n)) s("Float.NaN")
+          else {
+            n match {
+              case Float.PositiveInfinity => s("Float.PositiveInfinity")
+              case Float.NegativeInfinity => s("Float.NegativeInfinity")
+              case _ =>
+                s(value, "f")
+            }
+          }
+        case t @ Lit.Double(value) =>
+          val n = value.toDouble
+          if (java.lang.Double.isNaN(n)) s("Double.NaN")
+          else {
+            n match {
+              case Double.PositiveInfinity => s("Double.PositiveInfinity")
+              case Double.NegativeInfinity => s("Double.NegativeInfinity")
+              case _ =>
+                s(value, "d")
+            }
+          }
         case Lit.Char(value)    => m(Literal, s(enquote(value.toString, SingleQuotes)))
         case Lit.String(value)  => m(Literal, s(enquote(value.toString, if (value.contains(EOL)) TripleQuotes else DoubleQuotes)))
         case Lit.Symbol(value)  => m(Literal, s("'", value.name))
@@ -586,6 +606,7 @@ object TreeSyntax {
         case (t: Importee.Rename) :: Nil   => s("{", t, "}")
         case importees                     => s("{ ", r(importees, ", "), " }")
       }
+
     }
     // NOTE: This is the current state of the art of smart prettyprinting.
     // If we prettyprint a tree that's just been parsed with the same dialect,

@@ -41,12 +41,14 @@ object TreeStructure {
           s(enquote(value, DoubleQuotes))
         case x @ Lit(()) =>
           s("()")
+        case x @ Lit.Double(_) =>
+          s(x.tokens.mkString)
+        case x @ Lit.Float(_) =>
+          s(x.tokens.mkString)
         case x @ Lit(_) =>
           def isRelevantToken(tok: Token) = tok match {
             case Constant.Int(_) => true
             case Constant.Long(_) => true
-            case Constant.Float(_) => true
-            case Constant.Double(_) => true
             case Constant.Char(_) => true
             case Constant.Symbol(_) => true
             case Constant.String(_) => true
@@ -58,8 +60,6 @@ object TreeStructure {
           }
           def showToken(tok: Token) = tok match {
             case Constant.Long(v) => Show.Str(v.toString + "L")
-            case Constant.Float(v) => Show.Str(v.toString + "f")
-            case Constant.Double(v) => Show.Str(v.toString + "d")
             case _ => tok.show[Syntax]
           }
           s(x.tokens.filter(isRelevantToken _).map(showToken _).mkString)

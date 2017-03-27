@@ -193,13 +193,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"val a: 42 = 42".show[Syntax] === "val a: 42 = 42")
     assert(q"val a: 42L = 42L".show[Syntax] === "val a: 42L = 42L")
     assert(q"val a: 42d = 42d".show[Syntax] === "val a: 42d = 42d")
+    assert(q"val a: 42.0d = 42.0d".show[Syntax] === "val a: 42.0d = 42.0d")
     assert(q"val a: 42f = 42f".show[Syntax] === "val a: 42f = 42f")
+    assert(q"val a: 42.0f = 42.0f".show[Syntax] === "val a: 42.0f = 42.0f")
     assert(q"val a: true = true".show[Syntax] === "val a: true = true")
     assert(q"val a: false = false".show[Syntax] === "val a: false = false")
     assert(dialects.Dotty("val a: \"42\" = \"42\"").parse[Stat].get.show[Syntax] === "val a: \"42\" = \"42\"")
     assert(pat("_: 42").show[Syntax] === "_: 42")
-    assert(pat("_: 42.0f").show[Syntax] === "_: 42f")
-    assert(pat("_: 42.0d").show[Syntax] === "_: 42d")
+    assert(pat("_: 42f").show[Syntax] === "_: 42f")
+    assert(pat("_: 42d").show[Syntax] === "_: 42d")
+    assert(pat("_: 42.0f").show[Syntax] === "_: 42.0f")
+    assert(pat("_: 42.0d").show[Syntax] === "_: 42.0d")
     assert(pat("_: 42L").show[Syntax] === "_: 42L")
     assert(pat("_: true").show[Syntax] === "_: true")
     assert(pat("_: false").show[Syntax] === "_: false")
@@ -282,15 +286,44 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(templStat("0L").show[Syntax] === "0L")
     assert(templStat("0f").show[Syntax] === "0f")
     assert(templStat("0F").show[Syntax] === "0f")
+    assert(templStat("0.0f").show[Syntax] === "0.0f")
+    assert(templStat("0.0F").show[Syntax] === "0.0f")
     assert(templStat("1.4f").show[Syntax] === "1.4f")
-    assert(templStat("0.0").show[Syntax] === "0d")
+    assert(templStat("1.40f").show[Syntax] === "1.40f")
+    assert(templStat("0.0").show[Syntax] === "0.0d")
     assert(templStat("0d").show[Syntax] === "0d")
     assert(templStat("0D").show[Syntax] === "0d")
+    assert(templStat("0.0d").show[Syntax] === "0.0d")
+    assert(templStat("0.0D").show[Syntax] === "0.0d")
     assert(templStat("'0'").show[Syntax] === "'0'")
     assert(templStat("\"0\"").show[Syntax] === "\"0\"")
     assert(templStat("'zero").show[Syntax] === "'zero")
     assert(templStat("null").show[Syntax] === "null")
     assert(templStat("()").show[Syntax] === "()")
+  }
+
+  test("Lit.Double") {
+    assert(templStat("1.4d").show[Structure] == """Lit.Double(1.4d)""")
+    assert(templStat("1.40d").show[Structure] == """Lit.Double(1.40d)""")
+    assert(Lit.Double(1.40d).show[Structure] == "Lit.Double(1.4d)") // trailing 0 is lost
+    assert(Lit.Double(1.4d).show[Structure] == "Lit.Double(1.4d)")
+    assert(Lit.Double(Double.NaN).show[Syntax] == "Double.NaN")
+    assert(Lit.Double(Double.PositiveInfinity).show[Syntax] == "Double.PositiveInfinity")
+    assert(Lit.Double(Double.NegativeInfinity).show[Syntax] == "Double.NegativeInfinity")
+    assert(Lit.Double(Double.NaN).show[Structure] == "Lit.Double(Double.NaN)")
+    assert(Lit.Double(Double.PositiveInfinity).show[Structure] == "Lit.Double(Double.PositiveInfinity)")
+    assert(Lit.Double(Double.NegativeInfinity).show[Structure] == "Lit.Double(Double.NegativeInfinity)")
+  }
+
+  test("Lit.Float") {
+    assert(templStat("1.4f").show[Structure] == """Lit.Float(1.4f)""")
+    assert(templStat("1.40f").show[Structure] == """Lit.Float(1.40f)""")
+    assert(Lit.Float(Float.NaN).show[Syntax] == "Float.NaN")
+    assert(Lit.Float(Float.PositiveInfinity).show[Syntax] == "Float.PositiveInfinity")
+    assert(Lit.Float(Float.NegativeInfinity).show[Syntax] == "Float.NegativeInfinity")
+    assert(Lit.Float(Float.NaN).show[Structure] == "Lit.Float(Float.NaN)")
+    assert(Lit.Float(Float.PositiveInfinity).show[Structure] == "Lit.Float(Float.PositiveInfinity)")
+    assert(Lit.Float(Float.NegativeInfinity).show[Structure] == "Lit.Float(Float.NegativeInfinity)")
   }
 
   test("context and view bounds") {
@@ -553,24 +586,25 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'") {
-    val longLiterals = """foo(1l, 1L)""".parse[Stat].get.structure
-    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit.Long(1L), Lit.Long(1L)))"""
-    assert(longLiterals.equals(expectation))
+    assert(
+      templStat("foo(1l, 1L)").show[Structure] ==
+          """Term.Apply(Term.Name("foo"), Seq(Lit.Long(1L), Lit.Long(1L)))""")
     assert(q"val x = 1l".structure == q"val x = 1L".structure)
   }
 
   test("show[Structure] should lowercase float literals suffix: '0.01F' -> '0.01f'") {
-    val floatLiterals = """foo(0.01f, 0.01F)""".parse[Stat].get.structure
-    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit.Float(0.01f), Lit.Float(0.01f)))"""
-    assert(floatLiterals.equals(expectation))
+    assert(
+      templStat("foo(0.01f, 0.01F)").show[Structure] ==
+          """Term.Apply(Term.Name("foo"), Seq(Lit.Float(0.01f), Lit.Float(0.01f)))""")
     assert(q"val x = 1f".structure == q"val x = 1F".structure)
   }
 
   test("show[Structure] should lowercase double literals suffix: '0.01D' -> '0.01d'") {
-    val doubleLiterals = """foo(0.02d, 0.02D, 0.02)""".parse[Stat].get.structure
-    val expectation = """Term.Apply(Term.Name("foo"), Seq(Lit.Double(0.02d), Lit.Double(0.02d), Lit.Double(0.02d)))"""
-    assert(doubleLiterals.equals(expectation))
+    assert(
+      templStat("foo(0.02d, 0.02D, 0.02)").show[Structure] ==
+          """Term.Apply(Term.Name("foo"), Seq(Lit.Double(0.02d), Lit.Double(0.02d), Lit.Double(0.02d)))""")
     assert(q"val x = 1d".structure == q"val x = 1D".structure)
-    assert(q"val x = 1d".structure == q"val x = 1.0".structure)
+    assert(q"val x = 1.0d".structure == q"val x = 1.0".structure)
   }
 }
+

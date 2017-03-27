@@ -115,6 +115,7 @@ trait MacroHelpers extends DebugFinder
     def unapply(tpe: Type): Option[Type] = {
       if (tpe =:= typeOf[String] ||
           tpe =:= typeOf[scala.Symbol] ||
+          tpe =:= typeOf[scala.BigDecimal] ||
           ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
       else if (tpe.typeSymbol == definitions.OptionClass && PrimitiveTpe.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
       else if (tpe.typeSymbol == definitions.ClassClass) Some(tpe)

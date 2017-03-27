@@ -302,8 +302,10 @@ object Lit {
   def unapply(arg: Lit): Option[scala.Any] = Some(arg.value)
   @ast class Null(value: scala.Any) extends Lit
   @ast class Int(value: scala.Int) extends Lit
-  @ast class Double(format: scala.Predef.String) extends Lit { lazy val value = format.toDouble }
-  @ast class Float(format: scala.Predef.String) extends Lit { lazy val value = format.toFloat }
+  @ast class Double(format: scala.Predef.String) extends Lit { val value = format.toDouble }
+  object Double { def apply(double: scala.Double): Double = Lit.Double(double.toString)  }
+  @ast class Float(format: scala.Predef.String) extends Lit { val value = format.toFloat }
+  object Float { def apply(float: scala.Float): Float = Lit.Float(float.toString)  }
   @ast class Byte(value: scala.Byte) extends Lit
   @ast class Short(value: scala.Short) extends Lit
   @ast class Char(value: scala.Char) extends Lit

@@ -50,8 +50,6 @@ class ReflectionSuite extends AstSuite {
       |scala.Boolean
       |scala.Byte
       |scala.Char
-      |scala.Double
-      |scala.Float
       |scala.Int
       |scala.Long
       |scala.Option[scala.collection.immutable.Seq[scala.meta.Stat]]
