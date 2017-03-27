@@ -67,6 +67,7 @@ lazy val io = crossProject
     publishableSettings,
     description := "Scala.meta's API for JVM/JS agnostic IO."
   )
+
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
 
