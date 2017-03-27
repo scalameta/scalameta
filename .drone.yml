@@ -59,21 +59,17 @@ matrix:
   include:
     - TEST: ci-fast
       SCALA_VERSION: 2.11.8
-      SCALA_JS: false
       PUBLISH: true
     - TEST: ci-fast
       SCALA_VERSION: 2.11.8
       SCALA_JS: true
     - TEST: ci-fast
       SCALA_VERSION: 2.12.1
-      SCALA_JS: false
     - TEST: ci-fast
       SCALA_VERSION: 2.12.1
       SCALA_JS: true
     - TEST: ci-slow
       SCALA_VERSION: 2.11.8
-      SCALA_JS: false
     - TEST: ci-slow
       SCALA_VERSION: 2.12.1
-      SCALA_JS: false
 
