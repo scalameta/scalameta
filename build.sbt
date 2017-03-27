@@ -212,6 +212,7 @@ lazy val scalametaJS = scalameta.js
 lazy val scalahost = Project(id = "scalahost", base = file("scalahost"))
   .settings(
     publishableSettings,
+    hasLargeIntegrationTests,
     publishArtifact.in(Compile, packageSrc) := {
       // TODO: addCompilerPlugin for ivy repos is kinda broken.
       // If sbt finds a sources jar for a compiler plugin, it tries to add it to -Xplugin,
@@ -292,6 +293,7 @@ lazy val scalahostSbt =
 lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   .settings(
     publishableSettings,
+    hasLargeIntegrationTests,
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "geny" % "0.1.1",
       // These are used to download and extract a corpus tar.gz
@@ -595,6 +597,11 @@ lazy val noPublish = Seq(
   publish := {},
   publishSigned := {},
   publishLocal := {}
+)
+
+lazy val hasLargeIntegrationTests = Seq(
+  fork in (Test, run) := true,
+  javaOptions in (Test, run) += "-Xss4m"
 )
 
 def exposePaths(projectName: String, config: Configuration) = {
