@@ -34,7 +34,6 @@ lazy val scalametaRoot = Project(
     state
   },
   commands += Command.command("ci-slow") { state =>
-    "set fork in run in ThisBuild := true" :: // large integration tests put a lot of memory pressure
     "very scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "such testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
     "scalahostSbt/test" ::
@@ -195,6 +194,7 @@ lazy val scalahost = Project(
   base = file("scalahost")
 ) settings (
   publishableSettings,
+  hasLargeIntegrationTests,
   publishArtifact in (Compile, packageSrc) := {
     // TODO: addCompilerPlugin for ivy repos is kinda broken.
     // If sbt finds a sources jar for a compiler plugin, it tries to add it to -Xplugin,
@@ -277,6 +277,7 @@ lazy val testkit = Project(
   base = file("scalameta/testkit")
 ) settings (
   publishableSettings,
+  hasLargeIntegrationTests,
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "geny" % "0.1.1",
     // These are used to download and extract a corpus tar.gz
@@ -549,6 +550,11 @@ lazy val noPublish = Seq(
   publish := {},
   publishSigned := {},
   publishLocal := {}
+)
+
+lazy val hasLargeIntegrationTests = Seq(
+  fork in (Test, run) := true,
+  javaOptions in (Test, run) += "-Xss4m"
 )
 
 def exposePaths(projectName: String, config: Configuration) = {
