@@ -218,7 +218,6 @@ lazy val scalahost = Project(
   },
   exposePaths("scalahost", Test),
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-  libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % Test,
   pomPostProcess := { node =>
     new RuleTransformer(new RewriteRule {
       private def isScalametaDependency(node: XmlNode): Boolean = {
