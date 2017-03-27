@@ -9,7 +9,7 @@ import UnidocKeys._
 import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 
-lazy val ScalaVersion = sys.env.getOrElse("CI_SCALA_VERSION", "2.11.8")
+lazy val ScalaVersion = "2.11.8"
 lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
 lazy val LibrarySeries = "1.7.0"
 lazy val LibraryVersion =
@@ -23,20 +23,22 @@ name := "scalametaRoot"
 sharedSettings
 noPublish
 unidocSettings
-commands += Command.command("ci-fast") { state =>
-  if (sys.env.contains("SCALA_JS")) "scalametaJS/test" :: state
-  else "test" :: "doc" :: state
-}
-commands += Command.command("ci-slow") { state =>
+commands += CiCommand("ci-fast")(
+  if (sys.env.contains("SCALA_JS")) "scalametaJS/test" :: Nil
+  else {
+    "test" :: "doc" :: Nil
+  }
+)
+commands += CiCommand("ci-slow")(
   "scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
-    "scalahostSbt/test" ::
-    state
-}
-commands += Command.command("ci-publish") { state =>
-  if (sys.env.contains("CI_PUBLISH")) "very publish" :: state
-  else state
-}
+    Nil
+)
+commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/test" :: Nil)
+commands += CiCommand("ci-publish")(
+  if (sys.env.contains("CI_PUBLISH")) s"publish" :: Nil
+  else Nil
+)
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 aggregate.in(test) := false
@@ -274,8 +276,8 @@ lazy val scalahostSbt =
       },
       description := "sbt plugin to enable the scalahost compiler plugin",
       moduleName := "sbt-scalahost", // sbt convention is that plugin names start with sbt-
-      scalaVersion := "2.10.5",
-      crossScalaVersions := Seq("2.10.5"), // for some reason, scalaVersion.value does not work.
+      scalaVersion := "2.10.6",
+      crossScalaVersions := Seq("2.10.6"), // for some reason, scalaVersion.value does not work.
       scriptedLaunchOpts ++= Seq(
         "-Dplugin.version=" + version.value,
         // .jvmopts is ignored, simulate here
@@ -680,5 +682,12 @@ lazy val compilePublishSigned: Def.Initialize[Task[Unit]] = Def.taskDyn {
     Def.task {
       sys.error("Undefined publishing strategy"); ()
     }
+  }
+}
+
+lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
+def CiCommand(name: String)(commands: List[String]): Command = Command.command(name) { initState =>
+  commands.foldLeft(initState) {
+    case (state, command) => s"plz ${sys.env("CI_SCALA_VERSION")} $command" :: state
   }
 }

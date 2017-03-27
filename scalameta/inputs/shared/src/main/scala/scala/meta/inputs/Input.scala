@@ -11,7 +11,6 @@ import scala.meta.internal.io._
 import scala.meta.io._
 
 trait Input extends Optional with Product with Serializable with InternalInput {
-  def location = "<input>"
   def chars: Array[Char]
 }
 
@@ -49,7 +48,6 @@ object Input {
   }
 
   @data class VirtualFile(path: AbsolutePath, contents: scala.Predef.String) extends Input {
-    override def location = path.absolute
     lazy val chars = contents.toArray
     override def toString = s"""Input.VirtualFile($path, "$contents")"""
   }
@@ -57,7 +55,6 @@ object Input {
   @data class File(path: AbsolutePath, charset: Charset) extends Input {
     @deprecated("Use .path instead", "1.8.0")
     def file: java.io.File = new java.io.File(path.absolute)
-    override def location = path.absolute
     lazy val chars = path.slurp.toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
     override def toString = "Input.File(new File(\"" + path.relative + "\"), Charset.forName(\"" + charset.name + "\"))"
@@ -95,6 +92,7 @@ object Input {
   implicit val charsToInput: Convert[Array[Char], Input] = Convert(chars => Input.String(new scala.Predef.String(chars)))
   implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String(_))
   implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] = Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
+  // NOTE: fileToInput is lazy to avoid linking errors in Scala.js
   implicit lazy val fileToInput: Convert[java.io.File, Input] = Convert(f => Input.File(f, Charset.forName("UTF-8")))
 }
 

@@ -17,7 +17,11 @@ package object inputs {
     def formatMessage(severity: String, message: String): String = {
       if (point != Point.None) {
         val input = point.input
-        val shortContent = input.location
+        val shortContent = input match {
+          case Input.File(path, _) => path.absolute
+          case Input.VirtualFile(path, _) => path.absolute
+          case _ => "<input>"
+        }
         val header = s"$shortContent:${point.line + 1}: $severity: $message"
         val line = {
           val start = input.lineToOffset(point.line)

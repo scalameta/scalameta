@@ -302,6 +302,10 @@ object Lit {
   def unapply(arg: Lit): Option[scala.Any] = Some(arg.value)
   @ast class Null(value: scala.Any) extends Lit
   @ast class Int(value: scala.Int) extends Lit
+  // NOTE: Lit.Double/Float are strings to work the same across JS/JVM. Example:
+  // 1.4f.toString == "1.399999976158142" // in JS
+  // 1.4f.toString == "1.4"               // in JVM
+  // See https://www.scala-js.org/doc/semantics.html#tostring-of-float-double-and-unit
   @ast class Double(format: scala.Predef.String) extends Lit { val value = format.toDouble }
   object Double { def apply(double: scala.Double): Double = Lit.Double(double.toString)  }
   @ast class Float(format: scala.Predef.String) extends Lit { val value = format.toFloat }
