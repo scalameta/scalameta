@@ -19,7 +19,7 @@ trait ConverterSuite extends FunSuiteLike {
     def fail(msg: String) = sys.error(s"ReflectToMeta initialization failed: $msg")
     val classpath = System.getProperty("sbt.paths.scalahost.test.classes")
     val pluginpath = System.getProperty("sbt.paths.plugin.jar")
-    val options = "-cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:macroparadise"
+    val options = "-usejavacp -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:macroparadise"
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
     val reporter = new StoreReporter()

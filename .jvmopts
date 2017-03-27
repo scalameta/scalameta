@@ -1,5 +1,6 @@
--Xms4000m
--Xmx55g
+-Xss4m
+-Xms1G
+-Xmx8G
 -Xss4m
 -XX:ReservedCodeCacheSize=1024m
 -XX:+TieredCompilation
