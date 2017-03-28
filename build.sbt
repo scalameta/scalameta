@@ -364,9 +364,12 @@ lazy val readme = scalatex.ScalatexReadme(
       os.shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
       os.shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
       os.shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
-      val httpAuthentication = os.secret.obtain("github").map{ case (username, password) => s"$username:$password@" }.getOrElse("")
-      val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
-      os.shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
+      os.secret.obtain("github").foreach {
+        case (username, password) =>
+          val httpAuthentication = s"$username:$password@"
+          val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
+          os.shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
+      }
     } catch {
       case ex: Exception if ex.getMessage.contains(nothingToCommit) => println(nothingToCommit)
     }
