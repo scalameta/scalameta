@@ -21,7 +21,8 @@ pipeline:
       - sbt $CI_TEST
 
   publish:
-    image: scalaplatform/scala:0.6
+    # different image than tests to avoid leaking secrets
+    image: olafurpg/scalafix:0.3.0
     pull: true
     volumes:
       - /platform:/keys
