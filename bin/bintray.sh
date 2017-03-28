@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-username=$1
-api_key=$2
+set -eu
 
 if [[ "$DRONE_BRANCH" == "master" && "$TEST" == "ci-fast" ]]; then
   echo "Running publish from $(pwd)"
