@@ -1,7 +1,26 @@
-package scala.meta.contrib.equality
+package scala.meta.contrib.instances
 
-import scala.language.implicitConversions
-import scala.meta.Tree
+import scala.meta._
+import scala.meta.contrib.Equal
+import scala.meta.prettyprinters.{Show, Structure}
+import scala.language.higherKinds
+
+trait EqualityInstances {
+  implicit def showEquality[F[x] <: Show[x]]: Equal[F] =
+    new Equal[F] {
+      override def isEqual[A](a: A, b: A): Boolean =
+        a.show[F].equals(b.show[F])
+    }
+
+  implicit def structuralEquality: Equal[Structure] =
+    new Equal[Structure] {
+      override def isEqual[A <: Tree](a: A, b: A): Boolean =
+        Structurally.equal(a, b)
+    }
+}
+
+object EqualityInstances extends EqualityInstances
+
 
 /** Represents structural equality between trees
   *
@@ -9,18 +28,6 @@ import scala.meta.Tree
   * This implementation is however more efficient that doing
   * a.structure == b.structure.
   */
-class Structurally[+A <: Tree](val tree: A) extends TreeEquality[A] {
-  // TODO(olafur) more efficient hashCode
-  private lazy val hash: Int = tree.structure.hashCode
-  override def hashCode(): Int = hash
-  override def equals(obj: scala.Any): Boolean = {
-    obj match {
-      case e2: Structurally[_] => Structurally.equal(tree, e2.tree)
-      case _ => false
-    }
-  }
-}
-
 object Structurally {
 
   def equal(a: Tree, b: Tree): Boolean = loopStructure(a, b)
@@ -40,11 +47,4 @@ object Structurally {
       sameStructure
     case _ => x == y
   }
-
-  implicit def StructuralEq[A <: Tree]: Equal[Structurally[A]] =
-    new Equal[Structurally[A]] {
-      override def isEqual(a: Structurally[A], b: Structurally[A]): Boolean = a.equals(b)
-    }
-
-  implicit def toStructural[A <: Tree](e: A): Structurally[A] = new Structurally[A](e)
 }
