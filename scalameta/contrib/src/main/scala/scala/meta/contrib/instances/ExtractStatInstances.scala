@@ -2,40 +2,40 @@ package scala.meta.contrib.instances
 
 import scala.meta._
 import scala.meta.contrib._
+import scala.collection.immutable.Seq
 
 trait ExtractStatInstances {
-
-  implicit val extractTemplateStats: Extract[Template, Stats] =
+  implicit val extractTemplateStats: Extract[Template, Stat] =
     Extract(_.stats.getOrElse(Nil))
 
-  implicit val extractClassStats: Extract[Defn.Class, Stats] =
+  implicit val extractClassStats: Extract[Defn.Class, Stat] =
     Extract(_.templ.stats.getOrElse(Nil))
 
-  implicit val extractTraitStats: Extract[Defn.Trait, Stats] =
+  implicit val extractTraitStats: Extract[Defn.Trait, Stat] =
     Extract(_.templ.stats.getOrElse(Nil))
 
-  implicit val extractObjectStats: Extract[Defn.Object, Stats] =
+  implicit val extractObjectStats: Extract[Defn.Object, Stat] =
     Extract(_.templ.stats.getOrElse(Nil))
 
-  implicit val extractPkgStats: Extract[Pkg, Stats] =
+  implicit val extractPkgStats: Extract[Pkg, Stat] =
     Extract(_.stats)
 
-  implicit val extractSourceStats: Extract[Source, Stats] =
+  implicit val extractSourceStats: Extract[Source, Stat] =
     Extract(_.stats)
 
-  implicit val extractDefStats: Extract[Defn.Def, Stats] =
+  implicit val extractDefStats: Extract[Defn.Def, Stat] =
     Extract(d => extractStatsFromTerm(d.body))
 
-  implicit val extractValStats: Extract[Defn.Val, Stats] =
+  implicit val extractValStats: Extract[Defn.Val, Stat] =
     Extract(v => extractStatsFromTerm(v.rhs))
 
-  implicit val extractVarStats: Extract[Defn.Var, Stats] =
+  implicit val extractVarStats: Extract[Defn.Var, Stat] =
     Extract(
       _.rhs
         .map(extractStatsFromTerm)
         .getOrElse(Nil))
 
-  private def extractStatsFromTerm(term: Term): Stats =
+  private def extractStatsFromTerm(term: Term): Seq[Stat] =
     term match {
       case Term.Block(stats) => stats
       case s => s :: Nil

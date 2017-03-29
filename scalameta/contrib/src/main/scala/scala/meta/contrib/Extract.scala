@@ -1,5 +1,7 @@
 package scala.meta.contrib
 
+import scala.collection.immutable.Seq
+
 /**
   * Logical extraction of B from A.
   *
@@ -11,11 +13,11 @@ package scala.meta.contrib
   * is actually extracting the stats from the Template, which is a child of Defn.Class.
   */
 trait Extract[A, B] {
-  def extract(a: A): B
+  def extract(a: A): Seq[B]
 }
 
 object Extract {
-  def apply[A, B](f: A => B): Extract[A, B] = new Extract[A, B] {
-    @inline override def extract(a: A): B = f(a)
+  def apply[A, B](f: A => Seq[B]): Extract[A, B] = new Extract[A, B] {
+    @inline override def extract(a: A): Seq[B] = f(a)
   }
 }

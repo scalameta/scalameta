@@ -7,38 +7,38 @@ import scala.meta._
 class StatExtractionTest extends FunSuite {
 
   test("Test extract class stats") {
-    val stats = q"class Foo".extract[Stats]
+    val stats = q"class Foo".extract[Stat]
     assert(stats == Nil)
   }
 
   test("Test extract trait stats") {
-    val stats = q"trait Foo".extract[Stats]
+    val stats = q"trait Foo".extract[Stat]
     assert(stats == Nil)
   }
 
   test("Test extract object stats") {
-    val stats = q"object Foo".extract[Stats]
+    val stats = q"object Foo".extract[Stat]
     assert(stats == Nil)
   }
 
   test("Test extract def stats") {
-    val stats = q"def foo = {}".extract[Stats]
+    val stats = q"def foo = {}".extract[Stat]
     assert(stats == Nil)
   }
 
   test("Test extract def stats with single stat") {
-    val stats = q"def foo = 2".extract[Stats]
+    val stats = q"def foo = 2".extract[Stat]
     assert(stats.exists(_ isEqual q"2"))
   }
 
   test("Test extract val stats with single stat") {
-    val stats = q"val foo = 2".extract[Stats]
+    val stats = q"val foo = 2".extract[Stat]
     assert(stats.exists(_ isEqual q"2"))
     assert(stats.size == 1)
   }
 
   test("Test extract var stats with single stat") {
-    val stats = q"var foo = 2".extract[Stats]
+    val stats = q"var foo = 2".extract[Stat]
     assert(stats.exists(_ isEqual q"2"))
     assert(stats.size == 1)
   }
