@@ -8,6 +8,8 @@ pipeline:
       - /drone/.coursier-cache
       - /drone/.sbt
       - /drone/.git
+    when:
+      event: [push, pull_request, tag, deployment]
 
   tests:
     image: scalaplatform/scala:0.6
