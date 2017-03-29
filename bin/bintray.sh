@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -eu
+PUBLISH=${CI_PUBLISH:-false}
+echo $PUBLISH
 
-if [[ "$DRONE_BRANCH" == "master" && "$CI_PUBLISH" == "true" ]]; then
+if [[ "$DRONE_BRANCH" == "master" && "$PUBLISH" == "true" ]]; then
   echo "Running publish from $(pwd)"
   git log | head -n 20
   mkdir -p $HOME/.bintray
