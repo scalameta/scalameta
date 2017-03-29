@@ -32,7 +32,7 @@ commands += Command.command("ci-fast") { s =>
     s
 }
 commands += CiCommand("ci-slow")(
-  "scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
+  "scalahostNsc/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
     Nil
 )
@@ -212,10 +212,26 @@ lazy val scalameta = crossProject
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
-lazy val scalahost = Project(id = "scalahost", base = file("scalahost"))
+lazy val scalahost = project
+  .in(file("scalahost/core"))
   .settings(
+    moduleName := "scalahost",
+    description := "Scala.meta semantic API integration for Scala 2.x (scalac).",
     publishableSettings,
     hasLargeIntegrationTests,
+    isFullCrossVersion,
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+  )
+  .dependsOn(scalametaJVM)
+
+lazy val scalahostNsc = project
+  .in(file("scalahost/nsc"))
+  .settings(
+    moduleName := "scalahost-nsc",
+    description := "Scala 2.x compiler plugin that persists the semantic API on compile.",
+    publishableSettings,
+    mergeSettings,
+    isFullCrossVersion,
     publishArtifact.in(Compile, packageSrc) := {
       // TODO: addCompilerPlugin for ivy repos is kinda broken.
       // If sbt finds a sources jar for a compiler plugin, it tries to add it to -Xplugin,
@@ -223,22 +239,9 @@ lazy val scalahost = Project(id = "scalahost", base = file("scalahost"))
       // Until this bug is fixed, we work around.
       if (shouldPublishToBintray) false
       else if (shouldPublishToSonatype) true
-      else (publishArtifact.in(Compile, packageSrc)).value
-    },
-    mergeSettings,
-    description := "Scala.meta's connector to the Scala compiler",
-    crossVersion := CrossVersion.full,
-    unmanagedSourceDirectories.in(Compile) += {
-      // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
-      // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
-      // Unfortunately, it only includes directories like "scala_2.11" or "scala_2.12",
-      // not "scala_2.11.8" or "scala_2.12.1" that we need.
-      // That's why we have to work around here.
-      val base = sourceDirectory.in(Compile).value
-      base / ("scala-" + scalaVersion.value)
+      else publishArtifact.in(Compile, packageSrc).value
     },
     exposePaths("scalahost", Test),
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
         private def isScalametaDependency(node: XmlNode): Boolean = {
@@ -255,43 +258,43 @@ lazy val scalahost = Project(id = "scalahost", base = file("scalahost"))
       }).transform(node).head
     }
   )
-  .dependsOn(scalametaJVM, testkit % Test)
+  .dependsOn(scalahost, testkit % Test)
 
-lazy val scalahostSbt =
-  Project(id = "scalahostSbt", base = file("scalahost-sbt"))
-    .settings(
-      publishableSettings,
-      buildInfoSettings,
-      sbt.ScriptedPlugin.scriptedSettings,
-      sbtPlugin := true,
-      bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
-      testQuick := {
-        // runs tests for 2.11 only, avoiding the need to publish for 2.12
-        RunSbtCommand("; plz 2.11.8 publishLocal " +
-          "; such scalahostSbt/scripted sbt-scalahost/simple211")(state.value)
-      },
-      test := {
-        RunSbtCommand("; such publishLocal " +
-          "; such scalahostSbt/scripted")(state.value)
-      },
-      description := "sbt plugin to enable the scalahost compiler plugin",
-      moduleName := "sbt-scalahost", // sbt convention is that plugin names start with sbt-
-      scalaVersion := "2.10.6",
-      crossScalaVersions := Seq("2.10.6"), // for some reason, scalaVersion.value does not work.
-      scriptedLaunchOpts ++= Seq(
-        "-Dplugin.version=" + version.value,
-        // .jvmopts is ignored, simulate here
-        "-XX:MaxPermSize=256m",
-        "-Xmx2g",
-        "-Xss2m"
-      ) ++ {
-        // pass along custom boot properties if specified
-        val bootProps = "sbt.boot.properties"
-        sys.props.get(bootProps).map(x => s"-D$bootProps=$x").toList
-      },
-      scriptedBufferLog := false
-    )
-    .enablePlugins(BuildInfoPlugin)
+lazy val scalahostSbt = project
+  .in(file("scalahost/sbt"))
+  .settings(
+    publishableSettings,
+    buildInfoSettings,
+    sbt.ScriptedPlugin.scriptedSettings,
+    sbtPlugin := true,
+    bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
+    testQuick := {
+      // runs tests for 2.11 only, avoiding the need to publish for 2.12
+      RunSbtCommand("; plz 2.11.8 publishLocal " +
+        "; such scalahostSbt/scripted sbt-scalahost/semantic-example")(state.value)
+    },
+    test := {
+      RunSbtCommand("; such publishLocal " +
+        "; such scalahostSbt/scripted")(state.value)
+    },
+    description := "sbt plugin to enable the scalahost compiler plugin",
+    moduleName := "sbt-scalahost", // sbt convention is that plugin names start with sbt-
+    scalaVersion := "2.10.6",
+    crossScalaVersions := Seq("2.10.6"), // for some reason, scalaVersion.value does not work.
+    scriptedLaunchOpts ++= Seq(
+      "-Dplugin.version=" + version.value,
+      // .jvmopts is ignored, simulate here
+      "-XX:MaxPermSize=256m",
+      "-Xmx2g",
+      "-Xss2m"
+    ) ++ {
+      // pass along custom boot properties if specified
+      val bootProps = "sbt.boot.properties"
+      sys.props.get(bootProps).map(x => s"-D$bootProps=$x").toList
+    },
+    scriptedBufferLog := false
+  )
+  .enablePlugins(BuildInfoPlugin)
 
 lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   .settings(
@@ -323,7 +326,7 @@ lazy val tests = project
     // because JVM tests link and run faster than JS tests.
     testJVM := {
       val runScalametaTests = test.in(scalametaJVM, Test).value
-      val runScalahostTests = test.in(scalahost, Test).value
+      val runScalahostTests = test.in(scalahostNsc, Test).value
       val runBenchmarkTests = test.in(benchmarks, Test).value
       val runContribTests = test.in(contribJVM, Test).value
       val runDocs = test.in(readme).value
@@ -629,6 +632,18 @@ lazy val noPublish = Seq(
   publishLocal := {}
 )
 
+lazy val isFullCrossVersion = Seq(
+  crossVersion := CrossVersion.full,
+  unmanagedSourceDirectories.in(Compile) += {
+    // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
+    // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
+    // Unfortunately, it only includes directories like "scala_2.11" or "scala_2.12",
+    // not "scala_2.11.8" or "scala_2.12.1" that we need.
+    // That's why we have to work around here.
+    val base = sourceDirectory.in(Compile).value
+    base / ("scala-" + scalaVersion.value)
+  }
+)
 lazy val hasLargeIntegrationTests = Seq(
   fork in (Test, run) := true,
   javaOptions in (Test, run) += "-Xss4m"

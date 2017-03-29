@@ -35,38 +35,19 @@ object ScalahostSbtPlugin extends AutoPlugin {
       scalaVersion.value match {
         case SupportedScalaVersion(version) =>
           List(
-            "org.scalameta" % s"scalahost_$version" % scalahostVersion % Scalameta
+            "org.scalameta" % s"scalahost-nsc_$version" % scalahostVersion % Scalameta
           )
         case _ => Nil
       }
     },
     // sets -Xplugin:/scalahost.jar and other necessary compiler options.
     scalacOptions ++= {
-      scalaVersion.value match {
-        case SupportedScalaVersion(version) =>
-          val jarRegex = s".*scalahost_$version(-$scalahostVersion)?.jar$$"
-          val allJars = update.value.filter(configurationFilter(Scalameta.name)).allFiles
-          val scalahostJar = allJars
-            .collectFirst {
-              case file if file.getAbsolutePath.matches(jarRegex) => file.getAbsolutePath
-            }
-            .getOrElse {
-              throw new IllegalStateException(
-                s"""Unable to find scalahost compiler plugin jar.
-                   |Please report the output below at https://github.com/scalameta/scalameta/issues
-                   |Scala version: ${scalaVersion.value}
-                   |Cross version: ${crossScalaVersions.value}
-                   |Jar regex: $jarRegex
-                   |All jars: $allJars
-                   |""".stripMargin
-              )
-            }
-          List(
-            s"-Xplugin:$scalahostJar",
-            "-Yrangepos",
-            "-Xplugin-require:scalahost"
-          )
-        case _ => Nil
+      scalahostJarPath.value.fold(List.empty[String]) { path =>
+        List(
+          s"-Xplugin:$path",
+          "-Yrangepos",
+          "-Xplugin-require:scalahost"
+        )
       }
     }
   )
@@ -88,12 +69,13 @@ object ScalahostSbtPlugin extends AutoPlugin {
             .flatMap(_.files.map(_.getAbsolutePath))
             .mkString(java.io.File.pathSeparator)
         val projectName = name.value
-        List(
-          s"-D$projectName.scalameta.sourcepath=$sourcepath",
-          s"-D$projectName.scalameta.classpath=$classpath",
-          s"-Dscalameta.sourcepath=$sourcepath",
-          s"-Dscalameta.classpath=$classpath"
-        )
+        scalahostJarPath.value.map(path => s"-Dscalahost.jar=$path").toList ++
+          List(
+            s"-D$projectName.scalameta.sourcepath=$sourcepath",
+            s"-D$projectName.scalameta.classpath=$classpath",
+            s"-Dscalameta.sourcepath=$sourcepath",
+            s"-Dscalameta.classpath=$classpath"
+          )
       }
     },
     // fork := true is required to pass along -Dscalameta.mirror.{classpath,sourcepath}
@@ -119,6 +101,31 @@ object ScalahostSbtPlugin extends AutoPlugin {
     def unapply(arg: String): Option[String] = arg match {
       case MajorMinor(version) =>
         BuildInfo.supportedScalaVersions.find(_.startsWith(version))
+      case _ => None
+    }
+  }
+
+  private lazy val scalahostJarPath: Def.Initialize[Task[Option[String]]] = Def.task {
+    scalaVersion.value match {
+      case SupportedScalaVersion(version) =>
+        val jarRegex = s".*scalahost-nsc_$version(-$scalahostVersion)?.jar$$"
+        val allJars = update.value.filter(configurationFilter(Scalameta.name)).allFiles
+        val scalahostJar = allJars
+          .collectFirst {
+            case file if file.getAbsolutePath.matches(jarRegex) => file.getAbsolutePath
+          }
+          .getOrElse {
+            throw new IllegalStateException(
+              s"""Unable to find scalahost compiler plugin jar.
+                 |Please report the output below at https://github.com/scalameta/scalameta/issues
+                 |Scala version: ${scalaVersion.value}
+                 |Cross version: ${crossScalaVersions.value}
+                 |Jar regex: $jarRegex
+                 |All jars: $allJars
+                 |""".stripMargin
+            )
+          }
+        Some(scalahostJar)
       case _ => None
     }
   }

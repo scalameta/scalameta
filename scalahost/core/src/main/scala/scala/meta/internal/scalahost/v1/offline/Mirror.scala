@@ -73,7 +73,7 @@ class Mirror(classpath: String, sourcepath: String)
         this.getClass.getClassLoader match {
           case cl: java.net.URLClassLoader =>
             val paths = cl.getURLs.map(_.getPath)
-            paths.find(p => p.contains("scalahost") && p.endsWith(".jar"))
+            paths.find(p => p.contains("scalahost-nsc") && p.endsWith(".jar"))
           case _ =>
             None
         }
@@ -87,7 +87,7 @@ class Mirror(classpath: String, sourcepath: String)
         sys.error(
           "failed to locate scalahost.jar, specify the location manually via -Dscalahost.jar")
       }
-      autodetectFromClassloader.orElse(autodetectFromProperties).getOrElse(fail)
+      autodetectFromProperties.orElse(autodetectFromClassloader).getOrElse(fail())
     }
     val global: Global = {
       def fail(msg: String) = sys.error(s"mirror initialization failed: $msg")
