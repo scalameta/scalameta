@@ -23,12 +23,14 @@ name := "scalametaRoot"
 sharedSettings
 noPublish
 unidocSettings
-commands += CiCommand("ci-fast")(
-  if (sys.env.contains("SCALA_JS")) "scalametaJS/test" :: Nil
-  else {
-    "test" :: "doc" :: Nil
-  }
-)
+// ci-fast is ot a CiCommand because plz 2.11.8 test super slow, it runs `test`
+// sequentially in every defined module.
+commands += Command.command("ci-fast") { s =>
+  s"wow $ciScalaVersion" ::
+    "tests/test" ::
+    ci("doc") :: // skips 2.10 projects
+    s
+}
 commands += CiCommand("ci-slow")(
   "scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
     "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
@@ -39,17 +41,15 @@ commands += CiCommand("ci-publish")(
   if (sys.env.contains("CI_PUBLISH")) s"publish" :: Nil
   else Nil
 )
+// NOTE: These tasks are aliased here in order to support running "tests/test"
+// from a command. Running "test" inside a command will trigger the `test` task
+// to run in all defined modules, including ones like inputs/io/dialects which
+// have no tests.
+test := test.in(tests).value
+testJVM := testJVM.in(tests).value
+testJS := testJS.in(tests).value
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
-aggregate.in(test) := false
-test := {
-  // `test` by default only runs on the JVM
-  val runScalametaTests = test.in(scalametaJVM, Test).value
-  val runScalahostTests = test.in(scalahost, Test).value
-  val runBenchmarkTests = test.in(benchmarks, Test).value
-  val runContribTests = test.in(contrib, Test).value
-  val runDocs = run.in(readme, Compile).toTask(" --validate").value
-}
 console := console.in(scalametaJVM, Compile).value
 
 lazy val common = crossProject
@@ -308,12 +308,42 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   )
   .dependsOn(scalametaJVM)
 
-lazy val contrib = Project(id = "contrib", base = file("scalameta/contrib"))
+lazy val tests = project
+  .in(file("scalameta/tests"))
+  .settings(
+    sharedSettings,
+    noPublish,
+    description := "Runs all tests in scalameta project.",
+    test := {
+      testJVM.value
+      testJS.value
+    },
+    // These tasks skip over modules with no tests, like dialects/inputs/io, speeding up
+    // edit/test cycles. You may prefer to run testJVM while iterating on a design
+    // because JVM tests link and run faster than JS tests.
+    testJVM := {
+      val runScalametaTests = test.in(scalametaJVM, Test).value
+      val runScalahostTests = test.in(scalahost, Test).value
+      val runBenchmarkTests = test.in(benchmarks, Test).value
+      val runContribTests = test.in(contribJVM, Test).value
+      val runDocs = test.in(readme).value
+    },
+    testJS := {
+      val runScalametaTests = test.in(scalametaJS, Test).value
+      val runContribTests = test.in(contribJS, Test).value
+    }
+  )
+
+lazy val contrib = crossProject
+  .in(file("scalameta/contrib"))
   .settings(
     publishableSettings,
     description := "Utilities for scala.meta"
   )
-  .dependsOn(scalametaJVM, testkit % Test)
+  .jvmConfigure(_.dependsOn(testkit))
+  .dependsOn(scalameta)
+lazy val contribJVM = contrib.jvm
+lazy val contribJS = contrib.js
 
 lazy val benchmarks =
   Project(id = "benchmarks", base = file("scalameta/benchmarks"))
@@ -351,10 +381,10 @@ lazy val readme = scalatex
     source = "Readme"
   )
   .settings(
+    sharedSettings,
     noPublish,
     exposePaths("readme", Runtime),
-    scalaVersion := scalaVersion.in(scalametaJVM).value,
-    crossScalaVersions := ScalaVersions,
+    crossScalaVersions := ScalaVersions, // No need to cross-build.
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     sources.in(Compile) ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
     watchSources ++= baseDirectory.value.listFiles.toList,
@@ -396,7 +426,8 @@ lazy val readme = scalatex
         os.secret.obtain("github").foreach {
           case (username, password) =>
             val httpAuthentication = s"$username:$password@"
-            val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
+            val authenticatedUrl =
+              s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
             os.shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
         }
       } catch {
@@ -687,6 +718,10 @@ lazy val compilePublishSigned: Def.Initialize[Task[Unit]] = Def.taskDyn {
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
 def CiCommand(name: String)(commands: List[String]): Command = Command.command(name) { initState =>
   commands.foldLeft(initState) {
-    case (state, command) => s"plz ${sys.env("CI_SCALA_VERSION")} $command" :: state
+    case (state, command) => ci(command) :: state
   }
 }
+def ci(command: String) = s"plz ${sys.env("CI_SCALA_VERSION")} $command"
+
+lazy val testJVM = taskKey[Unit]("Run JVM tests")
+lazy val testJS = taskKey[Unit]("Run Scala.js tests")

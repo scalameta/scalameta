@@ -8,6 +8,8 @@ pipeline:
       - /drone/.coursier-cache
       - /drone/.sbt
       - /drone/.git
+    when:
+      event: [push, pull_request, tag, deployment]
 
   tests:
     image: scalaplatform/scala:0.6
@@ -62,14 +64,8 @@ matrix:
       CI_SCALA_VERSION: 2.11.8
       CI_PUBLISH: true
     - CI_TEST: ci-fast
-      CI_SCALA_VERSION: 2.11.8
-      SCALA_JS: true
-    - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.12.1
       CI_PUBLISH: true
-    - CI_TEST: ci-fast
-      CI_SCALA_VERSION: 2.12.1
-      SCALA_JS: true
     - CI_TEST: ci-sbt-scalahost
       CI_SCALA_VERSION: 2.10.6
       CI_PUBLISH: true
