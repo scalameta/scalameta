@@ -1,7 +1,3 @@
-package scala.meta.contrib
-
-import scala.collection.immutable.Seq
-
 /**
   * Logical extraction of B from A.
   *

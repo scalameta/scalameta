@@ -1,9 +1,3 @@
-package scala.meta.contrib.implicits
-
-import scala.meta._
-import scala.meta.contrib.Extract
-import scala.collection.immutable.Seq
-
 trait ExtractPimps {
   implicit class XtensionExtractors[A](a: A) {
 
