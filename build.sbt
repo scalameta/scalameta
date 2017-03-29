@@ -24,10 +24,8 @@ sharedSettings
 noPublish
 unidocSettings
 commands += CiCommand("ci-fast")(
-  if (sys.env.contains("SCALA_JS")) "scalametaJS/test" :: Nil
-  else {
-    "test" :: "doc" :: Nil
-  }
+  if (sys.env.contains("SCALA_JS")) "testJS" :: Nil
+  else "test" :: "doc" :: Nil
 )
 commands += CiCommand("ci-slow")(
   "scalahost/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
@@ -47,8 +45,12 @@ test := {
   val runScalametaTests = test.in(scalametaJVM, Test).value
   val runScalahostTests = test.in(scalahost, Test).value
   val runBenchmarkTests = test.in(benchmarks, Test).value
-  val runContribTests = test.in(contrib, Test).value
+  val runContribTests = test.in(contribJVM, Test).value
   val runDocs = run.in(readme, Compile).toTask(" --validate").value
+}
+TaskKey[Unit]("testJS") := {
+  val runScalametaTests = test.in(scalametaJS, Test).value
+  val runContribTests = test.in(contribJS, Test).value
 }
 console := console.in(scalametaJVM, Compile).value
 
@@ -308,12 +310,16 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   )
   .dependsOn(scalametaJVM)
 
-lazy val contrib = Project(id = "contrib", base = file("scalameta/contrib"))
+lazy val contrib = crossProject
+  .in(file("scalameta/contrib"))
   .settings(
     publishableSettings,
     description := "Utilities for scala.meta"
   )
-  .dependsOn(scalametaJVM, testkit % Test)
+  .jvmConfigure(_.dependsOn(testkit))
+  .dependsOn(scalameta)
+lazy val contribJVM = contrib.jvm
+lazy val contribJS = contrib.js
 
 lazy val benchmarks =
   Project(id = "benchmarks", base = file("scalameta/benchmarks"))
@@ -396,7 +402,8 @@ lazy val readme = scalatex
         os.secret.obtain("github").foreach {
           case (username, password) =>
             val httpAuthentication = s"$username:$password@"
-            val authenticatedUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
+            val authenticatedUrl =
+              s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
             os.shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
         }
       } catch {

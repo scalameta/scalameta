@@ -1,10 +1,9 @@
 package scala.meta
 package contrib
 
-import scala.meta.testkit.SyntaxAnalysis
 import org.scalatest.FunSuite
 
-class TreeOpsTest extends FunSuite {
+class TreeOpsSuite extends FunSuite {
   val a: Defn.Val = q"val x = 2"
 
   test("testForeach") {
@@ -18,14 +17,6 @@ class TreeOpsTest extends FunSuite {
           "Pat.Var.Term(Term.Name(\"x\"))",
           "Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"x\"))), None, Lit.Int(2))"
         ))
-  }
-
-  test("find property") {
-    val errors = SyntaxAnalysis.onParsed[Tree](ContribSuite.corpus) { ast =>
-      val names = ast.collect { case t: Defn.Val => t.copy(pats = t.pats) }
-      names.filterNot(name => ast.contains[Structurally](name))
-    }
-    assert(errors.isEmpty)
   }
 
   test("ancestors") {

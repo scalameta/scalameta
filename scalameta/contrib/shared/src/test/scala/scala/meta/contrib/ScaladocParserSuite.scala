@@ -1,12 +1,11 @@
 package scala.meta.contrib
 
-import org.scalatest.FunSuite
-
 import scala.meta.contrib.DocToken._
-import scala.meta.testkit._
 import scala.meta.tokens.Token.Comment
-import scala.meta.{Defn, _}
-import scala.util.Try
+import scala.meta.Defn
+import scala.meta._
+
+import org.scalatest.FunSuite
 
 /**
   * Test for [[ScaladocParser]]
@@ -226,20 +225,5 @@ class ScaladocParserSuite extends FunSuite {
         _.head.references === Seq(DocToken.Reference(reference1), DocToken.Reference(reference2))
       )
     )
-  }
-
-  test("property tests") {
-    // Checks that the parser does not crash with any input
-    val errors = SyntaxAnalysis.onParsed[Tree](ContribSuite.corpus) { ast =>
-      val commentTokens: Seq[Comment] = ast.tokens.collect {
-        case c: Comment => c
-      }
-      if (commentTokens.map(c => Try(ScaladocParser.parseScaladoc(c))).exists(_.isFailure)) {
-        Seq(ast)
-      } else {
-        Nil
-      }
-    }
-    assert(errors.isEmpty)
   }
 }
