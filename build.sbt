@@ -336,6 +336,8 @@ lazy val tests = project
       val runContribTests = test.in(contribJS, Test).value
     }
   )
+lazy val testJVM = taskKey[Unit]("Run JVM tests")
+lazy val testJS = taskKey[Unit]("Run Scala.js tests")
 
 lazy val contrib = crossProject
   .in(file("scalameta/contrib"))
@@ -739,5 +741,3 @@ def CiCommand(name: String)(commands: List[String]): Command = Command.command(n
 }
 def ci(command: String) = s"plz ${sys.env("CI_SCALA_VERSION")} $command"
 
-lazy val testJVM = taskKey[Unit]("Run JVM tests")
-lazy val testJS = taskKey[Unit]("Run Scala.js tests")
