@@ -407,8 +407,7 @@ lazy val readme = scalatex
 
       // import the scalatex readme into `repo`
       val repo = new File(os.temp.mkdir.getAbsolutePath + File.separator + "scalameta.org")
-      os.shell.call(
-        s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
+      os.shell.call(s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
       println(s"erasing everything in ${repo.getAbsolutePath}...")
       repo.listFiles.filter(f => f.getName != ".git").foreach(os.shutil.rmtree)
       println(s"importing website from ${website.getAbsolutePath} to ${repo.getAbsolutePath}...")
@@ -422,18 +421,15 @@ lazy val readme = scalatex
       os.shell.call(s"git add -A", cwd = repo.getAbsolutePath)
       val nothingToCommit = "nothing to commit, working directory clean"
       try {
-        val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + os.git
-          .currentSha()
-        os.shell.call(s"git config user.email 'scalametabot@gmail.com'",
-                      cwd = repo.getAbsolutePath)
+        val url = s"https://github.com/scalameta/scalameta/tree/" + os.git.currentSha()
+        os.shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
         os.shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
-        os.shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
+        os.shell.call(s"git commit -m $url", cwd = repo.getAbsolutePath)
         os.secret.obtain("github").foreach {
           case (username, password) =>
             val httpAuthentication = s"$username:$password@"
-            val authenticatedUrl =
-              s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
-            os.shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
+            val authUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
+            os.shell.call(s"git push $authUrl master", cwd = repo.getAbsolutePath)
         }
       } catch {
         case ex: Exception if ex.getMessage.contains(nothingToCommit) =>
@@ -522,8 +518,7 @@ def computePreReleaseVersion(LibrarySeries: String): String = {
 // This is the default behavior that you get without modifying the build.
 // The only exception is that we take extra care to not publish on pull request validation jobs in Drone.
 def shouldPublishToBintray: Boolean = {
-  if (!new File(sys.props("user.home") + "/.bintray/.credentials").exists)
-    return false
+  if (!new File(sys.props("user.home") + "/.bintray/.credentials").exists) return false
   if (sys.props("sbt.prohibit.publish") != null) return false
   if (sys.env.contains("CI_PULL_REQUEST")) return false
   LibraryVersion.contains("-")
@@ -656,7 +651,9 @@ def exposePaths(projectName: String, config: Configuration) = {
   def uncapitalize(s: String) =
     if (s.length == 0) ""
     else {
-      val chars = s.toCharArray; chars(0) = chars(0).toLower; new String(chars)
+      val chars = s.toCharArray
+      chars(0) = chars(0).toLower
+      new String(chars)
     }
   val prefix = "sbt.paths." + projectName + "." + uncapitalize(config.name) + "."
   Seq(
