@@ -21,8 +21,8 @@ name := "scalametaRoot"
 sharedSettings
 noPublish
 unidocSettings
-// ci-fast is ot a CiCommand because plz 2.11.8 test super slow, it runs `test`
-// sequentially in every defined module.
+// ci-fast is not a CiCommand because `plz 2.11.8 test` is super slow,
+// it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
   s"wow $LanguageVersion" ::
     "tests/test" ::
