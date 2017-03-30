@@ -12,8 +12,7 @@ import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 lazy val ScalaVersion = "2.11.8"
 lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
 lazy val LibrarySeries = "1.7.0"
-lazy val LibraryVersion =
-  sys.props.getOrElse("scalameta.version", computePreReleaseVersion(LibrarySeries))
+lazy val LibraryVersion = computeScalametaVersion(LibrarySeries)
 
 // ==========================================
 // Projects
@@ -501,17 +500,19 @@ lazy val mergeSettings = Def.settings(
   }
 )
 
-def computePreReleaseVersion(LibrarySeries: String): String = {
-  val preReleaseSuffix = {
-    val gitDescribeSuffix = {
-      val distance = os.git.distance("v1.0.0", "HEAD")
-      val currentSha = os.git.currentSha().substring(0, 8)
-      s"$distance-$currentSha"
+def computeScalametaVersion(LibrarySeries: String): String = {
+  sys.props.getOrElseUpdate("scalameta.version", {
+    val preReleaseSuffix = {
+      val gitDescribeSuffix = {
+        val distance = os.git.distance("v1.0.0", "HEAD")
+        val currentSha = os.git.currentSha().substring(0, 8)
+        s"$distance-$currentSha"
+      }
+      if (os.git.isStable()) gitDescribeSuffix
+      else gitDescribeSuffix + "." + os.time.stamp
     }
-    if (os.git.isStable()) gitDescribeSuffix
-    else gitDescribeSuffix + "." + os.time.stamp
-  }
-  LibrarySeries + "-" + preReleaseSuffix
+    LibrarySeries + "-" + preReleaseSuffix
+  })
 }
 
 // Pre-release versions go to bintray and should be published via `publish`.
@@ -538,12 +539,7 @@ lazy val publishableSettings = Def.settings(
   bintrayOrganization := Some("scalameta"),
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false, {
-    val publishingStatus = {
-      if (shouldPublishToBintray) "publishing to Bintray"
-      else if (shouldPublishToSonatype) "publishing to Sonatype"
-      else "publishing disabled"
-    }
-    println(s"[info] Welcome to scala.meta $LibraryVersion ($publishingStatus)")
+    printPublishStatus()
     publish.in(Compile) := customPublish.value
   },
   publishSigned.in(Compile) := customPublishSigned.value,
@@ -612,6 +608,17 @@ lazy val publishableSettings = Def.settings(
     </developers>
   )
 )
+
+def printPublishStatus(): Unit = {
+  if (sys.props("disable.publish.status") != null) return
+  sys.props("disable.publish.status") = ""
+  val publishStatus = {
+    if (shouldPublishToBintray) "publishing to Bintray"
+    else if (shouldPublishToSonatype) "publishing to Sonatype"
+    else "publishing disabled"
+  }
+  println(s"[info] Welcome to scala.meta $LibraryVersion ($publishStatus)")
+}
 
 lazy val customPublish: Def.Initialize[Task[Unit]] = Def.taskDyn {
   if (shouldPublishToBintray) {
