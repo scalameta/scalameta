@@ -10,7 +10,7 @@ import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 
 lazy val LanguageVersions = Seq("2.11.8", "2.12.1")
-lazy val LanguageVersion = sys.env.getOrElse("CI_SCALA_VERSION", LanguageVersions.head)
+lazy val LanguageVersion = LanguageVersions.head
 lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.version.preRelease())
 
 // ==========================================
@@ -24,7 +24,7 @@ unidocSettings
 // ci-fast is not a CiCommand because `plz 2.11.8 test` is super slow,
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
-  s"wow $LanguageVersion" ::
+  s"wow $ciScalaVersion" ::
     "tests/test" ::
     ci("doc") :: // skips 2.10 projects
     s
@@ -723,10 +723,11 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler ++ backwardCompat210
 }
 
+lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
 def CiCommand(name: String)(commands: List[String]): Command = Command.command(name) { initState =>
   commands.foldLeft(initState) {
     case (state, command) => ci(command) :: state
   }
 }
-def ci(command: String) = s"plz $LanguageVersion $command"
+def ci(command: String) = s"plz $ciScalaVersion $command"
 
