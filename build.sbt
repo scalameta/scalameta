@@ -544,9 +544,9 @@ lazy val publishableSettings = Def.settings(
       else "publishing disabled"
     }
     println(s"[info] Welcome to scala.meta $LibraryVersion ($publishingStatus)")
-    publish.in(Compile) := compilePublish.value
+    publish.in(Compile) := customPublish.value
   },
-  publishSigned.in(Compile) := compilePublishSigned.value,
+  publishSigned.in(Compile) := customPublishSigned.value,
   publishTo := {
     if (shouldPublishToBintray) {
       publishTo.in(bintray).value
@@ -613,6 +613,46 @@ lazy val publishableSettings = Def.settings(
   )
 )
 
+lazy val customPublish: Def.Initialize[Task[Unit]] = Def.taskDyn {
+  if (shouldPublishToBintray) {
+    Def.task {
+      publish.value
+    }
+  } else if (shouldPublishToSonatype) {
+    Def.task {
+      sys.error("Use publish-signed to publish release versions");
+      ()
+    }
+  } else {
+    Def.task {
+      sys.error("Undefined publishing strategy"); ()
+    }
+  }
+}
+
+lazy val customPublishSigned: Def.Initialize[Task[Unit]] = Def.taskDyn {
+  if (shouldPublishToBintray) {
+    Def.task {
+      sys.error("Use publish to publish pre-release versions"); ()
+    }
+  } else if (shouldPublishToSonatype) {
+    Def.task {
+      publishSigned.value
+    }
+  } else {
+    Def.task {
+      sys.error("Undefined publishing strategy"); ()
+    }
+  }
+}
+
+lazy val noPublish = Seq(
+  publishArtifact := false,
+  publish := {},
+  publishSigned := {},
+  publishLocal := {}
+)
+
 lazy val buildInfoSettings = Def.settings(
   buildInfoKeys := Seq[BuildInfoKey](
     version,
@@ -620,13 +660,6 @@ lazy val buildInfoSettings = Def.settings(
   ),
   buildInfoPackage := "org.scalameta",
   buildInfoObject := "BuildInfo"
-)
-
-lazy val noPublish = Seq(
-  publishArtifact := false,
-  publish := {},
-  publishSigned := {},
-  publishLocal := {}
 )
 
 lazy val isFullCrossVersion = Seq(
@@ -697,37 +730,6 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
     else Seq()
   }
   scalaReflect ++ scalaCompiler ++ backwardCompat210
-}
-
-lazy val compilePublish: Def.Initialize[Task[Unit]] = Def.taskDyn {
-  if (shouldPublishToBintray) {
-    Def.task {
-      publish.value
-    }
-  } else if (shouldPublishToSonatype) {
-    Def.task {
-      sys.error("Use publish-signed to publish release versions");
-      ()
-    }
-  } else {
-    Def.task {
-      sys.error("Undefined publishing strategy"); ()
-    }
-  }
-}
-
-lazy val compilePublishSigned: Def.Initialize[Task[Unit]] = Def.taskDyn {
-  if (shouldPublishToBintray) {
-    Def.task {
-      sys.error("Use publish to publish pre-release versions"); ()
-    }
-  } else if (shouldPublishToSonatype) Def.task {
-    publishSigned.value
-  } else {
-    Def.task {
-      sys.error("Undefined publishing strategy"); ()
-    }
-  }
 }
 
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
