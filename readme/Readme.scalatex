@@ -124,10 +124,11 @@
     @hl.scala
       import scala.meta._
 
+  @sect{Tutorial}
     @p
       To learn more about practical aspects of using scala.meta, take a look at
-      @lnk("our tutorial", "http://scalameta.org/tutorial"), which is based on
-      a workshop given by Ólafur Pall Geirsson at Scala World 2016.
+      our tutorial that is based on a workshop given by Ólafur Pall Geirsson at Scala World 2016:
+      @lnk("http://scalameta.org/tutorial", "http://scalameta.org/tutorial").
 
   @sect{Roadmap}
     @p
