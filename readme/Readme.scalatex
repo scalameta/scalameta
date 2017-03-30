@@ -2,7 +2,7 @@
 @import Main._
 @import scala.meta._
 
-@sect("scala.meta", versionBadge)
+@sect("scala.meta", stableVersionBadge)
 
   @p
     Scala.meta is a clean-room implementation of a metaprogramming toolkit for Scala,
@@ -81,12 +81,40 @@
       val q"$x + $y" = addition
       q"$y + $x" // compilation error
 
+  @sect{Releases}
+
+    @p
+      @b
+        Stable releases.
+      We are committed to publishing major releases (e.g. 1.7.0, 1.8.0, etc)
+      on the 10th day of every month. In such releases, we accumulate battle-tested changes
+      that have been merged since the last release and make them available on Maven Central.
+
+   @p
+      @b
+        Pre-release builds.
+      We automatically publish pre-release builds to our Bintray repository on every merge into master,
+      typically within 10-30 minutes of a merge. In such builds, we publish potentially experimental changes
+      that haven't yet undergone practical testing.
+
+   @p
+      @b
+        Compatibility.
+      Following a popular convention, we only provide binary and source compatibility
+      between minor versions (e.g. between 1.6.0 and 1.6.1, but not between 1.6.0 and 1.7.0).
+      There are no compatibility guarantees provided for pre-release builds.
+
   @sect{Getting started}
     @p
       To get started with scala.meta, add the following to your @code("build.sbt"):
 
     @hl.scala
-      libraryDependencies += "org.scalameta" %% "scalameta" % "@versionString"
+      // Latest stable version
+      libraryDependencies += "org.scalameta" %% "scalameta" % "@stableVersionString"
+
+      // Latest pre-release version
+      resolvers += Resolver.bintrayIvyRepo("scalameta", "maven")
+      libraryDependencies += "org.scalameta" %% "scalameta" % "@preReleaseVersionString"
 
     @p
       Next, you'll need to add a single wildcard import to the files where you'll
@@ -96,10 +124,11 @@
     @hl.scala
       import scala.meta._
 
+  @sect{Tutorial}
     @p
       To learn more about practical aspects of using scala.meta, take a look at
-      @lnk("our tutorial", "http://scalameta.org/tutorial"), which is based on
-      a workshop given by Ólafur Pall Geirsson at Scala World 2016.
+      our tutorial that is based on a workshop given by Ólafur Pall Geirsson at Scala World 2016:
+      @lnk("http://scalameta.org/tutorial", "http://scalameta.org/tutorial").
 
   @sect{Roadmap}
     @p
@@ -123,11 +152,11 @@
     @p
       @b
         Other execution environments.
-      The current version of scala.meta can only be run with Scala 2.11 or 2.12.
+      The current version of scala.meta can only be run with Scala 2.11, Scala 2.12 or Scala.js.
       This means that it is very hard or outright impossible to write scala.meta-based tools
-      targetting Scala 2.10 (e.g. running in sbt 0.13.x) or Scala.js.
+      targetting Scala 2.10 (e.g. running in sbt 0.13.x) or Scala Native.
       Vote for @lnk("#295", "https://github.com/scalameta/scalameta/issues/295")
-      and @lnk("#359", "https://github.com/scalameta/scalameta/issues/359")
+      and @lnk("#772", "https://github.com/scalameta/scalameta/issues/772")
       on our issue tracker if that's important for you.
 
   @sect("Talks")
@@ -158,28 +187,13 @@
           &nbsp; &nbsp;
           <a href="https://scala.epfl.ch/"><img width="95" height="95" src="https://scala.epfl.ch/resources/img/scala-center-swirl.png"/></a>
           &nbsp; &nbsp;
-          <a href="https://www.evolutiongaming.com/"><img width="75" height="95" src="https://dl.dropboxusercontent.com/u/10497693/evolution_gaming.png"/></a>
+          <a href="https://www.evolutiongaming.com/"><img width="75" height="95" src="https://www.dropbox.com/s/u5zulu0w1i04di6/evolution_gaming.png?dl=1"/></a>
         </center>
 
 @copyrightBadge
 
 @raw
   <a href="https://github.com/scalameta/scalameta"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
-
-  <script type="text/javascript">
-    var _paq = _paq || [];
-    _paq.push(["setDomains", ["*.scalameta.org"]]);
-    _paq.push(['trackPageView']);
-    _paq.push(['enableLinkTracking']);
-    (function() {
-      var u="https://stats.geirsson.com/hello/";
-      _paq.push(['setTrackerUrl', u+'hello.php']);
-      _paq.push(['setSiteId', 4]);
-      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-      g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'hello.js'; s.parentNode.insertBefore(g,s);
-    })();
-  </script>
-  <noscript><p><img src="https://stats.geirsson.com/hello/hello.php?idsite=4" style="border:0;" alt="" /></p></noscript>
 
   <script>
     // NOTE: Disables the sidebar because we don't really have anything to show there yet.

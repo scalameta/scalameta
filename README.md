@@ -2,7 +2,7 @@
 [![Build Status](https://platform-ci.scala-lang.org/api/badges/scalameta/scalameta/status.svg)](https://platform-ci.scala-lang.org/scalameta/scalameta)
 [![Join the chat at https://gitter.im/scalameta/scalameta](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scalameta/scalameta?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-### [User documentation][docs]
+### User documentation
 Head over to [the user docs][docs] to learn more about the project and its roadmap.
 
 ### Tutorial

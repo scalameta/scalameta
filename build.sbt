@@ -9,11 +9,9 @@ import UnidocKeys._
 import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 
-lazy val ScalaVersion = "2.11.8"
-lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
-lazy val LibrarySeries = "1.7.0"
-lazy val LibraryVersion =
-  sys.props.getOrElse("scalameta.version", computePreReleaseVersion(LibrarySeries))
+lazy val LanguageVersions = Seq("2.11.8", "2.12.1")
+lazy val LanguageVersion = LanguageVersions.head
+lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.version.preRelease())
 
 // ==========================================
 // Projects
@@ -23,8 +21,8 @@ name := "scalametaRoot"
 sharedSettings
 noPublish
 unidocSettings
-// ci-fast is ot a CiCommand because plz 2.11.8 test super slow, it runs `test`
-// sequentially in every defined module.
+// ci-fast is not a CiCommand because `plz 2.11.8 test` is super slow,
+// it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
   s"wow $ciScalaVersion" ::
     "tests/test" ::
@@ -336,6 +334,8 @@ lazy val tests = project
       val runContribTests = test.in(contribJS, Test).value
     }
   )
+lazy val testJVM = taskKey[Unit]("Run JVM tests")
+lazy val testJS = taskKey[Unit]("Run Scala.js tests")
 
 lazy val contrib = crossProject
   .in(file("scalameta/contrib"))
@@ -387,7 +387,7 @@ lazy val readme = scalatex
     sharedSettings,
     noPublish,
     exposePaths("readme", Runtime),
-    crossScalaVersions := ScalaVersions, // No need to cross-build.
+    crossScalaVersions := LanguageVersions, // No need to cross-build.
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     sources.in(Compile) ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
     watchSources ++= baseDirectory.value.listFiles.toList,
@@ -405,8 +405,7 @@ lazy val readme = scalatex
 
       // import the scalatex readme into `repo`
       val repo = new File(os.temp.mkdir.getAbsolutePath + File.separator + "scalameta.org")
-      os.shell.call(
-        s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
+      os.shell.call(s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
       println(s"erasing everything in ${repo.getAbsolutePath}...")
       repo.listFiles.filter(f => f.getName != ".git").foreach(os.shutil.rmtree)
       println(s"importing website from ${website.getAbsolutePath} to ${repo.getAbsolutePath}...")
@@ -420,18 +419,15 @@ lazy val readme = scalatex
       os.shell.call(s"git add -A", cwd = repo.getAbsolutePath)
       val nothingToCommit = "nothing to commit, working directory clean"
       try {
-        val currentUrl = s"https://github.com/scalameta/scalameta/tree/" + os.git
-          .currentSha()
-        os.shell.call(s"git config user.email 'scalametabot@gmail.com'",
-                      cwd = repo.getAbsolutePath)
+        val url = "https://github.com/scalameta/scalameta/tree/" + os.git.currentSha()
+        os.shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
         os.shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
-        os.shell.call(s"git commit -m $currentUrl", cwd = repo.getAbsolutePath)
+        os.shell.call(s"git commit -m $url", cwd = repo.getAbsolutePath)
         os.secret.obtain("github").foreach {
           case (username, password) =>
             val httpAuthentication = s"$username:$password@"
-            val authenticatedUrl =
-              s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
-            os.shell.call(s"git push $authenticatedUrl master", cwd = repo.getAbsolutePath)
+            val authUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
+            os.shell.call(s"git push $authUrl master", cwd = repo.getAbsolutePath)
         }
       } catch {
         case ex: Exception if ex.getMessage.contains(nothingToCommit) =>
@@ -451,8 +447,8 @@ lazy val readme = scalatex
 // ==========================================
 
 lazy val sharedSettings = Def.settings(
-  scalaVersion := ScalaVersion,
-  crossScalaVersions := ScalaVersions,
+  scalaVersion := LanguageVersion,
+  crossScalaVersions := LanguageVersions,
   crossVersion := {
     crossVersion.value match {
       case old @ ScalaJSCrossVersion.binary => old
@@ -503,25 +499,11 @@ lazy val mergeSettings = Def.settings(
   }
 )
 
-def computePreReleaseVersion(LibrarySeries: String): String = {
-  val preReleaseSuffix = {
-    val gitDescribeSuffix = {
-      val distance = os.git.distance("v1.0.0", "HEAD")
-      val currentSha = os.git.currentSha().substring(0, 8)
-      s"$distance-$currentSha"
-    }
-    if (os.git.isStable()) gitDescribeSuffix
-    else gitDescribeSuffix + "." + os.time.stamp
-  }
-  LibrarySeries + "-" + preReleaseSuffix
-}
-
 // Pre-release versions go to bintray and should be published via `publish`.
 // This is the default behavior that you get without modifying the build.
 // The only exception is that we take extra care to not publish on pull request validation jobs in Drone.
 def shouldPublishToBintray: Boolean = {
-  if (!new File(sys.props("user.home") + "/.bintray/.credentials").exists)
-    return false
+  if (!new File(sys.props("user.home") + "/.bintray/.credentials").exists) return false
   if (sys.props("sbt.prohibit.publish") != null) return false
   if (sys.env.contains("CI_PULL_REQUEST")) return false
   LibraryVersion.contains("-")
@@ -541,15 +523,10 @@ lazy val publishableSettings = Def.settings(
   bintrayOrganization := Some("scalameta"),
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false, {
-    val publishingStatus = {
-      if (shouldPublishToBintray) "publishing to Bintray"
-      else if (shouldPublishToSonatype) "publishing to Sonatype"
-      else "publishing disabled"
-    }
-    println(s"[info] Welcome to scala.meta $LibraryVersion ($publishingStatus)")
-    publish.in(Compile) := compilePublish.value
+    printPublishStatus()
+    publish.in(Compile) := customPublish.value
   },
-  publishSigned.in(Compile) := compilePublishSigned.value,
+  publishSigned.in(Compile) := customPublishSigned.value,
   publishTo := {
     if (shouldPublishToBintray) {
       publishTo.in(bintray).value
@@ -616,6 +593,57 @@ lazy val publishableSettings = Def.settings(
   )
 )
 
+def printPublishStatus(): Unit = {
+  if (sys.props("disable.publish.status") != null) return
+  sys.props("disable.publish.status") = ""
+  val publishStatus = {
+    if (shouldPublishToBintray) "publishing to Bintray"
+    else if (shouldPublishToSonatype) "publishing to Sonatype"
+    else "publishing disabled"
+  }
+  println(s"[info] Welcome to scala.meta $LibraryVersion ($publishStatus)")
+}
+
+lazy val customPublish: Def.Initialize[Task[Unit]] = Def.taskDyn {
+  if (shouldPublishToBintray) {
+    Def.task {
+      publish.value
+    }
+  } else if (shouldPublishToSonatype) {
+    Def.task {
+      sys.error("Use publish-signed to publish release versions");
+      ()
+    }
+  } else {
+    Def.task {
+      sys.error("Undefined publishing strategy"); ()
+    }
+  }
+}
+
+lazy val customPublishSigned: Def.Initialize[Task[Unit]] = Def.taskDyn {
+  if (shouldPublishToBintray) {
+    Def.task {
+      sys.error("Use publish to publish pre-release versions"); ()
+    }
+  } else if (shouldPublishToSonatype) {
+    Def.task {
+      publishSigned.value
+    }
+  } else {
+    Def.task {
+      sys.error("Undefined publishing strategy"); ()
+    }
+  }
+}
+
+lazy val noPublish = Seq(
+  publishArtifact := false,
+  publish := {},
+  publishSigned := {},
+  publishLocal := {}
+)
+
 lazy val buildInfoSettings = Def.settings(
   buildInfoKeys := Seq[BuildInfoKey](
     version,
@@ -623,13 +651,6 @@ lazy val buildInfoSettings = Def.settings(
   ),
   buildInfoPackage := "org.scalameta",
   buildInfoObject := "BuildInfo"
-)
-
-lazy val noPublish = Seq(
-  publishArtifact := false,
-  publish := {},
-  publishSigned := {},
-  publishLocal := {}
 )
 
 lazy val isFullCrossVersion = Seq(
@@ -654,7 +675,9 @@ def exposePaths(projectName: String, config: Configuration) = {
   def uncapitalize(s: String) =
     if (s.length == 0) ""
     else {
-      val chars = s.toCharArray; chars(0) = chars(0).toLower; new String(chars)
+      val chars = s.toCharArray
+      chars(0) = chars(0).toLower
+      new String(chars)
     }
   val prefix = "sbt.paths." + projectName + "." + uncapitalize(config.name) + "."
   Seq(
@@ -700,44 +723,11 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler ++ backwardCompat210
 }
 
-lazy val compilePublish: Def.Initialize[Task[Unit]] = Def.taskDyn {
-  if (shouldPublishToBintray) {
-    Def.task {
-      publish.value
-    }
-  } else if (shouldPublishToSonatype) {
-    Def.task {
-      sys.error("Use publish-signed to publish release versions");
-      ()
-    }
-  } else {
-    Def.task {
-      sys.error("Undefined publishing strategy"); ()
-    }
-  }
-}
-
-lazy val compilePublishSigned: Def.Initialize[Task[Unit]] = Def.taskDyn {
-  if (shouldPublishToBintray) {
-    Def.task {
-      sys.error("Use publish to publish pre-release versions"); ()
-    }
-  } else if (shouldPublishToSonatype) Def.task {
-    publishSigned.value
-  } else {
-    Def.task {
-      sys.error("Undefined publishing strategy"); ()
-    }
-  }
-}
-
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
 def CiCommand(name: String)(commands: List[String]): Command = Command.command(name) { initState =>
   commands.foldLeft(initState) {
     case (state, command) => ci(command) :: state
   }
 }
-def ci(command: String) = s"plz ${sys.env("CI_SCALA_VERSION")} $command"
+def ci(command: String) = s"plz $ciScalaVersion $command"
 
-lazy val testJVM = taskKey[Unit]("Run JVM tests")
-lazy val testJS = taskKey[Unit]("Run Scala.js tests")

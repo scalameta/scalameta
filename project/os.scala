@@ -140,3 +140,39 @@ object git {
     shell.check_output("git rev-parse HEAD", cwd = ".").trim
   }
 }
+
+object version {
+  def stable(): String = {
+    val stdout = shell.check_output(s"git tag -l v*")
+    val latestTag = stdout.split(EOL).last
+    val status = """^v(\d+)\.(\d+)\.(\d+)$""".r.unapplySeq(latestTag)
+    if (status.isEmpty) sys.error(s"unexpected shape of tag $latestTag in$EOL$stdout")
+    latestTag.stripPrefix("v")
+  }
+
+  def preRelease(): String = {
+    val nextStableVersion = {
+      val currStableVersion = stable()
+      val kindaSemVer = """^(\d+)\.(\d+)\.(\d+)$""".r
+      currStableVersion match {
+        case kindaSemVer(s_currEpoch, s_currMajor, _) =>
+          val currMajor = {
+            try s_currMajor.toInt
+            catch { case ex: Exception => sys.error(s"unexpected shape of version.stable() in $currStableVersion") }
+          }
+          val nextMajor = currMajor + 1
+          s"$s_currEpoch.$nextMajor.0"
+      }
+    }
+    val preReleaseSuffix = {
+      val gitDescribeSuffix = {
+        val distance = os.git.distance("v1.0.0", "HEAD")
+        val currentSha = os.git.currentSha().substring(0, 8)
+        s"$distance-$currentSha"
+      }
+      if (os.git.isStable()) gitDescribeSuffix
+      else gitDescribeSuffix + "." + os.time.stamp
+    }
+    nextStableVersion + "-" + preReleaseSuffix
+  }
+}
