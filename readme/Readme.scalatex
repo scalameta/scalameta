@@ -81,12 +81,40 @@
       val q"$x + $y" = addition
       q"$y + $x" // compilation error
 
+  @sect{Releases}
+
+    @p
+      @b
+        Stable releases.
+      We are committed to publishing major releases (e.g. 1.7.0, 1.8.0, etc)
+      on the 10th day of every month. In such releases, we accumulate battle-tested changes
+      that have been merged since the last release and make them available on Maven Central.
+
+   @p
+      @b
+        Pre-release builds.
+      We automatically publish pre-release builds to our Bintray repository on every merge into master,
+      typically within 10-30 minutes of a merge. In such builds, we publish potentially experimental changes
+      that haven't yet undergone practical testing.
+
+   @p
+      @b
+        Compatibility.
+      Following a popular convention, we only provide binary and source compatibility
+      between minor versions (e.g. between 1.6.0 and 1.6.1, but not between 1.6.0 and 1.7.0).
+      There are no compatibility guarantees provided for pre-release builds.
+
   @sect{Getting started}
     @p
       To get started with scala.meta, add the following to your @code("build.sbt"):
 
     @hl.scala
+      // Latest stable version
       libraryDependencies += "org.scalameta" %% "scalameta" % "@versionString"
+
+      // Latest pre-release version
+      resolvers += Resolver.bintrayIvyRepo("scalameta", "maven")
+      libraryDependencies += "org.scalameta" %% "scalameta" % "..."
 
     @p
       Next, you'll need to add a single wildcard import to the files where you'll
