@@ -228,7 +228,7 @@ lazy val scalahostNsc = project
   .in(file("scalahost/nsc"))
   .settings(
     moduleName := "scalahost-nsc",
-    description := "Scala 2.x compiler plugin that persists the semantic API on compile.",
+    description := "Scala 2.x compiler plugin that persists the semantic DB on compile.",
     publishableSettings,
     mergeSettings,
     isFullCrossVersion,
@@ -644,6 +644,7 @@ lazy val isFullCrossVersion = Seq(
     base / ("scala-" + scalaVersion.value)
   }
 )
+
 lazy val hasLargeIntegrationTests = Seq(
   fork in (Test, run) := true,
   javaOptions in (Test, run) += "-Xss4m"
