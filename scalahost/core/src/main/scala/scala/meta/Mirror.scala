@@ -36,7 +36,10 @@ object Mirror {
     * @param scalahostNscPluginPath File path to the scalahost-nsc compiler plugin fatjar,
     *                               the same path that is passed in `-Xplugin:/scalahost.jar`.
     */
-  def apply(classpath: String, sourcepath: String, scalahostNscPluginPath: String): Mirror =
+  def apply(
+      classpath: String,
+      sourcepath: String,
+      scalahostNscPluginPath: String = offline.Mirror.autodetectScalahostNscPluginPath): Mirror =
     new offline.Mirror(classpath, sourcepath, scalahostNscPluginPath)
 
   /** Automatic construction of an offline Mirror in a properly setup build integration.
