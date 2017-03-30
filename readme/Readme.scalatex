@@ -153,9 +153,8 @@
         Other execution environments.
       The current version of scala.meta can only be run with Scala 2.11 or 2.12.
       This means that it is very hard or outright impossible to write scala.meta-based tools
-      targetting Scala 2.10 (e.g. running in sbt 0.13.x) or Scala.js.
+      targetting Scala 2.10 (e.g. running in sbt 0.13.x).
       Vote for @lnk("#295", "https://github.com/scalameta/scalameta/issues/295")
-      and @lnk("#359", "https://github.com/scalameta/scalameta/issues/359")
       on our issue tracker if that's important for you.
 
   @sect("Talks")
