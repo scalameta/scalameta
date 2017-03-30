@@ -85,15 +85,15 @@ object Readme {
   def sideBySide(left: String, right: String) =
     pairs(List(left, right).map(x => half(hl.scala(x))): _*)
 
-  def versionString = {
-    val stdout = shell.check_output(s"git tag -l v*")
-    val latestTag = stdout.split(EOL).last
-    val status = """^v(\d+)\.(\d+)\.(\d+)$""".r.unapplySeq(latestTag)
-    if (status.isEmpty) sys.error(s"unexpected shape of tag $latestTag in$EOL$stdout")
-    latestTag.stripPrefix("v")
+  def stableVersionString = {
+    version.stable()
   }
 
-  def versionBadge = {
+  def preReleaseVersionString = {
+    version.preRelease()
+  }
+
+  def stableVersionBadge = {
     def timestampOfTag(tag: String): String = {
       val stdout = shell.check_output(s"git show $tag --pretty=%aD")
       val original_dateOfTag = stdout.split(EOL).apply(4)
@@ -103,9 +103,9 @@ object Readme {
       val pretty_dateOfTag = pretty.format(dateOfTag)
       s" (released on $pretty_dateOfTag)"
     }
-    val version = versionString
-    val timestamp = timestampOfTag("v" + version)
-    version + timestamp
+    val stableVersion = stableVersionString
+    val timestamp = timestampOfTag("v" + stableVersion)
+    stableVersion + timestamp
   }
 
   def copyrightBadge = {

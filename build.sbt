@@ -11,8 +11,7 @@ import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 
 lazy val ScalaVersion = "2.11.8"
 lazy val ScalaVersions = Seq("2.11.8", "2.12.1")
-lazy val LibrarySeries = "1.7.0"
-lazy val LibraryVersion = computeScalametaVersion(LibrarySeries)
+lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.version.preRelease())
 
 // ==========================================
 // Projects
@@ -499,21 +498,6 @@ lazy val mergeSettings = Def.settings(
     (art, slimJar)
   }
 )
-
-def computeScalametaVersion(LibrarySeries: String): String = {
-  sys.props.getOrElseUpdate("scalameta.version", {
-    val preReleaseSuffix = {
-      val gitDescribeSuffix = {
-        val distance = os.git.distance("v1.0.0", "HEAD")
-        val currentSha = os.git.currentSha().substring(0, 8)
-        s"$distance-$currentSha"
-      }
-      if (os.git.isStable()) gitDescribeSuffix
-      else gitDescribeSuffix + "." + os.time.stamp
-    }
-    LibrarySeries + "-" + preReleaseSuffix
-  })
-}
 
 // Pre-release versions go to bintray and should be published via `publish`.
 // This is the default behavior that you get without modifying the build.

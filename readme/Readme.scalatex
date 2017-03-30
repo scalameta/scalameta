@@ -2,7 +2,7 @@
 @import Main._
 @import scala.meta._
 
-@sect("scala.meta", versionBadge)
+@sect("scala.meta", stableVersionBadge)
 
   @p
     Scala.meta is a clean-room implementation of a metaprogramming toolkit for Scala,
@@ -110,11 +110,11 @@
 
     @hl.scala
       // Latest stable version
-      libraryDependencies += "org.scalameta" %% "scalameta" % "@versionString"
+      libraryDependencies += "org.scalameta" %% "scalameta" % "@stableVersionString"
 
       // Latest pre-release version
       resolvers += Resolver.bintrayIvyRepo("scalameta", "maven")
-      libraryDependencies += "org.scalameta" %% "scalameta" % "..."
+      libraryDependencies += "org.scalameta" %% "scalameta" % "@preReleaseVersionString"
 
     @p
       Next, you'll need to add a single wildcard import to the files where you'll
