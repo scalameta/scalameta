@@ -419,7 +419,7 @@ lazy val readme = scalatex
       os.shell.call(s"git add -A", cwd = repo.getAbsolutePath)
       val nothingToCommit = "nothing to commit, working directory clean"
       try {
-        val url = s"https://github.com/scalameta/scalameta/tree/" + os.git.currentSha()
+        val url = "https://github.com/scalameta/scalameta/tree/" + os.git.currentSha()
         os.shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
         os.shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
         os.shell.call(s"git commit -m $url", cwd = repo.getAbsolutePath)
