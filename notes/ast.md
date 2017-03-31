@@ -1,7 +1,7 @@
 ### Internal structure of scala.meta ASTs
 
 We use macro annotations to generate swaths of boilerplate that make our abstract syntax trees efficient and convenient.
-Here's the code that we write in [Trees.scala](/scalameta/trees/src/main/scala/scala/meta/Trees.scala):
+Here's the code that we write in [Trees.scala](/scalameta/trees/shared/src/main/scala/scala/meta/Trees.scala):
 
 ```
 @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
