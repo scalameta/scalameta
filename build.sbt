@@ -9,7 +9,7 @@ import UnidocKeys._
 import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 
-lazy val LanguageVersions = Seq("2.11.8", "2.12.1")
+lazy val LanguageVersions = Seq("2.11.9", "2.12.1")
 lazy val LanguageVersion = LanguageVersions.head
 lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.version.preRelease())
 
@@ -21,7 +21,7 @@ name := "scalametaRoot"
 sharedSettings
 noPublish
 unidocSettings
-// ci-fast is not a CiCommand because `plz 2.11.8 test` is super slow,
+// ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
   s"wow $ciScalaVersion" ::
@@ -268,7 +268,7 @@ lazy val scalahostSbt = project
     bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
     testQuick := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
-      RunSbtCommand("; plz 2.11.8 publishLocal " +
+      RunSbtCommand(s"; plz $ScalaVersion publishLocal " +
         "; such scalahostSbt/scripted sbt-scalahost/semantic-example")(state.value)
     },
     test := {
