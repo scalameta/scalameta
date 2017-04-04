@@ -4,7 +4,6 @@ import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalajs.sbtplugin.ScalaJSCrossVersion
 import org.scalameta.os
-import PgpKeys._
 import UnidocKeys._
 import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
@@ -19,7 +18,7 @@ lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.vers
 
 name := "scalametaRoot"
 sharedSettings
-noPublish
+nonPublishableSettings
 unidocSettings
 // ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
 // it runs `test` sequentially in every defined module.
@@ -230,15 +229,6 @@ lazy val scalahostNsc = project
     publishableSettings,
     mergeSettings,
     isFullCrossVersion,
-    publishArtifact.in(Compile, packageSrc) := {
-      // TODO: addCompilerPlugin for ivy repos is kinda broken.
-      // If sbt finds a sources jar for a compiler plugin, it tries to add it to -Xplugin,
-      // leading to nonsensical scalac invocations like `-Xplugin:...-sources.jar -Xplugin:...jar`.
-      // Until this bug is fixed, we work around.
-      if (shouldPublishToBintray) false
-      else if (shouldPublishToSonatype) true
-      else publishArtifact.in(Compile, packageSrc).value
-    },
     exposePaths("scalahost", Test),
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
@@ -265,7 +255,7 @@ lazy val scalahostSbt = project
     buildInfoSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
-    bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
+    bintrayRepository := "sbt", // sbtPlugin overrides this to sbt-plugins
     testQuick := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
       RunSbtCommand(s"; plz $ScalaVersion publishLocal " +
@@ -313,7 +303,7 @@ lazy val tests = project
   .in(file("scalameta/tests"))
   .settings(
     sharedSettings,
-    noPublish,
+    nonPublishableSettings,
     description := "Runs all tests in scalameta project.",
     test := {
       testJVM.value
@@ -352,7 +342,7 @@ lazy val benchmarks =
   Project(id = "benchmarks", base = file("scalameta/benchmarks"))
     .settings(
       sharedSettings,
-      noPublish,
+      nonPublishableSettings,
       resourceDirectory.in(Jmh) := resourceDirectory.in(Compile).value,
       javaOptions.in(run) ++= Seq(
         "-Djava.net.preferIPv4Stack=true",
@@ -385,7 +375,7 @@ lazy val readme = scalatex
   )
   .settings(
     sharedSettings,
-    noPublish,
+    nonPublishableSettings,
     exposePaths("readme", Runtime),
     crossScalaVersions := LanguageVersions, // No need to cross-build.
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
@@ -434,10 +424,7 @@ lazy val readme = scalatex
           println(nothingToCommit)
       }
     },
-    // TODO: doesn't work at the moment, see https://github.com/sbt/sbt-pgp/issues/42
-    publishSigned := publish.value,
     publishLocal := {},
-    publishLocalSigned := {},
     publishM2 := {}
   )
   .dependsOn(scalametaJVM)
@@ -499,65 +486,37 @@ lazy val mergeSettings = Def.settings(
   }
 )
 
-// Pre-release versions go to bintray and should be published via `publish`.
-// This is the default behavior that you get without modifying the build.
-// The only exception is that we take extra care to not publish on pull request validation jobs in Drone.
-def shouldPublishToBintray: Boolean = {
-  if (!new File(sys.props("user.home") + "/.bintray/.credentials").exists) return false
-  if (sys.props("sbt.prohibit.publish") != null) return false
-  if (sys.env.contains("CI_PULL_REQUEST")) return false
-  LibraryVersion.contains("-")
-}
-
-// Release versions go to sonatype and then get synced to maven central.
-// They should be published via `publish-signed` and signed by someone from <developers>.
-// In order to publish a release version, change LibraryVersion to be equal to LibrarySeries.
-def shouldPublishToSonatype: Boolean = {
-  if (!os.secret.obtain("sonatype").isDefined) return false
-  if (sys.props("sbt.prohibit.publish") != null) return false
-  !LibraryVersion.contains("-")
-}
-
 lazy val publishableSettings = Def.settings(
   sharedSettings,
   bintrayOrganization := Some("scalameta"),
+  bintrayRepository := (if (LibraryVersion.contains("-")) "pre-release" else "stable"),
   publishArtifact.in(Compile) := true,
-  publishArtifact.in(Test) := false, {
-    printPublishStatus()
-    publish.in(Compile) := customPublish.value
-  },
-  publishSigned.in(Compile) := customPublishSigned.value,
-  publishTo := {
-    if (shouldPublishToBintray) {
-      publishTo.in(bintray).value
-    } else if (shouldPublishToSonatype)
-      Some("releases".at("https://oss.sonatype.org/" + "service/local/staging/deploy/maven2"))
-    else publishTo.value
-  },
-  credentials ++= {
-    if (shouldPublishToBintray) {
-      // NOTE: Bintray credentials are automatically loaded by the sbt-bintray plugin
-      Nil
-    } else if (shouldPublishToSonatype) {
-      os.secret
-        .obtain("sonatype")
-        .map {
-          case (username, password) =>
-            Credentials("Sonatype Nexus Repository Manager",
-                        "oss.sonatype.org",
-                        username,
-                        password)
+  publishArtifact.in(Test) := false,
+  {
+    val publishingEnabled: Boolean = {
+      if (!new File(sys.props("user.home") + "/.bintray/.credentials").exists) false
+      else if (sys.props("sbt.prohibit.publish") != null) false
+      else if (sys.env.contains("CI_PULL_REQUEST")) false
+      else true
+    }
+    if (sys.props("disable.publish.status") == null) {
+      sys.props("disable.publish.status") = ""
+      val publishingStatus = if (publishingEnabled) "enabled" else "disabled"
+      println(s"[info] Welcome to scala.meta $LibraryVersion (publishing $publishingStatus)")
+    }
+    publish.in(Compile) := {
+      if (publishingEnabled) {
+        Def.task {
+          publish.value
         }
-        .toList
-    } else {
-      Nil
+      } else {
+        Def.task {
+          sys.error("Undefined publishing strategy"); ()
+        }
+      }
     }
   },
-  publishMavenStyle := {
-    if (shouldPublishToBintray) false
-    else if (shouldPublishToSonatype) true
-    else publishMavenStyle.value
-  },
+  publishMavenStyle := true,
   pomIncludeRepository := { x =>
     false
   },
@@ -593,55 +552,9 @@ lazy val publishableSettings = Def.settings(
   )
 )
 
-def printPublishStatus(): Unit = {
-  if (sys.props("disable.publish.status") != null) return
-  sys.props("disable.publish.status") = ""
-  val publishStatus = {
-    if (shouldPublishToBintray) "publishing to Bintray"
-    else if (shouldPublishToSonatype) "publishing to Sonatype"
-    else "publishing disabled"
-  }
-  println(s"[info] Welcome to scala.meta $LibraryVersion ($publishStatus)")
-}
-
-lazy val customPublish: Def.Initialize[Task[Unit]] = Def.taskDyn {
-  if (shouldPublishToBintray) {
-    Def.task {
-      publish.value
-    }
-  } else if (shouldPublishToSonatype) {
-    Def.task {
-      sys.error("Use publish-signed to publish release versions");
-      ()
-    }
-  } else {
-    Def.task {
-      sys.error("Undefined publishing strategy"); ()
-    }
-  }
-}
-
-lazy val customPublishSigned: Def.Initialize[Task[Unit]] = Def.taskDyn {
-  if (shouldPublishToBintray) {
-    Def.task {
-      sys.error("Use publish to publish pre-release versions"); ()
-    }
-  } else if (shouldPublishToSonatype) {
-    Def.task {
-      publishSigned.value
-    }
-  } else {
-    Def.task {
-      sys.error("Undefined publishing strategy"); ()
-    }
-  }
-}
-
-lazy val noPublish = Seq(
+lazy val nonPublishableSettings = Seq(
   publishArtifact := false,
-  publish := {},
-  publishSigned := {},
-  publishLocal := {}
+  publish := {}
 )
 
 lazy val buildInfoSettings = Def.settings(
