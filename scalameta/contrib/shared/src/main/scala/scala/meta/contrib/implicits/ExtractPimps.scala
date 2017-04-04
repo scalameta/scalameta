@@ -1,16 +1,11 @@
 trait ExtractPimps {
-  implicit class XtensionExtractors[A](a: A) {
 
-    /**
-      * Logical extraction of B from A.
-      *
-      * Meaning that this is supposed to replicate what the use thinks should happen.
-      * Not the actual class representation
-      *
-      * eg. Extract[Defn.Class, Seq[Stat]]
-      *
-      * is actually extracting the stats from the Template, which is a child of Defn.Class.
-      */
+  /**
+    * The motivation for this implicit enrichment is to extract values out of trees
+    * that could have been fields on the classes. However, these values are
+    * not included as fields on the tree nodes because of various reasons.
+    */
+  implicit class XtensionExtractors[A](a: A) {
     def extract[B](implicit ev: Extract[A, B]): Seq[B] = ev.extract(a)
   }
 }
