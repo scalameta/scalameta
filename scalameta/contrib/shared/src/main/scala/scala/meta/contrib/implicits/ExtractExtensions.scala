@@ -1,4 +1,8 @@
-trait ExtractPimps {
+package scala.meta.contrib.implicits
+
+import scala.meta.contrib._
+
+trait ExtractExtensions {
 
   /**
     * The motivation for this implicit enrichment is to extract values out of trees
