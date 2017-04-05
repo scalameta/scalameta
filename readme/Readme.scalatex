@@ -113,7 +113,7 @@
       libraryDependencies += "org.scalameta" %% "scalameta" % "@stableVersionString"
 
       // Latest pre-release version
-      resolvers += Resolver.bintrayIvyRepo("scalameta", "maven")
+      resolvers += Resolver.bintrayRepo("scalameta", "maven")
       libraryDependencies += "org.scalameta" %% "scalameta" % "@preReleaseVersionString"
 
     @p
