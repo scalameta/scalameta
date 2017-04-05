@@ -27,7 +27,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
 
   lazy val scalahostBaseSettings: Seq[Def.Setting[_]] = Def.settings(
     ivyConfigurations += Scalameta,
-    resolvers += Resolver.bintrayIvyRepo("scalameta", "maven")
+    resolvers += Resolver.bintrayRepo("scalameta", "maven")
   )
 
   lazy val scalahostInjectCompilerPluginSettings: Seq[Def.Setting[_]] = Def.settings(
