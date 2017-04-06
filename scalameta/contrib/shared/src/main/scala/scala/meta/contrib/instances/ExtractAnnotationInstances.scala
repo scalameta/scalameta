@@ -8,4 +8,4 @@ trait ExtractAnnotationInstances {
     Extract(a => ev.extract(a).collect { case m: Mod.Annot => m })
 }
 
-object ExtractAnnotationInstances
+object ExtractAnnotationInstances extends ExtractAnnotationInstances

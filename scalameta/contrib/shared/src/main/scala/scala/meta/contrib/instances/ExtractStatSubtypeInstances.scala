@@ -50,4 +50,4 @@ trait ExtractStatSubtypeInstances {
     Extract(a => ev.extract(a).collect { case v: Decl.Type => v })
 }
 
-object ExtractStatSubtypeInstances
+object ExtractStatSubtypeInstances extends ExtractStatSubtypeInstances
