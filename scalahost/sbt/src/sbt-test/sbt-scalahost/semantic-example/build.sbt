@@ -1,4 +1,4 @@
-scalaVersion in ThisBuild := "2.11.9"
+scalaVersion in ThisBuild := "2.11.10"
 scalacOptions in ThisBuild += "-deprecation"
 scalacOptions in ThisBuild += "-Ywarn-unused-import"
 lazy val library1 = project
