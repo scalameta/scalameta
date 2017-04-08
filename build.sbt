@@ -8,7 +8,7 @@ import UnidocKeys._
 import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 
-lazy val LanguageVersions = Seq("2.11.9", "2.12.1")
+lazy val LanguageVersions = Seq("2.11.10", "2.12.1")
 lazy val LanguageVersion = LanguageVersions.head
 lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.version.preRelease())
 

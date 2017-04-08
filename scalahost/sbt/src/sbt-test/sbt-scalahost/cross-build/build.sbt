@@ -7,5 +7,5 @@ lazy val root = project
   )
 
 lazy val p1 = project.settings(scalaVersion := "2.10.5")
-lazy val p2 = project.settings(scalaVersion := "2.11.9")
+lazy val p2 = project.settings(scalaVersion := "2.11.10")
 lazy val p3 = project.settings(scalaVersion := "2.12.1")
