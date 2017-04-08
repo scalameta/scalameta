@@ -1,5 +1,7 @@
 package scala.meta.contrib
 
+import scala.collection.immutable.Seq
+
 /**
   * The motivation for this typeclass is to extract values out of trees
   * that could have been fields on the classes. However, these values are
