@@ -23,6 +23,9 @@ class Structurally[+A <: Tree](val tree: A) extends TreeEquality[A] {
 
 object Structurally {
 
+  def apply[A <: Tree](tree: A): Structurally[A] =
+    new Structurally[A](tree)
+
   def equal(a: Tree, b: Tree): Boolean = loopStructure(a, b)
 
   private def loopStructure(x: Any, y: Any): Boolean = (x, y) match {
@@ -46,5 +49,5 @@ object Structurally {
       override def isEqual(a: Structurally[A], b: Structurally[A]): Boolean = a.equals(b)
     }
 
-  implicit def toStructural[A <: Tree](e: A): Structurally[A] = new Structurally[A](e)
+  implicit def toStructural[A <: Tree](e: A): Structurally[A] = apply(e)
 }
