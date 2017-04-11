@@ -110,6 +110,8 @@ class ScaladocParserSuite extends FunSuite {
     val complexCodeBlock =
       """
         |ggmqwogmwogmqwomgq
+        |val x = 1 // sdfdfh
+        |// zzz
         |gmqwgoiqmgoqmwomw
       """.stripMargin.trim
 
