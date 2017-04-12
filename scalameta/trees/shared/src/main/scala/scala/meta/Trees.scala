@@ -300,7 +300,7 @@ object Pat {
 }
 object Lit {
   def unapply(arg: Lit): Option[scala.Any] = Some(arg.value)
-  @deprecated("Use Lit.Null instead", "1.7.0")    def apply(x: scala.Any): Lit = Lit.Null(x)
+  @deprecated("Use Lit.Null instead", "1.7.0")    def apply(x: scala.Null): Lit = Lit.Null(x)
   @deprecated("Use Lit.Int instead", "1.7.0")     def apply(x: scala.Int): Lit = Lit.Int(x)
   @deprecated("Use Lit.Double instead", "1.7.0")  def apply(x: scala.Double): Lit = Lit.Double(x)
   @deprecated("Use Lit.Float instead", "1.7.0")   def apply(x: scala.Float): Lit = Lit.Float(x)
