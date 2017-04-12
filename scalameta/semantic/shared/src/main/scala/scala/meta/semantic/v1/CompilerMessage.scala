@@ -1,4 +1,6 @@
-package scala.meta.semantic.v1
+package scala.meta
+package semantic
+package v1
 
 import org.scalameta.adt._
 import org.scalameta.data.data
