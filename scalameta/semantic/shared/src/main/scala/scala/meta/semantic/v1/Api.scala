@@ -7,7 +7,7 @@ package v1
 // we will first deliver the low-hanging fruit (https://github.com/scalameta/scalameta/issues/604),
 // and only then will approach really tricky tasks (https://github.com/scalameta/scalameta/issues/623).
 
-private[meta] trait Api {
+private[meta] trait Api extends Flags {
   implicit class XtensionSemanticEquality(tree1: Tree)(implicit m: Mirror) {
     def ===(tree2: Tree): Boolean = scala.meta.internal.semantic.v1.Equality.equals(tree1, tree2)
     def =!=(tree2: Tree): Boolean = !(tree1 === tree2)
@@ -15,6 +15,10 @@ private[meta] trait Api {
 
   implicit class XtensionRefSymbol(ref: Ref)(implicit m: Mirror) {
     def symbol: Symbol = m.symbol(ref).get
+  }
+
+  implicit class XtensionSymbolFlags(sym: Symbol)(implicit m: Mirror) extends HasFlags {
+    def hasFlag(flag: Long) = (m.denot(sym).get.flags & flag) == flag
   }
 }
 
@@ -27,6 +31,9 @@ private[meta] trait Aliases {
 
   type Symbol = scala.meta.semantic.v1.Symbol
   val Symbol = scala.meta.semantic.v1.Symbol
+
+  type Denotation = scala.meta.semantic.v1.Denotation
+  val Denotation = scala.meta.semantic.v1.Denotation
 
   type SemanticException = scala.meta.semantic.v1.SemanticException
   lazy val SemanticException = scala.meta.semantic.v1.SemanticException

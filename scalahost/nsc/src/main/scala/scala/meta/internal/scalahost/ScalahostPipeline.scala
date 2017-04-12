@@ -36,7 +36,8 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
         val allowedAddrs = global.currentRun.units.map(_.source.toAddr).toSet
         val trimmedDatabase = Database(
           mergedDatabase.names.filterKeys(k => allowedAddrs.contains(k.addr)),
-          mergedDatabase.messages.filter(msg => allowedAddrs.contains(msg.location.addr))
+          mergedDatabase.messages.filter(msg => allowedAddrs.contains(msg.location.addr)),
+          mergedDatabase.denotations // TODO: filter out obsolete symbols
         )
         trimmedDatabase.writeDatabaseToFile(databaseFile)
       }

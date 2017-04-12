@@ -20,7 +20,8 @@ trait DatabaseOps {
       val messages = mutable.LinkedHashSet.empty[CompilerMessage]
       messages ++= db1.messages
       messages ++= db2.messages
-      Database(names2.toMap, messages.toSeq)
+      val denotations = db1.denotations ++ db2.denotations
+      Database(names2.toMap, messages.toSeq, denotations.toMap)
     }
   }
 }

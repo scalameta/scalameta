@@ -50,6 +50,12 @@ object ProtoCodec {
                           msg)
     }
   }
+  implicit val SymbolDenotationProto = new ProtoEncoder[(Symbol, Denotation), p.SymbolDenotation] {
+    override def toProto(e: (Symbol, Denotation)): p.SymbolDenotation = e match {
+      case (sym, denot) =>
+        p.SymbolDenotation(sym.syntax, Option(p.Denotation(denot.flags)))
+    }
+  }
   implicit val DatabaseProto = new ProtoCodec[Database, p.Database] {
     override def toProto(e: Database): p.Database = {
       val messagesGrouped = e.messages.groupBy(_.location.addr).withDefaultValue(Nil)
@@ -61,7 +67,8 @@ object ProtoCodec {
             p.DatabaseFile(
               address = addr.toProtoOpt[p.Address],
               names = names.map(_.toProto[p.ResolvedName]).toSeq,
-              messages = messages
+              messages = messages,
+              denotations = e.denotations.map(_.toProto[p.SymbolDenotation]).toSeq
             )
         }
         .toSeq
@@ -69,7 +76,7 @@ object ProtoCodec {
     }
     override def fromProto(e: p.Database): Database = {
       val names = e.files.flatMap {
-        case p.DatabaseFile(Some(addr), names, _) =>
+        case p.DatabaseFile(Some(addr), names, _, _) =>
           names.map {
             case p.ResolvedName(Some(p.Range(start, end)), Symbol(symbol)) =>
               Location(addr.toMeta[Address], start, end) -> symbol
@@ -77,7 +84,7 @@ object ProtoCodec {
         case _ => fail(e)
       }.toMap
       val messages: Seq[CompilerMessage] = e.files.flatMap {
-        case p.DatabaseFile(Some(addr), l, messages) =>
+        case p.DatabaseFile(Some(addr), l, messages, _) =>
           messages.map {
             case p.CompilerMessage(Some(p.Range(start, end)), sev, message) =>
               CompilerMessage(Location(addr.toMeta[Address], start, end),
@@ -87,7 +94,15 @@ object ProtoCodec {
           }
         case e => fail(e)
       }
-      Database(names, messages)
+      val denotations = e.files.flatMap {
+        case p.DatabaseFile(_, _, _, denotations) =>
+          denotations.map {
+            case p.SymbolDenotation(Symbol(symbol), Some(p.Denotation(flags))) =>
+              symbol -> Denotation(flags)
+          }
+        case _ => fail(e)
+      }.toMap
+      Database(names, messages, denotations)
     }
   }
 }

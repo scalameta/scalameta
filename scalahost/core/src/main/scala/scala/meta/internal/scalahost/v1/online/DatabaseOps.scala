@@ -8,6 +8,7 @@ import scala.reflect.internal.util._
 import scala.reflect.internal.Flags._
 import scala.tools.nsc.Global
 import scala.{meta => m}
+import scala.meta.internal.ast.Helpers._
 import scala.meta.semantic.v1.{Database, Location}
 import scala.compat.Platform.EOL
 
@@ -31,6 +32,7 @@ trait DatabaseOps { self: Mirror =>
           sys.error("the compiler phase must be not later than patmat")
 
         val symbols = mutable.Map[Location, m.Symbol]()
+        val denotations = mutable.Map[m.Symbol, m.Denotation]()
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
         val mends = mutable.Map[Int, m.Name]() // end offset -> tree
@@ -140,6 +142,7 @@ trait DatabaseOps { self: Mirror =>
                 if (symbol == m.Symbol.None) return
 
                 symbols(loc) = symbol
+                if (mtree.isBinder) denotations(symbol) = gsym.toDenotation
                 todo -= mtree
 
                 def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
@@ -289,7 +292,7 @@ trait DatabaseOps { self: Mirror =>
           sys.error(buf.toString)
         }
 
-        Database(symbols.toMap, unit.hijackedMessages)
+        Database(symbols.toMap, unit.hijackedMessages, denotations.toMap)
       })
     }
   }

@@ -22,6 +22,7 @@ class Mirror(val global: Global)
     extends MirrorApi
     with BaseMirror
     with DatabaseOps
+    with DenotationOps
     with ParseOps
     with ReporterOps
     with SymbolOps
@@ -63,7 +64,8 @@ class Mirror(val global: Global)
         if (unmappedNames != "") sys.error(unmappedNames.trim)
         val names = databases.flatMap(_.names).toMap
         val messages = databases.flatMap(_.messages)
-        Database(names, messages)
+        val denotations = databases.flatMap(_.denotations).toMap
+        Database(names, messages, denotations)
       }
       cachedDatabaseKey = recomputeCachedDatabaseKey()
       cachedDatabase = database

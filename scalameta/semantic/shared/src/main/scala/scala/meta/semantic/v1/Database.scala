@@ -22,10 +22,14 @@ import java.io.FileOutputStream
 
 case class Database(
   names: Map[Location, Symbol],
-  messages: Seq[CompilerMessage]
+  messages: Seq[CompilerMessage],
+  denotations: Map[Symbol, Denotation]
   // TODO: Additional fields are to be discussed
   // https://github.com/scalameta/scalameta/issues/605
 ) {
+  @deprecated("Use names instead", "1.8.0")
+  def symbols: Map[Location, Symbol] = names
+
   override def toString: String = {
     val buf = new StringBuilder
     val groupedNames = names.groupBy(_._1.addr)
@@ -43,6 +47,12 @@ case class Database(
       }
       buf ++= EOL
     })
+    buf ++= ("Denotations:" + EOL)
+    val symbols = denotations.keys.toList.sortBy(_.syntax)
+    symbols.foreach(symbol => {
+      val denot = denotations(symbol)
+      buf ++= (s"$symbol => $denot" + EOL)
+    })
     buf.toString.trim + EOL
   }
   def toBinary: Array[Byte] =
@@ -56,7 +66,7 @@ case class Database(
 
 object Database extends DatabaseOps {
   def apply(): Database = {
-    Database(Map[Location, Symbol](), Nil)
+    Database(Map[Location, Symbol](), Nil, Map[Symbol, Denotation]())
   }
   def fromBinary(bytes: Array[Byte]): Try[Database] =
     Try(p.Database.parseFrom(bytes).toMeta[Database])
