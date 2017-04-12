@@ -13,7 +13,7 @@ message Database {
 
 message DatabaseFile {
   Address address = 1;
-  repeated ResolvedName symbols = 2;
+  repeated ResolvedName names = 2;
   repeated CompilerMessage messages = 3;
 }
 

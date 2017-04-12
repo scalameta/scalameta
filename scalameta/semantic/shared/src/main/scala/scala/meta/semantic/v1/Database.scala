@@ -21,19 +21,20 @@ import java.io.FileOutputStream
 // and only then will approach really tricky tasks (https://github.com/scalameta/scalameta/issues/623).
 
 case class Database(
-  symbols: Map[Location, Symbol],
+  names: Map[Location, Symbol],
   messages: Seq[CompilerMessage]
   // TODO: Additional fields are to be discussed
   // https://github.com/scalameta/scalameta/issues/605
 ) {
   override def toString: String = {
     val buf = new StringBuilder
-    val messagesGrouped = messages.groupBy(_.location.addr).withDefaultValue(Nil)
-    val grouped = symbols.groupBy(_._1.addr)
-    grouped.keys.toList.sortBy(_.syntax).foreach(addr => {
-      val messages = messagesGrouped(addr).map(x => x.location -> x.syntax)
-      val symbols = grouped(addr).keys.map(x => x -> grouped(addr)(x).syntax)
-      val combined = (messages ++ symbols).sortBy(_._1.start)
+    val groupedNames = names.groupBy(_._1.addr)
+    val groupedMessages = messages.groupBy(_.location.addr).withDefaultValue(Nil)
+    val addrs = groupedNames.keys.toList.sortBy(_.syntax)
+    addrs.foreach(addr => {
+      val messages = groupedMessages(addr).map(x => x.location -> x.syntax)
+      val names = groupedNames(addr).keys.map(x => x -> groupedNames(addr)(x).syntax)
+      val combined = (messages ++ names).sortBy(_._1.start)
       buf ++= (addr + EOL)
       val content = addr.content
       combined.foreach { case (Location(_, start, end), syntax) =>

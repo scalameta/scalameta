@@ -53,7 +53,7 @@ trait Mirror extends MirrorApi with LocationOps {
         }
         val position = relevantPosition(ref1)
         val location = position.toSemantic
-        database.symbols.getOrElse(location, sys.error(s"semantic DB doesn't contain $ref"))
+        database.names.getOrElse(location, sys.error(s"semantic DB doesn't contain $ref"))
       }
       Completed.Success(symbol1)
     } catch {
@@ -67,7 +67,7 @@ trait Mirror extends MirrorApi with LocationOps {
   }
 
   private def isTypechecked(tree: Tree): Boolean = {
-    val indexedAddrs = database.symbols.keys.map(_.addr).toSet
+    val indexedAddrs = database.names.keys.map(_.addr).toSet
     var allIndexed = true
     object traverser extends Traverser {
       override def apply(tree: Tree): Unit = {

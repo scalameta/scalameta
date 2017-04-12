@@ -12,15 +12,15 @@ import scala.meta.semantic.v1.Symbol
 trait DatabaseOps {
   private[meta] implicit class XtensionInternalDatabase(db1: Database) {
     def append(db2: Database): Database = {
-      val symbols2 = mutable.Map[Location, Symbol]()
-      symbols2 ++= db1.symbols
-      val addrs = db2.symbols.keys.map(_.addr).toSet
-      addrs.foreach(addr => symbols2.retain((k, _) => k.addr != addr))
-      symbols2 ++= db2.symbols
+      val names2 = mutable.Map[Location, Symbol]()
+      names2 ++= db1.names
+      val addrs = db2.names.keys.map(_.addr).toSet
+      addrs.foreach(addr => names2.retain((k, _) => k.addr != addr))
+      names2 ++= db2.names
       val messages = mutable.LinkedHashSet.empty[CompilerMessage]
       messages ++= db1.messages
       messages ++= db2.messages
-      Database(symbols2.toMap, messages.toSeq)
+      Database(names2.toMap, messages.toSeq)
     }
   }
 }

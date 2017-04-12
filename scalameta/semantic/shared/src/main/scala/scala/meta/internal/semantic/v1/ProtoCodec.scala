@@ -53,14 +53,14 @@ object ProtoCodec {
   implicit val DatabaseProto = new ProtoCodec[Database, p.Database] {
     override def toProto(e: Database): p.Database = {
       val messagesGrouped = e.messages.groupBy(_.location.addr).withDefaultValue(Nil)
-      val files = e.symbols
+      val files = e.names
         .groupBy(_._1.addr)
         .map {
-          case (addr, symbols) =>
+          case (addr, names) =>
             val messages = messagesGrouped(addr).map(_.toProto[p.CompilerMessage])
             p.DatabaseFile(
               address = addr.toProtoOpt[p.Address],
-              symbols = symbols.map(_.toProto[p.ResolvedName]).toSeq,
+              names = names.map(_.toProto[p.ResolvedName]).toSeq,
               messages = messages
             )
         }
@@ -68,9 +68,9 @@ object ProtoCodec {
       p.Database(files)
     }
     override def fromProto(e: p.Database): Database = {
-      val symbols = e.files.flatMap {
-        case p.DatabaseFile(Some(addr), symbols, _) =>
-          symbols.map {
+      val names = e.files.flatMap {
+        case p.DatabaseFile(Some(addr), names, _) =>
+          names.map {
             case p.ResolvedName(Some(p.Range(start, end)), Symbol(symbol)) =>
               Location(addr.toMeta[Address], start, end) -> symbol
           }
@@ -87,7 +87,7 @@ object ProtoCodec {
           }
         case e => fail(e)
       }
-      Database(symbols, messages)
+      Database(names, messages)
     }
   }
 }

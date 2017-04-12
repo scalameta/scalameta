@@ -61,9 +61,9 @@ class Mirror(val global: Global)
           }
         })
         if (unmappedNames != "") sys.error(unmappedNames.trim)
-        val symbols = databases.flatMap(_.symbols).toMap
+        val names = databases.flatMap(_.names).toMap
         val messages = databases.flatMap(_.messages)
-        Database(symbols, messages)
+        Database(names, messages)
       }
       cachedDatabaseKey = recomputeCachedDatabaseKey()
       cachedDatabase = database
