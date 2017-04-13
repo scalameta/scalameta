@@ -6,6 +6,7 @@ package converters
 import scala.annotation.tailrec
 import scala.collection.{immutable, mutable}
 import scala.tools.nsc.Global
+import scala.reflect.internal.Flags._ // this import is here to prevent confusing unqualified flag references
 import scala.reflect.internal.{Flags => Gflags}
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -1454,7 +1455,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
         if (mods.hasFlag(Gflags.COVARIANT) && tree.isInstanceOf[g.TypeDef]) lmods += l.Covariant()
         if (mods.hasFlag(Gflags.CONTRAVARIANT) && tree.isInstanceOf[g.TypeDef])
           lmods += l.Contravariant()
-        if (mods.hasFlag(LAZY)) lmods += l.Lazy()
+        if (mods.hasFlag(Gflags.LAZY)) lmods += l.Lazy()
         lmods.toList
       }
 
@@ -1573,7 +1574,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
       }
     }
 
-    val (implicitss, explicitss) = paramss.partition(_.exists(_.mods.hasFlag(IMPLICIT)))
+    val (implicitss, explicitss) = paramss.partition(_.exists(_.mods.hasFlag(Gflags.IMPLICIT)))
     val (bounds, implicits) =
       implicitss.flatten.partition(_.name.startsWith(nme.EVIDENCE_PARAM_PREFIX))
     tparams.map(tparam => {
@@ -1587,7 +1588,7 @@ class LogicalTrees[G <: Global](val global: G, root: G#Tree) extends ReflectTool
   private def mkVparamss(paramss: List[List[g.ValDef]]): List[List[l.TermParamDef]] = {
     if (paramss.isEmpty) return Nil
     val init :+ last = paramss
-    val hasImplicits = last.exists(_.mods.hasFlag(IMPLICIT))
+    val hasImplicits = last.exists(_.mods.hasFlag(Gflags.IMPLICIT))
     val explicitss = if (hasImplicits) init else init :+ last
     val implicits = if (hasImplicits) last else Nil
     val limplicits = implicits.filter(!_.name.startsWith(nme.EVIDENCE_PARAM_PREFIX))
