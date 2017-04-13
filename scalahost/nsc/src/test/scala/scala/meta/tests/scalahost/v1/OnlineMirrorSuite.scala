@@ -97,6 +97,14 @@ abstract class OnlineMirrorSuite extends FunSuite {
     }
   }
 
+  def denotations(code: String, expected: String): Unit = {
+    test(code) {
+      val database = computeDatabaseFromSnippet(code)
+      val actual = database.toString.split(EOL).dropWhile(_ != "Denotations:").drop(1).mkString(EOL)
+      assert(expected === actual)
+    }
+  }
+
   private def computeDatabaseFromMarkup(markup: String): List[m.Name] = {
     val chevrons = "<<(.*?)>>".r
     val ps0 = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList

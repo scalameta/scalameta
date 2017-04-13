@@ -25,6 +25,12 @@ class DatabaseSuite extends OnlineMirrorSuite {
     |[72..76): List => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
     |[90..97): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
     |[98..102): list => file:<...>@61..85
+    |
+    |Denotations:
+    |_empty_.First. => FINAL | OBJECT
+    |_empty_.First.main([Ljava/lang/String;)V. => DEF
+    |_empty_.First.main([Ljava/lang/String;)V.(args) => TERMPARAM
+    |file:<...>@61..85 => VAL
   """.trim.stripMargin
   )
 
@@ -85,6 +91,10 @@ class DatabaseSuite extends OnlineMirrorSuite {
     |[38..44): _root_ => _root_.
     |[45..50): scala => _root_.scala.
     |[51..55): List => _root_.scala.collection.immutable.
+    |
+    |Denotations:
+    |_empty_.C# => CLASS
+    |_empty_.C#`<init>`()V. => PRIMARYCTOR
   """.trim.stripMargin
   )
 
@@ -113,5 +123,100 @@ class DatabaseSuite extends OnlineMirrorSuite {
       assert(copy.symbol === Symbol("_empty_.User#copy(Ljava/lang/String;I)LUser;."))
       assert(age.symbol === Symbol("_empty_.User#copy(Ljava/lang/String;I)LUser;.(age)"))
     }
+  )
+
+  denotations(
+    """
+      |import scala.language.experimental.macros
+      |
+      |package foo {
+      |  class C1(p1: Int, val p2: Int, var p3: Int) {
+      |    def this() = this(0, 0, 0)
+      |    val f1 = {
+      |      val l1 = ???
+      |      var l2 = ???
+      |      ???
+      |    }
+      |    var f2 = ???
+      |    def m1[T](x: Int): Int = ???
+      |    def m2 = macro ???
+      |    type T1 <: Int
+      |    type T2 = Int
+      |  }
+      |
+      |  abstract class C2 {
+      |    def m3: Int
+      |    final def m4 = ???
+      |  }
+      |
+      |  sealed class C3 extends C2 {
+      |    def m3 = 42
+      |    override def toString = ""
+      |  }
+      |
+      |  trait T {
+      |    private val f1 = ???
+      |    private[this] val f2 = ???
+      |    private[foo] val f3 = ???
+      |    protected var f4 = ???
+      |    protected[this] var f5 = ???
+      |    protected[foo] var f6 = ???
+      |  }
+      |
+      |  object M {
+      |    implicit def i1 = ???
+      |    lazy val l1 = ???
+      |    case class C1()
+      |    class C2[+T, -U]
+      |  }
+      |}
+      |
+      |package object foo {
+      |}
+  """.trim.stripMargin,
+    """
+      |_root_.foo. => PACKAGE
+      |_root_.foo.C1# => CLASS
+      |_root_.foo.C1#(p1) => TERMPARAM
+      |_root_.foo.C1#(p2) => VAL | TERMPARAM
+      |_root_.foo.C1#(p3) => VAR | TERMPARAM
+      |_root_.foo.C1#T1# => ABSTRACT | TYPE
+      |_root_.foo.C1#T2# => TYPE
+      |_root_.foo.C1#`<init>`()V. => SECONDARYCTOR
+      |_root_.foo.C1#`<init>`(III)V. => PRIMARYCTOR
+      |_root_.foo.C1#f1. => VAL
+      |_root_.foo.C1#f1.l1. => VAL
+      |_root_.foo.C1#f1.l2. => VAR
+      |_root_.foo.C1#f2. => VAR
+      |_root_.foo.C1#m1(I)I. => DEF
+      |_root_.foo.C1#m1(I)I.(x) => TERMPARAM
+      |_root_.foo.C1#m1(I)I.T# => TYPEPARAM
+      |_root_.foo.C1#m2()Lscala/Nothing;. => MACRO
+      |_root_.foo.C2# => ABSTRACT | CLASS
+      |_root_.foo.C2#`<init>`()V. => PRIMARYCTOR
+      |_root_.foo.C2#m3()I. => ABSTRACT | DEF
+      |_root_.foo.C2#m4()Lscala/Nothing;. => FINAL | DEF
+      |_root_.foo.C3# => SEALED | CLASS
+      |_root_.foo.C3#`<init>`()V. => PRIMARYCTOR
+      |_root_.foo.C3#m3()I. => DEF
+      |_root_.foo.C3#toString()Ljava/lang/String;. => DEF
+      |_root_.foo.M. => FINAL | OBJECT
+      |_root_.foo.M.C1# => CASE | CLASS
+      |_root_.foo.M.C1#`<init>`()V. => PRIMARYCTOR
+      |_root_.foo.M.C2# => CLASS
+      |_root_.foo.M.C2#[T] => COVARIANT | TYPEPARAM
+      |_root_.foo.M.C2#[U] => CONTRAVARIANT | TYPEPARAM
+      |_root_.foo.M.C2#`<init>`()V. => PRIMARYCTOR
+      |_root_.foo.M.i1()Lscala/Nothing;. => IMPLICIT | DEF
+      |_root_.foo.M.l1. => LAZY | VAL
+      |_root_.foo.T# => TRAIT
+      |_root_.foo.T#f1. => PRIVATE | VAL
+      |_root_.foo.T#f2. => PRIVATE | VAL
+      |_root_.foo.T#f3. => PRIVATE | VAL
+      |_root_.foo.T#f4. => PROTECTED | VAR
+      |_root_.foo.T#f5. => PROTECTED | VAR
+      |_root_.foo.T#f6. => PROTECTED | VAR
+      |_root_.foo.package. => PACKAGEOBJECT
+  """.trim.stripMargin
   )
 }
