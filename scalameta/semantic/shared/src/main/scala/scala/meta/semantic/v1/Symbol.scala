@@ -274,6 +274,8 @@ object Signature {
   }
 
   private def encodeName(name: String): String = {
-    if (name.forall(Character.isJavaIdentifierStart)) name else "`" + name + "`"
+    val headOk = Character.isJavaIdentifierStart(name.head)
+    val tailOk = name.tail.forall(Character.isJavaIdentifierPart)
+    if (headOk && tailOk) name else "`" + name + "`"
   }
 }
