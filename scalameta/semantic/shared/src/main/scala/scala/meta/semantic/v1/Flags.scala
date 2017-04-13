@@ -19,21 +19,16 @@ private[v1] trait Flags {
   final val TRAIT: Long = 1 << 13
 
   final val PRIVATE: Long = 1 << 14
-  final val PRIVATETHIS: Long = 1 << 15
-  final val PROTECTED: Long = 1 << 16
-  final val PROTECTEDTHIS: Long = 1 << 17
-
-  final val ABSTRACT: Long = 1 << 18
-  final val FINAL: Long = 1 << 19
-  final val SEALED: Long = 1 << 20
-  final val OVERRIDE: Long = 1 << 21
-
-  final val IMPLICIT: Long = 1 << 22
-  final val LAZY: Long = 1 << 23
-  final val CASE: Long = 1 << 24
-  final val COVARIANT: Long = 1 << 25
-  final val CONTRAVARIANT: Long = 1 << 26
-  final val INLINE: Long = 1 << 27
+  final val PROTECTED: Long = 1 << 15
+  final val ABSTRACT: Long = 1 << 16
+  final val FINAL: Long = 1 << 17
+  final val SEALED: Long = 1 << 18
+  final val IMPLICIT: Long = 1 << 19
+  final val LAZY: Long = 1 << 20
+  final val CASE: Long = 1 << 21
+  final val COVARIANT: Long = 1 << 22
+  final val CONTRAVARIANT: Long = 1 << 23
+  final val INLINE: Long = 1 << 24
 }
 
 object Flags extends Flags
@@ -57,15 +52,10 @@ private[v1] trait HasFlags {
   def isTrait: Boolean = hasFlag(TRAIT)
 
   def isPrivate: Boolean = hasFlag(PRIVATE)
-  def isPrivateThis: Boolean = hasFlag(PRIVATETHIS)
   def isProtected: Boolean = hasFlag(PROTECTED)
-  def isProtectedThis: Boolean = hasFlag(PROTECTEDTHIS)
-
   def isAbstract: Boolean = hasFlag(ABSTRACT)
   def isFinal: Boolean = hasFlag(FINAL)
   def isSealed: Boolean = hasFlag(SEALED)
-  def isOverride: Boolean = hasFlag(OVERRIDE)
-
   def isImplicit: Boolean = hasFlag(IMPLICIT)
   def isLazy: Boolean = hasFlag(LAZY)
   def isCase: Boolean = hasFlag(CASE)

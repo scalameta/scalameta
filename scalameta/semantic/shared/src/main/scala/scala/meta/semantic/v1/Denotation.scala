@@ -14,6 +14,18 @@ import org.scalameta.data.data
       if (buf.isEmpty) buf ++= flag
       else buf ++= (" | " + flag)
     }
+    if (hasFlag(PRIVATE)) append("PRIVATE")
+    if (hasFlag(PROTECTED)) append("PROTECTED")
+    if (hasFlag(ABSTRACT)) append("ABSTRACT")
+    if (hasFlag(FINAL)) append("FINAL")
+    if (hasFlag(SEALED)) append("SEALED")
+    if (hasFlag(IMPLICIT)) append("IMPLICIT")
+    if (hasFlag(LAZY)) append("LAZY")
+    if (hasFlag(CASE)) append("CASE")
+    if (hasFlag(COVARIANT)) append("COVARIANT")
+    if (hasFlag(CONTRAVARIANT)) append("CONTRAVARIANT")
+    if (hasFlag(INLINE)) append("INLINE")
+
     if (hasFlag(VAL)) append("VAL")
     if (hasFlag(VAR)) append("VAR")
     if (hasFlag(DEF)) append("DEF")
@@ -28,20 +40,6 @@ import org.scalameta.data.data
     if (hasFlag(PACKAGEOBJECT)) append("PACKAGEOBJECT")
     if (hasFlag(CLASS)) append("CLASS")
     if (hasFlag(TRAIT)) append("TRAIT")
-    if (hasFlag(PRIVATE)) append("PRIVATE")
-    if (hasFlag(PRIVATETHIS)) append("PRIVATETHIS")
-    if (hasFlag(PROTECTED)) append("PROTECTED")
-    if (hasFlag(PROTECTEDTHIS)) append("PROTECTEDTHIS")
-    if (hasFlag(ABSTRACT)) append("ABSTRACT")
-    if (hasFlag(FINAL)) append("FINAL")
-    if (hasFlag(SEALED)) append("SEALED")
-    if (hasFlag(OVERRIDE)) append("OVERRIDE")
-    if (hasFlag(IMPLICIT)) append("IMPLICIT")
-    if (hasFlag(LAZY)) append("LAZY")
-    if (hasFlag(CASE)) append("CASE")
-    if (hasFlag(COVARIANT)) append("COVARIANT")
-    if (hasFlag(CONTRAVARIANT)) append("CONTRAVARIANT")
-    if (hasFlag(INLINE)) append("INLINE")
     buf.toString
   }
 
