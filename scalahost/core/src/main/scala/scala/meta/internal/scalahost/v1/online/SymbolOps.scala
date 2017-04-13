@@ -55,10 +55,9 @@ trait SymbolOps { self: Mirror =>
           "(" + params.map(param => encode(param.info)).mkString("") + ")" + encode(jvmRet)
         }
 
-        if (sym.isMethod && !sym.asMethod.isGetter)
-          Signature.Method(name(sym), jvmSignature(sym.asMethod))
+        if (sym.isMethod && !sym.asMethod.isGetter) Signature.Method(name(sym), jvmSignature(sym.asMethod))
         else if (sym.isTypeParameter) Signature.TypeParameter(name(sym))
-        else if (sym.isValueParameter) Signature.TermParameter(name(sym))
+        else if (sym.isValueParameter || sym.isParamAccessor) Signature.TermParameter(name(sym))
         else if (sym.owner.thisSym == sym) Signature.Self(name(sym))
         else if (sym.isType) Signature.Type(name(sym))
         else Signature.Term(name(sym))
