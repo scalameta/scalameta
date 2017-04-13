@@ -142,7 +142,13 @@ trait DatabaseOps { self: Mirror =>
                 if (symbol == m.Symbol.None) return
 
                 symbols(loc) = symbol
-                if (mtree.isBinder) denotations(symbol) = gsym.toDenotation
+                if (mtree.isBinder) {
+                  denotations(symbol) = gsym.toDenotation
+                  if (gsym.isClass && !gsym.isTrait) {
+                    val gprim = gsym.primaryConstructor
+                    denotations(gprim.toSemantic) = gprim.toDenotation
+                  }
+                }
                 todo -= mtree
 
                 def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
