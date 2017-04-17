@@ -4,6 +4,7 @@ package v1
 package offline
 
 import java.io._
+import java.net.URI
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.collection.mutable
@@ -44,14 +45,31 @@ class Mirror(classpath: String, sourcepath: String, scalahostNscPluginPath: Stri
   }
 
   private lazy val classpathDatabase: Database = {
-    val databaseFiles = classpath.paths
+    val databaseURIs = classpath.paths
       .flatMap(uri => {
-        val subfiles = new File(uri).listFiles
-        if (subfiles != null) subfiles.filter(_.getName == "semanticdb").toList
-        else Nil
+        if (new File(uri).isDirectory) {
+          val dbURI = uri.resolve("semanticdb")
+          if (new File(dbURI).isFile()) {
+            Some(dbURI)
+          } else {
+            None
+          }
+        } else if (uri.getPath().endsWith(".jar")) {
+          val dbURI = new URI("jar:" + uri.toURL + "!semanticdb")
+          try {
+            // Attempt to open the URL to determine whether it describes a valid path.
+            dbURI.toURL.openStream().close()
+            // It does.
+            Some(dbURI)
+          } catch {
+            case _: Throwable => None
+          }
+        } else {
+          None
+        }
       })
-      .sortBy(_.getName)
-    val databases = databaseFiles.map(f => Database.fromFile(f).get)
+      .sortBy(_.getPath)
+    val databases = databaseURIs.map(f => Database.fromURI(f).get)
     databases.foldLeft(Database())(_ append _)
   }
 

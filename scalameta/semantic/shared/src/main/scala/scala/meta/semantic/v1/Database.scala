@@ -14,6 +14,7 @@ import scala.util.Try
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.net.URI
 
 // NOTE: This is an initial take on the semantic API.
 // Instead of immediately implementing the full vision described in my dissertation,
@@ -61,4 +62,6 @@ object Database extends DatabaseOps {
     Try(p.Database.parseFrom(bytes).toMeta[Database])
   def fromFile(file: File): Try[Database] =
     Try(p.Database.parseFrom(new FileInputStream(file)).toMeta[Database])
+  def fromURI(uri: URI): Try[Database] =
+    Try(p.Database.parseFrom(uri.toURL.openStream).toMeta[Database])
 }
