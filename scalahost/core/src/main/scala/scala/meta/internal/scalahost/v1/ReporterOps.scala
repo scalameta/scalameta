@@ -14,9 +14,9 @@ trait ReporterOps { self: OnlineMirror =>
         case r: StoreReporter =>
           val path = unit.source.toAbsolutePath
           object Message {
-            def unapply(info: r.Info): Option[(m.Location, Int, String)] =
+            def unapply(info: r.Info): Option[(m.Anchor, Int, String)] =
               if (!info.pos.isRange) None
-              else Some((info.pos.toLocation, info.severity.id, info.msg))
+              else Some((info.pos.toAnchor, info.severity.id, info.msg))
           }
           r.infos
             .collect {

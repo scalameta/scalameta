@@ -13,9 +13,9 @@ import scala.meta.internal.semantic.v1.mirrors.CommonMirror
 
 class OnlineMirror(val global: Global)
     extends CommonMirror
+    with AnchorOps
     with DatabaseOps
     with DenotationOps
-    with LocationOps
     with ParseOps
     with ReporterOps
     with SymbolOps

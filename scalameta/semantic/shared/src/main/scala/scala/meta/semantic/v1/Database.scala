@@ -18,27 +18,27 @@ import scala.util.Try
 // and only then will approach really tricky tasks (https://github.com/scalameta/scalameta/issues/623).
 
 case class Database(
-  names: Map[Location, Symbol],
+  names: Map[Anchor, Symbol],
   messages: Seq[Message],
   denotations: Map[Symbol, Denotation]
   // TODO: Additional fields are to be discussed
   // https://github.com/scalameta/scalameta/issues/605
 ) {
   @deprecated("Use names instead", "1.8.0")
-  def symbols: Map[Location, Symbol] = names
+  def symbols: Map[Anchor, Symbol] = names
 
   override def toString: String = {
     val buf = new StringBuilder
     val groupedNames = names.groupBy(_._1.path)
-    val groupedMessages = messages.groupBy(_.location.path).withDefaultValue(Nil)
+    val groupedMessages = messages.groupBy(_.anchor.path).withDefaultValue(Nil)
     val paths = groupedNames.keys.toList.sortBy(_.absolute)
     paths.foreach(path => {
-      val messages = groupedMessages(path).map(x => x.location -> s"[${x.severity.toString.toLowerCase}] ${x.message}")
+      val messages = groupedMessages(path).map(x => x.anchor -> s"[${x.severity.toString.toLowerCase}] ${x.message}")
       val names = groupedNames(path).keys.map(x => x -> groupedNames(path)(x).syntax)
       val combined = (messages ++ names).sortBy(_._1.start)
       buf ++= (path + EOL)
       val content = path.slurp
-      combined.foreach { case (Location(_, start, end), syntax) =>
+      combined.foreach { case (Anchor(_, start, end), syntax) =>
         val snippet = content.substring(start, end)
         buf ++= (s"[$start..$end): $snippet => $syntax" + EOL)
       }
@@ -63,7 +63,7 @@ case class Database(
 
 object Database extends DatabaseOps {
   def apply(): Database = {
-    Database(Map[Location, Symbol](), Nil, Map[Symbol, Denotation]())
+    Database(Map[Anchor, Symbol](), Nil, Map[Symbol, Denotation]())
   }
   def fromBinary(bytes: Array[Byte]): Try[Database] =
     Try(p.Database.parseFrom(bytes).toMeta[Database])

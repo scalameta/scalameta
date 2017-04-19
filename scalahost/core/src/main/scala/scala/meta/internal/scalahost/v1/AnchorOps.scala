@@ -18,10 +18,10 @@ trait LocationOps { self: OnlineMirror =>
     }
   }
 
-  implicit class XtensionGPositionLocation(pos: GPosition) {
-    def toLocation: m.Location = {
+  implicit class XtensionGPositionAnchor(pos: GPosition) {
+    def toAnchor: m.Anchor = {
       assert(pos.isRange)
-      m.Location(pos.source.toAbsolutePath, pos.start, pos.end)
+      m.Anchor(pos.source.toAbsolutePath, pos.start, pos.end)
     }
   }
 }

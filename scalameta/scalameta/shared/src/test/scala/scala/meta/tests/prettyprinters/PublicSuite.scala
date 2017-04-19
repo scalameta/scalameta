@@ -274,6 +274,13 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.semantic.v1.Anchor.toString") {
+    val file = "source.scala"
+    val path = AbsolutePath.fromRelative(file).absolute
+    val location = Anchor(file, 40, 42)
+    assert(location.toString === s"""$path@40..42""")
+  }
+
   test("scala.meta.semantic.v1.Completed.toString") {
     // covered below
   }
@@ -295,17 +302,10 @@ class PublicSuite extends FunSuite {
     // too involved to fit here, see DatabaseSuite in scalahost
   }
 
-  test("scala.meta.semantic.v1.Location.toString") {
-    val file = "source.scala"
-    val path = AbsolutePath.fromRelative(file).absolute
-    val location = Location(file, 40, 42)
-    assert(location.toString === s"""$path@40..42""")
-  }
-
   test("scala.meta.semantic.v1.Message.toString") {
     val file = "source.scala"
     val path = AbsolutePath.fromRelative(file).absolute
-    val location = Location(file, 40, 42)
+    val location = Anchor(file, 40, 42)
     val message = Message(location, Severity.Error, "does not compute")
     assert(message.toString === s"[error] $path@40..42: does not compute")
   }
@@ -396,7 +396,7 @@ class PublicSuite extends FunSuite {
 
     val file =  AbsolutePath.fromRelative("source.scala").absolute
     val syntaxLocal = s"$file@40..42"
-    val local @ Symbol.Local(Location(AbsolutePath(path), 40, 42)) = Symbol(syntaxLocal)
+    val local @ Symbol.Local(Anchor(AbsolutePath(path), 40, 42)) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
 
     val syntaxMulti = "_root_.C#;_root.C."

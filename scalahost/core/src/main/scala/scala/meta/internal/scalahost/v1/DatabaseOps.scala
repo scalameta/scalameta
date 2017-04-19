@@ -29,7 +29,7 @@ trait DatabaseOps { self: OnlineMirror =>
         if (g.phase.id > g.currentRun.phaseNamed("patmat").id)
           sys.error("the compiler phase must be not later than patmat")
 
-        val symbols = mutable.Map[m.Location, m.Symbol]()
+        val names = mutable.Map[m.Anchor, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
@@ -133,13 +133,13 @@ trait DatabaseOps { self: OnlineMirror =>
           object traverser extends g.Traverser {
             private def tryFindMtree(gtree: g.Tree): Unit = {
               def success(mtree: m.Name, gsym: g.Symbol): Unit = {
-                val loc = mtree.pos.toLocation
-                if (symbols.contains(loc)) return // NOTE: in the future, we may decide to preempt preexisting db entries
+                val anchor = mtree.pos.toAnchor
+                if (names.contains(anchor)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
                 val symbol = gsym.toSemantic
                 if (symbol == m.Symbol.None) return
 
-                symbols(loc) = symbol
+                names(anchor) = symbol
                 if (mtree.isBinder) {
                   denotations(symbol) = gsym.toDenotation
                   if (gsym.isClass && !gsym.isTrait) {
@@ -287,7 +287,7 @@ trait DatabaseOps { self: OnlineMirror =>
           traverser.traverse(unit.body)
         }
 
-        m.Database(symbols.toMap, unit.hijackedMessages, denotations.toMap)
+        m.Database(names.toMap, unit.hijackedMessages, denotations.toMap)
       })
     }
   }
@@ -301,7 +301,7 @@ trait DatabaseOps { self: OnlineMirror =>
   }
 
   private def syntaxAndPos(mtree: m.Tree): String = {
-    s"${mtree.pos.toLocation.path.absolute} $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
+    s"${mtree.pos.toAnchor.path.absolute} $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
   }
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {

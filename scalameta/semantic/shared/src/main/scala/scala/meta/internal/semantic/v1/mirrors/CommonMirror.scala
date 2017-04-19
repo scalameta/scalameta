@@ -50,8 +50,8 @@ trait CommonMirror extends Mirror {
       case _ => unreachable(debug(tree.syntax, tree.structure))
     }
     val position = relevantPosition(tree)
-    val location = position.toLocation
-    database.names.getOrElse(location, sys.error(s"semantic DB doesn't contain $tree"))
+    val anchor = position.toAnchor
+    database.names.getOrElse(anchor, sys.error(s"semantic DB doesn't contain $tree"))
   }
 
   def denot(sym: Symbol): Completed[Denotation] = apiBoundary {

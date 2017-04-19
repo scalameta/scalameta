@@ -37,10 +37,10 @@ object Symbol {
     override def fullName: Ref = unsupported(this, "fullName")
   }
 
-  @leaf class Local(location: Location) extends Symbol {
+  @leaf class Local(anchor: Anchor) extends Symbol {
     override def toString = syntax
-    override def syntax = location.syntax
-    override def structure = s"""Symbol.Local(${location.structure})"""
+    override def syntax = anchor.syntax
+    override def structure = s"""Symbol.Local(${anchor.structure})"""
     override def name: Name = ???
     override def fullName: Ref = ???
   }
@@ -193,7 +193,7 @@ object Symbol {
         val endBuf = new StringBuilder
         while (Character.isDigit(readChar())) endBuf += currChar
 
-        Symbol.Local(Location(addrBuf.toString, startBuf.toString.toInt, endBuf.toString.toInt))
+        Symbol.Local(Anchor(addrBuf.toString, startBuf.toString.toInt, endBuf.toString.toInt))
       }
 
       def parseMulti(symbols: List[Symbol]): Symbol = {

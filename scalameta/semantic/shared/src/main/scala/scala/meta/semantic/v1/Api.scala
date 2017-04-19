@@ -11,9 +11,9 @@ import scala.meta.inputs._
 
 private[meta] trait Api extends Flags {
   implicit class XtensionPositionLocation(pos: Position) {
-    def toLocation: Location = pos.input match {
+    def toAnchor: Anchor = pos.input match {
       case scala.meta.inputs.Input.File(path, _) =>
-        Location(path, pos.start.offset, pos.end.offset)
+        Anchor(path, pos.start.offset, pos.end.offset)
       case other =>
         sys.error(s"unsupported input " + other)
     }
@@ -40,8 +40,8 @@ private[meta] trait Aliases {
   type Mirror = scala.meta.semantic.v1.Mirror
   val Mirror = scala.meta.semantic.v1.Mirror
 
-  type Location = scala.meta.semantic.v1.Location
-  val Location = scala.meta.semantic.v1.Location
+  type Anchor = scala.meta.semantic.v1.Anchor
+  val Anchor = scala.meta.semantic.v1.Anchor
 
   type Symbol = scala.meta.semantic.v1.Symbol
   val Symbol = scala.meta.semantic.v1.Symbol

@@ -10,10 +10,10 @@ package object codecs {
     def toProtoOpt[B](implicit ev: ProtoEncoder[A, B]): Option[B] = Option(toProto[B])
   }
 
-  implicit val ResolvedNameEncoder: ProtoEncoder[(m.Location, m.Symbol), p.ResolvedName] =
-    new ProtoEncoder[(m.Location, m.Symbol), p.ResolvedName] {
-      override def toProto(e: (m.Location, m.Symbol)): p.ResolvedName = e match {
-        case (m.Location(_, start, end), sym) =>
+  implicit val ResolvedNameEncoder: ProtoEncoder[(m.Anchor, m.Symbol), p.ResolvedName] =
+    new ProtoEncoder[(m.Anchor, m.Symbol), p.ResolvedName] {
+      override def toProto(e: (m.Anchor, m.Symbol)): p.ResolvedName = e match {
+        case (m.Anchor(_, start, end), sym) =>
           p.ResolvedName(Option(p.Range(start, end)), sym.syntax)
       }
     }
@@ -21,7 +21,7 @@ package object codecs {
   implicit val MessageEncoder: ProtoEncoder[m.Message, p.Message] =
     new ProtoEncoder[m.Message, p.Message] {
       override def toProto(e: m.Message): p.Message = e match {
-        case m.Message(m.Location(addr, start, end), sev, msg) =>
+        case m.Message(m.Anchor(addr, start, end), sev, msg) =>
           p.Message(Option(p.Range(start, end)), p.Message.Severity.fromValue(sev.id), msg)
       }
     }
@@ -37,7 +37,7 @@ package object codecs {
   implicit val DatabaseCodec: ProtoCodec[m.Database, p.Database] =
     new ProtoCodec[m.Database, p.Database] {
       override def toProto(e: m.Database): p.Database = {
-        val messagesGrouped = e.messages.groupBy(_.location.path).withDefaultValue(Nil)
+        val messagesGrouped = e.messages.groupBy(_.anchor.path).withDefaultValue(Nil)
         val files = e.names
           .groupBy(_._1.path)
           .map {
@@ -59,7 +59,7 @@ package object codecs {
           case p.DatabaseFile(path, names, _, _) =>
             names.map {
               case p.ResolvedName(Some(p.Range(start, end)), m.Symbol(symbol)) =>
-                m.Location(path, start, end) -> symbol
+                m.Anchor(path, start, end) -> symbol
             }
           case _ =>
             fail(e)
@@ -68,7 +68,7 @@ package object codecs {
           case p.DatabaseFile(path, _, messages, _) =>
             messages.map {
               case p.Message(Some(p.Range(start, end)), sev, message) =>
-                m.Message(m.Location(path, start, end), m.Severity.fromId(sev.value), message)
+                m.Message(m.Anchor(path, start, end), m.Severity.fromId(sev.value), message)
               case e =>
                 fail(e)
             }

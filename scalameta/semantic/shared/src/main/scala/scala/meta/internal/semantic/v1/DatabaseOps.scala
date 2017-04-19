@@ -9,7 +9,7 @@ trait DatabaseOps {
   private[meta] implicit class XtensionInternalDatabase(db1: Database) {
     def append(db2: Database): Database = {
       import scala.collection.mutable
-      val names2 = mutable.Map[Location, Symbol]()
+      val names2 = mutable.Map[Anchor, Symbol]()
       names2 ++= db1.names
       val paths = db2.names.keys.map(_.path).toSet
       paths.foreach(path => names2.retain((k, _) => k.path != path))

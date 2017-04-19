@@ -6,10 +6,10 @@ import org.scalameta.adt._
 import org.scalameta.data._
 import org.scalameta.unreachable
 
-@data class Message(location: Location, severity: Severity, message: String) {
+@data class Message(anchor: Anchor, severity: Severity, message: String) {
   override def toString = syntax
-  def syntax = s"[${severity.toString.toLowerCase}] ${location.syntax}: $message"
-  def structure = s"""Message(${location.structure}, Severity.$severity, "$message")"""
+  def syntax = s"[${severity.toString.toLowerCase}] ${anchor.syntax}: $message"
+  def structure = s"""Message(${anchor.structure}, Severity.$severity, "$message")"""
 }
 
 @root trait Severity {
