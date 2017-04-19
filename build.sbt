@@ -8,7 +8,7 @@ import UnidocKeys._
 import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 
-lazy val LanguageVersions = Seq("2.11.10", "2.12.1")
+lazy val LanguageVersions = Seq("2.11.11", "2.12.2")
 lazy val LanguageVersion = LanguageVersions.head
 lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.version.preRelease())
 
@@ -503,7 +503,7 @@ lazy val publishableSettings = Def.settings(
       val publishingStatus = if (publishingEnabled) "enabled" else "disabled"
       println(s"[info] Welcome to scala.meta $LibraryVersion (publishing $publishingStatus)")
     }
-    publish.in(Compile) := {
+    publish.in(Compile) := (Def.taskDyn {
       if (publishingEnabled) {
         Def.task {
           publish.value
@@ -513,7 +513,7 @@ lazy val publishableSettings = Def.settings(
           sys.error("Undefined publishing strategy"); ()
         }
       }
-    }
+    }).value
   },
   publishMavenStyle := true,
   pomIncludeRepository := { x =>
