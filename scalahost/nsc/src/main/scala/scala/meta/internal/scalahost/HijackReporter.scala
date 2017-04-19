@@ -5,7 +5,6 @@ import scala.reflect.internal.util.Position
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.reporters.StoreReporter
 
-/** Reporter that forwards messages to underlying reporter AND stores messages. */
 class ScalahostReporter(underlying: Reporter) extends StoreReporter {
   override protected def info0(pos: Position,
                                msg: String,
@@ -21,7 +20,6 @@ class ScalahostReporter(underlying: Reporter) extends StoreReporter {
   }
 }
 
-/** Replaces g.reporter with a ScalahostReporter */
 trait HijackReporter { self: ScalahostPlugin =>
   def hijackReporter(): Unit = {
     g.reporter match {
