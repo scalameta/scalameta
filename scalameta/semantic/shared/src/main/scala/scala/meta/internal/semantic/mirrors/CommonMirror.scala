@@ -1,7 +1,6 @@
 package scala.meta
 package internal
 package semantic
-package v1
 package mirrors
 
 import scala.{Seq => _}
@@ -13,7 +12,7 @@ import scala.util.Properties
 import scala.meta.inputs._
 import scala.meta.internal.ast.Helpers._
 import scala.meta.prettyprinters._
-import scala.meta.semantic.v1._
+import scala.meta.semantic._
 
 trait CommonMirror extends Mirror {
   def dialect: Dialect = {

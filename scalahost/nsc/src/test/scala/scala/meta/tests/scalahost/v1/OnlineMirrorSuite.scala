@@ -1,6 +1,5 @@
 package scala.meta.tests
 package scalahost
-package v1
 
 import org.scalatest._
 import java.io.{File, PrintWriter}
@@ -11,7 +10,7 @@ import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
-import scala.meta.internal.scalahost.v1.OnlineMirror
+import scala.meta.internal.scalahost.mirrors.OnlineMirror
 
 abstract class OnlineMirrorSuite extends FunSuite {
   private def test(code: String)(fn: => Unit): Unit = {

@@ -1,4 +1,4 @@
-package scala.meta.internal.semantic.v1.codecs
+package scala.meta.internal.semantic.codecs
 
 /** Evidence that A can be serialized to a protobuf message and vice-versa.
   *

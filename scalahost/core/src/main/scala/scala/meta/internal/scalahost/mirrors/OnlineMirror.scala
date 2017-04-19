@@ -1,6 +1,6 @@
 package scala.meta.internal
 package scalahost
-package v1
+package mirrors
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -9,7 +9,7 @@ import scala.compat.Platform.EOL
 import scala.tools.nsc.Global
 import scala.util.Properties
 import scala.{meta => m}
-import scala.meta.internal.semantic.v1.mirrors.CommonMirror
+import scala.meta.internal.semantic.mirrors.CommonMirror
 
 class OnlineMirror(val global: Global)
     extends CommonMirror

@@ -1,7 +1,6 @@
 package scala.meta
 package internal
 package semantic
-package v1
 package mirrors
 
 import java.io._
@@ -9,7 +8,7 @@ import org.scalameta.data._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.parsers._
-import scala.meta.semantic.v1._
+import scala.meta.semantic._
 
 @data class OfflineMirror(classpath: String, sourcepath: String) extends CommonMirror with PathOps {
   private def failEmpty(what: String) =

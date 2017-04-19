@@ -1,6 +1,6 @@
 package scala.meta.internal
 package scalahost
-package v1
+package mirrors
 
 import scala.{meta => m}
 import scala.reflect.io.{PlainFile => GPlainFile}

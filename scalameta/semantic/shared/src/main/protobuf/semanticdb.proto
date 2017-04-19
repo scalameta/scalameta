@@ -1,8 +1,7 @@
 syntax = "proto3";
 
-package scala.meta.internal.semantic.v1.proto;
+package scala.meta.internal.semantic.proto;
 
-// scala.meta.semantic.v1.Database
 message Database {
   // a database is treated as a sequence of database files to accommodate
   // - incremental compilation, a database file maps one-to-one with a compilation unit.

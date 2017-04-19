@@ -5,7 +5,7 @@ import java.io._
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
 import scala.{meta => m}
-import scala.meta.internal.scalahost.v1.OnlineMirror
+import scala.meta.internal.scalahost.mirrors.OnlineMirror
 
 trait ScalahostPipeline { self: ScalahostPlugin =>
 

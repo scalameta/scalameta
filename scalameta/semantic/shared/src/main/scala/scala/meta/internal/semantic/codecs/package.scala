@@ -1,7 +1,7 @@
-package scala.meta.internal.semantic.v1
+package scala.meta.internal.semantic
 
-import scala.meta.semantic.{v1 => m}
-import scala.meta.internal.semantic.v1.{proto => p}
+import scala.meta.{semantic => m}
+import scala.meta.internal.semantic.{proto => p}
 
 package object codecs {
   implicit class XtensionProtoSerializable[A](val a: A) extends AnyVal {

@@ -1,6 +1,5 @@
 package scala.meta.tests
 package scalahost
-package v1
 
 import scala.meta._
 

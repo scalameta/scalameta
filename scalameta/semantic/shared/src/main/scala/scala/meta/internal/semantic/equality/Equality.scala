@@ -1,10 +1,9 @@
 package scala.meta
 package internal
 package semantic
-package v1
 
 import scala.meta.classifiers._
-import scala.meta.semantic.v1._
+import scala.meta.semantic._
 
 // NOTE: Semantic comparison operates almost like structural comparison,
 // but also taking into account envs, denots and typings.

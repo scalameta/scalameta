@@ -1,13 +1,13 @@
 package scala.meta.internal
 package scalahost
-package v1
+package mirrors
 
 import scala.collection.mutable
 import scala.compat.Platform.EOL
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.{meta => m}
-import scala.meta.semantic.v1.{Flags => mf}
+import scala.{meta => mf}
 import scala.meta.internal.ast.Helpers._
 
 trait DatabaseOps { self: OnlineMirror =>

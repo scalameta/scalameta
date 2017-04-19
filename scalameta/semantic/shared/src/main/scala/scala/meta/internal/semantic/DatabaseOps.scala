@@ -1,9 +1,8 @@
 package scala.meta
 package internal
 package semantic
-package v1
 
-import scala.meta.semantic.v1._
+import scala.meta.semantic._
 
 trait DatabaseOps {
   private[meta] implicit class XtensionInternalDatabase(db1: Database) {

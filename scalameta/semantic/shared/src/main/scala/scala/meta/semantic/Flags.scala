@@ -1,8 +1,7 @@
 package scala.meta
 package semantic
-package v1
 
-private[v1] trait Flags {
+private[semantic] trait Flags {
   final val VAL: Long = 1 << 0
   final val VAR: Long = 1 << 1
   final val DEF: Long = 1 << 2
@@ -31,7 +30,7 @@ private[v1] trait Flags {
   final val INLINE: Long = 1 << 24
 }
 
-private[v1] trait HasFlags {
+private[semantic] trait HasFlags {
   def hasFlag(flag: Long): Boolean
 
   def isVal: Boolean = hasFlag(VAL)

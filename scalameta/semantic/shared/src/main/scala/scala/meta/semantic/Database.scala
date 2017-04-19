@@ -1,21 +1,15 @@
 package scala.meta
 package semantic
-package v1
 
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import scala.compat.Platform.EOL
-import scala.meta.internal.semantic.v1.DatabaseOps
-import scala.meta.internal.semantic.v1.codecs._
-import scala.meta.internal.semantic.v1.{proto => p}
+import scala.meta.internal.semantic.DatabaseOps
+import scala.meta.internal.semantic.codecs._
+import scala.meta.internal.semantic.{proto => p}
 import scala.meta.prettyprinters._
 import scala.util.Try
-
-// NOTE: This is an initial take on the semantic API.
-// Instead of immediately implementing the full vision described in my dissertation,
-// we will first deliver the low-hanging fruit (https://github.com/scalameta/scalameta/issues/604),
-// and only then will approach really tricky tasks (https://github.com/scalameta/scalameta/issues/623).
 
 case class Database(
   names: Map[Anchor, Symbol],

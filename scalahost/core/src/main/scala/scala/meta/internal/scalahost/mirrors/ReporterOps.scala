@@ -1,6 +1,6 @@
 package scala.meta.internal
 package scalahost
-package v1
+package mirrors
 
 import org.scalameta.unreachable
 import scala.{meta => m}

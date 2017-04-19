@@ -274,35 +274,35 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Anchor.toString") {
+  test("scala.meta.semantic.Anchor.toString") {
     val file = "source.scala"
     val path = AbsolutePath.fromRelative(file).absolute
     val location = Anchor(file, 40, 42)
     assert(location.toString === s"""$path@40..42""")
   }
 
-  test("scala.meta.semantic.v1.Completed.toString") {
+  test("scala.meta.semantic.Completed.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Completed.Error.toString") {
+  test("scala.meta.semantic.Completed.Error.toString") {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Completed.Success.toString") {
+  test("scala.meta.semantic.Completed.Success.toString") {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Denotation.toString") {
+  test("scala.meta.semantic.Denotation.toString") {
     val denotation = Denotation(PRIVATE | CASE | CLASS)
     assert(denotation.toString === "PRIVATE | CASE | CLASS")
   }
 
-  test("scala.meta.semantic.v1.Database.toString") {
+  test("scala.meta.semantic.Database.toString") {
     // too involved to fit here, see DatabaseSuite in scalahost
   }
 
-  test("scala.meta.semantic.v1.Message.toString") {
+  test("scala.meta.semantic.Message.toString") {
     val file = "source.scala"
     val path = AbsolutePath.fromRelative(file).absolute
     val location = Anchor(file, 40, 42)
@@ -310,61 +310,61 @@ class PublicSuite extends FunSuite {
     assert(message.toString === s"[error] $path@40..42: does not compute")
   }
 
-  test("scala.meta.semantic.v1.Mirror.toString") {
+  test("scala.meta.semantic.Mirror.toString") {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.SemanticException.toString") {
+  test("scala.meta.semantic.SemanticException.toString") {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Severity.toString") {
+  test("scala.meta.semantic.Severity.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Severity.Error") {
+  test("scala.meta.semantic.Severity.Error") {
     assert(Severity.Error.toString === "Error")
   }
 
-  test("scala.meta.semantic.v1.Severity.Info") {
+  test("scala.meta.semantic.Severity.Info") {
     assert(Severity.Info.toString === "Info")
   }
 
-  test("scala.meta.semantic.v1.Severity.Warning") {
+  test("scala.meta.semantic.Severity.Warning") {
     assert(Severity.Warning.toString === "Warning")
   }
 
-  test("scala.meta.semantic.v1.Signature.toString") {
+  test("scala.meta.semantic.Signature.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.Method.toString") {
+  test("scala.meta.semantic.Signature.Method.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.Self.toString") {
+  test("scala.meta.semantic.Signature.Self.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.Term.toString") {
+  test("scala.meta.semantic.Signature.Term.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.TermParameter.toString") {
+  test("scala.meta.semantic.Signature.TermParameter.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.Type.toString") {
+  test("scala.meta.semantic.Signature.Type.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.TypeParameter.toString") {
+  test("scala.meta.semantic.Signature.TypeParameter.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Symbol.toString") {
-    import scala.meta.semantic.v1.Symbol
-    import scala.meta.semantic.v1.Signature
+  test("scala.meta.semantic.Symbol.toString") {
+    import scala.meta.semantic.Symbol
+    import scala.meta.semantic.Signature
 
     val syntaxNone = ""
     val none @ Symbol.None = Symbol(syntaxNone)
@@ -404,19 +404,19 @@ class PublicSuite extends FunSuite {
     assert(multi.toString === syntaxMulti)
   }
 
-  test("scala.meta.semantic.v1.Symbol.Global.toString") {
+  test("scala.meta.semantic.Symbol.Global.toString") {
     // covered above
   }
 
-  test("scala.meta.semantic.v1.Symbol.Local.toString") {
+  test("scala.meta.semantic.Symbol.Local.toString") {
     // covered above
   }
 
-  test("scala.meta.semantic.v1.Symbol.Multi.toString") {
+  test("scala.meta.semantic.Symbol.Multi.toString") {
     // covered above
   }
 
-  test("scala.meta.semantic.v1.Symbol.None.toString") {
+  test("scala.meta.semantic.Symbol.None.toString") {
     // covered above
   }
 

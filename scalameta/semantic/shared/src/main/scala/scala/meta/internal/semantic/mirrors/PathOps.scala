@@ -1,7 +1,6 @@
 package scala.meta
 package internal
 package semantic
-package v1
 package mirrors
 
 import java.io._
