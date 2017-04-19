@@ -100,7 +100,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.semantic.v1.Severity
       |scala.meta.semantic.v1.Severity.Error
       |scala.meta.semantic.v1.Severity.Info
-      |scala.meta.semantic.v1.Severity.Unknown
       |scala.meta.semantic.v1.Severity.Warning
       |scala.meta.semantic.v1.Signature
       |scala.meta.semantic.v1.Signature.Method

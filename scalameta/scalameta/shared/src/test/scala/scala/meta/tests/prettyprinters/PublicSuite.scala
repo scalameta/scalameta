@@ -330,10 +330,6 @@ class PublicSuite extends FunSuite {
     assert(Severity.Info.toString === "Info")
   }
 
-  test("scala.meta.semantic.v1.Severity.Unknown") {
-    assert(Severity.Unknown(42).toString === "Unknown(42)")
-  }
-
   test("scala.meta.semantic.v1.Severity.Warning") {
     assert(Severity.Warning.toString === "Warning")
   }

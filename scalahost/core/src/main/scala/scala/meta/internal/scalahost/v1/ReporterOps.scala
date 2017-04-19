@@ -2,6 +2,7 @@ package scala.meta.internal
 package scalahost
 package v1
 
+import org.scalameta.unreachable
 import scala.{meta => m}
 import scala.tools.nsc.reporters.StoreReporter
 
@@ -24,7 +25,7 @@ trait ReporterOps { self: OnlineMirror =>
                   case 0 => m.Severity.Info
                   case 1 => m.Severity.Warning
                   case 2 => m.Severity.Error
-                  case unknown => m.Severity.Unknown(unknown)
+                  case _ => unreachable
                 }
                 m.Message(location, severity, msg)
             }

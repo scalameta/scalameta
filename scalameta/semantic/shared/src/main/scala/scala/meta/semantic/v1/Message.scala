@@ -4,6 +4,7 @@ package v1
 
 import org.scalameta.adt._
 import org.scalameta.data._
+import org.scalameta.unreachable
 
 @data class Message(location: Location, severity: Severity, message: String) {
   override def toString = syntax
@@ -14,22 +15,20 @@ import org.scalameta.data._
 @root trait Severity {
   import Severity._
   def id: Int = this match {
-    case Unknown(id) => id
-    case Info => 1
-    case Warning => 2
-    case Error => 3
+    case Info => 0
+    case Warning => 1
+    case Error => 2
   }
 }
 object Severity {
   def fromId(id: Int): Severity = id match {
-    case 1 => Info
-    case 2 => Warning
-    case 3 => Error
-    case _ => Unknown(id)
+    case 0 => Info
+    case 1 => Warning
+    case 2 => Error
+    case _ => unreachable
   }
 
   @leaf object Info extends Severity
   @leaf object Warning extends Severity
   @leaf object Error extends Severity
-  @leaf class Unknown(n: Int) extends Severity
 }
