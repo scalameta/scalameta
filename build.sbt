@@ -29,9 +29,8 @@ commands += Command.command("ci-fast") { s =>
     s
 }
 commands += CiCommand("ci-slow")(
-  "scalahostNsc/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
-    "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
-    Nil
+  "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
+  Nil
 )
 commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/test" :: Nil)
 commands += CiCommand("ci-publish")(
@@ -215,7 +214,6 @@ lazy val scalahost = project
     moduleName := "scalahost",
     description := "Scala.meta semantic API integration for Scala 2.x (scalac).",
     publishableSettings,
-    hasLargeIntegrationTests,
     isFullCrossVersion,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
   )
