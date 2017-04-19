@@ -208,25 +208,15 @@ lazy val scalameta = crossProject
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
-lazy val scalahost = project
-  .in(file("scalahost/core"))
-  .settings(
-    moduleName := "scalahost",
-    description := "Scala.meta semantic API integration for Scala 2.x (scalac).",
-    publishableSettings,
-    isFullCrossVersion,
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
-  )
-  .dependsOn(scalametaJVM)
-
 lazy val scalahostNsc = project
   .in(file("scalahost/nsc"))
   .settings(
-    moduleName := "scalahost-nsc",
+    moduleName := "scalahost",
     description := "Scala 2.x compiler plugin that persists the semantic DB on compile.",
     publishableSettings,
     mergeSettings,
     isFullCrossVersion,
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     exposePaths("scalahost", Test),
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
@@ -244,7 +234,7 @@ lazy val scalahostNsc = project
       }).transform(node).head
     }
   )
-  .dependsOn(scalahost, testkit % Test)
+  .dependsOn(scalametaJVM, testkit % Test)
 
 lazy val scalahostSbt = project
   .in(file("scalahost/sbt"))
