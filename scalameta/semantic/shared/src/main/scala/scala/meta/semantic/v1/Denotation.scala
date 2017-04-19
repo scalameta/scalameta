@@ -3,7 +3,7 @@ package semantic
 package v1
 
 import org.scalameta.adt._
-import org.scalameta.data.data
+import org.scalameta.data._
 
 @data class Denotation(flags: Long) extends HasFlags {
   def hasFlag(flag: Long) = (flags & flag) == flag

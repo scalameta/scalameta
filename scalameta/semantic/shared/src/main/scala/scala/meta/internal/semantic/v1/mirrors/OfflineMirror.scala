@@ -1,40 +1,25 @@
-package scala.meta.internal
-package scalahost
+package scala.meta
+package internal
+package semantic
 package v1
-package offline
+package mirrors
 
 import java.io._
+import org.scalameta.data._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.collection.mutable
-import scala.compat.Platform.EOL
-import scala.tools.cmd.CommandLineParser
-import scala.tools.nsc.{Global, CompilerCommand, Settings}
-import scala.tools.nsc.reporters.StoreReporter
-import scala.meta._
-import scala.meta.semantic.v1.{Mirror => MirrorApi}
-import scala.meta.semantic.v1.Database
-import scala.meta.semantic.v1.Location
-import scala.meta.internal.scalahost.v1.{Mirror => BaseMirror}
-import scala.meta.internal.scalahost.v1.online.{Mirror => OnlineMirror}
+import scala.meta.parsers._
+import scala.meta.semantic.v1._
 
-class Mirror(classpath: String, sourcepath: String)
-    extends MirrorApi
-    with BaseMirror
-    with PathOps {
-
-  private def fail(what: String) =
+@data class OfflineMirror(classpath: String, sourcepath: String) extends CommonMirror with PathOps {
+  private def failEmpty(what: String) =
     sys.error(
       s"$what must be non-empty. " +
         s"This may indicate that Mirror is badly configured. " +
         s"If you use sbt-scalahost, make sure your project defines " +
         s"`dependsOn(<projectname> % Scalameta)` for at least one <projectname>.")
-  if (classpath == null || classpath == "") fail("classpath")
-  if (sourcepath == null || sourcepath == "") fail("sourcepath")
-
-  override def toString: String = {
-    s"online mirror for $classpath and $sourcepath"
-  }
+  if (classpath == null || classpath == "") failEmpty("classpath")
+  if (sourcepath == null || sourcepath == "") failEmpty("sourcepath")
 
   lazy val sources: Seq[Source] = {
     sourcepath

@@ -4,15 +4,12 @@ package v1
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.collection.mutable
 import scala.compat.Platform.EOL
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.common._
 import scala.meta.inputs._
-import scala.meta.internal.semantic.v1._
-import scala.meta.io.AbsolutePath
 
 // NOTE: This is an initial take on the semantic API.
 // Instead of immediately implementing the full vision described in my dissertation,

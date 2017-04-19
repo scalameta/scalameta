@@ -1,15 +1,12 @@
 package scala.meta.internal
 package scalahost
 package v1
-package online
 
 import scala.{meta => m}
-import scala.meta.semantic.v1._
-import scala.reflect.internal.Flags._ // this import is here to prevent confusing unqualified flag references
-import scala.meta.semantic.v1.{Flags => mf}
+import scala.{meta => mf}
 import scala.reflect.internal.{Flags => gf}
 
-trait DenotationOps { self: Mirror =>
+trait DenotationOps { self: OnlineMirror =>
   import g._
 
   implicit class XtensionGSymbolMDenotation(gsym0: g.Symbol) {
@@ -36,8 +33,8 @@ trait DenotationOps { self: Mirror =>
       if (gsym.isModule && gsym.name == nme.PACKAGE) flags |= mf.PACKAGEOBJECT
       if (gsym.isClass && !gsym.hasFlag(gf.TRAIT)) flags |= mf.CLASS
       if (gsym.isClass && gsym.hasFlag(gf.TRAIT)) flags |= mf.TRAIT
-      if (maybeValOrVar && (gsym.hasFlag(MUTABLE) || nme.isSetterName(gsym.name))) flags |= mf.VAR
-      if (maybeValOrVar && !(gsym.hasFlag(LOCAL) && gsym.hasFlag(PARAMACCESSOR))) flags |= mf.VAL
+      if (maybeValOrVar && (gsym.hasFlag(gf.MUTABLE) || nme.isSetterName(gsym.name))) flags |= mf.VAR
+      if (maybeValOrVar && !(gsym.hasFlag(gf.LOCAL) && gsym.hasFlag(gf.PARAMACCESSOR))) flags |= mf.VAL
       flags
     }
 

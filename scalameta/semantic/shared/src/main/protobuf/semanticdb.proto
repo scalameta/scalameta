@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package org.scalameta.semantic.v1.proto;
+package scala.meta.internal.semantic.v1.proto;
 
 // scala.meta.semantic.v1.Database
 message Database {

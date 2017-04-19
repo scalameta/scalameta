@@ -31,8 +31,6 @@ private[v1] trait Flags {
   final val INLINE: Long = 1 << 24
 }
 
-object Flags extends Flags
-
 private[v1] trait HasFlags {
   def hasFlag(flag: Long): Boolean
 

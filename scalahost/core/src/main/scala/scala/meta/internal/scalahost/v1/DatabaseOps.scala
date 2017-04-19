@@ -1,21 +1,19 @@
 package scala.meta.internal
 package scalahost
 package v1
-package online
 
 import scala.collection.mutable
-import scala.reflect.internal.util._
-import scala.reflect.internal.Flags._
-import scala.tools.nsc.Global
-import scala.{meta => m}
-import scala.meta.internal.ast.Helpers._
-import scala.meta.semantic.v1.{Database, Location}
 import scala.compat.Platform.EOL
+import scala.reflect.internal.util._
+import scala.reflect.internal.{Flags => gf}
+import scala.{meta => m}
+import scala.meta.semantic.v1.{Flags => mf}
+import scala.meta.internal.ast.Helpers._
 
-trait DatabaseOps { self: Mirror =>
+trait DatabaseOps { self: OnlineMirror =>
 
   implicit class XtensionCompilationUnitDatabase(unit: g.CompilationUnit) {
-    def toDatabase: Database = {
+    def toDatabase: m.Database = {
       unit.cache.getOrElse("database", {
         if (!g.settings.Yrangepos.value)
           sys.error("the compiler instance must have -Yrangepos enabled")
@@ -31,7 +29,7 @@ trait DatabaseOps { self: Mirror =>
         if (g.phase.id > g.currentRun.phaseNamed("patmat").id)
           sys.error("the compiler phase must be not later than patmat")
 
-        val symbols = mutable.Map[Location, m.Symbol]()
+        val symbols = mutable.Map[m.Location, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
@@ -135,7 +133,7 @@ trait DatabaseOps { self: Mirror =>
           object traverser extends g.Traverser {
             private def tryFindMtree(gtree: g.Tree): Unit = {
               def success(mtree: m.Name, gsym: g.Symbol): Unit = {
-                val loc = mtree.pos.toSemantic
+                val loc = mtree.pos.toLocation
                 if (symbols.contains(loc)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
                 val symbol = gsym.toSemantic
@@ -289,7 +287,7 @@ trait DatabaseOps { self: Mirror =>
           traverser.traverse(unit.body)
         }
 
-        Database(symbols.toMap, unit.hijackedMessages, denotations.toMap)
+        m.Database(symbols.toMap, unit.hijackedMessages, denotations.toMap)
       })
     }
   }
@@ -303,7 +301,7 @@ trait DatabaseOps { self: Mirror =>
   }
 
   private def syntaxAndPos(mtree: m.Tree): String = {
-    s"${mtree.pos.toSemantic.path.absolute} $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
+    s"${mtree.pos.toLocation.path.absolute} $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
   }
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
@@ -317,7 +315,7 @@ trait DatabaseOps { self: Mirror =>
         sym
       case normalizedAlts =>
         val wrapper = g.NoSymbol.newTermSymbol(g.TermName(name))
-        wrapper.setFlag(OVERLOADED)
+        wrapper.setFlag(gf.OVERLOADED)
         wrapper.setInfo(g.OverloadedType(g.NoType, normalizedAlts))
     }
   }

@@ -1,6 +1,8 @@
-package scala.meta.internal
-package scalahost
+package scala.meta
+package internal
+package semantic
 package v1
+package mirrors
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -8,13 +10,12 @@ import org.scalameta.unreachable
 import org.scalameta.debug
 import scala.compat.Platform.EOL
 import scala.util.Properties
-import scala.meta._
-import scala.meta.semantic.v1.Completed
-import scala.meta.semantic.v1.Database
-import scala.meta.semantic.v1.{Mirror => MirrorApi}
+import scala.meta.inputs._
 import scala.meta.internal.ast.Helpers._
+import scala.meta.prettyprinters._
+import scala.meta.semantic.v1._
 
-trait Mirror extends MirrorApi with LocationOps {
+trait CommonMirror extends Mirror {
   def dialect: Dialect = {
     val version = Properties.versionNumberString
     if (version.startsWith("2.10")) scala.meta.dialects.Scala210
@@ -49,7 +50,7 @@ trait Mirror extends MirrorApi with LocationOps {
       case _ => unreachable(debug(tree.syntax, tree.structure))
     }
     val position = relevantPosition(tree)
-    val location = position.toSemantic
+    val location = position.toLocation
     database.names.getOrElse(location, sys.error(s"semantic DB doesn't contain $tree"))
   }
 

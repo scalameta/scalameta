@@ -3,15 +3,12 @@ package internal
 package semantic
 package v1
 
-import scala.collection.mutable
-import scala.meta.semantic.v1.CompilerMessage
-import scala.meta.semantic.v1.Database
-import scala.meta.semantic.v1.Location
-import scala.meta.semantic.v1.Symbol
+import scala.meta.semantic.v1._
 
 trait DatabaseOps {
   private[meta] implicit class XtensionInternalDatabase(db1: Database) {
     def append(db2: Database): Database = {
+      import scala.collection.mutable
       val names2 = mutable.Map[Location, Symbol]()
       names2 ++= db1.names
       val paths = db2.names.keys.map(_.path).toSet

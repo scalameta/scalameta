@@ -2,18 +2,15 @@ package scala.meta
 package semantic
 package v1
 
-import scala.compat.Platform.EOL
-import scala.meta.internal.semantic.v1._
-
-import org.scalameta.semantic.v1.{proto => p}
-import scala.meta.internal.scalahost.v1.ProtoCodec._
-import scala.meta.prettyprinters._
-import scala.meta.semantic.v1._
-import scala.util.Try
-
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import scala.compat.Platform.EOL
+import scala.meta.internal.semantic.v1.DatabaseOps
+import scala.meta.internal.semantic.v1.codecs._
+import scala.meta.internal.semantic.v1.{proto => p}
+import scala.meta.prettyprinters._
+import scala.util.Try
 
 // NOTE: This is an initial take on the semantic API.
 // Instead of immediately implementing the full vision described in my dissertation,
@@ -36,7 +33,7 @@ case class Database(
     val groupedMessages = messages.groupBy(_.location.path).withDefaultValue(Nil)
     val paths = groupedNames.keys.toList.sortBy(_.absolute)
     paths.foreach(path => {
-      val messages = groupedMessages(path).map(x => x.location -> x.syntax)
+      val messages = groupedMessages(path).map(x => x.location -> s"[${x.severity.toString.toLowerCase}] ${x.message}")
       val names = groupedNames(path).keys.map(x => x -> groupedNames(path)(x).syntax)
       val combined = (messages ++ names).sortBy(_._1.start)
       buf ++= (path + EOL)

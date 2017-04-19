@@ -10,7 +10,7 @@ import scala.tools.nsc.interactive.{
 }
 import scala.tools.nsc.typechecker.ScalahostAnalyzer
 
-trait HijackAnalyzer { self: ScalahostPlugin =>
+trait HijackAnalyzer extends ScalahostAnalyzer { self: ScalahostPlugin =>
 
   def hijackAnalyzer(): global.analyzer.type = {
     // NOTE: need to hijack the right `analyzer` field - it's different for batch compilers and repl compilers

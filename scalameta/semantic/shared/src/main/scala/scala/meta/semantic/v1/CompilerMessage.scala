@@ -3,10 +3,12 @@ package semantic
 package v1
 
 import org.scalameta.adt._
-import org.scalameta.data.data
+import org.scalameta.data._
 
 @data class CompilerMessage(location: Location, severity: Severity, message: String) {
-  def syntax = s"$severity $message"
+  override def toString = syntax
+  def syntax = s"[${severity.toString.toLowerCase}] ${location.syntax}: $message"
+  def structure = s"""CompilerMessage(${location.structure}, Severity.$severity, "$message")"""
 }
 
 @root trait Severity {

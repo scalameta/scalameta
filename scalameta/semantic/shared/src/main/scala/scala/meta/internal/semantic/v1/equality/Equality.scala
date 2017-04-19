@@ -4,8 +4,7 @@ package semantic
 package v1
 
 import scala.meta.classifiers._
-import scala.meta.semantic.v1.Mirror
-import scala.meta.semantic.v1.XtensionRefSymbol
+import scala.meta.semantic.v1._
 
 // NOTE: Semantic comparison operates almost like structural comparison,
 // but also taking into account envs, denots and typings.
@@ -36,7 +35,7 @@ import scala.meta.semantic.v1.XtensionRefSymbol
 // spelling all cases out manually will take prohibitively too much time.
 // I would like to fix this in the future.
 
-object Equality {
+package object equality {
   def equals(x1: Any, x2: Any)(implicit m: Mirror): Boolean = customEquals(x1, x2)
 
   private def customEquals(x: Any, y: Any)(implicit m: Mirror): Boolean = (x, y) match {
@@ -89,43 +88,45 @@ object Equality {
   }
 }
 
-object NonRef {
-  def unapply(tree: Tree): Option[Tree] = {
-    if (tree.is[Ref]) None else Some(tree)
-  }
-}
-
-object NameRef {
-  def unapply(tree: Tree): Option[(Name, Int)] = {
-    tree match {
-      case name: Term.Name => Some((name, 1))
-      case name: Type.Name => Some((name, 2))
-      case name: Ctor.Name => Some((name, 3))
-      case Term.Select(NameRef(_, _), name) => Some((name, 1))
-      case Type.Select(NameRef(_, _), name) => Some((name, 2))
-      case Type.Project(NameRef(_, _), name) => Some((name, 2))
-      case Ctor.Ref.Select(NameRef(_, _), name) => Some((name, 3))
-      case _ => None
+package equality {
+  object NonRef {
+    def unapply(tree: Tree): Option[Tree] = {
+      if (tree.is[Ref]) None else Some(tree)
     }
   }
-}
 
-object OpaqueRef {
-  def unapply(tree: Tree): Option[(Name, Int)] = {
-    tree match {
-      case tree: Name.Indeterminate => Some((tree, 4))
-      case _ => None
+  object NameRef {
+    def unapply(tree: Tree): Option[(Name, Int)] = {
+      tree match {
+        case name: Term.Name => Some((name, 1))
+        case name: Type.Name => Some((name, 2))
+        case name: Ctor.Name => Some((name, 3))
+        case Term.Select(NameRef(_, _), name) => Some((name, 1))
+        case Type.Select(NameRef(_, _), name) => Some((name, 2))
+        case Type.Project(NameRef(_, _), name) => Some((name, 2))
+        case Ctor.Ref.Select(NameRef(_, _), name) => Some((name, 3))
+        case _ => None
+      }
     }
   }
-}
 
-object StructuralRef {
-  def unapply(tree: Tree): Option[Tree] = {
-    tree match {
-      case NameRef(_, _) => None
-      case OpaqueRef(_, _) => None
-      case _: Ref => Some(tree)
-      case _ => None
+  object OpaqueRef {
+    def unapply(tree: Tree): Option[(Name, Int)] = {
+      tree match {
+        case tree: Name.Indeterminate => Some((tree, 4))
+        case _ => None
+      }
+    }
+  }
+
+  object StructuralRef {
+    def unapply(tree: Tree): Option[Tree] = {
+      tree match {
+        case NameRef(_, _) => None
+        case OpaqueRef(_, _) => None
+        case _: Ref => Some(tree)
+        case _ => None
+      }
     }
   }
 }

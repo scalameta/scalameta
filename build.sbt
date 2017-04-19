@@ -184,7 +184,7 @@ lazy val semantic = crossProject
     PB.protoSources.in(Compile) := Seq(file("scalameta/semantic/shared/src/main/protobuf")),
     libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
   )
-  .dependsOn(common, trees)
+  .dependsOn(common, parsers, trees)
 lazy val semanticJVM = semantic.jvm
 lazy val semanticJS = semantic.js
 

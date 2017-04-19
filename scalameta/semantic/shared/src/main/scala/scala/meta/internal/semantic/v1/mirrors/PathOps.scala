@@ -1,15 +1,15 @@
-package scala.meta.internal
-package scalahost
+package scala.meta
+package internal
+package semantic
 package v1
-package offline
+package mirrors
 
 import java.io._
 import java.net.URI
 import java.util.zip._
 import scala.collection.mutable
 
-trait PathOps { self: Mirror =>
-
+trait PathOps {
   implicit class XtensionMultipath(s: String) {
     def paths: List[URI] = {
       s.split(File.pathSeparatorChar).map(s => new File(s).toURI).toList

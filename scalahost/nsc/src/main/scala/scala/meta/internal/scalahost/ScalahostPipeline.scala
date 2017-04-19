@@ -4,9 +4,8 @@ package scalahost
 import java.io._
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
-import scala.meta.semantic.v1.Database
-import scala.meta.internal.semantic.v1._
-import scala.meta.internal.scalahost.v1.online.{Mirror => OnlineMirror}
+import scala.{meta => m}
+import scala.meta.internal.scalahost.v1.OnlineMirror
 
 trait ScalahostPipeline { self: ScalahostPlugin =>
 
@@ -29,17 +28,14 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
           global.settings.outputDirs.getSingleOutput.getOrElse(global.settings.d.value)
         val databaseFile = new File(outputDir + File.separator + "semanticdb")
         val prevDatabase =
-          if (databaseFile.exists) Database.fromFile(databaseFile).get
-          else Database()
+          if (databaseFile.exists) m.Database.fromFile(databaseFile).get
+          else m.Database()
         val database = new OnlineMirror(global).database
         val mergedDatabase = prevDatabase.append(database)
-        val allowedPaths = global.currentRun.units.map(_.source.toAbsolutePath).toSet
-        val trimmedDatabase = Database(
-          mergedDatabase.names.filterKeys(k => allowedPaths.contains(k.path)),
-          mergedDatabase.messages.filter(msg => allowedPaths.contains(msg.location.path)),
-          mergedDatabase.denotations // TODO: filter out obsolete symbols
-        )
-        trimmedDatabase.writeDatabaseToFile(databaseFile)
+        // TODO: Trim the database from stale entries.
+        // I'm completely removing the old logic for doing that,
+        // because the underlying format is going to change anyway.
+        mergedDatabase.writeDatabaseToFile(databaseFile)
       }
     }
   }

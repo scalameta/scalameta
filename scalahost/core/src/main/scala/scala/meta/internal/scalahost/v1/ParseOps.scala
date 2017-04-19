@@ -1,12 +1,11 @@
 package scala.meta.internal
 package scalahost
 package v1
-package online
 
 import scala.{meta => m}
 import scala.reflect.io.{PlainFile => GPlainFile}
 
-trait ParseOps { self: Mirror =>
+trait ParseOps { self: OnlineMirror =>
 
   implicit class XtensionCompilationUnitSource(unit: g.CompilationUnit) {
     def toSource: m.Source = {

@@ -5,15 +5,13 @@ package v1
 import org.scalatest._
 import java.io.{File, PrintWriter}
 import scala.collection.immutable.Seq
-import scala.{meta => m}
 import scala.reflect.io._
 import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
-import scala.meta.semantic.v1.Mirror
-import scala.meta.semantic.v1.Database
-import scala.meta.internal.scalahost.v1.online.{Mirror => OnlineMirror, _}
+import scala.{meta => m}
+import scala.meta.internal.scalahost.v1.OnlineMirror
 
 abstract class OnlineMirrorSuite extends FunSuite {
   private def test(code: String)(fn: => Unit): Unit = {
@@ -43,13 +41,13 @@ abstract class OnlineMirrorSuite extends FunSuite {
   import mirror._
 
   // checks that parse(binary(database)) == database
-  def assertDatabaseSerializationIsBijective(database: Database): Unit = {
+  def assertDatabaseSerializationIsBijective(database: m.Database): Unit = {
     val binary = database.toBinary
-    val database2 = Database.fromBinary(binary).get
+    val database2 = m.Database.fromBinary(binary).get
     assert(database.toString === database2.toString)
   }
 
-  private def computeDatabaseFromSnippet(code: String): Database = {
+  private def computeDatabaseFromSnippet(code: String): m.Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
     val writer = new PrintWriter(javaFile)
     try writer.write(code)

@@ -5,6 +5,10 @@ import org.scalatest._
 import scala.meta._
 
 class PublicSuite extends FunSuite {
+  test("com.trueaccord.scalapb.GeneratedEnumCompanion.A") {
+    // TODO: lol what a wtf
+  }
+
   test("scala.meta.Dialect.toString") {
     // covered below
   }
@@ -165,7 +169,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Input.LabeledString.toString") {
     val input = Input.LabeledString("foo.scala", "foo")
-    org.scalameta.logger.elem(input.toString)
+    // org.scalameta.logger.elem(input.toString)
     assert(input.toString == s"""Input.LabeledString("foo.scala", "foo")""")
   }
 
@@ -270,24 +274,12 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Address.toString") {
-    // covered below
-  }
-
-  test("scala.meta.semantic.v1.Address.File.toString") {
+  test("scala.meta.semantic.v1.CompilerMessage.toString") {
     val file = "source.scala"
-    val syntax = s"file:$file"
-    val fullPath = AbsolutePath.fromRelative(file).absolute
-    val address = scala.meta.semantic.v1.Address(syntax)
-    val scala.meta.semantic.v1.Address.File(AbsolutePath(`fullPath`)) = address
-    assert(address.toString === s"file:$fullPath")
-  }
-
-  test("scala.meta.semantic.v1.Address.Snippet.toString") {
-    val syntax = "snippet:Int"
-    val address = scala.meta.semantic.v1.Address(syntax)
-    val scala.meta.semantic.v1.Address.Snippet("Int") = address
-    assert(address.toString === syntax)
+    val path = AbsolutePath.fromRelative(file).absolute
+    val location = Location(file, 40, 42)
+    val message = CompilerMessage(location, Severity.Error, "does not compute")
+    assert(message.toString === s"[error] $path@40..42: does not compute")
   }
 
   test("scala.meta.semantic.v1.Completed.toString") {
@@ -302,15 +294,20 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.semantic.v1.Denotation.toString") {
+    val denotation = Denotation(PRIVATE | CASE | CLASS)
+    assert(denotation.toString === "PRIVATE | CASE | CLASS")
+  }
+
   test("scala.meta.semantic.v1.Database.toString") {
-    // n/a
+    // too involved to fit here, see DatabaseSuite in scalahost
   }
 
   test("scala.meta.semantic.v1.Location.toString") {
     val file = "source.scala"
     val path = AbsolutePath.fromRelative(file).absolute
-    val location = scala.meta.semantic.v1.Location(scala.meta.semantic.v1.Address(s"file:$file"), 40, 42)
-    assert(location.toString === s"""Location(Address("file:$path"), 40, 42)""")
+    val location = Location(file, 40, 42)
+    assert(location.toString === s"""$path@40..42""")
   }
 
   test("scala.meta.semantic.v1.Mirror.toString") {
@@ -319,6 +316,26 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.semantic.v1.SemanticException.toString") {
     // n/a
+  }
+
+  test("scala.meta.semantic.v1.Severity.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.v1.Severity.Error") {
+    assert(Severity.Error.toString === "Error")
+  }
+
+  test("scala.meta.semantic.v1.Severity.Info") {
+    assert(Severity.Info.toString === "Info")
+  }
+
+  test("scala.meta.semantic.v1.Severity.Unknown") {
+    assert(Severity.Unknown(42).toString === "Unknown(42)")
+  }
+
+  test("scala.meta.semantic.v1.Severity.Warning") {
+    assert(Severity.Warning.toString === "Warning")
   }
 
   test("scala.meta.semantic.v1.Signature.toString") {
@@ -350,7 +367,6 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semantic.v1.Symbol.toString") {
-    import scala.meta.semantic.v1.Address
     import scala.meta.semantic.v1.Symbol
     import scala.meta.semantic.v1.Signature
 
@@ -383,8 +399,8 @@ class PublicSuite extends FunSuite {
     assert(globalSelf.toString === syntaxGlobalSelf)
 
     val file =  AbsolutePath.fromRelative("source.scala").absolute
-    val syntaxLocal = s"file:$file@40..42"
-    val local @ Symbol.Local(Address.File(AbsolutePath(path)), 40, 42) = Symbol(syntaxLocal)
+    val syntaxLocal = s"$file@40..42"
+    val local @ Symbol.Local(Location(AbsolutePath(path), 40, 42)) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
 
     val syntaxMulti = "_root_.C#;_root.C."
@@ -478,9 +494,4 @@ class PublicSuite extends FunSuite {
   test("scala.meta.transversers.Traverser.toString") {
     // n/a
   }
-  test("scala.meta.semantic.v1.Severity.Unknown") { }
-  test("scala.meta.semantic.v1.Severity.Error") { }
-  test("scala.meta.semantic.v1.Severity.Info") { }
-  test("scala.meta.semantic.v1.Severity.Warning") { }
-  test("scala.meta.semantic.v1.CompilerMessage") { }
 }

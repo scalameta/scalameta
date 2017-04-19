@@ -28,7 +28,6 @@ import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.tokens._
 import scala.compat.Platform.EOL
-import scala.meta.io.AbsolutePath
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
 // so that quasiquotes can be interpreted by any host, not just scalac
