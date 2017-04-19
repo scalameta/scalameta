@@ -97,6 +97,15 @@ abstract class OnlineMirrorSuite extends FunSuite {
     }
   }
 
+  def names(code: String, expected: String): Unit = {
+    test(code) {
+      val database = computeDatabaseFromSnippet(code)
+      val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
+      val actual = database.toString.split(EOL).takeWhile(_ != "Denotations:").drop(1).dropRight(1).mkString(EOL).replace(path, "<...>")
+      assert(expected === actual)
+    }
+  }
+
   def denotations(code: String, expected: String): Unit = {
     test(code) {
       val database = computeDatabaseFromSnippet(code)

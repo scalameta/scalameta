@@ -5,7 +5,7 @@ package v1
 import scala.meta._
 
 class DatabaseSuite extends OnlineMirrorSuite {
-  database(
+  names(
     """
     |object First {
     |  def main(args: Array[String]): Unit = {
@@ -25,12 +25,6 @@ class DatabaseSuite extends OnlineMirrorSuite {
     |[72..76): List => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
     |[90..97): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
     |[98..102): list => <...>@61..85
-    |
-    |Denotations:
-    |<...>@61..85 => VAL
-    |_empty_.First. => FINAL | OBJECT
-    |_empty_.First.main([Ljava/lang/String;)V. => DEF
-    |_empty_.First.main([Ljava/lang/String;)V.(args) => TERMPARAM
   """.trim.stripMargin
   )
 
@@ -65,7 +59,7 @@ class DatabaseSuite extends OnlineMirrorSuite {
     }
   )
 
-  database(
+  names(
     """
     |import _root_.scala.List
     |
@@ -82,10 +76,6 @@ class DatabaseSuite extends OnlineMirrorSuite {
     |[38..44): _root_ => _root_.
     |[45..50): scala => _root_.scala.
     |[51..55): List => _root_.scala.collection.immutable.
-    |
-    |Denotations:
-    |_empty_.C# => CLASS
-    |_empty_.C#`<init>`()V. => PRIMARYCTOR
   """.trim.stripMargin
   )
 
