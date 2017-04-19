@@ -25,17 +25,6 @@ object ProtoCodec {
 
   private def fail(e: Any): Nothing = sys.error(s"Invalid protobuf! $e")
 
-  implicit val AddressProto = new ProtoCodec[Address, p.Address] {
-    override def toProto(e: Address): p.Address = e match {
-      case Address.File(AbsolutePath(path)) => p.Address(path = path)
-      case Address.Snippet(code) => p.Address(contents = code)
-    }
-
-    def fromProto(e: p.Address): Address = {
-      if (e.path.isEmpty) Address.Snippet(e.contents)
-      else Address.File(e.path)
-    }
-  }
   implicit val ResolvedNameProto = new ProtoEncoder[(Location, Symbol), p.ResolvedName] {
     override def toProto(e: (Location, Symbol)): p.ResolvedName = e match {
       case (Location(_, start, end), sym) =>
@@ -58,14 +47,14 @@ object ProtoCodec {
   }
   implicit val DatabaseProto = new ProtoCodec[Database, p.Database] {
     override def toProto(e: Database): p.Database = {
-      val messagesGrouped = e.messages.groupBy(_.location.addr).withDefaultValue(Nil)
+      val messagesGrouped = e.messages.groupBy(_.location.path).withDefaultValue(Nil)
       val files = e.names
-        .groupBy(_._1.addr)
+        .groupBy(_._1.path)
         .map {
-          case (addr, names) =>
-            val messages = messagesGrouped(addr).map(_.toProto[p.CompilerMessage])
+          case (path, names) =>
+            val messages = messagesGrouped(path).map(_.toProto[p.CompilerMessage])
             p.DatabaseFile(
-              address = addr.toProtoOpt[p.Address],
+              path = path.absolute,
               names = names.map(_.toProto[p.ResolvedName]).toSeq,
               messages = messages,
               denotations = e.denotations.map(_.toProto[p.SymbolDenotation]).toSeq
@@ -76,18 +65,18 @@ object ProtoCodec {
     }
     override def fromProto(e: p.Database): Database = {
       val names = e.files.flatMap {
-        case p.DatabaseFile(Some(addr), names, _, _) =>
+        case p.DatabaseFile(path, names, _, _) =>
           names.map {
             case p.ResolvedName(Some(p.Range(start, end)), Symbol(symbol)) =>
-              Location(addr.toMeta[Address], start, end) -> symbol
+              Location(path, start, end) -> symbol
           }
         case _ => fail(e)
       }.toMap
       val messages: Seq[CompilerMessage] = e.files.flatMap {
-        case p.DatabaseFile(Some(addr), l, messages, _) =>
+        case p.DatabaseFile(path, l, messages, _) =>
           messages.map {
             case p.CompilerMessage(Some(p.Range(start, end)), sev, message) =>
-              CompilerMessage(Location(addr.toMeta[Address], start, end),
+              CompilerMessage(Location(path, start, end),
                               Severity.fromId(sev.value),
                               message)
             case e => fail(e)

@@ -33,10 +33,10 @@ trait ScalahostPipeline { self: ScalahostPlugin =>
           else Database()
         val database = new OnlineMirror(global).database
         val mergedDatabase = prevDatabase.append(database)
-        val allowedAddrs = global.currentRun.units.map(_.source.toAddr).toSet
+        val allowedPaths = global.currentRun.units.map(_.source.toAbsolutePath).toSet
         val trimmedDatabase = Database(
-          mergedDatabase.names.filterKeys(k => allowedAddrs.contains(k.addr)),
-          mergedDatabase.messages.filter(msg => allowedAddrs.contains(msg.location.addr)),
+          mergedDatabase.names.filterKeys(k => allowedPaths.contains(k.path)),
+          mergedDatabase.messages.filter(msg => allowedPaths.contains(msg.location.path)),
           mergedDatabase.denotations // TODO: filter out obsolete symbols
         )
         trimmedDatabase.writeDatabaseToFile(databaseFile)

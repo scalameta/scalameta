@@ -2,13 +2,8 @@ package scala.meta
 package semantic
 package v1
 
-import java.net.URI
-import java.nio.charset._
-
-import org.scalameta.adt._
-import scala.io._
+import org.scalameta.data._
 import scala.meta.prettyprinters._
-import scala.meta.internal.semantic.v1._
 import scala.meta.io.AbsolutePath
 
 // NOTE: This is an initial take on the semantic API.
@@ -19,43 +14,13 @@ import scala.meta.io.AbsolutePath
 // NOTE: `start` and `end` are String.substring-style,
 // i.e. `start` is inclusive and `end` is not.
 // Therefore Position.end can point to the last character plus one.
-case class Location(addr: Address, start: Int, end: Int) {
-  override def toString = s"""Location(Address("${addr.syntax}"), $start, $end)"""
+@data class Location(path: AbsolutePath, start: Int, end: Int) {
+  override def toString = syntax
+  def syntax = s"${path.absolute}@$start..$end"
+  def structure = s"""Location(${path.absolute}, $start, $end)"""
 }
-
-@root trait Address {
-  def syntax: String
-  def structure: String
-  def content: String
-}
-
-object Address {
-
-
-  @leaf class File(path: AbsolutePath) extends Address {
-    override def content = path.slurp
-    override def syntax = s"file:${path.absolute}"
-    override def structure = s"""Address.File("$path")"""
-    override def toString = syntax
-  }
-  object File {
-    def apply(path: AbsolutePath): File = new File(path)
-    def apply(path: String): File = apply(AbsolutePath.fromAbsoluteOrRelative(path))
-    def apply(file: java.io.File): File = apply(AbsolutePath(file))
-  }
-
-  @leaf class Snippet(content: String) extends Address {
-    override def syntax = s"snippet:$content"
-    override def structure = s"""Address.Snippet("$content")"""
-    override def toString = syntax
-  }
-
-  def apply(s: String): Address = {
-    val uri = new URI(s)
-    uri.getScheme match {
-      case "file" => Address.File(uri.getSchemeSpecificPart)
-      case "snippet" => Address.Snippet(uri.getSchemeSpecificPart)
-      case _ => sys.error(s"unsupported address: $s")
-    }
-  }
+object Location {
+  def apply(path: AbsolutePath, start: Int, end: Int): Location = new Location(path, start, end)
+  def apply(path: String, start: Int, end: Int): Location = apply(AbsolutePath.fromAbsoluteOrRelative(path), start, end)
+  def apply(file: java.io.File, start: Int, end: Int): Location = apply(AbsolutePath(file), start, end)
 }

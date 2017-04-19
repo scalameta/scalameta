@@ -30,7 +30,7 @@ trait Mirror extends MirrorApi with LocationOps {
   def database: Database
 
   def symbol(tree: Ref): Completed[Symbol] = apiBoundary {
-    def relevantPosition(tree1: Tree): Position = tree1 match {
+    def relevantPosition(tree: Tree): Position = tree match {
       case name1: Name => name1.pos
       case _: Term.This => ???
       case _: Term.Super => ???
@@ -46,10 +46,9 @@ trait Mirror extends MirrorApi with LocationOps {
       case Importee.Name(name1) => name1.pos
       case Importee.Rename(name1, _) => name1.pos
       case Importee.Unimport(name1) => name1.pos
-      case _ => unreachable(debug(tree1.syntax, tree1.structure))
+      case _ => unreachable(debug(tree.syntax, tree.structure))
     }
-    val tree1 = if (isTypechecked(tree)) tree else typecheck(tree)
-    val position = relevantPosition(tree1)
+    val position = relevantPosition(tree)
     val location = position.toSemantic
     database.names.getOrElse(location, sys.error(s"semantic DB doesn't contain $tree"))
   }
@@ -71,31 +70,4 @@ trait Mirror extends MirrorApi with LocationOps {
         Completed.Error(new SemanticException(Position.None, message, Some(ex)))
     }
   }
-
-  private def isTypechecked(tree: Tree): Boolean = {
-    val indexedAddrs = database.names.keys.map(_.addr).toSet
-    var allIndexed = true
-    object traverser extends Traverser {
-      override def apply(tree: Tree): Unit = {
-        val addr = {
-          try tree.pos.toSemantic.addr
-          catch {
-            case ex: Exception =>
-              allIndexed = false
-              return
-          }
-        }
-        if (indexedAddrs(addr)) {
-          super.apply(tree)
-        } else {
-          allIndexed = false
-          return
-        }
-      }
-    }
-    traverser(tree.root)
-    allIndexed
-  }
-
-  def typecheck(tree: Tree): Tree
 }

@@ -32,15 +32,15 @@ case class Database(
 
   override def toString: String = {
     val buf = new StringBuilder
-    val groupedNames = names.groupBy(_._1.addr)
-    val groupedMessages = messages.groupBy(_.location.addr).withDefaultValue(Nil)
-    val addrs = groupedNames.keys.toList.sortBy(_.syntax)
-    addrs.foreach(addr => {
-      val messages = groupedMessages(addr).map(x => x.location -> x.syntax)
-      val names = groupedNames(addr).keys.map(x => x -> groupedNames(addr)(x).syntax)
+    val groupedNames = names.groupBy(_._1.path)
+    val groupedMessages = messages.groupBy(_.location.path).withDefaultValue(Nil)
+    val paths = groupedNames.keys.toList.sortBy(_.absolute)
+    paths.foreach(path => {
+      val messages = groupedMessages(path).map(x => x.location -> x.syntax)
+      val names = groupedNames(path).keys.map(x => x -> groupedNames(path)(x).syntax)
       val combined = (messages ++ names).sortBy(_._1.start)
-      buf ++= (addr + EOL)
-      val content = addr.content
+      buf ++= (path + EOL)
+      val content = path.slurp
       combined.foreach { case (Location(_, start, end), syntax) =>
         val snippet = content.substring(start, end)
         buf ++= (s"[$start..$end): $snippet => $syntax" + EOL)

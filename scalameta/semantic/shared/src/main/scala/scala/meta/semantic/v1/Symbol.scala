@@ -12,6 +12,7 @@ import org.scalameta.unreachable
 import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.internal.semantic.v1._
+import scala.meta.io.AbsolutePath
 
 // NOTE: This is an initial take on the semantic API.
 // Instead of immediately implementing the full vision described in my dissertation,
@@ -39,10 +40,10 @@ object Symbol {
     override def fullName: Ref = unsupported(this, "fullName")
   }
 
-  @leaf class Local(addr: Address, start: Int, end: Int) extends Symbol {
+  @leaf class Local(location: Location) extends Symbol {
     override def toString = syntax
-    override def syntax = s"${addr.syntax}@$start..$end"
-    override def structure = s"""Symbol.Local(${addr.structure}, $start, $end)"""
+    override def syntax = location.syntax
+    override def structure = s"""Symbol.Local(${location.structure})"""
     override def name: Name = ???
     override def fullName: Ref = ???
   }
@@ -195,7 +196,7 @@ object Symbol {
         val endBuf = new StringBuilder
         while (Character.isDigit(readChar())) endBuf += currChar
 
-        Symbol.Local(Address(addrBuf.toString), startBuf.toString.toInt, endBuf.toString.toInt)
+        Symbol.Local(Location(addrBuf.toString, startBuf.toString.toInt, endBuf.toString.toInt))
       }
 
       def parseMulti(symbols: List[Symbol]): Symbol = {

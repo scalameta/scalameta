@@ -25,7 +25,7 @@ trait SymbolOps { self: Mirror =>
             ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter)
         !definitelyGlobal && (definitelyLocal || isLocal(sym.owner))
       }
-      if (isLocal(sym)) return Symbol.Local(sym.pos.source.toAddr, sym.pos.start, sym.pos.end)
+      if (isLocal(sym)) return Symbol.Local(sym.pos.toSemantic)
 
       val owner = sym.owner.toSemantic
       val signature = {

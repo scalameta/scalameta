@@ -14,8 +14,8 @@ trait DatabaseOps {
     def append(db2: Database): Database = {
       val names2 = mutable.Map[Location, Symbol]()
       names2 ++= db1.names
-      val addrs = db2.names.keys.map(_.addr).toSet
-      addrs.foreach(addr => names2.retain((k, _) => k.addr != addr))
+      val paths = db2.names.keys.map(_.path).toSet
+      paths.foreach(path => names2.retain((k, _) => k.path != path))
       names2 ++= db2.names
       val messages = mutable.LinkedHashSet.empty[CompilerMessage]
       messages ++= db1.messages

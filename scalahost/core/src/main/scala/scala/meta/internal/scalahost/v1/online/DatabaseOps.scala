@@ -312,7 +312,7 @@ trait DatabaseOps { self: Mirror =>
   }
 
   private def syntaxAndPos(mtree: m.Tree): String = {
-    s"${mtree.pos.toSemantic.addr.syntax} $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
+    s"${mtree.pos.toSemantic.path.absolute} $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
   }
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
