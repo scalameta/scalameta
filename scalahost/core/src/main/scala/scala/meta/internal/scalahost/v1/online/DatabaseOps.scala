@@ -289,15 +289,6 @@ trait DatabaseOps { self: Mirror =>
           traverser.traverse(unit.body)
         }
 
-        if (todo.nonEmpty && Configuration.strictMode) {
-          val buf = new StringBuilder
-          buf ++= ("Unmapped names in " + unit.source.file.file + EOL)
-          todo.toList
-            .sortBy(_.pos.start.offset)
-            .foreach(mtree => buf ++= (syntaxAndPos(mtree) + EOL))
-          sys.error(buf.toString)
-        }
-
         Database(symbols.toMap, unit.hijackedMessages, denotations.toMap)
       })
     }
