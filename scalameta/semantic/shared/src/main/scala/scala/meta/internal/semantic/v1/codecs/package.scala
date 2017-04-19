@@ -18,13 +18,11 @@ package object codecs {
       }
     }
 
-  implicit val CompilerMessageEncoder: ProtoEncoder[m.CompilerMessage, p.CompilerMessage] =
-    new ProtoEncoder[m.CompilerMessage, p.CompilerMessage] {
-      override def toProto(e: m.CompilerMessage): p.CompilerMessage = e match {
-        case m.CompilerMessage(m.Location(addr, start, end), sev, msg) =>
-          p.CompilerMessage(Option(p.Range(start, end)),
-                            p.CompilerMessage.Severity.fromValue(sev.id),
-                            msg)
+  implicit val MessageEncoder: ProtoEncoder[m.Message, p.Message] =
+    new ProtoEncoder[m.Message, p.Message] {
+      override def toProto(e: m.Message): p.Message = e match {
+        case m.Message(m.Location(addr, start, end), sev, msg) =>
+          p.Message(Option(p.Range(start, end)), p.Message.Severity.fromValue(sev.id), msg)
       }
     }
 
@@ -44,7 +42,7 @@ package object codecs {
           .groupBy(_._1.path)
           .map {
             case (path, names) =>
-              val messages = messagesGrouped(path).map(_.toProto[p.CompilerMessage])
+              val messages = messagesGrouped(path).map(_.toProto[p.Message])
               p.DatabaseFile(
                 path = path.absolute,
                 names = names.map(_.toProto[p.ResolvedName]).toSeq,
@@ -63,18 +61,19 @@ package object codecs {
               case p.ResolvedName(Some(p.Range(start, end)), m.Symbol(symbol)) =>
                 m.Location(path, start, end) -> symbol
             }
-          case _ => fail(e)
+          case _ =>
+            fail(e)
         }.toMap
-        val messages: Seq[m.CompilerMessage] = e.files.flatMap {
+        val messages: Seq[m.Message] = e.files.flatMap {
           case p.DatabaseFile(path, _, messages, _) =>
             messages.map {
-              case p.CompilerMessage(Some(p.Range(start, end)), sev, message) =>
-                m.CompilerMessage(m.Location(path, start, end),
-                                  m.Severity.fromId(sev.value),
-                                  message)
-              case e => fail(e)
+              case p.Message(Some(p.Range(start, end)), sev, message) =>
+                m.Message(m.Location(path, start, end), m.Severity.fromId(sev.value), message)
+              case e =>
+                fail(e)
             }
-          case e => fail(e)
+          case e =>
+            fail(e)
         }
         val denotations = e.files.flatMap {
           case p.DatabaseFile(_, _, _, denotations) =>
@@ -82,7 +81,8 @@ package object codecs {
               case p.SymbolDenotation(m.Symbol(symbol), Some(p.Denotation(flags))) =>
                 symbol -> m.Denotation(flags)
             }
-          case _ => fail(e)
+          case _ =>
+            fail(e)
         }.toMap
         m.Database(names, messages, denotations)
       }

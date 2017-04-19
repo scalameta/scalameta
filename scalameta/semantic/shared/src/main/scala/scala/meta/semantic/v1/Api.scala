@@ -49,8 +49,8 @@ private[meta] trait Aliases {
   type Signature = scala.meta.semantic.v1.Signature
   val Signature = scala.meta.semantic.v1.Signature
 
-  type CompilerMessage = scala.meta.semantic.v1.CompilerMessage
-  val CompilerMessage = scala.meta.semantic.v1.CompilerMessage
+  type Message = scala.meta.semantic.v1.Message
+  val Message = scala.meta.semantic.v1.Message
 
   type Severity = scala.meta.semantic.v1.Severity
   val Severity = scala.meta.semantic.v1.Severity

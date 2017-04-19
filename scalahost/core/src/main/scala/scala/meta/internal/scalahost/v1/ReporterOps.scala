@@ -8,7 +8,7 @@ import scala.tools.nsc.reporters.StoreReporter
 trait ReporterOps { self: OnlineMirror =>
 
   implicit class XtensionCompilationUnitReporter(unit: g.CompilationUnit) {
-    def hijackedMessages: Seq[m.CompilerMessage] = {
+    def hijackedMessages: Seq[m.Message] = {
       g.reporter match {
         case r: StoreReporter =>
           val path = unit.source.toAbsolutePath
@@ -26,7 +26,7 @@ trait ReporterOps { self: OnlineMirror =>
                   case 2 => m.Severity.Error
                   case unknown => m.Severity.Unknown(unknown)
                 }
-                m.CompilerMessage(location, severity, msg)
+                m.Message(location, severity, msg)
             }
             .to[Seq]
         case _ =>

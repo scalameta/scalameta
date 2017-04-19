@@ -19,7 +19,7 @@ import scala.util.Try
 
 case class Database(
   names: Map[Location, Symbol],
-  messages: Seq[CompilerMessage],
+  messages: Seq[Message],
   denotations: Map[Symbol, Denotation]
   // TODO: Additional fields are to be discussed
   // https://github.com/scalameta/scalameta/issues/605

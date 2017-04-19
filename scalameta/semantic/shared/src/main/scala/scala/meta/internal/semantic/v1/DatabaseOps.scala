@@ -14,7 +14,7 @@ trait DatabaseOps {
       val paths = db2.names.keys.map(_.path).toSet
       paths.foreach(path => names2.retain((k, _) => k.path != path))
       names2 ++= db2.names
-      val messages = mutable.LinkedHashSet.empty[CompilerMessage]
+      val messages = mutable.LinkedHashSet.empty[Message]
       messages ++= db1.messages
       messages ++= db2.messages
       val denotations = db1.denotations ++ db2.denotations

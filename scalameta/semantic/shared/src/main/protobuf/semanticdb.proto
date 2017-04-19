@@ -15,7 +15,7 @@ message DatabaseFile {
   reserved 1;
   string path = 5;
   repeated ResolvedName names = 2;
-  repeated CompilerMessage messages = 3;
+  repeated Message messages = 3;
   repeated SymbolDenotation denotations = 4;
 }
 
@@ -29,7 +29,7 @@ message Range {
   int32 end = 3;
 }
 
-message CompilerMessage {
+message Message {
   enum Severity {
     UNKNOWN = 0;
     INFO = 1;

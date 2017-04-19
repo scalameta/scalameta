@@ -274,14 +274,6 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.CompilerMessage.toString") {
-    val file = "source.scala"
-    val path = AbsolutePath.fromRelative(file).absolute
-    val location = Location(file, 40, 42)
-    val message = CompilerMessage(location, Severity.Error, "does not compute")
-    assert(message.toString === s"[error] $path@40..42: does not compute")
-  }
-
   test("scala.meta.semantic.v1.Completed.toString") {
     // covered below
   }
@@ -308,6 +300,14 @@ class PublicSuite extends FunSuite {
     val path = AbsolutePath.fromRelative(file).absolute
     val location = Location(file, 40, 42)
     assert(location.toString === s"""$path@40..42""")
+  }
+
+  test("scala.meta.semantic.v1.Message.toString") {
+    val file = "source.scala"
+    val path = AbsolutePath.fromRelative(file).absolute
+    val location = Location(file, 40, 42)
+    val message = Message(location, Severity.Error, "does not compute")
+    assert(message.toString === s"[error] $path@40..42: does not compute")
   }
 
   test("scala.meta.semantic.v1.Mirror.toString") {

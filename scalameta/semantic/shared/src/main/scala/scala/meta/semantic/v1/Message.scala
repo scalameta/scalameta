@@ -5,10 +5,10 @@ package v1
 import org.scalameta.adt._
 import org.scalameta.data._
 
-@data class CompilerMessage(location: Location, severity: Severity, message: String) {
+@data class Message(location: Location, severity: Severity, message: String) {
   override def toString = syntax
   def syntax = s"[${severity.toString.toLowerCase}] ${location.syntax}: $message"
-  def structure = s"""CompilerMessage(${location.structure}, Severity.$severity, "$message")"""
+  def structure = s"""Message(${location.structure}, Severity.$severity, "$message")"""
 }
 
 @root trait Severity {
