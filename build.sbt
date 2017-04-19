@@ -503,7 +503,7 @@ lazy val publishableSettings = Def.settings(
       val publishingStatus = if (publishingEnabled) "enabled" else "disabled"
       println(s"[info] Welcome to scala.meta $LibraryVersion (publishing $publishingStatus)")
     }
-    publish.in(Compile) := {
+    publish.in(Compile) := (Def.taskDyn {
       if (publishingEnabled) {
         Def.task {
           publish.value
@@ -513,7 +513,7 @@ lazy val publishableSettings = Def.settings(
           sys.error("Undefined publishing strategy"); ()
         }
       }
-    }
+    }).value
   },
   publishMavenStyle := true,
   pomIncludeRepository := { x =>
