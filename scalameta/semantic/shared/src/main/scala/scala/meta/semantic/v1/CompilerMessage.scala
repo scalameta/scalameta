@@ -21,7 +21,6 @@ import org.scalameta.data._
   }
 }
 object Severity {
-  private val Message = "(\\d+)?(\\w+) (.*)".r
   def fromId(id: Int): Severity = id match {
     case 1 => Info
     case 2 => Warning
