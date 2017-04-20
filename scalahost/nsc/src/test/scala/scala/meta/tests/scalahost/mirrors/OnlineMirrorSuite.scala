@@ -91,30 +91,24 @@ abstract class OnlineMirrorSuite extends FunSuite {
     }
   }
 
-  def database(code: String, expected: String): Unit = {
-    test(code) {
-      val database = computeDatabaseFromSnippet(code)
-      val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
-      val actual = database.toString.split(EOL).drop(1).mkString(EOL).replace(path, "<...>")
-      assert(expected === actual)
-    }
+  private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
+    val database = computeDatabaseFromSnippet(code)
+    val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
+    val payload = database.toString.split(EOL)
+    val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
+    section.mkString(EOL).replace(path, "<...>")
   }
 
   def names(code: String, expected: String): Unit = {
-    test(code) {
-      val database = computeDatabaseFromSnippet(code)
-      val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
-      val actual = database.toString.split(EOL).takeWhile(_ != "Denotations:").drop(1).dropRight(1).mkString(EOL).replace(path, "<...>")
-      assert(expected === actual)
-    }
+    test(code)(assert(expected === computeDatabaseSectionFromSnippet(code, "Names")))
+  }
+
+  def messages(code: String, expected: String): Unit = {
+    test(code)(assert(expected === computeDatabaseSectionFromSnippet(code, "Messages")))
   }
 
   def denotations(code: String, expected: String): Unit = {
-    test(code) {
-      val database = computeDatabaseFromSnippet(code)
-      val actual = database.toString.split(EOL).dropWhile(_ != "Denotations:").drop(1).mkString(EOL)
-      assert(expected === actual)
-    }
+    test(code)(assert(expected === computeDatabaseSectionFromSnippet(code, "Denotations")))
   }
 
   private def computeDatabaseFromMarkup(markup: String): List[m.Name] = {

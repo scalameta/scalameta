@@ -43,11 +43,7 @@ trait CommonMirror extends Mirror {
       case _ => unreachable(debug(tree.syntax, tree.structure))
     }
     val position = relevantPosition(tree)
-    val anchor: Anchor = {
-      // TODO: This is only going to work well if we embed file contents.
-      // The corresponding commit should land pretty soon.
-      ???
-    }
+    val anchor = position.toAnchor
     database.names.getOrElse(anchor, sys.error(s"semantic DB doesn't contain $tree"))
   }
 

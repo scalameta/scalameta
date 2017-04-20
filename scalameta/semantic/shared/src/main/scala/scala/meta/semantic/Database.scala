@@ -55,6 +55,7 @@ object Database {
   def fromFile(file: File): Database = {
     val databaseEntries = mutable.ListBuffer[URI]()
     def addFile(file: File): Unit = {
+      if (!file.getPath.endsWith(".semanticdb")) return
       databaseEntries += file.toURI
     }
     def addZipEntry(file: File, entry: ZipEntry): Unit = {
@@ -62,7 +63,8 @@ object Database {
       if (relativePath.startsWith("/")) relativePath = relativePath.substring(1)
       if (relativePath.endsWith("/")) return
       if (!relativePath.startsWith("META-INF/scalameta/")) return
-      databaseEntries += new URI("jar:" + file.toURI.toURL + "!" + entry.getName)
+      if (!relativePath.endsWith(".semanticdb")) return
+      databaseEntries += new URI("jar:" + file.toURI.toURL + "!" + relativePath)
     }
     def explore(file: File): Unit = {
       if (file.isDirectory) {
@@ -93,9 +95,7 @@ object Database {
       else sys.error(s"unsupported file: $file")
     }
     explore(databaseRoot)
-
-    val buf = mutable.ListBuffer[AttributedSource]()
-    Database(buf.toList)
+    Database(databaseEntries.map(AttributedSource.fromURI).toList)
   }
   def fromClasspath(classpath: String): Database = {
     val fragments = classpath.split(File.pathSeparatorChar).toList
@@ -115,13 +115,13 @@ object Database {
     val lines = mutable.ListBuffer[String]()
     def appendSection(name: String, section: List[String]): Unit = {
       if (section.nonEmpty) {
-        lines += (name + ":" + EOL)
-        lines ++= lines
-        lines += EOL
+        lines += (name + ":")
+        lines ++= section
+        lines += ""
       }
     }
 
-    lines.append(path.toString, "-" * path.toString.length, EOL)
+    lines.append(path.toString, "-" * path.toString.length, "")
 
     val content = path.slurp
     val s_names = names.toList.sortBy(_._1.start).map {
