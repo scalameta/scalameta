@@ -1,29 +1,27 @@
 package scala.meta.io
 
-import scala.meta.internal.io.PlatformIO._
+import java.io._
+import org.scalameta.data._
+import scala.meta.internal.io.PlatformIO
 
-// sealed abstract to ensure that AbsolutePath.apply constructor is used.
-sealed abstract class AbsolutePath(val absolute: String) extends Serializable {
-  def relative: String = absolute.stripPrefix(workingDirectory.absolute + fileSeparator)
-  override def hashCode(): Int = absolute.hashCode
-  override def equals(obj: scala.Any): Boolean = obj match {
-    case p: AbsolutePath => absolute == p.absolute
-    case _ => false
-  }
-  override def toString: String = s"AbsolutePath($absolute)"
-  @deprecated("Use .absolute instead", "1.8.0") // kept for source compabilitity with old Input.File/Address.File
-  def getAbsolutePath: String = absolute
-  def /(other: String): AbsolutePath =
-    new AbsolutePath(absolute + fileSeparator + other.stripPrefix(fileSeparator)) {}
+@data class AbsolutePath(underlying: String) {
+  override def toString: String = underlying
+
+  def toFile: File = new File(underlying)
+
+  @deprecated("Use .toString instead", "1.7.0") // kept for source compabilitity with old Input.File/Address.File
+  def getAbsolutePath: String = underlying
+
+  def relativize(path: AbsolutePath): RelativePath = PlatformIO.relativize(path, this)
 }
 
 object AbsolutePath {
-  def unapply(arg: AbsolutePath): Option[String] = Some(arg.absolute)
-  def apply(file: java.io.File): AbsolutePath =
-    new AbsolutePath(file.getAbsolutePath) {}
-  def apply(path: String): Option[AbsolutePath] =
-    if (isAbsolutePath(path)) Some(new AbsolutePath(path) {}) else None
-  def fromRelative(path: String): AbsolutePath = workingDirectory / path
-  def fromAbsoluteOrRelative(path: String): AbsolutePath =
-    apply(path).getOrElse(fromRelative(path))
+  def apply(file: File): AbsolutePath = {
+    AbsolutePath(file.getAbsolutePath)
+  }
+
+  def apply(path: String): AbsolutePath = {
+    if (PlatformIO.isAbsolutePath(path)) new AbsolutePath(path)
+    else sys.error(s"not an absolute path: $path")
+  }
 }

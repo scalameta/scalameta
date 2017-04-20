@@ -1,18 +1,21 @@
 package scala.meta.internal
 package scalahost
-package mirrors
+package databases
 
 import org.scalameta.unreachable
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import scala.{meta => m}
 import scala.tools.nsc.reporters.StoreReporter
 
-trait ReporterOps { self: OnlineMirror =>
+trait ReporterOps {
+  self: DatabaseOps =>
 
   implicit class XtensionCompilationUnitReporter(unit: g.CompilationUnit) {
     def hijackedMessages: Seq[m.Message] = {
       g.reporter match {
         case r: StoreReporter =>
-          val path = unit.source.toAbsolutePath
+          val path = unit.source.toRelativePath
           object Message {
             def unapply(info: r.Info): Option[(m.Anchor, Int, String)] =
               if (!info.pos.isRange) None

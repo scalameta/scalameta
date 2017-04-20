@@ -8,20 +8,14 @@ import scala.collection.immutable.Seq
 import org.scalameta.unreachable
 import org.scalameta.debug
 import scala.compat.Platform.EOL
-import scala.util.Properties
 import scala.meta.inputs._
 import scala.meta.internal.ast.Helpers._
 import scala.meta.prettyprinters._
 import scala.meta.semantic._
 
 trait CommonMirror extends Mirror {
-  def dialect: Dialect = {
-    val version = Properties.versionNumberString
-    if (version.startsWith("2.10")) scala.meta.dialects.Scala210
-    else if (version.startsWith("2.11")) scala.meta.dialects.Scala211
-    else if (version.startsWith("2.12")) scala.meta.dialects.Scala212
-    else sys.error(s"unsupported Scala version $version")
-  }
+  // NOTE: Implemented differently by online and offline mirrors
+  def dialect: Dialect
 
   // NOTE: Implemented differently by online and offline mirrors
   def sources: Seq[Source]
@@ -49,7 +43,11 @@ trait CommonMirror extends Mirror {
       case _ => unreachable(debug(tree.syntax, tree.structure))
     }
     val position = relevantPosition(tree)
-    val anchor = position.toAnchor
+    val anchor: Anchor = {
+      // TODO: This is only going to work well if we embed file contents.
+      // The corresponding commit should land pretty soon.
+      ???
+    }
     database.names.getOrElse(anchor, sys.error(s"semantic DB doesn't contain $tree"))
   }
 

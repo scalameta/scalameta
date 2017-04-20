@@ -4,23 +4,13 @@ package mirrors
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.collection.mutable
-import scala.compat.Platform.EOL
 import scala.tools.nsc.Global
 import scala.util.Properties
 import scala.{meta => m}
 import scala.meta.internal.semantic.mirrors.CommonMirror
+import scala.meta.internal.scalahost.databases.DatabaseOps
 
-class OnlineMirror(val global: Global)
-    extends CommonMirror
-    with AnchorOps
-    with DatabaseOps
-    with DenotationOps
-    with ParseOps
-    with ReporterOps
-    with SymbolOps
-    with ReflectionToolkit {
-
+class OnlineMirror(val global: Global) extends CommonMirror with DatabaseOps {
   override def toString: String = {
     val compiler = s"the Scala compiler ${Properties.versionString}"
     val settings = global.settings.toConciseString
@@ -42,24 +32,8 @@ class OnlineMirror(val global: Global)
     // NOTE: We rely on the fact that compilation units change monotonously,
     // i.e. that we can only add new compilation units, but not remove them.
     if (cachedDatabaseKey != recomputeCachedDatabaseKey()) {
-      val database = {
-        var unmappedNames = ""
-        val databases = units.map(unit => {
-          try unit.toDatabase
-          catch {
-            case ex: Exception if ex.getMessage.startsWith("Unmapped names in") =>
-              unmappedNames += (ex.getMessage + EOL)
-              m.Database()
-          }
-        })
-        if (unmappedNames != "") sys.error(unmappedNames.trim)
-        val names = databases.flatMap(_.names).toMap
-        val messages = databases.flatMap(_.messages)
-        val denotations = databases.flatMap(_.denotations).toMap
-        m.Database(names, messages, denotations)
-      }
       cachedDatabaseKey = recomputeCachedDatabaseKey()
-      cachedDatabase = database
+      cachedDatabase = m.Database(units.map(_.toAttributedSource))
     }
     cachedDatabase
   }

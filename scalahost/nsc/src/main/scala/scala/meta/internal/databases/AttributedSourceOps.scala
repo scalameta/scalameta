@@ -1,7 +1,9 @@
 package scala.meta.internal
 package scalahost
-package mirrors
+package databases
 
+import scala.{Seq => _}
+import scala.collection.immutable.Seq
 import scala.collection.mutable
 import scala.compat.Platform.EOL
 import scala.reflect.internal.util._
@@ -10,11 +12,12 @@ import scala.{meta => m}
 import scala.{meta => mf}
 import scala.meta.internal.ast.Helpers._
 
-trait DatabaseOps { self: OnlineMirror =>
+trait AttributedSourceOps {
+  self: DatabaseOps =>
 
-  implicit class XtensionCompilationUnitDatabase(unit: g.CompilationUnit) {
-    def toDatabase: m.Database = {
-      unit.cache.getOrElse("database", {
+  implicit class XtensionCompilationUnitAttributedSource(unit: g.CompilationUnit) {
+    def toAttributedSource: m.AttributedSource = {
+      unit.cache.getOrElse("attributedSource", {
         if (!g.settings.Yrangepos.value)
           sys.error("the compiler instance must have -Yrangepos enabled")
         if (g.useOffsetPositions) sys.error("The compiler instance must use range positions")
@@ -287,7 +290,7 @@ trait DatabaseOps { self: OnlineMirror =>
           traverser.traverse(unit.body)
         }
 
-        m.Database(names.toMap, unit.hijackedMessages, denotations.toMap)
+        m.AttributedSource(unit.source.toRelativePath, names.toMap, unit.hijackedMessages, denotations.toMap)
       })
     }
   }
@@ -301,7 +304,8 @@ trait DatabaseOps { self: OnlineMirror =>
   }
 
   private def syntaxAndPos(mtree: m.Tree): String = {
-    s"${mtree.pos.toAnchor.path.absolute} $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
+    val path = mtree.pos.toAnchor.path.absolutize(scala.meta.internal.io.PlatformIO.workingDirectory)
+    s"$path $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
   }
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {

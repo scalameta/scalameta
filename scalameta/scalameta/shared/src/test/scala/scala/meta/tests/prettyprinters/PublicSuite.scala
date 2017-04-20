@@ -3,6 +3,7 @@ package prettyprinters
 
 import org.scalatest._
 import scala.meta._
+import scala.meta.internal.io.PlatformIO
 
 class PublicSuite extends FunSuite {
   test("com.trueaccord.scalapb.GeneratedEnumCompanion.A") {
@@ -139,7 +140,7 @@ class PublicSuite extends FunSuite {
   test("scala.meta.inputs.Input.File.toString") {
     import java.io._
     import java.nio.charset.Charset
-    val path = AbsolutePath.fromRelative("hello.scala")
+    val path = RelativePath("hello.scala").absolutize(PlatformIO.workingDirectory)
     val input1 = Input.File(path, Charset.forName("latin1"))
     val input2 = Input.File(path, Charset.forName("UTF-8"))
     assert(input1.toString == """Input.File(new File("hello.scala"), Charset.forName("ISO-8859-1"))""")
@@ -201,8 +202,11 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.io.AbsolutePath.toString") {
-    val path = AbsolutePath.fromRelative("hello.scala")
-    assert(path.toString == s"""AbsolutePath(${path.absolute})""")
+    // TODO: come up with a platform-independent test
+  }
+
+  test("scala.meta.io.RelativePath.toString") {
+    // TODO: come up with a platform-independent test
   }
 
   test("scala.meta.parsers.Parse.toString") {
@@ -275,10 +279,12 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semantic.Anchor.toString") {
-    val file = "source.scala"
-    val path = AbsolutePath.fromRelative(file).absolute
-    val location = Anchor(file, 40, 42)
-    assert(location.toString === s"""$path@40..42""")
+    val anchor = Anchor(RelativePath("source.scala"), 40, 42)
+    assert(anchor.toString === s"""source.scala@40..42""")
+  }
+
+  test("scala.meta.semantic.AttributedSource.toString") {
+    // n/a
   }
 
   test("scala.meta.semantic.Completed.toString") {
@@ -303,11 +309,9 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semantic.Message.toString") {
-    val file = "source.scala"
-    val path = AbsolutePath.fromRelative(file).absolute
-    val location = Anchor(file, 40, 42)
-    val message = Message(location, Severity.Error, "does not compute")
-    assert(message.toString === s"[error] $path@40..42: does not compute")
+    val anchor = Anchor(RelativePath("source.scala"), 40, 42)
+    val message = Message(anchor, Severity.Error, "does not compute")
+    assert(message.toString === s"[error] source.scala@40..42: does not compute")
   }
 
   test("scala.meta.semantic.Mirror.toString") {
@@ -394,9 +398,8 @@ class PublicSuite extends FunSuite {
     val globalSelf @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Self("self")) = Symbol(syntaxGlobalSelf)
     assert(globalSelf.toString === syntaxGlobalSelf)
 
-    val file =  AbsolutePath.fromRelative("source.scala").absolute
-    val syntaxLocal = s"$file@40..42"
-    val local @ Symbol.Local(Anchor(AbsolutePath(path), 40, 42)) = Symbol(syntaxLocal)
+    val syntaxLocal = "source.scala@40..42"
+    val local @ Symbol.Local(Anchor(RelativePath("source.scala"), 40, 42)) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
 
     val syntaxMulti = "_root_.C#;_root.C."

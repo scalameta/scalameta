@@ -9,6 +9,7 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.common._
 import scala.meta.inputs._
+import scala.meta.io._
 
 @root trait Symbol extends Optional {
   def syntax: String
@@ -173,9 +174,9 @@ object Symbol {
         }
       }
       def parseLocal(): Symbol = {
-        val addrBuf = new StringBuilder
-        addrBuf += currChar
-        while (readChar() != '@') addrBuf += currChar
+        val pathBuf = new StringBuilder
+        pathBuf += currChar
+        while (readChar() != '@') pathBuf += currChar
 
         val startBuf = new StringBuilder
         while (Character.isDigit(readChar())) startBuf += currChar
@@ -187,7 +188,7 @@ object Symbol {
         val endBuf = new StringBuilder
         while (Character.isDigit(readChar())) endBuf += currChar
 
-        Symbol.Local(Anchor(addrBuf.toString, startBuf.toString.toInt, endBuf.toString.toInt))
+        Symbol.Local(Anchor(RelativePath(pathBuf.toString), startBuf.toString.toInt, endBuf.toString.toInt))
       }
 
       def parseMulti(symbols: List[Symbol]): Symbol = {

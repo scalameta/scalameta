@@ -3,14 +3,15 @@ syntax = "proto3";
 package scala.meta.internal.semantic.proto;
 
 message Database {
-  // a database is treated as a sequence of database files to accommodate
-  // - incremental compilation, a database file maps one-to-one with a compilation unit.
-  // - simple merging of two databases, the bytes of two semanticdbs can in
-  //   essence be concatenated.
-  repeated DatabaseFile files = 1;
+  // A database is treated as a sequence of attributed source files.
+  // This accommodates incremental compilation, because database entries
+  // map one-to-one to compilation units.
+  // This also makes merging databases trivial, as the bytes of two databases
+  // can be simply concatenated to produce a new database.
+  repeated AttributedSource sources = 1;
 }
 
-message DatabaseFile {
+message AttributedSource {
   reserved 1;
   string path = 5;
   repeated ResolvedName names = 2;

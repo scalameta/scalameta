@@ -1,12 +1,13 @@
 package scala.meta.internal
 package scalahost
-package mirrors
+package databases
 
 import scala.{meta => m}
 import scala.{meta => mf}
 import scala.reflect.internal.{Flags => gf}
 
-trait DenotationOps { self: OnlineMirror =>
+trait DenotationOps {
+  self: DatabaseOps =>
   import g._
 
   implicit class XtensionGSymbolMDenotation(gsym0: g.Symbol) {

@@ -42,47 +42,53 @@ abstract class OnlineMirrorSuite extends FunSuite {
   // checks that parse(binary(database)) == database
   def assertDatabaseSerializationIsBijective(database: m.Database): Unit = {
     val binary = database.toBinary
-    val database2 = m.Database.fromBinary(binary).get
+    val database2 = m.Database.fromBinary(binary)
     assert(database.toString === database2.toString)
   }
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
-    val javaFile = File.createTempFile("paradise", ".scala")
-    val writer = new PrintWriter(javaFile)
-    try writer.write(code)
-    finally writer.close()
+    val cwd = sys.props("user.dir")
+    try {
+      val javaFile = File.createTempFile("paradise", ".scala")
+      val writer = new PrintWriter(javaFile)
+      try writer.write(code)
+      finally writer.close()
 
-    val run = new g.Run
-    val abstractFile = AbstractFile.getFile(javaFile)
-    val sourceFile = g.getSourceFile(abstractFile)
-    val unit = new g.CompilationUnit(sourceFile)
-    run.compileUnits(List(unit), run.phaseNamed("terminal"))
+      sys.props("user.dir") = javaFile.getParentFile.getAbsolutePath
+      val run = new g.Run
+      val abstractFile = AbstractFile.getFile(javaFile)
+      val sourceFile = g.getSourceFile(abstractFile)
+      val unit = new g.CompilationUnit(sourceFile)
+      run.compileUnits(List(unit), run.phaseNamed("terminal"))
 
-    g.phase = run.parserPhase
-    g.globalPhase = run.parserPhase
-    val reporter = new StoreReporter()
-    g.reporter = reporter
-    unit.body = g.newUnitParser(unit).parse()
-    val errors = reporter.infos.filter(_.severity == reporter.ERROR)
-    errors.foreach(error => fail(s"scalac parse error: ${error.msg} at ${error.pos}"))
-
-    val packageobjectsPhase = run.phaseNamed("packageobjects")
-    val phases = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
-    reporter.reset()
-
-    phases.foreach(phase => {
-      g.phase = phase
-      g.globalPhase = phase
-      phase.asInstanceOf[g.GlobalPhase].apply(unit)
+      g.phase = run.parserPhase
+      g.globalPhase = run.parserPhase
+      val reporter = new StoreReporter()
+      g.reporter = reporter
+      unit.body = g.newUnitParser(unit).parse()
       val errors = reporter.infos.filter(_.severity == reporter.ERROR)
-      errors.foreach(error => fail(s"scalac ${phase.name} error: ${error.msg} at ${error.pos}"))
-    })
-    g.phase = run.phaseNamed("patmat")
-    g.globalPhase = run.phaseNamed("patmat")
+      errors.foreach(error => fail(s"scalac parse error: ${error.msg} at ${error.pos}"))
 
-    val database = unit.asInstanceOf[mirror.g.CompilationUnit].toDatabase
-    assertDatabaseSerializationIsBijective(database)
-    database
+      val packageobjectsPhase = run.phaseNamed("packageobjects")
+      val phases = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
+      reporter.reset()
+
+      phases.foreach(phase => {
+        g.phase = phase
+        g.globalPhase = phase
+        phase.asInstanceOf[g.GlobalPhase].apply(unit)
+        val errors = reporter.infos.filter(_.severity == reporter.ERROR)
+        errors.foreach(error => fail(s"scalac ${phase.name} error: ${error.msg} at ${error.pos}"))
+      })
+      g.phase = run.phaseNamed("patmat")
+      g.globalPhase = run.phaseNamed("patmat")
+
+      val database = m.Database(List(unit.asInstanceOf[mirror.g.CompilationUnit].toAttributedSource))
+      assertDatabaseSerializationIsBijective(database)
+      database
+    } finally {
+      sys.props("user.dir") = cwd
+    }
   }
 
   def database(code: String, expected: String): Unit = {

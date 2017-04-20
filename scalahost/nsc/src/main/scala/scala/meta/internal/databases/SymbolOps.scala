@@ -1,10 +1,11 @@
 package scala.meta.internal
 package scalahost
-package mirrors
+package databases
 
 import scala.{meta => m}
 
-trait SymbolOps { self: OnlineMirror =>
+trait SymbolOps {
+  self: DatabaseOps =>
 
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     def toSemantic: m.Symbol = {

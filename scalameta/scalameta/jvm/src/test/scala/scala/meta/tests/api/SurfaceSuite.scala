@@ -70,6 +70,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.internal
       |scala.meta.io
       |scala.meta.io.AbsolutePath
+      |scala.meta.io.RelativePath
       |scala.meta.parsers
       |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException
@@ -88,6 +89,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.quasiquotes.Unlift
       |scala.meta.semantic
       |scala.meta.semantic.Anchor
+      |scala.meta.semantic.AttributedSource
       |scala.meta.semantic.Completed
       |scala.meta.semantic.Completed.Error
       |scala.meta.semantic.Completed.Success
@@ -172,7 +174,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
       |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
       |* scala.meta.Type.pat: scala.meta.Pat.Type
-      |* scala.meta.inputs.Position.toAnchor: scala.meta.semantic.Anchor
       |* scala.meta.io.AbsolutePath.slurp: String
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).hasFlag(Long): Boolean
     """.trim.stripMargin)

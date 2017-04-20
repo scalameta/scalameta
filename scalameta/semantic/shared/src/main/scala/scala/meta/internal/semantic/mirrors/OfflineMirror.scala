@@ -7,10 +7,11 @@ import java.io._
 import org.scalameta.data._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.meta.internal.io.PlatformIO
 import scala.meta.parsers._
 import scala.meta.semantic._
 
-@data class OfflineMirror(classpath: String, sourcepath: String) extends CommonMirror with PathOps {
+@data class OfflineMirror(classpath: String, sourcepath: String) extends CommonMirror {
   private def failEmpty(what: String) =
     sys.error(
       s"$what must be non-empty. " +
@@ -20,22 +21,19 @@ import scala.meta.semantic._
   if (classpath == null || classpath == "") failEmpty("classpath")
   if (sourcepath == null || sourcepath == "") failEmpty("sourcepath")
 
+  lazy val dialect: Dialect = {
+    // TODO: This is only going to work well if we embed file contents.
+    // The corresponding commit should land pretty soon.
+    ???
+  }
+
   lazy val sources: Seq[Source] = {
-    sourcepath
-      .split(File.pathSeparator)
-      .flatMap(_.files.map(file => dialect(file).parse[Source].get))
-      .to[Seq]
+    // TODO: This is only going to work well if we embed file contents.
+    // The corresponding commit should land pretty soon.
+    ???
   }
 
   lazy val database: Database = {
-    val databaseFiles = classpath.paths
-      .flatMap(uri => {
-        val subfiles = new File(uri).listFiles
-        if (subfiles != null) subfiles.filter(_.getName == "semanticdb").toList
-        else Nil
-      })
-      .sortBy(_.getName)
-    val databases = databaseFiles.map(f => Database.fromFile(f).get)
-    databases.foldLeft(Database())(_ append _)
+    Database.fromClasspath(classpath)
   }
 }

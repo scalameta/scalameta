@@ -4,15 +4,6 @@ package semantic
 import scala.meta.inputs._
 
 private[meta] trait Api extends Flags {
-  implicit class XtensionPositionLocation(pos: Position) {
-    def toAnchor: Anchor = pos.input match {
-      case scala.meta.inputs.Input.File(path, _) =>
-        Anchor(path, pos.start.offset, pos.end.offset)
-      case other =>
-        sys.error(s"unsupported input " + other)
-    }
-  }
-
   implicit class XtensionSemanticEquality(tree1: Tree)(implicit m: Mirror) {
     def ===(tree2: Tree): Boolean = scala.meta.internal.semantic.equality.equals(tree1, tree2)
     def =!=(tree2: Tree): Boolean = !(tree1 === tree2)
@@ -28,11 +19,14 @@ private[meta] trait Api extends Flags {
 }
 
 private[meta] trait Aliases {
+  type Mirror = scala.meta.semantic.Mirror
+  val Mirror = scala.meta.semantic.Mirror
+
   type Database = scala.meta.semantic.Database
   val Database = scala.meta.semantic.Database
 
-  type Mirror = scala.meta.semantic.Mirror
-  val Mirror = scala.meta.semantic.Mirror
+  type AttributedSource = scala.meta.semantic.AttributedSource
+  val AttributedSource = scala.meta.semantic.AttributedSource
 
   type Anchor = scala.meta.semantic.Anchor
   val Anchor = scala.meta.semantic.Anchor
