@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 import scala.meta._
 import scala.meta.contrib._
 
-class DefnExtensionsTest extends FunSuite {
+class HasModTest extends FunSuite {
 
   test("Test hasMod(mod)") {
     assert(q"@foo final class Foo".hasMod(mod"final"))

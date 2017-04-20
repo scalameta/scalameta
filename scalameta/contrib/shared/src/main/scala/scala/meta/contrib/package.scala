@@ -5,7 +5,6 @@ import scala.meta.contrib.instances._
 
 package object contrib
   extends TreeExtensions
-  with DefnExtensions
   with SetExtensions
   with CommentExtensions
   with Equality
