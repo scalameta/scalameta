@@ -154,48 +154,48 @@ class DatabaseSuite extends OnlineMirrorSuite {
       |}
   """.trim.stripMargin,
     """
-      |_root_.foo. => PACKAGE
-      |_root_.foo.C1# => CLASS
-      |_root_.foo.C1#(p1) => TERMPARAM
-      |_root_.foo.C1#(p2) => VAL | TERMPARAM
-      |_root_.foo.C1#(p3) => VAR | TERMPARAM
-      |_root_.foo.C1#T1# => ABSTRACT | TYPE
-      |_root_.foo.C1#T2# => TYPE
-      |_root_.foo.C1#`<init>`()V. => SECONDARYCTOR
-      |_root_.foo.C1#`<init>`(III)V. => PRIMARYCTOR
-      |_root_.foo.C1#f1. => VAL
-      |_root_.foo.C1#f1.l1. => VAL
-      |_root_.foo.C1#f1.l2. => VAR
-      |_root_.foo.C1#f2. => VAR
-      |_root_.foo.C1#m1(I)I. => DEF
-      |_root_.foo.C1#m1(I)I.(x) => TERMPARAM
-      |_root_.foo.C1#m1(I)I.T# => TYPEPARAM
-      |_root_.foo.C1#m2()Lscala/Nothing;. => MACRO
-      |_root_.foo.C2# => ABSTRACT | CLASS
-      |_root_.foo.C2#`<init>`()V. => PRIMARYCTOR
-      |_root_.foo.C2#m3()I. => ABSTRACT | DEF
-      |_root_.foo.C2#m4()Lscala/Nothing;. => FINAL | DEF
-      |_root_.foo.C3# => SEALED | CLASS
-      |_root_.foo.C3#`<init>`()V. => PRIMARYCTOR
-      |_root_.foo.C3#m3()I. => DEF
-      |_root_.foo.C3#toString()Ljava/lang/String;. => DEF
-      |_root_.foo.M. => FINAL | OBJECT
-      |_root_.foo.M.C1# => CASE | CLASS
-      |_root_.foo.M.C1#`<init>`()V. => PRIMARYCTOR
-      |_root_.foo.M.C2# => CLASS
-      |_root_.foo.M.C2#[T] => COVARIANT | TYPEPARAM
-      |_root_.foo.M.C2#[U] => CONTRAVARIANT | TYPEPARAM
-      |_root_.foo.M.C2#`<init>`()V. => PRIMARYCTOR
-      |_root_.foo.M.i1()Lscala/Nothing;. => IMPLICIT | DEF
-      |_root_.foo.M.l1. => LAZY | VAL
-      |_root_.foo.T# => TRAIT
-      |_root_.foo.T#f1. => PRIVATE | VAL
-      |_root_.foo.T#f2. => PRIVATE | VAL
-      |_root_.foo.T#f3. => PRIVATE | VAL
-      |_root_.foo.T#f4. => PROTECTED | VAR
-      |_root_.foo.T#f5. => PROTECTED | VAR
-      |_root_.foo.T#f6. => PROTECTED | VAR
-      |_root_.foo.package. => PACKAGEOBJECT
+      |_root_.foo. => package foo
+      |_root_.foo.C1# => class C1
+      |_root_.foo.C1#(p1) => termparam p1: Int
+      |_root_.foo.C1#(p2) => val termparam p2: => Int
+      |_root_.foo.C1#(p3) => var termparam p3_=: (x$1: Int)Unit
+      |_root_.foo.C1#T1# => abstract type T1:  <: Int
+      |_root_.foo.C1#T2# => type T2: Int
+      |_root_.foo.C1#`<init>`()V. => secondaryctor <init>: ()foo.C1
+      |_root_.foo.C1#`<init>`(III)V. => primaryctor <init>: (p1: Int, p2: Int, p3: Int)foo.C1
+      |_root_.foo.C1#f1. => val f1: => Nothing
+      |_root_.foo.C1#f1.l1. => val l1: Nothing
+      |_root_.foo.C1#f1.l2. => var l2: Nothing
+      |_root_.foo.C1#f2. => var f2_=: (x$1: Nothing)Unit
+      |_root_.foo.C1#m1(I)I. => def m1: [T](x: Int)Int
+      |_root_.foo.C1#m1(I)I.(x) => termparam x: Int
+      |_root_.foo.C1#m1(I)I.T# => typeparam T
+      |_root_.foo.C1#m2()Lscala/Nothing;. => macro m2: => Nothing
+      |_root_.foo.C2# => abstract class C2
+      |_root_.foo.C2#`<init>`()V. => primaryctor <init>: ()foo.C2
+      |_root_.foo.C2#m3()I. => abstract def m3: => Int
+      |_root_.foo.C2#m4()Lscala/Nothing;. => final def m4: => Nothing
+      |_root_.foo.C3# => sealed class C3
+      |_root_.foo.C3#`<init>`()V. => primaryctor <init>: ()foo.C3
+      |_root_.foo.C3#m3()I. => def m3: => Int
+      |_root_.foo.C3#toString()Ljava/lang/String;. => def toString: ()String
+      |_root_.foo.M. => final object M
+      |_root_.foo.M.C1# => case class C1
+      |_root_.foo.M.C1#`<init>`()V. => primaryctor <init>: ()foo.M.C1
+      |_root_.foo.M.C2# => class C2
+      |_root_.foo.M.C2#[T] => covariant typeparam T
+      |_root_.foo.M.C2#[U] => contravariant typeparam U
+      |_root_.foo.M.C2#`<init>`()V. => primaryctor <init>: ()foo.M.C2[T,U]
+      |_root_.foo.M.i1()Lscala/Nothing;. => implicit def i1: => Nothing
+      |_root_.foo.M.l1. => lazy val l1: => Nothing
+      |_root_.foo.T# => trait T
+      |_root_.foo.T#f1. => private val f1: => Nothing
+      |_root_.foo.T#f2. => private val f2: Nothing
+      |_root_.foo.T#f3. => private val f3: => Nothing
+      |_root_.foo.T#f4. => protected var f4_=: (x$1: Nothing)Unit
+      |_root_.foo.T#f5. => protected var f5_=: (x$1: Nothing)Unit
+      |_root_.foo.T#f6. => protected var f6_=: (x$1: Nothing)Unit
+      |_root_.foo.package. => packageobject package
   """.trim.stripMargin
   )
 }

@@ -18,19 +18,19 @@ package object codecs {
           implicit val resolvedNameEncoder = new ProtoEncoder[(m.Anchor, m.Symbol), p.ResolvedName] {
             override def toProto(e: (m.Anchor, m.Symbol)): p.ResolvedName = e match {
               case (m.Anchor(_, start, end), symbol) =>
-                p.ResolvedName(Option(p.Range(start, end)), symbol.syntax)
+                p.ResolvedName(Some(p.Range(start, end)), symbol.syntax)
             }
           }
           implicit val messageEncoder = new ProtoEncoder[m.Message, p.Message] {
             override def toProto(e: m.Message): p.Message = e match {
               case m.Message(m.Anchor(_, start, end), sev, msg) =>
-                p.Message(Option(p.Range(start, end)), p.Message.Severity.fromValue(sev.id), msg)
+                p.Message(Some(p.Range(start, end)), p.Message.Severity.fromValue(sev.id), msg)
             }
           }
           implicit val symbolDenotationEncoder = new ProtoEncoder[(m.Symbol, m.Denotation), p.SymbolDenotation] {
             override def toProto(e: (m.Symbol, m.Denotation)): p.SymbolDenotation = e match {
               case (symbol, denotation) =>
-                p.SymbolDenotation(symbol.syntax, Option(p.Denotation(denotation.flags)))
+                p.SymbolDenotation(symbol.syntax, Some(p.Denotation(denotation.flags, denotation.name, denotation.info)))
             }
           }
           p.AttributedSource(path.toString,
@@ -54,8 +54,8 @@ package object codecs {
           }
           implicit val symbolDenotationEncoder = new ProtoDecoder[(m.Symbol, m.Denotation), p.SymbolDenotation] {
             override def fromProto(e: p.SymbolDenotation): (m.Symbol, m.Denotation) = e match {
-              case p.SymbolDenotation(m.Symbol(symbol), Some(p.Denotation(flags))) =>
-                symbol -> m.Denotation(flags)
+              case p.SymbolDenotation(m.Symbol(symbol), Some(p.Denotation(flags, name, info))) =>
+                symbol -> m.Denotation(flags, name, info)
             }
           }
           m.AttributedSource(AbsolutePath(path),

@@ -4,10 +4,14 @@ package semantic
 import org.scalameta.adt._
 import org.scalameta.data._
 
-@data class Denotation(flags: Long) extends HasFlags {
+@data class Denotation(flags: Long, name: String, info: String) extends HasFlags {
   def hasFlag(flag: Long) = (flags & flag) == flag
 
-  def syntax = {
+  def syntax = s"$flagSyntax $name" + (if (info != "") ": " + info else "")
+  private def flagSyntax: String = flagStructure.replace(" | ", " ").toLowerCase
+
+  def structure = s"""Denotation($flagStructure, "$name", "$info")"""
+  private def flagStructure: String = {
     val buf = new StringBuilder
     def append(flag: String) = {
       if (buf.isEmpty) buf ++= flag

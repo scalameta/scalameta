@@ -71,9 +71,21 @@ trait DenotationOps {
       flags
     }
 
+    private def flags: Long = {
+      definitionFlags | accessQualifierFlags | otherFlags
+    }
+
+    private def name: String = {
+      gsym.decodedName.toString
+    }
+
+    private def info: String = {
+      if (gsym.isClass || gsym.isModule) ""
+      else gsym.info.toString
+    }
+
     def toDenotation: m.Denotation = {
-      val flags = definitionFlags | accessQualifierFlags | otherFlags
-      m.Denotation(flags)
+      m.Denotation(flags, name, info)
     }
   }
 }

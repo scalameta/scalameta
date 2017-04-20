@@ -22,8 +22,9 @@ private[meta] trait Api extends Flags {
     def symbol: Symbol = m.symbol(ref).get
   }
 
-  implicit class XtensionSymbolFlags(sym: Symbol)(implicit m: Mirror) extends HasFlags {
+  implicit class XtensionSymbolDenotation(sym: Symbol)(implicit m: Mirror) extends HasFlags {
     def hasFlag(flag: Long): Boolean = (m.denot(sym).get.flags & flag) == flag
+    def info: String = m.denot(sym).get.info
   }
 }
 

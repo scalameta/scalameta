@@ -47,4 +47,6 @@ message SymbolDenotation {
 
 message Denotation {
   int64 flags = 1;
+  string name = 2;
+  string info = 3;
 }
