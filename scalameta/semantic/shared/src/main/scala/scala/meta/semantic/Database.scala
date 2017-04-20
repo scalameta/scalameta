@@ -36,11 +36,7 @@ import scala.meta.internal.semantic.{proto => p}
   def writeToFile(dir: File): Unit = {
     if (dir.exists) sys.error(s"implementation restriction: can't write a semantic database to an existing file")
     val databaseRoot = Database.locateInClasspath(dir)
-    sources.foreach(source => {
-      val databaseFile = new File(source.locateInDatabase(databaseRoot))
-      databaseFile.getParentFile().mkdirs()
-      source.writeToFile(databaseFile)
-    })
+    sources.foreach(source => source.writeToFile(new File(source.locateInDatabase(databaseRoot))))
   }
 }
 
@@ -154,6 +150,7 @@ object Database {
   def toBinary: Array[Byte] = this.toProto[p.AttributedSource].toByteArray
 
   def writeToFile(file: File): Unit = {
+    file.getParentFile.mkdirs()
     val fos = new FileOutputStream(file)
     try fos.write(this.toProto[p.AttributedSource].toByteArray)
     finally { fos.close() }
