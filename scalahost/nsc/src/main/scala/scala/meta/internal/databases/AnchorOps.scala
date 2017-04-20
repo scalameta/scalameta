@@ -8,8 +8,7 @@ import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSource
 import scala.reflect.io.{AbstractFile => GFile, PlainFile => GPlainFile}
 import scala.meta.internal.io.PlatformIO
 
-trait AnchorOps {
-  self: DatabaseOps =>
+trait AnchorOps { self: DatabaseOps =>
 
   implicit class XtensionGSourceFileLocation(gsource: GSourceFile) {
     def toAbsolutePath: m.AbsolutePath = gsource.file.toAbsolutePath

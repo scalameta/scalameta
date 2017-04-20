@@ -6,8 +6,7 @@ import scala.{meta => m}
 import scala.{meta => mf}
 import scala.reflect.internal.{Flags => gf}
 
-trait DenotationOps {
-  self: DatabaseOps =>
+trait DenotationOps { self: DatabaseOps =>
   import g._
 
   implicit class XtensionGSymbolMDenotation(gsym0: g.Symbol) {
@@ -21,21 +20,26 @@ trait DenotationOps {
 
     private def definitionFlags: Long = {
       var flags = 0l
-      def maybeValOrVar = (gsym.isTerm && flags == 0l) || (gsym.hasFlag(gf.PARAMACCESSOR) && flags == mf.TERMPARAM)
-      if (gsym.isMethod && !gsym.isConstructor && !gsym.hasFlag(gf.MACRO) && !gsym.hasFlag(gf.ACCESSOR) && !gsym.hasFlag(gf.PARAMACCESSOR)) flags |= mf.DEF
+      def maybeValOrVar =
+        (gsym.isTerm && flags == 0l) || (gsym.hasFlag(gf.PARAMACCESSOR) && flags == mf.TERMPARAM)
+      if (gsym.isMethod && !gsym.isConstructor && !gsym.hasFlag(gf.MACRO) && !gsym.hasFlag(
+            gf.ACCESSOR) && !gsym.hasFlag(gf.PARAMACCESSOR)) flags |= mf.DEF
       if (gsym.isPrimaryConstructor) flags |= mf.PRIMARYCTOR
       if (gsym.isConstructor && !gsym.isPrimaryConstructor) flags |= mf.SECONDARYCTOR
       if (gsym.hasFlag(gf.MACRO)) flags |= mf.MACRO
       if (gsym.isType && !gsym.isClass && !gsym.hasFlag(gf.PARAM)) flags |= mf.TYPE
-      if (gsym.isTerm && (gsym.hasFlag(gf.PARAM) || gsym.hasFlag(gf.PARAMACCESSOR))) flags |= mf.TERMPARAM
+      if (gsym.isTerm && (gsym.hasFlag(gf.PARAM) || gsym.hasFlag(gf.PARAMACCESSOR)))
+        flags |= mf.TERMPARAM
       if (gsym.isType && gsym.hasFlag(gf.PARAM)) flags |= mf.TYPEPARAM
       if (isObject) flags |= mf.OBJECT
       if (gsym.hasFlag(gf.PACKAGE)) flags |= mf.PACKAGE
       if (gsym.isModule && gsym.name == nme.PACKAGE) flags |= mf.PACKAGEOBJECT
       if (gsym.isClass && !gsym.hasFlag(gf.TRAIT)) flags |= mf.CLASS
       if (gsym.isClass && gsym.hasFlag(gf.TRAIT)) flags |= mf.TRAIT
-      if (maybeValOrVar && (gsym.hasFlag(gf.MUTABLE) || nme.isSetterName(gsym.name))) flags |= mf.VAR
-      if (maybeValOrVar && !(gsym.hasFlag(gf.LOCAL) && gsym.hasFlag(gf.PARAMACCESSOR))) flags |= mf.VAL
+      if (maybeValOrVar && (gsym.hasFlag(gf.MUTABLE) || nme.isSetterName(gsym.name)))
+        flags |= mf.VAR
+      if (maybeValOrVar && !(gsym.hasFlag(gf.LOCAL) && gsym.hasFlag(gf.PARAMACCESSOR)))
+        flags |= mf.VAL
       flags
     }
 
@@ -50,7 +54,8 @@ trait DenotationOps {
         if (gsym.hasFlag(gf.PRIVATE) && !gsym.hasFlag(gf.PARAMACCESSOR)) flags |= mf.PRIVATE
         // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
         // so we need to account for that!
-        if (gsym.hasAccessBoundary && gpriv != g.NoSymbol && !gsym.hasFlag(gf.PROTECTED)) flags |= mf.PRIVATE
+        if (gsym.hasAccessBoundary && gpriv != g.NoSymbol && !gsym.hasFlag(gf.PROTECTED))
+          flags |= mf.PRIVATE
       }
       flags
     }
@@ -58,7 +63,8 @@ trait DenotationOps {
     private def otherFlags: Long = {
       var flags = 0l
       val isDeclaredDeferred = gsym.hasFlag(gf.DEFERRED) && !gsym.hasFlag(gf.PARAM)
-      val isDeclaredAbstract = (gsym.hasFlag(gf.ABSTRACT) && !gsym.hasFlag(gf.TRAIT)) || gsym.hasFlag(gf.ABSOVERRIDE)
+      val isDeclaredAbstract = (gsym.hasFlag(gf.ABSTRACT) && !gsym.hasFlag(gf.TRAIT)) || gsym
+          .hasFlag(gf.ABSOVERRIDE)
       if (isDeclaredDeferred || isDeclaredAbstract) flags |= mf.ABSTRACT
       if ((gsym.hasFlag(gf.FINAL) && !gsym.hasFlag(gf.PACKAGE)) || isObject) flags |= mf.FINAL
       if (gsym.hasFlag(gf.SEALED)) flags |= mf.SEALED

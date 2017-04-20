@@ -12,8 +12,7 @@ import scala.{meta => m}
 import scala.{meta => mf}
 import scala.meta.internal.ast.Helpers._
 
-trait AttributedSourceOps {
-  self: DatabaseOps =>
+trait AttributedSourceOps { self: DatabaseOps =>
 
   implicit class XtensionCompilationUnitAttributedSource(unit: g.CompilationUnit) {
     def toAttributedSource: m.AttributedSource = {
@@ -290,7 +289,10 @@ trait AttributedSourceOps {
           traverser.traverse(unit.body)
         }
 
-        m.AttributedSource(unit.source.toAbsolutePath, names.toMap, unit.hijackedMessages, denotations.toMap)
+        m.AttributedSource(unit.source.toAbsolutePath,
+                           names.toMap,
+                           unit.hijackedMessages,
+                           denotations.toMap)
       })
     }
   }

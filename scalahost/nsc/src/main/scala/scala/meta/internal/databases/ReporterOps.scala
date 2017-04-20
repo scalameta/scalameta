@@ -8,8 +8,7 @@ import scala.collection.immutable.Seq
 import scala.{meta => m}
 import scala.tools.nsc.reporters.StoreReporter
 
-trait ReporterOps {
-  self: DatabaseOps =>
+trait ReporterOps { self: DatabaseOps =>
 
   implicit class XtensionCompilationUnitReporter(unit: g.CompilationUnit) {
     def hijackedMessages: Seq[m.Message] = {

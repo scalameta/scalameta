@@ -9,8 +9,7 @@ import scala.{meta => m}
 import scala.meta.internal.io.PlatformIO.workingDirectory
 import scala.meta.internal.scalahost.databases.DatabaseOps
 
-trait ScalahostPipeline extends DatabaseOps {
-  self: ScalahostPlugin =>
+trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
 
   object ScalahostComponent extends PluginComponent {
     val global: ScalahostPipeline.this.global.type = ScalahostPipeline.this.global
@@ -21,7 +20,9 @@ trait ScalahostPipeline extends DatabaseOps {
     def newPhase(_prev: Phase) = new ScalahostPhase(_prev)
 
     class ScalahostPhase(prev: Phase) extends StdPhase(prev) {
-      val outputDir = global.settings.outputDirs.getSingleOutput.map(_.file).getOrElse(new File(global.settings.d.value))
+      val outputDir = global.settings.outputDirs.getSingleOutput
+        .map(_.file)
+        .getOrElse(new File(global.settings.d.value))
       val databaseRoot = new File(m.Database.locateInClasspath(outputDir))
 
       override def apply(unit: g.CompilationUnit): Unit = {
@@ -41,8 +42,12 @@ trait ScalahostPipeline extends DatabaseOps {
         }
         collectDatabaseFiles(databaseRoot)
         oldDatabaseFiles.foreach(oldDatabaseFile => {
-          val oldScalaPath = m.AbsolutePath(new File(oldDatabaseFile.getAbsolutePath.stripSuffix(".semanticdb") + ".scala"))
-          val oldScalaFile = oldScalaPath.relativize(m.AbsolutePath(databaseRoot)).absolutize(workingDirectory).toFile
+          val oldScalaPath = m.AbsolutePath(
+            new File(oldDatabaseFile.getAbsolutePath.stripSuffix(".semanticdb") + ".scala"))
+          val oldScalaFile = oldScalaPath
+            .relativize(m.AbsolutePath(databaseRoot))
+            .absolutize(workingDirectory)
+            .toFile
           if (!oldScalaFile.exists) {
             def cleanupUpwards(file: File): Unit = {
               if (file.isFile) {

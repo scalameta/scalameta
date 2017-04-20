@@ -6,8 +6,7 @@ import scala.util.Properties
 import scala.{meta => m}
 import scala.reflect.io.{PlainFile => GPlainFile}
 
-trait ParseOps {
-  self: DatabaseOps =>
+trait ParseOps { self: DatabaseOps =>
 
   def dialect: m.Dialect = {
     val version = Properties.versionNumberString

@@ -3,8 +3,7 @@ package scalahost
 
 import scala.meta.internal.scalahost.compilers.ScalahostReporter
 
-trait HijackReporter {
-  self: ScalahostPlugin =>
+trait HijackReporter { self: ScalahostPlugin =>
 
   def hijackReporter(): Unit = {
     g.reporter match {

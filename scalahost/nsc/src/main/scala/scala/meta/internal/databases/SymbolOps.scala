@@ -4,8 +4,7 @@ package databases
 
 import scala.{meta => m}
 
-trait SymbolOps {
-  self: DatabaseOps =>
+trait SymbolOps { self: DatabaseOps =>
 
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     def toSemantic: m.Symbol = {
@@ -54,7 +53,8 @@ trait SymbolOps {
           "(" + params.map(param => encode(param.info)).mkString("") + ")" + encode(jvmRet)
         }
 
-        if (sym.isMethod && !sym.asMethod.isGetter) m.Signature.Method(name(sym), jvmSignature(sym.asMethod))
+        if (sym.isMethod && !sym.asMethod.isGetter)
+          m.Signature.Method(name(sym), jvmSignature(sym.asMethod))
         else if (sym.isTypeParameter) m.Signature.TypeParameter(name(sym))
         else if (sym.isValueParameter || sym.isParamAccessor) m.Signature.TermParameter(name(sym))
         else if (sym.owner.thisSym == sym) m.Signature.Self(name(sym))

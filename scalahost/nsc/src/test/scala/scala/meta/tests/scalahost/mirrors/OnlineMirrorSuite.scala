@@ -83,7 +83,8 @@ abstract class OnlineMirrorSuite extends FunSuite {
       g.phase = run.phaseNamed("patmat")
       g.globalPhase = run.phaseNamed("patmat")
 
-      val database = m.Database(List(unit.asInstanceOf[mirror.g.CompilationUnit].toAttributedSource))
+      val database =
+        m.Database(List(unit.asInstanceOf[mirror.g.CompilationUnit].toAttributedSource))
       assertDatabaseSerializationIsBijective(database)
       database
     } finally {
