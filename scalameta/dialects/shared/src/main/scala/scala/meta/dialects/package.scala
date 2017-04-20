@@ -147,14 +147,11 @@ package object dialects {
   )
 
   implicit val Scala212 = Scala211.copy(
-    allowLiteralTypes = false, // Scheduled to be included in 2.12.2
-    allowTrailingCommas = false // Scheduled to be included in 2.12.2
-  )
-
-  implicit val Typelevel212 = Scala212.copy(
     allowLiteralTypes = true,
     allowTrailingCommas = true
   )
+
+  implicit val Typelevel212 = Scala212
 
   implicit val Paradise212 = Scala212.copy(
     allowInlineIdents = true,
