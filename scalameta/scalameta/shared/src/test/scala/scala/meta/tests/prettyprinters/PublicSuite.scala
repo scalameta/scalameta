@@ -301,8 +301,8 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semantic.Denotation.toString") {
-    val denotation = Denotation(PRIVATE | CASE | CLASS)
-    assert(denotation.toString === "PRIVATE | CASE | CLASS")
+    val denotation = Denotation(PRIVATE | CASE | CLASS, "C", "")
+    assert(denotation.toString === "private case class C")
   }
 
   test("scala.meta.semantic.Database.toString") {
