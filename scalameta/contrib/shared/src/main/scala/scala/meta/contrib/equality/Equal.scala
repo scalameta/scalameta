@@ -7,7 +7,5 @@ package scala.meta.contrib.equality
   * Inspired by cats.Eq and scalaz.Equal.
   */
 trait Equal[A] {
-  @deprecated("Use isEqual instead", "1.7.0")
-  def equal(a: A, b: A): Boolean = isEqual(a, b)
   def isEqual(a: A, b: A): Boolean
 }

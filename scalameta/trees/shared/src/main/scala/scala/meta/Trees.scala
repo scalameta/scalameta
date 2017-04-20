@@ -300,19 +300,6 @@ object Pat {
 }
 object Lit {
   def unapply(arg: Lit): Option[scala.Any] = Some(arg.value)
-  @deprecated("Use Lit.Null instead", "1.7.0")    def apply(x: scala.Null): Lit = Lit.Null(x)
-  @deprecated("Use Lit.Int instead", "1.7.0")     def apply(x: scala.Int): Lit = Lit.Int(x)
-  @deprecated("Use Lit.Double instead", "1.7.0")  def apply(x: scala.Double): Lit = Lit.Double(x)
-  @deprecated("Use Lit.Float instead", "1.7.0")   def apply(x: scala.Float): Lit = Lit.Float(x)
-  @deprecated("Use Lit.Byte instead", "1.7.0")    def apply(x: scala.Byte): Lit = Lit.Byte(x)
-  @deprecated("Use Lit.Short instead", "1.7.0")   def apply(x: scala.Short): Lit = Lit.Short(x)
-  @deprecated("Use Lit.Char instead", "1.7.0")    def apply(x: scala.Char): Lit = Lit.Char(x)
-  @deprecated("Use Lit.Long instead", "1.7.0")    def apply(x: scala.Long): Lit = Lit.Long(x)
-  @deprecated("Use Lit.Boolean instead", "1.7.0") def apply(x: scala.Boolean): Lit = Lit.Boolean(x)
-  @deprecated("Use Lit.Unit instead", "1.7.0")    def apply(x: scala.Unit): Lit = Lit.Unit(x)
-  @deprecated("Use Lit.String instead", "1.7.0")  def apply(x: scala.Predef.String): Lit = Lit.String(x)
-  @deprecated("Use Lit.Symbol instead", "1.7.0")  def apply(x: scala.Symbol): Lit = Lit.Symbol(x)
-
   @ast class Null(value: scala.Any) extends Lit
   @ast class Int(value: scala.Int) extends Lit
   // NOTE: Lit.Double/Float are strings to work the same across JS/JVM. Example:

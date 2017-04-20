@@ -53,8 +53,6 @@ object Input {
   }
 
   @data class File(path: AbsolutePath, charset: Charset) extends Input {
-    @deprecated("Use .path instead", "1.7.0")
-    def file: java.io.File = path.toFile
     lazy val chars = path.slurp.toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
     override def toString = {
