@@ -43,13 +43,13 @@ package object codecs {
           implicit val resolvedNameDecoder = new ProtoDecoder[(m.Anchor, m.Symbol), p.ResolvedName] {
             override def fromProto(e: p.ResolvedName): (m.Anchor, m.Symbol) = e match {
               case p.ResolvedName(Some(p.Range(start, end)), m.Symbol(symbol)) =>
-                m.Anchor(RelativePath(path), start, end) -> symbol
+                m.Anchor(AbsolutePath(path), start, end) -> symbol
             }
           }
           implicit val messageDecoder = new ProtoDecoder[m.Message, p.Message] {
             override def fromProto(e: p.Message): m.Message = e match {
               case p.Message(Some(p.Range(start, end)), sev, message) =>
-                m.Message(m.Anchor(RelativePath(path), start, end), m.Severity.fromId(sev.value), message)
+                m.Message(m.Anchor(AbsolutePath(path), start, end), m.Severity.fromId(sev.value), message)
             }
           }
           implicit val symbolDenotationEncoder = new ProtoDecoder[(m.Symbol, m.Denotation), p.SymbolDenotation] {
@@ -58,7 +58,7 @@ package object codecs {
                 symbol -> m.Denotation(flags)
             }
           }
-          m.AttributedSource(RelativePath(path),
+          m.AttributedSource(AbsolutePath(path),
                              names.map(_.toMeta[(m.Anchor, m.Symbol)]).toMap,
                              messages.map(_.toMeta[m.Message]).toList,
                              denotations.map(_.toMeta[(m.Symbol, m.Denotation)]).toMap)

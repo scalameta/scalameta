@@ -188,7 +188,7 @@ object Symbol {
         val endBuf = new StringBuilder
         while (Character.isDigit(readChar())) endBuf += currChar
 
-        Symbol.Local(Anchor(RelativePath(pathBuf.toString), startBuf.toString.toInt, endBuf.toString.toInt))
+        Symbol.Local(Anchor(AbsolutePath(pathBuf.toString), startBuf.toString.toInt, endBuf.toString.toInt))
       }
 
       def parseMulti(symbols: List[Symbol]): Symbol = {

@@ -15,7 +15,7 @@ trait ReporterOps {
     def hijackedMessages: Seq[m.Message] = {
       g.reporter match {
         case r: StoreReporter =>
-          val path = unit.source.toRelativePath
+          val path = unit.source.toAbsolutePath
           object Message {
             def unapply(info: r.Info): Option[(m.Anchor, Int, String)] =
               if (!info.pos.isRange) None

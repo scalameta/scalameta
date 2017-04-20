@@ -290,7 +290,7 @@ trait AttributedSourceOps {
           traverser.traverse(unit.body)
         }
 
-        m.AttributedSource(unit.source.toRelativePath, names.toMap, unit.hijackedMessages, denotations.toMap)
+        m.AttributedSource(unit.source.toAbsolutePath, names.toMap, unit.hijackedMessages, denotations.toMap)
       })
     }
   }
@@ -304,7 +304,7 @@ trait AttributedSourceOps {
   }
 
   private def syntaxAndPos(mtree: m.Tree): String = {
-    val path = mtree.pos.toAnchor.path.absolutize(scala.meta.internal.io.PlatformIO.workingDirectory)
+    val path = mtree.pos.toAnchor.path
     s"$path $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
   }
 

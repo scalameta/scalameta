@@ -26,7 +26,7 @@ trait ScalahostPipeline extends DatabaseOps {
 
       override def apply(unit: g.CompilationUnit): Unit = {
         val attributedSource = unit.toAttributedSource
-        val databaseFile = new File(m.AttributedSource.locateInDatabase(databaseRoot.toURI, attributedSource.path))
+        val databaseFile = new File(attributedSource.locateInDatabase(databaseRoot.toURI))
         attributedSource.writeToFile(databaseFile)
       }
 

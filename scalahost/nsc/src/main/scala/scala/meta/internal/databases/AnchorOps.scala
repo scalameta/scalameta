@@ -11,23 +11,17 @@ import scala.meta.internal.io.PlatformIO
 trait AnchorOps {
   self: DatabaseOps =>
 
-  private def toRelativePath(jfile: JFile): m.RelativePath = {
-    // NOTE: This is an extremely important line that underpins
-    // the current strategy of extraction of semantic databases.
-    //
-    // In order to convert from absolute paths used by scalac compilations
-    // into relative paths used by semantic databases, we strip off
-    // the current working directory of the JVM process that runs the compiler.
-    m.AbsolutePath(jfile).relativize(PlatformIO.workingDirectory)
+  private def toAbsolutePath(jfile: JFile): m.AbsolutePath = {
+    m.AbsolutePath(jfile)
   }
 
   implicit class XtensionGSourceFileLocation(gsource: GSourceFile) {
-    def toRelativePath: m.RelativePath = gsource.file.toRelativePath
+    def toAbsolutePath: m.AbsolutePath = gsource.file.toAbsolutePath
   }
 
   implicit class XtensionGFileAddr(gfile: GFile) {
-    def toRelativePath: m.RelativePath = gfile match {
-      case gfile: GPlainFile => self.toRelativePath(gfile.file)
+    def toAbsolutePath: m.AbsolutePath = gfile match {
+      case gfile: GPlainFile => self.toAbsolutePath(gfile.file)
       case other => sys.error(s"unsupported file " + other)
     }
   }
@@ -35,7 +29,7 @@ trait AnchorOps {
   implicit class XtensionMPositionAnchor(pos: m.Position) {
     def toAnchor: m.Anchor = pos.input match {
       case scala.meta.inputs.Input.File(path, _) =>
-        m.Anchor(toRelativePath(path.toFile), pos.start.offset, pos.end.offset)
+        m.Anchor(toAbsolutePath(path.toFile), pos.start.offset, pos.end.offset)
       case other =>
         sys.error(s"unsupported input " + other)
     }
@@ -44,7 +38,7 @@ trait AnchorOps {
   implicit class XtensionGPositionAnchor(pos: GPosition) {
     def toAnchor: m.Anchor = {
       assert(pos.isRange)
-      m.Anchor(pos.source.toRelativePath, pos.start, pos.end)
+      m.Anchor(pos.source.toAbsolutePath, pos.start, pos.end)
     }
   }
 }

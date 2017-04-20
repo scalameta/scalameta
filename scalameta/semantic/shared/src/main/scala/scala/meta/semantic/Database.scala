@@ -37,7 +37,7 @@ import scala.meta.internal.semantic.{proto => p}
     if (dir.exists) sys.error(s"implementation restriction: can't write a semantic database to an existing file")
     val databaseRoot = Database.locateInClasspath(dir)
     sources.foreach(source => {
-      val databaseFile = new File(AttributedSource.locateInDatabase(databaseRoot, source.path))
+      val databaseFile = new File(source.locateInDatabase(databaseRoot))
       databaseFile.getParentFile().mkdirs()
       source.writeToFile(databaseFile)
     })
@@ -108,7 +108,7 @@ object Database {
 }
 
 @data class AttributedSource(
-  path: RelativePath,
+  path: AbsolutePath,
   names: Map[Anchor, Symbol],
   messages: Seq[Message],
   denotations: Map[Symbol, Denotation]
@@ -127,11 +127,7 @@ object Database {
 
     lines.append(path.toString, "-" * path.toString.length, EOL)
 
-    val content: String = {
-      // TODO: This is only going to work well if we embed file contents.
-      // The corresponding commit should land pretty soon.
-      ???
-    }
+    val content = path.slurp
     val s_names = names.toList.sortBy(_._1.start).map {
       case ((Anchor(_, start, end), symbol)) =>
         val snippet = content.substring(start, end)
@@ -162,17 +158,18 @@ object Database {
     try fos.write(this.toProto[p.AttributedSource].toByteArray)
     finally { fos.close() }
   }
-}
 
-object AttributedSource {
-  private[meta] def locateInDatabase(databaseRoot: URI, relativePath: RelativePath): URI = {
+  private[meta] def locateInDatabase(databaseRoot: URI): URI = {
     var result = databaseRoot.toString
     if (!result.endsWith("/")) result += "/"
-    result += relativePath.toString
+    // TODO: This relativization is unsound and should be removed.
+    result += path.relativize(PlatformIO.workingDirectory).toString
     result = result.stripSuffix(".scala") + ".semanticdb"
     new URI(result)
   }
+}
 
+object AttributedSource {
   def fromBinary(bytes: Array[Byte]): AttributedSource = {
     p.AttributedSource.parseFrom(bytes).toMeta[AttributedSource]
   }

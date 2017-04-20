@@ -279,8 +279,9 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semantic.Anchor.toString") {
-    val anchor = Anchor(RelativePath("source.scala"), 40, 42)
-    assert(anchor.toString === s"""source.scala@40..42""")
+    val path = RelativePath("hello.scala").absolutize(PlatformIO.workingDirectory)
+    val anchor = Anchor(path, 40, 42)
+    assert(anchor.toString === s"""$path@40..42""")
   }
 
   test("scala.meta.semantic.AttributedSource.toString") {
@@ -309,9 +310,10 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semantic.Message.toString") {
-    val anchor = Anchor(RelativePath("source.scala"), 40, 42)
+    val path = RelativePath("hello.scala").absolutize(PlatformIO.workingDirectory)
+    val anchor = Anchor(path, 40, 42)
     val message = Message(anchor, Severity.Error, "does not compute")
-    assert(message.toString === s"[error] source.scala@40..42: does not compute")
+    assert(message.toString === s"[error] $path@40..42: does not compute")
   }
 
   test("scala.meta.semantic.Mirror.toString") {
@@ -398,8 +400,8 @@ class PublicSuite extends FunSuite {
     val globalSelf @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Self("self")) = Symbol(syntaxGlobalSelf)
     assert(globalSelf.toString === syntaxGlobalSelf)
 
-    val syntaxLocal = "source.scala@40..42"
-    val local @ Symbol.Local(Anchor(RelativePath("source.scala"), 40, 42)) = Symbol(syntaxLocal)
+    val syntaxLocal = "/source.scala@40..42"
+    val local @ Symbol.Local(Anchor(AbsolutePath("/source.scala"), 40, 42)) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
 
     val syntaxMulti = "_root_.C#;_root.C."
