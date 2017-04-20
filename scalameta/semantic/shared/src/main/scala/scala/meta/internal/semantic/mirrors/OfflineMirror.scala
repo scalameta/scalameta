@@ -7,6 +7,7 @@ import java.io._
 import org.scalameta.data._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.collection.mutable
 import scala.meta.internal.io.PlatformIO
 import scala.meta.parsers._
 import scala.meta.semantic._
@@ -22,15 +23,31 @@ import scala.meta.semantic._
   if (sourcepath == null || sourcepath == "") failEmpty("sourcepath")
 
   lazy val dialect: Dialect = {
-    // TODO: This is only going to work well if we embed file contents.
-    // The corresponding commit should land pretty soon.
-    ???
+    // TODO: Make this configurable (either implicitly by storing in the semantic db
+    // or explicitly by asking for it, maybe as an implicit parameter, in the constructor of OfflineMirror)
+    scala.meta.dialects.Scala212
   }
 
   lazy val sources: Seq[Source] = {
-    // TODO: This is only going to work well if we embed file contents.
-    // The corresponding commit should land pretty soon.
-    ???
+    val scalaFiles = mutable.ListBuffer[File]()
+    def addFile(file: File): Unit = {
+      if (!file.getPath.endsWith(".scala")) return
+      scalaFiles += file
+    }
+    def explore(file: File): Unit = {
+      if (file.isDirectory) {
+        val files = file.listFiles
+        if (files != null) {
+          files.filter(_.isFile).foreach(addFile)
+          files.filter(_.isDirectory).foreach(explore)
+        }
+      } else {
+        addFile(file)
+      }
+    }
+    val fragments = sourcepath.split(PlatformIO.pathSeparator).toList
+    fragments.foreach(fragment => explore(new File(fragment)))
+    scalaFiles.toList.map(_.parse[Source].get)
   }
 
   lazy val database: Database = {
