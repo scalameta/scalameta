@@ -1,5 +1,6 @@
 package scala.meta.internal.semantic
 
+import org.scalameta.unreachable
 import scala.meta.io._
 import scala.meta.{semantic => m}
 import scala.meta.internal.semantic.{proto => p}
@@ -44,18 +45,24 @@ package object codecs {
             override def fromProto(e: p.ResolvedName): (m.Anchor, m.Symbol) = e match {
               case p.ResolvedName(Some(p.Range(start, end)), m.Symbol(symbol)) =>
                 m.Anchor(AbsolutePath(path), start, end) -> symbol
+              case _ =>
+                unreachable
             }
           }
           implicit val messageDecoder = new ProtoDecoder[m.Message, p.Message] {
             override def fromProto(e: p.Message): m.Message = e match {
               case p.Message(Some(p.Range(start, end)), sev, message) =>
                 m.Message(m.Anchor(AbsolutePath(path), start, end), m.Severity.fromId(sev.value), message)
+              case _ =>
+                unreachable
             }
           }
           implicit val symbolDenotationEncoder = new ProtoDecoder[(m.Symbol, m.Denotation), p.SymbolDenotation] {
             override def fromProto(e: p.SymbolDenotation): (m.Symbol, m.Denotation) = e match {
               case p.SymbolDenotation(m.Symbol(symbol), Some(p.Denotation(flags, name, info))) =>
                 symbol -> m.Denotation(flags, name, info)
+              case _ =>
+                unreachable
             }
           }
           m.AttributedSource(AbsolutePath(path),
