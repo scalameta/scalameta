@@ -43,9 +43,9 @@ import scala.meta.internal.semantic.{proto => p}
 object Database {
   private[meta] def locateInClasspath(classpath: File): URI = {
     if (classpath.isDirectory) {
-      new File(new File(classpath, "META-INF"), "scalameta").toURI
+      new File(new File(classpath, "META-INF"), "semanticdb").toURI
     } else if (classpath.getAbsolutePath.endsWith(".jar")) {
-      new URI("jar:" + classpath.toURI.toURL + "!META-INF/scalameta/")
+      new URI("jar:" + classpath.toURI.toURL + "!META-INF/semanticdb/")
     } else {
       sys.error(s"unsupported classpath entry: $classpath")
     }
@@ -62,7 +62,7 @@ object Database {
       var relativePath = entry.getName
       if (relativePath.startsWith("/")) relativePath = relativePath.substring(1)
       if (relativePath.endsWith("/")) return
-      if (!relativePath.startsWith("META-INF/scalameta/")) return
+      if (!relativePath.startsWith("META-INF/semanticdb/")) return
       if (!relativePath.endsWith(".semanticdb")) return
       databaseEntries += new URI("jar:" + file.toURI.toURL + "!" + relativePath)
     }
@@ -90,7 +90,7 @@ object Database {
       }
     }
     val databaseRoot = {
-      if (file.isDirectory) new File(new File(file, "META-INF"), "scalameta")
+      if (file.isDirectory) new File(new File(file, "META-INF"), "semanticdb")
       else if (file.getAbsolutePath.endsWith(".jar")) file
       else sys.error(s"unsupported file: $file")
     }
