@@ -156,9 +156,9 @@ class DatabaseSuite extends OnlineMirrorSuite {
     """
       |_root_.foo. => package foo
       |_root_.foo.C1# => class C1
-      |_root_.foo.C1#(p1) => termparam p1: Int
-      |_root_.foo.C1#(p2) => val termparam p2: => Int
-      |_root_.foo.C1#(p3) => var termparam p3_=: (x$1: Int)Unit
+      |_root_.foo.C1#(p1) => param p1: Int
+      |_root_.foo.C1#(p2) => val param p2: => Int
+      |_root_.foo.C1#(p3) => var param p3_=: (x$1: Int)Unit
       |_root_.foo.C1#T1# => abstract type T1:  <: Int
       |_root_.foo.C1#T2# => type T2: Int
       |_root_.foo.C1#`<init>`()V. => secondaryctor <init>: ()foo.C1
@@ -168,7 +168,7 @@ class DatabaseSuite extends OnlineMirrorSuite {
       |_root_.foo.C1#f1.l2. => var l2: Nothing
       |_root_.foo.C1#f2. => var f2_=: (x$1: Nothing)Unit
       |_root_.foo.C1#m1(I)I. => def m1: [T](x: Int)Int
-      |_root_.foo.C1#m1(I)I.(x) => termparam x: Int
+      |_root_.foo.C1#m1(I)I.(x) => param x: Int
       |_root_.foo.C1#m1(I)I.T# => typeparam T
       |_root_.foo.C1#m2()Lscala/Nothing;. => macro m2: => Nothing
       |_root_.foo.C2# => abstract class C2

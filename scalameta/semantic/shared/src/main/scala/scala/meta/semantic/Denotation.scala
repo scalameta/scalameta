@@ -36,7 +36,7 @@ import org.scalameta.data._
     if (hasFlag(SECONDARYCTOR)) append("SECONDARYCTOR")
     if (hasFlag(MACRO)) append("MACRO")
     if (hasFlag(TYPE)) append("TYPE")
-    if (hasFlag(TERMPARAM)) append("TERMPARAM")
+    if (hasFlag(PARAM)) append("PARAM")
     if (hasFlag(TYPEPARAM)) append("TYPEPARAM")
     if (hasFlag(OBJECT)) append("OBJECT")
     if (hasFlag(PACKAGE)) append("PACKAGE")
@@ -57,7 +57,7 @@ private[semantic] trait Flags {
   final val SECONDARYCTOR: Long = 1 << 4
   final val MACRO: Long = 1 << 5
   final val TYPE: Long = 1 << 6
-  final val TERMPARAM: Long = 1 << 7
+  final val PARAM: Long = 1 << 7
   final val TYPEPARAM: Long = 1 << 8
   final val OBJECT: Long = 1 << 9
   final val PACKAGE: Long = 1 << 10
@@ -88,7 +88,7 @@ private[semantic] trait HasFlags {
   def isSecondaryCtor: Boolean = hasFlag(SECONDARYCTOR)
   def isMacro: Boolean = hasFlag(MACRO)
   def isType: Boolean = hasFlag(TYPE)
-  def isTermParam: Boolean = hasFlag(TERMPARAM)
+  def isPARAM: Boolean = hasFlag(PARAM)
   def isTypeParam: Boolean = hasFlag(TYPEPARAM)
   def isObject: Boolean = hasFlag(OBJECT)
   def isPackage: Boolean = hasFlag(PACKAGE)

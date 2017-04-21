@@ -21,7 +21,7 @@ trait DenotationOps { self: DatabaseOps =>
     private def definitionFlags: Long = {
       var flags = 0l
       def maybeValOrVar =
-        (gsym.isTerm && flags == 0l) || (gsym.hasFlag(gf.PARAMACCESSOR) && flags == mf.TERMPARAM)
+        (gsym.isTerm && flags == 0l) || (gsym.hasFlag(gf.PARAMACCESSOR) && flags == mf.PARAM)
       if (gsym.isMethod && !gsym.isConstructor && !gsym.hasFlag(gf.MACRO) && !gsym.hasFlag(
             gf.ACCESSOR) && !gsym.hasFlag(gf.PARAMACCESSOR)) flags |= mf.DEF
       if (gsym.isPrimaryConstructor) flags |= mf.PRIMARYCTOR
@@ -29,7 +29,7 @@ trait DenotationOps { self: DatabaseOps =>
       if (gsym.hasFlag(gf.MACRO)) flags |= mf.MACRO
       if (gsym.isType && !gsym.isClass && !gsym.hasFlag(gf.PARAM)) flags |= mf.TYPE
       if (gsym.isTerm && (gsym.hasFlag(gf.PARAM) || gsym.hasFlag(gf.PARAMACCESSOR)))
-        flags |= mf.TERMPARAM
+        flags |= mf.PARAM
       if (gsym.isType && gsym.hasFlag(gf.PARAM)) flags |= mf.TYPEPARAM
       if (isObject) flags |= mf.OBJECT
       if (gsym.hasFlag(gf.PACKAGE)) flags |= mf.PACKAGE
