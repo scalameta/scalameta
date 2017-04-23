@@ -162,6 +162,20 @@
   @sect("Talks")
     @p
       @b
+        Semantic Tooling at Twitter
+      (ScalaDays Chicago 2017). This talk introduces semantic databases, the cornerstone of
+      the scala.meta semantic API, and explains how semantic databases can be used to integrate
+      with Kythe, a language-agnostic ecosystem for developer tools. In this talk, we presented
+      our vision of next-generation semantic tooling for the Scala ecosystem.
+
+    @p
+      Video: coming soon
+      @br
+      Slides:
+      @lnk("http://scalameta.org/talks/2017-04-21-SemanticToolingAtTwitter.pdf", "http://scalameta.org/talks/2017-04-21-SemanticToolingAtTwitter.pdf")
+
+    @p
+      @b
         Metaprogramming 2.0
       (ScalaDays Berlin 2016). This talk explains the status of scala.meta, demonstrates key features,
       presents the early adopters and publishes our plans for the future. In Berlin, we provided an extensive
