@@ -16,7 +16,10 @@ lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.vers
 // Projects
 // ==========================================
 
-name := "scalametaRoot"
+{
+  println(s"[info] Welcome to scalameta $LibraryVersion")
+  name := "scalametaRoot"
+}
 sharedSettings
 nonPublishableSettings
 unidocSettings
@@ -372,9 +375,6 @@ lazy val readme = scalatex
     watchSources ++= baseDirectory.value.listFiles.toList,
     test := run.in(Compile).toTask(" --validate").value,
     publish := {
-      if (sys.props("sbt.prohibit.publish") != null)
-        sys.error("Undefined publishing strategy")
-
       // generate the scalatex readme into `website`
       val website =
         new File(target.value.getAbsolutePath + File.separator + "scalatex")
@@ -480,30 +480,6 @@ lazy val publishableSettings = Def.settings(
   bintrayOrganization := Some("scalameta"),
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false,
-  {
-    val publishingEnabled: Boolean = {
-      if (!new File(sys.props("user.home") + "/.bintray/.credentials").exists) false
-      else if (sys.props("sbt.prohibit.publish") != null) false
-      else if (sys.env.contains("CI_PULL_REQUEST")) false
-      else true
-    }
-    if (sys.props("disable.publish.status") == null) {
-      sys.props("disable.publish.status") = ""
-      val publishingStatus = if (publishingEnabled) "enabled" else "disabled"
-      println(s"[info] Welcome to scalameta $LibraryVersion (publishing $publishingStatus)")
-    }
-    publish.in(Compile) := (Def.taskDyn {
-      if (publishingEnabled) {
-        Def.task {
-          publish.value
-        }
-      } else {
-        Def.task {
-          sys.error("Undefined publishing strategy"); ()
-        }
-      }
-    }).value
-  },
   publishMavenStyle := true,
   pomIncludeRepository := { x =>
     false
