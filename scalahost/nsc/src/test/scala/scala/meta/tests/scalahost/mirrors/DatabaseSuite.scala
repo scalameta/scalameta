@@ -198,4 +198,62 @@ class DatabaseSuite extends OnlineMirrorSuite {
       |_root_.foo.package. => packageobject package
   """.trim.stripMargin
   )
+
+  sugars(
+    """
+      |package commandeer
+      |import scala.language.higherKinds
+      |trait CommandeerDSL[Host]
+      |object CommandeerDSL {
+      |  def apply[Host, DSL <: CommandeerDSL[Host]](host: Host)(implicit dsl: DSL): DSL = dsl
+      |}
+      |trait Foo
+      |object Foo {
+      |  implicit val fooDSL: FooDSL = new FooDSL {}
+      |}
+      |trait FooDSL extends CommandeerDSL[Foo]
+      |object RunMe {
+      |  CommandeerDSL(null.asInstanceOf[Foo])
+      |}
+  """.trim.stripMargin,
+    """
+      |[333..333) [commandeer.Foo, commandeer.FooDSL]
+      |[357..357) (commandeer.this.Foo.fooDSL)
+  """.trim.stripMargin
+  )
+
+  sugars(
+    """
+      |class C[T]
+      |object C {
+      |  implicit def int: C[Int] = new C[Int]
+      |  implicit def list[T: C]: C[List[T]] = ???
+      |}
+      |
+      |class X
+      |object X {
+      |  implicit def cvt[T: C](x: T): X = ???
+      |}
+      |
+      |object M {
+      |  Nil.map(x => 2)
+      |
+      |  def c[T: C] = ???
+      |  M.c[List[Int]]
+      |
+      |  def x(x: X) = ???
+      |  x(42)
+      |
+      |  def i[T](t: T) = ???
+      |  i(new C[Int])
+      |}
+  """.trim.stripMargin,
+    """
+      |[191..191) [Int, List[Int]]
+      |[199..199) (immutable.this.List.canBuildFrom[Int])
+      |[237..237) (C.list[Int](C.int))
+      |[263..265) X.cvt[Int](*)(C.int)
+      |[294..294) [C[Int]]
+  """.trim.stripMargin
+  )
 }

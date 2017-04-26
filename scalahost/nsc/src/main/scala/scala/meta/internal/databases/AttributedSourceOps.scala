@@ -33,6 +33,7 @@ trait AttributedSourceOps { self: DatabaseOps =>
 
         val names = mutable.Map[m.Anchor, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
+        val inferred = mutable.Map[m.Anchor, String]()
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
         val mends = mutable.Map[Int, m.Name]() // end offset -> tree
@@ -251,6 +252,39 @@ trait AttributedSourceOps { self: DatabaseOps =>
               }
             }
 
+            private def tryFindInferred(gtree: g.Tree): Unit = {
+              def success(anchor: m.Anchor, syntax: String): Unit = {
+                if (inferred.contains(anchor)) return
+                inferred(anchor) = syntax
+              }
+
+              if (!gtree.pos.isRange) return
+              gtree match {
+                case gview: g.ApplyImplicitView =>
+                  val anchor = gtree.pos.toAnchor
+                  val syntax = gview.fun + "(*)"
+                  success(anchor, syntax)
+                case gimpl: g.ApplyToImplicitArgs =>
+                  gimpl.fun match {
+                    case gview: g.ApplyImplicitView =>
+                      val anchor = gtree.pos.toAnchor
+                      val syntax = gview.fun + "(*)(" + gimpl.args.mkString(", ") + ")"
+                      success(anchor, syntax)
+                    case gfun =>
+                      val morePreciseAnchor = gimpl.pos.withStart(gimpl.pos.end).toAnchor
+                      val syntax = "(" + gimpl.args.mkString(", ") + ")"
+                      success(morePreciseAnchor, syntax)
+                  }
+                case g.TypeApply(fun, targs @ List(targ, _ *)) =>
+                  if (targ.pos.isRange) return
+                  val morePreciseAnchor = fun.pos.withStart(fun.pos.end).toAnchor
+                  val syntax = "[" + targs.mkString(", ") + "]"
+                  success(morePreciseAnchor, syntax)
+                case _ =>
+                // do nothing
+              }
+            }
+
             override def traverse(gtree: g.Tree): Unit = {
               gtree match {
                 case ConstfoldOf(original) =>
@@ -280,6 +314,8 @@ trait AttributedSourceOps { self: DatabaseOps =>
                 case gtree: g.MemberDef =>
                   gtree.symbol.annotations.map(ann => traverse(ann.original))
                   tryFindMtree(gtree)
+                case _: g.Apply | _: g.TypeApply =>
+                  tryFindInferred(gtree)
                 case _ =>
                   tryFindMtree(gtree)
               }
@@ -292,7 +328,8 @@ trait AttributedSourceOps { self: DatabaseOps =>
         m.AttributedSource(unit.source.toAbsolutePath,
                            names.toMap,
                            unit.hijackedMessages,
-                           denotations.toMap)
+                           denotations.toMap,
+                           inferred.toMap)
       })
     }
   }

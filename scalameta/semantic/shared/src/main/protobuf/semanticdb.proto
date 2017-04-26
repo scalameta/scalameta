@@ -17,6 +17,7 @@ message AttributedSource {
   repeated ResolvedName names = 2;
   repeated Message messages = 3;
   repeated SymbolDenotation denotations = 4;
+  repeated Sugar sugars = 6;
 }
 
 message ResolvedName {
@@ -49,4 +50,9 @@ message Denotation {
   int64 flags = 1;
   string name = 2;
   string info = 3;
+}
+
+message Sugar {
+  Range range = 1;
+  string syntax = 2;
 }

@@ -112,6 +112,10 @@ abstract class OnlineMirrorSuite extends FunSuite {
     test(code)(assert(expected === computeDatabaseSectionFromSnippet(code, "Denotations")))
   }
 
+  def sugars(code: String, expected: String): Unit = {
+    test(code)(assert(expected === computeDatabaseSectionFromSnippet(code, "Sugars")))
+  }
+
   private def computeDatabaseFromMarkup(markup: String): List[m.Name] = {
     val chevrons = "<<(.*?)>>".r
     val ps0 = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList

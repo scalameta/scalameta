@@ -30,6 +30,7 @@ import scala.meta.internal.semantic.{proto => p}
   def names: Map[Anchor, Symbol] = sources.foldLeft(Map[Anchor, Symbol]())(_ ++ _.names)
   def messages: Seq[Message] = sources.flatMap(_.messages)
   def denotations: Map[Symbol, Denotation] = sources.foldLeft(Map[Symbol, Denotation]())(_ ++ _.denotations)
+  def sugars: Map[Anchor, String] = sources.foldLeft(Map[Anchor, String]())(_ ++ _.sugars)
 
   override def toString: String = sources.mkString(EOL + EOL)
   def toBinary: Array[Byte] = this.toProto[p.Database].toByteArray
@@ -107,7 +108,8 @@ object Database {
   path: AbsolutePath,
   names: Map[Anchor, Symbol],
   messages: Seq[Message],
-  denotations: Map[Symbol, Denotation]
+  denotations: Map[Symbol, Denotation],
+  sugars: Map[Anchor, String]
 ) {
   override def toString: String = {
     val lines = mutable.ListBuffer[String]()
@@ -141,6 +143,12 @@ object Database {
         s"$symbol => $denotation"
     }
     appendSection("Denotations", s_denotations)
+
+    val s_sugars = sugars.toList.sortBy(_._1.start).map {
+      case ((Anchor(_, start, end), syntax)) =>
+        s"[$start..$end) $syntax"
+    }
+    appendSection("Sugars", s_sugars)
 
     lines.mkString(EOL)
   }
