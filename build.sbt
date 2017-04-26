@@ -53,7 +53,7 @@ lazy val common = crossProject
   .settings(
     publishableSettings,
     libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.3",
-    description := "Bag of private and public helpers used in scala.meta's APIs and implementations",
+    description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
 lazy val commonJVM = common.jvm
@@ -63,7 +63,7 @@ lazy val io = crossProject
   .in(file("scalameta/io"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's API for JVM/JS agnostic IO."
+    description := "Scalameta APIs for JVM/JS agnostic IO."
   )
   .dependsOn(common)
 
@@ -74,7 +74,7 @@ lazy val dialects = crossProject
   .in(file("scalameta/dialects"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's dialects",
+    description := "Scalameta dialects",
     enableMacros
   )
   .dependsOn(common)
@@ -85,7 +85,7 @@ lazy val inline = crossProject
   .in(file("scalameta/inline"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's APIs for new-style (\"inline\") macros"
+    description := "Scalameta APIs for new-style (\"inline\") macros"
   )
   .dependsOn(inputs)
 lazy val inlineJVM = inline.jvm
@@ -95,7 +95,7 @@ lazy val inputs = crossProject
   .in(file("scalameta/inputs"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's APIs for source code in textual format",
+    description := "Scalameta APIs for source code in textual format",
     enableMacros
   )
   .dependsOn(common, io)
@@ -106,7 +106,7 @@ lazy val parsers = crossProject
   .in(file("scalameta/parsers"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's API for parsing and its baseline implementation"
+    description := "Scalameta APIs for parsing and their baseline implementation"
   )
   .dependsOn(common, dialects, inputs, tokens, tokenizers, trees)
 lazy val parsersJVM = parsers.jvm
@@ -116,7 +116,7 @@ lazy val quasiquotes = crossProject
   .in(file("scalameta/quasiquotes"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's quasiquotes for abstract syntax trees",
+    description := "Scalameta quasiquotes for abstract syntax trees",
     enableHardcoreMacros
   )
   .dependsOn(common, dialects, inputs, trees, parsers)
@@ -127,7 +127,7 @@ lazy val tokenizers = crossProject
   .in(file("scalameta/tokenizers"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's APIs for tokenization and its baseline implementation",
+    description := "Scalameta APIs for tokenization and their baseline implementation",
     libraryDependencies += "com.lihaoyi" %%% "scalaparse" % "0.4.2",
     enableMacros
   )
@@ -139,7 +139,7 @@ lazy val tokens = crossProject
   .in(file("scalameta/tokens"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's tokens and token-based abstractions (inputs and positions)",
+    description := "Scalameta tokens and token-based abstractions (inputs and positions)",
     enableMacros
   )
   .dependsOn(common, dialects, inputs)
@@ -150,7 +150,7 @@ lazy val transversers = crossProject
   .in(file("scalameta/transversers"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's traversal and transformation infrastructure for abstract syntax trees",
+    description := "Scalameta traversal and transformation infrastructure for abstract syntax trees",
     enableMacros
   )
   .dependsOn(common, trees)
@@ -161,7 +161,7 @@ lazy val trees = crossProject
   .in(file("scalameta/trees"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's abstract syntax trees",
+    description := "Scalameta abstract syntax trees",
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
     enableMacros
@@ -174,7 +174,7 @@ lazy val semantic = crossProject
   .in(file("scalameta/semantic"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's semantic APIs",
+    description := "Scalameta semantic APIs",
     // Protobuf setup for binary serialization.
     PB.targets.in(Compile) := Seq(
       scalapb.gen(
@@ -192,7 +192,7 @@ lazy val scalameta = crossProject
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's metaprogramming APIs",
+    description := "Scalameta umbrella module that includes all public APIs",
     exposePaths("scalameta", Test)
   )
   .dependsOn(
@@ -213,7 +213,7 @@ lazy val scalahostNsc = project
   .in(file("scalahost/nsc"))
   .settings(
     moduleName := "scalahost",
-    description := "Scala 2.x compiler plugin that persists the semantic DB on compile.",
+    description := "Scala 2.x compiler plugin that persists the scalameta semantic DB on compile",
     publishableSettings,
     mergeSettings,
     isFullCrossVersion,
@@ -254,7 +254,7 @@ lazy val scalahostSbt = project
       RunSbtCommand("; such publishLocal " +
         "; such scalahostSbt/scripted")(state.value)
     },
-    description := "sbt plugin to enable the scalahost compiler plugin",
+    description := "sbt plugin to enable the scalahost compiler plugin for Scala 2.x",
     moduleName := "sbt-scalahost", // sbt convention is that plugin names start with sbt-
     scalaVersion := "2.10.6",
     crossScalaVersions := Seq("2.10.6"), // for some reason, scalaVersion.value does not work.
@@ -284,7 +284,7 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
       "commons-io" % "commons-io" % "2.5"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-    description := "Testing utilities for scala.meta's metaprogramming APIs"
+    description := "Testing utilities for scalameta APIs"
   )
   .dependsOn(scalametaJVM)
 
@@ -293,7 +293,7 @@ lazy val tests = project
   .settings(
     sharedSettings,
     nonPublishableSettings,
-    description := "Runs all tests in scalameta project.",
+    description := "Tests for scalameta APIs",
     test := {
       testJVM.value
       testJS.value
@@ -320,7 +320,7 @@ lazy val contrib = crossProject
   .in(file("scalameta/contrib"))
   .settings(
     publishableSettings,
-    description := "Utilities for scala.meta"
+    description := "Incubator for scalameta APIs"
   )
   .jvmConfigure(_.dependsOn(testkit))
   .dependsOn(scalameta)
@@ -490,7 +490,7 @@ lazy val publishableSettings = Def.settings(
     if (sys.props("disable.publish.status") == null) {
       sys.props("disable.publish.status") = ""
       val publishingStatus = if (publishingEnabled) "enabled" else "disabled"
-      println(s"[info] Welcome to scala.meta $LibraryVersion (publishing $publishingStatus)")
+      println(s"[info] Welcome to scalameta $LibraryVersion (publishing $publishingStatus)")
     }
     publish.in(Compile) := (Def.taskDyn {
       if (publishingEnabled) {

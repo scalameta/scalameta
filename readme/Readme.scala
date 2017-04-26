@@ -110,7 +110,7 @@ object Readme {
 
   def copyrightBadge = {
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-    val text = s"(c) 2014 - $currentYear scala.meta contributors"
+    val text = s"(c) 2014 - $currentYear scalameta contributors"
     div(style := "margin: 0px;color: #ccc;text-align: center;padding: 0.5em 2em 0.5em 0em;border-top: 1px solid #eee;display: block;")(text)
   }
 }
