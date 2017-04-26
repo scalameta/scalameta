@@ -247,98 +247,28 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
   1. Any trivia token (e.g. whitespace and comments) in a quasiquote template or a quasiquote is insignificant and is ignored for the purposes of conformance testing.
 
   1. Any non-trivia token in a quasiquote template, except for an unquote template, means that exactly that token is required in a quasiquote, with the following exceptions:
-    1. Parentheses, brackets and braces around unquotes are oftentimes dropped if they wrap empty sequences, e.g. `q"x + y"` conforms to `q"$expr $name[..$tpes] $expr"`.
 
-    1. `with` is dropped if there are zero or one ctorcalls, e.g. both `q"new {}"` and `q"new C"` conform to `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }`.
+      1. Parentheses, brackets and braces around unquotes are oftentimes dropped if they wrap empty sequences, e.g. `q"x + y"` conforms to `q"$expr $name[..$tpes] $expr"`.
 
-    1. This list is probably incomplete. Please [submit an issue](https://github.com/scalameta/scalameta/issues/new) if you find any discrepancies.
+      1. `with` is dropped if there are zero or one ctorcalls, e.g. both `q"new {}"` and `q"new C"` conform to `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }`.
+
+      1. This list is probably incomplete. Please [submit an issue](https://github.com/scalameta/scalameta/issues/new) if you find any discrepancies.
 
   1. An *unquote template* (`$smth`, `..$smth` or `...$smth`) works as follows:
-    1. First, we strip standard suffixes from `smth` using the "Suffixes" table (e.g. `aexprssnel` means a non-empty sequence of sequences of `aexpr`).
 
-    1. Second, we figure out the expected type of `smth` using the "Shorthands" table (e.g. `aexpr` means `Term.Arg`, so `aexprssnel` means `Seq[Seq[Term.Arg]]`).
+      1. First, we strip standard suffixes from `smth` using the "Suffixes" table (e.g. `aexprssnel` means a non-empty sequence of sequences of `aexpr`).
 
-    1. Third, we apply an appropriate number of replications to the unquote template to have it match the corresponding part of a quasiquote that's being tested for conformance:
-      1. `$smth` can not be replicated.
-      1. `..$smth` means an arbitrary mix of `$smth` and `..$smth` unquote templates separated according to their location (e.g. an empty string, `[$tpe]`, `[..$tpes, $tpe]` all conform to `[..$tpes]`, and the separator is a comma, as appropriate for a list of type arguments).
-      1. `...$smth` means an arbitrary mix of `$smth`, `..$smth` and  `...$smth` unquote templates, separated according to their location (e.g. an empty string, `(...$aexprss)`, `(..$aexprs)($aexpr1, $aexpr2)()` all conform to `(...$aexprss)`, and the separator are matching parentheses, as appropriate for a list of arguments).
-      1. If a suffix of `smth` says that it's a non-empty sequence, then replication can't result in an empty list.
-      1. If a quasiquote is used as a pattern, then some replications may be illegal (TODO: to be elaborated!).
+      1. Second, we figure out the expected type of `smth` using the "Shorthands" table (e.g. `aexpr` means `Term.Arg`, so `aexprssnel` means `Seq[Seq[Term.Arg]]`).
 
-    1. Finally, we match the unquotes after replication against the corresponding parts of the quasiquote under conformance test. There are three possibilities for a match:
-    <table>
-      <th>
-        <td width="40%">
-          Description
-        </td>
-        <td width="60%">
-          Examples:
-          <br/>
-          1) <code>$qname</code> in <code>q"$qname.this"</code> (<code>qname</code> means <code>Name.Qualifier</code>)
-          <br/>
-          2) <code>..$tpesnel</code> in <code>q"$expr[..$tpesnel]"</code> (<code>tpes</code> is a plural of <code>tpe</code>, and <code>tpe</code> means <code>Type</code>)
-          <br/>
-          3) <code>...$aexprssnel</code> in <code>q"$expr(...$aexprssnel)"</code> (<code>aexprssnel</code> is a plural of <code>aexpr</code>, and <code>aexpr</code> means <code>Term.Arg</code>)
-        </td>
-      </th>
-      <tr>
-        <td>
-          Syntax
-        </td>
-        <td>
-          Scala syntax corresponding to the expected type
-        </td>
-        <td>
-          1) Any identifier. The rank of the unquote is 0, so we couldn't have replicated anything - only a single identifier is accepted,
-          and it can't be omitted.
-          <br/>
-          2) Any type. The rank of the unquote is 1, so we could have either written a single type or multiple types separated by commas.
-          <br/>
-          3) Any term as well as the special <code>term*</code> and <code>name = term</code> forms will do. The rank of the unquote is 2, so we have a multitude of options that include: no aexprs, a single aexpr, multiple aexprs separated by a comma, multiple argument lists.
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Unquote
-        </td>
-        <td>
-          An unquote of an object that has exactly the expected type
-        </td>
-        <td>
-          1) <code>$x</code>, where <code>x</code> is of type <code>Name.Qualifier</code>.
-          <br/>
-          2) <code>..$xs</code>, where <code>xs</code> is of type <code>Seq[Type]</code>.
-          <br/>
-          3) <code>...$xss</code>, where <code>xss</code> is of type <code>Seq[Seq[Type]]</code>.
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Lifted unquote
-        </td>
-        <td>
-          An unquote of an object of type <code>O</code> that can be lifted (a <code>Lift[O, I]</code> typeclass instance) or unlifted (a <code>Unlift[I, O]</code> typeclass instance) to the expected type <code>I</code>. The syntax is different for construction and deconstruction.
-        </td>
-        <td>
-          Construction:
-          <br/>
-          1) <code>$x</code>, where there exists an implicit of type <code>Lift[X, Name.Qualifier]</code>.
-          <br/>
-          2) <code>..$xs</code>, where there exists an implicit of type <code>Lift[X, Seq[Type]]</code>.
-          <br/>
-          3) <code>..$xss</code>, where there exists an implicit of type <code>Lift[X, Seq[Seq[Type]]]</code>.
-          <br/><br/>
+      1. Third, we apply an appropriate number of replications to the unquote template to have it match the corresponding part of a quasiquote that's being tested for conformance:
 
-          Deconstruction (<code>X</code> needs to be specified explicitly, because there are no expected types in pattern matching):
-          <br/>
-          1) <code>${x: X}</code>, where there exists an implicit of type <code>Unlift[Name.Qualifier, X]</code>.
-          <br/>
-          2) <code>..${xs: X}</code>, where there exists an implicit of type <code>Unlift[Seq[Type], X]</code>.
-          <br/>
-          3) <code>..${xss: X}</code>, where there exists an implicit of type <code>Unlift[Seq[Seq[Type]], X]</code>.
-        </td>
-      </tr>
-    </table>
+          1. `$smth` can not be replicated.
+          1. `..$smth` means an arbitrary mix of `$smth` and `..$smth` unquote templates separated according to their location (e.g. an empty string, `[$tpe]`, `[..$tpes, $tpe]` all conform to `[..$tpes]`, and the separator is a comma, as appropriate for a list of type arguments).
+          1. `...$smth` means an arbitrary mix of `$smth`, `..$smth` and  `...$smth` unquote templates, separated according to their location (e.g. an empty string, `(...$aexprss)`, `(..$aexprs)($aexpr1, $aexpr2)()` all conform to `(...$aexprss)`, and the separator are matching parentheses, as appropriate for a list of arguments).
+          1. If a suffix of `smth` says that it's a non-empty sequence, then replication can't result in an empty list.
+          1. If a quasiquote is used as a pattern, then some replications may be illegal (TODO: to be elaborated!).
+
+      1. Finally, we match the unquotes after replication against the corresponding parts of the quasiquote under conformance test. There are three possibilities for a match: scala syntax, unquote, lifted unquote.
 
   1. If not specified explicitly, quasiquote templates work for both construction and deconstruction. In some cases, a template is only applicable to construction (e.g. it's impossible to pattern match a name without specifying an expected type explicitly, because patterns like in `term match { case q"$name" => }` will match any term, not limited to just term names).
 
