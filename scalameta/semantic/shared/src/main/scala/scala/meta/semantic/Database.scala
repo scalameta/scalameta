@@ -108,8 +108,6 @@ object Database {
   names: Map[Anchor, Symbol],
   messages: Seq[Message],
   denotations: Map[Symbol, Denotation]
-  // TODO: Additional fields are to be discussed
-  // https://github.com/scalameta/scalameta/issues/605
 ) {
   override def toString: String = {
     val lines = mutable.ListBuffer[String]()
