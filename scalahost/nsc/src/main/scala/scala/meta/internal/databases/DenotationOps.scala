@@ -87,7 +87,11 @@ trait DenotationOps { self: DatabaseOps =>
 
     private def info: String = {
       if (gsym.isClass || gsym.isModule) ""
-      else gsym.info.toString
+      else {
+        val sig = gsym.info.toString
+        if (sig.startsWith("=> ")) sig.substring("=> ".length)
+        else sig
+      }
     }
 
     def toDenotation: m.Denotation = {
