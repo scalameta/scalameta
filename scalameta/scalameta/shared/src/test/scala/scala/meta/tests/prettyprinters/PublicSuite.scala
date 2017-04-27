@@ -168,7 +168,6 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Input.LabeledString.toString") {
     val input = Input.LabeledString("foo.scala", "foo")
-    // org.scalameta.logger.elem(input.toString)
     assert(input.toString == s"""Input.LabeledString("foo.scala", "foo")""")
   }
 
