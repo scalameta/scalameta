@@ -177,6 +177,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.inputs.Position.toAnchor: scala.meta.semantic.Anchor
       |* scala.meta.io.AbsolutePath.slurp: String
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).hasFlag(Long): Boolean
+      |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).info: String
     """.trim.stripMargin)
   }
 

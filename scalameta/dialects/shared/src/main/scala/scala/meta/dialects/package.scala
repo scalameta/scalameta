@@ -151,7 +151,7 @@ package object dialects {
     allowTrailingCommas = true
   )
 
-  implicit val Typelevel212 = Scala212
+  implicit val Typelevel212 = Scala212.copy()
 
   implicit val Paradise212 = Scala212.copy(
     allowInlineIdents = true,

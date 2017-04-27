@@ -20,7 +20,9 @@ object PlatformIO {
     !path.startsWith("/")
 
   def absolutize(parent: AbsolutePath, path: RelativePath): AbsolutePath = {
-    AbsolutePath(parent.toString + fileSeparator + path.toString)
+    var s_parent = parent.toString
+    if (s_parent.endsWith(fileSeparator)) s_parent = s_parent.stripSuffix(fileSeparator)
+    AbsolutePath(s_parent + fileSeparator + path.toString)
   }
 
   def relativize(parent: AbsolutePath, path: AbsolutePath): RelativePath = {

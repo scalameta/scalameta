@@ -18,7 +18,7 @@ object Mirror {
     *
     * @param classpath java.io.File.pathSeparator separated list of jar files
     *                 or directories containing classfiles and `semanticdb` files.
-    *                 The `semanticdb` files are emitted by the scalahost-nsc
+    *                 The `semanticdb` files are emitted by the scalahost
     *                 compiler plugin and are necessary for the semantic API to
     *                 function. The classfiles + jar files are necessary for
     *                 runtime compilation of quasiquotes when extracting

@@ -99,8 +99,8 @@ object Database {
     Database(databaseEntries.map(AttributedSource.fromURI).toList)
   }
   def fromClasspath(classpath: String): Database = {
-    val fragments = classpath.split(File.pathSeparatorChar).toList
-    Database(fragments.map(s => new File(s)).map(fromFile).flatMap(_.sources))
+    val fragments = classpath.split(File.pathSeparatorChar).toList.distinct
+    Database(fragments.map(s => new File(s)).filter(_.exists).map(fromFile).flatMap(_.sources))
   }
 }
 
