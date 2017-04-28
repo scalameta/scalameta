@@ -130,7 +130,7 @@ lazy val tokenizers = crossProject
   .in(file("scalameta/tokenizers"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's APIs for tokenization and its baseline implementation",
+    description := "Scalameta APIs for tokenization and their baseline implementation",
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "0.4.2",
     enableMacros
   )
@@ -436,7 +436,6 @@ lazy val sharedSettings = Def.settings(
   resolvers += Resolver.sonatypeRepo("snapshots"),
   resolvers += Resolver.sonatypeRepo("releases"),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
-  libraryDependencies += "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % "test",
   libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
   libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.13.5" % "test",
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),

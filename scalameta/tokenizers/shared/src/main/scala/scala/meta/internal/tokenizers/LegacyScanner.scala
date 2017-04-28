@@ -238,9 +238,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       if (lastOffset > 0 && buf(lastOffset) == '\n' && buf(lastOffset - 1) == '\r') {
         lastOffset -= 1
       }
-      if (inStringInterpolation) fetchStringPart()
-      else if (inXmlLiteral) fetchXmlPart()
-      else fetchToken()
+
+      fetchToken()
       if(token == ERROR) {
         if (inMultiLineInterpolation)
           sepRegions = sepRegions.tail.tail
@@ -309,6 +308,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    */
   protected final def fetchToken() {
     offset = charOffset - 1
+
+    if (inStringInterpolation) return fetchStringPart()
+    else if (inXmlLiteral) return fetchXmlPart()
+
     (ch: @switch) match {
       case ' ' | '\t' | CR | LF | FF =>
         token = WHITESPACE
@@ -733,10 +736,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     upcomingXmlLiteralParts.remove(offset)
   }
 
-  private def fetchStringPart(): Unit = {
-    offset = charOffset - 1
+  private def fetchStringPart(): Unit =
     getStringPart(multiLine = inMultiLineInterpolation)
-  }
 
   private def isTripleQuote(): Boolean =
     if (ch == '"') {
@@ -970,11 +971,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     // 1. Collect positions of scala expressions inside this xml literal.
     import fastparse.core.Parsed
     val start = offset
-    val embeddedScalaExprPositions = new ScalaExprPositionParser(input, dialect)
+    val embeddedScalaExprPositions = new ScalaExprPositionParser(dialect)
     val xmlParser = new XmlParser(embeddedScalaExprPositions)
     val result: Int = xmlParser.XmlExpr.parse(new String(input.chars), index = start) match {
       case Parsed.Success(_, endExclusive) => endExclusive - 1
-      case Parsed.Failure(_, _, _) => syntaxError("malformed xml literal", at = start)
+      case Parsed.Failure(_, failIndex, extra) =>
+        syntaxError(s"malformed xml literal, expected: ${extra.traced.expected}", at = failIndex)
     }
 
     // 2. Populate upcomingXmlLiteralParts with xml literal part positions.

@@ -237,35 +237,37 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       }
 
       if (prev.token == XMLLIT) {
-        var lastXmlPart = -1 // Used for the offset of the final Token.Xml.End
         def emitSpliceStart(offset: Offset) = tokens += Token.Xml.SpliceStart(input, dialect, offset, offset)
         def emitSpliceEnd(offset: Offset) = tokens += Token.Xml.SpliceEnd(input, dialect, offset, offset)
         def emitPart(from: Int, to: Int) = {
           tokens += Token.Xml.Part(input, dialect, from, to, new String(input.chars, from , to - from))
-          lastXmlPart = to
         }
+
         @tailrec def emitContents(): Unit = {
-          if (legacyTokens.length <= legacyIndex)
-            return
-          emitPart(prev.offset, prev.endOffset + 1)
-          val dollarOffset = curr.offset
-          val isEof = dollarOffset >= input.chars.length
-          // Are we at the start of an embedded scala expression?
-          if (!isEof && input.chars(dollarOffset) == '{') {
-            emitSpliceStart(dollarOffset - 1)
-            legacyIndex = loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
-            nextToken()
-            emitSpliceEnd(curr.offset)
-            nextToken()
-            emitContents() // Continue until we reach the final xml part.
-          } else {
-            // We have reached the final xml part.
-            nextToken()
+          curr.token match {
+            case XMLLIT =>
+              emitPart(curr.offset, curr.endOffset + 1)
+              nextToken()
+              emitContents()
+
+            case LBRACE =>
+              // We are at the start of an embedded scala expression
+              emitSpliceStart(curr.offset)
+              legacyIndex = loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
+              emitSpliceEnd(curr.offset)
+              emitContents()
+
+            case _ =>
+            // We have reached the final xml part
           }
         }
+
+
+        // Xml.Start has been emitted. Backtrack to emit first part
+        legacyIndex -= 1
         emitContents()
-        tokens += Token.Xml.End(input, dialect, lastXmlPart, lastXmlPart)
-        legacyIndex -= 1 // I don't know why, but this seems to do the trick.
+        val xmlEndIndex = prev.endOffset + 1
+        tokens += Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex)
       }
 
       loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)
