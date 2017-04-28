@@ -48,6 +48,15 @@ import org.scalatest.exceptions.TestFailedException
   */
 trait DiffAssertions extends FunSuiteLike {
 
+  implicit val strEquals = new Equality[String] {
+    override def areEqual(a: String, b: Any): Boolean = b match {
+      case b: String =>
+        assertNoDiff(a, b)
+      case _ =>
+        false
+    }
+  }
+
   case class DiffFailure(title: String, expected: String, obtained: String, diff: String)
       extends TestFailedException(title + "\n" + error2message(obtained, expected), 1)
 
