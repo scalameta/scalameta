@@ -524,7 +524,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("xml literals") {
     val tree = term("<foo>{bar}</foo>")
-    assert(tree.show[Structure] === """Term.Xml(Seq(Lit.String("<foo>{bar}</foo>")), Nil)""")
+    assert(tree.show[Structure] === """Term.Xml(Seq(Lit("<foo>"), Lit("</foo>")), Seq(Term.Name("bar")))""")
     assert(tree.show[Syntax] === "<foo>{bar}</foo>")
   }
 

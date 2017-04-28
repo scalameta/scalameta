@@ -162,12 +162,24 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    */
   var sepRegions: List[LegacyToken] = List()
 
+  /**
+    * A map of upcoming xml literal parts that are left to be returned in nextToken().
+    *
+    * The keys are offset start positions of an xml literal and the values are
+    * the respective offset end positions.
+    */
+  val upcomingXmlLiteralParts = mutable.Map.empty[Offset, Offset]
+
 // Get next token ------------------------------------------------------------
 
   /** Are we directly in a string interpolation expression?
    */
   private def inStringInterpolation =
     sepRegions.nonEmpty && sepRegions.head == STRINGLIT
+
+  private def inXmlLiteral: Boolean = {
+    upcomingXmlLiteralParts.contains(offset)
+  }
 
   /** Are we directly in a multiline string interpolation expression?
    *  @pre inStringInterpolation
@@ -226,7 +238,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       if (lastOffset > 0 && buf(lastOffset) == '\n' && buf(lastOffset - 1) == '\r') {
         lastOffset -= 1
       }
-      if (inStringInterpolation) fetchStringPart() else fetchToken()
+      if (inStringInterpolation) fetchStringPart()
+      else if (inXmlLiteral) fetchXmlPart()
+      else fetchToken()
       if(token == ERROR) {
         if (inMultiLineInterpolation)
           sepRegions = sepRegions.tail.tail
@@ -281,7 +295,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         do {
           idx += 1; ch = buf(idx)
           if (ch == LF || ch == FF) {
-//              println("blank line found at "+lastOffset+":"+(lastOffset to idx).map(buf(_)).toList)
             return true
           }
           if (idx == end) return false
@@ -373,7 +386,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       case '`' =>
         getBackquotedIdent()
       case '\"' =>
-        def fetchDoubleQuote() = {
+        def fetchDoubleQuote(): Unit = {
           if (token == INTERPOLATIONID) {
             nextRawChar()
             if (ch == '\"') {
@@ -712,7 +725,15 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
-  private def fetchStringPart() = {
+  private def fetchXmlPart(): Unit = {
+    require(inXmlLiteral, "must be at the start of an xml literal part")
+    val end = upcomingXmlLiteralParts(offset)
+    finishComposite(XMLLIT, end - 1)
+    // Clean up map, should be empty at EOF.
+    upcomingXmlLiteralParts.remove(offset)
+  }
+
+  private def fetchStringPart(): Unit = {
     offset = charOffset - 1
     getStringPart(multiLine = inMultiLineInterpolation)
   }
@@ -945,18 +966,32 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
-  def getXml() {
-    // TODO: replace this with honest XML support via #356
+  def getXml(): Unit = {
+    // 1. Collect positions of scala expressions inside this xml literal.
+    import fastparse.core.Parsed
     val start = offset
-    val endInclusive = {
-      import fastparse.core.Parsed
-      import scalaparse.Scala.XmlExpr
-      XmlExpr.parse(new String(input.chars), index = start) match {
-        case Parsed.Success(_, endExclusive) => endExclusive - 1
-        case Parsed.Failure(_, _, _) => syntaxError("malformed xml literal", at = start)
-      }
+    val embeddedScalaExprPositions = new ScalaExprPositionParser(input, dialect)
+    val xmlParser = new XmlParser(embeddedScalaExprPositions)
+    val result: Int = xmlParser.XmlExpr.parse(new String(input.chars), index = start) match {
+      case Parsed.Success(_, endExclusive) => endExclusive - 1
+      case Parsed.Failure(_, _, _) => syntaxError("malformed xml literal", at = start)
     }
-    finishComposite(XMLLIT, endInclusive)
+
+    // 2. Populate upcomingXmlLiteralParts with xml literal part positions.
+    var lastFrom = start
+    embeddedScalaExprPositions.getSplicePositions.foreach { pos =>
+      // pos contains the start and end positions of a scala expression.
+      // We want the range of the xml literal part which starts at lastFrom
+      // and ends at pos.from.
+      val to = pos.from - 1
+      upcomingXmlLiteralParts.update(lastFrom, to)
+      lastFrom = pos.to + 1
+    }
+    // The final xml literal part is not followed by any embedded scala expr.
+    upcomingXmlLiteralParts.update(lastFrom, result + 1)
+
+    // 3. Return only the first xml part.
+    fetchXmlPart()
   }
 
 // Unquotes -----------------------------------------------------------------
