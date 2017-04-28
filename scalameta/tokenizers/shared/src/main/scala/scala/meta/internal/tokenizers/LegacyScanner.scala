@@ -197,7 +197,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   /** Produce next token, filling curr TokenData fields of Scanner.
    */
-  def nextToken() {
+  def nextToken(): Unit = {
     val lastToken = token
     // Adapt sepRegions according to last token
     (lastToken: @switch) match {

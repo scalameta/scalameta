@@ -436,6 +436,7 @@ lazy val sharedSettings = Def.settings(
   resolvers += Resolver.sonatypeRepo("snapshots"),
   resolvers += Resolver.sonatypeRepo("releases"),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+  libraryDependencies += "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0" % "test",
   libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
   libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.13.5" % "test",
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
