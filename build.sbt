@@ -66,9 +66,8 @@ lazy val io = crossProject
     publishableSettings,
     description := "Scala.meta's API for JVM/JS agnostic IO."
   )
-  .jsSettings(
-    npmDependencies in Compile += "shelljs" -> "0.7.7" // provides cross-platform pwd in JS
-  )
+  .jsSettings(sharedJsSettings)
+  .jsConfigure(sharedJsConfigure)
   .enablePlugins(ScalaJSBundlerPlugin)
 
 lazy val ioJVM = io.jvm
@@ -199,6 +198,8 @@ lazy val scalameta = crossProject
     description := "Scala.meta's metaprogramming APIs",
     exposePaths("scalameta", Test)
   )
+  .jsSettings(sharedJsSettings)
+  .jsConfigure(sharedJsConfigure)
   .dependsOn(
     common,
     dialects,
@@ -324,6 +325,7 @@ lazy val tests = project
       val runDocs = test.in(readme).value
     },
     testJS := {
+      val runIoTests = test.in(ioJS, Test).value
       val runScalametaTests = test.in(scalametaJS, Test).value
       val runContribTests = test.in(contribJS, Test).value
     }
@@ -461,9 +463,17 @@ lazy val sharedSettings = Def.settings(
   parallelExecution.in(Test) := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
-  scalaJSModuleKind := ModuleKind.CommonJSModule,
   triggeredMessage.in(ThisBuild) := Watched.clearWhenTriggered
 )
+
+lazy val sharedJsSettings = Seq(
+  scalaJSModuleKind := ModuleKind.CommonJSModule,
+  // provides cross-platform pwd in JS
+  npmDependencies in Compile += "shelljs" -> "0.7.7"
+)
+
+def sharedJsConfigure(project: Project) = project.enablePlugins(ScalaJSBundlerPlugin)
+
 
 lazy val mergeSettings = Def.settings(
   sharedSettings,
