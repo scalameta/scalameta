@@ -67,7 +67,6 @@ lazy val io = crossProject
     description := "Scala.meta's API for JVM/JS agnostic IO."
   )
   .jsSettings(
-    scalaJSModuleKind := ModuleKind.CommonJSModule,
     npmDependencies in Compile += "shelljs" -> "0.7.7" // provides cross-platform pwd in JS
   )
   .enablePlugins(ScalaJSBundlerPlugin)
@@ -462,6 +461,7 @@ lazy val sharedSettings = Def.settings(
   parallelExecution.in(Test) := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
+  scalaJSModuleKind := ModuleKind.CommonJSModule,
   triggeredMessage.in(ThisBuild) := Watched.clearWhenTriggered
 )
 
