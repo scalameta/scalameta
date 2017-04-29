@@ -1,29 +1,27 @@
 package scala.meta.internal.io
 
+import java.io.File
 import scala.meta.io._
 
-object PathIO extends CommonPathIO {
+object PlatformPathIO {
   def fileSeparator: String =
-    "/"
+    File.separator
 
   def pathSeparator: String =
-    ":"
+    File.pathSeparator
 
   def workingDirectory: AbsolutePath =
-    AbsolutePath("/")
+    AbsolutePath(sys.props("user.dir"))
 
   def isAbsolutePath(path: String): Boolean =
-    path.startsWith("/")
+    new File(path).isAbsolute
 
   def normalizePath(path: String): String =
-    path.stripSuffix("/")
-
-  private def resolve(s1: String, s2: String): String =
-    s1.stripSuffix(fileSeparator) + fileSeparator + s2
+    new File(path).toString
 
   def resolve(path1: AbsolutePath, path2: RelativePath): AbsolutePath =
-    AbsolutePath(resolve(path1.toString, path2.toString))
+    AbsolutePath(new File(path1.toFile, path2.toString))
 
   def resolve(path1: RelativePath, path2: RelativePath): RelativePath =
-    RelativePath(resolve(path1.toString, path2.toString))
+    RelativePath(new File(path1.toFile, path2.toString))
 }
