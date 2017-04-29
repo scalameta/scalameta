@@ -37,6 +37,7 @@ object Tree extends InternalTreeXtensions {
 
 @branch trait Name extends Ref { def value: String }
 object Name {
+  def unapply(name: Name): Option[String] = Some(name.value)
   @ast class Anonymous extends Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
   @ast class Indeterminate(value: Predef.String @nonEmpty) extends Name with Qualifier
   @branch trait Qualifier extends Ref
