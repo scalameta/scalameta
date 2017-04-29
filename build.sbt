@@ -66,6 +66,10 @@ lazy val io = crossProject
     publishableSettings,
     description := "Scala.meta's API for JVM/JS agnostic IO."
   )
+  .jsSettings(
+    npmDependencies in Compile += "shelljs" -> "0.7.7" // provides cross-platform pwd in JS
+  )
+  .enablePlugins(ScalaJSBundlerPlugin)
 
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
