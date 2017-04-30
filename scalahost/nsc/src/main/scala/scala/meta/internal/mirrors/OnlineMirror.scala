@@ -7,10 +7,10 @@ import scala.collection.immutable.Seq
 import scala.tools.nsc.Global
 import scala.util.Properties
 import scala.{meta => m}
-import scala.meta.internal.semantic.mirrors.CommonMirror
+import scala.meta.semantic.Mirror
 import scala.meta.internal.scalahost.databases.DatabaseOps
 
-class OnlineMirror(val global: Global) extends CommonMirror with DatabaseOps {
+class OnlineMirror(val global: Global) extends Mirror with DatabaseOps {
   override def toString: String = {
     val compiler = s"the Scala compiler ${Properties.versionString}"
     val settings = global.settings.toConciseString

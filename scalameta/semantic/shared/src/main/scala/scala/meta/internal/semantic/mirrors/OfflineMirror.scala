@@ -12,7 +12,7 @@ import scala.meta.internal.io.PathIO
 import scala.meta.parsers._
 import scala.meta.semantic._
 
-@data class OfflineMirror(classpath: String, sourcepath: String) extends CommonMirror {
+@data class OfflineMirror(classpath: String, sourcepath: String) extends Mirror {
   private def failEmpty(what: String) =
     sys.error(
       s"$what must be non-empty. " +

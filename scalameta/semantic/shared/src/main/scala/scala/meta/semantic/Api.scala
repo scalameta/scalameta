@@ -1,7 +1,12 @@
 package scala.meta
 package semantic
 
+import org.scalameta.unreachable
+import org.scalameta.debug
+import scala.compat.Platform.EOL
+import scala.meta.internal.ast.Helpers._
 import scala.meta.inputs._
+import scala.meta.prettyprinters._
 
 private[meta] trait Api extends Flags {
   implicit class XtensionPositionAnchor(pos: Position) {
@@ -14,12 +19,50 @@ private[meta] trait Api extends Flags {
   }
 
   implicit class XtensionRefSymbol(ref: Ref)(implicit m: Mirror) {
-    def symbol: Symbol = m.symbol(ref).get
+    def symbol: Symbol = (apiBoundary {
+      def relevantPosition(tree: Tree): Position = tree match {
+        case name1: Name => name1.pos
+        case _: Term.This => ???
+        case _: Term.Super => ???
+        case Term.Select(_, name1) => name1.pos
+        case Term.ApplyUnary(_, name1) => name1.pos
+        case Type.Select(_, name1) => name1.pos
+        case Type.Project(_, name1) => name1.pos
+        case Type.Singleton(ref1) => relevantPosition(ref1)
+        case Ctor.Ref.Select(_, name1) => name1.pos
+        case Ctor.Ref.Project(_, name1) => name1.pos
+        case Ctor.Ref.Function(name1) => ???
+        case _: Importee.Wildcard => ???
+        case Importee.Name(name1) => name1.pos
+        case Importee.Rename(name1, _) => name1.pos
+        case Importee.Unimport(name1) => name1.pos
+        case _ => unreachable(debug(tree.syntax, tree.structure))
+      }
+      val position = relevantPosition(ref)
+      val anchor = position.toAnchor
+      m.database.names.getOrElse(anchor, sys.error(s"semantic DB doesn't contain $ref"))
+    }).get
   }
 
   implicit class XtensionSymbolDenotation(sym: Symbol)(implicit m: Mirror) extends HasFlags {
-    def hasFlag(flag: Long): Boolean = (m.denot(sym).get.flags & flag) == flag
-    def info: String = m.denot(sym).get.info
+    def denot: Completed[Denotation] = apiBoundary(m.database.denotations.getOrElse(sym, sys.error(s"semantic DB doesn't contain $sym")))
+    // NOTE: isXXX methods are added here via `extends HasFlags`
+    def hasFlag(flag: Long): Boolean = (denot.get.flags & flag) == flag
+    def info: String = denot.get.info
+  }
+
+  private def apiBoundary[T](op: => T): Completed[T] = {
+    try {
+      val result = op
+      Completed.Success(result)
+    } catch {
+      case ex: SemanticException =>
+        Completed.Error(ex)
+      case ex: Exception =>
+        var message = s"fatal error: ${ex.getMessage}$EOL"
+        message += "This is a bug; please report it via https://github.com/scalameta/scalameta/issues/new."
+        Completed.Error(new SemanticException(Position.None, message, Some(ex)))
+    }
   }
 }
 

@@ -171,6 +171,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
       |* scala.meta.Type.pat: scala.meta.Pat.Type
       |* scala.meta.inputs.Position.toAnchor: scala.meta.semantic.Anchor
+      |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).denot: scala.meta.semantic.Denotation
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).hasFlag(Long): Boolean
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).info: String
     """.trim.stripMargin)

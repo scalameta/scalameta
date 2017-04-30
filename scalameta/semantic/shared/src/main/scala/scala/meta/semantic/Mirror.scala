@@ -9,8 +9,6 @@ trait Mirror {
   def dialect: Dialect
   def sources: Seq[Source]
   def database: Database
-  def symbol(ref: Ref): Completed[Symbol]
-  def denot(sym: Symbol): Completed[Denotation]
 }
 
 object Mirror {
