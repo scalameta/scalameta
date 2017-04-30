@@ -8,7 +8,7 @@ import org.scalameta.data._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.collection.mutable
-import scala.meta.internal.io.PlatformIO
+import scala.meta.internal.io.PathIO
 import scala.meta.parsers._
 import scala.meta.semantic._
 
@@ -45,7 +45,7 @@ import scala.meta.semantic._
         addFile(file)
       }
     }
-    val fragments = sourcepath.split(PlatformIO.pathSeparator).toList
+    val fragments = sourcepath.split(PathIO.pathSeparator).toList
     fragments.foreach(fragment => explore(new File(fragment)))
     scalaFiles.toList.map(_.parse[Source].get)
   }

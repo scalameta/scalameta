@@ -2,14 +2,20 @@ package scala.meta.io
 
 import java.io._
 import org.scalameta.data._
-import scala.meta.internal.io.PlatformIO
+import scala.meta.internal.io.PathIO
 
-@data class RelativePath(underlying: String) {
-  override def toString: String = underlying
+@data class RelativePath private (value: String) {
+  override def toString: String = value
+  def toFile: File = new File(value)
 
-  def toFile: File = new File(underlying)
+  def toAbsolute: AbsolutePath = toAbsolute(PathIO.workingDirectory)
+  def toAbsolute(root: AbsolutePath): AbsolutePath = root.resolve(this)
+  def toAbsolute(file: File): AbsolutePath = toAbsolute(AbsolutePath(file))
+  def toAbsolute(path: String): AbsolutePath = toAbsolute(AbsolutePath(path))
 
-  def absolutize(parent: AbsolutePath): AbsolutePath = PlatformIO.absolutize(parent, this)
+  def resolve(path: RelativePath): RelativePath = PathIO.resolve(this, path)
+  def resolve(file: File): RelativePath = resolve(RelativePath(file))
+  def resolve(path: String): RelativePath = resolve(RelativePath(path))
 }
 
 object RelativePath {
@@ -18,7 +24,7 @@ object RelativePath {
   }
 
   def apply(path: String): RelativePath = {
-    if (PlatformIO.isRelativePath(path)) new RelativePath(path)
+    if (!PathIO.isAbsolutePath(path)) new RelativePath(path)
     else sys.error(s"not a relative path: $path")
   }
 }

@@ -3,7 +3,6 @@ package prettyprinters
 
 import org.scalatest._
 import scala.meta._
-import scala.meta.internal.io.PlatformIO
 
 class PublicSuite extends FunSuite {
   test("com.trueaccord.scalapb.GeneratedEnumCompanion.A") {
@@ -138,7 +137,7 @@ class PublicSuite extends FunSuite {
   test("scala.meta.inputs.Input.File.toString") {
     import java.io._
     import java.nio.charset.Charset
-    val path = RelativePath("hello.scala").absolutize(PlatformIO.workingDirectory)
+    val path = RelativePath("hello.scala").toAbsolute
     val input1 = Input.File(path, Charset.forName("latin1"))
     val input2 = Input.File(path, Charset.forName("UTF-8"))
     assert(input1.toString == """Input.File(new File("hello.scala"), Charset.forName("ISO-8859-1"))""")
@@ -276,7 +275,7 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semantic.Anchor.toString") {
-    val path = RelativePath("hello.scala").absolutize(PlatformIO.workingDirectory)
+    val path = RelativePath("hello.scala").toAbsolute
     val anchor = Anchor(path, 40, 42)
     assert(anchor.toString === s"""$path@40..42""")
   }
@@ -307,7 +306,7 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semantic.Message.toString") {
-    val path = RelativePath("hello.scala").absolutize(PlatformIO.workingDirectory)
+    val path = RelativePath("hello.scala").toAbsolute
     val anchor = Anchor(path, 40, 42)
     val message = Message(anchor, Severity.Error, "does not compute")
     assert(message.toString === s"[error] $path@40..42: does not compute")

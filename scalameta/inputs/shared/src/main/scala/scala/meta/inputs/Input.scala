@@ -7,7 +7,6 @@ import org.scalameta.data._
 import org.scalameta.invariants._
 import scala.meta.common._
 import scala.meta.internal.inputs._
-import scala.meta.internal.io._
 import scala.meta.io._
 
 trait Input extends Optional with Product with Serializable with InternalInput {
@@ -26,7 +25,7 @@ object Input {
   }
 
   @data class Stream(stream: java.io.InputStream, charset: Charset) extends Input {
-    lazy val chars = InputStreamIO.slurp(stream, charset).toArray
+    lazy val chars = scala.meta.internal.io.InputStreamIO.slurp(stream, charset).toArray
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
     override def toString = "Input.Stream(<stream>, Charset.forName(\"" + charset.name + "\"))"
   }
@@ -55,10 +54,7 @@ object Input {
   @data class File(path: AbsolutePath, charset: Charset) extends Input {
     lazy val chars = path.slurp.toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
-    override def toString = {
-      val file = "new File(\"" + path.relativize(PlatformIO.workingDirectory) + "\")"
-      "Input.File(" + file + ", Charset.forName(\"" + charset.name + "\"))"
-    }
+    override def toString = "Input.File(new File(\"" + path.toRelative + "\"), Charset.forName(\"" + charset.name + "\"))"
   }
   object File {
     def apply(path: AbsolutePath, charset: Charset): Input.File = new Input.File(path, charset)

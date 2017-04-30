@@ -11,7 +11,6 @@ import scala.compat.Platform.EOL
 import scala.util.Try
 import org.scalameta.data._
 import scala.meta.io._
-import scala.meta.internal.io.PlatformIO
 import scala.meta.internal.semantic.codecs._
 import scala.meta.internal.semantic.{proto => p}
 
@@ -166,7 +165,7 @@ object Database {
     var result = databaseRoot.toString
     if (!result.endsWith("/")) result += "/"
     // TODO: This relativization is unsound and should be removed.
-    result += path.relativize(PlatformIO.workingDirectory).toString
+    result += path.toRelative.toString
     result = result.stripSuffix(".scala") + ".semanticdb"
     new URI(result)
   }

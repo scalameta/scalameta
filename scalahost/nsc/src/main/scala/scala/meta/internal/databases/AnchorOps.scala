@@ -6,7 +6,6 @@ import java.io.{File => JFile}
 import scala.{meta => m}
 import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSourceFile}
 import scala.reflect.io.{AbstractFile => GFile, PlainFile => GPlainFile}
-import scala.meta.internal.io.PlatformIO
 
 trait AnchorOps { self: DatabaseOps =>
 

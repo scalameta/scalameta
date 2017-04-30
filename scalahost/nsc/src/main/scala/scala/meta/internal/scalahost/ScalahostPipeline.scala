@@ -6,7 +6,6 @@ import scala.collection.mutable
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
 import scala.{meta => m}
-import scala.meta.internal.io.PlatformIO.workingDirectory
 import scala.meta.internal.scalahost.databases.DatabaseOps
 
 trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
@@ -45,8 +44,8 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
           val oldScalaPath = m.AbsolutePath(
             new File(oldDatabaseFile.getAbsolutePath.stripSuffix(".semanticdb") + ".scala"))
           val oldScalaFile = oldScalaPath
-            .relativize(m.AbsolutePath(databaseRoot))
-            .absolutize(workingDirectory)
+            .toRelative(m.AbsolutePath(databaseRoot))
+            .toAbsolute(scala.meta.internal.io.PathIO.workingDirectory)
             .toFile
           if (!oldScalaFile.exists) {
             def cleanupUpwards(file: File): Unit = {
