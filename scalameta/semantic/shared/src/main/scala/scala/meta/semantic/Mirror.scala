@@ -3,7 +3,7 @@ package semantic
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.meta.internal.semantic.mirrors.OfflineMirror
+import scala.meta.internal.semantic.OfflineMirror
 
 trait Mirror {
   def dialect: Dialect

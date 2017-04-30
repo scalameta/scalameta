@@ -6,7 +6,7 @@ import scala.collection.mutable
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
 import scala.{meta => m}
-import scala.meta.internal.scalahost.databases.DatabaseOps
+import scala.meta.internal.semantic.DatabaseOps
 
 trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
 

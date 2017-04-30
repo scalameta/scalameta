@@ -1,6 +1,5 @@
 package scala.meta.internal
-package scalahost
-package databases
+package semantic
 
 import scala.util.Properties
 import scala.{meta => m}

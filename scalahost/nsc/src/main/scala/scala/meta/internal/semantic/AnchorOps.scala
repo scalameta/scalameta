@@ -1,6 +1,5 @@
 package scala.meta.internal
-package scalahost
-package databases
+package semantic
 
 import java.io.{File => JFile}
 import scala.{meta => m}

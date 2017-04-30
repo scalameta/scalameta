@@ -10,7 +10,7 @@ import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
-import scala.meta.internal.scalahost.mirrors.OnlineMirror
+import scala.meta.internal.semantic.OnlineMirror
 
 abstract class OnlineMirrorSuite extends FunSuite {
   private def test(code: String)(fn: => Unit): Unit = {

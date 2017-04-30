@@ -1,6 +1,5 @@
 package scala.meta.internal
-package scalahost
-package databases
+package semantic
 
 import org.scalameta.unreachable
 import scala.{Seq => _}

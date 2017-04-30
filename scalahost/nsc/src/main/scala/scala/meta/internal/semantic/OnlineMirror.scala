@@ -1,6 +1,5 @@
 package scala.meta.internal
-package scalahost
-package mirrors
+package semantic
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -8,7 +7,6 @@ import scala.tools.nsc.Global
 import scala.util.Properties
 import scala.{meta => m}
 import scala.meta.semantic.Mirror
-import scala.meta.internal.scalahost.databases.DatabaseOps
 
 class OnlineMirror(val global: Global) extends Mirror with DatabaseOps {
   override def toString: String = {
