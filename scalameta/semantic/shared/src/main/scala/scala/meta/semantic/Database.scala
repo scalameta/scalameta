@@ -122,21 +122,21 @@ object Database {
         lines += ""
       }
     }
+    implicit class XtensionPositionRange(pos: Position) {
+      def range = s"[${pos.start.offset}..${pos.end.offset})"
+    }
 
     lines.append(path.toString, "-" * path.toString.length, "")
 
-    val content = path.slurp
     val s_names = names.toList.sortBy(_._1.start.offset).map {
-      case ((Range(_, Offset(_, start), Offset(_, end)), symbol)) =>
-        val snippet = content.substring(start, end)
-        s"[$start..$end): $snippet => $symbol"
+      case ((pos, symbol)) =>
+        s"${pos.range}: ${pos.text} => $symbol"
     }
     appendSection("Names", s_names)
 
     val s_messages = messages.toList.sortBy(_.position.start.offset).map {
-      case Message(Range(_, Offset(_, start), Offset(_, end)), severity, message) =>
-        val snippet = content.substring(start, end)
-        s"[$start..$end): [${severity.toString.toLowerCase}] ${message}"
+      case Message(pos, severity, message) =>
+        s"${pos.range}: [${severity.toString.toLowerCase}] ${message}"
     }
     appendSection("Messages", s_messages)
 
@@ -147,8 +147,8 @@ object Database {
     appendSection("Denotations", s_denotations)
 
     val s_sugars = sugars.toList.sortBy(_._1.start.offset).map {
-      case ((Range(_, Offset(_, start), Offset(_, end)), syntax)) =>
-        s"[$start..$end) $syntax"
+      case ((pos, syntax)) =>
+        s"${pos.range} $syntax"
     }
     appendSection("Sugars", s_sugars)
 

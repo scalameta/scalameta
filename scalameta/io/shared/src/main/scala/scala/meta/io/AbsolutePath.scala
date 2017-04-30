@@ -16,8 +16,6 @@ import scala.meta.internal.io.{FileIO, PathIO}
   def resolve(path: RelativePath): AbsolutePath = PathIO.resolve(this, path)
   def resolve(file: File): AbsolutePath = resolve(RelativePath(file))
   def resolve(path: String): AbsolutePath = resolve(RelativePath(path))
-
-  def slurp: String = FileIO.slurp(this)
 }
 
 object AbsolutePath {
