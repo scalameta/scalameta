@@ -18,8 +18,8 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
         val banned = List("scala.collection.generic", "scala.Enumeration", "scala.math", "scala.Int", "scala.meta.inline.Api")
         banned.exists(prefix => sym.fullName.startsWith(prefix))
       }
-      def tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith("tests")
-      def internal = sym.fullName.contains(".internal.") // NOTE: don't ignore "internal" itself
+      def tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith(".tests")
+      def internal = sym.fullName.contains(".internal.") || (sym.fullName.endsWith(".internal") && !sym.fullName.endsWith(".meta.internal"))
       def invisible = !sym.isPublic
       def inexistent = !sym.asInstanceOf[scala.reflect.internal.SymbolTable#Symbol].exists // NOTE: wtf
       val result = artefact || trivial || arbitrary || tests || internal || invisible || inexistent
@@ -66,7 +66,17 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
 
   private def staticClassesObjectsAndVals(pkg: Symbol, onlyImmediatelyAccessible: Boolean): List[Symbol] = {
     val visited = Set[Symbol]()
+
     def loop(parent: Symbol): Unit = {
+      def mark(sym: Symbol): Boolean = {
+        val interesting = sym.isRelevant && !visited(sym)
+        if (interesting) visited += sym
+        interesting
+      }
+      def markAndRecur(sym: Symbol): Unit = {
+        if (mark(sym)) loop(sym)
+      }
+
       if (parent == NoSymbol) return
       parent.info.members.toList.foreach(sym => {
         def failUnsupported(sym: Symbol): Nothing = {
@@ -76,25 +86,22 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
           // ignore: not worth processing
         } else {
           if (sym.isPackage) {
-            if (!onlyImmediatelyAccessible && !visited(sym)) {
-              visited += sym
-              loop(sym)
-            }
+            if (!onlyImmediatelyAccessible) markAndRecur(sym)
             visited += sym
           } else if (sym.isModule) {
             // don't check onlyImmediatelyAccessible
             // because we expect many members of modules to be used via full fullNames
-            if (!visited(sym)) {
-              visited += sym
-              loop(sym)
-            }
+            markAndRecur(sym)
           } else if (sym.isClass) {
-            visited += sym
+            // don't recur into class members
+            mark(sym)
           } else if (sym.isMethod) {
             if (sym.asMethod.isGetter) {
               val isInPackageClass = sym.owner.isModuleClass && sym.owner.name == typeNames.PACKAGE
-              if (isInPackageClass) visited += sym
-              else {
+              if (isInPackageClass) {
+                // doesn't make sense to recur into package class methods
+                mark(sym)
+              } else {
                 // handle term aliases
                 val target = sym.info.finalResultType.typeSymbol
                 if (target.isModuleClass) loop(target.asClass.module)
@@ -103,8 +110,8 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
             }
           } else if (sym.isType) {
             // handle type aliases
-            val target = sym.info.typeSymbol
-            visited += target
+            // doesn't make sense to recur into type aliases
+            mark(sym.info.typeSymbol)
           } else if (sym.isTerm) {
             if (sym.asTerm.getter != NoSymbol || sym.isPrivateThis) {
               // ignore: processed in sym.isMethod

@@ -18,7 +18,7 @@ package object inputs {
       if (point != Point.None) {
         val input = point.input
         val shortContent = input match {
-          case Input.File(path, _) => path.absolute
+          case Input.File(path, _) => path.toString
           case Input.LabeledString(label, _) => label
           case _ => "<input>"
         }

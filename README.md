@@ -1,4 +1,4 @@
-### scala.meta
+### scalameta
 [![Build Status](https://platform-ci.scala-lang.org/api/badges/scalameta/scalameta/status.svg)](https://platform-ci.scala-lang.org/scalameta/scalameta)
 [![Join the chat at https://gitter.im/scalameta/scalameta](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scalameta/scalameta?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -6,7 +6,7 @@
 Head over to [the user docs][docs] to learn more about the project and its roadmap.
 
 ### Tutorial
-If you'd like to find out how to use scala.meta, see this [tutorial](http://scalameta.org/tutorial).
+If you'd like to find out how to use scalameta, see this [tutorial](http://scalameta.org/tutorial).
 
 ### Team
 The current maintainers (people who can merge pull requests) are:

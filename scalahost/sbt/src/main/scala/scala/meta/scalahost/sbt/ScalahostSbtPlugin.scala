@@ -35,7 +35,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
       scalaVersion.value match {
         case SupportedScalaVersion(version) =>
           List(
-            "org.scalameta" % s"scalahost-nsc_$version" % scalahostVersion % Scalameta
+            "org.scalameta" % s"scalahost_$version" % scalahostVersion % Scalameta
           )
         case _ => Nil
       }
@@ -108,7 +108,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
   private lazy val scalahostJarPath: Def.Initialize[Task[Option[String]]] = Def.task {
     scalaVersion.value match {
       case SupportedScalaVersion(version) =>
-        val jarRegex = s".*scalahost-nsc_$version(-$scalahostVersion)?.jar$$"
+        val jarRegex = s".*scalahost_$version(-$scalahostVersion)?.jar$$"
         val allJars = update.value.filter(configurationFilter(Scalameta.name)).allFiles
         val scalahostJar = allJars
           .collectFirst {

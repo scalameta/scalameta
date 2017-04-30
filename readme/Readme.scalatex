@@ -2,21 +2,21 @@
 @import Main._
 @import scala.meta._
 
-@sect("scala.meta", stableVersionBadge)
+@sect("Scalameta", stableVersionBadge)
 
   @p
-    Scala.meta is a clean-room implementation of a metaprogramming toolkit for Scala,
+    Scalameta is a clean-room implementation of a metaprogramming toolkit for Scala,
     designed to be simple, robust and portable.
-    We are striving for scala.meta to become a successor of scala.reflect,
+    We are striving for scalameta to become a successor of scala.reflect,
     the current de facto standard in the Scala ecosystem.
 
   @p
-    Scala.meta provides functionality that's unprecedented in the Scala ecosystem.
+    Scalameta provides functionality that's unprecedented in the Scala ecosystem.
     Our killer feature is abstract syntax trees that capture the code exactly as it is written -
     with all the original formatting and attention to minor syntactic details.
 
   @p
-    With scala.meta, we are building a community of next-generation tooling for Scala.
+    With scalameta, we are building a community of next-generation tooling for Scala.
     @lnk("Codacy", "https://codacy.com/")'s Scala engine, @lnk("Scalafmt", "http://scalafmt.org")
     and @lnk("Scalafix", "https://github.com/scalacenter/scalafix")
     take advantage of our unique features and deliver user experiences
@@ -28,7 +28,7 @@
         High-fidelity parsing.
       Note how the abstract syntax trees in the printout below
       contain comprehensive information about formatting and comments.
-      This is an exclusive feature of scala.meta.
+      This is an exclusive feature of scalameta.
 
     @meta
       "x + y /* adds x and y */".parse[Term]
@@ -37,7 +37,7 @@
     @p
       @b
         Tokens.
-      Scala.meta takes even the finest details of Scala code into account.
+      Scalameta takes even the finest details of Scala code into account.
       We achieve this by attaching tokens, data structures representing atomic
       units of Scala syntax, to our abstract syntax trees. Note that the
       abstract syntax tree in the printout doesn't have the comment per se -
@@ -52,7 +52,7 @@
     @p
       @b
         Dialects.
-      Scala.meta is designed from the ground up to be platform-independent.
+      Scalameta is designed from the ground up to be platform-independent.
       This means that we understand different versions of the base language:
       Scala 2.10, Scala 2.11 and even Dotty. We also support Sbt build files
       to make sure we cover as much Scala code as possible.
@@ -70,7 +70,7 @@
       Scala.reflect is notorious for being obscure and user-unfriendly,
       but it has its moments.
       Quasiquotes have proven to be an amazing productivity booster,
-      so we implemented them in scala.meta, and now they are better than ever.
+      so we implemented them in scalameta, and now they are better than ever.
       Note how the precise types for @code("x") and @code("y")
       prevent the programmer from generating invalid code.
       Learn more about quasiquotes in
@@ -106,7 +106,7 @@
 
   @sect{Getting started}
     @p
-      To get started with scala.meta, add the following to your @code("build.sbt"):
+      To get started with scalameta, add the following to your @code("build.sbt"):
 
     @hl.scala
       // Latest stable version
@@ -118,7 +118,7 @@
 
     @p
       Next, you'll need to add a single wildcard import to the files where you'll
-      be using scala.meta. Unlike with scala.reflect, the metaprogramming
+      be using scalameta. Unlike with scala.reflect, the metaprogramming
       library from the standard distribution, no complicated setup is necessary.
 
     @hl.scala
@@ -126,7 +126,7 @@
 
   @sect{Tutorial}
     @p
-      To learn more about practical aspects of using scala.meta, take a look at
+      To learn more about practical aspects of using scalameta, take a look at
       our tutorial that is based on a workshop given by Ólafur Pall Geirsson at Scala World 2016:
       @lnk("http://scalameta.org/tutorial", "http://scalameta.org/tutorial").
 
@@ -152,8 +152,8 @@
     @p
       @b
         Other execution environments.
-      The current version of scala.meta can only be run with Scala 2.11, Scala 2.12 or Scala.js.
-      This means that it is very hard or outright impossible to write scala.meta-based tools
+      The current version of scalameta can only be run with Scala 2.11, Scala 2.12 or Scala.js.
+      This means that it is very hard or outright impossible to write scalameta-based tools
       targetting Scala 2.10 (e.g. running in sbt 0.13.x) or Scala Native.
       Vote for @lnk("#295", "https://github.com/scalameta/scalameta/issues/295")
       and @lnk("#772", "https://github.com/scalameta/scalameta/issues/772")
@@ -177,7 +177,7 @@
     @p
       @b
         Metaprogramming 2.0
-      (ScalaDays Berlin 2016). This talk explains the status of scala.meta, demonstrates key features,
+      (ScalaDays Berlin 2016). This talk explains the status of scalameta, demonstrates key features,
       presents the early adopters and publishes our plans for the future. In Berlin, we provided an extensive
       story of what's going to happen to compile-time metaprogramming in Scala,
       featuring a live demo of new-style ("inline") macros that support integration with IntelliJ IDEA.

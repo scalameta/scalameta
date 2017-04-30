@@ -17,7 +17,10 @@ object Helpers {
   def isUnaryOp(s: String): Boolean = unaryOps contains s
 
   implicit class XtensionSyntacticName(name: Name) {
-    def isBinder: Boolean = name.parent.map(_.is[Member]).getOrElse(false)
+    def isBinder: Boolean = name.parent match {
+      case Some(parent: Member) => parent.name == name
+      case _ => false
+    }
     def isReference: Boolean = !isBinder
   }
 

@@ -16,7 +16,10 @@ lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.vers
 // Projects
 // ==========================================
 
-name := "scalametaRoot"
+{
+  println(s"[info] Welcome to scalameta $LibraryVersion")
+  name := "scalametaRoot"
+}
 sharedSettings
 nonPublishableSettings
 unidocSettings
@@ -29,9 +32,8 @@ commands += Command.command("ci-fast") { s =>
     s
 }
 commands += CiCommand("ci-slow")(
-  "scalahostNsc/test:runMain scala.meta.tests.scalahost.converters.LotsOfProjects" ::
-    "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
-    Nil
+  "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
+  Nil
 )
 commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/test" :: Nil)
 commands += CiCommand("ci-publish")(
@@ -54,7 +56,7 @@ lazy val common = crossProject
   .settings(
     publishableSettings,
     libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.3",
-    description := "Bag of private and public helpers used in scala.meta's APIs and implementations",
+    description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
 lazy val commonJVM = common.jvm
@@ -64,8 +66,9 @@ lazy val io = crossProject
   .in(file("scalameta/io"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's API for JVM/JS agnostic IO."
+    description := "Scalameta APIs for JVM/JS agnostic IO."
   )
+  .dependsOn(common)
 
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
@@ -74,7 +77,7 @@ lazy val dialects = crossProject
   .in(file("scalameta/dialects"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's dialects",
+    description := "Scalameta dialects",
     enableMacros
   )
   .dependsOn(common)
@@ -85,7 +88,7 @@ lazy val inline = crossProject
   .in(file("scalameta/inline"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's APIs for new-style (\"inline\") macros"
+    description := "Scalameta APIs for new-style (\"inline\") macros"
   )
   .dependsOn(inputs)
 lazy val inlineJVM = inline.jvm
@@ -95,7 +98,7 @@ lazy val inputs = crossProject
   .in(file("scalameta/inputs"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's APIs for source code in textual format",
+    description := "Scalameta APIs for source code in textual format",
     enableMacros
   )
   .dependsOn(common, io)
@@ -106,7 +109,7 @@ lazy val parsers = crossProject
   .in(file("scalameta/parsers"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's API for parsing and its baseline implementation"
+    description := "Scalameta APIs for parsing and their baseline implementation"
   )
   .dependsOn(common, dialects, inputs, tokens, tokenizers, trees)
 lazy val parsersJVM = parsers.jvm
@@ -116,7 +119,7 @@ lazy val quasiquotes = crossProject
   .in(file("scalameta/quasiquotes"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's quasiquotes for abstract syntax trees",
+    description := "Scalameta quasiquotes for abstract syntax trees",
     enableHardcoreMacros
   )
   .dependsOn(common, dialects, inputs, trees, parsers)
@@ -127,7 +130,7 @@ lazy val tokenizers = crossProject
   .in(file("scalameta/tokenizers"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's APIs for tokenization and its baseline implementation",
+    description := "Scalameta APIs for tokenization and their baseline implementation",
     libraryDependencies += "com.lihaoyi" %%% "scalaparse" % "0.4.2",
     enableMacros
   )
@@ -139,7 +142,7 @@ lazy val tokens = crossProject
   .in(file("scalameta/tokens"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's tokens and token-based abstractions (inputs and positions)",
+    description := "Scalameta tokens and token-based abstractions (inputs and positions)",
     enableMacros
   )
   .dependsOn(common, dialects, inputs)
@@ -150,7 +153,7 @@ lazy val transversers = crossProject
   .in(file("scalameta/transversers"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's traversal and transformation infrastructure for abstract syntax trees",
+    description := "Scalameta traversal and transformation infrastructure for abstract syntax trees",
     enableMacros
   )
   .dependsOn(common, trees)
@@ -161,7 +164,7 @@ lazy val trees = crossProject
   .in(file("scalameta/trees"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's abstract syntax trees",
+    description := "Scalameta abstract syntax trees",
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
     enableMacros
@@ -174,7 +177,7 @@ lazy val semantic = crossProject
   .in(file("scalameta/semantic"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's semantic APIs",
+    description := "Scalameta semantic APIs",
     // Protobuf setup for binary serialization.
     PB.targets.in(Compile) := Seq(
       scalapb.gen(
@@ -184,7 +187,7 @@ lazy val semantic = crossProject
     PB.protoSources.in(Compile) := Seq(file("scalameta/semantic/shared/src/main/protobuf")),
     libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
   )
-  .dependsOn(common, trees)
+  .dependsOn(common, parsers, trees)
 lazy val semanticJVM = semantic.jvm
 lazy val semanticJS = semantic.js
 
@@ -192,7 +195,7 @@ lazy val scalameta = crossProject
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
-    description := "Scala.meta's metaprogramming APIs",
+    description := "Scalameta umbrella module that includes all public APIs",
     exposePaths("scalameta", Test)
   )
   .dependsOn(
@@ -209,26 +212,15 @@ lazy val scalameta = crossProject
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
-lazy val scalahost = project
-  .in(file("scalahost/core"))
-  .settings(
-    moduleName := "scalahost",
-    description := "Scala.meta semantic API integration for Scala 2.x (scalac).",
-    publishableSettings,
-    hasLargeIntegrationTests,
-    isFullCrossVersion,
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
-  )
-  .dependsOn(scalametaJVM)
-
 lazy val scalahostNsc = project
   .in(file("scalahost/nsc"))
   .settings(
-    moduleName := "scalahost-nsc",
-    description := "Scala 2.x compiler plugin that persists the semantic DB on compile.",
+    moduleName := "scalahost",
+    description := "Scala 2.x compiler plugin that persists the scalameta semantic DB on compile",
     publishableSettings,
     mergeSettings,
     isFullCrossVersion,
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     exposePaths("scalahost", Test),
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
@@ -246,7 +238,7 @@ lazy val scalahostNsc = project
       }).transform(node).head
     }
   )
-  .dependsOn(scalahost, testkit % Test)
+  .dependsOn(scalametaJVM, testkit % Test)
 
 lazy val scalahostSbt = project
   .in(file("scalahost/sbt"))
@@ -265,7 +257,7 @@ lazy val scalahostSbt = project
       RunSbtCommand("; such publishLocal " +
         "; such scalahostSbt/scripted")(state.value)
     },
-    description := "sbt plugin to enable the scalahost compiler plugin",
+    description := "sbt plugin to enable the scalahost compiler plugin for Scala 2.x",
     moduleName := "sbt-scalahost", // sbt convention is that plugin names start with sbt-
     scalaVersion := "2.10.6",
     crossScalaVersions := Seq("2.10.6"), // for some reason, scalaVersion.value does not work.
@@ -295,7 +287,7 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
       "commons-io" % "commons-io" % "2.5"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-    description := "Testing utilities for scala.meta's metaprogramming APIs"
+    description := "Testing utilities for scalameta APIs"
   )
   .dependsOn(scalametaJVM)
 
@@ -304,7 +296,7 @@ lazy val tests = project
   .settings(
     sharedSettings,
     nonPublishableSettings,
-    description := "Runs all tests in scalameta project.",
+    description := "Tests for scalameta APIs",
     test := {
       testJVM.value
       testJS.value
@@ -331,7 +323,7 @@ lazy val contrib = crossProject
   .in(file("scalameta/contrib"))
   .settings(
     publishableSettings,
-    description := "Utilities for scala.meta"
+    description := "Incubator for scalameta APIs"
   )
   .jvmConfigure(_.dependsOn(testkit))
   .dependsOn(scalameta)
@@ -383,9 +375,6 @@ lazy val readme = scalatex
     watchSources ++= baseDirectory.value.listFiles.toList,
     test := run.in(Compile).toTask(" --validate").value,
     publish := {
-      if (sys.props("sbt.prohibit.publish") != null)
-        sys.error("Undefined publishing strategy")
-
       // generate the scalatex readme into `website`
       val website =
         new File(target.value.getAbsolutePath + File.separator + "scalatex")
@@ -491,30 +480,6 @@ lazy val publishableSettings = Def.settings(
   bintrayOrganization := Some("scalameta"),
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false,
-  {
-    val publishingEnabled: Boolean = {
-      if (!new File(sys.props("user.home") + "/.bintray/.credentials").exists) false
-      else if (sys.props("sbt.prohibit.publish") != null) false
-      else if (sys.env.contains("CI_PULL_REQUEST")) false
-      else true
-    }
-    if (sys.props("disable.publish.status") == null) {
-      sys.props("disable.publish.status") = ""
-      val publishingStatus = if (publishingEnabled) "enabled" else "disabled"
-      println(s"[info] Welcome to scala.meta $LibraryVersion (publishing $publishingStatus)")
-    }
-    publish.in(Compile) := (Def.taskDyn {
-      if (publishingEnabled) {
-        Def.task {
-          publish.value
-        }
-      } else {
-        Def.task {
-          sys.error("Undefined publishing strategy"); ()
-        }
-      }
-    }).value
-  },
   publishMavenStyle := true,
   pomIncludeRepository := { x =>
     false

@@ -68,6 +68,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.internal
       |scala.meta.io
       |scala.meta.io.AbsolutePath
+      |scala.meta.io.RelativePath
       |scala.meta.parsers
       |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException
@@ -85,35 +86,32 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
       |scala.meta.semantic
-      |scala.meta.semantic.v1 *
-      |scala.meta.semantic.v1.Address *
-      |scala.meta.semantic.v1.Address.File *
-      |scala.meta.semantic.v1.Address.Snippet *
-      |scala.meta.semantic.v1.CompilerMessage *
-      |scala.meta.semantic.v1.Completed *
-      |scala.meta.semantic.v1.Completed.Error *
-      |scala.meta.semantic.v1.Completed.Success *
-      |scala.meta.semantic.v1.Database
-      |scala.meta.semantic.v1.Location *
-      |scala.meta.semantic.v1.Mirror
-      |scala.meta.semantic.v1.SemanticException
-      |scala.meta.semantic.v1.Severity *
-      |scala.meta.semantic.v1.Severity.Error *
-      |scala.meta.semantic.v1.Severity.Info *
-      |scala.meta.semantic.v1.Severity.Unknown *
-      |scala.meta.semantic.v1.Severity.Warning *
-      |scala.meta.semantic.v1.Signature *
-      |scala.meta.semantic.v1.Signature.Method *
-      |scala.meta.semantic.v1.Signature.Self *
-      |scala.meta.semantic.v1.Signature.Term *
-      |scala.meta.semantic.v1.Signature.TermParameter *
-      |scala.meta.semantic.v1.Signature.Type *
-      |scala.meta.semantic.v1.Signature.TypeParameter *
-      |scala.meta.semantic.v1.Symbol
-      |scala.meta.semantic.v1.Symbol.Global
-      |scala.meta.semantic.v1.Symbol.Local
-      |scala.meta.semantic.v1.Symbol.Multi
-      |scala.meta.semantic.v1.Symbol.None
+      |scala.meta.semantic.Anchor
+      |scala.meta.semantic.AttributedSource
+      |scala.meta.semantic.Completed
+      |scala.meta.semantic.Completed.Error
+      |scala.meta.semantic.Completed.Success
+      |scala.meta.semantic.Database
+      |scala.meta.semantic.Denotation
+      |scala.meta.semantic.Message
+      |scala.meta.semantic.Mirror
+      |scala.meta.semantic.SemanticException
+      |scala.meta.semantic.Severity
+      |scala.meta.semantic.Severity.Error
+      |scala.meta.semantic.Severity.Info
+      |scala.meta.semantic.Severity.Warning
+      |scala.meta.semantic.Signature
+      |scala.meta.semantic.Signature.Method
+      |scala.meta.semantic.Signature.Self
+      |scala.meta.semantic.Signature.Term
+      |scala.meta.semantic.Signature.TermParameter
+      |scala.meta.semantic.Signature.Type
+      |scala.meta.semantic.Signature.TypeParameter
+      |scala.meta.semantic.Symbol
+      |scala.meta.semantic.Symbol.Global
+      |scala.meta.semantic.Symbol.Local
+      |scala.meta.semantic.Symbol.Multi
+      |scala.meta.semantic.Symbol.None
       |scala.meta.tokenizers
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException
@@ -166,15 +164,15 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Dialect.apply(scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
       |* scala.meta.Pat.Type.tpe: scala.meta.Type
-      |* scala.meta.Ref(implicit scala.meta.semantic.v1.Mirror).symbol: scala.meta.semantic.v1.Symbol
-      |* scala.meta.Tree(implicit scala.meta.semantic.v1.Mirror).=!=(scala.meta.Tree): Boolean
-      |* scala.meta.Tree(implicit scala.meta.semantic.v1.Mirror).===(scala.meta.Tree): Boolean
+      |* scala.meta.Ref(implicit scala.meta.semantic.Mirror).symbol: scala.meta.semantic.Symbol
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
       |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
       |* scala.meta.Type.pat: scala.meta.Pat.Type
-      |* scala.meta.io.AbsolutePath.slurp: String
+      |* scala.meta.inputs.Position.toAnchor: scala.meta.semantic.Anchor
+      |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).hasFlag(Long): Boolean
+      |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).info: String
     """.trim.stripMargin)
   }
 

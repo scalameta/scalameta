@@ -118,8 +118,6 @@ class PublicSuite extends FunSuite {
     assert(scala.meta.dialects.ParadiseTypelevel212.toString === "ParadiseTypelevel212")
   }
 
-  test("scala.meta.io.PlatformIO") {}
-
   test("scala.meta.inputs.Input.toString") {
     // covered below
   }
@@ -135,7 +133,7 @@ class PublicSuite extends FunSuite {
   test("scala.meta.inputs.Input.File.toString") {
     import java.io._
     import java.nio.charset.Charset
-    val path = AbsolutePath.fromRelative("hello.scala")
+    val path = RelativePath("hello.scala").toAbsolute
     val input1 = Input.File(path, Charset.forName("latin1"))
     val input2 = Input.File(path, Charset.forName("UTF-8"))
     assert(input1.toString == """Input.File(new File("hello.scala"), Charset.forName("ISO-8859-1"))""")
@@ -165,7 +163,6 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Input.LabeledString.toString") {
     val input = Input.LabeledString("foo.scala", "foo")
-    org.scalameta.logger.elem(input.toString)
     assert(input.toString == s"""Input.LabeledString("foo.scala", "foo")""")
   }
 
@@ -197,8 +194,11 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.io.AbsolutePath.toString") {
-    val path = AbsolutePath.fromRelative("hello.scala")
-    assert(path.toString == s"""AbsolutePath(${path.absolute})""")
+    // TODO: come up with a platform-independent test
+  }
+
+  test("scala.meta.io.RelativePath.toString") {
+    // TODO: come up with a platform-independent test
   }
 
   test("scala.meta.parsers.Parse.toString") {
@@ -270,89 +270,99 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Address.toString") {
-    // covered below
+  test("scala.meta.semantic.Anchor.toString") {
+    val path = RelativePath("hello.scala").toAbsolute
+    val anchor = Anchor(path, 40, 42)
+    assert(anchor.toString === s"""$path@40..42""")
   }
 
-  test("scala.meta.semantic.v1.Address.File.toString") {
-    val file = "source.scala"
-    val syntax = s"file:$file"
-    val fullPath = AbsolutePath.fromRelative(file).absolute
-    val address = scala.meta.semantic.v1.Address(syntax)
-    val scala.meta.semantic.v1.Address.File(AbsolutePath(`fullPath`)) = address
-    assert(address.toString === s"file:$fullPath")
-  }
-
-  test("scala.meta.semantic.v1.Address.Snippet.toString") {
-    val syntax = "snippet:Int"
-    val address = scala.meta.semantic.v1.Address(syntax)
-    val scala.meta.semantic.v1.Address.Snippet("Int") = address
-    assert(address.toString === syntax)
-  }
-
-  test("scala.meta.semantic.v1.Completed.toString") {
-    // covered below
-  }
-
-  test("scala.meta.semantic.v1.Completed.Error.toString") {
+  test("scala.meta.semantic.AttributedSource.toString") {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Completed.Success.toString") {
+  test("scala.meta.semantic.Completed.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.Completed.Error.toString") {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Database.toString") {
+  test("scala.meta.semantic.Completed.Success.toString") {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Location.toString") {
-    val file = "source.scala"
-    val path = AbsolutePath.fromRelative(file).absolute
-    val location = scala.meta.semantic.v1.Location(scala.meta.semantic.v1.Address(s"file:$file"), 40, 42)
-    assert(location.toString === s"""Location(Address("file:$path"), 40, 42)""")
+  test("scala.meta.semantic.Denotation.toString") {
+    val denotation = Denotation(PRIVATE | CASE | CLASS, "C", "")
+    assert(denotation.toString === "private case class C")
   }
 
-  test("scala.meta.semantic.v1.Mirror.toString") {
+  test("scala.meta.semantic.Database.toString") {
+    // too involved to fit here, see DatabaseSuite in scalahost
+  }
+
+  test("scala.meta.semantic.Message.toString") {
+    val path = RelativePath("hello.scala").toAbsolute
+    val anchor = Anchor(path, 40, 42)
+    val message = Message(anchor, Severity.Error, "does not compute")
+    assert(message.toString === s"[error] $path@40..42: does not compute")
+  }
+
+  test("scala.meta.semantic.Mirror.toString") {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.SemanticException.toString") {
+  test("scala.meta.semantic.SemanticException.toString") {
     // n/a
   }
 
-  test("scala.meta.semantic.v1.Signature.toString") {
+  test("scala.meta.semantic.Severity.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.Method.toString") {
+  test("scala.meta.semantic.Severity.Error") {
+    assert(Severity.Error.toString === "Error")
+  }
+
+  test("scala.meta.semantic.Severity.Info") {
+    assert(Severity.Info.toString === "Info")
+  }
+
+  test("scala.meta.semantic.Severity.Warning") {
+    assert(Severity.Warning.toString === "Warning")
+  }
+
+  test("scala.meta.semantic.Signature.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.Self.toString") {
+  test("scala.meta.semantic.Signature.Method.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.Term.toString") {
+  test("scala.meta.semantic.Signature.Self.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.TermParameter.toString") {
+  test("scala.meta.semantic.Signature.Term.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.Type.toString") {
+  test("scala.meta.semantic.Signature.TermParameter.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Signature.TypeParameter.toString") {
+  test("scala.meta.semantic.Signature.Type.toString") {
     // covered below
   }
 
-  test("scala.meta.semantic.v1.Symbol.toString") {
-    import scala.meta.semantic.v1.Address
-    import scala.meta.semantic.v1.Symbol
-    import scala.meta.semantic.v1.Signature
+  test("scala.meta.semantic.Signature.TypeParameter.toString") {
+    // covered below
+  }
+
+  test("scala.meta.semantic.Symbol.toString") {
+    import scala.meta.semantic.Symbol
+    import scala.meta.semantic.Signature
 
     val syntaxNone = ""
     val none @ Symbol.None = Symbol(syntaxNone)
@@ -382,9 +392,8 @@ class PublicSuite extends FunSuite {
     val globalSelf @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Self("self")) = Symbol(syntaxGlobalSelf)
     assert(globalSelf.toString === syntaxGlobalSelf)
 
-    val file =  AbsolutePath.fromRelative("source.scala").absolute
-    val syntaxLocal = s"file:$file@40..42"
-    val local @ Symbol.Local(Address.File(AbsolutePath(path)), 40, 42) = Symbol(syntaxLocal)
+    val syntaxLocal = "/source.scala@40..42"
+    val local @ Symbol.Local(Anchor(AbsolutePath("/source.scala"), 40, 42)) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
 
     val syntaxMulti = "_root_.C#;_root.C."
@@ -392,19 +401,19 @@ class PublicSuite extends FunSuite {
     assert(multi.toString === syntaxMulti)
   }
 
-  test("scala.meta.semantic.v1.Symbol.Global.toString") {
+  test("scala.meta.semantic.Symbol.Global.toString") {
     // covered above
   }
 
-  test("scala.meta.semantic.v1.Symbol.Local.toString") {
+  test("scala.meta.semantic.Symbol.Local.toString") {
     // covered above
   }
 
-  test("scala.meta.semantic.v1.Symbol.Multi.toString") {
+  test("scala.meta.semantic.Symbol.Multi.toString") {
     // covered above
   }
 
-  test("scala.meta.semantic.v1.Symbol.None.toString") {
+  test("scala.meta.semantic.Symbol.None.toString") {
     // covered above
   }
 
@@ -478,9 +487,4 @@ class PublicSuite extends FunSuite {
   test("scala.meta.transversers.Traverser.toString") {
     // n/a
   }
-  test("scala.meta.semantic.v1.Severity.Unknown") { }
-  test("scala.meta.semantic.v1.Severity.Error") { }
-  test("scala.meta.semantic.v1.Severity.Info") { }
-  test("scala.meta.semantic.v1.Severity.Warning") { }
-  test("scala.meta.semantic.v1.CompilerMessage") { }
 }

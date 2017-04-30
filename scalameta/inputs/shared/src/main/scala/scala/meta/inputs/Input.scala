@@ -7,7 +7,6 @@ import org.scalameta.data._
 import org.scalameta.invariants._
 import scala.meta.common._
 import scala.meta.internal.inputs._
-import scala.meta.internal.io._
 import scala.meta.io._
 
 trait Input extends Optional with Product with Serializable with InternalInput {
@@ -26,7 +25,7 @@ object Input {
   }
 
   @data class Stream(stream: java.io.InputStream, charset: Charset) extends Input {
-    lazy val chars = InputStreamIO.slurp(stream, charset).toArray
+    lazy val chars = scala.meta.internal.io.InputStreamIO.slurp(stream, charset).toArray
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
     override def toString = "Input.Stream(<stream>, Charset.forName(\"" + charset.name + "\"))"
   }
@@ -53,18 +52,15 @@ object Input {
   }
 
   @data class File(path: AbsolutePath, charset: Charset) extends Input {
-    @deprecated("Use .path instead", "1.8.0")
-    def file: java.io.File = new java.io.File(path.absolute)
     lazy val chars = path.slurp.toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
-    override def toString = "Input.File(new File(\"" + path.relative + "\"), Charset.forName(\"" + charset.name + "\"))"
+    override def toString = "Input.File(new File(\"" + path.toRelative + "\"), Charset.forName(\"" + charset.name + "\"))"
   }
   object File {
     def apply(path: AbsolutePath, charset: Charset): Input.File = new Input.File(path, charset)
     def apply(path: AbsolutePath): Input.File = apply(path, Charset.forName("UTF-8"))
-    def apply(path: Predef.String): Input.File = apply(AbsolutePath.fromAbsoluteOrRelative(path))
-    def apply(file: java.io.File): Input.File = apply(file.getAbsolutePath)
     def apply(file: java.io.File, charset: Charset): Input.File = apply(AbsolutePath(file), charset)
+    def apply(file: java.io.File): Input.File = apply(file, Charset.forName("UTF-8"))
 
     @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: File) extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
