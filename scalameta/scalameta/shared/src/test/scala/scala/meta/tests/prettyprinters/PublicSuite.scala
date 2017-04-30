@@ -5,10 +5,6 @@ import org.scalatest._
 import scala.meta._
 
 class PublicSuite extends FunSuite {
-  test("com.trueaccord.scalapb.GeneratedEnumCompanion.A") {
-    // TODO: lol what a wtf
-  }
-
   test("scala.meta.Dialect.toString") {
     // covered below
   }

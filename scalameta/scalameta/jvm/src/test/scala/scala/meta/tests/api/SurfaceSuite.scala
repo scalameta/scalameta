@@ -28,9 +28,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       s"$fullName$suffix"
     }).mkString(EOL)
     // println(diagnostic)
-    // TODO: lol at com.trueaccord.scalapb.GeneratedEnumCompanion.A *
     assert(diagnostic === """
-      |com.trueaccord.scalapb.GeneratedEnumCompanion.A *
       |scala.meta.Dialect
       |scala.meta.Tree
       |scala.meta.classifiers
