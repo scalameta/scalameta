@@ -26,7 +26,7 @@ object Input {
   }
 
   @data class Stream(stream: java.io.InputStream, charset: Charset) extends Input {
-    lazy val chars = scala.meta.internal.io.InputStreamIO.slurp(stream, charset).toArray
+    lazy val chars = new scala.Predef.String(scala.meta.internal.io.InputStreamIO.readBytes(stream), charset).toArray
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
     override def toString = "Input.Stream(<stream>, Charset.forName(\"" + charset.name + "\"))"
   }

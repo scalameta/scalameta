@@ -68,7 +68,11 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.internal
       |scala.meta.io
       |scala.meta.io.AbsolutePath
+      |scala.meta.io.Classpath
+      |scala.meta.io.Fragment
+      |scala.meta.io.Multipath
       |scala.meta.io.RelativePath
+      |scala.meta.io.Sourcepath
       |scala.meta.parsers
       |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException
@@ -86,7 +90,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
       |scala.meta.semantic
-      |scala.meta.semantic.AttributedSource
+      |scala.meta.semantic.Attributes
       |scala.meta.semantic.Database
       |scala.meta.semantic.Denotation
       |scala.meta.semantic.Message
@@ -165,10 +169,10 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
       |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
       |* scala.meta.Type.pat: scala.meta.Pat.Type
-      |* scala.meta.inputs.Position.structure: String
-      |* scala.meta.inputs.Position.syntax: String
+      |* scala.meta.semantic.Database.sources: scala.collection.immutable.Seq[scala.meta.Source]
+      |* scala.meta.semantic.Database.toSchema: scala.meta.internal.semantic.schema.Database
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).denot: scala.meta.semantic.Denotation
-      |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).hasFlag(Long): Boolean
+      |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).flags: Long
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).info: String
     """.trim.stripMargin)
   }

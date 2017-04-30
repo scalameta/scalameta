@@ -1,19 +1,11 @@
 syntax = "proto3";
 
-package scala.meta.internal.semantic.proto;
+package scala.meta.internal.semantic.schema;
 
-message Database {
-  // A database is treated as a sequence of attributed source files.
-  // This accommodates incremental compilation, because database entries
-  // map one-to-one to compilation units.
-  // This also makes merging databases trivial, as the bytes of two databases
-  // can be simply concatenated to produce a new database.
-  repeated AttributedSource sources = 1;
-}
-
-message AttributedSource {
+message Attributes {
   reserved 1;
   string path = 5;
+  string dialect = 7;
   repeated ResolvedName names = 2;
   repeated Message messages = 3;
   repeated SymbolDenotation denotations = 4;

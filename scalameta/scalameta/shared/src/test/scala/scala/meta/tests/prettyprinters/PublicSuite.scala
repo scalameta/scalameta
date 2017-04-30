@@ -198,7 +198,23 @@ class PublicSuite extends FunSuite {
     // TODO: come up with a platform-independent test
   }
 
+  test("scala.meta.io.Classpath.toString") {
+    // TODO: come up with a platform-independent test
+  }
+
+  test("scala.meta.io.Fragment.toString") {
+    // TODO: come up with a platform-independent test
+  }
+
+  test("scala.meta.io.Multipath.toString") {
+    // TODO: come up with a platform-independent test
+  }
+
   test("scala.meta.io.RelativePath.toString") {
+    // TODO: come up with a platform-independent test
+  }
+
+  test("scala.meta.io.Sourcepath.toString") {
     // TODO: come up with a platform-independent test
   }
 
@@ -271,19 +287,7 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("scala.meta.semantic.AttributedSource.toString") {
-    // n/a
-  }
-
-  test("scala.meta.semantic.Completed.toString") {
-    // covered below
-  }
-
-  test("scala.meta.semantic.Completed.Error.toString") {
-    // n/a
-  }
-
-  test("scala.meta.semantic.Completed.Success.toString") {
+  test("scala.meta.semantic.Attributes.toString") {
     // n/a
   }
 
@@ -305,10 +309,6 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semantic.Mirror.toString") {
-    // n/a
-  }
-
-  test("scala.meta.semantic.SemanticException.toString") {
     // n/a
   }
 

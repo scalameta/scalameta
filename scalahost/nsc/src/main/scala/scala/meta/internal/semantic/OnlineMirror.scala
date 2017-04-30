@@ -31,7 +31,7 @@ class OnlineMirror(val global: Global) extends Mirror with DatabaseOps {
     // i.e. that we can only add new compilation units, but not remove them.
     if (cachedDatabaseKey != recomputeCachedDatabaseKey()) {
       cachedDatabaseKey = recomputeCachedDatabaseKey()
-      cachedDatabase = m.Database(units.map(_.toAttributedSource))
+      cachedDatabase = m.Database(units.map(u => u.source.toInput -> u.toAttributes))
     }
     cachedDatabase
   }

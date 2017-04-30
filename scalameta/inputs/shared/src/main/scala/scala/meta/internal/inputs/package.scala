@@ -41,7 +41,7 @@ package object inputs {
   implicit class XtensionInputSyntaxStructure(input: Input) {
     def syntax: String = input match {
       case Input.None => "<none>"
-      case Input.File(path, _) => scala.util.Try(path.toRelative.toString).getOrElse(path.toString)
+      case Input.File(path, _) => path.toString
       case Input.LabeledString(label, _) => label
       case _ => "<input>"
     }
@@ -51,7 +51,7 @@ package object inputs {
   implicit class XtensionPositionSyntaxStructure(pos: Position) {
     def syntax: String = pos match {
       case Position.None => s"<none>"
-      case Position.Range(input, start, end) => s"${input.syntax}@${start.syntax}..${end.syntax}"
+      case Position.Range(input, start, end) => s"${input.syntax}@${start.offset}..${end.offset}"
     }
     def structure: String = pos match {
       case Position.None => s"Position.None"

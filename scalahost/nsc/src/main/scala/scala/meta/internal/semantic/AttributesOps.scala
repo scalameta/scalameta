@@ -10,12 +10,13 @@ import scala.reflect.internal.{Flags => gf}
 import scala.{meta => m}
 import scala.{meta => mf}
 import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.inputs._
 
-trait AttributedSourceOps { self: DatabaseOps =>
+trait AttributesOps { self: DatabaseOps =>
 
-  implicit class XtensionCompilationUnitAttributedSource(unit: g.CompilationUnit) {
-    def toAttributedSource: m.AttributedSource = {
-      unit.cache.getOrElse("attributedSource", {
+  implicit class XtensionCompilationUnitAttributes(unit: g.CompilationUnit) {
+    def toAttributes: m.Attributes = {
+      unit.cache.getOrElse("attributes", {
         if (!g.settings.Yrangepos.value)
           sys.error("the compiler instance must have -Yrangepos enabled")
         if (g.useOffsetPositions) sys.error("The compiler instance must use range positions")
@@ -323,11 +324,7 @@ trait AttributedSourceOps { self: DatabaseOps =>
           traverser.traverse(unit.body)
         }
 
-        m.AttributedSource(unit.source.toAbsolutePath,
-                           names.toMap,
-                           unit.hijackedMessages,
-                           denotations.toMap,
-                           inferred.toMap)
+        m.Attributes(dialect, names.toList, unit.hijackedMessages, denotations.toList, inferred.toList)
       })
     }
   }

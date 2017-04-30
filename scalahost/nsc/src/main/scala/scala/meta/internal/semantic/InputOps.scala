@@ -1,22 +1,18 @@
 package scala.meta.internal
 package semantic
 
-import java.io.{File => JFile}
 import scala.{meta => m}
 import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSourceFile}
-import scala.reflect.io.{AbstractFile => GFile, PlainFile => GPlainFile}
+import scala.reflect.io.{PlainFile => GPlainFile}
 
-trait PositionOps { self: DatabaseOps =>
+trait InputOps { self: DatabaseOps =>
 
-  implicit class XtensionGSourceFileLocation(gsource: GSourceFile) {
-    def toAbsolutePath: m.AbsolutePath = gsource.file.toAbsolutePath
-  }
-
-  implicit class XtensionGFileAddr(gfile: GFile) {
-    def toAbsolutePath: m.AbsolutePath = gfile match {
+  implicit class XtensionGSourceFileInput(gsource: GSourceFile) {
+    def toAbsolutePath: m.AbsolutePath = gsource.file match {
       case gfile: GPlainFile => m.AbsolutePath(gfile.file)
       case other => sys.error(s"unsupported file " + other)
     }
+    def toInput: m.Input = m.Input.File(gsource.toAbsolutePath)
   }
 
   implicit class XtensionGPositionMPosition(pos: GPosition) {
