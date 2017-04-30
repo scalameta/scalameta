@@ -15,4 +15,7 @@ package object contrib
   with ExtractModsInstances
   with ExtractAnnotationInstances
   with ExtractExtensions
+  with ReplaceExtensions
+  with ReplaceModsInstances
+  with ReplaceStatInstances
 
