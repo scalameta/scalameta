@@ -6,7 +6,7 @@ import scala.{meta => m}
 import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSourceFile}
 import scala.reflect.io.{AbstractFile => GFile, PlainFile => GPlainFile}
 
-trait AnchorOps { self: DatabaseOps =>
+trait PositionOps { self: DatabaseOps =>
 
   implicit class XtensionGSourceFileLocation(gsource: GSourceFile) {
     def toAbsolutePath: m.AbsolutePath = gsource.file.toAbsolutePath
@@ -19,10 +19,11 @@ trait AnchorOps { self: DatabaseOps =>
     }
   }
 
-  implicit class XtensionGPositionAnchor(pos: GPosition) {
-    def toAnchor: m.Anchor = {
+  implicit class XtensionGPositionMPosition(pos: GPosition) {
+    def toMeta: m.Position = {
       assert(pos.isRange)
-      m.Anchor(pos.source.toAbsolutePath, pos.start, pos.end)
+      val input = m.Input.File(pos.source.toAbsolutePath)
+      m.Position.Range(input, m.Point.Offset(input, pos.start), m.Point.Offset(input, pos.end))
     }
   }
 }

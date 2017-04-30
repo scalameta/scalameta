@@ -13,22 +13,25 @@ trait ReporterOps { self: DatabaseOps =>
     def hijackedMessages: Seq[m.Message] = {
       g.reporter match {
         case r: StoreReporter =>
-          val path = unit.source.toAbsolutePath
-          object Message {
-            def unapply(info: r.Info): Option[(m.Anchor, Int, String)] =
-              if (!info.pos.isRange) None
-              else Some((info.pos.toAnchor, info.severity.id, info.msg))
+          object RelevantMessage {
+            def unapply(info: r.Info): Option[(m.Position, Int, String)] = {
+              val unitPath = unit.source.toAbsolutePath
+              val infoPath = info.pos.source.toAbsolutePath
+              if (!info.pos.isRange) return None
+              if (infoPath != unitPath) return None
+              Some((info.pos.toMeta, info.severity.id, info.msg))
+            }
           }
           r.infos
             .collect {
-              case Message(location, severityId, msg) if location.path == path =>
+              case RelevantMessage(pos, severityId, msg) =>
                 val severity = severityId match {
                   case 0 => m.Severity.Info
                   case 1 => m.Severity.Warning
                   case 2 => m.Severity.Error
                   case _ => unreachable
                 }
-                m.Message(location, severity, msg)
+                m.Message(pos, severity, msg)
             }
             .to[Seq]
         case _ =>

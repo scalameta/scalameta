@@ -3,6 +3,9 @@ package scala.meta.internal.semantic
 import org.scalameta.unreachable
 import scala.meta.io._
 import scala.meta.{semantic => m}
+import scala.meta.inputs.{Input => mInput, Position => mPosition}
+import scala.meta.inputs.Point.{Offset => mOffset}
+import scala.meta.inputs.Position.{Range => mRange}
 import scala.meta.internal.semantic.{proto => p}
 
 package object codecs {
@@ -16,15 +19,15 @@ package object codecs {
     new ProtoCodec[m.AttributedSource, p.AttributedSource] {
       override def toProto(e: m.AttributedSource): p.AttributedSource = e match {
         case m.AttributedSource(path, names, messages, denotations, sugars) =>
-          implicit val resolvedNameEncoder = new ProtoEncoder[(m.Anchor, m.Symbol), p.ResolvedName] {
-            override def toProto(e: (m.Anchor, m.Symbol)): p.ResolvedName = e match {
-              case (m.Anchor(_, start, end), symbol) =>
+          implicit val resolvedNameEncoder = new ProtoEncoder[(mPosition, m.Symbol), p.ResolvedName] {
+            override def toProto(e: (mPosition, m.Symbol)): p.ResolvedName = e match {
+              case (mRange(_, mOffset(_, start), mOffset(_, end)), symbol) =>
                 p.ResolvedName(Some(p.Range(start, end)), symbol.syntax)
             }
           }
           implicit val messageEncoder = new ProtoEncoder[m.Message, p.Message] {
             override def toProto(e: m.Message): p.Message = e match {
-              case m.Message(m.Anchor(_, start, end), sev, msg) =>
+              case m.Message(mRange(_, mOffset(_, start), mOffset(_, end)), sev, msg) =>
                 p.Message(Some(p.Range(start, end)), p.Message.Severity.fromValue(sev.id), msg)
             }
           }
@@ -34,9 +37,9 @@ package object codecs {
                 p.SymbolDenotation(symbol.syntax, Some(p.Denotation(denotation.flags, denotation.name, denotation.info)))
             }
           }
-          implicit val sugarEncoder = new ProtoEncoder[(m.Anchor, String), p.Sugar] {
-            override def toProto(e: (m.Anchor, String)): p.Sugar = e match {
-              case (m.Anchor(_, start, end), syntax) =>
+          implicit val sugarEncoder = new ProtoEncoder[(mPosition, String), p.Sugar] {
+            override def toProto(e: (mPosition, String)): p.Sugar = e match {
+              case (mRange(_, mOffset(_, start), mOffset(_, end)), syntax) =>
                 p.Sugar(Some(p.Range(start, end)), syntax)
             }
           }
@@ -48,10 +51,11 @@ package object codecs {
       }
       override def fromProto(e: p.AttributedSource): m.AttributedSource = e match {
         case p.AttributedSource(path, names, messages, denotations, sugars) =>
-          implicit val resolvedNameDecoder = new ProtoDecoder[(m.Anchor, m.Symbol), p.ResolvedName] {
-            override def fromProto(e: p.ResolvedName): (m.Anchor, m.Symbol) = e match {
+          val input = mInput.File(AbsolutePath(path))
+          implicit val resolvedNameDecoder = new ProtoDecoder[(mPosition, m.Symbol), p.ResolvedName] {
+            override def fromProto(e: p.ResolvedName): (mPosition, m.Symbol) = e match {
               case p.ResolvedName(Some(p.Range(start, end)), m.Symbol(symbol)) =>
-                m.Anchor(AbsolutePath(path), start, end) -> symbol
+                mRange(input, mOffset(input, start), mOffset(input, end)) -> symbol
               case _ =>
                 unreachable
             }
@@ -59,7 +63,7 @@ package object codecs {
           implicit val messageDecoder = new ProtoDecoder[m.Message, p.Message] {
             override def fromProto(e: p.Message): m.Message = e match {
               case p.Message(Some(p.Range(start, end)), sev, message) =>
-                m.Message(m.Anchor(AbsolutePath(path), start, end), m.Severity.fromId(sev.value), message)
+                m.Message(mRange(input, mOffset(input, start), mOffset(input, end)), m.Severity.fromId(sev.value), message)
               case _ =>
                 unreachable
             }
@@ -72,19 +76,19 @@ package object codecs {
                 unreachable
             }
           }
-          implicit val sugarDecoder = new ProtoDecoder[(m.Anchor, String), p.Sugar] {
-            override def fromProto(e: p.Sugar): (m.Anchor, String) = e match {
+          implicit val sugarDecoder = new ProtoDecoder[(mPosition, String), p.Sugar] {
+            override def fromProto(e: p.Sugar): (mPosition, String) = e match {
               case p.Sugar(Some(p.Range(start, end)), syntax) =>
-                m.Anchor(AbsolutePath(path), start, end) -> syntax
+                mRange(input, mOffset(input, start), mOffset(input, end)) -> syntax
               case _ =>
                 unreachable
             }
           }
           m.AttributedSource(AbsolutePath(path),
-                             names.map(_.toMeta[(m.Anchor, m.Symbol)]).toMap,
+                             names.map(_.toMeta[(mPosition, m.Symbol)]).toMap,
                              messages.map(_.toMeta[m.Message]).toList,
                              denotations.map(_.toMeta[(m.Symbol, m.Denotation)]).toMap,
-                             sugars.map(_.toMeta[(m.Anchor, String)]).toMap)
+                             sugars.map(_.toMeta[(mPosition, String)]).toMap)
       }
     }
 

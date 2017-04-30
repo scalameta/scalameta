@@ -11,6 +11,9 @@ import scala.compat.Platform.EOL
 import scala.util.Try
 import org.scalameta.data._
 import scala.meta.io._
+import scala.meta.inputs._
+import scala.meta.inputs.Point.Offset
+import scala.meta.inputs.Position.Range
 import scala.meta.internal.semantic.codecs._
 import scala.meta.internal.semantic.{proto => p}
 
@@ -25,11 +28,11 @@ import scala.meta.internal.semantic.{proto => p}
     }
   }
 
-  @deprecated("Use names instead", "1.8.0") def symbols: Map[Anchor, Symbol] = names
-  def names: Map[Anchor, Symbol] = sources.foldLeft(Map[Anchor, Symbol]())(_ ++ _.names)
+  @deprecated("Use names instead", "1.8.0") def symbols: Map[Position, Symbol] = names
+  def names: Map[Position, Symbol] = sources.foldLeft(Map[Position, Symbol]())(_ ++ _.names)
   def messages: Seq[Message] = sources.flatMap(_.messages)
   def denotations: Map[Symbol, Denotation] = sources.foldLeft(Map[Symbol, Denotation]())(_ ++ _.denotations)
-  def sugars: Map[Anchor, String] = sources.foldLeft(Map[Anchor, String]())(_ ++ _.sugars)
+  def sugars: Map[Position, String] = sources.foldLeft(Map[Position, String]())(_ ++ _.sugars)
 
   override def toString: String = sources.mkString(EOL + EOL)
   def toBinary: Array[Byte] = this.toProto[p.Database].toByteArray
@@ -105,10 +108,10 @@ object Database {
 
 @data class AttributedSource(
   path: AbsolutePath,
-  names: Map[Anchor, Symbol],
+  names: Map[Position, Symbol],
   messages: Seq[Message],
   denotations: Map[Symbol, Denotation],
-  sugars: Map[Anchor, String]
+  sugars: Map[Position, String]
 ) {
   override def toString: String = {
     val lines = mutable.ListBuffer[String]()
@@ -123,15 +126,15 @@ object Database {
     lines.append(path.toString, "-" * path.toString.length, "")
 
     val content = path.slurp
-    val s_names = names.toList.sortBy(_._1.start).map {
-      case ((Anchor(_, start, end), symbol)) =>
+    val s_names = names.toList.sortBy(_._1.start.offset).map {
+      case ((Range(_, Offset(_, start), Offset(_, end)), symbol)) =>
         val snippet = content.substring(start, end)
         s"[$start..$end): $snippet => $symbol"
     }
     appendSection("Names", s_names)
 
-    val s_messages = messages.toList.sortBy(_.anchor.start).map {
-      case Message(Anchor(_, start, end), severity, message) =>
+    val s_messages = messages.toList.sortBy(_.position.start.offset).map {
+      case Message(Range(_, Offset(_, start), Offset(_, end)), severity, message) =>
         val snippet = content.substring(start, end)
         s"[$start..$end): [${severity.toString.toLowerCase}] ${message}"
     }
@@ -143,8 +146,8 @@ object Database {
     }
     appendSection("Denotations", s_denotations)
 
-    val s_sugars = sugars.toList.sortBy(_._1.start).map {
-      case ((Anchor(_, start, end), syntax)) =>
+    val s_sugars = sugars.toList.sortBy(_._1.start.offset).map {
+      case ((Range(_, Offset(_, start), Offset(_, end)), syntax)) =>
         s"[$start..$end) $syntax"
     }
     appendSection("Sugars", s_sugars)

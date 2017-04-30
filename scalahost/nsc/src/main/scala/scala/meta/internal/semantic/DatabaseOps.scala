@@ -4,10 +4,10 @@ package semantic
 import scala.tools.nsc.Global
 
 trait DatabaseOps
-    extends AnchorOps
-    with AttributedSourceOps
+    extends AttributedSourceOps
     with DenotationOps
     with ParseOps
+    with PositionOps
     with ReporterOps
     with SymbolOps
     with ReflectionToolkit {

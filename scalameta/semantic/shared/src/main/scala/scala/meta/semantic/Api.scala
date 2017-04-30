@@ -9,12 +9,20 @@ import scala.meta.inputs._
 import scala.meta.prettyprinters._
 
 private[meta] trait Api extends Flags {
-  implicit class XtensionPositionAnchor(pos: Position) {
-    def toAnchor: Anchor = pos.input match {
-      case scala.meta.inputs.Input.File(path, _) =>
-        Anchor(path, pos.start.offset, pos.end.offset)
-      case other =>
-        sys.error(s"unsupported input " + other)
+  // TODO: this is a temporary stub that should be replaced with something more principled
+  implicit class XtensionPosition(pos: Position) {
+    private def path = pos.input match {
+      case Input.File(path, _) => path
+      case Input.LabeledString(label, _) => label
+      case _ => "<input>"
+    }
+    def syntax: String = {
+      s"$path@${pos.start.offset}..${pos.end.offset}"
+    }
+    def structure: String = {
+      val s_start = s"Point.Offset(${pos.start.input}, ${pos.start.offset})"
+      val s_end = s"Point.Offset(${pos.end.input}, ${pos.end.offset})"
+      s"Position.Range(${pos.input}, $s_start, $s_end)"
     }
   }
 
@@ -39,8 +47,7 @@ private[meta] trait Api extends Flags {
         case _ => unreachable(debug(tree.syntax, tree.structure))
       }
       val position = relevantPosition(ref)
-      val anchor = position.toAnchor
-      m.database.names.getOrElse(anchor, sys.error(s"semantic DB doesn't contain $ref"))
+      m.database.names.getOrElse(position, sys.error(s"semantic DB doesn't contain $ref"))
     }
   }
 
@@ -61,9 +68,6 @@ private[meta] trait Aliases {
 
   type AttributedSource = scala.meta.semantic.AttributedSource
   val AttributedSource = scala.meta.semantic.AttributedSource
-
-  type Anchor = scala.meta.semantic.Anchor
-  val Anchor = scala.meta.semantic.Anchor
 
   type Symbol = scala.meta.semantic.Symbol
   val Symbol = scala.meta.semantic.Symbol
