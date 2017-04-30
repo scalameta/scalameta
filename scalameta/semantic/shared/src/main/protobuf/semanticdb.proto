@@ -32,9 +32,10 @@ message Range {
 
 message Message {
   enum Severity {
-    INFO = 0;
-    WARNING = 1;
-    ERROR = 2;
+    UNKNOWN = 0;
+    INFO = 1;
+    WARNING = 2;
+    ERROR = 3;
   }
   Range range = 1;
   Severity severity = 2;
