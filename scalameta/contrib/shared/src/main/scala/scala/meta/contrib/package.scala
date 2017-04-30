@@ -1,21 +1,10 @@
 package scala.meta
 
-import scala.meta.contrib.implicits._
-import scala.meta.contrib.instances._
+import scala.meta.contrib.implicits.implicits
+import scala.meta.contrib.instances.instances
 
 package object contrib
-  extends TreeExtensions
+  extends implicits
+  with instances
   with TreeExtractors
-  with SetExtensions
-  with CommentExtensions
-  with Equality
-  with Converters
-  with ExtractStatInstances
-  with ExtractStatSubtypeInstances
-  with ExtractModsInstances
-  with ExtractAnnotationInstances
-  with ExtractExtensions
-  with ReplaceExtensions
-  with ReplaceModsInstances
-  with ReplaceStatInstances
 
