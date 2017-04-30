@@ -21,12 +21,6 @@ import scala.meta.semantic._
   if (classpath == null || classpath == "") failEmpty("classpath")
   if (sourcepath == null || sourcepath == "") failEmpty("sourcepath")
 
-  lazy val dialect: Dialect = {
-    // TODO: Make this configurable (either implicitly by storing in the semantic db
-    // or explicitly by asking for it, maybe as an implicit parameter, in the constructor of OfflineMirror)
-    scala.meta.dialects.Scala212
-  }
-
   lazy val sources: Seq[Source] = {
     val scalaFiles = mutable.ListBuffer[File]()
     def addFile(file: File): Unit = {

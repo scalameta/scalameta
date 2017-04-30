@@ -6,7 +6,6 @@ import scala.collection.immutable.Seq
 import scala.meta.internal.semantic.OfflineMirror
 
 trait Mirror {
-  def dialect: Dialect
   def sources: Seq[Source]
   def database: Database
 }
