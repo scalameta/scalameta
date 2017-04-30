@@ -88,14 +88,10 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.semantic
       |scala.meta.semantic.Anchor
       |scala.meta.semantic.AttributedSource
-      |scala.meta.semantic.Completed
-      |scala.meta.semantic.Completed.Error
-      |scala.meta.semantic.Completed.Success
       |scala.meta.semantic.Database
       |scala.meta.semantic.Denotation
       |scala.meta.semantic.Message
       |scala.meta.semantic.Mirror
-      |scala.meta.semantic.SemanticException
       |scala.meta.semantic.Severity
       |scala.meta.semantic.Severity.Error
       |scala.meta.semantic.Severity.Info

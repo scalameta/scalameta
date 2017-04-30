@@ -21,7 +21,7 @@ import scala.meta.io._
 object Symbol {
   private def unsupported(sym: Symbol, op: String) = {
     val receiver = if (sym == None) "Symbol.None" else sym.syntax
-    throw new SemanticException(Position.None, s"Symbol.${op} not supported for $receiver")
+    sys.error(s"Symbol.${op} not supported for $receiver")
   }
 
   @none object None extends Symbol {

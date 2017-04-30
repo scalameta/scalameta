@@ -19,7 +19,7 @@ private[meta] trait Api extends Flags {
   }
 
   implicit class XtensionRefSymbol(ref: Ref)(implicit m: Mirror) {
-    def symbol: Symbol = (apiBoundary {
+    def symbol: Symbol = {
       def relevantPosition(tree: Tree): Position = tree match {
         case name1: Name => name1.pos
         case _: Term.This => ???
@@ -41,28 +41,14 @@ private[meta] trait Api extends Flags {
       val position = relevantPosition(ref)
       val anchor = position.toAnchor
       m.database.names.getOrElse(anchor, sys.error(s"semantic DB doesn't contain $ref"))
-    }).get
+    }
   }
 
   implicit class XtensionSymbolDenotation(sym: Symbol)(implicit m: Mirror) extends HasFlags {
-    def denot: Completed[Denotation] = apiBoundary(m.database.denotations.getOrElse(sym, sys.error(s"semantic DB doesn't contain $sym")))
+    def denot: Denotation = m.database.denotations.getOrElse(sym, sys.error(s"semantic DB doesn't contain $sym"))
     // NOTE: isXXX methods are added here via `extends HasFlags`
-    def hasFlag(flag: Long): Boolean = (denot.get.flags & flag) == flag
-    def info: String = denot.get.info
-  }
-
-  private def apiBoundary[T](op: => T): Completed[T] = {
-    try {
-      val result = op
-      Completed.Success(result)
-    } catch {
-      case ex: SemanticException =>
-        Completed.Error(ex)
-      case ex: Exception =>
-        var message = s"fatal error: ${ex.getMessage}$EOL"
-        message += "This is a bug; please report it via https://github.com/scalameta/scalameta/issues/new."
-        Completed.Error(new SemanticException(Position.None, message, Some(ex)))
-    }
+    def hasFlag(flag: Long): Boolean = (denot.flags & flag) == flag
+    def info: String = denot.info
   }
 }
 
@@ -93,10 +79,4 @@ private[meta] trait Aliases {
 
   type Denotation = scala.meta.semantic.Denotation
   val Denotation = scala.meta.semantic.Denotation
-
-  type Completed[+T] = scala.meta.semantic.Completed[T]
-  lazy val Completed = scala.meta.semantic.Completed
-
-  type SemanticException = scala.meta.semantic.SemanticException
-  lazy val SemanticException = scala.meta.semantic.SemanticException
 }
