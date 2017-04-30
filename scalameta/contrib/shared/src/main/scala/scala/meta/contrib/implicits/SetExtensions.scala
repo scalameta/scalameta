@@ -13,3 +13,5 @@ trait SetExtensions {
       set.map(Syntactically(_))
   }
 }
+
+object SetExtensions extends SetExtensions

@@ -12,3 +12,5 @@ trait ExtractExtensions {
       ev.extract(a).exists(_.isEqual(mod))
   }
 }
+
+object ExtractExtensions extends ExtractExtensions
