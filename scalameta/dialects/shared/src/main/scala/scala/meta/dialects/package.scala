@@ -147,11 +147,15 @@ package object dialects {
   )
 
   implicit val Scala212 = Scala211.copy(
-    allowLiteralTypes = true,
+    // NOTE: support for literal types is tentatively scheduled for 2.12.3
+    // https://github.com/scala/scala/pull/5310#issuecomment-290617202
+    allowLiteralTypes = false,
     allowTrailingCommas = true
   )
 
-  implicit val Typelevel212 = Scala212.copy()
+  implicit val Typelevel212 = Scala212.copy(
+    allowLiteralTypes = true
+  )
 
   implicit val Paradise212 = Scala212.copy(
     allowInlineIdents = true,
