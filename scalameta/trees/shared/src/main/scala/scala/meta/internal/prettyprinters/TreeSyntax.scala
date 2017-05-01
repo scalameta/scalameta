@@ -233,10 +233,15 @@ object TreeSyntax {
         case t: Term.Apply           => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), t.args))
         case t: Term.ApplyType       => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
         case t: Term.ApplyInfix      =>
-          m(InfixExpr(t.op.value), s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", t.args match {
-            case (arg: Term) :: Nil => s(p(InfixExpr(t.op.value), arg, right = true))
-            case args               => s(args)
-          }))
+          val args = t.args match {
+            case (Lit.Unit(())) :: Nil =>
+              s("(())")
+            case (arg: Term) :: Nil =>
+              s(p(InfixExpr(t.op.value), arg, right = true))
+            case args => s(args)
+          }
+
+          m(InfixExpr(t.op.value), s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", args))
         case t: Term.ApplyUnary      => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
         case t: Term.Assign          => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
         case t: Term.Update          => m(Expr1, s(p(SimpleExpr1, t.fun), t.argss, " ", kw("="), " ", p(Expr, t.rhs)))
@@ -275,8 +280,12 @@ object TreeSyntax {
               m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
             case Term.Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, body) =>
               m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
-            case Term.Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, body) =>
-              m(Expr, s(kw("_"), " ", kw("=>"), " ", p(Expr, body)))
+            case Term.Function(Term.Param(_, _: Name.Anonymous, decltpeOpt, _) :: Nil, body) =>
+              val param = decltpeOpt match {
+                case Some(decltpe) => s(kw("("), kw("_"), kw(":"), decltpe, kw(")"))
+                case None => s(kw("_"))
+              }
+              m(Expr, param, " ", kw("=>"), " ", p(Expr, body))
             case Term.Function(params, body) =>
               m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
           }
