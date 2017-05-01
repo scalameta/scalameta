@@ -275,8 +275,12 @@ object TreeSyntax {
               m(Expr, s(kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", p(Expr, body)))
             case Term.Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, body) =>
               m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
-            case Term.Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, body) =>
-              m(Expr, s(kw("_"), " ", kw("=>"), " ", p(Expr, body)))
+            case Term.Function(Term.Param(_, _: Name.Anonymous, decltpeOpt, _) :: Nil, body) =>
+              val param = decltpeOpt match {
+                case Some(decltpe) => s(kw("("), kw("_"), kw(":"), decltpe, kw(")"))
+                case None => s(kw("_"))
+              }
+              m(Expr, param, " ", kw("=>"), " ", p(Expr, body))
             case Term.Function(params, body) =>
               m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
           }

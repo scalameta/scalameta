@@ -17,13 +17,20 @@ class PrettyPrinterSuite extends FunSuite {
         .asInstanceOf[T]
     }
   }
+
   def checkOk(code: String): Unit = {
     test(logger.revealWhitespace(code)) {
-      val before = code.parse[Stat].get.resetAllOrigins
-      val prettyPrinted = before.syntax.parse[Stat].get
-      StructurallyEqual(before, prettyPrinted) match {
+
+      val before: Stat = code.parse[Stat].get.resetAllOrigins
+      val after: Stat  = before.syntax.parse[Stat].get
+
+      StructurallyEqual(before, after) match {
         case Left(err) =>
-          fail(err.toString)
+          fail(
+            s"""Not Structurally equal: ${err.toString}:
+               |before: ${before.structure}
+               |after : ${after.structure}
+             """.stripMargin)
         case _ => Nil
       }
 
@@ -31,11 +38,7 @@ class PrettyPrinterSuite extends FunSuite {
   }
 
   checkOk("val x = 1")
-  checkOk(
-    """
-      |{val directives = sort(flat)
-      |
-      |      { case x ⇒ directives collectFirst { case (c, d) if c isInstance x ⇒ d } getOrElse Escalate }}
-    """.stripMargin)
+
+  checkOk("""(_: Throwable) ⇒ 1""")
 
 }
