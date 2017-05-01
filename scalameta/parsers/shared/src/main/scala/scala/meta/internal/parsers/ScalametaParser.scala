@@ -356,6 +356,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (token.is[LeftBrace]) inBraces(body)
     else body
 
+  def dropTrivialBlock(term: Term): Term =
+    term match {
+      case Term.Block((stat: Term) :: Nil) => stat
+      case _ => term
+    }
+
   @inline final def inBrackets[T](body: => T): T = {
     accept[LeftBracket]
     val ret = body
@@ -1576,18 +1582,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    */
   def expr(): Term = expr(Local)
 
-  def unquoteExpr(): Term = {
-    def dropTrivialBlock(term: Term): Term = term match {
-      case Term.Block((stat: Term) :: Nil) => stat
-      case _ => term
-    }
+  def unquoteExpr(): Term =
     token match {
       case Ident(_)    => termName()
       case LeftBrace() => dropTrivialBlock(expr())
       case KwThis()    => val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous()); next(); atPos(in.prevTokenPos, auto)(Term.This(qual))
       case _           => syntaxError("error in interpolated string: identifier, `this' or block expected", at = token)
     }
-  }
 
   def unquoteXmlExpr(): Term = {
     // TODO: verify this
@@ -1759,7 +1760,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
         if (looksLikeLambda) {
           next()
-          t = atPos(t, auto)(Term.Function(convertToParams(t), if (location != InBlock) expr() else block()))
+          t = atPos(t, auto)({
+            // Don't synthesize a block in a case expression if there is only one expression
+            val body = dropTrivialBlock(if (location != InBlock) expr() else block())
+
+            Term.Function(convertToParams(t), body)
+          })
         } else {
           // do nothing, which will either allow self-type annotation parsing to kick in
           // or will trigger an unexpected token error down the line
