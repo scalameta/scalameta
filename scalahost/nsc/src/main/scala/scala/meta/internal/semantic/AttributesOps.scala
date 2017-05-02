@@ -324,7 +324,11 @@ trait AttributesOps { self: DatabaseOps =>
           traverser.traverse(unit.body)
         }
 
-        m.Attributes(dialect, names.toList, unit.hijackedMessages, denotations.toList, inferred.toList)
+        m.Attributes(dialect,
+                     names.toList,
+                     unit.hijackedMessages,
+                     denotations.toList,
+                     inferred.toList)
       })
     }
   }

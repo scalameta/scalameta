@@ -30,9 +30,10 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
       //     (that's the protocol that we assume that Scala build tools support)
       //   * All uris related to the previous semantic db are based on the file: protocol
       //     (that follows from the fact that the output directory is based on the file: protocol)
-      val outputClasspath = Classpath(global.settings.outputDirs.getSingleOutput
-        .map(_.file.getAbsolutePath)
-        .getOrElse(global.settings.d.value))
+      val outputClasspath = Classpath(
+        global.settings.outputDirs.getSingleOutput
+          .map(_.file.getAbsolutePath)
+          .getOrElse(global.settings.d.value))
       val assumedSourcepath = Sourcepath(".")
       implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
 
