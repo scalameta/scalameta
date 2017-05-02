@@ -9,6 +9,7 @@ import org.scalameta._
 import org.scalameta.invariants._
 import Chars.{CR, LF, FF}
 import LegacyToken._
+import scala.annotation.tailrec
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokenizers._
@@ -236,8 +237,37 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       }
 
       if (prev.token == XMLLIT) {
-        tokens += Token.Xml.Part(input, dialect, prev.offset, curr.offset, prev.strVal)
-        tokens += Token.Xml.End(input, dialect, curr.offset, curr.offset)
+        def emitSpliceStart(offset: Offset) = tokens += Token.Xml.SpliceStart(input, dialect, offset, offset)
+        def emitSpliceEnd(offset: Offset) = tokens += Token.Xml.SpliceEnd(input, dialect, offset, offset)
+        def emitPart(from: Int, to: Int) = {
+          tokens += Token.Xml.Part(input, dialect, from, to, new String(input.chars, from , to - from))
+        }
+
+        @tailrec def emitContents(): Unit = {
+          curr.token match {
+            case XMLLIT =>
+              emitPart(curr.offset, curr.endOffset + 1)
+              nextToken()
+              emitContents()
+
+            case LBRACE =>
+              // We are at the start of an embedded scala expression
+              emitSpliceStart(curr.offset)
+              legacyIndex = loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
+              emitSpliceEnd(curr.offset)
+              emitContents()
+
+            case _ =>
+            // We have reached the final xml part
+          }
+        }
+
+
+        // Xml.Start has been emitted. Backtrack to emit first part
+        legacyIndex -= 1
+        emitContents()
+        val xmlEndIndex = prev.endOffset + 1
+        tokens += Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex)
       }
 
       loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)
