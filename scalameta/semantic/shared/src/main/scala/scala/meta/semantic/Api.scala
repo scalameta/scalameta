@@ -17,8 +17,8 @@ import scala.meta.inputs.{Input => mInput, Position => mPosition, Point => mPoin
 import scala.meta.parsers.{XtensionParsersDialectInput, XtensionParseDialectInput}
 
 private[meta] trait Api extends Flags {
-  implicit class XtensionDatabaseSources(database: Database) {
-    def sources: Seq[Source] = database.entries.map { case (input, attrs) => attrs.dialect(input).parse[Source].get }
+  implicit class XtensionMirrorSources(mirror: Mirror) {
+    def sources: Seq[Source] = mirror.database.entries.map { case (input, attrs) => attrs.dialect(input).parse[Source].get }
   }
 
   implicit class XtensionRefSymbol(ref: Ref)(implicit m: Mirror) {

@@ -15,7 +15,7 @@ import scala.meta.internal.io.PathIO.pathSeparator
   def shallow: List[File] = value.split(pathSeparator).map(s => new File(s)).toList
   def deep: List[Fragment] = {
     var buf = mutable.ListBuffer[Fragment]()
-    shallow.foreach(base => {
+    shallow.distinct.foreach(base => {
       def exploreDir(base: File): Unit = {
         def loop(file: File): Unit = {
           if (file.isDirectory) {
