@@ -1591,7 +1591,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def unquoteXmlExpr(): Term = {
     // TODO: verify this
-    dropAnyBraces(expr())
+    unquoteExpr()
   }
 
   // TODO: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?

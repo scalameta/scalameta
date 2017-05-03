@@ -288,7 +288,7 @@ class XmlSuite extends ParseSuite {
     """.trim.stripMargin)
 
 
-  //checkOK("<a>{}</a>") // FIXME: Should parse
+  checkOK("<a>{}</a>")
   //checkError("<a></b>") // FIXME: Should not parse
 
   // Matches bugs in scalac
