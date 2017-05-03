@@ -7,8 +7,9 @@ import org.scalameta.data._
 
 @data class Fragment(base: AbsolutePath, name: RelativePath) {
   def uri: URI = {
-    val suri = if (base.toString.endsWith(".jar")) s"jar:file:$base!/$name" else s"file:$base/$name"
-    new URI(suri).normalize
+    val baseuri = base.toURI.normalize
+    if (baseuri.toString.endsWith(".jar")) new URI(s"jar:$baseuri!/$name")
+    else baseuri
   }
   def syntax: String = uri.toString
   def structure: String = s"""Fragment(${base.structure}, ${name.structure})"""

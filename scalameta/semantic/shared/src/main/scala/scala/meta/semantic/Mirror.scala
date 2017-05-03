@@ -30,6 +30,6 @@ object Mirror {
       if (sourcepath == null || sourcepath == "") failEmpty("-Dscalameta.sourcepath")
       sourcepath
     }
-    apply(classpath, sourcepath)
+    apply(Classpath(classpath), Sourcepath(sourcepath))
   }
 }

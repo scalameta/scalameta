@@ -68,15 +68,9 @@ import scala.meta.internal.io.PathIO.pathSeparator
   def structure: String = s"""Classpath("$value")"""
   override def toString: String = syntax
 }
-object Classpath {
-  implicit def stringToClasspath(value: String): Classpath = Classpath(value)
-}
 
 @leaf class Sourcepath(value: String) extends Multipath {
   def syntax: String = value
   def structure: String = s"""Sourcepath("$value")"""
   override def toString: String = syntax
-}
-object Sourcepath {
-  implicit def stringToSourcepath(value: String): Sourcepath = Sourcepath(value)
 }
