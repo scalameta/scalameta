@@ -1,12 +1,18 @@
-package scala.meta.io
+package scala.meta
+package io
 
 import java.io._
+import java.net._
 import org.scalameta.data._
 import scala.meta.internal.io.PathIO
 
 @data class RelativePath private (value: String) {
-  override def toString: String = value
+  def syntax: String = value
+  def structure: String = s"""RelativePath("$value")"""
+  override def toString: String = syntax
+
   def toFile: File = new File(value)
+  def toURI: URI = toFile.toURI
 
   def toAbsolute: AbsolutePath = toAbsolute(PathIO.workingDirectory)
   def toAbsolute(root: AbsolutePath): AbsolutePath = root.resolve(this)

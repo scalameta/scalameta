@@ -1,5 +1,4 @@
 package scala.meta.internal
-package scalahost
 
 import org.scalameta.collections._
 import scala.reflect.ClassTag

@@ -9,6 +9,9 @@ import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.meta.common._
 import scala.meta.inputs._
+import scala.meta.internal.inputs._
+import scala.meta.inputs.Point.Offset
+import scala.meta.inputs.Position.Range
 import scala.meta.io._
 
 @root trait Symbol extends Optional {
@@ -21,7 +24,7 @@ import scala.meta.io._
 object Symbol {
   private def unsupported(sym: Symbol, op: String) = {
     val receiver = if (sym == None) "Symbol.None" else sym.syntax
-    throw new SemanticException(Position.None, s"Symbol.${op} not supported for $receiver")
+    sys.error(s"Symbol.${op} not supported for $receiver")
   }
 
   @none object None extends Symbol {
@@ -32,10 +35,10 @@ object Symbol {
     override def fullName: Ref = unsupported(this, "fullName")
   }
 
-  @leaf class Local(anchor: Anchor) extends Symbol {
+  @leaf class Local(position: Position) extends Symbol {
     override def toString = syntax
-    override def syntax = anchor.syntax
-    override def structure = s"""Symbol.Local(${anchor.structure})"""
+    override def syntax = position.syntax
+    override def structure = s"""Symbol.Local(${position.structure})"""
     override def name: Name = ???
     override def fullName: Ref = ???
   }
@@ -188,7 +191,8 @@ object Symbol {
         val endBuf = new StringBuilder
         while (Character.isDigit(readChar())) endBuf += currChar
 
-        Symbol.Local(Anchor(AbsolutePath(pathBuf.toString), startBuf.toString.toInt, endBuf.toString.toInt))
+        val input = Input.File(AbsolutePath(pathBuf.toString))
+        Symbol.Local(Range(input, Offset(input, startBuf.toString.toInt), Offset(input, endBuf.toString.toInt)))
       }
 
       def parseMulti(symbols: List[Symbol]): Symbol = {
@@ -218,9 +222,6 @@ object Symbol {
     }
     naiveParser.entryPoint()
   }
-
-  def unapply(arg: String): Option[Symbol] =
-    scala.util.Try(apply(arg)).toOption
 }
 
 @root trait Signature {

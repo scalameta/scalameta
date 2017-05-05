@@ -23,7 +23,6 @@ object TokenSyntax {
       case Viewbound() if !dialect.allowViewBounds => failViewBound()
       case _ => // do nothing, check passed
     }
-
-    s(new String(x.input.chars, x.start, x.end - x.start))
+    s(x.text)
   }
 }

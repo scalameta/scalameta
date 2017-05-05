@@ -11,8 +11,9 @@ class OffsetLineColumnSuite extends FunSuite {
     super.test(testName) {
       val content = Input.String(s)
       val points = 0.to(content.chars.length).map(i => Point.Offset(content, i))
-      intercept[IllegalArgumentException](Point.Offset(content, -1))
-      intercept[IllegalArgumentException](Point.Offset(content, content.chars.length + 1))
+      // TODO: we can't have Point.Offset force input.chars, but we'd still like to validate this somehow
+      // intercept[IllegalArgumentException](Point.Offset(content, -1))
+      // intercept[IllegalArgumentException](Point.Offset(content, content.chars.length + 1))
       val actual = points.map(p => s"${p.offset} ${p.line} ${p.column}").mkString(EOL)
       if (actual != expected) Console.err.println(actual)
       assert(actual === expected)

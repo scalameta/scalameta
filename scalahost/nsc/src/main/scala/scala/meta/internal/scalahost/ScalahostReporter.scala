@@ -1,6 +1,5 @@
 package scala.meta.internal
 package scalahost
-package compilers
 
 import scala.reflect.internal.util.Position
 import scala.tools.nsc.reporters.Reporter

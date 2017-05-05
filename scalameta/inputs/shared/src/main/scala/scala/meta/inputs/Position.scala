@@ -13,6 +13,7 @@ import scala.meta.common._
   def input: Input
   def start: Point
   def end: Point
+  def text: String
 }
 
 object Position {
@@ -20,13 +21,14 @@ object Position {
     def input = Input.None
     def start = Point.None
     def end = Point.None
+    def text = ""
     override def toString = "Position.None"
   }
 
   @leaf class Range(input: Input @nonEmpty, start: Point @nonEmpty, end: Point @nonEmpty) extends Position {
-    if (!(start.offset <= end.offset)) throw new IllegalArgumentException(s"$rangeString is not a valid range")
-    private def rangeString = s"[${start.offset}..${end.offset})"
-    override def toString = s"$rangeString in $input"
+    if (!(start.offset <= end.offset)) throw new IllegalArgumentException(s"$this is not a valid range")
+    override def text = new String(input.chars, start.offset, end.offset - start.offset)
+    override def toString = s"[${start.offset}..${end.offset}) in $input"
   }
   object Range {
     def apply(input: Input, start: Point, end: Point): Position = {

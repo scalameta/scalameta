@@ -28,10 +28,6 @@ object Point {
   }
 
   @leaf class Offset(input: Input @nonEmpty, offset: Int) extends Point {
-    if (!(0 <= offset && offset <= input.chars.length)) {
-      val message = s"$offset is not a valid offset, allowed [0..${input.chars.length}]"
-      throw new IllegalArgumentException(message)
-    }
     def line: Int = input.offsetToLine(offset)
     def column: Int = offset - input.lineToOffset(line)
     override def toString = s"$offset in $input"

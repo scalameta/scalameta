@@ -1,6 +1,5 @@
 package scala.meta.internal
-package scalahost
-package databases
+package semantic
 
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
@@ -11,12 +10,13 @@ import scala.reflect.internal.{Flags => gf}
 import scala.{meta => m}
 import scala.{meta => mf}
 import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.inputs._
 
-trait AttributedSourceOps { self: DatabaseOps =>
+trait AttributesOps { self: DatabaseOps =>
 
-  implicit class XtensionCompilationUnitAttributedSource(unit: g.CompilationUnit) {
-    def toAttributedSource: m.AttributedSource = {
-      unit.cache.getOrElse("attributedSource", {
+  implicit class XtensionCompilationUnitAttributes(unit: g.CompilationUnit) {
+    def toAttributes: m.Attributes = {
+      unit.cache.getOrElse("attributes", {
         if (!g.settings.Yrangepos.value)
           sys.error("the compiler instance must have -Yrangepos enabled")
         if (g.useOffsetPositions) sys.error("The compiler instance must use range positions")
@@ -31,9 +31,9 @@ trait AttributedSourceOps { self: DatabaseOps =>
         if (g.phase.id > g.currentRun.phaseNamed("patmat").id)
           sys.error("the compiler phase must be not later than patmat")
 
-        val names = mutable.Map[m.Anchor, m.Symbol]()
+        val names = mutable.Map[m.Position, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
-        val inferred = mutable.Map[m.Anchor, String]()
+        val inferred = mutable.Map[m.Position, String]()
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
         val mends = mutable.Map[Int, m.Name]() // end offset -> tree
@@ -136,13 +136,12 @@ trait AttributedSourceOps { self: DatabaseOps =>
           object traverser extends g.Traverser {
             private def tryFindMtree(gtree: g.Tree): Unit = {
               def success(mtree: m.Name, gsym: g.Symbol): Unit = {
-                val anchor = mtree.pos.toAnchor
-                if (names.contains(anchor)) return // NOTE: in the future, we may decide to preempt preexisting db entries
+                if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
                 val symbol = gsym.toSemantic
                 if (symbol == m.Symbol.None) return
 
-                names(anchor) = symbol
+                names(mtree.pos) = symbol
                 if (mtree.isBinder) {
                   denotations(symbol) = gsym.toDenotation
                   if (gsym.isClass && !gsym.isTrait) {
@@ -253,33 +252,33 @@ trait AttributedSourceOps { self: DatabaseOps =>
             }
 
             private def tryFindInferred(gtree: g.Tree): Unit = {
-              def success(anchor: m.Anchor, syntax: String): Unit = {
-                if (inferred.contains(anchor)) return
-                inferred(anchor) = syntax
+              def success(pos: m.Position, syntax: String): Unit = {
+                if (inferred.contains(pos)) return
+                inferred(pos) = syntax
               }
 
               if (!gtree.pos.isRange) return
               gtree match {
                 case gview: g.ApplyImplicitView =>
-                  val anchor = gtree.pos.toAnchor
+                  val pos = gtree.pos.toMeta
                   val syntax = gview.fun + "(*)"
-                  success(anchor, syntax)
+                  success(pos, syntax)
                 case gimpl: g.ApplyToImplicitArgs =>
                   gimpl.fun match {
                     case gview: g.ApplyImplicitView =>
-                      val anchor = gtree.pos.toAnchor
+                      val pos = gtree.pos.toMeta
                       val syntax = gview.fun + "(*)(" + gimpl.args.mkString(", ") + ")"
-                      success(anchor, syntax)
+                      success(pos, syntax)
                     case gfun =>
-                      val morePreciseAnchor = gimpl.pos.withStart(gimpl.pos.end).toAnchor
+                      val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toMeta
                       val syntax = "(" + gimpl.args.mkString(", ") + ")"
-                      success(morePreciseAnchor, syntax)
+                      success(morePrecisePos, syntax)
                   }
                 case g.TypeApply(fun, targs @ List(targ, _ *)) =>
                   if (targ.pos.isRange) return
-                  val morePreciseAnchor = fun.pos.withStart(fun.pos.end).toAnchor
+                  val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                   val syntax = "[" + targs.mkString(", ") + "]"
-                  success(morePreciseAnchor, syntax)
+                  success(morePrecisePos, syntax)
                 case _ =>
                 // do nothing
               }
@@ -325,11 +324,11 @@ trait AttributedSourceOps { self: DatabaseOps =>
           traverser.traverse(unit.body)
         }
 
-        m.AttributedSource(unit.source.toAbsolutePath,
-                           names.toMap,
-                           unit.hijackedMessages,
-                           denotations.toMap,
-                           inferred.toMap)
+        m.Attributes(dialect,
+                     names.toList,
+                     unit.hijackedMessages,
+                     denotations.toList,
+                     inferred.toList)
       })
     }
   }
@@ -343,8 +342,7 @@ trait AttributedSourceOps { self: DatabaseOps =>
   }
 
   private def syntaxAndPos(mtree: m.Tree): String = {
-    val path = mtree.pos.toAnchor.path
-    s"$path $mtree [${mtree.pos.start.offset}..${mtree.pos.end.offset})"
+    s"${mtree.pos.syntax} $mtree"
   }
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
