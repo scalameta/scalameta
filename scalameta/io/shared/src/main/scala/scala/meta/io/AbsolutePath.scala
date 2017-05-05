@@ -7,6 +7,8 @@ import scala.meta.internal.io.{FileIO, PathIO}
 @data class AbsolutePath private (value: String) {
   override def toString: String = value
   def toFile: File = new File(value)
+  @deprecated("Use toString() instead", "1.8")
+  def absolute: String = toString()
 
   def toRelative: RelativePath = toRelative(PathIO.workingDirectory)
   def toRelative(path: AbsolutePath): RelativePath = PathIO.unresolve(path, this)
