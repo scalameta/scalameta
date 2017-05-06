@@ -1590,7 +1590,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def unquoteXmlExpr(): Term = {
-    // TODO: verify this
     unquoteExpr()
   }
 
@@ -2342,7 +2341,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
 
     def unquoteXmlPattern(): Pat = {
-      // TODO: verify this
       dropAnyBraces(pattern().require[Pat])
     }
 
