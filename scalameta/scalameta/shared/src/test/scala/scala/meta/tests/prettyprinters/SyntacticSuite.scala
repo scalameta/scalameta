@@ -528,6 +528,18 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tree.show[Syntax] === "<foo>{bar}</foo>")
   }
 
+  test("xml literals unit") {
+    val tree = term("<foo>{}</foo>")
+    assert(tree.show[Structure] == """Term.Xml(Seq(Lit.String("<foo>"), Lit.String("</foo>")), Seq(Term.Block(Nil)))""")
+    assert(tree.show[Syntax] == "<foo>{{}}</foo>")
+  }
+
+  test("interpolator unit") {
+    val tree = term("""s"Hello${}World"""")
+    assert(tree.show[Structure] == """Term.Interpolate(Term.Name("s"), Seq(Lit.String("Hello"), Lit.String("World")), Seq(Term.Block(Nil)))""")
+    assert(tree.show[Syntax] == """s"Hello${{}}World"""")
+  }
+
   test("empty-arglist application") {
     val tree = term("foo.toString()")
     assert(tree.show[Structure] === "Term.Apply(Term.Select(Term.Name(\"foo\"), Term.Name(\"toString\")), Nil)")
