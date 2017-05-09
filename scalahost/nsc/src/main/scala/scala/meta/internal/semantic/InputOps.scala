@@ -19,7 +19,7 @@ trait InputOps { self: DatabaseOps =>
     def toMeta: m.Position = {
       assert(pos.isRange)
       val input = m.Input.File(pos.source.toAbsolutePath)
-      m.Position.Range(input, m.Point.Offset(input, pos.start), m.Point.Offset(input, pos.end))
+      m.Position.Range(input, m.Point.Offset(input, pos.point), m.Point.Offset(input, pos.end))
     }
   }
 }

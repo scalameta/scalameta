@@ -20,10 +20,10 @@ class SemanticSuite extends DatabaseSuite {
     |[32..37): Array => _root_.scala.Array#
     |[38..44): String => _root_.scala.Predef.String#
     |[48..52): Unit => _root_.scala.Unit#
-    |[65..69): list => <...>@61..85
+    |[65..69): list => <...>@65..85
     |[72..76): List => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
     |[90..97): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
-    |[98..102): list => <...>@61..85
+    |[98..102): list => <...>@65..85
   """.trim.stripMargin
   )
 
@@ -196,8 +196,8 @@ class SemanticSuite extends DatabaseSuite {
       |}
   """.trim.stripMargin,
     """
-      |[333..333) [commandeer.Foo, commandeer.FooDSL]
-      |[357..357) (commandeer.this.Foo.fooDSL)
+      |[320..333) [commandeer.Foo, commandeer.FooDSL]
+      |[333..357) (commandeer.this.Foo.fooDSL)
   """.trim.stripMargin
   )
 
@@ -228,11 +228,21 @@ class SemanticSuite extends DatabaseSuite {
       |}
   """.trim.stripMargin,
     """
-      |[191..191) [Int, List[Int]]
-      |[199..199) (immutable.this.List.canBuildFrom[Int])
-      |[237..237) (C.list[Int](C.int))
+      |[188..191) [Int, List[Int]]
+      |[191..199) (immutable.this.List.canBuildFrom[Int])
+      |[226..237) (C.list[Int](C.int))
       |[263..265) X.cvt[Int](*)(C.int)
-      |[294..294) [C[Int]]
+      |[293..294) [C[Int]]
   """.trim.stripMargin
+  )
+
+  messages(
+    """
+      |import scala.collection.mutable.{ Map, Set, ListBuffer }
+      |object a { ListBuffer.empty[Int] }
+    """.stripMargin.trim,
+    """|[34..56): [warning] Unused import
+       |[39..56): [warning] Unused import
+    """.stripMargin.trim
   )
 }
