@@ -42,4 +42,6 @@ class PrettyPrinterSuite extends FunSuite {
   checkOk("""(_: Throwable) ⇒ 1""")
 
   checkOk("""1 join (())""")
+
+  checkOk("""foo match{ case _ => _ => false}""")
 }
