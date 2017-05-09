@@ -9,7 +9,7 @@ import org.scalameta.data._
   def uri: URI = {
     val baseuri = base.toURI.normalize
     if (baseuri.toString.endsWith(".jar")) new URI(s"jar:$baseuri!/$name")
-    else baseuri
+    else base.resolve(name).toURI
   }
   def syntax: String = uri.toString
   def structure: String = s"""Fragment(${base.structure}, ${name.structure})"""

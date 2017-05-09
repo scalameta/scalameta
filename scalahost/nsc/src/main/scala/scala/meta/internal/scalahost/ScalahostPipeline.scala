@@ -34,7 +34,10 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
         global.settings.outputDirs.getSingleOutput
           .map(_.file.getAbsolutePath)
           .getOrElse(global.settings.d.value))
-      val assumedSourcepath = Sourcepath(".")
+      // NOTE: user.dir is not a great default for sourcepaths since it will include
+      // irrelevant directories such as target. This parameter should ideall be passed by
+      // the build integration as a compiler flag -Xplugin:scalahost:xxx.
+      val assumedSourcepath = Sourcepath(sys.props("user.dir"))
       implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
 
       override def apply(unit: g.CompilationUnit): Unit = {
