@@ -68,6 +68,9 @@ import scala.meta.internal.io.PathIO.pathSeparator
   def structure: String = s"""Classpath("$value")"""
   override def toString: String = syntax
 }
+// NOTE: This empty companion object is necessary for some reason to avoid a
+// "classnotfound exception: Classpath$". It seems to be a bug in the @leaf
+// macro annotation.
 object Classpath
 
 @leaf class Sourcepath(value: String) extends Multipath {
@@ -75,4 +78,5 @@ object Classpath
   def structure: String = s"""Sourcepath("$value")"""
   override def toString: String = syntax
 }
+// NOTE: same comment as for Classpath.
 object Sourcepath
