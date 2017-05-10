@@ -1,37 +1,31 @@
 package scala.meta.internal
 package semantic
 
-import org.scalameta.unreachable
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.{meta => m}
+import scala.collection.mutable
 import scala.tools.nsc.reporters.StoreReporter
+import scala.reflect.internal.util.{Position => gPosition}
 
 trait ReporterOps { self: DatabaseOps =>
 
   implicit class XtensionCompilationUnitReporter(unit: g.CompilationUnit) {
-    def hijackedMessages: Seq[m.Message] = {
+    def hijackedMessages: Seq[(gPosition, Int, String)] = {
       g.reporter match {
         case r: StoreReporter =>
           object RelevantMessage {
-            def unapply(info: r.Info): Option[(m.Position, Int, String)] = {
+            def unapply(info: r.Info): Option[(gPosition, Int, String)] = {
               val unitPath = unit.source.toAbsolutePath
               val infoPath = info.pos.source.toAbsolutePath
               if (!info.pos.isRange) return None
               if (infoPath != unitPath) return None
-              Some((info.pos.toMeta, info.severity.id, info.msg))
+              Some((info.pos, info.severity.id, info.msg))
             }
           }
           r.infos
             .collect {
-              case RelevantMessage(pos, severityId, msg) =>
-                val severity = severityId match {
-                  case 0 => m.Severity.Info
-                  case 1 => m.Severity.Warning
-                  case 2 => m.Severity.Error
-                  case _ => unreachable
-                }
-                m.Message(pos, severity, msg)
+              case RelevantMessage(pos, severity, msg) =>
+                ((pos, severity, msg))
             }
             .to[Seq]
         case _ =>

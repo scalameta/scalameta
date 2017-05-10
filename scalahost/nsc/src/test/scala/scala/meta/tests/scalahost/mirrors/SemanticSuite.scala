@@ -306,4 +306,23 @@ class SemanticSuite extends DatabaseSuite {
       |[72..77): apply => _root_.scala.Function1#apply(Ljava/lang/Object;)Ljava/lang/Object;.
     """.stripMargin.trim
   )
+
+  messages(
+    """
+      |import scala.collection.mutable. /* comment */{ Map, Set, ListBuffer }
+      |import scala.concurrent._, collection.mutable.{HashSet, Buffer}
+      |import scala.collection.{ /* comment */mutable /* comment */ => m}
+      |object a {
+      |  ListBuffer.empty[Int]
+      |  HashSet.empty[Int]
+      |}
+    """.stripMargin.trim,
+    """
+      |[48..51): [warning] Unused import
+      |[53..56): [warning] Unused import
+      |[71..96): [warning] Unused import
+      |[127..133): [warning] Unused import
+      |[174..181): [warning] Unused import
+    """.stripMargin.trim
+  )
 }
