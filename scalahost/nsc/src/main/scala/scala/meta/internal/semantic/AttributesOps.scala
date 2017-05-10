@@ -336,10 +336,9 @@ trait AttributesOps { self: DatabaseOps =>
     }
   }
 
-  private lazy val applyCharacters = "apply".toCharArray
   private def isSyntheticApply(select: g.Select): Boolean =
     select.pos == select.qualifier.pos &&
-      select.name.toChars.sameElements(applyCharacters)
+      select.name == g.nme.apply
 
   private def syntaxAndPos(gtree: g.Tree): String = {
     if (gtree == g.EmptyTree) "\u001b[1;31mEmptyTree\u001b[0m"
