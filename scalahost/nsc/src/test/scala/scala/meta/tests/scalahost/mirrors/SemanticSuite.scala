@@ -286,4 +286,15 @@ class SemanticSuite extends DatabaseSuite {
     "class F[T: Manifest] { val arr = Array.empty[T] }",
     "[47..47) (F.this.evidence$1)".trim
   )
+
+  messages(
+    """
+      |import scala.collection.mutable.{ Map, Set, ListBuffer }
+      |object a { ListBuffer.empty[Int] }
+    """.stripMargin.trim,
+    """
+      |[0..34..56): [warning] Unused import
+      |[0..39..56): [warning] Unused import
+    """.stripMargin.trim
+  )
 }

@@ -16,7 +16,11 @@ import scala.meta.internal.io.{FileIO, PathIO}
   @deprecated("Use toString() instead", "1.8")
   def absolute: String = toString()
 
-  def toRelative: RelativePath = toRelative(PathIO.workingDirectory)
+  // NOTE: Anticipating exceptions in this method is just plain terrible.
+  // It's not exceptional at all that this AbsolutePath is not relative to the
+  // working directory. Fix this once https://github.com/scalameta/scalameta/issues/821
+  // is settled.
+  def toRelative: Option[RelativePath] = scala.util.Try(toRelative(PathIO.workingDirectory)).toOption
   def toRelative(path: AbsolutePath): RelativePath = PathIO.unresolve(path, this)
   def toRelative(file: File): RelativePath = toRelative(AbsolutePath(file))
   def toRelative(path: String): RelativePath = toRelative(AbsolutePath(path))

@@ -8,9 +8,9 @@ import scala.meta.inputs._
 import scala.meta.internal.inputs._
 
 @data class Message(position: Position, severity: Severity, message: String) {
-  def syntax = s"[${severity.toString.toLowerCase}] ${position.syntax}: $message"
+  def syntax = s"[${severity.toString.toLowerCase}] ${position.syntaxWithInput} $message"
   def structure = s"""Message(${position.structure}, Severity.$severity, "$message")"""
-  override def toString = syntax
+  override def toString = structure
 }
 
 @root trait Severity

@@ -16,6 +16,8 @@ import scala.meta.common._
   def offset: Int
   def line: Int
   def column: Int
+  def syntax: String
+  def structure: String
 }
 
 object Point {
@@ -24,13 +26,17 @@ object Point {
     def offset = -1
     def line = -1
     def column = -1
-    override def toString = "Point.None"
+    def syntax = "<none>"
+    def structure = "Point.None"
+    override def toString = structure
   }
 
   @leaf class Offset(input: Input @nonEmpty, offset: Int) extends Point {
     def line: Int = input.offsetToLine(offset)
     def column: Int = offset - input.lineToOffset(line)
-    override def toString = s"$offset in $input"
+    def syntax = s"${input.syntax}@${offset}"
+    def structure = s"Point.Offset(${input.structure}, ${offset})"
+    override def toString = structure
   }
 }
 

@@ -7,5 +7,7 @@ import org.scalameta.data._
 
 @data class VirtualInput(s: scala.Predef.String) extends Input {
   lazy val chars = s.toArray
-  override def toString = "VirtualInput(\"" + s + "\")"
+  def syntax = "<input>"
+  def structure = "VirtualInput(\"" + s + "\")"
+  override def toString: String = structure
 }

@@ -37,7 +37,8 @@ object Symbol {
 
   @leaf class Local(position: Position) extends Symbol {
     override def toString = syntax
-    override def syntax = position.syntax
+    // NOTE: we treat RangeWithPosition as a Range for Symbol.Local.
+    override def syntax = position.syntaxWithInput
     override def structure = s"""Symbol.Local(${position.structure})"""
     override def name: Name = ???
     override def fullName: Ref = ???

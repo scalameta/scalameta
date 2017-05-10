@@ -2,33 +2,43 @@ package scala.meta
 package inputs
 
 import java.nio.charset.Charset
+
 import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.data._
 import org.scalameta.invariants._
 import scala.meta.common._
 import scala.meta.internal.inputs._
+import scala.meta.internal.io.PathIO
 import scala.meta.io._
 
 trait Input extends Optional with Product with Serializable with InternalInput {
   def chars: Array[Char]
   def text: String = new String(chars)
+  def syntax: String
+  def structure: String
 }
 
 object Input {
   @none object None extends Input {
     lazy val chars = new Array[Char](0)
-    override def toString = "Input.None"
+    def syntax = "<none>"
+    def structure = "Input.None"
+    override def toString = structure
   }
 
   @data class String(s: scala.Predef.String) extends Input {
     lazy val chars = s.toArray
-    override def toString = "Input.String(\"" + s + "\")"
+    def syntax = "<input>"
+    def structure = "Input.String(\"" + s + "\")"
+    override def toString = structure
   }
 
   @data class Stream(stream: java.io.InputStream, charset: Charset) extends Input {
     lazy val chars = new scala.Predef.String(scala.meta.internal.io.InputStreamIO.readBytes(stream), charset).toArray
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
-    override def toString = "Input.Stream(<stream>, Charset.forName(\"" + charset.name + "\"))"
+    def syntax = "<input>"
+    def structure = "Input.Stream(<stream>, Charset.forName(\"" + charset.name + "\"))"
+    override def toString = structure
   }
   object Stream {
     @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Stream) extends Serializable {
@@ -49,13 +59,17 @@ object Input {
 
   @data class LabeledString(label: scala.Predef.String, contents: scala.Predef.String) extends Input {
     lazy val chars = contents.toArray
-    override def toString = s"""Input.LabeledString("$label", "$contents")"""
+    def syntax = label
+    def structure = s"""Input.LabeledString("$label", "$contents")"""
+    override def toString = structure
   }
 
   @data class File(path: AbsolutePath, charset: Charset) extends Input {
     lazy val chars = scala.meta.internal.io.FileIO.slurp(path, charset).toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
-    override def toString = "Input.File(new File(\"" + path.toRelative + "\"), Charset.forName(\"" + charset.name + "\"))"
+    def syntax = path.toString
+    def structure = "Input.File(new File(\"" + path.toRelative.getOrElse(path.syntax) + "\"), Charset.forName(\"" + charset.name + "\"))"
+    override def toString = structure
   }
   object File {
     def apply(path: AbsolutePath, charset: Charset): Input.File = new Input.File(path, charset)
@@ -83,7 +97,9 @@ object Input {
   // Therefore Slice.end can point to the last character of input plus one.
   @data class Slice(input: Input, start: Int, end: Int) extends Input {
     lazy val chars = input.chars.slice(start, end)
-    override def toString = s"Input.Slice($input, $start, $end)"
+    def syntax = "<input>"
+    def structure = s"Input.Slice($input, $start, $end)"
+    override def toString = structure
   }
 
   implicit val charsToInput: Convert[Array[Char], Input] = Convert(chars => Input.String(new scala.Predef.String(chars)))
