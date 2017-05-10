@@ -270,7 +270,6 @@ trait AttributesOps { self: DatabaseOps =>
                       val syntax = gview.fun + "(*)(" + gimpl.args.mkString(", ") + ")"
                       success(pos, syntax)
                     case gfun =>
-
                       val fullyQualifiedArgs = gimpl.args.map(g.showCode(_))
                       val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toMeta
                       val syntax = "(" + fullyQualifiedArgs.mkString(", ") + ")"
