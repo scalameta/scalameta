@@ -197,7 +197,7 @@ class SemanticSuite extends DatabaseSuite {
   """.trim.stripMargin,
     """
       |[333..333) [commandeer.Foo, commandeer.FooDSL]
-      |[357..357) (commandeer.this.Foo.fooDSL)
+      |[357..357) (commandeer.Foo.fooDSL)
   """.trim.stripMargin
   )
 
@@ -229,10 +229,61 @@ class SemanticSuite extends DatabaseSuite {
   """.trim.stripMargin,
     """
       |[191..191) [Int, List[Int]]
-      |[199..199) (immutable.this.List.canBuildFrom[Int])
+      |[199..199) (scala.collection.immutable.List.canBuildFrom[Int])
       |[237..237) (C.list[Int](C.int))
       |[263..265) X.cvt[Int](*)(C.int)
       |[294..294) [C[Int]]
   """.trim.stripMargin
+  )
+
+  denotations(
+    """
+      |import scala.collection.mutable.ListBuffer
+      |import scala.collection.mutable.{HashSet => HS}
+      |trait B {
+      |  type X
+      |  def x: X
+      |}
+      |class E extends B {
+      |  type X = ListBuffer[Int]
+      |  def x = ListBuffer.empty
+      |}
+      |class D extends B {
+      |  type X = HS[Int]
+      |  def x = HS.empty
+      |}
+      |object a {
+      |  val x = new E().x
+      |  val y = new D().x
+      |  def foo(b: B): b.X = {
+      |    val result = b.x
+      |    result
+      |  }
+      |}
+    """.stripMargin,
+    """
+      |<...>@340..356 => val result: b.X
+      |_empty_.B# => trait B
+      |_empty_.B#X# => abstract type X
+      |_empty_.B#x()Ljava/lang/Object;. => abstract def x: B.this.X
+      |_empty_.D# => class D
+      |_empty_.D#X# => type X: scala.collection.mutable.HashSet[Int]
+      |_empty_.D#`<init>`()V. => primaryctor <init>: ()D
+      |_empty_.D#x()Lscala/collection/mutable/HashSet;. => def x: scala.collection.mutable.HashSet[Int]
+      |_empty_.E# => class E
+      |_empty_.E#X# => type X: scala.collection.mutable.ListBuffer[Int]
+      |_empty_.E#`<init>`()V. => primaryctor <init>: ()E
+      |_empty_.E#x()Lscala/collection/mutable/ListBuffer;. => def x: scala.collection.mutable.ListBuffer[Int]
+      |_empty_.a. => final object a
+      |_empty_.a.foo(LB;)Ljava/lang/Object;. => def foo: (b: B)b.X
+      |_empty_.a.foo(LB;)Ljava/lang/Object;.(b) => param b: B
+      |_empty_.a.x. => val x: scala.collection.mutable.ListBuffer[Int]
+      |_empty_.a.y. => val y: scala.collection.mutable.HashSet[Int]
+    """.stripMargin.trim
+  )
+
+  sugars(
+    "class F[T: Manifest] { val arr = Array.empty[T] }",
+    "[47..47) (F.this.evidence$1)".trim
   )
 }
