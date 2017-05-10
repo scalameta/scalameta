@@ -281,4 +281,9 @@ class SemanticSuite extends DatabaseSuite {
       |_empty_.a.y. => val y: scala.collection.mutable.HashSet[Int]
     """.stripMargin.trim
   )
+
+  sugars(
+    "class F[T: Manifest] { val arr = Array.empty[T] }",
+    "[47..47) (F.this.evidence$1)".trim
+  )
 }
