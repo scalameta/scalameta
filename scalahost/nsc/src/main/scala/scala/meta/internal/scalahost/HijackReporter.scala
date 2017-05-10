@@ -1,8 +1,6 @@
 package scala.meta.internal
 package scalahost
 
-import scala.meta.internal.scalahost.compilers.ScalahostReporter
-
 trait HijackReporter { self: ScalahostPlugin =>
 
   def hijackReporter(): Unit = {

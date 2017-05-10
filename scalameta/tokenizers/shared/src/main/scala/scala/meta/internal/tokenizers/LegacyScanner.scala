@@ -973,8 +973,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     val start = offset
     val embeddedScalaExprPositions = new ScalaExprPositionParser(dialect)
     val xmlParser = new XmlParser(embeddedScalaExprPositions)
-    val result: Int = xmlParser.XmlExpr.parse(new String(input.chars), index = start) match {
-      case Parsed.Success(_, endExclusive) => endExclusive - 1
+    val result: Int = xmlParser.XmlExpr.parse(input.text, index = start) match {
+      case Parsed.Success(_, endExclusive) =>
+        endExclusive - 1
       case Parsed.Failure(_, failIndex, extra) =>
         syntaxError(s"malformed xml literal, expected: ${extra.traced.expected}", at = failIndex)
     }

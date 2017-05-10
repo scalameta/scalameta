@@ -35,4 +35,38 @@ package object inputs {
       }
     }
   }
+
+  // TODO: the extension methods below are temporary stubs that should be moved to the public API
+
+  implicit class XtensionInputSyntaxStructure(input: Input) {
+    def syntax: String = input match {
+      case Input.None => "<none>"
+      case Input.File(path, _) => path.toString
+      case Input.LabeledString(label, _) => label
+      case _ => "<input>"
+    }
+    def structure: String = input.toString
+  }
+
+  implicit class XtensionPositionSyntaxStructure(pos: Position) {
+    def syntax: String = pos match {
+      case Position.None => s"<none>"
+      case Position.Range(input, start, end) => s"${input.syntax}@${start.offset}..${end.offset}"
+    }
+    def structure: String = pos match {
+      case Position.None => s"Position.None"
+      case Position.Range(input, start, end) => s"Position.Range(${input.structure}, ${start.structure}, ${end.structure})"
+    }
+  }
+
+  implicit class XtensionPointSyntaxStructure(point: Point) {
+    def syntax: String = point match {
+      case Point.None => s"<none>"
+      case Point.Offset(input, offset) => s"${input.syntax}@${offset}"
+    }
+    def structure: String = point match {
+      case Point.None => s"Point.None"
+      case Point.Offset(input, offset) => s"Point.Offset(${input.structure}, ${offset})"
+    }
+  }
 }

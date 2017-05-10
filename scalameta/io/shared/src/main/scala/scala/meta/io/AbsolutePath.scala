@@ -1,12 +1,18 @@
-package scala.meta.io
+package scala.meta
+package io
 
 import java.io._
+import java.net._
 import org.scalameta.data._
 import scala.meta.internal.io.{FileIO, PathIO}
 
 @data class AbsolutePath private (value: String) {
-  override def toString: String = value
+  def syntax: String = value
+  def structure: String = s"""AbsolutePath("$value")"""
+  override def toString: String = syntax
+
   def toFile: File = new File(value)
+  def toURI: URI = toFile.toURI
   @deprecated("Use toString() instead", "1.8")
   def absolute: String = toString()
 
@@ -18,8 +24,6 @@ import scala.meta.internal.io.{FileIO, PathIO}
   def resolve(path: RelativePath): AbsolutePath = PathIO.resolve(this, path)
   def resolve(file: File): AbsolutePath = resolve(RelativePath(file))
   def resolve(path: String): AbsolutePath = resolve(RelativePath(path))
-
-  def slurp: String = FileIO.slurp(this)
 }
 
 object AbsolutePath {

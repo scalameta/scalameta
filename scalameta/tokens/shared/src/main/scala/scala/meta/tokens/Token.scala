@@ -18,6 +18,7 @@ import scala.meta.internal.prettyprinters._
   def start: Int
   def end: Int
   def pos: Position
+  def text: String = pos.text
 }
 
 object Token {

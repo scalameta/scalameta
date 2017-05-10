@@ -3,6 +3,7 @@ package prettyprinters
 
 import org.scalatest._
 import scala.meta._
+import scala.meta.inputs.{Input, Point, Position}
 
 class PublicSuite extends FunSuite {
   test("scala.meta.Dialect.toString") {
@@ -197,7 +198,23 @@ class PublicSuite extends FunSuite {
     // TODO: come up with a platform-independent test
   }
 
+  test("scala.meta.io.Classpath.toString") {
+    // TODO: come up with a platform-independent test
+  }
+
+  test("scala.meta.io.Fragment.toString") {
+    // TODO: come up with a platform-independent test
+  }
+
+  test("scala.meta.io.Multipath.toString") {
+    // TODO: come up with a platform-independent test
+  }
+
   test("scala.meta.io.RelativePath.toString") {
+    // TODO: come up with a platform-independent test
+  }
+
+  test("scala.meta.io.Sourcepath.toString") {
     // TODO: come up with a platform-independent test
   }
 
@@ -270,25 +287,7 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("scala.meta.semantic.Anchor.toString") {
-    val path = RelativePath("hello.scala").toAbsolute
-    val anchor = Anchor(path, 40, 42)
-    assert(anchor.toString === s"""$path@40..42""")
-  }
-
-  test("scala.meta.semantic.AttributedSource.toString") {
-    // n/a
-  }
-
-  test("scala.meta.semantic.Completed.toString") {
-    // covered below
-  }
-
-  test("scala.meta.semantic.Completed.Error.toString") {
-    // n/a
-  }
-
-  test("scala.meta.semantic.Completed.Success.toString") {
+  test("scala.meta.semantic.Attributes.toString") {
     // n/a
   }
 
@@ -303,16 +302,13 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.semantic.Message.toString") {
     val path = RelativePath("hello.scala").toAbsolute
-    val anchor = Anchor(path, 40, 42)
-    val message = Message(anchor, Severity.Error, "does not compute")
+    val input = Input.File(path)
+    val position = Position.Range(input, Point.Offset(input, 40), Point.Offset(input, 42))
+    val message = Message(position, Severity.Error, "does not compute")
     assert(message.toString === s"[error] $path@40..42: does not compute")
   }
 
   test("scala.meta.semantic.Mirror.toString") {
-    // n/a
-  }
-
-  test("scala.meta.semantic.SemanticException.toString") {
     // n/a
   }
 
@@ -393,7 +389,7 @@ class PublicSuite extends FunSuite {
     assert(globalSelf.toString === syntaxGlobalSelf)
 
     val syntaxLocal = "/source.scala@40..42"
-    val local @ Symbol.Local(Anchor(AbsolutePath("/source.scala"), 40, 42)) = Symbol(syntaxLocal)
+    val local @ Symbol.Local(Position.Range(Input.File(AbsolutePath("/source.scala"), _), Point.Offset(_, 40), Point.Offset(_, 42))) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
 
     val syntaxMulti = "_root_.C#;_root.C."
