@@ -65,6 +65,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.inputs.Position
       |scala.meta.inputs.Position.None
       |scala.meta.inputs.Position.Range
+      |scala.meta.inputs.Position.RangeWithPoint
       |scala.meta.internal
       |scala.meta.io
       |scala.meta.io.AbsolutePath

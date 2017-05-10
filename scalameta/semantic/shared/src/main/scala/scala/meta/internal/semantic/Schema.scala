@@ -37,7 +37,11 @@ package object schema {
             def unapply(srange: s.Range): Option[mPosition] = {
               val mstart = mPoint.Offset(minput, srange.start)
               val mend = mPoint.Offset(minput, srange.end)
-              Some(mPosition.Range(minput, mstart, mend))
+              if (srange.point > srange.start && srange.point < srange.end) {
+                val mpoint = mPoint.Offset(minput, srange.point)
+                Some(mPosition.RangeWithPoint(minput, mstart, mpoint, mend))
+              }
+              else Some(mPosition.Range(minput, mstart, mend))
             }
           }
           object sSymbol {

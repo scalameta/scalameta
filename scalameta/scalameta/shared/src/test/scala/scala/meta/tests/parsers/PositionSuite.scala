@@ -62,4 +62,13 @@ class PositionSuite extends ParseSuite {
         | List(Term.Name{8..9}("c")))
     """.trim.stripMargin.split("\n").mkString)
   }
+
+  test("Position.Range.unapply") {
+    val input = Input.String("blah")
+    Position.RangeWithPoint(input, 0, 1, 2) match {
+      case Position.Range(_, start, end) =>
+        assert(start.offset == 0)
+        assert(end.offset == 2)
+    }
+  }
 }

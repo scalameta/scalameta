@@ -20,6 +20,8 @@ message ResolvedName {
 message Range {
   int32 start = 2;
   int32 end = 3;
+  // See Position.RangeWithPoint comment for motivation of this field.
+  int32 point = 4;
 }
 
 message Message {

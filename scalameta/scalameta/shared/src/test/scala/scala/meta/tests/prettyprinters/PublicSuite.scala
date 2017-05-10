@@ -137,8 +137,8 @@ class PublicSuite extends FunSuite {
     val path = RelativePath("hello.scala").toAbsolute
     val input1 = Input.File(path, Charset.forName("latin1"))
     val input2 = Input.File(path, Charset.forName("UTF-8"))
-    assert(input1.toString == """Input.File(new File("hello.scala"), Charset.forName("ISO-8859-1"))""")
-    assert(input2.toString == """Input.File(new File("hello.scala"), Charset.forName("UTF-8"))""")
+    assert(input1.structure == """Input.File(new File("hello.scala"), Charset.forName("ISO-8859-1"))""")
+    assert(input2.structure == """Input.File(new File("hello.scala"), Charset.forName("UTF-8"))""")
   }
 
   test("scala.meta.inputs.Input.Slice.toString") {
@@ -177,8 +177,8 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Point.Offset.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    assert(lhs.pos.start.toString === """0 in Input.String("foo + bar")""")
-    assert(lhs.pos.end.toString === """3 in Input.String("foo + bar")""")
+    assert(lhs.pos.start.toString === """Point.Offset(Input.String("foo + bar"), 0)""")
+    assert(lhs.pos.end.toString === """Point.Offset(Input.String("foo + bar"), 3)""")
   }
 
   test("scala.meta.inputs.Position.toString") {
@@ -191,7 +191,13 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Position.Range.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    assert(lhs.pos.toString === """[0..3) in Input.String("foo + bar")""")
+    assert(lhs.pos.toString === """Position.Range(Input.String("foo + bar"), 0, 3)""")
+  }
+
+  test("scala.meta.inputs.Position.RangeWithPoint.toString") {
+    val input = Input.String("foo")
+    val pos = Position.RangeWithPoint(input, 0, 1, 3)
+    assert(pos.toString === """Position.RangeWithPoint(Input.String("foo"), 0, 1, 3)""")
   }
 
   test("scala.meta.io.AbsolutePath.toString") {
@@ -300,12 +306,12 @@ class PublicSuite extends FunSuite {
     // too involved to fit here, see DatabaseSuite in scalahost
   }
 
-  test("scala.meta.semantic.Message.toString") {
+  test("scala.meta.semantic.Message.syntax") {
     val path = RelativePath("hello.scala").toAbsolute
     val input = Input.File(path)
     val position = Position.Range(input, Point.Offset(input, 40), Point.Offset(input, 42))
     val message = Message(position, Severity.Error, "does not compute")
-    assert(message.toString === s"[error] $path@40..42: does not compute")
+    assert(message.syntax === s"[error] $path@40..42 does not compute")
   }
 
   test("scala.meta.semantic.Mirror.toString") {
@@ -390,7 +396,7 @@ class PublicSuite extends FunSuite {
 
     val syntaxLocal = "/source.scala@40..42"
     val local @ Symbol.Local(Position.Range(Input.File(AbsolutePath("/source.scala"), _), Point.Offset(_, 40), Point.Offset(_, 42))) = Symbol(syntaxLocal)
-    assert(local.toString === syntaxLocal)
+    assert(local.syntax === syntaxLocal)
 
     val syntaxMulti = "_root_.C#;_root.C."
     val multi @ Symbol.Multi(List(Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Type("C")), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root")), Signature.Term("C")))) = Symbol(syntaxMulti)

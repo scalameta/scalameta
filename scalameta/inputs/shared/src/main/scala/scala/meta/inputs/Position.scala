@@ -14,6 +14,8 @@ import scala.meta.common._
   def start: Point
   def end: Point
   def text: String
+  def syntax: String
+  def structure: String
 }
 
 object Position {
@@ -22,13 +24,17 @@ object Position {
     def start = Point.None
     def end = Point.None
     def text = ""
-    override def toString = "Position.None"
+    def syntax = "<none>"
+    def structure = "Position.None"
+    override def toString = structure
   }
 
   @leaf class Range(input: Input @nonEmpty, start: Point @nonEmpty, end: Point @nonEmpty) extends Position {
     if (!(start.offset <= end.offset)) throw new IllegalArgumentException(s"$this is not a valid range")
     override def text = new String(input.chars, start.offset, end.offset - start.offset)
-    override def toString = s"[${start.offset}..${end.offset}) in $input"
+    def syntax = s"[${start.offset}..${end.offset})"
+    def structure = s"Position.Range(${input.structure}, ${start.offset}, ${end.offset})"
+    override def toString = structure
   }
   object Range {
     def apply(input: Input, start: Point, end: Point): Position = {
@@ -36,6 +42,40 @@ object Position {
     }
     def apply(input: Input, start: Int, end: Int): Position = {
       new Range(input, Point.Offset(input, start), Point.Offset(input, end))
+    }
+    // Custom unapply so that most users won't have to match against RangeWithPoint.
+    def unapply(position: Position): Option[(Input, Point, Point)] = position match {
+      case r: Range => Some((r.input, r.start, r.end))
+      case RangeWithPoint(input, start, _, end) => Some((input, start, end))
+      case _ => scala.None
+    }
+  }
+
+  // the `point` field is inherited from scala-reflect's Position. In scala-reflect,
+  // `point` is the offset where the caret ^ should appear. Offset positions don't have
+  // start/end, only point. In scala-reflect RangePosition, the point is often matched
+  // with end and is therefore redundant. The commit
+  // https://github.com/scalameta/scalameta/commit/7a193ed47638f6a6b3216814866ae95cc7b57344
+  // removed Position.Range.point from scalameta. However, it turns out that in some
+  // cases the `point` field is necessary even for range positions because: start != point != end.
+  // On such case is "unused import" warnings, related discussion: https://github.com/scalameta/scalameta/issues/839
+  // Instead of adding a third field `point` to Range, we use `RangeWithPoint` to
+  // encode these (hopefully) rare cases where start != point != end.
+  // Ideally, most scalameta users should have to worry about RangeWithPoint as long
+  // as they construct Position.Range and use Position.Range.unapply.
+  @leaf class RangeWithPoint(input: Input @nonEmpty, start: Point @nonEmpty, point: Point @nonEmpty, end: Point @nonEmpty) extends Position {
+    if (!(start.offset < point.offset && point.offset < end.offset)) throw new IllegalArgumentException(s"$this is not a valid range")
+    override def text = new String(input.chars, start.offset, end.offset - start.offset)
+    def syntax = s"[${start.offset}..${point.offset}..${end.offset})"
+    def structure = s"Position.RangeWithPoint(${input.structure}, ${start.offset}, ${point.offset}, ${end.offset})"
+    override def toString = structure
+  }
+  object RangeWithPoint {
+    def apply(input: Input, start: Point, point: Point, end: Point): Position = {
+      new RangeWithPoint(input, start, point, end)
+    }
+    def apply(input: Input, start: Int, point: Int, end: Int): Position = {
+      new RangeWithPoint(input, Point.Offset(input, start), Point.Offset(input, point), Point.Offset(input, end))
     }
   }
 }
