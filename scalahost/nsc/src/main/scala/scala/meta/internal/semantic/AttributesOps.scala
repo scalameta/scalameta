@@ -329,7 +329,7 @@ trait AttributesOps { self: DatabaseOps =>
 
         m.Attributes(dialect,
                      names.toList,
-                     unit.hijackedMessages,
+                     unit.hijackedMessages(mstarts),
                      denotations.toList,
                      inferred.toList)
       })
