@@ -197,7 +197,7 @@ class SemanticSuite extends DatabaseSuite {
   """.trim.stripMargin,
     """
       |[333..333) [commandeer.Foo, commandeer.FooDSL]
-      |[357..357) (commandeer.this.Foo.fooDSL)
+      |[357..357) (commandeer.Foo.fooDSL)
   """.trim.stripMargin
   )
 
@@ -229,7 +229,7 @@ class SemanticSuite extends DatabaseSuite {
   """.trim.stripMargin,
     """
       |[191..191) [Int, List[Int]]
-      |[199..199) (immutable.this.List.canBuildFrom[Int])
+      |[199..199) (scala.collection.immutable.List.canBuildFrom[Int])
       |[237..237) (C.list[Int](C.int))
       |[263..265) X.cvt[Int](*)(C.int)
       |[294..294) [C[Int]]
