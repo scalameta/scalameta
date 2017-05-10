@@ -334,7 +334,7 @@ lazy val contrib = crossProject
     publishableSettings,
     description := "Incubator for scalameta APIs"
   )
-  .jvmConfigure(_.dependsOn(testkit))
+  .jvmConfigure(_.dependsOn(testkit % Test))
   .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
   .dependsOn(scalameta)
 lazy val contribJVM = contrib.jvm
