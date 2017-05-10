@@ -3,10 +3,8 @@ package scala.meta.internal.io
 import scala.meta.io._
 
 object PlatformPathIO {
-  private [io] def isNode = JSFs != null
-
   def workingDirectory: AbsolutePath =
-    if (isNode) AbsolutePath(JSShell.pwd().toString)
+    if (PlatformIO.isNode) AbsolutePath(JSShell.pwd().toString)
     else AbsolutePath(fileSeparator)
 
   def fileSeparator: String =

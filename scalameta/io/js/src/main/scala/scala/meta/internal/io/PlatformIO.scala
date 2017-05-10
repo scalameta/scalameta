@@ -45,3 +45,7 @@ object JSPath extends js.Any {
   def resolve(paths: String*): String = js.native
   def normalize(path: String): String = js.native
 }
+
+object PlatformIO {
+  private[io] def isNode = JSFs != null
+}
