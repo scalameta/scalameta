@@ -69,6 +69,10 @@ lazy val io = crossProject
     description := "Scalameta APIs for JVM/JS agnostic IO."
   )
   .dependsOn(common)
+  .jsSettings(
+    npmDependencies in Compile += "shelljs" -> "0.7.7" // provides cross-platform pwd in JS
+  )
+  .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
 
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
@@ -102,6 +106,7 @@ lazy val inputs = crossProject
     enableMacros
   )
   .dependsOn(common, io)
+  .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
 
@@ -198,6 +203,7 @@ lazy val scalameta = crossProject
     description := "Scalameta umbrella module that includes all public APIs",
     exposePaths("scalameta", Test)
   )
+  .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
   .dependsOn(
     common,
     dialects,
@@ -207,6 +213,8 @@ lazy val scalameta = crossProject
     transversers,
     trees,
     inline,
+    inputs,
+    io,
     semantic
   )
 lazy val scalametaJVM = scalameta.jvm
@@ -312,6 +320,7 @@ lazy val tests = project
       val runDocs = test.in(readme).value
     },
     testJS := {
+      val runIoTests = test.in(ioJS, Test).value
       val runScalametaTests = test.in(scalametaJS, Test).value
       val runContribTests = test.in(contribJS, Test).value
     }
@@ -326,6 +335,7 @@ lazy val contrib = crossProject
     description := "Incubator for scalameta APIs"
   )
   .jvmConfigure(_.dependsOn(testkit))
+  .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
   .dependsOn(scalameta)
 lazy val contribJVM = contrib.jvm
 lazy val contribJS = contrib.js
