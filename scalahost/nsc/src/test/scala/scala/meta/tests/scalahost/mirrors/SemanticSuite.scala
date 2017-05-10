@@ -21,7 +21,7 @@ class SemanticSuite extends DatabaseSuite {
     |[38..44): String => _root_.scala.Predef.String#
     |[48..52): Unit => _root_.scala.Unit#
     |[65..69): list => <...>@61..85
-    |[72..76): List => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
+    |[72..76): List => _root_.scala.collection.immutable.List.
     |[90..97): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
     |[98..102): list => <...>@61..85
   """.trim.stripMargin
@@ -285,5 +285,25 @@ class SemanticSuite extends DatabaseSuite {
   sugars(
     "class F[T: Manifest] { val arr = Array.empty[T] }",
     "[47..47) (F.this.evidence$1)".trim
+  )
+
+  names(
+    s"""
+       |object tup {
+       |  val foo = (a: (Int, Boolean)) => 1
+       |  foo(2, true)
+       |  foo.apply(2, true)
+       |}
+    """.stripMargin,
+    """
+      |[8..11): tup => _empty_.tup.
+      |[20..23): foo => _empty_.tup.foo.
+      |[27..28): a => _empty_.tup.foo.$anonfun.(a)
+      |[31..34): Int => _root_.scala.Int#
+      |[36..43): Boolean => _root_.scala.Boolean#
+      |[53..56): foo => _empty_.tup.foo.
+      |[68..71): foo => _empty_.tup.foo.
+      |[72..77): apply => _root_.scala.Function1#apply(Ljava/lang/Object;)Ljava/lang/Object;.
+    """.stripMargin.trim
   )
 }

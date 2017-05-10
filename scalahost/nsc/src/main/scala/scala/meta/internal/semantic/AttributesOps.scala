@@ -316,6 +316,8 @@ trait AttributesOps { self: DatabaseOps =>
                   tryFindMtree(gtree)
                 case _: g.Apply | _: g.TypeApply =>
                   tryFindInferred(gtree)
+                case select: g.Select if isSyntheticApply(select) =>
+                  tryFindMtree(select.qualifier)
                 case _ =>
                   tryFindMtree(gtree)
               }
@@ -333,6 +335,10 @@ trait AttributesOps { self: DatabaseOps =>
       })
     }
   }
+
+  private def isSyntheticApply(select: g.Select): Boolean =
+    select.pos == select.qualifier.pos &&
+      select.name == g.nme.apply
 
   private def syntaxAndPos(gtree: g.Tree): String = {
     if (gtree == g.EmptyTree) "\u001b[1;31mEmptyTree\u001b[0m"
