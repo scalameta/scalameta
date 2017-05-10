@@ -17,9 +17,15 @@ trait InputOps { self: DatabaseOps =>
 
   implicit class XtensionGPositionMPosition(pos: GPosition) {
     def toMeta: m.Position = {
-      assert(pos.isRange)
       val input = m.Input.File(pos.source.toAbsolutePath)
-      m.Position.Range(input, m.Point.Offset(input, pos.start), m.Point.Offset(input, pos.end))
+      if (pos.isRange) {
+        m.Position.Range(input, m.Point.Offset(input, pos.start), m.Point.Offset(input, pos.end))
+      } else {
+        // NOTE: Even with -Yrangepos enabled we cannot be guaranteed that all positions are
+        // range positions. In the case we encounter a non-range position we assume start == end.
+        val mpoint = m.Point.Offset(input, pos.point)
+        m.Position.Range(input, mpoint, mpoint)
+      }
     }
   }
 }
