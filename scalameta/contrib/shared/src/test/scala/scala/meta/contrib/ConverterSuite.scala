@@ -28,4 +28,10 @@ class ConverterSuite extends FunSuite {
     assert(termName.asCtorRef.isEqual(Ctor.Ref.Name("Foo")))
   }
 
+  test("toType") {
+    val tpe = Type.fresh("hello")
+    assert(Type.Arg.Repeated(tpe).toType.isEqual(tpe))
+    assert(Type.Arg.ByName(tpe).toType.isEqual(tpe))
+  }
+
 }
