@@ -6,7 +6,7 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.3")
 
 addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.3")
 
-addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")
+// addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15") // see "Updating"
 
 addSbtPlugin("com.lihaoyi" % "scalatex-sbt-plugin" % "0.3.7")
 
