@@ -10,6 +10,7 @@ import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
+import scala.meta.io._
 import scala.meta.internal.semantic.DatabaseOps
 
 abstract class DatabaseSuite extends FunSuite { self =>
@@ -37,6 +38,8 @@ abstract class DatabaseSuite extends FunSuite { self =>
   }
   private lazy val databaseOps: DatabaseOps { val global: self.g.type } = new DatabaseOps {
     val global: self.g.type = self.g
+    def scalametaClasspath = Classpath(sys.props("user.dir"))
+    def scalametaSourcepath = Sourcepath(sys.props("user.dir"))
   }
   import databaseOps._
 

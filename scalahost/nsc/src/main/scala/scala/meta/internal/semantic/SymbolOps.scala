@@ -2,6 +2,7 @@ package scala.meta.internal
 package semantic
 
 import scala.{meta => m}
+import scala.meta.internal.inputs._
 
 trait SymbolOps { self: DatabaseOps =>
 
@@ -22,7 +23,7 @@ trait SymbolOps { self: DatabaseOps =>
             ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter)
         !definitelyGlobal && (definitelyLocal || isLocal(sym.owner))
       }
-      if (isLocal(sym)) return m.Symbol.Local(sym.pos.toMeta)
+      if (isLocal(sym)) return m.Symbol.Local(sym.pos.toMeta.syntax)
 
       val owner = sym.owner.toSemantic
       val signature = {

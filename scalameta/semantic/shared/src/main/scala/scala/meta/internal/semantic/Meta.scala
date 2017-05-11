@@ -6,7 +6,9 @@ import java.nio.charset.Charset
 import org.scalameta.data._
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
+import scala.util.Try
 import scala.meta.io._
+import scala.meta.internal.io._
 import scala.meta.internal.semantic.{schema => s}
 import scala.meta.{semantic => m}
 import scala.meta.{Dialect => mDialect}
@@ -44,10 +46,14 @@ package object meta {
               case _ => None
             }
           }
-          val spath = minput match {
+          val (spath, scontents) = minput match {
             case mInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
               val spath = sourcepath.relativize(path.toURI)
-              spath.getOrElse(sys.error(s"bad database: can't find $path in $sourcepath"))
+              spath.getOrElse(sys.error(s"bad database: can't find $path in $sourcepath")) -> ""
+            case mInput.LabeledString(label, contents) =>
+              val spathOpt = Try(RelativePath(label))
+              val spath = spathOpt.getOrElse(sys.error(s"bad database: unsupported label $label"))
+              spath -> contents
             case other =>
               sys.error(s"bad database: unsupported input $other")
           }
@@ -71,7 +77,7 @@ package object meta {
             case (mRange(srange), ssyntax) => s.Sugar(Some(srange), ssyntax)
             case other => sys.error(s"bad database: unsupported sugar $other")
           }
-          spath -> s.Attributes(sdialect, snames, smessages, sdenots, ssugars)
+          spath -> s.Attributes(scontents, sdialect, snames, smessages, sdenots, ssugars)
         case (other, _) =>
           sys.error(s"unsupported input: $other")
       }
