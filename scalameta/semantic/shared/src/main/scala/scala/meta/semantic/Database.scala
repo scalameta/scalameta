@@ -8,6 +8,7 @@ import scala.compat.Platform.EOL
 import scala.meta.inputs._
 import scala.meta.io._
 import scala.meta.internal.semantic._
+import scala.meta.internal.semantic.meta._
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
 import scala.meta.{semantic => m}
@@ -21,7 +22,7 @@ import scala.meta.{semantic => m}
   lazy val sugars: Map[Position, String] = entries.flatMap(_._2.sugars).toMap
 
   def save(classpath: Classpath, sourcepath: Sourcepath): Unit = {
-    this.toSchema.toVfs(classpath, sourcepath).save()
+    this.toSchema(sourcepath).toVfs(classpath).save()
   }
 
   def syntax: String = scala.meta.internal.semantic.DatabaseSyntax(this)
@@ -33,7 +34,7 @@ import scala.meta.{semantic => m}
 }
 
 object Database {
-  def load(classpath: Classpath): Database = {
-    v.Database.load(classpath).toSchema.toMeta
+  def load(classpath: Classpath, sourcepath: Sourcepath): Database = {
+    v.Database.load(classpath).toSchema.toMeta(sourcepath)
   }
 }

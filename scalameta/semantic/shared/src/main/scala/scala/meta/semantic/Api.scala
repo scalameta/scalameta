@@ -1,7 +1,6 @@
 package scala.meta
 package semantic
 
-import java.nio.charset.Charset
 import org.scalameta.unreachable
 import org.scalameta.debug
 import scala.{Seq => _}
@@ -10,10 +9,6 @@ import scala.compat.Platform.EOL
 import scala.meta.internal.ast.Helpers._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
-import scala.meta.internal.semantic.{schema => s}
-import scala.meta.{semantic => m}
-import scala.meta.{Dialect => mDialect}
-import scala.meta.inputs.{Input => mInput, Position => mPosition, Point => mPoint}
 import scala.meta.parsers.{XtensionParsersDialectInput, XtensionParseDialectInput}
 
 private[meta] trait Api extends Flags {
@@ -51,73 +46,6 @@ private[meta] trait Api extends Flags {
     // NOTE: hasFlag/isXXX methods are added here via `extends HasFlags`
     def flags: Long = denot.flags
     def info: String = denot.info
-  }
-
-  implicit class XtensionDatabaseSchema(mdatabase: m.Database) {
-    def toSchema: s.Database = {
-      val sentries = mdatabase.entries.map {
-        case (minput, m.Attributes(mdialect, mnames, mmessages, mdenots, msugars)) =>
-          object mDialect {
-            def unapply(mdialect: mDialect): Option[String] = {
-              val isStandard = scala.meta.Dialect.standards.exists(_._2 == mdialect)
-              if (isStandard) Some(mdialect.toString) else None
-            }
-          }
-          object mPosition {
-            def unapply(mpos: mPosition): Option[s.Range] = mpos match {
-              case scala.meta.inputs.Position.Range(`minput`, mPoint.Offset(_, sstart), mPoint.Offset(_, send)) => Some(s.Range(sstart, send))
-              case _ => None
-            }
-          }
-          object mSymbol {
-            def unapply(msym: m.Symbol): Option[String] = Some(msym.syntax)
-          }
-          object mSeverity {
-            def unapply(msev: m.Severity): Option[s.Message.Severity] = {
-              msev match {
-                case m.Severity.Info => Some(s.Message.Severity.INFO)
-                case m.Severity.Warning => Some(s.Message.Severity.WARNING)
-                case m.Severity.Error => Some(s.Message.Severity.ERROR)
-                case _ => None
-              }
-            }
-          }
-          object mDenotation {
-            def unapply(mdenot: m.Denotation): Option[s.Denotation] = mdenot match {
-              case m.Denotation(sflags, sname, sinfo) => Some(s.Denotation(sflags, sname, sinfo))
-              case _ => None
-            }
-          }
-          val spath = minput match {
-            case mInput.File(spath, charset) if charset == Charset.forName("UTF-8") => spath.value
-            case other => sys.error(s"bad database: unsupported input $other")
-          }
-          val sdialect = mdialect match {
-            case mDialect(sdialect) => sdialect
-            case other => sys.error(s"bad database: unsupported dialect $other")
-          }
-          val snames = mnames.map {
-            case (mPosition(srange), mSymbol(ssym)) => s.ResolvedName(Some(srange), ssym)
-            case other => sys.error(s"bad database: unsupported name $other")
-          }
-          val smessages = mmessages.map {
-            case m.Message(mPosition(srange), mSeverity(ssym), smessage) => s.Message(Some(srange), ssym, smessage)
-            case other => sys.error(s"bad database: unsupported message $other")
-          }
-          val sdenots = mdenots.map {
-            case (mSymbol(ssym), mDenotation(sdenot)) => s.SymbolDenotation(ssym, Some(sdenot))
-            case other => sys.error(s"bad database: unsupported denotation $other")
-          }
-          val ssugars = msugars.map {
-            case (mPosition(srange), ssyntax) => s.Sugar(Some(srange), ssyntax)
-            case other => sys.error(s"bad database: unsupported sugar $other")
-          }
-          s.Attributes(spath, sdialect, snames, smessages, sdenots, ssugars)
-        case (other, _) =>
-          sys.error(s"unsupported input: $other")
-      }
-      s.Database(sentries)
-    }
   }
 }
 

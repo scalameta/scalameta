@@ -60,10 +60,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
     javaOptions ++= {
       if (scalametaDependencies.value.isEmpty) Nil
       else {
-        val sourcepath =
-          scalahostSourcepath.value
-            .flatMap(_.map(_.getAbsolutePath))
-            .mkString(java.io.File.pathSeparator)
+        val sourcepath = sys.props("user.dir")
         val classpath =
           scalahostClasspath.value
             .flatMap(_.files.map(_.getAbsolutePath))
@@ -136,8 +133,6 @@ object ScalahostSbtPlugin extends AutoPlugin {
     ScopeFilter(inProjects(scalametaDependencies.value.map(x => LocalProject(x.project)): _*),
                 inConfigurations(Compile, Test, IntegrationTest))
   }
-  private val scalahostSourcepath: Def.Initialize[Seq[Seq[File]]] =
-    Def.settingDyn(sourceDirectories.all(scalahostAggregateFilter.value))
   private val scalahostClasspath: Def.Initialize[Task[Seq[Classpath]]] =
     Def.taskDyn(fullClasspath.all(scalahostAggregateFilter.value))
 }
