@@ -17,16 +17,12 @@ package object meta {
     def toSchema(sourcepath: Sourcepath): s.Database = {
       val sentries = mdatabase.entries.map {
         case (minput, m.Attributes(mdialect, mnames, mmessages, mdenots, msugars)) =>
-          object mDialect {
-            def unapply(mdialect: mDialect): Option[String] = {
-              val isStandard = scala.meta.Dialect.standards.exists(_._2 == mdialect)
-              if (isStandard) Some(mdialect.toString) else None
-            }
-          }
-          object mPosition {
+          object mRange {
             def unapply(mpos: mPosition): Option[s.Range] = mpos match {
-              case scala.meta.inputs.Position.Range(`minput`, mPoint.Offset(_, sstart), mPoint.Offset(_, send)) => Some(s.Range(sstart, send))
-              case _ => None
+              case mPosition.Range(`minput`, mPoint.Offset(_, sstart), mPoint.Offset(_, send)) =>
+                Some(s.Range(sstart, send))
+              case _ =>
+                None
             }
           }
           object mSymbol {
@@ -49,19 +45,22 @@ package object meta {
             }
           }
           val spath = minput match {
-            case mInput.File(path, charset) if charset == Charset.forName("UTF-8") => sourcepath.relativize(path.toURI).getOrElse(sys.error(s"can't find $path in $sourcepath"))
-            case other => sys.error(s"bad database: unsupported input $other")
+            case mInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
+              val spath = sourcepath.relativize(path.toURI)
+              spath.getOrElse(sys.error(s"bad database: can't find $path in $sourcepath"))
+            case other =>
+              sys.error(s"bad database: unsupported input $other")
           }
-          val sdialect = mdialect match {
-            case mDialect(sdialect) => sdialect
-            case other => sys.error(s"bad database: unsupported dialect $other")
+          val sdialect = {
+            val sdialect = mDialect.standards.find(_._2 == mdialect).map(_._1)
+            sdialect.getOrElse(sys.error(s"bad database: unsupported dialect $mdialect"))
           }
           val snames = mnames.map {
-            case (mPosition(srange), mSymbol(ssym)) => s.ResolvedName(Some(srange), ssym)
+            case (mRange(srange), mSymbol(ssym)) => s.ResolvedName(Some(srange), ssym)
             case other => sys.error(s"bad database: unsupported name $other")
           }
           val smessages = mmessages.map {
-            case m.Message(mPosition(srange), mSeverity(ssym), smessage) => s.Message(Some(srange), ssym, smessage)
+            case m.Message(mRange(srange), mSeverity(ssym), smessage) => s.Message(Some(srange), ssym, smessage)
             case other => sys.error(s"bad database: unsupported message $other")
           }
           val sdenots = mdenots.map {
@@ -69,7 +68,7 @@ package object meta {
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val ssugars = msugars.map {
-            case (mPosition(srange), ssyntax) => s.Sugar(Some(srange), ssyntax)
+            case (mRange(srange), ssyntax) => s.Sugar(Some(srange), ssyntax)
             case other => sys.error(s"bad database: unsupported sugar $other")
           }
           spath -> s.Attributes(sdialect, snames, smessages, sdenots, ssugars)
