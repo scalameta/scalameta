@@ -30,7 +30,7 @@ pipeline:
     volumes:
       - /platform:/keys
     commands:
-      - apt-get install nodejs
+      - apt-get install -y nodejs
       - ./bin/bintray.sh
     when:
       event: push
