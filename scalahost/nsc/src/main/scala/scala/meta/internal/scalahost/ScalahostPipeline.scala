@@ -4,8 +4,10 @@ package scalahost
 import java.io._
 import java.net.URI
 import scala.collection.mutable
+import scala.compat.Platform.EOL
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
+import scala.util.control.NonFatal
 import scala.{meta => m}
 import scala.meta.io._
 import scala.meta.internal.semantic.DatabaseOps
@@ -41,9 +43,18 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
       implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
 
       override def apply(unit: g.CompilationUnit): Unit = {
-        if (!unit.source.file.name.endsWith(".scala")) return
-        val mminidb = m.Database(List(unit.source.toInput -> unit.toAttributes))
-        mminidb.save(outputClasspath, assumedSourcepath)
+        try {
+          if (!unit.source.file.name.endsWith(".scala")) return
+          val mminidb = m.Database(List(unit.source.toInput -> unit.toAttributes))
+          mminidb.save(outputClasspath, assumedSourcepath)
+        } catch {
+          case NonFatal(ex) =>
+            val msg = new StringWriter()
+            val path = unit.source.file.path
+            msg.write(s"failed to generate semanticdb for $path:$EOL")
+            ex.printStackTrace(new PrintWriter(msg))
+            global.reporter.error(g.NoPosition, msg.toString)
+        }
       }
 
       override def run(): Unit = {
