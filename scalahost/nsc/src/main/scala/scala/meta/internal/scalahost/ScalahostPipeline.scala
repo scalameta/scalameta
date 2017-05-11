@@ -41,6 +41,7 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
       implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
 
       override def apply(unit: g.CompilationUnit): Unit = {
+        if (!unit.source.file.name.endsWith(".scala")) return
         val mminidb = m.Database(List(unit.source.toInput -> unit.toAttributes))
         mminidb.save(outputClasspath, assumedSourcepath)
       }
