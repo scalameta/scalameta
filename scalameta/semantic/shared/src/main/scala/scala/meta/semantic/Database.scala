@@ -8,6 +8,7 @@ import scala.compat.Platform.EOL
 import scala.meta.inputs._
 import scala.meta.io._
 import scala.meta.internal.semantic._
+import scala.meta.internal.semantic.meta._
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
 import scala.meta.{semantic => m}
