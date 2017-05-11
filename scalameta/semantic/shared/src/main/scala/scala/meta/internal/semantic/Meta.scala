@@ -14,7 +14,7 @@ import scala.meta.inputs.{Input => mInput, Position => mPosition, Point => mPoin
 
 package object meta {
   implicit class XtensionDatabaseSchema(mdatabase: m.Database) {
-    def toSchema: s.Database = {
+    def toSchema(sourcepath: Sourcepath): s.Database = {
       val sentries = mdatabase.entries.map {
         case (minput, m.Attributes(mdialect, mnames, mmessages, mdenots, msugars)) =>
           object mDialect {
@@ -49,7 +49,7 @@ package object meta {
             }
           }
           val spath = minput match {
-            case mInput.File(spath, charset) if charset == Charset.forName("UTF-8") => spath.value
+            case mInput.File(path, charset) if charset == Charset.forName("UTF-8") => sourcepath.relativize(path.toURI).getOrElse(sys.error(s"can't find $path in $sourcepath"))
             case other => sys.error(s"bad database: unsupported input $other")
           }
           val sdialect = mdialect match {
@@ -72,7 +72,7 @@ package object meta {
             case (mPosition(srange), ssyntax) => s.Sugar(Some(srange), ssyntax)
             case other => sys.error(s"bad database: unsupported sugar $other")
           }
-          s.Attributes(spath, sdialect, snames, smessages, sdenots, ssugars)
+          spath -> s.Attributes(sdialect, snames, smessages, sdenots, ssugars)
         case (other, _) =>
           sys.error(s"unsupported input: $other")
       }

@@ -2,6 +2,7 @@ package scala.meta
 package internal
 package semantic
 
+import java.io._
 import java.net.URI
 import org.scalameta.data._
 import scala.{Seq => _}
@@ -13,26 +14,28 @@ import scala.meta.{semantic => m}
 import scala.meta.inputs.{Input => mInput, Position => mPosition, Point => mPoint}
 
 package object schema {
-  @data class Database(entries: Seq[Attributes]) {
-    def toVfs(classpath: Classpath, sourcepath: Sourcepath): v.Database = {
+  @data class Database(entries: Seq[(RelativePath, Attributes)]) {
+    def toVfs(classpath: Classpath): v.Database = {
       if (classpath.shallow.isEmpty) sys.error("can't save semanticdb to an empty classpath")
-      val ventries = entries.map(entry => {
-        // TODO: Would it make sense to support multiclasspaths?
-        // One use-case for this would be in-place updates of semanticdb files.
-        val base = AbsolutePath(classpath.shallow.head)
-        val scalaNameOpt = sourcepath.relativize(AbsolutePath(entry.path).toURI)
-        val scalaName = scalaNameOpt.getOrElse(sys.error(s"can't find ${entry.path} in $sourcepath"))
-        val semanticdbName = v.Paths.scalaToSemanticdb(scalaName)
-        val fragment = Fragment(base, semanticdbName)
-        v.Entry.InMemory(fragment, entry.toByteArray)
-      })
+      val ventries = entries.map {
+        case (path, sentry) =>
+          // TODO: Would it make sense to support multiclasspaths?
+          // One use-case for this would be in-place updates of semanticdb files.
+          val base = AbsolutePath(classpath.shallow.head)
+          val semanticdbName = v.Paths.scalaToSemanticdb(path)
+          val fragment = Fragment(base, semanticdbName)
+          v.Entry.InMemory(fragment, sentry.toByteArray)
+      }
       v.Database(ventries)
     }
 
-    def toMeta: m.Database = {
+    def toMeta(sourcepath: Sourcepath): m.Database = {
       val mentries = entries.map {
-        case s.Attributes(spath, sdialect, snames, smessages, sdenots, ssugars) =>
-          val minput = mInput.File(AbsolutePath(spath))
+        case (path, s.Attributes(sdialect, snames, smessages, sdenots, ssugars)) =>
+          val minput = {
+            val uri = sourcepath.find(path).getOrElse(sys.error(s"can't find $path in $sourcepath"))
+            mInput.File(new File(uri))
+          }
           object sRange {
             def unapply(srange: s.Range): Option[mPosition] = {
               val mstart = mPoint.Offset(minput, srange.start)

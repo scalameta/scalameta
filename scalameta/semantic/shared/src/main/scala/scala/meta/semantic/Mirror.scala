@@ -9,8 +9,7 @@ trait Mirror {
 
 object Mirror {
   def apply(classpath: Classpath, sourcepath: Sourcepath): Mirror = {
-    // TODO: sourcepath is unused (that's intentional until #777 is fixed)
-    Database.load(classpath)
+    Database.load(classpath, sourcepath)
   }
 
   def apply(): Mirror = {
