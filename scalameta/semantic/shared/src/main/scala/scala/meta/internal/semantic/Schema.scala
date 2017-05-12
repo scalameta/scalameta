@@ -18,12 +18,12 @@ package object schema {
     def toVfs(classpath: Classpath): v.Database = {
       if (classpath.shallow.isEmpty) sys.error("can't save semanticdb to an empty classpath")
       val ventries = entries.map {
-        case (path, sentry) =>
+        case (spath, sentry) =>
           // TODO: Would it make sense to support multiclasspaths?
           // One use-case for this would be in-place updates of semanticdb files.
           val base = AbsolutePath(classpath.shallow.head)
-          val semanticdbName = v.Paths.scalaToSemanticdb(path)
-          val fragment = Fragment(base, semanticdbName)
+          val vpath = v.Paths.scalaToSemanticdb(spath)
+          val fragment = Fragment(base, vpath)
           v.Entry.InMemory(fragment, sentry.toByteArray)
       }
       v.Database(ventries)
@@ -31,10 +31,14 @@ package object schema {
 
     def toMeta(sourcepath: Sourcepath): m.Database = {
       val mentries = entries.map {
-        case (path, s.Attributes(sdialect, snames, smessages, sdenots, ssugars)) =>
+        case (spath, s.Attributes(scontents, sdialect, snames, smessages, sdenots, ssugars)) =>
           val minput = {
-            val uri = sourcepath.find(path).getOrElse(sys.error(s"can't find $path in $sourcepath"))
-            mInput.File(new File(uri))
+            if (scontents == "") {
+              val uri = sourcepath.find(spath).getOrElse(sys.error(s"can't find $spath in $sourcepath"))
+              mInput.File(new File(uri))
+            } else {
+              mInput.LabeledString(spath.toString, scontents)
+            }
           }
           object sRange {
             def unapply(srange: s.Range): Option[mPosition] = {

@@ -5,6 +5,7 @@ package scala.meta.internal.semantic.schema;
 message Attributes {
   reserved 1;
   reserved 5;
+  string contents = 8;
   string dialect = 7;
   repeated ResolvedName names = 2;
   repeated Message messages = 3;

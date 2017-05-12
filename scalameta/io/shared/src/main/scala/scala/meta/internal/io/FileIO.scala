@@ -9,5 +9,5 @@ object FileIO {
     PlatformFileIO.slurp(path, charset)
 
   def slurp(path: AbsolutePath): String =
-    slurp(path, Charset.forName("UTF8"))
+    slurp(path, Charset.forName("UTF-8"))
 }

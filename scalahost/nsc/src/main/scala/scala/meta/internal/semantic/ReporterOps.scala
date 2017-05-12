@@ -15,10 +15,8 @@ trait ReporterOps { self: DatabaseOps =>
         case r: StoreReporter =>
           object RelevantMessage {
             def unapply(info: r.Info): Option[(gPosition, Int, String)] = {
-              val unitPath = unit.source.toAbsolutePath
-              val infoPath = info.pos.source.toAbsolutePath
               if (!info.pos.isRange) return None
-              if (infoPath != unitPath) return None
+              if (info.pos.source != unit.source) return None
               Some((info.pos, info.severity.id, info.msg))
             }
           }

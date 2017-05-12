@@ -10,6 +10,7 @@ import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
+import scala.meta.io._
 import scala.meta.internal.semantic.DatabaseOps
 
 abstract class DatabaseSuite extends FunSuite { self =>
@@ -41,14 +42,14 @@ abstract class DatabaseSuite extends FunSuite { self =>
   import databaseOps._
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
-    val cwd = sys.props("user.dir")
+    val oldSourcepath = sys.props("scalameta.sourcepath")
     try {
       val javaFile = File.createTempFile("paradise", ".scala")
       val writer = new PrintWriter(javaFile)
       try writer.write(code)
       finally writer.close()
 
-      sys.props("user.dir") = javaFile.getParentFile.getAbsolutePath
+      sys.props("scalameta.sourcepath") = javaFile.getParentFile.getAbsolutePath
       val run = new g.Run
       val abstractFile = AbstractFile.getFile(javaFile)
       val sourceFile = g.getSourceFile(abstractFile)
@@ -79,7 +80,8 @@ abstract class DatabaseSuite extends FunSuite { self =>
 
       m.Database(List(unit.source.toInput -> unit.toAttributes))
     } finally {
-      sys.props("user.dir") = cwd
+      if (oldSourcepath != null) sys.props("scalameta.sourcepath") = oldSourcepath
+      else sys.props.remove("scalameta.sourcepath")
     }
   }
 

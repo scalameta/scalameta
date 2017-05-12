@@ -4,6 +4,7 @@ package semantic
 import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.compat.Platform.EOL
+import scala.util.Try
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -35,10 +36,10 @@ object Symbol {
     override def fullName: Ref = unsupported(this, "fullName")
   }
 
-  @leaf class Local(position: Position) extends Symbol {
+  @leaf class Local(id: String) extends Symbol {
     override def toString = syntax
-    override def syntax = position.syntax
-    override def structure = s"""Symbol.Local(${position.structure})"""
+    override def syntax = id
+    override def structure = s"""Symbol.Local("$id")"""
     override def name: Name = ???
     override def fullName: Ref = ???
   }
@@ -177,22 +178,15 @@ object Symbol {
         }
       }
       def parseLocal(): Symbol = {
-        val pathBuf = new StringBuilder
-        pathBuf += currChar
-        while (readChar() != '@') pathBuf += currChar
-
-        val startBuf = new StringBuilder
-        while (Character.isDigit(readChar())) startBuf += currChar
-
+        val start = i - 1
+        while (readChar() != '@') {}
+        while (Character.isDigit(readChar())) {}
         if (currChar != '.') fail()
         readChar()
         if (currChar != '.') fail()
-
-        val endBuf = new StringBuilder
-        while (Character.isDigit(readChar())) endBuf += currChar
-
-        val input = Input.File(AbsolutePath(pathBuf.toString))
-        Symbol.Local(Range(input, Offset(input, startBuf.toString.toInt), Offset(input, endBuf.toString.toInt)))
+        while (Character.isDigit(readChar())) {}
+        val end = i - 1
+        Symbol.Local(s.substring(start, end))
       }
 
       def parseMulti(symbols: List[Symbol]): Symbol = {
