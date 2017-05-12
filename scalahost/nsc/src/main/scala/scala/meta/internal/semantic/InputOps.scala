@@ -21,8 +21,8 @@ trait InputOps { self: DatabaseOps =>
         if (config.slim) {
           m.Input.File(path)
         } else if (config.fat) {
-          val labelOpt = scalametaSourcepath.relativize(path.toURI).map(_.toString)
-          val label = labelOpt.getOrElse(sys.error(s"can't find $path in $scalametaSourcepath"))
+          val labelOpt = config.sourcepath.relativize(path.toURI).map(_.toString)
+          val label = labelOpt.getOrElse(sys.error(s"can't find $path in ${config.sourcepath}"))
           // NOTE: Can't use gsource.content because it's preprocessed by scalac.
           // TODO: Obtain charset from Global.reader.
           val charset = Charset.forName("UTF-8")

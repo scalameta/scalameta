@@ -26,8 +26,7 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
     global.settings.outputDirs.getSingleOutput
       .map(_.file.getAbsolutePath)
       .getOrElse(global.settings.d.value))
-  lazy val scalametaSourcepath = Sourcepath(
-    sys.props.getOrElse("scalameta.sourcepath", sys.props("user.dir")))
+  lazy val scalametaSourcepath = config.sourcepath
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
 
   object ScalahostComponent extends PluginComponent {

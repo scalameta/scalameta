@@ -15,6 +15,4 @@ trait DatabaseOps
     with SymbolOps
     with ReflectionToolkit {
   val global: Global
-  def scalametaClasspath: Classpath
-  def scalametaSourcepath: Sourcepath
 }
