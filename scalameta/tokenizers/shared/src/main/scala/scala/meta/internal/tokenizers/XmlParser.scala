@@ -39,7 +39,7 @@ class XmlParser(Block: P0,
     val Unparsed = P( UnpStart ~/ UnpData ~ UnpEnd )
     val UnpStart = P( "<xml:unparsed" ~/ (WL ~ Attribute).rep ~ WL.? ~ ">" )
     val UnpEnd   = P( "</xml:unparsed>" )
-    val UnpData  = P( (!UnpEnd ~ AnyChar).rep )
+    val UnpData  = P( (!UnpEnd ~ Char).rep )
 
     val CDSect  = P( CDStart ~/ CData ~ CDEnd )
     val CDStart = P( "<![CDATA[" )
@@ -49,9 +49,8 @@ class XmlParser(Block: P0,
     val Comment = P( "<!--" ~/ ComText ~ "-->" )
     val ComText = P( (!"--" ~ Char).rep ~ ("-" ~ &("--")).? )
 
-    val PI         = P( "<?" ~ PITarget ~ PIProcText.? ~ "?>" )
-    val PITarget   = P( !(("X" | "x") ~ ("M" | "m") ~ ("L" | "l")) ~ Name )
-    val PIProcText = P( WL ~ (!"?>" ~ Char).rep )
+    val PI         = P( "<?" ~ Name ~ WL.? ~ PIProcText ~ "?>" )
+    val PIProcText = P( (!"?>" ~ Char).rep )
 
     val Reference = P( EntityRef | CharRef )
     val EntityRef = P( "&" ~ Name ~/ ";" )
@@ -66,9 +65,9 @@ class XmlParser(Block: P0,
     val CharQ  = P( !"\"" ~ Char1 )
     val CharA  = P( !"'" ~ Char1 )
 
-    val Name      = P( NameStart ~ NameChar.rep )
-    val NameStart = P( CharPred(isNameStart) ).opaque("NameStart")
-    val NameChar  = P( CharPred(isNameChar) ).opaque("NameChar")
+    val Name: P0  = P( NameStart ~ NameChar.rep ).!.filter(_.last != ':').opaque("Name").map(_ => Unit) // discard result
+    val NameStart = P( CharPred(isNameStart) )
+    val NameChar  = P( CharPred(isNameChar) )
 
     val ElemPattern: P0 = P( TagPHeader ~/ ("/>" | ">" ~/ ContentP ~/ ETag ) )
     val TagPHeader      = P( "<" ~ Name ~ WL.?  )

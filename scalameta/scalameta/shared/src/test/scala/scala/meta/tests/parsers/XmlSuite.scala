@@ -209,9 +209,11 @@ class XmlSuite extends ParseSuite {
   checkOK("""<foo a="'"/>""")
   checkOK("""<foo a='"'/>""")
   checkOK("<foo>&name;</foo>")
+  checkOK("<foo>&na:me;</foo>")
   checkOK("<foo>&lt;</foo>")
   checkOK("<foo>Hello &name;!</foo>")
   checkOK("""<foo a="&name;" />""")
+  checkOK("""<foo a="&na:me;" />""")
   checkOK("""<foo a="&lt;" />""")
   checkOK("""<foo a="Hello &name;!"/>""")
   checkOK("""<foo a="1 &lt; 2"/>""")
@@ -233,8 +235,11 @@ class XmlSuite extends ParseSuite {
   checkOK("<![CDATA[]>]]>")
   checkOK("<![CDATA[]]]]>")
   checkOK("<?foo bar?>")
+  checkOK("<?foo  bar?>")
   checkOK("<?foo?>")
   checkOK("<?foo     ?>")
+  checkOK("<?foo??>")
+  checkOK("<?foo<bar?>")
   checkOK("<xml:unparsed>foo</xml:unparsed>")
   checkOK("<xml:unparsed>{</xml:unparsed>")
   checkOK("<xml:unparsed><</xml:unparsed>")
@@ -257,6 +262,7 @@ class XmlSuite extends ParseSuite {
   checkOK("<foo a={<bar/>}/>")
   checkOK("<foo a={<bar/><bat/>}/>")
   checkOK("<a>{ List(1, 2) }</a>")
+  checkOK("<a>{}</a>")
   checkOK("<a>{1}{2}</a>")
   checkOK("<a>{1}{2}<b/>{3}</a>")
   checkOK("<a>{<b>{1}{2}</b>}</a>")
@@ -287,19 +293,23 @@ class XmlSuite extends ParseSuite {
       |}</ips>
     """.trim.stripMargin)
 
-
-  checkOK("<a>{}</a>")
-  checkError("e match { case <a>{}</a> => ??? }")
-  //checkError("<a></b>") // FIXME: Should not parse
-
   // Matches bugs in scalac
   checkOK("""<a b="&#;"/>""")
   checkOK("""<a b="&#x;"/>""")
   checkOK("<a>&#;</a>")
   checkOK("<a>&#x;</a>")
   checkOK("<a>]]></a> ")
-  //checkOK("e match { case <a>&</a> => () }") // FIXME: Should parse, probably a bug in scalac though
+  //checkOK("""<a b="&:;"/>""") // FIXME
+  //checkOK("""<a b="&:a;"/>""") //FIXME
+  //checkOK("""<a b="&a:;"/>""") // FIXME
+  //checkOK("e match { case <a>&</a> => () }") // FIXME
 
+  checkError("<a:/>")
+  checkError("""<a b:="Hello"/>""")
+  checkError("<a>&b:;</a>")
+  checkError("<a>&:b;</a>")
+  checkError("<a><a:/>")
+  checkError("<a>")
   checkError("<!-- -- -->")
   checkError("<!--->")
   checkError("<!-- >")
@@ -308,6 +318,8 @@ class XmlSuite extends ParseSuite {
   checkError("<![CDATA[]]>]]>")
   checkError("<a></ a>")
   checkError("<a></\na>")
+  checkError("e match { case <a>{}</a> => ??? }")
+  //checkError("<a></b>") // FIXME: Should not parse
 
   // FIXME These should not parse: we need to differentiate between expression and pattern position
   //checkError("""e match { case <a b="foo"/> => () }""" )
