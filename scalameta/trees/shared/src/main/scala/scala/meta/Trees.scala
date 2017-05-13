@@ -33,7 +33,6 @@ object Tree extends InternalTreeXtensions {
 
 @branch trait Ref extends Tree
 @branch trait Stat extends Tree
-@branch trait Scope extends Tree
 
 @branch trait Name extends Ref { def value: String }
 object Name {
@@ -77,24 +76,24 @@ object Term {
     // however, this element may be Quasi with "hidden" list of elements inside
     require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
   }
-  @ast class Block(stats: Seq[Stat]) extends Term with Scope {
+  @ast class Block(stats: Seq[Stat]) extends Term {
     require(stats.forall(_.isBlockStat))
   }
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
   @ast class Match(expr: Term, cases: Seq[Case] @nonEmpty) extends Term
   @ast class TryWithCases(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithTerm(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
-  @ast class Function(params: Seq[Term.Param], body: Term) extends Term with Scope {
+  @ast class Function(params: Seq[Term.Param], body: Term) extends Term {
     require(params.forall(param => param.is[Term.Param.Quasi] || (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)))
     require(params.exists(_.is[Term.Param.Quasi]) || params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class PartialFunction(cases: Seq[Case] @nonEmpty) extends Term
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
-  @ast class For(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope {
+  @ast class For(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term {
     require(enums.head.is[Enumerator.Generator])
   }
-  @ast class ForYield(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term with Scope
+  @ast class ForYield(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term
   @ast class New(templ: Template) extends Term
   @ast class Placeholder() extends Term
   @ast class Eta(expr: Term) extends Term
@@ -111,7 +110,7 @@ object Term {
   def fresh(prefix: String): Term.Name = Term.Name(prefix + Fresh.nextId())
 }
 
-@branch trait Type extends Tree with Type.Arg with Scope
+@branch trait Type extends Tree with Type.Arg
 object Type {
   @branch trait Ref extends Type with scala.meta.Ref
   @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref with Pat.Type.Ref with Param.Name with scala.meta.Name.Qualifier {
@@ -322,7 +321,7 @@ object Lit {
   @ast class Symbol(value: scala.Symbol) extends Lit
 }
 
-@branch trait Member extends Tree with Scope {
+@branch trait Member extends Tree {
   def name: Name
 }
 object Member {
@@ -519,7 +518,7 @@ object Importee {
   @ast class Unimport(name: scala.meta.Name.Indeterminate) extends Importee
 }
 
-@ast class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree with Scope {
+@ast class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree {
   require(pat.isLegal)
 }
 

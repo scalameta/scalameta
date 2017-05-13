@@ -283,7 +283,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Pkg
       |scala.meta.Pkg.Object
       |scala.meta.Ref
-      |scala.meta.Scope
       |scala.meta.Source
       |scala.meta.Stat
       |scala.meta.Template
