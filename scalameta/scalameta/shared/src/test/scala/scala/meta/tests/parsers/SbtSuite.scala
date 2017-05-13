@@ -74,7 +74,7 @@ class SbtSuite extends FunSuite {
               |Term.Select(
                 |Term.Apply(
                   |Term.Select(Term.ApplyInfix(Term.Name("project"), Term.Name("in"), Nil, Seq(Term.Apply(Term.Name("file"), Seq(Lit.String("."))))), Term.Name("settings")),
-                  | Seq(Term.Arg.Repeated(Term.Name("commonSettings")))),
+                  | Seq(Term.Repeated(Term.Name("commonSettings")))),
                 | Term.Name("settings")),
               | Seq(
                   |Term.ApplyInfix(Term.Name("name"), Term.Name(":="), Nil, Seq(Lit.String("hello"))))))))

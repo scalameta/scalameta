@@ -297,8 +297,7 @@ object TreeSyntax {
         case t: Term.New             => m(SimpleExpr, s(kw("new"), " ", t.templ))
         case _: Term.Placeholder     => m(SimpleExpr1, kw("_"))
         case t: Term.Eta             => m(SimpleExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
-        case t: Term.Arg.Named       => s(t.name, " ", kw("="), " ", p(Expr, t.expr))
-        case t: Term.Arg.Repeated    => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
+        case t: Term.Repeated        => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
         case t: Term.Param           =>
           val mods = t.mods.filter(!_.is[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
           s(w(mods, " "), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
@@ -567,12 +566,12 @@ object TreeSyntax {
       }
 
       // Multiples and optionals
-      implicit def syntaxArgs: Syntax[Seq[Term.Arg]] = Syntax {
+      implicit def syntaxArgs: Syntax[Seq[Term]] = Syntax {
         case (b: Term.Block) :: Nil                                                     => s(" ", b)
         case (f @ Term.Function(params, _)) :: Nil if !params.exists(_.decltpe.isEmpty) => s(" { ", f, " }")
         case args                                                                       => s("(", r(args, ", "), ")")
       }
-      implicit def syntaxArgss: Syntax[Seq[Seq[Term.Arg]]] = Syntax {
+      implicit def syntaxArgss: Syntax[Seq[Seq[Term]]] = Syntax {
         r(_)
       }
       implicit def syntaxTargs: Syntax[Seq[Type]] = Syntax { targs =>

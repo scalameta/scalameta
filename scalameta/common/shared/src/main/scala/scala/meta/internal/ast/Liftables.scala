@@ -61,8 +61,8 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       }
       q"""
         object ApplyToTripleDots {
-          def unapply(tree: _root_.scala.meta.Tree): Option[(_root_.scala.meta.Term, _root_.scala.meta.Term.Arg.Quasi)] = tree match {
-            case _root_.scala.meta.Term.Apply(fn, _root_.scala.collection.immutable.Seq(arg: _root_.scala.meta.Term.Arg.Quasi))
+          def unapply(tree: _root_.scala.meta.Tree): Option[(_root_.scala.meta.Term, _root_.scala.meta.Term.Quasi)] = tree match {
+            case _root_.scala.meta.Term.Apply(fn, _root_.scala.collection.immutable.Seq(arg: _root_.scala.meta.Term.Quasi))
             if arg.rank == 2 => _root_.scala.Some((fn, arg))
             case _ => _root_.scala.None
           }
@@ -80,7 +80,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
               ${liftPath("scala.meta.internal.ast.Syntactic.Term.Apply")},
               _root_.scala.collection.immutable.List(
                 ${liftField(q"fn", tq"_root_.scala.meta.Term")},
-                ${liftField(q"Seq(Seq(tripleQuasi))", tq"Seq[Seq[_root_.scala.meta.Term.Arg.Quasi]]")}))
+                ${liftField(q"Seq(Seq(tripleQuasi))", tq"Seq[Seq[_root_.scala.meta.Term.Quasi]]")}))
           case _ =>
             $body
         }

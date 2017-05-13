@@ -41,7 +41,7 @@ object Name {
   @branch trait Qualifier extends Ref
 }
 
-@branch trait Term extends Stat with Term.Arg
+@branch trait Term extends Stat
 object Term {
   @branch trait Ref extends Term with scala.meta.Ref
   @ast class This(qual: scala.meta.Name.Qualifier) extends Term.Ref with scala.meta.Name.Qualifier {
@@ -58,14 +58,14 @@ object Term {
   @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
     require(parts.length == args.length + 1)
   }
-  @ast class Apply(fun: Term, args: Seq[Arg]) extends Term with Ctor.Call
+  @ast class Apply(fun: Term, args: Seq[Term]) extends Term with Ctor.Call
   @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term with Ctor.Call
-  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Arg]) extends Term
+  @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Term]) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
     require(op.isUnaryOp)
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
-  @ast class Update(fun: Term, argss: Seq[Seq[Arg]] @nonEmpty, rhs: Term) extends Term
+  @ast class Update(fun: Term, argss: Seq[Seq[Term]] @nonEmpty, rhs: Term) extends Term
   @ast class Return(expr: Term) extends Term
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
@@ -96,11 +96,7 @@ object Term {
   @ast class New(templ: Template) extends Term
   @ast class Placeholder() extends Term
   @ast class Eta(expr: Term) extends Term
-  @branch trait Arg extends Tree
-  object Arg {
-    @ast class Named(name: Name, expr: Term.Arg) extends Arg
-    @ast class Repeated(expr: Term) extends Arg
-  }
+  @ast class Repeated(expr: Term) extends Term
   @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Member
   object Param {
     @branch trait Name extends scala.meta.Name

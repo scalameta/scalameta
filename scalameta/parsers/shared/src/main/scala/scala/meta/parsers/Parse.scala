@@ -13,7 +13,6 @@ trait Parse[T] {
 object Parse {
   implicit lazy val parseStat: Parse[Stat] = toParse(_.parseStat())
   implicit lazy val parseTerm: Parse[Term] = toParse(_.parseTerm())
-  implicit lazy val parseTermArg: Parse[Term.Arg] = toParse(_.parseTermArg())
   implicit lazy val parseTermParam: Parse[Term.Param] = toParse(_.parseTermParam())
   implicit lazy val parseType: Parse[Type] = toParse(_.parseType())
   implicit lazy val parseTypeArg: Parse[Type.Arg] = toParse(_.parseTypeArg())

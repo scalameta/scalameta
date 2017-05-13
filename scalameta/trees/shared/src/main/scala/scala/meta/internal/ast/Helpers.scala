@@ -99,8 +99,8 @@ object Helpers {
       }
       loop(tree)
     }
-    def ctorArgss: Seq[Seq[Term.Arg]] = {
-      def loop(tree: Tree): Seq[Seq[Term.Arg]] = tree match {
+    def ctorArgss: Seq[Seq[Term]] = {
+      def loop(tree: Tree): Seq[Seq[Term]] = tree match {
         case _: Ctor.Ref => Nil
         case Term.ApplyType(callee, _) => callee.ctorArgss
         case Term.Apply(callee, args) => callee.ctorArgss :+ args
@@ -331,8 +331,8 @@ object Helpers {
       case _ => Term.Apply(fun, Nil)
     }
 
-    def unapply(call: Term.Apply): Option[(Term, Seq[Seq[Term.Arg]])] = {
-      def recur(acc: Seq[Seq[Term.Arg]], term: Term): (Term, Seq[Seq[Term.Arg]])  = term match {
+    def unapply(call: Term.Apply): Option[(Term, Seq[Seq[Term]])] = {
+      def recur(acc: Seq[Seq[Term]], term: Term): (Term, Seq[Seq[Term]])  = term match {
         case Term.Apply(fun, args) => recur(args +: acc, fun) // inner-most is in the front
         case fun => (fun, acc)
       }

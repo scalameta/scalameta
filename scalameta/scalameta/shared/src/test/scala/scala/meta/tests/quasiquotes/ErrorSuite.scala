@@ -18,18 +18,6 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("q\"foo: _*\"") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      q"foo: _*"
-    """) === """
-      |<macro>:4: ; expected but identifier found
-      |      q"foo: _*"
-      |              ^
-    """.trim.stripMargin)
-  }
-
   test("q\"foo + class\"") {
     assert(typecheckError("""
       import scala.meta._
@@ -52,7 +40,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:6: type mismatch when unquoting;
       | found   : Dummy
-      | required: scala.meta.Term.Arg
+      | required: scala.meta.Term
       |      q"foo($x)"
       |            ^
     """.trim.stripMargin)
@@ -84,7 +72,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:6: type mismatch when unquoting;
       | found   : List[Dummy]
-      | required: scala.collection.immutable.Seq[scala.meta.Term.Arg]
+      | required: scala.collection.immutable.Seq[scala.meta.Term]
       |      q"foo(..$xs)"
       |              ^
     """.trim.stripMargin)
@@ -99,7 +87,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Term.Name]
-      | required: scala.meta.Term.Arg
+      | required: scala.meta.Term
       |      q"foo($xs)"
       |            ^
     """.trim.stripMargin)

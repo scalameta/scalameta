@@ -13,7 +13,6 @@ private[meta] trait Api {
   // TODO: overloading Case and Pat.Arg within p"..." is probably not the best idea
   // however, cas"..." is so ugly that I'm willing to be conceptually impure here
   @quasiquote[Ctor, Stat]('q)          implicit class XtensionQuasiquoteTerm(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Term.Arg]('arg)          implicit class XtensionQuasiquoteTermArg(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Term.Param]('param)      implicit class XtensionQuasiquoteTermParam(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Type]('t)                implicit class XtensionQuasiquoteType(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Type.Arg]('targ)         implicit class XtensionQuasiquoteTypeArg(ctx: StringContext) extends QuasiquoteParsers

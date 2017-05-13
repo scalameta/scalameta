@@ -17,12 +17,12 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Name              | `q"$name"` (construction only), `q"${name: Term.Name}"` (also deconstruction)
  Selection         | `q"$expr.$name"`
  Interpolation     | Not supported yet
- Application       | `q"$expr(...$aexprssnel)"`
+ Application       | `q"$expr(...$exprssnel)"`
  Type Application  | `q"$expr[..$tpesnel]"`
- Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$aexprs)"`
+ Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$exprs)"`
  Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`
  Assign            | `q"$ref = $expr"`
- Update            | `q"$expr(...$aexprssnel) = $expr"`
+ Update            | `q"$expr(...$exprssnel) = $expr"`
  Return            | `q"return $expr"`
  Throw             | `q"throw $expr"`
  Ascribe           | `q"$expr: $tpe"`
@@ -42,15 +42,8 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  New               | `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }"`
  Placeholder       | `q"_"`
  Eta Expansion     | `q"$expr _"`
+ Repeated          | `q"$expr: _*"`
  Literal           | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
-
-## Arguments (meta.Term.Arg)
-
-            | Quasiquote
-------------|------------------------------
- Named      | `arg"$name = $aexpr"`
- Repeated   | `arg"$expr: _*"`
- Expression | `arg"$expr"` (construction only), `arg"${expr: Term}"` (also deconstruction)
 
 ## Types (meta.Type)
 
@@ -183,7 +176,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Project Reference   | `ctor"$tpe#$ctorname"`
  Function Reference  | `ctor"(..$tpes) => $tpe"`
  Annotated Reference | `ctor"$ctorname ..@annots"`
- Applied Reference   | `ctor"$ctorref(...$aexprssnel)"`
+ Applied Reference   | `ctor"$ctorref(...$exprssnel)"`
  Tapplied Reference  | `ctor"$ctorref[..$atpesnel]"`
 
 ## Template (meta.Template)
@@ -257,15 +250,15 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
 
   1. An *unquote template* (`$smth`, `..$smth` or `...$smth`) works as follows:
 
-      1. First, we strip standard suffixes from `smth` using the "Suffixes" table (e.g. `aexprssnel` means a non-empty sequence of sequences of `aexpr`).
+      1. First, we strip standard suffixes from `smth` using the "Suffixes" table (e.g. `exprssnel` means a non-empty sequence of sequences of `expr`).
 
-      1. Second, we figure out the expected type of `smth` using the "Shorthands" table (e.g. `aexpr` means `Term.Arg`, so `aexprssnel` means `Seq[Seq[Term.Arg]]`).
+      1. Second, we figure out the expected type of `smth` using the "Shorthands" table (e.g. `expr` means `Term`, so `exprssnel` means `Seq[Seq[Term]]`).
 
       1. Third, we apply an appropriate number of replications to the unquote template to have it match the corresponding part of a quasiquote that's being tested for conformance:
 
           1. `$smth` can not be replicated.
           1. `..$smth` means an arbitrary mix of `$smth` and `..$smth` unquote templates separated according to their location (e.g. an empty string, `[$tpe]`, `[..$tpes, $tpe]` all conform to `[..$tpes]`, and the separator is a comma, as appropriate for a list of type arguments).
-          1. `...$smth` means an arbitrary mix of `$smth`, `..$smth` and  `...$smth` unquote templates, separated according to their location (e.g. an empty string, `(...$aexprss)`, `(..$aexprs)($aexpr1, $aexpr2)()` all conform to `(...$aexprss)`, and the separator are matching parentheses, as appropriate for a list of arguments).
+          1. `...$smth` means an arbitrary mix of `$smth`, `..$smth` and  `...$smth` unquote templates, separated according to their location (e.g. an empty string, `(...$exprss)`, `(..$exprs)($expr1, $expr2)()` all conform to `(...$exprss)`, and the separator are matching parentheses, as appropriate for a list of arguments).
           1. If a suffix of `smth` says that it's a non-empty sequence, then replication can't result in an empty list.
           1. If a quasiquote is used as a pattern, then some replications may be illegal (TODO: to be elaborated!).
 
@@ -297,7 +290,6 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Stat                | `$stat`       | `q`
  meta.Template            | `$template`   | `template`
  meta.Term                | `$expr`       | `q`
- meta.Term.Arg            | `$aexpr`      | `arg`
  meta.Term.Name           | `$name`       | `q`
  meta.Term.Ref            | `$ref`        | `q`
  meta.Term.Param          | `$param`      | `param`

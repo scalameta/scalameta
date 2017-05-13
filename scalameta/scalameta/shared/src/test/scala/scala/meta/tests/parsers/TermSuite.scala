@@ -66,15 +66,15 @@ class TermSuite extends ParseSuite {
   }
 
   test("f(x = 0)") {
-    val Apply(TermName("f"), Arg.Named(TermName("x"), Lit(0)) :: Nil) = term("f(x = 0)")
+    val Apply(TermName("f"), Assign(TermName("x"), Lit(0)) :: Nil) = term("f(x = 0)")
   }
 
   test("f(x: _*)") {
-    val Apply(TermName("f"), Arg.Repeated(TermName("x")) :: Nil) = term("f(x: _*)")
+    val Apply(TermName("f"), Repeated(TermName("x")) :: Nil) = term("f(x: _*)")
   }
 
   test("f(x = xs: _*)") {
-    val Term.Apply(Term.Name("f"), Seq(Term.Arg.Named(Term.Name("x"), Term.Arg.Repeated(Term.Name("xs"))))) = term("f(x = xs: _*)")
+    val Term.Apply(Term.Name("f"), Seq(Assign(Term.Name("x"), Repeated(Term.Name("xs"))))) = term("f(x = xs: _*)")
   }
 
   test("a + ()") {
@@ -356,7 +356,7 @@ class TermSuite extends ParseSuite {
 
   test("a + (b = c)") {
     val ApplyInfix(TermName("a"), TermName("+"), Nil,
-                   Arg.Named(TermName("b"), TermName("c")) :: Nil) = term("a + (b = c)")
+                   Assign(TermName("b"), TermName("c")) :: Nil) = term("a + (b = c)")
   }
 
   test("(a = b) + c") {
@@ -372,7 +372,7 @@ class TermSuite extends ParseSuite {
 
   test("a + (b: _*)") {
     val ApplyInfix(TermName("a"), TermName("+"), Nil,
-                   Arg.Repeated(TermName("b")) :: Nil) = term("a + (b: _*)")
+                   Repeated(TermName("b")) :: Nil) = term("a + (b: _*)")
   }
 
   test("local class") {

@@ -11,6 +11,7 @@ import mutable.{ ListBuffer, StringBuilder }
 import scala.annotation.tailrec
 import scala.{Seq => _}
 import scala.collection.immutable._
+import scala.util.Try
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.ast._
 import scala.meta.internal.ast.Helpers._
@@ -83,18 +84,25 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val addendum = advice.map(", " + _).getOrElse("")
       reporter.syntaxError(message + addendum, at = parserTokens.head)
     }
-    parseRule(parser => parser.statSeq(consumeStat) match {
-      case Nil => failEmpty()
-      case stat :: Nil => stat
-      case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
-      case stats if stats.forall(_.isTopLevelStat) => failMix(Some("try source\"...\" instead"))
-      case other => failMix(None)
+    parseRule(parser => {
+      val rewind = in.fork
+      try {
+        parser.statSeq(consumeStat) match {
+          case Nil => failEmpty()
+          case stat :: Nil => stat
+          case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
+          case stats if stats.forall(_.isTopLevelStat) => failMix(Some("try source\"...\" instead"))
+          case other => failMix(None)
+        }
+      } catch {
+        case ex @ ParseException(_, "; expected but identifier found") =>
+          Try({ in = rewind; repeatedExpr() }).getOrElse(throw ex)
+      }
     })
   }
   def parseQuasiquoteCtor(): Ctor = parseRule(_.quasiquoteCtor())
   def parseTerm(): Term = parseRule(_.expr())
   def parseUnquoteTerm(): Term = parseRule(_.unquoteExpr())
-  def parseTermArg(): Term.Arg = parseRule(_.argumentExpr())
   def parseTermParam(): Term.Param = parseRule(_.param(ownerIsCase = false, ownerIsType = true, isImplicit = false))
   def parseType(): Type = parseRule(_.typ())
   def parseTypeArg(): Type.Arg = parseRule(_.paramType())
@@ -1692,7 +1700,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             next()
             t = atPos(ref, auto)(Term.Assign(ref, expr()))
           case app: Term.Apply =>
-            def decompose(term: Term): (Term, List[List[Term.Arg]]) = term match {
+            def decompose(term: Term): (Term, List[List[Term]]) = term match {
               case Term.Apply(fun, args) =>
                 val (core, otherArgss) = decompose(fun)
                 (core, args.toList +: otherArgss)
@@ -1887,20 +1895,20 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   // For example, did you know that `a * b + (c, d) * (f, g: _*)` means:
   // a.$times(b).$plus(scala.Tuple2(c, d).$times(f, g: _*))?!
   //
-  // Therefore, Lhs = List[Term], Rhs = List[Term.Arg], FinishedInfix = Term.
+  // Therefore, Lhs = List[Term], Rhs = List[Term], FinishedInfix = Term.
   //
   // Actually there's even crazier stuff in scala-compiler.jar.
   // Apparently you can parse and typecheck `a + (bs: _*) * c`,
   // however I'm going to error out on this.
   object termInfixContext extends InfixContext {
     type Lhs = List[Term]
-    type Rhs = List[Term.Arg]
+    type Rhs = List[Term]
     type FinishedInfix = Term
 
     def toRhs(fin: FinishedInfix): Rhs = List(fin)
     def toLhs(rhs: Rhs): Lhs = rhs.map({
-      case term: Term => term
-      case arg => syntaxError("`: _*' annotations are only allowed in arguments to *-parameters", at = arg)
+      case arg: Term.Repeated => syntaxError("`: _*' annotations are only allowed in arguments to *-parameters", at = arg)
+      case other => other
     })
 
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
@@ -2100,18 +2108,17 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def argumentExprsOrPrefixExpr(): List[Term.Arg] = {
+  def argumentExprsOrPrefixExpr(): List[Term] = {
     if (token.isNot[LeftBrace] && token.isNot[LeftParen]) prefixExpr() :: Nil
     else {
-      def argsToTerm(args: List[Term.Arg], openParenPos: Int, closeParenPos: Int): Term = {
-        def badRep(rep: Term.Arg.Repeated) = syntaxError("repeated argument not allowed here", at = rep)
-        def loop(args: List[Term.Arg]): List[Term] = args match {
-          case Nil                                                 => Nil
-          case (t: Term) :: rest                                   => t :: loop(rest)
-          case (nmd @ Term.Arg.Named(name, rhs: Term)) :: rest     => atPos(nmd, nmd)(Term.Assign(name, rhs)) :: loop(rest)
-          case (Term.Arg.Named(_, rep: Term.Arg.Repeated)) :: rest => badRep(rep)
-          case (rep: Term.Arg.Repeated) :: rest                    => badRep(rep)
-          case _                                                   => unreachable(debug(args))
+      def argsToTerm(args: List[Term], openParenPos: Int, closeParenPos: Int): Term = {
+        def badRep(rep: Term.Repeated) = syntaxError("repeated argument not allowed here", at = rep)
+        def loop(args: List[Term]): List[Term] = args match {
+          case Nil                                          => Nil
+          case (Term.Assign(_, rep: Term.Repeated)) :: rest => badRep(rep)
+          case (rep: Term.Repeated) :: rest                 => badRep(rep)
+          case (t: Term) :: rest                            => t :: loop(rest)
+          case _                                            => unreachable(debug(args))
         }
         atPos(openParenPos, closeParenPos)(makeTupleTerm(loop(args)))
       }
@@ -2130,20 +2137,28 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def argumentExpr(): Term.Arg = {
+  def argumentExpr(): Term = {
     expr() match {
       case q: Quasi =>
-        q.become[Term.Arg.Quasi]
+        q.become[Term.Quasi]
       case Term.Ascribe(t1, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
         next()
-        atPos(t1, auto)(Term.Arg.Repeated(t1))
+        atPos(t1, auto)(Term.Repeated(t1))
       case Term.Assign(t1: Term.Name, Term.Ascribe(t2, Type.Placeholder(Type.Bounds(None, None)))) if isIdentOf("*") =>
         next()
-        atPos(t1, auto)(Term.Arg.Named(t1, atPos(t2, auto)(Term.Arg.Repeated(t2))))
-      case Term.Assign(t2: Term.Name, rhs) =>
-        atPos(t2, auto)(Term.Arg.Named(t2, rhs))
+        atPos(t1, auto)(Term.Assign(t1, atPos(t2, auto)(Term.Repeated(t2))))
       case other =>
         other
+    }
+  }
+
+  def repeatedExpr(): Term = autoPos {
+    expr() match {
+      case Term.Ascribe(expr1, Type.Placeholder(Type.Bounds(None, None))) if isIdentOf("*") =>
+        next()
+        Term.Repeated(expr1)
+      case other =>
+        syntaxError(s"`expr: _*` expected, $other found", at = other)
     }
   }
 
@@ -2152,7 +2167,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *                  | [nl] BlockExpr
    *  }}}
    */
-  def argumentExprs(): List[Term.Arg] = token match {
+  def argumentExprs(): List[Term] = token match {
     case LeftBrace() =>
       List(blockExpr())
     case LeftParen() =>
@@ -2160,7 +2175,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case RightParen() =>
           Nil
         case tok: Ellipsis if tok.rank == 2 =>
-          List(ellipsis(2, astInfo[Term.Arg]))
+          List(ellipsis(2, astInfo[Term]))
         case _ =>
           commaSeparated(argumentExpr)
       })

@@ -107,7 +107,7 @@ trait AttributesOps { self: DatabaseOps =>
                     def loop(term: m.Term): List[m.Term.Name] = term match {
                       case m.Term.Apply(mfn, margs) =>
                         margs.toList.collect {
-                          case m.Term.Arg.Named(mname, _) => mname
+                          case m.Term.Assign(mname: m.Term.Name, _) => mname
                         } ++ loop(mfn)
                       case _ => Nil
                     }

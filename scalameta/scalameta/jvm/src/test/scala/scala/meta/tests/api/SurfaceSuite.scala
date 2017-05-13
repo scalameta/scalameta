@@ -292,9 +292,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Term.ApplyInfix
       |scala.meta.Term.ApplyType
       |scala.meta.Term.ApplyUnary
-      |scala.meta.Term.Arg
-      |scala.meta.Term.Arg.Named
-      |scala.meta.Term.Arg.Repeated
       |scala.meta.Term.Ascribe
       |scala.meta.Term.Assign
       |scala.meta.Term.Block
@@ -313,6 +310,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Term.PartialFunction
       |scala.meta.Term.Placeholder
       |scala.meta.Term.Ref
+      |scala.meta.Term.Repeated
       |scala.meta.Term.Return
       |scala.meta.Term.Select
       |scala.meta.Term.Super
