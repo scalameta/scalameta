@@ -28,7 +28,6 @@ object Tree extends InternalTreeXtensions {
   implicit def classifiable[T <: Tree]: Classifiable[T] = null
   implicit def showStructure[T <: Tree](implicit options: Options): Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T](options)
   implicit def showSyntax[T <: Tree](implicit dialect: Dialect, options: Options): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect, options)
-  // implicit def showSemantics[T <: Tree](implicit c: SemanticContext): Semantics[T] = scala.meta.internal.prettyprinters.TreeSemantics.apply[T](c)
 }
 
 @branch trait Ref extends Tree
