@@ -319,16 +319,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     try body finally in = forked
   }
 
-  /** Perform an operation while peeking ahead.
-   *  Recover to inputal state in case of exception.
-   */
-  @inline def peekingAhead[T](tree: => T): T = {
-    val forked = in.fork
-    next()
-    // try it, in case it is recoverable
-    try tree catch { case e: Exception => in = forked ; throw e }
-  }
-
   /** Methods inParensOrError and similar take a second argument which, should
    *  the next token not be the expected opener (e.g. token.LeftParen) will be returned
    *  instead of the contents of the groupers.  However in all cases accept[LeftParen]
@@ -2471,12 +2461,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case _      => false
       }
       def checkWildStar: Option[Pat.Arg.SeqWildcard] = lhs match {
-        case Pat.Wildcard() if dialect.allowAtForExtractorVarargs && isSequenceOK && isRawStar => peekingAhead (
+        case Pat.Wildcard() if dialect.allowAtForExtractorVarargs && isSequenceOK && isRawStar =>
           // TODO: used to be Star(lhs) | EmptyTree, why start had param?
+          next()
           if (isCloseDelim) Some(atPos(lhs, auto)(Pat.Arg.SeqWildcard()))
           else None
-        )
-        case _ => None
+        case _ =>
+          None
       }
       def loop(rhs: ctx.Rhs): ctx.Rhs = {
         val op = if (isIdentExcept("|") || token.is[Unquote]) Some(termName()) else None
