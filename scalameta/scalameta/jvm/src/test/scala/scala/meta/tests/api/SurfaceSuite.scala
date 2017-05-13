@@ -318,8 +318,8 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Term.Super
       |scala.meta.Term.This
       |scala.meta.Term.Throw
-      |scala.meta.Term.TryWithCases
-      |scala.meta.Term.TryWithTerm
+      |scala.meta.Term.Try
+      |scala.meta.Term.TryWithHandler
       |scala.meta.Term.Tuple
       |scala.meta.Term.Update
       |scala.meta.Term.While

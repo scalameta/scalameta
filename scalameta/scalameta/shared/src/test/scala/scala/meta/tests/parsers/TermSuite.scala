@@ -259,20 +259,20 @@ class TermSuite extends ParseSuite {
   }
 
   test("try 1") {
-    val TryWithCases(Lit(1), Nil, None) = term("try 1")
+    val Try(Lit(1), Nil, None) = term("try 1")
   }
 
   test("try 1 catch 1") {
-    val TryWithTerm(Lit(1), Lit(1), None) = term("try 1 catch 1")
+    val TryWithHandler(Lit(1), Lit(1), None) = term("try 1 catch 1")
   }
 
   test("try 1 catch { case _ => }") {
-    val TryWithCases(Lit(1), Case(Pat.Wildcard(), None, Term.Block(Nil)) :: Nil, None) =
+    val Try(Lit(1), Case(Pat.Wildcard(), None, Term.Block(Nil)) :: Nil, None) =
       term("try 1 catch { case _ => }")
   }
 
   test("try 1 finally 1") {
-    val TryWithCases(Lit(1), Nil, Some(Lit(1))) = term("try 1 finally 1")
+    val Try(Lit(1), Nil, Some(Lit(1))) = term("try 1 finally 1")
   }
 
   test("{ case 1 => () }") {

@@ -1644,9 +1644,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case _           => None
       }
       catchopt match {
-        case None => Term.TryWithCases(body, Nil, finallyopt)
-        case Some(cases: List[_]) => Term.TryWithCases(body, cases.require[List[Case]], finallyopt)
-        case Some(term: Term) => Term.TryWithTerm(body, term, finallyopt)
+        case None => Term.Try(body, Nil, finallyopt)
+        case Some(cases: List[_]) => Term.Try(body, cases.require[List[Case]], finallyopt)
+        case Some(term: Term) => Term.TryWithHandler(body, term, finallyopt)
         case _ => unreachable(debug(catchopt))
       }
     case KwWhile() =>

@@ -267,11 +267,11 @@ object TreeSyntax {
           }
         case t: Term.If              => m(Expr1, s(kw("if"), " (", t.cond, ") ", p(Expr, t.thenp), if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()))
         case t: Term.Match           => m(Expr1, s(p(PostfixExpr, t.expr), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}")))
-        case t: Term.TryWithCases    =>
+        case t: Term.Try             =>
           m(Expr1, s(kw("try"), " ", p(Expr, t.expr),
             if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", r(t.catchp.map(i(_)), ""), n("}")) else s(""),
             t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())))
-        case t: Term.TryWithTerm     =>
+        case t: Term.TryWithHandler  =>
           m(Expr1, s(kw("try"), " ", p(Expr, t.expr), " ", kw("catch"), " ", t.catchp,
             t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())))
         case t: Term.Function        =>

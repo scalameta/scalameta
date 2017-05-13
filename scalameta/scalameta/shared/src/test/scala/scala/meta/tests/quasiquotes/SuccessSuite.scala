@@ -541,7 +541,7 @@ class SuccessSuite extends FunSuite {
     val case1 = p"case a => b"
     val case2 = p"case q => w"
     val expropt = q"baz"
-    assert(q"try $expr catch { case $case1 ..case $cases; case $case2 } finally $expropt".show[Structure] === "Term.TryWithCases(Term.Name(\"foo\"), Seq(Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Name(\"b\")), Case(Pat.Wildcard(), None, Term.Name(\"bar\")), Case(Lit.Int(1), None, Lit.Int(2)), Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Name(\"w\"))), Some(Term.Name(\"baz\")))")
+    assert(q"try $expr catch { case $case1 ..case $cases; case $case2 } finally $expropt".show[Structure] === "Term.Try(Term.Name(\"foo\"), Seq(Case(Pat.Var.Term(Term.Name(\"a\")), None, Term.Name(\"b\")), Case(Pat.Wildcard(), None, Term.Name(\"bar\")), Case(Lit.Int(1), None, Lit.Int(2)), Case(Pat.Var.Term(Term.Name(\"q\")), None, Term.Name(\"w\"))), Some(Term.Name(\"baz\")))")
   }
 
   test("1 q\"try $expr catch $expr finally $expropt\"") {
@@ -555,7 +555,7 @@ class SuccessSuite extends FunSuite {
     val expr = q"{ foo }"
     val exprr = q"pf"
     val expropt = q"{ bar }"
-    assert(q"try $expr catch $exprr finally $expropt".show[Structure] === "Term.TryWithTerm(Term.Block(Seq(Term.Name(\"foo\"))), Term.Name(\"pf\"), Some(Term.Block(Seq(Term.Name(\"bar\")))))")
+    assert(q"try $expr catch $exprr finally $expropt".show[Structure] === "Term.TryWithHandler(Term.Block(Seq(Term.Name(\"foo\"))), Term.Name(\"pf\"), Some(Term.Block(Seq(Term.Name(\"bar\")))))")
   }
 
   test("""q"(i: Int) => 42" """) {

@@ -80,8 +80,8 @@ object Term {
   }
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
   @ast class Match(expr: Term, cases: Seq[Case] @nonEmpty) extends Term
-  @ast class TryWithCases(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
-  @ast class TryWithTerm(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
+  @ast class Try(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
+  @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
   @ast class Function(params: Seq[Term.Param], body: Term) extends Term {
     require(params.forall(param => param.is[Term.Param.Quasi] || (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)))
     require(params.exists(_.is[Term.Param.Quasi]) || params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1))

@@ -31,8 +31,8 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Block             | `q"{ ..$stats }"`
  If                | `q"if ($expr) $expr else $expr"`
  Match             | `q"$expr match { ..case $casesnel }"`
- Try Catch Cases   | `q"try $expr catch { ..case $cases } finally $expropt"`
- Try Catch Expr    | `q"try $expr catch $expr finally $expropt"`
+ Try               | `q"try $expr catch { ..case $cases } finally $expropt"`
+ Try With Handler  | `q"try $expr catch $expr finally $expropt"`
  Function          | `q"(..$params) => $expr"`
  Partial Function  | `q"{ ..case $casesnel }"`
  While             | `q"while ($expr) $expr"`
