@@ -255,6 +255,7 @@ lazy val scalahostSbt = project
     buildInfoSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
+    publishMavenStyle := false, // necessary for pre-releases to work with addSbtPlugin
     bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
     testQuick := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
