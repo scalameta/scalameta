@@ -488,22 +488,6 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(secondary.toString === "def this() = this(42)")
   }
 
-  test("lazy printing") {
-    val emptyCtor = Ctor.Primary(Nil, Ctor.Name("this"), Nil)
-    val lazyStats = templStat("class C") #:: ??? #:: Stream.empty
-    val lazyTemplate = Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(lazyStats))
-    val tree1 = Defn.Class(Nil, Type.Name("test"), Nil, emptyCtor, lazyTemplate)
-    assert(tree1.toString === "class test { ... }")
-    val tree2 = Defn.Trait(Nil, Type.Name("test"), Nil, emptyCtor, lazyTemplate)
-    assert(tree2.toString === "trait test { ... }")
-    val tree3 = Defn.Object(Nil, Term.Name("test"), lazyTemplate)
-    assert(tree3.toString === "object test { ... }")
-    val tree4 = Pkg(Term.Name("test"), lazyStats)
-    assert(tree4.toString === "package test { ... }")
-    val tree5 = Pkg.Object(Nil, Term.Name("test"), lazyTemplate)
-    assert(tree5.toString === "package object test { ... }")
-  }
-
   test("smart case printing - oneliner in one line") {
     val Term.Match(_, case1 :: Nil) = templStat("??? match { case x => x }")
     assert(case1.toString === "case x => x")

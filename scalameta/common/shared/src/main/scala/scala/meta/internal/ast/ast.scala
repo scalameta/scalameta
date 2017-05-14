@@ -227,27 +227,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       val internalInitss = 1.to(internalInitCount).map(_ => q"null")
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$CommonTyperMacrosModule.initParam($local)" })
       internalBody += q"val node = new $name(..$internalInitss)(...$paramInitss)"
-      internalBody ++= internalLocalss.flatten.flatMap{ case (local, internal) =>
-        val (parentChecks, assignee) = {
-          // TODO: this is totally ugly. we need to come up with a way to express this in a sane way.
-          val validateLocal = TermName("validate" + local.toString.capitalize)
-          if (is("Pkg") && local.toString == "stats") {
-            val parentChecks = List(q"def $validateLocal(stat: Stat) = { require(stat.isTopLevelStat); stat }")
-            (parentChecks, q"$local.map($validateLocal)")
-          } else if ((is("Defn.Trait") || is("Defn.Object") || is("Pkg.Object")) && local.toString == "templ") {
-            val parentChecks = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(!stat.is[Ctor]); stat })")
-            (parentChecks, q"{ if (!$local.is[$QuasiClass]) $local.stats.map($validateLocal); $local }")
-          } else if (is("Template") && local.toString == "early") {
-            val parentChecks = List(q"def $validateLocal(stat: Stat) = { require(stat.isEarlyStat && parents.nonEmpty); stat }")
-            (parentChecks, q"$local.map($validateLocal)")
-          } else if (is("Template") && local.toString == "stats") {
-            val parentChecks = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(stat.isTemplateStat); stat })")
-            (parentChecks, q"$local.map($validateLocal)")
-          } else {
-            (Nil, q"$local")
-          }
-        }
-        parentChecks :+ q"$CommonTyperMacrosModule.storeField(node.$internal, $assignee, ${local.toString})"
+      internalBody ++= internalLocalss.flatten.map{ case (local, internal) =>
+        q"$CommonTyperMacrosModule.storeField(node.$internal, $local, ${local.toString})"
       }
       internalBody += q"node"
       val internalArgss = paramss.map(_.map(p => q"${p.name}"))
