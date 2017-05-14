@@ -21,7 +21,7 @@ import scala.meta.{semantic => m}
   lazy val sugars: Map[Position, String] = entries.flatMap(_._2.sugars).toMap
 
   def save(classpath: Classpath, sourcepath: Sourcepath): Unit = {
-    s.Database.fromMeta(this, sourcepath).toVfs(classpath).save()
+    this.toSchema(sourcepath).toVfs(classpath).save()
   }
 
   def syntax: String = scala.meta.internal.semantic.DatabaseSyntax(this)
