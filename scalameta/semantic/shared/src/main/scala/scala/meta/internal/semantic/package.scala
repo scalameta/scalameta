@@ -12,11 +12,7 @@ import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.io._
 import scala.meta.{Dialect => mDialect}
 import scala.meta.{semantic => m}
-import scala.{Seq => _}
 
-import java.io._
-
-import org.scalameta.data._
 package object semantic {
   implicit class XtensionDatabaseSchema(mdatabase: m.Database) {
     def toSchema(sourcepath: Sourcepath): s.Database = {
