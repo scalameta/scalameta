@@ -2,17 +2,19 @@ package scala.meta
 package internal
 package semantic
 
-import java.nio.charset.Charset
-import org.scalameta.data._
-import scala.{Seq => _}
 import scala.collection.immutable.Seq
-import scala.util.Try
-import scala.meta.io._
+import scala.meta.inputs.{Position => mPosition}
+import scala.meta.inputs.{Input => mInput}
+import scala.meta.inputs.{Point => mPoint}
 import scala.meta.internal.io._
 import scala.meta.internal.semantic.{schema => s}
-import scala.meta.{semantic => m}
+import scala.meta.io._
 import scala.meta.{Dialect => mDialect}
-import scala.meta.inputs.{Input => mInput, Position => mPosition, Point => mPoint}
+import scala.meta.{semantic => m}
+import scala.util.Try
+import scala.{Seq => _}
+
+import java.nio.charset.Charset
 
 package object meta {
   implicit class XtensionDatabaseSchema(mdatabase: m.Database) {
