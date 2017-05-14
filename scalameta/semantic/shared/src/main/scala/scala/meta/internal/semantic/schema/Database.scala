@@ -56,11 +56,6 @@ import org.scalameta.data._
             Some(mPosition.Range(minput, mstart, mend))
           }
         }
-        object sSymbol {
-          def unapply(ssym: String): Option[m.Symbol] = {
-            scala.util.Try(m.Symbol(ssym)).toOption
-          }
-        }
         object sSeverity {
           def unapply(ssev: s.Message.Severity): Option[m.Severity] = {
             ssev match {
@@ -71,14 +66,9 @@ import org.scalameta.data._
             }
           }
         }
-        object sString {
-          def unapply(s: String): Option[String] = {
-            if (s != null) Some(s) else None
-          }
-        }
         object sDenotation {
           def unapply(sdenot: s.Denotation): Option[m.Denotation] = sdenot match {
-            case s.Denotation(mflags, sString(mname), sString(minfo)) =>
+            case s.Denotation(mflags, mname: String, minfo: String) =>
               Some(m.Denotation(mflags, mname, minfo))
             case _ => None
           }
@@ -88,20 +78,20 @@ import org.scalameta.data._
           mdialect.getOrElse(sys.error(s"bad protobuf: unsupported dialect ${sdialect}"))
         }
         val mnames = snames.map {
-          case s.ResolvedName(Some(sRange(mpos)), sSymbol(msym)) => mpos -> msym
+          case s.ResolvedName(Some(sRange(mpos)), m.Symbol(msym)) => mpos -> msym
           case other => sys.error(s"bad protobuf: unsupported name $other")
         }.toList
         val mmessages = smessages.map {
-          case s.Message(Some(sRange(mpos)), sSeverity(msev), sString(mmsg)) =>
+          case s.Message(Some(sRange(mpos)), sSeverity(msev), mmsg: String) =>
             m.Message(mpos, msev, mmsg)
           case other => sys.error(s"bad protobuf: unsupported message $other")
         }.toList
         val mdenots = sdenots.map {
-          case s.SymbolDenotation(sSymbol(msym), Some(sDenotation(mdenot))) => msym -> mdenot
+          case s.SymbolDenotation(m.Symbol(msym), Some(sDenotation(mdenot))) => msym -> mdenot
           case other => sys.error(s"bad protobuf: unsupported denotation $other")
         }.toList
         val msugars = ssugars.map {
-          case s.Sugar(Some(sRange(mpos)), sString(msyntax)) => mpos -> msyntax
+          case s.Sugar(Some(sRange(mpos)), msyntax: String) => mpos -> msyntax
           case other => sys.error(s"bad protobuf: unsupported sugar $other")
         }.toList
         minput -> m.Attributes(mdialect, mnames, mmessages, mdenots, msugars)
@@ -121,9 +111,6 @@ object Database {
             case _ =>
               None
           }
-        }
-        object mSymbol {
-          def unapply(msym: m.Symbol): Option[String] = Some(msym.syntax)
         }
         object mSeverity {
           def unapply(msev: m.Severity): Option[s.Message.Severity] = {
@@ -157,7 +144,7 @@ object Database {
           sdialect.getOrElse(sys.error(s"bad database: unsupported dialect $mdialect"))
         }
         val snames = mnames.map {
-          case (mRange(srange), mSymbol(ssym)) => s.ResolvedName(Some(srange), ssym)
+          case (mRange(srange), ssym) => s.ResolvedName(Some(srange), ssym.syntax)
           case other => sys.error(s"bad database: unsupported name $other")
         }
         val smessages = mmessages.map {
@@ -165,7 +152,7 @@ object Database {
           case other => sys.error(s"bad database: unsupported message $other")
         }
         val sdenots = mdenots.map {
-          case (mSymbol(ssym), mDenotation(sdenot)) => s.SymbolDenotation(ssym, Some(sdenot))
+          case (ssym, mDenotation(sdenot)) => s.SymbolDenotation(ssym.syntax, Some(sdenot))
           case other => sys.error(s"bad database: unsupported denotation $other")
         }
         val ssugars = msugars.map {
