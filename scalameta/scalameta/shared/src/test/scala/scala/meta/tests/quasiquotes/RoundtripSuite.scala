@@ -7,7 +7,7 @@ import scala.meta.dialects.Scala211
 /**
   * Validates that construction/deconstruction types are aligned
   */
-object DeConstructionTypesSuite {
+object RoundtripSuite {
   val tree: Tree = q"foo"
   tree match {
     case q"${lit: Lit}" => q"${lit: Lit}"
