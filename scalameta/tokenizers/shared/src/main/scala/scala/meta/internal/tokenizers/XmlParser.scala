@@ -13,7 +13,7 @@ import fastparse.all._
   */
 class XmlParser(Block: P0,
                 Patterns: P0 = Fail,
-                WL: P0 = CharsWhile(_.isWhitespace).opaque("whitespace")) {
+                WL: P0 = CharsWhile.raw(_.isWhitespace).opaque("whitespace")) {
 
   val XmlExpr: P0 = P( Xml.XmlContent.rep(min = 1, sep = WL.?) )
   val XmlPattern: P0 = P( Xml.ElemPattern )
@@ -66,8 +66,8 @@ class XmlParser(Block: P0,
     val CharA  = P( !"'" ~ Char1 )
 
     val Name: P0  = P( NameStart ~ NameChar.rep ).!.filter(_.last != ':').opaque("Name").map(_ => Unit) // discard result
-    val NameStart = P( CharPred(isNameStart) )
-    val NameChar  = P( CharPred(isNameChar) )
+    val NameStart = P( CharPred.raw(isNameStart) )
+    val NameChar  = P( CharPred.raw(isNameChar) )
 
     val ElemPattern: P0 = P( TagPHeader ~/ ("/>" | ">" ~/ ContentP ~/ ETag ) )
     val TagPHeader      = P( "<" ~ Name ~ WL.?  )
