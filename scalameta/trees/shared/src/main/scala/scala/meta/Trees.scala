@@ -112,10 +112,7 @@ object Term {
 @branch trait Type extends Tree with Type.Arg
 object Type {
   @branch trait Ref extends Type with scala.meta.Ref
-  @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref with Pat.Type.Ref with Param.Name with scala.meta.Name.Qualifier {
-    // TODO: revisit this once we have trivia in place
-    // checkFields(keywords.contains(value) ==> isBackquoted)
-  }
+  @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref with Pat.Type.Ref with Param.Name with scala.meta.Name.Qualifier
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref with Pat.Type.Ref {
     checkFields(qual.isPath || qual.is[Term.Super] || qual.is[Term.Ref.Quasi])
   }
