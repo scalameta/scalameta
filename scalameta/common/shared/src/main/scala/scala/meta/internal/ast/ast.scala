@@ -72,8 +72,9 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       val (imports, rest2) = rest1.partition(_ match { case _: Import => true; case _ => false })
       stats1 ++= defns
       stats1 ++= imports
-      val (requires, rest3) = rest2.partition(_ match { case q"require($what)" => true; case _ => false })
-      val (validators, illegal) = rest3.partition(_ match { case q"validate($what)" => true; case _ => false })
+      var (fieldChecks, rest3) = rest2.partition(_ match { case q"checkFields($what)" => true; case _ => false })
+      fieldChecks = fieldChecks.map{ case q"checkFields($arg)" => q"_root_.org.scalameta.invariants.require($arg)" }
+      val (parentChecks, illegal) = rest3.partition(_ match { case q"checkParent($what)" => true; case _ => false })
       illegal.foreach(stmt => c.abort(stmt.pos, "only invariants and definitions are allowed in @ast classes"))
 
       // step 3: calculate the parameters of the class
@@ -125,19 +126,19 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       privateCopyBargs += q"parent"
       privateCopyBargs += q"origin"
       val privateCopyArgs = paramss.map(_.map(p => q"$CommonTyperMacrosModule.initField(this.${internalize(p.name)})"))
-      val privateCopyValidators = {
-        if (validators.isEmpty) q""
+      val privateCopyParentChecks = {
+        if (parentChecks.isEmpty) q""
         else {
           q"""
             if (destination != null) {
-              def validate(fn: ($name, $TreeClass, $StringClass) => Boolean) = {
-                val advancedCheckOk = fn(this, parent, destination)
-                if (!advancedCheckOk) {
+              def checkParent(fn: ($name, $TreeClass, $StringClass) => $BooleanClass): $UnitClass = {
+                val parentCheckOk = fn(this, parent, destination)
+                if (!parentCheckOk) {
                   val parentPrefix = parent.productPrefix
-                  _root_.org.scalameta.invariants.require(advancedCheckOk && _root_.org.scalameta.debug(this, parentPrefix, destination))
+                  _root_.org.scalameta.invariants.require(parentCheckOk && _root_.org.scalameta.debug(this, parentPrefix, destination))
                 }
               }
-              ..$validators
+              ..$parentChecks
             }
           """
         }
@@ -149,7 +150,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
             parent: $TreeClass = privateParent,
             destination: $StringClass = null,
             origin: $OriginClass = privateOrigin): Tree = {
-          $privateCopyValidators
+          $privateCopyParentChecks
           $privateCopyBody
         }
       """
@@ -210,43 +211,43 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$DataTyperMacrosModule.nullCheck($local)" }
       internalBody ++= internalLocalss.flatten.map{ case (local, internal) => q"$DataTyperMacrosModule.emptyCheck($local)" }
       internalBody ++= imports
-      internalBody ++= requires.map(require => {
+      internalBody ++= fieldChecks.map(fieldCheck => {
         var hasErrors = false
         object errorChecker extends Traverser {
           override def traverse(tree: Tree): Unit = tree match {
-            case _: This => hasErrors = true; c.error(tree.pos, "cannot refer to this in @ast requires")
+            case _: This => hasErrors = true; c.error(tree.pos, "cannot refer to this in @ast field checks")
             case _ => super.traverse(tree)
           }
         }
-        errorChecker.traverse(require)
+        errorChecker.traverse(fieldCheck)
         if (hasErrors) q"()"
-        else require
+        else fieldCheck
       })
       val internalInitCount = 3 // privatePrototype, privateParent, privateOrigin
       val internalInitss = 1.to(internalInitCount).map(_ => q"null")
       val paramInitss = internalLocalss.map(_.map{ case (local, internal) => q"$CommonTyperMacrosModule.initParam($local)" })
       internalBody += q"val node = new $name(..$internalInitss)(...$paramInitss)"
       internalBody ++= internalLocalss.flatten.flatMap{ case (local, internal) =>
-        val (validators, assignee) = {
+        val (parentChecks, assignee) = {
           // TODO: this is totally ugly. we need to come up with a way to express this in a sane way.
           val validateLocal = TermName("validate" + local.toString.capitalize)
           if (is("Pkg") && local.toString == "stats") {
-            val validators = List(q"def $validateLocal(stat: Stat) = { require(stat.isTopLevelStat); stat }")
-            (validators, q"$local.map($validateLocal)")
+            val parentChecks = List(q"def $validateLocal(stat: Stat) = { require(stat.isTopLevelStat); stat }")
+            (parentChecks, q"$local.map($validateLocal)")
           } else if ((is("Defn.Trait") || is("Defn.Object") || is("Pkg.Object")) && local.toString == "templ") {
-            val validators = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(!stat.is[Ctor]); stat })")
-            (validators, q"{ if (!$local.is[$QuasiClass]) $local.stats.map($validateLocal); $local }")
+            val parentChecks = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(!stat.is[Ctor]); stat })")
+            (parentChecks, q"{ if (!$local.is[$QuasiClass]) $local.stats.map($validateLocal); $local }")
           } else if (is("Template") && local.toString == "early") {
-            val validators = List(q"def $validateLocal(stat: Stat) = { require(stat.isEarlyStat && parents.nonEmpty); stat }")
-            (validators, q"$local.map($validateLocal)")
+            val parentChecks = List(q"def $validateLocal(stat: Stat) = { require(stat.isEarlyStat && parents.nonEmpty); stat }")
+            (parentChecks, q"$local.map($validateLocal)")
           } else if (is("Template") && local.toString == "stats") {
-            val validators = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(stat.isTemplateStat); stat })")
-            (validators, q"$local.map($validateLocal)")
+            val parentChecks = List(q"def $validateLocal(stats: Seq[Stat]) = stats.map(stat => { require(stat.isTemplateStat); stat })")
+            (parentChecks, q"$local.map($validateLocal)")
           } else {
             (Nil, q"$local")
           }
         }
-        validators :+ q"$CommonTyperMacrosModule.storeField(node.$internal, $assignee, ${local.toString})"
+        parentChecks :+ q"$CommonTyperMacrosModule.storeField(node.$internal, $assignee, ${local.toString})"
       }
       internalBody += q"node"
       val internalArgss = paramss.map(_.map(p => q"${p.name}"))

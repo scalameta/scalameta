@@ -332,7 +332,7 @@ object Helpers {
     }
   }
 
-  object AdvancedChecks {
+  object ParentChecks {
     def TermAssign(tree: Term.Assign, parent: Tree, destination: String): Boolean = {
       def namedRepeatedArg = tree.rhs.is[Term.Repeated]
       def applyArg = parent.is[Term.Apply] && destination == "args"

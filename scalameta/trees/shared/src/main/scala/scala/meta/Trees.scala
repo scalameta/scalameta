@@ -45,27 +45,27 @@ object Name {
 object Term {
   @branch trait Ref extends Term with scala.meta.Ref
   @ast class This(qual: scala.meta.Name.Qualifier) extends Term.Ref with scala.meta.Name.Qualifier {
-    require(!qual.is[Term.This])
+    checkFields(!qual.is[Term.This])
   }
   @ast class Super(thisp: scala.meta.Name.Qualifier, superp: scala.meta.Name.Qualifier) extends Term.Ref {
-    require(!thisp.is[Term.This] && !superp.is[Term.This])
+    checkFields(!thisp.is[Term.This] && !superp.is[Term.This])
   }
   @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat with Param.Name with scala.meta.Name.Qualifier
   @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
-    require(parts.length == args.length + 1)
+    checkFields(parts.length == args.length + 1)
   }
   @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Term]) extends Term {
-    require(parts.length == args.length + 1)
+    checkFields(parts.length == args.length + 1)
   }
   @ast class Apply(fun: Term, args: Seq[Term]) extends Term with Ctor.Call
   @ast class ApplyType(fun: Term, targs: Seq[Type] @nonEmpty) extends Term with Ctor.Call
   @ast class ApplyInfix(lhs: Term, op: Name, targs: Seq[Type], args: Seq[Term]) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
-    require(op.isUnaryOp)
+    checkFields(op.isUnaryOp)
   }
   @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term {
-    validate(AdvancedChecks.TermAssign)
+    checkParent(ParentChecks.TermAssign)
   }
   @ast class Update(fun: Term, argss: Seq[Seq[Term]] @nonEmpty, rhs: Term) extends Term
   @ast class Return(expr: Term) extends Term
@@ -75,31 +75,31 @@ object Term {
   @ast class Tuple(args: Seq[Term] @nonEmpty) extends Term {
     // tuple must have more than one element
     // however, this element may be Quasi with "hidden" list of elements inside
-    require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
+    checkFields(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
   }
   @ast class Block(stats: Seq[Stat]) extends Term {
-    require(stats.forall(_.isBlockStat))
+    checkFields(stats.forall(_.isBlockStat))
   }
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
   @ast class Match(expr: Term, cases: Seq[Case] @nonEmpty) extends Term
   @ast class Try(expr: Term, catchp: Seq[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
   @ast class Function(params: Seq[Term.Param], body: Term) extends Term {
-    require(params.forall(param => param.is[Term.Param.Quasi] || (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)))
-    require(params.exists(_.is[Term.Param.Quasi]) || params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1))
+    checkFields(params.forall(param => param.is[Term.Param.Quasi] || (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)))
+    checkFields(params.exists(_.is[Term.Param.Quasi]) || params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1))
   }
   @ast class PartialFunction(cases: Seq[Case] @nonEmpty) extends Term
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
   @ast class For(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term {
-    require(enums.head.is[Enumerator.Generator])
+    checkFields(enums.head.is[Enumerator.Generator])
   }
   @ast class ForYield(enums: Seq[Enumerator] @nonEmpty, body: Term) extends Term
   @ast class New(templ: Template) extends Term
   @ast class Placeholder() extends Term
   @ast class Eta(expr: Term) extends Term
   @ast class Repeated(expr: Term) extends Term {
-    validate(AdvancedChecks.TermRepeated)
+    checkParent(ParentChecks.TermRepeated)
   }
   @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Member
   object Param {
@@ -114,30 +114,30 @@ object Type {
   @branch trait Ref extends Type with scala.meta.Ref
   @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref with Pat.Type.Ref with Param.Name with scala.meta.Name.Qualifier {
     // TODO: revisit this once we have trivia in place
-    // require(keywords.contains(value) ==> isBackquoted)
+    // checkFields(keywords.contains(value) ==> isBackquoted)
   }
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref with Pat.Type.Ref {
-    require(qual.isPath || qual.is[Term.Super] || qual.is[Term.Ref.Quasi])
+    checkFields(qual.isPath || qual.is[Term.Super] || qual.is[Term.Ref.Quasi])
   }
   @ast class Project(qual: Type, name: Type.Name) extends Type.Ref
   @ast class Singleton(ref: Term.Ref) extends Type.Ref with Pat.Type.Ref {
-    require(ref.isPath || ref.is[Term.Super])
+    checkFields(ref.isPath || ref.is[Term.Super])
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
   @ast class Function(params: Seq[Type.Arg], res: Type) extends Type
   @ast class ImplicitFunction(params: Seq[Type.Arg], res: Type) extends Type
   @ast class Tuple(args: Seq[Type] @nonEmpty) extends Type {
-    require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
+    checkFields(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
   }
   @ast class With(lhs: Type, rhs: Type) extends Type
   @ast class And(lhs: Type, rhs: Type) extends Type
   @ast class Or(lhs: Type, rhs: Type) extends Type
   @ast class Refine(tpe: Option[Type], stats: Seq[Stat]) extends Type {
-    require(stats.forall(_.isRefineStat))
+    checkFields(stats.forall(_.isRefineStat))
   }
   @ast class Existential(tpe: Type, stats: Seq[Stat] @nonEmpty) extends Type {
-    require(stats.forall(_.isExistentialStat))
+    checkFields(stats.forall(_.isExistentialStat))
   }
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
   @ast class Placeholder(bounds: Bounds) extends Type
@@ -201,42 +201,42 @@ object Pat {
   @branch trait Var extends Tree
   object Var {
     @ast class Term(name: scala.meta.Term.Name) extends Var with Pat with Member.Term {
-      // NOTE: Unlike in Pat.Var.Term, we can't say `require(name.value(0).isLower)` here,
+      // NOTE: Unlike in Pat.Var.Term, we can't say `checkFields(name.value(0).isLower)` here,
       // because we model things like `val X = 2` with abstract syntax nodes
       // like `Defn.Val(Nil, List(Pat.Var.Term(Term.Name("X"))), None, Lit.Int(2))`.
       //
       // This is a very annoying inconsistency, because capitalized Pat.Var.Terms
       // are only allowed at the top level of left-hand sides in vals and vars.
-      // As a result, we have to externalize this require to every use site of Pat.Var.Terms
+      // As a result, we have to externalize this checkFields to every use site of Pat.Var.Terms
       // except for those vals/vars.
       //
       // TODO: It might be nice to avoid this inconsistency by redesigning this whole Pat.Var.XXX approach.
       // However, that will imply significant changes in our tree structure, and I'd like to avoid that before 0.1.
-      validate(AdvancedChecks.PatVarTerm)
+      checkParent(ParentChecks.PatVarTerm)
     }
     @ast class Type(name: scala.meta.Type.Name) extends Var with Pat.Type with Member.Type {
-      require(name.value(0).isLower)
+      checkFields(name.value(0).isLower)
     }
   }
   @ast class Wildcard() extends Pat
   @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat
   @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
   @ast class Tuple(args: Seq[Pat] @nonEmpty) extends Pat {
-    require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
+    checkFields(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
   }
   @ast class Extract(ref: Term.Ref, targs: Seq[scala.meta.Pat.Type], args: Seq[Pat.Arg]) extends Pat {
-    require(ref.isStableId)
+    checkFields(ref.isStableId)
   }
   @ast class ExtractInfix(lhs: Pat, op: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
-    require(parts.length == args.length + 1)
+    checkFields(parts.length == args.length + 1)
   }
   @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Pat.Arg]) extends Pat {
-    require(parts.length == args.length + 1)
+    checkFields(parts.length == args.length + 1)
   }
   @ast class Typed(lhs: Pat, rhs: Pat.Type) extends Pat {
-    require(lhs.is[Pat.Wildcard] || lhs.is[Pat.Var.Term] || lhs.is[Pat.Quasi])
-    require(!rhs.is[Pat.Var.Type] && !rhs.is[Pat.Type.Wildcard])
+    checkFields(lhs.is[Pat.Wildcard] || lhs.is[Pat.Var.Term] || lhs.is[Pat.Quasi])
+    checkFields(!rhs.is[Pat.Var.Type] && !rhs.is[Pat.Type.Wildcard])
   }
   @branch trait Arg extends Tree
   object Arg {
@@ -247,32 +247,32 @@ object Pat {
     @branch trait Ref extends Pat.Type with scala.meta.Ref
     @ast class Wildcard() extends Pat.Type
     @ast class Project(qual: Pat.Type, name: scala.meta.Type.Name) extends Pat.Type with Pat.Type.Ref {
-      require(!qual.is[Pat.Var.Type] && !qual.is[Pat.Type.Wildcard])
+      checkFields(!qual.is[Pat.Var.Type] && !qual.is[Pat.Type.Wildcard])
     }
     @ast class Apply(tpe: Pat.Type, args: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
-      require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
+      checkFields(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
     }
     @ast class ApplyInfix(lhs: Pat.Type, op: scala.meta.Type.Name, rhs: Pat.Type) extends Pat.Type
     @ast class Function(params: Seq[Pat.Type], res: Pat.Type) extends Pat.Type
     @ast class Tuple(args: Seq[Pat.Type] @nonEmpty) extends Pat.Type {
-      require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
+      checkFields(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
     }
     @ast class With(lhs: Pat.Type, rhs: Pat.Type) extends Pat.Type
     @ast class And(lhs: Pat.Type, rhs: Pat.Type) extends Pat.Type
     @ast class Or(lhs: Pat.Type, rhs: Pat.Type) extends Pat.Type
     @ast class Refine(tpe: Option[Pat.Type], stats: Seq[Stat]) extends Pat.Type {
-      require(tpe.isEmpty || (!tpe.get.is[Pat.Var.Type] && !tpe.get.is[Pat.Type.Wildcard]))
-      require(stats.forall(_.isRefineStat))
+      checkFields(tpe.isEmpty || (!tpe.get.is[Pat.Var.Type] && !tpe.get.is[Pat.Type.Wildcard]))
+      checkFields(stats.forall(_.isRefineStat))
     }
     @ast class Existential(tpe: Pat.Type, stats: Seq[Stat] @nonEmpty) extends Pat.Type {
-      require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
-      require(stats.forall(_.isExistentialStat))
+      checkFields(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
+      checkFields(stats.forall(_.isExistentialStat))
     }
     @ast class Annotate(tpe: Pat.Type, annots: Seq[Mod.Annot] @nonEmpty) extends Pat.Type {
-      require(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
+      checkFields(!tpe.is[Pat.Var.Type] && !tpe.is[Pat.Type.Wildcard])
     }
     @ast class Placeholder(bounds: scala.meta.Type.Bounds) extends Pat.Type {
-      require(bounds.lo.nonEmpty || bounds.hi.nonEmpty)
+      checkFields(bounds.lo.nonEmpty || bounds.hi.nonEmpty)
     }
     def fresh(): Pat.Var.Type = Pat.Var.Type(scala.meta.Type.fresh())
     def fresh(prefix: String): Pat.Var.Type = Pat.Var.Type(scala.meta.Type.fresh(prefix))
@@ -347,15 +347,15 @@ object Defn {
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[scala.meta.Type],
                  rhs: Term) extends Defn {
-    require(pats.forall(!_.is[Term.Name]))
+    checkFields(pats.forall(!_.is[Term.Name]))
   }
   @ast class Var(mods: Seq[Mod],
                  pats: Seq[Pat] @nonEmpty,
                  decltpe: Option[scala.meta.Type],
                  rhs: Option[Term]) extends Defn {
-    require(pats.forall(!_.is[Term.Name]))
-    require(decltpe.nonEmpty || rhs.nonEmpty)
-    require(rhs.isEmpty ==> pats.forall(_.is[Pat.Var.Term]))
+    checkFields(pats.forall(!_.is[Term.Name]))
+    checkFields(decltpe.nonEmpty || rhs.nonEmpty)
+    checkFields(rhs.isEmpty ==> pats.forall(_.is[Pat.Var.Term]))
   }
   @ast class Def(mods: Seq[Mod],
                  name: Term.Name,
@@ -384,12 +384,12 @@ object Defn {
                    ctor: Ctor.Primary,
                    templ: Template) extends Defn with Member.Type {
     // TODO: hardcoded in the @ast macro, find out a better way
-    // require(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
+    // checkFields(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
 
     // TODO this doesn't work because the Dialect in implicit
     // scope is the dialect of the host Scala environment
     // (i.e. Scala211), not the parser's dialect.
-    //require (
+    //checkFields (
     //  implicitly[Dialect].allowTraitParameters ||
     //    (ctor.mods.isEmpty && ctor.paramss.isEmpty)
     //)
@@ -398,15 +398,15 @@ object Defn {
                     name: Term.Name,
                     templ: Template) extends Defn with Member.Term {
     // TODO: hardcoded in the @ast macro, find out a better way
-    // require(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
+    // checkFields(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
   }
 }
 
 @ast class Pkg(ref: Term.Ref, stats: Seq[Stat])
      extends Member.Term with Stat {
-  require(ref.isQualId)
+  checkFields(ref.isQualId)
   // TODO: hardcoded in the @ast macro, find out a better way
-  // require(stats.forall(_.isTopLevelStat))
+  // checkFields(stats.forall(_.isTopLevelStat))
   def name: Term.Name = ref match {
     case name: Term.Name => name
     case Term.Select(_, name: Term.Name) => name
@@ -416,7 +416,7 @@ object Pkg {
   @ast class Object(mods: Seq[Mod], name: Term.Name, templ: Template)
        extends Member.Term with Stat {
     // TODO: hardcoded in the @ast macro, find out a better way
-    // require(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
+    // checkFields(templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
   }
 }
 
@@ -430,7 +430,7 @@ object Ctor {
                        name: Ctor.Name,
                        paramss: Seq[Seq[Term.Param]] @nonEmpty,
                        body: Term) extends Ctor with Stat {
-    require(body.isCtorBody)
+    checkFields(body.isCtorBody)
   }
   @branch trait Ref extends scala.meta.Term.Ref with Ctor.Call
   val Name = Ref.Name
@@ -455,17 +455,17 @@ object Ctor {
                     parents: Seq[Ctor.Call],
                     self: Term.Param,
                     stats: Option[Seq[Stat]]) extends Tree {
-  require(parents.forall(_.isCtorCall))
+  checkFields(parents.forall(_.isCtorCall))
   // TODO: hardcoded in the @ast macro, find out a better way
-  // require(early.nonEmpty ==> parents.nonEmpty)
-  // require(early.forall(_.isEarlyStat))
-  // require(stats.getOrElse(Nil).forall(_.isTemplateStat))
+  // checkFields(early.nonEmpty ==> parents.nonEmpty)
+  // checkFields(early.forall(_.isEarlyStat))
+  // checkFields(stats.getOrElse(Nil).forall(_.isTemplateStat))
 }
 
 @branch trait Mod extends Tree
 object Mod {
   @ast class Annot(body: Term) extends Mod {
-    require(body.isCtorCall)
+    checkFields(body.isCtorCall)
   }
   @ast class Private(within: Name.Qualifier) extends Mod
   @ast class Protected(within: Name.Qualifier) extends Mod
@@ -496,7 +496,7 @@ object Enumerator {
 @ast class Import(importers: Seq[Importer] @nonEmpty) extends Stat
 
 @ast class Importer(ref: Term.Ref, importees: Seq[Importee] @nonEmpty) extends Tree {
-  require(ref.isStableId)
+  checkFields(ref.isStableId)
 }
 
 @branch trait Importee extends Tree with Ref
@@ -512,7 +512,7 @@ object Importee {
 @ast class Source(stats: Seq[Stat]) extends Tree {
   // NOTE: This validation has been removed to allow dialects with top-level terms.
   // Ideally, we should push the validation into a dialect-specific prettyprinter when #220 is fixed.
-  // require(stats.forall(_.isTopLevelStat))
+  // checkFields(stats.forall(_.isTopLevelStat))
 }
 
 package internal.ast {
