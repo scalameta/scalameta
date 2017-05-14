@@ -846,4 +846,10 @@ class ErrorSuite extends FunSuite {
     val xs = q"xs: _*"
     intercept[InvariantFailedException] { q"$xs + $xs" }
   }
+
+  test("Pat.Var.Term") {
+    import scala.meta._
+    val x = p"X"
+    intercept[InvariantFailedException] { p"case $x =>" }
+  }
 }

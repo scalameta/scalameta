@@ -212,40 +212,30 @@ object Pat {
       //
       // TODO: It might be nice to avoid this inconsistency by redesigning this whole Pat.Var.XXX approach.
       // However, that will imply significant changes in our tree structure, and I'd like to avoid that before 0.1.
+      validate(AdvancedChecks.PatVarTerm)
     }
     @ast class Type(name: scala.meta.Type.Name) extends Var with Pat.Type with Member.Type {
       require(name.value(0).isLower)
     }
   }
   @ast class Wildcard() extends Pat
-  @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat {
-    require(lhs.isLegal && rhs.isLegal)
-  }
-  @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat {
-    require(lhs.isLegal && rhs.isLegal)
-  }
+  @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat
+  @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
   @ast class Tuple(args: Seq[Pat] @nonEmpty) extends Pat {
     require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
-    require(args.forall(_.isLegal))
   }
   @ast class Extract(ref: Term.Ref, targs: Seq[scala.meta.Pat.Type], args: Seq[Pat.Arg]) extends Pat {
     require(ref.isStableId)
-    require(args.forall(_.isLegal))
   }
-  @ast class ExtractInfix(lhs: Pat, op: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat {
-    require(lhs.isLegal && rhs.forall(_.isLegal))
-  }
+  @ast class ExtractInfix(lhs: Pat, op: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
     require(parts.length == args.length + 1)
-    require(args.forall(_.isLegal))
   }
   @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Pat.Arg]) extends Pat {
     require(parts.length == args.length + 1)
-    require(args.forall(_.isLegal))
   }
   @ast class Typed(lhs: Pat, rhs: Pat.Type) extends Pat {
     require(lhs.is[Pat.Wildcard] || lhs.is[Pat.Var.Term] || lhs.is[Pat.Quasi])
-    require(lhs.isLegal)
     require(!rhs.is[Pat.Var.Type] && !rhs.is[Pat.Type.Wildcard])
   }
   @branch trait Arg extends Tree
@@ -517,9 +507,7 @@ object Importee {
   @ast class Unimport(name: scala.meta.Name.Indeterminate) extends Importee
 }
 
-@ast class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree {
-  require(pat.isLegal)
-}
+@ast class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree
 
 @ast class Source(stats: Seq[Stat]) extends Tree {
   // NOTE: This validation has been removed to allow dialects with top-level terms.

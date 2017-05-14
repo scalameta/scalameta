@@ -225,22 +225,6 @@ object Helpers {
     }
   }
 
-  implicit class XtensionPatArg(tree: Pat.Arg) {
-    // NOTE: see comments to Pat.Var.Term for explanation why this method is necessary
-    def isIllegal: Boolean = tree match {
-      case _: Pat.Var.Term.Quasi => false
-      case Pat.Var.Term(Term.Name(value)) => value(0).isUpper
-      case _ => false
-    }
-    def isLegal: Boolean = !isIllegal
-    def firstNonPatParent: Option[Tree] = {
-      tree.parent match {
-        case Some(pat: Pat) => pat.firstNonPatParent
-        case other => other.map(_.require[Tree])
-      }
-    }
-  }
-
   implicit class XtensionApply(tree: Term.Apply) {
     def argsc: Int = 1 + (tree.fun match { case fun: Term.Apply => fun.argsc; case _ => 0 })
   }
@@ -363,6 +347,18 @@ object Helpers {
       def namedArg = parent.is[Term.Assign] && destination == "rhs"
       def updateArg = parent.is[Term.Update] && destination == "argss"
       applyArg || applyInfixArg || namedArg || updateArg
+    }
+
+    def PatVarTerm(tree: Pat.Var.Term, parent: Tree, destination: String): Boolean = {
+      val Pat.Var.Term(Term.Name(value)) = tree
+      def isCapitalized = value.nonEmpty && value(0).isUpper
+      def declValPat = parent.is[Decl.Val] && destination == "pats"
+      def declVarPat = parent.is[Decl.Var] && destination == "pats"
+      def defnValPat = parent.is[Defn.Val] && destination == "pats"
+      def defnVarPat = parent.is[Defn.Var] && destination == "pats"
+      def enumeratorGeneratorPat = parent.is[Enumerator.Generator] && destination == "pat"
+      def enumeratorValPat = parent.is[Enumerator.Val] && destination == "pat"
+      !isCapitalized || declValPat || declVarPat || defnValPat || defnVarPat || enumeratorGeneratorPat || enumeratorValPat
     }
   }
 }
