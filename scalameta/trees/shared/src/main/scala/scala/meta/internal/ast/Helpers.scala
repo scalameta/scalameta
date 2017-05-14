@@ -347,4 +347,22 @@ object Helpers {
       case None => tree
     }
   }
+
+  object AdvancedChecks {
+    def TermAssign(tree: Term.Assign, parent: Tree, destination: String): Boolean = {
+      def namedRepeatedArg = tree.rhs.is[Term.Repeated]
+      def applyArg = parent.is[Term.Apply] && destination == "args"
+      def applyInfixArg = parent.is[Term.ApplyInfix] && destination == "args"
+      def updateArg = parent.is[Term.Update] && destination == "argss"
+      !namedRepeatedArg || applyArg || applyInfixArg || updateArg
+    }
+
+    def TermRepeated(tree: Term.Repeated, parent: Tree, destination: String): Boolean = {
+      def applyArg = parent.is[Term.Apply] && destination == "args"
+      def applyInfixArg = parent.is[Term.ApplyInfix] && destination == "args"
+      def namedArg = parent.is[Term.Assign] && destination == "rhs"
+      def updateArg = parent.is[Term.Update] && destination == "argss"
+      applyArg || applyInfixArg || namedArg || updateArg
+    }
+  }
 }

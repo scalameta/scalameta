@@ -13,8 +13,8 @@ import org.scalameta.internal.MacroHelpers
 object CommonTyperMacros {
   def hierarchyCheck[T]: Unit = macro CommonTyperMacrosBundle.hierarchyCheck[T]
   def productPrefix[T]: String = macro CommonTyperMacrosBundle.productPrefix[T]
-  def loadField[T](f: T): Unit = macro CommonTyperMacrosBundle.loadField
-  def storeField[T](f: T, v: T): Unit = macro CommonTyperMacrosBundle.storeField
+  def loadField[T](f: T, s: String): Unit = macro CommonTyperMacrosBundle.loadField
+  def storeField[T](f: T, v: T, s: String): Unit = macro CommonTyperMacrosBundle.storeField
   def initField[T](f: T): T = macro CommonTyperMacrosBundle.initField
   def initParam[T](f: T): T = macro CommonTyperMacrosBundle.initField
   def children[T, U]: Seq[U] = macro CommonTyperMacrosBundle.children[T]
@@ -61,7 +61,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     q"${T.tpe.typeSymbol.asLeaf.prefix}"
   }
 
-  def loadField(f: c.Tree): c.Tree = {
+  def loadField(f: c.Tree, s: c.Tree): c.Tree = {
     val q"this.$finternalName" = f
     val fname = TermName(finternalName.toString.stripPrefix("_"))
     def lazyLoad(fn: c.Tree => c.Tree) = {
@@ -78,7 +78,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     }
     def copySubtree(subtree: c.Tree, subtp: c.Type) = {
       val tempName = c.freshName(TermName("copy" + fname.toString.capitalize))
-      q"$subtree.privateCopy(prototype = $subtree, parent = this).asInstanceOf[$subtp]"
+      q"$subtree.privateCopy(prototype = $subtree, parent = this, destination = null).asInstanceOf[$subtp]"
     }
     f.tpe.finalResultType match {
       case AnyTpe(tpe) => q"()"
@@ -92,9 +92,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     }
   }
 
-  def storeField(f: c.Tree, v: c.Tree): c.Tree = {
+  def storeField(f: c.Tree, v: c.Tree, s: c.Tree): c.Tree = {
     def copySubtree(subtree: c.Tree, subtp: c.Type) = {
-      q"$subtree.privateCopy(prototype = $subtree, parent = node).asInstanceOf[$subtp]"
+      q"$subtree.privateCopy(prototype = $subtree, parent = node, destination = $s).asInstanceOf[$subtp]"
     }
     f.tpe.finalResultType match {
       case AnyTpe(tpe) => q"()"

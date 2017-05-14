@@ -64,7 +64,9 @@ object Term {
   @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
     require(op.isUnaryOp)
   }
-  @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term
+  @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term {
+    validate(AdvancedChecks.TermAssign)
+  }
   @ast class Update(fun: Term, argss: Seq[Seq[Term]] @nonEmpty, rhs: Term) extends Term
   @ast class Return(expr: Term) extends Term
   @ast class Throw(expr: Term) extends Term
@@ -96,7 +98,9 @@ object Term {
   @ast class New(templ: Template) extends Term
   @ast class Placeholder() extends Term
   @ast class Eta(expr: Term) extends Term
-  @ast class Repeated(expr: Term) extends Term
+  @ast class Repeated(expr: Term) extends Term {
+    validate(AdvancedChecks.TermRepeated)
+  }
   @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Member
   object Param {
     @branch trait Name extends scala.meta.Name

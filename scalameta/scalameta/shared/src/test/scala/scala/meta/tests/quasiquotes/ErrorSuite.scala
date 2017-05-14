@@ -3,6 +3,7 @@
 
 import org.scalatest._
 import org.scalameta.tests._
+import org.scalameta.invariants._
 import typecheckError.Options.WithPositions
 
 class ErrorSuite extends FunSuite {
@@ -838,5 +839,11 @@ class ErrorSuite extends FunSuite {
       |      q"class C extends $notReallyAParent"
       |                        ^
     """.trim.stripMargin)
+  }
+
+  test("Term.Repeated") {
+    import scala.meta._
+    val xs = q"xs: _*"
+    intercept[InvariantFailedException] { q"$xs + $xs" }
   }
 }

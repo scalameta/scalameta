@@ -72,7 +72,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       val (imports, rest2) = rest1.partition(_ match { case _: Import => true; case _ => false })
       stats1 ++= defns
       stats1 ++= imports
-      val (requires, illegal) = rest2.partition(_ match { case q"require($what)" => true; case _ => false })
+      val (requires, rest3) = rest2.partition(_ match { case q"require($what)" => true; case _ => false })
+      val (validators, illegal) = rest3.partition(_ match { case q"validate($what)" => true; case _ => false })
       illegal.foreach(stmt => c.abort(stmt.pos, "only invariants and definitions are allowed in @ast classes"))
 
       // step 3: calculate the parameters of the class
@@ -81,7 +82,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       // step 4: turn all parameters into vars, create getters and setters
       def internalize(name: TermName) = TermName("_" + name.toString)
       val fieldParamss = paramss
-      istats1 ++= fieldParamss.flatten.map(p => {
+      val fieldParams = fieldParamss.flatten.map(p => (p, p.name.decodedName.toString))
+      istats1 ++= fieldParams.map({ case (p, _) =>
         var getterAnns = List(q"new $AstMetadataModule.astField")
         if (p.mods.annotations.exists(_.toString.contains("auxiliary"))) getterAnns :+= q"new $AstMetadataModule.auxiliary"
         val getterMods = Modifiers(DEFERRED, typeNames.EMPTY, getterAnns)
@@ -92,12 +94,12 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
           val mods1 = mods.mkMutable.unPrivate.unOverride.unDefault
           q"$mods1 val ${internalize(p.name)}: $tpt"
       })
-      stats1 ++= fieldParamss.flatten.map(p => {
+      stats1 ++= fieldParams.map({ case (p, s) =>
         val pinternal = internalize(p.name)
         val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
         q"""
           $pmods def ${p.name}: ${p.tpt} = {
-            $CommonTyperMacrosModule.loadField(this.$pinternal)
+            $CommonTyperMacrosModule.loadField(this.$pinternal, $s)
             this.$pinternal
           }
         """
@@ -123,12 +125,31 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       privateCopyBargs += q"parent"
       privateCopyBargs += q"origin"
       val privateCopyArgs = paramss.map(_.map(p => q"$CommonTyperMacrosModule.initField(this.${internalize(p.name)})"))
+      val privateCopyValidators = {
+        if (validators.isEmpty) q""
+        else {
+          q"""
+            if (destination != null) {
+              def validate(fn: ($name, $TreeClass, $StringClass) => Boolean) = {
+                val advancedCheckOk = fn(this, parent, destination)
+                if (!advancedCheckOk) {
+                  val parentPrefix = parent.productPrefix
+                  _root_.org.scalameta.invariants.require(advancedCheckOk && _root_.org.scalameta.debug(this, parentPrefix, destination))
+                }
+              }
+              ..$validators
+            }
+          """
+        }
+      }
       val privateCopyBody = q"new $name(..$privateCopyBargs)(...$privateCopyArgs)"
       stats1 += q"""
         private[meta] def privateCopy(
             prototype: $TreeClass = this,
             parent: $TreeClass = privateParent,
+            destination: $StringClass = null,
             origin: $OriginClass = privateOrigin): Tree = {
+          $privateCopyValidators
           $privateCopyBody
         }
       """
@@ -176,7 +197,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       stats1 += q"override def productFields: $SeqClass[$StringClass] = Seq(..$productFields)"
 
       // step 12: generate serialization logic
-      val fieldInits = fieldParamss.flatten.map(p => q"$CommonTyperMacrosModule.loadField(this.${internalize(p.name)})")
+      val fieldInits = fieldParams.map({ case (p, s) => q"$CommonTyperMacrosModule.loadField(this.${internalize(p.name)}, $s)" })
       stats1 += q"protected def writeReplace(): $AnyRefClass = { ..$fieldInits; this }"
 
       // step 13: generate Companion.apply
@@ -225,7 +246,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
             (Nil, q"$local")
           }
         }
-        validators :+ q"$CommonTyperMacrosModule.storeField(node.$internal, $assignee)"
+        validators :+ q"$CommonTyperMacrosModule.storeField(node.$internal, $assignee, ${local.toString})"
       }
       internalBody += q"node"
       val internalArgss = paramss.map(_.map(p => q"${p.name}"))
