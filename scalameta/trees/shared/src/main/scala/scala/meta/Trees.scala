@@ -101,7 +101,7 @@ object Term {
   @ast class Repeated(expr: Term) extends Term {
     checkParent(ParentChecks.TermRepeated)
   }
-  @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type.Arg], default: Option[Term]) extends Member
+  @ast class Param(mods: Seq[Mod], name: Param.Name, decltpe: Option[Type], default: Option[Term]) extends Member
   object Param {
     @branch trait Name extends scala.meta.Name
   }
@@ -109,7 +109,7 @@ object Term {
   def fresh(prefix: String): Term.Name = Term.Name(prefix + Fresh.nextId())
 }
 
-@branch trait Type extends Tree with Type.Arg
+@branch trait Type extends Tree
 object Type {
   @branch trait Ref extends Type with scala.meta.Ref
   @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref with Pat.Type.Ref with Param.Name with scala.meta.Name.Qualifier
@@ -122,8 +122,8 @@ object Type {
   }
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
-  @ast class Function(params: Seq[Type.Arg], res: Type) extends Type
-  @ast class ImplicitFunction(params: Seq[Type.Arg], res: Type) extends Type
+  @ast class Function(params: Seq[Type], res: Type) extends Type
+  @ast class ImplicitFunction(params: Seq[Type], res: Type) extends Type
   @ast class Tuple(args: Seq[Type] @nonEmpty) extends Type {
     checkFields(args.length > 1 || (args.length == 1 && args.head.is[Type.Quasi]))
   }
@@ -139,10 +139,11 @@ object Type {
   @ast class Annotate(tpe: Type, annots: Seq[Mod.Annot] @nonEmpty) extends Type
   @ast class Placeholder(bounds: Bounds) extends Type
   @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
-  @branch trait Arg extends Tree
-  object Arg {
-    @ast class ByName(tpe: Type) extends Arg
-    @ast class Repeated(tpe: Type) extends Arg
+  @ast class ByName(tpe: Type) extends Type {
+    checkParent(ParentChecks.TypeByName)
+  }
+  @ast class Repeated(tpe: Type) extends Type {
+    checkParent(ParentChecks.TypeRepeated)
   }
   @ast class Param(mods: Seq[Mod],
                    name: Param.Name,
@@ -509,7 +510,7 @@ object Importee {
 package internal.ast {
   // NOTE: Quasi is a base trait for a whole bunch of classes.
   // Every root, branch and ast trait/class among scala.meta trees (except for quasis themselves)
-  // has a corresponding quasi, e.g. Term.Quasi or Type.Arg.Quasi.
+  // has a corresponding quasi, e.g. Term.Quasi or Type.Quasi.
   //
   // Here's how quasis represent unquotes
   // (XXX below depends on the position where the unquote occurs, e.g. q"$x" will result in Term.Quasi):

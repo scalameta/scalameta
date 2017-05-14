@@ -278,12 +278,6 @@ object Helpers {
   def tpeToCtorref(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
     val tpe0 = tpe
     def loop(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
-      object Types {
-        def unapply(tpes: Seq[Type.Arg]): Option[Seq[Type]] = {
-          if (tpes.forall(_.is[Type])) Some(tpes.map(_.require[Type]))
-          else None
-        }
-      }
       tpe match {
         case tpe @ Type.Name(value) =>
           ctor.copy(value = tpe.value)
@@ -291,7 +285,7 @@ object Helpers {
           tpe match {
             case Type.Select(qual, tpe @ Type.Name(value)) => Ctor.Ref.Select(qual, ctor.copy(value = tpe.value))
             case Type.Project(qual, tpe @ Type.Name(value)) => Ctor.Ref.Project(qual, ctor.copy(value = tpe.value))
-            case Type.Function(Types(params), ret) => Term.ApplyType(Ctor.Ref.Function(ctor), params :+ ret)
+            case Type.Function(params, ret) => Term.ApplyType(Ctor.Ref.Function(ctor), params :+ ret)
             case Type.Annotate(tpe, annots) => Term.Annotate(loop(tpe, ctor), annots)
             case Type.Apply(tpe, args) => Term.ApplyType(loop(tpe, ctor), args)
             case Type.ApplyInfix(lhs, op, rhs) => Term.ApplyType(loop(op, ctor), List(lhs, rhs))
@@ -333,32 +327,48 @@ object Helpers {
   }
 
   object ParentChecks {
+    private def termArgument(parent: Tree, destination: String): Boolean = {
+      def applyArgument = parent.is[Term.Apply] && destination == "args"
+      def applyInfixArgument = parent.is[Term.ApplyInfix] && destination == "args"
+      def namedArg = parent.is[Term.Assign] && destination == "rhs"
+      def updateArgument = parent.is[Term.Update] && destination == "argss"
+      applyArgument || applyInfixArgument || namedArg || updateArgument
+    }
+
     def TermAssign(tree: Term.Assign, parent: Tree, destination: String): Boolean = {
-      def namedRepeatedArg = tree.rhs.is[Term.Repeated]
-      def applyArg = parent.is[Term.Apply] && destination == "args"
-      def applyInfixArg = parent.is[Term.ApplyInfix] && destination == "args"
-      def updateArg = parent.is[Term.Update] && destination == "argss"
-      !namedRepeatedArg || applyArg || applyInfixArg || updateArg
+      def namedRepeatedArgument = tree.rhs.is[Term.Repeated]
+      !namedRepeatedArgument || termArgument(parent, destination)
     }
 
     def TermRepeated(tree: Term.Repeated, parent: Tree, destination: String): Boolean = {
-      def applyArg = parent.is[Term.Apply] && destination == "args"
-      def applyInfixArg = parent.is[Term.ApplyInfix] && destination == "args"
-      def namedArg = parent.is[Term.Assign] && destination == "rhs"
-      def updateArg = parent.is[Term.Update] && destination == "argss"
-      applyArg || applyInfixArg || namedArg || updateArg
+      termArgument(parent, destination)
     }
 
     def PatVarTerm(tree: Pat.Var.Term, parent: Tree, destination: String): Boolean = {
       val Pat.Var.Term(Term.Name(value)) = tree
-      def isCapitalized = value.nonEmpty && value(0).isUpper
+      def capitalized = value.nonEmpty && value(0).isUpper
       def declValPat = parent.is[Decl.Val] && destination == "pats"
       def declVarPat = parent.is[Decl.Var] && destination == "pats"
       def defnValPat = parent.is[Defn.Val] && destination == "pats"
       def defnVarPat = parent.is[Defn.Var] && destination == "pats"
       def enumeratorGeneratorPat = parent.is[Enumerator.Generator] && destination == "pat"
       def enumeratorValPat = parent.is[Enumerator.Val] && destination == "pat"
-      !isCapitalized || declValPat || declVarPat || defnValPat || defnVarPat || enumeratorGeneratorPat || enumeratorValPat
+      !capitalized || declValPat || declVarPat || defnValPat || defnVarPat || enumeratorGeneratorPat || enumeratorValPat
+    }
+
+    private def typeArgument(parent: Tree, destination: String): Boolean = {
+      def termParamDecltpe = parent.is[Term.Param] && destination == "decltpe"
+      def typeFunctionArgument = parent.is[Type.Function] && destination == "args"
+      def byNameType = parent.is[Type.ByName] && destination == "tpe"
+      termParamDecltpe || typeFunctionArgument || byNameType
+    }
+
+    def TypeByName(tree: Type.ByName, parent: Tree, destination: String): Boolean = {
+      typeArgument(parent, destination)
+    }
+
+    def TypeRepeated(tree: Type.Repeated, parent: Tree, destination: String): Boolean = {
+      typeArgument(parent, destination)
     }
   }
 }

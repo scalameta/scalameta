@@ -100,12 +100,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     })
   }
+  def parseQuasiquoteType(): Type = parseRule(_.paramType())
   def parseQuasiquoteCtor(): Ctor = parseRule(_.quasiquoteCtor())
   def parseTerm(): Term = parseRule(_.expr())
   def parseUnquoteTerm(): Term = parseRule(_.unquoteExpr())
   def parseTermParam(): Term.Param = parseRule(_.param(ownerIsCase = false, ownerIsType = true, isImplicit = false))
   def parseType(): Type = parseRule(_.typ())
-  def parseTypeArg(): Type.Arg = parseRule(_.paramType())
   def parseTypeParam(): Type.Param = parseRule(_.typeParam(ownerIsType = true, ctxBoundsAllowed = true))
   def parsePat(): Pat = parseRule(_.pattern()).require[Pat]
   def parseQuasiquotePat(): Pat = parseRule(_.quasiquotePattern()).require[Pat]
@@ -883,13 +883,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  threaded through numerous methods as boolean isPattern.
    */
   trait PatternContextSensitive {
-    /** {{{
-     *  ArgType       ::=  Type
-     *  }}}
-     */
-    def argType(): Type
-    def functionArgType(): Type.Arg
-
     private def tupleInfixType(): Type = autoPos {
       require(token.is[LeftParen] && debug(token))
       val openParenPos = in.tokenPos
@@ -919,7 +912,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           } else {
             if (hasParams) syntaxError("can't mix function type and method type syntaxes", at = token)
             hasTypes = true
-            functionArgType()
+            paramType()
           }
         }
 
@@ -943,15 +936,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
         rawtss.toList
       }
-      def ts: List[Type.Arg] = {
+      def ts: List[Type] = {
         if (hasParams) require(false && debug(hasParams, hasImplicits, hasTypes))
         if (rawtss.length != 1) {
           val message = "can't have multiple parameter lists in function types"
           syntaxError(message, at = scannerTokens(secondOpenParenPos))
         }
         rawtss.head.map({
-          case q: Tree.Quasi => q.become[Type.Arg.Quasi]
-          case t: Type.Arg => t
+          case q: Tree.Quasi => q.become[Type.Quasi]
+          case t: Type => t
           case other => unreachable(debug(other.syntax, other.structure))
         })
       }
@@ -972,10 +965,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         Type.Function(ts, typ())
       } else {
         val tuple = atPos(openParenPos, closeParenPos)(makeTupleType(ts map {
-          case q: Type.Arg.Quasi    => q.become[Type.Quasi]
-          case t: Type              => t
-          case p: Type.Arg.ByName   => syntaxError("by name type not allowed here", at = p)
-          case p: Type.Arg.Repeated => syntaxError("repeated type not allowed here", at = p)
+          case t: Type.ByName   => syntaxError("by name type not allowed here", at = t)
+          case t: Type.Repeated => syntaxError("repeated type not allowed here", at = t)
+          case t: Type          => t
         }))
         infixTypeRest(
           compoundTypeRest(Some(
@@ -1156,7 +1148,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
      *  Types ::= Type {`,' Type}
      *  }}}
      */
-    def types(): List[Type] = commaSeparated(argType())
+    def types(): List[Type] = commaSeparated(typ())
 
     // TODO: I have a feeling that we no longer need PatternContextSensitive
     // now that we have Pat.Type separate from Type
@@ -1187,7 +1179,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           atPos(tpe, tpe)(Pat.Type.ApplyInfix(lhs1, op1, rhs1))
         case Type.Function(params, res) =>
           val params1 = params.map {
-            case q @ Type.Arg.Quasi(1, Type.Arg.Quasi(0, _)) => q.become[Pat.Type.Quasi]
+            case q @ Type.Quasi(1, Type.Quasi(0, _)) => q.become[Pat.Type.Quasi]
             case p => loop(p.require[Type], convertTypevars = true)
           }
           val res1 = loop(res, convertTypevars = false)
@@ -2323,9 +2315,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // are we in an XML pattern?
     def isXML: Boolean = false
 
-    def functionArgType(): Type.Arg = paramType()
-    def argType(): Type = typ()
-
     /** {{{
      *  Patterns ::= Pattern { `,' Pattern }
      *  SeqPatterns ::= SeqPattern { `,' SeqPattern }
@@ -2582,8 +2571,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
   /** The implementation of the context sensitive methods for parsing outside of patterns. */
   object outPattern extends PatternContextSensitive {
-    def argType(): Type = typ()
-    def functionArgType(): Type.Arg = paramType()
   }
   /** The implementation for parsing inside of patterns at points where sequences are allowed. */
   object seqOK extends SeqContextSensitive {
@@ -2797,16 +2784,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  ParamType ::= Type | `=>' Type | Type `*'
    *  }}}
    */
-  def paramType(): Type.Arg = autoPos(token match {
+  def paramType(): Type = autoPos(token match {
     case RightArrow() =>
       next()
-      Type.Arg.ByName(typ())
+      Type.ByName(typ())
     case _ =>
       val t = typ()
       if (!isRawStar) t
       else {
         next()
-        Type.Arg.Repeated(t)
+        Type.Repeated(t)
       }
   })
 
@@ -2842,11 +2829,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                 None
               else {
                 accept[Colon]
-                val tpt = paramType() match {
-                  case q: Type.Quasi => q.become[Type.Arg.Quasi]
-                  case x => x
-                }
-                if (tpt.is[Type.Arg.ByName]) {
+                val tpt = paramType()
+                if (tpt.is[Type.ByName]) {
                   def mayNotBeByName(subj: String) =
                     syntaxError(s"$subj parameters may not be call-by-name", at = name)
                   val isLocalToThis: Boolean = {
@@ -3373,15 +3357,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
 
   def constructorCall(tpe: Type, allowArgss: Boolean = true): Ctor.Call = {
-    object Types {
-      def unapply(tpes: Seq[Type.Arg]): Option[Seq[Type]] = {
-        if (tpes.forall(t => t.is[Type] || t.is[Type.Arg.Quasi])) Some(tpes.map {
-          case q: Type.Arg.Quasi => q.become[Type.Quasi]
-          case t: Type => t.require[Type]
-        })
-        else None
-      }
-    }
     def convert(tpe: Type): Ctor.Call = {
       // TODO: we should really think of a different representation for constructor invocations...
       // if anything, this mkCtorRefFunction is a testament to how problematic our current encoding is
@@ -3397,7 +3372,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case Type.Select(qual, name) => Ctor.Ref.Select(qual, atPos(name, name)(Ctor.Name(name.value)))
         case Type.Project(qual, name: Type.Name.Quasi) => Ctor.Ref.Project(qual, atPos(name, name)(name.become[Ctor.Name.Quasi]))
         case Type.Project(qual, name) => Ctor.Ref.Project(qual, atPos(name, name)(Ctor.Name(name.value)))
-        case Type.Function(Types(params), ret) => Term.ApplyType(mkCtorRefFunction(tpe), params :+ ret)
+        case Type.Function(params, ret) => Term.ApplyType(mkCtorRefFunction(tpe), params :+ ret)
         case Type.Annotate(tpe, annots) => Term.Annotate(convert(tpe), annots)
         case Type.Apply(tpe, args) => Term.ApplyType(convert(tpe), args)
         case Type.ApplyInfix(lhs, op, rhs) => Term.ApplyType(convert(op), List(lhs, rhs))

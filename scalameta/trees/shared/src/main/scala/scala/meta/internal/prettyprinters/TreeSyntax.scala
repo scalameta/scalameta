@@ -335,8 +335,8 @@ object TreeSyntax {
         case t: Type.Placeholder  => m(SimpleTyp, s(kw("_"), t.bounds))
         case t: Type.Bounds =>
           s(t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()), t.hi.map(hi => s(" ", kw("<:"), " ", p(Typ, hi))).getOrElse(s()))
-        case t: Type.Arg.Repeated => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
-        case t: Type.Arg.ByName   => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
+        case t: Type.Repeated     => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
+        case t: Type.ByName       => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
         case t: Type.Param        =>
           val mods = t.mods.filter(m => !m.is[Mod.Covariant] && !m.is[Mod.Contravariant])
           require(t.mods.length - mods.length <= 1)
@@ -604,9 +604,6 @@ object TreeSyntax {
       }
       implicit def syntaxTparams: Syntax[Seq[Type.Param]] = Syntax { tparams =>
         if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
-      }
-      implicit def syntaxTypeArgOpt: Syntax[Option[Type.Arg]] = Syntax {
-        _.map { t => s(kw(":"), " ", t) }.getOrElse(s())
       }
       implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax {
         _.map { t => s(kw(":"), " ", t) }.getOrElse(s())

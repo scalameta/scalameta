@@ -58,22 +58,16 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  With              | `t"$tpe with $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
  And               | `t"$tpe & $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
  Or                | `t"$tpe | $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
- Function          | `t"(..$atpes) => $tpe"`
- Implicit Function | `t"implicit (..$atpes) => $tpe"`
+ Function          | `t"(..$tpes) => $tpe"`
+ Implicit Function | `t"implicit (..$tpes) => $tpe"`
  Tuple             | `t"(..$tpesnel)"`
  Refine            | `t"$tpeopt { ..$stats }"`
  Existential       | `t"$tpe forSome { ..$statsnel }"`
  Annotate          | `t"$tpe ..@$annotsnel"`
  Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`
+ By Name           | `t"=> $tpe"`
+ Repeated          | `t"$tpe*"`
  Literal           | `t"$lit"` (construction only), `t"${lit: Lit}"` (also deconstruction)
-
-## Argument Types (meta.Type.Arg)
-
-          | Quasiquote
-----------|-----------------
- By Name  | `targ"=> $tpe"`
- Repeated | `targ"$tpe*"`
- Type     | `targ"$tpe"` (construction only), `targ"${tpe: Type}"` (also deconstruction)
 
 ## Patterns (meta.Pat) and Cases (meta.Case)
 
@@ -159,7 +153,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Term Param     | `param"..$mods $paramname: $atpeopt = $expropt"`
+ Term Param     | `param"..$mods $paramname: $tpeopt = $expropt"`
 
 ### Type Parameters (meta.Type.Param)
 
@@ -177,7 +171,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Function Reference  | `ctor"(..$tpes) => $tpe"`
  Annotated Reference | `ctor"$ctorname ..@annots"`
  Applied Reference   | `ctor"$ctorref(...$exprssnel)"`
- Tapplied Reference  | `ctor"$ctorref[..$atpesnel]"`
+ Tapplied Reference  | `ctor"$ctorref[..$tpesnel]"`
 
 ## Template (meta.Template)
 
@@ -295,7 +289,6 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Term.Param          | `$param`      | `param`
  meta.Term.Param.Name     | `$paramname`  | `q`, anonymous names can't be constructed, only extracted from `param`
  meta.Type                | `$tpe`        | `t`
- meta.Type.Arg            | `$atpe`       | `targ`
  meta.Type.Name           | `$tname`      | `t`
  meta.Type.Param          | `$tparam`     | `tparam`
  meta.Type.Param.Name     | `$tparamname` | `t`, anonymous names can't be constructed, only extracted from `tparam`

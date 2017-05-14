@@ -12,7 +12,7 @@ import org.scalameta.internal.MacroHelpers
 // The main different is customizability - we can stuff any extensions we want into @data.
 // Currently it's just two things:
 //    1) Support for lazy parameters (implemented via a @byNeed marker annotation),
-//       as in e.g.: `@leaf class Nonrecursive(tpe: Type.Arg @byNeed) extends Typing`.
+//       as in e.g.: `@leaf class Nonrecursive(tpe: Type @byNeed) extends Typing`.
 //       NOTE: @byNeed isn't defined anywhere - it's just a syntactic marker.
 //    2) Support for on-demand member generation via named parameters to @data,
 //       as in e.g. `@data(toString = false) class ...`.

@@ -327,10 +327,8 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Type.Annotate
       |scala.meta.Type.Apply
       |scala.meta.Type.ApplyInfix
-      |scala.meta.Type.Arg
-      |scala.meta.Type.Arg.ByName
-      |scala.meta.Type.Arg.Repeated
       |scala.meta.Type.Bounds
+      |scala.meta.Type.ByName
       |scala.meta.Type.Existential
       |scala.meta.Type.Function
       |scala.meta.Type.ImplicitFunction
@@ -342,6 +340,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Type.Project
       |scala.meta.Type.Ref
       |scala.meta.Type.Refine
+      |scala.meta.Type.Repeated
       |scala.meta.Type.Select
       |scala.meta.Type.Singleton
       |scala.meta.Type.Tuple

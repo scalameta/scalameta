@@ -451,30 +451,6 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("t\"T*\"") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      t"T*"
-    """) === """
-      |<macro>:4: end of file expected but identifier found
-      |      t"T*"
-      |         ^
-    """.trim.stripMargin)
-  }
-
-  test("t\"=> T\"") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      t"=> T"
-    """) === """
-      |<macro>:4: identifier expected but => found
-      |      t"=> T"
-      |        ^
-    """.trim.stripMargin)
-  }
-
   test("p\"_*\"") {
     assert(typecheckError("""
       import scala.meta._
@@ -851,5 +827,17 @@ class ErrorSuite extends FunSuite {
     import scala.meta._
     val x = p"X"
     intercept[InvariantFailedException] { p"case $x =>" }
+  }
+
+  test("Type.ByName") {
+    import scala.meta._
+    val t = t"=> T"
+    intercept[InvariantFailedException] { t"List[$t]" }
+  }
+
+  test("Type.Repeated") {
+    import scala.meta._
+    val t = t"T*"
+    intercept[InvariantFailedException] { t"List[$t]" }
   }
 }

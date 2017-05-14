@@ -15,7 +15,6 @@ object Parse {
   implicit lazy val parseTerm: Parse[Term] = toParse(_.parseTerm())
   implicit lazy val parseTermParam: Parse[Term.Param] = toParse(_.parseTermParam())
   implicit lazy val parseType: Parse[Type] = toParse(_.parseType())
-  implicit lazy val parseTypeArg: Parse[Type.Arg] = toParse(_.parseTypeArg())
   implicit lazy val parseTypeParam: Parse[Type.Param] = toParse(_.parseTypeParam())
   implicit lazy val parsePat: Parse[Pat] = toParse(_.parsePat())
   implicit lazy val parsePatArg: Parse[Pat.Arg] = toParse(_.parsePatArg())

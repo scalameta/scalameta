@@ -793,36 +793,36 @@ class SuccessSuite extends FunSuite {
     assert(t"$tpe1 $tname $tpe2".show[Structure] === "Type.ApplyInfix(Type.Name(\"X\"), Type.Name(\"Y\"), Type.Name(\"Z\"))")
   }
 
-  test("1 t\"(..$atpes) => $tpe\"") {
-    val t"(..$atpes) => $tpe" = t"(X, Y) => Z"
-    assert(atpes.toString === "List(X, Y)")
-    assert(atpes(0).show[Structure] === "Type.Name(\"X\")")
-    assert(atpes(1).show[Structure] === "Type.Name(\"Y\")")
+  test("1 t\"(..$tpes) => $tpe\"") {
+    val t"(..$tpes) => $tpe" = t"(X, Y) => Z"
+    assert(tpes.toString === "List(X, Y)")
+    assert(tpes(0).show[Structure] === "Type.Name(\"X\")")
+    assert(tpes(1).show[Structure] === "Type.Name(\"Y\")")
     assert(tpe.show[Structure] === "Type.Name(\"Z\")")
   }
 
-  test("2 t\"(..$atpes) => $tpe\"") {
-    val atpes: List[Type.Arg] = List(t"X", t"Y")
+  test("2 t\"(..$tpes) => $tpe\"") {
+    val tpes: List[Type] = List(t"X", t"Y")
     val tpe = t"Z"
-    assert(t"(..$atpes) => $tpe".show[Structure] === "Type.Function(Seq(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))")
+    assert(t"(..$tpes) => $tpe".show[Structure] === "Type.Function(Seq(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))")
   }
 
-  test("1 t\"implicit (..$atpes) => $tpe\"") {
+  test("1 t\"implicit (..$tpes) => $tpe\"") {
     val Scala211 = "shadow scala.meta.dialects.Scala211"
     import scala.meta.dialects.Dotty
-    val t"implicit (..$atpes) => $tpe" = t"implicit (X, Y) => Z"
-    assert(atpes.toString === "List(X, Y)")
-    assert(atpes(0).show[Structure] === "Type.Name(\"X\")")
-    assert(atpes(1).show[Structure] === "Type.Name(\"Y\")")
+    val t"implicit (..$tpes) => $tpe" = t"implicit (X, Y) => Z"
+    assert(tpes.toString === "List(X, Y)")
+    assert(tpes(0).show[Structure] === "Type.Name(\"X\")")
+    assert(tpes(1).show[Structure] === "Type.Name(\"Y\")")
     assert(tpe.show[Structure] === "Type.Name(\"Z\")")
   }
 
-  test("2 t\"implicit (..$atpes) => $tpe\"") {
+  test("2 t\"implicit (..$tpes) => $tpe\"") {
     val Scala211 = "shadow scala.meta.dialects.Scala211"
     import scala.meta.dialects.Dotty
-    val atpes: List[Type.Arg] = List(t"X", t"Y")
+    val tpes: List[Type] = List(t"X", t"Y")
     val tpe = t"Z"
-    assert(t"implicit (..$atpes) => $tpe".show[Structure] === "Type.ImplicitFunction(Seq(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))")
+    assert(t"implicit (..$tpes) => $tpe".show[Structure] === "Type.ImplicitFunction(List(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))")
   }
 
   test("1 t\"(..$tpes)\"") {
@@ -893,39 +893,29 @@ class SuccessSuite extends FunSuite {
     assert(t"_ >: $tpe1 <: $tpe2".show[Structure] === "Type.Placeholder(Type.Bounds(Some(Type.Name(\"X\")), Some(Type.Name(\"Y\"))))")
   }
 
-  test("t\"$lit\"") {
-    val lit = q"1"
-    assert(t"$lit".show[Structure] === "Lit.Int(1)")
-  }
-
   test("1 t\"=> $tpe\"") {
-    val targ"=> $tpe" = targ"=> X"
+    val t"=> $tpe" = t"=> X"
     assert(tpe.show[Structure] === "Type.Name(\"X\")")
   }
 
   test("2 t\"=> $tpe\"") {
     val tpe = t"X"
-    assert(targ"=> $tpe".show[Structure] === "Type.Arg.ByName(Type.Name(\"X\"))")
+    assert(t"=> $tpe".show[Structure] === "Type.ByName(Type.Name(\"X\"))")
   }
 
   test("1 t\"$tpe *\"") {
-    val targ"$tpe*" = targ"X*"
+    val t"$tpe*" = t"X*"
     assert(tpe.show[Structure] === "Type.Name(\"X\")")
   }
 
   test("2 t\"$tpe *\"") {
     val tpe = t"X"
-    assert(targ"$tpe*".show[Structure] === "Type.Arg.Repeated(Type.Name(\"X\"))")
+    assert(t"$tpe*".show[Structure] === "Type.Repeated(Type.Name(\"X\"))")
   }
 
-  test("1 t\"$tpe\"") {
-    val t"$tpe" = t"X"
-    assert(tpe.show[Structure] === "Type.Name(\"X\")")
-  }
-
-  test("2 t\"$tpe\"") {
-    val tpe = t"X"
-    assert(t"$tpe".show[Structure] === "Type.Name(\"X\")")
+  test("t\"$lit\"") {
+    val lit = q"1"
+    assert(t"$lit".show[Structure] === "Lit.Int(1)")
   }
 
   test("p\"_\"") {
@@ -1739,22 +1729,22 @@ class SuccessSuite extends FunSuite {
      assert(q"..$mods def this(...$paramss) = $expr".show[Structure] === "Ctor.Secondary(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Ctor.Ref.Name(\"this\"), Seq(Seq(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Term.Apply(Ctor.Ref.Name(\"C\"), Seq(Term.Name(\"foo\"), Term.Name(\"bar\"))))")
    }
 
-  test("1 param\"..$mods $paramname: $atpeopt = $expropt\"") {
-    val param"..$mods $paramname: $atpeopt = $expropt" = param"private final x: X = 42"
+  test("1 param\"..$mods $paramname: $tpeopt = $expropt\"") {
+    val param"..$mods $paramname: $tpeopt = $expropt" = param"private final x: X = 42"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).show[Structure] === "Mod.Private(Name.Anonymous())")
     assert(mods(1).show[Structure] === "Mod.Final()")
     assert(paramname.show[Structure] === "Term.Name(\"x\")")
-    assert(atpeopt.show[Structure] === "Some(Type.Name(\"X\"))")
+    assert(tpeopt.show[Structure] === "Some(Type.Name(\"X\"))")
     assert(expropt.show[Structure] === "Some(Lit.Int(42))")
   }
 
-  test("2 param\"..$mods $paramname: $atpeopt = $expropt\"") {
+  test("2 param\"..$mods $paramname: $tpeopt = $expropt\"") {
     val mods = List(mod"private", mod"final")
     val paramname = q"x"
-    val atpeopt = t"X"
+    val tpeopt = t"X"
     val expropt = q"42"
-    assert(param"..$mods $paramname: $atpeopt = $expropt".show[Structure] === "Term.Param(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Term.Name(\"x\"), Some(Type.Name(\"X\")), Some(Lit.Int(42)))")
+    assert(param"..$mods $paramname: $tpeopt = $expropt".show[Structure] === "Term.Param(Seq(Mod.Private(Name.Anonymous()), Mod.Final()), Term.Name(\"x\"), Some(Type.Name(\"X\")), Some(Lit.Int(42)))")
   }
 
   test("1 tparam\"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes\"") {
@@ -1859,18 +1849,18 @@ class SuccessSuite extends FunSuite {
     assert(ctor"$ctorref(...$exprss)".show[Structure] === "Term.Apply(Ctor.Ref.Name(\"x\"), Seq(Term.Name(\"y\"), Term.Name(\"z\")))")
   }
 
-  test("1 ctor\"$ctorref[..$atpes]\"") {
-    val ctor"$ctorref[..$atpes]" = ctor"x[y, z]" // TODO after #227 types should be precise (Ctor.Call)
+  test("1 ctor\"$ctorref[..$tpes]\"") {
+    val ctor"$ctorref[..$tpes]" = ctor"x[y, z]" // TODO after #227 types should be precise (Ctor.Call)
     assert(ctorref.show[Structure] === "Ctor.Ref.Name(\"x\")")
-    assert(atpes.toString === "List(y, z)")
-    assert(atpes(0).show[Structure] === "Type.Name(\"y\")")
-    assert(atpes(1).show[Structure] === "Type.Name(\"z\")")
+    assert(tpes.toString === "List(y, z)")
+    assert(tpes(0).show[Structure] === "Type.Name(\"y\")")
+    assert(tpes(1).show[Structure] === "Type.Name(\"z\")")
   }
 
-  test("2 ctor\"$ctorref[..$atpes]\"") {
+  test("2 ctor\"$ctorref[..$tpes]\"") {
     val ctorref = ctor"x"
-    val atpes = List(t"y", t"z")
-    assert(ctor"$ctorref[..$atpes]".show[Structure] === "Term.ApplyType(Ctor.Ref.Name(\"x\"), Seq(Type.Name(\"y\"), Type.Name(\"z\")))")
+    val tpes = List(t"y", t"z")
+    assert(ctor"$ctorref[..$tpes]".show[Structure] === "Term.ApplyType(Ctor.Ref.Name(\"x\"), Seq(Type.Name(\"y\"), Type.Name(\"z\")))")
   }
 
   test("1 template\"{ ..$stats } with ..$exprs { $param => ..$stats }\"") {
