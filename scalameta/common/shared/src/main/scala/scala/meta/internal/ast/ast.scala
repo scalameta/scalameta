@@ -214,8 +214,10 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       internalBody ++= fieldChecks.map(fieldCheck => {
         var hasErrors = false
         object errorChecker extends Traverser {
+          private val nmeParent = TermName("parent")
           override def traverse(tree: Tree): Unit = tree match {
             case _: This => hasErrors = true; c.error(tree.pos, "cannot refer to this in @ast field checks")
+            case Ident(`nmeParent`) => hasErrors = true; c.error(tree.pos, "cannot refer to parent in @ast field checks; use checkParent instead")
             case _ => super.traverse(tree)
           }
         }
