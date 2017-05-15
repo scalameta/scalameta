@@ -28,7 +28,7 @@ unidocSettings
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
   s"wow $ciScalaVersion" ::
-    "testsJVM/testAll" :: // runs both JS and JVM tests
+    ("testOnly" + ciPlatform) ::
     ci("doc") :: // skips 2.10 projects
     s
 }
@@ -54,7 +54,29 @@ test := {
       |- contribJVM/testQuick   # contrib
       |- scalahostNsc/test      # Semantic API tests
       |- scalahostSbt/it:test   # sbt-scalahost tests
+      |- testOnlyJVM
+      |- testOnlyJS
       |""".stripMargin)
+}
+testAll := {
+  testOnlyJVM.value
+  testOnlyJS.value
+}
+// These tasks skip over modules with no tests, like dialects/inputs/io, speeding up
+// edit/test cycles. You may prefer to run testJVM while iterating on a design
+// because JVM tests link and run faster than JS tests.
+testOnlyJVM := {
+  val runScalametaTests = test.in(scalametaJVM, Test).value
+  val runScalahostTests = test.in(scalahostNsc, Test).value
+  val runBenchmarkTests = test.in(benchmarks, Test).value
+  val runContribTests = test.in(contribJVM, Test).value
+  val runTests = test.in(testsJVM, Test).value
+  val runDocs = test.in(readme).value
+}
+testOnlyJS := {
+  val runScalametaTests = test.in(scalametaJS, Test).value
+  val runContribTests = test.in(contribJS, Test).value
+  val runTests = test.in(testsJS, Test).value
 }
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
@@ -296,23 +318,8 @@ lazy val scalahostSbt = project
   )
   .enablePlugins(BuildInfoPlugin)
 
-lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
-  .settings(
-    publishableSettings,
-    hasLargeIntegrationTests,
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "geny" % "0.1.1",
-      // These are used to download and extract a corpus tar.gz
-      "org.rauschig" % "jarchivelib" % "0.7.1",
-      "commons-io" % "commons-io" % "2.5"
-    ),
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-    description := "Testing utilities for scalameta APIs"
-  )
-  .dependsOn(scalametaJVM)
-
-lazy val testsInput = project
-  .in(file("scalameta/tests-input"))
+lazy val scalahostIntegration = project
+  .in(file("scalahost/integration"))
   .settings(
     description := "Sources to compile with scalahost to build a mirror for tests.",
     sharedSettings,
@@ -328,35 +335,32 @@ lazy val testsInput = project
     }
   )
 
+
+lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
+  .settings(
+    publishableSettings,
+    hasLargeIntegrationTests,
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "geny" % "0.1.1",
+      // These are used to download and extract a corpus tar.gz
+      "org.rauschig" % "jarchivelib" % "0.7.1",
+      "commons-io" % "commons-io" % "2.5"
+    ),
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
+    description := "Testing utilities for scalameta APIs"
+  )
+  .dependsOn(scalametaJVM)
+
 lazy val tests = crossProject
   .in(file("scalameta/tests"))
   .settings(
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
-    test.in(Test) := test.in(Test).dependsOn(compile.in(testsInput, Compile)).value,
-    testAll := {
-      testOnlyJVM.value
-      testOnlyJS.value
-    },
-    // These tasks skip over modules with no tests, like dialects/inputs/io, speeding up
-    // edit/test cycles. You may prefer to run testJVM while iterating on a design
-    // because JVM tests link and run faster than JS tests.
-    testOnlyJVM := {
-      val runScalametaTests = test.in(scalametaJVM, Test).value
-      val runScalahostTests = test.in(scalahostNsc, Test).value
-      val runBenchmarkTests = test.in(benchmarks, Test).value
-      val runContribTests = test.in(contribJVM, Test).value
-      val runDocs = test.in(readme).value
-    },
-    testOnlyJS := {
-      val runIoTests = test.in(ioJS, Test).value
-      val runScalametaTests = test.in(scalametaJS, Test).value
-      val runContribTests = test.in(contribJS, Test).value
-    },
+    test.in(Test) := test.in(Test).dependsOn(compile.in(scalahostIntegration, Compile)).value,
     buildInfoKeys := Seq[BuildInfoKey](
       "mirrorSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
-      "mirrorClasspath" -> target.in(testsInput, Compile).value.getAbsolutePath
+      "mirrorClasspath" -> target.in(scalahostIntegration, Compile).value.getAbsolutePath
     ),
     buildInfoPackage := "scala.meta.tests"
   )
@@ -650,6 +654,7 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler ++ backwardCompat210
 }
 
+lazy val ciPlatform = if (sys.env.contains("CI_SCALA_JS")) "JS" else "JVM"
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
 def CiCommand(name: String)(commands: List[String]): Command = Command.command(name) { initState =>
   commands.foldLeft(initState) {
