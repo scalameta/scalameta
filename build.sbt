@@ -45,9 +45,16 @@ commands += CiCommand("ci-publish")(
 // from a command. Running "test" inside a command will trigger the `test` task
 // to run in all defined modules, including ones like inputs/io/dialects which
 // have no tests.
-test := testAll.in(testsJVM).value
-testOnlyJVM := testOnlyJVM.in(testsJVM).value
-testOnlyJS := testOnlyJS.in(testsJVM).value
+test := {
+  println(
+    """Welcome to the scalameta build! This is a big project with lots of tests :)
+      |Here are some useful commands that give a tight edit/run/debug cycle.
+      |- scalametaJVM/testQuick # Parser/Pretty-printer/Trees/...
+      |- contribJVM/testQuick   # contrib
+      |- scalahostNsc/test      # Semantic API tests
+      |- scalahostSbt/it:test   # sbt-scalahost tests
+      |""".stripMargin)
+}
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
@@ -303,12 +310,30 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   )
   .dependsOn(scalametaJVM)
 
+lazy val testInputs = project
+  .in(file("scalameta/tests-input"))
+  .settings(
+    description := "Sources to compile with scalahost to build a mirror for tests.",
+    sharedSettings,
+    nonPublishableSettings,
+    scalacOptions ++= {
+      val pluginJar = Keys.`package`.in(scalahostNsc, Compile).value.getAbsolutePath
+      Seq(
+        s"-Xplugin:$pluginJar",
+        "-Yrangepos",
+        s"-P:scalahost:sourcepath:${baseDirectory.in(ThisBuild).value}",
+        "-Xplugin-require:scalahost"
+      )
+    }
+  )
+
 lazy val tests = crossProject
   .in(file("scalameta/tests"))
   .settings(
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
+    test.in(Test) := test.in(Test).dependsOn(compile.in(testInputs, Compile)).value,
     testAll := {
       testOnlyJVM.value
       testOnlyJS.value
@@ -327,8 +352,15 @@ lazy val tests = crossProject
       val runIoTests = test.in(ioJS, Test).value
       val runScalametaTests = test.in(scalametaJS, Test).value
       val runContribTests = test.in(contribJS, Test).value
-    }
+    },
+    buildInfoKeys := Seq[BuildInfoKey](
+      "mirrorSourcepath" -> baseDirectory.in(ThisBuild).value,
+      "mirrorClasspath" -> target.in(IntegrationTest).value
+    ),
+    buildInfoPackage := "scala.meta.tests"
   )
+  .enablePlugins(BuildInfoPlugin)
+  .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
 lazy val testOnlyJVM = taskKey[Unit]("Run JVM tests")
