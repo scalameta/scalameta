@@ -41,7 +41,7 @@ abstract class DatabaseSuite extends FunSuite { self =>
     val global: self.g.type = self.g
   }
   import databaseOps._
-  databaseOps.config.setSemanticdbMode(SemanticdbMode.Slim)
+  config.setSemanticdbMode(SemanticdbMode.Slim)
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
