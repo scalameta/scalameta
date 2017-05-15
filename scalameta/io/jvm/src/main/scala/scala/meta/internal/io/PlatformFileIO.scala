@@ -25,14 +25,13 @@ object PlatformFileIO {
   def isDirectory(path: AbsolutePath): Boolean =
     path.toFile.isDirectory
 
-  def walk(root: AbsolutePath, walker: FileWalker): ListFiles = {
+  def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     val builder = List.newBuilder[RelativePath]
     Files.walkFileTree(root.toNIO, new SimpleFileVisitor[Path] {
       override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
         val abspath = AbsolutePath(file.toAbsolutePath)
         builder += abspath.toRelative(root)
-        if (walker.skip(abspath)) FileVisitResult.SKIP_SUBTREE
-        else FileVisitResult.CONTINUE
+        FileVisitResult.CONTINUE
       }
     })
     new ListFiles(root, builder.result())

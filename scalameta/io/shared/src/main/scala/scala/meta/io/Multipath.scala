@@ -23,10 +23,9 @@ trait Multipath {
     case _ => value.mkString(pathSeparator)
   }
   def shallow: Seq[AbsolutePath] = value.flatMap(path => FileIO.listFiles(path))
-  def deep: List[Fragment] = deep(FileWalker.default)
-  def deep(walker: FileWalker): List[Fragment] = {
+  def deep: List[Fragment] = {
     var buf = mutable.LinkedHashSet[Fragment]()
-    shallow.foreach(base => {
+    value.foreach { base =>
       def exploreJar(base: AbsolutePath): Unit = {
         if (scala.meta.internal.platform.isJS) return
         val stream = new FileInputStream(base.toFile)
@@ -49,11 +48,16 @@ trait Multipath {
         }
       }
       if (base.isDirectory) {
-        base.walk.files.foreach(relpath => buf += new Fragment(base, relpath))
+        FileIO
+          .listAllFilesRecursively(base)
+          .files
+          .foreach(relpath => buf += new Fragment(base, relpath))
       } else if (base.isFile && base.toString.endsWith(".jar")) {
         exploreJar(base)
+      } else {
+        sys.error(s"Obtained file $base. Expected directory.")
       }
-    })
+    }
     buf.toList
   }
 

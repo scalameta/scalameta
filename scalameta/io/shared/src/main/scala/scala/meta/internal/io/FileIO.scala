@@ -1,7 +1,6 @@
 package scala.meta.internal.io
 
 import scala.meta.io._
-
 import java.nio.charset.Charset
 
 object FileIO {
@@ -23,6 +22,7 @@ object FileIO {
   def isDirectory(path: AbsolutePath): Boolean =
     PlatformFileIO.isDirectory(path)
 
-  def walk(path: AbsolutePath, walker: FileWalker): ListFiles =
-    PlatformFileIO.walk(path, walker)
+  def listAllFilesRecursively(path: AbsolutePath): ListFiles =
+    PlatformFileIO.listAllFilesRecursively(path)
 }
+

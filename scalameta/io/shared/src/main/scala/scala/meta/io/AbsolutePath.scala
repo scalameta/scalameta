@@ -27,11 +27,9 @@ import scala.meta.internal.io.{FileIO, PathIO}
   def resolve(file: File): AbsolutePath = resolve(RelativePath(file))
   def resolve(path: String): AbsolutePath = resolve(RelativePath(path))
 
-  def isFile = FileIO.isFile(this)
-  def isDirectory = FileIO.isDirectory(this)
-  def listFiles = FileIO.listFiles(this)
-  def walk = FileIO.walk(this, FileWalker.default)
-  def readAllBytes = FileIO.readAllBytes(this)
+  def isFile: Boolean = FileIO.isFile(this)
+  def isDirectory: Boolean = FileIO.isDirectory(this)
+  def readAllBytes: Array[Byte] = FileIO.readAllBytes(this)
 }
 
 object AbsolutePath {
@@ -47,15 +45,4 @@ object AbsolutePath {
     if (PathIO.isAbsolutePath(path)) new AbsolutePath(path)
     else sys.error(s"not an absolute path: $path")
   }
-}
-
-@data class ListFiles(root: AbsolutePath, files: Seq[RelativePath]) extends Seq[AbsolutePath] {
-  override def length: Int = files.length
-  override def apply(idx: Int): AbsolutePath = root.resolve(files.apply(idx))
-  override def iterator: Iterator[AbsolutePath] = files.iterator.map(root.resolve)
-}
-
-@data class FileWalker(skip: AbsolutePath => Boolean)
-object FileWalker {
-  def default = new FileWalker(_ => false)
 }
