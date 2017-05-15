@@ -1,20 +1,19 @@
 package scala.meta
 package internal
-package semantic
-
-import java.nio.charset.Charset
-import org.scalameta.data._
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.util.Try
-import scala.meta.io._
-import scala.meta.internal.io._
-import scala.meta.internal.semantic.{schema => s}
-import scala.meta.{semantic => m}
-import scala.meta.{Dialect => mDialect}
-import scala.meta.inputs.{Input => mInput, Position => mPosition, Point => mPoint}
+import java.nio.charset.Charset
 
-package object meta {
+import scala.collection.immutable.Seq
+import scala.meta.inputs.{Input => mInput}
+import scala.meta.inputs.{Point => mPoint}
+import scala.meta.inputs.{Position => mPosition}
+import scala.meta.internal.semantic.{schema => s}
+import scala.meta.internal.semantic.{vfs => v}
+import scala.meta.io._
+import scala.meta.{Dialect => mDialect}
+import scala.meta.{semantic => m}
+
+package object semantic {
   implicit class XtensionDatabaseSchema(mdatabase: m.Database) {
     def toSchema(sourcepath: Sourcepath): s.Database = {
       val sentries = mdatabase.entries.map {
@@ -26,9 +25,6 @@ package object meta {
               case _ =>
                 None
             }
-          }
-          object mSymbol {
-            def unapply(msym: m.Symbol): Option[String] = Some(msym.syntax)
           }
           object mSeverity {
             def unapply(msev: m.Severity): Option[s.Message.Severity] = {
@@ -62,15 +58,16 @@ package object meta {
             sdialect.getOrElse(sys.error(s"bad database: unsupported dialect $mdialect"))
           }
           val snames = mnames.map {
-            case (mRange(srange), mSymbol(ssym)) => s.ResolvedName(Some(srange), ssym)
+            case (mRange(srange), ssym) => s.ResolvedName(Some(srange), ssym.syntax)
             case other => sys.error(s"bad database: unsupported name $other")
           }
           val smessages = mmessages.map {
-            case m.Message(mRange(srange), mSeverity(ssym), smessage) => s.Message(Some(srange), ssym, smessage)
+            case m.Message(mRange(srange), mSeverity(ssym), smessage) =>
+              s.Message(Some(srange), ssym, smessage)
             case other => sys.error(s"bad database: unsupported message $other")
           }
           val sdenots = mdenots.map {
-            case (mSymbol(ssym), mDenotation(sdenot)) => s.SymbolDenotation(ssym, Some(sdenot))
+            case (ssym, mDenotation(sdenot)) => s.SymbolDenotation(ssym.syntax, Some(sdenot))
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val ssugars = msugars.map {
