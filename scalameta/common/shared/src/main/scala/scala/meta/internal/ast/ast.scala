@@ -68,13 +68,14 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       if (rawparamss.length == 0) c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
 
       // step 2: validate the body of the class
-      val (defns, rest1) = stats.partition(_.isDef)
-      val (imports, rest2) = rest1.partition(_ match { case _: Import => true; case _ => false })
+      val (rest1, rest2) = stats.partition(_.isDef)
+      val (copies, defns) = rest1.partition(_ match { case ddef: DefDef => !isQuasi && ddef.name == TermName("copy"); case _ => false })
+      val (imports, rest3) = rest2.partition(_ match { case _: Import => true; case _ => false })
       stats1 ++= defns
       stats1 ++= imports
-      var (fieldChecks, rest3) = rest2.partition(_ match { case q"checkFields($what)" => true; case _ => false })
+      var (fieldChecks, rest4) = rest3.partition(_ match { case q"checkFields($what)" => true; case _ => false })
       fieldChecks = fieldChecks.map{ case q"checkFields($arg)" => q"_root_.org.scalameta.invariants.require($arg)" }
-      val (parentChecks, illegal) = rest3.partition(_ match { case q"checkParent($what)" => true; case _ => false })
+      val (parentChecks, illegal) = rest4.partition(_ match { case q"checkParent($what)" => true; case _ => false })
       illegal.foreach(stmt => c.abort(stmt.pos, "only invariants and definitions are allowed in @ast classes"))
 
       // step 3: calculate the parameters of the class
@@ -163,12 +164,16 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       // and there can't be multiple overloaded methods with default parameters.
       // Not a big deal though, since XXX.Quasi is an internal class.
       if (!isQuasi) {
-        val fieldDefaultss = fieldParamss.map(_.map(p => q"this.${p.name}"))
-        val copyParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
-        val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
-        val copyBody = q"$mname.apply(...$copyArgss)"
-        istats1 += q"def copy(...$copyParamss): $iname"
-        stats1 += q"def copy(...$copyParamss): $iname = $copyBody"
+        if (copies.isEmpty) {
+          val fieldDefaultss = fieldParamss.map(_.map(p => q"this.${p.name}"))
+          val copyParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
+          val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
+          val copyBody = q"$mname.apply(...$copyArgss)"
+          istats1 += q"def copy(...$copyParamss): $iname"
+          stats1 += q"def copy(...$copyParamss): $iname = $copyBody"
+        } else {
+          istats1 ++= copies
+        }
       }
 
       // step 8: create the children method

@@ -34,7 +34,11 @@ object Tree extends InternalTreeXtensions {
 @branch trait Name extends Ref { def value: String }
 object Name {
   def unapply(name: Name): Option[String] = Some(name.value)
-  @ast class Anonymous extends Name with Term.Param.Name with Type.Param.Name with Qualifier { def value = "_" }
+  @ast class Anonymous extends Term.Name with Type.Name {
+    def value = "_"
+    def copy(value: String): Name.Anonymous = { require(value == "_"); Name.Anonymous() }
+    checkParent(ParentChecks.NameAnonymous)
+  }
   @ast class Indeterminate(value: Predef.String @nonEmpty) extends Name with Qualifier
   @branch trait Qualifier extends Ref
 }
@@ -48,7 +52,7 @@ object Term {
   @ast class Super(thisp: scala.meta.Name.Qualifier, superp: scala.meta.Name.Qualifier) extends Term.Ref {
     checkFields(!thisp.is[Term.This] && !superp.is[Term.This])
   }
-  @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat with Param.Name with scala.meta.Name.Qualifier
+  @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat with scala.meta.Name.Qualifier
   @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: List[Lit] @nonEmpty, args: List[Term]) extends Term {
     checkFields(parts.length == args.length + 1)
@@ -99,10 +103,7 @@ object Term {
   @ast class Repeated(expr: Term) extends Term {
     checkParent(ParentChecks.TermRepeated)
   }
-  @ast class Param(mods: List[Mod], name: Param.Name, decltpe: Option[Type], default: Option[Term]) extends Member
-  object Param {
-    @branch trait Name extends scala.meta.Name
-  }
+  @ast class Param(mods: List[Mod], name: Name, decltpe: Option[Type], default: Option[Term]) extends Member.Term
   def fresh(): Term.Name = fresh("fresh")
   def fresh(prefix: String): Term.Name = Term.Name(prefix + Fresh.nextId())
 }
@@ -110,7 +111,7 @@ object Term {
 @branch trait Type extends Tree
 object Type {
   @branch trait Ref extends Type with scala.meta.Ref
-  @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref with Pat.Type.Ref with Param.Name with scala.meta.Name.Qualifier
+  @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref with Pat.Type.Ref with scala.meta.Name.Qualifier
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref with Pat.Type.Ref {
     checkFields(qual.isPath || qual.is[Term.Super] || qual.is[Term.Ref.Quasi])
   }
@@ -144,14 +145,11 @@ object Type {
     checkParent(ParentChecks.TypeRepeated)
   }
   @ast class Param(mods: List[Mod],
-                   name: Param.Name,
+                   name: Name,
                    tparams: List[Type.Param],
                    tbounds: Type.Bounds,
                    vbounds: List[Type],
-                   cbounds: List[Type]) extends Member
-  object Param {
-    @branch trait Name extends scala.meta.Name
-  }
+                   cbounds: List[Type]) extends Member.Type
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
   implicit class XtensionType(tpe: Type) {

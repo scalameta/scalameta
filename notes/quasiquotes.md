@@ -146,13 +146,13 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Term Param     | `param"..$mods $paramname: $tpeopt = $expropt"`
+ Term Param     | `param"..$mods $name: $tpeopt = $expropt"`
 
 ### Type Parameters (meta.Type.Param)
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Type Param     | `tparam"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
+ Type Param     | `tparam"..$mods $tname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
 
 ## Constructor References (meta.Ctor.Ref and meta.Term)
 
@@ -265,8 +265,8 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Member              | `$member`     | `q`
  meta.Mod                 | `$mod`        | `mod`
  meta.Mod.Annot           | `$annot`      | `mod`
- meta.Name.Indeterminate  | `$iname`      | Can't be constructed, only extracted from `importee"..."` and `mod"..."`
- meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
+ meta.Name.Indeterminate  | `$iname`      | Can't be constructed, only extracted
+ meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only extracted
  meta.Pat                 | `$pat`        | `p`
  meta.Pat.Var.Term        | `$pname`      | `p`
  meta.Pat.Var.Type        | `$ptname`     | `pt`
@@ -279,18 +279,16 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Term.Name           | `$name`       | `q`
  meta.Term.Ref            | `$ref`        | `q`
  meta.Term.Param          | `$param`      | `param`
- meta.Term.Param.Name     | `$paramname`  | `q`, anonymous names can't be constructed, only extracted from `param`
  meta.Type                | `$tpe`        | `t`
  meta.Type.Name           | `$tname`      | `t`
  meta.Type.Param          | `$tparam`     | `tparam`
- meta.Type.Param.Name     | `$tparamname` | `t`, anonymous names can't be constructed, only extracted from `tparam`
                           | `$lit`        | `q`
 
 ### Suffixes
 
- Suffix | Wrapped Type  | Example
---------|---------------|-----------------------------
- -s     | `List[_]`      | `exprs: List[meta.Term]`
+ Suffix | Wrapped Type    | Example
+--------|-----------------|-----------------------------
+ -s     | `List[_]`       | `exprs: List[meta.Term]`
  -ss    | `List[List[_]]` | `exprss: List[List[meta.Term]]`
- -opt   | `Option[_]`   | `expropt: Option[meta.Term]`
- -nel   | `_`           | `tpesnel: List[meta.Type]`
+ -opt   | `Option[_]`     | `expropt: Option[meta.Term]`
+ -nel   | `_`             | `tpesnel: List[meta.Type]`

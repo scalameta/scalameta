@@ -302,7 +302,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Term.Name
       |scala.meta.Term.New
       |scala.meta.Term.Param
-      |scala.meta.Term.Param.Name
       |scala.meta.Term.PartialFunction
       |scala.meta.Term.Placeholder
       |scala.meta.Term.Ref
@@ -330,7 +329,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Type.Name
       |scala.meta.Type.Or
       |scala.meta.Type.Param
-      |scala.meta.Type.Param.Name
       |scala.meta.Type.Placeholder
       |scala.meta.Type.Project
       |scala.meta.Type.Ref

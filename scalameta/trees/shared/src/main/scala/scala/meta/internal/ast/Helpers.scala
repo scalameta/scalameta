@@ -376,5 +376,15 @@ object Helpers {
       def extractXml = parent.is[Pat.Xml] && destination == "args"
       bindRhs || extractArgs || extractInfixArgs || extractInterpolate || extractXml
     }
+
+    def NameAnonymous(tree: Name.Anonymous, parent: Tree, destination: String): Boolean = {
+      def termParamName = parent.is[Term.Param] && destination == "name"
+      def typeParamName = parent.is[Type.Param] && destination == "name"
+      def privateWithin = parent.is[Mod.Private] && destination == "within"
+      def protectedWithin = parent.is[Mod.Protected] && destination == "within"
+      def thisQualifier = parent.is[Term.This]
+      def superQualifier = parent.is[Term.Super]
+      termParamName || typeParamName || privateWithin || protectedWithin || thisQualifier || superQualifier
+    }
   }
 }

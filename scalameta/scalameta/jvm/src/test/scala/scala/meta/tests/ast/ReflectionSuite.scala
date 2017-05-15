@@ -14,8 +14,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 27)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 303)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 25)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 301)
   }
 
   test("If") {
@@ -87,12 +87,10 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.Term
       |scala.meta.Term.Name
       |scala.meta.Term.Param
-      |scala.meta.Term.Param.Name
       |scala.meta.Term.Ref
       |scala.meta.Type
       |scala.meta.Type.Bounds
       |scala.meta.Type.Name
-      |scala.meta.Type.Param.Name
     """.trim.stripMargin)
   }
 }

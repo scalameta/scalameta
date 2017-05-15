@@ -2791,16 +2791,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         // Quasi param recognised in primary constructor
         q.become[Term.Param.Quasi]
       case _ =>
-        val name = termName() match {
-          case q: Term.Name.Quasi => q.become[Term.Param.Name.Quasi]
-          case x => x
-        }
+        val name = termName()
         name match {
-          case q: Term.Param.Name.Quasi if endParamQuasi =>
+          case q: Term.Name.Quasi if endParamQuasi =>
             q.become[Term.Param.Quasi]
           case _ =>
             val tpt =
-              if (token.isNot[Colon] && name.is[Term.Param.Name.Quasi])
+              if (token.isNot[Colon] && name.is[Term.Name.Quasi])
                 None
               else {
                 accept[Colon]
@@ -2863,7 +2860,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     val nameopt =
       if (token.is[Ident]) typeName()
-      else if (token.is[Unquote]) unquote[Type.Param.Name]
+      else if (token.is[Unquote]) unquote[Type.Name]
       else if (token.is[Underscore]) { next(); atPos(in.prevTokenPos, in.prevTokenPos)(Name.Anonymous()) }
       else syntaxError("identifier or `_' expected", at = token)
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
