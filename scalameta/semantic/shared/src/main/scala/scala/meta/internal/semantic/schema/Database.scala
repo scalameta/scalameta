@@ -27,7 +27,7 @@ import org.scalameta.data._
       case (spath, sentry) =>
         // TODO: Would it make sense to support multiclasspaths?
         // One use-case for this would be in-place updates of semanticdb files.
-        val base = AbsolutePath(classpath.shallow.head)
+        val base = classpath.shallow.head
         val vpath = v.Paths.scalaToSemanticdb(spath)
         val fragment = Fragment(base, vpath)
         v.Entry.InMemory(fragment, sentry.toByteArray)

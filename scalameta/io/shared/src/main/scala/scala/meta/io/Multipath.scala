@@ -2,54 +2,57 @@ package scala.meta
 package io
 
 import scala.language.implicitConversions
+
 import java.net._
 import java.io._
 import java.util.zip._
+
 import org.scalameta.adt._
 import scala.collection.mutable
+import scala.meta.internal.io.FileIO
+import scala.meta.internal.io.PathIO
 import scala.meta.internal.io.PathIO.pathSeparator
 
-@root trait Multipath {
-  def value: String
-  def shallow: List[File] = value.split(pathSeparator).map(s => new File(s)).toList
-  def deep: List[Fragment] = {
-    if (scala.meta.internal.platform.isJS) return Nil
-    var buf = mutable.ListBuffer[Fragment]()
-    shallow.distinct.foreach(base => {
-      def exploreDir(base: File): Unit = {
-        def loop(file: File): Unit = {
-          if (file.isDirectory) {
-            val files = file.listFiles
-            if (files != null) files.foreach(loop)
-          } else {
-            val name = AbsolutePath(file).toRelative(base)
-            buf += Fragment(AbsolutePath(base), name)
-          }
-        }
-        loop(base)
-      }
-      def exploreJar(base: File): Unit = {
-        val stream = new FileInputStream(base)
+import org.scalameta.logger
+
+@root
+trait Multipath {
+  def value: Seq[AbsolutePath]
+  def syntax: String = value match {
+    case cwd :: Nil if cwd == PathIO.workingDirectory => "\".\""
+    case _ => value.mkString(pathSeparator)
+  }
+  def shallow: Seq[AbsolutePath] = value.flatMap(path => FileIO.listFiles(path))
+  def deep: List[Fragment] = deep(FileWalker.default)
+  def deep(walker: FileWalker): List[Fragment] = {
+    var buf = mutable.LinkedHashSet[Fragment]()
+    shallow.foreach(base => {
+      def exploreJar(base: AbsolutePath): Unit = {
+        if (scala.meta.internal.platform.isJS) return
+        val stream = new FileInputStream(base.toFile)
         try {
           val zip = new ZipInputStream(stream)
-          var entry = zip.getNextEntry()
+          var entry = zip.getNextEntry
           while (entry != null) {
             if (!entry.getName.endsWith("/")) {
               val name = RelativePath(entry.getName.stripPrefix("/"))
-              buf += Fragment(AbsolutePath(base), name)
+              buf += new Fragment(base, name)
             }
-            entry = zip.getNextEntry()
+            entry = zip.getNextEntry
           }
         } catch {
           case ex: IOException =>
-            // NOTE: If we fail to read the zip file, this shouldn't crash exploration.
-            // We may want to revisit this decision later.
+          // NOTE: If we fail to read the zip file, this shouldn't crash exploration.
+          // We may want to revisit this decision later.
         } finally {
           stream.close()
         }
       }
-      if (base.isDirectory) exploreDir(base)
-      else if (base.isFile && base.getName.endsWith(".jar")) exploreJar(base)
+      if (base.isDirectory) {
+        base.walk.files.foreach(relpath => buf += new Fragment(base, relpath))
+      } else if (base.isFile && base.toString.endsWith(".jar")) {
+        exploreJar(base)
+      }
     })
     buf.toList
   }
@@ -63,20 +66,30 @@ import scala.meta.internal.io.PathIO.pathSeparator
   }
 }
 
-@leaf class Classpath(value: String) extends Multipath {
-  def syntax: String = value
-  def structure: String = s"""Classpath("$value")"""
-  override def toString: String = syntax
+@leaf
+class Classpath(value: Seq[AbsolutePath]) extends Multipath {
+  def structure: String = s"""Classpath("$syntax")"""
 }
 // NOTE: This empty companion object is necessary for some reason to avoid a
 // "classnotfound exception: Classpath$". It seems to be a bug in the @leaf
 // macro annotation.
-object Classpath
+object Classpath {
+  def apply(value: String): Classpath = {
+    new Classpath(value.split(pathSeparator).map(AbsolutePath.apply))
+  }
+}
 
-@leaf class Sourcepath(value: String) extends Multipath {
-  def syntax: String = value
-  def structure: String = s"""Sourcepath("$value")"""
-  override def toString: String = syntax
+@leaf
+class Sourcepath(value: Seq[AbsolutePath]) extends Multipath {
+  def structure: String = s"""Sourcepath("$syntax")"""
 }
 // NOTE: same comment as for Classpath.
-object Sourcepath
+object Sourcepath {
+  def workingDirectory = new Sourcepath(List(PathIO.workingDirectory))
+  def apply(path: AbsolutePath): Sourcepath =
+    new Sourcepath(List(path))
+  def apply(value: String): Sourcepath = {
+    if (value == ".") workingDirectory
+    else new Sourcepath(value.split(pathSeparator).map(AbsolutePath.apply))
+  }
+}

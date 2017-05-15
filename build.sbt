@@ -48,7 +48,8 @@ commands += CiCommand("ci-publish")(
 test := {
   println(
     """Welcome to the scalameta build! This is a big project with lots of tests :)
-      |Here are some useful commands that give a tight edit/run/debug cycle.
+      |Running "test" may take a really long time. Here are some other useful commands
+      |that give a tighter edit/run/debug cycle.
       |- scalametaJVM/testQuick # Parser/Pretty-printer/Trees/...
       |- contribJVM/testQuick   # contrib
       |- scalahostNsc/test      # Semantic API tests
@@ -310,7 +311,7 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   )
   .dependsOn(scalametaJVM)
 
-lazy val testInputs = project
+lazy val testsInput = project
   .in(file("scalameta/tests-input"))
   .settings(
     description := "Sources to compile with scalahost to build a mirror for tests.",
@@ -333,7 +334,7 @@ lazy val tests = crossProject
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
-    test.in(Test) := test.in(Test).dependsOn(compile.in(testInputs, Compile)).value,
+    test.in(Test) := test.in(Test).dependsOn(compile.in(testsInput, Compile)).value,
     testAll := {
       testOnlyJVM.value
       testOnlyJS.value
@@ -354,8 +355,8 @@ lazy val tests = crossProject
       val runContribTests = test.in(contribJS, Test).value
     },
     buildInfoKeys := Seq[BuildInfoKey](
-      "mirrorSourcepath" -> baseDirectory.in(ThisBuild).value,
-      "mirrorClasspath" -> target.in(IntegrationTest).value
+      "mirrorSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
+      "mirrorClasspath" -> target.in(testsInput, Compile).value.getAbsolutePath
     ),
     buildInfoPackage := "scala.meta.tests"
   )

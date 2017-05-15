@@ -1,7 +1,10 @@
 package scala.meta.internal
 package scalahost
 
+import scala.meta.internal.io.PathIO
 import scala.meta.internal.semantic.SemanticdbMode
+import scala.meta.io.AbsolutePath
+import scala.meta.io.RelativePath
 import scala.meta.io.Sourcepath
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
@@ -24,7 +27,10 @@ class ScalahostPlugin(val global: Global)
     }
     options.foreach {
       case SetSourcepath(path) =>
-        config.setSourcepath(new Sourcepath(path))
+        val abspath =
+          if (PathIO.isAbsolutePath(path)) AbsolutePath(path)
+          else PathIO.workingDirectory.resolve(RelativePath(path))
+        config.setSourcepath(Sourcepath(abspath))
       case SetSemanticdb(SemanticdbMode(mode)) =>
         config.setSemanticdbMode(mode)
       case SetSemanticdb(els) =>

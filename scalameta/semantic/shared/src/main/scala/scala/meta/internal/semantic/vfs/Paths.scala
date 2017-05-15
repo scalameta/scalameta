@@ -12,7 +12,7 @@ object Paths {
   private val scalaSuffix = ".scala"
 
   def isSemanticdb(path: RelativePath): Boolean = {
-    path.toString.startsWith(semanticDbPrefix) &&
+    path.toString.contains(semanticDbPrefix) &&
     path.toString.endsWith(semanticDbSuffix)
   }
 

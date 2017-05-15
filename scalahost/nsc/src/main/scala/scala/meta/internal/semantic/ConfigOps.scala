@@ -10,7 +10,7 @@ case class ScalahostConfig(sourcepath: Sourcepath, semanticdb: SemanticdbMode) {
       s"-P:${ScalahostPlugin.name}:semanticdb:$semanticdb"
 }
 object ScalahostConfig {
-  def default = ScalahostConfig(new Sourcepath(sys.props("user.dir")), SemanticdbMode.Fat)
+  def default = ScalahostConfig(Sourcepath.workingDirectory, SemanticdbMode.Fat)
 }
 
 sealed abstract class SemanticdbMode {
