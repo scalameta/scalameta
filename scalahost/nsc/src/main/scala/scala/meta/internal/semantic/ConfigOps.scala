@@ -3,6 +3,7 @@ package semantic
 
 import scala.meta.internal.scalahost.ScalahostPlugin
 import scala.meta.io._
+import scala.meta.internal.scalahost.ScalahostPlugin.name
 
 case class ScalahostConfig(sourcepath: Sourcepath, semanticdb: SemanticdbMode) {
   def syntax: String =
