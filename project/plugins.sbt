@@ -8,7 +8,8 @@ addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.3")
 
 addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")
 
-addSbtPlugin("com.lihaoyi" % "scalatex-sbt-plugin" % "0.3.7")
+resolvers += Resolver.bintrayIvyRepo("scalameta", "sbt-plugins") // only needed for scalatex 0.3.8-pre
+addSbtPlugin("com.lihaoyi" % "scalatex-sbt-plugin" % "0.3.8-pre")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
 
