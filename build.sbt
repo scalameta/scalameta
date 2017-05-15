@@ -28,7 +28,7 @@ unidocSettings
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
   s"wow $ciScalaVersion" ::
-    "testsJVM/test" ::
+    "testsJVM/testAll" :: // runs both JS and JVM tests
     ci("doc") :: // skips 2.10 projects
     s
 }
@@ -45,7 +45,7 @@ commands += CiCommand("ci-publish")(
 // from a command. Running "test" inside a command will trigger the `test` task
 // to run in all defined modules, including ones like inputs/io/dialects which
 // have no tests.
-test := test.in(testsJVM).value
+test := testAll.in(testsJVM).value
 testOnlyJVM := testOnlyJVM.in(testsJVM).value
 testOnlyJS := testOnlyJS.in(testsJVM).value
 packagedArtifacts := Map.empty
@@ -309,7 +309,7 @@ lazy val tests = crossProject
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
-    test := {
+    testAll := {
       testOnlyJVM.value
       testOnlyJS.value
     },
@@ -333,6 +333,7 @@ lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
 lazy val testOnlyJVM = taskKey[Unit]("Run JVM tests")
 lazy val testOnlyJS = taskKey[Unit]("Run Scala.js tests")
+lazy val testAll = taskKey[Unit]("Run JVM and Scala.js tests")
 
 lazy val contrib = crossProject
   .in(file("scalameta/contrib"))
