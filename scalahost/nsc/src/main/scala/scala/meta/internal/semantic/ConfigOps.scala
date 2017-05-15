@@ -27,5 +27,13 @@ object SemanticdbMode {
 trait ConfigOps { self: DatabaseOps =>
   val SetSemanticdb = "semanticdb:(.*)".r
   val SetSourcepath = "sourcepath:(.*)".r
+
   var config: ScalahostConfig = ScalahostConfig.default
+  // Hack to support config.setSourcepath().
+  implicit class XtensionScalahostConfig(ignored: ScalahostConfig) {
+    def setSourcepath(sourcepath: Sourcepath): Unit =
+      config = config.copy(sourcepath = sourcepath)
+    def setSemanticdbMode(mode: SemanticdbMode): Unit =
+      config = config.copy(semanticdb = mode)
+  }
 }

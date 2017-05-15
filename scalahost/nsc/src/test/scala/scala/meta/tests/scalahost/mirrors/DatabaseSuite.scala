@@ -12,6 +12,7 @@ import scala.compat.Platform.EOL
 import scala.{meta => m}
 import scala.meta.io._
 import scala.meta.internal.semantic.DatabaseOps
+import scala.meta.internal.semantic.SemanticdbMode
 
 abstract class DatabaseSuite extends FunSuite { self =>
   private def test(code: String)(fn: => Unit): Unit = {
@@ -40,14 +41,14 @@ abstract class DatabaseSuite extends FunSuite { self =>
     val global: self.g.type = self.g
   }
   import databaseOps._
+  databaseOps.config.setSemanticdbMode(SemanticdbMode.Slim)
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
     finally writer.close()
-    databaseOps.config =
-      databaseOps.config.copy(sourcepath = Sourcepath(javaFile.getParentFile.getAbsolutePath))
+    databaseOps.config.setSourcepath(Sourcepath(javaFile.getParentFile.getAbsolutePath))
     val run = new g.Run
     val abstractFile = AbstractFile.getFile(javaFile)
     val sourceFile = g.getSourceFile(abstractFile)

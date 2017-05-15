@@ -24,9 +24,9 @@ class ScalahostPlugin(val global: Global)
     }
     options.foreach {
       case SetSourcepath(path) =>
-        config = config.copy(sourcepath = new Sourcepath(path))
+        config.setSourcepath(new Sourcepath(path))
       case SetSemanticdb(SemanticdbMode(mode)) =>
-        config = config.copy(semanticdb = mode)
+        config.setSemanticdbMode(mode)
       case SetSemanticdb(els) =>
         err(s"Unknown semanticdb $els. Expected one of: ${SemanticdbMode.all.mkString(", ")} ")
       case els =>
