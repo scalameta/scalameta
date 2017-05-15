@@ -12,6 +12,8 @@ import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
 import scala.meta.{semantic => m}
 
+import org.scalameta.logger
+
 @data class Database(entries: Seq[(Input, Attributes)]) extends Mirror {
   def database = this
 
@@ -39,7 +41,7 @@ object Database {
   def load(path: RelativePath, bytes: Array[Byte]): Database = {
     val sattrs = s.Attributes.parseFrom(bytes)
     val sdb = new s.Database(Seq(path -> sattrs))
-    val mdb = sdb.toMeta(Sourcepath(""))
+    val mdb = sdb.toMeta(Sourcepath.workingDirectory)
     mdb
   }
 }

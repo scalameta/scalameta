@@ -10,11 +10,14 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 
 object PlatformFileIO {
+  def readAllBytes(path: AbsolutePath): Array[Byte] =
+    Files.readAllBytes(path.toNIO)
+
   def slurp(path: AbsolutePath, charset: Charset): String =
     scala.io.Source.fromFile(path.toFile)(scala.io.Codec(charset)).mkString
 
   def listFiles(path: AbsolutePath): ListFiles =
-    new ListFiles(path, path.toFile.list().map(RelativePath.apply))
+    new ListFiles(path, Option(path.toFile.list()).toList.flatten.map(RelativePath.apply))
 
   def isFile(path: AbsolutePath): Boolean =
     path.toFile.isFile

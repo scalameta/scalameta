@@ -5,6 +5,9 @@ import scala.meta.io._
 import java.nio.charset.Charset
 
 object FileIO {
+  def readAllBytes(path: AbsolutePath): Array[Byte] =
+    PlatformFileIO.readAllBytes(path)
+
   def slurp(path: AbsolutePath, charset: Charset): String =
     PlatformFileIO.slurp(path, charset)
 

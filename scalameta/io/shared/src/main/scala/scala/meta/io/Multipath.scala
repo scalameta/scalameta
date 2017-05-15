@@ -69,6 +69,7 @@ trait Multipath {
 @leaf
 class Classpath(value: Seq[AbsolutePath]) extends Multipath {
   def structure: String = s"""Classpath("$syntax")"""
+  override def toString: String = syntax
 }
 // NOTE: This empty companion object is necessary for some reason to avoid a
 // "classnotfound exception: Classpath$". It seems to be a bug in the @leaf
@@ -82,6 +83,7 @@ object Classpath {
 @leaf
 class Sourcepath(value: Seq[AbsolutePath]) extends Multipath {
   def structure: String = s"""Sourcepath("$syntax")"""
+  override def toString: String = syntax
 }
 // NOTE: same comment as for Classpath.
 object Sourcepath {

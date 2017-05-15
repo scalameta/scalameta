@@ -31,6 +31,7 @@ import scala.meta.internal.io.{FileIO, PathIO}
   def isDirectory = FileIO.isDirectory(this)
   def listFiles = FileIO.listFiles(this)
   def walk = FileIO.walk(this, FileWalker.default)
+  def readAllBytes = FileIO.readAllBytes(this)
 }
 
 object AbsolutePath {
