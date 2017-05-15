@@ -107,11 +107,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def parseTermParam(): Term.Param = parseRule(_.param(ownerIsCase = false, ownerIsType = true, isImplicit = false))
   def parseType(): Type = parseRule(_.typ())
   def parseTypeParam(): Type.Param = parseRule(_.typeParam(ownerIsType = true, ctxBoundsAllowed = true))
-  def parsePat(): Pat = parseRule(_.pattern()).require[Pat]
-  def parseQuasiquotePat(): Pat = parseRule(_.quasiquotePattern()).require[Pat]
+  def parsePat(): Pat = parseRule(_.pattern())
+  def parseQuasiquotePat(): Pat = parseRule(_.quasiquotePattern())
   def parseUnquotePat(): Pat = parseRule(_.unquotePattern())
-  def parsePatArg(): Pat.Arg = parseRule(_.argumentPattern())
-  def parseQuasiquotePatArg(): Pat.Arg = parseRule(_.quasiquotePatternArg())
   def parsePatType(): Pat.Type = parseRule(_.patternTyp())
   def parseQuasiquotePatType(): Pat.Type = parseRule(_.quasiquotePatternTyp())
   def parseCase(): Case = parseRule{parser => parser.accept[KwCase]; parser.caseClause()}
@@ -1517,7 +1515,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     interpolate[Pat, Pat.Interpolate](unquotePattern _, Pat.Interpolate.apply _)
 
   def xmlPat(): Pat.Xml =
-    interpolate[Pat.Arg, Pat.Xml](unquoteXmlPattern _, (_, parts, args) => Pat.Xml.apply(parts, args))
+    interpolate[Pat, Pat.Xml](unquoteXmlPattern _, (_, parts, args) => Pat.Xml.apply(parts, args))
 
 /* ------------- NEW LINES ------------------------------------------------- */
 
@@ -2193,7 +2191,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def caseClause(): Case = atPos(in.prevTokenPos, auto) {
     require(token.isNot[KwCase] && debug(token))
-    Case(pattern().require[Pat], guard(), {
+    Case(pattern(), guard(), {
       accept[RightArrow]
       val start = in.tokenPos
       def end = in.prevTokenPos
@@ -2288,8 +2286,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val rhs = expr()
 
     val head = {
-      if (hasEq) atPos(startPos, auto)(Enumerator.Val(pat.require[Pat], rhs))
-      else atPos(startPos, auto)(Enumerator.Generator(pat.require[Pat], rhs))
+      if (hasEq) atPos(startPos, auto)(Enumerator.Val(pat, rhs))
+      else atPos(startPos, auto)(Enumerator.Generator(pat, rhs))
     }
     val tail = {
       def loop(): List[Enumerator] = {
@@ -2320,17 +2318,17 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
      *  SeqPatterns ::= SeqPattern { `,' SeqPattern }
      *  }}}
      */
-    def patterns(): List[Pat.Arg] = commaSeparated(pattern())
+    def patterns(): List[Pat] = commaSeparated(pattern())
 
     /** {{{
      *  Pattern  ::=  Pattern1 { `|' Pattern1 }
      *  SeqPattern ::= SeqPattern1 { `|' SeqPattern1 }
      *  }}}
      */
-    def pattern(): Pat.Arg = {
-      def loop(pat: Pat.Arg): Pat.Arg =
+    def pattern(): Pat = {
+      def loop(pat: Pat): Pat =
         if (!isRawBar) pat
-        else { next(); atPos(pat, auto)(Pat.Alternative(pat.require[Pat], pattern().require[Pat])) }
+        else { next(); atPos(pat, auto)(Pat.Alternative(pat, pattern())) }
       loop(pattern1())
     }
 
@@ -2348,20 +2346,24 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     }
 
-    def quasiquotePattern(): Pat.Arg = {
-      topLevelNamesToPats(pattern())
+    def quasiquotePattern(): Pat = {
+      topLevelNamesToPats(argumentPattern())
     }
 
     def unquotePattern(): Pat = {
-      dropAnyBraces(pattern().require[Pat])
+      dropAnyBraces(pattern())
     }
 
-    def unquoteXmlPattern(): Pat.Arg = {
-      dropAnyBraces(pattern().require[Pat.Arg])
+    def unquoteXmlPattern(): Pat = {
+      dropAnyBraces(pattern())
     }
 
-    def quasiquotePatternArg(): Pat.Arg = {
-      topLevelNamesToPats(argumentPattern())
+    private def isLegitimateSeqWildcard = {
+      def isUnderscore = token.is[Underscore]
+      def isStar = isIdentOf("*")
+      def isArglistEnd = token.is[RightParen] || token.is[RightBrace] || token.is[EOF]
+      def tokensMatched = isUnderscore && ahead(isStar && ahead(isArglistEnd))
+      isSequenceOK && tokensMatched
     }
 
     /** {{{
@@ -2373,7 +2375,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
      *                |  [SeqPattern2]
      *  }}}
      */
-    def pattern1(): Pat.Arg = autoPos {
+    def pattern1(): Pat = autoPos {
       val p = pattern2()
       if (token.isNot[Colon]) p
       else {
@@ -2381,18 +2383,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case p: Pat.Quasi =>
             nextOnce()
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
-          case p: Pat.Var.Term if dialect.allowColonForExtractorVarargs && isColonWildcardStar =>
+          case p: Pat.Var.Term if dialect.allowColonForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
             nextOnce()
-            val wildcard = autoPos({ nextTwice(); Pat.Arg.SeqWildcard() })
-            Pat.Bind(p, wildcard)
+            val seqWildcard = autoPos({ nextTwice(); Pat.SeqWildcard() })
+            Pat.Bind(p, seqWildcard)
           case p: Pat.Var.Term if !dialect.allowColonForExtractorVarargs && isColonWildcardStar =>
             syntaxError(s"$dialect does not support var: _*", at = p)
           case p: Pat.Var.Term =>
             nextOnce()
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
-          case p: Pat.Wildcard if dialect.allowColonForExtractorVarargs && isColonWildcardStar =>
+          case p: Pat.Wildcard if dialect.allowColonForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
             nextThrice()
-            Pat.Arg.SeqWildcard()
+            Pat.SeqWildcard()
           case p: Pat.Wildcard =>
             nextOnce()
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
@@ -2409,23 +2411,27 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
      *                |   SeqPattern3
      *  }}}
      */
-    def pattern2(): Pat.Arg = autoPos {
+    def pattern2(): Pat = autoPos {
       val p = pattern3()
       if (token.isNot[At]) p
       else p match {
         case p: Pat.Quasi =>
           next()
           val lhs = p.become[Pat.Var.Term.Quasi]
-          val rhs = pattern3() match {
-            case q @ Pat.Quasi(0, _) => q.become[Pat.Arg.Quasi]
-            case p => p
-          }
+          val rhs = pattern3()
           Pat.Bind(lhs, rhs)
         case p: Term.Name =>
           syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)", at = p)
+        case p: Pat.Var.Term if dialect.allowAtForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
+          nextOnce()
+          val seqWildcard = autoPos({ nextTwice(); Pat.SeqWildcard() })
+          Pat.Bind(p, seqWildcard)
         case p: Pat.Var.Term =>
           next()
           Pat.Bind(p, pattern3())
+        case p: Pat.Wildcard if dialect.allowAtForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
+          nextThrice()
+          Pat.SeqWildcard()
         case p: Pat.Wildcard =>
           next()
           pattern3()
@@ -2439,25 +2445,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
      *                |  SimplePattern {Id [nl] SimplePattern}
      *  }}}
      */
-    def pattern3(): Pat.Arg = {
+    def pattern3(): Pat = {
       val ctx = patInfixContext
       val lhs = simplePattern(badPattern3)
       val base = ctx.stack
-      // See SI-3189, SI-4832 for motivation. Cf SI-3480 for counter-motivation.
-      def isCloseDelim = token match {
-        case RightBrace() => isXML
-        case RightParen() => !isXML
-        case _      => false
-      }
-      def checkWildStar: Option[Pat.Arg.SeqWildcard] = lhs match {
-        case Pat.Wildcard() if dialect.allowAtForExtractorVarargs && isSequenceOK && isRawStar =>
-          // TODO: used to be Star(lhs) | EmptyTree, why start had param?
-          next()
-          if (isCloseDelim) Some(atPos(lhs, auto)(Pat.Arg.SeqWildcard()))
-          else None
-        case _ =>
-          None
-      }
       def loop(rhs: ctx.Rhs): ctx.Rhs = {
         val op = if (isIdentExcept("|") || token.is[Unquote]) Some(termName()) else None
         val lhs1 = ctx.reduceStack(base, rhs, rhs, op)
@@ -2468,10 +2459,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             val rhs1 = simplePattern(badPattern3)
             loop(rhs1)
           case None =>
-            lhs1 // TODO: more rigorous type discipline
+            lhs1
         }
       }
-      checkWildStar getOrElse loop(lhs) // TODO: more rigorous type discipline
+      loop(lhs)
     }
 
     def badPattern3(token: Token): Nothing = {
@@ -2550,6 +2541,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case (_, select: Term.Select)             => select
           case _                                    => unreachable(debug(token, token.structure, sid, sid.structure))
         }
+      case Underscore() if isLegitimateSeqWildcard =>
+        nextTwice()
+        Pat.SeqWildcard()
       case Underscore() =>
         next()
         Pat.Wildcard()
@@ -2560,10 +2554,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case Xml.Start() =>
         xmlPat()
       case LeftParen() =>
-        val patterns = inParens(if (token.is[RightParen]) Nil else noSeq.patterns()).map {
-          case q: Pat.Arg.Quasi => q.become[Pat.Quasi]
-          case p => p.require[Pat]
-        }
+        val patterns = inParens(if (token.is[RightParen]) Nil else noSeq.patterns())
         makeTuple[Pat](patterns, () => Lit.Unit(()), Pat.Tuple(_))
       case _ =>
         onError(token)
@@ -2595,15 +2586,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def exprSimpleType() = outPattern.simpleType()
 
   /** Default entry points into some pattern contexts. */
-  def pattern(): Pat.Arg = noSeq.pattern()
-  def quasiquotePattern(): Pat.Arg = noSeq.quasiquotePattern()
+  def pattern(): Pat = noSeq.pattern()
+  def quasiquotePattern(): Pat = noSeq.quasiquotePattern()
   def unquotePattern(): Pat = noSeq.unquotePattern()
-  def unquoteXmlPattern(): Pat.Arg = xmlSeqOK.unquoteXmlPattern()
-  def quasiquotePatternArg(): Pat.Arg = seqOK.quasiquotePatternArg()
-  def seqPatterns(): List[Pat.Arg] = seqOK.patterns()
-  def xmlSeqPatterns(): List[Pat.Arg] = xmlSeqOK.patterns() // Called from xml parser
-  def argumentPattern(): Pat.Arg = seqOK.pattern()
-  def argumentPatterns(): List[Pat.Arg] = inParens {
+  def unquoteXmlPattern(): Pat = xmlSeqOK.unquoteXmlPattern()
+  def seqPatterns(): List[Pat] = seqOK.patterns()
+  def xmlSeqPatterns(): List[Pat] = xmlSeqOK.patterns() // Called from xml parser
+  def argumentPattern(): Pat = seqOK.pattern()
+  def argumentPatterns(): List[Pat] = inParens {
     if (token.is[RightParen]) Nil
     else seqPatterns()
   }
@@ -3054,7 +3044,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (!mods.has[Mod.Override])
       rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     next()
-    val lhs: List[Pat] = commaSeparated(noSeq.pattern2().require[Pat]).map {
+    val lhs: List[Pat] = commaSeparated(noSeq.pattern2()).map {
       case q: Pat.Quasi => q.become[Pat.Var.Term.Quasi]
       case name: Term.Name => atPos(name, name)(Pat.Var.Term(name))
       case pat => pat

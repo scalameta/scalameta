@@ -79,7 +79,6 @@ object RoundtripSuite {
     // case p"$lit" => p"$lit"
     case p"${lit: Lit}" => p"${lit: Lit}"
     case p"case $pat if $expropt => $expr" => p"case $pat if $expropt => $expr"
-    case parg"${pat: Pat}" => parg"${pat: Pat}"
     case pt"${name: Pat.Var.Type}" => pt"${name: Pat.Var.Type}"
     case pt"$ref.$tname" => pt"$ref.$tname"
     case pt"$ptpe#$tname" => pt"$ptpe#$tname"

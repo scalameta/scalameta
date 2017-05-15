@@ -451,18 +451,6 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("p\"_*\"") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      p"_*"
-    """) === """
-      |<macro>:4: illegal start of simple pattern
-      |      p"_*"
-      |          ^
-    """.trim.stripMargin)
-  }
-
   test("unquote Seq[T] into Option[Seq[T]]") {
     assert(typecheckError("""
       import scala.meta._
@@ -839,5 +827,11 @@ class ErrorSuite extends FunSuite {
     import scala.meta._
     val t = t"T*"
     intercept[InvariantFailedException] { t"List[$t]" }
+  }
+
+  test("Pat.SeqWildcard") {
+    import scala.meta._
+    val p = p"_*"
+    intercept[InvariantFailedException] { p"case $p =>" }
   }
 }

@@ -62,11 +62,11 @@ class PatSuite extends ParseSuite {
   }
 
   test("foo(_*)") {
-    val Extract(Term.Name("foo"), Nil, Arg.SeqWildcard() :: Nil) = pat("foo(_*)")
+    val Extract(Term.Name("foo"), Nil, SeqWildcard() :: Nil) = pat("foo(_*)")
   }
 
   test("foo(x @ _*)") {
-    val Extract(Term.Name("foo"), Nil, Bind(Var.Term(Term.Name("x")), Arg.SeqWildcard()) :: Nil) = pat("foo(x @ _*)")
+    val Extract(Term.Name("foo"), Nil, Bind(Var.Term(Term.Name("x")), SeqWildcard()) :: Nil) = pat("foo(x @ _*)")
   }
 
   test("a :: b") {
@@ -107,11 +107,11 @@ class PatSuite extends ParseSuite {
   }
 
   test("<a>{_*}</a>") {
-    val Pat.Xml(Seq(Lit("<a>"), Lit("</a>")), Seq(Arg.SeqWildcard())) = pat("<a>{_*}</a>")
+    val Pat.Xml(Seq(Lit("<a>"), Lit("</a>")), Seq(SeqWildcard())) = pat("<a>{_*}</a>")
   }
 
   test("<a>{ns @ _*}</a>") {
-    val Pat.Xml(Seq(Lit("<a>"), Lit("</a>")), Seq(Bind(Var.Term(Term.Name("ns")), Arg.SeqWildcard()))) = pat("<a>{ns @ _*}</a>")
+    val Pat.Xml(Seq(Lit("<a>"), Lit("</a>")), Seq(Bind(Var.Term(Term.Name("ns")), SeqWildcard()))) = pat("<a>{ns @ _*}</a>")
   }
 
 }

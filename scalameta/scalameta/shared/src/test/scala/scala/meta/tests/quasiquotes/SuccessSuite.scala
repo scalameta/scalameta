@@ -1112,12 +1112,12 @@ class SuccessSuite extends FunSuite {
     assert(p"case $pat if $expropt => $expr".show[Structure] === "Case(Term.Name(\"X\"), Some(Term.Name(\"foo\")), Term.Name(\"bar\"))")
   }
 
-  test("p\"_*\"") {
-    assert(p"case List(_*) =>".show[Structure] === "Case(Pat.Extract(Term.Name(\"List\"), Nil, Seq(Pat.Arg.SeqWildcard())), None, Term.Block(Nil))")
+  test("1 p\"_*\"") {
+    assert(p"case List(_*) =>".show[Structure] === "Case(Pat.Extract(Term.Name(\"List\"), Nil, Seq(Pat.SeqWildcard())), None, Term.Block(Nil))")
   }
 
-  test("parg\"_*\"") {
-    assert(parg"_*".show[Structure] === "Pat.Wildcard()")
+  test("2 p\"_*\"") {
+    assert(p"_*".show[Structure] === "Pat.SeqWildcard()")
   }
 
   test("1 p\"$pat\"") {

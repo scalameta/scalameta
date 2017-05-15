@@ -71,28 +71,22 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 
 ## Patterns (meta.Pat) and Cases (meta.Case)
 
-               | Quasiquote
----------------|----------------------------
- Wildcard      | `p"_"`
- Var           | `p"$pname"` (construction only), `q"${name: Pat.Var.Term}"` (also deconstruction)
- Bind          | `p"$pname @ $apat"`
- Alternative   | `p"$pat | $pat"`
- Tuple         | `p"(..$patsnel)"`
- Extract       | `p"$ref[..$tpes](..$apats)"`
- Infix Extract | `p"$pat $name (..$apatsnel)"`
- Interpolation | Not supported yet
- Typed         | `p"$pat: $ptpe"`
- Name          | `p"$name"` (construction only), `p"${name: Term.Name}"` (also deconstruction)
- Selection     | `p"$expr.$name"`
- Literal       | `p"$lit"` (construction only), `p"${lit: Lit}"` (also deconstruction)
- Case          | `p"case $pat if $expropt => $expr"`
-
-## Argument Patterns (meta.Pat.Arg)
-
                    | Quasiquote
 -------------------|----------------------------
- Sequence Wildcard | `parg"_*"`
- Pattern           | `parg"$pat"` (construction only), `parg"${pat: Pat}"` (also deconstruction)
+ Wildcard          | `p"_"`
+ Sequence Wildcard | `p"_*"`
+ Var               | `p"$pname"` (construction only), `q"${name: Pat.Var.Term}"` (also deconstruction)
+ Bind              | `p"$pname @ $pat"`
+ Alternative       | `p"$pat | $pat"`
+ Tuple             | `p"(..$patsnel)"`
+ Extract           | `p"$ref[..$tpes](..$pats)"`
+ Infix Extract     | `p"$pat $name (..$patsnel)"`
+ Interpolation     | Not supported yet
+ Typed             | `p"$pat: $ptpe"`
+ Name              | `p"$name"` (construction only), `p"${name: Term.Name}"` (also deconstruction)
+ Selection         | `p"$expr.$name"`
+ Literal           | `p"$lit"` (construction only), `p"${lit: Lit}"` (also deconstruction)
+ Case              | `p"case $pat if $expropt => $expr"`
 
 ## Type Patterns (meta.Pat.Type)
 
@@ -275,7 +269,6 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Name.Indeterminate  | `$iname`      | Can't be constructed, only extracted from `importee"..."` and `mod"..."`
  meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only extracted from `mod"..."`
  meta.Pat                 | `$pat`        | `p`
- meta.Pat.Arg             | `$apat`       | `parg`
  meta.Pat.Var.Term        | `$pname`      | `p`
  meta.Pat.Var.Type        | `$ptname`     | `pt`
  meta.Pat.Type            | `$ptpe`       | `pt`

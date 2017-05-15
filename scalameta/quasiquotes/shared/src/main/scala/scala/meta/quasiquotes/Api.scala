@@ -9,14 +9,13 @@ private[meta] trait Api {
   // we will have `@quasiquote('q) @branch trait Stat extends Tree`
   // that would probably allow us for every AST node to have an associated quasiquote interpolator in the doc
   // upd. this might also require non-local macro expansion because of hierarchical structure of the `scala.meta` package.
-  // TODO: overloading Case and Pat.Arg within p"..." is probably not the best idea
+  // TODO: overloading Case and Pat within p"..." is probably not the best idea
   // however, cas"..." is so ugly that I'm willing to be conceptually impure here
   @quasiquote[Ctor, Stat]('q)          implicit class XtensionQuasiquoteTerm(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Term.Param]('param)      implicit class XtensionQuasiquoteTermParam(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Type]('t)                implicit class XtensionQuasiquoteType(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Type.Param]('tparam)     implicit class XtensionQuasiquoteTypeParam(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Case, Pat]('p)           implicit class XtensionQuasiquoteCaseOrPattern(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Pat.Arg]('parg)          implicit class XtensionQuasiquotePatternArg(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Pat.Type]('pt)           implicit class XtensionQuasiquotePatternType(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Ctor.Call]('ctor)        implicit class XtensionQuasiquoteCtor(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Template]('template)     implicit class XtensionQuasiquoteTemplate(ctx: StringContext) extends QuasiquoteParsers

@@ -14,8 +14,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 28)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 306)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 27)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 305)
   }
 
   test("If") {
@@ -69,7 +69,6 @@ class ReflectionSuite extends AstSuite {
       |scala.collection.immutable.Seq[scala.meta.Lit]
       |scala.collection.immutable.Seq[scala.meta.Mod.Annot]
       |scala.collection.immutable.Seq[scala.meta.Mod]
-      |scala.collection.immutable.Seq[scala.meta.Pat.Arg]
       |scala.collection.immutable.Seq[scala.meta.Pat.Type]
       |scala.collection.immutable.Seq[scala.meta.Pat.Var.Term]
       |scala.collection.immutable.Seq[scala.meta.Pat]
@@ -83,7 +82,6 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.Name.Indeterminate
       |scala.meta.Name.Qualifier
       |scala.meta.Pat
-      |scala.meta.Pat.Arg
       |scala.meta.Pat.Type
       |scala.meta.Pat.Var.Term
       |scala.meta.Template

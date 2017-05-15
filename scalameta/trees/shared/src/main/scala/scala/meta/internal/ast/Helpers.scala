@@ -370,5 +370,14 @@ object Helpers {
     def TypeRepeated(tree: Type.Repeated, parent: Tree, destination: String): Boolean = {
       typeArgument(parent, destination)
     }
+
+    def PatSeqWildcard(tree: Pat.SeqWildcard, parent: Tree, destination: String): Boolean = {
+      def bindRhs = parent.is[Pat.Bind] && destination == "rhs"
+      def extractArgs = parent.is[Pat.Extract] && destination == "args"
+      def extractInfixArgs = parent.is[Pat.ExtractInfix] && destination == "args"
+      def extractInterpolate = parent.is[Pat.Interpolate] && destination == "args"
+      def extractXml = parent.is[Pat.Xml] && destination == "args"
+      bindRhs || extractArgs || extractInfixArgs || extractInterpolate || extractXml
+    }
   }
 }

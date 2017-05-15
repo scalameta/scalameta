@@ -252,12 +252,11 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Name.Qualifier
       |scala.meta.Pat
       |scala.meta.Pat.Alternative
-      |scala.meta.Pat.Arg
-      |scala.meta.Pat.Arg.SeqWildcard
       |scala.meta.Pat.Bind
       |scala.meta.Pat.Extract
       |scala.meta.Pat.ExtractInfix
       |scala.meta.Pat.Interpolate
+      |scala.meta.Pat.SeqWildcard
       |scala.meta.Pat.Tuple
       |scala.meta.Pat.Type
       |scala.meta.Pat.Type.And

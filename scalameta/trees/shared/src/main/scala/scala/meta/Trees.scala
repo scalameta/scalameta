@@ -162,7 +162,7 @@ object Type {
   }
 }
 
-@branch trait Pat extends Tree with Pat.Arg
+@branch trait Pat extends Tree
 object Pat {
   // TODO: Introduction of Pat.Var.Term and Pat.Var.Type is a very far-reaching design decision.
   //
@@ -217,15 +217,18 @@ object Pat {
     }
   }
   @ast class Wildcard() extends Pat
-  @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat
+  @ast class SeqWildcard() extends Pat {
+    checkParent(ParentChecks.PatSeqWildcard)
+  }
+  @ast class Bind(lhs: Pat.Var.Term, rhs: Pat) extends Pat
   @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
   @ast class Tuple(args: Seq[Pat] @nonEmpty) extends Pat {
     checkFields(args.length > 1 || (args.length == 1 && args.head.is[Pat.Quasi]))
   }
-  @ast class Extract(ref: Term.Ref, targs: Seq[scala.meta.Pat.Type], args: Seq[Pat.Arg]) extends Pat {
+  @ast class Extract(ref: Term.Ref, targs: Seq[scala.meta.Pat.Type], args: Seq[Pat]) extends Pat {
     checkFields(ref.isStableId)
   }
-  @ast class ExtractInfix(lhs: Pat, op: Term.Name, rhs: Seq[Pat.Arg] @nonEmpty) extends Pat
+  @ast class ExtractInfix(lhs: Pat, op: Term.Name, rhs: Seq[Pat] @nonEmpty) extends Pat
   @ast class Interpolate(prefix: Term.Name, parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
     checkFields(parts.length == args.length + 1)
   }
@@ -235,10 +238,6 @@ object Pat {
   @ast class Typed(lhs: Pat, rhs: Pat.Type) extends Pat {
     checkFields(lhs.is[Pat.Wildcard] || lhs.is[Pat.Var.Term] || lhs.is[Pat.Quasi])
     checkFields(!rhs.is[Pat.Var.Type] && !rhs.is[Pat.Type.Wildcard])
-  }
-  @branch trait Arg extends Tree
-  object Arg {
-    @ast class SeqWildcard() extends Arg
   }
   @branch trait Type extends Tree
   object Type {
