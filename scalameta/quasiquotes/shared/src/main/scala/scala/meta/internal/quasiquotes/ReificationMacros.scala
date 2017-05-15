@@ -68,8 +68,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val dialect = instantiateDialect(dialectTree, mode)
     val parser = instantiateParser(c.macroApplication.symbol)
     val skeleton = parseSkeleton(parser, input, dialect)
-    val hygienicSkeleton = hygienifySkeleton(skeleton)
-    reifySkeleton(hygienicSkeleton, mode)
+    reifySkeleton(skeleton, mode)
   }
 
   private def extractQuasiquotee(): (Input, Mode) = {
@@ -182,14 +181,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       case TokenizeException(pos, message) => c.abort(pos, message)
       case ParseException(pos, message) => c.abort(pos, message)
     }
-  }
-
-  private def hygienifySkeleton(meta: MetaTree): MetaTree = {
-    // TODO: Implement this (https://github.com/scalameta/scalameta/issues/156)
-    // by setting Tree.env of appropriate trees (names, apply-like nodes) to appropriate values.
-    // So far, we don't have to set anything to anything,
-    // because Environment.None (the only possible value for environments at the moment) is the default.
-    meta
   }
 
   private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
