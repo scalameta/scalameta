@@ -18,7 +18,7 @@ import org.scalameta.{unreachable, debug}
 import scala.compat.Platform.EOL
 
 object TreeSyntax {
-  def apply[T <: Tree](dialect: Dialect, options: Options): Syntax[T] = {
+  def apply[T <: Tree](dialect: Dialect): Syntax[T] = {
     object syntaxInstances {
       // NOTE: these groups closely follow non-terminals in the grammar spec from SLS, except for:
       // 1) we don't care about tracking non-terminals (with m() and/or p()) when that doesn't affect parenthesization
@@ -195,7 +195,6 @@ object TreeSyntax {
             s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
           } else {
             val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var.Term] || t.tree.is[Term.This] || t.tree.is[Pat.Wildcard]
-            implicit val syntaxOptions = options
             implicit val syntaxDialect = dialect.copy(allowTermUnquotes = false, allowPatUnquotes = false, allowMultilinePrograms = true)
             s("$", w("{", t.tree.syntax, "}", !allowBraceless))
           }
@@ -463,8 +462,7 @@ object TreeSyntax {
         case t: Defn.Def       => s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
         case t: Defn.Macro     => s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " ", kw("="), " ", kw("macro"), " ", t.body)
         case t: Pkg            =>
-          if (options.isLazy && t.stats.isLazy) s(kw("package"), " ", t.ref, " { ... }")
-          else if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
+          if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
           else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
         case t: Pkg.Object     => s(kw("package"), " ", w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
         case t: Ctor.Primary   => s(w(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
@@ -481,21 +479,16 @@ object TreeSyntax {
             val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
             val pparents = w(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
             val pbody = {
-              if (options.isLazy && t.stats.getOrElse(Nil).isLazy) {
-                if (isSelfNonEmpty) s("{ ", t.self, " => ... }")
-                else s("{ ... }")
-              } else {
-                val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
-                (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
-                  case (false, false, _) => s()
-                  case (true, false, _) => s("{ ", t.self, " => }")
-                  case (false, true, List()) if isOneLiner => s("{}")
-                  case (false, true, List(stat)) if isOneLiner => s("{ ", stat, " }")
-                  case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
-                  case (true, true, List()) if isOneLiner => s("{ ", t.self, " => }")
-                  case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
-                  case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
-                }
+              val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
+              (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
+                case (false, false, _) => s()
+                case (true, false, _) => s("{ ", t.self, " => }")
+                case (false, true, List()) if isOneLiner => s("{}")
+                case (false, true, List(stat)) if isOneLiner => s("{ ", stat, " }")
+                case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
+                case (true, true, List()) if isOneLiner => s("{ ", t.self, " => }")
+                case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
+                case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
               }
             }
             s(pearly, pparents, pbody)

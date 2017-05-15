@@ -24,8 +24,8 @@ import scala.meta.internal.ast.Helpers._
 
 object Tree extends InternalTreeXtensions {
   implicit def classifiable[T <: Tree]: Classifiable[T] = null
-  implicit def showStructure[T <: Tree](implicit options: Options): Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T](options)
-  implicit def showSyntax[T <: Tree](implicit dialect: Dialect, options: Options): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect, options)
+  implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T]
+  implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect)
 }
 
 @branch trait Ref extends Tree

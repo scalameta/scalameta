@@ -11,7 +11,7 @@ import scala.meta.tokens.Token._
 import scala.meta.internal.ast.Quasi
 
 object TreeStructure {
-  def apply[T <: Tree](implicit options: Options): Structure[T] = {
+  def apply[T <: Tree]: Structure[T] = {
     Structure(x => s(x.productPrefix, "(", {
       def default = {
         def anyStructure(x: Any): String = x match {
@@ -22,13 +22,10 @@ object TreeStructure {
           case el: Some[_] => "Some(" + anyStructure(el.get) + ")"
           case el => el.toString
         }
-        def listStructure(xs: List[_]): String = {
-          if (options.isLazy && xs.isLazy) "List(...)"
-          else xs match {
-            case xs: Nil.type => "Nil"
-            case xs @ List(List()) => "List(List())"
-            case xs => "List(" + xs.map(anyStructure).mkString(", ") + ")"
-          }
+        def listStructure(xs: List[_]): String = xs match {
+          case xs: Nil.type => "Nil"
+          case xs @ List(List()) => "List(List())"
+          case xs => "List(" + xs.map(anyStructure).mkString(", ") + ")"
         }
         r(x.productIterator.map(anyStructure).toList, ", ")
       }

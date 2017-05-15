@@ -257,18 +257,6 @@ class PublicSuite extends FunSuite {
     assert(parsed.toString === "foo + bar")
   }
 
-  test("scala.meta.prettyprinters.LowPriorityOptions.Lazy.toString") {
-    assert(scala.meta.prettyprinters.Options.Lazy.toString == "Lazy")
-  }
-
-  test("scala.meta.prettyprinters.Options.toString") {
-    // covered above and below
-  }
-
-  test("scala.meta.prettyprinters.Options.Eager.toString") {
-    assert(scala.meta.prettyprinters.Options.Eager.toString == "Eager")
-  }
-
   test("scala.meta.prettyprinters.Show.toString") {
     // n/a
   }

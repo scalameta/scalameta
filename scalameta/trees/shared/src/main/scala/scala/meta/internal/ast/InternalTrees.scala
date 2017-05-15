@@ -75,8 +75,7 @@ trait InternalTree extends Product {
         val tokens = dialect(input).tokenize.get
         tokens.slice(pos.start, pos.end)
       case _ =>
-        val virtualInput = VirtualInput({ implicit val eagerPrettyprinting = Options.Eager; this.syntax })
-        dialect(virtualInput).tokenize.get
+        dialect(VirtualInput(this.syntax)).tokenize.get
     }
   }
 

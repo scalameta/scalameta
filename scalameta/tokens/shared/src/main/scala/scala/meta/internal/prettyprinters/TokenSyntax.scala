@@ -8,7 +8,7 @@ import scala.meta.tokens._
 import scala.meta.tokens.Token._
 
 object TokenSyntax {
-  def apply[T <: Token](dialect: Dialect, options: Options): Syntax[T] = Syntax { x =>
+  def apply[T <: Token](dialect: Dialect): Syntax[T] = Syntax { x =>
     def failXml() = throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
     def failQuasiquote() = throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
     def failViewBound() = throw new UnsupportedOperationException(s"$dialect doesn't support view bounds")

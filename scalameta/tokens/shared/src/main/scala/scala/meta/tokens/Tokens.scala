@@ -66,6 +66,6 @@ object Tokens {
 
   implicit val tokensToInput: Convert[Tokens, Input] = Convert(tokens => Input.String(tokens.syntax))
   implicit val listTokenToInput: Convert[List[Token], Input] = Convert(tokens => Input.String(Tokens(tokens.toArray, 0, tokens.length).syntax))
-  implicit def showStructure[T <: Tokens](implicit options: Options): Structure[T] = TokensStructure.apply[T](options)
-  implicit def showSyntax[T <: Tokens](implicit dialect: Dialect, options: Options): Syntax[T] = TokensSyntax.apply[T](dialect, options)
+  implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
+  implicit def showSyntax[T <: Tokens](implicit dialect: Dialect): Syntax[T] = TokensSyntax.apply[T](dialect)
 }
