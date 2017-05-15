@@ -36,4 +36,10 @@ object Database {
   def load(classpath: Classpath, sourcepath: Sourcepath): Database = {
     v.Database.load(classpath).toSchema.toMeta(sourcepath)
   }
+  def load(path: RelativePath, bytes: Array[Byte]): Database = {
+    val sattrs = s.Attributes.parseFrom(bytes)
+    val sdb = new s.Database(Seq(path -> sattrs))
+    val mdb = sdb.toMeta(Sourcepath(""))
+    mdb
+  }
 }

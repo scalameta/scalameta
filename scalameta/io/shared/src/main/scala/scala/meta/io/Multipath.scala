@@ -11,9 +11,9 @@ import scala.meta.internal.io.PathIO.pathSeparator
 
 @root trait Multipath {
   def value: String
-
   def shallow: List[File] = value.split(pathSeparator).map(s => new File(s)).toList
   def deep: List[Fragment] = {
+    if (scala.meta.internal.platform.isJS) return Nil
     var buf = mutable.ListBuffer[Fragment]()
     shallow.distinct.foreach(base => {
       def exploreDir(base: File): Unit = {

@@ -28,7 +28,7 @@ unidocSettings
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
   s"wow $ciScalaVersion" ::
-    "tests/test" ::
+    "testsJVM/test" ::
     ci("doc") :: // skips 2.10 projects
     s
 }
@@ -45,9 +45,9 @@ commands += CiCommand("ci-publish")(
 // from a command. Running "test" inside a command will trigger the `test` task
 // to run in all defined modules, including ones like inputs/io/dialects which
 // have no tests.
-test := test.in(tests).value
-testJVM := testJVM.in(tests).value
-testJS := testJS.in(tests).value
+test := test.in(testsJVM).value
+testOnlyJVM := testOnlyJVM.in(testsJVM).value
+testOnlyJS := testOnlyJS.in(testsJVM).value
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
@@ -303,34 +303,36 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   )
   .dependsOn(scalametaJVM)
 
-lazy val tests = project
+lazy val tests = crossProject
   .in(file("scalameta/tests"))
   .settings(
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
     test := {
-      testJVM.value
-      testJS.value
+      testOnlyJVM.value
+      testOnlyJS.value
     },
     // These tasks skip over modules with no tests, like dialects/inputs/io, speeding up
     // edit/test cycles. You may prefer to run testJVM while iterating on a design
     // because JVM tests link and run faster than JS tests.
-    testJVM := {
+    testOnlyJVM := {
       val runScalametaTests = test.in(scalametaJVM, Test).value
       val runScalahostTests = test.in(scalahostNsc, Test).value
       val runBenchmarkTests = test.in(benchmarks, Test).value
       val runContribTests = test.in(contribJVM, Test).value
       val runDocs = test.in(readme).value
     },
-    testJS := {
+    testOnlyJS := {
       val runIoTests = test.in(ioJS, Test).value
       val runScalametaTests = test.in(scalametaJS, Test).value
       val runContribTests = test.in(contribJS, Test).value
     }
   )
-lazy val testJVM = taskKey[Unit]("Run JVM tests")
-lazy val testJS = taskKey[Unit]("Run Scala.js tests")
+lazy val testsJVM = tests.jvm
+lazy val testsJS = tests.js
+lazy val testOnlyJVM = taskKey[Unit]("Run JVM tests")
+lazy val testOnlyJS = taskKey[Unit]("Run Scala.js tests")
 
 lazy val contrib = crossProject
   .in(file("scalameta/contrib"))
