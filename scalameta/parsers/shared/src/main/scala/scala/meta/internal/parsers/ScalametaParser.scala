@@ -1676,23 +1676,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       var t: Term = autoPos(postfixExpr())
       if (token.is[Equals]) {
         t match {
-          case ref: Term.Ref =>
+          case _: Term.Ref | _: Term.Apply | _: Term.Quasi =>
             next()
-            t = atPos(ref, auto)(Term.Assign(ref, expr()))
-          case app: Term.Apply =>
-            def decompose(term: Term): (Term, List[List[Term]]) = term match {
-              case Term.Apply(fun, args) =>
-                val (core, otherArgss) = decompose(fun)
-                (core, args.toList +: otherArgss)
-              case term =>
-                (term, Nil)
-            }
-            val (core, argss) = decompose(app)
-            next()
-            t = atPos(core, auto)(Term.Update(core, argss, expr()))
-          case q: Term.Quasi =>
-            next()
-            t = atPos(q, auto)(Term.Assign(q.become[Term.Ref.Quasi], expr()))
+            t = atPos(t, auto)(Term.Assign(t, expr()))
           case _ =>
         }
       } else if (token.is[Colon]) {

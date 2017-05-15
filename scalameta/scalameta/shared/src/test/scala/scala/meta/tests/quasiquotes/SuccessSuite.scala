@@ -375,7 +375,7 @@ class SuccessSuite extends FunSuite {
     val expr1 = q"foo"
     val exprs = List(List(q"a", q"b"))
     val expr2 = q"bar"
-    assert(q"$expr1(...$exprs) = $expr2".show[Structure] === "Term.Update(Term.Name(\"foo\"), Seq(Seq(Term.Name(\"a\"), Term.Name(\"b\"))), Term.Name(\"bar\"))")
+    assert(q"$expr1(...$exprs) = $expr2".show[Structure] === "Term.Assign(Term.Apply(Term.Name(\"foo\"), Seq(Term.Name(\"a\"), Term.Name(\"b\"))), Term.Name(\"bar\"))")
   }
 
   test("1 q\"($x, y: Int)\"") {
@@ -397,7 +397,7 @@ class SuccessSuite extends FunSuite {
   test("2 q\"f($q, y: Y)") {
     val q = q"x: X"
     val r = q"1"
-    assert(q"f($q, y: Y) = $r".show[Structure] === "Term.Update(Term.Name(\"f\"), Seq(Seq(Term.Ascribe(Term.Name(\"x\"), Type.Name(\"X\")), Term.Ascribe(Term.Name(\"y\"), Type.Name(\"Y\")))), Lit.Int(1))")
+    assert(q"f($q, y: Y) = $r".show[Structure] === "Term.Assign(Term.Apply(Term.Name(\"f\"), Seq(Term.Ascribe(Term.Name(\"x\"), Type.Name(\"X\")), Term.Ascribe(Term.Name(\"y\"), Type.Name(\"Y\")))), Lit.Int(1))")
   }
 
   test("1 q\"return $expr\"") {

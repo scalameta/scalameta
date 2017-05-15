@@ -15,7 +15,7 @@ class ReflectionSuite extends AstSuite {
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
     assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 27)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 305)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 303)
   }
 
   test("If") {
@@ -60,7 +60,6 @@ class ReflectionSuite extends AstSuite {
       |scala.Symbol
       |scala.Unit
       |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.Term.Param]]
-      |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.Term]]
       |scala.collection.immutable.Seq[scala.meta.Case]
       |scala.collection.immutable.Seq[scala.meta.Ctor.Call]
       |scala.collection.immutable.Seq[scala.meta.Enumerator]

@@ -21,8 +21,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Type Application  | `q"$expr[..$tpesnel]"`
  Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$exprs)"`
  Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`
- Assign            | `q"$ref = $expr"`
- Update            | `q"$expr(...$exprssnel) = $expr"`
+ Assign            | `q"$expr = $expr"`
  Return            | `q"return $expr"`
  Throw             | `q"throw $expr"`
  Ascribe           | `q"$expr: $tpe"`

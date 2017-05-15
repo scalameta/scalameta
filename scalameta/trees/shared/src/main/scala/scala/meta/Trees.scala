@@ -64,10 +64,10 @@ object Term {
   @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
     checkFields(op.isUnaryOp)
   }
-  @ast class Assign(lhs: Term.Ref, rhs: Term) extends Term {
+  @ast class Assign(lhs: Term, rhs: Term) extends Term {
+    checkFields(lhs.is[Term.Quasi] || lhs.is[Term.Ref] || lhs.is[Term.Apply])
     checkParent(ParentChecks.TermAssign)
   }
-  @ast class Update(fun: Term, argss: Seq[Seq[Term]] @nonEmpty, rhs: Term) extends Term
   @ast class Return(expr: Term) extends Term
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term

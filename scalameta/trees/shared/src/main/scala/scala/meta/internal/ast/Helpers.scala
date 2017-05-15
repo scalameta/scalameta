@@ -331,8 +331,7 @@ object Helpers {
       def applyArgument = parent.is[Term.Apply] && destination == "args"
       def applyInfixArgument = parent.is[Term.ApplyInfix] && destination == "args"
       def namedArg = parent.is[Term.Assign] && destination == "rhs"
-      def updateArgument = parent.is[Term.Update] && destination == "argss"
-      applyArgument || applyInfixArgument || namedArg || updateArgument
+      applyArgument || applyInfixArgument || namedArg
     }
 
     def TermAssign(tree: Term.Assign, parent: Tree, destination: String): Boolean = {
