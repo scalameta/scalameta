@@ -101,4 +101,9 @@ class PatSuite extends ParseSuite {
   test("$_") {
     val Pat.Interpolate(Term.Name("q"), Seq(Lit("x + "), Lit("")), Seq(Pat.Wildcard())) = pat(""" q"x + $_" """)
   }
+
+  test("#501") {
+    intercept[ParseException] { pat("case List(_: BlockExpr, _: MatchExpr, x:_*)  ⇒ false") }
+  }
+
 }
