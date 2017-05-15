@@ -8,7 +8,7 @@ import UnidocKeys._
 import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
 
-lazy val LanguageVersions = Seq("2.11.11", "2.12.2")
+lazy val LanguageVersions = Seq(scala211, scala212)
 lazy val LanguageVersion = LanguageVersions.head
 lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.version.preRelease())
 
@@ -270,8 +270,8 @@ lazy val scalahostSbt = project
     },
     description := "sbt plugin to enable the scalahost compiler plugin for Scala 2.x",
     moduleName := "sbt-scalahost", // sbt convention is that plugin names start with sbt-
-    scalaVersion := "2.10.6",
-    crossScalaVersions := Seq("2.10.6"), // for some reason, scalaVersion.value does not work.
+    scalaVersion := scala210,
+    crossScalaVersions := Seq(scala210),
     scriptedLaunchOpts ++= Seq(
       "-Dplugin.version=" + version.value,
       // .jvmopts is ignored, simulate here
@@ -620,4 +620,7 @@ def CiCommand(name: String)(commands: List[String]): Command = Command.command(n
   }
 }
 def ci(command: String) = s"plz $ciScalaVersion $command"
+lazy val scala210 = "2.10.6"
+lazy val scala211 = "2.11.11"
+lazy val scala212 = "2.12.2"
 

@@ -46,8 +46,8 @@ abstract class DatabaseSuite extends FunSuite { self =>
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
     finally writer.close()
-    databaseOps.config = databaseOps.config.copy(
-      sourcepath = Sourcepath(javaFile.getParentFile.getAbsolutePath))
+    databaseOps.config =
+      databaseOps.config.copy(sourcepath = Sourcepath(javaFile.getParentFile.getAbsolutePath))
     val run = new g.Run
     val abstractFile = AbstractFile.getFile(javaFile)
     val sourceFile = g.getSourceFile(abstractFile)

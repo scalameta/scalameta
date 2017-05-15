@@ -11,6 +11,9 @@ import sbt.plugins.JvmPlugin
 object ScalahostSbtPlugin extends AutoPlugin {
   object autoImport {
 
+    // NOTE: This is duplicated in ConfigOps.scala in the scalahost project.
+    // If we end up adding more complicated options like opting out of sections
+    // we should consider sharing the same sources.
     sealed trait ScalametaSemanticdb
     object ScalametaSemanticdb {
       case object Disabled extends ScalametaSemanticdb
@@ -22,10 +25,10 @@ object ScalahostSbtPlugin extends AutoPlugin {
     // of foo in the scala.meta.Mirror() constructor.
     val Scalameta: Configuration = config("scalameta")
     val scalametaSourcepath: SettingKey[File] =
-      settingKey[File]("What is the the base directory for all source files in this project?")
+      settingKey[File]("What is the the base directory for all source files in this build?")
     val scalametaSemanticdb: SettingKey[ScalametaSemanticdb] =
       settingKey[ScalametaSemanticdb](
-        "What kind of semanticdb to persist? See ScalametaSemanticdb")
+        "What kind of semanticdb to persist? See ScalametaSemanticdb for options.")
     val scalametaDependencies: SettingKey[Seq[ProjectRef]] =
       settingKey[Seq[ProjectRef]](
         "Projects to analyze with scalameta, automatically set by dependsOn(foo % Scalameta).")
