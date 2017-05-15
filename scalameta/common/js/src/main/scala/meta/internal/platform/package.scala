@@ -1,6 +1,6 @@
 package scala.meta.internal
 
 package object platform {
-  def isJS = true
-  def isJVM = false
+  final val isJS = true
+  final val isJVM = false
 }
