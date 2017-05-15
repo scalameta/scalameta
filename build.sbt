@@ -35,7 +35,7 @@ commands += CiCommand("ci-slow")(
   "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
   Nil
 )
-commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/test" :: Nil)
+commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/it:test" :: Nil)
 commands += CiCommand("ci-publish")(
   if (sys.env.contains("CI_PUBLISH")) s"publish" :: Nil
   else Nil
@@ -250,19 +250,21 @@ lazy val scalahostNsc = project
 
 lazy val scalahostSbt = project
   .in(file("scalahost/sbt"))
+  .configs(IntegrationTest)
   .settings(
     publishableSettings,
     buildInfoSettings,
+    Defaults.itSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
     publishMavenStyle := false, // necessary for pre-releases to work with addSbtPlugin
     bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
-    testQuick := {
+    testQuick.in(IntegrationTest) := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
       RunSbtCommand(s"; plz $ScalaVersion publishLocal " +
         "; such scalahostSbt/scripted sbt-scalahost/semantic-example")(state.value)
     },
-    test := {
+    test.in(IntegrationTest) := {
       RunSbtCommand("; such publishLocal " +
         "; such scalahostSbt/scripted")(state.value)
     },

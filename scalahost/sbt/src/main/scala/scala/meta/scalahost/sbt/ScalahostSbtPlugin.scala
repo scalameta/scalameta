@@ -1,5 +1,7 @@
 package scala.meta.scalahost.sbt
 
+import scala.collection.mutable.ListBuffer
+
 import sbt._
 import Keys.{version => _, _}
 import org.scalameta.BuildInfo
@@ -8,12 +10,25 @@ import sbt.plugins.JvmPlugin
 
 object ScalahostSbtPlugin extends AutoPlugin {
   object autoImport {
+
+    sealed trait ScalametaSemanticdb
+    object ScalametaSemanticdb {
+      case object Disabled extends ScalametaSemanticdb
+      case object Slim extends ScalametaSemanticdb
+      case object Fat extends ScalametaSemanticdb
+    }
+
     // use dependsOn(foo % Scalahost) to automatically include the semantic database
     // of foo in the scala.meta.Mirror() constructor.
     val Scalameta: Configuration = config("scalameta")
+    val scalametaSourcepath: SettingKey[File] =
+      settingKey[File]("What is the the base directory for all source files in this project?")
+    val scalametaSemanticdb: SettingKey[ScalametaSemanticdb] =
+      settingKey[ScalametaSemanticdb](
+        "What kind of semanticdb to persist? See ScalametaSemanticdb")
     val scalametaDependencies: SettingKey[Seq[ProjectRef]] =
       settingKey[Seq[ProjectRef]](
-        "Projects to analyze with scala.meta, automatically set by dependsOn(foo % Scalahost).")
+        "Projects to analyze with scalameta, automatically set by dependsOn(foo % Scalameta).")
   }
   import autoImport._
   override def requires = JvmPlugin
@@ -22,15 +37,21 @@ object ScalahostSbtPlugin extends AutoPlugin {
 
   lazy val scalahostAllSettings =
     scalahostBaseSettings ++
-      scalahostInjectCompilerPluginSettings ++
+      inTestAndCompile(scalahostConfigSettings) ++
+      scalahostInjectScalacOptions ++
+      scalahostInjectDependency ++
       scalahostHasMirrorSettings
 
   lazy val scalahostBaseSettings: Seq[Def.Setting[_]] = Def.settings(
     ivyConfigurations += Scalameta,
+    scalametaSourcepath := baseDirectory.in(ThisBuild).value,
     resolvers += Resolver.bintrayRepo("scalameta", "maven")
   )
+  lazy val scalahostConfigSettings: Seq[Def.Setting[_]] = Def.settings(
+    scalametaSemanticdb := ScalametaSemanticdb.Fat
+  )
 
-  lazy val scalahostInjectCompilerPluginSettings: Seq[Def.Setting[_]] = Def.settings(
+  lazy val scalahostInjectDependency: Seq[Def.Setting[_]] = Def.settings(
     libraryDependencies ++= {
       scalaVersion.value match {
         case SupportedScalaVersion(version) =>
@@ -39,14 +60,21 @@ object ScalahostSbtPlugin extends AutoPlugin {
           )
         case _ => Nil
       }
-    },
+    }
+  )
+  lazy val scalahostInjectScalacOptions: Seq[Def.Setting[_]] = Def.settings(
     // sets -Xplugin:/scalahost.jar and other necessary compiler options.
     scalacOptions ++= {
       scalahostJarPath.value.fold(List.empty[String]) { path =>
+        val pluginName = "scalahost"
+        val semanticdb = scalametaSemanticdb.value.toString.toLowerCase
+        val sourcepath = scalametaSourcepath.value.getAbsolutePath
         List(
           s"-Xplugin:$path",
+          s"-P:$pluginName:semanticdb:$semanticdb",
+          s"-P:$pluginName:sourcepath:$sourcepath",
           "-Yrangepos",
-          "-Xplugin-require:scalahost"
+          s"-Xplugin-require:$pluginName"
         )
       }
     }
@@ -89,6 +117,9 @@ object ScalahostSbtPlugin extends AutoPlugin {
         )
     }
   )
+
+  private def inTestAndCompile(settings: Seq[Def.Setting[_]]) =
+    List(Compile, Test).flatMap(inConfig(_)(settings)) ++ settings
 
   // Scalahost only supports the latest patch version of scala minor version, for example
   // 2.11.8 and not 2.11.7. If a build is using 2.11.7, we upgrade the dependency to

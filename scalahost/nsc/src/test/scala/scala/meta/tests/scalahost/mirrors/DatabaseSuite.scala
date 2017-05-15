@@ -42,47 +42,41 @@ abstract class DatabaseSuite extends FunSuite { self =>
   import databaseOps._
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
-    val oldSourcepath = sys.props("scalameta.sourcepath")
-    try {
-      val javaFile = File.createTempFile("paradise", ".scala")
-      val writer = new PrintWriter(javaFile)
-      try writer.write(code)
-      finally writer.close()
+    val javaFile = File.createTempFile("paradise", ".scala")
+    val writer = new PrintWriter(javaFile)
+    try writer.write(code)
+    finally writer.close()
+    databaseOps.config = databaseOps.config.copy(
+      sourcepath = Sourcepath(javaFile.getParentFile.getAbsolutePath))
+    val run = new g.Run
+    val abstractFile = AbstractFile.getFile(javaFile)
+    val sourceFile = g.getSourceFile(abstractFile)
+    val unit = new g.CompilationUnit(sourceFile)
+    run.compileUnits(List(unit), run.phaseNamed("terminal"))
 
-      sys.props("scalameta.sourcepath") = javaFile.getParentFile.getAbsolutePath
-      val run = new g.Run
-      val abstractFile = AbstractFile.getFile(javaFile)
-      val sourceFile = g.getSourceFile(abstractFile)
-      val unit = new g.CompilationUnit(sourceFile)
-      run.compileUnits(List(unit), run.phaseNamed("terminal"))
+    g.phase = run.parserPhase
+    g.globalPhase = run.parserPhase
+    val reporter = new StoreReporter()
+    g.reporter = reporter
+    unit.body = g.newUnitParser(unit).parse()
+    val errors = reporter.infos.filter(_.severity == reporter.ERROR)
+    errors.foreach(error => fail(s"scalac parse error: ${error.msg} at ${error.pos}"))
 
-      g.phase = run.parserPhase
-      g.globalPhase = run.parserPhase
-      val reporter = new StoreReporter()
-      g.reporter = reporter
-      unit.body = g.newUnitParser(unit).parse()
+    val packageobjectsPhase = run.phaseNamed("packageobjects")
+    val phases = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
+    reporter.reset()
+
+    phases.foreach(phase => {
+      g.phase = phase
+      g.globalPhase = phase
+      phase.asInstanceOf[g.GlobalPhase].apply(unit)
       val errors = reporter.infos.filter(_.severity == reporter.ERROR)
-      errors.foreach(error => fail(s"scalac parse error: ${error.msg} at ${error.pos}"))
+      errors.foreach(error => fail(s"scalac ${phase.name} error: ${error.msg} at ${error.pos}"))
+    })
+    g.phase = run.phaseNamed("patmat")
+    g.globalPhase = run.phaseNamed("patmat")
 
-      val packageobjectsPhase = run.phaseNamed("packageobjects")
-      val phases = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
-      reporter.reset()
-
-      phases.foreach(phase => {
-        g.phase = phase
-        g.globalPhase = phase
-        phase.asInstanceOf[g.GlobalPhase].apply(unit)
-        val errors = reporter.infos.filter(_.severity == reporter.ERROR)
-        errors.foreach(error => fail(s"scalac ${phase.name} error: ${error.msg} at ${error.pos}"))
-      })
-      g.phase = run.phaseNamed("patmat")
-      g.globalPhase = run.phaseNamed("patmat")
-
-      m.Database(List(unit.source.toInput -> unit.toAttributes))
-    } finally {
-      if (oldSourcepath != null) sys.props("scalameta.sourcepath") = oldSourcepath
-      else sys.props.remove("scalameta.sourcepath")
-    }
+    m.Database(List(unit.source.toInput -> unit.toAttributes))
   }
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
