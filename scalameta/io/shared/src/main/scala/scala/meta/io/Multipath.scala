@@ -17,15 +17,14 @@ import org.scalameta.logger
 
 @root
 trait Multipath {
-  def value: Seq[AbsolutePath]
-  def syntax: String = value match {
+  def shallow: Seq[AbsolutePath]
+  def syntax: String = shallow match {
     case cwd :: Nil if cwd == PathIO.workingDirectory => "\".\""
-    case _ => value.mkString(pathSeparator)
+    case _ => shallow.mkString(pathSeparator)
   }
-  def shallow: Seq[AbsolutePath] = value.flatMap(path => FileIO.listFiles(path))
   def deep: List[Fragment] = {
     var buf = mutable.LinkedHashSet[Fragment]()
-    value.foreach { base =>
+    shallow.foreach { base =>
       def exploreJar(base: AbsolutePath): Unit = {
         if (scala.meta.internal.platform.isJS) return
         val stream = new FileInputStream(base.toFile)
@@ -71,27 +70,35 @@ trait Multipath {
 }
 
 @leaf
-class Classpath(value: Seq[AbsolutePath]) extends Multipath {
+class Classpath(shallow: Seq[AbsolutePath]) extends Multipath {
   def structure: String = s"""Classpath("$syntax")"""
   override def toString: String = syntax
 }
-// NOTE: This empty companion object is necessary for some reason to avoid a
-// "classnotfound exception: Classpath$". It seems to be a bug in the @leaf
-// macro annotation.
 object Classpath {
+  // NOTE: These methods are duplicated in Classpath and Sourcepath.
+  // The @leaf annotation should synthesize at least the default apply(List[Path])
+  // but it doesn't seem to do that for some reason.
+  def apply(paths: Seq[AbsolutePath]): Classpath =
+    new Classpath(paths)
+  def apply(path: AbsolutePath): Classpath =
+    new Classpath(List(path))
+  // NOTE: This constructor is inherently unsafe and escapes the entire safety
+  // provided by Absolute vs. Relative paths. This constructor will crash if the
+  // argument is not an absolute path.
   def apply(value: String): Classpath = {
     new Classpath(value.split(pathSeparator).map(AbsolutePath.apply))
   }
 }
 
 @leaf
-class Sourcepath(value: Seq[AbsolutePath]) extends Multipath {
+class Sourcepath(shallow: Seq[AbsolutePath]) extends Multipath {
   def structure: String = s"""Sourcepath("$syntax")"""
   override def toString: String = syntax
 }
-// NOTE: same comment as for Classpath.
 object Sourcepath {
   def workingDirectory = new Sourcepath(List(PathIO.workingDirectory))
+  def apply(paths: Seq[AbsolutePath]): Sourcepath =
+    new Sourcepath(paths)
   def apply(path: AbsolutePath): Sourcepath =
     new Sourcepath(List(path))
   def apply(value: String): Sourcepath = {
