@@ -109,8 +109,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def parsePat(): Pat = parseRule(_.pattern())
   def parseQuasiquotePat(): Pat = parseRule(_.quasiquotePattern())
   def parseUnquotePat(): Pat = parseRule(_.unquotePattern())
-  def parsePatType(): Pat.Type = parseRule(_.patternTyp())
-  def parseQuasiquotePatType(): Pat.Type = parseRule(_.quasiquotePatternTyp())
   def parseCase(): Case = parseRule{parser => parser.accept[KwCase]; parser.caseClause()}
   def parseCtorCall(): Ctor.Call = parseRule(_.constructorCall(typ(), allowArgss = true))
   def parseTemplate(): Template = parseRule(_.template())
@@ -1147,14 +1145,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
      */
     def types(): List[Type] = commaSeparated(typ())
 
-    // TODO: I have a feeling that we no longer need PatternContextSensitive
-    // now that we have Pat.Type separate from Type
-    def patternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Pat.Type = {
-      def loop(tpe: Type, convertTypevars: Boolean): Pat.Type = tpe match {
+    def patternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Type = {
+      def loop(tpe: Type, convertTypevars: Boolean): Type = tpe match {
         case q: Type.Quasi =>
-          q.become[Pat.Type.Quasi]
+          q
         case tpe @ Type.Name(value) if convertTypevars && value(0).isLower =>
-          atPos(tpe, tpe)(Pat.Var.Type(tpe))
+          atPos(tpe, tpe)(Type.Var(tpe))
         case tpe: Type.Name =>
           tpe
         case tpe: Type.Select =>
@@ -1162,57 +1158,52 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case Type.Project(qual, name) =>
           val qual1 = loop(qual, convertTypevars = false)
           val name1 = name
-          atPos(tpe, tpe)(Pat.Type.Project(qual1, name1))
+          atPos(tpe, tpe)(Type.Project(qual1, name1))
         case tpe: Type.Singleton =>
           tpe
         case Type.Apply(underlying, args) =>
           val underlying1 = loop(underlying, convertTypevars = false)
           val args1 = args.map(arg => loop(arg, convertTypevars = true))
-          atPos(tpe, tpe)(Pat.Type.Apply(underlying1, args1))
+          atPos(tpe, tpe)(Type.Apply(underlying1, args1))
         case Type.ApplyInfix(lhs, op, rhs) =>
           val lhs1 = loop(lhs, convertTypevars = false)
           val op1 = op
           val rhs1 = loop(rhs, convertTypevars = false)
-          atPos(tpe, tpe)(Pat.Type.ApplyInfix(lhs1, op1, rhs1))
+          atPos(tpe, tpe)(Type.ApplyInfix(lhs1, op1, rhs1))
         case Type.Function(params, res) =>
-          val params1 = params.map {
-            case q @ Type.Quasi(1, Type.Quasi(0, _)) => q.become[Pat.Type.Quasi]
-            case p => loop(p.require[Type], convertTypevars = true)
-          }
+          val params1 = params.map(p => loop(p, convertTypevars = true))
           val res1 = loop(res, convertTypevars = false)
-          atPos(tpe, tpe)(Pat.Type.Function(params1, res1))
+          atPos(tpe, tpe)(Type.Function(params1, res1))
         case Type.Tuple(elements) =>
           val elements1 = elements.map(el => loop(el, convertTypevars = true))
-          atPos(tpe, tpe)(Pat.Type.Tuple(elements1))
+          atPos(tpe, tpe)(Type.Tuple(elements1))
         case Type.With(lhs, rhs) =>
           val lhs1 = loop(lhs, convertTypevars = false)
           val rhs1 = loop(rhs, convertTypevars = false)
-          atPos(tpe, tpe)(Pat.Type.With(lhs1, rhs1))
+          atPos(tpe, tpe)(Type.With(lhs1, rhs1))
         case Type.And(lhs, rhs) =>
           val lhs1 = loop(lhs, convertTypevars = false)
           val rhs1 = loop(rhs, convertTypevars = false)
-          atPos(tpe, tpe)(Pat.Type.And(lhs1, rhs1))
+          atPos(tpe, tpe)(Type.And(lhs1, rhs1))
         case Type.Or(lhs, rhs) =>
           val lhs1 = loop(lhs, convertTypevars = false)
           val rhs1 = loop(rhs, convertTypevars = false)
-          atPos(tpe, tpe)(Pat.Type.Or(lhs1, rhs1))
+          atPos(tpe, tpe)(Type.Or(lhs1, rhs1))
         case Type.Refine(tpe, stats) =>
           val tpe1 = tpe.map(tpe => loop(tpe, convertTypevars = false))
           val stats1 = stats
-          atPos(tpe, tpe)(Pat.Type.Refine(tpe1, stats1))
+          atPos(tpe, tpe)(Type.Refine(tpe1, stats1))
         case Type.Existential(underlying, stats) =>
           val underlying1 = loop(underlying, convertTypevars = false)
           val stats1 = stats
-          atPos(tpe, tpe)(Pat.Type.Existential(underlying1, stats1))
+          atPos(tpe, tpe)(Type.Existential(underlying1, stats1))
         case Type.Annotate(underlying, annots) =>
           val underlying1 = loop(underlying, convertTypevars = false)
           val annots1 = annots
-          atPos(tpe, tpe)(Pat.Type.Annotate(underlying1, annots1))
-        case Type.Placeholder(Type.Bounds(None, None)) if convertTypevars =>
-          atPos(tpe, tpe)(Pat.Type.Wildcard())
+          atPos(tpe, tpe)(Type.Annotate(underlying1, annots1))
         case Type.Placeholder(bounds) =>
           val bounds1 = bounds
-          atPos(tpe, tpe)(Pat.Type.Placeholder(bounds1))
+          atPos(tpe, tpe)(Type.Placeholder(bounds1))
         case tpe: Lit =>
           tpe
       }
@@ -1230,33 +1221,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
       }
       loop(t, convertTypevars = allowImmediateTypevars)
-    }
-
-    def quasiquotePatternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Pat.Type = autoPos {
-      // NOTE: As per quasiquotes.md
-      // * pt"_" => Pat.Type.Wildcard (doesn't parse)
-      // * pt"x" => Pat.Var.Type (needs postprocessing, parsed as Type.Name)
-      // * pt"X" => error
-      // * pt"`x`" => Type.Name (ok)
-      // * pt"`X`" => Type.Name (ok)
-      token match {
-        case Underscore() if ahead(token.is[EOF]) =>
-          next()
-          Pat.Type.Wildcard()
-        case _ =>
-          val bqIdent = isIdent && isBackquoted
-          val nonbqIdent = isIdent && !isBackquoted
-          val ptpe = patternTyp(allowInfix = true, allowImmediateTypevars = false)
-          ptpe match {
-            case ptpe: Type.Name if nonbqIdent =>
-              if (ptpe.value.head.isLower) atPos(ptpe, ptpe)(Pat.Var.Type(ptpe))
-              else syntaxError("Pattern type variables must start with a lower-case letter", at = ptpe)
-            case ptpe: Type.Name if bqIdent =>
-              syntaxError("Pattern type variables must not be enclosed in backquotes", at = ptpe)
-            case _ =>
-              ptpe
-          }
-      }
     }
 
     def patternTypeArgs() = inBrackets(commaSeparated(patternTyp(allowInfix = true, allowImmediateTypevars = true)))
@@ -2319,14 +2283,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     private def topLevelNamesToPats[T >: Pat](op: => T): T = {
       // NOTE: As per quasiquotes.md
-      // * p"x" => Pat.Var.Term (ok)
-      // * p"X" => Pat.Var.Term (needs postprocessing, parsed as Term.Name)
+      // * p"x" => Pat.Var (ok)
+      // * p"X" => Pat.Var (needs postprocessing, parsed as Term.Name)
       // * p"`x`" => Term.Name (ok)
       // * p"`X`" => Term.Name (ok)
       val nonbqIdent = isIdent && !isBackquoted
       val pat = op
       pat match {
-        case pat: Term.Name if nonbqIdent => atPos(pat, pat)(Pat.Var.Term(pat))
+        case pat: Term.Name if nonbqIdent => atPos(pat, pat)(Pat.Var(pat))
         case _ => pat
       }
     }
@@ -2368,13 +2332,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case p: Pat.Quasi =>
             nextOnce()
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
-          case p: Pat.Var.Term if dialect.allowColonForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
+          case p: Pat.Var if dialect.allowColonForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
             nextOnce()
             val seqWildcard = autoPos({ nextTwice(); Pat.SeqWildcard() })
             Pat.Bind(p, seqWildcard)
-          case p: Pat.Var.Term if !dialect.allowColonForExtractorVarargs && isColonWildcardStar =>
+          case p: Pat.Var if !dialect.allowColonForExtractorVarargs && isColonWildcardStar =>
             syntaxError(s"$dialect does not support var: _*", at = p)
-          case p: Pat.Var.Term =>
+          case p: Pat.Var =>
             nextOnce()
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
           case p: Pat.Wildcard if dialect.allowColonForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
@@ -2402,16 +2366,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       else p match {
         case p: Pat.Quasi =>
           next()
-          val lhs = p.become[Pat.Var.Term.Quasi]
-          val rhs = pattern3()
-          Pat.Bind(lhs, rhs)
+          Pat.Bind(p, pattern3())
         case p: Term.Name =>
           syntaxError("Pattern variables must start with a lower-case letter. (SLS 8.1.1.)", at = p)
-        case p: Pat.Var.Term if dialect.allowAtForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
+        case p: Pat.Var if dialect.allowAtForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
           nextOnce()
           val seqWildcard = autoPos({ nextTwice(); Pat.SeqWildcard() })
           Pat.Bind(p, seqWildcard)
-        case p: Pat.Var.Term =>
+        case p: Pat.Var =>
           next()
           Pat.Bind(p, pattern3())
         case p: Pat.Wildcard if dialect.allowAtForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
@@ -2514,14 +2476,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
         (token, sid) match {
           case (LeftParen(), _)                     =>
-            val quasiOrSid = sid match {
-              case quasi: Term.Name.Quasi => quasi.become[Term.Ref.Quasi]
-              case path => path
+            val ref = sid match {
+              case quasi: Term.Name.Quasi => quasi.become[Term.Quasi]
+              case other => other
             }
-            Pat.Extract(quasiOrSid, targs, checkNoTripleDots(argumentPatterns()))
+            val fun = if (targs.nonEmpty) atPos(sid, auto)(Term.ApplyType(ref, targs)) else ref
+            Pat.Extract(fun, checkNoTripleDots(argumentPatterns()))
           case (_, _) if targs.nonEmpty             => syntaxError("pattern must be a value", at = token)
           case (_, name: Term.Name.Quasi)           => name.become[Pat.Quasi]
-          case (_, name: Term.Name) if isVarPattern => Pat.Var.Term(name)
+          case (_, name: Term.Name) if isVarPattern => Pat.Var(name)
           case (_, name: Term.Name)                 => name
           case (_, select: Term.Select)             => select
           case _                                    => unreachable(debug(token, token.structure, sid, sid.structure))
@@ -2584,7 +2547,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
   def xmlLiteralPattern(): Pat = syntaxError("XML literals are not supported", at = in.token)
   def patternTyp() = noSeq.patternTyp(allowInfix = true, allowImmediateTypevars = false)
-  def quasiquotePatternTyp() = noSeq.quasiquotePatternTyp(allowInfix = true, allowImmediateTypevars = false)
   def patternTypeArgs() = noSeq.patternTypeArgs()
 
 /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
@@ -2673,7 +2635,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       validate()
       mods :+ mod
     }
-    // the only things that can come after $mod or $mods are either keywords or $pname/$tpname; the former is easy,
+    // the only things that can come after $mod or $mods are either keywords or names; the former is easy,
     // but in the case of the latter, we need to take care to not hastily parse those names as modifiers
     def continueLoop = ahead(token.is[Colon] || token.is[Equals] || token.is[EOF] || token.is[LeftBracket] || token.is[Subtype] || token.is[Supertype] || token.is[Viewbound])
     def loop(mods: List[Mod]): List[Mod] = token match {
@@ -3027,8 +2989,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     next()
     val lhs: List[Pat] = commaSeparated(noSeq.pattern2()).map {
-      case q: Pat.Quasi => q.become[Pat.Var.Term.Quasi]
-      case name: Term.Name => atPos(name, name)(Pat.Var.Term(name))
+      case name: Term.Name => atPos(name, name)(Pat.Var(name))
       case pat => pat
     }
     val tp: Option[Type] = typedOpt()
@@ -3038,7 +2999,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val rhsExpr = expr()
       val rhs =
         if (rhsExpr.is[Term.Placeholder]) {
-          if (tp.nonEmpty && isMutable && lhs.forall(_.is[Pat.Var.Term]))
+          if (tp.nonEmpty && isMutable && lhs.forall(_.is[Pat.Var]))
             None
           else
             syntaxError("unbound placeholder parameter", at = token)
@@ -3049,8 +3010,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     } else {
       if (!isMutable) rejectMod[Mod.Lazy](mods, "lazy values may not be abstract")
       val ids = lhs.map {
-        case name: Pat.Var.Term => name
-        case other              => syntaxError("pattern definition may not be abstract", at = other)
+        case q: Pat.Quasi  => q
+        case name: Pat.Var => name
+        case other         => syntaxError("pattern definition may not be abstract", at = other)
       }
 
       if (isMutable) Decl.Var(mods, ids, tp.get)

@@ -159,13 +159,11 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Dialect.apply(scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
-      |* scala.meta.Pat.Type.tpe: scala.meta.Type
       |* scala.meta.Ref(implicit scala.meta.semantic.Mirror).symbol: scala.meta.semantic.Symbol
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
       |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
-      |* scala.meta.Type.pat: scala.meta.Pat.Type
       |* scala.meta.semantic.Mirror.sources: List[scala.meta.Source]
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).denot: scala.meta.semantic.Denotation
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).flags: Long
@@ -255,25 +253,8 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Pat.Interpolate
       |scala.meta.Pat.SeqWildcard
       |scala.meta.Pat.Tuple
-      |scala.meta.Pat.Type
-      |scala.meta.Pat.Type.And
-      |scala.meta.Pat.Type.Annotate
-      |scala.meta.Pat.Type.Apply
-      |scala.meta.Pat.Type.ApplyInfix
-      |scala.meta.Pat.Type.Existential
-      |scala.meta.Pat.Type.Function
-      |scala.meta.Pat.Type.Or
-      |scala.meta.Pat.Type.Placeholder
-      |scala.meta.Pat.Type.Project
-      |scala.meta.Pat.Type.Ref
-      |scala.meta.Pat.Type.Refine
-      |scala.meta.Pat.Type.Tuple
-      |scala.meta.Pat.Type.Wildcard
-      |scala.meta.Pat.Type.With
       |scala.meta.Pat.Typed
       |scala.meta.Pat.Var
-      |scala.meta.Pat.Var.Term
-      |scala.meta.Pat.Var.Type
       |scala.meta.Pat.Wildcard
       |scala.meta.Pat.Xml
       |scala.meta.Pkg
@@ -337,6 +318,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Type.Select
       |scala.meta.Type.Singleton
       |scala.meta.Type.Tuple
+      |scala.meta.Type.Var
       |scala.meta.Type.With
     """.trim.stripMargin)
   }

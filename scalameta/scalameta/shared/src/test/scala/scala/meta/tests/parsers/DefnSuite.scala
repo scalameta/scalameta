@@ -6,49 +6,49 @@ import scala.meta.dialects.Scala211
 
 class DefnSuite extends ParseSuite {
   test("val x = 2") {
-    val Defn.Val(Nil, Pat.Var.Term(Term.Name("x")) :: Nil, None, Lit(2)) = templStat("val x = 2")
+    val Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Nil, None, Lit(2)) = templStat("val x = 2")
   }
 
   test("var x = 2") {
-    val Defn.Var(Nil, Pat.Var.Term(Term.Name("x")) :: Nil, None, Some(Lit(2))) = templStat("var x = 2")
+    val Defn.Var(Nil, Pat.Var(Term.Name("x")) :: Nil, None, Some(Lit(2))) = templStat("var x = 2")
   }
 
   test("val x, y = 2") {
-    val Defn.Val(Nil, Pat.Var.Term(Term.Name("x")) :: Pat.Var.Term(Term.Name("y")) :: Nil,
+    val Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Pat.Var(Term.Name("y")) :: Nil,
                  None, Lit(2)) = templStat("val x, y = 2")
   }
 
   test("val x: Int = 2") {
-    val Defn.Val(Nil, Pat.Var.Term(Term.Name("x")) :: Nil,
+    val Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Nil,
                  Some(Type.Name("Int")), Lit(2)) = templStat("val x: Int = 2")
   }
 
   test("val `x`: Int = 2") {
-    val Defn.Val(Nil, Pat.Var.Term(Term.Name("x")) :: Nil,
+    val Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Nil,
                  Some(Type.Name("Int")), Lit(2)) = templStat("val `x`: Int = 2")
   }
 
   test("val f: Int => String = _.toString") {
     val Defn.Val(
-      Nil, 
-      Pat.Var.Term(Term.Name("f")) :: Nil, 
-      Some(Type.Function(Type.Name("Int") :: Nil, Type.Name("String"))), 
-      Term.Select(Term.Placeholder(), Term.Name("toString"))) = 
+      Nil,
+      Pat.Var(Term.Name("f")) :: Nil,
+      Some(Type.Function(Type.Name("Int") :: Nil, Type.Name("String"))),
+      Term.Select(Term.Placeholder(), Term.Name("toString"))) =
         templStat("val f: Int => String = _.toString")
   }
 
   test("var f: Int => String = _.toString") {
     val Defn.Var(
-      Nil, 
-      Pat.Var.Term(Term.Name("f")) :: Nil, 
-      Some(Type.Function(Type.Name("Int") :: Nil, Type.Name("String"))), 
-      Some(Term.Select(Term.Placeholder(), Term.Name("toString")))) = 
+      Nil,
+      Pat.Var(Term.Name("f")) :: Nil,
+      Some(Type.Function(Type.Name("Int") :: Nil, Type.Name("String"))),
+      Some(Term.Select(Term.Placeholder(), Term.Name("toString")))) =
         templStat("var f: Int => String = _.toString")
   }
 
 
   test("var x: Int = _") {
-    val Defn.Var(Nil, Pat.Var.Term(Term.Name("x")) :: Nil,
+    val Defn.Var(Nil, Pat.Var(Term.Name("x")) :: Nil,
                  Some(Type.Name("Int")), None) = templStat("var x: Int = _")
   }
 
@@ -65,7 +65,7 @@ class DefnSuite extends ParseSuite {
   }
 
   test("val (x: Int) = 2") {
-    val Defn.Val(Nil, Pat.Typed(Pat.Var.Term(Term.Name("x")), Type.Name("Int")) :: Nil,
+    val Defn.Val(Nil, Pat.Typed(Pat.Var(Term.Name("x")), Type.Name("Int")) :: Nil,
                  None, Lit(2)) = templStat("val (x: Int) = 2")
   }
 

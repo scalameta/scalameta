@@ -81,7 +81,7 @@ class TypeSuite extends ParseSuite {
     val Refine(Some(TypeName("A")),
                Decl.Def(Nil, TermName("x"),
                         Nil, Nil, TypeName("Int")) ::
-               Decl.Val(Nil, List(Pat.Var.Term(TermName("y"))), TypeName("B")) ::
+               Decl.Val(Nil, List(Pat.Var(TermName("y"))), TypeName("B")) ::
                Decl.Type(Nil, TypeName("C"), Nil, Type.Bounds(None, None)) :: Nil) =
       tpe("A { def x: Int; val y: B; type C }")
   }
@@ -117,7 +117,7 @@ class TypeSuite extends ParseSuite {
 
   test("a.T forSome { val a: A }") {
     val Existential(Select(TermName("a"), TypeName("T")),
-                    Decl.Val(Nil, Pat.Var.Term(TermName("a")) :: Nil, TypeName("A")) :: Nil) =
+                    Decl.Val(Nil, Pat.Var(TermName("a")) :: Nil, TypeName("A")) :: Nil) =
       tpe("a.T forSome { val a: A }")
   }
 

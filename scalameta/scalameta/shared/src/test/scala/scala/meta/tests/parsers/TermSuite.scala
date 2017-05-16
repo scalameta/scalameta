@@ -289,16 +289,16 @@ class TermSuite extends ParseSuite {
   }
 
   test("for (a <- b; if c; x = a) x") {
-    val For(List(Enumerator.Generator(Pat.Var.Term(TermName("a")), TermName("b")),
+    val For(List(Enumerator.Generator(Pat.Var(TermName("a")), TermName("b")),
                  Enumerator.Guard(TermName("c")),
-                 Enumerator.Val(Pat.Var.Term(TermName("x")), TermName("a"))),
+                 Enumerator.Val(Pat.Var(TermName("x")), TermName("a"))),
             TermName("x")) = term("for (a <- b; if c; x = a) x")
 
   }
   test("for (a <- b; if c; x = a) yield x") {
-    val ForYield(List(Enumerator.Generator(Pat.Var.Term(TermName("a")), TermName("b")),
+    val ForYield(List(Enumerator.Generator(Pat.Var(TermName("a")), TermName("b")),
                       Enumerator.Guard(TermName("c")),
-                      Enumerator.Val(Pat.Var.Term(TermName("x")), TermName("a"))),
+                      Enumerator.Val(Pat.Var(TermName("x")), TermName("a"))),
                  TermName("x")) = term("for (a <- b; if c; x = a) yield x")
   }
 
@@ -344,7 +344,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("new { val x: Int = 1 } with A") {
-    val New(Template(Defn.Val(Nil, List(Pat.Var.Term(TermName("x"))), Some(TypeName("Int")), Lit(1)) :: Nil,
+    val New(Template(Defn.Val(Nil, List(Pat.Var(TermName("x"))), Some(TypeName("Int")), Lit(1)) :: Nil,
                      Ctor.Name("A") :: Nil, EmptySelf(), None)) =
       term("new { val x: Int = 1 } with A")
   }
@@ -385,8 +385,8 @@ class TermSuite extends ParseSuite {
 
   test("xml literal - 1") {
     val Term.Block(List(
-      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Xml(List(Lit("<p/>")), Nil)),
-      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("y"))), None, Term.Name("x")))) =
+      Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Xml(List(Lit("<p/>")), Nil)),
+      Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Term.Name("x")))) =
     term("""{
       val x = <p/>
       val y = x
@@ -404,7 +404,7 @@ class TermSuite extends ParseSuite {
 
   test("#312") {
     val Term.Block(List(
-      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Ascribe(Term.Name("yz"), Type.Tuple(List(Type.Name("Y"), Type.Name("Z"))))),
+      Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Ascribe(Term.Name("yz"), Type.Tuple(List(Type.Name("Y"), Type.Name("Z"))))),
       Term.Tuple(List(Term.Name("x"), Term.Name("x"))))) =
     term("""{
       val x = yz: (Y, Z)
@@ -417,7 +417,7 @@ class TermSuite extends ParseSuite {
       Term.Name("spawn"),
       List(
         Term.Block(List(
-          Defn.Var(Nil, List(Pat.Var.Term(Term.Name("v"))), Some(Type.Name("Int")), None), Term.Name("???"))))) =
+          Defn.Var(Nil, List(Pat.Var(Term.Name("v"))), Some(Type.Name("Int")), None), Term.Name("???"))))) =
     term("spawn { var v: Int = _; ??? }")
   }
 

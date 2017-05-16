@@ -21,6 +21,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   lazy val TermApplySymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply")).asClass
   lazy val DefnValSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val")).asClass
   lazy val DefnVarSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Var")).asClass
+  lazy val PatBindSymbol = c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Bind")).asClass
   lazy val PatTypedSymbol = c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Typed")).asClass
   lazy val LitSymbol = c.mirror.staticClass("scala.meta.Lit")
   lazy val TokensSymbol = c.mirror.staticClass("scala.meta.tokens.Tokens")
@@ -44,7 +45,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
           pat match {
             case q: _root_.scala.meta.internal.ast.Quasi if unquotesName(q) =>
               val action = if (q.rank == 0) "unquote" else "splice"
-              c.abort(q.pos, "can't " + action + " a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)")
+              c.abort(q.pos, "can't " + action + " a name here, use a pattern instead (e.g. p\"x\")")
             case _ =>
           }
         }
@@ -92,6 +93,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       else if (adt.tpe <:< TermApplySymbol.toType) Some(specialcaseTermApply(body))
       else if (adt.tpe <:< DefnValSymbol.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
       else if (adt.tpe <:< DefnVarSymbol.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
+      else if (adt.tpe <:< PatBindSymbol.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
       else if (adt.tpe <:< PatTypedSymbol.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
       else if (adt.tpe <:< LitSymbol.toType) Some(q"""
         implicit object LiftableAny extends c.universe.Liftable[_root_.scala.Any] {

@@ -14,8 +14,8 @@ class ReflectionSuite extends AstSuite {
   // but please deal with that (or come up with a more effective way of testing AstReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 25)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 301)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 22)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 272)
   }
 
   test("If") {
@@ -60,8 +60,6 @@ class ReflectionSuite extends AstSuite {
       |scala.List[scala.meta.Lit]
       |scala.List[scala.meta.Mod.Annot]
       |scala.List[scala.meta.Mod]
-      |scala.List[scala.meta.Pat.Type]
-      |scala.List[scala.meta.Pat.Var.Term]
       |scala.List[scala.meta.Pat]
       |scala.List[scala.meta.Stat]
       |scala.List[scala.meta.Term.Param]
@@ -70,7 +68,6 @@ class ReflectionSuite extends AstSuite {
       |scala.List[scala.meta.Type]
       |scala.Long
       |scala.Option[scala.List[scala.meta.Stat]]
-      |scala.Option[scala.meta.Pat.Type]
       |scala.Option[scala.meta.Term]
       |scala.Option[scala.meta.Type]
       |scala.Short
@@ -81,8 +78,6 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.Name.Indeterminate
       |scala.meta.Name.Qualifier
       |scala.meta.Pat
-      |scala.meta.Pat.Type
-      |scala.meta.Pat.Var.Term
       |scala.meta.Template
       |scala.meta.Term
       |scala.meta.Term.Name

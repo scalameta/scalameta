@@ -196,7 +196,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       q"val $name = foo"
     """) === """
-      |<macro>:5: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
+      |<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      q"val $name = foo"
       |            ^
     """.trim.stripMargin)
@@ -209,7 +209,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       q"var $name = foo"
     """) === """
-      |<macro>:5: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
+      |<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      q"var $name = foo"
       |            ^
     """.trim.stripMargin)
@@ -222,7 +222,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       p"$name: T"
     """) === """
-      |<macro>:5: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
+      |<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      p"$name: T"
       |        ^
     """.trim.stripMargin)
@@ -329,44 +329,42 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("""p"$pname @ $apat"""") {
+  test("""p"$pat @ $pat"""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      val pname = p"`x`"
-      val apat = p"y"
-      p"$pname @ $apat"
+      val pat1 = p"`x`"
+      val pat2 = p"y"
+      p"$pat1 @ $pat2"
     """) === """
-      |<macro>:6: type mismatch when unquoting;
-      | found   : scala.meta.Term.Name
-      | required: scala.meta.Pat.Var.Term
-      |      p"$pname @ $apat"
+      |<macro>:6: can't unquote a name here, use a pattern instead (e.g. p"x")
+      |      p"$pat1 @ $pat2"
       |        ^
     """.trim.stripMargin)
   }
 
-  test("""p"$ref[..$tpes](..$apats)""") {
+  test("""p"$ref[..$tpes](..$pats)""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      val p"$ref[..$tpes](..$apats)" = p"x[A, B]"
+      val p"$ref[..$tpes](..$pats)" = p"x[A, B]"
     """) === """
       |<macro>:4: pattern must be a value
-      |      val p"$ref[..$tpes](..$apats)" = p"x[A, B]"
-      |                                                ^
+      |      val p"$ref[..$tpes](..$pats)" = p"x[A, B]"
+      |                                               ^
     """.trim.stripMargin)
   }
 
-  test("""p"$pat: $ptpe"""") {
+  test("""p"$pat: $tpe"""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
       val pat = p"`x`"
-      val ptpe = pt"y"
-      p"$pat: $ptpe"
+      val tpe = t"T"
+      p"$pat: $tpe"
     """) === """
-      |<macro>:6: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
-      |      p"$pat: $ptpe"
+      |<macro>:6: can't unquote a name here, use a pattern instead (e.g. p"x")
+      |      p"$pat: $tpe"
       |        ^
     """.trim.stripMargin)
   }
@@ -382,62 +380,6 @@ class ErrorSuite extends FunSuite {
       |                  ^
     """.trim.stripMargin)
   }
-
-  test("pt\"X\"") {
-   assert(typecheckError("""
-     import scala.meta._
-     import scala.meta.dialects.Scala211
-     pt"X"
-   """).contains("Pattern type variables must start with a lower-case letter"))
-  }
-
-  test("pt\"`x`\"") {
-   assert(typecheckError("""
-     import scala.meta._
-     import scala.meta.dialects.Scala211
-     pt"`x`"
-   """).contains("Pattern type variables must not be enclosed in backquotes"))
-  }
-
-  test("pt\"`X`\"") {
-   assert(typecheckError("""
-     import scala.meta._
-     import scala.meta.dialects.Scala211
-     pt"`X`"
-   """).contains("Pattern type variables must not be enclosed in backquotes"))
-  }
-
-//  test("""pt"$ptpe[..$ptpes]""") { // TODO review after #216 resolved
-//    assert(typecheckError("""
-//      import scala.meta._
-//      import scala.meta.dialects.Scala211
-//      val pt"$ptpe[..$ptpes]" = pt"x[y, z]"
-//    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
-//  }
-
-//  test("""pt"..$ptpes { ..$stats }"""") { // TODO review after #216 resolved
-//    assert(typecheckError("""
-//      import scala.meta._
-//      import scala.meta.dialects.Scala211
-//      val pt"..$ptpes { ..$stats }" = pt"x with y { val a: A; val b: B }"
-//    """).contains("found that tpes.forall(((tpe: Pat.Type) => tpe.isInstanceOf[Pat.Var.Type].`unary_!`.&&(tpe.isInstanceOf[Pat.Type.Wildcard].`unary_!`))) is false"))
-//  }
-
-//  test("""pt"$ptpe forSome { ..$stats }"""") { // TODO review after #216 resolved
-//    assert(typecheckError("""
-//      import scala.meta._
-//      import scala.meta.dialects.Scala211
-//      val pt"$ptpe forSome { ..$stats }" = pt"x forSome { val a: A }"
-//    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
-//  }
-
-//  test("""pt"$ptpe ..@$annots"""") { // TODO review after #216 resolved
-//    assert(typecheckError("""
-//      import scala.meta._
-//      import scala.meta.dialects.Scala211
-//      val pt"$ptpe ..@$annots" = pt"x @q @w"
-//    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
-//  }
 
   test("""q"..$mods def this(...$paramss) = $expr"""") {
     assert(typecheckError("""
@@ -811,7 +753,7 @@ class ErrorSuite extends FunSuite {
     intercept[InvariantFailedException] { q"$xs + $xs" }
   }
 
-  test("Pat.Var.Term") {
+  test("Pat.Var") {
     import scala.meta._
     val x = p"X"
     intercept[InvariantFailedException] { p"case $x =>" }
@@ -833,5 +775,15 @@ class ErrorSuite extends FunSuite {
     import scala.meta._
     val p = p"_*"
     intercept[InvariantFailedException] { p"case $p =>" }
+  }
+
+  test("Type.Var") {
+    import scala.meta._
+    val p"$_: List[$tvar]" = p"xs: List[t]"
+    assert(tvar.is[Type.Var])
+    intercept[InvariantFailedException] { p"x: $tvar" }
+    val okay1 = t"List[$tvar]"
+    val okay2 = q"List[$tvar]"
+    val okay3 = p"$okay2(x, y)"
   }
 }

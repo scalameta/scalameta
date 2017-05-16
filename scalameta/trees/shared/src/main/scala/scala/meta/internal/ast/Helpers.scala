@@ -119,6 +119,12 @@ object Helpers {
         case superCall => isSuperCall(superCall)
       }
     }
+    def isExtractor: Boolean = tree match {
+      case quasi: Term.Quasi => true
+      case ref: Term.Ref => ref.isStableId
+      case Term.ApplyType(tree, _) => tree.isExtractor
+      case _ => false
+    }
   }
 
   implicit class XtensionTermRefOps(tree: Term.Ref) {
@@ -227,52 +233,6 @@ object Helpers {
     def argsc: Int = 1 + (tree.fun match { case fun: Term.Apply => fun.argsc; case _ => 0 })
   }
 
-  def tpeToPattpe(tpe: Type): Pat.Type = {
-    def loop(tpe: Type): Pat.Type = tpe match {
-      case tpe: Type.Name => tpe
-      case tpe: Type.Select => tpe
-      case Type.Project(qual, name) => Pat.Type.Project(loop(qual), name)
-      case tpe: Type.Singleton => tpe
-      case Type.Apply(tpe, args) => Pat.Type.Apply(loop(tpe), args.map(loop))
-      case Type.ApplyInfix(lhs, op, rhs) => Pat.Type.ApplyInfix(loop(lhs), op, loop(rhs))
-      case Type.Function(params, res) => Pat.Type.Function(params.map(param => loop(param.require[Type])), loop(res))
-      case Type.Tuple(elements) => Pat.Type.Tuple(elements.map(loop))
-      case Type.With(lhs, rhs) => Pat.Type.With(loop(lhs), loop(rhs))
-      case Type.And(lhs, rhs) => Pat.Type.And(loop(lhs), loop(rhs))
-      case Type.Or(lhs, rhs) => Pat.Type.Or(loop(lhs), loop(rhs))
-      case Type.Refine(tpe, stats) => Pat.Type.Refine(tpe.map(loop), stats)
-      case Type.Existential(tpe, stats) => Pat.Type.Existential(loop(tpe), stats)
-      case Type.Annotate(tpe, annots) => Pat.Type.Annotate(loop(tpe), annots)
-      case Type.Placeholder(bounds) => Pat.Type.Placeholder(bounds)
-      case tpe: Lit => tpe
-    }
-    loop(tpe.require[Type])
-  }
-
-  def pattpeToTpe(pattpe: Pat.Type): Type = {
-    def loop(tpe: Pat.Type): Type = tpe match {
-      case tpe: Type.Name => tpe
-      case tpe: Type.Select => tpe
-      case tpe: Type.Singleton => tpe
-      case tpe: Pat.Var.Type => ???
-      case tpe: Pat.Type.Wildcard => Type.Placeholder(Type.Bounds(None, None))
-      case Pat.Type.Project(qual, name) => Type.Project(loop(qual), name)
-      case Pat.Type.Apply(tpe, args) => Type.Apply(loop(tpe), args.map(loop))
-      case Pat.Type.ApplyInfix(lhs, op, rhs) => Type.ApplyInfix(loop(lhs), op, loop(rhs))
-      case Pat.Type.Function(params, res) => Type.Function(params.map(loop), loop(res))
-      case Pat.Type.Tuple(elements) => Type.Tuple(elements.map(loop))
-      case Pat.Type.With(lhs, rhs) => Type.With(loop(lhs), loop(rhs))
-      case Pat.Type.And(lhs, rhs) => Type.And(loop(lhs), loop(rhs))
-      case Pat.Type.Or(lhs, rhs) => Type.Or(loop(lhs), loop(rhs))
-      case Pat.Type.Refine(tpe, stats) => Type.Refine(tpe.map(loop), stats)
-      case Pat.Type.Existential(tpe, stats) => Type.Existential(loop(tpe), stats)
-      case Pat.Type.Annotate(tpe, annots) => Type.Annotate(loop(tpe), annots)
-      case Pat.Type.Placeholder(bounds) => Type.Placeholder(bounds)
-      case tpe: Lit => tpe
-    }
-    loop(pattpe.require[Pat.Type])
-  }
-
   def tpeToCtorref(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
     val tpe0 = tpe
     def loop(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
@@ -341,8 +301,8 @@ object Helpers {
       termArgument(parent, destination)
     }
 
-    def PatVarTerm(tree: Pat.Var.Term, parent: Tree, destination: String): Boolean = {
-      val Pat.Var.Term(Term.Name(value)) = tree
+    def PatVar(tree: Pat.Var, parent: Tree, destination: String): Boolean = {
+      val Pat.Var(Term.Name(value)) = tree
       def capitalized = value.nonEmpty && value(0).isUpper
       def declValPat = parent.is[Decl.Val] && destination == "pats"
       def declVarPat = parent.is[Decl.Var] && destination == "pats"
@@ -385,6 +345,17 @@ object Helpers {
       def thisQualifier = parent.is[Term.This]
       def superQualifier = parent.is[Term.Super]
       termParamName || typeParamName || privateWithin || protectedWithin || thisQualifier || superQualifier
+    }
+
+    def TypeVar(tree: Type.Var, parent: Tree, destination: String): Boolean = {
+      def loop(tree: Option[Tree]): Boolean = tree match {
+        case Some(tree: Type) => loop(tree.parent)
+        case Some(_: Pat.Typed) => true
+        case Some(tree: Term.ApplyType) => tree.parent.map(_.is[Pat.Extract]).getOrElse(true)
+        case Some(_) => false
+        case None => true
+      }
+      loop(Some(tree))
     }
   }
 }

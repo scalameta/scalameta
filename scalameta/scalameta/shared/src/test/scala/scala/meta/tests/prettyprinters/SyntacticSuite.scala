@@ -25,7 +25,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("val x: Int (raw)") {
     val tree = templStat("val x: Int")
-    assert(tree.show[Structure] === "Decl.Val(Nil, List(Pat.Var.Term(Term.Name(\"x\"))), Type.Name(\"Int\"))")
+    assert(tree.show[Structure] === "Decl.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), Type.Name(\"Int\"))")
   }
 
   test("val x: Int (code)") {
@@ -55,7 +55,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       QQQ
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Structure] === """Term.Block(List(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var.Term(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", escapedEOL))
+    assert(tree.show[Structure] === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", escapedEOL))
     assert(tree.show[Syntax] === """
     |{
     |  val x = QQQ
@@ -75,7 +75,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         ..$z
       QQQ
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.show[Structure] === """Term.Block(List(Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Pat.Var.Term(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
+    assert(tree.show[Structure] === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
     assert(tree.show[Syntax] === """
     |{
     |  val x = q"123 + $x + ${foo(123)} + 456"
@@ -421,19 +421,19 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("case List(xs @ _*)") {
     val tree = pat("List(xs @ _*)")
-    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), Nil, List(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.SeqWildcard())))")
+    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))")
     assert(tree.show[Syntax] === "List(xs @ _*)")
   }
 
   test("case List[t](xs @ _*)") {
     val tree = pat("List[t](xs @ _*)")
-    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), List(Pat.Var.Type(Type.Name(\"t\"))), List(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.SeqWildcard())))")
+    assert(tree.show[Structure] === "Pat.Extract(Term.ApplyType(Term.Name(\"List\"), List(Type.Var(Type.Name(\"t\")))), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))")
     assert(tree.show[Syntax] === "List[t](xs @ _*)")
   }
 
   test("case List[_](xs @ _*)") {
     val tree = pat("List[_](xs @ _*)")
-    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), List(Pat.Type.Wildcard()), List(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.SeqWildcard())))")
+    assert(tree.show[Structure] === "Pat.Extract(Term.ApplyType(Term.Name(\"List\"), List(Type.Placeholder(Type.Bounds(None, None)))), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))")
     assert(tree.show[Syntax] === "List[_](xs @ _*)")
   }
 
@@ -447,13 +447,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val tree1 = pat("`x`")
     assert(tree1.show[Structure] === "Term.Name(\"x\")")
     val tree2 = pat("f(`x`)")
-    assert(tree2.show[Structure] === "Pat.Extract(Term.Name(\"f\"), Nil, List(Term.Name(\"x\")))")
+    assert(tree2.show[Structure] === "Pat.Extract(Term.Name(\"f\"), List(Term.Name(\"x\")))")
     assert(tree2.show[Syntax] === "f(`x`)")
     val tree3 = pat("X")
     assert(tree3.show[Structure] === "Term.Name(\"X\")")
     assert(tree3.show[Syntax] === "X")
     val tree4 = pat("f(X)")
-    assert(tree4.show[Structure] === "Pat.Extract(Term.Name(\"f\"), Nil, List(Term.Name(\"X\")))")
+    assert(tree4.show[Structure] === "Pat.Extract(Term.Name(\"f\"), List(Term.Name(\"X\")))")
     assert(tree4.show[Syntax] === "f(X)")
   }
 
@@ -578,7 +578,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val interpolate = Pat.Interpolate(
       Term.Name("q"),
       List(Lit.String("object "), Lit.String(" { .."), Lit.String(" }")),
-      List(Pat.Var.Term(Term.Name("name")), Pat.Var.Term(Term.Name("stats")))
+      List(Pat.Var(Term.Name("name")), Pat.Var(Term.Name("stats")))
     )
     assert(interpolate.show[Syntax] === """q"object ${name} { ..${stats} }"""")
   }

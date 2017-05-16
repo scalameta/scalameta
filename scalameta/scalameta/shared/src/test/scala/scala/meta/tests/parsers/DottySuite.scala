@@ -7,7 +7,7 @@ import scala.meta.dialects.Dotty
 class DottySuite extends ParseSuite {
   test("case List(xs: _*)") {
     val tree = pat("List(xs: _*)")
-    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), Nil, List(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.SeqWildcard())))")
+    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))")
     assert(tree.show[Syntax] === "List(xs: _*)")
   }
   test("xml literals") {
@@ -77,7 +77,7 @@ class DottySuite extends ParseSuite {
       Some(Type.ImplicitFunction(List(Type.Name("Int")), Type.Name("Int"))), _) =
         templStat("def f(): implicit Int => Int = ???")
 
-    val Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))),
+    val Defn.Val(Nil, List(Pat.Var(Term.Name("x"))),
       Some(Type.ImplicitFunction(List(Type.Name("String"), Type.Name("Int")), Type.Name("Int"))), _) =
         templStat("val x: implicit (String, Int) => Int = ???")
 

@@ -58,7 +58,7 @@ class SbtSuite extends FunSuite {
       |Source(List(
         |Defn.Val(
           |List(Mod.Lazy()),
-          | List(Pat.Var.Term(Term.Name("commonSettings"))),
+          | List(Pat.Var(Term.Name("commonSettings"))),
           | None,
           | Term.Apply(
               |Term.Name("Seq"),
@@ -68,7 +68,7 @@ class SbtSuite extends FunSuite {
                   | Term.ApplyInfix(Term.Name("scalaVersion"), Term.Name(":="), Nil, List(Lit.String("2.11.7")))))),
         | Defn.Val(
           |List(Mod.Lazy()),
-          | List(Pat.Var.Term(Term.Name("root"))),
+          | List(Pat.Var(Term.Name("root"))),
           | None,
           | Term.Apply(
               |Term.Select(

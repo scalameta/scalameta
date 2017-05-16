@@ -139,7 +139,7 @@ object TreeSyntax {
             case p: Term.Name => unreachable
             case p: Term.Select => false
             case p: Pat.Wildcard => unreachable
-            case p: Pat.Var.Term => false
+            case p: Pat.Var => false
             case p: Pat.Bind => unreachable
             case p: Pat.Alternative => true
             case p: Pat.Tuple => true
@@ -160,8 +160,8 @@ object TreeSyntax {
         def isAmbiguousWithPatVarType(t: Type.Name, p: Tree): Boolean = {
           // TODO: figure this out with Martin
           // `x match { case _: t => }` produces a Type.Name
-          // `x match { case _: List[t] => }` produces a Pat.Var.Type
-          // `x match { case _: List[`t`] => }` produces a Pat.Var.Type as well
+          // `x match { case _: List[t] => }` produces a Type.Var
+          // `x match { case _: List[`t`] => }` produces a Type.Var as well
           // the rules look really inconsistent and probably that's just an oversight
           false
         }
@@ -194,7 +194,7 @@ object TreeSyntax {
           if (t.rank > 0) {
             s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
           } else {
-            val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var.Term] || t.tree.is[Term.This] || t.tree.is[Pat.Wildcard]
+            val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var] || t.tree.is[Term.This] || t.tree.is[Pat.Wildcard]
             implicit val syntaxDialect = dialect.copy(allowTermUnquotes = false, allowPatUnquotes = false, allowMultilinePrograms = true)
             s("$", w("{", t.tree.syntax, "}", !allowBraceless))
           }
@@ -333,6 +333,7 @@ object TreeSyntax {
           s(t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()), t.hi.map(hi => s(" ", kw("<:"), " ", p(Typ, hi))).getOrElse(s()))
         case t: Type.Repeated     => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
         case t: Type.ByName       => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
+        case t: Type.Var          => m(SimpleTyp, s(t.name.value))
         case t: Type.Param        =>
           val mods = t.mods.filter(m => !m.is[Mod.Covariant] && !m.is[Mod.Contravariant])
           require(t.mods.length - mods.length <= 1)
@@ -346,7 +347,7 @@ object TreeSyntax {
           s(w(mods, " "), variance, t.name, t.tparams, tbounds, vbounds, cbounds)
 
         // Pat
-        case t: Pat.Var.Term         => m(SimplePattern, s(if (guessIsBackquoted(t.name)) s"`${t.name.value}`" else t.name.value))
+        case t: Pat.Var              => m(SimplePattern, s(if (guessIsBackquoted(t.name)) s"`${t.name.value}`" else t.name.value))
         case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
         case _: Pat.SeqWildcard      => m(SimplePattern, kw("_*"))
         case t: Pat.Bind             =>
@@ -361,7 +362,7 @@ object TreeSyntax {
           m(Pattern2, s(p(SimplePattern, t.lhs), separator, " ", p(AnyPattern3, t.rhs)))
         case t: Pat.Alternative      => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
         case t: Pat.Tuple            => m(SimplePattern, s("(", r(t.args, ", "), ")"))
-        case t: Pat.Extract          => m(SimplePattern, s(t.ref, t.targs, t.args))
+        case t: Pat.Extract          => m(SimplePattern, s(t.fun, t.args))
         case t: Pat.ExtractInfix     =>
           m(Pattern3(t.op.value), s(p(Pattern3(t.op.value), t.lhs, left = true), " ", t.op, " ", t.rhs match {
             case pat :: Nil => s(p(Pattern3(t.op.value), pat, right = true))
@@ -384,30 +385,6 @@ object TreeSyntax {
           if (dialect.allowLiteralTypes) m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
           else throw new UnsupportedOperationException(s"$dialect doesn't support literal types")
         case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(RefineTyp, t.rhs)))
-
-        // Pat.Type
-        // TODO: fix copy/paste with Type
-        case t: Pat.Type.Wildcard    => m(SimpleTyp, s("_"))
-        case t: Pat.Var.Type         => m(SimpleTyp, s(t.name.value))
-        case t: Pat.Type.Project     => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
-        case t: Pat.Type.Apply       => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
-        case t: Pat.Type.ApplyInfix  => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
-        case t: Pat.Type.Function    =>
-          val params = if (t.params.size == 1) s(p(AnyInfixTyp, t.params.head)) else s("(", r(t.params.map(param => p(ParamTyp, param)), ", "), ")")
-          m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
-        case t: Pat.Type.Tuple       => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
-        case t: Pat.Type.With        =>
-          if (!dialect.allowWithTypes) throw new UnsupportedOperationException(s"$dialect doesn't support with types")
-          m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
-        case t: Pat.Type.And         =>
-          if (!dialect.allowAndTypes) throw new UnsupportedOperationException(s"$dialect doesn't support and types")
-          m(InfixTyp("&"), s(p(InfixTyp("&"), t.lhs, left = true), " ", "&", " ", p(InfixTyp("&"), t.rhs, right = true)))
-        case t: Pat.Type.Or          =>
-          if (!dialect.allowOrTypes) throw new UnsupportedOperationException(s"$dialect doesn't support or types")
-          m(InfixTyp("|"), s(p(InfixTyp("|"), t.lhs, left = true), " ", "|", " ", p(InfixTyp("|"), t.rhs, right = true)))
-        case t: Pat.Type.Refine      => m(RefineTyp, t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), "{", w(" ", r(t.stats, "; "), " ", t.stats.nonEmpty), "}")
-        case t: Pat.Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.stats, "; "), " }"))
-        case t: Pat.Type.Annotate    => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
 
         // Lit
         case Lit.Boolean(value) => m(Literal, s(value.toString))
@@ -567,10 +544,6 @@ object TreeSyntax {
       implicit def syntaxTargs: Syntax[List[Type]] = Syntax { targs =>
         if (targs.isEmpty) s()
         else s("[", r(targs, ", "), "]")
-      }
-      implicit def syntaxPtargs: Syntax[List[Pat.Type]] = Syntax { ptargs =>
-        if (ptargs.isEmpty) s()
-        else s("[", r(ptargs, ", "), "]")
       }
       implicit def syntaxPats: Syntax[List[Pat]] = Syntax { pats =>
         s("(", r(pats, ", "), ")")

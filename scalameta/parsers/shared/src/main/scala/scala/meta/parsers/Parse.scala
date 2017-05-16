@@ -17,7 +17,6 @@ object Parse {
   implicit lazy val parseType: Parse[Type] = toParse(_.parseType())
   implicit lazy val parseTypeParam: Parse[Type.Param] = toParse(_.parseTypeParam())
   implicit lazy val parsePat: Parse[Pat] = toParse(_.parsePat())
-  implicit lazy val parsePatType: Parse[Pat.Type] = toParse(_.parsePatType())
   implicit lazy val parseCase: Parse[Case] = toParse(_.parseCase())
   implicit lazy val parseCtorCall: Parse[Ctor.Call] = toParse(_.parseCtorCall())
   implicit lazy val parseTemplate: Parse[Template] = toParse(_.parseTemplate())
