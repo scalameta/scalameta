@@ -2,16 +2,11 @@ Below you can find a comprehensive map between Scala's language constructs and v
 
 This specification describes quasiquote syntax using a markedly condensed notation. If you have troubles decyphering it, consult the "Legend" section in the end of the document.
 
-## Literals
-
-         | Quasiquote
----------|------------------------------
-Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
-
 ## Expressions (meta.Term)
 
                    | Quasiquote
 -------------------|------------------
+ Literal           | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  This              | `q"this"`, `q"$qname.this"`
  Super             | `q"super"`, `q"$qname.super"`, `q"super[$qname]"`, `q"$qname.super[$qname]"`
  Name              | `q"$name"` (construction only), `q"${name: Term.Name}"` (also deconstruction)
@@ -42,12 +37,12 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Placeholder       | `q"_"`
  Eta Expansion     | `q"$expr _"`
  Repeated          | `q"$expr: _*"`
- Literal           | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
 
 ## Types (meta.Type)
 
                    | Quasiquote
 -------------------|------------------------------
+ Literal           | `t"$lit"` (construction only), `t"${lit: Lit}"` (also deconstruction)
  Name              | `t"name"` (construction only), `t"${name: Type.Name}"` (also deconstruction)
  Selection         | `t"$ref.$tname"`
  Projection        | `t"$tpe#$tname"`
@@ -67,12 +62,12 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  By Name           | `t"=> $tpe"`
  Repeated          | `t"$tpe*"`
  Var               | Construction not supported, `t"${tvar: Type.Var}"` (deconstruction only)
- Literal           | `t"$lit"` (construction only), `t"${lit: Lit}"` (also deconstruction)
 
 ## Patterns (meta.Pat) and Cases (meta.Case)
 
                    | Quasiquote
 -------------------|----------------------------
+ Literal           | `p"$lit"` (construction only), `p"${lit: Lit}"` (also deconstruction)
  Wildcard          | `p"_"`
  Sequence Wildcard | `p"_*"`
  Var               | `p"$name"` (construction only), `q"${pvar: Pat.Var}"` (also deconstruction)
@@ -85,7 +80,6 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Typed             | `p"$pat: $tpe"`
  Name              | `p"$name"` (construction only), `p"${name: Term.Name}"` (also deconstruction)
  Selection         | `p"$expr.$name"`
- Literal           | `p"$lit"` (construction only), `p"${lit: Lit}"` (also deconstruction)
  Case              | `p"case $pat if $expropt => $expr"`
 
 ## Statements (meta.Stat)
@@ -244,6 +238,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Ctor.Name           | `$ctorname`   | `ctor`
  meta.Ctor.Ref            | `$ctorref`    | `ctor`
  meta.Enumerator          | `$enumerator` | `enumerator`
+ meta.Lit                 | `$lit`        | `q`, `t`, `p`
  meta.Member              | `$member`     | `q`
  meta.Mod                 | `$mod`        | `mod`
  meta.Mod.Annot           | `$annot`      | `mod`
@@ -261,7 +256,6 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Type                | `$tpe`        | `t`, type vars can't be constructed, only deconstructed
  meta.Type.Name           | `$tname`      | `t`
  meta.Type.Param          | `$tparam`     | `tparam`
-                          | `$lit`        | `q`
 
 ### Suffixes
 
