@@ -22,10 +22,8 @@ trait InputOps { self: DatabaseOps =>
             import SemanticdbMode._
             config.semanticdb match {
               case Slim =>
-                logger.elem(path, "SLIM")
                 m.Input.File(path)
               case Fat =>
-                logger.elem(path, "FAT")
                 val label = path.toRelative(config.sourceroot).toString
                 // NOTE: Can't use gsource.content because it's preprocessed by scalac.
                 // TODO: Obtain charset from Global.reader.

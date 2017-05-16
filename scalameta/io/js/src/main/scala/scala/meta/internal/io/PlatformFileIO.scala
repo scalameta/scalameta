@@ -1,6 +1,5 @@
 package scala.meta.internal.io
 
-import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
 import scala.meta.io._
