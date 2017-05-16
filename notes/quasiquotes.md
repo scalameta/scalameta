@@ -10,11 +10,11 @@ This specification describes quasiquote syntax using a markedly condensed notati
  This              | `q"this"`, `q"$name.this"`
  Super             | `q"super"`, `q"$name.super"`, `q"super[$name]"`, `q"$name.super[$name]"`
  Name              | `q"<name>"`
- Selection         | `q"$expr.$name"`
+ Selection         | `q"$expr.$ename"`
  Interpolation     | Not supported yet
  Application       | `q"$expr(...$exprss)"`
  Type Application  | `q"$expr[..$tpesnel]"` (vote for #519 to support `q"$expr[...$tpess]"`)
- Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$exprs)"`
+ Infix Application | `q"$expr $ename[..$tpes] $expr"`, `q"$expr $ename[..$tpes] (..$exprs)"`
  Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`
  Assign            | `q"$expr = $expr"`
  Return            | `q"return $expr"`
@@ -44,9 +44,9 @@ This specification describes quasiquote syntax using a markedly condensed notati
 -------------------|------------------------------
  Literal           | `t"<literal>"`
  Name              | `t"<name>"`
- Selection         | `t"$ref.$tname"`
+ Selection         | `t"$eref.$tname"`
  Projection        | `t"$tpe#$tname"`
- Singleton         | `t"$ref.type"`
+ Singleton         | `t"$eref.type"`
  Application       | `t"$tpe[..$tpesnel]` (vote for #519 to support `q"$expr[...$tpess]"`)
  Infix Application | `t"$tpe $tname $tpe"`
  With              | `t"$tpe with $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
@@ -75,11 +75,11 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Alternative       | `p"$pat | $pat"`
  Tuple             | `p"(..$patsnel)"`
  Extract           | `p"$expr(..$pats)"`
- Infix Extract     | `p"$pat $name (..$pats)"`
+ Infix Extract     | `p"$pat $ename (..$pats)"`
  Interpolation     | Not supported yet
  Typed             | `p"$pat: $tpe"`
  Name              | ``p"`<name>`"``
- Selection         | `p"$expr.$name"`
+ Selection         | `p"$expr.$ename"`
  Case              | `p"case $pat if $expropt => $expr"`
 
 ## Statements (meta.Stat)
@@ -99,7 +99,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
 -----------|------------------------------
  Val       | `q"..$mods val ..$patsnel: $tpe"`
  Var       | `q"..$mods var ..$patsnel: $tpe"`
- Def       | `q"..$mods def $name[..$tparams](...$paramss): $tpe"`
+ Def       | `q"..$mods def $ename[..$tparams](...$paramss): $tpe"`
  Type      | `q"..$mods type $tname[..$tparams] >: $tpeopt <: $tpeopt"`
 
 ### Definitions
@@ -108,14 +108,14 @@ This specification describes quasiquote syntax using a markedly condensed notati
 ----------------|------------------------------
  Val            | `q"..$mods val ..$patsnel: $tpeopt = $expr"`
  Var            | `q"..$mods var ..$patsnel: $tpeopt = $expropt"`
- Def            | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"`
- Macro          | `q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr"`
+ Def            | `q"..$mods def $ename[..$tparams](...$paramss): $tpeopt = $expr"`
+ Macro          | `q"..$mods def $ename[..$tparams](...$paramss): $tpeopt = macro $expr"`
  Type           | `q"..$mods type $tname[..$tparams] = $tpe"`
  Class          | `q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends $template"`
  Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`
- Object         | `q"..$mods object $name extends $template"`
- Package Object | `q"package object $name extends $template"`
- Package        | `q"package $ref { ..$stats }"`
+ Object         | `q"..$mods object $ename extends $template"`
+ Package Object | `q"package object $ename extends $template"`
+ Package        | `q"package $eref { ..$stats }"`
  Primary Ctor   | `q"..$mods def this(...$paramss)"`
  Secondary Ctor | `q"..$mods def this(...$paramss) = $expr"`
 
@@ -123,7 +123,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Term Param     | `param"..$mods $name: $tpeopt = $expropt"`
+ Term Param     | `param"..$mods $ename: $tpeopt = $expropt"`
 
 ### Type Parameters (meta.Type.Param)
 
@@ -136,7 +136,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
                      | Quasiquote
 ---------------------|------------------------------
  Name Reference      | `ctor"$ctorname"` (construction only), `ctor"${ctorname: Ctor.Name}"` (also deconstruction)
- Select Reference    | `ctor"$ref.$ctorname"`
+ Select Reference    | `ctor"$eref.$ctorname"`
  Project Reference   | `ctor"$tpe#$ctorname"`
  Function Reference  | `ctor"(..$tpes) => $tpe"`
  Annotated Reference | `ctor"$ctorname ..@annots"`
@@ -183,15 +183,15 @@ This specification describes quasiquote syntax using a markedly condensed notati
 
            | Quasiquote
 -----------|---------------------------
- Importer  | `importer"$ref.{..$importeesnel}"`
+ Importer  | `importer"$eref.{..$importeesnel}"`
 
 ## Importees (meta.Importee)
 
            | Quasiquote
 -----------|---------------------------
- Name      | `importee"$iname"` (construction only), `importee"${iname: Name.Indeterminate}"` (also deconstruction)
- Rename    | `importee"$iname => $iname"`
- Unimport  | `importee"$iname => _"`
+ Name      | `importee"$name"`
+ Rename    | `importee"$name => $name"`
+ Unimport  | `importee"$name => _"`
  Wildcard  | `importee"_"`
 
 ## Sources (meta.Source)
@@ -208,7 +208,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
 
   1. Any non-trivia token in a quasiquote template, except for an unquote template, means that exactly that token is required in a quasiquote, with the following exceptions:
 
-      1. Parentheses, brackets and braces around unquotes are oftentimes dropped if they wrap empty lists, e.g. `q"x + y"` conforms to `q"$expr $name[..$tpes] $expr"`.
+      1. Parentheses, brackets and braces around unquotes are oftentimes dropped if they wrap empty lists, e.g. `q"x + y"` conforms to `q"$expr $ename[..$tpes] $expr"`.
 
       1. `with` is dropped if there are zero or one ctorcalls, e.g. both `q"new {}"` and `q"new C"` conform to `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }`.
 
@@ -230,7 +230,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
 
       1. Finally, we match the unquotes after replication against the corresponding parts of the quasiquote under conformance test. There are three possibilities for a match: scala syntax, unquote, lifted unquote.
 
-  1. If not specified explicitly, quasiquote templates work for both construction and deconstruction. In some cases, a template is only applicable to construction (e.g. it's impossible to pattern match a name without specifying an expected type explicitly, because patterns like in `term match { case q"$name" => }` will match any term, not limited to just term names).
+  1. If not specified explicitly, quasiquote templates work for both construction and deconstruction. In some cases, a template is only applicable to construction (e.g. it's impossible to pattern match a name without specifying an expected type explicitly, because patterns like in `term match { case q"$ename" => }` will match any term, not limited to just term names).
 
 ### Shorthands
 
@@ -242,15 +242,15 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Enumerator          | `$enumerator`
  meta.Mod                 | `$mod`
  meta.Mod.Annot           | `$annot`
- meta.Name.Indeterminate  | `$iname`
+ meta.Name                | `$name`
  meta.Pat                 | `$pat`
  meta.Importee            | `$importee`
  meta.Importer            | `$importer`
  meta.Stat                | `$stat`
  meta.Template            | `$template`
  meta.Term                | `$expr`
- meta.Term.Name           | `$name`
- meta.Term.Ref            | `$ref`
+ meta.Term.Name           | `$ename`
+ meta.Term.Ref            | `$eref`
  meta.Term.Param          | `$param`
  meta.Type                | `$tpe`
  meta.Type.Name           | `$tname`

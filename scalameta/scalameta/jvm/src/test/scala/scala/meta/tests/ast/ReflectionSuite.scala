@@ -76,7 +76,6 @@ class ReflectionSuite extends AstSuite {
       |scala.meta.Ctor.Primary
       |scala.meta.Ctor.Ref.Name
       |scala.meta.Name
-      |scala.meta.Name.Indeterminate
       |scala.meta.Pat
       |scala.meta.Template
       |scala.meta.Term

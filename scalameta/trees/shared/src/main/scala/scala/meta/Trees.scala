@@ -410,9 +410,16 @@ object Enumerator {
 @branch trait Importee extends Tree with Ref
 object Importee {
   @ast class Wildcard() extends Importee
-  @ast class Name(name: scala.meta.Name.Indeterminate) extends Importee
-  @ast class Rename(name: scala.meta.Name.Indeterminate, rename: scala.meta.Name.Indeterminate) extends Importee
-  @ast class Unimport(name: scala.meta.Name.Indeterminate) extends Importee
+  @ast class Name(name: scala.meta.Name) extends Importee {
+    checkFields(name.is[scala.meta.Name.Quasi] || name.is[scala.meta.Name.Indeterminate])
+  }
+  @ast class Rename(name: scala.meta.Name, rename: scala.meta.Name) extends Importee {
+    checkFields(name.is[scala.meta.Name.Quasi] || name.is[scala.meta.Name.Indeterminate])
+    checkFields(rename.is[scala.meta.Name.Quasi] || rename.is[scala.meta.Name.Indeterminate])
+  }
+  @ast class Unimport(name: scala.meta.Name) extends Importee {
+    checkFields(name.is[scala.meta.Name.Quasi] || name.is[scala.meta.Name.Indeterminate])
+  }
 }
 
 @ast class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree

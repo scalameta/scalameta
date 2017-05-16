@@ -482,8 +482,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   implicit object InvalidFinalAbstract extends InvalidModCombination(Mod.Final(), Mod.Abstract())
   implicit object InvalidFinalSealed extends InvalidModCombination(Mod.Final(), Mod.Sealed())
   implicit object InvalidOverrideAbstract extends InvalidModCombination(Mod.Override(), Mod.Abstract())
-  implicit object InvalidPrivateProtected extends InvalidModCombination(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Anonymous()))
-  implicit object InvalidProtectedPrivate extends InvalidModCombination(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Anonymous()))
+  implicit object InvalidPrivateProtected extends InvalidModCombination(Mod.PrivateWithin(Name.Anonymous()), Mod.ProtectedWithin(Name.Anonymous()))
+  implicit object InvalidProtectedPrivate extends InvalidModCombination(Mod.ProtectedWithin(Name.Anonymous()), Mod.PrivateWithin(Name.Anonymous()))
 
 /* -------------- TOKEN CLASSES ------------------------------------------- */
 
@@ -2628,8 +2628,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             syntaxError("repeated modifier", at = mod)
           }
           if (mods.exists(_.isNakedAccessMod) && mod.isNakedAccessMod) {
-            if (mod.is[Mod.Protected]) rejectModCombination[Mod.Private, Mod.Protected](mods :+ mod, "")
-            if (mod.is[Mod.Private]) rejectModCombination[Mod.Protected, Mod.Private](mods :+ mod, "")
+            if (mod.is[Mod.ProtectedWithin]) rejectModCombination[Mod.PrivateWithin, Mod.ProtectedWithin](mods :+ mod, "")
+            if (mod.is[Mod.PrivateWithin]) rejectModCombination[Mod.ProtectedWithin, Mod.PrivateWithin](mods :+ mod, "")
           }
           if (mods.exists(_.isQualifiedAccessMod) && mod.isQualifiedAccessMod) {
             syntaxError("duplicate private/protected qualifier", at = mod)
@@ -2919,7 +2919,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def importWildcardOrName(): Importee = autoPos {
     if (token.is[Underscore]) { next(); Importee.Wildcard() }
-    else if (token.is[Unquote]) Importee.Name(unquote[Name.Indeterminate.Quasi])
+    else if (token.is[Unquote]) Importee.Name(unquote[Name.Quasi])
     else { val name = termName(); Importee.Name(atPos(name, name)(Name.Indeterminate(name.value))) }
   }
 

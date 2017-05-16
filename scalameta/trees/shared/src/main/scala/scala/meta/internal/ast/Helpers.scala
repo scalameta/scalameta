@@ -20,13 +20,6 @@ object Helpers {
       case _ => false
     }
     def isReference: Boolean = !isBinder
-    def isQualifier: Boolean = name match {
-      case _: Name.Quasi => true
-      case _: Name.Indeterminate => true
-      case _: Term.Name => true
-      case _: Type.Name => true
-      case _ => false
-    }
   }
 
   implicit class XtensionSyntacticTermName(name: Term.Name) {
@@ -153,15 +146,19 @@ object Helpers {
 
   implicit class XtensionMod(mod: Mod) {
     def isAccessMod: Boolean = mod match {
-      case _: Mod.Private => true
-      case _: Mod.Protected => true
+      case _: Mod.PrivateThis => true
+      case _: Mod.PrivateWithin => true
+      case _: Mod.ProtectedThis => true
+      case _: Mod.ProtectedWithin => true
       case _ => false
     }
-    def accessBoundary: Option[Name.Qualifier] = mod match {
-      case Mod.Private(Name.Anonymous()) => None
-      case Mod.Protected(Name.Anonymous()) => None
-      case Mod.Private(name) => Some(name)
-      case Mod.Protected(name) => Some(name)
+    def accessBoundary: Option[Ref] = mod match {
+      case Mod.PrivateThis() => Some(Term.This(Name.Anonymous()))
+      case Mod.ProtectedThis() => Some(Term.This(Name.Anonymous()))
+      case Mod.PrivateWithin(Name.Anonymous()) => None
+      case Mod.ProtectedWithin(Name.Anonymous()) => None
+      case Mod.PrivateWithin(name) => Some(name)
+      case Mod.ProtectedWithin(name) => Some(name)
       case _ => None
     }
     def isNakedAccessMod: Boolean = isAccessMod && accessBoundary.isEmpty
@@ -344,13 +341,17 @@ object Helpers {
     }
 
     def NameAnonymous(tree: Name.Anonymous, parent: Tree, destination: String): Boolean = {
+      def primaryCtorName = parent.is[Ctor.Primary] && destination == "name"
+      def secondaryCtorName = parent.is[Ctor.Secondary] && destination == "name"
       def termParamName = parent.is[Term.Param] && destination == "name"
       def typeParamName = parent.is[Type.Param] && destination == "name"
+      def initName = parent.is[Init] && destination == "name"
       def privateWithin = parent.is[Mod.PrivateWithin] && destination == "within"
       def protectedWithin = parent.is[Mod.ProtectedWithin] && destination == "within"
       def thisQualifier = parent.is[Term.This]
       def superQualifier = parent.is[Term.Super]
-      termParamName || typeParamName || privateWithin || protectedWithin || thisQualifier || superQualifier
+      primaryCtorName || secondaryCtorName || termParamName || typeParamName ||
+      initName || privateWithin || protectedWithin || thisQualifier || superQualifier
     }
 
     def TypeVar(tree: Type.Var, parent: Tree, destination: String): Boolean = {
@@ -362,6 +363,10 @@ object Helpers {
         case None => true
       }
       loop(Some(tree))
+    }
+
+    def Init(tree: Init, parent: Tree, destination: String): Boolean = {
+      tree.tpe.is[Type.Singleton] ==> (parent.is[Ctor.Secondary] && destination == "init")
     }
   }
 }
