@@ -20,6 +20,13 @@ object Helpers {
       case _ => false
     }
     def isReference: Boolean = !isBinder
+    def isQualifier: Boolean = name match {
+      case _: Name.Quasi => true
+      case _: Name.Indeterminate => true
+      case _: Term.Name => true
+      case _: Type.Name => true
+      case _ => false
+    }
   }
 
   implicit class XtensionSyntacticTermName(name: Term.Name) {
@@ -167,7 +174,6 @@ object Helpers {
     def getAll[T <: Mod](implicit tag: ClassTag[T],
                          classifier: Classifier[Mod, T]): List[T] =
       mods.collect { case m if classifier.apply(m) => m.require[T] }
-    def accessBoundary: Option[Name.Qualifier] = mods.flatMap(_.accessBoundary).headOption
     def getIncompatible[T <: Mod, U <: Mod]
       (implicit classifier1: Classifier[Mod, T], tag1: ClassTag[T],
                 classifier2: Classifier[Mod, U], tag2: ClassTag[U]): List[(Mod, Mod)] =
@@ -340,8 +346,8 @@ object Helpers {
     def NameAnonymous(tree: Name.Anonymous, parent: Tree, destination: String): Boolean = {
       def termParamName = parent.is[Term.Param] && destination == "name"
       def typeParamName = parent.is[Type.Param] && destination == "name"
-      def privateWithin = parent.is[Mod.Private] && destination == "within"
-      def protectedWithin = parent.is[Mod.Protected] && destination == "within"
+      def privateWithin = parent.is[Mod.PrivateWithin] && destination == "within"
+      def protectedWithin = parent.is[Mod.ProtectedWithin] && destination == "within"
       def thisQualifier = parent.is[Term.This]
       def superQualifier = parent.is[Term.Super]
       termParamName || typeParamName || privateWithin || protectedWithin || thisQualifier || superQualifier

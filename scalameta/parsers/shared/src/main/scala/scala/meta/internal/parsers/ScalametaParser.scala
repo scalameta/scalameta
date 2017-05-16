@@ -1287,7 +1287,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (token.is[KwThis]) {
           next()
           val qual = name match {
-            case q: Term.Name.Quasi => q.become[Name.Qualifier.Quasi]
+            case q: Term.Name.Quasi => q.become[Name.Quasi]
             case name => atPos(name, name)(Name.Indeterminate(name.value))
           }
           val thisp = atPos(name, auto)(Term.This(qual))
@@ -1299,7 +1299,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         } else if (token.is[KwSuper]) {
           next()
           val qual = name match {
-            case q: Term.Name.Quasi => q.become[Name.Qualifier.Quasi]
+            case q: Term.Name.Quasi => q.become[Name.Quasi]
             case name => atPos(name, name)(Name.Indeterminate(name.value))
           }
           val superp = atPos(name, auto)(Term.Super(qual, mixinQualifier()))
@@ -1335,11 +1335,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   *   MixinQualifier ::= `[' Id `]'
   *   }}}
   */
-  def mixinQualifier(): Name.Qualifier = {
+  def mixinQualifier(): Name = {
     if (token.is[LeftBracket]) {
       inBrackets {
         typeName() match {
-          case q: Type.Name.Quasi => q.become[Name.Qualifier.Quasi]
+          case q: Type.Name.Quasi => q.become[Name.Quasi]
           case name => atPos(name, name)(Name.Indeterminate(name.value))
         }
 
@@ -2552,25 +2552,29 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
 
   def accessModifier(): Mod = autoPos {
-    val mod = in.token match {
-      case KwPrivate() => (name: Name.Qualifier) => Mod.Private(name)
-      case KwProtected() => (name: Name.Qualifier) => Mod.Protected(name)
+    val mod = token match {
+      case KwPrivate() | KwProtected() => token
       case other => unreachable(debug(other, other.structure))
     }
     next()
-    if (in.token.isNot[LeftBracket]) mod(autoPos(Name.Anonymous()))
-    else {
+    if (token.isNot[LeftBracket]) {
+      val within = autoPos(Name.Anonymous())
+      if (mod.is[KwPrivate]) Mod.PrivateWithin(within)
+      else Mod.ProtectedWithin(within)
+    } else {
       next()
       val result = {
-        if (in.token.is[KwThis]) {
-          val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
+        if (token.is[KwThis]) {
           next()
-          mod(atPos(in.prevTokenPos, auto)(Term.This(qual)))
-        } else if (in.token.is[Unquote]) {
-          mod(unquote[Name.Qualifier.Quasi])
+          if (mod.is[KwPrivate]) Mod.PrivateThis()
+          else Mod.ProtectedThis()
         } else {
-          val name = termName()
-          mod(atPos(name, name)(Name.Indeterminate(name.value)))
+          val within = termName() match {
+            case q: Term.Name.Quasi => q.become[Name.Quasi]
+            case name => atPos(name, name)(Name.Indeterminate(name.value))
+          }
+          if (mod.is[KwPrivate]) Mod.PrivateWithin(within)
+          else Mod.ProtectedWithin(within)
         }
       }
       accept[RightBracket]
@@ -2768,7 +2772,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                   def mayNotBeByName(subj: String) =
                     syntaxError(s"$subj parameters may not be call-by-name", at = name)
                   val isLocalToThis: Boolean = {
-                    val isExplicitlyLocal = mods.accessBoundary.exists(_.is[Term.This])
+                    val isExplicitlyLocal = mods.exists(_.is[Mod.PrivateThis])
                     if (ownerIsCase) isExplicitlyLocal
                     else isExplicitlyLocal || (!isValParam && !isVarParam)
                   }

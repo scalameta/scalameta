@@ -7,8 +7,8 @@ This specification describes quasiquote syntax using a markedly condensed notati
                    | Quasiquote
 -------------------|------------------
  Literal           | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
- This              | `q"this"`, `q"$qname.this"`
- Super             | `q"super"`, `q"$qname.super"`, `q"super[$qname]"`, `q"$qname.super[$qname]"`
+ This              | `q"this"`, `q"$name.this"`
+ Super             | `q"super"`, `q"$name.super"`, `q"super[$name]"`, `q"$name.super[$name]"`
  Name              | `q"$name"` (construction only), `q"${name: Term.Name}"` (also deconstruction)
  Selection         | `q"$expr.$name"`
  Interpolation     | Not supported yet
@@ -153,8 +153,10 @@ This specification describes quasiquote syntax using a markedly condensed notati
                   | Quasiquote
 ------------------|-----------------
  Annotation       | `mod"@$expr"`
- Private          | `mod"private"`, `mod"private[$qname]"`
- Protected        | `mod"protected"`, `mod"protected[$qname]"`
+ Private This     | `mod"private[this]"`
+ Private Within   | `mod"private"`, `mod"private[$name]"`
+ Protected This   | `mod"protected[this]"`
+ Protected Within | `mod"protected"`, `mod"protected[$name]"`
  Implicit         | `mod"implicit"`
  Final            | `mod"final"`
  Sealed           | `mod"sealed"`
@@ -243,7 +245,6 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Mod                 | `$mod`        | `mod`
  meta.Mod.Annot           | `$annot`      | `mod`
  meta.Name.Indeterminate  | `$iname`      | Can't be constructed, only deconstructed
- meta.Name.Qualifier      | `$qname`      | `q`, `t`, anonymous names can't be constructed, only deconstructed
  meta.Pat                 | `$pat`        | `p`
  meta.Importee            | `$importee`   | `importee`
  meta.Importer            | `$importer`   | `importer`

@@ -786,4 +786,15 @@ class ErrorSuite extends FunSuite {
     val okay2 = q"List[$tvar]"
     val okay3 = p"$okay2(x, y)"
   }
+
+  test("qname") {
+    import scala.meta._
+    val qthis = q"this"
+    val qctorname = ctor"C"
+    intercept[InvariantFailedException] { q"$qctorname.this" }
+    intercept[InvariantFailedException] { q"$qctorname.super" }
+    intercept[InvariantFailedException] { q"super[$qctorname]" }
+    intercept[InvariantFailedException] { mod"private[$qctorname]" }
+    intercept[InvariantFailedException] { mod"protected[$qctorname]" }
+  }
 }

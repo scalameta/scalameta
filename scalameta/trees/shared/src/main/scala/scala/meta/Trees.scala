@@ -39,20 +39,19 @@ object Name {
     def copy(value: String): Name.Anonymous = { require(value == "_"); Name.Anonymous() }
     checkParent(ParentChecks.NameAnonymous)
   }
-  @ast class Indeterminate(value: Predef.String @nonEmpty) extends Name with Qualifier
-  @branch trait Qualifier extends Ref
+  @ast class Indeterminate(value: Predef.String @nonEmpty) extends Name
 }
 
 @branch trait Term extends Stat
 object Term {
   @branch trait Ref extends Term with scala.meta.Ref
-  @ast class This(qual: scala.meta.Name.Qualifier) extends Term.Ref with scala.meta.Name.Qualifier {
-    checkFields(!qual.is[Term.This])
+  @ast class This(qual: scala.meta.Name) extends Term.Ref {
+    checkFields(qual.isQualifier)
   }
-  @ast class Super(thisp: scala.meta.Name.Qualifier, superp: scala.meta.Name.Qualifier) extends Term.Ref {
-    checkFields(!thisp.is[Term.This] && !superp.is[Term.This])
+  @ast class Super(thisp: scala.meta.Name, superp: scala.meta.Name) extends Term.Ref {
+    checkFields(thisp.isQualifier && superp.isQualifier)
   }
-  @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat with scala.meta.Name.Qualifier
+  @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat
   @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: List[Lit] @nonEmpty, args: List[Term]) extends Term {
     checkFields(parts.length == args.length + 1)
@@ -111,7 +110,7 @@ object Term {
 @branch trait Type extends Tree
 object Type {
   @branch trait Ref extends Type with scala.meta.Ref
-  @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref with scala.meta.Name.Qualifier
+  @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
     checkFields(qual.isPath || qual.is[Term.Super] || qual.is[Term.Ref.Quasi])
   }
@@ -374,8 +373,10 @@ object Mod {
   @ast class Annot(body: Term) extends Mod {
     checkFields(body.isCtorCall)
   }
-  @ast class Private(within: Name.Qualifier) extends Mod
-  @ast class Protected(within: Name.Qualifier) extends Mod
+  @ast class PrivateThis() extends Mod
+  @ast class PrivateWithin(within: Name) extends Mod { checkFields(within.isQualifier) }
+  @ast class ProtectedThis() extends Mod
+  @ast class ProtectedWithin(within: Name) extends Mod { checkFields(within.isQualifier) }
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
