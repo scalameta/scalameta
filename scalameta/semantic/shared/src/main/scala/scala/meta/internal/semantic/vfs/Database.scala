@@ -21,12 +21,10 @@ object Database {
   }
 }
 
-@data class Database(entries: Seq[Entry]) {
+@data
+class Database(entries: Seq[Entry]) {
   def toSchema: s.Database = {
-    val sentries = entries.map(ventry => {
-      val scalaName = v.Paths.semanticdbToScala(ventry.name)
-      scalaName -> s.Attributes.parseFrom(ventry.bytes)
-    })
+    val sentries = entries.map(ventry => s.Attributes.parseFrom(ventry.bytes))
     s.Database(sentries)
   }
 

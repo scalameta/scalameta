@@ -22,8 +22,8 @@ import org.scalameta.logger
   lazy val denotations: Map[Symbol, Denotation] = entries.flatMap(_._2.denotations).toMap
   lazy val sugars: Map[Position, String] = entries.flatMap(_._2.sugars).toMap
 
-  def save(classpath: Classpath, sourcepath: Sourcepath): Unit = {
-    this.toSchema(sourcepath).toVfs(classpath).save()
+  def save(classpath: Classpath, sourceroot: AbsolutePath): Unit = {
+    this.toSchema(sourceroot).toVfs(classpath).save()
   }
 
   def syntax: String = scala.meta.internal.semantic.DatabaseSyntax(this)
@@ -38,9 +38,9 @@ object Database {
   def load(classpath: Classpath, sourcepath: Sourcepath): Database = {
     v.Database.load(classpath).toSchema.toMeta(sourcepath)
   }
-  def load(path: RelativePath, bytes: Array[Byte]): Database = {
+  def load(bytes: Array[Byte]): Database = {
     val sattrs = s.Attributes.parseFrom(bytes)
-    val sdb = new s.Database(Seq(path -> sattrs))
+    val sdb = new s.Database(Seq(sattrs))
     val mdb = sdb.toMeta(Sourcepath.workingDirectory)
     mdb
   }
