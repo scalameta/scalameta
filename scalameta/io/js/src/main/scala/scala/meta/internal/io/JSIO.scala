@@ -25,11 +25,36 @@ object JSShell extends js.Any {
 @JSImport("fs", Namespace)
 object JSFs extends js.Any {
 
-  /** Returns the file contents using blocking apis */
-  def readFileSync(path: String, encoding: String): js.Any = js.native
+  /** Returns the file contents as Buffer using blocking apis.
+    *
+    * NOTE: The actual return value is a Node.js buffer and not js.Array[Int].
+    * However, both support .length and angle bracket access (foo[1]).
+    **/
+  def readFileSync(path: String): js.Array[Int] = js.native
+
+  /** Returns the file contents as String using blocking apis */
+  def readFileSync(path: String, encoding: String): String = js.native
 
   /** Writes file contents using blocking apis */
   def writeFileSync(path: String, contents: String): Unit = js.native
+
+  /** Returns an array of filenames excluding '.' and '..'. */
+  def readdirSync(path: String): js.Array[String] = js.native
+
+  /** Returns an fs.Stats for path. */
+  def lstatSync(path: String): JSStats = js.native
+
+}
+
+/** Facade for nodejs class fs.Stats.
+  *
+  * @see https://nodejs.org/api/fs.html#fs_class_fs_stats
+  */
+@js.native
+@JSImport("fs", Namespace)
+class JSStats extends js.Any {
+  def isFile(): Boolean = js.native
+  def isDirectory(): Boolean = js.native
 }
 
 /** Facade for native nodejs module "path".
@@ -46,6 +71,11 @@ object JSPath extends js.Any {
   def normalize(path: String): String = js.native
 }
 
-object PlatformIO {
+object JSIO {
   private[io] def isNode = JSFs != null
+  def inNode[T](f: => T): T =
+    if (JSIO.isNode) f
+    else {
+      throw new IllegalStateException("This operation is not supported in this environment.")
+    }
 }

@@ -4,7 +4,7 @@ import scala.meta.io._
 
 object PlatformPathIO {
   def workingDirectory: AbsolutePath =
-    if (PlatformIO.isNode) AbsolutePath(JSShell.pwd().toString)
+    if (JSIO.isNode) AbsolutePath(JSShell.pwd().toString)
     else AbsolutePath(fileSeparator)
 
   def fileSeparator: String =

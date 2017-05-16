@@ -26,27 +26,31 @@ trait Multipath {
     var buf = mutable.LinkedHashSet[Fragment]()
     shallow.foreach { base =>
       def exploreJar(base: AbsolutePath): Unit = {
-        if (scala.meta.internal.platform.isJS) return
-        val stream = new FileInputStream(base.toFile)
-        try {
-          val zip = new ZipInputStream(stream)
-          var entry = zip.getNextEntry
-          while (entry != null) {
-            if (!entry.getName.endsWith("/")) {
-              val name = RelativePath(entry.getName.stripPrefix("/"))
-              buf += new Fragment(base, name)
+        if (scala.meta.internal.platform.isJS) {
+          // Dead code eliminate
+        } else {
+          val stream = new FileInputStream(base.toFile)
+          try {
+            val zip = new ZipInputStream(stream)
+            var entry = zip.getNextEntry
+            while (entry != null) {
+              if (!entry.getName.endsWith("/")) {
+                val name = RelativePath(entry.getName.stripPrefix("/"))
+                buf += new Fragment(base, name)
+              }
+              entry = zip.getNextEntry
             }
-            entry = zip.getNextEntry
+          } catch {
+            case ex: IOException =>
+            // NOTE: If we fail to read the zip file, this shouldn't crash exploration.
+            // We may want to revisit this decision later.
+          } finally {
+            stream.close()
           }
-        } catch {
-          case ex: IOException =>
-          // NOTE: If we fail to read the zip file, this shouldn't crash exploration.
-          // We may want to revisit this decision later.
-        } finally {
-          stream.close()
         }
       }
       if (base.isDirectory) {
+        logger.elem(base)
         FileIO
           .listAllFilesRecursively(base)
           .files

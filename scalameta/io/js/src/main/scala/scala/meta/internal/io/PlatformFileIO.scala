@@ -4,10 +4,49 @@ import java.nio.charset.Charset
 import scala.meta.io._
 
 object PlatformFileIO {
-  def slurp(path: AbsolutePath, charset: Charset): String =
-    if (PlatformIO.isNode) JSFs.readFileSync(path.toString, charset.toString).toString
-    else {
-      throw new IllegalStateException(
-        "Slurping from an AbsolutePath is not supported in this environment.")
+  def readAllBytes(path: AbsolutePath): Array[Byte] = JSIO.inNode {
+    val jsArray = JSFs.readFileSync(path.toString)
+    val len = jsArray.length
+    val result = new Array[Byte](len)
+    var curr = 0
+    while (curr < len) {
+      result(curr) = jsArray(curr).toByte
+      curr += 1
     }
+    result
+  }
+
+  def slurp(path: AbsolutePath, charset: Charset): String =
+    JSIO.inNode(JSFs.readFileSync(path.toString, charset.toString))
+
+  def listFiles(path: AbsolutePath): ListFiles = JSIO.inNode {
+    if (path.isFile) new ListFiles(path, Nil)
+    else {
+      val jsArray = JSFs.readdirSync(path.toString)
+      val builder = Seq.newBuilder[RelativePath]
+      builder.sizeHint(jsArray.length)
+      var curr = 0
+      while (curr < jsArray.length) {
+        builder += RelativePath(jsArray(curr))
+        curr += 1
+      }
+      new ListFiles(path, builder.result())
+    }
+  }
+
+  def isFile(path: AbsolutePath): Boolean =
+    JSFs.lstatSync(path.toString).isFile()
+
+  def isDirectory(path: AbsolutePath): Boolean =
+    JSFs.lstatSync(path.toString).isDirectory()
+
+  def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
+    val builder = Seq.newBuilder[RelativePath]
+    def loop(path: AbsolutePath): Unit = {
+      if (path.isDirectory) listFiles(path).foreach(loop)
+      else builder += path.toRelative(root)
+    }
+    loop(root)
+    new ListFiles(root, builder.result())
+  }
 }

@@ -5,8 +5,10 @@ import org.scalameta.adt._
 import scala.collection.immutable.Seq
 import scala.meta.io._
 import scala.meta.internal.io.InputStreamIO
+import scala.meta.internal.platform
 
-@root trait Entry {
+@root
+trait Entry {
   def fragment: Fragment
   def base: AbsolutePath = fragment.base
   def name: RelativePath = fragment.name
@@ -15,8 +17,9 @@ import scala.meta.internal.io.InputStreamIO
 }
 
 object Entry {
-  private def readBytes(fragment: Fragment) = InputStreamIO.readBytes(fragment.uri.toURL.openStream)
+  private def readBytes(fragment: Fragment): Array[Byte] =
+    if (platform.isJS) Array.empty[Byte]
+    else InputStreamIO.readBytes(fragment.uri.toURL.openStream)
   @leaf class OnDisk(fragment: Fragment) extends Entry { lazy val bytes = readBytes(fragment) }
   @leaf class InMemory(fragment: Fragment, bytes: Array[Byte]) extends Entry
 }
-

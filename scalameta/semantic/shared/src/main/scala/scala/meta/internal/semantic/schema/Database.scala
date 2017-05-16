@@ -38,12 +38,13 @@ import org.scalameta.logger
 
   def toMeta(sourcepath: Sourcepath): m.Database = {
     val mentries = entries.map {
-      case (spath, s.Attributes(scontents, sdialect, snames, smessages, sdenots, ssugars)) =>
+      case (spath, x @ s.Attributes(scontents, sdialect, snames, smessages, sdenots, ssugars)) =>
+        logger.elem(spath)
         val minput = {
           if (scontents == "") {
             val uri =
               sourcepath.find(spath).getOrElse(sys.error(s"can't find $spath in $sourcepath"))
-            mInput.File(new File(uri))
+            mInput.File(AbsolutePath(uri.getPath))
           } else {
             mInput.LabeledString(spath.toString, scontents)
           }

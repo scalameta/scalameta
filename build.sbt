@@ -364,6 +364,7 @@ lazy val tests = crossProject
     ),
     buildInfoPackage := "scala.meta.tests"
   )
+  .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm
