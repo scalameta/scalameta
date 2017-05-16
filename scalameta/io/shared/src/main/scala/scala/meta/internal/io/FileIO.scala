@@ -1,11 +1,16 @@
 package scala.meta.internal.io
 
+import java.net.URI
 import scala.meta.io._
 import java.nio.charset.Charset
 
 object FileIO {
+
   def readAllBytes(path: AbsolutePath): Array[Byte] =
     PlatformFileIO.readAllBytes(path)
+
+  def readAllBytes(uri: URI): Array[Byte] =
+    PlatformFileIO.readAllBytes(uri)
 
   def slurp(path: AbsolutePath, charset: Charset): String =
     PlatformFileIO.slurp(path, charset)
@@ -24,5 +29,6 @@ object FileIO {
 
   def listAllFilesRecursively(path: AbsolutePath): ListFiles =
     PlatformFileIO.listAllFilesRecursively(path)
+
 }
 

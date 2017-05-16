@@ -50,6 +50,7 @@ package object semantic {
             case other =>
               sys.error(s"bad database: unsupported input $other")
           }
+          assert(spath.nonEmpty, s"'$spath'.nonEmpty")
           val sdialect = {
             val sdialect = mDialect.standards.find(_._2 == mdialect).map(_._1)
             sdialect.getOrElse(sys.error(s"bad database: unsupported dialect $mdialect"))

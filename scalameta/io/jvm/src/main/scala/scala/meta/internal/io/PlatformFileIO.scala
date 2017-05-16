@@ -1,8 +1,9 @@
 package scala.meta.internal.io
 
+import java.io.InputStream
+import java.net.URI
 import java.nio.charset.Charset
 import scala.meta.io._
-
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
@@ -10,6 +11,9 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 
 object PlatformFileIO {
+  def readAllBytes(uri: URI): Array[Byte] =
+    InputStreamIO.readBytes(uri.toURL.openStream())
+
   def readAllBytes(path: AbsolutePath): Array[Byte] =
     Files.readAllBytes(path.toNIO)
 

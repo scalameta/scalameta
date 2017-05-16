@@ -13,8 +13,6 @@ import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.io.PathIO.pathSeparator
 
-import org.scalameta.logger
-
 @root
 trait Multipath {
   def shallow: Seq[AbsolutePath]
@@ -50,15 +48,18 @@ trait Multipath {
         }
       }
       if (base.isDirectory) {
-        logger.elem(base)
         FileIO
           .listAllFilesRecursively(base)
           .files
           .foreach(relpath => buf += new Fragment(base, relpath))
-      } else if (base.isFile && base.toString.endsWith(".jar")) {
-        exploreJar(base)
+      } else if (base.isFile) {
+        if (base.toString.endsWith(".jar")) {
+          exploreJar(base)
+        } else {
+          sys.error(s"Obtained non-jar file $base. Expected directory or *.jar file.")
+        }
       } else {
-        sys.error(s"Obtained file $base. Expected directory.")
+        // Skip
       }
     }
     buf.toList

@@ -38,17 +38,17 @@ class Database(entries: Seq[Attributes]) {
 
   def toMeta(sourcepath: Sourcepath): m.Database = {
     val mentries = entries.map {
-      case s.Attributes(spath, scontents, sdialect, snames, smessages, sdenots, ssugars) =>
-        logger.elem(spath)
+      case s.Attributes(sfilename, scontents, sdialect, snames, smessages, sdenots, ssugars) =>
+        assert(sfilename.nonEmpty, "s.Attribute.filename must not be empty")
         val minput = {
           if (scontents == "") {
             val uri =
               sourcepath
-                .find(RelativePath(spath))
-                .getOrElse(sys.error(s"can't find $spath in $sourcepath"))
+                .find(RelativePath(sfilename))
+                .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
             mInput.File(AbsolutePath(uri.getPath))
           } else {
-            mInput.LabeledString(spath.toString, scontents)
+            mInput.LabeledString(sfilename.toString, scontents)
           }
         }
         object sRange {

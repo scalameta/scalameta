@@ -5,6 +5,7 @@
 > clean
 > set every scalametaSemanticdb := ScalametaSemanticdb.Fat
 > set scalametaSemanticdb in library2 in Test := ScalametaSemanticdb.Slim
+$ pause
 > app/testOnly Mix
 > set every scalametaSemanticdb := ScalametaSemanticdb.Disabled
 > clean

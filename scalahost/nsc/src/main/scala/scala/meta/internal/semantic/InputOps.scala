@@ -8,6 +8,7 @@ import scala.meta.internal.io._
 import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSourceFile}
 import scala.reflect.io.{PlainFile => GPlainFile}
 import scala.util.Try
+import org.scalameta.logger
 
 trait InputOps { self: DatabaseOps =>
 
@@ -15,21 +16,27 @@ trait InputOps { self: DatabaseOps =>
   implicit class XtensionGSourceFileInput(gsource: GSourceFile) {
     def toInput: m.Input =
       gSourceFileInputCache.getOrElseUpdate(gsource, {
-        val path = gsource.file match {
-          case gfile: GPlainFile => m.AbsolutePath(gfile.file)
-          case other => sys.error(s"unsupported file " + other)
-        }
-        if (config.semanticdb.isSlim) {
-          m.Input.File(path)
-        } else if (config.semanticdb.isFat) {
-          val label = path.toRelative(config.sourceroot).toString
-          // NOTE: Can't use gsource.content because it's preprocessed by scalac.
-          // TODO: Obtain charset from Global.reader.
-          val charset = Charset.forName("UTF-8")
-          val contents = FileIO.slurp(path, charset)
-          m.Input.LabeledString(label, contents)
-        } else {
-          sys.error(s"unsupported configuration $config")
+        gsource.file match {
+          case gfile: GPlainFile =>
+            val path = m.AbsolutePath(gfile.file)
+            import SemanticdbMode._
+            config.semanticdb match {
+              case Slim =>
+                logger.elem(path, "SLIM")
+                m.Input.File(path)
+              case Fat =>
+                logger.elem(path, "FAT")
+                val label = path.toRelative(config.sourceroot).toString
+                // NOTE: Can't use gsource.content because it's preprocessed by scalac.
+                // TODO: Obtain charset from Global.reader.
+                val charset = Charset.forName("UTF-8")
+                val contents = FileIO.slurp(path, charset)
+                m.Input.LabeledString(label, contents)
+              case Disabled =>
+                m.Input.None
+            }
+          case other =>
+            m.Input.None
         }
       })
   }
@@ -37,7 +44,9 @@ trait InputOps { self: DatabaseOps =>
   implicit class XtensionGPositionMPosition(pos: GPosition) {
     def toMeta: m.Position = {
       val input = pos.source.toInput
-      if (pos.isRange) {
+      if (input == m.Input.None) {
+        m.Position.None
+      } else if (pos.isRange) {
         m.Position.Range(input, m.Point.Offset(input, pos.start), m.Point.Offset(input, pos.end))
       } else {
         // NOTE: Even with -Yrangepos enabled we cannot be guaranteed that all positions are

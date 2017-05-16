@@ -1,11 +1,7 @@
 package scala.meta.internal.semantic.vfs
 
 import java.io._
-import java.net._
-import org.scalameta.adt._
 import org.scalameta.data._
-import org.scalameta.invariants._
-import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.io._
 import scala.meta.internal.io.InputStreamIO
