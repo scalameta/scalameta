@@ -572,6 +572,9 @@ lazy val publishableSettings = Def.settings(
 )
 
 lazy val nonPublishableSettings = Seq(
+  publishArtifact in (Compile, packageDoc) := false,
+  publishArtifact in packageDoc := false,
+  sources in (Compile,doc) := Seq.empty,
   publishArtifact := false,
   publish := {}
 )

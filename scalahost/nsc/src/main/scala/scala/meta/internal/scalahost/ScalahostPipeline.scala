@@ -13,6 +13,7 @@ import scala.meta.io._
 import scala.meta.internal.semantic.DatabaseOps
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
+import scala.tools.nsc.doc.ScaladocGlobal
 
 trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
   // NOTE: Here we encode assumptions that hold by design:
@@ -38,6 +39,7 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
 
     class ScalahostPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
+        if (g.isInstanceOf[ScaladocGlobal]) return // Do nothing
         try {
           if (config.semanticdb.isDisabled || !unit.source.file.name.endsWith(".scala")) return
           val mminidb = m.Database(List(unit.source.toInput -> unit.toAttributes))
