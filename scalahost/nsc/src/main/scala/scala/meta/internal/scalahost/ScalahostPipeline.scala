@@ -39,7 +39,9 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
 
     class ScalahostPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
-        if (g.isInstanceOf[ScaladocGlobal]) return // Do nothing
+        if (g.isInstanceOf[ScaladocGlobal]) return
+        if (config.semanticdb.isDisabled) return
+
         try {
           if (config.semanticdb.isDisabled || !unit.source.file.name.endsWith(".scala")) return
           val mminidb = m.Database(List(unit.source.toInput -> unit.toAttributes))
