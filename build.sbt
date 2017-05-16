@@ -7,8 +7,9 @@ import org.scalameta.os
 import UnidocKeys._
 import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
+import Versions._
 
-lazy val LanguageVersions = Seq("2.11.11", "2.12.2")
+lazy val LanguageVersions = Seq(LatestScala211, LatestScala212)
 lazy val LanguageVersion = LanguageVersions.head
 lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.version.preRelease())
 
@@ -35,7 +36,7 @@ commands += CiCommand("ci-slow")(
   "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
   Nil
 )
-commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/test" :: Nil)
+commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/it:test" :: Nil)
 commands += CiCommand("ci-publish")(
   if (sys.env.contains("CI_PUBLISH")) s"publish" :: Nil
   else Nil
@@ -250,26 +251,28 @@ lazy val scalahostNsc = project
 
 lazy val scalahostSbt = project
   .in(file("scalahost/sbt"))
+  .configs(IntegrationTest)
   .settings(
     publishableSettings,
     buildInfoSettings,
+    Defaults.itSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
     publishMavenStyle := false, // necessary for pre-releases to work with addSbtPlugin
     bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
-    testQuick := {
+    testQuick.in(IntegrationTest) := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
       RunSbtCommand(s"; plz $ScalaVersion publishLocal " +
         "; such scalahostSbt/scripted sbt-scalahost/semantic-example")(state.value)
     },
-    test := {
+    test.in(IntegrationTest) := {
       RunSbtCommand("; such publishLocal " +
         "; such scalahostSbt/scripted")(state.value)
     },
     description := "sbt plugin to enable the scalahost compiler plugin for Scala 2.x",
     moduleName := "sbt-scalahost", // sbt convention is that plugin names start with sbt-
-    scalaVersion := "2.10.6",
-    crossScalaVersions := Seq("2.10.6"), // for some reason, scalaVersion.value does not work.
+    scalaVersion := LatestScala210,
+    crossScalaVersions := Seq(LatestScala210),
     scriptedLaunchOpts ++= Seq(
       "-Dplugin.version=" + version.value,
       // .jvmopts is ignored, simulate here

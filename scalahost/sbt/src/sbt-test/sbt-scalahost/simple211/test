@@ -1,2 +1,0 @@
-> test:compile
-$ exists target/scala-2.11/classes/META-INF/semanticdb

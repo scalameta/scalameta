@@ -18,9 +18,9 @@ trait InputOps { self: DatabaseOps =>
           case gfile: GPlainFile => m.AbsolutePath(gfile.file)
           case other => sys.error(s"unsupported file " + other)
         }
-        if (config.slim) {
+        if (config.semanticdb.isSlim) {
           m.Input.File(path)
-        } else if (config.fat) {
+        } else if (config.semanticdb.isFat) {
           val labelOpt = config.sourcepath.relativize(path.toURI).map(_.toString)
           val label = labelOpt.getOrElse(sys.error(s"can't find $path in ${config.sourcepath}"))
           // NOTE: Can't use gsource.content because it's preprocessed by scalac.
