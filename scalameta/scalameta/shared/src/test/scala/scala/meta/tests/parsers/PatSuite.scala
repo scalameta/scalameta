@@ -73,6 +73,10 @@ class PatSuite extends ParseSuite {
     val ExtractInfix(Var(Term.Name("a")), Term.Name("::"), Var(Term.Name("b")) :: Nil) = pat("a :: b")
   }
 
+  test("a :: ()") {
+    val ExtractInfix(Var(Term.Name("a")), Term.Name("::"), Nil) = pat("a :: ()")
+  }
+
   test("1 | 2 | 3") {
     val Alternative(Lit(1), Lit(2)) = pat("1 | 2")
     val Alternative(Lit(1), Alternative(Lit(2), Lit(3))) = pat("1 | 2 | 3")

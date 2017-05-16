@@ -17,8 +17,8 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Name              | `q"$name"` (construction only), `q"${name: Term.Name}"` (also deconstruction)
  Selection         | `q"$expr.$name"`
  Interpolation     | Not supported yet
- Application       | `q"$expr(...$exprssnel)"`
- Type Application  | `q"$expr[..$tpesnel]"`
+ Application       | `q"$expr(...$exprss)"`
+ Type Application  | `q"$expr[..$tpesnel]"` (vote for #519 to support `q"$expr[...$tpess]"`)
  Infix Application | `q"$expr $name[..$tpes] $expr"`, `q"$expr $name[..$tpes] (..$exprs)"`
  Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`
  Assign            | `q"$expr = $expr"`
@@ -52,7 +52,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Selection         | `t"$ref.$tname"`
  Projection        | `t"$tpe#$tname"`
  Singleton         | `t"$ref.type"`
- Application       | `t"$tpe[..$tpesnel]`
+ Application       | `t"$tpe[..$tpesnel]` (vote for #519 to support `q"$expr[...$tpess]"`)
  Infix Application | `t"$tpe $tname $tpe"`
  With              | `t"$tpe with $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
  And               | `t"$tpe & $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
@@ -80,7 +80,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  Alternative       | `p"$pat | $pat"`
  Tuple             | `p"(..$patsnel)"`
  Extract           | `p"$expr(..$pats)"`
- Infix Extract     | `p"$pat $name (..$patsnel)"`
+ Infix Extract     | `p"$pat $name (..$pats)"`
  Interpolation     | Not supported yet
  Typed             | `p"$pat: $tpe"`
  Name              | `p"$name"` (construction only), `p"${name: Term.Name}"` (also deconstruction)

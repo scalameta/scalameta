@@ -182,7 +182,7 @@ object Pat {
   @ast class Extract(fun: Term, args: List[Pat]) extends Pat {
     checkFields(fun.isExtractor)
   }
-  @ast class ExtractInfix(lhs: Pat, op: Term.Name, rhs: List[Pat] @nonEmpty) extends Pat
+  @ast class ExtractInfix(lhs: Pat, op: Term.Name, rhs: List[Pat]) extends Pat
   @ast class Interpolate(prefix: Term.Name, parts: List[Lit] @nonEmpty, args: List[Pat]) extends Pat {
     checkFields(parts.length == args.length + 1)
   }

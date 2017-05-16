@@ -1858,7 +1858,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
       val UnfinishedInfix(lhsStart, lhs, _, op, _) = unf
-      val args = rhs match { case Pat.Tuple(args) => args.toList; case _ => List(rhs) }
+      val args = rhs match { case Pat.Tuple(args) => args.toList; case Lit.Unit(()) => Nil; case _ => List(rhs) }
       atPos(lhsStart, rhsEnd)(Pat.ExtractInfix(lhs, op, checkNoTripleDots(args)))
     }
   }
