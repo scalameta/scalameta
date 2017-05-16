@@ -26,7 +26,6 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
     global.settings.outputDirs.getSingleOutput
       .map(_.file.getAbsolutePath)
       .getOrElse(global.settings.d.value))
-  lazy val scalametaSourcepath = config.sourcepath
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
 
   object ScalahostComponent extends PluginComponent {
@@ -42,7 +41,7 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
         try {
           if (config.semanticdb.isDisabled || !unit.source.file.name.endsWith(".scala")) return
           val mminidb = m.Database(List(unit.source.toInput -> unit.toAttributes))
-          mminidb.save(scalametaClasspath, scalametaSourcepath)
+          mminidb.save(scalametaClasspath, config.sourceroot)
         } catch {
           case NonFatal(ex) =>
             val msg = new StringWriter()
@@ -57,7 +56,7 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
         val vdb = v.Database.load(scalametaClasspath)
         val orphanedVentries = vdb.entries.filter(ventry => {
           val scalaName = v.Paths.semanticdbToScala(ventry.fragment.name)
-          scalametaSourcepath.find(scalaName).isEmpty
+          !config.sourceroot.resolve(scalaName).isFile
         })
         orphanedVentries.map(ve => {
           def cleanupUpwards(file: File): Unit = {

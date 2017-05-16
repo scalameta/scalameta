@@ -30,7 +30,7 @@ class ScalahostPlugin(val global: Global)
         val abspath =
           if (PathIO.isAbsolutePath(path)) AbsolutePath(path)
           else PathIO.workingDirectory.resolve(RelativePath(path))
-        config.setSourcepath(Sourcepath(abspath))
+        config.setSourceroot(abspath)
       case SetSemanticdb(SemanticdbMode(mode)) =>
         config.setSemanticdbMode(mode)
       case SetSemanticdb(els) =>

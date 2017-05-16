@@ -3,7 +3,6 @@ package scala.meta.internal.semantic.vfs
 import scala.meta.internal.io.PathIO.fileSeparator
 import scala.meta.io.RelativePath
 import org.scalameta.invariants.require
-import org.scalameta.logger
 
 object Paths {
   private val semanticDbPrefix = "META-INF" + fileSeparator + "semanticdb" + fileSeparator
@@ -12,8 +11,7 @@ object Paths {
   private val scalaSuffix = ".scala"
 
   def isSemanticdb(path: RelativePath): Boolean = {
-    logger.elem(path)
-    path.toString.startsWith(semanticDbPrefix) &&
+    path.toString.contains(semanticDbPrefix) &&
     path.toString.endsWith(semanticDbSuffix)
   }
 
