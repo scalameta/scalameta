@@ -6,10 +6,10 @@ This specification describes quasiquote syntax using a markedly condensed notati
 
                    | Quasiquote
 -------------------|------------------
- Literal           | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
+ Literal           | `q"<literal>"`
  This              | `q"this"`, `q"$name.this"`
  Super             | `q"super"`, `q"$name.super"`, `q"super[$name]"`, `q"$name.super[$name]"`
- Name              | `q"$name"` (construction only), `q"${name: Term.Name}"` (also deconstruction)
+ Name              | `q"<name>"`
  Selection         | `q"$expr.$name"`
  Interpolation     | Not supported yet
  Application       | `q"$expr(...$exprss)"`
@@ -42,8 +42,8 @@ This specification describes quasiquote syntax using a markedly condensed notati
 
                    | Quasiquote
 -------------------|------------------------------
- Literal           | `t"$lit"` (construction only), `t"${lit: Lit}"` (also deconstruction)
- Name              | `t"name"` (construction only), `t"${name: Type.Name}"` (also deconstruction)
+ Literal           | `t"<literal>"`
+ Name              | `t"<name>"`
  Selection         | `t"$ref.$tname"`
  Projection        | `t"$tpe#$tname"`
  Singleton         | `t"$ref.type"`
@@ -61,16 +61,16 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`
  By Name           | `t"=> $tpe"`
  Repeated          | `t"$tpe*"`
- Var               | Construction not supported, `t"${tvar: Type.Var}"` (deconstruction only)
+ Var               | Not supported
 
 ## Patterns (meta.Pat) and Cases (meta.Case)
 
                    | Quasiquote
 -------------------|----------------------------
- Literal           | `p"$lit"` (construction only), `p"${lit: Lit}"` (also deconstruction)
+ Literal           | `p"<lit>"`
  Wildcard          | `p"_"`
  Sequence Wildcard | `p"_*"`
- Var               | `p"$name"` (construction only), `q"${pvar: Pat.Var}"` (also deconstruction)
+ Var               | `p"<name>"`
  Bind              | `p"$pat @ $pat"`
  Alternative       | `p"$pat | $pat"`
  Tuple             | `p"(..$patsnel)"`
@@ -78,17 +78,18 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Infix Extract     | `p"$pat $name (..$pats)"`
  Interpolation     | Not supported yet
  Typed             | `p"$pat: $tpe"`
- Name              | `p"$name"` (construction only), `p"${name: Term.Name}"` (also deconstruction)
+ Name              | ``p"`<name>`"``
  Selection         | `p"$expr.$name"`
  Case              | `p"case $pat if $expropt => $expr"`
 
 ## Statements (meta.Stat)
 
-            | Quasiquote
-------------|----------------------------
- Expression | `q"$expr"` (construction only), `q"${expr: Term}"` (also deconstruction)
- Member     | `q"$member"` (construction only), `q"${member: Member}"` (also deconstruction)
- Import     | `q"import ..$importersnel"`
+             | Quasiquote
+-------------|----------------------------
+ Expression  | See above
+ Declaration | See above
+ Definition  | See above
+ Import      | `q"import ..$importersnel"`
 
 ## Members (meta.Member)
 
@@ -239,11 +240,9 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Ctor.Name           | `$ctorname`   | `ctor`
  meta.Ctor.Ref            | `$ctorref`    | `ctor`
  meta.Enumerator          | `$enumerator` | `enumerator`
- meta.Lit                 | `$lit`        | `q`, `t`, `p`
- meta.Member              | `$member`     | `q`
  meta.Mod                 | `$mod`        | `mod`
  meta.Mod.Annot           | `$annot`      | `mod`
- meta.Name.Indeterminate  | `$iname`      | Can't be constructed, only deconstructed
+ meta.Name.Indeterminate  | `$iname`      | Not supported
  meta.Pat                 | `$pat`        | `p`
  meta.Importee            | `$importee`   | `importee`
  meta.Importer            | `$importer`   | `importer`
@@ -253,7 +252,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Term.Name           | `$name`       | `q`
  meta.Term.Ref            | `$ref`        | `q`
  meta.Term.Param          | `$param`      | `param`
- meta.Type                | `$tpe`        | `t`, type vars can't be constructed, only deconstructed
+ meta.Type                | `$tpe`        | `t`
  meta.Type.Name           | `$tname`      | `t`
  meta.Type.Param          | `$tparam`     | `tparam`
 
