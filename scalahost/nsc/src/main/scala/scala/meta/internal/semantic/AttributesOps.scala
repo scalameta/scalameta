@@ -345,7 +345,11 @@ trait AttributesOps { self: DatabaseOps =>
             }
             m.Message(mpos, mseverity, msg)
         }
-
+        // We cannot be guaranteed that all symbols have a position, see
+        // https://github.com/scalameta/scalameta/issues/665
+        // Instead of crashing with "unsupported file", we ignore these cases.
+        // TODO: find a minimal reproduction of this error and fix bug at root.
+        names.remove(m.Position.None)
         m.Attributes(dialect, names.toList, messages.toList, denotations.toList, inferred.toList)
       })
     }
