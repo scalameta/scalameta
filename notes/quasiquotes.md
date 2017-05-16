@@ -234,27 +234,27 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
 
 ### Shorthands
 
- Type                     | Shorthand     | Interpolator
---------------------------|---------------|--------------
- meta.Case                | `$case`       | `p`
- meta.Ctor.Name           | `$ctorname`   | `ctor`
- meta.Ctor.Ref            | `$ctorref`    | `ctor`
- meta.Enumerator          | `$enumerator` | `enumerator`
- meta.Mod                 | `$mod`        | `mod`
- meta.Mod.Annot           | `$annot`      | `mod`
- meta.Name.Indeterminate  | `$iname`      | Not supported
- meta.Pat                 | `$pat`        | `p`
- meta.Importee            | `$importee`   | `importee`
- meta.Importer            | `$importer`   | `importer`
- meta.Stat                | `$stat`       | `q`
- meta.Template            | `$template`   | `template`
- meta.Term                | `$expr`       | `q`
- meta.Term.Name           | `$name`       | `q`
- meta.Term.Ref            | `$ref`        | `q`
- meta.Term.Param          | `$param`      | `param`
- meta.Type                | `$tpe`        | `t`
- meta.Type.Name           | `$tname`      | `t`
- meta.Type.Param          | `$tparam`     | `tparam`
+ Type                     | Shorthand
+--------------------------|---------------
+ meta.Case                | `$case`
+ meta.Ctor.Name           | `$ctorname`
+ meta.Ctor.Ref            | `$ctorref`
+ meta.Enumerator          | `$enumerator`
+ meta.Mod                 | `$mod`
+ meta.Mod.Annot           | `$annot`
+ meta.Name.Indeterminate  | `$iname`
+ meta.Pat                 | `$pat`
+ meta.Importee            | `$importee`
+ meta.Importer            | `$importer`
+ meta.Stat                | `$stat`
+ meta.Template            | `$template`
+ meta.Term                | `$expr`
+ meta.Term.Name           | `$name`
+ meta.Term.Ref            | `$ref`
+ meta.Term.Param          | `$param`
+ meta.Type                | `$tpe`
+ meta.Type.Name           | `$tname`
+ meta.Type.Param          | `$tparam`
 
 ### Suffixes
 
