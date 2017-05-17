@@ -48,111 +48,84 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   // Entry points for Parse[T]
-  // Used for quasiquotes as well as for ad-hoc parsing
-  // parseQuasiquoteStat is used to implement q"..." and surprisingly can't be reduced to anything that's already in the parser,
-  // because it needs to support a wide range of constructs, from expressions to top-level definitions.
-  // Note the expr(Local) part, which means that we're going to parse lambda expressions in the mode that
-  // precludes ambiguities with self-type annotations.
-  private val consumeStat: PartialFunction[Token, Stat] = {
-    case KwImport() => importStmt()
-    case KwPackage() if !dialect.allowToplevelTerms => packageOrPackageObjectDef()
-    case DefIntro() => nonLocalDefOrDcl()
-    case ExprIntro() => expr(Local) match { case q: Term.Quasi => q.become[Stat.Quasi]; case other => other }
-    case Ellipsis(_) => Term.Block(List(ellipsis(1, astInfo[Stat])))
-  }
   def parseStat(): Stat = {
-    parseRule(parser => {
-      def skipStatementSeparators(): Unit = {
-        if (token.is[EOF]) return
-        if (!token.is[StatSep]) accept[EOF]
-        next()
-        skipStatementSeparators()
-      }
-      val maybeStat = consumeStat.lift(token)
-      val stat = maybeStat.getOrElse(reporter.syntaxError("unexpected start of statement", at = token))
-      skipStatementSeparators()
-      stat
-    })
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteStat())
+    else parseRule(_.entrypointStat())
   }
-  def parseQuasiquoteStat(): Stat = {
-    def failEmpty() = {
-      reporter.syntaxError("unexpected end of input", at = token)
-    }
-    def failMix(advice: Option[String]) = {
-      val message = "these statements can't be mixed together"
-      val addendum = advice.map(", " + _).getOrElse("")
-      reporter.syntaxError(message + addendum, at = parserTokens.head)
-    }
-    parseRule(parser => {
-      val rewind = in.fork
-      try {
-        parser.statSeq(consumeStat) match {
-          case Nil => failEmpty()
-          case stat :: Nil => stat
-          case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
-          case stats if stats.forall(_.isTopLevelStat) => failMix(Some("try source\"...\" instead"))
-          case other => failMix(None)
-        }
-      } catch {
-        case ex @ ParseException(_, "; expected but identifier found") =>
-          Try({ in = rewind; repeatedExpr() }).getOrElse(throw ex)
-      }
-    })
+
+  def parseTerm(): Term = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteExpr())
+    else parseRule(_.entrypointExpr())
   }
-  def parseQuasiquoteType(): Type = parseRule(_.paramType())
-  def parseQuasiquoteCtor(): Ctor = parseRule(_.quasiquoteCtor())
-  def parseTerm(): Term = parseRule(_.expr())
+
   def parseUnquoteTerm(): Term = parseRule(_.unquoteExpr())
-  def parseTermParam(): Term.Param = parseRule(_.param(ownerIsCase = false, ownerIsType = true, isImplicit = false))
-  def parseType(): Type = parseRule(_.typ())
-  def parseTypeParam(): Type.Param = parseRule(_.typeParam(ownerIsType = true, ctxBoundsAllowed = true))
-  def parsePat(): Pat = parseRule(_.pattern())
-  def parseQuasiquotePat(): Pat = parseRule(_.quasiquotePattern())
+
+  def parseTermParam(): Term.Param = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteTermParam())
+    else parseRule(_.entrypointTermParam())
+  }
+
+  def parseType(): Type = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteType())
+    else parseRule(_.entrypointType())
+  }
+
+  def parseTypeParam(): Type.Param = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteTypeParam())
+    else parseRule(_.entrypointTypeParam())
+  }
+
+  def parsePat(): Pat = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquotePattern())
+    else parseRule(_.entrypointPattern())
+  }
+
   def parseUnquotePat(): Pat = parseRule(_.unquotePattern())
-  def parseCase(): Case = parseRule{parser => parser.accept[KwCase]; parser.caseClause()}
-  def parseInit(): Init = parseRule(_.initInsideQuasiquote())
-  def parseTemplate(): Template = parseRule(_.template())
+
+  def parseCase(): Case = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteCase())
+    else parseRule(_.entrypointCase())
+  }
+
+  def parseCtor(): Ctor = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteCtor())
+    else parseRule(_.entrypointCtor())
+  }
+
+  def parseInit(): Init = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteInit())
+    else parseRule(_.entrypointInit())
+  }
+
+  def parseTemplate(): Template = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteTemplate())
+    else parseRule(_.entrypointTemplate())
+  }
+
   def parseMod(): Mod = {
-    implicit class XtensionParser(parser: this.type) {
-      def annot() = parser.annots(skipNewLines = false) match {
-        case annot :: Nil => annot
-        case annot :: other :: _ => parser.reporter.syntaxError(s"end of file expected but ${token.name} found", at = other)
-        case Nil => unreachable
-      }
-    }
-    def fail() = parser.reporter.syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
-    parseRule(parser => parser.autoPos(parser.token match {
-      case Unquote()                                  => unquote[Mod.Quasi]
-      case At()                                       => parser.annot()
-      case KwPrivate()                                => parser.accessModifier()
-      case KwProtected()                              => parser.accessModifier()
-      case KwImplicit()                               => parser.next(); Mod.Implicit()
-      case KwFinal()                                  => parser.next(); Mod.Final()
-      case KwSealed()                                 => parser.next(); Mod.Sealed()
-      case KwOverride()                               => parser.next(); Mod.Override()
-      case KwCase()                                   => parser.next(); Mod.Case()
-      case KwAbstract()                               => parser.next(); Mod.Abstract()
-      case Ident("+")                                 => parser.next(); Mod.Covariant()
-      case Ident("-")                                 => parser.next(); Mod.Contravariant()
-      case KwLazy()                                   => parser.next(); Mod.Lazy()
-      case KwVal() if !dialect.allowUnquotes          => parser.next(); Mod.ValParam()
-      case KwVar() if !dialect.allowUnquotes          => parser.next(); Mod.VarParam()
-      case Ident("valparam") if dialect.allowUnquotes => parser.next(); Mod.ValParam()
-      case Ident("varparam") if dialect.allowUnquotes => parser.next(); Mod.VarParam()
-      case Ident("inline") if dialect.allowInlineMods => parser.next(); Mod.Inline()
-      case _                                          => fail()
-    }))
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteModifier())
+    else parseRule(_.entrypointModifier())
   }
-  def parseQuasiquoteMod(): Mod = parseMod() // NOTE: special treatment for mod"valparam" and likes is implemented directly in `parseMod`
+
   def parseEnumerator(): Enumerator = {
-    parseRule(_.enumerator(isFirst = false, allowNestedIf = false) match {
-      case enumerator :: Nil => enumerator
-      case other => unreachable(debug(other))
-    })
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteEnumerator())
+    else parseRule(_.entrypointEnumerator())
   }
-  def parseImporter(): Importer = parseRule(_.importer())
-  def parseImportee(): Importee = parseRule(_.importee())
-  def parseSource(): Source = parseRule(_.source())
+
+  def parseImporter(): Importer = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteImporter())
+    else parseRule(_.entrypointImporter())
+  }
+
+  def parseImportee(): Importee = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteImportee())
+    else parseRule(_.entrypointImportee())
+  }
+
+  def parseSource(): Source = {
+    if (dialect.allowUnquotes) parseRule(_.quasiquoteSource())
+    else parseRule(_.entrypointSource())
+  }
 
 /* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
 
@@ -1008,6 +981,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     }
 
+    def quasiquoteType(): Type = entrypointType()
+
+    def entrypointType(): Type = paramType()
+
     /** {{{
      *  TypeArgs    ::= `[' ArgType {`,' ArgType} `]'
      *  }}}
@@ -1547,6 +1524,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  }}}
    */
   def expr(): Term = expr(Local)
+
+  def quasiquoteExpr(): Term = expr()
+
+  def entrypointExpr(): Term = expr()
 
   def unquoteExpr(): Term =
     token match {
@@ -2156,6 +2137,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     })
   }
 
+  def quasiquoteCase(): Case = entrypointCase()
+
+  def entrypointCase(): Case = {
+    accept[KwCase]
+    caseClause()
+  }
+
   /** {{{
    *  CaseClauses ::= CaseClause {CaseClause}
    *  CaseClause  ::= case Pattern [Guard] `=>' Block
@@ -2206,7 +2194,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     enums.toList
   }
 
-  def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] =
+  def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] = {
     if (token.is[KwIf] && !isFirst) autoPos(Enumerator.Guard(guard().get)) :: Nil
     else if (token.is[Ellipsis]) {
       ellipsis(1, astInfo[Enumerator.Generator]) :: Nil
@@ -2214,6 +2202,17 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       unquote[Enumerator.Generator] :: Nil
     }
     else generator(!isFirst, allowNestedIf)
+  }
+
+  def quasiquoteEnumerator(): Enumerator = entrypointEnumerator()
+
+  def entrypointEnumerator(): Enumerator = {
+    enumerator(isFirst = false, allowNestedIf = false) match {
+      case enumerator :: Nil => enumerator
+      case other => unreachable(debug(other))
+    }
+  }
+
 
   /** {{{
    *  Generator ::= Pattern1 (`<-' | `=') Expr [Guard]
@@ -2285,22 +2284,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       loop(pattern1())
     }
 
-    private def topLevelNamesToPats[T >: Pat](op: => T): T = {
+    def quasiquotePattern(): Pat = {
       // NOTE: As per quasiquotes.md
       // * p"x" => Pat.Var (ok)
       // * p"X" => Pat.Var (needs postprocessing, parsed as Term.Name)
       // * p"`x`" => Term.Name (ok)
       // * p"`X`" => Term.Name (ok)
       val nonbqIdent = isIdent && !isBackquoted
-      val pat = op
+      val pat = argumentPattern()
       pat match {
         case pat: Term.Name if nonbqIdent => atPos(pat, pat)(Pat.Var(pat))
         case _ => pat
       }
     }
 
-    def quasiquotePattern(): Pat = {
-      topLevelNamesToPats(argumentPattern())
+    def entrypointPattern(): Pat = {
+      pattern()
     }
 
     def unquotePattern(): Pat = {
@@ -2532,6 +2531,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  they are all initiated from non-pattern context.
    */
   def typ() = outPattern.typ()
+  def quasiquoteType() = outPattern.quasiquoteType()
+  def entrypointType() = outPattern.entrypointType()
   def startInfixType() = outPattern.infixType(InfixMode.FirstOp)
   def startModType() = outPattern.annotType()
   def exprTypeArgs() = outPattern.typeArgs()
@@ -2539,7 +2540,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /** Default entry points into some pattern contexts. */
   def pattern(): Pat = noSeq.pattern()
-  def quasiquotePattern(): Pat = noSeq.quasiquotePattern()
+  def quasiquotePattern(): Pat = seqOK.quasiquotePattern()
+  def entrypointPattern(): Pat = seqOK.entrypointPattern()
   def unquotePattern(): Pat = noSeq.unquotePattern()
   def unquoteXmlPattern(): Pat = xmlSeqOK.unquoteXmlPattern()
   def seqPatterns(): List[Pat] = seqOK.patterns()
@@ -2613,6 +2615,38 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     case Ident("inline") if dialect.allowInlineMods => next(); Mod.Inline()
     case _                                          => syntaxError(s"modifier expected but ${token.name} found", at = token)
   })
+
+  def quasiquoteModifier(): Mod = entrypointModifier()
+
+  def entrypointModifier(): Mod = autoPos {
+    def annot() = annots(skipNewLines = false) match {
+      case annot :: Nil => annot
+      case annot :: other :: _ => syntaxError(s"end of file expected but ${token.name} found", at = other)
+      case Nil => unreachable
+    }
+    def fail() = syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
+    token match {
+      case Unquote()                                  => unquote[Mod.Quasi]
+      case At()                                       => annot()
+      case KwPrivate()                                => accessModifier()
+      case KwProtected()                              => accessModifier()
+      case KwImplicit()                               => next(); Mod.Implicit()
+      case KwFinal()                                  => next(); Mod.Final()
+      case KwSealed()                                 => next(); Mod.Sealed()
+      case KwOverride()                               => next(); Mod.Override()
+      case KwCase()                                   => next(); Mod.Case()
+      case KwAbstract()                               => next(); Mod.Abstract()
+      case Ident("+")                                 => next(); Mod.Covariant()
+      case Ident("-")                                 => next(); Mod.Contravariant()
+      case KwLazy()                                   => next(); Mod.Lazy()
+      case KwVal() if !dialect.allowUnquotes          => next(); Mod.ValParam()
+      case KwVar() if !dialect.allowUnquotes          => next(); Mod.VarParam()
+      case Ident("valparam") if dialect.allowUnquotes => next(); Mod.ValParam()
+      case Ident("varparam") if dialect.allowUnquotes => next(); Mod.VarParam()
+      case Ident("inline") if dialect.allowInlineMods => next(); Mod.Inline()
+      case _                                          => fail()
+    }
+  }
 
   /** {{{
    *  Modifiers ::= {Modifier}
@@ -2801,6 +2835,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
+  def quasiquoteTermParam(): Term.Param = entrypointTermParam()
+
+  def entrypointTermParam(): Term.Param = param(ownerIsCase = false, ownerIsType = true, isImplicit = false)
+
   /** {{{
    *  TypeParamClauseOpt    ::= [TypeParamClause]
    *  TypeParamClause       ::= `[' VariantTypeParam {`,' VariantTypeParam} `]']
@@ -2858,6 +2896,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     Type.Param(mods, nameopt, tparams, tbounds, vbounds.toList, cbounds.toList)
   }
 
+  def quasiquoteTypeParam(): Type.Param = entrypointTypeParam()
+
+  def entrypointTypeParam(): Type.Param = typeParam(ownerIsType = true, ctxBoundsAllowed = true)
+
   /** {{{
    *  TypeBounds ::= [`>:' Type] [`<:' Type]
    *  }}}
@@ -2898,6 +2940,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         dotselectors
     }
   }
+
+  def quasiquoteImporter(): Importer = entrypointImporter()
+
+  def entrypointImporter(): Importer = importer()
 
   /** {{{
    *  ImportSelectors ::= `{' {ImportSelector `,'} (ImportSelector | `_') `}'
@@ -2948,6 +2994,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         other
     }
   }
+
+  def quasiquoteImportee(): Importee = entrypointImportee()
+
+  def entrypointImportee(): Importee = importee()
 
   def nonLocalDefOrDcl(): Stat = {
     val anns = annots(skipNewLines = true)
@@ -3246,6 +3296,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     else secondaryCtorRest(mods, name, paramss)
   }
 
+  def entrypointCtor(): Ctor = {
+    // TODO: implement me
+    ???
+  }
+
   def secondaryCtorRest(mods: List[Mod], name: Name, paramss: List[List[Term.Param]]): Ctor.Secondary = {
     newLineOptWhenFollowedBy[LeftBrace]
     val (init, stats) = token match {
@@ -3298,7 +3353,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     initRest(() => tpe, allowArgss = true, allowBraces = false)
   }
 
-  def initInsideQuasiquote(): Init = {
+  def quasiquoteInit(): Init = entrypointInit()
+
+  def entrypointInit(): Init = {
     token match {
       case KwThis() => initInsideConstructor()
       case _ => initInsideTemplate()
@@ -3381,6 +3438,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
+  def quasiquoteTemplate(): Template = entrypointTemplate()
+
+  def entrypointTemplate(): Template = template()
+
   def ensureEarlyDef(tree: Stat): Stat = tree match {
     case v: Stat.Quasi => v
     case v: Defn.Val => v
@@ -3449,6 +3510,51 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
 /* -------- STATSEQS ------------------------------------------- */
+
+  private val consumeStat: PartialFunction[Token, Stat] = {
+    case KwImport() => importStmt()
+    case KwPackage() if !dialect.allowToplevelTerms => packageOrPackageObjectDef()
+    case DefIntro() => nonLocalDefOrDcl()
+    case ExprIntro() => expr(Local) match { case q: Term.Quasi => q.become[Stat.Quasi]; case other => other }
+    case Ellipsis(_) => Term.Block(List(ellipsis(1, astInfo[Stat])))
+  }
+
+  def quasiquoteStat(): Stat = {
+    def failEmpty() = {
+      syntaxError("unexpected end of input", at = token)
+    }
+    def failMix(advice: Option[String]) = {
+      val message = "these statements can't be mixed together"
+      val addendum = advice.map(", " + _).getOrElse("")
+      syntaxError(message + addendum, at = parserTokens.head)
+    }
+    val rewind = in.fork
+    try {
+      statSeq(consumeStat) match {
+        case Nil => failEmpty()
+        case stat :: Nil => stat
+        case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
+        case stats if stats.forall(_.isTopLevelStat) => failMix(Some("try source\"...\" instead"))
+        case other => failMix(None)
+      }
+    } catch {
+      case ex @ ParseException(_, "; expected but identifier found") =>
+        Try({ in = rewind; repeatedExpr() }).getOrElse(throw ex)
+    }
+  }
+
+  def entrypointStat(): Stat = {
+    def skipStatementSeparators(): Unit = {
+      if (token.is[EOF]) return
+      if (!token.is[StatSep]) accept[EOF]
+      next()
+      skipStatementSeparators()
+    }
+    val maybeStat = consumeStat.lift(token)
+    val stat = maybeStat.getOrElse(syntaxError("unexpected start of statement", at = token))
+    skipStatementSeparators()
+    stat
+  }
 
   def statSeq[T <: Tree: AstInfo](statpf: PartialFunction[Token, T],
                                       errorMsg: String = "illegal start of definition"): List[T] = {
@@ -3666,6 +3772,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (dialect.allowToplevelTerms) scriptSource()
     else batchSource()
   }
+
+  def quasiquoteSource(): Source = entrypointSource()
+
+  def entrypointSource(): Source = source()
 
   def scriptSource(): Source = autoPos {
     // TODO: Faithfully reimplement the logic in SBT (see #368 in details).

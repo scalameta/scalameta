@@ -11,18 +11,18 @@ private[meta] trait Api {
   // upd. this might also require non-local macro expansion because of hierarchical structure of the `scala.meta` package.
   // TODO: overloading Case and Pat within p"..." is probably not the best idea
   // however, cas"..." is so ugly that I'm willing to be conceptually impure here
-  @quasiquote[Ctor, Stat]('q)          implicit class XtensionQuasiquoteTerm(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Term.Param]('param)      implicit class XtensionQuasiquoteTermParam(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Type]('t)                implicit class XtensionQuasiquoteType(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Type.Param]('tparam)     implicit class XtensionQuasiquoteTypeParam(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Case, Pat]('p)           implicit class XtensionQuasiquoteCaseOrPattern(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Init]('init)             implicit class XtensionQuasiquoteInit(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Template]('template)     implicit class XtensionQuasiquoteTemplate(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Mod]('mod)               implicit class XtensionQuasiquoteMod(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Enumerator]('enumerator) implicit class XtensionQuasiquoteEnumerator(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Importer]('importer)     implicit class XtensionQuasiquoteImporter(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Importee]('importee)     implicit class XtensionQuasiquoteImportee(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Source]('source)         implicit class XtensionQuasiquoteSource(ctx: StringContext) extends QuasiquoteParsers
+  @quasiquote[Ctor, Stat]('q)          implicit class XtensionQuasiquoteTerm(ctx: StringContext)
+  @quasiquote[Term.Param]('param)      implicit class XtensionQuasiquoteTermParam(ctx: StringContext)
+  @quasiquote[Type]('t)                implicit class XtensionQuasiquoteType(ctx: StringContext)
+  @quasiquote[Type.Param]('tparam)     implicit class XtensionQuasiquoteTypeParam(ctx: StringContext)
+  @quasiquote[Case, Pat]('p)           implicit class XtensionQuasiquoteCaseOrPattern(ctx: StringContext)
+  @quasiquote[Init]('init)             implicit class XtensionQuasiquoteInit(ctx: StringContext)
+  @quasiquote[Template]('template)     implicit class XtensionQuasiquoteTemplate(ctx: StringContext)
+  @quasiquote[Mod]('mod)               implicit class XtensionQuasiquoteMod(ctx: StringContext)
+  @quasiquote[Enumerator]('enumerator) implicit class XtensionQuasiquoteEnumerator(ctx: StringContext)
+  @quasiquote[Importer]('importer)     implicit class XtensionQuasiquoteImporter(ctx: StringContext)
+  @quasiquote[Importee]('importee)     implicit class XtensionQuasiquoteImportee(ctx: StringContext)
+  @quasiquote[Source]('source)         implicit class XtensionQuasiquoteSource(ctx: StringContext)
 }
 
 private[meta] trait Aliases {
