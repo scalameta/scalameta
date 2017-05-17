@@ -2375,6 +2375,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             nextOnce()
             val wildcard = autoPos({ nextTwice(); Pat.Arg.SeqWildcard() })
             Pat.Bind(p, wildcard)
+          case p: Pat.Var.Term if !dialect.allowColonForExtractorVarargs && isColonWildcardStar =>
+            syntaxError(s"$dialect does not support var: _*", at = p)
           case p: Pat.Var.Term =>
             nextOnce()
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
