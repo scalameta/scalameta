@@ -190,7 +190,6 @@ object Pat {
   def fresh(prefix: String): Pat.Var = Pat.Var(Term.fresh(prefix))
 }
 
-
 @branch trait Lit extends Term with Pat with Type {
   def value: Any
 }
@@ -416,9 +415,9 @@ package internal.ast {
   //
   // Here's how quasis represent unquotes
   // (XXX below depends on the position where the unquote occurs, e.g. q"$x" will result in Term.Quasi):
-  //   * $x => XXX.Quasi(0, Term.Name("x"))
-  //   * ..$xs => XXX.Quasi(1, XXX.Quasi(0, Term.Name("xs"))
-  //   * ...$xss => XXX.Quasi(2, XXX.Quasi(0, Term.Name("xss"))
+  //   * $x => XXX.Quasi(0, XXX.Name("x"))
+  //   * ..$xs => XXX.Quasi(1, XXX.Quasi(0, XXX.Name("xs"))
+  //   * ...$xss => XXX.Quasi(2, XXX.Quasi(0, XXX.Name("xss"))
   //   * ..{$fs($args)} => Complex ellipses aren't supported yet
   @branch trait Quasi extends Tree {
     def rank: Int

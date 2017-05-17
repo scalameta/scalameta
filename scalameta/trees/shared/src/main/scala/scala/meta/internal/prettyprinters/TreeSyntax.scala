@@ -561,10 +561,10 @@ object TreeSyntax {
       implicit def syntaxAnnots: Syntax[List[Mod.Annot]] = Syntax { annots =>
         if (annots.nonEmpty) r(annots, " ") else s()
       }
-      implicit def syntaxParams[P <: Term.Param]: Syntax[List[P]] = Syntax { params =>
+      implicit def syntaxParams: Syntax[List[Term.Param]] = Syntax { params =>
         s("(", r(params, ", "), ")")
       }
-      implicit def syntaxParamss[P <: Term.Param]: Syntax[List[List[P]]] = Syntax { paramss =>
+      implicit def syntaxParamss: Syntax[List[List[Term.Param]]] = Syntax { paramss =>
         r(paramss.map(params => {
           s("(", w("implicit ", r(params, ", "), params.exists(_.mods.exists(_.is[Mod.Implicit]))), ")")
         }), "")
@@ -574,9 +574,6 @@ object TreeSyntax {
       }
       implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax {
         _.map { t => s(kw(":"), " ", t) }.getOrElse(s())
-      }
-      implicit def syntaxTermNameOpt: Syntax[Option[Term.Name]] = Syntax {
-        _.map(s(_)).getOrElse(s(")"))
       }
       implicit def syntaxImportee: Syntax[List[Importee]] = Syntax {
         case (t: Importee.Name) :: Nil     => s(t)

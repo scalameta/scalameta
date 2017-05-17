@@ -14,7 +14,7 @@ object Helpers {
   val unaryOps = Set("-", "+", "~", "!")
   def isUnaryOp(s: String): Boolean = unaryOps contains s
 
-  implicit class XtensionSyntacticName(name: Name) {
+  implicit class XtensionHelpersName(name: Name) {
     def isBinder: Boolean = name.parent match {
       case Some(parent: Member) => parent.name == name
       case _ => false
@@ -22,7 +22,7 @@ object Helpers {
     def isReference: Boolean = !isBinder
   }
 
-  implicit class XtensionSyntacticTermName(name: Term.Name) {
+  implicit class XtensionHelpersTermName(name: Term.Name) {
     import name._
     // some heuristic is needed to govern associativity and precedence of unquoted operators
     def isLeftAssoc: Boolean = if (name.is[Term.Name.Quasi]) true
@@ -83,7 +83,7 @@ object Helpers {
     }
   }
 
-  implicit class XtensionTermRefOps(tree: Term.Ref) {
+  implicit class XtensionHelpersTermRef(tree: Term.Ref) {
     def isPath: Boolean = tree.isStableId || tree.is[Term.This]
     def isQualId: Boolean = tree match {
       case _: Term.Ref.Quasi              => true
@@ -136,7 +136,7 @@ object Helpers {
     def isQualifiedAccessMod: Boolean = isAccessMod && accessBoundary.nonEmpty
   }
 
-  implicit class XtensionMods(mods: List[Mod]) {
+  implicit class XtensionHelpersMods(mods: List[Mod]) {
     def has[T <: Mod](implicit classifier: Classifier[Mod, T]): Boolean =
       mods.exists(classifier.apply)
     def getAll[T <: Mod](implicit tag: ClassTag[T],
@@ -148,7 +148,7 @@ object Helpers {
       getAll[T].zip(getAll[U])
   }
 
-  implicit class XtensionStat(stat: Stat) {
+  implicit class XtensionHelpersStat(stat: Stat) {
     def isTopLevelStat: Boolean = stat match {
       case _: Stat.Quasi => true
       case _: Import => true
@@ -196,15 +196,11 @@ object Helpers {
     }
   }
 
-  implicit class XtensionCase(tree: Case) {
+  implicit class XtensionHelpersCase(tree: Case) {
     def stats: List[Stat] = tree.body match {
       case Term.Block(stats) => stats
       case body => List(body)
     }
-  }
-
-  implicit class XtensionApply(tree: Term.Apply) {
-    def argsc: Int = 1 + (tree.fun match { case fun: Term.Apply => fun.argsc; case _ => 0 })
   }
 
   def arrayClass(clazz: Class[_], rank: Int): Class[_] = {
@@ -212,29 +208,6 @@ object Helpers {
     Predef.require(rank >= 0)
     if (rank == 0) clazz
     else arrayClass(ScalaRunTime.arrayClass(clazz), rank - 1)
-  }
-
-  object TermApply {
-    def apply(fun: Term, argss: List[List[Term]]): Term = argss match {
-      case args :: rest => rest.foldLeft(Term.Apply(fun, args)) { (acc, args) => Term.Apply(acc, args) }
-      case _ => Term.Apply(fun, Nil)
-    }
-
-    def unapply(call: Term.Apply): Option[(Term, List[List[Term]])] = {
-      def recur(acc: List[List[Term]], term: Term): (Term, List[List[Term]])  = term match {
-        case Term.Apply(fun, args) => recur(args +: acc, fun) // inner-most is in the front
-        case fun => (fun, acc)
-      }
-
-      Some(recur(Nil, call))
-    }
-  }
-
-  implicit class XtensionTreeRoot(tree: Tree) {
-    def root: Tree = tree.parent match {
-      case Some(parent) => parent.root
-      case None => tree
-    }
   }
 
   object ParentChecks {

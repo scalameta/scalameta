@@ -324,7 +324,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                     if (optional) inferredPt = tq"_root_.scala.Option[$inferredPt]"
                     inferredPt
                 }
-                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$inferredPt](${hole.name})") // TODO: make `reifier`a immutable somehow
+                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$inferredPt](${hole.name})") // TODO: make `reifier` immutable somehow
                 pq"${hole.name}"
             }
             atPos(quasi.pos)(lifted)

@@ -4,13 +4,9 @@ package quasiquotes
 import scala.meta._
 import scala.meta.dialects.Scala211
 
-/**
-  * Validates that construction/deconstruction types are aligned
-  */
 object RoundtripSuite {
-  val tree: Tree = q"foo"
+  val tree: Tree = ???
   tree match {
-    case q"${lit: Lit}" => q"${lit: Lit}"
     case q"$name.this" => q"$name.this"
     case q"$name.super" => q"$name.super"
     case q"super[$name]" => q"super[$name]"
@@ -64,23 +60,14 @@ object RoundtripSuite {
     case t"_ >: $tpeopt1 <: $tpeopt2" => t"_ >: $tpeopt1 <: $tpeopt2"
     case t"=> $tpe" => t"=> $tpe"
     case t"$tpe*" => t"$tpe*"
-    case t"${lit: Lit}" => t"${lit: Lit}"
-    // case p"$name" => p"$name"
-    // case q"${pvar: Pat.Var}" => q"${pvar: Pat.Var}"
     case p"$pat1 @ $pat2" => p"$pat1 @ $pat2"
     case p"$pat1 | $pat2" => p"$pat1 | $pat2"
     case p"(..$patsnel)" => p"(..$patsnel)"
     case p"$ref[..$tpes](..$pats)" => p"$ref[..$tpes](..$pats)"
     // case p"$pat $name (..$patsnel)" => p"$pat $name (..$patsnel)"
     case p"$pat: $ptpe" => p"$pat: $ptpe"
-    // case p"$name" => p"$name"
-    case p"${name: Term.Name}" => p"${name: Term.Name}"
     case p"$expr.$name" => p"$expr.$name"
-    // case p"$lit" => p"$lit"
-    case p"${lit: Lit}" => p"${lit: Lit}"
     case p"case $pat if $expropt => $expr" => p"case $pat if $expropt => $expr"
-    case q"${expr: Term}" => q"${expr: Term}"
-    // case q"${member: Member}" => q"${member: Member}"
     case q"import ..$importersnel" => q"import ..$importersnel"
     case q"..$mods val ..$patsnel: $tpe" => q"..$mods val ..$patsnel: $tpe"
     case q"..$mods var ..$patsnel: $tpe" => q"..$mods var ..$patsnel: $tpe"

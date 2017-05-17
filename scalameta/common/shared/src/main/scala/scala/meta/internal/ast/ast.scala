@@ -76,7 +76,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       var (fieldChecks, rest4) = rest3.partition(_ match { case q"checkFields($what)" => true; case _ => false })
       fieldChecks = fieldChecks.map{ case q"checkFields($arg)" => q"_root_.org.scalameta.invariants.require($arg)" }
       val (parentChecks, illegal) = rest4.partition(_ match { case q"checkParent($what)" => true; case _ => false })
-      illegal.foreach(stmt => c.abort(stmt.pos, "only invariants and definitions are allowed in @ast classes"))
+      illegal.foreach(stmt => c.abort(stmt.pos, "only checkFields(...), checkParent(...) and definitions are allowed in @ast classes"))
 
       // step 3: calculate the parameters of the class
       val paramss = rawparamss
