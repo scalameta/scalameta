@@ -123,15 +123,13 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
   }
 }
 
-case class RangePosition(from: Int, to: Int)
-
 /** Collects start and end positions of scala expressions inside xml literals.
   *
   * Doesn't really parse scala expressions, only reads until the curly brace
   * balance hits 0.
   */
 class ScalaExprPositionParser(dialect: Dialect) extends Parser[Unit] {
-  private val splicePositions = List.newBuilder[RangePosition]
+  private val splicePositions = List.newBuilder[(Int, Int)]
   def getSplicePositions = splicePositions.result()
 
   def parseRec(cfg: ParseCtx, index: Int): fastparse.core.Mutable[Unit, Char, String] = {
@@ -152,7 +150,7 @@ class ScalaExprPositionParser(dialect: Dialect) extends Parser[Unit] {
     }
 
     val nextIndex = index + scanner.curr.offset
-    splicePositions += RangePosition(index, nextIndex)
+    splicePositions += ((index, nextIndex))
     success(cfg.success, (), nextIndex, Set.empty, cut = false)
   }
 }
