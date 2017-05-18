@@ -22,9 +22,4 @@ class ConverterSuite extends FunSuite {
     val termName = Term.Name("Foo")
     assert(termName.asPat.isEqual(Pat.Var(Term.Name("Foo"))))
   }
-
-  test("asCtorRef") {
-    val termName = Term.Name("Foo")
-    assert(termName.asCtorRef.isEqual(Ctor.Ref.Name("Foo")))
-  }
 }
