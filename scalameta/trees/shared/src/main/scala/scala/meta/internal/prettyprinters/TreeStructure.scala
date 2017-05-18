@@ -16,7 +16,7 @@ object TreeStructure {
       def default = {
         def anyStructure(x: Any): String = x match {
           case el: String => enquote(el, DoubleQuotes)
-          case el: Tree => el.show[Structure]
+          case el: Tree => el.structure
           case el: List[_] => listStructure(el)
           case el: None.type => "None"
           case el: Some[_] => "Some(" + anyStructure(el.get) + ")"
@@ -55,7 +55,7 @@ object TreeStructure {
           }
           def showToken(tok: Token) = tok match {
             case Constant.Long(v) => Show.Str(v.toString + "L")
-            case _ => tok.show[Syntax]
+            case _ => tok.syntax
           }
           s(x.tokens.filter(isRelevantToken _).map(showToken _).mkString)
         case x =>

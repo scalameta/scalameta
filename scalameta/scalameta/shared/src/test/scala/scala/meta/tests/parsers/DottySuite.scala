@@ -7,8 +7,8 @@ import scala.meta.dialects.Dotty
 class DottySuite extends ParseSuite {
   test("case List(xs: _*)") {
     val tree = pat("List(xs: _*)")
-    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))")
-    assert(tree.show[Syntax] === "List(xs: _*)")
+    assert(tree.structure === "Pat.Extract(Term.Name(\"List\"), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))")
+    assert(tree.syntax === "List(xs: _*)")
   }
   test("xml literals") {
     intercept[TokenizeException]{ term("<foo>{bar}</foo>") }
@@ -18,8 +18,8 @@ class DottySuite extends ParseSuite {
     val tree1@Defn.Def(List(Mod.Inline()), Term.Name("x"), Nil, Nil, None, Lit(42)) = templStat("inline def x = 42")
     val tree2@Defn.Def(List(Mod.Inline()), Term.Name("x"), Nil, Nil, None, Lit(42)) = blockStat("inline def x = 42")
 
-    assert(tree1.show[Syntax] === "inline def x = 42")
-    assert(tree2.show[Syntax] === "inline def x = 42")
+    assert(tree1.syntax === "inline def x = 42")
+    assert(tree2.syntax === "inline def x = 42")
   }
 
   test("inline can be used as a modifier") {
@@ -28,7 +28,7 @@ class DottySuite extends ParseSuite {
   }
 
   test("mod\"inline\"") {
-    assert(mod"inline".show[Structure] === "Mod.Inline()")
+    assert(mod"inline".structure === "Mod.Inline()")
   }
 
   test("inline cannot be used as an identifier") {

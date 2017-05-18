@@ -9,8 +9,8 @@ import scala.meta.dialects.Sbt0137
 class SbtSuite extends FunSuite {
   test("\"...\".parse[Source]") {
     val tree = simpleBuildSyntax.parse[Source].get
-    assert(tree.show[Syntax] === simpleBuildSyntax)
-    assert(tree.show[Structure] === simpleBuildStructure)
+    assert(tree.syntax === simpleBuildSyntax)
+    assert(tree.structure === simpleBuildStructure)
   }
 
   test("\"...\".parse[Stat]") {
@@ -32,11 +32,11 @@ class SbtSuite extends FunSuite {
         )
     """
     // NOTE: not checking against simpleBuildSyntax because quasiquotes don't retain tokens
-    assert(tree.show[Syntax] === """
+    assert(tree.syntax === """
       |lazy val commonSettings = Seq(organization := "com.example", version := "0.1.0", scalaVersion := "2.11.7")
       |lazy val root = (project in file(".")).settings(commonSettings: _*).settings(name := "hello")
     """.trim.stripMargin)
-    assert(tree.show[Structure] === simpleBuildStructure)
+    assert(tree.structure === simpleBuildStructure)
   }
 
   private def simpleBuildSyntax = """

@@ -10,7 +10,7 @@ class StructureSuite extends ParseSuite {
   def checkStructure[T: Parse: Structure](code: String, expected: String): Unit = {
 
     test(logger.revealWhitespace(code)) {
-      val obtained: String = code.parse[T].get.show[Structure]
+      val obtained: String = code.parse[T].get.structure
       assert(obtained == expected)
     }
   }

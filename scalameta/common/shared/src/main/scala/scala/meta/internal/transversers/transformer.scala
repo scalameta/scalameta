@@ -148,7 +148,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         import scala.meta.prettyprinters._
         val errorPrefix = "Invalid transformation of " + field + ": "
         val errorHeader = errorPrefix + from.productPrefix + " -> " + to.productPrefix + ". "
-        val errorDetails = "From: " + from.show[Structure] + ", to: " + to.show[Structure]
+        val errorDetails = "From: " + from.structure + ", to: " + to.structure
         throw new UnsupportedOperationException(errorHeader + errorDetails)
       }
     """
