@@ -350,10 +350,12 @@ object Ctor {
 @branch trait Mod extends Tree
 object Mod {
   @ast class Annot(body: Init) extends Mod
-  @ast class PrivateThis() extends Mod
-  @ast class PrivateWithin(within: Name) extends Mod
-  @ast class ProtectedThis() extends Mod
-  @ast class ProtectedWithin(within: Name) extends Mod
+  @ast class Private(within: Ref) extends Mod {
+    checkFields(within.isWithin)
+  }
+  @ast class Protected(within: Ref) extends Mod {
+    checkFields(within.isWithin)
+  }
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod

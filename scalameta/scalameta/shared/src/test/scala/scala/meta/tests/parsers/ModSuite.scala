@@ -388,13 +388,13 @@ class ModSuite extends ParseSuite {
 
   test("not really invalid private and protected") {
     // NOTE: Surprisingly, the code below is valid Scala.
-    val Defn.Def(List(Mod.PrivateWithin(Name.Anonymous()), Mod.ProtectedWithin(Name.Indeterminate("foo"))), _, _, _, _, _) =
+    val Defn.Def(List(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Indeterminate("foo"))), _, _, _, _, _) =
       templStat("private protected[foo] def foo = ???")
-    val Defn.Def(List(Mod.PrivateWithin(Name.Indeterminate("foo")), Mod.ProtectedWithin(Name.Anonymous())), _, _, _, _, _) =
+    val Defn.Def(List(Mod.Private(Name.Indeterminate("foo")), Mod.Protected(Name.Anonymous())), _, _, _, _, _) =
       templStat("private[foo] protected def foo = ???")
-    val Defn.Def(List(Mod.ProtectedWithin(Name.Anonymous()), Mod.PrivateWithin(Name.Indeterminate("foo"))), _, _, _, _, _) =
+    val Defn.Def(List(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Indeterminate("foo"))), _, _, _, _, _) =
       templStat("protected private[foo] def foo = ???")
-    val Defn.Def(List(Mod.ProtectedWithin(Name.Indeterminate("foo")), Mod.PrivateWithin(Name.Anonymous())), _, _, _, _, _) =
+    val Defn.Def(List(Mod.Protected(Name.Indeterminate("foo")), Mod.Private(Name.Anonymous())), _, _, _, _, _) =
       templStat("protected[foo] private def foo = ???")
   }
 }

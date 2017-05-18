@@ -146,25 +146,23 @@ This specification describes quasiquote syntax using a markedly condensed notati
 
 ## Modifiers (meta.Mod)
 
-                  | Quasiquote
-------------------|-----------------
- Annotation       | `mod"@$init"`
- Private This     | `mod"private[this]"`
- Private Within   | `mod"private"`, `mod"private[$name]"`
- Protected This   | `mod"protected[this]"`
- Protected Within | `mod"protected"`, `mod"protected[$name]"`
- Implicit         | `mod"implicit"`
- Final            | `mod"final"`
- Sealed           | `mod"sealed"`
- Override         | `mod"override"`
- Case             | `mod"case"`
- Abstract         | `mod"abstract"`
- Covariant        | `mod"+"`
- Contravariant    | `mod"-"`
- Lazy             | `mod"lazy"`
- Val Param        | `mod"valparam"`
- Var Param        | `mod"varparam"`
- Inline           | `mod"inline"`
+               | Quasiquote
+---------------|-----------------
+ Annotation    | `mod"@$init"`
+ Private       | `mod"private[$ref]"`
+ Protected     | `mod"protected[$ref]"`
+ Implicit      | `mod"implicit"`
+ Final         | `mod"final"`
+ Sealed        | `mod"sealed"`
+ Override      | `mod"override"`
+ Case          | `mod"case"`
+ Abstract      | `mod"abstract"`
+ Covariant     | `mod"+"`
+ Contravariant | `mod"-"`
+ Lazy          | `mod"lazy"`
+ Val Param     | `mod"valparam"`
+ Var Param     | `mod"varparam"`
+ Inline        | `mod"inline"`
 
 ## Enumerators (meta.Enum)
 
@@ -236,10 +234,11 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Mod                 | `$mod`
  meta.Mod.Annot           | `$annot`
  meta.Name                | `$name`
- meta.Pat                 | `$pat`
  meta.Importee            | `$importee`
  meta.Importer            | `$importer`
  meta.Init                | `$init`
+ meta.Pat                 | `$pat`
+ meta.Ref                 | `$ref`
  meta.Stat                | `$stat`
  meta.Template            | `$template`
  meta.Term                | `$expr`

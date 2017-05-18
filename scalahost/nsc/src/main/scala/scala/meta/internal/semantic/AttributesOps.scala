@@ -109,9 +109,9 @@ trait AttributesOps { self: DatabaseOps =>
                     case _ => Nil
                   }
                   indexArgNames(mtree, loop(mtree))
-                case mtree @ m.Mod.PrivateWithin(mname: m.Name.Indeterminate) =>
+                case mtree @ m.Mod.Private(mname: m.Name.Indeterminate) =>
                   indexWithin(mname)
-                case mtree @ m.Mod.ProtectedWithin(mname: m.Name.Indeterminate) =>
+                case mtree @ m.Mod.Protected(mname: m.Name.Indeterminate) =>
                   indexWithin(mname)
                 case mtree @ m.Importee.Rename(mname, mrename) =>
                   indexName(mname)

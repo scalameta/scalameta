@@ -448,8 +448,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   implicit object InvalidFinalAbstract extends InvalidModCombination(Mod.Final(), Mod.Abstract())
   implicit object InvalidFinalSealed extends InvalidModCombination(Mod.Final(), Mod.Sealed())
   implicit object InvalidOverrideAbstract extends InvalidModCombination(Mod.Override(), Mod.Abstract())
-  implicit object InvalidPrivateProtected extends InvalidModCombination(Mod.PrivateWithin(Name.Anonymous()), Mod.ProtectedWithin(Name.Anonymous()))
-  implicit object InvalidProtectedPrivate extends InvalidModCombination(Mod.ProtectedWithin(Name.Anonymous()), Mod.PrivateWithin(Name.Anonymous()))
+  implicit object InvalidPrivateProtected extends InvalidModCombination(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Anonymous()))
+  implicit object InvalidProtectedPrivate extends InvalidModCombination(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Anonymous()))
 
 /* -------------- TOKEN CLASSES ------------------------------------------- */
 
@@ -2352,28 +2352,25 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def accessModifier(): Mod = autoPos {
     val mod = token match {
-      case KwPrivate() | KwProtected() => token
+      case KwPrivate() => (ref: Ref) => Mod.Private(ref)
+      case KwProtected() => (ref: Ref) => Mod.Protected(ref)
       case other => unreachable(debug(other, other.structure))
     }
     next()
-    if (token.isNot[LeftBracket]) {
-      val within = autoPos(Name.Anonymous())
-      if (mod.is[KwPrivate]) Mod.PrivateWithin(within)
-      else Mod.ProtectedWithin(within)
-    } else {
-      next()
+    if (in.token.isNot[LeftBracket]) mod(autoPos(Name.Anonymous()))
+    else {
+      accept[LeftBracket]
       val result = {
         if (token.is[KwThis]) {
+          val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
           next()
-          if (mod.is[KwPrivate]) Mod.PrivateThis()
-          else Mod.ProtectedThis()
+          mod(atPos(in.prevTokenPos, auto)(Term.This(qual)))
         } else {
           val within = termName() match {
-            case q: Term.Name.Quasi => q.become[Name.Quasi]
+            case q: Term.Name.Quasi => q.become[Ref.Quasi]
             case name => atPos(name, name)(Name.Indeterminate(name.value))
           }
-          if (mod.is[KwPrivate]) Mod.PrivateWithin(within)
-          else Mod.ProtectedWithin(within)
+          mod(within)
         }
       }
       accept[RightBracket]
@@ -2447,8 +2444,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             syntaxError("repeated modifier", at = mod)
           }
           if (mods.exists(_.isNakedAccessMod) && mod.isNakedAccessMod) {
-            if (mod.is[Mod.ProtectedWithin]) rejectModCombination[Mod.PrivateWithin, Mod.ProtectedWithin](mods :+ mod, "")
-            if (mod.is[Mod.PrivateWithin]) rejectModCombination[Mod.ProtectedWithin, Mod.PrivateWithin](mods :+ mod, "")
+            if (mod.is[Mod.Protected]) rejectModCombination[Mod.Private, Mod.Protected](mods :+ mod, "")
+            if (mod.is[Mod.Private]) rejectModCombination[Mod.Protected, Mod.Private](mods :+ mod, "")
           }
           if (mods.exists(_.isQualifiedAccessMod) && mod.isQualifiedAccessMod) {
             syntaxError("duplicate private/protected qualifier", at = mod)
@@ -2566,7 +2563,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                   def mayNotBeByName(subj: String) =
                     syntaxError(s"$subj parameters may not be call-by-name", at = name)
                   val isLocalToThis: Boolean = {
-                    val isExplicitlyLocal = mods.exists(_.is[Mod.PrivateThis])
+                    val isExplicitlyLocal = mods.exists{ case Mod.Private(_: Term.This) => true; case _ => false }
                     if (ownerIsCase) isExplicitlyLocal
                     else isExplicitlyLocal || (!isValParam && !isVarParam)
                   }

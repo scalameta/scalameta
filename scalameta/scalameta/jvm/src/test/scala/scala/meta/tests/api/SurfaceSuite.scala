@@ -230,10 +230,8 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Mod.Inline
       |scala.meta.Mod.Lazy
       |scala.meta.Mod.Override
-      |scala.meta.Mod.PrivateThis
-      |scala.meta.Mod.PrivateWithin
-      |scala.meta.Mod.ProtectedThis
-      |scala.meta.Mod.ProtectedWithin
+      |scala.meta.Mod.Private
+      |scala.meta.Mod.Protected
       |scala.meta.Mod.Sealed
       |scala.meta.Mod.ValParam
       |scala.meta.Mod.VarParam

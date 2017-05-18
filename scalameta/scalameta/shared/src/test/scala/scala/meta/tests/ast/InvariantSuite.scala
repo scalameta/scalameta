@@ -68,4 +68,10 @@ class InvariantSuite extends FunSuite {
     val init = init"this()"
     intercept[InvariantFailedException] { q"new $init" }
   }
+
+  test("Mod.Private/Protected") {
+    val ref = q"foo.bar"
+    intercept[InvariantFailedException] { mod"private[$ref]" }
+    intercept[InvariantFailedException] { mod"protected[$ref]" }
+  }
 }
