@@ -136,7 +136,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
 
       | Quasiquote
 ------|------------------------------
- Init | `init"$tpe(...$exprss)"`
+ Init | `init"$tpe(...$exprss)"`, `init"this(...$exprss)"`
 
 ## Template (meta.Template)
 
