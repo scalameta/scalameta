@@ -1511,7 +1511,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     interpolate[Pat, Pat.Interpolate](unquotePattern _, Pat.Interpolate.apply _)
 
   def xmlPat(): Pat.Xml =
-    interpolate[Pat, Pat.Xml](unquoteXmlPattern _, (_, parts, args) => Pat.Xml.apply(parts, args))
+    interpolate[Pat.Arg, Pat.Xml](unquoteXmlPattern _, (_, parts, args) => Pat.Xml.apply(parts, args))
 
 /* ------------- NEW LINES ------------------------------------------------- */
 
@@ -2346,8 +2346,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       dropAnyBraces(pattern().require[Pat])
     }
 
-    def unquoteXmlPattern(): Pat = {
-      dropAnyBraces(pattern().require[Pat])
+    def unquoteXmlPattern(): Pat.Arg = {
+      dropAnyBraces(pattern().require[Pat.Arg])
     }
 
     def quasiquotePatternArg(): Pat.Arg = {
@@ -2589,7 +2589,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def pattern(): Pat.Arg = noSeq.pattern()
   def quasiquotePattern(): Pat.Arg = noSeq.quasiquotePattern()
   def unquotePattern(): Pat = noSeq.unquotePattern()
-  def unquoteXmlPattern(): Pat = xmlSeqOK.unquoteXmlPattern()
+  def unquoteXmlPattern(): Pat.Arg = xmlSeqOK.unquoteXmlPattern()
   def quasiquotePatternArg(): Pat.Arg = seqOK.quasiquotePatternArg()
   def seqPatterns(): List[Pat.Arg] = seqOK.patterns()
   def xmlSeqPatterns(): List[Pat.Arg] = xmlSeqOK.patterns() // Called from xml parser
