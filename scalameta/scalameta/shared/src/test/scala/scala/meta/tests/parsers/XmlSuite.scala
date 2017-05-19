@@ -266,6 +266,7 @@ class XmlSuite extends ParseSuite {
   checkOK("<a>{1}{2}</a>")
   checkOK("<a>{1}{2}<b/>{3}</a>")
   checkOK("<a>{<b>{1}{2}</b>}</a>")
+  checkOK("e match { case <a>{_*}</a> => }")
   checkOK(
     """
       |<a>

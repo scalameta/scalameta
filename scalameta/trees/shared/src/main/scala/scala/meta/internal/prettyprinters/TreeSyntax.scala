@@ -351,7 +351,7 @@ object TreeSyntax {
         case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
         case t: Pat.Bind             =>
           val separator = t.rhs match {
-            case Pat.Arg.SeqWildcard() =>
+            case Pat.SeqWildcard() =>
               if (dialect.allowAtForExtractorVarargs) s(" ", kw("@"))
               else if (dialect.allowColonForExtractorVarargs) s(kw(":"))
               else throw new UnsupportedOperationException(s"$dialect doesn't support extractor varargs")
@@ -382,7 +382,7 @@ object TreeSyntax {
           if (dialect.allowLiteralTypes) m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
           else throw new UnsupportedOperationException(s"$dialect doesn't support literal types")
         case t: Pat.Typed            => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(RefineTyp, t.rhs)))
-        case _: Pat.Arg.SeqWildcard  => m(SimplePattern, kw("_*"))
+        case _: Pat.SeqWildcard  => m(SimplePattern, kw("_*"))
 
         // Pat.Type
         // TODO: fix copy/paste with Type

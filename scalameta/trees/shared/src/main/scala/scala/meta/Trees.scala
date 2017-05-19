@@ -219,6 +219,7 @@ object Pat {
     }
   }
   @ast class Wildcard() extends Pat
+  @ast class SeqWildcard() extends Pat
   @ast class Bind(lhs: Pat.Var.Term, rhs: Pat.Arg) extends Pat {
     require(lhs.isLegal && rhs.isLegal)
   }
@@ -250,9 +251,6 @@ object Pat {
     require(!rhs.is[Pat.Var.Type] && !rhs.is[Pat.Type.Wildcard])
   }
   @branch trait Arg extends Tree
-  object Arg {
-    @ast class SeqWildcard() extends Arg
-  }
   @branch trait Type extends Tree
   object Type {
     @branch trait Ref extends Pat.Type with scala.meta.Ref
