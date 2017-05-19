@@ -83,15 +83,6 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Selection         | `p"$expr.$ename"`
  Case              | `p"case $pat if $expropt => $expr"`
 
-## Statements (meta.Stat)
-
-             | Quasiquote
--------------|----------------------------
- Expression  | See above
- Declaration | See above
- Definition  | See above
- Import      | `q"import ..$importersnel"`
-
 ## Members (meta.Member)
 
 ### Declarations
@@ -171,6 +162,12 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Generator | `enumerator"$pat <- $expr"`
  Value     | `enumerator"$pat = $expr"`
  Guard     | `enumerator"if $expr"`
+
+## Imports (meta.Import)
+
+           | Quasiquote
+-----------|----------------------------
+ Import    | `q"import ..$importersnel"`
 
 ## Importer (meta.Importer)
 

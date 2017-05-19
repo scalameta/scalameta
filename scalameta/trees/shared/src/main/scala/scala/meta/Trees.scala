@@ -41,6 +41,31 @@ object Name {
   @ast class Indeterminate(value: Predef.String @nonEmpty) extends Name
 }
 
+@branch trait Lit extends Term with Pat with Type {
+  def value: Any
+}
+object Lit {
+  def unapply(arg: Lit): Option[scala.Any] = Some(arg.value)
+  @ast class Null(value: scala.Any) extends Lit
+  @ast class Int(value: scala.Int) extends Lit
+  // NOTE: Lit.Double/Float are strings to work the same across JS/JVM. Example:
+  // 1.4f.toString == "1.399999976158142" // in JS
+  // 1.4f.toString == "1.4"               // in JVM
+  // See https://www.scala-js.org/doc/semantics.html#tostring-of-float-double-and-unit
+  @ast class Double(format: scala.Predef.String) extends Lit { val value = format.toDouble }
+  object Double { def apply(double: scala.Double): Double = Lit.Double(double.toString)  }
+  @ast class Float(format: scala.Predef.String) extends Lit { val value = format.toFloat }
+  object Float { def apply(float: scala.Float): Float = Lit.Float(float.toString)  }
+  @ast class Byte(value: scala.Byte) extends Lit
+  @ast class Short(value: scala.Short) extends Lit
+  @ast class Char(value: scala.Char) extends Lit
+  @ast class Long(value: scala.Long) extends Lit
+  @ast class Boolean(value: scala.Boolean) extends Lit
+  @ast class Unit(value: scala.Unit) extends Lit
+  @ast class String(value: scala.Predef.String) extends Lit
+  @ast class Symbol(value: scala.Symbol) extends Lit
+}
+
 @branch trait Term extends Stat
 object Term {
   @branch trait Ref extends Term with scala.meta.Ref
@@ -187,31 +212,6 @@ object Pat {
   }
   def fresh(): Pat.Var = Pat.Var(Term.fresh())
   def fresh(prefix: String): Pat.Var = Pat.Var(Term.fresh(prefix))
-}
-
-@branch trait Lit extends Term with Pat with Type {
-  def value: Any
-}
-object Lit {
-  def unapply(arg: Lit): Option[scala.Any] = Some(arg.value)
-  @ast class Null(value: scala.Any) extends Lit
-  @ast class Int(value: scala.Int) extends Lit
-  // NOTE: Lit.Double/Float are strings to work the same across JS/JVM. Example:
-  // 1.4f.toString == "1.399999976158142" // in JS
-  // 1.4f.toString == "1.4"               // in JVM
-  // See https://www.scala-js.org/doc/semantics.html#tostring-of-float-double-and-unit
-  @ast class Double(format: scala.Predef.String) extends Lit { val value = format.toDouble }
-  object Double { def apply(double: scala.Double): Double = Lit.Double(double.toString)  }
-  @ast class Float(format: scala.Predef.String) extends Lit { val value = format.toFloat }
-  object Float { def apply(float: scala.Float): Float = Lit.Float(float.toString)  }
-  @ast class Byte(value: scala.Byte) extends Lit
-  @ast class Short(value: scala.Short) extends Lit
-  @ast class Char(value: scala.Char) extends Lit
-  @ast class Long(value: scala.Long) extends Lit
-  @ast class Boolean(value: scala.Boolean) extends Lit
-  @ast class Unit(value: scala.Unit) extends Lit
-  @ast class String(value: scala.Predef.String) extends Lit
-  @ast class Symbol(value: scala.Symbol) extends Lit
 }
 
 @branch trait Member extends Tree {
