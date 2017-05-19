@@ -6,7 +6,7 @@ import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
-import scala.meta.internal.ast._
+import scala.meta.internal.trees._
 
 @root trait Tree extends InternalTree {
   def parent: Option[Tree]
@@ -409,7 +409,7 @@ object Importee {
   // checkFields(stats.forall(_.isTopLevelStat))
 }
 
-package internal.ast {
+package internal.trees {
   // NOTE: Quasi is a base trait for a whole bunch of classes.
   // Every root, branch and ast trait/class among scala.meta trees (except for quasis themselves)
   // has a corresponding quasi, e.g. Term.Quasi or Type.Quasi.

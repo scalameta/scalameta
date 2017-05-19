@@ -1,6 +1,6 @@
 package scala.meta
 package internal
-package ast
+package trees
 
 import scala.annotation.StaticAnnotation
 import scala.annotation.meta.getter

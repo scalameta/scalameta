@@ -1,12 +1,12 @@
 package scala.meta
 package internal
-package ast
+package trees
 
 import scala.language.implicitConversions
 import scala.collection.mutable
 import org.scalameta.invariants._
 import org.scalameta.adt.{Reflection => AdtReflection}
-import scala.meta.internal.ast.{Reflection => AstReflection}
+import scala.meta.internal.trees.{Reflection => AstReflection}
 
 trait Reflection extends AdtReflection {
   import u._
@@ -20,15 +20,15 @@ trait Reflection extends AdtReflection {
   def PrivateMeta(flags: FlagSet): Modifiers = Modifiers(flags, TypeName("meta"), Nil)
 
   lazy val TreeSymbol = mirror.staticClass("scala.meta.Tree")
-  lazy val QuasiSymbol = mirror.staticClass("scala.meta.internal.ast.Quasi")
+  lazy val QuasiSymbol = mirror.staticClass("scala.meta.internal.trees.Quasi")
   lazy val NameAnonymousSymbol = mirror.staticModule("scala.meta.Name").info.member(TypeName("Anonymous")).asClass
   lazy val NameAnonymousQuasiSymbol = NameAnonymousSymbol.companion.info.member(TypeName("Quasi")).asClass
   lazy val TermNameSymbol = mirror.staticModule("scala.meta.Term").info.member(TypeName("Name")).asClass
   lazy val TermNameQuasiSymbol = TermNameSymbol.companion.info.member(TypeName("Quasi")).asClass
   lazy val TypeNameSymbol = mirror.staticModule("scala.meta.Type").info.member(TypeName("Name")).asClass
   lazy val TypeNameQuasiSymbol = TypeNameSymbol.companion.info.member(TypeName("Quasi")).asClass
-  lazy val AllModule = mirror.staticModule("scala.meta.internal.ast.All")
-  lazy val RegistryAnnotation = mirror.staticModule("scala.meta.internal.ast.Metadata").info.member(TypeName("registry")).asClass
+  lazy val AllModule = mirror.staticModule("scala.meta.internal.trees.All")
+  lazy val RegistryAnnotation = mirror.staticModule("scala.meta.internal.trees.Metadata").info.member(TypeName("registry")).asClass
 
   override protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
     def fail = sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")

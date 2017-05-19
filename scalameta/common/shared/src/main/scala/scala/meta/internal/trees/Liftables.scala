@@ -1,13 +1,13 @@
 package scala.meta
 package internal
-package ast
+package trees
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.unreachable
 import org.scalameta.adt.{LiftableMacros => AdtLiftableMacros}
-import scala.meta.internal.ast.{Reflection => AstReflection}
-import scala.meta.internal.ast.Metadata.Ast
+import scala.meta.internal.trees.{Reflection => AstReflection}
+import scala.meta.internal.trees.Metadata.Ast
 
 // Implementation of the scala.reflect.api.Universe#Liftable interface for asts.
 trait Liftables {
@@ -38,12 +38,12 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     def prohibitName(pat: Tree): Tree = {
       q"""
         def prohibitName(pat: _root_.scala.meta.Tree): _root_.scala.Unit = {
-          def unquotesName(q: _root_.scala.meta.internal.ast.Quasi): Boolean = {
+          def unquotesName(q: _root_.scala.meta.internal.trees.Quasi): Boolean = {
             val tpe = q.hole.arg.tpe // NOTE: no easy way to find this out without holes
             tpe != null && tpe <:< typeOf[scala.meta.Term.Name]
           }
           pat match {
-            case q: _root_.scala.meta.internal.ast.Quasi if unquotesName(q) =>
+            case q: _root_.scala.meta.internal.trees.Quasi if unquotesName(q) =>
               val action = if (q.rank == 0) "unquote" else "splice"
               c.abort(q.pos, "can't " + action + " a name here, use a pattern instead (e.g. p\"x\")")
             case _ =>
@@ -79,7 +79,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
             checkNoTripleDots(fn)
 
             c.universe.Apply(
-              ${liftPath("scala.meta.internal.ast.Syntactic.Term.Apply")},
+              ${liftPath("scala.meta.internal.trees.Syntactic.Term.Apply")},
               _root_.scala.collection.immutable.List(
                 ${liftField(q"fn", tq"_root_.scala.meta.Term")},
                 ${liftField(q"List(List(tripleQuasi))", tq"List[List[_root_.scala.meta.Term.Quasi]]")}))

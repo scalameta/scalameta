@@ -12,13 +12,12 @@ import scala.annotation.tailrec
 import scala.collection.immutable._
 import scala.util.Try
 import scala.meta.internal.parsers.Location._
-import scala.meta.internal.ast._
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
 import scala.meta.internal.tokens._
-import scala.meta.internal.ast.{AstInfo, astInfo}
+import scala.meta.internal.trees._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._

@@ -1,12 +1,12 @@
 package scala.meta
 package internal
-package ast
+package trees
 
 import scala.language.experimental.macros
 import scala.language.reflectiveCalls
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
-import scala.meta.internal.ast.{Reflection => AstReflection}
+import scala.meta.internal.trees.{Reflection => AstReflection}
 import org.scalameta.internal.MacroHelpers
 
 // Detects scala.meta ASTs defined in the current compilation unit

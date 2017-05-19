@@ -45,10 +45,10 @@ trait MacroHelpers extends DebugFinder
   lazy val AdtPackage = q"_root_.org.scalameta.adt"
   lazy val AdtMetadataModule = hygienicRef(org.scalameta.adt.Metadata)
   lazy val AdtTyperMacrosModule = hygienicRef(org.scalameta.adt.AdtTyperMacros)
-  lazy val AstMetadataModule = hygienicRef(scala.meta.internal.ast.Metadata)
-  lazy val CommonTyperMacrosModule = hygienicRef(scala.meta.internal.ast.CommonTyperMacros)
-  lazy val CommonTyperMacrosBundle = hygienicRef[scala.meta.internal.ast.CommonTyperMacrosBundle]
-  lazy val AstInfoClass = tq"_root_.scala.meta.internal.ast.AstInfo"
+  lazy val AstMetadataModule = hygienicRef(scala.meta.internal.trees.Metadata)
+  lazy val CommonTyperMacrosModule = hygienicRef(scala.meta.internal.trees.CommonTyperMacros)
+  lazy val CommonTyperMacrosBundle = hygienicRef[scala.meta.internal.trees.CommonTyperMacrosBundle]
+  lazy val AstInfoClass = tq"_root_.scala.meta.internal.trees.AstInfo"
   lazy val TokenMetadataModule = hygienicRef(scala.meta.internal.tokens.Metadata)
   lazy val BooleanClass = hygienicRef[scala.Boolean]
   lazy val IntClass = hygienicRef[scala.Int]

@@ -1,6 +1,6 @@
 package scala.meta
 package internal
-package ast
+package trees
 
 import scala.language.experimental.macros
 import scala.collection.mutable.ListBuffer
@@ -12,18 +12,18 @@ trait CommonNamerMacros extends MacroHelpers {
   import Flag._
 
   lazy val TreeClass = tq"_root_.scala.meta.Tree"
-  lazy val QuasiClass = tq"_root_.scala.meta.internal.ast.Quasi"
+  lazy val QuasiClass = tq"_root_.scala.meta.internal.trees.Quasi"
   lazy val ClassifierClass = tq"_root_.scala.meta.classifiers.Classifier"
-  lazy val ArrayClassMethod = q"_root_.scala.meta.internal.ast.`package`.arrayClass"
+  lazy val ArrayClassMethod = q"_root_.scala.meta.internal.trees.`package`.arrayClass"
   lazy val ClassOfMethod = q"_root_.scala.Predef.classOf"
   lazy val TokensClass = tq"_root_.scala.meta.tokens.Tokens"
-  lazy val AstAnnotation = tq"_root_.scala.meta.internal.ast.ast"
+  lazy val AstAnnotation = tq"_root_.scala.meta.internal.trees.ast"
   lazy val PositionClass = tq"_root_.scala.meta.inputs.Position"
   lazy val PositionModule = q"_root_.scala.meta.inputs.Position"
   lazy val PointClass = tq"_root_.scala.meta.inputs.Point"
   lazy val PointModule = q"_root_.scala.meta.inputs.Point"
-  lazy val OriginClass = tq"_root_.scala.meta.internal.ast.Origin"
-  lazy val OriginModule = q"_root_.scala.meta.internal.ast.Origin"
+  lazy val OriginClass = tq"_root_.scala.meta.internal.trees.Origin"
+  lazy val OriginModule = q"_root_.scala.meta.internal.trees.Origin"
 
   def mkClassifier(name: TypeName): List[Tree] = {
     val q"..$classifierBoilerplate" = q"""

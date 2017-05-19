@@ -5,22 +5,19 @@ package quasiquotes
 import scala.runtime.ScalaRunTime
 import scala.language.implicitConversions
 import scala.language.experimental.macros
-
 import scala.reflect.macros.whitebox.Context
 import scala.collection.{immutable, mutable}
-
-import org.scalameta.data._
-import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
-import scala.meta.internal.ast.{Liftables => AstLiftables, Reflection => AstReflection}
-
 import org.scalameta._
+import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
+import org.scalameta.data._
 import org.scalameta.invariants._
 import scala.meta.dialects
 import scala.meta.classifiers._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
-import scala.meta.internal.ast._
+import scala.meta.internal.trees._
+import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection}
 import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.tokens._

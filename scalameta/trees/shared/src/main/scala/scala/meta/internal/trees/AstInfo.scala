@@ -1,13 +1,13 @@
 package scala.meta
 package internal
-package ast
+package trees
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
 import org.scalameta.internal.MacroHelpers
-import scala.meta.internal.ast.Metadata.Ast
+import scala.meta.internal.trees.Metadata.Ast
 
 @implicitNotFound(msg = "${T} is not an ast class and can't be used here.")
 trait AstInfo[T <: Ast] extends ClassTag[T] {
@@ -23,7 +23,7 @@ class AstInfoMacros(val c: Context) extends MacroHelpers {
   import c.internal._
 
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    val QuasiSymbol = rootMirror.staticClass("scala.meta.internal.ast.Quasi")
+    val QuasiSymbol = rootMirror.staticClass("scala.meta.internal.trees.Quasi")
     val TreeSymbol = rootMirror.staticClass("scala.meta.Tree")
     val QuasiFactory = {
       if (T.tpe <:< QuasiSymbol.toType) q"${T.tpe.typeSymbol.companion}"

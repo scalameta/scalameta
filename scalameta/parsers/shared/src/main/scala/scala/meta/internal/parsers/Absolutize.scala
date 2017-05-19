@@ -5,7 +5,6 @@ package parsers
 import scala.meta.inputs._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
-import scala.meta.internal.ast.Origin
 
 object Absolutize {
   implicit class XtensionPositionAbsolutize(pos: Position) {

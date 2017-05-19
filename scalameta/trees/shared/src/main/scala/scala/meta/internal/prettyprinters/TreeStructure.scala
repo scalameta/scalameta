@@ -8,7 +8,7 @@ import scala.meta.prettyprinters._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
-import scala.meta.internal.ast.Quasi
+import scala.meta.internal.trees.Quasi
 
 object TreeStructure {
   def apply[T <: Tree]: Structure[T] = {

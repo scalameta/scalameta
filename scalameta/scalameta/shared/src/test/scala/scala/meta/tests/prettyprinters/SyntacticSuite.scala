@@ -4,7 +4,7 @@ package prettyprinters
 import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.internal.ast._
+import scala.meta.internal.trees._
 
 class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   override def term(code: String)(implicit dialect: Dialect)       = super.term(code)(dialect).resetAllOrigins

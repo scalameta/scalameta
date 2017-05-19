@@ -7,7 +7,7 @@ import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-import scala.meta.internal.ast.{Reflection => AstReflection}
+import scala.meta.internal.trees.{Reflection => AstReflection}
 
 // NOTE: we don't have the signature as [O, I] to keep symmetry with Unlift
 object Lift {

@@ -1,5 +1,5 @@
 package scala.meta.tests
-package ast
+package trees
 
 import org.scalatest._
 import scala.meta._

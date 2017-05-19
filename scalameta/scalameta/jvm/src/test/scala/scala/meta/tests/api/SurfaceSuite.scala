@@ -5,15 +5,21 @@ import org.scalatest._
 import org.scalameta.tests._
 import org.scalameta.explore
 import scala.compat.Platform.EOL
+import scala.reflect.runtime.universe._
+import scala.reflect.runtime.{universe => ru}
 
-class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
-  import AstReflection._
-  val reflectedTrees = {
+class SurfaceSuite extends FunSuite {
+  object TreeReflection extends {
+    val u: ru.type = ru
+    val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
+  } with scala.meta.internal.trees.Reflection
+  import TreeReflection._
+
+  lazy val reflectedTrees = {
     val root = symbolOf[scala.meta.Tree].asRoot
     val all = List(root) ++ root.allBranches ++ root.allLeafs
     all.map(_.sym.fullName).toSet
   }
-
   lazy val wildcardImportStatics = explore.wildcardImportStatics("scala.meta")
   lazy val allStatics = explore.allStatics("scala.meta")
   lazy val trees = wildcardImportStatics.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))

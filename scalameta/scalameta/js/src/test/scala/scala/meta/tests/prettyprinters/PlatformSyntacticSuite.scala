@@ -3,7 +3,6 @@ package prettyprinters
 
 import org.scalatest._
 import scala.meta._
-import scala.meta.internal.ast._
 
 class PlatformSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("JS floats are not JVM floats") {

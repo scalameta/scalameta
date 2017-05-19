@@ -1,17 +1,23 @@
 package scala.meta.tests
-package ast
+package trees
 
+import org.scalatest._
 import scala.compat.Platform.EOL
 import scala.collection.mutable.ListBuffer
 import scala.reflect.runtime.universe._
+import scala.reflect.runtime.{universe => ru}
 
-class ReflectionSuite extends AstSuite {
-  import AstReflection._
+class ReflectionSuite extends FunSuite {
+  object TreeReflection extends {
+    val u: ru.type = ru
+    val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
+  } with scala.meta.internal.trees.Reflection
+  import TreeReflection._
 
-  // NOTE: These counts are important because our AstReflection infrastructure is quite fragile.
+  // NOTE: These counts are important because our TreeReflection infrastructure is quite fragile.
   // Therefore we do need additional safeguards in place to prevent silent failures.
   // I understand that it's inconvenient to update these numbers every time something changes,
-  // but please deal with that (or come up with a more effective way of testing AstReflection)
+  // but please deal with that (or come up with a more effective way of testing TreeReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
     assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 19)

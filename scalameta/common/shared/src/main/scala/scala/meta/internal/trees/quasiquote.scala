@@ -1,6 +1,6 @@
 package scala.meta
 package internal
-package ast
+package trees
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation

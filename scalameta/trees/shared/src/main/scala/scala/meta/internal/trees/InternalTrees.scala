@@ -1,6 +1,6 @@
 package scala.meta
 package internal
-package ast
+package trees
 
 import org.scalameta.debug
 import org.scalameta.invariants._

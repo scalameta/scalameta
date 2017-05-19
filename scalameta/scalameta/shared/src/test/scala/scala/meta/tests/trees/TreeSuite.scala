@@ -1,8 +1,8 @@
-package scala.meta.tests.ast
-
-import scala.meta._
+package scala.meta.tests
+package trees
 
 import org.scalatest._
+import scala.meta._
 
 class TreeSuite extends FunSuite {
   test("Name.unapply") {

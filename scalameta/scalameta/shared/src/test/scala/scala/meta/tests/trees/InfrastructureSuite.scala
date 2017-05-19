@@ -1,9 +1,9 @@
 package scala.meta.tests
-package ast
+package trees
 
 import org.scalatest._
 import scala.meta._
-import scala.meta.internal.ast._
+import scala.meta.internal.trees._
 import scala.meta.dialects.{Scala211, QuasiquoteTerm}
 
 class InfrastructureSuite extends FunSuite {
