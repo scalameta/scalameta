@@ -288,14 +288,6 @@ object Defn {
                    ctor: Ctor.Primary,
                    templ: Template) extends Defn with Member.Type {
     checkFields(templ.is[Template.Quasi] || templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
-
-    // TODO this doesn't work because the Dialect in implicit
-    // scope is the dialect of the host Scala environment
-    // (i.e. Scala211), not the parser's dialect.
-    //checkFields (
-    //  implicitly[Dialect].allowTraitParameters ||
-    //    (ctor.mods.isEmpty && ctor.paramss.isEmpty)
-    //)
   }
   @ast class Object(mods: List[Mod],
                     name: Term.Name,
