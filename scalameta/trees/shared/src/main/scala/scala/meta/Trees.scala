@@ -416,6 +416,5 @@ package internal.trees {
     def become[T <: Quasi : AstInfo]: T
   }
 
-  // TODO: since trees are no longer sealed, we need a mechanism that would keep track of all of them
   @registry object All
 }
