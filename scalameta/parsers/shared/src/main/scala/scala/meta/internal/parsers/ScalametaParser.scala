@@ -2373,7 +2373,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
           case p: Pat.Var.Term if dialect.allowColonForExtractorVarargs && isColonWildcardStar =>
             nextOnce()
-            val wildcard = autoPos({ nextTwice(); Pat.SeqWildcard() })
+            val wildcard = autoPos({ nextTwice(); Pat.Arg.SeqWildcard() })
             Pat.Bind(p, wildcard)
           case p: Pat.Var.Term if !dialect.allowColonForExtractorVarargs && isColonWildcardStar =>
             syntaxError(s"$dialect does not support var: _*", at = p)
@@ -2382,7 +2382,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
           case p: Pat.Wildcard if dialect.allowColonForExtractorVarargs && isColonWildcardStar =>
             nextThrice()
-            Pat.SeqWildcard()
+            Pat.Arg.SeqWildcard()
           case p: Pat.Wildcard =>
             nextOnce()
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
@@ -2439,10 +2439,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case RightParen() => !isXML
         case _      => false
       }
-      def checkWildStar: Option[Pat.SeqWildcard] = lhs match {
+      def checkWildStar: Option[Pat.Arg.SeqWildcard] = lhs match {
         case Pat.Wildcard() if dialect.allowAtForExtractorVarargs && isSequenceOK && isRawStar => peekingAhead (
           // TODO: used to be Star(lhs) | EmptyTree, why start had param?
-          if (isCloseDelim) Some(atPos(lhs, auto)(Pat.SeqWildcard()))
+          if (isCloseDelim) Some(atPos(lhs, auto)(Pat.Arg.SeqWildcard()))
           else None
         )
         case _ => None

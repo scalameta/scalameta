@@ -1123,7 +1123,7 @@ class SuccessSuite extends FunSuite {
   }
 
   test("p\"_*\"") {
-    assert(p"case List(_*) =>".show[Structure] === "Case(Pat.Extract(Term.Name(\"List\"), Nil, Seq(Pat.SeqWildcard())), None, Term.Block(Nil))")
+    assert(p"case List(_*) =>".show[Structure] === "Case(Pat.Extract(Term.Name(\"List\"), Nil, Seq(Pat.Arg.SeqWildcard())), None, Term.Block(Nil))")
   }
 
   test("parg\"_*\"") {
