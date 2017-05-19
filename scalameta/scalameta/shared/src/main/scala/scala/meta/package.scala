@@ -11,7 +11,8 @@ package object meta extends classifiers.Api with classifiers.Aliases
                        with semantic.Api with semantic.Aliases
                        with tokenizers.Api with tokenizers.Aliases
                        with tokens.Api with tokens.Aliases
-                       with transversers.Api with transversers.Aliases {
+                       with transversers.Api with transversers.Aliases
+                       with trees.Api with trees.Aliases {
 
   // TODO: The necessity of scalameta/package.scala being non-empty is unsatisfying.
   // We seriously need to come up with a better way of achieving similar functionality.
