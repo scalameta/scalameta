@@ -349,7 +349,7 @@ object Ctor {
 
 @branch trait Mod extends Tree
 object Mod {
-  @ast class Annot(body: Init) extends Mod
+  @ast class Annot(init: Init) extends Mod
   @ast class Private(within: Ref) extends Mod {
     checkFields(within.isWithin)
   }
