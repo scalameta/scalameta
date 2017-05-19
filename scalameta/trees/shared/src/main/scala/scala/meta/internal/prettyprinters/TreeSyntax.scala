@@ -376,8 +376,10 @@ object TreeSyntax {
           }
           m(SimplePattern, s(t.prefix, "\"", r(zipped), parts.last, "\""))
         case t: Pat.Xml              =>
-          val zipped = t.parts.zip(t.args).map{ case (part, arg) => s(part, "${", arg, "}") }
-          m(SimplePattern, s(r(zipped), t.parts.last))
+          if (!dialect.allowXmlLiterals) throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
+          val parts = t.parts.map{ case Lit(part: String) => part }
+          val zipped = parts.zip(t.args).map{ case (part, arg) => s(part, "{", arg, "}") }
+          m(SimplePattern, s(r(zipped), parts.last))
         case Pat.Typed(lhs, rhs : Lit) =>
           if (dialect.allowLiteralTypes) m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
           else throw new UnsupportedOperationException(s"$dialect doesn't support literal types")
