@@ -106,4 +106,12 @@ class PatSuite extends ParseSuite {
     intercept[ParseException] { pat("case List(_: BlockExpr, _: MatchExpr, x:_*)  ⇒ false") }
   }
 
+  test("<a>{_*}</a>") {
+    val Pat.Xml(Seq(Lit("<a>"), Lit("</a>")), Seq(Arg.SeqWildcard())) = pat("<a>{_*}</a>")
+  }
+
+  test("<a>{ns @ _*}</a>") {
+    val Pat.Xml(Seq(Lit("<a>"), Lit("</a>")), Seq(Bind(Var.Term(Term.Name("ns")), Arg.SeqWildcard()))) = pat("<a>{ns @ _*}</a>")
+  }
+
 }

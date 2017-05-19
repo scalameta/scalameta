@@ -240,7 +240,7 @@ object Pat {
     require(parts.length == args.length + 1)
     require(args.forall(_.isLegal))
   }
-  @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
+  @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Pat.Arg]) extends Pat {
     require(parts.length == args.length + 1)
     require(args.forall(_.isLegal))
   }

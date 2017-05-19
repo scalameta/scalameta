@@ -534,6 +534,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tree.show[Syntax] == "<foo>{{}}</foo>")
   }
 
+  test("xml literals: pattern position") {
+    assert(pat("<a>{_*}</a>").show[Syntax] == "<a>{_*}</a>")
+    assert(pat("<a>{ns @ _*}</a>").show[Syntax] == "<a>{ns @ _*}</a>")
+    assert(pat("<a><b/>{ns @ _*}</a>").show[Syntax] == "<a><b/>{ns @ _*}</a>")
+  }
+
   test("interpolator unit") {
     val tree = term("""s"Hello${}World"""")
     assert(tree.show[Structure] == """Term.Interpolate(Term.Name("s"), Seq(Lit.String("Hello"), Lit.String("World")), Seq(Term.Block(Nil)))""")
