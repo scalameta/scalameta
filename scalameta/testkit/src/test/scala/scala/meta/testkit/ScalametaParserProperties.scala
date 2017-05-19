@@ -59,6 +59,35 @@ object ScalametaParserProperties {
     }
   }
 
+  case class XmlLitCount(expr: Int, pat: Int) {
+    def +(that: XmlLitCount) = XmlLitCount(expr + that.expr, pat + that.pat)
+  }
+
+  def runXmlAnalysis(corpusSize: Int = Int.MaxValue) = {
+    val corpus =
+      Corpus
+        .files(Corpus.fastparse)
+        .take(corpusSize)
+        .toBuffer
+        .par
+
+    SyntaxAnalysis.run[XmlLitCount](corpus) { file =>
+      file.jFile.parse[Source] match {
+        case Parsed.Success(s) =>
+          var expr = 0
+          var pat = 0
+          s.traverse {
+            case _: Term.Xml => expr += 1
+            case _: Pat.Xml => pat += 1
+          }
+          Seq(XmlLitCount(expr, pat))
+
+        case e: Parsed.Error =>
+          Nil
+      }
+    }
+  }
+
   def runAndPrintAnalysis(): Unit = {
     val result = runAnalysis(100)
     val markdown = Observation.markdownTable(result)
@@ -72,13 +101,22 @@ object ScalametaParserProperties {
 
 object ScalametaParserPropertyTest extends FunSuiteLike {
   import ScalametaParserProperties._
+//  def main(args: Array[String]): Unit = {
+//    val result = runAnalysis()
+//    val parserProken = result.count(_._2.kind == ParserBroken)
+//    val prettyPrinterBroken = result.count(_._2.kind == PrettyPrinterBroken)
+//    println(s"""Parser broken: $parserProken
+//               |Pretty printer broken: $prettyPrinterBroken""".stripMargin)
+//    assert(parserProken <= 7)
+//    assert(prettyPrinterBroken <= 1922)
+//  }
+
   def main(args: Array[String]): Unit = {
-    val result = runAnalysis()
-    val parserProken = result.count(_._2.kind == ParserBroken)
-    val prettyPrinterBroken = result.count(_._2.kind == PrettyPrinterBroken)
-    println(s"""Parser broken: $parserProken
-               |Pretty printer broken: $prettyPrinterBroken""".stripMargin)
-    assert(parserProken <= 7)
-    assert(prettyPrinterBroken <= 1922)
+    val result = runXmlAnalysis()
+    val xmlCount = result.foldLeft(XmlLitCount(0, 0)) {
+      case (acc, (_, count)) => acc + count
+    }
+    println(s"Xml expr: ${xmlCount.expr}")
+    println(s"Xml pat: ${xmlCount.pat}")
   }
 }
