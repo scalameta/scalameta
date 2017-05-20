@@ -11,22 +11,14 @@ class TermSuite extends ParseSuite {
 
   test("`x`") {
     val name @ TermName("x") = term("`x`")
-    // TODO: revisit this once we have trivia in place
-    // assert(name.isBackquoted === true)
   }
 
   test("a.b.c") {
     val outer @ Select(inner @ Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b.c")
-    // TODO: revisit this once we have trivia in place
-    // assert(outer.isPostfix === false)
-    // assert(inner.isPostfix === false)
   }
 
   test("a.b c") {
     val outer @ Select(inner @ Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b c")
-    // TODO: revisit this once we have trivia in place
-    // assert(outer.isPostfix === true)
-    // assert(inner.isPostfix === false)
   }
 
   test("foo.this") {
@@ -113,14 +105,10 @@ class TermSuite extends ParseSuite {
 
   test("return") {
     val ret @ Return(Lit(())) = term("return")
-    // TODO: revisit this once we have trivia in place
-    // assert(ret.hasExpr === false)
   }
 
   test("return 1") {
     val ret @ Return(Lit(1)) = term("return 1")
-    // TODO: revisit this once we have trivia in place
-    // assert(ret.hasExpr === true)
   }
 
   test("throw 1") {
@@ -149,20 +137,14 @@ class TermSuite extends ParseSuite {
 
   test("if (true) true else false") {
     val iff @ If(Lit(true), Lit(true), Lit(false)) = term("if (true) true else false")
-    // TODO: revisit this once we have trivia in place
-    // assert(iff.hasElsep === true)
   }
 
   test("if (true) true; else false") {
     val iff @ If(Lit(true), Lit(true), Lit(false)) = term("if (true) true; else false")
-    // TODO: revisit this once we have trivia in place
-    // assert(iff.hasElsep === true)
   }
 
   test("if (true) true") {
     val iff @ If(Lit(true), Lit(true), Lit(())) = term("if (true) true")
-    // TODO: revisit this once we have trivia in place
-    // assert(iff.hasElsep === false)
   }
 
   test("() => x") {

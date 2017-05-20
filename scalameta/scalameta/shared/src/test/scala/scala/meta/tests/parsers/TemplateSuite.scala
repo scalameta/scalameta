@@ -7,14 +7,10 @@ import scala.meta.dialects.Scala211
 class TemplateSuite extends ParseSuite {
   test("trait T") {
     val Trait(Nil, Type.Name("T"), Nil, EmptyCtor(), EmptyTemplate()) = templStat("trait T")
-    // TODO: revisit this once we have trivia in place
-    // assert(templ.hasStats === false)
   }
 
   test("trait T {}") {
     val Trait(Nil, Type.Name("T"), Nil, EmptyCtor(), EmptyTemplate()) = templStat("trait T {}")
-    // TODO: revisit this once we have trivia in place
-    // assert(templ.hasStats === true)
   }
 
   test("trait F[T]") {
@@ -89,8 +85,6 @@ class TemplateSuite extends ParseSuite {
 
   test("class A { this => }") {
     val Class(Nil, Type.Name("A"), Nil, EmptyCtor(), Template(Nil, Nil, self @ EmptySelf(), Nil)) = templStat("class A { this => }")
-    // TODO: revisit this once we have trivia in place
-    // assert(self.hasThis == true)
   }
 
   test("class C { def x: Int }") {

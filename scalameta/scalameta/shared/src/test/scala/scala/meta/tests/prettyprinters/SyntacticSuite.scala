@@ -212,9 +212,6 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("packages") {
     assert(source("package foo.bar; class C").syntax === s"package foo.bar${EOL}class C")
     assert(source("package foo.bar; class C; class D").syntax === s"package foo.bar${EOL}class C${EOL}class D")
-    // TODO: revisit this once we have trivia in place
-    // assert(source("package foo.bar { class C }").syntax === s"package foo.bar {${EOL}  class C${EOL}}")
-    // assert(source("package foo.bar { class C; class D }").syntax === s"package foo.bar {${EOL}  class C${EOL}  class D${EOL}}")
     assert(source("package foo.bar { class C }").syntax === s"package foo.bar${EOL}class C")
     assert(source("package foo.bar { class C; class D }").syntax === s"package foo.bar${EOL}class C${EOL}class D")
   }

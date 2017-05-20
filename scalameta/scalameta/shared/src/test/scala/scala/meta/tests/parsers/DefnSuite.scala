@@ -113,8 +113,6 @@ class DefnSuite extends ParseSuite {
   test("def proc { return 42 }") {
     val Defn.Def(Nil, Term.Name("proc"), Nil, Nil, Some(Type.Name("Unit")), Term.Block((ret @ Term.Return(Lit(42))) :: Nil)) =
       templStat("def proc { return 42 }")
-    // TODO: revisit this once we have trivia in place
-    // assert(ret.hasExpr === true)
   }
 
   test("def f(x: Int) = macro impl") {

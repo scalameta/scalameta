@@ -121,7 +121,6 @@ object TreeSyntax {
         else if (templ.inits.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
         else s(" ", templ)
 
-      // TODO: revisit this once we have trivia in place
       def guessIsBackquoted(t: Name): Boolean = {
         def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
           // TODO: this requires a more thorough implementation
