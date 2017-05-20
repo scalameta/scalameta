@@ -260,6 +260,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Pkg
       |scala.meta.Pkg.Object
       |scala.meta.Ref
+      |scala.meta.Self
       |scala.meta.Source
       |scala.meta.Stat
       |scala.meta.Template

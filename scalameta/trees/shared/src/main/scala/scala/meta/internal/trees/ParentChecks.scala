@@ -65,12 +65,13 @@ object ParentChecks {
     def termParamName = parent.is[Term.Param] && destination == "name"
     def typeParamName = parent.is[Type.Param] && destination == "name"
     def initName = parent.is[Init] && destination == "name"
+    def selfName = parent.is[Self] && destination == "name"
     def privateWithin = parent.is[Mod.Private] && destination == "within"
     def protectedWithin = parent.is[Mod.Protected] && destination == "within"
     def thisQualifier = parent.is[Term.This]
     def superQualifier = parent.is[Term.Super]
     primaryCtorName || secondaryCtorName || termParamName || typeParamName ||
-    initName || privateWithin || protectedWithin || thisQualifier || superQualifier
+    initName || selfName || privateWithin || protectedWithin || thisQualifier || superQualifier
   }
 
   def TypeVar(tree: Type.Var, parent: Tree, destination: String): Boolean = {

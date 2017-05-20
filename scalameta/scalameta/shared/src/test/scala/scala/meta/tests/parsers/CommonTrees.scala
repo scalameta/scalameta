@@ -20,7 +20,7 @@ trait CommonTrees {
 
   object EmptySelf {
     def unapply(tree: Tree): Boolean = tree match {
-      case Term.Param(Nil, Name.Anonymous(), None, None) => true
+      case Self(Name.Anonymous(), None) => true
       case _ => false
     }
   }

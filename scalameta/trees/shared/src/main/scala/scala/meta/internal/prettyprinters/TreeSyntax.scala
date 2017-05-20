@@ -453,6 +453,9 @@ object TreeSyntax {
         // Init
         case t: Init => s(if (t.tpe.is[Type.Singleton]) kw("this") else p(AnnotTyp, t.tpe), t.argss)
 
+        // Self
+        case t: Self => s(t.name, t.decltpe)
+
         // Template
         case t: Template =>
           val isSelfEmpty = t.self.name.is[Name.Anonymous] && t.self.decltpe.isEmpty

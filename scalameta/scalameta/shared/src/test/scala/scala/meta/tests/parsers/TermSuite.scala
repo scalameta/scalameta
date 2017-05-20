@@ -347,7 +347,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("new { self: T => }") {
-    val NewAnonymous(Template(Nil, Nil, Term.Param(Nil, TermName("self"), Some(TypeName("T")), None), Nil)) =
+    val NewAnonymous(Template(Nil, Nil, Self(TermName("self"), Some(TypeName("T"))), Nil)) =
       term("new { self: T => }")
   }
 

@@ -46,7 +46,7 @@ class TemplateSuite extends ParseSuite {
 
   test("trait A extends { self: B => }") {
     val Trait(Nil, Type.Name("A"), Nil, EmptyCtor(),
-              Template(Nil, Nil, Term.Param(Nil, Term.Name("self"), Some(Type.Name("B")), None), Nil)) =
+              Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)) =
       templStat("trait A { self: B => }")
   }
 
@@ -83,7 +83,7 @@ class TemplateSuite extends ParseSuite {
 
   test("class A extends { self: B => }") {
     val Class(Nil, Type.Name("A"), Nil, EmptyCtor(),
-              Template(Nil, Nil, Term.Param(Nil, Term.Name("self"), Some(Type.Name("B")), None), Nil)) =
+              Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)) =
       templStat("class A { self: B => }")
   }
 
@@ -178,7 +178,7 @@ class TemplateSuite extends ParseSuite {
 
   test("object A extends { self: B => }") {
     val Object(Nil, Term.Name("A"),
-               Template(Nil, Nil, Term.Param(Nil, Term.Name("self"), Some(Type.Name("B")), None), Nil)) =
+               Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)) =
       templStat("object A { self: B => }")
   }
 }

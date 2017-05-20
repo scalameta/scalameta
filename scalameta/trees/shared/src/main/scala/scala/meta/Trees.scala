@@ -331,9 +331,11 @@ object Ctor {
   checkParent(ParentChecks.Init)
 }
 
+@ast class Self(name: Term.Name, decltpe: Option[Type]) extends Member
+
 @ast class Template(early: List[Stat],
                     inits: List[Init],
-                    self: Term.Param,
+                    self: Self,
                     stats: List[Stat]) extends Tree {
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
   checkFields(stats.forall(_.isTemplateStat))
