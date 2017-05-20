@@ -287,12 +287,12 @@ object Defn {
                    tparams: List[scala.meta.Type.Param],
                    ctor: Ctor.Primary,
                    templ: Template) extends Defn with Member.Type {
-    checkFields(templ.is[Template.Quasi] || templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
+    checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
   }
   @ast class Object(mods: List[Mod],
                     name: Term.Name,
                     templ: Template) extends Defn with Member.Term {
-    checkFields(templ.is[Template.Quasi] || templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
+    checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
   }
 }
 
@@ -308,7 +308,7 @@ object Defn {
 object Pkg {
   @ast class Object(mods: List[Mod], name: Term.Name, templ: Template)
        extends Member.Term with Stat {
-    checkFields(templ.is[Template.Quasi] || templ.stats.getOrElse(Nil).forall(!_.is[Ctor]))
+    checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
   }
 }
 
@@ -334,9 +334,9 @@ object Ctor {
 @ast class Template(early: List[Stat],
                     inits: List[Init],
                     self: Term.Param,
-                    stats: Option[List[Stat]]) extends Tree {
+                    stats: List[Stat]) extends Tree {
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
-  checkFields(stats.getOrElse(Nil).forall(_.isTemplateStat))
+  checkFields(stats.forall(_.isTemplateStat))
 }
 
 @branch trait Mod extends Tree

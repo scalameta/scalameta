@@ -288,7 +288,12 @@ object TreeSyntax {
         case t: Term.For             => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
         case t: Term.ForYield        => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
         case t: Term.New             => m(SimpleExpr, s(kw("new"), " ", t.init))
-        case t: Term.NewAnonymous    => m(SimpleExpr, s(kw("new"), " ", t.templ))
+        case t: Term.NewAnonymous    =>
+          val needsExplicitBraces = {
+            val selfIsEmpty = t.templ.self.name.is[Name.Anonymous] && t.templ.self.decltpe.isEmpty
+            t.templ.early.isEmpty && t.templ.inits.length < 2 && selfIsEmpty && t.templ.stats.isEmpty
+          }
+          m(SimpleExpr, s(kw("new"), " ", t.templ), w(" {", "", "}", needsExplicitBraces))
         case _: Term.Placeholder     => m(SimpleExpr1, kw("_"))
         case t: Term.Eta             => m(SimpleExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
         case t: Term.Repeated        => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
@@ -459,16 +464,14 @@ object TreeSyntax {
             val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
             val pparents = w(r(t.inits, " with "), " ", !t.inits.isEmpty && !isBodyEmpty)
             val pbody = {
-              val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
-              (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
-                case (false, false, _) => s()
-                case (true, false, _) => s("{ ", t.self, " => }")
-                case (false, true, List()) if isOneLiner => s("{}")
-                case (false, true, List(stat)) if isOneLiner => s("{ ", stat, " }")
-                case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
-                case (true, true, List()) if isOneLiner => s("{ ", t.self, " => }")
-                case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
-                case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
+              val isOneLiner = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
+              (isSelfNonEmpty, t.stats) match {
+                case (false, Nil) => s()
+                case (false, List(stat)) if isOneLiner => s("{ ", stat, " }")
+                case (false, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
+                case (true, Nil) => s("{ ", t.self, " => }")
+                case (true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
+                case (true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
               }
             }
             s(pearly, pparents, pbody)

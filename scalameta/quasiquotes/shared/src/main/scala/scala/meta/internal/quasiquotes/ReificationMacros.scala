@@ -326,44 +326,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             atPos(quasi.pos)(lifted)
           } else {
             quasi.tree match {
-              case quasi: Quasi if quasi.rank == 0 =>
-                // NOTE: Option[List[T]] exists only in one instance in our tree API: Template.stats.
-                // Unfortunately, there is a semantic difference between an empty template and a template
-                // without any stats, so we can't just replace it with List[T] and rely on tokens
-                // (because tokens may be lost, e.g. a TASTY roundtrip).
-                //
-                // Strictly speaking, we shouldn't be allowing ..$stats in Template.stats,
-                // because the pt is Option[List[T]], not a List[T], but given the fact that Template.stats
-                // is very common, I'm willing to bend the rules here and flatten Option[List[T]],
-                // capturing 0 trees if we have None and working as usual if we have Some.
-                //
-                // This is definitely loss of information, but if someone wants to discern Some and None,
-                // they are welcome to write $stats, which will correctly capture an Option.
-                // TODO: Well, they aren't welcome, because $stats will insert or capture just one stat.
-                // This is the same problem as with `q"new $x"`, where x is ambiguous between a template and a ctorcall.
-                if (optional) {
-                  mode match {
-                    case Mode.Term(_, _) =>
-                      q"_root_.scala.Some(${liftQuasi(quasi)})"
-                    case Mode.Pattern(_, holes, _) =>
-                      val reified = liftQuasi(quasi)
-                      val hole = holes.find(hole => reified.equalsStructure(pq"${hole.name}")).get
-                      require(hole.reifier.nonEmpty)
-                      val flattened = q"_root_.scala.meta.internal.quasiquotes.Flatten.unapply(${hole.name})"
-                      val unlifted = (new Transformer {
-                        override def transform(tree: ReflectTree): ReflectTree = tree match {
-                          case Ident(name) if name == hole.name => Ident(TermName("tree"))
-                          case tree => super.transform(tree)
-                        }
-                      }).transform(hole.reifier)
-                      hole.reifier = atPos(quasi.pos)(q"$flattened.flatMap(tree => $unlifted)")
-                      reified
-                  }
-                } else {
-                  liftQuasi(quasi)
-                }
-              case _ =>
-                c.abort(quasi.pos, "complex ellipses are not supported yet")
+              case quasi: Quasi if quasi.rank == 0 => liftQuasi(quasi)
+              case _ => c.abort(quasi.pos, "complex ellipses are not supported yet")
             }
           }
         } finally {

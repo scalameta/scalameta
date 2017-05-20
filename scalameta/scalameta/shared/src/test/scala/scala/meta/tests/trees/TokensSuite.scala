@@ -32,7 +32,7 @@ class TokensSuite extends FunSuite {
 
   test("Tree.tokens: empty") {
     val emptySelf = "class C".parse[Stat].get.children(2)
-    assert(emptySelf.structure === "Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)")
+    assert(emptySelf.structure === "Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Nil)")
     assert(emptySelf.tokens.structure === "Tokens()")
   }
 

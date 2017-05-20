@@ -74,7 +74,6 @@ class ReflectionSuite extends FunSuite {
       |scala.List[scala.meta.Type.Param]
       |scala.List[scala.meta.Type]
       |scala.Long
-      |scala.Option[scala.List[scala.meta.Stat]]
       |scala.Option[scala.meta.Term]
       |scala.Option[scala.meta.Type]
       |scala.Short

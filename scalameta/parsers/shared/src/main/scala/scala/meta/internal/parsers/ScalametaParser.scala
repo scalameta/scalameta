@@ -152,7 +152,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (scannerTokens(roughIndex) eq token) roughIndex
         else lurk(roughIndex - 1)
       }
-      lurk(scannerTokenCache(token.start))
+      if (token.start == input.chars.length) scannerTokens.length - 1
+      else lurk(scannerTokenCache(token.start))
     }
     def prev: Token = {
       val prev = scannerTokens.apply(Math.max(token.index - 1, 0))
@@ -1854,8 +1855,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           next()
           atPos(in.prevTokenPos, auto) {
             template() match {
-              case Template(Nil, List(init), Term.Param(Nil, Name.Anonymous(), None, None), None) => Term.New(init)
-              case other => Term.NewAnonymous(other)
+              case trivial @ Template(Nil, List(init), Term.Param(Nil, Name.Anonymous(), None, None), Nil) =>
+                if (!token.prev.is[RightBrace]) Term.New(init)
+                else Term.NewAnonymous(trivial)
+              case other =>
+                Term.NewAnonymous(other)
             }
           }
         case _ =>
@@ -3075,7 +3079,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
         Template(edefs, parents, self1, body1)
       } else {
-        Template(Nil, Nil, self, Some(body))
+        Template(Nil, Nil, self, body)
       }
     } else {
       val parents = templateParents()
@@ -3117,11 +3121,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def templateBody(isPre: Boolean): (Term.Param, List[Stat]) =
     inBraces(templateStatSeq(isPre = isPre))
 
-  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Term.Param, Option[List[Stat]]) = {
+  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Term.Param, List[Stat]) = {
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[LeftBrace]) {
-      val (self, body) = templateBody(isPre = false)
-      (self, Some(body))
+      templateBody(isPre = false)
     } else {
       if (token.is[LeftParen]) {
         if (parenMeansSyntaxError) {
@@ -3129,7 +3132,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           syntaxError(s"$what may not have parameters", at = token)
         } else syntaxError("unexpected opening parenthesis", at = token)
       }
-      (autoPos(Term.Param(Nil, autoPos(Name.Anonymous()), None, None)), None)
+      (autoPos(Term.Param(Nil, autoPos(Name.Anonymous()), None, None)), Nil)
     }
   }
 

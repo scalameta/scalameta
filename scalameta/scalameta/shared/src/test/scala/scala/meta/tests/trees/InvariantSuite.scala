@@ -11,7 +11,7 @@ class InvariantSuite extends FunSuite {
     val primaryCtor = Ctor.Primary(Nil, Name.Anonymous(), Nil)
     val secondaryCtor = Ctor.Secondary(Nil, Name.Anonymous(), List(List()), Init(Type.Singleton(Term.This(Name.Anonymous())), Name.Anonymous(), Nil), Nil)
     val stats = List(secondaryCtor)
-    val template = Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Some(stats))
+    val template = Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), stats)
     Defn.Class(Nil, Type.Name("test"), Nil, primaryCtor, template)
     intercept[InvariantFailedException] { Defn.Trait(Nil, Type.Name("test"), Nil, primaryCtor, template) }
     intercept[InvariantFailedException] { Defn.Object(Nil, Term.Name("test"), template) }

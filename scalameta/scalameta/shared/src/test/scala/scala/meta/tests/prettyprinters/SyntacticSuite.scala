@@ -139,6 +139,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("new X") {
     assert(templStat("new X").syntax === "new X")
+    val blah = templStat("new X {}")
+    println(blah.syntax)
+    println(blah.structure)
     assert(templStat("new X {}").syntax === "new X {}")
   }
 
@@ -439,7 +442,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("package foo; class C; package baz { class D }") {
     val tree = source("package foo; class C; package baz { class D }")
-    assert(tree.structure === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name.Anonymous(), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Name.Anonymous(), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), None))))))))")
+    assert(tree.structure === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name.Anonymous(), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Name.Anonymous(), Nil), Template(Nil, Nil, Term.Param(Nil, Name.Anonymous(), None, None), Nil))))))))")
     assert(tree.syntax === "package foo\nclass C\npackage baz {\n  class D\n}")
   }
 
@@ -479,7 +482,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("constructors") {
-    val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, Some(secondary :: Nil))) = templStat("class C(x: Int) { def this() = this(42) }")
+    val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, List(secondary))) = templStat("class C(x: Int) { def this() = this(42) }")
     assert(tree.syntax === "class C(x: Int) { def this() = this(42) }")
     assert(primary.syntax === "(x: Int)")
     assert(secondary.syntax === "def this() = this(42)")

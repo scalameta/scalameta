@@ -5,16 +5,16 @@ import scala.meta.contrib._
 
 trait ExtractStatInstances {
   implicit val extractTemplateStats: Extract[Template, Stat] =
-    Extract(_.stats.getOrElse(Nil))
+    Extract(_.stats)
 
   implicit val extractClassStats: Extract[Defn.Class, Stat] =
-    Extract(_.templ.stats.getOrElse(Nil))
+    Extract(_.templ.stats)
 
   implicit val extractTraitStats: Extract[Defn.Trait, Stat] =
-    Extract(_.templ.stats.getOrElse(Nil))
+    Extract(_.templ.stats)
 
   implicit val extractObjectStats: Extract[Defn.Object, Stat] =
-    Extract(_.templ.stats.getOrElse(Nil))
+    Extract(_.templ.stats)
 
   implicit val extractPkgStats: Extract[Pkg, Stat] =
     Extract(_.stats)
