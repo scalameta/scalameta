@@ -19,4 +19,7 @@ private[meta] trait Aliases {
 
   type Classpath = scala.meta.io.Classpath
   lazy val Classpath = scala.meta.io.Classpath
+
+  type Sourcepath = scala.meta.io.Sourcepath
+  lazy val Sourcepath = scala.meta.io.Sourcepath
 }

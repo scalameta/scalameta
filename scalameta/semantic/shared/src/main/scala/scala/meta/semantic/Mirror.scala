@@ -8,8 +8,8 @@ trait Mirror {
 }
 
 object Mirror {
-  def apply(classpath: Classpath, sourceroot: AbsolutePath): Mirror = {
-    Database.load(classpath, sourceroot)
+  def apply(classpath: Classpath, sourcepath: Sourcepath): Mirror = {
+    Database.load(classpath, sourcepath)
   }
 
   def apply(): Mirror = {
@@ -24,11 +24,11 @@ object Mirror {
       if (classpath == null || classpath == "") failEmpty("-Dscalameta.classpath")
       classpath
     }
-    val sourceroot = {
-      val sourcepath = sys.props("scalameta.sourceroot")
-      if (sourcepath == null || sourcepath == "") failEmpty("-Dscalameta.sourceroot")
+    val sourcepath = {
+      val sourcepath = sys.props("scalameta.sourcepath")
+      if (sourcepath == null || sourcepath == "") failEmpty("-Dscalameta.sourcepath")
       sourcepath
     }
-    apply(Classpath(classpath), AbsolutePath(sourceroot))
+    apply(Classpath(classpath), Sourcepath(sourcepath))
   }
 }

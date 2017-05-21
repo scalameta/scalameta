@@ -215,6 +215,10 @@ class PublicSuite extends FunSuite {
     // TODO: come up with a platform-independent test
   }
 
+  test("scala.meta.io.Sourcepath.toString") {
+    // TODO: come up with a platform-independent test
+  }
+
   test("scala.meta.parsers.Parse.toString") {
     // n/a
   }

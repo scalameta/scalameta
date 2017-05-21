@@ -75,6 +75,9 @@ import scala.meta.internal.io.PathIO.pathSeparator
   override def toString: String = syntax
 }
 object Classpath {
+  // NOTE: These methods are duplicated in Classpath and Sourcepath.
+  // The @leaf annotation should synthesize at least the default apply(List[Path])
+  // but it doesn't seem to do that for some reason.
   def apply(paths: Seq[AbsolutePath]): Classpath =
     new Classpath(paths)
   def apply(path: AbsolutePath): Classpath =
@@ -87,3 +90,15 @@ object Classpath {
   }
 }
 
+@leaf class Sourcepath(shallow: Seq[AbsolutePath]) extends Multipath {
+  def structure: String = s"""Sourcepath("$syntax")"""
+  override def toString: String = syntax
+}
+object Sourcepath {
+  def apply(paths: Seq[AbsolutePath]): Sourcepath =
+    new Sourcepath(paths)
+  def apply(path: AbsolutePath): Sourcepath =
+    new Sourcepath(List(path))
+  def apply(value: String): Sourcepath =
+    new Sourcepath(value.split(pathSeparator).map(AbsolutePath.apply))
+}

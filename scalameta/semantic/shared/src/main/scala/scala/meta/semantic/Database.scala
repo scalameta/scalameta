@@ -33,8 +33,8 @@ import scala.meta.{semantic => m}
 }
 
 object Database {
-  def load(classpath: Classpath, sourceroot: AbsolutePath): Database = {
-    v.Database.load(classpath).toSchema.toMeta(Some(sourceroot))
+  def load(classpath: Classpath, sourcepath: Sourcepath): Database = {
+    v.Database.load(classpath).toSchema.toMeta(Some(sourcepath))
   }
   def load(bytes: Array[Byte]): Database = {
     val sattrs = s.Attributes.parseFrom(bytes)
