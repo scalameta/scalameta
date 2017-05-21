@@ -24,7 +24,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
     // use dependsOn(foo % Scalahost) to automatically include the semantic database
     // of foo in the scala.meta.Mirror() constructor.
     val Scalameta: Configuration = config("scalameta")
-    val scalametaSourcepath: SettingKey[File] =
+    val scalametaSourceroot: SettingKey[File] =
       settingKey[File]("What is the the base directory for all source files in this build?")
     val scalametaSemanticdb: SettingKey[ScalametaSemanticdb] =
       settingKey[ScalametaSemanticdb](
@@ -47,7 +47,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
 
   lazy val scalahostBaseSettings: Seq[Def.Setting[_]] = Def.settings(
     ivyConfigurations += Scalameta,
-    scalametaSourcepath := baseDirectory.in(ThisBuild).value,
+    scalametaSourceroot := baseDirectory.in(ThisBuild).value,
     resolvers += Resolver.bintrayRepo("scalameta", "maven")
   )
   lazy val scalahostConfigSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -71,11 +71,11 @@ object ScalahostSbtPlugin extends AutoPlugin {
       scalahostJarPath.value.fold(List.empty[String]) { path =>
         val pluginName = "scalahost"
         val semanticdb = scalametaSemanticdb.value.toString.toLowerCase
-        val sourcepath = scalametaSourcepath.value.getAbsolutePath
+        val sourceroot = scalametaSourceroot.value.getAbsolutePath
         List(
           s"-Xplugin:$path",
           s"-P:$pluginName:semanticdb:$semanticdb",
-          s"-P:$pluginName:sourcepath:$sourcepath",
+          s"-P:$pluginName:sourceroot:$sourceroot",
           "-Yrangepos",
           s"-Xplugin-require:$pluginName"
         )
@@ -91,7 +91,7 @@ object ScalahostSbtPlugin extends AutoPlugin {
     javaOptions ++= {
       if (scalametaDependencies.value.isEmpty) Nil
       else {
-        val sourcepath = sys.props("user.dir")
+        val sourceroot = sys.props("user.dir")
         val classpath =
           scalahostClasspath.value
             .flatMap(_.files.map(_.getAbsolutePath))
@@ -99,14 +99,14 @@ object ScalahostSbtPlugin extends AutoPlugin {
         val projectName = name.value
         scalahostJarPath.value.map(path => s"-Dscalahost.jar=$path").toList ++
           List(
-            s"-D$projectName.scalameta.sourcepath=$sourcepath",
+            s"-D$projectName.scalameta.sourceroot=$sourceroot",
             s"-D$projectName.scalameta.classpath=$classpath",
-            s"-Dscalameta.sourcepath=$sourcepath",
+            s"-Dscalameta.sourceroot=$sourceroot",
             s"-Dscalameta.classpath=$classpath"
           )
       }
     },
-    // fork := true is required to pass along -Dscalameta.mirror.{classpath,sourcepath}
+    // fork := true is required to pass along -Dscalameta.mirror.{classpath,sourceroot}
     fork in run := {
       if (scalametaDependencies.value.isEmpty) fork.in(run).value
       else true

@@ -15,7 +15,6 @@ class MultipathSuite extends FunSuite {
   files.foreach(file => {
     assert(new File(tmp, file).createNewFile())
   })
-  val multipath = Sourcepath(tmp.getAbsolutePath)
 
   test("Multipath.deep") {
     val obtained = multipath.deep.map(_.syntax)
@@ -32,14 +31,6 @@ class MultipathSuite extends FunSuite {
     files.foreach { file =>
       assert(multipath.relativize(new File(tmp, file).toURI).get.value == file)
     }
-  }
-
-  test("Sourcepath.syntax") {
-    assert(Sourcepath(".").syntax == "\".\"")
-    val fromPath = Sourcepath(Seq(AbsolutePath(tmp)))
-    val fromSyntax = Sourcepath(tmp.getAbsolutePath)
-    assert(fromPath == fromSyntax)
-    assert(fromPath.syntax == fromSyntax.syntax)
   }
 
   test("Classpath.syntax") {

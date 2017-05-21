@@ -44,7 +44,7 @@ package object semantic {
           }
           val (spath, scontents) = minput match {
             case mInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
-             path.toRelative(sourceroot).toString -> ""
+              path.toRelative(sourceroot).toString -> ""
             case mInput.LabeledString(label, contents) =>
               label -> contents
             case other =>

@@ -36,17 +36,22 @@ class Database(entries: Seq[Attributes]) {
     v.Database(ventries)
   }
 
-  def toMeta(sourcepath: Sourcepath): m.Database = {
+  /** Builds scala.meta.Database from schema.Database.
+    *
+    * @param sourceroot None if loading a fat semanticdb. Some if loading a slim
+    *                   semanticdb.
+    * @return
+    */
+  def toMeta(sourceroot: Option[AbsolutePath]): m.Database = {
     val mentries = entries.map {
       case s.Attributes(sfilename, scontents, sdialect, snames, smessages, sdenots, ssugars) =>
         assert(sfilename.nonEmpty, "s.Attribute.filename must not be empty")
         val minput = {
           if (scontents == "") {
-            val uri =
-              sourcepath
-                .find(RelativePath(sfilename))
-                .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
-            mInput.File(AbsolutePath(uri.getPath))
+            val root = sourceroot.getOrElse(sys.error("A sourceroot is required to load a slim semanticdb."))
+            val path = root.resolve(sfilename)
+            if (!path.isFile) sys.error(s"Path '$path' is not a file.")
+            mInput.File(path)
           } else {
             mInput.LabeledString(sfilename.toString, scontents)
           }

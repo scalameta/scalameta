@@ -13,19 +13,15 @@ import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.io.PathIO.pathSeparator
 
-@root
-trait Multipath {
+@root trait Multipath {
   def shallow: Seq[AbsolutePath]
-  def syntax: String = shallow match {
-    case cwd :: Nil if cwd == PathIO.workingDirectory => "\".\""
-    case _ => shallow.mkString(pathSeparator)
-  }
+  def syntax: String = shallow.mkString(pathSeparator)
   def deep: List[Fragment] = {
     var buf = mutable.LinkedHashSet[Fragment]()
     shallow.foreach { base =>
       def exploreJar(base: AbsolutePath): Unit = {
         if (scala.meta.internal.platform.isJS) {
-          // Dead code eliminate
+          throw new UnsupportedEncodingException("Unzipping jars is not yet supported in JS.")
         } else {
           val stream = new FileInputStream(base.toFile)
           try {
@@ -74,15 +70,11 @@ trait Multipath {
   }
 }
 
-@leaf
-class Classpath(shallow: Seq[AbsolutePath]) extends Multipath {
+@leaf class Classpath(shallow: Seq[AbsolutePath]) extends Multipath {
   def structure: String = s"""Classpath("$syntax")"""
   override def toString: String = syntax
 }
 object Classpath {
-  // NOTE: These methods are duplicated in Classpath and Sourcepath.
-  // The @leaf annotation should synthesize at least the default apply(List[Path])
-  // but it doesn't seem to do that for some reason.
   def apply(paths: Seq[AbsolutePath]): Classpath =
     new Classpath(paths)
   def apply(path: AbsolutePath): Classpath =
@@ -95,19 +87,3 @@ object Classpath {
   }
 }
 
-@leaf
-class Sourcepath(shallow: Seq[AbsolutePath]) extends Multipath {
-  def structure: String = s"""Sourcepath("$syntax")"""
-  override def toString: String = syntax
-}
-object Sourcepath {
-  def workingDirectory = new Sourcepath(List(PathIO.workingDirectory))
-  def apply(paths: Seq[AbsolutePath]): Sourcepath =
-    new Sourcepath(paths)
-  def apply(path: AbsolutePath): Sourcepath =
-    new Sourcepath(List(path))
-  def apply(value: String): Sourcepath = {
-    if (value == ".") workingDirectory
-    else new Sourcepath(value.split(pathSeparator).map(AbsolutePath.apply))
-  }
-}

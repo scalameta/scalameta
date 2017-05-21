@@ -329,12 +329,11 @@ lazy val scalahostIntegration = project
       Seq(
         s"-Xplugin:$pluginJar",
         "-Yrangepos",
-        s"-P:scalahost:sourcepath:${baseDirectory.in(ThisBuild).value}",
+        s"-P:scalahost:sourceroot:${baseDirectory.in(ThisBuild).value}",
         "-Xplugin-require:scalahost"
       )
     }
   )
-
 
 lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   .settings(
@@ -359,7 +358,7 @@ lazy val tests = crossProject
     description := "Tests for scalameta APIs",
     test.in(Test) := test.in(Test).dependsOn(compile.in(scalahostIntegration, Compile)).value,
     buildInfoKeys := Seq[BuildInfoKey](
-      "mirrorSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
+      "mirrorRoot" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
       "mirrorClasspath" -> classDirectory.in(scalahostIntegration, Compile).value.getAbsolutePath
     ),
     buildInfoPackage := "scala.meta.tests"

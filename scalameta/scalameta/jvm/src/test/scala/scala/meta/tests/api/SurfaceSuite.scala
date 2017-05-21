@@ -72,7 +72,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.io.Fragment
       |scala.meta.io.Multipath
       |scala.meta.io.RelativePath
-      |scala.meta.io.Sourcepath
       |scala.meta.parsers
       |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException

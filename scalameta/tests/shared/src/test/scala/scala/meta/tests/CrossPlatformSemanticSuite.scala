@@ -7,10 +7,10 @@ import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
 
 class CrossPlatformSemanticSuite extends FunSuite {
-  val sourcepath = Sourcepath(BuildInfo.mirrorSourcepath)
+  val sourceroot = AbsolutePath(BuildInfo.mirrorRoot)
   val classpath = Classpath(BuildInfo.mirrorClasspath)
-  test("Database.load(Sourcepath, Classpath)") {
-    val mirror = Database.load(classpath, sourcepath)
+  test("Database.load(Classpath, Sourceroot)") {
+    val mirror = Database.load(classpath, sourceroot)
     assert(mirror.sources.nonEmpty)
   }
 

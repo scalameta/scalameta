@@ -5,10 +5,8 @@ import scala.meta.internal.io.PathIO
 import scala.meta.internal.semantic.SemanticdbMode
 import scala.meta.io.AbsolutePath
 import scala.meta.io.RelativePath
-import scala.meta.io.Sourcepath
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
-import scala.tools.nsc.typechecker.ScalahostAnalyzer
 
 class ScalahostPlugin(val global: Global)
     extends Plugin
@@ -26,7 +24,7 @@ class ScalahostPlugin(val global: Global)
       g.reporter.error(g.NoPosition, s"[scalahost] $msg")
     }
     options.foreach {
-      case SetSourcepath(path) =>
+      case SetSourceroot(path) =>
         val abspath =
           if (PathIO.isAbsolutePath(path)) AbsolutePath(path)
           else PathIO.workingDirectory.resolve(RelativePath(path))
