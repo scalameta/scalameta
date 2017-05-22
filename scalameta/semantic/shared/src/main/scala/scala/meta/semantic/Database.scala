@@ -20,8 +20,8 @@ import scala.meta.{semantic => m}
   lazy val denotations: Map[Symbol, Denotation] = entries.flatMap(_._2.denotations).toMap
   lazy val sugars: Map[Position, String] = entries.flatMap(_._2.sugars).toMap
 
-  def save(classpath: Classpath, sourceroot: AbsolutePath): Unit = {
-    this.toSchema(sourceroot).toVfs(classpath).save()
+  def save(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
+    this.toSchema(sourceroot).toVfs(targetroot).save()
   }
 
   def syntax: String = scala.meta.internal.semantic.DatabaseSyntax(this)
