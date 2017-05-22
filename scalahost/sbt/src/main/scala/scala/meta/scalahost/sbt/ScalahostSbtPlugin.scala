@@ -1,7 +1,5 @@
 package scala.meta.scalahost.sbt
 
-import scala.collection.mutable.ListBuffer
-
 import sbt._
 import Keys.{version => _, _}
 import org.scalameta.BuildInfo
@@ -24,8 +22,12 @@ object ScalahostSbtPlugin extends AutoPlugin {
     // use dependsOn(foo % Scalahost) to automatically include the semantic database
     // of foo in the scala.meta.Mirror() constructor.
     val Scalameta: Configuration = config("scalameta")
-    val scalametaSourcepath: SettingKey[File] =
+    val scalametaSourceroot: SettingKey[File] =
       settingKey[File]("What is the the base directory for all source files in this build?")
+    val scalametaExtraSourcepath: SettingKey[Seq[File]] =
+      settingKey[Seq[File]](
+        "Directories besides scalametaSourceroot containing additional source " +
+          "files necessary to load slim semanticdb files from the classpath.")
     val scalametaSemanticdb: SettingKey[ScalametaSemanticdb] =
       settingKey[ScalametaSemanticdb](
         "What kind of semanticdb to persist? See ScalametaSemanticdb for options.")
@@ -47,7 +49,8 @@ object ScalahostSbtPlugin extends AutoPlugin {
 
   lazy val scalahostBaseSettings: Seq[Def.Setting[_]] = Def.settings(
     ivyConfigurations += Scalameta,
-    scalametaSourcepath := baseDirectory.in(ThisBuild).value,
+    scalametaSourceroot := baseDirectory.in(ThisBuild).value,
+    scalametaExtraSourcepath := Nil,
     resolvers += Resolver.bintrayRepo("scalameta", "maven")
   )
   lazy val scalahostConfigSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -71,11 +74,11 @@ object ScalahostSbtPlugin extends AutoPlugin {
       scalahostJarPath.value.fold(List.empty[String]) { path =>
         val pluginName = "scalahost"
         val semanticdb = scalametaSemanticdb.value.toString.toLowerCase
-        val sourcepath = scalametaSourcepath.value.getAbsolutePath
+        val sourceroot = scalametaSourceroot.value.getAbsolutePath
         List(
           s"-Xplugin:$path",
           s"-P:$pluginName:semanticdb:$semanticdb",
-          s"-P:$pluginName:sourcepath:$sourcepath",
+          s"-P:$pluginName:sourceroot:$sourceroot",
           "-Yrangepos",
           s"-Xplugin-require:$pluginName"
         )
@@ -91,11 +94,10 @@ object ScalahostSbtPlugin extends AutoPlugin {
     javaOptions ++= {
       if (scalametaDependencies.value.isEmpty) Nil
       else {
-        val sourcepath = sys.props("user.dir")
+        val sourcepath =
+          (scalametaSourceroot.value +: scalametaExtraSourcepath.value).asPath
         val classpath =
-          scalahostClasspath.value
-            .flatMap(_.files.map(_.getAbsolutePath))
-            .mkString(java.io.File.pathSeparator)
+          scalahostClasspath.value.flatMap(_.files).asPath
         val projectName = name.value
         scalahostJarPath.value.map(path => s"-Dscalahost.jar=$path").toList ++
           List(
@@ -159,6 +161,10 @@ object ScalahostSbtPlugin extends AutoPlugin {
         Some(scalahostJar)
       case _ => None
     }
+  }
+
+  private implicit class XtensionSeqFile(files: Seq[File]) {
+    def asPath: String = files.map(_.getAbsolutePath).mkString(java.io.File.pathSeparator)
   }
   // Defaults to version.value of in scala.meta's build.sbt
   private val scalahostVersion: String =
