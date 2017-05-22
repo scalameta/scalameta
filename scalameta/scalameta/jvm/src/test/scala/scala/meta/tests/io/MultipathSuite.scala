@@ -33,4 +33,19 @@ class MultipathSuite extends FunSuite {
       assert(multipath.relativize(new File(tmp, file).toURI).get.value == file)
     }
   }
+
+  test("Sourcepath.syntax") {
+    val fromPath = Sourcepath(Seq(AbsolutePath(tmp)))
+    val fromSyntax = Sourcepath(tmp.getAbsolutePath)
+    assert(fromPath == fromSyntax)
+    assert(fromPath.syntax == fromSyntax.syntax)
+  }
+
+  test("Classpath.syntax") {
+    assert(Classpath("/Foo/Bar.jar").syntax == "/Foo/Bar.jar")
+    val fromPath = Classpath(Seq(AbsolutePath(tmp)))
+    val fromSyntax = Classpath(tmp.getAbsolutePath)
+    assert(fromPath == fromSyntax)
+    assert(fromPath.syntax == fromSyntax.syntax)
+  }
 }

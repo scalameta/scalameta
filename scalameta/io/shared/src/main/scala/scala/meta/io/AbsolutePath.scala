@@ -2,6 +2,7 @@ package scala.meta
 package io
 
 import java.io._
+import java.nio.{file => nio}
 import java.net._
 import org.scalameta.data._
 import scala.meta.internal.io.{FileIO, PathIO}
@@ -12,7 +13,8 @@ import scala.meta.internal.io.{FileIO, PathIO}
   override def toString: String = syntax
 
   def toFile: File = new File(value)
-  def toURI: URI = toFile.toURI
+  def toURI: URI = new URI(s"file:$value")
+  def toNIO: nio.Path = nio.Paths.get(toURI)
   @deprecated("Use toString() instead", "1.8")
   def absolute: String = toString()
 
@@ -24,9 +26,17 @@ import scala.meta.internal.io.{FileIO, PathIO}
   def resolve(path: RelativePath): AbsolutePath = PathIO.resolve(this, path)
   def resolve(file: File): AbsolutePath = resolve(RelativePath(file))
   def resolve(path: String): AbsolutePath = resolve(RelativePath(path))
+
+  def isFile: Boolean = FileIO.isFile(this)
+  def isDirectory: Boolean = FileIO.isDirectory(this)
+  def readAllBytes: Array[Byte] = FileIO.readAllBytes(this)
 }
 
 object AbsolutePath {
+  def apply(path: nio.Path): AbsolutePath = {
+    AbsolutePath(path.toString)
+  }
+
   def apply(file: File): AbsolutePath = {
     AbsolutePath(file.getAbsolutePath)
   }

@@ -2,7 +2,6 @@ package scala.meta.internal.semantic.vfs
 
 import scala.meta.internal.io.PathIO.fileSeparator
 import scala.meta.io.RelativePath
-
 import org.scalameta.invariants.require
 
 object Paths {

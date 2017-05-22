@@ -1,16 +1,17 @@
 package scala.meta.internal
 package semantic
 
+import scala.meta.internal.io.PathIO
 import scala.meta.internal.scalahost.ScalahostPlugin
 import scala.meta.io._
 
-case class ScalahostConfig(sourcepath: Sourcepath, semanticdb: SemanticdbMode) {
+case class ScalahostConfig(sourceroot: AbsolutePath, semanticdb: SemanticdbMode) {
   def syntax: String =
-    s"-P:${ScalahostPlugin.name}:sourcepath:$sourcepath " +
+    s"-P:${ScalahostPlugin.name}:sourceroot:$sourceroot " +
       s"-P:${ScalahostPlugin.name}:semanticdb:$semanticdb"
 }
 object ScalahostConfig {
-  def default = ScalahostConfig(new Sourcepath(sys.props("user.dir")), SemanticdbMode.Fat)
+  def default = ScalahostConfig(PathIO.workingDirectory, SemanticdbMode.Fat)
 }
 
 sealed abstract class SemanticdbMode {
@@ -30,12 +31,12 @@ object SemanticdbMode {
 
 trait ConfigOps { self: DatabaseOps =>
   val SetSemanticdb = "semanticdb:(.*)".r
-  val SetSourcepath = "sourcepath:(.*)".r
+  val SetSourceroot = "sourceroot:(.*)".r
 
   var config: ScalahostConfig = ScalahostConfig.default
   implicit class XtensionScalahostConfig(ignored: ScalahostConfig) {
-    def setSourcepath(sourcepath: Sourcepath): Unit =
-      config = config.copy(sourcepath = sourcepath)
+    def setSourceroot(sourceroot: AbsolutePath): Unit =
+      config = config.copy(sourceroot = sourceroot)
     def setSemanticdbMode(mode: SemanticdbMode): Unit =
       config = config.copy(semanticdb = mode)
   }

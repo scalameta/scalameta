@@ -17,34 +17,36 @@ import scala.{Seq => _}
 import java.io._
 
 import org.scalameta.data._
+import org.scalameta.logger
 
 // NOTE: s.Attributes and friends are generated from semanticdb.proto.
 // See scalameta/semantic/jvm/target/scala-<version>/src_managed/main/scala/meta/internal/semantic/schema.
-@data class Database(entries: Seq[(RelativePath, Attributes)]) {
-  def toVfs(classpath: Classpath): v.Database = {
-    if (classpath.shallow.isEmpty) sys.error("can't save semanticdb to an empty classpath")
-    val ventries = entries.map {
-      case (spath, sentry) =>
-        // TODO: Would it make sense to support multiclasspaths?
-        // One use-case for this would be in-place updates of semanticdb files.
-        val base = AbsolutePath(classpath.shallow.head)
-        val vpath = v.Paths.scalaToSemanticdb(spath)
-        val fragment = Fragment(base, vpath)
-        v.Entry.InMemory(fragment, sentry.toByteArray)
+@data
+class Database(entries: Seq[Attributes]) {
+  def toVfs(targetroot: AbsolutePath): v.Database = {
+    val ventries = entries.map { sentry =>
+      // TODO: Would it make sense to support multiclasspaths?
+      // One use-case for this would be in-place updates of semanticdb files.
+      val vpath = v.Paths.scalaToSemanticdb(RelativePath(sentry.filename))
+      val fragment = Fragment(targetroot, vpath)
+      v.Entry.InMemory(fragment, sentry.toByteArray)
     }
     v.Database(ventries)
   }
 
-  def toMeta(sourcepath: Sourcepath): m.Database = {
+  def toMeta(sourcepath: Option[Sourcepath]): m.Database = {
     val mentries = entries.map {
-      case (spath, s.Attributes(scontents, sdialect, snames, smessages, sdenots, ssugars)) =>
+      case s.Attributes(sfilename, scontents, sdialect, snames, smessages, sdenots, ssugars) =>
+        assert(sfilename.nonEmpty, "s.Attribute.filename must not be empty")
         val minput = {
           if (scontents == "") {
             val uri =
-              sourcepath.find(spath).getOrElse(sys.error(s"can't find $spath in $sourcepath"))
-            mInput.File(new File(uri))
+              sourcepath.getOrElse(sys.error("Sourcepath is required to load slim semanticdb."))
+                .find(RelativePath(sfilename))
+                .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
+            mInput.File(AbsolutePath(uri.getPath))
           } else {
-            mInput.LabeledString(spath.toString, scontents)
+            mInput.LabeledString(sfilename.toString, scontents)
           }
         }
         object sRange {

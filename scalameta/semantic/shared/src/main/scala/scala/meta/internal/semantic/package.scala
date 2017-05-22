@@ -15,7 +15,7 @@ import scala.meta.{semantic => m}
 
 package object semantic {
   implicit class XtensionDatabaseSchema(mdatabase: m.Database) {
-    def toSchema(sourcepath: Sourcepath): s.Database = {
+    def toSchema(sourceroot: AbsolutePath): s.Database = {
       val sentries = mdatabase.entries.map {
         case (minput, m.Attributes(mdialect, mnames, mmessages, mdenots, msugars)) =>
           object mRange {
@@ -44,15 +44,13 @@ package object semantic {
           }
           val (spath, scontents) = minput match {
             case mInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
-              val spath = sourcepath.relativize(path.toURI)
-              spath.getOrElse(sys.error(s"bad database: can't find $path in $sourcepath")) -> ""
+              path.toRelative(sourceroot).toString -> ""
             case mInput.LabeledString(label, contents) =>
-              val spathOpt = Try(RelativePath(label))
-              val spath = spathOpt.getOrElse(sys.error(s"bad database: unsupported label $label"))
-              spath -> contents
+              label -> contents
             case other =>
               sys.error(s"bad database: unsupported input $other")
           }
+          assert(spath.nonEmpty, s"'$spath'.nonEmpty")
           val sdialect = {
             val sdialect = mDialect.standards.find(_._2 == mdialect).map(_._1)
             sdialect.getOrElse(sys.error(s"bad database: unsupported dialect $mdialect"))
@@ -74,7 +72,7 @@ package object semantic {
             case (mRange(srange), ssyntax) => s.Sugar(Some(srange), ssyntax)
             case other => sys.error(s"bad database: unsupported sugar $other")
           }
-          spath -> s.Attributes(scontents, sdialect, snames, smessages, sdenots, ssugars)
+          s.Attributes(spath, scontents, sdialect, snames, smessages, sdenots, ssugars)
         case (other, _) =>
           sys.error(s"unsupported input: $other")
       }

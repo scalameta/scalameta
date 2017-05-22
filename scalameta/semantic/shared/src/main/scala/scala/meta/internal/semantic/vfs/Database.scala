@@ -1,11 +1,7 @@
 package scala.meta.internal.semantic.vfs
 
 import java.io._
-import java.net._
-import org.scalameta.adt._
 import org.scalameta.data._
-import org.scalameta.invariants._
-import scala.{Seq => _}
 import scala.collection.immutable.Seq
 import scala.meta.io._
 import scala.meta.internal.io.InputStreamIO
@@ -21,12 +17,10 @@ object Database {
   }
 }
 
-@data class Database(entries: Seq[Entry]) {
+@data
+class Database(entries: Seq[Entry]) {
   def toSchema: s.Database = {
-    val sentries = entries.map(ventry => {
-      val scalaName = v.Paths.semanticdbToScala(ventry.name)
-      scalaName -> s.Attributes.parseFrom(ventry.bytes)
-    })
+    val sentries = entries.map(ventry => s.Attributes.parseFrom(ventry.bytes))
     s.Database(sentries)
   }
 
