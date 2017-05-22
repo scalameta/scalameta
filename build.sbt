@@ -428,7 +428,7 @@ lazy val readme = scalatex
     sources.in(Compile) ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
     watchSources ++= baseDirectory.value.listFiles.toList,
     test := run.in(Compile).toTask(" --validate").value,
-    publish := {
+    publish := (if (!sys.props.contains("CI")) () else {
       // generate the scalatex readme into `website`
       val website =
         new File(target.value.getAbsolutePath + File.separator + "scalatex")
@@ -466,7 +466,7 @@ lazy val readme = scalatex
         case ex: Exception if ex.getMessage.contains(nothingToCommit) =>
           println(nothingToCommit)
       }
-    },
+    }),
     publishLocal := {},
     publishM2 := {}
   )
@@ -530,6 +530,13 @@ lazy val mergeSettings = Def.settings(
 )
 
 lazy val publishableSettings = Def.settings(
+  publishTo := {
+    if (sys.props("scalameta.publish") == "sonatype")
+      Some(
+        "releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+    else
+      publishTo.in(bintray).value
+  },
   sharedSettings,
   bintrayOrganization := Some("scalameta"),
   publishArtifact.in(Compile) := true,
