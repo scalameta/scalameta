@@ -25,3 +25,7 @@ libraryDependencies += "com.trueaccord.scalapb" %% "compilerplugin-shaded" % "0.
 libraryDependencies += "org.scala-sbt" % "scripted-plugin" % sbtVersion.value
 
 addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.6.0")
+
+addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
+
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "1.1")
