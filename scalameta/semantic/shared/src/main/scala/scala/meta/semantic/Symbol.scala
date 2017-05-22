@@ -9,7 +9,6 @@ import org.scalameta.unreachable
 import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.internal.inputs._
-import scala.meta.inputs.Point.Offset
 import scala.meta.inputs.Position.Range
 import scala.meta.io._
 

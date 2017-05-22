@@ -41,16 +41,14 @@ trait InputOps { self: DatabaseOps =>
 
   implicit class XtensionGPositionMPosition(pos: GPosition) {
     def toMeta: m.Position = {
+      // NOTE: Even with -Yrangepos enabled we cannot be guaranteed that all positions are
+      // range positions. In the case we encounter a non-range position we assume start == end.
       val input = pos.source.toInput
-      if (input == m.Input.None) {
-        m.Position.None
-      } else if (pos.isRange) {
-        m.Position.Range(input, m.Point.Offset(input, pos.start), m.Point.Offset(input, pos.end))
+      if (input != m.Input.None) {
+        if (pos.isRange) m.Position.Range(input, pos.start, pos.end)
+        else m.Position.Range(input, pos.point, pos.point)
       } else {
-        // NOTE: Even with -Yrangepos enabled we cannot be guaranteed that all positions are
-        // range positions. In the case we encounter a non-range position we assume start == end.
-        val mpoint = m.Point.Offset(input, pos.point)
-        m.Position.Range(input, mpoint, mpoint)
+        m.Position.None
       }
     }
   }

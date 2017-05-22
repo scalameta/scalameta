@@ -9,26 +9,16 @@ package object inputs {
     def formatMessage(severity: String, message: String): String = {
       // TODO: In order to be completely compatible with scalac, we need to support Position.point.
       // On the other hand, do we really need to? Let's try without it. See #383 for discussion.
-      pos.start.formatMessage(severity, message)
-    }
-  }
-
-  implicit class XtensionPointFormatMessage(point: Point) {
-    def formatMessage(severity: String, message: String): String = {
-      if (point != Point.None) {
-        val input = point.input
-        val shortContent = input match {
-          case Input.File(path, _) => path.toString
-          case Input.LabeledString(label, _) => label
-          case _ => "<input>"
-        }
-        val header = s"$shortContent:${point.line + 1}: $severity: $message"
+      if (pos != Position.None) {
+        val input = pos.input
+        val header = s"${input.syntax}:${pos.startLine + 1}: $severity: $message"
         val line = {
-          val start = input.lineToOffset(point.line)
-          val end = if (start < input.chars.length) input.lineToOffset(point.line + 1) else start
+          val start = input.lineToOffset(pos.startLine)
+          val notEof = start < input.chars.length
+          val end = if (notEof) input.lineToOffset(pos.startLine + 1) else start
           new String(input.chars, start, end - start).trim
         }
-        var caret = " " * point.column + "^"
+        var caret = " " * pos.startColumn + "^"
         header + EOL + line + EOL + caret
       } else {
         s"$severity: $message"
@@ -51,22 +41,11 @@ package object inputs {
   implicit class XtensionPositionSyntaxStructure(pos: Position) {
     def syntax: String = pos match {
       case Position.None => s"<none>"
-      case Position.Range(input, start, end) => s"${input.syntax}@${start.offset}..${end.offset}"
+      case Position.Range(input, start, end) => s"${input.syntax}@$start..$end"
     }
     def structure: String = pos match {
       case Position.None => s"Position.None"
-      case Position.Range(input, start, end) => s"Position.Range(${input.structure}, ${start.structure}, ${end.structure})"
-    }
-  }
-
-  implicit class XtensionPointSyntaxStructure(point: Point) {
-    def syntax: String = point match {
-      case Point.None => s"<none>"
-      case Point.Offset(input, offset) => s"${input.syntax}@${offset}"
-    }
-    def structure: String = point match {
-      case Point.None => s"Point.None"
-      case Point.Offset(input, offset) => s"Point.Offset(${input.structure}, ${offset})"
+      case Position.Range(input, start, end) => s"Position.Range(${input.structure}, $start, $end)"
     }
   }
 }

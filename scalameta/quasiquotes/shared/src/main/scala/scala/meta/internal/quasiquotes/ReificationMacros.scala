@@ -123,7 +123,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
 
   private implicit def metaPositionToReflectPosition(pos: MetaPosition): ReflectPosition = {
     // TODO: this is another instance of #383
-    c.macroApplication.pos.focus.withPoint(pos.start.absolutize.offset)
+    c.macroApplication.pos.focus.withPoint(pos.absolutize.start)
   }
 
   private def instantiateDialect(dialectTree: ReflectTree, mode: Mode): Dialect = {
@@ -218,7 +218,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     implicit class XtensionQuasiHole(quasi: Quasi) {
       def hole: Hole = {
         val pos = quasi.pos.absolutize
-        val maybeHole = mode.holes.find(h => pos.start.offset <= h.arg.pos.point && h.arg.pos.point <= pos.end.offset)
+        val maybeHole = mode.holes.find(h => pos.start <= h.arg.pos.point && h.arg.pos.point <= pos.end)
         maybeHole.getOrElse(unreachable(debug(quasi, quasi.pos.absolutize, mode.holes, mode.holes.map(_.arg.pos))))
       }
     }

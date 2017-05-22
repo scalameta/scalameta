@@ -39,8 +39,8 @@ object JSFacade {
 
   private[this] def toPosition(p: Position): js.Dynamic =
     js.Dynamic.literal(
-      "start" -> p.start.offset,
-      "end" -> p.end.offset
+      "start" -> p.start,
+      "end" -> p.end
     )
 
   private[this] def toNode(t: Tree): js.Dynamic = {
@@ -98,8 +98,8 @@ object JSFacade {
           case Parsed.Error(pos, message, _) => js.Dictionary(
             "error" -> message,
             "pos" -> toPosition(pos),
-            "lineNumber" -> pos.start.line,
-            "columnNumber" -> pos.start.column
+            "lineNumber" -> pos.startLine,
+            "columnNumber" -> pos.startColumn
           )
         }
     }

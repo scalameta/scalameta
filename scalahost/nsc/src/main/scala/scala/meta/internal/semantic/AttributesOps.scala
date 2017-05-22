@@ -48,8 +48,8 @@ trait AttributesOps { self: DatabaseOps =>
               todo += mname
               // TODO: also drop trivia (no idea how to formulate this concisely)
               val tok = mname.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption
-              val mstart1 = tok.map(_.start).getOrElse(mname.pos.start.offset)
-              val mend1 = tok.map(_.end).getOrElse(mname.pos.end.offset)
+              val mstart1 = tok.map(_.start).getOrElse(mname.pos.start)
+              val mend1 = tok.map(_.end).getOrElse(mname.pos.end)
               if (mstarts.contains(mstart1))
                 sys.error(
                   s"ambiguous mstart ${syntaxAndPos(mname)} ${syntaxAndPos(mstarts(mstart1))}")
@@ -119,11 +119,11 @@ trait AttributesOps { self: DatabaseOps =>
                 case mtree @ m.Name.Anonymous() =>
                   // TODO: support non-ctor-related use cases for anonymous names
                 case mtree: m.Ctor =>
-                  mctordefs(mtree.pos.start.offset) = mtree.name
+                  mctordefs(mtree.pos.start) = mtree.name
                 case mtree: m.Term.New =>
-                  mctorrefs(mtree.pos.start.offset) = mtree.init.name
+                  mctorrefs(mtree.pos.start) = mtree.init.name
                 case mtree: m.Init =>
-                  mctorrefs(mtree.pos.start.offset) = mtree.name
+                  mctorrefs(mtree.pos.start) = mtree.name
                 case mtree: m.Name =>
                   indexName(mtree)
                 case _ =>
@@ -188,7 +188,7 @@ trait AttributesOps { self: DatabaseOps =>
               def tryMpos(start: Int, end: Int): Boolean = {
                 if (!mstarts.contains(start)) return false
                 val mtree = mstarts(start)
-                if (mtree.pos.end.offset != end) return false
+                if (mtree.pos.end != end) return false
                 success(mtree, gtree.symbol)
                 return true
               }

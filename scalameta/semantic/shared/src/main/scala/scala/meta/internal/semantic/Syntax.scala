@@ -33,19 +33,19 @@ object AttributesSyntax {
       }
     }
     implicit class XtensionPositionRange(pos: Position) {
-      def range = s"[${pos.start.offset}..${pos.end.offset})"
+      def range = s"[${pos.start}..${pos.end})"
     }
 
     val s_dialect = dialect.toString
     appendSection("Dialect", List(s_dialect))
 
-    val s_names = names.toList.sortBy(_._1.start.offset).map {
+    val s_names = names.toList.sortBy(_._1.start).map {
       case ((pos, symbol)) =>
         s"${pos.range}: ${pos.text} => $symbol"
     }
     appendSection("Names", s_names)
 
-    val s_messages = messages.toList.sortBy(_.position.start.offset).map {
+    val s_messages = messages.toList.sortBy(_.position.start).map {
       case Message(pos, severity, message) =>
         s"${pos.range}: [${severity.toString.toLowerCase}] ${message}"
     }
@@ -57,7 +57,7 @@ object AttributesSyntax {
     }
     appendSection("Denotations", s_denots)
 
-    val s_sugars = sugars.toList.sortBy(_._1.start.offset).map {
+    val s_sugars = sugars.toList.sortBy(_._1.start).map {
       case ((pos, syntax)) =>
         s"${pos.range} $syntax"
     }

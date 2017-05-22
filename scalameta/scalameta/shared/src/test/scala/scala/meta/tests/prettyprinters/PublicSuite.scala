@@ -3,8 +3,7 @@ package prettyprinters
 
 import org.scalatest._
 import scala.meta._
-import scala.meta.inputs.{Input, Point, Position}
-import scala.meta.internal.io.PathIO
+import scala.meta.inputs.{Input, Position}
 
 class PublicSuite extends FunSuite {
   test("scala.meta.Dialect.toString") {
@@ -169,20 +168,6 @@ class PublicSuite extends FunSuite {
     assert(input.toString == s"""Input.LabeledString("foo.scala", "foo")""")
   }
 
-  test("scala.meta.inputs.Point.toString") {
-    // covered below
-  }
-
-  test("scala.meta.inputs.Point.None.toString") {
-    assert(Point.None.toString == "Point.None")
-  }
-
-  test("scala.meta.inputs.Point.Offset.toString") {
-    val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    assert(lhs.pos.start.toString === """0 in Input.String("foo + bar")""")
-    assert(lhs.pos.end.toString === """3 in Input.String("foo + bar")""")
-  }
-
   test("scala.meta.inputs.Position.toString") {
     // covered below
   }
@@ -293,7 +278,7 @@ class PublicSuite extends FunSuite {
   test("scala.meta.semantic.Message.toString") {
     val path = RelativePath("hello.scala").toAbsolute
     val input = Input.File(path)
-    val position = Position.Range(input, Point.Offset(input, 40), Point.Offset(input, 42))
+    val position = Position.Range(input, 40, 42)
     val message = Message(position, Severity.Error, "does not compute")
     assert(message.toString === s"[error] $path@40..42: does not compute")
   }
