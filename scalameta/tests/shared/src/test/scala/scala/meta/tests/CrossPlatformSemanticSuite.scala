@@ -20,5 +20,10 @@ class CrossPlatformSemanticSuite extends FunSuite {
     val mirror = Database.load(bytes)
     assert(mirror.sources.nonEmpty)
   }
+
+  test("Database.load(Classpath)") {
+    val mirror = Database.load(classpath)
+    assert(mirror.sources.nonEmpty)
+  }
 }
 
