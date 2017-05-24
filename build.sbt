@@ -288,7 +288,7 @@ lazy val scalahostSbt = project
     Defaults.itSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
-    publishMavenStyle := false, // necessary for pre-releases to work with addSbtPlugin
+    publishMavenStyle := publishToSonatype,
     bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
     testQuick.in(IntegrationTest) := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
@@ -531,7 +531,7 @@ lazy val mergeSettings = Def.settings(
 
 lazy val publishableSettings = Def.settings(
   publishTo := {
-    if (sys.props("scalameta.publish") == "sonatype")
+    if (publishToSonatype)
       Some(
         "releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
     else
@@ -672,4 +672,5 @@ def CiCommand(name: String)(commands: List[String]): Command = Command.command(n
   }
 }
 def ci(command: String) = s"plz $ciScalaVersion $command"
+def publishToSonatype = sys.props("scalameta.publish") == "sonatype"
 
