@@ -288,7 +288,7 @@ lazy val scalahostSbt = project
     Defaults.itSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
-    publishMavenStyle := publishToSonatype,
+    publishMavenStyle := isSonatypePublish,
     bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
     testQuick.in(IntegrationTest) := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
@@ -428,7 +428,7 @@ lazy val readme = scalatex
     sources.in(Compile) ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
     watchSources ++= baseDirectory.value.listFiles.toList,
     test := run.in(Compile).toTask(" --validate").value,
-    publish := (if (!sys.props.contains("CI")) () else {
+    publish := (if (!isCiPublish) () else {
       // generate the scalatex readme into `website`
       val website =
         new File(target.value.getAbsolutePath + File.separator + "scalatex")
@@ -531,7 +531,7 @@ lazy val mergeSettings = Def.settings(
 
 lazy val publishableSettings = Def.settings(
   publishTo := {
-    if (publishToSonatype)
+    if (isSonatypePublish)
       Some(
         "releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
     else
@@ -664,6 +664,8 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler ++ backwardCompat210
 }
 
+lazy val isSonatypePublish = sys.props("scalameta.publish") == "sonatype"
+lazy val isCiPublish = sys.env.contains("CI_PUBLISH")
 lazy val ciPlatform = if (sys.env.contains("CI_SCALA_JS")) "JS" else "JVM"
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
 def CiCommand(name: String)(commands: List[String]): Command = Command.command(name) { initState =>
@@ -672,5 +674,3 @@ def CiCommand(name: String)(commands: List[String]): Command = Command.command(n
   }
 }
 def ci(command: String) = s"plz $ciScalaVersion $command"
-def publishToSonatype = sys.props("scalameta.publish") == "sonatype"
-
