@@ -17,7 +17,7 @@
 
   @p
     With scalameta, we are building a community of next-generation tooling for Scala.
-    @lnk("Codacy", "https://codacy.com/")'s Scala engine, @lnk("Scalafmt", "http://scalafmt.org")
+    @lnk("Codacy", "https://codacy.com/")'s Scala engine, @lnk("Scalafmt", "http://scalafmt.org"),
     and @lnk("Scalafix", "https://github.com/scalacenter/scalafix")
     take advantage of our unique features and deliver user experiences
     that have been unreachable for the most of the traditional Scala tools.
