@@ -267,6 +267,8 @@ class XmlSuite extends ParseSuite {
   checkOK("<a>{1}{2}<b/>{3}</a>")
   checkOK("<a>{<b>{1}{2}</b>}</a>")
   checkOK("e match { case <a>{_*}</a> => }")
+  checkOK("<a>{{</a>")
+  checkOK("<a>}}</a>")
   checkOK(
     """
       |<a>
@@ -320,6 +322,9 @@ class XmlSuite extends ParseSuite {
   checkError("<a></ a>")
   checkError("<a></\na>")
   checkError("e match { case <a>{}</a> => ??? }")
+  checkError("<a>}</a>")
+  checkError("<a>{</a>")
+  checkError("<a>}{</a>")
   //checkError("<a></b>") // FIXME: Should not parse
 
   // FIXME These should not parse: we need to differentiate between expression and pattern position
