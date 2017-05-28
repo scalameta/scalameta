@@ -11,7 +11,7 @@ import scala.meta.tokens.Token._
 trait Trivia
 object Trivia {
   def unapply(token: Token): Boolean = {
-    token.is[Whitespace] || token.is[Comment]
+    token.is[Whitespace] || token.is[Comment] || token.is[BOF] || token.is[EOF]
   }
 }
 
