@@ -306,7 +306,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (token.is[LeftParen]) inParens(body)
     else { accept[LeftParen]; alt }
 
-  @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, Lit.Unit(()))
+  @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret = inParensOrError(body, Lit.Unit())
   @inline final def inParensOrNil[T](body: => List[T]): List[T] = inParensOrError(body, Nil)
 
   @inline final def inBraces[T](body: => T): T = {
@@ -320,7 +320,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     else { accept[LeftBrace]; alt }
 
   @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOrError(body, Nil)
-  @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit.Unit(()))
+  @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit.Unit())
   @inline final def dropAnyBraces[T](body: => T): T =
     if (token.is[LeftBrace]) inBraces(body)
     else body
@@ -766,7 +766,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       Some(atPos(tree, tree)(Term.Param(Nil, name, Some(tpt), None)))
     case Term.Ascribe(name: Term.Placeholder, tpt) =>
       Some(atPos(tree, tree)(Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)))
-    case Lit.Unit(()) =>
+    case Lit.Unit() =>
       None
     case other =>
       syntaxError(s"not a legal formal parameter", at = other)
@@ -819,7 +819,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // see comments to makeTupleType for discussion
     body match {
       case List(q @ Term.Quasi(1, _)) => atPos(q, q)(Term.Tuple(body))
-      case _ => makeTuple[Term](body, () => Lit.Unit(()), Term.Tuple(_))
+      case _ => makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
     }
   }
 
@@ -1326,7 +1326,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwFalse() =>
         Lit.Boolean(false)
       case KwNull() =>
-        Lit.Null(null)
+        Lit.Null()
       case _ =>
         unreachable(debug(token))
     }
@@ -1456,7 +1456,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val thenp = expr()
       if (token.is[KwElse]) { next(); Term.If(cond, thenp, expr()) }
       else if (token.is[Semicolon] && ahead { token.is[KwElse] }) { next(); next(); Term.If(cond, thenp, expr()) }
-      else { Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit(()))) }
+      else { Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit())) }
     case KwTry() =>
       next()
       val body: Term = token match {
@@ -1512,7 +1512,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     case KwReturn() =>
       next()
       if (token.is[ExprIntro]) Term.Return(expr())
-      else Term.Return(atPos(in.tokenPos, auto)(Lit.Unit(())))
+      else Term.Return(atPos(in.tokenPos, auto)(Lit.Unit()))
     case KwThrow() =>
       next()
       Term.Throw(expr())
@@ -1587,7 +1587,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             }
           }
           t match {
-            case Lit.Unit(()) => true // 1
+            case Lit.Unit() => true // 1
             case NameLike() => location != InTemplate // 2-3
             case ParamLike() => inParens || location == InBlock // 4-5
             case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
@@ -1737,7 +1737,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
       val UnfinishedInfix(lhsStart, lhs, _, op, _) = unf
-      val args = rhs match { case Pat.Tuple(args) => args.toList; case Lit.Unit(()) => Nil; case _ => List(rhs) }
+      val args = rhs match { case Pat.Tuple(args) => args.toList; case Lit.Unit() => Nil; case _ => List(rhs) }
       atPos(lhsStart, rhsEnd)(Pat.ExtractInfix(lhs, op, checkNoTripleDots(args)))
     }
   }
@@ -2307,7 +2307,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         xmlPat()
       case LeftParen() =>
         val patterns = inParens(if (token.is[RightParen]) Nil else noSeq.patterns())
-        makeTuple[Pat](patterns, () => Lit.Unit(()), Pat.Tuple(_))
+        makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
       case _ =>
         onError(token)
     })

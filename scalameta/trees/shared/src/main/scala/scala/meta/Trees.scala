@@ -45,8 +45,8 @@ object Name {
   def value: Any
 }
 object Lit {
-  def unapply(arg: Lit): Option[scala.Any] = Some(arg.value)
-  @ast class Null(value: scala.Any) extends Lit
+  def unapply(arg: Lit): Option[Any] = Some(arg.value)
+  @ast class Null() extends Lit { def value: Any = null }
   @ast class Int(value: scala.Int) extends Lit
   // NOTE: Lit.Double/Float are strings to work the same across JS/JVM. Example:
   // 1.4f.toString == "1.399999976158142" // in JS
@@ -61,7 +61,7 @@ object Lit {
   @ast class Char(value: scala.Char) extends Lit
   @ast class Long(value: scala.Long) extends Lit
   @ast class Boolean(value: scala.Boolean) extends Lit
-  @ast class Unit(value: scala.Unit) extends Lit
+  @ast class Unit() extends Lit { def value: Any = () }
   @ast class String(value: scala.Predef.String) extends Lit
   @ast class Symbol(value: scala.Symbol) extends Lit
 }

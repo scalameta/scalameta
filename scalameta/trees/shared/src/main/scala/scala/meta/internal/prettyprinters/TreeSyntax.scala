@@ -169,8 +169,8 @@ object TreeSyntax {
         }
       }
       def guessIsPostfix(t: Term.Select): Boolean = false
-      def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit(()) => false; case _ => true }
-      def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit(()) => false; case e => true }
+      def guessHasExpr(t: Term.Return): Boolean = t.expr match { case Lit.Unit() => false; case _ => true }
+      def guessHasElsep(t: Term.If): Boolean = t.elsep match { case Lit.Unit() => false; case e => true }
       def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
       def guessHasBraces(t: Pkg): Boolean = {
         def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
@@ -227,7 +227,7 @@ object TreeSyntax {
         case t: Term.ApplyType       => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
         case t: Term.ApplyInfix      =>
           val args = t.args match {
-            case (Lit.Unit(())) :: Nil =>
+            case (Lit.Unit()) :: Nil =>
               s("(())")
             case (arg: Term) :: Nil =>
               s(p(InfixExpr(t.op.value), arg, right = true))
@@ -419,8 +419,8 @@ object TreeSyntax {
         case Lit.Char(value)    => m(Literal, s(enquote(value.toString, SingleQuotes)))
         case Lit.String(value)  => m(Literal, s(enquote(value.toString, if (value.contains(EOL)) TripleQuotes else DoubleQuotes)))
         case Lit.Symbol(value)  => m(Literal, s("'", value.name))
-        case Lit.Null(value)    => m(Literal, s(kw("null")))
-        case Lit.Unit(value)    => m(Literal, s("()"))
+        case Lit.Null()         => m(Literal, s(kw("null")))
+        case Lit.Unit()         => m(Literal, s("()"))
 
         // Member
         case t: Decl.Val       => s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)

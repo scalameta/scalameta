@@ -20,8 +20,8 @@ object Lift {
   implicit def liftChar[O <: Char, I >: Lit]: Lift[O, I]       = Lift{ x => Lit.Char(x) }
   implicit def liftString[O <: String, I >: Lit]: Lift[O, I]   = Lift{ x => Lit.String(x) }
   implicit def liftSymbol[I >: Lit]: Lift[Symbol, I]           = Lift{ x => Lit.Symbol(x) }
-  implicit def liftNull[I >: Lit]: Lift[Null, I]               = Lift{ x => Lit.Null(x) }
-  implicit def liftUnit[I >: Lit]: Lift[Unit, I]               = Lift{ x => Lit.Unit(x) }
+  implicit def liftNull[I >: Lit]: Lift[Null, I]               = Lift{ _ => Lit.Null() }
+  implicit def liftUnit[I >: Lit]: Lift[Unit, I]               = Lift{ _ => Lit.Unit() }
 
   implicit def liftIdentity[O, I >: O]: Lift[O, I] = Lift { x => x }
   implicit def liftAnyToOption[O, I](implicit lift: Lift[O, I]): Lift[O, Option[I]] = Lift { x => Some(lift(x)) }

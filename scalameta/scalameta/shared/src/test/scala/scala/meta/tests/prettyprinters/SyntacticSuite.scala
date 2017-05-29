@@ -546,7 +546,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("Lit(()) - 2") {
-    val Term.If(Term.Name("cond"), Lit(42), lit @ Lit.Unit(())) = super.term("if (cond) 42")
+    val Term.If(Term.Name("cond"), Lit(42), lit @ Lit.Unit()) = super.term("if (cond) 42")
     assert(lit.structure === "Lit.Unit(())")
     assert(lit.syntax === "")
   }
@@ -558,9 +558,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("Term.Apply(_, List(Term.Function(...))) #572, #574") {
     import scala.collection.immutable.List
-    val tree1 = Term.Apply(Term.Name("foo"), List(Term.Function(List(Term.Param(List(), Term.Name("i"), Some(Type.Name("Int")), None)), Lit.Unit(()))))
-    val tree2 = Term.Apply(Term.Name("foo"), List(Term.Function(List(Term.Param(List(Mod.Implicit()), Term.Name("i"), Some(Type.Name("Int")), None)), Lit.Unit(()))))
-    val tree3 = Term.Apply(Term.Name("foo"), List(Term.Function(List(Term.Param(List(), Term.Name("i"), None, None)), Lit.Unit(()))))
+    val tree1 = Term.Apply(Term.Name("foo"), List(Term.Function(List(Term.Param(List(), Term.Name("i"), Some(Type.Name("Int")), None)), Lit.Unit())))
+    val tree2 = Term.Apply(Term.Name("foo"), List(Term.Function(List(Term.Param(List(Mod.Implicit()), Term.Name("i"), Some(Type.Name("Int")), None)), Lit.Unit())))
+    val tree3 = Term.Apply(Term.Name("foo"), List(Term.Function(List(Term.Param(List(), Term.Name("i"), None, None)), Lit.Unit())))
     assert(tree1.syntax == "foo { (i: Int) => () }")
     assert(tree2.syntax == "foo { implicit i: Int => () }")
     assert(tree3.syntax == "foo(i => ())")

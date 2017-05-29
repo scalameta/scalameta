@@ -52,7 +52,6 @@ class ReflectionSuite extends FunSuite {
     duplicateRelevantFieldTpes.foreach(tpe => if (!distinctRelevantFieldTpes.exists(_ =:= tpe)) distinctRelevantFieldTpes += tpe)
     assert(distinctRelevantFieldTpes.sortBy(_.toString).mkString(EOL) === """
       |String
-      |scala.Any
       |scala.Boolean
       |scala.Byte
       |scala.Char
@@ -78,7 +77,6 @@ class ReflectionSuite extends FunSuite {
       |scala.Option[scala.meta.Type]
       |scala.Short
       |scala.Symbol
-      |scala.Unit
       |scala.meta.Ctor.Primary
       |scala.meta.Init
       |scala.meta.Name
