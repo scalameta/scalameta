@@ -270,18 +270,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         }
         loop(trees.toList, EmptyTree, Nil)
       }
-      def liftOptionTrees(maybeTrees: Option[List[MetaTree]]): ReflectTree = {
-        maybeTrees match {
-          case Some(List(quasi: Quasi)) if quasi.rank == 0 =>
-            q"_root_.scala.Some(${liftTrees(List(quasi))})"
-          case Some(List(quasi: Quasi)) if quasi.rank > 0 =>
-            liftQuasi(quasi, optional = true)
-          case Some(otherTrees) =>
-            q"_root_.scala.Some(${liftTrees(otherTrees)})"
-          case None =>
-            q"_root_.scala.None"
-        }
-      }
       def liftTreess(treess: List[List[MetaTree]]): ReflectTree = {
         val tripleDotQuasis = treess.flatten.collect{ case quasi: Quasi if quasi.rank == 2 => quasi }
         if (tripleDotQuasis.length == 0) {
@@ -342,7 +330,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       implicit def liftableSubTrees[T <:MetaTree]: Liftable[List[T]] = Liftable((trees: List[T]) => Lifts.liftTrees(trees))
       implicit def liftableSubTreess[T <: MetaTree]: Liftable[List[List[T]]] = Liftable((treess: List[List[T]]) => Lifts.liftTreess(treess))
       implicit def liftableOptionSubTree[T <: MetaTree]: Liftable[Option[T]] = Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
-      implicit def liftableOptionSubTrees[T <: MetaTree]: Liftable[Option[List[T]]] = Liftable((x: Option[List[T]]) => Lifts.liftOptionTrees(x))
     }
     mode match {
       case Mode.Term(_, _) =>
