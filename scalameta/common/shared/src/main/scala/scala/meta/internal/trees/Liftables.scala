@@ -95,25 +95,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       else if (adt.tpe <:< DefnVarSymbol.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
       else if (adt.tpe <:< PatBindSymbol.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
       else if (adt.tpe <:< PatTypedSymbol.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
-      else if (adt.tpe <:< LitSymbol.toType) Some(q"""
-        implicit object LiftableAny extends c.universe.Liftable[_root_.scala.Any] {
-          def apply(value: _root_.scala.Any): c.universe.Tree = value match {
-            case value: _root_.scala.Boolean => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Boolean]].apply(value)
-            case value: _root_.scala.Byte => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Byte]].apply(value)
-            case value: _root_.scala.Short => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Short]].apply(value)
-            case value: _root_.scala.Int => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Int]].apply(value)
-            case value: _root_.scala.Long => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Long]].apply(value)
-            case value: _root_.scala.Float => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Float]].apply(value)
-            case value: _root_.scala.Double => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Double]].apply(value)
-            case value: _root_.scala.Char => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Char]].apply(value)
-            case value: _root_.scala.Predef.String => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Predef.String]].apply(value)
-            case value: _root_.scala.Symbol => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Symbol]].apply(value)
-            case null => c.universe.Literal(c.universe.Constant(null))
-            case value: _root_.scala.Unit => _root_.scala.Predef.implicitly[c.universe.Liftable[_root_.scala.Unit]].apply(value)
-          }
-        }
-        $body
-      """) else None
+      else None
     }
     // NOTE: we ignore tokens here for the time being
     customize(body)
