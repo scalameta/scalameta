@@ -65,4 +65,14 @@ class DottySuite extends ParseSuite {
     val tree = dialects.Dotty("val a: 42 = 42").parse[Stat].get
     assert(tree.syntax === "val a: 42 = 42")
   }
+
+  test("implicit function type") {
+    val Type.ImplicitFunction(params, res) = tpe("implicit String => Int")
+    val Type.ImplicitFunction(params2, res2) = tpe("implicit (String, Boolean) => Int")
+  }
+
+  test("Type.ImplicitFunction.syntax") {
+    assert(t"implicit String => Int".syntax == "implicit String => Int")
+    assert(t"implicit (String, Double) => Int".syntax == "implicit (String, Double) => Int")
+  }
 }

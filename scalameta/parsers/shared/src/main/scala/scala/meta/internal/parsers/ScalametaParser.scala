@@ -988,15 +988,29 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
 
     /** {{{
-     *  Type ::= InfixType `=>' Type
-     *         | `(' [`=>' Type] `)' `=>' Type
+     *  Type ::= [`implicit'] InfixType `=>' Type
+     *         | [`implicit'] `(’ [`=>’ Type] `)’ `=>' Type
      *         | `[' [`=>' Type] `]' `=>' Type
      *         | InfixType [ExistentialClause]
      *  ExistentialClause ::= forSome `{' ExistentialDcl {semi ExistentialDcl}} `}'
      *  ExistentialDcl    ::= type TypeDcl | val ValDcl
      *  }}}
      */
-    def typ(): Type = autoPos {
+    def typ(): Type = {
+      if (token.is[KwImplicit] && dialect.allowImplicitFunctionTypes) {
+        next()
+        typRest() match {
+          case Type.Function(params, body) =>
+            Type.ImplicitFunction(params, body)
+          case t =>
+            syntaxError(s"$dialect does not support implicit function types", at = t)
+        }
+      } else {
+        typRest()
+      }
+    }
+
+    def typRest(): Type = autoPos {
       val t: Type =
         if (token.is[LeftParen]) tupleInfixType()
         else infixType(InfixMode.FirstOp)
