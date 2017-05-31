@@ -1003,7 +1003,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case Type.Function(params, body) =>
             Type.ImplicitFunction(params, body)
           case t =>
-            syntaxError(s"$dialect does not support implicit function types", at = t)
+            syntaxError("Function type expected", at = t)
         }
       } else {
         typRest()
