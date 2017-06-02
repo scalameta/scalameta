@@ -996,14 +996,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
      *  ExistentialDcl    ::= type TypeDcl | val ValDcl
      *  }}}
      */
-    def typ(): Type = {
+    def typ(): Type = autoPos {
       if (token.is[KwImplicit] && dialect.allowImplicitFunctionTypes) {
         next()
         typRest() match {
           case Type.Function(params, body) =>
             Type.ImplicitFunction(params, body)
           case t =>
-            syntaxError("Function type expected", at = t)
+            syntaxError("function type expected", at = t)
         }
       } else {
         typRest()

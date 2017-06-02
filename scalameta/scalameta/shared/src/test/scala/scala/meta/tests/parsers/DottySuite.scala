@@ -91,7 +91,7 @@ class DottySuite extends ParseSuite {
   test("invalid implicit function types") {
     def failWithMessage(code: String) = {
       val error = intercept[ParseException](term(code))
-      assert(error.getMessage.contains("Function type expected"))
+      assert(error.getMessage.contains("function type expected"))
     }
 
     failWithMessage("{ def f(f: Int => implicit Int): Int = ??? }")
