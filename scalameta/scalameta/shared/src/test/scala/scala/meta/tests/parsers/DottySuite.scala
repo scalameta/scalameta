@@ -65,4 +65,43 @@ class DottySuite extends ParseSuite {
     val tree = dialects.Dotty("val a: 42 = 42").parse[Stat].get
     assert(tree.syntax === "val a: 42 = 42")
   }
+
+  test("implicit function type") {
+    val Type.ImplicitFunction(Seq(Type.Name("String")), Type.Name("Int")) =
+      tpe("implicit String => Int")
+
+    val Type.ImplicitFunction(Seq(Type.Name("String"), Type.Name("Boolean")), Type.Name("Int")) =
+      tpe("implicit (String, Boolean) => Int")
+
+    val Defn.Def(Nil, Term.Name("f"), Nil, Seq(Nil),
+      Some(Type.ImplicitFunction(Seq(Type.Name("Int")), Type.Name("Int"))), _) =
+        templStat("def f(): implicit Int => Int = ???")
+
+    val Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))),
+      Some(Type.ImplicitFunction(Seq(Type.Name("String"), Type.Name("Int")), Type.Name("Int"))), _) =
+        templStat("val x: implicit (String, Int) => Int = ???")
+
+    val Defn.Def(Nil, Term.Name("f"), _, Nil,
+      Some(
+        Type.ImplicitFunction(Seq(Type.Name("A")),
+          Type.ImplicitFunction(Seq(Type.Name("B")), Type.Tuple(Seq(Type.Name("A"), Type.Name("B")))))), _) =
+            templStat("def f[A, B]: implicit A => implicit B => (A, B) = ???")
+  }
+
+  test("invalid implicit function types") {
+    def failWithMessage(code: String) = {
+      val error = intercept[ParseException](term(code))
+      assert(error.getMessage.contains("function type expected"))
+    }
+
+    failWithMessage("{ def f(f: Int => implicit Int): Int = ??? }")
+    failWithMessage("{ def f(): implicit Int = ??? }")
+    failWithMessage("{ def f(): Int => implicit Int = ??? }")
+  }
+
+  test("Type.ImplicitFunction.syntax") {
+    assert(t"implicit String => Int".syntax == "implicit String => Int")
+    assert(t"implicit String => (Int, Double)".syntax == "implicit String => (Int, Double)")
+    assert(t"implicit (String, Double) => Int".syntax == "implicit (String, Double) => Int")
+  }
 }
