@@ -825,6 +825,24 @@ class SuccessSuite extends FunSuite {
     assert(t"(..$atpes) => $tpe".show[Structure] === "Type.Function(Seq(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))")
   }
 
+  test("1 t\"implicit (..$atpes) => $tpe\"") {
+    val Scala211 = "shadow scala.meta.dialects.Scala211"
+    import scala.meta.dialects.Dotty
+    val t"implicit (..$atpes) => $tpe" = t"implicit (X, Y) => Z"
+    assert(atpes.toString === "List(X, Y)")
+    assert(atpes(0).show[Structure] === "Type.Name(\"X\")")
+    assert(atpes(1).show[Structure] === "Type.Name(\"Y\")")
+    assert(tpe.show[Structure] === "Type.Name(\"Z\")")
+  }
+
+  test("2 t\"implicit (..$atpes) => $tpe\"") {
+    val Scala211 = "shadow scala.meta.dialects.Scala211"
+    import scala.meta.dialects.Dotty
+    val atpes: List[Type.Arg] = List(t"X", t"Y")
+    val tpe = t"Z"
+    assert(t"implicit (..$atpes) => $tpe".show[Structure] === "Type.ImplicitFunction(Seq(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))")
+  }
+
   test("1 t\"(..$tpes)\"") {
     val t"(..$tpes)" = t"(X, Y)"
     assert(tpes.toString === "List(X, Y)")
