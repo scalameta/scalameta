@@ -1,4 +1,6 @@
 language: scala
+install:
+  - git fetch --tags
 script:
   - ./bin/runci.sh $CI_TEST
 jdk:
