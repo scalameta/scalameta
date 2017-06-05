@@ -143,10 +143,10 @@
     @p
       @b
         New-style ("inline") macros.
-      As announced at ScalaDays NYC 2016,
+      As announced at ScalaDays New York City 2016,
       macros based on scala.reflect are going to be dropped from the future versions of Scala.
-      We are now working on the replacement, so-called inline macros, under the banner of Macro Paradise 3.0.
-      You may be interested in visiting @lnk("https://github.com/scalameta/paradise", "https://github.com/scalameta/paradise")
+      We are now working on the replacement that is designed to be platform-independent and easy-to-use.
+      You may be interested in visiting @lnk("https://github.com/scalamacros/scalamacros", "https://github.com/scalamacros/scalamacros")
       to check out the state of the art.
 
     @p
@@ -163,8 +163,8 @@
     @p
       @b
         Semantic Tooling at Twitter
-      (ScalaDays Chicago 2017). This talk introduces semantic databases, the cornerstone of
-      the scala.meta semantic API, and explains how semantic databases can be used to integrate
+      (ScalaDays Copenhagen 2017). This talk introduces semantic databases, the cornerstone of
+      the scalameta semantic API, and explains how semantic databases can be used to integrate
       with Kythe, a language-agnostic ecosystem for developer tools. In this talk, we presented
       our vision of next-generation semantic tooling for the Scala ecosystem.
 
@@ -172,7 +172,7 @@
       Video: coming soon
       @br
       Slides:
-      @lnk("http://scalameta.org/talks/2017-04-21-SemanticToolingAtTwitter.pdf", "http://scalameta.org/talks/2017-04-21-SemanticToolingAtTwitter.pdf")
+      @lnk("http://scalameta.org/talks/2017-06-01-SemanticToolingAtTwitter.pdf", "http://scalameta.org/talks/2017-06-01-SemanticToolingAtTwitter.pdf")
 
     @p
       @b
