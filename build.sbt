@@ -422,6 +422,9 @@ lazy val readme = scalatex
   .settings(
     sharedSettings,
     nonPublishableSettings,
+    // only needed for scalatex 0.3.8-pre until next scalatex release
+    resolvers += Resolver.bintrayIvyRepo("scalameta", "sbt-plugins"),
+    resolvers += Resolver.bintrayRepo("scalameta", "maven"),
     exposePaths("readme", Runtime),
     crossScalaVersions := LanguageVersions, // No need to cross-build.
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
@@ -489,8 +492,6 @@ lazy val sharedSettings = Def.settings(
   organization := "org.scalameta",
   resolvers += Resolver.sonatypeRepo("snapshots"),
   resolvers += Resolver.sonatypeRepo("releases"),
-  // only needed for scalatex 0.3.8-pre until next scalatex release
-  resolvers += Resolver.bintrayIvyRepo("scalameta", "sbt-plugins"),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
   libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.13.5" % "test",
