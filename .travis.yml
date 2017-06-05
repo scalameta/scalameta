@@ -1,11 +1,16 @@
 language: scala
+git:
+  depth: 9999
 install:
   - git fetch --tags
+  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 script:
   - ./bin/runci.sh $CI_TEST
 jdk:
   - oraclejdk8
 env:
+  global:
+  - TRAVIS_NODE_VERSION="8"
   matrix:
     - CI_TEST: scalafmt
     - CI_TEST: ci-fast
