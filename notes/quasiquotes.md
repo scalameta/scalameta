@@ -66,6 +66,7 @@ Literal  | `q"$lit"` (construction only), `q"${lit: Lit}"` (also deconstruction)
  And               | `t"$tpe & $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
  Or                | `t"$tpe | $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
  Function          | `t"(..$atpes) => $tpe"`
+ Implicit Function | `t"implicit (..$atpes) => $tpe"`
  Tuple             | `t"(..$tpesnel)"`
  Refine            | `t"$tpeopt { ..$stats }"`
  Existential       | `t"$tpe forSome { ..$statsnel }"`
