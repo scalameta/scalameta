@@ -422,6 +422,9 @@ lazy val readme = scalatex
   .settings(
     sharedSettings,
     nonPublishableSettings,
+    // only needed for scalatex 0.3.8-pre until next scalatex release
+    resolvers += Resolver.bintrayIvyRepo("scalameta", "sbt-plugins"),
+    resolvers += Resolver.bintrayRepo("scalameta", "maven"),
     exposePaths("readme", Runtime),
     crossScalaVersions := LanguageVersions, // No need to cross-build.
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
