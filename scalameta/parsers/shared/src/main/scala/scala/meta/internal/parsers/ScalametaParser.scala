@@ -1724,14 +1724,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         // That's why we later need `convertToParams` to make sense of what the parser has produced.
         //
         // Rules:
-        // 1) `() => ...` means lambda
-        // 2) `x => ...` means self-type annotation, but only in template position
-        // 3) `(x) => ...` means self-type annotation, but only in template position
-        // 4a) `x: Int => ...` means self-type annotation in template position
-        // 4b) `x: Int => ...` means lambda in block position
-        // 4c) `x: Int => ...` means ascription, i.e. `x: (Int => ...)`, in expression position
-        // 5) `(x: Int) => ...` means lambda
-        // 6) `(x, y) => ...` or `(x: Int, y: Int) => ...` or with more entries means lambda
+        // 1. `() => ...` means lambda
+        // 2. `x => ...` means self-type annotation, but only in template position
+        // 3. `(x) => ...` means self-type annotation, but only in template position
+        // 4a. `x: Int => ...` means self-type annotation in template position
+        // 4b. `x: Int => ...` means lambda in block position
+        // 4c. `x: Int => ...` means ascription, i.e. `x: (Int => ...)`, in expression position
+        // 5. `(x: Int) => ...` means lambda
+        // 6. `(x, y) => ...` or `(x: Int, y: Int) => ...` or with more entries means lambda
         //
         // A funny thing is that scalac's parser tries to disambiguate between self-type annotations and lambdas
         // even if it's not parsing the first statement in the template. E.g. `class C { foo; x => x }` will be
@@ -2065,7 +2065,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         simpleExprRest(selector(t), canApply = true)
       case LeftBracket() =>
         t match {
-          case _: Term.Quasi | _: Term.Name | _: Term.Select | _: Term.Apply =>
+          case _: Term.Quasi | _: Term.Name | _: Term.Select | _: Term.Apply | _: Term.ApplyInfix | _: Term.ApplyUnary | _: Term.New | _: Term.Placeholder =>
             var app: Term = t
             while (token.is[LeftBracket])
               app = atPos(t, auto)(Term.ApplyType(app, exprTypeArgs()))
