@@ -3224,10 +3224,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     val className = typeName()
     rejectModCombination[Mod.Final, Mod.Sealed](mods, s"class $className")
-    // TODO:
-    // if (ofCaseClass && token.isNot[LeftParen])
-    //  syntaxError(token.offset, "case classes without a parameter list are not allowed;\n"+
-    //                             "use either case objects or case classes with an explicit `()' as a parameter list.")
+    val typeParams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
+    val ctor = primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass)
+
+    if (!dialect.allowCaseClassWithoutParameterList && mods.has[Mod.Case] && ctor.paramss.isEmpty) {
+      syntaxError(s"case classes must have a parameter list; try 'case class $className()' or 'case object $className'",
+                  at = token)
+    }
+
     // TODO:
     // if (owner == nme.CONSTRUCTOR && (result.isEmpty || (result.head take 1 exists (_.mods.isImplicit)))) {
     //  token match {
@@ -3236,9 +3240,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     //    case _           => syntaxError(start, "auxiliary constructor needs non-implicit parameter list")
     //  }
     // }
-    Defn.Class(mods, className,
-               typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true),
-               primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass), templateOpt(OwnedByClass))
+    Defn.Class(mods, className, typeParams, ctor, templateOpt(OwnedByClass))
   }
 
   /** {{{
