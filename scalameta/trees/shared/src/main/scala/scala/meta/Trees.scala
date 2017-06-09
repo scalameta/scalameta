@@ -128,6 +128,7 @@ object Type {
   @ast class Apply(tpe: Type, args: Seq[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
   @ast class Function(params: Seq[Type.Arg], res: Type) extends Type
+  @ast class ImplicitFunction(params: Seq[Type.Arg], res: Type) extends Type
   @ast class Tuple(args: Seq[Type] @nonEmpty) extends Type {
     require(args.length > 1 || (args.length == 1 && args.head.is[scala.meta.internal.ast.Quasi]))
   }
@@ -240,7 +241,7 @@ object Pat {
     require(parts.length == args.length + 1)
     require(args.forall(_.isLegal))
   }
-  @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Pat]) extends Pat {
+  @ast class Xml(parts: Seq[Lit] @nonEmpty, args: Seq[Pat.Arg]) extends Pat {
     require(parts.length == args.length + 1)
     require(args.forall(_.isLegal))
   }

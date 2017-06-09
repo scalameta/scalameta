@@ -1,13 +1,31 @@
 package scala.meta.contrib
 
-import scala.meta.Tree
+import scala.meta._
 import scala.meta.tokens.Token
-import scala.meta.tokens.Tokens
 import scala.meta.tokens.Token.Comment
-import scala.collection.immutable.Seq
+import scala.collection.immutable.List
+import org.scalameta.logger
 
-sealed abstract class AssociatedComments(leadingMap: Map[Token, Seq[Comment]],
-                                         trailingMap: Map[Token, Seq[Comment]]) {
+sealed abstract class AssociatedComments(leadingMap: Map[Token, List[Comment]],
+                                         trailingMap: Map[Token, List[Comment]]) {
+  private def pretty(map: Map[Token, List[Comment]]): String =
+    map
+      .map {
+        case (tok, comments) =>
+          val commentStructure = comments.map(comment => logger.revealWhitespace(comment.syntax))
+          s"    ${tok.structure} => $commentStructure"
+      }
+      .mkString("\n")
+  def syntax: String =
+    s"""|AssociatedComments(
+        |  Leading =
+        |${pretty(leadingMap)}
+        |
+        |  Trailing =
+        |${pretty(trailingMap)}
+        |)""".stripMargin
+
+  override def toString: String = syntax
   def leading(tree: Tree): Set[Comment] =
     (for {
       token <- tree.tokens.headOption
@@ -29,10 +47,10 @@ object AssociatedComments {
   def apply(tree: Tree): AssociatedComments = apply(tree.tokens)
   def apply(tokens: Tokens): AssociatedComments = {
     import scala.meta.tokens.Token._
-    val leadingBuilder = Map.newBuilder[Token, Seq[Comment]]
-    val trailingBuilder = Map.newBuilder[Token, Seq[Comment]]
-    val leading = Seq.newBuilder[Comment]
-    val trailing = Seq.newBuilder[Comment]
+    val leadingBuilder = Map.newBuilder[Token, List[Comment]]
+    val trailingBuilder = Map.newBuilder[Token, List[Comment]]
+    val leading = List.newBuilder[Comment]
+    val trailing = List.newBuilder[Comment]
     var isLeading = true
     var lastToken: Token = tokens.head
     tokens.foreach {

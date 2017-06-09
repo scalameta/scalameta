@@ -7,8 +7,9 @@ import org.scalameta.os
 import UnidocKeys._
 import sbt.ScriptedPlugin._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
+import Versions._
 
-lazy val LanguageVersions = Seq("2.11.11", "2.12.2")
+lazy val LanguageVersions = Seq(LatestScala211, LatestScala212)
 lazy val LanguageVersion = LanguageVersions.head
 lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.version.preRelease())
 
@@ -27,7 +28,7 @@ unidocSettings
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
   s"wow $ciScalaVersion" ::
-    "tests/test" ::
+    ("testOnly" + ciPlatform) ::
     ci("doc") :: // skips 2.10 projects
     s
 }
@@ -35,7 +36,7 @@ commands += CiCommand("ci-slow")(
   "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
   Nil
 )
-commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/test" :: Nil)
+commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/it:test" :: Nil)
 commands += CiCommand("ci-publish")(
   if (sys.env.contains("CI_PUBLISH")) s"publish" :: Nil
   else Nil
@@ -44,9 +45,39 @@ commands += CiCommand("ci-publish")(
 // from a command. Running "test" inside a command will trigger the `test` task
 // to run in all defined modules, including ones like inputs/io/dialects which
 // have no tests.
-test := test.in(tests).value
-testJVM := testJVM.in(tests).value
-testJS := testJS.in(tests).value
+test := {
+  println(
+    """Welcome to the scalameta build! This is a big project with lots of tests :)
+      |Running "test" may take a really long time. Here are some other useful commands
+      |that give a tighter edit/run/debug cycle.
+      |- scalametaJVM/testQuick # Parser/Pretty-printer/Trees/...
+      |- contribJVM/testQuick   # contrib
+      |- scalahostNsc/test      # Semantic API tests
+      |- scalahostSbt/it:test   # sbt-scalahost tests
+      |- testOnlyJVM
+      |- testOnlyJS
+      |""".stripMargin)
+}
+testAll := {
+  testOnlyJVM.value
+  testOnlyJS.value
+}
+// These tasks skip over modules with no tests, like dialects/inputs/io, speeding up
+// edit/test cycles. You may prefer to run testJVM while iterating on a design
+// because JVM tests link and run faster than JS tests.
+testOnlyJVM := {
+  val runScalametaTests = test.in(scalametaJVM, Test).value
+  val runScalahostTests = test.in(scalahostNsc, Test).value
+  val runBenchmarkTests = test.in(benchmarks, Test).value
+  val runContribTests = test.in(contribJVM, Test).value
+  val runTests = test.in(testsJVM, Test).value
+  val runDocs = test.in(readme).value
+}
+testOnlyJS := {
+  val runScalametaTests = test.in(scalametaJS, Test).value
+  val runContribTests = test.in(contribJS, Test).value
+  val runTests = test.in(testsJS, Test).value
+}
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
@@ -136,7 +167,7 @@ lazy val tokenizers = crossProject
   .settings(
     publishableSettings,
     description := "Scalameta APIs for tokenization and their baseline implementation",
-    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "0.4.2",
+    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "0.4.3",
     enableMacros
   )
   .dependsOn(common, dialects, inputs, tokens)
@@ -250,25 +281,28 @@ lazy val scalahostNsc = project
 
 lazy val scalahostSbt = project
   .in(file("scalahost/sbt"))
+  .configs(IntegrationTest)
   .settings(
     publishableSettings,
     buildInfoSettings,
+    Defaults.itSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
+    publishMavenStyle := isSonatypePublish,
     bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
-    testQuick := {
+    testQuick.in(IntegrationTest) := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
       RunSbtCommand(s"; plz $ScalaVersion publishLocal " +
         "; such scalahostSbt/scripted sbt-scalahost/semantic-example")(state.value)
     },
-    test := {
+    test.in(IntegrationTest) := {
       RunSbtCommand("; such publishLocal " +
         "; such scalahostSbt/scripted")(state.value)
     },
     description := "sbt plugin to enable the scalahost compiler plugin for Scala 2.x",
     moduleName := "sbt-scalahost", // sbt convention is that plugin names start with sbt-
-    scalaVersion := "2.10.6",
-    crossScalaVersions := Seq("2.10.6"), // for some reason, scalaVersion.value does not work.
+    scalaVersion := LatestScala210,
+    crossScalaVersions := Seq(LatestScala210),
     scriptedLaunchOpts ++= Seq(
       "-Dplugin.version=" + version.value,
       // .jvmopts is ignored, simulate here
@@ -283,6 +317,23 @@ lazy val scalahostSbt = project
     scriptedBufferLog := false
   )
   .enablePlugins(BuildInfoPlugin)
+
+lazy val scalahostIntegration = project
+  .in(file("scalahost/integration"))
+  .settings(
+    description := "Sources to compile with scalahost to build a mirror for tests.",
+    sharedSettings,
+    nonPublishableSettings,
+    scalacOptions ++= {
+      val pluginJar = Keys.`package`.in(scalahostNsc, Compile).value.getAbsolutePath
+      Seq(
+        s"-Xplugin:$pluginJar",
+        "-Yrangepos",
+        s"-P:scalahost:sourceroot:${baseDirectory.in(ThisBuild).value}",
+        "-Xplugin-require:scalahost"
+      )
+    }
+  )
 
 lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   .settings(
@@ -299,34 +350,27 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   )
   .dependsOn(scalametaJVM)
 
-lazy val tests = project
+lazy val tests = crossProject
   .in(file("scalameta/tests"))
   .settings(
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
-    test := {
-      testJVM.value
-      testJS.value
-    },
-    // These tasks skip over modules with no tests, like dialects/inputs/io, speeding up
-    // edit/test cycles. You may prefer to run testJVM while iterating on a design
-    // because JVM tests link and run faster than JS tests.
-    testJVM := {
-      val runScalametaTests = test.in(scalametaJVM, Test).value
-      val runScalahostTests = test.in(scalahostNsc, Test).value
-      val runBenchmarkTests = test.in(benchmarks, Test).value
-      val runContribTests = test.in(contribJVM, Test).value
-      val runDocs = test.in(readme).value
-    },
-    testJS := {
-      val runIoTests = test.in(ioJS, Test).value
-      val runScalametaTests = test.in(scalametaJS, Test).value
-      val runContribTests = test.in(contribJS, Test).value
-    }
+    test.in(Test) := test.in(Test).dependsOn(compile.in(scalahostIntegration, Compile)).value,
+    buildInfoKeys := Seq[BuildInfoKey](
+      "mirrorSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
+      "mirrorClasspath" -> classDirectory.in(scalahostIntegration, Compile).value.getAbsolutePath
+    ),
+    buildInfoPackage := "scala.meta.tests"
   )
-lazy val testJVM = taskKey[Unit]("Run JVM tests")
-lazy val testJS = taskKey[Unit]("Run Scala.js tests")
+  .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
+  .enablePlugins(BuildInfoPlugin)
+  .dependsOn(scalameta, contrib)
+lazy val testsJVM = tests.jvm
+lazy val testsJS = tests.js
+lazy val testOnlyJVM = taskKey[Unit]("Run JVM tests")
+lazy val testOnlyJS = taskKey[Unit]("Run Scala.js tests")
+lazy val testAll = taskKey[Unit]("Run JVM and Scala.js tests")
 
 lazy val contrib = crossProject
   .in(file("scalameta/contrib"))
@@ -378,13 +422,16 @@ lazy val readme = scalatex
   .settings(
     sharedSettings,
     nonPublishableSettings,
+    // only needed for scalatex 0.3.8-pre until next scalatex release
+    resolvers += Resolver.bintrayIvyRepo("scalameta", "sbt-plugins"),
+    resolvers += Resolver.bintrayRepo("scalameta", "maven"),
     exposePaths("readme", Runtime),
     crossScalaVersions := LanguageVersions, // No need to cross-build.
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     sources.in(Compile) ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
     watchSources ++= baseDirectory.value.listFiles.toList,
     test := run.in(Compile).toTask(" --validate").value,
-    publish := {
+    publish := (if (!isCiPublish) () else {
       // generate the scalatex readme into `website`
       val website =
         new File(target.value.getAbsolutePath + File.separator + "scalatex")
@@ -422,7 +469,7 @@ lazy val readme = scalatex
         case ex: Exception if ex.getMessage.contains(nothingToCommit) =>
           println(nothingToCommit)
       }
-    },
+    }),
     publishLocal := {},
     publishM2 := {}
   )
@@ -486,6 +533,13 @@ lazy val mergeSettings = Def.settings(
 )
 
 lazy val publishableSettings = Def.settings(
+  publishTo := {
+    if (isSonatypePublish)
+      Some(
+        "releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+    else
+      publishTo.in(bintray).value
+  },
   sharedSettings,
   bintrayOrganization := Some("scalameta"),
   publishArtifact.in(Compile) := true,
@@ -527,6 +581,9 @@ lazy val publishableSettings = Def.settings(
 )
 
 lazy val nonPublishableSettings = Seq(
+  publishArtifact in (Compile, packageDoc) := false,
+  publishArtifact in packageDoc := false,
+  sources in (Compile,doc) := Seq.empty,
   publishArtifact := false,
   publish := {}
 )
@@ -610,6 +667,9 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler ++ backwardCompat210
 }
 
+lazy val isSonatypePublish = sys.props("scalameta.publish") == "sonatype"
+lazy val isCiPublish = sys.env.contains("CI_PUBLISH")
+lazy val ciPlatform = if (sys.env.contains("CI_SCALA_JS")) "JS" else "JVM"
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
 def CiCommand(name: String)(commands: List[String]): Command = Command.command(name) { initState =>
   commands.foldLeft(initState) {
@@ -617,4 +677,3 @@ def CiCommand(name: String)(commands: List[String]): Command = Command.command(n
   }
 }
 def ci(command: String) = s"plz $ciScalaVersion $command"
-

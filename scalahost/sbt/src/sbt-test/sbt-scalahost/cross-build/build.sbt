@@ -1,3 +1,4 @@
+// This project should only test cross-versions. For more intricate tests use "semantic-example"
 lazy val root = project
   .in(file("."))
   .aggregate(

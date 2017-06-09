@@ -73,12 +73,12 @@ object Corpus {
   /** If necessary, downloads and extracts the corpus files */
   private def createReposDir(corpus: Corpus): File = {
     val name = "repos"
-    val localTarball = FileOps.getFile(s"$name.tar.gz")
-    if (!localTarball.isFile) {
-      downloadReposTar(corpus, destination = localTarball)
-    }
     val localDirectory = FileOps.getFile("target", name)
     if (!localDirectory.isDirectory) {
+      val localTarball = FileOps.getFile(s"$name.tar.gz")
+      if (!localTarball.isFile) {
+        downloadReposTar(corpus, destination = localTarball)
+      }
       extractReposTar(localTarball, destination = FileOps.workingDirectory)
     }
     FileOps.getFile("target", name)

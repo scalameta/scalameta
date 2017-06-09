@@ -4,6 +4,7 @@ package prettyprinters
 import org.scalatest._
 import scala.meta._
 import scala.meta.inputs.{Input, Point, Position}
+import scala.meta.internal.io.PathIO
 
 class PublicSuite extends FunSuite {
   test("scala.meta.Dialect.toString") {

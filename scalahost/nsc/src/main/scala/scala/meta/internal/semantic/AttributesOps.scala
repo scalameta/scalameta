@@ -137,6 +137,10 @@ trait AttributesOps { self: DatabaseOps =>
           object traverser extends g.Traverser {
             private def tryFindMtree(gtree: g.Tree): Unit = {
               def success(mtree: m.Name, gsym: g.Symbol): Unit = {
+                // We cannot be guaranteed that all symbols have a position, see
+                // https://github.com/scalameta/scalameta/issues/665
+                // Instead of crashing with "unsupported file", we ignore these cases.
+                if (mtree.pos == m.Position.None) return
                 if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
                 val symbol = gsym.toSemantic
@@ -345,7 +349,6 @@ trait AttributesOps { self: DatabaseOps =>
             }
             m.Message(mpos, mseverity, msg)
         }
-
         m.Attributes(dialect, names.toList, messages.toList, denotations.toList, inferred.toList)
       })
     }

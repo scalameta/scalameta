@@ -216,6 +216,7 @@ object Symbol {
     }
     naiveParser.entryPoint()
   }
+  def unapply(sym: String): Option[Symbol] = scala.util.Try(apply(sym)).toOption
 }
 
 @root trait Signature {

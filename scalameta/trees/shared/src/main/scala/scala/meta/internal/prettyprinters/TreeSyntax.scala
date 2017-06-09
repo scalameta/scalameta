@@ -310,12 +310,16 @@ object TreeSyntax {
         case t: Type.Singleton    => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
         case t: Type.Apply        => m(SimpleTyp, s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]")))
         case t: Type.ApplyInfix   => m(InfixTyp(t.op.value), s(p(InfixTyp(t.op.value), t.lhs, left = true), " ", t.op, " ", p(InfixTyp(t.op.value), t.rhs, right = true)))
-        case t: Type.Function     =>
-          val params = t.params match {
+        case t @ (_: Type.Function | _: Type.ImplicitFunction) =>
+          val (prefix, tParams, tRes) = t match {
+            case Type.Function(params, res) => (s(), params, res)
+            case Type.ImplicitFunction(params, res) => (s(kw("implicit"), " "), params, res)
+          }
+          val params = tParams match {
             case param +: Nil if !param.is[Type.Tuple] => s(p(AnyInfixTyp, param))
             case params => s("(", r(params.map(param => p(ParamTyp, param)), ", "), ")")
           }
-          m(Typ, s(params, " ", kw("=>"), " ", p(Typ, t.res)))
+          m(Typ, s(prefix, params, " ", kw("=>"), " ", p(Typ, tRes)))
         case t: Type.Tuple        => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
         case t: Type.With         =>
           if (!dialect.allowWithTypes) throw new UnsupportedOperationException(s"$dialect doesn't support with types")
@@ -376,8 +380,10 @@ object TreeSyntax {
           }
           m(SimplePattern, s(t.prefix, "\"", r(zipped), parts.last, "\""))
         case t: Pat.Xml              =>
-          val zipped = t.parts.zip(t.args).map{ case (part, arg) => s(part, "${", arg, "}") }
-          m(SimplePattern, s(r(zipped), t.parts.last))
+          if (!dialect.allowXmlLiterals) throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
+          val parts = t.parts.map{ case Lit(part: String) => part }
+          val zipped = parts.zip(t.args).map{ case (part, arg) => s(part, "{", arg, "}") }
+          m(SimplePattern, s(r(zipped), parts.last))
         case Pat.Typed(lhs, rhs : Lit) =>
           if (dialect.allowLiteralTypes) m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
           else throw new UnsupportedOperationException(s"$dialect doesn't support literal types")

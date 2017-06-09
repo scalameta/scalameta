@@ -13,7 +13,7 @@ import fastparse.all._
   */
 class XmlParser(Block: P0,
                 Patterns: P0 = Fail,
-                WL: P0 = CharsWhile(_.isWhitespace).opaque("whitespace")) {
+                WL: P0 = CharsWhile.raw(_.isWhitespace).opaque("whitespace")) {
 
   val XmlExpr: P0 = P( Xml.XmlContent.rep(min = 1, sep = WL.?) )
   val XmlPattern: P0 = P( Xml.ElemPattern )
@@ -58,16 +58,17 @@ class XmlParser(Block: P0,
     val Num       = P( CharIn('0' to '9').rep )
     val HexNum    = P( CharIn('0' to '9', 'a' to 'f', 'A' to 'F').rep )
 
-    val CharData = P( (!"{" ~ Char1 | "{{").rep(1) )
+    val CharData = P( (CharB | "{{" | "}}").rep(1) )
 
     val Char   = P( AnyChar )
     val Char1  = P( !("<" | "&") ~ Char )
     val CharQ  = P( !"\"" ~ Char1 )
     val CharA  = P( !"'" ~ Char1 )
+    val CharB  = P( !("{" | "}") ~ Char1 )
 
     val Name: P0  = P( NameStart ~ NameChar.rep ).!.filter(_.last != ':').opaque("Name").map(_ => Unit) // discard result
-    val NameStart = P( CharPred(isNameStart) )
-    val NameChar  = P( CharPred(isNameChar) )
+    val NameStart = P( CharPred.raw(isNameStart) )
+    val NameChar  = P( CharPred.raw(isNameChar) )
 
     val ElemPattern: P0 = P( TagPHeader ~/ ("/>" | ">" ~/ ContentP ~/ ETag ) )
     val TagPHeader      = P( "<" ~ Name ~ WL.?  )
@@ -133,7 +134,7 @@ class ScalaExprPositionParser(dialect: Dialect) extends Parser[Unit] {
   private val splicePositions = Seq.newBuilder[RangePosition]
   def getSplicePositions = splicePositions.result()
 
-  def parseRec(cfg: ParseCtx, index: Int) = {
+  def parseRec(cfg: ParseCtx, index: Int): fastparse.core.Mutable[Unit, Char, String] = {
     var curlyBraceCount = 1
     val input = cfg.input
     val scanner =
@@ -144,9 +145,12 @@ class ScalaExprPositionParser(dialect: Dialect) extends Parser[Unit] {
       (scanner.curr.token: @switch) match {
         case LegacyToken.LBRACE => curlyBraceCount += 1
         case LegacyToken.RBRACE => curlyBraceCount -= 1
+        case LegacyToken.EOF =>
+          return fail(cfg.failure, index + scanner.curr.offset)
         case _ =>
       }
     }
+
     val nextIndex = index + scanner.curr.offset
     splicePositions += RangePosition(index, nextIndex)
     success(cfg.success, (), nextIndex, Set.empty, cut = false)
