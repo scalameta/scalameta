@@ -288,7 +288,7 @@ lazy val scalahostSbt = project
     Defaults.itSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
-    publishMavenStyle := isSonatypePublish,
+    publishMavenStyle := isCustomRepository,
     bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
     testQuick.in(IntegrationTest) := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
@@ -532,13 +532,14 @@ lazy val mergeSettings = Def.settings(
   }
 )
 
+lazy val customRepositoryName = sys.props("scalameta.repository.name")
+lazy val customRepositoryUrl = sys.props("scalameta.repository.url")
+lazy val isCustomRepository = customRepositoryName != null && customRepositoryUrl != null
+
 lazy val publishableSettings = Def.settings(
   publishTo := {
-    if (isSonatypePublish)
-      Some(
-        "releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
-    else
-      publishTo.in(bintray).value
+    if (isCustomRepository) Some(customRepositoryName at customRepositoryUrl)
+    else publishTo.in(bintray).value
   },
   sharedSettings,
   bintrayOrganization := Some("scalameta"),
@@ -667,7 +668,6 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler ++ backwardCompat210
 }
 
-lazy val isSonatypePublish = sys.props("scalameta.publish") == "sonatype"
 lazy val isCiPublish = sys.env.contains("CI_PUBLISH")
 lazy val ciPlatform = if (sys.env.contains("CI_SCALA_JS")) "JS" else "JVM"
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
