@@ -498,4 +498,16 @@ class TermSuite extends ParseSuite {
       Term.Name("length")) =
     term("!(arr.cast[Ptr[Byte]] + sizeof[Ptr[_]]).cast[Ptr[Int]] = length")
   }
+
+  test("(x ++ y)[T]") {
+    val Term.ApplyType(Term.ApplyInfix(Term.Name("x"), Term.Name("++"), Nil, Seq(Term.Name("y"))), Seq(Type.Name("T"))) = term("(x ++ y)[T]")
+  }
+
+  test(" structHydrators map { _[K]() } ") {
+    val Term.ApplyInfix(Term.Name("structHydrators"), Term.Name("map"), Nil, Seq(Term.Block(Seq(Term.Apply(Term.ApplyType(Term.Placeholder(), Seq(Type.Name("K"))), Nil))))) = term(" structHydrators map { _[K]() } ")
+  }
+
+  test(" new C()[String]() ") {
+    val Term.Apply(Term.ApplyType(Term.New(Template(Nil, Seq(Term.Apply(Ctor.Ref.Name("C"), Nil)), Term.Param(Nil, Name.Anonymous(), None, None), None)), Seq(Type.Name("String"))), Nil) = term(" new C()[String]() ")
+  }
 }
