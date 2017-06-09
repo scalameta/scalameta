@@ -104,4 +104,16 @@ class DottySuite extends ParseSuite {
     assert(t"implicit String => (Int, Double)".syntax == "implicit String => (Int, Double)")
     assert(t"implicit (String, Double) => Int".syntax == "implicit (String, Double) => Int")
   }
+
+  test("case classes without a parameter list are not allowed") {
+    intercept[ParseException](templStat("case class A"))
+    intercept[ParseException](templStat("case class A[T]"))
+    intercept[ParseException](templStat("case class A[T] private"))
+  }
+
+  test("case classes with an empty parameter list are allowed") {
+    templStat("case class A()")
+    templStat("case class A @Inject() ()")
+    templStat("case class A private ()")
+  }
 }

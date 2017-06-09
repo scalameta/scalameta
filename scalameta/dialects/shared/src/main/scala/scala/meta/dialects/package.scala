@@ -20,6 +20,10 @@ import scala.compat.Platform.EOL
   // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
   allowAtForExtractorVarargs: Boolean,
 
+  // Can case classes be declared without a parameter list?
+  // Deprecated in 2.10, not supported in 2.11 and newer.
+  allowCaseClassWithoutParameterList: Boolean,
+
   // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
   allowColonForExtractorVarargs: Boolean,
 
@@ -103,6 +107,7 @@ package object dialects {
   implicit val Scala210 = Dialect(
     allowAndTypes = false,
     allowAtForExtractorVarargs = true,
+    allowCaseClassWithoutParameterList = true,
     allowColonForExtractorVarargs = false,
     allowImplicitFunctionTypes = false,
     allowInlineIdents = true,
@@ -133,6 +138,7 @@ package object dialects {
   )
 
   implicit val Scala211 = Scala210.copy(
+    allowCaseClassWithoutParameterList = false,
     allowSpliceUnderscores = true // SI-7715, only fixed in 2.11.0-M5
   )
 
