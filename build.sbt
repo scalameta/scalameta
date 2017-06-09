@@ -490,8 +490,6 @@ lazy val sharedSettings = Def.settings(
   },
   version := LibraryVersion,
   organization := "org.scalameta",
-  resolvers += Resolver.sonatypeRepo("snapshots"),
-  resolvers += Resolver.sonatypeRepo("releases"),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
   libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.13.5" % "test",
