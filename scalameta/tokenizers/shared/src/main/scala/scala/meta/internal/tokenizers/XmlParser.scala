@@ -11,9 +11,9 @@ import fastparse.all._
   * [[https://github.com/scalameta/fastparse/pull/1#issuecomment-244940542]]
   * and adapted to more closely match scala-xml
   */
-class XmlParser(Block: P0,
-                Patterns: P0 = Fail,
-                WL: P0 = CharsWhile.raw(_.isWhitespace).opaque("whitespace")) {
+class XmlParser(Block: P0, Patterns: P0 = Fail) {
+
+  private val WL = CharsWhileIn("\t\n\r ")
 
   val XmlExpr: P0 = P( Xml.XmlContent.rep(min = 1, sep = WL.?) )
   val XmlPattern: P0 = P( Xml.ElemPattern )
