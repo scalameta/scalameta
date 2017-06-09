@@ -13,18 +13,18 @@ import fastparse.all._
   */
 class XmlParser(Block: P0, Patterns: P0 = Fail) {
 
-  private val WL = CharsWhileIn("\t\n\r ")
+  private val S = CharsWhileIn("\t\n\r ")
 
-  val XmlExpr: P0 = P( Xml.XmlContent.rep(min = 1, sep = WL.?) )
+  val XmlExpr: P0 = P( Xml.XmlContent.rep(min = 1, sep = S.?) )
   val XmlPattern: P0 = P( Xml.ElemPattern )
 
   private[this] object Xml {
     val Element   = P( TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag ) ) // FIXME tag must be balanced
-    val TagHeader = P( "<" ~ Name ~/ (WL ~ Attribute).rep ~ WL.? )
-    val ETag      = P( "</" ~ Name ~ WL.? ~ ">" )
+    val TagHeader = P( "<" ~ Name ~/ (S ~ Attribute).rep ~ S.? )
+    val ETag      = P( "</" ~ Name ~ S.? ~ ">" )
 
     val Attribute = P( Name ~ Eq ~/ AttValue )
-    val Eq        = P( WL.? ~ "=" ~ WL.? )
+    val Eq        = P( S.? ~ "=" ~ S.? )
     val AttValue  = P(
       "\"" ~/ (CharQ | Reference).rep ~ "\"" |
         "'" ~/ (CharA | Reference).rep ~ "'" |
@@ -37,7 +37,7 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
     val ScalaExpr = P( "{" ~ Block ~ "}" )
 
     val Unparsed = P( UnpStart ~/ UnpData ~ UnpEnd )
-    val UnpStart = P( "<xml:unparsed" ~/ (WL ~ Attribute).rep ~ WL.? ~ ">" )
+    val UnpStart = P( "<xml:unparsed" ~/ (S ~ Attribute).rep ~ S.? ~ ">" )
     val UnpEnd   = P( "</xml:unparsed>" )
     val UnpData  = P( (!UnpEnd ~ Char).rep )
 
@@ -49,7 +49,7 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
     val Comment = P( "<!--" ~/ ComText ~ "-->" )
     val ComText = P( (!"--" ~ Char).rep ~ ("-" ~ &("--")).? )
 
-    val PI         = P( "<?" ~ Name ~ WL.? ~ PIProcText ~ "?>" )
+    val PI         = P( "<?" ~ Name ~ S.? ~ PIProcText ~ "?>" )
     val PIProcText = P( (!"?>" ~ Char).rep )
 
     val Reference = P( EntityRef | CharRef )
@@ -71,7 +71,7 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
     val NameChar  = P( CharPred.raw(isNameChar) )
 
     val ElemPattern: P0 = P( TagPHeader ~/ ("/>" | ">" ~/ ContentP ~/ ETag ) )
-    val TagPHeader      = P( "<" ~ Name ~ WL.?  )
+    val TagPHeader      = P( "<" ~ Name ~ S.?  )
 
     val ContentP: P0  = P( ( CharDataP | ScalaPatterns | ElemPattern ).rep )
     val ScalaPatterns = P( "{" ~ Patterns ~ "}" )
