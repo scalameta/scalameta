@@ -5,7 +5,7 @@ import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Scala211
 
-class Scala211Suite extends ParseSuite with Matchers {
+class Scala211Suite extends ParseSuite {
   test("case classes without a parameter list are not allowed") {
     def failWithMessage(code: String) = {
       val error = intercept[ParseException](templStat(code))
