@@ -530,14 +530,18 @@ lazy val mergeSettings = Def.settings(
   }
 )
 
-lazy val customRepositoryName = sys.props("scalameta.repository.name")
-lazy val customRepositoryUrl = sys.props("scalameta.repository.url")
-lazy val isCustomRepository = customRepositoryName != null && customRepositoryUrl != null
+lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
+lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
+lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
 
 lazy val publishableSettings = Def.settings(
   publishTo := {
-    if (isCustomRepository) Some(customRepositoryName at customRepositoryUrl)
+    if (isCustomRepository) Some("adhoc" at adhocRepoUri)
     else publishTo.in(bintray).value
+  },
+  credentials ++= {
+    val credentialsFile = if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
+    if (credentialsFile != null) List(new FileCredentials(credentialsFile)) else Nil
   },
   sharedSettings,
   bintrayOrganization := Some("scalameta"),
