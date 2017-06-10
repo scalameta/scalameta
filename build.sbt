@@ -545,6 +545,10 @@ lazy val publishableSettings = Def.settings(
   },
   sharedSettings,
   bintrayOrganization := Some("scalameta"),
+  bintrayRelease := (Def.taskDyn {
+    if (isCustomRepository) Def.task(())
+    else bintrayRelease
+  }).value,
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false,
   publishMavenStyle := true,
