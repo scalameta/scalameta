@@ -288,7 +288,7 @@ lazy val scalahostSbt = project
     Defaults.itSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
-    publishMavenStyle := isSonatypePublish,
+    publishMavenStyle := isCustomRepository,
     bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
     testQuick.in(IntegrationTest) := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
@@ -490,8 +490,6 @@ lazy val sharedSettings = Def.settings(
   },
   version := LibraryVersion,
   organization := "org.scalameta",
-  resolvers += Resolver.sonatypeRepo("snapshots"),
-  resolvers += Resolver.sonatypeRepo("releases"),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
   libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.13.5" % "test",
@@ -532,16 +530,25 @@ lazy val mergeSettings = Def.settings(
   }
 )
 
+lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
+lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
+lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
+
 lazy val publishableSettings = Def.settings(
   publishTo := {
-    if (isSonatypePublish)
-      Some(
-        "releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
-    else
-      publishTo.in(bintray).value
+    if (isCustomRepository) Some("adhoc" at adhocRepoUri)
+    else publishTo.in(bintray).value
+  },
+  credentials ++= {
+    val credentialsFile = if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
+    if (credentialsFile != null) List(new FileCredentials(credentialsFile)) else Nil
   },
   sharedSettings,
   bintrayOrganization := Some("scalameta"),
+  bintrayRelease := (Def.taskDyn {
+    if (isCustomRepository) Def.task(())
+    else bintrayRelease
+  }).value,
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false,
   publishMavenStyle := true,
@@ -667,7 +674,6 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler ++ backwardCompat210
 }
 
-lazy val isSonatypePublish = sys.props("scalameta.publish") == "sonatype"
 lazy val isCiPublish = sys.env.contains("CI_PUBLISH")
 lazy val ciPlatform = if (sys.env.contains("CI_SCALA_JS")) "JS" else "JVM"
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
