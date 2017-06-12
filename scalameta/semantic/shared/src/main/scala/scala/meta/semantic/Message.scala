@@ -3,14 +3,30 @@ package semantic
 
 import org.scalameta.adt._
 import org.scalameta.data._
-import org.scalameta.unreachable
 import scala.meta.inputs._
 import scala.meta.internal.inputs._
+import scala.meta.semantic.Message.Kind
 
-@data class Message(position: Position, severity: Severity, message: String) {
+@data
+class Message(position: Position, severity: Severity, message: String, kind: Kind = Kind.None) {
   def syntax = s"[${severity.toString.toLowerCase}] ${position.syntax}: $message"
   def structure = s"""Message(${position.structure}, Severity.$severity, "$message")"""
   override def toString = syntax
+}
+
+object Message {
+  @root
+  trait Kind {
+    def syntax = if (this.isNone) "" else this.toString
+    def structure = s"Kind.${super.toString}"
+    def isNone = this == Kind.None
+    def isUnusedImport = this == Kind.UnusedImport
+  }
+  object Kind {
+    @leaf object None extends Kind
+    @leaf object UnusedImport extends Kind
+    @leaf object AdaptedArg extends Kind
+  }
 }
 
 @root trait Severity

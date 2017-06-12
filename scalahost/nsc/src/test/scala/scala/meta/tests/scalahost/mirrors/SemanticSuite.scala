@@ -318,11 +318,11 @@ class SemanticSuite extends DatabaseSuite {
       |}
     """.stripMargin.trim,
     """
-      |[48..51): [warning] Unused import
-      |[53..56): [warning] Unused import
-      |[71..96): [warning] Unused import
-      |[127..133): [warning] Unused import
-      |[174..181): [warning] Unused import
+      |[48..51): [warning] <UnusedImport>
+      |[53..56): [warning] <UnusedImport>
+      |[71..96): [warning] <UnusedImport>
+      |[127..133): [warning] <UnusedImport>
+      |[174..181): [warning] <UnusedImport>
     """.stripMargin.trim
   )
 }

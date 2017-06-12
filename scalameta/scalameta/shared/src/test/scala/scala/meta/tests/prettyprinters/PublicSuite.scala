@@ -313,6 +313,18 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.semantic.Message.Kind.None.toString") {
+    assert(Message.Kind.None.syntax == "")
+  }
+
+  test("scala.meta.semantic.Message.Kind.UnusedImport.toString") {
+    assert(Message.Kind.UnusedImport.syntax == "UnusedImport")
+  }
+
+  test("scala.meta.semantic.Message.Kind.AdaptedArgs.toString") {
+    assert(Message.Kind.AdaptedArg.syntax == "AdaptedArg")
+  }
+
   test("scala.meta.semantic.Severity.toString") {
     // covered below
   }

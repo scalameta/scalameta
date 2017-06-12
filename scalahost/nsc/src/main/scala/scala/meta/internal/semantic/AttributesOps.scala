@@ -334,11 +334,15 @@ trait AttributesOps { self: DatabaseOps =>
 
         val messages = unit.hijackedMessages.map {
           case (gpos, gseverity, msg) =>
+            val mkind = msg match {
+              case "Unused import" => m.Message.Kind.UnusedImport
+              case _ => m.Message.Kind.None
+            }
             val mpos = {
               // NOTE: The caret in unused import warnings points to Importee.pos, but
               // the message position start/end point to the enclosing Import.pos.
               // See https://github.com/scalameta/scalameta/issues/839
-              if (msg == "Unused import" && mstarts.contains(gpos.point)) mstarts(gpos.point).pos
+              if (mkind.isUnusedImport && mstarts.contains(gpos.point)) mstarts(gpos.point).pos
               else gpos.toMeta
             }
             val mseverity = gseverity match {
@@ -347,7 +351,7 @@ trait AttributesOps { self: DatabaseOps =>
               case 2 => m.Severity.Error
               case _ => unreachable
             }
-            m.Message(mpos, mseverity, msg)
+            m.Message(mpos, mseverity, msg, mkind)
         }
         m.Attributes(dialect, names.toList, messages.toList, denotations.toList, inferred.toList)
       })

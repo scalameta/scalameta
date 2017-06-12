@@ -31,9 +31,15 @@ message Message {
     WARNING = 2;
     ERROR = 3;
   }
+  enum Kind {
+    NONE = 0;
+    UNUSED_IMPORT = 1;
+    ADAPTED_ARG = 2;
+  }
   Range range = 1;
   Severity severity = 2;
   string msg = 3;
+  Kind kind = 4;
 }
 
 message SymbolDenotation {
