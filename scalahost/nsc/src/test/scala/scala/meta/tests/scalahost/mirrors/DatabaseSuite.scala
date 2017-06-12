@@ -14,7 +14,7 @@ import scala.meta.io._
 import scala.meta.internal.semantic.DatabaseOps
 import scala.meta.internal.semantic.SemanticdbMode
 
-abstract class DatabaseSuite extends FunSuite { self =>
+abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
@@ -41,7 +41,7 @@ abstract class DatabaseSuite extends FunSuite { self =>
     val global: self.g.type = self.g
   }
   import databaseOps._
-  config.setSemanticdbMode(SemanticdbMode.Slim)
+  config.setSemanticdbMode(mode)
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
