@@ -47,7 +47,7 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
     val CDEnd   = P( "]]>" )
 
     val Comment = P( "<!--" ~/ ComText ~ "-->" )
-    val ComText = P( (!"--" ~ Char).rep ~ ("-" ~ &("--")).? )
+    val ComText = P( (!"-->" ~ Char).rep )
 
     val PI         = P( "<?" ~ Name ~ S.? ~ PIProcText ~ "?>" )
     val PIProcText = P( (!"?>" ~ Char).rep )

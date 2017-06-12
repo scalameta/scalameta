@@ -229,6 +229,8 @@ class XmlSuite extends ParseSuite {
   checkOK("<!----->")
   checkOK("<!--foo-->")
   checkOK("<!--a-b-->")
+  checkOK("<!-- -- -->") // fails at runtime
+  checkOK("<!------>") // fails at runtime
   checkOK("<![CDATA[foo]]>")
   checkOK("<![CDATA[]]>")
   checkOK("<![CDATA[>]]>")
@@ -240,6 +242,7 @@ class XmlSuite extends ParseSuite {
   checkOK("<?foo     ?>")
   checkOK("<?foo??>")
   checkOK("<?foo<bar?>")
+  checkOK("<?xml bar?>") // fails at runtime
   checkOK("<xml:unparsed>foo</xml:unparsed>")
   checkOK("<xml:unparsed>{</xml:unparsed>")
   checkOK("<xml:unparsed><</xml:unparsed>")
@@ -301,7 +304,7 @@ class XmlSuite extends ParseSuite {
   checkOK("""<a b="&#x;"/>""")
   checkOK("<a>&#;</a>")
   checkOK("<a>&#x;</a>")
-  checkOK("<a>]]></a> ")
+  checkOK("<a>]]></a>")
   //checkOK("""<a b="&:;"/>""") // FIXME
   //checkOK("""<a b="&:a;"/>""") //FIXME
   //checkOK("""<a b="&a:;"/>""") // FIXME
@@ -313,11 +316,9 @@ class XmlSuite extends ParseSuite {
   checkError("<a>&:b;</a>")
   checkError("<a><a:/>")
   checkError("<a>")
-  checkError("<!-- -- -->")
   checkError("<!--->")
   checkError("<!-- >")
   checkError("<!-- ->")
-  checkError("<!------>")
   checkError("<![CDATA[]]>]]>")
   checkError("<a></ a>")
   checkError("<a></\na>")
