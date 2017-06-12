@@ -36,6 +36,16 @@ package object semantic {
               }
             }
           }
+          object mKind {
+            def unapply(msev: m.Message.Kind): Option[s.Message.Kind] = {
+              msev match {
+                case m.Message.Kind.None => Some(s.Message.Kind.NONE)
+                case m.Message.Kind.UnusedImport => Some(s.Message.Kind.UNUSED_IMPORT)
+                case m.Message.Kind.AdaptedArg => Some(s.Message.Kind.ADAPTED_ARG)
+                case _ => None
+              }
+            }
+          }
           object mDenotation {
             def unapply(mdenot: m.Denotation): Option[s.Denotation] = mdenot match {
               case m.Denotation(sflags, sname, sinfo) => Some(s.Denotation(sflags, sname, sinfo))
@@ -60,8 +70,8 @@ package object semantic {
             case other => sys.error(s"bad database: unsupported name $other")
           }
           val smessages = mmessages.map {
-            case m.Message(mRange(srange), mSeverity(ssym), smessage) =>
-              s.Message(Some(srange), ssym, smessage)
+            case m.Message(mRange(srange), mSeverity(ssym), smessage, mKind(skind)) =>
+              s.Message(Some(srange), ssym, smessage, skind)
             case other => sys.error(s"bad database: unsupported message $other")
           }
           val sdenots = mdenots.map {

@@ -66,6 +66,16 @@ class Database(entries: Seq[Attributes]) {
             }
           }
         }
+        object sKind {
+          def unapply(sskin: s.Message.Kind): Option[m.Message.Kind] = {
+            sskin match {
+              case s.Message.Kind.NONE => Some(m.Message.Kind.None)
+              case s.Message.Kind.UNUSED_IMPORT => Some(m.Message.Kind.UnusedImport)
+              case s.Message.Kind.ADAPTED_ARG => Some(m.Message.Kind.AdaptedArg)
+              case _ => None
+            }
+          }
+        }
         object sDenotation {
           def unapply(sdenot: s.Denotation): Option[m.Denotation] = sdenot match {
             case s.Denotation(mflags, mname: String, minfo: String) =>
@@ -82,8 +92,8 @@ class Database(entries: Seq[Attributes]) {
           case other => sys.error(s"bad protobuf: unsupported name $other")
         }.toList
         val mmessages = smessages.map {
-          case s.Message(Some(sRange(mpos)), sSeverity(msev), mmsg: String) =>
-            m.Message(mpos, msev, mmsg)
+          case s.Message(Some(sRange(mpos)), sSeverity(msev), mmsg: String, sKind(mkind)) =>
+            m.Message(mpos, msev, mmsg, mkind)
           case other => sys.error(s"bad protobuf: unsupported message $other")
         }.toList
         val mdenots = sdenots.map {

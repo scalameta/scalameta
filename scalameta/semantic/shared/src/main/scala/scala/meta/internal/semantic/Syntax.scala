@@ -46,8 +46,9 @@ object AttributesSyntax {
     appendSection("Names", s_names)
 
     val s_messages = messages.toList.sortBy(_.position.start.offset).map {
-      case Message(pos, severity, message) =>
-        s"${pos.range}: [${severity.toString.toLowerCase}] ${message}"
+      case Message(pos, severity, message, kind) =>
+        val messageSyntax = if (kind.isNone) message else s"<${kind.syntax}>"
+        s"${pos.range}: [${severity.toString.toLowerCase}] $messageSyntax"
     }
     appendSection("Messages", s_messages)
 

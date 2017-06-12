@@ -94,6 +94,10 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.semantic.Database
       |scala.meta.semantic.Denotation
       |scala.meta.semantic.Message
+      |scala.meta.semantic.Message.Kind
+      |scala.meta.semantic.Message.Kind.AdaptedArg
+      |scala.meta.semantic.Message.Kind.None
+      |scala.meta.semantic.Message.Kind.UnusedImport
       |scala.meta.semantic.Mirror
       |scala.meta.semantic.Severity
       |scala.meta.semantic.Severity.Error
