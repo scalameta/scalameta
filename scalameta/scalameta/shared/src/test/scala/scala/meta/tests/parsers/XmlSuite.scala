@@ -305,6 +305,7 @@ class XmlSuite extends ParseSuite {
   checkOK("<a>&#;</a>")
   checkOK("<a>&#x;</a>")
   checkOK("<a>]]></a>")
+  //checkOK("<a/>{0}") // FIXME
   //checkOK("""<a b="&:;"/>""") // FIXME
   //checkOK("""<a b="&:a;"/>""") //FIXME
   //checkOK("""<a b="&a:;"/>""") // FIXME
