@@ -140,13 +140,30 @@ object Helpers {
     }
   }
 
+  implicit class XtensionMod(mod: Mod) {
+    def isAccessMod: Boolean = mod match {
+      case _: Mod.Private => true
+      case _: Mod.Protected => true
+      case _ => false
+    }
+    def accessBoundary: Option[Name.Qualifier] = mod match {
+      case Mod.Private(Name.Anonymous()) => None
+      case Mod.Protected(Name.Anonymous()) => None
+      case Mod.Private(name) => Some(name)
+      case Mod.Protected(name) => Some(name)
+      case _ => None
+    }
+    def isNakedAccessMod: Boolean = isAccessMod && accessBoundary.isEmpty
+    def isQualifiedAccessMod: Boolean = isAccessMod && accessBoundary.nonEmpty
+  }
+
   implicit class XtensionMods(mods: List[Mod]) {
     def has[T <: Mod](implicit classifier: Classifier[Mod, T]): Boolean =
       mods.exists(classifier.apply)
     def getAll[T <: Mod](implicit tag: ClassTag[T],
                          classifier: Classifier[Mod, T]): List[T] =
       mods.collect { case m if classifier.apply(m) => m.require[T] }
-    def accessBoundary: Option[Name.Qualifier] = mods.collectFirst{ case Mod.Private(name) => name; case Mod.Protected(name) => name }
+    def accessBoundary: Option[Name.Qualifier] = mods.flatMap(_.accessBoundary).headOption
     def getIncompatible[T <: Mod, U <: Mod]
       (implicit classifier1: Classifier[Mod, T], tag1: ClassTag[T],
                 classifier2: Classifier[Mod, U], tag2: ClassTag[U]): List[(Mod, Mod)] =
