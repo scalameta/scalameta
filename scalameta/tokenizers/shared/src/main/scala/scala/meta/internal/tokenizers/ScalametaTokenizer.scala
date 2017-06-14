@@ -258,14 +258,14 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
               emitContents()
 
             case _ =>
-            // We have reached the final xml part
+              // We have reached the final xml part
           }
         }
-
 
         // Xml.Start has been emitted. Backtrack to emit first part
         legacyIndex -= 1
         emitContents()
+        assert(prev.token == XMLLIT)
         val xmlEndIndex = prev.endOffset + 1
         tokens += Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex)
       }
