@@ -367,14 +367,12 @@ class ModSuite extends ParseSuite {
 
   test("invalid private and protected") {
     interceptParseErrors(
-      "private protected class A",
-      "protected private class A",
-      "private[something] protected class A",
-      "protected private[something] class A",
-      "protected[something] private class A",
-      "private protected[something] class A",
       "protected protected class A",
       "private private class A"
     )
+  }
+
+  test("duplicate qualifiers") {
+    val Defn.Def(Seq(Mod.Private(Name.Indeterminate("foo")), Mod.Protected(Name.Anonymous())), Term.Name("bar"), Nil, Nil, None, Term.Name("???")) = templStat("private[foo] protected def bar = ???")
   }
 }

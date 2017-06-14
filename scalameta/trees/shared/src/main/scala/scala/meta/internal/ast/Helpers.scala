@@ -140,14 +140,6 @@ object Helpers {
     }
   }
 
-  implicit class XtensionMod(mod: Mod) {
-    def hasAccessBoundary: Boolean = mod match {
-      case _: Mod.Private         => true
-      case _: Mod.Protected       => true
-      case _                      => false
-    }
-  }
-
   implicit class XtensionMods(mods: List[Mod]) {
     def has[T <: Mod](implicit classifier: Classifier[Mod, T]): Boolean =
       mods.exists(classifier.apply)

@@ -2686,7 +2686,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       def validate() = {
         if (isLocal && !mod.tokens.head.is[LocalModifier]) syntaxError("illegal modifier for a local definition", at = mod)
         if (!mod.is[Mod.Quasi]) mods.foreach(m => if (m.productPrefix == mod.productPrefix) syntaxError("repeated modifier", at = mod))
-        if (mod.hasAccessBoundary) mods.filter(_.hasAccessBoundary).foreach(mod => syntaxError("duplicate access qualifier", at = mod))
       }
       validate()
       mods :+ mod
