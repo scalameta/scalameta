@@ -367,14 +367,34 @@ class ModSuite extends ParseSuite {
 
   test("invalid private and protected") {
     interceptParseErrors(
+      "private private class A",
+      "private private[foo] class A",
       "private protected class A",
+      // "private protected[foo] class A", /* see the test below */
+      "private[foo] private class A",
+      "private[foo] private[foo] class A",
+      // "private[foo] protected class A", /* see the test below */
+      "private[foo] protected[foo] class A",
       "protected private class A",
-      "private[something] protected class A",
-      "protected private[something] class A",
-      "protected[something] private class A",
-      "private protected[something] class A",
+      // "protected private[foo] class A", /* see the test below */
       "protected protected class A",
-      "private private class A"
+      "protected protected[foo] class A",
+      // "protected[foo] private class A", /* see the test below */
+      "protected[foo] private[foo] class A",
+      "protected[foo] protected class A",
+      "protected[foo] protected[foo] class A"
     )
+  }
+
+  test("not really invalid private and protected") {
+    // NOTE: Surprisingly, the code below is valid Scala.
+    val Defn.Def(Seq(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Indeterminate("foo"))), _, _, _, _, _) =
+      templStat("private protected[foo] def foo = ???")
+    val Defn.Def(Seq(Mod.Private(Name.Indeterminate("foo")), Mod.Protected(Name.Anonymous())), _, _, _, _, _) =
+      templStat("private[foo] protected def foo = ???")
+    val Defn.Def(Seq(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Indeterminate("foo"))), _, _, _, _, _) =
+      templStat("protected private[foo] def foo = ???")
+    val Defn.Def(Seq(Mod.Protected(Name.Indeterminate("foo")), Mod.Private(Name.Anonymous())), _, _, _, _, _) =
+      templStat("protected[foo] private def foo = ???")
   }
 }

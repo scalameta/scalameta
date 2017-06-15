@@ -489,6 +489,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   implicit object InvalidFinalAbstract extends InvalidModCombination(Mod.Final(), Mod.Abstract())
   implicit object InvalidFinalSealed extends InvalidModCombination(Mod.Final(), Mod.Sealed())
   implicit object InvalidOverrideAbstract extends InvalidModCombination(Mod.Override(), Mod.Abstract())
+  implicit object InvalidPrivateProtected extends InvalidModCombination(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Anonymous()))
+  implicit object InvalidProtectedPrivate extends InvalidModCombination(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Anonymous()))
 
 /* -------------- TOKEN CLASSES ------------------------------------------- */
 
@@ -2684,9 +2686,21 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def modifiers(isLocal: Boolean = false): List[Mod] = {
     def appendMod(mods: List[Mod], mod: Mod): List[Mod] = {
       def validate() = {
-        if (isLocal && !mod.tokens.head.is[LocalModifier]) syntaxError("illegal modifier for a local definition", at = mod)
-        if (!mod.is[Mod.Quasi]) mods.foreach(m => if (m.productPrefix == mod.productPrefix) syntaxError("repeated modifier", at = mod))
-        if (mod.hasAccessBoundary) mods.filter(_.hasAccessBoundary).foreach(mod => syntaxError("duplicate access qualifier", at = mod))
+        if (isLocal && !mod.tokens.head.is[LocalModifier]) {
+          syntaxError("illegal modifier for a local definition", at = mod)
+        }
+        if (!mod.is[Mod.Quasi]) {
+          if (mods.exists(_.productPrefix == mod.productPrefix)) {
+            syntaxError("repeated modifier", at = mod)
+          }
+          if (mods.exists(_.isNakedAccessMod) && mod.isNakedAccessMod) {
+            if (mod.is[Mod.Protected]) rejectModCombination[Mod.Private, Mod.Protected](mods :+ mod, "")
+            if (mod.is[Mod.Private]) rejectModCombination[Mod.Protected, Mod.Private](mods :+ mod, "")
+          }
+          if (mods.exists(_.isQualifiedAccessMod) && mod.isQualifiedAccessMod) {
+            syntaxError("duplicate private/protected qualifier", at = mod)
+          }
+        }
       }
       validate()
       mods :+ mod
