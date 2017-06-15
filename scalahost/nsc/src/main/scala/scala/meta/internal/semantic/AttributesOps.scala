@@ -147,12 +147,10 @@ trait AttributesOps { self: DatabaseOps =>
                 if (symbol == m.Symbol.None) return
 
                 names(mtree.pos) = symbol
-                if (mtree.isBinder) {
-                  denotations(symbol) = gsym.toDenotation
-                  if (gsym.isClass && !gsym.isTrait) {
-                    val gprim = gsym.primaryConstructor
-                    denotations(gprim.toSemantic) = gprim.toDenotation
-                  }
+                denotations(symbol) = gsym.toDenotation
+                if (gsym.isClass && !gsym.isTrait) {
+                  val gprim = gsym.primaryConstructor
+                  denotations(gprim.toSemantic) = gprim.toDenotation
                 }
                 todo -= mtree
 

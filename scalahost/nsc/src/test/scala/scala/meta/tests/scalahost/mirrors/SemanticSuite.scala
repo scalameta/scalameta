@@ -2,8 +2,9 @@ package scala.meta.tests
 package scalahost
 
 import scala.meta._
+import scala.meta.internal.semantic.SemanticdbMode
 
-class SemanticSuite extends DatabaseSuite {
+class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   names(
     """
     |object First {
@@ -175,6 +176,13 @@ class SemanticSuite extends DatabaseSuite {
       |_root_.foo.T#f5. => protected var f5_=: (x$1: Nothing)Unit
       |_root_.foo.T#f6. => protected var f6_=: (x$1: Nothing)Unit
       |_root_.foo.package. => packageobject package
+      |_root_.scala. => package scala
+      |_root_.scala.Int# => abstract final class Int
+      |_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()Int
+      |_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: Nothing
+      |_root_.scala.language. => final object language
+      |_root_.scala.language.experimental. => final object experimental
+      |_root_.scala.language.experimental.macros. => implicit lazy val macros: languageFeature.experimental.macros
   """.trim.stripMargin
   )
 
@@ -279,6 +287,21 @@ class SemanticSuite extends DatabaseSuite {
       |_empty_.a.foo(LB;)Ljava/lang/Object;.(b) => param b: B
       |_empty_.a.x. => val x: scala.collection.mutable.ListBuffer[Int]
       |_empty_.a.y. => val y: scala.collection.mutable.HashSet[Int]
+      |_root_.scala. => package scala
+      |_root_.scala.Int# => abstract final class Int
+      |_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()Int
+      |_root_.scala.collection. => package collection
+      |_root_.scala.collection.generic.GenericCompanion#empty()Lscala/collection/GenTraversable;. => def empty: [A]=> CC[A]
+      |_root_.scala.collection.mutable. => package mutable
+      |_root_.scala.collection.mutable.HashSet# => class HashSet
+      |_root_.scala.collection.mutable.HashSet#`<init>`(Lscala/collection/mutable/FlatHashTable/Contents;)V. => private primaryctor <init>: (contents: scala.collection.mutable.FlatHashTable.Contents[A])scala.collection.mutable.HashSet[A]
+      |_root_.scala.collection.mutable.HashSet. => final object HashSet
+      |_root_.scala.collection.mutable.HashSet.;_root_.scala.collection.mutable.HashSet# => val <import scala.collection.mutable.HashSet>: scala.collection.mutable.HashSet.type <and> scala.collection.mutable.HashSet
+      |_root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;. => def empty: [A]=> scala.collection.mutable.HashSet[A]
+      |_root_.scala.collection.mutable.ListBuffer# => final class ListBuffer
+      |_root_.scala.collection.mutable.ListBuffer#`<init>`()V. => primaryctor <init>: ()scala.collection.mutable.ListBuffer[A]
+      |_root_.scala.collection.mutable.ListBuffer. => final object ListBuffer
+      |_root_.scala.collection.mutable.ListBuffer.;_root_.scala.collection.mutable.ListBuffer# => val <import scala.collection.mutable.ListBuffer>: scala.collection.mutable.ListBuffer.type <and> scala.collection.mutable.ListBuffer
     """.stripMargin.trim
   )
 
@@ -323,6 +346,23 @@ class SemanticSuite extends DatabaseSuite {
       |[71..96): [warning] Unused import
       |[127..133): [warning] Unused import
       |[174..181): [warning] Unused import
+    """.stripMargin.trim
+  )
+
+  denotations(
+    """
+      |object A {
+      |  List.newBuilder[Int].result
+      |  List(1).head
+      |}""".stripMargin,
+    """
+      |_empty_.A. => final object A
+      |_root_.scala.Int# => abstract final class Int
+      |_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()Int
+      |_root_.scala.collection.IterableLike#head()Ljava/lang/Object;. => def head: A
+      |_root_.scala.collection.immutable.List. => final object List
+      |_root_.scala.collection.immutable.List.newBuilder()Lscala/collection/mutable/Builder;. => def newBuilder: [A]=> scala.collection.mutable.Builder[A,List[A]]
+      |_root_.scala.collection.mutable.Builder#result()Ljava/lang/Object;. => abstract def result: ()To
     """.stripMargin.trim
   )
 }
