@@ -351,7 +351,7 @@ object TreeSyntax {
           s(w(mods, " "), variance, t.name, t.tparams, tbounds, vbounds, cbounds)
 
         // Pat
-        case t: Pat.Var.Term         => m(SimplePattern, s(t.name.value))
+        case t: Pat.Var.Term         => m(SimplePattern, s(if (guessIsBackquoted(t.name)) s"`${t.name.value}`" else t.name.value))
         case _: Pat.Wildcard         => m(SimplePattern, kw("_"))
         case t: Pat.Bind             =>
           val separator = t.rhs match {

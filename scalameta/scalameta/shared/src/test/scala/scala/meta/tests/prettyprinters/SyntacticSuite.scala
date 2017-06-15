@@ -624,6 +624,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"val x = 1d".structure == q"val x = 1D".structure)
     assert(q"val x = 1.0d".structure == q"val x = 1.0".structure)
   }
-}
 
+  test("#931 val `a b` = 2") {
+    assert(q"val `a b` = 2".syntax == "val `a b` = 2")
+  }
+  
+}
 
