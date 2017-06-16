@@ -683,3 +683,12 @@ def CiCommand(name: String)(commands: List[String]): Command = Command.command(n
   }
 }
 def ci(command: String) = s"plz $ciScalaVersion $command"
+
+lazy val parsersJSFacade = project
+  .in(file("scalameta/parsersJSFacade"))
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    sharedSettings,
+    scalaJSModuleKind := ModuleKind.CommonJSModule
+  )
+  .dependsOn(parsersJS)
