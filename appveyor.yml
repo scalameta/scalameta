@@ -6,9 +6,9 @@ install:
 environment:
   CI_SCALA_VERSION: 2.12.2
 build_script:
-  - sbt compile
+  - sbt version # dummy step, a build_script step is required by appveyor.
 test_script:
-  - sbt scalametaJVM/test
+  - sbt testOnlyJVM
 cache:
   - C:\Users\appveyor\.m2
   - C:\Users\appveyor\.ivy2
