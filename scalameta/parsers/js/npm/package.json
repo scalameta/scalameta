@@ -1,0 +1,10 @@
+{
+  "name": "scalameta-parsers",
+  "version": "1.9.0-beta",
+  "main": "index.js",
+  "files": [
+    "index.js"
+  ],
+  "author": "scalameta",
+  "license": "BSD-3-Clause"
+}
