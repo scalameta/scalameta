@@ -5,6 +5,8 @@ import scala.scalajs.js
 import js.JSConverters._
 import js.annotation._
 
+import prettyprinters._
+
 object JSFacade {
 
   // https://stackoverflow.com/a/36573183/846273
@@ -59,7 +61,12 @@ object JSFacade {
       case _ => js.Dynamic.literal()
     }
 
-    mergeJSObjects(base, value)
+    val syntax = t match {
+      case _: Lit | _: Name => js.Dynamic.literal("syntax" -> t.syntax)
+      case _ => js.Dynamic.literal()
+    }
+
+    mergeJSObjects(base, value, syntax)
   }
 
   private[this] def parse[A <: Tree: Parse](code: String): js.Dictionary[Any] =
