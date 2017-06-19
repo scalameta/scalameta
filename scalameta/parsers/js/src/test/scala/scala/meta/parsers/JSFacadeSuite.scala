@@ -36,8 +36,7 @@ class JSFacadeSuite extends FunSuite {
               "type" -> "Term.Name",
               "children" -> a(),
               "pos" -> pos(7, 11),
-              "value" -> "Main",
-              "syntax" -> "Main"
+              "value" -> "Main"
             ),
             d(
               "type" -> "Template",
@@ -49,8 +48,7 @@ class JSFacadeSuite extends FunSuite {
                       "type" -> "Name.Anonymous",
                       "children" -> a(),
                       "pos" -> pos(16, 16),
-                      "value" -> "_",
-                      "syntax" -> ""
+                      "value" -> "_"
                     )
                   ),
                   "pos" -> pos(16, 16)
@@ -62,8 +60,7 @@ class JSFacadeSuite extends FunSuite {
                       "type" -> "Term.Name",
                       "children" -> a(),
                       "pos" -> pos(20, 24),
-                      "value" -> "main",
-                      "syntax" -> "main"
+                      "value" -> "main"
                     ),
                     d(
                       "type" -> "Term.Param",
@@ -72,8 +69,7 @@ class JSFacadeSuite extends FunSuite {
                           "type" -> "Term.Name",
                           "children" -> a(),
                           "pos" -> pos(25, 29),
-                          "value" -> "args",
-                          "syntax" -> "args"
+                          "value" -> "args"
                         ),
                         d(
                           "type" -> "Type.Apply",
@@ -82,15 +78,13 @@ class JSFacadeSuite extends FunSuite {
                               "type" -> "Type.Name",
                               "children" -> a(),
                               "pos" -> pos(31, 36),
-                              "value" -> "Array",
-                              "syntax" -> "Array"
+                              "value" -> "Array"
                             ),
                             d(
                               "type" -> "Type.Name",
                               "children" -> a(),
                               "pos" -> pos(37, 43),
-                              "value" -> "String",
-                              "syntax" -> "String"
+                              "value" -> "String"
                             )
                           ),
                           "pos" -> pos(31, 44)
@@ -102,8 +96,7 @@ class JSFacadeSuite extends FunSuite {
                       "type" -> "Type.Name",
                       "children" -> a(),
                       "pos" -> pos(47, 51),
-                      "value" -> "Unit",
-                      "syntax" -> "Unit"
+                      "value" -> "Unit"
                     ),
                     d(
                       "type" -> "Term.Apply",
@@ -112,8 +105,7 @@ class JSFacadeSuite extends FunSuite {
                           "type" -> "Term.Name",
                           "children" -> a(),
                           "pos" -> pos(58, 65),
-                          "value" -> "println",
-                          "syntax" -> "println"
+                          "value" -> "println"
                         ),
                         d(
                           "type" -> "Lit.String",
@@ -200,7 +192,12 @@ class JSFacadeSuite extends FunSuite {
 
   test("parse Name") {
     val parsed = JSFacade.parseStat("foo")
-    val expected = lit("Term.Name", "foo", "foo", pos(0, 3))
+    val expected = d(
+      "type" -> "Term.Name",
+      "children" -> a(),
+      "pos" -> pos(0, 3),
+      "value" -> "foo"
+    ).asInstanceOf[js.Dictionary[Any]]
     check(parsed, expected)
   }
 

@@ -58,7 +58,7 @@ object JSFacade {
     }
 
     val syntax = t match {
-      case _: Lit | _: Name => js.Dynamic.literal("syntax" -> t.syntax)
+      case _: Lit => js.Dynamic.literal("syntax" -> t.syntax)
       case _ => js.Dynamic.literal()
     }
 
