@@ -5,6 +5,7 @@ install:
   - ps: scoop install sbt
 environment:
   CI_SCALA_VERSION: 2.12.2
+  APPVEYOR_CACHE_ENTRY_ZIP_ARGS: "-t7z -m0=lzma -mx=9"
 build_script:
   - sbt version # dummy step, a build_script step is required by appveyor.
 test_script:
