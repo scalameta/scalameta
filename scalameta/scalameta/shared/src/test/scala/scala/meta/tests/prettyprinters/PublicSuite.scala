@@ -136,10 +136,11 @@ class PublicSuite extends FunSuite {
     import java.io._
     import java.nio.charset.Charset
     val path = RelativePath("hello.scala").toAbsolute
+    val syntax = path.syntax
     val input1 = Input.File(path, Charset.forName("latin1"))
     val input2 = Input.File(path, Charset.forName("UTF-8"))
-    assert(input1.toString == """Input.File(new File("hello.scala"), Charset.forName("ISO-8859-1"))""")
-    assert(input2.toString == """Input.File(new File("hello.scala"), Charset.forName("UTF-8"))""")
+    assert(input1.toString == s"""Input.File(new File("$syntax"), Charset.forName("ISO-8859-1"))""")
+    assert(input2.toString == s"""Input.File(new File("$syntax"), Charset.forName("UTF-8"))""")
   }
 
   test("scala.meta.inputs.Input.Slice.toString") {
