@@ -13,7 +13,12 @@ import scala.meta.internal.io.{FileIO, PathIO}
   override def toString: String = syntax
 
   def toFile: File = new File(value)
-  def toURI: URI = new URI(s"file:$value")
+  def toURI: URI = {
+    val path = // replace \ with / on Windows.
+      if (PathIO.fileSeparator == "/") value
+      else value.replaceAllLiterally(PathIO.fileSeparator, "/")
+    new URI(s"file:$path")
+  }
   def toNIO: nio.Path = toFile.toPath
   @deprecated("Use toString() instead", "1.8")
   def absolute: String = toString()
