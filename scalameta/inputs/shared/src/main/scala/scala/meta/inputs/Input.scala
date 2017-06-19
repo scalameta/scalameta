@@ -55,7 +55,7 @@ object Input {
   @data class File(path: AbsolutePath, charset: Charset) extends Input {
     lazy val chars = scala.meta.internal.io.FileIO.slurp(path, charset).toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
-    override def toString = "Input.File(new File(\"" + path.toRelative + "\"), Charset.forName(\"" + charset.name + "\"))"
+    override def toString = "Input.File(new File(\"" + path.syntax + "\"), Charset.forName(\"" + charset.name + "\"))"
   }
   object File {
     def apply(path: AbsolutePath, charset: Charset): Input.File = new Input.File(path, charset)
