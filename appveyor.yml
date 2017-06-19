@@ -1,0 +1,17 @@
+version: '{build}'
+os: Windows Server 2012
+install:
+  - ps: iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+  - ps: scoop install sbt
+environment:
+  CI_SCALA_VERSION: 2.12.2
+build_script:
+  - sbt compile
+test_script:
+  - sbt scalametaJVM/test
+cache:
+  - C:\Users\appveyor\.m2
+  - C:\Users\appveyor\.ivy2
+  - C:\Users\appveyor\.coursier
+  - C:\Users\appveyor\scoop\cache
+  - target\repos
