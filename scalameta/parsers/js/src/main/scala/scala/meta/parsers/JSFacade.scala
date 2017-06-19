@@ -1,13 +1,11 @@
 package scala.meta
-package parsersjsfacade
+package parsers
 
 import scala.scalajs.js
 import js.JSConverters._
 import js.annotation._
 
-import parsers._
-
-object ScalaParser {
+object JSFacade {
 
   // https://stackoverflow.com/a/36573183/846273
   private[this] def mergeJSObjects(objs: js.Dynamic*): js.Dynamic = {
@@ -19,6 +17,7 @@ object ScalaParser {
     result.asInstanceOf[js.Dynamic]
   }
 
+  // https://github.com/scala-js/scala-js/issues/2170#issuecomment-176795604
   @js.native
   private[this] sealed trait JSLong extends js.Any
   implicit private[this] class LongJSOps(val x: Long) extends AnyVal {
@@ -38,12 +37,13 @@ object ScalaParser {
       )
     )
 
-    // FIXME: this is really just for personal gratification
-    // ideally `.toMap` on Tree will take care of adding these
-    // attributes
     def v[A](a: A): js.Dynamic =
       js.Dynamic.literal("value" -> a.asInstanceOf[js.Any])
 
+    // FIXME(gabro)
+    // This is to make the facade immediately useful by showing the trees' values
+    // Ideally `.toMap` on Tree will take care of adding the '.value' attribute.
+    // See https://github.com/scalameta/scalameta/issues/948
     val value = t match {
       case t: Lit.Int => v(t.value)
       case t: Lit.Double => v(t.value)
@@ -71,12 +71,10 @@ object ScalaParser {
     }
 
   @JSExportTopLevel("default")
-  @JSExportTopLevel("parse")
-  def parseSource(code: String): js.Dictionary[Any] =
-    parse[Source](code)
+  @JSExportTopLevel("parseSource")
+  def parseSource(code: String): js.Dictionary[Any] = parse[Source](code)
 
   @JSExportTopLevel("parseStat")
-  def parseStat(code: String): js.Dictionary[Any] =
-    parse[Stat](code)
+  def parseStat(code: String): js.Dictionary[Any] = parse[Stat](code)
 
 }

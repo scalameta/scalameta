@@ -1,12 +1,12 @@
 package scala.meta.tests
-package parsersjsfacade
+package parsers
 
 import org.scalatest._
 import scala.scalajs.js
-import scala.meta.parsersjsfacade._
 import scala.collection.mutable
+import scala.meta.parsers._
 
-class ApiSuite extends FunSuite {
+class JSFacadeSuite extends FunSuite {
 
   private[this] val d = js.Dictionary
   private[this] val a = js.Array
@@ -25,7 +25,7 @@ class ApiSuite extends FunSuite {
           |  def main(args: Array[String]): Unit =
           |    println("Hello, World")
           |}""".stripMargin
-    val parsed = ScalaParser.parseSource(code)
+    val parsed = JSFacade.parseSource(code)
     val expected = d(
       "type" -> "Source",
       "children" -> a(
@@ -141,55 +141,55 @@ class ApiSuite extends FunSuite {
     )
 
   test("parse Lit.Int") {
-    val parsed = ScalaParser.parseStat("42")
+    val parsed = JSFacade.parseStat("42")
     val expected = lit("Lit.Int", 42, pos(0, 2))
     check(parsed, expected)
   }
 
   test("parse Lit.Double") {
-    val parsed = ScalaParser.parseStat("42.2")
+    val parsed = JSFacade.parseStat("42.2")
     val expected = lit("Lit.Double", 42.2, pos(0, 4))
     check(parsed, expected)
   }
 
   test("parse Lit.Float") {
-    val parsed = ScalaParser.parseStat("42.2f")
+    val parsed = JSFacade.parseStat("42.2f")
     val expected = lit("Lit.Float", 42.2f, pos(0, 5))
     check(parsed, expected)
   }
 
   test("parse Lit.Char") {
-    val parsed = ScalaParser.parseStat("'a'")
+    val parsed = JSFacade.parseStat("'a'")
     val expected = lit("Lit.Char", "a", pos(0, 3))
     check(parsed, expected)
   }
 
   test("parse Lit.Long") {
-    val parsed = ScalaParser.parseStat("42L")
+    val parsed = JSFacade.parseStat("42L")
     val expected = lit("Lit.Long", 42, pos(0, 3))
     check(parsed, expected)
   }
 
   test("parse Lit.Boolean") {
-    val parsed = ScalaParser.parseStat("true")
+    val parsed = JSFacade.parseStat("true")
     val expected = lit("Lit.Boolean", true, pos(0, 4))
     check(parsed, expected)
   }
 
   test("parse Lit.String") {
-    val parsed = ScalaParser.parseStat(""""42"""")
+    val parsed = JSFacade.parseStat(""""42"""")
     val expected = lit("Lit.String", "42", pos(0, 4))
     check(parsed, expected)
   }
 
   test("parse Lit.Symbol") {
-    val parsed = ScalaParser.parseStat("'foo")
+    val parsed = JSFacade.parseStat("'foo")
     val expected = lit("Lit.Symbol", "foo", pos(0, 4))
     check(parsed, expected)
   }
 
   test("parse Name") {
-    val parsed = ScalaParser.parseStat("foo")
+    val parsed = JSFacade.parseStat("foo")
     val expected = lit("Term.Name", "foo", pos(0, 3))
     check(parsed, expected)
   }
