@@ -42,10 +42,6 @@ object JSFacade {
     def v[A](a: A): js.Dynamic =
       js.Dynamic.literal("value" -> a.asInstanceOf[js.Any])
 
-    // FIXME(gabro)
-    // This is to make the facade immediately useful by showing the trees' values
-    // Ideally `.toMap` on Tree will take care of adding the '.value' attribute.
-    // See https://github.com/scalameta/scalameta/issues/948
     val value = t match {
       case t: Lit.Int => v(t.value)
       case t: Lit.Double => v(t.value)
