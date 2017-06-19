@@ -43,17 +43,11 @@ object JSFacade {
       js.Dynamic.literal("value" -> a.asInstanceOf[js.Any])
 
     val value = t match {
-      case t: Lit.Int => v(t.value)
-      case t: Lit.Double => v(t.value)
-      case t: Lit.Float => v(t.value)
-      case t: Lit.Byte => v(t.value)
-      case t: Lit.Short => v(t.value)
-      case t: Lit.Char => v(t.value.toString)
-      case t: Lit.Long => v(t.value.toJSLong)
-      case t: Lit.Boolean => v(t.value)
-      case t: Lit.String => v(t.value)
-      case t: Lit.Symbol => v(t.value.name)
-      case t: Name => v(t.value)
+      case Lit.Char(value) => v(value.toString)
+      case Lit.Long(value) => v(value.toJSLong)
+      case Lit.Symbol(value) => v(value.name)
+      case Lit(value) => v(value)
+      case Name(value) => v(value)
       case _ => js.Dynamic.literal()
     }
 
