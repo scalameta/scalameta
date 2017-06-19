@@ -19,13 +19,13 @@ class ApiSuite extends FunSuite {
     assert(toJSON(a) == toJSON(b))
   }
 
-  test("Api") {
+  test("parseSource") {
     val code =
       s"""|object Main {
           |  def main(args: Array[String]): Unit =
           |    println("Hello, World")
           |}""".stripMargin
-    val parsed = ScalaParser.parse(code)
+    val parsed = ScalaParser.parseSource(code)
     val expected = d(
       "type" -> "Source",
       "children" -> a(
@@ -129,6 +129,68 @@ class ApiSuite extends FunSuite {
       "pos" -> pos(0, 83)
     ).asInstanceOf[js.Dictionary[Any]]
 
+    check(parsed, expected)
+  }
+
+  private[this] def lit[A](tpe: String, value: A, pos: js.Dictionary[Int]) =
+    d(
+      "type" -> tpe,
+      "children" -> a(),
+      "pos" -> pos,
+      "value" -> value
+    )
+
+  test("parse Lit.Int") {
+    val parsed = ScalaParser.parseStat("42")
+    val expected = lit("Lit.Int", 42, pos(0, 2))
+    check(parsed, expected)
+  }
+
+  test("parse Lit.Double") {
+    val parsed = ScalaParser.parseStat("42.2")
+    val expected = lit("Lit.Double", 42.2, pos(0, 4))
+    check(parsed, expected)
+  }
+
+  test("parse Lit.Float") {
+    val parsed = ScalaParser.parseStat("42.2f")
+    val expected = lit("Lit.Float", 42.2f, pos(0, 5))
+    check(parsed, expected)
+  }
+
+  test("parse Lit.Char") {
+    val parsed = ScalaParser.parseStat("'a'")
+    val expected = lit("Lit.Char", "a", pos(0, 3))
+    check(parsed, expected)
+  }
+
+  test("parse Lit.Long") {
+    val parsed = ScalaParser.parseStat("42L")
+    val expected = lit("Lit.Long", 42, pos(0, 3))
+    check(parsed, expected)
+  }
+
+  test("parse Lit.Boolean") {
+    val parsed = ScalaParser.parseStat("true")
+    val expected = lit("Lit.Boolean", true, pos(0, 4))
+    check(parsed, expected)
+  }
+
+  test("parse Lit.String") {
+    val parsed = ScalaParser.parseStat(""""42"""")
+    val expected = lit("Lit.String", "42", pos(0, 4))
+    check(parsed, expected)
+  }
+
+  test("parse Lit.Symbol") {
+    val parsed = ScalaParser.parseStat("'foo")
+    val expected = lit("Lit.Symbol", "foo", pos(0, 4))
+    check(parsed, expected)
+  }
+
+  test("parse Name") {
+    val parsed = ScalaParser.parseStat("foo")
+    val expected = lit("Term.Name", "foo", pos(0, 3))
     check(parsed, expected)
   }
 
