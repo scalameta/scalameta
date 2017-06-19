@@ -12,13 +12,18 @@ import scala.meta.internal.io.{FileIO, PathIO}
   def structure: String = s"""AbsolutePath("$value")"""
   override def toString: String = syntax
 
-  def toFile: File = new File(value)
-  def toURI: URI = {
-    val path = // replace \ with / on Windows.
+  // replace \ with / on Windows.
+  private def uriPath: String = {
+    val leadingSlash = if (value.startsWith(PathIO.fileSeparator)) "" else "/"
+    val trailingSlash = if (!value.endsWith(PathIO.fileSeparator) && isDirectory) "/" else ""
+    val path =
       if (PathIO.fileSeparator == "/") value
       else value.replaceAllLiterally(PathIO.fileSeparator, "/")
-    new URI(s"file:$path")
+    s"$leadingSlash$path$trailingSlash"
   }
+
+  def toFile: File = new File(value)
+  def toURI: URI = new URI("file", null, uriPath, null)
   def toNIO: nio.Path = toFile.toPath
   @deprecated("Use toString() instead", "1.8")
   def absolute: String = toString()
