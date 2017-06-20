@@ -3,9 +3,13 @@ package scala.meta.internal.io
 import scala.meta.io._
 
 object PlatformPathIO {
+  private implicit val cwd = PathIO.workingDirectory
   def workingDirectory: AbsolutePath =
     if (JSIO.isNode) AbsolutePath(JSShell.pwd().toString)
     else AbsolutePath(fileSeparator)
+
+  def fileSeparatorChar: Char =
+    JSPath.sep.toCharArray.head
 
   def fileSeparator: String =
     JSPath.sep

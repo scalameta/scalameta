@@ -13,9 +13,8 @@ import scala.meta.io._
 import scala.meta.{Dialect => mDialect}
 import scala.meta.{semantic => m}
 import scala.{Seq => _}
-
 import java.io._
-
+import scala.meta.internal.io.PathIO
 import org.scalameta.data._
 import org.scalameta.logger
 
@@ -44,7 +43,7 @@ class Database(entries: Seq[Attributes]) {
               sourcepath.getOrElse(sys.error("Sourcepath is required to load slim semanticdb."))
                 .find(RelativePath(sfilename))
                 .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
-            mInput.File(AbsolutePath(uri.getPath))
+            mInput.File(AbsolutePath(uri.getPath)(PathIO.workingDirectory))
           } else {
             mInput.LabeledString(sfilename.toString, scontents)
           }

@@ -3,34 +3,33 @@ package io
 
 import java.io._
 import java.net._
-import org.scalameta.data._
+import java.nio.file.Path
+import java.nio.{file => nio}
+import java.nio.file.Paths
 import scala.meta.internal.io.PathIO
 
-@data class RelativePath private (value: String) {
-  def syntax: String = value
-  def structure: String = s"""RelativePath("$value")"""
-  override def toString: String = syntax
+sealed abstract case class RelativePath(path: Path) {
+  require(!path.isAbsolute, s"$path is not relative!")
+  def syntax: String = toString
+  def structure: String = s"""RelativePath("$syntax")"""
+  override def toString: String = path.toString
 
-  def toFile: File = new File(value)
+  def toFile: File = path.toFile
   def toURI: URI = toFile.toURI
 
-  def toAbsolute: AbsolutePath = toAbsolute(PathIO.workingDirectory)
+  def toAbsolute: AbsolutePath = PathIO.workingDirectory.resolve(this)
   def toAbsolute(root: AbsolutePath): AbsolutePath = root.resolve(this)
-  def toAbsolute(file: File): AbsolutePath = toAbsolute(AbsolutePath(file))
-  def toAbsolute(path: String): AbsolutePath = toAbsolute(AbsolutePath(path))
 
-  def resolve(path: RelativePath): RelativePath = PathIO.resolve(this, path)
-  def resolve(file: File): RelativePath = resolve(RelativePath(file))
-  def resolve(path: String): RelativePath = resolve(RelativePath(path))
+  def resolve(other: nio.Path): RelativePath = RelativePath(path.resolve(other))
+  def resolve(other: RelativePath): RelativePath = resolve(other.path)
+  def resolve(path: String): RelativePath = resolve(Paths.get(path))
 }
 
 object RelativePath {
-  def apply(file: File): RelativePath = {
-    RelativePath(file.getPath)
-  }
+  def apply(file: File): RelativePath = apply(file.getPath)
+  def apply(path: String): RelativePath = apply(Paths.get(path))
 
-  def apply(path: String): RelativePath = {
-    if (!PathIO.isAbsolutePath(path)) new RelativePath(path)
-    else sys.error(s"not a relative path: $path")
-  }
+  // throws Illegal argument exception if path is not relative.
+  def apply(path: nio.Path): RelativePath =
+    new RelativePath(path) {}
 }
