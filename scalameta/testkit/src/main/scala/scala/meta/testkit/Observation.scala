@@ -4,11 +4,14 @@ import scala.collection.mutable
 
 /** An observation during a [[SyntaxAnalysis]].
   *
-  * @param msg The message corresponding this observation.
+  * @param msg The message corresponding this individual observation. The message
+  *            will be dislayed next to this entry.
   * @param line The offending line number in the source file where the
-  *             observation was made.
-  * @param kind The category of this observation. Good values are enumerations
-  *             or sealed ADTs
+  *             observation was made. Starts from line 0, which matches with
+  *             scala.meta.Position.line.
+  * @param kind The category of this observation. Observations of the same category
+  *             are grouped together in the markdown table. Good values are
+  *             enumerations or sealed ADTs.
   */
 case class Observation[T](msg: String, line: Int, kind: T)
 
@@ -20,11 +23,10 @@ object Observation {
     *
     * Example: https://github.com/scalameta/scalameta/issues/567#issuecomment-267074738
     */
-  def markdownTable[T](
-      observations: Seq[(CorpusFile, Observation[T])]): String = {
+  def markdownTable[T](observations: Seq[(CorpusFile, Observation[T])]): String = {
     val sb = new mutable.StringBuilder()
     val grouped = observations.groupBy(_._2.kind)
-    grouped.foreach {
+    grouped.toSeq.sortBy(_._1.toString).foreach {
       case (cat, rs) =>
         sb.append(s"## $cat\n")
         sb.append(s"URL | details |\n")
