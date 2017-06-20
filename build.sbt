@@ -145,7 +145,8 @@ lazy val parsers = crossProject
   .in(file("scalameta/parsers"))
   .settings(
     publishableSettings,
-    description := "Scalameta APIs for parsing and their baseline implementation"
+    description := "Scalameta APIs for parsing and their baseline implementation",
+    scalaJSModuleKind := ModuleKind.CommonJSModule
   )
   .dependsOn(common, dialects, inputs, tokens, tokenizers, trees)
 lazy val parsersJVM = parsers.jvm
