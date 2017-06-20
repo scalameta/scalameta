@@ -24,7 +24,7 @@ case class CorpusFile(filename: String, projectUrl: String, commit: String) {
   def read: String = FileOps.readFile(jFile)
 
   /** Same as [[githubUrl]] but highlighted at a given line-number. */
-  def githubUrlAtLine(line: Int): String = link(s"$githubUrl#L$line")
+  def githubUrlAtLine(line: Int): String = link(s"$githubUrl#L${line + 1}")
 
   /** Github url to non-raw (i.e., syntax highlighted) version of this ScalaFile */
   def githubUrl = s"$projectUrl/blob/$commit$filename"
