@@ -28,106 +28,100 @@ class JSFacadeSuite extends FunSuite {
     val parsed = JSFacade.parseSource(code)
     val expected = d(
       "type" -> "Source",
-      "children" -> a(
+      "pos" -> pos(0, 83),
+      "stats" -> a(
         d(
           "type" -> "Defn.Object",
-          "children" -> a(
-            d(
-              "type" -> "Term.Name",
-              "children" -> a(),
-              "pos" -> pos(7, 11),
-              "value" -> "Main"
+          "pos" -> pos(0, 83),
+          "mods" -> a(),
+          "name" -> d(
+            "type" -> "Term.Name",
+            "pos" -> pos(7, 11),
+            "value" -> "Main"
+          ),
+          "templ" -> d(
+            "type" -> "Template",
+            "pos" -> pos(12, 83),
+            "early" -> a(),
+            "parents" -> a(),
+            "self" -> d(
+              "type" -> "Term.Param",
+              "pos" -> pos(16, 16),
+              "mods" -> a(),
+              "name" -> d(
+                "type" -> "Name.Anonymous",
+                "pos" -> pos(16, 16),
+                "value" -> "_"
+              )
             ),
-            d(
-              "type" -> "Template",
-              "children" -> a(
-                d(
-                  "type" -> "Term.Param",
-                  "children" -> a(
-                    d(
-                      "type" -> "Name.Anonymous",
-                      "children" -> a(),
-                      "pos" -> pos(16, 16),
-                      "value" -> "_"
-                    )
-                  ),
-                  "pos" -> pos(16, 16)
+            "stats" -> a(
+              d(
+                "type" -> "Defn.Def",
+                "pos" -> pos(16, 81),
+                "mods" -> a(),
+                "name" -> d(
+                  "type" -> "Term.Name",
+                  "pos" -> pos(20, 24),
+                  "value" -> "main"
                 ),
-                d(
-                  "type" -> "Defn.Def",
-                  "children" -> a(
-                    d(
-                      "type" -> "Term.Name",
-                      "children" -> a(),
-                      "pos" -> pos(20, 24),
-                      "value" -> "main"
-                    ),
+                "tparams" -> a(),
+                "paramss" -> a(
+                  a(
                     d(
                       "type" -> "Term.Param",
-                      "children" -> a(
-                        d(
-                          "type" -> "Term.Name",
-                          "children" -> a(),
-                          "pos" -> pos(25, 29),
-                          "value" -> "args"
-                        ),
-                        d(
-                          "type" -> "Type.Apply",
-                          "children" -> a(
-                            d(
-                              "type" -> "Type.Name",
-                              "children" -> a(),
-                              "pos" -> pos(31, 36),
-                              "value" -> "Array"
-                            ),
-                            d(
-                              "type" -> "Type.Name",
-                              "children" -> a(),
-                              "pos" -> pos(37, 43),
-                              "value" -> "String"
-                            )
-                          ),
-                          "pos" -> pos(31, 44)
-                        )
+                      "pos" -> pos(25, 44),
+                      "mods" -> a(),
+                      "name" -> d(
+                        "type" -> "Term.Name",
+                        "pos" -> pos(25, 29),
+                        "value" -> "args"
                       ),
-                      "pos" -> pos(25, 44)
-                    ),
-                    d(
-                      "type" -> "Type.Name",
-                      "children" -> a(),
-                      "pos" -> pos(47, 51),
-                      "value" -> "Unit"
-                    ),
-                    d(
-                      "type" -> "Term.Apply",
-                      "children" -> a(
-                        d(
-                          "type" -> "Term.Name",
-                          "children" -> a(),
-                          "pos" -> pos(58, 65),
-                          "value" -> "println"
+                      "decltpe" -> d(
+                        "type" -> "Type.Apply",
+                        "pos" -> pos(31, 44),
+                        "tpe" -> d(
+                          "type" -> "Type.Name",
+                          "pos" -> pos(31, 36),
+                          "value" -> "Array"
                         ),
-                        d(
-                          "type" -> "Lit.String",
-                          "children" -> a(),
-                          "pos" -> pos(66, 80),
-                          "value" -> "Hello, World",
-                          "syntax" -> """"Hello, World""""
+                        "args" -> a(
+                          d(
+                            "type" -> "Type.Name",
+                            "pos" -> pos(37, 43),
+                            "value" -> "String"
+                          )
                         )
-                      ),
-                      "pos" -> pos(58, 81)
+                      )
                     )
+                  )
+                ),
+                "decltpe" -> d(
+                  "type" -> "Type.Name",
+                  "pos" -> pos(47, 51),
+                  "value" -> "Unit"
+                ),
+                "body" -> d(
+                  "type" -> "Term.Apply",
+                  "pos" -> pos(58, 81),
+                  "fun" -> d(
+                    "type" -> "Term.Name",
+                    "pos" -> pos(58, 65),
+                    "value" -> "println"
                   ),
-                  "pos" -> pos(16, 81)
+                  "args" -> a(
+                    d(
+                      "type" -> "Lit.String",
+                      "pos" -> pos(66, 80),
+                      "value" -> "Hello, World",
+                      "syntax" -> """"Hello, World""""
+                    )
+                  )
                 )
-              ),
-              "pos" -> pos(12, 83)
+              )
             )
-          ),
-          "pos" -> pos(0, 83)
+          )
         )
-      ),
-      "pos" -> pos(0, 83)
+      )
     ).asInstanceOf[js.Dictionary[Any]]
 
     check(parsed, expected)
@@ -136,7 +130,6 @@ class JSFacadeSuite extends FunSuite {
   private[this] def lit[A](tpe: String, value: A, syntax: String, pos: js.Dictionary[Int]) =
     d(
       "type" -> tpe,
-      "children" -> a(),
       "pos" -> pos,
       "value" -> value,
       "syntax" -> syntax
@@ -194,7 +187,6 @@ class JSFacadeSuite extends FunSuite {
     val parsed = JSFacade.parseStat("foo")
     val expected = d(
       "type" -> "Term.Name",
-      "children" -> a(),
       "pos" -> pos(0, 3),
       "value" -> "foo"
     ).asInstanceOf[js.Dictionary[Any]]
