@@ -17,7 +17,7 @@ import scala.meta.internal.tokens._
 
 // NOTE: Methods that start with "private" are NOT intended to be called outside scala.meta.
 // Calling these methods from hosts will compile (because hosts are in meta), but is strongly discouraged.
-trait InternalTree {
+trait InternalTree extends Product {
   self: Tree =>
 
   // =============================================================================================
@@ -44,6 +44,12 @@ trait InternalTree {
     if (privateParent != null) scala.Some(privateParent) else None
   }
 
+  // NOTE: InternalTree inherits traditional productXXX methods from Product
+  // and also adds a new method called productFields.
+  // def productPrefix: String
+  // def productArity: Int
+  // def productElement(n: Int): Any
+  // def productIterator: Iterator[Any]
   def productFields: Seq[String]
 
   private[meta] def origin: Origin = {
