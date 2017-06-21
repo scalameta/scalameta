@@ -172,6 +172,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       pelClauses += cq"_ => throw new $IndexOutOfBoundsException(n.toString)"
       stats1 += q"override def productElement(n: $IntClass): Any = n match { case ..$pelClauses }"
       stats1 += q"override def productIterator: $IteratorClass[$AnyClass] = $ScalaRunTimeModule.typedProductIterator(this)"
+      val productFields = productParamss.head.map(_.name.toString)
+      stats1 += q"override def productFields: $SeqClass[$StringClass] = Seq(..$productFields)"
 
       // step 12: generate serialization logic
       val fieldInits = fieldParamss.flatten.map(p => q"$CommonTyperMacrosModule.loadField(this.${internalize(p.name)})")

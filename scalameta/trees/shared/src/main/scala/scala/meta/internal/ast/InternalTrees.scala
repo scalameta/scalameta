@@ -44,6 +44,8 @@ trait InternalTree {
     if (privateParent != null) scala.Some(privateParent) else None
   }
 
+  def productFields: Seq[String]
+
   private[meta] def origin: Origin = {
     if (privateOrigin != null) privateOrigin else Origin.None
   }
