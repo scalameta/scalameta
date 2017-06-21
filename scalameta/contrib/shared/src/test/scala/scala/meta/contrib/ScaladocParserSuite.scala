@@ -149,26 +149,34 @@ class ScaladocParserSuite extends FunSuite {
   }
 
   test("headings") {
-    val headingBody = "Overview"
-    val subHeadingBody = "Of the heading"
+    val level1HeadingBody = "Level 1"
+    val level2HeadingBody = "Level 2"
+    val level3HeadingBody = "Level 3"
+    val level4HeadingBody = "Level 4"
+    val level5HeadingBody = "Level 5"
 
     val result: Option[Seq[DocToken]] =
       parseString(
         s"""
         /**
-          * =$headingBody=
-          * ==$subHeadingBody==
+          * =$level1HeadingBody=
+          * ==$level2HeadingBody==
+          * ===$level3HeadingBody===
+          * ====$level4HeadingBody====
+          * =====$level5HeadingBody=====
           */
          case class foo(bar : String)
          """
       )
     val expectation = Option(
       Seq(
-        DocToken(Heading, headingBody),
-        DocToken(SubHeading, subHeadingBody)
+        DocToken(Heading(1), level1HeadingBody),
+        DocToken(Heading(2), level2HeadingBody),
+        DocToken(Heading(3), level3HeadingBody),
+        DocToken(Heading(4), level4HeadingBody),
+        DocToken(Heading(5), level5HeadingBody)
       )
     )
-
     assert(result === expectation)
   }
 
