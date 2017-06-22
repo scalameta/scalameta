@@ -201,7 +201,8 @@ class JSFacadeSuite extends FunSuite {
          |)""".stripMargin
     val parsedDefaultDialect = JSFacade.parseStat(code)
     val expected = d(
-      "error" -> "illegal start of simple expression"
+      "error" -> "illegal start of simple expression",
+      "pos" -> pos(16, 17)
     ).asInstanceOf[js.Dictionary[Any]]
     check(parsedDefaultDialect, expected)
   }
@@ -214,7 +215,8 @@ class JSFacadeSuite extends FunSuite {
          |)""".stripMargin
     val parsedDefaultDialect = JSFacade.parseStat(code, js.Dictionary("dialect" -> "wrong"))
     val expected = d(
-      "error" -> "illegal start of simple expression"
+      "error" -> "illegal start of simple expression",
+      "pos" -> pos(16, 17)
     ).asInstanceOf[js.Dictionary[Any]]
     check(parsedDefaultDialect, expected)
   }

@@ -6,6 +6,7 @@ import js.JSConverters._
 import js.annotation._
 
 import prettyprinters._
+import inputs.Position
 
 object JSFacade {
 
@@ -36,13 +37,16 @@ object JSFacade {
     case _ => ()
   }
 
+  private[this] def toPosition(p: Position): js.Dynamic =
+    js.Dynamic.literal(
+      "start" -> p.start.offset,
+      "end" -> p.end.offset
+    )
+
   private[this] def toNode(t: Tree): js.Dynamic = {
     val base = js.Dynamic.literal(
       "type" -> t.productPrefix,
-      "pos" -> js.Dynamic.literal(
-        "start" -> t.pos.start.offset,
-        "end" -> t.pos.end.offset
-      )
+      "pos" -> toPosition(t.pos)
     )
 
     val fields = js.Dictionary(t.productFields.zip(t.productIterator.toList).collect {
@@ -84,8 +88,9 @@ object JSFacade {
 
     dialect(code).parse[A] match {
       case Parsed.Success(t) => toNode(t).asInstanceOf[js.Dictionary[Any]]
-      case Parsed.Error(_, message, _) => js.Dictionary(
-        "error" -> message
+      case Parsed.Error(pos, message, _) => js.Dictionary(
+        "error" -> message,
+        "pos" -> toPosition(pos)
       )
     }
   }
