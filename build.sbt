@@ -77,6 +77,7 @@ testOnlyJS := {
   val runScalametaTests = test.in(scalametaJS, Test).value
   val runContribTests = test.in(contribJS, Test).value
   val runTests = test.in(testsJS, Test).value
+  val runParsersTest = test.in(parsersJS, Test).value
 }
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
