@@ -29,15 +29,25 @@ object JSFacade {
     }.asInstanceOf[JSLong]
   }
 
+  private[this] def toNode(t: Any): js.Any = t match {
+    case t: Tree => toNode(t)
+    case tt: Seq[_] => tt.map(toNode).toJSArray
+    case t: Option[_] => t.map(toNode).orUndefined
+    case _ => ()
+  }
+
   private[this] def toNode(t: Tree): js.Dynamic = {
     val base = js.Dynamic.literal(
       "type" -> t.productPrefix,
-      "children" -> t.children.map(toNode).toJSArray,
       "pos" -> js.Dynamic.literal(
         "start" -> t.pos.start.offset,
         "end" -> t.pos.end.offset
       )
     )
+
+    val fields = js.Dictionary(t.productFields.zip(t.productIterator.toList).collect {
+      case (name, value) => name -> toNode(value)
+    }: _*).asInstanceOf[js.Dynamic]
 
     def v[A](a: A): js.Dynamic =
       js.Dynamic.literal("value" -> a.asInstanceOf[js.Any])
@@ -56,7 +66,7 @@ object JSFacade {
       case _ => js.Dynamic.literal()
     }
 
-    mergeJSObjects(base, value, syntax)
+    mergeJSObjects(base, fields, value, syntax)
   }
 
   private[this] def parse[A <: Tree: Parse](code: String): js.Dictionary[Any] =
