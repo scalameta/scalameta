@@ -23,7 +23,13 @@ trait SymbolOps { self: DatabaseOps =>
             ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter)
         !definitelyGlobal && (definitelyLocal || isLocal(sym.owner))
       }
-      if (isLocal(sym)) return m.Symbol.Local(sym.pos.toMeta.syntax)
+      if (isLocal(sym)) {
+        val mpos = sym.pos.toMeta
+        return {
+          if (mpos == m.Position.None) m.Symbol.None
+          else m.Symbol.Local(mpos.syntax)
+        }
+      }
 
       val owner = sym.owner.toSemantic
       val signature = {
