@@ -32,6 +32,7 @@ case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[Stri
             case _ => Seq[DocToken.Reference]()
           }
         }
+
         parseBodyFrom(0)
       }
       .getOrElse(Nil)
@@ -264,6 +265,48 @@ object DocToken {
   /**
     * Documents a Scaladoc Heading.
     */
-  case class Heading(level: Int) extends Kind
+  abstract class Heading(val level: Int) extends Kind
+
+  /**
+    * Represents a first level heading:
+    *
+    * i.e: '=HEADING='
+    */
+  case object Heading1 extends Heading(1)
+
+  /**
+    * Represents a second level heading:
+    *
+    * i.e: '==HEADING=='
+    */
+  case object Heading2 extends Heading(2)
+
+  /**
+    * Represents a third level heading:
+    *
+    * i.e: '===HEADING==='
+    */
+  case object Heading3 extends Heading(3)
+
+  /**
+    * Represents a fourth level heading:
+    *
+    * i.e: '====HEADING===='
+    */
+  case object Heading4 extends Heading(4)
+
+  /**
+    * Represents a fifth level heading:
+    *
+    * i.e: '=====HEADING====='
+    */
+  case object Heading5 extends Heading(5)
+
+  /**
+    * Represents a sixth level heading:
+    *
+    * i.e: '======HEADING======'
+    */
+  case object Heading6 extends Heading(6)
 
 }
