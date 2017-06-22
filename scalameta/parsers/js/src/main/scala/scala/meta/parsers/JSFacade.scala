@@ -69,19 +69,38 @@ object JSFacade {
     mergeJSObjects(base, fields, value, syntax)
   }
 
-  private[this] def parse[A <: Tree: Parse](code: String): js.Dictionary[Any] =
-    code.parse[A] match {
+  private[this] type Settings = js.UndefOr[js.Dictionary[String]]
+  private[this] val defaultSettings = None.orUndefined
+
+  private[this] def parse[A <: Tree: Parse](
+    code: String,
+    settings: Settings
+  ): js.Dictionary[Any] = {
+    val dialect = (for {
+      settings <- settings.toOption
+      dialectStr <- settings.get("dialect")
+      dialect <- Dialect.standards.get(dialectStr)
+    } yield dialect).getOrElse(dialects.Scala211)
+
+    dialect(code).parse[A] match {
       case Parsed.Success(t) => toNode(t).asInstanceOf[js.Dictionary[Any]]
       case Parsed.Error(_, message, _) => js.Dictionary(
         "error" -> message
       )
     }
+  }
 
   @JSExportTopLevel("default")
   @JSExportTopLevel("parseSource")
-  def parseSource(code: String): js.Dictionary[Any] = parse[Source](code)
+  def parseSource(
+    code: String,
+    settings: Settings = defaultSettings
+  ): js.Dictionary[Any] = parse[Source](code, settings)
 
   @JSExportTopLevel("parseStat")
-  def parseStat(code: String): js.Dictionary[Any] = parse[Stat](code)
+  def parseStat(
+    code: String,
+    settings: Settings = defaultSettings
+  ): js.Dictionary[Any] = parse[Stat](code, settings)
 
 }
