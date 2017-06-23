@@ -44,6 +44,8 @@ object JSFs extends js.Any {
   /** Returns an fs.Stats for path. */
   def lstatSync(path: String): JSStats = js.native
 
+  /** Returns true if the file exists, false otherwise. */
+  def existsSync(path: String): Boolean = js.native
 }
 
 /** Facade for nodejs class fs.Stats.
