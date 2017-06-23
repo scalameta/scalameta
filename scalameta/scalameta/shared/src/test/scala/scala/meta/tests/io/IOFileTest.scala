@@ -1,9 +1,10 @@
 package scala.meta.tests.io
 
 import java.io.File
+import scala.meta.internal.io.PathIO
 import org.scalatest.FunSuite
 
-class FileTest extends FunSuite {
+class IOFileTest extends FunSuite {
   val file = new File("build.sbt")
   val target = new File("target")
 

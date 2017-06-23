@@ -1,6 +1,7 @@
 package scala.meta.internal.io
 
 import java.io.File
+import java.nio.file.Path
 import java.nio.file.Paths
 import scala.meta.io._
 
@@ -29,4 +30,7 @@ object PlatformPathIO {
 
   def normalizePath(path: String): String =
     Paths.get(path).normalize().toString
+
+  def pathGet(first: String, more: String*): Path =
+    Paths.get(first, more: _*)
 }

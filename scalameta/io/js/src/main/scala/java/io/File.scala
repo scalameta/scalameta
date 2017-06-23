@@ -6,7 +6,7 @@ import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.JSFs
 import scala.meta.internal.io.JSPath
 import scala.meta.internal.io.JSStats
-import scala.meta.internal.io.NodeJSPath
+import scala.meta.internal.io.NodeNIOPath
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.io.PlatformFileIO
 
@@ -28,7 +28,7 @@ class File(path: String) {
       }
     )
   def toPath: Path =
-    NodeJSPath(filename)
+    NodeNIOPath(filename)
   def toURI: URI = {
     val file = getAbsoluteFile.toString
     val path =

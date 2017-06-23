@@ -1,5 +1,6 @@
 package scala.meta.internal.io
 
+import java.nio.file.Path
 import scala.meta.io._
 
 object PlatformPathIO {
@@ -28,4 +29,8 @@ object PlatformPathIO {
 
   def resolve(path1: RelativePath, path2: RelativePath): RelativePath =
     RelativePath(JSPath.resolve(path1.toString, path2.toString))
+
+
+  def pathGet(first: String, more: String*): Path =
+    NodeNIOPath(JSPath.join(first, more: _*))
 }
