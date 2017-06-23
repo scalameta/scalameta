@@ -204,7 +204,9 @@ class JSFacadeSuite extends FunSuite {
     val parsedDefaultDialect = JSFacade.parseStat(code)
     val expected = d(
       "error" -> "illegal start of simple expression",
-      "pos" -> pos(16, 17)
+      "pos" -> pos(16, 17),
+      "lineNumber" -> 3,
+      "columnNumber" -> 0
     ).asInstanceOf[js.Dictionary[Any]]
     check(parsedDefaultDialect, expected)
   }

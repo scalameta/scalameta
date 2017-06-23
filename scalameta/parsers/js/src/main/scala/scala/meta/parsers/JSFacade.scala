@@ -97,7 +97,9 @@ object JSFacade {
           case Parsed.Success(t) => toNode(t).asInstanceOf[js.Dictionary[Any]]
           case Parsed.Error(pos, message, _) => js.Dictionary(
             "error" -> message,
-            "pos" -> toPosition(pos)
+            "pos" -> toPosition(pos),
+            "lineNumber" -> pos.start.line,
+            "columnNumber" -> pos.start.column
           )
         }
     }
