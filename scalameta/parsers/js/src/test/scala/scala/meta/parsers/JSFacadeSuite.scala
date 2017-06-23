@@ -141,7 +141,9 @@ class JSFacadeSuite extends FunSuite {
     check(parsed, expected)
   }
 
-  test("parse Lit.Double") {
+  // Ignored because of
+  // https://github.com/scalameta/scalameta/issues/961
+  ignore("parse Lit.Double") {
     val parsed = JSFacade.parseStat("42.2")
     val expected = lit("Lit.Double", 42.2, "42.2", pos(0, 4))
     check(parsed, expected)
@@ -191,6 +193,56 @@ class JSFacadeSuite extends FunSuite {
       "value" -> "foo"
     ).asInstanceOf[js.Dictionary[Any]]
     check(parsed, expected)
+  }
+
+  test("default dialect is Scala 2.11") {
+    val code =
+      """|List(
+         |  1,
+         |  2,
+         |)""".stripMargin
+    val parsedDefaultDialect = JSFacade.parseStat(code)
+    val expected = d(
+      "error" -> "illegal start of simple expression",
+      "pos" -> pos(16, 17)
+    ).asInstanceOf[js.Dictionary[Any]]
+    check(parsedDefaultDialect, expected)
+  }
+
+  test("inexisting dialects report an error") {
+    val code =
+      """|List(
+         |  1,
+         |  2,
+         |)""".stripMargin
+    val parsedDefaultDialect = JSFacade.parseStat(code, js.Dictionary("dialect" -> "wrong"))
+    val expected = d(
+      "error" -> "'wrong' is not a valid dialect."
+    ).asInstanceOf[js.Dictionary[Any]]
+    check(parsedDefaultDialect, expected)
+  }
+
+  test("can specify dialect") {
+    val code =
+      """|List(
+         |  1,
+         |  2,
+         |)""".stripMargin
+    val parsedDefaultDialect = JSFacade.parseStat(code, js.Dictionary("dialect" -> "Scala212"))
+    val expected = d(
+      "type" -> "Term.Apply",
+      "pos" -> pos(0, 17),
+      "fun" -> d(
+        "type" -> "Term.Name",
+        "pos" -> pos(0, 4),
+        "value" -> "List"
+      ),
+      "args" -> a(
+        lit("Lit.Int", 1, "1", pos(8, 9)),
+        lit("Lit.Int", 2, "2", pos(13, 14))
+      )
+    ).asInstanceOf[js.Dictionary[Any]]
+    check(parsedDefaultDialect, expected)
   }
 
 }

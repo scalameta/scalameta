@@ -6,6 +6,7 @@ import js.JSConverters._
 import js.annotation._
 
 import prettyprinters._
+import inputs.Position
 
 object JSFacade {
 
@@ -36,13 +37,16 @@ object JSFacade {
     case _ => ()
   }
 
+  private[this] def toPosition(p: Position): js.Dynamic =
+    js.Dynamic.literal(
+      "start" -> p.start.offset,
+      "end" -> p.end.offset
+    )
+
   private[this] def toNode(t: Tree): js.Dynamic = {
     val base = js.Dynamic.literal(
       "type" -> t.productPrefix,
-      "pos" -> js.Dynamic.literal(
-        "start" -> t.pos.start.offset,
-        "end" -> t.pos.end.offset
-      )
+      "pos" -> toPosition(t.pos)
     )
 
     val fields = js.Dictionary(t.productFields.zip(t.productIterator.toList).collect {
@@ -69,19 +73,46 @@ object JSFacade {
     mergeJSObjects(base, fields, value, syntax)
   }
 
-  private[this] def parse[A <: Tree: Parse](code: String): js.Dictionary[Any] =
-    code.parse[A] match {
-      case Parsed.Success(t) => toNode(t).asInstanceOf[js.Dictionary[Any]]
-      case Parsed.Error(_, message, _) => js.Dictionary(
-        "error" -> message
-      )
+  private[this] type Settings = js.UndefOr[js.Dictionary[String]]
+  private[this] val defaultSettings = None.orUndefined
+
+  private[this] def extractDialect(s: Settings): Either[String, Dialect] = {
+    s.toOption.flatMap(_.get("dialect")) match {
+      case Some(dialectStr) => Dialect.standards.get(dialectStr) match {
+        case Some(dialect) => Right(dialect)
+        case None => Left(s"'$dialectStr' is not a valid dialect.")
+      }
+      case None => Right(dialects.Scala211)
+    }
+  }
+
+  private[this] def parse[A <: Tree: Parse](
+    code: String,
+    settings: Settings
+  ): js.Dictionary[Any] =
+    extractDialect(settings) match {
+      case Left(error) => js.Dictionary("error" -> error)
+      case Right(dialect) =>
+        dialect(code).parse[A] match {
+          case Parsed.Success(t) => toNode(t).asInstanceOf[js.Dictionary[Any]]
+          case Parsed.Error(pos, message, _) => js.Dictionary(
+            "error" -> message,
+            "pos" -> toPosition(pos)
+          )
+        }
     }
 
   @JSExportTopLevel("default")
   @JSExportTopLevel("parseSource")
-  def parseSource(code: String): js.Dictionary[Any] = parse[Source](code)
+  def parseSource(
+    code: String,
+    settings: Settings = defaultSettings
+  ): js.Dictionary[Any] = parse[Source](code, settings)
 
   @JSExportTopLevel("parseStat")
-  def parseStat(code: String): js.Dictionary[Any] = parse[Stat](code)
+  def parseStat(
+    code: String,
+    settings: Settings = defaultSettings
+  ): js.Dictionary[Any] = parse[Stat](code, settings)
 
 }
