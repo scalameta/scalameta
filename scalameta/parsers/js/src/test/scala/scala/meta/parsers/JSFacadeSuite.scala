@@ -141,7 +141,9 @@ class JSFacadeSuite extends FunSuite {
     check(parsed, expected)
   }
 
-  test("parse Lit.Double") {
+  // Ignored because of
+  // https://github.com/scalameta/scalameta/issues/961
+  ignore("parse Lit.Double") {
     val parsed = JSFacade.parseStat("42.2")
     val expected = lit("Lit.Double", 42.2, "42.2", pos(0, 4))
     check(parsed, expected)
