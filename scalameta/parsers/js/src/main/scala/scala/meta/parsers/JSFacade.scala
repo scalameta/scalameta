@@ -76,24 +76,31 @@ object JSFacade {
   private[this] type Settings = js.UndefOr[js.Dictionary[String]]
   private[this] val defaultSettings = None.orUndefined
 
+  private[this] def extractDialect(s: Settings): Either[String, Dialect] = {
+    s.toOption.flatMap(_.get("dialect")) match {
+      case Some(dialectStr) => Dialect.standards.get(dialectStr) match {
+        case Some(dialect) => Right(dialect)
+        case None => Left(s"'$dialectStr' is not a valid dialect.")
+      }
+      case None => Right(dialects.Scala211)
+    }
+  }
+
   private[this] def parse[A <: Tree: Parse](
     code: String,
     settings: Settings
-  ): js.Dictionary[Any] = {
-    val dialect = (for {
-      settings <- settings.toOption
-      dialectStr <- settings.get("dialect")
-      dialect <- Dialect.standards.get(dialectStr)
-    } yield dialect).getOrElse(dialects.Scala211)
-
-    dialect(code).parse[A] match {
-      case Parsed.Success(t) => toNode(t).asInstanceOf[js.Dictionary[Any]]
-      case Parsed.Error(pos, message, _) => js.Dictionary(
-        "error" -> message,
-        "pos" -> toPosition(pos)
-      )
+  ): js.Dictionary[Any] =
+    extractDialect(settings) match {
+      case Left(error) => js.Dictionary("error" -> error)
+      case Right(dialect) =>
+        dialect(code).parse[A] match {
+          case Parsed.Success(t) => toNode(t).asInstanceOf[js.Dictionary[Any]]
+          case Parsed.Error(pos, message, _) => js.Dictionary(
+            "error" -> message,
+            "pos" -> toPosition(pos)
+          )
+        }
     }
-  }
 
   @JSExportTopLevel("default")
   @JSExportTopLevel("parseSource")

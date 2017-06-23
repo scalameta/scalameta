@@ -209,7 +209,7 @@ class JSFacadeSuite extends FunSuite {
     check(parsedDefaultDialect, expected)
   }
 
-  test("inexisting dialects fallback to Scala 2.11") {
+  test("inexisting dialects report an error") {
     val code =
       """|List(
          |  1,
@@ -217,8 +217,7 @@ class JSFacadeSuite extends FunSuite {
          |)""".stripMargin
     val parsedDefaultDialect = JSFacade.parseStat(code, js.Dictionary("dialect" -> "wrong"))
     val expected = d(
-      "error" -> "illegal start of simple expression",
-      "pos" -> pos(16, 17)
+      "error" -> "'wrong' is not a valid dialect."
     ).asInstanceOf[js.Dictionary[Any]]
     check(parsedDefaultDialect, expected)
   }
