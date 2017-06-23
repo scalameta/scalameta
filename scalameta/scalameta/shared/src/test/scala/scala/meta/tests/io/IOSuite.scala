@@ -5,7 +5,6 @@ import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PathIO
 import scala.meta.io.AbsolutePath
 import scala.meta.io.RelativePath
-import org.scalameta.logger
 import org.scalatest.FunSuite
 
 class IOSuite extends FunSuite {

@@ -3,7 +3,6 @@ package scala.meta.internal.io
 import java.io.File
 import java.net.URI
 import java.nio.file.Path
-import org.scalameta.logger
 
 // Rough implementation of java.nio.Path, should work similarly for the happy
 // path but has undefined behavior for error handling.

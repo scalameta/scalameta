@@ -100,6 +100,5 @@ object Sourcepath {
   def apply(path: AbsolutePath): Sourcepath =
     new Sourcepath(List(path))
   def apply(value: String): Sourcepath =
-    new Sourcepath(
-      value.split(pathSeparator).map(path => AbsolutePath(path)))
+    new Sourcepath(value.split(pathSeparator).map(AbsolutePath(_)))
 }

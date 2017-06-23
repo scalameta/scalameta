@@ -1,10 +1,8 @@
 package scala.meta.tests.io
 
 import java.nio.file.Path
-import java.nio.file.Paths
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.io.PlatformPathIO
-import org.scalameta.logger
 import org.scalatest.FunSuite
 
 class NIOPathTest extends FunSuite {

@@ -14,9 +14,7 @@ import scala.meta.{Dialect => mDialect}
 import scala.meta.{semantic => m}
 import scala.{Seq => _}
 import java.io._
-import scala.meta.internal.io.PathIO
 import org.scalameta.data._
-import org.scalameta.logger
 
 // NOTE: s.Attributes and friends are generated from semanticdb.proto.
 // See scalameta/semantic/jvm/target/scala-<version>/src_managed/main/scala/meta/internal/semantic/schema.

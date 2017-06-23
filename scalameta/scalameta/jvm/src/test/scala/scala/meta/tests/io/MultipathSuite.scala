@@ -3,7 +3,6 @@ package scala.meta.tests.io
 import scala.meta._
 import java.io.File
 import java.net.URI
-import org.scalameta.logger
 import org.scalatest.FunSuite
 
 class MultipathSuite extends FunSuite {
@@ -19,7 +18,6 @@ class MultipathSuite extends FunSuite {
   test("Multipath.deep") {
     val obtained = multipath.deep.map(_.syntax)
     val expected = files.map(file => Fragment(AbsolutePath(tmp), RelativePath(file))).map(_.syntax)
-    logger.elem(obtained.sorted, expected.sorted)
     assert(obtained.sorted == expected.sorted)
   }
 
@@ -49,5 +47,3 @@ class MultipathSuite extends FunSuite {
     assert(fromPath.syntax == fromSyntax.syntax)
   }
 }
-
-
