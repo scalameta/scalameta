@@ -22,6 +22,7 @@ class NIOPathTest extends FunSuite {
   }
   test(".getRoot") {
     assert(file.getRoot == null)
+    assert(get("").toAbsolutePath.getRoot != null)
   }
   test(".getFileName") {
     assert(file.getFileName.toString == "build.sbt")
@@ -52,7 +53,6 @@ class NIOPathTest extends FunSuite {
     assert(file.endsWith("build.sbt"))
   }
   test(".normalize") {
-    logger.elem(file, file.resolve("bar"))
     assert(file.resolve("foo").resolve("..").normalize().toString == "build.sbt")
   }
   test(".resolve") {

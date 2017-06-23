@@ -8,6 +8,7 @@ import java.nio.{file => nio}
 import java.nio.file.Paths
 import scala.meta.internal.io.PathIO
 
+/** Wrapper around a relative nio.Path. */
 sealed abstract case class RelativePath(path: Path) {
   require(!path.isAbsolute, s"$path is not relative!")
   def syntax: String = toString

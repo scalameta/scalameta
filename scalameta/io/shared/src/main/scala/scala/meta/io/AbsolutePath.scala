@@ -6,8 +6,11 @@ import java.nio.{file => nio}
 import java.net._
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.meta.internal.io.{FileIO, PathIO}
+import scala.meta.internal.io.PlatformPathIO
+import scala.meta.internal.io.FileIO
+import scala.meta.internal.io.PathIO
 
+/** Wrapper around an absolute nio.Path. */
 sealed abstract case class AbsolutePath(path: nio.Path) {
   require(path.isAbsolute, s"$path is not absolute!")
   def toFile: File = path.toFile
@@ -30,9 +33,14 @@ sealed abstract case class AbsolutePath(path: nio.Path) {
 }
 
 object AbsolutePath {
-  private[meta] val root = new AbsolutePath(Paths.get("").toAbsolutePath.getRoot) {}
-  def apply(file: File): AbsolutePath = apply(file.toPath)(PathIO.workingDirectory)
-  def apply(path: String)(implicit cwd: AbsolutePath): AbsolutePath = apply(Paths.get(path))
+  lazy val root = new AbsolutePath(Paths.get("").toAbsolutePath.getRoot) {}
+  // java.{io,nio} implicitly assume sys.props("user.dir") as the working directory.
+  // This assumption does not hold for JS runtimes.
+  implicit def workingDirectory: AbsolutePath =
+    new AbsolutePath(Paths.get(PlatformPathIO.workingDirectoryString)) {}
+  // Use working directory as cwd, that's the default behavior of java.io.File.
+  def apply(file: File)(implicit cwd: AbsolutePath): AbsolutePath = apply(file.toPath)(cwd)
+  def apply(path: String)(implicit cwd: AbsolutePath): AbsolutePath = apply(Paths.get(path))(cwd)
   def apply(path: Path)(implicit cwd: AbsolutePath): AbsolutePath =
     if (path.isAbsolute) {
       new AbsolutePath(path) {}

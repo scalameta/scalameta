@@ -41,10 +41,8 @@ case class NodeNIOPath(filename: String) extends Path {
   override def getRoot: Path =
     if (!isAbsolute) null
     else NodeNIOPath(PathIO.fileSeparator)
-  override def normalize(): Path = {
-    logger.elem(filename, JSPath.normalize(filename))
+  override def normalize(): Path =
     NodeNIOPath(JSPath.normalize(filename))
-  }
   override def endsWith(other: Path): Boolean =
     endsWith(other.toString)
   override def endsWith(other: String): Boolean =

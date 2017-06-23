@@ -43,7 +43,7 @@ class Database(entries: Seq[Attributes]) {
               sourcepath.getOrElse(sys.error("Sourcepath is required to load slim semanticdb."))
                 .find(RelativePath(sfilename))
                 .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
-            mInput.File(AbsolutePath(uri.getPath)(PathIO.workingDirectory))
+            mInput.File(AbsolutePath(uri.getPath))
           } else {
             mInput.LabeledString(sfilename.toString, scontents)
           }

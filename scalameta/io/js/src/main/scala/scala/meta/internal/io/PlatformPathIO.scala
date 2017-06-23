@@ -4,9 +4,10 @@ import java.nio.file.Path
 import scala.meta.io._
 
 object PlatformPathIO {
-  private implicit val cwd = PathIO.workingDirectory
+  def workingDirectoryString: String = JSShell.pwd().toString
+
   def workingDirectory: AbsolutePath =
-    if (JSIO.isNode) AbsolutePath(JSShell.pwd().toString)
+    if (JSIO.isNode) AbsolutePath(workingDirectoryString)
     else AbsolutePath(fileSeparator)
 
   def fileSeparatorChar: Char =
@@ -29,7 +30,6 @@ object PlatformPathIO {
 
   def resolve(path1: RelativePath, path2: RelativePath): RelativePath =
     RelativePath(JSPath.resolve(path1.toString, path2.toString))
-
 
   def pathGet(first: String, more: String*): Path =
     NodeNIOPath(JSPath.join(first, more: _*))

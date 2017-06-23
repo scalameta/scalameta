@@ -2,13 +2,10 @@ package scala.meta.internal.io
 
 import java.net.URI
 import java.nio.charset.Charset
-import java.nio.file.FileVisitOption
-import scala.meta.io._
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.SimpleFileVisitor
 import java.util.stream.Collectors
+import scala.meta.io._
 
 object PlatformFileIO {
   def readAllBytes(uri: URI): Array[Byte] =

@@ -16,14 +16,17 @@ object PlatformPathIO {
   def pathSeparator: String =
     File.pathSeparator
 
+  def workingDirectoryString: String =
+    sys.props("user.dir")
+
   def workingDirectory: AbsolutePath =
-    AbsolutePath(sys.props("user.dir"))(AbsolutePath.root)
+    AbsolutePath(workingDirectoryString)
 
   def rootDirectory: AbsolutePath =
-    AbsolutePath(Paths.get("").toAbsolutePath.getRoot)(AbsolutePath.root)
+    AbsolutePath(Paths.get("").toAbsolutePath.getRoot)
 
   def homeDirectory: AbsolutePath =
-    AbsolutePath(sys.props("user.home"))(AbsolutePath.root)
+    AbsolutePath(sys.props("user.home"))
 
   def isAbsolutePath(path: String): Boolean =
     Paths.get(path).isAbsolute
