@@ -14,6 +14,7 @@ import scala.meta.{Dialect => mDialect}
 import scala.meta.{semantic => m}
 import scala.{Seq => _}
 import java.io._
+import scala.meta.internal.io.PathIO
 import org.scalameta.data._
 
 // NOTE: s.Attributes and friends are generated from semanticdb.proto.
@@ -33,8 +34,9 @@ class Database(entries: Seq[Attributes]) {
 
   def toMeta(sourcepath: Option[Sourcepath]): m.Database = {
     val mentries = entries.map {
-      case s.Attributes(sfilename, scontents, sdialect, snames, smessages, sdenots, ssugars) =>
-        assert(sfilename.nonEmpty, "s.Attribute.filename must not be empty")
+      case s.Attributes(sunixfilename, scontents, sdialect, snames, smessages, sdenots, ssugars) =>
+        assert(sunixfilename.nonEmpty, "s.Attribute.filename must not be empty")
+        val sfilename = PathIO.fromUnix(sunixfilename)
         val minput = {
           if (scontents == "") {
             val uri =
