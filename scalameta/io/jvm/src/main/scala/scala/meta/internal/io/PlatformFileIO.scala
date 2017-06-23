@@ -8,6 +8,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.SimpleFileVisitor
+import java.util.stream.Collectors
 
 object PlatformFileIO {
   def readAllBytes(uri: URI): Array[Byte] =
@@ -32,13 +33,12 @@ object PlatformFileIO {
     import scala.collection.JavaConverters._
     val relativeFiles = Files
       .walk(root.toNIO)
-      .iterator()
+      .collect(Collectors.toList[Path])
       .asScala
       .collect {
         case path if Files.isRegularFile(path) =>
           RelativePath(root.path.relativize(path))
       }
-      .toSeq
     new ListFiles(root, relativeFiles)
   }
 }
