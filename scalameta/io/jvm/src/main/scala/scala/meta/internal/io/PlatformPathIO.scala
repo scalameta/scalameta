@@ -33,7 +33,4 @@ object PlatformPathIO {
 
   def normalizePath(path: String): String =
     Paths.get(path).normalize().toString
-
-  def pathGet(first: String, more: String*): Path =
-    Paths.get(first, more: _*)
 }

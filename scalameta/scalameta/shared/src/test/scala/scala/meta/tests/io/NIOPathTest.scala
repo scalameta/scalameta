@@ -1,18 +1,16 @@
 package scala.meta.tests.io
 
 import java.nio.file.Path
+import java.nio.file.Paths
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.io.PlatformPathIO
 import org.scalatest.FunSuite
 
 class NIOPathTest extends FunSuite {
 
-  // NOTE: For some reason, we can't call Paths.get due to cryptic linking errors.
-  def get(first: String, more: String*) =
-    PlatformPathIO.pathGet(first, more: _*)
-  def file: Path = get("build.sbt")
-  def target: Path = get("target")
-  def abs: Path = get(PathIO.fileSeparator).resolve("bar").resolve("foo")
+  def file: Path = Paths.get("build.sbt")
+  def target: Path = Paths.get("target")
+  def abs: Path = Paths.get(PathIO.fileSeparator).resolve("bar").resolve("foo")
 
   test(".isAbsolute") {
     assert(!file.isAbsolute)
@@ -20,7 +18,7 @@ class NIOPathTest extends FunSuite {
   }
   test(".getRoot") {
     assert(file.getRoot == null)
-    assert(get("").toAbsolutePath.getRoot != null)
+    assert(Paths.get("").toAbsolutePath.getRoot != null)
   }
   test(".getFileName") {
     assert(file.getFileName.toString == "build.sbt")
@@ -62,7 +60,7 @@ class NIOPathTest extends FunSuite {
     assert(abs.resolveSibling("foobar") == abs.getParent.resolve("foobar"))
   }
   test(".relativize(Path)") {
-    assert(abs.relativize(abs.resolve("qux")) == get("qux"))
+    assert(abs.relativize(abs.resolve("qux")) == Paths.get("qux"))
   }
   test(".toUri") {
     assert(file.toUri.getPath.endsWith("build.sbt"))
