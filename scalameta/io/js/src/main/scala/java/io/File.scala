@@ -2,13 +2,7 @@ package java.io
 
 import java.net.URI
 import java.nio.file.Path
-import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.JSFs
-import scala.meta.internal.io.JSPath
-import scala.meta.internal.io.JSStats
-import scala.meta.internal.io.NodeNIOPath
-import scala.meta.internal.io.PathIO
-import scala.meta.internal.io.PlatformFileIO
+import scala.meta.internal.io._
 
 // obtained implementation by experimentation on the JDK.
 class File(path: String) {
