@@ -257,15 +257,16 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
               emitSpliceEnd(curr.offset)
               emitContents()
 
-            case _ =>
+            case XMLLITEND =>
               // We have reached the final xml part
+              nextToken()
           }
         }
 
         // Xml.Start has been emitted. Backtrack to emit first part
         legacyIndex -= 1
         emitContents()
-        assert(prev.token == XMLLIT)
+        assert(prev.token == XMLLITEND)
         val xmlEndIndex = prev.endOffset + 1
         tokens += Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex)
       }
