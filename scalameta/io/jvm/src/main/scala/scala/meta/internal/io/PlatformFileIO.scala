@@ -1,14 +1,11 @@
 package scala.meta.internal.io
 
-import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
-import scala.meta.io._
-import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes
+import java.util.stream.Collectors
+import scala.meta.io._
 
 object PlatformFileIO {
   def readAllBytes(uri: URI): Array[Byte] =
@@ -24,20 +21,21 @@ object PlatformFileIO {
     new ListFiles(path, Option(path.toFile.list()).toList.flatten.map(RelativePath.apply))
 
   def isFile(path: AbsolutePath): Boolean =
-    path.toFile.isFile
+    Files.isRegularFile(path.path)
 
   def isDirectory(path: AbsolutePath): Boolean =
-    path.toFile.isDirectory
+    Files.isDirectory(path.path)
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
-    val builder = List.newBuilder[RelativePath]
-    Files.walkFileTree(root.toNIO, new SimpleFileVisitor[Path] {
-      override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-        val abspath = AbsolutePath(file.toAbsolutePath)
-        builder += abspath.toRelative(root)
-        FileVisitResult.CONTINUE
+    import scala.collection.JavaConverters._
+    val relativeFiles = Files
+      .walk(root.toNIO)
+      .collect(Collectors.toList[Path])
+      .asScala
+      .collect {
+        case path if Files.isRegularFile(path) =>
+          RelativePath(root.path.relativize(path))
       }
-    })
-    new ListFiles(root, builder.result())
+    new ListFiles(root, relativeFiles)
   }
 }

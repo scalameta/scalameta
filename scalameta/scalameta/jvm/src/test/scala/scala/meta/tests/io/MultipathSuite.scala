@@ -1,10 +1,8 @@
 package scala.meta.tests.io
 
 import scala.meta._
-
 import java.io.File
 import java.net.URI
-
 import org.scalatest.FunSuite
 
 class MultipathSuite extends FunSuite {
@@ -30,7 +28,7 @@ class MultipathSuite extends FunSuite {
   test("Multipath.relativize") {
     assert(multipath.relativize(new URI("blah")).isEmpty)
     files.foreach { file =>
-      assert(multipath.relativize(new File(tmp, file).toURI).get.value == file)
+      assert(multipath.relativize(new File(tmp, file).toURI).get.toString == file)
     }
   }
 

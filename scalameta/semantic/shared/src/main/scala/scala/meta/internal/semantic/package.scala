@@ -2,11 +2,11 @@ package scala.meta
 package internal
 import scala.util.Try
 import java.nio.charset.Charset
-
 import scala.collection.immutable.Seq
 import scala.meta.inputs.{Input => mInput}
 import scala.meta.inputs.{Point => mPoint}
 import scala.meta.inputs.{Position => mPosition}
+import scala.meta.internal.io.PathIO
 import scala.meta.internal.semantic.{schema => s}
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.io._
@@ -42,7 +42,7 @@ package object semantic {
               case _ => None
             }
           }
-          val (spath, scontents) = minput match {
+          val (splatformpath, scontents) = minput match {
             case mInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
               path.toRelative(sourceroot).toString -> ""
             case mInput.LabeledString(label, contents) =>
@@ -50,6 +50,7 @@ package object semantic {
             case other =>
               sys.error(s"bad database: unsupported input $other")
           }
+          val spath = PathIO.toUnix(splatformpath)
           assert(spath.nonEmpty, s"'$spath'.nonEmpty")
           val sdialect = {
             val sdialect = mDialect.standards.find(_._2 == mdialect).map(_._1)

@@ -28,8 +28,7 @@ class IOSuite extends FunSuite {
   }
 
   test("PathIO.isAbsolute") {
-    val obtained = PathIO.isAbsolutePath(PathIO.workingDirectory.toString)
-    assert(obtained)
+    assert(PathIO.isAbsolutePath(PathIO.workingDirectory.toString))
   }
 
   test("FileIO.listFiles(Directory)") {
@@ -58,6 +57,12 @@ class IOSuite extends FunSuite {
   test("Input.File.slurp") {
     val obtained = new String(Input.File(buildSbt).chars)
     assert(obtained.contains("project"))
+  }
+
+  test("AbsolutePath(relpath)(customCwd)") {
+    implicit val customWorkingDirectory = AbsolutePath.root
+    val obtained = AbsolutePath("foo")
+    assert(obtained == customWorkingDirectory.resolve("foo"))
   }
 
 }

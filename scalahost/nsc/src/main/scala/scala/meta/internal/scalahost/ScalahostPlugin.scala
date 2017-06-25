@@ -25,9 +25,7 @@ class ScalahostPlugin(val global: Global)
     }
     options.foreach {
       case SetSourceroot(path) =>
-        val abspath =
-          if (PathIO.isAbsolutePath(path)) AbsolutePath(path)
-          else PathIO.workingDirectory.resolve(RelativePath(path))
+        val abspath = AbsolutePath(path)
         config.setSourceroot(abspath)
       case SetSemanticdb(SemanticdbMode(mode)) =>
         config.setSemanticdbMode(mode)

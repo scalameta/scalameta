@@ -86,7 +86,7 @@ object Classpath {
   // provided by Absolute vs. Relative paths. This constructor will crash if the
   // argument is not an absolute path.
   def apply(value: String): Classpath = {
-    new Classpath(value.split(pathSeparator).map(AbsolutePath.apply))
+    new Classpath(value.split(pathSeparator).map(AbsolutePath(_)))
   }
 }
 
@@ -100,5 +100,5 @@ object Sourcepath {
   def apply(path: AbsolutePath): Sourcepath =
     new Sourcepath(List(path))
   def apply(value: String): Sourcepath =
-    new Sourcepath(value.split(pathSeparator).map(AbsolutePath.apply))
+    new Sourcepath(value.split(pathSeparator).map(AbsolutePath(_)))
 }

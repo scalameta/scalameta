@@ -44,6 +44,8 @@ object JSFs extends js.Any {
   /** Returns an fs.Stats for path. */
   def lstatSync(path: String): JSStats = js.native
 
+  /** Returns true if the file exists, false otherwise. */
+  def existsSync(path: String): Boolean = js.native
 }
 
 /** Facade for nodejs class fs.Stats.
@@ -69,6 +71,10 @@ object JSPath extends js.Any {
   def isAbsolute(path: String): Boolean = js.native
   def resolve(paths: String*): String = js.native
   def normalize(path: String): String = js.native
+  def basename(path: String): String = js.native
+  def dirname(path: String): String = js.native
+  def relative(from: String, to: String): String = js.native
+  def join(first: String, more: String*): String = js.native
 }
 
 object JSIO {
