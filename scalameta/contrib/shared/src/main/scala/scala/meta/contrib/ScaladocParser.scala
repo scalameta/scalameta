@@ -45,15 +45,15 @@ object ScaladocParser {
     comment.content.map(parseRec)
   }
 
-  private[this] def generateHeadingParser(level: Int, f: (String) => DocToken): Parser[DocToken] = {
-    val headingSimbols = "=" * level
+  private[this] def generateHeadingParser(headingType: Heading): Parser[DocToken] = {
+    val headingSymbols = "=" * headingType.level
     P(
       // Code block start
-      headingSimbols
+      headingSymbols
       // Heading description
-        ~ ((AnyChar ~ !"=").rep ~ AnyChar).!.map(f(_))
+        ~ ((AnyChar ~ !"=").rep ~ AnyChar).!.map(c => DocToken(headingType, c.trim))
       // Code block end
-        ~ headingSimbols
+        ~ headingSymbols
     )
   }
 
@@ -79,14 +79,7 @@ object ScaladocParser {
       )
 
     // Parsers for headings/subheadings instances.
-    val headingsParsers = Seq(
-      generateHeadingParser(6, (c: String) => DocToken(Heading6, c.trim)),
-      generateHeadingParser(5, (c: String) => DocToken(Heading5, c.trim)),
-      generateHeadingParser(4, (c: String) => DocToken(Heading4, c.trim)),
-      generateHeadingParser(3, (c: String) => DocToken(Heading3, c.trim)),
-      generateHeadingParser(2, (c: String) => DocToken(Heading2, c.trim)),
-      generateHeadingParser(1, (c: String) => DocToken(Heading1, c.trim))
-    )
+    val headingsParsers = DocToken.allHeadings.reverse.map(generateHeadingParser(_))
 
     // Parser for Inheritdoc instances
     val inheritDocParser = P("@inheritdoc".!).map(_ => DocToken(InheritDoc))

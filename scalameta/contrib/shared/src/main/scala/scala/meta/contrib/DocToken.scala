@@ -309,4 +309,14 @@ object DocToken {
     */
   case object Heading6 extends Heading(6)
 
+  /**
+    * Contains all the implemented [[Heading]]'s.
+    */
+  def allHeadings: Seq[Heading] = List(Heading1, Heading2, Heading3, Heading4, Heading5, Heading6)
+
+  /**
+    * Obtains a heading by its level if available.
+    */
+  def headingForLevel(level: Int): Option[Heading] = allHeadings.find(_.level == level)
+
 }
