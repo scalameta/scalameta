@@ -4,6 +4,11 @@
 
 @sect("Scalameta", stableVersionBadge)
 
+  @raw
+    <center>
+      <img style="margin: auto; width: 12em; padding-top: 2em" src="img/scalameta-logo.png" />
+    </center>
+
   @p
     Scalameta is a clean-room implementation of a metaprogramming toolkit for Scala,
     designed to be simple, robust and portable.
