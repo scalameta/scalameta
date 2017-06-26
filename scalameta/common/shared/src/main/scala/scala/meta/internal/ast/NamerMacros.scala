@@ -14,7 +14,7 @@ trait CommonNamerMacros extends MacroHelpers {
   lazy val TreeClass = tq"_root_.scala.meta.Tree"
   lazy val QuasiClass = tq"_root_.scala.meta.internal.ast.Quasi"
   lazy val ClassifierClass = tq"_root_.scala.meta.classifiers.Classifier"
-  lazy val ArrayClassMethod = q"_root_.scala.meta.internal.ast.Helpers.arrayClass"
+  lazy val ArrayClassMethod = q"_root_.scala.meta.internal.ast.`package`.arrayClass"
   lazy val ClassOfMethod = q"_root_.scala.Predef.classOf"
   lazy val TokensClass = tq"_root_.scala.meta.tokens.Tokens"
   lazy val AstAnnotation = tq"_root_.scala.meta.internal.ast.ast"

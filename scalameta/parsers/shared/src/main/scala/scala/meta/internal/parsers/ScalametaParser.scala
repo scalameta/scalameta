@@ -13,7 +13,6 @@ import scala.collection.immutable._
 import scala.util.Try
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.ast._
-import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.inputs._
 import scala.meta.tokens._
@@ -458,7 +457,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     case Ident(value) if pred(value.stripPrefix("`").stripSuffix("`")) => true
     case _                                                             => false
   }
-  def isUnaryOp: Boolean            = isIdentAnd(Helpers.isUnaryOp)
+  def isUnaryOp: Boolean            = isIdentAnd(name => Term.Name(name).isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
   def isIdentOf(name: String)       = isIdentAnd(_ == name)
   def isIdent: Boolean              = isIdentAnd(_ => true)

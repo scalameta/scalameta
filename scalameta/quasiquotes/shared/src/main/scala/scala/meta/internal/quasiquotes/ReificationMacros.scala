@@ -20,8 +20,7 @@ import scala.meta.classifiers._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.prettyprinters._
-import scala.meta.internal.ast.Quasi
-import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.ast._
 import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.tokens._

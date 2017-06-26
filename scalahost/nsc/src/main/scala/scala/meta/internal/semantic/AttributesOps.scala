@@ -8,7 +8,7 @@ import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.{meta => m}
 import scala.{meta => mf}
-import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.ast._
 import scala.meta.internal.inputs._
 
 trait AttributesOps { self: DatabaseOps =>

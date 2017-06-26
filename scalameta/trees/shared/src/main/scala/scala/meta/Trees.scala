@@ -7,7 +7,6 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
 import scala.meta.internal.ast._
-import scala.meta.internal.ast.Helpers._
 
 @root trait Tree extends InternalTree {
   def parent: Option[Tree]

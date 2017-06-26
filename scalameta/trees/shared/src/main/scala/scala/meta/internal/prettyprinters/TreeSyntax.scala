@@ -6,9 +6,7 @@ import scala.meta.classifiers._
 import scala.meta.prettyprinters._
 import scala.meta.prettyprinters.Syntax._
 import Show.{ sequence => s, repeat => r, indent => i, newline => n, meta => m, wrap => w, function => fn }
-import scala.meta.internal.ast.Origin
-import scala.meta.internal.ast.Quasi
-import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.ast.{root => _, branch => _, _}
 import scala.meta.internal.tokenizers.Chars._
 import scala.meta.internal.tokenizers.keywords
 import org.scalameta.adt._
