@@ -361,15 +361,15 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   names(
     s"""
-      |package m
-      |class C(x: Int) {
-      |  def this() = this(0)
-      |}
-      |
-      |object M {
-      |  val c0 = new C()
-      |  val c1 = new C(1)
-      |}
+       |package m
+       |class C(x: Int) {
+       |  def this() = this(0)
+       |}
+       |
+       |object M {
+       |  val c0 = new C()
+       |  val c1 = new C(1)
+       |}
     """.stripMargin,
     """
       |[9..10): m => _root_.m.

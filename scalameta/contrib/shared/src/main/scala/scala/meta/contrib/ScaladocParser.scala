@@ -29,7 +29,8 @@ object ScaladocParser {
           if (remainingScaladoc.trim.nonEmpty || remainingScaladoc.contains("\n\n")) {
             // Adds the parsed token to the list of tokens and parse the rest of the string recursively.
             if (remainingScaladoc.take(2) == "\n\n") {
-              List(p.value, DocToken(Paragraph)) ++ parseRec(remainingScaladoc.dropWhile(_ == '\n'))
+              List(p.value, DocToken(Paragraph)) ++ parseRec(
+                remainingScaladoc.dropWhile(_ == '\n'))
             } else {
               List(p.value) ++ parseRec(remainingScaladoc.dropWhile(c => c == ' ' || c == '\n'))
             }

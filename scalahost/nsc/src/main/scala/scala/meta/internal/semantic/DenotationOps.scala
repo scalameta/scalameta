@@ -63,7 +63,7 @@ trait DenotationOps { self: DatabaseOps =>
       var flags = 0l
       val isDeclaredDeferred = gsym.hasFlag(gf.DEFERRED) && !gsym.hasFlag(gf.PARAM)
       val isDeclaredAbstract = (gsym.hasFlag(gf.ABSTRACT) && !gsym.hasFlag(gf.TRAIT)) || gsym
-          .hasFlag(gf.ABSOVERRIDE)
+        .hasFlag(gf.ABSOVERRIDE)
       if (isDeclaredDeferred || isDeclaredAbstract) flags |= mf.ABSTRACT
       if ((gsym.hasFlag(gf.FINAL) && !gsym.hasFlag(gf.PACKAGE)) || isObject) flags |= mf.FINAL
       if (gsym.hasFlag(gf.SEALED)) flags |= mf.SEALED

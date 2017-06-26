@@ -6,8 +6,9 @@ import scala.meta.tokens.Token.Comment
 import scala.collection.immutable.List
 import org.scalameta.logger
 
-sealed abstract class AssociatedComments(leadingMap: Map[Token, List[Comment]],
-                                         trailingMap: Map[Token, List[Comment]]) {
+sealed abstract class AssociatedComments(
+    leadingMap: Map[Token, List[Comment]],
+    trailingMap: Map[Token, List[Comment]]) {
   private def pretty(map: Map[Token, List[Comment]]): String =
     map
       .map {
