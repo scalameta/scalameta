@@ -2,11 +2,12 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.17")
 
 addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
 
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.3")
+// exclude is a workaround for https://github.com/sbt/sbt-assembly/issues/236#issuecomment-294452474
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.5" exclude("org.apache.maven", "maven-plugin-api"))
 
 addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.3")
 
-addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC4")
 
 resolvers += Resolver.bintrayIvyRepo("scalameta", "sbt-plugins") // only needed for scalatex 0.3.8-pre
 addSbtPlugin("com.lihaoyi" % "scalatex-sbt-plugin" % "0.3.8-pre")
