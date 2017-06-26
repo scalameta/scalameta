@@ -51,12 +51,14 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case CHARLIT         => Token.Constant.Char(input, dialect, curr.offset, curr.endOffset + 1, curr.charVal)
         case SYMBOLLIT       => Token.Constant.Symbol(input, dialect, curr.offset, curr.endOffset + 1, scala.Symbol(curr.strVal))
         case STRINGLIT       => Token.Constant.String(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+        case STRINGPART      => unreachable
         case TRUE            => Token.KwTrue(input, dialect, curr.offset)
         case FALSE           => Token.KwFalse(input, dialect, curr.offset)
         case NULL            => Token.KwNull(input, dialect, curr.offset)
 
         case INTERPOLATIONID => Token.Interpolation.Id(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
         case XMLLIT          => Token.Xml.Start(input, dialect, curr.offset, curr.offset)
+        case XMLLITEND       => unreachable
 
         case NEW   => Token.KwNew(input, dialect, curr.offset)
         case THIS  => Token.KwThis(input, dialect, curr.offset)
