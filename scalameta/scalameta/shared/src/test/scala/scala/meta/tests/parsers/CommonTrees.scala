@@ -27,7 +27,7 @@ trait CommonTrees {
 
   object EmptyCtor {
     def unapply(tree: Tree): Boolean = tree match {
-      case Ctor.Primary(Nil, Ctor.Name("this"), Nil) => true
+      case Ctor.Primary(Nil, Name.Anonymous(), Nil) => true
       case _ => false
     }
   }

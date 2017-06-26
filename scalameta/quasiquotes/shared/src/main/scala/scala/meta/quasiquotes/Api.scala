@@ -16,7 +16,7 @@ private[meta] trait Api {
   @quasiquote[Type]('t)                implicit class XtensionQuasiquoteType(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Type.Param]('tparam)     implicit class XtensionQuasiquoteTypeParam(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Case, Pat]('p)           implicit class XtensionQuasiquoteCaseOrPattern(ctx: StringContext) extends QuasiquoteParsers
-  @quasiquote[Ctor.Call]('ctor)        implicit class XtensionQuasiquoteCtor(ctx: StringContext) extends QuasiquoteParsers
+  @quasiquote[Init]('init)             implicit class XtensionQuasiquoteInit(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Template]('template)     implicit class XtensionQuasiquoteTemplate(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Mod]('mod)               implicit class XtensionQuasiquoteMod(ctx: StringContext) extends QuasiquoteParsers
   @quasiquote[Enumerator]('enumerator) implicit class XtensionQuasiquoteEnumerator(ctx: StringContext) extends QuasiquoteParsers

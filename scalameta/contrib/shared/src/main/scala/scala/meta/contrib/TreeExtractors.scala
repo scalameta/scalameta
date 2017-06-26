@@ -6,7 +6,6 @@ trait TreeExtractors {
     def unapply(tree: Tree): Option[(Term, Name)] = tree match {
       case Term.Select(qual, name) => Some(qual -> name)
       case Type.Select(qual, name) => Some(qual -> name)
-      case Ctor.Ref.Select(qual, name) => Some(qual -> name)
       case _ => None
     }
   }

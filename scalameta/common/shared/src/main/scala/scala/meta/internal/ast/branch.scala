@@ -33,7 +33,7 @@ class BranchNamerMacros(val c: Context) extends AstReflection with CommonNamerMa
       mstats1 += q"$CommonTyperMacrosModule.hierarchyCheck[$name]"
       val anns1 = anns :+ q"new $AdtMetadataModule.branch" :+ q"new $AstMetadataModule.branch"
       mstats1 ++= mkClassifier(name)
-      if (!isQuasi) mstats1 += mkQuasi(name, parents, Nil, "value", "name") // NOTE: this accounts for Name.value and Member.name
+      if (!isQuasi) mstats1 += mkQuasi(name, parents, Nil, "value", "name", "tpe")
 
       val cdef1 = q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
       val mdef1 = q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"

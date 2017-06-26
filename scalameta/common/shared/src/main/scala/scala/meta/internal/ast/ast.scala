@@ -284,8 +284,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
           }
         """
       } else {
-        // NOTE: additional stubs account for Pkg.name and Name.Anonymous.value
-        mstats1 += mkQuasi(iname, iparents, fieldParamss, "name", "value")
+        mstats1 += mkQuasi(iname, iparents, fieldParamss, "name", "value", "tpe")
       }
 
       mstats1 += q"$mods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"

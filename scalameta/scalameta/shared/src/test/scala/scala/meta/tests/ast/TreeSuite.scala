@@ -8,6 +8,5 @@ class TreeSuite extends FunSuite {
   test("Name.unapply") {
     assert(Name.unapply(q"a").contains("a"))
     assert(Name.unapply(t"a").contains("a"))
-    assert(Name.unapply(Ctor.Ref.Name("a")).contains("a"))
   }
 }

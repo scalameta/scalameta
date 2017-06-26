@@ -119,8 +119,8 @@ object TreeSyntax {
 
       def templ(templ: Template) =
         // TODO: consider XXX.isEmpty
-        if (templ.early.isEmpty && templ.parents.isEmpty && templ.self.name.is[Name.Anonymous] && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
-        else if (templ.parents.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
+        if (templ.early.isEmpty && templ.inits.isEmpty && templ.self.name.is[Name.Anonymous] && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
+        else if (templ.inits.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
         else s(" ", templ)
 
       // TODO: revisit this once we have trivia in place
@@ -204,7 +204,6 @@ object TreeSyntax {
         case t: Name.Indeterminate   => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
 
         // Term
-        case t: Term if t.isCtorCall => if (t.is[Ctor.Ref.Function]) s("=>") else s(p(AnnotTyp, t.ctorTpe), t.ctorArgss)
         case t: Term.This            =>
           val qual = if (t.qual.is[Name.Anonymous]) s() else s(t.qual, ".")
           m(Path, qual, kw("this"))
@@ -290,7 +289,8 @@ object TreeSyntax {
         case t: Term.Do              => m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
         case t: Term.For             => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
         case t: Term.ForYield        => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
-        case t: Term.New             => m(SimpleExpr, s(kw("new"), " ", t.templ))
+        case t: Term.New             => m(SimpleExpr, s(kw("new"), " ", t.init))
+        case t: Term.NewAnonymous    => m(SimpleExpr, s(kw("new"), " ", t.templ))
         case _: Term.Placeholder     => m(SimpleExpr1, kw("_"))
         case t: Term.Eta             => m(SimpleExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
         case t: Term.Repeated        => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
@@ -443,18 +443,23 @@ object TreeSyntax {
           else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
         case t: Pkg.Object     => s(kw("package"), " ", w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
         case t: Ctor.Primary   => s(w(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
-        case t: Ctor.Secondary => s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, if (t.body.is[Term.Block]) " " else " = ", t.body)
+        case t: Ctor.Secondary =>
+          if (t.stats.isEmpty) s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, " = ", t.init)
+          else s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, " {", i(t.init), "", r(t.stats.map(i(_)), ""), n("}"))
+
+        // Init
+        case t: Init => s(if (t.tpe.is[Type.Singleton]) kw("this") else p(AnnotTyp, t.tpe), t.argss)
 
         // Template
         case t: Template =>
           val isSelfEmpty = t.self.name.is[Name.Anonymous] && t.self.decltpe.isEmpty
           val isSelfNonEmpty = !isSelfEmpty
           val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
-          val isTemplateEmpty = t.early.isEmpty && t.parents.isEmpty && isBodyEmpty
+          val isTemplateEmpty = t.early.isEmpty && t.inits.isEmpty && isBodyEmpty
           if (isTemplateEmpty) s()
           else {
             val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
-            val pparents = w(r(t.parents, " with "), " ", !t.parents.isEmpty && !isBodyEmpty)
+            val pparents = w(r(t.inits, " with "), " ", !t.inits.isEmpty && !isBodyEmpty)
             val pbody = {
               val isOneLiner = t.stats.map(stats => stats.length == 0 || (stats.length == 1 && !s(stats.head).toString.contains(EOL))).getOrElse(true)
               (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
@@ -472,7 +477,7 @@ object TreeSyntax {
           }
 
         // Mod
-        case Mod.Annot(tree)                       => s(kw("@"), p(SimpleTyp, tree.ctorTpe), tree.ctorArgss)
+        case Mod.Annot(init)                       => s(kw("@"), p(SimpleTyp, init.tpe), init.argss)
         case Mod.PrivateThis()                     => s(kw("private"), kw("["), kw("this"), kw("]"))
         case Mod.PrivateWithin(Name.Anonymous())   => s(kw("private"))
         case Mod.PrivateWithin(name)               => s(kw("private"), kw("["), s(name), kw("]"))

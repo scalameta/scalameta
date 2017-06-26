@@ -33,7 +33,8 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Do While          | `q"do $expr while($expr)"`
  For               | `q"for (..$enumeratorsnel) $expr"`
  For Yield         | `q"for (..$enumeratorsnel) yield $expr"`
- New               | `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }"`
+ New               | `q"new $init"`
+ New Anonymous     | `q"new { ..$stat } with ..$inits { $param => ..$stats }"`
  Placeholder       | `q"_"`
  Eta Expansion     | `q"$expr _"`
  Repeated          | `q"$expr: _*"`
@@ -131,29 +132,23 @@ This specification describes quasiquote syntax using a markedly condensed notati
 ----------------|-------------------------------------------------
  Type Param     | `tparam"..$mods $tname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
 
-## Constructor References (meta.Ctor.Ref and meta.Term)
+## Inits (meta.Init)
 
-                     | Quasiquote
----------------------|------------------------------
- Name Reference      | `ctor"$ctorname"` (construction only), `ctor"${ctorname: Ctor.Name}"` (also deconstruction)
- Select Reference    | `ctor"$eref.$ctorname"`
- Project Reference   | `ctor"$tpe#$ctorname"`
- Function Reference  | `ctor"(..$tpes) => $tpe"`
- Annotated Reference | `ctor"$ctorname ..@annots"`
- Applied Reference   | `ctor"$ctorref(...$exprssnel)"`
- Tapplied Reference  | `ctor"$ctorref[..$tpesnel]"`
+      | Quasiquote
+------|------------------------------
+ Init | `init"$tpe(...$exprss)"`
 
 ## Template (meta.Template)
 
            | Quasiquote
 -----------|--------------------
- Template  | `template"{ ..$stats } with ..$ctorcalls { $param => ..$stats }"` (first `stats` is early initializers, second `stats` is regular statements in the body of the template).
+ Template  | `template"{ ..$stats } with ..$inits { $param => ..$stats }"` (first `stats` is early initializers, second `stats` is regular statements in the body of the template).
 
 ## Modifiers (meta.Mod)
 
                   | Quasiquote
 ------------------|-----------------
- Annotation       | `mod"@$expr"`
+ Annotation       | `mod"@$init"`
  Private This     | `mod"private[this]"`
  Private Within   | `mod"private"`, `mod"private[$name]"`
  Protected This   | `mod"protected[this]"`
@@ -210,7 +205,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
 
       1. Parentheses, brackets and braces around unquotes are oftentimes dropped if they wrap empty lists, e.g. `q"x + y"` conforms to `q"$expr $ename[..$tpes] $expr"`.
 
-      1. `with` is dropped if there are zero or one ctorcalls, e.g. both `q"new {}"` and `q"new C"` conform to `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }`.
+      1. `with` is dropped if there are zero or one inits, e.g. both `q"new {}"` and `q"new C"` conform to `q"new { ..$stat } with ..$inits { $param => ..$stats }`.
 
       1. This list is probably incomplete. Please [submit an issue](https://github.com/scalameta/scalameta/issues/new) if you find any discrepancies.
 
@@ -237,8 +232,6 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  Type                     | Shorthand
 --------------------------|---------------
  meta.Case                | `$case`
- meta.Ctor.Name           | `$ctorname`
- meta.Ctor.Ref            | `$ctorref`
  meta.Enumerator          | `$enumerator`
  meta.Mod                 | `$mod`
  meta.Mod.Annot           | `$annot`
@@ -246,6 +239,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
  meta.Pat                 | `$pat`
  meta.Importee            | `$importee`
  meta.Importer            | `$importer`
+ meta.Init                | `$init`
  meta.Stat                | `$stat`
  meta.Template            | `$template`
  meta.Term                | `$expr`

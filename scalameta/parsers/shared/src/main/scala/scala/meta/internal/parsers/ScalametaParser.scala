@@ -110,9 +110,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def parseQuasiquotePat(): Pat = parseRule(_.quasiquotePattern())
   def parseUnquotePat(): Pat = parseRule(_.unquotePattern())
   def parseCase(): Case = parseRule{parser => parser.accept[KwCase]; parser.caseClause()}
-  def parseCtorCall(): Ctor.Call = parseRule(_.constructorCall(typ(), allowArgss = true))
+  def parseInit(): Init = parseRule(_.initInsideQuasiquote())
   def parseTemplate(): Template = parseRule(_.template())
-  def parseQuasiquoteTemplate(): Template = parseRule(_.quasiquoteTemplate())
   def parseMod(): Mod = {
     implicit class XtensionParser(parser: this.type) {
       def annot() = parser.annots(skipNewLines = false) match {
@@ -2002,7 +2001,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case KwNew() =>
           canApply = false
           next()
-          atPos(in.prevTokenPos, auto)(Term.New(template()))
+          atPos(in.prevTokenPos, auto) {
+            template() match {
+              case Template(Nil, List(init), Term.Param(Nil, Name.Anonymous(), None, None), None) => Term.New(init)
+              case other => Term.NewAnonymous(other)
+            }
+          }
         case _ =>
           syntaxError(s"illegal start of simple expression", at = token)
       }
@@ -2672,7 +2676,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       } else {
         next()
         if (token.is[Unquote]) annots += unquote[Mod.Annot]
-        else annots += atPos(in.prevTokenPos, auto)(Mod.Annot(constructorCall(exprSimpleType(), allowArgss)))
+        else annots += atPos(in.prevTokenPos, auto)(Mod.Annot(initInsideAnnotation(allowArgss)))
       }
       if (skipNewLines) newLineOpt()
     }
@@ -3208,11 +3212,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
     if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters)) {
       val mods = constructorAnnots() ++ accessModifierOpt()
-      val name = atPos(in.tokenPos, in.prevTokenPos)(Ctor.Name("this"))
+      val name = autoPos(Name.Anonymous())
       val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
     } else if (owner.isTrait) {
-      Ctor.Primary(Nil, atPos(in.tokenPos, in.prevTokenPos)(Ctor.Name("this")), Nil)
+      Ctor.Primary(Nil, atPos(in.tokenPos, in.tokenPos)(Name.Anonymous()), Nil)
     } else {
       unreachable(debug(owner))
     }
@@ -3221,50 +3225,48 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def secondaryCtor(mods: List[Mod]): Ctor.Secondary = atPos(mods, auto) {
     accept[KwDef]
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
-    val thisPos = in.tokenPos
+    val name = atPos(in.tokenPos, in.tokenPos)(Name.Anonymous())
     accept[KwThis]
     // TODO: ownerIsType = true is most likely a bug here
     // secondary constructors can't have val/var parameters
     val paramss = paramClauses(ownerIsType = true)
-    newLineOptWhenFollowedBy[LeftBrace]
-    val body = token match {
-      case LeftBrace() => constrBlock()
-      case _      => accept[Equals]; constrExpr()
-    }
-    Ctor.Secondary(mods, atPos(thisPos, thisPos)(Ctor.Name("this")), paramss, body)
+    secondaryCtorRest(mods, name, paramss)
   }
 
   def quasiquoteCtor(): Ctor = autoPos {
     val anns = annots(skipNewLines = true)
     val mods = anns ++ modifiers()
+    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     accept[KwDef]
-    val name = atPos(in.tokenPos, in.tokenPos)(Ctor.Name("this"))
+    val name = atPos(in.tokenPos, in.tokenPos)(Name.Anonymous())
     accept[KwThis]
     val paramss = paramClauses(ownerIsType = true)
     newLineOptWhenFollowedBy[LeftBrace]
-    if (token.is[EOF]) {
-      Ctor.Primary(mods, name, paramss)
-    } else {
-      val body = token match {
-        case LeftBrace() => constrBlock()
-        case _      => accept[Equals]; constrExpr()
-      }
-      Ctor.Secondary(mods, name, paramss, body)
+    if (token.is[EOF]) Ctor.Primary(mods, name, paramss)
+    else secondaryCtorRest(mods, name, paramss)
+  }
+
+  def secondaryCtorRest(mods: List[Mod], name: Name, paramss: List[List[Term.Param]]): Ctor.Secondary = {
+    newLineOptWhenFollowedBy[LeftBrace]
+    val (init, stats) = token match {
+      case LeftBrace() => constrBlock()
+      case _      => accept[Equals]; constrExpr()
     }
+    Ctor.Secondary(mods, name, paramss, init, stats)
   }
 
   /** {{{
    *  ConstrBlock    ::=  `{' SelfInvocation {semi BlockStat} `}'
    *  }}}
    */
-  def constrBlock(): Term.Block = autoPos {
+  def constrBlock(): (Init, List[Stat]) = {
     accept[LeftBrace]
-    val supercall = selfInvocation()
+    val init = initInsideConstructor()
     val stats =
       if (!token.is[StatSep]) Nil
       else { next(); blockStatSeq() }
     accept[RightBrace]
-    Term.Block(supercall +: stats)
+    (init, stats)
   }
 
   /** {{{
@@ -3272,58 +3274,55 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *                    |  ConstrBlock
    *  }}}
    */
-  def constrExpr(): Term =
+  def constrExpr(): (Init, List[Stat]) =
     if (token.is[LeftBrace]) constrBlock()
-    else selfInvocation()
+    else (initInsideConstructor(), Nil)
 
   /** {{{
    *  SelfInvocation  ::= this ArgumentExprs {ArgumentExprs}
    *  }}}
    */
-  def selfInvocation(): Term =
-    if (token.is[Unquote])
-      unquote[Term]
-    else {
-      var result: Term = autoPos(Ctor.Name("this"))
-      accept[KwThis]
-      newLineOptWhenFollowedBy[LeftBrace]
-      while (token.is[LeftParen] || token.is[LeftBrace]) {
-        result = atPos(result, auto)(Term.Apply(result, argumentExprs()))
-        newLineOptWhenFollowedBy[LeftBrace]
-      }
-      result
-    }
+  def initInsideConstructor(): Init = {
+    def name = autoPos{ accept[KwThis]; Name.Anonymous() }
+    def tpe = autoPos(Type.Singleton(autoPos(Term.This(name))))
+    initRest(() => tpe, allowArgss = true, allowBraces = true)
+  }
 
-  def constructorCall(tpe: Type, allowArgss: Boolean = true): Ctor.Call = {
-    def convert(tpe: Type): Ctor.Call = {
-      // TODO: we should really think of a different representation for constructor invocations...
-      // if anything, this mkCtorRefFunction is a testament to how problematic our current encoding is
-      // the Type.ApplyInfix => Term.ApplyType conversion is weird as well
-      def mkCtorRefFunction(tpe: Type) = {
-        val arrow = scannerTokens.slice(tpe.tokens.head.index, tpe.tokens.last.index + 1).find(_.is[RightArrow]).get
-        atPos(arrow, arrow)(Ctor.Ref.Function(atPos(arrow, arrow)(Ctor.Name("Function1"))))
-      }
-      atPos(tpe, tpe)(tpe match {
-        case q: Type.Quasi => q.become[Ctor.Call.Quasi]
-        case Type.Name(value) => Ctor.Name(value)
-        case Type.Select(qual, name: Type.Name.Quasi) => Ctor.Ref.Select(qual, atPos(name, name)(name.become[Ctor.Name.Quasi]))
-        case Type.Select(qual, name) => Ctor.Ref.Select(qual, atPos(name, name)(Ctor.Name(name.value)))
-        case Type.Project(qual, name: Type.Name.Quasi) => Ctor.Ref.Project(qual, atPos(name, name)(name.become[Ctor.Name.Quasi]))
-        case Type.Project(qual, name) => Ctor.Ref.Project(qual, atPos(name, name)(Ctor.Name(name.value)))
-        case Type.Function(params, ret) => Term.ApplyType(mkCtorRefFunction(tpe), params :+ ret)
-        case Type.Annotate(tpe, annots) => Term.Annotate(convert(tpe), annots)
-        case Type.Apply(tpe, args) => Term.ApplyType(convert(tpe), args)
-        case Type.ApplyInfix(lhs, op, rhs) => Term.ApplyType(convert(op), List(lhs, rhs))
-        case _ => syntaxError("this type can't be used in a constructor call", at = tpe)
-      })
+  def initInsideAnnotation(allowArgss: Boolean): Init = {
+    def tpe = exprSimpleType()
+    initRest(() => tpe, allowArgss = allowArgss, allowBraces = false)
+  }
+
+  def initInsideTemplate(): Init = {
+    def tpe = startModType()
+    initRest(() => tpe, allowArgss = true, allowBraces = false)
+  }
+
+  def initInsideQuasiquote(): Init = {
+    token match {
+      case KwThis() => initInsideConstructor()
+      case _ => initInsideTemplate()
     }
-    var result = convert(tpe)
-    var done = false
-    while (token.is[LeftParen] && !done) {
-      result = atPos(result, auto)(Term.Apply(result, argumentExprs()))
-      if (!allowArgss) done = true
+  }
+
+  def initRest(typeParser: () => Type, allowArgss: Boolean, allowBraces: Boolean): Init = autoPos {
+    def isPendingArglist = token.is[LeftParen] || (token.is[LeftBrace] && allowBraces)
+    token match {
+      case Unquote() if !ahead(isPendingArglist) =>
+        unquote[Init]
+      case _ =>
+        val tpe = typeParser()
+        val name = autoPos(Name.Anonymous())
+        val argss = mutable.ListBuffer[List[Term]]()
+        var done = false
+        if (allowBraces) newLineOptWhenFollowedBy[LeftBrace]
+        while (isPendingArglist && !done) {
+          argss += argumentExprs()
+          if (!allowArgss) done = true
+          if (allowBraces) newLineOptWhenFollowedBy[LeftBrace]
+        }
+        Init(tpe, name, argss.toList)
     }
-    result
   }
 
 /* -------- TEMPLATES ------------------------------------------- */
@@ -3343,25 +3342,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  TraitParents       ::= ModType {with ModType}
    *  }}}
    */
-  def templateParents(): List[Ctor.Call] = {
-    val parents = new ListBuffer[Ctor.Call]
-    def readAppliedParent() = {
-      val parent = token match {
-        case Unquote() =>
-          val parent = constructorCall(startModType())
-          parent match {
-            case parent: Ctor.Ref.Name.Quasi => parent.become[Ctor.Call.Quasi]
-            case other => other
-          }
-        case Ellipsis(_) =>
-          ellipsis(1, astInfo[Ctor.Call])
-        case _ =>
-          constructorCall(startModType())
-      }
-      parents += parent
+  def templateParents(): List[Init] = {
+    val parents = ListBuffer[Init]()
+    def readInit() = token match {
+      case Ellipsis(_) => parents += ellipsis(1, astInfo[Init])
+      case _ => parents += initInsideTemplate()
     }
-    readAppliedParent()
-    while (token.is[KwWith]) { next(); readAppliedParent() }
+    readInit()
+    while (token.is[KwWith]) { next(); readInit() }
     parents.toList
   }
 
@@ -3386,26 +3374,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       } else {
         Template(Nil, Nil, self, Some(body))
       }
-    } else if (token.is[Unquote] && ahead(
-      !token.is[Dot] && !token.is[Hash] && !token.is[At] && !token.is[Ellipsis] &&
-      !token.is[LeftParen] && !token.is[LeftBracket] && !token.is[LeftBrace] && !token.is[KwWith]
-    )) {
-      unquote[Template]
     } else {
       val parents = templateParents()
       val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
       Template(Nil, parents, self, body)
-    }
-  }
-
-  def quasiquoteTemplate(): Template = autoPos {
-    token match {
-      case Unquote() if ahead(token.is[EOF]) =>
-        val parents = List(unquote[Ctor.Call])
-        val self = autoPos(Term.Param(Nil, autoPos(Name.Anonymous()), None, None))
-        Template(Nil, parents, self, None)
-      case _ =>
-        template()
     }
   }
 
@@ -3426,7 +3398,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def templateOpt(owner: TemplateOwner): Template = {
     if (token.is[KwExtends] || (token.is[Subtype] && owner.isTrait)) {
       next()
-      template()
+      if (token.is[Unquote] && ahead(
+        !token.is[Dot] && !token.is[Hash] && !token.is[At] && !token.is[Ellipsis] &&
+        !token.is[LeftParen] && !token.is[LeftBracket] && !token.is[LeftBrace] && !token.is[KwWith]
+      )) {
+        unquote[Template]
+      } else {
+        template()
+      }
     } else {
       val startPos = in.tokenPos
       val (self, body) = templateBodyOpt(parenMeansSyntaxError = !owner.isClass)

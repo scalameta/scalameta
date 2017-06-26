@@ -58,7 +58,7 @@ class TypeSuite extends ParseSuite {
   }
 
   test("T @foo") {
-    val Annotate(TypeName("T"), Mod.Annot(Ctor.Name("foo")) :: Nil) = tpe("T @foo")
+    val Annotate(TypeName("T"), Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), Nil)) :: Nil) = tpe("T @foo")
   }
 
   test("A with B") {

@@ -163,7 +163,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
-      |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
       |* scala.meta.semantic.Mirror.sources: List[scala.meta.Source]
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).denot: scala.meta.semantic.Denotation
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).flags: Long
@@ -176,13 +175,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     assert(trees.toList.sorted.mkString(EOL) === """
       |scala.meta.Case
       |scala.meta.Ctor
-      |scala.meta.Ctor.Call
       |scala.meta.Ctor.Primary
-      |scala.meta.Ctor.Ref
-      |scala.meta.Ctor.Ref.Function
-      |scala.meta.Ctor.Ref.Name
-      |scala.meta.Ctor.Ref.Project
-      |scala.meta.Ctor.Ref.Select
       |scala.meta.Ctor.Secondary
       |scala.meta.Decl
       |scala.meta.Decl.Def
@@ -209,6 +202,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Importee.Unimport
       |scala.meta.Importee.Wildcard
       |scala.meta.Importer
+      |scala.meta.Init
       |scala.meta.Lit
       |scala.meta.Lit.Boolean
       |scala.meta.Lit.Byte
@@ -283,6 +277,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Term.Match
       |scala.meta.Term.Name
       |scala.meta.Term.New
+      |scala.meta.Term.NewAnonymous
       |scala.meta.Term.Param
       |scala.meta.Term.PartialFunction
       |scala.meta.Term.Placeholder

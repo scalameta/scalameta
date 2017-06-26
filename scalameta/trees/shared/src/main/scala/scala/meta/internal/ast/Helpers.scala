@@ -74,51 +74,7 @@ object Helpers {
     }
   }
 
-  implicit class XtensionTermOps(tree: Term) {
-    def isCtorCall: Boolean = tree match {
-      case _: Term.Quasi => true
-      case _: Ctor.Ref => true
-      case Term.ApplyType(callee, _) => callee.isCtorCall
-      case Term.Apply(callee, _) => callee.isCtorCall
-      case Term.Annotate(annottee, _) => annottee.isCtorCall
-      case _ => false
-    }
-    def ctorTpe: Type = {
-      def loop(tree: Tree): Type = tree match {
-        case Ctor.Ref.Name(value) => Type.Name(value)
-        case Ctor.Ref.Select(qual, name) => Type.Select(qual, Type.Name(name.value))
-        case Ctor.Ref.Project(qual, name) => Type.Project(qual, Type.Name(name.value))
-        case Ctor.Ref.Function(_) => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Structure]))
-        case Term.ApplyType(Ctor.Ref.Function(_), targs) => Type.Function(targs.init, targs.last)
-        case Term.ApplyType(callee, targs) => Type.Apply(loop(callee), targs)
-        case Term.Apply(callee, _) => callee.ctorTpe
-        case Term.Annotate(annottee, annots) => Type.Annotate(loop(annottee), annots)
-        case _ => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Structure], tree, tree.show[Structure]))
-      }
-      loop(tree)
-    }
-    def ctorArgss: List[List[Term]] = {
-      def loop(tree: Tree): List[List[Term]] = tree match {
-        case _: Ctor.Ref => Nil
-        case Term.ApplyType(callee, _) => callee.ctorArgss
-        case Term.Apply(callee, args) => callee.ctorArgss :+ args
-        case Term.Annotate(annottee, _) => annottee.ctorArgss
-        case _ => unreachable(debug(XtensionTermOps.this.tree, XtensionTermOps.this.tree.show[Structure]))
-      }
-      loop(tree)
-    }
-    def isCtorBody: Boolean = {
-      def isSuperCall(tree: Tree): Boolean = tree match {
-        case _: Ctor.Name => true
-        case Term.Apply(fn, _) => isSuperCall(fn)
-        case _ => false // you can't write `this[...](...)`
-      }
-      tree match {
-        case _: Term.Quasi => true
-        case Term.Block(superCall +: _) => isSuperCall(superCall)
-        case superCall => isSuperCall(superCall)
-      }
-    }
+  implicit class XtensionHelpersTerm(tree: Term) {
     def isExtractor: Boolean = tree match {
       case quasi: Term.Quasi => true
       case ref: Term.Ref => ref.isStableId
@@ -144,7 +100,22 @@ object Helpers {
     }
   }
 
-  implicit class XtensionMod(mod: Mod) {
+  implicit class XtensionHelpersType(tree: Type) {
+    def isConstructable: Boolean = tree match {
+      case _: Type.Quasi                               => true
+      case _: Type.Name                                => true
+      case _: Type.Select                              => true
+      case _: Type.Project                             => true
+      case _: Type.Function                            => true
+      case _: Type.Annotate                            => true
+      case _: Type.Apply                               => true
+      case _: Type.ApplyInfix                          => true
+      case Type.Singleton(Term.This(Name.Anonymous())) => true
+      case _                                           => false
+    }
+  }
+
+  implicit class XtensionHelpersMod(mod: Mod) {
     def isAccessMod: Boolean = mod match {
       case _: Mod.PrivateThis => true
       case _: Mod.PrivateWithin => true
@@ -234,27 +205,6 @@ object Helpers {
 
   implicit class XtensionApply(tree: Term.Apply) {
     def argsc: Int = 1 + (tree.fun match { case fun: Term.Apply => fun.argsc; case _ => 0 })
-  }
-
-  def tpeToCtorref(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
-    val tpe0 = tpe
-    def loop(tpe: Type, ctor: Ctor.Name): Ctor.Call = {
-      tpe match {
-        case tpe @ Type.Name(value) =>
-          ctor.copy(value = tpe.value)
-        case tpe =>
-          tpe match {
-            case Type.Select(qual, tpe @ Type.Name(value)) => Ctor.Ref.Select(qual, ctor.copy(value = tpe.value))
-            case Type.Project(qual, tpe @ Type.Name(value)) => Ctor.Ref.Project(qual, ctor.copy(value = tpe.value))
-            case Type.Function(params, ret) => Term.ApplyType(Ctor.Ref.Function(ctor), params :+ ret)
-            case Type.Annotate(tpe, annots) => Term.Annotate(loop(tpe, ctor), annots)
-            case Type.Apply(tpe, args) => Term.ApplyType(loop(tpe, ctor), args)
-            case Type.ApplyInfix(lhs, op, rhs) => Term.ApplyType(loop(op, ctor), List(lhs, rhs))
-            case _ => unreachable(debug(tpe0, tpe0.show[Structure], tpe, tpe.show[Structure]))
-          }
-      }
-    }
-    loop(tpe.require[Type], ctor.require[Ctor.Name])
   }
 
   def arrayClass(clazz: Class[_], rank: Int): Class[_] = {

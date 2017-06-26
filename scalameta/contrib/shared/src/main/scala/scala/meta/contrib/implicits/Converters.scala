@@ -6,7 +6,6 @@ trait Converters {
   implicit class convertName(n: Name) {
     def asTerm: Term.Name = Term.Name(n.value)
     def asType: Type.Name = Type.Name(n.value)
-    def asCtorRef: Ctor.Ref.Name = Ctor.Ref.Name(n.value)
     def asPat: Pat.Var = Pat.Var(n.asTerm)
   }
 }

@@ -39,6 +39,8 @@ trait AttributesOps { self: DatabaseOps =>
         val margnames = mutable.Map[Int, List[m.Name]]() // start offset of enclosing apply -> its arg names
         val mwithins = mutable.Map[m.Tree, m.Name]() // name of enclosing member -> name of private/protected within
         val mwithinctors = mutable.Map[m.Tree, m.Name]() // name of enclosing class -> name of private/protected within for primary ctor
+        val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
+        val mctorrefs = mutable.Map[Int, m.Name]() // start offset of new/init -> new's anonymous name
 
         locally {
           object traverser extends m.Traverser {
@@ -46,8 +48,8 @@ trait AttributesOps { self: DatabaseOps =>
               todo += mname
               // TODO: also drop trivia (no idea how to formulate this concisely)
               val tok = mname.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption
-              val mstart1 = tok.map(_.start).getOrElse(-1)
-              val mend1 = tok.map(_.end).getOrElse(-1)
+              val mstart1 = tok.map(_.start).getOrElse(mname.pos.start.offset)
+              val mend1 = tok.map(_.end).getOrElse(mname.pos.end.offset)
               if (mstarts.contains(mstart1))
                 sys.error(
                   s"ambiguous mstart ${syntaxAndPos(mname)} ${syntaxAndPos(mstarts(mstart1))}")
@@ -97,33 +99,35 @@ trait AttributesOps { self: DatabaseOps =>
               }
             }
             override def apply(mtree: m.Tree): Unit = {
-              val mstart = mtree.pos.start.offset
-              val mend = mtree.pos.end.offset
-              if (mstart != mend) {
-                mtree match {
-                  case mtree @ m.Term.Apply(_, margs) =>
-                    def loop(term: m.Term): List[m.Term.Name] = term match {
-                      case m.Term.Apply(mfn, margs) =>
-                        margs.toList.collect {
-                          case m.Term.Assign(mname: m.Term.Name, _) => mname
-                        } ++ loop(mfn)
-                      case _ => Nil
-                    }
-                    indexArgNames(mtree, loop(mtree))
-                  case mtree @ m.Mod.PrivateWithin(mname: m.Name.Indeterminate) =>
-                    indexWithin(mname)
-                  case mtree @ m.Mod.ProtectedWithin(mname: m.Name.Indeterminate) =>
-                    indexWithin(mname)
-                  case mtree @ m.Importee.Rename(mname, mrename) =>
-                    indexName(mname)
-                    return // NOTE: ignore mrename for now, we may decide to make it a binder
-                  case mtree @ m.Name.Anonymous() =>
-                  // do nothing
-                  case mtree: m.Name =>
-                    indexName(mtree)
-                  case _ =>
-                  // do nothing
-                }
+              mtree match {
+                case mtree @ m.Term.Apply(_, margs) =>
+                  def loop(term: m.Term): List[m.Term.Name] = term match {
+                    case m.Term.Apply(mfn, margs) =>
+                      margs.toList.collect {
+                        case m.Term.Assign(mname: m.Term.Name, _) => mname
+                      } ++ loop(mfn)
+                    case _ => Nil
+                  }
+                  indexArgNames(mtree, loop(mtree))
+                case mtree @ m.Mod.PrivateWithin(mname: m.Name.Indeterminate) =>
+                  indexWithin(mname)
+                case mtree @ m.Mod.ProtectedWithin(mname: m.Name.Indeterminate) =>
+                  indexWithin(mname)
+                case mtree @ m.Importee.Rename(mname, mrename) =>
+                  indexName(mname)
+                  return // NOTE: ignore mrename for now, we may decide to make it a binder
+                case mtree @ m.Name.Anonymous() =>
+                  // TODO: support non-ctor-related use cases for anonymous names
+                case mtree: m.Ctor =>
+                  mctordefs(mtree.pos.start.offset) = mtree.name
+                case mtree: m.Term.New =>
+                  mctorrefs(mtree.pos.start.offset) = mtree.init.name
+                case mtree: m.Init =>
+                  mctorrefs(mtree.pos.start.offset) = mtree.name
+                case mtree: m.Name =>
+                  indexName(mtree)
+                case _ =>
+                // do nothing
               }
               super.apply(mtree)
             }
@@ -134,13 +138,17 @@ trait AttributesOps { self: DatabaseOps =>
         locally {
           object traverser extends g.Traverser {
             private def tryFindMtree(gtree: g.Tree): Unit = {
-              def success(mtree: m.Name, gsym: g.Symbol): Unit = {
+              def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
                 // We cannot be guaranteed that all symbols have a position, see
                 // https://github.com/scalameta/scalameta/issues/665
                 // Instead of crashing with "unsupported file", we ignore these cases.
                 if (mtree.pos == m.Position.None) return
                 if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
+                val gsym = {
+                  if (gsym0 != null && gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]) gsym0.owner
+                  else gsym0 // TODO: fix this in callers of `success`
+                }
                 val symbol = gsym.toSemantic
                 if (symbol == m.Symbol.None) return
 
@@ -197,6 +205,26 @@ trait AttributesOps { self: DatabaseOps =>
                     gsym.foreach(success(margname, _))
                   }
                 })
+              }
+
+              if (mctordefs.contains(gstart)) {
+                val mname = mctordefs(gstart)
+                gtree match {
+                  case gtree: g.Template =>
+                    val gctor = gtree.body.find(_.symbol.isPrimaryConstructor).getOrElse(g.EmptyTree)
+                    success(mname, gctor.symbol)
+                  case gtree: g.DefDef if gtree.symbol.isConstructor =>
+                    success(mname, gtree.symbol)
+                  case _ =>
+                }
+              }
+
+              if (mctorrefs.contains(gpoint)) {
+                val mname = mctorrefs(gpoint)
+                gtree match {
+                  case g.Select(_, g.nme.CONSTRUCTOR) => success(mname, gtree.symbol)
+                  case _ =>
+                }
               }
 
               // Ideally, we'd like a perfect match when gtree.pos == mtree.pos.

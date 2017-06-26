@@ -132,7 +132,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1: @foo") {
-    val Annotate(Lit(1), Mod.Annot(Ctor.Name("foo")) :: Nil) = term("1: @foo")
+    val Annotate(Lit(1), Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), Nil)) :: Nil) = term("1: @foo")
   }
 
   test("(true, false)") {
@@ -319,38 +319,35 @@ class TermSuite extends ParseSuite {
   }
 
   test("new {}") {
-    val New(Template(Nil, Nil, EmptySelf(), Some(Nil))) = term("new {}")
+    val NewAnonymous(Template(Nil, Nil, EmptySelf(), Some(Nil))) = term("new {}")
   }
 
   test("new { x }") {
-    val New(Template(Nil, Nil, EmptySelf(), Some(Term.Name("x") :: Nil))) = term("new { x }")
+    val NewAnonymous(Template(Nil, Nil, EmptySelf(), Some(Term.Name("x") :: Nil))) = term("new { x }")
   }
 
   test("new A") {
-    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), None)) = term("new A")
-    // TODO: revisit this once we have trivia in place
-    // assert(templ.hasStats === false)
+    val New(Init(Type.Name("A"), Name.Anonymous(), Nil)) = term("new A")
   }
 
   test("new A {}") {
-    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), Some(Nil))) = term("new A {}")
-    // TODO: revisit this once we have trivia in place
-    // assert(templ.hasStats === true)
+    val NewAnonymous(Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Some(Nil))) = term("new A {}")
   }
 
   test("new A with B") {
-    val New(Template(Nil, Ctor.Name("A") :: Ctor.Name("B") :: Nil, EmptySelf(), None)) =
+    val NewAnonymous(Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) ::
+                                   Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), None)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
-    val New(Template(Defn.Val(Nil, List(Pat.Var(TermName("x"))), Some(TypeName("Int")), Lit(1)) :: Nil,
-                     Ctor.Name("A") :: Nil, EmptySelf(), None)) =
+    val NewAnonymous(Template(Defn.Val(Nil, List(Pat.Var(TermName("x"))), Some(TypeName("Int")), Lit(1)) :: Nil,
+                              Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), None)) =
       term("new { val x: Int = 1 } with A")
   }
 
   test("new { self: T => }") {
-    val New(Template(Nil, Nil, Term.Param(Nil, TermName("self"), Some(TypeName("T")), None), Some(Nil))) =
+    val NewAnonymous(Template(Nil, Nil, Term.Param(Nil, TermName("self"), Some(TypeName("T")), None), Some(Nil))) =
       term("new { self: T => }")
   }
 
@@ -379,7 +376,7 @@ class TermSuite extends ParseSuite {
     val Term.Block(List(
       Defn.Class(
         List(Mod.Case()), Type.Name("C"), Nil,
-        Ctor.Primary(Nil, Ctor.Name("this"), List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
+        Ctor.Primary(Nil, Name.Anonymous(), List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
         EmptyTemplate()))) = term("{ case class C(x: Int); }")
   }
 
@@ -508,6 +505,6 @@ class TermSuite extends ParseSuite {
   }
 
   test(" new C()[String]() ") {
-    val Term.Apply(Term.ApplyType(Term.New(Template(Nil, List(Term.Apply(Ctor.Ref.Name("C"), Nil)), Term.Param(Nil, Name.Anonymous(), None, None), None)), List(Type.Name("String"))), Nil) = term(" new C()[String]() ")
+    val Term.Apply(Term.ApplyType(New(Init(Type.Name("C"), Name.Anonymous(), List(List()))), List(Type.Name("String"))), Nil) = term(" new C()[String]() ")
   }
 }

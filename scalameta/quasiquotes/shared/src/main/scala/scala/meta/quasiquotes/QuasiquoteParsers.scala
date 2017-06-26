@@ -12,6 +12,5 @@ private[meta] trait QuasiquoteParsers extends scala.meta.parsers.Api {
   implicit lazy val parseQuasiquoteType: Parse[Type] = toParse(_.parseQuasiquoteType())
   implicit lazy val parseQuasiquoteCtor: Parse[Ctor] = toParse(_.parseQuasiquoteCtor())
   implicit lazy val parseQuasiquotePat: Parse[Pat] = toParse(_.parseQuasiquotePat())
-  implicit lazy val parseQuasiquoteTemplate: Parse[Template] = toParse(_.parseQuasiquoteTemplate())
   implicit lazy val parseQuasiquoteMod: Parse[Mod] = toParse(_.parseQuasiquoteMod())
 }

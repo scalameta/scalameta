@@ -45,12 +45,8 @@ object Name {
 @branch trait Term extends Stat
 object Term {
   @branch trait Ref extends Term with scala.meta.Ref
-  @ast class This(qual: scala.meta.Name) extends Term.Ref {
-    checkFields(qual.isQualifier)
-  }
-  @ast class Super(thisp: scala.meta.Name, superp: scala.meta.Name) extends Term.Ref {
-    checkFields(thisp.isQualifier && superp.isQualifier)
-  }
+  @ast class This(qual: scala.meta.Name) extends Term.Ref
+  @ast class Super(thisp: scala.meta.Name, superp: scala.meta.Name) extends Term.Ref
   @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat
   @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: List[Lit] @nonEmpty, args: List[Term]) extends Term {
@@ -59,8 +55,8 @@ object Term {
   @ast class Xml(parts: List[Lit] @nonEmpty, args: List[Term]) extends Term {
     checkFields(parts.length == args.length + 1)
   }
-  @ast class Apply(fun: Term, args: List[Term]) extends Term with Ctor.Call
-  @ast class ApplyType(fun: Term, targs: List[Type] @nonEmpty) extends Term with Ctor.Call
+  @ast class Apply(fun: Term, args: List[Term]) extends Term
+  @ast class ApplyType(fun: Term, targs: List[Type] @nonEmpty) extends Term
   @ast class ApplyInfix(lhs: Term, op: Name, targs: List[Type], args: List[Term]) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
     checkFields(op.isUnaryOp)
@@ -72,7 +68,7 @@ object Term {
   @ast class Return(expr: Term) extends Term
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
-  @ast class Annotate(expr: Term, annots: List[Mod.Annot] @nonEmpty) extends Term with Ctor.Call
+  @ast class Annotate(expr: Term, annots: List[Mod.Annot] @nonEmpty) extends Term
   @ast class Tuple(args: List[Term] @nonEmpty) extends Term {
     // tuple must have more than one element
     // however, this element may be Quasi with "hidden" list of elements inside
@@ -96,7 +92,8 @@ object Term {
     checkFields(enums.head.is[Enumerator.Generator])
   }
   @ast class ForYield(enums: List[Enumerator] @nonEmpty, body: Term) extends Term
-  @ast class New(templ: Template) extends Term
+  @ast class New(init: Init) extends Term
+  @ast class NewAnonymous(templ: Template) extends Term
   @ast class Placeholder() extends Term
   @ast class Eta(expr: Term) extends Term
   @ast class Repeated(expr: Term) extends Term {
@@ -155,9 +152,6 @@ object Type {
                    cbounds: List[Type]) extends Member.Type
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
-  implicit class XtensionType(tpe: Type) {
-    def ctorRef(ctor: Ctor.Name): Ctor.Call = Helpers.tpeToCtorref(tpe, ctor)
-  }
 }
 
 @branch trait Pat extends Tree
@@ -330,53 +324,38 @@ object Pkg {
 
 @branch trait Ctor extends Tree with Member
 object Ctor {
-  @branch trait Call extends Term
   @ast class Primary(mods: List[Mod],
-                     name: Ctor.Name,
+                     name: Name,
                      paramss: List[List[Term.Param]]) extends Ctor
   @ast class Secondary(mods: List[Mod],
-                       name: Ctor.Name,
+                       name: Name,
                        paramss: List[List[Term.Param]] @nonEmpty,
-                       body: Term) extends Ctor with Stat {
-    checkFields(body.isCtorBody)
+                       init: Init,
+                       stats: List[Stat]) extends Ctor with Stat {
+    checkFields(stats.forall(_.isBlockStat))
   }
-  @branch trait Ref extends scala.meta.Term.Ref with Ctor.Call
-  val Name = Ref.Name
-  type Name = Ref.Name
-  object Ref {
-    // TODO: current design with Ctor.Name(value) has a problem of sometimes meaningless `value`
-    // for example, q"def this() = ..." is going to have Ctor.Name("this"), because we're parsing
-    // this constructor outside of any enclosure, so we can't call it Ctor.Name("C") or Ctor.Name("D")
-    // an alternative design might reintroduce the Ctor.Ref ast node that would have the structure of:
-    // Ctor.Ref(tpe: Type, ctor: Ctor.Name), where Ctor.Name would be Ctor.Name()
-    // in that design, we also won't have to convert between Type and Ctor.Ref hierarchies, which is a definite plus
-    @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Ref
-    @ast class Select(qual: Term.Ref, name: Name) extends Ref
-    @ast class Project(qual: Type, name: Name) extends Ref
-    @ast class Function(name: Name) extends Ref
-  }
-  def fresh(): Ctor.Name = fresh("fresh")
-  def fresh(prefix: String): Ctor.Name = Ctor.Name(prefix + Fresh.nextId())
+}
+
+@ast class Init(tpe: Type, name: Name, argss: List[List[Term]]) extends Ref {
+  checkFields(tpe.isConstructable)
+  checkParent(ParentChecks.Init)
 }
 
 @ast class Template(early: List[Stat],
-                    parents: List[Ctor.Call],
+                    inits: List[Init],
                     self: Term.Param,
                     stats: Option[List[Stat]]) extends Tree {
-  checkFields(parents.forall(_.isCtorCall))
-  checkFields(early.forall(_.isEarlyStat && parents.nonEmpty))
+  checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
   checkFields(stats.getOrElse(Nil).forall(_.isTemplateStat))
 }
 
 @branch trait Mod extends Tree
 object Mod {
-  @ast class Annot(body: Term) extends Mod {
-    checkFields(body.isCtorCall)
-  }
+  @ast class Annot(body: Init) extends Mod
   @ast class PrivateThis() extends Mod
-  @ast class PrivateWithin(within: Name) extends Mod { checkFields(within.isQualifier) }
+  @ast class PrivateWithin(within: Name) extends Mod
   @ast class ProtectedThis() extends Mod
-  @ast class ProtectedWithin(within: Name) extends Mod { checkFields(within.isQualifier) }
+  @ast class ProtectedWithin(within: Name) extends Mod
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
