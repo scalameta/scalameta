@@ -871,4 +871,9 @@ class TokenizerSuite extends FunSuite {
     val Tokens(bof, comment: Comment, eof) = "//foo".tokenize.get
     assert(comment.value === "foo")
   }
+
+  test("enum") {
+    val Tokens(BOF(), _: KwEnum, EOF()) = dialects.Dotty("enum").tokenize.get
+    val Tokens(BOF(), Ident("enum"), EOF()) = dialects.Scala212("enum").tokenize.get
+  }
 }

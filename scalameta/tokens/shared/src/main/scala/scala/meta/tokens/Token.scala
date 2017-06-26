@@ -33,6 +33,7 @@ object Token {
   @fixed("def") class KwDef extends Token
   @fixed("do") class KwDo extends Token
   @fixed("else") class KwElse extends Token
+  @fixed("enum") class KwEnum extends Token
   @fixed("extends") class KwExtends extends Token
   @fixed("false") class KwFalse extends Token
   @fixed("final") class KwFinal extends Token
