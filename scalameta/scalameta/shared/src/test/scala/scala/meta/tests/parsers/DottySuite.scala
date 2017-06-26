@@ -116,4 +116,7 @@ class DottySuite extends ParseSuite {
     templStat("case class A @Inject() ()")
     templStat("case class A private ()")
   }
+
+  checkOK("def foo(implicit x: => Int) = 1")
+  checkOK("def foo(implicit y: Int, x: => Int) = 1")
 }

@@ -2853,7 +2853,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                       mayNotBeByName("`var'")
                     else
                       mayNotBeByName("`val'")
-                  } else if (isImplicit)
+                  } else if (isImplicit && !dialect.allowImplicitByNameParameters)
                     mayNotBeByName("implicit")
                 }
                 Some(tpt)

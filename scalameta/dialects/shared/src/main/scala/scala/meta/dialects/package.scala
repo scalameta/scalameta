@@ -27,6 +27,10 @@ import scala.compat.Platform.EOL
   // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
   allowColonForExtractorVarargs: Boolean,
 
+  // Are implicit by name parameters supported?
+  // They are in Dotty, but not in Scala 2.12 or older.
+  allowImplicitByNameParameters: Boolean,
+
   // Are implicit functions supported by this dialect?
   allowImplicitFunctionTypes: Boolean,
 
@@ -109,6 +113,7 @@ package object dialects {
     allowAtForExtractorVarargs = true,
     allowCaseClassWithoutParameterList = true,
     allowColonForExtractorVarargs = false,
+    allowImplicitByNameParameters = false,
     allowImplicitFunctionTypes = false,
     allowInlineIdents = true,
     allowInlineMods = false,
@@ -181,6 +186,7 @@ package object dialects {
     allowAndTypes = true, // New feature in Dotty
     allowAtForExtractorVarargs = false, // New feature in Dotty
     allowColonForExtractorVarargs = true, // New feature in Dotty
+    allowImplicitByNameParameters = true, // New feature in Dotty
     allowImplicitFunctionTypes = true, // New feature in Dotty
     allowInlineIdents = false, // New feature in Dotty
     allowInlineMods = true, // New feature in Dotty
