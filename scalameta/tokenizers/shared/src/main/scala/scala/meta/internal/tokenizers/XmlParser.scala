@@ -23,7 +23,7 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
     val TagHeader = P( "<" ~ Name ~/ (S ~ Attribute).rep ~ S.? )
     val ETag      = P( "</" ~ Name ~ S.? ~ ">" )
 
-    val Attribute = P( Name ~ Eq ~/ AttValue )
+    val Attribute = P( Name ~/ Eq ~/ AttValue )
     val Eq        = P( S.? ~ "=" ~ S.? )
     val AttValue  = P(
       "\"" ~/ (CharQ | Reference).rep ~ "\"" |

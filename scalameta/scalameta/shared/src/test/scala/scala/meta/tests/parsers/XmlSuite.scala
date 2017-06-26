@@ -107,6 +107,19 @@ class XmlSuite extends ParseSuite {
       |          EOF [22..22) ----> class scala.meta.tokens.Token$EOF
     """.stripMargin
   )
+  checkToken(
+    "<foo/>{1}",
+    """
+      |            BOF [0..0) ----> class scala.meta.tokens.Token$BOF
+      |                [0..0) ----> class scala.meta.tokens.Token$Xml$Start
+      |         <foo/> [0..6) ----> class scala.meta.tokens.Token$Xml$Part
+      |                [6..6) ----> class scala.meta.tokens.Token$Xml$End
+      |              { [6..7) ----> class scala.meta.tokens.Token$LeftBrace
+      |              1 [7..8) ----> class scala.meta.tokens.Token$Constant$Int
+      |              } [8..9) ----> class scala.meta.tokens.Token$RightBrace
+      |            EOF [9..9) ----> class scala.meta.tokens.Token$EOF
+    """.stripMargin
+  )
 
   private val trickyXml =
     """
@@ -305,7 +318,7 @@ class XmlSuite extends ParseSuite {
   checkOK("<a>&#;</a>")
   checkOK("<a>&#x;</a>")
   checkOK("<a>]]></a>")
-  //checkOK("<a/>{0}") // FIXME
+  checkOK("<a/>{0}")
   //checkOK("""<a b="&:;"/>""") // FIXME
   //checkOK("""<a b="&:a;"/>""") //FIXME
   //checkOK("""<a b="&a:;"/>""") // FIXME

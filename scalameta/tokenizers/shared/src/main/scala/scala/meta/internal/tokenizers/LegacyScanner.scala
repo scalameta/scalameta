@@ -166,9 +166,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     * A map of upcoming xml literal parts that are left to be returned in nextToken().
     *
     * The keys are offset start positions of an xml literal and the values are
-    * the respective offset end positions.
+    * the respective offset end positions and a boolean indicating if the part
+    * is the last part.
     */
-  val upcomingXmlLiteralParts = mutable.Map.empty[Offset, Offset]
+  val upcomingXmlLiteralParts = mutable.Map.empty[Offset, (Offset, Boolean)]
 
 // Get next token ------------------------------------------------------------
 
@@ -730,8 +731,13 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   private def fetchXmlPart(): Unit = {
     require(inXmlLiteral, "must be at the start of an xml literal part")
-    val end = upcomingXmlLiteralParts(offset)
+    val (end, isLastPart) = upcomingXmlLiteralParts(offset)
     finishComposite(XMLLIT, end - 1)
+
+    if (isLastPart) {
+      next.token = XMLLITEND
+    }
+
     // Clean up map, should be empty at EOF.
     upcomingXmlLiteralParts.remove(offset)
   }
@@ -975,7 +981,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     val xmlParser = new XmlParser(embeddedScalaExprPositions)
     val result: Int = xmlParser.XmlExpr.parse(input.text, index = start) match {
       case Parsed.Success(_, endExclusive) =>
-        endExclusive - 1
+        endExclusive
       case Parsed.Failure(_, failIndex, extra) =>
         syntaxError(s"malformed xml literal, expected: ${extra.traced.expected}", at = failIndex)
     }
@@ -987,11 +993,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       // We want the range of the xml literal part which starts at lastFrom
       // and ends at pos.from.
       val to = pos.from - 1
-      upcomingXmlLiteralParts.update(lastFrom, to)
+      upcomingXmlLiteralParts.update(lastFrom, (to, false))
       lastFrom = pos.to + 1
     }
     // The final xml literal part is not followed by any embedded scala expr.
-    upcomingXmlLiteralParts.update(lastFrom, result + 1)
+    upcomingXmlLiteralParts.update(lastFrom, (result, true))
 
     // 3. Return only the first xml part.
     fetchXmlPart()
@@ -1049,11 +1055,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    */
   def foreach(f: LegacyTokenData => Unit) {
     nextChar()
-    nextToken()
-    f(curr)
-    while(curr.token != EOF) {
+    do {
       nextToken()
       f(curr)
-    }
+    } while(curr.token != EOF)
   }
 }

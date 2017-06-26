@@ -26,6 +26,7 @@ object LegacyToken {
   final val SYMBOLLIT = 8
   final val INTERPOLATIONID = 9 // the lead identifier of an interpolated string
   final val XMLLIT = 1000
+  final val XMLLITEND = 1001
 
   /** identifiers */
   final val IDENTIFIER = 10
