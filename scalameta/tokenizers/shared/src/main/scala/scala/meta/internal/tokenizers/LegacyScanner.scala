@@ -125,10 +125,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     if (idtoken == IDENTIFIER) {
       if (kw2legacytoken contains name) {
         token = kw2legacytoken(name)
-        if (token == IDENTIFIER) {
-          if (emitIdentifierDeprecationWarnings)
-            deprecationWarning(s"$name is now a reserved word; usage as an identifier is deprecated", at = token)
-        }
+
+        if (token == IDENTIFIER && emitIdentifierDeprecationWarnings)
+          deprecationWarning(s"$name is now a reserved word; usage as an identifier is deprecated", at = token)
+
+        if (token == ENUM && !dialect.allowEnums)
+          token = IDENTIFIER
       }
     }
   }
@@ -705,6 +707,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           cbuf.clear()
           if (kw2legacytoken contains next.name) {
             next.token = kw2legacytoken(next.name)
+            if (token == ENUM && !dialect.allowEnums) next.token = IDENTIFIER
           }
         } else {
           var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")

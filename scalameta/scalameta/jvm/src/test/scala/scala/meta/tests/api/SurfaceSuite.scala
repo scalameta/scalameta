@@ -390,6 +390,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.tokens.Token.KwDef
       |scala.meta.tokens.Token.KwDo
       |scala.meta.tokens.Token.KwElse
+      |scala.meta.tokens.Token.KwEnum
       |scala.meta.tokens.Token.KwExtends
       |scala.meta.tokens.Token.KwFalse
       |scala.meta.tokens.Token.KwFinal
