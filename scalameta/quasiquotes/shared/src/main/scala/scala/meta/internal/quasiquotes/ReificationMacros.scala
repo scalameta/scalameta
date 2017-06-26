@@ -2,8 +2,6 @@ package scala.meta
 package internal
 package quasiquotes
 
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.runtime.ScalaRunTime
 import scala.language.implicitConversions
 import scala.language.experimental.macros
@@ -59,12 +57,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   }
 
   import definitions._
-  val SeqModule = c.mirror.staticModule("scala.collection.Seq")
-  val ScalaPackageObjectClass = c.mirror.staticModule("scala.package")
-  val ScalaList = ScalaPackageObjectClass.info.decl(TermName("List"))
-  val ScalaNil = ScalaPackageObjectClass.info.decl(TermName("Nil"))
-  val ScalaSeq = ScalaPackageObjectClass.info.decl(TermName("Seq"))
-  val ImmutableSeq = mirror.staticClass("scala.collection.immutable.Seq")
   val InternalLift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Lift")
   val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Unlift")
   val QuasiquotePrefix = c.freshName("quasiquote")
@@ -213,7 +205,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       }
       def toTpe: u.Type = {
         if (clazz.isArray) {
-          appliedType(ImmutableSeq, clazz.getComponentType.toTpe)
+          appliedType(ListClass, clazz.getComponentType.toTpe)
         } else {
           def loop(owner: u.Symbol, parts: List[String]): u.Symbol = parts match {
             case part :: Nil =>
@@ -233,7 +225,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     implicit class XtensionRankedTree(tree: u.Tree) {
       def wrap(rank: Int): u.Tree = {
         if (rank == 0) tree
-        else AppliedTypeTree(tq"$ImmutableSeq", List(tree.wrap(rank - 1)))
+        else AppliedTypeTree(tq"$ListClass", List(tree.wrap(rank - 1)))
       }
     }
     implicit class XtensionQuasiHole(quasi: Quasi) {
@@ -254,7 +246,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           case None => q"_root_.scala.None"
         }
       }
-      def liftTrees(trees: Seq[MetaTree]): ReflectTree = {
+      def liftTrees(trees: List[MetaTree]): ReflectTree = {
         def loop(trees: List[MetaTree], acc: ReflectTree, prefix: List[MetaTree]): ReflectTree = trees match {
           // TODO: instead of checking against 1, we should also take pendingQuasis into account
           case (quasi: Quasi) +: rest if quasi.rank == 1 =>
@@ -268,9 +260,9 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                 // Finally, we can't do something like q"+:(${liftQuasi(quasi)}, (${liftTree(curr)}))",
                 // because would violate evaluation order guarantees that we must keep.
                 val currElement = liftTree(curr)
-                val alreadyLiftedSeq = acc.orElse(liftQuasi(quasi))
-                if (mode.isTerm) q"$currElement +: $alreadyLiftedSeq"
-                else pq"$currElement +: $alreadyLiftedSeq"
+                val alreadyLiftedList = acc.orElse(liftQuasi(quasi))
+                if (mode.isTerm) q"$currElement +: $alreadyLiftedList"
+                else pq"$currElement +: $alreadyLiftedList"
               }), Nil)
             } else {
               require(prefix.isEmpty && debug(trees, acc, prefix))
@@ -286,16 +278,16 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             }
           case Nil =>
             // NOTE: Luckily, at least this quasiquote works fine both in term and pattern modes
-            if (acc.isEmpty) q"_root_.scala.collection.immutable.Seq(..${prefix.map(liftTree)})"
+            if (acc.isEmpty) q"$ListModule(..${prefix.map(liftTree)})"
             else acc
         }
         loop(trees.toList, EmptyTree, Nil)
       }
-      def liftOptionTrees(maybeTrees: Option[Seq[MetaTree]]): ReflectTree = {
+      def liftOptionTrees(maybeTrees: Option[List[MetaTree]]): ReflectTree = {
         maybeTrees match {
-          case Some(Seq(quasi: Quasi)) if quasi.rank == 0 =>
-            q"_root_.scala.Some(${liftTrees(Seq(quasi))})"
-          case Some(Seq(quasi: Quasi)) if quasi.rank > 0 =>
+          case Some(List(quasi: Quasi)) if quasi.rank == 0 =>
+            q"_root_.scala.Some(${liftTrees(List(quasi))})"
+          case Some(List(quasi: Quasi)) if quasi.rank > 0 =>
             liftQuasi(quasi, optional = true)
           case Some(otherTrees) =>
             q"_root_.scala.Some(${liftTrees(otherTrees)})"
@@ -303,10 +295,10 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             q"_root_.scala.None"
         }
       }
-      def liftTreess(treess: Seq[Seq[MetaTree]]): ReflectTree = {
+      def liftTreess(treess: List[List[MetaTree]]): ReflectTree = {
         val tripleDotQuasis = treess.flatten.collect{ case quasi: Quasi if quasi.rank == 2 => quasi }
         if (tripleDotQuasis.length == 0) {
-          Liftable.liftList[Seq[MetaTree]](Liftables.liftableSubTrees).apply(treess.toList)
+          Liftable.liftList[List[MetaTree]](Liftables.liftableSubTrees).apply(treess.toList)
         } else if (tripleDotQuasis.length == 1) {
           if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
           else c.abort(tripleDotQuasis(0).pos,
@@ -348,14 +340,14 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           } else {
             quasi.tree match {
               case quasi: Quasi if quasi.rank == 0 =>
-                // NOTE: Option[Seq[T]] exists only in one instance in our tree API: Template.stats.
+                // NOTE: Option[List[T]] exists only in one instance in our tree API: Template.stats.
                 // Unfortunately, there is a semantic difference between an empty template and a template
-                // without any stats, so we can't just replace it with Seq[T] and rely on tokens
+                // without any stats, so we can't just replace it with List[T] and rely on tokens
                 // (because tokens may be lost, e.g. a TASTY roundtrip).
                 //
                 // Strictly speaking, we shouldn't be allowing ..$stats in Template.stats,
-                // because the pt is Option[Seq[T]], not a Seq[T], but given the fact that Template.stats
-                // is very common, I'm willing to bend the rules here and flatten Option[Seq[T]],
+                // because the pt is Option[List[T]], not a List[T], but given the fact that Template.stats
+                // is very common, I'm willing to bend the rules here and flatten Option[List[T]],
                 // capturing 0 trees if we have None and working as usual if we have Some.
                 //
                 // This is definitely loss of information, but if someone wants to discern Some and None,
@@ -396,10 +388,10 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
       implicit def liftableSubTree[T <: MetaTree]: Liftable[T] = Liftable((tree: T) => materializeAst[MetaTree].apply(tree))
-      implicit def liftableSubTrees[T <:MetaTree]: Liftable[Seq[T]] = Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
-      implicit def liftableSubTreess[T <: MetaTree]: Liftable[Seq[Seq[T]]] = Liftable((treess: Seq[Seq[T]]) => Lifts.liftTreess(treess))
+      implicit def liftableSubTrees[T <:MetaTree]: Liftable[List[T]] = Liftable((trees: List[T]) => Lifts.liftTrees(trees))
+      implicit def liftableSubTreess[T <: MetaTree]: Liftable[List[List[T]]] = Liftable((treess: List[List[T]]) => Lifts.liftTreess(treess))
       implicit def liftableOptionSubTree[T <: MetaTree]: Liftable[Option[T]] = Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
-      implicit def liftableOptionSubTrees[T <: MetaTree]: Liftable[Option[Seq[T]]] = Liftable((x: Option[Seq[T]]) => Lifts.liftOptionTrees(x))
+      implicit def liftableOptionSubTrees[T <: MetaTree]: Liftable[Option[List[T]]] = Liftable((x: Option[List[T]]) => Lifts.liftOptionTrees(x))
     }
     mode match {
       case Mode.Term(_, _) =>

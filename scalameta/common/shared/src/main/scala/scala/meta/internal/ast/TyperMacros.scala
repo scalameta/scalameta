@@ -3,8 +3,6 @@ package internal
 package ast
 
 import scala.language.experimental.macros
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.{Reflection => AdtReflection}
 import org.scalameta.internal.MacroHelpers
@@ -17,7 +15,7 @@ object CommonTyperMacros {
   def storeField[T](f: T, v: T, s: String): Unit = macro CommonTyperMacrosBundle.storeField
   def initField[T](f: T): T = macro CommonTyperMacrosBundle.initField
   def initParam[T](f: T): T = macro CommonTyperMacrosBundle.initField
-  def children[T, U]: Seq[U] = macro CommonTyperMacrosBundle.children[T]
+  def children[T, U]: List[U] = macro CommonTyperMacrosBundle.children[T]
 }
 
 class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpers {
@@ -85,9 +83,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case PrimitiveTpe(tpe) => q"()"
       case TreeTpe(tpe) => lazyLoad(pf => q"${copySubtree(pf, tpe)}")
       case OptionTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
-      case SeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
-      case OptionSeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
-      case SeqSeqTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
+      case ListTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
+      case OptionListTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
+      case ListListTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
@@ -101,9 +99,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case PrimitiveTpe(tpe) => q"()"
       case TreeTpe(tpe) => q"$f = ${copySubtree(v, tpe)}"
       case OptionTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
-      case SeqTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
-      case OptionSeqTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
-      case SeqSeqTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
+      case ListTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
+      case OptionListTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
+      case ListListTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
@@ -113,9 +111,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case PrimitiveTpe(tpe) => q"$f"
       case TreeTpe(tpe) => q"null"
       case OptionTreeTpe(tpe) => q"null"
-      case SeqTreeTpe(tpe) => q"null"
-      case OptionSeqTreeTpe(tpe) => q"null"
-      case SeqSeqTreeTpe(tpe) => q"null"
+      case ListTreeTpe(tpe) => q"null"
+      case OptionListTreeTpe(tpe) => q"null"
+      case ListListTreeTpe(tpe) => q"null"
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
@@ -134,13 +132,13 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case OptionTreeTpe(_) =>
         val acc1 = flushStreak(acc)
         q"$acc1 ++ this.${f.sym}.toList"
-      case SeqTreeTpe(_) =>
+      case ListTreeTpe(_) =>
         val acc1 = flushStreak(acc)
         q"$acc1 ++ this.${f.sym}"
-      case OptionSeqTreeTpe(_) =>
+      case OptionListTreeTpe(_) =>
         val acc1 = flushStreak(acc)
         q"$acc1 ++ this.${f.sym}.getOrElse(_root_.scala.collection.immutable.Nil)"
-      case SeqSeqTreeTpe(_) =>
+      case ListListTreeTpe(_) =>
         val acc1 = flushStreak(acc)
         q"$acc1 ++ this.${f.sym}.flatten"
       case _ =>

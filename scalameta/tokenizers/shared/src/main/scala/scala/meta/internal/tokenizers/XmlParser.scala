@@ -131,7 +131,7 @@ case class RangePosition(from: Int, to: Int)
   * balance hits 0.
   */
 class ScalaExprPositionParser(dialect: Dialect) extends Parser[Unit] {
-  private val splicePositions = Seq.newBuilder[RangePosition]
+  private val splicePositions = List.newBuilder[RangePosition]
   def getSplicePositions = splicePositions.result()
 
   def parseRec(cfg: ParseCtx, index: Int): fastparse.core.Mutable[Unit, Char, String] = {

@@ -2,8 +2,6 @@ package scala.meta.internal
 package semantic
 
 import org.scalameta.unreachable
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.collection.mutable
 import scala.compat.Platform.EOL
 import scala.reflect.internal.util._

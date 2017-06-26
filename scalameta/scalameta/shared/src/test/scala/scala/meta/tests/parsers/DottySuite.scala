@@ -7,7 +7,7 @@ import scala.meta.dialects.Dotty
 class DottySuite extends ParseSuite {
   test("case List(xs: _*)") {
     val tree = pat("List(xs: _*)")
-    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), Nil, Seq(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.SeqWildcard())))")
+    assert(tree.show[Structure] === "Pat.Extract(Term.Name(\"List\"), Nil, List(Pat.Bind(Pat.Var.Term(Term.Name(\"xs\")), Pat.SeqWildcard())))")
     assert(tree.show[Syntax] === "List(xs: _*)")
   }
   test("xml literals") {
@@ -15,8 +15,8 @@ class DottySuite extends ParseSuite {
   }
 
   test("inline def x = 42") {
-    val tree1@Defn.Def(Seq(Mod.Inline()), Term.Name("x"), Nil, Nil, None, Lit(42)) = templStat("inline def x = 42")
-    val tree2@Defn.Def(Seq(Mod.Inline()), Term.Name("x"), Nil, Nil, None, Lit(42)) = blockStat("inline def x = 42")
+    val tree1@Defn.Def(List(Mod.Inline()), Term.Name("x"), Nil, Nil, None, Lit(42)) = templStat("inline def x = 42")
+    val tree2@Defn.Def(List(Mod.Inline()), Term.Name("x"), Nil, Nil, None, Lit(42)) = blockStat("inline def x = 42")
 
     assert(tree1.show[Syntax] === "inline def x = 42")
     assert(tree2.show[Syntax] === "inline def x = 42")
@@ -67,24 +67,24 @@ class DottySuite extends ParseSuite {
   }
 
   test("implicit function type") {
-    val Type.ImplicitFunction(Seq(Type.Name("String")), Type.Name("Int")) =
+    val Type.ImplicitFunction(List(Type.Name("String")), Type.Name("Int")) =
       tpe("implicit String => Int")
 
-    val Type.ImplicitFunction(Seq(Type.Name("String"), Type.Name("Boolean")), Type.Name("Int")) =
+    val Type.ImplicitFunction(List(Type.Name("String"), Type.Name("Boolean")), Type.Name("Int")) =
       tpe("implicit (String, Boolean) => Int")
 
-    val Defn.Def(Nil, Term.Name("f"), Nil, Seq(Nil),
-      Some(Type.ImplicitFunction(Seq(Type.Name("Int")), Type.Name("Int"))), _) =
+    val Defn.Def(Nil, Term.Name("f"), Nil, List(Nil),
+      Some(Type.ImplicitFunction(List(Type.Name("Int")), Type.Name("Int"))), _) =
         templStat("def f(): implicit Int => Int = ???")
 
-    val Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))),
-      Some(Type.ImplicitFunction(Seq(Type.Name("String"), Type.Name("Int")), Type.Name("Int"))), _) =
+    val Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))),
+      Some(Type.ImplicitFunction(List(Type.Name("String"), Type.Name("Int")), Type.Name("Int"))), _) =
         templStat("val x: implicit (String, Int) => Int = ???")
 
     val Defn.Def(Nil, Term.Name("f"), _, Nil,
       Some(
-        Type.ImplicitFunction(Seq(Type.Name("A")),
-          Type.ImplicitFunction(Seq(Type.Name("B")), Type.Tuple(Seq(Type.Name("A"), Type.Name("B")))))), _) =
+        Type.ImplicitFunction(List(Type.Name("A")),
+          Type.ImplicitFunction(List(Type.Name("B")), Type.Tuple(List(Type.Name("A"), Type.Name("B")))))), _) =
             templStat("def f[A, B]: implicit A => implicit B => (A, B) = ???")
   }
 

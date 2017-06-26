@@ -22,14 +22,14 @@ case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[Stri
   /**
     * Obtains all the code references from this DocToken.
     */
-  def references: Seq[DocToken.Reference] =
+  def references: List[DocToken.Reference] =
     body
       .map { b =>
-        def parseBodyFrom(idx: Int): Seq[DocToken.Reference] = {
+        def parseBodyFrom(idx: Int): List[DocToken.Reference] = {
           DocToken.referenceParser.parse(b, idx) match {
             case Parsed.Success(value, index) =>
-              Seq(DocToken.Reference(value)) ++ parseBodyFrom(index)
-            case _ => Seq[DocToken.Reference]()
+              List(DocToken.Reference(value)) ++ parseBodyFrom(index)
+            case _ => List[DocToken.Reference]()
           }
         }
 
@@ -69,8 +69,8 @@ object DocToken {
   /**
     * Returns all the labelled token kinds.
     */
-  val tagTokenKinds: Seq[TagKind] =
-    Seq(
+  val tagTokenKinds: List[TagKind] =
+    List(
       Constructor,
       Param,
       TypeParam,

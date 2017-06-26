@@ -169,7 +169,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
       |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
       |* scala.meta.Type.pat: scala.meta.Pat.Type
-      |* scala.meta.semantic.Mirror.sources: scala.collection.immutable.Seq[scala.meta.Source]
+      |* scala.meta.semantic.Mirror.sources: List[scala.meta.Source]
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).denot: scala.meta.semantic.Denotation
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).flags: Long
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).info: String

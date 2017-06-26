@@ -15,7 +15,7 @@ class TreeOpsSuite extends FunSuite {
           "Lit.Int(2)",
           "Term.Name(\"x\")",
           "Pat.Var.Term(Term.Name(\"x\"))",
-          "Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name(\"x\"))), None, Lit.Int(2))"
+          "Defn.Val(Nil, List(Pat.Var.Term(Term.Name(\"x\"))), None, Lit.Int(2))"
         ))
   }
 

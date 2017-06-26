@@ -1,13 +1,12 @@
 package scala.meta.contrib.implicits
 
-import scala.collection.immutable.Seq
 import scala.meta._
 import scala.meta.contrib._
 
 trait ReplaceExtensions {
   implicit class ExtensionReplacers[A](a: A) {
-    def withStats(bs: Seq[Stat])(implicit ev: Replace[A, Stat]): A = ev.replace(a, bs)
-    def withMods(bs: Seq[Mod])(implicit ev: Replace[A, Mod]): A = ev.replace(a, bs)
+    def withStats(bs: List[Stat])(implicit ev: Replace[A, Stat]): A = ev.replace(a, bs)
+    def withMods(bs: List[Mod])(implicit ev: Replace[A, Mod]): A = ev.replace(a, bs)
   }
 }
 

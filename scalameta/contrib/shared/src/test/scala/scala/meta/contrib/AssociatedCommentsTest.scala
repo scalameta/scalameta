@@ -1,7 +1,6 @@
 package scala.meta.contrib
 
 import scala.meta._
-import scala.collection.immutable.Seq
 import scala.meta.tokens.Token
 import org.scalatest.FunSuite
 
@@ -20,15 +19,15 @@ class AssociatedCommentsTest extends FunSuite {
     val defnVal = input.find(_.is[Defn.Val]).get
     val lit = input.find(_.is[Lit]).get
     val Token.Comment(a) = comments.leading(defnVal).head
-    val Seq(Token.Comment("* leading docstring ")) =
-      comments.leading(defnObject).to[Seq]
-    val Seq() = comments.trailing(defnObject).to[Seq]
-    val Seq(Token.Comment(" leading 2")) =
-      comments.leading(defnVal).to[Seq]
-    val Seq(Token.Comment(" trailing")) =
-      comments.trailing(defnVal).to[Seq]
-    val Seq(Token.Comment(" trailing")) =
-      comments.trailing(lit).to[Seq]
+    val List(Token.Comment("* leading docstring ")) =
+      comments.leading(defnObject).to[List]
+    val List() = comments.trailing(defnObject).to[List]
+    val List(Token.Comment(" leading 2")) =
+      comments.leading(defnVal).to[List]
+    val List(Token.Comment(" trailing")) =
+      comments.trailing(defnVal).to[List]
+    val List(Token.Comment(" trailing")) =
+      comments.trailing(lit).to[List]
   }
 
   test("#897 first comment in file") {

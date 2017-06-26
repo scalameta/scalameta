@@ -18,7 +18,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.Tree.show[Structure] (manual)") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
-    assert(tree.show[Structure] === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, Seq(Term.Name("bar")))""")
+    assert(tree.show[Structure] === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))""")
   }
 
   test("scala.meta.Tree.show[Syntax]") {
@@ -33,7 +33,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.Tree.show[Structure] (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assert(tree.show[Structure] === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, Seq(Term.Name("bar")))""")
+    assert(tree.show[Structure] === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))""")
   }
 
   test("scala.meta.Tree.show[Syntax] (parsed)") {
@@ -48,7 +48,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.Tree.show[Structure] (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assert(tree.show[Structure] === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, Seq(Term.Name("bar")))""")
+    assert(tree.show[Structure] === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))""")
   }
 
   test("scala.meta.Tree.show[Syntax] (quasiquoted)") {

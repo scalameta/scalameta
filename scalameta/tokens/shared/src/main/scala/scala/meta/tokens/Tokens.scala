@@ -12,7 +12,7 @@ import scala.meta.internal.tokens._
 // TODO: better API for the Tokens collection (#385)
 // TODO: better internal representation for tokens (#150)
 //
-// NOTE: `Tokens` is no longer a general-purpose wrapper over arbitrary sequences of tokens.
+// NOTE: `Tokens` is no longer a general-purpose wrapper over arbitrary lists of tokens.
 // Now, it has a representation specialized to ensure that:
 //   1) Random access is O(1)
 //   2) Slice is O(1)
@@ -65,7 +65,7 @@ object Tokens {
   def unapplySeq(tokens: Tokens): Option[Seq[Token]] = Some(tokens)
 
   implicit val tokensToInput: Convert[Tokens, Input] = Convert(tokens => Input.String(tokens.syntax))
-  implicit val seqTokenToInput: Convert[Seq[Token], Input] = Convert(tokens => Input.String(Tokens(tokens.toArray, 0, tokens.length).syntax))
+  implicit val listTokenToInput: Convert[List[Token], Input] = Convert(tokens => Input.String(Tokens(tokens.toArray, 0, tokens.length).syntax))
   implicit def showStructure[T <: Tokens](implicit options: Options): Structure[T] = TokensStructure.apply[T](options)
   implicit def showSyntax[T <: Tokens](implicit dialect: Dialect, options: Options): Syntax[T] = TokensSyntax.apply[T](dialect, options)
 }

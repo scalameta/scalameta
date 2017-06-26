@@ -73,7 +73,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:6: type mismatch when unquoting;
       | found   : List[Dummy]
-      | required: scala.collection.immutable.Seq[scala.meta.Term]
+      | required: List[scala.meta.Term]
       |      q"foo(..$xs)"
       |              ^
     """.trim.stripMargin)
@@ -148,7 +148,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Term.Name]
-      | required: scala.collection.immutable.Seq[scala.meta.Type]
+      | required: List[scala.meta.Type]
       |      q"foo[..$terms]"
       |              ^
     """.trim.stripMargin)
@@ -169,8 +169,8 @@ class ErrorSuite extends FunSuite {
       |<macro>:6: rank mismatch when unquoting;
       | found   : ..$
       | required: $
-      |Note that you can extract a sequence into an unquote when pattern matching,
-      |it just cannot follow another sequence either directly or indirectly.
+      |Note that you can extract a list into an unquote when pattern matching,
+      |it just cannot follow another list either directly or indirectly.
       |        case q"$_($x, ..$ys, $z, ..$ts)" =>
       |                                 ^
     """.trim.stripMargin)
@@ -451,7 +451,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("unquote Seq[T] into Option[Seq[T]]") {
+  test("unquote List[T] into Option[List[T]]") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -466,7 +466,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("unquote Option[Seq[T]] into Option[Seq[T]]") {
+  test("unquote Option[List[T]] into Option[List[T]]") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -704,8 +704,8 @@ class ErrorSuite extends FunSuite {
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
-      |Note that you can extract a sequence into an unquote when pattern matching,
-      |it just cannot follow another sequence either directly or indirectly.
+      |Note that you can extract a list into an unquote when pattern matching,
+      |it just cannot follow another list either directly or indirectly.
       |        case q"$_(...$argss)(...$_)" =>
       |                             ^
     """.trim.stripMargin)
@@ -722,8 +722,8 @@ class ErrorSuite extends FunSuite {
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
-      |Note that you can extract a sequence into an unquote when pattern matching,
-      |it just cannot follow another sequence either directly or indirectly.
+      |Note that you can extract a list into an unquote when pattern matching,
+      |it just cannot follow another list either directly or indirectly.
       |        case q"$_(...$argss)(foo)(...$_)" =>
       |                                  ^
     """.trim.stripMargin)

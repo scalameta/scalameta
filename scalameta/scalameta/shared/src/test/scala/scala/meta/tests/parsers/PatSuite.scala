@@ -99,7 +99,7 @@ class PatSuite extends ParseSuite {
   }
 
   test("$_") {
-    val Pat.Interpolate(Term.Name("q"), Seq(Lit("x + "), Lit("")), Seq(Pat.Wildcard())) = pat(""" q"x + $_" """)
+    val Pat.Interpolate(Term.Name("q"), List(Lit("x + "), Lit("")), List(Pat.Wildcard())) = pat(""" q"x + $_" """)
   }
 
   test("#501") {
@@ -107,11 +107,11 @@ class PatSuite extends ParseSuite {
   }
 
   test("<a>{_*}</a>") {
-    val Pat.Xml(Seq(Lit("<a>"), Lit("</a>")), Seq(SeqWildcard())) = pat("<a>{_*}</a>")
+    val Pat.Xml(List(Lit("<a>"), Lit("</a>")), List(SeqWildcard())) = pat("<a>{_*}</a>")
   }
 
   test("<a>{ns @ _*}</a>") {
-    val Pat.Xml(Seq(Lit("<a>"), Lit("</a>")), Seq(Bind(Var.Term(Term.Name("ns")), SeqWildcard()))) = pat("<a>{ns @ _*}</a>")
+    val Pat.Xml(List(Lit("<a>"), Lit("</a>")), List(Bind(Var.Term(Term.Name("ns")), SeqWildcard()))) = pat("<a>{ns @ _*}</a>")
   }
 
 }

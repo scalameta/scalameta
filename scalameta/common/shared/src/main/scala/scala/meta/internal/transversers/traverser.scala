@@ -30,19 +30,19 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
         case $NoneModule => // do nothing
       }
 
-      def apply(trees: $SeqClass[$TreeClass]): $UnitClass = {
+      def apply(trees: $ListClass[$TreeClass]): $UnitClass = {
         val it = trees.iterator
         while (it.hasNext) {
           apply(it.next)
         }
       }
 
-      def apply(treesopt: $OptionClass[$SeqClass[$TreeClass]])(implicit hack: $Hack1Class): $UnitClass = treesopt match {
+      def apply(treesopt: $OptionClass[$ListClass[$TreeClass]])(implicit hack: $Hack1Class): $UnitClass = treesopt match {
         case $SomeModule(trees) => apply(trees)
         case $NoneModule => // do nothing
       }
 
-      def apply(treess: $SeqClass[$SeqClass[$TreeClass]])(implicit hack: $Hack2Class): $UnitClass = {
+      def apply(treess: $ListClass[$ListClass[$TreeClass]])(implicit hack: $Hack2Class): $UnitClass = {
         val it = treess.iterator
         while (it.hasNext) {
           apply(it.next)

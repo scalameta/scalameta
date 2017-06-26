@@ -32,7 +32,7 @@ object JSFacade {
 
   private[this] def toNode(t: Any): js.Any = t match {
     case t: Tree => toNode(t)
-    case tt: Seq[_] => tt.map(toNode).toJSArray
+    case tt: List[_] => tt.map(toNode).toJSArray
     case t: Option[_] => t.map(toNode).orUndefined
     case _ => ()
   }

@@ -51,31 +51,31 @@ class ReflectionSuite extends AstSuite {
       |scala.Byte
       |scala.Char
       |scala.Int
+      |scala.List[scala.List[scala.meta.Term.Param]]
+      |scala.List[scala.meta.Case]
+      |scala.List[scala.meta.Ctor.Call]
+      |scala.List[scala.meta.Enumerator]
+      |scala.List[scala.meta.Importee]
+      |scala.List[scala.meta.Importer]
+      |scala.List[scala.meta.Lit]
+      |scala.List[scala.meta.Mod.Annot]
+      |scala.List[scala.meta.Mod]
+      |scala.List[scala.meta.Pat.Type]
+      |scala.List[scala.meta.Pat.Var.Term]
+      |scala.List[scala.meta.Pat]
+      |scala.List[scala.meta.Stat]
+      |scala.List[scala.meta.Term.Param]
+      |scala.List[scala.meta.Term]
+      |scala.List[scala.meta.Type.Param]
+      |scala.List[scala.meta.Type]
       |scala.Long
-      |scala.Option[scala.collection.immutable.Seq[scala.meta.Stat]]
+      |scala.Option[scala.List[scala.meta.Stat]]
       |scala.Option[scala.meta.Pat.Type]
       |scala.Option[scala.meta.Term]
       |scala.Option[scala.meta.Type]
       |scala.Short
       |scala.Symbol
       |scala.Unit
-      |scala.collection.immutable.Seq[scala.collection.immutable.Seq[scala.meta.Term.Param]]
-      |scala.collection.immutable.Seq[scala.meta.Case]
-      |scala.collection.immutable.Seq[scala.meta.Ctor.Call]
-      |scala.collection.immutable.Seq[scala.meta.Enumerator]
-      |scala.collection.immutable.Seq[scala.meta.Importee]
-      |scala.collection.immutable.Seq[scala.meta.Importer]
-      |scala.collection.immutable.Seq[scala.meta.Lit]
-      |scala.collection.immutable.Seq[scala.meta.Mod.Annot]
-      |scala.collection.immutable.Seq[scala.meta.Mod]
-      |scala.collection.immutable.Seq[scala.meta.Pat.Type]
-      |scala.collection.immutable.Seq[scala.meta.Pat.Var.Term]
-      |scala.collection.immutable.Seq[scala.meta.Pat]
-      |scala.collection.immutable.Seq[scala.meta.Stat]
-      |scala.collection.immutable.Seq[scala.meta.Term.Param]
-      |scala.collection.immutable.Seq[scala.meta.Term]
-      |scala.collection.immutable.Seq[scala.meta.Type.Param]
-      |scala.collection.immutable.Seq[scala.meta.Type]
       |scala.meta.Ctor.Primary
       |scala.meta.Ctor.Ref.Name
       |scala.meta.Name.Indeterminate

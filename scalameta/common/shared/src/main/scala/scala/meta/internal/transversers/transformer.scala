@@ -49,23 +49,23 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           }
         """
       }
-      def seqTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
-        val fromseq = c.freshName(TermName("fromseq"))
+      def listTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
+        val fromlist = c.freshName(TermName("fromlist"))
         val from = c.freshName(TermName("from"))
         val to = c.freshName(TermName("to"))
         q"""
-          val $fromseq = $input
-          var sameseq = true
-          val toseq = $ListBufferModule[${tpe.typeArgs.head}]()
-          val it = $fromseq.iterator
+          val $fromlist = $input
+          var samelist = true
+          val tolist = $ListBufferModule[${tpe.typeArgs.head}]()
+          val it = $fromlist.iterator
           while (it.hasNext) {
             val $from = it.next
             val $to = ${nested(q"$from", tpe.typeArgs.head)}
-            if ($from ne $to) sameseq = false
-            toseq += $to
+            if ($from ne $to) samelist = false
+            tolist += $to
           }
-          if (sameseq) $fromseq
-          else toseq.toList
+          if (samelist) $fromlist
+          else tolist.toList
         """
       }
       val rhs = f.tpe match {
@@ -73,12 +73,12 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           treeTransformer(q"${f.name}", tpe)
         case tpe @ OptionTreeTpe(_) =>
           optionTransformer(q"${f.name}", tpe, treeTransformer)
-        case tpe @ SeqTreeTpe(_) =>
-          seqTransformer(q"${f.name}", tpe, treeTransformer)
-        case tpe @ OptionSeqTreeTpe(_) =>
-          optionTransformer(q"${f.name}", tpe, seqTransformer(_, _, treeTransformer))
-        case tpe @ SeqSeqTreeTpe(_) =>
-          seqTransformer(q"${f.name}", tpe, seqTransformer(_, _, treeTransformer))
+        case tpe @ ListTreeTpe(_) =>
+          listTransformer(q"${f.name}", tpe, treeTransformer)
+        case tpe @ OptionListTreeTpe(_) =>
+          optionTransformer(q"${f.name}", tpe, listTransformer(_, _, treeTransformer))
+        case tpe @ ListListTreeTpe(_) =>
+          listTransformer(q"${f.name}", tpe, listTransformer(_, _, treeTransformer))
         case _ =>
           q"${f.name}"
       }
@@ -107,7 +107,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           $NoneModule
       }
 
-      def apply(trees: $SeqClass[$TreeClass]): $SeqClass[$TreeClass] = {
+      def apply(trees: $ListClass[$TreeClass]): $ListClass[$TreeClass] = {
         var same = true
         val buf = $ListBufferModule[$TreeClass]()
         val it = trees.iterator
@@ -121,7 +121,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         else buf.toList
       }
 
-      def apply(treesopt: $OptionClass[$SeqClass[$TreeClass]])(implicit hack: $Hack1Class): $OptionClass[$SeqClass[$TreeClass]] = treesopt match {
+      def apply(treesopt: $OptionClass[$ListClass[$TreeClass]])(implicit hack: $Hack1Class): $OptionClass[$ListClass[$TreeClass]] = treesopt match {
         case $SomeModule(trees) =>
           val trees1 = apply(trees)
           if (trees eq trees1) treesopt
@@ -130,9 +130,9 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           $NoneModule
       }
 
-      def apply(treess: $SeqClass[$SeqClass[$TreeClass]])(implicit hack: $Hack2Class): $SeqClass[$SeqClass[$TreeClass]] = {
+      def apply(treess: $ListClass[$ListClass[$TreeClass]])(implicit hack: $Hack2Class): $ListClass[$ListClass[$TreeClass]] = {
         var same = true
-        val buf = $ListBufferModule[$SeqClass[$TreeClass]]()
+        val buf = $ListBufferModule[$ListClass[$TreeClass]]()
         val it = treess.iterator
         while (it.hasNext) {
           val trees = it.next

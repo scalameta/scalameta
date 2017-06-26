@@ -200,14 +200,14 @@ class XmlSuite extends ParseSuite {
     val parsedTricky = term(trickyXml)
     // format: off
     val Term.Block(
-    Seq(
-    Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None,
-    Term.Xml(Seq(Lit("<div href="), Lit(">Hello "), Lit("</div>")),
-    Seq(Term.ApplyInfix(Lit("/"), Term.Name("+"), Nil, Seq(Term.Name("url"))), Term.Name("name")))),
-    Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("noSemicolon"))), None,
-    Term.Xml(Seq(Lit("<h1>"), Lit("</h1>")),
-    Seq(Term.ApplyInfix(Term.Name("msg"), Term.Name("infix"), Nil, Seq(Term.Name("upper")))))),
-    Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("y"))), None, Lit(2)))) = parsedTricky
+    List(
+    Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None,
+    Term.Xml(List(Lit("<div href="), Lit(">Hello "), Lit("</div>")),
+    List(Term.ApplyInfix(Lit("/"), Term.Name("+"), Nil, List(Term.Name("url"))), Term.Name("name")))),
+    Defn.Val(Nil, List(Pat.Var.Term(Term.Name("noSemicolon"))), None,
+    Term.Xml(List(Lit("<h1>"), Lit("</h1>")),
+    List(Term.ApplyInfix(Term.Name("msg"), Term.Name("infix"), Nil, List(Term.Name("upper")))))),
+    Defn.Val(Nil, List(Pat.Var.Term(Term.Name("y"))), None, Lit(2)))) = parsedTricky
     // format: on
   }
 

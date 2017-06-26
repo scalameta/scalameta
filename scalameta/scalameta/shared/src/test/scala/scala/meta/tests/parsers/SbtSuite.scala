@@ -55,29 +55,29 @@ class SbtSuite extends FunSuite {
 
   private def simpleBuildStructure = {
     """
-      |Source(Seq(
+      |Source(List(
         |Defn.Val(
-          |Seq(Mod.Lazy()),
-          | Seq(Pat.Var.Term(Term.Name("commonSettings"))),
+          |List(Mod.Lazy()),
+          | List(Pat.Var.Term(Term.Name("commonSettings"))),
           | None,
           | Term.Apply(
               |Term.Name("Seq"),
-              | Seq(
-                  |Term.ApplyInfix(Term.Name("organization"), Term.Name(":="), Nil, Seq(Lit.String("com.example"))),
-                  | Term.ApplyInfix(Term.Name("version"), Term.Name(":="), Nil, Seq(Lit.String("0.1.0"))),
-                  | Term.ApplyInfix(Term.Name("scalaVersion"), Term.Name(":="), Nil, Seq(Lit.String("2.11.7")))))),
+              | List(
+                  |Term.ApplyInfix(Term.Name("organization"), Term.Name(":="), Nil, List(Lit.String("com.example"))),
+                  | Term.ApplyInfix(Term.Name("version"), Term.Name(":="), Nil, List(Lit.String("0.1.0"))),
+                  | Term.ApplyInfix(Term.Name("scalaVersion"), Term.Name(":="), Nil, List(Lit.String("2.11.7")))))),
         | Defn.Val(
-          |Seq(Mod.Lazy()),
-          | Seq(Pat.Var.Term(Term.Name("root"))),
+          |List(Mod.Lazy()),
+          | List(Pat.Var.Term(Term.Name("root"))),
           | None,
           | Term.Apply(
               |Term.Select(
                 |Term.Apply(
-                  |Term.Select(Term.ApplyInfix(Term.Name("project"), Term.Name("in"), Nil, Seq(Term.Apply(Term.Name("file"), Seq(Lit.String("."))))), Term.Name("settings")),
-                  | Seq(Term.Repeated(Term.Name("commonSettings")))),
+                  |Term.Select(Term.ApplyInfix(Term.Name("project"), Term.Name("in"), Nil, List(Term.Apply(Term.Name("file"), List(Lit.String("."))))), Term.Name("settings")),
+                  | List(Term.Repeated(Term.Name("commonSettings")))),
                 | Term.Name("settings")),
-              | Seq(
-                  |Term.ApplyInfix(Term.Name("name"), Term.Name(":="), Nil, Seq(Lit.String("hello"))))))))
+              | List(
+                  |Term.ApplyInfix(Term.Name("name"), Term.Name(":="), Nil, List(Lit.String("hello"))))))))
     """.trim.stripMargin.split(EOL).mkString("")
   }
 }

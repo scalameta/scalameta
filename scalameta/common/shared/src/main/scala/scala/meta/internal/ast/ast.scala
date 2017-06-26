@@ -172,7 +172,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       }
 
       // step 8: create the children method
-      stats1 += q"def children: Seq[$TreeClass] = $CommonTyperMacrosModule.children[$iname, $TreeClass]"
+      stats1 += q"def children: $ListClass[$TreeClass] = $CommonTyperMacrosModule.children[$iname, $TreeClass]"
 
       // step 9: generate boilerplate required by the @ast infrastructure
       // TODO: remove leafClass and leafCompanion from here
@@ -195,7 +195,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       stats1 += q"override def productElement(n: $IntClass): Any = n match { case ..$pelClauses }"
       stats1 += q"override def productIterator: $IteratorClass[$AnyClass] = $ScalaRunTimeModule.typedProductIterator(this)"
       val productFields = productParamss.head.map(_.name.toString)
-      stats1 += q"override def productFields: $SeqClass[$StringClass] = Seq(..$productFields)"
+      stats1 += q"override def productFields: $ListClass[$StringClass] = _root_.scala.List(..$productFields)"
 
       // step 12: generate serialization logic
       val fieldInits = fieldParams.map({ case (p, s) => q"$CommonTyperMacrosModule.loadField(this.${internalize(p.name)}, $s)" })

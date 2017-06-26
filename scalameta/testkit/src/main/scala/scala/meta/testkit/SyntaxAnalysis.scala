@@ -21,7 +21,7 @@ object SyntaxAnalysis {
     * @return The aggregate sum of all analysis results.
     */
   def run[T](corpus: GenIterable[CorpusFile])(
-      f: CorpusFile => Seq[T]
+      f: CorpusFile => List[T]
   ): mutable.Buffer[(CorpusFile, T)] = Phase.run("syntax analysis") {
     val results = new CopyOnWriteArrayList[(CorpusFile, T)]
     val counter = new AtomicInteger()
@@ -57,7 +57,7 @@ object SyntaxAnalysis {
   }
 
   def onParsed[A](corpus: GenIterable[CorpusFile])(
-      f: Source => Seq[A]): mutable.Buffer[(CorpusFile, A)] =
+      f: Source => List[A]): mutable.Buffer[(CorpusFile, A)] =
     SyntaxAnalysis.run[A](corpus)(_.jFile.parse[Source] match {
       case parsers.Parsed.Success(ast: Source) => f(ast)
       case _                                   => Nil

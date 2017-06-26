@@ -12,7 +12,7 @@ import org.scalatest.FunSuite
   */
 class ScaladocParserSuite extends FunSuite {
 
-  private[this] def parseString(commentCode: String): Option[Seq[DocToken]] = {
+  private[this] def parseString(commentCode: String): Option[List[DocToken]] = {
     val code = commentCode.parse[Source].get
     val comments = AssociatedComments(code.tokens)
     val defnClass = code.collectFirst { case t: Defn.Class => t }.get
@@ -37,7 +37,7 @@ class ScaladocParserSuite extends FunSuite {
   test("indentation checks") {
 
     val expectedBody: String = "BODY"
-    val expectedResult: Option[Seq[DocToken]] = Option(Seq(DocToken(Description, expectedBody)))
+    val expectedResult: Option[List[DocToken]] = Option(List(DocToken(Description, expectedBody)))
 
     assert(
       parseString(
@@ -92,7 +92,7 @@ class ScaladocParserSuite extends FunSuite {
           case class foo(bar: String)
          """
       ) === Option(
-        Seq(
+        List(
           DocToken(Description, descriptionBody),
           DocToken(Paragraph),
           DocToken(Description, descriptionBody)
@@ -115,7 +115,7 @@ class ScaladocParserSuite extends FunSuite {
         |gmqwgoiqmgoqmwomw
       """.stripMargin.trim
 
-    val result: Option[Seq[DocToken]] =
+    val result: Option[List[DocToken]] =
       parseString(
         s"""
           /**
@@ -134,7 +134,7 @@ class ScaladocParserSuite extends FunSuite {
       )
 
     val expectation = Option(
-      Seq(
+      List(
         DocToken(Description, testDescription),
         DocToken(CodeBlock, codeBlock1),
         DocToken(Description, testDescription),
@@ -156,7 +156,7 @@ class ScaladocParserSuite extends FunSuite {
     val level5HeadingBody = "Level 5"
     val level6HeadingBody = "Level 6"
 
-    val result: Option[Seq[DocToken]] =
+    val result: Option[List[DocToken]] =
       parseString(
         s"""
         /**
@@ -171,7 +171,7 @@ class ScaladocParserSuite extends FunSuite {
          """
       )
     val expectation = Option(
-      Seq(
+      List(
         DocToken(Heading1, level1HeadingBody),
         DocToken(Heading2, level2HeadingBody),
         DocToken(Heading3, level3HeadingBody),
@@ -187,7 +187,7 @@ class ScaladocParserSuite extends FunSuite {
     val testStringToMerge = "Test DocText"
     val scaladoc: String =
       DocToken.tagTokenKinds
-        .flatMap(token => Seq(generateTestString(token), testStringToMerge))
+        .flatMap(token => List(generateTestString(token), testStringToMerge))
         .mkString("/**\n * ", "\n * ", "\n */")
 
     val codeToParse: String =
@@ -196,7 +196,7 @@ class ScaladocParserSuite extends FunSuite {
          |case class Foo(bar: String)
       """.stripMargin
 
-    val parsedScaladoc: Option[Seq[DocToken]] = parseString(codeToParse)
+    val parsedScaladoc: Option[List[DocToken]] = parseString(codeToParse)
 
     // Inherit doc does not merge
     assert(parsedScaladoc.map(_.size) === Option(DocToken.tagTokenKinds.size))
@@ -235,7 +235,7 @@ class ScaladocParserSuite extends FunSuite {
 
     assert(
       parseString(codeToParse).exists(
-        _.head.references === Seq(DocToken.Reference(reference1), DocToken.Reference(reference2))
+        _.head.references === List(DocToken.Reference(reference1), DocToken.Reference(reference2))
       )
     )
   }

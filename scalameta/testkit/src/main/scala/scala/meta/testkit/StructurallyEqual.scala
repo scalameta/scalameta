@@ -16,7 +16,7 @@ object StructurallyEqual {
         case (x, y) if x == null || y == null => x == null && y == null
         case (x: Some[_], y: Some[_]) => loop(x.get, y.get)
         case (x: None.type, y: None.type) => true
-        case (xs: Seq[_], ys: Seq[_]) =>
+        case (xs: List[_], ys: List[_]) =>
           xs.length == ys.length &&
             xs.zip(ys).forall {
               case (x, y) => loop(x, y)

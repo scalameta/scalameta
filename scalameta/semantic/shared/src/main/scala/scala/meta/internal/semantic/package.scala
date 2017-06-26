@@ -1,8 +1,8 @@
 package scala.meta
 package internal
-import scala.util.Try
+
 import java.nio.charset.Charset
-import scala.collection.immutable.Seq
+import scala.util.Try
 import scala.meta.inputs.{Input => mInput}
 import scala.meta.inputs.{Point => mPoint}
 import scala.meta.inputs.{Position => mPosition}

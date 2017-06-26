@@ -229,7 +229,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
 
   1. Any non-trivia token in a quasiquote template, except for an unquote template, means that exactly that token is required in a quasiquote, with the following exceptions:
 
-      1. Parentheses, brackets and braces around unquotes are oftentimes dropped if they wrap empty sequences, e.g. `q"x + y"` conforms to `q"$expr $name[..$tpes] $expr"`.
+      1. Parentheses, brackets and braces around unquotes are oftentimes dropped if they wrap empty lists, e.g. `q"x + y"` conforms to `q"$expr $name[..$tpes] $expr"`.
 
       1. `with` is dropped if there are zero or one ctorcalls, e.g. both `q"new {}"` and `q"new C"` conform to `q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }`.
 
@@ -237,16 +237,16 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
 
   1. An *unquote template* (`$smth`, `..$smth` or `...$smth`) works as follows:
 
-      1. First, we strip standard suffixes from `smth` using the "Suffixes" table (e.g. `exprssnel` means a non-empty sequence of sequences of `expr`).
+      1. First, we strip standard suffixes from `smth` using the "Suffixes" table (e.g. `exprssnel` means a non-empty list of lists of `expr`).
 
-      1. Second, we figure out the expected type of `smth` using the "Shorthands" table (e.g. `expr` means `Term`, so `exprssnel` means `Seq[Seq[Term]]`).
+      1. Second, we figure out the expected type of `smth` using the "Shorthands" table (e.g. `expr` means `Term`, so `exprssnel` means `List[List[Term]]`).
 
       1. Third, we apply an appropriate number of replications to the unquote template to have it match the corresponding part of a quasiquote that's being tested for conformance:
 
           1. `$smth` can not be replicated.
           1. `..$smth` means an arbitrary mix of `$smth` and `..$smth` unquote templates separated according to their location (e.g. an empty string, `[$tpe]`, `[..$tpes, $tpe]` all conform to `[..$tpes]`, and the separator is a comma, as appropriate for a list of type arguments).
           1. `...$smth` means an arbitrary mix of `$smth`, `..$smth` and  `...$smth` unquote templates, separated according to their location (e.g. an empty string, `(...$exprss)`, `(..$exprs)($expr1, $expr2)()` all conform to `(...$exprss)`, and the separator are matching parentheses, as appropriate for a list of arguments).
-          1. If a suffix of `smth` says that it's a non-empty sequence, then replication can't result in an empty list.
+          1. If a suffix of `smth` says that it's a non-empty list, then replication can't result in an empty list.
           1. If a quasiquote is used as a pattern, then some replications may be illegal (TODO: to be elaborated!).
 
       1. Finally, we match the unquotes after replication against the corresponding parts of the quasiquote under conformance test. There are three possibilities for a match: scala syntax, unquote, lifted unquote.
@@ -290,7 +290,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
 
  Suffix | Wrapped Type  | Example
 --------|---------------|-----------------------------
- -s     | `Seq[_]`      | `exprs: Seq[meta.Term]`
- -ss    | `Seq[Seq[_]]` | `exprss: Seq[Seq[meta.Term]]`
+ -s     | `List[_]`      | `exprs: List[meta.Term]`
+ -ss    | `List[List[_]]` | `exprss: List[List[meta.Term]]`
  -opt   | `Option[_]`   | `expropt: Option[meta.Term]`
- -nel   | `_`           | `tpesnel: Seq[meta.Type]`
+ -nel   | `_`           | `tpesnel: List[meta.Type]`

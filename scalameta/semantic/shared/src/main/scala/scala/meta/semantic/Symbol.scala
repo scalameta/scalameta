@@ -1,8 +1,6 @@
 package scala.meta
 package semantic
 
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.compat.Platform.EOL
 import scala.util.Try
 import org.scalameta.adt._
@@ -84,7 +82,7 @@ object Symbol {
     }
   }
 
-  @leaf class Multi(symbols: Seq[Symbol] @nonEmpty) extends Symbol {
+  @leaf class Multi(symbols: List[Symbol] @nonEmpty) extends Symbol {
     override def toString = syntax
     override def syntax = symbols.map(_.syntax).mkString(";")
     override def structure = s"""Symbol.Multi(${symbols.map(_.structure).mkString(", ")})"""

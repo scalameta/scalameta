@@ -10,11 +10,11 @@ import scala.meta.contrib.equality.TreeEquality
 trait TreeExtensions {
   implicit class XtensionTreeOps[A <: Tree](a: A) {
     @inline
-    def ancestors: Seq[Tree] =
+    def ancestors: List[Tree] =
       TreeOps.ancestors(a)
 
     @inline
-    def descendants: Seq[Tree] =
+    def descendants: List[Tree] =
       TreeOps.descendants(a)
 
     @inline

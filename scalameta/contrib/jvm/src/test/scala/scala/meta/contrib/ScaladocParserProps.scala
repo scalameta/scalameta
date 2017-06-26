@@ -12,11 +12,11 @@ class ScaladocParserProps extends FunSuite {
 
   test("parser does not crash") {
     val errors = SyntaxAnalysis.onParsed[Tree](ContribSuite.corpus) { ast =>
-      val commentTokens: Seq[Comment] = ast.tokens.collect {
+      val commentTokens: List[Comment] = ast.tokens.collect {
         case c: Comment => c
       }
       if (commentTokens.map(c => Try(ScaladocParser.parseScaladoc(c))).exists(_.isFailure)) {
-        Seq(ast)
+        List(ast)
       } else {
         Nil
       }

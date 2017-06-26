@@ -1,6 +1,5 @@
 package scala.meta.contrib.instances
 
-import scala.collection.immutable.Seq
 import scala.meta._
 import scala.meta.contrib._
 

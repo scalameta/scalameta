@@ -4,8 +4,6 @@ package prettyprinters
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 import scala.language.higherKinds
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.meta.common._
 import scala.compat.Platform.EOL
 
@@ -58,7 +56,7 @@ object Show {
   private[meta] final case object None extends Result
   private[meta] final case class Str(value: String) extends Result
   private[meta] final case class Sequence(xs: Result*) extends Result
-  private[meta] final case class Repeat(xs: Seq[Result], sep: String) extends Result
+  private[meta] final case class Repeat(xs: List[Result], sep: String) extends Result
   private[meta] final case class Indent(res: Result) extends Result
   private[meta] final case class Newline(res: Result) extends Result
   private[meta] final case class Meta(data: Any, res: Result) extends Result
@@ -68,11 +66,11 @@ object Show {
   def apply[T](f: T => Result): Show[T] =
     new Show[T] { def apply(input: T): Result = f(input) }
 
-  def sequence[T](xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.seq
+  def sequence[T](xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.sequence
 
   def indent[T](x: T)(implicit show: Show[T]): Result = Indent(show(x))
 
-  def repeat[T](xs: Seq[T], sep: String = "")(implicit show: Show[T]): Result =
+  def repeat[T](xs: List[T], sep: String = "")(implicit show: Show[T]): Result =
     Repeat(xs.map(show(_)), sep)
 
   def newline[T](x: T)(implicit show: Show[T]): Result = Newline(show(x))

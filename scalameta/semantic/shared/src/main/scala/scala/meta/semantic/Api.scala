@@ -3,8 +3,6 @@ package semantic
 
 import org.scalameta.unreachable
 import org.scalameta.debug
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.compat.Platform.EOL
 import scala.meta.internal.ast.Helpers._
 import scala.meta.inputs._
@@ -13,7 +11,7 @@ import scala.meta.parsers.{XtensionParsersDialectInput, XtensionParseDialectInpu
 
 private[meta] trait Api extends Flags {
   implicit class XtensionMirrorSources(mirror: Mirror) {
-    def sources: Seq[Source] = mirror.database.entries.map { case (input, attrs) => attrs.dialect(input).parse[Source].get }
+    def sources: List[Source] = mirror.database.entries.map { case (input, attrs) => attrs.dialect(input).parse[Source].get }
   }
 
   implicit class XtensionRefSymbol(ref: Ref)(implicit m: Mirror) {

@@ -69,7 +69,8 @@ trait MacroHelpers extends DebugFinder
   lazy val UnsupportedOperationException = hygienicRef[UnsupportedOperationException]
   lazy val IndexOutOfBoundsException = hygienicRef[IndexOutOfBoundsException]
   lazy val IteratorClass = tq"_root_.scala.collection.Iterator"
-  lazy val SeqClass = tq"_root_.scala.collection.immutable.Seq"
+  lazy val ListClass = tq"_root_.scala.collection.immutable.List"
+  lazy val ListModule = q"_root_.scala.collection.immutable.List"
   lazy val ListBufferModule = hygienicRef(scala.collection.mutable.ListBuffer)
   lazy val UnitClass = hygienicRef[scala.Unit]
   lazy val ClassClass = tq"_root_.java.lang.Class"
@@ -140,9 +141,9 @@ trait MacroHelpers extends DebugFinder
     }
   }
 
-  object SeqTreeTpe {
+  object ListTreeTpe {
     def unapply(tpe: Type): Option[Type] = {
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.Seq")) {
+      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.List")) {
         tpe.typeArgs match {
           case TreeTpe(tpe) :: Nil => Some(tpe)
           case _ => None
@@ -151,22 +152,22 @@ trait MacroHelpers extends DebugFinder
     }
   }
 
-  object OptionSeqTreeTpe {
+  object OptionListTreeTpe {
     def unapply(tpe: Type): Option[Type] = {
       if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) {
         tpe.typeArgs match {
-          case SeqTreeTpe(tpe) :: Nil => Some(tpe)
+          case ListTreeTpe(tpe) :: Nil => Some(tpe)
           case _ => None
         }
       } else None
     }
   }
 
-  object SeqSeqTreeTpe {
+  object ListListTreeTpe {
     def unapply(tpe: Type): Option[Type] = {
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.Seq")) {
+      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.List")) {
         tpe.typeArgs match {
-          case SeqTreeTpe(tpe) :: Nil => Some(tpe)
+          case ListTreeTpe(tpe) :: Nil => Some(tpe)
           case _ => None
         }
       } else None

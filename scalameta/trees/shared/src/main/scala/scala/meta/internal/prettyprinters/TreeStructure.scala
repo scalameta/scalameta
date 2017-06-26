@@ -2,8 +2,6 @@ package scala.meta
 package internal
 package prettyprinters
 
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import org.scalameta.collections._
 import scala.meta.classifiers._
 import scala.meta.prettyprinters._
@@ -19,17 +17,17 @@ object TreeStructure {
         def anyStructure(x: Any): String = x match {
           case el: String => enquote(el, DoubleQuotes)
           case el: Tree => el.show[Structure]
-          case el: Seq[_] => seqStructure(el)
+          case el: List[_] => listStructure(el)
           case el: None.type => "None"
           case el: Some[_] => "Some(" + anyStructure(el.get) + ")"
           case el => el.toString
         }
-        def seqStructure(xs: Seq[_]): String = {
-          if (options.isLazy && xs.isLazy) "Seq(...)"
+        def listStructure(xs: List[_]): String = {
+          if (options.isLazy && xs.isLazy) "List(...)"
           else xs match {
             case xs: Nil.type => "Nil"
-            case xs @ Seq(Seq()) => "Seq(Seq())"
-            case xs => "Seq(" + xs.map(anyStructure).mkString(", ") + ")"
+            case xs @ List(List()) => "List(List())"
+            case xs => "List(" + xs.map(anyStructure).mkString(", ") + ")"
           }
         }
         r(x.productIterator.map(anyStructure).toList, ", ")

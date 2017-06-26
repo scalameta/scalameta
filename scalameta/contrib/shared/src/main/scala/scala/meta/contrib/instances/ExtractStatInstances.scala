@@ -2,7 +2,6 @@ package scala.meta.contrib.instances
 
 import scala.meta._
 import scala.meta.contrib._
-import scala.collection.immutable.Seq
 
 trait ExtractStatInstances {
   implicit val extractTemplateStats: Extract[Template, Stat] =
@@ -35,7 +34,7 @@ trait ExtractStatInstances {
         .map(extractStatsFromTerm)
         .getOrElse(Nil))
 
-  private def extractStatsFromTerm(term: Term): Seq[Stat] =
+  private def extractStatsFromTerm(term: Term): List[Stat] =
     term match {
       case Term.Block(stats) => stats
       case s => s :: Nil

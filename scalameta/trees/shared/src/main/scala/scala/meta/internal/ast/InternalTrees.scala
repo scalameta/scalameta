@@ -51,7 +51,7 @@ trait InternalTree extends Product {
   // def productArity: Int
   // def productElement(n: Int): Any
   // def productIterator: Iterator[Any]
-  def productFields: Seq[String]
+  def productFields: List[String]
 
   private[meta] def origin: Origin = {
     if (privateOrigin != null) privateOrigin else Origin.None

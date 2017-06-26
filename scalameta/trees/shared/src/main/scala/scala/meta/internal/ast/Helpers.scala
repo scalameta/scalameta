@@ -3,8 +3,6 @@ package internal
 package ast
 
 import java.lang.{ Character => JCharacter }
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.reflect.ClassTag
 import org.scalameta._
 import org.scalameta.invariants._
@@ -99,8 +97,8 @@ object Helpers {
       }
       loop(tree)
     }
-    def ctorArgss: Seq[Seq[Term]] = {
-      def loop(tree: Tree): Seq[Seq[Term]] = tree match {
+    def ctorArgss: List[List[Term]] = {
+      def loop(tree: Tree): List[List[Term]] = tree match {
         case _: Ctor.Ref => Nil
         case Term.ApplyType(callee, _) => callee.ctorArgss
         case Term.Apply(callee, args) => callee.ctorArgss :+ args
@@ -219,7 +217,7 @@ object Helpers {
   }
 
   implicit class XtensionCase(tree: Case) {
-    def stats: Seq[Stat] = tree.body match {
+    def stats: List[Stat] = tree.body match {
       case Term.Block(stats) => stats
       case body => List(body)
     }
@@ -309,8 +307,8 @@ object Helpers {
       case _ => Term.Apply(fun, Nil)
     }
 
-    def unapply(call: Term.Apply): Option[(Term, Seq[Seq[Term]])] = {
-      def recur(acc: Seq[Seq[Term]], term: Term): (Term, Seq[Seq[Term]])  = term match {
+    def unapply(call: Term.Apply): Option[(Term, List[List[Term]])] = {
+      def recur(acc: List[List[Term]], term: Term): (Term, List[List[Term]])  = term match {
         case Term.Apply(fun, args) => recur(args +: acc, fun) // inner-most is in the front
         case fun => (fun, acc)
       }

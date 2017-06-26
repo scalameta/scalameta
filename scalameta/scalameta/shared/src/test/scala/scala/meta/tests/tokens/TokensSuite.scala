@@ -1,8 +1,6 @@
 package scala.meta.tests
 package tokens
 
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.Token._

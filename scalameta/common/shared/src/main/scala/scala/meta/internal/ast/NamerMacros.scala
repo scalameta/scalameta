@@ -3,8 +3,6 @@ package internal
 package ast
 
 import scala.language.experimental.macros
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.collection.mutable.ListBuffer
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.internal.MacroHelpers

@@ -23,7 +23,7 @@ object Observation {
     *
     * Example: https://github.com/scalameta/scalameta/issues/567#issuecomment-267074738
     */
-  def markdownTable[T](observations: Seq[(CorpusFile, Observation[T])]): String = {
+  def markdownTable[T](observations: List[(CorpusFile, Observation[T])]): String = {
     val sb = new mutable.StringBuilder()
     val grouped = observations.groupBy(_._2.kind)
     grouped.toSeq.sortBy(_._1.toString).foreach {

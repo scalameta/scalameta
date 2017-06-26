@@ -43,5 +43,5 @@ object CommentOps {
   }
 
   @inline
-  def docTokens(c: Comment): Option[Seq[DocToken]] = ScaladocParser.parseScaladoc(c)
+  def docTokens(c: Comment): Option[List[DocToken]] = ScaladocParser.parseScaladoc(c)
 }

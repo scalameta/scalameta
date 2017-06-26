@@ -11,8 +11,6 @@ import scala.meta.internal.ast.Quasi
 import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.tokenizers.Chars._
 import scala.meta.internal.tokenizers.keywords
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import org.scalameta.adt._
 import org.scalameta.collections._
 import org.scalameta.invariants._
@@ -251,7 +249,7 @@ object TreeSyntax {
         case t: Term.Tuple           => m(SimpleExpr1, s("(", r(t.args, ", "), ")"))
         case t: Term.Block           =>
           import Term.{Block, Function}
-          def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
+          def pstats(s: List[Stat]) = r(s.map(i(_)), "")
           t match {
             case Block(Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil) if mods.exists(_.is[Mod.Implicit]) =>
               m(SimpleExpr, s("{ ", kw("implicit"), " ", name, tptopt.map(s(kw(":"), " ", _)).getOrElse(s()), " ", kw("=>"), " ", pstats(stats), n("}")))
@@ -491,11 +489,11 @@ object TreeSyntax {
                 (isSelfNonEmpty, t.stats.nonEmpty, t.stats.getOrElse(Nil)) match {
                   case (false, false, _) => s()
                   case (true, false, _) => s("{ ", t.self, " => }")
-                  case (false, true, Seq()) if isOneLiner => s("{}")
-                  case (false, true, Seq(stat)) if isOneLiner => s("{ ", stat, " }")
+                  case (false, true, List()) if isOneLiner => s("{}")
+                  case (false, true, List(stat)) if isOneLiner => s("{ ", stat, " }")
                   case (false, true, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
-                  case (true, true, Seq()) if isOneLiner => s("{ ", t.self, " => }")
-                  case (true, true, Seq(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
+                  case (true, true, List()) if isOneLiner => s("{ ", t.self, " => }")
+                  case (true, true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
                   case (true, true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
                 }
               }
@@ -565,40 +563,40 @@ object TreeSyntax {
       }
 
       // Multiples and optionals
-      implicit def syntaxArgs: Syntax[Seq[Term]] = Syntax {
+      implicit def syntaxArgs: Syntax[List[Term]] = Syntax {
         case (b: Term.Block) :: Nil                                                     => s(" ", b)
         case (f @ Term.Function(params, _)) :: Nil if !params.exists(_.decltpe.isEmpty) => s(" { ", f, " }")
         case args                                                                       => s("(", r(args, ", "), ")")
       }
-      implicit def syntaxArgss: Syntax[Seq[Seq[Term]]] = Syntax {
+      implicit def syntaxArgss: Syntax[List[List[Term]]] = Syntax {
         r(_)
       }
-      implicit def syntaxTargs: Syntax[Seq[Type]] = Syntax { targs =>
+      implicit def syntaxTargs: Syntax[List[Type]] = Syntax { targs =>
         if (targs.isEmpty) s()
         else s("[", r(targs, ", "), "]")
       }
-      implicit def syntaxPtargs: Syntax[Seq[Pat.Type]] = Syntax { ptargs =>
+      implicit def syntaxPtargs: Syntax[List[Pat.Type]] = Syntax { ptargs =>
         if (ptargs.isEmpty) s()
         else s("[", r(ptargs, ", "), "]")
       }
-      implicit def syntaxPats: Syntax[Seq[Pat]] = Syntax { pats =>
+      implicit def syntaxPats: Syntax[List[Pat]] = Syntax { pats =>
         s("(", r(pats, ", "), ")")
       }
-      implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax { mods =>
+      implicit def syntaxMods: Syntax[List[Mod]] = Syntax { mods =>
         if (mods.nonEmpty) r(mods, " ") else s()
       }
-      implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax { annots =>
+      implicit def syntaxAnnots: Syntax[List[Mod.Annot]] = Syntax { annots =>
         if (annots.nonEmpty) r(annots, " ") else s()
       }
-      implicit def syntaxParams[P <: Term.Param]: Syntax[Seq[P]] = Syntax { params =>
+      implicit def syntaxParams[P <: Term.Param]: Syntax[List[P]] = Syntax { params =>
         s("(", r(params, ", "), ")")
       }
-      implicit def syntaxParamss[P <: Term.Param]: Syntax[Seq[Seq[P]]] = Syntax { paramss =>
+      implicit def syntaxParamss[P <: Term.Param]: Syntax[List[List[P]]] = Syntax { paramss =>
         r(paramss.map(params => {
           s("(", w("implicit ", r(params, ", "), params.exists(_.mods.exists(_.is[Mod.Implicit]))), ")")
         }), "")
       }
-      implicit def syntaxTparams: Syntax[Seq[Type.Param]] = Syntax { tparams =>
+      implicit def syntaxTparams: Syntax[List[Type.Param]] = Syntax { tparams =>
         if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
       }
       implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax {
@@ -607,7 +605,7 @@ object TreeSyntax {
       implicit def syntaxTermNameOpt: Syntax[Option[Term.Name]] = Syntax {
         _.map(s(_)).getOrElse(s(")"))
       }
-      implicit def syntaxImportee: Syntax[Seq[Importee]] = Syntax {
+      implicit def syntaxImportee: Syntax[List[Importee]] = Syntax {
         case (t: Importee.Name) :: Nil     => s(t)
         case (t: Importee.Wildcard) :: Nil => s(t)
         case (t: Importee.Rename) :: Nil   => s("{", t, "}")

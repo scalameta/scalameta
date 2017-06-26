@@ -32,8 +32,8 @@ class TemplateSuite extends ParseSuite {
 
   test("trait Inner <: { val x : Int = 3 }") {
     val Trait(Nil, Type.Name("Inner"), Nil, EmptyCtor(),
-              Template(Nil, Nil, EmptySelf(), Some(Seq(
-                Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit(3)))))) =
+              Template(Nil, Nil, EmptySelf(), Some(List(
+                Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), Some(Type.Name("Int")), Lit(3)))))) =
     templStat("trait Inner <: { val x : Int = 3 }")
   }
 

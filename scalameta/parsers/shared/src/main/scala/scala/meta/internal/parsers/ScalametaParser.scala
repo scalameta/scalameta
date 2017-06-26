@@ -9,7 +9,6 @@ import scala.runtime.ScalaRunTime
 import scala.collection.{ mutable, immutable }
 import mutable.{ ListBuffer, StringBuilder }
 import scala.annotation.tailrec
-import scala.{Seq => _}
 import scala.collection.immutable._
 import scala.util.Try
 import scala.meta.internal.parsers.Location._
@@ -723,7 +722,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                 case quasi: Quasi =>
                   // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
                   // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
-                  // For example, in `new { ..$stats }`, ellipsis's pt is Seq[Stat], but quasi's pt is Term.
+                  // For example, in `new { ..$stats }`, ellipsis's pt is List[Stat], but quasi's pt is Term.
                   // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
                   require(classTag[T].runtimeClass.isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.structure))
                   atPos(quasi, quasi)(astInfo.quasi(quasi.rank, quasi.tree))
@@ -853,7 +852,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // NOTE: we can't make this autoPos, unlike makeTupleTermParens
     // see comments to makeTupleType for discussion
     body match {
-      case Seq(q @ Term.Quasi(1, _)) => atPos(q, q)(Term.Tuple(body))
+      case List(q @ Term.Quasi(1, _)) => atPos(q, q)(Term.Tuple(body))
       case _ => makeTuple[Term](body, () => Lit.Unit(()), Term.Tuple(_))
     }
   }
@@ -869,7 +868,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // therefore, we'll rely on our callers to assign positions to the tuple we return
     // we can't do atPos(body.first, body.last) either, because that wouldn't account for parentheses
     body match {
-      case Seq(q @ Type.Quasi(1, _)) => atPos(q, q)(Type.Tuple(body))
+      case List(q @ Type.Quasi(1, _)) => atPos(q, q)(Type.Tuple(body))
       case _ => makeTuple[Type](body, () => unreachable, Type.Tuple(_))
     }
   }
@@ -2149,7 +2148,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       Nil
   }
 
-  private def checkNoTripleDots[T <: Tree](trees: Seq[T]): Seq[T] = {
+  private def checkNoTripleDots[T <: Tree](trees: List[T]): List[T] = {
     val illegalQuasis = trees.collect{ case q: Quasi if q.rank == 2 => q }
     illegalQuasis.foreach(q => syntaxError(Messages.QuasiquoteRankMismatch(q.rank, 1), at = q))
     trees
@@ -3085,7 +3084,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def warnProcedureDeprecation =
       deprecationWarning(s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.", at = name)
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val paramss = paramClauses(ownerIsType = false).require[Seq[Seq[Term.Param]]]
+    val paramss = paramClauses(ownerIsType = false).require[List[List[Term.Param]]]
     newLineOptWhenFollowedBy[LeftBrace]
     val restype = fromWithinReturnType(typedOpt())
     if (token.is[StatSep] || token.is[RightBrace]) {
@@ -3740,7 +3739,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def batchSource(): Source = autoPos {
     def inBracelessPackage() = token.is[KwPackage] && !ahead(token.is[KwObject]) && ahead{ qualId(); token.isNot[LeftBrace] }
-    def bracelessPackageStats(): Seq[Stat] = {
+    def bracelessPackageStats(): List[Stat] = {
       if (token.is[EOF]) {
         Nil
       } else if (token.is[StatSep]) {

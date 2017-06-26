@@ -3,7 +3,6 @@ package scalahost
 
 import org.scalatest._
 import java.io.{File, PrintWriter}
-import scala.collection.immutable.Seq
 import scala.reflect.io._
 import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{CompilerCommand, Global, Settings}
