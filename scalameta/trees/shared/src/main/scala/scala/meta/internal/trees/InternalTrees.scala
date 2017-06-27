@@ -88,6 +88,14 @@ trait InternalTree extends Product {
   private[meta] def privateWithOrigin(origin: Origin): Tree = {
     this.privateCopy(origin = origin)
   }
+
+  // =============================================================================================
+  // Intellij-friendly stubs.
+  // See https://github.com/scalameta/scalameta/pull/907#discussion_r120090447.
+  // =============================================================================================
+
+  protected def checkFields(x: Any): Unit = ()
+  protected def checkParent(x: Any): Unit = ()
 }
 
 trait InternalTreeXtensions {
