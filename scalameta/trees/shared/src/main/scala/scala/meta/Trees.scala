@@ -312,6 +312,9 @@ object Pkg {
   }
 }
 
+// NOTE: The names of Ctor.Primary and Ctor.Secondary here is always Name.Anonymous.
+// While seemingly useless, this name is crucial to one of the key principles behind the semantic API:
+// "every definition and every reference should carry a name".
 @branch trait Ctor extends Tree with Member
 object Ctor {
   @ast class Primary(mods: List[Mod],
@@ -326,6 +329,8 @@ object Ctor {
   }
 }
 
+// NOTE: The name here is always Name.Anonymous.
+// See comments to Ctor.Primary and Ctor.Secondary for justification.
 @ast class Init(tpe: Type, name: Name, argss: List[List[Term]]) extends Ref {
   checkFields(tpe.isConstructable)
   checkParent(ParentChecks.Init)
