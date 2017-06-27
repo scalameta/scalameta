@@ -875,5 +875,20 @@ class TokenizerSuite extends FunSuite {
   test("enum") {
     val Tokens(BOF(), _: KwEnum, EOF()) = dialects.Dotty("enum").tokenize.get
     val Tokens(BOF(), Ident("enum"), EOF()) = dialects.Scala212("enum").tokenize.get
+
+    val Tokens(
+      BOF(),
+      Interpolation.Id("s"),
+      Interpolation.Start(),
+      Interpolation.Part(""),
+      Interpolation.SpliceStart(),
+      Ident("enum"),
+      Interpolation.SpliceEnd(),
+      Interpolation.Part(""),
+      Interpolation.End(),
+      EOF()
+    ) = dialects.Scala212("s\"$enum\"").tokenize.get
+
+    // TODO when #973 is fixed: dialects.Dotty("s\"$enum\"")
   }
 }

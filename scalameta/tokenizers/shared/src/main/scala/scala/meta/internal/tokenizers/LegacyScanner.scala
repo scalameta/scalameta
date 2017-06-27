@@ -707,7 +707,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           cbuf.clear()
           if (kw2legacytoken contains next.name) {
             next.token = kw2legacytoken(next.name)
-            if (token == ENUM && !dialect.allowEnums) next.token = IDENTIFIER
+            if (next.token == ENUM && !dialect.allowEnums) next.token = IDENTIFIER
           }
         } else {
           var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
