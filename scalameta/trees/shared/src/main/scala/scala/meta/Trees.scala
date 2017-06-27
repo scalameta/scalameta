@@ -343,7 +343,10 @@ object Ctor {
 
 @branch trait Mod extends Tree
 object Mod {
-  @ast class Annot(init: Init) extends Mod
+  @ast class Annot(init: Init) extends Mod {
+    @deprecated("Use init instead", "1.9.0")
+    def body = init
+  }
   @ast class Private(within: Ref) extends Mod {
     checkFields(within.isWithin)
   }
