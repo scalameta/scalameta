@@ -994,13 +994,13 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
     // 2. Populate upcomingXmlLiteralParts with xml literal part positions.
     var lastFrom = start
-    embeddedScalaExprPositions.getSplicePositions.foreach { pos =>
+    embeddedScalaExprPositions.splicePositions.foreach { pos =>
       // pos contains the start and end positions of a scala expression.
       // We want the range of the xml literal part which starts at lastFrom
       // and ends at pos.from.
-      val to = pos._1 - 1
+      val to = pos.from - 1
       upcomingXmlLiteralParts.update(lastFrom, (to, false))
-      lastFrom = pos._2 + 1
+      lastFrom = pos.to + 1
     }
     // The final xml literal part is not followed by any embedded scala expr.
     upcomingXmlLiteralParts.update(lastFrom, (result, true))

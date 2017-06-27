@@ -129,8 +129,9 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
   * balance hits 0.
   */
 class ScalaExprPositionParser(dialect: Dialect) extends Parser[Unit] {
-  private val splicePositions = List.newBuilder[(Int, Int)]
-  def getSplicePositions = splicePositions.result()
+  case class XmlTokenRange(from: Int, to: Int) // from is inclusive, to is exclusive
+  private val _splicePositions = List.newBuilder[XmlTokenRange]
+  def splicePositions: List[XmlTokenRange] = _splicePositions.result()
 
   def parseRec(cfg: ParseCtx, index: Int): fastparse.core.Mutable[Unit, Char, String] = {
     var curlyBraceCount = 1
@@ -150,7 +151,7 @@ class ScalaExprPositionParser(dialect: Dialect) extends Parser[Unit] {
     }
 
     val nextIndex = index + scanner.curr.offset
-    splicePositions += ((index, nextIndex))
+    _splicePositions += XmlTokenRange(index, nextIndex)
     success(cfg.success, (), nextIndex, Set.empty, cut = false)
   }
 }
