@@ -889,6 +889,6 @@ class TokenizerSuite extends FunSuite {
       EOF()
     ) = dialects.Scala212("s\"$enum\"").tokenize.get
 
-    // TODO when #973 is fixed: dialects.Dotty("s\"$enum\"")
+    assert(dialects.Dotty("s\"$enum\"").tokenize.isInstanceOf[Tokenized.Error])
   }
 }
