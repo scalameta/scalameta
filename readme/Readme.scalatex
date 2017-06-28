@@ -170,6 +170,7 @@
 
     @p
       Video: coming soon
+      @lnk("https://www.youtube.com/watch?v=4yqDFsdKciA", "https://www.youtube.com/watch?v=4yqDFsdKciA")
       @br
       Slides:
       @lnk("http://scalameta.org/talks/2017-06-01-SemanticToolingAtTwitter.pdf", "http://scalameta.org/talks/2017-06-01-SemanticToolingAtTwitter.pdf")
