@@ -13,8 +13,9 @@ import scala.{meta => m}
 import scala.meta.io._
 import scala.meta.internal.semantic.DatabaseOps
 import scala.meta.internal.semantic.SemanticdbMode
+import scala.meta.testkit.DiffAssertions
 
-abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite { self =>
+abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
@@ -88,20 +89,27 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite { self =>
     section.mkString(EOL).replace(path, "<...>")
   }
 
+  def checkSection(code: String, expected: String, section: String): Unit = {
+    test(code) {
+      val obtained = computeDatabaseSectionFromSnippet(code, section)
+      assertNoDiff(obtained, expected)
+    }
+  }
+
   def names(code: String, expected: String): Unit = {
-    test(code)(assert(expected === computeDatabaseSectionFromSnippet(code, "Names")))
+    checkSection(code, expected, "Names")
   }
 
   def messages(code: String, expected: String): Unit = {
-    test(code)(assert(expected === computeDatabaseSectionFromSnippet(code, "Messages")))
+    checkSection(code, expected, "Messages")
   }
 
   def denotations(code: String, expected: String): Unit = {
-    test(code)(assert(expected === computeDatabaseSectionFromSnippet(code, "Denotations")))
+    checkSection(code, expected, "Denotations")
   }
 
   def sugars(code: String, expected: String): Unit = {
-    test(code)(assert(expected === computeDatabaseSectionFromSnippet(code, "Sugars")))
+    checkSection(code, expected, "Sugars")
   }
 
   private def computeDatabaseAndNamesFromMarkup(markup: String): (m.Database, List[m.Name]) = {

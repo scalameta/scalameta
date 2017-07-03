@@ -342,10 +342,12 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
     publishableSettings,
     hasLargeIntegrationTests,
     libraryDependencies ++= Seq(
+      "org.scalatest" %%% "scalatest" % "3.0.1",
       "com.lihaoyi" %% "geny" % "0.1.1",
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.7.1",
-      "commons-io" % "commons-io" % "2.5"
+      "commons-io" % "commons-io" % "2.5",
+      "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
     description := "Testing utilities for scalameta APIs"
