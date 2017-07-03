@@ -29,10 +29,12 @@ class ScalahostPlugin(val global: Global)
         config.setSourceroot(abspath)
       case SetSemanticdb(SemanticdbMode(mode)) =>
         config.setSemanticdbMode(mode)
+      case SetFailures(Failures(severity)) =>
+        config.setFailures(severity)
       case SetSemanticdb(els) =>
         err(s"Unknown semanticdb $els. Expected one of: ${SemanticdbMode.all.mkString(", ")} ")
       case els =>
-        err(s"Ignoring unknown scalahost option $els")
+        err(s"Ignoring unknown option $els")
     }
     true
   }

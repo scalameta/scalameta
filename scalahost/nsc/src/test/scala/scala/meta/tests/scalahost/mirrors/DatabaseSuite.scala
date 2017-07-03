@@ -42,6 +42,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
   }
   import databaseOps._
   config.setSemanticdbMode(mode)
+  config.setFailures(Severity.ERROR)
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
