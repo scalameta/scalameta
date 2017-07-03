@@ -353,7 +353,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """
       |[58..61): [warning] Unused import
       |[63..66): [warning] Unused import
-      |[81..106): [warning] Unused import
+      |[105..106): [warning] Unused import
       |[137..143): [warning] Unused import
       |[184..191): [warning] Unused import
     """.stripMargin.trim
@@ -404,5 +404,12 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |_root_.scala.collection.immutable.List.newBuilder()Lscala/collection/mutable/Builder;. => def newBuilder: [A]=> scala.collection.mutable.Builder[A,List[A]]
       |_root_.scala.collection.mutable.Builder#result()Ljava/lang/Object;. => abstract def result: ()To
     """.stripMargin.trim
+  )
+
+  messages(
+    // See https://github.com/scalameta/scalameta/issues/899
+    """import scala.io._
+      |object Foo""".stripMargin,
+    "[16..17): [warning] Unused import"
   )
 }
