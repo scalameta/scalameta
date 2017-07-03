@@ -108,6 +108,10 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
     checkSection(code, expected, "Denotations")
   }
 
+  def denotationsContain(code: String, denotation: String): Unit = {
+    test(code)(assert(computeDatabaseSectionFromSnippet(code, "Denotations").contains(denotation)))
+  }
+
   def sugars(code: String, expected: String): Unit = {
     checkSection(code, expected, "Sugars")
   }
