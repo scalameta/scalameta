@@ -339,6 +339,29 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.stripMargin.trim
   )
 
+  names(
+    // See https://github.com/scalameta/scalameta/issues/977
+    """|object Foo {
+       |  val Name = "name:(.*)".r
+       |  val x #:: xs = Stream(1, 2);
+       |  val Name(name) = "name:foo"
+       |  1 #:: 2 #:: Stream.empty
+       |}""".stripMargin,
+    """|[7..10): Foo => _empty_.Foo.
+       |[19..23): Name => _empty_.Foo.Name.
+       |[38..39): r => _root_.scala.collection.immutable.StringLike#r()Lscala/util/matching/Regex;.
+       |[46..47): x => _empty_.Foo.x$1.x.
+       |[48..51): #:: => _root_.scala.package.`#::`.
+       |[52..54): xs => _empty_.Foo.x$1.xs.
+       |[57..63): Stream => _root_.scala.package.Stream.
+       |[77..81): Name => _empty_.Foo.Name.
+       |[82..86): name => _empty_.Foo.name.name.
+       |[105..108): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
+       |[111..114): #:: => _root_.scala.collection.immutable.Stream.consWrapper(Lscala/Function0;)Lscala/collection/immutable/Stream/ConsWrapper;.
+       |[115..121): Stream => _root_.scala.package.Stream.
+       |[122..127): empty => _root_.scala.collection.immutable.Stream.consWrapper(Lscala/Function0;)Lscala/collection/immutable/Stream/ConsWrapper;.""".stripMargin
+  )
+
   messages(
     """
       |package l
