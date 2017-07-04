@@ -404,4 +404,20 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |""".stripMargin
   )
 
+  sugars(
+    """|object Boo {
+       |  def apply() = 2
+       |  Boo()
+       |  Boo.apply()
+       |  case class Bar()
+       |  Bar()
+       |  1.asInstanceOf[Int => Int](2)
+       |}
+    """.stripMargin,
+    """|[36..36) .apply
+       |[77..77) .apply
+       |[108..108) .apply
+       |""".stripMargin
+  )
+
 }

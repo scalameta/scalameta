@@ -286,6 +286,9 @@ trait AttributesOps { self: DatabaseOps =>
                   val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                   val syntax = "[" + targs.mkString(", ") + "]"
                   success(morePrecisePos, syntax)
+                case g.Apply(select @ g.Select(qual, nme), _) if isSyntheticApply(select) =>
+                  val pos = qual.pos.withStart(qual.pos.end).toMeta
+                  success(pos, s".${nme.decoded}")
                 case _ =>
                 // do nothing
               }
@@ -325,6 +328,7 @@ trait AttributesOps { self: DatabaseOps =>
                   tryFindInferred(gtree)
                 case select: g.Select if isSyntheticApply(select) =>
                   tryFindMtree(select.qualifier)
+                  tryFindInferred(select)
                 case _ =>
                   tryFindMtree(gtree)
               }
