@@ -1,6 +1,5 @@
 package scala.meta.internal.semantic.vfs
 
-import java.io._
 import org.scalameta.data._
 import scala.collection.immutable.Seq
 import scala.meta.io._
@@ -20,17 +19,7 @@ object Database {
 @data
 class Database(entries: Seq[Entry]) {
   def toSchema: s.Database = {
-    val sentries = entries.map(ventry => s.Attributes.parseFrom(ventry.bytes))
+    val sentries = entries.flatMap(ventry => s.Database.parseFrom(ventry.inputStream).entries)
     s.Database(sentries)
-  }
-
-  def save(): Unit = {
-    entries.foreach(ventry => {
-      val file = new File(ventry.uri)
-      file.getParentFile.mkdirs()
-      val fos = new FileOutputStream(file)
-      try fos.write(ventry.bytes)
-      finally fos.close()
-    })
   }
 }

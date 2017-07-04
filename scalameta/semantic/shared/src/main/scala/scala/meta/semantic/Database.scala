@@ -21,7 +21,7 @@ import scala.meta.{semantic => m}
   lazy val sugars: Map[Position, String] = entries.flatMap(_._2.sugars).toMap
 
   def save(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
-    this.toSchema(sourceroot).toVfs(targetroot).save()
+    this.toSchema(sourceroot).save(targetroot)
   }
 
   def syntax: String = scala.meta.internal.semantic.DatabaseSyntax(this)
@@ -40,8 +40,7 @@ object Database {
     v.Database.load(classpath).toSchema.toMeta(None)
   }
   def load(bytes: Array[Byte]): Database = {
-    val sattrs = s.Attributes.parseFrom(bytes)
-    val sdb = new s.Database(Seq(sattrs))
+    val sdb = s.Database.parseFrom(bytes)
     val mdb = sdb.toMeta(None)
     mdb
   }

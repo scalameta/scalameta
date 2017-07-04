@@ -1,5 +1,7 @@
 package scala.meta.internal.semantic.vfs
 
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.net.URI
 import org.scalameta.adt._
 import scala.collection.immutable.Seq
@@ -15,11 +17,13 @@ trait Entry {
   def name: RelativePath = fragment.name
   def uri: URI = fragment.uri
   def bytes: Array[Byte]
+  def inputStream: InputStream = new ByteArrayInputStream(bytes)
 }
 
 object Entry {
-  private def readBytes(fragment: Fragment): Array[Byte] =
-    FileIO.readAllBytes(fragment.uri)
-  @leaf class OnDisk(fragment: Fragment) extends Entry { lazy val bytes = readBytes(fragment) }
+  @leaf class OnDisk(fragment: Fragment) extends Entry {
+    lazy val bytes = InputStreamIO.readBytes(inputStream)
+    override def inputStream: InputStream = FileIO.newInputStream(fragment.uri)
+  }
   @leaf class InMemory(fragment: Fragment, bytes: Array[Byte]) extends Entry
 }

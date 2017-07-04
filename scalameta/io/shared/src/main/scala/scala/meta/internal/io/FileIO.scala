@@ -1,16 +1,20 @@
 package scala.meta.internal.io
 
+import java.io.InputStream
 import java.net.URI
 import scala.meta.io._
 import java.nio.charset.Charset
 
 object FileIO {
 
+  def newInputStream(uri: URI): InputStream =
+    PlatformFileIO.newInputStream(uri)
+
   def readAllBytes(path: AbsolutePath): Array[Byte] =
     PlatformFileIO.readAllBytes(path)
 
   def readAllBytes(uri: URI): Array[Byte] =
-    PlatformFileIO.readAllBytes(uri)
+    InputStreamIO.readBytes(newInputStream(uri))
 
   def slurp(path: AbsolutePath, charset: Charset): String =
     PlatformFileIO.slurp(path, charset)

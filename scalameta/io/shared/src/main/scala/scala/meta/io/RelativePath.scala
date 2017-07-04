@@ -15,6 +15,7 @@ sealed abstract case class RelativePath(path: Path) {
   def structure: String = s"""RelativePath("$syntax")"""
   override def toString: String = path.toString
 
+  def toNIO: Path = path
   def toFile: File = path.toFile
   def toURI: URI = toFile.toURI
 
@@ -24,6 +25,8 @@ sealed abstract case class RelativePath(path: Path) {
   def resolve(other: nio.Path): RelativePath = RelativePath(path.resolve(other))
   def resolve(other: RelativePath): RelativePath = resolve(other.path)
   def resolve(path: String): RelativePath = resolve(Paths.get(path))
+  def resolveSibling(f: String => String): RelativePath =
+    RelativePath(path.resolveSibling(f(path.getFileName.toString)))
 }
 
 object RelativePath {
