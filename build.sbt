@@ -361,7 +361,7 @@ lazy val tests = crossProject
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
-    test.in(Test) := test.in(Test).dependsOn(compile.in(scalahostIntegration, Compile)).value,
+    compile.in(Test) := compile.in(Test).dependsOn(compile.in(scalahostIntegration, Compile)).value,
     buildInfoKeys := Seq[BuildInfoKey](
       "mirrorSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
       "mirrorClasspath" -> classDirectory.in(scalahostIntegration, Compile).value.getAbsolutePath
@@ -369,6 +369,7 @@ lazy val tests = crossProject
     buildInfoPackage := "scala.meta.tests"
   )
   .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
+  .jvmConfigure(_.dependsOn(testkit))
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm
