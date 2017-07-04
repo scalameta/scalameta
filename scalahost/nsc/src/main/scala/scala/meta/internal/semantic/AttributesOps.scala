@@ -39,6 +39,7 @@ trait AttributesOps { self: DatabaseOps =>
         val names = mutable.Map[m.Position, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
         val inferred = mutable.Map[m.Position, String]()
+        val inferredImplicitConv = mutable.Set.empty[g.Tree] // synthesized implicit conversions
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
         val mends = mutable.Map[Int, m.Name]() // end offset -> tree
@@ -306,13 +307,15 @@ trait AttributesOps { self: DatabaseOps =>
               gtree match {
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
-                  val syntax = gview.fun + "(*)"
+                  val syntax = g.showCode(gview.fun) + "(*)"
                   success(pos, syntax)
+                  inferredImplicitConv += gview.fun
                 case gimpl: g.ApplyToImplicitArgs =>
                   gimpl.fun match {
                     case gview: g.ApplyImplicitView =>
                       val pos = gtree.pos.toMeta
-                      val syntax = gview.fun + "(*)(" + gimpl.args.mkString(", ") + ")"
+                      val args = gimpl.args.map(g.showCode(_)).mkString(", ")
+                      val syntax = g.showCode(gview.fun) + "(*)(" + args + ")"
                       success(pos, syntax)
                     case gfun =>
                       val fullyQualifiedArgs = gimpl.args.map(g.showCode(_))
@@ -331,6 +334,7 @@ trait AttributesOps { self: DatabaseOps =>
             }
 
             override def traverse(gtree: g.Tree): Unit = {
+              if (inferredImplicitConv.contains(gtree)) return // synthetic tree, skip.
               gtree match {
                 case ConstfoldOf(original) =>
                   traverse(original)

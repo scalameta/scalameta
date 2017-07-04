@@ -405,4 +405,43 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |_root_.scala.collection.mutable.Builder#result()Ljava/lang/Object;. => abstract def result: ()To
     """.stripMargin.trim
   )
+
+  names(
+    """|object b {
+       |  val lst = 1 #:: 2 #:: Stream.empty
+       |  lst + "foo"
+       |}
+    """.stripMargin,
+    """|[7..8): b => _empty_.b.
+       |[17..20): lst => _empty_.b.lst.
+       |[25..28): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
+       |[31..34): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
+       |[35..41): Stream => _root_.scala.package.Stream.
+       |[42..47): empty => _root_.scala.collection.immutable.Stream.empty()Lscala/collection/immutable/Stream;.
+       |[50..53): lst => _empty_.b.lst.
+       |[54..55): + => _root_.scala.Predef.any2stringadd#`+`(Ljava/lang/String;)Ljava/lang/String;.
+       |""".stripMargin
+  )
+
+  sugars(
+    """|object a {
+       |  List(1) + "blaH"
+       |}
+    """.stripMargin,
+    """|[13..20) scala.Predef.any2stringadd[List[Int]](*)
+       |[17..17) [Int]
+       |""".stripMargin
+  )
+
+  sugars(
+    """|object b {
+       |  class F
+       |  implicit val ordering: Ordering[F] = ???
+       |  val x: Ordered[F] = new F
+       |}
+    """.stripMargin,
+    """|[86..91) scala.math.Ordered.orderingToOrdered[b.F](*)(b.this.ordering)
+       |""".stripMargin
+  )
+
 }
