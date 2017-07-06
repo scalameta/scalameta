@@ -23,10 +23,8 @@ object SemanticdbExpectSuite {
     Paths.get("scalameta", "tests", "jvm", "src", "test", "resources", "semanticdb.expect")
   def getMirror: Mirror = {
     val mirror = Database.load(Classpath(BuildInfo.mirrorClasspath))
-    val normalizedMirror = Database(mirror.entries.map {
-      case (input, attrs) =>
-        val normalizedAttrs = attrs.copy(dialect = dialects.Scala212)
-        input -> normalizedAttrs
+    val normalizedMirror = Database(mirror.entries.map { attrs =>
+      attrs.copy(dialect = dialects.Scala212)
     })
     normalizedMirror
   }
