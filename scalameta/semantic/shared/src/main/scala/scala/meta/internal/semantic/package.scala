@@ -51,9 +51,7 @@ package object semantic {
           }
           object sRange {
             def unapply(srange: s.Range): Option[mPosition] = {
-              val mstart = mPoint.Offset(minput, srange.start)
-              val mend = mPoint.Offset(minput, srange.end)
-              Some(mPosition.Range(minput, mstart, mend))
+              Some(mPosition.Range(minput, srange.start, srange.end))
             }
           }
           object sSeverity {
@@ -96,7 +94,7 @@ package object semantic {
           }.toList
           minput -> m.Attributes(mdialect, mnames, mmessages, mdenots, msugars)
       }
-      m.Database(mentries.to[Seq])
+      m.Database(mentries.toList)
     }
   }
   implicit class XtensionMetaDatabase(mdatabase: m.Database) {
