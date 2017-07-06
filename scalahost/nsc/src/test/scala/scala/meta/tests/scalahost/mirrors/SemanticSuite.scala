@@ -430,24 +430,24 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   )
 
   names(
-    """|object b {
+    """|object p {
        |  val lst = 1 #:: 2 #:: Stream.empty
        |  lst + "foo"
        |}
     """.stripMargin,
-    """|[7..8): b => _empty_.b.
-       |[17..20): lst => _empty_.b.lst.
+    """|[7..8): p => _empty_.p.
+       |[17..20): lst => _empty_.p.lst.
        |[25..28): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
        |[31..34): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
        |[35..41): Stream => _root_.scala.package.Stream.
        |[42..47): empty => _root_.scala.collection.immutable.Stream.empty()Lscala/collection/immutable/Stream;.
-       |[50..53): lst => _empty_.b.lst.
+       |[50..53): lst => _empty_.p.lst.
        |[54..55): + => _root_.scala.Predef.any2stringadd#`+`(Ljava/lang/String;)Ljava/lang/String;.
        |""".stripMargin
   )
 
   sugars(
-    """|object a {
+    """|object q {
        |  List(1) + "blaH"
        |}
     """.stripMargin,
@@ -457,36 +457,36 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   )
 
   sugars(
-    """|object b {
+    """|object r {
        |  class F
        |  implicit val ordering: Ordering[F] = ???
        |  val x: Ordered[F] = new F
        |}
     """.stripMargin,
-    """|[86..91) scala.math.Ordered.orderingToOrdered[b.F](*)(b.this.ordering)
+    """|[86..91) scala.math.Ordered.orderingToOrdered[r.F](*)(r.this.ordering)
        |""".stripMargin
   )
 
   sugars(
-    """|object Boo {
+    """|object s {
        |  def apply() = 2
-       |  Boo()
-       |  Boo.apply()
+       |  s()
+       |  s.apply()
        |  case class Bar()
        |  Bar()
        |  1.asInstanceOf[Int => Int](2)
        |}
     """.stripMargin,
-    """|[36..36) .apply
-       |[77..77) .apply
-       |[108..108) .apply
+    """|[32..32) .apply
+       |[71..71) .apply
+       |[102..102) .apply
        |""".stripMargin
   )
 
   messages(
     // See https://github.com/scalameta/scalameta/issues/899
     """import scala.io._
-      |object Foo""".stripMargin,
+      |object t""".stripMargin,
     "[16..17): [warning] Unused import"
   )
 }
