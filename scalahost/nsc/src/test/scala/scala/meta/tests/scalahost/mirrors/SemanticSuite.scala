@@ -243,7 +243,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |[201..201) [Int, List[Int]]
       |[209..209) (scala.collection.immutable.List.canBuildFrom[Int])
       |[247..247) (h.C.list[Int](h.C.int))
-      |[273..275) h.this.X.cvt[Int](*)(h.this.C.int)
+      |[273..275) h.X.cvt[Int](*)(h.C.int)
       |[304..304) [h.C[Int]]
   """.trim.stripMargin
   )
