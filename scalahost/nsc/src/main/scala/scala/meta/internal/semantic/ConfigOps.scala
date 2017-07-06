@@ -4,18 +4,33 @@ package semantic
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.scalahost.ScalahostPlugin
 import scala.meta.io._
-import scala.meta.internal.semantic.schema.Message.Severity
 
-case class ScalahostConfig(sourceroot: AbsolutePath,
-                           semanticdb: SemanticdbMode,
-                           failures: Severity) {
+case class ScalahostConfig(
+    sourceroot: AbsolutePath,
+    semanticdb: SemanticdbMode,
+    failures: FailureMode) {
   def syntax: String =
     s"-P:${ScalahostPlugin.name}:sourceroot:$sourceroot " +
       s"-P:${ScalahostPlugin.name}:semanticdb:$semanticdb" +
-      s"-P:${ScalahostPlugin.name}:failures:${failures.name.toLowerCase()} "
+      s"-P:${ScalahostPlugin.name}:failures:${failures.name} "
 }
 object ScalahostConfig {
-  def default = ScalahostConfig(PathIO.workingDirectory, SemanticdbMode.Fat, Severity.WARNING)
+  def default = ScalahostConfig(PathIO.workingDirectory, SemanticdbMode.Fat, FailureMode.Warning)
+}
+
+sealed abstract class FailureMode {
+  def name: String = toString.toLowerCase
+}
+object FailureMode {
+  def unapply(arg: String): Option[FailureMode] = {
+    val lower = arg.toLowerCase()
+    all.find(_.name == lower)
+  }
+  case object Error extends FailureMode
+  case object Warning extends FailureMode
+  case object Info extends FailureMode
+  case object Ignore extends FailureMode
+  def all = List(Error, Warning, Info, Ignore)
 }
 
 sealed abstract class SemanticdbMode {
@@ -37,11 +52,6 @@ trait ConfigOps { self: DatabaseOps =>
   val SetSemanticdb = "semanticdb:(.*)".r
   val SetSourceroot = "sourceroot:(.*)".r
   val SetFailures = "failures:(.*)".r
-  object Failures {
-    def unapply(arg: String): Option[Severity] =
-      if (arg.compareToIgnoreCase("ignore") == 0) Some(Severity.UNKNOWN)
-      else Severity.fromName(arg.toUpperCase())
-  }
 
   var config: ScalahostConfig = ScalahostConfig.default
   implicit class XtensionScalahostConfig(ignored: ScalahostConfig) {
@@ -49,7 +59,7 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(sourceroot = sourceroot)
     def setSemanticdbMode(mode: SemanticdbMode): Unit =
       config = config.copy(semanticdb = mode)
-    def setFailures(severity: Severity): Unit =
+    def setFailures(severity: FailureMode): Unit =
       config = config.copy(failures = severity)
   }
 }

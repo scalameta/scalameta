@@ -48,11 +48,12 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
             writer.write(s"failed to generate semanticdb for $path:$EOL")
             ex.printStackTrace(new PrintWriter(writer))
             val msg = writer.toString
+            import scala.meta.internal.semantic.FailureMode._
             config.failures match {
-              case Severity.ERROR => global.reporter.error(g.NoPosition, msg)
-              case Severity.WARNING => global.reporter.warning(g.NoPosition, msg)
-              case Severity.INFO => global.reporter.info(g.NoPosition, msg, force = true)
-              case _ =>
+              case Error => global.reporter.error(g.NoPosition, msg)
+              case Warning => global.reporter.warning(g.NoPosition, msg)
+              case Info => global.reporter.info(g.NoPosition, msg, force = true)
+              case Ignore => // do nothing.
             }
         }
       }
