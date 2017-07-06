@@ -24,11 +24,9 @@ object SemanticdbExpectSuite {
   def getMirror: Mirror = {
     val mirror = Database.load(Classpath(BuildInfo.mirrorClasspath))
     val normalizedMirror = Database(mirror.entries.map {
-      case (input: Input.LabeledString, attrs) =>
+      case (input, attrs) =>
         val normalizedAttrs = attrs.copy(dialect = dialects.Scala212)
-        val normalizedInput = input.copy(label = PathIO.toUnix(input.label))
-        normalizedInput -> normalizedAttrs
-      case (input, _) => sys.error(s"Unexpected input $input")
+        input -> normalizedAttrs
     })
     normalizedMirror
   }

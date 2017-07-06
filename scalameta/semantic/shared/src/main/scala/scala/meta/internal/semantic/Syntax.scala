@@ -6,13 +6,14 @@ import scala.meta.inputs._
 import scala.meta.semantic._
 import scala.collection.mutable
 import scala.compat.Platform.EOL
+import scala.meta.internal.io.PathIO
 
 object DatabaseSyntax {
   def apply(database: Database): String = {
     val Database(entries) = database
     val s_entries = entries.map {
       case (input, attrs) =>
-        val s_input = input.syntax
+        val s_input = PathIO.toUnix(input.syntax)
         val separator = EOL + "-" * s_input.toString.length + EOL
         s_input + separator + attrs.syntax
     }
