@@ -404,7 +404,14 @@ trait AttributesOps { self: DatabaseOps =>
             }
             m.Message(mpos, mseverity, msg)
         }
-        m.Attributes(unit.source.toInput, dialect, names.toList, messages.toList, denotations.toList, inferred.toList)
+        m.Attributes(
+          unit.source.toInput,
+          dialect,
+          names.toList,
+          messages.toList,
+          denotations.toList,
+          inferred.toList
+        )
       })
     }
   }

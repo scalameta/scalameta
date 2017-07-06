@@ -11,7 +11,7 @@ import scala.meta.parsers.{XtensionParsersDialectInput, XtensionParseDialectInpu
 
 private[meta] trait Api extends Flags {
   implicit class XtensionMirrorSources(mirror: Mirror) {
-    def sources: List[Source] = mirror.database.entries.map { attrs => attrs.dialect(attrs.input).parse[Source].get }
+    def sources: Seq[Source] = mirror.database.entries.map { attrs => attrs.dialect(attrs.input).parse[Source].get }
   }
 
   implicit class XtensionRefSymbol(ref: Ref)(implicit m: Mirror) {

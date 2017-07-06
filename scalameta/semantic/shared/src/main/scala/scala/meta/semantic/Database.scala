@@ -2,7 +2,6 @@ package scala.meta
 package semantic
 
 import org.scalameta.data._
-import scala.compat.Platform.EOL
 import scala.meta.inputs._
 import scala.meta.io._
 import scala.meta.internal.semantic._
@@ -10,11 +9,11 @@ import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
 import scala.meta.{semantic => m}
 
-@data class Database(entries: List[Attributes]) extends Mirror {
+@data class Database(entries: Seq[Attributes]) extends Mirror {
   def database = this
 
   lazy val names: Map[Position, Symbol] = entries.flatMap(_.names).toMap
-  lazy val messages: List[Message] = entries.flatMap(_.messages)
+  lazy val messages: Seq[Message] = entries.flatMap(_.messages)
   lazy val denotations: Map[Symbol, Denotation] = entries.flatMap(_.denotations).toMap
   lazy val sugars: Map[Position, String] = entries.flatMap(_.sugars).toMap
 

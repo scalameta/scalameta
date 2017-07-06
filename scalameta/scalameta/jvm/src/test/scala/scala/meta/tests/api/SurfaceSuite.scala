@@ -167,7 +167,7 @@ class SurfaceSuite extends FunSuite {
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
-      |* scala.meta.semantic.Mirror.sources: List[scala.meta.Source]
+      |* scala.meta.semantic.Mirror.sources: Seq[scala.meta.Source]
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).denot: scala.meta.semantic.Denotation
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).flags: Long
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).info: String
