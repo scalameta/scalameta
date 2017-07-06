@@ -14,6 +14,7 @@ import scala.meta.internal.semantic.DatabaseOps
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
 import scala.tools.nsc.doc.ScaladocGlobal
+import scala.meta.internal.semantic.schema.Message.Severity
 
 trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
   lazy val scalametaTargetroot = AbsolutePath(
@@ -42,11 +43,18 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
           mminidb.save(scalametaTargetroot, config.sourceroot)
         } catch {
           case NonFatal(ex) =>
-            val msg = new StringWriter()
+            val writer = new StringWriter()
             val path = unit.source.file.path
-            msg.write(s"failed to generate semanticdb for $path:$EOL")
-            ex.printStackTrace(new PrintWriter(msg))
-            global.reporter.error(g.NoPosition, msg.toString)
+            writer.write(s"failed to generate semanticdb for $path:$EOL")
+            ex.printStackTrace(new PrintWriter(writer))
+            val msg = writer.toString
+            import scala.meta.internal.semantic.FailureMode._
+            config.failures match {
+              case Error => global.reporter.error(g.NoPosition, msg)
+              case Warning => global.reporter.warning(g.NoPosition, msg)
+              case Info => global.reporter.info(g.NoPosition, msg, force = true)
+              case Ignore => // do nothing.
+            }
         }
       }
 

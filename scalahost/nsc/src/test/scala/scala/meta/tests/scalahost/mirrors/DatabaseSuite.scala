@@ -11,6 +11,7 @@ import scala.compat.Platform.EOL
 import scala.{meta => m}
 import scala.meta.io._
 import scala.meta.internal.semantic.DatabaseOps
+import scala.meta.internal.semantic.FailureMode
 import scala.meta.internal.semantic.SemanticdbMode
 import scala.meta.testkit.DiffAssertions
 
@@ -42,6 +43,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
   }
   import databaseOps._
   config.setSemanticdbMode(mode)
+  config.setFailures(FailureMode.Error)
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
     val javaFile = File.createTempFile("paradise", ".scala")

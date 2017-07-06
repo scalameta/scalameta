@@ -2,6 +2,7 @@ package scala.meta.internal
 package scalahost
 
 import scala.meta.internal.io.PathIO
+import scala.meta.internal.semantic.FailureMode
 import scala.meta.internal.semantic.SemanticdbMode
 import scala.meta.io.AbsolutePath
 import scala.meta.io.RelativePath
@@ -29,10 +30,12 @@ class ScalahostPlugin(val global: Global)
         config.setSourceroot(abspath)
       case SetSemanticdb(SemanticdbMode(mode)) =>
         config.setSemanticdbMode(mode)
+      case SetFailures(FailureMode(severity)) =>
+        config.setFailures(severity)
       case SetSemanticdb(els) =>
         err(s"Unknown semanticdb $els. Expected one of: ${SemanticdbMode.all.mkString(", ")} ")
       case els =>
-        err(s"Ignoring unknown scalahost option $els")
+        err(s"Ignoring unknown option $els")
     }
     true
   }
