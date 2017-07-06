@@ -5,13 +5,32 @@ import scala.meta.internal.io.PathIO
 import scala.meta.internal.scalahost.ScalahostPlugin
 import scala.meta.io._
 
-case class ScalahostConfig(sourceroot: AbsolutePath, semanticdb: SemanticdbMode) {
+case class ScalahostConfig(
+    sourceroot: AbsolutePath,
+    semanticdb: SemanticdbMode,
+    failures: FailureMode) {
   def syntax: String =
     s"-P:${ScalahostPlugin.name}:sourceroot:$sourceroot " +
-      s"-P:${ScalahostPlugin.name}:semanticdb:$semanticdb"
+      s"-P:${ScalahostPlugin.name}:semanticdb:$semanticdb" +
+      s"-P:${ScalahostPlugin.name}:failures:${failures.name} "
 }
 object ScalahostConfig {
-  def default = ScalahostConfig(PathIO.workingDirectory, SemanticdbMode.Fat)
+  def default = ScalahostConfig(PathIO.workingDirectory, SemanticdbMode.Fat, FailureMode.Warning)
+}
+
+sealed abstract class FailureMode {
+  def name: String = toString.toLowerCase
+}
+object FailureMode {
+  def unapply(arg: String): Option[FailureMode] = {
+    val lower = arg.toLowerCase()
+    all.find(_.name == lower)
+  }
+  case object Error extends FailureMode
+  case object Warning extends FailureMode
+  case object Info extends FailureMode
+  case object Ignore extends FailureMode
+  def all = List(Error, Warning, Info, Ignore)
 }
 
 sealed abstract class SemanticdbMode {
@@ -32,6 +51,7 @@ object SemanticdbMode {
 trait ConfigOps { self: DatabaseOps =>
   val SetSemanticdb = "semanticdb:(.*)".r
   val SetSourceroot = "sourceroot:(.*)".r
+  val SetFailures = "failures:(.*)".r
 
   var config: ScalahostConfig = ScalahostConfig.default
   implicit class XtensionScalahostConfig(ignored: ScalahostConfig) {
@@ -39,5 +59,7 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(sourceroot = sourceroot)
     def setSemanticdbMode(mode: SemanticdbMode): Unit =
       config = config.copy(semanticdb = mode)
+    def setFailures(severity: FailureMode): Unit =
+      config = config.copy(failures = severity)
   }
 }
