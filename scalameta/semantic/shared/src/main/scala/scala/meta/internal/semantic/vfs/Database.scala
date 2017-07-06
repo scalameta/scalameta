@@ -1,6 +1,5 @@
 package scala.meta.internal.semantic.vfs
 
-import java.io._
 import org.scalameta.data._
 import scala.meta.io._
 import scala.meta.internal.io.InputStreamIO
@@ -19,17 +18,7 @@ object Database {
 @data
 class Database(entries: List[Entry]) {
   def toSchema: s.Database = {
-    val sentries = entries.map(ventry => s.Attributes.parseFrom(ventry.bytes))
+    val sentries = entries.flatMap(ventry => s.Database.parseFrom(ventry.inputStream).entries)
     s.Database(sentries)
-  }
-
-  def save(): Unit = {
-    entries.foreach(ventry => {
-      val file = new File(ventry.uri)
-      file.getParentFile.mkdirs()
-      val fos = new FileOutputStream(file)
-      try fos.write(ventry.bytes)
-      finally fos.close()
-    })
   }
 }

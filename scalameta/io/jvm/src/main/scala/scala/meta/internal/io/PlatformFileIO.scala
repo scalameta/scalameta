@@ -1,5 +1,6 @@
 package scala.meta.internal.io
 
+import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -8,8 +9,9 @@ import java.util.stream.Collectors
 import scala.meta.io._
 
 object PlatformFileIO {
-  def readAllBytes(uri: URI): Array[Byte] =
-    InputStreamIO.readBytes(uri.toURL.openStream())
+
+  def newInputStream(uri: URI): InputStream =
+    uri.toURL.openStream()
 
   def readAllBytes(path: AbsolutePath): Array[Byte] =
     Files.readAllBytes(path.toNIO)

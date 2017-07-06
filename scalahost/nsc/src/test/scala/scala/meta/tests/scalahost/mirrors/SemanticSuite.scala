@@ -243,7 +243,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |[201..201) [Int, List[Int]]
       |[209..209) (scala.collection.immutable.List.canBuildFrom[Int])
       |[247..247) (h.C.list[Int](h.C.int))
-      |[273..275) h.this.X.cvt[Int](*)(h.this.C.int)
+      |[273..275) h.X.cvt[Int](*)(h.C.int)
       |[304..304) [h.C[Int]]
   """.trim.stripMargin
   )
@@ -353,7 +353,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """
       |[58..61): [warning] Unused import
       |[63..66): [warning] Unused import
-      |[81..106): [warning] Unused import
+      |[105..106): [warning] Unused import
       |[137..143): [warning] Unused import
       |[184..191): [warning] Unused import
     """.stripMargin.trim
@@ -389,14 +389,37 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.stripMargin.trim
   )
 
+  names(
+    // See https://github.com/scalameta/scalameta/issues/977
+    """|object n {
+       |  val Name = "name:(.*)".r
+       |  val x #:: xs = Stream(1, 2);
+       |  val Name(name) = "name:foo"
+       |  1 #:: 2 #:: Stream.empty
+       |}""".stripMargin,
+    """|[7..8): n => _empty_.n.
+       |[17..21): Name => _empty_.n.Name.
+       |[36..37): r => _root_.scala.collection.immutable.StringLike#r()Lscala/util/matching/Regex;.
+       |[44..45): x => _empty_.n.x$1.x.
+       |[46..49): #:: => _root_.scala.package.`#::`.
+       |[50..52): xs => _empty_.n.x$1.xs.
+       |[55..61): Stream => _root_.scala.package.Stream.
+       |[75..79): Name => _empty_.n.Name.
+       |[80..84): name => _empty_.n.name.name.
+       |[103..106): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
+       |[109..112): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
+       |[113..119): Stream => _root_.scala.package.Stream.
+       |[120..125): empty => _root_.scala.collection.immutable.Stream.empty()Lscala/collection/immutable/Stream;.
+       |""".stripMargin
+  )
+
   denotations(
     """
-      |object A {
+      |object o {
       |  List.newBuilder[Int].result
       |  List(1).head
       |}""".stripMargin,
-    """
-      |_empty_.A. => final object A
+    """_empty_.o. => final object o
       |_root_.scala.Int# => abstract final class Int
       |_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()Int
       |_root_.scala.collection.IterableLike#head()Ljava/lang/Object;. => def head: A
@@ -406,12 +429,72 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.stripMargin.trim
   )
 
+  names(
+    """|object p {
+       |  val lst = 1 #:: 2 #:: Stream.empty
+       |  lst + "foo"
+       |}
+    """.stripMargin,
+    """|[7..8): p => _empty_.p.
+       |[17..20): lst => _empty_.p.lst.
+       |[25..28): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
+       |[31..34): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
+       |[35..41): Stream => _root_.scala.package.Stream.
+       |[42..47): empty => _root_.scala.collection.immutable.Stream.empty()Lscala/collection/immutable/Stream;.
+       |[50..53): lst => _empty_.p.lst.
+       |[54..55): + => _root_.scala.Predef.any2stringadd#`+`(Ljava/lang/String;)Ljava/lang/String;.
+       |""".stripMargin
+  )
+
+  sugars(
+    """|object q {
+       |  List(1) + "blaH"
+       |}
+    """.stripMargin,
+    """|[13..20) scala.Predef.any2stringadd[List[Int]](*)
+       |[17..17) [Int]
+       |""".stripMargin
+  )
+
+  sugars(
+    """|object r {
+       |  class F
+       |  implicit val ordering: Ordering[F] = ???
+       |  val x: Ordered[F] = new F
+       |}
+    """.stripMargin,
+    """|[86..91) scala.math.Ordered.orderingToOrdered[r.F](*)(r.this.ordering)
+       |""".stripMargin
+  )
+
+  sugars(
+    """|object s {
+       |  def apply() = 2
+       |  s()
+       |  s.apply()
+       |  case class Bar()
+       |  Bar()
+       |  1.asInstanceOf[Int => Int](2)
+       |}
+    """.stripMargin,
+    """|[32..32) .apply
+       |[71..71) .apply
+       |[102..102) .apply
+       |""".stripMargin
+  )
+
+  messages(
+    // See https://github.com/scalameta/scalameta/issues/899
+    """import scala.io._
+      |object t""".stripMargin,
+    "[16..17): [warning] Unused import"
+  )
+
   targeted(
     // See https://github.com/scalameta/scalameta/issues/830
-    "case class Foo(a: Int); object ya { Foo.<<unapply>>(Foo(2)) }", {
-      implicit database => first =>
-        assert(first.symbol == Symbol("_empty_.Foo.unapply(LFoo;)Lscala/Option;."))
-        assert(first.symbol.denot.toString == "case def unapply: (x$0: Foo)Option[Int]")
+    "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", { implicit database => first =>
+      assert(first.symbol == Symbol("_empty_.u.unapply(Lu;)Lscala/Option;."))
+      assert(first.symbol.denot.toString == "case def unapply: (x$0: u)Option[Int]")
     }
   )
 

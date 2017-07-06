@@ -1,0 +1,26 @@
+scalahost/integration/src/main/scala/example/Example.scala
+----------------------------------------------------------
+Dialect:
+Scala212
+
+Names:
+[8..15): example => _root_.example.
+[24..31): Example => _root_.example.Example.
+[40..44): main => _root_.example.Example.main([Ljava/lang/String;)V.
+[45..49): args => _root_.example.Example.main([Ljava/lang/String;)V.(args)
+[51..56): Array => _root_.scala.Array#
+[57..63): String => _root_.scala.Predef.String#
+[67..71): Unit => _root_.scala.Unit#
+[80..87): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
+
+Denotations:
+_root_.example. => package example
+_root_.example.Example. => final object Example
+_root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String])Unit
+_root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: Array[String]
+_root_.scala.Array# => final class Array
+_root_.scala.Array#`<init>`(I)V. => primaryctor <init>: (_length: Int)Array[T]
+_root_.scala.Predef.String# => type String: String
+_root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: Any)Unit
+_root_.scala.Unit# => abstract final class Unit
+_root_.scala.Unit#`<init>`()V. => primaryctor <init>: ()Unit

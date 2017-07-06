@@ -1,12 +1,14 @@
 package scala.meta.internal.io
 
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
 import scala.meta.io._
 
 object PlatformFileIO {
-  def readAllBytes(uri: URI): Array[Byte] =
-    if (uri.getScheme == "file") readAllBytes(AbsolutePath(uri.getPath))
+  def newInputStream(uri: URI): InputStream =
+    if (uri.getScheme == "file") new ByteArrayInputStream(readAllBytes(AbsolutePath(uri.getPath)))
     else throw new UnsupportedOperationException(s"Can't read $uri as InputStream")
 
   def readAllBytes(path: AbsolutePath): Array[Byte] = JSIO.inNode {

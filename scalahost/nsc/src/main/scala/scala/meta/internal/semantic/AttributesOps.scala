@@ -39,6 +39,7 @@ trait AttributesOps { self: DatabaseOps =>
         val names = mutable.Map[m.Position, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
         val inferred = mutable.Map[m.Position, String]()
+        val inferredImplicitConv = mutable.Set.empty[g.Tree] // synthesized implicit conversions
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
         val mends = mutable.Map[Int, m.Name]() // end offset -> tree
@@ -306,13 +307,15 @@ trait AttributesOps { self: DatabaseOps =>
               gtree match {
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
-                  val syntax = gview.fun + "(*)"
+                  val syntax = g.showCode(gview.fun) + "(*)"
                   success(pos, syntax)
+                  inferredImplicitConv += gview.fun
                 case gimpl: g.ApplyToImplicitArgs =>
                   gimpl.fun match {
                     case gview: g.ApplyImplicitView =>
                       val pos = gtree.pos.toMeta
-                      val syntax = gview.fun + "(*)(" + gimpl.args.mkString(", ") + ")"
+                      val args = gimpl.args.map(g.showCode(_)).mkString(", ")
+                      val syntax = g.showCode(gview.fun) + "(*)(" + args + ")"
                       success(pos, syntax)
                     case gfun =>
                       val fullyQualifiedArgs = gimpl.args.map(g.showCode(_))
@@ -325,12 +328,16 @@ trait AttributesOps { self: DatabaseOps =>
                   val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                   val syntax = "[" + targs.mkString(", ") + "]"
                   success(morePrecisePos, syntax)
+                case g.Apply(select @ g.Select(qual, nme), _) if isSyntheticName(select) =>
+                  val pos = qual.pos.withStart(qual.pos.end).toMeta
+                  success(pos, s".${nme.decoded}")
                 case _ =>
                 // do nothing
               }
             }
 
             override def traverse(gtree: g.Tree): Unit = {
+              if (inferredImplicitConv.contains(gtree)) return // synthetic tree, skip.
               gtree match {
                 case ConstfoldOf(original) =>
                   traverse(original)
@@ -361,8 +368,9 @@ trait AttributesOps { self: DatabaseOps =>
                   tryFindMtree(gtree)
                 case _: g.Apply | _: g.TypeApply =>
                   tryFindInferred(gtree)
-                case select: g.Select if isSyntheticApply(select) =>
+                case select: g.Select if isSyntheticName(select) =>
                   tryFindMtree(select.qualifier)
+                  tryFindInferred(select)
                 case _ =>
                   tryFindMtree(gtree)
               }
@@ -378,8 +386,15 @@ trait AttributesOps { self: DatabaseOps =>
               // NOTE: The caret in unused import warnings points to Importee.pos, but
               // the message position start/end point to the enclosing Import.pos.
               // See https://github.com/scalameta/scalameta/issues/839
-              if (msg == "Unused import" && mstarts.contains(gpos.point)) mstarts(gpos.point).pos
-              else gpos.toMeta
+              if (msg == "Unused import") {
+                mstarts.get(gpos.point) match {
+                  case Some(name) => name.pos
+                  case None =>
+                    if (unit.source.content(gpos.point) == '_') // Importee.Wildcard()
+                      gpos.withStart(gpos.point).withEnd(gpos.point + 1).toMeta
+                    else gpos.toMeta
+                }
+              } else gpos.toMeta
             }
             val mseverity = gseverity match {
               case 0 => m.Severity.Info
@@ -394,9 +409,11 @@ trait AttributesOps { self: DatabaseOps =>
     }
   }
 
-  private def isSyntheticApply(select: g.Select): Boolean =
+  private def isSyntheticName(select: g.Select): Boolean =
     select.pos == select.qualifier.pos &&
-      select.name == g.nme.apply
+      (select.name == g.nme.apply ||
+        select.name == g.nme.unapplySeq ||
+        select.name == g.nme.unapply)
 
   private def syntaxAndPos(gtree: g.Tree): String = {
     if (gtree == g.EmptyTree) "\u001b[1;31mEmptyTree\u001b[0m"
