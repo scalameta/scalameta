@@ -9,8 +9,12 @@ import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
 import scala.meta.{semantic => m}
 
-@data class Database(entries: Seq[Attributes]) extends Mirror {
+@data class Database(entries: Seq[Attributes]) extends Mirror with Seq[Attributes] {
   def database = this
+
+  override def length: Int = entries.length
+  override def apply(idx: Int): Attributes = entries.apply(idx)
+  override def iterator: Iterator[Attributes] = entries.iterator
 
   lazy val names: Map[Position, Symbol] = entries.flatMap(_.names).toMap
   lazy val messages: Seq[Message] = entries.flatMap(_.messages)
