@@ -43,15 +43,14 @@ class JSFacadeSuite extends FunSuite {
             "type" -> "Template",
             "pos" -> pos(12, 83),
             "early" -> a(),
-            "parents" -> a(),
+            "inits" -> a(),
             "self" -> d(
-              "type" -> "Term.Param",
+              "type" -> "Self",
               "pos" -> pos(16, 16),
-              "mods" -> a(),
               "name" -> d(
                 "type" -> "Name.Anonymous",
                 "pos" -> pos(16, 16),
-                "value" -> "_"
+                "value" -> ""
               )
             ),
             "stats" -> a(
