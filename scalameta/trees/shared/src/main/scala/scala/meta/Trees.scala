@@ -33,9 +33,8 @@ object Tree extends InternalTreeXtensions {
 @branch trait Name extends Ref { def value: String }
 object Name {
   def unapply(name: Name): Option[String] = Some(name.value)
-  @ast class Anonymous extends Term.Name with Type.Name {
-    def value = "_"
-    def copy(value: String): Name.Anonymous = { require(value == "_"); Name.Anonymous() }
+  @ast class Anonymous() extends Name {
+    def value = ""
     checkParent(ParentChecks.NameAnonymous)
   }
   @ast class Indeterminate(value: Predef.String @nonEmpty) extends Name
@@ -123,7 +122,7 @@ object Term {
   @ast class Repeated(expr: Term) extends Term {
     checkParent(ParentChecks.TermRepeated)
   }
-  @ast class Param(mods: List[Mod], name: Name, decltpe: Option[Type], default: Option[Term]) extends Member.Term
+  @ast class Param(mods: List[Mod], name: meta.Name, decltpe: Option[Type], default: Option[Term]) extends Member
   def fresh(): Term.Name = fresh("fresh")
   def fresh(prefix: String): Term.Name = Term.Name(prefix + Fresh.nextId())
 }
@@ -169,11 +168,11 @@ object Type {
     checkParent(ParentChecks.TypeVar)
   }
   @ast class Param(mods: List[Mod],
-                   name: Name,
+                   name: meta.Name,
                    tparams: List[Type.Param],
                    tbounds: Type.Bounds,
                    vbounds: List[Type],
-                   cbounds: List[Type]) extends Member.Type
+                   cbounds: List[Type]) extends Member
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
 }
@@ -336,7 +335,7 @@ object Ctor {
   checkParent(ParentChecks.Init)
 }
 
-@ast class Self(name: Term.Name, decltpe: Option[Type]) extends Member
+@ast class Self(name: Name, decltpe: Option[Type]) extends Member
 
 @ast class Template(early: List[Stat],
                     inits: List[Init],

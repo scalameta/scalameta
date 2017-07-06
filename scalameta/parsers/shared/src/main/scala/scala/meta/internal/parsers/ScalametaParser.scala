@@ -2556,13 +2556,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         // Quasi param recognised in primary constructor
         q.become[Term.Param.Quasi]
       case _ =>
-        val name = termName()
+        val name = termName() match {
+          case q: Term.Name.Quasi => q.become[Name.Quasi]
+          case other => other
+        }
         name match {
-          case q: Term.Name.Quasi if endParamQuasi =>
+          case q: Name.Quasi if endParamQuasi =>
             q.become[Term.Param.Quasi]
           case _ =>
             val tpt =
-              if (token.isNot[Colon] && name.is[Term.Name.Quasi])
+              if (token.isNot[Colon] && name.is[Name.Quasi])
                 None
               else {
                 accept[Colon]
@@ -2620,7 +2623,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     val nameopt =
       if (token.is[Ident]) typeName()
-      else if (token.is[Unquote]) unquote[Type.Name]
+      else if (token.is[Unquote]) unquote[Name]
       else if (token.is[Underscore]) { next(); atPos(in.prevTokenPos, in.prevTokenPos)(Name.Anonymous()) }
       else syntaxError("identifier or `_' expected", at = token)
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
@@ -3062,7 +3065,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwThis() =>
         autoPos{ next(); Name.Anonymous() }
       case Unquote() =>
-        if (ahead(token.is[Colon])) unquote[Term.Name.Quasi]
+        if (ahead(token.is[Colon])) unquote[Name.Quasi]
         else return unquote[Self.Quasi]
       case _ =>
         syntaxError("expected identifier, `this' or unquote", at = token)

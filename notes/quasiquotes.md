@@ -115,13 +115,13 @@ This specification describes quasiquote syntax using a markedly condensed notati
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Term Param     | `param"..$mods $ename: $tpeopt = $expropt"`
+ Term Param     | `param"..$mods $name: $tpeopt = $expropt"`
 
 ### Type Parameters (meta.Type.Param)
 
                 | Quasiquote
 ----------------|-------------------------------------------------
- Type Param     | `tparam"..$mods $tname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
+ Type Param     | `tparam"..$mods $name[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes"`
 
 ## Inits (meta.Init)
 

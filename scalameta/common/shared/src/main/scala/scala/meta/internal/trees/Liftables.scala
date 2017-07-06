@@ -28,7 +28,6 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
 
   override def customAdts(root: Root): Option[List[Adt]] = {
     var nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiSymbol.toType))
-    nonQuasis = nonQuasis.sortBy(_.sym != NameAnonymousSymbol) // NOTE: temporary hack until we factor out core
     Some(QuasiSymbol.asBranch +: nonQuasis)
   }
   override def customWrapper(adt: Adt, defName: TermName, localName: TermName, body: Tree): Option[Tree] = {

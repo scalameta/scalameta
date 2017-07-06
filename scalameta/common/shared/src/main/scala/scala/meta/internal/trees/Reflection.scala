@@ -21,12 +21,6 @@ trait Reflection extends AdtReflection {
 
   lazy val TreeSymbol = mirror.staticClass("scala.meta.Tree")
   lazy val QuasiSymbol = mirror.staticClass("scala.meta.internal.trees.Quasi")
-  lazy val NameAnonymousSymbol = mirror.staticModule("scala.meta.Name").info.member(TypeName("Anonymous")).asClass
-  lazy val NameAnonymousQuasiSymbol = NameAnonymousSymbol.companion.info.member(TypeName("Quasi")).asClass
-  lazy val TermNameSymbol = mirror.staticModule("scala.meta.Term").info.member(TypeName("Name")).asClass
-  lazy val TermNameQuasiSymbol = TermNameSymbol.companion.info.member(TypeName("Quasi")).asClass
-  lazy val TypeNameSymbol = mirror.staticModule("scala.meta.Type").info.member(TypeName("Name")).asClass
-  lazy val TypeNameQuasiSymbol = TypeNameSymbol.companion.info.member(TypeName("Quasi")).asClass
   lazy val AllModule = mirror.staticModule("scala.meta.internal.trees.All")
   lazy val RegistryAnnotation = mirror.staticModule("scala.meta.internal.trees.Metadata").info.member(TypeName("registry")).asClass
 
@@ -42,7 +36,7 @@ trait Reflection extends AdtReflection {
     AllModule.initialize.annotations match {
       case List(ann) if ann.tree.tpe =:= RegistryAnnotation.toType =>
         val q"new $_($_.$_[..$_](..${astPaths: List[String]}))" = ann.tree
-        var astClasses = astPaths.map(astPath => {
+        val astClasses = astPaths.map(astPath => {
           def locateModule(root: ModuleSymbol, parts: List[String]): ModuleSymbol = parts match {
             case Nil => root
             case head :: rest => locateModule(root.info.member(TermName(head)).asModule, rest)
@@ -50,7 +44,6 @@ trait Reflection extends AdtReflection {
           val modulePath :+ className = astPath.split('.').toList
           locateModule(mirror.RootPackage, modulePath).info.member(TypeName(className)).asClass
         })
-        astClasses = astClasses.filter(_ != NameAnonymousSymbol) // NOTE: temporary hack until we factor out core
         val entireHierarchy = {
           var result = astClasses.flatMap(_.baseClasses.map(_.asClass))
           result = result.filter(sym => sym.toType <:< TreeSymbol.toType)
@@ -63,17 +56,8 @@ trait Reflection extends AdtReflection {
         entireHierarchy.foreach(sym => {
           val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
           val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(TreeSymbol))
-          relevantParents.foreach(p => {
-            var addendum = List(sym)
-            // NOTE: temporary hack until we factor out core
-            if (sym == TermNameSymbol || sym == TypeNameSymbol) addendum :+= NameAnonymousSymbol
-            if (sym == TermNameQuasiSymbol || sym == TypeNameQuasiSymbol) addendum :+= NameAnonymousQuasiSymbol
-            registry(p) ++= addendum
-          })
+          relevantParents.foreach(parent => registry(parent) :+= sym)
         })
-        // NOTE: the following lines are temporary hacks until we factor out core
-        registry(NameAnonymousSymbol) = List(NameAnonymousQuasiSymbol)
-        registry(NameAnonymousQuasiSymbol) = Nil
         registry.toMap
       case _ =>
         sys.error("failed to figure out meta trees")
