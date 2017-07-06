@@ -1,7 +1,7 @@
 scalahost/integration/src/main/scala/example/Example.scala
 ----------------------------------------------------------
 Dialect:
-Scala211
+Scala212
 
 Names:
 [8..15): example => _root_.example.
