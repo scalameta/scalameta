@@ -8,6 +8,8 @@ import scala.meta.tokens.Token.Comment
 
 object ScaladocParser {
 
+  private[this] val numberOfSupportedHeadingLevels = 6
+
   /**
     * Parses a scaladoc comment.
     */
@@ -43,6 +45,18 @@ object ScaladocParser {
     comment.content.map(parseRec)
   }
 
+  private[this] def generateHeadingParser(headingType: Heading): Parser[DocToken] = {
+    val headingSymbols = "=" * headingType.level
+    P(
+      // Code block start
+      headingSymbols
+      // Heading description
+        ~ ((AnyChar ~ !"=").rep ~ AnyChar).!.map(c => DocToken(headingType, c.trim))
+      // Code block end
+        ~ headingSymbols
+    )
+  }
+
   /**
     * Set containing all the scaladoc parsers.
     */
@@ -63,25 +77,9 @@ object ScaladocParser {
         // Code block end
           ~ "}}}"
       )
-    // Parser for heading instances
-    val headingParser =
-      P(
-        // Code block start
-        "="
-        // Heading description
-          ~ ((AnyChar ~ !"=").rep ~ AnyChar).!.map(c => DocToken(Heading, c.trim))
-        // Code block end
-          ~ "="
-      )
-    val subHeadingParser =
-      P(
-        // Code block start
-        "=="
-        // Heading description
-          ~ ((AnyChar ~ !"==").rep ~ AnyChar).!.map(c => DocToken(SubHeading, c.trim))
-        // Code block end
-          ~ "=="
-      )
+
+    // Parsers for headings/subheadings instances.
+    val headingsParsers = DocToken.allHeadings.reverse.map(generateHeadingParser(_))
 
     // Parser for Inheritdoc instances
     val inheritDocParser = P("@inheritdoc".!).map(_ => DocToken(InheritDoc))
@@ -114,10 +112,8 @@ object ScaladocParser {
     // in case no valid parser was found for an Scaladoc comment.
     (Seq(
       paragraphParser,
-      subHeadingParser,
-      headingParser,
       inheritDocParser,
       codeBlockParser
-    ) ++ labelledParsers) :+ descriptionParser
+    ) ++ headingsParsers ++ labelledParsers) :+ descriptionParser
   }
 }
