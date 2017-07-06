@@ -489,4 +489,14 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |object t""".stripMargin,
     "[16..17): [warning] Unused import"
   )
+
+  targeted(
+    // See https://github.com/scalameta/scalameta/issues/830
+    "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", {
+      implicit database => first =>
+        assert(first.symbol == Symbol("_empty_.u.unapply(Lu;)Lscala/Option;."))
+        assert(first.symbol.denot.toString == "case def unapply: (x$0: u)Option[Int]")
+    }
+  )
+
 }
