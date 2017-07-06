@@ -205,11 +205,11 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |object RunMe {
       |  CommandeerDSL(null.asInstanceOf[Foo])
       |}
-  """.trim.stripMargin,
+    """.trim.stripMargin,
     """
-      |[324..324) [g.Foo, g.FooDSL]
-      |[348..348) (g.Foo.fooDSL)
-  """.trim.stripMargin
+      |[324..324) (*).apply[g.Foo, g.FooDSL]
+      |[348..348) (*)(g.Foo.fooDSL)
+    """.trim.stripMargin
   )
 
   sugars(
@@ -240,11 +240,11 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
   """.trim.stripMargin,
     """
-      |[201..201) [Int, List[Int]]
-      |[209..209) (scala.collection.immutable.List.canBuildFrom[Int])
-      |[247..247) (h.C.list[Int](h.C.int))
+      |[201..201) (*)[Int, List[Int]]
+      |[209..209) (*)(scala.collection.immutable.List.canBuildFrom[Int])
+      |[247..247) (*)(h.C.list[Int](h.C.int))
       |[273..275) h.X.cvt[Int](*)(h.C.int)
-      |[304..304) [h.C[Int]]
+      |[304..304) (*)[h.C[Int]]
   """.trim.stripMargin
   )
 
@@ -314,7 +314,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   sugars(
     "class J[T: Manifest] { val arr = Array.empty[T] }",
-    "[47..47) (J.this.evidence$1)".trim
+    "[47..47) (*)(J.this.evidence$1)".trim
   )
 
   names(
@@ -452,7 +452,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |}
     """.stripMargin,
     """|[13..20) scala.Predef.any2stringadd[List[Int]](*)
-       |[17..17) [Int]
+       |[17..17) (*).apply[Int]
        |""".stripMargin
   )
 
@@ -477,9 +477,9 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  1.asInstanceOf[Int => Int](2)
        |}
     """.stripMargin,
-    """|[32..32) .apply
-       |[71..71) .apply
-       |[102..102) .apply
+    """|[32..32) (*).apply
+       |[71..71) (*).apply
+       |[102..102) (*).apply
        |""".stripMargin
   )
 

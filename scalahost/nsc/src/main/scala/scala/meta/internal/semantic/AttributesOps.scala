@@ -35,7 +35,7 @@ trait AttributesOps { self: DatabaseOps =>
 
         val names = mutable.Map[m.Position, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
-        val inferred = mutable.Map[m.Position, String]()
+        val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
         val inferredImplicitConv = mutable.Set.empty[g.Tree] // synthesized implicit conversions
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
@@ -295,39 +295,48 @@ trait AttributesOps { self: DatabaseOps =>
             }
 
             private def tryFindInferred(gtree: g.Tree): Unit = {
-              def success(pos: m.Position, syntax: String): Unit = {
-                if (inferred.contains(pos)) return
-                inferred(pos) = syntax
+              def success(pos: m.Position, f: Inferred => Inferred): Unit = {
+                inferred(pos) = f(inferred(pos))
               }
 
               if (!gtree.pos.isRange) return
+
+              object ApplySelect {
+                def unapply(tree: g.Tree): Option[g.Select] = Option(tree).collect {
+                  case g.Apply(select: g.Select, _) => select
+                  case select: g.Select => select
+                }
+              }
+
               gtree match {
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
                   val syntax = g.showCode(gview.fun) + "(*)"
-                  success(pos, syntax)
+                  success(pos, _.withConversion(syntax))
                   inferredImplicitConv += gview.fun
                 case gimpl: g.ApplyToImplicitArgs =>
+//                  inferredImplicitConv += gimpl.fun
                   gimpl.fun match {
                     case gview: g.ApplyImplicitView =>
                       val pos = gtree.pos.toMeta
                       val args = gimpl.args.map(g.showCode(_)).mkString(", ")
                       val syntax = g.showCode(gview.fun) + "(*)(" + args + ")"
-                      success(pos, syntax)
+                      success(pos, _.withConversion(syntax))
                     case gfun =>
                       val fullyQualifiedArgs = gimpl.args.map(g.showCode(_))
                       val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toMeta
                       val syntax = "(" + fullyQualifiedArgs.mkString(", ") + ")"
-                      success(morePrecisePos, syntax)
+                      success(morePrecisePos, _.copy(args = Some(syntax)))
                   }
                 case g.TypeApply(fun, targs @ List(targ, _*)) =>
                   if (targ.pos.isRange) return
                   val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                   val syntax = "[" + targs.mkString(", ") + "]"
-                  success(morePrecisePos, syntax)
-                case g.Apply(select @ g.Select(qual, nme), _) if isSyntheticName(select) =>
+                  success(morePrecisePos, _.copy(types = Some(syntax)))
+                case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
                   val pos = qual.pos.withStart(qual.pos.end).toMeta
-                  success(pos, s".${nme.decoded}")
+                  val syntax = s".${nme.decoded}"
+                  success(pos, _.copy(select = Some(syntax)))
                 case _ =>
                 // do nothing
               }
@@ -401,13 +410,17 @@ trait AttributesOps { self: DatabaseOps =>
             }
             m.Message(mpos, mseverity, msg)
         }
+        val sugars = inferred.toIterator.map {
+          case (pos, inferred) => pos -> inferred.syntax
+        }
+
         m.Attributes(
           unit.source.toInput,
           dialect,
           names.toList,
           messages.toList,
           denotations.toList,
-          inferred.toList
+          sugars.toList
         )
       })
     }
