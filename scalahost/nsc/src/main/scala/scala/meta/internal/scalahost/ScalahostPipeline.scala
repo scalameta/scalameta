@@ -39,7 +39,7 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
 
         try {
           if (config.semanticdb.isDisabled || !unit.source.file.name.endsWith(".scala")) return
-          val mminidb = m.Database(List(unit.source.toInput -> unit.toAttributes))
+          val mminidb = m.Database(List(unit.toAttributes))
           mminidb.save(scalametaTargetroot, config.sourceroot)
         } catch {
           case NonFatal(ex) =>

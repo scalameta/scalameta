@@ -92,7 +92,7 @@ package object semantic {
             case s.Sugar(Some(sRange(mpos)), msyntax: String) => mpos -> msyntax
             case other => sys.error(s"bad protobuf: unsupported sugar $other")
           }.toList
-          minput -> m.Attributes(mdialect, mnames, mmessages, mdenots, msugars)
+          m.Attributes(minput, mdialect, mnames, mmessages, mdenots, msugars)
       }
       m.Database(mentries.toList)
     }
@@ -100,7 +100,7 @@ package object semantic {
   implicit class XtensionMetaDatabase(mdatabase: m.Database) {
     def toSchema(sourceroot: AbsolutePath): s.Database = {
       val sentries = mdatabase.entries.map {
-        case (minput, m.Attributes(mdialect, mnames, mmessages, mdenots, msugars)) =>
+        case m.Attributes(minput, mdialect, mnames, mmessages, mdenots, msugars) =>
           object mRange {
             def unapply(mpos: mPosition): Option[s.Range] = mpos match {
               case mPosition.Range(`minput`, sstart, send) =>
@@ -157,8 +157,6 @@ package object semantic {
             case other => sys.error(s"bad database: unsupported sugar $other")
           }
           s.Attributes(spath, scontents, sdialect, snames, smessages, sdenots, ssugars)
-        case (other, _) =>
-          sys.error(s"unsupported input: $other")
       }
       s.Database(sentries)
     }

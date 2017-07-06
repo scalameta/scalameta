@@ -10,10 +10,8 @@ import scala.meta.internal.io.PathIO
 
 object DatabaseSyntax {
   def apply(database: Database): String = {
-    val Database(entries) = database
-    val s_entries = entries.map {
-      case (input, attrs) =>
-        val s_input = PathIO.toUnix(input.syntax)
+    val s_entries = database.entries.map { attrs =>
+        val s_input = PathIO.toUnix(attrs.input.syntax)
         val separator = EOL + "-" * s_input.toString.length + EOL
         s_input + separator + attrs.syntax
     }
@@ -23,7 +21,7 @@ object DatabaseSyntax {
 
 object AttributesSyntax {
   def apply(attrs: Attributes): String = {
-    val Attributes(dialect, names, messages, denotations, sugars) = attrs
+    import attrs._
 
     val lines = mutable.ListBuffer[String]()
     def appendSection(name: String, section: List[String]): Unit = {
