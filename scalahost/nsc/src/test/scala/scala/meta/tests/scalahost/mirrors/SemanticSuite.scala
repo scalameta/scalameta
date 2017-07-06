@@ -407,12 +407,11 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |[75..79): Name => _empty_.n.Name.
        |[80..84): name => _empty_.n.name.name.
        |[103..106): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
-       |[109..112): #:: => _root_.scala.collection.immutable.Stream.consWrapper(Lscala/Function0;)Lscala/collection/immutable/Stream/ConsWrapper;.
+       |[109..112): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
        |[113..119): Stream => _root_.scala.package.Stream.
-       |[120..125): empty => _root_.scala.collection.immutable.Stream.consWrapper(Lscala/Function0;)Lscala/collection/immutable/Stream/ConsWrapper;.
+       |[120..125): empty => _root_.scala.collection.immutable.Stream.empty()Lscala/collection/immutable/Stream;.
        |""".stripMargin
   )
-
 
   denotations(
     """

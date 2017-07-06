@@ -328,7 +328,7 @@ trait AttributesOps { self: DatabaseOps =>
                   val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                   val syntax = "[" + targs.mkString(", ") + "]"
                   success(morePrecisePos, syntax)
-                case g.Apply(select @ g.Select(qual, nme), _) if isSyntheticApply(select) =>
+                case g.Apply(select @ g.Select(qual, nme), _) if isSyntheticName(select) =>
                   val pos = qual.pos.withStart(qual.pos.end).toMeta
                   success(pos, s".${nme.decoded}")
                 case _ =>
