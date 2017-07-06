@@ -381,8 +381,10 @@ trait AttributesOps { self: DatabaseOps =>
               if (msg == "Unused import") {
                 mstarts.get(gpos.point) match {
                   case Some(name) => name.pos
-                  // Importee.Wildcard()
-                  case None => gpos.withStart(gpos.point).withEnd(gpos.point + 1).toMeta
+                  case None =>
+                    if (unit.source.content(gpos.point) == '_') // Importee.Wildcard()
+                      gpos.withStart(gpos.point).withEnd(gpos.point + 1).toMeta
+                    else gpos.toMeta
                 }
               } else gpos.toMeta
             }
