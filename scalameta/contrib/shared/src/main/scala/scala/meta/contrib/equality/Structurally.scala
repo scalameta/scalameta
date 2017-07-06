@@ -5,7 +5,7 @@ import scala.meta.Tree
 
 /** Represents structural equality between trees
   *
-  * Two trees are structurally equal if their .show[Structure] is equal.
+  * Two trees are structurally equal if their .structure is equal.
   * This implementation is however more efficient that doing
   * a.structure == b.structure.
   */
@@ -32,7 +32,7 @@ object Structurally {
     case (x, y) if x == null || y == null => x == null && y == null
     case (Some(x), Some(y)) => loopStructure(x, y)
     case (None, None) => true
-    case (xs: Seq[_], ys: Seq[_]) =>
+    case (xs: List[_], ys: List[_]) =>
       xs.length == ys.length &&
         xs.zip(ys).forall { case (x, y) => loopStructure(x, y) }
     case (x: Tree, y: Tree) =>

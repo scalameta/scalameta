@@ -12,8 +12,7 @@ trait Reporter {
   // NOTE: not making this public, e.g. by exposing Position.Offset
   // because I don't want to advertise this style of positioning
   private implicit class XtensionOffsetPosition(offset: Offset) {
-    private val point = Point.Offset(input, offset)
-    def pos = Position.Range(input, point, point)
+    def pos = Position.Range(input, offset, offset)
   }
 
   def input: Input

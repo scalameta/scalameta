@@ -1,10 +1,9 @@
 package scala.meta
 package internal
-import scala.util.Try
+
 import java.nio.charset.Charset
-import scala.collection.immutable.Seq
+import scala.util.Try
 import scala.meta.inputs.{Input => mInput}
-import scala.meta.inputs.{Point => mPoint}
 import scala.meta.inputs.{Position => mPosition}
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.semantic.{schema => s}
@@ -20,7 +19,7 @@ package object semantic {
         case (minput, m.Attributes(mdialect, mnames, mmessages, mdenots, msugars)) =>
           object mRange {
             def unapply(mpos: mPosition): Option[s.Range] = mpos match {
-              case mPosition.Range(`minput`, mPoint.Offset(_, sstart), mPoint.Offset(_, send)) =>
+              case mPosition.Range(`minput`, sstart, send) =>
                 Some(s.Range(sstart, send))
               case _ =>
                 None

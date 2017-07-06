@@ -14,7 +14,7 @@ trait CommentExtensions {
     def content: Option[String] = CommentOps.content(c)
 
     @inline
-    def docTokens: Option[Seq[DocToken]] = CommentOps.docTokens(c)
+    def docTokens: Option[List[DocToken]] = CommentOps.docTokens(c)
   }
 
 }

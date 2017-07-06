@@ -20,7 +20,7 @@ class EqualProps extends org.scalatest.FunSuite {
       val refEqual = a.equals(b) && transformWillChangeRef // should be false
       val structuralEqual = a.isEqual(b) // should be true
 
-      if (refEqual || !structuralEqual) Seq(a)
+      if (refEqual || !structuralEqual) List(a)
       else Nil
     }
     assert(errors.isEmpty)

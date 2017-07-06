@@ -3,6 +3,7 @@
 
 import org.scalatest._
 import org.scalameta.tests._
+import org.scalameta.invariants._
 import typecheckError.Options.WithPositions
 
 class ErrorSuite extends FunSuite {
@@ -15,18 +16,6 @@ class ErrorSuite extends FunSuite {
       |<macro>:4: not found: value X
       |      val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
       |                        ^
-    """.trim.stripMargin)
-  }
-
-  test("q\"foo: _*\"") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      q"foo: _*"
-    """) === """
-      |<macro>:4: ; expected but identifier found
-      |      q"foo: _*"
-      |              ^
     """.trim.stripMargin)
   }
 
@@ -52,7 +41,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:6: type mismatch when unquoting;
       | found   : Dummy
-      | required: scala.meta.Term.Arg
+      | required: scala.meta.Term
       |      q"foo($x)"
       |            ^
     """.trim.stripMargin)
@@ -84,7 +73,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:6: type mismatch when unquoting;
       | found   : List[Dummy]
-      | required: scala.collection.immutable.Seq[scala.meta.Term.Arg]
+      | required: List[scala.meta.Term]
       |      q"foo(..$xs)"
       |              ^
     """.trim.stripMargin)
@@ -99,7 +88,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Term.Name]
-      | required: scala.meta.Term.Arg
+      | required: scala.meta.Term
       |      q"foo($xs)"
       |            ^
     """.trim.stripMargin)
@@ -159,7 +148,7 @@ class ErrorSuite extends FunSuite {
     """) === """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Term.Name]
-      | required: scala.collection.immutable.Seq[scala.meta.Type]
+      | required: List[scala.meta.Type]
       |      q"foo[..$terms]"
       |              ^
     """.trim.stripMargin)
@@ -180,8 +169,8 @@ class ErrorSuite extends FunSuite {
       |<macro>:6: rank mismatch when unquoting;
       | found   : ..$
       | required: $
-      |Note that you can extract a sequence into an unquote when pattern matching,
-      |it just cannot follow another sequence either directly or indirectly.
+      |Note that you can extract a list into an unquote when pattern matching,
+      |it just cannot follow another list either directly or indirectly.
       |        case q"$_($x, ..$ys, $z, ..$ts)" =>
       |                                 ^
     """.trim.stripMargin)
@@ -207,7 +196,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       q"val $name = foo"
     """) === """
-      |<macro>:5: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
+      |<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      q"val $name = foo"
       |            ^
     """.trim.stripMargin)
@@ -220,7 +209,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       q"var $name = foo"
     """) === """
-      |<macro>:5: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
+      |<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      q"var $name = foo"
       |            ^
     """.trim.stripMargin)
@@ -233,7 +222,7 @@ class ErrorSuite extends FunSuite {
       val name = q"x"
       p"$name: T"
     """) === """
-      |<macro>:5: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
+      |<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      p"$name: T"
       |        ^
     """.trim.stripMargin)
@@ -340,44 +329,42 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("""p"$pname @ $apat"""") {
+  test("""p"$pat @ $pat"""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      val pname = p"`x`"
-      val apat = p"y"
-      p"$pname @ $apat"
+      val pat1 = p"`x`"
+      val pat2 = p"y"
+      p"$pat1 @ $pat2"
     """) === """
-      |<macro>:6: type mismatch when unquoting;
-      | found   : scala.meta.Term.Name
-      | required: scala.meta.Pat.Var.Term
-      |      p"$pname @ $apat"
+      |<macro>:6: can't unquote a name here, use a pattern instead (e.g. p"x")
+      |      p"$pat1 @ $pat2"
       |        ^
     """.trim.stripMargin)
   }
 
-  test("""p"$ref[..$tpes](..$apats)""") {
+  test("""p"$ref[..$tpes](..$pats)""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
-      val p"$ref[..$tpes](..$apats)" = p"x[A, B]"
+      val p"$ref[..$tpes](..$pats)" = p"x[A, B]"
     """) === """
       |<macro>:4: pattern must be a value
-      |      val p"$ref[..$tpes](..$apats)" = p"x[A, B]"
-      |                                                ^
+      |      val p"$ref[..$tpes](..$pats)" = p"x[A, B]"
+      |                                               ^
     """.trim.stripMargin)
   }
 
-  test("""p"$pat: $ptpe"""") {
+  test("""p"$pat: $tpe"""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
       val pat = p"`x`"
-      val ptpe = pt"y"
-      p"$pat: $ptpe"
+      val tpe = t"T"
+      p"$pat: $tpe"
     """) === """
-      |<macro>:6: can't unquote a name here, use a scala.meta.Pat instead, for example Pat.Var.Term(name: Term.Name)
-      |      p"$pat: $ptpe"
+      |<macro>:6: can't unquote a name here, use a pattern instead (e.g. p"x")
+      |      p"$pat: $tpe"
       |        ^
     """.trim.stripMargin)
   }
@@ -394,62 +381,6 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("pt\"X\"") {
-   assert(typecheckError("""
-     import scala.meta._
-     import scala.meta.dialects.Scala211
-     pt"X"
-   """).contains("Pattern type variables must start with a lower-case letter"))
-  }
-
-  test("pt\"`x`\"") {
-   assert(typecheckError("""
-     import scala.meta._
-     import scala.meta.dialects.Scala211
-     pt"`x`"
-   """).contains("Pattern type variables must not be enclosed in backquotes"))
-  }
-
-  test("pt\"`X`\"") {
-   assert(typecheckError("""
-     import scala.meta._
-     import scala.meta.dialects.Scala211
-     pt"`X`"
-   """).contains("Pattern type variables must not be enclosed in backquotes"))
-  }
-
-//  test("""pt"$ptpe[..$ptpes]""") { // TODO review after #216 resolved
-//    assert(typecheckError("""
-//      import scala.meta._
-//      import scala.meta.dialects.Scala211
-//      val pt"$ptpe[..$ptpes]" = pt"x[y, z]"
-//    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
-//  }
-
-//  test("""pt"..$ptpes { ..$stats }"""") { // TODO review after #216 resolved
-//    assert(typecheckError("""
-//      import scala.meta._
-//      import scala.meta.dialects.Scala211
-//      val pt"..$ptpes { ..$stats }" = pt"x with y { val a: A; val b: B }"
-//    """).contains("found that tpes.forall(((tpe: Pat.Type) => tpe.isInstanceOf[Pat.Var.Type].`unary_!`.&&(tpe.isInstanceOf[Pat.Type.Wildcard].`unary_!`))) is false"))
-//  }
-
-//  test("""pt"$ptpe forSome { ..$stats }"""") { // TODO review after #216 resolved
-//    assert(typecheckError("""
-//      import scala.meta._
-//      import scala.meta.dialects.Scala211
-//      val pt"$ptpe forSome { ..$stats }" = pt"x forSome { val a: A }"
-//    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
-//  }
-
-//  test("""pt"$ptpe ..@$annots"""") { // TODO review after #216 resolved
-//    assert(typecheckError("""
-//      import scala.meta._
-//      import scala.meta.dialects.Scala211
-//      val pt"$ptpe ..@$annots" = pt"x @q @w"
-//    """).contains("found that tpe.isInstanceOf[Pat.Var.Type].`unary_!` is true"))
-//  }
-
   test("""q"..$mods def this(...$paramss) = $expr"""") {
     assert(typecheckError("""
       import scala.meta._
@@ -462,43 +393,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("t\"T*\"") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      t"T*"
-    """) === """
-      |<macro>:4: end of file expected but identifier found
-      |      t"T*"
-      |         ^
-    """.trim.stripMargin)
-  }
-
-  test("t\"=> T\"") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      t"=> T"
-    """) === """
-      |<macro>:4: identifier expected but => found
-      |      t"=> T"
-      |        ^
-    """.trim.stripMargin)
-  }
-
-  test("p\"_*\"") {
-    assert(typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      p"_*"
-    """) === """
-      |<macro>:4: illegal start of simple pattern
-      |      p"_*"
-      |          ^
-    """.trim.stripMargin)
-  }
-
-  test("unquote Seq[T] into Option[Seq[T]]") {
+  test("unquote List[T] into Option[List[T]]") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -513,7 +408,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("unquote Option[Seq[T]] into Option[Seq[T]]") {
+  test("unquote Option[List[T]] into Option[List[T]]") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -751,8 +646,8 @@ class ErrorSuite extends FunSuite {
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
-      |Note that you can extract a sequence into an unquote when pattern matching,
-      |it just cannot follow another sequence either directly or indirectly.
+      |Note that you can extract a list into an unquote when pattern matching,
+      |it just cannot follow another list either directly or indirectly.
       |        case q"$_(...$argss)(...$_)" =>
       |                             ^
     """.trim.stripMargin)
@@ -769,8 +664,8 @@ class ErrorSuite extends FunSuite {
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
-      |Note that you can extract a sequence into an unquote when pattern matching,
-      |it just cannot follow another sequence either directly or indirectly.
+      |Note that you can extract a list into an unquote when pattern matching,
+      |it just cannot follow another list either directly or indirectly.
       |        case q"$_(...$argss)(foo)(...$_)" =>
       |                                  ^
     """.trim.stripMargin)

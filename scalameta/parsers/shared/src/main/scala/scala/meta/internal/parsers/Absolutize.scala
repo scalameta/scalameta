@@ -5,29 +5,15 @@ package parsers
 import scala.meta.inputs._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
-import scala.meta.internal.ast.Origin
 
 object Absolutize {
   implicit class XtensionPositionAbsolutize(pos: Position) {
     def absolutize: Position = {
       pos match {
-        case Position.Range(input, start, end) =>
-          require(start.input == end.input)
-          val start1 = start.absolutize
-          val end1 = end.absolutize
-          val input1 = start1.input
-          Position.Range(input1, start1, end1)
-        case other =>
-          other
-      }
-    }
-  }
-
-  implicit class XtensionPointAbsolutize(pos: Point) {
-    def absolutize: Point = {
-      pos match {
-        case Point.Offset(Input.Slice(input, absoluteStart, _), relativeOffset) =>
-          Point.Offset(input, absoluteStart + relativeOffset)
+        case Position.Range(Input.Slice(input, absoluteStart, _), start, end) =>
+          val start1 = absoluteStart + start
+          val end1 = absoluteStart + end
+          Position.Range(input, start1, end1)
         case other =>
           other
       }

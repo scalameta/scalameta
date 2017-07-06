@@ -25,7 +25,7 @@ class ShowMacros(val c: Context) {
     }
   }
 
-  def seq(xs: c.Tree*) = {
+  def sequence(xs: c.Tree*) = {
     val results = mkResults(xs.toList)
     if (xs.isEmpty) q"$ShowObj.None"
     else if (xs.length == 1) results.head

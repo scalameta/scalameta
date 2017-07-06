@@ -10,11 +10,11 @@ case class AnyDiff(a: Any, b: Any) extends Exception {
   /** Best effort attempt to find a line number for scala.meta.Tree */
   def lineNumber: Int =
     1 + (a match {
-      case e: Tree => e.pos.start.line
-      case Some(t: Tree) => t.pos.start.line
-      case lst: Seq[_] =>
+      case e: Tree => e.pos.startLine
+      case Some(t: Tree) => t.pos.startLine
+      case lst: List[_] =>
         lst match {
-          case (head: Tree) :: tail => head.pos.start.line
+          case (head: Tree) :: tail => head.pos.startLine
           case _ => -2
         }
       case _ => -2
@@ -37,7 +37,7 @@ case class AnyDiff(a: Any, b: Any) extends Exception {
            |${t1.structure}
            |${t2.structure}
            """.stripMargin
-      case (t1: Seq[_], t2: Seq[_]) =>
+      case (t1: List[_], t2: List[_]) =>
         t1.zip(t2).map { case (a, b) => compare(a, b) }.mkString
       case _ => toString
     }

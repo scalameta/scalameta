@@ -22,7 +22,7 @@ object ScalametaParserProperties {
     **/
   case object PrettyPrinterBroken extends BugKind
 
-  def onParseSuccess(source: Source): Seq[ParserBug] = {
+  def onParseSuccess(source: Source): List[ParserBug] = {
     val syntheticTree = Source(source.stats) // simple trick to remove origin.
     syntheticTree.syntax.parse[Source] match {
       case Parsed.Success(parsedFromSyntheticTree) =>
@@ -39,9 +39,9 @@ object ScalametaParserProperties {
     }
   }
 
-  def onParseError(scalaFile: CorpusFile, err: Parsed.Error): Seq[ParserBug] =
+  def onParseError(scalaFile: CorpusFile, err: Parsed.Error): List[ParserBug] =
     if (ScalacParser.canParseInput(scalaFile.read))
-      Seq(ParserBug(err.details.getMessage, err.pos.start.line, ParserBroken))
+      List(ParserBug(err.details.getMessage, err.pos.start.line, ParserBroken))
     else Nil
 
   def runAnalysis(corpusSize: Int = Int.MaxValue) = {

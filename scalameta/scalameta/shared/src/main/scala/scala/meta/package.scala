@@ -11,7 +11,8 @@ package object meta extends classifiers.Api with classifiers.Aliases
                        with semantic.Api with semantic.Aliases
                        with tokenizers.Api with tokenizers.Aliases
                        with tokens.Api with tokens.Aliases
-                       with transversers.Api with transversers.Aliases {
+                       with transversers.Api with transversers.Aliases
+                       with trees.Api with trees.Aliases {
 
   // TODO: The necessity of scalameta/package.scala being non-empty is unsatisfying.
   // We seriously need to come up with a better way of achieving similar functionality.
@@ -32,13 +33,13 @@ package object meta extends classifiers.Api with classifiers.Aliases
     }
   }
   implicit class XtensionDialectTokenSyntax(dialectToken: (scala.meta.Dialect, scala.meta.tokens.Token)) {
-    def syntax(implicit options: scala.meta.prettyprinters.Options): String = {
+    def syntax: String = {
       implicit val (dialect, token) = dialectToken
       token.syntax
     }
   }
   implicit class XtensionDialectTokensSyntax(dialectTokens: (scala.meta.Dialect, scala.meta.tokens.Tokens)) {
-    def syntax(implicit options: scala.meta.prettyprinters.Options): String = {
+    def syntax: String = {
       implicit val (dialect, tokens) = dialectTokens
       tokens.syntax
     }
@@ -54,7 +55,7 @@ package object meta extends classifiers.Api with classifiers.Aliases
     }
   }
   implicit class XtensionDialectTreeSyntax(dialectTree: (scala.meta.Dialect, scala.meta.Tree)) {
-    def syntax(implicit options: scala.meta.prettyprinters.Options): String = {
+    def syntax: String = {
       implicit val (dialect, tree) = dialectTree
       tree.syntax
     }

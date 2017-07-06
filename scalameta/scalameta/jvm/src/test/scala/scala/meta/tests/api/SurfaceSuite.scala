@@ -5,15 +5,21 @@ import org.scalatest._
 import org.scalameta.tests._
 import org.scalameta.explore
 import scala.compat.Platform.EOL
+import scala.reflect.runtime.universe._
+import scala.reflect.runtime.{universe => ru}
 
-class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
-  import AstReflection._
-  val reflectedTrees = {
+class SurfaceSuite extends FunSuite {
+  object TreeReflection extends {
+    val u: ru.type = ru
+    val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
+  } with scala.meta.internal.trees.Reflection
+  import TreeReflection._
+
+  lazy val reflectedTrees = {
     val root = symbolOf[scala.meta.Tree].asRoot
     val all = List(root) ++ root.allBranches ++ root.allLeafs
     all.map(_.sym.fullName).toSet
   }
-
   lazy val wildcardImportStatics = explore.wildcardImportStatics("scala.meta")
   lazy val allStatics = explore.allStatics("scala.meta")
   lazy val trees = wildcardImportStatics.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
@@ -59,9 +65,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.inputs.Input.Slice
       |scala.meta.inputs.Input.Stream
       |scala.meta.inputs.Input.String
-      |scala.meta.inputs.Point
-      |scala.meta.inputs.Point.None
-      |scala.meta.inputs.Point.Offset
       |scala.meta.inputs.Position
       |scala.meta.inputs.Position.None
       |scala.meta.inputs.Position.Range
@@ -80,9 +83,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.parsers.Parsed.Error
       |scala.meta.parsers.Parsed.Success
       |scala.meta.prettyprinters
-      |scala.meta.prettyprinters.LowPriorityOptions.Lazy *
-      |scala.meta.prettyprinters.Options *
-      |scala.meta.prettyprinters.Options.Eager *
       |scala.meta.prettyprinters.Show *
       |scala.meta.prettyprinters.Structure
       |scala.meta.prettyprinters.Syntax
@@ -123,6 +123,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.transversers
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
+      |scala.meta.trees
     """.trim.stripMargin)
   }
 
@@ -142,12 +143,12 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
 
     // println(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL))
     assert(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL) === """
-      |* (scala.meta.Dialect, scala.meta.Tree).syntax(implicit scala.meta.prettyprinters.Options): String
+      |* (scala.meta.Dialect, scala.meta.Tree).syntax: String
       |* (scala.meta.Dialect, scala.meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.Dialect, scala.meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
-      |* (scala.meta.Dialect, scala.meta.tokens.Token).syntax(implicit scala.meta.prettyprinters.Options): String
+      |* (scala.meta.Dialect, scala.meta.tokens.Token).syntax: String
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
-      |* (scala.meta.Dialect, scala.meta.tokens.Tokens).syntax(implicit scala.meta.prettyprinters.Options): String
+      |* (scala.meta.Dialect, scala.meta.tokens.Tokens).syntax: String
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
@@ -162,14 +163,11 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |* scala.meta.Dialect.apply(scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
-      |* scala.meta.Pat.Type.tpe: scala.meta.Type
       |* scala.meta.Ref(implicit scala.meta.semantic.Mirror).symbol: scala.meta.semantic.Symbol
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
-      |* scala.meta.Type.ctorRef(scala.meta.Ctor.Name): scala.meta.Ctor.Call
-      |* scala.meta.Type.pat: scala.meta.Pat.Type
-      |* scala.meta.semantic.Mirror.sources: scala.collection.immutable.Seq[scala.meta.Source]
+      |* scala.meta.semantic.Mirror.sources: List[scala.meta.Source]
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).denot: scala.meta.semantic.Denotation
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).flags: Long
       |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).info: String
@@ -181,13 +179,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
     assert(trees.toList.sorted.mkString(EOL) === """
       |scala.meta.Case
       |scala.meta.Ctor
-      |scala.meta.Ctor.Call
       |scala.meta.Ctor.Primary
-      |scala.meta.Ctor.Ref
-      |scala.meta.Ctor.Ref.Function
-      |scala.meta.Ctor.Ref.Name
-      |scala.meta.Ctor.Ref.Project
-      |scala.meta.Ctor.Ref.Select
       |scala.meta.Ctor.Secondary
       |scala.meta.Decl
       |scala.meta.Decl.Def
@@ -214,6 +206,7 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Importee.Unimport
       |scala.meta.Importee.Wildcard
       |scala.meta.Importer
+      |scala.meta.Init
       |scala.meta.Lit
       |scala.meta.Lit.Boolean
       |scala.meta.Lit.Byte
@@ -249,41 +242,22 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Name
       |scala.meta.Name.Anonymous
       |scala.meta.Name.Indeterminate
-      |scala.meta.Name.Qualifier
       |scala.meta.Pat
       |scala.meta.Pat.Alternative
-      |scala.meta.Pat.Arg
-      |scala.meta.Pat.Arg.SeqWildcard
       |scala.meta.Pat.Bind
       |scala.meta.Pat.Extract
       |scala.meta.Pat.ExtractInfix
       |scala.meta.Pat.Interpolate
+      |scala.meta.Pat.SeqWildcard
       |scala.meta.Pat.Tuple
-      |scala.meta.Pat.Type
-      |scala.meta.Pat.Type.And
-      |scala.meta.Pat.Type.Annotate
-      |scala.meta.Pat.Type.Apply
-      |scala.meta.Pat.Type.ApplyInfix
-      |scala.meta.Pat.Type.Existential
-      |scala.meta.Pat.Type.Function
-      |scala.meta.Pat.Type.Or
-      |scala.meta.Pat.Type.Placeholder
-      |scala.meta.Pat.Type.Project
-      |scala.meta.Pat.Type.Ref
-      |scala.meta.Pat.Type.Refine
-      |scala.meta.Pat.Type.Tuple
-      |scala.meta.Pat.Type.Wildcard
-      |scala.meta.Pat.Type.With
       |scala.meta.Pat.Typed
       |scala.meta.Pat.Var
-      |scala.meta.Pat.Var.Term
-      |scala.meta.Pat.Var.Type
       |scala.meta.Pat.Wildcard
       |scala.meta.Pat.Xml
       |scala.meta.Pkg
       |scala.meta.Pkg.Object
       |scala.meta.Ref
-      |scala.meta.Scope
+      |scala.meta.Self
       |scala.meta.Source
       |scala.meta.Stat
       |scala.meta.Template
@@ -293,9 +267,6 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Term.ApplyInfix
       |scala.meta.Term.ApplyType
       |scala.meta.Term.ApplyUnary
-      |scala.meta.Term.Arg
-      |scala.meta.Term.Arg.Named
-      |scala.meta.Term.Arg.Repeated
       |scala.meta.Term.Ascribe
       |scala.meta.Term.Assign
       |scala.meta.Term.Block
@@ -309,20 +280,20 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Term.Match
       |scala.meta.Term.Name
       |scala.meta.Term.New
+      |scala.meta.Term.NewAnonymous
       |scala.meta.Term.Param
-      |scala.meta.Term.Param.Name
       |scala.meta.Term.PartialFunction
       |scala.meta.Term.Placeholder
       |scala.meta.Term.Ref
+      |scala.meta.Term.Repeated
       |scala.meta.Term.Return
       |scala.meta.Term.Select
       |scala.meta.Term.Super
       |scala.meta.Term.This
       |scala.meta.Term.Throw
-      |scala.meta.Term.TryWithCases
-      |scala.meta.Term.TryWithTerm
+      |scala.meta.Term.Try
+      |scala.meta.Term.TryWithHandler
       |scala.meta.Term.Tuple
-      |scala.meta.Term.Update
       |scala.meta.Term.While
       |scala.meta.Term.Xml
       |scala.meta.Type
@@ -330,24 +301,23 @@ class SurfaceSuite extends scala.meta.tests.ast.AstSuite {
       |scala.meta.Type.Annotate
       |scala.meta.Type.Apply
       |scala.meta.Type.ApplyInfix
-      |scala.meta.Type.Arg
-      |scala.meta.Type.Arg.ByName
-      |scala.meta.Type.Arg.Repeated
       |scala.meta.Type.Bounds
+      |scala.meta.Type.ByName
       |scala.meta.Type.Existential
       |scala.meta.Type.Function
       |scala.meta.Type.ImplicitFunction
       |scala.meta.Type.Name
       |scala.meta.Type.Or
       |scala.meta.Type.Param
-      |scala.meta.Type.Param.Name
       |scala.meta.Type.Placeholder
       |scala.meta.Type.Project
       |scala.meta.Type.Ref
       |scala.meta.Type.Refine
+      |scala.meta.Type.Repeated
       |scala.meta.Type.Select
       |scala.meta.Type.Singleton
       |scala.meta.Type.Tuple
+      |scala.meta.Type.Var
       |scala.meta.Type.With
     """.trim.stripMargin)
   }

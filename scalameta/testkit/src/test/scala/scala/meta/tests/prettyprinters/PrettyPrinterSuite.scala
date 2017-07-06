@@ -1,7 +1,7 @@
 package scala.meta
 package tests.prettyprinters
 
-import scala.meta.internal.ast.Origin
+import scala.meta.internal.trees.Origin
 import scala.meta.testkit.StructurallyEqual
 
 import org.scalameta.logger

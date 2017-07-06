@@ -91,12 +91,12 @@ class LitSuite extends ParseSuite {
   }
 
   test("#344") {
-    val Term.ApplyInfix(_, _, _, Seq(minusOne)) = term("1 + -1")
-    assert(minusOne.tokens.show[Structure] === "Tokens(- [4..5), 1 [5..6))")
+    val Term.ApplyInfix(_, _, _, List(minusOne)) = term("1 + -1")
+    assert(minusOne.tokens.structure === "Tokens(- [4..5), 1 [5..6))")
   }
 
   test("#342") {
-    assert(term("""( 50).toString""").show[Structure] === "Term.Select(Lit.Int(50), Term.Name(\"toString\"))")
+    assert(term("""( 50).toString""").structure === "Term.Select(Lit.Int(50), Term.Name(\"toString\"))")
   }
 
   test("#360") {

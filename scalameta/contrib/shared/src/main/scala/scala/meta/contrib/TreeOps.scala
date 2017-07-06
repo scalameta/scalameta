@@ -2,7 +2,6 @@ package scala.meta
 package contrib
 
 import scala.annotation.tailrec
-import scala.collection.immutable.Seq
 import scala.language.higherKinds
 
 import scala.meta.contrib.equality.Equal
@@ -42,8 +41,8 @@ object TreeOps {
   def foreach(tree: Tree)(f: Tree => Unit): Unit =
     tree.traverse { case t => f(t) }
 
-  def descendants(tree: Tree): Seq[Tree] = {
-    val builder = Seq.newBuilder[Tree]
+  def descendants(tree: Tree): List[Tree] = {
+    val builder = List.newBuilder[Tree]
     object traverser extends Traverser {
       override def apply(t: Tree): Unit = {
         if (t ne tree) builder += t
@@ -55,7 +54,7 @@ object TreeOps {
   }
 
   @tailrec
-  final def ancestors(tree: Tree, accum: Seq[Tree] = Seq.empty[Tree]): Seq[Tree] =
+  final def ancestors(tree: Tree, accum: List[Tree] = Nil): List[Tree] =
     tree.parent match {
       case Some(parent) => ancestors(parent, parent +: accum)
       case _ => accum

@@ -13,9 +13,9 @@ object ScaladocParser {
   /**
     * Parses a scaladoc comment.
     */
-  def parseScaladoc(comment: Comment): Option[Seq[DocToken]] = {
+  def parseScaladoc(comment: Comment): Option[List[DocToken]] = {
 
-    def parseRec(toParse: String): Seq[DocToken] = {
+    def parseRec(toParse: String): List[DocToken] = {
       parsers
         .find(_.parse(toParse).index != 0)
         .map(_.parse(toParse)) match {
@@ -29,16 +29,17 @@ object ScaladocParser {
           if (remainingScaladoc.trim.nonEmpty || remainingScaladoc.contains("\n\n")) {
             // Adds the parsed token to the list of tokens and parse the rest of the string recursively.
             if (remainingScaladoc.take(2) == "\n\n") {
-              Seq(p.value, DocToken(Paragraph)) ++ parseRec(remainingScaladoc.dropWhile(_ == '\n'))
+              List(p.value, DocToken(Paragraph)) ++ parseRec(
+                remainingScaladoc.dropWhile(_ == '\n'))
             } else {
-              Seq(p.value) ++ parseRec(remainingScaladoc.dropWhile(c => c == ' ' || c == '\n'))
+              List(p.value) ++ parseRec(remainingScaladoc.dropWhile(c => c == ' ' || c == '\n'))
             }
           } else {
             // No more elements to parse, end recursion.
-            Seq(p.value)
+            List(p.value)
           }
         // Can't parse anymore, end recursion.
-        case _ => Seq()
+        case _ => List()
       }
     }
 
@@ -60,7 +61,7 @@ object ScaladocParser {
   /**
     * Set containing all the scaladoc parsers.
     */
-  private[this] val parsers: Seq[Parser[DocToken]] = {
+  private[this] val parsers: List[Parser[DocToken]] = {
 
     val bodyParser = ((AnyChar ~ !("\n@" | "{{{" | "\n\n" | End)).rep ~ AnyChar).!.map(_.trim)
 
@@ -85,7 +86,7 @@ object ScaladocParser {
     val inheritDocParser = P("@inheritdoc".!).map(_ => DocToken(InheritDoc))
 
     // Parsers for all labelled docs instances
-    val labelledParsers: Seq[Parser[DocToken]] = {
+    val labelledParsers: List[Parser[DocToken]] = {
 
       DocToken.tagTokenKinds.map {
         // Single parameter doc tokens
@@ -110,7 +111,7 @@ object ScaladocParser {
 
     // Merges all the parsers in a single list, with the description parser as the fallback,
     // in case no valid parser was found for an Scaladoc comment.
-    (Seq(
+    (List(
       paragraphParser,
       inheritDocParser,
       codeBlockParser

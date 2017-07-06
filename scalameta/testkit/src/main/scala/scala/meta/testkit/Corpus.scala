@@ -37,7 +37,7 @@ object Corpus {
     url =
       "https://github.com/scalameta/scalafmt/releases/download/v0.1.4/repos.tar.gz",
     x =>
-      !Seq(
+      !List(
         // sbt/sbt
         // Unicode escapes in weird places
         "target/repos/sbt/main-settings/src/main/scala/sbt/std/InputWrapper.scala",
@@ -97,7 +97,7 @@ object Corpus {
     }
   }
 
-  /** Downloads the zip file, extracts it and parses into a sequence of [[CorpusFile]].
+  /** Downloads the zip file, extracts it and parses into a list of [[CorpusFile]].
     *
     * @param corpus See [[Corpus]].
     * @return A generator of [[CorpusFile]]. Use Generator.take to limit the

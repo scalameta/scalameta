@@ -10,11 +10,8 @@ class OffsetLineColumnSuite extends FunSuite {
     val testName = (if (s != "") s.replace("\n", "\\n") else "empty string")
     super.test(testName) {
       val content = Input.String(s)
-      val points = 0.to(content.chars.length).map(i => Point.Offset(content, i))
-      // TODO: we can't have Point.Offset force input.chars, but we'd still like to validate this somehow
-      // intercept[IllegalArgumentException](Point.Offset(content, -1))
-      // intercept[IllegalArgumentException](Point.Offset(content, content.chars.length + 1))
-      val actual = points.map(p => s"${p.offset} ${p.line} ${p.column}").mkString(EOL)
+      val points = 0.to(content.chars.length).map(i => Position.Range(content, i, i))
+      val actual = points.map(p => s"${p.start} ${p.startLine} ${p.startColumn}").mkString(EOL)
       if (actual != expected) Console.err.println(actual)
       assert(actual === expected)
     }

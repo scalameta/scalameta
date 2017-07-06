@@ -1,8 +1,6 @@
 package scala.meta
 
 import scala.annotation.implicitNotFound
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import org.scalameta.data._
 import org.scalameta.invariants._
 import scala.meta.dialects._

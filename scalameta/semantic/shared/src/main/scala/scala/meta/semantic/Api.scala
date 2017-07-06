@@ -3,37 +3,33 @@ package semantic
 
 import org.scalameta.unreachable
 import org.scalameta.debug
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.compat.Platform.EOL
-import scala.meta.internal.ast.Helpers._
+import scala.meta.internal.trees._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import scala.meta.parsers.{XtensionParsersDialectInput, XtensionParseDialectInput}
 
 private[meta] trait Api extends Flags {
   implicit class XtensionMirrorSources(mirror: Mirror) {
-    def sources: Seq[Source] = mirror.database.entries.map { case (input, attrs) => attrs.dialect(input).parse[Source].get }
+    def sources: List[Source] = mirror.database.entries.map { case (input, attrs) => attrs.dialect(input).parse[Source].get }
   }
 
   implicit class XtensionRefSymbol(ref: Ref)(implicit m: Mirror) {
     def symbol: Symbol = {
       def relevantPosition(tree: Tree): Position = tree match {
-        case name1: Name => name1.pos
+        case name: Name => name.pos
         case _: Term.This => ???
         case _: Term.Super => ???
-        case Term.Select(_, name1) => name1.pos
-        case Term.ApplyUnary(_, name1) => name1.pos
-        case Type.Select(_, name1) => name1.pos
-        case Type.Project(_, name1) => name1.pos
-        case Type.Singleton(ref1) => relevantPosition(ref1)
-        case Ctor.Ref.Select(_, name1) => name1.pos
-        case Ctor.Ref.Project(_, name1) => name1.pos
-        case Ctor.Ref.Function(name1) => ???
+        case Term.Select(_, name) => name.pos
+        case Term.ApplyUnary(_, name) => name.pos
+        case Type.Select(_, name) => name.pos
+        case Type.Project(_, name) => name.pos
+        case Type.Singleton(ref) => relevantPosition(ref)
+        case Init(_, name, _) => name.pos
         case _: Importee.Wildcard => ???
-        case Importee.Name(name1) => name1.pos
-        case Importee.Rename(name1, _) => name1.pos
-        case Importee.Unimport(name1) => name1.pos
+        case Importee.Name(name) => name.pos
+        case Importee.Rename(name, _) => name.pos
+        case Importee.Unimport(name) => name.pos
         case _ => unreachable(debug(tree.syntax, tree.structure))
       }
       val position = relevantPosition(ref)

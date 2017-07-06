@@ -3,8 +3,7 @@ package prettyprinters
 
 import org.scalatest._
 import scala.meta._
-import scala.meta.inputs.{Input, Point, Position}
-import scala.meta.internal.io.PathIO
+import scala.meta.inputs.{Input, Position}
 
 class PublicSuite extends FunSuite {
   test("scala.meta.Dialect.toString") {
@@ -16,14 +15,14 @@ class PublicSuite extends FunSuite {
     assert(tree.toString === "foo + bar")
   }
 
-  test("scala.meta.Tree.show[Structure] (manual)") {
+  test("scala.meta.Tree.structure (manual)") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
-    assert(tree.show[Structure] === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, Seq(Term.Name("bar")))""")
+    assert(tree.structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))""")
   }
 
-  test("scala.meta.Tree.show[Syntax]") {
+  test("scala.meta.Tree.syntax") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
-    assert(tree.show[Syntax] === "foo + bar")
+    assert(tree.syntax === "foo + bar")
   }
 
   test("scala.meta.Tree.toString (parsed)") {
@@ -31,14 +30,14 @@ class PublicSuite extends FunSuite {
     assert(tree.toString === "foo + bar // baz")
   }
 
-  test("scala.meta.Tree.show[Structure] (parsed)") {
+  test("scala.meta.Tree.structure (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assert(tree.show[Structure] === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, Seq(Term.Name("bar")))""")
+    assert(tree.structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))""")
   }
 
-  test("scala.meta.Tree.show[Syntax] (parsed)") {
+  test("scala.meta.Tree.syntax (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assert(tree.show[Syntax] === "foo + bar // baz")
+    assert(tree.syntax === "foo + bar // baz")
   }
 
   test("scala.meta.Tree.toString (quasiquotes)") {
@@ -46,14 +45,14 @@ class PublicSuite extends FunSuite {
     assert(tree.toString === "foo + bar")
   }
 
-  test("scala.meta.Tree.show[Structure] (quasiquoted)") {
+  test("scala.meta.Tree.structure (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assert(tree.show[Structure] === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, Seq(Term.Name("bar")))""")
+    assert(tree.structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))""")
   }
 
-  test("scala.meta.Tree.show[Syntax] (quasiquoted)") {
+  test("scala.meta.Tree.syntax (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assert(tree.show[Syntax] === "foo + bar")
+    assert(tree.syntax === "foo + bar")
   }
 
   test("scala.meta.classifiers.Classifiable.toString") {
@@ -169,20 +168,6 @@ class PublicSuite extends FunSuite {
     assert(input.toString == s"""Input.LabeledString("foo.scala", "foo")""")
   }
 
-  test("scala.meta.inputs.Point.toString") {
-    // covered below
-  }
-
-  test("scala.meta.inputs.Point.None.toString") {
-    assert(Point.None.toString == "Point.None")
-  }
-
-  test("scala.meta.inputs.Point.Offset.toString") {
-    val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    assert(lhs.pos.start.toString === """0 in Input.String("foo + bar")""")
-    assert(lhs.pos.end.toString === """3 in Input.String("foo + bar")""")
-  }
-
   test("scala.meta.inputs.Position.toString") {
     // covered below
   }
@@ -257,18 +242,6 @@ class PublicSuite extends FunSuite {
     assert(parsed.toString === "foo + bar")
   }
 
-  test("scala.meta.prettyprinters.LowPriorityOptions.Lazy.toString") {
-    assert(scala.meta.prettyprinters.Options.Lazy.toString == "Lazy")
-  }
-
-  test("scala.meta.prettyprinters.Options.toString") {
-    // covered above and below
-  }
-
-  test("scala.meta.prettyprinters.Options.Eager.toString") {
-    assert(scala.meta.prettyprinters.Options.Eager.toString == "Eager")
-  }
-
   test("scala.meta.prettyprinters.Show.toString") {
     // n/a
   }
@@ -305,7 +278,7 @@ class PublicSuite extends FunSuite {
   test("scala.meta.semantic.Message.toString") {
     val path = RelativePath("hello.scala").toAbsolute
     val input = Input.File(path)
-    val position = Position.Range(input, Point.Offset(input, 40), Point.Offset(input, 42))
+    val position = Position.Range(input, 40, 42)
     val message = Message(position, Severity.Error, "does not compute")
     assert(message.toString === s"[error] $path@40..42: does not compute")
   }
@@ -453,14 +426,14 @@ class PublicSuite extends FunSuite {
     assert(token.toString === "foo")
   }
 
-  test("scala.meta.tokens.Token.show[Structure]") {
+  test("scala.meta.tokens.Token.structure") {
     val token = "foo + bar".tokenize.get(1)
-    assert(token.show[Structure] === "foo [0..3)")
+    assert(token.structure === "foo [0..3)")
   }
 
-  test("scala.meta.tokens.Token.show[Syntax]") {
+  test("scala.meta.tokens.Token.syntax") {
     val token = "foo + bar".tokenize.get(1)
-    assert(token.show[Syntax] === "foo")
+    assert(token.syntax === "foo")
   }
 
   test("scala.meta.tokens.Tokens.toString") {
@@ -468,14 +441,14 @@ class PublicSuite extends FunSuite {
     assert(tokens.toString === "foo + bar")
   }
 
-  test("scala.meta.tokens.Tokens.show[Structure]") {
+  test("scala.meta.tokens.Tokens.structure") {
     val tokens = "foo + bar".tokenize.get
-    assert(tokens.show[Structure] === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
+    assert(tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
   }
 
-  test("scala.meta.tokens.Tokens.show[Syntax]") {
+  test("scala.meta.tokens.Tokens.syntax") {
     val tokens = "foo + bar".tokenize.get
-    assert(tokens.show[Syntax] === "foo + bar")
+    assert(tokens.syntax === "foo + bar")
   }
 
   test("scala.meta.transversers.Transformer.toString") {

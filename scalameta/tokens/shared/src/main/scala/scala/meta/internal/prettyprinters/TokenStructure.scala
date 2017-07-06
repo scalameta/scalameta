@@ -7,7 +7,7 @@ import Show.{ sequence => s, repeat => r, indent => i, newline => n }
 import scala.meta.tokens._
 
 object TokenStructure {
-  def apply[T <: Token](implicit options: Options): Structure[T] = {
+  def apply[T <: Token]: Structure[T] = {
     Structure(x => {
       implicit val dialect = x.dialect
       val prefix = (x: Token) match {

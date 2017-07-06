@@ -138,8 +138,8 @@ object Token {
   @freeform("unquote") private[meta] class Unquote extends Token
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
-  implicit def showStructure[T <: Token](implicit options: Options): Structure[T] = TokenStructure.apply[T](options)
-  implicit def showSyntax[T <: Token](implicit dialect: Dialect, options: Options): Syntax[T] = TokenSyntax.apply[T](dialect, options)
+  implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
+  implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = TokenSyntax.apply[T](dialect)
 }
 
 // NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.

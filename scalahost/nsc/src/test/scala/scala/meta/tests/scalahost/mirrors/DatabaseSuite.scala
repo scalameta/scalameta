@@ -3,7 +3,6 @@ package scalahost
 
 import org.scalatest._
 import java.io.{File, PrintWriter}
-import scala.collection.immutable.Seq
 import scala.reflect.io._
 import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{CompilerCommand, Global, Settings}
@@ -86,6 +85,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
     val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
     val payload = database.toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
+    // println(section.mkString(EOL).replace(path, "<...>"))
     section.mkString(EOL).replace(path, "<...>")
   }
 
@@ -123,7 +123,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
     val names = ps.map {
       case (s, e) =>
         val names = source.collect {
-          case name: m.Name if name.pos.start.offset == s && name.pos.end.offset == e => name
+          case name: m.Name if name.pos.start == s && name.pos.end == e => name
         }
         val chevron = "<<" + code.substring(s, e) + ">>"
         names match {

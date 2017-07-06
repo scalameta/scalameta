@@ -10,7 +10,4 @@ private[meta] trait Aliases {
 
   type Position = scala.meta.inputs.Position
   lazy val Position = scala.meta.inputs.Position
-
-  type Point = scala.meta.inputs.Point
-  lazy val Point = scala.meta.inputs.Point
 }

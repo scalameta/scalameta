@@ -1,8 +1,6 @@
 package scala.meta.tests
 package tokens
 
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.Token._
@@ -58,29 +56,29 @@ class TokensApiSuite extends FunSuite {
     assert(tokens.length == 13)
     assert(tokens.segmentLength(_.is[LeftParen]) === 2)
     assert(tokens.segmentLengthRight(_.is[RightParen]) === 1)
-    assert(tokens.take(2).show[Syntax] === "((")
-    assert(tokens.slice(11, 13).show[Syntax] === "2)")
-    assert(tokens.slice(11, 13).show[Syntax] === "2)")
-    assert(tokens.takeRight(2).show[Syntax] === "2)")
-    assert(tokens.drop(11).show[Syntax] === "2)")
-    assert(tokens.dropRight(11).show[Syntax] === "((")
-    assert(tokens.takeWhile(_.is[LeftParen]).show[Syntax] === "((")
+    assert(tokens.take(2).syntax === "((")
+    assert(tokens.slice(11, 13).syntax === "2)")
+    assert(tokens.slice(11, 13).syntax === "2)")
+    assert(tokens.takeRight(2).syntax === "2)")
+    assert(tokens.drop(11).syntax === "2)")
+    assert(tokens.dropRight(11).syntax === "((")
+    assert(tokens.takeWhile(_.is[LeftParen]).syntax === "((")
     assert(tokens.segmentLengthRight(_.is[RightParen]) == 1)
-    assert(tokens.takeRightWhile(_.is[RightParen]).show[Syntax] === ")")
+    assert(tokens.takeRightWhile(_.is[RightParen]).syntax === ")")
     assert(tokens.segmentLength(_.is[LeftParen]) == 2)
-    assert(tokens.dropWhile(_.is[LeftParen]).show[Syntax] === "1 + 1) == 2)")
-    assert(tokens.dropRightWhile(_.is[RightParen]).show[Syntax] === "((1 + 1) == 2")
+    assert(tokens.dropWhile(_.is[LeftParen]).syntax === "1 + 1) == 2)")
+    assert(tokens.dropRightWhile(_.is[RightParen]).syntax === "((1 + 1) == 2")
     assert{
       val (front, back) = tokens.splitAt(8)
-      front.show[Syntax] === "((1 + 1)" && back.show[Syntax] === " == 2)"
+      front.syntax === "((1 + 1)" && back.syntax === " == 2)"
     }
     assert{
       val (front, back) = tokens.span(_.isNot[RightParen])
-      front.show[Syntax] === "((1 + 1" && back.show[Syntax] === ") == 2)"
+      front.syntax === "((1 + 1" && back.syntax === ") == 2)"
     }
     assert{
       val (front, back) = tokens.spanRight(_.isNot[LeftParen])
-      front.show[Syntax] === "((" && back.show[Syntax] === "1 + 1) == 2)"
+      front.syntax === "((" && back.syntax === "1 + 1) == 2)"
     }
   }
 }

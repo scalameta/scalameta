@@ -32,15 +32,15 @@ object JSFacade {
 
   private[this] def toNode(t: Any): js.Any = t match {
     case t: Tree => toNode(t)
-    case tt: Seq[_] => tt.map(toNode).toJSArray
+    case tt: List[_] => tt.map(toNode).toJSArray
     case t: Option[_] => t.map(toNode).orUndefined
     case _ => ()
   }
 
   private[this] def toPosition(p: Position): js.Dynamic =
     js.Dynamic.literal(
-      "start" -> p.start.offset,
-      "end" -> p.end.offset
+      "start" -> p.start,
+      "end" -> p.end
     )
 
   private[this] def toNode(t: Tree): js.Dynamic = {
@@ -98,8 +98,8 @@ object JSFacade {
           case Parsed.Error(pos, message, _) => js.Dictionary(
             "error" -> message,
             "pos" -> toPosition(pos),
-            "lineNumber" -> pos.start.line,
-            "columnNumber" -> pos.start.column
+            "lineNumber" -> pos.startLine,
+            "columnNumber" -> pos.startColumn
           )
         }
     }

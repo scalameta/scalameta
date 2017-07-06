@@ -170,8 +170,9 @@ object ScalahostSbtPlugin extends AutoPlugin {
   private val scalahostVersion: String =
     sys.props.getOrElse("scalahost.version", BuildInfo.version)
   private def scalahostAggregateFilter: Def.Initialize[ScopeFilter] = Def.setting {
-    ScopeFilter(inProjects(scalametaDependencies.value.map(x => LocalProject(x.project)): _*),
-                inConfigurations(Compile, Test, IntegrationTest))
+    ScopeFilter(
+      inProjects(scalametaDependencies.value.map(x => LocalProject(x.project)): _*),
+      inConfigurations(Compile, Test, IntegrationTest))
   }
   private val scalahostClasspath: Def.Initialize[Task[Seq[Classpath]]] =
     Def.taskDyn(fullClasspath.all(scalahostAggregateFilter.value))

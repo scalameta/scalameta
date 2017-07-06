@@ -86,9 +86,9 @@
     @p
       @b
         Stable releases.
-      We are committed to publishing major releases (e.g. 1.7.0, 1.8.0, etc)
-      on the 10th day of every month. In such releases, we accumulate battle-tested changes
-      that have been merged since the last release and make them available on Maven Central.
+      Every four to six weeks, we publish major releases (e.g. 1.7.0, 1.8.0, etc).
+      In such releases, we accumulate battle-tested changes that have been merged since
+      the last release and make them available on Maven Central.
 
    @p
       @b

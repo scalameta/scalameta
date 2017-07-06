@@ -2,7 +2,6 @@ package scala.meta.internal.semantic.vfs
 
 import java.io._
 import org.scalameta.data._
-import scala.collection.immutable.Seq
 import scala.meta.io._
 import scala.meta.internal.io.InputStreamIO
 import scala.meta.internal.io.PathIO.fileSeparator
@@ -18,7 +17,7 @@ object Database {
 }
 
 @data
-class Database(entries: Seq[Entry]) {
+class Database(entries: List[Entry]) {
   def toSchema: s.Database = {
     val sentries = entries.map(ventry => s.Attributes.parseFrom(ventry.bytes))
     s.Database(sentries)

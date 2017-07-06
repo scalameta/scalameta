@@ -20,12 +20,12 @@ object CommentOps {
 
   @inline
   def isScaladoc(c: Comment): Boolean = {
-    val rawSyntax: String = c.show[Syntax].trim
+    val rawSyntax: String = c.syntax.trim
     rawSyntax.startsWith("/**") && rawSyntax.endsWith("*/")
   }
 
   def content(c: Comment): Option[String] = {
-    val rawSyntax: String = c.show[Syntax].trim
+    val rawSyntax: String = c.syntax.trim
     if (isScaladoc(c)) {
       val content =
         dropRightWhile(rawSyntax, scaladocBorderSymbols)
@@ -43,5 +43,5 @@ object CommentOps {
   }
 
   @inline
-  def docTokens(c: Comment): Option[Seq[DocToken]] = ScaladocParser.parseScaladoc(c)
+  def docTokens(c: Comment): Option[List[DocToken]] = ScaladocParser.parseScaladoc(c)
 }

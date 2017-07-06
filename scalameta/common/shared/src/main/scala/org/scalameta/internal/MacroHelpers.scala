@@ -45,10 +45,10 @@ trait MacroHelpers extends DebugFinder
   lazy val AdtPackage = q"_root_.org.scalameta.adt"
   lazy val AdtMetadataModule = hygienicRef(org.scalameta.adt.Metadata)
   lazy val AdtTyperMacrosModule = hygienicRef(org.scalameta.adt.AdtTyperMacros)
-  lazy val AstMetadataModule = hygienicRef(scala.meta.internal.ast.Metadata)
-  lazy val CommonTyperMacrosModule = hygienicRef(scala.meta.internal.ast.CommonTyperMacros)
-  lazy val CommonTyperMacrosBundle = hygienicRef[scala.meta.internal.ast.CommonTyperMacrosBundle]
-  lazy val AstInfoClass = tq"_root_.scala.meta.internal.ast.AstInfo"
+  lazy val AstMetadataModule = hygienicRef(scala.meta.internal.trees.Metadata)
+  lazy val CommonTyperMacrosModule = hygienicRef(scala.meta.internal.trees.CommonTyperMacros)
+  lazy val CommonTyperMacrosBundle = hygienicRef[scala.meta.internal.trees.CommonTyperMacrosBundle]
+  lazy val AstInfoClass = tq"_root_.scala.meta.internal.trees.AstInfo"
   lazy val TokenMetadataModule = hygienicRef(scala.meta.internal.tokens.Metadata)
   lazy val BooleanClass = hygienicRef[scala.Boolean]
   lazy val IntClass = hygienicRef[scala.Int]
@@ -69,7 +69,8 @@ trait MacroHelpers extends DebugFinder
   lazy val UnsupportedOperationException = hygienicRef[UnsupportedOperationException]
   lazy val IndexOutOfBoundsException = hygienicRef[IndexOutOfBoundsException]
   lazy val IteratorClass = tq"_root_.scala.collection.Iterator"
-  lazy val SeqClass = tq"_root_.scala.collection.immutable.Seq"
+  lazy val ListClass = tq"_root_.scala.collection.immutable.List"
+  lazy val ListModule = q"_root_.scala.collection.immutable.List"
   lazy val ListBufferModule = hygienicRef(scala.collection.mutable.ListBuffer)
   lazy val UnitClass = hygienicRef[scala.Unit]
   lazy val ClassClass = tq"_root_.java.lang.Class"
@@ -140,9 +141,9 @@ trait MacroHelpers extends DebugFinder
     }
   }
 
-  object SeqTreeTpe {
+  object ListTreeTpe {
     def unapply(tpe: Type): Option[Type] = {
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.Seq")) {
+      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.List")) {
         tpe.typeArgs match {
           case TreeTpe(tpe) :: Nil => Some(tpe)
           case _ => None
@@ -151,22 +152,22 @@ trait MacroHelpers extends DebugFinder
     }
   }
 
-  object OptionSeqTreeTpe {
+  object OptionListTreeTpe {
     def unapply(tpe: Type): Option[Type] = {
       if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) {
         tpe.typeArgs match {
-          case SeqTreeTpe(tpe) :: Nil => Some(tpe)
+          case ListTreeTpe(tpe) :: Nil => Some(tpe)
           case _ => None
         }
       } else None
     }
   }
 
-  object SeqSeqTreeTpe {
+  object ListListTreeTpe {
     def unapply(tpe: Type): Option[Type] = {
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.Seq")) {
+      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.List")) {
         tpe.typeArgs match {
-          case SeqTreeTpe(tpe) :: Nil => Some(tpe)
+          case ListTreeTpe(tpe) :: Nil => Some(tpe)
           case _ => None
         }
       } else None

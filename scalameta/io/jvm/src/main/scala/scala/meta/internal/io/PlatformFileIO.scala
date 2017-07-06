@@ -36,6 +36,6 @@ object PlatformFileIO {
         case path if Files.isRegularFile(path) =>
           RelativePath(root.path.relativize(path))
       }
-    new ListFiles(root, relativeFiles)
+    new ListFiles(root, relativeFiles.toList)
   }
 }

@@ -8,7 +8,7 @@ class NameclashSuite extends FunSuite {
   object TreeReflection extends {
     val u: ru.type = ru
     val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
-  } with scala.meta.internal.ast.Reflection
+  } with scala.meta.internal.trees.Reflection
   object TokenReflection extends {
     val u: ru.type = ru
     val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.tokens.Token].getClassLoader)

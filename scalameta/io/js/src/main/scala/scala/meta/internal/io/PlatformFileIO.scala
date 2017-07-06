@@ -28,7 +28,7 @@ object PlatformFileIO {
     if (path.isFile) new ListFiles(path, Nil)
     else {
       val jsArray = JSFs.readdirSync(path.toString)
-      val builder = Seq.newBuilder[RelativePath]
+      val builder = List.newBuilder[RelativePath]
       builder.sizeHint(jsArray.length)
       var curr = 0
       while (curr < jsArray.length) {
@@ -47,7 +47,7 @@ object PlatformFileIO {
     JSFs.lstatSync(path.toString).isDirectory()
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
-    val builder = Seq.newBuilder[RelativePath]
+    val builder = List.newBuilder[RelativePath]
     def loop(path: AbsolutePath): Unit = {
       if (path.isDirectory) listFiles(path).foreach(loop)
       else builder += path.toRelative(root)

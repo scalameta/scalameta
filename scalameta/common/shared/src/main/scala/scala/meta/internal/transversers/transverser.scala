@@ -6,7 +6,7 @@ import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import org.scalameta.internal.MacroHelpers
-import scala.meta.internal.ast.{Reflection => AstReflection}
+import scala.meta.internal.trees.{Reflection => AstReflection}
 
 trait TransverserMacros extends MacroHelpers with AstReflection {
   lazy val u: c.universe.type = c.universe
@@ -16,7 +16,7 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
 
   lazy val TreeClass = tq"_root_.scala.meta.Tree"
   lazy val TreeAdt = TreeSymbol.asRoot
-  lazy val QuasiClass = tq"_root_.scala.meta.internal.ast.Quasi"
+  lazy val QuasiClass = tq"_root_.scala.meta.internal.trees.Quasi"
   lazy val QuasiAdt = QuasiSymbol.asAdt
   lazy val Hack1Class = hygienicRef[org.scalameta.overload.Hack1]
   lazy val Hack2Class = hygienicRef[org.scalameta.overload.Hack2]

@@ -2,35 +2,39 @@ package scala.meta.internal
 package semantic
 
 import org.scalameta.unreachable
-import scala.{Seq => _}
-import scala.collection.immutable.Seq
 import scala.collection.mutable
 import scala.compat.Platform.EOL
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.{meta => m}
 import scala.{meta => mf}
-import scala.meta.internal.ast.Helpers._
 import scala.meta.internal.inputs._
+import scala.meta.internal.trees._
 
 trait AttributesOps { self: DatabaseOps =>
 
   implicit class XtensionCompilationUnitAttributes(unit: g.CompilationUnit) {
     def toAttributes: m.Attributes = {
       unit.cache.getOrElse("attributes", {
-        if (!g.settings.Yrangepos.value)
+        if (!g.settings.Yrangepos.value) {
           sys.error("the compiler instance must have -Yrangepos enabled")
-        if (g.useOffsetPositions) sys.error("The compiler instance must use range positions")
-        if (!g.settings.plugin.value.exists(_.contains("scalahost")))
+        }
+        if (g.useOffsetPositions) {
+          sys.error("The compiler instance must use range positions")
+        }
+        if (!g.settings.plugin.value.exists(_.contains("scalahost"))) {
           sys.error("the compiler instance must use the scalahost plugin")
+        }
         if (!g.analyzer.getClass.getName.contains("scalahost")) {
           println(g.analyzer.getClass.getName)
           sys.error("the compiler instance must use a hijacked analyzer")
         }
-        if (g.phase.id < g.currentRun.phaseNamed("typer").id)
+        if (g.phase.id < g.currentRun.phaseNamed("typer").id) {
           sys.error("the compiler phase must be not earlier than typer")
-        if (g.phase.id > g.currentRun.phaseNamed("patmat").id)
+        }
+        if (g.phase.id > g.currentRun.phaseNamed("patmat").id) {
           sys.error("the compiler phase must be not later than patmat")
+        }
 
         val names = mutable.Map[m.Position, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
@@ -41,6 +45,8 @@ trait AttributesOps { self: DatabaseOps =>
         val margnames = mutable.Map[Int, List[m.Name]]() // start offset of enclosing apply -> its arg names
         val mwithins = mutable.Map[m.Tree, m.Name]() // name of enclosing member -> name of private/protected within
         val mwithinctors = mutable.Map[m.Tree, m.Name]() // name of enclosing class -> name of private/protected within for primary ctor
+        val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
+        val mctorrefs = mutable.Map[Int, m.Name]() // start offset of new/init -> new's anonymous name
 
         locally {
           object traverser extends m.Traverser {
@@ -48,13 +54,16 @@ trait AttributesOps { self: DatabaseOps =>
               todo += mname
               // TODO: also drop trivia (no idea how to formulate this concisely)
               val tok = mname.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption
-              val mstart1 = tok.map(_.start).getOrElse(-1)
-              val mend1 = tok.map(_.end).getOrElse(-1)
-              if (mstarts.contains(mstart1))
-                sys.error(
-                  s"ambiguous mstart ${syntaxAndPos(mname)} ${syntaxAndPos(mstarts(mstart1))}")
-              if (mends.contains(mend1))
-                sys.error(s"ambiguous mend ${syntaxAndPos(mname)} ${syntaxAndPos(mends(mend1))}")
+              val mstart1 = tok.map(_.start).getOrElse(mname.pos.start)
+              val mend1 = tok.map(_.end).getOrElse(mname.pos.end)
+              if (mstarts.contains(mstart1)) {
+                val details = syntaxAndPos(mname) + " " + syntaxAndPos(mstarts(mstart1))
+                sys.error(s"ambiguous mstart $details")
+              }
+              if (mends.contains(mend1)) {
+                val details = syntaxAndPos(mname) + " " + syntaxAndPos(mends(mend1))
+                sys.error(s"ambiguous mend $details")
+              }
               mstarts(mstart1) = mname
               mends(mend1) = mname
             }
@@ -73,59 +82,63 @@ trait AttributesOps { self: DatabaseOps =>
             }
             private def indexWithin(mname: m.Name.Indeterminate): Unit = {
               todo += mname
-              val menclosing = mname.parent.flatMap(_.parent).get
-              menclosing match {
-                case menclosing: m.Ctor.Primary =>
-                  val menclosingDefn = menclosing.parent.get.asInstanceOf[m.Member]
-                  val menclosingName = menclosingDefn.name
-                  if (mwithinctors.contains(menclosingName))
-                    sys.error(
-                      s"ambiguous mwithinctors ${syntaxAndPos(mname)} ${syntaxAndPos(mwithinctors(menclosingName))}")
-                  mwithinctors(menclosingName) = mname
+              val mencl = mname.parent.flatMap(_.parent).get
+              mencl match {
+                case mencl: m.Ctor.Primary =>
+                  val menclDefn = mencl.parent.get.asInstanceOf[m.Member]
+                  val menclName = menclDefn.name
+                  if (mwithinctors.contains(menclName)) {
+                    val details = syntaxAndPos(mname) + " " + syntaxAndPos(mwithinctors(menclName))
+                    sys.error(s"ambiguous mwithinctors $details")
+                  }
+                  mwithinctors(menclName) = mname
                 case _ =>
                   def findBinder(pat: m.Pat) =
-                    pat.collect { case m.Pat.Var.Term(name) => name }.head
-                  val menclosingName = menclosing match {
+                    pat.collect { case m.Pat.Var(name) => name }.head
+                  val menclName = mencl match {
                     case mtree: m.Member => mtree.name
                     case m.Decl.Val(_, pat :: Nil, _) => findBinder(pat)
                     case m.Decl.Var(_, pat :: Nil, _) => findBinder(pat)
                     case m.Defn.Val(_, pat :: Nil, _, _) => findBinder(pat)
                     case m.Defn.Var(_, pat :: Nil, _, _) => findBinder(pat)
                   }
-                  if (mwithins.contains(menclosingName))
-                    sys.error(
-                      s"ambiguous mwithins ${syntaxAndPos(mname)} ${syntaxAndPos(mwithins(menclosingName))}")
-                  mwithins(menclosingName) = mname
+                  if (mwithins.contains(menclName)) {
+                    val details = syntaxAndPos(mname) + " " + syntaxAndPos(mwithins(menclName))
+                    sys.error(s"ambiguous mwithins $details")
+                  }
+                  mwithins(menclName) = mname
               }
             }
             override def apply(mtree: m.Tree): Unit = {
-              val mstart = mtree.pos.start.offset
-              val mend = mtree.pos.end.offset
-              if (mstart != mend) {
-                mtree match {
-                  case mtree @ m.Term.Apply(_, margs) =>
-                    def loop(term: m.Term): List[m.Term.Name] = term match {
-                      case m.Term.Apply(mfn, margs) =>
-                        margs.toList.collect {
-                          case m.Term.Arg.Named(mname, _) => mname
-                        } ++ loop(mfn)
-                      case _ => Nil
-                    }
-                    indexArgNames(mtree, loop(mtree))
-                  case mtree @ m.Mod.Private(mname: m.Name.Indeterminate) =>
-                    indexWithin(mname)
-                  case mtree @ m.Mod.Protected(mname: m.Name.Indeterminate) =>
-                    indexWithin(mname)
-                  case mtree @ m.Importee.Rename(mname, mrename) =>
-                    indexName(mname)
-                    return // NOTE: ignore mrename for now, we may decide to make it a binder
-                  case mtree @ m.Name.Anonymous() =>
-                  // do nothing
-                  case mtree: m.Name =>
-                    indexName(mtree)
-                  case _ =>
-                  // do nothing
-                }
+              mtree match {
+                case mtree @ m.Term.Apply(_, margs) =>
+                  def loop(term: m.Term): List[m.Term.Name] = term match {
+                    case m.Term.Apply(mfn, margs) =>
+                      margs.toList.collect {
+                        case m.Term.Assign(mname: m.Term.Name, _) => mname
+                      } ++ loop(mfn)
+                    case _ => Nil
+                  }
+                  indexArgNames(mtree, loop(mtree))
+                case mtree @ m.Mod.Private(mname: m.Name.Indeterminate) =>
+                  indexWithin(mname)
+                case mtree @ m.Mod.Protected(mname: m.Name.Indeterminate) =>
+                  indexWithin(mname)
+                case mtree @ m.Importee.Rename(mname, mrename) =>
+                  indexName(mname)
+                  return // NOTE: ignore mrename for now, we may decide to make it a binder
+                case mtree @ m.Name.Anonymous() =>
+                // TODO: support non-ctor-related use cases for anonymous names
+                case mtree: m.Ctor =>
+                  mctordefs(mtree.pos.start) = mtree.name
+                case mtree: m.Term.New =>
+                  mctorrefs(mtree.pos.start) = mtree.init.name
+                case mtree: m.Init =>
+                  mctorrefs(mtree.pos.start) = mtree.name
+                case mtree: m.Name =>
+                  indexName(mtree)
+                case _ =>
+                // do nothing
               }
               super.apply(mtree)
             }
@@ -136,13 +149,18 @@ trait AttributesOps { self: DatabaseOps =>
         locally {
           object traverser extends g.Traverser {
             private def tryFindMtree(gtree: g.Tree): Unit = {
-              def success(mtree: m.Name, gsym: g.Symbol): Unit = {
+              def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
                 // We cannot be guaranteed that all symbols have a position, see
                 // https://github.com/scalameta/scalameta/issues/665
                 // Instead of crashing with "unsupported file", we ignore these cases.
                 if (mtree.pos == m.Position.None) return
                 if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
+                val gsym = {
+                  def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
+                  if (gsym0 != null && isClassRefInCtorCall) gsym0.owner
+                  else gsym0 // TODO: fix this in callers of `success`
+                }
                 val symbol = gsym.toSemantic
                 if (symbol == m.Symbol.None) return
 
@@ -159,11 +177,13 @@ trait AttributesOps { self: DatabaseOps =>
                     val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
                     if (!gsym.hasAccessBoundary) return
                     val within1 = gsym.privateWithin
-                    val within2 = within1.owner.info.member(
+                    val within2 = within1.owner.info.member({
                       if (within1.name.isTermName) within1.name.toTypeName
-                      else within1.name.toTermName)
-                    success(map(mtree),
-                            wrapAlternatives("<within " + symbol + ">", within1, within2))
+                      else within1.name.toTermName
+                    })
+                    success(
+                      map(mtree),
+                      wrapAlternatives("<within " + symbol + ">", within1, within2))
                   }
                 }
                 tryWithin(mwithins, gsym)
@@ -182,7 +202,7 @@ trait AttributesOps { self: DatabaseOps =>
               def tryMpos(start: Int, end: Int): Boolean = {
                 if (!mstarts.contains(start)) return false
                 val mtree = mstarts(start)
-                if (mtree.pos.end.offset != end) return false
+                if (mtree.pos.end != end) return false
                 success(mtree, gtree.symbol)
                 return true
               }
@@ -199,6 +219,26 @@ trait AttributesOps { self: DatabaseOps =>
                     gsym.foreach(success(margname, _))
                   }
                 })
+              }
+
+              if (mctordefs.contains(gstart)) {
+                val mname = mctordefs(gstart)
+                gtree match {
+                  case gtree: g.Template =>
+                    val gctor = gtree.body.find(_.symbol.isPrimaryConstructor)
+                    success(mname, gctor.map(_.symbol).getOrElse(g.NoSymbol))
+                  case gtree: g.DefDef if gtree.symbol.isConstructor =>
+                    success(mname, gtree.symbol)
+                  case _ =>
+                }
+              }
+
+              if (mctorrefs.contains(gpoint)) {
+                val mname = mctorrefs(gpoint)
+                gtree match {
+                  case g.Select(_, g.nme.CONSTRUCTOR) => success(mname, gtree.symbol)
+                  case _ =>
+                }
               }
 
               // Ideally, we'd like a perfect match when gtree.pos == mtree.pos.
@@ -245,10 +285,12 @@ trait AttributesOps { self: DatabaseOps =>
                     case (gname, mname) =>
                       val import1 = gtree.expr.tpe.member(gname.toTermName)
                       val import2 = gtree.expr.tpe.member(gname.toTypeName)
-                      success(mname,
-                              wrapAlternatives("<import " + gtree.expr + "." + gname + ">",
-                                               import1,
-                                               import2))
+                      success(
+                        mname,
+                        wrapAlternatives(
+                          "<import " + gtree.expr + "." + gname + ">",
+                          import1,
+                          import2))
                   }
                 case _ =>
               }
@@ -278,7 +320,7 @@ trait AttributesOps { self: DatabaseOps =>
                       val syntax = "(" + fullyQualifiedArgs.mkString(", ") + ")"
                       success(morePrecisePos, syntax)
                   }
-                case g.TypeApply(fun, targs @ List(targ, _ *)) =>
+                case g.TypeApply(fun, targs @ List(targ, _*)) =>
                   if (targ.pos.isRange) return
                   val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                   val syntax = "[" + targs.mkString(", ") + "]"
@@ -358,10 +400,11 @@ trait AttributesOps { self: DatabaseOps =>
 
   private def syntaxAndPos(gtree: g.Tree): String = {
     if (gtree == g.EmptyTree) "\u001b[1;31mEmptyTree\u001b[0m"
-    else
-      s"${gtree.toString
-        .substring(0, Math.min(45, gtree.toString.length))
-        .replace("\n", " ")} [${gtree.pos.start}..${gtree.pos.end})"
+    else {
+      val text =
+        gtree.toString.substring(0, Math.min(45, gtree.toString.length)).replace("\n", " ")
+      s"$text [${gtree.pos.start}..${gtree.pos.end})"
+    }
   }
 
   private def syntaxAndPos(mtree: m.Tree): String = {

@@ -39,7 +39,7 @@ class TransverserSuite extends FunSuite {
       |class C(x: x) { def bar(x: x) = ??? }
       |C
       |def this(x: x)
-      |this
+      |_
       |x: x
       |x
       |x

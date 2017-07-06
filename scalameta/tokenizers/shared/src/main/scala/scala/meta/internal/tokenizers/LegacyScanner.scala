@@ -994,7 +994,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
     // 2. Populate upcomingXmlLiteralParts with xml literal part positions.
     var lastFrom = start
-    embeddedScalaExprPositions.getSplicePositions.foreach { pos =>
+    embeddedScalaExprPositions.splicePositions.foreach { pos =>
       // pos contains the start and end positions of a scala expression.
       // We want the range of the xml literal part which starts at lastFrom
       // and ends at pos.from.
@@ -1041,7 +1041,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             loop(balance = 1)
           } catch {
             case TokenizeException(pos, message) =>
-              syntaxError(s"invalid unquote: $message", at = start + pos.start.offset)
+              syntaxError(s"invalid unquote: $message", at = start + pos.start)
           }
         case IDENTIFIER | THIS | USCORE =>
           // do nothing, this is the end of the unquote

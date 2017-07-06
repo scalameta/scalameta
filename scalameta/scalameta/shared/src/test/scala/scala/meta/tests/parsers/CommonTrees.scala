@@ -20,21 +20,21 @@ trait CommonTrees {
 
   object EmptySelf {
     def unapply(tree: Tree): Boolean = tree match {
-      case Term.Param(Nil, Name.Anonymous(), None, None) => true
+      case Self(Name.Anonymous(), None) => true
       case _ => false
     }
   }
 
   object EmptyCtor {
     def unapply(tree: Tree): Boolean = tree match {
-      case Ctor.Primary(Nil, Ctor.Name("this"), Nil) => true
+      case Ctor.Primary(Nil, Name.Anonymous(), Nil) => true
       case _ => false
     }
   }
 
   object EmptyTemplate {
     def unapply(tree: Tree): Boolean = tree match {
-      case Template(Nil, Nil, EmptySelf(), None) => true
+      case Template(Nil, Nil, EmptySelf(), Nil) => true
       case _ => false
     }
   }

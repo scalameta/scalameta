@@ -11,22 +11,14 @@ class TermSuite extends ParseSuite {
 
   test("`x`") {
     val name @ TermName("x") = term("`x`")
-    // TODO: revisit this once we have trivia in place
-    // assert(name.isBackquoted === true)
   }
 
   test("a.b.c") {
     val outer @ Select(inner @ Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b.c")
-    // TODO: revisit this once we have trivia in place
-    // assert(outer.isPostfix === false)
-    // assert(inner.isPostfix === false)
   }
 
   test("a.b c") {
     val outer @ Select(inner @ Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b c")
-    // TODO: revisit this once we have trivia in place
-    // assert(outer.isPostfix === true)
-    // assert(inner.isPostfix === false)
   }
 
   test("foo.this") {
@@ -66,15 +58,15 @@ class TermSuite extends ParseSuite {
   }
 
   test("f(x = 0)") {
-    val Apply(TermName("f"), Arg.Named(TermName("x"), Lit(0)) :: Nil) = term("f(x = 0)")
+    val Apply(TermName("f"), Assign(TermName("x"), Lit(0)) :: Nil) = term("f(x = 0)")
   }
 
   test("f(x: _*)") {
-    val Apply(TermName("f"), Arg.Repeated(TermName("x")) :: Nil) = term("f(x: _*)")
+    val Apply(TermName("f"), Repeated(TermName("x")) :: Nil) = term("f(x: _*)")
   }
 
   test("f(x = xs: _*)") {
-    val Term.Apply(Term.Name("f"), Seq(Term.Arg.Named(Term.Name("x"), Term.Arg.Repeated(Term.Name("xs"))))) = term("f(x = xs: _*)")
+    val Term.Apply(Term.Name("f"), List(Assign(Term.Name("x"), Repeated(Term.Name("xs"))))) = term("f(x = xs: _*)")
   }
 
   test("a + ()") {
@@ -108,19 +100,15 @@ class TermSuite extends ParseSuite {
   }
 
   test("a(0) = true") {
-    val Update(TermName("a"), (Lit(0) :: Nil) :: Nil, Lit(true)) = term("a(0) = true")
+    val Assign(Apply(TermName("a"), (Lit(0) :: Nil)), Lit(true)) = term("a(0) = true")
   }
 
   test("return") {
     val ret @ Return(Lit(())) = term("return")
-    // TODO: revisit this once we have trivia in place
-    // assert(ret.hasExpr === false)
   }
 
   test("return 1") {
     val ret @ Return(Lit(1)) = term("return 1")
-    // TODO: revisit this once we have trivia in place
-    // assert(ret.hasExpr === true)
   }
 
   test("throw 1") {
@@ -132,7 +120,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1: @foo") {
-    val Annotate(Lit(1), Mod.Annot(Ctor.Name("foo")) :: Nil) = term("1: @foo")
+    val Annotate(Lit(1), Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), Nil)) :: Nil) = term("1: @foo")
   }
 
   test("(true, false)") {
@@ -149,20 +137,14 @@ class TermSuite extends ParseSuite {
 
   test("if (true) true else false") {
     val iff @ If(Lit(true), Lit(true), Lit(false)) = term("if (true) true else false")
-    // TODO: revisit this once we have trivia in place
-    // assert(iff.hasElsep === true)
   }
 
   test("if (true) true; else false") {
     val iff @ If(Lit(true), Lit(true), Lit(false)) = term("if (true) true; else false")
-    // TODO: revisit this once we have trivia in place
-    // assert(iff.hasElsep === true)
   }
 
   test("if (true) true") {
     val iff @ If(Lit(true), Lit(true), Lit(())) = term("if (true) true")
-    // TODO: revisit this once we have trivia in place
-    // assert(iff.hasElsep === false)
   }
 
   test("() => x") {
@@ -259,20 +241,20 @@ class TermSuite extends ParseSuite {
   }
 
   test("try 1") {
-    val TryWithCases(Lit(1), Nil, None) = term("try 1")
+    val Try(Lit(1), Nil, None) = term("try 1")
   }
 
   test("try 1 catch 1") {
-    val TryWithTerm(Lit(1), Lit(1), None) = term("try 1 catch 1")
+    val TryWithHandler(Lit(1), Lit(1), None) = term("try 1 catch 1")
   }
 
   test("try 1 catch { case _ => }") {
-    val TryWithCases(Lit(1), Case(Pat.Wildcard(), None, Term.Block(Nil)) :: Nil, None) =
+    val Try(Lit(1), Case(Pat.Wildcard(), None, Term.Block(Nil)) :: Nil, None) =
       term("try 1 catch { case _ => }")
   }
 
   test("try 1 finally 1") {
-    val TryWithCases(Lit(1), Nil, Some(Lit(1))) = term("try 1 finally 1")
+    val Try(Lit(1), Nil, Some(Lit(1))) = term("try 1 finally 1")
   }
 
   test("{ case 1 => () }") {
@@ -289,16 +271,16 @@ class TermSuite extends ParseSuite {
   }
 
   test("for (a <- b; if c; x = a) x") {
-    val For(List(Enumerator.Generator(Pat.Var.Term(TermName("a")), TermName("b")),
+    val For(List(Enumerator.Generator(Pat.Var(TermName("a")), TermName("b")),
                  Enumerator.Guard(TermName("c")),
-                 Enumerator.Val(Pat.Var.Term(TermName("x")), TermName("a"))),
+                 Enumerator.Val(Pat.Var(TermName("x")), TermName("a"))),
             TermName("x")) = term("for (a <- b; if c; x = a) x")
 
   }
   test("for (a <- b; if c; x = a) yield x") {
-    val ForYield(List(Enumerator.Generator(Pat.Var.Term(TermName("a")), TermName("b")),
+    val ForYield(List(Enumerator.Generator(Pat.Var(TermName("a")), TermName("b")),
                       Enumerator.Guard(TermName("c")),
-                      Enumerator.Val(Pat.Var.Term(TermName("x")), TermName("a"))),
+                      Enumerator.Val(Pat.Var(TermName("x")), TermName("a"))),
                  TermName("x")) = term("for (a <- b; if c; x = a) yield x")
   }
 
@@ -319,44 +301,41 @@ class TermSuite extends ParseSuite {
   }
 
   test("new {}") {
-    val New(Template(Nil, Nil, EmptySelf(), Some(Nil))) = term("new {}")
+    val NewAnonymous(Template(Nil, Nil, EmptySelf(), Nil)) = term("new {}")
   }
 
   test("new { x }") {
-    val New(Template(Nil, Nil, EmptySelf(), Some(Term.Name("x") :: Nil))) = term("new { x }")
+    val NewAnonymous(Template(Nil, Nil, EmptySelf(), List(Term.Name("x")))) = term("new { x }")
   }
 
   test("new A") {
-    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), None)) = term("new A")
-    // TODO: revisit this once we have trivia in place
-    // assert(templ.hasStats === false)
+    val New(Init(Type.Name("A"), Name.Anonymous(), Nil)) = term("new A")
   }
 
   test("new A {}") {
-    val New(templ @ Template(Nil, Ctor.Name("A") :: Nil, EmptySelf(), Some(Nil))) = term("new A {}")
-    // TODO: revisit this once we have trivia in place
-    // assert(templ.hasStats === true)
+    val NewAnonymous(Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)) = term("new A {}")
   }
 
   test("new A with B") {
-    val New(Template(Nil, Ctor.Name("A") :: Ctor.Name("B") :: Nil, EmptySelf(), None)) =
+    val NewAnonymous(Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) ::
+                                   Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)) =
       term("new A with B")
   }
 
   test("new { val x: Int = 1 } with A") {
-    val New(Template(Defn.Val(Nil, List(Pat.Var.Term(TermName("x"))), Some(TypeName("Int")), Lit(1)) :: Nil,
-                     Ctor.Name("A") :: Nil, EmptySelf(), None)) =
+    val NewAnonymous(Template(Defn.Val(Nil, List(Pat.Var(TermName("x"))), Some(TypeName("Int")), Lit(1)) :: Nil,
+                              Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)) =
       term("new { val x: Int = 1 } with A")
   }
 
   test("new { self: T => }") {
-    val New(Template(Nil, Nil, Term.Param(Nil, TermName("self"), Some(TypeName("T")), None), Some(Nil))) =
+    val NewAnonymous(Template(Nil, Nil, Self(TermName("self"), Some(TypeName("T"))), Nil)) =
       term("new { self: T => }")
   }
 
   test("a + (b = c)") {
     val ApplyInfix(TermName("a"), TermName("+"), Nil,
-                   Arg.Named(TermName("b"), TermName("c")) :: Nil) = term("a + (b = c)")
+                   Assign(TermName("b"), TermName("c")) :: Nil) = term("a + (b = c)")
   }
 
   test("(a = b) + c") {
@@ -372,21 +351,21 @@ class TermSuite extends ParseSuite {
 
   test("a + (b: _*)") {
     val ApplyInfix(TermName("a"), TermName("+"), Nil,
-                   Arg.Repeated(TermName("b")) :: Nil) = term("a + (b: _*)")
+                   Repeated(TermName("b")) :: Nil) = term("a + (b: _*)")
   }
 
   test("local class") {
     val Term.Block(List(
       Defn.Class(
         List(Mod.Case()), Type.Name("C"), Nil,
-        Ctor.Primary(Nil, Ctor.Name("this"), List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
+        Ctor.Primary(Nil, Name.Anonymous(), List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
         EmptyTemplate()))) = term("{ case class C(x: Int); }")
   }
 
   test("xml literal - 1") {
     val Term.Block(List(
-      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("x"))), None, Term.Xml(List(Lit("<p/>")), Nil)),
-      Defn.Val(Nil, List(Pat.Var.Term(Term.Name("y"))), None, Term.Name("x")))) =
+      Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Xml(List(Lit("<p/>")), Nil)),
+      Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Term.Name("x")))) =
     term("""{
       val x = <p/>
       val y = x
@@ -403,9 +382,9 @@ class TermSuite extends ParseSuite {
   }
 
   test("#312") {
-    val Term.Block(Seq(
-      Defn.Val(Nil, Seq(Pat.Var.Term(Term.Name("x"))), None, Term.Ascribe(Term.Name("yz"), Type.Tuple(Seq(Type.Name("Y"), Type.Name("Z"))))),
-      Term.Tuple(Seq(Term.Name("x"), Term.Name("x"))))) =
+    val Term.Block(List(
+      Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Ascribe(Term.Name("yz"), Type.Tuple(List(Type.Name("Y"), Type.Name("Z"))))),
+      Term.Tuple(List(Term.Name("x"), Term.Name("x"))))) =
     term("""{
       val x = yz: (Y, Z)
       (x, x)
@@ -415,19 +394,19 @@ class TermSuite extends ParseSuite {
   test("spawn { var v: Int = _; ??? }") {
     val Term.Apply(
       Term.Name("spawn"),
-      Seq(
-        Term.Block(Seq(
-          Defn.Var(Nil, Seq(Pat.Var.Term(Term.Name("v"))), Some(Type.Name("Int")), None), Term.Name("???"))))) =
+      List(
+        Term.Block(List(
+          Defn.Var(Nil, List(Pat.Var(Term.Name("v"))), Some(Type.Name("Int")), None), Term.Name("???"))))) =
     term("spawn { var v: Int = _; ??? }")
   }
 
   test("#345") {
-    val Term.Match(_, Seq(Case(_, _, rhs), _)) = term("""x match {
+    val Term.Match(_, List(Case(_, _, rhs), _)) = term("""x match {
       case x => true
       // sobaka
       case y => y
     }""")
-    assert(rhs.tokens.show[Structure] === "Tokens(true [26..30))")
+    assert(rhs.tokens.structure === "Tokens(true [26..30))")
   }
 
   test("a + (bs: _*) * c") {
@@ -436,10 +415,10 @@ class TermSuite extends ParseSuite {
 
   test("a + (c, d) * e") {
     val Term.ApplyInfix(
-      Term.Name("a"), Term.Name("+"), Nil, Seq(
+      Term.Name("a"), Term.Name("+"), Nil, List(
         Term.ApplyInfix(
-          Term.Tuple(Seq(Term.Name("c"), Term.Name("d"))), Term.Name("*"), Nil,
-          Seq(Term.Name("e"))))) =
+          Term.Tuple(List(Term.Name("c"), Term.Name("d"))), Term.Name("*"), Nil,
+          List(Term.Name("e"))))) =
     term("a + (c, d) * e")
   }
 
@@ -447,18 +426,18 @@ class TermSuite extends ParseSuite {
     val Term.ApplyInfix(
       Term.ApplyInfix(
         Term.Name("a"), Term.Name("*"), Nil,
-        Seq(Term.Name("c"), Term.Name("d"))),
-      Term.Name("+"), Nil, Seq(Term.Name("e"))) =
+        List(Term.Name("c"), Term.Name("d"))),
+      Term.Name("+"), Nil, List(Term.Name("e"))) =
     term("a * (c, d) + e")
   }
 
   test("(a + b) c") {
-    val Term.Select(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Seq(Term.Name("b"))), Term.Name("c")) =
+    val Term.Select(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))), Term.Name("c")) =
       term("(a + b) c")
   }
 
   test("a + b c") {
-    val Term.Select(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Seq(Term.Name("b"))), Term.Name("c")) =
+    val Term.Select(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))), Term.Name("c")) =
       term("a + b c")
   }
 
@@ -489,25 +468,25 @@ class TermSuite extends ParseSuite {
         Term.ApplyType(
           Term.Select(
             Term.ApplyInfix(
-              Term.ApplyType(Term.Select(Term.Name("arr"), Term.Name("cast")), Seq(Type.Apply(Type.Name("Ptr"), Seq(Type.Name("Byte"))))),
+              Term.ApplyType(Term.Select(Term.Name("arr"), Term.Name("cast")), List(Type.Apply(Type.Name("Ptr"), List(Type.Name("Byte"))))),
               Term.Name("+"),
               Nil,
-              Seq(Term.ApplyType(Term.Name("sizeof"), Seq(Type.Apply(Type.Name("Ptr"), Seq(Type.Placeholder(Type.Bounds(None, None)))))))),
+              List(Term.ApplyType(Term.Name("sizeof"), List(Type.Apply(Type.Name("Ptr"), List(Type.Placeholder(Type.Bounds(None, None)))))))),
             Term.Name("cast")),
-          Seq(Type.Apply(Type.Name("Ptr"), Seq(Type.Name("Int")))))),
+          List(Type.Apply(Type.Name("Ptr"), List(Type.Name("Int")))))),
       Term.Name("length")) =
     term("!(arr.cast[Ptr[Byte]] + sizeof[Ptr[_]]).cast[Ptr[Int]] = length")
   }
 
   test("(x ++ y)[T]") {
-    val Term.ApplyType(Term.ApplyInfix(Term.Name("x"), Term.Name("++"), Nil, Seq(Term.Name("y"))), Seq(Type.Name("T"))) = term("(x ++ y)[T]")
+    val Term.ApplyType(Term.ApplyInfix(Term.Name("x"), Term.Name("++"), Nil, List(Term.Name("y"))), List(Type.Name("T"))) = term("(x ++ y)[T]")
   }
 
   test(" structHydrators map { _[K]() } ") {
-    val Term.ApplyInfix(Term.Name("structHydrators"), Term.Name("map"), Nil, Seq(Term.Block(Seq(Term.Apply(Term.ApplyType(Term.Placeholder(), Seq(Type.Name("K"))), Nil))))) = term(" structHydrators map { _[K]() } ")
+    val Term.ApplyInfix(Term.Name("structHydrators"), Term.Name("map"), Nil, List(Term.Block(List(Term.Apply(Term.ApplyType(Term.Placeholder(), List(Type.Name("K"))), Nil))))) = term(" structHydrators map { _[K]() } ")
   }
 
   test(" new C()[String]() ") {
-    val Term.Apply(Term.ApplyType(Term.New(Template(Nil, Seq(Term.Apply(Ctor.Ref.Name("C"), Nil)), Term.Param(Nil, Name.Anonymous(), None, None), None)), Seq(Type.Name("String"))), Nil) = term(" new C()[String]() ")
+    val Term.Apply(Term.ApplyType(New(Init(Type.Name("C"), Name.Anonymous(), List(List()))), List(Type.Name("String"))), Nil) = term(" new C()[String]() ")
   }
 }

@@ -1,7 +1,6 @@
 package scala.meta.contrib
 
 import scala.annotation.implicitNotFound
-import scala.collection.immutable.Seq
 
 /**
   *
@@ -15,11 +14,11 @@ import scala.collection.immutable.Seq
   * @tparam B the type of items you are replacing
   */
 trait Replace[A, B] {
-  def replace(a: A, bs: Seq[B]): A
+  def replace(a: A, bs: List[B]): A
 }
 
 object Replace {
-  def apply[A, B](f: (A, Seq[B]) => A): Replace[A, B] = new Replace[A, B] {
-    @inline override def replace(a: A, bs: Seq[B]): A = f(a, bs)
+  def apply[A, B](f: (A, List[B]) => A): Replace[A, B] = new Replace[A, B] {
+    @inline override def replace(a: A, bs: List[B]): A = f(a, bs)
   }
 }
