@@ -11,6 +11,7 @@ trait DatabaseOps
     with InputOps
     with ParseOps
     with ReporterOps
+    with PrinterOps
     with SymbolOps
     with ReflectionToolkit {
   val global: Global

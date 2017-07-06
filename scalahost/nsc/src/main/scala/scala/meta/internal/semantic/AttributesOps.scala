@@ -1,6 +1,8 @@
 package scala.meta.internal
 package semantic
 
+import java.io.PrintWriter
+import java.io.StringWriter
 import org.scalameta.unreachable
 import scala.collection.mutable
 import scala.reflect.internal.util._
@@ -311,6 +313,12 @@ trait AttributesOps { self: DatabaseOps =>
               gtree match {
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
+                  val out = new StringWriter()
+                  val printer = new SugarCodePrinter(new PrintWriter(out))
+                  printer.print(gview.fun)
+                  val printed = out.toString
+                  pprint.log(printed)
+
                   val syntax = g.showCode(gview.fun) + "(*)"
                   success(pos, _.withConversion(syntax))
                   inferredImplicitConv += gview.fun
