@@ -37,7 +37,7 @@ object ParentChecks {
 
   private def typeArgument(parent: Tree, destination: String): Boolean = {
     def termParamDecltpe = parent.is[Term.Param] && destination == "decltpe"
-    def typeFunctionArgument = parent.is[Type.Function] && destination == "args"
+    def typeFunctionArgument = parent.is[Type.Function] && destination == "params"
     def byNameType = parent.is[Type.ByName] && destination == "tpe"
     termParamDecltpe || typeFunctionArgument || byNameType
   }
