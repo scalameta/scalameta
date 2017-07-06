@@ -436,7 +436,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("package foo; class C; package baz { class D }") {
     val tree = source("package foo; class C; package baz { class D }")
-    assert(tree.structure === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name.Anonymous(), Nil), Template(Nil, Nil, Self(Name.Anonymous(), None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Name.Anonymous(), Nil), Template(Nil, Nil, Self(Name.Anonymous(), None), Nil))))))))")
+    assert(tree.structure === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))))))")
     assert(tree.syntax === "package foo\nclass C\npackage baz {\n  class D\n}")
   }
 
@@ -609,6 +609,6 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("#931 val `a b` = 2") {
     assert(q"val `a b` = 2".syntax == "val `a b` = 2")
   }
-  
+
 }
 

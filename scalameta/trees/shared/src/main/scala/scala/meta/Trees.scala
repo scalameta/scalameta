@@ -32,6 +32,7 @@ object Tree extends InternalTreeXtensions {
 
 @branch trait Name extends Ref { def value: String }
 object Name {
+  def apply(value: String): Name = if (value == "") Name.Anonymous() else Name.Indeterminate(value)
   def unapply(name: Name): Option[String] = Some(name.value)
   @ast class Anonymous() extends Name {
     def value = ""

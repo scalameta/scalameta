@@ -17,16 +17,16 @@ class StructureSuite extends ParseSuite {
 
   checkStructure[Case](
     "case _ => _ => false",
-    "Case(Pat.Wildcard(), None, Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Lit.Boolean(false)))"
+    """Case(Pat.Wildcard(), None, Term.Function(List(Term.Param(Nil, Name(""), None, None)), Lit.Boolean(false)))"""
   )
 
   checkStructure[Case](
     "case _ => _ => {false}",
-    "Case(Pat.Wildcard(), None, Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Block(List(Lit.Boolean(false)))))"
+    """Case(Pat.Wildcard(), None, Term.Function(List(Term.Param(Nil, Name(""), None, None)), Term.Block(List(Lit.Boolean(false)))))"""
   )
 
   checkStructure[Case](
     "case _ => _ => false; a",
-    """Case(Pat.Wildcard(), None, Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Block(List(Lit.Boolean(false), Term.Name("a")))))"""
+    """Case(Pat.Wildcard(), None, Term.Function(List(Term.Param(Nil, Name(""), None, None)), Term.Block(List(Lit.Boolean(false), Term.Name("a")))))"""
   )
 }
