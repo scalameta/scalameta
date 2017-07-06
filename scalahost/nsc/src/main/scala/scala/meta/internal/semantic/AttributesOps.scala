@@ -401,7 +401,8 @@ trait AttributesOps { self: DatabaseOps =>
   private def syntaxAndPos(gtree: g.Tree): String = {
     if (gtree == g.EmptyTree) "\u001b[1;31mEmptyTree\u001b[0m"
     else {
-      val text = gtree.toString.substring(0, Math.min(45, gtree.toString.length)).replace("\n", " ")
+      val text =
+        gtree.toString.substring(0, Math.min(45, gtree.toString.length)).replace("\n", " ")
       s"$text [${gtree.pos.start}..${gtree.pos.end})"
     }
   }
