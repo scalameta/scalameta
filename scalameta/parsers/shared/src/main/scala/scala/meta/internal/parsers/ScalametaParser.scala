@@ -154,7 +154,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def index: Int = {
       def lurk(roughIndex: Int): Int = {
         require(roughIndex >= 0 && debug(token))
-        if (scannerTokens(roughIndex) eq token) roughIndex
+        val scannerToken = scannerTokens(roughIndex)
+        def exactMatch = scannerToken eq token
+        def originMatch = token.is[LFLF] && scannerToken.start == token.start && scannerToken.end == token.end
+        if (exactMatch || originMatch) roughIndex
         else lurk(roughIndex - 1)
       }
       if (token.start == input.chars.length) scannerTokens.length - 1
