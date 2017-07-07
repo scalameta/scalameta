@@ -23,7 +23,7 @@ case class Inferred(
 
   def syntax: String = {
     val result = new StringBuilder
-    if (needsPrefix) result.append("(*)")
+    if (needsPrefix) result.append("*")
     select.foreach(result.append)
     types.foreach(result.append)
     conversion.foreach(result.append)
