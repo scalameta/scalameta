@@ -16,6 +16,7 @@ case class PlainSugar(syntax: String, names: List[SugarRange]) {
 
 object PlainSugar {
   val empty = PlainSugar("", Nil)
+  val star = PlainSugar("*", List(SugarRange(0, 1, Symbol("_star_."))))
   def apply(syntax: String): PlainSugar = PlainSugar(syntax, Nil)
   def mkString(sugars: List[PlainSugar], sep: String): PlainSugar = sugars match {
     case Nil => empty
@@ -53,7 +54,7 @@ case class Inferred(
   def toSugar(input: Input, pos: Position): Sugar = {
     val sugar: PlainSugar = {
       val start =
-        if (needsPrefix) PlainSugar("*")
+        if (needsPrefix) PlainSugar.star
         else PlainSugar.empty
       all.foldLeft(start)(_ + _)
     }

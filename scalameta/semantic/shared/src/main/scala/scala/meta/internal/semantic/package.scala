@@ -135,7 +135,7 @@ package object semantic {
               case _ => None
             }
           }
-          object cSugar {
+          object mPositionSugar {
             def unapply(msugar: (mPosition, mSugar)): Option[s.Sugar] = msugar match {
               case (mRange(srange), mSugar(mInput.Sugar(syntax, _, _, _), mnames)) =>
                 val snames = mnames.map {
@@ -175,7 +175,7 @@ package object semantic {
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val ssugars = msugars.map {
-            case cSugar(ssugar) => ssugar
+            case mPositionSugar(ssugar) => ssugar
             case other => sys.error(s"bad database: unsupported sugar $other")
           }
           s.Attributes(spath, scontents, sdialect, snames, smessages, sdenots, ssugars)
