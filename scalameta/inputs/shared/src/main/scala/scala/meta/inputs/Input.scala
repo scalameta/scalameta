@@ -1,6 +1,7 @@
 package scala.meta
 package inputs
 
+import java.nio.{file => nio}
 import java.nio.charset.Charset
 import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.data._
@@ -61,6 +62,7 @@ object Input {
     def apply(path: AbsolutePath): Input.File = apply(path, Charset.forName("UTF-8"))
     def apply(file: java.io.File, charset: Charset): Input.File = apply(AbsolutePath(file), charset)
     def apply(file: java.io.File): Input.File = apply(file, Charset.forName("UTF-8"))
+    def apply(path: nio.Path): Input.File = apply(AbsolutePath(path))
 
     @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: File) extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
@@ -89,7 +91,9 @@ object Input {
   implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String(_))
   implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] = Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
   // NOTE: fileToInput is lazy to avoid linking errors in Scala.js
-  implicit lazy val fileToInput: Convert[java.io.File, Input] = Convert(f => Input.File(f, Charset.forName("UTF-8")))
+  implicit lazy val fileToInput: Convert[java.io.File, Input] = Convert(Input.File.apply)
+  implicit lazy val nioPathToInput: Convert[nio.Path, Input] = Convert(Input.File.apply)
+  implicit lazy val absolutePathToInput: Convert[AbsolutePath, Input] = Convert(Input.File.apply)
 }
 
 // NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
