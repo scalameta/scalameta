@@ -22,15 +22,13 @@ sealed abstract class FailureMode {
   def name: String = toString.toLowerCase
 }
 object FailureMode {
-  def unapply(arg: String): Option[FailureMode] = {
-    val lower = arg.toLowerCase()
-    all.find(_.name == lower)
-  }
+  def unapply(arg: String): Option[FailureMode] =
+    all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(Error, Warning, Info, Ignore)
   case object Error extends FailureMode
   case object Warning extends FailureMode
   case object Info extends FailureMode
   case object Ignore extends FailureMode
-  def all = List(Error, Warning, Info, Ignore)
 }
 
 sealed abstract class SemanticdbMode {
