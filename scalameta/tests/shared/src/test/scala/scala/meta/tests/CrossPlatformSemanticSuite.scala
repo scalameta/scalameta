@@ -10,7 +10,7 @@ class CrossPlatformSemanticSuite extends FunSuite {
   val classpath = Classpath(BuildInfo.mirrorClasspath)
 
   def semanticdbs: List[AbsolutePath] = classpath.deep.collect {
-    case path if v.Paths.isSemanticdb(path.name) =>
+    case path if v.SemanticdbPaths.isSemanticdb(path.name) =>
       path.base.resolve(path.name)
   }
 

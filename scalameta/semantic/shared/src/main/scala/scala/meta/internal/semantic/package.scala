@@ -18,7 +18,7 @@ package object semantic {
     private def entries = sdatabase.entries
     def save(targetroot: AbsolutePath): Unit = {
       sdatabase.entries.foreach { entry =>
-        val relpath = v.Paths.scalaToSemanticdb(RelativePath(entry.filename))
+        val relpath = v.SemanticdbPaths.fromScala(RelativePath(entry.filename))
         val abspath = targetroot.resolve(relpath).toNIO
         Files.createDirectories(abspath.getParent)
         val fos = Files.newOutputStream(abspath)

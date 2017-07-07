@@ -7,7 +7,7 @@ import scala.meta.internal.semantic.{schema => s}
 
 object Database {
   def load(classpath: Classpath): v.Database = {
-    val fentries = classpath.deep.filter(e => v.Paths.isSemanticdb(e.name))
+    val fentries = classpath.deep.filter(e => v.SemanticdbPaths.isSemanticdb(e.name))
     val ventries = fentries.map(fentry => v.Entry.OnDisk(fentry))
     v.Database(ventries)
   }

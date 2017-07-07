@@ -58,7 +58,7 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
       override def run(): Unit = {
         val vdb = v.Database.load(Classpath(scalametaTargetroot))
         val orphanedVentries = vdb.entries.filter(ventry => {
-          val scalaName = v.Paths.semanticdbToScala(ventry.fragment.name)
+          val scalaName = v.SemanticdbPaths.toScala(ventry.fragment.name)
           !config.sourceroot.resolve(scalaName).isFile
         })
         orphanedVentries.map(ve => {

@@ -4,7 +4,7 @@ import scala.meta.internal.io.PathIO
 import scala.meta.io.RelativePath
 import org.scalameta.invariants.require
 
-object Paths {
+object SemanticdbPaths {
   private val semanticdbPrefix: RelativePath = RelativePath("META-INF").resolve("semanticdb")
   private val semanticdbExtension = "semanticdb"
   private val scalaExtension = "scala"
@@ -14,7 +14,7 @@ object Paths {
     PathIO.extension(path.toNIO).contains(semanticdbExtension)
   }
 
-  def semanticdbToScala(path: RelativePath): RelativePath = {
+  def toScala(path: RelativePath): RelativePath = {
     require(isSemanticdb(path))
     val scalaSibling =
       path.resolveSibling(_.stripSuffix(semanticdbExtension) + scalaExtension)
@@ -25,7 +25,7 @@ object Paths {
     PathIO.extension(path.toNIO).contains(scalaExtension)
   }
 
-  def scalaToSemanticdb(path: RelativePath): RelativePath = {
+  def fromScala(path: RelativePath): RelativePath = {
     require(isScala(path))
     val semanticdbSibling =
       path.resolveSibling(_.stripSuffix(scalaExtension) + semanticdbExtension)
