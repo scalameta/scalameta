@@ -3,8 +3,10 @@ package internal
 
 import java.nio.charset.Charset
 import java.nio.file.Files
+import org.scalameta.invariants.require
 import scala.meta.inputs.{Input => mInput}
 import scala.meta.inputs.{Position => mPosition}
+import scala.meta.semantic.{Sugar => mSugar}
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.semantic.{schema => s}
 import scala.meta.internal.semantic.{vfs => v}
@@ -66,6 +68,18 @@ package object semantic {
               case _ => None
             }
           }
+          object sSugar {
+            def unapply(ssugar: s.Sugar): Option[(mPosition, mSugar)] = ssugar match {
+              case s.Sugar(Some(srange @ sRange(mpos)), syntax, snames) =>
+              require(ssugar.syntax.nonEmpty)
+              val sugarinput = mInput.Sugar(syntax, minput, srange.start, srange.end)
+                val mnames = snames.toIterator.map {
+                  case s.ResolvedName(Some(sRange(mpos)), m.Symbol(msym)) =>
+                    mpos -> msym
+                }.toList
+              Some(mpos -> mSugar(sugarinput, mnames))
+            }
+          }
           val mdialect = {
             val mdialect = Dialect.standards.get(sdialect)
             mdialect.getOrElse(sys.error(s"bad protobuf: unsupported dialect ${sdialect}"))
@@ -84,7 +98,7 @@ package object semantic {
             case other => sys.error(s"bad protobuf: unsupported denotation $other")
           }.toList
           val msugars = ssugars.map {
-            case s.Sugar(Some(sRange(mpos)), msyntax: String, _) => mpos -> msyntax
+            case sSugar(mpos, msugar) => mpos -> msugar
             case other => sys.error(s"bad protobuf: unsupported sugar $other")
           }.toList
           m.Attributes(minput, mdialect, mnames, mmessages, mdenots, msugars)

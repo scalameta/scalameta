@@ -80,6 +80,11 @@ object Input {
     }
   }
 
+  @data class Sugar(value: scala.Predef.String, underlying: Input, start: Int, end: Int) extends Input {
+    lazy val chars = value.toCharArray
+    override def toString = s"Input.Sugar($underlying, $start, $end)"
+  }
+
   // NOTE: `start` and `end` are String.substring-style,
   // i.e. `start` is inclusive and `end` is not.
   // Therefore Slice.end can point to the last character of input plus one.

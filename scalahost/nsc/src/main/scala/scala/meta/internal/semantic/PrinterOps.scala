@@ -1,23 +1,49 @@
 package scala.meta.internal.semantic
 
+import scala.{meta => m}
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.io.Writer
 import scala.collection.mutable
 import scala.reflect.internal.ModifierFlags._
 
+// A writer that keeps track of the current length.
+class LengthWriter(delegate: Writer, start: Int) extends Writer {
+  var length: Int = start
+  override def flush(): Unit = delegate.flush()
+  override def write(cbuf: Array[Char], off: Int, len: Int): Unit = {
+    length += len
+    delegate.write(cbuf, off, len)
+  }
+  override def close(): Unit = delegate.close()
+}
+
 trait PrinterOps { self: DatabaseOps =>
   import g._
-  class SugarCodePrinter(out: PrintWriter) extends CodePrinter2(out, false) {
-    val names = mutable.ListBuffer.empty[Int]
 
-    override protected def printedName(name: g.Name, decoded: Boolean = true) = {
-      pprint.log(name)
-      super.printedName(name, decoded)
-    }
+  object SugarCodePrinter {
+    def apply() = new SugarCodePrinter(new LengthWriter(new StringWriter(), 0))
   }
-
-  class CodePrinter2(out: PrintWriter, printRootPkg: Boolean) extends TreePrinter(out) {
+  class SugarCodePrinter(out: LengthWriter) extends TreePrinter(new PrintWriter(out)) {
+    case class ResolvedName(syntax: String, symbol: m.Symbol)
+    val names = mutable.HashMap.empty[(Int, Int), m.Symbol]
+    val printRootPkg = false
     protected val parentsStack: mutable.Stack[g.Tree] = scala.collection.mutable.Stack[Tree]()
+
+    override def print(args: Any*): Unit = args.foreach {
+      case ResolvedName(syntax, symbol) =>
+        val start = out.length
+        super.print(syntax)
+        val end = out.length
+        if (symbol != m.Symbol.None) {
+          pprint.log(start -> end)
+          pprint.log(symbol)
+          names(start -> end) = symbol
+        }
+      case els => super.print(els)
+    }
+
+    // Original code printer with minor changes below.
 
     protected def currentTree: Option[g.Tree] =
       if (parentsStack.nonEmpty) Some(parentsStack.top) else None
@@ -85,7 +111,6 @@ trait PrinterOps { self: DatabaseOps =>
       checkForBlank(name.isOperatorName || name.endsWith("_"))
     def render(
         what: Any,
-        mkPrinter: PrintWriter => TreePrinter,
         printTypes: BooleanFlag = None,
         printIds: BooleanFlag = None,
         printOwners: BooleanFlag = None,
@@ -93,8 +118,8 @@ trait PrinterOps { self: DatabaseOps =>
         printMirrors: BooleanFlag = None,
         printPositions: BooleanFlag = None): String = {
       val buffer = new StringWriter()
-      val writer = new PrintWriter(buffer)
-      val printer = mkPrinter(writer)
+      val writer = new LengthWriter(buffer, out.length)
+      val printer = new SugarCodePrinter(writer)
       printTypes.value.map(printTypes =>
         if (printTypes) printer.withTypes else printer.withoutTypes)
       printIds.value.map(printIds => if (printIds) printer.withIds else printer.withoutIds)
@@ -108,6 +133,7 @@ trait PrinterOps { self: DatabaseOps =>
         if (printPositions) printer.withPositions else printer.withoutPositions)
       printer.print(what)
       writer.flush()
+      out.length = writer.length
       buffer.toString
     }
 
@@ -124,7 +150,7 @@ trait PrinterOps { self: DatabaseOps =>
         case Select(qual, name) if name.isTypeName =>
           s"${resolveSelect(qual)}#${blankForOperatorName(name)}%${printedName(name)}"
         case Ident(name) => printedName(name)
-        case _ => render(t, new SugarCodePrinter(_))
+        case _ => render(t)
       }
     }
 
@@ -586,7 +612,7 @@ trait PrinterOps { self: DatabaseOps =>
         case Select(qual: New, name) =>
           print(qual)
 
-        case Select(qual, name) =>
+        case sel @ Select(qual, name) =>
           def checkRootPackage(tr: Tree): Boolean =
             (currentParent match { //check that Select is not for package def name
               case Some(_: PackageDef) => false
@@ -603,8 +629,11 @@ trait PrinterOps { self: DatabaseOps =>
           val printParentheses = needsParentheses(qual)(insideAnnotated = false) || isIntLitWithDecodedOp(
             qual,
             name)
-          if (printParentheses) print("(", resolveSelect(qual), ").", printedName(name))
-          else print(resolveSelect(qual), ".", printedName(name))
+          pprint.log(qual.symbol.fullName)
+          pprint.log(sel.symbol.fullName)
+          val resolved = ResolvedName(printedName(name), sel.symbol.toSemantic)
+          if (printParentheses) print("(", resolveSelect(qual), ").", resolved)
+          else print(resolveSelect(qual), ".", resolved)
 
         case id @ Ident(name) =>
           if (name.nonEmpty) {

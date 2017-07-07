@@ -314,7 +314,7 @@ trait AttributesOps { self: DatabaseOps =>
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
                   val out = new StringWriter()
-                  val printer = new SugarCodePrinter(new PrintWriter(out))
+                  val printer = SugarCodePrinter()
                   printer.print(gview.fun)
                   val printed = out.toString
                   pprint.log(printed)
