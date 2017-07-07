@@ -46,11 +46,16 @@ trait PrinterOps { self: DatabaseOps =>
     }
     // - scalac deviation
 
+    // The original code printer was copied from the 2.11 sources and used mutable.Stack
+    // which was deprecated in 2.12. I refactored the code to use a var + List instead.
+    // + scalac deviation
+    protected var parentsStack: List[g.Tree] = Nil
+    // - scalac deviation
+
     private val printRootPkg = false
-    protected val parentsStack: mutable.Stack[g.Tree] = scala.collection.mutable.Stack[Tree]()
 
     protected def currentTree: Option[g.Tree] =
-      if (parentsStack.nonEmpty) Some(parentsStack.top) else None
+      parentsStack.headOption
 
     protected def currentParent: Option[g.Tree] =
       if (parentsStack.length > 1) Some(parentsStack(1)) else None
@@ -305,11 +310,13 @@ trait PrinterOps { self: DatabaseOps =>
     }
 
     override def printTree(tree: Tree): Unit = {
-      parentsStack.push(tree)
+      parentsStack = tree :: parentsStack
       try {
         processTreePrinting(tree)
         printTypesInfo(tree)
-      } finally parentsStack.pop()
+      } finally {
+        parentsStack = parentsStack.tail
+      }
     }
 
     def processTreePrinting(tree: Tree): Unit = {
