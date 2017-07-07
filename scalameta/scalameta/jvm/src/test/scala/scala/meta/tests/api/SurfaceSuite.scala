@@ -64,6 +64,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.inputs.Input.Slice
       |scala.meta.inputs.Input.Stream
       |scala.meta.inputs.Input.String
+      |scala.meta.inputs.Input.Sugar
       |scala.meta.inputs.Position
       |scala.meta.inputs.Position.None
       |scala.meta.inputs.Position.Range
@@ -105,6 +106,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.semantic.Signature.TermParameter
       |scala.meta.semantic.Signature.Type
       |scala.meta.semantic.Signature.TypeParameter
+      |scala.meta.semantic.Sugar
       |scala.meta.semantic.Symbol
       |scala.meta.semantic.Symbol.Global
       |scala.meta.semantic.Symbol.Local

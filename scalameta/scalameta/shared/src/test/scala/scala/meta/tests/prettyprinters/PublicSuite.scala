@@ -162,6 +162,12 @@ class PublicSuite extends FunSuite {
     assert(input.toString == """Input.String("foo")""")
   }
 
+  test("scala.meta.inputs.Input.Sugar.toString") {
+    val original = Input.String("blah")
+    val input = Input.Sugar("foo", original, 0, 0)
+    assert(input.toString == """Input.Sugar("foo", Input.String("blah"), 0, 0)""")
+  }
+
   test("scala.meta.inputs.Input.LabeledString.toString") {
     val input = Input.LabeledString("foo.scala", "foo")
     assert(input.toString == s"""Input.LabeledString("foo.scala", "foo")""")
@@ -328,6 +334,16 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.semantic.Signature.TypeParameter.toString") {
     // covered below
+  }
+
+  test("scala.meta.semantic.Sugar.toString") {
+    val original = Input.String("input")
+    val input = Input.Sugar("sugar", original, 1, 1)
+    val pos = Position.Range(input, 0, 5)
+    val sugar = Sugar(input, List(pos -> Symbol("_root.sugar.")))
+    println(sugar)
+    assert(sugar.syntax == "sugar")
+    assert(sugar.structure == "Sugar(\"sugar\")")
   }
 
   test("scala.meta.semantic.Symbol.toString") {
