@@ -24,7 +24,7 @@ class LengthWriter(delegate: Writer, start: Int) extends Writer {
 trait PrinterOps { self: DatabaseOps =>
   import g._
 
-  def showSugar(what: g.Tree): PlainSugar = {
+  def showSugar(what: g.Tree): AttributedSugar = {
     val out = new StringWriter()
     val printer = SugarCodePrinter(out)
     printer.print(what)
@@ -32,7 +32,7 @@ trait PrinterOps { self: DatabaseOps =>
       case ((start, end), symbol) => SugarRange(start, end, symbol)
     }.toList
     val syntax = out.toString
-    PlainSugar(syntax, names)
+    AttributedSugar(syntax, names)
   }
 
   object SugarCodePrinter {

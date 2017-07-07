@@ -8,17 +8,17 @@ case class SugarRange(start: Int, end: Int, symbol: Symbol) {
   def toMeta(input: Input): (Range, Symbol) =
     (Position.Range(input, start, end), symbol)
 }
-case class PlainSugar(syntax: String, names: List[SugarRange]) {
-  def +(other: String) = PlainSugar(syntax + other, names)
-  def +(other: PlainSugar) =
-    PlainSugar(syntax + other.syntax, names ++ other.names.map(_.withOffset(syntax.length)))
+case class AttributedSugar(syntax: String, names: List[SugarRange]) {
+  def +(other: String) = AttributedSugar(syntax + other, names)
+  def +(other: AttributedSugar) =
+    AttributedSugar(syntax + other.syntax, names ++ other.names.map(_.withOffset(syntax.length)))
 }
 
-object PlainSugar {
-  val empty = PlainSugar("", Nil)
-  val star = PlainSugar("*", List(SugarRange(0, 1, Symbol("_star_."))))
-  def apply(syntax: String): PlainSugar = PlainSugar(syntax, Nil)
-  def mkString(sugars: List[PlainSugar], sep: String): PlainSugar = sugars match {
+object AttributedSugar {
+  val empty = AttributedSugar("", Nil)
+  val star = AttributedSugar("*", List(SugarRange(0, 1, Symbol("_star_."))))
+  def apply(syntax: String): AttributedSugar = AttributedSugar(syntax, Nil)
+  def mkString(sugars: List[AttributedSugar], sep: String): AttributedSugar = sugars match {
     case Nil => empty
     case head :: Nil => head
     case head :: lst =>
@@ -30,17 +30,17 @@ object PlainSugar {
 }
 // data structure to manage multiple inferred sugars at the same position.
 case class Inferred(
-    select: Option[PlainSugar] = None,
-    types: Option[PlainSugar] = None,
-    conversion: Option[PlainSugar] = None,
-    args: Option[PlainSugar] = None
+    select: Option[AttributedSugar] = None,
+    types: Option[AttributedSugar] = None,
+    conversion: Option[AttributedSugar] = None,
+    args: Option[AttributedSugar] = None
 ) {
   assert(
     args.isEmpty || conversion.isEmpty,
     s"Not possible to define conversion + args! $args $conversion"
   )
 
-  private def all: List[PlainSugar] = (select :: types :: conversion :: args :: Nil).flatten
+  private def all: List[AttributedSugar] = (select :: types :: conversion :: args :: Nil).flatten
 
   private def onlyConversionIsDefined =
     conversion.isDefined &&
@@ -52,17 +52,17 @@ case class Inferred(
     !onlyConversionIsDefined
 
   def toSugar(input: Input, pos: Position): Sugar = {
-    val sugar: PlainSugar = {
+    val sugar: AttributedSugar = {
       val start =
-        if (needsPrefix) PlainSugar.star
-        else PlainSugar.empty
+        if (needsPrefix) AttributedSugar.star
+        else AttributedSugar.empty
       all.foldLeft(start)(_ + _)
     }
     val sugarInput = Input.Sugar(sugar.syntax, input, pos.start, pos.end)
     new Sugar(sugarInput, sugar.names.map(_.toMeta(sugarInput)))
   }
 
-  def withConversion(syntax: PlainSugar): Inferred =
+  def withConversion(syntax: AttributedSugar): Inferred =
     if (conversion.isDefined) this
     else copy(conversion = Some(syntax))
 }

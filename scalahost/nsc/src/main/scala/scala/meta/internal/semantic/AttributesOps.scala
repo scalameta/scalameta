@@ -297,6 +297,7 @@ trait AttributesOps { self: DatabaseOps =>
             }
 
             private def tryFindInferred(gtree: g.Tree): Unit = {
+              import scala.meta.internal.semantic.{AttributedSugar => S}
               def success(pos: m.Position, f: Inferred => Inferred): Unit = {
                 inferred(pos) = f(inferred(pos))
               }
@@ -313,35 +314,34 @@ trait AttributesOps { self: DatabaseOps =>
               gtree match {
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
-                  val syntax = showSugar(gview.fun) + "(" + PlainSugar.star + ")"
+                  val syntax = showSugar(gview.fun) + "(" + S.star + ")"
                   success(pos, _.withConversion(syntax))
                   inferredImplicitConv += gview.fun
                 case gimpl: g.ApplyToImplicitArgs =>
-//                  inferredImplicitConv += gimpl.fun
                   gimpl.fun match {
                     case gview: g.ApplyImplicitView =>
                       val pos = gtree.pos.toMeta
-                      val args = PlainSugar.mkString(gimpl.args.map(showSugar), ", ")
-                      val syntax = showSugar(gview.fun) + "(" + PlainSugar.star + ")(" + args + ")"
+                      val args = S.mkString(gimpl.args.map(showSugar), ", ")
+                      val syntax = showSugar(gview.fun) + "(" + S.star + ")(" + args + ")"
                       success(pos, _.withConversion(syntax))
                     case gfun =>
-                      val fullyQualifiedArgs = PlainSugar.mkString(gimpl.args.map(showSugar), ", ")
+                      val fullyQualifiedArgs = S.mkString(gimpl.args.map(showSugar), ", ")
                       val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toMeta
-                      val syntax = PlainSugar("(") + fullyQualifiedArgs + ")"
+                      val syntax = S("(") + fullyQualifiedArgs + ")"
                       success(morePrecisePos, _.copy(args = Some(syntax)))
                   }
                 case g.TypeApply(fun, targs @ List(targ, _*)) =>
                   if (targ.pos.isRange) return
                   val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
-                  val args = PlainSugar.mkString(targs.map(showSugar), ", ")
-                  val syntax = PlainSugar("[") +  args + "]"
+                  val args = S.mkString(targs.map(showSugar), ", ")
+                  val syntax = S("[") +  args + "]"
                   success(morePrecisePos, _.copy(types = Some(syntax)))
                 case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
                   val pos = qual.pos.withStart(qual.pos.end).toMeta
                   val symbol = select.symbol.toSemantic
                   val name = nme.decoded
                   val names = List(SugarRange(0, name.length, symbol))
-                  val syntax = PlainSugar(".") + PlainSugar(nme.decoded, names)
+                  val syntax = S(".") + S(nme.decoded, names)
                   success(pos, _.copy(select = Some(syntax)))
                 case _ =>
                 // do nothing
