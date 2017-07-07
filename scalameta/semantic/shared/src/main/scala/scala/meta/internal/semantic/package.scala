@@ -84,7 +84,7 @@ package object semantic {
             case other => sys.error(s"bad protobuf: unsupported denotation $other")
           }.toList
           val msugars = ssugars.map {
-            case s.Sugar(Some(sRange(mpos)), msyntax: String) => mpos -> msyntax
+            case s.Sugar(Some(sRange(mpos)), msyntax: String, _) => mpos -> msyntax
             case other => sys.error(s"bad protobuf: unsupported sugar $other")
           }.toList
           m.Attributes(minput, mdialect, mnames, mmessages, mdenots, msugars)
