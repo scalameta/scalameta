@@ -1,5 +1,6 @@
 package scala.meta.internal.io
 
+import java.nio.file.Path
 import scala.meta.io._
 
 object PathIO {
@@ -34,4 +35,11 @@ object PathIO {
   def fromUnix(path: String): String =
     if (fileSeparatorChar != '/') path.replace('/', PathIO.fileSeparatorChar)
     else path
+
+  def extension(path: Path): Option[String] = {
+    val filename = path.getFileName.toString
+    val idx = filename.lastIndexOf('.')
+    if (idx == -1) None
+    else Some(filename.substring(idx + 1))
+  }
 }

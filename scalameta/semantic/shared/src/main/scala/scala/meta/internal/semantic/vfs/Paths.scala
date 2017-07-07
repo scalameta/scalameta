@@ -1,33 +1,34 @@
 package scala.meta.internal.semantic.vfs
 
+import scala.meta.internal.io.PathIO
 import scala.meta.io.RelativePath
 import org.scalameta.invariants.require
 
 object Paths {
-  private val semanticDbPrefix: RelativePath = RelativePath("META-INF").resolve("semanticdb")
-  private val semanticDbSuffix = ".semanticdb"
-  private val scalaPrefix = ""
-  private val scalaSuffix = ".scala"
+  private val semanticdbPrefix: RelativePath = RelativePath("META-INF").resolve("semanticdb")
+  private val semanticdbExtension = "semanticdb"
+  private val scalaExtension = "scala"
 
   def isSemanticdb(path: RelativePath): Boolean = {
-    path.toNIO.startsWith(semanticDbPrefix.toNIO) &&
-    path.toNIO.getFileName.toString.endsWith(semanticDbSuffix)
+    path.toNIO.startsWith(semanticdbPrefix.toNIO) &&
+    PathIO.extension(path.toNIO).contains(semanticdbExtension)
   }
 
   def semanticdbToScala(path: RelativePath): RelativePath = {
     require(isSemanticdb(path))
-    RelativePath(path.toNIO
-      .relativize(path.toNIO)
-      .resolveSibling(path.toNIO.getFileName.toString.stripSuffix(semanticDbSuffix) + scalaSuffix))
+    val scalaSibling =
+      path.resolveSibling(_.stripSuffix(semanticdbExtension) + scalaExtension)
+    semanticdbPrefix.relativize(scalaSibling)
   }
 
   def isScala(path: RelativePath): Boolean = {
-    path.toString.startsWith(scalaPrefix) &&
-    path.toString.endsWith(scalaSuffix)
+    PathIO.extension(path.toNIO).contains(scalaExtension)
   }
 
   def scalaToSemanticdb(path: RelativePath): RelativePath = {
     require(isScala(path))
-    semanticDbPrefix.resolve(path.resolveSibling(_.stripSuffix(scalaSuffix) + semanticDbSuffix))
+    val semanticdbSibling =
+      path.resolveSibling(_.stripSuffix(scalaExtension) + semanticdbExtension)
+    semanticdbPrefix.resolve(semanticdbSibling)
   }
 }
