@@ -4,15 +4,12 @@ package trees
 
 import scala.language.implicitConversions
 import scala.collection.mutable
-import org.scalameta.invariants._
 import org.scalameta.adt.{Reflection => AdtReflection}
-import scala.meta.internal.trees.{Reflection => AstReflection}
 
 trait Reflection extends AdtReflection {
   import u._
   import internal._
   import decorators._
-  import definitions._
   import Flag._
 
   def Protected: Modifiers = Modifiers(PROTECTED)

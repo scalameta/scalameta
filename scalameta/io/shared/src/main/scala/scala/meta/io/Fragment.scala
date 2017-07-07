@@ -2,7 +2,6 @@ package scala.meta
 package io
 
 import java.net._
-import java.io._
 import org.scalameta.data._
 
 @data class Fragment(base: AbsolutePath, name: RelativePath) {

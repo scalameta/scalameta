@@ -1,7 +1,6 @@
 package scala.meta
 
 import org.scalameta.invariants._
-import org.scalameta.unreachable
 import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.tokens._

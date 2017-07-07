@@ -5,9 +5,8 @@ package parsers
 import scala.language.implicitConversions
 import scala.compat.Platform.EOL
 import scala.reflect.{ClassTag, classTag}
-import scala.runtime.ScalaRunTime
-import scala.collection.{ mutable, immutable }
-import mutable.{ ListBuffer, StringBuilder }
+import scala.collection. mutable 
+import mutable. ListBuffer 
 import scala.annotation.tailrec
 import scala.collection.immutable._
 import scala.util.Try

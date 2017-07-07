@@ -16,7 +16,6 @@ class quasiquote[T](qname: scala.Symbol) extends StaticAnnotation {
 
 class QuasiquoteMacros(val c: Context) extends MacroHelpers {
   import c.universe._
-  import Flag._
   val ReificationMacros = q"_root_.scala.meta.internal.quasiquotes.ReificationMacros"
   def impl(annottees: c.Tree*): c.Tree = annottees.transformAnnottees(new ImplTransformer {
     val q"new $_[..$qtypes](scala.Symbol(${qname: String})).macroTransform(..$_)" = c.macroApplication

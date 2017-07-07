@@ -3,13 +3,10 @@ package internal
 package prettyprinters
 
 import org.scalameta.adt._
-import org.scalameta.unreachable
-import scala.compat.Platform.EOL
 import scala.annotation.implicitNotFound
-import scala.collection.mutable.StringBuilder
 import scala.Console._
 import scala.meta.prettyprinters._
-import Show.{ sequence => s, repeat => r, indent => i, newline => n }
+import Show.{ sequence => s, repeat => r }
 
 @root trait PositionStyle
 object PositionStyle {

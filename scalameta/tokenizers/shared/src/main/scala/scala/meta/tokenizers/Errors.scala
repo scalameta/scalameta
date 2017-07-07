@@ -6,7 +6,6 @@ import org.scalameta.data._
 import scala.meta.tokens._
 import scala.meta.inputs._
 import scala.meta.internal.inputs._
-import scala.compat.Platform.EOL
 
 @root trait Tokenized {
   def get: Tokens = this match {

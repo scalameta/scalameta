@@ -2,7 +2,6 @@ package scala.meta
 package internal
 package trees
 
-import org.scalameta._
 import org.scalameta.invariants._
 import scala.meta.classifiers._
 

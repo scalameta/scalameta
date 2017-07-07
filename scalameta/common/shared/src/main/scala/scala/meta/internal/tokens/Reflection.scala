@@ -2,7 +2,6 @@ package scala.meta
 package internal
 package tokens
 
-import org.scalameta.invariants._
 import org.scalameta.adt.{Reflection => AdtReflection}
 import scala.meta.internal.tokens.{Metadata => TokenMetadata}
 

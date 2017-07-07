@@ -5,8 +5,6 @@ package quasiquotes
 import scala.compat.Platform.EOL
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-import org.scalameta.invariants._
-import org.scalameta.unreachable
 import scala.meta.internal.trees.{Reflection => AstReflection}
 
 // NOTE: we don't have the signature as [O, I] to keep symmetry with Unlift
@@ -29,7 +27,6 @@ class ConversionMacros(val c: Context) extends AstReflection {
   lazy val mirror: u.Mirror = c.mirror
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
   import u._
-  import definitions._
 
   val MetaLift = mirror.staticClass("scala.meta.quasiquotes.Lift")
   val MetaUnlift = mirror.staticClass("scala.meta.quasiquotes.Unlift")

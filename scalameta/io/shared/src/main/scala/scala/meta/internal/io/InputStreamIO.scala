@@ -1,7 +1,6 @@
 package scala.meta.internal.io
 
 import java.io._
-import scala.meta.io._
 
 object InputStreamIO {
   def readBytes(is: InputStream): Array[Byte] = {

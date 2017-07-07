@@ -1,9 +1,7 @@
 package org.scalameta.adt
 
-import scala.collection.mutable
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
-import org.scalameta.unreachable
 import org.scalameta.adt.Metadata.Adt
 import org.scalameta.adt.{Reflection => AdtReflection}
 

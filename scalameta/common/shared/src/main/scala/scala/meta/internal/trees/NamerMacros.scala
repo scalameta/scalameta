@@ -2,14 +2,11 @@ package scala.meta
 package internal
 package trees
 
-import scala.language.experimental.macros
 import scala.collection.mutable.ListBuffer
-import scala.reflect.macros.blackbox.Context
 import org.scalameta.internal.MacroHelpers
 
 trait CommonNamerMacros extends MacroHelpers {
   import c.universe._
-  import Flag._
 
   lazy val TreeClass = tq"_root_.scala.meta.Tree"
   lazy val QuasiClass = tq"_root_.scala.meta.internal.trees.Quasi"

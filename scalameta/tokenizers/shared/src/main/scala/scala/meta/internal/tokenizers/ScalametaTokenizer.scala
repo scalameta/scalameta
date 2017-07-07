@@ -2,12 +2,9 @@ package scala.meta
 package internal
 package tokenizers
 
-import java.lang.ref.WeakReference
-import java.util.{concurrent => juc}
-import scala.collection.{immutable, mutable}
+import scala.collection.mutable
 import org.scalameta._
 import org.scalameta.invariants._
-import Chars.{CR, LF, FF}
 import LegacyToken._
 import scala.annotation.tailrec
 import scala.meta.inputs._
@@ -17,7 +14,6 @@ import scala.meta.internal.tokenizers.PlatformTokenizerCache._
 
 class ScalametaTokenizer(input: Input, dialect: Dialect) {
   def tokenize(): Tokens = {
-    import ScalametaTokenizer._
     val miniCache = {
       var result = megaCache.get(dialect)
       if (result == null) {

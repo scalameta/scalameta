@@ -4,11 +4,9 @@ package io
 import java.net._
 import java.io._
 import java.util.zip._
-import scala.language.implicitConversions
 import scala.collection.mutable
 import org.scalameta.adt._
 import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.PathIO
 import scala.meta.internal.io.PathIO.pathSeparator
 
 @root trait Multipath {

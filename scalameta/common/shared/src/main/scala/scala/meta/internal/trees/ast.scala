@@ -5,11 +5,8 @@ package trees
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
-import scala.collection.mutable.{ListBuffer, ListMap}
-import org.scalameta.unreachable
-import scala.compat.Platform.EOL
+import scala.collection.mutable.ListBuffer
 import scala.meta.internal.trees.{Reflection => AstReflection}
-import org.scalameta.internal.MacroHelpers
 
 // @ast is a specialized version of @org.scalameta.adt.leaf for scala.meta ASTs.
 class ast extends StaticAnnotation {

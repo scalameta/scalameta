@@ -2,7 +2,7 @@ package scala.meta
 package internal
 package tokenizers
 
-import scala.annotation.{ tailrec, switch }
+import scala.annotation.switch 
 import java.lang.{ Character => JCharacter }
 import scala.language.postfixOps
 

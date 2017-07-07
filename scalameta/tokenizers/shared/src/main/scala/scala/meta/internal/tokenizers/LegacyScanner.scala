@@ -2,14 +2,10 @@ package scala.meta
 package internal
 package tokenizers
 
-import java.util.NoSuchElementException
 import scala.annotation.{ switch, tailrec }
-import scala.collection.{ mutable, immutable }
-import scala.language.postfixOps
-import mutable.{ ListBuffer, ArrayBuffer }
+import scala.collection. mutable 
 import Chars._
 import LegacyToken._
-import org.scalameta._
 import scala.meta.inputs._
 import scala.meta.tokenizers.TokenizeException
 

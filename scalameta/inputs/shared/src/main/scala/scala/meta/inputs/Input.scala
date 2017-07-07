@@ -4,7 +4,6 @@ package inputs
 import java.nio.charset.Charset
 import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.data._
-import org.scalameta.invariants._
 import scala.meta.common._
 import scala.meta.internal.inputs._
 import scala.meta.io._

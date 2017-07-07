@@ -1,9 +1,7 @@
 package scala.meta
 package tokenizers
 
-import org.scalameta.unreachable
 import scala.meta.common._
-import scala.meta.tokens._
 import scala.meta.inputs._
 
 private[meta] trait Api {

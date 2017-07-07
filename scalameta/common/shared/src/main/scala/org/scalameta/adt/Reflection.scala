@@ -4,7 +4,6 @@ import scala.reflect.api.Universe
 import org.scalameta.adt.{Metadata => AdtMetadata}
 import scala.meta.internal.trees.{Metadata => AstMetadata}
 import scala.reflect.{classTag, ClassTag}
-import scala.collection.mutable
 
 trait Reflection {
   val u: Universe

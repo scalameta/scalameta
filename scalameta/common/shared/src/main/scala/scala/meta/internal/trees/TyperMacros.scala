@@ -23,8 +23,6 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._
   import c.internal._
-  import decorators._
-  import definitions._
 
   def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     val sym = T.tpe.typeSymbol.asClass

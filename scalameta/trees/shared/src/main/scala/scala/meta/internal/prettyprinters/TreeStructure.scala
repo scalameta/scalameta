@@ -2,10 +2,8 @@ package scala.meta
 package internal
 package prettyprinters
 
-import org.scalameta.collections._
-import scala.meta.classifiers._
 import scala.meta.prettyprinters._
-import Show.{ sequence => s, repeat => r, indent => i, newline => n }
+import Show.{ sequence => s, repeat => r }
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
 import scala.meta.internal.trees.Quasi
