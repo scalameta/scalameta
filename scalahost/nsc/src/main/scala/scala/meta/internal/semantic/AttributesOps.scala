@@ -313,13 +313,7 @@ trait AttributesOps { self: DatabaseOps =>
               gtree match {
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
-                  val out = new StringWriter()
-                  val printer = SugarCodePrinter()
-                  printer.print(gview.fun)
-                  val printed = out.toString
-                  pprint.log(printed)
-
-                  val syntax = g.showCode(gview.fun) + "(*)"
+                  val syntax = showSugar(gview.fun) + "(*)"
                   success(pos, _.withConversion(syntax))
                   inferredImplicitConv += gview.fun
                 case gimpl: g.ApplyToImplicitArgs =>
@@ -327,23 +321,27 @@ trait AttributesOps { self: DatabaseOps =>
                   gimpl.fun match {
                     case gview: g.ApplyImplicitView =>
                       val pos = gtree.pos.toMeta
-                      val args = gimpl.args.map(g.showCode(_)).mkString(", ")
-                      val syntax = g.showCode(gview.fun) + "(*)(" + args + ")"
+                      val args = PlainSugar.mkString(gimpl.args.map(showSugar), ", ")
+                      val syntax = showSugar(gview.fun) + "(*)(" + args + ")"
                       success(pos, _.withConversion(syntax))
                     case gfun =>
-                      val fullyQualifiedArgs = gimpl.args.map(g.showCode(_))
+                      val fullyQualifiedArgs = PlainSugar.mkString(gimpl.args.map(showSugar), ", ")
                       val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toMeta
-                      val syntax = "(" + fullyQualifiedArgs.mkString(", ") + ")"
+                      val syntax = PlainSugar("(") + fullyQualifiedArgs + ")"
                       success(morePrecisePos, _.copy(args = Some(syntax)))
                   }
                 case g.TypeApply(fun, targs @ List(targ, _*)) =>
                   if (targ.pos.isRange) return
                   val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
-                  val syntax = "[" + targs.mkString(", ") + "]"
+                  val args = PlainSugar.mkString(targs.map(showSugar), ", ")
+                  val syntax = PlainSugar("[") +  args + "]"
                   success(morePrecisePos, _.copy(types = Some(syntax)))
                 case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
                   val pos = qual.pos.withStart(qual.pos.end).toMeta
-                  val syntax = s".${nme.decoded}"
+                  val symbol = select.symbol.toSemantic
+                  val name = nme.decoded
+                  val names = List(SugarRange(1, name.length, symbol))
+                  val syntax = PlainSugar(".") + PlainSugar(nme.decoded, names)
                   success(pos, _.copy(select = Some(syntax)))
                 case _ =>
                 // do nothing
@@ -418,16 +416,14 @@ trait AttributesOps { self: DatabaseOps =>
             }
             m.Message(mpos, mseverity, msg)
         }
-        val minput = unit.source.toInput
+        val input = unit.source.toInput
 
         val sugars = inferred.toIterator.map {
-          case (pos, inferred) =>
-            val input = m.Input.Sugar(inferred.syntax, minput, pos.start, pos.end)
-            pos -> m.Sugar(input, Nil)
+          case (pos, inferred) => pos -> inferred.toSugar(input, pos)
         }
 
         m.Attributes(
-          minput,
+          input,
           dialect,
           names.toList,
           messages.toList,

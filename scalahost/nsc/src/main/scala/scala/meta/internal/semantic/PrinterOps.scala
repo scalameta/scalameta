@@ -10,7 +10,10 @@ import scala.reflect.internal.ModifierFlags._
 // A writer that keeps track of the current length.
 class LengthWriter(delegate: Writer, start: Int) extends Writer {
   var length: Int = start
-  override def flush(): Unit = delegate.flush()
+  override def flush(): Unit = {
+    length = 0
+    delegate.flush()
+  }
   override def write(cbuf: Array[Char], off: Int, len: Int): Unit = {
     length += len
     delegate.write(cbuf, off, len)
@@ -21,8 +24,19 @@ class LengthWriter(delegate: Writer, start: Int) extends Writer {
 trait PrinterOps { self: DatabaseOps =>
   import g._
 
+  def showSugar(what: g.Tree): PlainSugar = {
+    val out = new StringWriter()
+    val printer = SugarCodePrinter(out)
+    printer.print(what)
+    val names = printer.names.map {
+      case ((start, end), symbol) => SugarRange(start, end, symbol)
+    }.toList
+    val syntax = out.toString
+    PlainSugar(syntax, names)
+  }
+
   object SugarCodePrinter {
-    def apply() = new SugarCodePrinter(new LengthWriter(new StringWriter(), 0))
+    def apply(writer: Writer) = new SugarCodePrinter(new LengthWriter(writer, 0))
   }
   class SugarCodePrinter(out: LengthWriter) extends TreePrinter(new PrintWriter(out)) {
     case class ResolvedName(syntax: String, symbol: m.Symbol)
@@ -36,8 +50,6 @@ trait PrinterOps { self: DatabaseOps =>
         super.print(syntax)
         val end = out.length
         if (symbol != m.Symbol.None) {
-          pprint.log(start -> end)
-          pprint.log(symbol)
           names(start -> end) = symbol
         }
       case els => super.print(els)
@@ -629,8 +641,6 @@ trait PrinterOps { self: DatabaseOps =>
           val printParentheses = needsParentheses(qual)(insideAnnotated = false) || isIntLitWithDecodedOp(
             qual,
             name)
-          pprint.log(qual.symbol.fullName)
-          pprint.log(sel.symbol.fullName)
           val resolved = ResolvedName(printedName(name), sel.symbol.toSemantic)
           if (printParentheses) print("(", resolveSelect(qual), ").", resolved)
           else print(resolveSelect(qual), ".", resolved)
