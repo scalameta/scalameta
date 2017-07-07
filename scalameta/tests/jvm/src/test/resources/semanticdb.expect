@@ -49,7 +49,10 @@ _root_.scala.collection.immutable.List. => final object List
 
 Sugars:
 [37..37): *.apply[Int]
+  [0..1): * => _star_.
   [2..7): apply => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
 [44..44): *[Int, List[Int]]
+  [0..1): * => _star_.
 [51..51): *(scala.collection.immutable.List.canBuildFrom[Int])
+  [0..1): * => _star_.
   [34..46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
