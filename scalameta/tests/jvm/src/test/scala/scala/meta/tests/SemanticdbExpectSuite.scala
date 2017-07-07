@@ -26,7 +26,11 @@ class SemanticdbExpectSuite extends FunSuite with DiffAssertions {
 object SemanticdbExpectSuite {
   val expectPath: Path =
     Paths.get("scalameta", "tests", "jvm", "src", "test", "resources", "semanticdb.expect")
-  def getMirror: Mirror = Database.load(Classpath(BuildInfo.mirrorClasspath))
+  def getMirror: Mirror = {
+    val mirror = Database.load(Classpath(BuildInfo.mirrorClasspath))
+    val sorted = Database(mirror.entries.sortBy(_.input.syntax))
+    sorted
+  }
 }
 
 // To save the current behavior, run:
