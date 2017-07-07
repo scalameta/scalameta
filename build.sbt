@@ -363,6 +363,7 @@ lazy val tests = crossProject
     description := "Tests for scalameta APIs",
     compile.in(Test) := compile.in(Test).dependsOn(compile.in(scalahostIntegration, Compile)).value,
     buildInfoKeys := Seq[BuildInfoKey](
+      scalaVersion,
       "mirrorSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
       "mirrorClasspath" -> classDirectory.in(scalahostIntegration, Compile).value.getAbsolutePath
     ),

@@ -1,7 +1,7 @@
 scalahost/integration/src/main/scala/example/Example.scala
 ----------------------------------------------------------
 Dialect:
-Scala212
+Scala211
 
 Names:
 [8..15): example => _root_.example.
@@ -29,7 +29,7 @@ _root_.scala.Unit#`<init>`()V. => primaryctor <init>: ()Unit
 scalahost/integration/src/main/scala/example/Sugar.scala
 --------------------------------------------------------
 Dialect:
-Scala212
+Scala211
 
 Names:
 [8..15): example => _root_.example.
