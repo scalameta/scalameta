@@ -24,3 +24,32 @@ _root_.scala.Predef.String# => type String: String
 _root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: Any)Unit
 _root_.scala.Unit# => abstract final class Unit
 _root_.scala.Unit#`<init>`()V. => primaryctor <init>: ()Unit
+
+
+scalahost/integration/src/main/scala/example/Sugar.scala
+--------------------------------------------------------
+Dialect:
+Scala212
+
+Names:
+[8..15): example => _root_.example.
+[23..28): Sugar => _root_.example.Sugar#
+[29..29):  => _root_.example.Sugar#`<init>`()V.
+[33..37): List => _root_.scala.collection.immutable.List.
+[41..44): map => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
+[47..48): + => _root_.scala.Int#`+`(I)I.
+
+Denotations:
+_root_.example. => package example
+_root_.example.Sugar# => class Sugar
+_root_.example.Sugar#`<init>`()V. => primaryctor <init>: ()example.Sugar
+_root_.scala.Int#`+`(I)I. => abstract def +: (x: Int)Int
+_root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;. => final def map: [B, That](f: A => B)(implicit bf: scala.collection.generic.CanBuildFrom[List[A],B,That])That
+_root_.scala.collection.immutable.List. => final object List
+
+Sugars:
+[37..37): *.apply[Int]
+  [2..7): apply => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
+[44..44): *[Int, List[Int]]
+[51..51): *(scala.collection.immutable.List.canBuildFrom[Int])
+  [34..46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
