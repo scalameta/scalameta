@@ -132,7 +132,6 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.inputs.Input.File.toString") {
-    import java.io._
     import java.nio.charset.Charset
     val path = RelativePath("hello.scala").toAbsolute
     val syntax = path.syntax

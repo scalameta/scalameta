@@ -23,7 +23,6 @@ import scala.compat.Platform.EOL
 class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
-  import c.internal._
   import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
   import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Position => ReflectPosition}
   import scala.meta.{Tree => MetaTree, Dialect => Dialect}

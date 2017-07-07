@@ -1,10 +1,8 @@
 package scala.meta.contrib
 
-import scala.util.matching.Regex
 
 import fastparse.all._
 import fastparse.core.Parsed
-import org.scalameta.logger
 
 /**
   * Represents a scaladoc line.

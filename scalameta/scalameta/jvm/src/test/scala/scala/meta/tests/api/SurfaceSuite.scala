@@ -2,7 +2,6 @@ package scala.meta.tests
 package api
 
 import org.scalatest._
-import org.scalameta.tests._
 import org.scalameta.explore
 import scala.compat.Platform.EOL
 import scala.reflect.runtime.universe._

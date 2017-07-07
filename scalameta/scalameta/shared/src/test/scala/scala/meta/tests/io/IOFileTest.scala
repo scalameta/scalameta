@@ -1,7 +1,6 @@
 package scala.meta.tests.io
 
 import java.io.File
-import scala.meta.internal.io.PathIO
 import org.scalatest.FunSuite
 
 class IOFileTest extends FunSuite {

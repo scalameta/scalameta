@@ -3,7 +3,6 @@ package scala.meta.contrib
 import org.scalatest.FunSuite
 
 import scala.meta._
-import scala.meta.contrib._
 
 class ModReplacementTest extends FunSuite {
   test("Test replace class mods with no existing mods") {

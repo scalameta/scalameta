@@ -3,13 +3,10 @@ package semantic
 
 import org.scalameta.unreachable
 import scala.collection.mutable
-import scala.compat.Platform.EOL
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.{meta => m}
-import scala.{meta => mf}
 import scala.meta.internal.inputs._
-import scala.meta.internal.trees._
 
 trait AttributesOps { self: DatabaseOps =>
 

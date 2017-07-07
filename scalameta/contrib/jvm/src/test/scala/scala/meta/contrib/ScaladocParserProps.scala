@@ -2,10 +2,9 @@ package scala.meta.contrib
 
 import org.scalatest.FunSuite
 
-import scala.meta.contrib.DocToken._
 import scala.meta.testkit._
 import scala.meta.tokens.Token.Comment
-import scala.meta.{Defn, _}
+import scala.meta._
 import scala.util.Try
 
 class ScaladocParserProps extends FunSuite {

@@ -1,11 +1,9 @@
 package scala.meta.internal
 package scalahost
 
-import scala.meta.internal.io.PathIO
 import scala.meta.internal.semantic.FailureMode
 import scala.meta.internal.semantic.SemanticdbMode
 import scala.meta.io.AbsolutePath
-import scala.meta.io.RelativePath
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 

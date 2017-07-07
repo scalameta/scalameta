@@ -1,7 +1,6 @@
 package scala.meta.testkit
 
 import scala.collection.GenIterable
-import scala.meta.parsers.Parsed
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.meta._

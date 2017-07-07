@@ -4,7 +4,6 @@ package transversers
 import org.scalatest._
 import scala.compat.Platform.EOL
 import scala.meta._
-import scala.meta.internal.prettyprinters._
 
 class TransverserSuite extends FunSuite {
   test("Traverser Ok") {

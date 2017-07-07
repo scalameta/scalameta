@@ -1,7 +1,6 @@
 package scala.meta
 package tests
 
-import scala.meta.internal.io.FileIO
 import org.scalatest._
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}

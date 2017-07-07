@@ -1,6 +1,5 @@
 package scala.meta.contrib
 
-import scala.annotation.implicitNotFound
 
 /**
   *

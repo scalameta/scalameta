@@ -2,15 +2,9 @@ package scala.meta
 package semantic
 
 import scala.compat.Platform.EOL
-import scala.util.Try
 import org.scalameta.adt._
 import org.scalameta.invariants._
-import org.scalameta.unreachable
 import scala.meta.common._
-import scala.meta.inputs._
-import scala.meta.internal.inputs._
-import scala.meta.inputs.Position.Range
-import scala.meta.io._
 
 @root trait Symbol extends Optional {
   def syntax: String

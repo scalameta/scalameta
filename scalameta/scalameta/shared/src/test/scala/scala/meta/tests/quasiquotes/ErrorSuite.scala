@@ -3,7 +3,6 @@
 
 import org.scalatest._
 import org.scalameta.tests._
-import org.scalameta.invariants._
 import typecheckError.Options.WithPositions
 
 class ErrorSuite extends FunSuite {

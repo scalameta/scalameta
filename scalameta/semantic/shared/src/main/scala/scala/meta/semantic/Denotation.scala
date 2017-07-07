@@ -1,7 +1,6 @@
 package scala.meta
 package semantic
 
-import org.scalameta.adt._
 import org.scalameta.data._
 
 @data class Denotation(flags: Long, name: String, info: String) extends HasFlags {

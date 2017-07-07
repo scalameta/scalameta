@@ -3,8 +3,6 @@ package semantic
 
 import org.scalameta.unreachable
 import org.scalameta.debug
-import scala.compat.Platform.EOL
-import scala.meta.internal.trees._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import scala.meta.parsers.{XtensionParsersDialectInput, XtensionParseDialectInput}

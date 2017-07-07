@@ -3,12 +3,9 @@ package internal
 
 import java.nio.charset.Charset
 import java.nio.file.Files
-import scala.collection.immutable.Seq
 import scala.meta.inputs.{Input => mInput}
 import scala.meta.inputs.{Position => mPosition}
-import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PathIO
-import scala.meta.internal.semantic.vfs.Paths
 import scala.meta.internal.semantic.{schema => s}
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.io._

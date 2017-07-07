@@ -1,7 +1,6 @@
 package scala.meta.tests
 package prettyprinters
 
-import org.scalatest._
 import scala.meta._
 
 class PlatformSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {

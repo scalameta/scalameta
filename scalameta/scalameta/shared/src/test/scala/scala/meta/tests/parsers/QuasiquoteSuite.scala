@@ -1,7 +1,6 @@
 package scala.meta.tests
 package parsers
 
-import org.scalatest._
 import scala.meta._
 
 class QuasiquoteSuite extends ParseSuite {

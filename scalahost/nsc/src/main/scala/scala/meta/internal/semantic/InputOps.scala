@@ -7,8 +7,6 @@ import scala.{meta => m}
 import scala.meta.internal.io._
 import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSourceFile}
 import scala.reflect.io.{PlainFile => GPlainFile}
-import scala.util.Try
-import org.scalameta.logger
 
 trait InputOps { self: DatabaseOps =>
 

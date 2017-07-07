@@ -2,7 +2,6 @@ package scala.meta.internal
 package semantic
 
 import scala.{meta => m}
-import scala.reflect.io.{PlainFile => GPlainFile}
 
 trait ParseOps { self: DatabaseOps =>
 

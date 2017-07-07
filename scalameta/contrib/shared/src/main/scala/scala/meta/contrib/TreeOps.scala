@@ -6,7 +6,6 @@ import scala.language.higherKinds
 
 import scala.meta.contrib.equality.Equal
 import scala.meta.contrib.equality.TreeEquality
-import scala.meta.contrib.implicits.Equality._
 
 object TreeOps {
 

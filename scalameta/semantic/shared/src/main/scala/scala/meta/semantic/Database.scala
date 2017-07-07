@@ -7,7 +7,6 @@ import scala.meta.io._
 import scala.meta.internal.semantic._
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
-import scala.meta.{semantic => m}
 
 @data class Database(entries: Seq[Attributes]) extends Mirror {
   def database = this

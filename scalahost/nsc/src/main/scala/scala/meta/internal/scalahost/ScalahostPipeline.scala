@@ -3,7 +3,6 @@ package scalahost
 
 import java.io._
 import java.net.URI
-import scala.collection.mutable
 import scala.compat.Platform.EOL
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
@@ -12,9 +11,7 @@ import scala.{meta => m}
 import scala.meta.io._
 import scala.meta.internal.semantic.DatabaseOps
 import scala.meta.internal.semantic.{vfs => v}
-import scala.meta.internal.semantic.{schema => s}
 import scala.tools.nsc.doc.ScaladocGlobal
-import scala.meta.internal.semantic.schema.Message.Severity
 
 trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
   lazy val scalametaTargetroot = AbsolutePath(
