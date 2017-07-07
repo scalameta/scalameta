@@ -1,6 +1,5 @@
 package scala.meta.contrib
 
-
 import fastparse.all._
 import fastparse.core.Parsed
 

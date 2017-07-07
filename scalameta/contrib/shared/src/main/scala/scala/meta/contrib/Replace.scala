@@ -1,6 +1,5 @@
 package scala.meta.contrib
 
-
 /**
   *
   * The purpose of this typeclass is to replace
