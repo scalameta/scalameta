@@ -851,7 +851,6 @@ class SuccessSuite extends FunSuite {
   }
 
   test("1 t\"$tpe forSome { ..$stats }\"") {
-    import scala.language.existentials
     val t"$tpe forSome { ..$stats }" = t"X forSome { val a: A; val b: B }"
     assert(tpe.structure === "Type.Name(\"X\")")
     assert(stats.toString === "List(val a: A, val b: B)")

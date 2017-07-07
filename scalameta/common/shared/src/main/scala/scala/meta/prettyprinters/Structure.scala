@@ -2,8 +2,7 @@ package scala.meta
 package prettyprinters
 
 import scala.annotation.implicitNotFound
-import org.scalameta.collections._
-import Show.{ sequence => _, repeat => r, indent => i, newline => n, _ }
+import Show.{ sequence => _, repeat => r, _ }
 
 @implicitNotFound(msg = "don't know how to show[Structure] for ${T}")
 trait Structure[T] extends Show[T]

@@ -4,23 +4,18 @@ package quasiquotes
 
 import scala.runtime.ScalaRunTime
 import scala.language.implicitConversions
-import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-import scala.collection.{immutable, mutable}
+import scala.collection.mutable
 import org.scalameta._
-import org.scalameta.adt.{Liftables => AdtLiftables, Reflection => AdtReflection}
-import org.scalameta.data._
+import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.invariants._
 import scala.meta.dialects
-import scala.meta.classifiers._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
-import scala.meta.prettyprinters._
 import scala.meta.internal.trees._
 import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection}
 import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
-import scala.meta.internal.tokens._
 import scala.compat.Platform.EOL
 
 // TODO: ideally, we would like to bootstrap these macros on top of scala.meta
@@ -28,11 +23,9 @@ import scala.compat.Platform.EOL
 class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
-  import c.internal._
-  import decorators._
   import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
-  import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Type => ReflectType, Position => ReflectPosition}
-  import scala.meta.{Tree => MetaTree, Type => MetaType, Dialect => Dialect}
+  import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Position => ReflectPosition}
+  import scala.meta.{Tree => MetaTree, Dialect => Dialect}
   import scala.meta.inputs.{Position => MetaPosition, _}
   type MetaParser = (Input, Dialect) => MetaTree
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"

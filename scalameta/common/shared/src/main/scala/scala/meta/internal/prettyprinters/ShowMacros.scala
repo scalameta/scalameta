@@ -3,7 +3,6 @@ package internal
 package prettyprinters
 
 import scala.reflect.macros.blackbox.Context
-import scala.language.experimental.macros
 import scala.meta.prettyprinters._
 
 class ShowMacros(val c: Context) {

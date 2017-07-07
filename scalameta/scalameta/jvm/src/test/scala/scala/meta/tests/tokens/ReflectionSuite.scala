@@ -3,7 +3,6 @@ package tokens
 
 import org.scalatest._
 import scala.compat.Platform.EOL
-import scala.meta._
 import scala.reflect.runtime.{universe => ru}
 import scala.reflect.runtime.universe._
 

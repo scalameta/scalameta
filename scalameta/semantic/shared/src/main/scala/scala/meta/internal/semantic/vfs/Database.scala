@@ -2,8 +2,6 @@ package scala.meta.internal.semantic.vfs
 
 import org.scalameta.data._
 import scala.meta.io._
-import scala.meta.internal.io.InputStreamIO
-import scala.meta.internal.io.PathIO.fileSeparator
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
 

@@ -3,7 +3,6 @@ package internal
 package prettyprinters
 
 import scala.meta.tokens.Token
-import scala.meta.dialects.Scala211
 
 object TokenToString {
   def apply(token: Token) = {

@@ -1,7 +1,6 @@
 package scala.meta.contrib
 
 import scala.annotation.tailrec
-import scala.meta.Syntax
 import scala.meta.tokens.Token.Comment
 
 object CommentOps {

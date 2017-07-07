@@ -1,11 +1,9 @@
 package scala.meta
 
-import scala.annotation.implicitNotFound
 import org.scalameta.data._
 import org.scalameta.invariants._
 import scala.meta.dialects._
 import scala.meta.internal.dialects._
-import scala.language.experimental.macros
 import scala.compat.Platform.EOL
 
 // NOTE: can't put Dialect into scala.meta.Dialects

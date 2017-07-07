@@ -4,7 +4,6 @@ package trees
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
-import org.scalameta.unreachable
 import org.scalameta.adt.{LiftableMacros => AdtLiftableMacros}
 import scala.meta.internal.trees.{Reflection => AstReflection}
 import scala.meta.internal.trees.Metadata.Ast

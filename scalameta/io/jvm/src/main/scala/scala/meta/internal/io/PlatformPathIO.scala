@@ -1,7 +1,6 @@
 package scala.meta.internal.io
 
 import java.io.File
-import java.nio.file.Path
 import java.nio.file.Paths
 import scala.meta.io._
 

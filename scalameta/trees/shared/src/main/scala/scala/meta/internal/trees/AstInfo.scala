@@ -20,7 +20,6 @@ object AstInfo {
 
 class AstInfoMacros(val c: Context) extends MacroHelpers {
   import c.universe._
-  import c.internal._
 
   def materialize[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     val QuasiSymbol = rootMirror.staticClass("scala.meta.internal.trees.Quasi")

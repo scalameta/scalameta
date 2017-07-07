@@ -1,12 +1,9 @@
 package scala.meta.tests
 package parsers
 
-import org.scalatest._
-import java.net._
 import java.io._
 import scala.meta._
 import scala.meta.tokens.Token._
-import scala.meta.internal.prettyprinters.Positions
 import scala.meta.dialects.Scala211
 
 class BootstrapSuite extends ParseSuite {

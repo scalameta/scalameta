@@ -5,7 +5,6 @@ import org.scalameta.adt._
 import org.scalameta.data._
 import scala.meta.inputs._
 import scala.meta.internal.inputs._
-import scala.compat.Platform.EOL
 
 @root trait Parsed[+T] {
   def get: T = this match {

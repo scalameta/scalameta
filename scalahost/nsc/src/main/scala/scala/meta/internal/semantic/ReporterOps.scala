@@ -1,7 +1,6 @@
 package scala.meta.internal
 package semantic
 
-import scala.collection.mutable
 import scala.tools.nsc.reporters.StoreReporter
 import scala.reflect.internal.util.{Position => gPosition}
 

@@ -2,9 +2,6 @@ package scala.meta
 package prettyprinters
 
 import scala.language.experimental.macros
-import scala.language.implicitConversions
-import scala.language.higherKinds
-import scala.meta.common._
 import scala.compat.Platform.EOL
 
 trait Show[T] {

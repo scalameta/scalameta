@@ -7,7 +7,7 @@ import scalatags.Text.all._
 import org.scalameta.os._
 import scala.compat.Platform.EOL
 import scala.tools.nsc.interpreter._
-import scala.tools.nsc.{Settings, MainGenericRunner}
+import scala.tools.nsc.Settings
 
 object Readme {
   import scalatex.Main._

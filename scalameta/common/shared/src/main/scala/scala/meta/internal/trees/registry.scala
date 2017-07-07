@@ -19,7 +19,6 @@ class RegistryMacros(val c: Context) extends AstReflection with MacroHelpers {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._
-  import Flag._
   def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
     override def transformModule(mdef: ModuleDef): ModuleDef = {
       val ModuleDef(mods @ Modifiers(flags, privateWithin, anns), name, Template(parents, self, stats)) = mdef

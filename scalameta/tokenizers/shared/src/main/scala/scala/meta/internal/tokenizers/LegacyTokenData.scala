@@ -2,7 +2,6 @@ package scala.meta
 package internal
 package tokenizers
 
-import scala.util.Try
 import LegacyToken._
 import Chars._
 import scala.meta.inputs._

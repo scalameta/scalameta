@@ -2,8 +2,7 @@ package scala.meta
 package internal
 package inputs
 
-import org.scalameta.invariants._
-import scala.collection.{immutable, mutable}
+import scala.collection.mutable
 import scala.meta.inputs._
 
 trait InternalInput {

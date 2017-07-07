@@ -1,7 +1,5 @@
 package scala.meta.contrib
 
-import scala.annotation.implicitNotFound
-
 /**
   *
   * The purpose of this typeclass is to replace

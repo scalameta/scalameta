@@ -3,7 +3,6 @@ package semantic
 
 import org.scalameta.adt._
 import org.scalameta.data._
-import org.scalameta.unreachable
 import scala.meta.inputs._
 import scala.meta.internal.inputs._
 

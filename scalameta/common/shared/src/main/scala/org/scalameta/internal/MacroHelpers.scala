@@ -1,7 +1,6 @@
 package org.scalameta
 package internal
 
-import scala.reflect.macros.blackbox.Context
 
 trait MacroHelpers extends DebugFinder
                       with FreeLocalFinder

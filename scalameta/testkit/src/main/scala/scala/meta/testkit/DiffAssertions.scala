@@ -1,9 +1,5 @@
 package scala.meta.testkit
 
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.TimeZone
 
 import org.scalatest.FunSuiteLike
 import org.scalatest.exceptions.TestFailedException

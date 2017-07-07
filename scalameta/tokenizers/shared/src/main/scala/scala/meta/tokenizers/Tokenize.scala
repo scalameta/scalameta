@@ -1,7 +1,6 @@
 package scala.meta
 package tokenizers
 
-import scala.annotation.implicitNotFound
 import scala.meta.inputs._
 import scala.meta.internal.tokenizers._
 

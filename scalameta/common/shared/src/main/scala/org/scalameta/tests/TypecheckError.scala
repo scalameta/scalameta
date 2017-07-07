@@ -1,7 +1,6 @@
 package org.scalameta
 package tests
 
-import org.scalameta.adt._
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import scala.reflect.macros.ParseException

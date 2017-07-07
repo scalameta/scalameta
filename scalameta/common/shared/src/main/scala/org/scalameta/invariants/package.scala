@@ -2,7 +2,7 @@ package org.scalameta
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
-import scala.reflect.{ClassTag, classTag}
+import scala.reflect.ClassTag
 import org.scalameta.internal.MacroHelpers
 
 package object invariants {

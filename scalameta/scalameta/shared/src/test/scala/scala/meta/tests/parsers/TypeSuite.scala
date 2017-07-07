@@ -4,7 +4,7 @@ package parsers
 import scala.meta._
 import Term.{Super, Name => TermName}
 import Type.{Name => TypeName, _}
-import Name.{Anonymous, Indeterminate}
+import Name.Anonymous
 import scala.meta.dialects.Scala211
 import scala.meta.parsers.ParseException
 

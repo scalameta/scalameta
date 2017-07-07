@@ -2,7 +2,6 @@ package org.scalameta.adt
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
-import org.scalameta.invariants.nonEmpty
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
 import org.scalameta.adt.{Reflection => AdtReflection, Metadata => AdtMetadata}
@@ -37,7 +36,6 @@ class none extends StaticAnnotation {
 
 class AdtNamerMacros(val c: Context) extends MacroHelpers {
   import c.universe._
-  import definitions._
   import Flag._
 
   def root(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {

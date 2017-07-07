@@ -1,7 +1,6 @@
 package scala.meta.tests
 package parsers
 
-import org.scalatest.exceptions.TestFailedException
 
 import scala.meta._
 

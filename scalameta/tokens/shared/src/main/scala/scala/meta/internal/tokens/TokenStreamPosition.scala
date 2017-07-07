@@ -3,7 +3,6 @@ package internal
 package tokens
 
 import org.scalameta.data._
-import scala.meta.inputs._
 
 // NOTE: `start` and `end` are not characters offsets,
 // but token indices in the underlying token stream.
