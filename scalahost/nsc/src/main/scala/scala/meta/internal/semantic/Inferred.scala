@@ -57,10 +57,8 @@ case class Inferred(
         else PlainSugar.empty
       all.foldLeft(start)(_ + _)
     }
-    new Sugar(
-      Input.Sugar(sugar.syntax, input, pos.start, pos.end),
-      sugar.names.map(_.toMeta(input))
-    )
+    val sugarInput = Input.Sugar(sugar.syntax, input, pos.start, pos.end)
+    new Sugar(sugarInput, sugar.names.map(_.toMeta(sugarInput)))
   }
 
   def withConversion(syntax: PlainSugar): Inferred =

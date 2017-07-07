@@ -84,7 +84,12 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
     val database = computeDatabaseFromSnippet(code)
-//    pprint.log(database.toString)
+    pprint.log(database.toString)
+//    database.sugars.foreach {
+//      case (pos, sugar)=>
+//        pprint.log(sugar)
+//
+//    }
     val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
     val payload = database.toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
