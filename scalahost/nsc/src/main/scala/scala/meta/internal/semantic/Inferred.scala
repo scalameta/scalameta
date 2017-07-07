@@ -31,7 +31,7 @@ object AttributedSugar {
 // data structure to manage multiple inferred sugars at the same position.
 case class Inferred(
     select: Option[AttributedSugar] = None,
-    types: Option[AttributedSugar] = None,
+    targs: Option[AttributedSugar] = None,
     conversion: Option[AttributedSugar] = None,
     args: Option[AttributedSugar] = None
 ) {
@@ -40,18 +40,18 @@ case class Inferred(
     s"Not possible to define conversion + args! $args $conversion"
   )
 
-  private def all: List[AttributedSugar] = (select :: types :: conversion :: args :: Nil).flatten
-
-  private def onlyConversionIsDefined =
-    conversion.isDefined &&
-      select.isEmpty &&
-      types.isEmpty &&
-      args.isEmpty
-
-  private def needsPrefix: Boolean =
-    !onlyConversionIsDefined
+  private def all: List[AttributedSugar] = (select :: targs :: conversion :: args :: Nil).flatten
 
   def toSugar(input: Input, pos: Position): Sugar = {
+    def onlyConversionIsDefined =
+      conversion.isDefined &&
+        select.isEmpty &&
+        targs.isEmpty &&
+        args.isEmpty
+
+    def needsPrefix: Boolean =
+      !onlyConversionIsDefined
+
     val sugar: AttributedSugar = {
       val start =
         if (needsPrefix) AttributedSugar.star
