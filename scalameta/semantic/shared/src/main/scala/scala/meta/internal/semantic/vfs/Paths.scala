@@ -11,14 +11,14 @@ object Paths {
 
   def isSemanticdb(path: RelativePath): Boolean = {
     path.toNIO.startsWith(semanticDbPrefix.toNIO) &&
-    path.path.getFileName.toString.endsWith(semanticDbSuffix)
+    path.toNIO.getFileName.toString.endsWith(semanticDbSuffix)
   }
 
   def semanticdbToScala(path: RelativePath): RelativePath = {
     require(isSemanticdb(path))
     RelativePath(path.toNIO
       .relativize(path.toNIO)
-      .resolveSibling(path.path.getFileName.toString.stripSuffix(semanticDbSuffix) + scalaSuffix))
+      .resolveSibling(path.toNIO.getFileName.toString.stripSuffix(semanticDbSuffix) + scalaSuffix))
   }
 
   def isScala(path: RelativePath): Boolean = {

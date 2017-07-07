@@ -23,10 +23,10 @@ object PlatformFileIO {
     new ListFiles(path, Option(path.toFile.list()).toList.flatten.map(RelativePath.apply))
 
   def isFile(path: AbsolutePath): Boolean =
-    Files.isRegularFile(path.path)
+    Files.isRegularFile(path.toNIO)
 
   def isDirectory(path: AbsolutePath): Boolean =
-    Files.isDirectory(path.path)
+    Files.isDirectory(path.toNIO)
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     import scala.collection.JavaConverters._
@@ -36,7 +36,7 @@ object PlatformFileIO {
       .asScala
       .collect {
         case path if Files.isRegularFile(path) =>
-          RelativePath(root.path.relativize(path))
+          RelativePath(root.toNIO.relativize(path))
       }
     new ListFiles(root, relativeFiles.toList)
   }
