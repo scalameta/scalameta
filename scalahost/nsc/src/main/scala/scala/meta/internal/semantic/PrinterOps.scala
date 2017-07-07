@@ -7,20 +7,6 @@ import java.io.Writer
 import scala.collection.mutable
 import scala.reflect.internal.ModifierFlags._
 
-// A writer that keeps track of the current length.
-class LengthWriter(delegate: Writer, start: Int) extends Writer {
-  var length: Int = start
-  override def flush(): Unit = {
-    length = 0
-    delegate.flush()
-  }
-  override def write(cbuf: Array[Char], off: Int, len: Int): Unit = {
-    length += len
-    delegate.write(cbuf, off, len)
-  }
-  override def close(): Unit = delegate.close()
-}
-
 trait PrinterOps { self: DatabaseOps =>
   import g._
 
@@ -31,19 +17,23 @@ trait PrinterOps { self: DatabaseOps =>
     val names = printer.names.map {
       case ((start, end), symbol) => SugarRange(start, end, symbol)
     }.toList
+    printer.names.clear()
     val syntax = out.toString
     AttributedSugar(syntax, names)
   }
 
-  object SugarCodePrinter {
+  private object SugarCodePrinter {
     def apply(writer: Writer) = new SugarCodePrinter(new LengthWriter(writer, 0))
   }
-  class SugarCodePrinter(out: LengthWriter) extends TreePrinter(new PrintWriter(out)) {
+
+  // An adaptation of g.CodePrinter that emits positioned symbols for names inside sugars.
+  // The modifications have been wrapped in "+- scalac deviation" comments.
+  // In addition, the original source has been reformatted for better readability.
+  private class SugarCodePrinter(out: LengthWriter) extends TreePrinter(new PrintWriter(out)) {
+
+    // + scalac deviation
     case class ResolvedName(syntax: String, symbol: m.Symbol)
     val names = mutable.HashMap.empty[(Int, Int), m.Symbol]
-    val printRootPkg = false
-    protected val parentsStack: mutable.Stack[g.Tree] = scala.collection.mutable.Stack[Tree]()
-
     override def print(args: Any*): Unit = args.foreach {
       case ResolvedName(syntax, symbol) =>
         val start = out.length
@@ -54,8 +44,10 @@ trait PrinterOps { self: DatabaseOps =>
         }
       case els => super.print(els)
     }
+    // - scalac deviation
 
-    // Original code printer with minor changes below.
+    private val printRootPkg = false
+    protected val parentsStack: mutable.Stack[g.Tree] = scala.collection.mutable.Stack[Tree]()
 
     protected def currentTree: Option[g.Tree] =
       if (parentsStack.nonEmpty) Some(parentsStack.top) else None
@@ -153,9 +145,9 @@ trait PrinterOps { self: DatabaseOps =>
       t match {
         // case for: 1) (if (a) b else c).meth1.meth2 or 2) 1 + 5 should be represented as (1).+(5)
         case Select(qual, name)
-            if (name.isTermName && needsParentheses(qual)(insideLabelDef = false)) || isIntLitWithDecodedOp(
-              qual,
-              name) =>
+            if (name.isTermName &&
+              needsParentheses(qual)(insideLabelDef = false)) ||
+              isIntLitWithDecodedOp(qual, name) =>
           s"(${resolveSelect(qual)}).${printedName(name)}"
         case Select(qual, name) if name.isTermName =>
           s"${resolveSelect(qual)}.${printedName(name)}"
@@ -638,12 +630,15 @@ trait PrinterOps { self: DatabaseOps =>
             })
 
           if (printRootPkg && checkRootPackage(tree)) print(s"${printedName(nme.ROOTPKG)}.")
-          val printParentheses = needsParentheses(qual)(insideAnnotated = false) || isIntLitWithDecodedOp(
-            qual,
-            name)
+          val printParentheses =
+            needsParentheses(qual)(insideAnnotated = false) ||
+              isIntLitWithDecodedOp(qual, name)
+
+          // + scalac deviation
           val resolved = ResolvedName(printedName(name), sel.symbol.toSemantic)
           if (printParentheses) print("(", resolveSelect(qual), ").", resolved)
           else print(resolveSelect(qual), ".", resolved)
+        // - scalac deviation
 
         case id @ Ident(name) =>
           if (name.nonEmpty) {

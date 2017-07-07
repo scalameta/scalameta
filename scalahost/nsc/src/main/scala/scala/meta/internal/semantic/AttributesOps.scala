@@ -334,7 +334,7 @@ trait AttributesOps { self: DatabaseOps =>
                   if (targ.pos.isRange) return
                   val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                   val args = S.mkString(targs.map(showSugar), ", ")
-                  val syntax = S("[") +  args + "]"
+                  val syntax = S("[") + args + "]"
                   success(morePrecisePos, _.copy(targs = Some(syntax)))
                 case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
                   val pos = qual.pos.withStart(qual.pos.end).toMeta
