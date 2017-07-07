@@ -9,5 +9,5 @@ import scala.meta.inputs._
     names: List[(Position, Symbol)]
 ) {
   def syntax = input.value
-
+  def structure = s"""Sugar("$syntax")"""
 }

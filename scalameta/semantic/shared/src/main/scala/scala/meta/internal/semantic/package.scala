@@ -134,6 +134,18 @@ package object semantic {
               case _ => None
             }
           }
+          object cSugar {
+            def unapply(msugar: (mPosition, mSugar)): Option[s.Sugar] = msugar match {
+              case (mRange(srange), mSugar(mInput.Sugar(syntax, _, _, _), mnames)) =>
+                val snames = mnames.map {
+                  case (mRange(srange), msymbol) =>
+                    s.ResolvedName(Some(srange), msymbol.syntax)
+                }
+                Some(s.Sugar(Some(srange), syntax, snames))
+              case _ =>
+                None
+            }
+          }
           val (splatformpath, scontents) = minput match {
             case mInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
               path.toRelative(sourceroot).toString -> ""
@@ -162,7 +174,7 @@ package object semantic {
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val ssugars = msugars.map {
-            case (mRange(srange), ssyntax) => s.Sugar(Some(srange), ssyntax)
+            case cSugar(ssugar) => ssugar
             case other => sys.error(s"bad database: unsupported sugar $other")
           }
           s.Attributes(spath, scontents, sdialect, snames, smessages, sdenots, ssugars)

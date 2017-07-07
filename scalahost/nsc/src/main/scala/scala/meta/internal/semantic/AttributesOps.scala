@@ -418,12 +418,16 @@ trait AttributesOps { self: DatabaseOps =>
             }
             m.Message(mpos, mseverity, msg)
         }
+        val minput = unit.source.toInput
+
         val sugars = inferred.toIterator.map {
-          case (pos, inferred) => pos -> inferred.syntax
+          case (pos, inferred) =>
+            val input = m.Input.Sugar(inferred.syntax, minput, pos.start, pos.end)
+            pos -> m.Sugar(input, Nil)
         }
 
         m.Attributes(
-          unit.source.toInput,
+          minput,
           dialect,
           names.toList,
           messages.toList,

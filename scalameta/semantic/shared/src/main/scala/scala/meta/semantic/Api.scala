@@ -53,6 +53,9 @@ private[meta] trait Aliases {
   type Attributes = scala.meta.semantic.Attributes
   val Attributes = scala.meta.semantic.Attributes
 
+  type Sugar = scala.meta.semantic.Sugar
+  val Sugar = scala.meta.semantic.Sugar
+
   type Symbol = scala.meta.semantic.Symbol
   val Symbol = scala.meta.semantic.Symbol
 

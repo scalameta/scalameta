@@ -57,8 +57,8 @@ object AttributesSyntax {
     appendSection("Denotations", s_denots)
 
     val s_sugars = sugars.toList.sortBy(_._1.start).map {
-      case ((pos, syntax)) =>
-        s"${pos.range} $syntax"
+      case ((pos, sugar)) =>
+        s"${pos.range} ${sugar.syntax}"
     }
     appendSection("Sugars", s_sugars)
 

@@ -14,7 +14,7 @@ import scala.meta.internal.semantic.{schema => s}
   lazy val names: Map[Position, Symbol] = entries.flatMap(_.names).toMap
   lazy val messages: Seq[Message] = entries.flatMap(_.messages)
   lazy val denotations: Map[Symbol, Denotation] = entries.flatMap(_.denotations).toMap
-  lazy val sugars: Map[Position, String] = entries.flatMap(_.sugars).toMap
+  lazy val sugars: Map[Position, Sugar] = entries.flatMap(_.sugars).toMap
 
   def save(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
     this.toSchema(sourceroot).toVfs(targetroot).save()
