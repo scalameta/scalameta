@@ -40,7 +40,7 @@ private[semantic] trait HasFlags {
   def isSecondaryCtor: Boolean = hasFlag(SECONDARYCTOR)
   def isMacro: Boolean = hasFlag(MACRO)
   def isType: Boolean = hasFlag(TYPE)
-  def isPARAM: Boolean = hasFlag(PARAM)
+  def isParam: Boolean = hasFlag(PARAM)
   def isTypeParam: Boolean = hasFlag(TYPEPARAM)
   def isObject: Boolean = hasFlag(OBJECT)
   def isPackage: Boolean = hasFlag(PACKAGE)
