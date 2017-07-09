@@ -23,7 +23,7 @@ object enquote {
         case '\\' => sb.append("\\\\")
         case '"' if style eq DoubleQuotes =>
           sb.append("\\\"")
-        case ''' if style eq SingleQuotes =>
+        case '\'' if style eq SingleQuotes =>
           sb.append("\\\'")
         case c =>
           sb.append(c)
