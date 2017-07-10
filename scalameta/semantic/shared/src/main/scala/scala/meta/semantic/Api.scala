@@ -17,13 +17,13 @@ private[meta] trait Api extends Flags {
   }
 
   implicit class XtensionTermSugar(term: Term)(implicit m: Mirror) {
-    def sugar: Option[Stat] =
+    def sugar: Option[Term] =
       for {
         sugar <- m.database.sugars.get(term.pos)
         // Would be nice if there was a less hacky way to get the underlying dialect
         // of a Tree.
         dialect <- term.tokens.headOption.map(_.dialect)
-      } yield dialect(sugar.input).parse[Stat].get
+      } yield dialect(sugar.input).parse[Term].get
   }
 
   implicit class XtensionRefSymbol(ref: Ref)(implicit m: Mirror) {

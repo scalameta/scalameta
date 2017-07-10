@@ -165,7 +165,7 @@ class SurfaceSuite extends FunSuite {
       |* scala.meta.Dialect.apply(scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
       |* scala.meta.Ref(implicit scala.meta.semantic.Mirror).symbol: scala.meta.semantic.Symbol
-      |* scala.meta.Term(implicit scala.meta.semantic.Mirror).sugar: Option[scala.meta.Stat]
+      |* scala.meta.Term(implicit scala.meta.semantic.Mirror).sugar: Option[scala.meta.Term]
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
