@@ -80,9 +80,9 @@ object Input {
     }
   }
 
-  @data class Sugar(value: scala.Predef.String, underlying: Input, start: Int, end: Int) extends Input {
+  @data class Sugar(value: scala.Predef.String, input: Input, start: Int, end: Int) extends Input {
     lazy val chars = value.toCharArray
-    override def toString = s"""Input.Sugar("$value", $underlying, $start, $end)"""
+    override def toString = s"""Input.Sugar("$value", $input, $start, $end)"""
   }
 
   // NOTE: `start` and `end` are String.substring-style,
