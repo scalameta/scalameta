@@ -61,7 +61,8 @@ object Input {
     def apply(path: AbsolutePath, charset: Charset): Input.File = new Input.File(path, charset)
     def apply(path: AbsolutePath): Input.File = apply(path, Charset.forName("UTF-8"))
     def apply(file: java.io.File, charset: Charset): Input.File = apply(AbsolutePath(file), charset)
-    def apply(file: java.io.File): Input.File = apply(file, Charset.forName("UTF-8"))
+    def apply(file: java.io.File): Input.File = apply(AbsolutePath(file))
+    def apply(path: nio.Path, charset: Charset): Input.File = apply(AbsolutePath(path), charset)
     def apply(path: nio.Path): Input.File = apply(AbsolutePath(path))
 
     @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: File) extends Serializable {
