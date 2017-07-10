@@ -73,6 +73,8 @@ class PublicSuite extends FunSuite {
       (??? : Input).parse[Term]
       (??? : String).parse[Term]
       (??? : java.io.File).parse[Term]
+      (??? : java.nio.file.Path).parse[Term]
+      (??? : AbsolutePath).parse[Term]
       (??? : Tokens).parse[Term]
       (??? : Array[Char]).parse[Term]
     """) === "")
