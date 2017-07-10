@@ -8,7 +8,10 @@ import scala.meta.io._
 
 object PlatformFileIO {
   def newInputStream(uri: URI): InputStream =
-    if (uri.getScheme == "file") new ByteArrayInputStream(readAllBytes(AbsolutePath(uri.getPath)))
+    new ByteArrayInputStream(readAllBytes(uri))
+
+  def readAllBytes(uri: URI): Array[Byte] =
+    if (uri.getScheme == "file") readAllBytes(AbsolutePath(uri.getPath))
     else throw new UnsupportedOperationException(s"Can't read $uri as InputStream")
 
   def readAllBytes(path: AbsolutePath): Array[Byte] = JSIO.inNode {
