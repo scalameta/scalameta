@@ -5,13 +5,13 @@ import scala.meta.io.RelativePath
 import org.scalameta.invariants.require
 
 object SemanticdbPaths {
-  private val semanticdbPrefix: RelativePath = RelativePath("META-INF").resolve("semanticdb")
+  private val semanticdbPrefix = RelativePath("META-INF").resolve("semanticdb")
   private val semanticdbExtension = "semanticdb"
   private val scalaExtension = "scala"
 
   def isSemanticdb(path: RelativePath): Boolean = {
     path.toNIO.startsWith(semanticdbPrefix.toNIO) &&
-    PathIO.extension(path.toNIO).contains(semanticdbExtension)
+    PathIO.extension(path.toNIO) == semanticdbExtension
   }
 
   def toScala(path: RelativePath): RelativePath = {
@@ -22,7 +22,7 @@ object SemanticdbPaths {
   }
 
   def isScala(path: RelativePath): Boolean = {
-    PathIO.extension(path.toNIO).contains(scalaExtension)
+    PathIO.extension(path.toNIO) == scalaExtension
   }
 
   def fromScala(path: RelativePath): RelativePath = {

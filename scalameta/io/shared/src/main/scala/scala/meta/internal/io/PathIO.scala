@@ -36,10 +36,11 @@ object PathIO {
     if (fileSeparatorChar != '/') path.replace('/', PathIO.fileSeparatorChar)
     else path
 
-  def extension(path: Path): Option[String] = {
+  /** Returns file extension of this path, returns empty string if path has no extension */
+  def extension(path: Path): String = {
     val filename = path.getFileName.toString
     val idx = filename.lastIndexOf('.')
-    if (idx == -1) None
-    else Some(filename.substring(idx + 1))
+    if (idx == -1) ""
+    else filename.substring(idx + 1)
   }
 }
