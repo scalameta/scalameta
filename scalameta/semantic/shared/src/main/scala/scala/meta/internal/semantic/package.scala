@@ -98,10 +98,10 @@ package object semantic {
             case s.SymbolDenotation(m.Symbol(msym), Some(sDenotation(mdenot))) => msym -> mdenot
             case other => sys.error(s"bad protobuf: unsupported denotation $other")
           }.toList
-          val msugars = ssugars.map {
+          val msugars = ssugars.toIterator.map {
             case sSugar(mpos, msugar) => mpos -> msugar
             case other => sys.error(s"bad protobuf: unsupported sugar $other")
-          }.toList
+          }.toMap
           m.Attributes(minput, mdialect, mnames, mmessages, mdenots, msugars)
       }
       m.Database(mentries.toList)
@@ -174,10 +174,10 @@ package object semantic {
             case (ssym, mDenotation(sdenot)) => s.SymbolDenotation(ssym.syntax, Some(sdenot))
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
-          val ssugars = msugars.map {
+          val ssugars = msugars.toIterator.map {
             case mPositionSugar(ssugar) => ssugar
             case other => sys.error(s"bad database: unsupported sugar $other")
-          }
+          }.toSeq
           s.Attributes(spath, scontents, sdialect, snames, smessages, sdenots, ssugars)
       }
       s.Database(sentries)

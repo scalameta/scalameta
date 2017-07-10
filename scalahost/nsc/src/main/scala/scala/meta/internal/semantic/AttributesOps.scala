@@ -428,7 +428,7 @@ trait AttributesOps { self: DatabaseOps =>
           names.toList,
           messages.toList,
           denotations.toList,
-          sugars.toList
+          sugars.toMap
         )
       })
     }

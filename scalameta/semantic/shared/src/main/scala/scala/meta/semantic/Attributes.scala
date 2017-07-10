@@ -11,7 +11,7 @@ import scala.meta.internal.inputs._
   names: List[(Position, Symbol)],
   messages: List[Message],
   denotations: List[(Symbol, Denotation)],
-  sugars: List[(Position, Sugar)]
+  sugars: Map[Position, Sugar]
 ) {
   def syntax: String = scala.meta.internal.semantic.AttributesSyntax(this)
   def structure: String = {

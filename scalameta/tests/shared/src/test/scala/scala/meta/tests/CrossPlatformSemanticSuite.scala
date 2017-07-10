@@ -37,4 +37,18 @@ class CrossPlatformSemanticSuite extends FunSuite {
       assert(!sattrs.filename.contains('\\'))
     }
   }
+
+  test("Database.sugars") {
+    implicit val mirror = Database.load(classpath, sourcepath)
+    val attribute = mirror.entries.find(_.input.syntax.contains("Sugar")).get
+    val sugarAsserts = attribute.source.collect {
+      case term @ q"Array.empty[Int]" =>
+        val sugar = term.asInstanceOf[Term].sugar.get
+        val arrayOpsNames = sugar.collect {
+          case n @ q"intArrayOps" => n.asInstanceOf[Name].symbol
+        }
+        assert(arrayOpsNames.nonEmpty)
+    }
+    assert(sugarAsserts.nonEmpty)
+  }
 }

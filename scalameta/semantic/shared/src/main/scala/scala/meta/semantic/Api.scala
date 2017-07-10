@@ -9,7 +9,21 @@ import scala.meta.parsers.{XtensionParsersDialectInput, XtensionParseDialectInpu
 
 private[meta] trait Api extends Flags {
   implicit class XtensionMirrorSources(mirror: Mirror) {
-    def sources: Seq[Source] = mirror.database.entries.map { attrs => attrs.dialect(attrs.input).parse[Source].get }
+    def sources: Seq[Source] = mirror.database.entries.map(_.source)
+  }
+
+  implicit class XtensionAttributesSource(attributes: Attributes) {
+    def source: Source = attributes.dialect(attributes.input).parse[Source].get
+  }
+
+  implicit class XtensionTermSugar(term: Term)(implicit m: Mirror) {
+    def sugar: Option[Stat] =
+      for {
+        sugar <- m.database.sugars.get(term.pos)
+        // Would be nice if there was a less hacky way to get the underlying dialect
+        // of a Tree.
+        dialect <- term.tokens.headOption.map(_.dialect)
+      } yield dialect(sugar.input).parse[Stat].get
   }
 
   implicit class XtensionRefSymbol(ref: Ref)(implicit m: Mirror) {
