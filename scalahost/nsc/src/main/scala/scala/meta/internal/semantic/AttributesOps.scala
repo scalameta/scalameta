@@ -315,15 +315,16 @@ trait AttributesOps { self: DatabaseOps =>
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
                   val syntax = showSugar(gview.fun) + "(" + S.star + ")"
-                  success(pos, _.withConversion(syntax))
+                  success(pos, _.copy(conversion = Some(syntax)))
                   inferredImplicitConv += gview.fun
                 case gimpl: g.ApplyToImplicitArgs =>
                   gimpl.fun match {
                     case gview: g.ApplyImplicitView =>
+                      inferredImplicitConv += gview
                       val pos = gtree.pos.toMeta
                       val args = S.mkString(gimpl.args.map(showSugar), ", ")
                       val syntax = showSugar(gview.fun) + "(" + S.star + ")(" + args + ")"
-                      success(pos, _.withConversion(syntax))
+                      success(pos, _.copy(conversion = Some(syntax)))
                     case gfun =>
                       val fullyQualifiedArgs = S.mkString(gimpl.args.map(showSugar), ", ")
                       val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toMeta

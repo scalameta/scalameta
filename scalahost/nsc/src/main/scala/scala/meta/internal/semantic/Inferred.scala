@@ -63,7 +63,4 @@ case class Inferred(
     new Sugar(sugarInput, sugar.names.map(_.toMeta(sugarInput)))
   }
 
-  def withConversion(syntax: AttributedSugar): Inferred =
-    if (conversion.isDefined) this
-    else copy(conversion = Some(syntax))
 }
