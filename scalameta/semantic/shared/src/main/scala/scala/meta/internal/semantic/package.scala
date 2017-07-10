@@ -3,8 +3,10 @@ package internal
 
 import java.nio.charset.Charset
 import java.nio.file.Files
+import org.scalameta.invariants.require
 import scala.meta.inputs.{Input => mInput}
 import scala.meta.inputs.{Position => mPosition}
+import scala.meta.semantic.{Sugar => mSugar}
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.semantic.{schema => s}
 import scala.meta.internal.semantic.{vfs => v}
@@ -66,6 +68,19 @@ package object semantic {
               case _ => None
             }
           }
+          object sSugar {
+            def unapply(ssugar: s.Sugar): Option[(mPosition, mSugar)] = ssugar match {
+              case s.Sugar(Some(srange @ sRange(mpos)), syntax, snames) =>
+              require(ssugar.syntax.nonEmpty)
+              val sugarinput = mInput.Sugar(syntax, minput, srange.start, srange.end)
+                val mnames = snames.toIterator.map {
+                  case s.ResolvedName(Some(s.Range(sstart, send)), m.Symbol(msym)) =>
+                    val sugarpos: mPosition = mPosition.Range(sugarinput, sstart, send)
+                    sugarpos -> msym
+                }.toMap
+              Some(mpos -> mSugar(sugarinput, mnames))
+            }
+          }
           val mdialect = {
             val mdialect = Dialect.standards.get(sdialect)
             mdialect.getOrElse(sys.error(s"bad protobuf: unsupported dialect ${sdialect}"))
@@ -83,10 +98,10 @@ package object semantic {
             case s.SymbolDenotation(m.Symbol(msym), Some(sDenotation(mdenot))) => msym -> mdenot
             case other => sys.error(s"bad protobuf: unsupported denotation $other")
           }.toList
-          val msugars = ssugars.map {
-            case s.Sugar(Some(sRange(mpos)), msyntax: String) => mpos -> msyntax
+          val msugars = ssugars.toIterator.map {
+            case sSugar(mpos, msugar) => mpos -> msugar
             case other => sys.error(s"bad protobuf: unsupported sugar $other")
-          }.toList
+          }.toMap
           m.Attributes(minput, mdialect, mnames, mmessages, mdenots, msugars)
       }
       m.Database(mentries.toList)
@@ -120,6 +135,18 @@ package object semantic {
               case _ => None
             }
           }
+          object mPositionSugar {
+            def unapply(msugar: (mPosition, mSugar)): Option[s.Sugar] = msugar match {
+              case (mRange(srange), mSugar(mInput.Sugar(syntax, _, _, _), mnames)) =>
+                val snames = mnames.toIterator.map {
+                  case (mPosition.Range(_: mInput.Sugar, sstart, send), msymbol) =>
+                    s.ResolvedName(Some(s.Range(sstart, send)), msymbol.syntax)
+                }.toSeq
+                Some(s.Sugar(Some(srange), syntax, snames))
+              case _ =>
+                None
+            }
+          }
           val (splatformpath, scontents) = minput match {
             case mInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
               path.toRelative(sourceroot).toString -> ""
@@ -147,10 +174,10 @@ package object semantic {
             case (ssym, mDenotation(sdenot)) => s.SymbolDenotation(ssym.syntax, Some(sdenot))
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
-          val ssugars = msugars.map {
-            case (mRange(srange), ssyntax) => s.Sugar(Some(srange), ssyntax)
+          val ssugars = msugars.toIterator.map {
+            case mPositionSugar(ssugar) => ssugar
             case other => sys.error(s"bad database: unsupported sugar $other")
-          }
+          }.toSeq
           s.Attributes(spath, scontents, sdialect, snames, smessages, sdenots, ssugars)
       }
       s.Database(sentries)

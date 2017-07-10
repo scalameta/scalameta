@@ -54,4 +54,5 @@ message Denotation {
 message Sugar {
   Range range = 1;
   string syntax = 2;
+  repeated ResolvedName names = 3;
 }

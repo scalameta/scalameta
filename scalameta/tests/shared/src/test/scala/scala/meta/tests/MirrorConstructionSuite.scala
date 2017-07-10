@@ -5,10 +5,12 @@ import org.scalatest._
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
 
-class CrossPlatformSemanticSuite extends FunSuite {
+trait BaseSemanticSuite extends FunSuiteLike {
   val sourcepath = Sourcepath(BuildInfo.mirrorSourcepath)
   val classpath = Classpath(BuildInfo.mirrorClasspath)
+}
 
+class MirrorConstructionSuite extends BaseSemanticSuite {
   def semanticdbs: List[AbsolutePath] = classpath.deep.collect {
     case path if v.SemanticdbPaths.isSemanticdb(path.name) =>
       path.base.resolve(path.name)

@@ -205,11 +205,15 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |object RunMe {
       |  CommandeerDSL(null.asInstanceOf[Foo])
       |}
-  """.trim.stripMargin,
+    """.trim.stripMargin,
     """
-      |[324..324) [g.Foo, g.FooDSL]
-      |[348..348) (g.Foo.fooDSL)
-  """.trim.stripMargin
+      |[324..324): *.apply[g.Foo, g.FooDSL]
+      |  [0..1): * => _star_.
+      |  [2..7): apply => _root_.g.CommandeerDSL.apply(Ljava/lang/Object;Lg/CommandeerDSL;)Lg/CommandeerDSL;.
+      |[348..348): *(g.Foo.fooDSL)
+      |  [0..1): * => _star_.
+      |  [8..14): fooDSL => _root_.g.Foo.fooDSL.
+    """.trim.stripMargin
   )
 
   sugars(
@@ -240,11 +244,21 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
   """.trim.stripMargin,
     """
-      |[201..201) [Int, List[Int]]
-      |[209..209) (scala.collection.immutable.List.canBuildFrom[Int])
-      |[247..247) (h.C.list[Int](h.C.int))
-      |[273..275) h.X.cvt[Int](*)(h.C.int)
-      |[304..304) [h.C[Int]]
+      |[201..201): *[Int, List[Int]]
+      |  [0..1): * => _star_.
+      |[209..209): *(scala.collection.immutable.List.canBuildFrom[Int])
+      |  [0..1): * => _star_.
+      |  [34..46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
+      |[247..247): *(h.C.list[Int](h.C.int))
+      |  [0..1): * => _star_.
+      |  [6..10): list => _root_.h.C.list(Lh/C;)Lh/C;.
+      |  [20..23): int => _root_.h.C.int()Lh/C;.
+      |[273..275): h.X.cvt[Int](*)(h.C.int)
+      |  [4..7): cvt => _root_.h.X.cvt(Ljava/lang/Object;Lh/C;)Lh/X;.
+      |  [13..14): * => _star_.
+      |  [20..23): int => _root_.h.C.int()Lh/C;.
+      |[304..304): *[h.C[Int]]
+      |  [0..1): * => _star_.
   """.trim.stripMargin
   )
 
@@ -314,7 +328,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   sugars(
     "class J[T: Manifest] { val arr = Array.empty[T] }",
-    "[47..47) (J.this.evidence$1)".trim
+    """|[47..47): *(J.this.evidence$1)
+       |  [0..1): * => _star_.
+       |  [9..19): evidence$1 => _empty_.J#(evidence$1)
+       |""".trim.stripMargin
   )
 
   names(
@@ -451,8 +468,12 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  List(1) + "blaH"
        |}
     """.stripMargin,
-    """|[13..20) scala.Predef.any2stringadd[List[Int]](*)
-       |[17..17) [Int]
+    """|[13..20): scala.Predef.any2stringadd[List[Int]](*)
+       |  [13..26): any2stringadd => _root_.scala.Predef.any2stringadd(Ljava/lang/Object;)Ljava/lang/Object;.
+       |  [38..39): * => _star_.
+       |[17..17): *.apply[Int]
+       |  [0..1): * => _star_.
+       |  [2..7): apply => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
        |""".stripMargin
   )
 
@@ -463,7 +484,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  val x: Ordered[F] = new F
        |}
     """.stripMargin,
-    """|[86..91) scala.math.Ordered.orderingToOrdered[r.F](*)(r.this.ordering)
+    """|[86..91): scala.math.Ordered.orderingToOrdered[r.F](*)(r.this.ordering)
+       |  [19..36): orderingToOrdered => _root_.scala.math.Ordered.orderingToOrdered(Ljava/lang/Object;Lscala/math/Ordering;)Lscala/math/Ordered;.
+       |  [42..43): * => _star_.
+       |  [52..60): ordering => _empty_.r.ordering.
        |""".stripMargin
   )
 
@@ -477,9 +501,15 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  1.asInstanceOf[Int => Int](2)
        |}
     """.stripMargin,
-    """|[32..32) .apply
-       |[71..71) .apply
-       |[102..102) .apply
+    """|[32..32): *.apply
+       |  [0..1): * => _star_.
+       |  [2..7): apply => _empty_.s.apply()I.
+       |[71..71): *.apply
+       |  [0..1): * => _star_.
+       |  [2..7): apply => _empty_.s.Bar.apply()Ls/Bar;.
+       |[102..102): *.apply
+       |  [0..1): * => _star_.
+       |  [2..7): apply => _root_.scala.Function1#apply(Ljava/lang/Object;)Ljava/lang/Object;.
        |""".stripMargin
   )
 
