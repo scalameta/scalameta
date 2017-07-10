@@ -251,8 +251,8 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [34..46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
       |[247..247): *(h.C.list[Int](h.C.int))
       |  [0..1): * => _star_.
-      |  [6..9): lis => _root_.h.C.int()Lh/C;.
       |  [6..10): list => _root_.h.C.list(Lh/C;)Lh/C;.
+      |  [20..23): int => _root_.h.C.int()Lh/C;.
       |[273..275): h.X.cvt[Int](*)(h.C.int)
       |  [4..7): cvt => _root_.h.X.cvt(Ljava/lang/Object;Lh/C;)Lh/X;.
       |  [13..14): * => _star_.

@@ -142,7 +142,6 @@ trait PrinterOps { self: DatabaseOps =>
         if (printPositions) printer.withPositions else printer.withoutPositions)
       printer.print(what)
       writer.flush()
-      out.length = writer.length
       buffer.toString
     }
 

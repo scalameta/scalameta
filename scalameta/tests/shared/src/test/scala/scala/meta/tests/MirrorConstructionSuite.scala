@@ -5,10 +5,12 @@ import org.scalatest._
 import scala.meta.internal.semantic.{vfs => v}
 import scala.meta.internal.semantic.{schema => s}
 
-class CrossPlatformSemanticSuite extends FunSuite {
+trait BaseSemanticSuite extends FunSuiteLike {
   val sourcepath = Sourcepath(BuildInfo.mirrorSourcepath)
   val classpath = Classpath(BuildInfo.mirrorClasspath)
+}
 
+class MirrorConstructionSuite extends BaseSemanticSuite {
   def semanticdbs: List[AbsolutePath] = classpath.deep.collect {
     case path if v.SemanticdbPaths.isSemanticdb(path.name) =>
       path.base.resolve(path.name)
@@ -36,19 +38,5 @@ class CrossPlatformSemanticSuite extends FunSuite {
       val sattrs = s.Attributes.parseFrom(path.readAllBytes)
       assert(!sattrs.filename.contains('\\'))
     }
-  }
-
-  test("Database.sugars") {
-    implicit val mirror = Database.load(classpath, sourcepath)
-    val attribute = mirror.entries.find(_.input.syntax.contains("Sugar")).get
-    val sugarAsserts = attribute.source.collect {
-      case term @ q"Array.empty[Int]" =>
-        val sugar = term.asInstanceOf[Term].sugar.get
-        val arrayOpsNames = sugar.collect {
-          case n @ q"intArrayOps" => n.asInstanceOf[Name].symbol
-        }
-        assert(arrayOpsNames.nonEmpty)
-    }
-    assert(sugarAsserts.nonEmpty)
   }
 }
