@@ -4,14 +4,14 @@ package internal.semantic
 import scala.meta.inputs.Position.Range
 
 case class SugarRange(start: Int, end: Int, symbol: Symbol) {
-  def withOffset(offset: Int) = SugarRange(start + offset, end + offset, symbol)
+  def addOffset(offset: Int) = SugarRange(start + offset, end + offset, symbol)
   def toMeta(input: Input): (Range, Symbol) =
     (Position.Range(input, start, end), symbol)
 }
 case class AttributedSugar(syntax: String, names: List[SugarRange]) {
   def +(other: String) = AttributedSugar(syntax + other, names)
   def +(other: AttributedSugar) =
-    AttributedSugar(syntax + other.syntax, names ++ other.names.map(_.withOffset(syntax.length)))
+    AttributedSugar(syntax + other.syntax, names ++ other.names.map(_.addOffset(syntax.length)))
 }
 
 object AttributedSugar {
@@ -28,6 +28,7 @@ object AttributedSugar {
       }
   }
 }
+
 // data structure to manage multiple inferred sugars at the same position.
 case class Inferred(
     select: Option[AttributedSugar] = None,
