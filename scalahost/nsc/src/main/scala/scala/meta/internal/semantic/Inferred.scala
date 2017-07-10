@@ -1,11 +1,9 @@
 package scala.meta
 package internal.semantic
 
-import scala.meta.inputs.Position.Range
-
 case class SugarRange(start: Int, end: Int, symbol: Symbol) {
   def addOffset(offset: Int) = SugarRange(start + offset, end + offset, symbol)
-  def toMeta(input: Input): (Range, Symbol) =
+  def toMeta(input: Input): (Position, Symbol) =
     (Position.Range(input, start, end), symbol)
 }
 case class AttributedSugar(syntax: String, names: List[SugarRange]) {
@@ -60,7 +58,8 @@ case class Inferred(
       all.foldLeft(start)(_ + _)
     }
     val sugarInput = Input.Sugar(sugar.syntax, input, pos.start, pos.end)
-    new Sugar(sugarInput, sugar.names.map(_.toMeta(sugarInput)))
+    val names = sugar.names.toIterator.map(_.toMeta(sugarInput)).toMap
+    new Sugar(sugarInput, names)
   }
 
 }

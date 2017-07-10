@@ -75,9 +75,9 @@ package object semantic {
               val sugarinput = mInput.Sugar(syntax, minput, srange.start, srange.end)
                 val mnames = snames.toIterator.map {
                   case s.ResolvedName(Some(s.Range(sstart, send)), m.Symbol(msym)) =>
-                    val sugarpos = mPosition.Range(sugarinput, sstart, send)
+                    val sugarpos: mPosition = mPosition.Range(sugarinput, sstart, send)
                     sugarpos -> msym
-                }.toList
+                }.toMap
               Some(mpos -> mSugar(sugarinput, mnames))
             }
           }
@@ -138,10 +138,10 @@ package object semantic {
           object mPositionSugar {
             def unapply(msugar: (mPosition, mSugar)): Option[s.Sugar] = msugar match {
               case (mRange(srange), mSugar(mInput.Sugar(syntax, _, _, _), mnames)) =>
-                val snames = mnames.map {
+                val snames = mnames.toIterator.map {
                   case (mPosition.Range(_: mInput.Sugar, sstart, send), msymbol) =>
                     s.ResolvedName(Some(s.Range(sstart, send)), msymbol.syntax)
-                }
+                }.toSeq
                 Some(s.Sugar(Some(srange), syntax, snames))
               case _ =>
                 None
