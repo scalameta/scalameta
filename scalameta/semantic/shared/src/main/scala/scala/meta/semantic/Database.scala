@@ -11,7 +11,16 @@ import scala.meta.internal.semantic.{schema => s}
 @data class Database(entries: Seq[Attributes]) extends Mirror {
   def database = this
 
-  lazy val names: Map[Position, Symbol] = entries.flatMap(_.names).toMap
+  lazy val names: Map[Position, Symbol] = {
+    val builder = Map.newBuilder[Position, Symbol]
+    entries.foreach { entry =>
+      entry.names.foreach(builder += _)
+      entry.sugars.foreach { case (_, sugar) =>
+        sugar.names.foreach(builder += _)
+      }
+    }
+    builder.result()
+  }
   lazy val messages: Seq[Message] = entries.flatMap(_.messages)
   lazy val denotations: Map[Symbol, Denotation] = entries.flatMap(_.denotations).toMap
   lazy val sugars: Map[Position, Sugar] = entries.flatMap(_.sugars).toMap
