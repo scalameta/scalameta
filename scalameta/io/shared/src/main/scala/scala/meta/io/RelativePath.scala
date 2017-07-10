@@ -9,24 +9,25 @@ import java.nio.file.Paths
 import scala.meta.internal.io.PathIO
 
 /** Wrapper around a relative nio.Path. */
-sealed abstract case class RelativePath(path: Path) {
-  require(!path.isAbsolute, s"$path is not relative!")
+sealed abstract case class RelativePath(toNIO: Path) {
+  require(!toNIO.isAbsolute, s"$toNIO is not relative!")
+  def toFile: File = toNIO.toFile
+  def toURI: URI = toFile.toURI
+
   def syntax: String = toString
   def structure: String = s"""RelativePath("$syntax")"""
-  override def toString: String = path.toString
-
-  def toNIO: Path = path
-  def toFile: File = path.toFile
-  def toURI: URI = toFile.toURI
+  override def toString: String = toNIO.toString
 
   def toAbsolute: AbsolutePath = PathIO.workingDirectory.resolve(this)
   def toAbsolute(root: AbsolutePath): AbsolutePath = root.resolve(this)
 
-  def resolve(other: nio.Path): RelativePath = RelativePath(path.resolve(other))
-  def resolve(other: RelativePath): RelativePath = resolve(other.path)
+  def relativize(other: RelativePath): RelativePath = RelativePath(toNIO.relativize(other.toNIO))
+
+  def resolve(other: nio.Path): RelativePath = RelativePath(toNIO.resolve(other))
+  def resolve(other: RelativePath): RelativePath = resolve(other.toNIO)
   def resolve(path: String): RelativePath = resolve(Paths.get(path))
   def resolveSibling(f: String => String): RelativePath =
-    RelativePath(path.resolveSibling(f(path.getFileName.toString)))
+    RelativePath(toNIO.resolveSibling(f(toNIO.getFileName.toString)))
 }
 
 object RelativePath {

@@ -15,23 +15,21 @@ import scala.meta.{semantic => m}
 package object semantic {
 
   implicit class XtensionSchemaDatabase(sdatabase: s.Database) {
-    private def entries = sdatabase.entries
-    def save(targetroot: AbsolutePath): Unit = {
-      sdatabase.entries.foreach { entry =>
-        val relpath = v.Paths.scalaToSemanticdb(RelativePath(entry.filename))
-        val abspath = targetroot.resolve(relpath).toNIO
-        Files.createDirectories(abspath.getParent)
-        val fos = Files.newOutputStream(abspath)
-        try {
-          s.Database(List(entry)).writeTo(fos)
-        } finally {
-          fos.close()
-        }
+
+    def toVfs(targetroot: AbsolutePath): v.Database = {
+      val ventries = sdatabase.entries.toIterator.map { sentry =>
+        // TODO: Would it make sense to support multiclasspaths?
+        // One use-case for this would be in-place updates of semanticdb files.
+        val vpath = v.SemanticdbPaths.fromScala(RelativePath(sentry.filename))
+        val fragment = Fragment(targetroot, vpath)
+        val bytes = s.Database(List(sentry)).toByteArray
+        v.Entry.InMemory(fragment, bytes)
       }
+      v.Database(ventries.toList)
     }
 
     def toMeta(sourcepath: Option[Sourcepath]): m.Database = {
-      val mentries = entries.toIterator.map {
+      val mentries = sdatabase.entries.toIterator.map {
         case s.Attributes(sunixfilename, scontents, sdialect, snames, smessages, sdenots, ssugars) =>
           assert(sunixfilename.nonEmpty, "s.Attribute.filename must not be empty")
           val sfilename = PathIO.fromUnix(sunixfilename)

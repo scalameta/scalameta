@@ -29,7 +29,7 @@ case class NodeNIOPath(filename: String) extends Path {
     NodeNIOPath(JSPath.dirname(filename))
   override def toAbsolutePath: Path =
     if (JSPath.isAbsolute(filename)) this
-    else PathIO.workingDirectory.path.resolve(this)
+    else PathIO.workingDirectory.toNIO.resolve(this)
   override def relativize(other: Path): Path =
     NodeNIOPath(JSPath.relative(filename, other.toString))
   override def getNameCount: Int =

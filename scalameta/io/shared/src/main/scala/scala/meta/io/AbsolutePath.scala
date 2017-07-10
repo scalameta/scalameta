@@ -11,21 +11,20 @@ import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PathIO
 
 /** Wrapper around an absolute nio.Path. */
-sealed abstract case class AbsolutePath(path: nio.Path) {
-  require(path.isAbsolute, s"$path is not absolute!")
-  def toFile: File = path.toFile
-  def toURI: URI = path.toUri
-  def toNIO: nio.Path = path
+sealed abstract case class AbsolutePath(toNIO: nio.Path) {
+  require(toNIO.isAbsolute, s"$toNIO is not absolute!")
+  def toFile: File = toNIO.toFile
+  def toURI: URI = toNIO.toUri
 
   def syntax: String = toString
   def structure: String = s"""AbsolutePath("$syntax")"""
-  override def toString: String = path.toString
+  override def toString: String = toNIO.toString
 
   def toRelative: RelativePath = toRelative(PathIO.workingDirectory)
-  def toRelative(prefix: AbsolutePath): RelativePath = RelativePath(prefix.path.relativize(path))
+  def toRelative(prefix: AbsolutePath): RelativePath = RelativePath(prefix.toNIO.relativize(toNIO))
 
-  def resolve(other: RelativePath): AbsolutePath = AbsolutePath(path.resolve(other.path))(this)
-  def resolve(other: String): AbsolutePath = AbsolutePath(path.resolve(other))(this)
+  def resolve(other: RelativePath): AbsolutePath = AbsolutePath(toNIO.resolve(other.toNIO))(this)
+  def resolve(other: String): AbsolutePath = AbsolutePath(toNIO.resolve(other))(this)
 
   def isFile: Boolean = FileIO.isFile(this)
   def isDirectory: Boolean = FileIO.isDirectory(this)
