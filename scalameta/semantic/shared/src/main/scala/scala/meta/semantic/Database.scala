@@ -17,7 +17,7 @@ import scala.meta.internal.semantic.{schema => s}
   lazy val sugars: Map[Position, String] = entries.flatMap(_.sugars).toMap
 
   def save(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
-    this.toSchema(sourceroot).save(targetroot)
+    this.toSchema(sourceroot).toVfs(targetroot).save()
   }
 
   def syntax: String = scala.meta.internal.semantic.DatabaseSyntax(this)

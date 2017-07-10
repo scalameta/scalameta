@@ -15,13 +15,11 @@ trait Entry {
   def name: RelativePath = fragment.name
   def uri: URI = fragment.uri
   def bytes: Array[Byte]
-  def inputStream: InputStream = new ByteArrayInputStream(bytes)
 }
 
 object Entry {
   @leaf class OnDisk(fragment: Fragment) extends Entry {
-    lazy val bytes = InputStreamIO.readBytes(inputStream)
-    override def inputStream: InputStream = FileIO.newInputStream(fragment.uri)
+    lazy val bytes = FileIO.readAllBytes(fragment.uri)
   }
   @leaf class InMemory(fragment: Fragment, bytes: Array[Byte]) extends Entry
 }
