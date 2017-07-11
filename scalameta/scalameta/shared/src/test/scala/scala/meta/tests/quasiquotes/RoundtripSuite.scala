@@ -89,7 +89,7 @@ object RoundtripSuite {
     case tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2" => tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2"
     case init"$tpe(...$exprss)" => init"$tpe(...$exprss)"
     case template"{ ..$stats1 } with ..$ctorcalls { $param => ..$stats2 }" => template"{ ..$stats1 } with ..$ctorcalls { $param => ..$stats2 }"
-    // case mod"@$init" => mod"@$init"
+    case mod"@$annot" => mod"@$annot"
     case mod"private[$name]" => mod"private[$name]"
     case mod"protected[$name]" => mod"protected[$name]"
     case enumerator"$pat <- $expr" => enumerator"$pat <- $expr"

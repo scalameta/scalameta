@@ -280,11 +280,14 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         try {
           pendingQuasis.push(quasi)
           if (quasi.rank == 0) {
-            var inferredPt = quasi.pt.wrap(pendingQuasis.map(_.rank).sum).toTpe
-            if (optional) inferredPt = appliedType(definitions.OptionClass, inferredPt)
+            val inferredPt = {
+              val unwrappedPt = quasi.pt.wrap(pendingQuasis.map(_.rank).sum).toTpe
+              if (optional) appliedType(definitions.OptionClass, unwrappedPt) else unwrappedPt
+            }
             val lifted = mode match {
               case Mode.Term(_, _) =>
-                q"$InternalLift[$inferredPt](${quasi.hole.arg})"
+                val liftedPt = inferredPt
+                q"$InternalLift[$liftedPt](${quasi.hole.arg})"
               case Mode.Pattern(_, _, _) =>
                 // TODO: Here, we would like to say q"$InternalUnlift[$inferredPt](${quasi.hole.arg})".
                 // Unfortunately, the way how patterns work prevents us from having it this easy:
@@ -293,15 +296,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                 // Therefore, we're forced to take a two-step unquoting scheme: a) match everything in the corresponding hole,
                 // b) call Unlift.unapply as a normal method in the right-hand side part of the pattern matching clause.
                 val hole = quasi.hole
-                val inferredPt = hole.arg match {
-                  case pq"_: $pt" => pt
-                  case pq"$_: $pt" => pt
-                  case _ =>
-                    var inferredPt = tq"_root_.scala.meta.Tree".wrap(pendingQuasis.map(_.rank).sum)
-                    if (optional) inferredPt = tq"_root_.scala.Option[$inferredPt]"
-                    inferredPt
+                val unliftedPt = hole.arg match {
+                  case pq"_: $explicitPt" => explicitPt
+                  case pq"$_: $explicitPt" => explicitPt
+                  case _ => TypeTree(inferredPt)
                 }
-                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$inferredPt](${hole.name})") // TODO: make `reifier` immutable somehow
+                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$unliftedPt](${hole.name})") // TODO: make `reifier` immutable somehow
                 pq"${hole.name}"
             }
             atPos(quasi.pos)(lifted)
