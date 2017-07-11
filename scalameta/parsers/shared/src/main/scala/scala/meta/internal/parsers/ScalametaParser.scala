@@ -3087,7 +3087,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val name = token match {
       case Ident(_) =>
         termName()
-      case KwThis() =>
+      case Underscore() | KwThis() =>
         autoPos{ next(); Name.Anonymous() }
       case Unquote() =>
         if (ahead(token.is[Colon])) unquote[Name.Quasi]

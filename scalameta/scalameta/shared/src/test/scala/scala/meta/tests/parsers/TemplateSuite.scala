@@ -87,6 +87,10 @@ class TemplateSuite extends ParseSuite {
     val Class(Nil, Type.Name("A"), Nil, EmptyCtor(), Template(Nil, Nil, self @ EmptySelf(), Nil)) = templStat("class A { this => }")
   }
 
+  test("class A { _ => }") {
+    val Class(Nil, Type.Name("A"), Nil, EmptyCtor(), Template(Nil, Nil, self @ EmptySelf(), Nil)) = templStat("class A { this => }")
+  }
+
   test("class C { def x: Int }") {
     val Class(Nil, Type.Name("C"), Nil, EmptyCtor(),
               Template(Nil, Nil, EmptySelf(), List(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int"))))) =
