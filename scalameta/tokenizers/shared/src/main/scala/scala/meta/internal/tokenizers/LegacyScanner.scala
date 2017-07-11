@@ -3,7 +3,7 @@ package internal
 package tokenizers
 
 import scala.annotation.{ switch, tailrec }
-import scala.collection. mutable 
+import scala.collection.mutable
 import Chars._
 import LegacyToken._
 import scala.meta.inputs._
