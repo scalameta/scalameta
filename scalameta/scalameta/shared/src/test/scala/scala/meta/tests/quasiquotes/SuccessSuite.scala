@@ -1993,4 +1993,16 @@ class SuccessSuite extends FunSuite {
     val importer = importer"$a.b"
     assert(importer.syntax == "a.b")
   }
+
+  test("#833") {
+    val ys = List(Term.Name("y"))
+    val block = q"x; ..$ys; z"
+    assert(block.syntax == """
+      |{
+      |  x
+      |  y
+      |  z
+      |}
+    """.trim.stripMargin)
+  }
 }

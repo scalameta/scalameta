@@ -3211,7 +3211,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     case KwPackage() if !dialect.allowToplevelTerms => packageOrPackageObjectDef()
     case DefIntro() => nonLocalDefOrDcl()
     case ExprIntro() => expr(Local) match { case q: Term.Quasi => q.become[Stat.Quasi]; case other => other }
-    case Ellipsis(_) => Term.Block(List(ellipsis(1, astInfo[Stat])))
+    case Ellipsis(_) => ellipsis(1, astInfo[Stat])
   }
 
   def quasiquoteStat(): Stat = {
@@ -3227,6 +3227,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     try {
       statSeq(consumeStat) match {
         case Nil => failEmpty()
+        case (stat @ Stat.Quasi(1, _)) :: Nil => Term.Block(List(stat))
         case stat :: Nil => stat
         case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
         case stats if stats.forall(_.isTopLevelStat) => failMix(Some("try source\"...\" instead"))
