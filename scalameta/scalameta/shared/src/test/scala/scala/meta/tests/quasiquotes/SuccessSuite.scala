@@ -1982,4 +1982,9 @@ class SuccessSuite extends FunSuite {
     val lambda = q"map($param => 3)"
     assert(lambda.syntax == "map { (x: Int) => 3 }")
   }
+
+  test("#843") {
+    val t = t"x.${Type.Name("T")}"
+    assert(t.syntax == "x.T")
+  }
 }

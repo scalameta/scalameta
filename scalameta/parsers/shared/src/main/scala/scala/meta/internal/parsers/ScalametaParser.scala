@@ -782,7 +782,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val newName = name.become[Type.Name.Quasi]
       Some(atPos(ref, ref)(Type.Select(newQual, newName)))
     case Term.Select(qual: Term.Ref, name) =>
-      val newName = atPos(name, name)(Type.Name(name.value))
+      val newName = name match {
+        case q: Term.Name.Quasi => q.become[Type.Name.Quasi]
+        case _ => atPos(name, name)(Type.Name(name.value))
+      }
       Some(atPos(ref, ref)(Type.Select(qual, newName)))
     case name: Term.Name =>
       Some(atPos(name, name)(Type.Name(name.value)))
