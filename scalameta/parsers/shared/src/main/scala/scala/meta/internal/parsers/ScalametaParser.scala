@@ -1577,7 +1577,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
         val looksLikeLambda = {
           val inParens = t.tokens.nonEmpty && t.tokens.head.is[LeftParen] && t.tokens.last.is[RightParen]
-          object NameLike { def unapply(tree: Tree): Boolean = tree.is[Term.Name] || tree.is[Term.Placeholder] }
+          object NameLike {
+            def unapply(tree: Tree): Boolean = tree match {
+              case Term.Quasi(0, _) => true
+              case _: Term.Name => true
+              case _: Term.Placeholder => true
+              case _ => false
+            }
+          }
           object ParamLike {
             def unapply(tree: Tree): Boolean = tree match {
               case Term.Quasi(0, _) => true

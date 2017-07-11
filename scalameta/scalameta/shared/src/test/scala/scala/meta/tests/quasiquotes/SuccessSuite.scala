@@ -1976,4 +1976,10 @@ class SuccessSuite extends FunSuite {
     val tparam2 = tparam"$t1 : $t2"
     assert(tparam2.syntax === "T1: T2")
   }
+
+  test("#829 - lambda extensions I") {
+    val param = param"x:Int"
+    val lambda = q"map($param => 3)"
+    assert(lambda.syntax == "map { (x: Int) => 3 }")
+  }
 }
