@@ -15,16 +15,19 @@ env:
     - CI_TEST: scalafmt
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.11.11
+      CI_PUBLISH: true
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.11.11
       CI_SCALA_JS: true
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.12.2
+      CI_PUBLISH: true
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.12.2
       CI_SCALA_JS: true
     - CI_TEST: ci-sbt-scalahost
       CI_SCALA_VERSION: 2.10.6
+      CI_PUBLISH: true
 
 cache:
   directories:
@@ -42,3 +45,6 @@ before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -type f -delete
   - find $HOME/.ivy2/cache -name "*scalafix*.xml" -type f -delete
   - rm -rf $HOME/.ivy2/local
+
+after_success:
+- "./bin/ci-publish.sh"
