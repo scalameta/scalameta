@@ -1987,4 +1987,10 @@ class SuccessSuite extends FunSuite {
     val t = t"x.${Type.Name("T")}"
     assert(t.syntax == "x.T")
   }
+
+  test("#915") {
+    val a = q"a"
+    val importer = importer"$a.b"
+    assert(importer.syntax == "a.b")
+  }
 }

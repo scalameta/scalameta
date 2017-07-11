@@ -2696,6 +2696,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def importer(): Importer = autoPos {
     val sid = stableId() match {
       case quasi: Term.Name.Quasi => quasi.become[Term.Ref.Quasi]
+      case sid @ Term.Select(q: Term.Quasi, name) => atPos(sid, sid)(Term.Select(q.become[Term.Ref.Quasi], name))
       case path => path
     }
     def dotselectors = { accept[Dot]; Importer(sid, importees()) }
