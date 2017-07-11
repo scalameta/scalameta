@@ -2055,9 +2055,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] = {
     if (token.is[KwIf] && !isFirst) autoPos(Enumerator.Guard(guard().get)) :: Nil
     else if (token.is[Ellipsis]) {
-      ellipsis(1, astInfo[Enumerator.Generator]) :: Nil
+      ellipsis(1, astInfo[Enumerator]) :: Nil
     } else if (token.is[Unquote] && ahead(!token.is[Equals] && !token.is[LeftArrow])) { // support for q"for ($enum1; ..$enums; $enum2)"
-      unquote[Enumerator.Generator] :: Nil
+      unquote[Enumerator] :: Nil
     }
     else generator(!isFirst, allowNestedIf)
   }
