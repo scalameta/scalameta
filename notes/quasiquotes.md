@@ -145,7 +145,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
 
                | Quasiquote
 ---------------|-----------------
- Annotation    | `mod"@$init"`
+ Annotation    | `mod"@$annot"`
  Private       | `mod"private[$ref]"`
  Protected     | `mod"protected[$ref]"`
  Implicit      | `mod"implicit"`

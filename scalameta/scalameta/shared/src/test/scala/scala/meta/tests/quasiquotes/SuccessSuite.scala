@@ -1962,4 +1962,47 @@ class SuccessSuite extends FunSuite {
     assert(params.head.syntax === "b: Int")
     assert(params.tail.head.syntax === "c: Int")
   }
+
+  test("#230 - tparam extensions I") {
+    val tparam = tparam"@foo ${Mod.Covariant()} T"
+    assert(tparam.syntax === "@foo +T")
+  }
+
+  test("#1006 - tparam extensions II") {
+    val t1 = Type.Name("T1")
+    val t2 = Type.Name("T2")
+    val tparam1 = tparam"$t1"
+    assert(tparam1.syntax === "T1")
+    val tparam2 = tparam"$t1 : $t2"
+    assert(tparam2.syntax === "T1: T2")
+  }
+
+  test("#829 - lambda extensions I") {
+    val param = param"x:Int"
+    val lambda = q"map($param => 3)"
+    assert(lambda.syntax == "map { (x: Int) => 3 }")
+  }
+
+  test("#843") {
+    val t = t"x.${Type.Name("T")}"
+    assert(t.syntax == "x.T")
+  }
+
+  test("#915") {
+    val a = q"a"
+    val importer = importer"$a.b"
+    assert(importer.syntax == "a.b")
+  }
+
+  test("#833") {
+    val ys = List(Term.Name("y"))
+    val block = q"x; ..$ys; z"
+    assert(block.syntax == """
+      |{
+      |  x
+      |  y
+      |  z
+      |}
+    """.trim.stripMargin)
+  }
 }

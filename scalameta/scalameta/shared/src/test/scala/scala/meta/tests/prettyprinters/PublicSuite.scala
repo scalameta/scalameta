@@ -341,7 +341,6 @@ class PublicSuite extends FunSuite {
     val input = Input.Sugar("sugar", original, 1, 1)
     val pos = Position.Range(input, 0, 5)
     val sugar = Sugar(input, Map(pos -> Symbol("_root.sugar.")))
-    println(sugar)
     assert(sugar.syntax == "sugar")
     assert(sugar.structure == "Sugar(\"sugar\")")
   }

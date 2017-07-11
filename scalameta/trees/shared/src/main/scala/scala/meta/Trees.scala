@@ -112,7 +112,7 @@ object Term {
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
   @ast class For(enums: List[Enumerator] @nonEmpty, body: Term) extends Term {
-    checkFields(enums.head.is[Enumerator.Generator])
+    checkFields(enums.head.is[Enumerator.Generator] || enums.head.is[Enumerator.Quasi])
   }
   @ast class ForYield(enums: List[Enumerator] @nonEmpty, body: Term) extends Term
   @ast class New(init: Init) extends Term
