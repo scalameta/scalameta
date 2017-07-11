@@ -2388,14 +2388,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def accessModifierOpt(): Option[Mod] = token match {
-    case Unquote()     => Some(unquote[Mod])
-    case Ellipsis(_)   => Some(ellipsis(1, astInfo[Mod]))
-    case KwPrivate()   => Some(accessModifier())
-    case KwProtected() => Some(accessModifier())
-    case _             => None
-  }
-
   def modifier(): Mod = autoPos(token match {
     case Unquote()                                  => unquote[Mod]
     case Ellipsis(_)                                => ellipsis(1, astInfo[Mod])
@@ -2421,7 +2413,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     def fail() = syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
     token match {
-      case Unquote()                                  => unquote[Mod.Quasi]
+      case Unquote()                                  => unquote[Mod]
       case At()                                       => annot()
       case KwPrivate()                                => accessModifier()
       case KwProtected()                              => accessModifier()
@@ -2443,7 +2435,26 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def modifiers(isLocal: Boolean = false): List[Mod] = {
+  def ctorModifiers(): Option[Mod] = token match {
+    case Unquote()     => Some(unquote[Mod])
+    case Ellipsis(_)   => Some(ellipsis(1, astInfo[Mod]))
+    case KwPrivate()   => Some(accessModifier())
+    case KwProtected() => Some(accessModifier())
+    case _             => None
+  }
+
+  def tparamModifiers(): Option[Mod] = {
+    if (token.is[Unquote] && !ahead(token.is[Ident] || token.is[Unquote])) None
+    else token match {
+      case Unquote()   => Some(unquote[Mod])
+      case Ellipsis(_) => Some(ellipsis(1, astInfo[Mod]))
+      case Ident("+")  => Some(autoPos({ next(); Mod.Covariant() }))
+      case Ident("-")  => Some(autoPos({ next(); Mod.Contravariant() }))
+      case _           => None
+    }
+  }
+
+  def modifiers(isLocal: Boolean = false, isTparam: Boolean = false): List[Mod] = {
     def appendMod(mods: List[Mod], mod: Mod): List[Mod] = {
       def validate() = {
         if (isLocal && !mod.tokens.head.is[LocalModifier]) {
@@ -2555,7 +2566,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def endParamQuasi = token.is[RightParen] || token.is[Comma]
     mods.headOption match {
       case Some(q: Mod.Quasi) if endParamQuasi =>
-        // Quasi param recognised in primary constructor
         q.become[Term.Param.Quasi]
       case _ =>
         val name = termName() match {
@@ -2612,45 +2622,47 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def typeParam(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Type.Param = autoPos {
-    if (token.is[Unquote]) return unquote[Type.Param]
-    var mods: List[Mod] = if (token.is[Ellipsis]) List(ellipsis(1, astInfo[Mod])) else annots(skipNewLines = true)
-    if (ownerIsType && token.is[Ident]) {
-      if (isIdentOf("+")) {
-        next()
-        mods ++= List(atPos(in.prevTokenPos, in.prevTokenPos)(Mod.Covariant()))
-      } else if (isIdentOf("-")) {
-        next()
-        mods ++= List(atPos(in.prevTokenPos, in.prevTokenPos)(Mod.Contravariant()))
-      }
-    }
-    val nameopt =
-      if (token.is[Ident]) typeName()
-      else if (token.is[Unquote]) unquote[Name]
-      else if (token.is[Underscore]) { next(); atPos(in.prevTokenPos, in.prevTokenPos)(Name.Anonymous()) }
-      else syntaxError("identifier or `_' expected", at = token)
-    val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-    val tbounds = this.typeBounds()
-    val vbounds = new ListBuffer[Type]
-    val cbounds = new ListBuffer[Type]
-    if (ctxBoundsAllowed) {
-      while (token.is[Viewbound]) {
-        if (!dialect.allowViewBounds) {
-          val msg = ("Use an implicit parameter instead.\n" +
-                     "Example: Instead of `def f[A <% Int](a: A)` " +
-                     "use `def f[A](a: A)(implicit ev: A => Int)`.")
-          syntaxError(s"View bounds are not supported. $msg", at = token)
+    var mods: List[Mod] = annots(skipNewLines = false)
+    if (ownerIsType) mods ++= tparamModifiers()
+    def endTparamQuasi = token.is[RightBracket] || token.is[Comma]
+    mods.headOption match {
+      case Some(q: Mod.Quasi) if endTparamQuasi =>
+        q.become[Type.Param.Quasi]
+      case _ =>
+        val name =
+          if (token.is[Ident]) typeName()
+          else if (token.is[Unquote]) unquote[Name]
+          else if (token.is[Underscore]) { next(); atPos(in.prevTokenPos, in.prevTokenPos)(Name.Anonymous()) }
+          else syntaxError("identifier or `_' expected", at = token)
+        name match {
+          case q: Name.Quasi if endTparamQuasi =>
+            q.become[Type.Param.Quasi]
+          case _ =>
+            val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+            val tbounds = typeBounds()
+            val vbounds = new ListBuffer[Type]
+            val cbounds = new ListBuffer[Type]
+            if (ctxBoundsAllowed) {
+              while (token.is[Viewbound]) {
+                if (!dialect.allowViewBounds) {
+                  val msg = ("Use an implicit parameter instead.\n" +
+                             "Example: Instead of `def f[A <% Int](a: A)` " +
+                             "use `def f[A](a: A)(implicit ev: A => Int)`.")
+                  syntaxError(s"View bounds are not supported. $msg", at = token)
+                }
+                next()
+                if (token.is[Ellipsis]) vbounds += ellipsis(1, astInfo[Type])
+                else vbounds += typ()
+              }
+              while (token.is[Colon]) {
+                next()
+                if (token.is[Ellipsis]) cbounds += ellipsis(1, astInfo[Type])
+                else cbounds += typ()
+              }
+            }
+            Type.Param(mods, name, tparams, tbounds, vbounds.toList, cbounds.toList)
         }
-        next()
-        if (token.is[Ellipsis]) vbounds += ellipsis(1, astInfo[Type])
-        else vbounds += typ()
-      }
-      while (token.is[Colon]) {
-        next()
-        if (token.is[Ellipsis]) cbounds += ellipsis(1, astInfo[Type])
-        else cbounds += typ()
-      }
     }
-    Type.Param(mods, nameopt, tparams, tbounds, vbounds.toList, cbounds.toList)
   }
 
   def quasiquoteTypeParam(): Type.Param = entrypointTypeParam()
@@ -2946,7 +2958,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
     if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters)) {
-      val mods = constructorAnnots() ++ accessModifierOpt()
+      val mods = constructorAnnots() ++ ctorModifiers()
       val name = autoPos(Name.Anonymous())
       val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)

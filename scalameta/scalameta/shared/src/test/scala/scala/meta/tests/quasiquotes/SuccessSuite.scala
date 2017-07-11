@@ -1962,4 +1962,18 @@ class SuccessSuite extends FunSuite {
     assert(params.head.syntax === "b: Int")
     assert(params.tail.head.syntax === "c: Int")
   }
+
+  test("#230 - tparam extensions I") {
+    val tparam = tparam"@foo ${Mod.Covariant()} T"
+    assert(tparam.syntax === "@foo +T")
+  }
+
+  test("#1006 - tparam extensions II") {
+    val t1 = Type.Name("T1")
+    val t2 = Type.Name("T2")
+    val tparam1 = tparam"$t1"
+    assert(tparam1.syntax === "T1")
+    val tparam2 = tparam"$t1 : $t2"
+    assert(tparam2.syntax === "T1: T2")
+  }
 }
