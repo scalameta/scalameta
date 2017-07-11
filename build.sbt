@@ -555,6 +555,7 @@ lazy val publishableSettings = Def.settings(
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false,
   publishMavenStyle := true,
+  bintrayReleaseOnPublish := !isCustomRepository,
   pomIncludeRepository := { x =>
     false
   },
