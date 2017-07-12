@@ -12,7 +12,7 @@ env:
   global:
   - TRAVIS_NODE_VERSION="8"
   matrix:
-    - CI_TEST: scalafmt
+    - CI_TEST: check
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.11.11
       CI_PUBLISH: true
