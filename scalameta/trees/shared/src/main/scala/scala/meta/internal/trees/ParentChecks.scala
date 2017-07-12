@@ -10,10 +10,13 @@ object ParentChecks {
     def applyArgument = parent.is[Term.Apply] && destination == "args"
     def applyInfixArgument = parent.is[Term.ApplyInfix] && destination == "args"
     def applyUnaryArgument = parent.is[Term.ApplyUnary] && destination == "arg"
+    def assignArgument = parent.is[Term.Assign] && destination == "rhs"
     def interpolateArgument = parent.is[Term.Interpolate] && destination == "args"
     def xmlArgument = parent.is[Term.Interpolate] && destination == "args"
+    def initArgument = parent.is[Init] && destination == "argss"
     def namedArgument = parent.is[Term.Assign] && destination == "rhs"
-    applyArgument || applyInfixArgument || applyUnaryArgument || interpolateArgument || xmlArgument || namedArgument
+    applyArgument || applyInfixArgument || applyUnaryArgument || assignArgument ||
+    interpolateArgument || xmlArgument || initArgument || namedArgument
   }
 
   def TermAssign(tree: Term.Assign, parent: Tree, destination: String): Boolean = {
@@ -34,7 +37,8 @@ object ParentChecks {
     def defnVarPat = parent.is[Defn.Var] && destination == "pats"
     def enumeratorGeneratorPat = parent.is[Enumerator.Generator] && destination == "pat"
     def enumeratorValPat = parent.is[Enumerator.Val] && destination == "pat"
-    !capitalized || declValPat || declVarPat || defnValPat || defnVarPat || enumeratorGeneratorPat || enumeratorValPat
+    !capitalized || declValPat || declVarPat || defnValPat || defnVarPat ||
+    enumeratorGeneratorPat || enumeratorValPat
   }
 
   private def typeArgument(parent: Tree, destination: String): Boolean = {

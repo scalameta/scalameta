@@ -1494,7 +1494,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         t match {
           case _: Term.Ref | _: Term.Apply | _: Quasi =>
             next()
-            t = atPos(t, auto)(Term.Assign(t, expr(location = NoStat, allowRepeated = allowRepeated)))
+            t = atPos(t, auto)(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
           case _ =>
         }
       } else if (token.is[Colon]) {

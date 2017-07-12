@@ -324,6 +324,10 @@ class TermSuite extends ParseSuite {
     val New(Init(Type.Name("A"), Name.Anonymous(), Nil)) = term("new A")
   }
 
+  test("new A(xs: _*)") {
+    val New(Init(Type.Name("A"), Name.Anonymous(), List(List(Term.Repeated(Term.Name("xs")))))) = term("new A(xs: _*)")
+  }
+
   test("new A {}") {
     val NewAnonymous(Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)) = term("new A {}")
   }
@@ -487,6 +491,10 @@ class TermSuite extends ParseSuite {
 
   test("!x = y") {
     val Term.Assign(Term.ApplyUnary(Term.Name("!"), Term.Name("x")), Term.Name("y")) = term("!x = y")
+  }
+
+  test("x = (ys: _*)") {
+    val Term.Assign(Term.Name("x"), Term.Repeated(Term.Name("ys"))) = term("x = (ys: _*)")
   }
 
   test("!(arr.cast[Ptr[Byte]] + sizeof[Ptr[_]]).cast[Ptr[Int]] = length") {
