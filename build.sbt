@@ -71,6 +71,7 @@ testOnlyJVM := {
   val runBenchmarkTests = test.in(benchmarks, Test).value
   val runContribTests = test.in(contribJVM, Test).value
   val runTests = test.in(testsJVM, Test).value
+  val propertyTests = compile.in(testkit, Test).value
   val runDocs = test.in(readme).value
 }
 testOnlyJS := {
