@@ -74,11 +74,11 @@ object ScalametaParserPropertyTest extends FunSuiteLike {
   import ScalametaParserProperties._
   def main(args: Array[String]): Unit = {
     val result = runAnalysis()
-    val parserProken = result.count(_._2.kind == ParserBroken)
+    val parserBroken = result.count(_._2.kind == ParserBroken)
     val prettyPrinterBroken = result.count(_._2.kind == PrettyPrinterBroken)
-    println(s"""Parser broken: $parserProken
+    println(s"""Parser broken: $parserBroken
                |Pretty printer broken: $prettyPrinterBroken""".stripMargin)
-    assert(parserProken <= 4)
+    assert(parserBroken <= 4)
     assert(prettyPrinterBroken <= 1888)
   }
 }
