@@ -324,6 +324,10 @@ class TermSuite extends ParseSuite {
     val New(Init(Type.Name("A"), Name.Anonymous(), Nil)) = term("new A")
   }
 
+  test("new A(xs: _*)") {
+    val New(Init(Type.Name("A"), Name.Anonymous(), List(List(Term.Repeated(Term.Name("xs")))))) = term("new A(xs: _*)")
+  }
+
   test("new A {}") {
     val NewAnonymous(Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)) = term("new A {}")
   }
