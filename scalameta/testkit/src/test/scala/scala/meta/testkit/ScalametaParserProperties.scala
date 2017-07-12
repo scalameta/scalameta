@@ -41,7 +41,7 @@ object ScalametaParserProperties {
 
   def onParseError(scalaFile: CorpusFile, err: Parsed.Error): List[ParserBug] =
     if (ScalacParser.canParseInput(scalaFile.read))
-      List(ParserBug(err.details.getMessage, err.pos.start.line, ParserBroken))
+      List(ParserBug(err.details.getMessage, err.pos.startLine, ParserBroken))
     else Nil
 
   def runAnalysis(corpusSize: Int = Int.MaxValue) = {
@@ -61,7 +61,7 @@ object ScalametaParserProperties {
 
   def runAndPrintAnalysis(): Unit = {
     val result = runAnalysis(100)
-    val markdown = Observation.markdownTable(result)
+    val markdown = Observation.markdownTable(result.toList)
     println(markdown)
   }
 
@@ -78,7 +78,7 @@ object ScalametaParserPropertyTest extends FunSuiteLike {
     val prettyPrinterBroken = result.count(_._2.kind == PrettyPrinterBroken)
     println(s"""Parser broken: $parserProken
                |Pretty printer broken: $prettyPrinterBroken""".stripMargin)
-    assert(parserProken <= 7)
-    assert(prettyPrinterBroken <= 1922)
+    assert(parserProken <= 4)
+    assert(prettyPrinterBroken <= 1888)
   }
 }
