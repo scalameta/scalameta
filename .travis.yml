@@ -12,7 +12,7 @@ env:
   global:
   - TRAVIS_NODE_VERSION="8"
   matrix:
-    - CI_TEST: scalafmt
+    - CI_TEST: check
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.11.11
       CI_PUBLISH: true
@@ -28,9 +28,6 @@ env:
     - CI_TEST: ci-sbt-scalahost
       CI_SCALA_VERSION: 2.10.6
       CI_PUBLISH: true
-
-before_script:
-  - ./bin/checkCLA.sh
 
 cache:
   directories:
