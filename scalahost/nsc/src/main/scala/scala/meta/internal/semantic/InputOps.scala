@@ -27,7 +27,7 @@ trait InputOps { self: DatabaseOps =>
                 // TODO: Obtain charset from Global.reader.
                 val charset = Charset.forName("UTF-8")
                 val contents = FileIO.slurp(path, charset)
-                m.Input.LabeledString(label, contents)
+                m.Input.VirtualFile(label, contents)
               case Disabled =>
                 m.Input.None
             }

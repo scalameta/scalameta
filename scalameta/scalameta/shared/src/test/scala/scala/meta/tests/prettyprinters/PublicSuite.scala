@@ -168,9 +168,9 @@ class PublicSuite extends FunSuite {
     assert(input.toString == """Input.Sugar("foo", Input.String("blah"), 0, 0)""")
   }
 
-  test("scala.meta.inputs.Input.LabeledString.toString") {
-    val input = Input.LabeledString("foo.scala", "foo")
-    assert(input.toString == s"""Input.LabeledString("foo.scala", "foo")""")
+  test("scala.meta.inputs.Input.VirtualFile.toString") {
+    val input = Input.VirtualFile("foo.scala", "foo")
+    assert(input.toString == s"""Input.VirtualFile("foo.scala", "foo")""")
   }
 
   test("scala.meta.inputs.Position.toString") {

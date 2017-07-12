@@ -43,7 +43,7 @@ package object semantic {
                     .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
               mInput.File(AbsolutePath(uri.getPath))
             } else {
-              mInput.LabeledString(sfilename.toString, scontents)
+              mInput.VirtualFile(sfilename.toString, scontents)
             }
           }
           object sRange {
@@ -150,8 +150,8 @@ package object semantic {
           val (splatformpath, scontents) = minput match {
             case mInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
               path.toRelative(sourceroot).toString -> ""
-            case mInput.LabeledString(label, contents) =>
-              label -> contents
+            case mInput.VirtualFile(path, contents) =>
+              path -> contents
             case other =>
               sys.error(s"bad database: unsupported input $other")
           }
