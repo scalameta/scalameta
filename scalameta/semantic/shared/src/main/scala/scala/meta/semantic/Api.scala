@@ -71,10 +71,42 @@ private[meta] trait Aliases {
   val Sugar = scala.meta.semantic.Sugar
 
   type Symbol = scala.meta.semantic.Symbol
-  val Symbol = scala.meta.semantic.Symbol
+  object Symbol {
+    val None = scala.meta.semantic.Symbol.None
+
+    type Local = scala.meta.semantic.Symbol.Local
+    val Local = scala.meta.semantic.Symbol.Local
+
+    type Global = scala.meta.semantic.Symbol.Global
+    val Global = scala.meta.semantic.Symbol.Global
+
+    type Multi = scala.meta.semantic.Symbol.Multi
+    val Multi = scala.meta.semantic.Symbol.Multi
+
+    def apply(s: String): Symbol = scala.meta.semantic.Symbol.apply(s)
+    def unapply(sym: String): Option[Symbol] = scala.meta.semantic.Symbol.unapply(sym)
+  }
 
   type Signature = scala.meta.semantic.Signature
-  val Signature = scala.meta.semantic.Signature
+  object Signature {
+    type Type = scala.meta.semantic.Signature.Type
+    val Type = scala.meta.semantic.Signature.Type
+
+    type Term = scala.meta.semantic.Signature.Term
+    val Term = scala.meta.semantic.Signature.Term
+
+    type Method = scala.meta.semantic.Signature.Method
+    val Method = scala.meta.semantic.Signature.Method
+
+    type TypeParameter = scala.meta.semantic.Signature.TypeParameter
+    val TypeParameter = scala.meta.semantic.Signature.TypeParameter
+
+    type TermParameter = scala.meta.semantic.Signature.TermParameter
+    val TermParameter = scala.meta.semantic.Signature.TermParameter
+
+    type Self = scala.meta.semantic.Signature.Self
+    val Self = scala.meta.semantic.Signature.Self
+  }
 
   type Message = scala.meta.semantic.Message
   val Message = scala.meta.semantic.Message

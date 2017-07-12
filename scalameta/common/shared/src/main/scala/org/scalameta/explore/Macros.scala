@@ -18,11 +18,12 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
         val banned = List("scala.collection.generic", "scala.Enumeration", "scala.math", "scala.Int", "scala.meta.inline.Api")
         banned.exists(prefix => sym.fullName.startsWith(prefix))
       }
+      def aliases = sym.fullName.contains(".Aliases.")
       def tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith(".tests")
       def internal = sym.fullName.contains(".internal.") || (sym.fullName.endsWith(".internal") && !sym.fullName.endsWith(".meta.internal"))
       def invisible = !sym.isPublic
       def inexistent = !sym.asInstanceOf[scala.reflect.internal.SymbolTable#Symbol].exists // NOTE: wtf
-      val result = artefact || trivial || arbitrary || tests || internal || invisible || inexistent
+      val result = artefact || trivial || arbitrary || aliases || tests || internal || invisible || inexistent
       // println((sym.fullName, s"$result = $artefact || $trivial || $arbitrary || $tests || $internal || $invisible || $inexistent"))
       result
     }
