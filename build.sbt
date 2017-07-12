@@ -120,16 +120,6 @@ lazy val dialects = crossProject
 lazy val dialectsJVM = dialects.jvm
 lazy val dialectsJS = dialects.js
 
-lazy val inline = crossProject
-  .in(file("scalameta/inline"))
-  .settings(
-    publishableSettings,
-    description := "Scalameta APIs for new-style (\"inline\") macros"
-  )
-  .dependsOn(inputs)
-lazy val inlineJVM = inline.jvm
-lazy val inlineJS = inline.js
-
 lazy val inputs = crossProject
   .in(file("scalameta/inputs"))
   .settings(
@@ -245,7 +235,6 @@ lazy val scalameta = crossProject
     tokenizers,
     transversers,
     trees,
-    inline,
     inputs,
     io,
     semantic

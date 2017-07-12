@@ -55,7 +55,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.dialects.Scala212 *
       |scala.meta.dialects.Typelevel211 *
       |scala.meta.dialects.Typelevel212 *
-      |scala.meta.inline
       |scala.meta.inputs
       |scala.meta.inputs.Input
       |scala.meta.inputs.Input.File
