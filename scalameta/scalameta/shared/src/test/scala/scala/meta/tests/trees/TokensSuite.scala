@@ -22,12 +22,12 @@ class TokensSuite extends FunSuite {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
     assert(tree.syntax === "foo + bar")
     assert(tree.tokens.syntax === "foo + bar")
-    assert(tree.tokens.forall(_.input.isInstanceOf[scala.meta.internal.inputs.VirtualInput]))
+    assert(tree.tokens.forall(_.input.isInstanceOf[Input.VirtualFile]))
   }
 
   test("wat") {
     // NOTE: if this test fails, then we'll get ScalametaTokenizer.megaCache corruptions
-    assert(scala.meta.internal.inputs.VirtualInput("abcdefgh") != Input.String("abcdefgh"))
+    assert(Input.VirtualFile("<InternalTrees.tokens>", "abcdefgh") != Input.String("abcdefgh"))
   }
 
   test("Tree.tokens: empty") {

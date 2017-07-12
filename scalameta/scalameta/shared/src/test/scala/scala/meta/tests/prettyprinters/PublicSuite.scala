@@ -1,9 +1,10 @@
 package scala.meta.tests
 package prettyprinters
 
+import java.io._
+import java.nio.charset.Charset
 import org.scalatest._
 import scala.meta._
-import scala.meta.inputs.{Input, Position}
 
 class PublicSuite extends FunSuite {
   test("scala.meta.Dialect.toString") {
@@ -132,45 +133,49 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.inputs.Input.File.toString") {
-    import java.nio.charset.Charset
     val path = RelativePath("hello.scala").toAbsolute
     val syntax = path.syntax
     val input1 = Input.File(path, Charset.forName("latin1"))
     val input2 = Input.File(path, Charset.forName("UTF-8"))
+    input1 match { case _: Input.File => }
+    input2 match { case _: Input.File => }
     assert(input1.toString == s"""Input.File(new File("$syntax"), Charset.forName("ISO-8859-1"))""")
     assert(input2.toString == s"""Input.File(new File("$syntax"), Charset.forName("UTF-8"))""")
   }
 
   test("scala.meta.inputs.Input.Slice.toString") {
     val input = Input.Slice(Input.String("foo"), 0, 2)
+    input match { case _: Input.Slice => }
     assert(input.toString == """Input.Slice(Input.String("foo"), 0, 2)""")
   }
 
   test("scala.meta.inputs.Input.Stream.toString") {
-    import java.io._
-    import java.nio.charset.Charset
     val latin1 = Charset.forName("latin1")
     val stream = new ByteArrayInputStream("Привет(мир!)".getBytes(latin1))
     val input1 = Input.Stream(stream, latin1)
     val input2 = Input.Stream(stream, Charset.forName("UTF-8"))
+    input1 match { case _: Input.Stream => }
+    input2 match { case _: Input.Stream => }
     assert(input1.toString == """Input.Stream(<stream>, Charset.forName("ISO-8859-1"))""")
     assert(input2.toString == """Input.Stream(<stream>, Charset.forName("UTF-8"))""")
   }
 
   test("scala.meta.inputs.Input.String.toString") {
     val input = Input.String("foo")
+    input match { case _: Input.String => }
     assert(input.toString == """Input.String("foo")""")
   }
 
   test("scala.meta.inputs.Input.Sugar.toString") {
-    val original = Input.String("blah")
-    val input = Input.Sugar("foo", original, 0, 0)
+    val input = Input.Sugar("foo", Input.String("blah"), 0, 0)
+    input match { case _: Input.Sugar => }
     assert(input.toString == """Input.Sugar("foo", Input.String("blah"), 0, 0)""")
   }
 
-  test("scala.meta.inputs.Input.LabeledString.toString") {
-    val input = Input.LabeledString("foo.scala", "foo")
-    assert(input.toString == s"""Input.LabeledString("foo.scala", "foo")""")
+  test("scala.meta.inputs.Input.VirtualFile.toString") {
+    val input = Input.VirtualFile("foo.scala", "foo")
+    input match { case _: Input.VirtualFile => }
+    assert(input.toString == s"""Input.VirtualFile("foo.scala", "foo")""")
   }
 
   test("scala.meta.inputs.Position.toString") {
@@ -183,6 +188,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Position.Range.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
+    lhs.pos match { case _: Position.Range =>; case _ => }
     assert(lhs.pos.toString === """[0..3) in Input.String("foo + bar")""")
   }
 
@@ -235,6 +241,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.parsers.Parsed.Error.toString") {
     val parsed = "foo + class".parse[Term]
+    parsed match { case _: Parsed.Error =>; case _ => }
     assert(parsed.toString === """
       |<input>:1: error: end of file expected but class found
       |foo + class
@@ -244,6 +251,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.parsers.Parsed.Success.toString") {
     val parsed = "foo + bar".parse[Term]
+    parsed match { case _: Parsed.Success[_] =>; case _ => }
     assert(parsed.toString === "foo + bar")
   }
 
@@ -346,9 +354,6 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semantic.Symbol.toString") {
-    import scala.meta.semantic.Symbol
-    import scala.meta.semantic.Signature
-
     val syntaxNone = ""
     val none @ Symbol.None = Symbol(syntaxNone)
     assert(none.toString === syntaxNone)
@@ -423,6 +428,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.tokenizers.Tokenized.Error.toString") {
     val tokenized = """"c""".tokenize
+    tokenized match { case _: Tokenized.Error =>; case _ => }
     assert(tokenized.toString === """
       |<input>:1: error: unclosed string literal
       |"c
@@ -432,6 +438,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.tokenizers.Tokenized.Success.toString") {
     val tokenized = "foo + bar".tokenize
+    tokenized match { case _: Tokenized.Success =>; case _ => }
     assert(tokenized.toString === "foo + bar")
   }
 
@@ -463,6 +470,18 @@ class PublicSuite extends FunSuite {
   test("scala.meta.tokens.Tokens.syntax") {
     val tokens = "foo + bar".tokenize.get
     assert(tokens.syntax === "foo + bar")
+  }
+
+  test("scala.meta.tokens.Token.Constant.toString") {
+    // n/a
+  }
+
+  test("scala.meta.tokens.Token.Interpolation.toString") {
+    // n/a
+  }
+
+  test("scala.meta.tokens.Token.Xml.toString") {
+    // n/a
   }
 
   test("scala.meta.transversers.Transformer.toString") {

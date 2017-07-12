@@ -8,21 +8,25 @@ import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
 class SurfaceSuite extends FunSuite {
-  object TreeReflection extends {
+  object CoreReflection extends {
     val u: ru.type = ru
     val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
-  } with scala.meta.internal.trees.Reflection
-  import TreeReflection._
+  } with scala.meta.internal.trees.Reflection with scala.meta.internal.tokens.Reflection
+  import CoreReflection._
 
   lazy val reflectedTrees = {
     val root = symbolOf[scala.meta.Tree].asRoot
     val all = List(root) ++ root.allBranches ++ root.allLeafs
     all.map(_.sym.fullName).toSet
   }
+  lazy val reflectedTokens = {
+    val all = symbolOf[scala.meta.tokens.Token].asRoot.allLeafs
+    all.filter(_.sym.isPublic).map(_.sym.fullName).sorted
+  }
   lazy val wildcardImportStatics = explore.wildcardImportStatics("scala.meta")
   lazy val allStatics = explore.allStatics("scala.meta")
   lazy val trees = wildcardImportStatics.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
-  lazy val tokens = wildcardImportStatics.filter(_.startsWith("scala.meta.tokens.Token."))
+  lazy val tokens = reflectedTokens
   lazy val core = allStatics.diff(trees).diff(tokens).map(fullName => (fullName, wildcardImportStatics.contains(fullName))).toMap
   lazy val allSurface = explore.allSurface("scala.meta")
   lazy val coreSurface = allSurface.filter(entry => !(tokens ++ trees).exists(noncore => entry.startsWith(noncore)))
@@ -55,19 +59,18 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.dialects.Scala212 *
       |scala.meta.dialects.Typelevel211 *
       |scala.meta.dialects.Typelevel212 *
-      |scala.meta.inline
       |scala.meta.inputs
       |scala.meta.inputs.Input
-      |scala.meta.inputs.Input.File
-      |scala.meta.inputs.Input.LabeledString
-      |scala.meta.inputs.Input.None
-      |scala.meta.inputs.Input.Slice
-      |scala.meta.inputs.Input.Stream
-      |scala.meta.inputs.Input.String
-      |scala.meta.inputs.Input.Sugar
+      |scala.meta.inputs.Input.File *
+      |scala.meta.inputs.Input.None *
+      |scala.meta.inputs.Input.Slice *
+      |scala.meta.inputs.Input.Stream *
+      |scala.meta.inputs.Input.String *
+      |scala.meta.inputs.Input.Sugar *
+      |scala.meta.inputs.Input.VirtualFile *
       |scala.meta.inputs.Position
-      |scala.meta.inputs.Position.None
-      |scala.meta.inputs.Position.Range
+      |scala.meta.inputs.Position.None *
+      |scala.meta.inputs.Position.Range *
       |scala.meta.internal
       |scala.meta.io
       |scala.meta.io.AbsolutePath
@@ -80,8 +83,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException
       |scala.meta.parsers.Parsed
-      |scala.meta.parsers.Parsed.Error
-      |scala.meta.parsers.Parsed.Success
+      |scala.meta.parsers.Parsed.Error *
+      |scala.meta.parsers.Parsed.Success *
       |scala.meta.prettyprinters
       |scala.meta.prettyprinters.Show *
       |scala.meta.prettyprinters.Structure
@@ -100,26 +103,29 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.semantic.Severity.Info
       |scala.meta.semantic.Severity.Warning
       |scala.meta.semantic.Signature
-      |scala.meta.semantic.Signature.Method
-      |scala.meta.semantic.Signature.Self
-      |scala.meta.semantic.Signature.Term
-      |scala.meta.semantic.Signature.TermParameter
-      |scala.meta.semantic.Signature.Type
-      |scala.meta.semantic.Signature.TypeParameter
+      |scala.meta.semantic.Signature.Method *
+      |scala.meta.semantic.Signature.Self *
+      |scala.meta.semantic.Signature.Term *
+      |scala.meta.semantic.Signature.TermParameter *
+      |scala.meta.semantic.Signature.Type *
+      |scala.meta.semantic.Signature.TypeParameter *
       |scala.meta.semantic.Sugar
       |scala.meta.semantic.Symbol
-      |scala.meta.semantic.Symbol.Global
-      |scala.meta.semantic.Symbol.Local
-      |scala.meta.semantic.Symbol.Multi
-      |scala.meta.semantic.Symbol.None
+      |scala.meta.semantic.Symbol.Global *
+      |scala.meta.semantic.Symbol.Local *
+      |scala.meta.semantic.Symbol.Multi *
+      |scala.meta.semantic.Symbol.None *
       |scala.meta.tokenizers
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException
       |scala.meta.tokenizers.Tokenized
-      |scala.meta.tokenizers.Tokenized.Error
-      |scala.meta.tokenizers.Tokenized.Success
+      |scala.meta.tokenizers.Tokenized.Error *
+      |scala.meta.tokenizers.Tokenized.Success *
       |scala.meta.tokens
       |scala.meta.tokens.Token
+      |scala.meta.tokens.Token.Constant *
+      |scala.meta.tokens.Token.Interpolation *
+      |scala.meta.tokens.Token.Xml *
       |scala.meta.tokens.Tokens
       |scala.meta.transversers
       |scala.meta.transversers.Transformer
@@ -326,16 +332,14 @@ class SurfaceSuite extends FunSuite {
   }
 
   test("statics (tokens)") {
-    def encode(name: String) = name.replace(" ", "WHITESPACE").replace("\n", "\\n").replace("\r", "\\r").replace("\f", "\\f").replace("\t", "\\t")
-    // println(tokens.toList.map(encode).sorted.mkString(EOL))
-    assert(tokens.toList.map(encode).sorted.mkString(EOL) === """
+    // println(tokens.toList.sorted.mkString(EOL))
+    assert(tokens.toList.sorted.mkString(EOL) === """
       |scala.meta.tokens.Token.At
       |scala.meta.tokens.Token.BOF
       |scala.meta.tokens.Token.CR
       |scala.meta.tokens.Token.Colon
       |scala.meta.tokens.Token.Comma
       |scala.meta.tokens.Token.Comment
-      |scala.meta.tokens.Token.Constant
       |scala.meta.tokens.Token.Constant.Char
       |scala.meta.tokens.Token.Constant.Double
       |scala.meta.tokens.Token.Constant.Float
@@ -349,7 +353,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.FF
       |scala.meta.tokens.Token.Hash
       |scala.meta.tokens.Token.Ident
-      |scala.meta.tokens.Token.Interpolation
       |scala.meta.tokens.Token.Interpolation.End
       |scala.meta.tokens.Token.Interpolation.Id
       |scala.meta.tokens.Token.Interpolation.Part
@@ -413,7 +416,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.Tab
       |scala.meta.tokens.Token.Underscore
       |scala.meta.tokens.Token.Viewbound
-      |scala.meta.tokens.Token.Xml
       |scala.meta.tokens.Token.Xml.End
       |scala.meta.tokens.Token.Xml.Part
       |scala.meta.tokens.Token.Xml.SpliceEnd

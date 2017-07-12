@@ -9,8 +9,11 @@ object ParentChecks {
   private def termArgument(parent: Tree, destination: String): Boolean = {
     def applyArgument = parent.is[Term.Apply] && destination == "args"
     def applyInfixArgument = parent.is[Term.ApplyInfix] && destination == "args"
-    def namedArg = parent.is[Term.Assign] && destination == "rhs"
-    applyArgument || applyInfixArgument || namedArg
+    def applyUnaryArgument = parent.is[Term.ApplyUnary] && destination == "arg"
+    def interpolateArgument = parent.is[Term.Interpolate] && destination == "args"
+    def xmlArgument = parent.is[Term.Interpolate] && destination == "args"
+    def namedArgument = parent.is[Term.Assign] && destination == "rhs"
+    applyArgument || applyInfixArgument || applyUnaryArgument || interpolateArgument || xmlArgument || namedArgument
   }
 
   def TermAssign(tree: Term.Assign, parent: Tree, destination: String): Boolean = {

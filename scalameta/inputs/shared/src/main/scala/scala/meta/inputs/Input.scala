@@ -3,13 +3,12 @@ package inputs
 
 import java.nio.{file => nio}
 import java.nio.charset.Charset
-import org.scalameta.adt.{Liftables => AdtLiftables}
-import org.scalameta.data._
+import org.scalameta.adt.{Liftables => AdtLiftables, _}
 import scala.meta.common._
 import scala.meta.internal.inputs._
 import scala.meta.io._
 
-trait Input extends Optional with Product with Serializable with InternalInput {
+@root trait Input extends Optional with Product with Serializable with InternalInput {
   def chars: Array[Char]
   def text: String = new String(chars)
 }
@@ -20,15 +19,15 @@ object Input {
     override def toString = "Input.None"
   }
 
-  @data class String(s: scala.Predef.String) extends Input {
-    lazy val chars = s.toArray
-    override def toString = "Input.String(\"" + s + "\")"
+  @leaf class String(value: scala.Predef.String) extends Input {
+    lazy val chars = value.toArray
+    override def toString = s"""Input.String("$value")"""
   }
 
-  @data class Stream(stream: java.io.InputStream, charset: Charset) extends Input {
+  @leaf class Stream(stream: java.io.InputStream, charset: Charset) extends Input {
     lazy val chars = new scala.Predef.String(scala.meta.internal.io.InputStreamIO.readBytes(stream), charset).toArray
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
-    override def toString = "Input.Stream(<stream>, Charset.forName(\"" + charset.name + "\"))"
+    override def toString = s"""Input.Stream(<stream>, Charset.forName("${charset.name}"))"""
   }
   object Stream {
     @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Stream) extends Serializable {
@@ -43,19 +42,14 @@ object Input {
         orig = Stream(stream, charset)
       }
       private def readResolve(): AnyRef = orig
-      override def toString = s"Proxy($orig)"
+      override def toString = s"""Proxy($orig)"""
     }
   }
 
-  @data class LabeledString(label: scala.Predef.String, contents: scala.Predef.String) extends Input {
-    lazy val chars = contents.toArray
-    override def toString = s"""Input.LabeledString("$label", "$contents")"""
-  }
-
-  @data class File(path: AbsolutePath, charset: Charset) extends Input {
+  @leaf class File(path: AbsolutePath, charset: Charset) extends Input {
     lazy val chars = scala.meta.internal.io.FileIO.slurp(path, charset).toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
-    override def toString = "Input.File(new File(\"" + path.syntax + "\"), Charset.forName(\"" + charset.name + "\"))"
+    override def toString = s"""Input.File(new File("${path.syntax}"), Charset.forName("${charset.name}"))"""
   }
   object File {
     def apply(path: AbsolutePath, charset: Charset): Input.File = new Input.File(path, charset)
@@ -76,11 +70,16 @@ object Input {
         orig = File(file, charset)
       }
       private def readResolve(): AnyRef = orig
-      override def toString = s"Proxy($orig)"
+      override def toString = s"""Proxy($orig)"""
     }
   }
 
-  @data class Sugar(value: scala.Predef.String, input: Input, start: Int, end: Int) extends Input {
+  @leaf class VirtualFile(path: scala.Predef.String, value: scala.Predef.String) extends Input {
+    lazy val chars = value.toArray
+    override def toString = s"""Input.VirtualFile("$path", "$value")"""
+  }
+
+  @leaf class Sugar(value: scala.Predef.String, input: Input, start: Int, end: Int) extends Input {
     lazy val chars = value.toCharArray
     override def toString = s"""Input.Sugar("$value", $input, $start, $end)"""
   }
@@ -88,7 +87,7 @@ object Input {
   // NOTE: `start` and `end` are String.substring-style,
   // i.e. `start` is inclusive and `end` is not.
   // Therefore Slice.end can point to the last character of input plus one.
-  @data class Slice(input: Input, start: Int, end: Int) extends Input {
+  @leaf class Slice(input: Input, start: Int, end: Int) extends Input {
     lazy val chars = input.chars.slice(start, end)
     override def toString = s"Input.Slice($input, $start, $end)"
   }

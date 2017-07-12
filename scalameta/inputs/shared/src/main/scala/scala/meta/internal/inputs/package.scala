@@ -32,7 +32,7 @@ package object inputs {
     def syntax: String = input match {
       case Input.None => "<none>"
       case Input.File(path, _) => path.toString
-      case Input.LabeledString(label, _) => label
+      case Input.VirtualFile(path, _) => path
       case _ => "<input>"
     }
     def structure: String = input.toString
