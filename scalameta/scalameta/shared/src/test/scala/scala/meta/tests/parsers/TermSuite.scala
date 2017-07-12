@@ -493,6 +493,10 @@ class TermSuite extends ParseSuite {
     val Term.Assign(Term.ApplyUnary(Term.Name("!"), Term.Name("x")), Term.Name("y")) = term("!x = y")
   }
 
+  test("x = (ys: _*)") {
+    val Term.Assign(Term.Name("x"), Term.Repeated(Term.Name("ys"))) = term("x = (ys: _*)")
+  }
+
   test("!(arr.cast[Ptr[Byte]] + sizeof[Ptr[_]]).cast[Ptr[Int]] = length") {
     val Term.Assign(
       Term.ApplyUnary(
