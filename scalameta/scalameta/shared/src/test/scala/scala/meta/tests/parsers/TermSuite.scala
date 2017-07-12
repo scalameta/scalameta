@@ -65,8 +65,16 @@ class TermSuite extends ParseSuite {
     val Apply(TermName("f"), Repeated(TermName("x")) :: Nil) = term("f(x: _*)")
   }
 
+  test("f((x: _*))") {
+    val Apply(TermName("f"), Repeated(TermName("x")) :: Nil) = term("f((x: _*))")
+  }
+
   test("f(x = xs: _*)") {
     val Term.Apply(Term.Name("f"), List(Assign(Term.Name("x"), Repeated(Term.Name("xs"))))) = term("f(x = xs: _*)")
+  }
+
+  test("f(x = (xs: _*))") {
+    val Term.Apply(Term.Name("f"), List(Assign(Term.Name("x"), Repeated(Term.Name("xs"))))) = term("f(x = (xs: _*))")
   }
 
   test("a + ()") {
@@ -93,6 +101,10 @@ class TermSuite extends ParseSuite {
 
   test("!a") {
     val ApplyUnary(TermName("!"), TermName("a")) = term("!a")
+  }
+
+  test("!(a: _*)") {
+    val ApplyUnary(TermName("!"), Repeated(TermName("a"))) = term("!(a: _*)")
   }
 
   test("a = true") {
@@ -354,6 +366,11 @@ class TermSuite extends ParseSuite {
                    Repeated(TermName("b")) :: Nil) = term("a + (b: _*)")
   }
 
+  test("a + ((b: _*))") {
+    val ApplyInfix(TermName("a"), TermName("+"), Nil,
+                   Repeated(TermName("b")) :: Nil) = term("a + ((b: _*))")
+  }
+
   test("local class") {
     val Term.Block(List(
       Defn.Class(
@@ -411,6 +428,17 @@ class TermSuite extends ParseSuite {
 
   test("a + (bs: _*) * c") {
     intercept[ParseException] { term("a + (bs: _*) * c") }
+  }
+
+  test("a + b: _*") {
+    intercept[ParseException] { term("a + b: _*") }
+  }
+
+  test("foo(a + b: _*)") {
+    val Term.Apply(
+      Term.Name("foo"), List(
+        Term.Repeated(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b")))))) =
+    term("foo(a + b: _*)")
   }
 
   test("a + (c, d) * e") {
