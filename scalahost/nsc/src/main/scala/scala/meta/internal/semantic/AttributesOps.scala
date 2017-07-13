@@ -225,7 +225,8 @@ trait AttributesOps { self: DatabaseOps =>
                 val mname = mctordefs(gstart)
                 gtree match {
                   case gtree: g.Template =>
-                    val gctor = gtree.body.find(_.symbol.isPrimaryConstructor)
+                    val gctor =
+                      gtree.body.find(x => Option(x.symbol).exists(_.isPrimaryConstructor))
                     success(mname, gctor.map(_.symbol).getOrElse(g.NoSymbol))
                   case gtree: g.DefDef if gtree.symbol.isConstructor =>
                     success(mname, gtree.symbol)
