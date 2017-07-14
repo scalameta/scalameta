@@ -549,7 +549,6 @@ lazy val publishableSettings = Def.settings(
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false,
   publishMavenStyle := true,
-  PgpKeys.pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray()),
   bintrayReleaseOnPublish := publishToBintray,
   pomIncludeRepository := { x =>
     false
@@ -693,5 +692,6 @@ inScope(Global)(
       username <- sys.env.get("SONATYPE_USERNAME")
       password <- sys.env.get("SONATYPE_PASSWORD")
     } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq
-  )
+  ),
+  PgpKeys.pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray())
 )
