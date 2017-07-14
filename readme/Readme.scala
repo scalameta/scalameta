@@ -5,6 +5,7 @@ import java.util.Calendar
 import scala.util.Try
 import scalatags.Text.all._
 import org.scalameta.os._
+import org.scalameta.BuildInfo
 import scala.compat.Platform.EOL
 import scala.tools.nsc.interpreter._
 import scala.tools.nsc.Settings
@@ -86,11 +87,17 @@ object Readme {
     pairs(List(left, right).map(x => half(hl.scala(x))): _*)
 
   def stableVersionString = {
-    version.stable()
+    val stdout = shell.check_output("git tag -l v*")
+    val StableVersion = """v(\d+.\d+.\d+)""".r
+    stdout
+      .split(EOL)
+      .reverse
+      .collectFirst { case StableVersion(version) => version }
+      .getOrElse(sys.error(s"Unable to find stable version: \n $stdout"))
   }
 
   def preReleaseVersionString = {
-    version.preRelease()
+    BuildInfo.version
   }
 
   def stableVersionBadge = {
