@@ -11,7 +11,7 @@ import Versions._
 
 lazy val LanguageVersions = Seq(LatestScala212, LatestScala211)
 lazy val LanguageVersion = LanguageVersions.head
-lazy val LibraryVersion = sys.props.getOrElseUpdate("scalameta.version", os.version.preRelease())
+lazy val LibraryVersion = customVersion.getOrElse(os.version.preRelease())
 
 // ==========================================
 // Projects
@@ -280,8 +280,7 @@ lazy val scalahostSbt = project
     Defaults.itSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
-    publishMavenStyle := isCustomRepository,
-    bintrayRepository := "maven", // sbtPlugin overrides this to sbt-plugins
+    publishMavenStyle := !publishToBintray,
     testQuick.in(IntegrationTest) := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
       RunSbtCommand(s"; plz $ScalaVersion publishLocal " +
@@ -530,11 +529,13 @@ lazy val mergeSettings = Def.settings(
 lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
 lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
 lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
+lazy val publishToBintray = !isCustomRepository && !customVersion.isDefined
 
 lazy val publishableSettings = Def.settings(
   publishTo := {
-    if (isCustomRepository) Some("adhoc" at adhocRepoUri)
-    else publishTo.in(bintray).value
+    if (publishToBintray) publishTo.in(bintray).value
+    else if (isCustomRepository) Some("adhoc" at adhocRepoUri)
+    else publishTo.value // Sonatype.
   },
   credentials ++= {
     val credentialsFile = if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
@@ -677,3 +678,4 @@ def CiCommand(name: String)(commands: List[String]): Command = Command.command(n
   }
 }
 def ci(command: String) = s"plz $ciScalaVersion $command"
+def customVersion = sys.props.get("scalameta.version")
