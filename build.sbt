@@ -38,7 +38,8 @@ commands += CiCommand("ci-slow")(
 )
 commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/it:test" :: Nil)
 commands += CiCommand("ci-publish")(
-  if (sys.env.contains("CI_PUBLISH")) s"publish" :: Nil
+  if (isCiPublish && isTagPush) s"publishSigned" :: Nil
+  else if (isCiPublish) s"publish" :: Nil
   else Nil
 )
 // NOTE: These tasks are aliased here in order to support running "tests/test"
@@ -539,13 +540,20 @@ lazy val publishableSettings = Def.settings(
   },
   credentials ++= {
     val credentialsFile = if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
-    if (credentialsFile != null) List(new FileCredentials(credentialsFile)) else Nil
+    if (credentialsFile != null) List(new FileCredentials(credentialsFile))
+    else {
+      (for {
+        username <- Option(System.getenv().get("SONATYPE_USERNAME"))
+        password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
+      } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq
+    }
   },
   sharedSettings,
   bintrayOrganization := Some("scalameta"),
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false,
   publishMavenStyle := true,
+  PgpKeys.pgpPassphrase := (if (isTagPush) Some(Array.emptyCharArray) else None),
   bintrayReleaseOnPublish := !isCustomRepository,
   pomIncludeRepository := { x =>
     false
@@ -669,6 +677,7 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler ++ backwardCompat210
 }
 
+lazy val isTagPush = sys.env.contains("TRAVIS_TAG")
 lazy val isCiPublish = sys.env.contains("CI_PUBLISH")
 lazy val ciPlatform = if (sys.env.contains("CI_SCALA_JS")) "JS" else "JVM"
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
