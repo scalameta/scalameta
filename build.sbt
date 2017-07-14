@@ -542,12 +542,7 @@ lazy val publishableSettings = Def.settings(
   credentials ++= {
     val credentialsFile = if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
     if (credentialsFile != null) List(new FileCredentials(credentialsFile))
-    else {
-      (for {
-        username <- Option(System.getenv().get("SONATYPE_USERNAME"))
-        password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
-      } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq
-    }
+    else Nil
   },
   sharedSettings,
   bintrayOrganization := Some("scalameta"),
@@ -690,3 +685,13 @@ def CiCommand(name: String)(commands: List[String]): Command = Command.command(n
 }
 def ci(command: String) = s"plz $ciScalaVersion $command"
 def customVersion = sys.props.get("scalameta.version")
+
+// Defining these here so it's only defined once and for all projects (including root)
+inScope(Global)(
+  Seq(
+    credentials ++= (for {
+      username <- sys.env.get("SONATYPE_USERNAME")
+      password <- sys.env.get("SONATYPE_PASSWORD")
+    } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq
+  )
+)
