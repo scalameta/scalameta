@@ -555,7 +555,7 @@ lazy val publishableSettings = Def.settings(
   publishArtifact.in(Test) := false,
   publishMavenStyle := true,
   PgpKeys.pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray()),
-  bintrayReleaseOnPublish := !isCustomRepository,
+  bintrayReleaseOnPublish := publishToBintray,
   pomIncludeRepository := { x =>
     false
   },
@@ -596,6 +596,7 @@ lazy val nonPublishableSettings = Seq(
   publishArtifact in packageDoc := false,
   sources in (Compile,doc) := Seq.empty,
   publishArtifact := false,
+  PgpKeys.publishSigned := {},
   publish := {}
 )
 
