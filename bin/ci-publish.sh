@@ -16,11 +16,11 @@ EOF
 }
 
 sonatype() {
+  echo "$PGP_SECRET" | base64 --decode | gpg --import
   sbt "sonatypeOpen scalameta-$TRAVIS_TAG" ci-publish sonatypeReleaseAll
 }
 
 if [ "$SECURE_VAR" == true ]; then
-  echo "$PGP_SECRET" | base64 --decode | gpg --import
   if [ -n "$TRAVIS_TAG" ]; then
     sonatype
   else
