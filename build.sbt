@@ -553,7 +553,7 @@ lazy val publishableSettings = Def.settings(
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false,
   publishMavenStyle := true,
-  PgpKeys.pgpPassphrase := (if (isTagPush) Some(Array.emptyCharArray) else None),
+  PgpKeys.pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray()),
   bintrayReleaseOnPublish := !isCustomRepository,
   pomIncludeRepository := { x =>
     false
@@ -677,7 +677,7 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler ++ backwardCompat210
 }
 
-lazy val isTagPush = sys.env.contains("TRAVIS_TAG")
+lazy val isTagPush = sys.env.get("TRAVIS_TAG").exists(_.nonEmpty)
 lazy val isCiPublish = sys.env.contains("CI_PUBLISH")
 lazy val ciPlatform = if (sys.env.contains("CI_SCALA_JS")) "JS" else "JVM"
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
