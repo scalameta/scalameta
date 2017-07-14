@@ -280,7 +280,7 @@ lazy val scalahostSbt = project
     Defaults.itSettings,
     sbt.ScriptedPlugin.scriptedSettings,
     sbtPlugin := true,
-    publishMavenStyle := !publishToBintray,
+    publishMavenStyle := true,
     testQuick.in(IntegrationTest) := {
       // runs tests for 2.11 only, avoiding the need to publish for 2.12
       RunSbtCommand(s"; plz $ScalaVersion publishLocal " +
@@ -420,8 +420,6 @@ lazy val readme = scalatex
     nonPublishableSettings,
     buildInfoSettings,
     // only needed for scalatex 0.3.8-pre until next scalatex release
-    resolvers += Resolver.bintrayIvyRepo("scalameta", "sbt-plugins"),
-    resolvers += Resolver.bintrayRepo("scalameta", "maven"),
     exposePaths("readme", Runtime),
     crossScalaVersions := LanguageVersions, // No need to cross-build.
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
@@ -531,13 +529,11 @@ lazy val mergeSettings = Def.settings(
 lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
 lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
 lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
-lazy val publishToBintray = !isCustomRepository && !customVersion.isDefined
 
 lazy val publishableSettings = Def.settings(
   publishTo := {
-    if (publishToBintray) publishTo.in(bintray).value
-    else if (isCustomRepository) Some("adhoc" at adhocRepoUri)
-    else publishTo.value // Sonatype.
+    if (isCustomRepository) Some("adhoc" at adhocRepoUri)
+    else Some("Releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
   },
   credentials ++= {
     val credentialsFile = if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
@@ -545,11 +541,9 @@ lazy val publishableSettings = Def.settings(
     else Nil
   },
   sharedSettings,
-  bintrayOrganization := Some("scalameta"),
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false,
   publishMavenStyle := true,
-  bintrayReleaseOnPublish := publishToBintray,
   pomIncludeRepository := { x =>
     false
   },
