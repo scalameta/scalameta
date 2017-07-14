@@ -11,17 +11,16 @@ import Versions._
 
 lazy val LanguageVersions = Seq(LatestScala212, LatestScala211)
 lazy val LanguageVersion = LanguageVersions.head
-lazy val LibraryVersion = customVersion.getOrElse(os.version.preRelease())
 
 // ==========================================
 // Projects
 // ==========================================
 
-{
-  println(s"[info] Welcome to scalameta $LibraryVersion")
-  name := "scalametaRoot"
-}
 sharedSettings
+name := {
+  println(s"[info] Welcome to scalameta ${version.value}")
+  "scalametaRoot"
+}
 nonPublishableSettings
 unidocSettings
 // ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
@@ -419,6 +418,7 @@ lazy val readme = scalatex
   .settings(
     sharedSettings,
     nonPublishableSettings,
+    buildInfoSettings,
     // only needed for scalatex 0.3.8-pre until next scalatex release
     resolvers += Resolver.bintrayIvyRepo("scalameta", "sbt-plugins"),
     resolvers += Resolver.bintrayRepo("scalameta", "maven"),
@@ -471,6 +471,7 @@ lazy val readme = scalatex
     publishM2 := {}
   )
   .dependsOn(scalametaJVM)
+  .enablePlugins(BuildInfoPlugin)
 
 // ==========================================
 // Settings
@@ -485,7 +486,7 @@ lazy val sharedSettings = Def.settings(
       case _ => CrossVersion.binary
     }
   },
-  version := LibraryVersion,
+  version := customVersion.getOrElse(version.value.replace('+', '-')),
   organization := "org.scalameta",
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
