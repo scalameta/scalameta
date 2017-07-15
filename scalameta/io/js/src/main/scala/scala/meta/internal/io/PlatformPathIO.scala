@@ -10,23 +10,23 @@ object PlatformPathIO {
     else AbsolutePath(fileSeparator)
 
   def fileSeparatorChar: Char =
-    JSPath.sep.toCharArray.head
+    JSIO.sep.toCharArray.head
 
   def fileSeparator: String =
-    JSPath.sep
+    JSIO.sep
 
   def pathSeparator: String =
-    JSPath.delimiter
+    JSIO.delimiter
 
   def isAbsolutePath(path: String): Boolean =
-    JSPath.isAbsolute(path)
+    JSIO.isAbsolute(path)
 
   def normalizePath(path: String): String =
-    JSPath.normalize(path)
+    JSIO.normalize(path)
 
   def resolve(path1: AbsolutePath, path2: RelativePath): AbsolutePath =
-    AbsolutePath(JSPath.resolve(path1.toString, path2.toString))
+    AbsolutePath(JSIO.resolve(path1.toString, path2.toString))
 
   def resolve(path1: RelativePath, path2: RelativePath): RelativePath =
-    RelativePath(JSPath.resolve(path1.toString, path2.toString))
+    RelativePath(JSIO.resolve(path1.toString, path2.toString))
 }
