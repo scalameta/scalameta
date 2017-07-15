@@ -78,7 +78,25 @@ object JSPath extends js.Any {
 }
 
 object JSIO {
-  private[io] def isNode = JSFs != null
+  def sep: String =
+    if (isNode) JSPath.sep
+    else "/"
+  def delimiter: String =
+    if (isNode) JSPath.delimiter
+    else ":"
+  def normalize(path: String): String =
+    if (isNode) JSPath.normalize(path)
+    else path
+  def isAbsolute(path: String): Boolean =
+    if (isNode) JSPath.isAbsolute(path)
+    else path.startsWith("/")
+  def resolve(path1: String, path2: String): String =
+    if (isNode) JSPath.resolve(path1, path2)
+    else s"$path1$sep$path2"
+
+  private[io] def isNode = {
+    JSFs != null
+  }
   def inNode[T](f: => T): T =
     if (JSIO.isNode) f
     else {
