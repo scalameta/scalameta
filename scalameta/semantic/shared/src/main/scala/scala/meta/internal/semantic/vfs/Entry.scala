@@ -1,11 +1,8 @@
 package scala.meta.internal.semantic.vfs
 
-import java.io.ByteArrayInputStream
-import java.io.InputStream
 import java.net.URI
 import org.scalameta.adt._
 import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.InputStreamIO
 import scala.meta.io._
 
 @root

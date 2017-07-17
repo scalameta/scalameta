@@ -2,7 +2,6 @@ package scala.meta
 package internal
 
 import java.nio.charset.Charset
-import java.nio.file.Files
 import org.scalameta.invariants.require
 import scala.meta.inputs.{Input => mInput}
 import scala.meta.inputs.{Position => mPosition}
