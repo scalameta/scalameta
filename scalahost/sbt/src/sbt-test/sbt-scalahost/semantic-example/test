@@ -1,9 +1,0 @@
-> app/testOnly Fat
-> clean
-> doc
-> clean
-> set every scalametaSemanticdb := ScalametaSemanticdb.Slim
-> app/testOnly Slim
-> clean
-> set every scalametaSemanticdb := ScalametaSemanticdb.Disabled
-> app/testOnly Disabled
