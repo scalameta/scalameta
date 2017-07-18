@@ -528,4 +528,16 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     }
   )
 
+  targeted(
+    """
+    object isJavaDefined {
+      new Object().<<toString>>
+      List(1).<<toString>>
+    }
+    """, { implicit db => (objectToString, listToString) =>
+      assert(objectToString.symbol.denot.isJavaDefined)
+      assert(!listToString.symbol.denot.isJavaDefined)
+    }
+  )
+
 }
