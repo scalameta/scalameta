@@ -35,7 +35,6 @@ commands += CiCommand("ci-slow")(
   "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
   Nil
 )
-commands += CiCommand("ci-sbt-scalahost")("scalahostSbt/it:test" :: Nil)
 commands += CiCommand("ci-publish")(
   if (isCiPublish && isTagPush) s"publishSigned" :: Nil
   else if (isCiPublish) s"publish" :: Nil
@@ -53,7 +52,6 @@ test := {
       |- scalametaJVM/testQuick # Parser/Pretty-printer/Trees/...
       |- contribJVM/testQuick   # contrib
       |- scalahostNsc/test      # Semantic API tests
-      |- scalahostSbt/it:test   # sbt-scalahost tests
       |- testOnlyJVM
       |- testOnlyJS
       |""".stripMargin)
@@ -270,44 +268,6 @@ lazy val scalahostNsc = project
     }
   )
   .dependsOn(scalametaJVM, testkit % Test)
-
-lazy val scalahostSbt = project
-  .in(file("scalahost/sbt"))
-  .configs(IntegrationTest)
-  .settings(
-    publishableSettings,
-    buildInfoSettings,
-    Defaults.itSettings,
-    sbt.ScriptedPlugin.scriptedSettings,
-    sbtPlugin := true,
-    publishMavenStyle := true,
-    testQuick.in(IntegrationTest) := {
-      // runs tests for 2.11 only, avoiding the need to publish for 2.12
-      RunSbtCommand(s"; plz $ScalaVersion publishLocal " +
-        "; such scalahostSbt/scripted sbt-scalahost/semantic-example")(state.value)
-    },
-    test.in(IntegrationTest) := {
-      RunSbtCommand("; such publishLocal " +
-        "; such scalahostSbt/scripted")(state.value)
-    },
-    description := "sbt plugin to enable the scalahost compiler plugin for Scala 2.x",
-    moduleName := "sbt-scalahost", // sbt convention is that plugin names start with sbt-
-    scalaVersion := LatestScala210,
-    crossScalaVersions := Seq(LatestScala210),
-    scriptedLaunchOpts ++= Seq(
-      "-Dplugin.version=" + version.value,
-      // .jvmopts is ignored, simulate here
-      "-XX:MaxPermSize=256m",
-      "-Xmx2g",
-      "-Xss2m"
-    ) ++ {
-      // pass along custom boot properties if specified
-      val bootProps = "sbt.boot.properties"
-      sys.props.get(bootProps).map(x => s"-D$bootProps=$x").toList
-    },
-    scriptedBufferLog := false
-  )
-  .enablePlugins(BuildInfoPlugin)
 
 lazy val scalahostIntegration = project
   .in(file("scalahost/integration"))
