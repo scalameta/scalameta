@@ -39,6 +39,8 @@ trait DenotationOps { self: DatabaseOps =>
         flags |= mf.VAR
       if (maybeValOrVar && !(gsym.hasFlag(gf.LOCAL) && gsym.hasFlag(gf.PARAMACCESSOR)))
         flags |= mf.VAL
+      if (gsym.hasFlag(gf.JAVA))
+        flags |= mf.JAVADEFINED
       flags
     }
 

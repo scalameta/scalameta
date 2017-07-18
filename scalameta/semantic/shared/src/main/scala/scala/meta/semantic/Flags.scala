@@ -27,6 +27,7 @@ private[semantic] trait Flags {
   final val COVARIANT: Long = 1 << 22
   final val CONTRAVARIANT: Long = 1 << 23
   final val INLINE: Long = 1 << 24
+  final val JAVADEFINED: Long = 1 << 25
 }
 
 private[semantic] trait HasFlags {
@@ -58,6 +59,7 @@ private[semantic] trait HasFlags {
   def isCovariant: Boolean = hasFlag(COVARIANT)
   def isContravariant: Boolean = hasFlag(CONTRAVARIANT)
   def isInline: Boolean = hasFlag(INLINE)
+  def isJavaDefined: Boolean = hasFlag(JAVADEFINED)
 
   protected def flagSyntax: String = scala.meta.internal.semantic.FlagSyntax(flags)
   protected def flagStructure: String = flagSyntax.replace(" ", " | ").toUpperCase
