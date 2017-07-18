@@ -530,7 +530,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   targeted(
     """
-    object isJavaDefined {
+    object v {
       new Object().<<toString>>
       List(1).<<toString>>
     }
