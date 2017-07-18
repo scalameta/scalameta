@@ -9,7 +9,6 @@ import scala.collection.mutable
 import mutable.ListBuffer
 import scala.annotation.tailrec
 import scala.collection.immutable._
-import scala.util.Try
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.inputs._

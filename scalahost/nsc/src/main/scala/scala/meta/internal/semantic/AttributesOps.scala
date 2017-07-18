@@ -1,8 +1,6 @@
 package scala.meta.internal
 package semantic
 
-import java.io.PrintWriter
-import java.io.StringWriter
 import org.scalameta.unreachable
 import scala.collection.mutable
 import scala.reflect.internal.util._
