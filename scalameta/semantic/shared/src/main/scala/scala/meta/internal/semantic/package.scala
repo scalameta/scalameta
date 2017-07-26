@@ -134,8 +134,8 @@ package object semantic {
           }
           object mDenotation {
             def unapply(mdenot: m.Denotation): Option[s.Denotation] = mdenot match {
-              case m.Denotation(sflags, sname, sinfo, mPosition.None) => Some(s.Denotation(sflags, sname, sinfo, None))
               case m.Denotation(sflags, sname, sinfo, mRange(spos)) => Some(s.Denotation(sflags, sname, sinfo, Some(spos)))
+              case m.Denotation(sflags, sname, sinfo, _) => Some(s.Denotation(sflags, sname, sinfo, None))
               case _ => None
             }
           }
