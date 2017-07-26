@@ -53,7 +53,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     |[14..19): scala => _root_.scala.
     |[20..24): List => _root_.scala.package.List.;_root_.scala.package.List#
     |[32..33): C => _empty_.C#
-    |[34..34):  => _empty_.C#`<init>`()V.
+    |[34..34): ε => _empty_.C#`<init>`()V.
     |[38..44): _root_ => _root_.
     |[45..50): scala => _root_.scala.
     |[51..55): List => _root_.scala.collection.immutable.
@@ -391,18 +391,18 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """
       |[9..10): m => _root_.m.
       |[17..18): C => _root_.m.C#
-      |[18..18):  => _root_.m.C#`<init>`(I)V.
+      |[18..18): ε => _root_.m.C#`<init>`(I)V.
       |[19..20): x => _root_.m.C#(x)
       |[22..25): Int => _root_.scala.Int#
       |[35..39): this => _root_.m.C#`<init>`()V.
-      |[48..48):  => _root_.m.C#`<init>`(I)V.
+      |[48..48): ε => _root_.m.C#`<init>`(I)V.
       |[62..63): M => _root_.m.M.
       |[72..74): c0 => _root_.m.M.c0.
       |[81..82): C => _root_.m.C#
-      |[82..82):  => _root_.m.C#`<init>`()V.
+      |[82..82): ε => _root_.m.C#`<init>`()V.
       |[91..93): c1 => _root_.m.M.c1.
       |[100..101): C => _root_.m.C#
-      |[101..101):  => _root_.m.C#`<init>`(I)V.
+      |[101..101): ε => _root_.m.C#`<init>`(I)V.
     """.stripMargin.trim
   )
 
