@@ -92,7 +92,7 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     def toDenotation: m.Denotation = {
-      m.Denotation(flags, name, info)
+      m.Denotation(flags, name, info, gsym.pos.toMeta)
     }
   }
 }
