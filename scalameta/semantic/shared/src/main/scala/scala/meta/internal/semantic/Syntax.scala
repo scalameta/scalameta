@@ -40,7 +40,8 @@ object AttributesSyntax {
 
     val s_names = names.toList.sortBy(_._1.start).map {
       case ((pos, symbol)) =>
-        s"${pos.range}: ${pos.text} => $symbol"
+        val text = if (pos.text.nonEmpty) pos.text else "ε"
+        s"${pos.range}: $text => $symbol"
     }
     appendSection("Names", s_names)
 
