@@ -25,11 +25,6 @@ class TokensSuite extends FunSuite {
     assert(tree.tokens.forall(_.input.isInstanceOf[Input.VirtualFile]))
   }
 
-  test("wat") {
-    // NOTE: if this test fails, then we'll get ScalametaTokenizer.megaCache corruptions
-    assert(Input.VirtualFile("<InternalTrees.tokens>", "abcdefgh") != Input.String("abcdefgh"))
-  }
-
   test("Tree.tokens: empty") {
     val emptyTemplate = "class C".parse[Stat].get.children(2)
     assert(emptyTemplate.structure === "Template(Nil, Nil, Self(Name(\"\"), None), Nil)")

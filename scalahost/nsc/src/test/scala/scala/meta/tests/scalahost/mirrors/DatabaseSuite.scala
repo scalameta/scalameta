@@ -114,7 +114,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
     checkSection(code, expected, "Sugars")
   }
 
-  private def computeDatabaseAndNamesFromMarkup(markup: String): (m.Database, List[m.Name]) = {
+  private def computeDatabaseAndNamesFromMarkup(markup: String): (m.Database, List[m.Symbol]) = {
     val chevrons = "<<(.*?)>>".r
     val ps0 = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList
     val ps = ps0.zipWithIndex.map { case ((s, e), i) => (s - 4 * i, e - 4 * i - 4) }
@@ -122,19 +122,20 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
     val database = computeDatabaseFromSnippet(code)
     val unit = g.currentRun.units.toList.last
     val source = unit.toSource
-    val names = ps.map {
+    val symbols = ps.map {
       case (s, e) =>
-        val names = source.collect {
-          case name: m.Name if name.pos.start == s && name.pos.end == e => name
+        val symbols = source.collect {
+          case name: m.Name if name.pos.start == s && name.pos.end == e =>
+            database.names.get(name.pos)
         }
         val chevron = "<<" + code.substring(s, e) + ">>"
-        names match {
+        symbols match {
           case Nil => sys.error(chevron + " does not wrap a name")
-          case List(name) => name
+          case List(Some(symbol)) => symbol
           case _ => sys.error("fatal error processing " + chevron)
         }
     }
-    (database, names)
+    (database, symbols)
   }
 
   trait OverloadHack1; implicit object OverloadHack1 extends OverloadHack1
@@ -143,55 +144,55 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
   trait OverloadHack4; implicit object OverloadHack4 extends OverloadHack4
   trait OverloadHack5; implicit object OverloadHack5 extends OverloadHack5
 
-  def targeted(markup: String, fn: m.Database => () => Unit)(implicit hack: OverloadHack1): Unit = {
+  def targeted(markup: String, fn: m.Database => Unit)(implicit hack: OverloadHack1): Unit = {
     test(markup) {
       val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
       names match {
-        case List() => fn(database)()
+        case List() => fn(database)
         case _ => sys.error(s"0 chevrons expected, ${names.length} chevrons found")
       }
     }
   }
 
-  def targeted(markup: String, fn: m.Database => m.Name => Unit)(
+  def targeted(markup: String, fn: (m.Database, m.Symbol) => Unit)(
       implicit hack: OverloadHack2): Unit = {
     test(markup) {
       val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
       names match {
-        case List(name1) => fn(database)(name1)
+        case List(name1) => fn(database, name1)
         case _ => sys.error(s"1 chevron expected, ${names.length} chevrons found")
       }
     }
   }
 
-  def targeted(markup: String, fn: m.Database => (m.Name, m.Name) => Unit)(
+  def targeted(markup: String, fn: (m.Database, m.Symbol, m.Symbol) => Unit)(
       implicit hack: OverloadHack3): Unit = {
     test(markup) {
       val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
       names match {
-        case List(name1, name2) => fn(database)(name1, name2)
+        case List(name1, name2) => fn(database, name1, name2)
         case _ => sys.error(s"2 chevrons expected, ${names.length} chevrons found")
       }
     }
   }
 
-  def targeted(markup: String, fn: m.Database => (m.Name, m.Name, m.Name) => Unit)(
+  def targeted(markup: String, fn: (m.Database, m.Symbol, m.Symbol, m.Symbol) => Unit)(
       implicit hack: OverloadHack4): Unit = {
     test(markup) {
       val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
       names match {
-        case List(name1, name2, name3) => fn(database)(name1, name2, name3)
+        case List(name1, name2, name3) => fn(database, name1, name2, name3)
         case _ => sys.error(s"3 chevrons expected, ${names.length} chevrons found")
       }
     }
   }
 
-  def targeted(markup: String, fn: m.Database => (m.Name, m.Name, m.Name, m.Name) => Unit)(
+  def targeted(markup: String, fn: (m.Database, m.Symbol, m.Symbol, m.Symbol, m.Symbol) => Unit)(
       implicit hack: OverloadHack5): Unit = {
     test(markup) {
       val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
       names match {
-        case List(name1, name2, name3, name4) => fn(database)(name1, name2, name3, name4)
+        case List(name1, name2, name3, name4) => fn(database, name1, name2, name3, name4)
         case _ => sys.error(s"4 chevrons expected, ${names.length} chevrons found")
       }
     }

@@ -7,8 +7,8 @@ trait DatabaseOps
     extends AttributesOps
     with ConfigOps
     with DenotationOps
-    with DialectOps
     with InputOps
+    with LanguageOps
     with ParseOps
     with ReporterOps
     with PrinterOps

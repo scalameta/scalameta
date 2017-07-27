@@ -5,6 +5,7 @@ package prettyprinters
 import org.scalameta.adt._
 import scala.annotation.implicitNotFound
 import scala.Console._
+import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import Show.{ sequence => s, repeat => r }
 
@@ -44,11 +45,11 @@ object Positions {
         case el => s(el.toString.colored(color))
       }
       def pos(x: Tree): String = {
-        if (x.pos.nonEmpty) s"{${x.pos.start}..${x.pos.end}}".sliced(x.toString)
+        if (x.pos != Position.None) s"{${x.pos.start}..${x.pos.end}}".sliced(x.toString)
         else ""
       }
       def color(x: Tree): String = {
-        if (x.pos.nonEmpty) GREEN else RED
+        if (x.pos != Position.None) GREEN else RED
       }
       val prefix = (x.productPrefix + pos(x) + "(").colored(color(x))
       val fields = r(x.productIterator.toList.map(el => loopField(el, color(x))), ", ".colored(color(x)))

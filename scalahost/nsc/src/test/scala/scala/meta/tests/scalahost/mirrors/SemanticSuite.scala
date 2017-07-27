@@ -35,8 +35,8 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     |    42
     |  }
     |}
-  """.trim.stripMargin, { implicit database => second =>
-      assert(second.symbol === Symbol("_empty_.B."))
+  """.trim.stripMargin, { (db, second) =>
+      assert(second === Symbol("_empty_.B."))
     }
   )
 
@@ -67,8 +67,8 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  def bar(children: Int)(x: Int) = children + x
       |  <<bar>>(children = 4)(3)
       |}
-    """.trim.stripMargin, { implicit database => second =>
-      assert(second.symbol === Symbol("_empty_.D.bar(II)I."))
+    """.trim.stripMargin, { (db, second) =>
+      assert(second === Symbol("_empty_.D.bar(II)I."))
     }
   )
 
@@ -80,9 +80,9 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  val u: User = ???
       |  u.<<copy>>(<<age>> = 43)
       |}
-    """.trim.stripMargin, { implicit database => (copy, age) =>
-      assert(copy.symbol === Symbol("_root_.e.User#copy(Ljava/lang/String;I)Le/User;."))
-      assert(age.symbol === Symbol("_root_.e.User#copy(Ljava/lang/String;I)Le/User;.(age)"))
+    """.trim.stripMargin, { (db, copy, age) =>
+      assert(copy === Symbol("_root_.e.User#copy(Ljava/lang/String;I)Le/User;."))
+      assert(age === Symbol("_root_.e.User#copy(Ljava/lang/String;I)Le/User;.(age)"))
     }
   )
 
@@ -522,9 +522,9 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   targeted(
     // See https://github.com/scalameta/scalameta/issues/830
-    "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", { implicit database => first =>
-      assert(first.symbol == Symbol("_empty_.u.unapply(Lu;)Lscala/Option;."))
-      assert(first.symbol.denot.toString == "case def unapply: (x$0: u)Option[Int]")
+    "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", { (db, first) =>
+      assert(first == Symbol("_empty_.u.unapply(Lu;)Lscala/Option;."))
+      assert(db.denotations(first).toString == "case def unapply: (x$0: u)Option[Int]")
     }
   )
 
@@ -534,9 +534,9 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       new Object().<<toString>>
       List(1).<<toString>>
     }
-    """, { implicit db => (objectToString, listToString) =>
-      assert(objectToString.symbol.denot.isJavaDefined)
-      assert(!listToString.symbol.denot.isJavaDefined)
+    """, { (db, objectToString, listToString) =>
+      assert(db.denotations(objectToString).isJavaDefined)
+      assert(!db.denotations(listToString).isJavaDefined)
     }
   )
 

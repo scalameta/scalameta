@@ -6,7 +6,7 @@ import js.JSConverters._
 import js.annotation._
 
 import prettyprinters._
-import inputs.Position
+import inputs._
 
 object JSFacade {
 

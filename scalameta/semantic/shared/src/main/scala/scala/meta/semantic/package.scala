@@ -1,3 +1,3 @@
 package scala.meta
 
-package object semantic extends Api
+package object semantic extends Api with Aliases

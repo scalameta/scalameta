@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package star.meta.internal.semanticdb.schema;
+
+message Database {
+  repeated Attributes entries = 1;
+}
+
+message Attributes {
+  reserved 1;
+  reserved 5;
+  string filename = 9;
+  string contents = 8;
+  string language = 7;
+  repeated ResolvedName names = 2;
+  repeated Message messages = 3;
+  repeated SymbolDenotation denotations = 4;
+  repeated Sugar sugars = 6;
+}
+
+message ResolvedName {
+  Range range = 1;
+  string symbol = 2;
+}
+
+message Range {
+  int32 start = 2;
+  int32 end = 3;
+}
+
+message Message {
+  enum Severity {
+    UNKNOWN = 0;
+    INFO = 1;
+    WARNING = 2;
+    ERROR = 3;
+  }
+  Range range = 1;
+  Severity severity = 2;
+  string msg = 3;
+}
+
+message SymbolDenotation {
+  string symbol = 1;
+  Denotation denot = 2;
+}
+
+message Denotation {
+  int64 flags = 1;
+  string name = 2;
+  string info = 3;
+}
+
+message Sugar {
+  Range range = 1;
+  string syntax = 2;
+  repeated ResolvedName names = 3;
+}

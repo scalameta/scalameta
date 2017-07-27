@@ -39,7 +39,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       1.parse[Term]
-    """) === "don't know how to convert Int to scala.meta.inputs.Input")
+    """) === "don't know how to convert Int to meta.inputs.Input")
   }
 
   test("InputLike.parse without parseability") {
@@ -90,7 +90,7 @@ class PublicSuite extends FunSuite {
   test("Dialect.parse without input-likeness") {
     assert(typecheckError("""
       scala.meta.dialects.Scala211(1).parse[scala.meta.Term]
-    """) === "don't know how to convert Int to scala.meta.inputs.Input")
+    """) === "don't know how to convert Int to meta.inputs.Input")
   }
 
   test("Dialect.parse without parseability") {
@@ -119,7 +119,7 @@ class PublicSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       1.tokenize
-    """) === "don't know how to convert Int to scala.meta.inputs.Input")
+    """) === "don't know how to convert Int to meta.inputs.Input")
   }
 
   test("tokenize when everything's correct (static dialect)") {
@@ -160,7 +160,7 @@ class PublicSuite extends FunSuite {
   test("Dialect.tokenize without input-likeness") {
     assert(typecheckError("""
       scala.meta.dialects.Scala211(1).tokenize
-    """) === "don't know how to convert Int to scala.meta.inputs.Input")
+    """) === "don't know how to convert Int to meta.inputs.Input")
   }
 
   test("Dialect.tokenize when everything's correct") {

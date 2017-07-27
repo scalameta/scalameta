@@ -424,7 +424,7 @@ trait AttributesOps { self: DatabaseOps =>
 
         m.Attributes(
           input,
-          dialect,
+          language,
           names.toList,
           messages.toList,
           denotations.toList,

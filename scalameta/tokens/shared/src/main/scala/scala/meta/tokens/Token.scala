@@ -1,7 +1,6 @@
 package scala.meta
 package tokens
 
-import org.scalameta.adt.{Liftables => AdtLiftables}
 import scala.meta.internal.tokens._
 import scala.meta.inputs._
 import scala.meta.classifiers._
@@ -140,25 +139,4 @@ object Token {
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
   implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = TokenSyntax.apply[T](dialect)
-}
-
-// NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
-// Without this, compilation order may unexpectedly affect compilation success.
-private[meta] trait TokenLiftables extends AdtLiftables with InputLiftables with DialectLiftables {
-  val c: scala.reflect.macros.blackbox.Context
-  override lazy val u: c.universe.type = c.universe
-
-  import c.universe._
-  private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
-
-  implicit lazy val liftBigInt: Liftable[BigInt] = Liftable[BigInt] { v =>
-    q"_root_.scala.math.BigInt(${v.bigInteger.toString})"
-  }
-
-  implicit lazy val liftBigDecimal: Liftable[BigDecimal] = Liftable[BigDecimal] { v =>
-    q"_root_.scala.math.BigDecimal(${v.bigDecimal.toString})"
-  }
-
-  // TODO: this can't be `implicit val`, because then the materialization macro will crash in GenICode
-  implicit def liftToken: Liftable[Token] = materializeAdt[Token]
 }
