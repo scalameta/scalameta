@@ -21,12 +21,6 @@ object PlatformPathIO {
   def workingDirectory: AbsolutePath =
     AbsolutePath(workingDirectoryString)
 
-  def rootDirectory: AbsolutePath =
-    AbsolutePath(Paths.get("").toAbsolutePath.getRoot)
-
-  def homeDirectory: AbsolutePath =
-    AbsolutePath(sys.props("user.home"))
-
   def isAbsolutePath(path: String): Boolean =
     Paths.get(path).isAbsolute
 
