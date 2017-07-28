@@ -6,18 +6,23 @@ import org.scalatest.FunSuite
 class IOFileTest extends FunSuite {
   val file = new File("build.sbt")
   val target = new File("target")
+  val streams = new File("target", "streams")
 
   test(".toString") {
     assert(file.toString == "build.sbt")
     assert(target.toString == "target")
+    assert(streams.toString == "target/streams" || streams.toString == "target\\streams")
   }
 
   test(".isFile") {
     assert(file.isFile)
+    assert(!streams.isFile)
   }
 
   test(".isDirectory") {
+    assert(!file.isDirectory)
     assert(target.isDirectory)
+    assert(streams.isDirectory)
   }
 
   test(".getAbsolutePath") {
