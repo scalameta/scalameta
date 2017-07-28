@@ -3,30 +3,29 @@ package scala.meta.internal.io
 import scala.meta.io._
 
 object PlatformPathIO {
-  def workingDirectoryString: String = JSShell.pwd().toString
+  def workingDirectoryString: String =
+    if (JSIO.isNode) JSShell.pwd().toString
+    else fileSeparator
 
   def workingDirectory: AbsolutePath =
-    if (JSIO.isNode) AbsolutePath(workingDirectoryString)
-    else AbsolutePath(fileSeparator)
+    AbsolutePath(workingDirectoryString)
 
   def fileSeparatorChar: Char =
-    JSPath.sep.toCharArray.head
+    fileSeparator.charAt(0)
 
   def fileSeparator: String =
-    JSPath.sep
+    if (JSIO.isNode) JSPath.sep
+    else "/"
 
   def pathSeparator: String =
-    JSPath.delimiter
+    if (JSIO.isNode) JSPath.delimiter
+    else ":"
 
   def isAbsolutePath(path: String): Boolean =
-    JSPath.isAbsolute(path)
+    if (JSIO.isNode) JSPath.isAbsolute(path)
+    else path.startsWith(fileSeparator)
 
   def normalizePath(path: String): String =
-    JSPath.normalize(path)
-
-  def resolve(path1: AbsolutePath, path2: RelativePath): AbsolutePath =
-    AbsolutePath(JSPath.resolve(path1.toString, path2.toString))
-
-  def resolve(path1: RelativePath, path2: RelativePath): RelativePath =
-    RelativePath(JSPath.resolve(path1.toString, path2.toString))
+    if (JSIO.isNode) JSPath.normalize(path)
+    else path
 }

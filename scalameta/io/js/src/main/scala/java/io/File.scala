@@ -6,11 +6,9 @@ import scala.meta.internal.io._
 
 // obtained implementation by experimentation on the JDK.
 class File(path: String) {
-  private val filename = JSPath.normalize(path)
+  private val filename = PathIO.normalizePath(path)
   def this(parent: String, child: String) =
-    this(JSPath.resolve(child, parent))
-  def this(child: String, parent: File) =
-    this(parent.getPath, child)
+    this(JSPath.join(parent, child))
   def this(parent: File, child: String) =
     this(parent.getPath, child)
   def this(uri: URI) =

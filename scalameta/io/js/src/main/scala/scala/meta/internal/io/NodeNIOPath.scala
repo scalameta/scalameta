@@ -18,7 +18,7 @@ case class NodeNIOPath(filename: String) extends Path {
   override def toFile: File =
     new File(filename)
   override def isAbsolute: Boolean =
-    JSPath.isAbsolute(filename)
+    PathIO.isAbsolutePath(filename)
   override def getName(index: Int): Path =
     NodeNIOPath(
       filename
@@ -28,8 +28,8 @@ case class NodeNIOPath(filename: String) extends Path {
   override def getParent: Path =
     NodeNIOPath(JSPath.dirname(filename))
   override def toAbsolutePath: Path =
-    if (JSPath.isAbsolute(filename)) this
-    else PathIO.workingDirectory.toNIO.resolve(this)
+    if (PathIO.isAbsolutePath(filename)) this
+    else NodeNIOPath.workingDirectory.resolve(this)
   override def relativize(other: Path): Path =
     NodeNIOPath(JSPath.relative(filename, other.toString))
   override def getNameCount: Int =
@@ -41,7 +41,7 @@ case class NodeNIOPath(filename: String) extends Path {
     if (!isAbsolute) null
     else NodeNIOPath(PathIO.fileSeparator)
   override def normalize(): Path =
-    NodeNIOPath(JSPath.normalize(filename))
+    NodeNIOPath(PathIO.normalizePath(filename))
   override def endsWith(other: Path): Boolean =
     endsWith(other.toString)
   override def endsWith(other: String): Boolean =

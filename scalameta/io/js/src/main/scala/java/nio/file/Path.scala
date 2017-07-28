@@ -1,8 +1,6 @@
 package java.nio.file
 
 import java.net.URI
-import scala.meta.internal.io.JSPath
-import scala.meta.internal.io.PathIO
 
 // obtained interface by experimentation on the JDK.
 trait Path {
