@@ -24,7 +24,7 @@ object PathIO {
     !isAbsolutePath(path)
 
   def normalizePath(path: String): String =
-    PlatformPathIO.fileSeparator
+    PlatformPathIO.normalizePath(path)
 
   // These two methods work on strings instead of AbsolutePath because AbsolutePath
   // with unix / slashes is non-sensical on Windows.
