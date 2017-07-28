@@ -15,13 +15,13 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     |}
   """.trim.stripMargin,
     """
-    |[7..8): A => _empty_.A.
-    |[17..21): main => _empty_.A.main([Ljava/lang/String;)V.
-    |[22..26): args => _empty_.A.main([Ljava/lang/String;)V.(args)
+    |[7..8): A <= _empty_.A.
+    |[17..21): main <= _empty_.A.main([Ljava/lang/String;)V.
+    |[22..26): args <= _empty_.A.main([Ljava/lang/String;)V.(args)
     |[28..33): Array => _root_.scala.Array#
     |[34..40): String => _root_.scala.Predef.String#
     |[44..48): Unit => _root_.scala.Unit#
-    |[61..65): list => <...>@57..81
+    |[61..65): list <= <...>@57..81
     |[68..72): List => _root_.scala.collection.immutable.List.
     |[86..93): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
     |[94..98): list => <...>@57..81
@@ -52,8 +52,8 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     |[7..13): _root_ => _root_.
     |[14..19): scala => _root_.scala.
     |[20..24): List => _root_.scala.package.List.;_root_.scala.package.List#
-    |[32..33): C => _empty_.C#
-    |[34..34): ε => _empty_.C#`<init>`()V.
+    |[32..33): C <= _empty_.C#
+    |[34..34): ε <= _empty_.C#`<init>`()V.
     |[38..44): _root_ => _root_.
     |[45..50): scala => _root_.scala.
     |[51..55): List => _root_.scala.collection.immutable.
@@ -344,10 +344,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |}
     """.stripMargin,
     """
-      |[9..10): k => _root_.k.
-      |[18..21): tup => _root_.k.tup.
-      |[30..33): foo => _root_.k.tup.foo.
-      |[37..38): a => _root_.k.tup.foo.$anonfun.(a)
+      |[9..10): k <= _root_.k.
+      |[18..21): tup <= _root_.k.tup.
+      |[30..33): foo <= _root_.k.tup.foo.
+      |[37..38): a <= _root_.k.tup.foo.$anonfun.(a)
       |[41..44): Int => _root_.scala.Int#
       |[46..53): Boolean => _root_.scala.Boolean#
       |[63..66): foo => _root_.k.tup.foo.
@@ -389,18 +389,18 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |}
     """.stripMargin,
     """
-      |[9..10): m => _root_.m.
-      |[17..18): C => _root_.m.C#
-      |[18..18): ε => _root_.m.C#`<init>`(I)V.
-      |[19..20): x => _root_.m.C#(x)
+      |[9..10): m <= _root_.m.
+      |[17..18): C <= _root_.m.C#
+      |[18..18): ε <= _root_.m.C#`<init>`(I)V.
+      |[19..20): x <= _root_.m.C#(x)
       |[22..25): Int => _root_.scala.Int#
-      |[35..39): this => _root_.m.C#`<init>`()V.
+      |[35..39): this <= _root_.m.C#`<init>`()V.
       |[48..48): ε => _root_.m.C#`<init>`(I)V.
-      |[62..63): M => _root_.m.M.
-      |[72..74): c0 => _root_.m.M.c0.
+      |[62..63): M <= _root_.m.M.
+      |[72..74): c0 <= _root_.m.M.c0.
       |[81..82): C => _root_.m.C#
       |[82..82): ε => _root_.m.C#`<init>`()V.
-      |[91..93): c1 => _root_.m.M.c1.
+      |[91..93): c1 <= _root_.m.M.c1.
       |[100..101): C => _root_.m.C#
       |[101..101): ε => _root_.m.C#`<init>`(I)V.
     """.stripMargin.trim
@@ -414,15 +414,15 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  val Name(name) = "name:foo"
        |  1 #:: 2 #:: Stream.empty
        |}""".stripMargin,
-    """|[7..8): n => _empty_.n.
-       |[17..21): Name => _empty_.n.Name.
+    """|[7..8): n <= _empty_.n.
+       |[17..21): Name <= _empty_.n.Name.
        |[36..37): r => _root_.scala.collection.immutable.StringLike#r()Lscala/util/matching/Regex;.
-       |[44..45): x => _empty_.n.x$1.x.
+       |[44..45): x <= _empty_.n.x$1.x.
        |[46..49): #:: => _root_.scala.package.`#::`.
-       |[50..52): xs => _empty_.n.x$1.xs.
+       |[50..52): xs <= _empty_.n.x$1.xs.
        |[55..61): Stream => _root_.scala.package.Stream.
        |[75..79): Name => _empty_.n.Name.
-       |[80..84): name => _empty_.n.name.name.
+       |[80..84): name <= _empty_.n.name.name.
        |[103..106): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
        |[109..112): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
        |[113..119): Stream => _root_.scala.package.Stream.
@@ -452,8 +452,8 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  lst + "foo"
        |}
     """.stripMargin,
-    """|[7..8): p => _empty_.p.
-       |[17..20): lst => _empty_.p.lst.
+    """|[7..8): p <= _empty_.p.
+       |[17..20): lst <= _empty_.p.lst.
        |[25..28): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
        |[31..34): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(Ljava/lang/Object;)Lscala/collection/immutable/Stream;.
        |[35..41): Stream => _root_.scala.package.Stream.

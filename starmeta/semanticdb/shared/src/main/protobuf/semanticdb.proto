@@ -21,6 +21,7 @@ message Attributes {
 message ResolvedName {
   Position pos = 1;
   string sym = 2;
+  bool is_binder = 3;
 }
 
 message Position {

@@ -66,10 +66,10 @@ package object semanticdb {
             def unapply(ssugar: s.Sugar): Option[dSugar] = ssugar match {
               case s.Sugar(Some(sPosition(dpos)), dtext, snames) =>
                 val dnames = snames.toIterator.map {
-                  case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym)) =>
+                  case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disBinder) =>
                     val dsugarinput = dInput.Sugar(dtext, dpos.input, dpos.start, dpos.end)
                     val dsugarpos = dPosition.Range(dsugarinput, sstart, send)
-                    d.ResolvedName(dsugarpos, dsym)
+                    d.ResolvedName(dsugarpos, dsym, disBinder)
                   case other =>
                     sys.error(s"bad protobuf: unsupported name $other")
                 }.toList
@@ -78,7 +78,7 @@ package object semanticdb {
           }
           val dlanguage = slanguage
           val dnames = snames.map {
-            case s.ResolvedName(Some(sPosition(dpos)), d.Symbol(dsym)) => d.ResolvedName(dpos, dsym)
+            case s.ResolvedName(Some(sPosition(dpos)), d.Symbol(dsym), disBinder) => d.ResolvedName(dpos, dsym, disBinder)
             case other => sys.error(s"bad protobuf: unsupported name $other")
           }.toList
           val dmessages = smessages.map {
@@ -131,8 +131,8 @@ package object semanticdb {
             def unapply(dsugar: dSugar): Option[s.Sugar] = dsugar match {
               case d.Sugar(dPosition(spos), ssyntax, dnames) =>
                 val snames = dnames.toIterator.map {
-                  case d.ResolvedName(star.meta.inputs.Position.Range(_, sstart, send), ssym) =>
-                    s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax)
+                  case d.ResolvedName(star.meta.inputs.Position.Range(_, sstart, send), ssym, sisBinder) =>
+                    s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisBinder)
                   case other =>
                     sys.error(s"bad database: unsupported name $other")
                 }.toSeq
@@ -153,7 +153,7 @@ package object semanticdb {
           assert(spath.nonEmpty, s"'$spath'.nonEmpty")
           val slanguage = dlanguage
           val snames = dnames.map {
-            case d.ResolvedName(dPosition(spos), ssym) => s.ResolvedName(Some(spos), ssym.syntax)
+            case d.ResolvedName(dPosition(spos), ssym, sisBinder) => s.ResolvedName(Some(spos), ssym.syntax, sisBinder)
             case other => sys.error(s"bad database: unsupported name $other")
           }
           val smessages = dmessages.map {

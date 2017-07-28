@@ -33,6 +33,7 @@ trait AttributesOps { self: DatabaseOps =>
           sys.error("the compiler phase must be not later than patmat")
         }
 
+        val binders = mutable.Set[m.Position]()
         val names = mutable.Map[m.Position, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
         val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
@@ -163,6 +164,7 @@ trait AttributesOps { self: DatabaseOps =>
                 if (symbol == m.Symbol.None) return
 
                 names(mtree.pos) = symbol
+                if (mtree.isBinder) binders += mtree.pos
                 denotations(symbol) = gsym.toDenotation
                 if (gsym.isClass && !gsym.isTrait) {
                   val gprim = gsym.primaryConstructor
@@ -425,7 +427,7 @@ trait AttributesOps { self: DatabaseOps =>
         m.Attributes(
           input,
           language,
-          names.map { case (pos, sym) => m.ResolvedName(pos, sym) }.toList,
+          names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,
           messages.toList,
           denotations.map { case (sym, denot) => m.ResolvedSymbol(sym, denot) }.toList,
           sugars.toList

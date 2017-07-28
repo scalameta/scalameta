@@ -356,12 +356,12 @@ class PublicSuite extends FunSuite {
     val original = Input.String("input")
     val input = Input.Sugar("sugar", original, 1, 1)
     val pos = Position.Range(input, 0, 5)
-    val sugar = Sugar(pos, "sugar", List(ResolvedName(pos, Symbol("_root_.sugar."))))
+    val sugar = Sugar(pos, "sugar", List(ResolvedName(pos, Symbol("_root_.sugar."), isBinder = false)))
     assert(sugar.syntax == """
       |[0..5): sugar
       |  [0..5): sugar => _root_.sugar.
     """.trim.stripMargin)
-    assert(sugar.structure == """Sugar(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), "sugar", List(ResolvedName(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("sugar")))))""")
+    assert(sugar.structure == """Sugar(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), "sugar", List(ResolvedName(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("sugar")), false)))""")
   }
 
   test("star.meta.semanticdb.Symbol.toString") {
