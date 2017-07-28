@@ -63,13 +63,15 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
         })
         orphanedVentries.map(ve => {
           def cleanupUpwards(file: File): Unit = {
-            if (file.isFile) {
-              file.delete()
-            } else {
-              if (file.getAbsolutePath == ve.base.toString) return
-              if (file.listFiles.isEmpty) file.delete()
+            if (file != null) {
+              if (file.isFile) {
+                file.delete()
+              } else {
+                if (file.getAbsolutePath == ve.base.toString) return
+                if (file.listFiles.isEmpty) file.delete()
+              }
+              cleanupUpwards(file.getParentFile)
             }
-            cleanupUpwards(file.getParentFile)
           }
           cleanupUpwards(ve.uri.toFile)
         })
