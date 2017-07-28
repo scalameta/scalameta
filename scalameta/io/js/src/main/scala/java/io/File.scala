@@ -9,8 +9,6 @@ class File(path: String) {
   private val filename = JSPath.normalize(path)
   def this(parent: String, child: String) =
     this(JSPath.resolve(child, parent))
-  def this(child: String, parent: File) =
-    this(parent.getPath, child)
   def this(parent: File, child: String) =
     this(parent.getPath, child)
   def this(uri: URI) =
