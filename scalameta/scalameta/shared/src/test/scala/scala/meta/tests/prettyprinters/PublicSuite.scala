@@ -293,7 +293,7 @@ class PublicSuite extends FunSuite {
     val input = Input.File(path)
     val position = Position.Range(input, 40, 42)
     val message = Message(position, Severity.Error, "does not compute")
-    assert(message.toString === s"[error] $path@40..42: does not compute")
+    assert(message.toString === s"[40..42): [error] does not compute")
   }
 
   test("star.meta.semanticdb.Mirror.toString") {
@@ -304,16 +304,16 @@ class PublicSuite extends FunSuite {
     // covered below
   }
 
-  test("star.meta.semanticdb.Severity.Error") {
-    assert(Severity.Error.toString === "Error")
+  test("star.meta.semanticdb.Severity.Error.toString") {
+    assert(Severity.Error.toString === "[error]")
   }
 
-  test("star.meta.semanticdb.Severity.Info") {
-    assert(Severity.Info.toString === "Info")
+  test("star.meta.semanticdb.Severity.Info.toString") {
+    assert(Severity.Info.toString === "[info]")
   }
 
-  test("star.meta.semanticdb.Severity.Warning") {
-    assert(Severity.Warning.toString === "Warning")
+  test("star.meta.semanticdb.Severity.Warning.toString") {
+    assert(Severity.Warning.toString === "[warning]")
   }
 
   test("star.meta.semanticdb.Signature.toString") {
@@ -344,13 +344,24 @@ class PublicSuite extends FunSuite {
     // covered below
   }
 
+  test("star.meta.semanticdb.ResolvedName.toString") {
+    // covered below
+  }
+
+  test("star.meta.semanticdb.ResolvedSymbol.toString") {
+    // covered below
+  }
+
   test("star.meta.semanticdb.Sugar.toString") {
     val original = Input.String("input")
     val input = Input.Sugar("sugar", original, 1, 1)
     val pos = Position.Range(input, 0, 5)
-    val sugar = Sugar(input, Map(pos -> Symbol("_root.sugar.")))
-    assert(sugar.syntax == "sugar")
-    assert(sugar.structure == "Sugar(\"sugar\")")
+    val sugar = Sugar(pos, "sugar", List(ResolvedName(pos, Symbol("_root_.sugar."))))
+    assert(sugar.syntax == """
+      |[0..5): sugar
+      |  [0..5): sugar => _root_.sugar.
+    """.trim.stripMargin)
+    assert(sugar.structure == """Sugar(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), "sugar", List(ResolvedName(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("sugar")))))""")
   }
 
   test("star.meta.semanticdb.Symbol.toString") {

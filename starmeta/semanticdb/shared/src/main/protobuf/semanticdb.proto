@@ -14,16 +14,16 @@ message Attributes {
   string language = 7;
   repeated ResolvedName names = 2;
   repeated Message messages = 3;
-  repeated SymbolDenotation denotations = 4;
+  repeated ResolvedSymbol symbols = 4;
   repeated Sugar sugars = 6;
 }
 
 message ResolvedName {
-  Range range = 1;
-  string symbol = 2;
+  Position pos = 1;
+  string sym = 2;
 }
 
-message Range {
+message Position {
   int32 start = 2;
   int32 end = 3;
 }
@@ -35,13 +35,13 @@ message Message {
     WARNING = 2;
     ERROR = 3;
   }
-  Range range = 1;
+  Position pos = 1;
   Severity severity = 2;
-  string msg = 3;
+  string text = 3;
 }
 
-message SymbolDenotation {
-  string symbol = 1;
+message ResolvedSymbol {
+  string sym = 1;
   Denotation denot = 2;
 }
 
@@ -52,7 +52,7 @@ message Denotation {
 }
 
 message Sugar {
-  Range range = 1;
-  string syntax = 2;
+  Position pos = 1;
+  string text = 2;
   repeated ResolvedName names = 3;
 }

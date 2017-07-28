@@ -6,10 +6,6 @@ package object semantic {
   implicit def XtensionSchemaDatabase(sdatabase: star.meta.internal.semanticdb.schema.Database) = new star.meta.internal.semanticdb.XtensionSchemaDatabase(sdatabase)
   implicit def XtensionDatabase(ddatabase: star.meta.semanticdb.Database) = new star.meta.internal.semanticdb.XtensionDatabase(ddatabase)
 
-  val DatabaseSyntax = star.meta.internal.semanticdb.DatabaseSyntax
-  val AttributesSyntax = star.meta.internal.semanticdb.AttributesSyntax
-  val FlagSyntax = star.meta.internal.semanticdb.FlagSyntax
-
   object vfs {
     val Database = star.meta.internal.semanticdb.vfs.Database
     type Database = star.meta.internal.semanticdb.vfs.Database

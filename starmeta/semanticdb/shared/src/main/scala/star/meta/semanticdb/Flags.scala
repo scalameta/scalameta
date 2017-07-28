@@ -61,6 +61,42 @@ private[semanticdb] trait HasFlags {
   def isInline: Boolean = hasFlag(INLINE)
   def isJavaDefined: Boolean = hasFlag(JAVADEFINED)
 
-  protected def flagSyntax: String = star.meta.internal.semanticdb.FlagSyntax(flags)
-  protected def flagStructure: String = flagSyntax.replace(" ", " | ").toUpperCase
+  protected def flagSyntax: String = {
+    val buf = new StringBuilder
+    def append(flag: String) = {
+      if (buf.isEmpty) buf ++= flag
+      else buf ++= (" " + flag)
+    }
+    def hasFlag(flag: Long) = (flags & flag) == flag
+    if (hasFlag(PRIVATE)) append("PRIVATE")
+    if (hasFlag(PROTECTED)) append("PROTECTED")
+    if (hasFlag(ABSTRACT)) append("ABSTRACT")
+    if (hasFlag(FINAL)) append("FINAL")
+    if (hasFlag(SEALED)) append("SEALED")
+    if (hasFlag(IMPLICIT)) append("IMPLICIT")
+    if (hasFlag(LAZY)) append("LAZY")
+    if (hasFlag(CASE)) append("CASE")
+    if (hasFlag(COVARIANT)) append("COVARIANT")
+    if (hasFlag(CONTRAVARIANT)) append("CONTRAVARIANT")
+    if (hasFlag(INLINE)) append("INLINE")
+    if (hasFlag(VAL)) append("VAL")
+    if (hasFlag(VAR)) append("VAR")
+    if (hasFlag(DEF)) append("DEF")
+    if (hasFlag(PRIMARYCTOR)) append("PRIMARYCTOR")
+    if (hasFlag(SECONDARYCTOR)) append("SECONDARYCTOR")
+    if (hasFlag(MACRO)) append("MACRO")
+    if (hasFlag(TYPE)) append("TYPE")
+    if (hasFlag(PARAM)) append("PARAM")
+    if (hasFlag(TYPEPARAM)) append("TYPEPARAM")
+    if (hasFlag(OBJECT)) append("OBJECT")
+    if (hasFlag(PACKAGE)) append("PACKAGE")
+    if (hasFlag(PACKAGEOBJECT)) append("PACKAGEOBJECT")
+    if (hasFlag(CLASS)) append("CLASS")
+    if (hasFlag(TRAIT)) append("TRAIT")
+    buf.toString.toLowerCase
+  }
+
+  protected def flagStructure: String = {
+    flagSyntax.replace(" ", " | ").toUpperCase
+  }
 }

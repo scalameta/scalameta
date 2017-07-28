@@ -26,8 +26,8 @@ package object semanticdb {
 
     def toDb(sourcepath: Option[Sourcepath]): d.Database = {
       val dentries = sdatabase.entries.toIterator.map {
-        case s.Attributes(sunixfilename, scontents, slanguage, snames, smessages, sdenots, ssugars) =>
-          assert(sunixfilename.nonEmpty, "s.Attribute.filename must not be empty")
+        case s.Attributes(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssugars) =>
+          assert(sunixfilename.nonEmpty, "s.Attributes.filename must not be empty")
           val sfilename = PathIO.fromUnix(sunixfilename)
           val dinput = {
             if (scontents == "") {
@@ -40,14 +40,14 @@ package object semanticdb {
               dInput.VirtualFile(sfilename.toString, scontents)
             }
           }
-          object sRange {
-            def unapply(srange: s.Range): Option[dPosition] = {
-              Some(dPosition.Range(dinput, srange.start, srange.end))
+          object sPosition {
+            def unapply(spos: s.Position): Option[dPosition] = {
+              Some(dPosition.Range(dinput, spos.start, spos.end))
             }
           }
           object sSeverity {
-            def unapply(ssev: s.Message.Severity): Option[d.Severity] = {
-              ssev match {
+            def unapply(sseverity: s.Message.Severity): Option[d.Severity] = {
+              sseverity match {
                 case s.Message.Severity.INFO => Some(d.Severity.Info)
                 case s.Message.Severity.WARNING => Some(d.Severity.Warning)
                 case s.Message.Severity.ERROR => Some(d.Severity.Error)
@@ -57,42 +57,44 @@ package object semanticdb {
           }
           object sDenotation {
             def unapply(sdenot: s.Denotation): Option[d.Denotation] = sdenot match {
-              case s.Denotation(dflags, dname: String, minfo: String) =>
-                Some(d.Denotation(dflags, dname, minfo))
+              case s.Denotation(dflags, dname: String, dinfo: String) =>
+                Some(d.Denotation(dflags, dname, dinfo))
               case _ => None
             }
           }
           object sSugar {
-            def unapply(ssugar: s.Sugar): Option[(dPosition, dSugar)] = ssugar match {
-              case s.Sugar(Some(srange @ sRange(dpos)), syntax, snames) =>
-              val sugarinput = dInput.Sugar(syntax, dinput, srange.start, srange.end)
+            def unapply(ssugar: s.Sugar): Option[dSugar] = ssugar match {
+              case s.Sugar(Some(sPosition(dpos)), dtext, snames) =>
                 val dnames = snames.toIterator.map {
-                  case s.ResolvedName(Some(s.Range(sstart, send)), d.Symbol(msym)) =>
-                    val sugarpos: dPosition = dPosition.Range(sugarinput, sstart, send)
-                    sugarpos -> msym
-                }.toMap
-              Some(dpos -> dSugar(sugarinput, dnames))
+                  case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym)) =>
+                    val dsugarinput = dInput.Sugar(dtext, dpos.input, dpos.start, dpos.end)
+                    val dsugarpos = dPosition.Range(dsugarinput, sstart, send)
+                    d.ResolvedName(dsugarpos, dsym)
+                  case other =>
+                    sys.error(s"bad protobuf: unsupported name $other")
+                }.toList
+              Some(dSugar(dpos, dtext, dnames))
             }
           }
           val dlanguage = slanguage
           val dnames = snames.map {
-            case s.ResolvedName(Some(sRange(dpos)), d.Symbol(msym)) => dpos -> msym
+            case s.ResolvedName(Some(sPosition(dpos)), d.Symbol(dsym)) => d.ResolvedName(dpos, dsym)
             case other => sys.error(s"bad protobuf: unsupported name $other")
           }.toList
           val dmessages = smessages.map {
-            case s.Message(Some(sRange(dpos)), sSeverity(dseverity), mmsg: String) =>
-              d.Message(dpos, dseverity, mmsg)
+            case s.Message(Some(sPosition(dpos)), sSeverity(dseverity), dmsg: String) =>
+              d.Message(dpos, dseverity, dmsg)
             case other => sys.error(s"bad protobuf: unsupported message $other")
           }.toList
-          val ddenots = sdenots.map {
-            case s.SymbolDenotation(d.Symbol(msym), Some(sDenotation(ddenot))) => msym -> ddenot
+          val dsymbols = ssymbols.map {
+            case s.ResolvedSymbol(d.Symbol(dsym), Some(sDenotation(ddenot))) => d.ResolvedSymbol(dsym, ddenot)
             case other => sys.error(s"bad protobuf: unsupported denotation $other")
           }.toList
           val dsugars = ssugars.toIterator.map {
-            case sSugar(dpos, dsugar) => dpos -> dsugar
+            case sSugar(dsugar) => dsugar
             case other => sys.error(s"bad protobuf: unsupported sugar $other")
-          }.toMap
-          d.Attributes(dinput, dlanguage, dnames, dmessages, ddenots, dsugars)
+          }.toList
+          d.Attributes(dinput, dlanguage, dnames, dmessages, dsymbols, dsugars)
       }
       d.Database(dentries.toList)
     }
@@ -100,11 +102,11 @@ package object semanticdb {
   implicit class XtensionDatabase(ddatabase: d.Database) {
     def toSchema(sourceroot: AbsolutePath): s.Database = {
       val sentries = ddatabase.entries.map {
-        case d.Attributes(dinput, dlanguage, dnames, dmessages, ddenots, dsugars) =>
-          object dRange {
-            def unapply(dpos: dPosition): Option[s.Range] = dpos match {
-              case dPosition.Range(`dinput`, sstart, send) =>
-                Some(s.Range(sstart, send))
+        case d.Attributes(dinput, dlanguage, dnames, dmessages, dsymbols, dsugars) =>
+          object dPosition {
+            def unapply(dpos: dPosition): Option[s.Position] = dpos match {
+              case star.meta.inputs.Position.Range(`dinput`, sstart, send) =>
+                Some(s.Position(sstart, send))
               case _ =>
                 None
             }
@@ -125,16 +127,16 @@ package object semanticdb {
               case _ => None
             }
           }
-          object dPositionSugar {
-            def unapply(dpossugar: (dPosition, dSugar)): Option[s.Sugar] = dpossugar match {
-              case (dRange(srange), dSugar(dInput.Sugar(syntax, _, _, _), dnames)) =>
+          object dSugar {
+            def unapply(dsugar: dSugar): Option[s.Sugar] = dsugar match {
+              case d.Sugar(dPosition(spos), ssyntax, dnames) =>
                 val snames = dnames.toIterator.map {
-                  case (dPosition.Range(_: dInput.Sugar, sstart, send), dsymbol) =>
-                    s.ResolvedName(Some(s.Range(sstart, send)), dsymbol.syntax)
+                  case d.ResolvedName(star.meta.inputs.Position.Range(_, sstart, send), ssym) =>
+                    s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax)
                   case other =>
                     sys.error(s"bad database: unsupported name $other")
                 }.toSeq
-                Some(s.Sugar(Some(srange), syntax, snames))
+                Some(s.Sugar(Some(spos), ssyntax, snames))
               case _ =>
                 None
             }
@@ -151,23 +153,22 @@ package object semanticdb {
           assert(spath.nonEmpty, s"'$spath'.nonEmpty")
           val slanguage = dlanguage
           val snames = dnames.map {
-            case (dRange(srange), ssym) => s.ResolvedName(Some(srange), ssym.syntax)
+            case d.ResolvedName(dPosition(spos), ssym) => s.ResolvedName(Some(spos), ssym.syntax)
             case other => sys.error(s"bad database: unsupported name $other")
           }
           val smessages = dmessages.map {
-            case d.Message(dRange(srange), dSeverity(ssym), smessage) =>
-              s.Message(Some(srange), ssym, smessage)
+            case d.Message(dPosition(spos), dSeverity(ssym), smessage) => s.Message(Some(spos), ssym, smessage)
             case other => sys.error(s"bad database: unsupported message $other")
           }
-          val sdenots = ddenots.map {
-            case (ssym, dDenotation(sdenot)) => s.SymbolDenotation(ssym.syntax, Some(sdenot))
+          val ssymbols = dsymbols.map {
+            case d.ResolvedSymbol(ssym, dDenotation(sdenot)) => s.ResolvedSymbol(ssym.syntax, Some(sdenot))
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val ssugars = dsugars.toIterator.map {
-            case dPositionSugar(ssugar) => ssugar
+            case dSugar(ssugar) => ssugar
             case other => sys.error(s"bad database: unsupported sugar $other")
           }.toSeq
-          s.Attributes(spath, scontents, slanguage, snames, smessages, sdenots, ssugars)
+          s.Attributes(spath, scontents, slanguage, snames, smessages, ssymbols, ssugars)
       }
       s.Database(sentries)
     }

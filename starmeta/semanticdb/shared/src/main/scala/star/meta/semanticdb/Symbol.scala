@@ -3,7 +3,7 @@ package semanticdb
 
 import scala.compat.Platform.EOL
 
-sealed trait Symbol {
+sealed trait Symbol extends Product {
   def syntax: String
   def structure: String
 }

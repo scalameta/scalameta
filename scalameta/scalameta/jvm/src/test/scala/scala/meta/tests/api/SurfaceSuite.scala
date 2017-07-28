@@ -104,6 +104,8 @@ class SurfaceSuite extends FunSuite {
       |star.meta.semanticdb.Database
       |star.meta.semanticdb.Denotation
       |star.meta.semanticdb.Message
+      |star.meta.semanticdb.ResolvedName
+      |star.meta.semanticdb.ResolvedSymbol
       |star.meta.semanticdb.Severity
       |star.meta.semanticdb.Severity.Error
       |star.meta.semanticdb.Severity.Info

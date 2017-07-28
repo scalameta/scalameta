@@ -4,15 +4,8 @@ package semanticdb
 import star.meta.inputs._
 import star.meta.internal.inputs._
 
-final case class Message(position: Position, severity: Severity, message: String) {
-  def syntax = s"[${severity.toString.toLowerCase}] ${position.syntax}: $message"
-  def structure = s"""Message(${position.structure}, Severity.$severity, "$message")"""
+final case class Message(pos: Position, severity: Severity, text: String) {
+  def syntax = s"[${pos.start}..${pos.end}): ${severity.syntax} $text"
+  def structure = s"""Message(${pos.structure}, ${severity.structure}, "$text")"""
   override def toString = syntax
-}
-
-sealed trait Severity
-object Severity {
-  case object Info extends Severity
-  case object Warning extends Severity
-  case object Error extends Severity
 }

@@ -86,7 +86,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     }
   )
 
-  denotations(
+  symbols(
     """
       |import scala.language.experimental.macros
       |
@@ -262,7 +262,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   """.trim.stripMargin
   )
 
-  denotations(
+  symbols(
     """
       |package i
       |import scala.collection.mutable.ListBuffer
@@ -430,7 +430,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |""".stripMargin
   )
 
-  denotations(
+  symbols(
     """
       |object o {
       |  List.newBuilder[Int].result
@@ -523,8 +523,9 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   targeted(
     // See https://github.com/scalameta/scalameta/issues/830
     "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", { (db, first) =>
+      val denot = db.symbols.find(_.sym == first).get.denot
       assert(first == Symbol("_empty_.u.unapply(Lu;)Lscala/Option;."))
-      assert(db.denotations(first).toString == "case def unapply: (x$0: u)Option[Int]")
+      assert(denot.toString == "case def unapply: (x$0: u)Option[Int]")
     }
   )
 
@@ -535,8 +536,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       List(1).<<toString>>
     }
     """, { (db, objectToString, listToString) =>
-      assert(db.denotations(objectToString).isJavaDefined)
-      assert(!db.denotations(listToString).isJavaDefined)
+      val denot1 = db.symbols.find(_.sym == objectToString).get.denot
+      val denot2 = db.symbols.find(_.sym == listToString).get.denot
+      assert(denot1.isJavaDefined)
+      assert(!denot2.isJavaDefined)
     }
   )
 

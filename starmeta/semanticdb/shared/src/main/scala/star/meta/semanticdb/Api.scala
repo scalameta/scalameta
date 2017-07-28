@@ -62,4 +62,10 @@ private[meta] trait Aliases {
 
   type Denotation = star.meta.semanticdb.Denotation
   val Denotation = star.meta.semanticdb.Denotation
+
+  type ResolvedName = star.meta.semanticdb.ResolvedName
+  val ResolvedName = star.meta.semanticdb.ResolvedName
+
+  type ResolvedSymbol = star.meta.semanticdb.ResolvedSymbol
+  val ResolvedSymbol = star.meta.semanticdb.ResolvedSymbol
 }

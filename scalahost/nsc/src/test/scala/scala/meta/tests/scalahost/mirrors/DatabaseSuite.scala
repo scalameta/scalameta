@@ -106,8 +106,8 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
     checkSection(code, expected, "Messages")
   }
 
-  def denotations(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Denotations")
+  def symbols(code: String, expected: String): Unit = {
+    checkSection(code, expected, "Symbols")
   }
 
   def sugars(code: String, expected: String): Unit = {
@@ -126,7 +126,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
       case (s, e) =>
         val symbols = source.collect {
           case name: m.Name if name.pos.start == s && name.pos.end == e =>
-            database.names.get(name.pos)
+            database.names.find(_.pos == name.pos).map(_.sym)
         }
         val chevron = "<<" + code.substring(s, e) + ">>"
         symbols match {
