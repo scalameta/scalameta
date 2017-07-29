@@ -5,49 +5,50 @@ import org.scalatest.FunSuite
 
 class IOFileTest extends FunSuite {
   val file = new File("build.sbt")
-  val target = new File("target")
-  val streams = new File("target", "streams")
+  val project = new File("project")
+  val nestedFile = new File("project", "build.properties")
 
   test(".toString") {
     assert(file.toString == "build.sbt")
-    assert(target.toString == "target")
-    assert(streams.toString == "target/streams" || streams.toString == "target\\streams")
+    assert(project.toString == "project")
+    assert(nestedFile.toString == "project/build.properties"
+      || nestedFile.toString == "project\\build.properties")
   }
 
   test(".isFile") {
     assert(file.isFile)
-    assert(!streams.isFile)
+    assert(!project.isFile)
+    assert(nestedFile.isFile)
   }
 
   test(".isDirectory") {
     assert(!file.isDirectory)
-    assert(target.isDirectory)
-    assert(streams.isDirectory)
+    assert(project.isDirectory)
   }
 
   test(".getAbsolutePath") {
     assert(file.getAbsolutePath.endsWith("build.sbt"))
-    assert(target.getAbsolutePath.endsWith("target"))
+    assert(project.getAbsolutePath.endsWith("project"))
   }
 
   test(".getPath") {
     assert(file.getPath == "build.sbt")
-    assert(target.getPath == "target")
+    assert(project.getPath == "project")
   }
 
   test(".toPath") {
     assert(file.toPath.endsWith("build.sbt"))
-    assert(target.toPath.endsWith("target"))
+    assert(project.toPath.endsWith("project"))
   }
 
   test(".exists") {
     assert(file.exists())
-    assert(target.exists())
+    assert(project.exists())
   }
 
   test(".toURI") {
     assert(file.toURI.getPath.endsWith("build.sbt"))
-    assert(target.toURI.getPath.endsWith("target/"))
+    assert(project.toURI.getPath.endsWith("project/"))
   }
 
 }

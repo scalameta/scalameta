@@ -8,7 +8,7 @@ import org.scalatest.FunSuite
 class NIOPathTest extends FunSuite {
 
   def file: Path = Paths.get("build.sbt")
-  def target: Path = Paths.get("target")
+  def project: Path = Paths.get("project")
   def abs: Path = Paths.get(PathIO.fileSeparator).resolve("bar").resolve("foo")
 
   test(".isAbsolute") {
@@ -63,7 +63,7 @@ class NIOPathTest extends FunSuite {
   }
   test(".toUri") {
     assert(file.toUri.getPath.endsWith("build.sbt"))
-    assert(target.toUri.getPath.endsWith("target/"))
+    assert(project.toUri.getPath.endsWith("project/"))
   }
   test(".toAbsolutePath") {
     assert(file.toAbsolutePath.endsWith(file))
@@ -71,6 +71,6 @@ class NIOPathTest extends FunSuite {
   }
   test(".toFile") {
     assert(file.toFile.isFile)
-    assert(target.toFile.isDirectory)
+    assert(project.toFile.isDirectory)
   }
 }
