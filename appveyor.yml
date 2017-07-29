@@ -4,7 +4,7 @@ install:
   - ps: iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
   - ps: scoop install sbt
 environment:
-  CI_SCALA_VERSION: 2.12.2
+  CI_SCALA_VERSION: 2.12.3
   APPVEYOR_CACHE_ENTRY_ZIP_ARGS: "-t7z -m0=lzma -mx=9"
 build_script:
   - sbt version # dummy step, a build_script step is required by appveyor.
