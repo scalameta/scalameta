@@ -100,9 +100,6 @@ lazy val io = crossProject
     description := "Scalameta APIs for JVM/JS agnostic IO."
   )
   .dependsOn(common)
-  .jsSettings(
-    npmDependencies in Compile += "shelljs" -> "0.7.7" // provides cross-platform pwd in JS
-  )
   .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
 
 lazy val ioJVM = io.jvm

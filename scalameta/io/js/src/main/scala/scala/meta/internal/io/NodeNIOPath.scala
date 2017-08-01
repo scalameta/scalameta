@@ -70,5 +70,5 @@ case class NodeNIOPath(filename: String) extends Path {
 }
 
 object NodeNIOPath {
-  def workingDirectory = NodeNIOPath(JSShell.pwd().toString)
+  def workingDirectory = NodeNIOPath(PlatformPathIO.workingDirectoryString)
 }

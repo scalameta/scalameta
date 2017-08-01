@@ -5,16 +5,17 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import scala.scalajs.js.annotation.JSImport.Namespace
 
-/** Facade for npm package "shelljs".
+/** Facade for the native nodejs process API
   *
-  * @see https://www.npmjs.com/package/shelljs
+  * The process object is a global that provides information about, and
+  * control over, the current Node.js process. As a global, it is always
+  * available to Node.js applications without using require().
+  *
+  * @see https://nodejs.org/api/process.html
   */
 @js.native
-@JSImport("shelljs", Namespace)
-object JSShell extends js.Any {
-
-  /** Returns the current directory. */
-  def pwd(): js.Object = js.native
+trait JSProcess extends js.Any {
+  def cwd(): String = js.native
 }
 
 /** Facade for native nodejs module "fs".
@@ -78,12 +79,18 @@ object JSPath extends js.Any {
 }
 
 object JSIO {
-  private[io] def isNode = JSFs != null
+  private[io] val process: JSProcess = js.Dynamic.global.process.asInstanceOf[JSProcess]
+  private[io] def isNode = !js.isUndefined(process) && !js.isUndefined(process.cwd)
+
   def inNode[T](f: => T): T =
     if (JSIO.isNode) f
     else {
       throw new IllegalStateException("This operation is not supported in this environment.")
     }
+
+  def cwd(): String =
+    if (isNode) process.cwd()
+    else "/"
 
   def exists(path: String): Boolean =
     if (isNode) JSFs.existsSync(path)
