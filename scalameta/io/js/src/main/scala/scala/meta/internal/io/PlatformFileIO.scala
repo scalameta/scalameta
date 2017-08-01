@@ -44,12 +44,11 @@ object PlatformFileIO {
     }
   }
 
-  def isFile(path: AbsolutePath): Boolean = JSIO.inNode {
-    JSFs.lstatSync(path.toString).isFile()
-  }
+  def isFile(path: AbsolutePath): Boolean =
+    JSIO.isFile(path.toString)
 
   def isDirectory(path: AbsolutePath): Boolean =
-    JSFs.lstatSync(path.toString).isDirectory()
+    JSIO.isDirectory(path.toString)
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     val builder = List.newBuilder[RelativePath]

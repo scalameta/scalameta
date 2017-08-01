@@ -84,4 +84,14 @@ object JSIO {
     else {
       throw new IllegalStateException("This operation is not supported in this environment.")
     }
+
+  def exists(path: String): Boolean =
+    if (isNode) JSFs.existsSync(path)
+    else false
+
+  def isFile(path: String): Boolean =
+    exists(path) && JSFs.lstatSync(path).isFile()
+
+  def isDirectory(path: String): Boolean =
+    exists(path) && JSFs.lstatSync(path).isDirectory()
 }

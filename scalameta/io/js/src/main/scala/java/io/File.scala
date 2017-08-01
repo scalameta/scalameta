@@ -36,12 +36,11 @@ class File(path: String) {
   def getPath: String =
     filename
   def exists(): Boolean =
-    JSFs.existsSync(filename)
-  private def lstat: JSStats = JSFs.lstatSync(filename)
+    JSIO.exists(filename)
   def isFile: Boolean =
-    lstat.isFile()
+    JSIO.isFile(filename)
   def isDirectory: Boolean =
-    lstat.isDirectory()
+    JSIO.isDirectory(filename)
   override def toString: String =
     filename
 }
