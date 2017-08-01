@@ -5,16 +5,6 @@ import java.nio.file.Paths
 import scala.meta.io._
 
 object PlatformPathIO {
-
-  def fileSeparatorChar: Char =
-    File.separatorChar
-
-  def fileSeparator: String =
-    File.separator
-
-  def pathSeparator: String =
-    File.pathSeparator
-
   def workingDirectoryString: String =
     sys.props("user.dir")
 

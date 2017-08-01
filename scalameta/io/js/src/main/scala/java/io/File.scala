@@ -44,3 +44,16 @@ class File(path: String) {
   override def toString: String =
     filename
 }
+
+object File {
+  def separatorChar: Char =
+    separator.charAt(0)
+
+  def separator: String =
+    if (JSIO.isNode) JSPath.sep
+    else "/"
+
+  def pathSeparator: String =
+    if (JSIO.isNode) JSPath.delimiter
+    else ":"
+}

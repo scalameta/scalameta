@@ -80,7 +80,7 @@ object JSPath extends js.Any {
 
 object JSIO {
   private[io] val process: JSProcess = js.Dynamic.global.process.asInstanceOf[JSProcess]
-  private[io] def isNode = !js.isUndefined(process) && !js.isUndefined(process.cwd)
+  def isNode = !js.isUndefined(process) && !js.isUndefined(process.cwd)
 
   def inNode[T](f: => T): T =
     if (JSIO.isNode) f

@@ -1,15 +1,15 @@
 package scala.meta.tests.io
 
+import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.meta.internal.io.PathIO
 import org.scalatest.FunSuite
 
 class NIOPathTest extends FunSuite {
 
   def file: Path = Paths.get("build.sbt")
   def project: Path = Paths.get("project")
-  def abs: Path = Paths.get(PathIO.fileSeparator).resolve("bar").resolve("foo")
+  def abs: Path = Paths.get(File.separator).resolve("bar").resolve("foo")
 
   test(".isAbsolute") {
     assert(!file.isAbsolute)

@@ -17,16 +17,6 @@ class IOSuite extends FunSuite {
     assert(obtained != "/")
   }
 
-  test("PathIO.pathSeparator") {
-    val obtained = PathIO.pathSeparator
-    assert(obtained == ":" || obtained == ";")
-  }
-
-  test("PathIO.fileSeparator") {
-    val obtained = PathIO.fileSeparator
-    assert(obtained == "/" || obtained == "\\")
-  }
-
   test("PathIO.isAbsolute") {
     assert(PathIO.isAbsolutePath(PathIO.workingDirectory.toString))
   }

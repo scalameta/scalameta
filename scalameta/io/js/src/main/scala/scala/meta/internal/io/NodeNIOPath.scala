@@ -12,7 +12,7 @@ case class NodeNIOPath(filename: String) extends Path {
   override def subpath(beginIndex: Int, endIndex: Int): Path =
     NodeNIOPath(
       filename
-        .split(PathIO.fileSeparator)
+        .split(File.separator)
         .slice(adjustIndex(beginIndex), adjustIndex(endIndex))
         .mkString)
   override def toFile: File =
@@ -22,7 +22,7 @@ case class NodeNIOPath(filename: String) extends Path {
   override def getName(index: Int): Path =
     NodeNIOPath(
       filename
-        .split(PathIO.fileSeparator)
+        .split(File.separator)
         .lift(adjustIndex(index))
         .getOrElse(throw new IllegalArgumentException))
   override def getParent: Path =
@@ -33,13 +33,13 @@ case class NodeNIOPath(filename: String) extends Path {
   override def relativize(other: Path): Path =
     NodeNIOPath(JSPath.relative(filename, other.toString))
   override def getNameCount: Int =
-    filename.count(_ == PathIO.fileSeparatorChar)
+    filename.count(_ == File.separatorChar)
   override def toUri: URI = toFile.toURI
   override def getFileName: Path =
     NodeNIOPath(JSPath.basename(filename))
   override def getRoot: Path =
     if (!isAbsolute) null
-    else NodeNIOPath(PathIO.fileSeparator)
+    else NodeNIOPath(File.separator)
   override def normalize(): Path =
     NodeNIOPath(PathIO.normalizePath(filename))
   override def endsWith(other: Path): Boolean =
@@ -64,7 +64,7 @@ case class NodeNIOPath(filename: String) extends Path {
   override def startsWith(other: String): Boolean =
     paths(filename).startsWith(paths(other))
   private def paths(name: String) =
-    name.split(PathIO.fileSeparator)
+    name.split(File.separator)
   override def toString: String =
     filename
 }

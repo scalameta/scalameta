@@ -51,4 +51,14 @@ class IOFileTest extends FunSuite {
     assert(project.toURI.getPath.endsWith("project/"))
   }
 
+  test("File.pathSeparator") {
+    val obtained = File.pathSeparator
+    assert(obtained == ":" || obtained == ";")
+  }
+
+  test("File.fileSeparator") {
+    val obtained = File.separator
+    assert(obtained == "/" || obtained == "\\")
+  }
+
 }
