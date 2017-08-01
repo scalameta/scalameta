@@ -4,16 +4,19 @@ import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
 import org.scalatest.FunSuite
+import scala.meta.internal.io.PlatformPathIO
 
 class NIOPathTest extends FunSuite {
 
   def file: Path = Paths.get("build.sbt")
   def project: Path = Paths.get("project")
   def abs: Path = Paths.get(File.separator).resolve("bar").resolve("foo")
+  def cwd: Path = Paths.get(PlatformPathIO.workingDirectoryString)
 
   test(".isAbsolute") {
     assert(!file.isAbsolute)
     assert(abs.isAbsolute)
+    assert(cwd.isAbsolute)
   }
   test(".getRoot") {
     assert(file.getRoot == null)
@@ -68,9 +71,11 @@ class NIOPathTest extends FunSuite {
   test(".toAbsolutePath") {
     assert(file.toAbsolutePath.endsWith(file))
     assert(abs.toAbsolutePath == abs)
+    assert(cwd == Paths.get("").toAbsolutePath)
   }
   test(".toFile") {
     assert(file.toFile.isFile)
     assert(project.toFile.isDirectory)
+    assert(cwd.toFile.isDirectory)
   }
 }

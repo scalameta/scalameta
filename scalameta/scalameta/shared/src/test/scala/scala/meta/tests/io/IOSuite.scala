@@ -17,10 +17,6 @@ class IOSuite extends FunSuite {
     assert(obtained != "/")
   }
 
-  test("PathIO.isAbsolute") {
-    assert(PathIO.isAbsolutePath(PathIO.workingDirectory.toString))
-  }
-
   test("FileIO.listFiles(Directory)") {
     val obtained = FileIO.listFiles(PathIO.workingDirectory)
     assert(obtained.contains(buildSbt))

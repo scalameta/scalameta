@@ -29,8 +29,7 @@ class File(path: String) {
     new URI("file", null, path, null)
   }
   def getAbsoluteFile: File =
-    if (PathIO.isAbsolutePath(filename)) this
-    else new File(PathIO.workingDirectory.resolve(filename).toString)
+    toPath.toAbsolutePath.toFile
   def getAbsolutePath: String =
     getAbsoluteFile.toString
   def getPath: String =
