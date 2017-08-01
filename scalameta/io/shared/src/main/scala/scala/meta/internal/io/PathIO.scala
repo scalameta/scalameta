@@ -10,9 +10,6 @@ object PathIO {
   def workingDirectory: AbsolutePath =
     AbsolutePath(PlatformPathIO.workingDirectoryString)
 
-  def normalizePath(path: String): String =
-    Paths.get(path).normalize().toString
-
   // These two methods work on strings instead of AbsolutePath because AbsolutePath
   // with unix / slashes is non-sensical on Windows.
   def toUnix(path: String): String =

@@ -5,6 +5,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import org.scalatest.FunSuite
 import scala.meta.internal.io.PlatformPathIO
+import scala.meta.internal.io.PathIO
 
 class NIOPathTest extends FunSuite {
 
@@ -12,6 +13,13 @@ class NIOPathTest extends FunSuite {
   def project: Path = Paths.get("project")
   def abs: Path = Paths.get(File.separator).resolve("bar").resolve("foo")
   def cwd: Path = Paths.get(PlatformPathIO.workingDirectoryString)
+  val nonNormalizedFile: Path = Paths.get("project", "..", "bin", "scalafmt")
+
+  test(".toString") {
+    assert(file.toString == "build.sbt")
+    assert(project.toString == "project")
+    assert(nonNormalizedFile.toString == PathIO.fromUnix("project/../bin/scalafmt"))
+  }
 
   test(".isAbsolute") {
     assert(!file.isAbsolute)
@@ -25,12 +33,16 @@ class NIOPathTest extends FunSuite {
   test(".getFileName") {
     assert(file.getFileName.toString == "build.sbt")
     assert(abs.getFileName.toString == "foo")
+    assert(nonNormalizedFile.getFileName.toString == "scalafmt")
   }
   test(".getParent") {
     assert(abs.getParent.getFileName.toString == "bar")
   }
   test(".getNameCount") {
+    assert(Paths.get("/").getNameCount == 0)
+    assert(Paths.get("").getNameCount == 1)
     assert(abs.getNameCount == 2)
+    assert(nonNormalizedFile.getNameCount == 4)
   }
   test(".getName(index)") {
     assert(file.getName(0).toString == "build.sbt")
@@ -52,6 +64,7 @@ class NIOPathTest extends FunSuite {
   }
   test(".normalize") {
     assert(file.resolve("foo").resolve("..").normalize().toString == "build.sbt")
+    assert(nonNormalizedFile.normalize().toString == PathIO.fromUnix("bin/scalafmt"))
   }
   test(".resolve") {
     assert(!file.resolve("bar").isAbsolute)

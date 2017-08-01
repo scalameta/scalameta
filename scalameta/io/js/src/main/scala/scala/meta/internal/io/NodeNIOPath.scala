@@ -33,8 +33,11 @@ case class NodeNIOPath(filename: String) extends Path {
     else NodeNIOPath.workingDirectory.resolve(this)
   override def relativize(other: Path): Path =
     NodeNIOPath(JSPath.relative(filename, other.toString))
-  override def getNameCount: Int =
-    filename.count(_ == File.separatorChar)
+  override def getNameCount: Int = {
+    val (first, remaining) = filename.split(File.separator + "+").span(_.isEmpty)
+    if (remaining.isEmpty) first.length
+    else remaining.length
+  }
   override def toUri: URI = toFile.toURI
   override def getFileName: Path =
     NodeNIOPath(JSPath.basename(filename))

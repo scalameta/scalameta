@@ -6,9 +6,8 @@ import scala.meta.internal.io._
 
 // obtained implementation by experimentation on the JDK.
 class File(path: String) {
-  private val filename = PathIO.normalizePath(path)
   def this(parent: String, child: String) =
-    this(JSPath.join(parent, child))
+    this(parent + File.separator + child)
   def this(parent: File, child: String) =
     this(parent.getPath, child)
   def this(uri: URI) =
@@ -20,7 +19,7 @@ class File(path: String) {
       }
     )
   def toPath: Path =
-    NodeNIOPath(filename)
+    NodeNIOPath(path)
   def toURI: URI = {
     val file = getAbsoluteFile.toString
     val path =
@@ -33,15 +32,15 @@ class File(path: String) {
   def getAbsolutePath: String =
     getAbsoluteFile.toString
   def getPath: String =
-    filename
+    path
   def exists(): Boolean =
-    JSIO.exists(filename)
+    JSIO.exists(path)
   def isFile: Boolean =
-    JSIO.isFile(filename)
+    JSIO.isFile(path)
   def isDirectory: Boolean =
-    JSIO.isDirectory(filename)
+    JSIO.isDirectory(path)
   override def toString: String =
-    filename
+    path
 }
 
 object File {
