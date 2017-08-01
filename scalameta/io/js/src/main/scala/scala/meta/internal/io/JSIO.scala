@@ -18,13 +18,25 @@ trait JSProcess extends js.Any {
   def cwd(): String = js.native
 }
 
+/** Facade for the native nodejs modules API
+  *
+  * @see https://nodejs.org/api/modules.html
+  */
+@js.native
+trait JSModules extends js.Any {
+  /** Load a module by ID or path.
+    *
+    * @see https://nodejs.org/api/modules.html#modules_require
+    */
+  def require[T](path: String): T = js.native
+}
+
 /** Facade for native nodejs module "fs".
   *
   * @see https://nodejs.org/api/fs.html
   */
 @js.native
-@JSImport("fs", Namespace)
-object JSFs extends js.Any {
+trait JSFs extends js.Any {
 
   /** Returns the file contents as Buffer using blocking apis.
     *
@@ -54,8 +66,7 @@ object JSFs extends js.Any {
   * @see https://nodejs.org/api/fs.html#fs_class_fs_stats
   */
 @js.native
-@JSImport("fs", Namespace)
-class JSStats extends js.Any {
+trait JSStats extends js.Any {
   def isFile(): Boolean = js.native
   def isDirectory(): Boolean = js.native
 }
@@ -65,8 +76,7 @@ class JSStats extends js.Any {
   * @see https://nodejs.org/api/path.html
   */
 @js.native
-@JSImport("path", Namespace)
-object JSPath extends js.Any {
+trait JSPath extends js.Any {
   def sep: String = js.native
   def delimiter: String = js.native
   def isAbsolute(path: String): Boolean = js.native
@@ -81,6 +91,9 @@ object JSPath extends js.Any {
 object JSIO {
   private[io] val process: JSProcess = js.Dynamic.global.process.asInstanceOf[JSProcess]
   def isNode = !js.isUndefined(process) && !js.isUndefined(process.cwd)
+  private[io] lazy val module: JSModules = js.Dynamic.global.asInstanceOf[JSModules]
+  lazy val fs: JSFs = module.require("fs")
+  lazy val path: JSPath = module.require("path")
 
   def inNode[T](f: => T): T =
     if (JSIO.isNode) f
@@ -93,12 +106,12 @@ object JSIO {
     else "/"
 
   def exists(path: String): Boolean =
-    if (isNode) JSFs.existsSync(path)
+    if (isNode) fs.existsSync(path)
     else false
 
   def isFile(path: String): Boolean =
-    exists(path) && JSFs.lstatSync(path).isFile()
+    exists(path) && fs.lstatSync(path).isFile()
 
   def isDirectory(path: String): Boolean =
-    exists(path) && JSFs.lstatSync(path).isDirectory()
+    exists(path) && fs.lstatSync(path).isDirectory()
 }

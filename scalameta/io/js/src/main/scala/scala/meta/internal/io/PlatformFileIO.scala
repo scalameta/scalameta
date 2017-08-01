@@ -15,7 +15,7 @@ object PlatformFileIO {
     else throw new UnsupportedOperationException(s"Can't read $uri as InputStream")
 
   def readAllBytes(path: AbsolutePath): Array[Byte] = JSIO.inNode {
-    val jsArray = JSFs.readFileSync(path.toString)
+    val jsArray = JSIO.fs.readFileSync(path.toString)
     val len = jsArray.length
     val result = new Array[Byte](len)
     var curr = 0
@@ -27,12 +27,12 @@ object PlatformFileIO {
   }
 
   def slurp(path: AbsolutePath, charset: Charset): String =
-    JSIO.inNode(JSFs.readFileSync(path.toString, charset.toString))
+    JSIO.inNode(JSIO.fs.readFileSync(path.toString, charset.toString))
 
   def listFiles(path: AbsolutePath): ListFiles = JSIO.inNode {
     if (path.isFile) new ListFiles(path, Nil)
     else {
-      val jsArray = JSFs.readdirSync(path.toString)
+      val jsArray = JSIO.fs.readdirSync(path.toString)
       val builder = List.newBuilder[RelativePath]
       builder.sizeHint(jsArray.length)
       var curr = 0

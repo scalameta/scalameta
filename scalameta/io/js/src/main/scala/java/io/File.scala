@@ -48,10 +48,10 @@ object File {
     separator.charAt(0)
 
   def separator: String =
-    if (JSIO.isNode) JSPath.sep
+    if (JSIO.isNode) JSIO.path.sep
     else "/"
 
   def pathSeparator: String =
-    if (JSIO.isNode) JSPath.delimiter
+    if (JSIO.isNode) JSIO.path.delimiter
     else ":"
 }
