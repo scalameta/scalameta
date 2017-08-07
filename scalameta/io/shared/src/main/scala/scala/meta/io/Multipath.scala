@@ -7,7 +7,7 @@ import java.util.zip._
 import scala.collection.mutable
 import org.scalameta.adt._
 import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.PathIO.pathSeparator
+import java.io.File.pathSeparator
 
 @root trait Multipath {
   def shallow: List[AbsolutePath]

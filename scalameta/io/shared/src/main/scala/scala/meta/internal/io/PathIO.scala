@@ -1,39 +1,23 @@
 package scala.meta.internal.io
 
 import java.nio.file.Path
+import java.nio.file.Paths
+import java.io.File
 import scala.meta.io._
 
 object PathIO {
 
-  def fileSeparatorChar: Char =
-    PlatformPathIO.fileSeparatorChar
-
-  def fileSeparator: String =
-    PlatformPathIO.fileSeparator
-
-  def pathSeparator: String =
-    PlatformPathIO.pathSeparator
-
   def workingDirectory: AbsolutePath =
-    PlatformPathIO.workingDirectory
-
-  def isAbsolutePath(path: String): Boolean =
-    PlatformPathIO.isAbsolutePath(path)
-
-  def isRelativePath(path: String): Boolean =
-    !isAbsolutePath(path)
-
-  def normalizePath(path: String): String =
-    PlatformPathIO.normalizePath(path)
+    AbsolutePath(PlatformPathIO.workingDirectoryString)
 
   // These two methods work on strings instead of AbsolutePath because AbsolutePath
   // with unix / slashes is non-sensical on Windows.
   def toUnix(path: String): String =
-    if (fileSeparatorChar != '/') path.replace(PathIO.fileSeparatorChar, '/')
+    if (File.separatorChar != '/') path.replace(File.separatorChar, '/')
     else path
 
   def fromUnix(path: String): String =
-    if (fileSeparatorChar != '/') path.replace('/', PathIO.fileSeparatorChar)
+    if (File.separatorChar != '/') path.replace('/', File.separatorChar)
     else path
 
   /** Returns file extension of this path, returns empty string if path has no extension */

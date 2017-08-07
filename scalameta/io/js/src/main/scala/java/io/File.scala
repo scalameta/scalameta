@@ -6,9 +6,8 @@ import scala.meta.internal.io._
 
 // obtained implementation by experimentation on the JDK.
 class File(path: String) {
-  private val filename = PathIO.normalizePath(path)
   def this(parent: String, child: String) =
-    this(JSPath.join(parent, child))
+    this(parent + File.separator + child)
   def this(parent: File, child: String) =
     this(parent.getPath, child)
   def this(uri: URI) =
@@ -20,7 +19,7 @@ class File(path: String) {
       }
     )
   def toPath: Path =
-    NodeNIOPath(filename)
+    NodeNIOPath(path)
   def toURI: URI = {
     val file = getAbsoluteFile.toString
     val path =
@@ -29,19 +28,30 @@ class File(path: String) {
     new URI("file", null, path, null)
   }
   def getAbsoluteFile: File =
-    if (PathIO.isAbsolutePath(filename)) this
-    else new File(PathIO.workingDirectory.resolve(filename).toString)
+    toPath.toAbsolutePath.toFile
   def getAbsolutePath: String =
     getAbsoluteFile.toString
   def getPath: String =
-    filename
+    path
   def exists(): Boolean =
-    JSFs.existsSync(filename)
-  private def lstat: JSStats = JSFs.lstatSync(filename)
+    JSIO.exists(path)
   def isFile: Boolean =
-    lstat.isFile()
+    JSIO.isFile(path)
   def isDirectory: Boolean =
-    lstat.isDirectory()
+    JSIO.isDirectory(path)
   override def toString: String =
-    filename
+    path
+}
+
+object File {
+  def separatorChar: Char =
+    separator.charAt(0)
+
+  def separator: String =
+    if (JSIO.isNode) JSIO.path.sep
+    else "/"
+
+  def pathSeparator: String =
+    if (JSIO.isNode) JSIO.path.delimiter
+    else ":"
 }

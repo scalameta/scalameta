@@ -2,17 +2,19 @@ package scala.meta.tests.io
 
 import java.io.File
 import org.scalatest.FunSuite
+import scala.meta.internal.io.PathIO
 
 class IOFileTest extends FunSuite {
   val file = new File("build.sbt")
   val project = new File("project")
   val nestedFile = new File("project", "build.properties")
+  val nonNormalizedFile = new File(new File(new File(project, ".."), "bin"), "scalafmt")
 
   test(".toString") {
     assert(file.toString == "build.sbt")
     assert(project.toString == "project")
-    assert(nestedFile.toString == "project/build.properties"
-      || nestedFile.toString == "project\\build.properties")
+    assert(nestedFile.toString == PathIO.fromUnix("project/build.properties"))
+    assert(nonNormalizedFile.toString == PathIO.fromUnix("project/../bin/scalafmt"))
   }
 
   test(".isFile") {
@@ -49,6 +51,16 @@ class IOFileTest extends FunSuite {
   test(".toURI") {
     assert(file.toURI.getPath.endsWith("build.sbt"))
     assert(project.toURI.getPath.endsWith("project/"))
+  }
+
+  test("File.pathSeparator") {
+    val obtained = File.pathSeparator
+    assert(obtained == ":" || obtained == ";")
+  }
+
+  test("File.fileSeparator") {
+    val obtained = File.separator
+    assert(obtained == "/" || obtained == "\\")
   }
 
 }

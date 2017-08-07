@@ -15,7 +15,7 @@ trait Path {
   def startsWith(other: String): Boolean
   def endsWith(other: Path): Boolean
   def endsWith(other: String): Boolean
-  def normalize: Path
+  def normalize(): Path
   def resolve(other: Path): Path
   def resolve(other: String): Path
   def resolveSibling(other: Path): Path
