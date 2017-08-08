@@ -38,6 +38,27 @@ class SurfaceSuite extends FunSuite {
     }).mkString(EOL)
     // println(diagnostic)
     assert(diagnostic === """
+      |lang.meta.inputs.Input
+      |lang.meta.inputs.Position
+      |lang.meta.io.AbsolutePath
+      |lang.meta.io.Classpath
+      |lang.meta.io.Fragment
+      |lang.meta.io.Multipath
+      |lang.meta.io.RelativePath
+      |lang.meta.io.Sourcepath
+      |lang.meta.semanticdb.Attributes
+      |lang.meta.semanticdb.Database
+      |lang.meta.semanticdb.Denotation
+      |lang.meta.semanticdb.Message
+      |lang.meta.semanticdb.ResolvedName
+      |lang.meta.semanticdb.ResolvedSymbol
+      |lang.meta.semanticdb.Severity
+      |lang.meta.semanticdb.Severity.Error
+      |lang.meta.semanticdb.Severity.Info
+      |lang.meta.semanticdb.Severity.Warning
+      |lang.meta.semanticdb.Signature
+      |lang.meta.semanticdb.Sugar
+      |lang.meta.semanticdb.Symbol
       |scala.meta.Dialect
       |scala.meta.Tree
       |scala.meta.classifiers
@@ -92,27 +113,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
       |scala.meta.trees
-      |star.meta.inputs.Input
-      |star.meta.inputs.Position
-      |star.meta.io.AbsolutePath
-      |star.meta.io.Classpath
-      |star.meta.io.Fragment
-      |star.meta.io.Multipath
-      |star.meta.io.RelativePath
-      |star.meta.io.Sourcepath
-      |star.meta.semanticdb.Attributes
-      |star.meta.semanticdb.Database
-      |star.meta.semanticdb.Denotation
-      |star.meta.semanticdb.Message
-      |star.meta.semanticdb.ResolvedName
-      |star.meta.semanticdb.ResolvedSymbol
-      |star.meta.semanticdb.Severity
-      |star.meta.semanticdb.Severity.Error
-      |star.meta.semanticdb.Severity.Info
-      |star.meta.semanticdb.Severity.Warning
-      |star.meta.semanticdb.Signature
-      |star.meta.semanticdb.Sugar
-      |star.meta.semanticdb.Symbol
     """.trim.stripMargin)
   }
 

@@ -1,13 +1,13 @@
-package star.meta.internal.inputs {
-  trait Api extends star.meta.inputs.Api
-  trait Aliases extends star.meta.inputs.Aliases
+package lang.meta.internal.inputs {
+  trait Api extends lang.meta.inputs.Api
+  trait Aliases extends lang.meta.inputs.Aliases
 }
 
 package scala.meta.inputs {
-  private[meta] trait Api extends star.meta.internal.inputs.Api {
+  private[meta] trait Api extends lang.meta.internal.inputs.Api {
     import java.nio.charset._
     import scala.meta.common._
-    import star.meta.io.AbsolutePath
+    import lang.meta.io.AbsolutePath
     implicit val charsToInput: Convert[Array[Char], Input] = Convert(chars => Input.String(new scala.Predef.String(chars)))
     implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String(_))
     implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] = Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
@@ -17,6 +17,6 @@ package scala.meta.inputs {
     implicit lazy val absolutePathToInput: Convert[AbsolutePath, Input] = Convert(Input.File.apply)
   }
 
-  private[meta] trait Aliases extends star.meta.internal.inputs.Aliases {
+  private[meta] trait Aliases extends lang.meta.internal.inputs.Aliases {
   }
 }

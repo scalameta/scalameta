@@ -120,7 +120,7 @@ class PublicSuite extends FunSuite {
     assert(scala.meta.dialects.ParadiseTypelevel212.toString === "ParadiseTypelevel212")
   }
 
-  test("star.meta.inputs.Input.toString") {
+  test("lang.meta.inputs.Input.toString") {
     // covered below
   }
 
@@ -128,11 +128,11 @@ class PublicSuite extends FunSuite {
     // Satisfy surface suite.
   }
 
-  test("star.meta.inputs.Input.None.toString") {
+  test("lang.meta.inputs.Input.None.toString") {
     assert(Input.None.toString == "Input.None")
   }
 
-  test("star.meta.inputs.Input.File.toString") {
+  test("lang.meta.inputs.Input.File.toString") {
     val path = RelativePath("hello.scala").toAbsolute
     val syntax = path.syntax
     val input1 = Input.File(path, Charset.forName("latin1"))
@@ -143,13 +143,13 @@ class PublicSuite extends FunSuite {
     assert(input2.toString == s"""Input.File(new File("$syntax"), Charset.forName("UTF-8"))""")
   }
 
-  test("star.meta.inputs.Input.Slice.toString") {
+  test("lang.meta.inputs.Input.Slice.toString") {
     val input = Input.Slice(Input.String("foo"), 0, 2)
     input match { case _: Input.Slice => }
     assert(input.toString == """Input.Slice(Input.String("foo"), 0, 2)""")
   }
 
-  test("star.meta.inputs.Input.Stream.toString") {
+  test("lang.meta.inputs.Input.Stream.toString") {
     val latin1 = Charset.forName("latin1")
     val stream = new ByteArrayInputStream("Привет(мир!)".getBytes(latin1))
     val input1 = Input.Stream(stream, latin1)
@@ -160,59 +160,59 @@ class PublicSuite extends FunSuite {
     assert(input2.toString == """Input.Stream(<stream>, Charset.forName("UTF-8"))""")
   }
 
-  test("star.meta.inputs.Input.String.toString") {
+  test("lang.meta.inputs.Input.String.toString") {
     val input = Input.String("foo")
     input match { case _: Input.String => }
     assert(input.toString == """Input.String("foo")""")
   }
 
-  test("star.meta.inputs.Input.Sugar.toString") {
+  test("lang.meta.inputs.Input.Sugar.toString") {
     val input = Input.Sugar("foo", Input.String("blah"), 0, 0)
     input match { case _: Input.Sugar => }
     assert(input.toString == """Input.Sugar("foo", Input.String("blah"), 0, 0)""")
   }
 
-  test("star.meta.inputs.Input.VirtualFile.toString") {
+  test("lang.meta.inputs.Input.VirtualFile.toString") {
     val input = Input.VirtualFile("foo.scala", "foo")
     input match { case _: Input.VirtualFile => }
     assert(input.toString == s"""Input.VirtualFile("foo.scala", "foo")""")
   }
 
-  test("star.meta.inputs.Position.toString") {
+  test("lang.meta.inputs.Position.toString") {
     // covered below
   }
 
-  test("star.meta.inputs.Position.None.toString") {
+  test("lang.meta.inputs.Position.None.toString") {
     assert(Position.None.toString == "Position.None")
   }
 
-  test("star.meta.inputs.Position.Range.toString") {
+  test("lang.meta.inputs.Position.Range.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
     lhs.pos match { case _: Position.Range =>; case _ => }
     assert(lhs.pos.toString === """[0..3) in Input.String("foo + bar")""")
   }
 
-  test("star.meta.io.AbsolutePath.toString") {
+  test("lang.meta.io.AbsolutePath.toString") {
     // TODO: come up with a platform-independent test
   }
 
-  test("star.meta.io.Classpath.toString") {
+  test("lang.meta.io.Classpath.toString") {
     // TODO: come up with a platform-independent test
   }
 
-  test("star.meta.io.Fragment.toString") {
+  test("lang.meta.io.Fragment.toString") {
     // TODO: come up with a platform-independent test
   }
 
-  test("star.meta.io.Multipath.toString") {
+  test("lang.meta.io.Multipath.toString") {
     // TODO: come up with a platform-independent test
   }
 
-  test("star.meta.io.RelativePath.toString") {
+  test("lang.meta.io.RelativePath.toString") {
     // TODO: come up with a platform-independent test
   }
 
-  test("star.meta.io.Sourcepath.toString") {
+  test("lang.meta.io.Sourcepath.toString") {
     // TODO: come up with a platform-independent test
   }
 
@@ -275,20 +275,20 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("star.meta.semanticdb.Attributes.toString") {
+  test("lang.meta.semanticdb.Attributes.toString") {
     // n/a
   }
 
-  test("star.meta.semanticdb.Denotation.toString") {
+  test("lang.meta.semanticdb.Denotation.toString") {
     val denotation = Denotation(PRIVATE | CASE | CLASS, "C", "")
     assert(denotation.toString === "private case class C")
   }
 
-  test("star.meta.semanticdb.Database.toString") {
+  test("lang.meta.semanticdb.Database.toString") {
     // too involved to fit here, see DatabaseSuite in scalahost
   }
 
-  test("star.meta.semanticdb.Message.toString") {
+  test("lang.meta.semanticdb.Message.toString") {
     val path = RelativePath("hello.scala").toAbsolute
     val input = Input.File(path)
     val position = Position.Range(input, 40, 42)
@@ -296,63 +296,63 @@ class PublicSuite extends FunSuite {
     assert(message.toString === s"[40..42): [error] does not compute")
   }
 
-  test("star.meta.semanticdb.Mirror.toString") {
+  test("lang.meta.semanticdb.Mirror.toString") {
     // n/a
   }
 
-  test("star.meta.semanticdb.Severity.toString") {
+  test("lang.meta.semanticdb.Severity.toString") {
     // covered below
   }
 
-  test("star.meta.semanticdb.Severity.Error.toString") {
+  test("lang.meta.semanticdb.Severity.Error.toString") {
     assert(Severity.Error.toString === "[error]")
   }
 
-  test("star.meta.semanticdb.Severity.Info.toString") {
+  test("lang.meta.semanticdb.Severity.Info.toString") {
     assert(Severity.Info.toString === "[info]")
   }
 
-  test("star.meta.semanticdb.Severity.Warning.toString") {
+  test("lang.meta.semanticdb.Severity.Warning.toString") {
     assert(Severity.Warning.toString === "[warning]")
   }
 
-  test("star.meta.semanticdb.Signature.toString") {
+  test("lang.meta.semanticdb.Signature.toString") {
     // covered below
   }
 
-  test("star.meta.semanticdb.Signature.Method.toString") {
+  test("lang.meta.semanticdb.Signature.Method.toString") {
     // covered below
   }
 
-  test("star.meta.semanticdb.Signature.Self.toString") {
+  test("lang.meta.semanticdb.Signature.Self.toString") {
     // covered below
   }
 
-  test("star.meta.semanticdb.Signature.Term.toString") {
+  test("lang.meta.semanticdb.Signature.Term.toString") {
     // covered below
   }
 
-  test("star.meta.semanticdb.Signature.TermParameter.toString") {
+  test("lang.meta.semanticdb.Signature.TermParameter.toString") {
     // covered below
   }
 
-  test("star.meta.semanticdb.Signature.Type.toString") {
+  test("lang.meta.semanticdb.Signature.Type.toString") {
     // covered below
   }
 
-  test("star.meta.semanticdb.Signature.TypeParameter.toString") {
+  test("lang.meta.semanticdb.Signature.TypeParameter.toString") {
     // covered below
   }
 
-  test("star.meta.semanticdb.ResolvedName.toString") {
+  test("lang.meta.semanticdb.ResolvedName.toString") {
     // covered below
   }
 
-  test("star.meta.semanticdb.ResolvedSymbol.toString") {
+  test("lang.meta.semanticdb.ResolvedSymbol.toString") {
     // covered below
   }
 
-  test("star.meta.semanticdb.Sugar.toString") {
+  test("lang.meta.semanticdb.Sugar.toString") {
     val original = Input.String("input")
     val input = Input.Sugar("sugar", original, 1, 1)
     val pos = Position.Range(input, 0, 5)
@@ -364,7 +364,7 @@ class PublicSuite extends FunSuite {
     assert(sugar.structure == """Sugar(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), "sugar", List(ResolvedName(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("sugar")), false)))""")
   }
 
-  test("star.meta.semanticdb.Symbol.toString") {
+  test("lang.meta.semanticdb.Symbol.toString") {
     val syntaxNone = ""
     val none @ Symbol.None = Symbol(syntaxNone)
     assert(none.toString === syntaxNone)
@@ -402,19 +402,19 @@ class PublicSuite extends FunSuite {
     assert(multi.toString === syntaxMulti)
   }
 
-  test("star.meta.semanticdb.Symbol.Global.toString") {
+  test("lang.meta.semanticdb.Symbol.Global.toString") {
     // covered above
   }
 
-  test("star.meta.semanticdb.Symbol.Local.toString") {
+  test("lang.meta.semanticdb.Symbol.Local.toString") {
     // covered above
   }
 
-  test("star.meta.semanticdb.Symbol.Multi.toString") {
+  test("lang.meta.semanticdb.Symbol.Multi.toString") {
     // covered above
   }
 
-  test("star.meta.semanticdb.Symbol.None.toString") {
+  test("lang.meta.semanticdb.Symbol.None.toString") {
     // covered above
   }
 

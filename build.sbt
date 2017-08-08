@@ -82,35 +82,35 @@ packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
 
-/** ======================== STARMETA ======================== **/
+/** ======================== LANGMETA ======================== **/
 
-lazy val starmetaIo = crossProject
-  .in(file("starmeta/io"))
+lazy val langmetaIo = crossProject
+  .in(file("langmeta/io"))
   .settings(
     publishableSettings,
-    moduleName := "starmeta-io",
-    description := "Starmeta APIs for input/output"
+    moduleName := "langmeta-io",
+    description := "Langmeta APIs for input/output"
   )
 
-lazy val starmetaIoJVM = starmetaIo.jvm
-lazy val starmetaIoJs = starmetaIo.js
+lazy val langmetaIoJVM = langmetaIo.jvm
+lazy val langmetaIoJs = langmetaIo.js
 
-lazy val starmetaInputs = crossProject
-  .in(file("starmeta/inputs"))
+lazy val langmetaInputs = crossProject
+  .in(file("langmeta/inputs"))
   .settings(
     publishableSettings,
-    moduleName := "starmeta-inputs",
-    description := "Starmeta APIs for source code"
+    moduleName := "langmeta-inputs",
+    description := "Langmeta APIs for source code"
   )
-  .dependsOn(starmetaIo)
-lazy val starmetaInputsJVM = starmetaInputs.jvm
-lazy val starmetaInputsJS = starmetaInputs.js
+  .dependsOn(langmetaIo)
+lazy val langmetaInputsJVM = langmetaInputs.jvm
+lazy val langmetaInputsJS = langmetaInputs.js
 
-lazy val starmetaSemanticdb = crossProject
-  .in(file("starmeta/semanticdb"))
+lazy val langmetaSemanticdb = crossProject
+  .in(file("langmeta/semanticdb"))
   .settings(
     publishableSettings,
-    moduleName := "starmeta-semanticdb",
+    moduleName := "langmeta-semanticdb",
     description := "Semantic database APIs",
     // Protobuf setup for binary serialization.
     PB.targets.in(Compile) := Seq(
@@ -118,27 +118,27 @@ lazy val starmetaSemanticdb = crossProject
         flatPackage = true // Don't append filename to package
       ) -> sourceManaged.in(Compile).value
     ),
-    PB.protoSources.in(Compile) := Seq(file("starmeta/semanticdb/shared/src/main/protobuf")),
+    PB.protoSources.in(Compile) := Seq(file("langmeta/semanticdb/shared/src/main/protobuf")),
     libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
   )
-  .dependsOn(starmetaIo, starmetaInputs)
-lazy val starmetaSemanticdbJVM = starmetaSemanticdb.jvm
-lazy val starmetaSemanticdbJS = starmetaSemanticdb.js
+  .dependsOn(langmetaIo, langmetaInputs)
+lazy val langmetaSemanticdbJVM = langmetaSemanticdb.jvm
+lazy val langmetaSemanticdbJS = langmetaSemanticdb.js
 
-lazy val starmeta = crossProject
-  .in(file("starmeta/starmeta"))
+lazy val langmeta = crossProject
+  .in(file("langmeta/langmeta"))
   .settings(
     publishableSettings,
-    description := "Starmeta umbrella module that includes all public APIs",
-    exposePaths("starmeta", Test)
+    description := "Langmeta umbrella module that includes all public APIs",
+    exposePaths("langmeta", Test)
   )
   .dependsOn(
-    starmetaInputs,
-    starmetaIo,
-    starmetaSemanticdb
+    langmetaInputs,
+    langmetaIo,
+    langmetaSemanticdb
   )
-lazy val starmetaJVM = starmeta.jvm
-lazy val starmetaJS = starmeta.js
+lazy val langmetaJVM = langmeta.jvm
+lazy val langmetaJS = langmeta.js
 
 /** ======================== SCALAMETA ======================== **/
 
@@ -159,7 +159,7 @@ lazy val io = crossProject
     publishableSettings,
     description := "Scalameta APIs for input/output"
   )
-  .dependsOn(starmetaIo, common)
+  .dependsOn(langmetaIo, common)
 
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
@@ -182,7 +182,7 @@ lazy val inputs = crossProject
     description := "Scalameta APIs for source code",
     enableMacros
   )
-  .dependsOn(starmetaInputs, common, io)
+  .dependsOn(langmetaInputs, common, io)
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
 
@@ -261,7 +261,7 @@ lazy val semantic = crossProject
     publishableSettings,
     description := "Scalameta semantic APIs"
   )
-  .dependsOn(starmetaSemanticdb)
+  .dependsOn(langmetaSemanticdb)
 lazy val semanticJVM = semantic.jvm
 lazy val semanticJS = semantic.js
 
@@ -303,7 +303,7 @@ lazy val scalahostNsc = project
           def isArtifactId(node: XmlNode, fn: String => Boolean) =
             node.label == "artifactId" && fn(node.text)
           node.label == "dependency" && node.child.exists(child =>
-            isArtifactId(child, _.startsWith("starmeta-")) ||
+            isArtifactId(child, _.startsWith("langmeta-")) ||
             isArtifactId(child, _.startsWith("scalameta_")))
         }
         override def transform(node: XmlNode): XmlNodeSeq = node match {
