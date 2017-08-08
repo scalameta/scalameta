@@ -1,19 +1,19 @@
 scalahost/integration/src/main/scala/example/Example.scala
 ----------------------------------------------------------
-Dialect:
+Language:
 Scala211
 
 Names:
-[8..15): example => _root_.example.
-[24..31): Example => _root_.example.Example.
-[40..44): main => _root_.example.Example.main([Ljava/lang/String;)V.
-[45..49): args => _root_.example.Example.main([Ljava/lang/String;)V.(args)
+[8..15): example <= _root_.example.
+[24..31): Example <= _root_.example.Example.
+[40..44): main <= _root_.example.Example.main([Ljava/lang/String;)V.
+[45..49): args <= _root_.example.Example.main([Ljava/lang/String;)V.(args)
 [51..56): Array => _root_.scala.Array#
 [57..63): String => _root_.scala.Predef.String#
 [67..71): Unit => _root_.scala.Unit#
 [80..87): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
 
-Denotations:
+Symbols:
 _root_.example. => package example
 _root_.example.Example. => final object Example
 _root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String])Unit
@@ -28,13 +28,13 @@ _root_.scala.Unit#`<init>`()V. => primaryctor <init>: ()Unit
 
 scalahost/integration/src/main/scala/example/Sugar.scala
 --------------------------------------------------------
-Dialect:
+Language:
 Scala211
 
 Names:
-[8..15): example => _root_.example.
-[23..28): Sugar => _root_.example.Sugar#
-[29..29):  => _root_.example.Sugar#`<init>`()V.
+[8..15): example <= _root_.example.
+[23..28): Sugar <= _root_.example.Sugar#
+[29..29): ε <= _root_.example.Sugar#`<init>`()V.
 [33..37): List => _root_.scala.collection.immutable.List.
 [41..44): map => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
 [47..48): + => _root_.scala.Int#`+`(I)I.
@@ -44,7 +44,7 @@ Names:
 [71..81): headOption => _root_.scala.collection.TraversableLike#headOption()Lscala/Option;.
 [91..102): stripPrefix => _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;.
 
-Denotations:
+Symbols:
 _root_.example. => package example
 _root_.example.Sugar# => class Sugar
 _root_.example.Sugar#`<init>`()V. => primaryctor <init>: ()example.Sugar

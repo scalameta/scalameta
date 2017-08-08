@@ -319,7 +319,7 @@ lazy val scalahostNsc = project
 lazy val scalahostIntegration = project
   .in(file("scalahost/integration"))
   .settings(
-    description := "Sources to compile with scalahost to build a mirror for tests.",
+    description := "Sources to compile with scalahost to build a semanticdb for tests.",
     sharedSettings,
     nonPublishableSettings,
     scalacOptions ++= {
@@ -360,8 +360,8 @@ lazy val tests = crossProject
     compile.in(Test) := compile.in(Test).dependsOn(compile.in(scalahostIntegration, Compile)).value,
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,
-      "mirrorSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
-      "mirrorClasspath" -> classDirectory.in(scalahostIntegration, Compile).value.getAbsolutePath
+      "databaseSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
+      "databaseClasspath" -> classDirectory.in(scalahostIntegration, Compile).value.getAbsolutePath
     ),
     buildInfoPackage := "scala.meta.tests"
   )

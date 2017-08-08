@@ -3,8 +3,10 @@ package scala.meta.internal
 import scala.language.implicitConversions
 
 package object semantic {
-  implicit def XtensionSchemaDatabase(sdatabase: star.meta.internal.semanticdb.schema.Database) = new star.meta.internal.semanticdb.XtensionSchemaDatabase(sdatabase)
-  implicit def XtensionDatabase(ddatabase: star.meta.semanticdb.Database) = new star.meta.internal.semanticdb.XtensionDatabase(ddatabase)
+  implicit def XtensionSchemaDatabase(sdatabase: star.meta.internal.semanticdb.schema.Database) =
+    new star.meta.internal.semanticdb.XtensionSchemaDatabase(sdatabase)
+  implicit def XtensionDatabase(ddatabase: star.meta.semanticdb.Database) =
+    new star.meta.internal.semanticdb.XtensionDatabase(ddatabase)
 
   object vfs {
     val Database = star.meta.internal.semanticdb.vfs.Database
@@ -16,6 +18,8 @@ package object semantic {
   }
 
   object schema {
+    val Attributes = star.meta.internal.semanticdb.schema.Attributes
+    type Attributes = star.meta.internal.semanticdb.schema.Attributes
     // TODO
   }
 }
