@@ -51,7 +51,7 @@ test := {
       |that give a tighter edit/run/debug cycle.
       |- scalametaJVM/testQuick # Parser/Pretty-printer/Trees/...
       |- contribJVM/testQuick   # Contrib
-      |- scalahostNsc/test      # Semanticdb implementation for Scalac
+      |- semanticdbScalac/test  # Semanticdb implementation for Scalac
       |- testOnlyJVM
       |- testOnlyJS
       |""".stripMargin)
@@ -65,7 +65,7 @@ testAll := {
 // because JVM tests link and run faster than JS tests.
 testOnlyJVM := {
   val runScalametaTests = test.in(scalametaJVM, Test).value
-  val runScalahostTests = test.in(scalahostNsc, Test).value
+  val runSemanticdbScalacTests = test.in(semanticdbScalac, Test).value
   val runBenchmarkTests = test.in(benchmarks, Test).value
   val runContribTests = test.in(contribJVM, Test).value
   val runTests = test.in(testsJVM, Test).value
@@ -287,16 +287,16 @@ lazy val scalameta = crossProject
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
-lazy val scalahostNsc = project
-  .in(file("scalahost/nsc"))
+lazy val semanticdbScalac = project
+  .in(file("scalameta/semanticdb-scalac"))
   .settings(
-    moduleName := "scalahost",
+    moduleName := "semanticdb-scalac",
     description := "Scala 2.x compiler plugin that generates semanticdb on compile",
     publishableSettings,
     mergeSettings,
     isFullCrossVersion,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    exposePaths("scalahost", Test),
+    exposePaths("semanticdb-scalac", Test),
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
         private def isAbsorbedDependency(node: XmlNode): Boolean = {
@@ -316,20 +316,20 @@ lazy val scalahostNsc = project
   )
   .dependsOn(scalametaJVM, testkit % Test)
 
-lazy val scalahostIntegration = project
-  .in(file("scalahost/integration"))
+lazy val semanticdbIntegration = project
+  .in(file("scalameta/semanticdb-integration"))
   .settings(
-    description := "Sources to compile with scalahost to build a semanticdb for tests.",
+    description := "Sources to compile to build a semanticdb for tests.",
     sharedSettings,
     nonPublishableSettings,
     scalacOptions ++= {
-      val pluginJar = Keys.`package`.in(scalahostNsc, Compile).value.getAbsolutePath
+      val pluginJar = Keys.`package`.in(semanticdbScalac, Compile).value.getAbsolutePath
       Seq(
         s"-Xplugin:$pluginJar",
         "-Yrangepos",
-        s"-P:scalahost:sourceroot:${baseDirectory.in(ThisBuild).value}",
-        s"-P:scalahost:failures:error", // fail fast during development.
-        "-Xplugin-require:scalahost"
+        s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
+        s"-P:semanticdb:failures:error", // fail fast during development.
+        "-Xplugin-require:semanticdb"
       )
     }
   )
@@ -357,11 +357,11 @@ lazy val tests = crossProject
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
-    compile.in(Test) := compile.in(Test).dependsOn(compile.in(scalahostIntegration, Compile)).value,
+    compile.in(Test) := compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,
       "databaseSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
-      "databaseClasspath" -> classDirectory.in(scalahostIntegration, Compile).value.getAbsolutePath
+      "databaseClasspath" -> classDirectory.in(semanticdbIntegration, Compile).value.getAbsolutePath
     ),
     buildInfoPackage := "scala.meta.tests"
   )

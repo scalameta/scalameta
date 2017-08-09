@@ -1,4 +1,0 @@
-<plugin>
-  <name>scalahost</name>
-  <classname>scala.meta.internal.scalahost.ScalahostPlugin</classname>
-</plugin>

@@ -285,7 +285,7 @@ class PublicSuite extends FunSuite {
   }
 
   test("lang.meta.semanticdb.Database.toString") {
-    // too involved to fit here, see DatabaseSuite in scalahost
+    // too involved to fit here, see DatabaseSuite in semanticdb-scalac
   }
 
   test("lang.meta.semanticdb.Message.toString") {

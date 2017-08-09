@@ -1,5 +1,5 @@
-scalahost/integration/src/main/scala/example/Example.scala
-----------------------------------------------------------
+scalameta/semanticdb-integration/src/main/scala/example/Example.scala
+---------------------------------------------------------------------
 Language:
 Scala211
 
@@ -26,8 +26,8 @@ _root_.scala.Unit# => abstract final class Unit
 _root_.scala.Unit#`<init>`()V. => primaryctor <init>: ()Unit
 
 
-scalahost/integration/src/main/scala/example/Sugar.scala
---------------------------------------------------------
+scalameta/semanticdb-integration/src/main/scala/example/Sugar.scala
+-------------------------------------------------------------------
 Language:
 Scala211
 
