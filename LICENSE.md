@@ -1,4 +1,5 @@
 Copyright (c) 2014-2017 EPFL
+Copyright (c) 2016-2017 Twitter, Inc.
 
 All rights reserved.
 

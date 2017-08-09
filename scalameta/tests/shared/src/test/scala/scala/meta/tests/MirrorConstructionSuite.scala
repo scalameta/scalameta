@@ -2,12 +2,12 @@ package scala.meta
 package tests
 
 import org.scalatest._
-import scala.meta.internal.semantic.{vfs => v}
-import scala.meta.internal.semantic.{schema => s}
+import scala.meta.internal.semanticdb.{vfs => v}
+import scala.meta.internal.semanticdb.{schema => s}
 
 trait BaseSemanticSuite extends FunSuiteLike {
-  val sourcepath = Sourcepath(BuildInfo.mirrorSourcepath)
-  val classpath = Classpath(BuildInfo.mirrorClasspath)
+  val sourcepath = Sourcepath(BuildInfo.databaseSourcepath)
+  val classpath = Classpath(BuildInfo.databaseClasspath)
 }
 
 class MirrorConstructionSuite extends BaseSemanticSuite {
@@ -17,20 +17,20 @@ class MirrorConstructionSuite extends BaseSemanticSuite {
   }
 
   test("Database.load(Classpath, Sourcepath)") {
-    val mirror = Database.load(classpath, sourcepath)
-    assert(mirror.sources.nonEmpty)
+    val database = Database.load(classpath, sourcepath)
+    assert(database.entries.nonEmpty)
   }
 
   test("Database.load(Array[Byte])") {
     semanticdbs.foreach { path =>
-      val mirror = Database.load(path.readAllBytes)
-      assert(mirror.sources.nonEmpty, path.toString)
+      val database = Database.load(path.readAllBytes)
+      assert(database.entries.nonEmpty, path.toString)
     }
   }
 
   test("Database.load(Classpath)") {
-    val mirror = Database.load(classpath)
-    assert(mirror.sources.nonEmpty)
+    val database = Database.load(classpath)
+    assert(database.entries.nonEmpty)
   }
 
   test("s.Attributes.filename has no Windows slash (\\)") {

@@ -15,7 +15,7 @@ class SemanticdbExpectSuite extends FunSuite with DiffAssertions {
       // output of 2.11. It's possible to add another expect file for 2.12
       // later down the road if that turns out to be useful.
       case "2" :: "11" :: Nil =>
-        val obtained = SemanticdbExpectSuite.getMirror.toString
+        val obtained = SemanticdbExpectSuite.loadDatabase.toString
         val expected = new String(Files.readAllBytes(SemanticdbExpectSuite.expectPath))
         assertNoDiff(obtained, expected)
       case _ => // do nothing.
@@ -26,9 +26,9 @@ class SemanticdbExpectSuite extends FunSuite with DiffAssertions {
 object SemanticdbExpectSuite {
   val expectPath: Path =
     Paths.get("scalameta", "tests", "jvm", "src", "test", "resources", "semanticdb.expect")
-  def getMirror: Mirror = {
-    val mirror = Database.load(Classpath(BuildInfo.mirrorClasspath))
-    val sorted = Database(mirror.entries.sortBy(_.input.syntax))
+  def loadDatabase: Database = {
+    val database = Database.load(Classpath(BuildInfo.databaseClasspath))
+    val sorted = Database(database.entries.sortBy(_.input.syntax))
     sorted
   }
 }
@@ -37,7 +37,7 @@ object SemanticdbExpectSuite {
 // testsJVM/test:runMain scala.meta.tests.SaveSemanticdbExpectTest
 object SaveSemanticdbExpectTest {
   def main(args: Array[String]): Unit = {
-    val mirror = SemanticdbExpectSuite.getMirror
-    Files.write(SemanticdbExpectSuite.expectPath, mirror.toString.getBytes("UTF-8"))
+    val database = SemanticdbExpectSuite.loadDatabase
+    Files.write(SemanticdbExpectSuite.expectPath, database.toString.getBytes("UTF-8"))
   }
 }

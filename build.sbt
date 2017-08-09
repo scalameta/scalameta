@@ -50,8 +50,8 @@ test := {
       |Running "test" may take a really long time. Here are some other useful commands
       |that give a tighter edit/run/debug cycle.
       |- scalametaJVM/testQuick # Parser/Pretty-printer/Trees/...
-      |- contribJVM/testQuick   # contrib
-      |- scalahostNsc/test      # Semantic API tests
+      |- contribJVM/testQuick   # Contrib
+      |- semanticdbScalac/test  # Semanticdb implementation for Scalac
       |- testOnlyJVM
       |- testOnlyJS
       |""".stripMargin)
@@ -65,7 +65,7 @@ testAll := {
 // because JVM tests link and run faster than JS tests.
 testOnlyJVM := {
   val runScalametaTests = test.in(scalametaJVM, Test).value
-  val runScalahostTests = test.in(scalahostNsc, Test).value
+  val runSemanticdbScalacTests = test.in(semanticdbScalac, Test).value
   val runBenchmarkTests = test.in(benchmarks, Test).value
   val runContribTests = test.in(contribJVM, Test).value
   val runTests = test.in(testsJVM, Test).value
@@ -82,6 +82,66 @@ packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
 
+/** ======================== LANGMETA ======================== **/
+
+lazy val langmetaIo = crossProject
+  .in(file("langmeta/io"))
+  .settings(
+    publishableSettings,
+    moduleName := "langmeta-io",
+    description := "Langmeta APIs for input/output"
+  )
+
+lazy val langmetaIoJVM = langmetaIo.jvm
+lazy val langmetaIoJs = langmetaIo.js
+
+lazy val langmetaInputs = crossProject
+  .in(file("langmeta/inputs"))
+  .settings(
+    publishableSettings,
+    moduleName := "langmeta-inputs",
+    description := "Langmeta APIs for source code"
+  )
+  .dependsOn(langmetaIo)
+lazy val langmetaInputsJVM = langmetaInputs.jvm
+lazy val langmetaInputsJS = langmetaInputs.js
+
+lazy val langmetaSemanticdb = crossProject
+  .in(file("langmeta/semanticdb"))
+  .settings(
+    publishableSettings,
+    moduleName := "langmeta-semanticdb",
+    description := "Semantic database APIs",
+    // Protobuf setup for binary serialization.
+    PB.targets.in(Compile) := Seq(
+      scalapb.gen(
+        flatPackage = true // Don't append filename to package
+      ) -> sourceManaged.in(Compile).value
+    ),
+    PB.protoSources.in(Compile) := Seq(file("langmeta/semanticdb/shared/src/main/protobuf")),
+    libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
+  )
+  .dependsOn(langmetaIo, langmetaInputs)
+lazy val langmetaSemanticdbJVM = langmetaSemanticdb.jvm
+lazy val langmetaSemanticdbJS = langmetaSemanticdb.js
+
+lazy val langmeta = crossProject
+  .in(file("langmeta/langmeta"))
+  .settings(
+    publishableSettings,
+    description := "Langmeta umbrella module that includes all public APIs",
+    exposePaths("langmeta", Test)
+  )
+  .dependsOn(
+    langmetaInputs,
+    langmetaIo,
+    langmetaSemanticdb
+  )
+lazy val langmetaJVM = langmeta.jvm
+lazy val langmetaJS = langmeta.js
+
+/** ======================== SCALAMETA ======================== **/
+
 lazy val common = crossProject
   .in(file("scalameta/common"))
   .settings(
@@ -97,9 +157,9 @@ lazy val io = crossProject
   .in(file("scalameta/io"))
   .settings(
     publishableSettings,
-    description := "Scalameta APIs for JVM/JS agnostic IO."
+    description := "Scalameta APIs for input/output"
   )
-  .dependsOn(common)
+  .dependsOn(langmetaIo, common)
 
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
@@ -119,10 +179,10 @@ lazy val inputs = crossProject
   .in(file("scalameta/inputs"))
   .settings(
     publishableSettings,
-    description := "Scalameta APIs for source code in textual format",
+    description := "Scalameta APIs for source code",
     enableMacros
   )
-  .dependsOn(common, io)
+  .dependsOn(langmetaInputs, common, io)
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
 
@@ -195,23 +255,15 @@ lazy val trees = crossProject
 lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
 
-lazy val semantic = crossProject
-  .in(file("scalameta/semantic"))
+lazy val semanticdb = crossProject
+  .in(file("scalameta/semanticdb"))
   .settings(
     publishableSettings,
-    description := "Scalameta semantic APIs",
-    // Protobuf setup for binary serialization.
-    PB.targets.in(Compile) := Seq(
-      scalapb.gen(
-        flatPackage = true // Don't append filename to package
-      ) -> sourceManaged.in(Compile).value
-    ),
-    PB.protoSources.in(Compile) := Seq(file("scalameta/semantic/shared/src/main/protobuf")),
-    libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
+    description := "Scalameta semantic database APIs"
   )
-  .dependsOn(common, parsers, trees)
-lazy val semanticJVM = semantic.jvm
-lazy val semanticJS = semantic.js
+  .dependsOn(langmetaSemanticdb)
+lazy val semanticdbJVM = semanticdb.jvm
+lazy val semanticdbJS = semanticdb.js
 
 lazy val scalameta = crossProject
   .in(file("scalameta/scalameta"))
@@ -230,32 +282,33 @@ lazy val scalameta = crossProject
     trees,
     inputs,
     io,
-    semantic
+    semanticdb
   )
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
-lazy val scalahostNsc = project
-  .in(file("scalahost/nsc"))
+lazy val semanticdbScalac = project
+  .in(file("scalameta/semanticdb-scalac"))
   .settings(
-    moduleName := "scalahost",
-    description := "Scala 2.x compiler plugin that persists the scalameta semantic DB on compile",
+    moduleName := "semanticdb-scalac",
+    description := "Scala 2.x compiler plugin that generates semanticdb on compile",
     publishableSettings,
     mergeSettings,
     isFullCrossVersion,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    exposePaths("scalahost", Test),
+    exposePaths("semanticdb-scalac", Test),
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
-        private def isScalametaDependency(node: XmlNode): Boolean = {
+        private def isAbsorbedDependency(node: XmlNode): Boolean = {
           def isArtifactId(node: XmlNode, fn: String => Boolean) =
             node.label == "artifactId" && fn(node.text)
           node.label == "dependency" && node.child.exists(child =>
+            isArtifactId(child, _.startsWith("langmeta-")) ||
             isArtifactId(child, _.startsWith("scalameta_")))
         }
         override def transform(node: XmlNode): XmlNodeSeq = node match {
-          case e: Elem if isScalametaDependency(node) =>
-            Comment("scalameta dependency has been merged into scalahost via sbt-assembly")
+          case e: Elem if isAbsorbedDependency(node) =>
+            Comment("this dependency has been absorbed via sbt-assembly")
           case _ => node
         }
       }).transform(node).head
@@ -263,20 +316,20 @@ lazy val scalahostNsc = project
   )
   .dependsOn(scalametaJVM, testkit % Test)
 
-lazy val scalahostIntegration = project
-  .in(file("scalahost/integration"))
+lazy val semanticdbIntegration = project
+  .in(file("scalameta/semanticdb-integration"))
   .settings(
-    description := "Sources to compile with scalahost to build a mirror for tests.",
+    description := "Sources to compile to build a semanticdb for tests.",
     sharedSettings,
     nonPublishableSettings,
     scalacOptions ++= {
-      val pluginJar = Keys.`package`.in(scalahostNsc, Compile).value.getAbsolutePath
+      val pluginJar = Keys.`package`.in(semanticdbScalac, Compile).value.getAbsolutePath
       Seq(
         s"-Xplugin:$pluginJar",
         "-Yrangepos",
-        s"-P:scalahost:sourceroot:${baseDirectory.in(ThisBuild).value}",
-        s"-P:scalahost:failures:error", // fail fast during development.
-        "-Xplugin-require:scalahost"
+        s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
+        s"-P:semanticdb:failures:error", // fail fast during development.
+        "-Xplugin-require:semanticdb"
       )
     }
   )
@@ -304,11 +357,11 @@ lazy val tests = crossProject
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
-    compile.in(Test) := compile.in(Test).dependsOn(compile.in(scalahostIntegration, Compile)).value,
+    compile.in(Test) := compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,
-      "mirrorSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
-      "mirrorClasspath" -> classDirectory.in(scalahostIntegration, Compile).value.getAbsolutePath
+      "databaseSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
+      "databaseClasspath" -> classDirectory.in(semanticdbIntegration, Compile).value.getAbsolutePath
     ),
     buildInfoPackage := "scala.meta.tests"
   )

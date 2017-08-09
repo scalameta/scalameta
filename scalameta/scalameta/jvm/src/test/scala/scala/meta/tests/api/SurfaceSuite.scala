@@ -38,6 +38,27 @@ class SurfaceSuite extends FunSuite {
     }).mkString(EOL)
     // println(diagnostic)
     assert(diagnostic === """
+      |lang.meta.inputs.Input
+      |lang.meta.inputs.Position
+      |lang.meta.io.AbsolutePath
+      |lang.meta.io.Classpath
+      |lang.meta.io.Fragment
+      |lang.meta.io.Multipath
+      |lang.meta.io.RelativePath
+      |lang.meta.io.Sourcepath
+      |lang.meta.semanticdb.Attributes
+      |lang.meta.semanticdb.Database
+      |lang.meta.semanticdb.Denotation
+      |lang.meta.semanticdb.Message
+      |lang.meta.semanticdb.ResolvedName
+      |lang.meta.semanticdb.ResolvedSymbol
+      |lang.meta.semanticdb.Severity
+      |lang.meta.semanticdb.Severity.Error
+      |lang.meta.semanticdb.Severity.Info
+      |lang.meta.semanticdb.Severity.Warning
+      |lang.meta.semanticdb.Signature
+      |lang.meta.semanticdb.Sugar
+      |lang.meta.semanticdb.Symbol
       |scala.meta.Dialect
       |scala.meta.Tree
       |scala.meta.classifiers
@@ -60,25 +81,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.dialects.Typelevel211 *
       |scala.meta.dialects.Typelevel212 *
       |scala.meta.inputs
-      |scala.meta.inputs.Input
-      |scala.meta.inputs.Input.File *
-      |scala.meta.inputs.Input.None *
-      |scala.meta.inputs.Input.Slice *
-      |scala.meta.inputs.Input.Stream *
-      |scala.meta.inputs.Input.String *
-      |scala.meta.inputs.Input.Sugar *
-      |scala.meta.inputs.Input.VirtualFile *
-      |scala.meta.inputs.Position
-      |scala.meta.inputs.Position.None *
-      |scala.meta.inputs.Position.Range *
       |scala.meta.internal
       |scala.meta.io
-      |scala.meta.io.AbsolutePath
-      |scala.meta.io.Classpath
-      |scala.meta.io.Fragment
-      |scala.meta.io.Multipath
-      |scala.meta.io.RelativePath
-      |scala.meta.io.Sourcepath
       |scala.meta.parsers
       |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException
@@ -92,29 +96,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.quasiquotes
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
-      |scala.meta.semantic
-      |scala.meta.semantic.Attributes
-      |scala.meta.semantic.Database
-      |scala.meta.semantic.Denotation
-      |scala.meta.semantic.Message
-      |scala.meta.semantic.Mirror
-      |scala.meta.semantic.Severity
-      |scala.meta.semantic.Severity.Error
-      |scala.meta.semantic.Severity.Info
-      |scala.meta.semantic.Severity.Warning
-      |scala.meta.semantic.Signature
-      |scala.meta.semantic.Signature.Method *
-      |scala.meta.semantic.Signature.Self *
-      |scala.meta.semantic.Signature.Term *
-      |scala.meta.semantic.Signature.TermParameter *
-      |scala.meta.semantic.Signature.Type *
-      |scala.meta.semantic.Signature.TypeParameter *
-      |scala.meta.semantic.Sugar
-      |scala.meta.semantic.Symbol
-      |scala.meta.semantic.Symbol.Global *
-      |scala.meta.semantic.Symbol.Local *
-      |scala.meta.semantic.Symbol.Multi *
-      |scala.meta.semantic.Symbol.None *
+      |scala.meta.semanticdb
       |scala.meta.tokenizers
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException
@@ -150,36 +132,29 @@ class SurfaceSuite extends FunSuite {
 
     // println(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL))
     assert(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL) === """
+      |* (meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
+      |* (meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
+      |* (scala.meta.Dialect, meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
+      |* (scala.meta.Dialect, meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* (scala.meta.Dialect, scala.meta.Tree).syntax: String
-      |* (scala.meta.Dialect, scala.meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
-      |* (scala.meta.Dialect, scala.meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* (scala.meta.Dialect, scala.meta.tokens.Token).syntax: String
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).syntax: String
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
-      |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
-      |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
       |* T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
-      |* T.parse(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
+      |* T.parse(implicit scala.meta.common.Convert[T,meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
       |* T.show(implicit Style[T]): String
-      |* T.tokenize(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
-      |* scala.meta.Dialect.apply(T)(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input]): (scala.meta.Dialect, scala.meta.inputs.Input)
+      |* T.tokenize(implicit scala.meta.common.Convert[T,meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
+      |* scala.meta.Dialect.apply(T)(implicit scala.meta.common.Convert[T,meta.inputs.Input]): (scala.meta.Dialect, meta.inputs.Input)
       |* scala.meta.Dialect.apply(scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
-      |* scala.meta.Ref(implicit scala.meta.semantic.Mirror).symbol: scala.meta.semantic.Symbol
-      |* scala.meta.Term(implicit scala.meta.semantic.Mirror).sugar: Option[scala.meta.Term]
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
-      |* scala.meta.semantic.Attributes.source: scala.meta.Source
-      |* scala.meta.semantic.Mirror.sources: Seq[scala.meta.Source]
-      |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).denot: scala.meta.semantic.Denotation
-      |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).flags: Long
-      |* scala.meta.semantic.Symbol(implicit scala.meta.semantic.Mirror).info: String
     """.trim.stripMargin)
   }
 

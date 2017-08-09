@@ -8,7 +8,7 @@ import scala.meta.dialects.Scala211
 
 class TokenizerSuite extends FunSuite {
   def tokenize(code: String): Tokens = {
-    val convert = scala.meta.inputs.Input.stringToInput
+    val convert = scala.meta.inputs.stringToInput
     val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
     val dialect = Scala211
     code.tokenize(convert, tokenize, dialect).get
@@ -832,13 +832,13 @@ class TokenizerSuite extends FunSuite {
 
   test("parsed trees don't have BOF/EOF in their tokens") {
     val tree = "foo + bar".parse[Term].get
-    assert(tree.pos.nonEmpty)
+    assert(tree.pos != Position.None)
     assert(tree.tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
   }
 
   test("synthetic trees don't have BOF/EOF in their tokens") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
-    assert(tree.pos.isEmpty)
+    assert(tree.pos == Position.None)
     assert(tree.tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
   }
 
