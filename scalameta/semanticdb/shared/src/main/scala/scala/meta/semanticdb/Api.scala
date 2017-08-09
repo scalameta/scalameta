@@ -3,7 +3,7 @@ package lang.meta.internal.semanticdb {
   trait Aliases extends lang.meta.semanticdb.Aliases
 }
 
-package scala.meta.semantic {
+package scala.meta.semanticdb {
   private[meta] trait Api extends lang.meta.internal.semanticdb.Api
   private[meta] trait Aliases extends lang.meta.internal.semanticdb.Aliases
 }

@@ -10,9 +10,9 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
 import scala.meta.io._
-import scala.meta.internal.semantic.DatabaseOps
-import scala.meta.internal.semantic.FailureMode
-import scala.meta.internal.semantic.SemanticdbMode
+import scala.meta.internal.semanticdb.DatabaseOps
+import scala.meta.internal.semanticdb.FailureMode
+import scala.meta.internal.semanticdb.SemanticdbMode
 import scala.meta.testkit.DiffAssertions
 
 abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAssertions { self =>

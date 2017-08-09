@@ -1,4 +1,4 @@
-package scala.meta.internal.semantic
+package scala.meta.internal.semanticdb
 
 import scala.{meta => m}
 import java.io.PrintWriter

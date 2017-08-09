@@ -1,5 +1,5 @@
 package scala.meta.internal
-package semantic
+package semanticdb
 
 import scala.tools.nsc.reporters.StoreReporter
 import scala.reflect.internal.util.{Position => gPosition}

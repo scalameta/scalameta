@@ -1,5 +1,5 @@
 package scala.meta.internal
-package semantic
+package semanticdb
 
 import java.nio.charset.Charset
 import scala.collection.mutable

@@ -1,5 +1,5 @@
 package scala.meta.internal
-package semantic
+package semanticdb
 
 import scala.{meta => m}
 import scala.meta.internal.inputs._

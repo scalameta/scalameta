@@ -1,5 +1,5 @@
 package scala.meta.internal
-package semantic
+package semanticdb
 
 import org.scalameta.unreachable
 import scala.collection.mutable
@@ -298,7 +298,7 @@ trait AttributesOps { self: DatabaseOps =>
             }
 
             private def tryFindInferred(gtree: g.Tree): Unit = {
-              import scala.meta.internal.semantic.{AttributedSugar => S}
+              import scala.meta.internal.semanticdb.{AttributedSugar => S}
               def success(pos: m.Position, f: Inferred => Inferred): Unit = {
                 inferred(pos) = f(inferred(pos))
               }

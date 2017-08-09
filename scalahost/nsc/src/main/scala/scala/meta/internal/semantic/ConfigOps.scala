@@ -1,5 +1,5 @@
 package scala.meta.internal
-package semantic
+package semanticdb
 
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.scalahost.ScalahostPlugin

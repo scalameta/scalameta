@@ -9,8 +9,8 @@ import scala.tools.nsc.plugins.PluginComponent
 import scala.util.control.NonFatal
 import scala.{meta => m}
 import scala.meta.io._
-import scala.meta.internal.semantic.DatabaseOps
-import scala.meta.internal.semantic.{vfs => v}
+import scala.meta.internal.semanticdb.DatabaseOps
+import scala.meta.internal.semanticdb.{vfs => v}
 import scala.tools.nsc.doc.ScaladocGlobal
 
 trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
@@ -26,7 +26,7 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
     val runsAfter = List("typer")
     override val runsRightAfter = Some("typer")
     val phaseName = "scalameta"
-    override val description = "compute the scala.meta semantic database"
+    override val description = "compute the scalameta semantic database"
     def newPhase(_prev: Phase) = new ScalahostPhase(_prev)
 
     class ScalahostPhase(prev: Phase) extends StdPhase(prev) {
@@ -45,7 +45,7 @@ trait ScalahostPipeline extends DatabaseOps { self: ScalahostPlugin =>
             writer.write(s"failed to generate semanticdb for $path:$EOL")
             ex.printStackTrace(new PrintWriter(writer))
             val msg = writer.toString
-            import scala.meta.internal.semantic.FailureMode._
+            import scala.meta.internal.semanticdb.FailureMode._
             config.failures match {
               case Error => global.reporter.error(g.NoPosition, msg)
               case Warning => global.reporter.warning(g.NoPosition, msg)

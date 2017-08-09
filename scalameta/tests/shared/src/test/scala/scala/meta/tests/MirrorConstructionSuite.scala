@@ -2,8 +2,8 @@ package scala.meta
 package tests
 
 import org.scalatest._
-import scala.meta.internal.semantic.{vfs => v}
-import scala.meta.internal.semantic.{schema => s}
+import scala.meta.internal.semanticdb.{vfs => v}
+import scala.meta.internal.semanticdb.{schema => s}
 
 trait BaseSemanticSuite extends FunSuiteLike {
   val sourcepath = Sourcepath(BuildInfo.databaseSourcepath)

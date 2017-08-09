@@ -2,7 +2,7 @@ package scala.meta.tests
 package scalahost
 
 import scala.meta._
-import scala.meta.internal.semantic.SemanticdbMode
+import scala.meta.internal.semanticdb.SemanticdbMode
 
 class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   names(

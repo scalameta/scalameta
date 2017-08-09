@@ -1,5 +1,5 @@
 package scala.meta
-package internal.semantic
+package internal.semanticdb
 
 case class SugarRange(start: Int, end: Int, symbol: Symbol) {
   def addOffset(offset: Int) = SugarRange(start + offset, end + offset, symbol)
