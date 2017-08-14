@@ -84,10 +84,15 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== LANGMETA ======================== **/
 
+lazy val langmetaSettings = List(
+  crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
+)
+
 lazy val langmetaIo = crossProject
   .in(file("langmeta/io"))
   .settings(
     publishableSettings,
+    langmetaSettings,
     moduleName := "langmeta-io",
     description := "Langmeta APIs for input/output"
   )
@@ -99,6 +104,7 @@ lazy val langmetaInputs = crossProject
   .in(file("langmeta/inputs"))
   .settings(
     publishableSettings,
+    langmetaSettings,
     moduleName := "langmeta-inputs",
     description := "Langmeta APIs for source code"
   )
@@ -110,6 +116,7 @@ lazy val langmetaSemanticdb = crossProject
   .in(file("langmeta/semanticdb"))
   .settings(
     publishableSettings,
+    langmetaSettings,
     moduleName := "langmeta-semanticdb",
     description := "Semantic database APIs",
     // Protobuf setup for binary serialization.
@@ -129,10 +136,16 @@ lazy val langmeta = crossProject
   .in(file("langmeta/langmeta"))
   .settings(
     publishableSettings,
+    langmetaSettings,
     description := "Langmeta umbrella module that includes all public APIs",
     exposePaths("langmeta", Test)
   )
   .dependsOn(
+    langmetaInputs,
+    langmetaIo,
+    langmetaSemanticdb
+  )
+  .aggregate(
     langmetaInputs,
     langmetaIo,
     langmetaSemanticdb
