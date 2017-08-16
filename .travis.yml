@@ -15,7 +15,6 @@ env:
     - CI_TEST: check
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.11.11
-      CI_PUBLISH: true
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.11.11
       CI_SCALA_JS: true
