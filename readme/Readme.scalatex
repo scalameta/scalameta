@@ -194,15 +194,15 @@
     @p
       @raw
         <center>
-          <a href="https://twitter.com/"><img width="112" height="90" src="https://g.twimg.com/Twitter_logo_blue.png" /></a>
+          <a href="https://twitter.com/"><img width="112" height="90" src="images/twitter.png" /></a>
           &nbsp; &nbsp;
-          <a href="https://www.jetbrains.com/"><img width="95" height="95" src="http://resources.jetbrains.com/assets/media/open-graph/jetbrains_250x250.png" /></a>
+          <a href="https://www.jetbrains.com/"><img width="95" height="95" src="images/jetbrains.png" /></a>
           &nbsp; &nbsp;
-          <a href="https://www.codacy.com/"><img width="105" height="105" src="https://avatars3.githubusercontent.com/u/1834093?v=3&s=200" /></a>
+          <a href="https://www.codacy.com/"><img width="105" height="105" src="images/codacy.png" /></a>
           &nbsp; &nbsp;
-          <a href="https://scala.epfl.ch/"><img width="95" height="95" src="https://scala.epfl.ch/resources/img/scala-center-swirl.png"/></a>
+          <a href="https://scala.epfl.ch/"><img width="70" height="100" src="images/scala_center.png"/></a>
           &nbsp; &nbsp;
-          <a href="https://www.evolutiongaming.com/"><img width="75" height="95" src="https://www.dropbox.com/s/u5zulu0w1i04di6/evolution_gaming.png?dl=1"/></a>
+          <a href="https://www.evolutiongaming.com/"><img width="75" height="95" src="images/evolution_gaming.png"/></a>
         </center>
 
 @copyrightBadge
