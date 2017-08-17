@@ -145,11 +145,6 @@ lazy val langmeta = crossProject
     langmetaIo,
     langmetaSemanticdb
   )
-  .aggregate(
-    langmetaInputs,
-    langmetaIo,
-    langmetaSemanticdb
-  )
 lazy val langmetaJVM = langmeta.jvm
 lazy val langmetaJS = langmeta.js
 
