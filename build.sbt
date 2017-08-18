@@ -35,11 +35,11 @@ commands += CiCommand("ci-slow")(
   "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
   Nil
 )
-commands += CiCommand("ci-publish")(
-  if (isCiPublish && isTagPush) s"publishSigned" :: Nil
-  else if (isCiPublish) s"publish" :: Nil
-  else Nil
-)
+commands += Command.command("ci-publish") { s =>
+  if (isCiPublish && isTagPush) s"very publishSigned" :: s
+  else if (isCiPublish) s"very publish" :: s
+  else s
+}
 // NOTE: These tasks are aliased here in order to support running "tests/test"
 // from a command. Running "test" inside a command will trigger the `test` task
 // to run in all defined modules, including ones like inputs/io/dialects which
@@ -84,10 +84,15 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== LANGMETA ======================== **/
 
+lazy val langmetaSettings = List(
+  crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
+)
+
 lazy val langmetaIo = crossProject
   .in(file("langmeta/io"))
   .settings(
     publishableSettings,
+    langmetaSettings,
     moduleName := "langmeta-io",
     description := "Langmeta APIs for input/output"
   )
@@ -99,6 +104,7 @@ lazy val langmetaInputs = crossProject
   .in(file("langmeta/inputs"))
   .settings(
     publishableSettings,
+    langmetaSettings,
     moduleName := "langmeta-inputs",
     description := "Langmeta APIs for source code"
   )
@@ -110,6 +116,7 @@ lazy val langmetaSemanticdb = crossProject
   .in(file("langmeta/semanticdb"))
   .settings(
     publishableSettings,
+    langmetaSettings,
     moduleName := "langmeta-semanticdb",
     description := "Semantic database APIs",
     // Protobuf setup for binary serialization.
@@ -129,6 +136,7 @@ lazy val langmeta = crossProject
   .in(file("langmeta/langmeta"))
   .settings(
     publishableSettings,
+    langmetaSettings,
     description := "Langmeta umbrella module that includes all public APIs",
     exposePaths("langmeta", Test)
   )

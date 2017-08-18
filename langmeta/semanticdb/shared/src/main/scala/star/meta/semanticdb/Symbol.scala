@@ -11,7 +11,7 @@ sealed trait Symbol extends Product {
 object Symbol {
   case object None extends Symbol {
     override def toString = syntax
-    override def syntax = s""
+    override def syntax = ""
     override def structure = s"""Symbol.None"""
   }
 
