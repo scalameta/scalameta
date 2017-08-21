@@ -1,7 +1,7 @@
 scalameta/semanticdb-integration/src/main/scala/example/Example.scala
 ---------------------------------------------------------------------
 Language:
-Scala211
+Scala212
 
 Names:
 [8..15): example <= _root_.example.
@@ -17,10 +17,10 @@ Symbols:
 _root_.example. => package example
 _root_.example.Example. => final object Example
 _root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String])Unit
-_root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: Array[String]
+_root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: scala.Array[String]
 _root_.scala.Array# => final class Array
 _root_.scala.Array#`<init>`(I)V. => primaryctor <init>: (_length: Int)Array[T]
-_root_.scala.Predef.String# => type String: String
+_root_.scala.Predef.String# => type String: java.lang.String
 _root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: Any)Unit
 _root_.scala.Unit# => abstract final class Unit
 _root_.scala.Unit#`<init>`()V. => primaryctor <init>: ()Unit
@@ -29,7 +29,7 @@ _root_.scala.Unit#`<init>`()V. => primaryctor <init>: ()Unit
 scalameta/semanticdb-integration/src/main/scala/example/Sugar.scala
 -------------------------------------------------------------------
 Language:
-Scala211
+Scala212
 
 Names:
 [8..15): example <= _root_.example.
@@ -53,7 +53,7 @@ _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;. => def emp
 _root_.scala.Int# => abstract final class Int
 _root_.scala.Int#`+`(I)I. => abstract def +: (x: Int)Int
 _root_.scala.Int#`<init>`()V. => primaryctor <init>: ()Int
-_root_.scala.collection.TraversableLike#headOption()Lscala/Option;. => def headOption: Option[A]
+_root_.scala.collection.TraversableLike#headOption()Lscala/Option;. => def headOption: scala.Option[A]
 _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;. => final def map: [B, That](f: A => B)(implicit bf: scala.collection.generic.CanBuildFrom[List[A],B,That])That
 _root_.scala.collection.immutable.List. => final object List
 _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;. => def stripPrefix: (prefix: String)String
@@ -68,7 +68,7 @@ Sugars:
   [0..1): * => _star_.
   [34..46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
 [54..70): scala.Predef.intArrayOps(*)
-  [13..24): intArrayOps => _root_.scala.Predef.intArrayOps([I)Lscala/collection/mutable/ArrayOps;.
+  [13..24): intArrayOps => _root_.scala.Predef.intArrayOps([I)[I.
   [25..26): * => _star_.
 [70..70): *(((ClassTag.Int): scala.reflect.ClassTag[Int]))
   [0..1): * => _star_.
