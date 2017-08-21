@@ -88,7 +88,20 @@ trait DenotationOps { self: DatabaseOps =>
 
     private def info: String = {
       if (gsym.isClass || gsym.isModule) ""
-      else gsym.info.toString.stripPrefix("=> ")
+      else {
+        val code = gsym.info.toString().stripPrefix("=> ")
+        val prefix = gsym.info.prefix
+        if ((code.indexOf('.') == -1) &&
+            !prefix.typeSymbol.isInstanceOf[g.NoSymbol]) {
+          // NOTE(olafur) the default pretty printer shortens the names of several
+          // magic symbols by stripping out their prefix, see for example `shorthands`
+          // in Types.scala. Here we insert the prefix back to emit fully qualified
+          // names for DenotationInfo.
+          s"${prefix.typeSymbol.fullName}.$code"
+        } else {
+          code
+        }
+      }
     }
 
     def toDenotation: m.Denotation = {
