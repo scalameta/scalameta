@@ -5,6 +5,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import scala.meta.testkit.DiffAssertions
+import lang.meta.internal.io.FileIO
 import org.scalatest.FunSuite
 
 class SemanticdbExpectSuite extends FunSuite with DiffAssertions {
@@ -16,7 +17,7 @@ class SemanticdbExpectSuite extends FunSuite with DiffAssertions {
       // later down the road if that turns out to be useful.
       case "2" :: "12" :: Nil =>
         val obtained = SemanticdbExpectSuite.loadDatabase.toString
-        val expected = new String(Files.readAllBytes(SemanticdbExpectSuite.expectPath))
+        val expected = FileIO.slurp(AbsolutePath(SemanticdbExpectSuite.expectPath))
         assertNoDiff(obtained, expected)
       case _ => // do nothing.
     }
