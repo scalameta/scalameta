@@ -138,28 +138,28 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |_root_.F.package. => packageobject package
       |_root_.f. => package f
       |_root_.f.C1# => class C1
-      |_root_.f.C1#(p1) => param p1: Int
-      |_root_.f.C1#(p2) => val param p2: Int
+      |_root_.f.C1#(p1) => param p1: scala.Int
+      |_root_.f.C1#(p2) => val param p2: scala.Int
       |_root_.f.C1#(p3) => var param p3_=: (x$1: Int)Unit
       |_root_.f.C1#T1# => abstract type T1:  <: Int
-      |_root_.f.C1#T2# => type T2: Int
+      |_root_.f.C1#T2# => type T2: scala.Int
       |_root_.f.C1#`<init>`()V. => secondaryctor <init>: ()f.C1
       |_root_.f.C1#`<init>`(III)V. => primaryctor <init>: (p1: Int, p2: Int, p3: Int)f.C1
-      |_root_.f.C1#f1. => val f1: Nothing
-      |_root_.f.C1#f1.l1. => val l1: Nothing
-      |_root_.f.C1#f1.l2. => var l2: Nothing
+      |_root_.f.C1#f1. => val f1: scala.Nothing
+      |_root_.f.C1#f1.l1. => val l1: scala.Nothing
+      |_root_.f.C1#f1.l2. => var l2: scala.Nothing
       |_root_.f.C1#f2. => var f2_=: (x$1: Nothing)Unit
       |_root_.f.C1#m1(I)I. => def m1: [T](x: Int)Int
-      |_root_.f.C1#m1(I)I.(x) => param x: Int
+      |_root_.f.C1#m1(I)I.(x) => param x: scala.Int
       |_root_.f.C1#m1(I)I.T# => typeparam T
-      |_root_.f.C1#m2()Lscala/Nothing;. => macro m2: Nothing
+      |_root_.f.C1#m2()Lscala/Nothing;. => macro m2: scala.Nothing
       |_root_.f.C2# => abstract class C2
       |_root_.f.C2#`<init>`()V. => primaryctor <init>: ()f.C2
-      |_root_.f.C2#m3()I. => abstract def m3: Int
-      |_root_.f.C2#m4()Lscala/Nothing;. => final def m4: Nothing
+      |_root_.f.C2#m3()I. => abstract def m3: scala.Int
+      |_root_.f.C2#m4()Lscala/Nothing;. => final def m4: scala.Nothing
       |_root_.f.C3# => sealed class C3
       |_root_.f.C3#`<init>`()V. => primaryctor <init>: ()f.C3
-      |_root_.f.C3#m3()I. => def m3: Int
+      |_root_.f.C3#m3()I. => def m3: scala.Int
       |_root_.f.C3#toString()Ljava/lang/String;. => def toString: ()String
       |_root_.f.M. => final object M
       |_root_.f.M.C1# => case class C1
@@ -168,20 +168,20 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |_root_.f.M.C2#[T] => covariant typeparam T
       |_root_.f.M.C2#[U] => contravariant typeparam U
       |_root_.f.M.C2#`<init>`()V. => primaryctor <init>: ()f.M.C2[T,U]
-      |_root_.f.M.i1()Lscala/Nothing;. => implicit def i1: Nothing
-      |_root_.f.M.l1. => lazy val l1: Nothing
+      |_root_.f.M.i1()Lscala/Nothing;. => implicit def i1: scala.Nothing
+      |_root_.f.M.l1. => lazy val l1: scala.Nothing
       |_root_.f.T# => trait T
       |_root_.f.T#$init$()V. => primaryctor $init$: ()Unit
-      |_root_.f.T#f1. => private val f1: Nothing
-      |_root_.f.T#f2. => private val f2: Nothing
-      |_root_.f.T#f3. => private val f3: Nothing
+      |_root_.f.T#f1. => private val f1: scala.Nothing
+      |_root_.f.T#f2. => private val f2: scala.Nothing
+      |_root_.f.T#f3. => private val f3: scala.Nothing
       |_root_.f.T#f4. => protected var f4_=: (x$1: Nothing)Unit
       |_root_.f.T#f5. => protected var f5_=: (x$1: Nothing)Unit
       |_root_.f.T#f6. => protected var f6_=: (x$1: Nothing)Unit
       |_root_.scala. => package scala
       |_root_.scala.Int# => abstract final class Int
       |_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()Int
-      |_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: Nothing
+      |_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: scala.Nothing
       |_root_.scala.language. => final object language
       |_root_.scala.language.experimental. => final object experimental
       |_root_.scala.language.experimental.macros. => implicit lazy val macros: languageFeature.experimental.macros
@@ -539,6 +539,25 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       val denot2 = db.symbols.find(_.symbol == listToString).get.denot
       assert(denot1.isJavaDefined)
       assert(!denot2.isJavaDefined)
+    }
+  )
+
+  targeted(
+    """
+      |object a {
+      |  val <<a>> = new java.lang.StringBuilder
+      |  val <<b>> = new StringBuilder
+      |  val <<c>>: Traversable[Int] = List(1)
+      |  val <<d>> = Map(1 -> 2)
+      |}
+    """.stripMargin, { (db, a, b, c, d) =>
+      def check(symbol: Symbol, info: String) = {
+        assert(db.symbols.find(_.sym == symbol).get.denot.info == info)
+      }
+      check(a, "java.lang.StringBuilder")
+      check(b, "scala.collection.mutable.StringBuilder")
+      check(c, "scala.collection.Traversable[Int]")
+      check(d, "scala.collection.immutable.Map[Int,Int]")
     }
   )
 
