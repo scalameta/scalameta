@@ -81,6 +81,11 @@ object Input {
     override def toString = s"""Input.Sugar("$value", $input, $start, $end)"""
   }
 
+  final case class Denotation(value: scala.Predef.String, symbol: scala.Predef.String) extends Input {
+    lazy val chars = value.toCharArray
+    override def toString = s"""Input.Denotation("$value", "$symbol")"""
+  }
+
   // NOTE: `start` and `end` are String.substring-style,
   // i.e. `start` is inclusive and `end` is not.
   // Therefore Slice.end can point to the last character of input plus one.

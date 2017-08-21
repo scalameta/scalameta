@@ -29,6 +29,7 @@ Messages:
 Symbols:
 _root_.example. => package example
 _root_.example.Example. => final object Example
+<<<<<<< 9dd45b2c41b09f1d3d5fa79bb7aa959242bf107b
 _root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String])Unit
 _root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: Array[String]
 _root_.scala. => package scala
@@ -47,6 +48,32 @@ _root_.scala.collection.mutable.Stack#`<init>`()V. => secondaryctor <init>: ()sc
 _root_.scala.collection.mutable.Stack#`<init>`(Lscala/collection/immutable/List;)V. => private primaryctor <init>: (elems: List[A])scala.collection.mutable.Stack[A]
 _root_.scala.concurrent. => package concurrent
 _root_.scala.concurrent.Future.;_root_.scala.concurrent.Future# => val <import scala.concurrent.Future>: scala.concurrent.Future.type <and> scala.concurrent.Future
+=======
+_root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: scala.Array[scala.Predef.String])scala.Unit
+  [46..50): Unit => _root_.scala.Unit#
+  [13..18): Array => _root_.scala.Array#
+  [19..24): scala => _root_.scala.
+  [25..31): Predef => _root_.scala.Predef.
+  [32..38): String => _root_.scala.Predef.String#
+_root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: scala.Array[scala.Predef.String]
+  [18..24): Predef => _root_.scala.Predef.
+  [25..31): String => _root_.scala.Predef.String#
+  [6..11): Array => _root_.scala.Array#
+  [12..17): scala => _root_.scala.
+_root_.scala.Array# => final class Array
+_root_.scala.Array#`<init>`(I)V. => primaryctor <init>: (_length: scala.Int)scala.Array[T]
+  [26..31): Array => _root_.scala.Array#
+  [32..33): T => _root_.scala.Array#[T]
+  [16..19): Int => _root_.scala.Int#
+_root_.scala.Predef.String# => type String: java.lang.String
+  [10..16): String => _root_.java.lang.String#
+_root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: scala.Any)scala.Unit
+  [20..24): Unit => _root_.scala.Unit#
+  [10..13): Any => _root_.scala.Any#
+_root_.scala.Unit# => abstract final class Unit
+_root_.scala.Unit#`<init>`()V. => primaryctor <init>: ()scala.Unit
+  [8..12): Unit => _root_.scala.Unit#
+>>>>>>> Add semantic information for denotation types.
 
 
 scalameta/semanticdb-integration/src/main/scala/example/Sugar.scala
@@ -71,30 +98,67 @@ Symbols:
 _root_.example. => package example
 _root_.example.Sugar# => class Sugar
 _root_.example.Sugar#`<init>`()V. => primaryctor <init>: ()example.Sugar
+  [10..15): Sugar => _root_.example.Sugar#
 _root_.scala.Array. => final object Array
-_root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;. => def empty: [T](implicit evidence$1: scala.reflect.ClassTag[T])Array[T]
+_root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;. => def empty: [T](implicit evidence$1: scala.reflect.ClassTag[T])scala.Array[T]
+  [63..64): T => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.[T]
+  [39..47): ClassTag => _root_.scala.reflect.ClassTag#
+  [48..49): T => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.[T]
+  [57..62): Array => _root_.scala.Array#
 _root_.scala.Int# => abstract final class Int
+<<<<<<< 9dd45b2c41b09f1d3d5fa79bb7aa959242bf107b
 _root_.scala.Int#`+`(I)I. => abstract def +: (x: Int)Int
 _root_.scala.Int#`<init>`()V. => primaryctor <init>: ()Int
 _root_.scala.collection.TraversableLike#headOption()Lscala/Option;. => def headOption: Option[A]
 _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;. => final def map: [B, That](f: A => B)(implicit bf: scala.collection.generic.CanBuildFrom[List[A],B,That])That
+=======
+_root_.scala.Int#`+`(I)I. => abstract def +: (x: scala.Int)scala.Int
+  [20..23): Int => _root_.scala.Int#
+  [10..13): Int => _root_.scala.Int#
+_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()scala.Int
+  [8..11): Int => _root_.scala.Int#
+_root_.scala.collection.TraversableLike#headOption()Lscala/Option;. => def headOption: scala.Option[A]
+  [6..12): Option => _root_.scala.Option#
+  [13..14): A => _root_.scala.collection.TraversableLike#[A]
+_root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;. => final def map: [B,That](f: scala.Function1[A,B])(implicit bf: scala.collection.generic.CanBuildFrom[scala.collection.immutable.List[A],B,That])That
+  [112..116): List => _root_.scala.collection.immutable.List#
+  [128..132): That => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[That]
+  [117..118): A => _root_.scala.collection.immutable.List#[A]
+  [122..126): That => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[That]
+  [72..84): CanBuildFrom => _root_.scala.collection.generic.CanBuildFrom#
+  [120..121): B => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[B]
+  [18..27): Function1 => _root_.scala.Function1#
+  [28..29): A => _root_.scala.collection.immutable.List#[A]
+  [30..31): B => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[B]
+>>>>>>> Add semantic information for denotation types.
 _root_.scala.collection.immutable.List. => final object List
-_root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;. => def stripPrefix: (prefix: String)String
+_root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;. => def stripPrefix: (prefix: scala.Predef.String)java.lang.String
+  [39..45): String => _root_.java.lang.String#
+  [9..14): scala => _root_.scala.
+  [22..28): String => _root_.scala.Predef.String#
+  [15..21): Predef => _root_.scala.Predef.
 
 Sugars:
-[37..37): *.apply[Int]
+[37..37): *.apply[scala.Int]
   [0..1): * => _star_.
   [2..7): apply => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
-[44..44): *[Int, List[Int]]
+  [14..17): Int => _root_.scala.Int#
+[44..44): *[scala.Int, scala.collection.immutable.List[scala.Int]]
   [0..1): * => _star_.
-[51..51): *(scala.collection.immutable.List.canBuildFrom[Int])
+  [8..11): Int => _root_.scala.Int#
+  [40..44): List => _root_.scala.collection.immutable.List#
+  [51..54): Int => _root_.scala.Int#
+[51..51): *(scala.collection.immutable.List.canBuildFrom[scala.Int])
   [0..1): * => _star_.
   [34..46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
+  [53..56): Int => _root_.scala.Int#
 [54..70): scala.Predef.intArrayOps(*)
   [13..24): intArrayOps => _root_.scala.Predef.intArrayOps([I)[I.
   [25..26): * => _star_.
-[70..70): *(((ClassTag.Int): scala.reflect.ClassTag[Int]))
+[70..70): *(((ClassTag.Int): scala.reflect.ClassTag[scala.Int]))
   [0..1): * => _star_.
+  [48..51): Int => _root_.scala.Int#
+  [33..41): ClassTag => _root_.scala.reflect.ClassTag#
   [13..16): Int => _root_.scala.reflect.ClassTag.Int.
 [84..90): scala.Predef.augmentString(*)
   [13..26): augmentString => _root_.scala.Predef.augmentString(Ljava/lang/String;)Ljava/lang/String;.

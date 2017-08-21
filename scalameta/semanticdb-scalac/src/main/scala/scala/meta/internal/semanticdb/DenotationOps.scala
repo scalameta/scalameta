@@ -1,6 +1,8 @@
 package scala.meta.internal
 package semanticdb
 
+import java.io.PrintWriter
+import java.io.StringWriter
 import scala.{meta => m}
 import scala.{meta => mf}
 import scala.reflect.internal.{Flags => gf}
@@ -86,26 +88,22 @@ trait DenotationOps { self: DatabaseOps =>
       gsym.decodedName.toString
     }
 
-    private def info: String = {
-      if (gsym.isClass || gsym.isModule) ""
+    private def info: (String, List[m.ResolvedName]) = {
+      if (gsym.isClass || gsym.isModule) "" -> Nil
       else {
-        val code = gsym.info.toString().stripPrefix("=> ")
-        val prefix = gsym.info.prefix
-        if ((code.indexOf('.') == -1) &&
-            !prefix.typeSymbol.isInstanceOf[g.NoSymbol]) {
-          // NOTE(olafur) the default pretty printer shortens the names of several
-          // magic symbols by stripping out their prefix, see for example `shorthands`
-          // in Types.scala. Here we insert the prefix back to emit fully qualified
-          // names for DenotationInfo.
-          s"${prefix.typeSymbol.fullName}.$code"
-        } else {
-          code
+        val sugar = showSugar(gsym.info)
+        val input = m.Input.Denotation(sugar.text, symbol.syntax)
+        val resolvedNames = sugar.names.map {
+          case SugarRange(start, end, symbol) =>
+            m.ResolvedName(m.Position.Range(input, start, end), symbol, isBinder = false)
         }
+        sugar.text -> resolvedNames
       }
     }
 
     def toDenotation: m.Denotation = {
-      m.Denotation(flags, name, info)
+      val (minfo, mnames) = info
+      m.Denotation(flags, name, minfo, mnames)
     }
   }
 }
