@@ -25,7 +25,7 @@ final case class Attributes(
     appendSection("Language", List(language))
     appendSection("Names", names.sortBy(_.pos.start).map(_.syntax))
     appendSection("Messages", messages.sortBy(_.pos.start).map(_.syntax))
-    appendSection("Symbols", symbols.sortBy(_.sym.syntax).map(_.syntax))
+    appendSection("Symbols", symbols.sortBy(_.symbol.syntax).map(_.syntax))
     appendSection("Sugars", sugars.sortBy(_.pos.start).map(_.syntax))
     lines.mkString(EOL)
   }

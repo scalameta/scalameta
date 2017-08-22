@@ -125,7 +125,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
       case (s, e) =>
         val symbols = source.collect {
           case name: m.Name if name.pos.start == s && name.pos.end == e =>
-            database.names.find(_.pos == name.pos).map(_.sym)
+            database.names.find(_.pos == name.pos).map(_.symbol)
         }
         val chevron = "<<" + code.substring(s, e) + ">>"
         symbols match {

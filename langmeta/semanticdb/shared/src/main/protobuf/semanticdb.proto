@@ -20,7 +20,7 @@ message Attributes {
 
 message ResolvedName {
   Position pos = 1;
-  string sym = 2;
+  string symbol = 2;
   bool is_binder = 3;
 }
 
@@ -42,7 +42,7 @@ message Message {
 }
 
 message ResolvedSymbol {
-  string sym = 1;
+  string symbol = 1;
   Denotation denot = 2;
 }
 
