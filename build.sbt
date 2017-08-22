@@ -330,10 +330,12 @@ lazy val semanticdbIntegration = project
     description := "Sources to compile to build a semanticdb for tests.",
     sharedSettings,
     nonPublishableSettings,
+    scalacOptions -= "-Xfatal-warnings",
     scalacOptions ++= {
       val pluginJar = Keys.`package`.in(semanticdbScalac, Compile).value.getAbsolutePath
       Seq(
         s"-Xplugin:$pluginJar",
+        s"-Ywarn-unused-import",
         "-Yrangepos",
         s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
         s"-P:semanticdb:failures:error", // fail fast during development.

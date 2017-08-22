@@ -1,7 +1,6 @@
 package scala.meta.internal
 package semanticdb
 
-import org.scalameta.unreachable
 import scala.collection.mutable
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
@@ -40,6 +39,7 @@ trait AttributesOps { self: DatabaseOps =>
         val inferredImplicitConv = mutable.Set.empty[g.Tree] // synthesized implicit conversions
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
+        unit.body.updateAttachment(mstarts) // used in MessagesOps
         val mends = mutable.Map[Int, m.Name]() // end offset -> tree
         val margnames = mutable.Map[Int, List[m.Name]]() // start offset of enclosing apply -> its arg names
         val mwithins = mutable.Map[m.Tree, m.Name]() // name of enclosing member -> name of private/protected within
@@ -394,30 +394,6 @@ trait AttributesOps { self: DatabaseOps =>
           traverser.traverse(unit.body)
         }
 
-        val messages = unit.hijackedMessages.map {
-          case (gpos, gseverity, text) =>
-            val mpos = {
-              // NOTE: The caret in unused import warnings points to Importee.pos, but
-              // the message position start/end point to the enclosing Import.pos.
-              // See https://github.com/scalameta/scalameta/issues/839
-              if (text == "Unused import") {
-                mstarts.get(gpos.point) match {
-                  case Some(name) => name.pos
-                  case None =>
-                    if (unit.source.content(gpos.point) == '_') // Importee.Wildcard()
-                      gpos.withStart(gpos.point).withEnd(gpos.point + 1).toMeta
-                    else gpos.toMeta
-                }
-              } else gpos.toMeta
-            }
-            val mseverity = gseverity match {
-              case 0 => m.Severity.Info
-              case 1 => m.Severity.Warning
-              case 2 => m.Severity.Error
-              case _ => unreachable
-            }
-            m.Message(mpos, mseverity, text)
-        }
         val input = unit.source.toInput
 
         val sugars = inferred.toIterator.map {
@@ -428,7 +404,7 @@ trait AttributesOps { self: DatabaseOps =>
           input,
           language,
           names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,
-          messages.toList,
+          Nil, // added after jvm phase.
           denotations.map { case (sym, denot) => m.ResolvedSymbol(sym, denot) }.toList,
           sugars.toList
         )
