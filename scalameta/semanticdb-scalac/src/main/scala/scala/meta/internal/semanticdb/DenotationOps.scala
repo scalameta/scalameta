@@ -1,11 +1,11 @@
 package scala.meta.internal
 package semanticdb
 
-import java.io.PrintWriter
-import java.io.StringWriter
 import scala.{meta => m}
 import scala.{meta => mf}
 import scala.reflect.internal.{Flags => gf}
+import scala.util.Sorting
+import org.scalameta.logger
 
 trait DenotationOps { self: DatabaseOps =>
   import g._
@@ -88,21 +88,22 @@ trait DenotationOps { self: DatabaseOps =>
       gsym.decodedName.toString
     }
 
-    private def info: (String, List[m.ResolvedName]) = {
+    private def info(symbol: m.Symbol): (String, List[m.ResolvedName]) = {
       if (gsym.isClass || gsym.isModule) "" -> Nil
       else {
         val sugar = showSugar(gsym.info)
         val input = m.Input.Denotation(sugar.text, symbol.syntax)
-        val resolvedNames = sugar.names.map {
-          case SugarRange(start, end, symbol) =>
-            m.ResolvedName(m.Position.Range(input, start, end), symbol, isBinder = false)
-        }
-        sugar.text -> resolvedNames
+        val resolvedNames = sugar.names.toIterator.map {
+          case SugarRange(start, end, sugarSymbol) =>
+            m.ResolvedName(m.Position.Range(input, start, end), sugarSymbol, isBinder = false)
+        }.toArray
+        Sorting.quickSort(resolvedNames)(Ordering.by[m.ResolvedName, Int](_.pos.start))
+        sugar.text -> resolvedNames.toList
       }
     }
 
-    def toDenotation: m.Denotation = {
-      val (minfo, mnames) = info
+    def toDenotation(symbol: m.Symbol): m.Denotation = {
+      val (minfo, mnames) = info(symbol)
       m.Denotation(flags, name, minfo, mnames)
     }
   }

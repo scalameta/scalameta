@@ -58,9 +58,9 @@ package object semanticdb {
           object sResolvedSymbol {
             def unapply(sresolvedsymbol: s.ResolvedSymbol): Option[d.ResolvedSymbol] = sresolvedsymbol match {
               case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dinfo: String, snames))) =>
+                val ddenotinput = dInput.Denotation(dinfo, dsym.syntax)
                 val dnames = snames.toIterator.map {
                   case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disBinder) =>
-                    val ddenotinput = dInput.Denotation(dinfo, dsym.syntax)
                     val ddenotpos = dPosition.Range(ddenotinput, sstart, send)
                     d.ResolvedName(ddenotpos, dsym, disBinder)
                   case other =>
