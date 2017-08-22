@@ -78,7 +78,8 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    m.Database(List(unit.toAttributes))
+    val mattrs = unit.toAttributes.copy(messages = unit.reportedMessages)
+    m.Database(List(mattrs))
   }
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
