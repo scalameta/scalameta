@@ -661,7 +661,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
     """.stripMargin, { (db, a, b, c, d) =>
       def check(symbol: Symbol, info: String) = {
-        assertNoDiff(db.symbols.find(_.sym == symbol).get.denot.info, info)
+        assertNoDiff(db.symbols.find(_.symbol == symbol).get.denot.info, info)
       }
       check(a, "java.lang.StringBuilder")
       check(b, "scala.collection.mutable.StringBuilder")

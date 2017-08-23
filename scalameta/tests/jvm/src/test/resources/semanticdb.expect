@@ -29,26 +29,6 @@ Messages:
 Symbols:
 _root_.example. => package example
 _root_.example.Example. => final object Example
-<<<<<<< 9dd45b2c41b09f1d3d5fa79bb7aa959242bf107b
-_root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String])Unit
-_root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: Array[String]
-_root_.scala. => package scala
-_root_.scala.Array# => final class Array
-_root_.scala.Array#`<init>`(I)V. => primaryctor <init>: (_length: Int)Array[T]
-_root_.scala.Int# => abstract final class Int
-_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()Int
-_root_.scala.Predef.String# => type String: String
-_root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: Any)Unit
-_root_.scala.Unit# => abstract final class Unit
-_root_.scala.Unit#`<init>`()V. => primaryctor <init>: ()Unit
-_root_.scala.collection. => package collection
-_root_.scala.collection.mutable. => package mutable
-_root_.scala.collection.mutable.Stack# => class Stack
-_root_.scala.collection.mutable.Stack#`<init>`()V. => secondaryctor <init>: ()scala.collection.mutable.Stack[A]
-_root_.scala.collection.mutable.Stack#`<init>`(Lscala/collection/immutable/List;)V. => private primaryctor <init>: (elems: List[A])scala.collection.mutable.Stack[A]
-_root_.scala.concurrent. => package concurrent
-_root_.scala.concurrent.Future.;_root_.scala.concurrent.Future# => val <import scala.concurrent.Future>: scala.concurrent.Future.type <and> scala.concurrent.Future
-=======
 _root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: scala.Array[scala.Predef.String])scala.Unit
   [13..18): Array => _root_.scala.Array#
   [19..24): scala => _root_.scala.
@@ -60,11 +40,15 @@ _root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: scala.Ar
   [12..17): scala => _root_.scala.
   [18..24): Predef => _root_.scala.Predef.
   [25..31): String => _root_.scala.Predef.String#
+_root_.scala. => package scala
 _root_.scala.Array# => final class Array
 _root_.scala.Array#`<init>`(I)V. => primaryctor <init>: (_length: scala.Int)scala.Array[T]
   [16..19): Int => _root_.scala.Int#
   [26..31): Array => _root_.scala.Array#
   [32..33): T => _root_.scala.Array#[T]
+_root_.scala.Int# => abstract final class Int
+_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()scala.Int
+  [8..11): Int => _root_.scala.Int#
 _root_.scala.Predef.String# => type String: java.lang.String
   [10..16): String => _root_.java.lang.String#
 _root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: scala.Any)scala.Unit
@@ -73,7 +57,19 @@ _root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: scala.Any)
 _root_.scala.Unit# => abstract final class Unit
 _root_.scala.Unit#`<init>`()V. => primaryctor <init>: ()scala.Unit
   [8..12): Unit => _root_.scala.Unit#
->>>>>>> Add semantic information for denotation types.
+_root_.scala.collection. => package collection
+_root_.scala.collection.mutable. => package mutable
+_root_.scala.collection.mutable.Stack# => class Stack
+_root_.scala.collection.mutable.Stack#`<init>`()V. => secondaryctor <init>: ()scala.collection.mutable.Stack[A]
+  [27..32): Stack => _root_.scala.collection.mutable.Stack#
+  [33..34): A => _root_.scala.collection.mutable.Stack#[A]
+_root_.scala.collection.mutable.Stack#`<init>`(Lscala/collection/immutable/List;)V. => private primaryctor <init>: (elems: scala.collection.immutable.List[A])scala.collection.mutable.Stack[A]
+  [35..39): List => _root_.scala.collection.immutable.List#
+  [40..41): A => _root_.scala.collection.mutable.Stack#[A]
+  [68..73): Stack => _root_.scala.collection.mutable.Stack#
+  [74..75): A => _root_.scala.collection.mutable.Stack#[A]
+_root_.scala.concurrent. => package concurrent
+_root_.scala.concurrent.Future.;_root_.scala.concurrent.Future# => val <import scala.concurrent.Future>: scala.concurrent.Future.type <and> scala.concurrent.Future
 
 
 scalameta/semanticdb-integration/src/main/scala/example/Sugar.scala
@@ -106,12 +102,6 @@ _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;. => def emp
   [57..62): Array => _root_.scala.Array#
   [63..64): T => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.[T]
 _root_.scala.Int# => abstract final class Int
-<<<<<<< 9dd45b2c41b09f1d3d5fa79bb7aa959242bf107b
-_root_.scala.Int#`+`(I)I. => abstract def +: (x: Int)Int
-_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()Int
-_root_.scala.collection.TraversableLike#headOption()Lscala/Option;. => def headOption: Option[A]
-_root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;. => final def map: [B, That](f: A => B)(implicit bf: scala.collection.generic.CanBuildFrom[List[A],B,That])That
-=======
 _root_.scala.Int#`+`(I)I. => abstract def +: (x: scala.Int)scala.Int
   [10..13): Int => _root_.scala.Int#
   [20..23): Int => _root_.scala.Int#
@@ -124,16 +114,12 @@ _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/ge
   [18..27): Function1 => _root_.scala.Function1#
   [28..29): A => _root_.scala.collection.immutable.List#[A]
   [30..31): B => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[B]
-<<<<<<< 983f05bfa27149eac8e97060ba8678bc6f727a9c
->>>>>>> Add semantic information for denotation types.
-=======
   [72..84): CanBuildFrom => _root_.scala.collection.generic.CanBuildFrom#
   [112..116): List => _root_.scala.collection.immutable.List#
   [117..118): A => _root_.scala.collection.immutable.List#[A]
   [120..121): B => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[B]
   [122..126): That => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[That]
   [128..132): That => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[That]
->>>>>>> Fix issues caught after running CI.
 _root_.scala.collection.immutable.List. => final object List
 _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;. => def stripPrefix: (prefix: scala.Predef.String)java.lang.String
   [9..14): scala => _root_.scala.

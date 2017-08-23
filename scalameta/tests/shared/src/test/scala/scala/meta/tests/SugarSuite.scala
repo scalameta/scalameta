@@ -9,10 +9,10 @@ class SugarSuite extends BaseSemanticSuite {
     val source = entry.input.parse[Source].get
     val sugarAsserts = source.collect {
       case t: Defn.Def if t.name.value == "main" =>
-        val symbol = entry.names.find(_.pos == t.name.pos).get.sym
+        val symbol = entry.names.find(_.pos == t.name.pos).get.symbol
         val expectedInput =
           Input.Denotation("(args: scala.Array[scala.Predef.String])scala.Unit", symbol.syntax)
-        val infoSymbols = entry.symbols.find(_.sym == symbol).get.denot.resolvedNames
+        val infoSymbols = entry.symbols.find(_.symbol == symbol).get.denot.resolvedNames
         assert(infoSymbols.nonEmpty)
         infoSymbols.foreach {
           case ResolvedName(Position.Range(input, _, _), _, false) =>
