@@ -5,6 +5,8 @@ import org.scalatest._
 import scala.meta._
 import scala.meta.dialects.Scala211
 
+import compat.Platform.EOL
+
 class SuccessSuite extends FunSuite {
   test("rank-0 liftables") {
     assert(q"foo[${42}]".structure === "Term.ApplyType(Term.Name(\"foo\"), List(Lit.Int(42)))")
@@ -1883,12 +1885,12 @@ class SuccessSuite extends FunSuite {
     |{
     |  class C
     |  class C
-    |}""".trim.stripMargin)
+    |}""".trim.stripMargin.split('\n').mkString(EOL))
     assert(q"{ $stat; $stat }".syntax === """
     |{
     |  class C
     |  class C
-    |}""".trim.stripMargin)
+    |}""".trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("#450") {
@@ -1906,7 +1908,7 @@ class SuccessSuite extends FunSuite {
       |  println("another stat")
       |  def baz: Unit = {}
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("#458") {
@@ -2003,6 +2005,6 @@ class SuccessSuite extends FunSuite {
       |  y
       |  z
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 }

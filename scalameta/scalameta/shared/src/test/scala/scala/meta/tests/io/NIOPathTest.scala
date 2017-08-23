@@ -9,9 +9,11 @@ import scala.meta.internal.io.PathIO
 
 class NIOPathTest extends FunSuite {
 
+  def rootUri = File.listRoots()(0).toURI
+
   def file: Path = Paths.get("build.sbt")
   def project: Path = Paths.get("project")
-  def abs: Path = Paths.get(File.separator).resolve("bar").resolve("foo")
+  def abs: Path = Paths.get(rootUri).resolve("bar").resolve("foo")
   def cwd: Path = Paths.get(PlatformPathIO.workingDirectoryString)
   val nonNormalizedFile: Path = Paths.get("project", "..", "bin", "scalafmt")
 

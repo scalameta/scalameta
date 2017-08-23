@@ -40,7 +40,6 @@ class MultipathSuite extends FunSuite {
   }
 
   test("Classpath.syntax") {
-    assert(Classpath("/Foo/Bar.jar").syntax == "/Foo/Bar.jar")
     val fromPath = Classpath(List(AbsolutePath(tmp)))
     val fromSyntax = Classpath(tmp.getAbsolutePath)
     assert(fromPath == fromSyntax)

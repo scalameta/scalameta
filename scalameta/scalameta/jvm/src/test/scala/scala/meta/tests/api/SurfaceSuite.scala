@@ -113,7 +113,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
       |scala.meta.trees
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("prettyprinters for statics (core)") {
@@ -155,7 +155,7 @@ class SurfaceSuite extends FunSuite {
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("statics (trees)") {
@@ -303,7 +303,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Tuple
       |scala.meta.Type.Var
       |scala.meta.Type.With
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("statics (tokens)") {
@@ -396,6 +396,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.Xml.SpliceEnd
       |scala.meta.tokens.Token.Xml.SpliceStart
       |scala.meta.tokens.Token.Xml.Start
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 }

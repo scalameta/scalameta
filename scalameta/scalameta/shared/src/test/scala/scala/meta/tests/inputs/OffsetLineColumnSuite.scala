@@ -11,7 +11,7 @@ class OffsetLineColumnSuite extends FunSuite {
     super.test(testName) {
       val content = Input.String(s)
       val points = 0.to(content.chars.length).map(i => Position.Range(content, i, i))
-      val actual = points.map(p => s"${p.start} ${p.startLine} ${p.startColumn}").mkString(EOL)
+      val actual = points.map(p => s"${p.start} ${p.startLine} ${p.startColumn}").mkString("\n")
       if (actual != expected) Console.err.println(actual)
       assert(actual === expected)
     }

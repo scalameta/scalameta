@@ -35,7 +35,7 @@ class SbtSuite extends FunSuite {
     assert(tree.syntax === """
       |lazy val commonSettings = Seq(organization := "com.example", version := "0.1.0", scalaVersion := "2.11.7")
       |lazy val root = (project in file(".")).settings(commonSettings: _*).settings(name := "hello")
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
     assert(tree.structure === simpleBuildStructure)
   }
 
@@ -51,7 +51,7 @@ class SbtSuite extends FunSuite {
     |  settings(
     |    name := "hello"
     |  )
-  """.trim.stripMargin
+  """.trim.stripMargin.split('\n').mkString(EOL)
 
   private def simpleBuildStructure = {
     """
@@ -78,6 +78,6 @@ class SbtSuite extends FunSuite {
                 | Term.Name("settings")),
               | List(
                   |Term.ApplyInfix(Term.Name("name"), Term.Name(":="), Nil, List(Lit.String("hello"))))))))
-    """.trim.stripMargin.split(EOL).mkString("")
+    """.trim.stripMargin.split('\n').mkString("")
   }
 }
