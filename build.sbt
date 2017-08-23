@@ -390,8 +390,11 @@ lazy val readme = scalatex
     nonPublishableSettings,
     buildInfoSettings,
     // only needed for scalatex 0.3.8-pre until next scalatex release
-    exposePaths("readme", Runtime),
-    crossScalaVersions := LanguageVersions, // No need to cross-build.
+    {
+      sys.props("scala.color") = "false" // remove color from repl output
+      exposePaths("readme", Runtime)
+    },
+    crossScalaVersions := List(LanguageVersion), // No need to cross-build.
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     sources.in(Compile) ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
     watchSources ++= baseDirectory.value.listFiles.toList,

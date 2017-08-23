@@ -141,16 +141,6 @@ package object dialects {
     toplevelSeparator = ""
   )
 
-  implicit val Sbt0136 = Scala210.copy(
-    allowToplevelTerms = true,
-    toplevelSeparator = EOL
-  )
-
-  implicit val Sbt0137 = Scala210.copy(
-    allowToplevelTerms = true,
-    toplevelSeparator = ""
-  )
-
   implicit val Scala211 = Scala210.copy(
     allowCaseClassWithoutParameterList = false,
     allowSpliceUnderscores = true // SI-7715, only fixed in 2.11.0-M5
@@ -175,6 +165,21 @@ package object dialects {
     // https://github.com/scala/scala/pull/5310#issuecomment-290617202
     allowLiteralTypes = false,
     allowTrailingCommas = true
+  )
+
+  implicit val Sbt0136 = Scala210.copy(
+    allowToplevelTerms = true,
+    toplevelSeparator = EOL
+  )
+
+  implicit val Sbt0137 = Scala210.copy(
+    allowToplevelTerms = true,
+    toplevelSeparator = ""
+  )
+
+  implicit val Sbt1 = Scala212.copy(
+    allowToplevelTerms = true,
+    toplevelSeparator = ""
   )
 
   implicit val Typelevel212 = Scala212.copy(
@@ -231,6 +236,7 @@ object Dialect extends InternalDialect {
     "Scala210" -> Scala210,
     "Sbt0136" -> Sbt0136,
     "Sbt0137" -> Sbt0137,
+    "Sbt1" -> Sbt1,
     "Scala211" -> Scala211,
     "Typelevel211" -> Typelevel211,
     "Paradise211" -> Paradise211,

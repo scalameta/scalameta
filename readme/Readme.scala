@@ -68,6 +68,7 @@ object Readme {
     val code1 = s"import scala.meta._$EOL${unindent(code0).trim}"
     val result0 = executeInRepl(code1)
     val result1 = result0.split(EOL).drop(3).mkString(EOL)
+    print(".")
     hl.scala(result1)
   }
 
