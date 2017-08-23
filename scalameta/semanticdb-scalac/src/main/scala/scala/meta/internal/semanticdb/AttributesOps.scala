@@ -39,7 +39,7 @@ trait AttributesOps { self: DatabaseOps =>
         val inferredImplicitConv = mutable.Set.empty[g.Tree] // synthesized implicit conversions
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
-        unit.body.updateAttachment(mstarts) // used in MessagesOps
+        unit.body.appendMetadata("semanticdbMstarts" -> mstarts) // used in MessagesOps
         val mends = mutable.Map[Int, m.Name]() // end offset -> tree
         val margnames = mutable.Map[Int, List[m.Name]]() // start offset of enclosing apply -> its arg names
         val mwithins = mutable.Map[m.Tree, m.Name]() // name of enclosing member -> name of private/protected within
