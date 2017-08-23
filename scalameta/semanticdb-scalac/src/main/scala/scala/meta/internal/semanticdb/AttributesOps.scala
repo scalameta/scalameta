@@ -165,11 +165,10 @@ trait AttributesOps { self: DatabaseOps =>
 
                 names(mtree.pos) = symbol
                 if (mtree.isBinder) binders += mtree.pos
-                denotations(symbol) = gsym.toDenotation(symbol)
+                denotations(symbol) = gsym.toDenotation
                 if (gsym.isClass && !gsym.isTrait) {
                   val gprim = gsym.primaryConstructor
-                  val symbol = gprim.toSemantic
-                  denotations(symbol) = gprim.toDenotation(symbol)
+                  denotations(gprim.toSemantic) = gprim.toDenotation
                 }
                 todo -= mtree
 

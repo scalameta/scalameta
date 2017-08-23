@@ -88,11 +88,11 @@ trait DenotationOps { self: DatabaseOps =>
       gsym.decodedName.toString
     }
 
-    private def info(symbol: m.Symbol): (String, List[m.ResolvedName]) = {
+    private def info: (String, List[m.ResolvedName]) = {
       if (gsym.isClass || gsym.isModule) "" -> Nil
       else {
         val sugar = showSugar(gsym.info)
-        val input = m.Input.Denotation(sugar.text, symbol.syntax)
+        val input = m.Input.Denotation(sugar.text, gsym.toSemantic.syntax)
         val resolvedNames = sugar.names.toIterator.map {
           case SugarRange(start, end, sugarSymbol) =>
             m.ResolvedName(m.Position.Range(input, start, end), sugarSymbol, isBinder = false)
@@ -102,8 +102,8 @@ trait DenotationOps { self: DatabaseOps =>
       }
     }
 
-    def toDenotation(symbol: m.Symbol): m.Denotation = {
-      val (minfo, mnames) = info(symbol)
+    def toDenotation: m.Denotation = {
+      val (minfo, mnames) = info
       m.Denotation(flags, name, minfo, mnames)
     }
   }
