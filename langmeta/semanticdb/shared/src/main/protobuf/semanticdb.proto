@@ -50,6 +50,7 @@ message Denotation {
   int64 flags = 1;
   string name = 2;
   string info = 3;
+  repeated ResolvedName names = 4;
 }
 
 message Sugar {

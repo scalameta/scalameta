@@ -24,6 +24,9 @@ private[meta] trait Aliases {
     type Sugar = lang.meta.inputs.Input.Sugar
     val Sugar = lang.meta.inputs.Input.Sugar
 
+    type Denotation = lang.meta.inputs.Input.Denotation
+    val Denotation = lang.meta.inputs.Input.Denotation
+
     type Slice = lang.meta.inputs.Input.Slice
     val Slice = lang.meta.inputs.Input.Slice
   }

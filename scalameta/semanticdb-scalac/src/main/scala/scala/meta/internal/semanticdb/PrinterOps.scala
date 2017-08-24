@@ -10,6 +10,9 @@ import scala.reflect.internal.ModifierFlags._
 trait PrinterOps { self: DatabaseOps =>
   import g._
 
+  def showSugar(tpe: g.Type): AttributedSugar = {
+    showSugar(g.TypeTree(tpe))
+  }
   def showSugar(what: g.Tree): AttributedSugar = {
     val out = new StringWriter()
     val printer = SugarCodePrinter(out)
@@ -34,6 +37,12 @@ trait PrinterOps { self: DatabaseOps =>
     // + scalac deviation
     case class ResolvedName(syntax: String, symbol: m.Symbol)
     val names = mutable.HashMap.empty[(Int, Int), m.Symbol]
+    def printWithTrailingSpace(string: String): Unit =
+      if (string.isEmpty) ()
+      else {
+        this.print(string)
+        this.print(" ")
+      }
     override def print(args: Any*): Unit = args.foreach {
       case ResolvedName(syntax, symbol) =>
         val start = out.length
@@ -307,6 +316,73 @@ trait PrinterOps { self: DatabaseOps =>
         case _ => super.printTree(tree)
       }
     }
+
+    // + scalac deviation
+    def printType(tpe: Type): Unit = {
+      def wrapped[T](
+          ts: List[T],
+          open: String = "[",
+          close: String = "]",
+          forceOpen: Boolean = false)(f: T => Unit): Unit = {
+        if (ts.nonEmpty || forceOpen) {
+          this.print(open)
+          var first = true
+          ts.foreach { t =>
+            if (!first) {
+              this.print(",")
+            }
+            f(t)
+            first = false
+          }
+          this.print(close)
+        }
+      }
+      def prefix(pre: Type): Unit = {
+        if (!pre.typeSymbol.isInstanceOf[NoSymbol] &&
+            !pre.typeSymbol.isEmptyPrefix &&
+            !pre.typeSymbol.isEmptyPackage) {
+          this.printType(pre)
+          this.print(".")
+        }
+      }
+      tpe match {
+        case ThisType(result) =>
+          if (result.hasPackageFlag) {
+            this.print(result.fullNameString)
+          } else {
+            this.print(tpe.safeToString.stripSuffix(".type"))
+          }
+        case NullaryMethodType(result) =>
+          printType(result)
+        case SingleType(pre, sym) =>
+          prefix(pre)
+          this.print(ResolvedName(sym.decodedName, sym.toSemantic))
+        case TypeRef(pre, sym, args) =>
+          prefix(pre)
+          this.print(ResolvedName(sym.decodedName, sym.toSemantic))
+          wrapped(args)(printType)
+        case mt @ MethodType(params, result) =>
+          wrapped(params, "(", ")", forceOpen = true) { s =>
+            this.printWithTrailingSpace(s.flagString)
+            this.print(s.varianceString)
+            val nameString = s.nameString
+            this.print(nameString)
+            if (nameString.lastOption.exists(!_.isLetterOrDigit)) {
+              this.print(" ")
+            }
+            this.print(": ")
+            this.printType(s.typeSignature)
+            this.print(s.flagsExplanationString)
+          }
+          this.printType(result)
+        case PolyType(tparams, result) =>
+          wrapped(tparams)(s => this.print(s.decodedName))
+          this.printType(result)
+        case _ =>
+          super.print(tpe.safeToString)
+      }
+    }
+    // - scalac deviation
 
     override def printTree(tree: Tree): Unit = {
       parentsStack = tree :: parentsStack
@@ -695,7 +771,11 @@ trait PrinterOps { self: DatabaseOps =>
           if (!isEmptyTree(tt)) {
             val original = tt.original
             if (original != null) print(original)
-            else super.printTree(tree)
+            else {
+              // + scalac deviation
+              this.printType(tree.tpe)
+              // - scalac deviation
+            }
           }
 
         case AppliedTypeTree(tp, args) =>

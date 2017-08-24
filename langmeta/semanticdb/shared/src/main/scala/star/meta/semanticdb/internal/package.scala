@@ -55,11 +55,20 @@ package object semanticdb {
               }
             }
           }
-          object sDenotation {
-            def unapply(sdenot: s.Denotation): Option[d.Denotation] = sdenot match {
-              case s.Denotation(dflags, dname: String, dinfo: String) =>
-                Some(d.Denotation(dflags, dname, dinfo))
-              case _ => None
+          object sResolvedSymbol {
+            def unapply(sresolvedsymbol: s.ResolvedSymbol): Option[d.ResolvedSymbol] = sresolvedsymbol match {
+              case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dinfo: String, snames))) =>
+                val ddenotinput = dInput.Denotation(dinfo, dsym.syntax)
+                val dnames = snames.toIterator.map {
+                  case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disBinder) =>
+                    val ddenotpos = dPosition.Range(ddenotinput, sstart, send)
+                    d.ResolvedName(ddenotpos, dsym, disBinder)
+                  case other =>
+                    sys.error(s"bad protobuf: unsupported name $other")
+                }.toList
+                val ddenot = d.Denotation(dflags, dname, dinfo, dnames)
+                Some(d.ResolvedSymbol(dsym, ddenot))
+              case other => sys.error(s"bad protobuf: unsupported denotation $other")
             }
           }
           object sSugar {
@@ -87,8 +96,7 @@ package object semanticdb {
             case other => sys.error(s"bad protobuf: unsupported message $other")
           }.toList
           val dsymbols = ssymbols.map {
-            case s.ResolvedSymbol(d.Symbol(dsym), Some(sDenotation(ddenot))) => d.ResolvedSymbol(dsym, ddenot)
-            case other => sys.error(s"bad protobuf: unsupported denotation $other")
+            case sResolvedSymbol(dresolvedsymbol) => dresolvedsymbol
           }.toList
           val dsugars = ssugars.toIterator.map {
             case sSugar(dsugar) => dsugar
@@ -123,7 +131,14 @@ package object semanticdb {
           }
           object dDenotation {
             def unapply(ddenot: d.Denotation): Option[s.Denotation] = ddenot match {
-              case d.Denotation(sflags, sname, sinfo) => Some(s.Denotation(sflags, sname, sinfo))
+              case d.Denotation(sflags, sname, sinfo, dnames) =>
+                val snames = dnames.map {
+                  case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisBinder) =>
+                    s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisBinder)
+                  case other =>
+                    sys.error(s"bad database: unsupported position $other")
+                }
+                Some(s.Denotation(sflags, sname, sinfo, snames))
               case _ => None
             }
           }

@@ -4,6 +4,8 @@ package semanticdb
 import scala.{meta => m}
 import scala.{meta => mf}
 import scala.reflect.internal.{Flags => gf}
+import scala.util.Sorting
+import org.scalameta.logger
 
 trait DenotationOps { self: DatabaseOps =>
   import g._
@@ -86,13 +88,23 @@ trait DenotationOps { self: DatabaseOps =>
       gsym.decodedName.toString
     }
 
-    private def info: String = {
-      if (gsym.isClass || gsym.isModule) ""
-      else gsym.info.toString.stripPrefix("=> ")
+    private def info: (String, List[m.ResolvedName]) = {
+      if (gsym.isClass || gsym.isModule) "" -> Nil
+      else {
+        val sugar = showSugar(gsym.info)
+        val input = m.Input.Denotation(sugar.text, gsym.toSemantic.syntax)
+        val resolvedNames = sugar.names.toIterator.map {
+          case SugarRange(start, end, sugarSymbol) =>
+            m.ResolvedName(m.Position.Range(input, start, end), sugarSymbol, isBinder = false)
+        }.toArray
+        Sorting.quickSort(resolvedNames)(Ordering.by[m.ResolvedName, Int](_.pos.start))
+        sugar.text -> resolvedNames.toList
+      }
     }
 
     def toDenotation: m.Denotation = {
-      m.Denotation(flags, name, info)
+      val (minfo, mnames) = info
+      m.Denotation(flags, name, minfo, mnames)
     }
   }
 }

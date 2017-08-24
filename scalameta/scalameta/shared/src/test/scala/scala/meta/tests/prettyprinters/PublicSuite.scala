@@ -280,8 +280,18 @@ class PublicSuite extends FunSuite {
   }
 
   test("lang.meta.semanticdb.Denotation.toString") {
-    val denotation = Denotation(PRIVATE | CASE | CLASS, "C", "")
-    assert(denotation.toString === "private case class C")
+    val symbol = Symbol("_root_.E#")
+    val info = "[T](e: E)T"
+    val input = Input.Denotation(info, symbol.syntax)
+    val pos = Position.Range(input, 7, 8)
+    val names = List(ResolvedName(pos, symbol, isBinder = false))
+    val classC = Denotation(PRIVATE | CASE | CLASS, "C", "", Nil)
+    assert(classC.toString === "private case class C")
+    val defIdentity = Denotation(DEF | FINAL, "identity", info, names)
+    assert(defIdentity.toString ===
+      """final def identity: [T](e: E)T
+        |  [7..8): E => _root_.E#""".stripMargin
+    )
   }
 
   test("lang.meta.semanticdb.Database.toString") {
