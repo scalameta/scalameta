@@ -80,10 +80,12 @@ trait JSPath extends js.Any {
   def sep: String = js.native
   def delimiter: String = js.native
   def isAbsolute(path: String): Boolean = js.native
+  def parse(path: String): JSPath = js.native
   def resolve(paths: String*): String = js.native
   def normalize(path: String): String = js.native
   def basename(path: String): String = js.native
   def dirname(path: String): String = js.native
+  def root: String = js.native
   def relative(from: String, to: String): String = js.native
   def join(first: String, more: String*): String = js.native
 }
