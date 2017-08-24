@@ -15,9 +15,6 @@ object FileIO {
   def slurp(path: AbsolutePath, charset: Charset): String =
     PlatformFileIO.slurp(path, charset)
 
-  def slurp(path: AbsolutePath): String =
-    slurp(path, Charset.forName("UTF-8"))
-
   def listFiles(path: AbsolutePath): ListFiles =
     PlatformFileIO.listFiles(path)
 
