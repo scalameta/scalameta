@@ -21,6 +21,10 @@ Names:
 [133..139): String => _root_.scala.Predef.String#
 [143..147): Unit => _root_.scala.Unit#
 [156..163): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
+[177..178): x <= _root_.example.Example.x.
+[181..191): sourcecode => _root_.sourcecode.
+[192..196): Name => _root_.sourcecode.Name.
+[197..205): generate => _root_.sourcecode.Name.generate()Lsourcecode/Name;.
 
 Messages:
 [41..47): [warning] Unused import
@@ -40,6 +44,9 @@ _root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: scala.Ar
   [12..17): scala => _root_.scala.
   [18..24): Predef => _root_.scala.Predef.
   [25..31): String => _root_.scala.Predef.String#
+_root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String])Unit
+_root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: Array[String]
+_root_.example.Example.x. => val x: sourcecode.Name
 _root_.scala. => package scala
 _root_.scala.Array# => final class Array
 _root_.scala.Array#`<init>`(I)V. => primaryctor <init>: (_length: scala.Int)scala.Array[T]
@@ -70,6 +77,9 @@ _root_.scala.collection.mutable.Stack#`<init>`(Lscala/collection/immutable/List;
   [74..75): A => _root_.scala.collection.mutable.Stack#[A]
 _root_.scala.concurrent. => package concurrent
 _root_.scala.concurrent.Future.;_root_.scala.concurrent.Future# => val <import scala.concurrent.Future>: scala.concurrent.Future.type <and> scala.concurrent.Future
+_root_.sourcecode. => package sourcecode
+_root_.sourcecode.Name. => final object Name
+_root_.sourcecode.Name.generate()Lsourcecode/Name;. => implicit macro generate: sourcecode.Name
 
 
 scalameta/semanticdb-integration/src/main/scala/example/Sugar.scala
