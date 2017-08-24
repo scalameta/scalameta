@@ -3,7 +3,7 @@ set -eu
 PUBLISH=${CI_PUBLISH:-false}
 SECURE_VAR=${TRAVIS_SECURE_ENV_VARS:-false}
 
-if [ "$SECURE_VAR" == true && -n "$TRAVIS_TAG" ]; then
+if [[ "$TRAVIS_SECURE_ENV_VARS" == true && -n "$TRAVIS_TAG" && "$CI_PUBLISH" == true ]]; then
   git log | head -n 20
   echo "$PGP_SECRET" | base64 --decode | gpg --import
   mkdir -p $HOME/.bintray
