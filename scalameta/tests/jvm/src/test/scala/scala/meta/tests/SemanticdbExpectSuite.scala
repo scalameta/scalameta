@@ -4,6 +4,7 @@ package tests
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.charset.Charset
 import scala.meta.testkit.DiffAssertions
 import lang.meta.internal.io.FileIO
 import org.scalatest.FunSuite
@@ -17,7 +18,7 @@ class SemanticdbExpectSuite extends FunSuite with DiffAssertions {
       // later down the road if that turns out to be useful.
       case "2" :: "12" :: Nil =>
         val obtained = SemanticdbExpectSuite.loadDatabase.toString
-        val expected = FileIO.slurp(AbsolutePath(SemanticdbExpectSuite.expectPath))
+        val expected = FileIO.slurp(AbsolutePath(SemanticdbExpectSuite.expectPath), Charset.forName("UTF-8"))
         assertNoDiff(obtained, expected)
       case _ => // do nothing.
     }
