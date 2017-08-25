@@ -90,6 +90,6 @@ class ReflectionSuite extends FunSuite {
       |scala.meta.Type
       |scala.meta.Type.Bounds
       |scala.meta.Type.Name
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 }

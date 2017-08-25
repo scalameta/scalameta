@@ -44,6 +44,13 @@ class File(path: String) {
 }
 
 object File {
+  def listRoots(): Array[File] = Array(
+    new File(
+      if (JSIO.isNode) JSIO.path.parse(JSIO.path.resolve()).root
+      else "/"
+    )
+  )
+
   def separatorChar: Char =
     separator.charAt(0)
 

@@ -22,7 +22,7 @@ class FormatMessageSuite extends FunSuite {
     |<input>:1: error: foo
     |
     |^
-  """.trim.stripMargin)
+  """.trim.stripMargin.split('\n').mkString(EOL))
 
   test("\n")("""
     |<input>:1: error: foo
@@ -31,7 +31,7 @@ class FormatMessageSuite extends FunSuite {
     |<input>:2: error: foo
     |
     |^
-  """.trim.stripMargin)
+  """.trim.stripMargin.split('\n').mkString(EOL))
 
   test("foo")("""
     |<input>:1: error: foo
@@ -46,7 +46,7 @@ class FormatMessageSuite extends FunSuite {
     |<input>:1: error: foo
     |foo
     |   ^
-  """.trim.stripMargin)
+  """.trim.stripMargin.split('\n').mkString(EOL))
 
   test("foo\n")("""
     |<input>:1: error: foo
@@ -64,7 +64,7 @@ class FormatMessageSuite extends FunSuite {
     |<input>:2: error: foo
     |
     |^
-  """.trim.stripMargin)
+  """.trim.stripMargin.split('\n').mkString(EOL))
 
   test("foo\nbar")("""
     |<input>:1: error: foo
@@ -91,5 +91,5 @@ class FormatMessageSuite extends FunSuite {
     |<input>:2: error: foo
     |bar
     |   ^
-  """.trim.stripMargin)
+  """.trim.stripMargin.split('\n').mkString(EOL))
 }

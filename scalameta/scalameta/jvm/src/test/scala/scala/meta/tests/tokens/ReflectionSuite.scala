@@ -44,6 +44,6 @@ class ReflectionSuite extends FunSuite {
       |Token.Xml.SpliceEnd
       |Token.Xml.SpliceStart
       |Token.Xml.Start
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 }

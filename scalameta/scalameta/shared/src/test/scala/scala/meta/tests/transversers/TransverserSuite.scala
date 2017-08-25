@@ -21,7 +21,7 @@ class TransverserSuite extends FunSuite {
       }
     }
     traverser(tree0)
-    assert(log.mkString(EOL) === """
+    assert(log.mkString("\n").replace("\r", "") === """
       |{   def foo(x: x)(x: Int) = x + x   class C(x: x) { def bar(x: x) = ??? } }
       |def foo(x: x)(x: Int) = x + x
       |foo
@@ -75,7 +75,7 @@ class TransverserSuite extends FunSuite {
       |  def foo(y: y)(y: Int) = y + y
       |  class C(y: y) { def bar(y: y) = ??? }
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("Transformer Fail") {

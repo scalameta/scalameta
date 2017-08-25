@@ -54,7 +54,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       QQQ
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.structure === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", escapedEOL))
+    assert(tree.structure === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", "\\n"))
     assert(tree.syntax === """
     |{
     |  val x = QQQ
@@ -74,7 +74,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         ..$z
       QQQ
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.structure === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", escapedEOL))
+    assert(tree.structure === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", "\\n"))
     assert(tree.syntax === """
     |{
     |  val x = q"123 + $x + ${foo(123)} + 456"
@@ -93,7 +93,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       |foo.bar(bar) {
       |  baz
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("Template.self stringifications") {
@@ -110,7 +110,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       |  val x = 2
       |  val y = 3
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
     assert(templStat("""
       new { self =>
         val x = 2
@@ -121,7 +121,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       |  val x = 2
       |  val y = 3
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
     assert(templStat("""
       new { self: Int =>
         val x = 2
@@ -132,7 +132,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       |  val x = 2
       |  val y = 3
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
     assert(templStat("class B { x: B => }").syntax === "class B { x: B => }")
   }
 
@@ -237,7 +237,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       |x match {
       |  case (xs: List[Int]) :+ x => ???
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("List(x, y) :: z") {
@@ -246,7 +246,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       |x match {
       |  case List(x, y) :: z => ???
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("secondary ctor - expr") {
@@ -261,7 +261,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       |    println("OBLIVION!!!")
       |  }
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("case semicolons") {
@@ -271,7 +271,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       |    foo1
       |    foo2
       |}
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("assorted literals") {
@@ -364,7 +364,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         """{
             |  class A { class B }
             |  type C = A#B
-            |}""".stripMargin
+            |}""".stripMargin.split('\n').mkString(EOL)
     )
     // With lambda trick
     assert(
@@ -375,7 +375,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         """{
             |  def foo[F[_]]: Unit = ???
             |  foo[({ type T[A] = Either[Int, A] })#T]
-            |}""".stripMargin
+            |}""".stripMargin.split('\n').mkString(EOL)
     )
   }
 
@@ -412,7 +412,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       |  protected[this] val z = 3
       |  protected[D] val w = 4
       |}
-    """.stripMargin.trim)
+    """.stripMargin.trim.split('\n').mkString(EOL))
   }
 
   test("case List(xs @ _*)") {
@@ -436,7 +436,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("package foo; class C; package baz { class D }") {
     val tree = source("package foo; class C; package baz { class D }")
     assert(tree.structure === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))))))")
-    assert(tree.syntax === "package foo\nclass C\npackage baz {\n  class D\n}")
+    assert(tree.syntax === s"package foo${EOL}class C${EOL}package baz {$EOL  class D${EOL}}")
   }
 
   test("case `x`") {
@@ -494,12 +494,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(case1.toString === """
       |case x =>
       |  x
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
     assert(case2.toString === """
       |case List(x, y) =>
       |  println(x)
       |  println(y)
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("xml literals") {

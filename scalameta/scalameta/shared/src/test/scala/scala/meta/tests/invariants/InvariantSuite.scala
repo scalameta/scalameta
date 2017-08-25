@@ -5,6 +5,8 @@ import org.scalatest._
 import org.scalameta._
 import org.scalameta.invariants._
 
+import scala.compat.Platform.EOL
+
 class InvariantSuite extends FunSuite {
   test("more informative error messages") {
     val x = 2
@@ -16,7 +18,7 @@ class InvariantSuite extends FunSuite {
           |when verifying x.>(3)
           |found that x.>(3) is false
           |where x = 2
-        """.trim.stripMargin)
+        """.trim.stripMargin.split('\n').mkString(EOL))
     }
   }
 
@@ -34,7 +36,7 @@ class InvariantSuite extends FunSuite {
           |where C = C(3)
           |where C.this.x = 3
           |where y = 2
-        """.trim.stripMargin)
+        """.trim.stripMargin.split('\n').mkString(EOL))
     }
   }
 
@@ -45,7 +47,7 @@ class InvariantSuite extends FunSuite {
       case ex: UnreachableError =>
         assert(ex.getMessage === """
           |this code path should've been unreachable
-        """.trim.stripMargin)
+        """.trim.stripMargin.split('\n').mkString(EOL))
     }
   }
 
@@ -60,7 +62,7 @@ class InvariantSuite extends FunSuite {
           |this code path should've been unreachable
           |where C.this.x = 3
           |where y = 2
-        """.trim.stripMargin)
+        """.trim.stripMargin.split('\n').mkString(EOL))
     }
   }
 

@@ -5,6 +5,8 @@ import java.io._
 import java.nio.charset.Charset
 import org.scalatest._
 import scala.meta._
+import compat.Platform.EOL
+
 
 class PublicSuite extends FunSuite {
   test("scala.meta.Dialect.toString") {
@@ -229,7 +231,7 @@ class PublicSuite extends FunSuite {
             |<input>:1: error: end of file expected but class found
             |foo + class
             |      ^
-          """.trim.stripMargin)
+          """.trim.stripMargin.split('\n').mkString(EOL))
           throw ex
       }
     }
@@ -246,7 +248,7 @@ class PublicSuite extends FunSuite {
       |<input>:1: error: end of file expected but class found
       |foo + class
       |      ^
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("scala.meta.parsers.Parsed.Success.toString") {
@@ -370,7 +372,7 @@ class PublicSuite extends FunSuite {
     assert(sugar.syntax == """
       |[0..5): sugar
       |  [0..5): sugar => _root_.sugar.
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
     assert(sugar.structure == """Sugar(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), "sugar", List(ResolvedName(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("sugar")), false)))""")
   }
 
@@ -441,7 +443,7 @@ class PublicSuite extends FunSuite {
             |<input>:1: error: unclosed string literal
             |"c
             |^
-          """.trim.stripMargin)
+          """.trim.stripMargin.split('\n').mkString(EOL))
           throw ex
       }
     }
@@ -454,7 +456,7 @@ class PublicSuite extends FunSuite {
       |<input>:1: error: unclosed string literal
       |"c
       |^
-    """.trim.stripMargin)
+    """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
   test("scala.meta.tokenizers.Tokenized.Success.toString") {
