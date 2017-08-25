@@ -176,7 +176,7 @@ lazy val tokenizers = crossProject
   .settings(
     publishableSettings,
     description := "Scalameta APIs for tokenization and their baseline implementation",
-    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "0.4.3",
+    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "0.4.4",
     enableMacros
   )
   .dependsOn(common, dialects, inputs, tokens)
