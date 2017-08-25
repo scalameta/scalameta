@@ -96,7 +96,7 @@ lazy val langmeta = crossProject
         flatPackage = true // Don't append filename to package
       ) -> sourceManaged.in(Compile).value
     ),
-    PB.protoSources.in(Compile) := Seq(file("langmeta/semanticdb/shared/src/main/protobuf")),
+    PB.protoSources.in(Compile) := Seq(file("langmeta/shared/src/main/protobuf")),
     libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion,
     exposePaths("langmeta", Test)
   )
