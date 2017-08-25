@@ -668,6 +668,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       check(c, "scala.package.Traversable[scala.Int]")
       check(d, "scala.collection.immutable.Map[scala.Int,scala.Int]")
     }
+  )
 
   names(
     """|

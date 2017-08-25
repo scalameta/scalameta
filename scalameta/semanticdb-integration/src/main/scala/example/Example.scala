@@ -7,5 +7,5 @@ object Example {
   def main(args: Array[String]): Unit = {
     println(1)
   }
-  val x = sourcecode.Name.generate
+  val x = scala.reflect.classTag[Int]
 }

@@ -343,7 +343,6 @@ lazy val semanticdbIntegration = project
       )
     }
   )
-  .dependsOn(scalametaJVM)
 
 lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
   .settings(
