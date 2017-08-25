@@ -298,7 +298,7 @@ trait AttributesOps { self: DatabaseOps =>
             }
 
             private def tryFindInferred(gtree: g.Tree): Unit = {
-              import scala.meta.internal.semanticdb.{AttributedSugar => S}
+              import scala.meta.internal.semanticdb.{AttributedSynthetic => S}
               def success(pos: m.Position, f: Inferred => Inferred): Unit = {
                 inferred(pos) = f(inferred(pos))
               }
@@ -315,7 +315,7 @@ trait AttributesOps { self: DatabaseOps =>
               gtree match {
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
-                  val syntax = showSugar(gview.fun) + "(" + S.star + ")"
+                  val syntax = showSynthetic(gview.fun) + "(" + S.star + ")"
                   success(pos, _.copy(conversion = Some(syntax)))
                   isVisited += gview.fun
                 case gimpl: g.ApplyToImplicitArgs =>
@@ -323,11 +323,11 @@ trait AttributesOps { self: DatabaseOps =>
                     case gview: g.ApplyImplicitView =>
                       isVisited += gview
                       val pos = gtree.pos.toMeta
-                      val args = S.mkString(gimpl.args.map(showSugar), ", ")
-                      val syntax = showSugar(gview.fun) + "(" + S.star + ")(" + args + ")"
+                      val args = S.mkString(gimpl.args.map(showSynthetic), ", ")
+                      val syntax = showSynthetic(gview.fun) + "(" + S.star + ")(" + args + ")"
                       success(pos, _.copy(conversion = Some(syntax)))
                     case gfun =>
-                      val fullyQualifiedArgs = S.mkString(gimpl.args.map(showSugar), ", ")
+                      val fullyQualifiedArgs = S.mkString(gimpl.args.map(showSynthetic), ", ")
                       val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toMeta
                       val syntax = S("(") + fullyQualifiedArgs + ")"
                       success(morePrecisePos, _.copy(args = Some(syntax)))
@@ -335,14 +335,14 @@ trait AttributesOps { self: DatabaseOps =>
                 case g.TypeApply(fun, targs @ List(targ, _*)) =>
                   if (targ.pos.isRange) return
                   val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
-                  val args = S.mkString(targs.map(showSugar), ", ")
+                  val args = S.mkString(targs.map(showSynthetic), ", ")
                   val syntax = S("[") + args + "]"
                   success(morePrecisePos, _.copy(targs = Some(syntax)))
                 case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
                   val pos = qual.pos.withStart(qual.pos.end).toMeta
                   val symbol = select.symbol.toSemantic
                   val name = nme.decoded
-                  val names = List(SugarRange(0, name.length, symbol))
+                  val names = List(SyntheticRange(0, name.length, symbol))
                   val syntax = S(".") + S(nme.decoded, names)
                   success(pos, _.copy(select = Some(syntax)))
                 case _ =>
@@ -402,7 +402,7 @@ trait AttributesOps { self: DatabaseOps =>
         val input = unit.source.toInput
 
         val sugars = inferred.toIterator.map {
-          case (pos, inferred) => inferred.toSugar(input, pos)
+          case (pos, inferred) => inferred.toSynthetic(input, pos)
         }
 
         m.Attributes(

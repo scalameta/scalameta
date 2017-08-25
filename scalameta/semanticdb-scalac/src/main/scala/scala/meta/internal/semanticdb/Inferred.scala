@@ -1,22 +1,22 @@
 package scala.meta
 package internal.semanticdb
 
-case class SugarRange(start: Int, end: Int, symbol: Symbol) {
-  def addOffset(offset: Int) = SugarRange(start + offset, end + offset, symbol)
+case class SyntheticRange(start: Int, end: Int, symbol: Symbol) {
+  def addOffset(offset: Int) = SyntheticRange(start + offset, end + offset, symbol)
   def toMeta(input: Input): ResolvedName =
     ResolvedName(Position.Range(input, start, end), symbol, isDefinition = false)
 }
-case class AttributedSugar(text: String, names: List[SugarRange]) {
-  def +(other: String) = AttributedSugar(text + other, names)
-  def +(other: AttributedSugar) =
-    AttributedSugar(text + other.text, names ++ other.names.map(_.addOffset(text.length)))
+case class AttributedSynthetic(text: String, names: List[SyntheticRange]) {
+  def +(other: String) = AttributedSynthetic(text + other, names)
+  def +(other: AttributedSynthetic) =
+    AttributedSynthetic(text + other.text, names ++ other.names.map(_.addOffset(text.length)))
 }
 
-object AttributedSugar {
-  val empty = AttributedSugar("", Nil)
-  val star = AttributedSugar("*", List(SugarRange(0, 1, Symbol("_star_."))))
-  def apply(text: String): AttributedSugar = AttributedSugar(text, Nil)
-  def mkString(sugars: List[AttributedSugar], sep: String): AttributedSugar = sugars match {
+object AttributedSynthetic {
+  val empty = AttributedSynthetic("", Nil)
+  val star = AttributedSynthetic("*", List(SyntheticRange(0, 1, Symbol("_star_."))))
+  def apply(text: String): AttributedSynthetic = AttributedSynthetic(text, Nil)
+  def mkString(sugars: List[AttributedSynthetic], sep: String): AttributedSynthetic = sugars match {
     case Nil => empty
     case head :: Nil => head
     case head :: lst =>
@@ -29,19 +29,19 @@ object AttributedSugar {
 
 // data structure to manage multiple inferred sugars at the same position.
 case class Inferred(
-    select: Option[AttributedSugar] = None,
-    targs: Option[AttributedSugar] = None,
-    conversion: Option[AttributedSugar] = None,
-    args: Option[AttributedSugar] = None
+    select: Option[AttributedSynthetic] = None,
+    targs: Option[AttributedSynthetic] = None,
+    conversion: Option[AttributedSynthetic] = None,
+    args: Option[AttributedSynthetic] = None
 ) {
   assert(
     args.isEmpty || conversion.isEmpty,
     s"Not possible to define conversion + args! $args $conversion"
   )
 
-  private def all: List[AttributedSugar] = (select :: targs :: conversion :: args :: Nil).flatten
+  private def all: List[AttributedSynthetic] = (select :: targs :: conversion :: args :: Nil).flatten
 
-  def toSugar(input: Input, pos: Position): Synthetic = {
+  def toSynthetic(input: Input, pos: Position): Synthetic = {
     def onlyConversionIsDefined =
       conversion.isDefined &&
         select.isEmpty &&
@@ -51,13 +51,13 @@ case class Inferred(
     def needsPrefix: Boolean =
       !onlyConversionIsDefined
 
-    val sugar: AttributedSugar = {
+    val sugar: AttributedSynthetic = {
       val start =
-        if (needsPrefix) AttributedSugar.star
-        else AttributedSugar.empty
+        if (needsPrefix) AttributedSynthetic.star
+        else AttributedSynthetic.empty
       all.foldLeft(start)(_ + _)
     }
-    val sugarInput = Input.Sugar(sugar.text, input, pos.start, pos.end)
+    val sugarInput = Input.Synthetic(sugar.text, input, pos.start, pos.end)
     val names = sugar.names.map(_.toMeta(sugarInput))
     new Synthetic(pos, sugar.text, names)
   }

@@ -21,8 +21,8 @@ private[meta] trait Aliases {
     type VirtualFile = lang.meta.inputs.Input.VirtualFile
     val VirtualFile = lang.meta.inputs.Input.VirtualFile
 
-    type Sugar = lang.meta.inputs.Input.Sugar
-    val Sugar = lang.meta.inputs.Input.Sugar
+    type Synthetic = lang.meta.inputs.Input.Synthetic
+    val Synthetic = lang.meta.inputs.Input.Synthetic
 
     type Denotation = lang.meta.inputs.Input.Denotation
     val Denotation = lang.meta.inputs.Input.Denotation

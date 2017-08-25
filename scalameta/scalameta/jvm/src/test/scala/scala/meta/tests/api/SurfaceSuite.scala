@@ -57,8 +57,8 @@ class SurfaceSuite extends FunSuite {
       |lang.meta.semanticdb.Severity.Info
       |lang.meta.semanticdb.Severity.Warning
       |lang.meta.semanticdb.Signature
-      |lang.meta.semanticdb.Sugar
       |lang.meta.semanticdb.Symbol
+      |lang.meta.semanticdb.Synthetic
       |scala.meta.Dialect
       |scala.meta.Tree
       |scala.meta.classifiers

@@ -168,10 +168,10 @@ class PublicSuite extends FunSuite {
     assert(input.toString == """Input.String("foo")""")
   }
 
-  test("lang.meta.inputs.Input.Sugar.toString") {
-    val input = Input.Sugar("foo", Input.String("blah"), 0, 0)
-    input match { case _: Input.Sugar => }
-    assert(input.toString == """Input.Sugar("foo", Input.String("blah"), 0, 0)""")
+  test("lang.meta.inputs.Input.Synthetic.toString") {
+    val input = Input.Synthetic("foo", Input.String("blah"), 0, 0)
+    input match { case _: Input.Synthetic => }
+    assert(input.toString == """Input.Synthetic("foo", Input.String("blah"), 0, 0)""")
   }
 
   test("lang.meta.inputs.Input.VirtualFile.toString") {
@@ -364,16 +364,16 @@ class PublicSuite extends FunSuite {
     // covered below
   }
 
-  test("lang.meta.semanticdb.Sugar.toString") {
+  test("lang.meta.semanticdb.Synthetic.toString") {
     val original = Input.String("input")
-    val input = Input.Sugar("sugar", original, 1, 1)
+    val input = Input.Synthetic("sugar", original, 1, 1)
     val pos = Position.Range(input, 0, 5)
-    val sugar = Sugar(pos, "sugar", List(ResolvedName(pos, Symbol("_root_.sugar."), isDefinition = false)))
+    val sugar = Synthetic(pos, "sugar", List(ResolvedName(pos, Symbol("_root_.sugar."), isDefinition = false)))
     assert(sugar.syntax == """
       |[0..5): sugar
       |  [0..5): sugar => _root_.sugar.
     """.trim.stripMargin.split('\n').mkString(EOL))
-    assert(sugar.structure == """Sugar(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), "sugar", List(ResolvedName(Position.Range(Input.Sugar("sugar", Input.String("input"), 1, 1), 0, 5), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("sugar")), false)))""")
+    assert(sugar.structure == """Synthetic(Position.Range(Input.Synthetic("sugar", Input.String("input"), 1, 1), 0, 5), "sugar", List(ResolvedName(Position.Range(Input.Synthetic("sugar", Input.String("input"), 1, 1), 0, 5), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("sugar")), false)))""")
   }
 
   test("lang.meta.semanticdb.Symbol.toString") {

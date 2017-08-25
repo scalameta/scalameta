@@ -71,12 +71,12 @@ package object semanticdb {
               case other => sys.error(s"bad protobuf: unsupported denotation $other")
             }
           }
-          object sSugar {
-            def unapply(ssugar: s.Sugar): Option[dSynthetic] = ssugar match {
-              case s.Sugar(Some(sPosition(dpos)), dtext, snames) =>
+          object sSynthetic {
+            def unapply(ssugar: s.Synthetic): Option[dSynthetic] = ssugar match {
+              case s.Synthetic(Some(sPosition(dpos)), dtext, snames) =>
                 val dnames = snames.toIterator.map {
                   case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
-                    val dsugarinput = dInput.Sugar(dtext, dpos.input, dpos.start, dpos.end)
+                    val dsugarinput = dInput.Synthetic(dtext, dpos.input, dpos.start, dpos.end)
                     val dsugarpos = dPosition.Range(dsugarinput, sstart, send)
                     d.ResolvedName(dsugarpos, dsym, disDefinition)
                   case other =>
@@ -99,7 +99,7 @@ package object semanticdb {
             case sResolvedSymbol(dresolvedsymbol) => dresolvedsymbol
           }.toList
           val dsynthetics = ssynthetics.toIterator.map {
-            case sSugar(dsugar) => dsugar
+            case sSynthetic(dsugar) => dsugar
             case other => sys.error(s"bad protobuf: unsupported sugar $other")
           }.toList
           d.Attributes(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
@@ -143,7 +143,7 @@ package object semanticdb {
             }
           }
           object dSynthetic {
-            def unapply(dsugar: dSynthetic): Option[s.Sugar] = dsugar match {
+            def unapply(dsugar: dSynthetic): Option[s.Synthetic] = dsugar match {
               case d.Synthetic(dPosition(spos), ssyntax, dnames) =>
                 val snames = dnames.toIterator.map {
                   case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
@@ -151,7 +151,7 @@ package object semanticdb {
                   case other =>
                     sys.error(s"bad database: unsupported name $other")
                 }.toSeq
-                Some(s.Sugar(Some(spos), ssyntax, snames))
+                Some(s.Synthetic(Some(spos), ssyntax, snames))
               case _ =>
                 None
             }

@@ -111,7 +111,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
   }
 
   def sugars(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Sugars")
+    checkSection(code, expected, "Synthetics")
   }
 
   private def computeDatabaseAndNamesFromMarkup(markup: String): (m.Database, List[m.Symbol]) = {

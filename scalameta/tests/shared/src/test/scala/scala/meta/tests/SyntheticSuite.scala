@@ -26,7 +26,7 @@ class SyntheticSuite extends BaseSemanticSuite {
   }
 
   test("Database.sugars") {
-    val entry = database.entries.find(_.input.syntax.contains("Sugar")).get
+    val entry = database.entries.find(_.input.syntax.contains("Synthetic")).get
     val source = entry.input.parse[Source].get
     val sugarAsserts = source.collect {
       case q"$term.stripPrefix($_)" =>

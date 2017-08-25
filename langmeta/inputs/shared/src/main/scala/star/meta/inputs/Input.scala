@@ -76,9 +76,9 @@ object Input {
     override def toString = s"""Input.VirtualFile("$path", "$value")"""
   }
 
-  final case class Sugar(value: scala.Predef.String, input: Input, start: Int, end: Int) extends Input {
+  final case class Synthetic(value: scala.Predef.String, input: Input, start: Int, end: Int) extends Input {
     lazy val chars = value.toCharArray
-    override def toString = s"""Input.Sugar("$value", $input, $start, $end)"""
+    override def toString = s"""Input.Synthetic("$value", $input, $start, $end)"""
   }
 
   final case class Denotation(value: scala.Predef.String, symbol: scala.Predef.String) extends Input {
