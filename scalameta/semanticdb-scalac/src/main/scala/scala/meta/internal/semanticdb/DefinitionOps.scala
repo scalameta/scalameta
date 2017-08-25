@@ -93,15 +93,15 @@ trait DefinitionOps { self: DatabaseOps =>
       else {
         val synthetic = showSynthetic(gsym.info)
         val input = m.Input.Definition(synthetic.text, gsym.toSemantic.syntax)
-        val resolvedNames = synthetic.names.toIterator.map {
+        val names = synthetic.names.toIterator.map {
           case SyntheticRange(start, end, syntheticSymbol) =>
             m.ResolvedName(
               m.Position.Range(input, start, end),
               syntheticSymbol,
               isDefinition = false)
         }.toArray
-        Sorting.quickSort(resolvedNames)(Ordering.by[m.ResolvedName, Int](_.position.start))
-        synthetic.text -> resolvedNames.toList
+        Sorting.quickSort(names)(Ordering.by[m.ResolvedName, Int](_.position.start))
+        synthetic.text -> names.toList
       }
     }
 
