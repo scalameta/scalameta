@@ -7,7 +7,7 @@ class SyntheticSuite extends BaseSemanticSuite {
   test("Database.symbols") {
     val entry = database.entries.find(_.input.syntax.contains("Example")).get
     val source = entry.input.parse[Source].get
-    val sugarAsserts = source.collect {
+    val syntheticAsserts = source.collect {
       case t: Defn.Def if t.name.value == "main" =>
         val symbol = entry.names.find(_.position == t.name.pos).get.symbol
         val expectedInput =
@@ -21,19 +21,19 @@ class SyntheticSuite extends BaseSemanticSuite {
             sys.error(s"Unexpected $els")
         }
     }
-    assert(sugarAsserts.nonEmpty)
+    assert(syntheticAsserts.nonEmpty)
 
   }
 
-  test("Database.sugars") {
+  test("Database.synthetics") {
     val entry = database.entries.find(_.input.syntax.contains("Synthetic")).get
     val source = entry.input.parse[Source].get
-    val sugarAsserts = source.collect {
+    val syntheticAsserts = source.collect {
       case q"$term.stripPrefix($_)" =>
-        val sugar = entry.sugars.find(_.position == term.pos).get
-        assert(sugar.names.nonEmpty)
+        val synthetic = entry.synthetics.find(_.position == term.pos).get
+        assert(synthetic.names.nonEmpty)
     }
-    assert(sugarAsserts.nonEmpty)
+    assert(syntheticAsserts.nonEmpty)
   }
 
 }

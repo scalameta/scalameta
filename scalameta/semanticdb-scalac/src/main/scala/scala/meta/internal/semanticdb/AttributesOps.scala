@@ -401,7 +401,7 @@ trait AttributesOps { self: DatabaseOps =>
 
         val input = unit.source.toInput
 
-        val sugars = inferred.toIterator.map {
+        val synthetics = inferred.toIterator.map {
           case (pos, inferred) => inferred.toSynthetic(input, pos)
         }
 
@@ -411,7 +411,7 @@ trait AttributesOps { self: DatabaseOps =>
           names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,
           Nil, // added after jvm phase.
           denotations.map { case (sym, denot) => m.ResolvedSymbol(sym, denot) }.toList,
-          sugars.toList
+          synthetics.toList
         )
       })
     }

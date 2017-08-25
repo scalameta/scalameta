@@ -11,7 +11,7 @@ final case class Attributes(
   names: List[ResolvedName],
   messages: List[Message],
   symbols: List[ResolvedSymbol],
-  sugars: List[Synthetic]
+  synthetics: List[Synthetic]
 ) {
   def syntax: String = {
     val lines = scala.collection.mutable.ListBuffer[String]()
@@ -26,7 +26,7 @@ final case class Attributes(
     appendSection("Names", names.sortBy(_.position.start).map(_.syntax))
     appendSection("Messages", messages.sortBy(_.position.start).map(_.syntax))
     appendSection("Symbols", symbols.sortBy(_.symbol.syntax).map(_.syntax))
-    appendSection("Synthetics", sugars.sortBy(_.position.start).map(_.syntax))
+    appendSection("Synthetics", synthetics.sortBy(_.position.start).map(_.syntax))
     lines.mkString(EOL)
   }
 

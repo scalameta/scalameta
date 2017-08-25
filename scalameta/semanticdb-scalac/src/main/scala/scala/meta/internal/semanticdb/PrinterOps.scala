@@ -29,7 +29,7 @@ trait PrinterOps { self: DatabaseOps =>
     def apply(writer: Writer) = new SyntheticCodePrinter(new LengthWriter(writer, 0))
   }
 
-  // An adaptation of g.CodePrinter that emits positioned symbols for names inside sugars.
+  // An adaptation of g.CodePrinter that emits positioned symbols for names inside synthetics.
   // The modifications have been wrapped in "+- scalac deviation" comments.
   // In addition, the original source has been reformatted for better readability.
   private class SyntheticCodePrinter(out: LengthWriter) extends TreePrinter(new PrintWriter(out)) {

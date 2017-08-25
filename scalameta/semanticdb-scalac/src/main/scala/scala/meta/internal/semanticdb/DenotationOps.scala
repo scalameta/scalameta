@@ -91,14 +91,14 @@ trait DenotationOps { self: DatabaseOps =>
     private def info: (String, List[m.ResolvedName]) = {
       if (gsym.isClass || gsym.isModule) "" -> Nil
       else {
-        val sugar = showSynthetic(gsym.info)
-        val input = m.Input.Denotation(sugar.text, gsym.toSemantic.syntax)
-        val resolvedNames = sugar.names.toIterator.map {
-          case SyntheticRange(start, end, sugarSymbol) =>
-            m.ResolvedName(m.Position.Range(input, start, end), sugarSymbol, isDefinition = false)
+        val synthetic = showSynthetic(gsym.info)
+        val input = m.Input.Denotation(synthetic.text, gsym.toSemantic.syntax)
+        val resolvedNames = synthetic.names.toIterator.map {
+          case SyntheticRange(start, end, syntheticSymbol) =>
+            m.ResolvedName(m.Position.Range(input, start, end), syntheticSymbol, isDefinition = false)
         }.toArray
         Sorting.quickSort(resolvedNames)(Ordering.by[m.ResolvedName, Int](_.position.start))
-        sugar.text -> resolvedNames.toList
+        synthetic.text -> resolvedNames.toList
       }
     }
 

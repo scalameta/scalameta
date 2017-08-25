@@ -234,7 +234,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   """.trim.stripMargin
   )
 
-  sugars(
+  synthetics(
     """
       |package g
       |import scala.language.higherKinds
@@ -263,7 +263,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.trim.stripMargin
   )
 
-  sugars(
+  synthetics(
     """
       |package h
       |class C[T]
@@ -415,7 +415,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.stripMargin.trim
   )
 
-  sugars(
+  synthetics(
     "class J[T: Manifest] { val arr = Array.empty[T] }",
     """|[47..47): *(J.this.evidence$1)
        |  [0..1): * => _star_.
@@ -559,7 +559,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |""".stripMargin
   )
 
-  sugars(
+  synthetics(
     """|object q {
        |  List(1) + "blaH"
        |}
@@ -577,7 +577,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |""".stripMargin
   )
 
-  sugars(
+  synthetics(
     """|object r {
        |  class F
        |  implicit val ordering: Ordering[F] = ???
@@ -592,7 +592,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |""".stripMargin
   )
 
-  sugars(
+  synthetics(
     """|object s {
        |  def apply() = 2
        |  s()

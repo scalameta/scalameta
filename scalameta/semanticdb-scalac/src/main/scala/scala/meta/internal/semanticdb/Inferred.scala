@@ -16,18 +16,18 @@ object AttributedSynthetic {
   val empty = AttributedSynthetic("", Nil)
   val star = AttributedSynthetic("*", List(SyntheticRange(0, 1, Symbol("_star_."))))
   def apply(text: String): AttributedSynthetic = AttributedSynthetic(text, Nil)
-  def mkString(sugars: List[AttributedSynthetic], sep: String): AttributedSynthetic = sugars match {
+  def mkString(synthetics: List[AttributedSynthetic], sep: String): AttributedSynthetic = synthetics match {
     case Nil => empty
     case head :: Nil => head
     case head :: lst =>
       lst.foldLeft(head) {
-        case (accum, sugar) =>
-          accum + sep + sugar
+        case (accum, synthetic) =>
+          accum + sep + synthetic
       }
   }
 }
 
-// data structure to manage multiple inferred sugars at the same position.
+// data structure to manage multiple inferred synthetics at the same position.
 case class Inferred(
     select: Option[AttributedSynthetic] = None,
     targs: Option[AttributedSynthetic] = None,
@@ -51,14 +51,14 @@ case class Inferred(
     def needsPrefix: Boolean =
       !onlyConversionIsDefined
 
-    val sugar: AttributedSynthetic = {
+    val synthetic: AttributedSynthetic = {
       val start =
         if (needsPrefix) AttributedSynthetic.star
         else AttributedSynthetic.empty
       all.foldLeft(start)(_ + _)
     }
-    val sugarInput = Input.Synthetic(sugar.text, input, pos.start, pos.end)
-    val names = sugar.names.map(_.toMeta(sugarInput))
-    new Synthetic(pos, sugar.text, names)
+    val syntheticInput = Input.Synthetic(synthetic.text, input, pos.start, pos.end)
+    val names = synthetic.names.map(_.toMeta(syntheticInput))
+    new Synthetic(pos, synthetic.text, names)
   }
 }

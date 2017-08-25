@@ -72,13 +72,13 @@ package object semanticdb {
             }
           }
           object sSynthetic {
-            def unapply(ssugar: s.Synthetic): Option[dSynthetic] = ssugar match {
+            def unapply(ssynthetic: s.Synthetic): Option[dSynthetic] = ssynthetic match {
               case s.Synthetic(Some(sPosition(dpos)), dtext, snames) =>
                 val dnames = snames.toIterator.map {
                   case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
-                    val dsugarinput = dInput.Synthetic(dtext, dpos.input, dpos.start, dpos.end)
-                    val dsugarpos = dPosition.Range(dsugarinput, sstart, send)
-                    d.ResolvedName(dsugarpos, dsym, disDefinition)
+                    val dsyntheticinput = dInput.Synthetic(dtext, dpos.input, dpos.start, dpos.end)
+                    val dsyntheticpos = dPosition.Range(dsyntheticinput, sstart, send)
+                    d.ResolvedName(dsyntheticpos, dsym, disDefinition)
                   case other =>
                     sys.error(s"bad protobuf: unsupported name $other")
                 }.toList
@@ -99,8 +99,8 @@ package object semanticdb {
             case sResolvedSymbol(dresolvedsymbol) => dresolvedsymbol
           }.toList
           val dsynthetics = ssynthetics.toIterator.map {
-            case sSynthetic(dsugar) => dsugar
-            case other => sys.error(s"bad protobuf: unsupported sugar $other")
+            case sSynthetic(dsynthetic) => dsynthetic
+            case other => sys.error(s"bad protobuf: unsupported synthetic $other")
           }.toList
           d.Attributes(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
       }
@@ -143,7 +143,7 @@ package object semanticdb {
             }
           }
           object dSynthetic {
-            def unapply(dsugar: dSynthetic): Option[s.Synthetic] = dsugar match {
+            def unapply(dsynthetic: dSynthetic): Option[s.Synthetic] = dsynthetic match {
               case d.Synthetic(dPosition(spos), ssyntax, dnames) =>
                 val snames = dnames.toIterator.map {
                   case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
@@ -180,8 +180,8 @@ package object semanticdb {
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val ssynthetics = dsynthetics.toIterator.map {
-            case dSynthetic(ssugar) => ssugar
-            case other => sys.error(s"bad database: unsupported sugar $other")
+            case dSynthetic(ssynthetic) => ssynthetic
+            case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
           s.Attributes(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
       }

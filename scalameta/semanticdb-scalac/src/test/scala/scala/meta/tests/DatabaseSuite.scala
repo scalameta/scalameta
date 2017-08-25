@@ -110,7 +110,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
     checkSection(code, expected, "Symbols")
   }
 
-  def sugars(code: String, expected: String): Unit = {
+  def synthetics(code: String, expected: String): Unit = {
     checkSection(code, expected, "Synthetics")
   }
 

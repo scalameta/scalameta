@@ -366,14 +366,14 @@ class PublicSuite extends FunSuite {
 
   test("lang.meta.semanticdb.Synthetic.toString") {
     val original = Input.String("input")
-    val input = Input.Synthetic("sugar", original, 1, 1)
-    val pos = Position.Range(input, 0, 5)
-    val sugar = Synthetic(pos, "sugar", List(ResolvedName(pos, Symbol("_root_.sugar."), isDefinition = false)))
-    assert(sugar.syntax == """
-      |[0..5): sugar
-      |  [0..5): sugar => _root_.sugar.
+    val input = Input.Synthetic("synthetic", original, 1, 1)
+    val pos = Position.Range(input, 0, 9)
+    val synthetic = Synthetic(pos, "synthetic", List(ResolvedName(pos, Symbol("_root_.synthetic."), isDefinition = false)))
+    assert(synthetic.syntax == """
+      |[0..9): synthetic
+      |  [0..9): synthetic => _root_.synthetic.
     """.trim.stripMargin.split('\n').mkString(EOL))
-    assert(sugar.structure == """Synthetic(Position.Range(Input.Synthetic("sugar", Input.String("input"), 1, 1), 0, 5), "sugar", List(ResolvedName(Position.Range(Input.Synthetic("sugar", Input.String("input"), 1, 1), 0, 5), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("sugar")), false)))""")
+    assert(synthetic.structure == """Synthetic(Position.Range(Input.Synthetic("synthetic", Input.String("input"), 1, 1), 0, 9), "synthetic", List(ResolvedName(Position.Range(Input.Synthetic("synthetic", Input.String("input"), 1, 1), 0, 9), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("synthetic")), false)))""")
   }
 
   test("lang.meta.semanticdb.Symbol.toString") {
