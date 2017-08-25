@@ -30,7 +30,7 @@ object SemanticdbExpectSuite {
     Paths.get("scalameta", "tests", "jvm", "src", "test", "resources", "semanticdb.expect")
   def loadDatabase: Database = {
     val database = Database.load(Classpath(BuildInfo.databaseClasspath))
-    val sorted = Database(database.entries.sortBy(_.input.syntax))
+    val sorted = Database(database.files.sortBy(_.input.syntax))
     sorted
   }
 }

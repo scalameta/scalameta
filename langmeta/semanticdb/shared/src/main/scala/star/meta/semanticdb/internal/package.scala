@@ -13,7 +13,7 @@ import lang.meta.{semanticdb => d}
 package object semanticdb {
   implicit class XtensionSchemaDatabase(sdatabase: s.Database) {
     def toVfs(targetroot: AbsolutePath): v.Database = {
-      val ventries = sdatabase.entries.toIterator.map { sentry =>
+      val ventries = sdatabase.files.toIterator.map { sentry =>
         // TODO: Would it make sense to support multiclasspaths?
         // One use-case for this would be in-place updates of semanticdb files.
         val vpath = v.SemanticdbPaths.fromScala(RelativePath(sentry.filename))
@@ -25,7 +25,7 @@ package object semanticdb {
     }
 
     def toDb(sourcepath: Option[Sourcepath]): d.Database = {
-      val dentries = sdatabase.entries.toIterator.map {
+      val dentries = sdatabase.files.toIterator.map {
         case s.SourceFile(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) =>
           assert(sunixfilename.nonEmpty, "s.SourceFile.filename must not be empty")
           val sfilename = PathIO.fromUnix(sunixfilename)
@@ -109,7 +109,7 @@ package object semanticdb {
   }
   implicit class XtensionDatabase(ddatabase: d.Database) {
     def toSchema(sourceroot: AbsolutePath): s.Database = {
-      val sentries = ddatabase.entries.map {
+      val sentries = ddatabase.files.map {
         case d.SourceFile(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
           object dPosition {
             def unapply(dpos: dPosition): Option[s.Position] = dpos match {

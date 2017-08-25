@@ -5,7 +5,7 @@ class SyntheticSuite extends BaseSemanticSuite {
   implicit val database = Database.load(classpath, sourcepath)
 
   test("Database.symbols") {
-    val entry = database.entries.find(_.input.syntax.contains("Example")).get
+    val entry = database.files.find(_.input.syntax.contains("Example")).get
     val source = entry.input.parse[Source].get
     val syntheticAsserts = source.collect {
       case t: Defn.Def if t.name.value == "main" =>
@@ -26,7 +26,7 @@ class SyntheticSuite extends BaseSemanticSuite {
   }
 
   test("Database.synthetics") {
-    val entry = database.entries.find(_.input.syntax.contains("Synthetic")).get
+    val entry = database.files.find(_.input.syntax.contains("Synthetic")).get
     val source = entry.input.parse[Source].get
     val syntheticAsserts = source.collect {
       case q"$term.stripPrefix($_)" =>

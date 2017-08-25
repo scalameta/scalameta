@@ -3,10 +3,10 @@ syntax = "proto3";
 package lang.meta.internal.semanticdb.schema;
 
 message Database {
-  repeated Attributes entries = 1;
+  repeated SourceFile files = 1;
 }
 
-message Attributes {
+message SourceFile {
   reserved 1;
   reserved 5;
   string filename = 9;
@@ -15,11 +15,11 @@ message Attributes {
   repeated ResolvedName names = 2;
   repeated Message messages = 3;
   repeated ResolvedSymbol symbols = 4;
-  repeated Sugar sugars = 6;
+  repeated Synthetic synthetics = 6;
 }
 
 message ResolvedName {
-  Position pos = 1;
+  Position position = 1;
   string symbol = 2;
   bool is_binder = 3;
 }
@@ -36,24 +36,24 @@ message Message {
     WARNING = 2;
     ERROR = 3;
   }
-  Position pos = 1;
+  Position position = 1;
   Severity severity = 2;
   string text = 3;
 }
 
 message ResolvedSymbol {
   string symbol = 1;
-  Denotation denot = 2;
+  Denotation denotation = 2;
 }
 
 message Denotation {
   int64 flags = 1;
   string name = 2;
-  string info = 3;
+  string signature = 3;
   repeated ResolvedName names = 4;
 }
 
-message Sugar {
+message Synthetic {
   Position pos = 1;
   string text = 2;
   repeated ResolvedName names = 3;

@@ -18,19 +18,19 @@ class MirrorConstructionSuite extends BaseSemanticSuite {
 
   test("Database.load(Classpath, Sourcepath)") {
     val database = Database.load(classpath, sourcepath)
-    assert(database.entries.nonEmpty)
+    assert(database.files.nonEmpty)
   }
 
   test("Database.load(Array[Byte])") {
     semanticdbs.foreach { path =>
       val database = Database.load(path.readAllBytes)
-      assert(database.entries.nonEmpty, path.toString)
+      assert(database.files.nonEmpty, path.toString)
     }
   }
 
   test("Database.load(Classpath)") {
     val database = Database.load(classpath)
-    assert(database.entries.nonEmpty)
+    assert(database.files.nonEmpty)
   }
 
   test("s.SourceFile.filename has no Windows slash (\\)") {
