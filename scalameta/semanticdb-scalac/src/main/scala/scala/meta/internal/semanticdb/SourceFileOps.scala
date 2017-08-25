@@ -7,10 +7,10 @@ import scala.reflect.internal.{Flags => gf}
 import scala.{meta => m}
 import scala.meta.internal.inputs._
 
-trait SourceFileOps { self: DatabaseOps =>
+trait DocumentOps { self: DatabaseOps =>
 
-  implicit class XtensionCompilationUnitSourceFile(unit: g.CompilationUnit) {
-    def toSourceFile: m.SourceFile = {
+  implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
+    def toDocument: m.Document = {
       unit.cache.getOrElse("attributes", {
         if (!g.settings.Yrangepos.value) {
           sys.error("the compiler instance must have -Yrangepos enabled")
@@ -405,7 +405,7 @@ trait SourceFileOps { self: DatabaseOps =>
           case (pos, inferred) => inferred.toSynthetic(input, pos)
         }
 
-        m.SourceFile(
+        m.Document(
           input,
           language,
           names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,

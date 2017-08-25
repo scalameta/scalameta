@@ -8,18 +8,18 @@ import org.langmeta.internal.semanticdb._
 import org.langmeta.internal.semanticdb.{vfs => v}
 import org.langmeta.internal.semanticdb.{schema => s}
 
-final case class Database(files: Seq[SourceFile]) {
-  lazy val names: Seq[ResolvedName] = files.flatMap(_.names)
-  lazy val messages: Seq[Message] = files.flatMap(_.messages)
-  lazy val symbols: Seq[ResolvedSymbol] = files.flatMap(_.symbols)
-  lazy val synthetics: Seq[Synthetic] = files.flatMap(_.synthetics)
+final case class Database(documents: Seq[Document]) {
+  lazy val names: Seq[ResolvedName] = documents.flatMap(_.names)
+  lazy val messages: Seq[Message] = documents.flatMap(_.messages)
+  lazy val symbols: Seq[ResolvedSymbol] = documents.flatMap(_.symbols)
+  lazy val synthetics: Seq[Synthetic] = documents.flatMap(_.synthetics)
 
   def save(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
     this.toSchema(sourceroot).toVfs(targetroot).save()
   }
 
   def syntax: String = {
-    val s_entries = files.map { attrs =>
+    val s_entries = documents.map { attrs =>
       val s_input = PathIO.toUnix(attrs.input.syntax)
       val separator = EOL + "-" * s_input.toString.length + EOL
       s_input + separator + attrs.syntax
@@ -28,7 +28,7 @@ final case class Database(files: Seq[SourceFile]) {
   }
 
   def structure: String = {
-    val s_entries = files.map(_.structure).mkString(",")
+    val s_entries = documents.map(_.structure).mkString(",")
     s"Database(List($s_entries))"
   }
 

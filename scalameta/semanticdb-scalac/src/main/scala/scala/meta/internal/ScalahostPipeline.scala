@@ -51,8 +51,8 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       override def apply(unit: g.CompilationUnit): Unit = {
         if (isDisabled) return
         try {
-          unit.body.attachments.get[m.SourceFile].foreach { mattrs =>
-            unit.body.removeAttachment[m.SourceFile]
+          unit.body.attachments.get[m.Document].foreach { mattrs =>
+            unit.body.removeAttachment[m.Document]
             val messages = unit.reportedMessages
             val mminidb = m.Database(List(mattrs.copy(messages = messages)))
             mminidb.save(scalametaTargetroot, config.sourceroot)
@@ -75,7 +75,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
         if (isDisabled) return
         try {
           if (config.mode.isDisabled || !unit.source.file.name.endsWith(".scala")) return
-          val mattrs = unit.toSourceFile
+          val mattrs = unit.toDocument
           unit.body.updateAttachment(mattrs)
         } catch handleError(unit)
       }

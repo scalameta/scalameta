@@ -48,6 +48,7 @@ class SurfaceSuite extends FunSuite {
       |org.langmeta.io.Sourcepath
       |org.langmeta.semanticdb.Database
       |org.langmeta.semanticdb.Denotation
+      |org.langmeta.semanticdb.Document
       |org.langmeta.semanticdb.Message
       |org.langmeta.semanticdb.ResolvedName
       |org.langmeta.semanticdb.ResolvedSymbol
@@ -56,7 +57,6 @@ class SurfaceSuite extends FunSuite {
       |org.langmeta.semanticdb.Severity.Info
       |org.langmeta.semanticdb.Severity.Warning
       |org.langmeta.semanticdb.Signature
-      |org.langmeta.semanticdb.SourceFile
       |org.langmeta.semanticdb.Symbol
       |org.langmeta.semanticdb.Synthetic
       |scala.meta.Dialect

@@ -71,10 +71,10 @@ abstract class GenJSCode extends plugins.PluginComponent
   private[this] object pos2irPosCache { // scalastyle:ignore
     import scala.reflect.internal.util._
 
-    private[this] var lastNscSource: SourceFile = null
-    private[this] var lastIRSource: ir.Position.SourceFile = null
+    private[this] var lastNscSource: Document = null
+    private[this] var lastIRSource: ir.Position.Document = null
 
-    def toIRSource(nscSource: SourceFile): ir.Position.SourceFile = {
+    def toIRSource(nscSource: Document): ir.Position.Document = {
       if (nscSource != lastNscSource) {
         lastIRSource = convert(nscSource)
         lastNscSource = nscSource
@@ -82,7 +82,7 @@ abstract class GenJSCode extends plugins.PluginComponent
       lastIRSource
     }
 
-    private[this] def convert(nscSource: SourceFile): ir.Position.SourceFile = {
+    private[this] def convert(nscSource: Document): ir.Position.Document = {
       nscSource.file.file match {
         case null =>
           new java.net.URI(

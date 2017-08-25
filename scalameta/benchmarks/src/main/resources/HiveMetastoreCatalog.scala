@@ -440,7 +440,7 @@ private[hive] class HiveMetastoreCatalog(val client: HiveClient, hive: HiveConte
   }
 
   private def convertToParquetRelation(metastoreRelation: MetastoreRelation): LogicalRelation = {
-    val metastoreSchema = StructType.fromSourceFile(metastoreRelation.output)
+    val metastoreSchema = StructType.fromDocument(metastoreRelation.output)
     val mergeSchema = hive.convertMetastoreParquetWithSchemaMerging
 
     val parquetOptions = Map(
@@ -488,7 +488,7 @@ private[hive] class HiveMetastoreCatalog(val client: HiveClient, hive: HiveConte
     }
 
     val result = if (metastoreRelation.hiveQlTable.isPartitioned) {
-      val partitionSchema = StructType.fromSourceFile(metastoreRelation.partitionKeys)
+      val partitionSchema = StructType.fromDocument(metastoreRelation.partitionKeys)
       val partitionColumnDataTypes = partitionSchema.map(_.dataType)
       // We're converting the entire table into ParquetRelation, so predicates to Hive metastore
       // are empty.
@@ -552,7 +552,7 @@ private[hive] class HiveMetastoreCatalog(val client: HiveClient, hive: HiveConte
 
       parquetRelation
     }
-    result.copy(expectedOutputSourceFile = Some(metastoreRelation.output))
+    result.copy(expectedOutputDocument = Some(metastoreRelation.output))
   }
 
   override def getTables(databaseName: Option[String]): Seq[(String, Boolean)] = {

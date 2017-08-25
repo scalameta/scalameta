@@ -277,7 +277,7 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("org.langmeta.semanticdb.SourceFile.toString") {
+  test("org.langmeta.semanticdb.Document.toString") {
     // n/a
   }
 

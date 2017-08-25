@@ -11,8 +11,8 @@ private[langmeta] trait Aliases {
   type Database = org.langmeta.semanticdb.Database
   val Database = org.langmeta.semanticdb.Database
 
-  type SourceFile = org.langmeta.semanticdb.SourceFile
-  val SourceFile = org.langmeta.semanticdb.SourceFile
+  type Document = org.langmeta.semanticdb.Document
+  val Document = org.langmeta.semanticdb.Document
 
   type Synthetic = org.langmeta.semanticdb.Synthetic
   val Synthetic = org.langmeta.semanticdb.Synthetic

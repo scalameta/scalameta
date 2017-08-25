@@ -13,7 +13,7 @@ import org.langmeta.{semanticdb => d}
 package object semanticdb {
   implicit class XtensionSchemaDatabase(sdatabase: s.Database) {
     def toVfs(targetroot: AbsolutePath): v.Database = {
-      val ventries = sdatabase.files.toIterator.map { sentry =>
+      val ventries = sdatabase.documents.toIterator.map { sentry =>
         // TODO: Would it make sense to support multiclasspaths?
         // One use-case for this would be in-place updates of semanticdb files.
         val vpath = v.SemanticdbPaths.fromScala(RelativePath(sentry.filename))
@@ -25,9 +25,9 @@ package object semanticdb {
     }
 
     def toDb(sourcepath: Option[Sourcepath]): d.Database = {
-      val dentries = sdatabase.files.toIterator.map {
-        case s.SourceFile(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) =>
-          assert(sunixfilename.nonEmpty, "s.SourceFile.filename must not be empty")
+      val dentries = sdatabase.documents.toIterator.map {
+        case s.Document(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) =>
+          assert(sunixfilename.nonEmpty, "s.Document.filename must not be empty")
           val sfilename = PathIO.fromUnix(sunixfilename)
           val dinput = {
             if (scontents == "") {
@@ -102,15 +102,15 @@ package object semanticdb {
             case sSynthetic(dsynthetic) => dsynthetic
             case other => sys.error(s"bad protobuf: unsupported synthetic $other")
           }.toList
-          d.SourceFile(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
+          d.Document(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
       }
       d.Database(dentries.toList)
     }
   }
   implicit class XtensionDatabase(ddatabase: d.Database) {
     def toSchema(sourceroot: AbsolutePath): s.Database = {
-      val sentries = ddatabase.files.map {
-        case d.SourceFile(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
+      val sentries = ddatabase.documents.map {
+        case d.Document(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
           object dPosition {
             def unapply(dpos: dPosition): Option[s.Position] = dpos match {
               case org.langmeta.inputs.Position.Range(`dinput`, sstart, send) =>
@@ -183,7 +183,7 @@ package object semanticdb {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.SourceFile(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
+          s.Document(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
       }
       s.Database(sentries)
     }

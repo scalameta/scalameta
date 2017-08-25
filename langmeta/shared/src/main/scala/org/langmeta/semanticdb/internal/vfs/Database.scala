@@ -20,7 +20,7 @@ final case class Database(entries: List[Entry]) {
   def toSchema: s.Database = {
     val sentries = entries.flatMap { ventry =>
       val sdb = s.Database.parseFrom(ventry.bytes)
-      sdb.files
+      sdb.documents
     }
     s.Database(sentries)
   }

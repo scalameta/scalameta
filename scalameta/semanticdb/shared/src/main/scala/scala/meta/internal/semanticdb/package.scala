@@ -18,8 +18,8 @@ package object semanticdb {
   }
 
   object schema {
-    val SourceFile = org.langmeta.internal.semanticdb.schema.SourceFile
-    type SourceFile = org.langmeta.internal.semanticdb.schema.SourceFile
+    val Document = org.langmeta.internal.semanticdb.schema.Document
+    type Document = org.langmeta.internal.semanticdb.schema.Document
     // TODO
   }
 }

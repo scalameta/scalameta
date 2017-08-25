@@ -4,7 +4,7 @@ package semanticdb
 import scala.tools.nsc.Global
 
 trait DatabaseOps
-    extends SourceFileOps
+    extends DocumentOps
     with ConfigOps
     with DenotationOps
     with InputOps
