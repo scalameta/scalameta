@@ -16,15 +16,16 @@ object AttributedSynthetic {
   val empty = AttributedSynthetic("", Nil)
   val star = AttributedSynthetic("*", List(SyntheticRange(0, 1, Symbol("_star_."))))
   def apply(text: String): AttributedSynthetic = AttributedSynthetic(text, Nil)
-  def mkString(synthetics: List[AttributedSynthetic], sep: String): AttributedSynthetic = synthetics match {
-    case Nil => empty
-    case head :: Nil => head
-    case head :: lst =>
-      lst.foldLeft(head) {
-        case (accum, synthetic) =>
-          accum + sep + synthetic
-      }
-  }
+  def mkString(synthetics: List[AttributedSynthetic], sep: String): AttributedSynthetic =
+    synthetics match {
+      case Nil => empty
+      case head :: Nil => head
+      case head :: lst =>
+        lst.foldLeft(head) {
+          case (accum, synthetic) =>
+            accum + sep + synthetic
+        }
+    }
 }
 
 // data structure to manage multiple inferred synthetics at the same position.
@@ -39,7 +40,8 @@ case class Inferred(
     s"Not possible to define conversion + args! $args $conversion"
   )
 
-  private def all: List[AttributedSynthetic] = (select :: targs :: conversion :: args :: Nil).flatten
+  private def all: List[AttributedSynthetic] =
+    (select :: targs :: conversion :: args :: Nil).flatten
 
   def toSynthetic(input: Input, pos: Position): Synthetic = {
     def onlyConversionIsDefined =

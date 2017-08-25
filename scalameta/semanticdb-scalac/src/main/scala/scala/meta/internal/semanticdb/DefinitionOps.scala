@@ -95,7 +95,10 @@ trait DefinitionOps { self: DatabaseOps =>
         val input = m.Input.Definition(synthetic.text, gsym.toSemantic.syntax)
         val resolvedNames = synthetic.names.toIterator.map {
           case SyntheticRange(start, end, syntheticSymbol) =>
-            m.ResolvedName(m.Position.Range(input, start, end), syntheticSymbol, isDefinition = false)
+            m.ResolvedName(
+              m.Position.Range(input, start, end),
+              syntheticSymbol,
+              isDefinition = false)
         }.toArray
         Sorting.quickSort(resolvedNames)(Ordering.by[m.ResolvedName, Int](_.position.start))
         synthetic.text -> resolvedNames.toList
