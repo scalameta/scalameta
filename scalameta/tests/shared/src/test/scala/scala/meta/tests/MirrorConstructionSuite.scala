@@ -33,9 +33,9 @@ class MirrorConstructionSuite extends BaseSemanticSuite {
     assert(database.entries.nonEmpty)
   }
 
-  test("s.Attributes.filename has no Windows slash (\\)") {
+  test("s.SourceFile.filename has no Windows slash (\\)") {
     semanticdbs.foreach { path =>
-      val sattrs = s.Attributes.parseFrom(path.readAllBytes)
+      val sattrs = s.SourceFile.parseFrom(path.readAllBytes)
       assert(!sattrs.filename.contains('\\'))
     }
   }

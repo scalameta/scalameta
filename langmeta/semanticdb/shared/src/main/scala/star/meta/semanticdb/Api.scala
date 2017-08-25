@@ -10,8 +10,8 @@ private[meta] trait Aliases {
   type Database = lang.meta.semanticdb.Database
   val Database = lang.meta.semanticdb.Database
 
-  type Attributes = lang.meta.semanticdb.Attributes
-  val Attributes = lang.meta.semanticdb.Attributes
+  type SourceFile = lang.meta.semanticdb.SourceFile
+  val SourceFile = lang.meta.semanticdb.SourceFile
 
   type Synthetic = lang.meta.semanticdb.Synthetic
   val Synthetic = lang.meta.semanticdb.Synthetic

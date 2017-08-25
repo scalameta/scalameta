@@ -9,7 +9,7 @@ import lang.meta.internal.semanticdb._
 import lang.meta.internal.semanticdb.{vfs => v}
 import lang.meta.internal.semanticdb.{schema => s}
 
-final case class Database(entries: Seq[Attributes]) {
+final case class Database(entries: Seq[SourceFile]) {
   lazy val names: Seq[ResolvedName] = entries.flatMap(_.names)
   lazy val messages: Seq[Message] = entries.flatMap(_.messages)
   lazy val symbols: Seq[ResolvedSymbol] = entries.flatMap(_.symbols)

@@ -26,8 +26,8 @@ package object semanticdb {
 
     def toDb(sourcepath: Option[Sourcepath]): d.Database = {
       val dentries = sdatabase.entries.toIterator.map {
-        case s.Attributes(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) =>
-          assert(sunixfilename.nonEmpty, "s.Attributes.filename must not be empty")
+        case s.SourceFile(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) =>
+          assert(sunixfilename.nonEmpty, "s.SourceFile.filename must not be empty")
           val sfilename = PathIO.fromUnix(sunixfilename)
           val dinput = {
             if (scontents == "") {
@@ -102,7 +102,7 @@ package object semanticdb {
             case sSynthetic(dsynthetic) => dsynthetic
             case other => sys.error(s"bad protobuf: unsupported synthetic $other")
           }.toList
-          d.Attributes(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
+          d.SourceFile(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
       }
       d.Database(dentries.toList)
     }
@@ -110,7 +110,7 @@ package object semanticdb {
   implicit class XtensionDatabase(ddatabase: d.Database) {
     def toSchema(sourceroot: AbsolutePath): s.Database = {
       val sentries = ddatabase.entries.map {
-        case d.Attributes(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
+        case d.SourceFile(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
           object dPosition {
             def unapply(dpos: dPosition): Option[s.Position] = dpos match {
               case lang.meta.inputs.Position.Range(`dinput`, sstart, send) =>
@@ -183,7 +183,7 @@ package object semanticdb {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.Attributes(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
+          s.SourceFile(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
       }
       s.Database(sentries)
     }

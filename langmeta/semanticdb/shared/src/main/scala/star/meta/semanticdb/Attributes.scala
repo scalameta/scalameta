@@ -5,7 +5,7 @@ import scala.compat.Platform.EOL
 import lang.meta.inputs._
 import lang.meta.internal.inputs._
 
-final case class Attributes(
+final case class SourceFile(
   input: Input,
   language: String,
   names: List[ResolvedName],

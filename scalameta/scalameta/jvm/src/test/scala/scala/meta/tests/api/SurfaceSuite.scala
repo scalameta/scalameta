@@ -46,7 +46,6 @@ class SurfaceSuite extends FunSuite {
       |lang.meta.io.Multipath
       |lang.meta.io.RelativePath
       |lang.meta.io.Sourcepath
-      |lang.meta.semanticdb.Attributes
       |lang.meta.semanticdb.Database
       |lang.meta.semanticdb.Denotation
       |lang.meta.semanticdb.Message
@@ -57,6 +56,7 @@ class SurfaceSuite extends FunSuite {
       |lang.meta.semanticdb.Severity.Info
       |lang.meta.semanticdb.Severity.Warning
       |lang.meta.semanticdb.Signature
+      |lang.meta.semanticdb.SourceFile
       |lang.meta.semanticdb.Symbol
       |lang.meta.semanticdb.Synthetic
       |scala.meta.Dialect
