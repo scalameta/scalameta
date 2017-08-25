@@ -7,10 +7,10 @@ import scala.reflect.internal.{Flags => gf}
 import scala.util.Sorting
 import org.scalameta.logger
 
-trait DefinitionOps { self: DatabaseOps =>
+trait DenotationOps { self: DatabaseOps =>
   import g._
 
-  implicit class XtensionGSymbolMDefinition(gsym0: g.Symbol) {
+  implicit class XtensionGSymbolMDenotation(gsym0: g.Symbol) {
     private val gsym: g.Symbol = {
       if (gsym0.isModuleClass) gsym0.asClass.module
       else if (gsym0.isTypeSkolem) gsym0.deSkolemize
@@ -92,7 +92,7 @@ trait DefinitionOps { self: DatabaseOps =>
       if (gsym.isClass || gsym.isModule) "" -> Nil
       else {
         val synthetic = showSynthetic(gsym.info)
-        val input = m.Input.Definition(synthetic.text, gsym.toSemantic)
+        val input = m.Input.Denotation(synthetic.text, gsym.toSemantic)
         val names = synthetic.names.toIterator.map {
           case SyntheticRange(start, end, syntheticSymbol) =>
             m.ResolvedName(
@@ -105,9 +105,9 @@ trait DefinitionOps { self: DatabaseOps =>
       }
     }
 
-    def toDefinition: m.Definition = {
+    def toDenotation: m.Denotation = {
       val (minfo, mnames) = info
-      m.Definition(flags, name, minfo, mnames)
+      m.Denotation(flags, name, minfo, mnames)
     }
   }
 }

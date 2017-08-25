@@ -624,10 +624,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   targeted(
     // See https://github.com/scalameta/scalameta/issues/830
     "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", { (db, first) =>
-      val definition = db.symbols.find(_.symbol == first).get.definition
+      val denotation = db.symbols.find(_.symbol == first).get.denotation
       assert(first == Symbol("_empty_.u.unapply(Lu;)Lscala/Option;."))
       assertNoDiff(
-        definition.toString,
+        denotation.toString,
         """case def unapply: (x$0: u)scala.Option[scala.Int]
           |  [6..7): u => _empty_.u#
           |  [14..20): Option => _root_.scala.Option#
@@ -644,10 +644,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       List(1).<<toString>>
     }
     """, { (db, objectToString, listToString) =>
-      val definition1 = db.symbols.find(_.symbol == objectToString).get.definition
-      val definition2 = db.symbols.find(_.symbol == listToString).get.definition
-      assert(definition1.isJavaDefined)
-      assert(!definition2.isJavaDefined)
+      val denotation1 = db.symbols.find(_.symbol == objectToString).get.denotation
+      val denotation2 = db.symbols.find(_.symbol == listToString).get.denotation
+      assert(denotation1.isJavaDefined)
+      assert(!denotation2.isJavaDefined)
     }
   )
 
@@ -661,7 +661,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
     """.stripMargin, { (db, a, b, c, d) =>
       def check(symbol: Symbol, info: String) = {
-        assertNoDiff(db.symbols.find(_.symbol == symbol).get.definition.signature, info)
+        assertNoDiff(db.symbols.find(_.symbol == symbol).get.denotation.signature, info)
       }
       check(a, "java.lang.StringBuilder")
       check(b, "scala.collection.mutable.StringBuilder")

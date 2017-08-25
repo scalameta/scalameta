@@ -47,7 +47,7 @@ class SurfaceSuite extends FunSuite {
       |org.langmeta.io.RelativePath
       |org.langmeta.io.Sourcepath
       |org.langmeta.semanticdb.Database
-      |org.langmeta.semanticdb.Definition
+      |org.langmeta.semanticdb.Denotation
       |org.langmeta.semanticdb.Message
       |org.langmeta.semanticdb.ResolvedName
       |org.langmeta.semanticdb.ResolvedSymbol
