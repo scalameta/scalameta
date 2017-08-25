@@ -284,7 +284,7 @@ class PublicSuite extends FunSuite {
   test("org.langmeta.semanticdb.Definition.toString") {
     val symbol = Symbol("_root_.E#")
     val info = "[T](e: E)T"
-    val input = Input.Definition(info, symbol.syntax)
+    val input = Input.Definition(info, symbol)
     val pos = Position.Range(input, 7, 8)
     val names = List(ResolvedName(pos, symbol, isDefinition = false))
     val classC = Definition(PRIVATE | CASE | CLASS, "C", "", Nil)
