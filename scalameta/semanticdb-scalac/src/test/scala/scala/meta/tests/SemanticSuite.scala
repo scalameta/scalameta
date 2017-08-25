@@ -624,7 +624,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   targeted(
     // See https://github.com/scalameta/scalameta/issues/830
     "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", { (db, first) =>
-      val denot = db.symbols.find(_.symbol == first).get.denot
+      val denot = db.symbols.find(_.symbol == first).get.denotation
       assert(first == Symbol("_empty_.u.unapply(Lu;)Lscala/Option;."))
       assertNoDiff(
         denot.toString,
@@ -644,8 +644,8 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       List(1).<<toString>>
     }
     """, { (db, objectToString, listToString) =>
-      val denot1 = db.symbols.find(_.symbol == objectToString).get.denot
-      val denot2 = db.symbols.find(_.symbol == listToString).get.denot
+      val denot1 = db.symbols.find(_.symbol == objectToString).get.denotation
+      val denot2 = db.symbols.find(_.symbol == listToString).get.denotation
       assert(denot1.isJavaDefined)
       assert(!denot2.isJavaDefined)
     }
@@ -661,7 +661,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
     """.stripMargin, { (db, a, b, c, d) =>
       def check(symbol: Symbol, info: String) = {
-        assertNoDiff(db.symbols.find(_.symbol == symbol).get.denot.info, info)
+        assertNoDiff(db.symbols.find(_.symbol == symbol).get.denotation.info, info)
       }
       check(a, "java.lang.StringBuilder")
       check(b, "scala.collection.mutable.StringBuilder")

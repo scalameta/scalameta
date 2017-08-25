@@ -286,7 +286,7 @@ class PublicSuite extends FunSuite {
     val info = "[T](e: E)T"
     val input = Input.Denotation(info, symbol.syntax)
     val pos = Position.Range(input, 7, 8)
-    val names = List(ResolvedName(pos, symbol, isBinder = false))
+    val names = List(ResolvedName(pos, symbol, isDefinition = false))
     val classC = Denotation(PRIVATE | CASE | CLASS, "C", "", Nil)
     assert(classC.toString === "private case class C")
     val defIdentity = Denotation(DEF | FINAL, "identity", info, names)
@@ -368,7 +368,7 @@ class PublicSuite extends FunSuite {
     val original = Input.String("input")
     val input = Input.Sugar("sugar", original, 1, 1)
     val pos = Position.Range(input, 0, 5)
-    val sugar = Sugar(pos, "sugar", List(ResolvedName(pos, Symbol("_root_.sugar."), isBinder = false)))
+    val sugar = Sugar(pos, "sugar", List(ResolvedName(pos, Symbol("_root_.sugar."), isDefinition = false)))
     assert(sugar.syntax == """
       |[0..5): sugar
       |  [0..5): sugar => _root_.sugar.

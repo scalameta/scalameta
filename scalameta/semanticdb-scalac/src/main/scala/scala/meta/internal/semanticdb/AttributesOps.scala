@@ -164,7 +164,7 @@ trait AttributesOps { self: DatabaseOps =>
                 if (symbol == m.Symbol.None) return
 
                 names(mtree.pos) = symbol
-                if (mtree.isBinder) binders += mtree.pos
+                if (mtree.isDefinition) binders += mtree.pos
                 denotations(symbol) = gsym.toDenotation
                 if (gsym.isClass && !gsym.isTrait) {
                   val gprim = gsym.primaryConstructor

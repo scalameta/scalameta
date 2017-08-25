@@ -10,11 +10,11 @@ import scala.meta.internal.trees.Metadata.Ast
 
 package object trees {
   implicit class XtensionTreesName(name: Name) {
-    def isBinder: Boolean = name.parent match {
+    def isDefinition: Boolean = name.parent match {
       case Some(parent: Member) => parent.name == name
       case _ => false
     }
-    def isReference: Boolean = !isBinder
+    def isReference: Boolean = !isDefinition
   }
 
   implicit class XtensionTreesRef(ref: Ref) {

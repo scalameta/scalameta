@@ -4,7 +4,7 @@ package internal.semanticdb
 case class SugarRange(start: Int, end: Int, symbol: Symbol) {
   def addOffset(offset: Int) = SugarRange(start + offset, end + offset, symbol)
   def toMeta(input: Input): ResolvedName =
-    ResolvedName(Position.Range(input, start, end), symbol, isBinder = false)
+    ResolvedName(Position.Range(input, start, end), symbol, isDefinition = false)
 }
 case class AttributedSugar(text: String, names: List[SugarRange]) {
   def +(other: String) = AttributedSugar(text + other, names)

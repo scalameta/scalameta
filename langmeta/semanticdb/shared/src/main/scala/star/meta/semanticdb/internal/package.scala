@@ -60,9 +60,9 @@ package object semanticdb {
               case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dinfo: String, snames))) =>
                 val ddenotinput = dInput.Denotation(dinfo, dsym.syntax)
                 val dnames = snames.toIterator.map {
-                  case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disBinder) =>
+                  case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
                     val ddenotpos = dPosition.Range(ddenotinput, sstart, send)
-                    d.ResolvedName(ddenotpos, dsym, disBinder)
+                    d.ResolvedName(ddenotpos, dsym, disDefinition)
                   case other =>
                     sys.error(s"bad protobuf: unsupported name $other")
                 }.toList
@@ -75,10 +75,10 @@ package object semanticdb {
             def unapply(ssugar: s.Sugar): Option[dSugar] = ssugar match {
               case s.Sugar(Some(sPosition(dpos)), dtext, snames) =>
                 val dnames = snames.toIterator.map {
-                  case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disBinder) =>
+                  case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
                     val dsugarinput = dInput.Sugar(dtext, dpos.input, dpos.start, dpos.end)
                     val dsugarpos = dPosition.Range(dsugarinput, sstart, send)
-                    d.ResolvedName(dsugarpos, dsym, disBinder)
+                    d.ResolvedName(dsugarpos, dsym, disDefinition)
                   case other =>
                     sys.error(s"bad protobuf: unsupported name $other")
                 }.toList
@@ -87,7 +87,7 @@ package object semanticdb {
           }
           val dlanguage = slanguage
           val dnames = snames.map {
-            case s.ResolvedName(Some(sPosition(dpos)), d.Symbol(dsym), disBinder) => d.ResolvedName(dpos, dsym, disBinder)
+            case s.ResolvedName(Some(sPosition(dpos)), d.Symbol(dsym), disDefinition) => d.ResolvedName(dpos, dsym, disDefinition)
             case other => sys.error(s"bad protobuf: unsupported name $other")
           }.toList
           val dmessages = smessages.map {
@@ -133,8 +133,8 @@ package object semanticdb {
             def unapply(ddenot: d.Denotation): Option[s.Denotation] = ddenot match {
               case d.Denotation(sflags, sname, sinfo, dnames) =>
                 val snames = dnames.map {
-                  case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisBinder) =>
-                    s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisBinder)
+                  case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
+                    s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
                   case other =>
                     sys.error(s"bad database: unsupported position $other")
                 }
@@ -146,8 +146,8 @@ package object semanticdb {
             def unapply(dsugar: dSugar): Option[s.Sugar] = dsugar match {
               case d.Sugar(dPosition(spos), ssyntax, dnames) =>
                 val snames = dnames.toIterator.map {
-                  case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisBinder) =>
-                    s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisBinder)
+                  case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
+                    s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
                   case other =>
                     sys.error(s"bad database: unsupported name $other")
                 }.toSeq
@@ -168,7 +168,7 @@ package object semanticdb {
           assert(spath.nonEmpty, s"'$spath'.nonEmpty")
           val slanguage = dlanguage
           val snames = dnames.map {
-            case d.ResolvedName(dPosition(spos), ssym, sisBinder) => s.ResolvedName(Some(spos), ssym.syntax, sisBinder)
+            case d.ResolvedName(dPosition(spos), ssym, sisDefinition) => s.ResolvedName(Some(spos), ssym.syntax, sisDefinition)
             case other => sys.error(s"bad database: unsupported name $other")
           }
           val smessages = dmessages.map {

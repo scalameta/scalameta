@@ -5,13 +5,13 @@ import scala.compat.Platform.EOL
 import lang.meta.inputs._
 import lang.meta.internal.inputs._
 
-final case class ResolvedName(pos: Position, symbol: Symbol, isBinder: Boolean) {
+final case class ResolvedName(position: Position, symbol: Symbol, isDefinition: Boolean) {
   def syntax: String = {
-    val text = if (pos.text.nonEmpty) pos.text else "ε"
-    val binder = if (isBinder) "<=" else "=>"
-    s"[${pos.start}..${pos.end}): $text $binder ${symbol.syntax}"
+    val text = if (position.text.nonEmpty) position.text else "ε"
+    val binder = if (isDefinition) "<=" else "=>"
+    s"[${position.start}..${position.end}): $text $binder ${symbol.syntax}"
   }
-  def structure = s"""ResolvedName(${pos.structure}, ${symbol.structure}, $isBinder)"""
+  def structure = s"""ResolvedName(${position.structure}, ${symbol.structure}, $isDefinition)"""
   override def toString = syntax
 }
 

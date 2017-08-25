@@ -95,9 +95,9 @@ trait DenotationOps { self: DatabaseOps =>
         val input = m.Input.Denotation(sugar.text, gsym.toSemantic.syntax)
         val resolvedNames = sugar.names.toIterator.map {
           case SugarRange(start, end, sugarSymbol) =>
-            m.ResolvedName(m.Position.Range(input, start, end), sugarSymbol, isBinder = false)
+            m.ResolvedName(m.Position.Range(input, start, end), sugarSymbol, isDefinition = false)
         }.toArray
-        Sorting.quickSort(resolvedNames)(Ordering.by[m.ResolvedName, Int](_.pos.start))
+        Sorting.quickSort(resolvedNames)(Ordering.by[m.ResolvedName, Int](_.position.start))
         sugar.text -> resolvedNames.toList
       }
     }

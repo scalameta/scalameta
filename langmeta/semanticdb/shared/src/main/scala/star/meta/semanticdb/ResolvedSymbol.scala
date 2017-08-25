@@ -1,8 +1,8 @@
 package lang.meta
 package semanticdb
 
-final case class ResolvedSymbol(symbol: Symbol, denot: Denotation) {
-  def syntax = s"${symbol.syntax} => ${denot.syntax}"
-  def structure = s"""ResolvedSymbol(${symbol.structure}, ${denot.structure})"""
+final case class ResolvedSymbol(symbol: Symbol, denotation: Denotation) {
+  def syntax = s"${symbol.syntax} => ${denotation.syntax}"
+  def structure = s"""ResolvedSymbol(${symbol.structure}, ${denotation.structure})"""
   override def toString = syntax
 }
