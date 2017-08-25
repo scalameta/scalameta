@@ -11,7 +11,7 @@ final case class Attributes(
   names: List[ResolvedName],
   messages: List[Message],
   symbols: List[ResolvedSymbol],
-  sugars: List[Sugar]
+  sugars: List[Synthetic]
 ) {
   def syntax: String = {
     val lines = scala.collection.mutable.ListBuffer[String]()

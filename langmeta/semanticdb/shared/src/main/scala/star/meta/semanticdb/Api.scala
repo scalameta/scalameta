@@ -13,8 +13,8 @@ private[meta] trait Aliases {
   type Attributes = lang.meta.semanticdb.Attributes
   val Attributes = lang.meta.semanticdb.Attributes
 
-  type Sugar = lang.meta.semanticdb.Sugar
-  val Sugar = lang.meta.semanticdb.Sugar
+  type Synthetic = lang.meta.semanticdb.Synthetic
+  val Synthetic = lang.meta.semanticdb.Synthetic
 
   type Symbol = lang.meta.semanticdb.Symbol
   object Symbol {

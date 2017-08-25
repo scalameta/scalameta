@@ -1,7 +1,7 @@
 package scala.meta
 package tests
 
-class SugarSuite extends BaseSemanticSuite {
+class SyntheticSuite extends BaseSemanticSuite {
   implicit val database = Database.load(classpath, sourcepath)
 
   test("Database.symbols") {

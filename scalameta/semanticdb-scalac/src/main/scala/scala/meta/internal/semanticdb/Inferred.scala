@@ -41,7 +41,7 @@ case class Inferred(
 
   private def all: List[AttributedSugar] = (select :: targs :: conversion :: args :: Nil).flatten
 
-  def toSugar(input: Input, pos: Position): Sugar = {
+  def toSugar(input: Input, pos: Position): Synthetic = {
     def onlyConversionIsDefined =
       conversion.isDefined &&
         select.isEmpty &&
@@ -59,6 +59,6 @@ case class Inferred(
     }
     val sugarInput = Input.Sugar(sugar.text, input, pos.start, pos.end)
     val names = sugar.names.map(_.toMeta(sugarInput))
-    new Sugar(pos, sugar.text, names)
+    new Synthetic(pos, sugar.text, names)
   }
 }

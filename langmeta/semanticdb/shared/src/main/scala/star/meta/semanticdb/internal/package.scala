@@ -3,7 +3,7 @@ package lang.meta.internal
 import java.nio.charset.Charset
 import lang.meta.inputs.{Input => dInput}
 import lang.meta.inputs.{Position => dPosition}
-import lang.meta.semanticdb.{Sugar => dSugar}
+import lang.meta.semanticdb.{Synthetic => dSynthetic}
 import lang.meta.internal.io.PathIO
 import lang.meta.internal.semanticdb.{schema => s}
 import lang.meta.internal.semanticdb.{vfs => v}
@@ -26,7 +26,7 @@ package object semanticdb {
 
     def toDb(sourcepath: Option[Sourcepath]): d.Database = {
       val dentries = sdatabase.entries.toIterator.map {
-        case s.Attributes(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssugars) =>
+        case s.Attributes(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) =>
           assert(sunixfilename.nonEmpty, "s.Attributes.filename must not be empty")
           val sfilename = PathIO.fromUnix(sunixfilename)
           val dinput = {
@@ -72,7 +72,7 @@ package object semanticdb {
             }
           }
           object sSugar {
-            def unapply(ssugar: s.Sugar): Option[dSugar] = ssugar match {
+            def unapply(ssugar: s.Sugar): Option[dSynthetic] = ssugar match {
               case s.Sugar(Some(sPosition(dpos)), dtext, snames) =>
                 val dnames = snames.toIterator.map {
                   case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
@@ -82,7 +82,7 @@ package object semanticdb {
                   case other =>
                     sys.error(s"bad protobuf: unsupported name $other")
                 }.toList
-              Some(dSugar(dpos, dtext, dnames))
+              Some(dSynthetic(dpos, dtext, dnames))
             }
           }
           val dlanguage = slanguage
@@ -98,11 +98,11 @@ package object semanticdb {
           val dsymbols = ssymbols.map {
             case sResolvedSymbol(dresolvedsymbol) => dresolvedsymbol
           }.toList
-          val dsugars = ssugars.toIterator.map {
+          val dsynthetics = ssynthetics.toIterator.map {
             case sSugar(dsugar) => dsugar
             case other => sys.error(s"bad protobuf: unsupported sugar $other")
           }.toList
-          d.Attributes(dinput, dlanguage, dnames, dmessages, dsymbols, dsugars)
+          d.Attributes(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
       }
       d.Database(dentries.toList)
     }
@@ -110,7 +110,7 @@ package object semanticdb {
   implicit class XtensionDatabase(ddatabase: d.Database) {
     def toSchema(sourceroot: AbsolutePath): s.Database = {
       val sentries = ddatabase.entries.map {
-        case d.Attributes(dinput, dlanguage, dnames, dmessages, dsymbols, dsugars) =>
+        case d.Attributes(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
           object dPosition {
             def unapply(dpos: dPosition): Option[s.Position] = dpos match {
               case lang.meta.inputs.Position.Range(`dinput`, sstart, send) =>
@@ -142,9 +142,9 @@ package object semanticdb {
               case _ => None
             }
           }
-          object dSugar {
-            def unapply(dsugar: dSugar): Option[s.Sugar] = dsugar match {
-              case d.Sugar(dPosition(spos), ssyntax, dnames) =>
+          object dSynthetic {
+            def unapply(dsugar: dSynthetic): Option[s.Sugar] = dsugar match {
+              case d.Synthetic(dPosition(spos), ssyntax, dnames) =>
                 val snames = dnames.toIterator.map {
                   case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
                     s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
@@ -179,11 +179,11 @@ package object semanticdb {
             case d.ResolvedSymbol(ssym, dDenotation(sdenot)) => s.ResolvedSymbol(ssym.syntax, Some(sdenot))
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
-          val ssugars = dsugars.toIterator.map {
-            case dSugar(ssugar) => ssugar
+          val ssynthetics = dsynthetics.toIterator.map {
+            case dSynthetic(ssugar) => ssugar
             case other => sys.error(s"bad database: unsupported sugar $other")
           }.toSeq
-          s.Attributes(spath, scontents, slanguage, snames, smessages, ssymbols, ssugars)
+          s.Attributes(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
       }
       s.Database(sentries)
     }

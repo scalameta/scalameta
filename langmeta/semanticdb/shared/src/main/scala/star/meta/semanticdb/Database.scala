@@ -13,7 +13,7 @@ final case class Database(entries: Seq[Attributes]) {
   lazy val names: Seq[ResolvedName] = entries.flatMap(_.names)
   lazy val messages: Seq[Message] = entries.flatMap(_.messages)
   lazy val symbols: Seq[ResolvedSymbol] = entries.flatMap(_.symbols)
-  lazy val sugars: Seq[Sugar] = entries.flatMap(_.sugars)
+  lazy val sugars: Seq[Synthetic] = entries.flatMap(_.sugars)
 
   def save(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
     this.toSchema(sourceroot).toVfs(targetroot).save()
