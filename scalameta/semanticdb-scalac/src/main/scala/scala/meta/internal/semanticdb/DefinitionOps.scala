@@ -92,7 +92,7 @@ trait DefinitionOps { self: DatabaseOps =>
       if (gsym.isClass || gsym.isModule) "" -> Nil
       else {
         val synthetic = showSynthetic(gsym.info)
-        val input = m.Input.Definition(synthetic.text, gsym.toSemantic.syntax)
+        val input = m.Input.Definition(synthetic.text, gsym.toSemantic)
         val names = synthetic.names.toIterator.map {
           case SyntheticRange(start, end, syntheticSymbol) =>
             m.ResolvedName(

@@ -31,6 +31,10 @@ class File(path: String) {
     toPath.toAbsolutePath.toFile
   def getAbsolutePath: String =
     getAbsoluteFile.toString
+  def getParentFile: File =
+    toPath.getParent.toFile
+  def mkdirs(): Unit =
+    throw new UnsupportedOperationException("mkdirs() is not supported in Scala.js")
   def getPath: String =
     path
   def exists(): Boolean =
