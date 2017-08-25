@@ -36,7 +36,7 @@ trait AttributesOps { self: DatabaseOps =>
         val names = mutable.Map[m.Position, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
         val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
-        val inferredImplicitConv = mutable.Set.empty[g.Tree] // synthesized implicit conversions
+        val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
         val todo = mutable.Set[m.Name]() // names to map to global trees
         val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
         unit.body.appendMetadata("semanticdbMstarts" -> mstarts) // used in MessagesOps
@@ -317,11 +317,11 @@ trait AttributesOps { self: DatabaseOps =>
                   val pos = gtree.pos.toMeta
                   val syntax = showSugar(gview.fun) + "(" + S.star + ")"
                   success(pos, _.copy(conversion = Some(syntax)))
-                  inferredImplicitConv += gview.fun
+                  isVisited += gview.fun
                 case gimpl: g.ApplyToImplicitArgs =>
                   gimpl.fun match {
                     case gview: g.ApplyImplicitView =>
-                      inferredImplicitConv += gview
+                      isVisited += gview
                       val pos = gtree.pos.toMeta
                       val args = S.mkString(gimpl.args.map(showSugar), ", ")
                       val syntax = showSugar(gview.fun) + "(" + S.star + ")(" + args + ")"
@@ -351,7 +351,12 @@ trait AttributesOps { self: DatabaseOps =>
             }
 
             override def traverse(gtree: g.Tree): Unit = {
-              if (inferredImplicitConv.contains(gtree)) return // synthetic tree, skip.
+              if (isVisited(gtree)) return else isVisited += gtree
+              gtree.attachments.all.foreach {
+                case att: g.analyzer.MacroExpansionAttachment =>
+                  traverse(att.expandee)
+                case _ =>
+              }
               gtree match {
                 case ConstfoldOf(original) =>
                   traverse(original)

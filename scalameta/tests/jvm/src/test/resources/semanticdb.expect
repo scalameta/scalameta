@@ -21,6 +21,11 @@ Names:
 [133..139): String => _root_.scala.Predef.String#
 [143..147): Unit => _root_.scala.Unit#
 [156..163): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
+[177..178): x <= _root_.example.Example.x.
+[181..186): scala => _root_.scala.
+[187..194): reflect => _root_.scala.reflect.
+[195..203): classTag => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.
+[204..207): Int => _root_.scala.Int#
 
 Messages:
 [41..47): [warning] Unused import
@@ -40,6 +45,9 @@ _root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: scala.Ar
   [12..17): scala => _root_.scala.
   [18..24): Predef => _root_.scala.Predef.
   [25..31): String => _root_.scala.Predef.String#
+_root_.example.Example.x. => val x: scala.reflect.ClassTag[scala.Int]
+  [14..22): ClassTag => _root_.scala.reflect.ClassTag#
+  [29..32): Int => _root_.scala.Int#
 _root_.scala. => package scala
 _root_.scala.Array# => final class Array
 _root_.scala.Array#`<init>`(I)V. => primaryctor <init>: (_length: scala.Int)scala.Array[T]
@@ -70,6 +78,19 @@ _root_.scala.collection.mutable.Stack#`<init>`(Lscala/collection/immutable/List;
   [74..75): A => _root_.scala.collection.mutable.Stack#[A]
 _root_.scala.concurrent. => package concurrent
 _root_.scala.concurrent.Future.;_root_.scala.concurrent.Future# => val <import scala.concurrent.Future>: scala.concurrent.Future.type <and> scala.concurrent.Future
+_root_.scala.reflect. => package reflect
+_root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;. => def classTag: [T](implicit ctag: scala.reflect.ClassTag[T])scala.reflect.ClassTag[T]
+  [33..41): ClassTag => _root_.scala.reflect.ClassTag#
+  [42..43): T => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.[T]
+  [59..67): ClassTag => _root_.scala.reflect.ClassTag#
+  [68..69): T => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.[T]
+
+Sugars:
+[208..208): *(((ClassTag.Int): scala.reflect.ClassTag[scala.Int]))
+  [0..1): * => _star_.
+  [48..51): Int => _root_.scala.Int#
+  [33..41): ClassTag => _root_.scala.reflect.ClassTag#
+  [13..16): Int => _root_.scala.reflect.ClassTag.Int.
 
 
 scalameta/semanticdb-integration/src/main/scala/example/Sugar.scala

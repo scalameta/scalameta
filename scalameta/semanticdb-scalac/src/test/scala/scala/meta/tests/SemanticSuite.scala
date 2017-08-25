@@ -670,4 +670,43 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     }
   )
 
+  names(
+    """|
+       |import scala.meta._
+       |import org.scalatest._
+       |object w extends FunSuite {
+       |  val x = q"Foo"
+       |  val y = q"Bar"
+       |  val z = q"$x + $y"
+       |  val k = sourcecode.Name.generate
+       |  assert(x.value == "Foo")
+       |}
+    """.stripMargin,
+    """|
+       |[8..13): scala => _root_.scala.
+       |[14..18): meta => _root_.scala.meta.
+       |[28..31): org => _root_.org.
+       |[32..41): scalatest => _root_.org.scalatest.
+       |[51..52): w <= _empty_.w.
+       |[61..69): FunSuite => _root_.org.scalatest.FunSuite#
+       |[70..70): ε => _root_.org.scalatest.FunSuite#`<init>`()V.
+       |[78..79): x <= _empty_.w.x.
+       |[82..83): q => _root_.scala.meta.internal.quasiquotes.Unlift.
+       |[95..96): y <= _empty_.w.y.
+       |[99..100): q => _root_.scala.meta.internal.quasiquotes.Unlift.
+       |[112..113): z <= _empty_.w.z.
+       |[116..117): q => _root_.scala.meta.internal.quasiquotes.Unlift.
+       |[119..120): x => _empty_.w.x.
+       |[124..125): y => _empty_.w.y.
+       |[133..134): k <= _empty_.w.k.
+       |[137..147): sourcecode => _root_.sourcecode.
+       |[148..152): Name => _root_.sourcecode.Name.
+       |[153..161): generate => _root_.sourcecode.Name.generate()Lsourcecode/Name;.
+       |[164..170): assert => _root_.org.scalatest.Assertions#assert(ZLorg/scalactic/Prettifier;Lorg/scalactic/source/Position;)Lorg/scalatest/compatible/Assertion;.
+       |[171..172): x => _empty_.w.x.
+       |[173..178): value => _root_.scala.meta.Term.Name#value()Ljava/lang/String;.
+       |[179..181): == => _root_.java.lang.Object#`==`(Ljava/lang/Object;)Z.
+       |""".stripMargin
+  )
+
 }
