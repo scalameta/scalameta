@@ -24,8 +24,8 @@ private[meta] trait Aliases {
     type Synthetic = lang.meta.inputs.Input.Synthetic
     val Synthetic = lang.meta.inputs.Input.Synthetic
 
-    type Denotation = lang.meta.inputs.Input.Denotation
-    val Denotation = lang.meta.inputs.Input.Denotation
+    type Definition = lang.meta.inputs.Input.Definition
+    val Definition = lang.meta.inputs.Input.Definition
 
     type Slice = lang.meta.inputs.Input.Slice
     val Slice = lang.meta.inputs.Input.Slice

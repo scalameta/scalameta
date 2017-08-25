@@ -60,8 +60,8 @@ private[meta] trait Aliases {
   type Severity = lang.meta.semanticdb.Severity
   val Severity = lang.meta.semanticdb.Severity
 
-  type Denotation = lang.meta.semanticdb.Denotation
-  val Denotation = lang.meta.semanticdb.Denotation
+  type Definition = lang.meta.semanticdb.Definition
+  val Definition = lang.meta.semanticdb.Definition
 
   type ResolvedName = lang.meta.semanticdb.ResolvedName
   val ResolvedName = lang.meta.semanticdb.ResolvedName

@@ -81,9 +81,9 @@ object Input {
     override def toString = s"""Input.Synthetic("$value", $input, $start, $end)"""
   }
 
-  final case class Denotation(value: scala.Predef.String, symbol: scala.Predef.String) extends Input {
+  final case class Definition(value: scala.Predef.String, symbol: scala.Predef.String) extends Input {
     lazy val chars = value.toCharArray
-    override def toString = s"""Input.Denotation("$value", "$symbol")"""
+    override def toString = s"""Input.Definition("$value", "$symbol")"""
   }
 
   // NOTE: `start` and `end` are String.substring-style,

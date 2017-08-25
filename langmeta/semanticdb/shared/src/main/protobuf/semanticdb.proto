@@ -43,10 +43,10 @@ message Message {
 
 message ResolvedSymbol {
   string symbol = 1;
-  Denotation denotation = 2;
+  Definition definition = 2;
 }
 
-message Denotation {
+message Definition {
   int64 flags = 1;
   string name = 2;
   string signature = 3;

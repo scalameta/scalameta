@@ -281,15 +281,15 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("lang.meta.semanticdb.Denotation.toString") {
+  test("lang.meta.semanticdb.Definition.toString") {
     val symbol = Symbol("_root_.E#")
     val info = "[T](e: E)T"
-    val input = Input.Denotation(info, symbol.syntax)
+    val input = Input.Definition(info, symbol.syntax)
     val pos = Position.Range(input, 7, 8)
     val names = List(ResolvedName(pos, symbol, isDefinition = false))
-    val classC = Denotation(PRIVATE | CASE | CLASS, "C", "", Nil)
+    val classC = Definition(PRIVATE | CASE | CLASS, "C", "", Nil)
     assert(classC.toString === "private case class C")
-    val defIdentity = Denotation(DEF | FINAL, "identity", info, names)
+    val defIdentity = Definition(DEF | FINAL, "identity", info, names)
     assert(defIdentity.toString ===
       """final def identity: [T](e: E)T
         |  [7..8): E => _root_.E#""".stripMargin

@@ -34,7 +34,7 @@ trait SourceFileOps { self: DatabaseOps =>
 
         val binders = mutable.Set[m.Position]()
         val names = mutable.Map[m.Position, m.Symbol]()
-        val denotations = mutable.Map[m.Symbol, m.Denotation]()
+        val definitions = mutable.Map[m.Symbol, m.Definition]()
         val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
         val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
         val todo = mutable.Set[m.Name]() // names to map to global trees
@@ -165,10 +165,10 @@ trait SourceFileOps { self: DatabaseOps =>
 
                 names(mtree.pos) = symbol
                 if (mtree.isDefinition) binders += mtree.pos
-                denotations(symbol) = gsym.toDenotation
+                definitions(symbol) = gsym.toDefinition
                 if (gsym.isClass && !gsym.isTrait) {
                   val gprim = gsym.primaryConstructor
-                  denotations(gprim.toSemantic) = gprim.toDenotation
+                  definitions(gprim.toSemantic) = gprim.toDefinition
                 }
                 todo -= mtree
 
@@ -410,7 +410,7 @@ trait SourceFileOps { self: DatabaseOps =>
           language,
           names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,
           Nil, // added after jvm phase.
-          denotations.map { case (sym, denot) => m.ResolvedSymbol(sym, denot) }.toList,
+          definitions.map { case (sym, denot) => m.ResolvedSymbol(sym, denot) }.toList,
           synthetics.toList
         )
       })

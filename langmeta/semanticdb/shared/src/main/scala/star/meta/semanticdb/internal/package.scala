@@ -57,18 +57,18 @@ package object semanticdb {
           }
           object sResolvedSymbol {
             def unapply(sresolvedsymbol: s.ResolvedSymbol): Option[d.ResolvedSymbol] = sresolvedsymbol match {
-              case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames))) =>
-                val ddenotinput = dInput.Denotation(dsignature, dsym.syntax)
+              case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Definition(dflags, dname: String, dsignature: String, snames))) =>
+                val ddefninput = dInput.Definition(dsignature, dsym.syntax)
                 val dnames = snames.toIterator.map {
                   case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
-                    val ddenotpos = dPosition.Range(ddenotinput, sstart, send)
-                    d.ResolvedName(ddenotpos, dsym, disDefinition)
+                    val ddefnpos = dPosition.Range(ddefninput, sstart, send)
+                    d.ResolvedName(ddefnpos, dsym, disDefinition)
                   case other =>
                     sys.error(s"bad protobuf: unsupported name $other")
                 }.toList
-                val ddenot = d.Denotation(dflags, dname, dsignature, dnames)
-                Some(d.ResolvedSymbol(dsym, ddenot))
-              case other => sys.error(s"bad protobuf: unsupported denotation $other")
+                val ddefn = d.Definition(dflags, dname, dsignature, dnames)
+                Some(d.ResolvedSymbol(dsym, ddefn))
+              case other => sys.error(s"bad protobuf: unsupported definition $other")
             }
           }
           object sSynthetic {
@@ -129,16 +129,16 @@ package object semanticdb {
               }
             }
           }
-          object dDenotation {
-            def unapply(ddenot: d.Denotation): Option[s.Denotation] = ddenot match {
-              case d.Denotation(sflags, sname, ssignature, dnames) =>
+          object dDefinition {
+            def unapply(ddefn: d.Definition): Option[s.Definition] = ddefn match {
+              case d.Definition(sflags, sname, ssignature, dnames) =>
                 val snames = dnames.map {
                   case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
                     s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
                   case other =>
                     sys.error(s"bad database: unsupported position $other")
                 }
-                Some(s.Denotation(sflags, sname, ssignature, snames))
+                Some(s.Definition(sflags, sname, ssignature, snames))
               case _ => None
             }
           }
@@ -176,8 +176,8 @@ package object semanticdb {
             case other => sys.error(s"bad database: unsupported message $other")
           }
           val ssymbols = dsymbols.map {
-            case d.ResolvedSymbol(ssym, dDenotation(sdenot)) => s.ResolvedSymbol(ssym.syntax, Some(sdenot))
-            case other => sys.error(s"bad database: unsupported denotation $other")
+            case d.ResolvedSymbol(ssym, dDefinition(sdefn)) => s.ResolvedSymbol(ssym.syntax, Some(sdefn))
+            case other => sys.error(s"bad database: unsupported definition $other")
           }
           val ssynthetics = dsynthetics.toIterator.map {
             case dSynthetic(ssynthetic) => ssynthetic

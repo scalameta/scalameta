@@ -6,7 +6,7 @@ import scala.tools.nsc.Global
 trait DatabaseOps
     extends SourceFileOps
     with ConfigOps
-    with DenotationOps
+    with DefinitionOps
     with InputOps
     with LanguageOps
     with ParseOps
