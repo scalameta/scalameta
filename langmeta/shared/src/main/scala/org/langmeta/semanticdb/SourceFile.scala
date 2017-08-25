@@ -1,5 +1,4 @@
-package org.langmeta
-package semanticdb
+package org.langmeta.semanticdb
 
 import scala.compat.Platform.EOL
 import org.langmeta.inputs._

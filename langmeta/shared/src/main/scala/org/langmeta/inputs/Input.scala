@@ -1,5 +1,4 @@
-package org.langmeta
-package inputs
+package org.langmeta.inputs
 
 import java.nio.{file => nio}
 import java.nio.charset.Charset

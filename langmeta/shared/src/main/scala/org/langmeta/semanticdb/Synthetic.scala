@@ -1,5 +1,4 @@
-package org.langmeta
-package semanticdb
+package org.langmeta.semanticdb
 
 import org.langmeta.inputs._
 import org.langmeta.internal.inputs._
