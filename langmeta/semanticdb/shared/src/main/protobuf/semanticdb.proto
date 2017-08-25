@@ -21,7 +21,7 @@ message SourceFile {
 message ResolvedName {
   Position position = 1;
   string symbol = 2;
-  bool is_binder = 3;
+  bool is_definition = 3;
 }
 
 message Position {
