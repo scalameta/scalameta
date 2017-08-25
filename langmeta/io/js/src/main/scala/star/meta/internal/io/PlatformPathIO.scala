@@ -1,6 +1,6 @@
-package lang.meta.internal.io
+package org.langmeta.internal.io
 
-import lang.meta.io._
+import org.langmeta.io._
 
 object PlatformPathIO {
   def workingDirectoryString: String =

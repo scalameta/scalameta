@@ -1,4 +1,4 @@
-package lang.meta
+package org.langmeta
 package io
 
 import java.io._
@@ -6,9 +6,9 @@ import java.nio.{file => nio}
 import java.net._
 import java.nio.file.Path
 import java.nio.file.Paths
-import lang.meta.internal.io.PlatformPathIO
-import lang.meta.internal.io.FileIO
-import lang.meta.internal.io.PathIO
+import org.langmeta.internal.io.PlatformPathIO
+import org.langmeta.internal.io.FileIO
+import org.langmeta.internal.io.PathIO
 
 /** Wrapper around an absolute nio.Path. */
 sealed abstract case class AbsolutePath(toNIO: nio.Path) {

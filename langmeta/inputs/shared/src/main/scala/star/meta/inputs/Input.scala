@@ -1,10 +1,10 @@
-package lang.meta
+package org.langmeta
 package inputs
 
 import java.nio.{file => nio}
 import java.nio.charset.Charset
-import lang.meta.internal.inputs._
-import lang.meta.io._
+import org.langmeta.internal.inputs._
+import org.langmeta.io._
 
 sealed trait Input extends Product with Serializable with InternalInput {
   def chars: Array[Char]
@@ -23,7 +23,7 @@ object Input {
   }
 
   final case class Stream(stream: java.io.InputStream, charset: Charset) extends Input {
-    lazy val chars = new scala.Predef.String(lang.meta.internal.io.InputStreamIO.readBytes(stream), charset).toArray
+    lazy val chars = new scala.Predef.String(org.langmeta.internal.io.InputStreamIO.readBytes(stream), charset).toArray
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
     override def toString = s"""Input.Stream(<stream>, Charset.forName("${charset.name}"))"""
   }
@@ -45,7 +45,7 @@ object Input {
   }
 
   final case class File(path: AbsolutePath, charset: Charset) extends Input {
-    lazy val chars = lang.meta.internal.io.FileIO.slurp(path, charset).toArray
+    lazy val chars = org.langmeta.internal.io.FileIO.slurp(path, charset).toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
     override def toString = s"""Input.File(new File("${path.syntax}"), Charset.forName("${charset.name}"))"""
   }

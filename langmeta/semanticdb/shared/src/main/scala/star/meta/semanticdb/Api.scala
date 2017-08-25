@@ -1,71 +1,72 @@
-package lang.meta
+package org.langmeta
 package semanticdb
 
-import lang.meta.inputs._
+import org.langmeta.inputs._
+import org.langmeta
 
-private[meta] trait Api extends Flags {
+private[langmeta] trait Api extends Flags {
 }
 
-private[meta] trait Aliases {
-  type Database = lang.meta.semanticdb.Database
-  val Database = lang.meta.semanticdb.Database
+private[langmeta] trait Aliases {
+  type Database = org.langmeta.semanticdb.Database
+  val Database = org.langmeta.semanticdb.Database
 
-  type SourceFile = lang.meta.semanticdb.SourceFile
-  val SourceFile = lang.meta.semanticdb.SourceFile
+  type SourceFile = org.langmeta.semanticdb.SourceFile
+  val SourceFile = org.langmeta.semanticdb.SourceFile
 
-  type Synthetic = lang.meta.semanticdb.Synthetic
-  val Synthetic = lang.meta.semanticdb.Synthetic
+  type Synthetic = org.langmeta.semanticdb.Synthetic
+  val Synthetic = org.langmeta.semanticdb.Synthetic
 
-  type Symbol = lang.meta.semanticdb.Symbol
+  type Symbol = org.langmeta.semanticdb.Symbol
   object Symbol {
-    val None = lang.meta.semanticdb.Symbol.None
+    val None = org.langmeta.semanticdb.Symbol.None
 
-    type Local = lang.meta.semanticdb.Symbol.Local
-    val Local = lang.meta.semanticdb.Symbol.Local
+    type Local = org.langmeta.semanticdb.Symbol.Local
+    val Local = org.langmeta.semanticdb.Symbol.Local
 
-    type Global = lang.meta.semanticdb.Symbol.Global
-    val Global = lang.meta.semanticdb.Symbol.Global
+    type Global = org.langmeta.semanticdb.Symbol.Global
+    val Global = org.langmeta.semanticdb.Symbol.Global
 
-    type Multi = lang.meta.semanticdb.Symbol.Multi
-    val Multi = lang.meta.semanticdb.Symbol.Multi
+    type Multi = org.langmeta.semanticdb.Symbol.Multi
+    val Multi = org.langmeta.semanticdb.Symbol.Multi
 
-    def apply(s: String): Symbol = lang.meta.semanticdb.Symbol.apply(s)
-    def unapply(sym: String): Option[Symbol] = lang.meta.semanticdb.Symbol.unapply(sym)
+    def apply(s: String): Symbol = org.langmeta.semanticdb.Symbol.apply(s)
+    def unapply(sym: String): Option[Symbol] = org.langmeta.semanticdb.Symbol.unapply(sym)
   }
 
-  type Signature = lang.meta.semanticdb.Signature
+  type Signature = org.langmeta.semanticdb.Signature
   object Signature {
-    type Type = lang.meta.semanticdb.Signature.Type
-    val Type = lang.meta.semanticdb.Signature.Type
+    type Type = org.langmeta.semanticdb.Signature.Type
+    val Type = org.langmeta.semanticdb.Signature.Type
 
-    type Term = lang.meta.semanticdb.Signature.Term
-    val Term = lang.meta.semanticdb.Signature.Term
+    type Term = org.langmeta.semanticdb.Signature.Term
+    val Term = org.langmeta.semanticdb.Signature.Term
 
-    type Method = lang.meta.semanticdb.Signature.Method
-    val Method = lang.meta.semanticdb.Signature.Method
+    type Method = org.langmeta.semanticdb.Signature.Method
+    val Method = org.langmeta.semanticdb.Signature.Method
 
-    type TypeParameter = lang.meta.semanticdb.Signature.TypeParameter
-    val TypeParameter = lang.meta.semanticdb.Signature.TypeParameter
+    type TypeParameter = org.langmeta.semanticdb.Signature.TypeParameter
+    val TypeParameter = org.langmeta.semanticdb.Signature.TypeParameter
 
-    type TermParameter = lang.meta.semanticdb.Signature.TermParameter
-    val TermParameter = lang.meta.semanticdb.Signature.TermParameter
+    type TermParameter = org.langmeta.semanticdb.Signature.TermParameter
+    val TermParameter = org.langmeta.semanticdb.Signature.TermParameter
 
-    type Self = lang.meta.semanticdb.Signature.Self
-    val Self = lang.meta.semanticdb.Signature.Self
+    type Self = org.langmeta.semanticdb.Signature.Self
+    val Self = org.langmeta.semanticdb.Signature.Self
   }
 
-  type Message = lang.meta.semanticdb.Message
-  val Message = lang.meta.semanticdb.Message
+  type Message = org.langmeta.semanticdb.Message
+  val Message = org.langmeta.semanticdb.Message
 
-  type Severity = lang.meta.semanticdb.Severity
-  val Severity = lang.meta.semanticdb.Severity
+  type Severity = org.langmeta.semanticdb.Severity
+  val Severity = org.langmeta.semanticdb.Severity
 
-  type Definition = lang.meta.semanticdb.Definition
-  val Definition = lang.meta.semanticdb.Definition
+  type Definition = org.langmeta.semanticdb.Definition
+  val Definition = org.langmeta.semanticdb.Definition
 
-  type ResolvedName = lang.meta.semanticdb.ResolvedName
-  val ResolvedName = lang.meta.semanticdb.ResolvedName
+  type ResolvedName = org.langmeta.semanticdb.ResolvedName
+  val ResolvedName = org.langmeta.semanticdb.ResolvedName
 
-  type ResolvedSymbol = lang.meta.semanticdb.ResolvedSymbol
-  val ResolvedSymbol = lang.meta.semanticdb.ResolvedSymbol
+  type ResolvedSymbol = org.langmeta.semanticdb.ResolvedSymbol
+  val ResolvedSymbol = org.langmeta.semanticdb.ResolvedSymbol
 }

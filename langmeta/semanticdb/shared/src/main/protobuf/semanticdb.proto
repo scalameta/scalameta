@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package lang.meta.internal.semanticdb.schema;
+package org.langmeta.internal.semanticdb.schema;
 
 message Database {
   repeated SourceFile files = 1;

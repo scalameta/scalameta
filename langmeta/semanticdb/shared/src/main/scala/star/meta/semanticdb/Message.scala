@@ -1,8 +1,8 @@
-package lang.meta
+package org.langmeta
 package semanticdb
 
-import lang.meta.inputs._
-import lang.meta.internal.inputs._
+import org.langmeta.inputs._
+import org.langmeta.internal.inputs._
 
 final case class Message(position: Position, severity: Severity, text: String) {
   def syntax = s"[${position.start}..${position.end}): ${severity.syntax} $text"

@@ -2,7 +2,7 @@ package java.io
 
 import java.net.URI
 import java.nio.file.Path
-import lang.meta.internal.io._
+import org.langmeta.internal.io._
 
 // obtained implementation by experimentation on the JDK.
 class File(path: String) {

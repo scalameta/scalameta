@@ -1,12 +1,12 @@
-package lang.meta.internal
+package org.langmeta.internal
 package semanticdb
 package vfs
 
 import java.io.File
 import java.io.FileOutputStream
-import lang.meta.io._
-import lang.meta.internal.semanticdb.{vfs => v}
-import lang.meta.internal.semanticdb.{schema => s}
+import org.langmeta.io._
+import org.langmeta.internal.semanticdb.{vfs => v}
+import org.langmeta.internal.semanticdb.{schema => s}
 
 object Database {
   def load(classpath: Classpath): v.Database = {

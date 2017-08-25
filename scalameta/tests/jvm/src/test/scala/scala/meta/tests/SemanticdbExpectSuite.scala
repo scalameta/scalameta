@@ -6,7 +6,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.charset.Charset
 import scala.meta.testkit.DiffAssertions
-import lang.meta.internal.io.FileIO
+import org.langmeta.internal.io.FileIO
 import org.scalatest.FunSuite
 
 class SemanticdbExpectSuite extends FunSuite with DiffAssertions {

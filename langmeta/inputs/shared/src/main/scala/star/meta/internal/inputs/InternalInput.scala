@@ -1,8 +1,9 @@
-package lang.meta.internal
+package org.langmeta.internal
 package inputs
 
 import scala.collection.mutable
-import lang.meta.inputs._
+import org.langmeta.inputs._
+import org.langmeta
 
 trait InternalInput {
   self: Input =>
@@ -23,7 +24,7 @@ trait InternalInput {
     buf.toArray
   }
 
-  private[meta] def lineToOffset(line: Int): Int = {
+  private[langmeta] def lineToOffset(line: Int): Int = {
     // NOTE: The length-1 part is not a typo, it's to accommodate the sentinel value.
     if (!(0 <= line && line <= cachedLineIndices.length - 1)) {
       val message = s"$line is not a valid line number, allowed [0..${cachedLineIndices.length - 1}]"
@@ -32,7 +33,7 @@ trait InternalInput {
     cachedLineIndices(line)
   }
 
-  private[meta] def offsetToLine(offset: Int): Int = {
+  private[langmeta] def offsetToLine(offset: Int): Int = {
     val chars = this.chars
     val a = cachedLineIndices
     // NOTE: We allow chars.length, because it's a valid value for an offset.

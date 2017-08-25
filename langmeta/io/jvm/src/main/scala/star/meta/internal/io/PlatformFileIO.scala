@@ -1,11 +1,11 @@
-package lang.meta.internal.io
+package org.langmeta.internal.io
 
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
-import lang.meta.io._
+import org.langmeta.io._
 
 object PlatformFileIO {
 

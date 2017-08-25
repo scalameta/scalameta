@@ -1,8 +1,8 @@
-package lang.meta.internal.io
+package org.langmeta.internal.io
 
 import java.nio.file._
 import java.io.File
-import lang.meta.io._
+import org.langmeta.io._
 
 object PathIO {
 

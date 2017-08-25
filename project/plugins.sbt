@@ -28,3 +28,5 @@ addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "1.1")
 
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "2.0.0")
 
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.0-M7")
+

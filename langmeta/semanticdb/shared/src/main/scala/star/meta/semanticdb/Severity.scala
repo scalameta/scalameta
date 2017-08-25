@@ -1,4 +1,4 @@
-package lang.meta
+package org.langmeta
 package semanticdb
 
 sealed trait Severity extends Product {

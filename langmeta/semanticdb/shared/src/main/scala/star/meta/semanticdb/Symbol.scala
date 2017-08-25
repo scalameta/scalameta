@@ -1,4 +1,4 @@
-package lang.meta
+package org.langmeta
 package semanticdb
 
 import scala.compat.Platform.EOL

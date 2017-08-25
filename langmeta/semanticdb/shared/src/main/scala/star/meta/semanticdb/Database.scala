@@ -1,13 +1,13 @@
-package lang.meta
+package org.langmeta
 package semanticdb
 
 import scala.compat.Platform.EOL
-import lang.meta.inputs._
-import lang.meta.io._
-import lang.meta.internal.io.PathIO
-import lang.meta.internal.semanticdb._
-import lang.meta.internal.semanticdb.{vfs => v}
-import lang.meta.internal.semanticdb.{schema => s}
+import org.langmeta.inputs._
+import org.langmeta.io._
+import org.langmeta.internal.io.PathIO
+import org.langmeta.internal.semanticdb._
+import org.langmeta.internal.semanticdb.{vfs => v}
+import org.langmeta.internal.semanticdb.{schema => s}
 
 final case class Database(files: Seq[SourceFile]) {
   lazy val names: Seq[ResolvedName] = files.flatMap(_.names)

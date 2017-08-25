@@ -1,6 +1,6 @@
-package lang.meta.internal.io
+package org.langmeta.internal.io
 
-import lang.meta.io._
+import org.langmeta.io._
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import scala.scalajs.js.annotation.JSImport.Namespace

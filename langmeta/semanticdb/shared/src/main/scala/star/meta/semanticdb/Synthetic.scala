@@ -1,8 +1,8 @@
-package lang.meta
+package org.langmeta
 package semanticdb
 
-import lang.meta.inputs._
-import lang.meta.internal.inputs._
+import org.langmeta.inputs._
+import org.langmeta.internal.inputs._
 
 final case class Synthetic(position: Position, text: String, names: List[ResolvedName]) {
   def input = Input.Synthetic(text, position.input, position.start, position.end)

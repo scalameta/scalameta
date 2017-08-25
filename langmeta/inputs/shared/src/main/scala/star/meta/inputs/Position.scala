@@ -1,4 +1,4 @@
-package lang.meta
+package org.langmeta
 package inputs
 
 // NOTE: `start` and `end` are String.substring-style,

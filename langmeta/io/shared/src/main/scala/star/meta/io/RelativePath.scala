@@ -1,4 +1,4 @@
-package lang.meta
+package org.langmeta
 package io
 
 import java.io._
@@ -6,7 +6,7 @@ import java.net._
 import java.nio.file.Path
 import java.nio.{file => nio}
 import java.nio.file.Paths
-import lang.meta.internal.io.PathIO
+import org.langmeta.internal.io.PathIO
 
 /** Wrapper around a relative nio.Path. */
 sealed abstract case class RelativePath(toNIO: Path) {

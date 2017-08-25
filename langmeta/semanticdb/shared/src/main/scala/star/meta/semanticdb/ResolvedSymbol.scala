@@ -1,4 +1,4 @@
-package lang.meta
+package org.langmeta
 package semanticdb
 
 final case class ResolvedSymbol(symbol: Symbol, definition: Definition) {

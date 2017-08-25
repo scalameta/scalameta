@@ -1,4 +1,4 @@
-package lang.meta
+package org.langmeta
 package io
 
 import java.net._
@@ -6,7 +6,7 @@ import java.io._
 import java.io.File.pathSeparator
 import java.util.zip._
 import scala.collection.mutable
-import lang.meta.internal.io.FileIO
+import org.langmeta.internal.io.FileIO
 
 sealed trait Multipath {
   def shallow: List[AbsolutePath]
@@ -15,7 +15,7 @@ sealed trait Multipath {
     var buf = mutable.LinkedHashSet[Fragment]()
     shallow.foreach { base =>
       def exploreJar(base: AbsolutePath): Unit = {
-        if (lang.meta.internal.platform.isJS) {
+        if (org.langmeta.internal.platform.isJS) {
           throw new UnsupportedEncodingException("Unzipping jars is not yet supported in JS.")
         } else {
           val stream = new FileInputStream(base.toFile)

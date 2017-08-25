@@ -1,8 +1,8 @@
 package java.nio.file
 
 import java.io.File
-import lang.meta.internal.io.JSPath
-import lang.meta.internal.io.NodeNIOPath
+import org.langmeta.internal.io.JSPath
+import org.langmeta.internal.io.NodeNIOPath
 
 object Paths {
   // NOTE: We can't use Scala-style varargs since those have a different jvm

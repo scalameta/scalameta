@@ -1,14 +1,14 @@
-package lang.meta.internal
+package org.langmeta.internal
 
 import java.nio.charset.Charset
-import lang.meta.inputs.{Input => dInput}
-import lang.meta.inputs.{Position => dPosition}
-import lang.meta.semanticdb.{Synthetic => dSynthetic}
-import lang.meta.internal.io.PathIO
-import lang.meta.internal.semanticdb.{schema => s}
-import lang.meta.internal.semanticdb.{vfs => v}
-import lang.meta.io._
-import lang.meta.{semanticdb => d}
+import org.langmeta.inputs.{Input => dInput}
+import org.langmeta.inputs.{Position => dPosition}
+import org.langmeta.semanticdb.{Synthetic => dSynthetic}
+import org.langmeta.internal.io.PathIO
+import org.langmeta.internal.semanticdb.{schema => s}
+import org.langmeta.internal.semanticdb.{vfs => v}
+import org.langmeta.io._
+import org.langmeta.{semanticdb => d}
 
 package object semanticdb {
   implicit class XtensionSchemaDatabase(sdatabase: s.Database) {
@@ -113,7 +113,7 @@ package object semanticdb {
         case d.SourceFile(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
           object dPosition {
             def unapply(dpos: dPosition): Option[s.Position] = dpos match {
-              case lang.meta.inputs.Position.Range(`dinput`, sstart, send) =>
+              case org.langmeta.inputs.Position.Range(`dinput`, sstart, send) =>
                 Some(s.Position(sstart, send))
               case _ =>
                 None
@@ -133,7 +133,7 @@ package object semanticdb {
             def unapply(ddefn: d.Definition): Option[s.Definition] = ddefn match {
               case d.Definition(sflags, sname, ssignature, dnames) =>
                 val snames = dnames.map {
-                  case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
+                  case d.ResolvedName(org.langmeta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
                     s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
                   case other =>
                     sys.error(s"bad database: unsupported position $other")
@@ -146,7 +146,7 @@ package object semanticdb {
             def unapply(dsynthetic: dSynthetic): Option[s.Synthetic] = dsynthetic match {
               case d.Synthetic(dPosition(spos), ssyntax, dnames) =>
                 val snames = dnames.toIterator.map {
-                  case d.ResolvedName(lang.meta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
+                  case d.ResolvedName(org.langmeta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
                     s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
                   case other =>
                     sys.error(s"bad database: unsupported name $other")

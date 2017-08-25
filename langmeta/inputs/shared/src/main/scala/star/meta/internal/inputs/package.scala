@@ -1,7 +1,7 @@
-package lang.meta.internal
+package org.langmeta.internal
 
 import scala.compat.Platform.EOL
-import lang.meta.inputs._
+import org.langmeta.inputs._
 
 package object inputs {
   implicit class XtensionPositionFormatMessage(pos: Position) {

@@ -1,4 +1,4 @@
-package lang.meta
+package org.langmeta
 package io
 
 import java.net._

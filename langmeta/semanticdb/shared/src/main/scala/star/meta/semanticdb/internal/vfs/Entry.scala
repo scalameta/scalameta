@@ -1,10 +1,10 @@
-package lang.meta.internal
+package org.langmeta.internal
 package semanticdb
 package vfs
 
 import java.net.URI
-import lang.meta.internal.io.FileIO
-import lang.meta.io._
+import org.langmeta.internal.io.FileIO
+import org.langmeta.io._
 
 sealed trait Entry {
   def fragment: Fragment

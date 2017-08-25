@@ -3,23 +3,23 @@ package scala.meta.internal
 import scala.language.implicitConversions
 
 package object semanticdb {
-  implicit def XtensionSchemaDatabase(sdatabase: lang.meta.internal.semanticdb.schema.Database) =
-    new lang.meta.internal.semanticdb.XtensionSchemaDatabase(sdatabase)
-  implicit def XtensionDatabase(ddatabase: lang.meta.semanticdb.Database) =
-    new lang.meta.internal.semanticdb.XtensionDatabase(ddatabase)
+  implicit def XtensionSchemaDatabase(sdatabase: org.langmeta.internal.semanticdb.schema.Database) =
+    new org.langmeta.internal.semanticdb.XtensionSchemaDatabase(sdatabase)
+  implicit def XtensionDatabase(ddatabase: org.langmeta.semanticdb.Database) =
+    new org.langmeta.internal.semanticdb.XtensionDatabase(ddatabase)
 
   object vfs {
-    val Database = lang.meta.internal.semanticdb.vfs.Database
-    type Database = lang.meta.internal.semanticdb.vfs.Database
-    val Entry = lang.meta.internal.semanticdb.vfs.Entry
-    type Entry = lang.meta.internal.semanticdb.vfs.Entry
-    val SemanticdbPaths = lang.meta.internal.semanticdb.vfs.SemanticdbPaths
+    val Database = org.langmeta.internal.semanticdb.vfs.Database
+    type Database = org.langmeta.internal.semanticdb.vfs.Database
+    val Entry = org.langmeta.internal.semanticdb.vfs.Entry
+    type Entry = org.langmeta.internal.semanticdb.vfs.Entry
+    val SemanticdbPaths = org.langmeta.internal.semanticdb.vfs.SemanticdbPaths
     // there's no type SemanticdbPaths, so we don't have a type alias here
   }
 
   object schema {
-    val SourceFile = lang.meta.internal.semanticdb.schema.SourceFile
-    type SourceFile = lang.meta.internal.semanticdb.schema.SourceFile
+    val SourceFile = org.langmeta.internal.semanticdb.schema.SourceFile
+    type SourceFile = org.langmeta.internal.semanticdb.schema.SourceFile
     // TODO
   }
 }

@@ -1,10 +1,10 @@
-package lang.meta.internal.io
+package org.langmeta.internal.io
 
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
-import lang.meta.io._
+import org.langmeta.io._
 
 object PlatformFileIO {
   def newInputStream(uri: URI): InputStream =

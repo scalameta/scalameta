@@ -1,9 +1,9 @@
-package lang.meta
+package org.langmeta
 package semanticdb
 
 import scala.compat.Platform.EOL
-import lang.meta.inputs._
-import lang.meta.internal.inputs._
+import org.langmeta.inputs._
+import org.langmeta.internal.inputs._
 
 final case class ResolvedName(position: Position, symbol: Symbol, isDefinition: Boolean) {
   def syntax: String = {

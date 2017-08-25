@@ -1,9 +1,9 @@
-package lang.meta.internal
+package org.langmeta.internal
 package semanticdb
 package vfs
 
-import lang.meta.internal.io.PathIO
-import lang.meta.io.RelativePath
+import org.langmeta.internal.io.PathIO
+import org.langmeta.io.RelativePath
 
 object SemanticdbPaths {
   private val semanticdbPrefix = RelativePath("META-INF").resolve("semanticdb")

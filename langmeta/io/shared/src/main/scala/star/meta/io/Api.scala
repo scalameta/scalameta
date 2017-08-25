@@ -1,25 +1,26 @@
-package lang.meta
+package org.langmeta
 package io
 
-private[meta] trait Api {
+import org.langmeta
+private[langmeta] trait Api {
 }
 
-private[meta] trait Aliases {
-  type AbsolutePath = lang.meta.io.AbsolutePath
-  lazy val AbsolutePath = lang.meta.io.AbsolutePath
+private[langmeta] trait Aliases {
+  type AbsolutePath = org.langmeta.io.AbsolutePath
+  lazy val AbsolutePath = org.langmeta.io.AbsolutePath
 
-  type RelativePath = lang.meta.io.RelativePath
-  lazy val RelativePath = lang.meta.io.RelativePath
+  type RelativePath = org.langmeta.io.RelativePath
+  lazy val RelativePath = org.langmeta.io.RelativePath
 
-  type Multipath = lang.meta.io.Multipath
+  type Multipath = org.langmeta.io.Multipath
   // there's no term Multipath, so we don't have a term alias here
 
-  type Fragment = lang.meta.io.Fragment
-  val Fragment = lang.meta.io.Fragment
+  type Fragment = org.langmeta.io.Fragment
+  val Fragment = org.langmeta.io.Fragment
 
-  type Classpath = lang.meta.io.Classpath
-  lazy val Classpath = lang.meta.io.Classpath
+  type Classpath = org.langmeta.io.Classpath
+  lazy val Classpath = org.langmeta.io.Classpath
 
-  type Sourcepath = lang.meta.io.Sourcepath
-  lazy val Sourcepath = lang.meta.io.Sourcepath
+  type Sourcepath = org.langmeta.io.Sourcepath
+  lazy val Sourcepath = org.langmeta.io.Sourcepath
 }

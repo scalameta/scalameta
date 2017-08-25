@@ -1,41 +1,41 @@
-package lang.meta
+package org.langmeta
 package inputs
 
-private[meta] trait Api {
+private[langmeta] trait Api {
 }
 
-private[meta] trait Aliases {
-  type Input = lang.meta.inputs.Input
+private[langmeta] trait Aliases {
+  type Input = org.langmeta.inputs.Input
   object Input {
-    val None = lang.meta.inputs.Input.None
+    val None = org.langmeta.inputs.Input.None
 
-    type String = lang.meta.inputs.Input.String
-    val String = lang.meta.inputs.Input.String
+    type String = org.langmeta.inputs.Input.String
+    val String = org.langmeta.inputs.Input.String
 
-    type Stream = lang.meta.inputs.Input.Stream
-    val Stream = lang.meta.inputs.Input.Stream
+    type Stream = org.langmeta.inputs.Input.Stream
+    val Stream = org.langmeta.inputs.Input.Stream
 
-    type File = lang.meta.inputs.Input.File
-    val File = lang.meta.inputs.Input.File
+    type File = org.langmeta.inputs.Input.File
+    val File = org.langmeta.inputs.Input.File
 
-    type VirtualFile = lang.meta.inputs.Input.VirtualFile
-    val VirtualFile = lang.meta.inputs.Input.VirtualFile
+    type VirtualFile = org.langmeta.inputs.Input.VirtualFile
+    val VirtualFile = org.langmeta.inputs.Input.VirtualFile
 
-    type Synthetic = lang.meta.inputs.Input.Synthetic
-    val Synthetic = lang.meta.inputs.Input.Synthetic
+    type Synthetic = org.langmeta.inputs.Input.Synthetic
+    val Synthetic = org.langmeta.inputs.Input.Synthetic
 
-    type Definition = lang.meta.inputs.Input.Definition
-    val Definition = lang.meta.inputs.Input.Definition
+    type Definition = org.langmeta.inputs.Input.Definition
+    val Definition = org.langmeta.inputs.Input.Definition
 
-    type Slice = lang.meta.inputs.Input.Slice
-    val Slice = lang.meta.inputs.Input.Slice
+    type Slice = org.langmeta.inputs.Input.Slice
+    val Slice = org.langmeta.inputs.Input.Slice
   }
 
-  type Position = lang.meta.inputs.Position
+  type Position = org.langmeta.inputs.Position
   object Position {
-    val None = lang.meta.inputs.Position.None
+    val None = org.langmeta.inputs.Position.None
 
-    type Range = lang.meta.inputs.Position.Range
-    val Range = lang.meta.inputs.Position.Range
+    type Range = org.langmeta.inputs.Position.Range
+    val Range = org.langmeta.inputs.Position.Range
   }
 }

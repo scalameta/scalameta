@@ -1,4 +1,4 @@
-package lang.meta.internal.io
+package org.langmeta.internal.io
 
 import java.io.File
 import java.net.URI

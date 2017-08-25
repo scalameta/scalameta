@@ -1,4 +1,4 @@
-package lang.meta.internal
+package org.langmeta.internal
 
 package object platform {
   final val isJS = false

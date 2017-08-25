@@ -1,4 +1,4 @@
-package lang.meta
+package org.langmeta
 package semanticdb
 
 final case class Definition(flags: Long, name: String, signature: String, resolvedNames: List[ResolvedName]) extends HasFlags {
