@@ -1,9 +1,9 @@
 package scala.meta.internal
 
 package object io {
-  val FileIO = lang.meta.internal.io.FileIO
-  val InputStreamIO = lang.meta.internal.io.InputStreamIO
-  val ListFiles = lang.meta.internal.io.ListFiles
-  val PathIO = lang.meta.internal.io.PathIO
-  val PlatformPathIO = lang.meta.internal.io.PlatformPathIO
+  val FileIO = org.langmeta.internal.io.FileIO
+  val InputStreamIO = org.langmeta.internal.io.InputStreamIO
+  val ListFiles = org.langmeta.internal.io.ListFiles
+  val PathIO = org.langmeta.internal.io.PathIO
+  val PlatformPathIO = org.langmeta.internal.io.PlatformPathIO
 }

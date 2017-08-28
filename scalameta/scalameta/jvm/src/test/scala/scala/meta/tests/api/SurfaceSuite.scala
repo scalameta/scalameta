@@ -38,27 +38,27 @@ class SurfaceSuite extends FunSuite {
     }).mkString(EOL)
     // println(diagnostic)
     assert(diagnostic === """
-      |lang.meta.inputs.Input
-      |lang.meta.inputs.Position
-      |lang.meta.io.AbsolutePath
-      |lang.meta.io.Classpath
-      |lang.meta.io.Fragment
-      |lang.meta.io.Multipath
-      |lang.meta.io.RelativePath
-      |lang.meta.io.Sourcepath
-      |lang.meta.semanticdb.Attributes
-      |lang.meta.semanticdb.Database
-      |lang.meta.semanticdb.Denotation
-      |lang.meta.semanticdb.Message
-      |lang.meta.semanticdb.ResolvedName
-      |lang.meta.semanticdb.ResolvedSymbol
-      |lang.meta.semanticdb.Severity
-      |lang.meta.semanticdb.Severity.Error
-      |lang.meta.semanticdb.Severity.Info
-      |lang.meta.semanticdb.Severity.Warning
-      |lang.meta.semanticdb.Signature
-      |lang.meta.semanticdb.Sugar
-      |lang.meta.semanticdb.Symbol
+      |org.langmeta.inputs.Input
+      |org.langmeta.inputs.Position
+      |org.langmeta.io.AbsolutePath
+      |org.langmeta.io.Classpath
+      |org.langmeta.io.Fragment
+      |org.langmeta.io.Multipath
+      |org.langmeta.io.RelativePath
+      |org.langmeta.io.Sourcepath
+      |org.langmeta.semanticdb.Database
+      |org.langmeta.semanticdb.Denotation
+      |org.langmeta.semanticdb.Document
+      |org.langmeta.semanticdb.Message
+      |org.langmeta.semanticdb.ResolvedName
+      |org.langmeta.semanticdb.ResolvedSymbol
+      |org.langmeta.semanticdb.Severity
+      |org.langmeta.semanticdb.Severity.Error
+      |org.langmeta.semanticdb.Severity.Info
+      |org.langmeta.semanticdb.Severity.Warning
+      |org.langmeta.semanticdb.Signature
+      |org.langmeta.semanticdb.Symbol
+      |org.langmeta.semanticdb.Synthetic
       |scala.meta.Dialect
       |scala.meta.Tree
       |scala.meta.classifiers

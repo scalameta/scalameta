@@ -84,66 +84,21 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== LANGMETA ======================== **/
 
-lazy val langmetaSettings = List(
-  crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
-)
-
-lazy val langmetaIo = crossProject
-  .in(file("langmeta/io"))
+lazy val langmeta = crossProject
+  .in(file("langmeta"))
   .settings(
     publishableSettings,
-    langmetaSettings,
-    moduleName := "langmeta-io",
-    description := "Langmeta APIs for input/output"
-  )
-
-lazy val langmetaIoJVM = langmetaIo.jvm
-lazy val langmetaIoJs = langmetaIo.js
-
-lazy val langmetaInputs = crossProject
-  .in(file("langmeta/inputs"))
-  .settings(
-    publishableSettings,
-    langmetaSettings,
-    moduleName := "langmeta-inputs",
-    description := "Langmeta APIs for source code"
-  )
-  .dependsOn(langmetaIo)
-lazy val langmetaInputsJVM = langmetaInputs.jvm
-lazy val langmetaInputsJS = langmetaInputs.js
-
-lazy val langmetaSemanticdb = crossProject
-  .in(file("langmeta/semanticdb"))
-  .settings(
-    publishableSettings,
-    langmetaSettings,
-    moduleName := "langmeta-semanticdb",
-    description := "Semantic database APIs",
+    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
+    description := "Langmeta umbrella module that includes all public APIs",
     // Protobuf setup for binary serialization.
     PB.targets.in(Compile) := Seq(
       scalapb.gen(
         flatPackage = true // Don't append filename to package
       ) -> sourceManaged.in(Compile).value
     ),
-    PB.protoSources.in(Compile) := Seq(file("langmeta/semanticdb/shared/src/main/protobuf")),
-    libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
-  )
-  .dependsOn(langmetaIo, langmetaInputs)
-lazy val langmetaSemanticdbJVM = langmetaSemanticdb.jvm
-lazy val langmetaSemanticdbJS = langmetaSemanticdb.js
-
-lazy val langmeta = crossProject
-  .in(file("langmeta/langmeta"))
-  .settings(
-    publishableSettings,
-    langmetaSettings,
-    description := "Langmeta umbrella module that includes all public APIs",
+    PB.protoSources.in(Compile) := Seq(file("langmeta/shared/src/main/protobuf")),
+    libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion,
     exposePaths("langmeta", Test)
-  )
-  .dependsOn(
-    langmetaInputs,
-    langmetaIo,
-    langmetaSemanticdb
   )
 lazy val langmetaJVM = langmeta.jvm
 lazy val langmetaJS = langmeta.js
@@ -167,7 +122,7 @@ lazy val io = crossProject
     publishableSettings,
     description := "Scalameta APIs for input/output"
   )
-  .dependsOn(langmetaIo, common)
+  .dependsOn(langmeta, common)
 
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
@@ -190,7 +145,7 @@ lazy val inputs = crossProject
     description := "Scalameta APIs for source code",
     enableMacros
   )
-  .dependsOn(langmetaInputs, common, io)
+  .dependsOn(langmeta, common, io)
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
 
@@ -221,7 +176,7 @@ lazy val tokenizers = crossProject
   .settings(
     publishableSettings,
     description := "Scalameta APIs for tokenization and their baseline implementation",
-    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "0.4.3",
+    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "0.4.4",
     enableMacros
   )
   .dependsOn(common, dialects, inputs, tokens)
@@ -269,7 +224,7 @@ lazy val semanticdb = crossProject
     publishableSettings,
     description := "Scalameta semantic database APIs"
   )
-  .dependsOn(langmetaSemanticdb)
+  .dependsOn(langmeta)
 lazy val semanticdbJVM = semanticdb.jvm
 lazy val semanticdbJS = semanticdb.js
 

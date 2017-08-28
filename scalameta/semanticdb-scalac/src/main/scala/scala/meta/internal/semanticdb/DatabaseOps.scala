@@ -4,16 +4,16 @@ package semanticdb
 import scala.tools.nsc.Global
 
 trait DatabaseOps
-    extends AttributesOps
-    with ConfigOps
+    extends ConfigOps
     with DenotationOps
+    with DocumentOps
     with InputOps
     with LanguageOps
-    with ParseOps
-    with ReporterOps
-    with PrinterOps
-    with SymbolOps
     with MessageOps
-    with ReflectionToolkit {
+    with ParseOps
+    with PrinterOps
+    with ReporterOps
+    with ReflectionToolkit
+    with SymbolOps {
   val global: Global
 }

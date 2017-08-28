@@ -78,7 +78,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    val mattrs = unit.toAttributes.copy(messages = unit.reportedMessages)
+    val mattrs = unit.toDocument.copy(messages = unit.reportedMessages)
     m.Database(List(mattrs))
   }
 
@@ -110,8 +110,8 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
     checkSection(code, expected, "Symbols")
   }
 
-  def sugars(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Sugars")
+  def synthetics(code: String, expected: String): Unit = {
+    checkSection(code, expected, "Synthetics")
   }
 
   private def computeDatabaseAndNamesFromMarkup(markup: String): (m.Database, List[m.Symbol]) = {
@@ -126,7 +126,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
       case (s, e) =>
         val symbols = source.collect {
           case name: m.Name if name.pos.start == s && name.pos.end == e =>
-            database.names.find(_.pos == name.pos).map(_.symbol)
+            database.names.find(_.position == name.pos).map(_.symbol)
         }
         val chevron = "<<" + code.substring(s, e) + ">>"
         symbols match {

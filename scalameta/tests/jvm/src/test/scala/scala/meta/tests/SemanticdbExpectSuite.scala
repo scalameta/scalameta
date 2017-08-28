@@ -6,7 +6,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.charset.Charset
 import scala.meta.testkit.DiffAssertions
-import lang.meta.internal.io.FileIO
+import org.langmeta.internal.io.FileIO
 import org.scalatest.FunSuite
 
 class SemanticdbExpectSuite extends FunSuite with DiffAssertions {
@@ -30,7 +30,7 @@ object SemanticdbExpectSuite {
     Paths.get("scalameta", "tests", "jvm", "src", "test", "resources", "semanticdb.expect")
   def loadDatabase: Database = {
     val database = Database.load(Classpath(BuildInfo.databaseClasspath))
-    val sorted = Database(database.entries.sortBy(_.input.syntax))
+    val sorted = Database(database.documents.sortBy(_.input.syntax))
     sorted
   }
 }

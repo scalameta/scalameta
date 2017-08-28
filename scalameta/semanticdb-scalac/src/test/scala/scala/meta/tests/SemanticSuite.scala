@@ -234,7 +234,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   """.trim.stripMargin
   )
 
-  sugars(
+  synthetics(
     """
       |package g
       |import scala.language.higherKinds
@@ -263,7 +263,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.trim.stripMargin
   )
 
-  sugars(
+  synthetics(
     """
       |package h
       |class C[T]
@@ -415,7 +415,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.stripMargin.trim
   )
 
-  sugars(
+  synthetics(
     "class J[T: Manifest] { val arr = Array.empty[T] }",
     """|[47..47): *(J.this.evidence$1)
        |  [0..1): * => _star_.
@@ -559,7 +559,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |""".stripMargin
   )
 
-  sugars(
+  synthetics(
     """|object q {
        |  List(1) + "blaH"
        |}
@@ -577,7 +577,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |""".stripMargin
   )
 
-  sugars(
+  synthetics(
     """|object r {
        |  class F
        |  implicit val ordering: Ordering[F] = ???
@@ -592,7 +592,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |""".stripMargin
   )
 
-  sugars(
+  synthetics(
     """|object s {
        |  def apply() = 2
        |  s()
@@ -624,10 +624,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   targeted(
     // See https://github.com/scalameta/scalameta/issues/830
     "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", { (db, first) =>
-      val denot = db.symbols.find(_.symbol == first).get.denot
+      val denotation = db.symbols.find(_.symbol == first).get.denotation
       assert(first == Symbol("_empty_.u.unapply(Lu;)Lscala/Option;."))
       assertNoDiff(
-        denot.toString,
+        denotation.toString,
         """case def unapply: (x$0: u)scala.Option[scala.Int]
           |  [6..7): u => _empty_.u#
           |  [14..20): Option => _root_.scala.Option#
@@ -644,10 +644,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       List(1).<<toString>>
     }
     """, { (db, objectToString, listToString) =>
-      val denot1 = db.symbols.find(_.symbol == objectToString).get.denot
-      val denot2 = db.symbols.find(_.symbol == listToString).get.denot
-      assert(denot1.isJavaDefined)
-      assert(!denot2.isJavaDefined)
+      val denotation1 = db.symbols.find(_.symbol == objectToString).get.denotation
+      val denotation2 = db.symbols.find(_.symbol == listToString).get.denotation
+      assert(denotation1.isJavaDefined)
+      assert(!denotation2.isJavaDefined)
     }
   )
 
@@ -661,7 +661,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
     """.stripMargin, { (db, a, b, c, d) =>
       def check(symbol: Symbol, info: String) = {
-        assertNoDiff(db.symbols.find(_.symbol == symbol).get.denot.info, info)
+        assertNoDiff(db.symbols.find(_.symbol == symbol).get.denotation.signature, info)
       }
       check(a, "java.lang.StringBuilder")
       check(b, "scala.collection.mutable.StringBuilder")

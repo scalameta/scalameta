@@ -10,29 +10,29 @@ import scala.reflect.internal.ModifierFlags._
 trait PrinterOps { self: DatabaseOps =>
   import g._
 
-  def showSugar(tpe: g.Type): AttributedSugar = {
-    showSugar(g.TypeTree(tpe))
+  def showSynthetic(tpe: g.Type): AttributedSynthetic = {
+    showSynthetic(g.TypeTree(tpe))
   }
-  def showSugar(what: g.Tree): AttributedSugar = {
+  def showSynthetic(what: g.Tree): AttributedSynthetic = {
     val out = new StringWriter()
-    val printer = SugarCodePrinter(out)
+    val printer = SyntheticCodePrinter(out)
     printer.print(what)
     val names = printer.names.map {
-      case ((start, end), symbol) => SugarRange(start, end, symbol)
+      case ((start, end), symbol) => SyntheticRange(start, end, symbol)
     }.toList
     printer.names.clear()
     val syntax = out.toString
-    AttributedSugar(syntax, names)
+    AttributedSynthetic(syntax, names)
   }
 
-  private object SugarCodePrinter {
-    def apply(writer: Writer) = new SugarCodePrinter(new LengthWriter(writer, 0))
+  private object SyntheticCodePrinter {
+    def apply(writer: Writer) = new SyntheticCodePrinter(new LengthWriter(writer, 0))
   }
 
-  // An adaptation of g.CodePrinter that emits positioned symbols for names inside sugars.
+  // An adaptation of g.CodePrinter that emits positioned symbols for names inside synthetics.
   // The modifications have been wrapped in "+- scalac deviation" comments.
   // In addition, the original source has been reformatted for better readability.
-  private class SugarCodePrinter(out: LengthWriter) extends TreePrinter(new PrintWriter(out)) {
+  private class SyntheticCodePrinter(out: LengthWriter) extends TreePrinter(new PrintWriter(out)) {
 
     // + scalac deviation
     case class ResolvedName(syntax: String, symbol: m.Symbol)
@@ -137,7 +137,7 @@ trait PrinterOps { self: DatabaseOps =>
         printPositions: BooleanFlag = None): String = {
       val buffer = new StringWriter()
       val writer = new LengthWriter(buffer, out.length)
-      val printer = new SugarCodePrinter(writer)
+      val printer = new SyntheticCodePrinter(writer)
       printTypes.value.map(printTypes =>
         if (printTypes) printer.withTypes else printer.withoutTypes)
       printIds.value.map(printIds => if (printIds) printer.withIds else printer.withoutIds)

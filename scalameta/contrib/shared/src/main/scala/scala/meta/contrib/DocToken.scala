@@ -173,7 +173,7 @@ object DocToken {
   case object UseCase extends TagKind("@usecase", numberParameters = 1)
 
   /**
-    * Attributes an entity to one author.
+    * Document an entity to one author.
     */
   case object Author extends TagKind("@author", numberParameters = 1)
 
