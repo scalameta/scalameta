@@ -104,7 +104,7 @@
       @lnk("Semantic DB", "http://scalameta.org/tutorial/#SemanticDB"), a simple
       @lnk("schema", "https://github.com/scalameta/scalameta/blob/master/langmeta/semanticdb/shared/src/main/protobuf/semanticdb.proto")
       for persisting semantic information extracted from a snapshot of the compiler after typer.
-      By persisting semantic information instead querying a live compiler instance,
+      By persisting semantic information instead of querying a live compiler instance,
       the same data can be used to power multiple applications running on
       different platforms.
       @table
