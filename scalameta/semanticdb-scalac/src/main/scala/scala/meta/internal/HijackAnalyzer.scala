@@ -7,11 +7,15 @@ import scala.tools.nsc.interactive.{
   Global => NscInteractiveGlobal,
   InteractiveAnalyzer => NscInteractiveAnalyzer
 }
+import scala.tools.nsc.doc.ScaladocGlobal
 import scala.tools.nsc.typechecker.SemanticdbAnalyzer
 
 trait HijackAnalyzer extends SemanticdbAnalyzer { self: SemanticdbPlugin =>
 
   def hijackAnalyzer(): global.analyzer.type = {
+    // Do nothing if running under ScaladocGlobal, see
+    // https://github.com/scalameta/scalameta/issues/1072
+    if (global.isInstanceOf[ScaladocGlobal]) return global.analyzer
     // NOTE: need to hijack the right `analyzer` field - it's different for batch compilers and repl compilers
     val isRepl = global.isInstanceOf[NscReplGlobal]
     val isInteractive = global.isInstanceOf[NscInteractiveGlobal]
