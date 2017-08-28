@@ -214,7 +214,7 @@ object TreeSyntax {
             case (part, id: Name) if !guessIsBackquoted(id) => s(part, "$", id.value)
             case (part, arg) => s(part, "${", p(Expr, arg), "}")
           }
-          val quote = if (parts.exists(s => s.contains(EOL) || s.contains("\""))) "\"\"\"" else "\""
+          val quote = if (parts.exists(s => s.contains("\n") || s.contains("\""))) "\"\"\"" else "\""
           m(SimpleExpr1, s(t.prefix, quote, r(zipped), parts.last, quote))
         case t: Term.Xml             =>
           if (!dialect.allowXmlLiterals) throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
@@ -415,7 +415,8 @@ object TreeSyntax {
             }
           }
         case Lit.Char(value)    => m(Literal, s(enquote(value.toString, SingleQuotes)))
-        case Lit.String(value)  => m(Literal, s(enquote(value.toString, if (value.contains(EOL)) TripleQuotes else DoubleQuotes)))
+        // Strings should be triple-quoted regardless of what newline style is used.
+        case Lit.String(value)  => m(Literal, s(enquote(value.toString, if (value.contains("\n")) TripleQuotes else DoubleQuotes)))
         case Lit.Symbol(value)  => m(Literal, s("'", value.name))
         case Lit.Null()         => m(Literal, s(kw("null")))
         case Lit.Unit()         => m(Literal, s("()"))

@@ -12,6 +12,14 @@ import org.scalameta.logger
 class ParseSuite extends FunSuite with CommonTrees {
   val EOL = scala.compat.Platform.EOL
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""
+
+
+  def assertSameLines(actual: String, expected: String) = {
+    val actualLines = actual.lines.toList
+    val expectedLines = expected.lines.toList
+    assert(actualLines === expectedLines)
+  }
+
   def stat(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseStat())
   def term(code: String)(implicit dialect: Dialect) = code.parseRule(_.expr())
   def pat(code: String)(implicit dialect: Dialect) = code.parseRule(_.pattern())
@@ -40,6 +48,7 @@ class ParseSuite extends FunSuite with CommonTrees {
     test(logger.revealWhitespace(stat).take(50)) { interceptParseErrors(stat) }
   def checkOK(stat: String)(implicit dialect: Dialect) =
     test(logger.revealWhitespace(stat).take(50)) { templStat(stat) }
+
 }
 
 object MoreHelpers {
