@@ -41,7 +41,7 @@ class NIOPathTest extends FunSuite {
     assert(abs.getParent.getFileName.toString == "bar")
   }
   test(".getNameCount") {
-    assert(Paths.get("/").getNameCount == 0)
+    assert(Paths.get(rootString).getNameCount == 0)
     assert(Paths.get("").getNameCount == 1)
     assert(abs.getNameCount == 2)
     assert(nonNormalizedFile.getNameCount == 4)

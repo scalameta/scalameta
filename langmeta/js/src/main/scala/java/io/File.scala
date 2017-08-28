@@ -22,10 +22,9 @@ class File(path: String) {
     NodeNIOPath(path)
   def toURI: URI = {
     val file = getAbsoluteFile.toString
-    val path =
-      if (isDirectory && !file.endsWith("/")) file + "/"
-      else file
-    new URI("file", null, path, null)
+    val uripath = if (file.startsWith("/")) file else "/" + file.replace(File.separator, "/")
+    val withslash = if (isDirectory && !uripath.endsWith("/")) uripath + "/" else uripath
+    new URI("file", null, withslash, null)
   }
   def getAbsoluteFile: File =
     toPath.toAbsolutePath.toFile

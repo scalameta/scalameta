@@ -13,7 +13,7 @@ class ParseSuite extends FunSuite with CommonTrees {
   val EOL = scala.compat.Platform.EOL
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""
 
-
+  //This should eventually be replaced by DiffAssertions.assertNoDiff
   def assertSameLines(actual: String, expected: String) = {
     val actualLines = actual.lines.toList
     val expectedLines = expected.lines.toList
