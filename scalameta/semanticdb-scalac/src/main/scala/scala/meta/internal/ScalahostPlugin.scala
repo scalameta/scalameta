@@ -15,7 +15,7 @@ class SemanticdbPlugin(val global: Global)
   val description = "Scala 2.x compiler plugin that generates semanticdb on compile"
   hijackAnalyzer()
   hijackReporter()
-  val components = List[PluginComponent](SemanticdbComponent, PersistSemanticdbComponent)
+  val components = List[PluginComponent](ComputeSemanticdbComponent, PersistSemanticdbComponent)
 
   override def init(options: List[String], error: (String) => Unit): Boolean = {
     def err(msg: String): Unit = {
