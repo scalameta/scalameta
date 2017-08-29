@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
+import java.nio.file.Paths
 import org.langmeta.io._
 
 object PlatformFileIO {
@@ -11,7 +12,10 @@ object PlatformFileIO {
     new ByteArrayInputStream(readAllBytes(uri))
 
   def readAllBytes(uri: URI): Array[Byte] =
-    if (uri.getScheme == "file") readAllBytes(AbsolutePath(uri.getPath))
+    if (uri.getScheme == "file") {
+      val filepath = Paths.get(uri)
+      readAllBytes(AbsolutePath(filepath.toString))
+    }
     else throw new UnsupportedOperationException(s"Can't read $uri as InputStream")
 
   def readAllBytes(path: AbsolutePath): Array[Byte] = JSIO.inNode {

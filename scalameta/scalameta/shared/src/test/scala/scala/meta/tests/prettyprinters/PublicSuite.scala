@@ -292,7 +292,7 @@ class PublicSuite extends FunSuite {
     val defIdentity = Denotation(DEF | FINAL, "identity", info, names)
     assert(defIdentity.toString ===
       """final def identity: [T](e: E)T
-        |  [7..8): E => _root_.E#""".stripMargin
+        |  [7..8): E => _root_.E#""".stripMargin.split('\n').mkString(EOL)
     )
   }
 

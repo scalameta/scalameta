@@ -47,6 +47,22 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tree.syntax === "(x map y).foo")
   }
 
+  test("multi-line string literals") {
+    val tree = templStat("""{
+      val x = QQQ
+        x
+      QQQ
+    }""".replace("QQQ", "\"\"\""))
+
+    assertSameLines(tree.syntax, """
+    |{
+    |  val x = QQQ
+    |        x
+    |      QQQ
+    |}
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+  }
+
   test("string literals with newlines and double quotes") {
     val tree = templStat("""{
       val x = QQQ
@@ -55,7 +71,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
     assert(tree.structure === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", "\\n"))
-    assert(tree.syntax === """
+    assertSameLines(tree.syntax, """
     |{
     |  val x = QQQ
     |        x
@@ -75,7 +91,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       QQQ
     }""".replace("QQQ", "\"\"\""))
     assert(tree.structure === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", "\\n"))
-    assert(tree.syntax === """
+    assertSameLines(tree.syntax, """
     |{
     |  val x = q"123 + $x + ${foo(123)} + 456"
     |  val y = QQQ
@@ -491,10 +507,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("smart case printing - oneliner in multiple lines") {
     val Term.Match(_, case1 :: case2 :: Nil) = templStat("??? match { case x => x; case List(x, y) => println(x); println(y) }")
-    assert(case1.toString === """
+    assertSameLines(case1.toString, """
       |case x =>
       |  x
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin)
     assert(case2.toString === """
       |case List(x, y) =>
       |  println(x)

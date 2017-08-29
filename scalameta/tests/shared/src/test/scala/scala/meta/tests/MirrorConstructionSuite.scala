@@ -39,4 +39,5 @@ class MirrorConstructionSuite extends BaseSemanticSuite {
       assert(!sattrs.filename.contains('\\'))
     }
   }
+
 }

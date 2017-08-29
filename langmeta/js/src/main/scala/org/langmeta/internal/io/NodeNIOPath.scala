@@ -7,12 +7,14 @@ import java.nio.file.Path
 // Rough implementation of java.nio.Path, should work similarly for the happy
 // path but has undefined behavior for error handling.
 case class NodeNIOPath(filename: String) extends Path {
+  private[this] val escapedSeparator = scala.util.matching.Regex.quote(File.separator)
+
   private def adjustIndex(idx: Int): Int =
     if (isAbsolute) idx + 1 else idx
   override def subpath(beginIndex: Int, endIndex: Int): Path =
     NodeNIOPath(
       filename
-        .split(File.separator)
+        .split(escapedSeparator)
         .slice(adjustIndex(beginIndex), adjustIndex(endIndex))
         .mkString)
   override def toFile: File =
@@ -23,7 +25,7 @@ case class NodeNIOPath(filename: String) extends Path {
   override def getName(index: Int): Path =
     NodeNIOPath(
       filename
-        .split(File.separator)
+        .split(escapedSeparator)
         .lift(adjustIndex(index))
         .getOrElse(throw new IllegalArgumentException))
   override def getParent: Path =
@@ -34,7 +36,8 @@ case class NodeNIOPath(filename: String) extends Path {
   override def relativize(other: Path): Path =
     NodeNIOPath(JSIO.path.relative(filename, other.toString))
   override def getNameCount: Int = {
-    val (first, remaining) = filename.split(File.separator + "+").span(_.isEmpty)
+    val strippeddrive = if ((filename.length > 1) && (filename(1) == ':')) filename.substring(2) else filename
+    val (first, remaining) = strippeddrive.split(escapedSeparator + "+").span(_.isEmpty)
     if (remaining.isEmpty) first.length
     else remaining.length
   }
@@ -69,7 +72,7 @@ case class NodeNIOPath(filename: String) extends Path {
   override def startsWith(other: String): Boolean =
     paths(filename).startsWith(paths(other))
   private def paths(name: String) =
-    name.split(File.separator)
+    name.split(escapedSeparator)
   override def toString: String =
     filename
 }
