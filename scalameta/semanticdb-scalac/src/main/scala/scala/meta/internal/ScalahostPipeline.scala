@@ -40,14 +40,33 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       }
   }
 
+  object ComputeSemanticdbComponent extends PluginComponent {
+    val global: SemanticdbPipeline.this.global.type = SemanticdbPipeline.this.global
+    val runsAfter = List("typer")
+    override val runsRightAfter = Some("typer")
+    val phaseName = "semanticdb-compute"
+    override val description = "compute semanticdb"
+    def newPhase(_prev: Phase) = new ComputeSemanticdbPhase(_prev)
+    class ComputeSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
+      override def apply(unit: g.CompilationUnit): Unit = {
+        if (isDisabled) return
+        try {
+          if (config.mode.isDisabled || !unit.source.file.name.endsWith(".scala")) return
+          val mattrs = unit.toDocument
+          unit.body.updateAttachment(mattrs)
+        } catch handleError(unit)
+      }
+    }
+  }
+
   object PersistSemanticdbComponent extends PluginComponent {
     val global: SemanticdbPipeline.this.global.type = SemanticdbPipeline.this.global
     val runsAfter = List("jvm")
     override val runsRightAfter = Some("jvm")
     val phaseName = "semanticdb-persist"
     override val description = "persist semanticdb files"
-    def newPhase(_prev: Phase) = new SemanticdbPhase(_prev)
-    class SemanticdbPhase(prev: Phase) extends StdPhase(prev) {
+    def newPhase(_prev: Phase) = new PersistSemanticdbPhase(_prev)
+    class PersistSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
         if (isDisabled) return
         try {
@@ -57,26 +76,6 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
             val mminidb = m.Database(List(mattrs.copy(messages = messages)))
             mminidb.save(scalametaTargetroot, config.sourceroot)
           }
-        } catch handleError(unit)
-      }
-    }
-  }
-
-  object SemanticdbComponent extends PluginComponent {
-    val global: SemanticdbPipeline.this.global.type = SemanticdbPipeline.this.global
-    val runsAfter = List("typer")
-    override val runsRightAfter = Some("typer")
-    val phaseName = "semanticdb-compute"
-    override val description = "compute semanticdb"
-    def newPhase(_prev: Phase) = new SemanticdbPhase(_prev)
-
-    class SemanticdbPhase(prev: Phase) extends StdPhase(prev) {
-      override def apply(unit: g.CompilationUnit): Unit = {
-        if (isDisabled) return
-        try {
-          if (config.mode.isDisabled || !unit.source.file.name.endsWith(".scala")) return
-          val mattrs = unit.toDocument
-          unit.body.updateAttachment(mattrs)
         } catch handleError(unit)
       }
 
