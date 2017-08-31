@@ -806,31 +806,29 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
       // NOTE: This is a really hardcore disambiguation caused by introduction of Type.Method.
       // We need to accept `(T, U) => W`, `(x: T): x.U` and also support unquoting.
-      // Maybe it was not the best idea to introduce method types or to have this syntax for them...
-      // TODO: Decide whether to keep or remove this after we think about semantic once again.
       var hasParams = false
       var hasImplicits = false
       var hasTypes = false
       var secondOpenParenPos = -1
       var closeParenPos = -1
       val rawtss: List[List[Tree]] = {
-        def paramOrType() = {
-          def looksLikeParam = token.is[KwImplicit] || (token.is[Ident] && ahead(token.is[Colon]))
-          if (token.is[Ellipsis]) {
-            ellipsis(1, astInfo[Tree])
-          } else if (token.is[Unquote]) {
+        def paramOrType(): Tree = token match {
+          case Ellipsis(rank) =>
+            ellipsis(rank, astInfo[Tree])
+          case Unquote() =>
             unquote[Tree]
-          } else if (looksLikeParam) {
+          case KwImplicit() if !hasImplicits =>
+            next()
+            hasImplicits = true
+            paramOrType()
+          case Ident(_) if ahead(token.is[Colon]) =>
             if (hasTypes) syntaxError("can't mix function type and method type syntaxes", at = token)
-            if (hasImplicits) accept[Ident]
             hasParams = true
-            hasImplicits |= token.is[KwImplicit]
             param(ownerIsCase = false, ownerIsType = false, isImplicit = hasImplicits)
-          } else {
+          case _ =>
             if (hasParams) syntaxError("can't mix function type and method type syntaxes", at = token)
             hasTypes = true
             paramType()
-          }
         }
 
         val rawtss = new ListBuffer[List[Tree]]
@@ -877,7 +875,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (hasParams && !token.is[Colon]) syntaxError("can't mix function type and method type syntaxes", at = token)
       if (hasTypes && token.is[Colon]) accept[RightArrow]
 
-      if (token.is[RightArrow]) {
+      if (token.is[Colon] && dialect.allowMethodTypes) {
+        next()
+        Type.Method(pss, typ())
+      } else if (token.is[RightArrow]) {
         next()
         Type.Function(ts, typ())
       } else {
@@ -896,6 +897,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     }
 
+    private def typeLambda(): Type = {
+      val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+      accept[RightArrow]
+      val tpe = typ()
+      Type.Lambda(quants, tpe)
+    }
+
     def typ(): Type = autoPos {
       if (token.is[KwImplicit] && dialect.allowImplicitFunctionTypes) {
         next()
@@ -911,14 +919,20 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
 
     def typRest(): Type = autoPos {
-      val t: Type =
-        if (token.is[LeftParen]) tupleInfixType()
-        else infixType(InfixMode.FirstOp)
+      if (token.is[Colon] && dialect.allowMethodTypes) {
+        next()
+        Type.Method(Nil, typ())
+      } else {
+        val t: Type =
+          if (token.is[LeftParen]) tupleInfixType()
+          else if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambda()
+          else infixType(InfixMode.FirstOp)
 
-      token match {
-        case RightArrow() => next(); Type.Function(List(t), typ())
-        case KwForsome()  => next(); Type.Existential(t, existentialStats())
-        case _            => t
+        token match {
+          case RightArrow() => next(); Type.Function(List(t), typ())
+          case KwForsome()  => next(); Type.Existential(t, existentialStats())
+          case _            => t
+        }
       }
     }
 

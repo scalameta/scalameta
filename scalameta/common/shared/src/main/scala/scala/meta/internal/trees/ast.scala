@@ -275,6 +275,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
                 ev.quasi(0, tree).withOrigin(this.origin).asInstanceOf[T]
               case $mname(1, nested @ $mname(0, tree)) =>
                 ev.quasi(1, nested.become[T]).withOrigin(this.origin).asInstanceOf[T]
+              case $mname(2, nested @ $mname(0, tree)) =>
+                ev.quasi(2, nested.become[T]).withOrigin(this.origin).asInstanceOf[T]
               case _ =>
                 throw new Exception("complex ellipses are not supported yet")
             }

@@ -61,6 +61,12 @@ class DottySuite extends ParseSuite {
     val Or(TypeName("A"), TypeName("B")) = tpe("A | B")
   }
 
+  test("[T] => (T, T)") {
+    val Type.Lambda(
+      List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+      Type.Tuple(List(TypeName("T"), TypeName("T")))) = tpe("[T] => (T, T)")
+  }
+
   test("literal types are allowed") {
     val tree = dialects.Dotty("val a: 42 = 42").parse[Stat].get
     assert(tree.syntax === "val a: 42 = 42")

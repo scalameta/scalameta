@@ -94,4 +94,12 @@ object ParentChecks {
   def Init(tree: Init, parent: Tree, destination: String): Boolean = {
     tree.tpe.is[Type.Singleton] ==> (parent.is[Ctor.Secondary] && destination == "init")
   }
+
+  def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = {
+    parent.is[Type] // TODO: better checks for non-value types not being used where value types are expected
+  }
+
+  def TypeMethod(tree: Type.Method, parent: Tree, destination: String): Boolean = {
+    parent.is[Type] // TODO: better checks for non-value types not being used where value types are expected
+  }
 }

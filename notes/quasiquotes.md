@@ -59,6 +59,8 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Refine            | `t"$tpeopt { ..$stats }"`
  Existential       | `t"$tpe forSome { ..$statsnel }"`
  Annotate          | `t"$tpe ..@$annotsnel"`
+ Lambda            | `t[..$tparams] => $tpe`
+ Method            | `t(...$paramss): $tpe`
  Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`
  By Name           | `t"=> $tpe"`
  Repeated          | `t"$tpe*"`
