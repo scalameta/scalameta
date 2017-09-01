@@ -245,11 +245,9 @@ object Dialect extends InternalDialect {
     "Sbt0136" -> Sbt0136,
     "Sbt0137" -> Sbt0137,
     "Sbt1" -> Sbt1,
-    "Sbt" -> Sbt,
     "Scala210" -> Scala210,
     "Scala211" -> Scala211,
     "Scala212" -> Scala212,
-    "Scala" -> Scala,
     "Typelevel211" -> Typelevel211,
     "Typelevel212" -> Typelevel212
   )
