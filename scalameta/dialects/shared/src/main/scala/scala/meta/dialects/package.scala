@@ -237,6 +237,7 @@ object Dialect extends InternalDialect {
   // NOTE: Spinning up a macro just for this is too hard.
   // Using JVM reflection won't be portable to Scala.js.
   private[meta] lazy val standards: Map[String, Dialect] = Map(
+    "Dotty" -> Dotty,
     "Paradise211" -> Paradise211,
     "Paradise212" -> Paradise212,
     "ParadiseTypelevel211" -> ParadiseTypelevel211,
