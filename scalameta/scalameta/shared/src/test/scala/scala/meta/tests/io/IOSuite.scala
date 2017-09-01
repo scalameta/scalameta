@@ -28,11 +28,10 @@ class IOSuite extends FunSuite {
   }
 
   test("FileIO.listAllFilesRecursively") {
-    val resources = PathIO.workingDirectory.resolve("readme").resolve("resources")
-    val obtained = FileIO.listAllFilesRecursively(resources)
-    val semanticTooling =
-      resources.resolve("talks").resolve("2017-04-21-SemanticToolingAtTwitter.pdf")
-    assert(obtained.contains(semanticTooling))
+    val bin = PathIO.workingDirectory.resolve("bin")
+    val obtained = FileIO.listAllFilesRecursively(bin)
+    val scalafmt = bin.resolve("scalafmt")
+    assert(obtained.contains(scalafmt))
   }
 
   test("FileIO.readAllBytes") {
