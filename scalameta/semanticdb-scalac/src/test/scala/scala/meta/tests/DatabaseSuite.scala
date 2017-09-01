@@ -13,6 +13,8 @@ import scala.meta.internal.semanticdb.DatabaseOps
 import scala.meta.internal.semanticdb.FailureMode
 import scala.meta.internal.semanticdb.SemanticdbMode
 import scala.meta.testkit.DiffAssertions
+import scala.util.control.NonFatal
+import org.scalatest.exceptions.TestFailedException
 
 abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
@@ -84,11 +86,27 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
     val database = computeDatabaseFromSnippet(code)
+    assertDenotationSignaturesAreParseable(database)
     val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
     val payload = database.toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
     // println(section.mkString(EOL).replace(path, "<...>"))
     section.mkString(EOL).replace(path, "<...>")
+  }
+
+  private def assertDenotationSignaturesAreParseable(database: m.Database): Unit = {
+    import scala.meta._
+    // TODO(olafur): remove this once we have "Default" dialect, see
+    // https://github.com/scalameta/scalameta/issues/253#issuecomment-312634924
+    val dialect = dialects.Scala212.copy(
+      allowTypeLambdas = true,
+      allowMethodTypes = true
+    )
+    database.symbols.foreach { sym =>
+      if (sym.denotation.signature.nonEmpty && sym.symbol.isInstanceOf[m.Symbol.Global]) {
+        (dialect, sym.input).parse[Type].get // assert no parse error.
+      }
+    }
   }
 
   def checkSection(code: String, expected: String, section: String): Unit = {

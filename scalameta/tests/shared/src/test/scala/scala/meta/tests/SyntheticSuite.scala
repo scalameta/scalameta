@@ -11,7 +11,7 @@ class SyntheticSuite extends BaseSemanticSuite {
       case t: Defn.Def if t.name.value == "main" =>
         val symbol = entry.names.find(_.position == t.name.pos).get.symbol
         val expectedInput =
-          Input.Denotation("(args: scala.Array[scala.Predef.String])scala.Unit", symbol)
+          Input.Denotation("(args: Array[String]): Unit", symbol)
         val infoSymbols = entry.symbols.find(_.symbol == symbol).get.denotation.names
         assert(infoSymbols.nonEmpty)
         infoSymbols.foreach {

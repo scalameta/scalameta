@@ -134,103 +134,100 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |package object F {
       |}
   """.trim.stripMargin,
-    """
-      |_root_.F.package. => packageobject package
-      |_root_.f. => package f
-      |_root_.f.C1# => class C1
-      |_root_.f.C1#(p1) => param p1: scala.Int
-      |  [6..9): Int => _root_.scala.Int#
-      |_root_.f.C1#(p2) => val param p2: scala.Int
-      |  [6..9): Int => _root_.scala.Int#
-      |_root_.f.C1#(p3) => var param p3_=: (x$1: scala.Int)scala.Unit
-      |  [12..15): Int => _root_.scala.Int#
-      |  [22..26): Unit => _root_.scala.Unit#
-      |_root_.f.C1#T1# => abstract type T1:  <: Int
-      |_root_.f.C1#T2# => type T2: scala.Int
-      |  [6..9): Int => _root_.scala.Int#
-      |_root_.f.C1#`<init>`()V. => secondaryctor <init>: ()f.C1
-      |  [4..6): C1 => _root_.f.C1#
-      |_root_.f.C1#`<init>`(III)V. => primaryctor <init>: (p1: scala.Int,p2: scala.Int,p3: scala.Int)f.C1
-      |  [11..14): Int => _root_.scala.Int#
-      |  [25..28): Int => _root_.scala.Int#
-      |  [39..42): Int => _root_.scala.Int#
-      |  [45..47): C1 => _root_.f.C1#
-      |_root_.f.C1#f1. => val f1: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.f.C1#f1.l1. => val l1: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.f.C1#f1.l2. => var l2: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.f.C1#f2. => var f2_=: (x$1: scala.Nothing)scala.Unit
-      |  [12..19): Nothing => _root_.scala.Nothing#
-      |  [26..30): Unit => _root_.scala.Unit#
-      |_root_.f.C1#m1(I)I. => def m1: [T](x: scala.Int)scala.Int
-      |  [13..16): Int => _root_.scala.Int#
-      |  [23..26): Int => _root_.scala.Int#
-      |_root_.f.C1#m1(I)I.(x) => param x: scala.Int
-      |  [6..9): Int => _root_.scala.Int#
-      |_root_.f.C1#m1(I)I.T# => typeparam T
-      |_root_.f.C1#m2()Lscala/Nothing;. => macro m2: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.f.C2# => abstract class C2
-      |_root_.f.C2#`<init>`()V. => primaryctor <init>: ()f.C2
-      |  [4..6): C2 => _root_.f.C2#
-      |_root_.f.C2#m3()I. => abstract def m3: scala.Int
-      |  [6..9): Int => _root_.scala.Int#
-      |_root_.f.C2#m4()Lscala/Nothing;. => final def m4: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.f.C3# => sealed class C3
-      |_root_.f.C3#`<init>`()V. => primaryctor <init>: ()f.C3
-      |  [4..6): C3 => _root_.f.C3#
-      |_root_.f.C3#m3()I. => def m3: scala.Int
-      |  [6..9): Int => _root_.scala.Int#
-      |_root_.f.C3#toString()Ljava/lang/String;. => def toString: ()java.lang.String
-      |  [12..18): String => _root_.java.lang.String#
-      |_root_.f.M. => final object M
-      |_root_.f.M.C1# => case class C1
-      |_root_.f.M.C1#`<init>`()V. => primaryctor <init>: ()f.M.C1
-      |  [6..8): C1 => _root_.f.M.C1#
-      |_root_.f.M.C2# => class C2
-      |_root_.f.M.C2#[T] => covariant typeparam T
-      |_root_.f.M.C2#[U] => contravariant typeparam U
-      |_root_.f.M.C2#`<init>`()V. => primaryctor <init>: ()f.M.C2[T,U]
-      |  [6..8): C2 => _root_.f.M.C2#
-      |  [9..10): T => _root_.f.M.C2#[T]
-      |  [11..12): U => _root_.f.M.C2#[U]
-      |_root_.f.M.i1()Lscala/Nothing;. => implicit def i1: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.f.M.l1. => lazy val l1: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.f.T# => trait T
-      |_root_.f.T#$init$()V. => primaryctor $init$: ()scala.Unit
-      |  [8..12): Unit => _root_.scala.Unit#
-      |_root_.f.T#f1. => private val f1: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.f.T#f2. => private val f2: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.f.T#f3. => private val f3: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.f.T#f4. => protected var f4_=: (x$1: scala.Nothing)scala.Unit
-      |  [12..19): Nothing => _root_.scala.Nothing#
-      |  [26..30): Unit => _root_.scala.Unit#
-      |_root_.f.T#f5. => protected var f5_=: (x$1: scala.Nothing)scala.Unit
-      |  [12..19): Nothing => _root_.scala.Nothing#
-      |  [26..30): Unit => _root_.scala.Unit#
-      |_root_.f.T#f6. => protected var f6_=: (x$1: scala.Nothing)scala.Unit
-      |  [12..19): Nothing => _root_.scala.Nothing#
-      |  [26..30): Unit => _root_.scala.Unit#
-      |_root_.scala. => package scala
-      |_root_.scala.Int# => abstract final class Int
-      |_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()scala.Int
-      |  [8..11): Int => _root_.scala.Int#
-      |_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: scala.Nothing
-      |  [6..13): Nothing => _root_.scala.Nothing#
-      |_root_.scala.language. => final object language
-      |_root_.scala.language.experimental. => final object experimental
-      |_root_.scala.language.experimental.macros. => implicit lazy val macros: scala.languageFeature.experimental.macros
-      |  [6..21): languageFeature => _root_.scala.languageFeature.
-      |  [22..34): experimental => _root_.scala.languageFeature.experimental.
-      |  [35..41): macros => _root_.scala.languageFeature.experimental.macros#
+    """|_root_.F.package. => packageobject package
+       |_root_.f. => package f
+       |_root_.f.C1# => class C1
+       |_root_.f.C1#(p1) => param p1: Int
+       |  [0..3): Int => _root_.scala.Int#
+       |_root_.f.C1#(p2) => val param p2: Int
+       |  [0..3): Int => _root_.scala.Int#
+       |_root_.f.C1#(p3) => var param p3_=: (x$1: Int): Unit
+       |  [6..9): Int => _root_.scala.Int#
+       |  [12..16): Unit => _root_.scala.Unit#
+       |_root_.f.C1#T1# => abstract type T1
+       |_root_.f.C1#T2# => type T2: Int
+       |  [0..3): Int => _root_.scala.Int#
+       |_root_.f.C1#`<init>`()V. => secondaryctor <init>: (): C1
+       |  [4..6): C1 => _root_.f.C1#
+       |_root_.f.C1#`<init>`(III)V. => primaryctor <init>: (p1: Int, p2: Int, p3: Int): C1
+       |  [5..8): Int => _root_.scala.Int#
+       |  [14..17): Int => _root_.scala.Int#
+       |  [23..26): Int => _root_.scala.Int#
+       |  [29..31): C1 => _root_.f.C1#
+       |_root_.f.C1#f1. => val f1: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.f.C1#f1.l1. => val l1: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.f.C1#f1.l2. => var l2: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.f.C1#f2. => var f2_=: (x$1: Nothing): Unit
+       |  [6..13): Nothing => _root_.scala.Nothing#
+       |  [16..20): Unit => _root_.scala.Unit#
+       |_root_.f.C1#m1(I)I. => def m1: [T] => (x: Int): Int
+       |  [11..14): Int => _root_.scala.Int#
+       |  [17..20): Int => _root_.scala.Int#
+       |_root_.f.C1#m1(I)I.(x) => param x: Int
+       |  [0..3): Int => _root_.scala.Int#
+       |_root_.f.C1#m1(I)I.T# => typeparam T
+       |_root_.f.C1#m2()Lscala/Nothing;. => macro m2: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.f.C2# => abstract class C2
+       |_root_.f.C2#`<init>`()V. => primaryctor <init>: (): C2
+       |  [4..6): C2 => _root_.f.C2#
+       |_root_.f.C2#m3()I. => abstract def m3: Int
+       |  [0..3): Int => _root_.scala.Int#
+       |_root_.f.C2#m4()Lscala/Nothing;. => final def m4: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.f.C3# => sealed class C3
+       |_root_.f.C3#`<init>`()V. => primaryctor <init>: (): C3
+       |  [4..6): C3 => _root_.f.C3#
+       |_root_.f.C3#m3()I. => def m3: Int
+       |  [0..3): Int => _root_.scala.Int#
+       |_root_.f.C3#toString()Ljava/lang/String;. => def toString: (): String
+       |  [4..10): String => _root_.java.lang.String#
+       |_root_.f.M. => final object M
+       |_root_.f.M.C1# => case class C1
+       |_root_.f.M.C1#`<init>`()V. => primaryctor <init>: (): C1
+       |  [4..6): C1 => _root_.f.M.C1#
+       |_root_.f.M.C2# => class C2
+       |_root_.f.M.C2#[T] => covariant typeparam T
+       |_root_.f.M.C2#[U] => contravariant typeparam U
+       |_root_.f.M.C2#`<init>`()V. => primaryctor <init>: (): C2[T, U]
+       |  [4..6): C2 => _root_.f.M.C2#
+       |  [7..8): T => _root_.f.M.C2#[T]
+       |  [10..11): U => _root_.f.M.C2#[U]
+       |_root_.f.M.i1()Lscala/Nothing;. => implicit def i1: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.f.M.l1. => lazy val l1: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.f.T# => trait T
+       |_root_.f.T#$init$()V. => primaryctor $init$: (): Unit
+       |  [4..8): Unit => _root_.scala.Unit#
+       |_root_.f.T#f1. => private val f1: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.f.T#f2. => private val f2: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.f.T#f3. => private val f3: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.f.T#f4. => protected var f4_=: (x$1: Nothing): Unit
+       |  [6..13): Nothing => _root_.scala.Nothing#
+       |  [16..20): Unit => _root_.scala.Unit#
+       |_root_.f.T#f5. => protected var f5_=: (x$1: Nothing): Unit
+       |  [6..13): Nothing => _root_.scala.Nothing#
+       |  [16..20): Unit => _root_.scala.Unit#
+       |_root_.f.T#f6. => protected var f6_=: (x$1: Nothing): Unit
+       |  [6..13): Nothing => _root_.scala.Nothing#
+       |  [16..20): Unit => _root_.scala.Unit#
+       |_root_.scala. => package scala
+       |_root_.scala.Int# => abstract final class Int
+       |_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
+       |  [4..7): Int => _root_.scala.Int#
+       |_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: Nothing
+       |  [0..7): Nothing => _root_.scala.Nothing#
+       |_root_.scala.language. => final object language
+       |_root_.scala.language.experimental. => final object experimental
+       |_root_.scala.language.experimental.macros. => implicit lazy val macros: macros
+       |  [0..6): macros => _root_.scala.languageFeature.experimental.macros#
   """.trim.stripMargin
   )
 
@@ -251,15 +248,14 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  CommandeerDSL(null.asInstanceOf[Foo])
       |}
     """.trim.stripMargin,
-    """
-      |[324..324): *.apply[g.Foo, g.FooDSL]
-      |  [0..1): * => _star_.
-      |  [2..7): apply => _root_.g.CommandeerDSL.apply(Ljava/lang/Object;Lg/CommandeerDSL;)Lg/CommandeerDSL;.
-      |  [10..13): Foo => _root_.g.Foo#
-      |  [17..23): FooDSL => _root_.g.FooDSL#
-      |[348..348): *(g.Foo.fooDSL)
-      |  [0..1): * => _star_.
-      |  [8..14): fooDSL => _root_.g.Foo.fooDSL.
+    """|[324..324): *.apply[Foo, FooDSL]
+       |  [0..1): * => _star_.
+       |  [2..7): apply => _root_.g.CommandeerDSL.apply(Ljava/lang/Object;Lg/CommandeerDSL;)Lg/CommandeerDSL;.
+       |  [8..11): Foo => _root_.g.Foo#
+       |  [13..19): FooDSL => _root_.g.FooDSL#
+       |[348..348): *(g.Foo.fooDSL)
+       |  [0..1): * => _star_.
+       |  [8..14): fooDSL => _root_.g.Foo.fooDSL.
     """.trim.stripMargin
   )
 
@@ -290,30 +286,29 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  i(new C[Int])
       |}
   """.trim.stripMargin,
-    """
-      |[201..201): *[scala.Int, scala.collection.immutable.List[scala.Int]]
-      |  [0..1): * => _star_.
-      |  [8..11): Int => _root_.scala.Int#
-      |  [40..44): List => _root_.scala.collection.immutable.List#
-      |  [51..54): Int => _root_.scala.Int#
-      |[209..209): *(scala.collection.immutable.List.canBuildFrom[scala.Int])
-      |  [0..1): * => _star_.
-      |  [34..46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
-      |  [53..56): Int => _root_.scala.Int#
-      |[247..247): *(h.C.list[scala.Int](h.C.int))
-      |  [0..1): * => _star_.
-      |  [17..20): Int => _root_.scala.Int#
-      |  [26..29): int => _root_.h.C.int()Lh/C;.
-      |  [6..10): list => _root_.h.C.list(Lh/C;)Lh/C;.
-      |[273..275): h.X.cvt[scala.Int](*)(h.C.int)
-      |  [4..7): cvt => _root_.h.X.cvt(Ljava/lang/Object;Lh/C;)Lh/X;.
-      |  [14..17): Int => _root_.scala.Int#
-      |  [19..20): * => _star_.
-      |  [26..29): int => _root_.h.C.int()Lh/C;.
-      |[304..304): *[h.C[scala.Int]]
-      |  [0..1): * => _star_.
-      |  [4..5): C => _root_.h.C#
-      |  [12..15): Int => _root_.scala.Int#
+    """|[201..201): *[Int, List[Int]]
+       |  [0..1): * => _star_.
+       |  [2..5): Int => _root_.scala.Int#
+       |  [12..15): Int => _root_.scala.Int#
+       |  [7..11): List => _root_.scala.collection.immutable.List#
+       |[209..209): *(scala.collection.immutable.List.canBuildFrom[Int])
+       |  [0..1): * => _star_.
+       |  [47..50): Int => _root_.scala.Int#
+       |  [34..46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
+       |[247..247): *(h.C.list[Int](h.C.int))
+       |  [0..1): * => _star_.
+       |  [11..14): Int => _root_.scala.Int#
+       |  [6..10): list => _root_.h.C.list(Lh/C;)Lh/C;.
+       |  [20..23): int => _root_.h.C.int()Lh/C;.
+       |[273..275): h.X.cvt[Int](*)(h.C.int)
+       |  [8..11): Int => _root_.scala.Int#
+       |  [4..7): cvt => _root_.h.X.cvt(Ljava/lang/Object;Lh/C;)Lh/X;.
+       |  [13..14): * => _star_.
+       |  [20..23): int => _root_.h.C.int()Lh/C;.
+       |[304..304): *[C[Int]]
+       |  [0..1): * => _star_.
+       |  [4..7): Int => _root_.scala.Int#
+       |  [2..3): C => _root_.h.C#
   """.trim.stripMargin
   )
 
@@ -343,75 +338,71 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  }
       |}
     """.stripMargin,
-    """
-      |<...>@359..375 => val result: b.X
-      |  [0..1): b => _root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b)
-      |  [2..3): X => _root_.i.B#X#
-      |_root_.i. => package i
-      |_root_.i.B# => trait B
-      |_root_.i.B#X# => abstract type X
-      |_root_.i.B#x()Ljava/lang/Object;. => abstract def x: B.this.X
-      |  [7..8): X => _root_.i.B#X#
-      |_root_.i.D# => class D
-      |_root_.i.D#X# => type X: scala.collection.mutable.HashSet[scala.Int]
-      |  [25..32): HashSet => _root_.scala.collection.mutable.HashSet#
-      |  [39..42): Int => _root_.scala.Int#
-      |_root_.i.D#`<init>`()V. => primaryctor <init>: ()i.D
-      |  [4..5): D => _root_.i.D#
-      |_root_.i.D#x()Lscala/collection/mutable/HashSet;. => def x: scala.collection.mutable.HashSet[scala.Int]
-      |  [25..32): HashSet => _root_.scala.collection.mutable.HashSet#
-      |  [39..42): Int => _root_.scala.Int#
-      |_root_.i.E# => class E
-      |_root_.i.E#X# => type X: scala.collection.mutable.ListBuffer[scala.Int]
-      |  [25..35): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
-      |  [42..45): Int => _root_.scala.Int#
-      |_root_.i.E#`<init>`()V. => primaryctor <init>: ()i.E
-      |  [4..5): E => _root_.i.E#
-      |_root_.i.E#x()Lscala/collection/mutable/ListBuffer;. => def x: scala.collection.mutable.ListBuffer[scala.Int]
-      |  [25..35): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
-      |  [42..45): Int => _root_.scala.Int#
-      |_root_.i.a. => final object a
-      |_root_.i.a.foo(Li/B;)Ljava/lang/Object;. => def foo: (implicit b: i.B)b.X
-      |  [15..16): B => _root_.i.B#
-      |  [17..18): b => _root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b)
-      |  [19..20): X => _root_.i.B#X#
-      |_root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b) => implicit param b: i.B
-      |  [2..3): B => _root_.i.B#
-      |_root_.i.a.x. => val x: scala.collection.mutable.ListBuffer[scala.Int]
-      |  [25..35): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
-      |  [42..45): Int => _root_.scala.Int#
-      |_root_.i.a.y. => val y: scala.collection.mutable.HashSet[scala.Int]
-      |  [25..32): HashSet => _root_.scala.collection.mutable.HashSet#
-      |  [39..42): Int => _root_.scala.Int#
-      |_root_.java.lang.Object#`<init>`()V. => primaryctor <init>: ()java.lang.Object
-      |  [12..18): Object => _root_.java.lang.Object#
-      |_root_.scala. => package scala
-      |_root_.scala.Int# => abstract final class Int
-      |_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()scala.Int
-      |  [8..11): Int => _root_.scala.Int#
-      |_root_.scala.collection. => package collection
-      |_root_.scala.collection.generic.GenericCompanion#empty()Lscala/collection/GenTraversable;. => def empty: [A]CC[A]
-      |  [3..5): CC => _root_.scala.collection.generic.GenericCompanion#[CC]
-      |  [6..7): A => _root_.scala.collection.generic.GenericCompanion#empty()Lscala/collection/GenTraversable;.[A]
-      |_root_.scala.collection.mutable. => package mutable
-      |_root_.scala.collection.mutable.HashSet# => class HashSet
-      |_root_.scala.collection.mutable.HashSet#`<init>`(Lscala/collection/mutable/FlatHashTable/Contents;)V. => private primaryctor <init>: (contents: scala.collection.mutable.FlatHashTable.Contents[A])scala.collection.mutable.HashSet[A]
-      |  [36..49): FlatHashTable => _root_.scala.collection.mutable.FlatHashTable.
-      |  [50..58): Contents => _root_.scala.collection.mutable.FlatHashTable.Contents#
-      |  [59..60): A => _root_.scala.collection.mutable.HashSet#[A]
-      |  [87..94): HashSet => _root_.scala.collection.mutable.HashSet#
-      |  [95..96): A => _root_.scala.collection.mutable.HashSet#[A]
-      |_root_.scala.collection.mutable.HashSet. => final object HashSet
-      |_root_.scala.collection.mutable.HashSet.;_root_.scala.collection.mutable.HashSet# => val <import scala.collection.mutable.HashSet>: scala.collection.mutable.HashSet.type <and> scala.collection.mutable.HashSet
-      |_root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;. => def empty: [A]scala.collection.mutable.HashSet[A]
-      |  [28..35): HashSet => _root_.scala.collection.mutable.HashSet#
-      |  [36..37): A => _root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;.[A]
-      |_root_.scala.collection.mutable.ListBuffer# => final class ListBuffer
-      |_root_.scala.collection.mutable.ListBuffer#`<init>`()V. => primaryctor <init>: ()scala.collection.mutable.ListBuffer[A]
-      |  [27..37): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
-      |  [38..39): A => _root_.scala.collection.mutable.ListBuffer#[A]
-      |_root_.scala.collection.mutable.ListBuffer. => final object ListBuffer
-      |_root_.scala.collection.mutable.ListBuffer.;_root_.scala.collection.mutable.ListBuffer# => val <import scala.collection.mutable.ListBuffer>: scala.collection.mutable.ListBuffer.type <and> scala.collection.mutable.ListBuffer
+    """|<...>@359..375 => val result: X
+       |  [0..1): X => _root_.i.B#X#
+       |_root_.i. => package i
+       |_root_.i.B# => trait B
+       |_root_.i.B#X# => abstract type X
+       |_root_.i.B#x()Ljava/lang/Object;. => abstract def x: X
+       |  [0..1): X => _root_.i.B#X#
+       |_root_.i.D# => class D
+       |_root_.i.D#X# => type X: HashSet[Int]
+       |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
+       |  [8..11): Int => _root_.scala.Int#
+       |_root_.i.D#`<init>`()V. => primaryctor <init>: (): D
+       |  [4..5): D => _root_.i.D#
+       |_root_.i.D#x()Lscala/collection/mutable/HashSet;. => def x: HashSet[Int]
+       |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
+       |  [8..11): Int => _root_.scala.Int#
+       |_root_.i.E# => class E
+       |_root_.i.E#X# => type X: ListBuffer[Int]
+       |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
+       |  [11..14): Int => _root_.scala.Int#
+       |_root_.i.E#`<init>`()V. => primaryctor <init>: (): E
+       |  [4..5): E => _root_.i.E#
+       |_root_.i.E#x()Lscala/collection/mutable/ListBuffer;. => def x: ListBuffer[Int]
+       |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
+       |  [11..14): Int => _root_.scala.Int#
+       |_root_.i.a. => final object a
+       |_root_.i.a.foo(Li/B;)Ljava/lang/Object;. => def foo: (implicit b: B): X
+       |  [13..14): B => _root_.i.B#
+       |  [17..18): X => _root_.i.B#X#
+       |_root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b) => implicit param b: B
+       |  [0..1): B => _root_.i.B#
+       |_root_.i.a.x. => val x: ListBuffer[Int]
+       |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
+       |  [11..14): Int => _root_.scala.Int#
+       |_root_.i.a.y. => val y: HashSet[Int]
+       |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
+       |  [8..11): Int => _root_.scala.Int#
+       |_root_.java.lang.Object#`<init>`()V. => primaryctor <init>: (): Object
+       |  [4..10): Object => _root_.java.lang.Object#
+       |_root_.scala. => package scala
+       |_root_.scala.Int# => abstract final class Int
+       |_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
+       |  [4..7): Int => _root_.scala.Int#
+       |_root_.scala.collection. => package collection
+       |_root_.scala.collection.generic.GenericCompanion#empty()Lscala/collection/GenTraversable;. => def empty: [A] => CC[A]
+       |  [7..9): CC => _root_.scala.collection.generic.GenericCompanion#[CC]
+       |  [10..11): A => _root_.scala.collection.generic.GenericCompanion#empty()Lscala/collection/GenTraversable;.[A]
+       |_root_.scala.collection.mutable. => package mutable
+       |_root_.scala.collection.mutable.HashSet# => class HashSet
+       |_root_.scala.collection.mutable.HashSet#`<init>`(Lscala/collection/mutable/FlatHashTable/Contents;)V. => private primaryctor <init>: (contents: Contents[A]): HashSet[A]
+       |  [11..19): Contents => _root_.scala.collection.mutable.FlatHashTable.Contents#
+       |  [20..21): A => _root_.scala.collection.mutable.HashSet#[A]
+       |  [25..32): HashSet => _root_.scala.collection.mutable.HashSet#
+       |  [33..34): A => _root_.scala.collection.mutable.HashSet#[A]
+       |_root_.scala.collection.mutable.HashSet. => final object HashSet
+       |_root_.scala.collection.mutable.HashSet.;_root_.scala.collection.mutable.HashSet# => val <import scala.collection.mutable.HashSet>: scala.collection.mutable.HashSet.type <and> scala.collection.mutable.HashSet
+       |_root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;. => def empty: [A] => HashSet[A]
+       |  [7..14): HashSet => _root_.scala.collection.mutable.HashSet#
+       |  [15..16): A => _root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;.[A]
+       |_root_.scala.collection.mutable.ListBuffer# => final class ListBuffer
+       |_root_.scala.collection.mutable.ListBuffer#`<init>`()V. => primaryctor <init>: (): ListBuffer[A]
+       |  [4..14): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
+       |  [15..16): A => _root_.scala.collection.mutable.ListBuffer#[A]
+       |_root_.scala.collection.mutable.ListBuffer. => final object ListBuffer
+       |_root_.scala.collection.mutable.ListBuffer.;_root_.scala.collection.mutable.ListBuffer# => val <import scala.collection.mutable.ListBuffer>: scala.collection.mutable.ListBuffer.type <and> scala.collection.mutable.ListBuffer
     """.stripMargin.trim
   )
 
@@ -524,21 +515,20 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  List.newBuilder[Int].result
       |  List(1).head
       |}""".stripMargin,
-    """
-      |_empty_.o. => final object o
-      |_root_.scala.Int# => abstract final class Int
-      |_root_.scala.Int#`<init>`()V. => primaryctor <init>: ()scala.Int
-      |  [8..11): Int => _root_.scala.Int#
-      |_root_.scala.collection.IterableLike#head()Ljava/lang/Object;. => def head: A
-      |  [0..1): A => _root_.scala.collection.IterableLike#[A]
-      |_root_.scala.collection.immutable.List. => final object List
-      |_root_.scala.collection.immutable.List.newBuilder()Lscala/collection/mutable/Builder;. => def newBuilder: [A]scala.collection.mutable.Builder[A,scala.collection.immutable.List[A]]
-      |  [28..35): Builder => _root_.scala.collection.mutable.Builder#
-      |  [36..37): A => _root_.scala.collection.immutable.List.newBuilder()Lscala/collection/mutable/Builder;.[A]
-      |  [65..69): List => _root_.scala.collection.immutable.List#
-      |  [70..71): A => _root_.scala.collection.immutable.List.newBuilder()Lscala/collection/mutable/Builder;.[A]
-      |_root_.scala.collection.mutable.Builder#result()Ljava/lang/Object;. => abstract def result: ()To
-      |  [2..4): To => _root_.scala.collection.mutable.Builder#[To]
+    """|_empty_.o. => final object o
+       |_root_.scala.Int# => abstract final class Int
+       |_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
+       |  [4..7): Int => _root_.scala.Int#
+       |_root_.scala.collection.IterableLike#head()Ljava/lang/Object;. => def head: A
+       |  [0..1): A => _root_.scala.collection.IterableLike#[A]
+       |_root_.scala.collection.immutable.List. => final object List
+       |_root_.scala.collection.immutable.List.newBuilder()Lscala/collection/mutable/Builder;. => def newBuilder: [A] => Builder[A, List[A]]
+       |  [7..14): Builder => _root_.scala.collection.mutable.Builder#
+       |  [15..16): A => _root_.scala.collection.immutable.List.newBuilder()Lscala/collection/mutable/Builder;.[A]
+       |  [18..22): List => _root_.scala.collection.immutable.List#
+       |  [23..24): A => _root_.scala.collection.immutable.List.newBuilder()Lscala/collection/mutable/Builder;.[A]
+       |_root_.scala.collection.mutable.Builder#result()Ljava/lang/Object;. => abstract def result: (): To
+       |  [4..6): To => _root_.scala.collection.mutable.Builder#[To]
     """.stripMargin.trim
   )
 
@@ -564,16 +554,15 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  List(1) + "blaH"
        |}
     """.stripMargin,
-    """|
-       |[13..20): scala.Predef.any2stringadd[scala.collection.immutable.List[scala.Int]](*)
+    """|[13..20): scala.Predef.any2stringadd[List[Int]](*)
+       |  [27..31): List => _root_.scala.collection.immutable.List#
        |  [13..26): any2stringadd => _root_.scala.Predef.any2stringadd(Ljava/lang/Object;)Ljava/lang/Object;.
-       |  [65..68): Int => _root_.scala.Int#
-       |  [54..58): List => _root_.scala.collection.immutable.List#
-       |  [71..72): * => _star_.
-       |[17..17): *.apply[scala.Int]
+       |  [32..35): Int => _root_.scala.Int#
+       |  [38..39): * => _star_.
+       |[17..17): *.apply[Int]
        |  [0..1): * => _star_.
        |  [2..7): apply => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
-       |  [14..17): Int => _root_.scala.Int#
+       |  [8..11): Int => _root_.scala.Int#
        |""".stripMargin
   )
 
@@ -584,11 +573,11 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  val x: Ordered[F] = new F
        |}
     """.stripMargin,
-    """|[86..91): scala.math.Ordered.orderingToOrdered[r.F](*)(r.this.ordering)
+    """|[86..91): scala.math.Ordered.orderingToOrdered[F](*)(r.this.ordering)
        |  [19..36): orderingToOrdered => _root_.scala.math.Ordered.orderingToOrdered(Ljava/lang/Object;Lscala/math/Ordering;)Lscala/math/Ordered;.
-       |  [39..40): F => _empty_.r.F#
-       |  [42..43): * => _star_.
-       |  [52..60): ordering => _empty_.r.ordering.
+       |  [37..38): F => _empty_.r.F#
+       |  [40..41): * => _star_.
+       |  [50..58): ordering => _empty_.r.ordering.
        |""".stripMargin
   )
 
@@ -628,10 +617,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       assert(first == Symbol("_empty_.u.unapply(Lu;)Lscala/Option;."))
       assertNoDiff(
         denotation.toString,
-        """case def unapply: (x$0: u)scala.Option[scala.Int]
+        """case def unapply: (x$0: u): Option[Int]
           |  [6..7): u => _empty_.u#
-          |  [14..20): Option => _root_.scala.Option#
-          |  [27..30): Int => _root_.scala.Int#
+          |  [10..16): Option => _root_.scala.Option#
+          |  [17..20): Int => _root_.scala.Int#
         """.stripMargin
       )
     }
@@ -663,10 +652,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       def check(symbol: Symbol, info: String) = {
         assertNoDiff(db.symbols.find(_.symbol == symbol).get.denotation.signature, info)
       }
-      check(a, "java.lang.StringBuilder")
-      check(b, "scala.collection.mutable.StringBuilder")
-      check(c, "scala.package.Traversable[scala.Int]")
-      check(d, "scala.collection.immutable.Map[scala.Int,scala.Int]")
+      check(a, "StringBuilder")
+      check(b, "StringBuilder")
+      check(c, "Traversable[Int]")
+      check(d, "Map[Int, Int]")
     }
   )
 
