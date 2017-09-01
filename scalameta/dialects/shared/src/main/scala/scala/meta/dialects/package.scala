@@ -43,6 +43,9 @@ import scala.compat.Platform.EOL
   // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
   allowLiteralTypes: Boolean,
 
+  // Are method types allowed, i.e. is `(x: X): x.T` legal or not?
+  allowMethodTypes: Boolean,
+
   // Are multiline programs allowed?
   // Some quasiquotes only support single-line snippets.
   allowMultilinePrograms: Boolean,
@@ -71,6 +74,9 @@ import scala.compat.Platform.EOL
   // Are trait allowed to have parameters?
   // They are in Dotty, but not in Scala 2.12 or older.
   allowTraitParameters: Boolean,
+
+  // Are type lambdas allowed, i.e. is `[T] => (T, T)` legal or not?
+  allowTypeLambdas: Boolean,
 
   // Are view bounds supported by this dialect?
   // Removed in Dotty.
@@ -119,6 +125,7 @@ package object dialects {
     allowInlineIdents = true,
     allowInlineMods = false,
     allowLiteralTypes = false,
+    allowMethodTypes = false,
     allowMultilinePrograms = true,
     allowOrTypes = false,
     allowPatUnquotes = false,
@@ -127,6 +134,7 @@ package object dialects {
     allowToplevelTerms = false,
     allowTrailingCommas = false,
     allowTraitParameters = false,
+    allowTypeLambdas = false,
     allowViewBounds = true,
     allowWithTypes = true,
     allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
@@ -193,9 +201,11 @@ package object dialects {
     allowInlineIdents = false, // New feature in Dotty
     allowInlineMods = true, // New feature in Dotty
     allowLiteralTypes = true, // New feature in Dotty
+    allowMethodTypes = false,
     allowOrTypes = true, // New feature in Dotty
     allowTrailingCommas = false, // Not yet implemented in Dotty
     allowTraitParameters = true, // New feature in Dotty
+    allowTypeLambdas = true, // New feature in Dotty
     allowViewBounds = false, // View bounds have been removed in Dotty
     allowWithTypes = false, // New feature in Dotty
     allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
@@ -204,13 +214,13 @@ package object dialects {
   // TODO: https://github.com/scalameta/scalameta/issues/380
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
-    underlying.copy(allowTermUnquotes = true, allowMultilinePrograms = multiline)
+    underlying.copy(allowTermUnquotes = true, allowMethodTypes = true, allowMultilinePrograms = multiline, allowTypeLambdas = true)
   }
 
   // TODO: https://github.com/scalameta/scalameta/issues/380
   private[meta] def QuasiquotePat(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
-    underlying.copy(allowPatUnquotes = true, allowMultilinePrograms = multiline)
+    underlying.copy(allowPatUnquotes = true, allowMethodTypes = true, allowMultilinePrograms = multiline, allowTypeLambdas = true)
   }
 }
 

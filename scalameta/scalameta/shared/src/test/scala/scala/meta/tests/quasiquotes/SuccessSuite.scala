@@ -880,6 +880,31 @@ class SuccessSuite extends FunSuite {
     assert(t"$tpe ..@$annots".structure === "Type.Annotate(Type.Name(\"X\"), List(Mod.Annot(Init(Type.Name(\"a\"), Name(\"\"), Nil)), Mod.Annot(Init(Type.Name(\"b\"), Name(\"\"), Nil))))")
   }
 
+  test("1 t\"[..$tparams] => $tpe\"") {
+    val t"[..$tparams] => $tpe" = t"[T] => (T, T)"
+    assert(tparams.toString === "List(T)")
+    assert(tparams(0).structure === "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)")
+    assert(tpe.toString === "(T, T)")
+  }
+
+  test("2 t\"(..$tparams) => $tpe\"") {
+    val tparams = List(tparam"T")
+    val tpe = t"(T, T)"
+    assert(t"[..$tparams] => $tpe".structure === "Type.Lambda(List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Tuple(List(Type.Name(\"T\"), Type.Name(\"T\"))))")
+  }
+
+  test("1 t\"(...$paramss): $tpe\"") {
+    val t"(...$paramss): $tpe" = t"(x: X): x.T"
+    assert(paramss.toString === "List(List(x: X))")
+    assert(tpe.toString === "x.T")
+  }
+
+  test("2 t\"(...$paramss): $tpe\"") {
+    val paramss = List(List(param"x: X"))
+    val tpe = t"x.T"
+    assert(t"(...$paramss): $tpe".structure === "Type.Method(List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None))), Type.Select(Term.Name(\"x\"), Type.Name(\"T\")))")
+  }
+
   test("1 t\"_ >: $tpeopt <: $tpeopt\"") {
     val t"_ >: $tpe1 <: $tpe2" = t"_ >: X <: Y"
     assert(tpe1.structure === "Some(Type.Name(\"X\"))")

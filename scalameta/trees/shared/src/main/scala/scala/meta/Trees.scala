@@ -155,6 +155,12 @@ object Type {
     checkFields(stats.forall(_.isExistentialStat))
   }
   @ast class Annotate(tpe: Type, annots: List[Mod.Annot] @nonEmpty) extends Type
+  @ast class Lambda(tparams: List[Type.Param], tpe: Type) extends Type {
+    checkParent(ParentChecks.TypeLambda)
+  }
+  @ast class Method(paramss: List[List[Term.Param]], tpe: Type) extends Type {
+    checkParent(ParentChecks.TypeMethod)
+  }
   @ast class Placeholder(bounds: Bounds) extends Type
   @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
   @ast class ByName(tpe: Type) extends Type {

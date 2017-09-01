@@ -230,7 +230,9 @@ class DataMacros(val c: Context) extends MacroHelpers {
           needs(TermName("unapplySeq"), companion = true, duplicate = false)) {
         val unapplyParamss = paramss.map(_.map(unByNeed))
         val unapplyParams = unapplyParamss.head
-        if (unapplyParams.length != 0) {
+        if (unapplyParams.length > 22) {
+          // do nothing
+        } else if (unapplyParams.length != 0) {
           val successTargs = unapplyParams.map({
             case VanillaParam(mods, name, tpt, default) => tpt
             case VarargParam(mods, name, Vararg(tpt), default) => tq"_root_.scala.Seq[$tpt]"
