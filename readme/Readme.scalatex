@@ -5,13 +5,11 @@
 @sect("Scalameta", stableVersionBadge)
 
   @p
-    Scalameta is a cross-platform, clean-room implementation of a
-    metaprogramming toolkit for Scala, designed to be simple, robust and
-    portable.  Scalameta's primary focus is to enable a new generation of
-    syntactic and semantic @b{developer tools} for Scala.
-    Please note that macros are no longer on the roadmap for Scalameta, see
-    @lnk("scalamacros", "https://github.com/scalamacros/scalamacros") for more
-    details.
+    Scalameta is a modern metaprogramming library for Scala that supports
+    a wide range of language versions and execution platforms.
+    Originally, Scalameta was founded to become a better macro system for Scala,
+    but over time we shifted focus to developer tools and spun off the new macro system
+    into a @lnk("separate project", "https://github.com/scalamacros/scalamacros").
 
   @sect{Features}
     @p
@@ -19,7 +17,7 @@
         High-fidelity parsing.
       Note how the abstract syntax trees in the printout below
       contain comprehensive information about formatting and comments.
-      This is an exclusive feature of scalameta.
+      This is an exclusive feature of Scalameta.
 
     @meta
       "x + y /* adds x and y */".parse[Term]
@@ -42,10 +40,23 @@
 
     @p
       @b
+        Quasiquotes.
+      Quasiquotes have proven to be an amazing productivity booster in scala.reflect,
+      so we implemented them in Scalameta and now they are better than ever.
+      Note how the precise types for @code("x") and @code("y")
+      prevent the programmer from generating invalid code.
+      Learn more about quasiquotes in
+      @lnk("our documentation", "https://github.com/scalameta/scalameta/blob/master/notes/quasiquotes.md").
+
+    @meta
+      val addition = q"x + y"
+      val q"$x + $y" = addition
+
+    @p
+      @b
         Dialects.
-      Scalameta is designed from the ground up to be platform-independent.
-      This means that we understand different versions of the base language:
-      Scala 2.10, Scala 2.11 and even Dotty. We also support Sbt build files
+      Scalameta is designed from the ground up to understand different versions of the base language:
+      Scala 2.10, Scala 2.11, Scala 2.12 and even Dotty. We also support Sbt build files
       to make sure we cover as much Scala code as possible.
 
     @meta
@@ -68,45 +79,30 @@
           @th
             Notes
       @tbody
-        @def dialect(name: Dialect, syntax: String, semantic: String, notes: Frag*) = tr(
-          td(name.toString),
+        @def dialect(name: String, syntax: String, semantic: String, notes: Frag*) = tr(
+          td(name),
           td(syntax),
           td(semantic),
           td(notes)
         )
-        @dialect(dialects.Scala210, "Yes", "Yes*", "enabled with ", lnk("https://github.com/scalameta/sbthost"))
-        @dialect(dialects.Sbt0137, "Yes", "Yes*", "enabled with ", lnk("https://github.com/scalameta/sbthost"))
-        @dialect(dialects.Scala211, "Yes", "Yes", "Primary focus")
-        @dialect(dialects.Scala212, "Yes", "Yes", "Primary focus")
-        @dialect(dialects.Sbt1, "Yes", "No")
-        @dialect(dialects.Dotty, "Partial", "No", "Missing support to parse enums")
+        @dialect("Scala 2.10", "Yes", "Yes*", "Requires ", lnk("an external module", "https://github.com/scalameta/sbthost"))
+        @dialect("Scala 2.11", "Yes", "Yes", "Full support")
+        @dialect("Scala 2.12", "Yes", "Yes", "Full support")
+        @dialect("Dotty", "Partial", "No", "Partial support for new language features")
+        @dialect("Sbt 0.13", "Yes", "Yes*", "Requires ", lnk("an external module", "https://github.com/scalameta/sbthost"))
+        @dialect("Sbt 1.0", "Yes", "No")
 
     @p
       @b
-        Quasiquotes.
-      Quasiquotes have proven to be an amazing productivity booster in scala.reflect,
-      so we implemented them in scalameta and now they are better than ever.
-      Note how the precise types for @code("x") and @code("y")
-      prevent the programmer from generating invalid code.
-      Learn more about quasiquotes in
-      @lnk("our documentation", "https://github.com/scalameta/scalameta/blob/master/notes/quasiquotes.md").
-
-    @meta
-      val addition = q"x + y"
-      val q"$x + $y" = addition
-
-    @p
-      @b
-        Semantic API
+        Semantic API.
       Semantic analysis of Scala programs has typically been tricky business, requiring
-      intimate familiarity with scalac implementation details.
-      The Scalameta Semantic API involves none of that. The Semantic API is powered by
+      intimate familiarity with compiler internals.
+      Scalameta involves none of that. Our semantic API is powered by
       @lnk("Semantic DB", "http://scalameta.org/tutorial/#SemanticDB"), a simple
       @lnk("schema", "https://github.com/scalameta/scalameta/blob/master/langmeta/semanticdb/shared/src/main/protobuf/semanticdb.proto")
-      for persisting semantic information extracted from a snapshot of the compiler after typer.
-      By persisting semantic information instead of querying a live compiler instance,
-      the same data can be used to power multiple applications running on
-      different platforms.
+      for persisting semantic information extracted from the Scala compiler.
+      Saved semantic information can then be used in multiple applications running on
+      different platforms, potentially in a distributed fashion.
       @table
         @(cls := "pure-table")
         @(margin := "auto")
@@ -118,38 +114,41 @@
               Supported?
         @tbody
           @def feature(name: String, supported: String) = tr(td(name), td(supported))
-          @feature("Reported message at position", "Yes")
+          @feature("Compiler messages", "Yes")
           @feature("Symbol at position", "Yes")
-          @feature("Type at symbol", "Yes")
+          @feature("Symbol signature", "Yes")
           @feature("Type at position", "Planned")
           @feature("Type members", "Planned")
-          @feature("Symbol at macro expansion", "Planned")
-          @feature("Expanded macro", "Planned")
-          @feature("implicit arguments at position", "Yes")
-          @feature("implicit conversion at position", "Yes")
-          @feature("Inferred .apply/.unapply at position", "Yes")
+          @feature("Macro expansions", "Planned")
+          @feature("Inferred type arguments", "Yes")
+          @feature("Implicit arguments", "Yes")
+          @feature("Implicit conversions", "Yes")
+          @feature(".apply/.unapply and other desugarings", "Partially")
     @p
       @b
         Cross-platform.
-      Scalameta compiles to JVM bytecode and JavaScript with @lnk("Scala.js",
-      "https://www.scala-js.org/"). Support for Scala Native is
-      @lnk("planned", "https://github.com/scalameta/scalameta/issues/772").
+      Scalameta is available as a JVM library and as a JavaScript module
+      via @lnk("Scala.js", "http://www.scala-js.org/").
+      Support for a native library via @lnk("Scala Native", "http://www.scala-native.org/") is
+      @lnk("in the works", "https://github.com/scalameta/scalameta/issues/772").
 
-  @sect{Built with scalameta}
+  @sect{Built with Scalameta}
     @p
       Feel free to add your project to this list.
     @ul
       @li
-         @lnk("Scalafmt", "http://scalameta.org/scalafmt/"): code formatter
+         @lnk("Scalafmt", "http://scalameta.org/scalafmt/"): code formatter.
+      @li
+         @lnk("Scalafix", "https://scalacenter.github.io/scalafix/"): automated code rewriter.
       @li
          @lnk("Metadoc", "http://scalameta.org/metadoc/"): online code browser
          with "Jump to definition" and "See references".
       @li
         @lnk("Imclipitly", "https://github.com/ShaneDelmore/imclipitly"): Scala-Clippy advice generator for implicit enrichments
       @li
-        @lnk("Stags", "https://github.com/pjrt/stags"): Scala tags generator
+        @lnk("Stags", "https://github.com/pjrt/stags"): Scala tags generator.
       @li
-        @lnk("AST explorer", "https://astexplorer.net/#/gist/22cf8a3fcb2155c087ae94b4d194c1b6/d10c646ecfae4c69c919408aa3aaefb2deda2df7"): interactively explore Scalameta trees
+        @lnk("AST explorer", "https://astexplorer.net/#/gist/22cf8a3fcb2155c087ae94b4d194c1b6/d10c646ecfae4c69c919408aa3aaefb2deda2df7"): interactively explorer of Scala syntax.
 
   @sect{Releases}
 
@@ -160,19 +159,18 @@
     @p
       @b
         Semantic versioning.
-      With Scalameta v2.0 onwards, we follow
+      With Scalameta 2.0 onwards, we follow
       @lnk("semantic versioning", "http://semver.org/") enforced with
       @lnk("MiMa", "https://github.com/typesafehub/migration-manager/").
-      Binary breaking changes bump up the major version (e.g., 2.0.0 -> 3.0.0),
-      backwards binary compatible improvements bump up the minor version (e.g.,
-      2.0.0 -> 2.1.0) minor bug fixes bump up the patch version (e.g. 2.0.0 ->
-      2.0.1).
+      Binary breaking changes bump up the major version (e.g., 2.0 -> 3.0),
+      binary compatible improvements bump up the minor version (e.g.,
+      2.0 -> 2.1).
 
     @p
       @b
         Milestone releases.
-      Between major releases that break binary compatibility, we may cut
-      milestone releases to test out work-in-progress binary breaking changes.
+      At any point in the release cycle, we may cut
+      milestone releases to test out work-in-progress changes.
 
   @sect{Getting started}
     @p
@@ -200,9 +198,8 @@
       @b
         Refactoring.
       @lnk("Scalafix", "https://scalacenter.github.io/scalafix/") is a
-      refactoring tool developed at the @lnk("Scala Center", "https://scala.epfl.ch/").
-      Scalafix rewrites use the Scalameta Semantic and Syntactic APIs to do
-      help automate migration between different library and compiler versions.
+      code rewriting tool developed at the @lnk("Scala Center", "https://scala.epfl.ch/").
+      Scalafix rewrites use the Scalameta to automate migration between different library and compiler versions.
 
     @p
       @b
@@ -215,20 +212,13 @@
       we "just" need to get our tests ported to know it works as expected.
       See @lnk{https://github.com/scalameta/scalameta/issues/772}.
 
-    @p
-      @b
-        Next generation of semantic tooling.
-      As scalafix and metadoc show, it is possible to build
-      cross-platform semantic developer tools using Scalameta. We are excited
-      to see what other applications the community will build on top of Scalameta.
-
   @sect{Not on the roadmap}
     @p
       @b
-        New-style macros.
-      Efforts to support macros with Scalameta have been moved to 
-      @lnk{https://github.com/scalamacros/scalamacros}.
-      Scalameta's primary focus at the moment is to enable semantic tooling.
+        Scala macros.
+      Originally, Scalameta was founded to become a better macro system for Scala,
+      but over time we shifted focus to developer tools and spun off the new macro system
+      into a @lnk("separate project", "https://github.com/scalamacros/scalamacros").
 
   @sect("Talks")
     @p
@@ -250,9 +240,10 @@
       @b
         Metaprogramming 2.0
       (ScalaDays Berlin 2016). This talk explains the status of scalameta, demonstrates key features,
-      presents the early adopters and publishes our plans for the future. In Berlin, we provided an extensive
-      story of what's going to happen to compile-time metaprogramming in Scala,
-      featuring a live demo of new-style ("inline") macros that support integration with IntelliJ IDEA.
+      presents the early adopters and publishes our plans for the future. The centerpiece of the talk
+      is the demo of a new macro system for Scala, which is no longer part of Scalameta.
+      Nonetheless, the talk still does a good job of showcasing potential usecases for Scalameta
+      and highlighting contributions from our amazing community.
 
     @p
       Video:
