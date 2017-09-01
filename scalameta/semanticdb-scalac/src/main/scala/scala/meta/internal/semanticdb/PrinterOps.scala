@@ -10,8 +10,10 @@ import scala.reflect.internal.ModifierFlags._
 trait PrinterOps { self: DatabaseOps =>
   import g._
 
-  def showSynthetic(tpe: g.Type): AttributedSynthetic = {
-    showSynthetic(g.TypeTree(tpe))
+  def showSynthetic(tpe: g.Type): AttributedSynthetic = tpe match {
+    // Skip signature for abstract type members, e.g. type T <: Int
+    case g.TypeBounds(_, _) => AttributedSynthetic.empty
+    case _ => showSynthetic(g.TypeTree(tpe))
   }
   def showSynthetic(what: g.Tree): AttributedSynthetic = {
     val out = new StringWriter()
@@ -319,17 +321,14 @@ trait PrinterOps { self: DatabaseOps =>
 
     // + scalac deviation
     def printType(tpe: Type): Unit = {
-      def wrapped[T](
-          ts: List[T],
-          open: String = "[",
-          close: String = "]",
-          forceOpen: Boolean = false)(f: T => Unit): Unit = {
+      def wrapped[T](ts: List[T], open: String, close: String, forceOpen: Boolean = false)(
+          f: T => Unit): Unit = {
         if (ts.nonEmpty || forceOpen) {
           this.print(open)
           var first = true
           ts.foreach { t =>
             if (!first) {
-              this.print(",")
+              this.print(", ")
             }
             f(t)
             first = false
@@ -346,24 +345,13 @@ trait PrinterOps { self: DatabaseOps =>
         }
       }
       tpe match {
-        case ThisType(result) =>
-          if (result.hasPackageFlag) {
-            this.print(result.fullNameString)
-          } else {
-            this.print(tpe.safeToString.stripSuffix(".type"))
-          }
-        case NullaryMethodType(result) =>
-          printType(result)
-        case SingleType(pre, sym) =>
-          prefix(pre)
-          this.print(ResolvedName(sym.decodedName, sym.toSemantic))
-        case TypeRef(pre, sym, args) =>
-          prefix(pre)
-          this.print(ResolvedName(sym.decodedName, sym.toSemantic))
-          wrapped(args)(printType)
-        case mt @ MethodType(params, result) =>
+        case MethodType(params, result) =>
+          var isImplicit = false
           wrapped(params, "(", ")", forceOpen = true) { s =>
-            this.printWithTrailingSpace(s.flagString)
+            if (!isImplicit && s.isImplicit) {
+              this.print("implicit ")
+              isImplicit = true
+            }
             this.print(s.varianceString)
             val nameString = s.nameString
             this.print(nameString)
@@ -374,10 +362,28 @@ trait PrinterOps { self: DatabaseOps =>
             this.printType(s.typeSignature)
             this.print(s.flagsExplanationString)
           }
+          if (!result.isInstanceOf[MethodType]) {
+            // Only print `: ` before last curried parameter list.
+            this.print(": ")
+          }
           this.printType(result)
+        case NullaryMethodType(result) =>
+          printType(result)
         case PolyType(tparams, result) =>
-          wrapped(tparams)(s => this.print(s.decodedName))
+          wrapped(tparams, "[", "] => ")(s => this.print(s.decodedName))
           this.printType(result)
+        case SingleType(pre, sym) =>
+          prefix(pre)
+          this.print(ResolvedName(sym.decodedName, sym.toSemantic))
+        case ThisType(result) =>
+          if (result.hasPackageFlag) {
+            this.print(ResolvedName(result.nameString, result.toSemantic))
+          } else {
+            this.print(tpe.safeToString.stripSuffix(".type"))
+          }
+        case TypeRef(_, sym, args) =>
+          this.print(ResolvedName(sym.decodedName, sym.toSemantic))
+          wrapped(args, "[", "]")(printType)
         case _ =>
           super.print(tpe.safeToString)
       }
