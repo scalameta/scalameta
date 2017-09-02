@@ -7,7 +7,7 @@ import java.nio.file.Path
 // Rough implementation of java.nio.Path, should work similarly for the happy
 // path but has undefined behavior for error handling.
 case class NodeNIOPath(filename: String) extends Path {
-  private[this] val escapedSeparator = scala.util.matching.Regex.quote(File.separator)
+  private[this] val escapedSeparator = java.util.regex.Pattern.quote(File.separator)
 
   private def adjustIndex(idx: Int): Int =
     if (isAbsolute) idx + 1 else idx

@@ -70,6 +70,7 @@ testOnlyJVM := {
   val runContribTests = test.in(contribJVM, Test).value
   val runTests = test.in(testsJVM, Test).value
   val propertyTests = compile.in(testkit, Test).value
+  val langmetaTests = compile.in(langmetaJVM, Test).value
 }
 testOnlyJS := {
   val runScalametaTests = test.in(scalametaJS, Test).value
@@ -98,6 +99,9 @@ lazy val langmeta = crossProject
     PB.protoSources.in(Compile) := Seq(file("langmeta/shared/src/main/protobuf")),
     libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion,
     exposePaths("langmeta", Test)
+  )
+  .jsSettings(
+    crossScalaVersions := List(LatestScala211, LatestScala212)
   )
 lazy val langmetaJVM = langmeta.jvm
 lazy val langmetaJS = langmeta.js
