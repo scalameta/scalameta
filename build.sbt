@@ -70,7 +70,6 @@ testOnlyJVM := {
   val runContribTests = test.in(contribJVM, Test).value
   val runTests = test.in(testsJVM, Test).value
   val propertyTests = compile.in(testkit, Test).value
-  val runDocs = test.in(readme).value
 }
 testOnlyJS := {
   val runScalametaTests = test.in(scalametaJS, Test).value
@@ -377,69 +376,6 @@ lazy val benchmarks =
     )
     .dependsOn(scalametaJVM)
     .enablePlugins(JmhPlugin)
-
-lazy val readme = scalatex
-  .ScalatexReadme(
-    projectId = "readme",
-    wd = file(""),
-    url = "https://github.com/scalameta/scalameta/tree/master",
-    source = "Readme"
-  )
-  .settings(
-    sharedSettings,
-    nonPublishableSettings,
-    buildInfoSettings,
-    // only needed for scalatex 0.3.8-pre until next scalatex release
-    exposePaths("readme", Runtime),
-    crossScalaVersions := LanguageVersions, // No need to cross-build.
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    sources.in(Compile) ++= List("os.scala").map(f => baseDirectory.value / "../project" / f),
-    watchSources ++= baseDirectory.value.listFiles.toList,
-    test := run.in(Compile).toTask(" --validate").value,
-    publish := (if (!isCiPublish) () else {
-      // generate the scalatex readme into `website`
-      val website =
-        new File(target.value.getAbsolutePath + File.separator + "scalatex")
-      if (website.exists) website.delete
-      val _ = run.in(Compile).toTask(" --validate").value
-      if (!website.exists) sys.error("failed to generate the scalatex website")
-
-      // import the scalatex readme into `repo`
-      val repo = new File(os.temp.mkdir.getAbsolutePath + File.separator + "scalameta.org")
-      os.shell.call(s"git clone https://github.com/scalameta/scalameta.github.com ${repo.getAbsolutePath}")
-      println(s"erasing everything in ${repo.getAbsolutePath}...")
-      repo.listFiles.filter(f => f.getName != ".git").foreach(os.shutil.rmtree)
-      println(s"importing website from ${website.getAbsolutePath} to ${repo.getAbsolutePath}...")
-      new PrintWriter(new File(repo.getAbsolutePath + File.separator + "CNAME")) {
-        write("scalameta.org"); close
-      }
-      website.listFiles.foreach(src =>
-        os.shutil.copytree(src, new File(repo.getAbsolutePath + File.separator + src.getName)))
-
-      // commit and push the changes if any
-      os.shell.call(s"git add -A", cwd = repo.getAbsolutePath)
-      val nothingToCommit = "nothing to commit, working directory clean"
-      try {
-        val url = "https://github.com/scalameta/scalameta/tree/" + os.git.currentSha()
-        os.shell.call(s"git config user.email 'scalametabot@gmail.com'", cwd = repo.getAbsolutePath)
-        os.shell.call(s"git config user.name 'Scalameta Bot'", cwd = repo.getAbsolutePath)
-        os.shell.call(s"git commit -m $url", cwd = repo.getAbsolutePath)
-        os.secret.obtain("github").foreach {
-          case (username, password) =>
-            val httpAuthentication = s"$username:$password@"
-            val authUrl = s"https://${httpAuthentication}github.com/scalameta/scalameta.github.com"
-            os.shell.call(s"git push $authUrl master", cwd = repo.getAbsolutePath)
-        }
-      } catch {
-        case ex: Exception if ex.getMessage.contains(nothingToCommit) =>
-          println(nothingToCommit)
-      }
-    }),
-    publishLocal := {},
-    publishM2 := {}
-  )
-  .dependsOn(scalametaJVM)
-  .enablePlugins(BuildInfoPlugin)
 
 // ==========================================
 // Settings

@@ -141,16 +141,6 @@ package object dialects {
     toplevelSeparator = ""
   )
 
-  implicit val Sbt0136 = Scala210.copy(
-    allowToplevelTerms = true,
-    toplevelSeparator = EOL
-  )
-
-  implicit val Sbt0137 = Scala210.copy(
-    allowToplevelTerms = true,
-    toplevelSeparator = ""
-  )
-
   implicit val Scala211 = Scala210.copy(
     allowCaseClassWithoutParameterList = false,
     allowSpliceUnderscores = true // SI-7715, only fixed in 2.11.0-M5
@@ -177,6 +167,25 @@ package object dialects {
     allowTrailingCommas = true
   )
 
+  implicit val Scala = Scala212 // alias for latest Scala dialect.
+
+  implicit val Sbt0136 = Scala210.copy(
+    allowToplevelTerms = true,
+    toplevelSeparator = EOL
+  )
+
+  implicit val Sbt0137 = Scala210.copy(
+    allowToplevelTerms = true,
+    toplevelSeparator = ""
+  )
+
+  implicit val Sbt1 = Scala212.copy(
+    allowToplevelTerms = true,
+    toplevelSeparator = ""
+  )
+
+  implicit val Sbt = Sbt1 // alias for latest Sbt dialect.
+
   implicit val Typelevel212 = Scala212.copy(
     allowLiteralTypes = true
   )
@@ -191,7 +200,7 @@ package object dialects {
     allowInlineMods = true
   )
 
-  implicit val Dotty = Scala211.copy(
+  implicit val Dotty = Scala212.copy(
     allowAndTypes = true, // New feature in Dotty
     allowAtForExtractorVarargs = false, // New feature in Dotty
     allowColonForExtractorVarargs = true, // New feature in Dotty
@@ -228,18 +237,19 @@ object Dialect extends InternalDialect {
   // NOTE: Spinning up a macro just for this is too hard.
   // Using JVM reflection won't be portable to Scala.js.
   private[meta] lazy val standards: Map[String, Dialect] = Map(
-    "Scala210" -> Scala210,
+    "Dotty" -> Dotty,
+    "Paradise211" -> Paradise211,
+    "Paradise212" -> Paradise212,
+    "ParadiseTypelevel211" -> ParadiseTypelevel211,
+    "ParadiseTypelevel212" -> ParadiseTypelevel212,
     "Sbt0136" -> Sbt0136,
     "Sbt0137" -> Sbt0137,
+    "Sbt1" -> Sbt1,
+    "Scala210" -> Scala210,
     "Scala211" -> Scala211,
-    "Typelevel211" -> Typelevel211,
-    "Paradise211" -> Paradise211,
-    "ParadiseTypelevel211" -> ParadiseTypelevel211,
     "Scala212" -> Scala212,
-    "Typelevel212" -> Typelevel212,
-    "Paradise212" -> Paradise212,
-    "ParadiseTypelevel212" -> ParadiseTypelevel212,
-    "Dotty" -> Dotty
+    "Typelevel211" -> Typelevel211,
+    "Typelevel212" -> Typelevel212
   )
 }
 

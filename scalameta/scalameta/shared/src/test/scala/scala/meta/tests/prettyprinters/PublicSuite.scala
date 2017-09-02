@@ -86,6 +86,14 @@ class PublicSuite extends FunSuite {
     assert(scala.meta.dialects.Sbt0137.toString === "Sbt0137")
   }
 
+  test("scala.meta.dialects.Sbt.toString") {
+    assert(scala.meta.dialects.Sbt.toString === "Sbt1")
+  }
+
+  test("scala.meta.dialects.Sbt1.toString") {
+    assert(scala.meta.dialects.Sbt1.toString === "Sbt1")
+  }
+
   test("scala.meta.dialects.Scala210.toString") {
     assert(scala.meta.dialects.Scala210.toString === "Scala210")
   }
@@ -96,6 +104,10 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.dialects.Scala212.toString") {
     assert(scala.meta.dialects.Scala212.toString === "Scala212")
+  }
+
+  test("scala.meta.dialects.Scala.toString") {
+    assert(scala.meta.dialects.Scala.toString === "Scala212")
   }
 
   test("scala.meta.dialects.Typelevel211.toString") {
