@@ -31,6 +31,7 @@ commands += Command.command("ci-fast") { s =>
     ci("doc") :: // skips 2.10 projects
     s
 }
+commands += CiCommand("ci-langmeta")("langmetaJVM/test" :: Nil)
 commands += CiCommand("ci-slow")(
   "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
   Nil
