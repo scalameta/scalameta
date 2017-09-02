@@ -1,14 +1,11 @@
-package scala.meta.tests.io
+package org.langmeta.tests.io
 
-import scala.meta.inputs.Input
-import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.PathIO
-import scala.meta.io.AbsolutePath
-import scala.meta.io.RelativePath
+import org.langmeta._
+import org.langmeta.internal.io._
 import org.scalatest.FunSuite
 
 class IOSuite extends FunSuite {
-  val buildSbt = RelativePath("build.sbt").toAbsolute
+  val buildSbt: AbsolutePath = RelativePath("build.sbt").toAbsolute
 
   test("PathIO.workingDirectory") {
     val obtained = PathIO.workingDirectory.toString

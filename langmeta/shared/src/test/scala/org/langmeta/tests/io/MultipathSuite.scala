@@ -1,12 +1,12 @@
-package scala.meta.tests.io
+package org.langmeta.tests.io
 
-import scala.meta._
 import java.io.File
 import java.net.URI
+import org.langmeta._
 import org.scalatest.FunSuite
 
 class MultipathSuite extends FunSuite {
-  val tmp = File.createTempFile("src", "main")
+  val tmp: File = File.createTempFile("src", "main")
   assert(tmp.delete())
   assert(tmp.mkdirs())
   val files = List("a", "b")
