@@ -24,7 +24,7 @@ env:
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.12.3
       CI_SCALA_JS: true
-    - CI_TEST: plz 2.10.6 test
+    - CI_TEST: "plz 2.10.6 test"
       CI_SCALA_VERSION: 2.10.6
 
 cache:
