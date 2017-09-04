@@ -728,4 +728,19 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [0..1): B => _empty_.a.Path#B#
     """.stripMargin
   )
+
+  symbols(
+    """package a.b
+      |object c {
+      |  val x = c
+      |}
+    """.stripMargin,
+    """
+      |_root_.a. => package a
+      |_root_.a.b. => package b
+      |_root_.a.b.c. => final object c
+      |_root_.a.b.c.x. => val x: c.type
+      |  [0..1): c => _root_.a.b.c.
+    """.stripMargin
+  )
 }

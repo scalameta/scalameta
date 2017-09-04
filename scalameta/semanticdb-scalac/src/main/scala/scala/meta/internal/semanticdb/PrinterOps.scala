@@ -380,8 +380,9 @@ trait PrinterOps { self: DatabaseOps =>
           wrapped(tparams, "[", "] => ")(s => this.print(s.decodedName))
           this.printType(result)
         case SingleType(pre, sym) =>
-          prefix(pre)
+          if (!sym.isStable) this.printType(pre)
           this.print(ResolvedName(sym.decodedName, sym.toSemantic))
+          this.print(".type")
         case ThisType(result) =>
           if (result.hasPackageFlag) {
             this.print(ResolvedName(result.nameString, result.toSemantic))
