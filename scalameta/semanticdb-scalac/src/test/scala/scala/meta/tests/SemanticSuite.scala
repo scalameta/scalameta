@@ -338,8 +338,9 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  }
       |}
     """.stripMargin,
-    """|<...>@359..375 => val result: X
-       |  [0..1): X => _root_.i.B#X#
+    """|<...>@359..375 => val result: b.X
+       |  [0..1): b => _root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b)
+       |  [2..3): X => _root_.i.B#X#
        |_root_.i. => package i
        |_root_.i.B# => trait B
        |_root_.i.B#X# => abstract type X
@@ -364,9 +365,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
        |  [11..14): Int => _root_.scala.Int#
        |_root_.i.a. => final object a
-       |_root_.i.a.foo(Li/B;)Ljava/lang/Object;. => def foo: (implicit b: B): X
+       |_root_.i.a.foo(Li/B;)Ljava/lang/Object;. => def foo: (implicit b: B): b.X
        |  [13..14): B => _root_.i.B#
-       |  [17..18): X => _root_.i.B#X#
+       |  [17..18): b => _root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b)
+       |  [19..20): X => _root_.i.B#X#
        |_root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b) => implicit param b: B
        |  [0..1): B => _root_.i.B#
        |_root_.i.a.x. => val x: ListBuffer[Int]
