@@ -403,7 +403,6 @@ trait PrinterOps { self: DatabaseOps =>
           this.printType(pre)
         case NoType =>
         case _ =>
-          pprint.log(tpe)
           unreachable(debug(tpe))
       }
       if (tpe.isInstanceOf[SingletonType]) this.print(".type")
