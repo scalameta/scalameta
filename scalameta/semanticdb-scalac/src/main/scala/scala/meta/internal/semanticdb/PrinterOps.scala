@@ -324,9 +324,9 @@ trait PrinterOps { self: DatabaseOps =>
     }
 
     // + scalac deviation
-    object PathDependentType {
+    object PathDependentPrefix {
       def unapply(arg: g.Type): Option[g.Symbol] = arg match {
-        case SingleType(ThisType(_), sym) if sym.isTerm && !sym.isModule =>
+        case SingleType(_, sym) if sym.isTerm && !sym.isModule =>
           Some(sym)
         case _ => None
       }
@@ -390,7 +390,7 @@ trait PrinterOps { self: DatabaseOps =>
           this.print(ResolvedName(sym))
         case TypeRef(pre, sym, args) =>
           pre match {
-            case PathDependentType(sym) =>
+            case PathDependentPrefix(sym) =>
               this.print(ResolvedName(sym))
               this.print(".")
             case _ =>
