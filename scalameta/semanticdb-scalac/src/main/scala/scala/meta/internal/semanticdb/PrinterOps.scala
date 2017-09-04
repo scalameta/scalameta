@@ -320,6 +320,13 @@ trait PrinterOps { self: DatabaseOps =>
     }
 
     // + scalac deviation
+    object PathDependentType {
+      def unapply(arg: g.Type): Option[g.Symbol] = arg match {
+        case SingleType(ThisType(_), sym) if sym.isTerm && !sym.isModule =>
+          Some(sym)
+        case _ => None
+      }
+    }
     def printType(tpe: Type): Unit = {
       def wrapped[T](ts: List[T], open: String, close: String, forceOpen: Boolean = false)(
           f: T => Unit): Unit = {
@@ -381,7 +388,13 @@ trait PrinterOps { self: DatabaseOps =>
           } else {
             this.print(tpe.safeToString.stripSuffix(".type"))
           }
-        case TypeRef(_, sym, args) =>
+        case TypeRef(pre, sym, args) =>
+          pre match {
+            case PathDependentType(sym) =>
+              this.print(ResolvedName(sym.nameString, sym.toSemantic))
+              this.print(".")
+            case _ =>
+          }
           this.print(ResolvedName(sym.decodedName, sym.toSemantic))
           wrapped(args, "[", "]")(printType)
         case _ =>

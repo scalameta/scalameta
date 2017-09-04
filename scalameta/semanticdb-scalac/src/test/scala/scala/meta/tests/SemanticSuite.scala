@@ -698,4 +698,34 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |""".stripMargin
   )
 
+  symbols(
+    """object a {
+      |  class Path {
+      |    class B { class C }
+      |    val x = new B
+      |    val y = new x.C
+      |  }
+      |  implicit val b = new Path().x
+      |}
+    """.stripMargin,
+    """
+      |_empty_.a. => final object a
+      |_empty_.a.Path# => class Path
+      |_empty_.a.Path#B# => class B
+      |_empty_.a.Path#B#C# => class C
+      |_empty_.a.Path#B#C#`<init>`()V. => primaryctor <init>: (): C
+      |  [4..5): C => _empty_.a.Path#B#C#
+      |_empty_.a.Path#B#`<init>`()V. => primaryctor <init>: (): B
+      |  [4..5): B => _empty_.a.Path#B#
+      |_empty_.a.Path#`<init>`()V. => primaryctor <init>: (): Path
+      |  [4..8): Path => _empty_.a.Path#
+      |_empty_.a.Path#x. => val x: B
+      |  [0..1): B => _empty_.a.Path#B#
+      |_empty_.a.Path#y. => val y: x.C
+      |  [0..1): x => _empty_.a.Path#x.
+      |  [2..3): C => _empty_.a.Path#B#C#
+      |_empty_.a.b. => implicit val b: B
+      |  [0..1): B => _empty_.a.Path#B#
+    """.stripMargin
+  )
 }
