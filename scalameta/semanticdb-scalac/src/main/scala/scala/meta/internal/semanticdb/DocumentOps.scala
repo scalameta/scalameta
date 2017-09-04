@@ -165,7 +165,9 @@ trait DocumentOps { self: DatabaseOps =>
 
                 names(mtree.pos) = symbol
                 if (mtree.isDefinition) binders += mtree.pos
-                denotations(symbol) = gsym.toDenotation
+                if (!gsym.isOverloaded) {
+                  denotations(symbol) = gsym.toDenotation
+                }
                 if (gsym.isClass && !gsym.isTrait) {
                   val gprim = gsym.primaryConstructor
                   denotations(gprim.toSemantic) = gprim.toDenotation

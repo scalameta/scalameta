@@ -393,7 +393,6 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [25..32): HashSet => _root_.scala.collection.mutable.HashSet#
        |  [33..34): A => _root_.scala.collection.mutable.HashSet#[A]
        |_root_.scala.collection.mutable.HashSet. => final object HashSet
-       |_root_.scala.collection.mutable.HashSet.;_root_.scala.collection.mutable.HashSet# => val <import scala.collection.mutable.HashSet>: scala.collection.mutable.HashSet.type <and> scala.collection.mutable.HashSet
        |_root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;. => def empty: [A] => HashSet[A]
        |  [7..14): HashSet => _root_.scala.collection.mutable.HashSet#
        |  [15..16): A => _root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;.[A]
@@ -402,7 +401,6 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [4..14): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
        |  [15..16): A => _root_.scala.collection.mutable.ListBuffer#[A]
        |_root_.scala.collection.mutable.ListBuffer. => final object ListBuffer
-       |_root_.scala.collection.mutable.ListBuffer.;_root_.scala.collection.mutable.ListBuffer# => val <import scala.collection.mutable.ListBuffer>: scala.collection.mutable.ListBuffer.type <and> scala.collection.mutable.ListBuffer
     """.stripMargin.trim
   )
 
@@ -741,6 +739,34 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |_root_.a.b.c. => final object c
       |_root_.a.b.c.x. => val x: c.type
       |  [0..1): c => _root_.a.b.c.
+    """.stripMargin
+  )
+
+  symbols(
+    """package a
+      |class c {
+      |  val x = this
+      |  val y: this.type = this
+      |}
+    """.stripMargin,
+    """
+      |_root_.a. => package a
+      |_root_.a.c# => class c
+      |_root_.a.c#`<init>`()V. => primaryctor <init>: (): c
+      |  [4..5): c => _root_.a.c#
+      |_root_.a.c#x. => val x: c
+      |  [0..1): c => _root_.a.c#
+      |_root_.a.c#y. => val y: c.type
+      |  [0..1): c => _root_.a.c#
+    """.stripMargin
+  )
+
+  symbols(
+    """
+      |object `symbols are hard`
+    """.stripMargin,
+    """
+      |_empty_.`symbols are hard`. => final object `symbols are hard`
     """.stripMargin
   )
 }

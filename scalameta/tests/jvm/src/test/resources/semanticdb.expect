@@ -73,7 +73,6 @@ _root_.scala.collection.mutable.Stack#`<init>`(Lscala/collection/immutable/List;
   [18..23): Stack => _root_.scala.collection.mutable.Stack#
   [24..25): A => _root_.scala.collection.mutable.Stack#[A]
 _root_.scala.concurrent. => package concurrent
-_root_.scala.concurrent.Future.;_root_.scala.concurrent.Future# => val <import scala.concurrent.Future>: scala.concurrent.Future.type <and> scala.concurrent.Future
 _root_.scala.reflect. => package reflect
 _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;. => def classTag: [T] => (implicit ctag: ClassTag[T]): ClassTag[T]
   [23..31): ClassTag => _root_.scala.reflect.ClassTag#
