@@ -18,7 +18,6 @@ trait SymbolOps { self: DatabaseOps =>
         def definitelyGlobal = sym.hasPackageFlag
         def definitelyLocal =
           sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
-            sym.name.decoded == g.tpnme.REFINE_CLASS_NAME ||
             (sym.owner.isMethod && !sym.isParameter) ||
             ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter)
         !definitelyGlobal && (definitelyLocal || isLocal(sym.owner))
@@ -33,7 +32,14 @@ trait SymbolOps { self: DatabaseOps =>
 
       val owner = sym.owner.toSemantic
       val signature = {
-        def name(sym: g.Symbol) = sym.name.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
+        def name(sym: g.Symbol) = {
+          if (sym.isRefinementClass && sym.isAnonOrRefinementClass) {
+            // refinement class namese are <refinement> but should be "$anon"
+            g.nme.ANON_CLASS_NAME.decoded
+          } else {
+            sym.name.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
+          }
+        }
         def jvmSignature(sym: g.MethodSymbol): String = {
           // NOTE: unfortunately, this simple-looking facility generates side effects that corrupt the state of the compiler
           // in particular, mixin composition stops working correctly, at least for `object Main extends App`

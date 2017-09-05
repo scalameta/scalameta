@@ -791,4 +791,73 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [0..7): Nothing => _root_.scala.Nothing#
     """.stripMargin
   )
+
+  symbols(
+    """
+      |object ab {
+      |  trait Foo
+      |  class Bar
+      |  val x = new Foo {
+      |    val y = 2
+      |    def z[T](e: T) = e
+      |  }
+      |  val z: AnyRef with Foo { val y: Int } = x
+      |  val k: AnyRef with Foo { val y: Any } = x
+      |  val zz = new Bar {
+      |    val y = 2
+      |  }
+      |}
+    """.stripMargin,
+    // Note that _empty_.ab.$anon#y. matches both y: Int and  y: Any.
+    """
+      |_empty_.ab. => final object ab
+      |_empty_.ab.$anon#y. => abstract val y: Any
+      |  [0..3): Any => _root_.scala.Any#
+      |_empty_.ab.Bar# => class Bar
+      |_empty_.ab.Bar#`<init>`()V. => primaryctor <init>: (): Bar
+      |  [4..7): Bar => _empty_.ab.Bar#
+      |_empty_.ab.Foo# => trait Foo
+      |_empty_.ab.k. => val k: AnyRef with Foo{val y: Any}
+      |  [0..6): AnyRef => _root_.scala.AnyRef#
+      |  [12..15): Foo => _empty_.ab.Foo#
+      |  [20..21): y => _empty_.ab.$anon#y.
+      |_empty_.ab.x. => val x: AnyRef with Foo{val y: Int; def z[T](e: T): T}
+      |  [0..6): AnyRef => _root_.scala.AnyRef#
+      |  [12..15): Foo => _empty_.ab.Foo#
+      |  [20..21): y => _empty_.ab.x.$anon#y.
+      |  [32..33): z => _empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.
+      |_empty_.ab.x.$anon# => final class $anon
+      |_empty_.ab.x.$anon#`<init>`()V. => primaryctor <init>: (): $anon
+      |  [4..9): $anon => _empty_.ab.x.$anon#
+      |_empty_.ab.x.$anon#y. => val y: Int
+      |  [0..3): Int => _root_.scala.Int#
+      |_empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;. => def z: [T] => (e: T): T
+      |  [11..12): T => _empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+      |  [15..16): T => _empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+      |_empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.(e) => param e: T
+      |  [0..1): T => _empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.T#
+      |_empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.T# => typeparam T
+      |_empty_.ab.z. => val z: AnyRef with Foo{val y: Int}
+      |  [0..6): AnyRef => _root_.scala.AnyRef#
+      |  [12..15): Foo => _empty_.ab.Foo#
+      |  [20..21): y => _empty_.ab.$anon#y.
+      |_empty_.ab.zz. => val zz: Bar{val y: Int}
+      |  [0..3): Bar => _empty_.ab.Bar#
+      |  [8..9): y => _empty_.ab.zz.$anon#y.
+      |_empty_.ab.zz.$anon# => final class $anon
+      |_empty_.ab.zz.$anon#`<init>`()V. => primaryctor <init>: (): $anon
+      |  [4..9): $anon => _empty_.ab.zz.$anon#
+      |_empty_.ab.zz.$anon#y. => val y: Int
+      |  [0..3): Int => _root_.scala.Int#
+      |_root_.java.lang.Object#`<init>`()V. => primaryctor <init>: (): Object
+      |  [4..10): Object => _root_.java.lang.Object#
+      |_root_.scala.Any# => abstract class Any
+      |_root_.scala.AnyRef# => val AnyRef: AnyRef with Specializable{}
+      |  [0..6): AnyRef => _root_.scala.AnyRef#
+      |  [12..25): Specializable => _root_.scala.Specializable#
+      |_root_.scala.Int# => abstract final class Int
+      |_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
+      |  [4..7): Int => _root_.scala.Int#
+    """.stripMargin
+  )
 }
