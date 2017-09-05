@@ -746,7 +746,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """
       |class z {
       |  val x = this
-      |  val y: this.type = this
+      |  val y: z.this.type = this
       |}
     """.stripMargin,
     """
@@ -755,7 +755,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [4..5): z => _empty_.z#
       |_empty_.z#x. => val x: z
       |  [0..1): z => _empty_.z#
-      |_empty_.z#y. => val y: z.type
+      |_empty_.z#y. => val y: z.this.type
       |  [0..1): z => _empty_.z#
     """.stripMargin
   )

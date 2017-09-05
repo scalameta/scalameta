@@ -401,7 +401,7 @@ trait PrinterOps { self: DatabaseOps =>
           this.print(".type")
         case ThisType(sym) =>
           this.print(ResolvedName(sym))
-          this.print(".type")
+          this.print(".this.type")
         case TypeRef(pre, sym, args) =>
           pre match {
             case PathDependentPrefix(sym) =>
