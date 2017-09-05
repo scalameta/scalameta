@@ -13,7 +13,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Selection         | `q"$expr.$ename"`
  Interpolation     | Not supported yet
  Application       | `q"$expr(...$exprss)"`
- Type Application  | `q"$expr[..$tpesnel]"` (vote for #519 to support `q"$expr[...$tpess]"`)
+ Type Application  | `q"$expr[..$tpesnel]"`
  Infix Application | `q"$expr $ename[..$tpes] $expr"`, `q"$expr $ename[..$tpes] (..$exprs)"`
  Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`
  Assign            | `q"$expr = $expr"`
