@@ -338,8 +338,9 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  }
       |}
     """.stripMargin,
-    """|<...>@359..375 => val result: X
-       |  [0..1): X => _root_.i.B#X#
+    """|<...>@359..375 => val result: b.X
+       |  [0..1): b => _root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b)
+       |  [2..3): X => _root_.i.B#X#
        |_root_.i. => package i
        |_root_.i.B# => trait B
        |_root_.i.B#X# => abstract type X
@@ -364,9 +365,10 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
        |  [11..14): Int => _root_.scala.Int#
        |_root_.i.a. => final object a
-       |_root_.i.a.foo(Li/B;)Ljava/lang/Object;. => def foo: (implicit b: B): X
+       |_root_.i.a.foo(Li/B;)Ljava/lang/Object;. => def foo: (implicit b: B): b.X
        |  [13..14): B => _root_.i.B#
-       |  [17..18): X => _root_.i.B#X#
+       |  [17..18): b => _root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b)
+       |  [19..20): X => _root_.i.B#X#
        |_root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b) => implicit param b: B
        |  [0..1): B => _root_.i.B#
        |_root_.i.a.x. => val x: ListBuffer[Int]
@@ -393,7 +395,6 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [25..32): HashSet => _root_.scala.collection.mutable.HashSet#
        |  [33..34): A => _root_.scala.collection.mutable.HashSet#[A]
        |_root_.scala.collection.mutable.HashSet. => final object HashSet
-       |_root_.scala.collection.mutable.HashSet.;_root_.scala.collection.mutable.HashSet# => val <import scala.collection.mutable.HashSet>: scala.collection.mutable.HashSet.type <and> scala.collection.mutable.HashSet
        |_root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;. => def empty: [A] => HashSet[A]
        |  [7..14): HashSet => _root_.scala.collection.mutable.HashSet#
        |  [15..16): A => _root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;.[A]
@@ -402,7 +403,6 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [4..14): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
        |  [15..16): A => _root_.scala.collection.mutable.ListBuffer#[A]
        |_root_.scala.collection.mutable.ListBuffer. => final object ListBuffer
-       |_root_.scala.collection.mutable.ListBuffer.;_root_.scala.collection.mutable.ListBuffer# => val <import scala.collection.mutable.ListBuffer>: scala.collection.mutable.ListBuffer.type <and> scala.collection.mutable.ListBuffer
     """.stripMargin.trim
   )
 
@@ -698,4 +698,77 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |""".stripMargin
   )
 
+  symbols(
+    """object a {
+      |  class Path {
+      |    class B { class C }
+      |    val x = new B
+      |    val y = new x.C
+      |  }
+      |  implicit val b = new Path().x
+      |}
+    """.stripMargin,
+    """
+      |_empty_.a. => final object a
+      |_empty_.a.Path# => class Path
+      |_empty_.a.Path#B# => class B
+      |_empty_.a.Path#B#C# => class C
+      |_empty_.a.Path#B#C#`<init>`()V. => primaryctor <init>: (): C
+      |  [4..5): C => _empty_.a.Path#B#C#
+      |_empty_.a.Path#B#`<init>`()V. => primaryctor <init>: (): B
+      |  [4..5): B => _empty_.a.Path#B#
+      |_empty_.a.Path#`<init>`()V. => primaryctor <init>: (): Path
+      |  [4..8): Path => _empty_.a.Path#
+      |_empty_.a.Path#x. => val x: B
+      |  [0..1): B => _empty_.a.Path#B#
+      |_empty_.a.Path#y. => val y: x.C
+      |  [0..1): x => _empty_.a.Path#x.
+      |  [2..3): C => _empty_.a.Path#B#C#
+      |_empty_.a.b. => implicit val b: B
+      |  [0..1): B => _empty_.a.Path#B#
+    """.stripMargin
+  )
+
+  symbols(
+    """package a.b
+      |object c {
+      |  val x = c
+      |}
+    """.stripMargin,
+    """
+      |_root_.a. => package a
+      |_root_.a.b. => package b
+      |_root_.a.b.c. => final object c
+      |_root_.a.b.c.x. => val x: c.type
+      |  [0..1): c => _root_.a.b.c.
+    """.stripMargin
+  )
+
+  symbols(
+    """package a
+      |class c {
+      |  val x = this
+      |  val y: this.type = this
+      |}
+    """.stripMargin,
+    """
+      |_root_.a. => package a
+      |_root_.a.c# => class c
+      |_root_.a.c#`<init>`()V. => primaryctor <init>: (): c
+      |  [4..5): c => _root_.a.c#
+      |_root_.a.c#x. => val x: c
+      |  [0..1): c => _root_.a.c#
+      |_root_.a.c#y. => val y: c.type
+      |  [0..1): c => _root_.a.c#
+    """.stripMargin
+  )
+
+  symbols(
+    """
+      |object `symbols are hard`
+    """.stripMargin,
+    """
+      |_empty_.`symbols are hard`. => final object `symbols are hard`
+    """.stripMargin
+  )
 }

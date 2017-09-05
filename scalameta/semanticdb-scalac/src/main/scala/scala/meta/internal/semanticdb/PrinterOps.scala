@@ -1,5 +1,6 @@
 package scala.meta.internal.semanticdb
 
+import org.scalameta._
 import scala.{meta => m}
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -38,6 +39,9 @@ trait PrinterOps { self: DatabaseOps =>
 
     // + scalac deviation
     case class ResolvedName(syntax: String, symbol: m.Symbol)
+    object ResolvedName {
+      def apply(sym: g.Symbol): ResolvedName = ResolvedName(printedName(sym.name), sym.toSemantic)
+    }
     val names = mutable.HashMap.empty[(Int, Int), m.Symbol]
     def printWithTrailingSpace(string: String): Unit =
       if (string.isEmpty) ()
@@ -320,6 +324,13 @@ trait PrinterOps { self: DatabaseOps =>
     }
 
     // + scalac deviation
+    object PathDependentPrefix {
+      def unapply(arg: g.Type): Option[g.Symbol] = arg match {
+        case SingleType(_, sym) if sym.isTerm && !sym.isModule =>
+          Some(sym)
+        case _ => None
+      }
+    }
     def printType(tpe: Type): Unit = {
       def wrapped[T](ts: List[T], open: String, close: String, forceOpen: Boolean = false)(
           f: T => Unit): Unit = {
@@ -373,20 +384,28 @@ trait PrinterOps { self: DatabaseOps =>
           wrapped(tparams, "[", "] => ")(s => this.print(s.decodedName))
           this.printType(result)
         case SingleType(pre, sym) =>
-          prefix(pre)
-          this.print(ResolvedName(sym.decodedName, sym.toSemantic))
-        case ThisType(result) =>
-          if (result.hasPackageFlag) {
-            this.print(ResolvedName(result.nameString, result.toSemantic))
-          } else {
-            this.print(tpe.safeToString.stripSuffix(".type"))
+          if (!sym.isStable) this.printType(pre)
+          this.print(ResolvedName(sym))
+        case ThisType(sym) =>
+          this.print(ResolvedName(sym))
+        case TypeRef(pre, sym, args) =>
+          pre match {
+            case PathDependentPrefix(sym) =>
+              this.print(ResolvedName(sym))
+              this.print(".")
+            case _ =>
           }
-        case TypeRef(_, sym, args) =>
-          this.print(ResolvedName(sym.decodedName, sym.toSemantic))
+          this.print(ResolvedName(sym))
           wrapped(args, "[", "]")(printType)
+        case AnnotatedType(annotations, tpe) =>
+          this.printType(tpe)
+        case OverloadedType(pre, alternatives) =>
+          this.printType(pre)
+        case NoType =>
         case _ =>
-          super.print(tpe.safeToString)
+          unreachable(debug(tpe))
       }
+      if (tpe.isInstanceOf[SingletonType]) this.print(".type")
     }
     // - scalac deviation
 
