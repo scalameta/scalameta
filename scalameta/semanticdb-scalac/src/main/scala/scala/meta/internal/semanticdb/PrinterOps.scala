@@ -386,8 +386,10 @@ trait PrinterOps { self: DatabaseOps =>
         case SingleType(pre, sym) =>
           if (!sym.isStable) this.printType(pre)
           this.print(ResolvedName(sym))
+          this.print(".type")
         case ThisType(sym) =>
           this.print(ResolvedName(sym))
+          this.print(".type")
         case TypeRef(pre, sym, args) =>
           pre match {
             case PathDependentPrefix(sym) =>
@@ -402,10 +404,11 @@ trait PrinterOps { self: DatabaseOps =>
         case OverloadedType(pre, alternatives) =>
           this.printType(pre)
         case NoType =>
+        case ConstantType(_) =>
+          this.printType(tpe.widen)
         case _ =>
-          unreachable(debug(tpe))
+          this.print(tpe.toString())
       }
-      if (tpe.isInstanceOf[SingletonType]) this.print(".type")
     }
     // - scalac deviation
 

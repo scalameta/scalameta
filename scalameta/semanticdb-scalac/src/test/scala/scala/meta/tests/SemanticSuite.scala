@@ -699,7 +699,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   )
 
   symbols(
-    """object a {
+    """object x {
       |  class Path {
       |    class B { class C }
       |    val x = new B
@@ -709,57 +709,54 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
     """.stripMargin,
     """
-      |_empty_.a. => final object a
-      |_empty_.a.Path# => class Path
-      |_empty_.a.Path#B# => class B
-      |_empty_.a.Path#B#C# => class C
-      |_empty_.a.Path#B#C#`<init>`()V. => primaryctor <init>: (): C
-      |  [4..5): C => _empty_.a.Path#B#C#
-      |_empty_.a.Path#B#`<init>`()V. => primaryctor <init>: (): B
-      |  [4..5): B => _empty_.a.Path#B#
-      |_empty_.a.Path#`<init>`()V. => primaryctor <init>: (): Path
-      |  [4..8): Path => _empty_.a.Path#
-      |_empty_.a.Path#x. => val x: B
-      |  [0..1): B => _empty_.a.Path#B#
-      |_empty_.a.Path#y. => val y: x.C
-      |  [0..1): x => _empty_.a.Path#x.
-      |  [2..3): C => _empty_.a.Path#B#C#
-      |_empty_.a.b. => implicit val b: B
-      |  [0..1): B => _empty_.a.Path#B#
+      |_empty_.x. => final object x
+      |_empty_.x.Path# => class Path
+      |_empty_.x.Path#B# => class B
+      |_empty_.x.Path#B#C# => class C
+      |_empty_.x.Path#B#C#`<init>`()V. => primaryctor <init>: (): C
+      |  [4..5): C => _empty_.x.Path#B#C#
+      |_empty_.x.Path#B#`<init>`()V. => primaryctor <init>: (): B
+      |  [4..5): B => _empty_.x.Path#B#
+      |_empty_.x.Path#`<init>`()V. => primaryctor <init>: (): Path
+      |  [4..8): Path => _empty_.x.Path#
+      |_empty_.x.Path#x. => val x: B
+      |  [0..1): B => _empty_.x.Path#B#
+      |_empty_.x.Path#y. => val y: x.C
+      |  [0..1): x => _empty_.x.Path#x.
+      |  [2..3): C => _empty_.x.Path#B#C#
+      |_empty_.x.b. => implicit val b: B
+      |  [0..1): B => _empty_.x.Path#B#
     """.stripMargin
   )
 
   symbols(
-    """package a.b
-      |object c {
-      |  val x = c
+    """
+      |object y {
+      |  val x = y
       |}
     """.stripMargin,
     """
-      |_root_.a. => package a
-      |_root_.a.b. => package b
-      |_root_.a.b.c. => final object c
-      |_root_.a.b.c.x. => val x: c.type
-      |  [0..1): c => _root_.a.b.c.
+      |_empty_.y. => final object y
+      |_empty_.y.x. => val x: y.type
+      |  [0..1): y => _empty_.y.
     """.stripMargin
   )
 
   symbols(
-    """package a
-      |class c {
+    """
+      |class z {
       |  val x = this
       |  val y: this.type = this
       |}
     """.stripMargin,
     """
-      |_root_.a. => package a
-      |_root_.a.c# => class c
-      |_root_.a.c#`<init>`()V. => primaryctor <init>: (): c
-      |  [4..5): c => _root_.a.c#
-      |_root_.a.c#x. => val x: c
-      |  [0..1): c => _root_.a.c#
-      |_root_.a.c#y. => val y: c.type
-      |  [0..1): c => _root_.a.c#
+      |_empty_.z# => class z
+      |_empty_.z#`<init>`()V. => primaryctor <init>: (): z
+      |  [4..5): z => _empty_.z#
+      |_empty_.z#x. => val x: z
+      |  [0..1): z => _empty_.z#
+      |_empty_.z#y. => val y: z.type
+      |  [0..1): z => _empty_.z#
     """.stripMargin
   )
 
@@ -769,6 +766,29 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.stripMargin,
     """
       |_empty_.`symbols are hard`. => final object `symbols are hard`
+    """.stripMargin
+  )
+
+  symbols(
+    """
+      |object aa {
+      |  val x = Int.MaxValue
+      |  val y: Class[_] = ???
+      |}
+    """.stripMargin,
+    """
+      |_empty_.aa. => final object aa
+      |_empty_.aa.x. => val x: Int
+      |  [0..3): Int => _root_.scala.Int#
+      |_empty_.aa.y. => val y: Class[_]
+      |_root_.scala.Int. => final object Int
+      |_root_.scala.Int.MaxValue. => final val MaxValue: Int
+      |  [0..3): Int => _root_.scala.Int#
+      |_root_.scala.Predef.Class# => type Class: [T] => Class[T]
+      |  [7..12): Class => _root_.java.lang.Class#
+      |  [13..14): T => _root_.scala.Predef.Class#[T]
+      |_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: Nothing
+      |  [0..7): Nothing => _root_.scala.Nothing#
     """.stripMargin
   )
 }
