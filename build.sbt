@@ -90,7 +90,6 @@ lazy val langmeta = crossProject
   .settings(
     publishableSettings,
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
-    organization := "org.langmeta",
     description := "Langmeta umbrella module that includes all public APIs",
     // Protobuf setup for binary serialization.
     PB.targets.in(Compile) := Seq(
