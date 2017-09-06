@@ -36,11 +36,10 @@ commands += CiCommand("ci-slow")(
   "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
   Nil
 )
-commands += Command.command("ci-publish") { s =>
-  if (isCiPublish && isTagPush) s"very publishSigned" :: s
-  else if (isCiPublish) s"very publish" :: s
-  else s
-}
+commands += CiCommand("ci-publish")(
+  if (isTagPush) "publishSigned" :: Nil
+  else Nil
+)
 // NOTE: These tasks are aliased here in order to support running "tests/test"
 // from a command. Running "test" inside a command will trigger the `test` task
 // to run in all defined modules, including ones like inputs/io/dialects which
