@@ -170,7 +170,9 @@ trait DocumentOps { self: DatabaseOps =>
                 }
                 if (gsym.isClass && !gsym.isTrait) {
                   val gprim = gsym.primaryConstructor
-                  denotations(gprim.toSemantic) = gprim.toDenotation
+                  if (gprim != g.NoSymbol) {
+                    denotations(gprim.toSemantic) = gprim.toDenotation
+                  }
                 }
                 todo -= mtree
 

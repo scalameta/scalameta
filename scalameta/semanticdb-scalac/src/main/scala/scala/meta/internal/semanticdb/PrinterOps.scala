@@ -1,6 +1,5 @@
 package scala.meta.internal.semanticdb
 
-import org.scalameta._
 import scala.{meta => m}
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -12,8 +11,12 @@ trait PrinterOps { self: DatabaseOps =>
   import g._
 
   def showSynthetic(tpe: g.Type): AttributedSynthetic = tpe match {
-    // Skip signature for abstract type members, e.g. type T <: Int
-    case g.TypeBounds(_, _) => AttributedSynthetic.empty
+    case g.TypeBounds(_, _) =>
+      // Skip signature for abstract type members, e.g. type T <: Int
+      AttributedSynthetic.empty
+    case PolyType(tparams, tb: TypeBounds) =>
+      // Type lambda with no body
+      AttributedSynthetic.empty
     case _ => showSynthetic(g.TypeTree(tpe))
   }
   def showSynthetic(what: g.Tree): AttributedSynthetic = {
@@ -40,7 +43,8 @@ trait PrinterOps { self: DatabaseOps =>
     // + scalac deviation
     case class ResolvedName(syntax: String, symbol: m.Symbol)
     object ResolvedName {
-      def apply(sym: g.Symbol): ResolvedName = ResolvedName(printedName(sym.name), sym.toSemantic)
+      def apply(sym: g.Symbol): ResolvedName =
+        ResolvedName(printedName(sym.name), sym.toSemantic)
     }
     val names = mutable.HashMap.empty[(Int, Int), m.Symbol]
     def printWithTrailingSpace(string: String): Unit =
@@ -332,14 +336,18 @@ trait PrinterOps { self: DatabaseOps =>
       }
     }
     def printType(tpe: Type): Unit = {
-      def wrapped[T](ts: List[T], open: String, close: String, forceOpen: Boolean = false)(
-          f: T => Unit): Unit = {
+      def wrapped[T](
+          ts: List[T],
+          open: String,
+          close: String,
+          forceOpen: Boolean = false,
+          sep: String = ", ")(f: T => Unit): Unit = {
         if (ts.nonEmpty || forceOpen) {
           this.print(open)
           var first = true
           ts.foreach { t =>
             if (!first) {
-              this.print(", ")
+              this.print(sep)
             }
             f(t)
             first = false
@@ -355,6 +363,18 @@ trait PrinterOps { self: DatabaseOps =>
           this.print(".")
         }
       }
+
+      def printSymbol(s: g.Symbol): Unit = {
+        this.print(s.varianceString)
+        val nameString = s.nameString
+        this.print(nameString)
+        if (nameString.lastOption.exists(!_.isLetterOrDigit)) {
+          this.print(" ")
+        }
+        this.print(": ")
+        this.printType(s.typeSignature)
+        this.print(s.flagsExplanationString)
+      }
       tpe match {
         case MethodType(params, result) =>
           var isImplicit = false
@@ -363,15 +383,7 @@ trait PrinterOps { self: DatabaseOps =>
               this.print("implicit ")
               isImplicit = true
             }
-            this.print(s.varianceString)
-            val nameString = s.nameString
-            this.print(nameString)
-            if (nameString.lastOption.exists(!_.isLetterOrDigit)) {
-              this.print(" ")
-            }
-            this.print(": ")
-            this.printType(s.typeSignature)
-            this.print(s.flagsExplanationString)
+            printSymbol(s)
           }
           if (!result.isInstanceOf[MethodType]) {
             // Only print `: ` before last curried parameter list.
@@ -386,8 +398,10 @@ trait PrinterOps { self: DatabaseOps =>
         case SingleType(pre, sym) =>
           if (!sym.isStable) this.printType(pre)
           this.print(ResolvedName(sym))
+          this.print(".type")
         case ThisType(sym) =>
           this.print(ResolvedName(sym))
+          this.print(".this.type")
         case TypeRef(pre, sym, args) =>
           pre match {
             case PathDependentPrefix(sym) =>
@@ -402,10 +416,26 @@ trait PrinterOps { self: DatabaseOps =>
         case OverloadedType(pre, alternatives) =>
           this.printType(pre)
         case NoType =>
+        case ConstantType(_) =>
+          this.printType(tpe.widen)
+        case RefinedType(parents, decls) =>
+          wrapped(parents, "", "", sep = " with ") { s =>
+            this.printType(s)
+          }
+          this.print("{")
+          wrapped(decls.toList, "", "", sep = "; ") { s =>
+            import s._
+            this.printWithTrailingSpace(s.flagString)
+            this.printWithTrailingSpace(s.keyString)
+            this.print(varianceString)
+            this.print(ResolvedName(s))
+            this.print(signatureString)
+            this.print(flagsExplanationString)
+          }
+          this.print("}")
         case _ =>
-          unreachable(debug(tpe))
+          this.print(tpe.toString())
       }
-      if (tpe.isInstanceOf[SingletonType]) this.print(".type")
     }
     // - scalac deviation
 

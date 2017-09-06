@@ -86,11 +86,11 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
     val database = computeDatabaseFromSnippet(code)
-    assertDenotationSignaturesAreParseable(database)
     val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
     val payload = database.toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
     // println(section.mkString(EOL).replace(path, "<...>"))
+    assertDenotationSignaturesAreParseable(database)
     section.mkString(EOL).replace(path, "<...>")
   }
 
