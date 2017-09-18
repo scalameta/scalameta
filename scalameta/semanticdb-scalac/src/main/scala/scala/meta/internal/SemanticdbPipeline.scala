@@ -10,7 +10,6 @@ import scala.{meta => m}
 import scala.meta.io._
 import scala.meta.internal.semanticdb.DatabaseOps
 import scala.meta.internal.semanticdb.{vfs => v}
-import scala.tools.nsc.doc.ScaladocGlobal
 
 trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
   lazy val scalametaTargetroot = AbsolutePath(
@@ -21,8 +20,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
 
   def isDisabled: Boolean =
-    g.isInstanceOf[ScaladocGlobal] ||
-      config.mode.isDisabled
+    config.mode.isDisabled
 
   def handleError(unit: g.CompilationUnit): PartialFunction[Throwable, Unit] = {
     case NonFatal(ex) =>

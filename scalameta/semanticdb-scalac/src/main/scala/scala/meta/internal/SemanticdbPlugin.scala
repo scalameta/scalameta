@@ -13,9 +13,13 @@ class SemanticdbPlugin(val global: Global)
     with SemanticdbPipeline {
   val name = SemanticdbPlugin.name
   val description = "Scala 2.x compiler plugin that generates semanticdb on compile"
+
   hijackAnalyzer()
   hijackReporter()
-  val components = List[PluginComponent](ComputeSemanticdbComponent, PersistSemanticdbComponent)
+  val components = {
+    if (isBatchCompiler) List(ComputeSemanticdbComponent, PersistSemanticdbComponent)
+    else Nil
+  }
 
   override def init(options: List[String], error: (String) => Unit): Boolean = {
     def err(msg: String): Unit = {
