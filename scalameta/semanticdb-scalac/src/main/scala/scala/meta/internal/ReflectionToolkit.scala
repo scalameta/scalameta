@@ -4,11 +4,19 @@ import org.scalameta.collections._
 import scala.reflect.ClassTag
 import scala.reflect.macros.Attachments
 import scala.tools.nsc.Global
+import scala.tools.nsc.doc.ScaladocGlobal
+import scala.tools.nsc.interactive.{Global => InteractiveGlobal}
+import scala.tools.nsc.interpreter.ReplGlobal
 
 trait ReflectionToolkit {
   val global: Global
   import global._
   lazy val g: global.type = global
+
+  lazy val isDocCompiler = global.isInstanceOf[ScaladocGlobal]
+  lazy val isReplCompiler = global.isInstanceOf[ReplGlobal]
+  lazy val isInteractiveCompiler = global.isInstanceOf[InteractiveGlobal]
+  lazy val isBatchCompiler = !isDocCompiler && !isReplCompiler && !isInteractiveCompiler
 
   // NOTE: this boilerplate is unfortunately necessary, because we don't expose Attachable in the public API
   trait Attachable[-T] {
