@@ -8,18 +8,19 @@ import scala.meta.inputs._
 import scala.meta.internal.inputs._
 
 @root trait Tokenized {
-  def get: Tokens = this match {
-    case Tokenized.Success(tokens) => tokens
-    case Tokenized.Error(_, _, details) => throw details
+
+  def fold[A](fe: Tokenized.Error => A, ft: Tokens => A): A = this match {
+    case Tokenized.Success(t) => ft(t)
+    case e: Tokenized.Error => fe(e)
   }
-  def orElse(alt: => Tokenized): Tokenized = this match {
-    case Tokenized.Success(_) => this
-    case _ => alt
-  }
-  def getOrElse(alt: => Tokens): Tokens = this match {
-    case Tokenized.Success(tokens) => tokens
-    case _ => alt
-  }
+
+  def get: Tokens = fold(e => throw e.details, identity)
+  def orElse(alt: => Tokenized): Tokenized = fold(_ => alt, _ => this)
+  def getOrElse(alt: => Tokens): Tokens = fold(_ => alt, identity)
+
+  def toOption: Option[Tokens] = fold(_ => None, t => Some(t))
+  def toEither: Either[Tokenized.Error, Tokens] = fold(e => Left(e), t => Right(t))
+
 }
 
 object Tokenized {

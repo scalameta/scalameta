@@ -7,18 +7,19 @@ import scala.meta.inputs._
 import scala.meta.internal.inputs._
 
 @root trait Parsed[+T] {
-  def get: T = this match {
-    case Parsed.Success(tree) => tree
-    case Parsed.Error(_, _, details) => throw details
+
+  def fold[A](fe: Parsed.Error => A, ft: T => A): A = this match {
+    case Parsed.Success(t) => ft(t)
+    case e: Parsed.Error => fe(e)
   }
-  def orElse[U >: T](alt: => Parsed[U]): Parsed[U] = this match {
-    case Parsed.Success(_) => this
-    case _ => alt
-  }
-  def getOrElse[U >: T](alt: => U): U = this match {
-    case Parsed.Success(tree) => tree
-    case _ => alt
-  }
+
+  def get: T = fold(e => throw e.details, identity)
+  def orElse[U >: T](alt: => Parsed[U]): Parsed[U] = fold(_ => alt, _ => this)
+  def getOrElse[U >: T](alt: => U): U = fold(_ => alt, identity)
+
+  def toOption: Option[T] = fold(_ => None, t => Some(t))
+  def toEither: Either[Parsed.Error, T] = fold(e => Left(e), t => Right(t))
+
 }
 
 object Parsed {
