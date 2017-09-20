@@ -19,9 +19,6 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
         .getOrElse(global.settings.d.value)))
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
 
-  def isDisabled: Boolean =
-    config.mode.isDisabled
-
   def handleError(unit: g.CompilationUnit): PartialFunction[Throwable, Unit] = {
     case NonFatal(ex) =>
       val writer = new StringWriter()
@@ -47,7 +44,6 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
     def newPhase(_prev: Phase) = new ComputeSemanticdbPhase(_prev)
     class ComputeSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
-        if (isDisabled) return
         try {
           if (config.mode.isDisabled || !unit.source.file.name.endsWith(".scala")) return
           val mattrs = unit.toDocument
@@ -66,7 +62,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
     def newPhase(_prev: Phase) = new PersistSemanticdbPhase(_prev)
     class PersistSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
-        if (isDisabled) return
+        if (config.mode.isDisabled) return
         try {
           unit.body.attachments.get[m.Document].foreach { mattrs =>
             unit.body.removeAttachment[m.Document]
