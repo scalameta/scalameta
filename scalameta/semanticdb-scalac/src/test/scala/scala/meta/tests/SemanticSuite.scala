@@ -879,4 +879,41 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       assert(z1 == z2)
     }
   )
+
+  names(
+    """
+      |object flatmap {
+      | for (x <- 1 to 10; y <- 0 until 10) println(x -> x)
+      | for (i <- 1 to 10; j <- 0 until 10) yield (i, j)
+      | for (i <- 1 to 10; j <- 0 until 10 if i % 2 == 0) yield (i, j)
+      |}
+  """.trim.stripMargin,
+    """
+      |[7..14): flatmap <= _empty_.flatmap.
+      |[23..24): x <= <...>@23..24
+      |[30..32): to => _root_.scala.runtime.RichInt#to(I)Lscala/collection/immutable/Range/Inclusive;.
+      |[37..38): y <= <...>@37..38
+      |[44..49): until => _root_.scala.runtime.RichInt#until(I)Lscala/collection/immutable/Range;.
+      |[54..61): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
+      |[62..63): x => <...>@23..24
+      |[64..66): -> => _root_.scala.Predef.ArrowAssoc#`->`(Ljava/lang/Object;)Lscala/Tuple2;.
+      |[67..68): x => <...>@23..24
+      |[76..77): i <= <...>@76..77
+      |[83..85): to => _root_.scala.runtime.RichInt#to(I)Lscala/collection/immutable/Range/Inclusive;.
+      |[90..91): j <= <...>@90..91
+      |[97..102): until => _root_.scala.runtime.RichInt#until(I)Lscala/collection/immutable/Range;.
+      |[114..115): i => <...>@76..77
+      |[117..118): j => <...>@90..91
+      |[126..127): i <= <...>@126..127
+      |[133..135): to => _root_.scala.runtime.RichInt#to(I)Lscala/collection/immutable/Range/Inclusive;.
+      |[140..141): j <= <...>@140..140
+      |[147..152): until => _root_.scala.runtime.RichInt#until(I)Lscala/collection/immutable/Range;.
+      |[159..160): i => <...>@126..127
+      |[161..162): % => _root_.scala.Int#`%`(I)I.
+      |[165..167): == => _root_.scala.Int#`==`(I)Z.
+      |[178..179): i => <...>@126..127
+      |[181..182): j => <...>@140..141
+  """.trim.stripMargin
+  )
+
 }

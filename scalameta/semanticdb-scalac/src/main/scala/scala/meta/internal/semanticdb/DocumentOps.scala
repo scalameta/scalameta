@@ -153,7 +153,20 @@ trait DocumentOps { self: DatabaseOps =>
                 // https://github.com/scalameta/scalameta/issues/665
                 // Instead of crashing with "unsupported file", we ignore these cases.
                 if (mtree.pos == m.Position.None) return
-                if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
+
+                /*
+                 * HACK for desugared for-comprehensions.
+                 * See https://github.com/scalameta/scalameta/issues/1037
+                 */
+                def keepExistingEntry = names.get(mtree.pos) match {
+                  case Some(MethodSymbol("foreach")) => false
+                  case Some(MethodSymbol("flatMap")) => false
+                  case Some(MethodSymbol("map")) => false
+                  case Some(MethodSymbol("withFilter")) => false
+                  case Some(_) => true
+                  case None => false
+                }
+                if (keepExistingEntry) return
 
                 val gsym = {
                   def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
