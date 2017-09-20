@@ -153,7 +153,27 @@ trait DocumentOps { self: DatabaseOps =>
                 // https://github.com/scalameta/scalameta/issues/665
                 // Instead of crashing with "unsupported file", we ignore these cases.
                 if (mtree.pos == m.Position.None) return
-                if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
+
+                object DesugaredLoopMethod {
+                  def unapply(sym: m.Symbol): Option[String] = sym match {
+                    case m.Symbol.Global(_, m.Signature.Method(name, _)) => Some(name)
+                    case _ => None
+                  }
+                }
+
+                /*
+                 * HACK for desugared for-comprehensions.
+                 * See https://github.com/scalameta/scalameta/issues/1037
+                 */
+                def keepExistingEntry = names.get(mtree.pos) match {
+                  case Some(DesugaredLoopMethod("foreach")) => false
+                  case Some(DesugaredLoopMethod("flatMap")) => false
+                  case Some(DesugaredLoopMethod("map")) => false
+                  case Some(DesugaredLoopMethod("withFilter")) => false
+                  case Some(_) => true
+                  case None => false
+                }
+                if (keepExistingEntry) return
 
                 val gsym = {
                   def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
