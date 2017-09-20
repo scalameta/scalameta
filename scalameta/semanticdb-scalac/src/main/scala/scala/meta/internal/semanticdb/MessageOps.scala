@@ -1,6 +1,5 @@
 package scala.meta.internal.semanticdb
 
-import scala.collection.mutable
 import org.scalameta.unreachable
 import scala.{meta => m}
 
@@ -8,10 +7,9 @@ trait MessageOps { self: DatabaseOps =>
   implicit class XtensionCompilationUnitMessages(unit: g.CompilationUnit) {
     def reportedMessages: List[m.Message] = {
       val mstarts = {
-        val x =
-          unit.body.metadata.get("semanticdbMstarts").map(_.asInstanceOf[mutable.Map[Int, m.Name]])
+        val x = unit.body.metadata.get("semanticdbMstarts").map(_.asInstanceOf[Map[Int, m.Position]])
         if (x.nonEmpty) unit.body.removeMetadata("semanticdbMstarts")
-        x.getOrElse(mutable.Map.empty)
+        x.getOrElse(Map.empty)
       }
       val messages = unit.hijackedMessages.map {
         case (gpos, gseverity, text) =>
@@ -21,7 +19,7 @@ trait MessageOps { self: DatabaseOps =>
             // See https://github.com/scalameta/scalameta/issues/839
             if (text == "Unused import") {
               mstarts.get(gpos.point) match {
-                case Some(name) => name.pos
+                case Some(mpos) => mpos
                 case None =>
                   if (unit.source.content(gpos.point) == '_') // Importee.Wildcard()
                     gpos.withStart(gpos.point).withEnd(gpos.point + 1).toMeta
@@ -37,7 +35,6 @@ trait MessageOps { self: DatabaseOps =>
           }
           m.Message(mpos, mseverity, text)
       }
-      mstarts.clear()
       messages
     }
   }
