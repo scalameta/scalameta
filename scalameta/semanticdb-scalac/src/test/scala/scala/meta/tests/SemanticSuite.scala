@@ -879,7 +879,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       assert(z1 == z2)
     }
   )
-  
+
   names(
     """
       |object flatmap {

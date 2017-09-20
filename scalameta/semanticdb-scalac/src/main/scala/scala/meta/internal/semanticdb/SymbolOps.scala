@@ -80,4 +80,12 @@ trait SymbolOps { self: DatabaseOps =>
       m.Symbol.Global(owner, signature)
     }
   }
+
+  object MethodSymbol {
+    def unapply(sym: m.Symbol): Option[String] = sym match {
+      case m.Symbol.Global(_, m.Signature.Method(name, _)) => Some(name)
+      case _ => None
+    }
+  }
+
 }

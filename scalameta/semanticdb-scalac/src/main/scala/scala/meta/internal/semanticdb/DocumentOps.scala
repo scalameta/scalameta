@@ -154,22 +154,15 @@ trait DocumentOps { self: DatabaseOps =>
                 // Instead of crashing with "unsupported file", we ignore these cases.
                 if (mtree.pos == m.Position.None) return
 
-                object DesugaredLoopMethod {
-                  def unapply(sym: m.Symbol): Option[String] = sym match {
-                    case m.Symbol.Global(_, m.Signature.Method(name, _)) => Some(name)
-                    case _ => None
-                  }
-                }
-
                 /*
                  * HACK for desugared for-comprehensions.
                  * See https://github.com/scalameta/scalameta/issues/1037
                  */
                 def keepExistingEntry = names.get(mtree.pos) match {
-                  case Some(DesugaredLoopMethod("foreach")) => false
-                  case Some(DesugaredLoopMethod("flatMap")) => false
-                  case Some(DesugaredLoopMethod("map")) => false
-                  case Some(DesugaredLoopMethod("withFilter")) => false
+                  case Some(MethodSymbol("foreach")) => false
+                  case Some(MethodSymbol("flatMap")) => false
+                  case Some(MethodSymbol("map")) => false
+                  case Some(MethodSymbol("withFilter")) => false
                   case Some(_) => true
                   case None => false
                 }
