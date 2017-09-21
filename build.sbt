@@ -463,7 +463,8 @@ lazy val publishableSettings = Def.settings(
     false
   },
   mimaPreviousArtifacts := {
-    val stableVersion = version.value.replaceAll("\\-.*", "")
+    // Compare against 2.0.0 throughtout the 2.x series.
+    val stableVersion = "2.0.0"
     val binaryVersion = scalaBinaryVersion.value
     Set(
       organization.value % s"${moduleName.value}_$binaryVersion" % stableVersion
