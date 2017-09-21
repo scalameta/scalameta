@@ -879,4 +879,140 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       assert(z1 == z2)
     }
   )
+
+  names(
+    """
+      |object ac {
+      | for (x <- 1 to 10; y <- 0 until 10) println(x -> x)
+      | for (i <- 1 to 10; j <- 0 until 10) yield (i, j)
+      | for (i <- 1 to 10; j <- 0 until 10 if i % 2 == 0) yield (i, j)
+      |}
+    """.trim.stripMargin,
+    """
+      |[7..9): ac <= _empty_.ac.
+      |[18..19): x <= <...>@18..19
+      |[25..27): to => _root_.scala.runtime.RichInt#to(I)Lscala/collection/immutable/Range/Inclusive;.
+      |[32..33): y <= <...>@32..33
+      |[39..44): until => _root_.scala.runtime.RichInt#until(I)Lscala/collection/immutable/Range;.
+      |[49..56): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
+      |[57..58): x => <...>@18..19
+      |[59..61): -> => _root_.scala.Predef.ArrowAssoc#`->`(Ljava/lang/Object;)Lscala/Tuple2;.
+      |[62..63): x => <...>@18..19
+      |[71..72): i <= <...>@71..72
+      |[78..80): to => _root_.scala.runtime.RichInt#to(I)Lscala/collection/immutable/Range/Inclusive;.
+      |[85..86): j <= <...>@85..86
+      |[92..97): until => _root_.scala.runtime.RichInt#until(I)Lscala/collection/immutable/Range;.
+      |[109..110): i => <...>@71..72
+      |[112..113): j => <...>@85..86
+      |[121..122): i <= <...>@121..122
+      |[128..130): to => _root_.scala.runtime.RichInt#to(I)Lscala/collection/immutable/Range/Inclusive;.
+      |[135..136): j <= <...>@135..135
+      |[142..147): until => _root_.scala.runtime.RichInt#until(I)Lscala/collection/immutable/Range;.
+      |[154..155): i => <...>@121..122
+      |[156..157): % => _root_.scala.Int#`%`(I)I.
+      |[160..162): == => _root_.scala.Int#`==`(I)Z.
+      |[173..174): i => <...>@121..122
+      |[176..177): j => <...>@135..136
+    """.trim.stripMargin
+  )
+
+  synthetics(
+    """
+      |object ad {
+      | for (x <- 1 to 10; y <- 0 until 10) println(x -> x)
+      | for (i <- 1 to 10; j <- 0 until 10) yield (i, j)
+      | for (i <- 1 to 10; j <- 0 until 10 if i % 2 == 0) yield (i, j)
+      |}
+    """.trim.stripMargin,
+    """
+      |[23..24): scala.Predef.intWrapper(*)
+      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(I)I.
+      |  [24..25): * => _star_.
+      |[30..30): *.foreach[Unit]
+      |  [0..1): * => _star_.
+      |  [2..9): foreach => _root_.scala.collection.immutable.Range#foreach(Lscala/Function1;)V.
+      |  [10..14): Unit => _root_.scala.Unit#
+      |[37..38): scala.Predef.intWrapper(*)
+      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(I)I.
+      |  [24..25): * => _star_.
+      |[47..47): *.foreach[Unit]
+      |  [0..1): * => _star_.
+      |  [2..9): foreach => _root_.scala.collection.immutable.Range#foreach(Lscala/Function1;)V.
+      |  [10..14): Unit => _root_.scala.Unit#
+      |[57..58): scala.Predef.ArrowAssoc[Int](*)
+      |  [13..23): ArrowAssoc => _root_.scala.Predef.ArrowAssoc(Ljava/lang/Object;)Ljava/lang/Object;.
+      |  [24..27): Int => _root_.scala.Int#
+      |  [29..30): * => _star_.
+      |[61..61): *[Int]
+      |  [0..1): * => _star_.
+      |  [2..5): Int => _root_.scala.Int#
+      |[76..77): scala.Predef.intWrapper(*)
+      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(I)I.
+      |  [24..25): * => _star_.
+      |[83..83): *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]]
+      |  [0..1): * => _star_.
+      |  [2..9): flatMap => _root_.scala.collection.TraversableLike#flatMap(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
+      |  [22..25): Int => _root_.scala.Int#
+      |  [10..16): Tuple2 => _root_.scala.Tuple2#
+      |  [17..20): Int => _root_.scala.Int#
+      |  [28..38): IndexedSeq => _root_.scala.collection.immutable.IndexedSeq#
+      |  [39..45): Tuple2 => _root_.scala.Tuple2#
+      |  [46..49): Int => _root_.scala.Int#
+      |  [51..54): Int => _root_.scala.Int#
+      |[90..91): scala.Predef.intWrapper(*)
+      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(I)I.
+      |  [24..25): * => _star_.
+      |[100..100): *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]]
+      |  [0..1): * => _star_.
+      |  [2..5): map => _root_.scala.collection.TraversableLike#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
+      |  [18..21): Int => _root_.scala.Int#
+      |  [6..12): Tuple2 => _root_.scala.Tuple2#
+      |  [13..16): Int => _root_.scala.Int#
+      |  [24..34): IndexedSeq => _root_.scala.collection.immutable.IndexedSeq#
+      |  [35..41): Tuple2 => _root_.scala.Tuple2#
+      |  [42..45): Int => _root_.scala.Int#
+      |  [47..50): Int => _root_.scala.Int#
+      |[114..114): *(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
+      |  [0..1): * => _star_.
+      |  [53..59): Tuple2 => _root_.scala.Tuple2#
+      |  [60..63): Int => _root_.scala.Int#
+      |  [65..68): Int => _root_.scala.Int#
+      |  [40..52): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
+      |[126..127): scala.Predef.intWrapper(*)
+      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(I)I.
+      |  [24..25): * => _star_.
+      |[133..133): *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]]
+      |  [0..1): * => _star_.
+      |  [2..9): flatMap => _root_.scala.collection.TraversableLike#flatMap(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
+      |  [22..25): Int => _root_.scala.Int#
+      |  [10..16): Tuple2 => _root_.scala.Tuple2#
+      |  [17..20): Int => _root_.scala.Int#
+      |  [28..38): IndexedSeq => _root_.scala.collection.immutable.IndexedSeq#
+      |  [39..45): Tuple2 => _root_.scala.Tuple2#
+      |  [46..49): Int => _root_.scala.Int#
+      |  [51..54): Int => _root_.scala.Int#
+      |[140..141): scala.Predef.intWrapper(*)
+      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(I)I.
+      |  [24..25): * => _star_.
+      |[150..150): *.withFilter
+      |  [0..1): * => _star_.
+      |  [2..12): withFilter => _root_.scala.collection.TraversableLike#withFilter(Lscala/Function1;)Lscala/collection/generic/FilterMonadic;.
+      |[164..164): *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]]
+      |  [0..1): * => _star_.
+      |  [2..5): map => _root_.scala.collection.generic.FilterMonadic#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
+      |  [18..21): Int => _root_.scala.Int#
+      |  [6..12): Tuple2 => _root_.scala.Tuple2#
+      |  [13..16): Int => _root_.scala.Int#
+      |  [24..34): IndexedSeq => _root_.scala.collection.immutable.IndexedSeq#
+      |  [35..41): Tuple2 => _root_.scala.Tuple2#
+      |  [42..45): Int => _root_.scala.Int#
+      |  [47..50): Int => _root_.scala.Int#
+      |[178..178): *(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
+      |  [0..1): * => _star_.
+      |  [53..59): Tuple2 => _root_.scala.Tuple2#
+      |  [60..63): Int => _root_.scala.Int#
+      |  [65..68): Int => _root_.scala.Int#
+      |  [40..52): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
+    """.trim.stripMargin
+  )
 }
