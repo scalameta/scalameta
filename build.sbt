@@ -40,6 +40,10 @@ commands += CiCommand("ci-publish")(
   if (isTagPush) "publishSigned" :: Nil
   else Nil
 )
+commands += Command.command("mima") { s =>
+  s"very mimaReportBinaryIssues" ::
+  s
+}
 // NOTE: These tasks are aliased here in order to support running "tests/test"
 // from a command. Running "test" inside a command will trigger the `test` task
 // to run in all defined modules, including ones like inputs/io/dialects which
@@ -263,6 +267,7 @@ lazy val semanticdbScalac = project
     isFullCrossVersion,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     exposePaths("semanticdb-scalac", Test),
+    mimaPreviousArtifacts := Set.empty,
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
         private def isAbsorbedDependency(node: XmlNode): Boolean = {
@@ -457,6 +462,14 @@ lazy val publishableSettings = Def.settings(
   pomIncludeRepository := { x =>
     false
   },
+  mimaPreviousArtifacts := {
+    val stableVersion = version.value.replaceAll("\\-.*", "")
+    val binaryVersion = scalaBinaryVersion.value
+    Set(
+      organization.value % s"${moduleName.value}_$binaryVersion" % stableVersion
+    )
+  },
+  mimaBinaryIssueFilters ++= Mima.ignoredABIProblems,
   licenses += "BSD" -> url("https://github.com/scalameta/scalameta/blob/master/LICENSE.md"),
   pomExtra := (
     <url>https://github.com/scalameta/scalameta</url>
@@ -490,6 +503,7 @@ lazy val publishableSettings = Def.settings(
 )
 
 lazy val nonPublishableSettings = Seq(
+  mimaPreviousArtifacts := Set.empty,
   publishArtifact in (Compile, packageDoc) := false,
   publishArtifact in packageDoc := false,
   sources in (Compile,doc) := Seq.empty,
