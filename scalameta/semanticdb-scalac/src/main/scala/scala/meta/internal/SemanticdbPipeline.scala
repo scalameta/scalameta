@@ -50,6 +50,12 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
           unit.body.updateAttachment(mattrs)
         } catch handleError(unit)
       }
+
+      override def run(): Unit = {
+        timestampComputeStarted = System.nanoTime()
+        super.run()
+        timestampComputeFinished = System.nanoTime()
+      }
     }
   }
 
@@ -74,6 +80,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       }
 
       override def run(): Unit = {
+        timestampPersistStarted = System.nanoTime()
         val vdb = v.Database.load(Classpath(scalametaTargetroot))
         val orphanedVentries = vdb.entries.filter(ventry => {
           val scalaName = v.SemanticdbPaths.toScala(ventry.fragment.name)
@@ -94,7 +101,37 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
           cleanupUpwards(ve.uri.toFile)
         })
         super.run()
+        timestampPersistFinished = System.nanoTime()
+        reportSemanticdbSummary()
       }
     }
+  }
+
+  private val timestampPluginCreated = System.nanoTime()
+  private var timestampComputeStarted = -1L
+  private var timestampComputeFinished = -1L
+  private var timestampPersistStarted = -1L
+  private var timestampPersistFinished = -1L
+
+  private def reportSemanticdbSummary(): Unit = {
+    val createdSemanticdbsMessage = {
+      val howMany = g.currentRun.units.length
+      val what = if (howMany == 1) "file" else "files"
+      var where = scalametaTargetroot.toString
+      where = where.stripSuffix("/").stripSuffix("/.")
+      where = where + "/META-INF/semanticdb"
+      s"Created $howMany semanticdb $what in $where"
+    }
+    val performanceOverheadMessage = {
+      val computeMs = (timestampComputeFinished - timestampComputeStarted) / 1000000
+      val persistMs = (timestampPersistFinished - timestampPersistStarted) / 1000000
+      val semanticdbMs = computeMs + persistMs
+      val totalMs = (timestampPersistFinished - timestampPluginCreated) / 1000000
+      val overhead = s"$computeMs+$persistMs=${semanticdbMs}ms performance overhead"
+      val pct = Math.floor(1.0 * semanticdbMs / totalMs * 100).toInt
+      s"At the cost of $overhead ($pct% of compilation time)"
+    }
+    if (config.profiling.isConsole) println(createdSemanticdbsMessage)
+    if (config.profiling.isConsole) println(performanceOverheadMessage)
   }
 }
