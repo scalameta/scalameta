@@ -9,27 +9,44 @@ case class SemanticdbConfig(
     sourceroot: AbsolutePath,
     mode: SemanticdbMode,
     failures: FailureMode,
-    members: MemberMode) {
+    members: MemberMode,
+    denotations: DenotationMode) {
   def syntax: String =
     s"-P:${SemanticdbPlugin.name}:sourceroot:$sourceroot " +
-      s"-P:${SemanticdbPlugin.name}:mode:$mode" +
-      s"-P:${SemanticdbPlugin.name}:failures:${failures.name} "
+      s"-P:${SemanticdbPlugin.name}:mode:${mode.name}" +
+      s"-P:${SemanticdbPlugin.name}:failures:${failures.name} " +
+      s"-P:${SemanticdbPlugin.name}:denotations:${denotations.name} "
 }
 object SemanticdbConfig {
-  def default =
-    SemanticdbConfig(
-      PathIO.workingDirectory,
-      SemanticdbMode.Fat,
-      FailureMode.Warning,
-      MemberMode.None)
+  def default = SemanticdbConfig(
+    PathIO.workingDirectory,
+    SemanticdbMode.Fat,
+    FailureMode.Warning,
+    MemberMode.None,
+    DenotationMode.All
+  )
+}
+
+sealed abstract class SemanticdbMode {
+  def name: String = toString.toLowerCase
+  import SemanticdbMode._
+  def isSlim: Boolean = this == Slim
+  def isFat: Boolean = this == Fat
+  def isDisabled: Boolean = this == Disabled
+}
+object SemanticdbMode {
+  def unapply(arg: String): Option[SemanticdbMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(Fat, Slim, Disabled)
+  case object Fat extends SemanticdbMode
+  case object Slim extends SemanticdbMode
+  case object Disabled extends SemanticdbMode
 }
 
 sealed abstract class FailureMode {
   def name: String = toString.toLowerCase
 }
 object FailureMode {
-  def unapply(arg: String): Option[FailureMode] =
-    all.find(_.toString.equalsIgnoreCase(arg))
+  def unapply(arg: String): Option[FailureMode] = all.find(_.toString.equalsIgnoreCase(arg))
   def all = List(Error, Warning, Info, Ignore)
   case object Error extends FailureMode
   case object Warning extends FailureMode
@@ -37,19 +54,18 @@ object FailureMode {
   case object Ignore extends FailureMode
 }
 
-sealed abstract class SemanticdbMode {
-  import SemanticdbMode._
-  def isSlim: Boolean = this == Slim
-  def isFat: Boolean = this == Fat
-  def isDisabled: Boolean = this == Disabled
+sealed abstract class DenotationMode {
+  def name: String = toString.toLowerCase
+  import DenotationMode._
+  def saveDefinitions: Boolean = this == All || this == Definitions
+  def saveReferences: Boolean = this == All
 }
-object SemanticdbMode {
-  def unapply(arg: String): Option[SemanticdbMode] =
-    all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(Fat, Slim, Disabled)
-  case object Fat extends SemanticdbMode
-  case object Slim extends SemanticdbMode
-  case object Disabled extends SemanticdbMode
+object DenotationMode {
+  def unapply(arg: String): Option[DenotationMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, Definitions, None)
+  case object All extends DenotationMode
+  case object Definitions extends DenotationMode
+  case object None extends DenotationMode
 }
 
 sealed abstract class MemberMode {
@@ -65,10 +81,11 @@ object MemberMode {
 }
 
 trait ConfigOps { self: DatabaseOps =>
-  val SetMode = "mode:(.*)".r
   val SetSourceroot = "sourceroot:(.*)".r
+  val SetMode = "mode:(.*)".r
   val SetFailures = "failures:(.*)".r
   val SetMembers = "members:(.*)".r
+  val SetDenotations = "denotations:(.*)".r
 
   var config: SemanticdbConfig = SemanticdbConfig.default
   implicit class XtensionSemanticdbConfig(ignored: SemanticdbConfig) {
@@ -80,5 +97,7 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(failures = severity)
     def setMembers(members: MemberMode): Unit =
       config = config.copy(members = members)
+    def setDenotations(denotations: DenotationMode): Unit =
+      config = config.copy(denotations = denotations)
   }
 }

@@ -1,8 +1,6 @@
 package scala.meta.internal
 
-import scala.meta.internal.semanticdb.FailureMode
-import scala.meta.internal.semanticdb.MemberMode
-import scala.meta.internal.semanticdb.SemanticdbMode
+import scala.meta.internal.semanticdb._
 import scala.meta.io.AbsolutePath
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
@@ -38,6 +36,10 @@ class SemanticdbPlugin(val global: Global)
         config.setMembers(members)
       case SetMode(els) =>
         err(s"Unknown mode $els. Expected one of: ${SemanticdbMode.all.mkString(", ")} ")
+      case SetFailures(FailureMode(severity)) =>
+        config.setFailures(severity)
+      case SetDenotations(DenotationMode(denotations)) =>
+        config.setDenotations(denotations)
       case els =>
         err(s"Ignoring unknown option $els")
     }

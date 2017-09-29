@@ -166,19 +166,24 @@ trait DocumentOps { self: DatabaseOps =>
                 val symbol = gsym.toSemantic
                 if (symbol == m.Symbol.None) return
 
+                todo -= mtree
+
                 names(mtree.pos) = symbol
                 if (mtree.isDefinition) binders += mtree.pos
-                if (!gsym.isOverloaded &&
-                    gsym != g.definitions.RepeatedParamClass) {
-                  denotations(symbol) = gsym.toDenotation
-                }
-                if (gsym.isClass && !gsym.isTrait) {
-                  val gprim = gsym.primaryConstructor
-                  if (gprim != g.NoSymbol) {
-                    denotations(gprim.toSemantic) = gprim.toDenotation
+
+                def saveDenotation(): Unit = {
+                  if (!gsym.isOverloaded &&  gsym != g.definitions.RepeatedParamClass) {
+                    denotations(symbol) = gsym.toDenotation
+                  }
+                  if (gsym.isClass && !gsym.isTrait) {
+                    val gprim = gsym.primaryConstructor
+                    if (gprim != g.NoSymbol) {
+                      denotations(gprim.toSemantic) = gprim.toDenotation
+                    }
                   }
                 }
-                todo -= mtree
+                if (mtree.isDefinition && config.denotations.saveDefinitions) saveDenotation()
+                if (mtree.isReference && config.denotations.saveReferences) saveDenotation()
 
                 def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
                   if (map.contains(mtree)) {
