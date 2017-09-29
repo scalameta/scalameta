@@ -48,8 +48,21 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
           if (config.mode.isDisabled || !unit.source.file.name.endsWith(".scala")) return
           val fullName = unit.source.file.file.getAbsolutePath
           if (!fullName.matches(config.include) || fullName.matches(config.exclude)) return
-          val mattrs = unit.toDocument
-          unit.body.updateAttachment(mattrs)
+          val mdoc = unit.toDocument
+          if (config.messages.saveMessages) {
+            // Current version of the semanticdb doesn't contain any messages,
+            // because we're just at typer, and future phases can introduce additional messages
+            // (e.g. deprecation warnings in refchecks).
+            // Therefore, if we want to save messages, we don't save the semanticdb to disk right now.
+            // Instead, we just cache the current version of the semanticdb (without any messages),
+            // and yield execution.
+            // In a future phase that runs after the compilation is finished, we fetch the cached semanticdb,
+            // populate it with messages and only then save it to disk.
+            unit.body.updateAttachment(mdoc)
+          } else {
+            val mdb = m.Database(List(mdoc))
+            mdb.save(scalametaTargetroot, config.sourceroot)
+          }
         } catch handleError(unit)
       }
 
@@ -72,10 +85,10 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       override def apply(unit: g.CompilationUnit): Unit = {
         if (config.mode.isDisabled) return
         try {
-          unit.body.attachments.get[m.Document].foreach { mattrs =>
+          unit.body.attachments.get[m.Document].foreach { mdoc =>
             unit.body.removeAttachment[m.Document]
-            val messages = if (config.messages.saveMessages) unit.reportedMessages else Nil
-            val mminidb = m.Database(List(mattrs.copy(messages = messages)))
+            val messages = unit.reportedMessages
+            val mminidb = m.Database(List(mdoc.copy(messages = messages)))
             mminidb.save(scalametaTargetroot, config.sourceroot)
           }
         } catch handleError(unit)
