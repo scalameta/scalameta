@@ -46,6 +46,8 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       override def apply(unit: g.CompilationUnit): Unit = {
         try {
           if (config.mode.isDisabled || !unit.source.file.name.endsWith(".scala")) return
+          val fullName = unit.source.file.file.getAbsolutePath
+          if (!config.fileFilter.matches(fullName)) return
           val mattrs = unit.toDocument
           unit.body.updateAttachment(mattrs)
         } catch handleError(unit)

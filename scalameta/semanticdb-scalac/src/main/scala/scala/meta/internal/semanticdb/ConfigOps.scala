@@ -4,6 +4,7 @@ package semanticdb
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.SemanticdbPlugin
 import scala.meta.io._
+import scala.util.matching.Regex
 
 case class SemanticdbConfig(
     sourceroot: AbsolutePath,
@@ -11,14 +12,17 @@ case class SemanticdbConfig(
     failures: FailureMode,
     members: MemberMode,
     denotations: DenotationMode,
-    profiling: ProfilingMode
-    ) {
+    profiling: ProfilingMode,
+    fileFilter: FileFilter
+) {
   def syntax: String =
     s"-P:${SemanticdbPlugin.name}:sourceroot:$sourceroot " +
       s"-P:${SemanticdbPlugin.name}:mode:${mode.name}" +
       s"-P:${SemanticdbPlugin.name}:failures:${failures.name} " +
       s"-P:${SemanticdbPlugin.name}:denotations:${denotations.name} " +
-      s"-P:${SemanticdbPlugin.name}:profiling:${profiling.name} "
+      s"-P:${SemanticdbPlugin.name}:profiling:${profiling.name} " +
+      s"-P:${SemanticdbPlugin.name}:include:${fileFilter.include} " +
+      s"-P:${SemanticdbPlugin.name}:exclude:${fileFilter.exclude} "
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
@@ -27,7 +31,8 @@ object SemanticdbConfig {
     FailureMode.Warning,
     MemberMode.None,
     DenotationMode.All,
-    ProfilingMode.Off
+    ProfilingMode.Off,
+    FileFilter.matchEverything
   )
 }
 
@@ -97,6 +102,17 @@ object ProfilingMode {
   case object Off extends ProfilingMode
 }
 
+case class FileFilter(include: Regex, exclude: Regex) {
+  def matches(path: String): Boolean = 
+    include.findFirstIn(path).isDefined &&
+    exclude.findFirstIn(path).isEmpty
+}
+object FileFilter {
+  def apply(include: String, exclude: String): FileFilter =
+    FileFilter(include.r, exclude.r)
+  val matchEverything = FileFilter(".*", "$a")
+}
+
 trait ConfigOps { self: DatabaseOps =>
   val SetSourceroot = "sourceroot:(.*)".r
   val SetMode = "mode:(.*)".r
@@ -104,6 +120,8 @@ trait ConfigOps { self: DatabaseOps =>
   val SetMembers = "members:(.*)".r
   val SetDenotations = "denotations:(.*)".r
   val SetProfiling = "profiling:(.*)".r
+  val SetInclude = "include:(.*)".r
+  val SetExclude = "exclude:(.*)".r
 
   var config: SemanticdbConfig = SemanticdbConfig.default
   implicit class XtensionSemanticdbConfig(ignored: SemanticdbConfig) {
@@ -119,5 +137,9 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(denotations = denotations)
     def setProfiling(profiling: ProfilingMode): Unit =
       config = config.copy(profiling = profiling)
+    def setInclude(include: String): Unit =
+      config = config.copy(fileFilter = config.fileFilter.copy(include = include.r))
+    def setExclude(exclude: String): Unit =
+      config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
   }
 }

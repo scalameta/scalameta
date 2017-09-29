@@ -42,6 +42,10 @@ class SemanticdbPlugin(val global: Global)
         config.setDenotations(denotations)
       case SetProfiling(ProfilingMode(profiling)) =>
         config.setProfiling(profiling)
+      case SetInclude(include) =>
+        config.setInclude(include)
+      case SetExclude(exclude) =>
+        config.setExclude(exclude)
       case els =>
         err(s"Ignoring unknown option $els")
     }
