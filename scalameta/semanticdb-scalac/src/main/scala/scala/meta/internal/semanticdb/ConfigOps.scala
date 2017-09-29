@@ -10,12 +10,15 @@ case class SemanticdbConfig(
     mode: SemanticdbMode,
     failures: FailureMode,
     members: MemberMode,
-    denotations: DenotationMode) {
+    denotations: DenotationMode,
+    profiling: ProfilingMode
+    ) {
   def syntax: String =
     s"-P:${SemanticdbPlugin.name}:sourceroot:$sourceroot " +
       s"-P:${SemanticdbPlugin.name}:mode:${mode.name}" +
       s"-P:${SemanticdbPlugin.name}:failures:${failures.name} " +
-      s"-P:${SemanticdbPlugin.name}:denotations:${denotations.name} "
+      s"-P:${SemanticdbPlugin.name}:denotations:${denotations.name} " +
+      s"-P:${SemanticdbPlugin.name}:profiling:${profiling.name} "
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
@@ -23,7 +26,8 @@ object SemanticdbConfig {
     SemanticdbMode.Fat,
     FailureMode.Warning,
     MemberMode.None,
-    DenotationMode.All
+    DenotationMode.All,
+    ProfilingMode.Off
   )
 }
 
@@ -80,12 +84,26 @@ object MemberMode {
   case object None extends MemberMode
 }
 
+sealed abstract class ProfilingMode {
+  def name: String = toString.toLowerCase
+  import ProfilingMode._
+  def isConsole: Boolean = this == Console
+  def isOff: Boolean = this == Off
+}
+object ProfilingMode {
+  def unapply(arg: String): Option[ProfilingMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(Console, Off)
+  case object Console extends ProfilingMode
+  case object Off extends ProfilingMode
+}
+
 trait ConfigOps { self: DatabaseOps =>
   val SetSourceroot = "sourceroot:(.*)".r
   val SetMode = "mode:(.*)".r
   val SetFailures = "failures:(.*)".r
   val SetMembers = "members:(.*)".r
   val SetDenotations = "denotations:(.*)".r
+  val SetProfiling = "profiling:(.*)".r
 
   var config: SemanticdbConfig = SemanticdbConfig.default
   implicit class XtensionSemanticdbConfig(ignored: SemanticdbConfig) {
@@ -99,5 +117,7 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(members = members)
     def setDenotations(denotations: DenotationMode): Unit =
       config = config.copy(denotations = denotations)
+    def setProfiling(profiling: ProfilingMode): Unit =
+      config = config.copy(profiling = profiling)
   }
 }
