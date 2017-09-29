@@ -189,9 +189,7 @@ trait DocumentOps { self: DatabaseOps =>
                     if (within1.name.isTermName) within1.name.toTypeName
                     else within1.name.toTermName
                   })
-                  success(
-                    map(mtree),
-                    wrapAlternatives("<within " + symbol + ">", within1, within2))
+                  success(map(mtree), wrapAlternatives("<within " + symbol + ">", within1, within2))
                 }
               }
               tryWithin(mwithins, gsym)
