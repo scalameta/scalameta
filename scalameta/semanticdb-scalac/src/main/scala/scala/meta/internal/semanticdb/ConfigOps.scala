@@ -12,7 +12,9 @@ case class SemanticdbConfig(
     denotations: DenotationMode,
     profiling: ProfilingMode,
     include: String,
-    exclude: String) {
+    exclude: String,
+    messages: MessageMode,
+    synthetics: SyntheticMode) {
   def syntax: String =
     s"-P:${SemanticdbPlugin.name}:sourceroot:$sourceroot " +
       s"-P:${SemanticdbPlugin.name}:mode:${mode.name}" +
@@ -20,7 +22,9 @@ case class SemanticdbConfig(
       s"-P:${SemanticdbPlugin.name}:denotations:${denotations.name} " +
       s"-P:${SemanticdbPlugin.name}:profiling:${profiling.name} " +
       s"-P:${SemanticdbPlugin.name}:include:$include " +
-      s"-P:${SemanticdbPlugin.name}:exclude:$exclude "
+      s"-P:${SemanticdbPlugin.name}:exclude:$exclude " +
+      s"-P:${SemanticdbPlugin.name}:messages:${messages.name} " +
+      s"-P:${SemanticdbPlugin.name}:synthetics:${synthetics.name} "
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
@@ -30,7 +34,9 @@ object SemanticdbConfig {
     DenotationMode.All,
     ProfilingMode.Off,
     ".*",
-    "")
+    "",
+    MessageMode.All,
+    SyntheticMode.All)
 }
 
 sealed abstract class SemanticdbMode {
@@ -87,6 +93,30 @@ object ProfilingMode {
   case object Off extends ProfilingMode
 }
 
+sealed abstract class MessageMode {
+  def name: String = toString.toLowerCase
+  import MessageMode._
+  def saveMessages: Boolean = this == All
+}
+object MessageMode {
+  def unapply(arg: String): Option[MessageMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, None)
+  case object All extends MessageMode
+  case object None extends MessageMode
+}
+
+sealed abstract class SyntheticMode {
+  def name: String = toString.toLowerCase
+  import SyntheticMode._
+  def saveSynthetics: Boolean = this == All
+}
+object SyntheticMode {
+  def unapply(arg: String): Option[SyntheticMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, None)
+  case object All extends SyntheticMode
+  case object None extends SyntheticMode
+}
+
 trait ConfigOps { self: DatabaseOps =>
   val SetSourceroot = "sourceroot:(.*)".r
   val SetMode = "mode:(.*)".r
@@ -95,6 +125,8 @@ trait ConfigOps { self: DatabaseOps =>
   val SetProfiling = "profiling:(.*)".r
   val SetInclude = "include:(.*)".r
   val SetExclude = "exclude:(.*)".r
+  val SetMessages = "messages:(.*)".r
+  val SetSynthetics = "synthetics:(.*)".r
 
   var config: SemanticdbConfig = SemanticdbConfig.default
   implicit class XtensionSemanticdbConfig(ignored: SemanticdbConfig) {
@@ -112,5 +144,9 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(include = include)
     def setExclude(exclude: String): Unit =
       config = config.copy(exclude = exclude)
+    def setMessages(messages: MessageMode): Unit =
+      config = config.copy(messages = messages)
+    def setSynthetics(synthetics: SyntheticMode): Unit =
+      config = config.copy(synthetics = synthetics)
   }
 }

@@ -42,6 +42,10 @@ class SemanticdbPlugin(val global: Global)
         config.setInclude(include)
       case SetExclude(exclude) =>
         config.setExclude(exclude)
+      case SetMessages(MessageMode(messages)) =>
+        config.setMessages(messages)
+      case SetSynthetics(SyntheticMode(synthetics)) =>
+        config.setSynthetics(synthetics)
       case els =>
         err(s"Ignoring unknown option $els")
     }

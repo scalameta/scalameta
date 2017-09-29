@@ -74,7 +74,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
         try {
           unit.body.attachments.get[m.Document].foreach { mattrs =>
             unit.body.removeAttachment[m.Document]
-            val messages = unit.reportedMessages
+            val messages = if (config.messages.saveMessages) unit.reportedMessages else Nil
             val mminidb = m.Database(List(mattrs.copy(messages = messages)))
             mminidb.save(scalametaTargetroot, config.sourceroot)
           }
