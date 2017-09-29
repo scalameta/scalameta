@@ -15,7 +15,7 @@ package object inputs {
           val start = input.lineToOffset(pos.startLine)
           val notEof = start < input.chars.length
           val end = if (notEof) input.lineToOffset(pos.startLine + 1) else start
-          new String(input.chars, start, end - start).trim
+          new String(input.chars, start, end - start).stripLineEnd
         }
         var caret = " " * pos.startColumn + "^"
         header + EOL + line + EOL + caret
