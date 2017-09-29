@@ -325,6 +325,8 @@ trait DocumentOps { self: DatabaseOps =>
             }
 
             private def tryFindInferred(gtree: g.Tree): Unit = {
+              if (!config.synthetics.saveSynthetics) return
+
               import scala.meta.internal.semanticdb.{AttributedSynthetic => S}
               def success(pos: m.Position, f: Inferred => Inferred): Unit = {
                 inferred(pos) = f(inferred(pos))
@@ -464,7 +466,7 @@ trait DocumentOps { self: DatabaseOps =>
           input,
           language,
           names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,
-          Nil, // added after jvm phase.
+          Nil, // added in a separate phase.
           symbols,
           synthetics.toList
         )

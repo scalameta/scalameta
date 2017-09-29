@@ -13,8 +13,9 @@ case class SemanticdbConfig(
     members: MemberMode,
     denotations: DenotationMode,
     profiling: ProfilingMode,
-    fileFilter: FileFilter
-) {
+    fileFilter: FileFilter,
+    messages: MessageMode,
+    synthetics: SyntheticMode) {
   def syntax: String =
     s"-P:${SemanticdbPlugin.name}:sourceroot:$sourceroot " +
       s"-P:${SemanticdbPlugin.name}:mode:${mode.name}" +
@@ -23,6 +24,8 @@ case class SemanticdbConfig(
       s"-P:${SemanticdbPlugin.name}:profiling:${profiling.name} " +
       s"-P:${SemanticdbPlugin.name}:include:${fileFilter.include} " +
       s"-P:${SemanticdbPlugin.name}:exclude:${fileFilter.exclude} "
+      s"-P:${SemanticdbPlugin.name}:messages:${messages.name} " +
+      s"-P:${SemanticdbPlugin.name}:synthetics:${synthetics.name} "
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
@@ -32,8 +35,9 @@ object SemanticdbConfig {
     MemberMode.None,
     DenotationMode.All,
     ProfilingMode.Off,
-    FileFilter.matchEverything
-  )
+    FileFilter.matchEverything,
+    MessageMode.All,
+    SyntheticMode.All)
 }
 
 sealed abstract class SemanticdbMode {
@@ -103,7 +107,7 @@ object ProfilingMode {
 }
 
 case class FileFilter(include: Regex, exclude: Regex) {
-  def matches(path: String): Boolean = 
+  def matches(path: String): Boolean =
     include.findFirstIn(path).isDefined &&
     exclude.findFirstIn(path).isEmpty
 }
@@ -111,6 +115,30 @@ object FileFilter {
   def apply(include: String, exclude: String): FileFilter =
     FileFilter(include.r, exclude.r)
   val matchEverything = FileFilter(".*", "$a")
+}
+
+sealed abstract class MessageMode {
+  def name: String = toString.toLowerCase
+  import MessageMode._
+  def saveMessages: Boolean = this == All
+}
+object MessageMode {
+  def unapply(arg: String): Option[MessageMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, None)
+  case object All extends MessageMode
+  case object None extends MessageMode
+}
+
+sealed abstract class SyntheticMode {
+  def name: String = toString.toLowerCase
+  import SyntheticMode._
+  def saveSynthetics: Boolean = this == All
+}
+object SyntheticMode {
+  def unapply(arg: String): Option[SyntheticMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, None)
+  case object All extends SyntheticMode
+  case object None extends SyntheticMode
 }
 
 trait ConfigOps { self: DatabaseOps =>
@@ -122,6 +150,8 @@ trait ConfigOps { self: DatabaseOps =>
   val SetProfiling = "profiling:(.*)".r
   val SetInclude = "include:(.*)".r
   val SetExclude = "exclude:(.*)".r
+  val SetMessages = "messages:(.*)".r
+  val SetSynthetics = "synthetics:(.*)".r
 
   var config: SemanticdbConfig = SemanticdbConfig.default
   implicit class XtensionSemanticdbConfig(ignored: SemanticdbConfig) {
@@ -141,5 +171,9 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(fileFilter = config.fileFilter.copy(include = include.r))
     def setExclude(exclude: String): Unit =
       config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
+    def setMessages(messages: MessageMode): Unit =
+      config = config.copy(messages = messages)
+    def setSynthetics(synthetics: SyntheticMode): Unit =
+      config = config.copy(synthetics = synthetics)
   }
 }
