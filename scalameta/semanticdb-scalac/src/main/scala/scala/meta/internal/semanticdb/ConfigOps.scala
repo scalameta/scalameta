@@ -10,13 +10,17 @@ case class SemanticdbConfig(
     mode: SemanticdbMode,
     failures: FailureMode,
     denotations: DenotationMode,
-    profiling: ProfilingMode) {
+    profiling: ProfilingMode,
+    include: String,
+    exclude: String) {
   def syntax: String =
     s"-P:${SemanticdbPlugin.name}:sourceroot:$sourceroot " +
       s"-P:${SemanticdbPlugin.name}:mode:${mode.name}" +
       s"-P:${SemanticdbPlugin.name}:failures:${failures.name} " +
       s"-P:${SemanticdbPlugin.name}:denotations:${denotations.name} " +
-      s"-P:${SemanticdbPlugin.name}:profiling:${profiling.name} "
+      s"-P:${SemanticdbPlugin.name}:profiling:${profiling.name} " +
+      s"-P:${SemanticdbPlugin.name}:include:$include " +
+      s"-P:${SemanticdbPlugin.name}:exclude:$exclude "
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
@@ -24,7 +28,9 @@ object SemanticdbConfig {
     SemanticdbMode.Fat,
     FailureMode.Warning,
     DenotationMode.All,
-    ProfilingMode.Off)
+    ProfilingMode.Off,
+    ".*",
+    "")
 }
 
 sealed abstract class SemanticdbMode {
@@ -87,6 +93,8 @@ trait ConfigOps { self: DatabaseOps =>
   val SetFailures = "failures:(.*)".r
   val SetDenotations = "denotations:(.*)".r
   val SetProfiling = "profiling:(.*)".r
+  val SetInclude = "include:(.*)".r
+  val SetExclude = "exclude:(.*)".r
 
   var config: SemanticdbConfig = SemanticdbConfig.default
   implicit class XtensionSemanticdbConfig(ignored: SemanticdbConfig) {
@@ -100,5 +108,9 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(denotations = denotations)
     def setProfiling(profiling: ProfilingMode): Unit =
       config = config.copy(profiling = profiling)
+    def setInclude(include: String): Unit =
+      config = config.copy(include = include)
+    def setExclude(exclude: String): Unit =
+      config = config.copy(exclude = exclude)
   }
 }
