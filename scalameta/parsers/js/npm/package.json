@@ -1,12 +1,12 @@
 {
   "name": "scalameta-parsers",
-  "version": "1.9.0-beta.3",
+  "version": "2.0.1",
   "main": "index.js",
   "files": [
     "index.js"
   ],
   "scripts": {
-    "prepublish": "export current=$PWD && cd ../../../.. && sbt parsersJS/fullOptJS && cd $current && cp ../target/scala-2.11/parsers-opt.js index.js"
+    "prepublish": "export current=$PWD && cd ../../../.. && sbt parsersJS/fullOptJS && cd $current && cp ../target/scala-2.12/parsers-opt.js index.js"
   },
   "author": "scalameta",
   "license": "BSD-3-Clause"
