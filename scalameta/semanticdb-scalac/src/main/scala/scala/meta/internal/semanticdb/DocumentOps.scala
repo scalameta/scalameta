@@ -316,6 +316,17 @@ trait DocumentOps { self: DatabaseOps =>
                 }
               }
 
+              object SyntheticApplyToImplicitArgs {
+                private def findSelect(t: g.Tree): Option[g.Tree] = t match {
+                  case g.Apply(fun, _) => findSelect(fun)
+                  case g.TypeApply(fun, _) => findSelect(fun)
+                  case s@g.Select(qual, _) if isSyntheticName(s) => Some(qual)
+                  case _ => None
+                }
+
+                def unapply(gfun: g.Apply): Option[g.Tree] = findSelect(gfun)
+              }
+
               gtree match {
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
@@ -323,17 +334,20 @@ trait DocumentOps { self: DatabaseOps =>
                   success(pos, _.copy(conversion = Some(syntax)))
                   isVisited += gview.fun
                 case gimpl: g.ApplyToImplicitArgs =>
+                  val args = S.mkString(gimpl.args.map(showSynthetic), ", ")
                   gimpl.fun match {
                     case gview: g.ApplyImplicitView =>
                       isVisited += gview
                       val pos = gtree.pos.toMeta
-                      val args = S.mkString(gimpl.args.map(showSynthetic), ", ")
                       val syntax = showSynthetic(gview.fun) + "(" + S.star + ")(" + args + ")"
                       success(pos, _.copy(conversion = Some(syntax)))
+                    case SyntheticApplyToImplicitArgs(qual) =>
+                      val morePrecisePos = qual.pos.withStart(qual.pos.end).toMeta
+                      val syntax = S("(") + S.star + ")" + "(" + args + ")"
+                      success(morePrecisePos, _.copy(args = Some(syntax)))
                     case gfun =>
-                      val fullyQualifiedArgs = S.mkString(gimpl.args.map(showSynthetic), ", ")
                       val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toMeta
-                      val syntax = S("(") + fullyQualifiedArgs + ")"
+                      val syntax = S("(") + args + ")"
                       success(morePrecisePos, _.copy(args = Some(syntax)))
                   }
                 case g.TypeApply(fun, targs @ List(targ, _*)) =>

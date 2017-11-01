@@ -248,14 +248,13 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  CommandeerDSL(null.asInstanceOf[Foo])
       |}
     """.trim.stripMargin,
-    """|[324..324): *.apply[Foo, FooDSL]
+    """|[324..324): *.apply[Foo, FooDSL](*)(g.Foo.fooDSL)
        |  [0..1): * => _star_.
        |  [2..7): apply => _root_.g.CommandeerDSL.apply(Ljava/lang/Object;Lg/CommandeerDSL;)Lg/CommandeerDSL;.
        |  [8..11): Foo => _root_.g.Foo#
        |  [13..19): FooDSL => _root_.g.FooDSL#
-       |[348..348): *(g.Foo.fooDSL)
-       |  [0..1): * => _star_.
-       |  [8..14): fooDSL => _root_.g.Foo.fooDSL.
+       |  [21..22): * => _star_.
+       |  [30..36): fooDSL => _root_.g.Foo.fooDSL.
     """.trim.stripMargin
   )
 
@@ -949,7 +948,7 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |[76..77): scala.Predef.intWrapper(*)
       |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(I)I.
       |  [24..25): * => _star_.
-      |[83..83): *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]]
+      |[83..83): *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
       |  [0..1): * => _star_.
       |  [2..9): flatMap => _root_.scala.collection.TraversableLike#flatMap(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
       |  [22..25): Int => _root_.scala.Int#
@@ -959,10 +958,15 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [39..45): Tuple2 => _root_.scala.Tuple2#
       |  [46..49): Int => _root_.scala.Int#
       |  [51..54): Int => _root_.scala.Int#
+      |  [58..59): * => _star_.
+      |  [112..118): Tuple2 => _root_.scala.Tuple2#
+      |  [119..122): Int => _root_.scala.Int#
+      |  [124..127): Int => _root_.scala.Int#
+      |  [99..111): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
       |[90..91): scala.Predef.intWrapper(*)
       |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(I)I.
       |  [24..25): * => _star_.
-      |[100..100): *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]]
+      |[100..100): *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
       |  [0..1): * => _star_.
       |  [2..5): map => _root_.scala.collection.TraversableLike#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
       |  [18..21): Int => _root_.scala.Int#
@@ -972,16 +976,15 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [35..41): Tuple2 => _root_.scala.Tuple2#
       |  [42..45): Int => _root_.scala.Int#
       |  [47..50): Int => _root_.scala.Int#
-      |[114..114): *(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
-      |  [0..1): * => _star_.
-      |  [53..59): Tuple2 => _root_.scala.Tuple2#
-      |  [60..63): Int => _root_.scala.Int#
-      |  [65..68): Int => _root_.scala.Int#
-      |  [40..52): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
+      |  [54..55): * => _star_.
+      |  [108..114): Tuple2 => _root_.scala.Tuple2#
+      |  [115..118): Int => _root_.scala.Int#
+      |  [120..123): Int => _root_.scala.Int#
+      |  [95..107): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
       |[126..127): scala.Predef.intWrapper(*)
       |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(I)I.
       |  [24..25): * => _star_.
-      |[133..133): *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]]
+      |[133..133): *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
       |  [0..1): * => _star_.
       |  [2..9): flatMap => _root_.scala.collection.TraversableLike#flatMap(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
       |  [22..25): Int => _root_.scala.Int#
@@ -991,13 +994,18 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [39..45): Tuple2 => _root_.scala.Tuple2#
       |  [46..49): Int => _root_.scala.Int#
       |  [51..54): Int => _root_.scala.Int#
+      |  [58..59): * => _star_.
+      |  [112..118): Tuple2 => _root_.scala.Tuple2#
+      |  [119..122): Int => _root_.scala.Int#
+      |  [124..127): Int => _root_.scala.Int#
+      |  [99..111): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
       |[140..141): scala.Predef.intWrapper(*)
       |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(I)I.
       |  [24..25): * => _star_.
       |[150..150): *.withFilter
       |  [0..1): * => _star_.
       |  [2..12): withFilter => _root_.scala.collection.TraversableLike#withFilter(Lscala/Function1;)Lscala/collection/generic/FilterMonadic;.
-      |[164..164): *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]]
+      |[164..164): *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
       |  [0..1): * => _star_.
       |  [2..5): map => _root_.scala.collection.generic.FilterMonadic#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
       |  [18..21): Int => _root_.scala.Int#
@@ -1007,12 +1015,55 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [35..41): Tuple2 => _root_.scala.Tuple2#
       |  [42..45): Int => _root_.scala.Int#
       |  [47..50): Int => _root_.scala.Int#
-      |[178..178): *(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
-      |  [0..1): * => _star_.
-      |  [53..59): Tuple2 => _root_.scala.Tuple2#
-      |  [60..63): Int => _root_.scala.Int#
-      |  [65..68): Int => _root_.scala.Int#
-      |  [40..52): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
+      |  [54..55): * => _star_.
+      |  [108..114): Tuple2 => _root_.scala.Tuple2#
+      |  [115..118): Int => _root_.scala.Int#
+      |  [120..123): Int => _root_.scala.Int#
+      |  [95..107): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
     """.trim.stripMargin
   )
+
+  synthetics(
+    """
+      |object ForCompFuture {
+      |  import scala.concurrent.ExecutionContext.Implicits.global
+      |  val f1 = scala.concurrent.Future {1}
+      |  val f2 = scala.concurrent.Future {2}
+      |
+      |  for (v1 <- f1; v2 <- f2 if v1 > v2) yield v1+v2
+      |}
+    """.trim.stripMargin,
+    """
+      |[109..109): *.apply[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [2..7): apply => _root_.scala.concurrent.Future.apply(Lscala/Function0;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
+      |  [8..11): Int => _root_.scala.Int#
+      |  [13..14): * => _star_.
+      |  [60..66): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+      |[148..148): *.apply[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [2..7): apply => _root_.scala.concurrent.Future.apply(Lscala/Function0;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
+      |  [8..11): Int => _root_.scala.Int#
+      |  [13..14): * => _star_.
+      |  [60..66): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+      |[169..169): *.flatMap[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [2..9): flatMap => _root_.scala.concurrent.Future#flatMap(Lscala/Function1;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
+      |  [10..13): Int => _root_.scala.Int#
+      |  [15..16): * => _star_.
+      |  [62..68): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+      |[179..179): *.withFilter(*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [2..12): withFilter => _root_.scala.concurrent.Future#withFilter(Lscala/Function1;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
+      |  [13..14): * => _star_.
+      |  [60..66): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+      |[190..190): *.map[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [2..5): map => _root_.scala.concurrent.Future#map(Lscala/Function1;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
+      |  [6..9): Int => _root_.scala.Int#
+      |  [11..12): * => _star_.
+      |  [58..64): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+    """.trim.stripMargin
+  )
+
 }
