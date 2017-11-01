@@ -1026,86 +1026,61 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   synthetics(
     """
-      |object ForCompFuture {
+      |object ForCompImplicits {
       |  import scala.concurrent.ExecutionContext.Implicits.global
-      |  val f1 = scala.concurrent.Future {1}
-      |  val f2 = scala.concurrent.Future {2}
-      |
-      |  for (v1 <- f1; v2 <- f2 if v1 > v2) yield v1+v2
+      |  for {
+      |    a <- scala.concurrent.Future.successful(1)
+      |    b <- scala.concurrent.Future.successful(2)
+      |  } println(a)
+      |  for {
+      |    a <- scala.concurrent.Future.successful(1)
+      |    b <- scala.concurrent.Future.successful(2)
+      |    if a < b
+      |  } yield a
       |}
     """.trim.stripMargin,
     """
-    |[117..117): *.apply[Int]
-    |  [0..1): * => _star_.
-    |  [2..7): apply => _root_.scala.concurrent.Future.apply(Lscala/Function0;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
-    |  [8..11): Int => _root_.scala.Int#
-    |[121..121): *(scala.concurrent.ExecutionContext.Implicits.global)
-    |  [0..1): * => _star_.
-    |  [46..52): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
-    |[156..156): *.apply[Int]
-    |  [0..1): * => _star_.
-    |  [2..7): apply => _root_.scala.concurrent.Future.apply(Lscala/Function0;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
-    |  [8..11): Int => _root_.scala.Int#
-    |[160..160): *(scala.concurrent.ExecutionContext.Implicits.global)
-    |  [0..1): * => _star_.
-    |  [46..52): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
-    |[177..177): *.flatMap[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
-    |  [0..1): * => _star_.
-    |  [2..9): flatMap => _root_.scala.concurrent.Future#flatMap(Lscala/Function1;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
-    |  [10..13): Int => _root_.scala.Int#
-    |  [15..16): * => _star_.
-    |  [62..68): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
-    |[187..187): *.withFilter(*)(scala.concurrent.ExecutionContext.Implicits.global)
-    |  [0..1): * => _star_.
-    |  [2..12): withFilter => _root_.scala.concurrent.Future#withFilter(Lscala/Function1;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
-    |  [13..14): * => _star_.
-    |  [60..66): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
-    |[198..198): *.map[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
-    |  [0..1): * => _star_.
-    |  [2..5): map => _root_.scala.concurrent.Future#map(Lscala/Function1;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
-    |  [6..9): Int => _root_.scala.Int#
-    |  [11..12): * => _star_.
-    |  [58..64): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
-   """.trim.stripMargin
-  )
-
-  synthetics(
-    """
-      |object ForeachFuture {
-      |  import scala.concurrent.ExecutionContext.Implicits.global
-      |  val f1 = scala.concurrent.Future {1}
-      |  val f2 = scala.concurrent.Future {2}
-      |
-      |  for (v1 <- f1; v2 <- f2) println(v1+v2)
-      |}
-    """.trim.stripMargin,
-    """
-      |[117..117): *.apply[Int]
+      |[137..137): *[Int]
       |  [0..1): * => _star_.
-      |  [2..7): apply => _root_.scala.concurrent.Future.apply(Lscala/Function0;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
-      |  [8..11): Int => _root_.scala.Int#
-      |[121..121): *(scala.concurrent.ExecutionContext.Implicits.global)
-      |  [0..1): * => _star_.
-      |  [46..52): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
-      |[156..156): *.apply[Int]
-      |  [0..1): * => _star_.
-      |  [2..7): apply => _root_.scala.concurrent.Future.apply(Lscala/Function0;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
-      |  [8..11): Int => _root_.scala.Int#
-      |[160..160): *(scala.concurrent.ExecutionContext.Implicits.global)
-      |  [0..1): * => _star_.
-      |  [46..52): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
-      |[177..177): *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [2..5): Int => _root_.scala.Int#
+      |[140..140): *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
       |  [0..1): * => _star_.
       |  [2..9): foreach => _root_.scala.concurrent.Future#foreach(Lscala/Function1;Lscala/concurrent/ExecutionContext;)V.
       |  [10..14): Unit => _root_.scala.Unit#
       |  [16..17): * => _star_.
       |  [63..69): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+      |[184..184): *[Int]
+      |  [0..1): * => _star_.
+      |  [2..5): Int => _root_.scala.Int#
       |[187..187): *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
       |  [0..1): * => _star_.
       |  [2..9): foreach => _root_.scala.concurrent.Future#foreach(Lscala/Function1;Lscala/concurrent/ExecutionContext;)V.
       |  [10..14): Unit => _root_.scala.Unit#
       |  [16..17): * => _star_.
       |  [63..69): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
-    """.trim.stripMargin
+      |[254..254): *[Int]
+      |  [0..1): * => _star_.
+      |  [2..5): Int => _root_.scala.Int#
+      |[257..257): *.flatMap[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [2..9): flatMap => _root_.scala.concurrent.Future#flatMap(Lscala/Function1;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
+      |  [10..13): Int => _root_.scala.Int#
+      |  [15..16): * => _star_.
+      |  [62..68): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+      |[301..301): *[Int]
+      |  [0..1): * => _star_.
+      |  [2..5): Int => _root_.scala.Int#
+      |[304..304): *.withFilter(*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [2..12): withFilter => _root_.scala.concurrent.Future#withFilter(Lscala/Function1;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
+      |  [13..14): * => _star_.
+      |  [60..66): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+      |[317..317): *.map[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [2..5): map => _root_.scala.concurrent.Future#map(Lscala/Function1;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
+      |  [6..9): Int => _root_.scala.Int#
+      |  [11..12): * => _star_.
+      |  [58..64): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+   """.trim.stripMargin
   )
 }
