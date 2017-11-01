@@ -1069,4 +1069,43 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
    """.trim.stripMargin
   )
 
+  synthetics(
+    """
+      |object ForeachFuture {
+      |  import scala.concurrent.ExecutionContext.Implicits.global
+      |  val f1 = scala.concurrent.Future {1}
+      |  val f2 = scala.concurrent.Future {2}
+      |
+      |  for (v1 <- f1; v2 <- f2) println(v1+v2)
+      |}
+    """.trim.stripMargin,
+    """
+      |[117..117): *.apply[Int]
+      |  [0..1): * => _star_.
+      |  [2..7): apply => _root_.scala.concurrent.Future.apply(Lscala/Function0;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
+      |  [8..11): Int => _root_.scala.Int#
+      |[121..121): *(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [46..52): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+      |[156..156): *.apply[Int]
+      |  [0..1): * => _star_.
+      |  [2..7): apply => _root_.scala.concurrent.Future.apply(Lscala/Function0;Lscala/concurrent/ExecutionContext;)Lscala/concurrent/Future;.
+      |  [8..11): Int => _root_.scala.Int#
+      |[160..160): *(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [46..52): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+      |[177..177): *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [2..9): foreach => _root_.scala.concurrent.Future#foreach(Lscala/Function1;Lscala/concurrent/ExecutionContext;)V.
+      |  [10..14): Unit => _root_.scala.Unit#
+      |  [16..17): * => _star_.
+      |  [63..69): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+      |[187..187): *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
+      |  [0..1): * => _star_.
+      |  [2..9): foreach => _root_.scala.concurrent.Future#foreach(Lscala/Function1;Lscala/concurrent/ExecutionContext;)V.
+      |  [10..14): Unit => _root_.scala.Unit#
+      |  [16..17): * => _star_.
+      |  [63..69): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
+    """.trim.stripMargin
+  )
 }

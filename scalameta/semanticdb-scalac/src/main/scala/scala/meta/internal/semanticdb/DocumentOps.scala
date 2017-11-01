@@ -320,7 +320,8 @@ trait DocumentOps { self: DatabaseOps =>
                 private def isForComprehensionSyntheticName(select: g.Select): Boolean = {
                   select.pos == select.qualifier.pos && (select.name == g.nme.map ||
                   select.name == g.nme.withFilter ||
-                  select.name == g.nme.flatMap)
+                  select.name == g.nme.flatMap ||
+                  select.name == g.nme.foreach)
                 }
 
                 private def findSelect(t: g.Tree): Option[g.Tree] = t match {
