@@ -316,11 +316,17 @@ trait DocumentOps { self: DatabaseOps =>
                 }
               }
 
-              object SyntheticApplyToImplicitArgs {
+              object ForComprehensionImplicitArg {
+                private def isForComprehensionSyntheticName(select: g.Select): Boolean = {
+                  select.pos == select.qualifier.pos && (select.name == g.nme.map ||
+                  select.name == g.nme.withFilter ||
+                  select.name == g.nme.flatMap)
+                }
+
                 private def findSelect(t: g.Tree): Option[g.Tree] = t match {
                   case g.Apply(fun, _) => findSelect(fun)
                   case g.TypeApply(fun, _) => findSelect(fun)
-                  case s@g.Select(qual, _) if isSyntheticName(s) => Some(qual)
+                  case s @ g.Select(qual, _) if isForComprehensionSyntheticName(s) => Some(qual)
                   case _ => None
                 }
 
@@ -341,7 +347,7 @@ trait DocumentOps { self: DatabaseOps =>
                       val pos = gtree.pos.toMeta
                       val syntax = showSynthetic(gview.fun) + "(" + S.star + ")(" + args + ")"
                       success(pos, _.copy(conversion = Some(syntax)))
-                    case SyntheticApplyToImplicitArgs(qual) =>
+                    case ForComprehensionImplicitArg(qual) =>
                       val morePrecisePos = qual.pos.withStart(qual.pos.end).toMeta
                       val syntax = S("(") + S.star + ")" + "(" + args + ")"
                       success(morePrecisePos, _.copy(args = Some(syntax)))
