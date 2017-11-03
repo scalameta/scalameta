@@ -16,6 +16,7 @@ The current maintainers (people who can merge pull requests) are:
 * Mikhail Mutcianko - [`@mutcianm`](https://github.com/mutcianm)
 * Ólafur Páll Geirsson - [`@olafurpg`](https://github.com/olafurpg)
 * David Dudson - [`@DavidDudson`](https://github.com/DavidDudson)
+* Gabriele Petronella - [`@gabro`](https://github.com/gabro)
 
 An up-to-date list of contributors is available here: https://github.com/scalameta/scalameta/graphs/contributors.
 
