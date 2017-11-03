@@ -1095,4 +1095,22 @@ class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [58..64): global => _root_.scala.concurrent.ExecutionContext.Implicits.global.
     """.trim.stripMargin
   )
+
+  targeted(
+    """
+      |object af {
+      |  None.<<fold>>(1)(identity)
+      |  java.lang.String.<<format>>("%s%s", "", "")
+      |  def <<a>>(b: => Int, c: String*): Unit = ()
+      |}
+    """.stripMargin, { (db, fold, format, a) =>
+      val aDenot = db.symbols.find(_.symbol == a).get.denotation
+      assertNoDiff(aDenot.signature, "(b: =>Int, c: String*): Unit")
+      val foldDenot = db.symbols.find(_.symbol == fold).get.denotation
+      assertNoDiff(foldDenot.signature, "[B] => (ifEmpty: =>B)(f: Function1[A, B]): B")
+      // Check java repeated params have same * syntax
+      val formatDenot = db.symbols.find(_.symbol == format).get.denotation
+      assertNoDiff(formatDenot.signature, "(x$1: String, x$2: Object*): String")
+    }
+  )
 }
