@@ -44,6 +44,7 @@ message Message {
 message ResolvedSymbol {
   string symbol = 1;
   Denotation denotation = 2;
+  repeated string members = 3;
 }
 
 message Denotation {

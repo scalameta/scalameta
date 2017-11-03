@@ -11,12 +11,15 @@ import scala.{meta => m}
 import scala.meta.io._
 import scala.meta.internal.semanticdb.DatabaseOps
 import scala.meta.internal.semanticdb.FailureMode
+import scala.meta.internal.semanticdb.MemberMode
 import scala.meta.internal.semanticdb.SemanticdbMode
 import scala.meta.testkit.DiffAssertions
 import scala.util.control.NonFatal
 import org.scalatest.exceptions.TestFailedException
 
-abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAssertions { self =>
+abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberMode.None)
+    extends FunSuite
+    with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
@@ -45,6 +48,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
   import databaseOps._
   config.setMode(mode)
   config.setFailures(FailureMode.Error)
+  config.setMembers(members)
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
@@ -214,5 +218,19 @@ abstract class DatabaseSuite(mode: SemanticdbMode) extends FunSuite with DiffAss
         case _ => sys.error(s"4 chevrons expected, ${names.length} chevrons found")
       }
     }
+  }
+
+  def members(original: String, expected: String): Unit = {
+    targeted(original, { db =>
+      val obtained = db.symbols
+        .collect {
+          case rs if rs.members.nonEmpty =>
+            s"${rs.symbol}{\n  ${rs.members.mkString("\n  ")}\n}"
+        }
+        .mkString("\n")
+
+      println(obtained)
+      assertNoDiff(obtained, expected)
+    })
   }
 }

@@ -1,6 +1,7 @@
 package scala.meta.tests
 
 import scala.meta._
+import scala.meta.internal.semanticdb.MemberMode
 import scala.meta.internal.semanticdb.SemanticdbMode
 
 class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
