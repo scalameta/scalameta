@@ -27,10 +27,6 @@ Names:
 [195..203): classTag => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.
 [204..207): Int => _root_.scala.Int#
 
-Messages:
-[41..47): [warning] Unused import
-[72..107): [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
-
 Symbols:
 _root_.example. => package example
 _root_.example.Example. => final object Example
@@ -86,6 +82,16 @@ Synthetics:
   [28..31): Int => _root_.scala.Int#
   [19..27): ClassTag => _root_.scala.reflect.ClassTag#
   [13..16): Int => _root_.scala.reflect.ClassTag.Int.
+
+
+scalameta/semanticdb-integration/src/main/scala/example/Example.scala
+---------------------------------------------------------------------
+Language:
+Scala212
+
+Messages:
+[41..47): [warning] Unused import
+[72..107): [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 
 scalameta/semanticdb-integration/src/main/scala/example/Synthetic.scala
