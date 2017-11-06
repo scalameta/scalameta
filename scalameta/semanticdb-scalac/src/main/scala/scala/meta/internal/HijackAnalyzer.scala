@@ -15,13 +15,21 @@ trait HijackAnalyzer extends SemanticdbAnalyzer { self: SemanticdbPlugin =>
         classOf[AnalyzerPlugins].getDeclaredMethods.find(_.getName.endsWith("macroPlugins")).get
       macroPluginsGetter.invoke(global.analyzer).asInstanceOf[List[MacroPlugin]]
     }
+    val oldAnalyzerPlugins = {
+      val analyzerPluginsGetter =
+        classOf[AnalyzerPlugins].getDeclaredMethods.find(_.getName.endsWith("analyzerPlugins")).get
+      analyzerPluginsGetter.invoke(global.analyzer).asInstanceOf[List[AnalyzerPlugin]]
+    }
     val newAnalyzer = new { val global: self.global.type = self.global } with SemanticdbAnalyzer
     val analyzerField = classOf[NscGlobal].getDeclaredField("analyzer")
     analyzerField.setAccessible(true)
     analyzerField.set(global, newAnalyzer)
+    // Restore macro and analyzer plugins from old analyzer, see https://github.com/scalameta/scalameta/issues/1135
     oldMacroPlugins.foreach { oldMacroPlugin =>
-      // Restore macroPlugins from old analyzer, see https://github.com/scalameta/scalameta/issues/1135
       newAnalyzer.addMacroPlugin(oldMacroPlugin.asInstanceOf[newAnalyzer.MacroPlugin])
+    }
+    oldAnalyzerPlugins.foreach { oldAnalyzerPlugin =>
+      newAnalyzer.addAnalyzerPlugin(oldAnalyzerPlugin.asInstanceOf[newAnalyzer.AnalyzerPlugin])
     }
 
     val phasesSetMapGetter = classOf[NscGlobal].getDeclaredMethod("phasesSet")
