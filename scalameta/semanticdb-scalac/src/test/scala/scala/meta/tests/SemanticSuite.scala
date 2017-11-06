@@ -14,7 +14,7 @@ import scala.meta.internal.semanticdb.SemanticdbMode
 // - Try to follow the alphabetical order of the enclosing object, at the time
 //   of this writing the latest object is `object ad`, so the next object should
 //   be `object ae`.
-// - glhf, and if you have any questions don't hestiate to ask in the gitter channel :)
+// - glhf, and if you have any questions don't hesitate to ask in the gitter channel :)
 class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   names(
     """
