@@ -165,7 +165,8 @@ trait DocumentOps { self: DatabaseOps =>
 
                 names(mtree.pos) = symbol
                 if (mtree.isDefinition) binders += mtree.pos
-                if (!gsym.isOverloaded) {
+                if (!gsym.isOverloaded &&
+                    gsym != g.definitions.RepeatedParamClass) {
                   denotations(symbol) = gsym.toDenotation
                 }
                 if (gsym.isClass && !gsym.isTrait) {

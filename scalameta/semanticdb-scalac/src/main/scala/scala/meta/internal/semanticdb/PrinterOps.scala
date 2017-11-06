@@ -335,6 +335,18 @@ trait PrinterOps { self: DatabaseOps =>
         case _ => None
       }
     }
+    object ByNameType {
+      def unapply(arg: g.Type): Option[Type] =
+        if (definitions.isByNameParamType(arg)) {
+          arg match { case TypeRef(_, _, arg :: Nil) => Some(arg) }
+        } else None
+    }
+    object RepeatedType {
+      def unapply(arg: g.Type): Option[Type] =
+        if (definitions.isRepeatedParamType(arg)) {
+          arg match { case TypeRef(_, _, arg :: Nil) => Some(arg) }
+        } else None
+    }
     def printType(tpe: Type): Unit = {
       def wrapped[T](
           ts: List[T],
@@ -402,6 +414,12 @@ trait PrinterOps { self: DatabaseOps =>
         case ThisType(sym) =>
           this.print(ResolvedName(sym))
           this.print(".this.type")
+        case ByNameType(arg) =>
+          this.print("=>")
+          this.printType(arg)
+        case RepeatedType(arg) =>
+          this.printType(arg)
+          this.print("*")
         case TypeRef(pre, sym, args) =>
           pre match {
             case PathDependentPrefix(sym) =>
