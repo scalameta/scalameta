@@ -25,11 +25,14 @@ final case class Database(entries: List[Entry]) {
     s.Database(sentries)
   }
 
-  def save(): Unit = {
+  def save(): Unit = persist(append = false)
+
+  def append(): Unit = persist(append = true)
+
+  private def persist(append: Boolean): Unit = {
     entries.foreach(ventry => {
       val file = new File(ventry.uri)
-      file.getParentFile.mkdirs()
-      val fos = new FileOutputStream(file)
+      val fos = new FileOutputStream(file, append)
       try fos.write(ventry.bytes)
       finally fos.close()
     })

@@ -18,6 +18,10 @@ final case class Database(documents: Seq[Document]) {
     this.toSchema(sourceroot).toVfs(targetroot).save()
   }
 
+  def append(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
+    this.toSchema(sourceroot).toVfs(targetroot).append()
+  }
+
   def syntax: String = {
     val s_entries = documents.map { attrs =>
       val s_input = PathIO.toUnix(attrs.input.syntax)
