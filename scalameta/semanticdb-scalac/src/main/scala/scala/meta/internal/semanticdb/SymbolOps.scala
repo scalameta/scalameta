@@ -17,7 +17,8 @@ trait SymbolOps { self: DatabaseOps =>
       def isLocal(sym: g.Symbol): Boolean = {
         def definitelyGlobal = sym.hasPackageFlag
         def definitelyLocal =
-          sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
+          sym == g.NoSymbol ||
+            sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
             (sym.owner.isMethod && !sym.isParameter) ||
             ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter)
         !definitelyGlobal && (definitelyLocal || isLocal(sym.owner))

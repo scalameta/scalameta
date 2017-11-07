@@ -19,9 +19,6 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
         .getOrElse(global.settings.d.value)))
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
 
-  def isDisabled: Boolean =
-    config.mode.isDisabled
-
   def handleError(unit: g.CompilationUnit): PartialFunction[Throwable, Unit] = {
     case NonFatal(ex) =>
       val writer = new StringWriter()
@@ -47,12 +44,20 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
     def newPhase(_prev: Phase) = new ComputeSemanticdbPhase(_prev)
     class ComputeSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
-        if (isDisabled) return
         try {
           if (config.mode.isDisabled || !unit.source.file.name.endsWith(".scala")) return
-          val mattrs = unit.toDocument
-          unit.body.updateAttachment(mattrs)
+          val fullName = unit.source.file.file.getAbsolutePath
+          if (!fullName.matches(config.include) || fullName.matches(config.exclude)) return
+          val mdoc = unit.toDocument
+          val mdb = m.Database(List(mdoc))
+          mdb.save(scalametaTargetroot, config.sourceroot)
         } catch handleError(unit)
+      }
+
+      override def run(): Unit = {
+        timestampComputeStarted = System.nanoTime()
+        super.run()
+        timestampComputeFinished = System.nanoTime()
       }
     }
   }
@@ -66,18 +71,26 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
     def newPhase(_prev: Phase) = new PersistSemanticdbPhase(_prev)
     class PersistSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
-        if (isDisabled) return
+        if (config.mode.isDisabled) return
         try {
-          unit.body.attachments.get[m.Document].foreach { mattrs =>
-            unit.body.removeAttachment[m.Document]
-            val messages = unit.reportedMessages
-            val mminidb = m.Database(List(mattrs.copy(messages = messages)))
-            mminidb.save(scalametaTargetroot, config.sourceroot)
+          val messages = unit.reportedMessages
+          if (config.messages.saveMessages && messages.nonEmpty) {
+            val mdoc = org.langmeta.semanticdb.Document(
+              input = unit.source.toInput,
+              language = language,
+              names = Nil,
+              messages = messages,
+              symbols = Nil,
+              synthetics = Nil
+            )
+            val mminidb = m.Database(List(mdoc))
+            mminidb.append(scalametaTargetroot, config.sourceroot)
           }
         } catch handleError(unit)
       }
 
       override def run(): Unit = {
+        timestampPersistStarted = System.nanoTime()
         val vdb = v.Database.load(Classpath(scalametaTargetroot))
         val orphanedVentries = vdb.entries.filter(ventry => {
           val scalaName = v.SemanticdbPaths.toScala(ventry.fragment.name)
@@ -98,7 +111,37 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
           cleanupUpwards(ve.uri.toFile)
         })
         super.run()
+        timestampPersistFinished = System.nanoTime()
+        reportSemanticdbSummary()
       }
     }
+  }
+
+  private val timestampPluginCreated = System.nanoTime()
+  private var timestampComputeStarted = -1L
+  private var timestampComputeFinished = -1L
+  private var timestampPersistStarted = -1L
+  private var timestampPersistFinished = -1L
+
+  private def reportSemanticdbSummary(): Unit = {
+    val createdSemanticdbsMessage = {
+      val howMany = g.currentRun.units.length
+      val what = if (howMany == 1) "file" else "files"
+      var where = scalametaTargetroot.toString
+      where = where.stripSuffix("/").stripSuffix("/.")
+      where = where + "/META-INF/semanticdb"
+      s"Created $howMany semanticdb $what in $where"
+    }
+    val performanceOverheadMessage = {
+      val computeMs = (timestampComputeFinished - timestampComputeStarted) / 1000000
+      val persistMs = (timestampPersistFinished - timestampPersistStarted) / 1000000
+      val semanticdbMs = computeMs + persistMs
+      val totalMs = (timestampPersistFinished - timestampPluginCreated) / 1000000
+      val overhead = s"$computeMs+$persistMs=${semanticdbMs}ms performance overhead"
+      val pct = Math.floor(1.0 * semanticdbMs / totalMs * 100).toInt
+      s"At the cost of $overhead ($pct% of compilation time)"
+    }
+    if (config.profiling.isConsole) println(createdSemanticdbsMessage)
+    if (config.profiling.isConsole) println(performanceOverheadMessage)
   }
 }
