@@ -27,16 +27,17 @@ case class SemanticdbConfig(
       s"-P:${SemanticdbPlugin.name}:synthetics:${synthetics.name} "
 }
 object SemanticdbConfig {
-  def default = SemanticdbConfig(
-    PathIO.workingDirectory,
-    SemanticdbMode.Fat,
-    FailureMode.Warning,
-    DenotationMode.All,
-    ProfilingMode.Off,
-    ".*",
-    "",
-    MessageMode.All,
-    SyntheticMode.All)
+  def default =
+    SemanticdbConfig(
+      PathIO.workingDirectory,
+      SemanticdbMode.Fat,
+      FailureMode.Warning,
+      DenotationMode.All,
+      ProfilingMode.Off,
+      ".*",
+      "",
+      MessageMode.All,
+      SyntheticMode.All)
 }
 
 sealed abstract class SemanticdbMode {

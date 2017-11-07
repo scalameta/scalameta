@@ -7,7 +7,8 @@ trait MessageOps { self: DatabaseOps =>
   implicit class XtensionCompilationUnitMessages(unit: g.CompilationUnit) {
     def reportedMessages: List[m.Message] = {
       val mstarts = {
-        val x = unit.body.metadata.get("semanticdbMstarts").map(_.asInstanceOf[Map[Int, m.Position]])
+        val x =
+          unit.body.metadata.get("semanticdbMstarts").map(_.asInstanceOf[Map[Int, m.Position]])
         if (x.nonEmpty) unit.body.removeMetadata("semanticdbMstarts")
         x.getOrElse(Map.empty)
       }
