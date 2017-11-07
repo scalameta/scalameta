@@ -14,8 +14,6 @@ import scala.meta.internal.semanticdb.FailureMode
 import scala.meta.internal.semanticdb.MemberMode
 import scala.meta.internal.semanticdb.SemanticdbMode
 import scala.meta.testkit.DiffAssertions
-import scala.util.control.NonFatal
-import org.scalatest.exceptions.TestFailedException
 
 abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberMode.None)
     extends FunSuite
@@ -224,12 +222,11 @@ abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberM
     targeted(original, { db =>
       val obtained = db.symbols
         .collect {
-          case rs if rs.members.nonEmpty =>
-            s"${rs.symbol}{\n  ${rs.members.mkString("\n  ")}\n}"
+          case rs if rs.denotation.members.nonEmpty =>
+            s"${rs.symbol}{\n  ${rs.denotation.members.get.mkString("\n  ")}\n}"
         }
         .mkString("\n")
-
-      println(obtained)
+      // println(obtained)
       assertNoDiff(obtained, expected)
     })
   }

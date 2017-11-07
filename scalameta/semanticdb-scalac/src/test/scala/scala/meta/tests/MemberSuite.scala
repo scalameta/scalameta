@@ -41,13 +41,14 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
       |}
     """.stripMargin
   )
+
   symbols(
     """
       |import scala.util._
     """.stripMargin,
     """
       |_root_.scala. => package scala
-      |_root_.scala.util. => package util.{+72}
+      |_root_.scala.util. => package util.{+72 members}
     """.stripMargin
   )
 

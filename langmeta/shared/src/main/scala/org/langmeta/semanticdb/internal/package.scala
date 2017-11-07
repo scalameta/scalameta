@@ -57,7 +57,7 @@ package object semanticdb {
           }
           object sResolvedSymbol {
             def unapply(sresolvedsymbol: s.ResolvedSymbol): Option[d.ResolvedSymbol] = sresolvedsymbol match {
-              case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames)), members) =>
+              case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames, smembers))) =>
                 val ddefninput = dInput.Denotation(dsignature, dsym)
                 val dnames = snames.toIterator.map {
                   case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
@@ -130,16 +130,15 @@ package object semanticdb {
             }
           }
           object dDenotation {
-            def unapply(ddefn: d.Denotation): Option[s.Denotation] = ddefn match {
-              case d.Denotation(sflags, sname, ssignature, dnames) =>
+            def unapply(ddefn: d.Denotation): Option[s.Denotation] = {
+              import ddefn._
                 val snames = dnames.map {
                   case d.ResolvedName(org.langmeta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
                     s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
                   case other =>
                     sys.error(s"bad database: unsupported position $other")
                 }
-                Some(s.Denotation(sflags, sname, ssignature, snames))
-              case _ => None
+                Some(s.Denotation(flags, name, signature, snames))
             }
           }
           object dSynthetic {

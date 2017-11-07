@@ -14,6 +14,7 @@ trait DatabaseOps
     with PrinterOps
     with ReporterOps
     with ReflectionToolkit
-    with SymbolOps {
+    with SymbolOps
+    with TypeOps {
   val global: Global
 }

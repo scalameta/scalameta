@@ -36,7 +36,6 @@ trait DocumentOps { self: DatabaseOps =>
         val names = mutable.Map[m.Position, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
         val members = mutable.Map[m.Symbol, List[m.Signature]]()
-        val docstrings = mutable.Map[m.Symbol, String]()
         val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
         val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
         val todo = mutable.Set[m.Name]() // names to map to global trees
@@ -257,7 +256,6 @@ trait DocumentOps { self: DatabaseOps =>
               // Unfortunately, this is often not the case as demonstrated by a bunch of cases above and below.
               if (tryMpos(gstart, gend)) return
 
-              pprint.log(gtree)
               gtree match {
                 case gtree: g.ValDef if gtree.symbol == gtree.symbol.owner.thisSym =>
                   tryMstart(gstart)
@@ -448,7 +446,10 @@ trait DocumentOps { self: DatabaseOps =>
         }
         val symbols = denotations.map {
           case (sym, denot) =>
-            m.ResolvedSymbol(sym, denot, members.getOrElse(sym, Nil))
+            val denotationWithMembers = members.get(sym).fold(denot) { members =>
+              new m.Denotation(denot.flags, denot.name, denot.signature, denot.names, Some(members))
+            }
+            m.ResolvedSymbol(sym, denotationWithMembers)
         }.toList
 
         m.Document(
