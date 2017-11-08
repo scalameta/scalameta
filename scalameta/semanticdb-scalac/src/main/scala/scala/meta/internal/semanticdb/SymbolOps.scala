@@ -1,7 +1,6 @@
 package scala.meta.internal
 package semanticdb
 
-import scala.collection.immutable.ListSet
 import scala.{meta => m}
 import scala.meta.internal.inputs._
 

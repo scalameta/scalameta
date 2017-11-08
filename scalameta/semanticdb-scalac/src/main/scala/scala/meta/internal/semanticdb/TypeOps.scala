@@ -28,7 +28,7 @@ trait TypeOps { self: DatabaseOps =>
   )
 
   implicit class XtensionGTypeMSignatures(tpe: g.Type) {
-    def toMembers: List[m.Signature] = {
+    def lookupMembers: List[m.Signature] = {
       val buffer = List.newBuilder[m.Signature]
       tpe.members.iterator.filterNot(s => ignoreName(s.name)).foreach { s =>
         buffer += (

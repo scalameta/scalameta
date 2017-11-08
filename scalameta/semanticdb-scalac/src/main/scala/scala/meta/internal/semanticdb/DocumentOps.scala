@@ -232,7 +232,7 @@ trait DocumentOps { self: DatabaseOps =>
                   case gtree: g.Template =>
                     if (config.members.isAll) {
                       gtree.parents.foreach { parent =>
-                        members(parent.symbol.toSemantic) = parent.tpe.toMembers
+                        members(parent.symbol.toSemantic) = parent.tpe.lookupMembers
                       }
                     }
                     val gctor =
@@ -263,7 +263,7 @@ trait DocumentOps { self: DatabaseOps =>
                 // NOTE: never interested in synthetics except for the ones above
                 case gtree: g.PackageDef =>
                   if (config.members.isAll) {
-                    members(gtree.symbol.toSemantic) = gtree.pid.tpe.toMembers
+                    members(gtree.symbol.toSemantic) = gtree.pid.tpe.lookupMembers
                   }
                 // NOTE: capture PackageDef.pid instead
                 case gtree: g.ModuleDef if gtree.name == g.nme.PACKAGE =>
@@ -295,7 +295,7 @@ trait DocumentOps { self: DatabaseOps =>
                 case gtree: g.Import =>
                   val sels = gtree.selectors.flatMap { sel =>
                     if (sel.name == g.nme.WILDCARD && config.members.isAll) {
-                      members(gtree.expr.symbol.toSemantic) = gtree.expr.tpe.toMembers
+                      members(gtree.expr.symbol.toSemantic) = gtree.expr.tpe.lookupMembers
                       Nil
                     } else {
                       mstarts.get(sel.namePos).map(mname => (sel.name, mname))
