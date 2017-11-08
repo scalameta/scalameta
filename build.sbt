@@ -302,6 +302,7 @@ lazy val semanticdbIntegration = project
         "-Yrangepos",
         s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
         s"-P:semanticdb:failures:error", // fail fast during development.
+        s"-P:semanticdb:members:all",
         "-Xplugin-require:semanticdb"
       )
     }

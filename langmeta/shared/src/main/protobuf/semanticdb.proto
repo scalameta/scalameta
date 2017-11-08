@@ -51,6 +51,7 @@ message Denotation {
   string name = 2;
   string signature = 3;
   repeated ResolvedName names = 4;
+  repeated string members = 5;
 }
 
 message Synthetic {

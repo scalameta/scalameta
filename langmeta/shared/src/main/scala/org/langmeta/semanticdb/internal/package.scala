@@ -8,6 +8,7 @@ import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb.{schema => s}
 import org.langmeta.internal.semanticdb.{vfs => v}
 import org.langmeta.io._
+import org.langmeta.semanticdb.Signature
 import org.langmeta.{semanticdb => d}
 
 package object semanticdb {
@@ -57,7 +58,7 @@ package object semanticdb {
           }
           object sResolvedSymbol {
             def unapply(sresolvedsymbol: s.ResolvedSymbol): Option[d.ResolvedSymbol] = sresolvedsymbol match {
-              case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames))) =>
+              case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames, smembers))) =>
                 val ddefninput = dInput.Denotation(dsignature, dsym)
                 val dnames = snames.toIterator.map {
                   case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
@@ -66,7 +67,16 @@ package object semanticdb {
                   case other =>
                     sys.error(s"bad protobuf: unsupported name $other")
                 }.toList
-                val ddefn = d.Denotation(dflags, dname, dsignature, dnames)
+                val dmembers: Option[List[d.Signature]] =
+                  if (smembers.isEmpty) None
+                  else Some(
+                    smembers.toIterator.map { smember =>
+                      if (smember.endsWith("#")) d.Signature.Type(smember.stripSuffix("#"))
+                      else if (smember.endsWith(".")) d.Signature.Term(smember.stripSuffix("."))
+                      else sys.error(s"Unexpected signature $smember")
+                    }.toList
+                  )
+                val ddefn = d.Denotation(dflags, dname, dsignature, dnames, dmembers)
                 Some(d.ResolvedSymbol(dsym, ddefn))
               case other => sys.error(s"bad protobuf: unsupported denotation $other")
             }
@@ -130,16 +140,19 @@ package object semanticdb {
             }
           }
           object dDenotation {
-            def unapply(ddefn: d.Denotation): Option[s.Denotation] = ddefn match {
-              case d.Denotation(sflags, sname, ssignature, dnames) =>
-                val snames = dnames.map {
-                  case d.ResolvedName(org.langmeta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
-                    s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
-                  case other =>
-                    sys.error(s"bad database: unsupported position $other")
-                }
-                Some(s.Denotation(sflags, sname, ssignature, snames))
-              case _ => None
+            def unapply(ddefn: d.Denotation): Option[s.Denotation] = {
+              import ddefn._
+              val snames = ddefn.names.map {
+                case d.ResolvedName(org.langmeta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
+                  s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
+                case other =>
+                  sys.error(s"bad database: unsupported position $other")
+              }
+              val smembers = ddefn.members match {
+                case Some(dmembers) => dmembers.map(_.syntax)
+                case _ => Nil
+              }
+              Some(s.Denotation(flags, name, signature, snames, smembers))
             }
           }
           object dSynthetic {

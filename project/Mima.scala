@@ -5,6 +5,7 @@ import com.typesafe.tools.mima.core._
 object Mima {
   val ignoredABIProblems: Seq[ProblemFilter] = {
     Seq(
+      ProblemFilters.exclude[Problem]("org.langmeta.internal.*"),
       ProblemFilters.exclude[Problem]("scala.meta.internal.*"),
       ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.parsers.Parsed.*"),
       ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.tokenizers.Tokenized.*")

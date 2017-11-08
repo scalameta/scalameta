@@ -35,6 +35,7 @@ trait DocumentOps { self: DatabaseOps =>
         val binders = mutable.Set[m.Position]()
         val names = mutable.Map[m.Position, m.Symbol]()
         val denotations = mutable.Map[m.Symbol, m.Denotation]()
+        val members = mutable.Map[m.Symbol, List[m.Signature]]()
         val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
         val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
         val todo = mutable.Set[m.Name]() // names to map to global trees
@@ -230,6 +231,11 @@ trait DocumentOps { self: DatabaseOps =>
                 val mname = mctordefs(gstart)
                 gtree match {
                   case gtree: g.Template =>
+                    if (config.members.isAll) {
+                      gtree.parents.foreach { parent =>
+                        members(parent.symbol.toSemantic) = parent.tpe.lookupMembers
+                      }
+                    }
                     val gctor =
                       gtree.body.find(x => Option(x.symbol).exists(_.isPrimaryConstructor))
                     success(mname, gctor.map(_.symbol).getOrElse(g.NoSymbol))
@@ -257,6 +263,9 @@ trait DocumentOps { self: DatabaseOps =>
                 case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
                 // NOTE: never interested in synthetics except for the ones above
                 case gtree: g.PackageDef =>
+                  if (config.members.isAll) {
+                    members(gtree.symbol.toSemantic) = gtree.pid.tpe.lookupMembers
+                  }
                 // NOTE: capture PackageDef.pid instead
                 case gtree: g.ModuleDef if gtree.name == g.nme.PACKAGE =>
                   // TODO: if a package object comes first in the compilation unit
@@ -285,8 +294,14 @@ trait DocumentOps { self: DatabaseOps =>
                   if (prohibited(gtree.name.decoded)) return
                   tryMstart(gpoint)
                 case gtree: g.Import =>
-                  val sels = gtree.selectors.flatMap(sel =>
-                    mstarts.get(sel.namePos).map(mname => (sel.name, mname)))
+                  val sels = gtree.selectors.flatMap { sel =>
+                    if (sel.name == g.nme.WILDCARD && config.members.isAll) {
+                      members(gtree.expr.symbol.toSemantic) = gtree.expr.tpe.lookupMembers
+                      Nil
+                    } else {
+                      mstarts.get(sel.namePos).map(mname => (sel.name, mname))
+                    }
+                  }
                   sels.foreach {
                     case (gname, mname) =>
                       val import1 = gtree.expr.tpe.member(gname.toTermName)
@@ -430,13 +445,20 @@ trait DocumentOps { self: DatabaseOps =>
         val synthetics = inferred.toIterator.map {
           case (pos, inferred) => inferred.toSynthetic(input, pos)
         }
+        val symbols = denotations.map {
+          case (sym, denot) =>
+            val denotationWithMembers = members.get(sym).fold(denot) { members =>
+              new m.Denotation(denot.flags, denot.name, denot.signature, denot.names, Some(members))
+            }
+            m.ResolvedSymbol(sym, denotationWithMembers)
+        }.toList
 
         m.Document(
           input,
           language,
           names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,
           Nil, // added after jvm phase.
-          denotations.map { case (sym, denot) => m.ResolvedSymbol(sym, denot) }.toList,
+          symbols,
           synthetics.toList
         )
       })
