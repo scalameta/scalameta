@@ -9,7 +9,9 @@ trait ParseOps { self: DatabaseOps =>
     def toSource: m.Source = {
       val dialect =
         m.Dialect.standards.getOrElse(language, sys.error(s"unsupported dialect $language"))
-      unit.cache.getOrElse("source", dialect(unit.source.toInput).parse[m.Source].get)
+      // TODO(olafur) remove
+      // TODO(olafur) upgrade to 2.11.12
+      dialect(unit.source.toInput).parse[m.Source].get
     }
   }
 }
