@@ -450,7 +450,7 @@ trait DocumentOps { self: DatabaseOps =>
         val symbols = denotations.map {
           case (sym, denot) =>
             val denotationWithMembers = members.get(sym).fold(denot) { members =>
-              new m.Denotation(denot.flags, denot.name, denot.signature, denot.names, Some(members))
+              new m.Denotation(denot.flags, denot.name, denot.signature, denot.names, members)
             }
             m.ResolvedSymbol(sym, denotationWithMembers)
         }.toList

@@ -223,7 +223,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberM
       val obtained = db.symbols
         .collect {
           case rs if rs.denotation.members.nonEmpty =>
-            s"${rs.symbol}{\n  ${rs.denotation.members.get.mkString("\n  ")}\n}"
+            s"${rs.symbol}{\n  ${rs.denotation.members.mkString("\n  ")}\n}"
         }
         .mkString("\n")
       // println(obtained)
