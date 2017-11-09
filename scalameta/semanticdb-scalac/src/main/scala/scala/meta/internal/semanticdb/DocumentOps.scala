@@ -153,6 +153,8 @@ trait DocumentOps { self: DatabaseOps =>
                 // We cannot be guaranteed that all symbols have a position, see
                 // https://github.com/scalameta/scalameta/issues/665
                 // Instead of crashing with "unsupported file", we ignore these cases.
+                if (gsym0 == null) return
+                if (gsym0.isAnonymousClass) return
                 if (mtree.pos == m.Position.None) return
                 if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
