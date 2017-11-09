@@ -18,6 +18,15 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
         .map(_.file.getAbsolutePath)
         .getOrElse(global.settings.d.value)))
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
+  implicit class XtensionUnit(unit: g.CompilationUnit) {
+    def isIgnored: Boolean = {
+      config.mode.isDisabled ||
+      !unit.source.file.name.endsWith(".scala") || {
+        val fullName = unit.source.file.file.getAbsolutePath
+        !config.fileFilter.matches(fullName)
+      }
+    }
+  }
 
   def handleError(unit: g.CompilationUnit): PartialFunction[Throwable, Unit] = {
     case NonFatal(ex) =>
@@ -35,19 +44,17 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       }
   }
 
-  object ComputeSemanticdbComponent extends PluginComponent {
+  object SemanticdbTyperComponent extends PluginComponent {
     val global: SemanticdbPipeline.this.global.type = SemanticdbPipeline.this.global
     val runsAfter = List("typer")
     override val runsRightAfter = Some("typer")
-    val phaseName = "semanticdb-compute"
-    override val description = "compute semanticdb"
+    val phaseName = "semanticdb-typer"
+    override val description = "computes and persists semanticdb after typer"
     def newPhase(_prev: Phase) = new ComputeSemanticdbPhase(_prev)
     class ComputeSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
         try {
-          if (config.mode.isDisabled || !unit.source.file.name.endsWith(".scala")) return
-          val fullName = unit.source.file.file.getAbsolutePath
-          if (!config.fileFilter.matches(fullName)) return
+          if (unit.isIgnored) return
           val mdoc = unit.toDocument
           val mdb = m.Database(List(mdoc))
           mdb.save(scalametaTargetroot, config.sourceroot)
@@ -62,22 +69,32 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
     }
   }
 
-  object PersistSemanticdbComponent extends PluginComponent {
+  object SemanticdbJvmComponent extends PluginComponent {
     val global: SemanticdbPipeline.this.global.type = SemanticdbPipeline.this.global
     val runsAfter = List("jvm")
     override val runsRightAfter = Some("jvm")
-    val phaseName = "semanticdb-persist"
-    override val description = "persist semanticdb files"
+    val phaseName = "semanticdb-jvm"
+    override val description =
+      "compute and persist semanticdb information after typer (most commonly messages)"
     def newPhase(_prev: Phase) = new PersistSemanticdbPhase(_prev)
     class PersistSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
-        if (config.mode.isDisabled) return
+        if (unit.isIgnored) return
         try {
-          val messages = if (config.messages.saveMessages) unit.reportedMessages(Map.empty) else Nil
-          if (messages.nonEmpty) {
-            val mminidb = m.Database(List(m.Document(unit.source.toInput, language, Nil, messages, Nil, Nil)))
-            // TODO(olafur) append here
-            mminidb.save(scalametaTargetroot, config.sourceroot)
+          if (config.messages.saveMessages) {
+            val messages = unit.reportedMessages(Map.empty)
+            if (messages.nonEmpty) {
+              val mdoc = m.Document(
+                input = m.Input.File(unit.source.file.file),
+                language = language,
+                names = Nil,
+                messages = messages,
+                symbols = Nil,
+                synthetics = Nil
+              )
+              val mdb = m.Database(mdoc :: Nil)
+              mdb.append(scalametaTargetroot, config.sourceroot)
+            }
           }
         } catch handleError(unit)
       }

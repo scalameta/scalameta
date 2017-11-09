@@ -24,8 +24,8 @@ case class SemanticdbConfig(
       s"-P:${SemanticdbPlugin.name}:profiling:${profiling.name} " +
       s"-P:${SemanticdbPlugin.name}:include:${fileFilter.include} " +
       s"-P:${SemanticdbPlugin.name}:exclude:${fileFilter.exclude} "
-      s"-P:${SemanticdbPlugin.name}:messages:${messages.name} " +
-      s"-P:${SemanticdbPlugin.name}:synthetics:${synthetics.name} "
+  s"-P:${SemanticdbPlugin.name}:messages:${messages.name} " +
+    s"-P:${SemanticdbPlugin.name}:synthetics:${synthetics.name} "
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
@@ -37,7 +37,8 @@ object SemanticdbConfig {
     ProfilingMode.Off,
     FileFilter.matchEverything,
     MessageMode.All,
-    SyntheticMode.All)
+    SyntheticMode.All
+  )
 }
 
 sealed abstract class SemanticdbMode {
@@ -109,7 +110,7 @@ object ProfilingMode {
 case class FileFilter(include: Regex, exclude: Regex) {
   def matches(path: String): Boolean =
     include.findFirstIn(path).isDefined &&
-    exclude.findFirstIn(path).isEmpty
+      exclude.findFirstIn(path).isEmpty
 }
 object FileFilter {
   def apply(include: String, exclude: String): FileFilter =

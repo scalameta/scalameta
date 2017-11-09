@@ -16,7 +16,7 @@ class SemanticdbPlugin(val global: Global)
   hijackAnalyzer()
   hijackReporter()
   val components = {
-    if (isBatchCompiler) List(ComputeSemanticdbComponent, PersistSemanticdbComponent)
+    if (isBatchCompiler) List(SemanticdbTyperComponent, SemanticdbJvmComponent)
     else Nil
   }
 
