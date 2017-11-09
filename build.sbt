@@ -292,6 +292,7 @@ lazy val semanticdbScalac = project
     moduleName := "semanticdb-scalac-core",
     description := "Scala 2.x compiler plugin that generates semanticdb on compile",
     publishableSettings,
+    mimaPreviousArtifacts := Set.empty,
     isFullCrossVersion,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     exposePaths("semanticdb-scalac", Test)
