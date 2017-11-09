@@ -11,7 +11,6 @@ trait DocumentOps { self: DatabaseOps =>
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toDocument: m.Document = {
-      unit.cache.getOrElse("attributes", {
         if (!g.settings.Yrangepos.value) {
           sys.error("the compiler instance must have -Yrangepos enabled")
         }
@@ -470,7 +469,6 @@ trait DocumentOps { self: DatabaseOps =>
           symbols,
           synthetics.toList
         )
-      })
     }
   }
 
