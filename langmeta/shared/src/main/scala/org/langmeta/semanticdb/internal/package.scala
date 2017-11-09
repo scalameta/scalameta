@@ -67,15 +67,11 @@ package object semanticdb {
                   case other =>
                     sys.error(s"bad protobuf: unsupported name $other")
                 }.toList
-                val dmembers: Option[List[d.Signature]] =
-                  if (smembers.isEmpty) None
-                  else Some(
-                    smembers.toIterator.map { smember =>
-                      if (smember.endsWith("#")) d.Signature.Type(smember.stripSuffix("#"))
-                      else if (smember.endsWith(".")) d.Signature.Term(smember.stripSuffix("."))
-                      else sys.error(s"Unexpected signature $smember")
-                    }.toList
-                  )
+                val dmembers = smembers.toIterator.map { smember =>
+                  if (smember.endsWith("#")) d.Signature.Type(smember.stripSuffix("#"))
+                  else if (smember.endsWith(".")) d.Signature.Term(smember.stripSuffix("."))
+                  else sys.error(s"Unexpected signature $smember")
+                }.toList
                 val ddefn = d.Denotation(dflags, dname, dsignature, dnames, dmembers)
                 Some(d.ResolvedSymbol(dsym, ddefn))
               case other => sys.error(s"bad protobuf: unsupported denotation $other")
@@ -148,10 +144,7 @@ package object semanticdb {
                 case other =>
                   sys.error(s"bad database: unsupported position $other")
               }
-              val smembers = ddefn.members match {
-                case Some(dmembers) => dmembers.map(_.syntax)
-                case _ => Nil
-              }
+              val smembers = ddefn.members.map(_.syntax)
               Some(s.Denotation(flags, name, signature, snames, smembers))
             }
           }

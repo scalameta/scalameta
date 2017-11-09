@@ -9,15 +9,15 @@ final class Denotation(
     val name: String,
     val signature: String,
     val names: List[ResolvedName],
-    val members: Option[List[Signature]]
+    val members: List[Signature]
 ) extends HasFlags
     with Product
     with Serializable {
   def this(flags: Long, name: String, signature: String, names: List[ResolvedName]) =
-      this(flags, name, signature, names, None)
+      this(flags, name, signature, names, Nil)
 
   def syntax: String = {
-    val s_members = members.fold("")(members => s".{+${members.length} members}")
+    val s_members = if (members.isEmpty) "" else s".{+${members.length} members}"
     val s_info = if (signature != "") ": " + signature else ""
     val s_names = ResolvedName.syntax(names)
     // TODO(olafur) use more advances escaping.
@@ -65,7 +65,7 @@ final class Denotation(
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Denotation]
 }
 object Denotation extends AbstractFunction4[Long, String, String, List[ResolvedName], Denotation] {
-  def apply(flags: Long, name: String, signature: String, names: List[ResolvedName], members: Option[List[Signature]]): Denotation =
+  def apply(flags: Long, name: String, signature: String, names: List[ResolvedName], members: List[Signature]): Denotation =
     new Denotation(flags, name, signature, names, members)
   def apply(flags: Long, name: String, signature: String, names: List[ResolvedName]): Denotation =
     new Denotation(flags, name, signature, names)
