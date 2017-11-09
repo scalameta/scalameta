@@ -261,7 +261,7 @@ lazy val semanticdbScalacPlugin = project
   .in(file("scalameta/semanticdb-scalac-plugin"))
   .settings(
     moduleName := "semanticdb-scalac",
-    description := "Fatjar of semanticdbScalac",
+    description := "Scala 2.x compiler plugin that generates semanticdb on compile",
     publishableSettings,
     mergeSettings,
     isFullCrossVersion,
@@ -290,7 +290,7 @@ lazy val semanticdbScalac = project
   .in(file("scalameta/semanticdb-scalac"))
   .settings(
     moduleName := "semanticdb-scalac-core",
-    description := "Scala 2.x compiler plugin that generates semanticdb on compile",
+    description := "Library to generate semanticdb from Scala 2.x internal data structures",
     publishableSettings,
     mimaPreviousArtifacts := Set.empty,
     isFullCrossVersion,
