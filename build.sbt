@@ -257,16 +257,14 @@ lazy val scalameta = crossProject
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
-lazy val semanticdbScalac = project
-  .in(file("scalameta/semanticdb-scalac"))
+lazy val semanticdbScalacPlugin = project
+  .in(file("scalameta/semanticdb-scalac-plugin"))
   .settings(
     moduleName := "semanticdb-scalac",
-    description := "Scala 2.x compiler plugin that generates semanticdb on compile",
+    description := "Fatjar of semanticdbScalac",
     publishableSettings,
     mergeSettings,
     isFullCrossVersion,
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    exposePaths("semanticdb-scalac", Test),
     mimaPreviousArtifacts := Set.empty,
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
@@ -285,6 +283,19 @@ lazy val semanticdbScalac = project
       }).transform(node).head
     }
   )
+  .dependsOn(semanticdbScalac)
+
+
+lazy val semanticdbScalac = project
+  .in(file("scalameta/semanticdb-scalac"))
+  .settings(
+    moduleName := "semanticdb-scalac-core",
+    description := "Scala 2.x compiler plugin that generates semanticdb on compile",
+    publishableSettings,
+    isFullCrossVersion,
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+    exposePaths("semanticdb-scalac", Test)
+  )
   .dependsOn(scalametaJVM, testkit % Test)
 
 lazy val semanticdbIntegration = project
@@ -295,7 +306,7 @@ lazy val semanticdbIntegration = project
     nonPublishableSettings,
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions ++= {
-      val pluginJar = Keys.`package`.in(semanticdbScalac, Compile).value.getAbsolutePath
+      val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
       Seq(
         s"-Xplugin:$pluginJar",
         s"-Ywarn-unused-import",
