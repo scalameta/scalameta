@@ -170,6 +170,16 @@ package object semanticdb {
                 None
             }
           }
+          object dSeverity {
+            def unapply(dseverity: d.Severity): Option[s.Message.Severity] = {
+              dseverity match {
+                case d.Severity.Info => Some(s.Message.Severity.INFO)
+                case d.Severity.Warning => Some(s.Message.Severity.WARNING)
+                case d.Severity.Error => Some(s.Message.Severity.ERROR)
+                case _ => None
+              }
+            }
+          }
           object dDenotation {
             def unapply(ddefn: d.Denotation): Option[s.Denotation] = {
               import ddefn._
@@ -230,31 +240,4 @@ package object semanticdb {
     }
   }
 
-  implicit class XtensionMetaMessagesAppend(mmessages: List[d.Message]) {
-    private def toSchema: List[s.Message] = mmessages.collect {
-      case d.Message(pos, dSeverity(severity), msg) =>
-        s.Message(Some(s.Position(pos.start, pos.end)),severity, msg)
-    }
-    def append(filename: AbsolutePath, sourceroot: AbsolutePath, targetroot: AbsolutePath): Unit = {
-      val relpath = v.SemanticdbPaths.fromScala(filename.toRelative(sourceroot))
-      val semanticdbpath = targetroot.resolve(relpath)
-      val out = new RandomAccessFile(semanticdbpath.toFile, "rw")
-      try {
-        out.setLength(out.length() - 1)
-        s.Database().writeTo(???)
-        out.write(s.Database(s.Document(messages = toSchema) :: Nil).toByteArray)
-      } finally out.close()
-    }
-  }
-
-  private object dSeverity {
-    def unapply(dseverity: d.Severity): Option[s.Message.Severity] = {
-      dseverity match {
-        case d.Severity.Info => Some(s.Message.Severity.INFO)
-        case d.Severity.Warning => Some(s.Message.Severity.WARNING)
-        case d.Severity.Error => Some(s.Message.Severity.ERROR)
-        case _ => None
-      }
-    }
-  }
 }

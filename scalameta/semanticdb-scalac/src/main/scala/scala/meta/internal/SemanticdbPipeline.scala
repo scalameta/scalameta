@@ -75,7 +75,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
     override val runsRightAfter = Some("jvm")
     val phaseName = "semanticdb-jvm"
     override val description =
-      "compute and persist semanticdb information after typer (most commonly messages)"
+      "compute and persist additional semanticdb entries created after typer"
     def newPhase(_prev: Phase) = new PersistSemanticdbPhase(_prev)
     class PersistSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {

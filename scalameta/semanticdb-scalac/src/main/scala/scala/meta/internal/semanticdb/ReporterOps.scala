@@ -8,7 +8,7 @@ import scala.reflect.internal.util.{Position => gPosition}
 trait ReporterOps { self: DatabaseOps =>
   // Hack, keep track of how many messages we have returns for each path to avoid
   // duplicate messages. The key is System.identityHashCode to keep memory usage low.
-  private val returnedMessagesByPath = mutable.LongMap.empty[Int]
+  private val returnedMessagesByPath = mutable.Map.empty[g.CompilationUnit, Int]
   implicit class XtensionCompilationUnitReporter(unit: g.CompilationUnit) {
     def hijackedMessages: List[(gPosition, Int, String)] = {
       g.reporter match {
@@ -21,9 +21,8 @@ trait ReporterOps { self: DatabaseOps =>
             }
           }
           val infos = r.infos
-          val key = System.identityHashCode(unit).toLong
-          val toDrop = returnedMessagesByPath.getOrElse(key, 0)
-          returnedMessagesByPath.put(key, infos.size)
+          val toDrop = returnedMessagesByPath.getOrElse(unit, 0)
+          returnedMessagesByPath.put(unit, infos.size)
           infos.iterator
             .drop(toDrop) // drop messages that have been reported before.
             .collect {
