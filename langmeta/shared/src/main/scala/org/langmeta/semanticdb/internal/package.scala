@@ -18,6 +18,34 @@ import org.langmeta.{semanticdb => d}
 
 package object semanticdb {
   implicit class XtensionSchemaDatabase(sdatabase: s.Database) {
+
+    def mergeMessageOnlyDocuments: s.Database = {
+      // returns true if this document contains only messages and nothing else.
+      // deprecation messages are reported in refchecks and get persisted
+      // as standalone documents that need to be merged with their typer-phase
+      // document during loading. It seems there's no way to merge the documents
+      // during compilation without introducing a lot of memory pressure.
+      def isOnlyMessages(sdocument: s.Document): Boolean =
+        sdocument.messages.nonEmpty &&
+          sdocument.contents.isEmpty &&
+          sdocument.names.isEmpty &&
+          sdocument.synthetics.isEmpty &&
+          sdocument.symbols.isEmpty
+      if (sdatabase.documents.length <= 1) {
+        // NOTE(olafur) the most common case is that there is only a single database
+        // per document so we short-circuit here if that's the case.
+        sdatabase
+      } else {
+        sdatabase.documents match {
+          case Seq(doc, messages)
+            if doc.filename == messages.filename &&
+                isOnlyMessages(messages) =>
+            val x = doc.addMessages(messages.messages: _*)
+            s.Database(x :: Nil)
+          case _ => sdatabase
+        }
+      }
+    }
     def toVfs(targetroot: AbsolutePath): v.Database = {
       val ventries = sdatabase.documents.toIterator.map { sentry =>
         // TODO: Would it make sense to support multiclasspaths?
@@ -28,27 +56,6 @@ package object semanticdb {
         v.Entry.InMemory(fragment, bytes)
       }
       v.Database(ventries.toList)
-    }
-
-    private def sdocumentsMerged: Seq[s.Document] = {
-      def isOnlyMessages(sdocument: s.Document) =
-        sdocument.contents.isEmpty &&
-          sdocument.messages.nonEmpty &&
-          sdocument.names.isEmpty &&
-          sdocument.synthetics.isEmpty &&
-          sdocument.symbols.isEmpty
-      if (sdatabase.documents.length <= 1) {
-        // NOTE(olafur) the most common case is that there is only a single database
-        // per document so we short-circuit here if that's the case.
-        sdatabase.documents
-      }
-      else sdatabase.documents match {
-        // Some messages get reported in later phases like deprecation warnings.
-        // These get persisted
-        case Seq(doc, messages) if doc.filename == messages.filename && isOnlyMessages(messages) =>
-          doc.addMessages(messages.messages:_*) :: Nil
-        case _ => sdatabase.documents
-      }
     }
 
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.Document): d.Document = {
@@ -138,8 +145,7 @@ package object semanticdb {
 
 
     def toDb(sourcepath: Option[Sourcepath]): d.Database = {
-      val x = sdocumentsMerged
-      val dentries = x.toIterator.map { sdoc =>
+      val dentries = sdatabase.documents.toIterator.map { sdoc =>
         try {
           toDb(sourcepath, sdoc)
         } catch {
