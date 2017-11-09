@@ -463,7 +463,7 @@ trait DocumentOps { self: DatabaseOps =>
         input,
         language,
         names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,
-        Nil, // added in a separate phase.
+        unit.reportedMessages(mstarts),
         symbols,
         synthetics.toList
       )

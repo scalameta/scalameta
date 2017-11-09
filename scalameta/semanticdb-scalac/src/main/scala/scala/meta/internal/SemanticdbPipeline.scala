@@ -48,8 +48,9 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
           if (config.mode.isDisabled || !unit.source.file.name.endsWith(".scala")) return
           val fullName = unit.source.file.file.getAbsolutePath
           if (!config.fileFilter.matches(fullName)) return
-          val mattrs = unit.toDocument
-          unit.body.updateAttachment(mattrs)
+          val mdoc = unit.toDocument
+          val mdb = m.Database(List(mdoc))
+          mdb.save(scalametaTargetroot, config.sourceroot)
         } catch handleError(unit)
       }
 
@@ -72,10 +73,10 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       override def apply(unit: g.CompilationUnit): Unit = {
         if (config.mode.isDisabled) return
         try {
-          unit.body.attachments.get[m.Document].foreach { mattrs =>
-            unit.body.removeAttachment[m.Document]
-            val messages = if (config.messages.saveMessages) unit.reportedMessages else Nil
-            val mminidb = m.Database(List(mattrs.copy(messages = messages)))
+          val messages = if (config.messages.saveMessages) unit.reportedMessages(Map.empty) else Nil
+          if (messages.nonEmpty) {
+            val mminidb = m.Database(List(m.Document(unit.source.toInput, language, Nil, messages, Nil, Nil)))
+            // TODO(olafur) append here
             mminidb.save(scalametaTargetroot, config.sourceroot)
           }
         } catch handleError(unit)
