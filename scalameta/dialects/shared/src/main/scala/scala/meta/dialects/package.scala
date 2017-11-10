@@ -161,8 +161,8 @@ package object dialects {
   )
 
   implicit val Scala212 = Scala211.copy(
-    // NOTE: support for literal types is tentatively scheduled for 2.12.3
-    // https://github.com/scala/scala/pull/5310#issuecomment-290617202
+    // NOTE: support for literal types is tentatively scheduled for 2.12.5
+    // https://github.com/scala/scala/pull/5311#issuecomment-290617202
     allowLiteralTypes = false,
     allowTrailingCommas = true
   )

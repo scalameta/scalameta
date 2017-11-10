@@ -1,6 +1,11 @@
 package org.langmeta.internal
 
+import java.io.RandomAccessFile
 import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.OpenOption
+import java.nio.file.StandardOpenOption
+import scala.util.control.NonFatal
 import org.langmeta.inputs.{Input => dInput}
 import org.langmeta.inputs.{Position => dPosition}
 import org.langmeta.semanticdb.{Synthetic => dSynthetic}
@@ -13,6 +18,34 @@ import org.langmeta.{semanticdb => d}
 
 package object semanticdb {
   implicit class XtensionSchemaDatabase(sdatabase: s.Database) {
+
+    def mergeMessageOnlyDocuments: s.Database = {
+      // returns true if this document contains only messages and nothing else.
+      // deprecation messages are reported in refchecks and get persisted
+      // as standalone documents that need to be merged with their typer-phase
+      // document during loading. It seems there's no way to merge the documents
+      // during compilation without introducing a lot of memory pressure.
+      def isOnlyMessages(sdocument: s.Document): Boolean =
+        sdocument.messages.nonEmpty &&
+          sdocument.contents.isEmpty &&
+          sdocument.names.isEmpty &&
+          sdocument.synthetics.isEmpty &&
+          sdocument.symbols.isEmpty
+      if (sdatabase.documents.length <= 1) {
+        // NOTE(olafur) the most common case is that there is only a single database
+        // per document so we short-circuit here if that's the case.
+        sdatabase
+      } else {
+        sdatabase.documents match {
+          case Seq(doc, messages)
+            if doc.filename == messages.filename &&
+                isOnlyMessages(messages) =>
+            val x = doc.addMessages(messages.messages: _*)
+            s.Database(x :: Nil)
+          case _ => sdatabase
+        }
+      }
+    }
     def toVfs(targetroot: AbsolutePath): v.Database = {
       val ventries = sdatabase.documents.toIterator.map { sentry =>
         // TODO: Would it make sense to support multiclasspaths?
@@ -25,90 +58,102 @@ package object semanticdb {
       v.Database(ventries.toList)
     }
 
+    def toDb(sourcepath: Option[Sourcepath], sdoc: s.Document): d.Document = {
+      val s.Document(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
+      assert(sunixfilename.nonEmpty, "s.Document.filename must not be empty")
+      val sfilename = PathIO.fromUnix(sunixfilename)
+      val dinput = {
+        if (scontents == "") {
+          val uri =
+            sourcepath.getOrElse(sys.error("Sourcepath is required to load slim semanticdb."))
+                .find(RelativePath(sfilename))
+                .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
+          dInput.File(AbsolutePath(uri.getPath))
+        } else {
+          dInput.VirtualFile(sfilename.toString, scontents)
+        }
+      }
+      object sPosition {
+        def unapply(spos: s.Position): Option[dPosition] = {
+          Some(dPosition.Range(dinput, spos.start, spos.end))
+        }
+      }
+      object sSeverity {
+        def unapply(sseverity: s.Message.Severity): Option[d.Severity] = {
+          sseverity match {
+            case s.Message.Severity.INFO => Some(d.Severity.Info)
+            case s.Message.Severity.WARNING => Some(d.Severity.Warning)
+            case s.Message.Severity.ERROR => Some(d.Severity.Error)
+            case _ => None
+          }
+        }
+      }
+      object sResolvedSymbol {
+        def unapply(sresolvedsymbol: s.ResolvedSymbol): Option[d.ResolvedSymbol] = sresolvedsymbol match {
+          case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames, smembers))) =>
+            val ddefninput = dInput.Denotation(dsignature, dsym)
+            val dnames = snames.toIterator.map {
+              case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
+                val ddefnpos = dPosition.Range(ddefninput, sstart, send)
+                d.ResolvedName(ddefnpos, dsym, disDefinition)
+              case other =>
+                sys.error(s"bad protobuf: unsupported name $other")
+            }.toList
+            val dmembers: List[d.Signature] = smembers.toIterator.map { smember =>
+              if (smember.endsWith("#")) d.Signature.Type(smember.stripSuffix("#"))
+              else if (smember.endsWith(".")) d.Signature.Term(smember.stripSuffix("."))
+              else sys.error(s"Unexpected signature $smember")
+            }.toList
+            val ddefn = d.Denotation(dflags, dname, dsignature, dnames, dmembers)
+            Some(d.ResolvedSymbol(dsym, ddefn))
+          case other => sys.error(s"bad protobuf: unsupported denotation $other")
+        }
+      }
+      object sSynthetic {
+        def unapply(ssynthetic: s.Synthetic): Option[dSynthetic] = ssynthetic match {
+          case s.Synthetic(Some(sPosition(dpos)), dtext, snames) =>
+            val dnames = snames.toIterator.map {
+              case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
+                val dsyntheticinput = dInput.Synthetic(dtext, dpos.input, dpos.start, dpos.end)
+                val dsyntheticpos = dPosition.Range(dsyntheticinput, sstart, send)
+                d.ResolvedName(dsyntheticpos, dsym, disDefinition)
+              case other =>
+                sys.error(s"bad protobuf: unsupported name $other")
+            }.toList
+            Some(dSynthetic(dpos, dtext, dnames))
+        }
+      }
+      val dlanguage = slanguage
+      val dnames = snames.map {
+        case s.ResolvedName(Some(sPosition(dpos)), d.Symbol(dsym), disDefinition) => d.ResolvedName(dpos, dsym, disDefinition)
+        case other => sys.error(s"bad protobuf: unsupported name $other")
+      }.toList
+      val dmessages = smessages.map {
+        case s.Message(Some(sPosition(dpos)), sSeverity(dseverity), dmsg: String) =>
+          d.Message(dpos, dseverity, dmsg)
+        case other => sys.error(s"bad protobuf: unsupported message $other")
+      }.toList
+      val dsymbols = ssymbols.map {
+        case sResolvedSymbol(dresolvedsymbol) => dresolvedsymbol
+      }.toList
+      val dsynthetics = ssynthetics.toIterator.map {
+        case sSynthetic(dsynthetic) => dsynthetic
+        case other => sys.error(s"bad protobuf: unsupported synthetic $other")
+      }.toList
+      d.Document(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
+    }
+
+
     def toDb(sourcepath: Option[Sourcepath]): d.Database = {
-      val dentries = sdatabase.documents.toIterator.map {
-        case s.Document(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) =>
-          assert(sunixfilename.nonEmpty, "s.Document.filename must not be empty")
-          val sfilename = PathIO.fromUnix(sunixfilename)
-          val dinput = {
-            if (scontents == "") {
-              val uri =
-                sourcepath.getOrElse(sys.error("Sourcepath is required to load slim semanticdb."))
-                    .find(RelativePath(sfilename))
-                    .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
-              dInput.File(AbsolutePath(uri.getPath))
-            } else {
-              dInput.VirtualFile(sfilename.toString, scontents)
-            }
-          }
-          object sPosition {
-            def unapply(spos: s.Position): Option[dPosition] = {
-              Some(dPosition.Range(dinput, spos.start, spos.end))
-            }
-          }
-          object sSeverity {
-            def unapply(sseverity: s.Message.Severity): Option[d.Severity] = {
-              sseverity match {
-                case s.Message.Severity.INFO => Some(d.Severity.Info)
-                case s.Message.Severity.WARNING => Some(d.Severity.Warning)
-                case s.Message.Severity.ERROR => Some(d.Severity.Error)
-                case _ => None
-              }
-            }
-          }
-          object sResolvedSymbol {
-            def unapply(sresolvedsymbol: s.ResolvedSymbol): Option[d.ResolvedSymbol] = sresolvedsymbol match {
-              case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames, smembers))) =>
-                val ddefninput = dInput.Denotation(dsignature, dsym)
-                val dnames = snames.toIterator.map {
-                  case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
-                    val ddefnpos = dPosition.Range(ddefninput, sstart, send)
-                    d.ResolvedName(ddefnpos, dsym, disDefinition)
-                  case other =>
-                    sys.error(s"bad protobuf: unsupported name $other")
-                }.toList
-                val dmembers = smembers.toIterator.map { smember =>
-                  if (smember.endsWith("#")) d.Signature.Type(smember.stripSuffix("#"))
-                  else if (smember.endsWith(".")) d.Signature.Term(smember.stripSuffix("."))
-                  else sys.error(s"Unexpected signature $smember")
-                }.toList
-                val ddefn = d.Denotation(dflags, dname, dsignature, dnames, dmembers)
-                Some(d.ResolvedSymbol(dsym, ddefn))
-              case other => sys.error(s"bad protobuf: unsupported denotation $other")
-            }
-          }
-          object sSynthetic {
-            def unapply(ssynthetic: s.Synthetic): Option[dSynthetic] = ssynthetic match {
-              case s.Synthetic(Some(sPosition(dpos)), dtext, snames) =>
-                val dnames = snames.toIterator.map {
-                  case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
-                    val dsyntheticinput = dInput.Synthetic(dtext, dpos.input, dpos.start, dpos.end)
-                    val dsyntheticpos = dPosition.Range(dsyntheticinput, sstart, send)
-                    d.ResolvedName(dsyntheticpos, dsym, disDefinition)
-                  case other =>
-                    sys.error(s"bad protobuf: unsupported name $other")
-                }.toList
-              Some(dSynthetic(dpos, dtext, dnames))
-            }
-          }
-          val dlanguage = slanguage
-          val dnames = snames.map {
-            case s.ResolvedName(Some(sPosition(dpos)), d.Symbol(dsym), disDefinition) => d.ResolvedName(dpos, dsym, disDefinition)
-            case other => sys.error(s"bad protobuf: unsupported name $other")
-          }.toList
-          val dmessages = smessages.map {
-            case s.Message(Some(sPosition(dpos)), sSeverity(dseverity), dmsg: String) =>
-              d.Message(dpos, dseverity, dmsg)
-            case other => sys.error(s"bad protobuf: unsupported message $other")
-          }.toList
-          val dsymbols = ssymbols.map {
-            case sResolvedSymbol(dresolvedsymbol) => dresolvedsymbol
-          }.toList
-          val dsynthetics = ssynthetics.toIterator.map {
-            case sSynthetic(dsynthetic) => dsynthetic
-            case other => sys.error(s"bad protobuf: unsupported synthetic $other")
-          }.toList
-          d.Document(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
+      val dentries = sdatabase.documents.toIterator.map { sdoc =>
+        try {
+          toDb(sourcepath, sdoc)
+        } catch {
+          case NonFatal(e) =>
+            throw new IllegalArgumentException(
+              s"Error converting s.Document to m.Document where filename=${sdoc.filename}\n$sdoc",
+              e)
+        }
       }
       d.Database(dentries.toList)
     }
@@ -119,7 +164,7 @@ package object semanticdb {
         case d.Document(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
           object dPosition {
             def unapply(dpos: dPosition): Option[s.Position] = dpos match {
-              case org.langmeta.inputs.Position.Range(`dinput`, sstart, send) =>
+              case org.langmeta.inputs.Position.Range(_, sstart, send) =>
                 Some(s.Position(sstart, send))
               case _ =>
                 None
@@ -194,4 +239,5 @@ package object semanticdb {
       s.Database(sentries)
     }
   }
+
 }

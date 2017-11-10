@@ -1,21 +1,14 @@
 package scala.meta.internal.semanticdb
 
-import scala.collection.mutable
 import org.scalameta.unreachable
 import scala.{meta => m}
 
 trait MessageOps { self: DatabaseOps =>
   implicit class XtensionCompilationUnitMessages(unit: g.CompilationUnit) {
-    def reportedMessages: List[m.Message] = {
-      val mstarts = {
-        val x =
-          unit.body.metadata.get("semanticdbMstarts").map(_.asInstanceOf[mutable.Map[Int, m.Name]])
-        if (x.nonEmpty) unit.body.removeMetadata("semanticdbMstarts")
-        x.getOrElse(mutable.Map.empty)
-      }
+    def reportedMessages(mstarts: collection.Map[Int, m.Name]): List[m.Message] = {
       val messages = unit.hijackedMessages.map {
         case (gpos, gseverity, text) =>
-          val mpos = {
+          val mpos: m.Position = {
             // NOTE: The caret in unused import warnings points to Importee.pos, but
             // the message position start/end point to the enclosing Import.pos.
             // See https://github.com/scalameta/scalameta/issues/839
@@ -37,7 +30,6 @@ trait MessageOps { self: DatabaseOps =>
           }
           m.Message(mpos, mseverity, text)
       }
-      mstarts.clear()
       messages
     }
   }

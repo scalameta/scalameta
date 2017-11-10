@@ -82,8 +82,8 @@ abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberM
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    val mattrs = unit.toDocument.copy(messages = unit.reportedMessages)
-    m.Database(List(mattrs))
+    val mdoc = unit.toDocument
+    m.Database(List(mdoc))
   }
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {

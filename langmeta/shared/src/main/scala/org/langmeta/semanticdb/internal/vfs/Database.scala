@@ -20,16 +20,16 @@ final case class Database(entries: List[Entry]) {
   def toSchema: s.Database = {
     val sentries = entries.flatMap { ventry =>
       val sdb = s.Database.parseFrom(ventry.bytes)
-      sdb.documents
+      sdb.mergeMessageOnlyDocuments.documents
     }
     s.Database(sentries)
   }
 
-  def save(): Unit = {
+  def save(append: Boolean): Unit = {
     entries.foreach(ventry => {
       val file = new File(ventry.uri)
       file.getParentFile.mkdirs()
-      val fos = new FileOutputStream(file)
+      val fos = new FileOutputStream(file, append)
       try fos.write(ventry.bytes)
       finally fos.close()
     })

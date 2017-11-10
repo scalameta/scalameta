@@ -15,7 +15,10 @@ final case class Database(documents: Seq[Document]) {
   lazy val synthetics: Seq[Synthetic] = documents.flatMap(_.synthetics)
 
   def save(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
-    this.toSchema(sourceroot).toVfs(targetroot).save()
+    this.toSchema(sourceroot).toVfs(targetroot).save(append = false)
+  }
+  def append(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
+    this.toSchema(sourceroot).toVfs(targetroot).save(append = true)
   }
 
   def syntax: String = {
@@ -46,7 +49,7 @@ object Database {
 
   def load(bytes: Array[Byte]): Database = {
     val sdb = s.Database.parseFrom(bytes)
-    val mdb = sdb.toDb(None)
+    val mdb = sdb.mergeMessageOnlyDocuments.toDb(None)
     mdb
   }
 }
