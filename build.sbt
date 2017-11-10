@@ -273,7 +273,7 @@ lazy val semanticdbScalacPlugin = project
             node.label == "artifactId" && fn(node.text)
           node.label == "dependency" && node.child.exists(child =>
             isArtifactId(child, _.startsWith("langmeta-")) ||
-            isArtifactId(child, _.startsWith("scalameta_")))
+            isArtifactId(child, _.startsWith("semanticdb")))
         }
         override def transform(node: XmlNode): XmlNodeSeq = node match {
           case e: Elem if isAbsorbedDependency(node) =>
