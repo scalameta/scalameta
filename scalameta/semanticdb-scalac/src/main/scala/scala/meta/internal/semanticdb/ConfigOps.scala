@@ -23,9 +23,9 @@ case class SemanticdbConfig(
       s"-P:${SemanticdbPlugin.name}:denotations:${denotations.name} " +
       s"-P:${SemanticdbPlugin.name}:profiling:${profiling.name} " +
       s"-P:${SemanticdbPlugin.name}:include:${fileFilter.include} " +
-      s"-P:${SemanticdbPlugin.name}:exclude:${fileFilter.exclude} "
-  s"-P:${SemanticdbPlugin.name}:messages:${messages.name} " +
-    s"-P:${SemanticdbPlugin.name}:synthetics:${synthetics.name} "
+      s"-P:${SemanticdbPlugin.name}:exclude:${fileFilter.exclude} " +
+      s"-P:${SemanticdbPlugin.name}:messages:${messages.name} " +
+      s"-P:${SemanticdbPlugin.name}:synthetics:${synthetics.name} "
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(

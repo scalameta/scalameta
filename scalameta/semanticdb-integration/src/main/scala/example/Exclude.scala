@@ -1,4 +1,4 @@
 package exclude
 
-// This class should not be excluded by semanticdb.
+// This class should be excluded by semanticdb.
 class Exclude
