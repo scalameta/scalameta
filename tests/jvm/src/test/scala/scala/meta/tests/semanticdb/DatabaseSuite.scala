@@ -1,6 +1,7 @@
 package scala.meta.tests
 package semanticdb
 
+import org.langmeta.internal.semanticdb.{schema => s}
 import org.scalatest._
 import java.io.{File, PrintWriter}
 import scala.reflect.io._
@@ -54,7 +55,8 @@ abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberM
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
     finally writer.close()
-    databaseOps.config.setSourceroot(AbsolutePath(javaFile.getParentFile))
+    val sourceroot = AbsolutePath(javaFile.getParentFile)
+    databaseOps.config.setSourceroot(sourceroot)
     val run = new g.Run
     val abstractFile = AbstractFile.getFile(javaFile)
     val sourceFile = g.getSourceFile(abstractFile)
@@ -83,13 +85,13 @@ abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberM
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    val mdoc = unit.toDocument
-    m.Database(List(mdoc))
+    val mdb = s.Database(unit.toDocument :: Nil).toDb(None)
+    mdb
   }
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
     val database = computeDatabaseFromSnippet(code)
-    val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
+    val path = g.currentRun.units.toList.last.source.file.file.getName
     val payload = database.toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
     // println(section.mkString(EOL).replace(path, "<...>"))
@@ -153,6 +155,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberM
         symbols match {
           case Nil => sys.error(chevron + " does not wrap a name")
           case List(Some(symbol)) => symbol
+          case List(None) => sys.error(s"Name $chevron resolves to no symbol")
           case _ => sys.error("fatal error processing " + chevron)
         }
     }

@@ -8,6 +8,7 @@ import scala.meta.internal.io._
 import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSourceFile}
 import scala.reflect.io.VirtualFile
 import scala.reflect.io.{PlainFile => GPlainFile}
+import org.langmeta.internal.semanticdb.{schema => s}
 
 trait InputOps { self: DatabaseOps =>
 
@@ -41,6 +42,10 @@ trait InputOps { self: DatabaseOps =>
   }
 
   implicit class XtensionGPositionMPosition(pos: GPosition) {
+    def toSchema: s.Position = {
+      val mpos = toMeta
+      s.Position(mpos.start, mpos.end)
+    }
     def toMeta: m.Position = {
       // NOTE: Even with -Yrangepos enabled we cannot be guaranteed that all positions are
       // range positions. In the case we encounter a non-range position we assume start == end.

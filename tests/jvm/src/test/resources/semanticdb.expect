@@ -4,7 +4,7 @@ Language:
 Scala212
 
 Names:
-[8..15): example <= _root_.example.
+[8..15): example => _root_.example.
 [24..29): scala => _root_.scala.
 [30..40): concurrent => _root_.scala.concurrent.
 [41..47): Future => _root_.scala.concurrent.Future.;_root_.scala.concurrent.Future#
@@ -14,7 +14,6 @@ Names:
 [89..96): mutable => _root_.scala.collection.mutable.
 [97..102): Stack => _root_.scala.collection.mutable.Stack#
 [103..106): Int => _root_.scala.Int#
-[107..107): ε => _root_.scala.collection.mutable.Stack#`<init>`()V.
 [116..120): main <= _root_.example.Example.main([Ljava/lang/String;)V.
 [121..125): args <= _root_.example.Example.main([Ljava/lang/String;)V.(args)
 [127..132): Array => _root_.scala.Array#
@@ -29,7 +28,6 @@ Names:
 
 Messages:
 [41..47): [warning] Unused import
-[72..107): [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 Symbols:
 _root_.example. => package example.{+2 members}
@@ -64,9 +62,6 @@ _root_.scala.Unit#`<init>`()V. => primaryctor <init>: (): Unit
 _root_.scala.collection. => package collection
 _root_.scala.collection.mutable. => package mutable
 _root_.scala.collection.mutable.Stack# => class Stack
-_root_.scala.collection.mutable.Stack#`<init>`()V. => secondaryctor <init>: (): Stack[A]
-  [4..9): Stack => _root_.scala.collection.mutable.Stack#
-  [10..11): A => _root_.scala.collection.mutable.Stack#[A]
 _root_.scala.collection.mutable.Stack#`<init>`(Lscala/collection/immutable/List;)V. => private primaryctor <init>: (elems: List[A]): Stack[A]
   [8..12): List => _root_.scala.collection.immutable.List#
   [13..14): A => _root_.scala.collection.mutable.Stack#[A]
@@ -94,9 +89,8 @@ Language:
 Scala212
 
 Names:
-[8..15): example <= _root_.example.
+[8..15): example => _root_.example.
 [23..32): Synthetic <= _root_.example.Synthetic#
-[33..33): ε <= _root_.example.Synthetic#`<init>`()V.
 [37..41): List => _root_.scala.collection.immutable.List.
 [45..48): map => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
 [51..52): + => _root_.scala.Int#`+`(I)I.

@@ -1,6 +1,7 @@
 package scala.meta.internal
 package semanticdb
 
+import org.langmeta.internal.semanticdb.{schema => s}
 import scala.{meta => m}
 import scala.{meta => mf}
 import scala.reflect.internal.{Flags => gf}
@@ -88,26 +89,23 @@ trait DenotationOps { self: DatabaseOps =>
       gsym.decodedName.toString
     }
 
-    private def info: (String, List[m.ResolvedName]) = {
+    private def info: (String, List[s.ResolvedName]) = {
       if (gsym.isClass || gsym.isModule) "" -> Nil
       else {
         val synthetic = showSynthetic(gsym.info)
         val input = m.Input.Denotation(synthetic.text, gsym.toSemantic)
         val names = synthetic.names.toIterator.map {
           case SyntheticRange(start, end, syntheticSymbol) =>
-            m.ResolvedName(
-              m.Position.Range(input, start, end),
-              syntheticSymbol,
-              isDefinition = false)
+            s.ResolvedName(Some(s.Position(start, end)), syntheticSymbol)
         }.toArray
-        Sorting.quickSort(names)(Ordering.by[m.ResolvedName, Int](_.position.start))
+        Sorting.quickSort(names)(Ordering.by[s.ResolvedName, Int](_.position.fold(-1)(_.start)))
         synthetic.text -> names.toList
       }
     }
 
-    def toDenotation: m.Denotation = {
+    def toDenotation: s.Denotation = {
       val (minfo, mnames) = info
-      m.Denotation(flags, name, minfo, mnames)
+      s.Denotation(flags, name, minfo, mnames)
     }
   }
 }

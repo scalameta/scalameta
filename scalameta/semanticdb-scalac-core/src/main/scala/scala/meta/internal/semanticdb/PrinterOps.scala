@@ -24,7 +24,7 @@ trait PrinterOps { self: DatabaseOps =>
     val printer = SyntheticCodePrinter(out)
     printer.print(what)
     val names = printer.names.map {
-      case ((start, end), symbol) => SyntheticRange(start, end, symbol)
+      case ((start, end), symbol) => SyntheticRange(start, end, symbol.syntax)
     }.toList
     printer.names.clear()
     val syntax = out.toString

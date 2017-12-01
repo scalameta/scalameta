@@ -10,6 +10,7 @@ import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.reporters.StoreReporter
 import scala.meta.semanticdb.Document
+import org.langmeta.internal.semanticdb.schema.Database
 
 object InteractiveSemanticdb {
 
@@ -70,7 +71,7 @@ object InteractiveSemanticdb {
     import databaseOps._
     unit.body = tree
     val document = unit.asInstanceOf[databaseOps.global.CompilationUnit].toDocument
-    document
+    Database(document :: Nil).toDb(None).documents.head
   }
 
   /**
