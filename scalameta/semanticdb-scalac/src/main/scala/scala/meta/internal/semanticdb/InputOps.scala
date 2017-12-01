@@ -6,6 +6,7 @@ import scala.collection.mutable
 import scala.{meta => m}
 import scala.meta.internal.io._
 import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSourceFile}
+import scala.reflect.io.VirtualFile
 import scala.reflect.io.{PlainFile => GPlainFile}
 
 trait InputOps { self: DatabaseOps =>
@@ -31,6 +32,8 @@ trait InputOps { self: DatabaseOps =>
               case Disabled =>
                 m.Input.None
             }
+          case gfile: VirtualFile =>
+            m.Input.VirtualFile(gfile.path, gsource.content.mkString)
           case other =>
             m.Input.None
         }

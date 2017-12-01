@@ -16,7 +16,7 @@ trait ReflectionToolkit {
   lazy val isDocCompiler = global.isInstanceOf[ScaladocGlobal]
   lazy val isReplCompiler = global.isInstanceOf[ReplGlobal]
   lazy val isInteractiveCompiler = global.isInstanceOf[InteractiveGlobal]
-  lazy val isBatchCompiler = !isDocCompiler && !isReplCompiler && !isInteractiveCompiler
+  lazy val isSupportedCompiler = !isDocCompiler && !isReplCompiler
 
   // NOTE: this boilerplate is unfortunately necessary, because we don't expose Attachable in the public API
   trait Attachable[-T] {

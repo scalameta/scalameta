@@ -55,6 +55,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       override def apply(unit: g.CompilationUnit): Unit = {
         try {
           if (unit.isIgnored) return
+          validateCompilerState()
           val mdoc = unit.toDocument
           val mdb = m.Database(List(mdoc))
           mdb.save(scalametaTargetroot, config.sourceroot)

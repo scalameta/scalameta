@@ -3,7 +3,7 @@ package scala.meta.internal
 trait HijackReporter { self: SemanticdbPlugin =>
 
   def hijackReporter(): Unit = {
-    if (!isBatchCompiler) return
+    if (!isSupportedCompiler) return
 
     g.reporter match {
       case _: SemanticdbReporter => // do nothing, already hijacked

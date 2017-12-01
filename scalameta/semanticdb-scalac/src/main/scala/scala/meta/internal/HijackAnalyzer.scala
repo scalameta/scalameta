@@ -8,7 +8,7 @@ import scala.tools.nsc.typechecker.SemanticdbAnalyzer
 trait HijackAnalyzer extends SemanticdbAnalyzer { self: SemanticdbPlugin =>
 
   def hijackAnalyzer(): Unit = {
-    if (!isBatchCompiler) return
+    if (!isSupportedCompiler) return
 
     val oldMacroPlugins = {
       val macroPluginsGetter =
