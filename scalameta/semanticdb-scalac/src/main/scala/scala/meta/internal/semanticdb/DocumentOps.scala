@@ -8,29 +8,30 @@ import scala.{meta => m}
 import scala.meta.internal.inputs._
 
 trait DocumentOps { self: DatabaseOps =>
+  def validateCompilerState(): Unit = {
+    if (!g.settings.Yrangepos.value) {
+      sys.error("the compiler instance must have -Yrangepos enabled")
+    }
+    if (g.useOffsetPositions) {
+      sys.error("The compiler instance must use range positions")
+    }
+    if (!g.settings.plugin.value.exists(_.contains("semanticdb"))) {
+      sys.error("the compiler instance must use the semanticdb plugin")
+    }
+    if (!g.analyzer.getClass.getName.contains("HijackAnalyzer")) {
+      println(g.analyzer.getClass.getName)
+      sys.error("the compiler instance must use a hijacked analyzer")
+    }
+    if (g.phase.id < g.currentRun.phaseNamed("typer").id) {
+      sys.error("the compiler phase must be not earlier than typer")
+    }
+    if (g.phase.id > g.currentRun.phaseNamed("patmat").id) {
+      sys.error("the compiler phase must be not later than patmat")
+    }
+  }
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toDocument: m.Document = {
-      if (!g.settings.Yrangepos.value) {
-        sys.error("the compiler instance must have -Yrangepos enabled")
-      }
-      if (g.useOffsetPositions) {
-        sys.error("The compiler instance must use range positions")
-      }
-      if (!g.settings.plugin.value.exists(_.contains("semanticdb"))) {
-        sys.error("the compiler instance must use the semanticdb plugin")
-      }
-      if (!g.analyzer.getClass.getName.contains("HijackAnalyzer")) {
-        println(g.analyzer.getClass.getName)
-        sys.error("the compiler instance must use a hijacked analyzer")
-      }
-      if (g.phase.id < g.currentRun.phaseNamed("typer").id) {
-        sys.error("the compiler phase must be not earlier than typer")
-      }
-      if (g.phase.id > g.currentRun.phaseNamed("patmat").id) {
-        sys.error("the compiler phase must be not later than patmat")
-      }
-
       val binders = mutable.Set[m.Position]()
       val names = mutable.Map[m.Position, m.Symbol]()
       val denotations = mutable.Map[m.Symbol, m.Denotation]()
