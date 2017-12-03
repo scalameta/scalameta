@@ -1,5 +1,6 @@
 package org.langmeta.sqlite
 
+import java.io._
 import java.nio.file._
 import java.sql._
 import scala.Array
@@ -190,9 +191,11 @@ object Main {
         } finally {
           conn.commit()
           conn.close()
-          val appElapsed = (System.nanoTime() - appStart) * 1.0 / 1000000000
-          val appPerformance = genuineDocuments / appElapsed
-          println(s"Elapsed: ${"%.3f".format(appElapsed)}s")
+          val appCPU = (System.nanoTime() - appStart) * 1.0 / 1000000000
+          val appDisk = new File(sqliteFilename).length * 1.0 / 1024 / 1024
+          val appPerformance = genuineDocuments / appCPU
+          println(s"CPU time: ${"%.3f".format(appCPU)}s")
+          println(s"Disk size: ${"%.1f".format(appDisk)} MB")
           println(s"Performance: ${"%.3f".format(appPerformance)} documents/s")
         }
       case _ =>
