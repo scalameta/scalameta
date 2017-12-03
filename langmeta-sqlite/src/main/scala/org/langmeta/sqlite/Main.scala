@@ -13,7 +13,8 @@ object Main {
     args match {
       case Array(sqliteFilename, semanticdbFilenames @ _*) =>
         val appStart = System.nanoTime()
-        val docsToPaths = mutable.Map[String, Path]()
+        class Counter { var value = 0; def next() = { value += 1; value }; }
+        var documentId = new Counter()
         val sqlitePath = Paths.get(sqliteFilename)
         if (Files.exists(sqlitePath)) sys.error(s"$sqlitePath already exists")
         val conn = DriverManager.getConnection(s"jdbc:sqlite:$sqliteFilename")
@@ -31,58 +32,93 @@ object Main {
             val columnCount = rsmd.getColumnCount()
             val columnNames = 1.to(columnCount).map(rsmd.getColumnName)
             val s_columns = "(" + columnNames.mkString(", ") + ")"
-            val columnValues = "?" * columnCount
+            val columnValues = "?" * columnNames.length
             val s_values = "(" + columnValues.mkString(", ") + ")"
             val sql = s"insert into $table $s_columns values $s_values"
             conn.prepareStatement(sql)
           }
-          val namesStmt = tableInsertStmt("names")
+          val documentStmt = tableInsertStmt("document")
+          val nameStmt = tableInsertStmt("name")
+          val symbolStmt = tableInsertStmt("symbol")
 
           val semanticdbStart = System.nanoTime()
-          var nameCount = 0
-          var messageCount = 0
-          var symbolCount = 0
-          val syntheticCount = 0
+          val documentsToPaths = mutable.Map[String, Path]()
+          var nameId = new Counter()
+          var messageId = new Counter()
+          var _symbolId = new Counter()
+          var symbolIds = mutable.Map[String, Int]()
+          var symbolTodo = mutable.Map[Int, String]()
+          def symbolId(symbol: String): Int = {
+            if (symbolIds.contains(symbol)) {
+              symbolIds(symbol)
+            } else {
+              val symbolId = _symbolId.next()
+              symbolIds(symbol) = symbolId
+              symbolTodo(symbolId) = symbol
+              symbolId
+            }
+          }
+          val syntheticId = new Counter()
+
           semanticdbFilenames.foreach { semanticdbFilename =>
             val path = Paths.get(semanticdbFilename)
             val bytes = Files.readAllBytes(path)
             val db = Database.parseFrom(bytes)
-            db.documents.foreach { doc =>
-              docsToPaths.get(doc.filename) match {
+            db.documents.foreach { document =>
+              documentsToPaths.get(document.filename) match {
                 case Some(existingPath) =>
-                  val what = doc.filename
+                  val what = document.filename
                   val details = "both $existingPath and $path"
                   println(s"Duplicate document filename $what in $details")
                 case None =>
-                  docsToPaths(doc.filename) = path
-                  doc.names.foreach { name =>
-                    nameCount += 1
-                    namesStmt.setString(1, doc.filename)
-                    namesStmt.setInt(2, name.position.get.start)
-                    namesStmt.setInt(3, name.position.get.end)
-                    namesStmt.setString(4, name.symbol)
-                    namesStmt.setBoolean(5, name.isDefinition)
-                    namesStmt.executeUpdate()
+                  documentsToPaths(document.filename) = path
+                  documentStmt.setInt(1, documentId.next)
+                  documentStmt.setString(2, document.filename)
+                  documentStmt.setString(3, document.contents)
+                  documentStmt.setString(4, document.language)
+                  documentStmt.executeUpdate()
+
+                  document.names.foreach { name =>
+                    nameStmt.setInt(1, nameId.next)
+                    nameStmt.setInt(2, documentId.value)
+                    nameStmt.setInt(3, name.position.get.start)
+                    nameStmt.setInt(4, name.position.get.end)
+                    nameStmt.setInt(5, symbolId(name.symbol))
+                    nameStmt.setBoolean(6, name.isDefinition)
+                    nameStmt.executeUpdate()
                   }
-                  if ((docsToPaths.size % 1000) == 0) {
+
+                  if ((documentId.value % 1000) == 0) {
                     val semanticdbElapsed = System.nanoTime() - semanticdbStart
                     val buf = new StringBuilder
-                    buf.append(s"${docsToPaths.size} docs: ")
-                    buf.append(s"$nameCount names, ")
-                    buf.append(s"$messageCount messages, ")
-                    buf.append(s"$symbolCount symbols, ")
-                    buf.append(s"$syntheticCount synthetics")
+                    buf.append(s"${documentId.value} documents: ")
+                    buf.append(s"${nameId.value} names, ")
+                    buf.append(s"${messageId.value} messages, ")
+                    buf.append(s"${_symbolId.value} symbols, ")
+                    buf.append(s"${syntheticId.value} synthetics")
                     buf.append(s" (~${semanticdbElapsed / 1000000000}s) ")
                     println(buf.toString)
                   }
               }
             }
           }
+
+          // NOTE: Remaining symbols that haven't yet been mentioned
+          // in document.symbols must be flushed using default metadata.
+          symbolTodo.foreach {
+            case (symbolId, symbol) =>
+              symbolStmt.setInt(1, symbolId)
+              symbolStmt.setString(2, symbol)
+              symbolStmt.setInt(3, 0)
+              symbolStmt.setString(4, null)
+              symbolStmt.setInt(5, 0)
+              symbolStmt.executeUpdate()
+          }
         } finally {
           conn.commit()
           conn.close()
           val appElapsed = (System.nanoTime() - appStart) * 1.0 / 1000000000
-          val appPerformance = docsToPaths.size / appElapsed
+          val appPerformance = documentId.value / appElapsed
           println(s"Elapsed: ${"%.3f".format(appElapsed)}s")
           println(s"Performance: ${"%.3f".format(appPerformance)} docs/s")
         }
