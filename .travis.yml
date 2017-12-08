@@ -25,7 +25,7 @@ env:
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.12.4
       CI_SCALA_JS: true
-    - CI_TEST: ci-langmeta
+    - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.10.6
       CI_PUBLISH: true
     - CI_TEST: mima

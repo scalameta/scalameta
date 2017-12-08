@@ -28,7 +28,7 @@ class ExpectSuite extends FunSuite with DiffAssertions {
 
 object SemanticdbExpectSuite {
   val expectPath: Path =
-    Paths.get("scalameta", "tests", "jvm", "src", "test", "resources", "semanticdb.expect")
+    Paths.get("tests", "jvm", "src", "test", "resources", "semanticdb.expect")
   def loadDatabase: Database = {
     val database = Database.load(Classpath(BuildInfo.databaseClasspath))
     val sorted = Database(database.documents.sortBy(_.input.syntax))
