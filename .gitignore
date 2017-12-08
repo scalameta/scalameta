@@ -28,7 +28,7 @@ project/plugins/project/
 *.actual
 secrets.yml
 
-repos.tar.gz
+repos.tar.gz*
 
 .classpath
 .settings
