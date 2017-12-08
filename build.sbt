@@ -230,8 +230,8 @@ lazy val scalameta = crossProject
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
-lazy val semanticdbScalac = project
-  .in(file("scalameta/semanticdb-scalac"))
+lazy val semanticdbScalacCore = project
+  .in(file("scalameta/semanticdb-scalac-core"))
   .settings(
     moduleName := "semanticdb-scalac-core",
     description := "Library to generate semanticdb from Scala 2.x internal data structures",
@@ -268,7 +268,7 @@ lazy val semanticdbScalacPlugin = project
       }).transform(node).head
     }
   )
-  .dependsOn(semanticdbScalac)
+  .dependsOn(semanticdbScalacCore)
 
 lazy val semanticdbIntegration = project
   .in(file("scalameta/semanticdb-integration"))
@@ -326,7 +326,7 @@ lazy val tests = crossProject
     ),
     buildInfoPackage := "scala.meta.tests"
   )
-  .jvmConfigure(_.dependsOn(testkit, semanticdbScalac))
+  .jvmConfigure(_.dependsOn(testkit, semanticdbScalacCore))
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm
