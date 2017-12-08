@@ -27,7 +27,7 @@ unidocSettings
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
   s"wow $ciScalaVersion" ::
-    ("testOnly" + ciPlatform) ::
+    ("tests" + ciPlatform + "/test") ::
     ci("doc") :: // skips 2.10 projects
     s
 }
@@ -53,25 +53,10 @@ test := {
     """Welcome to the scalameta build! This is a big project with lots of tests :)
       |Running "test" may take a really long time. Here are some other useful commands
       |that give a tighter edit/run/debug cycle.
-      |- testsJVM/testQuick    # Parser/Pretty-printer/Trees/...
-      |- semanticdbScalac/test # Semanticdb implementation for Scalac
-      |- testOnlyJVM
-      |- testOnlyJS
+      |- testsJVM/testQuick # Bread and butter tests
+      |- testsJS/testQuick  # Ensure crosscompilability
+      |- testkit/test       # Ensure additional reliability thanks to property tests
       |""".stripMargin)
-}
-testAll := {
-  testOnlyJVM.value
-  testOnlyJS.value
-}
-// These tasks skip over modules with no tests, like dialects/inputs/io, speeding up
-// edit/test cycles. You may prefer to run testJVM while iterating on a design
-// because JVM tests link and run faster than JS tests.
-testOnlyJVM := {
-  val runTests = test.in(testsJVM, Test).value
-  val runTestkitTests = compile.in(testkit, Test).value
-}
-testOnlyJS := {
-  val runTests = test.in(testsJS, Test).value
 }
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
@@ -347,9 +332,6 @@ lazy val tests = crossProject
   .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
-lazy val testOnlyJVM = taskKey[Unit]("Run JVM tests")
-lazy val testOnlyJS = taskKey[Unit]("Run Scala.js tests")
-lazy val testAll = taskKey[Unit]("Run JVM and Scala.js tests")
 
 lazy val contrib = crossProject
   .in(file("scalameta/contrib"))

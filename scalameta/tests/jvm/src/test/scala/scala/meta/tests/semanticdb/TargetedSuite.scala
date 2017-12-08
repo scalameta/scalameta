@@ -7,7 +7,7 @@ import scala.meta.internal.semanticdb.SemanticdbMode
 
 // Contributing tips:
 // - Create another suite like YYY.scala that extends DatabaseSuite,
-//   add YYY.scala to your .gitignore, and run `> ~semanticdbScala/testOnly *YYY`.
+//   add YYY.scala to your .gitignore, and run `> ~testsJVM/testOnly *YYY`.
 //   That should give you a tight edit/run/debug cycle.
 // - Go to DatabaseSuite and uncomment the "println" right above
 //   "assertDenotationSignaturesAreParseable", that will print out the obtained
