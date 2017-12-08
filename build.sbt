@@ -53,9 +53,9 @@ test := {
     """Welcome to the scalameta build! This is a big project with lots of tests :)
       |Running "test" may take a really long time. Here are some other useful commands
       |that give a tighter edit/run/debug cycle.
-      |- scalametaJVM/testQuick # Parser/Pretty-printer/Trees/...
-      |- contribJVM/testQuick   # Contrib
-      |- semanticdbScalac/test  # Semanticdb implementation for Scalac
+      |- testsJVM/testQuick    # Parser/Pretty-printer/Trees/...
+      |- contribJVM/testQuick  # Contrib
+      |- semanticdbScalac/test # Semanticdb implementation for Scalac
       |- testOnlyJVM
       |- testOnlyJS
       |""".stripMargin)
@@ -68,7 +68,6 @@ testAll := {
 // edit/test cycles. You may prefer to run testJVM while iterating on a design
 // because JVM tests link and run faster than JS tests.
 testOnlyJVM := {
-  val runScalametaTests = test.in(scalametaJVM, Test).value
   val runSemanticdbScalacTests = test.in(semanticdbScalac, Test).value
   val runContribTests = test.in(contribJVM, Test).value
   val runTests = test.in(testsJVM, Test).value
@@ -76,7 +75,6 @@ testOnlyJVM := {
   val runLangmetaTests = compile.in(langmetaJVM, Test).value
 }
 testOnlyJS := {
-  val runScalametaTests = test.in(scalametaJS, Test).value
   val runContribTests = test.in(contribJS, Test).value
   val runTests = test.in(testsJS, Test).value
   val runLangmetaTests = compile.in(langmetaJS, Test).value
@@ -238,8 +236,7 @@ lazy val scalameta = crossProject
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
-    description := "Scalameta umbrella module that includes all public APIs",
-    exposePaths("scalameta", Test)
+    description := "Scalameta umbrella module that includes all public APIs"
   )
   .dependsOn(
     common,
@@ -344,6 +341,7 @@ lazy val tests = crossProject
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
+    exposePaths("tests", Test),
     compile.in(Test) := compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,

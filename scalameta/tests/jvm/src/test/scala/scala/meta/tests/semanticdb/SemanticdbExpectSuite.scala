@@ -1,5 +1,5 @@
-package scala.meta
-package tests
+package scala.meta.tests
+package semanticdb
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -8,6 +8,7 @@ import java.nio.charset.Charset
 import scala.meta.testkit.DiffAssertions
 import org.langmeta.internal.io.FileIO
 import org.scalatest.FunSuite
+import scala.meta._
 
 class SemanticdbExpectSuite extends FunSuite with DiffAssertions {
   test("semanticdb.expect") {
@@ -36,7 +37,7 @@ object SemanticdbExpectSuite {
 }
 
 // To save the current behavior, run:
-// testsJVM/test:runMain scala.meta.tests.SaveSemanticdbExpectTest
+// testsJVM/test:runMain scala.meta.tests.semanticdb.SaveSemanticdbExpectTest
 object SaveSemanticdbExpectTest {
   def main(args: Array[String]): Unit = {
     val database = SemanticdbExpectSuite.loadDatabase

@@ -1,5 +1,7 @@
-package scala.meta
-package tests
+package scala.meta.tests
+package semanticdb
+
+import scala.meta._
 
 class SyntheticSuite extends BaseSemanticSuite {
   implicit val database = Database.load(classpath, sourcepath)

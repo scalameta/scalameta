@@ -17,7 +17,7 @@ class IntegritySuite extends FunSuite {
       shallow.filter(_.isFile) ++ shallow.filter(_.isDirectory).flatMap(deepfiles)
     }
 
-    val fullcp = sys.props("sbt.paths.scalameta.test.classes").split(pathSeparator).toList
+    val fullcp = sys.props("sbt.paths.tests.test.classes").split(pathSeparator).toList
     val cp = fullcp.filter(_.contains(separator + "target" + separator))
 
     var success = true

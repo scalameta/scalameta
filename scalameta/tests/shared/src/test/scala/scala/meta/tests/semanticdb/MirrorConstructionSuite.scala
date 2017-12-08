@@ -1,7 +1,8 @@
-package scala.meta
-package tests
+package scala.meta.tests
+package semanticdb
 
 import org.scalatest._
+import scala.meta._
 import scala.meta.internal.semanticdb.{vfs => v}
 import scala.meta.internal.semanticdb.{schema => s}
 
