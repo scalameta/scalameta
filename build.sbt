@@ -70,11 +70,9 @@ testOnlyJVM := {
   val runSemanticdbScalacTests = test.in(semanticdbScalac, Test).value
   val runTests = test.in(testsJVM, Test).value
   val runTestkitTests = compile.in(testkit, Test).value
-  val runLangmetaTests = compile.in(langmetaJVM, Test).value
 }
 testOnlyJS := {
   val runTests = test.in(testsJS, Test).value
-  val runLangmetaTests = compile.in(langmetaJS, Test).value
 }
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
@@ -95,8 +93,7 @@ lazy val langmeta = crossProject
       ) -> sourceManaged.in(Compile).value
     ),
     PB.protoSources.in(Compile) := Seq(file("langmeta/shared/src/main/protobuf")),
-    libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion,
-    exposePaths("langmeta", Test)
+    libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
   )
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)

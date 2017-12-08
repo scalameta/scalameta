@@ -1,4 +1,5 @@
-package org.langmeta.tests.io
+package org.langmeta.tests
+package io
 
 import java.io.File
 import org.scalatest.FunSuite

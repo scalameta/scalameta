@@ -1,4 +1,5 @@
-package org.langmeta.tests.io
+package org.langmeta.tests
+package io
 
 import org.langmeta._
 import org.langmeta.internal.io._
