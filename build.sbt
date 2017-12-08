@@ -67,7 +67,6 @@ testAll := {
 // edit/test cycles. You may prefer to run testJVM while iterating on a design
 // because JVM tests link and run faster than JS tests.
 testOnlyJVM := {
-  val runSemanticdbScalacTests = test.in(semanticdbScalac, Test).value
   val runTests = test.in(testsJVM, Test).value
   val runTestkitTests = compile.in(testkit, Test).value
 }
@@ -255,8 +254,7 @@ lazy val semanticdbScalac = project
     publishableSettings,
     mimaPreviousArtifacts := Set.empty,
     isFullCrossVersion,
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    exposePaths("semanticdb-scalac", Test)
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
   )
   .dependsOn(scalametaJVM, testkit % Test)
 
@@ -335,6 +333,7 @@ lazy val tests = crossProject
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
     exposePaths("tests", Test),
+    exposePaths("semanticdb-scalac-plugin", Test),
     compile.in(Test) := compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,
@@ -343,7 +342,7 @@ lazy val tests = crossProject
     ),
     buildInfoPackage := "scala.meta.tests"
   )
-  .jvmConfigure(_.dependsOn(testkit))
+  .jvmConfigure(_.dependsOn(testkit, semanticdbScalac))
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm

@@ -1,4 +1,5 @@
 package scala.meta.tests
+package semanticdb
 
 import scala.meta.internal.semanticdb.MemberMode
 import scala.meta.internal.semanticdb.SemanticdbMode

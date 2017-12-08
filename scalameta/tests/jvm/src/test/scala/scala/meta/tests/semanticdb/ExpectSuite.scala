@@ -10,7 +10,7 @@ import org.langmeta.internal.io.FileIO
 import org.scalatest.FunSuite
 import scala.meta._
 
-class SemanticdbExpectSuite extends FunSuite with DiffAssertions {
+class ExpectSuite extends FunSuite with DiffAssertions {
   test("semanticdb.expect") {
     BuildInfo.scalaVersion.split("\\.").take(2).toList match {
       // both the compiler and stdlib are different between Scala versions.

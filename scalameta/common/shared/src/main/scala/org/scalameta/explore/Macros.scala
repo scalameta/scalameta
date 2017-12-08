@@ -20,12 +20,13 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
       }
       def aliases = sym.fullName.contains(".Aliases.")
       def contrib = sym.fullName.contains(".contrib.") || sym.fullName.endsWith(".contrib")
+      def interactive = sym.fullName.contains(".interactive.") || sym.fullName.endsWith(".interactive")
       def testkit = sym.fullName.contains(".testkit.") || sym.fullName.endsWith(".testkit")
       def tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith(".tests")
       def internal = sym.fullName.contains(".internal.") || (sym.fullName.endsWith(".internal") && !sym.fullName.endsWith(".meta.internal"))
       def invisible = !sym.isPublic
       def inexistent = !sym.asInstanceOf[scala.reflect.internal.SymbolTable#Symbol].exists // NOTE: wtf
-      artefact || trivial || arbitrary || aliases || contrib || testkit || tests || internal || invisible || inexistent
+      artefact || trivial || arbitrary || aliases || contrib || interactive || testkit || tests || internal || invisible || inexistent
     }
     def isRelevant: Boolean = {
       !isIrrelevant

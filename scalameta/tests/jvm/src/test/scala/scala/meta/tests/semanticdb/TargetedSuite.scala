@@ -1,4 +1,5 @@
 package scala.meta.tests
+package semanticdb
 
 import scala.meta._
 import scala.meta.internal.semanticdb.MemberMode
@@ -16,7 +17,7 @@ import scala.meta.internal.semanticdb.SemanticdbMode
 //   of this writing the latest object is `object ad`, so the next object should
 //   be `object ae`.
 // - glhf, and if you have any questions don't hesitate to ask in the gitter channel :)
-class SemanticSuite extends DatabaseSuite(SemanticdbMode.Slim) {
+class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   names(
     """
     |object A {

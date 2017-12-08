@@ -1,4 +1,5 @@
 package scala.meta.tests
+package semanticdb
 
 import org.scalatest._
 import java.io.{File, PrintWriter}
@@ -26,8 +27,8 @@ abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberM
 
   lazy val g: Global = {
     def fail(msg: String) = sys.error(s"DatabaseSuite initialization failed: $msg")
-    val classpath = System.getProperty("sbt.paths.semanticdb-scalac.test.classes")
-    val pluginpath = System.getProperty("sbt.paths.semanticdb-scalac.compile.jar")
+    val classpath = System.getProperty("sbt.paths.semanticdb-scalac-plugin.test.classes")
+    val pluginpath = System.getProperty("sbt.paths.semanticdb-scalac-plugin.compile.jar")
     val options = "-Yrangepos -Ywarn-unused-import -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:semanticdb"
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))

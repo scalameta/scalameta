@@ -1,4 +1,5 @@
 package scala.meta.tests
+package semanticdb
 
 import scala.meta.internal.semanticdb.DatabaseOps
 import org.scalameta.logger
@@ -7,7 +8,7 @@ import scala.meta.interactive.InteractiveSemanticdb._
 import scala.meta.testkit.DiffAssertions
 import scala.tools.nsc.interactive.Global
 
-class InteractiveSemanticdbSuite extends FunSuite with DiffAssertions {
+class InteractiveSuite extends FunSuite with DiffAssertions {
   val compiler: Global = newCompiler(scalacOptions = "-Ywarn-unused-import" :: Nil)
   def check(
       original: String,
