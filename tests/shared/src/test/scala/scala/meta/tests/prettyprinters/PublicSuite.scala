@@ -309,7 +309,7 @@ class PublicSuite extends FunSuite {
   }
 
   test("org.langmeta.semanticdb.Database.toString") {
-    // too involved to fit here, see DatabaseSuite in semanticdb-scalac
+    // too involved to fit here, see DatabaseSuite
   }
 
   test("org.langmeta.semanticdb.Message.toString") {

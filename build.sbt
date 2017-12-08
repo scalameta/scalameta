@@ -230,6 +230,16 @@ lazy val scalameta = crossProject
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
+lazy val contrib = crossProject
+  .in(file("scalameta/contrib"))
+  .settings(
+    publishableSettings,
+    description := "Incubator for scalameta APIs"
+  )
+  .dependsOn(scalameta)
+lazy val contribJVM = contrib.jvm
+lazy val contribJS = contrib.js
+
 lazy val semanticdbScalacCore = project
   .in(file("scalameta/semanticdb-scalac-core"))
   .settings(
@@ -330,16 +340,6 @@ lazy val tests = crossProject
   .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
-
-lazy val contrib = crossProject
-  .in(file("scalameta/contrib"))
-  .settings(
-    publishableSettings,
-    description := "Incubator for scalameta APIs"
-  )
-  .dependsOn(scalameta)
-lazy val contribJVM = contrib.jvm
-lazy val contribJS = contrib.js
 
 // ==========================================
 // Settings
