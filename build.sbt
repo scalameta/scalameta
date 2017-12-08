@@ -320,7 +320,8 @@ lazy val semanticdbIntegration = project
     }
   )
 
-lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
+lazy val testkit = project
+  .in(file("scalameta/testkit"))
   .settings(
     publishableSettings,
     hasLargeIntegrationTests,
