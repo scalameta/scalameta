@@ -70,7 +70,6 @@ testAll := {
 testOnlyJVM := {
   val runScalametaTests = test.in(scalametaJVM, Test).value
   val runSemanticdbScalacTests = test.in(semanticdbScalac, Test).value
-  val runBenchmarkTests = test.in(benchmarks, Test).value
   val runContribTests = test.in(contribJVM, Test).value
   val runTests = test.in(testsJVM, Test).value
   val propertyTests = compile.in(testkit, Test).value
@@ -371,34 +370,6 @@ lazy val contrib = crossProject
   .dependsOn(scalameta)
 lazy val contribJVM = contrib.jvm
 lazy val contribJS = contrib.js
-
-lazy val benchmarks =
-  Project(id = "benchmarks", base = file("scalameta/benchmarks"))
-    .settings(
-      sharedSettings,
-      nonPublishableSettings,
-      resourceDirectory.in(Jmh) := resourceDirectory.in(Compile).value,
-      javaOptions.in(run) ++= Seq(
-        "-Djava.net.preferIPv4Stack=true",
-        "-XX:+AggressiveOpts",
-        "-XX:+UseParNewGC",
-        "-XX:+UseConcMarkSweepGC",
-        "-XX:+CMSParallelRemarkEnabled",
-        "-XX:+CMSClassUnloadingEnabled",
-        "-XX:ReservedCodeCacheSize=128m",
-        "-XX:MaxPermSize=1024m",
-        "-Xss8M",
-        "-Xms512M",
-        "-XX:SurvivorRatio=128",
-        "-XX:MaxTenuringThreshold=0",
-        "-Xss8M",
-        "-Xms512M",
-        "-Xmx2G",
-        "-server"
-      )
-    )
-    .dependsOn(scalametaJVM)
-    .enablePlugins(JmhPlugin)
 
 // ==========================================
 // Settings
