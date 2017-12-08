@@ -72,8 +72,8 @@ testOnlyJVM := {
   val runSemanticdbScalacTests = test.in(semanticdbScalac, Test).value
   val runContribTests = test.in(contribJVM, Test).value
   val runTests = test.in(testsJVM, Test).value
-  val propertyTests = compile.in(testkit, Test).value
-  val langmetaTests = compile.in(langmetaJVM, Test).value
+  val runTestkitTests = compile.in(testkit, Test).value
+  val runLangmetaTests = compile.in(langmetaJVM, Test).value
 }
 testOnlyJS := {
   val runScalametaTests = test.in(scalametaJS, Test).value
