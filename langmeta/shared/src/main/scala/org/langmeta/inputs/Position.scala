@@ -1,6 +1,8 @@
 package org.langmeta
 package inputs
 
+import scala.io.AnsiColor._
+
 // NOTE: `start` and `end` are String.substring-style,
 // i.e. `start` is inclusive and `end` is not.
 // Therefore Position.end can point to the last character plus one.
@@ -40,6 +42,16 @@ object Position {
     def endLine: Int = input.offsetToLine(end)
     def endColumn: Int = end - input.lineToOffset(endLine)
     override def text = new String(input.chars, start, end - start)
-    override def toString = s"[$start..$end) in $input"
+    override def toString = {
+      val maxContextLenght = 100 //chars
+      val text = input.text
+      // nb slice will clips to [0 or text.lenght)
+      val contextBefore = text.slice(start - maxContextLenght, start) 
+      val highlight = UNDERLINED + WHITE + text.slice(start, end) + RESET
+      val contextAfter = text.slice(end, end + maxContextLenght)
+      val context = contextBefore + highlight + contextAfter
+      s"""|[$start..$end)
+          |$context""".stripMargin
+    }
   }
 }
