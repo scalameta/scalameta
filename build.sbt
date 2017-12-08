@@ -240,7 +240,7 @@ lazy val semanticdbScalacCore = project
     isFullCrossVersion,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
   )
-  .dependsOn(scalametaJVM, testkit % Test)
+  .dependsOn(scalametaJVM)
 
 lazy val semanticdbScalacPlugin = project
   .in(file("scalameta/semanticdb-scalac-plugin"))
