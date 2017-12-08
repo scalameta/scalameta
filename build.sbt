@@ -397,7 +397,8 @@ lazy val sharedSettings = Def.settings(
   parallelExecution.in(Test) := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
-  triggeredMessage.in(ThisBuild) := Watched.clearWhenTriggered
+  triggeredMessage.in(ThisBuild) := Watched.clearWhenTriggered,
+  incOptions := incOptions.value.withLogRecompileOnMacro(false)
 )
 
 lazy val mergeSettings = Def.settings(
