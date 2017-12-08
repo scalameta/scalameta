@@ -54,7 +54,6 @@ test := {
       |Running "test" may take a really long time. Here are some other useful commands
       |that give a tighter edit/run/debug cycle.
       |- testsJVM/testQuick    # Parser/Pretty-printer/Trees/...
-      |- contribJVM/testQuick  # Contrib
       |- semanticdbScalac/test # Semanticdb implementation for Scalac
       |- testOnlyJVM
       |- testOnlyJS
@@ -69,13 +68,11 @@ testAll := {
 // because JVM tests link and run faster than JS tests.
 testOnlyJVM := {
   val runSemanticdbScalacTests = test.in(semanticdbScalac, Test).value
-  val runContribTests = test.in(contribJVM, Test).value
   val runTests = test.in(testsJVM, Test).value
   val runTestkitTests = compile.in(testkit, Test).value
   val runLangmetaTests = compile.in(langmetaJVM, Test).value
 }
 testOnlyJS := {
-  val runContribTests = test.in(contribJS, Test).value
   val runTests = test.in(testsJS, Test).value
   val runLangmetaTests = compile.in(langmetaJS, Test).value
 }
@@ -253,6 +250,19 @@ lazy val scalameta = crossProject
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
+lazy val semanticdbScalac = project
+  .in(file("scalameta/semanticdb-scalac"))
+  .settings(
+    moduleName := "semanticdb-scalac-core",
+    description := "Library to generate semanticdb from Scala 2.x internal data structures",
+    publishableSettings,
+    mimaPreviousArtifacts := Set.empty,
+    isFullCrossVersion,
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+    exposePaths("semanticdb-scalac", Test)
+  )
+  .dependsOn(scalametaJVM, testkit % Test)
+
 lazy val semanticdbScalacPlugin = project
   .in(file("scalameta/semanticdb-scalac-plugin"))
   .settings(
@@ -280,20 +290,6 @@ lazy val semanticdbScalacPlugin = project
     }
   )
   .dependsOn(semanticdbScalac)
-
-
-lazy val semanticdbScalac = project
-  .in(file("scalameta/semanticdb-scalac"))
-  .settings(
-    moduleName := "semanticdb-scalac-core",
-    description := "Library to generate semanticdb from Scala 2.x internal data structures",
-    publishableSettings,
-    mimaPreviousArtifacts := Set.empty,
-    isFullCrossVersion,
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    exposePaths("semanticdb-scalac", Test)
-  )
-  .dependsOn(scalametaJVM, testkit % Test)
 
 lazy val semanticdbIntegration = project
   .in(file("scalameta/semanticdb-integration"))
@@ -333,7 +329,7 @@ lazy val testkit = project
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
     description := "Testing utilities for scalameta APIs"
   )
-  .dependsOn(scalametaJVM)
+  .dependsOn(contribJVM)
 
 lazy val tests = crossProject
   .in(file("scalameta/tests"))
@@ -365,7 +361,6 @@ lazy val contrib = crossProject
     publishableSettings,
     description := "Incubator for scalameta APIs"
   )
-  .jvmConfigure(_.dependsOn(testkit % Test))
   .dependsOn(scalameta)
 lazy val contribJVM = contrib.jvm
 lazy val contribJS = contrib.js

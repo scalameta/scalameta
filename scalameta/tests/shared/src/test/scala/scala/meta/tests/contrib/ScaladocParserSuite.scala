@@ -1,5 +1,7 @@
-package scala.meta.contrib
+package scala.meta.tests
+package contrib
 
+import scala.meta.contrib._
 import scala.meta.contrib.DocToken._
 import scala.meta.tokens.Token.Comment
 import scala.meta.Defn

@@ -1,9 +1,9 @@
-package scala.meta.contrib.conversion
+package scala.meta.tests
+package contrib
 
 import org.scalatest.FunSuite
-
-import scala.meta.contrib._
 import scala.meta._
+import scala.meta.contrib._
 
 class ConverterSuite extends FunSuite {
 

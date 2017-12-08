@@ -1,4 +1,5 @@
-package scala.meta.contrib
+package scala.meta.tests
+package contrib
 
 import scala.meta.testkit.Corpus
 import scala.util.Random

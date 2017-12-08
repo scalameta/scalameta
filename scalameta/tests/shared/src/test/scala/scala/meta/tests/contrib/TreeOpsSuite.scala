@@ -1,7 +1,9 @@
-package scala.meta
+package scala.meta.tests
 package contrib
 
 import org.scalatest.FunSuite
+import scala.meta._
+import scala.meta.contrib._
 
 class TreeOpsSuite extends FunSuite {
   val a: Defn.Val = q"val x = 2"

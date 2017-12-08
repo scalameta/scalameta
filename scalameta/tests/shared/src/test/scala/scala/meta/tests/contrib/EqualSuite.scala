@@ -1,6 +1,9 @@
-package scala.meta
+package scala.meta.tests
 package contrib
+
 import org.scalatest.FunSuite
+import scala.meta._
+import scala.meta.contrib._
 
 class EqualSuite extends FunSuite {
   val a: Stat = "val x = 2 // foo".parse[Stat].get

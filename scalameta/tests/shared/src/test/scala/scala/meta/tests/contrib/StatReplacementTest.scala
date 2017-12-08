@@ -1,7 +1,9 @@
-package scala.meta.contrib
+package scala.meta.tests
+package contrib
 
 import org.scalatest.FunSuite
 import scala.meta._
+import scala.meta.contrib._
 
 class StatReplacementTest extends FunSuite {
   val methodDef = q"def foo = 1"

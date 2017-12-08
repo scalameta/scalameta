@@ -1,6 +1,8 @@
-package scala.meta.contrib
+package scala.meta.tests
+package contrib
 
 import scala.meta._
+import scala.meta.contrib._
 import scala.meta.tokens.Token
 import org.scalatest.FunSuite
 

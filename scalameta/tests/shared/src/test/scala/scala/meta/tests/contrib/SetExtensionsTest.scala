@@ -1,8 +1,9 @@
-package scala.meta.contrib
+package scala.meta.tests
+package contrib
 
 import org.scalatest.FunSuite
-
 import scala.meta._
+import scala.meta.contrib._
 
 class SetExtensionsTest extends FunSuite {
   val typeFoo = t"Foo"
