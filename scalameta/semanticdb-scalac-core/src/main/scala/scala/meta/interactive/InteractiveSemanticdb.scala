@@ -9,7 +9,7 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.reporters.StoreReporter
-import org.langmeta.semanticdb.Document
+import scala.meta.semanticdb.Document
 
 object InteractiveSemanticdb {
 

@@ -149,7 +149,8 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     // NOTE: We filtered out package objects and implicit classes (hopefully, IDEs and autocompletes will ignore those),
     // and then we added methods from package objects (because `import scala.meta._` will bring those in).
     val effectiveStatics = nonPkgObjectStatics ++ pkgObjectMethods
-    val fullNames = effectiveStatics.map(sym => scala.reflect.NameTransformer.decode(sym.fullName))
+    var fullNames = effectiveStatics.map(sym => scala.reflect.NameTransformer.decode(sym.fullName))
+    fullNames = fullNames.map(_.replace("org.langmeta.", "scala.meta."))
     q"${fullNames.distinct.sorted}"
   }
 

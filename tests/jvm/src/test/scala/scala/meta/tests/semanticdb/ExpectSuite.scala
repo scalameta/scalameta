@@ -6,7 +6,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.charset.Charset
 import scala.meta.testkit.DiffAssertions
-import org.langmeta.internal.io.FileIO
+import scala.meta.internal.io.FileIO
 import org.scalatest.FunSuite
 import scala.meta._
 

@@ -38,27 +38,6 @@ class SurfaceSuite extends FunSuite {
     }).mkString(EOL)
     // println(diagnostic)
     assert(diagnostic === """
-      |org.langmeta.inputs.Input
-      |org.langmeta.inputs.Position
-      |org.langmeta.io.AbsolutePath
-      |org.langmeta.io.Classpath
-      |org.langmeta.io.Fragment
-      |org.langmeta.io.Multipath
-      |org.langmeta.io.RelativePath
-      |org.langmeta.io.Sourcepath
-      |org.langmeta.semanticdb.Database
-      |org.langmeta.semanticdb.Denotation
-      |org.langmeta.semanticdb.Document
-      |org.langmeta.semanticdb.Message
-      |org.langmeta.semanticdb.ResolvedName
-      |org.langmeta.semanticdb.ResolvedSymbol
-      |org.langmeta.semanticdb.Severity
-      |org.langmeta.semanticdb.Severity.Error
-      |org.langmeta.semanticdb.Severity.Info
-      |org.langmeta.semanticdb.Severity.Warning
-      |org.langmeta.semanticdb.Signature
-      |org.langmeta.semanticdb.Symbol
-      |org.langmeta.semanticdb.Synthetic
       |scala.meta.Dialect
       |scala.meta.Tree
       |scala.meta.classifiers
@@ -84,8 +63,16 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.dialects.Typelevel211 *
       |scala.meta.dialects.Typelevel212 *
       |scala.meta.inputs
+      |scala.meta.inputs.Input
+      |scala.meta.inputs.Position
       |scala.meta.internal
       |scala.meta.io
+      |scala.meta.io.AbsolutePath
+      |scala.meta.io.Classpath
+      |scala.meta.io.Fragment
+      |scala.meta.io.Multipath
+      |scala.meta.io.RelativePath
+      |scala.meta.io.Sourcepath
       |scala.meta.parsers
       |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException
@@ -100,6 +87,19 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
       |scala.meta.semanticdb
+      |scala.meta.semanticdb.Database
+      |scala.meta.semanticdb.Denotation
+      |scala.meta.semanticdb.Document
+      |scala.meta.semanticdb.Message
+      |scala.meta.semanticdb.ResolvedName
+      |scala.meta.semanticdb.ResolvedSymbol
+      |scala.meta.semanticdb.Severity
+      |scala.meta.semanticdb.Severity.Error
+      |scala.meta.semanticdb.Severity.Info
+      |scala.meta.semanticdb.Severity.Warning
+      |scala.meta.semanticdb.Signature
+      |scala.meta.semanticdb.Symbol
+      |scala.meta.semanticdb.Synthetic
       |scala.meta.tokenizers
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException
