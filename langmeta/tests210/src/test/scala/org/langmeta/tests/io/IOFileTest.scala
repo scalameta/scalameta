@@ -1,9 +1,9 @@
-package scala.meta.tests
+package org.langmeta.tests
 package io
 
 import java.io.File
 import org.scalatest.FunSuite
-import scala.meta.internal.io._
+import org.langmeta.internal.io._
 
 class IOFileTest extends FunSuite {
   val file = new File("build.sbt")

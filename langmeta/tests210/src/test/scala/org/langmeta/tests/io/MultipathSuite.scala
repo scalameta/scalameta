@@ -1,10 +1,10 @@
-package scala.meta.tests
+package org.langmeta.tests
 package io
 
 import java.io.File
 import java.net.URI
+import org.langmeta._
 import org.scalatest.FunSuite
-import scala.meta._
 
 class MultipathSuite extends FunSuite {
   val tmp: File = File.createTempFile("src", "main")

@@ -1,8 +1,8 @@
-package scala.meta.tests
+package org.langmeta.tests
 package io
 
-import scala.meta._
-import scala.meta.internal.io._
+import org.langmeta._
+import org.langmeta.internal.io._
 import org.scalatest.FunSuite
 
 class IOSuite extends FunSuite {

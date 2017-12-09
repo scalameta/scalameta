@@ -26,10 +26,14 @@ unidocSettings
 // ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
-  s"wow $ciScalaVersion" ::
-    ("tests" + ciPlatform + "/test") ::
-    ci("doc") :: // skips 2.10 projects
-    s
+  if (ciScalaVersion.startsWith("2.10")) {
+    s"wow $ciScalaVersion" :: "tests210/test" :: s
+  } else {
+    s"wow $ciScalaVersion" ::
+      ("tests" + ciPlatform + "/test") ::
+      ci("doc") :: // skips 2.10 projects
+      s
+  }
 }
 commands += CiCommand("ci-publish")(
   if (isTagPush) "publishSigned" :: Nil
@@ -275,6 +279,8 @@ lazy val semanticdbScalacPlugin = project
   )
   .dependsOn(semanticdbScalacCore)
 
+/** ======================== TESTS ======================== **/
+
 lazy val semanticdbIntegration = project
   .in(file("scalameta/semanticdb-integration"))
   .settings(
@@ -336,6 +342,17 @@ lazy val tests = crossProject
   .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
+
+lazy val tests210 = project
+  .in(file("langmeta/tests210"))
+  .settings(
+    sharedSettings,
+    nonPublishableSettings,
+    crossScalaVersions := List(LatestScala210),
+    scalaVersion := LatestScala210,
+    description := "Tests for scalameta APIs that are published for Scala 2.10"
+  )
+  .dependsOn(langmetaJVM)
 
 // ==========================================
 // Settings

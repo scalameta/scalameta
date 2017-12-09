@@ -1,10 +1,10 @@
-package scala.meta.tests
+package org.langmeta.tests
 package io
 
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.meta.internal.io._
+import org.langmeta.internal.io._
 import org.scalatest.FunSuite
 
 class NIOPathTest extends FunSuite {
