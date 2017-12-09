@@ -2,7 +2,7 @@ package org.langmeta.internal
 package inputs
 
 import scala.collection.mutable
-import org.langmeta.inputs._
+import org.langmeta.highlevel.inputs._
 import org.langmeta
 
 trait InternalInput {

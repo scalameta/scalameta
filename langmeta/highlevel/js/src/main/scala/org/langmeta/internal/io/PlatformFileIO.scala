@@ -5,7 +5,7 @@ import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Paths
-import org.langmeta.io._
+import org.langmeta.highlevel.io._
 
 object PlatformFileIO {
   def newInputStream(uri: URI): InputStream =

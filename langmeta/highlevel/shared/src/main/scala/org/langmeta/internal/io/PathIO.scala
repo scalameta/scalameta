@@ -2,7 +2,7 @@ package org.langmeta.internal.io
 
 import java.nio.file._
 import java.io.File
-import org.langmeta.io._
+import org.langmeta.highlevel.io._
 
 object PathIO {
 

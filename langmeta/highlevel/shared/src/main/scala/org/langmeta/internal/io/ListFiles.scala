@@ -1,7 +1,7 @@
 package org.langmeta.internal.io
 
-import org.langmeta.io.AbsolutePath
-import org.langmeta.io.RelativePath
+import org.langmeta.highlevel.io.AbsolutePath
+import org.langmeta.highlevel.io.RelativePath
 
 final case class ListFiles(root: AbsolutePath, files: List[RelativePath]) extends Seq[AbsolutePath] {
   override def length: Int = files.length

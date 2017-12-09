@@ -1,6 +1,6 @@
 package org.langmeta.internal.io
 
-import org.langmeta.io._
+import org.langmeta.highlevel.io._
 
 object PlatformPathIO {
   def workingDirectoryString: String =

@@ -2,7 +2,7 @@ package org.langmeta.internal.io
 
 import java.net.URI
 import java.nio.charset.Charset
-import org.langmeta.io._
+import org.langmeta.highlevel.io._
 
 object FileIO {
 

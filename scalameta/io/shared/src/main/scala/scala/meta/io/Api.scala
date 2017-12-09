@@ -1,6 +1,6 @@
 package org.langmeta.internal.io {
-  trait Api extends org.langmeta.io.Api
-  trait Aliases extends org.langmeta.io.Aliases
+  trait Api extends org.langmeta.highlevel.io.Api
+  trait Aliases extends org.langmeta.highlevel.io.Aliases
 }
 
 package scala.meta.io {
