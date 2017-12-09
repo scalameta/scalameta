@@ -63,25 +63,40 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== LANGMETA ======================== **/
 
-lazy val langmetaHighlevel = crossProject
-  .in(file("langmeta/highlevel"))
+lazy val langmetaLowlevel = crossProject
+  .in(file("langmeta/lowlevel"))
   .settings(
     publishableSettings,
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
-    moduleName := "langmeta-highlevel",
-    description := "Langmeta umbrella module that includes all highlevel public APIs",
+    moduleName := "langmeta-lowlevel",
+    description := "Langmeta umbrella module that includes all lowlevel public APIs",
     // Protobuf setup for binary serialization.
     PB.targets.in(Compile) := Seq(
       scalapb.gen(
         flatPackage = true // Don't append filename to package
       ) -> sourceManaged.in(Compile).value
     ),
-    PB.protoSources.in(Compile) := Seq(file("langmeta/highlevel/shared/src/main/protobuf")),
+    PB.protoSources.in(Compile) := Seq(file("langmeta/lowlevel/shared/src/main/protobuf")),
     libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
   )
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
+lazy val langmetaLowlevelJVM = langmetaLowlevel.jvm
+lazy val langmetaLowlevelJS = langmetaLowlevel.js
+
+lazy val langmetaHighlevel = crossProject
+  .in(file("langmeta/highlevel"))
+  .settings(
+    publishableSettings,
+    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
+    moduleName := "langmeta-highlevel",
+    description := "Langmeta umbrella module that includes all highlevel public APIs"
+  )
+  .jsSettings(
+    crossScalaVersions := List(LatestScala211, LatestScala212)
+  )
+  .dependsOn(langmetaLowlevel)
 lazy val langmetaHighlevelJVM = langmetaHighlevel.jvm
 lazy val langmetaHighlevelJS = langmetaHighlevel.js
 

@@ -10,7 +10,7 @@ import org.langmeta.highlevel.inputs.{Input => dInput}
 import org.langmeta.highlevel.inputs.{Position => dPosition}
 import org.langmeta.highlevel.semanticdb.{Synthetic => dSynthetic}
 import org.langmeta.internal.io.PathIO
-import org.langmeta.internal.semanticdb.{schema => s}
+import org.langmeta.lowlevel.{semanticdb => s}
 import org.langmeta.internal.semanticdb.{vfs => v}
 import org.langmeta.highlevel.io._
 import org.langmeta.highlevel.semanticdb.Signature

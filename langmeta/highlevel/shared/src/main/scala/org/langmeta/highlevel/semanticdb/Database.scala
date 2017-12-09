@@ -6,7 +6,7 @@ import org.langmeta.highlevel.io._
 import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb._
 import org.langmeta.internal.semanticdb.{vfs => v}
-import org.langmeta.internal.semanticdb.{schema => s}
+import org.langmeta.lowlevel.{semanticdb => s}
 
 final case class Database(documents: Seq[Document]) {
   lazy val names: Seq[ResolvedName] = documents.flatMap(_.names)

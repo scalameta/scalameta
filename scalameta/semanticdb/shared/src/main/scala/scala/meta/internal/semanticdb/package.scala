@@ -3,7 +3,7 @@ package scala.meta.internal
 import scala.language.implicitConversions
 
 package object semanticdb {
-  implicit def XtensionSchemaDatabase(sdatabase: org.langmeta.internal.semanticdb.schema.Database) =
+  implicit def XtensionSchemaDatabase(sdatabase: org.langmeta.lowlevel.semanticdb.Database) =
     new org.langmeta.internal.semanticdb.XtensionSchemaDatabase(sdatabase)
   implicit def XtensionDatabase(ddatabase: org.langmeta.highlevel.semanticdb.Database) =
     new org.langmeta.internal.semanticdb.XtensionDatabase(ddatabase)
@@ -18,8 +18,8 @@ package object semanticdb {
   }
 
   object schema {
-    val Document = org.langmeta.internal.semanticdb.schema.Document
-    type Document = org.langmeta.internal.semanticdb.schema.Document
+    val Document = org.langmeta.lowlevel.semanticdb.Document
+    type Document = org.langmeta.lowlevel.semanticdb.Document
     // TODO
   }
 }
