@@ -1,6 +1,6 @@
 package org.langmeta.internal.semanticdb {
-  trait Api extends org.langmeta.semanticdb.Api
-  trait Aliases extends org.langmeta.semanticdb.Aliases
+  trait Api extends org.langmeta.highlevel.semanticdb.Api
+  trait Aliases extends org.langmeta.highlevel.semanticdb.Aliases
 }
 
 package scala.meta.semanticdb {

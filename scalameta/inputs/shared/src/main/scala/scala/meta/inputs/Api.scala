@@ -1,13 +1,13 @@
 package org.langmeta.internal.inputs {
-  trait Api extends org.langmeta.inputs.Api
-  trait Aliases extends org.langmeta.inputs.Aliases
+  trait Api extends org.langmeta.highlevel.inputs.Api
+  trait Aliases extends org.langmeta.highlevel.inputs.Aliases
 }
 
 package scala.meta.inputs {
   private[meta] trait Api extends org.langmeta.internal.inputs.Api {
     import java.nio.charset._
     import scala.meta.common._
-    import org.langmeta.io.AbsolutePath
+    import org.langmeta.highlevel.io.AbsolutePath
     implicit val charsToInput: Convert[Array[Char], Input] = Convert(chars => Input.String(new scala.Predef.String(chars)))
     implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String(_))
     implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] = Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
