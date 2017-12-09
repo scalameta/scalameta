@@ -63,8 +63,8 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== LANGMETA ======================== **/
 
-lazy val langmeta = crossProject
-  .in(file("langmeta/langmeta"))
+lazy val langmetaHighlevel = crossProject
+  .in(file("langmeta/highlevel"))
   .settings(
     publishableSettings,
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
@@ -75,14 +75,14 @@ lazy val langmeta = crossProject
         flatPackage = true // Don't append filename to package
       ) -> sourceManaged.in(Compile).value
     ),
-    PB.protoSources.in(Compile) := Seq(file("langmeta/langmeta/shared/src/main/protobuf")),
+    PB.protoSources.in(Compile) := Seq(file("langmeta/highlevel/shared/src/main/protobuf")),
     libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
   )
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
-lazy val langmetaJVM = langmeta.jvm
-lazy val langmetaJS = langmeta.js
+lazy val langmetaHighlevelJVM = langmetaHighlevel.jvm
+lazy val langmetaHighlevelJS = langmetaHighlevel.js
 
 /** ======================== SCALAMETA ======================== **/
 
@@ -103,7 +103,7 @@ lazy val io = crossProject
     publishableSettings,
     description := "Scalameta APIs for input/output"
   )
-  .dependsOn(langmeta, common)
+  .dependsOn(langmetaHighlevel, common)
 
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
@@ -126,7 +126,7 @@ lazy val inputs = crossProject
     description := "Scalameta APIs for source code",
     enableMacros
   )
-  .dependsOn(langmeta, common, io)
+  .dependsOn(langmetaHighlevel, common, io)
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
 
@@ -205,7 +205,7 @@ lazy val semanticdb = crossProject
     publishableSettings,
     description := "Scalameta semantic database APIs"
   )
-  .dependsOn(langmeta)
+  .dependsOn(langmetaHighlevel)
 lazy val semanticdbJVM = semanticdb.jvm
 lazy val semanticdbJS = semanticdb.js
 
@@ -352,7 +352,7 @@ lazy val tests210 = project
     scalaVersion := LatestScala210,
     description := "Tests for scalameta APIs that are published for Scala 2.10"
   )
-  .dependsOn(langmetaJVM)
+  .dependsOn(langmetaHighlevelJVM)
 
 // ==========================================
 // Settings
