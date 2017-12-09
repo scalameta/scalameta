@@ -26,16 +26,15 @@ unidocSettings
 // ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
-  s"wow $ciScalaVersion" ::
-    ("testOnly" + ciPlatform) ::
-    ci("doc") :: // skips 2.10 projects
-    s
+  if (ciScalaVersion.startsWith("2.10")) {
+    s"wow $ciScalaVersion" :: "tests210/test" :: s
+  } else {
+    s"wow $ciScalaVersion" ::
+      ("tests" + ciPlatform + "/test") ::
+      ci("doc") :: // skips 2.10 projects
+      s
+  }
 }
-commands += CiCommand("ci-langmeta")("langmetaJVM/test" :: Nil)
-commands += CiCommand("ci-slow")(
-  "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
-  Nil
-)
 commands += CiCommand("ci-publish")(
   if (isTagPush) "publishSigned" :: Nil
   else Nil
@@ -53,34 +52,10 @@ test := {
     """Welcome to the scalameta build! This is a big project with lots of tests :)
       |Running "test" may take a really long time. Here are some other useful commands
       |that give a tighter edit/run/debug cycle.
-      |- scalametaJVM/testQuick # Parser/Pretty-printer/Trees/...
-      |- contribJVM/testQuick   # Contrib
-      |- semanticdbScalac/test  # Semanticdb implementation for Scalac
-      |- testOnlyJVM
-      |- testOnlyJS
+      |- testsJVM/testQuick # Bread and butter tests
+      |- testsJS/testQuick  # Ensure crosscompilability
+      |- testkit/test       # Ensure additional reliability thanks to property tests
       |""".stripMargin)
-}
-testAll := {
-  testOnlyJVM.value
-  testOnlyJS.value
-}
-// These tasks skip over modules with no tests, like dialects/inputs/io, speeding up
-// edit/test cycles. You may prefer to run testJVM while iterating on a design
-// because JVM tests link and run faster than JS tests.
-testOnlyJVM := {
-  val runScalametaTests = test.in(scalametaJVM, Test).value
-  val runSemanticdbScalacTests = test.in(semanticdbScalac, Test).value
-  val runBenchmarkTests = test.in(benchmarks, Test).value
-  val runContribTests = test.in(contribJVM, Test).value
-  val runTests = test.in(testsJVM, Test).value
-  val propertyTests = compile.in(testkit, Test).value
-  val langmetaTests = compile.in(langmetaJVM, Test).value
-}
-testOnlyJS := {
-  val runScalametaTests = test.in(scalametaJS, Test).value
-  val runContribTests = test.in(contribJS, Test).value
-  val runTests = test.in(testsJS, Test).value
-  val runParsersTest = test.in(parsersJS, Test).value
 }
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
@@ -89,7 +64,7 @@ console := console.in(scalametaJVM, Compile).value
 /** ======================== LANGMETA ======================== **/
 
 lazy val langmeta = crossProject
-  .in(file("langmeta"))
+  .in(file("langmeta/langmeta"))
   .settings(
     publishableSettings,
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
@@ -100,9 +75,8 @@ lazy val langmeta = crossProject
         flatPackage = true // Don't append filename to package
       ) -> sourceManaged.in(Compile).value
     ),
-    PB.protoSources.in(Compile) := Seq(file("langmeta/shared/src/main/protobuf")),
-    libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion,
-    exposePaths("langmeta", Test)
+    PB.protoSources.in(Compile) := Seq(file("langmeta/langmeta/shared/src/main/protobuf")),
+    libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
   )
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
@@ -239,8 +213,7 @@ lazy val scalameta = crossProject
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
-    description := "Scalameta umbrella module that includes all public APIs",
-    exposePaths("scalameta", Test)
+    description := "Scalameta umbrella module that includes all public APIs"
   )
   .dependsOn(
     common,
@@ -257,6 +230,28 @@ lazy val scalameta = crossProject
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
+lazy val contrib = crossProject
+  .in(file("scalameta/contrib"))
+  .settings(
+    publishableSettings,
+    description := "Incubator for scalameta APIs"
+  )
+  .dependsOn(scalameta)
+lazy val contribJVM = contrib.jvm
+lazy val contribJS = contrib.js
+
+lazy val semanticdbScalacCore = project
+  .in(file("scalameta/semanticdb-scalac-core"))
+  .settings(
+    moduleName := "semanticdb-scalac-core",
+    description := "Library to generate semanticdb from Scala 2.x internal data structures",
+    publishableSettings,
+    mimaPreviousArtifacts := Set.empty,
+    isFullCrossVersion,
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+  )
+  .dependsOn(scalametaJVM)
+
 lazy val semanticdbScalacPlugin = project
   .in(file("scalameta/semanticdb-scalac-plugin"))
   .settings(
@@ -272,32 +267,19 @@ lazy val semanticdbScalacPlugin = project
           def isArtifactId(node: XmlNode, fn: String => Boolean) =
             node.label == "artifactId" && fn(node.text)
           node.label == "dependency" && node.child.exists(child =>
-            isArtifactId(child, _.startsWith("langmeta-")) ||
-            isArtifactId(child, _.startsWith("semanticdb")))
+            isArtifactId(child, _.startsWith("semanticdb-scalac-core")))
         }
         override def transform(node: XmlNode): XmlNodeSeq = node match {
           case e: Elem if isAbsorbedDependency(node) =>
-            Comment("this dependency has been absorbed via sbt-assembly")
+            Comment("the dependency that was here has been absorbed via sbt-assembly")
           case _ => node
         }
       }).transform(node).head
     }
   )
-  .dependsOn(semanticdbScalac)
+  .dependsOn(semanticdbScalacCore)
 
-
-lazy val semanticdbScalac = project
-  .in(file("scalameta/semanticdb-scalac"))
-  .settings(
-    moduleName := "semanticdb-scalac-core",
-    description := "Library to generate semanticdb from Scala 2.x internal data structures",
-    publishableSettings,
-    mimaPreviousArtifacts := Set.empty,
-    isFullCrossVersion,
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    exposePaths("semanticdb-scalac", Test)
-  )
-  .dependsOn(scalametaJVM, testkit % Test)
+/** ======================== TESTS ======================== **/
 
 lazy val semanticdbIntegration = project
   .in(file("scalameta/semanticdb-integration"))
@@ -311,17 +293,18 @@ lazy val semanticdbIntegration = project
       Seq(
         s"-Xplugin:$pluginJar",
         s"-Ywarn-unused-import",
-        "-Yrangepos",
+        s"-Yrangepos",
         s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
         s"-P:semanticdb:failures:error", // fail fast during development.
         s"-P:semanticdb:members:all",
         s"-P:semanticdb:exclude:Exclude.scala",
-        "-Xplugin-require:semanticdb"
+        s"-Xplugin-require:semanticdb"
       )
     }
   )
 
-lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
+lazy val testkit = project
+  .in(file("scalameta/testkit"))
   .settings(
     publishableSettings,
     hasLargeIntegrationTests,
@@ -336,14 +319,16 @@ lazy val testkit = Project(id = "testkit", base = file("scalameta/testkit"))
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
     description := "Testing utilities for scalameta APIs"
   )
-  .dependsOn(scalametaJVM)
+  .dependsOn(contribJVM)
 
 lazy val tests = crossProject
-  .in(file("scalameta/tests"))
+  .in(file("tests"))
   .settings(
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
+    exposePaths("tests", Test),
+    exposePaths("semanticdb-scalac-plugin", Test),
     compile.in(Test) := compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,
@@ -352,53 +337,22 @@ lazy val tests = crossProject
     ),
     buildInfoPackage := "scala.meta.tests"
   )
-  .jvmConfigure(_.dependsOn(testkit))
+  .jvmConfigure(_.dependsOn(testkit, semanticdbScalacCore))
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
-lazy val testOnlyJVM = taskKey[Unit]("Run JVM tests")
-lazy val testOnlyJS = taskKey[Unit]("Run Scala.js tests")
-lazy val testAll = taskKey[Unit]("Run JVM and Scala.js tests")
 
-lazy val contrib = crossProject
-  .in(file("scalameta/contrib"))
+lazy val tests210 = project
+  .in(file("langmeta/tests210"))
   .settings(
-    publishableSettings,
-    description := "Incubator for scalameta APIs"
+    sharedSettings,
+    nonPublishableSettings,
+    crossScalaVersions := List(LatestScala210),
+    scalaVersion := LatestScala210,
+    description := "Tests for scalameta APIs that are published for Scala 2.10"
   )
-  .jvmConfigure(_.dependsOn(testkit % Test))
-  .dependsOn(scalameta)
-lazy val contribJVM = contrib.jvm
-lazy val contribJS = contrib.js
-
-lazy val benchmarks =
-  Project(id = "benchmarks", base = file("scalameta/benchmarks"))
-    .settings(
-      sharedSettings,
-      nonPublishableSettings,
-      resourceDirectory.in(Jmh) := resourceDirectory.in(Compile).value,
-      javaOptions.in(run) ++= Seq(
-        "-Djava.net.preferIPv4Stack=true",
-        "-XX:+AggressiveOpts",
-        "-XX:+UseParNewGC",
-        "-XX:+UseConcMarkSweepGC",
-        "-XX:+CMSParallelRemarkEnabled",
-        "-XX:+CMSClassUnloadingEnabled",
-        "-XX:ReservedCodeCacheSize=128m",
-        "-XX:MaxPermSize=1024m",
-        "-Xss8M",
-        "-Xms512M",
-        "-XX:SurvivorRatio=128",
-        "-XX:MaxTenuringThreshold=0",
-        "-Xss8M",
-        "-Xms512M",
-        "-Xmx2G",
-        "-server"
-      )
-    )
-    .dependsOn(scalametaJVM)
-    .enablePlugins(JmhPlugin)
+  .dependsOn(langmetaJVM)
 
 // ==========================================
 // Settings
@@ -426,7 +380,8 @@ lazy val sharedSettings = Def.settings(
   parallelExecution.in(Test) := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
-  triggeredMessage.in(ThisBuild) := Watched.clearWhenTriggered
+  triggeredMessage.in(ThisBuild) := Watched.clearWhenTriggered,
+  incOptions := incOptions.value.withLogRecompileOnMacro(false)
 )
 
 lazy val mergeSettings = Def.settings(

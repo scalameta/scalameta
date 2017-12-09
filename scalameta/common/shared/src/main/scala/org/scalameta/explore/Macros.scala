@@ -19,13 +19,14 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
         banned.exists(prefix => sym.fullName.startsWith(prefix))
       }
       def aliases = sym.fullName.contains(".Aliases.")
+      def contrib = sym.fullName.contains(".contrib.") || sym.fullName.endsWith(".contrib")
+      def interactive = sym.fullName.contains(".interactive.") || sym.fullName.endsWith(".interactive")
+      def testkit = sym.fullName.contains(".testkit.") || sym.fullName.endsWith(".testkit")
       def tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith(".tests")
       def internal = sym.fullName.contains(".internal.") || (sym.fullName.endsWith(".internal") && !sym.fullName.endsWith(".meta.internal"))
       def invisible = !sym.isPublic
       def inexistent = !sym.asInstanceOf[scala.reflect.internal.SymbolTable#Symbol].exists // NOTE: wtf
-      val result = artefact || trivial || arbitrary || aliases || tests || internal || invisible || inexistent
-      // println((sym.fullName, s"$result = $artefact || $trivial || $arbitrary || $tests || $internal || $invisible || $inexistent"))
-      result
+      artefact || trivial || arbitrary || aliases || contrib || interactive || testkit || tests || internal || invisible || inexistent
     }
     def isRelevant: Boolean = {
       !isIrrelevant
@@ -148,7 +149,8 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     // NOTE: We filtered out package objects and implicit classes (hopefully, IDEs and autocompletes will ignore those),
     // and then we added methods from package objects (because `import scala.meta._` will bring those in).
     val effectiveStatics = nonPkgObjectStatics ++ pkgObjectMethods
-    val fullNames = effectiveStatics.map(sym => scala.reflect.NameTransformer.decode(sym.fullName))
+    var fullNames = effectiveStatics.map(sym => scala.reflect.NameTransformer.decode(sym.fullName))
+    fullNames = fullNames.map(_.replace("org.langmeta.", "scala.meta."))
     q"${fullNames.distinct.sorted}"
   }
 
