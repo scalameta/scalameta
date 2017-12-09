@@ -1,3 +1,6 @@
+package org.scalameta
+package build
+
 import com.typesafe.tools.mima.core._
 
 // More details about Mim:

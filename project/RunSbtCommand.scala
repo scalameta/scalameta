@@ -1,3 +1,6 @@
+package org.scalameta
+package build
+
 import sbt._
 import Keys._
 import sbt.complete.Parser
