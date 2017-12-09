@@ -3,11 +3,13 @@ import scala.util.Try
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalajs.sbtplugin.ScalaJSCrossVersion
+import org.scalameta.build._
+import org.scalameta.build.Versions._
 import org.scalameta.os
 import UnidocKeys._
 import sbt.ScriptedPlugin._
+import complete.DefaultParsers._
 import com.trueaccord.scalapb.compiler.Version.scalapbVersion
-import Versions._
 
 lazy val LanguageVersions = Seq(LatestScala212, LatestScala211)
 lazy val LanguageVersion = LanguageVersions.head
@@ -23,6 +25,8 @@ name := {
 }
 nonPublishableSettings
 unidocSettings
+addCommandAlias("benchAll", benchAll.command)
+addCommandAlias("benchQuick", benchQuick.command)
 // ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
@@ -354,6 +358,32 @@ lazy val tests210 = project
   )
   .dependsOn(langmetaJVM)
 
+/** ======================== BENCHES ======================== **/
+
+lazy val bench = project
+  .in(file("bench/suite"))
+  .enablePlugins(BuildInfoPlugin)
+  .enablePlugins(JmhPlugin)
+  .settings(
+    sharedSettings,
+    nonPublishableSettings,
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+    buildInfoKeys := Seq[BuildInfoKey](
+      "sourceroot" -> (baseDirectory in ThisBuild).value
+    ),
+    buildInfoPackage := "org.scalameta.bench",
+    run.in(Jmh) := (Def.inputTaskDyn {
+      val args = spaceDelimited("<arg>").parsed
+      val semanticdbScalacJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+      val buf = List.newBuilder[String]
+      buf += "org.openjdk.jmh.Main"
+      buf ++= args
+      buf += "-p"
+      buf += s"semanticdbScalacJar=$semanticdbScalacJar"
+      runMain.in(Jmh).toTask(s"  ${buf.result.mkString(" ")}")
+    }).evaluated
+  )
+
 // ==========================================
 // Settings
 // ==========================================
@@ -495,15 +525,6 @@ lazy val nonPublishableSettings = Seq(
   publishArtifact := false,
   PgpKeys.publishSigned := {},
   publish := {}
-)
-
-lazy val buildInfoSettings = Def.settings(
-  buildInfoKeys := Seq[BuildInfoKey](
-    version,
-    "supportedScalaVersions" -> crossScalaVersions.in(scalametaJVM).value
-  ),
-  buildInfoPackage := "org.scalameta",
-  buildInfoObject := "BuildInfo"
 )
 
 lazy val isFullCrossVersion = Seq(
