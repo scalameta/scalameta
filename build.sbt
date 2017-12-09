@@ -31,10 +31,6 @@ commands += Command.command("ci-fast") { s =>
     ci("doc") :: // skips 2.10 projects
     s
 }
-commands += CiCommand("ci-slow")(
-  "testkit/test:runMain scala.meta.testkit.ScalametaParserPropertyTest" ::
-  Nil
-)
 commands += CiCommand("ci-publish")(
   if (isTagPush) "publishSigned" :: Nil
   else Nil
