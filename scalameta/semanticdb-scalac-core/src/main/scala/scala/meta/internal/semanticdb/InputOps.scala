@@ -45,12 +45,10 @@ trait InputOps { self: DatabaseOps =>
       // NOTE: Even with -Yrangepos enabled we cannot be guaranteed that all positions are
       // range positions. In the case we encounter a non-range position we assume start == end.
       val input = pos.source.toInput
-      if (input != m.Input.None) {
-        if (pos.isRange) m.Position.Range(input, pos.start, pos.end)
-        else m.Position.Range(input, pos.point, pos.point)
-      } else {
-        m.Position.None
-      }
+      if (input == m.Input.None) m.Position.None
+      else if (!pos.isDefined) m.Position.None
+      else if (pos.isRange) m.Position.Range(input, pos.start, pos.end)
+      else m.Position.Range(input, pos.point, pos.point)
     }
   }
 }
