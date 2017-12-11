@@ -16,9 +16,9 @@ sealed abstract case class AbsolutePath(toNIO: nio.Path) {
   def toFile: File = toNIO.toFile
   def toURI: URI = toNIO.toUri
 
-  def syntax: String = toString
+  def syntax: String = toNIO.toString
   def structure: String = s"""AbsolutePath("$syntax")"""
-  override def toString: String = toNIO.toString
+  override def toString: String = syntax
 
   def toRelative: RelativePath = toRelative(PathIO.workingDirectory)
   def toRelative(prefix: AbsolutePath): RelativePath = RelativePath(prefix.toNIO.relativize(toNIO))

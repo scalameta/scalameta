@@ -25,27 +25,16 @@ package object inputs {
     }
   }
 
-  // TODO: the extension methods below are temporary stubs that should be moved to the public API
-
+  
+  @deprecated("Use Input.syntax or Input.structure", "2.1.4")
   implicit class XtensionInputSyntaxStructure(input: Input) {
-    def syntax: String = input match {
-      case Input.None => "<none>"
-      case Input.File(path, _) => path.toString
-      case Input.VirtualFile(path, _) => path
-      case Input.Denotation(_, symbol) => symbol.syntax
-      case _ => "<input>"
-    }
-    def structure: String = input.toString
+    def syntax: String = input.syntax
+    def structure: String = input.structure
   }
 
+  @deprecated("Use Position.syntax or Position.structure", "2.1.4")
   implicit class XtensionPositionSyntaxStructure(pos: Position) {
-    def syntax: String = pos match {
-      case Position.None => s"<none>"
-      case Position.Range(input, start, end) => s"${input.syntax}@$start..$end"
-    }
-    def structure: String = pos match {
-      case Position.None => s"Position.None"
-      case Position.Range(input, start, end) => s"Position.Range(${input.structure}, $start, $end)"
-    }
+    def syntax: String = pos.syntax
+    def structure: String = pos.structure
   }
 }

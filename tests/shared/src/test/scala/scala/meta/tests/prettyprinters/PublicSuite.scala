@@ -142,68 +142,108 @@ class PublicSuite extends FunSuite {
     // Satisfy surface suite.
   }
 
-  test("scala.meta.inputs.Input.None.toString") {
-    assert(Input.None.toString == "Input.None")
+  test("scala.meta.inputs.Input.None.syntax") {
+    assert(Input.None.syntax == "<none>")
   }
 
-  test("scala.meta.inputs.Input.File.toString") {
+  test("scala.meta.inputs.Input.None.structure") {
+    assert(Input.None.structure == "Input.None")
+  }
+
+  test("scala.meta.inputs.Input.File.syntax") {
+    val file = new File("a/b/foo.scala")
+    val input = Input.File(file)
+    assert(input.syntax == file.getAbsolutePath)
+  }
+
+  test("scala.meta.inputs.Input.File.structure") {
     val path = RelativePath("hello.scala").toAbsolute
     val syntax = path.syntax
     val input1 = Input.File(path, Charset.forName("latin1"))
     val input2 = Input.File(path, Charset.forName("UTF-8"))
-    input1 match { case _: Input.File => }
-    input2 match { case _: Input.File => }
-    assert(input1.toString == s"""Input.File(new File("$syntax"), Charset.forName("ISO-8859-1"))""")
-    assert(input2.toString == s"""Input.File(new File("$syntax"), Charset.forName("UTF-8"))""")
+    assert(input1.structure == s"""Input.File(new File("$syntax"), Charset.forName("ISO-8859-1"))""")
+    assert(input2.structure == s"""Input.File(new File("$syntax"), Charset.forName("UTF-8"))""")
   }
 
-  test("scala.meta.inputs.Input.Slice.toString") {
+  test("scala.meta.inputs.Input.Slice.syntax") {
     val input = Input.Slice(Input.String("foo"), 0, 2)
-    input match { case _: Input.Slice => }
-    assert(input.toString == """Input.Slice(Input.String("foo"), 0, 2)""")
+    assert(input.syntax == "<slice>")
   }
 
-  test("scala.meta.inputs.Input.Stream.toString") {
+  test("scala.meta.inputs.Input.Slice.structure") {
+    val input = Input.Slice(Input.String("foo"), 0, 2)
+    assert(input.structure == """Input.Slice(Input.String("foo"), 0, 2)""")
+  }
+
+  test("scala.meta.inputs.Input.Stream.syntax") {
+    val utf8 = Charset.forName("UTF-8")
+    val input = Input.Stream(new ByteArrayInputStream("Hello, World!".getBytes(utf8)), utf8)
+    assert(input.syntax == "<stream>")
+  }
+
+  test("scala.meta.inputs.Input.Stream.structure") {
     val latin1 = Charset.forName("latin1")
     val stream = new ByteArrayInputStream("Привет(мир!)".getBytes(latin1))
     val input1 = Input.Stream(stream, latin1)
     val input2 = Input.Stream(stream, Charset.forName("UTF-8"))
-    input1 match { case _: Input.Stream => }
-    input2 match { case _: Input.Stream => }
-    assert(input1.toString == """Input.Stream(<stream>, Charset.forName("ISO-8859-1"))""")
-    assert(input2.toString == """Input.Stream(<stream>, Charset.forName("UTF-8"))""")
+    assert(input1.structure == """Input.Stream(<stream>, Charset.forName("ISO-8859-1"))""")
+    assert(input2.structure == """Input.Stream(<stream>, Charset.forName("UTF-8"))""")
   }
 
-  test("scala.meta.inputs.Input.String.toString") {
+  test("scala.meta.inputs.Input.String.syntax") {
     val input = Input.String("foo")
-    input match { case _: Input.String => }
-    assert(input.toString == """Input.String("foo")""")
+    assert(input.syntax == "<string>")
   }
 
-  test("scala.meta.inputs.Input.Synthetic.toString") {
+  test("scala.meta.inputs.Input.String.structure") {
+    val input = Input.String("foo")
+    assert(input.structure == """Input.String("foo")""")
+  }
+
+  test("scala.meta.inputs.Input.Synthetic.syntax") {
     val input = Input.Synthetic("foo", Input.String("blah"), 0, 0)
-    input match { case _: Input.Synthetic => }
-    assert(input.toString == """Input.Synthetic("foo", Input.String("blah"), 0, 0)""")
+    assert(input.syntax == "<synthetic>")
   }
 
-  test("scala.meta.inputs.Input.VirtualFile.toString") {
+  test("scala.meta.inputs.Input.Synthetic.structure") {
+    val input = Input.Synthetic("foo", Input.String("blah"), 0, 0)
+    assert(input.structure == """Input.Synthetic("foo", Input.String("blah"), 0, 0)""")
+  }
+
+  test("scala.meta.inputs.Input.VirtualFile.syntax") {
     val input = Input.VirtualFile("foo.scala", "foo")
-    input match { case _: Input.VirtualFile => }
-    assert(input.toString == s"""Input.VirtualFile("foo.scala", "foo")""")
+    assert(input.syntax == "foo.scala")
+  }
+
+  test("scala.meta.inputs.Input.VirtualFile.structure") {
+    val input = Input.VirtualFile("foo.scala", "foo")
+    assert(input.structure == s"""Input.VirtualFile("foo.scala", "foo")""")
   }
 
   test("scala.meta.inputs.Position.toString") {
     // covered below
   }
 
-  test("scala.meta.inputs.Position.None.toString") {
-    assert(Position.None.toString == "Position.None")
+  test("scala.meta.inputs.Position.None.syntax") {
+    assert(Position.None.syntax == "<none>")
   }
 
-  test("scala.meta.inputs.Position.Range.toString") {
+  test("scala.meta.inputs.Position.None.toString") {
+    assert(Position.None.structure == "Position.None")
+  }
+
+  test("scala.meta.inputs.Position.Range.syntax") {
+    val content = """|object A {
+                     |  val foo = 42 
+                     |}""".stripMargin
+    val input = Input.VirtualFile("a/b/foo.scala", content)
+    val range = Position.Range(input, 13, 26) // selects the val above
+    assert(range.syntax == "a/b/foo.scala:2:2")
+  }
+
+  test("scala.meta.inputs.Position.Range.structure") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    lhs.pos match { case _: Position.Range =>; case _ => }
-    assert(lhs.pos.toString === """[0..3) in Input.String("foo + bar")""")
+    assert(lhs.pos.structure === """Position.Range(Input.String("foo + bar"), 0, 3)""")
   }
 
   test("scala.meta.io.AbsolutePath.toString") {
@@ -240,7 +280,7 @@ class PublicSuite extends FunSuite {
       catch {
         case ex: ParseException =>
           assert(ex.toString === """
-            |<input>:1: error: end of file expected but class found
+            |<string>:1: error: end of file expected but class found
             |foo + class
             |      ^
           """.trim.stripMargin.split('\n').mkString(EOL))
@@ -257,7 +297,7 @@ class PublicSuite extends FunSuite {
     val parsed = "foo + class".parse[Term]
     parsed match { case _: Parsed.Error =>; case _ => }
     assert(parsed.toString === """
-      |<input>:1: error: end of file expected but class found
+      |<string>:1: error: end of file expected but class found
       |foo + class
       |      ^
     """.trim.stripMargin.split('\n').mkString(EOL))
@@ -452,7 +492,7 @@ class PublicSuite extends FunSuite {
       catch {
         case ex: TokenizeException =>
           assert(ex.toString === """
-            |<input>:1: error: unclosed string literal
+            |<string>:1: error: unclosed string literal
             |"c
             |^
           """.trim.stripMargin.split('\n').mkString(EOL))
@@ -465,7 +505,7 @@ class PublicSuite extends FunSuite {
     val tokenized = """"c""".tokenize
     tokenized match { case _: Tokenized.Error =>; case _ => }
     assert(tokenized.toString === """
-      |<input>:1: error: unclosed string literal
+      |<string>:1: error: unclosed string literal
       |"c
       |^
     """.trim.stripMargin.split('\n').mkString(EOL))

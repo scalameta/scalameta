@@ -45,4 +45,3 @@ In case of any questions, don't hesitate to ask on our
 
 (these guidelines have been adapted from
 https://github.com/lihaoyi/ammonite#contribution-guidelines)
-

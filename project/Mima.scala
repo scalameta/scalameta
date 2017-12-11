@@ -11,7 +11,13 @@ object Mima {
       ProblemFilters.exclude[Problem]("org.langmeta.internal.*"),
       ProblemFilters.exclude[Problem]("scala.meta.internal.*"),
       ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.parsers.Parsed.*"),
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.tokenizers.Tokenized.*")
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.tokenizers.Tokenized.*"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("org.langmeta.inputs.Input.structure"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("org.langmeta.inputs.Input.syntax"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("org.langmeta.inputs.Position.structure"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("org.langmeta.inputs.Position.syntax")
     )
   }
 }
+
+
