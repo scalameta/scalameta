@@ -31,7 +31,7 @@ addCommandAlias("benchQuick", benchQuick.command)
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
   if (ciScalaVersion.startsWith("2.10")) {
-    s"wow $ciScalaVersion" :: "tests210/test" :: s
+    s"wow $ciScalaVersion" :: "langmetaTestsJVM/test" :: s
   } else {
     s"wow $ciScalaVersion" ::
       ("tests" + ciPlatform + "/test") ::
@@ -347,13 +347,15 @@ lazy val tests = crossProject
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
 
-lazy val tests210 = project
-  .in(file("langmeta/tests210"))
+// NOTE: Most of the tests that could be part of the project still live in testsJVM.
+// At some point, we plan to explore splitting langmeta into a separate repo,
+// and at this point we will deal with splitting the tests appropriately.
+lazy val langmetaTestsJVM = project
+  .in(file("langmeta/tests"))
   .settings(
     sharedSettings,
     nonPublishableSettings,
-    crossScalaVersions := List(LatestScala210),
-    scalaVersion := LatestScala210,
+    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
     description := "Tests for scalameta APIs that are published for Scala 2.10"
   )
   .dependsOn(langmetaJVM)
