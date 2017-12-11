@@ -19,6 +19,8 @@ sealed trait Position {
   def endLine: Int
   def endColumn: Int
   def text: String
+  def syntax: String
+  def structure: String
 }
 
 object Position {
@@ -31,7 +33,9 @@ object Position {
     def endLine = -1
     def endColumn = -1
     def text = ""
-    override def toString = "Position.None"
+    override def toString = syntax
+    def syntax: String = "<none>"
+    def structure: String = "Position.None"
   }
 
   final case class Range(input: Input, start: Int, end: Int) extends Position {
@@ -40,6 +44,8 @@ object Position {
     def endLine: Int = input.offsetToLine(end)
     def endColumn: Int = end - input.lineToOffset(endLine)
     override def text = new String(input.chars, start, end - start)
-    override def toString = s"[$start..$end) in $input"
+    override def toString = syntax
+    def syntax: String = s"${input.syntax}:${startLine + 1}:$startColumn"
+    def structure: String = s"Position.Range(${input.structure}, $start, $end)"
   }
 }
