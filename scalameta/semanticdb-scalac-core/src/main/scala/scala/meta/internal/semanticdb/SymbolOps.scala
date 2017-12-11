@@ -7,7 +7,7 @@ import scala.meta.internal.inputs._
 
 trait SymbolOps { self: DatabaseOps =>
 
-  private lazy val symbolCache = new HashMap[g.Symbol, m.Symbol]
+  lazy val symbolCache = new HashMap[g.Symbol, m.Symbol]
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     def toSemantic: m.Symbol = {
       def uncached(sym: g.Symbol): m.Symbol = {
