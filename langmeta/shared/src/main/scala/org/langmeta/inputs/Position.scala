@@ -42,16 +42,62 @@ object Position {
     def endLine: Int = input.offsetToLine(end)
     def endColumn: Int = end - input.lineToOffset(endLine)
     override def text = new String(input.chars, start, end - start)
+
+    private def highlightLine(text: String, start: Int, end: Int): String = {
+      if(startLine == endLine) {
+        val startLineColumn = input.lineToOffset(startLine)
+        val endLineColumn = input.lineToOffset(endLine)
+        val highlight = UNDERLINED + B_BLACK + WHITE + text.slice(start, end) + RESET
+        text.slice(startLineColumn, start) + highlight + text.slice(end, endLineColumn)
+      } else {
+        ""
+      }
+    }
+
+    private def inputSyntax(input: Input): String = {
+      val path =
+        input match {
+          case Input.VirtualFile(path, _) => path
+          case Input.File(path, _) => path
+
+
+
+
+          // private def inputSyntax(input: Input)
+          // 
+          case Input.Synthetic(value, input, start2, end2) => 
+            Position.Range(input, start2, end2))
+
+
+          case Input.Slice(input, start2, end2) => 
+            Position.Range(input, start2, end2))
+
+          case Input.Denotation(_, symbol) => symbol.syntax
+          case _: Input.String => "<string>"
+          case _: Input.Stream => "<stream>"
+          case _: Input.None => "<none>"
+        }
+
+      s"${path}:${startLine}:${startColumn}"
+    }
+
     override def toString = {
-      val maxContextLenght = 100 //chars
-      val text = input.text
-      // nb slice will clips to [0 or text.lenght)
-      val contextBefore = text.slice(start - maxContextLenght, start) 
-      val highlight = UNDERLINED + WHITE + text.slice(start, end) + RESET
-      val contextAfter = text.slice(end, end + maxContextLenght)
-      val context = contextBefore + highlight + contextAfter
-      s"""|[$start..$end)
-          |$context""".stripMargin
+      input match {
+        case Input.VirtualFile(path, _) =>
+        case Input.File(path, _) =>
+        case Input.Synthetic(_, input, _, _) =>
+        case Input.Slice(input, _, _) =>
+        case _: Input.String => ""
+        case _: Input.Denotation => ""
+        case _: Input.Stream => default
+        case _: Input.None => ""
+      }
+
+      // def default = highlightLine(text, start, end)
+
+      s"${highlight}"
     }
   }
 }
+
+// <denotation> _root_.toString
