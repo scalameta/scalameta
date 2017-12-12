@@ -113,6 +113,9 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.Xml *
       |scala.meta.tokens.Tokens
       |scala.meta.transversers
+      |scala.meta.transversers.Api.LeafFirst
+      |scala.meta.transversers.Api.RootFirst
+      |scala.meta.transversers.Api.TraversalOrder
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
       |scala.meta.trees
@@ -155,9 +158,9 @@ class SurfaceSuite extends FunSuite {
       |* scala.meta.Dialect.apply(scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
-      |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
-      |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
-      |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
+      |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T])(implicit Api.this.TraversalOrder): List[T]
+      |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree])(implicit Api.this.TraversalOrder): scala.meta.Tree
+      |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit])(implicit Api.this.TraversalOrder): Unit
     """.trim.stripMargin.split('\n').mkString(EOL))
   }
 
