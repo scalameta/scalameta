@@ -186,7 +186,11 @@ lazy val transversers = crossProject
     description := "Scalameta traversal and transformation infrastructure for abstract syntax trees",
     enableMacros
   )
-  .dependsOn(common, trees)
+  .dependsOn(
+    common, trees,
+    parsers % "compile->test",
+    quasiquotes % "compile->test")
+
 lazy val traversersJVM = transversers.jvm
 lazy val traversersJS = transversers.js
 
