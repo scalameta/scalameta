@@ -66,6 +66,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
         timestampComputeStarted = System.nanoTime()
         super.run()
         timestampComputeFinished = System.nanoTime()
+        symbolCache.clear()
       }
     }
   }

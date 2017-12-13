@@ -38,6 +38,7 @@ Other Scalameta configurations progressively enable more and more features:
 Benchmark                      Mode    Cnt Score
 QuickScalacBaseline            sample  35  1595.274 ± 15.263  ms/op
 QuickScalacRangepos            sample  35  1703.097 ± 25.044  ms/op  (6% overhead)
+QuickScalametaOpt              sample  15  1934.902 ± 29.232  ms/op  (21% overhead)
 QuickScalametaBaseline         sample  15  2020.256 ± 39.586  ms/op  (25% overhead)
 QuickScalametaFullContents     sample  15  2081.549 ± 38.977  ms/op  (30% overhead)
 QuickScalametaFullDenotations  sample  15  2236.738 ± 28.241  ms/op  (39% overhead)
