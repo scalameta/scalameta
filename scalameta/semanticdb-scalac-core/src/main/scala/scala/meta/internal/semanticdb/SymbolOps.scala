@@ -4,6 +4,7 @@ package semanticdb
 import java.util.HashMap
 import scala.{meta => m}
 import scala.meta.internal.inputs._
+import scala.util.control.NonFatal
 
 trait SymbolOps { self: DatabaseOps =>
 
@@ -87,7 +88,14 @@ trait SymbolOps { self: DatabaseOps =>
       if (msym != null) {
         msym
       } else {
-        val msym = uncached(sym)
+        val msym = try {
+          uncached(sym)
+        } catch {
+          case NonFatal(e) if isInteractiveCompiler =>
+            // happens regularly for broken code with the pc, see
+            // https://github.com/scalameta/scalameta/issues/1194
+            m.Symbol.None
+        }
         symbolCache.put(sym, msym)
         msym
       }

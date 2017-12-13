@@ -1,7 +1,6 @@
 package scala.meta.tests
 package semanticdb
 
-import scala.meta.internal.semanticdb.DatabaseOps
 import org.scalameta.logger
 import org.scalatest.FunSuite
 import scala.meta.interactive.InteractiveSemanticdb._
@@ -74,4 +73,28 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
     """.stripMargin
   )
 
+  // This tests a case where SymbolOps.toSemantic crashes
+  check(
+    """
+      |object b {
+      |  def add(a: In) = 1
+      |}""".stripMargin,
+    """
+      |Language:
+      |Interactive
+      |
+      |Names:
+      |[8..9): b <= _empty_.b.
+      |[22..23): a <= (a)
+      |[25..27): In => (a)`<error: <none>>`#
+      |
+      |Messages:
+      |[25..27): [error] not found: type In
+      |
+      |Symbols:
+      |(a) => param a: <error>
+      |(a)`<error: <none>>`# => class `<error: <none>>`
+      |_empty_.b. => final object b
+    """.stripMargin
+  )
 }
