@@ -113,4 +113,16 @@ class TransverserSuite extends FunSuite {
     val result1 = tree0.collect { case Term.Name(s) => s }
     assert(result1.toString == "List(x, +, y)")
   }
+
+  test("#1200") {
+    var i = 0
+    val fn: PartialFunction[Tree, Tree] = {
+      case q"A" if { i += 1; i < 2 } =>  q"B"
+    }
+    q"A".collect(fn)
+    i = 0
+    q"A".traverse(fn.andThen(_ => Unit))
+    i = 0
+    q"A".transform(fn)
+  }
 }
