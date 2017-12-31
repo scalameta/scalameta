@@ -21,7 +21,7 @@ trait Equality {
     @inline
     def isEqual[F[x <: Tree] <: TreeEquality[x]](
         b: A)(implicit conv: Tree => F[Tree], eqEv: Equal[F[Tree]]): Boolean =
-      eqEv.isEqual(a, b)
+      (a eq b) || eqEv.isEqual(a, b)
   }
 }
 
