@@ -29,7 +29,11 @@ import scala.meta.internal.prettyprinters._
 extends immutable.IndexedSeq[Token] with collection.IndexedSeqOptimized[Token, immutable.IndexedSeq[Token]] {
   def apply(idx: Int): Token = tokens(start + idx)
   def length: Int = end - start
-  override def slice(from: Int, until: Int): Tokens = Tokens(tokens, start + math.max(from, 0), start + math.min(math.max(until, 0), length))
+  override def slice(from: Int, until: Int): Tokens = {
+    val lo = start + from.max(0).min(length)
+    val hi = lo.max(start + until.min(length))
+    Tokens(tokens, lo, hi)
+  }
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 
   override def segmentLength(p: Token => Boolean, from: Int = 0): Int = super.segmentLength(p, from)
