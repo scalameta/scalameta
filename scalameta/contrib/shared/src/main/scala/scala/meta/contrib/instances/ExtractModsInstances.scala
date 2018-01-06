@@ -21,6 +21,27 @@ trait ExtractModsInstances {
 
   implicit val extractVarMods: Extract[Defn.Var, Mod] =
     Extract(_.mods)
+
+  implicit val extractTypeMod: Extract[Defn.Type, Mod] =
+    Extract(_.mods)
+
+  implicit val extractTypeParamMod: Extract[Type.Param, Mod] =
+    Extract(_.mods)
+
+  implicit val extractTermParamMod: Extract[Term.Param, Mod] =
+    Extract(_.mods)
+
+  implicit val extractDeclDefMod: Extract[Decl.Def, Mod] =
+    Extract(_.mods)
+
+  implicit val extractDeclVarMod: Extract[Decl.Var, Mod] =
+    Extract(_.mods)
+
+  implicit val extractDeclValMod: Extract[Decl.Val, Mod] =
+    Extract(_.mods)
+
+  implicit val extractDeclTypeMod: Extract[Decl.Type, Mod] =
+    Extract(_.mods)
 }
 
 object ExtractModsInstances extends ExtractModsInstances
