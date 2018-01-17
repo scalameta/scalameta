@@ -14,7 +14,7 @@ trait PrinterOps { self: DatabaseOps =>
     case g.TypeBounds(_, _) =>
       // Skip signature for abstract type members, e.g. type T <: Int
       AttributedSynthetic.empty
-    case PolyType(tparams, tb: TypeBounds) =>
+    case PolyType(_, _: TypeBounds) =>
       // Type lambda with no body
       AttributedSynthetic.empty
     case _ => showSynthetic(g.TypeTree(tpe))
@@ -365,14 +365,6 @@ trait PrinterOps { self: DatabaseOps =>
             first = false
           }
           this.print(close)
-        }
-      }
-      def prefix(pre: Type): Unit = {
-        if (!pre.typeSymbol.isInstanceOf[NoSymbol] &&
-            !pre.typeSymbol.isEmptyPrefix &&
-            !pre.typeSymbol.isEmptyPackage) {
-          this.printType(pre)
-          this.print(".")
         }
       }
 
