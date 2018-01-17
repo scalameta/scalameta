@@ -358,8 +358,9 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_root_.i. => package i
        |_root_.i.B# => trait B
        |_root_.i.B#X# => abstract type X
-       |_root_.i.B#x()Ljava/lang/Object;. => abstract def x: X
-       |  [0..1): X => _root_.i.B#X#
+       |_root_.i.B#x()Ljava/lang/Object;. => abstract def x: B.this.X
+       |  [0..1): B => _root_.i.B#
+       |  [7..8): X => _root_.i.B#X#
        |_root_.i.D# => class D
        |_root_.i.D#X# => type X: HashSet[Int]
        |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
@@ -727,14 +728,17 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |_empty_.x.Path# => class Path
       |_empty_.x.Path#B# => class B
       |_empty_.x.Path#B#C# => class C
-      |_empty_.x.Path#B#C#`<init>`()V. => primaryctor <init>: (): C
-      |  [4..5): C => _empty_.x.Path#B#C#
-      |_empty_.x.Path#B#`<init>`()V. => primaryctor <init>: (): B
+      |_empty_.x.Path#B#C#`<init>`()V. => primaryctor <init>: (): B.this.C
       |  [4..5): B => _empty_.x.Path#B#
+      |  [11..12): C => _empty_.x.Path#B#C#
+      |_empty_.x.Path#B#`<init>`()V. => primaryctor <init>: (): Path.this.B
+      |  [4..8): Path => _empty_.x.Path#
+      |  [14..15): B => _empty_.x.Path#B#
       |_empty_.x.Path#`<init>`()V. => primaryctor <init>: (): Path
       |  [4..8): Path => _empty_.x.Path#
-      |_empty_.x.Path#x. => val x: B
-      |  [0..1): B => _empty_.x.Path#B#
+      |_empty_.x.Path#x. => val x: Path.this.B
+      |  [0..4): Path => _empty_.x.Path#
+      |  [10..11): B => _empty_.x.Path#B#
       |_empty_.x.Path#y. => val y: x.C
       |  [0..1): x => _empty_.x.Path#x.
       |  [2..3): C => _empty_.x.Path#B#C#
@@ -1118,6 +1122,22 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
     """.stripMargin, { (_, Foo) =>
       assertNoDiff(Foo.syntax, "_root_.ag.Foo#")
+    }
+  )
+
+  targeted(
+    """
+      |package ah
+      |
+      |trait EventBus {
+      |  type Classifier
+      |}
+      |trait Foo { this: EventBus =>
+      |  val <<x>>: Classifier
+      |}
+      |""".stripMargin, { (db, x) =>
+      val sig = db.symbols.find(_.symbol == x).get.denotation.signature
+      assertNoDiff(sig, "Foo.this.Classifier")
     }
   )
 }

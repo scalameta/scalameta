@@ -425,6 +425,12 @@ trait PrinterOps { self: DatabaseOps =>
             case PathDependentPrefix(sym) =>
               this.print(ResolvedName(sym))
               this.print(".")
+            case ThisType(sym)
+                if !sym.hasPackageFlag &&
+                  !sym.isModuleOrModuleClass &&
+                  !sym.isConstructor =>
+              this.print(ResolvedName(sym))
+              this.print(".this.")
             case _ =>
           }
           this.print(ResolvedName(sym))
