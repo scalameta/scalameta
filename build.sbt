@@ -66,6 +66,38 @@ packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
 
+/** ======================== SEMANTICDB3 ======================== **/
+
+lazy val semanticdb3 = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .in(file("semanticdb3"))
+  .settings(
+    scalaVersion := LatestScala211,
+    version := customVersion.getOrElse(version.value.replace('+', '-')),
+    organization := "org.scalameta",
+    description := "SemanticDB v3 protobuf schema and classes",
+    // Protobuf setup for binary serialization.
+    PB.targets.in(Compile) := Seq(
+      scalapb.gen(
+        flatPackage = true // Don't append filename to package
+      ) -> sourceManaged.in(Compile).value
+    ),
+    PB.protoSources.in(Compile) := Seq(file("semanticdb3/")),
+    libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
+  )
+  .jvmSettings(
+    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
+  )
+  .jsSettings(
+    crossScalaVersions := List(LatestScala211, LatestScala212)
+  )
+  .nativeSettings(
+    crossScalaVersions := List(LatestScala211)
+  )
+lazy val semanticdb3JVM = semanticdb3.jvm
+lazy val semanticdb3JS = semanticdb3.js
+lazy val semanticdb3Native = semanticdb3.native
+
 /** ======================== LANGMETA ======================== **/
 
 lazy val langmeta = crossProject(JVMPlatform, JSPlatform)
@@ -86,6 +118,7 @@ lazy val langmeta = crossProject(JVMPlatform, JSPlatform)
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
+  .dependsOn(semanticdb3)
 lazy val langmetaJVM = langmeta.jvm
 lazy val langmetaJS = langmeta.js
 
