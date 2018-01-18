@@ -3,13 +3,14 @@ import scala.util.Try
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalajs.sbtplugin.ScalaJSCrossVersion
+import sbtcrossproject.{crossProject, CrossType}
 import org.scalameta.build._
 import org.scalameta.build.Versions._
 import org.scalameta.os
 import UnidocKeys._
 import sbt.ScriptedPlugin._
 import complete.DefaultParsers._
-import com.trueaccord.scalapb.compiler.Version.scalapbVersion
+import scalapb.compiler.Version.scalapbVersion
 
 lazy val LanguageVersions = Seq(LatestScala212, LatestScala211)
 lazy val LanguageVersion = LanguageVersions.head
@@ -80,7 +81,7 @@ lazy val langmeta = crossProject
       ) -> sourceManaged.in(Compile).value
     ),
     PB.protoSources.in(Compile) := Seq(file("langmeta/langmeta/shared/src/main/protobuf")),
-    libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
+    libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
   )
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
