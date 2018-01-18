@@ -72,14 +72,20 @@ packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
 
-/** ======================== LANGMETA ======================== **/
+/** ======================== SEMANTICDB ======================== **/
 
-lazy val langmeta = crossProject(JVMPlatform, JSPlatform)
-  .in(file("langmeta/langmeta"))
+lazy val semanticdb2 = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .in(file("semanticdb/semanticdb2"))
   .settings(
     publishableSettings,
-    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
-    description := "Langmeta umbrella module that includes all public APIs",
+    // Protobuf setup for binary serialization.
+    PB.targets.in(Compile) := Seq(
+      scalapb.gen(
+        flatPackage = true // Don't append filename to package
+      ) -> sourceManaged.in(Compile).value
+    ),
+    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb2/")),
     PB.runProtoc in Compile := {
       val isNixOS = sys.props.get("java.home").map(_.startsWith("/nix/store")).getOrElse(false)
       if (isNixOS) {
@@ -90,18 +96,36 @@ lazy val langmeta = crossProject(JVMPlatform, JSPlatform)
         (PB.runProtoc in Compile).value
       }
     },
-    // Protobuf setup for binary serialization.
-    PB.targets.in(Compile) := Seq(
-      scalapb.gen(
-        flatPackage = true // Don't append filename to package
-      ) -> sourceManaged.in(Compile).value
-    ),
-    PB.protoSources.in(Compile) := Seq(file("langmeta/langmeta/shared/src/main/protobuf")),
     libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
+  )
+  .jvmSettings(
+    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
   )
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
+  .nativeSettings(
+    crossScalaVersions := List(LatestScala211)
+  )
+lazy val semanticdb2JVM = semanticdb2.jvm
+lazy val semanticdb2JS = semanticdb2.js
+lazy val semanticdb2Native = semanticdb2.native
+
+/** ======================== LANGMETA ======================== **/
+
+lazy val langmeta = crossProject(JVMPlatform, JSPlatform)
+  .in(file("langmeta/langmeta"))
+  .settings(
+    publishableSettings,
+    description := "Langmeta umbrella module that includes all public APIs"
+  )
+  .jvmSettings(
+    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
+  )
+  .jsSettings(
+    crossScalaVersions := List(LatestScala211, LatestScala212)
+  )
+  .dependsOn(semanticdb2)
 lazy val langmetaJVM = langmeta.jvm
 lazy val langmetaJS = langmeta.js
 
