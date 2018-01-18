@@ -18,7 +18,7 @@ object Build extends AutoPlugin {
     trait BenchSuite {
       def initCommands: List[String] = List(
         "bench/clean",
-        "wow " + Versions.LatestScala211
+        "wow " + Versions.LatestScala212
       )
 
       def scalacBenches: List[String]
@@ -37,6 +37,11 @@ object Build extends AutoPlugin {
         val benchCommands = scalacCommands ++ scalametaCommands
         (initCommands ++ benchCommands).map(c => s";$c ").mkString("")
       }
+    }
+
+    object benchLSP extends BenchSuite {
+      def scalacBenches = List("QuickScalacBaseline")
+      def scalametaBenches = List("QuickScalametaBaseline")
     }
 
     object benchAll extends BenchSuite {

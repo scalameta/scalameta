@@ -26,6 +26,7 @@ name := {
 nonPublishableSettings
 unidocSettings
 addCommandAlias("benchAll", benchAll.command)
+addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
 // ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
 // it runs `test` sequentially in every defined module.
