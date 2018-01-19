@@ -453,9 +453,10 @@ lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
 lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
 
 lazy val publishableSettings = Def.settings(
-  publishTo := {
-    if (isCustomRepository) Some("adhoc" at adhocRepoUri)
-    else Some("Releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+  publishTo := Some {
+    if (isCustomRepository) "adhoc" at adhocRepoUri
+    else if (isSnapshot.value) Opts.resolver.sonatypeSnapshots
+    else Opts.resolver.sonatypeStaging
   },
   credentials ++= {
     val credentialsFile = if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
