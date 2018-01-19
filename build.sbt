@@ -19,6 +19,12 @@ lazy val LanguageVersion = LanguageVersions.head
 // ==========================================
 
 sharedSettings
+version.in(ThisBuild) ~= { old =>
+  val suffix =
+    if (sys.props.contains("scalameta.snapshot")) "-SNAPSHOT"
+    else ""
+  customVersion.getOrElse(old.replace('+', '-') + suffix)
+}
 name := {
   println(s"[info] Welcome to scalameta ${version.value}")
   "scalametaRoot"
@@ -41,8 +47,7 @@ commands += Command.command("ci-fast") { s =>
   }
 }
 commands += CiCommand("ci-publish")(
-  if (isTagPush) "publishSigned" :: Nil
-  else Nil
+  "publishSigned" :: Nil
 )
 commands += Command.command("mima") { s =>
   s"very mimaReportBinaryIssues" ::
@@ -401,7 +406,6 @@ lazy val sharedSettings = Def.settings(
       case _ => CrossVersion.binary
     }
   },
-  version := customVersion.getOrElse(version.value.replace('+', '-')),
   organization := "org.scalameta",
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
