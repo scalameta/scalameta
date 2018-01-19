@@ -423,6 +423,9 @@ trait PrinterOps { self: DatabaseOps =>
                   !sym.isConstructor =>
               this.print(ResolvedName(sym))
               this.print(".this.")
+            case TypeRef(_, _, _ :: _) =>
+              this.printType(pre)
+              this.print("#")
             case _ =>
           }
           this.print(ResolvedName(sym))

@@ -1140,4 +1140,25 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       assertNoDiff(sig, "Foo.this.Classifier")
     }
   )
+
+  targeted(
+    """package ai
+      |trait A[T] { type Self; def self: Self }
+      |object A {
+      |  def <<foo>>[T] = null.asInstanceOf[A[T]].self
+      |}
+    """.trim.stripMargin, { (db, foo) =>
+      val symbol = db.symbols.find(_.symbol == foo).get
+      assertNoDiff(foo.syntax, "_root_.ai.A.foo()Ljava/lang/Object;.")
+      assertNoDiff(
+        symbol.syntax,
+        """
+          |_root_.ai.A.foo()Ljava/lang/Object;. => def foo: [T] => A[T]#Self
+          |  [7..8): A => _root_.ai.A#
+          |  [9..10): T => _root_.ai.A.foo()Ljava/lang/Object;.[T]
+          |  [12..16): Self => _root_.ai.A#Self#
+        """.stripMargin
+      )
+    }
+  )
 }
