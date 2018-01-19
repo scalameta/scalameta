@@ -163,13 +163,41 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
   members(
     """
       |object a {
-      |  val run = new java.lang.Runnable {
+      |  new java.lang.Runnable {
       |    def run(): Unit = ()
       |  }
-      |  val timer = new java.util.TimerTask {
+      |}""".stripMargin,
+    """
+      |_root_.java.lang.Runnable#{
+      |  run.
+      |}
+      |""".stripMargin
+  )
+
+  members(
+    """
+      |object a {
+      |  new java.util.TimerTask {
       |    def run(): Unit = ()
       |  }
-      |  val ab = new java.lang.AutoCloseable with java.lang.Iterable[Int] {
+      |}""".stripMargin,
+    """
+      |_root_.java.util.TimerTask#{
+      |  scheduledExecutionTime.
+      |  cancel.
+      |  period.
+      |  nextExecutionTime.
+      |  state.
+      |  lock.
+      |  run.
+      |}
+      |""".stripMargin
+  )
+
+  members(
+    """
+      |object a {
+      |  new java.lang.AutoCloseable with java.lang.Iterable[Int] {
       |    def close(): Unit = ???
       |    def iterator(): java.util.Iterator[Int] = ???
       |  }
@@ -183,19 +211,15 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
       |_root_.java.lang.AutoCloseable#{
       |  close.
       |}
-      |_root_.java.lang.Runnable#{
-      |  run.
-      |}
-      |_root_.java.util.TimerTask#{
-      |  scheduledExecutionTime.
-      |  cancel.
-      |  period.
-      |  nextExecutionTime.
-      |  state.
-      |  lock.
-      |  run.
-      |}
       |""".stripMargin
   )
 
+  members(
+    """
+      |object a {
+      |  class Bar()  
+      |  trait Foo { def bar: Int }  
+      |}""".stripMargin,
+    ""
+  )
 }
