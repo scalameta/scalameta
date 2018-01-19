@@ -10,7 +10,7 @@ def fail():
   sys.exit(1)
 if len(sys.argv) != 2: fail()
 suite = sys.argv[1]
-supported_suites = ["All", "Quick"]
+supported_suites = ["All", "Quick", "LSP"]
 if not suite in supported_suites: fail()
 
 def check_exists(path):
