@@ -1,11 +1,15 @@
 package scala.meta.internal
 package semanticdb
 
+import java.util
 import scala.collection.mutable
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.{meta => m}
+import org.langmeta.internal.semanticdb.{schema => s}
 import scala.meta.internal.inputs._
+import scala.meta.io.AbsolutePath
+import org.langmeta.io.RelativePath
 
 trait DocumentOps { self: DatabaseOps =>
   def validateCompilerState(): Unit = {
@@ -30,174 +34,88 @@ trait DocumentOps { self: DatabaseOps =>
     }
   }
 
-  implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
-    def toDocument: m.Document = {
-      val binders = mutable.Set[m.Position]()
-      val names = mutable.Map[m.Position, m.Symbol]()
-      val denotations = mutable.Map[m.Symbol, m.Denotation]()
-      val members = mutable.Map[m.Symbol, List[m.Signature]]()
-      val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
-      val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
-      val todo = mutable.Set[m.Name]() // names to map to global trees
-      val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
-      val mends = mutable.Map[Int, m.Name]() // end offset -> tree
-      val margnames = mutable.Map[Int, List[m.Name]]() // start offset of enclosing apply -> its arg names
-      val mwithins = mutable.Map[m.Tree, m.Name]() // name of enclosing member -> name of private/protected within
-      val mwithinctors = mutable.Map[m.Tree, m.Name]() // name of enclosing class -> name of private/protected within for primary ctor
-      val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
-      val mctorrefs = mutable.Map[Int, m.Name]() // start offset of new/init -> new's anonymous name
+  import scala.tools.nsc.ast.parser.Tokens.isIdentifier
+  case class Iddent(start: Int, end: Int)
+  object Iddent {
+    import scala.collection.JavaConverters._
+    def apply(unit: global.CompilationUnit): mutable.Map[Int, s.Position] = {
+      val tokens = new util.TreeMap[Int, s.Position]()
+      class Scan extends global.syntaxAnalyzer.UnitScanner(unit) {
+        override def deprecationWarning(off: Int, msg: String, since: String) {}
+        override def error(off: Int, msg: String) {}
+        override def incompleteInputError(off: Int, msg: String) {}
 
-      locally {
-        object traverser extends m.Traverser {
-          private def indexName(mname: m.Name): Unit = {
-            todo += mname
-            // TODO: also drop trivia (no idea how to formulate this concisely)
-            val tok = mname.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption
-            val mstart1 = tok.map(_.start).getOrElse(mname.pos.start)
-            val mend1 = tok.map(_.end).getOrElse(mname.pos.end)
-            if (mstarts.contains(mstart1)) {
-              val details = syntaxAndPos(mname) + " " + syntaxAndPos(mstarts(mstart1))
-              sys.error(s"ambiguous mstart $details")
-            }
-            if (mends.contains(mend1)) {
-              val details = syntaxAndPos(mname) + " " + syntaxAndPos(mends(mend1))
-              sys.error(s"ambiguous mend $details")
-            }
-            mstarts(mstart1) = mname
-            mends(mend1) = mname
-          }
-          private def indexArgNames(mapp: m.Tree, mnames: List[m.Name]): Unit = {
-            if (mnames.isEmpty) return
-            todo ++= mnames
-            // TODO: also drop trivia (no idea how to formulate this concisely)
-            val mstart1 = mapp.tokens
-              .dropWhile(_.is[m.Token.LeftParen])
-              .headOption
-              .map(_.start)
-              .getOrElse(-1)
-            // only add names for the top-level term.apply of a curried function application.
-            if (!margnames.contains(mstart1))
-              margnames(mstart1) = mnames
-          }
-          private def indexWithin(mname: m.Name.Indeterminate): Unit = {
-            todo += mname
-            val mencl = mname.parent.flatMap(_.parent).get
-            mencl match {
-              case mencl: m.Ctor.Primary =>
-                val menclDefn = mencl.parent.get.asInstanceOf[m.Member]
-                val menclName = menclDefn.name
-                if (mwithinctors.contains(menclName)) {
-                  val details = syntaxAndPos(mname) + " " + syntaxAndPos(mwithinctors(menclName))
-                  sys.error(s"ambiguous mwithinctors $details")
-                }
-                mwithinctors(menclName) = mname
-              case _ =>
-                def findBinder(pat: m.Pat) =
-                  pat.collect { case m.Pat.Var(name) => name }.head
-                val menclName = mencl match {
-                  case mtree: m.Member => mtree.name
-                  case m.Decl.Val(_, pat :: Nil, _) => findBinder(pat)
-                  case m.Decl.Var(_, pat :: Nil, _) => findBinder(pat)
-                  case m.Defn.Val(_, pat :: Nil, _, _) => findBinder(pat)
-                  case m.Defn.Var(_, pat :: Nil, _, _) => findBinder(pat)
-                }
-                if (mwithins.contains(menclName)) {
-                  val details = syntaxAndPos(mname) + " " + syntaxAndPos(mwithins(menclName))
-                  sys.error(s"ambiguous mwithins $details")
-                }
-                mwithins(menclName) = mname
-            }
-          }
-          override def apply(mtree: m.Tree): Unit = {
-            mtree match {
-              case mtree @ m.Term.Apply(_, margs) =>
-                def loop(term: m.Term): List[m.Term.Name] = term match {
-                  case m.Term.Apply(mfn, margs) =>
-                    margs.toList.collect {
-                      case m.Term.Assign(mname: m.Term.Name, _) => mname
-                    } ++ loop(mfn)
-                  case _ => Nil
-                }
-                indexArgNames(mtree, loop(mtree))
-              case mtree @ m.Mod.Private(mname: m.Name.Indeterminate) =>
-                indexWithin(mname)
-              case mtree @ m.Mod.Protected(mname: m.Name.Indeterminate) =>
-                indexWithin(mname)
-              case mtree @ m.Importee.Rename(mname, mrename) =>
-                indexName(mname)
-                return // NOTE: ignore mrename for now, we may decide to make it a binder
-              case mtree @ m.Name.Anonymous() =>
-              // TODO: support non-ctor-related use cases for anonymous names
-              case mtree: m.Ctor =>
-                mctordefs(mtree.pos.start) = mtree.name
-              case mtree: m.Term.New =>
-                mctorrefs(mtree.pos.start) = mtree.init.name
-              case mtree: m.Init =>
-                mctorrefs(mtree.pos.start) = mtree.name
-              case mtree: m.Name =>
-                indexName(mtree)
-              case _ =>
-              // do nothing
-            }
-            super.apply(mtree)
+        override def nextToken() {
+          val offset0 = offset
+          val code = token
+
+          super.nextToken()
+
+          if (isIdentifier(code)) {
+            val length = (lastOffset - offset0).max(1)
+            tokens.put(offset0, s.Position(offset0, offset0 + length))
           }
         }
-        traverser(unit.toSource)
       }
+      val parser = new global.syntaxAnalyzer.UnitParser(unit) {
+        override def newScanner = new Scan
+      }
+      parser.parse()
+      tokens.asScala
+    }
+  }
+
+  implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
+    def toRelpath: RelativePath = AbsolutePath(unit.source.file.file).toRelative(config.sourceroot)
+    def toDocument: s.Document = {
+      val names = mutable.Map[s.Position, s.ResolvedName]()
+      type sSymbol = String
+      val denotations = mutable.Map[sSymbol, s.Denotation]()
+      val members = mutable.Map[sSymbol, List[m.Signature]]()
+      val inferred = mutable.Map[s.Position, Inferred]().withDefaultValue(Inferred())
+      val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
+      val mstarts = Iddent(unit)
+      val mends = mutable.Map[Int, s.Position]() // end offset -> tree
 
       locally {
         object traverser extends g.Traverser {
           private def tryFindMtree(gtree: g.Tree): Unit = {
-            def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
+            def success(spos: s.Position, gsym0: g.Symbol): Unit = {
               // We cannot be guaranteed that all symbols have a position, see
               // https://github.com/scalameta/scalameta/issues/665
               // Instead of crashing with "unsupported file", we ignore these cases.
               if (gsym0 == null) return
               if (gsym0.isAnonymousClass) return
-              if (mtree.pos == m.Position.None) return
-              if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
+//              if (spos.pos == m.Position.None) return
+              if (names.contains(spos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
               val gsym = {
-                def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
+                def isClassRefInCtorCall = gsym0.isConstructor // && spos.isNot[m.Name.Anonymous]
                 if (gsym0 != null && isClassRefInCtorCall) gsym0.owner
                 else gsym0 // TODO: fix this in callers of `success`
               }
               val symbol = gsym.toSemantic
+              val ssymbol = symbol.syntax
               if (symbol == m.Symbol.None) return
 
-              todo -= mtree
+              val isDefinition = gtree.isDef
 
-              names(mtree.pos) = symbol
-              if (mtree.isDefinition) binders += mtree.pos
+              names(spos) =
+                s.ResolvedName(position = Some(spos), symbol = ssymbol, isDefinition = isDefinition)
 
               def saveDenotation(): Unit = {
                 if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
-                  denotations(symbol) = gsym.toDenotation
+                  denotations(ssymbol) = gsym.toDenotation
                 }
                 if (gsym.isClass && !gsym.isTrait) {
                   val gprim = gsym.primaryConstructor
                   if (gprim != g.NoSymbol) {
-                    denotations(gprim.toSemantic) = gprim.toDenotation
+                    denotations(gprim.toSemantic.syntax) = gprim.toDenotation
                   }
                 }
               }
-              if (mtree.isDefinition && config.denotations.saveDefinitions) saveDenotation()
-              if (mtree.isReference && config.denotations.saveReferences) saveDenotation()
-
-              def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
-                if (map.contains(mtree)) {
-                  val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
-                  if (!gsym.hasAccessBoundary) return
-                  val within1 = gsym.privateWithin
-                  val within2 = within1.owner.info.member({
-                    if (within1.name.isTermName) within1.name.toTypeName
-                    else within1.name.toTermName
-                  })
-                  success(map(mtree), wrapAlternatives("<within " + symbol + ">", within1, within2))
-                }
-              }
-              tryWithin(mwithins, gsym)
-              tryWithin(mwithinctors, gsym.primaryConstructor)
+              if (isDefinition && config.denotations.saveDefinitions) saveDenotation()
+              if (!isDefinition && config.denotations.saveReferences) saveDenotation()
             }
             def tryMstart(start: Int): Boolean = {
               if (!mstarts.contains(start)) return false
@@ -212,7 +130,7 @@ trait DocumentOps { self: DatabaseOps =>
             def tryMpos(start: Int, end: Int): Boolean = {
               if (!mstarts.contains(start)) return false
               val mtree = mstarts(start)
-              if (mtree.pos.end != end) return false
+              if (mtree.end != end) return false
               success(mtree, gtree.symbol)
               return true
             }
@@ -222,37 +140,12 @@ trait DocumentOps { self: DatabaseOps =>
             val gpoint = gtree.pos.point
             val gend = gtree.pos.end
 
-            if (margnames.contains(gstart) || margnames.contains(gpoint)) {
-              (margnames.get(gstart) ++ margnames.get(gpoint)).flatten.foreach(margname => {
-                if (gtree.symbol != null && gtree.symbol.isMethod) {
-                  val gsym = gtree.symbol.paramss.flatten.find(_.name.decoded == margname.value)
-                  gsym.foreach(success(margname, _))
-                }
-              })
-            }
-
-            if (mctordefs.contains(gstart)) {
-              val mname = mctordefs(gstart)
+            if (config.members.isAll) {
               gtree match {
                 case gtree: g.Template =>
-                  if (config.members.isAll) {
-                    gtree.parents.foreach { parent =>
-                      members(parent.symbol.toSemantic) = parent.tpe.lookupMembers
-                    }
+                  gtree.parents.foreach { parent =>
+                    members(parent.symbol.toSemantic.syntax) = parent.tpe.lookupMembers
                   }
-                  val gctor =
-                    gtree.body.find(x => Option(x.symbol).exists(_.isPrimaryConstructor))
-                  success(mname, gctor.map(_.symbol).getOrElse(g.NoSymbol))
-                case gtree: g.DefDef if gtree.symbol.isConstructor =>
-                  success(mname, gtree.symbol)
-                case _ =>
-              }
-            }
-
-            if (mctorrefs.contains(gpoint)) {
-              val mname = mctorrefs(gpoint)
-              gtree match {
-                case g.Select(_, g.nme.CONSTRUCTOR) => success(mname, gtree.symbol)
                 case _ =>
               }
             }
@@ -268,7 +161,7 @@ trait DocumentOps { self: DatabaseOps =>
               // NOTE: never interested in synthetics except for the ones above
               case gtree: g.PackageDef =>
                 if (config.members.isAll) {
-                  members(gtree.symbol.toSemantic) = gtree.pid.tpe.lookupMembers
+                  members(gtree.symbol.toSemantic.syntax) = gtree.pid.tpe.lookupMembers
                 }
               // NOTE: capture PackageDef.pid instead
               case gtree: g.ModuleDef if gtree.name == g.nme.PACKAGE =>
@@ -300,7 +193,7 @@ trait DocumentOps { self: DatabaseOps =>
               case gtree: g.Import =>
                 val sels = gtree.selectors.flatMap { sel =>
                   if (sel.name == g.nme.WILDCARD && config.members.isAll) {
-                    members(gtree.expr.symbol.toSemantic) = gtree.expr.tpe.lookupMembers
+                    members(gtree.expr.symbol.toSemantic.syntax) = gtree.expr.tpe.lookupMembers
                     Nil
                   } else {
                     mstarts.get(sel.namePos).map(mname => (sel.name, mname))
@@ -325,7 +218,7 @@ trait DocumentOps { self: DatabaseOps =>
             if (!config.synthetics.saveSynthetics) return
 
             import scala.meta.internal.semanticdb.{AttributedSynthetic => S}
-            def success(pos: m.Position, f: Inferred => Inferred): Unit = {
+            def success(pos: s.Position, f: Inferred => Inferred): Unit = {
               inferred(pos) = f(inferred(pos))
             }
 
@@ -358,7 +251,7 @@ trait DocumentOps { self: DatabaseOps =>
 
             gtree match {
               case gview: g.ApplyImplicitView =>
-                val pos = gtree.pos.toMeta
+                val pos = gtree.pos.toSchema
                 val syntax = showSynthetic(gview.fun) + "(" + S.star + ")"
                 success(pos, _.copy(conversion = Some(syntax)))
                 isVisited += gview.fun
@@ -367,27 +260,27 @@ trait DocumentOps { self: DatabaseOps =>
                 gimpl.fun match {
                   case gview: g.ApplyImplicitView =>
                     isVisited += gview
-                    val pos = gtree.pos.toMeta
+                    val pos = gtree.pos.toSchema
                     val syntax = showSynthetic(gview.fun) + "(" + S.star + ")(" + args + ")"
                     success(pos, _.copy(conversion = Some(syntax)))
                   case ForComprehensionImplicitArg(qual) =>
-                    val morePrecisePos = qual.pos.withStart(qual.pos.end).toMeta
+                    val morePrecisePos = qual.pos.withStart(qual.pos.end).toSchema
                     val syntax = S("(") + S.star + ")" + "(" + args + ")"
                     success(morePrecisePos, _.copy(args = Some(syntax)))
                   case gfun =>
-                    val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toMeta
+                    val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toSchema
                     val syntax = S("(") + args + ")"
                     success(morePrecisePos, _.copy(args = Some(syntax)))
                 }
               case g.TypeApply(fun, targs @ List(targ, _*)) =>
                 if (targ.pos.isRange) return
-                val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
+                val morePrecisePos = fun.pos.withStart(fun.pos.end).toSchema
                 val args = S.mkString(targs.map(showSynthetic), ", ")
                 val syntax = S("[") + args + "]"
                 success(morePrecisePos, _.copy(targs = Some(syntax)))
               case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
-                val pos = qual.pos.withStart(qual.pos.end).toMeta
-                val symbol = select.symbol.toSemantic
+                val pos = qual.pos.withStart(qual.pos.end).toSchema
+                val symbol = select.symbol.toSemantic.syntax
                 val name = nme.decoded
                 val names = List(SyntheticRange(0, name.length, symbol))
                 val syntax = S(".") + S(nme.decoded, names)
@@ -454,18 +347,31 @@ trait DocumentOps { self: DatabaseOps =>
       val symbols = denotations.map {
         case (sym, denot) =>
           val denotationWithMembers = members.get(sym).fold(denot) { members =>
-            new m.Denotation(denot.flags, denot.name, denot.signature, denot.names, members)
+            s.Denotation(
+              denot.flags,
+              denot.name,
+              denot.signature,
+              denot.names,
+              members.map {
+                // HACK(olafur) we don't encode names here to avoid double backtick ``c_=``
+                case m.Signature.Term(value) => value + "."
+                case m.Signature.Type(value) => value + "#"
+                case els => els.syntax
+              }
+            )
           }
-          m.ResolvedSymbol(sym, denotationWithMembers)
+          s.ResolvedSymbol(sym, Some(denotationWithMembers))
       }.toList
 
-      m.Document(
-        input,
-        language,
-        names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,
-        unit.reportedMessages(mstarts),
-        symbols,
-        synthetics.toList
+      s.Document(
+        filename = input.syntax,
+        contents = input.text,
+        language = language,
+        names = names.values.toSeq,
+        symbols = symbols,
+        synthetics = synthetics.toList,
+        messages = unit.reportedMessages(mstarts)
+//        names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,
       )
     }
   }

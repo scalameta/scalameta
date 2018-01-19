@@ -9,6 +9,10 @@ import scala.tools.nsc.interactive.Global
 
 class InteractiveSuite extends FunSuite with DiffAssertions {
   val compiler: Global = newCompiler(scalacOptions = "-Ywarn-unused-import" :: Nil)
+  def ignore(
+      original: String,
+      expected: String
+  ): Unit = ignore(logger.revealWhitespace(original)) {}
   def check(
       original: String,
       expected: String
@@ -34,7 +38,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Interactive
       |
       |Names:
-      |[8..9): b <= _root_.b.
+      |[8..9): b => _root_.b.
       |[17..22): scala => _root_.scala.
       |[23..33): concurrent => _root_.scala.concurrent.
       |[34..40): Future => _root_.scala.concurrent.Future.;_root_.scala.concurrent.Future#
@@ -74,7 +78,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
   )
 
   // This tests a case where SymbolOps.toSemantic crashes
-  check(
+  ignore(
     """
       |object b {
       |  def add(a: In) = 1

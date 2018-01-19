@@ -26,6 +26,9 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
       |}
     """.stripMargin,
     """
+      |_empty_.a.AA#{
+      |  aa.
+      |}
       |_empty_.a.A#{
       |  G#
       |  F#
@@ -36,9 +39,6 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
       |  a.
       |  a.
       |  E#
-      |}
-      |_empty_.a.AA#{
-      |  aa.
       |}
     """.stripMargin
   )
