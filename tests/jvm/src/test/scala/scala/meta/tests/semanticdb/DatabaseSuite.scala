@@ -10,13 +10,12 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
 import scala.meta.io._
-import scala.meta.internal.semanticdb.DatabaseOps
-import scala.meta.internal.semanticdb.FailureMode
-import scala.meta.internal.semanticdb.MemberMode
-import scala.meta.internal.semanticdb.SemanticdbMode
+import scala.meta.internal.semanticdb.{DatabaseOps, FailureMode, MemberMode, OverrideMode, SemanticdbMode}
 import scala.meta.testkit.DiffAssertions
 
-abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberMode.None)
+abstract class DatabaseSuite(mode: SemanticdbMode,
+                             members: MemberMode = MemberMode.None,
+                             overrides: OverrideMode = OverrideMode.None)
     extends FunSuite
     with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
@@ -48,6 +47,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberM
   config.setMode(mode)
   config.setFailures(FailureMode.Error)
   config.setMembers(members)
+  config.setOverrides(overrides)
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
@@ -228,6 +228,18 @@ abstract class DatabaseSuite(mode: SemanticdbMode, members: MemberMode = MemberM
         }
         .mkString("\n")
       // println(obtained)
+      assertNoDiff(obtained, expected)
+    })
+  }
+
+  def overrides(original: String, expected: String): Unit = {
+    targeted(original, { db =>
+      val obtained = db.symbols
+        .collect {
+          case rs if rs.denotation.overrides.nonEmpty =>
+            s"${rs.symbol}{\n  ${rs.denotation.overrides.mkString("\n  ")}\n}"
+        }
+        .mkString("\n")
       assertNoDiff(obtained, expected)
     })
   }

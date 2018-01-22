@@ -185,12 +185,12 @@ trait DocumentOps { self: DatabaseOps =>
 
               def saveDenotation(): Unit = {
                 if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
-                  denotations(symbol) = gsym.toDenotation
+                  denotations(symbol) = gsym.toDenotation(config.overrides.isDef)
                 }
                 if (gsym.isClass && !gsym.isTrait) {
                   val gprim = gsym.primaryConstructor
                   if (gprim != g.NoSymbol) {
-                    denotations(gprim.toSemantic) = gprim.toDenotation
+                    denotations(gprim.toSemantic) = gprim.toDenotation(config.overrides.isDef)
                   }
                 }
               }
