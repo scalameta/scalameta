@@ -90,7 +90,7 @@ package object semanticdb {
       }
       object sResolvedSymbol {
         def unapply(sresolvedsymbol: s.ResolvedSymbol): Option[d.ResolvedSymbol] = sresolvedsymbol match {
-          case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames, smembers, soverrides: String))) =>
+          case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames, smembers, soverrides))) =>
             val ddefninput = dInput.Denotation(dsignature, dsym)
             val dnames = snames.toIterator.map {
               case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
@@ -104,9 +104,7 @@ package object semanticdb {
               else if (smember.endsWith(".")) d.Signature.Term(smember.stripSuffix("."))
               else sys.error(s"Unexpected signature $smember")
             }.toList
-            val doverrides = 
-              if(soverrides.nonEmpty) d.Symbol.unapply(soverrides)
-              else None
+            val doverrides = soverrides.flatMap(d.Symbol.unapply).toList
             val ddefn = d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides)
             Some(d.ResolvedSymbol(dsym, ddefn))
           case other => sys.error(s"bad protobuf: unsupported denotation $other")

@@ -10,15 +10,15 @@ final class Denotation(
     val signature: String,
     val names: List[ResolvedName],
     val members: List[Signature],
-    val overrides: Option[Symbol]
+    val overrides: List[Symbol]
 ) extends HasFlags
     with Product
     with Serializable {
   def this(flags: Long, name: String, signature: String, names: List[ResolvedName]) =
-      this(flags, name, signature, names, Nil, None)
+      this(flags, name, signature, names, Nil, Nil)
 
   def this(flags: Long, name: String, signature: String, names: List[ResolvedName], members: List[Signature]) =
-      this(flags, name, signature, names, members, None)
+      this(flags, name, signature, names, members, Nil)
 
   def syntax: String = {
     val s_members_and_overrides =
@@ -29,7 +29,7 @@ final class Denotation(
           else s"+${members.length} members"
 
         val overridePart =
-          overrides match {
+          overrides.headOption match {
             case Some(symbol) => s"override $symbol"
             case _ => ""
           }
@@ -96,7 +96,7 @@ object Denotation extends AbstractFunction4[Long, String, String, List[ResolvedN
             signature: String,
             names: List[ResolvedName],
             members: List[Signature],
-            overrides: Option[Symbol]): Denotation =
+            overrides: List[Symbol]): Denotation =
     new Denotation(flags, name, signature, names, members, overrides)
 
   def apply(flags: Long,

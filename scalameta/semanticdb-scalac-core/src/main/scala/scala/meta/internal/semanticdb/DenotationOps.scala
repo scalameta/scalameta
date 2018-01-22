@@ -105,9 +105,9 @@ trait DenotationOps { self: DatabaseOps =>
         synthetic.text -> names.toList
       }
     }
-    private def overrides(includingOverride: Boolean): Option[MSymbol] =
-      if (includingOverride) gsym.overrides.headOption.map(_.toSemantic)
-      else None
+    private def overrides(includingOverride: Boolean): List[MSymbol] =
+      if (includingOverride) gsym.overrides.map(_.toSemantic)
+      else Nil
 
     def toDenotation(includingOverride: Boolean): m.Denotation = {
       val (minfo, mnames) = info
