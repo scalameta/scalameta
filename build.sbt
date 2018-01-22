@@ -79,6 +79,16 @@ lazy val langmeta = crossProject
     publishableSettings,
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
     description := "Langmeta umbrella module that includes all public APIs",
+    PB.runProtoc in Compile := {
+      val isNixOS = sys.props.get("java.home").map(_.startsWith("/nix/store")).getOrElse(false)
+      if (isNixOS) {
+        // must have protoc installed
+        // nix-env -i protobuf-3.3.0
+        (args => Process("protoc", args)!)
+      } else {
+        (PB.runProtoc in Compile).value
+      }
+    },
     // Protobuf setup for binary serialization.
     PB.targets.in(Compile) := Seq(
       scalapb.gen(
