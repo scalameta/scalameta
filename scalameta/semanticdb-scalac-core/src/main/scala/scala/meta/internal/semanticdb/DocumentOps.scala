@@ -153,7 +153,20 @@ trait DocumentOps { self: DatabaseOps =>
               // https://github.com/scalameta/scalameta/issues/665
               // Instead of crashing with "unsupported file", we ignore these cases.
               if (gsym0 == null) return
-              if (gsym0.isAnonymousClass) return
+              if (gsym0.isAnonymousClass) {
+                if (config.members.isAll) {
+                  gsym0.asClass.parentSymbols
+                    .filterNot(_ == g.definitions.ObjectClass)
+                    .foreach { parent =>
+                      val symbol = parent.toSemantic
+                      if (!members.contains(symbol)) {
+                        members(symbol) = parent.tpe.lookupMembers
+                      }
+                    }
+                }
+
+                return
+              }
               if (mtree.pos == m.Position.None) return
               if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 

@@ -160,4 +160,66 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
     """.stripMargin
   )
 
+  members(
+    """
+      |object a {
+      |  new java.lang.Runnable {
+      |    def run(): Unit = ()
+      |  }
+      |}""".stripMargin,
+    """
+      |_root_.java.lang.Runnable#{
+      |  run.
+      |}
+      |""".stripMargin
+  )
+
+  members(
+    """
+      |object a {
+      |  new java.util.TimerTask {
+      |    def run(): Unit = ()
+      |  }
+      |}""".stripMargin,
+    """
+      |_root_.java.util.TimerTask#{
+      |  scheduledExecutionTime.
+      |  cancel.
+      |  period.
+      |  nextExecutionTime.
+      |  state.
+      |  lock.
+      |  run.
+      |}
+      |""".stripMargin
+  )
+
+  members(
+    """
+      |object a {
+      |  new java.lang.AutoCloseable with java.lang.Iterable[Int] {
+      |    def close(): Unit = ???
+      |    def iterator(): java.util.Iterator[Int] = ???
+      |  }
+      |}""".stripMargin,
+    """
+      |_root_.java.lang.Iterable#{
+      |  spliterator.
+      |  forEach.
+      |  iterator.
+      |}
+      |_root_.java.lang.AutoCloseable#{
+      |  close.
+      |}
+      |""".stripMargin
+  )
+
+  members(
+    """
+      |object a {
+      |  class Bar()  
+      |  trait Foo { def bar: Int }  
+      |}""".stripMargin,
+    ""
+  )
 }
