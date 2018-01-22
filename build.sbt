@@ -380,7 +380,8 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
       "databaseSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
       "databaseClasspath" -> classDirectory.in(semanticdbIntegration, Compile).value.getAbsolutePath
     ),
-    buildInfoPackage := "scala.meta.tests"
+    buildInfoPackage := "scala.meta.tests",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
   .jvmConfigure(_.dependsOn(testkit, semanticdbScalacCore))
   .enablePlugins(BuildInfoPlugin)
@@ -397,7 +398,8 @@ lazy val langmetaTestsJVM = project
     sharedSettings,
     nonPublishableSettings,
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
-    description := "Tests for scalameta APIs that are published for Scala 2.10"
+    description := "Tests for scalameta APIs that are published for Scala 2.10",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
   .dependsOn(langmetaJVM)
 
@@ -443,7 +445,6 @@ lazy val sharedSettings = Def.settings(
   },
   organization := "org.scalameta",
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
-  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
   scalacOptions.in(Compile, doc) ++= Seq("-skip-packages", ""),
   scalacOptions.in(Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
