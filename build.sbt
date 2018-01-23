@@ -3,7 +3,6 @@ import scala.util.Try
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalajs.sbtplugin.ScalaJSCrossVersion
-import sbtcrossproject.{crossProject, CrossType}
 import org.scalameta.build._
 import org.scalameta.build.Versions._
 import org.scalameta.os
@@ -74,7 +73,7 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== SEMANTICDB ======================== **/
 
-lazy val semanticdb2 = crossProject(JVMPlatform, JSPlatform)
+lazy val semanticdb2 = crossProject
   .crossType(CrossType.Pure)
   .in(file("semanticdb/semanticdb2"))
   .settings(
@@ -109,7 +108,7 @@ lazy val semanticdb2JS = semanticdb2.js
 
 /** ======================== LANGMETA ======================== **/
 
-lazy val langmeta = crossProject(JVMPlatform, JSPlatform)
+lazy val langmeta = crossProject
   .in(file("langmeta/langmeta"))
   .settings(
     publishableSettings,
@@ -127,7 +126,7 @@ lazy val langmetaJS = langmeta.js
 
 /** ======================== SCALAMETA ======================== **/
 
-lazy val common = crossProject(JSPlatform, JVMPlatform)
+lazy val common = crossProject
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
@@ -138,7 +137,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform)
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
 
-lazy val io = crossProject(JSPlatform, JVMPlatform)
+lazy val io = crossProject
   .in(file("scalameta/io"))
   .settings(
     publishableSettings,
@@ -149,7 +148,7 @@ lazy val io = crossProject(JSPlatform, JVMPlatform)
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
 
-lazy val dialects = crossProject(JSPlatform, JVMPlatform)
+lazy val dialects = crossProject
   .in(file("scalameta/dialects"))
   .settings(
     publishableSettings,
@@ -160,7 +159,7 @@ lazy val dialects = crossProject(JSPlatform, JVMPlatform)
 lazy val dialectsJVM = dialects.jvm
 lazy val dialectsJS = dialects.js
 
-lazy val inputs = crossProject(JSPlatform, JVMPlatform)
+lazy val inputs = crossProject
   .in(file("scalameta/inputs"))
   .settings(
     publishableSettings,
@@ -171,7 +170,7 @@ lazy val inputs = crossProject(JSPlatform, JVMPlatform)
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
 
-lazy val parsers = crossProject(JSPlatform, JVMPlatform)
+lazy val parsers = crossProject
   .in(file("scalameta/parsers"))
   .settings(
     publishableSettings,
@@ -182,7 +181,7 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform)
 lazy val parsersJVM = parsers.jvm
 lazy val parsersJS = parsers.js
 
-lazy val quasiquotes = crossProject(JSPlatform, JVMPlatform)
+lazy val quasiquotes = crossProject
   .in(file("scalameta/quasiquotes"))
   .settings(
     publishableSettings,
@@ -193,7 +192,7 @@ lazy val quasiquotes = crossProject(JSPlatform, JVMPlatform)
 lazy val quasiquotesJVM = quasiquotes.jvm
 lazy val quasiquotesJS = quasiquotes.js
 
-lazy val tokenizers = crossProject(JSPlatform, JVMPlatform)
+lazy val tokenizers = crossProject
   .in(file("scalameta/tokenizers"))
   .settings(
     publishableSettings,
@@ -205,7 +204,7 @@ lazy val tokenizers = crossProject(JSPlatform, JVMPlatform)
 lazy val tokenizersJVM = tokenizers.jvm
 lazy val tokenizersJS = tokenizers.js
 
-lazy val tokens = crossProject(JSPlatform, JVMPlatform)
+lazy val tokens = crossProject
   .in(file("scalameta/tokens"))
   .settings(
     publishableSettings,
@@ -216,7 +215,7 @@ lazy val tokens = crossProject(JSPlatform, JVMPlatform)
 lazy val tokensJVM = tokens.jvm
 lazy val tokensJS = tokens.js
 
-lazy val transversers = crossProject(JSPlatform, JVMPlatform)
+lazy val transversers = crossProject
   .in(file("scalameta/transversers"))
   .settings(
     publishableSettings,
@@ -227,7 +226,7 @@ lazy val transversers = crossProject(JSPlatform, JVMPlatform)
 lazy val traversersJVM = transversers.jvm
 lazy val traversersJS = transversers.js
 
-lazy val trees = crossProject(JSPlatform, JVMPlatform)
+lazy val trees = crossProject
   .in(file("scalameta/trees"))
   .settings(
     publishableSettings,
@@ -240,7 +239,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform)
 lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
 
-lazy val semanticdb = crossProject(JSPlatform, JVMPlatform)
+lazy val semanticdb = crossProject
   .in(file("scalameta/semanticdb"))
   .settings(
     publishableSettings,
@@ -250,7 +249,7 @@ lazy val semanticdb = crossProject(JSPlatform, JVMPlatform)
 lazy val semanticdbJVM = semanticdb.jvm
 lazy val semanticdbJS = semanticdb.js
 
-lazy val scalameta = crossProject(JSPlatform, JVMPlatform)
+lazy val scalameta = crossProject
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
@@ -271,7 +270,7 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform)
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
-lazy val contrib = crossProject(JSPlatform, JVMPlatform)
+lazy val contrib = crossProject
   .in(file("scalameta/contrib"))
   .settings(
     publishableSettings,
@@ -362,7 +361,7 @@ lazy val testkit = project
   )
   .dependsOn(contribJVM)
 
-lazy val tests = crossProject(JSPlatform, JVMPlatform)
+lazy val tests = crossProject
   .in(file("tests"))
   .settings(
     sharedSettings,
