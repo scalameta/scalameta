@@ -74,7 +74,7 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== SEMANTICDB ======================== **/
 
-lazy val semanticdb2 = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+lazy val semanticdb2 = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
   .in(file("semanticdb/semanticdb2"))
   .settings(
@@ -104,12 +104,8 @@ lazy val semanticdb2 = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
-  .nativeSettings(
-    crossScalaVersions := List(LatestScala211)
-  )
 lazy val semanticdb2JVM = semanticdb2.jvm
 lazy val semanticdb2JS = semanticdb2.js
-lazy val semanticdb2Native = semanticdb2.native
 
 /** ======================== LANGMETA ======================== **/
 
