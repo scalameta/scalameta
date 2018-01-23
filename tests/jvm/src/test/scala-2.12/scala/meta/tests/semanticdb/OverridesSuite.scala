@@ -4,7 +4,7 @@ package semanticdb
 import scala.meta.internal.semanticdb.OverrideMode
 import scala.meta.internal.semanticdb.SemanticdbMode
 
-class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = OverrideMode.Def) {
+class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = OverrideMode.All) {
   overrides(
     """
        |trait A { def foo: Int }

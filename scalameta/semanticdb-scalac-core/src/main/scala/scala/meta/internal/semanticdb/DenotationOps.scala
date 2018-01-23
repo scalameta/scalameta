@@ -105,13 +105,13 @@ trait DenotationOps { self: DatabaseOps =>
         synthetic.text -> names.toList
       }
     }
-    private def overrides(includingOverride: Boolean): List[MSymbol] =
-      if (includingOverride) gsym.overrides.map(_.toSemantic)
+    private def overrides: List[MSymbol] =
+      if (config.overrides.isAll) gsym.overrides.map(_.toSemantic)
       else Nil
 
-    def toDenotation(includingOverride: Boolean): m.Denotation = {
+    def toDenotation: m.Denotation = {
       val (minfo, mnames) = info
-      m.Denotation(flags, name, minfo, mnames, Nil, overrides(includingOverride))
+      m.Denotation(flags, name, minfo, mnames, Nil, overrides)
     }
   }
 }

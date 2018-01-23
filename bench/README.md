@@ -25,22 +25,24 @@ ScalametaBaseline corresponds to the following compiler plugin options:
 -P:semanticdb:mode:slim
 -P:semanticdb:denotations:definitions
 -P:semanticdb:synthetics:none
+-P:semanticdb:overrides:none
 ```
 
 Other Scalameta configurations progressively enable more and more features:
   * ScalametaFullContents enables `-P:semanticdb:mode:fat`
   * ScalametaFullDenotations further enables `-P:semanticdb:denotations:all`
   * ScalametaFullSynthetics further enables `-P:semanticdb:synthetics:all`
+  * ScalametaFullOverrides further enables `-P:semanticdb:overrides:all`
 
 ## Results
 
 ```
 Benchmark                      Mode    Cnt Score
-QuickScalacBaseline            sample  35  1595.274 ± 15.263  ms/op
-QuickScalacRangepos            sample  35  1703.097 ± 25.044  ms/op  (6% overhead)
-QuickScalametaOpt              sample  15  1934.902 ± 29.232  ms/op  (21% overhead)
-QuickScalametaBaseline         sample  15  2020.256 ± 39.586  ms/op  (25% overhead)
-QuickScalametaFullContents     sample  15  2081.549 ± 38.977  ms/op  (30% overhead)
-QuickScalametaFullDenotations  sample  15  2236.738 ± 28.241  ms/op  (39% overhead)
-QuickScalametaFullSynthetics   sample  15  2272.054 ± 81.361  ms/op  (42% overhead)
+QuickScalacBaseline            sample  50  1042.956 ± 17.837 ms/op   
+QuickScalacRangepos            sample  50  1089.995 ± 11.297 ms/op   ( 5% overhead)
+QuickScalametaBaseline         sample  40  1294.257 ± 22.686 ms/op   (25% overhead)
+QuickScalametaFullContents     sample  40  1295.044 ± 11.326 ms/op   (25% overhead)
+QuickScalametaFullDenotations  sample  40  1395.760 ± 12.056 ms/op   (34% overhead)
+QuickScalametaFullOverrides    sample  38  1427.002 ± 21.510 ms/op   (37% overhead)
+QuickScalametaFullSynthetics   sample  40  1345.795 ± 15.959 ms/op   (30% overhead)
 ```

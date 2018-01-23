@@ -98,13 +98,13 @@ object MemberMode {
 
 sealed abstract class OverrideMode {
   import OverrideMode._
-  def isDef: Boolean = this == Def
+  def isAll: Boolean = this == All
 }
 object OverrideMode {
   def unapply(arg: String): Option[OverrideMode] =
     all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(Def, None)
-  case object Def extends OverrideMode
+  def all = List(All, None)
+  case object All extends OverrideMode
   case object None extends OverrideMode
 }
 

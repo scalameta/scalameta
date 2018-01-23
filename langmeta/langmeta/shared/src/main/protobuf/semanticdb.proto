@@ -52,7 +52,7 @@ message Denotation {
   string signature = 3;
   repeated ResolvedName names = 4;
   repeated string members = 5;
-  repeated string override = 6;
+  repeated string overrides = 6;
 }
 
 message Synthetic {
