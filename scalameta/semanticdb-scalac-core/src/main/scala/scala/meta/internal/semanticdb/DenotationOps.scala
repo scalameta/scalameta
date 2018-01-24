@@ -115,7 +115,8 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     def overridesMembers: List[(m.Symbol, m.Denotation)] =
-      if (config.overrides.isAll) gsym.overrides.map(ov => (ov.toSemantic, ov.toDenotation))
+      if (config.overrides.isAll && config.denotations.saveReferences)
+        gsym.overrides.map(ov => (ov.toSemantic, ov.toDenotation))
       else Nil
   }
 }
