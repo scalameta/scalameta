@@ -23,6 +23,27 @@ class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = Over
        |  _empty_.A#foo()I.
        |}""".stripMargin
   )
+  // the denotation of B.foo overrides A.foo
+  symbols(
+    """
+       |trait A { def foo: Int }
+       |class B() extends A { def foo: Int = 2 }
+       """.stripMargin,
+    """
+       |_empty_.A# => trait A
+       |_empty_.A#foo()I. => abstract def foo: Int
+       |  [0..3): Int => _root_.scala.Int#
+       |_empty_.B# => class B
+       |_empty_.B#`<init>`()V. => primaryctor <init>: (): B
+       |  [4..5): B => _empty_.B#
+       |_empty_.B#foo()I. => def foo: Int
+       |  [0..3): Int => _root_.scala.Int#.{override _empty_.A#foo()I.}
+       |_root_.java.lang.Object#`<init>`()V. => primaryctor <init>: (): Object
+       |  [4..10): Object => _root_.java.lang.Object#
+       |_root_.scala.Int# => abstract final class Int
+       |_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
+       |  [4..7): Int => _root_.scala.Int#""".stripMargin
+  )
   overrides(
      """
        |object a {
@@ -33,6 +54,9 @@ class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = Over
      """
        |_empty_.a.foo.$anon#run()V.{
        |  _root_.java.util.TimerTask#run()V.
+       |  _root_.java.lang.Runnable#run()V.
+       |}
+       |_root_.java.util.TimerTask#run()V.{
        |  _root_.java.lang.Runnable#run()V.
        |}""".stripMargin
   )
