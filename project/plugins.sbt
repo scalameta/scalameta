@@ -1,5 +1,11 @@
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.21")
 
+addSbtPlugin("org.portable-scala" % "sbt-crossproject" % "0.3.0")
+
+addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "0.3.0")
+
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.3.6" exclude("org.scala-native", "sbt-crossproject"))
+
 // exclude is a workaround for https://github.com/sbt/sbt-assembly/issues/236#issuecomment-294452474
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.6" exclude("org.apache.maven", "maven-plugin-api"))
 
@@ -15,8 +21,8 @@ addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.7.0")
 
 addSbtPlugin("com.eed3si9n" % "sbt-doge" % "0.1.5")
 
-addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.11" exclude ("com.trueaccord.scalapb", "protoc-bridge_2.10"))
-libraryDependencies += "com.trueaccord.scalapb" %% "compilerplugin-shaded" % "0.6.2"
+addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.12" exclude ("com.trueaccord.scalapb", "protoc-bridge_2.10"))
+libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin-shaded" % "0.7.0-rc7"
 
 libraryDependencies += "org.scala-sbt" % "scripted-plugin" % sbtVersion.value
 
