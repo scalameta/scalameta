@@ -184,13 +184,22 @@ trait DocumentOps { self: DatabaseOps =>
               if (mtree.isDefinition) binders += mtree.pos
 
               def saveDenotation(): Unit = {
+                def add(ms: m.Symbol, gs: g.Symbol): Unit = {
+                  denotations(ms) = gs.toDenotation
+                  if (config.overrides.isAll) {
+                    gs.overridesMembers.foreach {
+                      case (s, d) => denotations(s) = d
+                    }
+                  }
+                }
+
                 if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
-                  denotations(symbol) = gsym.toDenotation
+                  add(symbol, gsym)
                 }
                 if (gsym.isClass && !gsym.isTrait) {
                   val gprim = gsym.primaryConstructor
                   if (gprim != g.NoSymbol) {
-                    denotations(gprim.toSemantic) = gprim.toDenotation
+                    add(gprim.toSemantic, gprim)
                   }
                 }
               }

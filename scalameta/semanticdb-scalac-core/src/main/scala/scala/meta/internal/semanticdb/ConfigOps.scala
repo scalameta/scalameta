@@ -11,6 +11,7 @@ case class SemanticdbConfig(
     mode: SemanticdbMode,
     failures: FailureMode,
     members: MemberMode,
+    overrides: OverrideMode,
     denotations: DenotationMode,
     profiling: ProfilingMode,
     fileFilter: FileFilter,
@@ -33,6 +34,7 @@ object SemanticdbConfig {
     SemanticdbMode.Fat,
     FailureMode.Warning,
     MemberMode.None,
+    OverrideMode.None,
     DenotationMode.All,
     ProfilingMode.Off,
     FileFilter.matchEverything,
@@ -94,6 +96,18 @@ object MemberMode {
   case object None extends MemberMode
 }
 
+sealed abstract class OverrideMode {
+  import OverrideMode._
+  def isAll: Boolean = this == All
+}
+object OverrideMode {
+  def unapply(arg: String): Option[OverrideMode] =
+    all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, None)
+  case object All extends OverrideMode
+  case object None extends OverrideMode
+}
+
 sealed abstract class ProfilingMode {
   def name: String = toString.toLowerCase
   import ProfilingMode._
@@ -148,6 +162,7 @@ trait ConfigOps { self: DatabaseOps =>
   val SetFailures = "failures:(.*)".r
   val SetMembers = "members:(.*)".r
   val SetDenotations = "denotations:(.*)".r
+  val SetOverrides = "overrides:(.*)".r
   val SetProfiling = "profiling:(.*)".r
   val SetInclude = "include:(.*)".r
   val SetExclude = "exclude:(.*)".r
@@ -164,6 +179,8 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(failures = severity)
     def setMembers(members: MemberMode): Unit =
       config = config.copy(members = members)
+    def setOverrides(overrides: OverrideMode): Unit =
+      config = config.copy(overrides = overrides)
     def setDenotations(denotations: DenotationMode): Unit =
       config = config.copy(denotations = denotations)
     def setProfiling(profiling: ProfilingMode): Unit =

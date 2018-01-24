@@ -105,9 +105,17 @@ trait DenotationOps { self: DatabaseOps =>
       }
     }
 
+    private def overrides: List[m.Symbol] =
+      if (config.overrides.isAll) gsym.overrides.map(_.toSemantic)
+      else Nil
+
     def toDenotation: m.Denotation = {
       val (minfo, mnames) = info
-      m.Denotation(flags, name, minfo, mnames)
+      m.Denotation(flags, name, minfo, mnames, Nil, overrides)
     }
+
+    def overridesMembers: List[(m.Symbol, m.Denotation)] =
+      if (config.overrides.isAll) gsym.overrides.map(ov => (ov.toSemantic, ov.toDenotation))
+      else Nil
   }
 }
