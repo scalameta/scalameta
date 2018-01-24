@@ -40,6 +40,8 @@ class SemanticdbPlugin(val global: Global)
         config.setFailures(severity)
       case SetDenotations(DenotationMode(denotations)) =>
         config.setDenotations(denotations)
+      case SetOverrides(OverrideMode(overrides)) =>
+        config.setOverrides(overrides)
       case SetProfiling(ProfilingMode(profiling)) =>
         config.setProfiling(profiling)
       case SetInclude(include) =>
