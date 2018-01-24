@@ -36,13 +36,15 @@ Other Scalameta configurations progressively enable more and more features:
 
 ## Results
 
+time/operation (ms/op) = lower score is better
+
 ```
 Benchmark                      Mode    Cnt Score
-QuickScalacBaseline            sample  50  1042.956 ± 17.837 ms/op   
-QuickScalacRangepos            sample  50  1089.995 ± 11.297 ms/op   ( 5% overhead)
-QuickScalametaBaseline         sample  40  1294.257 ± 22.686 ms/op   (25% overhead)
-QuickScalametaFullContents     sample  40  1295.044 ± 11.326 ms/op   (25% overhead)
-QuickScalametaFullDenotations  sample  40  1395.760 ± 12.056 ms/op   (34% overhead)
-QuickScalametaFullOverrides    sample  38  1427.002 ± 21.510 ms/op   (37% overhead)
-QuickScalametaFullSynthetics   sample  40  1345.795 ± 15.959 ms/op   (30% overhead)
+QuickScalacBaseline            sample  70  741.478 ± 6.719 ms/op     
+QuickScalacRangepos            sample  63  825.612 ± 15.735 ms/op    (12% overhead)
+QuickScalametaBaseline         sample  50  1035.070 ± 23.457 ms/op   (40% overhead)
+QuickScalametaFullContents     sample  50  1064.116 ± 24.879 ms/op   (44% overhead)
+QuickScalametaFullDenotations  sample  45  1208.193 ± 36.802 ms/op   (63% overhead)
+QuickScalametaFullSynthetics   sample  48  1146.530 ± 34.069 ms/op   (55% overhead)
+QuickScalametaFullOverrides    sample  44  1248.187 ± 43.677 ms/op   (69% overhead)
 ```
