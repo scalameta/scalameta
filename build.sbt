@@ -9,7 +9,7 @@ import org.scalameta.os
 import UnidocKeys._
 import sbt.ScriptedPlugin._
 import complete.DefaultParsers._
-import com.trueaccord.scalapb.compiler.Version.scalapbVersion
+import scalapb.compiler.Version.scalapbVersion
 
 lazy val LanguageVersions = Seq(LatestScala212, LatestScala211)
 lazy val LanguageVersion = LanguageVersions.head
@@ -71,14 +71,20 @@ packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
 
-/** ======================== LANGMETA ======================== **/
+/** ======================== SEMANTICDB ======================== **/
 
-lazy val langmeta = crossProject
-  .in(file("langmeta/langmeta"))
+lazy val semanticdb2 = crossProject
+  .crossType(CrossType.Pure)
+  .in(file("semanticdb/semanticdb2"))
   .settings(
     publishableSettings,
-    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
-    description := "Langmeta umbrella module that includes all public APIs",
+    // Protobuf setup for binary serialization.
+    PB.targets.in(Compile) := Seq(
+      scalapb.gen(
+        flatPackage = true // Don't append filename to package
+      ) -> sourceManaged.in(Compile).value
+    ),
+    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb2/")),
     PB.runProtoc in Compile := {
       val isNixOS = sys.props.get("java.home").map(_.startsWith("/nix/store")).getOrElse(false)
       if (isNixOS) {
@@ -89,18 +95,33 @@ lazy val langmeta = crossProject
         (PB.runProtoc in Compile).value
       }
     },
-    // Protobuf setup for binary serialization.
-    PB.targets.in(Compile) := Seq(
-      scalapb.gen(
-        flatPackage = true // Don't append filename to package
-      ) -> sourceManaged.in(Compile).value
-    ),
-    PB.protoSources.in(Compile) := Seq(file("langmeta/langmeta/shared/src/main/protobuf")),
-    libraryDependencies += "com.trueaccord.scalapb" %%% "scalapb-runtime" % scalapbVersion
+    libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
+    mimaPreviousArtifacts := Set()
+  )
+  .jvmSettings(
+    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
   )
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
+lazy val semanticdb2JVM = semanticdb2.jvm
+lazy val semanticdb2JS = semanticdb2.js
+
+/** ======================== LANGMETA ======================== **/
+
+lazy val langmeta = crossProject
+  .in(file("langmeta/langmeta"))
+  .settings(
+    publishableSettings,
+    description := "Langmeta umbrella module that includes all public APIs"
+  )
+  .jvmSettings(
+    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
+  )
+  .jsSettings(
+    crossScalaVersions := List(LatestScala211, LatestScala212)
+  )
+  .dependsOn(semanticdb2)
 lazy val langmetaJVM = langmeta.jvm
 lazy val langmetaJS = langmeta.js
 
@@ -355,7 +376,8 @@ lazy val tests = crossProject
       "databaseSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
       "databaseClasspath" -> classDirectory.in(semanticdbIntegration, Compile).value.getAbsolutePath
     ),
-    buildInfoPackage := "scala.meta.tests"
+    buildInfoPackage := "scala.meta.tests",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
   .jvmConfigure(_.dependsOn(testkit, semanticdbScalacCore))
   .enablePlugins(BuildInfoPlugin)
@@ -372,7 +394,8 @@ lazy val langmetaTestsJVM = project
     sharedSettings,
     nonPublishableSettings,
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
-    description := "Tests for scalameta APIs that are published for Scala 2.10"
+    description := "Tests for scalameta APIs that are published for Scala 2.10",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
   .dependsOn(langmetaJVM)
 
@@ -418,8 +441,6 @@ lazy val sharedSettings = Def.settings(
   },
   organization := "org.scalameta",
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
-  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
-  libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.13.5" % "test",
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
   scalacOptions.in(Compile, doc) ++= Seq("-skip-packages", ""),
   scalacOptions.in(Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
