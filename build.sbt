@@ -95,7 +95,8 @@ lazy val semanticdb2 = crossProject
         (PB.runProtoc in Compile).value
       }
     },
-    libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
+    libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
+    mimaPreviousArtifacts := Set()
   )
   .jvmSettings(
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
