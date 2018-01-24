@@ -43,6 +43,6 @@ QuickScalacRangepos            sample  50  1089.995 ± 11.297 ms/op   ( 5% overh
 QuickScalametaBaseline         sample  40  1294.257 ± 22.686 ms/op   (25% overhead)
 QuickScalametaFullContents     sample  40  1295.044 ± 11.326 ms/op   (25% overhead)
 QuickScalametaFullDenotations  sample  40  1395.760 ± 12.056 ms/op   (34% overhead)
-QuickScalametaFullOverrides    sample  38  1427.002 ± 21.510 ms/op   (37% overhead)
 QuickScalametaFullSynthetics   sample  40  1345.795 ± 15.959 ms/op   (30% overhead)
+QuickScalametaFullOverrides    sample  38  1427.002 ± 21.510 ms/op   (37% overhead)
 ```
