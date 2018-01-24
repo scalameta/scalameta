@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, re, subprocess, signal, sys, tempfile, time
+import os, re, subprocess, signal, sys, tempfile, time, math
 
 def fail():
   print "usage: " + sys.argv[0] + " <suite>"
@@ -37,6 +37,8 @@ print ""
 rows = []
 rows.append(("Benchmark", "Mode", "Cnt", "Score"))
 lengths = [0] * 255
+first = False
+firstOps = -1
 with open(sbt_bench_log_path, "r") as sbt_bench_log:
   for line in sbt_bench_log:
     m1 = re.search("(?:0m)?(\w+)\.run\s+(\w+)\s+(\d+)\s+(.*?\s+ms/op)", line)
@@ -45,6 +47,13 @@ with open(sbt_bench_log_path, "r") as sbt_bench_log:
     if m:
       row = m.groups()
       for j, cell in enumerate(row): lengths[j] = max(len(cell), lengths[j])
+      ops = float(re.search("(\d+.\d+)", row[3]).groups()[0])
+      if not first:
+        firstOps = ops
+        first = True
+      else:
+        overhead = "(+ {}%)".format(int(math.ceil((ops / firstOps - 1) * 100)))
+        row = row + (overhead, )
       rows.append(row)
 
 for row in rows:
