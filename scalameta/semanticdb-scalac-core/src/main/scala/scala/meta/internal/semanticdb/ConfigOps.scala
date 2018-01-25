@@ -17,16 +17,23 @@ case class SemanticdbConfig(
     fileFilter: FileFilter,
     messages: MessageMode,
     synthetics: SyntheticMode) {
-  def syntax: String =
-    s"-P:${SemanticdbPlugin.name}:sourceroot:$sourceroot " +
-      s"-P:${SemanticdbPlugin.name}:mode:${mode.name}" +
-      s"-P:${SemanticdbPlugin.name}:failures:${failures.name} " +
-      s"-P:${SemanticdbPlugin.name}:denotations:${denotations.name} " +
-      s"-P:${SemanticdbPlugin.name}:profiling:${profiling.name} " +
-      s"-P:${SemanticdbPlugin.name}:include:${fileFilter.include} " +
-      s"-P:${SemanticdbPlugin.name}:exclude:${fileFilter.exclude} " +
-      s"-P:${SemanticdbPlugin.name}:messages:${messages.name} " +
-      s"-P:${SemanticdbPlugin.name}:synthetics:${synthetics.name} "
+  def syntax: String = {
+    val p = SemanticdbPlugin.name
+    List(
+      "sourceroot" -> sourceroot,
+      "mode" -> mode.name,
+      "failures" -> failures.name,
+      "members" -> members.name,
+      "overrides" -> overrides.name,
+      "denotations" -> denotations.name,
+      "profiling" -> profiling.name,
+      "include" -> fileFilter.include,
+      "exclude" -> fileFilter.exclude,
+      "messages" -> messages.name,
+      "synthetics" -> synthetics.name
+    ).map { case (k, v) => s"-P:$p:$k:$v" }.mkString(" ")
+  }
+
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
@@ -71,12 +78,13 @@ object FailureMode {
 }
 
 sealed abstract class DenotationMode {
-  def name: String = toString.toLowerCase
   import DenotationMode._
+  def name: String = toString.toLowerCase
   def saveDefinitions: Boolean = this == All || this == Definitions
   def saveReferences: Boolean = this == All
 }
 object DenotationMode {
+  def name: String = toString.toLowerCase
   def unapply(arg: String): Option[DenotationMode] = all.find(_.toString.equalsIgnoreCase(arg))
   def all = List(All, Definitions, None)
   case object All extends DenotationMode
@@ -86,6 +94,7 @@ object DenotationMode {
 
 sealed abstract class MemberMode {
   import MemberMode._
+  def name: String = toString.toLowerCase
   def isAll: Boolean = this == All
 }
 object MemberMode {
@@ -98,6 +107,7 @@ object MemberMode {
 
 sealed abstract class OverrideMode {
   import OverrideMode._
+  def name: String = toString.toLowerCase
   def isAll: Boolean = this == All
 }
 object OverrideMode {
