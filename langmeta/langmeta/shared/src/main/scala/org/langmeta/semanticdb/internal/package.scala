@@ -191,7 +191,8 @@ package object semanticdb {
                   sys.error(s"bad database: unsupported position $other")
               }
               val smembers = ddefn.members.map(_.syntax)
-              Some(s.Denotation(flags, name, signature, snames, smembers))
+              val soverrides = ddefn.overrides.map(_.syntax)
+              Some(s.Denotation(flags, name, signature, snames, smembers, soverrides))
             }
           }
           object dSynthetic {

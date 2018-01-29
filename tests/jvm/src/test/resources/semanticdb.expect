@@ -32,7 +32,7 @@ Messages:
 [72..107): [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 Symbols:
-_root_.example. => package example.{+2 members}
+_root_.example. => package example.{+4 members}
 _root_.example.Example. => final object Example
 _root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String]): Unit
   [7..12): Array => _root_.scala.Array#
@@ -88,6 +88,41 @@ Synthetics:
   [13..16): Int => _root_.scala.reflect.ClassTag.Int.
 
 
+scalameta/semanticdb-integration/src/main/scala/example/Overrides.scala
+-----------------------------------------------------------------------
+Language:
+Scala212
+
+Names:
+[8..15): example <= _root_.example.
+[23..24): A <= _root_.example.A#
+[31..34): foo <= _root_.example.A#foo()I.
+[36..39): Int => _root_.scala.Int#
+[48..49): B <= _root_.example.B#
+[49..49): ε <= _root_.example.B#`<init>`()V.
+[60..61): A => _root_.example.A#
+[62..62): ε => _root_.java.lang.Object#`<init>`()V.
+[68..71): foo <= _root_.example.B#foo()I.
+[73..76): Int => _root_.scala.Int#
+
+Symbols:
+_root_.example. => package example.{+4 members}
+_root_.example.A# => trait A.{+1 members}
+_root_.example.A#foo()I. => abstract def foo: Int
+  [0..3): Int => _root_.scala.Int#
+_root_.example.B# => class B
+_root_.example.B#`<init>`()V. => primaryctor <init>: (): B
+  [4..5): B => _root_.example.B#
+_root_.example.B#foo()I. => def foo: Int
+  override _root_.example.A#foo()I.
+  [0..3): Int => _root_.scala.Int#
+_root_.java.lang.Object#`<init>`()V. => primaryctor <init>: (): Object
+  [4..10): Object => _root_.java.lang.Object#
+_root_.scala.Int# => abstract final class Int
+_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
+  [4..7): Int => _root_.scala.Int#
+
+
 scalameta/semanticdb-integration/src/main/scala/example/Synthetic.scala
 -----------------------------------------------------------------------
 Language:
@@ -107,7 +142,7 @@ Names:
 [95..106): stripPrefix => _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;.
 
 Symbols:
-_root_.example. => package example.{+2 members}
+_root_.example. => package example.{+4 members}
 _root_.example.Synthetic# => class Synthetic
 _root_.example.Synthetic#`<init>`()V. => primaryctor <init>: (): Synthetic
   [4..13): Synthetic => _root_.example.Synthetic#
