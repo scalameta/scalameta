@@ -183,9 +183,9 @@ trait DocumentOps { self: DatabaseOps =>
               names(mtree.pos) = symbol
               if (mtree.isDefinition) binders += mtree.pos
 
-              def saveDenotation(isDefinition: Boolean): Unit = {
+              def saveDenotation(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  denotations(ms) = gs.toDenotation(isDefinition)
+                  denotations(ms) = gs.toDenotation(saveOverrides = mtree.isDefinition)
                   if (config.overrides.isAll && isDefinition) {
                     gs.overridesMembers.foreach {
                       case (s, d) => denotations(s) = d
@@ -203,10 +203,8 @@ trait DocumentOps { self: DatabaseOps =>
                   }
                 }
               }
-              if (mtree.isDefinition && config.denotations.saveDefinitions)
-                saveDenotation(mtree.isDefinition)
-              if (mtree.isReference && config.denotations.saveReferences)
-                saveDenotation(mtree.isDefinition)
+              if (mtree.isDefinition && config.denotations.saveDefinitions) saveDenotation()
+              if (mtree.isReference && config.denotations.saveReferences) saveDenotation()
 
               def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
                 if (map.contains(mtree)) {
