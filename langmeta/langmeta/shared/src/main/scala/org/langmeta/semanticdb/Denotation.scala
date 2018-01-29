@@ -3,6 +3,7 @@ package semanticdb
 
 import scala.annotation.switch
 import scala.runtime.AbstractFunction4
+import scala.compat.Platform.EOL
 
 final class Denotation(
     val flags: Long,
@@ -21,29 +22,16 @@ final class Denotation(
       this(flags, name, signature, names, members, Nil)
 
   def syntax: String = {
-    val s_members_and_overrides =
-      if (members.isEmpty && overrides.isEmpty) ""
-      else {
-        val membersPart =
-          if (members.isEmpty) ""
-          else s"+${members.length} members"
-
-        val overridePart =
-          overrides.headOption match {
-            case Some(symbol) => s"override $symbol"
-            case _ => ""
-          }
-
-        val join = List(membersPart, overridePart).filterNot(_.isEmpty).mkString(" ")
-
-        s".{$join}"
-      }
-
+    val s_overrides = if (overrides.isEmpty) "" else s"${EOL}  override ${overrides.head}"
+    val s_members = if (members.isEmpty) "" else s".{+${members.length} members}"
     val s_info = if (signature != "") ": " + signature else ""
     val s_names = ResolvedName.syntax(names)
     // TODO(olafur) use more advances escaping.
     val s_name = if (name.contains(" ")) s"`$name`" else name
-    s"$flagSyntax $s_name" + s_info + s_names + s_members_and_overrides
+
+    s"$flagSyntax $s_name" + s_info + s_members +
+      s_overrides +
+      s_names
   }
   def structure = s"""Denotation($flagStructure, "$name", "$signature")"""
 
