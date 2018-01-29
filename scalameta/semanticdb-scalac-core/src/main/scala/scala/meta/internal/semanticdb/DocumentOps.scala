@@ -185,8 +185,8 @@ trait DocumentOps { self: DatabaseOps =>
 
               def saveDenotation(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  denotations(ms) = gs.toDenotation
-                  if (config.overrides.isAll) {
+                  denotations(ms) = gs.toDenotation(saveOverrides = mtree.isDefinition)
+                  if (config.overrides.isAll && isDefinition) {
                     gs.overridesMembers.foreach {
                       case (s, d) => denotations(s) = d
                     }
