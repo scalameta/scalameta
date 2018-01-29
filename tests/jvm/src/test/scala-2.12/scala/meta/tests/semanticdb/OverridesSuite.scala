@@ -5,6 +5,11 @@ import scala.meta.internal.semanticdb.OverrideMode
 import scala.meta.internal.semanticdb.SemanticdbMode
 
 class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = OverrideMode.All) {
+  // Dont save overrides for reference, only for definition
+  overrides(
+    "object a { Array.empty[Int].headOption }",
+    ""
+  )
   overrides(
     """
        |trait A { def foo: Int }
