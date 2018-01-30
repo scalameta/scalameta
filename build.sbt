@@ -78,24 +78,8 @@ lazy val semanticdb2 = crossProject
   .in(file("semanticdb/semanticdb2"))
   .settings(
     publishableSettings,
-    // Protobuf setup for binary serialization.
-    PB.targets.in(Compile) := Seq(
-      scalapb.gen(
-        flatPackage = true // Don't append filename to package
-      ) -> sourceManaged.in(Compile).value
-    ),
+    protobufSettings,
     PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb2/")),
-    PB.runProtoc in Compile := {
-      val isNixOS = sys.props.get("java.home").map(_.startsWith("/nix/store")).getOrElse(false)
-      if (isNixOS) {
-        // must have protoc installed
-        // nix-env -i protobuf-3.3.0
-        (args => Process("protoc", args)!)
-      } else {
-        (PB.runProtoc in Compile).value
-      }
-    },
-    libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
     mimaPreviousArtifacts := Set()
   )
   .jvmSettings(
@@ -106,6 +90,24 @@ lazy val semanticdb2 = crossProject
   )
 lazy val semanticdb2JVM = semanticdb2.jvm
 lazy val semanticdb2JS = semanticdb2.js
+
+lazy val semanticdb3 = crossProject
+  .crossType(CrossType.Pure)
+  .in(file("semanticdb/semanticdb3"))
+  .settings(
+    publishableSettings,
+    protobufSettings,
+    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3")),
+    mimaPreviousArtifacts := Set()
+  )
+  .jvmSettings(
+    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
+  )
+  .jsSettings(
+    crossScalaVersions := List(LatestScala211, LatestScala212)
+  )
+lazy val semanticdb3JVM = semanticdb3.jvm
+lazy val semanticdb3JS = semanticdb3.js
 
 /** ======================== LANGMETA ======================== **/
 
@@ -479,6 +481,26 @@ lazy val mergeSettings = Def.settings(
     IO.copy(List(fatJar -> slimJar), overwrite = true)
     (art, slimJar)
   }
+)
+
+lazy val protobufSettings = Def.settings(
+  sharedSettings,
+  PB.targets.in(Compile) := Seq(
+    scalapb.gen(
+      flatPackage = true // Don't append filename to package
+    ) -> sourceManaged.in(Compile).value
+  ),
+  PB.runProtoc in Compile := {
+    val isNixOS = sys.props.get("java.home").map(_.startsWith("/nix/store")).getOrElse(false)
+    if (isNixOS) {
+      // must have protoc installed
+      // nix-env -i protobuf-3.3.0
+      (args => Process("protoc", args)!)
+    } else {
+      (PB.runProtoc in Compile).value
+    }
+  },
+  libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
 )
 
 lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
