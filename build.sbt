@@ -364,8 +364,12 @@ lazy val tests = crossProject
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
     exposePaths("tests", Test),
-    exposePaths("semanticdb-scalac-plugin", Test),
     compile.in(Test) := compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
+    fullClasspath.in(Test) := {
+      val semanticdbScalacJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+      sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
+      fullClasspath.in(Test).value
+    },
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,
       "databaseSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,

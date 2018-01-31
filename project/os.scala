@@ -43,7 +43,7 @@ object shell {
 
 object secret {
   def obtain(domain: String): Option[(String, String)] = {
-    val credentialsFile = System.getProperty(domain + ".settings.file")
+    val credentialsFile = sys.props(domain + ".settings.file")
     if (credentialsFile != null) {
       try {
         import scala.xml._
