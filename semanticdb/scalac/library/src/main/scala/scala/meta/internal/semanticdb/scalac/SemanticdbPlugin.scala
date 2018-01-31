@@ -11,7 +11,7 @@ class SemanticdbPlugin(val global: Global)
     with HijackReporter
     with SemanticdbPipeline {
   val name = SemanticdbPlugin.name
-  val description = "Scala 2.x compiler plugin that generates semanticdb on compile"
+  val description = SemanticdbPlugin.description
 
   hijackAnalyzer()
   hijackReporter()
@@ -61,4 +61,5 @@ class SemanticdbPlugin(val global: Global)
 
 object SemanticdbPlugin {
   val name = "semanticdb"
+  val description = "Scalac 2.x compiler plugin that generates SemanticDB on compile"
 }
