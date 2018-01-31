@@ -30,10 +30,42 @@ message Range {
 }
 
 message SymbolInformation {
+  enum Kind {
+    UNKNOWN1 = 0;
+    VALUE = 1;
+    VARIABLE = 2;
+    METHOD = 3;
+    PRIMARY_CONSTRUCTOR = 4;
+    SECONDARY_CONSTRUCTOR = 5;
+    MACRO = 6;
+    TYPE = 7;
+    PARAMETER = 8;
+    TYPE_PARAMETER = 9;
+    OBJECT = 10;
+    PACKAGE = 11;
+    PACKAGE_OBJECT = 12;
+    CLASS = 13;
+    TRAIT = 14;
+  }
+  enum Property {
+    UNKNOWN2 = 0;
+    PRIVATE = 0x1;
+    PROTECTED = 0x2;
+    ABSTRACT = 0x4;
+    FINAL = 0x8;
+    SEALED = 0x10;
+    IMPLICIT = 0x20;
+    LAZY = 0x40;
+    CASE = 0x80;
+    COVARIANT = 0x100;
+    CONTRAVARIANT = 0x200;
+  }
   reserved 2;
+  reserved 3;
   string symbol = 1;
   string language = 9;
-  int64 flags = 3;
+  int32 kind = 10;
+  int32 properties = 11;
   string name = 4;
   string signature = 5;
   repeated SymbolOccurrence occurrences = 6;

@@ -94,7 +94,40 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(d.Symbol(dsym), _, dflags, dname: String, dsignature: String, soccurrences, smembers, soverrides) =>
+          case s.SymbolInformation(d.Symbol(dsym), _, skind, sproperties, dname: String, dsignature: String, soccurrences, smembers, soverrides) =>
+            val dflags = {
+              var dflags = 0L
+              def dflip(dbit: Long) = dflags ^= dbit
+              skind match {
+                case s.SymbolInformation.Kind.UNKNOWN1.value => ()
+                case s.SymbolInformation.Kind.VALUE.value => dflip(d.VAL)
+                case s.SymbolInformation.Kind.VARIABLE.value => dflip(d.VAR)
+                case s.SymbolInformation.Kind.METHOD.value => dflip(d.DEF)
+                case s.SymbolInformation.Kind.PRIMARY_CONSTRUCTOR.value => dflip(d.PRIMARYCTOR)
+                case s.SymbolInformation.Kind.SECONDARY_CONSTRUCTOR.value => dflip(d.SECONDARYCTOR)
+                case s.SymbolInformation.Kind.MACRO.value => dflip(d.MACRO)
+                case s.SymbolInformation.Kind.TYPE.value => dflip(d.TYPE)
+                case s.SymbolInformation.Kind.PARAMETER.value => dflip(d.PARAM)
+                case s.SymbolInformation.Kind.TYPE_PARAMETER.value => dflip(d.TYPEPARAM)
+                case s.SymbolInformation.Kind.OBJECT.value => dflip(d.OBJECT)
+                case s.SymbolInformation.Kind.PACKAGE.value => dflip(d.PACKAGE)
+                case s.SymbolInformation.Kind.PACKAGE_OBJECT.value => dflip(d.PACKAGEOBJECT)
+                case s.SymbolInformation.Kind.CLASS.value => dflip(d.CLASS)
+                case s.SymbolInformation.Kind.TRAIT.value => dflip(d.TRAIT)
+              }
+              def stest(bit: Long) = (sproperties & bit) == bit
+              if (stest(s.SymbolInformation.Property.PRIVATE.value)) dflip(d.PRIVATE)
+              if (stest(s.SymbolInformation.Property.PROTECTED.value)) dflip(d.PROTECTED)
+              if (stest(s.SymbolInformation.Property.ABSTRACT.value)) dflip(d.ABSTRACT)
+              if (stest(s.SymbolInformation.Property.FINAL.value)) dflip(d.FINAL)
+              if (stest(s.SymbolInformation.Property.SEALED.value)) dflip(d.SEALED)
+              if (stest(s.SymbolInformation.Property.IMPLICIT.value)) dflip(d.IMPLICIT)
+              if (stest(s.SymbolInformation.Property.LAZY.value)) dflip(d.LAZY)
+              if (stest(s.SymbolInformation.Property.CASE.value)) dflip(d.CASE)
+              if (stest(s.SymbolInformation.Property.COVARIANT.value)) dflip(d.COVARIANT)
+              if (stest(s.SymbolInformation.Property.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
+              dflags
+            }
             val ddenotInput = dInput.Denotation(dsignature, dsym)
             val dnames = soccurrences.toIterator.map {
               case s.SymbolOccurrence(Some(srange), d.Symbol(dsym), disDefinition) =>
@@ -194,7 +227,39 @@ package object semanticdb {
               val d.ResolvedSymbol(dsymbol, ddenot) = dresolvedSymbol
               val ssymbol = dsymbol.syntax
               val slanguage = dlanguage
-              val sflags = ddenot.flags
+              def dtest(bit: Long) = (ddenot.flags & bit) == bit
+              val skind = {
+                if (dtest(d.VAL)) s.SymbolInformation.Kind.VALUE.value
+                else if (dtest(d.VAR)) s.SymbolInformation.Kind.VARIABLE.value
+                else if (dtest(d.DEF)) s.SymbolInformation.Kind.METHOD.value
+                else if (dtest(d.PRIMARYCTOR)) s.SymbolInformation.Kind.PRIMARY_CONSTRUCTOR.value
+                else if (dtest(d.SECONDARYCTOR)) s.SymbolInformation.Kind.SECONDARY_CONSTRUCTOR.value
+                else if (dtest(d.MACRO)) s.SymbolInformation.Kind.MACRO.value
+                else if (dtest(d.TYPE)) s.SymbolInformation.Kind.TYPE.value
+                else if (dtest(d.PARAM)) s.SymbolInformation.Kind.PARAMETER.value
+                else if (dtest(d.TYPEPARAM)) s.SymbolInformation.Kind.TYPE_PARAMETER.value
+                else if (dtest(d.OBJECT)) s.SymbolInformation.Kind.OBJECT.value
+                else if (dtest(d.PACKAGE)) s.SymbolInformation.Kind.PACKAGE.value
+                else if (dtest(d.PACKAGEOBJECT)) s.SymbolInformation.Kind.PACKAGE_OBJECT.value
+                else if (dtest(d.CLASS)) s.SymbolInformation.Kind.CLASS.value
+                else if (dtest(d.TRAIT)) s.SymbolInformation.Kind.TRAIT.value
+                else s.SymbolInformation.Kind.UNKNOWN1.value
+              }
+              val sproperties = {
+                var sproperties = 0
+                def sflip(sbit: Int) = sproperties ^= sbit
+                if (dtest(d.PRIVATE)) sflip(s.SymbolInformation.Property.PRIVATE.value)
+                if (dtest(d.PROTECTED)) sflip(s.SymbolInformation.Property.PROTECTED.value)
+                if (dtest(d.ABSTRACT)) sflip(s.SymbolInformation.Property.ABSTRACT.value)
+                if (dtest(d.FINAL)) sflip(s.SymbolInformation.Property.FINAL.value)
+                if (dtest(d.SEALED)) sflip(s.SymbolInformation.Property.SEALED.value)
+                if (dtest(d.IMPLICIT)) sflip(s.SymbolInformation.Property.IMPLICIT.value)
+                if (dtest(d.LAZY)) sflip(s.SymbolInformation.Property.LAZY.value)
+                if (dtest(d.CASE)) sflip(s.SymbolInformation.Property.CASE.value)
+                if (dtest(d.COVARIANT)) sflip(s.SymbolInformation.Property.COVARIANT.value)
+                if (dtest(d.CONTRAVARIANT)) sflip(s.SymbolInformation.Property.CONTRAVARIANT.value)
+                sproperties
+              }
               val sname = ddenot.name
               val ssignature = ddenot.signature
               val soccurrences = ddenot.names.map {
@@ -206,7 +271,7 @@ package object semanticdb {
               }
               val smembers = ddenot.members.map(_.syntax)
               val soverrides = ddenot.overrides.map(_.syntax)
-              Some(s.SymbolInformation(ssymbol, slanguage, sflags, sname, ssignature, soccurrences, smembers, soverrides))
+              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, ssignature, soccurrences, smembers, soverrides))
             }
           }
           object dSynthetic {
