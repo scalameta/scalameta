@@ -102,7 +102,8 @@ message Diagnostic {
 }
 
 message Synthetic {
+  reserved 2;
+  reserved 3;
   Range range = 1;
-  string text = 2;
-  repeated SymbolOccurrence occurrences = 3;
+  TextDocument text = 4;
 }
