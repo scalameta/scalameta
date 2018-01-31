@@ -92,9 +92,9 @@ package object semanticdb {
       object sSeverity {
         def unapply(sseverity: s.Diagnostic.Severity): Option[d.Severity] = {
           sseverity match {
-            case s.Diagnostic.Severity.INFORMATION => Some(d.Severity.Info)
-            case s.Diagnostic.Severity.WARNING => Some(d.Severity.Warning)
             case s.Diagnostic.Severity.ERROR => Some(d.Severity.Error)
+            case s.Diagnostic.Severity.WARNING => Some(d.Severity.Warning)
+            case s.Diagnostic.Severity.INFORMATION => Some(d.Severity.Info)
             case s.Diagnostic.Severity.HINT => Some(d.Severity.Hint)
             case _ => None
           }
@@ -235,9 +235,9 @@ package object semanticdb {
           object dSeverity {
             def unapply(dseverity: d.Severity): Option[s.Diagnostic.Severity] = {
               dseverity match {
-                case d.Severity.Info => Some(s.Diagnostic.Severity.INFORMATION)
-                case d.Severity.Warning => Some(s.Diagnostic.Severity.WARNING)
                 case d.Severity.Error => Some(s.Diagnostic.Severity.ERROR)
+                case d.Severity.Warning => Some(s.Diagnostic.Severity.WARNING)
+                case d.Severity.Info => Some(s.Diagnostic.Severity.INFORMATION)
                 case d.Severity.Hint => Some(s.Diagnostic.Severity.HINT)
                 case _ => None
               }

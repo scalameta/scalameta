@@ -90,13 +90,14 @@ message SymbolOccurrence {
 message Diagnostic {
   enum Severity {
     UNKNOWN = 0;
-    INFORMATION = 1;
+    ERROR = 1;
     WARNING = 2;
-    ERROR = 3;
+    INFORMATION = 3;
     HINT = 4;
   }
+  reserved 2;
   Range range = 1;
-  Severity severity = 2;
+  Severity severity = 4;
   string text = 3;
 }
 
