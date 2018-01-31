@@ -130,6 +130,19 @@ lazy val semanticdbScalacPlugin = project
   )
   .dependsOn(semanticdbScalacCore)
 
+lazy val metac = project
+  .in(file("semanticdb/metac"))
+  .settings(
+    publishableSettings,
+    description := "Scalac 2.x launcher that generates SemanticDB on compile",
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+    // NOTE: necessary for embedded Scalac to pick up the compiler plugin
+    fork in run := true
+  )
+  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
+  .disablePlugins(BackgroundRunPlugin)
+  .dependsOn(semanticdbScalacPlugin)
+
 /** ======================== LANGMETA ======================== **/
 
 lazy val langmeta = crossProject
