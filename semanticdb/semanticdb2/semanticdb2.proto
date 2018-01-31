@@ -19,6 +19,11 @@ message TextDocument {
   repeated Synthetic synthetics = 6;
 }
 
+message Position {
+  int32 start = 2;
+  int32 end = 3;
+}
+
 message SymbolInformation {
   string symbol = 1;
   Denotation denotation = 2;
@@ -37,11 +42,6 @@ message SymbolOccurrence {
   Position position = 1;
   string symbol = 2;
   bool is_definition = 3;
-}
-
-message Position {
-  int32 start = 2;
-  int32 end = 3;
 }
 
 message Diagnostic {
