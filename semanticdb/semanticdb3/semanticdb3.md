@@ -192,7 +192,7 @@ message SymbolInformation {
   string symbol = 1;
   string language = 2;
   Kind kind = 3;
-  int64 properties = 4;
+  int32 properties = 4;
   string name = 5;
   Range range = 6;
   TextDocument signature = 7;
