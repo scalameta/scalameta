@@ -78,9 +78,9 @@ lazy val semanticdb3 = crossProject
   .in(file("semanticdb/semanticdb3"))
   .settings(
     publishableSettings,
+    ignoreMimaSettings,
     protobufSettings,
-    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3")),
-    mimaPreviousArtifacts := Set()
+    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3"))
   )
   .jvmSettings(
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
@@ -94,11 +94,11 @@ lazy val semanticdb3JS = semanticdb3.js
 lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
   .settings(
+    publishableSettings,
+    fullCrossVersionSettings,
+    ignoreMimaSettings,
     moduleName := "semanticdb-scalac-core",
     description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
-    publishableSettings,
-    mimaPreviousArtifacts := Set.empty,
-    isFullCrossVersion,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
   )
   .dependsOn(scalametaJVM)
@@ -110,8 +110,8 @@ lazy val semanticdbScalacPlugin = project
     description := "Scalac 2.x compiler plugin that generates SemanticDB on compile",
     publishableSettings,
     mergeSettings,
-    isFullCrossVersion,
-    mimaPreviousArtifacts := Set.empty,
+    fullCrossVersionSettings,
+    ignoreMimaSettings,
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
         private def isAbsorbedDependency(node: XmlNode): Boolean = {
@@ -134,6 +134,7 @@ lazy val metac = project
   .in(file("semanticdb/metac"))
   .settings(
     publishableSettings,
+    ignoreMimaSettings,
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.Metac")
@@ -147,6 +148,7 @@ lazy val metap = crossProject
   .in(file("semanticdb/metap"))
   .settings(
     publishableSettings,
+    ignoreMimaSettings,
     description := "SemanticDB decompiler",
     mainClass := Some("scala.meta.cli.Metap")
   )
@@ -224,6 +226,7 @@ lazy val interactive = project
   .in(file("scalameta/interactive"))
   .settings(
     publishableSettings,
+    ignoreMimaSettings,
     description := "Scalameta APIs for interactive building of SemanticDB",
     enableMacros
   )
@@ -612,7 +615,11 @@ lazy val nonPublishableSettings = Seq(
   publish := {}
 )
 
-lazy val isFullCrossVersion = Seq(
+lazy val ignoreMimaSettings = Seq(
+  mimaPreviousArtifacts := Set.empty
+)
+
+lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,
   unmanagedSourceDirectories.in(Compile) += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
