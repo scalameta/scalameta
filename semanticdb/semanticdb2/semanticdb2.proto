@@ -9,6 +9,7 @@ message TextDocuments {
 message TextDocument {
   reserved 1;
   reserved 5;
+  string format = 10;
   string filename = 9;
   string contents = 8;
   string language = 7;

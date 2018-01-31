@@ -59,7 +59,8 @@ package object semanticdb {
     }
 
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
-      val s.TextDocument(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
+      val s.TextDocument(sformat, sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
+      assert(sformat == "semanticdb2", "s.TextDocument.format must be \"semanticdb2\"")
       assert(sunixfilename.nonEmpty, "s.TextDocument.filename must not be empty")
       val sfilename = PathIO.fromUnix(sunixfilename)
       val dinput = {
@@ -209,6 +210,7 @@ package object semanticdb {
                 None
             }
           }
+          val sformat = "semanticdb2"
           val (splatformpath, scontents) = dinput match {
             case dInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
               path.toRelative(sourceroot).toString -> ""
@@ -236,7 +238,7 @@ package object semanticdb {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.TextDocument(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
+          s.TextDocument(sformat, spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
       }
       s.TextDocuments(sentries)
     }
