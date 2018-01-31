@@ -94,7 +94,7 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(d.Symbol(dsym), _, skind, sproperties, dname: String, dsignature: String, soccurrences, smembers, soverrides) =>
+          case s.SymbolInformation(d.Symbol(dsym), _, skind, sproperties, dname: String, _, dsignature: String, soccurrences, smembers, soverrides) =>
             val dflags = {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
@@ -261,6 +261,7 @@ package object semanticdb {
                 sproperties
               }
               val sname = ddenot.name
+              val srange = None
               val ssignature = ddenot.signature
               val soccurrences = ddenot.names.map {
                 case d.ResolvedName(dpos: org.langmeta.Position.Range, ssym, sisDefinition) =>
@@ -271,7 +272,7 @@ package object semanticdb {
               }
               val smembers = ddenot.members.map(_.syntax)
               val soverrides = ddenot.overrides.map(_.syntax)
-              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, ssignature, soccurrences, smembers, soverrides))
+              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, srange, ssignature, soccurrences, smembers, soverrides))
             }
           }
           object dSynthetic {

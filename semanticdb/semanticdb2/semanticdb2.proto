@@ -67,6 +67,7 @@ message SymbolInformation {
   int32 kind = 10;
   int32 properties = 11;
   string name = 4;
+  Range range = 12;
   string signature = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated string members = 7;
