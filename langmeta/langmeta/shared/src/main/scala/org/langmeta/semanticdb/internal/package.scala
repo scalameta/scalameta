@@ -82,6 +82,13 @@ package object semanticdb {
           Some(dPosition.Range(dinput, dstartOffset, dendOffset))
         }
       }
+      object sRole {
+        def unapply(srole: s.SymbolOccurrence.Role): Option[Boolean] = srole match {
+          case s.SymbolOccurrence.Role.REFERENCE => Some(false)
+          case s.SymbolOccurrence.Role.DEFINITION => Some(true)
+          case _ => None
+        }
+      }
       object sSeverity {
         def unapply(sseverity: s.Diagnostic.Severity): Option[d.Severity] = {
           sseverity match {
@@ -134,7 +141,7 @@ package object semanticdb {
               ssignature.map { ssignature =>
                 val dinput = dInput.Denotation(dsignature, dsym)
                 ssignature.occurrences.toIterator.map {
-                  case s.SymbolOccurrence(Some(srange), d.Symbol(dsym), disDefinition) =>
+                  case s.SymbolOccurrence(Some(srange), d.Symbol(dsym), sRole(disDefinition)) =>
                     val dstartOffset = dinput.lineToOffset(srange.startLine) + srange.startCharacter
                     val dendOffset = dinput.lineToOffset(srange.endLine) + srange.endCharacter
                     val ddefnpos = dPosition.Range(dinput, dstartOffset, dendOffset)
@@ -158,7 +165,7 @@ package object semanticdb {
         def unapply(ssynthetic: s.Synthetic): Option[dSynthetic] = ssynthetic match {
           case s.Synthetic(Some(sRange(dpos)), dtext, soccurrences) =>
             val dnames = soccurrences.toIterator.map {
-              case s.SymbolOccurrence(Some(srange), d.Symbol(dsym), disDefinition) =>
+              case s.SymbolOccurrence(Some(srange), d.Symbol(dsym), sRole(disDefinition)) =>
                 val dsyntheticinput = dInput.Synthetic(dtext, dpos.input, dpos.start, dpos.end)
                 val dstartOffset = dsyntheticinput.lineToOffset(srange.startLine) + srange.startCharacter
                 val dendOffset = dsyntheticinput.lineToOffset(srange.endLine) + srange.endCharacter
@@ -172,7 +179,7 @@ package object semanticdb {
       }
       val dlanguage = slanguage
       val dnames = soccurrences.map {
-        case s.SymbolOccurrence(Some(sRange(dpos)), d.Symbol(dsym), disDefinition) => d.ResolvedName(dpos, dsym, disDefinition)
+        case s.SymbolOccurrence(Some(sRange(dpos)), d.Symbol(dsym), sRole(disDefinition)) => d.ResolvedName(dpos, dsym, disDefinition)
         case other => sys.error(s"bad protobuf: unsupported occurrence $other")
       }.toList
       val dmessages = sdiagnostics.map {
@@ -215,6 +222,12 @@ package object semanticdb {
                 Some(s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn))
               case _ =>
                 None
+            }
+          }
+          object disDefinition {
+            def unapply(disDefinition: Boolean): Option[s.SymbolOccurrence.Role] = {
+              if (disDefinition) Some(s.SymbolOccurrence.Role.DEFINITION)
+              else Some(s.SymbolOccurrence.Role.REFERENCE)
             }
           }
           object dSeverity {
@@ -270,9 +283,9 @@ package object semanticdb {
               val ssignature = {
                 val stext = ddenot.signature
                 val soccurrences = ddenot.names.map {
-                  case d.ResolvedName(dpos: org.langmeta.Position.Range, ssym, sisDefinition) =>
+                  case d.ResolvedName(dpos: org.langmeta.Position.Range, ssym, disDefinition(srole)) =>
                     val srange = s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn)
-                    s.SymbolOccurrence(Some(srange), ssym.syntax, sisDefinition)
+                    s.SymbolOccurrence(Some(srange), ssym.syntax, srole)
                   case other =>
                     sys.error(s"bad database: unsupported name $other")
                 }
@@ -287,9 +300,9 @@ package object semanticdb {
             def unapply(dsynthetic: dSynthetic): Option[s.Synthetic] = dsynthetic match {
               case d.Synthetic(dPosition(srange), ssyntax, dnames) =>
                 val soccurrences = dnames.toIterator.map {
-                  case d.ResolvedName(dpos: org.langmeta.Position.Range, ssym, sisDefinition) =>
+                  case d.ResolvedName(dpos: org.langmeta.Position.Range, ssym, disDefinition(srole)) =>
                     val srange = s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn)
-                    s.SymbolOccurrence(Some(srange), ssym.syntax, sisDefinition)
+                    s.SymbolOccurrence(Some(srange), ssym.syntax, srole)
                   case other =>
                     sys.error(s"bad database: unsupported name $other")
                 }.toSeq
@@ -318,7 +331,7 @@ package object semanticdb {
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val soccurrences = dnames.map {
-            case d.ResolvedName(dPosition(srange), ssym, sisDefinition) => s.SymbolOccurrence(Some(srange), ssym.syntax, sisDefinition)
+            case d.ResolvedName(dPosition(srange), ssym, disDefinition(srole)) => s.SymbolOccurrence(Some(srange), ssym.syntax, srole)
             case other => sys.error(s"bad database: unsupported name $other")
           }
           val sdiagnostics = dmessages.map {

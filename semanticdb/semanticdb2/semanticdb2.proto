@@ -76,9 +76,15 @@ message SymbolInformation {
 }
 
 message SymbolOccurrence {
+  enum Role {
+    UNKNOWN = 0;
+    REFERENCE = 1;
+    DEFINITION = 2;
+  }
+  reserved 3;
   Range range = 1;
   string symbol = 2;
-  bool is_definition = 3;
+  Role role = 4;
 }
 
 message Diagnostic {

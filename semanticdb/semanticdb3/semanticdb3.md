@@ -385,7 +385,7 @@ We intend to improve that in the future.
 message SymbolOccurrence {
   Range range = 1;
   string symbol = 2;
-  int64 role = 3;
+  Role role = 3;
 }
 ```
 
