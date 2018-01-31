@@ -7,26 +7,21 @@ message TextDocuments {
 }
 
 message TextDocument {
-  reserved 1;
-  reserved 5;
-  string format = 10;
-  string uri = 9;
-  string text = 8;
-  string language = 7;
-  repeated SymbolInformation symbols = 4;
-  repeated SymbolOccurrence occurrences = 2;
-  repeated Diagnostic diagnostics = 3;
-  repeated Synthetic synthetics = 6;
+  string format = 1;
+  string uri = 2;
+  string text = 3;
+  string language = 4;
+  repeated SymbolInformation symbols = 5;
+  repeated SymbolOccurrence occurrences = 6;
+  repeated Diagnostic diagnostics = 7;
+  repeated Synthetic synthetics = 8;
 }
 
 message Range {
-  reserved 1;
-  reserved 2;
-  reserved 3;
-  int32 start_line = 4;
-  int32 start_character = 5;
-  int32 end_line = 6;
-  int32 end_character = 7;
+  int32 start_line = 1;
+  int32 start_character = 2;
+  int32 end_line = 3;
+  int32 end_character = 4;
 }
 
 message SymbolInformation {
@@ -60,19 +55,15 @@ message SymbolInformation {
     COVARIANT = 0x100;
     CONTRAVARIANT = 0x200;
   }
-  reserved 2;
-  reserved 3;
-  reserved 5;
-  reserved 6;
   string symbol = 1;
-  string language = 9;
-  Kind kind = 10;
-  int32 properties = 11;
-  string name = 4;
-  Range range = 12;
-  TextDocument signature = 13;
-  repeated string members = 7;
-  repeated string overrides = 8;
+  string language = 2;
+  Kind kind = 3;
+  int32 properties = 4;
+  string name = 5;
+  Range range = 6;
+  TextDocument signature = 7;
+  repeated string members = 8;
+  repeated string overrides = 9;
 }
 
 message SymbolOccurrence {
@@ -81,10 +72,9 @@ message SymbolOccurrence {
     REFERENCE = 1;
     DEFINITION = 2;
   }
-  reserved 3;
   Range range = 1;
   string symbol = 2;
-  Role role = 4;
+  Role role = 3;
 }
 
 message Diagnostic {
@@ -95,15 +85,12 @@ message Diagnostic {
     INFORMATION = 3;
     HINT = 4;
   }
-  reserved 2;
   Range range = 1;
-  Severity severity = 4;
+  Severity severity = 2;
   string message = 3;
 }
 
 message Synthetic {
-  reserved 2;
-  reserved 3;
   Range range = 1;
-  TextDocument text = 4;
+  TextDocument text = 2;
 }
