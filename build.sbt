@@ -135,11 +135,26 @@ lazy val metac = project
   .settings(
     publishableSettings,
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+    mainClass := Some("scala.meta.cli.Metac")
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbScalacPlugin)
+
+lazy val metap = crossProject
+  .crossType(CrossType.Pure)
+  .in(file("semanticdb/metap"))
+  .settings(
+    publishableSettings,
+    description := "SemanticDB decompiler",
+    mainClass := Some("scala.meta.cli.Metap")
+  )
+  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
+  .disablePlugins(BackgroundRunPlugin)
+  .dependsOn(semanticdb3)
+lazy val metapJVM = metap.jvm
+lazy val metapJS = metap.js
 
 /** ======================== LANGMETA ======================== **/
 
@@ -391,7 +406,7 @@ lazy val tests = crossProject
   )
   .jvmConfigure(_.dependsOn(testkit, interactive, metac))
   .enablePlugins(BuildInfoPlugin)
-  .dependsOn(scalameta, contrib)
+  .dependsOn(scalameta, contrib, metap)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
 
