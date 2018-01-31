@@ -62,14 +62,15 @@ message SymbolInformation {
   }
   reserved 2;
   reserved 3;
+  reserved 5;
+  reserved 6;
   string symbol = 1;
   string language = 9;
   int32 kind = 10;
   int32 properties = 11;
   string name = 4;
   Range range = 12;
-  string signature = 5;
-  repeated SymbolOccurrence occurrences = 6;
+  TextDocument signature = 13;
   repeated string members = 7;
   repeated string overrides = 8;
 }
