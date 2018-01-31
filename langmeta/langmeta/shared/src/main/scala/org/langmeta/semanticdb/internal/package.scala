@@ -37,11 +37,11 @@ package object semanticdb {
         sdocuments
       } else {
         sdocuments.documents match {
-          case Seq(doc, messages)
-            if doc.filename == messages.filename &&
-                isOnlyMessages(messages) =>
-            val x = doc.addMessages(messages.messages: _*)
-            s.TextDocuments(x :: Nil)
+          case Seq(smaindoc, smessagedoc)
+            if smaindoc.uri == smessagedoc.uri &&
+                isOnlyMessages(smessagedoc) =>
+            val smaindoc1 = smaindoc.addMessages(smessagedoc.messages: _*)
+            s.TextDocuments(smaindoc1 :: Nil)
           case _ => sdocuments
         }
       }
@@ -50,7 +50,7 @@ package object semanticdb {
       val ventries = sdocuments.documents.toIterator.map { sentry =>
         // TODO: Would it make sense to support multiclasspaths?
         // One use-case for this would be in-place updates of semanticdb files.
-        val vpath = v.SemanticdbPaths.fromScala(RelativePath(sentry.filename))
+        val vpath = v.SemanticdbPaths.fromScala(RelativePath(sentry.uri))
         val fragment = Fragment(targetroot, vpath)
         val bytes = s.TextDocuments(List(sentry)).toByteArray
         v.Entry.InMemory(fragment, bytes)
@@ -59,17 +59,19 @@ package object semanticdb {
     }
 
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
-      val s.TextDocument(sformat, sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
+      val s.TextDocument(sformat, suri, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
       assert(sformat == "semanticdb2", "s.TextDocument.format must be \"semanticdb2\"")
-      assert(sunixfilename.nonEmpty, "s.TextDocument.filename must not be empty")
-      val sfilename = PathIO.fromUnix(sunixfilename)
       val dinput = {
+        val sfilename = {
+          assert(suri.nonEmpty, "s.TextDocument.uri must not be empty")
+          PathIO.fromUnix(suri)
+        }
         if (scontents == "") {
-          val uri =
+          val duri =
             sourcepath.getOrElse(sys.error("Sourcepath is required to load slim semanticdb."))
                 .find(RelativePath(sfilename))
                 .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
-          dInput.File(AbsolutePath(uri.getPath))
+          dInput.File(AbsolutePath(duri.getPath))
         } else {
           dInput.VirtualFile(sfilename.toString, scontents)
         }
@@ -153,7 +155,7 @@ package object semanticdb {
         } catch {
           case NonFatal(e) =>
             throw new IllegalArgumentException(
-              s"Error converting s.TextDocument to m.Document where filename=${sdoc.filename}\n$sdoc",
+              s"Error converting s.TextDocument to m.Document where uri=${sdoc.uri}\n$sdoc",
               e)
         }
       }
@@ -219,8 +221,11 @@ package object semanticdb {
             case other =>
               sys.error(s"bad database: unsupported input $other")
           }
-          val spath = PathIO.toUnix(splatformpath)
-          assert(spath.nonEmpty, s"'$spath'.nonEmpty")
+          val suri = {
+            val result = PathIO.toUnix(splatformpath)
+            assert(result.nonEmpty, s"'$result'.nonEmpty")
+            result
+          }
           val slanguage = dlanguage
           val snames = dnames.map {
             case d.ResolvedName(dPosition(spos), ssym, sisDefinition) => s.ResolvedName(Some(spos), ssym.syntax, sisDefinition)
@@ -238,7 +243,7 @@ package object semanticdb {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.TextDocument(sformat, spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
+          s.TextDocument(sformat, suri, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
       }
       s.TextDocuments(sentries)
     }
