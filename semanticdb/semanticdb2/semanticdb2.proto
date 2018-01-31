@@ -98,7 +98,7 @@ message Diagnostic {
   reserved 2;
   Range range = 1;
   Severity severity = 4;
-  string text = 3;
+  string message = 3;
 }
 
 message Synthetic {
