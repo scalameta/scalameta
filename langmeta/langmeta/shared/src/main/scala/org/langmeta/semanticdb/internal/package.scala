@@ -19,14 +19,14 @@ import org.langmeta.{semanticdb => d}
 package object semanticdb {
   implicit class XtensionSchemaTextDocuments(sdocuments: s.TextDocuments) {
 
-    def mergeMessageOnlyDocuments: s.TextDocuments = {
-      // returns true if this document contains only messages and nothing else.
+    def mergeDiagnosticOnlyDocuments: s.TextDocuments = {
+      // returns true if this document contains only diagnostics and nothing else.
       // deprecation messages are reported in refchecks and get persisted
       // as standalone documents that need to be merged with their typer-phase
       // document during loading. It seems there's no way to merge the documents
       // during compilation without introducing a lot of memory pressure.
       def isOnlyMessages(sdocument: s.TextDocument): Boolean =
-        sdocument.messages.nonEmpty &&
+        sdocument.diagnostics.nonEmpty &&
           sdocument.text.isEmpty &&
           sdocument.symbols.isEmpty &&
           sdocument.occurrences.isEmpty &&
@@ -37,10 +37,10 @@ package object semanticdb {
         sdocuments
       } else {
         sdocuments.documents match {
-          case Seq(smaindoc, smessagedoc)
-            if smaindoc.uri == smessagedoc.uri &&
-                isOnlyMessages(smessagedoc) =>
-            val smaindoc1 = smaindoc.addMessages(smessagedoc.messages: _*)
+          case Seq(smaindoc, sdiagdoc)
+            if smaindoc.uri == sdiagdoc.uri &&
+                isOnlyMessages(sdiagdoc) =>
+            val smaindoc1 = smaindoc.addDiagnostics(sdiagdoc.diagnostics: _*)
             s.TextDocuments(smaindoc1 :: Nil)
           case _ => sdocuments
         }
@@ -59,7 +59,7 @@ package object semanticdb {
     }
 
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
-      val s.TextDocument(sformat, suri, stext, slanguage, ssymbols, soccurrences, smessages, ssynthetics) = sdoc
+      val s.TextDocument(sformat, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics) = sdoc
       assert(sformat == "semanticdb2", "s.TextDocument.format must be \"semanticdb2\"")
       val dinput = {
         val sfilename = {
@@ -132,7 +132,7 @@ package object semanticdb {
         case s.SymbolOccurrence(Some(sPosition(dpos)), d.Symbol(dsym), disDefinition) => d.ResolvedName(dpos, dsym, disDefinition)
         case other => sys.error(s"bad protobuf: unsupported occurrence $other")
       }.toList
-      val dmessages = smessages.map {
+      val dmessages = sdiagnostics.map {
         case s.Diagnostic(Some(sPosition(dpos)), sSeverity(dseverity), dmsg: String) =>
           d.Message(dpos, dseverity, dmsg)
         case other => sys.error(s"bad protobuf: unsupported diagnostic $other")
@@ -235,7 +235,7 @@ package object semanticdb {
             case d.ResolvedName(dPosition(spos), ssym, sisDefinition) => s.SymbolOccurrence(Some(spos), ssym.syntax, sisDefinition)
             case other => sys.error(s"bad database: unsupported name $other")
           }
-          val smessages = dmessages.map {
+          val sdiagnostics = dmessages.map {
             case d.Message(dPosition(spos), dSeverity(ssym), smessage) => s.Diagnostic(Some(spos), ssym, smessage)
             case other => sys.error(s"bad database: unsupported message $other")
           }
@@ -243,7 +243,7 @@ package object semanticdb {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.TextDocument(sformat, suri, stext, slanguage, ssymbols, soccurrences, smessages, ssynthetics)
+          s.TextDocument(sformat, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics)
       }
       s.TextDocuments(sentries)
     }

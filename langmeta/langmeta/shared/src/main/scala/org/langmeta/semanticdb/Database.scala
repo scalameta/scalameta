@@ -49,7 +49,7 @@ object Database {
 
   def load(bytes: Array[Byte]): Database = {
     val sdocs = s.TextDocuments.parseFrom(bytes)
-    val mdb = sdocs.mergeMessageOnlyDocuments.toDb(None)
+    val mdb = sdocs.mergeDiagnosticOnlyDocuments.toDb(None)
     mdb
   }
 }

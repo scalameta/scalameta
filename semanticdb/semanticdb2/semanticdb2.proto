@@ -15,7 +15,7 @@ message TextDocument {
   string language = 7;
   repeated SymbolInformation symbols = 4;
   repeated SymbolOccurrence occurrences = 2;
-  repeated Diagnostic messages = 3;
+  repeated Diagnostic diagnostics = 3;
   repeated Synthetic synthetics = 6;
 }
 

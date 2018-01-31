@@ -20,7 +20,7 @@ final case class Database(entries: List[Entry]) {
   def toSchema: s.TextDocuments = {
     val sentries = entries.flatMap { ventry =>
       val sdocs = s.TextDocuments.parseFrom(ventry.bytes)
-      sdocs.mergeMessageOnlyDocuments.documents
+      sdocs.mergeDiagnosticOnlyDocuments.documents
     }
     s.TextDocuments(sentries)
   }
