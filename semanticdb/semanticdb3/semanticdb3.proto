@@ -63,6 +63,7 @@ message SymbolInformation {
   Range range = 6;
   TextDocument signature = 7;
   repeated string members = 8;
+  repeated string overrides = 9;
 }
 
 message SymbolOccurrence {

@@ -190,13 +190,14 @@ always equal to an asterisk (`*`).
 ```protobuf
 message SymbolInformation {
   string symbol = 1;
-  int32 kind = 2;
-  int64 properties = 3;
-  string name = 4;
-  Range range = 5;
-  TextDocument signature = 6;
-  repeated string members = 7;
-  repeated string overrides = 8;
+  string language = 2;
+  int32 kind = 3;
+  int64 properties = 4;
+  string name = 5;
+  Range range = 6;
+  TextDocument signature = 7;
+  repeated string members = 8;
+  repeated string overrides = 9;
 }
 ```
 
@@ -209,6 +210,8 @@ At the moment, the supported metadata is usecase-driven and is not supposed to
 be comprehensive or language-agnostic. In the future, we may add support for
 more metadata, for example information about overriding, documentation strings
 or features from other languages.
+
+`language`. Language that defines this symbol.
 
 `kind`. Enumeration that defines the kind of the symbol:
 <table>
