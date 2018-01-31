@@ -14,7 +14,8 @@ object Metac {
     pluginStream.getChannel().transferFrom(resourceChannel, 0, Long.MaxValue)
     pluginStream.close()
     val semanticdbArgs = Array("-Xplugin:" + pluginDir, "-Xplugin-require:semanticdb", "-Yrangepos")
-    val scalacArgs = args ++ semanticdbArgs
+    val stopAfterSemanticdb = Array("-Ystop-after:semanticdb-typer")
+    val scalacArgs = args ++ semanticdbArgs ++ stopAfterSemanticdb
     Main.main(scalacArgs)
   }
 }

@@ -2,6 +2,7 @@ package scala.meta.internal
 package semanticdb
 
 import scala.collection.mutable
+import scala.reflect.internal._
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.{meta => m}
@@ -13,7 +14,7 @@ trait DocumentOps { self: DatabaseOps =>
       sys.error("the compiler instance must have -Yrangepos enabled")
     }
     if (g.useOffsetPositions) {
-      sys.error("The compiler instance must use range positions")
+      sys.error("the compiler instance must use range positions")
     }
     if (!g.settings.plugin.value.exists(_.contains("semanticdb"))) {
       sys.error("the compiler instance must use the semanticdb plugin")
@@ -22,11 +23,19 @@ trait DocumentOps { self: DatabaseOps =>
       println(g.analyzer.getClass.getName)
       sys.error("the compiler instance must use a hijacked analyzer")
     }
-    if (g.phase.id < g.currentRun.phaseNamed("typer").id) {
-      sys.error("the compiler phase must be not earlier than typer")
+    if (g.currentRun.phaseNamed("typer") != NoPhase) {
+      if (g.phase.id < g.currentRun.phaseNamed("typer").id) {
+        sys.error("the compiler phase must be not earlier than typer")
+      }
+    } else {
+      sys.error("the compiler instance does not have a typer phase")
     }
-    if (g.phase.id > g.currentRun.phaseNamed("patmat").id) {
-      sys.error("the compiler phase must be not later than patmat")
+    if (g.currentRun.phaseNamed("patmat") != NoPhase) {
+      if (g.phase.id > g.currentRun.phaseNamed("patmat").id) {
+        sys.error("the compiler phase must be not later than patmat")
+      }
+    } else {
+      // do nothing
     }
   }
 
