@@ -73,24 +73,6 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== SEMANTICDB ======================== **/
 
-lazy val semanticdb2 = crossProject
-  .crossType(CrossType.Pure)
-  .in(file("semanticdb/semanticdb2"))
-  .settings(
-    publishableSettings,
-    protobufSettings,
-    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb2/")),
-    mimaPreviousArtifacts := Set()
-  )
-  .jvmSettings(
-    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
-  )
-  .jsSettings(
-    crossScalaVersions := List(LatestScala211, LatestScala212)
-  )
-lazy val semanticdb2JVM = semanticdb2.jvm
-lazy val semanticdb2JS = semanticdb2.js
-
 lazy val semanticdb3 = crossProject
   .crossType(CrossType.Pure)
   .in(file("semanticdb/semanticdb3"))
