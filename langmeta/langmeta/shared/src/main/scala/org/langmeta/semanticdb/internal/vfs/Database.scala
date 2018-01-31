@@ -17,12 +17,12 @@ object Database {
 }
 
 final case class Database(entries: List[Entry]) {
-  def toSchema: s.Database = {
+  def toSchema: s.TextDocuments = {
     val sentries = entries.flatMap { ventry =>
-      val sdb = s.Database.parseFrom(ventry.bytes)
-      sdb.mergeMessageOnlyDocuments.documents
+      val sdocs = s.TextDocuments.parseFrom(ventry.bytes)
+      sdocs.mergeMessageOnlyDocuments.documents
     }
-    s.Database(sentries)
+    s.TextDocuments(sentries)
   }
 
   def save(append: Boolean): Unit = {

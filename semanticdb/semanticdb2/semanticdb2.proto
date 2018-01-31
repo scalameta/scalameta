@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package org.langmeta.internal.semanticdb.schema;
 
-message Database {
+message TextDocuments {
   repeated Document documents = 1;
 }
 

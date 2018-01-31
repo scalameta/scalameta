@@ -17,9 +17,9 @@ import org.langmeta.semanticdb.Signature
 import org.langmeta.{semanticdb => d}
 
 package object semanticdb {
-  implicit class XtensionSchemaDatabase(sdatabase: s.Database) {
+  implicit class XtensionSchemaTextDocuments(sdocuments: s.TextDocuments) {
 
-    def mergeMessageOnlyDocuments: s.Database = {
+    def mergeMessageOnlyDocuments: s.TextDocuments = {
       // returns true if this document contains only messages and nothing else.
       // deprecation messages are reported in refchecks and get persisted
       // as standalone documents that need to be merged with their typer-phase
@@ -31,28 +31,28 @@ package object semanticdb {
           sdocument.names.isEmpty &&
           sdocument.synthetics.isEmpty &&
           sdocument.symbols.isEmpty
-      if (sdatabase.documents.length <= 1) {
+      if (sdocuments.documents.length <= 1) {
         // NOTE(olafur) the most common case is that there is only a single database
         // per document so we short-circuit here if that's the case.
-        sdatabase
+        sdocuments
       } else {
-        sdatabase.documents match {
+        sdocuments.documents match {
           case Seq(doc, messages)
             if doc.filename == messages.filename &&
                 isOnlyMessages(messages) =>
             val x = doc.addMessages(messages.messages: _*)
-            s.Database(x :: Nil)
-          case _ => sdatabase
+            s.TextDocuments(x :: Nil)
+          case _ => sdocuments
         }
       }
     }
     def toVfs(targetroot: AbsolutePath): v.Database = {
-      val ventries = sdatabase.documents.toIterator.map { sentry =>
+      val ventries = sdocuments.documents.toIterator.map { sentry =>
         // TODO: Would it make sense to support multiclasspaths?
         // One use-case for this would be in-place updates of semanticdb files.
         val vpath = v.SemanticdbPaths.fromScala(RelativePath(sentry.filename))
         val fragment = Fragment(targetroot, vpath)
-        val bytes = s.Database(List(sentry)).toByteArray
+        val bytes = s.TextDocuments(List(sentry)).toByteArray
         v.Entry.InMemory(fragment, bytes)
       }
       v.Database(ventries.toList)
@@ -146,7 +146,7 @@ package object semanticdb {
 
 
     def toDb(sourcepath: Option[Sourcepath]): d.Database = {
-      val dentries = sdatabase.documents.toIterator.map { sdoc =>
+      val dentries = sdocuments.documents.toIterator.map { sdoc =>
         try {
           toDb(sourcepath, sdoc)
         } catch {
@@ -160,7 +160,7 @@ package object semanticdb {
     }
   }
   implicit class XtensionDatabase(ddatabase: d.Database) {
-    def toSchema(sourceroot: AbsolutePath): s.Database = {
+    def toSchema(sourceroot: AbsolutePath): s.TextDocuments = {
       val sentries = ddatabase.documents.map {
         case d.Document(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
           object dPosition {
@@ -238,7 +238,7 @@ package object semanticdb {
           }.toSeq
           s.Document(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
       }
-      s.Database(sentries)
+      s.TextDocuments(sentries)
     }
   }
 
