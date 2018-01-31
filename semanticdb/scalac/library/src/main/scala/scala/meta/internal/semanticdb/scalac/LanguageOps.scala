@@ -1,5 +1,4 @@
-package scala.meta.internal
-package semanticdb
+package scala.meta.internal.semanticdb.scalac
 
 import scala.util.Properties
 import scala.{meta => m}

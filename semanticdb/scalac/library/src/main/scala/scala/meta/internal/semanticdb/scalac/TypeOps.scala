@@ -1,4 +1,4 @@
-package scala.meta.internal.semanticdb
+package scala.meta.internal.semanticdb.scalac
 
 import scala.{meta => m}
 

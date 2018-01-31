@@ -1,8 +1,7 @@
 package scala.meta.tests
 package semanticdb
 
-import scala.meta.internal.semanticdb.OverrideMode
-import scala.meta.internal.semanticdb.SemanticdbMode
+import scala.meta.internal.semanticdb.scalac._
 
 class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = OverrideMode.All) {
   // Dont save overrides for reference, only for definition

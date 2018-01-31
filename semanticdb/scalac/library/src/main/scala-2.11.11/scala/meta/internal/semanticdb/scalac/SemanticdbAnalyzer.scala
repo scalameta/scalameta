@@ -7,7 +7,7 @@ import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
 import scala.reflect.internal.Mode._
 import scala.reflect.internal.util._
 import scala.reflect.internal.Flags._
-import scala.meta.internal.ReflectionToolkit
+import scala.meta.internal.semanticdb.scalac.ReflectionToolkit
 
 // NOTE: grep for "scalac deviation" to see what exactly has been changed
 // I had to copy/paste a lot of code from Namers and Typers, but only a small percentage is actually relevant

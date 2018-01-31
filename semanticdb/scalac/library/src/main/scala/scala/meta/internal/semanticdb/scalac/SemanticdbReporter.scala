@@ -1,4 +1,4 @@
-package scala.meta.internal
+package scala.meta.internal.semanticdb.scalac
 
 import scala.reflect.internal.util.Position
 import scala.tools.nsc.reporters.Reporter

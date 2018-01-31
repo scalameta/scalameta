@@ -1,4 +1,4 @@
 <plugin>
   <name>semanticdb</name>
-  <classname>scala.meta.internal.SemanticdbPlugin</classname>
+  <classname>scala.meta.internal.semanticdb.scalac.SemanticdbPlugin</classname>
 </plugin>

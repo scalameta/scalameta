@@ -2,8 +2,7 @@ package scala.meta.tests
 package semanticdb
 
 import scala.meta._
-import scala.meta.internal.semanticdb.MemberMode
-import scala.meta.internal.semanticdb.SemanticdbMode
+import scala.meta.internal.semanticdb.scalac._
 
 // Contributing tips:
 // - Create another suite like YYY.scala that extends DatabaseSuite,

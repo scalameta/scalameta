@@ -1,4 +1,4 @@
-package scala.meta.internal
+package scala.meta.internal.semanticdb.scalac
 
 trait HijackReporter { self: SemanticdbPlugin =>
 

@@ -1,5 +1,4 @@
-package scala.meta.internal
-package semanticdb
+package scala.meta.internal.semanticdb.scalac
 
 import scala.collection.mutable
 import scala.tools.nsc.reporters.StoreReporter

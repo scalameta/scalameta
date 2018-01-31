@@ -1,5 +1,4 @@
-package scala.meta.internal
-package semanticdb
+package scala.meta.internal.semanticdb.scalac
 
 import scala.collection.mutable
 import scala.reflect.internal._
@@ -355,7 +354,7 @@ trait DocumentOps { self: DatabaseOps =>
           private def tryFindInferred(gtree: g.Tree): Unit = {
             if (!config.synthetics.saveSynthetics) return
 
-            import scala.meta.internal.semanticdb.{AttributedSynthetic => S}
+            import scala.meta.internal.semanticdb.scalac.{AttributedSynthetic => S}
             def success(pos: m.Position, f: Inferred => Inferred): Unit = {
               inferred(pos) = f(inferred(pos))
             }

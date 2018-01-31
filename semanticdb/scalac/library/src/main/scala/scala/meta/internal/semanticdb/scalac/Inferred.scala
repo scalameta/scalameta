@@ -1,5 +1,5 @@
 package scala.meta
-package internal.semanticdb
+package internal.semanticdb.scalac
 
 case class SyntheticRange(start: Int, end: Int, symbol: Symbol) {
   def addOffset(offset: Int) = SyntheticRange(start + offset, end + offset, symbol)

@@ -10,7 +10,7 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
 import scala.meta.io._
-import scala.meta.internal.semanticdb.{DatabaseOps, FailureMode, MemberMode, OverrideMode, SemanticdbMode}
+import scala.meta.internal.semanticdb.scalac._
 import scala.meta.testkit.DiffAssertions
 
 abstract class DatabaseSuite(mode: SemanticdbMode,

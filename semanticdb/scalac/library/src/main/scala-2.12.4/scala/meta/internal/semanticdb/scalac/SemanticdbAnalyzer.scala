@@ -7,7 +7,7 @@ import scala.tools.nsc.typechecker.{Analyzer => NscAnalyzer}
 import scala.reflect.internal.Mode._
 import scala.reflect.internal.util._
 import scala.reflect.internal.Flags._
-import scala.meta.internal.ReflectionToolkit
+import scala.meta.internal.semanticdb.scalac.ReflectionToolkit
 
 // NOTE: grep for "scalac deviation" to see what exactly has been changed
 // I had to copy/paste a lot of code from Namers and Typers, but only a small percentage is actually relevant
@@ -15,7 +15,7 @@ import scala.meta.internal.ReflectionToolkit
 trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
   import global._
   import definitions._
-  import TypersStats._
+  import statistics._
 
   override def newNamer(context: Context) = new SemanticdbNamer(context)
   class SemanticdbNamer(context0: Context) extends Namer(context0) {
@@ -47,19 +47,15 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
 
     override def typed1(tree: Tree, mode: Mode, pt: Type): Tree = {
       def typedSingletonTypeTree(tree: SingletonTypeTree) = {
-        val refTyped =
-          context.withImplicitsDisabled {
-            typed(tree.ref, MonoQualifierModes | mode.onlyTypePat, AnyRefTpe)
-          }
+        val refTyped = typedTypeSelectionQualifier(tree.ref)
 
-        if (refTyped.isErrorTyped) {
-          setError(tree)
-        } else {
+        if (refTyped.isErrorTyped) setError(tree)
+        else {
           //+scalac deviation
           tree setType refTyped.tpe.resultType.deconst rememberSingletonTypeTreeOf refTyped
           //-scalac deviation
-          if (refTyped.isErrorTyped || treeInfo.admitsTypeSelection(refTyped)) tree
-          else UnstableTreeError(tree)
+          if (!treeInfo.admitsTypeSelection(refTyped)) UnstableTreeError(tree)
+          else tree
         }
       }
 
@@ -83,10 +79,10 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
        * insert an implicit conversion.
        */
       def tryTypedApply(fun: Tree, args: List[Tree]): Tree = {
-        val start = if (Statistics.canEnable) Statistics.startTimer(failedApplyNanos) else null
+        val start = if (StatisticsStatics.areSomeColdStatsEnabled) statistics.startTimer(failedApplyNanos) else null
 
         def onError(typeErrors: Seq[AbsTypeError], warnings: Seq[(Position, String)]): Tree = {
-          if (Statistics.canEnable) Statistics.stopTimer(failedApplyNanos, start)
+          if (StatisticsStatics.areSomeColdStatsEnabled) statistics.stopTimer(failedApplyNanos, start)
 
           // If the problem is with raw types, convert to existentials and try again.
           // See #4712 for a case where this situation arises,
@@ -147,8 +143,8 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
         // TODO: replace `fun.symbol.isStable` by `treeInfo.isStableIdentifierPattern(fun)`
         val stableApplication = (fun.symbol ne null) && fun.symbol.isMethod && fun.symbol.isStable
         val funpt = if (mode.inPatternMode) pt else WildcardType
-        val appStart = if (Statistics.canEnable) Statistics.startTimer(failedApplyNanos) else null
-        val opeqStart = if (Statistics.canEnable) Statistics.startTimer(failedOpEqNanos) else null
+        val appStart = if (StatisticsStatics.areSomeColdStatsEnabled) statistics.startTimer(failedApplyNanos) else null
+        val opeqStart = if (StatisticsStatics.areSomeColdStatsEnabled) statistics.startTimer(failedOpEqNanos) else null
 
         def isConversionCandidate(qual: Tree, name: Name): Boolean =
           !mode.inPatternMode && nme.isOpAssignmentName(TermName(name.decode)) && !qual.exists(_.isErroneous)
@@ -178,7 +174,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
           case Select(qual, name) if isConversionCandidate(qual, name) =>
             val qual1 = typedQualifier(qual)
             if (treeInfo.isVariableOrGetter(qual1)) {
-              if (Statistics.canEnable) Statistics.stopTimer(failedOpEqNanos, opeqStart)
+              if (StatisticsStatics.areSomeColdStatsEnabled) statistics.stopTimer(failedOpEqNanos, opeqStart)
               val erred = qual1.exists(_.isErroneous) || args.exists(_.isErroneous)
               if (erred) reportError(error) else {
                 val convo = convertToAssignment(fun, qual1, name, args)
@@ -190,7 +186,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
                 }
               }
             } else {
-              if (Statistics.canEnable) Statistics.stopTimer(failedApplyNanos, appStart)
+              if (StatisticsStatics.areSomeColdStatsEnabled) statistics.stopTimer(failedApplyNanos, appStart)
               val Apply(Select(qual2, _), args2) = tree
               val erred = qual2.exists(_.isErroneous) || args2.exists(_.isErroneous)
               reportError {
@@ -198,7 +194,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
               }
             }
           case _ =>
-            if (Statistics.canEnable) Statistics.stopTimer(failedApplyNanos, appStart)
+            if (StatisticsStatics.areSomeColdStatsEnabled) statistics.stopTimer(failedApplyNanos, appStart)
             reportError(error)
         }
         val silentResult = silent(
@@ -209,7 +205,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
         silentResult match {
           case SilentResultValue(fun1) =>
             val fun2 = if (stableApplication) stabilizeFun(fun1, mode, pt) else fun1
-            if (Statistics.canEnable) Statistics.incCounter(typedApplyCount)
+            if (StatisticsStatics.areSomeColdStatsEnabled) statistics.incCounter(typedApplyCount)
             val noSecondTry = (
                  isPastTyper
               || context.inSecondTry
@@ -393,150 +389,162 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
        * `qual` is already attributed.
        */
       def typedSelect(tree: Tree, qual: Tree, name: Name): Tree = {
-        val t = typedSelectInternal(tree, qual, name)
-        // Checking for OverloadedTypes being handed out after overloading
-        // resolution has already happened.
-        if (isPastTyper) t.tpe match {
-          case OverloadedType(pre, alts) =>
-            if (alts forall (s => (s.owner == ObjectClass) || (s.owner == AnyClass) || isPrimitiveValueClass(s.owner))) ()
-            else if (settings.debug) printCaller(
-              s"""|Select received overloaded type during $phase, but typer is over.
-                  |If this type reaches the backend, we are likely doomed to crash.
-                  |$t has these overloads:
-                  |${alts map (s => "  " + s.defStringSeenAs(pre memberType s)) mkString "\n"}
-                  |""".stripMargin
-            )("")
-          case _ =>
-        }
-        t
-      }
+        // note: on error, we discard the work we did in type checking tree.qualifier into qual
+        // (tree is either Select or SelectFromTypeTree, and qual may be different from tree.qualifier because it has been type checked)
+        val qualTp = qual.tpe
+        if ((qualTp eq null) || qualTp.isError) setError(tree)
+        else if (name.isTypeName && qualTp.isVolatile)  // TODO: use same error message for volatileType#T and volatilePath.T?
+          if (tree.isInstanceOf[SelectFromTypeTree]) TypeSelectionFromVolatileTypeError(tree, qual)
+          else UnstableTreeError(qual)
+        else {
+          def asDynamicCall = dyna.mkInvoke(context, tree, qual, name) map { t =>
+            dyna.wrapErrors(t, (_.typed1(t, mode, pt)))
+          }
 
-      def typedSelectInternal(tree: Tree, qual: Tree, name: Name): Tree = {
-        def asDynamicCall = dyna.mkInvoke(context, tree, qual, name) map { t =>
-          dyna.wrapErrors(t, (_.typed1(t, mode, pt)))
-        }
+          val sym = tree.symbol orElse member(qual, name) orElse inCompanionForJavaStatic(qual.tpe.prefix, qual.symbol, name)
+          if ((sym eq NoSymbol) && name != nme.CONSTRUCTOR && mode.inAny(EXPRmode | PATTERNmode)) {
+            // symbol not found? --> try to convert implicitly to a type that does have the required
+            // member.  Added `| PATTERNmode` to allow enrichment in patterns (so we can add e.g., an
+            // xml member to StringContext, which in turn has an unapply[Seq] method)
 
-        val sym = tree.symbol orElse member(qual, name) orElse inCompanionForJavaStatic(qual.tpe.prefix, qual.symbol, name) orElse {
-          // symbol not found? --> try to convert implicitly to a type that does have the required
-          // member.  Added `| PATTERNmode` to allow enrichment in patterns (so we can add e.g., an
-          // xml member to StringContext, which in turn has an unapply[Seq] method)
-          if (name != nme.CONSTRUCTOR && mode.inAny(EXPRmode | PATTERNmode)) {
             val qual1 = adaptToMemberWithArgs(tree, qual, name, mode)
             if ((qual1 ne qual) && !qual1.isErrorTyped)
               return typed(treeCopy.Select(tree, qual1, name), mode, pt)
           }
-          NoSymbol
-        }
-        if (phase.erasedTypes && qual.isInstanceOf[Super] && tree.symbol != NoSymbol)
-          qual setType tree.symbol.owner.tpe
 
-        if (!reallyExists(sym)) {
-          def handleMissing: Tree = {
-            def errorTree = missingSelectErrorTree(tree, qual, name)
-            def asTypeSelection = (
-              if (context.unit.isJava && name.isTypeName) {
-                // SI-3120 Java uses the same syntax, A.B, to express selection from the
-                // value A and from the type A. We have to try both.
-                atPos(tree.pos)(gen.convertToSelectFromType(qual, name)) match {
-                  case EmptyTree => None
-                  case tree1     => Some(typed1(tree1, mode, pt))
-                }
-              }
-              else None
-            )
-            debuglog(s"""
-              |qual=$qual:${qual.tpe}
-              |symbol=${qual.tpe.termSymbol.defString}
-              |scope-id=${qual.tpe.termSymbol.info.decls.hashCode}
-              |members=${qual.tpe.members mkString ", "}
-              |name=$name
-              |found=$sym
-              |owner=${context.enclClass.owner}
-              """.stripMargin)
-
-            // 1) Try converting a term selection on a java class into a type selection.
-            // 2) Try expanding according to Dynamic rules.
-            // 3) Try looking up the name in the qualifier.
-            asTypeSelection orElse asDynamicCall getOrElse (lookupInQualifier(qual, name) match {
-              case NoSymbol => setError(errorTree)
-              case found    => typed1(tree setSymbol found, mode, pt)
-            })
-          }
-          handleMissing
-        }
-        else {
-          val tree1 = tree match {
-            case Select(_, _) => treeCopy.Select(tree, qual, name)
-            case SelectFromTypeTree(_, _) => treeCopy.SelectFromTypeTree(tree, qual, name)
-          }
-          val (result, accessibleError) = silent(_.asInstanceOf[SemanticdbTyper].makeAccessible(tree1, sym, qual.tpe, qual)) match {
-            case SilentTypeError(err: AccessTypeError) =>
-              (tree1, Some(err))
-            case SilentTypeError(err) =>
-              SelectWithUnderlyingError(tree, err)
-              return tree
-            case SilentResultValue(treeAndPre) =>
-              (stabilize(treeAndPre._1, treeAndPre._2, mode, pt), None)
+          // This special-case complements the logic in `adaptMember` in erasure, it handles selections
+          // from `Super`. In `adaptMember`, if the erased type of a qualifier doesn't conform to the
+          // owner of the selected member, a cast is inserted, e.g., (foo: Option[String]).get.trim).
+          // Similarly, for `super.m`, typing `super` during erasure assigns the superclass. If `m`
+          // is defined in a trait, this is incorrect, we need to assign a type to `super` that conforms
+          // to the owner of `m`. Adding a cast (as in `adaptMember`) would not work, `super.asInstanceOf`
+          // is not a valid tree.
+          if (phase.erasedTypes && qual.isInstanceOf[Super]) {
+            //  See the comment in `preErase` why we use the attachment (scala/bug#7936)
+            val qualSym = tree.getAndRemoveAttachment[QualTypeSymAttachment] match {
+              case Some(a) => a.sym
+              case None => sym.owner
+            }
+            qual.setType(qualSym.tpe)
           }
 
-          result match {
-            // could checkAccessible (called by makeAccessible) potentially have skipped checking a type application in qual?
-            case SelectFromTypeTree(qual@TypeTree(), name) if qual.tpe.typeArgs.nonEmpty => // TODO: somehow the new qual is not checked in refchecks
-              treeCopy.SelectFromTypeTree(
-                result,
-                (TypeTreeWithDeferredRefCheck(){ () => val tp = qual.tpe; val sym = tp.typeSymbolDirect
-                  // will execute during refchecks -- TODO: make private checkTypeRef in refchecks public and call that one?
-                  checkBounds(qual, tp.prefix, sym.owner, sym.typeParams, tp.typeArgs, "")
-                  qual // you only get to see the wrapped tree after running this check :-p
-                }) setType qual.tpe setPos qual.pos,
-                name)
-            case _ if accessibleError.isDefined =>
-              // don't adapt constructor, SI-6074
-              val qual1 = if (name == nme.CONSTRUCTOR) qual
-                          else adaptToMemberWithArgs(tree, qual, name, mode, reportAmbiguous = false, saveErrors = false)
-              if (!qual1.isErrorTyped && (qual1 ne qual))
-                typed(Select(qual1, name) setPos tree.pos, mode, pt)
-              else
+          if (!reallyExists(sym)) {
+            def handleMissing: Tree = {
+              def errorTree = missingSelectErrorTree(tree, qual, name)
+              def asTypeSelection = (
+                  if (context.unit.isJava && name.isTypeName) {
+                    // scala/bug#3120 Java uses the same syntax, A.B, to express selection from the
+                    // value A and from the type A. We have to try both.
+                    atPos(tree.pos)(gen.convertToSelectFromType(qual, name)) match {
+                      case EmptyTree => None
+                      case tree1     => Some(typed1(tree1, mode, pt))
+                    }
+                  }
+                  else None
+                  )
+              debuglog(s"""
+                          |qual=$qual:${qual.tpe}
+                          |symbol=${qual.tpe.termSymbol.defString}
+                          |scope-id=${qual.tpe.termSymbol.info.decls.hashCode}
+                          |members=${qual.tpe.members mkString ", "}
+                          |name=$name
+                          |found=$sym
+                          |owner=${context.enclClass.owner}
+                """.stripMargin)
+
+              // 1) Try converting a term selection on a java class into a type selection.
+              // 2) Try expanding according to Dynamic rules.
+              // 3) Try looking up the name in the qualifier.
+              asTypeSelection orElse asDynamicCall getOrElse (lookupInQualifier(qual, name) match {
+                case NoSymbol => setError(errorTree)
+                case found    => typed1(tree setSymbol found, mode, pt)
+              })
+            }
+            handleMissing
+          }
+          else {
+            val tree1 = tree match {
+              case Select(_, _) => treeCopy.Select(tree, qual, name)
+              case SelectFromTypeTree(_, _) => treeCopy.SelectFromTypeTree(tree, qual, name)
+            }
+            val (result, accessibleError) = silent(t => {
+              //+ scalac deviation
+              val semanticdbTyper = t.asInstanceOf[SemanticdbTyper]
+              //- scalac deviation
+              semanticdbTyper.makeAccessible(tree1, sym, qual.tpe, qual)
+            }) match {
+              case SilentTypeError(err: AccessTypeError) =>
+                (tree1, Some(err))
+              case SilentTypeError(err) =>
+                SelectWithUnderlyingError(tree, err)
+                return tree
+              case SilentResultValue((qual, pre)) =>
+                (stabilize(qual, pre, mode, pt), None)
+            }
+
+            result match {
+              // could checkAccessible (called by makeAccessible) potentially have skipped checking a type application in qual?
+              case SelectFromTypeTree(qual@TypeTree(), name) if qual.tpe.typeArgs.nonEmpty => // TODO: somehow the new qual is not checked in refchecks
+                treeCopy.SelectFromTypeTree(
+                  result,
+                  (TypeTreeWithDeferredRefCheck(){ () => val tp = qual.tpe; val sym = tp.typeSymbolDirect
+                    // will execute during refchecks -- TODO: make private checkTypeRef in refchecks public and call that one?
+                    checkBounds(qual, tp.prefix, sym.owner, sym.typeParams, tp.typeArgs, "")
+                    qual // you only get to see the wrapped tree after running this check :-p
+                  }) setType qual.tpe setPos qual.pos,
+                  name)
+              case _ if accessibleError.isDefined =>
+                // don't adapt constructor, scala/bug#6074
+                val qual1 = if (name == nme.CONSTRUCTOR) qual
+                else adaptToMemberWithArgs(tree, qual, name, mode, reportAmbiguous = false, saveErrors = false)
+                if (!qual1.isErrorTyped && (qual1 ne qual))
+                  typed(Select(qual1, name) setPos tree.pos, mode, pt)
+                else
                 // before failing due to access, try a dynamic call.
-                asDynamicCall getOrElse {
-                  context.issue(accessibleError.get)
-                  setError(tree)
-                }
-            case _ =>
-              result
+                  asDynamicCall getOrElse {
+                    context.issue(accessibleError.get)
+                    setError(tree)
+                  }
+              case _ =>
+                result
+            }
           }
         }
       }
 
+      //+scalac deviation
       // the qualifier type of a supercall constructor is its first parent class
       def typedSelectOrSuperQualifier(qual: Tree) =
         context withinSuperInit typed(qual, PolyQualifierModes)
+      //-scalac deviation
+
+      def typedTypeSelectionQualifier(tree: Tree, pt: Type = AnyRefTpe) =
+        context.withImplicitsDisabled { typed(tree, MonoQualifierModes | mode.onlyTypePat, pt) }
 
       def typedSelectOrSuperCall(tree: Select) = tree match {
         case Select(qual @ Super(_, _), nme.CONSTRUCTOR) =>
           // the qualifier type of a supercall constructor is its first parent class
           typedSelect(tree, typedSelectOrSuperQualifier(qual), nme.CONSTRUCTOR)
         case Select(qual, name) =>
-          if (Statistics.canEnable) Statistics.incCounter(typedSelectCount)
-          val qualTyped = checkDead(typedQualifier(qual, mode))
-          val qualStableOrError = (
-            if (qualTyped.isErrorTyped || !name.isTypeName || treeInfo.admitsTypeSelection(qualTyped))
-              qualTyped
-            else
-              UnstableTreeError(qualTyped)
-          )
-          val tree1 = typedSelect(tree, qualStableOrError, name)
-          def sym = tree1.symbol
-          if (tree.isInstanceOf[PostfixSelect])
-            checkFeature(tree.pos, PostfixOpsFeature, name.decode)
-          if (sym != null && sym.isOnlyRefinementMember && !sym.isMacro)
-            checkFeature(tree1.pos, ReflectiveCallsFeature, sym.toString)
+          if (name.isTypeName)
+            typedSelect(tree, typedTypeSelectionQualifier(tree.qualifier, WildcardType), name)
+          else {
+            if (StatisticsStatics.areSomeColdStatsEnabled) statistics.incCounter(typedSelectCount)
+            val qualTyped = checkDead(typedQualifier(qual, mode))
+            val tree1 = typedSelect(tree, qualTyped, name)
 
-          qualStableOrError.symbol match {
-            //+scalac deviation
-            case s: Symbol if s.isRootPackage => treeCopy.Ident(tree1, name).rememberSelectOf(tree1)
-            case _                            => tree1
-            //-scalac deviation
+            if (tree.isInstanceOf[PostfixSelect])
+              checkFeature(tree.pos, PostfixOpsFeature, name.decode)
+            val sym = tree1.symbol
+            if (sym != null && sym.isOnlyRefinementMember && !sym.isMacro)
+              checkFeature(tree1.pos, ReflectiveCallsFeature, sym.toString)
+
+            qualTyped.symbol match {
+              //+scalac deviation
+              case s: Symbol if s.isRootPackage => treeCopy.Ident(tree1, name).rememberSelectOf(tree1)
+              //-scalac deviation
+              case _ => tree1
+            }
           }
       }
 
@@ -811,6 +819,8 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
           if (context.implicitsEnabled) MissingArgsForMethodTpeError(tree, meth)
           else setError(tree)
 
+        def emptyApplication: Tree = adapt(typed(Apply(tree, Nil) setPos tree.pos), mode, pt, original)
+
         // constructors do not eta-expand
         if (meth.isConstructor) cantAdapt
         // (4.2) eta-expand method value when function or sam type is expected
@@ -827,26 +837,30 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
             case Typed(_, Function(Nil, EmptyTree)) => true // tree shape for `f _`
             case _ => false
           }
-          if (mt.params.isEmpty && !isExplicitEtaExpansion) {
-            currentRun.reporting.deprecationWarning(tree.pos, NoSymbol,
-              s"Eta-expansion of zero-argument method values is deprecated. Did you intend to write ${Apply(tree, Nil)}?", "2.12.0")
+          val isNullaryPtEtaExpansion = mt.params.isEmpty && !isExplicitEtaExpansion
+          val skipEta = isNullaryPtEtaExpansion && settings.isScala213
+          if (skipEta) emptyApplication
+          else {
+            if (isNullaryPtEtaExpansion && settings.isScala212)
+              currentRun.reporting.deprecationWarning(tree.pos, NoSymbol,
+                s"Eta-expansion of zero-argument method values is deprecated. Did you intend to write ${Apply(tree, Nil)}?", "2.12.0")
+
+            val tree0 = etaExpand(context.unit, tree, this)
+
+            // #2624: need to infer type arguments for eta expansion of a polymorphic method
+            // context.undetparams contains clones of meth.typeParams (fresh ones were generated in etaExpand)
+            // need to run typer on tree0, since etaExpansion sets the tpe's of its subtrees to null
+            // can't type with the expected type, as we can't recreate the setup in (3) without calling typed
+            // (note that (3) does not call typed to do the polymorphic type instantiation --
+            //  it is called after the tree has been typed with a polymorphic expected result type)
+            if (hasUndets)
+              instantiate(typed(tree0, mode), mode, pt)
+            else
+              typed(tree0, mode, pt)
           }
-
-          val tree0 = etaExpand(context.unit, tree, this)
-
-          // #2624: need to infer type arguments for eta expansion of a polymorphic method
-          // context.undetparams contains clones of meth.typeParams (fresh ones were generated in etaExpand)
-          // need to run typer on tree0, since etaExpansion sets the tpe's of its subtrees to null
-          // can't type with the expected type, as we can't recreate the setup in (3) without calling typed
-          // (note that (3) does not call typed to do the polymorphic type instantiation --
-          //  it is called after the tree has been typed with a polymorphic expected result type)
-          if (hasUndets)
-            instantiate(typed(tree0, mode), mode, pt)
-          else
-            typed(tree0, mode, pt)
         }
-        // (4.3) apply to empty argument list -- TODO 2.13: move this one case up to avoid eta-expanding at arity 0
-        else if (mt.params.isEmpty) adapt(typed(Apply(tree, Nil) setPos tree.pos), mode, pt, original)
+        // (4.3) apply to empty argument list
+        else if (mt.params.isEmpty) emptyApplication
         else cantAdapt
       }
 
@@ -906,7 +920,8 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
         if (sym != null && sym.isDeprecated)
           context.deprecationWarning(tree.pos, sym)
 
-        val result = treeCopy.Literal(tree, value)
+        // Keep the original tree in an annotation to avoid losing tree information for plugins
+        val result = treeCopy.Literal(tree, value).updateAttachment(OriginalTreeAttachment(original))
         //+scalac deviation
         result.rememberConstfoldOf(tree)
         //-scalac deviation

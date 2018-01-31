@@ -1,4 +1,4 @@
-package scala.meta.internal
+package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.semanticdb._
 import scala.meta.io.AbsolutePath

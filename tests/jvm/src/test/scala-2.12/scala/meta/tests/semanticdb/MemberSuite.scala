@@ -1,8 +1,7 @@
 package scala.meta.tests
 package semanticdb
 
-import scala.meta.internal.semanticdb.MemberMode
-import scala.meta.internal.semanticdb.SemanticdbMode
+import scala.meta.internal.semanticdb.scalac._
 
 class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
   members(
@@ -217,8 +216,8 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
   members(
     """
       |object a {
-      |  class Bar()  
-      |  trait Foo { def bar: Int }  
+      |  class Bar()
+      |  trait Foo { def bar: Int }
       |}""".stripMargin,
     ""
   )

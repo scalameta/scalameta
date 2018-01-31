@@ -1,4 +1,4 @@
-package scala.meta.internal
+package scala.meta.internal.semanticdb.scalac
 
 import java.io._
 import java.net.URI
@@ -8,7 +8,6 @@ import scala.tools.nsc.plugins.PluginComponent
 import scala.util.control.NonFatal
 import scala.{meta => m}
 import scala.meta.io._
-import scala.meta.internal.semanticdb.DatabaseOps
 import scala.meta.internal.semanticdb.{vfs => v}
 
 trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
@@ -35,7 +34,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       writer.write(s"failed to generate semanticdb for $path:$EOL")
       ex.printStackTrace(new PrintWriter(writer))
       val msg = writer.toString
-      import scala.meta.internal.semanticdb.FailureMode._
+      import scala.meta.internal.semanticdb.scalac.FailureMode._
       config.failures match {
         case Error => global.reporter.error(g.NoPosition, msg)
         case Warning => global.reporter.warning(g.NoPosition, msg)

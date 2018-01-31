@@ -2,8 +2,8 @@ package scala.meta.interactive
 
 import java.io.File
 import java.net.URLClassLoader
-import scala.meta.internal.SemanticdbPlugin
-import scala.meta.internal.semanticdb.DatabaseOps
+import scala.meta.internal.semanticdb.scalac.SemanticdbPlugin
+import scala.meta.internal.semanticdb.scalac.DatabaseOps
 import scala.reflect.io.VirtualDirectory
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global

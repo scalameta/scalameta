@@ -1,5 +1,4 @@
-package scala.meta.internal
-package semanticdb
+package scala.meta.internal.semanticdb.scalac
 
 import java.util.HashMap
 import scala.{meta => m}

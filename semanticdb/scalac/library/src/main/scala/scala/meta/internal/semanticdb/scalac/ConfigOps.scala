@@ -1,8 +1,6 @@
-package scala.meta.internal
-package semanticdb
+package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.io.PathIO
-import scala.meta.internal.SemanticdbPlugin
 import scala.meta.io._
 import scala.util.matching.Regex
 
