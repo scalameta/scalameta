@@ -18,7 +18,6 @@ import org.langmeta.{semanticdb => d}
 
 package object semanticdb {
   implicit class XtensionSchemaTextDocuments(sdocuments: s.TextDocuments) {
-
     def mergeDiagnosticOnlyDocuments: s.TextDocuments = {
       // returns true if this document contains only diagnostics and nothing else.
       // deprecation messages are reported in refchecks and get persisted
@@ -153,7 +152,6 @@ package object semanticdb {
       d.Document(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
     }
 
-
     def toDb(sourcepath: Option[Sourcepath]): d.Database = {
       val dentries = sdocuments.documents.toIterator.map { sdoc =>
         try {
@@ -168,6 +166,7 @@ package object semanticdb {
       d.Database(dentries.toList)
     }
   }
+
   implicit class XtensionDatabase(ddatabase: d.Database) {
     def toSchema(sourceroot: AbsolutePath): s.TextDocuments = {
       val sentries = ddatabase.documents.map {
@@ -260,5 +259,4 @@ package object semanticdb {
       s.TextDocuments(sentries)
     }
   }
-
 }
