@@ -24,6 +24,7 @@ object Metac {
     val stopAfterSemanticdb = Array("-Ystop-after:semanticdb-typer")
     val scalacArgs = args ++ semanticdbArgs ++ stopAfterSemanticdb
     ScalacMain.process(scalacArgs)
+    !ScalacMain.reporter.hasErrors
   }
 
   def main(args: Array[String]): Unit = {
