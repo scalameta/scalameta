@@ -14,7 +14,7 @@ import org.langmeta.internal.semanticdb.{vfs => v}
 import org.langmeta.io._
 import org.langmeta.semanticdb.Signature
 import org.langmeta.{semanticdb => d}
-import scala.meta.internal.{semanticdb2 => s}
+import scala.meta.internal.{semanticdb3 => s}
 
 package object semanticdb {
   implicit class XtensionSchemaTextDocuments(sdocuments: s.TextDocuments) {
@@ -59,7 +59,7 @@ package object semanticdb {
 
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
       val s.TextDocument(sformat, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics) = sdoc
-      assert(sformat == "semanticdb2", "s.TextDocument.format must be \"semanticdb2\"")
+      assert(sformat == "semanticdb3", "s.TextDocument.format must be \"semanticdb2\"")
       val dinput = {
         val sfilename = {
           assert(suri.nonEmpty, "s.TextDocument.uri must not be empty")
@@ -323,7 +323,7 @@ package object semanticdb {
                 None
             }
           }
-          val sformat = "semanticdb2"
+          val sformat = "semanticdb3"
           val (splatformpath, stext) = dinput match {
             case dInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
               path.toRelative(sourceroot).toString -> ""

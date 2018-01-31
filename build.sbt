@@ -123,7 +123,7 @@ lazy val langmeta = crossProject
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
-  .dependsOn(semanticdb2)
+  .dependsOn(semanticdb3)
 lazy val langmetaJVM = langmeta.jvm
 lazy val langmetaJS = langmeta.js
 
