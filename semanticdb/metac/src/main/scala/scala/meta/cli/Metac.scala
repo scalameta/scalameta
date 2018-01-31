@@ -8,7 +8,11 @@ import scala.meta.internal.semanticdb.scalac._
 import scala.tools.nsc.{Main => ScalacMain}
 
 object Metac {
-  def process(args: Array[String]): Boolean = {
+  def main(args: Array[String]): Unit = {
+    sys.exit(process(args))
+  }
+
+  def process(args: Array[String]): Int = {
     val manifestDir = Files.createTempDirectory("semanticdb-scalac_")
     val resourceUrl = classOf[SemanticdbPlugin].getResource("/scalac-plugin.xml")
     val resourceChannel = Channels.newChannel(resourceUrl.openStream())
@@ -24,10 +28,6 @@ object Metac {
     val stopAfterSemanticdb = Array("-Ystop-after:semanticdb-typer")
     val scalacArgs = args ++ semanticdbArgs ++ stopAfterSemanticdb
     ScalacMain.process(scalacArgs)
-    !ScalacMain.reporter.hasErrors
-  }
-
-  def main(args: Array[String]): Unit = {
-    sys.exit(if (process(args)) 0 else 1)
+    if (ScalacMain.reporter.hasErrors) 1 else 0
   }
 }
