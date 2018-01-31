@@ -91,9 +91,9 @@ package object semanticdb {
           }
         }
       }
-      object sResolvedSymbol {
-        def unapply(sresolvedsymbol: s.ResolvedSymbol): Option[d.ResolvedSymbol] = sresolvedsymbol match {
-          case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames, smembers, soverrides))) =>
+      object sSymbolInformation {
+        def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
+          case s.SymbolInformation(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames, smembers, soverrides))) =>
             val ddefninput = dInput.Denotation(dsignature, dsym)
             val dnames = snames.toIterator.map {
               case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
@@ -110,7 +110,7 @@ package object semanticdb {
             val doverrides = soverrides.flatMap(d.Symbol.unapply).toList
             val ddefn = d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides)
             Some(d.ResolvedSymbol(dsym, ddefn))
-          case other => sys.error(s"bad protobuf: unsupported denotation $other")
+          case other => sys.error(s"bad protobuf: unsupported symbol information $other")
         }
       }
       object sSynthetic {
@@ -138,7 +138,7 @@ package object semanticdb {
         case other => sys.error(s"bad protobuf: unsupported message $other")
       }.toList
       val dsymbols = ssymbols.map {
-        case sResolvedSymbol(dresolvedsymbol) => dresolvedsymbol
+        case sSymbolInformation(dresolvedsymbol) => dresolvedsymbol
       }.toList
       val dsynthetics = ssynthetics.toIterator.map {
         case sSynthetic(dsynthetic) => dsynthetic
@@ -228,7 +228,7 @@ package object semanticdb {
           }
           val slanguage = dlanguage
           val ssymbols = dsymbols.map {
-            case d.ResolvedSymbol(ssym, dDenotation(sdefn)) => s.ResolvedSymbol(ssym.syntax, Some(sdefn))
+            case d.ResolvedSymbol(ssym, dDenotation(sdefn)) => s.SymbolInformation(ssym.syntax, Some(sdefn))
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val snames = dnames.map {

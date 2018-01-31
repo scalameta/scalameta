@@ -13,7 +13,7 @@ message TextDocument {
   string uri = 9;
   string text = 8;
   string language = 7;
-  repeated ResolvedSymbol symbols = 4;
+  repeated SymbolInformation symbols = 4;
   repeated ResolvedName names = 2;
   repeated Message messages = 3;
   repeated Synthetic synthetics = 6;
@@ -42,7 +42,7 @@ message Message {
   string text = 3;
 }
 
-message ResolvedSymbol {
+message SymbolInformation {
   string symbol = 1;
   Denotation denotation = 2;
 }
