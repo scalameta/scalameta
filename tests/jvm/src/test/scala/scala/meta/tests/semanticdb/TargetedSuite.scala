@@ -657,7 +657,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   targeted(
     """
-      |object a {
+      |object w {
       |  val <<a>> = new java.lang.StringBuilder
       |  val <<b>> = new StringBuilder
       |  val <<c>>: Traversable[Int] = List(1)
@@ -678,7 +678,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """|
        |import scala.meta._
        |import org.scalatest._
-       |object w extends FunSuite {
+       |object x extends FunSuite {
        |  val x = q"Foo"
        |  val y = q"Bar"
        |  val z = q"$x + $y"
@@ -691,30 +691,30 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |[14..18): meta => _root_.scala.meta.
        |[28..31): org => _root_.org.
        |[32..41): scalatest => _root_.org.scalatest.
-       |[51..52): w <= _empty_.w.
+       |[51..52): x <= _empty_.x.
        |[61..69): FunSuite => _root_.org.scalatest.FunSuite#
        |[70..70): ε => _root_.org.scalatest.FunSuite#`<init>`()V.
-       |[78..79): x <= _empty_.w.x.
+       |[78..79): x <= _empty_.x.x.
        |[82..83): q => _root_.scala.meta.internal.quasiquotes.Unlift.
-       |[95..96): y <= _empty_.w.y.
+       |[95..96): y <= _empty_.x.y.
        |[99..100): q => _root_.scala.meta.internal.quasiquotes.Unlift.
-       |[112..113): z <= _empty_.w.z.
+       |[112..113): z <= _empty_.x.z.
        |[116..117): q => _root_.scala.meta.internal.quasiquotes.Unlift.
-       |[119..120): x => _empty_.w.x.
-       |[124..125): y => _empty_.w.y.
-       |[133..134): k <= _empty_.w.k.
+       |[119..120): x => _empty_.x.x.
+       |[124..125): y => _empty_.x.y.
+       |[133..134): k <= _empty_.x.k.
        |[137..147): sourcecode => _root_.sourcecode.
        |[148..152): Name => _root_.sourcecode.Name.
        |[153..161): generate => _root_.sourcecode.Name.generate()Lsourcecode/Name;.
        |[164..170): assert => _root_.org.scalatest.Assertions#assert(ZLorg/scalactic/Prettifier;Lorg/scalactic/source/Position;)Lorg/scalatest/compatible/Assertion;.
-       |[171..172): x => _empty_.w.x.
+       |[171..172): x => _empty_.x.x.
        |[173..178): value => _root_.scala.meta.Term.Name#value()Ljava/lang/String;.
        |[179..181): == => _root_.java.lang.Object#`==`(Ljava/lang/Object;)Z.
        |""".stripMargin
   )
 
   symbols(
-    """object x {
+    """object y {
       |  class Path {
       |    class B { class C }
       |    val x = new B
@@ -724,81 +724,81 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
     """.stripMargin,
     """
-      |_empty_.x. => final object x
-      |_empty_.x.Path# => class Path
-      |_empty_.x.Path#B# => class B
-      |_empty_.x.Path#B#C# => class C
-      |_empty_.x.Path#B#C#`<init>`()V. => primaryctor <init>: (): B.this.C
-      |  [4..5): B => _empty_.x.Path#B#
-      |  [11..12): C => _empty_.x.Path#B#C#
-      |_empty_.x.Path#B#`<init>`()V. => primaryctor <init>: (): Path.this.B
-      |  [4..8): Path => _empty_.x.Path#
-      |  [14..15): B => _empty_.x.Path#B#
-      |_empty_.x.Path#`<init>`()V. => primaryctor <init>: (): Path
-      |  [4..8): Path => _empty_.x.Path#
-      |_empty_.x.Path#x. => val x: Path.this.B
-      |  [0..4): Path => _empty_.x.Path#
-      |  [10..11): B => _empty_.x.Path#B#
-      |_empty_.x.Path#y. => val y: x.C
-      |  [0..1): x => _empty_.x.Path#x.
-      |  [2..3): C => _empty_.x.Path#B#C#
-      |_empty_.x.b. => implicit val b: B
-      |  [0..1): B => _empty_.x.Path#B#
-    """.stripMargin
-  )
-
-  symbols(
-    """
-      |object y {
-      |  val x = y
-      |}
-    """.stripMargin,
-    """
       |_empty_.y. => final object y
-      |_empty_.y.x. => val x: y.type
-      |  [0..1): y => _empty_.y.
+      |_empty_.y.Path# => class Path
+      |_empty_.y.Path#B# => class B
+      |_empty_.y.Path#B#C# => class C
+      |_empty_.y.Path#B#C#`<init>`()V. => primaryctor <init>: (): B.this.C
+      |  [4..5): B => _empty_.y.Path#B#
+      |  [11..12): C => _empty_.y.Path#B#C#
+      |_empty_.y.Path#B#`<init>`()V. => primaryctor <init>: (): Path.this.B
+      |  [4..8): Path => _empty_.y.Path#
+      |  [14..15): B => _empty_.y.Path#B#
+      |_empty_.y.Path#`<init>`()V. => primaryctor <init>: (): Path
+      |  [4..8): Path => _empty_.y.Path#
+      |_empty_.y.Path#x. => val x: Path.this.B
+      |  [0..4): Path => _empty_.y.Path#
+      |  [10..11): B => _empty_.y.Path#B#
+      |_empty_.y.Path#y. => val y: x.C
+      |  [0..1): x => _empty_.y.Path#x.
+      |  [2..3): C => _empty_.y.Path#B#C#
+      |_empty_.y.b. => implicit val b: B
+      |  [0..1): B => _empty_.y.Path#B#
     """.stripMargin
   )
 
   symbols(
     """
-      |class z {
-      |  val x = this
-      |  val y: z.this.type = this
+      |object z {
+      |  val x = z
       |}
     """.stripMargin,
     """
-      |_empty_.z# => class z
-      |_empty_.z#`<init>`()V. => primaryctor <init>: (): z
-      |  [4..5): z => _empty_.z#
-      |_empty_.z#x. => val x: z
-      |  [0..1): z => _empty_.z#
-      |_empty_.z#y. => val y: z.this.type
-      |  [0..1): z => _empty_.z#
+      |_empty_.z. => final object z
+      |_empty_.z.x. => val x: z.type
+      |  [0..1): z => _empty_.z.
     """.stripMargin
   )
 
   symbols(
     """
-      |object `symbols are hard`
+      |class aa {
+      |  val x = this
+      |  val y: aa.this.type = this
+      |}
     """.stripMargin,
     """
-      |_empty_.`symbols are hard`. => final object `symbols are hard`
+      |_empty_.aa# => class aa
+      |_empty_.aa#`<init>`()V. => primaryctor <init>: (): aa
+      |  [4..6): aa => _empty_.aa#
+      |_empty_.aa#x. => val x: aa
+      |  [0..2): aa => _empty_.aa#
+      |_empty_.aa#y. => val y: aa.this.type
+      |  [0..2): aa => _empty_.aa#
     """.stripMargin
   )
 
   symbols(
     """
-      |object aa {
+      |object `ab ab`
+    """.stripMargin,
+    """
+      |_empty_.`ab ab`. => final object `ab ab`
+    """.stripMargin
+  )
+
+  symbols(
+    """
+      |object ac {
       |  val x = Int.MaxValue
       |  val y: Class[_] = ???
       |}
     """.stripMargin,
     """
-      |_empty_.aa. => final object aa
-      |_empty_.aa.x. => val x: Int
+      |_empty_.ac. => final object ac
+      |_empty_.ac.x. => val x: Int
       |  [0..3): Int => _root_.scala.Int#
-      |_empty_.aa.y. => val y: Class[_]
+      |_empty_.ac.y. => val y: Class[_]
       |_root_.scala.Int. => final object Int
       |_root_.scala.Int.MaxValue. => final val MaxValue: Int
       |  [0..3): Int => _root_.scala.Int#
@@ -812,7 +812,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   symbols(
     """
-      |object ab {
+      |object ad {
       |  trait Foo
       |  class Bar
       |  val x = new Foo {
@@ -828,38 +828,38 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.stripMargin,
     // Note that _empty_.ab.$anon#y. matches both y: Int and  y: Any.
     """
-      |_empty_.ab. => final object ab
-      |_empty_.ab.$anon#y. => abstract val y: Any
+      |_empty_.ad. => final object ad
+      |_empty_.ad.$anon#y. => abstract val y: Any
       |  [0..3): Any => _root_.scala.Any#
-      |_empty_.ab.Bar# => class Bar
-      |_empty_.ab.Bar#`<init>`()V. => primaryctor <init>: (): Bar
-      |  [4..7): Bar => _empty_.ab.Bar#
-      |_empty_.ab.Foo# => trait Foo
-      |_empty_.ab.k. => val k: AnyRef with Foo{val y: Any}
+      |_empty_.ad.Bar# => class Bar
+      |_empty_.ad.Bar#`<init>`()V. => primaryctor <init>: (): Bar
+      |  [4..7): Bar => _empty_.ad.Bar#
+      |_empty_.ad.Foo# => trait Foo
+      |_empty_.ad.k. => val k: AnyRef with Foo{val y: Any}
       |  [0..6): AnyRef => _root_.scala.AnyRef#
-      |  [12..15): Foo => _empty_.ab.Foo#
-      |  [20..21): y => _empty_.ab.$anon#y.
-      |_empty_.ab.x. => val x: AnyRef with Foo{val y: Int; def z[T](e: T): T}
+      |  [12..15): Foo => _empty_.ad.Foo#
+      |  [20..21): y => _empty_.ad.$anon#y.
+      |_empty_.ad.x. => val x: AnyRef with Foo{val y: Int; def z[T](e: T): T}
       |  [0..6): AnyRef => _root_.scala.AnyRef#
-      |  [12..15): Foo => _empty_.ab.Foo#
-      |  [20..21): y => _empty_.ab.x.$anon#y.
-      |  [32..33): z => _empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.
-      |_empty_.ab.x.$anon#y. => val y: Int
+      |  [12..15): Foo => _empty_.ad.Foo#
+      |  [20..21): y => _empty_.ad.x.$anon#y.
+      |  [32..33): z => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.
+      |_empty_.ad.x.$anon#y. => val y: Int
       |  [0..3): Int => _root_.scala.Int#
-      |_empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;. => def z: [T] => (e: T): T
-      |  [11..12): T => _empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
-      |  [15..16): T => _empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
-      |_empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.(e) => param e: T
-      |  [0..1): T => _empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.T#
-      |_empty_.ab.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.T# => typeparam T
-      |_empty_.ab.z. => val z: AnyRef with Foo{val y: Int}
+      |_empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;. => def z: [T] => (e: T): T
+      |  [11..12): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+      |  [15..16): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+      |_empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.(e) => param e: T
+      |  [0..1): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.T#
+      |_empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.T# => typeparam T
+      |_empty_.ad.z. => val z: AnyRef with Foo{val y: Int}
       |  [0..6): AnyRef => _root_.scala.AnyRef#
-      |  [12..15): Foo => _empty_.ab.Foo#
-      |  [20..21): y => _empty_.ab.$anon#y.
-      |_empty_.ab.zz. => val zz: Bar{val y: Int}
-      |  [0..3): Bar => _empty_.ab.Bar#
-      |  [8..9): y => _empty_.ab.zz.$anon#y.
-      |_empty_.ab.zz.$anon#y. => val y: Int
+      |  [12..15): Foo => _empty_.ad.Foo#
+      |  [20..21): y => _empty_.ad.$anon#y.
+      |_empty_.ad.zz. => val zz: Bar{val y: Int}
+      |  [0..3): Bar => _empty_.ad.Bar#
+      |  [8..9): y => _empty_.ad.zz.$anon#y.
+      |_empty_.ad.zz.$anon#y. => val y: Int
       |  [0..3): Int => _root_.scala.Int#
       |_root_.java.lang.Object#`<init>`()V. => primaryctor <init>: (): Object
       |  [4..10): Object => _root_.java.lang.Object#
@@ -875,16 +875,16 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   targeted(
     """
-      |object ab {
+      |object ae {
       |  trait Foo
       |  val x = new Foo {
       |    val <<y>> = 2
       |    def <<z>>[T](e: T) = e
       |  }
       |}
-      |object ad {
-      |  val y = ab.x.<<y>>
-      |  val z = ab.x.<<z>>(2)
+      |object af {
+      |  val y = ae.x.<<y>>
+      |  val z = ae.x.<<z>>(2)
       |}
     """.stripMargin, { (db, y1, z1, y2, z2) =>
       assert(y1 == y2)
@@ -894,14 +894,14 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   names(
     """
-      |object ac {
+      |object ag {
       | for (x <- 1 to 10; y <- 0 until 10) println(x -> x)
       | for (i <- 1 to 10; j <- 0 until 10) yield (i, j)
       | for (i <- 1 to 10; j <- 0 until 10 if i % 2 == 0) yield (i, j)
       |}
     """.trim.stripMargin,
     """
-      |[7..9): ac <= _empty_.ac.
+      |[7..9): ag <= _empty_.ag.
       |[18..19): x <= <...>@18..19
       |[25..27): to => _root_.scala.runtime.RichInt#to(I)Lscala/collection/immutable/Range/Inclusive;.
       |[32..33): y <= <...>@32..33
@@ -930,7 +930,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   synthetics(
     """
-      |object ad {
+      |object ah {
       | for (x <- 1 to 10; y <- 0 until 10) println(x -> x)
       | for (i <- 1 to 10; j <- 0 until 10) yield (i, j)
       | for (i <- 1 to 10; j <- 0 until 10 if i % 2 == 0) yield (i, j)
@@ -1038,7 +1038,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   synthetics(
     """
-      |object ae {
+      |object ai {
       |  import scala.concurrent.ExecutionContext.Implicits.global
       |  for {
       |    a <- scala.concurrent.Future.successful(1)
@@ -1098,7 +1098,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
 
   targeted(
     """
-      |object af {
+      |object aj {
       |  None.<<fold>>(1)(identity)
       |  java.lang.String.<<format>>("%s%s", "", "")
       |  def <<a>>(b: => Int, c: String*): Unit = ()
@@ -1115,19 +1115,19 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   )
 
   targeted(
-    """package ag
+    """package ak
       |trait Foo
       |object Foo {
       |  new <<Foo>> {}
       |}
     """.stripMargin, { (_, Foo) =>
-      assertNoDiff(Foo.syntax, "_root_.ag.Foo#")
+      assertNoDiff(Foo.syntax, "_root_.ak.Foo#")
     }
   )
 
   targeted(
     """
-      |package ah
+      |package al
       |
       |trait EventBus {
       |  type Classifier
@@ -1142,21 +1142,21 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   )
 
   targeted(
-    """package ai
+    """package am
       |trait A[T] { type Self; def self: Self }
       |object A {
       |  def <<foo>>[T] = null.asInstanceOf[A[T]].self
       |}
     """.trim.stripMargin, { (db, foo) =>
       val symbol = db.symbols.find(_.symbol == foo).get
-      assertNoDiff(foo.syntax, "_root_.ai.A.foo()Ljava/lang/Object;.")
+      assertNoDiff(foo.syntax, "_root_.am.A.foo()Ljava/lang/Object;.")
       assertNoDiff(
         symbol.syntax,
         """
-          |_root_.ai.A.foo()Ljava/lang/Object;. => def foo: [T] => A[T]#Self
-          |  [7..8): A => _root_.ai.A#
-          |  [9..10): T => _root_.ai.A.foo()Ljava/lang/Object;.[T]
-          |  [12..16): Self => _root_.ai.A#Self#
+          |_root_.am.A.foo()Ljava/lang/Object;. => def foo: [T] => A[T]#Self
+          |  [7..8): A => _root_.am.A#
+          |  [9..10): T => _root_.am.A.foo()Ljava/lang/Object;.[T]
+          |  [12..16): Self => _root_.am.A#Self#
         """.stripMargin
       )
     }
