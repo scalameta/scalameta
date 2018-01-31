@@ -29,7 +29,7 @@ package object semanticdb {
         sdocument.messages.nonEmpty &&
           sdocument.text.isEmpty &&
           sdocument.symbols.isEmpty &&
-          sdocument.names.isEmpty &&
+          sdocument.occurrences.isEmpty &&
           sdocument.synthetics.isEmpty
       if (sdocuments.documents.length <= 1) {
         // NOTE(olafur) the most common case is that there is only a single database
@@ -59,7 +59,7 @@ package object semanticdb {
     }
 
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
-      val s.TextDocument(sformat, suri, stext, slanguage, ssymbols, snames, smessages, ssynthetics) = sdoc
+      val s.TextDocument(sformat, suri, stext, slanguage, ssymbols, soccurrences, smessages, ssynthetics) = sdoc
       assert(sformat == "semanticdb2", "s.TextDocument.format must be \"semanticdb2\"")
       val dinput = {
         val sfilename = {
@@ -93,14 +93,14 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames, smembers, soverrides))) =>
+          case s.SymbolInformation(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, soccurrences, smembers, soverrides))) =>
             val ddefninput = dInput.Denotation(dsignature, dsym)
-            val dnames = snames.toIterator.map {
+            val dnames = soccurrences.toIterator.map {
               case s.SymbolOccurrence(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
                 val ddefnpos = dPosition.Range(ddefninput, sstart, send)
                 d.ResolvedName(ddefnpos, dsym, disDefinition)
               case other =>
-                sys.error(s"bad protobuf: unsupported name $other")
+                sys.error(s"bad protobuf: unsupported occurrence $other")
             }.toList
             val dmembers: List[d.Signature] = smembers.toIterator.map { smember =>
               if (smember.endsWith("#")) d.Signature.Type(smember.stripSuffix("#"))
@@ -115,20 +115,20 @@ package object semanticdb {
       }
       object sSynthetic {
         def unapply(ssynthetic: s.Synthetic): Option[dSynthetic] = ssynthetic match {
-          case s.Synthetic(Some(sPosition(dpos)), dtext, snames) =>
-            val dnames = snames.toIterator.map {
+          case s.Synthetic(Some(sPosition(dpos)), dtext, soccurrences) =>
+            val dnames = soccurrences.toIterator.map {
               case s.SymbolOccurrence(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
                 val dsyntheticinput = dInput.Synthetic(dtext, dpos.input, dpos.start, dpos.end)
                 val dsyntheticpos = dPosition.Range(dsyntheticinput, sstart, send)
                 d.ResolvedName(dsyntheticpos, dsym, disDefinition)
               case other =>
-                sys.error(s"bad protobuf: unsupported name $other")
+                sys.error(s"bad protobuf: unsupported occurrence $other")
             }.toList
             Some(dSynthetic(dpos, dtext, dnames))
         }
       }
       val dlanguage = slanguage
-      val dnames = snames.map {
+      val dnames = soccurrences.map {
         case s.SymbolOccurrence(Some(sPosition(dpos)), d.Symbol(dsym), disDefinition) => d.ResolvedName(dpos, dsym, disDefinition)
         case other => sys.error(s"bad protobuf: unsupported occurrence $other")
       }.toList
@@ -187,27 +187,27 @@ package object semanticdb {
           object dDenotation {
             def unapply(ddefn: d.Denotation): Option[s.Denotation] = {
               import ddefn._
-              val snames = ddefn.names.map {
+              val soccurrences = ddefn.names.map {
                 case d.ResolvedName(org.langmeta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
                   s.SymbolOccurrence(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
                 case other =>
-                  sys.error(s"bad database: unsupported position $other")
+                  sys.error(s"bad database: unsupported name $other")
               }
               val smembers = ddefn.members.map(_.syntax)
               val soverrides = ddefn.overrides.map(_.syntax)
-              Some(s.Denotation(flags, name, signature, snames, smembers, soverrides))
+              Some(s.Denotation(flags, name, signature, soccurrences, smembers, soverrides))
             }
           }
           object dSynthetic {
             def unapply(dsynthetic: dSynthetic): Option[s.Synthetic] = dsynthetic match {
               case d.Synthetic(dPosition(spos), ssyntax, dnames) =>
-                val snames = dnames.toIterator.map {
+                val soccurrences = dnames.toIterator.map {
                   case d.ResolvedName(org.langmeta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
                     s.SymbolOccurrence(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
                   case other =>
                     sys.error(s"bad database: unsupported name $other")
                 }.toSeq
-                Some(s.Synthetic(Some(spos), ssyntax, snames))
+                Some(s.Synthetic(Some(spos), ssyntax, soccurrences))
               case _ =>
                 None
             }
@@ -231,7 +231,7 @@ package object semanticdb {
             case d.ResolvedSymbol(ssym, dDenotation(sdefn)) => s.SymbolInformation(ssym.syntax, Some(sdefn))
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
-          val snames = dnames.map {
+          val soccurrences = dnames.map {
             case d.ResolvedName(dPosition(spos), ssym, sisDefinition) => s.SymbolOccurrence(Some(spos), ssym.syntax, sisDefinition)
             case other => sys.error(s"bad database: unsupported name $other")
           }
@@ -243,7 +243,7 @@ package object semanticdb {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.TextDocument(sformat, suri, stext, slanguage, ssymbols, snames, smessages, ssynthetics)
+          s.TextDocument(sformat, suri, stext, slanguage, ssymbols, soccurrences, smessages, ssynthetics)
       }
       s.TextDocuments(sentries)
     }
