@@ -10,11 +10,11 @@ import org.langmeta.inputs.{Input => dInput}
 import org.langmeta.inputs.{Position => dPosition}
 import org.langmeta.semanticdb.{Synthetic => dSynthetic}
 import org.langmeta.internal.io.PathIO
-import org.langmeta.internal.semanticdb.{schema => s}
 import org.langmeta.internal.semanticdb.{vfs => v}
 import org.langmeta.io._
 import org.langmeta.semanticdb.Signature
 import org.langmeta.{semanticdb => d}
+import scala.meta.internal.{semanticdb2 => s}
 
 package object semanticdb {
   implicit class XtensionSchemaTextDocuments(sdocuments: s.TextDocuments) {

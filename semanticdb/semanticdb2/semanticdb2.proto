@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package org.langmeta.internal.semanticdb.schema;
+package scala.meta.internal.semanticdb2;
 
 message TextDocuments {
   repeated TextDocument documents = 1;

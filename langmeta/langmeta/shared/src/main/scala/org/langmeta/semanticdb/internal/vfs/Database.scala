@@ -6,7 +6,7 @@ import java.io.File
 import java.io.FileOutputStream
 import org.langmeta.io._
 import org.langmeta.internal.semanticdb.{vfs => v}
-import org.langmeta.internal.semanticdb.{schema => s}
+import scala.meta.internal.{semanticdb2 => s}
 
 object Database {
   def load(classpath: Classpath): v.Database = {
