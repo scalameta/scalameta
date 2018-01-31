@@ -27,7 +27,7 @@ package object semanticdb {
       // during compilation without introducing a lot of memory pressure.
       def isOnlyMessages(sdocument: s.TextDocument): Boolean =
         sdocument.messages.nonEmpty &&
-          sdocument.contents.isEmpty &&
+          sdocument.text.isEmpty &&
           sdocument.names.isEmpty &&
           sdocument.synthetics.isEmpty &&
           sdocument.symbols.isEmpty
@@ -59,21 +59,21 @@ package object semanticdb {
     }
 
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
-      val s.TextDocument(sformat, suri, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
+      val s.TextDocument(sformat, suri, stext, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
       assert(sformat == "semanticdb2", "s.TextDocument.format must be \"semanticdb2\"")
       val dinput = {
         val sfilename = {
           assert(suri.nonEmpty, "s.TextDocument.uri must not be empty")
           PathIO.fromUnix(suri)
         }
-        if (scontents == "") {
+        if (stext == "") {
           val duri =
             sourcepath.getOrElse(sys.error("Sourcepath is required to load slim semanticdb."))
                 .find(RelativePath(sfilename))
                 .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
           dInput.File(AbsolutePath(duri.getPath))
         } else {
-          dInput.VirtualFile(sfilename.toString, scontents)
+          dInput.VirtualFile(sfilename.toString, stext)
         }
       }
       object sPosition {
@@ -213,11 +213,11 @@ package object semanticdb {
             }
           }
           val sformat = "semanticdb2"
-          val (splatformpath, scontents) = dinput match {
+          val (splatformpath, stext) = dinput match {
             case dInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
               path.toRelative(sourceroot).toString -> ""
-            case dInput.VirtualFile(path, contents) =>
-              path -> contents
+            case dInput.VirtualFile(path, value) =>
+              path -> value
             case other =>
               sys.error(s"bad database: unsupported input $other")
           }
@@ -243,7 +243,7 @@ package object semanticdb {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.TextDocument(sformat, suri, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
+          s.TextDocument(sformat, suri, stext, slanguage, snames, smessages, ssymbols, ssynthetics)
       }
       s.TextDocuments(sentries)
     }

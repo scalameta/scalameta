@@ -11,7 +11,7 @@ message TextDocument {
   reserved 5;
   string format = 10;
   string uri = 9;
-  string contents = 8;
+  string text = 8;
   string language = 7;
   repeated ResolvedName names = 2;
   repeated Message messages = 3;
