@@ -19,6 +19,20 @@ message TextDocument {
   repeated Synthetic synthetics = 6;
 }
 
+message SymbolInformation {
+  string symbol = 1;
+  Denotation denotation = 2;
+}
+
+message Denotation {
+  int64 flags = 1;
+  string name = 2;
+  string signature = 3;
+  repeated SymbolOccurrence occurrences = 4;
+  repeated string members = 5;
+  repeated string overrides = 6;
+}
+
 message SymbolOccurrence {
   Position position = 1;
   string symbol = 2;
@@ -40,20 +54,6 @@ message Diagnostic {
   Position position = 1;
   Severity severity = 2;
   string text = 3;
-}
-
-message SymbolInformation {
-  string symbol = 1;
-  Denotation denotation = 2;
-}
-
-message Denotation {
-  int64 flags = 1;
-  string name = 2;
-  string signature = 3;
-  repeated SymbolOccurrence occurrences = 4;
-  repeated string members = 5;
-  repeated string overrides = 6;
 }
 
 message Synthetic {
