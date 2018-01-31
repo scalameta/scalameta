@@ -82,11 +82,11 @@ package object semanticdb {
         }
       }
       object sSeverity {
-        def unapply(sseverity: s.Message.Severity): Option[d.Severity] = {
+        def unapply(sseverity: s.Diagnostic.Severity): Option[d.Severity] = {
           sseverity match {
-            case s.Message.Severity.INFO => Some(d.Severity.Info)
-            case s.Message.Severity.WARNING => Some(d.Severity.Warning)
-            case s.Message.Severity.ERROR => Some(d.Severity.Error)
+            case s.Diagnostic.Severity.INFO => Some(d.Severity.Info)
+            case s.Diagnostic.Severity.WARNING => Some(d.Severity.Warning)
+            case s.Diagnostic.Severity.ERROR => Some(d.Severity.Error)
             case _ => None
           }
         }
@@ -133,9 +133,9 @@ package object semanticdb {
         case other => sys.error(s"bad protobuf: unsupported occurrence $other")
       }.toList
       val dmessages = smessages.map {
-        case s.Message(Some(sPosition(dpos)), sSeverity(dseverity), dmsg: String) =>
+        case s.Diagnostic(Some(sPosition(dpos)), sSeverity(dseverity), dmsg: String) =>
           d.Message(dpos, dseverity, dmsg)
-        case other => sys.error(s"bad protobuf: unsupported message $other")
+        case other => sys.error(s"bad protobuf: unsupported diagnostic $other")
       }.toList
       val dsymbols = ssymbols.map {
         case sSymbolInformation(dresolvedsymbol) => dresolvedsymbol
@@ -175,11 +175,11 @@ package object semanticdb {
             }
           }
           object dSeverity {
-            def unapply(dseverity: d.Severity): Option[s.Message.Severity] = {
+            def unapply(dseverity: d.Severity): Option[s.Diagnostic.Severity] = {
               dseverity match {
-                case d.Severity.Info => Some(s.Message.Severity.INFO)
-                case d.Severity.Warning => Some(s.Message.Severity.WARNING)
-                case d.Severity.Error => Some(s.Message.Severity.ERROR)
+                case d.Severity.Info => Some(s.Diagnostic.Severity.INFO)
+                case d.Severity.Warning => Some(s.Diagnostic.Severity.WARNING)
+                case d.Severity.Error => Some(s.Diagnostic.Severity.ERROR)
                 case _ => None
               }
             }
@@ -236,7 +236,7 @@ package object semanticdb {
             case other => sys.error(s"bad database: unsupported name $other")
           }
           val smessages = dmessages.map {
-            case d.Message(dPosition(spos), dSeverity(ssym), smessage) => s.Message(Some(spos), ssym, smessage)
+            case d.Message(dPosition(spos), dSeverity(ssym), smessage) => s.Diagnostic(Some(spos), ssym, smessage)
             case other => sys.error(s"bad database: unsupported message $other")
           }
           val ssynthetics = dsynthetics.toIterator.map {
