@@ -19,7 +19,7 @@ message TextDocument {
   repeated Synthetic synthetics = 6;
 }
 
-message Position {
+message Range {
   int32 start = 2;
   int32 end = 3;
 }
@@ -39,7 +39,7 @@ message Denotation {
 }
 
 message SymbolOccurrence {
-  Position position = 1;
+  Range position = 1;
   string symbol = 2;
   bool is_definition = 3;
 }
@@ -51,13 +51,13 @@ message Diagnostic {
     WARNING = 2;
     ERROR = 3;
   }
-  Position position = 1;
+  Range position = 1;
   Severity severity = 2;
   string text = 3;
 }
 
 message Synthetic {
-  Position pos = 1;
+  Range pos = 1;
   string text = 2;
   repeated SymbolOccurrence occurrences = 3;
 }
