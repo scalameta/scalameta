@@ -95,6 +95,7 @@ package object semanticdb {
             case s.Diagnostic.Severity.INFO => Some(d.Severity.Info)
             case s.Diagnostic.Severity.WARNING => Some(d.Severity.Warning)
             case s.Diagnostic.Severity.ERROR => Some(d.Severity.Error)
+            case s.Diagnostic.Severity.HINT => Some(d.Severity.Hint)
             case _ => None
           }
         }
@@ -237,6 +238,7 @@ package object semanticdb {
                 case d.Severity.Info => Some(s.Diagnostic.Severity.INFO)
                 case d.Severity.Warning => Some(s.Diagnostic.Severity.WARNING)
                 case d.Severity.Error => Some(s.Diagnostic.Severity.ERROR)
+                case d.Severity.Hint => Some(s.Diagnostic.Severity.HINT)
                 case _ => None
               }
             }
