@@ -28,9 +28,9 @@ package object semanticdb {
       def isOnlyMessages(sdocument: s.TextDocument): Boolean =
         sdocument.messages.nonEmpty &&
           sdocument.text.isEmpty &&
+          sdocument.symbols.isEmpty &&
           sdocument.names.isEmpty &&
-          sdocument.synthetics.isEmpty &&
-          sdocument.symbols.isEmpty
+          sdocument.synthetics.isEmpty
       if (sdocuments.documents.length <= 1) {
         // NOTE(olafur) the most common case is that there is only a single database
         // per document so we short-circuit here if that's the case.
@@ -59,7 +59,7 @@ package object semanticdb {
     }
 
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
-      val s.TextDocument(sformat, suri, stext, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
+      val s.TextDocument(sformat, suri, stext, slanguage, ssymbols, snames, smessages, ssynthetics) = sdoc
       assert(sformat == "semanticdb2", "s.TextDocument.format must be \"semanticdb2\"")
       val dinput = {
         val sfilename = {
@@ -227,6 +227,10 @@ package object semanticdb {
             result
           }
           val slanguage = dlanguage
+          val ssymbols = dsymbols.map {
+            case d.ResolvedSymbol(ssym, dDenotation(sdefn)) => s.ResolvedSymbol(ssym.syntax, Some(sdefn))
+            case other => sys.error(s"bad database: unsupported denotation $other")
+          }
           val snames = dnames.map {
             case d.ResolvedName(dPosition(spos), ssym, sisDefinition) => s.ResolvedName(Some(spos), ssym.syntax, sisDefinition)
             case other => sys.error(s"bad database: unsupported name $other")
@@ -235,15 +239,11 @@ package object semanticdb {
             case d.Message(dPosition(spos), dSeverity(ssym), smessage) => s.Message(Some(spos), ssym, smessage)
             case other => sys.error(s"bad database: unsupported message $other")
           }
-          val ssymbols = dsymbols.map {
-            case d.ResolvedSymbol(ssym, dDenotation(sdefn)) => s.ResolvedSymbol(ssym.syntax, Some(sdefn))
-            case other => sys.error(s"bad database: unsupported denotation $other")
-          }
           val ssynthetics = dsynthetics.toIterator.map {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.TextDocument(sformat, suri, stext, slanguage, snames, smessages, ssymbols, ssynthetics)
+          s.TextDocument(sformat, suri, stext, slanguage, ssymbols, snames, smessages, ssynthetics)
       }
       s.TextDocuments(sentries)
     }
