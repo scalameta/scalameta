@@ -32,6 +32,7 @@ message Range {
 message SymbolInformation {
   reserved 2;
   string symbol = 1;
+  string language = 9;
   int64 flags = 3;
   string name = 4;
   string signature = 5;
