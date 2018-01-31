@@ -30,17 +30,14 @@ message Range {
 }
 
 message SymbolInformation {
+  reserved 2;
   string symbol = 1;
-  Denotation denotation = 2;
-}
-
-message Denotation {
-  int64 flags = 1;
-  string name = 2;
-  string signature = 3;
-  repeated SymbolOccurrence occurrences = 4;
-  repeated string members = 5;
-  repeated string overrides = 6;
+  int64 flags = 3;
+  string name = 4;
+  string signature = 5;
+  repeated SymbolOccurrence occurrences = 6;
+  repeated string members = 7;
+  repeated string overrides = 8;
 }
 
 message SymbolOccurrence {

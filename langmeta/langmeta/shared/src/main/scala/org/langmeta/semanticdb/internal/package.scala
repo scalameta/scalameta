@@ -95,13 +95,13 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, soccurrences, smembers, soverrides))) =>
-            val ddefninput = dInput.Denotation(dsignature, dsym)
+          case s.SymbolInformation(d.Symbol(dsym), dflags, dname: String, dsignature: String, soccurrences, smembers, soverrides) =>
+            val ddenotInput = dInput.Denotation(dsignature, dsym)
             val dnames = soccurrences.toIterator.map {
               case s.SymbolOccurrence(Some(srange), d.Symbol(dsym), disDefinition) =>
-                val dstartOffset = ddefninput.lineToOffset(srange.startLine) + srange.startCharacter
-                val dendOffset = ddefninput.lineToOffset(srange.endLine) + srange.endCharacter
-                val ddefnpos = dPosition.Range(ddefninput, dstartOffset, dendOffset)
+                val dstartOffset = ddenotInput.lineToOffset(srange.startLine) + srange.startCharacter
+                val dendOffset = ddenotInput.lineToOffset(srange.endLine) + srange.endCharacter
+                val ddefnpos = dPosition.Range(ddenotInput, dstartOffset, dendOffset)
                 d.ResolvedName(ddefnpos, dsym, disDefinition)
               case other =>
                 sys.error(s"bad protobuf: unsupported occurrence $other")
@@ -112,8 +112,8 @@ package object semanticdb {
               else sys.error(s"Unexpected signature $smember")
             }.toList
             val doverrides = soverrides.flatMap(d.Symbol.unapply).toList
-            val ddefn = d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides)
-            Some(d.ResolvedSymbol(dsym, ddefn))
+            val ddenot = d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides)
+            Some(d.ResolvedSymbol(dsym, ddenot))
           case other => sys.error(s"bad protobuf: unsupported symbol information $other")
         }
       }
@@ -190,19 +190,23 @@ package object semanticdb {
               }
             }
           }
-          object dDenotation {
-            def unapply(ddefn: d.Denotation): Option[s.Denotation] = {
-              import ddefn._
-              val soccurrences = ddefn.names.map {
+          object dResolvedSymbol {
+            def unapply(dresolvedSymbol: d.ResolvedSymbol): Option[s.SymbolInformation] = {
+              val d.ResolvedSymbol(dsymbol, ddenot) = dresolvedSymbol
+              val ssymbol = dsymbol.syntax
+              val sflags = ddenot.flags
+              val sname = ddenot.name
+              val ssignature = ddenot.signature
+              val soccurrences = ddenot.names.map {
                 case d.ResolvedName(dpos: org.langmeta.Position.Range, ssym, sisDefinition) =>
                   val srange = s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn)
                   s.SymbolOccurrence(Some(srange), ssym.syntax, sisDefinition)
                 case other =>
                   sys.error(s"bad database: unsupported name $other")
               }
-              val smembers = ddefn.members.map(_.syntax)
-              val soverrides = ddefn.overrides.map(_.syntax)
-              Some(s.Denotation(flags, name, signature, soccurrences, smembers, soverrides))
+              val smembers = ddenot.members.map(_.syntax)
+              val soverrides = ddenot.overrides.map(_.syntax)
+              Some(s.SymbolInformation(ssymbol, sflags, sname, ssignature, soccurrences, smembers, soverrides))
             }
           }
           object dSynthetic {
@@ -236,7 +240,7 @@ package object semanticdb {
           }
           val slanguage = dlanguage
           val ssymbols = dsymbols.map {
-            case d.ResolvedSymbol(ssym, dDenotation(sdefn)) => s.SymbolInformation(ssym.syntax, Some(sdefn))
+            case dResolvedSymbol(ssymbolInformation) => ssymbolInformation
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val soccurrences = dnames.map {
