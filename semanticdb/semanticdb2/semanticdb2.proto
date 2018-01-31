@@ -1,109 +1,62 @@
 syntax = "proto3";
 
-package scala.meta.internal.semanticdb2;
+package org.langmeta.internal.semanticdb.schema;
 
-message TextDocuments {
-  repeated TextDocument documents = 1;
+message Database {
+  repeated Document documents = 1;
 }
 
-message TextDocument {
+message Document {
   reserved 1;
   reserved 5;
-  string format = 10;
-  string uri = 9;
-  string text = 8;
+  string filename = 9;
+  string contents = 8;
   string language = 7;
-  repeated SymbolInformation symbols = 4;
-  repeated SymbolOccurrence occurrences = 2;
-  repeated Diagnostic diagnostics = 3;
+  repeated ResolvedName names = 2;
+  repeated Message messages = 3;
+  repeated ResolvedSymbol symbols = 4;
   repeated Synthetic synthetics = 6;
 }
 
-message Range {
-  reserved 1;
-  reserved 2;
-  reserved 3;
-  int32 start_line = 4;
-  int32 start_character = 5;
-  int32 end_line = 6;
-  int32 end_character = 7;
-}
-
-message SymbolInformation {
-  enum Kind {
-    UNKNOWN1 = 0;
-    VALUE = 1;
-    VARIABLE = 2;
-    METHOD = 3;
-    PRIMARY_CONSTRUCTOR = 4;
-    SECONDARY_CONSTRUCTOR = 5;
-    MACRO = 6;
-    TYPE = 7;
-    PARAMETER = 8;
-    TYPE_PARAMETER = 9;
-    OBJECT = 10;
-    PACKAGE = 11;
-    PACKAGE_OBJECT = 12;
-    CLASS = 13;
-    TRAIT = 14;
-  }
-  enum Property {
-    UNKNOWN2 = 0;
-    PRIVATE = 0x1;
-    PROTECTED = 0x2;
-    ABSTRACT = 0x4;
-    FINAL = 0x8;
-    SEALED = 0x10;
-    IMPLICIT = 0x20;
-    LAZY = 0x40;
-    CASE = 0x80;
-    COVARIANT = 0x100;
-    CONTRAVARIANT = 0x200;
-  }
-  reserved 2;
-  reserved 3;
-  reserved 5;
-  reserved 6;
-  string symbol = 1;
-  string language = 9;
-  Kind kind = 10;
-  int32 properties = 11;
-  string name = 4;
-  Range range = 12;
-  TextDocument signature = 13;
-  repeated string members = 7;
-  repeated string overrides = 8;
-}
-
-message SymbolOccurrence {
-  enum Role {
-    UNKNOWN = 0;
-    REFERENCE = 1;
-    DEFINITION = 2;
-  }
-  reserved 3;
-  Range range = 1;
+message ResolvedName {
+  Position position = 1;
   string symbol = 2;
-  Role role = 4;
+  bool is_definition = 3;
 }
 
-message Diagnostic {
+message Position {
+  int32 start = 2;
+  int32 end = 3;
+}
+
+message Message {
   enum Severity {
     UNKNOWN = 0;
-    ERROR = 1;
+    INFO = 1;
     WARNING = 2;
-    INFORMATION = 3;
-    HINT = 4;
+    ERROR = 3;
   }
-  reserved 2;
-  Range range = 1;
-  Severity severity = 4;
-  string message = 3;
+  Position position = 1;
+  Severity severity = 2;
+  string text = 3;
+}
+
+message ResolvedSymbol {
+  string symbol = 1;
+  Denotation denotation = 2;
+}
+
+message Denotation {
+  int64 flags = 1;
+  string name = 2;
+  string signature = 3;
+  repeated ResolvedName names = 4;
+  repeated string members = 5;
+  repeated string overrides = 6;
 }
 
 message Synthetic {
-  reserved 2;
-  reserved 3;
-  Range range = 1;
-  TextDocument text = 4;
+  Position pos = 1;
+  string text = 2;
+  repeated ResolvedName names = 3;
 }
