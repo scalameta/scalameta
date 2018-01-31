@@ -135,9 +135,7 @@ lazy val metac = project
   .settings(
     publishableSettings,
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    // NOTE: necessary for embedded Scalac to pick up the compiler plugin
-    fork in run := true
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
@@ -391,7 +389,7 @@ lazy val tests = crossProject
     buildInfoPackage := "scala.meta.tests",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
-  .jvmConfigure(_.dependsOn(testkit, interactive))
+  .jvmConfigure(_.dependsOn(testkit, interactive, metac))
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm
