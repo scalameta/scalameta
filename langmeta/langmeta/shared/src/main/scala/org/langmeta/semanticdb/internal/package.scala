@@ -25,7 +25,7 @@ package object semanticdb {
       // as standalone documents that need to be merged with their typer-phase
       // document during loading. It seems there's no way to merge the documents
       // during compilation without introducing a lot of memory pressure.
-      def isOnlyMessages(sdocument: s.Document): Boolean =
+      def isOnlyMessages(sdocument: s.TextDocument): Boolean =
         sdocument.messages.nonEmpty &&
           sdocument.contents.isEmpty &&
           sdocument.names.isEmpty &&
@@ -58,9 +58,9 @@ package object semanticdb {
       v.Database(ventries.toList)
     }
 
-    def toDb(sourcepath: Option[Sourcepath], sdoc: s.Document): d.Document = {
-      val s.Document(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
-      assert(sunixfilename.nonEmpty, "s.Document.filename must not be empty")
+    def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
+      val s.TextDocument(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
+      assert(sunixfilename.nonEmpty, "s.TextDocument.filename must not be empty")
       val sfilename = PathIO.fromUnix(sunixfilename)
       val dinput = {
         if (scontents == "") {
@@ -152,7 +152,7 @@ package object semanticdb {
         } catch {
           case NonFatal(e) =>
             throw new IllegalArgumentException(
-              s"Error converting s.Document to m.Document where filename=${sdoc.filename}\n$sdoc",
+              s"Error converting s.TextDocument to m.Document where filename=${sdoc.filename}\n$sdoc",
               e)
         }
       }
@@ -236,7 +236,7 @@ package object semanticdb {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.Document(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
+          s.TextDocument(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
       }
       s.TextDocuments(sentries)
     }

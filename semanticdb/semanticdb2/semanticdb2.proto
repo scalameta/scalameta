@@ -3,10 +3,10 @@ syntax = "proto3";
 package org.langmeta.internal.semanticdb.schema;
 
 message TextDocuments {
-  repeated Document documents = 1;
+  repeated TextDocument documents = 1;
 }
 
-message Document {
+message TextDocument {
   reserved 1;
   reserved 5;
   string filename = 9;
