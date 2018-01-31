@@ -1,5 +1,5 @@
-scalameta/semanticdb-integration/src/main/scala/example/Example.scala
----------------------------------------------------------------------
+semanticdb/integration/src/main/scala/example/Example.scala
+-----------------------------------------------------------
 Language:
 Scala212
 
@@ -88,8 +88,8 @@ Synthetics:
   [13..16): Int => _root_.scala.reflect.ClassTag.Int.
 
 
-scalameta/semanticdb-integration/src/main/scala/example/Overrides.scala
------------------------------------------------------------------------
+semanticdb/integration/src/main/scala/example/Overrides.scala
+-------------------------------------------------------------
 Language:
 Scala212
 
@@ -123,8 +123,8 @@ _root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
   [4..7): Int => _root_.scala.Int#
 
 
-scalameta/semanticdb-integration/src/main/scala/example/Synthetic.scala
------------------------------------------------------------------------
+semanticdb/integration/src/main/scala/example/Synthetic.scala
+-------------------------------------------------------------
 Language:
 Scala212
 

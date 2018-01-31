@@ -91,6 +91,45 @@ lazy val semanticdb3 = crossProject
 lazy val semanticdb3JVM = semanticdb3.jvm
 lazy val semanticdb3JS = semanticdb3.js
 
+lazy val semanticdbScalacCore = project
+  .in(file("semanticdb/scalac/library"))
+  .settings(
+    moduleName := "semanticdb-scalac-core",
+    description := "Library to generate semanticdb from Scala 2.x internal data structures",
+    publishableSettings,
+    mimaPreviousArtifacts := Set.empty,
+    isFullCrossVersion,
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+  )
+  .dependsOn(scalametaJVM)
+
+lazy val semanticdbScalacPlugin = project
+  .in(file("semanticdb/scalac/plugin"))
+  .settings(
+    moduleName := "semanticdb-scalac",
+    description := "Scala 2.x compiler plugin that generates semanticdb on compile",
+    publishableSettings,
+    mergeSettings,
+    isFullCrossVersion,
+    mimaPreviousArtifacts := Set.empty,
+    pomPostProcess := { node =>
+      new RuleTransformer(new RewriteRule {
+        private def isAbsorbedDependency(node: XmlNode): Boolean = {
+          def isArtifactId(node: XmlNode, fn: String => Boolean) =
+            node.label == "artifactId" && fn(node.text)
+          node.label == "dependency" && node.child.exists(child =>
+            isArtifactId(child, _.startsWith("semanticdb-scalac-core")))
+        }
+        override def transform(node: XmlNode): XmlNodeSeq = node match {
+          case e: Elem if isAbsorbedDependency(node) =>
+            Comment("the dependency that was here has been absorbed via sbt-assembly")
+          case _ => node
+        }
+      }).transform(node).head
+    }
+  )
+  .dependsOn(semanticdbScalacCore)
+
 /** ======================== LANGMETA ======================== **/
 
 lazy val langmeta = crossProject
@@ -154,6 +193,15 @@ lazy val inputs = crossProject
   .dependsOn(langmeta, common, io)
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
+
+lazy val interactive = project
+  .in(file("scalameta/interactive"))
+  .settings(
+    publishableSettings,
+    description := "Scalameta APIs for interactive building of semanticdb",
+    enableMacros
+  )
+  .dependsOn(semanticdbScalacCore)
 
 lazy val parsers = crossProject
   .in(file("scalameta/parsers"))
@@ -265,49 +313,10 @@ lazy val contrib = crossProject
 lazy val contribJVM = contrib.jvm
 lazy val contribJS = contrib.js
 
-lazy val semanticdbScalacCore = project
-  .in(file("scalameta/semanticdb-scalac-core"))
-  .settings(
-    moduleName := "semanticdb-scalac-core",
-    description := "Library to generate semanticdb from Scala 2.x internal data structures",
-    publishableSettings,
-    mimaPreviousArtifacts := Set.empty,
-    isFullCrossVersion,
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
-  )
-  .dependsOn(scalametaJVM)
-
-lazy val semanticdbScalacPlugin = project
-  .in(file("scalameta/semanticdb-scalac-plugin"))
-  .settings(
-    moduleName := "semanticdb-scalac",
-    description := "Scala 2.x compiler plugin that generates semanticdb on compile",
-    publishableSettings,
-    mergeSettings,
-    isFullCrossVersion,
-    mimaPreviousArtifacts := Set.empty,
-    pomPostProcess := { node =>
-      new RuleTransformer(new RewriteRule {
-        private def isAbsorbedDependency(node: XmlNode): Boolean = {
-          def isArtifactId(node: XmlNode, fn: String => Boolean) =
-            node.label == "artifactId" && fn(node.text)
-          node.label == "dependency" && node.child.exists(child =>
-            isArtifactId(child, _.startsWith("semanticdb-scalac-core")))
-        }
-        override def transform(node: XmlNode): XmlNodeSeq = node match {
-          case e: Elem if isAbsorbedDependency(node) =>
-            Comment("the dependency that was here has been absorbed via sbt-assembly")
-          case _ => node
-        }
-      }).transform(node).head
-    }
-  )
-  .dependsOn(semanticdbScalacCore)
-
 /** ======================== TESTS ======================== **/
 
 lazy val semanticdbIntegration = project
-  .in(file("scalameta/semanticdb-integration"))
+  .in(file("semanticdb/integration"))
   .settings(
     description := "Sources to compile to build a semanticdb for tests.",
     sharedSettings,
@@ -365,7 +374,7 @@ lazy val tests = crossProject
     buildInfoPackage := "scala.meta.tests",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
-  .jvmConfigure(_.dependsOn(testkit, semanticdbScalacCore))
+  .jvmConfigure(_.dependsOn(testkit, interactive))
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, contrib)
 lazy val testsJVM = tests.jvm
