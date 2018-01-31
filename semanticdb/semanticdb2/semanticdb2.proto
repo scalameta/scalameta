@@ -66,7 +66,7 @@ message SymbolInformation {
   reserved 6;
   string symbol = 1;
   string language = 9;
-  int32 kind = 10;
+  Kind kind = 10;
   int32 properties = 11;
   string name = 4;
   Range range = 12;

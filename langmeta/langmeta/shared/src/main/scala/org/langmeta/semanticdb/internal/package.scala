@@ -106,21 +106,22 @@ package object semanticdb {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
               skind match {
-                case s.SymbolInformation.Kind.UNKNOWN1.value => ()
-                case s.SymbolInformation.Kind.VALUE.value => dflip(d.VAL)
-                case s.SymbolInformation.Kind.VARIABLE.value => dflip(d.VAR)
-                case s.SymbolInformation.Kind.METHOD.value => dflip(d.DEF)
-                case s.SymbolInformation.Kind.PRIMARY_CONSTRUCTOR.value => dflip(d.PRIMARYCTOR)
-                case s.SymbolInformation.Kind.SECONDARY_CONSTRUCTOR.value => dflip(d.SECONDARYCTOR)
-                case s.SymbolInformation.Kind.MACRO.value => dflip(d.MACRO)
-                case s.SymbolInformation.Kind.TYPE.value => dflip(d.TYPE)
-                case s.SymbolInformation.Kind.PARAMETER.value => dflip(d.PARAM)
-                case s.SymbolInformation.Kind.TYPE_PARAMETER.value => dflip(d.TYPEPARAM)
-                case s.SymbolInformation.Kind.OBJECT.value => dflip(d.OBJECT)
-                case s.SymbolInformation.Kind.PACKAGE.value => dflip(d.PACKAGE)
-                case s.SymbolInformation.Kind.PACKAGE_OBJECT.value => dflip(d.PACKAGEOBJECT)
-                case s.SymbolInformation.Kind.CLASS.value => dflip(d.CLASS)
-                case s.SymbolInformation.Kind.TRAIT.value => dflip(d.TRAIT)
+                case s.SymbolInformation.Kind.UNKNOWN1 => ()
+                case s.SymbolInformation.Kind.VALUE => dflip(d.VAL)
+                case s.SymbolInformation.Kind.VARIABLE => dflip(d.VAR)
+                case s.SymbolInformation.Kind.METHOD => dflip(d.DEF)
+                case s.SymbolInformation.Kind.PRIMARY_CONSTRUCTOR => dflip(d.PRIMARYCTOR)
+                case s.SymbolInformation.Kind.SECONDARY_CONSTRUCTOR => dflip(d.SECONDARYCTOR)
+                case s.SymbolInformation.Kind.MACRO => dflip(d.MACRO)
+                case s.SymbolInformation.Kind.TYPE => dflip(d.TYPE)
+                case s.SymbolInformation.Kind.PARAMETER => dflip(d.PARAM)
+                case s.SymbolInformation.Kind.TYPE_PARAMETER => dflip(d.TYPEPARAM)
+                case s.SymbolInformation.Kind.OBJECT => dflip(d.OBJECT)
+                case s.SymbolInformation.Kind.PACKAGE => dflip(d.PACKAGE)
+                case s.SymbolInformation.Kind.PACKAGE_OBJECT => dflip(d.PACKAGEOBJECT)
+                case s.SymbolInformation.Kind.CLASS => dflip(d.CLASS)
+                case s.SymbolInformation.Kind.TRAIT => dflip(d.TRAIT)
+                case _ => ()
               }
               def stest(bit: Long) = (sproperties & bit) == bit
               if (stest(s.SymbolInformation.Property.PRIVATE.value)) dflip(d.PRIVATE)
@@ -247,21 +248,21 @@ package object semanticdb {
               val slanguage = dlanguage
               def dtest(bit: Long) = (ddenot.flags & bit) == bit
               val skind = {
-                if (dtest(d.VAL)) s.SymbolInformation.Kind.VALUE.value
-                else if (dtest(d.VAR)) s.SymbolInformation.Kind.VARIABLE.value
-                else if (dtest(d.DEF)) s.SymbolInformation.Kind.METHOD.value
-                else if (dtest(d.PRIMARYCTOR)) s.SymbolInformation.Kind.PRIMARY_CONSTRUCTOR.value
-                else if (dtest(d.SECONDARYCTOR)) s.SymbolInformation.Kind.SECONDARY_CONSTRUCTOR.value
-                else if (dtest(d.MACRO)) s.SymbolInformation.Kind.MACRO.value
-                else if (dtest(d.TYPE)) s.SymbolInformation.Kind.TYPE.value
-                else if (dtest(d.PARAM)) s.SymbolInformation.Kind.PARAMETER.value
-                else if (dtest(d.TYPEPARAM)) s.SymbolInformation.Kind.TYPE_PARAMETER.value
-                else if (dtest(d.OBJECT)) s.SymbolInformation.Kind.OBJECT.value
-                else if (dtest(d.PACKAGE)) s.SymbolInformation.Kind.PACKAGE.value
-                else if (dtest(d.PACKAGEOBJECT)) s.SymbolInformation.Kind.PACKAGE_OBJECT.value
-                else if (dtest(d.CLASS)) s.SymbolInformation.Kind.CLASS.value
-                else if (dtest(d.TRAIT)) s.SymbolInformation.Kind.TRAIT.value
-                else s.SymbolInformation.Kind.UNKNOWN1.value
+                if (dtest(d.VAL)) s.SymbolInformation.Kind.VALUE
+                else if (dtest(d.VAR)) s.SymbolInformation.Kind.VARIABLE
+                else if (dtest(d.DEF)) s.SymbolInformation.Kind.METHOD
+                else if (dtest(d.PRIMARYCTOR)) s.SymbolInformation.Kind.PRIMARY_CONSTRUCTOR
+                else if (dtest(d.SECONDARYCTOR)) s.SymbolInformation.Kind.SECONDARY_CONSTRUCTOR
+                else if (dtest(d.MACRO)) s.SymbolInformation.Kind.MACRO
+                else if (dtest(d.TYPE)) s.SymbolInformation.Kind.TYPE
+                else if (dtest(d.PARAM)) s.SymbolInformation.Kind.PARAMETER
+                else if (dtest(d.TYPEPARAM)) s.SymbolInformation.Kind.TYPE_PARAMETER
+                else if (dtest(d.OBJECT)) s.SymbolInformation.Kind.OBJECT
+                else if (dtest(d.PACKAGE)) s.SymbolInformation.Kind.PACKAGE
+                else if (dtest(d.PACKAGEOBJECT)) s.SymbolInformation.Kind.PACKAGE_OBJECT
+                else if (dtest(d.CLASS)) s.SymbolInformation.Kind.CLASS
+                else if (dtest(d.TRAIT)) s.SymbolInformation.Kind.TRAIT
+                else s.SymbolInformation.Kind.UNKNOWN1
               }
               val sproperties = {
                 var sproperties = 0

@@ -191,7 +191,7 @@ always equal to an asterisk (`*`).
 message SymbolInformation {
   string symbol = 1;
   string language = 2;
-  int32 kind = 3;
+  Kind kind = 3;
   int64 properties = 4;
   string name = 5;
   Range range = 6;
