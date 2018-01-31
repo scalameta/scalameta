@@ -95,7 +95,7 @@ lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
   .settings(
     moduleName := "semanticdb-scalac-core",
-    description := "Library to generate semanticdb from Scala 2.x internal data structures",
+    description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
     publishableSettings,
     mimaPreviousArtifacts := Set.empty,
     isFullCrossVersion,
@@ -107,7 +107,7 @@ lazy val semanticdbScalacPlugin = project
   .in(file("semanticdb/scalac/plugin"))
   .settings(
     moduleName := "semanticdb-scalac",
-    description := "Scala 2.x compiler plugin that generates semanticdb on compile",
+    description := "Scalac 2.x compiler plugin that generates SemanticDB on compile",
     publishableSettings,
     mergeSettings,
     isFullCrossVersion,
@@ -198,7 +198,7 @@ lazy val interactive = project
   .in(file("scalameta/interactive"))
   .settings(
     publishableSettings,
-    description := "Scalameta APIs for interactive building of semanticdb",
+    description := "Scalameta APIs for interactive building of SemanticDB",
     enableMacros
   )
   .dependsOn(semanticdbScalacCore)
@@ -318,7 +318,7 @@ lazy val contribJS = contrib.js
 lazy val semanticdbIntegration = project
   .in(file("semanticdb/integration"))
   .settings(
-    description := "Sources to compile to build a semanticdb for tests.",
+    description := "Sources to compile to build SemanticDB for tests.",
     sharedSettings,
     nonPublishableSettings,
     scalacOptions -= "-Xfatal-warnings",
