@@ -95,6 +95,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.semanticdb.ResolvedSymbol
       |scala.meta.semanticdb.Severity
       |scala.meta.semanticdb.Severity.Error
+      |scala.meta.semanticdb.Severity.Hint
       |scala.meta.semanticdb.Severity.Info
       |scala.meta.semanticdb.Severity.Warning
       |scala.meta.semanticdb.Signature

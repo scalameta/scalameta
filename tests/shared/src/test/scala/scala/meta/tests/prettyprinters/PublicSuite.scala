@@ -332,6 +332,10 @@ class PublicSuite extends FunSuite {
     assert(Severity.Error.toString === "[error]")
   }
 
+  test("scala.meta.semanticdb.Severity.Hint.toString") {
+    assert(Severity.Hint.toString === "[hint]")
+  }
+
   test("scala.meta.semanticdb.Severity.Info.toString") {
     assert(Severity.Info.toString === "[info]")
   }
