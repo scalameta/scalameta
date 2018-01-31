@@ -20,8 +20,13 @@ message TextDocument {
 }
 
 message Range {
-  int32 start = 2;
-  int32 end = 3;
+  reserved 1;
+  reserved 2;
+  reserved 3;
+  int32 start_line = 4;
+  int32 start_character = 5;
+  int32 end_line = 6;
+  int32 end_character = 7;
 }
 
 message SymbolInformation {
