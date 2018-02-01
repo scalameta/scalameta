@@ -2,12 +2,17 @@ syntax = "proto3";
 
 package scala.meta.internal.semanticdb3;
 
+enum Schema {
+  LEGACY = 0;
+  SEMANTICDB3 = 3;
+}
+
 message TextDocuments {
   repeated TextDocument documents = 1;
 }
 
 message TextDocument {
-  string format = 1;
+  Schema schema = 1;
   string uri = 2;
   string text = 3;
   string language = 4;
@@ -26,10 +31,10 @@ message Range {
 
 message SymbolInformation {
   enum Kind {
-    UNKNOWN1 = 0;
-    VALUE = 1;
-    VARIABLE = 2;
-    METHOD = 3;
+    UNKNOWN_KIND = 0;
+    VAL = 1;
+    VAR = 2;
+    DEF = 3;
     PRIMARY_CONSTRUCTOR = 4;
     SECONDARY_CONSTRUCTOR = 5;
     MACRO = 6;
@@ -43,7 +48,7 @@ message SymbolInformation {
     TRAIT = 14;
   }
   enum Property {
-    UNKNOWN2 = 0;
+    UNKNOWN_PROPERTY = 0;
     PRIVATE = 0x1;
     PROTECTED = 0x2;
     ABSTRACT = 0x4;
@@ -68,7 +73,7 @@ message SymbolInformation {
 
 message SymbolOccurrence {
   enum Role {
-    UNKNOWN = 0;
+    UNKNOWN_ROLE = 0;
     REFERENCE = 1;
     DEFINITION = 2;
   }
@@ -79,7 +84,7 @@ message SymbolOccurrence {
 
 message Diagnostic {
   enum Severity {
-    UNKNOWN = 0;
+    UNKNOWN_SEVERITY = 0;
     ERROR = 1;
     WARNING = 2;
     INFORMATION = 3;

@@ -1,4 +1,4 @@
-# SemanticDB Specification, Version 3.0.0
+# SemanticDB Specification, Version 3
 
   * [Motivation](#motivation)
   * [Data Model](#data-model)
@@ -11,8 +11,6 @@
     * [Synthetic](#synthetic)
   * [Data Schemas](#data-schemas)
     * [Protobuf](#protobuf)
-  * [Changelog](#changelog)
-    * [3.0.0](#300)
 
 ## Motivation
 
@@ -64,7 +62,7 @@ message TextDocuments {
 }
 
 message TextDocument {
-  string format = 1;
+  Schema schema = 1;
   string uri = 2;
   string text = 3;
   string language = 4;
@@ -79,24 +77,24 @@ message TextDocument {
 It provides semantic information about a snippet of code written in a programming
 language `language`.
 
-SemanticDB payloads must include the descriptor of the data model that was used
-to produce them in the `model` field. The following descriptors are supported:
+SemanticDB payloads must include the version of the data model that was used
+to produce them in the `schema` field. The following versions are supported:
 
 <table>
   <tr>
-    <td><b>Descriptor</b></td>
+    <td><b>Version</b></td>
     <td><b>Explanation</b></td>
     <td><b>Data model<b></td>
   </tr>
   <tr>
-    <td>&lt;missing&gt;</td>
+    <td>LEGACY</td>
     <td>Legacy SemanticDB payloads</td>
-    <td><a href="https://github.com/scalameta/scalameta/blob/v2.1.7/langmeta/langmeta/shared/src/main/protobuf/semanticdb.proto">semanticdb.proto</a></td>
+    <td><a href="https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb2/semanticdb2.proto">semanticdb2.proto</a></td>
   </tr>
   <tr>
-    <td><code>semanticdb3</code></td>
-    <td>Current version of the model</td>
-    <td>Described in this document</td>
+    <td><code>SEMANTICDB3</code></td>
+    <td>SemanticDB v3</td>
+    <td><a href="https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb3/semanticdb3.proto">semanticdb3.proto</a> (described in this document)</td>
   </tr>
 </table>
 
@@ -213,17 +211,17 @@ or features from other languages.
   </tr>
   <tr>
     <td><code>1</code></td>
-    <td><code>VALUE</code></td>
+    <td><code>VAL</code></td>
     <td>Value, e.g. <code>val x = 42</code>.</td>
   </tr>
   <tr>
     <td><code>2</code></td>
-    <td><code>VARIABLE</code></td>
+    <td><code>VAR</code></td>
     <td>Variable, e.g. <code>var x = 42</code>.</td>
   </tr>
   <tr>
     <td><code>3</code></td>
-    <td><code>METHOD</code></td>
+    <td><code>DEF</code></td>
     <td>Method, e.g. <code>def x = 42</code>.</td>
   </tr>
   <tr>
@@ -487,19 +485,7 @@ in the future, but this is highly unlikely.
 
 [semanticdb3.proto][semanticdb3.proto]
 
-## Changelog
-
-### 3.0.0
-  * Codified the first specification of SemanticDB.
-    Previously (in Scalameta 1.x and 2.x), SemanticDB was loosely specified by
-    [an internal protobuf schema][semanticdb.proto] and the reference
-    implementation in `semanticdb-scalac`.
-  * Changed the package of the protobuf schema to `scala.meta.internal.semanticdb3`.
-  * Significantly changed the schema to perform long-awaited cleanups and ensure
-    consistency with LSP [\[2\]][2]. Some changes were
-    inspired by the design of Index-While-Building in Clang [[23][23], [24][24]].
-
-[semanticdb.proto]: https://github.com/scalameta/scalameta/blob/v2.1.7/langmeta/langmeta/shared/src/main/protobuf/semanticdb.proto
+[semanticdb2.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb2/semanticdb2.proto
 [semanticdb3.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb3/semanticdb3.proto
 [1]: https://semver.org/
 [2]: https://microsoft.github.io/language-server-protocol/

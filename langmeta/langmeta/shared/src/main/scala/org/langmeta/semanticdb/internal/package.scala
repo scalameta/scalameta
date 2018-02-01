@@ -15,6 +15,8 @@ import org.langmeta.io._
 import org.langmeta.semanticdb.Signature
 import org.langmeta.{semanticdb => d}
 import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 
 package object semanticdb {
   implicit class XtensionSchemaTextDocuments(sdocuments: s.TextDocuments) {
@@ -58,8 +60,8 @@ package object semanticdb {
     }
 
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
-      val s.TextDocument(sformat, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics) = sdoc
-      assert(sformat == "semanticdb3", "s.TextDocument.format must be \"semanticdb2\"")
+      val s.TextDocument(sschema, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics) = sdoc
+      assert(sschema == s.Schema.SEMANTICDB3, "s.TextDocument.schema must be ${s.Schema.SEMANTICDB3}")
       val dinput = {
         val sfilename = {
           assert(suri.nonEmpty, "s.TextDocument.uri must not be empty")
@@ -107,34 +109,33 @@ package object semanticdb {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
               skind match {
-                case s.SymbolInformation.Kind.UNKNOWN1 => ()
-                case s.SymbolInformation.Kind.VALUE => dflip(d.VAL)
-                case s.SymbolInformation.Kind.VARIABLE => dflip(d.VAR)
-                case s.SymbolInformation.Kind.METHOD => dflip(d.DEF)
-                case s.SymbolInformation.Kind.PRIMARY_CONSTRUCTOR => dflip(d.PRIMARYCTOR)
-                case s.SymbolInformation.Kind.SECONDARY_CONSTRUCTOR => dflip(d.SECONDARYCTOR)
-                case s.SymbolInformation.Kind.MACRO => dflip(d.MACRO)
-                case s.SymbolInformation.Kind.TYPE => dflip(d.TYPE)
-                case s.SymbolInformation.Kind.PARAMETER => dflip(d.PARAM)
-                case s.SymbolInformation.Kind.TYPE_PARAMETER => dflip(d.TYPEPARAM)
-                case s.SymbolInformation.Kind.OBJECT => dflip(d.OBJECT)
-                case s.SymbolInformation.Kind.PACKAGE => dflip(d.PACKAGE)
-                case s.SymbolInformation.Kind.PACKAGE_OBJECT => dflip(d.PACKAGEOBJECT)
-                case s.SymbolInformation.Kind.CLASS => dflip(d.CLASS)
-                case s.SymbolInformation.Kind.TRAIT => dflip(d.TRAIT)
+                case k.VAL => dflip(d.VAL)
+                case k.VAR => dflip(d.VAR)
+                case k.DEF => dflip(d.DEF)
+                case k.PRIMARY_CONSTRUCTOR => dflip(d.PRIMARYCTOR)
+                case k.SECONDARY_CONSTRUCTOR => dflip(d.SECONDARYCTOR)
+                case k.MACRO => dflip(d.MACRO)
+                case k.TYPE => dflip(d.TYPE)
+                case k.PARAMETER => dflip(d.PARAM)
+                case k.TYPE_PARAMETER => dflip(d.TYPEPARAM)
+                case k.OBJECT => dflip(d.OBJECT)
+                case k.PACKAGE => dflip(d.PACKAGE)
+                case k.PACKAGE_OBJECT => dflip(d.PACKAGEOBJECT)
+                case k.CLASS => dflip(d.CLASS)
+                case k.TRAIT => dflip(d.TRAIT)
                 case _ => ()
               }
               def stest(bit: Long) = (sproperties & bit) == bit
-              if (stest(s.SymbolInformation.Property.PRIVATE.value)) dflip(d.PRIVATE)
-              if (stest(s.SymbolInformation.Property.PROTECTED.value)) dflip(d.PROTECTED)
-              if (stest(s.SymbolInformation.Property.ABSTRACT.value)) dflip(d.ABSTRACT)
-              if (stest(s.SymbolInformation.Property.FINAL.value)) dflip(d.FINAL)
-              if (stest(s.SymbolInformation.Property.SEALED.value)) dflip(d.SEALED)
-              if (stest(s.SymbolInformation.Property.IMPLICIT.value)) dflip(d.IMPLICIT)
-              if (stest(s.SymbolInformation.Property.LAZY.value)) dflip(d.LAZY)
-              if (stest(s.SymbolInformation.Property.CASE.value)) dflip(d.CASE)
-              if (stest(s.SymbolInformation.Property.COVARIANT.value)) dflip(d.COVARIANT)
-              if (stest(s.SymbolInformation.Property.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
+              if (stest(p.PRIVATE.value)) dflip(d.PRIVATE)
+              if (stest(p.PROTECTED.value)) dflip(d.PROTECTED)
+              if (stest(p.ABSTRACT.value)) dflip(d.ABSTRACT)
+              if (stest(p.FINAL.value)) dflip(d.FINAL)
+              if (stest(p.SEALED.value)) dflip(d.SEALED)
+              if (stest(p.IMPLICIT.value)) dflip(d.IMPLICIT)
+              if (stest(p.LAZY.value)) dflip(d.LAZY)
+              if (stest(p.CASE.value)) dflip(d.CASE)
+              if (stest(p.COVARIANT.value)) dflip(d.COVARIANT)
+              if (stest(p.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
               dflags
             }
             val dname = sname
@@ -255,35 +256,35 @@ package object semanticdb {
               val slanguage = dlanguage
               def dtest(bit: Long) = (ddenot.flags & bit) == bit
               val skind = {
-                if (dtest(d.VAL)) s.SymbolInformation.Kind.VALUE
-                else if (dtest(d.VAR)) s.SymbolInformation.Kind.VARIABLE
-                else if (dtest(d.DEF)) s.SymbolInformation.Kind.METHOD
-                else if (dtest(d.PRIMARYCTOR)) s.SymbolInformation.Kind.PRIMARY_CONSTRUCTOR
-                else if (dtest(d.SECONDARYCTOR)) s.SymbolInformation.Kind.SECONDARY_CONSTRUCTOR
-                else if (dtest(d.MACRO)) s.SymbolInformation.Kind.MACRO
-                else if (dtest(d.TYPE)) s.SymbolInformation.Kind.TYPE
-                else if (dtest(d.PARAM)) s.SymbolInformation.Kind.PARAMETER
-                else if (dtest(d.TYPEPARAM)) s.SymbolInformation.Kind.TYPE_PARAMETER
-                else if (dtest(d.OBJECT)) s.SymbolInformation.Kind.OBJECT
-                else if (dtest(d.PACKAGE)) s.SymbolInformation.Kind.PACKAGE
-                else if (dtest(d.PACKAGEOBJECT)) s.SymbolInformation.Kind.PACKAGE_OBJECT
-                else if (dtest(d.CLASS)) s.SymbolInformation.Kind.CLASS
-                else if (dtest(d.TRAIT)) s.SymbolInformation.Kind.TRAIT
-                else s.SymbolInformation.Kind.UNKNOWN1
+                if (dtest(d.VAL)) k.VAL
+                else if (dtest(d.VAR)) k.VAR
+                else if (dtest(d.DEF)) k.DEF
+                else if (dtest(d.PRIMARYCTOR)) k.PRIMARY_CONSTRUCTOR
+                else if (dtest(d.SECONDARYCTOR)) k.SECONDARY_CONSTRUCTOR
+                else if (dtest(d.MACRO)) k.MACRO
+                else if (dtest(d.TYPE)) k.TYPE
+                else if (dtest(d.PARAM)) k.PARAMETER
+                else if (dtest(d.TYPEPARAM)) k.TYPE_PARAMETER
+                else if (dtest(d.OBJECT)) k.OBJECT
+                else if (dtest(d.PACKAGE)) k.PACKAGE
+                else if (dtest(d.PACKAGEOBJECT)) k.PACKAGE_OBJECT
+                else if (dtest(d.CLASS)) k.CLASS
+                else if (dtest(d.TRAIT)) k.TRAIT
+                else k.UNKNOWN_KIND
               }
               val sproperties = {
                 var sproperties = 0
                 def sflip(sbit: Int) = sproperties ^= sbit
-                if (dtest(d.PRIVATE)) sflip(s.SymbolInformation.Property.PRIVATE.value)
-                if (dtest(d.PROTECTED)) sflip(s.SymbolInformation.Property.PROTECTED.value)
-                if (dtest(d.ABSTRACT)) sflip(s.SymbolInformation.Property.ABSTRACT.value)
-                if (dtest(d.FINAL)) sflip(s.SymbolInformation.Property.FINAL.value)
-                if (dtest(d.SEALED)) sflip(s.SymbolInformation.Property.SEALED.value)
-                if (dtest(d.IMPLICIT)) sflip(s.SymbolInformation.Property.IMPLICIT.value)
-                if (dtest(d.LAZY)) sflip(s.SymbolInformation.Property.LAZY.value)
-                if (dtest(d.CASE)) sflip(s.SymbolInformation.Property.CASE.value)
-                if (dtest(d.COVARIANT)) sflip(s.SymbolInformation.Property.COVARIANT.value)
-                if (dtest(d.CONTRAVARIANT)) sflip(s.SymbolInformation.Property.CONTRAVARIANT.value)
+                if (dtest(d.PRIVATE)) sflip(p.PRIVATE.value)
+                if (dtest(d.PROTECTED)) sflip(p.PROTECTED.value)
+                if (dtest(d.ABSTRACT)) sflip(p.ABSTRACT.value)
+                if (dtest(d.FINAL)) sflip(p.FINAL.value)
+                if (dtest(d.SEALED)) sflip(p.SEALED.value)
+                if (dtest(d.IMPLICIT)) sflip(p.IMPLICIT.value)
+                if (dtest(d.LAZY)) sflip(p.LAZY.value)
+                if (dtest(d.CASE)) sflip(p.CASE.value)
+                if (dtest(d.COVARIANT)) sflip(p.COVARIANT.value)
+                if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT.value)
                 sproperties
               }
               val sname = ddenot.name
@@ -323,7 +324,7 @@ package object semanticdb {
                 None
             }
           }
-          val sformat = "semanticdb3"
+          val sschema = s.Schema.SEMANTICDB3
           val (splatformpath, stext) = dinput match {
             case dInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
               path.toRelative(sourceroot).toString -> ""
@@ -354,7 +355,7 @@ package object semanticdb {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.TextDocument(sformat, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics)
+          s.TextDocument(sschema, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics)
       }
       s.TextDocuments(sentries)
     }

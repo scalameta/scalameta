@@ -86,6 +86,98 @@ Synthetics:
   [13..16): Int => _root_.scala.reflect.ClassTag.Int.
 
 
+semanticdb/integration/src/main/scala/example/Flags.scala
+---------------------------------------------------------
+Language:
+Scala212
+
+Names:
+[8..13): flags <= _root_.flags.
+[30..31): p <= _root_.flags.p.package.
+[53..54): x <= _root_.flags.p.package.x.
+[84..85): y <= _root_.flags.p.package.y.
+[87..90): Int => _root_.scala.Int#
+[101..102): z <= _root_.flags.p.package.z()I.
+[124..125): C <= _root_.flags.p.package.C#
+[127..128): T <= _root_.flags.p.package.C#[T]
+[131..132): U <= _root_.flags.p.package.C#[U]
+[134..135): V <= _root_.flags.p.package.C#[V]
+[136..136): ε <= _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
+[137..138): x <= _root_.flags.p.package.C#(x)
+[140..141): T => _root_.flags.p.package.C#[T]
+[143..144): y <= _root_.flags.p.package.C#(y)
+[146..147): U => _root_.flags.p.package.C#[U]
+[149..150): z <= _root_.flags.p.package.C#(z)
+[152..153): V => _root_.flags.p.package.C#[V]
+[165..169): this <= _root_.flags.p.package.C#`<init>`()V.
+[178..178): ε => _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
+[179..182): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[184..187): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[189..192): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[202..203): w <= _root_.flags.p.package.C#w()I.
+[205..208): Int => _root_.scala.Int#
+[220..221): T <= _root_.flags.p.package.T#
+[224..227): Int => _root_.scala.Int#
+[235..236): U <= _root_.flags.p.package.U#
+[240..243): Int => _root_.scala.Int#
+[251..252): V <= _root_.flags.p.package.V#
+[256..259): Int => _root_.scala.Int#
+[274..275): X <= _root_.flags.p.package.X.
+[290..291): Y <= _root_.flags.p.package.Y#
+[291..291): ε <= _root_.flags.p.package.Y#`<init>`()V.
+[307..308): Z <= _root_.flags.p.package.Z#
+
+Symbols:
+_root_.flags. => package flags.{+1 members}
+_root_.flags.p.package. => packageobject package
+_root_.flags.p.package.C# => abstract class C
+_root_.flags.p.package.C#(x) => param x: T
+  [0..1): T => _root_.flags.p.package.C#[T]
+_root_.flags.p.package.C#(y) => param y: U
+  [0..1): U => _root_.flags.p.package.C#[U]
+_root_.flags.p.package.C#(z) => param z: V
+  [0..1): V => _root_.flags.p.package.C#[V]
+_root_.flags.p.package.C#[T] => covariant typeparam T
+_root_.flags.p.package.C#[U] => contravariant typeparam U
+_root_.flags.p.package.C#[V] => typeparam V
+_root_.flags.p.package.C#`<init>`()V. => secondaryctor <init>: (): C[T, U, V]
+  [4..5): C => _root_.flags.p.package.C#
+  [6..7): T => _root_.flags.p.package.C#[T]
+  [9..10): U => _root_.flags.p.package.C#[U]
+  [12..13): V => _root_.flags.p.package.C#[V]
+_root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V. => primaryctor <init>: (x: T, y: U, z: V): C[T, U, V]
+  [4..5): T => _root_.flags.p.package.C#[T]
+  [10..11): U => _root_.flags.p.package.C#[U]
+  [16..17): V => _root_.flags.p.package.C#[V]
+  [20..21): C => _root_.flags.p.package.C#
+  [22..23): T => _root_.flags.p.package.C#[T]
+  [25..26): U => _root_.flags.p.package.C#[U]
+  [28..29): V => _root_.flags.p.package.C#[V]
+_root_.flags.p.package.C#w()I. => abstract def w: Int
+  [0..3): Int => _root_.scala.Int#
+_root_.flags.p.package.T# => type T: Int
+  [0..3): Int => _root_.scala.Int#
+_root_.flags.p.package.U# => abstract type U
+_root_.flags.p.package.V# => abstract type V
+_root_.flags.p.package.X. => final case object X
+_root_.flags.p.package.Y# => final class Y
+_root_.flags.p.package.Y#`<init>`()V. => primaryctor <init>: (): Y
+  [4..5): Y => _root_.flags.p.package.Y#
+_root_.flags.p.package.Z# => sealed trait Z
+_root_.flags.p.package.x. => private lazy val x: Int
+  [0..3): Int => _root_.scala.Int#
+_root_.flags.p.package.y. => protected var y_=: (x$1: Int): Unit
+  [6..9): Int => _root_.scala.Int#
+  [12..16): Unit => _root_.scala.Unit#
+_root_.flags.p.package.z()I. => def z: Int
+  [0..3): Int => _root_.scala.Int#
+_root_.scala.Int# => abstract final class Int
+_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
+  [4..7): Int => _root_.scala.Int#
+_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
+
+
 semanticdb/integration/src/main/scala/example/Overrides.scala
 -------------------------------------------------------------
 Language:

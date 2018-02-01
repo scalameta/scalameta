@@ -60,7 +60,7 @@ class CliSuite extends FunSuite with DiffAssertions {
       |----------------
       |
       |Summary:
-      |Format => semanticdb3
+      |Schema => SemanticDB v3
       |Uri => HelloWorld.scala
       |Text => non-empty
       |Language => $language

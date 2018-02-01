@@ -1,6 +1,6 @@
 package scala.meta.cli
 
-import java.io._
+import java.nio.file._
 import java.util._
 import scala.collection.mutable
 import scala.compat.Platform.EOL
@@ -20,7 +20,7 @@ object Metap {
     var failed = false
     args.foreach { arg =>
       try {
-        val stream = new FileInputStream(new File(arg))
+        val stream = Files.newInputStream(Paths.get(arg))
         try {
           val documents = TextDocuments.parseFrom(stream)
           documents.documents.foreach(pprint)
@@ -43,7 +43,7 @@ object Metap {
     println("")
 
     println(s"Summary:")
-    println(s"Format => ${doc.format}")
+    println(s"Schema => SemanticDB v${doc.schema.value}")
     println(s"Uri => ${doc.uri}")
     println(s"Text => ${if (doc.text.nonEmpty) "non-empty" else "empty"}")
     println(s"Language => ${doc.language}")
@@ -134,9 +134,9 @@ object Metap {
     if (has(CASE)) print("case ")
     if (has(COVARIANT)) print("covariant ")
     if (has(CONTRAVARIANT)) print("contravariant ")
-    if (info.kind == VALUE) print("val ")
-    if (info.kind == VARIABLE) print("var ")
-    if (info.kind == METHOD) print("def ")
+    if (info.kind == VAL) print("val ")
+    if (info.kind == VAR) print("var ")
+    if (info.kind == DEF) print("def ")
     if (info.kind == PRIMARY_CONSTRUCTOR) print("primaryctor ")
     if (info.kind == SECONDARY_CONSTRUCTOR) print("secondaryctor ")
     if (info.kind == MACRO) print("macro ")
@@ -150,7 +150,7 @@ object Metap {
     if (info.kind == TRAIT) print("trait ")
     print(info.name)
     info.kind match {
-      case VALUE | VARIABLE | METHOD | PRIMARY_CONSTRUCTOR |
+      case VAL | VAR | DEF | PRIMARY_CONSTRUCTOR |
            SECONDARY_CONSTRUCTOR | MACRO | TYPE | PARAMETER | TYPE_PARAMETER =>
         info.signature match {
           case Some(sig) =>
