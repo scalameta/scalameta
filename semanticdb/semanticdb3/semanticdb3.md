@@ -1,8 +1,7 @@
 # SemanticDB Specification, Version 3.0.0
 
   * [Motivation](#motivation)
-  * [Overview](#overview)
-  * [Data Model](#datamodel)
+  * [Data Model](#data-model)
     * [TextDocument](#textdocument)
     * [Range](#range)
     * [Symbol](#symbol)
@@ -10,10 +9,8 @@
     * [SymbolOccurrence](#symboloccurrence)
     * [Diagnostic](#diagnostic)
     * [Synthetic](#synthetic)
-  * [Data Schemas](#dataschemas)
+  * [Data Schemas](#data-schemas)
     * [Protobuf](#protobuf)
-    * [JSON](#json)
-    * [SQL](#sql)
   * [Changelog](#changelog)
     * [3.0.0](#300)
 
@@ -22,7 +19,7 @@
 Nowadays, there is a clear trend towards standards for communication between developer tools.
 Language Server Protocol (LSP) [\[2\]][2], a protocol that connects programming
 language implementations and text editors, has gained strong industrial support
-and at the time of writing has implementations for over 25 programming languages (TODO).
+and at the time of writing has implementations for many programming languages and editors.
 Build Server Protocol (BSP) [\[3\]][3] follows in LSP's tracks with an ambition to
 define a protocol for communication between language servers and build tools.
 
@@ -47,31 +44,17 @@ In the previous years, we shipped portable syntactic APIs for Scala,
 including abstract syntax trees, parsing and prettyprinting [\[12\]][12].
 SemanticDB is our take on portable semantic APIs.
 
-## Overview
+## Data Model
 
 SemanticDB is a data model for semantic information about programs in Scala and
 other languages. SemanticDB decouples production and consumption of semantic information,
 establishing documented means for communication between tools.
 
-TODO: Once we upgrade semanticdb-scalac to support SemanticDB v3,
-demonstrate a hello world example. Show the original program, a prettyprinted
-version of its SemanticDB data, very briefly explain the sections.
-
-TODO: Once we ship metac and metap that support SemanticDB v3, explain that
-the SemanticDB data model is materialized as Protocol Buffers [\[13\]][13], JSON [\[14\]][14]
-and SQL [\[15\]][15]. Demonstrate how we can use metac to generate `.semanticdb` files
-from the hello world example above, show the binary payload, decode the files with metap.
-
-TODO: Explain how these protobuf files can be used in tools like scalafix, metadoc and metals.
-Mention that beyond protobuf files, there are many ways to use SemanticDB as an
-interchange format, including passing objects around in memory, communication via JSON, etc etc.
-
-## Model
-
 In this section, we describe the SemanticDB data model by going through the
-individual sections of the associated protobuf schema. However, in addition to protobuf,
-we also support other kinds of schemas, including JSON and SQL.
-See [Data Schemas](#dataschemas) for more information.
+individual sections of the associated Protocol Buffers [\[13\]][13] schema.
+In the future, we may also support other kinds of schemas, including
+JSON [\[14\]][14] and SQL [\[15\]][15]. See [Data Schemas](#data-schemas)
+for more information.
 
 ### TextDocument
 
@@ -162,7 +145,7 @@ of the corresponding global definition, where:
   * The signature of a definition is:
     * For a method, concatenation of its name, its JVM method descriptor [\[19\]][19]
       and a dot (`.`). The JVM method descriptor is used to distinguish
-      overloaded methods as mandated by the Scala Language Specification [20].
+      overloaded methods as mandated by the Scala Language Specification [\[20\]][20].
       For any other term definition (package, object, val or var),
       concatenation of its name and a dot (`.`).
     * For a type definition (class, type alias or type member),
@@ -231,75 +214,72 @@ or features from other languages.
   <tr>
     <td><code>1</code></td>
     <td><code>VALUE</code></td>
-    <td>Value, e.g. TODO.</td>
+    <td>Value, e.g. <code>val x = 42</code>.</td>
   </tr>
   <tr>
     <td><code>2</code></td>
     <td><code>VARIABLE</code></td>
-    <td>Variable, e.g. TODO.</td>
+    <td>Variable, e.g. <code>var x = 42</code>.</td>
   </tr>
   <tr>
     <td><code>3</code></td>
     <td><code>METHOD</code></td>
-    <td>Method, e.g. TODO.</td>
+    <td>Method, e.g. <code>def x = 42</code>.</td>
   </tr>
   <tr>
     <td><code>4</code></td>
     <td><code>PRIMARY_CONSTRUCTOR</code></td>
-    <td>Primary constructor, e.g. TODO.</td>
+    <td>Primary constructor, e.g. <code>(x: Int)</code> in <code>class C(x: Int)</code>.</td>
   </tr>
   <tr>
     <td><code>5</code></td>
     <td><code>SECONDARY_CONSTRUCTOR</code></td>
-    <td>Secondary constructor, e.g. TODO.</td>
+    <td>Secondary constructor, e.g. <code>def this() = this(0)</code>.</td>
   </tr>
   <tr>
     <td><code>6</code></td>
     <td><code>MACRO</code></td>
-    <td>Macro, e.g. TODO.</td>
+    <td>Macro, e.g. <code>def m = macro impl</code>.</td>
   </tr>
   <tr>
     <td><code>7</code></td>
     <td><code>TYPE</code></td>
-    <td>Abstract type or a type alias, e.g. TODO.</td>
+    <td>Abstract type or a type alias, e.g. <code>type T <: Int</code> or <code>type T = Int</code>.</td>
   </tr>
   <tr>
     <td><code>8</code></td>
-    <td>Parameter, e.g. TODO.</td>
     <td><code>PARAMETER</code></td>
-    <td>TODO</td>
+    <td>Parameter, e.g. <code>x</code> in <code>class C(x: Int)</code>.</td>
   </tr>
   <tr>
     <td><code>9</code></td>
-    <td>Type parameter, e.g. TODO.</td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td>TODO</td>
+    <td>Type parameter, e.g. <code>T</code> in <code>class C[T](x: T)</code>.</td>
   </tr>
   <tr>
     <td><code>10</code></td>
-    <td>Object, e.g. TODO.</td>
     <td><code>OBJECT</code></td>
-    <td>TODO</td>
+    <td>Object, e.g. <code>object M</code>.</td>
   </tr>
   <tr>
     <td><code>11</code></td>
     <td><code>PACKAGE</code></td>
-    <td>Package, e.g. TODO.</td>
+    <td>Package, e.g. <code>package p</code>.</td>
   </tr>
   <tr>
     <td><code>12</code></td>
     <td><code>PACKAGE_OBJECT</code></td>
-    <td>Package object, e.g. TODO.</td>
+    <td>Package object, e.g. <code>package object p</code>.</td>
   </tr>
   <tr>
     <td><code>13</code></td>
     <td><code>CLASS</code></td>
-    <td>Class, e.g. TODO.</td>
+    <td>Class, e.g. <code>class C</code>.</td>
   </tr>
   <tr>
     <td><code>14</code></td>
     <td><code>TRAIT</code></td>
-    <td>Trait, e.g. TODO.</td>
+    <td>Trait, e.g. <code>trait T</code>.</td>
   </tr>
 </table>
 
@@ -414,12 +394,12 @@ in SemanticDB, this one is usecase-driven and will likely be updated in the futu
   <tr>
     <td><code>1</code></td>
     <td><code>REFERENCE</code></td>
-    <td>Reference, e.g. TODO</td>
+    <td>Reference, e.g. <code>y</code> in <code>val x = y</code>.</td>
   </tr>
   <tr>
     <td><code>2</code></td>
     <td><code>DEFINITION</code></td>
-    <td>Definition, e.g. TODO</td>
+    <td>Definition, e.g. <code>x</code> in <code>val x = y</code>.</td>
   </tr>
 </table>
 
@@ -449,22 +429,22 @@ is unknown, it is up to the consumer to interpret diagnostics as error, warning,
   <tr>
     <td><code>1</code></td>
     <td><code>ERROR</code></td>
-    <td>Error, e.g. TODO.</td>
+    <td>Error.</td>
   </tr>
   <tr>
     <td><code>2</code></td>
     <td><code>WARNING</code></td>
-    <td>Warning, e.g. TODO.</td>
+    <td>Warning.</td>
   </tr>
   <tr>
     <td><code>3</code></td>
     <td><code>INFORMATION</code></td>
-    <td>Information, e.g. TODO.</td>
+    <td>Information.</td>
   </tr>
   <tr>
     <td><code>4</code></td>
     <td><code>HINT</code></td>
-    <td>Hint, e.g. TODO.</td>
+    <td>Hint.</td>
   </tr>
 </table>
 
@@ -501,20 +481,11 @@ synthetic format deliberately unspecified as well. Our experience [\[22\]][22] s
 that reverse engineering Scala synthetics is very hard. We may improve on this
 in the future, but this is highly unlikely.
 
-## Schemas
+## Data Schemas
 
 ### Protobuf
 
 [semanticdb3.proto][semanticdb3.proto]
-
-### JSON
-
-TODO: Generate a JSON schema from the protobuf schema.
-
-### SQL
-
-TODO: Adapt https://github.com/scalameta/scalameta/pull/1174 to the new
-protobuf schema.
 
 ## Changelog
 
@@ -529,9 +500,7 @@ protobuf schema.
     inspired by the design of Index-While-Building in Clang [[23][23], [24][24]].
 
 [semanticdb.proto]: https://github.com/scalameta/scalameta/blob/v2.1.7/langmeta/langmeta/shared/src/main/protobuf/semanticdb.proto
-[semanticdb3.proto]: https://github.com/scalameta/scalameta/tree/topic/semanticdb3/semanticdb3/semanticdb3.proto
-[semanticdb3.json]: https://github.com/scalameta/scalameta/tree/topic/semanticdb3/semanticdb3/semanticdb3.json
-[semanticdb3.ddl]: https://github.com/scalameta/scalameta/tree/topic/semanticdb3/semanticdb3/semanticdb3.ddl
+[semanticdb3.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb3/semanticdb3.proto
 [1]: https://semver.org/
 [2]: https://microsoft.github.io/language-server-protocol/
 [3]: https://scalacenter.github.io/bsp/
