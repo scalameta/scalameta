@@ -7,6 +7,7 @@ import scala.util.control.NonFatal
 
 trait SymbolOps { self: DatabaseOps =>
 
+  lazy val idCache = new HashMap[String, Int]
   lazy val symbolCache = new HashMap[g.Symbol, m.Symbol]
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     def toSemantic: m.Symbol = {
@@ -30,7 +31,11 @@ trait SymbolOps { self: DatabaseOps =>
           val mpos = sym.pos.toMeta
           return {
             if (mpos == m.Position.None) m.Symbol.None
-            else m.Symbol.Local(mpos.syntax)
+            else {
+              val id = idCache.get(mpos.input.syntax)
+              idCache.put(mpos.input.syntax, id + 1)
+              m.Symbol.Local("local" + id.toString)
+            }
           }
         }
 

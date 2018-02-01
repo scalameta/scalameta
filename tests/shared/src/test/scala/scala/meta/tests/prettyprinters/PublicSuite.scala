@@ -429,7 +429,7 @@ class PublicSuite extends FunSuite {
     val globalSelf @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Self("self")) = Symbol(syntaxGlobalSelf)
     assert(globalSelf.toString === syntaxGlobalSelf)
 
-    val syntaxLocal = "/source.scala@40..42"
+    val syntaxLocal = "local0"
     val local @ Symbol.Local(`syntaxLocal`) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
 

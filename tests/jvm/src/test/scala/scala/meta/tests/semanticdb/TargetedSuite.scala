@@ -33,10 +33,10 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     |[28..33): Array => _root_.scala.Array#
     |[34..40): String => _root_.scala.Predef.String#
     |[44..48): Unit => _root_.scala.Unit#
-    |[61..65): list <= <...>@57..81
+    |[61..65): list <= local0
     |[68..72): List => _root_.scala.collection.immutable.List.
     |[86..93): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
-    |[94..98): list => <...>@57..81
+    |[94..98): list => local0
   """.trim.stripMargin
   )
 
@@ -351,10 +351,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  }
       |}
     """.stripMargin,
-    """|<...>@359..375 => val result: b.X
-       |  [0..1): b => _root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b)
-       |  [2..3): X => _root_.i.B#X#
-       |_root_.i. => package i
+    """|_root_.i. => package i
        |_root_.i.B# => trait B
        |_root_.i.B#X# => abstract type X
        |_root_.i.B#x()Ljava/lang/Object;. => abstract def x: B.this.X
@@ -417,6 +414,9 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [4..14): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
        |  [15..16): A => _root_.scala.collection.mutable.ListBuffer#[A]
        |_root_.scala.collection.mutable.ListBuffer. => final object ListBuffer
+       |local0 => val result: b.X
+       |  [0..1): b => _root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b)
+       |  [2..3): X => _root_.i.B#X#
     """.stripMargin.trim
   )
 
@@ -901,29 +901,29 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.trim.stripMargin,
     """
       |[7..9): ag <= _empty_.ag.
-      |[18..19): x <= <...>@18..19
+      |[18..19): x <= local0
       |[25..27): to => _root_.scala.runtime.RichInt#to(I)Lscala/collection/immutable/Range/Inclusive;.
-      |[32..33): y <= <...>@32..33
+      |[32..33): y <= local1
       |[39..44): until => _root_.scala.runtime.RichInt#until(I)Lscala/collection/immutable/Range;.
       |[49..56): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
-      |[57..58): x => <...>@18..19
+      |[57..58): x => local0
       |[59..61): -> => _root_.scala.Predef.ArrowAssoc#`->`(Ljava/lang/Object;)Lscala/Tuple2;.
-      |[62..63): x => <...>@18..19
-      |[71..72): i <= <...>@71..72
+      |[62..63): x => local0
+      |[71..72): i <= local2
       |[78..80): to => _root_.scala.runtime.RichInt#to(I)Lscala/collection/immutable/Range/Inclusive;.
-      |[85..86): j <= <...>@85..86
+      |[85..86): j <= local3
       |[92..97): until => _root_.scala.runtime.RichInt#until(I)Lscala/collection/immutable/Range;.
-      |[109..110): i => <...>@71..72
-      |[112..113): j => <...>@85..86
-      |[121..122): i <= <...>@121..122
+      |[109..110): i => local2
+      |[112..113): j => local3
+      |[121..122): i <= local4
       |[128..130): to => _root_.scala.runtime.RichInt#to(I)Lscala/collection/immutable/Range/Inclusive;.
-      |[135..136): j <= <...>@135..135
+      |[135..136): j <= local5
       |[142..147): until => _root_.scala.runtime.RichInt#until(I)Lscala/collection/immutable/Range;.
-      |[154..155): i => <...>@121..122
+      |[154..155): i => local4
       |[156..157): % => _root_.scala.Int#`%`(I)I.
       |[160..162): == => _root_.scala.Int#`==`(I)Z.
-      |[173..174): i => <...>@121..122
-      |[176..177): j => <...>@135..136
+      |[173..174): i => local4
+      |[176..177): j => local6
     """.trim.stripMargin
   )
 
