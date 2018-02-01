@@ -121,7 +121,7 @@ package object semanticdb {
                 case k.OBJECT => dflip(d.OBJECT)
                 case k.PACKAGE => dflip(d.PACKAGE)
                 case k.PACKAGE_OBJECT => dflip(d.PACKAGEOBJECT)
-                case k.CLASS => dflip(d.CLASS)
+                case k.CLAZZ => dflip(d.CLASS)
                 case k.TRAIT => dflip(d.TRAIT)
                 case _ => ()
               }
@@ -268,7 +268,7 @@ package object semanticdb {
                 else if (dtest(d.OBJECT)) k.OBJECT
                 else if (dtest(d.PACKAGE)) k.PACKAGE
                 else if (dtest(d.PACKAGEOBJECT)) k.PACKAGE_OBJECT
-                else if (dtest(d.CLASS)) k.CLASS
+                else if (dtest(d.CLASS)) k.CLAZZ
                 else if (dtest(d.TRAIT)) k.TRAIT
                 else k.UNKNOWN_KIND
               }

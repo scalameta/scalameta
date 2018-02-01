@@ -44,7 +44,10 @@ message SymbolInformation {
     OBJECT = 10;
     PACKAGE = 11;
     PACKAGE_OBJECT = 12;
-    CLASS = 13;
+    // TODO: Can't say CLASS here, because of a Scala Native bug.
+    // Unlike other todos in this pull request, this one doesn't have a workaround.
+    // https://github.com/scala-native/scala-native/issues/1155.
+    CLAZZ = 13;
     TRAIT = 14;
   }
   enum Property {

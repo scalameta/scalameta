@@ -271,7 +271,7 @@ or features from other languages.
   </tr>
   <tr>
     <td><code>13</code></td>
-    <td><code>CLASS</code></td>
+    <td><code>CLAZZ</code></td>
     <td>Class, e.g. <code>class C</code>.</td>
   </tr>
   <tr>

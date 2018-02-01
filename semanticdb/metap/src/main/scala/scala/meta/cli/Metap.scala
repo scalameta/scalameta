@@ -146,7 +146,7 @@ object Metap {
     if (info.kind == OBJECT) print("object ")
     if (info.kind == PACKAGE) print("package ")
     if (info.kind == PACKAGE_OBJECT) print("package object ")
-    if (info.kind == CLASS) print("class ")
+    if (info.kind == CLAZZ) print("class ")
     if (info.kind == TRAIT) print("trait ")
     print(info.name)
     info.kind match {
@@ -162,7 +162,7 @@ object Metap {
             println("")
         }
         info.overrides.foreach(sym => println(s"  overrides $sym"))
-      case OBJECT | PACKAGE | PACKAGE_OBJECT | CLASS | TRAIT =>
+      case OBJECT | PACKAGE | PACKAGE_OBJECT | CLAZZ | TRAIT =>
         info.members match {
           case _ :: _ => println(s".{+${info.members.length}} members")
           case Nil => println("")
