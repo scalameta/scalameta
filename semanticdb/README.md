@@ -5,3 +5,5 @@ other languages. SemanticDB decouples production and consumption of semantic inf
 establishing documented means for communication between tools.
 
 [Specification](semanticdb3/semanticdb3.md)
+
+[Protobuf schema](semanticdb3/semanticdb3.proto)
