@@ -6,7 +6,7 @@ import org.langmeta.io._
 import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb._
 import org.langmeta.internal.semanticdb.{vfs => v}
-import org.langmeta.internal.semanticdb.{schema => s}
+import scala.meta.internal.{semanticdb3 => s}
 
 final case class Database(documents: Seq[Document]) {
   lazy val names: Seq[ResolvedName] = documents.flatMap(_.names)
@@ -48,8 +48,8 @@ object Database {
   }
 
   def load(bytes: Array[Byte]): Database = {
-    val sdb = s.Database.parseFrom(bytes)
-    val mdb = sdb.mergeMessageOnlyDocuments.toDb(None)
+    val sdocs = s.TextDocuments.parseFrom(bytes)
+    val mdb = sdocs.mergeDiagnosticOnlyDocuments.toDb(None)
     mdb
   }
 }

@@ -10,7 +10,7 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
 import scala.meta.io._
-import scala.meta.internal.semanticdb.{DatabaseOps, FailureMode, MemberMode, OverrideMode, SemanticdbMode}
+import scala.meta.internal.semanticdb.scalac._
 import scala.meta.testkit.DiffAssertions
 
 abstract class DatabaseSuite(mode: SemanticdbMode,
@@ -26,9 +26,11 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
 
   lazy val g: Global = {
     def fail(msg: String) = sys.error(s"DatabaseSuite initialization failed: $msg")
-    val classpath = System.getProperty("sbt.paths.semanticdb-scalac-plugin.test.classes")
-    val pluginpath = System.getProperty("sbt.paths.semanticdb-scalac-plugin.compile.jar")
-    val options = "-Yrangepos -Ywarn-unused-import -cp " + classpath + " -Xplugin:" + pluginpath + ":" + classpath + " -Xplugin-require:semanticdb"
+    val classpath = sys.props("sbt.paths.tests.test.classes")
+    if (classpath == null) fail("classpath not set. broken build?")
+    val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
+    if (pluginjar == null) fail("pluginjar not set. broken build?")
+    val options = "-Yrangepos -Ywarn-unused-import -cp " + classpath + " -Xplugin:" + pluginjar + " -Xplugin-require:semanticdb"
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
     val reporter = new StoreReporter()
@@ -89,12 +91,10 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
     val database = computeDatabaseFromSnippet(code)
-    val path = g.currentRun.units.toList.last.source.file.file.getAbsolutePath
     val payload = database.toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
-    // println(section.mkString(EOL).replace(path, "<...>"))
     assertDenotationSignaturesAreParseable(database)
-    section.mkString(EOL).replace(path, "<...>")
+    section.mkString(EOL)
   }
 
   private def assertDenotationSignaturesAreParseable(database: m.Database): Unit = {

@@ -66,6 +66,14 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.cli.Metac.toString") {
+    // n/a
+  }
+
+  test("scala.meta.cli.Metap.toString") {
+    // n/a
+  }
+
   test("scala.meta.common.Convert.toString") {
     // n/a
   }
@@ -332,6 +340,10 @@ class PublicSuite extends FunSuite {
     assert(Severity.Error.toString === "[error]")
   }
 
+  test("scala.meta.semanticdb.Severity.Hint.toString") {
+    assert(Severity.Hint.toString === "[hint]")
+  }
+
   test("scala.meta.semanticdb.Severity.Info.toString") {
     assert(Severity.Info.toString === "[info]")
   }
@@ -417,7 +429,7 @@ class PublicSuite extends FunSuite {
     val globalSelf @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Self("self")) = Symbol(syntaxGlobalSelf)
     assert(globalSelf.toString === syntaxGlobalSelf)
 
-    val syntaxLocal = "/source.scala@40..42"
+    val syntaxLocal = "local0"
     val local @ Symbol.Local(`syntaxLocal`) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
 

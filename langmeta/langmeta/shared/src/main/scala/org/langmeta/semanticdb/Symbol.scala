@@ -72,7 +72,10 @@ object Symbol {
         } else {
           if (!Character.isJavaIdentifierStart(currChar)) fail()
           buf += currChar
-          while (Character.isJavaIdentifierPart(readChar())) buf += currChar
+          while (Character.isJavaIdentifierPart(readChar())) {
+            if (currChar == EOF) return buf.toString
+            buf += currChar
+          }
         }
         buf.toString
       }
@@ -119,15 +122,9 @@ object Symbol {
         }
       }
       def parseLocal(): Symbol = {
-        val start = i - 1
-        while (readChar() != '@') {}
-        while (Character.isDigit(readChar())) {}
-        if (currChar != '.') fail()
-        readChar()
-        if (currChar != '.') fail()
-        while (Character.isDigit(readChar())) {}
-        val end = i - 1
-        Symbol.Local(s.substring(start, end))
+        val name = parseName()
+        if (name.startsWith("local")) Symbol.Local(name)
+        else fail()
       }
 
       def parseMulti(symbols: List[Symbol]): Symbol = {

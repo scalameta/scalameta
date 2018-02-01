@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package scala.meta.internal.semanticdb3;
+
+enum Schema {
+  LEGACY = 0;
+  SEMANTICDB3 = 3;
+}
+
+message TextDocuments {
+  repeated TextDocument documents = 1;
+}
+
+message TextDocument {
+  Schema schema = 1;
+  string uri = 2;
+  string text = 3;
+  string language = 4;
+  repeated SymbolInformation symbols = 5;
+  repeated SymbolOccurrence occurrences = 6;
+  repeated Diagnostic diagnostics = 7;
+  repeated Synthetic synthetics = 8;
+}
+
+message Range {
+  int32 start_line = 1;
+  int32 start_character = 2;
+  int32 end_line = 3;
+  int32 end_character = 4;
+}
+
+message SymbolInformation {
+  enum Kind {
+    UNKNOWN_KIND = 0;
+    VAL = 1;
+    VAR = 2;
+    DEF = 3;
+    PRIMARY_CONSTRUCTOR = 4;
+    SECONDARY_CONSTRUCTOR = 5;
+    MACRO = 6;
+    TYPE = 7;
+    PARAMETER = 8;
+    TYPE_PARAMETER = 9;
+    OBJECT = 10;
+    PACKAGE = 11;
+    PACKAGE_OBJECT = 12;
+    CLASS = 13;
+    TRAIT = 14;
+  }
+  enum Property {
+    UNKNOWN_PROPERTY = 0;
+    PRIVATE = 0x1;
+    PROTECTED = 0x2;
+    ABSTRACT = 0x4;
+    FINAL = 0x8;
+    SEALED = 0x10;
+    IMPLICIT = 0x20;
+    LAZY = 0x40;
+    CASE = 0x80;
+    COVARIANT = 0x100;
+    CONTRAVARIANT = 0x200;
+  }
+  string symbol = 1;
+  string language = 2;
+  Kind kind = 3;
+  int32 properties = 4;
+  string name = 5;
+  Range range = 6;
+  TextDocument signature = 7;
+  repeated string members = 8;
+  repeated string overrides = 9;
+}
+
+message SymbolOccurrence {
+  enum Role {
+    UNKNOWN_ROLE = 0;
+    REFERENCE = 1;
+    DEFINITION = 2;
+  }
+  Range range = 1;
+  string symbol = 2;
+  Role role = 3;
+}
+
+message Diagnostic {
+  enum Severity {
+    UNKNOWN_SEVERITY = 0;
+    ERROR = 1;
+    WARNING = 2;
+    INFORMATION = 3;
+    HINT = 4;
+  }
+  Range range = 1;
+  Severity severity = 2;
+  string message = 3;
+}
+
+message Synthetic {
+  Range range = 1;
+  TextDocument text = 2;
+}

@@ -43,6 +43,9 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.classifiers
       |scala.meta.classifiers.Classifiable *
       |scala.meta.classifiers.Classifier *
+      |scala.meta.cli
+      |scala.meta.cli.Metac *
+      |scala.meta.cli.Metap *
       |scala.meta.common
       |scala.meta.common.Convert *
       |scala.meta.common.Optional *
@@ -95,6 +98,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.semanticdb.ResolvedSymbol
       |scala.meta.semanticdb.Severity
       |scala.meta.semanticdb.Severity.Error
+      |scala.meta.semanticdb.Severity.Hint
       |scala.meta.semanticdb.Severity.Info
       |scala.meta.semanticdb.Severity.Warning
       |scala.meta.semanticdb.Signature

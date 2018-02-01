@@ -10,132 +10,193 @@ import org.langmeta.inputs.{Input => dInput}
 import org.langmeta.inputs.{Position => dPosition}
 import org.langmeta.semanticdb.{Synthetic => dSynthetic}
 import org.langmeta.internal.io.PathIO
-import org.langmeta.internal.semanticdb.{schema => s}
 import org.langmeta.internal.semanticdb.{vfs => v}
 import org.langmeta.io._
 import org.langmeta.semanticdb.Signature
 import org.langmeta.{semanticdb => d}
+import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 
 package object semanticdb {
-  implicit class XtensionSchemaDatabase(sdatabase: s.Database) {
-
-    def mergeMessageOnlyDocuments: s.Database = {
-      // returns true if this document contains only messages and nothing else.
+  implicit class XtensionSchemaTextDocuments(sdocuments: s.TextDocuments) {
+    def mergeDiagnosticOnlyDocuments: s.TextDocuments = {
+      // returns true if this document contains only diagnostics and nothing else.
       // deprecation messages are reported in refchecks and get persisted
       // as standalone documents that need to be merged with their typer-phase
       // document during loading. It seems there's no way to merge the documents
       // during compilation without introducing a lot of memory pressure.
-      def isOnlyMessages(sdocument: s.Document): Boolean =
-        sdocument.messages.nonEmpty &&
-          sdocument.contents.isEmpty &&
-          sdocument.names.isEmpty &&
-          sdocument.synthetics.isEmpty &&
-          sdocument.symbols.isEmpty
-      if (sdatabase.documents.length <= 1) {
+      def isOnlyMessages(sdocument: s.TextDocument): Boolean =
+        sdocument.diagnostics.nonEmpty &&
+          sdocument.text.isEmpty &&
+          sdocument.symbols.isEmpty &&
+          sdocument.occurrences.isEmpty &&
+          sdocument.synthetics.isEmpty
+      if (sdocuments.documents.length <= 1) {
         // NOTE(olafur) the most common case is that there is only a single database
         // per document so we short-circuit here if that's the case.
-        sdatabase
+        sdocuments
       } else {
-        sdatabase.documents match {
-          case Seq(doc, messages)
-            if doc.filename == messages.filename &&
-                isOnlyMessages(messages) =>
-            val x = doc.addMessages(messages.messages: _*)
-            s.Database(x :: Nil)
-          case _ => sdatabase
+        sdocuments.documents match {
+          case Seq(smaindoc, sdiagdoc)
+            if smaindoc.uri == sdiagdoc.uri &&
+                isOnlyMessages(sdiagdoc) =>
+            val smaindoc1 = smaindoc.addDiagnostics(sdiagdoc.diagnostics: _*)
+            s.TextDocuments(smaindoc1 :: Nil)
+          case _ => sdocuments
         }
       }
     }
     def toVfs(targetroot: AbsolutePath): v.Database = {
-      val ventries = sdatabase.documents.toIterator.map { sentry =>
+      val ventries = sdocuments.documents.toIterator.map { sentry =>
         // TODO: Would it make sense to support multiclasspaths?
         // One use-case for this would be in-place updates of semanticdb files.
-        val vpath = v.SemanticdbPaths.fromScala(RelativePath(sentry.filename))
+        val vpath = v.SemanticdbPaths.fromScala(RelativePath(sentry.uri))
         val fragment = Fragment(targetroot, vpath)
-        val bytes = s.Database(List(sentry)).toByteArray
+        val bytes = s.TextDocuments(List(sentry)).toByteArray
         v.Entry.InMemory(fragment, bytes)
       }
       v.Database(ventries.toList)
     }
 
-    def toDb(sourcepath: Option[Sourcepath], sdoc: s.Document): d.Document = {
-      val s.Document(sunixfilename, scontents, slanguage, snames, smessages, ssymbols, ssynthetics) = sdoc
-      assert(sunixfilename.nonEmpty, "s.Document.filename must not be empty")
-      val sfilename = PathIO.fromUnix(sunixfilename)
+    def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
+      val s.TextDocument(sschema, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics) = sdoc
+      assert(sschema == s.Schema.SEMANTICDB3, "s.TextDocument.schema must be ${s.Schema.SEMANTICDB3}")
       val dinput = {
-        if (scontents == "") {
-          val uri =
+        val sfilename = {
+          assert(suri.nonEmpty, "s.TextDocument.uri must not be empty")
+          PathIO.fromUnix(suri)
+        }
+        if (stext == "") {
+          val duri =
             sourcepath.getOrElse(sys.error("Sourcepath is required to load slim semanticdb."))
                 .find(RelativePath(sfilename))
                 .getOrElse(sys.error(s"can't find $sfilename in $sourcepath"))
-          dInput.File(AbsolutePath(uri.getPath))
+          dInput.File(AbsolutePath(duri.getPath))
         } else {
-          dInput.VirtualFile(sfilename.toString, scontents)
+          dInput.VirtualFile(sfilename.toString, stext)
         }
       }
-      object sPosition {
-        def unapply(spos: s.Position): Option[dPosition] = {
-          Some(dPosition.Range(dinput, spos.start, spos.end))
+      object sRange {
+        def unapply(srange: s.Range): Option[dPosition] = {
+          val dstartOffset = dinput.lineToOffset(srange.startLine) + srange.startCharacter
+          val dendOffset = dinput.lineToOffset(srange.endLine) + srange.endCharacter
+          Some(dPosition.Range(dinput, dstartOffset, dendOffset))
+        }
+      }
+      object sRole {
+        def unapply(srole: s.SymbolOccurrence.Role): Option[Boolean] = srole match {
+          case s.SymbolOccurrence.Role.REFERENCE => Some(false)
+          case s.SymbolOccurrence.Role.DEFINITION => Some(true)
+          case _ => None
         }
       }
       object sSeverity {
-        def unapply(sseverity: s.Message.Severity): Option[d.Severity] = {
+        def unapply(sseverity: s.Diagnostic.Severity): Option[d.Severity] = {
           sseverity match {
-            case s.Message.Severity.INFO => Some(d.Severity.Info)
-            case s.Message.Severity.WARNING => Some(d.Severity.Warning)
-            case s.Message.Severity.ERROR => Some(d.Severity.Error)
+            case s.Diagnostic.Severity.ERROR => Some(d.Severity.Error)
+            case s.Diagnostic.Severity.WARNING => Some(d.Severity.Warning)
+            case s.Diagnostic.Severity.INFORMATION => Some(d.Severity.Info)
+            case s.Diagnostic.Severity.HINT => Some(d.Severity.Hint)
             case _ => None
           }
         }
       }
-      object sResolvedSymbol {
-        def unapply(sresolvedsymbol: s.ResolvedSymbol): Option[d.ResolvedSymbol] = sresolvedsymbol match {
-          case s.ResolvedSymbol(d.Symbol(dsym), Some(s.Denotation(dflags, dname: String, dsignature: String, snames, smembers, soverrides))) =>
-            val ddefninput = dInput.Denotation(dsignature, dsym)
-            val dnames = snames.toIterator.map {
-              case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
-                val ddefnpos = dPosition.Range(ddefninput, sstart, send)
-                d.ResolvedName(ddefnpos, dsym, disDefinition)
-              case other =>
-                sys.error(s"bad protobuf: unsupported name $other")
-            }.toList
+      object sSymbolInformation {
+        def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
+          case s.SymbolInformation(d.Symbol(dsym), _, skind, sproperties, sname, _, ssignature, smembers, soverrides) =>
+            val dflags = {
+              var dflags = 0L
+              def dflip(dbit: Long) = dflags ^= dbit
+              skind match {
+                case k.VAL => dflip(d.VAL)
+                case k.VAR => dflip(d.VAR)
+                case k.DEF => dflip(d.DEF)
+                case k.PRIMARY_CONSTRUCTOR => dflip(d.PRIMARYCTOR)
+                case k.SECONDARY_CONSTRUCTOR => dflip(d.SECONDARYCTOR)
+                case k.MACRO => dflip(d.MACRO)
+                case k.TYPE => dflip(d.TYPE)
+                case k.PARAMETER => dflip(d.PARAM)
+                case k.TYPE_PARAMETER => dflip(d.TYPEPARAM)
+                case k.OBJECT => dflip(d.OBJECT)
+                case k.PACKAGE => dflip(d.PACKAGE)
+                case k.PACKAGE_OBJECT => dflip(d.PACKAGEOBJECT)
+                case k.CLASS => dflip(d.CLASS)
+                case k.TRAIT => dflip(d.TRAIT)
+                case _ => ()
+              }
+              def stest(bit: Long) = (sproperties & bit) == bit
+              if (stest(p.PRIVATE.value)) dflip(d.PRIVATE)
+              if (stest(p.PROTECTED.value)) dflip(d.PROTECTED)
+              if (stest(p.ABSTRACT.value)) dflip(d.ABSTRACT)
+              if (stest(p.FINAL.value)) dflip(d.FINAL)
+              if (stest(p.SEALED.value)) dflip(d.SEALED)
+              if (stest(p.IMPLICIT.value)) dflip(d.IMPLICIT)
+              if (stest(p.LAZY.value)) dflip(d.LAZY)
+              if (stest(p.CASE.value)) dflip(d.CASE)
+              if (stest(p.COVARIANT.value)) dflip(d.COVARIANT)
+              if (stest(p.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
+              dflags
+            }
+            val dname = sname
+            val dsignature = ssignature.map(_.text).getOrElse("")
+            val dnames = {
+              ssignature.map { ssignature =>
+                val dinput = dInput.Denotation(dsignature, dsym)
+                ssignature.occurrences.toIterator.map {
+                  case s.SymbolOccurrence(Some(srange), d.Symbol(dsym), sRole(disDefinition)) =>
+                    val dstartOffset = dinput.lineToOffset(srange.startLine) + srange.startCharacter
+                    val dendOffset = dinput.lineToOffset(srange.endLine) + srange.endCharacter
+                    val ddefnpos = dPosition.Range(dinput, dstartOffset, dendOffset)
+                    d.ResolvedName(ddefnpos, dsym, disDefinition)
+                  case other =>
+                    sys.error(s"bad protobuf: unsupported occurrence $other")
+                }.toList
+              }.getOrElse(Nil)
+            }
             val dmembers: List[d.Signature] = smembers.toIterator.map { smember =>
               if (smember.endsWith("#")) d.Signature.Type(smember.stripSuffix("#"))
               else if (smember.endsWith(".")) d.Signature.Term(smember.stripSuffix("."))
               else sys.error(s"Unexpected signature $smember")
             }.toList
             val doverrides = soverrides.flatMap(d.Symbol.unapply).toList
-            val ddefn = d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides)
-            Some(d.ResolvedSymbol(dsym, ddefn))
-          case other => sys.error(s"bad protobuf: unsupported denotation $other")
+            Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides)))
+          case other => sys.error(s"bad protobuf: unsupported symbol information $other")
         }
       }
       object sSynthetic {
         def unapply(ssynthetic: s.Synthetic): Option[dSynthetic] = ssynthetic match {
-          case s.Synthetic(Some(sPosition(dpos)), dtext, snames) =>
-            val dnames = snames.toIterator.map {
-              case s.ResolvedName(Some(s.Position(sstart, send)), d.Symbol(dsym), disDefinition) =>
-                val dsyntheticinput = dInput.Synthetic(dtext, dpos.input, dpos.start, dpos.end)
-                val dsyntheticpos = dPosition.Range(dsyntheticinput, sstart, send)
-                d.ResolvedName(dsyntheticpos, dsym, disDefinition)
-              case other =>
-                sys.error(s"bad protobuf: unsupported name $other")
-            }.toList
+          case s.Synthetic(Some(sRange(dpos)), stext) =>
+            val dtext = stext.map(_.text).getOrElse("")
+            val dnames = {
+              stext.map { stext =>
+                stext.occurrences.toIterator.map {
+                  case s.SymbolOccurrence(Some(srange), d.Symbol(dsym), sRole(disDefinition)) =>
+                    val dsyntheticinput = dInput.Synthetic(dtext, dpos.input, dpos.start, dpos.end)
+                    val dstartOffset = dsyntheticinput.lineToOffset(srange.startLine) + srange.startCharacter
+                    val dendOffset = dsyntheticinput.lineToOffset(srange.endLine) + srange.endCharacter
+                    val dsyntheticpos = dPosition.Range(dsyntheticinput, dstartOffset, dendOffset)
+                    d.ResolvedName(dsyntheticpos, dsym, disDefinition)
+                  case other =>
+                    sys.error(s"bad protobuf: unsupported occurrence $other")
+                }.toList
+              }.getOrElse(Nil)
+            }
             Some(dSynthetic(dpos, dtext, dnames))
         }
       }
       val dlanguage = slanguage
-      val dnames = snames.map {
-        case s.ResolvedName(Some(sPosition(dpos)), d.Symbol(dsym), disDefinition) => d.ResolvedName(dpos, dsym, disDefinition)
-        case other => sys.error(s"bad protobuf: unsupported name $other")
+      val dnames = soccurrences.map {
+        case s.SymbolOccurrence(Some(sRange(dpos)), d.Symbol(dsym), sRole(disDefinition)) => d.ResolvedName(dpos, dsym, disDefinition)
+        case other => sys.error(s"bad protobuf: unsupported occurrence $other")
       }.toList
-      val dmessages = smessages.map {
-        case s.Message(Some(sPosition(dpos)), sSeverity(dseverity), dmsg: String) =>
+      val dmessages = sdiagnostics.map {
+        case s.Diagnostic(Some(sRange(dpos)), sSeverity(dseverity), dmsg: String) =>
           d.Message(dpos, dseverity, dmsg)
-        case other => sys.error(s"bad protobuf: unsupported message $other")
+        case other => sys.error(s"bad protobuf: unsupported diagnostic $other")
       }.toList
       val dsymbols = ssymbols.map {
-        case sResolvedSymbol(dresolvedsymbol) => dresolvedsymbol
+        case sSymbolInformation(dresolvedsymbol) => dresolvedsymbol
       }.toList
       val dsynthetics = ssynthetics.toIterator.map {
         case sSynthetic(dsynthetic) => dsynthetic
@@ -144,102 +205,159 @@ package object semanticdb {
       d.Document(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics)
     }
 
-
     def toDb(sourcepath: Option[Sourcepath]): d.Database = {
-      val dentries = sdatabase.documents.toIterator.map { sdoc =>
+      val dentries = sdocuments.documents.toIterator.map { sdoc =>
         try {
           toDb(sourcepath, sdoc)
         } catch {
           case NonFatal(e) =>
             throw new IllegalArgumentException(
-              s"Error converting s.Document to m.Document where filename=${sdoc.filename}\n$sdoc",
+              s"Error converting s.TextDocument to m.Document where uri=${sdoc.uri}\n$sdoc",
               e)
         }
       }
       d.Database(dentries.toList)
     }
   }
+
   implicit class XtensionDatabase(ddatabase: d.Database) {
-    def toSchema(sourceroot: AbsolutePath): s.Database = {
+    def toSchema(sourceroot: AbsolutePath): s.TextDocuments = {
       val sentries = ddatabase.documents.map {
         case d.Document(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
           object dPosition {
-            def unapply(dpos: dPosition): Option[s.Position] = dpos match {
-              case org.langmeta.inputs.Position.Range(_, sstart, send) =>
-                Some(s.Position(sstart, send))
+            def unapply(dpos: dPosition): Option[s.Range] = dpos match {
+              case dpos: org.langmeta.Position.Range =>
+                Some(s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn))
               case _ =>
                 None
             }
           }
+          object disDefinition {
+            def unapply(disDefinition: Boolean): Option[s.SymbolOccurrence.Role] = {
+              if (disDefinition) Some(s.SymbolOccurrence.Role.DEFINITION)
+              else Some(s.SymbolOccurrence.Role.REFERENCE)
+            }
+          }
           object dSeverity {
-            def unapply(dseverity: d.Severity): Option[s.Message.Severity] = {
+            def unapply(dseverity: d.Severity): Option[s.Diagnostic.Severity] = {
               dseverity match {
-                case d.Severity.Info => Some(s.Message.Severity.INFO)
-                case d.Severity.Warning => Some(s.Message.Severity.WARNING)
-                case d.Severity.Error => Some(s.Message.Severity.ERROR)
+                case d.Severity.Error => Some(s.Diagnostic.Severity.ERROR)
+                case d.Severity.Warning => Some(s.Diagnostic.Severity.WARNING)
+                case d.Severity.Info => Some(s.Diagnostic.Severity.INFORMATION)
+                case d.Severity.Hint => Some(s.Diagnostic.Severity.HINT)
                 case _ => None
               }
             }
           }
-          object dDenotation {
-            def unapply(ddefn: d.Denotation): Option[s.Denotation] = {
-              import ddefn._
-              val snames = ddefn.names.map {
-                case d.ResolvedName(org.langmeta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
-                  s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
-                case other =>
-                  sys.error(s"bad database: unsupported position $other")
+          object dResolvedSymbol {
+            def unapply(dresolvedSymbol: d.ResolvedSymbol): Option[s.SymbolInformation] = {
+              val d.ResolvedSymbol(dsymbol, ddenot) = dresolvedSymbol
+              val ssymbol = dsymbol.syntax
+              val slanguage = dlanguage
+              def dtest(bit: Long) = (ddenot.flags & bit) == bit
+              val skind = {
+                if (dtest(d.VAL)) k.VAL
+                else if (dtest(d.VAR)) k.VAR
+                else if (dtest(d.DEF)) k.DEF
+                else if (dtest(d.PRIMARYCTOR)) k.PRIMARY_CONSTRUCTOR
+                else if (dtest(d.SECONDARYCTOR)) k.SECONDARY_CONSTRUCTOR
+                else if (dtest(d.MACRO)) k.MACRO
+                else if (dtest(d.TYPE)) k.TYPE
+                else if (dtest(d.PARAM)) k.PARAMETER
+                else if (dtest(d.TYPEPARAM)) k.TYPE_PARAMETER
+                else if (dtest(d.OBJECT)) k.OBJECT
+                else if (dtest(d.PACKAGE)) k.PACKAGE
+                else if (dtest(d.PACKAGEOBJECT)) k.PACKAGE_OBJECT
+                else if (dtest(d.CLASS)) k.CLASS
+                else if (dtest(d.TRAIT)) k.TRAIT
+                else k.UNKNOWN_KIND
               }
-              val smembers = ddefn.members.map(_.syntax)
-              val soverrides = ddefn.overrides.map(_.syntax)
-              Some(s.Denotation(flags, name, signature, snames, smembers, soverrides))
+              val sproperties = {
+                var sproperties = 0
+                def sflip(sbit: Int) = sproperties ^= sbit
+                if (dtest(d.PRIVATE)) sflip(p.PRIVATE.value)
+                if (dtest(d.PROTECTED)) sflip(p.PROTECTED.value)
+                if (dtest(d.ABSTRACT)) sflip(p.ABSTRACT.value)
+                if (dtest(d.FINAL)) sflip(p.FINAL.value)
+                if (dtest(d.SEALED)) sflip(p.SEALED.value)
+                if (dtest(d.IMPLICIT)) sflip(p.IMPLICIT.value)
+                if (dtest(d.LAZY)) sflip(p.LAZY.value)
+                if (dtest(d.CASE)) sflip(p.CASE.value)
+                if (dtest(d.COVARIANT)) sflip(p.COVARIANT.value)
+                if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT.value)
+                sproperties
+              }
+              val sname = ddenot.name
+              val srange = None
+              val ssignature = {
+                val stext = ddenot.signature
+                val soccurrences = ddenot.names.map {
+                  case d.ResolvedName(dpos: org.langmeta.Position.Range, ssym, disDefinition(srole)) =>
+                    val srange = s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn)
+                    s.SymbolOccurrence(Some(srange), ssym.syntax, srole)
+                  case other =>
+                    sys.error(s"bad database: unsupported name $other")
+                }
+                Some(s.TextDocument(text = stext, occurrences = soccurrences))
+              }
+              val smembers = ddenot.members.map(_.syntax)
+              val soverrides = ddenot.overrides.map(_.syntax)
+              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, srange, ssignature, smembers, soverrides))
             }
           }
           object dSynthetic {
             def unapply(dsynthetic: dSynthetic): Option[s.Synthetic] = dsynthetic match {
-              case d.Synthetic(dPosition(spos), ssyntax, dnames) =>
-                val snames = dnames.toIterator.map {
-                  case d.ResolvedName(org.langmeta.inputs.Position.Range(_, sstart, send), ssym, sisDefinition) =>
-                    s.ResolvedName(Some(s.Position(sstart, send)), ssym.syntax, sisDefinition)
-                  case other =>
-                    sys.error(s"bad database: unsupported name $other")
-                }.toSeq
-                Some(s.Synthetic(Some(spos), ssyntax, snames))
+              case d.Synthetic(dPosition(srange), ssyntax, dnames) =>
+                val stext = {
+                  val stext = ssyntax
+                  val soccurrences = dnames.toIterator.map {
+                    case d.ResolvedName(dpos: org.langmeta.Position.Range, ssym, disDefinition(srole)) =>
+                      val srange = s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn)
+                      s.SymbolOccurrence(Some(srange), ssym.syntax, srole)
+                    case other =>
+                      sys.error(s"bad database: unsupported name $other")
+                  }.toSeq
+                  Some(s.TextDocument(text = stext, occurrences = soccurrences))
+                }
+                Some(s.Synthetic(Some(srange), stext))
               case _ =>
                 None
             }
           }
-          val (splatformpath, scontents) = dinput match {
+          val sschema = s.Schema.SEMANTICDB3
+          val (splatformpath, stext) = dinput match {
             case dInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
               path.toRelative(sourceroot).toString -> ""
-            case dInput.VirtualFile(path, contents) =>
-              path -> contents
+            case dInput.VirtualFile(path, value) =>
+              path -> value
             case other =>
               sys.error(s"bad database: unsupported input $other")
           }
-          val spath = PathIO.toUnix(splatformpath)
-          assert(spath.nonEmpty, s"'$spath'.nonEmpty")
+          val suri = {
+            val result = PathIO.toUnix(splatformpath)
+            assert(result.nonEmpty, s"'$result'.nonEmpty")
+            result
+          }
           val slanguage = dlanguage
-          val snames = dnames.map {
-            case d.ResolvedName(dPosition(spos), ssym, sisDefinition) => s.ResolvedName(Some(spos), ssym.syntax, sisDefinition)
+          val ssymbols = dsymbols.map {
+            case dResolvedSymbol(ssymbolInformation) => ssymbolInformation
+            case other => sys.error(s"bad database: unsupported denotation $other")
+          }
+          val soccurrences = dnames.map {
+            case d.ResolvedName(dPosition(srange), ssym, disDefinition(srole)) => s.SymbolOccurrence(Some(srange), ssym.syntax, srole)
             case other => sys.error(s"bad database: unsupported name $other")
           }
-          val smessages = dmessages.map {
-            case d.Message(dPosition(spos), dSeverity(ssym), smessage) => s.Message(Some(spos), ssym, smessage)
+          val sdiagnostics = dmessages.map {
+            case d.Message(dPosition(srange), dSeverity(ssym), smessage) => s.Diagnostic(Some(srange), ssym, smessage)
             case other => sys.error(s"bad database: unsupported message $other")
-          }
-          val ssymbols = dsymbols.map {
-            case d.ResolvedSymbol(ssym, dDenotation(sdefn)) => s.ResolvedSymbol(ssym.syntax, Some(sdefn))
-            case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val ssynthetics = dsynthetics.toIterator.map {
             case dSynthetic(ssynthetic) => ssynthetic
             case other => sys.error(s"bad database: unsupported synthetic $other")
           }.toSeq
-          s.Document(spath, scontents, slanguage, snames, smessages, ssymbols, ssynthetics)
+          s.TextDocument(sschema, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics)
       }
-      s.Database(sentries)
+      s.TextDocuments(sentries)
     }
   }
-
 }

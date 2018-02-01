@@ -34,10 +34,10 @@ class MirrorConstructionSuite extends BaseSemanticSuite {
     assert(database.documents.nonEmpty)
   }
 
-  test("s.Document.filename has no Windows slash (\\)") {
+  test("s.Document.uri has no Windows slash (\\)") {
     semanticdbs.foreach { path =>
       val sattrs = s.Document.parseFrom(path.readAllBytes)
-      assert(!sattrs.filename.contains('\\'))
+      assert(!sattrs.uri.contains('\\'))
     }
   }
 

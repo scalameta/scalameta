@@ -6,7 +6,7 @@ import java.io.File
 import java.io.FileOutputStream
 import org.langmeta.io._
 import org.langmeta.internal.semanticdb.{vfs => v}
-import org.langmeta.internal.semanticdb.{schema => s}
+import scala.meta.internal.{semanticdb3 => s}
 
 object Database {
   def load(classpath: Classpath): v.Database = {
@@ -17,12 +17,12 @@ object Database {
 }
 
 final case class Database(entries: List[Entry]) {
-  def toSchema: s.Database = {
+  def toSchema: s.TextDocuments = {
     val sentries = entries.flatMap { ventry =>
-      val sdb = s.Database.parseFrom(ventry.bytes)
-      sdb.mergeMessageOnlyDocuments.documents
+      val sdocs = s.TextDocuments.parseFrom(ventry.bytes)
+      sdocs.mergeDiagnosticOnlyDocuments.documents
     }
-    s.Database(sentries)
+    s.TextDocuments(sentries)
   }
 
   def save(append: Boolean): Unit = {

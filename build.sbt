@@ -73,30 +73,15 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== SEMANTICDB ======================== **/
 
-lazy val semanticdb2 = crossProject
+lazy val semanticdb3 = crossProject
   .crossType(CrossType.Pure)
-  .in(file("semanticdb/semanticdb2"))
+  .in(file("semanticdb/semanticdb3"))
   .settings(
     publishableSettings,
-    // Protobuf setup for binary serialization.
-    PB.targets.in(Compile) := Seq(
-      scalapb.gen(
-        flatPackage = true // Don't append filename to package
-      ) -> sourceManaged.in(Compile).value
-    ),
-    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb2/")),
-    PB.runProtoc in Compile := {
-      val isNixOS = sys.props.get("java.home").map(_.startsWith("/nix/store")).getOrElse(false)
-      if (isNixOS) {
-        // must have protoc installed
-        // nix-env -i protobuf-3.3.0
-        (args => Process("protoc", args)!)
-      } else {
-        (PB.runProtoc in Compile).value
-      }
-    },
-    libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
-    mimaPreviousArtifacts := Set()
+    ignoreMimaSettings,
+    protobufSettings,
+    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3")),
+    version := "3.0.0"
   )
   .jvmSettings(
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
@@ -104,8 +89,75 @@ lazy val semanticdb2 = crossProject
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
-lazy val semanticdb2JVM = semanticdb2.jvm
-lazy val semanticdb2JS = semanticdb2.js
+lazy val semanticdb3JVM = semanticdb3.jvm
+lazy val semanticdb3JS = semanticdb3.js
+
+lazy val semanticdbScalacCore = project
+  .in(file("semanticdb/scalac/library"))
+  .settings(
+    publishableSettings,
+    fullCrossVersionSettings,
+    ignoreMimaSettings,
+    moduleName := "semanticdb-scalac-core",
+    description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+  )
+  .dependsOn(scalametaJVM)
+
+lazy val semanticdbScalacPlugin = project
+  .in(file("semanticdb/scalac/plugin"))
+  .settings(
+    moduleName := "semanticdb-scalac",
+    description := "Scalac 2.x compiler plugin that generates SemanticDB on compile",
+    publishableSettings,
+    mergeSettings,
+    fullCrossVersionSettings,
+    ignoreMimaSettings,
+    pomPostProcess := { node =>
+      new RuleTransformer(new RewriteRule {
+        private def isAbsorbedDependency(node: XmlNode): Boolean = {
+          def isArtifactId(node: XmlNode, fn: String => Boolean) =
+            node.label == "artifactId" && fn(node.text)
+          node.label == "dependency" && node.child.exists(child =>
+            isArtifactId(child, _.startsWith("semanticdb-scalac-core")))
+        }
+        override def transform(node: XmlNode): XmlNodeSeq = node match {
+          case e: Elem if isAbsorbedDependency(node) =>
+            Comment("the dependency that was here has been absorbed via sbt-assembly")
+          case _ => node
+        }
+      }).transform(node).head
+    }
+  )
+  .dependsOn(semanticdbScalacCore)
+
+lazy val metac = project
+  .in(file("semanticdb/metac"))
+  .settings(
+    publishableSettings,
+    ignoreMimaSettings,
+    description := "Scalac 2.x launcher that generates SemanticDB on compile",
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+    mainClass := Some("scala.meta.cli.Metac")
+  )
+  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
+  .disablePlugins(BackgroundRunPlugin)
+  .dependsOn(semanticdbScalacPlugin)
+
+lazy val metap = crossProject
+  .crossType(CrossType.Pure)
+  .in(file("semanticdb/metap"))
+  .settings(
+    publishableSettings,
+    ignoreMimaSettings,
+    description := "SemanticDB decompiler",
+    mainClass := Some("scala.meta.cli.Metap")
+  )
+  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
+  .disablePlugins(BackgroundRunPlugin)
+  .dependsOn(semanticdb3)
+lazy val metapJVM = metap.jvm
+lazy val metapJS = metap.js
 
 /** ======================== LANGMETA ======================== **/
 
@@ -121,7 +173,7 @@ lazy val langmeta = crossProject
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
-  .dependsOn(semanticdb2)
+  .dependsOn(semanticdb3)
 lazy val langmetaJVM = langmeta.jvm
 lazy val langmetaJS = langmeta.js
 
@@ -170,6 +222,16 @@ lazy val inputs = crossProject
   .dependsOn(langmeta, common, io)
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
+
+lazy val interactive = project
+  .in(file("scalameta/interactive"))
+  .settings(
+    publishableSettings,
+    ignoreMimaSettings,
+    description := "Scalameta APIs for interactive building of SemanticDB",
+    enableMacros
+  )
+  .dependsOn(semanticdbScalacCore)
 
 lazy val parsers = crossProject
   .in(file("scalameta/parsers"))
@@ -281,51 +343,12 @@ lazy val contrib = crossProject
 lazy val contribJVM = contrib.jvm
 lazy val contribJS = contrib.js
 
-lazy val semanticdbScalacCore = project
-  .in(file("scalameta/semanticdb-scalac-core"))
-  .settings(
-    moduleName := "semanticdb-scalac-core",
-    description := "Library to generate semanticdb from Scala 2.x internal data structures",
-    publishableSettings,
-    mimaPreviousArtifacts := Set.empty,
-    isFullCrossVersion,
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
-  )
-  .dependsOn(scalametaJVM)
-
-lazy val semanticdbScalacPlugin = project
-  .in(file("scalameta/semanticdb-scalac-plugin"))
-  .settings(
-    moduleName := "semanticdb-scalac",
-    description := "Scala 2.x compiler plugin that generates semanticdb on compile",
-    publishableSettings,
-    mergeSettings,
-    isFullCrossVersion,
-    mimaPreviousArtifacts := Set.empty,
-    pomPostProcess := { node =>
-      new RuleTransformer(new RewriteRule {
-        private def isAbsorbedDependency(node: XmlNode): Boolean = {
-          def isArtifactId(node: XmlNode, fn: String => Boolean) =
-            node.label == "artifactId" && fn(node.text)
-          node.label == "dependency" && node.child.exists(child =>
-            isArtifactId(child, _.startsWith("semanticdb-scalac-core")))
-        }
-        override def transform(node: XmlNode): XmlNodeSeq = node match {
-          case e: Elem if isAbsorbedDependency(node) =>
-            Comment("the dependency that was here has been absorbed via sbt-assembly")
-          case _ => node
-        }
-      }).transform(node).head
-    }
-  )
-  .dependsOn(semanticdbScalacCore)
-
 /** ======================== TESTS ======================== **/
 
 lazy val semanticdbIntegration = project
-  .in(file("scalameta/semanticdb-integration"))
+  .in(file("semanticdb/integration"))
   .settings(
-    description := "Sources to compile to build a semanticdb for tests.",
+    description := "Sources to compile to build SemanticDB for tests.",
     sharedSettings,
     nonPublishableSettings,
     scalacOptions -= "-Xfatal-warnings",
@@ -371,8 +394,12 @@ lazy val tests = crossProject
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
     exposePaths("tests", Test),
-    exposePaths("semanticdb-scalac-plugin", Test),
     compile.in(Test) := compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
+    fullClasspath.in(Test) := {
+      val semanticdbScalacJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+      sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
+      fullClasspath.in(Test).value
+    },
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,
       "databaseSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
@@ -381,9 +408,9 @@ lazy val tests = crossProject
     buildInfoPackage := "scala.meta.tests",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
-  .jvmConfigure(_.dependsOn(testkit, semanticdbScalacCore))
+  .jvmConfigure(_.dependsOn(testkit, interactive, metac))
   .enablePlugins(BuildInfoPlugin)
-  .dependsOn(scalameta, contrib)
+  .dependsOn(scalameta, contrib, metap)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
 
@@ -481,6 +508,26 @@ lazy val mergeSettings = Def.settings(
   }
 )
 
+lazy val protobufSettings = Def.settings(
+  sharedSettings,
+  PB.targets.in(Compile) := Seq(
+    scalapb.gen(
+      flatPackage = true // Don't append filename to package
+    ) -> sourceManaged.in(Compile).value
+  ),
+  PB.runProtoc in Compile := {
+    val isNixOS = sys.props.get("java.home").map(_.startsWith("/nix/store")).getOrElse(false)
+    if (isNixOS) {
+      // must have protoc installed
+      // nix-env -i protobuf-3.3.0
+      (args => Process("protoc", args)!)
+    } else {
+      (PB.runProtoc in Compile).value
+    }
+  },
+  libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
+)
+
 lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
 lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
 lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
@@ -569,7 +616,11 @@ lazy val nonPublishableSettings = Seq(
   publish := {}
 )
 
-lazy val isFullCrossVersion = Seq(
+lazy val ignoreMimaSettings = Seq(
+  mimaPreviousArtifacts := Set.empty
+)
+
+lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,
   unmanagedSourceDirectories.in(Compile) += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
