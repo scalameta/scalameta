@@ -16,7 +16,7 @@ Names:
 [103..106): Int => _root_.scala.Int#
 [107..107): ε => _root_.scala.collection.mutable.Stack#`<init>`()V.
 [116..120): main <= _root_.example.Example.main([Ljava/lang/String;)V.
-[121..125): args <= _root_.example.Example.main([Ljava/lang/String;)V.(args)
+[121..125): args <= local0
 [127..132): Array => _root_.scala.Array#
 [133..139): String => _root_.scala.Predef.String#
 [143..147): Unit => _root_.scala.Unit#
@@ -38,9 +38,6 @@ _root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[Str
   [7..12): Array => _root_.scala.Array#
   [13..19): String => _root_.scala.Predef.String#
   [23..27): Unit => _root_.scala.Unit#
-_root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: Array[String]
-  [0..5): Array => _root_.scala.Array#
-  [6..12): String => _root_.scala.Predef.String#
 _root_.example.Example.x. => val x: ClassTag[Int]
   [0..8): ClassTag => _root_.scala.reflect.ClassTag#
   [9..12): Int => _root_.scala.Int#
@@ -76,9 +73,10 @@ _root_.scala.concurrent. => package concurrent
 _root_.scala.reflect. => package reflect
 _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;. => def classTag: [T] => (implicit ctag: ClassTag[T]): ClassTag[T]
   [23..31): ClassTag => _root_.scala.reflect.ClassTag#
-  [32..33): T => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.[T]
   [37..45): ClassTag => _root_.scala.reflect.ClassTag#
-  [46..47): T => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.[T]
+local0 => param args: Array[String]
+  [0..5): Array => _root_.scala.Array#
+  [6..12): String => _root_.scala.Predef.String#
 
 Synthetics:
 [208..208): *(((ClassTag.Int): ClassTag[Int]))
@@ -149,9 +147,7 @@ _root_.example.Synthetic#`<init>`()V. => primaryctor <init>: (): Synthetic
 _root_.scala.Array. => final object Array
 _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;. => def empty: [T] => (implicit evidence$1: ClassTag[T]): Array[T]
   [29..37): ClassTag => _root_.scala.reflect.ClassTag#
-  [38..39): T => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.[T]
   [43..48): Array => _root_.scala.Array#
-  [49..50): T => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.[T]
 _root_.scala.Int# => abstract final class Int
 _root_.scala.Int#`+`(I)I. => abstract def +: (x: Int): Int
   [4..7): Int => _root_.scala.Int#
@@ -164,13 +160,9 @@ _root_.scala.collection.TraversableLike#headOption()Lscala/Option;. => def headO
 _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;. => final def map: [B, That] => (f: Function1[A, B])(implicit bf: CanBuildFrom[List[A], B, That]): That
   [17..26): Function1 => _root_.scala.Function1#
   [27..28): A => _root_.scala.collection.immutable.List#[A]
-  [30..31): B => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[B]
   [47..59): CanBuildFrom => _root_.scala.collection.generic.CanBuildFrom#
   [60..64): List => _root_.scala.collection.immutable.List#
   [65..66): A => _root_.scala.collection.immutable.List#[A]
-  [69..70): B => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[B]
-  [72..76): That => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[That]
-  [80..84): That => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[That]
 _root_.scala.collection.immutable.List. => final object List
 _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;. => def stripPrefix: (prefix: String): String
   [9..15): String => _root_.scala.Predef.String#

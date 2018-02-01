@@ -69,9 +69,6 @@ class CliSuite extends FunSuite with DiffAssertions {
       |  [0:7..0:12): Array => _root_.scala.Array#
       |  [0:13..0:19): String => _root_.scala.Predef.String#
       |  [0:23..0:27): Unit => _root_.scala.Unit#
-      |_empty_.HelloWorld.main([Ljava/lang/String;)V.(args) => param args: Array[String]
-      |  [0:0..0:5): Array => _root_.scala.Array#
-      |  [0:6..0:12): String => _root_.scala.Predef.String#
       |_root_.scala.Array# => final class Array
       |_root_.scala.Array#`<init>`(I)V. => primaryctor <init>: (_length: Int): Array[T]
       |  [0:10..0:13): Int => _root_.scala.Int#
@@ -85,11 +82,14 @@ class CliSuite extends FunSuite with DiffAssertions {
       |_root_.scala.Unit# => abstract final class Unit
       |_root_.scala.Unit#`<init>`()V. => primaryctor <init>: (): Unit
       |  [0:4..0:8): Unit => _root_.scala.Unit#
+      |local0 => param args: Array[String]
+      |  [0:0..0:5): Array => _root_.scala.Array#
+      |  [0:6..0:12): String => _root_.scala.Predef.String#
       |
       |Occurrences:
       |[1:11..1:21): HelloWorld <= _empty_.HelloWorld.
       |[2:10..2:14): main <= _empty_.HelloWorld.main([Ljava/lang/String;)V.
-      |[2:15..2:19): args <= _empty_.HelloWorld.main([Ljava/lang/String;)V.(args)
+      |[2:15..2:19): args <= local0
       |[2:21..2:26): Array => _root_.scala.Array#
       |[2:27..2:33): String => _root_.scala.Predef.String#
       |[2:37..2:41): Unit => _root_.scala.Unit#

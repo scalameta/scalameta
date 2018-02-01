@@ -23,8 +23,9 @@ trait SymbolOps { self: DatabaseOps =>
           def definitelyLocal =
             sym == g.NoSymbol ||
               sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
-              (sym.owner.isMethod && !sym.isParameter) ||
-              ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter)
+              sym.owner.isMethod ||
+              sym.owner.isAliasType ||
+              sym.owner.isAbstractType
           !definitelyGlobal && (definitelyLocal || isLocal(sym.owner))
         }
         if (isLocal(sym)) {
