@@ -181,6 +181,14 @@ For example, `x` in `def identity[T](x: T): T` may be modelled by local symbols
 the underlying document. The same logic applies to the type parameter `T`,
 which is also a local definition.
 
+**Multi symbols**. Are used to model references to a set of multiple definitions at once.
+This is occasionally useful to support corner cases of Scala, e.g. identifiers
+in imports that can refer to both a class and an object with the same name,
+or references to unresolved overloaded methods.
+
+Multi symbol format is a concatentation of the underlying symbol formats
+interspersed with a semicolon (`;`). The order of concatenation is unspecified.
+
 **Placeholder symbols**. Are used to model original snippets of code in [Synthetics](#synthetic).
 Must not be used outside `Synthetic.text` documents. Placeholder symbols are
 always equal to an asterisk (`*`).
