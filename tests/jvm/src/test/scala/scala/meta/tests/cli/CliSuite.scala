@@ -3,6 +3,7 @@ package scala.meta.tests.cli
 import java.io._
 import java.nio.charset.StandardCharsets._
 import java.nio.file._
+import scala.util.Properties.versionNumberString
 import org.scalatest.FunSuite
 import scala.meta.cli._
 import scala.meta.testkit.DiffAssertions
@@ -45,11 +46,16 @@ class CliSuite extends FunSuite with DiffAssertions {
   }
 
   test("metap " + helloWorldSemanticdb) {
+    val language = {
+      if (versionNumberString.startsWith("2.11")) "Scala211"
+      else if (versionNumberString.startsWith("2.12")) "Scala212"
+      else sys.error(s"unsupported Scala version: $versionNumberString")
+    }
     val (exitcode, output) = communicate {
       Metap.process(Array(helloWorldSemanticdb.toString))
     }
     assert(exitcode == 0)
-    assertNoDiff(output, """
+    assertNoDiff(output, s"""
       |HelloWorld.scala
       |----------------
       |
@@ -57,7 +63,7 @@ class CliSuite extends FunSuite with DiffAssertions {
       |Format => semanticdb3
       |Uri => HelloWorld.scala
       |Text => non-empty
-      |Language => Scala212
+      |Language => $language
       |Symbols => 9 entries
       |Occurrences => 7 entries
       |Diagnostics => 0 entries
