@@ -1,0 +1,65 @@
+
+Ô#
+!'_root_.scala.Predef.String#
+_root_.a.User#(name)7
+-_root_.a.User#`<init>`(Ljava/lang/String;I)V.
+;<_root_.a.a.
+EF_root_.a.a.x.5
+~â*src/main/scala/example/User.scala@122..145
+.1_root_.scala.Int#
+`a_root_.a.a.x.,
+¥∫"_root_.java.lang.String#length()I.
+		_root_.a.
+),_root_.a.User#(age)=
+ci5_root_.scala.collection.LinearSeqOptimized#length()I.4
+®≥*src/main/scala/example/User.scala@122..145
+pq_root_.a.a.z()I.
+_root_.a.User#
+TU_root_.a.a.y./
+X\'_root_.scala.collection.immutable.List."
+	_root_.a.ÄàÄa"L
+_root_.a.User#(name)4ÅnameString"!
+_root_.scala.Predef.String#"Q
+_root_.scala.Predef.String#2@StringString"
+_root_.java.lang.String#"7
+_root_.a.a.z()I.#zInt"
+_root_.scala.Int#">
+_root_.a.a.x.-xString"
+_root_.java.lang.String#"¥
+-_root_.a.User#`<init>`(Ljava/lang/String;I)V.Ç<init>(name: String, age: Int): User"#
+_root_.scala.Predef.String#"
+_root_.scala.Int#"
+_root_.a.User#"
+_root_.a.User#Ä†ÄUser"a
+5_root_.scala.collection.LinearSeqOptimized#length()I.(lengthInt"
+_root_.scala.Int#"W
+"_root_.java.lang.String#length()I.1ÑÄÄlength(): Int"
+_root_.scala.Int#"4
+_root_.a.a.y.#yInt"
+_root_.scala.Int#"5
+'_root_.scala.collection.immutable.List.
+ÄÑList"e
+*src/main/scala/example/User.scala@122..1457localSymbolString"
+_root_.java.lang.String#"
+_root_.a.a.ÄÑa"O
+_root_.scala.Int#`<init>`()V..<init>(): Int"
+_root_.scala.Int#"=
+_root_.a.User#(age)&ÅageInt"
+_root_.scala.Int#"
+_root_.scala.Int#	Ä†Int2Æ
+\\*.apply[Any]
+_star_.n
+f_root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
+_root_.scala.Any#:Scala212B¡package a
+
+case class User(name: String, age: Int)
+
+object a {
+  val x = "ba"
+  val y = List(1, x).length
+  def z = {
+    val localSymbol = "222" // can be renamed
+    localSymbol.length
+  }
+}
+J!src/main/scala/example/User.scala

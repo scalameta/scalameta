@@ -79,7 +79,9 @@ lazy val semanticdb3 = crossProject
   .settings(
     publishableSettings,
     protobufSettings,
-    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3")),
+    PB.protoSources.in(Compile) := Seq(
+      file("semanticdb/semanticdb3")
+    ),
     version := "3.1.0"
   )
   .jvmSettings(
@@ -164,6 +166,10 @@ lazy val langmeta = crossProject
   .in(file("langmeta/langmeta"))
   .settings(
     publishableSettings,
+    protobufSettings,
+    PB.protoSources.in(Compile) := Seq(
+      file("semanticdb/semanticdb2")
+    ),
     description := "Langmeta umbrella module that includes all public APIs"
   )
   .jvmSettings(
