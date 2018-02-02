@@ -126,10 +126,31 @@ Names:
 [290..291): Y <= _root_.flags.p.package.Y#
 [291..291): ε <= _root_.flags.p.package.Y#`<init>`()V.
 [307..308): Z <= _root_.flags.p.package.Z#
+[317..319): AA <= _root_.flags.p.package.AA#
+[319..319): ε <= _root_.flags.p.package.AA#`<init>`(III)V.
+[320..321): x <= _root_.flags.p.package.AA#(x)
+[323..326): Int => _root_.scala.Int#
+[332..333): y <= _root_.flags.p.package.AA#(y)
+[335..338): Int => _root_.scala.Int#
+[344..345): z <= _root_.flags.p.package.AA#(z)
+[347..350): Int => _root_.scala.Int#
 
 Symbols:
 _root_.flags. => package flags.{+1 members}
 _root_.flags.p.package. => packageobject package
+_root_.flags.p.package.AA# => class AA
+_root_.flags.p.package.AA#(x) => param x: Int
+  [0..3): Int => _root_.scala.Int#
+_root_.flags.p.package.AA#(y) => val param y: Int
+  [0..3): Int => _root_.scala.Int#
+_root_.flags.p.package.AA#(z) => var param z_=: (x$1: Int): Unit
+  [6..9): Int => _root_.scala.Int#
+  [12..16): Unit => _root_.scala.Unit#
+_root_.flags.p.package.AA#`<init>`(III)V. => primaryctor <init>: (x: Int, y: Int, z: Int): AA
+  [4..7): Int => _root_.scala.Int#
+  [12..15): Int => _root_.scala.Int#
+  [20..23): Int => _root_.scala.Int#
+  [26..28): AA => _root_.flags.p.package.AA#
 _root_.flags.p.package.C# => abstract class C
 _root_.flags.p.package.C#(x) => param x: T
   [0..1): T => _root_.flags.p.package.C#[T]

@@ -136,6 +136,8 @@ package object semanticdb {
               if (stest(p.CASE.value)) dflip(d.CASE)
               if (stest(p.COVARIANT.value)) dflip(d.COVARIANT)
               if (stest(p.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
+              if (stest(p.VALPARAM.value)) dflip(d.VAL)
+              if (stest(p.VARPARAM.value)) dflip(d.VAR)
               dflags
             }
             val dname = sname
@@ -256,8 +258,8 @@ package object semanticdb {
               val slanguage = dlanguage
               def dtest(bit: Long) = (ddenot.flags & bit) == bit
               val skind = {
-                if (dtest(d.VAL)) k.VAL
-                else if (dtest(d.VAR)) k.VAR
+                if (dtest(d.VAL) && !dtest(d.PARAM)) k.VAL
+                else if (dtest(d.VAR) && !dtest(d.PARAM)) k.VAR
                 else if (dtest(d.DEF)) k.DEF
                 else if (dtest(d.PRIMARYCTOR)) k.PRIMARY_CONSTRUCTOR
                 else if (dtest(d.SECONDARYCTOR)) k.SECONDARY_CONSTRUCTOR
@@ -285,6 +287,8 @@ package object semanticdb {
                 if (dtest(d.CASE)) sflip(p.CASE.value)
                 if (dtest(d.COVARIANT)) sflip(p.COVARIANT.value)
                 if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT.value)
+                if (dtest(d.VAL) && dtest(d.PARAM)) sflip(p.VALPARAM.value)
+                if (dtest(d.VAR) && dtest(d.PARAM)) sflip(p.VARPARAM.value)
                 sproperties
               }
               val sname = ddenot.name

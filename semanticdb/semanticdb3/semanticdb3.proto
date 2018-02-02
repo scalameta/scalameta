@@ -59,6 +59,8 @@ message SymbolInformation {
     CASE = 0x80;
     COVARIANT = 0x100;
     CONTRAVARIANT = 0x200;
+    VALPARAM = 0x400;
+    VARPARAM = 0x800;
   }
   string symbol = 1;
   string language = 2;

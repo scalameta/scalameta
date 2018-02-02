@@ -1,4 +1,4 @@
-# SemanticDB Specification, Version 3.0.0
+# SemanticDB Specification, Version 3.1.0
 
   * [Motivation](#motivation)
   * [Data Model](#data-model)
@@ -13,6 +13,7 @@
     * [Protobuf](#protobuf)
   * [Changelog](#changelog)
     * [3.0.0](#300)
+    * [3.1.0](#310)
 
 ## Motivation
 
@@ -343,6 +344,16 @@ or features from other languages.
     <td><code>CONTRAVARIANT</code></td>
     <td>Has a contravariant (<code>-</code>) modifier?</td>
   </tr>
+  <tr>
+    <td><code>0x400</code></td>
+    <td><code>VALPARAM</code></td>
+    <td>Is a `val` parameter of a primary constructor?</td>
+  </tr>
+  <tr>
+    <td><code>0x800</code></td>
+    <td><code>VARPARAM</code></td>
+    <td>Is a `var` parameter of a primary constructor?</td>
+  </tr>
 </table>
 
 `name`. String that represents the name of the symbol.
@@ -488,6 +499,9 @@ in the future, but this is highly unlikely.
 [semanticdb3.proto][semanticdb3.proto]
 
 ## Changelog
+
+### 3.1.0
+  * Added SymbolInformation.Property.{VALPARAM/VARPARAM}.
 
 ### 3.0.0
   * Codified the first specification of SemanticDB.
