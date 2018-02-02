@@ -19,6 +19,10 @@ object Symbol {
     override def toString = syntax
     override def syntax = id
     override def structure = s"""Symbol.Local("$id")"""
+    // Local symbols have reference equality because two local symbols from
+    // different source files can have the same id (for example, local0).
+    override def equals(obj: scala.Any): Boolean = this.eq(obj.asInstanceOf[AnyRef])
+    override def hashCode(): Int = System.identityHashCode(this)
   }
 
   final case class Global(owner: Symbol, signature: Signature) extends Symbol {

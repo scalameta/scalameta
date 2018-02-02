@@ -3,6 +3,9 @@ package semanticdb
 
 import scala.meta._
 import scala.meta.internal.semanticdb.scalac._
+import org.langmeta.internal.io.PathIO
+import org.langmeta.io.Sourcepath
+import org.scalameta.logger
 
 // Contributing tips:
 // - Create another suite like YYY.scala that extends DatabaseSuite,
@@ -91,10 +94,9 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |object M {
       |  val u: User = ???
       |  u.<<copy>>(<<age>> = 43)
-      |}
-    """.trim.stripMargin, { (db, copy, age) =>
+      |} """.trim.stripMargin, { (db, copy, age) =>
       assert(copy === Symbol("_root_.e.User#copy(Ljava/lang/String;I)Le/User;."))
-      assert(age === Symbol("local0"))
+      assert(age.syntax === "local0") // local symbols have reference equality
     }
   )
 
@@ -1153,6 +1155,31 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
           |  [12..16): Self => _root_.am.A#Self#
         """.stripMargin
       )
+    }
+  )
+
+  targeted(
+    """package an
+      |object A {
+      |  locally {
+      |    val <<x>> = 2
+      |    <<x>> + 1
+      |  }
+      |}
+      |
+    """.stripMargin, { (db, x1, x2) =>
+      // assert local symbols obey reference equality.
+      assert(x1.syntax == "local0")
+      assert(x1 != Symbol("local0"))
+      assert(x1 == x2)
+      assert(x1 eq x2)
+      import org.langmeta.internal.semanticdb._
+      val roundtripped = db.toSchema(sourceroot).toDb(Some(Sourcepath(sourceroot)))
+      val List(x3, x4) = roundtripped.names.filter(_.symbol.syntax == "local0").map(_.symbol)
+      assert(x1 != x3)
+      assert(x2 != x4)
+      assert(x3 == x4)
+      assert(x3 eq x4)
     }
   )
 }

@@ -1,12 +1,11 @@
 package org.langmeta.semanticdb
 
 import scala.compat.Platform.EOL
-import org.langmeta.inputs._
 import org.langmeta.io._
 import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb._
 import org.langmeta.internal.semanticdb.{vfs => v}
-import scala.meta.internal.{semanticdb3 => s}
+import org.langmeta.internal.semanticdb.vfs.Entry
 
 final case class Database(documents: Seq[Document]) {
   lazy val names: Seq[ResolvedName] = documents.flatMap(_.names)
@@ -48,8 +47,8 @@ object Database {
   }
 
   def load(bytes: Array[Byte]): Database = {
-    val sdocs = s.TextDocuments.parseFrom(bytes)
-    val mdb = sdocs.mergeDiagnosticOnlyDocuments.toDb(None)
-    mdb
+    val ventry =
+      Entry.InMemory(Fragment(PathIO.workingDirectory, RelativePath("(in-memory)")), bytes)
+    v.Database(ventry :: Nil).toSchema.toDb(None)
   }
 }
