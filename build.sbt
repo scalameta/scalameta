@@ -227,6 +227,7 @@ lazy val interactive = project
   .in(file("scalameta/interactive"))
   .settings(
     publishableSettings,
+    fullCrossVersionSettings,
     ignoreMimaSettings,
     description := "Scalameta APIs for interactive building of SemanticDB",
     enableMacros
