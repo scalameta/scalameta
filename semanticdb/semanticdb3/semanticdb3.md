@@ -1,4 +1,4 @@
-# SemanticDB Specification, Version 3
+# SemanticDB Specification, Version 3.1.0
 
   * [Motivation](#motivation)
   * [Data Model](#data-model)
@@ -11,6 +11,9 @@
     * [Synthetic](#synthetic)
   * [Data Schemas](#data-schemas)
     * [Protobuf](#protobuf)
+  * [Changelog](#changelog)
+    * [3.0.0](#300)
+    * [3.1.0](#310)
 
 ## Motivation
 
@@ -341,6 +344,16 @@ or features from other languages.
     <td><code>CONTRAVARIANT</code></td>
     <td>Has a contravariant (<code>-</code>) modifier?</td>
   </tr>
+  <tr>
+    <td><code>0x400</code></td>
+    <td><code>VALPARAM</code></td>
+    <td>Is a `val` parameter of a primary constructor?</td>
+  </tr>
+  <tr>
+    <td><code>0x800</code></td>
+    <td><code>VARPARAM</code></td>
+    <td>Is a `var` parameter of a primary constructor?</td>
+  </tr>
 </table>
 
 `name`. String that represents the name of the symbol.
@@ -484,6 +497,21 @@ in the future, but this is highly unlikely.
 ### Protobuf
 
 [semanticdb3.proto][semanticdb3.proto]
+
+## Changelog
+
+### 3.1.0
+  * Added SymbolInformation.Property.{VALPARAM/VARPARAM}.
+
+### 3.0.0
+  * Codified the first specification of SemanticDB.
+    Previously (in Scalameta 1.x and 2.x), SemanticDB was loosely specified by
+    [an internal protobuf schema][semanticdb2.proto] and the reference
+    implementation in `semanticdb-scalac`.
+  * Changed the package of the protobuf schema to `scala.meta.internal.semanticdb3`.
+  * Significantly changed the schema to perform long-awaited cleanups and ensure
+    consistency with LSP [\[2\]][2]. Some changes were
+    inspired by the design of Index-While-Building in Clang [[23][23], [24][24]].
 
 [semanticdb2.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb2/semanticdb2.proto
 [semanticdb3.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb3/semanticdb3.proto

@@ -14,4 +14,5 @@ package object p {
   case object X
   final class Y
   sealed trait Z
+  class AA(x: Int, val y: Int, var z: Int)
 }
