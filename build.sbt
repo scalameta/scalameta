@@ -78,7 +78,6 @@ lazy val semanticdb3 = crossProject
   .in(file("semanticdb/semanticdb3"))
   .settings(
     publishableSettings,
-    ignoreMimaSettings,
     protobufSettings,
     PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3")),
     version := "3.1.0"
@@ -228,7 +227,6 @@ lazy val interactive = project
   .settings(
     publishableSettings,
     fullCrossVersionSettings,
-    ignoreMimaSettings,
     description := "Scalameta APIs for interactive building of SemanticDB",
     enableMacros
   )
@@ -552,8 +550,8 @@ lazy val publishableSettings = Def.settings(
     false
   },
   mimaPreviousArtifacts := {
-    // Compare against 2.0.0 throughtout the 2.x series.
-    val stableVersion = "2.0.0"
+    // Compare against 3.0.0 throughtout the 3.x series.
+    val stableVersion = "3.0.0"
     val binaryVersion = scalaBinaryVersion.value
     Set(
       organization.value % s"${moduleName.value}_$binaryVersion" % stableVersion
