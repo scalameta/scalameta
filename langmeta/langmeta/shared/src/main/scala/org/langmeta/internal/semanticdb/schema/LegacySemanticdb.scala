@@ -1,13 +1,29 @@
 package org.langmeta.internal.semanticdb.schema
 
 import org.langmeta.inputs
-
 import org.{langmeta => d}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
+import com.google.protobuf.InvalidProtocolBufferException
 
 object LegacySemanticdb {
+
+  /**
+   * Returns semanticdb3 TextDocuments from both modern and legacy payloads.
+   *
+   * Tries first to use semanticdb3 schema with fallback to the legacy
+   * Database in case of decoding error.
+   */
+  def toTextDocuments(bytes: Array[Byte]): s.TextDocuments = {
+    try {
+      s.TextDocuments.parseFrom(bytes)
+    } catch {
+      case _: InvalidProtocolBufferException =>
+        val db = Database.parseFrom(bytes)
+        toTextDocuments(db)
+    }
+  }
 
   def toTextDocuments(database: Database): s.TextDocuments = {
     val documents = database.documents.map(toTextDocument)
@@ -28,7 +44,7 @@ object LegacySemanticdb {
       else if (symbol.startsWith("_empty_")) symbol
       else if (symbol.startsWith("_star_")) symbol
       // Convert old-style local symbol to new-style local symbol.
-      else "local" + symbol.replace('/', '_').replace('.', '_').replace('@', '_')
+      else "local_" + symbol.replace('/', '_').replace('.', '_').replace('@', '_')
     }
 
     val occurences = document.names.map { name =>

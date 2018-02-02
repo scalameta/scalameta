@@ -11,7 +11,7 @@ import org.scalatest.FunSuite
 class LegacySemanticdbSuite extends FunSuite with DiffAssertions {
   test("Database.load(Legacy)") {
     val bytes =
-      InputStreamIO.readBytes(this.getClass.getClassLoader.getResourceAsStream("User.semanticdb"))
+      InputStreamIO.readBytes(this.getClass.getClassLoader.getResourceAsStream("Legacy.semanticdb"))
     val obtained = Database.load(bytes).syntax
     assertNoDiff(
       obtained,
@@ -36,8 +36,8 @@ class LegacySemanticdbSuite extends FunSuite with DiffAssertions {
         |[96..97): x => _root_.a.a.x.
         |[99..105): length => _root_.scala.collection.LinearSeqOptimized#length()I.
         |[112..113): z <= _root_.a.a.z()I.
-        |[126..137): localSymbol <= localsrc_main_scala_example_User_scala_122__145
-        |[168..179): localSymbol => localsrc_main_scala_example_User_scala_122__145
+        |[126..137): localSymbol <= local_src_main_scala_example_User_scala_122__145
+        |[168..179): localSymbol => local_src_main_scala_example_User_scala_122__145
         |[180..186): length => _root_.java.lang.String#length()I.
         |
         |Symbols:
@@ -68,7 +68,7 @@ class LegacySemanticdbSuite extends FunSuite with DiffAssertions {
         |_root_.scala.collection.LinearSeqOptimized#length()I. => def length: Int
         |  [0..3): Int => _root_.scala.Int#
         |_root_.scala.collection.immutable.List. => final object List
-        |localsrc_main_scala_example_User_scala_122__145 => val localSymbol: String
+        |local_src_main_scala_example_User_scala_122__145 => val localSymbol: String
         |  [0..6): String => _root_.java.lang.String#
         |
         |Synthetics:
