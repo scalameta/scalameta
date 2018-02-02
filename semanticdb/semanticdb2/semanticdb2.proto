@@ -60,3 +60,17 @@ message Synthetic {
   string text = 2;
   repeated ResolvedName names = 3;
 }
+
+message LegacyTextDocuments {
+  LegacyTextDocument documents = 1;
+}
+
+message LegacyTextDocument {
+  LegacySchema schema = 1;
+}
+
+enum LegacySchema {
+  LEGACY = 0;
+  SEMANTICDB3 = 3;
+}
+
