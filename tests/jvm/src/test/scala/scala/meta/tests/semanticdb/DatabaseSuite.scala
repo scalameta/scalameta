@@ -18,6 +18,9 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
                              overrides: OverrideMode = OverrideMode.None)
     extends FunSuite
     with DiffAssertions { self =>
+
+  var sourceroot: AbsolutePath = _
+
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
@@ -56,7 +59,8 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
     finally writer.close()
-    databaseOps.config.setSourceroot(AbsolutePath(javaFile.getParentFile))
+    sourceroot = AbsolutePath(javaFile.getParentFile)
+    databaseOps.config.setSourceroot(sourceroot)
     val run = new g.Run
     val abstractFile = AbstractFile.getFile(javaFile)
     val sourceFile = g.getSourceFile(abstractFile)
