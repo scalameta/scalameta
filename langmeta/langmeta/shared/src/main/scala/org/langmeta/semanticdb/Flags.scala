@@ -79,6 +79,7 @@ private[semanticdb] trait HasFlags {
     if (hasFlag(COVARIANT)) append("COVARIANT")
     if (hasFlag(CONTRAVARIANT)) append("CONTRAVARIANT")
     if (hasFlag(INLINE)) append("INLINE")
+    if (hasFlag(JAVADEFINED)) append("JAVADEFINED")
     if (hasFlag(VAL)) append("VAL")
     if (hasFlag(VAR)) append("VAR")
     if (hasFlag(DEF)) append("DEF")
