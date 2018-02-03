@@ -162,15 +162,29 @@ of the corresponding global definition, where:
     `_root_` (the special root package [\[18\]][18]). For example,
     for the standard `Int` class, the owner chain is `[_root_, scala, Int]`.
   * The signature of a definition is:
-    * For a method, concatenation of its name, its JVM method descriptor [\[19\]][19]
-      and a dot (`.`). The JVM method descriptor is used to distinguish
-      overloaded methods as mandated by the Scala Language Specification [\[20\]][20].
-      For any other term definition (package, object, val or var),
-      concatenation of its name and a dot (`.`).
-    * For a type definition (class, type alias or type member),
-      concatentation of its name and a pound sign (`#`).
+    * For a val, var, object, package or package object, concatenation of its
+    encoded name and a dot (`.`).
+    * For a method, primary constructor, secondary constructor or macro,
+    concatenation of its encoded name, its JVM method descriptor [\[19\]][19]
+    and a dot (`.`). The JVM method descriptor is used to distinguish overloaded
+    methods as mandated by the Scala Language Specification [\[20\]][20].
+    * For an abstract type, type alias, class or trait, concatenation of its
+    encoded name and a pound sign (`#`).
+    * For a parameter, concatenation of a left parenthesis (`(`), its
+    encoded name and a right parenthesis (`)`).
+    * For a type parameter, concatenation of an left bracket (`[`), its
+    encoded name and a right bracket (`]`).
+  * The encoded name of a definition is:
+    * For a Java identifier [\[25\]][25], the name itself.
+    * Otherwise, concatenation of a backtick (`````), the name itself and
+    another backtick (`````).
 
-For example, the standard `Int` class must be modelled by a global symbol `_root_.scala.Int#`.
+For example, this is how some of the definitions from the Scala standard library
+must be modelled:
+  * The `scala` package: `_root_.scala.`
+  * The `Int` class: `_root_.scala.Int#`
+  * The single-parameter `println` method: `_root_.scala.Predef.println(Ljava/lang/Object;)V.`
+  * The integer addition method: ``_root_.scala.Int#`+`(I)I.``.
 
 Global symbols must be unique across the universe of documents that
 a tool is working with at any given time. For example, if in such a universe,
@@ -554,6 +568,7 @@ in the future, but this is highly unlikely.
     to be defined in that document.
   * Explained uniqueness guarantees for symbols.
   * Specified the order of underlying symbols in multi symbols.
+  * Synchronized the specification and the implementation of global symbol format.
 
 ### 3.0.0
   * Codified the first specification of SemanticDB.
@@ -591,3 +606,4 @@ in the future, but this is highly unlikely.
 [22]: http://scalamacros.org/paperstalks/2016-02-11-WhatDidWeLearnInScalaMeta.pdf
 [23]: https://docs.google.com/document/d/1cH2sTpgSnJZCkZtJl1aY-rzy4uGPcrI-6RrUpdATO2Q/edit
 [24]: https://www.youtube.com/watch?v=jGJhnIT-D2M
+[25]: https://docs.oracle.com/javase/specs/jls/se9/html/jls-3.html#jls-3.8
