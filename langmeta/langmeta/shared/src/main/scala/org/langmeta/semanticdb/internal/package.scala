@@ -62,6 +62,11 @@ package object semanticdb {
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
       val s.TextDocument(sschema, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics) = sdoc
       assert(sschema == s.Schema.SEMANTICDB3, "s.TextDocument.schema must be ${s.Schema.SEMANTICDB3}")
+      def dsymbol(ssymbol: String) = {
+        def suffix = suri.replace("/", "_").replace(".", "_")
+        if (ssymbol.startsWith("local")) d.Symbol(ssymbol + "_" + suffix)
+        else d.Symbol(ssymbol)
+      }
       val dinput = {
         val sfilename = {
           assert(suri.nonEmpty, "s.TextDocument.uri must not be empty")
@@ -104,7 +109,8 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(d.Symbol(dsym), _, skind, sproperties, sname, _, ssignature, smembers, soverrides) =>
+          case s.SymbolInformation(ssym, _, skind, sproperties, sname, _, ssignature, smembers, soverrides) =>
+            val dsym = dsymbol(ssym)
             val dflags = {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
@@ -146,10 +152,11 @@ package object semanticdb {
               ssignature.map { ssignature =>
                 val dinput = dInput.Denotation(dsignature, dsym)
                 ssignature.occurrences.toIterator.map {
-                  case s.SymbolOccurrence(Some(srange), d.Symbol(dsym), sRole(disDefinition)) =>
+                  case s.SymbolOccurrence(Some(srange), ssym, sRole(disDefinition)) =>
                     val dstartOffset = dinput.lineToOffset(srange.startLine) + srange.startCharacter
                     val dendOffset = dinput.lineToOffset(srange.endLine) + srange.endCharacter
                     val ddefnpos = dPosition.Range(dinput, dstartOffset, dendOffset)
+                    val dsym = dsymbol(ssym)
                     d.ResolvedName(ddefnpos, dsym, disDefinition)
                   case other =>
                     sys.error(s"bad protobuf: unsupported occurrence $other")
@@ -161,7 +168,7 @@ package object semanticdb {
               else if (smember.endsWith(".")) d.Signature.Term(smember.stripSuffix("."))
               else sys.error(s"Unexpected signature $smember")
             }.toList
-            val doverrides = soverrides.flatMap(d.Symbol.unapply).toList
+            val doverrides = soverrides.map(dsymbol).toList
             Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides)))
           case other => sys.error(s"bad protobuf: unsupported symbol information $other")
         }
@@ -173,11 +180,12 @@ package object semanticdb {
             val dnames = {
               stext.map { stext =>
                 stext.occurrences.toIterator.map {
-                  case s.SymbolOccurrence(Some(srange), d.Symbol(dsym), sRole(disDefinition)) =>
+                  case s.SymbolOccurrence(Some(srange), ssym, sRole(disDefinition)) =>
                     val dsyntheticinput = dInput.Synthetic(dtext, dpos.input, dpos.start, dpos.end)
                     val dstartOffset = dsyntheticinput.lineToOffset(srange.startLine) + srange.startCharacter
                     val dendOffset = dsyntheticinput.lineToOffset(srange.endLine) + srange.endCharacter
                     val dsyntheticpos = dPosition.Range(dsyntheticinput, dstartOffset, dendOffset)
+                    val dsym = dsymbol(ssym)
                     d.ResolvedName(dsyntheticpos, dsym, disDefinition)
                   case other =>
                     sys.error(s"bad protobuf: unsupported occurrence $other")
@@ -189,13 +197,17 @@ package object semanticdb {
       }
       val dlanguage = slanguage
       val dnames = soccurrences.map {
-        case s.SymbolOccurrence(Some(sRange(dpos)), d.Symbol(dsym), sRole(disDefinition)) => d.ResolvedName(dpos, dsym, disDefinition)
-        case other => sys.error(s"bad protobuf: unsupported occurrence $other")
+        case s.SymbolOccurrence(Some(sRange(dpos)), ssym, sRole(disDefinition)) =>
+          val dsym = dsymbol(ssym)
+          d.ResolvedName(dpos, dsym, disDefinition)
+        case other =>
+          sys.error(s"bad protobuf: unsupported occurrence $other")
       }.toList
       val dmessages = sdiagnostics.map {
         case s.Diagnostic(Some(sRange(dpos)), sSeverity(dseverity), dmsg: String) =>
           d.Message(dpos, dseverity, dmsg)
-        case other => sys.error(s"bad protobuf: unsupported diagnostic $other")
+        case other =>
+          sys.error(s"bad protobuf: unsupported diagnostic $other")
       }.toList
       val dsymbols = ssymbols.map {
         case sSymbolInformation(dresolvedsymbol) => dresolvedsymbol

@@ -121,7 +121,6 @@ object Metap {
   }
 
   private def pprint(info: SymbolInformation, doc: TextDocument): Unit = {
-    pprint(info.range, None)
     print(s"${info.symbol} => ")
     def has(prop: Property) = (info.properties & prop.value) != 0
     if (has(PRIVATE)) print("private ")

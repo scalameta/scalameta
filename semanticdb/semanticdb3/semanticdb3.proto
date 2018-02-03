@@ -29,6 +29,11 @@ message Range {
   int32 end_character = 4;
 }
 
+message Location {
+  string uri = 1;
+  Range range = 2;
+}
+
 message SymbolInformation {
   enum Kind {
     UNKNOWN_KIND = 0;
@@ -62,12 +67,13 @@ message SymbolInformation {
     VALPARAM = 0x400;
     VARPARAM = 0x800;
   }
+  reserved 6;
   string symbol = 1;
   string language = 2;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  Range range = 6;
+  Location location = 10;
   TextDocument signature = 7;
   repeated string members = 8;
   repeated string overrides = 9;
