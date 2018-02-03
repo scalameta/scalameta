@@ -433,8 +433,8 @@ class PublicSuite extends FunSuite {
     val local @ Symbol.Local(`syntaxLocal`) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
 
-    val syntaxMulti = "_root_.C#;_root.C."
-    val multi @ Symbol.Multi(List(Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Type("C")), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root")), Signature.Term("C")))) = Symbol(syntaxMulti)
+    val syntaxMulti = "_root_.C#;_root_.C."
+    val multi @ Symbol.Multi(List(Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Type("C")), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("C")))) = Symbol(syntaxMulti)
     assert(multi.toString === syntaxMulti)
   }
 

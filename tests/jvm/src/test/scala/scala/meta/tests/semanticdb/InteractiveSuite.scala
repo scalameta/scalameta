@@ -37,7 +37,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |[8..9): b <= _root_.b.
       |[17..22): scala => _root_.scala.
       |[23..33): concurrent => _root_.scala.concurrent.
-      |[34..40): Future => _root_.scala.concurrent.Future.;_root_.scala.concurrent.Future#
+      |[34..40): Future => _root_.scala.concurrent.Future#;_root_.scala.concurrent.Future.
       |[48..49): a <= _root_.b.a.
       |[58..59): x <= _root_.b.a.x.
       |[75..79): List => _root_.scala.collection.immutable.List.

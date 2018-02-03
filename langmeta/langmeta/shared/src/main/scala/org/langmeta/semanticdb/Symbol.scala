@@ -29,7 +29,7 @@ object Symbol {
 
   final case class Multi(symbols: List[Symbol]) extends Symbol {
     override def toString = syntax
-    override def syntax = symbols.map(_.syntax).mkString(";")
+    override def syntax = symbols.map(_.syntax).sorted.mkString(";")
     override def structure = s"""Symbol.Multi(${symbols.map(_.structure).mkString(", ")})"""
   }
 
@@ -132,7 +132,7 @@ object Symbol {
           symbols match {
             case Nil => Symbol.None
             case List(symbol) => symbol
-            case symbols => Symbol.Multi(symbols)
+            case symbols => Symbol.Multi(symbols.sortBy(_.syntax))
           }
         } else {
           val symbol = {
