@@ -29,6 +29,90 @@ message Range {
   int32 end_character = 4;
 }
 
+message Type {
+  TypeRef typeRef = 1;
+  SingleType singleType = 2;
+  ThisType thisType = 3;
+  SuperType superType = 4;
+  LiteralType literalType = 5;
+  CompoundType compoundType = 6;
+  AnnotatedType annotatedType = 7;
+  ExistentialType existentialType = 8;
+  ClassInfoType classInfoType = 9;
+  MethodType methodType = 10;
+  TypeType typeType = 11;
+}
+
+message TypeRef {
+  Type prefix = 1;
+  string symbol = 2;
+  repeated Type arguments = 3;
+}
+
+message SingleType {
+  Type prefix = 1;
+  string symbol = 2;
+}
+
+message ThisType {
+  string symbol = 1;
+}
+
+message SuperType {
+  string symbol = 1;
+  Type mix = 2;
+}
+
+message LiteralType {
+  bytes unit = 1;
+  bool boolean = 2;
+  int32 byte = 3;
+  int32 short = 4;
+  int32 char = 5;
+  int32 int = 6;
+  int64 long = 7;
+  float float = 8;
+  double double = 9;
+  string string = 10;
+  bytes null = 11;
+}
+
+message CompoundType {
+  repeated Type parents = 1;
+  repeated string members = 2;
+}
+
+message AnnotatedType {
+  Type tpe = 1;
+  string symbol = 2;
+}
+
+message ExistentialType {
+  Type tpe = 1;
+  repeated string members = 2;
+}
+
+message ClassInfoType {
+  repeated string type_parameters = 1;
+  repeated Type parents = 2;
+  repeated string members = 3;
+}
+
+message MethodType {
+  message ParameterList {
+    repeated string symbols = 1;
+  }
+  repeated string type_parameters = 1;
+  repeated ParameterList parameters = 2;
+  Type result = 3;
+}
+
+message TypeType {
+  repeated string type_parameters = 1;
+  Type lower_bound = 2;
+  Type upper_bound = 3;
+}
+
 message SymbolInformation {
   enum Kind {
     UNKNOWN_KIND = 0;
@@ -69,6 +153,7 @@ message SymbolInformation {
   string name = 5;
   Range range = 6;
   TextDocument signature = 7;
+  Type tpe = 10;
   repeated string members = 8;
   repeated string overrides = 9;
 }

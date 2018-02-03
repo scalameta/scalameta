@@ -115,7 +115,7 @@ Scalameta contains parts which are derived from
 We include the text of the original license below:
 
 ```
-Copyright (c) 2017 Twitter, Inc.
+Copyright (c) 2017-2018 Twitter, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -139,8 +139,8 @@ We include the text of the original license below:
 ```
 This software includes projects with other licenses -- see `doc/LICENSE.md`.
 
-Copyright (c) 2002-2017 EPFL
-Copyright (c) 2011-2017 Lightbend, Inc.
+Copyright (c) 2002-2018 EPFL
+Copyright (c) 2011-2018 Lightbend, Inc.
 
 All rights reserved.
 
