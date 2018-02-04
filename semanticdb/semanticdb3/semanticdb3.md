@@ -4,6 +4,7 @@
   * [Data Model](#data-model)
     * [TextDocument](#textdocument)
     * [Range](#range)
+    * [Location](#location)
     * [Symbol](#symbol)
     * [SymbolInformation](#symbolinformation)
     * [SymbolOccurrence](#symboloccurrence)
@@ -12,8 +13,8 @@
   * [Data Schemas](#data-schemas)
     * [Protobuf](#protobuf)
   * [Changelog](#changelog)
-    * [3.0.0](#300)
     * [3.1.0](#310)
+    * [3.0.0](#300)
 
 ## Motivation
 
@@ -126,6 +127,18 @@ It represents a range between start and end points in a document. Both points
 are represented by zero-based line and zero-based character offsets.
 The start point is inclusive, while the end point is exclusive.
 
+### Location
+
+```protobuf
+message Location {
+  string uri = 1;
+  Range range = 2;
+}
+```
+
+`Location` in SemanticDB directly corresponds to `Location` in LSP [\[2\]][2].
+It represents a location inside a document, such as a line inside a text file.
+
 ### Symbol
 
 Symbols are tokens that are used to correlate references and definitions.
@@ -133,6 +146,11 @@ In the SemanticDB model, symbols are represented as strings.
 At the moment, the symbol format is defined by the needs of the Scala implementations.
 In the future, we are planning to pay more attention to other languages,
 and we may decide to expand the format to accommodate namespacing rules not present in Scala.
+
+At the moment, symbols are not guaranteed to be globally unique, which means
+that there may be limitations for using symbols as keys in maps or databases.
+Read below for more information about uniqueness guarantees for different
+symbol categories.
 
 **Global symbols**. Correspond to a definition that can be referenced outside
 the compilation unit where the definition is defined.
@@ -154,8 +172,20 @@ of the corresponding global definition, where:
 
 For example, the standard `Int` class must be modelled by a global symbol `_root_.scala.Int#`.
 
+Global symbols must be unique across the universe of documents that
+a tool is working with at any given time. For example, if in such a universe,
+there exist multiple definitions of `Int` - e.g. coming from multiple different
+versions of Scala - then all references to those definitions will have
+`SymbolOccurrence.symbol` equal to the same `_root_.scala.Int#` symbol,
+and SemanticDB will not be able to provide information to disambiguate these references.
+
+In the future, we may extend SemanticDB to allow for multiple definitions
+that under current rules would correspond to the same global symbol.
+In the meanwhile, when global uniqueness is required, tool authors are advised to
+accompany global symbols with `SymbolInformation.location`.
+
 **Local symbols**. Correspond to a definition that isn't global (see above).
-Local symbol format is deliberately unspecified except for two restrictions:
+Local symbol format is defined by the following two rules:
   * Local symbols must start with `local`, so that they can be easily
     distinguished from global symbols.
   * Local symbols must be unique within the underlying document.
@@ -164,6 +194,16 @@ For example, `x` in `def identity[T](x: T): T` may be modelled by local symbols
 `local0`, `local_x`, `local_identity_x`, as long as these names are unique within
 the underlying document. The same logic applies to the type parameter `T`,
 which is also a local definition.
+
+Local symbols must be unique within the underlying document, but they don't have
+to be unique across multiple documents. For example, at the time of writing
+`semanticdb-scalac` produces local symbols named `local0`, `local1`, etc,
+with the counter resetting to zero for every new document.
+
+In the future, we may extend SemanticDB to make local symbols more unique,
+but we haven't yet found a way to do that without sacrificing performance
+and payload size. In the meanwhile, when global uniqueness is required,
+tool authors are advised to accompany local symbols with `TextDocument.uri`.
 
 **Multi symbols**. Are used to model references to a set of multiple definitions at once.
 This is occasionally useful to support corner cases of Scala, e.g. identifiers
@@ -181,12 +221,13 @@ always equal to an asterisk (`*`).
 
 ```protobuf
 message SymbolInformation {
+  reserved 6;
   string symbol = 1;
   string language = 2;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  Range range = 6;
+  Location location = 10;
   TextDocument signature = 7;
   repeated string members = 8;
   repeated string overrides = 9;
@@ -358,7 +399,7 @@ or features from other languages.
 
 `name`. String that represents the name of the symbol.
 
-`range`. [Range](#range) that represents the extent of the definition of the symbol.
+`location`. [Location](#location) that represents the extent of the definition of the symbol.
 
 `signature`. [TextDocument](#textdocument) that represents the type signature of the definition.
 In this document, `text` contains a string prettyprinted by a producer and various
@@ -501,7 +542,12 @@ in the future, but this is highly unlikely.
 ## Changelog
 
 ### 3.1.0
-  * Added SymbolInformation.Property.{VALPARAM/VARPARAM}.
+  * Added `SymbolInformation.Property.{VALPARAM/VARPARAM}`.
+  * Replaced `SymbolInformation.range` with `SymbolInformation.location`.
+    We can't use `Range` for the purpose of locating symbol definitions,
+    because symbols in the "Symbols" section of a document don't have
+    to be defined in that document.
+  * Explained uniqueness guarantees for symbols.
 
 ### 3.0.0
   * Codified the first specification of SemanticDB.

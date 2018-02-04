@@ -16,7 +16,7 @@ Names:
 [103..106): Int => _root_.scala.Int#
 [107..107): ε => _root_.scala.collection.mutable.Stack#`<init>`()V.
 [116..120): main <= _root_.example.Example.main([Ljava/lang/String;)V.
-[121..125): args <= local0
+[121..125): args <= local0_semanticdb_integration_src_main_scala_example_Example_scala
 [127..132): Array => _root_.scala.Array#
 [133..139): String => _root_.scala.Predef.String#
 [143..147): Unit => _root_.scala.Unit#
@@ -74,7 +74,7 @@ _root_.scala.reflect. => package reflect
 _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;. => def classTag: [T] => (implicit ctag: ClassTag[T]): ClassTag[T]
   [23..31): ClassTag => _root_.scala.reflect.ClassTag#
   [37..45): ClassTag => _root_.scala.reflect.ClassTag#
-local0 => param args: Array[String]
+local0_semanticdb_integration_src_main_scala_example_Example_scala => param args: Array[String]
   [0..5): Array => _root_.scala.Array#
   [6..12): String => _root_.scala.Predef.String#
 
