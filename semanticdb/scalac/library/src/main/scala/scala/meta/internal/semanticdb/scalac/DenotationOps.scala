@@ -88,7 +88,7 @@ trait DenotationOps { self: DatabaseOps =>
       gsym.decodedName.toString
     }
 
-    private def info: (String, List[m.ResolvedName]) = {
+    private def oldInfo: (String, List[m.ResolvedName]) = {
       if (gsym.isClass || gsym.isModule) "" -> Nil
       else {
         val synthetic = showSynthetic(gsym.info)
@@ -105,33 +105,46 @@ trait DenotationOps { self: DatabaseOps =>
       }
     }
 
-    private def tpe: s.Type = {
-      ???
+    private def newInfo: (s.Type, List[g.Symbol]) = {
+      gsym.info.toSemantic
     }
 
     private def overrides: List[m.Symbol] =
       if (config.overrides.isAll) gsym.overrides.map(_.toSemantic)
       else Nil
 
-    def toDenotation(saveOverrides: Boolean): m.Denotation = {
-      val over = if (saveOverrides) overrides else Nil
+    def toDenotation(saveOverrides: Boolean): DenotationResult = {
+      val over = {
+        if (saveOverrides) overrides
+        else Nil
+      }
+      val todoOverrides = {
+        if (saveOverrides && config.denotations.saveReferences) gsym.overrides
+        else Nil
+      }
       config.signatures match {
         case SignatureMode.None =>
-          m.Denotation(flags, name, "", Nil, Nil, over, None)
+          val denot = m.Denotation(flags, name, "", Nil, Nil, over, None)
+          DenotationResult(denot, todoOverrides, Nil)
         case SignatureMode.Old =>
-          val (signature, names) = info
-          m.Denotation(flags, name, signature, names, Nil, over, None)
+          val (signature, names) = oldInfo
+          val denot = m.Denotation(flags, name, signature, names, Nil, over, None)
+          DenotationResult(denot, todoOverrides, Nil)
         case SignatureMode.New =>
-          m.Denotation(flags, name, "", Nil, Nil, over, Some(tpe))
+          val (tpe, todoTpe) = newInfo
+          val denot = m.Denotation(flags, name, "", Nil, Nil, over, Some(tpe))
+          DenotationResult(denot, todoOverrides, todoTpe)
         case SignatureMode.All =>
-          val (signature, names) = info
-          m.Denotation(flags, name, signature, names, Nil, over, Some(tpe))
+          val (signature, names) = oldInfo
+          val (tpe, todoTpe) = newInfo
+          val denot = m.Denotation(flags, name, signature, names, Nil, over, Some(tpe))
+          DenotationResult(denot, todoOverrides, todoTpe)
       }
     }
-
-    def overridesMembers: List[(m.Symbol, m.Denotation)] =
-      if (config.overrides.isAll && config.denotations.saveReferences)
-        gsym.overrides.map(ov => (ov.toSemantic, ov.toDenotation(saveOverrides = true)))
-      else Nil
   }
+
+  case class DenotationResult(
+    denot: m.Denotation,
+    todoOverrides: List[g.Symbol],
+    todoTpe: List[g.Symbol])
 }
