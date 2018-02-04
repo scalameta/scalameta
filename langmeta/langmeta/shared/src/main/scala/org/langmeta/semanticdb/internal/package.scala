@@ -109,11 +109,12 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(ssym, _, skind, sproperties, sname, _, ssignature, smembers, soverrides) =>
+          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, _, ssignature, smembers, soverrides) =>
             val dsym = dsymbol(ssym)
             val dflags = {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
+              if (slanguage.startsWith("Java")) dflip(d.JAVADEFINED)
               skind match {
                 case k.VAL => dflip(d.VAL)
                 case k.VAR => dflip(d.VAR)
@@ -266,9 +267,12 @@ package object semanticdb {
           object dResolvedSymbol {
             def unapply(dresolvedSymbol: d.ResolvedSymbol): Option[s.SymbolInformation] = {
               val d.ResolvedSymbol(dsymbol, ddenot) = dresolvedSymbol
-              val ssymbol = dsymbol.syntax
-              val slanguage = dlanguage
               def dtest(bit: Long) = (ddenot.flags & bit) == bit
+              val ssymbol = dsymbol.syntax
+              val slanguage = {
+                if (dtest(d.JAVADEFINED)) "Java"
+                else dlanguage
+              }
               val skind = {
                 if (dtest(d.VAL) && !dtest(d.PARAM)) k.VAL
                 else if (dtest(d.VAR) && !dtest(d.PARAM)) k.VAR
