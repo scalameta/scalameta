@@ -177,24 +177,22 @@ object Metap {
             ()
         }
       case None =>
-        role match {
-          case REFERENCE =>
-            // TODO: It would be nice to have a symbol parser in semanticdb3.
-            sym.split("\\.").toList match {
-              case _ :+ last =>
-                val approxName = {
-                  val last1 = last.stripPrefix("(").stripPrefix("[")
-                  val last2 = last1.stripSuffix(")").stripSuffix("]").stripSuffix("#")
-                  last2.stripPrefix("`").stripSuffix("`")
-                }
-                print(approxName)
-              case _ =>
-                print("<?>")
+        // TODO: It would be nice to have a symbol parser in semanticdb3.
+        sym.split("\\.").toList match {
+          case _ :+ last =>
+            val approxName = {
+              val last1 = last.stripPrefix("(").stripPrefix("[")
+              val last2 = last1.stripSuffix(")").stripSuffix("]").stripSuffix("#")
+              last2.stripPrefix("`").stripSuffix("`")
             }
-          case DEFINITION =>
-            print("<?>")
+            print(approxName)
           case _ =>
-            ()
+            print("<?>")
+        }
+        role match {
+          case REFERENCE => ()
+          case DEFINITION => print(": <?>")
+          case _ => ()
         }
     }
   }
