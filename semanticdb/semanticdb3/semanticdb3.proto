@@ -40,13 +40,23 @@ message Type {
   ExistentialType existentialType = 8;
   ClassInfoType classInfoType = 9;
   MethodType methodType = 10;
-  TypeType typeType = 11;
+  ByNameType byNameType = 11;
+  RepeatedType repeatedType = 12;
+  TypeType typeType = 13;
 }
 
 message TypeRef {
   Type prefix = 1;
   string symbol = 2;
   repeated Type arguments = 3;
+}
+
+message ByNameType {
+  Type tpe = 1;
+}
+
+message RepeatedType {
+  Type tpe = 1;
 }
 
 message SingleType {

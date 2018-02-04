@@ -186,12 +186,14 @@ message Type {
   ThisType thisType = 3;
   SuperType superType = 4;
   LiteralType literalType = 5;
-  RefinedType refinedType = 6;
+  CompoundType compoundType = 6;
   AnnotatedType annotatedType = 7;
   ExistentialType existentialType = 8;
   ClassInfoType classInfoType = 9;
   MethodType methodType = 10;
-  TypeType typeType = 11;
+  ByNameType byNameType = 11;
+  RepeatedType repeatedType = 12;
+  TypeType typeType = 13;
 }
 ```
 
@@ -348,6 +350,24 @@ secondary constructors and macros:
   * Signature of `def m(): Int` ~ `MethodType(List(), List(List()), <Int>)`.
   * Signature of `def m(x: Int): Int` ~ `MethodType(List(), List(List(<x>)), <Int>)`.
   * Signature of `def m[T](x: T): T` ~ `MethodType(List(<T>), List(List(<x>)), <T>)`.
+
+```protobuf
+message ByNameType {
+  Type tpe = 1;
+}
+```
+
+`ByNameType` represents signatures of by-name parameters [\[37\]][37]:
+  * Signature of `x` in `def m(x: => Int): Int` ~ `ByNameType(<Int>)`.
+
+```protobuf
+message RepeatedType {
+  Type tpe = 1;
+}
+```
+
+`RepeatedType` represents signatures of repeated parameters [\[38\]][38]:
+  * Signature of `xs` in `def m(xs: Int*): Int` ~ `RepeatedType(<Int>)`.
 
 ```protobuf
 message TypeType {
@@ -745,3 +765,5 @@ in the future, but this is highly unlikely.
 [34]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types
 [35]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#annotated-types
 [36]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#existential-types
+[37]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#by-name-parameters
+[38]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#repeated-parameters
