@@ -2,7 +2,7 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.{meta => m}
 
-trait TypeOps { self: DatabaseOps =>
+trait MemberOps { self: DatabaseOps =>
   private[this] lazy val ignoreName: Set[g.Name] = Set(
     g.nme.CONSTRUCTOR,
     g.nme.MIXIN_CONSTRUCTOR,
