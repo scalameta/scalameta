@@ -181,19 +181,38 @@ always equal to an asterisk (`*`).
 
 ```protobuf
 message Type {
-  TypeRef typeRef = 1;
-  SingleType singleType = 2;
-  ThisType thisType = 3;
-  SuperType superType = 4;
-  LiteralType literalType = 5;
-  CompoundType compoundType = 6;
-  AnnotatedType annotatedType = 7;
-  ExistentialType existentialType = 8;
-  ClassInfoType classInfoType = 9;
-  MethodType methodType = 10;
-  ByNameType byNameType = 11;
-  RepeatedType repeatedType = 12;
-  TypeType typeType = 13;
+  enum Tag {
+    UNKNOWN_TAG = 0;
+    TYPE_REF = 1;
+    SINGLE_TYPE = 2;
+    THIS_TYPE = 3;
+    SUPER_TYPE = 4;
+    LITERAL_TYPE = 5;
+    COMPOUND_TYPE = 6;
+    ANNOTATED_TYPE = 7;
+    EXISTENTIAL_TYPE = 8;
+    TYPE_LAMBDA = 9;
+    CLASS_INFO_TYPE = 10;
+    METHOD_TYPE = 11;
+    BY_NAME_TYPE = 12;
+    REPEATED_TYPE = 13;
+    TYPE_TYPE = 14;
+  }
+  Tag tag = 1;
+  TypeRef typeRef = 2;
+  SingleType singleType = 3;
+  ThisType thisType = 4;
+  SuperType superType = 5;
+  LiteralType literalType = 6;
+  CompoundType compoundType = 7;
+  AnnotatedType annotatedType = 8;
+  ExistentialType existentialType = 9;
+  TypeLambda typeLambda = 10;
+  ClassInfoType classInfoType = 11;
+  MethodType methodType = 12;
+  ByNameType byNameType = 13;
+  RepeatedType repeatedType = 14;
+  TypeType typeType = 15;
 }
 ```
 
@@ -221,9 +240,9 @@ message TypeRef {
 
 `TypeRef` is bread-and-butter type in SemanticDB. It represents identifiers,
 paths [\[27\]][27], parameterized types [\[28\]][28] and type projections
-[\[29\]][29]. Tuple types [\[30\]][30] and function types [\[31\]][31]
-are also represented by typerefs via desugaring to their canonical
-parameterized form:
+[\[29\]][29]. Infix types [\[30\]][30], tuple types [\[31\]][31] and
+function types [\[32\]][32] are also represented by typerefs via desugaring
+to their canonical parameterized form:
   * `C` ~ `TypeRef(null, <C>, List())`.
   * `p.C` ~ `TypeRef(<p.type>, <C>, List())`.
   * `T#C` ~ `TypeRef(<T>, <C>, List())`.
@@ -238,7 +257,7 @@ message SingleType {
 }
 ```
 
-`SingleType` represents the majority of singleton types [\[32\]][32]:
+`SingleType` represents the majority of singleton types [\[33\]][33]:
   * `x.type` ~ `SingleType(null, <x>)`.
   * `p.x.type` ~ `SingleType(<p.type>, <x>)`.
   * `(T#x).type` ~ `SingleType(<T>, <x>)`.
@@ -255,42 +274,48 @@ message ThisType {
 
 ```protobuf
 message SuperType {
-  string symbol = 1;
+  Type prefix = 1;
   Type mix = 2;
 }
 ```
 
 `SuperType` represents types of `super` qualifiers [\[27\]][27]:
-  * Type of the qualifier in `super.x` ~ `SuperType(null, null)`.
-  * Type of the qualifier in `super[M].x` ~ `SuperType(null, <M>)`.
-  * Type of the qualifier in `C.super[M].x` ~ `SuperType(<C>, <M>)`.
+  * Type of the qualifier in `super.x` ~ `SuperType(ThisType(...), null)`.
+  * Type of the qualifier in `super[M].x` ~ `SuperType(ThisType(...), <M>)`.
+  * Type of the qualifier in `C.super[M].x` ~ `SuperType(ThisType(<C>), <M>)`.
 
 ```protobuf
 message LiteralType {
-  bytes unit = 1;
-  bool boolean = 2;
-  int32 byte = 3;
-  int32 short = 4;
-  int32 char = 5;
-  int32 int = 6;
-  int64 long = 7;
-  float float = 8;
-  double double = 9;
-  string string = 10;
-  bytes null = 11;
+  enum Tag {
+    UNKNOWN_TAG = 0;
+    UNIT = 1;
+    BOOLEAN = 2;
+    BYTE = 3;
+    SHORT = 4;
+    CHAR = 5;
+    INT = 6;
+    LONG = 7;
+    FLOAT = 8;
+    DOUBLE = 9;
+    STRING = 10;
+    NULL = 11;
+  }
+  Tag tag = 1;
+  int64 primitive = 2;
+  string string = 3;
 }
 ```
 
-`LiteralType` represents literal types [\[33\]][33].
+`LiteralType` represents literal types [\[34\]][34].
 
 ```protobuf
 message CompoundType {
   repeated Type parents = 1;
-  repeated string members = 2;
+  repeated string declarations = 2;
 }
 ```
 
-`CompoundType` represents compound types [\[34\]][34]:
+`CompoundType` represents compound types [\[35\]][35]:
   * `{ M1; ...; Mm }` ~ `CompoundType(List(), List(<M1>, ..., <Mm>))`.
   * `T1 with ... with Tn` ~ `CompoundType(List(<T1>, ..., <Tn>), List())`.
   * `T1 with ... with Tn { M1; ...; Mm }` ~ `CompoundType(List(<T1>, ..., <Tn>), List(<M1>, ..., <Mm>))`.
@@ -298,11 +323,11 @@ message CompoundType {
 ```protobuf
 message AnnotatedType {
   Type tpe = 1;
-  repeated string symbol = 2;
+  repeated Type annotations = 2;
 }
 ```
 
-`AnnotatedType` represents annotated types [\[35\]][35] with the caveat
+`AnnotatedType` represents annotated types [\[36\]][36] with the caveat
 that annotation arguments are not represented in the corresponding payload.
 We may remove this limitation in the future:
   * `T @ann` ~ `AnnotatedType(<T>, List(<ann>))`.
@@ -312,18 +337,28 @@ We may remove this limitation in the future:
 ```protobuf
 message ExistentialType {
   Type tpe = 1;
-  repeated string members = 2;
+  repeated string declarations = 2;
 }
 ```
 
-`ExistentialType` represents existential types [\[36\]][36]:
+`ExistentialType` represents existential types [\[37\]][37]:
   * `T forSome { type T }` ~ `ExistentialType(<T>, List(<T>))`.
+
+```protobuf
+message TypeLambda {
+  repeated string type_parameters = 1;
+  Type tpe = 2;
+}
+```
+
+`TypeLambda` represents types that are colloquially called "type lambdas"
+in the Scala community [\[38\]][38].
 
 ```protobuf
 message ClassInfoType {
   repeated string type_parameters = 1;
   repeated Type parents = 2;
-  repeated string members = 3;
+  repeated string declarations = 3;
 }
 ```
 
@@ -345,11 +380,13 @@ message MethodType {
 ```
 
 `MethodType` represents signatures of methods, primary constructors,
-secondary constructors and macros:
+secondary constructors and macros, but not vals or vars:
   * Signature of `def m: Int` ~ `MethodType(List(), List(), <Int>)`.
   * Signature of `def m(): Int` ~ `MethodType(List(), List(List()), <Int>)`.
   * Signature of `def m(x: Int): Int` ~ `MethodType(List(), List(List(<x>)), <Int>)`.
   * Signature of `def m[T](x: T): T` ~ `MethodType(List(<T>), List(List(<x>)), <T>)`.
+  * Signature of `val x: Int` ~ `TypeRef(null, <Int>, List())`
+  * Signature of `var x: Int` ~ `TypeRef(null, <Int>, List())`
 
 ```protobuf
 message ByNameType {
@@ -357,7 +394,7 @@ message ByNameType {
 }
 ```
 
-`ByNameType` represents signatures of by-name parameters [\[37\]][37]:
+`ByNameType` represents signatures of by-name parameters [\[39\]][39]:
   * Signature of `x` in `def m(x: => Int): Int` ~ `ByNameType(<Int>)`.
 
 ```protobuf
@@ -366,7 +403,7 @@ message RepeatedType {
 }
 ```
 
-`RepeatedType` represents signatures of repeated parameters [\[38\]][38]:
+`RepeatedType` represents signatures of repeated parameters [\[40\]][40]:
   * Signature of `xs` in `def m(xs: Int*): Int` ~ `RepeatedType(<Int>)`.
 
 ```protobuf
@@ -377,12 +414,13 @@ message TypeType {
 }
 ```
 
-`TypeType` represents signatures of abstract type members, type aliases
-and type parameters:
+`TypeType` represents signatures of abstract type members and type parameters,
+but not type aliases:
   * Signature of `type T` ~ `TypeBounds(List(), null, null)`.
-  * Signature of `type T = C` ~ `TypeBounds(List(), <C>, <C>)`.
   * Signature of `T` in `def m[T <: C]` ~ `TypeBounds(List(), null, <C>)`.
   * Signature of `M` in `def m[M[_]]` ~ `TypeBounds(List(<_>), null, null)`.
+  * Signature of `type T = C` ~ `TypeRef(..., <C>, List())`.
+  * Signature of `type T[U] = U` ~ `TypeLambda(List(<U>), TypeRef(null, <U>, List())`.
 
 ### SymbolInformation
 
@@ -758,12 +796,14 @@ in the future, but this is highly unlikely.
 [27]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#paths
 [28]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#parameterized-types
 [29]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-projection
-[30]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#tuple-types
-[31]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#function-types
-[32]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types
-[33]: https://github.com/scala/scala/pull/5310
-[34]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types
-[35]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#annotated-types
-[36]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#existential-types
-[37]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#by-name-parameters
-[38]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#repeated-parameters
+[30]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#infix-types
+[31]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#tuple-types
+[32]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#function-types
+[33]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types
+[34]: https://github.com/scala/scala/pull/5310
+[35]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types
+[36]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#annotated-types
+[37]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#existential-types
+[38]: https://stackoverflow.com/questions/8736164/what-are-type-lambdas-in-scala-and-what-are-their-benefits
+[39]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#by-name-parameters
+[40]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#repeated-parameters

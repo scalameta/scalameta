@@ -105,7 +105,7 @@ trait DenotationOps { self: DatabaseOps =>
       }
     }
 
-    private def newInfo: (s.Type, List[g.Symbol]) = {
+    private def newInfo: (Option[s.Type], List[g.Symbol]) = {
       gsym.info.toSemantic
     }
 
@@ -132,12 +132,12 @@ trait DenotationOps { self: DatabaseOps =>
           DenotationResult(denot, todoOverrides, Nil)
         case SignatureMode.New =>
           val (tpe, todoTpe) = newInfo
-          val denot = m.Denotation(flags, name, "", Nil, Nil, over, Some(tpe))
+          val denot = m.Denotation(flags, name, "", Nil, Nil, over, tpe)
           DenotationResult(denot, todoOverrides, todoTpe)
         case SignatureMode.All =>
           val (signature, names) = oldInfo
           val (tpe, todoTpe) = newInfo
-          val denot = m.Denotation(flags, name, signature, names, Nil, over, Some(tpe))
+          val denot = m.Denotation(flags, name, signature, names, Nil, over, tpe)
           DenotationResult(denot, todoOverrides, todoTpe)
       }
     }

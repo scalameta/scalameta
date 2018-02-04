@@ -41,7 +41,7 @@ object SemanticdbConfig {
     SemanticdbMode.Fat,
     FailureMode.Warning,
     DenotationMode.All,
-    SignatureMode.Old,
+    SignatureMode.All,
     MemberMode.None,
     OverrideMode.None,
     ProfilingMode.Off,

@@ -202,8 +202,10 @@ trait DocumentOps { self: DatabaseOps =>
                     otodoTpe
                   }
                   (todoTpe1 ++ todoTpe2).foreach { tgs =>
-                    val tms = tgs.toSemantic
-                    if (!denotations.contains(tms)) add(tms, tgs)
+                    if (tgs.isSemanticdbLocal) {
+                      val tms = tgs.toSemantic
+                      if (!denotations.contains(tms)) add(tms, tgs)
+                    }
                   }
                 }
                 if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {

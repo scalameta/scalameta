@@ -18,17 +18,7 @@ trait SymbolOps { self: DatabaseOps =>
         if (sym.isRootPackage) return m.Symbol.Global(m.Symbol.None, m.Signature.Term("_root_"))
         if (sym.isEmptyPackage) return m.Symbol.Global(m.Symbol.None, m.Signature.Term("_empty_"))
 
-        def isLocal(sym: g.Symbol): Boolean = {
-          def definitelyGlobal = sym.hasPackageFlag
-          def definitelyLocal =
-            sym == g.NoSymbol ||
-              sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
-              sym.owner.isMethod ||
-              sym.owner.isAliasType ||
-              sym.owner.isAbstractType
-          !definitelyGlobal && (definitelyLocal || isLocal(sym.owner))
-        }
-        if (isLocal(sym)) {
+        if (sym.isSemanticdbLocal) {
           val mpos = sym.pos.toMeta
           return {
             if (mpos == m.Position.None) m.Symbol.None
@@ -105,5 +95,20 @@ trait SymbolOps { self: DatabaseOps =>
         msym
       }
     }
+  }
+
+  implicit class XtensionGSymbolMCategories(sym: g.Symbol) {
+    def isSemanticdbGlobal: Boolean = !isSemanticdbLocal
+    def isSemanticdbLocal: Boolean = {
+      def definitelyGlobal = sym.hasPackageFlag
+      def definitelyLocal =
+        sym == g.NoSymbol ||
+          sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
+          sym.owner.isMethod ||
+          sym.owner.isAliasType ||
+          sym.owner.isAbstractType
+      !definitelyGlobal && (definitelyLocal || sym.owner.isSemanticdbLocal)
+    }
+    def isSemanticdbMulti: Boolean = sym.isOverloaded
   }
 }
