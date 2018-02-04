@@ -78,6 +78,7 @@ lazy val semanticdb3 = crossProject
   .in(file("semanticdb/semanticdb3"))
   .settings(
     publishableSettings,
+    ignoreMimaSettings,
     protobufSettings,
     PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3")),
     version := "3.1.0"
