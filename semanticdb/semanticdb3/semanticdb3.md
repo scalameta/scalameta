@@ -5,6 +5,7 @@
     * [TextDocument](#textdocument)
     * [Range](#range)
     * [Symbol](#symbol)
+    * [Type](#type)
     * [SymbolInformation](#symbolinformation)
     * [SymbolOccurrence](#symboloccurrence)
     * [Diagnostic](#diagnostic)
@@ -12,8 +13,8 @@
   * [Data Schemas](#data-schemas)
     * [Protobuf](#protobuf)
   * [Changelog](#changelog)
-    * [3.0.0](#300)
     * [3.1.0](#310)
+    * [3.0.0](#300)
 
 ## Motivation
 
@@ -131,8 +132,7 @@ The start point is inclusive, while the end point is exclusive.
 Symbols are tokens that are used to correlate references and definitions.
 In the SemanticDB model, symbols are represented as strings.
 At the moment, the symbol format is defined by the needs of the Scala implementations.
-In the future, we are planning to pay more attention to other languages,
-and we may decide to expand the format to accommodate namespacing rules not present in Scala.
+In the future, we are planning to pay more attention to other languages.
 
 **Global symbols**. Correspond to a definition that can be referenced outside
 the compilation unit where the definition is defined.
@@ -177,6 +177,251 @@ interspersed with a semicolon (`;`). The order of concatenation is unspecified.
 Must not be used outside `Synthetic.text` documents. Placeholder symbols are
 always equal to an asterisk (`*`).
 
+### Type
+
+```protobuf
+message Type {
+  enum Tag {
+    UNKNOWN_TAG = 0;
+    TYPE_REF = 1;
+    SINGLE_TYPE = 2;
+    THIS_TYPE = 3;
+    SUPER_TYPE = 4;
+    LITERAL_TYPE = 5;
+    COMPOUND_TYPE = 6;
+    ANNOTATED_TYPE = 7;
+    EXISTENTIAL_TYPE = 8;
+    TYPE_LAMBDA = 9;
+    CLASS_INFO_TYPE = 10;
+    METHOD_TYPE = 11;
+    BY_NAME_TYPE = 12;
+    REPEATED_TYPE = 13;
+    TYPE_TYPE = 14;
+  }
+  Tag tag = 1;
+  TypeRef typeRef = 2;
+  SingleType singleType = 3;
+  ThisType thisType = 4;
+  SuperType superType = 5;
+  LiteralType literalType = 6;
+  CompoundType compoundType = 7;
+  AnnotatedType annotatedType = 8;
+  ExistentialType existentialType = 9;
+  TypeLambda typeLambda = 10;
+  ClassInfoType classInfoType = 11;
+  MethodType methodType = 12;
+  ByNameType byNameType = 13;
+  RepeatedType repeatedType = 14;
+  TypeType typeType = 15;
+}
+```
+
+`Type` represents expression types and signatures of definitions.
+At the moment, types are are modelled after the Scala pickle format [\[25\]][25].
+In the future, we are planning to pay more attention to other languages.
+
+In this section, we describe various alternatives of `Type`, providing example
+SemanticDB data that corresponds to different Scala types,
+inspired by the scala.reflect documentation [\[26\]][26].
+
+In these examples, we will be using a simple notation to describe SemanticDB data.
+In this notation, `M(v1, v2, ...)` corresponds a message `M` with fields set to values
+`v1`, `v2`, etc. Literals correspond to scalar values, and `List(x1, x2, ...)`
+corresponds to repeated values. Moreover, `<X>` corresponds to a message that
+represents to `X`.
+
+```protobuf
+message TypeRef {
+  Type prefix = 1;
+  string symbol = 2;
+  repeated Type arguments = 3;
+}
+```
+
+`TypeRef` is bread-and-butter type in SemanticDB. It represents identifiers,
+paths [\[27\]][27], parameterized types [\[28\]][28] and type projections
+[\[29\]][29]. Infix types [\[30\]][30], tuple types [\[31\]][31] and
+function types [\[32\]][32] are also represented by typerefs via desugaring
+to their canonical parameterized form:
+  * `C` ~ `TypeRef(null, <C>, List())`.
+  * `p.C` ~ `TypeRef(<p.type>, <C>, List())`.
+  * `T#C` ~ `TypeRef(<T>, <C>, List())`.
+  * `C[T1, ... Tn]` ~ `TypeRef(null, <C>, List(<T1>, ..., <TN>))`.
+  * `p.C[T1, ... Tn]` ~ `TypeRef(<p.type>, <C>, List(<T1>, ..., <TN>))`.
+  * `T#C[T1, ... Tn]` ~ `TypeRef(<T>, <C>, List(<T1>, ..., <TN>))`.
+
+```protobuf
+message SingleType {
+  Type prefix = 1;
+  string symbol = 2;
+}
+```
+
+`SingleType` represents the majority of singleton types [\[33\]][33]:
+  * `x.type` ~ `SingleType(null, <x>)`.
+  * `p.x.type` ~ `SingleType(<p.type>, <x>)`.
+  * `(T#x).type` ~ `SingleType(<T>, <x>)`.
+
+```protobuf
+message ThisType {
+  string symbol = 1;
+}
+```
+
+`ThisType` represents `this.type`:
+  * `this.type` ~ `ThisType(null)`.
+  * `C.this.type` ~ `ThisType(<C>)`.
+
+```protobuf
+message SuperType {
+  Type prefix = 1;
+  Type mix = 2;
+}
+```
+
+`SuperType` represents types of `super` qualifiers [\[27\]][27]:
+  * Type of the qualifier in `super.x` ~ `SuperType(ThisType(...), null)`.
+  * Type of the qualifier in `super[M].x` ~ `SuperType(ThisType(...), <M>)`.
+  * Type of the qualifier in `C.super[M].x` ~ `SuperType(ThisType(<C>), <M>)`.
+
+```protobuf
+message LiteralType {
+  enum Tag {
+    UNKNOWN_TAG = 0;
+    UNIT = 1;
+    BOOLEAN = 2;
+    BYTE = 3;
+    SHORT = 4;
+    CHAR = 5;
+    INT = 6;
+    LONG = 7;
+    FLOAT = 8;
+    DOUBLE = 9;
+    STRING = 10;
+    NULL = 11;
+  }
+  Tag tag = 1;
+  int64 primitive = 2;
+  string string = 3;
+}
+```
+
+`LiteralType` represents literal types [\[34\]][34].
+
+```protobuf
+message CompoundType {
+  repeated Type parents = 1;
+  repeated string declarations = 2;
+}
+```
+
+`CompoundType` represents compound types [\[35\]][35]:
+  * `{ M1; ...; Mm }` ~ `CompoundType(List(), List(<M1>, ..., <Mm>))`.
+  * `T1 with ... with Tn` ~ `CompoundType(List(<T1>, ..., <Tn>), List())`.
+  * `T1 with ... with Tn { M1; ...; Mm }` ~ `CompoundType(List(<T1>, ..., <Tn>), List(<M1>, ..., <Mm>))`.
+
+```protobuf
+message AnnotatedType {
+  Type tpe = 1;
+  repeated Type annotations = 2;
+}
+```
+
+`AnnotatedType` represents annotated types [\[36\]][36] with the caveat
+that annotation arguments are not represented in the corresponding payload.
+We may remove this limitation in the future:
+  * `T @ann` ~ `AnnotatedType(<T>, List(<ann>))`.
+  * `T @ann1 ... @annN` ~ `AnnotatedType(<T>, List(<ann1>, ..., <annN>))`.
+  * `T @ann(x1, ... xM)` ~ `AnnotatedType(<T>, List(<ann>))`.
+
+```protobuf
+message ExistentialType {
+  Type tpe = 1;
+  repeated string declarations = 2;
+}
+```
+
+`ExistentialType` represents existential types [\[37\]][37]:
+  * `T forSome { type T }` ~ `ExistentialType(<T>, List(<T>))`.
+
+```protobuf
+message TypeLambda {
+  repeated string type_parameters = 1;
+  Type tpe = 2;
+}
+```
+
+`TypeLambda` represents types that are colloquially called "type lambdas"
+in the Scala community [\[38\]][38].
+
+```protobuf
+message ClassInfoType {
+  repeated string type_parameters = 1;
+  repeated Type parents = 2;
+  repeated string declarations = 3;
+}
+```
+
+`ClassInfoType` represents signatures of objects, package objects, classes
+and traits. It works along the same lines as `CompoundType`:
+  * Signature of `object M` ~ `ClassInfoType(List(), List(), List())`.
+  * Signature of `class C extends B { def x = 42 }` ~ `ClassInfoType(List(), List(<B>), List(<m>))`.
+  * Signature of `trait X[T]` ~ `ClassInfoType(List(<T>), List(), List())`.
+
+```protobuf
+message MethodType {
+  message ParameterList {
+    repeated string symbols = 1;
+  }
+  repeated string type_parameters = 1;
+  repeated ParameterList parameters = 2;
+  Type result = 3;
+}
+```
+
+`MethodType` represents signatures of methods, primary constructors,
+secondary constructors and macros, but not vals or vars:
+  * Signature of `def m: Int` ~ `MethodType(List(), List(), <Int>)`.
+  * Signature of `def m(): Int` ~ `MethodType(List(), List(List()), <Int>)`.
+  * Signature of `def m(x: Int): Int` ~ `MethodType(List(), List(List(<x>)), <Int>)`.
+  * Signature of `def m[T](x: T): T` ~ `MethodType(List(<T>), List(List(<x>)), <T>)`.
+  * Signature of `val x: Int` ~ `TypeRef(null, <Int>, List())`
+  * Signature of `var x: Int` ~ `TypeRef(null, <Int>, List())`
+
+```protobuf
+message ByNameType {
+  Type tpe = 1;
+}
+```
+
+`ByNameType` represents signatures of by-name parameters [\[39\]][39]:
+  * Signature of `x` in `def m(x: => Int): Int` ~ `ByNameType(<Int>)`.
+
+```protobuf
+message RepeatedType {
+  Type tpe = 1;
+}
+```
+
+`RepeatedType` represents signatures of repeated parameters [\[40\]][40]:
+  * Signature of `xs` in `def m(xs: Int*): Int` ~ `RepeatedType(<Int>)`.
+
+```protobuf
+message TypeType {
+  repeated string type_parameters = 1;
+  Type lower_bound = 2;
+  Type upper_bound = 3;
+}
+```
+
+`TypeType` represents signatures of abstract type members and type parameters,
+but not type aliases:
+  * Signature of `type T` ~ `TypeBounds(List(), null, null)`.
+  * Signature of `T` in `def m[T <: C]` ~ `TypeBounds(List(), null, <C>)`.
+  * Signature of `M` in `def m[M[_]]` ~ `TypeBounds(List(<_>), null, null)`.
+  * Signature of `type T = C` ~ `TypeRef(..., <C>, List())`.
+  * Signature of `type T[U] = U` ~ `TypeLambda(List(<U>), TypeRef(null, <U>, List())`.
+
 ### SymbolInformation
 
 ```protobuf
@@ -188,6 +433,7 @@ message SymbolInformation {
   string name = 5;
   Range range = 6;
   TextDocument signature = 7;
+  Type tpe = 10;
   repeated string members = 8;
   repeated string overrides = 9;
 }
@@ -370,11 +616,15 @@ For example, for `def x = 42`, the corresponding signature may be a document wit
 `text` equal to `Int` and `occurrences` featuring an identifier with `range`
 equal to `0:0..0:3`, `symbol` equal `_root_.scala.Int#` and `role` equal to `Reference`.
 
-At the moment, the signature format is unspecified, but we intend to
-improve that in the future.
+The signature format was historically unspecified. When we got around
+to specifying the format, we found out that representing type signatures
+with documents was an evolutionary dead end. Therefore, we superseded this
+field with `tpe`.
 
-`members`. At the moment, the format and the explanation of this field are unspecified.
-We intend to improve that in the future.
+`tpe`. [Type](#type) that represents the type signature of the definition.
+
+`members`. This field was historically unspecified. When we got around to
+specifying it, we superseded it with `ClassInfoType.members` in `SymbolInformation.tpe`.
 
 `overrides`. Symbols that are overridden by this symbol either directly or transitively.
 
@@ -502,6 +752,8 @@ in the future, but this is highly unlikely.
 
 ### 3.1.0
   * Added SymbolInformation.Property.{VALPARAM/VARPARAM}.
+  * Added `Type` and `SymbolInformation.tpe` to supersede
+    `SymbolInformation.signature` and `SymbolInformation.members`.
 
 ### 3.0.0
   * Codified the first specification of SemanticDB.
@@ -539,3 +791,19 @@ in the future, but this is highly unlikely.
 [22]: http://scalamacros.org/paperstalks/2016-02-11-WhatDidWeLearnInScalaMeta.pdf
 [23]: https://docs.google.com/document/d/1cH2sTpgSnJZCkZtJl1aY-rzy4uGPcrI-6RrUpdATO2Q/edit
 [24]: https://www.youtube.com/watch?v=jGJhnIT-D2M
+[25]: https://github.com/scala/scala/blob/v2.12.4/src/reflect/scala/reflect/internal/pickling/PickleFormat.scala
+[26]: https://docs.scala-lang.org/overviews/reflection/overview.html
+[27]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#paths
+[28]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#parameterized-types
+[29]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-projection
+[30]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#infix-types
+[31]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#tuple-types
+[32]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#function-types
+[33]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types
+[34]: https://github.com/scala/scala/pull/5310
+[35]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types
+[36]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#annotated-types
+[37]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#existential-types
+[38]: https://stackoverflow.com/questions/8736164/what-are-type-lambdas-in-scala-and-what-are-their-benefits
+[39]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#by-name-parameters
+[40]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#repeated-parameters

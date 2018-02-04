@@ -29,6 +29,130 @@ message Range {
   int32 end_character = 4;
 }
 
+message Type {
+  enum Tag {
+    UNKNOWN_TAG = 0;
+    TYPE_REF = 1;
+    SINGLE_TYPE = 2;
+    THIS_TYPE = 3;
+    SUPER_TYPE = 4;
+    LITERAL_TYPE = 5;
+    COMPOUND_TYPE = 6;
+    ANNOTATED_TYPE = 7;
+    EXISTENTIAL_TYPE = 8;
+    TYPE_LAMBDA = 9;
+    CLASS_INFO_TYPE = 10;
+    METHOD_TYPE = 11;
+    BY_NAME_TYPE = 12;
+    REPEATED_TYPE = 13;
+    TYPE_TYPE = 14;
+  }
+  Tag tag = 1;
+  TypeRef typeRef = 2;
+  SingleType singleType = 3;
+  ThisType thisType = 4;
+  SuperType superType = 5;
+  LiteralType literalType = 6;
+  CompoundType compoundType = 7;
+  AnnotatedType annotatedType = 8;
+  ExistentialType existentialType = 9;
+  TypeLambda typeLambda = 10;
+  ClassInfoType classInfoType = 11;
+  MethodType methodType = 12;
+  ByNameType byNameType = 13;
+  RepeatedType repeatedType = 14;
+  TypeType typeType = 15;
+}
+
+message TypeRef {
+  Type prefix = 1;
+  string symbol = 2;
+  repeated Type arguments = 3;
+}
+
+message SingleType {
+  Type prefix = 1;
+  string symbol = 2;
+}
+
+message ThisType {
+  string symbol = 1;
+}
+
+message SuperType {
+  Type prefix = 1;
+  Type mix = 2;
+}
+
+message LiteralType {
+  enum Tag {
+    UNKNOWN_TAG = 0;
+    UNIT = 1;
+    BOOLEAN = 2;
+    BYTE = 3;
+    SHORT = 4;
+    CHAR = 5;
+    INT = 6;
+    LONG = 7;
+    FLOAT = 8;
+    DOUBLE = 9;
+    STRING = 10;
+    NULL = 11;
+  }
+  Tag tag = 1;
+  int64 primitive = 2;
+  string string = 3;
+}
+
+message CompoundType {
+  repeated Type parents = 1;
+  repeated string declarations = 2;
+}
+
+message AnnotatedType {
+  Type tpe = 1;
+  repeated Type annotations = 2;
+}
+
+message ExistentialType {
+  Type tpe = 1;
+  repeated string declarations = 2;
+}
+
+message TypeLambda {
+  repeated string type_parameters = 1;
+  Type tpe = 2;
+}
+
+message ClassInfoType {
+  repeated string type_parameters = 1;
+  repeated Type parents = 2;
+  repeated string declarations = 3;
+}
+
+message MethodType {
+  message ParameterList {
+    repeated string symbols = 1;
+  }
+  repeated string type_parameters = 1;
+  repeated ParameterList parameters = 2;
+  Type result = 3;
+}
+
+message ByNameType {
+  Type tpe = 1;
+}
+
+message RepeatedType {
+  Type tpe = 1;
+}
+
+message TypeType {
+  repeated string type_parameters = 1;
+  Type lower_bound = 2;
+  Type upper_bound = 3;
+}
+
 message SymbolInformation {
   enum Kind {
     UNKNOWN_KIND = 0;
@@ -69,6 +193,7 @@ message SymbolInformation {
   string name = 5;
   Range range = 6;
   TextDocument signature = 7;
+  Type tpe = 10;
   repeated string members = 8;
   repeated string overrides = 9;
 }
