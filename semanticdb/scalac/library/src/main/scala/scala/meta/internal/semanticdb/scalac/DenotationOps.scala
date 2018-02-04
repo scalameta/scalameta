@@ -5,6 +5,7 @@ import scala.{meta => mf}
 import scala.reflect.internal.{Flags => gf}
 import scala.util.Sorting
 import org.scalameta.logger
+import scala.meta.internal.{semanticdb3 => s}
 
 trait DenotationOps { self: DatabaseOps =>
   import g._
@@ -104,14 +105,28 @@ trait DenotationOps { self: DatabaseOps =>
       }
     }
 
+    private def tpe: s.Type = {
+      ???
+    }
+
     private def overrides: List[m.Symbol] =
       if (config.overrides.isAll) gsym.overrides.map(_.toSemantic)
       else Nil
 
     def toDenotation(saveOverrides: Boolean): m.Denotation = {
-      val (minfo, mnames) = info
       val over = if (saveOverrides) overrides else Nil
-      m.Denotation(flags, name, minfo, mnames, Nil, over)
+      config.signatures match {
+        case SignatureMode.None =>
+          m.Denotation(flags, name, "", Nil, Nil, over, None)
+        case SignatureMode.Old =>
+          val (signature, names) = info
+          m.Denotation(flags, name, signature, names, Nil, over, None)
+        case SignatureMode.New =>
+          m.Denotation(flags, name, "", Nil, Nil, over, Some(tpe))
+        case SignatureMode.All =>
+          val (signature, names) = info
+          m.Denotation(flags, name, signature, names, Nil, over, Some(tpe))
+      }
     }
 
     def overridesMembers: List[(m.Symbol, m.Denotation)] =
