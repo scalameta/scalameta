@@ -85,16 +85,16 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |
       |Names:
       |[8..9): b <= _empty_.b.
-      |[22..23): a <= local0
-      |[25..27): In => local1
+      |[22..23): a <= (a)
+      |[25..27): In => (a)`<error: <none>>`#
       |
       |Messages:
       |[25..27): [error] not found: type In
       |
       |Symbols:
+      |(a) => param a: <error>
+      |(a)`<error: <none>>`# => class `<error: <none>>`
       |_empty_.b. => final object b
-      |local0 => param a: <error>
-      |local1 => class `<error: <none>>`
     """.stripMargin
   )
 }

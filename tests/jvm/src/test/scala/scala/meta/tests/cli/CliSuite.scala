@@ -64,7 +64,7 @@ class CliSuite extends FunSuite with DiffAssertions {
       |Uri => HelloWorld.scala
       |Text => non-empty
       |Language => $language
-      |Symbols => 9 entries
+      |Symbols => 7 entries
       |Occurrences => 7 entries
       |Diagnostics => 0 entries
       |Synthetics => 0 entries
@@ -72,30 +72,27 @@ class CliSuite extends FunSuite with DiffAssertions {
       |Symbols:
       |_empty_.HelloWorld. => final object HelloWorld
       |_empty_.HelloWorld.main([Ljava/lang/String;)V. => def main: (args: Array[String]): Unit
-      |  [0:7..0:12): Array => _root_.scala.Array#
-      |  [0:13..0:19): String => _root_.scala.Predef.String#
-      |  [0:23..0:27): Unit => _root_.scala.Unit#
-      |_root_.scala.Array# => final class Array
-      |_root_.scala.Array#`<init>`(I)V. => primaryctor <init>: (_length: Int): Array[T]
-      |  [0:10..0:13): Int => _root_.scala.Int#
-      |  [0:16..0:21): Array => _root_.scala.Array#
-      |  [0:22..0:23): T => _root_.scala.Array#[T]
+      |  args => _empty_.HelloWorld.main([Ljava/lang/String;)V.(args)
+      |  Unit => _root_.scala.Unit#
+      |_empty_.HelloWorld.main([Ljava/lang/String;)V.(args) => param args: Array[String]
+      |  Array => _root_.scala.Array#
+      |  String => _root_.scala.Predef.String#
+      |_root_.scala.Array# => final class Array.{+6 decls}
+      |  extends AnyRef
+      |  extends Serializable
+      |  extends Cloneable
       |_root_.scala.Predef.String# => type String: String
-      |  [0:0..0:6): String => _root_.java.lang.String#
-      |_root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: Any): Unit
-      |  [0:4..0:7): Any => _root_.scala.Any#
-      |  [0:10..0:14): Unit => _root_.scala.Unit#
-      |_root_.scala.Unit# => abstract final class Unit
-      |_root_.scala.Unit#`<init>`()V. => primaryctor <init>: (): Unit
-      |  [0:4..0:8): Unit => _root_.scala.Unit#
-      |local0 => param args: Array[String]
-      |  [0:0..0:5): Array => _root_.scala.Array#
-      |  [0:6..0:12): String => _root_.scala.Predef.String#
+      |  String => _root_.java.lang.String#
+      |_root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: <?>): Unit
+      |  x => _root_.scala.Predef.println(Ljava/lang/Object;)V.(x)
+      |  Unit => _root_.scala.Unit#
+      |_root_.scala.Unit# => abstract final class Unit.{+2 decls}
+      |  extends AnyVal
       |
       |Occurrences:
       |[1:11..1:21): HelloWorld <= _empty_.HelloWorld.
       |[2:10..2:14): main <= _empty_.HelloWorld.main([Ljava/lang/String;)V.
-      |[2:15..2:19): args <= local0
+      |[2:15..2:19): args <= _empty_.HelloWorld.main([Ljava/lang/String;)V.(args)
       |[2:21..2:26): Array => _root_.scala.Array#
       |[2:27..2:33): String => _root_.scala.Predef.String#
       |[2:37..2:41): Unit => _root_.scala.Unit#
