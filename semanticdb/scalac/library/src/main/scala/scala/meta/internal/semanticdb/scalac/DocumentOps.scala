@@ -204,7 +204,7 @@ trait DocumentOps { self: DatabaseOps =>
                 if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
                   add(symbol, gsym)
                 }
-                if (gsym.isClass && !gsym.isTrait) {
+                if (gsym.isClass && !gsym.isTrait && mtree.isDefinition) {
                   val gprim = gsym.primaryConstructor
                   if (gprim != g.NoSymbol) {
                     add(gprim.toSemantic, gprim)

@@ -43,32 +43,19 @@ _root_.example.Example.x. => val x: ClassTag[Int]
   [9..12): Int => _root_.scala.Int#
 _root_.scala. => package scala
 _root_.scala.Array# => final class Array
-_root_.scala.Array#`<init>`(I)V. => primaryctor <init>: (_length: Int): Array[T]
-  [10..13): Int => _root_.scala.Int#
-  [16..21): Array => _root_.scala.Array#
-  [22..23): T => _root_.scala.Array#[T]
 _root_.scala.Int# => abstract final class Int
-_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
-  [4..7): Int => _root_.scala.Int#
 _root_.scala.Predef.String# => type String: String
   [0..6): String => _root_.java.lang.String#
 _root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: Any): Unit
   [4..7): Any => _root_.scala.Any#
   [10..14): Unit => _root_.scala.Unit#
 _root_.scala.Unit# => abstract final class Unit
-_root_.scala.Unit#`<init>`()V. => primaryctor <init>: (): Unit
-  [4..8): Unit => _root_.scala.Unit#
 _root_.scala.collection. => package collection
 _root_.scala.collection.mutable. => package mutable
 _root_.scala.collection.mutable.Stack# => class Stack
 _root_.scala.collection.mutable.Stack#`<init>`()V. => secondaryctor <init>: (): Stack[A]
   [4..9): Stack => _root_.scala.collection.mutable.Stack#
   [10..11): A => _root_.scala.collection.mutable.Stack#[A]
-_root_.scala.collection.mutable.Stack#`<init>`(Lscala/collection/immutable/List;)V. => private primaryctor <init>: (elems: List[A]): Stack[A]
-  [8..12): List => _root_.scala.collection.immutable.List#
-  [13..14): A => _root_.scala.collection.mutable.Stack#[A]
-  [18..23): Stack => _root_.scala.collection.mutable.Stack#
-  [24..25): A => _root_.scala.collection.mutable.Stack#[A]
 _root_.scala.concurrent. => package concurrent
 _root_.scala.reflect. => package reflect
 _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;. => def classTag: [T] => (implicit ctag: ClassTag[T]): ClassTag[T]
@@ -193,8 +180,6 @@ _root_.flags.p.package.y. => protected var y_=: (x$1: Int): Unit
 _root_.flags.p.package.z()I. => def z: Int
   [0..3): Int => _root_.scala.Int#
 _root_.scala.Int# => abstract final class Int
-_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
-  [4..7): Int => _root_.scala.Int#
 _root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: Nothing
   [0..7): Nothing => _root_.scala.Nothing#
 
@@ -230,8 +215,6 @@ _root_.example.B#foo()I. => def foo: Int
 _root_.java.lang.Object#`<init>`()V. => javadefined primaryctor <init>: (): Object
   [4..10): Object => _root_.java.lang.Object#
 _root_.scala.Int# => abstract final class Int
-_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
-  [4..7): Int => _root_.scala.Int#
 
 
 semanticdb/integration/src/main/scala/example/Synthetic.scala
@@ -265,8 +248,6 @@ _root_.scala.Int# => abstract final class Int
 _root_.scala.Int#`+`(I)I. => abstract def +: (x: Int): Int
   [4..7): Int => _root_.scala.Int#
   [10..13): Int => _root_.scala.Int#
-_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
-  [4..7): Int => _root_.scala.Int#
 _root_.scala.collection.TraversableLike#headOption()Lscala/Option;. => def headOption: Option[A]
   [0..6): Option => _root_.scala.Option#
   [7..8): A => _root_.scala.collection.TraversableLike#[A]

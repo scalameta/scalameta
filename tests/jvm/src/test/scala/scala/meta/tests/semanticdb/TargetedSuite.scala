@@ -230,8 +230,6 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [16..20): Unit => _root_.scala.Unit#
        |_root_.scala. => package scala
        |_root_.scala.Int# => abstract final class Int
-       |_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
-       |  [4..7): Int => _root_.scala.Int#
        |_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: Nothing
        |  [0..7): Nothing => _root_.scala.Nothing#
        |_root_.scala.language. => final object language
@@ -390,25 +388,15 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [4..10): Object => _root_.java.lang.Object#
        |_root_.scala. => package scala
        |_root_.scala.Int# => abstract final class Int
-       |_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
-       |  [4..7): Int => _root_.scala.Int#
        |_root_.scala.collection. => package collection
        |_root_.scala.collection.generic.GenericCompanion#empty()Lscala/collection/GenTraversable;. => def empty: [A] => CC[A]
        |  [7..9): CC => _root_.scala.collection.generic.GenericCompanion#[CC]
        |_root_.scala.collection.mutable. => package mutable
        |_root_.scala.collection.mutable.HashSet# => class HashSet
-       |_root_.scala.collection.mutable.HashSet#`<init>`(Lscala/collection/mutable/FlatHashTable/Contents;)V. => private primaryctor <init>: (contents: Contents[A]): HashSet[A]
-       |  [11..19): Contents => _root_.scala.collection.mutable.FlatHashTable.Contents#
-       |  [20..21): A => _root_.scala.collection.mutable.HashSet#[A]
-       |  [25..32): HashSet => _root_.scala.collection.mutable.HashSet#
-       |  [33..34): A => _root_.scala.collection.mutable.HashSet#[A]
        |_root_.scala.collection.mutable.HashSet. => final object HashSet
        |_root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;. => def empty: [A] => HashSet[A]
        |  [7..14): HashSet => _root_.scala.collection.mutable.HashSet#
        |_root_.scala.collection.mutable.ListBuffer# => final class ListBuffer
-       |_root_.scala.collection.mutable.ListBuffer#`<init>`()V. => primaryctor <init>: (): ListBuffer[A]
-       |  [4..14): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
-       |  [15..16): A => _root_.scala.collection.mutable.ListBuffer#[A]
        |_root_.scala.collection.mutable.ListBuffer. => final object ListBuffer
        |local0 => implicit param b: B
        |  [0..1): B => _root_.i.B#
@@ -529,8 +517,6 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}""".stripMargin,
     """|_empty_.o. => final object o
        |_root_.scala.Int# => abstract final class Int
-       |_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
-       |  [4..7): Int => _root_.scala.Int#
        |_root_.scala.collection.IterableLike#head()Ljava/lang/Object;. => def head: A
        |  [0..1): A => _root_.scala.collection.IterableLike#[A]
        |_root_.scala.collection.immutable.List. => final object List
@@ -859,8 +845,6 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [0..6): AnyRef => _root_.scala.AnyRef#
       |  [12..25): Specializable => _root_.scala.Specializable#
       |_root_.scala.Int# => abstract final class Int
-      |_root_.scala.Int#`<init>`()V. => primaryctor <init>: (): Int
-      |  [4..7): Int => _root_.scala.Int#
       |local1 => typeparam T
       |local2 => param e: T
       |  [0..1): T => local1
