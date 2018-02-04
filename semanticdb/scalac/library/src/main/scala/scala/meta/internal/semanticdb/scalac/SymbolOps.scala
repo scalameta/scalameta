@@ -104,9 +104,8 @@ trait SymbolOps { self: DatabaseOps =>
       def definitelyLocal =
         sym == g.NoSymbol ||
           sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
-          sym.owner.isMethod ||
-          sym.owner.isAliasType ||
-          sym.owner.isAbstractType
+          (sym.owner.isMethod && !sym.isParameter) ||
+          ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter)
       !definitelyGlobal && (definitelyLocal || sym.owner.isSemanticdbLocal)
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
