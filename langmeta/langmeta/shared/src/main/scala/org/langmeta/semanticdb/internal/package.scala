@@ -104,7 +104,7 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(d.Symbol(dsym), _, skind, sproperties, sname, _, ssignature, _, smembers, soverrides) =>
+          case s.SymbolInformation(d.Symbol(dsym), _, skind, sproperties, sname, _, ssignature, stpe, smembers, soverrides) =>
             val dflags = {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
@@ -162,7 +162,8 @@ package object semanticdb {
               else sys.error(s"Unexpected signature $smember")
             }.toList
             val doverrides = soverrides.flatMap(d.Symbol.unapply).toList
-            Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides)))
+            val dtpe = stpe
+            Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides, dtpe)))
           case other => sys.error(s"bad protobuf: unsupported symbol information $other")
         }
       }
@@ -304,9 +305,10 @@ package object semanticdb {
                 }
                 Some(s.TextDocument(text = stext, occurrences = soccurrences))
               }
+              val stpe = ddenot.tpe
               val smembers = ddenot.members.map(_.syntax)
               val soverrides = ddenot.overrides.map(_.syntax)
-              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, srange, ssignature, None, smembers, soverrides))
+              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, srange, ssignature, stpe, smembers, soverrides))
             }
           }
           object dSynthetic {
