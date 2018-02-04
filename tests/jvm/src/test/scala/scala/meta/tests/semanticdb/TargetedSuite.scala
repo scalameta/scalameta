@@ -63,7 +63,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """
     |[7..13): _root_ => _root_.
     |[14..19): scala => _root_.scala.
-    |[20..24): List => _root_.scala.package.List.;_root_.scala.package.List#
+    |[20..24): List => _root_.scala.package.List#;_root_.scala.package.List.
     |[32..33): C <= _empty_.C#
     |[34..34): ε <= _empty_.C#`<init>`()V.
     |[38..44): _root_ => _root_.

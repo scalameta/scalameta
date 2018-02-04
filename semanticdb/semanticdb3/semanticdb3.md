@@ -211,7 +211,12 @@ in imports that can refer to both a class and an object with the same name,
 or references to unresolved overloaded methods.
 
 Multi symbol format is a concatentation of the underlying symbol formats
-interspersed with a semicolon (`;`). The order of concatenation is unspecified.
+interspersed with a semicolon (`;`). Within a multi symbol, the underlying
+symbols must be ordered lexicographically in ascending order.
+
+For example, a reference to both the standard `Int` class and its companion object
+must be modelled by `_root_.scala.Int#;_root_.scala.Int.`. Because of the order
+requirement, `_root_.scala.Int.;_root_.scala.Int#` is not a valid symbol.
 
 **Placeholder symbols**. Are used to model original snippets of code in [Synthetics](#synthetic).
 Must not be used outside `Synthetic.text` documents. Placeholder symbols are
@@ -548,6 +553,7 @@ in the future, but this is highly unlikely.
     because symbols in the "Symbols" section of a document don't have
     to be defined in that document.
   * Explained uniqueness guarantees for symbols.
+  * Specified the order of underlying symbols in multi symbols.
 
 ### 3.0.0
   * Codified the first specification of SemanticDB.
