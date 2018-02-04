@@ -194,10 +194,12 @@ trait DocumentOps { self: DatabaseOps =>
               def saveDenotation(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
                   val saveOverrides = config.overrides.isAll && mtree.isDefinition
-                  val DenotationResult(denot, todoOverrides, todoTpe1) = gs.toDenotation(saveOverrides)
+                  val DenotationResult(denot, todoOverrides, todoTpe1) =
+                    gs.toDenotation(saveOverrides)
                   denotations(ms) = denot
                   val todoTpe2 = todoOverrides.flatMap { ogs =>
-                    val DenotationResult(odenot, _, otodoTpe) = ogs.toDenotation(saveOverrides = true)
+                    val DenotationResult(odenot, _, otodoTpe) =
+                      ogs.toDenotation(saveOverrides = true)
                     denotations(ogs.toSemantic) = odenot
                     otodoTpe
                   }

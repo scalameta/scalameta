@@ -144,7 +144,7 @@ trait DenotationOps { self: DatabaseOps =>
   }
 
   case class DenotationResult(
-    denot: m.Denotation,
-    todoOverrides: List[g.Symbol],
-    todoTpe: List[g.Symbol])
+      denot: m.Denotation,
+      todoOverrides: List[g.Symbol],
+      todoTpe: List[g.Symbol])
 }
