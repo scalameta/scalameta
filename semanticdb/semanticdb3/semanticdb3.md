@@ -316,7 +316,6 @@ message SingleType {
 `SingleType` represents the majority of singleton types [\[34\]][34]:
   * `x.type` ~ `SingleType(null, <x>)`.
   * `p.x.type` ~ `SingleType(<p.type>, <x>)`.
-  * `(T#x).type` ~ `SingleType(<T>, <x>)`.
 
 ```protobuf
 message ThisType {
@@ -386,9 +385,8 @@ message AnnotatedType {
 `AnnotatedType` represents annotated types [\[37\]][37] with the caveat
 that annotation arguments are not represented in the corresponding payload.
 We may remove this limitation in the future:
-  * `T @ann` ~ `AnnotatedType(<T>, List(<ann>))`.
-  * `T @ann1 ... @annN` ~ `AnnotatedType(<T>, List(<ann1>, ..., <annN>))`.
   * `T @ann(x1, ... xM)` ~ `AnnotatedType(<T>, List(<ann>))`.
+  * `T @ann1 ... @annN` ~ `AnnotatedType(<T>, List(<ann1>, ..., <annN>))`.
 
 ```protobuf
 message ExistentialType {
@@ -435,14 +433,14 @@ message MethodType {
 }
 ```
 
-`MethodType` represents signatures of methods, primary constructors,
-secondary constructors and macros, but not vals or vars:
+`MethodType` represents signatures of vals, vars, methods, primary constructors,
+secondary constructors and macros:
+  * Signature of `val x: Int` ~ `MethodType(List(), List(), <Int>)`
+  * Signature of `var x: Int` ~ `MethodType(List(), List(), <Int>)`
   * Signature of `def m: Int` ~ `MethodType(List(), List(), <Int>)`.
   * Signature of `def m(): Int` ~ `MethodType(List(), List(List()), <Int>)`.
   * Signature of `def m(x: Int): Int` ~ `MethodType(List(), List(List(<x>)), <Int>)`.
   * Signature of `def m[T](x: T): T` ~ `MethodType(List(<T>), List(List(<x>)), <T>)`.
-  * Signature of `val x: Int` ~ `TypeRef(null, <Int>, List())`
-  * Signature of `var x: Int` ~ `TypeRef(null, <Int>, List())`
 
 ```protobuf
 message ByNameType {

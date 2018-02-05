@@ -162,13 +162,13 @@ object Metap {
               case TYPE =>
                 print("type ")
                 print(info.name)
+                print(" ")
               case PARAMETER =>
-                print("")
                 print(info.name)
                 print(": ")
               case TYPE_PARAMETER =>
-                print("")
                 print(info.name)
+                print(" ")
               case _ =>
                 print("<?>")
                 return
@@ -211,39 +211,38 @@ object Metap {
       buf += sym
       pprint(sym, DEFINITION, doc)
     }
-    def loop(tpe: Type): Unit = {
+    def prefix(tpe: Type): Unit = {
       tpe.tag match {
         case TYPE_REF =>
           val Some(TypeRef(pre, sym, args)) = tpe.typeRef
           pre match {
             case Some(pre) if pre.tag.isSingleType || pre.tag.isThisType || pre.tag.isSuperType =>
-              loop(pre)
+              prefix(pre)
               print(".")
             case Some(pre) =>
-              loop(pre)
+              prefix(pre)
               print("#")
             case _ =>
               ()
           }
           ref(sym)
-          rep("[", args, ", ", "]")(loop)
+          rep("[", args, ", ", "]")(normal)
         case SINGLE_TYPE =>
           val Some(SingleType(pre, sym)) = tpe.singleType
-          opt(pre, ".")(loop)
+          opt(pre, ".")(prefix)
           ref(sym)
-          print(".type")
         case THIS_TYPE =>
           val Some(ThisType(sym)) = tpe.thisType
           if (sym.nonEmpty) {
             ref(sym)
             print(".")
           }
-          print("this.type")
+          print("this")
         case SUPER_TYPE =>
           val Some(SuperType(pre, mix)) = tpe.superType
-          opt(pre, ".")(loop)
+          opt(pre, ".")(normal)
           print("super")
-          opt("[", mix, "]")(loop)
+          opt("[", mix, "]")(normal)
         case LITERAL_TYPE =>
           tpe.literalType match {
             case Some(LiteralType(UNIT, _, _)) =>
@@ -273,54 +272,64 @@ object Metap {
           }
         case COMPOUND_TYPE =>
           val Some(CompoundType(parents, decls)) = tpe.compoundType
-          rep(parents, " with ")(loop)
+          rep(parents, " with ")(normal)
           if (decls.nonEmpty || parents.length == 1) {
-            print("{ ")
+            print(" { ")
             rep(decls, "; ")(defn)
             print(" }")
           }
         case ANNOTATED_TYPE =>
           val Some(AnnotatedType(utpe, anns)) = tpe.annotatedType
-          utpe.foreach(loop)
+          utpe.foreach(normal)
           print(" ")
-          rep("@", anns, " ", "")(loop)
+          rep("@", anns, " ", "")(normal)
         case EXISTENTIAL_TYPE =>
           val Some(ExistentialType(utpe, decls)) = tpe.existentialType
-          utpe.foreach(loop)
+          utpe.foreach(normal)
           rep(" forSome { ", decls, "; ", " }")(defn)
         case TYPE_LAMBDA =>
           val Some(TypeLambda(tparams, utpe)) = tpe.typeLambda
           rep("[", tparams, ", ", "] => ")(defn)
-          utpe.foreach(loop)
+          utpe.foreach(normal)
         case CLASS_INFO_TYPE =>
           val Some(ClassInfoType(tparams, parents, decls)) = tpe.classInfoType
           rep("[", tparams, ", ", "] => ")(defn)
-          rep(parents, " with ")(loop)
+          rep(parents, " with ")(normal)
           rep(" { ", decls, "; ", " }")(defn)
         case METHOD_TYPE =>
           val Some(MethodType(tparams, paramss, res)) = tpe.methodType
           rep("[", tparams, ", ", "] => ")(defn)
           rep("(", paramss, ")(", ")")(params => rep(params.symbols, ", ")(defn))
           print(": ")
-          res.foreach(loop)
+          res.foreach(normal)
         case BY_NAME_TYPE =>
           val Some(ByNameType(utpe)) = tpe.byNameType
           print("=> ")
-          utpe.foreach(loop)
+          utpe.foreach(normal)
         case REPEATED_TYPE =>
           val Some(RepeatedType(utpe)) = tpe.repeatedType
-          utpe.foreach(loop)
+          utpe.foreach(normal)
           print("*")
         case TYPE_TYPE =>
           val Some(TypeType(tparams, lo, hi)) = tpe.typeType
           rep("[", tparams, ", ", "] => ")(defn)
-          opt(">: ", lo, "")(loop)
-          opt("<: ", hi, "")(loop)
+          opt(">: ", lo, "")(normal)
+          lo.foreach(_ => print(" "))
+          opt("<: ", hi, "")(normal)
         case _ =>
           print("<?>")
       }
     }
-    loop(tpe)
+    def normal(tpe: Type): Unit = {
+      tpe.tag match {
+        case SINGLE_TYPE | THIS_TYPE | SUPER_TYPE =>
+          prefix(tpe)
+          print(".type")
+        case _ =>
+          prefix(tpe)
+      }
+    }
+    normal(tpe)
     buf.result
   }
 

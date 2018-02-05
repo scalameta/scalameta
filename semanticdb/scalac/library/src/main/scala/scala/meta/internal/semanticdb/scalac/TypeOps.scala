@@ -70,7 +70,7 @@ trait TypeOps { self: DatabaseOps =>
           case g.AnnotatedType(ganns, gtpe) =>
             val stag = t.ANNOTATED_TYPE
             val stpe = loop(gtpe)
-            val sanns = ganns.flatMap(gann => loop(gann.atp))
+            val sanns = ganns.reverse.flatMap(gann => loop(gann.atp))
             Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(stpe, sanns))))
           case g.ExistentialType(gquants, gtpe) =>
             val stag = t.EXISTENTIAL_TYPE
