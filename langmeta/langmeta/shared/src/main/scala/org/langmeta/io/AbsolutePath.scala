@@ -23,6 +23,8 @@ sealed abstract case class AbsolutePath(toNIO: nio.Path) {
   def toRelative: RelativePath = toRelative(PathIO.workingDirectory)
   def toRelative(prefix: AbsolutePath): RelativePath = RelativePath(prefix.toNIO.relativize(toNIO))
 
+  def normalize: AbsolutePath = AbsolutePath(toNIO.normalize)(this)
+
   def resolve(other: RelativePath): AbsolutePath = AbsolutePath(toNIO.resolve(other.toNIO))(this)
   def resolve(other: String): AbsolutePath = AbsolutePath(toNIO.resolve(other))(this)
 

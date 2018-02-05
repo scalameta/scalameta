@@ -48,7 +48,7 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
     """.stripMargin,
     """
       |_root_.scala. => package scala
-      |_root_.scala.util. => package util.{+72 members}
+      |_root_.scala.util. => package util.{+71 members}
     """.stripMargin
   )
 

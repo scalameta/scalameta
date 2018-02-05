@@ -1,13 +1,24 @@
+// TODO: Workaround for what seems to be a bug in ScalaTest Native 3.2.0-SNAP10.
+// If a test suite is defined in an empty package (i.e. outside any package declarations),
+// then it will spuriously fail to compile.
+// Discussion: https://github.com/scalameta/scalameta/issues/772#issuecomment-362380136
+
 // package scala.meta.tests
-// package quasiquotes
+package quasiquotes
 
 import org.scalatest._
 import org.scalameta.tests._
 import typecheckError.Options.WithPositions
 import compat.Platform.EOL
 
+// TODO: Workaround for what seems to be a bug in ScalaTest 3.2.0-SNAP10.
+// I had to remove $ characters from all test names in this file.
+// This is because ScalaTest seems to erroneously consider dollars to be name terminators,
+// so it would spuriously crash with "duplicated test" exceptions for e.g.:
+// test("...$ in Pat.Extract") { ... } and test("...$ in Pat.ExtractInfix")  { .. }.
+
 class ErrorSuite extends FunSuite {
-  test("val q\"type $name[$A] = $B\"") {
+  test("val q\"type name[A] = B\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -31,7 +42,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"foo($x)\" when x has incompatible type") {
+  test("q\"foo(x)\" when x has incompatible type") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -47,7 +58,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"$x\" when x has incompatible type") {
+  test("q\"x\" when x has incompatible type") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -63,7 +74,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"foo(..$xs)\" when xs has incompatible type") {
+  test("q\"foo(..xs)\" when xs has incompatible type") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -79,7 +90,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"foo($xs)\" when xs has incompatible type") {
+  test("q\"foo(xs)\" when xs has incompatible type") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -94,7 +105,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"$xs\" when xs has incompatible type") {
+  test("q\"xs\" when xs has incompatible type") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -109,7 +120,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"...$xss\"") {
+  test("q\"...xss\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -124,7 +135,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"$xss\"") {
+  test("q\"xss\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -139,7 +150,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"foo[..$terms]\"") {
+  test("q\"foo[..terms]\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -154,7 +165,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"foo($x, ..$ys, $z, ..$ts)\"") {
+  test("q\"foo(x, ..ys, z, ..ts)\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -176,7 +187,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"\"\" \"$x\" \"\"\"\"") {
+  test("q\"\"\" \"x\" \"\"\"\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -189,7 +200,7 @@ class ErrorSuite extends FunSuite {
     """.replace("QQQ", "\"\"\"").trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"val $name = foo\"") {
+  test("q\"val name = foo\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -202,7 +213,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("q\"var $name = foo\"") {
+  test("q\"var name = foo\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -215,7 +226,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("p\"$name: T\"") {
+  test("p\"name: T\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -228,7 +239,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("""q"$qname" when qname has incompatible type """) {
+  test("""q"qname" when qname has incompatible type """) {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -243,7 +254,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("""q"expr: $tpe" when tpe has incompatible type """) {
+  test("""q"expr: tpe" when tpe has incompatible type """) {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -258,7 +269,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("""q"$expr: tpe" when expr has incompatible type """) {
+  test("""q"expr: tpe" when expr has incompatible type """) {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -286,7 +297,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("""q"expr.$name" when name has incompatible type """) {
+  test("""q"expr.name" when name has incompatible type """) {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -301,7 +312,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("""q"$expr.name" when expr has incompatible type """) {
+  test("""q"expr.name" when expr has incompatible type """) {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -329,7 +340,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("""p"$pat @ $pat"""") {
+  test("""p"pat @ pat"""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -343,7 +354,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("""p"$ref[..$tpes](..$pats)""") {
+  test("""p"ref[..tpes](..pats)""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -355,7 +366,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("""p"$pat: $tpe"""") {
+  test("""p"pat: tpe"""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -369,7 +380,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("p\"case $X: T =>\"") {
+  test("p\"case X: T =>\"") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -381,7 +392,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin.replace("\r", ""))
   }
 
-  test("""q"..$mods def this(...$paramss) = $expr"""") {
+  test("""q"..mods def this(...paramss) = expr"""") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -550,7 +561,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("weirdness after ..") {
+  test("weirdness after dot-dot") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -562,7 +573,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("weirdness after ...") {
+  test("weirdness after triple-dor") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -574,7 +585,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("x before ...$") {
+  test("x before triple-dot") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -589,7 +600,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("$ before ...$") {
+  test("no-dot before triple-dot") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -605,7 +616,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("..$ before ...$") {
+  test("dot-dot before triple-dot") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -621,7 +632,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("...$ before ...$") {
+  test("triple-dot before triple-dot") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -634,7 +645,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("...$ inside ...$ (1)") {
+  test("triple-dot inside triple-dot (1)") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -653,7 +664,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("...$ inside ...$ (2)") {
+  test("triple-dot inside triple-dot (2)") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -671,7 +682,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("...$ mixes with something else in parameter lists") {
+  test("triple-dot mixes with something else in parameter lists") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -685,7 +696,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("...$ in Term.ApplyInfix") {
+  test("triple-dot in Term.ApplyInfix") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -700,7 +711,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("...$ in Pat.Extract") {
+  test("triple-dot in Pat.Extract") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
@@ -715,7 +726,7 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 
-  test("...$ in Pat.ExtractInfix") {
+  test("triple-dot in Pat.ExtractInfix") {
     assert(typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211

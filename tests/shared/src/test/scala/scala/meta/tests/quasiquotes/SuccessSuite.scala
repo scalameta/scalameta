@@ -7,6 +7,12 @@ import scala.meta.dialects.Scala211
 
 import compat.Platform.EOL
 
+// TODO: Workaround for what seems to be a bug in ScalaTest 3.2.0-SNAP10.
+// I had to remove $ characters from all test names in this file.
+// This is because ScalaTest seems to erroneously consider dollars to be name terminators,
+// so it would spuriously crash with "duplicated test" exceptions for e.g.:
+// test("1 p\"case $x: T => \"") { ... } and test("1 p\"case $x @ $y => \"") { .. }.
+
 class SuccessSuite extends FunSuite {
   test("rank-0 liftables") {
     assert(q"foo[${42}]".structure === "Term.ApplyType(Term.Name(\"foo\"), List(Lit.Int(42)))")
@@ -51,29 +57,29 @@ class SuccessSuite extends FunSuite {
     assert(tpe.structure === "Type.Name(\"t\")")
   }
 
-  test("1 p\"case $x: T => \"") {
+  test("1 p\"case x: T => \"") {
     val p"case $x: T => " = p"case x: T =>"
     assert(x.structure === "Pat.Var(Term.Name(\"x\"))")
   }
 
-  test("2 p\"case $x: T => \"") {
+  test("2 p\"case x: T => \"") {
     val x = p"x"
     assert(p"case $x: T => ".structure === "Case(Pat.Typed(Pat.Var(Term.Name(\"x\")), Type.Name(\"T\")), None, Term.Block(Nil))")
   }
 
-  test("1 p\"case $x @ $y => \"") {
+  test("1 p\"case x @ y => \"") {
     val p"case $x @ $y => " = p"case x @ List(1, 2, 3) =>"
     assert(x.structure === "Pat.Var(Term.Name(\"x\"))")
     assert(y.structure === "Pat.Extract(Term.Name(\"List\"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3)))")
   }
 
-  test("2 p\"case $x @ $y => \"") {
+  test("2 p\"case x @ y => \"") {
     val x = p"x"
     val y = p"List(1, 2, 3)"
     assert(p"case $x @ $y => ".structure === "Case(Pat.Bind(Pat.Var(Term.Name(\"x\")), Pat.Extract(Term.Name(\"List\"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3)))), None, Term.Block(Nil))")
   }
 
-  test("1 q\"foo($term, ..$terms, $term)\"") {
+  test("1 q\"foo(term, ..terms, term)\"") {
     val q"foo($term1, ..$terms, $term2)" = q"foo(x, y, z, q)"
     assert(term1.structure === "Term.Name(\"x\")")
     assert(terms.toString === "List(y, z)")
@@ -82,13 +88,13 @@ class SuccessSuite extends FunSuite {
     assert(term2.structure === "Term.Name(\"q\")")
   }
 
-  test("2 q\"foo($term, ..$terms, $term)\"") {
+  test("2 q\"foo(term, ..terms, term)\"") {
     val term = q"x"
     val terms = List(q"y", q"z")
     assert(q"foo($term, ..$terms, $term)".structure === "Term.Apply(Term.Name(\"foo\"), List(Term.Name(\"x\"), Term.Name(\"y\"), Term.Name(\"z\"), Term.Name(\"x\")))")
   }
 
-  test("case q\"$foo(${x: Int})\"") {
+  test("case q\"foo({x: Int})\"") {
     q"foo(42)" match {
       case q"$foo(${x: Int})" =>
         assert(foo.structure === "Term.Name(\"foo\")")
@@ -96,7 +102,7 @@ class SuccessSuite extends FunSuite {
     }
   }
 
-  test("case q\"$foo(${x: Int}, ..$ys, $z)\"") {
+  test("case q\"foo({x: Int}, ..ys, z)\"") {
     q"foo(1, 2, 3)" match {
       case q"$_(${x: Int}, ..$y, $z)" =>
         assert(x === 1)
@@ -105,7 +111,7 @@ class SuccessSuite extends FunSuite {
     }
   }
 
-  test("1 q\"foo($x, ..$ys, $z)\"") {
+  test("1 q\"foo(x, ..ys, z)\"") {
     val q"foo($x, ..$ys, $z)" = q"foo(1, 2, 3)"
     assert(x.structure === "Lit.Int(1)")
     assert(ys.toString === "List(2)")
@@ -113,7 +119,7 @@ class SuccessSuite extends FunSuite {
     assert(z.structure === "Lit.Int(3)")
   }
 
-  test("2 q\"foo($x, ..$ys, $z, ..$ts)\"") {
+  test("2 q\"foo(x, ..ys, z, ..ts)\"") {
     val x = q"1"
     val ys = List(q"2")
     val z = q"3"
@@ -121,42 +127,42 @@ class SuccessSuite extends FunSuite {
     assert(q"foo($x, ..$ys, $z, ..$ts)".structure === "Term.Apply(Term.Name(\"foo\"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3)))")
   }
 
-  test("1 val q\"type $name[$_] = $_\"") {
+  test("1 val q\"type name[_] = _\"") {
     val q"type $name[$_] = $_" = q"type List[+A] = List[A]"
     assert(name.structure === "Type.Name(\"List\")")
   }
 
-  test("2 val q\"type $name[$a] = $b\"") {
+  test("2 val q\"type name[a] = b\"") {
     val q"type $name[$a] = $b" = q"type List[+A] = List[A]"
     assert(name.structure === "Type.Name(\"List\")")
     assert(a.structure === "Type.Param(List(Mod.Covariant()), Type.Name(\"A\"), Nil, Type.Bounds(None, None), Nil, Nil)")
     assert(b.structure === "Type.Apply(Type.Name(\"List\"), List(Type.Name(\"A\")))")
   }
 
-  test("3 val q\"type $name[$a] = $b\"") {
+  test("3 val q\"type name[a] = b\"") {
     val name = t"List"
     val a = tparam"+A"
     val b = t"B"
     assert(q"type $name[$a] = $b".structure === "Defn.Type(Nil, Type.Name(\"List\"), List(Type.Param(List(Mod.Covariant()), Type.Name(\"A\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"B\"))")
   }
 
-  test("1 val q\"def x = ${body: Int}\"") {
+  test("1 val q\"def x = {body: Int}\"") {
     val q"def x = ${body: Int}" = q"def x = 42"
     assert(body === 42)
   }
 
-  test("2 val q\"def x = ${body: Int}\"") {
+  test("2 val q\"def x = {body: Int}\"") {
     val body = 42
     assert(q"def x = ${body: Int}".structure === "Defn.Def(Nil, Term.Name(\"x\"), Nil, Nil, None, Lit.Int(42))")
   }
 
-  test("1 q\"$name.this.$id\"") {
+  test("1 q\"name.this.id\"") {
     val q"$name.this.$x" = q"SuccessSuite.this.x"
     assert(name.structure === "Name(\"SuccessSuite\")")
     assert(x.structure === "Term.Name(\"x\")")
   }
 
-  test("2 q\"$name.this.$id\"") {
+  test("2 q\"name.this.id\"") {
     val name = q"A"
     val x = q"B"
     // inconsistency with the test above planned, since Name can't be constructed directly
@@ -175,14 +181,14 @@ class SuccessSuite extends FunSuite {
     assert(q"$clazz.this".structure === "Term.This(Type.Name(\"C\"))")
   }
 
-  test("1 q\"$name.super[$name].$id\"") {
+  test("1 q\"name.super[name].id\"") {
     val q"$clazz.super[$tpe].$id" = q"A.super[B].x"
     assert(clazz.structure === "Name(\"A\")")
     assert(tpe.structure === "Name(\"B\")")
     assert(id.structure === "Term.Name(\"x\")")
   }
 
-  test("2 q\"$name.super[$name].$id\"") {
+  test("2 q\"name.super[name].id\"") {
     val clazz = q"A"
     val tpe = t"B"
     val id = q"x"
@@ -210,43 +216,31 @@ class SuccessSuite extends FunSuite {
     assert(q"$clazz.super[$tpe]".structure === "Term.Super(Type.Name(\"C\"), Type.Name(\"M\"))")
   }
 
-  test("1 q\"$expr.$name\"") {
+  test("1 q\"expr.name\"") {
     val q"$expr.$name" = q"foo.bar"
     assert(expr.structure === "Term.Name(\"foo\")")
     assert(name.structure === "Term.Name(\"bar\")")
   }
 
-  test("2 q\"$expr.$name\"") {
+  test("2 q\"expr.name\"") {
     val expr = q"foo"
     val name = q"bar"
     assert(q"$expr.$name".structure === "Term.Select(Term.Name(\"foo\"), Term.Name(\"bar\"))")
   }
 
-  test("1 q\"$expr($name)\"") {
+  test("1 q\"expr(name)\"") {
     val q"$expr($name)" = q"foo(bar)"
     assert(expr.structure === "Term.Name(\"foo\")")
     assert(name.structure === "Term.Name(\"bar\")")
   }
 
-  test("2 q\"$expr($name)\"") {
+  test("2 q\"expr(name)\"") {
     val expr = q"foo"
     val name = q"bar"
     assert(q"$expr($name)".structure === "Term.Apply(Term.Name(\"foo\"), List(Term.Name(\"bar\")))")
   }
 
-  test("1 q\"foo[..$tpes]\"") {
-    val q"foo[..$types]" = q"foo[T, U]"
-    assert(types.toString === "List(T, U)")
-    assert(types(0).structure === "Type.Name(\"T\")")
-    assert(types(1).structure === "Type.Name(\"U\")")
-  }
-
-  test("2 q\"foo[..$tpes]\"") {
-    val types = List(t"T", t"U")
-    assert(q"foo[..$types]".structure === "Term.ApplyType(Term.Name(\"foo\"), List(Type.Name(\"T\"), Type.Name(\"U\")))")
-  }
-
-  test("1 q\"$foo[..$tpes]\"") {
+  test("1 q\"foo[..tpes]\"") {
     val q"$foo[..$types]" = q"foo[T, U]"
     assert(foo.toString == "foo")
     assert(types.toString === "List(T, U)")
@@ -254,13 +248,13 @@ class SuccessSuite extends FunSuite {
     assert(types(1).structure === "Type.Name(\"U\")")
   }
 
-  test("2 q\"$foo[..$tpes]\"") {
+  test("2 q\"foo[..tpes]\"") {
     val foo = q"foo"
     val types = List(t"T", t"U")
     assert(q"$foo[..$types]".structure === "Term.ApplyType(Term.Name(\"foo\"), List(Type.Name(\"T\"), Type.Name(\"U\")))")
   }
 
-  test("1 q\"$expr $name[..$tpes] (..$exprs)\"") {
+  test("1 q\"expr name[..tpes] (..exprs)\"") {
     val q"$expr $name[..$tpes] (..$exprs)" = q"x method[T, U] (1, b)"
     assert(expr.structure === "Term.Name(\"x\")")
     assert(name.structure === "Term.Name(\"method\")")
@@ -272,7 +266,7 @@ class SuccessSuite extends FunSuite {
     assert(exprs(1).structure === "Term.Name(\"b\")")
   }
 
-  test("2 q\"$expr $name[..$tpes] (..$exprs)\"") {
+  test("2 q\"expr name[..tpes] (..exprs)\"") {
     val expr = q"x"
     val name = q"method"
     val tpes = List(t"T", t"U")
@@ -280,73 +274,73 @@ class SuccessSuite extends FunSuite {
     assert(q"$expr $name[..$tpes] (..$exprs)".structure === "Term.ApplyInfix(Term.Name(\"x\"), Term.Name(\"method\"), List(Type.Name(\"T\"), Type.Name(\"U\")), List(Lit.Int(1), Term.Name(\"b\")))")
   }
 
-  test("1 q\"$a $b $c\"") {
+  test("1 q\"a b c\"") {
     val q"$a $b $c" = q"x y z"
     assert(a.structure === "Term.Name(\"x\")")
     assert(b.structure === "Term.Name(\"y\")")
     assert(c.structure === "Term.Name(\"z\")")
   }
 
-  test("2 q\"$a $b $c\"") {
+  test("2 q\"a b c\"") {
     val a = q"x"
     val b = q"y"
     val c = q"z"
     assert(q"$a $b $c".structure === "Term.ApplyInfix(Term.Name(\"x\"), Term.Name(\"y\"), Nil, List(Term.Name(\"z\")))")
   }
 
-  test("1 q\"!$expr\"") {
+  test("1 q\"!expr\"") {
     val q"!$x" = q"!foo"
     assert(x.structure === "Term.Name(\"foo\")")
   }
 
-  test("2 q\"!$expr\"") {
+  test("2 q\"!expr\"") {
     val x = q"foo"
     assert(q"!$x".structure === "Term.ApplyUnary(Term.Name(\"!\"), Term.Name(\"foo\"))")
   }
 
-  test("1 q\"~$expr\"") {
+  test("1 q\"~expr\"") {
     val q"~$x" = q"~foo"
     assert(x.structure === "Term.Name(\"foo\")")
   }
 
-  test("2 q\"~$expr\"") {
+  test("2 q\"~expr\"") {
     val expr = q"foo"
     assert(q"~$expr".structure === "Term.ApplyUnary(Term.Name(\"~\"), Term.Name(\"foo\"))")
   }
 
-  test("1 q\"-$expr\"") {
+  test("1 q\"-expr\"") {
     val q"-$x" = q"-foo"
     assert(x.structure === "Term.Name(\"foo\")")
   }
 
-  test("2 q\"-$expr\"") {
+  test("2 q\"-expr\"") {
     val x = q"foo"
     assert(q"-$x".structure === "Term.ApplyUnary(Term.Name(\"-\"), Term.Name(\"foo\"))")
   }
 
-  test("1 q\"+$expr\"") {
+  test("1 q\"+expr\"") {
     val q"+$x" = q"+foo"
     assert(x.structure === "Term.Name(\"foo\")")
   }
 
-  test("2 q\"+$expr\"") {
+  test("2 q\"+expr\"") {
     val x = q"foo"
     assert(q"+$x".structure === "Term.ApplyUnary(Term.Name(\"+\"), Term.Name(\"foo\"))")
   }
 
-  test("1 q\"$ref = $expr\"") {
+  test("1 q\"ref = expr\"") {
     val q"$ref = $expr" = q"a = b"
     assert(ref.structure === "Term.Name(\"a\")")
     assert(expr.structure === "Term.Name(\"b\")")
   }
 
-  test("2 q\"$ref = $expr\"") {
+  test("2 q\"ref = expr\"") {
     val ref = q"a"
     val expr = q"b"
     assert(q"$ref = $expr".structure === "Term.Assign(Term.Name(\"a\"), Term.Name(\"b\"))")
   }
 
-  test("1 val q\"$x.$y = $z.$w\" = q\"a.b = c.d\"") {
+  test("1 val q\"x.y = z.w\" = q\"a.b = c.d\"") {
     val q"$x.$y = $z.$w" = q"a.b = c.d"
     assert(x.structure === "Term.Name(\"a\")")
     assert(y.structure === "Term.Name(\"b\")")
@@ -354,7 +348,7 @@ class SuccessSuite extends FunSuite {
     assert(w.structure === "Term.Name(\"d\")")
   }
 
-  test("2 val q\"$x.$y = $z.$w\" = q\"a.b = c.d\"") {
+  test("2 val q\"x.y = z.w\" = q\"a.b = c.d\"") {
     val x = q"a"
     val y = q"b"
     val z = q"c"
@@ -362,7 +356,7 @@ class SuccessSuite extends FunSuite {
     assert(q"$x.$y = $z.$w".structure === "Term.Assign(Term.Select(Term.Name(\"a\"), Term.Name(\"b\")), Term.Select(Term.Name(\"c\"), Term.Name(\"d\")))")
   }
 
-  test("q\"1 $expr(...$exprs) = $expr\"") {
+  test("q\"1 expr(...exprs) = expr\"") {
     val q"$expr1(...$exprs) = $expr2" = q"foo(a, b) = bar"
     assert(expr1.structure === "Term.Name(\"foo\")")
     assert(exprs.toString === "List(List(a, b))")
@@ -371,68 +365,68 @@ class SuccessSuite extends FunSuite {
     assert(expr2.structure === "Term.Name(\"bar\")")
   }
 
-  test("2 q\"$expr(...$exprs) = $expr\"") {
+  test("2 q\"expr(...exprs) = expr\"") {
     val expr1 = q"foo"
     val exprs = List(List(q"a", q"b"))
     val expr2 = q"bar"
     assert(q"$expr1(...$exprs) = $expr2".structure === "Term.Assign(Term.Apply(Term.Name(\"foo\"), List(Term.Name(\"a\"), Term.Name(\"b\"))), Term.Name(\"bar\"))")
   }
 
-  test("1 q\"($x, y: Int)\"") {
+  test("1 q\"(x, y: Int)\"") {
     val q"($x, y: Int)" = q"(x: X, y: Int)"
     assert(x.structure === "Term.Ascribe(Term.Name(\"x\"), Type.Name(\"X\"))")
   }
 
-  test("2 q\"($x, y: Int)\"") {
+  test("2 q\"(x, y: Int)\"") {
     val x = q"x: X"
     assert(q"($x, y: Int)".structure === "Term.Tuple(List(Term.Ascribe(Term.Name(\"x\"), Type.Name(\"X\")), Term.Ascribe(Term.Name(\"y\"), Type.Name(\"Int\"))))")
   }
 
-  test("1 q\"f($q, y: Y)") {
+  test("1 q\"f(q, y: Y)") {
     val q"f($q, y: Y) = $r" = q"f(x: X, y: Y) = 1"
     assert(q.structure === "Term.Ascribe(Term.Name(\"x\"), Type.Name(\"X\"))")
     assert(r.structure === "Lit.Int(1)")
   }
 
-  test("2 q\"f($q, y: Y)") {
+  test("2 q\"f(q, y: Y)") {
     val q = q"x: X"
     val r = q"1"
     assert(q"f($q, y: Y) = $r".structure === "Term.Assign(Term.Apply(Term.Name(\"f\"), List(Term.Ascribe(Term.Name(\"x\"), Type.Name(\"X\")), Term.Ascribe(Term.Name(\"y\"), Type.Name(\"Y\")))), Lit.Int(1))")
   }
 
-  test("1 q\"return $expr\"") {
+  test("1 q\"return expr\"") {
     val q"return $expr" = q"return foo == bar"
     assert(expr.structure === "Term.ApplyInfix(Term.Name(\"foo\"), Term.Name(\"==\"), Nil, List(Term.Name(\"bar\")))")
   }
 
-  test("2 q\"return $expr\"") {
+  test("2 q\"return expr\"") {
     val expr = q"foo == bar"
     assert(q"return $expr".structure === "Term.Return(Term.ApplyInfix(Term.Name(\"foo\"), Term.Name(\"==\"), Nil, List(Term.Name(\"bar\"))))")
   }
 
-  test("1 q\"throw $expr\"") {
+  test("1 q\"throw expr\"") {
     val q"throw $expr" = q"throw new RuntimeException"
     assert(expr.structure === "Term.New(Init(Type.Name(\"RuntimeException\"), Name(\"\"), Nil))")
   }
 
-  test("2 q\"throw $expr\"") {
+  test("2 q\"throw expr\"") {
     val expr = q"new RuntimeException"
     assert(q"throw $expr".structure === "Term.Throw(Term.New(Init(Type.Name(\"RuntimeException\"), Name(\"\"), Nil)))")
   }
 
-  test("1 q\"$expr: $tpe\"") {
+  test("1 q\"expr: tpe\"") {
     val q"$exp: $tpe" = q"1: Double"
     assert(exp.structure === "Lit.Int(1)")
     assert(tpe.structure === "Type.Name(\"Double\")")
   }
 
-  test("2 q\"$expr: $tpe\"") {
+  test("2 q\"expr: tpe\"") {
     val exp = q"1"
     val tpe = t"Double"
     assert(q"$exp: $tpe".structure === "Term.Ascribe(Lit.Int(1), Type.Name(\"Double\"))")
   }
 
-  test("1 q\"$expr: ..$@annots\"") {
+  test("1 q\"expr: ..@annots\"") {
     val q"$exprr: @q ..@$annotz @$ar" = q"foo: @q @w @e @r"
     assert(exprr.structure === "Term.Name(\"foo\")")
     assert(annotz.toString === "List(@w, @e)")
@@ -441,36 +435,36 @@ class SuccessSuite extends FunSuite {
     assert(ar.structure === "Mod.Annot(Init(Type.Name(\"r\"), Name(\"\"), Nil))")
   }
 
-  test("2 q\"$expr: ..$@annots\"") {
+  test("2 q\"expr: ..@annots\"") {
     val mods = List(mod"@w", mod"@e")
     assert(q"foo: @q ..@$mods @r".structure === "Term.Annotate(Term.Name(\"foo\"), List(Mod.Annot(Init(Type.Name(\"q\"), Name(\"\"), Nil)), Mod.Annot(Init(Type.Name(\"w\"), Name(\"\"), Nil)), Mod.Annot(Init(Type.Name(\"e\"), Name(\"\"), Nil)), Mod.Annot(Init(Type.Name(\"r\"), Name(\"\"), Nil))))")
   }
 
-  test("q\"(..$exprs)\"") {
+  test("q\"(..exprs)\"") {
     val q"(..$terms)" = q"(y, z)"
     assert(terms.toString === "List(y, z)")
     assert(terms(0).structure === "Term.Name(\"y\")")
     assert(terms(1).structure === "Term.Name(\"z\")")
   }
 
-  test("2 q\"(..$exprs)\"") {
+  test("2 q\"(..exprs)\"") {
     val terms = List(q"y", q"z")
     assert(q"(..$terms)".structure === "Term.Tuple(List(Term.Name(\"y\"), Term.Name(\"z\")))")
   }
 
-  test("1 val q\"(..$params)\" = q\"(x: Int, y: String)\"") {
+  test("1 val q\"(..params)\" = q\"(x: Int, y: String)\"") {
     val q"(..$params)" = q"(x: Int, y: String)"
     assert(params.toString === "List(x: Int, y: String)")
     assert(params(0).structure === "Term.Ascribe(Term.Name(\"x\"), Type.Name(\"Int\"))")
     assert(params(1).structure === "Term.Ascribe(Term.Name(\"y\"), Type.Name(\"String\"))")
   }
 
-  test("2 val q\"(..$params)\" = q\"(x: Int, y: String)\"") {
+  test("2 val q\"(..params)\" = q\"(x: Int, y: String)\"") {
     val params = List(q"x: Int", q"y: String")
     assert(q"(..$params)".structure === "Term.Tuple(List(Term.Ascribe(Term.Name(\"x\"), Type.Name(\"Int\")), Term.Ascribe(Term.Name(\"y\"), Type.Name(\"String\"))))")
   }
 
-  test("1 q\"{ ..$stats }\"") {
+  test("1 q\"{ ..stats }\"") {
     val q"{foo; ..$statz; $astat}" = q"{foo; val a = x; val b = y; val c = z}"
     assert(statz.toString === "List(val a = x, val b = y)")
     assert(statz(0).structure === "Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Term.Name(\"x\"))")
@@ -478,39 +472,39 @@ class SuccessSuite extends FunSuite {
     assert(astat.structure === "Defn.Val(Nil, List(Pat.Var(Term.Name(\"c\"))), None, Term.Name(\"z\"))")
   }
 
-  test("2 q\"{ ..$stats }\"") {
+  test("2 q\"{ ..stats }\"") {
     val stats = List(q"val x = 1", q"val y = 2")
     assert(q"{ ..$stats }".structure === "Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), None, Lit.Int(1)), Defn.Val(Nil, List(Pat.Var(Term.Name(\"y\"))), None, Lit.Int(2))))")
   }
 
-  test("1 q\"if ($expr) $expr else $expr\"") {
+  test("1 q\"if (expr) expr else expr\"") {
     val q"if ($expr1) $expr2 else $expr3" = q"if (1 > 2) a else b"
     assert(expr1.structure === "Term.ApplyInfix(Lit.Int(1), Term.Name(\">\"), Nil, List(Lit.Int(2)))")
     assert(expr2.structure === "Term.Name(\"a\")")
     assert(expr3.structure === "Term.Name(\"b\")")
   }
 
-  test("2 q\"if ($expr) $expr else $expr\"") {
+  test("2 q\"if (expr) expr else expr\"") {
     val expr1 = q"1 > 2"
     val expr2 = q"a"
     val expr3 = q"b"
     assert(q"if ($expr1) $expr2 else $expr3".structure === "Term.If(Term.ApplyInfix(Lit.Int(1), Term.Name(\">\"), Nil, List(Lit.Int(2))), Term.Name(\"a\"), Term.Name(\"b\"))")
   }
 
-  test("1 q\"$expr match { ..case $cases }\"") {
+  test("1 q\"expr match { ..case cases }\"") {
     val q"$expr match { case bar => baz; ..case $casez; case q => w}" = q"foo match { case bar => baz; case _ => foo ; case q => w }"
     assert(expr.structure === "Term.Name(\"foo\")")
     assert(casez.toString === "List(case _ => foo)")
     assert(casez(0).structure === "Case(Pat.Wildcard(), None, Term.Name(\"foo\"))")
   }
 
-  test("2 q\"$expr match { ..case $cases }\"") {
+  test("2 q\"expr match { ..case cases }\"") {
     val q"$expr match { case bar => baz; ..case $casez; case _ => foo }" = q"foo match { case bar => baz; case _ => foo }"
     assert(expr.structure === "Term.Name(\"foo\")")
     assert(casez.isEmpty)
   }
 
-  test("3 q\"$expr match { ..case $cases }\"") {
+  test("3 q\"expr match { ..case cases }\"") {
     val q"$expr match { ..case $casez }" = q"foo match { case bar => baz; case _ => foo }"
     assert(expr.structure === "Term.Name(\"foo\")")
     assert(casez.toString === "List(case bar => baz, case _ => foo)")
@@ -518,13 +512,13 @@ class SuccessSuite extends FunSuite {
     assert(casez(1).structure === "Case(Pat.Wildcard(), None, Term.Name(\"foo\"))")
   }
 
-  test("4 q\"$expr match { ..case $cases }\"") {
+  test("4 q\"expr match { ..case cases }\"") {
     val expr = q"foo"
     val casez = List(p"case a => b", p"case q => w")
     assert(q"$expr match { ..case $casez }".structure === "Term.Match(Term.Name(\"foo\"), List(Case(Pat.Var(Term.Name(\"a\")), None, Term.Name(\"b\")), Case(Pat.Var(Term.Name(\"q\")), None, Term.Name(\"w\"))))")
   }
 
-  test("1 q\"try $expr catch { ..case $cases } finally $expropt\"") {
+  test("1 q\"try expr catch { ..case cases } finally expropt\"") {
     val q"try $expr catch { case $case1 ..case $cases; case $case2 } finally $expropt" = q"try foo catch { case a => b; case _ => bar; case 1 => 2; case q => w} finally baz"
     assert(expr.structure === "Term.Name(\"foo\")")
     assert(cases.toString === "List(case _ => bar, case 1 => 2)")
@@ -535,7 +529,7 @@ class SuccessSuite extends FunSuite {
     assert(expropt.structure === "Some(Term.Name(\"baz\"))")
   }
 
-  test("2 q\"try $expr catch { ..case $cases } finally $expropt\"") {
+  test("2 q\"try expr catch { ..case cases } finally expropt\"") {
     val expr = q"foo"
     val cases = List(p"case _ => bar", p"case 1 => 2")
     val case1 = p"case a => b"
@@ -544,14 +538,14 @@ class SuccessSuite extends FunSuite {
     assert(q"try $expr catch { case $case1 ..case $cases; case $case2 } finally $expropt".structure === "Term.Try(Term.Name(\"foo\"), List(Case(Pat.Var(Term.Name(\"a\")), None, Term.Name(\"b\")), Case(Pat.Wildcard(), None, Term.Name(\"bar\")), Case(Lit.Int(1), None, Lit.Int(2)), Case(Pat.Var(Term.Name(\"q\")), None, Term.Name(\"w\"))), Some(Term.Name(\"baz\")))")
   }
 
-  test("1 q\"try $expr catch $expr finally $expropt\"") {
+  test("1 q\"try expr catch expr finally expropt\"") {
     val q"try $expr catch $exprr finally $expropt" = q"try { foo } catch { pf } finally { bar }"
     assert(expr.structure === "Term.Block(List(Term.Name(\"foo\")))")
     assert(exprr.structure === "Term.Name(\"pf\")")
     assert(expropt.structure === "Some(Term.Block(List(Term.Name(\"bar\"))))")
   }
 
-  test("2 q\"try $expr catch $expr finally $expropt\"") {
+  test("2 q\"try expr catch expr finally expropt\"") {
     val expr = q"{ foo }"
     val exprr = q"pf"
     val expropt = q"{ bar }"
@@ -562,7 +556,7 @@ class SuccessSuite extends FunSuite {
     assert(q"(i: Int) => 42".structure === "Term.Function(List(Term.Param(Nil, Term.Name(\"i\"), Some(Type.Name(\"Int\")), None)), Lit.Int(42))")
   }
 
-  test("1 q\"(..$params) => $expr\"") {
+  test("1 q\"(..params) => expr\"") {
     val q"(..$paramz) => $expr" = q"(x: Int, y: String) => 42"
     assert(paramz.toString === "List(x: Int, y: String)")
     assert(paramz(0).structure === "Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Int\")), None)")
@@ -570,13 +564,13 @@ class SuccessSuite extends FunSuite {
     assert(expr.structure === "Lit.Int(42)")
   }
 
-  test("2 q\"(..$params) => $expr\"") {
+  test("2 q\"(..params) => expr\"") {
     val paramz = List(param"x: Int", param"y: String")
     val expr = q"42"
     assert(q"(..$paramz) => $expr".structure === "Term.Function(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Int\")), None), Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"String\")), None)), Lit.Int(42))")
   }
 
-  test("1 val q\"(..$q, y: Y, $e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
+  test("1 val q\"(..q, y: Y, e) => r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
     val q"(..$q, y: Y, $e) => $r" = q"(x: X, y: Y, z: Z) => 1"
     assert(q.toString === "List(x: X)")
     assert(q(0).structure === "Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None)")
@@ -584,48 +578,48 @@ class SuccessSuite extends FunSuite {
     assert(r.structure === "Lit.Int(1)")
   }
 
-  test("2 val q\"(..$q, y: Y, $e) => $r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
+  test("2 val q\"(..q, y: Y, e) => r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
     val q = List(param"x: X")
     val e = param"z: Z"
     val r = q"1"
     assert(q"(..$q, y: Y, $e) => $r".structure === "Term.Function(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"Y\")), None), Term.Param(Nil, Term.Name(\"z\"), Some(Type.Name(\"Z\")), None)), Lit.Int(1))")
   }
 
-  test("1 q\"{ ..case $cases }\"") {
+  test("1 q\"{ ..case cases }\"") {
     val q"{ ..case $cases }" = q"{ case i: Int => i + 1 }"
     assert(cases(0).structure === "Case(Pat.Typed(Pat.Var(Term.Name(\"i\")), Type.Name(\"Int\")), None, Term.ApplyInfix(Term.Name(\"i\"), Term.Name(\"+\"), Nil, List(Lit.Int(1))))")
   }
 
-  test("2 q\"{ ..case $cases }\"") {
+  test("2 q\"{ ..case cases }\"") {
     val cases = List(p"case i: Int => i + 1")
     assert(q"{ ..case $cases }".structure === "Term.PartialFunction(List(Case(Pat.Typed(Pat.Var(Term.Name(\"i\")), Type.Name(\"Int\")), None, Term.ApplyInfix(Term.Name(\"i\"), Term.Name(\"+\"), Nil, List(Lit.Int(1))))))")
   }
 
-  test("1 q\"while ($expr) $expr\"") {
+  test("1 q\"while (expr) expr\"") {
     val q"while ($expr1) $expr2" = q"while (foo) bar"
     assert(expr1.structure === "Term.Name(\"foo\")")
     assert(expr2.structure === "Term.Name(\"bar\")")
   }
 
-  test("2 q\"while ($expr) $expr\"") {
+  test("2 q\"while (expr) expr\"") {
     val expr1 = q"foo"
     val expr2 = q"bar"
     assert(q"while ($expr1) $expr2".structure === "Term.While(Term.Name(\"foo\"), Term.Name(\"bar\"))")
   }
 
-  test("1 q\"do $expr while($expr)\"") {
+  test("1 q\"do expr while(expr)\"") {
     val q"do $expr1 while($expr2)" = q"do foo while (bar)"
     assert(expr1.structure === "Term.Name(\"foo\")")
     assert(expr2.structure === "Term.Name(\"bar\")")
   }
 
-  test("2 q\"do $expr while($expr)\"") {
+  test("2 q\"do expr while(expr)\"") {
     val expr1 = q"foo"
     val expr2 = q"bar"
     assert(q"do $expr1 while($expr2)".structure === "Term.Do(Term.Name(\"foo\"), Term.Name(\"bar\"))")
   }
 
-  test("1 q\"for (..$enumerators) $expr\"") {
+  test("1 q\"for (..enumerators) expr\"") {
     val q"for ($enum1; ..$enumerators; if $cond; $enum2) $exprr" = q"for (a <- as; x <- xs; y <- ys; if bar; b <- bs) foo(x, y)"
     assert(enumerators.toString === "List(x <- xs, y <- ys)")
     assert(enumerators(0).structure === "Enumerator.Generator(Pat.Var(Term.Name(\"x\")), Term.Name(\"xs\"))")
@@ -636,18 +630,18 @@ class SuccessSuite extends FunSuite {
     assert(exprr.structure === "Term.Apply(Term.Name(\"foo\"), List(Term.Name(\"x\"), Term.Name(\"y\")))")
   }
 
-  test("2 q\"for (..$enumerators) $expr\"") {
+  test("2 q\"for (..enumerators) expr\"") {
     val a = enumerator"a <- as"
     val b = enumerator"b <- bs"
     val ab = List(a,b)
     assert(q"for (..$ab) foo".structure === "Term.For(List(Enumerator.Generator(Pat.Var(Term.Name(\"a\")), Term.Name(\"as\")), Enumerator.Generator(Pat.Var(Term.Name(\"b\")), Term.Name(\"bs\"))), Term.Name(\"foo\"))")
   }
 
-//  test("3 q\"for (..$enumerators) $expr\"") {
+//  test("3 q\"for (..enumerators) expr\"") {
 //    val q"for (a <- as; if $cond; ..$enums) bar" = q"for (a <- as; if foo; b <- bs) bar" // TODO review after #203 resolved
 //  }
 
-  test("1 q\"for (..$enumerators) yield $expr\"") {
+  test("1 q\"for (..enumerators) yield expr\"") {
     val q"for (a <- as; ..$enumerators; b <- bs) yield $expr" = q"for (a <- as; x <- xs; y <- ys; b <- bs) yield foo(x, y)"
     assert(enumerators.toString === "List(x <- xs, y <- ys)")
     assert(enumerators(0).structure === "Enumerator.Generator(Pat.Var(Term.Name(\"x\")), Term.Name(\"xs\"))")
@@ -655,19 +649,19 @@ class SuccessSuite extends FunSuite {
     assert(expr.structure === "Term.Apply(Term.Name(\"foo\"), List(Term.Name(\"x\"), Term.Name(\"y\")))")
   }
 
-  test("2 q\"for (..$enumerators) yield $expr\"") {
+  test("2 q\"for (..enumerators) yield expr\"") {
     val a = enumerator"a <- as"
     val b = enumerator"b <- bs"
     val ab = List(a,b)
     assert(q"for (..$ab) yield foo".structure === "Term.ForYield(List(Enumerator.Generator(Pat.Var(Term.Name(\"a\")), Term.Name(\"as\")), Enumerator.Generator(Pat.Var(Term.Name(\"b\")), Term.Name(\"bs\"))), Term.Name(\"foo\"))")
   }
 
-  test("1 q\"new { ..$stat } with ..$inits { $self => ..$stats }\"") {
+  test("1 q\"new { ..stat } with ..inits { self => ..stats }\"") {
     val q"new $x" = q"new Foo"
     assert(x.structure === "Init(Type.Name(\"Foo\"), Name(\"\"), Nil)")
   }
 
-  test("2 q\"new { ..$stat } with ..$inits { $self => ..$stats }\"") {
+  test("2 q\"new { ..stat } with ..inits { self => ..stats }\"") {
     val q"new {..$stats; val b = 4} with $a {$self => ..$statz}" = q"new {val a = 2; val b = 4} with A { self => val b = 3 }"
     assert(stats.toString === "List(val a = 2)")
     assert(stats(0).structure === "Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Int(2))")
@@ -677,12 +671,12 @@ class SuccessSuite extends FunSuite {
     assert(statz(0).structure === "Defn.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), None, Lit.Int(3))")
   }
 
-  test("3 q\"new { ..$stat } with ..$inits { $self => ..$stats }\"") {
+  test("3 q\"new { ..stat } with ..inits { self => ..stats }\"") {
     val q"new X with T { $self => def m = 42}" = q"new X with T { def m = 42 }"
     assert(self.structure === "Self(Name(\"\"), None)")
   }
 
-  test("4 q\"new { ..$stat } with ..$inits { $self => ..$stats }\"") {
+  test("4 q\"new { ..stat } with ..inits { self => ..stats }\"") {
     val stats = List(q"val a = 2")
     val a = init"A"
     val self = self"self: A"
@@ -694,78 +688,78 @@ class SuccessSuite extends FunSuite {
     assert(q"_".structure === "Term.Placeholder()")
   }
 
-  test("1 q\"$expr _\"") {
+  test("1 q\"expr _\"") {
     val q"$expr _" = q"foo _"
     assert(expr.structure === "Term.Name(\"foo\")")
   }
 
-  test("2 q\"$expr _\"") {
+  test("2 q\"expr _\"") {
     val expr = q"foo"
     assert(q"$expr _".structure === "Term.Eta(Term.Name(\"foo\"))")
   }
 
-  test("1 q\"$expr: _*\"") {
+  test("1 q\"expr: _*\"") {
     val q"$expr: _*" = q"foo: _*"
     assert(expr.structure === "Term.Name(\"foo\")")
   }
 
-  test("2 arg\"$expr: _*\"") {
+  test("2 arg\"expr: _*\"") {
     val expr = q"foo"
     assert(q"$expr: _*".structure === "Term.Repeated(Term.Name(\"foo\"))")
   }
 
-  test("1 q\"$lit\"") {
+  test("1 q\"lit\"") {
     val q"$x" = q"42"
     assert(x.structure === "Lit.Int(42)")
   }
 
-  test("2 q\"$lit\"") {
+  test("2 q\"lit\"") {
     val lit = q"42"
     assert(q"$lit".structure === "Lit.Int(42)")
   }
 
-  test("1 t\"$ref.$tname\"") {
+  test("1 t\"ref.tname\"") {
     val t"$ref.$tname" = t"X.Y"
     assert(ref.structure === "Term.Name(\"X\")")
     assert(tname.structure === "Type.Name(\"Y\")")
   }
 
-  test("2 t\"$ref.$tname\"") {
+  test("2 t\"ref.tname\"") {
     val ref = q"X"
     val tname = t"Y"
     assert(t"$ref.$tname".structure === "Type.Select(Term.Name(\"X\"), Type.Name(\"Y\"))")
   }
 
-  test("1 t\"$tpe#$tname\"") {
+  test("1 t\"tpe#tname\"") {
     val t"$tpe#$tname" = t"X#Y"
     assert(tpe.structure === "Type.Name(\"X\")")
     assert(tname.structure === "Type.Name(\"Y\")")
   }
 
-  test("2 t\"$tpe#$tname\"") {
+  test("2 t\"tpe#tname\"") {
     val tpe = t"X"
     val tname = t"Y"
     assert(t"$tpe#$tname".structure === "Type.Project(Type.Name(\"X\"), Type.Name(\"Y\"))")
   }
 
-  test("1 t\"$ref.type\"") {
+  test("1 t\"ref.type\"") {
     val t"$ref.type" = t"X.type"
     assert(ref.structure === "Term.Name(\"X\")")
   }
 
-  test("2 t\"$ref.type\"") {
+  test("2 t\"ref.type\"") {
     val ref = q"X"
     assert(t"$ref.type".structure === "Type.Singleton(Term.Name(\"X\"))")
   }
   /*
    Issue #462
    */
-  test("3 t\"$ref.type\"") {
+  test("3 t\"ref.type\"") {
     val ref = q"X.a"
     assert(t"$ref.type".structure === "Type.Singleton(Term.Select(Term.Name(\"X\"), Term.Name(\"a\")))")
   }
 
-  test("1 t\"$tpe[..$tpes]") {
+  test("1 t\"tpe[..tpes]") {
     val t"$tpe[..$tpes]" = t"X[Y, Z]"
     assert(tpe.structure === "Type.Name(\"X\")")
     assert(tpes.toString === "List(Y, Z)")
@@ -773,27 +767,27 @@ class SuccessSuite extends FunSuite {
     assert(tpes(1).structure === "Type.Name(\"Z\")")
   }
 
-  test("2 t\"$tpe[..$tpes]") {
+  test("2 t\"tpe[..tpes]") {
     val tpe = t"X"
     val tpes = List(t"Y", t"Z")
     assert(t"$tpe[..$tpes]".structure === "Type.Apply(Type.Name(\"X\"), List(Type.Name(\"Y\"), Type.Name(\"Z\")))")
   }
 
-  test("1 t\"$tpe $tname $tpe\"") {
+  test("1 t\"tpe tname tpe\"") {
     val t"$tpe1 $tname $tpe2" = t"X Y Z"
     assert(tpe1.structure === "Type.Name(\"X\")")
     assert(tname.structure === "Type.Name(\"Y\")")
     assert(tpe2.structure === "Type.Name(\"Z\")")
   }
 
-  test("2 t\"$tpe $tname $tpe\"") {
+  test("2 t\"tpe tname tpe\"") {
     val tpe1 = t"X"
     val tname = t"Y"
     val tpe2 = t"Z"
     assert(t"$tpe1 $tname $tpe2".structure === "Type.ApplyInfix(Type.Name(\"X\"), Type.Name(\"Y\"), Type.Name(\"Z\"))")
   }
 
-  test("1 t\"(..$tpes) => $tpe\"") {
+  test("1 t\"(..tpes) => tpe\"") {
     val t"(..$tpes) => $tpe" = t"(X, Y) => Z"
     assert(tpes.toString === "List(X, Y)")
     assert(tpes(0).structure === "Type.Name(\"X\")")
@@ -801,13 +795,13 @@ class SuccessSuite extends FunSuite {
     assert(tpe.structure === "Type.Name(\"Z\")")
   }
 
-  test("2 t\"(..$tpes) => $tpe\"") {
+  test("2 t\"(..tpes) => tpe\"") {
     val tpes: List[Type] = List(t"X", t"Y")
     val tpe = t"Z"
     assert(t"(..$tpes) => $tpe".structure === "Type.Function(List(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))")
   }
 
-  test("1 t\"implicit (..$tpes) => $tpe\"") {
+  test("1 t\"implicit (..tpes) => tpe\"") {
     val Scala211 = "shadow scala.meta.dialects.Scala211"
     import scala.meta.dialects.Dotty
     val t"implicit (..$tpes) => $tpe" = t"implicit (X, Y) => Z"
@@ -817,7 +811,7 @@ class SuccessSuite extends FunSuite {
     assert(tpe.show[Structure] === "Type.Name(\"Z\")")
   }
 
-  test("2 t\"implicit (..$tpes) => $tpe\"") {
+  test("2 t\"implicit (..tpes) => tpe\"") {
     val Scala211 = "shadow scala.meta.dialects.Scala211"
     import scala.meta.dialects.Dotty
     val tpes: List[Type] = List(t"X", t"Y")
@@ -825,19 +819,19 @@ class SuccessSuite extends FunSuite {
     assert(t"implicit (..$tpes) => $tpe".show[Structure] === "Type.ImplicitFunction(List(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))")
   }
 
-  test("1 t\"(..$tpes)\"") {
+  test("1 t\"(..tpes)\"") {
     val t"(..$tpes)" = t"(X, Y)"
     assert(tpes.toString === "List(X, Y)")
     assert(tpes(0).structure === "Type.Name(\"X\")")
     assert(tpes(1).structure === "Type.Name(\"Y\")")
   }
 
-  test("t\"(..$tpes)\"") {
+  test("t\"(..tpes)\"") {
     val tpes = List(t"X", t"Y")
     assert(t"(..$tpes)".structure === "Type.Tuple(List(Type.Name(\"X\"), Type.Name(\"Y\")))")
   }
 
-  test("1 t\"$tpe { ..$stats }\"") {
+  test("1 t\"tpe { ..stats }\"") {
     val t"$tpe {..$stats}" = t"A with B with C { val a: A; val b: B }"
     assert(tpe.toString === "Some(A with B with C)")
     assert(tpe.structure === "Some(Type.With(Type.With(Type.Name(\"A\"), Type.Name(\"B\")), Type.Name(\"C\")))")
@@ -846,13 +840,13 @@ class SuccessSuite extends FunSuite {
     assert(stats(1).structure === "Decl.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), Type.Name(\"B\"))")
   }
 
-  test("2 t\"$tpe { ..$stats }\"") {
+  test("2 t\"tpe { ..stats }\"") {
     val tpe = t"X with Y"
     val stats = List(q"val a: A", q"val b: B")
     assert(t"$tpe { ..$stats }".structure === "Type.Refine(Some(Type.With(Type.Name(\"X\"), Type.Name(\"Y\"))), List(Decl.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), Type.Name(\"A\")), Decl.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), Type.Name(\"B\"))))")
   }
 
-  test("1 t\"$tpe forSome { ..$stats }\"") {
+  test("1 t\"tpe forSome { ..stats }\"") {
     val t"$tpe forSome { ..$stats }" = t"X forSome { val a: A; val b: B }"
     assert(tpe.structure === "Type.Name(\"X\")")
     assert(stats.toString === "List(val a: A, val b: B)")
@@ -860,13 +854,13 @@ class SuccessSuite extends FunSuite {
     assert(stats(1).structure === "Decl.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), Type.Name(\"B\"))")
   }
 
-  test("2 t\"$tpe forSome { ..$stats }\"") {
+  test("2 t\"tpe forSome { ..stats }\"") {
     val tpe = t"X"
     val stats = List(q"val a:A", q"val b:B")
     assert(t"$tpe forSome { ..$stats }".structure === "Type.Existential(Type.Name(\"X\"), List(Decl.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), Type.Name(\"A\")), Decl.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), Type.Name(\"B\"))))")
   }
 
-  test("1 t\"$tpe ..@$annots\"") {
+  test("1 t\"tpe ..@annots\"") {
     val t"$tpe ..@$annots" = t"X @a @b"
     assert(tpe.structure === "Type.Name(\"X\")")
     assert(annots.toString === "List(@a, @b)")
@@ -874,70 +868,70 @@ class SuccessSuite extends FunSuite {
     assert(annots(1).structure === "Mod.Annot(Init(Type.Name(\"b\"), Name(\"\"), Nil))")
   }
 
-  test("2 t\"$tpe ..@$annots\"") {
+  test("2 t\"tpe ..@annots\"") {
     val tpe = t"X"
     val annots = List(mod"@a", mod"@b")
     assert(t"$tpe ..@$annots".structure === "Type.Annotate(Type.Name(\"X\"), List(Mod.Annot(Init(Type.Name(\"a\"), Name(\"\"), Nil)), Mod.Annot(Init(Type.Name(\"b\"), Name(\"\"), Nil))))")
   }
 
-  test("1 t\"[..$tparams] => $tpe\"") {
+  test("1 t\"[..tparams] => tpe\"") {
     val t"[..$tparams] => $tpe" = t"[T] => (T, T)"
     assert(tparams.toString === "List(T)")
     assert(tparams(0).structure === "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)")
     assert(tpe.toString === "(T, T)")
   }
 
-  test("2 t\"(..$tparams) => $tpe\"") {
+  test("2 t\"(..tparams) => tpe\"") {
     val tparams = List(tparam"T")
     val tpe = t"(T, T)"
     assert(t"[..$tparams] => $tpe".structure === "Type.Lambda(List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Tuple(List(Type.Name(\"T\"), Type.Name(\"T\"))))")
   }
 
-  test("1 t\"(...$paramss): $tpe\"") {
+  test("1 t\"(...paramss): tpe\"") {
     val t"(...$paramss): $tpe" = t"(x: X): x.T"
     assert(paramss.toString === "List(List(x: X))")
     assert(tpe.toString === "x.T")
   }
 
-  test("2 t\"(...$paramss): $tpe\"") {
+  test("2 t\"(...paramss): tpe\"") {
     val paramss = List(List(param"x: X"))
     val tpe = t"x.T"
     assert(t"(...$paramss): $tpe".structure === "Type.Method(List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None))), Type.Select(Term.Name(\"x\"), Type.Name(\"T\")))")
   }
 
-  test("1 t\"_ >: $tpeopt <: $tpeopt\"") {
+  test("1 t\"_ >: tpeopt <: tpeopt\"") {
     val t"_ >: $tpe1 <: $tpe2" = t"_ >: X <: Y"
     assert(tpe1.structure === "Some(Type.Name(\"X\"))")
     assert(tpe2.structure === "Some(Type.Name(\"Y\"))")
   }
 
-  test("2 t\"_ >: $tpeopt <: $tpeopt\"") {
+  test("2 t\"_ >: tpeopt <: tpeopt\"") {
     val tpe1 = t"X"
     val tpe2 = t"Y"
     assert(t"_ >: $tpe1 <: $tpe2".structure === "Type.Placeholder(Type.Bounds(Some(Type.Name(\"X\")), Some(Type.Name(\"Y\"))))")
   }
 
-  test("1 t\"=> $tpe\"") {
+  test("1 t\"=> tpe\"") {
     val t"=> $tpe" = t"=> X"
     assert(tpe.structure === "Type.Name(\"X\")")
   }
 
-  test("2 t\"=> $tpe\"") {
+  test("2 t\"=> tpe\"") {
     val tpe = t"X"
     assert(t"=> $tpe".structure === "Type.ByName(Type.Name(\"X\"))")
   }
 
-  test("1 t\"$tpe *\"") {
+  test("1 t\"tpe *\"") {
     val t"$tpe*" = t"X*"
     assert(tpe.structure === "Type.Name(\"X\")")
   }
 
-  test("2 t\"$tpe *\"") {
+  test("2 t\"tpe *\"") {
     val tpe = t"X"
     assert(t"$tpe*".structure === "Type.Repeated(Type.Name(\"X\"))")
   }
 
-  test("t\"$lit\"") {
+  test("t\"lit\"") {
     val lit = q"1"
     assert(t"$lit".structure === "Lit.Int(1)")
   }
@@ -966,54 +960,54 @@ class SuccessSuite extends FunSuite {
     assert(p"`X`".structure === "Term.Name(\"X\")")
   }
 
-  test("1 p\"$pat @ $pat\"") {
+  test("1 p\"pat @ pat\"") {
     val p"$pat1 @ $pat2" = p"x @ y"
     assert(pat1.structure === "Pat.Var(Term.Name(\"x\"))")
     assert(pat2.structure === "Pat.Var(Term.Name(\"y\"))")
   }
 
-  test("2 p\"$pat1 @ $pat\"") {
+  test("2 p\"pat1 @ pat\"") {
     val pat1 = p"x"
     val pat2 = p"y"
     assert(p"$pat1 @ $pat2".structure === "Pat.Bind(Pat.Var(Term.Name(\"x\")), Pat.Var(Term.Name(\"y\")))")
   }
 
-  test("1 p\"$pat | $pat\"") {
+  test("1 p\"pat | pat\"") {
     val p"$pat1 | $pat2" = p"x | y"
     assert(pat1.structure === "Pat.Var(Term.Name(\"x\"))")
     assert(pat2.structure === "Pat.Var(Term.Name(\"y\"))")
   }
 
-  test("2 p\"$pat | $pat\"") {
+  test("2 p\"pat | pat\"") {
     val pat1 = q"X"
     val pat2 = q"Y"
     assert(p"$pat1 | $pat2".structure === "Pat.Alternative(Term.Name(\"X\"), Term.Name(\"Y\"))")
   }
 
-  test("3 p\"$pat | $pat\"") {
+  test("3 p\"pat | pat\"") {
     val pat1 = p"`X`"
     val pat2 = q"Y"
     assert(p"$pat1 | $pat2".structure === "Pat.Alternative(Term.Name(\"X\"), Term.Name(\"Y\"))")
   }
 
-  test("1 p\"(..$pats)\"") {
+  test("1 p\"(..pats)\"") {
     val p"(..$pats)" = p"(X, Y)"
     assert(pats.toString === "List(X, Y)")
     assert(pats(0).structure === "Term.Name(\"X\")")
     assert(pats(1).structure === "Term.Name(\"Y\")")
   }
 
-  test("2 p\"(..$pats)\"") {
+  test("2 p\"(..pats)\"") {
     val pats = List(p"x", p"y")
     assert(p"(..$pats)".structure === "Pat.Tuple(List(Pat.Var(Term.Name(\"x\")), Pat.Var(Term.Name(\"y\"))))")
   }
 
-  test("3 p\"(..$pats)\"") {
+  test("3 p\"(..pats)\"") {
     val pats = List(p"`X`", q"Y")
     assert(p"(..$pats)".structure === "Pat.Tuple(List(Term.Name(\"X\"), Term.Name(\"Y\")))")
   }
 
-  test("1 p\"$expr(..$pats)\"") {
+  test("1 p\"expr(..pats)\"") {
     val p"$expr(..$pats)" = p"x[A, B](Q, W)"
     assert(expr.structure === "Term.ApplyType(Term.Name(\"x\"), List(Type.Name(\"A\"), Type.Name(\"B\")))")
     assert(pats.toString === "List(Q, W)")
@@ -1021,7 +1015,7 @@ class SuccessSuite extends FunSuite {
     assert(pats(1).structure === "Term.Name(\"W\")")
   }
 
-  test("2 p\"$expr(..$pats)\"") {
+  test("2 p\"expr(..pats)\"") {
     val p"$expr(..$pats)" = p"x(Q, W)"
     assert(expr.structure === "Term.Name(\"x\")")
     assert(pats.toString === "List(Q, W)")
@@ -1029,14 +1023,14 @@ class SuccessSuite extends FunSuite {
     assert(pats(1).structure === "Term.Name(\"W\")")
   }
 
-  test("3 p\"$expr(..$pats)\"") {
+  test("3 p\"expr(..pats)\"") {
     val ref = q"x"
     val tpes = List(t"A", t"B")
     val pats = List(q"Q", q"W")
     assert(p"$ref[..$tpes](..$pats)".structure === "Pat.Extract(Term.ApplyType(Term.Name(\"x\"), List(Type.Name(\"A\"), Type.Name(\"B\"))), List(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
-  test("4 p\"$expr(..$pats)\"") {
+  test("4 p\"expr(..pats)\"") {
     val ref = q"`x`"
     val tpes = List(t"`A`", t"B")
     val pats = List(p"`Q`", q"W")
@@ -1046,14 +1040,14 @@ class SuccessSuite extends FunSuite {
   /*
    Issue #462
    */
-  test("5 p\"$expr(..$pats)\"") {
+  test("5 p\"expr(..pats)\"") {
     val ref = q"x.a"
     val tpes = List(t"A", t"B")
     val pats = List(q"Q", q"W")
     assert(p"$ref[..$tpes](..$pats)".structure === "Pat.Extract(Term.ApplyType(Term.Select(Term.Name(\"x\"), Term.Name(\"a\")), List(Type.Name(\"A\"), Type.Name(\"B\"))), List(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
-  test("1 p\"$pat $name (..$pats)\"") {
+  test("1 p\"pat name (..pats)\"") {
     val p"$pat $name (..$pats)" = p"x y (Q, W)"
     assert(pat.structure === "Pat.Var(Term.Name(\"x\"))")
     assert(name.structure === "Term.Name(\"y\")")
@@ -1062,70 +1056,70 @@ class SuccessSuite extends FunSuite {
     assert(pats(1).structure === "Term.Name(\"W\")")
   }
 
-  test("2 p\"$pat $name (..$pats)\"") {
+  test("2 p\"pat name (..pats)\"") {
     val pat = p"x"
     val name = q"y"
     val pats = List(q"Q", q"W")
     assert(p"$pat $name (..$pats)".structure === "Pat.ExtractInfix(Pat.Var(Term.Name(\"x\")), Term.Name(\"y\"), List(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
-  test("3 p\"$pat $name (..$pats)\"") {
+  test("3 p\"pat name (..pats)\"") {
     val pat = p"`x`"
     val name = q"y"
     val pats = List(q"Q", q"W")
     assert(p"$pat $name (..$pats)".structure === "Pat.ExtractInfix(Term.Name(\"x\"), Term.Name(\"y\"), List(Term.Name(\"Q\"), Term.Name(\"W\")))")
   }
 
-  test("1 p\"$pat: $ptpe\"") {
+  test("1 p\"pat: ptpe\"") {
     val p"$pat: $ptpe" = p"x: Y"
     assert(pat.structure === "Pat.Var(Term.Name(\"x\"))")
     assert(ptpe.structure === "Type.Name(\"Y\")")
   }
 
-  test("2 p\"$pat: $ptpe\"") {
+  test("2 p\"pat: ptpe\"") {
     val pat = p"x"
     val ptpe = t"Y"
     assert(p"$pat: $ptpe".structure === "Pat.Typed(Pat.Var(Term.Name(\"x\")), Type.Name(\"Y\"))")
   }
 
-  test("1 p\"$expr.$name\"") {
+  test("1 p\"expr.name\"") {
     val p"$expr.$name" = p"x.y"
     assert(expr.structure === "Term.Name(\"x\")")
     assert(name.structure === "Term.Name(\"y\")")
   }
 
-  test("2 p\"$expr.$name\"") {
+  test("2 p\"expr.name\"") {
     val expr = q"x"
     val name = q"y"
     assert(p"$expr.$name".structure === "Term.Select(Term.Name(\"x\"), Term.Name(\"y\"))")
   }
 
-  test("3 p\"$expr.$name\"") {
+  test("3 p\"expr.name\"") {
     val expr = q"`x`"
     val name = q"y"
     assert(p"$expr.$name".structure === "Term.Select(Term.Name(\"x\"), Term.Name(\"y\"))")
   }
 
-  test("p\"$lit\"") {
+  test("p\"lit\"") {
     val lit = q"1"
     assert(p"$lit".structure === "Lit.Int(1)")
   }
 
-  test("1 p\"case $pat if $expropt => $expr\"") {
+  test("1 p\"case pat if expropt => expr\"") {
     val p"case $pat if $expropt => $expr" = p"case X if foo => bar"
     assert(pat.structure === "Term.Name(\"X\")")
     assert(expropt.structure === "Some(Term.Name(\"foo\"))")
     assert(expr.structure === "Term.Name(\"bar\")")
   }
 
-  test("2 p\"case $pat if $expropt => $expr\"") {
+  test("2 p\"case pat if expropt => expr\"") {
     val pat = q"X"
     val expropt = q"foo"
     val expr = q"bar"
     assert(p"case $pat if $expropt => $expr".structure === "Case(Term.Name(\"X\"), Some(Term.Name(\"foo\")), Term.Name(\"bar\"))")
   }
 
-  test("3 p\"case $pat if $expropt => $expr\"") {
+  test("3 p\"case pat if expropt => expr\"") {
     val pat = p"`X`"
     val expropt = q"`foo`"
     val expr = q"`bar`"
@@ -1140,17 +1134,17 @@ class SuccessSuite extends FunSuite {
     assert(p"_*".structure === "Pat.SeqWildcard()")
   }
 
-  test("1 p\"$pat\"") {
+  test("1 p\"pat\"") {
     val pat = p"X"
     assert(p"$pat".structure === "Pat.Var(Term.Name(\"X\"))")
   }
 
-  test("2 p\"$pat\"") {
+  test("2 p\"pat\"") {
     val pat = p"`X`"
     assert(p"$pat".structure === "Term.Name(\"X\")")
   }
 
-  test("1 q\"..$mods val ..$pats: $tpe\"") {
+  test("1 q\"..mods val ..pats: tpe\"") {
     val q"..$mods val ..$pats: $tpe" = q"private final val x, y: T"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1161,14 +1155,14 @@ class SuccessSuite extends FunSuite {
     assert(tpe.structure === "Type.Name(\"T\")")
   }
 
-  test("2 q\"..$mods val ..$pats: $tpe\"") {
+  test("2 q\"..mods val ..pats: tpe\"") {
     val mods = List(mod"private", mod"final")
     val pats = List(p"x", p"y")
     val tpe = t"T"
     assert(q"..$mods val ..$pats: $tpe".structure === "Decl.Val(List(Mod.Private(Name(\"\")), Mod.Final()), List(Pat.Var(Term.Name(\"x\")), Pat.Var(Term.Name(\"y\"))), Type.Name(\"T\"))")
   }
 
-  test("1 q\"..$mods var ..$pats: $tpe\"") {
+  test("1 q\"..mods var ..pats: tpe\"") {
     val q"..$mods var ..$pats: $tpe" = q"private final var x, y: T"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1179,14 +1173,14 @@ class SuccessSuite extends FunSuite {
     assert(tpe.structure === "Type.Name(\"T\")")
   }
 
-  test("2 q\"..$mods var ..$pats: $tpe\"") {
+  test("2 q\"..mods var ..pats: tpe\"") {
     val mods = List(mod"private", mod"final")
     val pats = List(p"x", p"y")
     val tpe = t"T"
     assert(q"..$mods var ..$pats: $tpe".structure === "Decl.Var(List(Mod.Private(Name(\"\")), Mod.Final()), List(Pat.Var(Term.Name(\"x\")), Pat.Var(Term.Name(\"y\"))), Type.Name(\"T\"))")
   }
 
-  test("1 q\"..$mods def $name[..$tparams](...$paramss): $tpe\"") {
+  test("1 q\"..mods def name[..tparams](...paramss): tpe\"") {
     val q"..$mods def $name[..$tparams](...$paramss): $tpe" = q"private final def m[T, W](x: X, y: Y): R"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1201,7 +1195,7 @@ class SuccessSuite extends FunSuite {
     assert(tpe.structure === "Type.Name(\"R\")")
   }
 
-  test("2 q\"..$mods def $name[..$tparams](...$paramss): $tpe\"") {
+  test("2 q\"..mods def name[..tparams](...paramss): tpe\"") {
     val mods = List(mod"private", mod"final")
     val name = q"m"
     val tparams = List(tparam"T", tparam"W")
@@ -1210,7 +1204,7 @@ class SuccessSuite extends FunSuite {
     assert(q"..$mods def $name[..$tparams](...$paramss): $tpe".structure === "Decl.Def(List(Mod.Private(Name(\"\")), Mod.Final()), Term.Name(\"m\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Type.Name(\"R\"))")
   }
 
-  test("1 q\"..$mods type $tname[..$tparams] >: $tpeopt <: $tpeopt\"") {
+  test("1 q\"..mods type tname[..tparams] >: tpeopt <: tpeopt\"") {
     val q"..$mods type $tname[..$tparams] >: $tpeopt1 <: $tpeopt2" = q"private final type T[T, W] >: A <: B"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1223,7 +1217,7 @@ class SuccessSuite extends FunSuite {
     assert(tpeopt2.structure === "Some(Type.Name(\"B\"))")
   }
 
-  test("2 q\"..$mods type $tname[..$tparams] >: $tpeopt <: $tpeopt\"") {
+  test("2 q\"..mods type tname[..tparams] >: tpeopt <: tpeopt\"") {
     val mods = List(mod"private", mod"final")
     val tname = t"T"
     val tparams = List(tparam"T", tparam"W")
@@ -1232,7 +1226,7 @@ class SuccessSuite extends FunSuite {
     assert(q"..$mods type $tname[..$tparams] >: $tpeopt1 <: $tpeopt2".structure === "Decl.Type(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"T\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(Some(Type.Name(\"A\")), Some(Type.Name(\"A\"))))")
   }
 
-  test("1 q\"..$mods val ..$pats: $tpeopt = $expr\"") {
+  test("1 q\"..mods val ..pats: tpeopt = expr\"") {
     val q"..$mods val ..$pats: $tpeopt = $expr" = q"private final val x, y: T = t"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1244,7 +1238,7 @@ class SuccessSuite extends FunSuite {
     assert(expr.structure === "Term.Name(\"t\")")
   }
 
-  test("2 q\"..$mods val ..$pats: $tpeopt = $expr\"") {
+  test("2 q\"..mods val ..pats: tpeopt = expr\"") {
     val mods = List(mod"private", mod"final")
     val pats = List(p"x", p"y")
     val tpeopt = t"T"
@@ -1252,7 +1246,7 @@ class SuccessSuite extends FunSuite {
     assert(q"..$mods val ..$pats: $tpeopt = $expr".structure === "Defn.Val(List(Mod.Private(Name(\"\")), Mod.Final()), List(Pat.Var(Term.Name(\"x\")), Pat.Var(Term.Name(\"y\"))), Some(Type.Name(\"T\")), Term.Name(\"t\"))")
   }
 
-  test("1 q\"..$mods var ..$pats: $tpeopt = $expropt\"") {
+  test("1 q\"..mods var ..pats: tpeopt = expropt\"") {
     val q"..$mods var ..$pats: $tpeopt = $expropt" = q"private final var x, y: T = t"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1264,7 +1258,7 @@ class SuccessSuite extends FunSuite {
     assert(expropt.structure === "Some(Term.Name(\"t\"))")
   }
 
-  test("2 q\"..$mods var ..$pats: $tpeopt = $expropt\"") {
+  test("2 q\"..mods var ..pats: tpeopt = expropt\"") {
     val mods = List(mod"private", mod"final")
     val pats = List(p"x", p"y")
     val tpeopt = t"T"
@@ -1272,7 +1266,7 @@ class SuccessSuite extends FunSuite {
     assert(q"..$mods var ..$pats: $tpeopt = $expropt".structure === "Defn.Var(List(Mod.Private(Name(\"\")), Mod.Final()), List(Pat.Var(Term.Name(\"x\")), Pat.Var(Term.Name(\"y\"))), Some(Type.Name(\"T\")), Some(Term.Name(\"t\")))")
   }
 
-  test("1 q\"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr\"") {
+  test("1 q\"..mods def name[..tparams](...paramss): tpeopt = expr\"") {
     val q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr" = q"private final def m[T, W](x: X, y: Y): R = r"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1288,7 +1282,7 @@ class SuccessSuite extends FunSuite {
     assert(expr.structure === "Term.Name(\"r\")")
   }
 
-  test("2 q\"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr\"") {
+  test("2 q\"..mods def name[..tparams](...paramss): tpeopt = expr\"") {
     val mods = List(mod"private", mod"final")
     val name = q"m"
     val tparams = List(tparam"T", tparam"W")
@@ -1298,7 +1292,7 @@ class SuccessSuite extends FunSuite {
     assert(q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr".structure === "Defn.Def(List(Mod.Private(Name(\"\")), Mod.Final()), Term.Name(\"m\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Some(Type.Name(\"R\")), Term.Name(\"r\"))")
   }
 
-  test("1 q\"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr\"") {
+  test("1 q\"..mods def name[..tparams](...paramss): tpeopt = macro expr\"") {
     val q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr" = q"private final def m[T, W](x: X, y: Y): R = macro r"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1314,7 +1308,7 @@ class SuccessSuite extends FunSuite {
     assert(expr.structure === "Term.Name(\"r\")")
   }
 
-  test("2 q\"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr\"") {
+  test("2 q\"..mods def name[..tparams](...paramss): tpeopt = macro expr\"") {
     val mods = List(mod"private", mod"final")
     val name = q"m"
     val tparams = List(tparam"T", tparam"W")
@@ -1324,7 +1318,7 @@ class SuccessSuite extends FunSuite {
     assert(q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr".structure === "Defn.Macro(List(Mod.Private(Name(\"\")), Mod.Final()), Term.Name(\"m\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Some(Type.Name(\"R\")), Term.Name(\"r\"))")
   }
 
-  test("1 q\"..$mods type $tname[..$tparams] = $tpe\"") {
+  test("1 q\"..mods type tname[..tparams] = tpe\"") {
     val q"..$mods type $tname[..$tparams] = $tpe" = q"private final type Q[T, W] = R"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1336,7 +1330,7 @@ class SuccessSuite extends FunSuite {
     assert(tpe.structure === "Type.Name(\"R\")")
   }
 
-  test("2 q\"..$mods type $tname[..$tparams] = $tpe\"") {
+  test("2 q\"..mods type tname[..tparams] = tpe\"") {
     val mods = List(mod"private", mod"final")
     val tname = t"Q"
     val tparams = List(tparam"T", tparam"W")
@@ -1344,7 +1338,7 @@ class SuccessSuite extends FunSuite {
     assert(q"..$mods type $tname[..$tparams] = $tpe".structure === "Defn.Type(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"R\"))")
   }
 
-  test("1 q\"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template\"") {
+  test("1 q\"..mods class tname[..tparams] mod (...paramss) extends template\"") {
   val q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template" = q"private final class Q[T, W] private (x: X, y: Y) extends Y"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1360,7 +1354,7 @@ class SuccessSuite extends FunSuite {
     assert(template.structure === "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Self(Name(\"\"), None), Nil)")
   }
 
-  test("2 q\"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template\"") {
+  test("2 q\"..mods class tname[..tparams] mod (...paramss) extends template\"") {
   val q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template" = q"private final class Q[T, W] protected (x: X, y: Y) extends { def m1 = 42; def m2 = 666 }"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1376,7 +1370,7 @@ class SuccessSuite extends FunSuite {
     assert(template.structure === "Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))")
   }
 
-  test("3 q\"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template\"") {
+  test("3 q\"..mods class tname[..tparams] mod (...paramss) extends template\"") {
   val mods = List(mod"private", mod"final")
     val tname = t"Q"
     val tparams = List(tparam"T", tparam"W")
@@ -1386,7 +1380,7 @@ class SuccessSuite extends FunSuite {
     assert(q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template".structure === "Defn.Class(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Ctor.Primary(List(Mod.Protected(Name(\"\"))), Name(\"\"), List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None)))), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))")
   }
 
-  test("1 q\"..$mods trait $tname[..$tparams] extends $template\"") {
+  test("1 q\"..mods trait tname[..tparams] extends template\"") {
     val q"..$mods trait $tname[..$tparams] extends $template" = q"private sealed trait Q[T, W] extends Y"
     assert(mods.toString === "List(private, sealed)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1398,7 +1392,7 @@ class SuccessSuite extends FunSuite {
     assert(template.structure === "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Self(Name(\"\"), None), Nil)")
   }
 
-  test("2 q\"..$mods trait $tname[..$tparams] extends $template\"") {
+  test("2 q\"..mods trait tname[..tparams] extends template\"") {
     val q"..$mods trait $tname[..$tparams] extends $template" = q"private sealed trait Q[T, W] extends { def m1 = 42; def m2 = 666 }"
     assert(mods.toString === "List(private, sealed)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1410,7 +1404,7 @@ class SuccessSuite extends FunSuite {
     assert(template.structure === "Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))")
   }
 
-  test("3 q\"..$mods trait $tname[..$tparams] extends $template\"") {
+  test("3 q\"..mods trait tname[..tparams] extends template\"") {
     val mods = List(mod"private", mod"sealed")
     val tname = t"Q"
     val tparams = List(tparam"T", tparam"W")
@@ -1418,7 +1412,7 @@ class SuccessSuite extends FunSuite {
     assert(q"..$mods trait $tname[..$tparams] extends $template".structure === "Defn.Trait(List(Mod.Private(Name(\"\")), Mod.Sealed()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))")
   }
 
-  test("1 q\"..$mods object $name extends $template\"") {
+  test("1 q\"..mods object name extends template\"") {
     val q"..$mods object $name extends $template" = q"private final object Q extends Y"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1427,7 +1421,7 @@ class SuccessSuite extends FunSuite {
     assert(template.structure === "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Self(Name(\"\"), None), Nil)")
   }
 
-  test("2 q\"..$mods object $name extends $template\"") {
+  test("2 q\"..mods object name extends template\"") {
     val q"..$mods object $name extends $template" = q"private final object Q extends { def m1 = 42; def m2 = 666 }"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1436,32 +1430,32 @@ class SuccessSuite extends FunSuite {
     assert(template.structure === "Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))")
   }
 
-  test("3 q\"..$mods object $name extends $template\"") {
+  test("3 q\"..mods object name extends template\"") {
     val mods = List(mod"private", mod"final")
     val name = q"Q"
     val template = template"F { def m = 42 }"
     assert(q"..$mods object $name extends $template".structure === "Defn.Object(List(Mod.Private(Name(\"\")), Mod.Final()), Term.Name(\"Q\"), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))")
   }
 
-  test("1 q\"package object $name extends $template\"") {
+  test("1 q\"package object name extends template\"") {
     val q"package object $name extends $template" = q"package object Q extends Y"
     assert(name.structure === "Term.Name(\"Q\")")
     assert(template.structure === "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Self(Name(\"\"), None), Nil)")
   }
 
-  test("2 q\"package object $name extends $template\"") {
+  test("2 q\"package object name extends template\"") {
     val q"package object $name extends $template" = q"package object Q extends { def m1 = 42; def m2 = 666 }"
     assert(name.structure === "Term.Name(\"Q\")")
     assert(template.structure === "Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))")
   }
 
-  test("3 q\"package object $name extends $template\"") {
+  test("3 q\"package object name extends template\"") {
     val name = q"Q"
     val template = template"F { def m = 42 }"
     assert(q"package object $name extends $template".structure === "Pkg.Object(Nil, Term.Name(\"Q\"), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))")
   }
 
-  test("1 q\"package $ref { ..$stats }\"") {
+  test("1 q\"package ref { ..stats }\"") {
     val q"package $ref { ..$stats }" = q"package p { class A; object B }"
     assert(ref.structure === "Term.Name(\"p\")")
     assert(stats.toString === "List(class A, object B)")
@@ -1469,7 +1463,7 @@ class SuccessSuite extends FunSuite {
     assert(stats(1).structure === "Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))")
   }
 
-  test("2 q\"package $ref { ..$stats }\"") {
+  test("2 q\"package ref { ..stats }\"") {
     val ref = q"p"
     val stats = List(q"class A", q"object B")
     assert(q"package $ref { ..$stats }".structure === "Pkg(Term.Name(\"p\"), List(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil)), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))")
@@ -1478,13 +1472,13 @@ class SuccessSuite extends FunSuite {
   /*
    Issue #462
    */
-  test("3 q\"package $ref { ..$stats }\"") {
+  test("3 q\"package ref { ..stats }\"") {
     val ref = q"p.a"
     val stats = List(q"class A", q"object B")
     assert(q"package $ref { ..$stats }".structure === "Pkg(Term.Select(Term.Name(\"p\"), Term.Name(\"a\")), List(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil)), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))")
   }
 
-  test("1 q\"..$mods def this(...$paramss)\"") {
+  test("1 q\"..mods def this(...paramss)\"") {
     val q"..$mods def this(...$paramss)" = q"private def this(x: X, y: Y)"
     assert(mods.toString === "List(private)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1493,13 +1487,13 @@ class SuccessSuite extends FunSuite {
     assert(paramss(0)(1).structure === "Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"Y\")), None)")
   }
 
-   test("2 q\"..$mods def this(...$paramss)\"") {
+   test("2 q\"..mods def this(...paramss)\"") {
      val mods = List(mod"private")
      val paramss = List(List(param"x: X", param"x: Y"))
      assert(q"..$mods def this(...$paramss)".structure === "Ctor.Primary(List(Mod.Private(Name(\"\"))), Name(\"\"), List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))))")
    }
 
-  test("1 q\"..$mods def this(...$paramss) = $expr\"") {
+  test("1 q\"..mods def this(...paramss) = expr\"") {
     val q"..$mods def this(...$paramss) = $init" = q"private final def this(x: X, y: Y) = this(foo, bar)"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1510,14 +1504,14 @@ class SuccessSuite extends FunSuite {
     assert(init.structure === "Init(Type.Singleton(Term.This(Name(\"\"))), Name(\"\"), List(List(Term.Name(\"foo\"), Term.Name(\"bar\"))))")
   }
 
-   test("2 q\"..$mods def this(...$paramss) = $expr\"") {
+   test("2 q\"..mods def this(...paramss) = expr\"") {
      val mods = List(mod"private", mod"final")
      val paramss = List(List(param"x: X", param"x: Y"))
      val init = init"C(foo, bar)"
      assert(q"..$mods def this(...$paramss) = $init".structure === "Ctor.Secondary(List(Mod.Private(Name(\"\")), Mod.Final()), Name(\"\"), List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None))), Init(Type.Name(\"C\"), Name(\"\"), List(List(Term.Name(\"foo\"), Term.Name(\"bar\")))), Nil)")
    }
 
-  test("1 param\"..$mods $paramname: $tpeopt = $expropt\"") {
+  test("1 param\"..mods paramname: tpeopt = expropt\"") {
     val param"..$mods $paramname: $tpeopt = $expropt" = param"private final x: X = 42"
     assert(mods.toString === "List(private, final)")
     assert(mods(0).structure === "Mod.Private(Name(\"\"))")
@@ -1527,7 +1521,7 @@ class SuccessSuite extends FunSuite {
     assert(expropt.structure === "Some(Lit.Int(42))")
   }
 
-  test("2 param\"..$mods $paramname: $tpeopt = $expropt\"") {
+  test("2 param\"..mods paramname: tpeopt = expropt\"") {
     val mods = List(mod"private", mod"final")
     val paramname = q"x"
     val tpeopt = t"X"
@@ -1535,7 +1529,7 @@ class SuccessSuite extends FunSuite {
     assert(param"..$mods $paramname: $tpeopt = $expropt".structure === "Term.Param(List(Mod.Private(Name(\"\")), Mod.Final()), Term.Name(\"x\"), Some(Type.Name(\"X\")), Some(Lit.Int(42)))")
   }
 
-  test("1 tparam\"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes\"") {
+  test("1 tparam\"..mods tparamname[..tparams] >: tpeopt <: tpeopt <% ..tpes : ..tpes\"") {
     val tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2" = tparam"+Z[Q,W] >: E <: R <% T with Y : U with I"
     assert(mods.toString === "List(+)")
     assert(mods(0).structure === "Mod.Covariant()")
@@ -1551,7 +1545,7 @@ class SuccessSuite extends FunSuite {
     assert(tpes2(0).structure === "Type.With(Type.Name(\"U\"), Type.Name(\"I\"))")
   }
 
-  test("2 tparam\"..$mods $tparamname[..$tparams] >: $tpeopt <: $tpeopt <% ..$tpes : ..$tpes\"") {
+  test("2 tparam\"..mods tparamname[..tparams] >: tpeopt <: tpeopt <% ..tpes : ..tpes\"") {
     val mods = List(mod"+")
     val tparamname = t"Z"
     val tparams = List(tparam"Q", tparam"W")
@@ -1562,7 +1556,7 @@ class SuccessSuite extends FunSuite {
     assert(tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2".structure === "Type.Param(List(Mod.Covariant()), Type.Name(\"Z\"), List(Type.Param(Nil, Type.Name(\"Q\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(Some(Type.Name(\"E\")), Some(Type.Name(\"R\"))), List(Type.With(Type.Name(\"T\"), Type.Name(\"Y\"))), List(Type.With(Type.Name(\"U\"), Type.Name(\"I\"))))")
   }
 
-  test("1 init\"$tpe(...$exprss)\"") {
+  test("1 init\"tpe(...exprss)\"") {
     val init"$tpe(...$exprss)" = init"C(40)(2)"
     assert(tpe.toString === "C")
     assert(tpe.structure === "Type.Name(\"C\")")
@@ -1571,25 +1565,25 @@ class SuccessSuite extends FunSuite {
     assert(exprss(1)(0).structure === "Lit.Int(2)")
   }
 
-  test("2 init\"$tpe(...$exprss)\"") {
+  test("2 init\"tpe(...exprss)\"") {
     val tpe = t"C"
     val exprss = List(List(q"40"), List(q"2"))
     assert(init"$tpe(...$exprss)".structure === "Init(Type.Name(\"C\"), Name(\"\"), List(List(Lit.Int(40)), List(Lit.Int(2))))")
   }
 
-  test("1 init\"this(...$exprss)\"") {
+  test("1 init\"this(...exprss)\"") {
     val init"this(...$exprss)" = init"this(40)(2)"
     assert(exprss.toString === "List(List(40), List(2))")
     assert(exprss(0)(0).structure === "Lit.Int(40)")
     assert(exprss(1)(0).structure === "Lit.Int(2)")
   }
 
-  test("2 init\"this(...$exprss)\"") {
+  test("2 init\"this(...exprss)\"") {
     val exprss = List(List(q"40"), List(q"2"))
     assert(init"this(...$exprss)".structure === "Init(Type.Singleton(Term.This(Name(\"\"))), Name(\"\"), List(List(Lit.Int(40)), List(Lit.Int(2))))")
   }
 
-  test("1 self\"$name: $tpeopt\"") {
+  test("1 self\"name: tpeopt\"") {
     val self"$name: $tpeopt" = self"x: T"
     assert(name.toString === "x")
     assert(name.structure === "Term.Name(\"x\")")
@@ -1597,13 +1591,13 @@ class SuccessSuite extends FunSuite {
     assert(tpeopt.structure === "Some(Type.Name(\"T\"))")
   }
 
-  test("2 self\"$name: $tpeopt\"") {
+  test("2 self\"name: tpeopt\"") {
     val name = q"x"
     val tpeopt = t"T"
     assert(self"$name: $tpeopt".structure === "Self(Term.Name(\"x\"), Some(Type.Name(\"T\")))")
   }
 
-  test("1 self\"this: $tpeopt\"") {
+  test("1 self\"this: tpeopt\"") {
     val self"$name: $tpeopt" = self"this: T"
     assert(name.toString === "_")
     assert(name.structure === "Name(\"\")")
@@ -1611,12 +1605,12 @@ class SuccessSuite extends FunSuite {
     assert(tpeopt.structure === "Some(Type.Name(\"T\"))")
   }
 
-  test("2 self\"this: $tpeopt\"") {
+  test("2 self\"this: tpeopt\"") {
     val tpeopt = t"T"
     assert(self"this: $tpeopt".structure === "Self(Name(\"\"), Some(Type.Name(\"T\")))")
   }
 
-  test("1 template\"{ ..$stats } with ..$inits { $self => ..$stats }\"") {
+  test("1 template\"{ ..stats } with ..inits { self => ..stats }\"") {
     val template"{ ..$stats1 } with ..$inits { $self => ..$stats2 }" = template"{ val a = 2; val b = 2 } with T with U { self: Z => def m = 2; def n = 2 }"
     assert(stats1.toString === "List(val a = 2, val b = 2)")
     assert(stats1(0).structure === "Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Int(2))")
@@ -1630,7 +1624,7 @@ class SuccessSuite extends FunSuite {
     assert(stats2(1).structure === "Defn.Def(Nil, Term.Name(\"n\"), Nil, Nil, None, Lit.Int(2))")
   }
 
-   test("2 template\"{ ..$stats } with ..$inits { $self => ..$stats }\"") {
+   test("2 template\"{ ..stats } with ..inits { self => ..stats }\"") {
      val stats1 = List(q"val a = 2", q"val b = 2")
      val inits = List(init"T", init"U")
      val self = self"self: S"
@@ -1638,22 +1632,22 @@ class SuccessSuite extends FunSuite {
      assert(template"{ ..$stats1 } with ..$inits { $self => ..$stats2 }".structure === "Template(List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Int(2)), Defn.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), None, Lit.Int(2))), List(Init(Type.Name(\"T\"), Name(\"\"), Nil), Init(Type.Name(\"U\"), Name(\"\"), Nil)), Self(Term.Name(\"self\"), Some(Type.Name(\"S\"))), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(2)), Defn.Def(Nil, Term.Name(\"n\"), Nil, Nil, None, Lit.Int(2))))")
    }
 
-  test("1 mod\"@$expr\"") {
+  test("1 mod\"@expr\"") {
     val mod"@$expr" = mod"@a"
     assert(expr.structure === "Mod.Annot(Init(Type.Name(\"a\"), Name(\"\"), Nil))")
   }
 
-  test("2 mod\"@$expr\"") {
+  test("2 mod\"@expr\"") {
     val expr = mod"@a"
     assert(mod"@$expr".structure === "Mod.Annot(Init(Type.Name(\"a\"), Name(\"\"), Nil))")
   }
 
-  test("1 mod\"private[$name]\"") {
+  test("1 mod\"private[name]\"") {
     val mod"private[$name]" = mod"private[X]"
     assert(name.structure === "Name(\"X\")")
   }
 
-  test("2 mod\"private[$name]\"") {
+  test("2 mod\"private[name]\"") {
     val mod"private[$name]" = mod"private"
     assert(name.structure === "Name(\"\")")
   }
@@ -1662,17 +1656,17 @@ class SuccessSuite extends FunSuite {
     val mod"private[this]" = mod"private[this]"
   }
 
-  test("4 mod\"private[$name]\"") {
+  test("4 mod\"private[name]\"") {
     val name = q"q"
     assert(mod"private[$name]".structure === "Mod.Private(Term.Name(\"q\"))")
   }
 
-  test("1 mod\"protected[$name]\"") {
+  test("1 mod\"protected[name]\"") {
     val mod"protected[$name]" = mod"protected[X]"
     assert(name.structure === "Name(\"X\")")
   }
 
-  test("2 mod\"protected[$name]\"") {
+  test("2 mod\"protected[name]\"") {
     val mod"protected[$name]" = mod"protected"
     assert(name.structure === "Name(\"\")")
   }
@@ -1681,7 +1675,7 @@ class SuccessSuite extends FunSuite {
     val mod"protected[this]" = mod"protected[this]"
   }
 
-  test("4 mod\"protected[$name]\"") {
+  test("4 mod\"protected[name]\"") {
     val name = q"q"
     assert(mod"protected[$name]".structure === "Mod.Protected(Term.Name(\"q\"))")
   }
@@ -1730,62 +1724,62 @@ class SuccessSuite extends FunSuite {
     assert(mod"varparam".structure === "Mod.VarParam()")
   }
 
-  test("1 enumerator\"$pat <- $expr\"") {
+  test("1 enumerator\"pat <- expr\"") {
     val enumerator"$pat <- $expr" = enumerator"x <- xs"
     assert(pat.structure === "Pat.Var(Term.Name(\"x\"))")
   }
 
-  test("2 enumerator\"$pat <- $expr\"") {
+  test("2 enumerator\"pat <- expr\"") {
     val pat = p"x"
     val expr = q"xs"
     assert(enumerator"$pat <- $expr".structure === "Enumerator.Generator(Pat.Var(Term.Name(\"x\")), Term.Name(\"xs\"))")
   }
 
-  test("3 enumerator\"$pat <- $expr\"") {
+  test("3 enumerator\"pat <- expr\"") {
     val pat = p"X"
     val expr = q"xs"
     assert(enumerator"$pat <- $expr".structure === "Enumerator.Generator(Pat.Var(Term.Name(\"X\")), Term.Name(\"xs\"))")
   }
 
-  test("1 enumerator\"$pat = $expr\"") {
+  test("1 enumerator\"pat = expr\"") {
     val enumerator"$pat = $expr" = enumerator"x = xs"
     assert(pat.structure === "Pat.Var(Term.Name(\"x\"))")
   }
 
-  test("2 enumerator\"$pat = $expr\"") {
+  test("2 enumerator\"pat = expr\"") {
     val pat = p"x"
     val expr = q"xs"
     assert(enumerator"$pat = $expr".structure === "Enumerator.Val(Pat.Var(Term.Name(\"x\")), Term.Name(\"xs\"))")
   }
 
-  test("1 enumerator\"if $expr\"") {
+  test("1 enumerator\"if expr\"") {
     val enumerator"if $expr" = enumerator"if x"
     assert(expr.structure === "Term.Name(\"x\")")
   }
 
-  test("2 enumerator\"if $expr\"") {
+  test("2 enumerator\"if expr\"") {
     val expr = q"x"
     assert(enumerator"if $expr".structure === "Enumerator.Guard(Term.Name(\"x\"))")
   }
 
-  test("1 q\"import ..$importers\"") {
+  test("1 q\"import ..importers\"") {
     val importers = List(importer"foo.bar", importer"bar.{baz, _}")
     assert(q"import ..$importers".syntax === "import foo.bar, bar.{ baz, _ }")
   }
 
-  test("2 q\"import ..$importers\"") {
+  test("2 q\"import ..importers\"") {
     val q"import ..$importers" = q"import a.A"
     assert(importers.length == 1)
     assert(importers(0).syntax === "a.A")
   }
 
-  test("1 importer\"$ref.{..$importees}\"") {
+  test("1 importer\"ref.{..importees}\"") {
     val ref = q"bar"
     val importees = List(importee"baz", importee"_")
     assert(importer"$ref.{..$importees}".syntax === "bar.{ baz, _ }")
   }
 
-  test("2 importer\"$ref. ..$importees\"") {
+  test("2 importer\"ref. ..importees\"") {
     val importer"$ref.{..$importees}" = importer"bar.{baz, _}"
     assert(ref.syntax === "bar")
     assert(importees.length == 2)
@@ -1796,41 +1790,41 @@ class SuccessSuite extends FunSuite {
   /*
    Issue #462
    */
-  test("3 importer\"$ref.{..$importees}\"") {
+  test("3 importer\"ref.{..importees}\"") {
     val ref = q"bar.a"
     val importees = List(importee"baz", importee"_")
     assert(importer"$ref.{..$importees}".syntax === "bar.a.{ baz, _ }")
   }
 
-  test("1 importee\"$iname\"") {
+  test("1 importee\"iname\"") {
     val importee"$iname" = importee"x"
     assert(iname.structure === "Name(\"x\")")
   }
 
-  test("2 importee\"$iname\"") {
+  test("2 importee\"iname\"") {
     // $iname can't be constructed, only extracted from importee"..." and mod"..."
     val importee"$iname" = importee"x"
     assert(importee"$iname".structure === "Importee.Name(Name(\"x\"))")
   }
 
-  test("1 importee\"$iname => $iname\"") {
+  test("1 importee\"iname => iname\"") {
     val importee"$iname1 => $iname2" = importee"x => y"
     assert(iname1.structure === "Name(\"x\")")
     assert(iname2.structure === "Name(\"y\")")
   }
 
-  test("2 importee\"$iname => $iname\"") {
+  test("2 importee\"iname => iname\"") {
     // $iname can't be constructed, only extracted from importee"..." and mod"..."
     val importee"$iname1 => $iname2" = importee"x => y"
     assert(importee"$iname1 => $iname2".structure === "Importee.Rename(Name(\"x\"), Name(\"y\"))")
   }
 
-  test("1 importee\"$iname => _\"") {
+  test("1 importee\"iname => _\"") {
     val importee"$iname => _" = importee"x => _"
     assert(iname.structure === "Name(\"x\")")
   }
 
-  test("2 importee\"$iname => _\"") { // TODO review after #219 solved
+  test("2 importee\"iname => _\"") { // TODO review after #219 solved
   // $iname can't be constructed, only extracted from importee"..." and mod"..."
   val importee"$iname => _" = importee"x => _"
     assert(importee"$iname => _".structure === "Importee.Unimport(Name(\"x\"))")
@@ -1840,19 +1834,19 @@ class SuccessSuite extends FunSuite {
     assert(importee"_".structure === "Importee.Wildcard()")
   }
 
-  test("1 source\"..$stats\"") {
+  test("1 source\"..stats\"") {
     val source"..$stats" = source"class A { val a = 'a'}"
     assert(stats.toString === "List(class A { val a = 'a' })")
     assert(stats(0).structure === "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Char('a')))))")
   }
 
-  test("2 source\"..$stats\"") {
+  test("2 source\"..stats\"") {
     val source"class B { val b = 'b'}; ..$stats" = source"class B { val b = 'b'}; class A { val a = 'a'}"
     assert(stats.toString === "List(class A { val a = 'a' })")
     assert(stats(0).structure === "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Char('a')))))")
   }
 
-  test("3 source\"..$stats\"") {
+  test("3 source\"..stats\"") {
     val stats = List(q"class A { val x = 1 }", q"object B")
     assert(source"..$stats".structure === "Source(List(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), None, Lit.Int(1))))), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))")
   }

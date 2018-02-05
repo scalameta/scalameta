@@ -3,6 +3,7 @@ import scala.util.Try
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalajs.sbtplugin.ScalaJSCrossVersion
+import sbtcrossproject.{crossProject, CrossType}
 import org.scalameta.build._
 import org.scalameta.build.Versions._
 import org.scalameta.os
@@ -73,7 +74,7 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== SEMANTICDB ======================== **/
 
-lazy val semanticdb3 = crossProject
+lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("semanticdb/semanticdb3"))
   .settings(
@@ -89,8 +90,10 @@ lazy val semanticdb3 = crossProject
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
+  .nativeSettings(nativeSettings)
 lazy val semanticdb3JVM = semanticdb3.jvm
 lazy val semanticdb3JS = semanticdb3.js
+lazy val semanticdb3Native = semanticdb3.native
 
 lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
@@ -144,7 +147,7 @@ lazy val metac = project
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbScalacPlugin)
 
-lazy val metap = crossProject
+lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("semanticdb/metap"))
   .settings(
@@ -153,15 +156,17 @@ lazy val metap = crossProject
     description := "SemanticDB decompiler",
     mainClass := Some("scala.meta.cli.Metap")
   )
+  .nativeSettings(nativeSettings)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdb3)
 lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
+lazy val metapNative = metap.native
 
 /** ======================== LANGMETA ======================== **/
 
-lazy val langmeta = crossProject
+lazy val langmeta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("langmeta/langmeta"))
   .settings(
     publishableSettings,
@@ -173,13 +178,15 @@ lazy val langmeta = crossProject
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(semanticdb3)
 lazy val langmetaJVM = langmeta.jvm
 lazy val langmetaJS = langmeta.js
+lazy val langmetaNative = langmeta.native
 
 /** ======================== SCALAMETA ======================== **/
 
-lazy val common = crossProject
+lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
@@ -187,41 +194,49 @@ lazy val common = crossProject
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
+  .nativeSettings(nativeSettings)
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
+lazy val commonNative = common.native
 
-lazy val io = crossProject
+lazy val io = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/io"))
   .settings(
     publishableSettings,
     description := "Scalameta APIs for input/output"
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(langmeta, common)
 
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
+lazy val ioNative = io.native
 
-lazy val dialects = crossProject
+lazy val dialects = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/dialects"))
   .settings(
     publishableSettings,
     description := "Scalameta dialects",
     enableMacros
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(common)
 lazy val dialectsJVM = dialects.jvm
 lazy val dialectsJS = dialects.js
+lazy val dialectsNative = dialects.native
 
-lazy val inputs = crossProject
+lazy val inputs = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/inputs"))
   .settings(
     publishableSettings,
     description := "Scalameta APIs for source code",
     enableMacros
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(langmeta, common, io)
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
+lazy val inputsNative = inputs.native
 
 lazy val interactive = project
   .in(file("scalameta/interactive"))
@@ -233,29 +248,33 @@ lazy val interactive = project
   )
   .dependsOn(semanticdbScalacCore)
 
-lazy val parsers = crossProject
+lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/parsers"))
   .settings(
     publishableSettings,
     description := "Scalameta APIs for parsing and their baseline implementation",
     scalaJSModuleKind := ModuleKind.CommonJSModule
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(common, dialects, inputs, tokens, tokenizers, trees)
 lazy val parsersJVM = parsers.jvm
 lazy val parsersJS = parsers.js
+lazy val parsersNative = parsers.native
 
-lazy val quasiquotes = crossProject
+lazy val quasiquotes = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/quasiquotes"))
   .settings(
     publishableSettings,
     description := "Scalameta quasiquotes for abstract syntax trees",
     enableHardcoreMacros
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(common, dialects, inputs, trees, parsers)
 lazy val quasiquotesJVM = quasiquotes.jvm
 lazy val quasiquotesJS = quasiquotes.js
+lazy val quasiquotesNative = quasiquotes.native
 
-lazy val tokenizers = crossProject
+lazy val tokenizers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/tokenizers"))
   .settings(
     publishableSettings,
@@ -263,33 +282,39 @@ lazy val tokenizers = crossProject
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "0.4.4",
     enableMacros
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(common, dialects, inputs, tokens)
 lazy val tokenizersJVM = tokenizers.jvm
 lazy val tokenizersJS = tokenizers.js
+lazy val tokenizersNative = tokenizers.native
 
-lazy val tokens = crossProject
+lazy val tokens = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/tokens"))
   .settings(
     publishableSettings,
     description := "Scalameta tokens and token-based abstractions (inputs and positions)",
     enableMacros
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(common, dialects, inputs)
 lazy val tokensJVM = tokens.jvm
 lazy val tokensJS = tokens.js
+lazy val tokensNative = tokens.native
 
-lazy val transversers = crossProject
+lazy val transversers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/transversers"))
   .settings(
     publishableSettings,
     description := "Scalameta traversal and transformation infrastructure for abstract syntax trees",
     enableMacros
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(common, trees)
-lazy val traversersJVM = transversers.jvm
-lazy val traversersJS = transversers.js
+lazy val transversersJVM = transversers.jvm
+lazy val transversersJS = transversers.js
+lazy val transversersNative = transversers.native
 
-lazy val trees = crossProject
+lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/trees"))
   .settings(
     publishableSettings,
@@ -298,26 +323,31 @@ lazy val trees = crossProject
     // scalacOptions += "-Xprint:typer",
     enableMacros
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(common, dialects, inputs, tokens, tokenizers) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
+lazy val treesNative = trees.native
 
-lazy val semanticdb = crossProject
+lazy val semanticdb = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/semanticdb"))
   .settings(
     publishableSettings,
     description := "Scalameta semantic database APIs"
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(langmeta)
 lazy val semanticdbJVM = semanticdb.jvm
 lazy val semanticdbJS = semanticdb.js
+lazy val semanticdbNative = semanticdb.native
 
-lazy val scalameta = crossProject
+lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
     description := "Scalameta umbrella module that includes all public APIs"
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(
     common,
     dialects,
@@ -332,16 +362,19 @@ lazy val scalameta = crossProject
   )
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
+lazy val scalametaNative = scalameta.native
 
-lazy val contrib = crossProject
+lazy val contrib = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/contrib"))
   .settings(
     publishableSettings,
     description := "Incubator for scalameta APIs"
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(scalameta)
 lazy val contribJVM = contrib.jvm
 lazy val contribJS = contrib.js
+lazy val contribNative = contrib.native
 
 /** ======================== TESTS ======================== **/
 
@@ -387,7 +420,7 @@ lazy val testkit = project
   )
   .dependsOn(contribJVM)
 
-lazy val tests = crossProject
+lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
   .settings(
     sharedSettings,
@@ -406,13 +439,29 @@ lazy val tests = crossProject
       "databaseClasspath" -> classDirectory.in(semanticdbIntegration, Compile).value.getAbsolutePath
     ),
     buildInfoPackage := "scala.meta.tests",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test"
   )
   .jvmConfigure(_.dependsOn(testkit, interactive, metac))
+  .jvmSettings(
+    // TODO: Workaround for what seems to be a bug in ScalaTest 3.2.0-SNAP10.
+    // Without adding scalacheck to library dependencies, we get the following error:
+    // > testsJVM/test
+    // [info] Compiling 79 Scala sources to /Users/eburmako/Projects/scalameta/tests/jvm/target/scala-2.12/test-classes...
+    // [trace] Stack trace suppressed: run last testsJVM/test:executeTests for the full output.
+    // [error] (testsJVM/test:executeTests) java.lang.NoClassDefFoundError: org/scalacheck/Test$TestCallback
+    // [error] Total time: 19 s, completed Feb 1, 2018 3:12:34 PM
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.5" % "test"
+  )
+  .nativeSettings(
+    nativeSettings,
+    // TODO: Is it alright to test Scala Native libraries under debug?
+    nativeMode := "debug"
+  )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, contrib, metap)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
+lazy val testsNative = tests.native
 
 // NOTE: Most of the tests that could be part of the project still live in testsJVM.
 // At some point, we plan to explore splitting langmeta into a separate repo,
@@ -636,6 +685,20 @@ lazy val fullCrossVersionSettings = Seq(
 lazy val hasLargeIntegrationTests = Seq(
   fork in (Test, run) := true,
   javaOptions in (Test, run) += "-Xss4m"
+)
+
+lazy val nativeSettings = Seq(
+  scalaVersion := LatestScala211,
+  crossScalaVersions := List(LatestScala211),
+  nativeGC := "immix",
+  nativeMode := "release",
+  // TODO: I'd love to switch nativeLinkStubs to false, but I can't.
+  // No idea where the following nativeLink error is coming from.
+  // [error] cannot link: @java.lang.Thread::getStackTrace_scala.scalanative.runtime.ObjectArray
+  // [error] unable to link
+  // [error] (testsNative/nativetest:nativeLinkNIR) unable to link
+  // [error] Total time: 44 s, completed Feb 1, 2018 3:59:15 PM
+  nativeLinkStubs := false
 )
 
 def exposePaths(projectName: String, config: Configuration) = {
