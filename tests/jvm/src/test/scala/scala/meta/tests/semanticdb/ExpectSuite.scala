@@ -9,6 +9,9 @@ import scala.meta.testkit.DiffAssertions
 import scala.meta.internal.io.FileIO
 import org.scalatest.FunSuite
 import scala.meta._
+import org.langmeta.internal.io.PathIO
+import org.langmeta.internal.semanticdb._
+import org.langmeta.io.AbsolutePath
 
 class ExpectSuite extends FunSuite with DiffAssertions {
   test("semanticdb.expect") {
@@ -18,9 +21,13 @@ class ExpectSuite extends FunSuite with DiffAssertions {
       // output of 2.12. It's possible to add another expect file for 2.12
       // later down the road if that turns out to be useful.
       case "2" :: "12" :: Nil =>
-        val obtained = SemanticdbExpectSuite.loadDatabase.toString
+        val sourceroot = PathIO.workingDirectory
+        val database = SemanticdbExpectSuite.loadDatabase
+        val obtained = database.toString
         val expected = FileIO.slurp(AbsolutePath(SemanticdbExpectSuite.expectPath), Charset.forName("UTF-8"))
         assertNoDiff(obtained, expected)
+        val roundtrip = database.toSchema(sourceroot).toDb(Some(Sourcepath(sourceroot)))
+        assertNoDiff(roundtrip.toString, expected, "Roundtrip")
       case _ => // do nothing.
     }
   }
