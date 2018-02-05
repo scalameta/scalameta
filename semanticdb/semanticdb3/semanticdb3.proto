@@ -199,9 +199,9 @@ message SymbolInformation {
   string name = 5;
   Location location = 10;
   TextDocument signature = 7;
-  Type tpe = 11;
   repeated string members = 8;
   repeated string overrides = 9;
+  Type tpe = 11;
 }
 
 message SymbolOccurrence {

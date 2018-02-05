@@ -143,6 +143,7 @@ trait DenotationOps { self: DatabaseOps =>
     }
   }
 
+  // NOTE: Holds a denotation along with todo lists of symbols to persist.
   case class DenotationResult(
       denot: m.Denotation,
       todoOverrides: List[g.Symbol],

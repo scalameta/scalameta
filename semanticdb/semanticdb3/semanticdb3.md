@@ -1,4 +1,4 @@
-# SemanticDB Specification, Version 3.2.0
+# SemanticDB Specification
 
   * [Motivation](#motivation)
   * [Data Model](#data-model)
@@ -13,10 +13,6 @@
     * [Synthetic](#synthetic)
   * [Data Schemas](#data-schemas)
     * [Protobuf](#protobuf)
-  * [Changelog](#changelog)
-    * [3.2.0](#320)
-    * [3.1.0](#310)
-    * [3.0.0](#300)
 
 ## Motivation
 
@@ -288,7 +284,7 @@ In these examples, we will be using a simple notation to describe SemanticDB dat
 In this notation, `M(v1, v2, ...)` corresponds a message `M` with fields set to values
 `v1`, `v2`, etc. Literals correspond to scalar values, and `List(x1, x2, ...)`
 corresponds to repeated values. Moreover, `<X>` corresponds to a message that
-represents to `X`.
+represents `X`.
 
 ```protobuf
 message TypeRef {
@@ -494,9 +490,9 @@ message SymbolInformation {
   string name = 5;
   Location location = 10;
   TextDocument signature = 7;
-  Type tpe = 11;
   repeated string members = 8;
   repeated string overrides = 9;
+  Type tpe = 11;
 }
 ```
 
@@ -682,12 +678,12 @@ to specifying the format, we found out that representing type signatures
 with documents was an evolutionary dead end. Therefore, we superseded this
 field with `tpe`.
 
-`tpe`. [Type](#type) that represents the type signature of the definition.
-
 `members`. This field was historically unspecified. When we got around to
 specifying it, we superseded it with `ClassInfoType.members` in `SymbolInformation.tpe`.
 
 `overrides`. Symbols that are overridden by this symbol either directly or transitively.
+
+`tpe`. [Type](#type) that represents the type signature of the definition.
 
 ### SymbolOccurrence
 
@@ -808,32 +804,6 @@ in the future, but this is highly unlikely.
 ### Protobuf
 
 [semanticdb3.proto][semanticdb3.proto]
-
-## Changelog
-
-### 3.2.0
-  * Added `Type` and `SymbolInformation.tpe` to supersede
-    `SymbolInformation.signature` and `SymbolInformation.members`.
-
-### 3.1.0
-  * Added `SymbolInformation.Property.{VALPARAM/VARPARAM}`.
-  * Replaced `SymbolInformation.range` with `SymbolInformation.location`.
-    We can't use `Range` for the purpose of locating symbol definitions,
-    because symbols in the "Symbols" section of a document don't have
-    to be defined in that document.
-  * Explained uniqueness guarantees for symbols.
-  * Specified the order of underlying symbols in multi symbols.
-  * Synchronized the specification and the implementation of global symbol format.
-
-### 3.0.0
-  * Codified the first specification of SemanticDB.
-    Previously (in Scalameta 1.x and 2.x), SemanticDB was loosely specified by
-    [an internal protobuf schema][semanticdb2.proto] and the reference
-    implementation in `semanticdb-scalac`.
-  * Changed the package of the protobuf schema to `scala.meta.internal.semanticdb3`.
-  * Significantly changed the schema to perform long-awaited cleanups and ensure
-    consistency with LSP [\[2\]][2]. Some changes were
-    inspired by the design of Index-While-Building in Clang [[23][23], [24][24]].
 
 [semanticdb2.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb2/semanticdb2.proto
 [semanticdb3.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb3/semanticdb3.proto
