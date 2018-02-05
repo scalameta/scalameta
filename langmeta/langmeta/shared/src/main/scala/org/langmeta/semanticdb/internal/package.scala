@@ -1,10 +1,6 @@
 package org.langmeta.internal
 
-import java.io.RandomAccessFile
 import java.nio.charset.Charset
-import java.nio.file.Files
-import java.nio.file.OpenOption
-import java.nio.file.StandardOpenOption
 import scala.util.control.NonFatal
 import org.langmeta.inputs.{Input => dInput}
 import org.langmeta.inputs.{Position => dPosition}
@@ -12,7 +8,6 @@ import org.langmeta.semanticdb.{Synthetic => dSynthetic}
 import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb.{vfs => v}
 import org.langmeta.io._
-import org.langmeta.semanticdb.Signature
 import org.langmeta.{semanticdb => d}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
@@ -62,9 +57,9 @@ package object semanticdb {
     def toDb(sourcepath: Option[Sourcepath], sdoc: s.TextDocument): d.Document = {
       val s.TextDocument(sschema, suri, stext, slanguage, ssymbols, soccurrences, sdiagnostics, ssynthetics) = sdoc
       assert(sschema == s.Schema.SEMANTICDB3, "s.TextDocument.schema must be ${s.Schema.SEMANTICDB3}")
-      def dsymbol(ssymbol: String) = {
-        def suffix = suri.replace("/", "_").replace(".", "_")
-        if (ssymbol.startsWith("local")) d.Symbol(ssymbol + "_" + suffix)
+      val symbolSuffix = localSymbolSuffix(suri)
+      def dSymbol(ssymbol: String) = {
+        if (ssymbol.startsWith("local")) d.Symbol(ssymbol + symbolSuffix)
         else d.Symbol(ssymbol)
       }
       val dinput = {
@@ -110,7 +105,7 @@ package object semanticdb {
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
           case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, _, ssignature, smembers, soverrides) =>
-            val dsym = dsymbol(ssym)
+            val dsym = dSymbol(ssym)
             val dflags = {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
@@ -157,7 +152,7 @@ package object semanticdb {
                     val dstartOffset = dinput.lineToOffset(srange.startLine) + srange.startCharacter
                     val dendOffset = dinput.lineToOffset(srange.endLine) + srange.endCharacter
                     val ddefnpos = dPosition.Range(dinput, dstartOffset, dendOffset)
-                    val dsym = dsymbol(ssym)
+                    val dsym = dSymbol(ssym)
                     d.ResolvedName(ddefnpos, dsym, disDefinition)
                   case other =>
                     sys.error(s"bad protobuf: unsupported occurrence $other")
@@ -169,7 +164,7 @@ package object semanticdb {
               else if (smember.endsWith(".")) d.Signature.Term(smember.stripSuffix("."))
               else sys.error(s"Unexpected signature $smember")
             }.toList
-            val doverrides = soverrides.map(dsymbol).toList
+            val doverrides = soverrides.map(dSymbol).toList
             Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides)))
           case other => sys.error(s"bad protobuf: unsupported symbol information $other")
         }
@@ -186,7 +181,7 @@ package object semanticdb {
                     val dstartOffset = dsyntheticinput.lineToOffset(srange.startLine) + srange.startCharacter
                     val dendOffset = dsyntheticinput.lineToOffset(srange.endLine) + srange.endCharacter
                     val dsyntheticpos = dPosition.Range(dsyntheticinput, dstartOffset, dendOffset)
-                    val dsym = dsymbol(ssym)
+                    val dsym = dSymbol(ssym)
                     d.ResolvedName(dsyntheticpos, dsym, disDefinition)
                   case other =>
                     sys.error(s"bad protobuf: unsupported occurrence $other")
@@ -199,7 +194,7 @@ package object semanticdb {
       val dlanguage = slanguage
       val dnames = soccurrences.map {
         case s.SymbolOccurrence(Some(sRange(dpos)), ssym, sRole(disDefinition)) =>
-          val dsym = dsymbol(ssym)
+          val dsym = dSymbol(ssym)
           d.ResolvedName(dpos, dsym, disDefinition)
         case other =>
           sys.error(s"bad protobuf: unsupported occurrence $other")
@@ -239,6 +234,26 @@ package object semanticdb {
     def toSchema(sourceroot: AbsolutePath): s.TextDocuments = {
       val sentries = ddatabase.documents.map {
         case d.Document(dinput, dlanguage, dnames, dmessages, dsymbols, dsynthetics) =>
+          val sschema = s.Schema.SEMANTICDB3
+          val (splatformpath, stext) = dinput match {
+            case dInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
+              path.toRelative(sourceroot).toString -> ""
+            case dInput.VirtualFile(path, value) =>
+              path -> value
+            case other =>
+              sys.error(s"bad database: unsupported input $other")
+          }
+          val suri = {
+            val result = PathIO.toUnix(splatformpath)
+            assert(result.nonEmpty, s"'$result'.nonEmpty")
+            result
+          }
+          val symbolSuffix = localSymbolSuffix(suri)
+          def sSymbol(sym: d.Symbol): String = sym match {
+            case d.Symbol.Local(id) => id.stripSuffix(symbolSuffix)
+            case _ => sym.syntax
+          }
+          val slanguage = dlanguage
           object dPosition {
             def unapply(dpos: dPosition): Option[s.Range] = dpos match {
               case dpos: org.langmeta.Position.Range =>
@@ -268,7 +283,7 @@ package object semanticdb {
             def unapply(dresolvedSymbol: d.ResolvedSymbol): Option[s.SymbolInformation] = {
               val d.ResolvedSymbol(dsymbol, ddenot) = dresolvedSymbol
               def dtest(bit: Long) = (ddenot.flags & bit) == bit
-              val ssymbol = dsymbol.syntax
+              val ssymbol = sSymbol(dsymbol)
               val slanguage = {
                 if (dtest(d.JAVADEFINED)) "Java"
                 else dlanguage
@@ -312,16 +327,17 @@ package object semanticdb {
               val ssignature = {
                 val stext = ddenot.signature
                 val soccurrences = ddenot.names.map {
-                  case d.ResolvedName(dpos: org.langmeta.Position.Range, ssym, disDefinition(srole)) =>
+                  case d.ResolvedName(dpos: org.langmeta.Position.Range, dsym, disDefinition(srole)) =>
                     val srange = s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn)
-                    s.SymbolOccurrence(Some(srange), ssym.syntax, srole)
+                    val ssym = sSymbol(dsym)
+                    s.SymbolOccurrence(Some(srange), ssym, srole)
                   case other =>
                     sys.error(s"bad database: unsupported name $other")
                 }
                 Some(s.TextDocument(text = stext, occurrences = soccurrences))
               }
               val smembers = ddenot.members.map(_.syntax)
-              val soverrides = ddenot.overrides.map(_.syntax)
+              val soverrides = ddenot.overrides.map(sSymbol)
               Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, srange, ssignature, smembers, soverrides))
             }
           }
@@ -331,9 +347,10 @@ package object semanticdb {
                 val stext = {
                   val stext = ssyntax
                   val soccurrences = dnames.toIterator.map {
-                    case d.ResolvedName(dpos: org.langmeta.Position.Range, ssym, disDefinition(srole)) =>
+                    case d.ResolvedName(dpos: org.langmeta.Position.Range, dsym, disDefinition(srole)) =>
                       val srange = s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn)
-                      s.SymbolOccurrence(Some(srange), ssym.syntax, srole)
+                      val ssym = sSymbol(dsym)
+                      s.SymbolOccurrence(Some(srange), ssym, srole)
                     case other =>
                       sys.error(s"bad database: unsupported name $other")
                   }.toSeq
@@ -344,27 +361,14 @@ package object semanticdb {
                 None
             }
           }
-          val sschema = s.Schema.SEMANTICDB3
-          val (splatformpath, stext) = dinput match {
-            case dInput.File(path, charset) if charset == Charset.forName("UTF-8") =>
-              path.toRelative(sourceroot).toString -> ""
-            case dInput.VirtualFile(path, value) =>
-              path -> value
-            case other =>
-              sys.error(s"bad database: unsupported input $other")
-          }
-          val suri = {
-            val result = PathIO.toUnix(splatformpath)
-            assert(result.nonEmpty, s"'$result'.nonEmpty")
-            result
-          }
-          val slanguage = dlanguage
           val ssymbols = dsymbols.map {
             case dResolvedSymbol(ssymbolInformation) => ssymbolInformation
             case other => sys.error(s"bad database: unsupported denotation $other")
           }
           val soccurrences = dnames.map {
-            case d.ResolvedName(dPosition(srange), ssym, disDefinition(srole)) => s.SymbolOccurrence(Some(srange), ssym.syntax, srole)
+            case d.ResolvedName(dPosition(srange), dsym, disDefinition(srole)) =>
+              val ssym = sSymbol(dsym)
+              s.SymbolOccurrence(Some(srange), ssym, srole)
             case other => sys.error(s"bad database: unsupported name $other")
           }
           val sdiagnostics = dmessages.map {
@@ -379,5 +383,12 @@ package object semanticdb {
       }
       s.TextDocuments(sentries)
     }
+  }
+
+  // Returns suffix to make local symbol unique globally. By default, local symbols
+  // from different source files can have conflicting IDs. To distinguish them, we
+  // append the URI to the ID.
+  private def localSymbolSuffix(uri: String): String = {
+    "_" + uri.replaceAll("[^A-Za-z0-9]", "_")
   }
 }
