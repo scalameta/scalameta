@@ -439,11 +439,11 @@ Names:
 [1157..1158): M <= _root_.types.Test.C#typeLambda1()Lscala/Nothing;.M#
 [1165..1168): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [1173..1184): typeLambda1 => _root_.types.Test.C#typeLambda1()Lscala/Nothing;.
-[1193..1194): λ <= _root_.types.Test.C#$anon#λ#
-[1195..1196): T <= _root_.types.Test.C#$anon#λ#[T]
+[1193..1194): L <= _root_.types.Test.C#$anon#L#
+[1195..1196): T <= _root_.types.Test.C#$anon#L#[T]
 [1200..1204): List => _root_.scala.package.List#
-[1205..1206): T => _root_.types.Test.C#$anon#λ#[T]
-[1211..1212): λ => _root_.types.Test.C#$anon#λ#
+[1205..1206): T => _root_.types.Test.C#$anon#L#[T]
+[1211..1212): L => _root_.types.Test.C#$anon#L#
 [1226..1240): ClassInfoType1 <= _root_.types.Test.C#ClassInfoType1.
 [1251..1265): ClassInfoType2 <= _root_.types.Test.C#ClassInfoType2#
 [1266..1266): ε <= _root_.types.Test.C#ClassInfoType2#`<init>`()V.
@@ -555,12 +555,12 @@ _root_.types.T#x. => val x: T.this.X
   [7..8): X => _root_.types.T#X#
 _root_.types.Test. => final object Test
 _root_.types.Test.C# => class C
+_root_.types.Test.C#$anon#L# => type L: [T] => List[T]
+  [7..11): List => _root_.scala.package.List#
+  [12..13): T => _root_.types.Test.C#$anon#L#[T]
+_root_.types.Test.C#$anon#L#[T] => typeparam T
 _root_.types.Test.C#$anon#k()I. => abstract def k: Int
   [0..3): Int => _root_.scala.Int#
-_root_.types.Test.C#$anon#λ# => type λ: [T] => List[T]
-  [7..11): List => _root_.scala.package.List#
-  [12..13): T => _root_.types.Test.C#$anon#λ#[T]
-_root_.types.Test.C#$anon#λ#[T] => typeparam T
 _root_.types.Test.C#ByNameType. => final object ByNameType
 _root_.types.Test.C#ByNameType.m1(Lscala/Function0;)I. => def m1: (x: =>Int): Int
   [6..9): Int => _root_.scala.Int#

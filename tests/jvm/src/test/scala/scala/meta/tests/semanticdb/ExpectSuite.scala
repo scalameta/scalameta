@@ -5,6 +5,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets._
 import scala.collection.JavaConverters._
 import scala.meta.testkit.DiffAssertions
 import scala.meta.internal.io.FileIO
@@ -44,9 +45,9 @@ trait ExpectHelpers {
   def path: Path =
     Paths.get("tests", "jvm", "src", "test", "resources", filename)
   def loadExpected: String =
-    new String(Files.readAllBytes(path), Charset.forName("UTF-8"))
+    new String(Files.readAllBytes(path), UTF_8)
   def saveExpected(value: String): Unit =
-    Files.write(path, value.getBytes("UTF-8"))
+    Files.write(path, value.getBytes(UTF_8))
 }
 
 object LowlevelExpect extends ExpectHelpers {

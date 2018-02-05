@@ -61,7 +61,7 @@ object Test {
     val existentialType1: T forSome { type T } = ???
 
     def typeLambda1[M[_]] = ???
-    typeLambda1[({ type λ[T] = List[T] })#λ]
+    typeLambda1[({ type L[T] = List[T] })#L]
 
     object ClassInfoType1
     class ClassInfoType2 extends B { def x = 42 }

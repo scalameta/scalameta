@@ -115,10 +115,7 @@ object Metap {
         case Some(doc) if doc.text.nonEmpty =>
           val startOffset = offset(doc, range.startLine) + range.startCharacter
           val endOffset = offset(doc, range.endLine) + range.endCharacter
-          val text = {
-            if (startOffset >= endOffset) "ε"
-            else doc.text.substring(startOffset, endOffset)
-          }
+          val text = doc.text.substring(startOffset, endOffset)
           print(s": $text")
         case None =>
           ()

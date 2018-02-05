@@ -68,7 +68,7 @@ Occurrences:
 [5:23..5:30): mutable => _root_.scala.collection.mutable.
 [5:31..5:36): Stack => _root_.scala.collection.mutable.Stack#
 [5:37..5:40): Int => _root_.scala.Int#
-[5:41..5:41): ε => _root_.scala.collection.mutable.Stack#`<init>`()V.
+[5:41..5:41):  => _root_.scala.collection.mutable.Stack#`<init>`()V.
 [6:6..6:10): main <= _root_.example.Example.main([Ljava/lang/String;)V.
 [6:11..6:15): args <= _root_.example.Example.main([Ljava/lang/String;)V.(args)
 [6:17..6:22): Array => _root_.scala.Array#
@@ -85,7 +85,7 @@ Diagnostics:
 [2:24..2:30)[warning] Unused import
 
 Synthetics:
-[9:37..9:37): ε => *(((ClassTag.Int): ClassTag[Int]))
+[9:37..9:37):  => *(((ClassTag.Int): ClassTag[Int]))
   [0:0..0:1): * => _star_.
   [0:13..0:16): Int => _root_.scala.reflect.ClassTag.Int.
   [0:19..0:27): ClassTag => _root_.scala.reflect.ClassTag#
@@ -206,7 +206,7 @@ Occurrences:
 [6:20..6:21): T <= _root_.flags.p.package.C#[T]
 [6:24..6:25): U <= _root_.flags.p.package.C#[U]
 [6:27..6:28): V <= _root_.flags.p.package.C#[V]
-[6:29..6:29): ε <= _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
+[6:29..6:29):  <= _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
 [6:30..6:31): x <= _root_.flags.p.package.C#(x)
 [6:33..6:34): T => _root_.flags.p.package.C#[T]
 [6:36..6:37): y <= _root_.flags.p.package.C#(y)
@@ -214,7 +214,7 @@ Occurrences:
 [6:42..6:43): z <= _root_.flags.p.package.C#(z)
 [6:45..6:46): V => _root_.flags.p.package.C#[V]
 [7:8..7:12): this <= _root_.flags.p.package.C#`<init>`()V.
-[7:21..7:21): ε => _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
+[7:21..7:21):  => _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
 [7:22..7:25): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [7:27..7:30): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [7:32..7:35): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
@@ -228,10 +228,10 @@ Occurrences:
 [12:12..12:15): Int => _root_.scala.Int#
 [13:14..13:15): X <= _root_.flags.p.package.X.
 [14:14..14:15): Y <= _root_.flags.p.package.Y#
-[14:15..14:15): ε <= _root_.flags.p.package.Y#`<init>`()V.
+[14:15..14:15):  <= _root_.flags.p.package.Y#`<init>`()V.
 [15:15..15:16): Z <= _root_.flags.p.package.Z#
 [16:8..16:10): AA <= _root_.flags.p.package.AA#
-[16:10..16:10): ε <= _root_.flags.p.package.AA#`<init>`(III)V.
+[16:10..16:10):  <= _root_.flags.p.package.AA#`<init>`(III)V.
 [16:11..16:12): x <= _root_.flags.p.package.AA#(x)
 [16:14..16:17): Int => _root_.scala.Int#
 [16:23..16:24): y <= _root_.flags.p.package.AA#(y)
@@ -276,9 +276,9 @@ Occurrences:
 [2:14..2:17): foo <= _root_.example.A#foo()I.
 [2:19..2:22): Int => _root_.scala.Int#
 [3:6..3:7): B <= _root_.example.B#
-[3:7..3:7): ε <= _root_.example.B#`<init>`()V.
+[3:7..3:7):  <= _root_.example.B#`<init>`()V.
 [3:18..3:19): A => _root_.example.A#
-[3:20..3:20): ε => _root_.java.lang.Object#`<init>`()V.
+[3:20..3:20):  => _root_.java.lang.Object#`<init>`()V.
 [3:26..3:29): foo <= _root_.example.B#foo()I.
 [3:31..3:34): Int => _root_.scala.Int#
 
@@ -329,7 +329,7 @@ _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljav
 Occurrences:
 [0:8..0:15): example <= _root_.example.
 [2:6..2:15): Synthetic <= _root_.example.Synthetic#
-[2:16..2:16): ε <= _root_.example.Synthetic#`<init>`()V.
+[2:16..2:16):  <= _root_.example.Synthetic#`<init>`()V.
 [3:2..3:6): List => _root_.scala.collection.immutable.List.
 [3:10..3:13): map => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
 [3:16..3:17): + => _root_.scala.Int#`+`(I)I.
@@ -340,23 +340,23 @@ Occurrences:
 [5:9..5:20): stripPrefix => _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;.
 
 Synthetics:
-[3:6..3:6): ε => *.apply[Int]
+[3:6..3:6):  => *.apply[Int]
   [0:0..0:1): * => _star_.
   [0:2..0:7): apply => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
   [0:8..0:11): Int => _root_.scala.Int#
-[3:13..3:13): ε => *[Int, List[Int]]
+[3:13..3:13):  => *[Int, List[Int]]
   [0:0..0:1): * => _star_.
   [0:2..0:5): Int => _root_.scala.Int#
   [0:7..0:11): List => _root_.scala.collection.immutable.List#
   [0:12..0:15): Int => _root_.scala.Int#
-[3:20..3:20): ε => *(scala.collection.immutable.List.canBuildFrom[Int])
+[3:20..3:20):  => *(scala.collection.immutable.List.canBuildFrom[Int])
   [0:0..0:1): * => _star_.
   [0:34..0:46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
   [0:47..0:50): Int => _root_.scala.Int#
 [4:2..4:18): Array.empty[Int] => scala.Predef.intArrayOps(*)
   [0:13..0:24): intArrayOps => _root_.scala.Predef.intArrayOps([I)[I.
   [0:25..0:26): * => _star_.
-[4:18..4:18): ε => *(((ClassTag.Int): ClassTag[Int]))
+[4:18..4:18):  => *(((ClassTag.Int): ClassTag[Int]))
   [0:0..0:1): * => _star_.
   [0:13..0:16): Int => _root_.scala.reflect.ClassTag.Int.
   [0:19..0:27): ClassTag => _root_.scala.reflect.ClassTag#
@@ -438,15 +438,15 @@ _root_.types.T#x. => val x: : T.this.X
 _root_.types.Test. => final object Test
 _root_.types.Test.C# => class C.{+47 decls}
   extends M
-_root_.types.Test.C#$anon#k()I. => abstract def k: : Int
-  Int => _root_.scala.Int#
-_root_.types.Test.C#$anon#λ# => type λ: [T >: Nothing <: Any] => List[T]
-  T => _root_.types.Test.C#$anon#λ#[T]
+_root_.types.Test.C#$anon#L# => type L: [T >: Nothing <: Any] => List[T]
+  T => _root_.types.Test.C#$anon#L#[T]
   List => _root_.scala.package.List#
-  T => _root_.types.Test.C#$anon#λ#[T]
-_root_.types.Test.C#$anon#λ#[T] => typeparam T: >: Nothing <: Any
+  T => _root_.types.Test.C#$anon#L#[T]
+_root_.types.Test.C#$anon#L#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
+_root_.types.Test.C#$anon#k()I. => abstract def k: : Int
+  Int => _root_.scala.Int#
 _root_.types.Test.C#ByNameType. => final object ByNameType
 _root_.types.Test.C#ByNameType.m1(Lscala/Function0;)I. => def m1: (x: => Int): Int
   x => _root_.types.Test.C#ByNameType.m1(Lscala/Function0;)I.(x)
@@ -632,60 +632,60 @@ Occurrences:
 [3:22..3:33): higherKinds => _root_.scala.language.higherKinds.
 [5:6..5:9): ann <= _root_.types.ann#
 [5:10..5:11): T <= _root_.types.ann#[T]
-[5:12..5:12): ε <= _root_.types.ann#`<init>`(Ljava/lang/Object;)V.
+[5:12..5:12):  <= _root_.types.ann#`<init>`(Ljava/lang/Object;)V.
 [5:13..5:14): x <= _root_.types.ann#(x)
 [5:16..5:17): T => _root_.types.ann#[T]
 [5:27..5:32): scala => _root_.scala.
 [5:33..5:43): annotation => _root_.scala.annotation.
 [5:44..5:60): StaticAnnotation => _root_.scala.annotation.StaticAnnotation#
 [6:6..6:10): ann1 <= _root_.types.ann1#
-[6:11..6:11): ε <= _root_.types.ann1#`<init>`()V.
+[6:11..6:11):  <= _root_.types.ann1#`<init>`()V.
 [6:19..6:24): scala => _root_.scala.
 [6:25..6:35): annotation => _root_.scala.annotation.
 [6:36..6:52): StaticAnnotation => _root_.scala.annotation.StaticAnnotation#
 [7:6..7:10): ann2 <= _root_.types.ann2#
-[7:11..7:11): ε <= _root_.types.ann2#`<init>`()V.
+[7:11..7:11):  <= _root_.types.ann2#`<init>`()V.
 [7:19..7:24): scala => _root_.scala.
 [7:25..7:35): annotation => _root_.scala.annotation.
 [7:36..7:52): StaticAnnotation => _root_.scala.annotation.StaticAnnotation#
 [9:6..9:7): B <= _root_.types.B#
 [11:6..11:7): C <= _root_.types.C#
 [13:6..13:7): P <= _root_.types.P#
-[13:8..13:8): ε <= _root_.types.P#`<init>`()V.
+[13:8..13:8):  <= _root_.types.P#`<init>`()V.
 [14:8..14:9): C <= _root_.types.P#C#
-[14:9..14:9): ε <= _root_.types.P#C#`<init>`()V.
+[14:9..14:9):  <= _root_.types.P#C#`<init>`()V.
 [15:8..15:9): X <= _root_.types.P#X#
-[15:9..15:9): ε <= _root_.types.P#X#`<init>`()V.
+[15:9..15:9):  <= _root_.types.P#X#`<init>`()V.
 [16:6..16:7): x <= _root_.types.P#x.
 [16:14..16:15): X => _root_.types.P#X#
-[17:0..17:0): ε => _root_.types.P#X#`<init>`()V.
+[17:0..17:0):  => _root_.types.P#X#`<init>`()V.
 [19:6..19:7): T <= _root_.types.T#
-[19:8..19:8): ε <= _root_.types.T#`<init>`()V.
+[19:8..19:8):  <= _root_.types.T#`<init>`()V.
 [20:8..20:9): C <= _root_.types.T#C#
-[20:9..20:9): ε <= _root_.types.T#C#`<init>`()V.
+[20:9..20:9):  <= _root_.types.T#C#`<init>`()V.
 [21:8..21:9): X <= _root_.types.T#X#
-[21:9..21:9): ε <= _root_.types.T#X#`<init>`()V.
+[21:9..21:9):  <= _root_.types.T#X#`<init>`()V.
 [22:6..22:7): x <= _root_.types.T#x.
 [22:14..22:15): X => _root_.types.T#X#
-[23:0..23:0): ε => _root_.types.T#X#`<init>`()V.
+[23:0..23:0):  => _root_.types.T#X#`<init>`()V.
 [25:7..25:11): Test <= _root_.types.Test.
 [26:8..26:9): M <= _root_.types.Test.M#
-[26:10..26:10): ε <= _root_.types.Test.M#`<init>`()V.
+[26:10..26:10):  <= _root_.types.Test.M#`<init>`()V.
 [27:8..27:9): m <= _root_.types.Test.M#m()I.
 [27:11..27:14): Int => _root_.scala.Int#
 [27:17..27:20): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [30:8..30:9): N <= _root_.types.Test.N#
-[30:10..30:10): ε <= _root_.types.Test.N#`<init>`()V.
+[30:10..30:10):  <= _root_.types.Test.N#`<init>`()V.
 [31:8..31:9): n <= _root_.types.Test.N#n()I.
 [31:11..31:14): Int => _root_.scala.Int#
 [31:17..31:20): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [34:8..34:9): C <= _root_.types.Test.C#
-[34:10..34:10): ε <= _root_.types.Test.C#`<init>`()V.
+[34:10..34:10):  <= _root_.types.Test.C#`<init>`()V.
 [34:18..34:19): M => _root_.types.Test.M#
-[34:20..34:20): ε => _root_.types.Test.M#`<init>`()V.
+[34:20..34:20):  => _root_.types.Test.M#`<init>`()V.
 [35:8..35:9): p <= _root_.types.Test.C#p.
 [35:16..35:17): P => _root_.types.P#
-[35:17..35:17): ε => _root_.types.P#`<init>`()V.
+[35:17..35:17):  => _root_.types.P#`<init>`()V.
 [36:8..36:9): x <= _root_.types.Test.C#x.
 [36:12..36:13): p => _root_.types.Test.C#p.
 [36:14..36:15): x => _root_.types.P#x.
@@ -742,14 +742,14 @@ Occurrences:
 [57:8..57:16): annType1 <= _root_.types.Test.C#annType1.
 [57:18..57:19): T => _root_.types.T#
 [57:21..57:24): ann => _root_.types.ann#
-[57:24..57:24): ε => _root_.types.ann#`<init>`(Ljava/lang/Object;)V.
+[57:24..57:24):  => _root_.types.ann#`<init>`(Ljava/lang/Object;)V.
 [57:31..57:34): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [58:8..58:16): annType2 <= _root_.types.Test.C#annType2.
 [58:18..58:19): T => _root_.types.T#
 [58:21..58:25): ann1 => _root_.types.ann1#
-[58:26..58:26): ε => _root_.types.ann1#`<init>`()V.
+[58:26..58:26):  => _root_.types.ann1#`<init>`()V.
 [58:27..58:31): ann2 => _root_.types.ann2#
-[58:32..58:32): ε => _root_.types.ann2#`<init>`()V.
+[58:32..58:32):  => _root_.types.ann2#`<init>`()V.
 [58:34..58:37): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [60:8..60:24): existentialType1 <= _root_.types.Test.C#existentialType1.
 [60:26..60:27): T => _root_.types.Test.C#existentialType1.T#
@@ -759,16 +759,16 @@ Occurrences:
 [62:20..62:21): M <= _root_.types.Test.C#typeLambda1()Lscala/Nothing;.M#
 [62:28..62:31): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [63:4..63:15): typeLambda1 => _root_.types.Test.C#typeLambda1()Lscala/Nothing;.
-[63:24..63:25): λ <= _root_.types.Test.C#$anon#λ#
-[63:26..63:27): T <= _root_.types.Test.C#$anon#λ#[T]
+[63:24..63:25): L <= _root_.types.Test.C#$anon#L#
+[63:26..63:27): T <= _root_.types.Test.C#$anon#L#[T]
 [63:31..63:35): List => _root_.scala.package.List#
-[63:36..63:37): T => _root_.types.Test.C#$anon#λ#[T]
-[63:42..63:43): λ => _root_.types.Test.C#$anon#λ#
+[63:36..63:37): T => _root_.types.Test.C#$anon#L#[T]
+[63:42..63:43): L => _root_.types.Test.C#$anon#L#
 [65:11..65:25): ClassInfoType1 <= _root_.types.Test.C#ClassInfoType1.
 [66:10..66:24): ClassInfoType2 <= _root_.types.Test.C#ClassInfoType2#
-[66:25..66:25): ε <= _root_.types.Test.C#ClassInfoType2#`<init>`()V.
+[66:25..66:25):  <= _root_.types.Test.C#ClassInfoType2#`<init>`()V.
 [66:33..66:34): B => _root_.types.B#
-[66:35..66:35): ε => _root_.types.B#`<init>`()V.
+[66:35..66:35):  => _root_.types.B#`<init>`()V.
 [66:41..66:42): x <= _root_.types.Test.C#ClassInfoType2#x()I.
 [67:10..67:24): ClassInfoType3 <= _root_.types.Test.C#ClassInfoType3#
 [67:25..67:26): T <= _root_.types.Test.C#ClassInfoType3#[T]
@@ -856,13 +856,13 @@ local0 => val local: Int
 Occurrences:
 [0:8..0:15): example <= _root_.example.
 [2:6..2:18): `local-file` <= _root_.example.`local-file`#
-[2:19..2:19): ε <= _root_.example.`local-file`#`<init>`()V.
+[2:19..2:19):  <= _root_.example.`local-file`#`<init>`()V.
 [3:2..3:9): locally => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.
 [4:8..4:13): local <= local0
 [5:4..5:9): local => local0
 [5:10..5:11): + => _root_.scala.Int#`+`(I)I.
 
 Synthetics:
-[3:9..3:9): ε => *[Int]
+[3:9..3:9):  => *[Int]
   [0:0..0:1): * => _star_.
   [0:2..0:5): Int => _root_.scala.Int#
