@@ -39,6 +39,7 @@ object Test {
     val typeRef1: C = ???
     val typeRef2: p.C = ???
     val typeRef3: T#C = ???
+    val typeRef4: List[Int] = ???
 
     val singleType1: x.type = ???
     val singleType2: p.x.type = ???
