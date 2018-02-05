@@ -1,0 +1,409 @@
+semanticdb/integration/src/main/scala/example/Example.scala
+-----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Example.scala
+Text => non-empty
+Language => Scala212
+Symbols => 18 entries
+Occurrences => 22 entries
+Diagnostics => 1 entries
+Synthetics => 1 entries
+
+Symbols:
+_root_.example. => package example.{+5 members}
+_root_.example.Example. => final object Example
+_root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String]): Unit
+  args => _root_.example.Example.main([Ljava/lang/String;)V.(args)
+  Unit => _root_.scala.Unit#
+_root_.example.Example.main([Ljava/lang/String;)V.(args) => param args: Array[String]
+  Array => _root_.scala.Array#
+  String => _root_.scala.Predef.String#
+_root_.example.Example.x. => val x: : ClassTag[Int]
+  ClassTag => _root_.scala.reflect.ClassTag#
+  Int => _root_.scala.Int#
+_root_.scala. => package scala
+_root_.scala.Array# => final class Array.{+6 decls}
+  extends AnyRef
+  extends Serializable
+  extends Cloneable
+_root_.scala.Int# => abstract final class Int.{+111 decls}
+  extends AnyVal
+_root_.scala.Predef.String# => type String: String
+  String => _root_.java.lang.String#
+_root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: <?>): Unit
+  x => _root_.scala.Predef.println(Ljava/lang/Object;)V.(x)
+  Unit => _root_.scala.Unit#
+_root_.scala.Unit# => abstract final class Unit.{+2 decls}
+  extends AnyVal
+_root_.scala.collection. => package collection
+_root_.scala.collection.mutable. => package mutable
+_root_.scala.collection.mutable.Stack# => class Stack.{+20 decls}
+  extends AbstractSeq[Stack#[A]
+  extends Seq[Stack#[A]
+  extends SeqLike[Stack#[A, Stack[Stack#[A]]
+  extends GenericTraversableTemplate[Stack#[A, Stack]
+  extends Cloneable[Stack[Stack#[A]]
+  extends Serializable
+_root_.scala.collection.mutable.Stack#`<init>`()V. => secondaryctor <init>: (): Stack[Stack#[A]
+  Stack => _root_.scala.collection.mutable.Stack#
+  Stack#[A => _root_.scala.collection.mutable.Stack#[A]
+_root_.scala.concurrent. => package concurrent
+_root_.scala.reflect. => package reflect
+_root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;. => def classTag: [T: <?>] => (ctag: <?>): ClassTag[T]
+  T => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.[T]
+  ctag => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.(ctag)
+  ClassTag => _root_.scala.reflect.ClassTag#
+  T => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.[T]
+
+Occurrences:
+[0:8..0:15): example <= _root_.example.
+[2:7..2:12): scala => _root_.scala.
+[2:13..2:23): concurrent => _root_.scala.concurrent.
+[2:24..2:30): Future => _root_.scala.concurrent.Future#;_root_.scala.concurrent.Future.
+[4:7..4:14): Example <= _root_.example.Example.
+[5:6..5:11): scala => _root_.scala.
+[5:12..5:22): collection => _root_.scala.collection.
+[5:23..5:30): mutable => _root_.scala.collection.mutable.
+[5:31..5:36): Stack => _root_.scala.collection.mutable.Stack#
+[5:37..5:40): Int => _root_.scala.Int#
+[5:41..5:41): ε => _root_.scala.collection.mutable.Stack#`<init>`()V.
+[6:6..6:10): main <= _root_.example.Example.main([Ljava/lang/String;)V.
+[6:11..6:15): args <= _root_.example.Example.main([Ljava/lang/String;)V.(args)
+[6:17..6:22): Array => _root_.scala.Array#
+[6:23..6:29): String => _root_.scala.Predef.String#
+[6:33..6:37): Unit => _root_.scala.Unit#
+[7:4..7:11): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
+[9:6..9:7): x <= _root_.example.Example.x.
+[9:10..9:15): scala => _root_.scala.
+[9:16..9:23): reflect => _root_.scala.reflect.
+[9:24..9:32): classTag => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.
+[9:33..9:36): Int => _root_.scala.Int#
+
+Diagnostics:
+[2:24..2:30)[warning] Unused import
+
+Synthetics:
+[9:37..9:37): ε => *(((ClassTag.Int): ClassTag[Int]))
+  [0:0..0:1): * => _star_.
+  [0:13..0:16): Int => _root_.scala.reflect.ClassTag.Int.
+  [0:19..0:27): ClassTag => _root_.scala.reflect.ClassTag#
+  [0:28..0:31): Int => _root_.scala.Int#
+semanticdb/integration/src/main/scala/example/Example.scala
+-----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Example.scala
+Text => empty
+Language => Scala212
+Symbols => 0 entries
+Occurrences => 0 entries
+Diagnostics => 1 entries
+Synthetics => 0 entries
+
+Diagnostics:
+[5:6..5:41)[warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
+
+semanticdb/integration/src/main/scala/example/Flags.scala
+---------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Flags.scala
+Text => non-empty
+Language => Scala212
+Symbols => 29 entries
+Occurrences => 42 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+_root_.flags. => package flags.{+1 members}
+_root_.flags.p.package. => package object package
+_root_.flags.p.package.AA# => class AA.{+7 decls}
+  extends AnyRef
+_root_.flags.p.package.AA#(x) => param x: Int
+  Int => _root_.scala.Int#
+_root_.flags.p.package.AA#(y) => param y: : Int
+  Int => _root_.scala.Int#
+_root_.flags.p.package.AA#(z) => param z_=: (x$1: <?>): Unit
+  x$1 => _root_.flags.p.package.AA#`z_=`(I)V.(x$1)
+  Unit => _root_.scala.Unit#
+_root_.flags.p.package.AA#`<init>`(III)V. => primaryctor <init>: (x: <?>, y: <?>, z: <?>): AA
+  x => _root_.flags.p.package.AA#`<init>`(III)V.(x)
+  y => _root_.flags.p.package.AA#`<init>`(III)V.(y)
+  z => _root_.flags.p.package.AA#`<init>`(III)V.(z)
+  AA => _root_.flags.p.package.AA#
+_root_.flags.p.package.C# => abstract class C.{+6 decls}
+  extends AnyRef
+_root_.flags.p.package.C#(x) => param x: T
+  T => _root_.flags.p.package.C#[T]
+_root_.flags.p.package.C#(y) => param y: U
+  U => _root_.flags.p.package.C#[U]
+_root_.flags.p.package.C#(z) => param z: V
+  V => _root_.flags.p.package.C#[V]
+_root_.flags.p.package.C#[T] => covariant typeparam T: >: Nothing<: Any
+  Nothing => _root_.scala.Nothing#
+  Any => _root_.scala.Any#
+_root_.flags.p.package.C#[U] => contravariant typeparam U: >: Nothing<: Any
+  Nothing => _root_.scala.Nothing#
+  Any => _root_.scala.Any#
+_root_.flags.p.package.C#[V] => typeparam V: >: Nothing<: Any
+  Nothing => _root_.scala.Nothing#
+  Any => _root_.scala.Any#
+_root_.flags.p.package.C#`<init>`()V. => secondaryctor <init>: (): C[T, U, V]
+  C => _root_.flags.p.package.C#
+  T => _root_.flags.p.package.C#[T]
+  U => _root_.flags.p.package.C#[U]
+  V => _root_.flags.p.package.C#[V]
+_root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V. => primaryctor <init>: (x: <?>, y: <?>, z: <?>): C[T, U, V]
+  x => _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.(x)
+  y => _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.(y)
+  z => _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.(z)
+  C => _root_.flags.p.package.C#
+  T => _root_.flags.p.package.C#[T]
+  U => _root_.flags.p.package.C#[U]
+  V => _root_.flags.p.package.C#[V]
+_root_.flags.p.package.C#w()I. => abstract def w: : Int
+  Int => _root_.scala.Int#
+_root_.flags.p.package.T# => type T: Int
+  Int => _root_.scala.Int#
+_root_.flags.p.package.U# => abstract type U: >: Nothing<: Int
+  Nothing => _root_.scala.Nothing#
+  Int => _root_.scala.Int#
+_root_.flags.p.package.V# => abstract type V: >: Int<: Any
+  Int => _root_.scala.Int#
+  Any => _root_.scala.Any#
+_root_.flags.p.package.X. => final case object X
+_root_.flags.p.package.Y# => final class Y.{+1 decls}
+  extends AnyRef
+_root_.flags.p.package.Y#`<init>`()V. => primaryctor <init>: (): Y
+  Y => _root_.flags.p.package.Y#
+_root_.flags.p.package.Z# => sealed trait Z
+  extends AnyRef
+_root_.flags.p.package.x. => private lazy val x: : Int
+  Int => _root_.scala.Int#
+_root_.flags.p.package.y. => protected var y_=: (x$1: <?>): Unit
+  x$1 => _root_.flags.p.package.`y_=`(I)V.(x$1)
+  Unit => _root_.scala.Unit#
+_root_.flags.p.package.z()I. => def z: : Int
+  Int => _root_.scala.Int#
+_root_.scala.Int# => abstract final class Int.{+111 decls}
+  extends AnyVal
+_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: : Nothing
+  Nothing => _root_.scala.Nothing#
+
+Occurrences:
+[0:8..0:13): flags <= _root_.flags.
+[2:15..2:16): p <= _root_.flags.p.package.
+[3:19..3:20): x <= _root_.flags.p.package.x.
+[4:25..4:26): y <= _root_.flags.p.package.y.
+[4:28..4:31): Int => _root_.scala.Int#
+[5:6..5:7): z <= _root_.flags.p.package.z()I.
+[6:17..6:18): C <= _root_.flags.p.package.C#
+[6:20..6:21): T <= _root_.flags.p.package.C#[T]
+[6:24..6:25): U <= _root_.flags.p.package.C#[U]
+[6:27..6:28): V <= _root_.flags.p.package.C#[V]
+[6:29..6:29): ε <= _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
+[6:30..6:31): x <= _root_.flags.p.package.C#(x)
+[6:33..6:34): T => _root_.flags.p.package.C#[T]
+[6:36..6:37): y <= _root_.flags.p.package.C#(y)
+[6:39..6:40): U => _root_.flags.p.package.C#[U]
+[6:42..6:43): z <= _root_.flags.p.package.C#(z)
+[6:45..6:46): V => _root_.flags.p.package.C#[V]
+[7:8..7:12): this <= _root_.flags.p.package.C#`<init>`()V.
+[7:21..7:21): ε => _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
+[7:22..7:25): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[7:27..7:30): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[7:32..7:35): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[8:8..8:9): w <= _root_.flags.p.package.C#w()I.
+[8:11..8:14): Int => _root_.scala.Int#
+[10:7..10:8): T <= _root_.flags.p.package.T#
+[10:11..10:14): Int => _root_.scala.Int#
+[11:7..11:8): U <= _root_.flags.p.package.U#
+[11:12..11:15): Int => _root_.scala.Int#
+[12:7..12:8): V <= _root_.flags.p.package.V#
+[12:12..12:15): Int => _root_.scala.Int#
+[13:14..13:15): X <= _root_.flags.p.package.X.
+[14:14..14:15): Y <= _root_.flags.p.package.Y#
+[14:15..14:15): ε <= _root_.flags.p.package.Y#`<init>`()V.
+[15:15..15:16): Z <= _root_.flags.p.package.Z#
+[16:8..16:10): AA <= _root_.flags.p.package.AA#
+[16:10..16:10): ε <= _root_.flags.p.package.AA#`<init>`(III)V.
+[16:11..16:12): x <= _root_.flags.p.package.AA#(x)
+[16:14..16:17): Int => _root_.scala.Int#
+[16:23..16:24): y <= _root_.flags.p.package.AA#(y)
+[16:26..16:29): Int => _root_.scala.Int#
+[16:35..16:36): z <= _root_.flags.p.package.AA#(z)
+[16:38..16:41): Int => _root_.scala.Int#
+
+semanticdb/integration/src/main/scala/example/Overrides.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Overrides.scala
+Text => non-empty
+Language => Scala212
+Symbols => 8 entries
+Occurrences => 10 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+_root_.example. => package example.{+5 members}
+_root_.example.A# => trait A.{+1 members}
+_root_.example.A#foo()I. => abstract def foo: : Int
+  Int => _root_.scala.Int#
+_root_.example.B# => class B.{+2 decls}
+  extends AnyRef
+  extends A
+_root_.example.B#`<init>`()V. => primaryctor <init>: (): B
+  B => _root_.example.B#
+_root_.example.B#foo()I. => def foo: : Int
+  Int => _root_.scala.Int#
+  overrides _root_.example.A#foo()I.
+_root_.java.lang.Object#`<init>`()V. => primaryctor <init>: (): Object
+  Object => _root_.java.lang.Object#
+_root_.scala.Int# => abstract final class Int.{+111 decls}
+  extends AnyVal
+
+Occurrences:
+[0:8..0:15): example <= _root_.example.
+[2:6..2:7): A <= _root_.example.A#
+[2:14..2:17): foo <= _root_.example.A#foo()I.
+[2:19..2:22): Int => _root_.scala.Int#
+[3:6..3:7): B <= _root_.example.B#
+[3:7..3:7): ε <= _root_.example.B#`<init>`()V.
+[3:18..3:19): A => _root_.example.A#
+[3:20..3:20): ε => _root_.java.lang.Object#`<init>`()V.
+[3:26..3:29): foo <= _root_.example.B#foo()I.
+[3:31..3:34): Int => _root_.scala.Int#
+
+semanticdb/integration/src/main/scala/example/Synthetic.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Synthetic.scala
+Text => non-empty
+Language => Scala212
+Symbols => 11 entries
+Occurrences => 11 entries
+Diagnostics => 0 entries
+Synthetics => 6 entries
+
+Symbols:
+_root_.example. => package example.{+5 members}
+_root_.example.Synthetic# => class Synthetic.{+1 decls}
+  extends AnyRef
+_root_.example.Synthetic#`<init>`()V. => primaryctor <init>: (): Synthetic
+  Synthetic => _root_.example.Synthetic#
+_root_.scala.Array. => final object Array
+_root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;. => def empty: [T: <?>] => (evidence$1: <?>): Array[T]
+  T => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.[T]
+  evidence$1 => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.(evidence$1)
+  Array => _root_.scala.Array#
+  T => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.[T]
+_root_.scala.Int# => abstract final class Int.{+111 decls}
+  extends AnyVal
+_root_.scala.Int#`+`(I)I. => abstract def +: (x: <?>): Int
+  x => _root_.scala.Int#`+`(I)I.(x)
+  Int => _root_.scala.Int#
+_root_.scala.collection.TraversableLike#headOption()Lscala/Option;. => def headOption: : Option[TraversableLike#[A]
+  Option => _root_.scala.Option#
+  TraversableLike#[A => _root_.scala.collection.TraversableLike#[A]
+_root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;. => final def map: [B: <?>, That: <?>] => (f: <?>)(bf: <?>): That
+  B => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[B]
+  That => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[That]
+  f => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.(f)
+  bf => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.(bf)
+  That => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[That]
+_root_.scala.collection.immutable.List. => final object List
+_root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;. => def stripPrefix: (prefix: <?>): String
+  prefix => _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;.(prefix)
+  String => _root_.java.lang.String#
+
+Occurrences:
+[0:8..0:15): example <= _root_.example.
+[2:6..2:15): Synthetic <= _root_.example.Synthetic#
+[2:16..2:16): ε <= _root_.example.Synthetic#`<init>`()V.
+[3:2..3:6): List => _root_.scala.collection.immutable.List.
+[3:10..3:13): map => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.
+[3:16..3:17): + => _root_.scala.Int#`+`(I)I.
+[4:2..4:7): Array => _root_.scala.Array.
+[4:8..4:13): empty => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.
+[4:14..4:17): Int => _root_.scala.Int#
+[4:19..4:29): headOption => _root_.scala.collection.TraversableLike#headOption()Lscala/Option;.
+[5:9..5:20): stripPrefix => _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;.
+
+Synthetics:
+[3:6..3:6): ε => *.apply[Int]
+  [0:0..0:1): * => _star_.
+  [0:2..0:7): apply => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
+  [0:8..0:11): Int => _root_.scala.Int#
+[3:13..3:13): ε => *[Int, List[Int]]
+  [0:0..0:1): * => _star_.
+  [0:2..0:5): Int => _root_.scala.Int#
+  [0:7..0:11): List => _root_.scala.collection.immutable.List#
+  [0:12..0:15): Int => _root_.scala.Int#
+[3:20..3:20): ε => *(scala.collection.immutable.List.canBuildFrom[Int])
+  [0:0..0:1): * => _star_.
+  [0:34..0:46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom()Lscala/collection/generic/CanBuildFrom;.
+  [0:47..0:50): Int => _root_.scala.Int#
+[4:2..4:18): Array.empty[Int] => scala.Predef.intArrayOps(*)
+  [0:13..0:24): intArrayOps => _root_.scala.Predef.intArrayOps([I)[I.
+  [0:25..0:26): * => _star_.
+[4:18..4:18): ε => *(((ClassTag.Int): ClassTag[Int]))
+  [0:0..0:1): * => _star_.
+  [0:13..0:16): Int => _root_.scala.reflect.ClassTag.Int.
+  [0:19..0:27): ClassTag => _root_.scala.reflect.ClassTag#
+  [0:28..0:31): Int => _root_.scala.Int#
+[5:2..5:8): "fooo" => scala.Predef.augmentString(*)
+  [0:13..0:26): augmentString => _root_.scala.Predef.augmentString(Ljava/lang/String;)Ljava/lang/String;.
+  [0:27..0:28): * => _star_.
+
+semanticdb/integration/src/main/scala/example/local-file.scala
+--------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/local-file.scala
+Text => non-empty
+Language => Scala212
+Symbols => 6 entries
+Occurrences => 7 entries
+Diagnostics => 0 entries
+Synthetics => 1 entries
+
+Symbols:
+_root_.example. => package example.{+5 members}
+_root_.example.`local-file`# => class local-file.{+1 decls}
+  extends AnyRef
+_root_.example.`local-file`#`<init>`()V. => primaryctor <init>: (): local-file
+  local-file => _root_.example.`local-file`#
+_root_.scala.Int#`+`(I)I. => abstract def +: (x: <?>): Int
+  x => _root_.scala.Int#`+`(I)I.(x)
+  Int => _root_.scala.Int#
+_root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;. => def locally: [T: <?>] => (x: <?>): T
+  T => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+  x => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.(x)
+  T => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+local0 => val local: Int
+  Int => _root_.scala.Int#
+
+Occurrences:
+[0:8..0:15): example <= _root_.example.
+[2:6..2:18): `local-file` <= _root_.example.`local-file`#
+[2:19..2:19): ε <= _root_.example.`local-file`#`<init>`()V.
+[3:2..3:9): locally => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.
+[4:8..4:13): local <= local0
+[5:4..5:9): local => local0
+[5:10..5:11): + => _root_.scala.Int#`+`(I)I.
+
+Synthetics:
+[3:9..3:9): ε => *[Int]
+  [0:0..0:1): * => _star_.
+  [0:2..0:5): Int => _root_.scala.Int#

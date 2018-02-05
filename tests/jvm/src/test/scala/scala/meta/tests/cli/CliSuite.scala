@@ -21,17 +21,10 @@ class CliSuite extends FunSuite with DiffAssertions {
   val target = Files.createTempDirectory("target_")
   val helloWorldSemanticdb = target.resolve("META-INF/semanticdb/HelloWorld.semanticdb")
 
-  private def communicate[T](op: => T): (T, String) = {
-    val baos = new ByteArrayOutputStream
-    val ps = new PrintStream(baos, true, UTF_8.name)
-    val result = scala.Console.withOut(baos)(scala.Console.withErr(baos)(op))
-    (result, new String(baos.toByteArray, UTF_8))
-  }
-
   test("metac " + helloWorldScala) {
     val scalaLibraryJar = sys.props("sbt.paths.scalalibrary.classes")
     if (scalaLibraryJar == null) sys.error("sbt.paths.scalalibrary.classes not set. broken build?")
-    val (exitcode, output) = communicate {
+    val (exitcode, output) = CliSuite.communicate {
       Metac.process(Array(
         "-cp",
         scalaLibraryJar,
@@ -51,7 +44,7 @@ class CliSuite extends FunSuite with DiffAssertions {
       else if (versionNumberString.startsWith("2.12")) "Scala212"
       else sys.error(s"unsupported Scala version: $versionNumberString")
     }
-    val (exitcode, output) = communicate {
+    val (exitcode, output) = CliSuite.communicate {
       Metap.process(Array(helloWorldSemanticdb.toString))
     }
     assert(exitcode == 0)
@@ -98,5 +91,14 @@ class CliSuite extends FunSuite with DiffAssertions {
       |[2:37..2:41): Unit => _root_.scala.Unit#
       |[3:8..3:15): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
     """.trim.stripMargin)
+  }
+}
+
+object CliSuite {
+  def communicate[T](op: => T): (T, String) = {
+    val baos = new ByteArrayOutputStream
+    val ps = new PrintStream(baos, true, UTF_8.name)
+    val result = scala.Console.withOut(baos)(scala.Console.withErr(baos)(op))
+    (result, new String(baos.toByteArray, UTF_8))
   }
 }

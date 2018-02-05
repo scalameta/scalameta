@@ -20,21 +20,23 @@ object Metap {
 
   def process(args: Array[String]): Int = {
     var failed = false
-    args.foreach { arg =>
-      try {
-        val stream = Files.newInputStream(Paths.get(arg))
+    args.zipWithIndex.foreach {
+      case (arg, i) =>
         try {
-          val documents = TextDocuments.parseFrom(stream)
-          documents.documents.foreach(pprint)
-        } finally {
-          stream.close()
+          val stream = Files.newInputStream(Paths.get(arg))
+          try {
+            if (i != 0) println("")
+            val documents = TextDocuments.parseFrom(stream)
+            documents.documents.foreach(pprint)
+          } finally {
+            stream.close()
+          }
+        } catch {
+          case NonFatal(ex) =>
+            println(s"error: can't decompile $arg")
+            ex.printStackTrace()
+            failed = true
         }
-      } catch {
-        case NonFatal(ex) =>
-          println(s"error: can't decompile $arg")
-          ex.printStackTrace()
-          failed = true
-      }
     }
     if (failed) 1 else 0
   }
@@ -118,6 +120,8 @@ object Metap {
             else doc.text.substring(startOffset, endOffset)
           }
           print(s": $text")
+        case None =>
+          ()
       }
     }
   }
