@@ -4,6 +4,7 @@ package semanticdb
 import scala.annotation.switch
 import scala.runtime.AbstractFunction4
 import scala.compat.Platform.EOL
+import scala.meta.internal.{semanticdb3 => s}
 
 final class Denotation(
     val flags: Long,
@@ -11,15 +12,19 @@ final class Denotation(
     val signature: String,
     val names: List[ResolvedName],
     val members: List[Signature],
-    val overrides: List[Symbol]
+    val overrides: List[Symbol],
+    val tpe: Option[s.Type]
 ) extends HasFlags
     with Product
     with Serializable {
   def this(flags: Long, name: String, signature: String, names: List[ResolvedName]) =
-      this(flags, name, signature, names, Nil, Nil)
+      this(flags, name, signature, names, Nil, Nil, None)
 
   def this(flags: Long, name: String, signature: String, names: List[ResolvedName], members: List[Signature]) =
-      this(flags, name, signature, names, members, Nil)
+      this(flags, name, signature, names, members, Nil, None)
+
+  def this(flags: Long, name: String, signature: String, names: List[ResolvedName], members: List[Signature], overrides: List[Symbol]) =
+      this(flags, name, signature, names, members, overrides, None)
 
   def syntax: String = {
     val s_overrides = if (overrides.isEmpty) "" else s"${EOL}  override ${overrides.head}"
@@ -28,6 +33,7 @@ final class Denotation(
     val s_names = ResolvedName.syntax(names)
     // TODO(olafur) use more advances escaping.
     val s_name = if (name.contains(" ")) s"`$name`" else name
+    // TODO: implement Denotation.tpe prettyprinting.
 
     s"$flagSyntax $s_name" + s_info + s_members +
       s_overrides +
@@ -52,6 +58,7 @@ final class Denotation(
     acc = scala.runtime.Statics.mix(acc, scala.runtime.Statics.anyHash(names))
     acc = scala.runtime.Statics.mix(acc, scala.runtime.Statics.anyHash(members))
     acc = scala.runtime.Statics.mix(acc, scala.runtime.Statics.anyHash(overrides))
+    acc = scala.runtime.Statics.mix(acc, scala.runtime.Statics.anyHash(tpe))
     scala.runtime.Statics.finalizeHash(acc, 4)
   }
   override def equals(x$1: scala.Any): Boolean = this.eq(x$1.asInstanceOf[Object]) || {
@@ -68,8 +75,6 @@ final class Denotation(
     case 1 => name
     case 2 => signature
     case 3 => names
-    case 4 => members
-    case 5 => overrides
     case _ => throw new IndexOutOfBoundsException(x$1.toString)
   }
   override def productArity = 4
@@ -83,6 +88,13 @@ object Denotation extends AbstractFunction4[Long, String, String, List[ResolvedN
             name: String,
             signature: String,
             names: List[ResolvedName],
+            members: List[Signature]): Denotation =
+    new Denotation(flags, name, signature, names, members)
+
+  def apply(flags: Long,
+            name: String,
+            signature: String,
+            names: List[ResolvedName],
             members: List[Signature],
             overrides: List[Symbol]): Denotation =
     new Denotation(flags, name, signature, names, members, overrides)
@@ -91,8 +103,11 @@ object Denotation extends AbstractFunction4[Long, String, String, List[ResolvedN
             name: String,
             signature: String,
             names: List[ResolvedName],
-            members: List[Signature]): Denotation =
-    new Denotation(flags, name, signature, names, members)
+            members: List[Signature],
+            overrides: List[Symbol],
+            tpe: Option[s.Type]): Denotation =
+    new Denotation(flags, name, signature, names, members, overrides, tpe)
+
   @deprecated("Use `case d: Denotation` instead.", "2.1.0")
   def unapply(x$0: Denotation): Option[(Long, String, String, List[ResolvedName])] =
     if (x$0.==(null))

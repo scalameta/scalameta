@@ -80,8 +80,7 @@ lazy val semanticdb3 = crossProject
     publishableSettings,
     ignoreMimaSettings,
     protobufSettings,
-    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3")),
-    version := "3.1.0"
+    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3"))
   )
   .jvmSettings(
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
