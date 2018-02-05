@@ -47,6 +47,9 @@ commands += Command.command("ci-fast") { s =>
       s
   }
 }
+commands += Command.command("ci-native") { s =>
+  "metapNative/nativeLink" :: s
+}
 commands += CiCommand("ci-publish")(
   "publishSigned" :: Nil
 )
@@ -74,7 +77,7 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== SEMANTICDB ======================== **/
 
-lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform)
+lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("semanticdb/semanticdb3"))
   .settings(
@@ -83,6 +86,7 @@ lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform)
     protobufSettings,
     PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3"))
   )
+  .nativeSettings(nativeSettings)
   .jvmSettings(
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
   )
@@ -91,6 +95,7 @@ lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform)
   )
 lazy val semanticdb3JVM = semanticdb3.jvm
 lazy val semanticdb3JS = semanticdb3.js
+lazy val semanticdb3Native = semanticdb3.native
 
 lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
@@ -144,7 +149,7 @@ lazy val metac = project
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbScalacPlugin)
 
-lazy val metap = crossProject(JSPlatform, JVMPlatform)
+lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("semanticdb/metap"))
   .settings(
@@ -153,11 +158,13 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform)
     description := "SemanticDB decompiler",
     mainClass := Some("scala.meta.cli.Metap")
   )
+  .nativeSettings(nativeSettings)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdb3)
 lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
+lazy val metapNative = metap.native
 
 /** ======================== LANGMETA ======================== **/
 
@@ -636,6 +643,18 @@ lazy val fullCrossVersionSettings = Seq(
 lazy val hasLargeIntegrationTests = Seq(
   fork in (Test, run) := true,
   javaOptions in (Test, run) += "-Xss4m"
+)
+
+lazy val nativeSettings = Seq(
+  scalaVersion := LatestScala211,
+  crossScalaVersions := List(LatestScala211),
+  nativeGC := "immix",
+  nativeMode := "release",
+  nativeLinkStubs := false,
+  // These builds are published from my private fork of Scala Native
+  // https://github.com/xeno-by/scalapb/commits/topic/scalameta
+  libraryDependencies -= "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
+  libraryDependencies += "com.github.xenoby" %%% "scalapb-runtime" % scalapbVersion
 )
 
 def exposePaths(projectName: String, config: Configuration) = {
