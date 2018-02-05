@@ -193,14 +193,24 @@ trait DocumentOps { self: DatabaseOps =>
 
               def saveDenotation(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  denotations(ms) = gs.toDenotation(saveOverrides = mtree.isDefinition)
-                  if (config.overrides.isAll && mtree.isDefinition) {
-                    gs.overridesMembers.foreach {
-                      case (s, d) => denotations(s) = d
+                  val saveOverrides = config.overrides.isAll && mtree.isDefinition
+                  val DenotationResult(denot, todoOverrides, todoTpe1) =
+                    gs.toDenotation(saveOverrides)
+                  denotations(ms) = denot
+                  val todoTpe2 = todoOverrides.flatMap { ogs =>
+                    val DenotationResult(odenot, _, otodoTpe) =
+                      ogs.toDenotation(saveOverrides = true)
+                    denotations(ogs.toSemantic) = odenot
+                    otodoTpe
+                  }
+                  (todoTpe1 ++ todoTpe2).foreach { tgs =>
+                    if (tgs.isSemanticdbLocal) {
+                      val tms = tgs.toSemantic
+                      assert(tms != m.Symbol.None)
+                      if (!denotations.contains(tms)) add(tms, tgs)
                     }
                   }
                 }
-
                 if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
                   add(symbol, gsym)
                 }

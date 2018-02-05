@@ -72,24 +72,27 @@ class CliSuite extends FunSuite with DiffAssertions {
       |Symbols:
       |_empty_.HelloWorld. => final object HelloWorld
       |_empty_.HelloWorld.main([Ljava/lang/String;)V. => def main: (args: Array[String]): Unit
-      |  [0:7..0:12): Array => _root_.scala.Array#
-      |  [0:13..0:19): String => _root_.scala.Predef.String#
-      |  [0:23..0:27): Unit => _root_.scala.Unit#
-      |_root_.scala.Array# => final class Array
+      |  args => _empty_.HelloWorld.main([Ljava/lang/String;)V.(args)
+      |  Unit => _root_.scala.Unit#
+      |_empty_.HelloWorld.main([Ljava/lang/String;)V.(args) => param args: Array[String]
+      |  Array => _root_.scala.Array#
+      |  String => _root_.scala.Predef.String#
+      |_root_.scala.Array# => final class Array.{+6 decls}
+      |  extends AnyRef
+      |  extends Serializable
+      |  extends Cloneable
       |_root_.scala.Predef.String# => type String: String
-      |  [0:0..0:6): String => _root_.java.lang.String#
-      |_root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: Any): Unit
-      |  [0:4..0:7): Any => _root_.scala.Any#
-      |  [0:10..0:14): Unit => _root_.scala.Unit#
-      |_root_.scala.Unit# => abstract final class Unit
-      |local0 => param args: Array[String]
-      |  [0:0..0:5): Array => _root_.scala.Array#
-      |  [0:6..0:12): String => _root_.scala.Predef.String#
+      |  String => _root_.java.lang.String#
+      |_root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: <?>): Unit
+      |  x => _root_.scala.Predef.println(Ljava/lang/Object;)V.(x)
+      |  Unit => _root_.scala.Unit#
+      |_root_.scala.Unit# => abstract final class Unit.{+2 decls}
+      |  extends AnyVal
       |
       |Occurrences:
       |[1:11..1:21): HelloWorld <= _empty_.HelloWorld.
       |[2:10..2:14): main <= _empty_.HelloWorld.main([Ljava/lang/String;)V.
-      |[2:15..2:19): args <= local0
+      |[2:15..2:19): args <= _empty_.HelloWorld.main([Ljava/lang/String;)V.(args)
       |[2:21..2:26): Array => _root_.scala.Array#
       |[2:27..2:33): String => _root_.scala.Predef.String#
       |[2:37..2:41): Unit => _root_.scala.Unit#

@@ -8,9 +8,10 @@ case class SemanticdbConfig(
     sourceroot: AbsolutePath,
     mode: SemanticdbMode,
     failures: FailureMode,
+    denotations: DenotationMode,
+    signatures: SignatureMode,
     members: MemberMode,
     overrides: OverrideMode,
-    denotations: DenotationMode,
     profiling: ProfilingMode,
     fileFilter: FileFilter,
     messages: MessageMode,
@@ -21,9 +22,10 @@ case class SemanticdbConfig(
       "sourceroot" -> sourceroot,
       "mode" -> mode.name,
       "failures" -> failures.name,
+      "signatures" -> signatures.name,
+      "denotations" -> denotations.name,
       "members" -> members.name,
       "overrides" -> overrides.name,
-      "denotations" -> denotations.name,
       "profiling" -> profiling.name,
       "include" -> fileFilter.include,
       "exclude" -> fileFilter.exclude,
@@ -38,9 +40,10 @@ object SemanticdbConfig {
     PathIO.workingDirectory,
     SemanticdbMode.Fat,
     FailureMode.Warning,
+    DenotationMode.All,
+    SignatureMode.All,
     MemberMode.None,
     OverrideMode.None,
-    DenotationMode.All,
     ProfilingMode.Off,
     FileFilter.matchEverything,
     MessageMode.All,
@@ -88,6 +91,23 @@ object DenotationMode {
   case object All extends DenotationMode
   case object Definitions extends DenotationMode
   case object None extends DenotationMode
+}
+
+sealed abstract class SignatureMode {
+  def name: String = toString.toLowerCase
+  import SignatureMode._
+  def isAll: Boolean = this == All
+  def isNew: Boolean = this == New
+  def isOld: Boolean = this == Old
+  def isNone: Boolean = this == None
+}
+object SignatureMode {
+  def unapply(arg: String): Option[SignatureMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, New, Old, None)
+  case object All extends SignatureMode
+  case object New extends SignatureMode
+  case object Old extends SignatureMode
+  case object None extends SignatureMode
 }
 
 sealed abstract class MemberMode {
@@ -168,8 +188,9 @@ trait ConfigOps { self: DatabaseOps =>
   val SetSourceroot = "sourceroot:(.*)".r
   val SetMode = "mode:(.*)".r
   val SetFailures = "failures:(.*)".r
-  val SetMembers = "members:(.*)".r
   val SetDenotations = "denotations:(.*)".r
+  val SetSignatures = "signatures:(.*)".r
+  val SetMembers = "members:(.*)".r
   val SetOverrides = "overrides:(.*)".r
   val SetProfiling = "profiling:(.*)".r
   val SetInclude = "include:(.*)".r
@@ -185,12 +206,14 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(mode = mode)
     def setFailures(severity: FailureMode): Unit =
       config = config.copy(failures = severity)
+    def setDenotations(denotations: DenotationMode): Unit =
+      config = config.copy(denotations = denotations)
+    def setSignatures(signatures: SignatureMode): Unit =
+      config = config.copy(signatures = signatures)
     def setMembers(members: MemberMode): Unit =
       config = config.copy(members = members)
     def setOverrides(overrides: OverrideMode): Unit =
       config = config.copy(overrides = overrides)
-    def setDenotations(denotations: DenotationMode): Unit =
-      config = config.copy(denotations = denotations)
     def setProfiling(profiling: ProfilingMode): Unit =
       config = config.copy(profiling = profiling)
     def setInclude(include: String): Unit =
