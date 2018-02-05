@@ -32,7 +32,7 @@ Messages:
 [72..107): [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 Symbols:
-_root_.example. => package example.{+4 members}
+_root_.example. => package example.{+5 members}
 _root_.example.Example. => final object Example
 _root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String]): Unit
   [7..12): Array => _root_.scala.Array#
@@ -217,7 +217,7 @@ Names:
 [73..76): Int => _root_.scala.Int#
 
 Symbols:
-_root_.example. => package example.{+4 members}
+_root_.example. => package example.{+5 members}
 _root_.example.A# => trait A.{+1 members}
 _root_.example.A#foo()I. => abstract def foo: Int
   [0..3): Int => _root_.scala.Int#
@@ -253,7 +253,7 @@ Names:
 [95..106): stripPrefix => _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;.
 
 Symbols:
-_root_.example. => package example.{+4 members}
+_root_.example. => package example.{+5 members}
 _root_.example.Synthetic# => class Synthetic
 _root_.example.Synthetic#`<init>`()V. => primaryctor <init>: (): Synthetic
   [4..13): Synthetic => _root_.example.Synthetic#
@@ -306,3 +306,35 @@ Synthetics:
 [88..94): scala.Predef.augmentString(*)
   [13..26): augmentString => _root_.scala.Predef.augmentString(Ljava/lang/String;)Ljava/lang/String;.
   [27..28): * => _star_.
+
+
+semanticdb/integration/src/main/scala/example/local-file.scala
+--------------------------------------------------------------
+Language:
+Scala212
+
+Names:
+[8..15): example <= _root_.example.
+[23..35): `local-file` <= _root_.example.`local-file`#
+[36..36): ε <= _root_.example.`local-file`#`<init>`()V.
+[40..47): locally => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.
+[58..63): local <= local0_semanticdb_integration_src_main_scala_example_local_file_scala
+[73..78): local => local0_semanticdb_integration_src_main_scala_example_local_file_scala
+[79..80): + => _root_.scala.Int#`+`(I)I.
+
+Symbols:
+_root_.example. => package example.{+5 members}
+_root_.example.`local-file`# => class local-file
+_root_.example.`local-file`#`<init>`()V. => primaryctor <init>: (): `local-file`
+  [4..16): `local-file` => _root_.example.`local-file`#
+_root_.scala.Int#`+`(I)I. => abstract def +: (x: Int): Int
+  [4..7): Int => _root_.scala.Int#
+  [10..13): Int => _root_.scala.Int#
+_root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;. => def locally: [T] => (x: T): T
+local0_semanticdb_integration_src_main_scala_example_local_file_scala => val local: Int
+  [0..3): Int => _root_.scala.Int#
+
+Synthetics:
+[47..47): *[Int]
+  [0..1): * => _star_.
+  [2..5): Int => _root_.scala.Int#
