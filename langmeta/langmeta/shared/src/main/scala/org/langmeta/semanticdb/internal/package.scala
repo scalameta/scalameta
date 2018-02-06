@@ -140,6 +140,7 @@ package object semanticdb {
               if (stest(p.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
               if (stest(p.VALPARAM.value)) dflip(d.VAL)
               if (stest(p.VARPARAM.value)) dflip(d.VAR)
+              if (stest(p.SPECIALIZED.value)) dflip(d.SPECIALIZED)
               dflags
             }
             val dname = sname

@@ -28,6 +28,7 @@ private[semanticdb] trait Flags {
   final val CONTRAVARIANT: Long = 1 << 23
   final val INLINE: Long = 1 << 24
   final val JAVADEFINED: Long = 1 << 25
+  final val SPECIALIZED: Long = 1 << 26
 }
 
 private[semanticdb] trait HasFlags {
@@ -60,6 +61,7 @@ private[semanticdb] trait HasFlags {
   def isContravariant: Boolean = hasFlag(CONTRAVARIANT)
   def isInline: Boolean = hasFlag(INLINE)
   def isJavaDefined: Boolean = hasFlag(JAVADEFINED)
+  def isSpecialized: Boolean = hasFlag(SPECIALIZED)
 
   protected def flagSyntax: String = {
     val buf = new StringBuilder
@@ -80,6 +82,7 @@ private[semanticdb] trait HasFlags {
     if (hasFlag(CONTRAVARIANT)) append("CONTRAVARIANT")
     if (hasFlag(INLINE)) append("INLINE")
     if (hasFlag(JAVADEFINED)) append("JAVADEFINED")
+    if (hasFlag(SPECIALIZED)) append("SPECIALIZED")
     if (hasFlag(VAL)) append("VAL")
     if (hasFlag(VAR)) append("VAR")
     if (hasFlag(DEF)) append("DEF")

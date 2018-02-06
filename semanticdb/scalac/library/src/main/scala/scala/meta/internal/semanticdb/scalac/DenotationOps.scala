@@ -76,6 +76,8 @@ trait DenotationOps { self: DatabaseOps =>
       if (gsym.hasFlag(gf.CASE)) flags |= mf.CASE
       if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flags |= mf.CONTRAVARIANT
       if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flags |= mf.COVARIANT
+      if (gsym.isType && gsym.hasAnnotation(g.definitions.SpecializedClass)) flags |= mf.SPECIALIZED
+
       // TODO: mf.INLINE
       flags
     }

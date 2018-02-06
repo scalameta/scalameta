@@ -158,6 +158,7 @@ message TypeType {
   Type upper_bound = 3;
 }
 
+// see https://github.com/scala/scala/blob/2.12.x/src/reflect/scala/reflect/internal/Flags.scala
 message SymbolInformation {
   enum Kind {
     UNKNOWN_KIND = 0;
@@ -178,18 +179,20 @@ message SymbolInformation {
   }
   enum Property {
     UNKNOWN_PROPERTY = 0;
-    PRIVATE = 0x1;
-    PROTECTED = 0x2;
-    ABSTRACT = 0x4;
-    FINAL = 0x8;
-    SEALED = 0x10;
-    IMPLICIT = 0x20;
-    LAZY = 0x40;
-    CASE = 0x80;
-    COVARIANT = 0x100;
-    CONTRAVARIANT = 0x200;
-    VALPARAM = 0x400;
-    VARPARAM = 0x800;
+    PRIVATE = 0x1;          // 1 <<  1
+    PROTECTED = 0x2;        // 1 <<  2
+    ABSTRACT = 0x4;         // 1 <<  3
+    FINAL = 0x8;            // 1 <<  4
+    SEALED = 0x10;          // 1 <<  5
+    IMPLICIT = 0x20;        // 1 <<  6 
+    LAZY = 0x40;            // 1 <<  7 
+    CASE = 0x80;            // 1 <<  8 
+    COVARIANT = 0x100;      // 1 <<  9 
+    CONTRAVARIANT = 0x200;  // 1 << 10 
+    VALPARAM = 0x400;       // 1 << 11 
+    VARPARAM = 0x800;       // 1 << 12 
+    SPECIALIZED = 0x1000;   // 1 << 13
+    // (1 << 15).toHexString
   }
   reserved 6;
   string symbol = 1;
