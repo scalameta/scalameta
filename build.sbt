@@ -3,6 +3,7 @@ import scala.util.Try
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalajs.sbtplugin.ScalaJSCrossVersion
+import sbtcrossproject.{crossProject, CrossType}
 import org.scalameta.build._
 import org.scalameta.build.Versions._
 import org.scalameta.os
@@ -46,6 +47,9 @@ commands += Command.command("ci-fast") { s =>
       s
   }
 }
+commands += Command.command("ci-native") { s =>
+  "metapNative/nativeLink" :: s
+}
 commands += CiCommand("ci-publish")(
   "publishSigned" :: Nil
 )
@@ -73,7 +77,7 @@ console := console.in(scalametaJVM, Compile).value
 
 /** ======================== SEMANTICDB ======================== **/
 
-lazy val semanticdb3 = crossProject
+lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("semanticdb/semanticdb3"))
   .settings(
@@ -82,6 +86,7 @@ lazy val semanticdb3 = crossProject
     protobufSettings,
     PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3"))
   )
+  .nativeSettings(nativeSettings)
   .jvmSettings(
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
   )
@@ -90,6 +95,7 @@ lazy val semanticdb3 = crossProject
   )
 lazy val semanticdb3JVM = semanticdb3.jvm
 lazy val semanticdb3JS = semanticdb3.js
+lazy val semanticdb3Native = semanticdb3.native
 
 lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
@@ -143,7 +149,7 @@ lazy val metac = project
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbScalacPlugin)
 
-lazy val metap = crossProject
+lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("semanticdb/metap"))
   .settings(
@@ -152,15 +158,17 @@ lazy val metap = crossProject
     description := "SemanticDB decompiler",
     mainClass := Some("scala.meta.cli.Metap")
   )
+  .nativeSettings(nativeSettings)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdb3)
 lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
+lazy val metapNative = metap.native
 
 /** ======================== LANGMETA ======================== **/
 
-lazy val langmeta = crossProject
+lazy val langmeta = crossProject(JSPlatform, JVMPlatform)
   .in(file("langmeta/langmeta"))
   .settings(
     publishableSettings,
@@ -178,7 +186,7 @@ lazy val langmetaJS = langmeta.js
 
 /** ======================== SCALAMETA ======================== **/
 
-lazy val common = crossProject
+lazy val common = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
@@ -189,7 +197,7 @@ lazy val common = crossProject
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
 
-lazy val io = crossProject
+lazy val io = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/io"))
   .settings(
     publishableSettings,
@@ -200,7 +208,7 @@ lazy val io = crossProject
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
 
-lazy val dialects = crossProject
+lazy val dialects = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/dialects"))
   .settings(
     publishableSettings,
@@ -211,7 +219,7 @@ lazy val dialects = crossProject
 lazy val dialectsJVM = dialects.jvm
 lazy val dialectsJS = dialects.js
 
-lazy val inputs = crossProject
+lazy val inputs = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/inputs"))
   .settings(
     publishableSettings,
@@ -232,7 +240,7 @@ lazy val interactive = project
   )
   .dependsOn(semanticdbScalacCore)
 
-lazy val parsers = crossProject
+lazy val parsers = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/parsers"))
   .settings(
     publishableSettings,
@@ -243,7 +251,7 @@ lazy val parsers = crossProject
 lazy val parsersJVM = parsers.jvm
 lazy val parsersJS = parsers.js
 
-lazy val quasiquotes = crossProject
+lazy val quasiquotes = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/quasiquotes"))
   .settings(
     publishableSettings,
@@ -254,7 +262,7 @@ lazy val quasiquotes = crossProject
 lazy val quasiquotesJVM = quasiquotes.jvm
 lazy val quasiquotesJS = quasiquotes.js
 
-lazy val tokenizers = crossProject
+lazy val tokenizers = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/tokenizers"))
   .settings(
     publishableSettings,
@@ -266,7 +274,7 @@ lazy val tokenizers = crossProject
 lazy val tokenizersJVM = tokenizers.jvm
 lazy val tokenizersJS = tokenizers.js
 
-lazy val tokens = crossProject
+lazy val tokens = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/tokens"))
   .settings(
     publishableSettings,
@@ -277,7 +285,7 @@ lazy val tokens = crossProject
 lazy val tokensJVM = tokens.jvm
 lazy val tokensJS = tokens.js
 
-lazy val transversers = crossProject
+lazy val transversers = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/transversers"))
   .settings(
     publishableSettings,
@@ -288,7 +296,7 @@ lazy val transversers = crossProject
 lazy val traversersJVM = transversers.jvm
 lazy val traversersJS = transversers.js
 
-lazy val trees = crossProject
+lazy val trees = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/trees"))
   .settings(
     publishableSettings,
@@ -301,7 +309,7 @@ lazy val trees = crossProject
 lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
 
-lazy val semanticdb = crossProject
+lazy val semanticdb = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/semanticdb"))
   .settings(
     publishableSettings,
@@ -311,7 +319,7 @@ lazy val semanticdb = crossProject
 lazy val semanticdbJVM = semanticdb.jvm
 lazy val semanticdbJS = semanticdb.js
 
-lazy val scalameta = crossProject
+lazy val scalameta = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
@@ -332,7 +340,7 @@ lazy val scalameta = crossProject
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 
-lazy val contrib = crossProject
+lazy val contrib = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/contrib"))
   .settings(
     publishableSettings,
@@ -386,7 +394,7 @@ lazy val testkit = project
   )
   .dependsOn(contribJVM)
 
-lazy val tests = crossProject
+lazy val tests = crossProject(JSPlatform, JVMPlatform)
   .in(file("tests"))
   .settings(
     sharedSettings,
@@ -464,6 +472,7 @@ lazy val sharedSettings = Def.settings(
   crossVersion := {
     crossVersion.value match {
       case old @ ScalaJSCrossVersion.binary => old
+      case old @ ScalaNativeCrossVersion.binary => old
       case _ => CrossVersion.binary
     }
   },
@@ -635,6 +644,19 @@ lazy val fullCrossVersionSettings = Seq(
 lazy val hasLargeIntegrationTests = Seq(
   fork in (Test, run) := true,
   javaOptions in (Test, run) += "-Xss4m"
+)
+
+lazy val nativeSettings = Seq(
+  scalaVersion := LatestScala211,
+  crossScalaVersions := List(LatestScala211),
+  scalacOptions -= "-Xfatal-warnings",
+  nativeGC := "immix",
+  nativeMode := "release",
+  nativeLinkStubs := false,
+  // These builds are published from my private fork of Scala Native
+  // https://github.com/xeno-by/scalapb/commits/topic/scalameta
+  libraryDependencies -= "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
+  libraryDependencies += "com.github.xenoby" %%% "scalapb-runtime" % scalapbVersion
 )
 
 def exposePaths(projectName: String, config: Configuration) = {

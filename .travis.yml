@@ -19,6 +19,9 @@ env:
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.11.12
       CI_SCALA_JS: true
+    - CI_TEST: ci-native
+      CI_SCALA_VERSION: 2.11.12
+      CI_SCALA_NATIVE: true
     - CI_TEST: ci-fast
       CI_SCALA_VERSION: 2.12.4
       CI_PUBLISH: true
@@ -38,6 +41,9 @@ cache:
   - $HOME/.ivy2/cache
   - $HOME/.coursier
   - target/repos
+
+before_install:
+  - bin/travis_before_install
 
 before_cache:
   - du -h -d 1 $HOME/.ivy2/cache
