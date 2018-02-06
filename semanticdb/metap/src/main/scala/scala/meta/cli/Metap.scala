@@ -117,7 +117,7 @@ object Metap {
           val endOffset = offset(doc, range.endLine) + range.endCharacter
           val text = doc.text.substring(startOffset, endOffset)
           print(s": $text")
-        case None =>
+        case _ =>
           ()
       }
     }
