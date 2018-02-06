@@ -648,6 +648,7 @@ lazy val hasLargeIntegrationTests = Seq(
 lazy val nativeSettings = Seq(
   scalaVersion := LatestScala211,
   crossScalaVersions := List(LatestScala211),
+  scalacOptions -= "-Xfatal-warnings",
   nativeGC := "immix",
   nativeMode := "release",
   nativeLinkStubs := false,
