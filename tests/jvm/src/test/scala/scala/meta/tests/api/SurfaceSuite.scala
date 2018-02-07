@@ -48,6 +48,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.cli.metac.Main *
       |scala.meta.cli.metacp *
       |scala.meta.cli.metacp.Main *
+      |scala.meta.cli.metacp.Settings *
       |scala.meta.cli.metap *
       |scala.meta.cli.metap.Main *
       |scala.meta.common

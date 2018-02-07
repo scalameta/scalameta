@@ -155,11 +155,12 @@ lazy val metacp = project
     publishableSettings,
     ignoreMimaSettings,
     description := "Scala 2.x classpath to SemanticDB converter",
+    libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.metacp.Main")
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdb3JVM)
+  .dependsOn(semanticdb3JVM, langmetaJVM)
 
 lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
