@@ -469,13 +469,6 @@ lazy val bench = project
 lazy val sharedSettings = Def.settings(
   scalaVersion := LanguageVersion,
   crossScalaVersions := LanguageVersions,
-  crossVersion := {
-    crossVersion.value match {
-      case old @ ScalaJSCrossVersion.binary => old
-      case old @ ScalaNativeCrossVersion.binary => old
-      case _ => CrossVersion.binary
-    }
-  },
   organization := "org.scalameta",
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
