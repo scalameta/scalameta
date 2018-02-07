@@ -474,7 +474,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       case ')' =>
         nextChar(); token = RPAREN
       case '}' =>
+        // save the end of the current token (exclusive) in case nextChar
+        // advances the offset more than once
+        val end = charOffset + 1
         nextChar(); token = RBRACE
+        // restore the charOffset to the saved position
+        if (end < buf.length) charOffset = end
       case '[' =>
         nextChar(); token = LBRACKET
       case ']' =>
