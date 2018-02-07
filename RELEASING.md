@@ -12,10 +12,12 @@
 * Wait for [the Travis CI job](https://travis-ci.org/scalameta/scalameta/branches)
    in Active Branches to build the binaries and stage them to Sonatype.
 * Finalize the release on Sonatype:
-  * Go to [Staging Repositories](https://oss.sonatype.org/#stagingRepositories).
-  * Close the repositories that have been created by the Travis CI job.
+  * `sbt sonatypeReleaseAll`
+  * Alternatively:
+    * Go to [Staging Repositories](https://oss.sonatype.org/#stagingRepositories).
+    * Close the repositories that have been created by the Travis CI job.
     There can be several respositories produced by the job (currently, there are three).
-  * Release the repositories.
+    * Release the repositories.
 * Verify the release:
   * Make sure that the release shows up at https://oss.sonatype.org/content/repositories/releases/org/scalameta/.
   * Wait for 15-30 minutes.
