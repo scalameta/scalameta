@@ -344,7 +344,7 @@ lazy val contrib = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/contrib"))
   .settings(
     publishableSettings,
-    description := "Incubator for scalameta APIs"
+    description := "Incubator for Scalameta APIs"
   )
   .dependsOn(scalameta)
 lazy val contribJVM = contrib.jvm
