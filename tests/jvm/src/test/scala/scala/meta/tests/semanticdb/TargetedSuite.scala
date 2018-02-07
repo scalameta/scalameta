@@ -1145,21 +1145,15 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     }
   )
 
-  symbols(
-    "class Foo[@specialized(Int) T](v: T)".stripMargin,
-    """|_empty_.Foo# => class Foo
-       |_empty_.Foo#(v) => param v: T
-       |  [0..1): T => _empty_.Foo#[T]
-       |_empty_.Foo#[T] => specialized typeparam T
-       |_empty_.Foo#`<init>`(Ljava/lang/Object;)V. => primaryctor <init>: (v: T): Foo[T]
-       |  [4..5): T => _empty_.Foo#[T]
-       |  [8..11): Foo => _empty_.Foo#
-       |  [12..13): T => _empty_.Foo#[T]
-       |_root_.scala.Int. => final object Int
-       |_root_.scala.specialized# => class specialized
-       |_root_.scala.specialized#`<init>`(Lscala/collection/Seq;)V. => secondaryctor <init>: (types: Specializable*): specialized
-       |  [8..21): Specializable => _root_.scala.Specializable#
-       |  [25..36): specialized => _root_.scala.specialized#
-       |""".stripMargin.trim
+  targeted(
+    "class Foo[@specialized(Int) <<T>>](v: T)",
+    { (db, foo) =>
+      //      assertNoDiff(foo.syntax, "")
+      val symbol = db.symbols.find(_.symbol == foo).get
+      val denotation = symbol.denotation
+      assert(foo == Symbol("_empty_.Foo#[T]"))
+      assertNoDiff(denotation.toString, "specialized typeparam T")
+
+    }
   )
 }
