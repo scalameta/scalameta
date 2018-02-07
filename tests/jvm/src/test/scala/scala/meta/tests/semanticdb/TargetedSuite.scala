@@ -1144,4 +1144,16 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       )
     }
   )
+
+  targeted(
+    "class Foo[@specialized(Int) <<T>>](v: T)",
+    { (db, foo) =>
+      //      assertNoDiff(foo.syntax, "")
+      val symbol = db.symbols.find(_.symbol == foo).get
+      val denotation = symbol.denotation
+      assert(foo == Symbol("_empty_.Foo#[T]"))
+      assertNoDiff(denotation.toString, "specialized typeparam T")
+
+    }
+  )
 }

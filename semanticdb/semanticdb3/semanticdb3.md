@@ -655,6 +655,11 @@ or features from other languages.
     <td><code>VARPARAM</code></td>
     <td>Is a `var` parameter of a primary constructor?</td>
   </tr>
+  <tr>
+    <td><code>0x1000</code></td>
+    <td><code>SPECIALIZED</code></td>
+    <td>Is the type parameter specialized? (ex: class Foo[@specialized(Int) T](v: T))</td>
+  </tr>
 </table>
 
 `name`. String that represents the name of the symbol.
