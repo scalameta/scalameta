@@ -344,7 +344,8 @@ lazy val contrib = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/contrib"))
   .settings(
     publishableSettings,
-    description := "Incubator for scalameta APIs"
+    ignoreMimaSettings,
+    description := "Incubator for Scalameta APIs"
   )
   .dependsOn(scalameta)
 lazy val contribJVM = contrib.jvm
@@ -469,13 +470,6 @@ lazy val bench = project
 lazy val sharedSettings = Def.settings(
   scalaVersion := LanguageVersion,
   crossScalaVersions := LanguageVersions,
-  crossVersion := {
-    crossVersion.value match {
-      case old @ ScalaJSCrossVersion.binary => old
-      case old @ ScalaNativeCrossVersion.binary => old
-      case _ => CrossVersion.binary
-    }
-  },
   organization := "org.scalameta",
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
@@ -559,12 +553,39 @@ lazy val publishableSettings = Def.settings(
     false
   },
   mimaPreviousArtifacts := {
-    // Compare against 3.0.0 throughtout the 3.x series.
-    val stableVersion = "3.0.0"
-    val binaryVersion = scalaBinaryVersion.value
-    Set(
-      organization.value % s"${moduleName.value}_$binaryVersion" % stableVersion
-    )
+    val rxVersion = """^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+))?$""".r
+    val previousVersion = version.value match {
+      case rxVersion(major, minor, patch, suffix) if suffix != null =>
+        Some(s"$major.$minor.$patch")
+      case rxVersion(major, "0", "0", null) =>
+        None
+      case rxVersion(major, minor, "0", null) =>
+        Some(s"$major.${minor.toInt - 1}.0")
+      case rxVersion(major, minor, patch, null) =>
+        Some(s"$major.$minor.0")
+      case _ =>
+        sys.error(s"Invalid version number: ${version.value}")
+    }
+    val previousArtifact = {
+      // TODO: Figure out whether there is a more satisfying solution.
+      // Here's what I'd like to do, but I can't because of deprecations:
+      //   val isJVM = crossPlatform.value == JVMPlatform
+      // Here's my second best guess, but it doesn't work due to some reason:
+      //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
+      val isJVM = {
+        val isJS = platformDepsCrossVersion.value == ScalaJSCrossVersion.binary
+        val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
+        !isJS && !isNative
+      }
+      if (isJVM) {
+        previousVersion.map { previousVersion =>
+          organization.value % moduleName.value % previousVersion cross crossVersion.value
+        }
+      } else {
+        None
+      }
+    }
+    previousArtifact.toSet
   },
   mimaBinaryIssueFilters ++= Mima.ignoredABIProblems,
   licenses += "BSD" -> url("https://github.com/scalameta/scalameta/blob/master/LICENSE.md"),
