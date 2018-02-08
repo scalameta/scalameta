@@ -206,8 +206,9 @@ trait DocumentOps { self: DatabaseOps =>
                   (todoTpe1 ++ todoTpe2).foreach { tgs =>
                     if (tgs.isSemanticdbLocal) {
                       val tms = tgs.toSemantic
-                      assert(tms != m.Symbol.None)
-                      if (!denotations.contains(tms)) add(tms, tgs)
+                      if (tms != m.Symbol.None && !denotations.contains(tms)) {
+                        add(tms, tgs)
+                      }
                     }
                   }
                 }
