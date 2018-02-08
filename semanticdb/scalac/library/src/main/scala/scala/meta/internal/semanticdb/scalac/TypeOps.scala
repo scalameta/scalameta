@@ -168,7 +168,11 @@ trait TypeOps { self: DatabaseOps =>
   object RepeatedType {
     def unapply(gtpe: g.Type): Option[g.Type] =
       if (g.definitions.isRepeatedParamType(gtpe)) {
-        gtpe match { case g.TypeRef(_, _, gtpe :: Nil) => Some(gtpe) }
+        gtpe match {
+          case g.TypeRef(_, _, gtpe :: Nil) => Some(gtpe)
+          // accessor for repeated type
+          case g.NullaryMethodType(ref) => unapply(ref)
+        }
       } else None
   }
 }

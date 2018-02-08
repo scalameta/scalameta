@@ -373,8 +373,8 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala212
-Symbols => 101 entries
-Occurrences => 200 entries
+Symbols => 104 entries
+Occurrences => 204 entries
 Diagnostics => 0 entries
 Synthetics => 0 entries
 
@@ -386,6 +386,8 @@ _root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: : Nothing
   Nothing => _root_.scala.Nothing#
 _root_.scala.annotation. => package annotation
 _root_.scala.annotation.StaticAnnotation# => trait StaticAnnotation
+_root_.scala.collection.SeqLike#length()I. => abstract def length: : Int
+  Int => _root_.scala.Int#
 _root_.scala.language. => final object language
 _root_.scala.language.existentials. => implicit lazy val existentials: : existentials
   existentials => _root_.scala.languageFeature.existentials#
@@ -436,7 +438,7 @@ _root_.types.T#x. => val x: : T.this.X
   T => _root_.types.T#
   X => _root_.types.T#X#
 _root_.types.Test. => final object Test
-_root_.types.Test.C# => class C.{+47 decls}
+_root_.types.Test.C# => class C.{+48 decls}
   extends M
 _root_.types.Test.C#$anon#L# => type L: [T >: Nothing <: Any] => List[T]
   T => _root_.types.Test.C#$anon#L#[T]
@@ -489,11 +491,20 @@ _root_.types.Test.C#MethodType.x1()I. => def x1: : Int
   Int => _root_.scala.Int#
 _root_.types.Test.C#MethodType.x2()I. => def x2: : Int
   Int => _root_.scala.Int#
-_root_.types.Test.C#RepeatedType. => final object RepeatedType
-_root_.types.Test.C#RepeatedType.m1(Lscala/collection/Seq;)I. => def m1: (x: Int*): Int
-  x => _root_.types.Test.C#RepeatedType.m1(Lscala/collection/Seq;)I.(x)
+_root_.types.Test.C#RepeatedType# => case class RepeatedType.{+12 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
+_root_.types.Test.C#RepeatedType#(s) => param s: String*
+  String => _root_.scala.Predef.String#
+_root_.types.Test.C#RepeatedType#`<init>`(Lscala/collection/Seq;)V. => primaryctor <init>: (s: <?>): C.this.RepeatedType
+  s => _root_.types.Test.C#RepeatedType#`<init>`(Lscala/collection/Seq;)V.(s)
+  C => _root_.types.Test.C#
+  RepeatedType => _root_.types.Test.C#RepeatedType#
+_root_.types.Test.C#RepeatedType#m1(Lscala/collection/Seq;)I. => def m1: (x: Int*): Int
+  x => _root_.types.Test.C#RepeatedType#m1(Lscala/collection/Seq;)I.(x)
   Int => _root_.scala.Int#
-_root_.types.Test.C#RepeatedType.m1(Lscala/collection/Seq;)I.(x) => param x: Int*
+_root_.types.Test.C#RepeatedType#m1(Lscala/collection/Seq;)I.(x) => param x: Int*
   Int => _root_.scala.Int#
 _root_.types.Test.C#TypeType. => final object TypeType
 _root_.types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
@@ -802,12 +813,16 @@ Occurrences:
 [79:19..79:22): Int => _root_.scala.Int#
 [79:25..79:28): Int => _root_.scala.Int#
 [79:31..79:34): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
-[82:11..82:23): RepeatedType <= _root_.types.Test.C#RepeatedType.
-[83:10..83:12): m1 <= _root_.types.Test.C#RepeatedType.m1(Lscala/collection/Seq;)I.
-[83:13..83:14): x <= _root_.types.Test.C#RepeatedType.m1(Lscala/collection/Seq;)I.(x)
+[82:15..82:27): RepeatedType <= _root_.types.Test.C#RepeatedType#
+[82:27..82:27):  <= _root_.types.Test.C#RepeatedType#`<init>`(Lscala/collection/Seq;)V.
+[82:28..82:29): s <= _root_.types.Test.C#RepeatedType#(s)
+[82:31..82:37): String => _root_.scala.`<repeated>`#
+[83:10..83:12): m1 <= _root_.types.Test.C#RepeatedType#m1(Lscala/collection/Seq;)I.
+[83:13..83:14): x <= _root_.types.Test.C#RepeatedType#m1(Lscala/collection/Seq;)I.(x)
 [83:16..83:19): Int => _root_.scala.`<repeated>`#
 [83:23..83:26): Int => _root_.scala.Int#
-[83:29..83:32): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[83:29..83:30): s => _root_.types.Test.C#RepeatedType#(s)
+[83:31..83:37): length => _root_.scala.collection.SeqLike#length()I.
 [86:11..86:19): TypeType <= _root_.types.Test.C#TypeType.
 [87:11..87:13): T1 <= _root_.types.Test.C#TypeType.T1#
 [88:10..88:12): m2 <= _root_.types.Test.C#TypeType.m2()Lscala/Nothing;.
