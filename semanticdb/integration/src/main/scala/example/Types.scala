@@ -92,4 +92,17 @@ object Test {
       type T5[U] = U
     }
   }
+
+  object Literal {
+    final val int = 1
+    final val long = 1L
+    final val float = 1f
+    final val double = 2d
+    final val nil = null
+    final val char = 'a'
+    final val string = "a"
+    final val bool = true
+    final val unit = ()
+    final val javaEnum = java.nio.file.LinkOption.NOFOLLOW_LINKS
+  }
 }

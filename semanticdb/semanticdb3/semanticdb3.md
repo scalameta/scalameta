@@ -354,6 +354,7 @@ message LiteralType {
     DOUBLE = 9;
     STRING = 10;
     NULL = 11;
+    ENUM = 12;
   }
   Tag tag = 1;
   int64 primitive = 2;

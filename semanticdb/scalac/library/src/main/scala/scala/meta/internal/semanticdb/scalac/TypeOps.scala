@@ -59,7 +59,10 @@ trait TypeOps { self: DatabaseOps =>
               case g.Constant(x: Double) => s.LiteralType(l.DOUBLE, doubleBits(x), "")
               case g.Constant(x: String) => s.LiteralType(l.STRING, 0, x)
               case g.Constant(null) => s.LiteralType(l.NULL, 0, "")
-              case gother => sys.error(s"unsupported const ${gother}: ${g.showRaw(gother)}")
+              case g.Constant(name: g.TermSymbol) if name.isJavaEnum =>
+                s.LiteralType(l.ENUM, 0, name.toSemantic.syntax)
+              case gother =>
+                sys.error(s"unsupported const ${gother}: ${g.showRaw(gother)}")
             }
             Some(s.Type(tag = stag, literalType = Some(sconst)))
           case g.RefinedType(gparents, gdecls) =>

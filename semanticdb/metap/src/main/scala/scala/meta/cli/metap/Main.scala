@@ -269,6 +269,8 @@ object Main {
               println("\"" + s + "\"")
             case Some(LiteralType(NULL, _, _)) =>
               println("null")
+            case Some(LiteralType(ENUM, _, name)) =>
+              println(name)
             case _ =>
               println("<?>")
           }
