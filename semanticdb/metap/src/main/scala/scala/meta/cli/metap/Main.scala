@@ -51,10 +51,10 @@ object Main {
     println(s"Uri => ${doc.uri}")
     println(s"Text => ${if (doc.text.nonEmpty) "non-empty" else "empty"}")
     println(s"Language => ${doc.language}")
-    println(s"Symbols => ${doc.symbols.length} entries")
-    println(s"Occurrences => ${doc.occurrences.length} entries")
-    println(s"Diagnostics => ${doc.diagnostics.length} entries")
-    println(s"Synthetics => ${doc.synthetics.length} entries")
+    if (doc.symbols.nonEmpty) println(s"Symbols => ${doc.symbols.length} entries")
+    if (doc.occurrences.nonEmpty) println(s"Occurrences => ${doc.occurrences.length} entries")
+    if (doc.diagnostics.nonEmpty) println(s"Diagnostics => ${doc.diagnostics.length} entries")
+    if (doc.synthetics.nonEmpty) println(s"Synthetics => ${doc.synthetics.length} entries")
 
     if (doc.symbols.nonEmpty) {
       println("")

@@ -7,9 +7,6 @@ Uri => example/A.scala
 Text => empty
 Language => Scala
 Symbols => 2 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 example.A# => trait A
@@ -24,9 +21,6 @@ Uri => example/B.scala
 Text => empty
 Language => Scala
 Symbols => 3 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 example.B# => class B
@@ -42,9 +36,6 @@ Uri => example/Example.scala
 Text => empty
 Language => Scala
 Symbols => 4 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 example.Example. => final object Example
@@ -61,9 +52,6 @@ Uri => example/local-file.scala
 Text => empty
 Language => Scala
 Symbols => 2 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 example.`local-file`# => class local-file
@@ -78,9 +66,6 @@ Uri => example/Synthetic.scala
 Text => empty
 Language => Scala
 Symbols => 2 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 example.Synthetic# => class Synthetic
@@ -95,9 +80,6 @@ Uri => exclude/Exclude.scala
 Text => empty
 Language => Scala
 Symbols => 2 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 exclude.Exclude# => class Exclude
@@ -112,9 +94,6 @@ Uri => flags/p/package.scala
 Text => empty
 Language => Scala
 Symbols => 35 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 flags.p.package. => final package object package
@@ -162,9 +141,6 @@ Uri => types/ann.scala
 Text => empty
 Language => Scala
 Symbols => 5 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 types.ann# => class ann
@@ -182,9 +158,6 @@ Uri => types/ann1.scala
 Text => empty
 Language => Scala
 Symbols => 2 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 types.ann1# => class ann1
@@ -199,9 +172,6 @@ Uri => types/ann2.scala
 Text => empty
 Language => Scala
 Symbols => 2 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 types.ann2# => class ann2
@@ -216,9 +186,6 @@ Uri => types/B.scala
 Text => empty
 Language => Scala
 Symbols => 2 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 types.B# => class B
@@ -233,9 +200,6 @@ Uri => types/C.scala
 Text => empty
 Language => Scala
 Symbols => 2 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 types.C# => class C
@@ -250,9 +214,6 @@ Uri => types/P.scala
 Text => empty
 Language => Scala
 Symbols => 7 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 types.P# => class P
@@ -272,9 +233,6 @@ Uri => types/T.scala
 Text => empty
 Language => Scala
 Symbols => 7 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 types.T# => class T
@@ -294,9 +252,6 @@ Uri => types/Test.scala
 Text => empty
 Language => Scala
 Symbols => 69 entries
-Occurrences => 0 entries
-Diagnostics => 0 entries
-Synthetics => 0 entries
 
 Symbols:
 types.Test. => final object Test

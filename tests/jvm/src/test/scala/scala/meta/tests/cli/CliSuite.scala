@@ -60,8 +60,6 @@ class CliSuite extends FunSuite with DiffAssertions {
       |Language => $language
       |Symbols => 7 entries
       |Occurrences => 7 entries
-      |Diagnostics => 0 entries
-      |Synthetics => 0 entries
       |
       |Symbols:
       |_empty_.HelloWorld. => final object HelloWorld
