@@ -1,9 +1,9 @@
-example/A.scala
+example/A.class
 ---------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => example/A.scala
+Uri => example/A.class
 Text => empty
 Language => Scala
 Symbols => 2 entries
@@ -14,12 +14,12 @@ example.A# => trait A.{+1 decls}
 example.A#foo(0). => abstract def foo: : Int
   Int => scala.Int#
 
-example/B.scala
+example/B.class
 ---------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => example/B.scala
+Uri => example/B.class
 Text => empty
 Language => Scala
 Symbols => 3 entries
@@ -33,12 +33,12 @@ example.B#`<init>`(0). => primaryctor <init>: (): B
 example.B#foo(0). => def foo: : Int
   Int => scala.Int#
 
-example/Example.scala
+example/Example.class
 ---------------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => example/Example.scala
+Uri => example/Example.class
 Text => empty
 Language => Scala
 Symbols => 4 entries
@@ -55,12 +55,12 @@ example.Example.x. => val x: : ClassTag[Int]
   ClassTag => scala.reflect.ClassTag#
   Int => scala.Int#
 
-example/Synthetic.scala
+example/Synthetic.class
 -----------------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => example/Synthetic.scala
+Uri => example/Synthetic.class
 Text => empty
 Language => Scala
 Symbols => 2 entries
@@ -71,12 +71,12 @@ example.Synthetic# => class Synthetic.{+1 decls}
 example.Synthetic#`<init>`(0). => primaryctor <init>: (): Synthetic
   Synthetic => example.Synthetic#
 
-example/local-file.scala
+example/local-file.class
 ------------------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => example/local-file.scala
+Uri => example/local-file.class
 Text => empty
 Language => Scala
 Symbols => 2 entries
@@ -87,12 +87,12 @@ example.`local-file`# => class local-file.{+1 decls}
 example.`local-file`#`<init>`(0). => primaryctor <init>: (): local-file
   local-file => example.`local-file`#
 
-exclude/Exclude.scala
+exclude/Exclude.class
 ---------------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => exclude/Exclude.scala
+Uri => exclude/Exclude.class
 Text => empty
 Language => Scala
 Symbols => 2 entries
@@ -103,12 +103,12 @@ exclude.Exclude# => class Exclude.{+1 decls}
 exclude.Exclude#`<init>`(0). => primaryctor <init>: (): Exclude
   Exclude => exclude.Exclude#
 
-flags/p/package.scala
+flags/p/package.class
 ---------------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => flags/p/package.scala
+Uri => flags/p/package.class
 Text => empty
 Language => Scala
 Symbols => 35 entries
@@ -203,12 +203,12 @@ flags.p.package.z(1). => def z: (pp: Int): Int
 flags.p.package.z(1).(pp) => param pp: Int
   Int => scala.Int#
 
-types/B.scala
+types/B.class
 -------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => types/B.scala
+Uri => types/B.class
 Text => empty
 Language => Scala
 Symbols => 2 entries
@@ -219,12 +219,12 @@ types.B# => class B.{+1 decls}
 types.B#`<init>`(0). => primaryctor <init>: (): B
   B => types.B#
 
-types/C.scala
+types/C.class
 -------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => types/C.scala
+Uri => types/C.class
 Text => empty
 Language => Scala
 Symbols => 2 entries
@@ -235,12 +235,12 @@ types.C# => class C.{+1 decls}
 types.C#`<init>`(0). => primaryctor <init>: (): C
   C => types.C#
 
-types/P.scala
+types/P.class
 -------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => types/P.scala
+Uri => types/P.class
 Text => empty
 Language => Scala
 Symbols => 7 entries
@@ -264,12 +264,12 @@ types.P#x. => val x: : P.this.X
   P => types.P#
   X => types.P#X#
 
-types/T.scala
+types/T.class
 -------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => types/T.scala
+Uri => types/T.class
 Text => empty
 Language => Scala
 Symbols => 7 entries
@@ -293,12 +293,12 @@ types.T#x. => val x: : T.this.X
   T => types.T#
   X => types.T#X#
 
-types/Test.scala
+types/Test.class
 ----------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => types/Test.scala
+Uri => types/Test.class
 Text => empty
 Language => Scala
 Symbols => 69 entries
@@ -470,12 +470,12 @@ types.Test.N#`<init>`(0). => primaryctor <init>: (): N
 types.Test.N#n(0). => def n: : Int
   Int => scala.Int#
 
-types/ann.scala
+types/ann.class
 ---------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => types/ann.scala
+Uri => types/ann.class
 Text => empty
 Language => Scala
 Symbols => 5 entries
@@ -496,12 +496,12 @@ types.ann#`<init>`(1). => primaryctor <init>: (x: T): ann[T]
 types.ann#`<init>`(1).(x) => param x: T
   T => types.ann#[T]
 
-types/ann1.scala
+types/ann1.class
 ----------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => types/ann1.scala
+Uri => types/ann1.class
 Text => empty
 Language => Scala
 Symbols => 2 entries
@@ -513,12 +513,12 @@ types.ann1# => class ann1.{+1 decls}
 types.ann1#`<init>`(0). => primaryctor <init>: (): ann1
   ann1 => types.ann1#
 
-types/ann2.scala
+types/ann2.class
 ----------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => types/ann2.scala
+Uri => types/ann2.class
 Text => empty
 Language => Scala
 Symbols => 2 entries

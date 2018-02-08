@@ -25,8 +25,8 @@ class ExpectSuite extends FunSuite with DiffAssertions {
     // output of 2.12. It's possible to add another expect file for 2.12
     // later down the road if that turns out to be useful.
     case "2" :: "12" :: Nil =>
-      test("convert.expect") {
-        import ConvertExpect._
+      test("metacp.expect") {
+        import MetacpExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
       test("lowlevel.expect") {
@@ -55,8 +55,8 @@ trait ExpectHelpers {
     Files.write(path, value.getBytes(UTF_8))
 }
 
-object ConvertExpect extends ExpectHelpers {
-  def filename: String = "convert.expect"
+object MetacpExpect extends ExpectHelpers {
+  def filename: String = "metacp.expect"
 
   def loadObtained: String = {
     val classpath = BuildInfo.databaseClasspath
@@ -102,6 +102,6 @@ object SaveExpectTest {
   def main(args: Array[String]): Unit = {
     LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
     HighlevelExpect.saveExpected(HighlevelExpect.loadObtained)
-    ConvertExpect.saveExpected(ConvertExpect.loadObtained)
+    MetacpExpect.saveExpected(MetacpExpect.loadObtained)
   }
 }

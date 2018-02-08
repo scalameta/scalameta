@@ -11,6 +11,7 @@ import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.NameTransformer
 import scala.tools.scalap.scalax.rules.scalasig._
 import scala.util.control.NonFatal
+import org.langmeta.internal.io._
 import org.langmeta.io._
 
 object Main {
@@ -29,14 +30,8 @@ object Main {
       try {
         val bytecode = {
           val is = fragment.uri.toURL.openStream()
-          val os = new ByteArrayOutputStream()
-          var b = is.read()
-          while (b != -1) {
-            os.write(b)
-            b = is.read()
-          }
-          is.close()
-          ByteCode(os.toByteArray())
+          try ByteCode(InputStreamIO.readBytes(is))
+          finally is.close()
         }
         val classfile = ClassFileParser.parse(bytecode)
         ScalaSigParser.parse(classfile) match {
@@ -47,12 +42,12 @@ object Main {
             }
             val semanticdbRoot = Paths.get(settings.d, "META-INF", "semanticdb")
             val className = NameTransformer.decode(fragment.name.toString.replace("\\", "/"))
-            val semanticdbName = className.replace(".class", ".semanticdb")
+            val semanticdbName = className + ".semanticdb"
             val semanticdbFile = semanticdbRoot.resolve(semanticdbName)
             semanticdbFile.getParent.toFile.mkdirs()
             val semanticdbDocument = s.TextDocument(
               schema = s.Schema.SEMANTICDB3,
-              uri = className.replace(".class", ".scala"),
+              uri = className,
               language = "Scala",
               symbols = semanticdbInfos)
             val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
@@ -60,6 +55,9 @@ object Main {
             semanticdbDocuments.writeTo(semanticdbStream)
             semanticdbStream.close()
           case None =>
+            // NOTE: If a classfile doesn't contain ScalaSignature,
+            // we skip it for the time being. In the future, we may add support
+            // for parsing arbitrary Java classfiles.
             ()
         }
       } catch {
@@ -318,8 +316,7 @@ object Main {
           Some(s.Type(tag = stag, typeType = Some(s.TypeType(Nil, slo, shi))))
         case PolyType(tpe, tparams) =>
           val stparams = tparams.map(ssymbol)
-          val stpe = loop(tpe)
-          stpe.map { stpe =>
+          loop(tpe).map { stpe =>
             if (stpe.tag == t.CLASS_INFO_TYPE) {
               stpe.update(_.classInfoType.typeParameters := stparams)
             } else if (stpe.tag == t.METHOD_TYPE) {
