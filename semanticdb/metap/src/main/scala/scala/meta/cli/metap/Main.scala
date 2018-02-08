@@ -123,6 +123,11 @@ object Main {
     }
   }
 
+  private def pprint(name: String, doc: TextDocument): Unit = {
+    if (name.nonEmpty) print(name)
+    else print("<?>")
+  }
+
   private val symCache = new WeakHashMap[TextDocument, immutable.Map[String, SymbolInformation]]
   private def pprint(sym: String, role: Role, doc: TextDocument): Unit = {
     var infos = symCache.get(doc)
@@ -134,7 +139,7 @@ object Main {
       case Some(info) =>
         role match {
           case REFERENCE =>
-            print(info.name)
+            pprint(info.name, doc)
           case DEFINITION =>
             def has(prop: Property) = (info.properties & prop.value) != 0
             if (has(PRIVATE)) print("private ")
@@ -186,7 +191,7 @@ object Main {
               val last2 = last1.stripSuffix(")").stripSuffix("]").stripSuffix("#")
               last2.stripPrefix("`").stripSuffix("`")
             }
-            print(approxName)
+            pprint(approxName, doc)
           case _ =>
             print("<?>")
         }
@@ -331,7 +336,8 @@ object Main {
   }
 
   private def pprint(info: SymbolInformation, doc: TextDocument): Unit = {
-    print(s"${info.symbol} => ")
+    pprint(info.symbol, doc)
+    print(" => ")
     def has(prop: Property) = (info.properties & prop.value) != 0
     if (has(PRIVATE)) print("private ")
     if (has(PROTECTED)) print("protected ")
@@ -343,6 +349,8 @@ object Main {
     if (has(CASE)) print("case ")
     if (has(COVARIANT)) print("covariant ")
     if (has(CONTRAVARIANT)) print("contravariant ")
+    if (has(VALPARAM)) print("val ")
+    if (has(VARPARAM)) print("var ")
     if (info.kind == VAL) print("val ")
     if (info.kind == VAR) print("var ")
     if (info.kind == DEF) print("def ")
@@ -357,7 +365,7 @@ object Main {
     if (info.kind == PACKAGE_OBJECT) print("package object ")
     if (info.kind == CLASS) print("class ")
     if (info.kind == TRAIT) print("trait ")
-    print(info.name)
+    pprint(info.name, doc)
     info.kind match {
       case VAL | VAR | DEF | PRIMARY_CONSTRUCTOR |
            SECONDARY_CONSTRUCTOR | MACRO | TYPE | PARAMETER | TYPE_PARAMETER =>
@@ -405,7 +413,7 @@ object Main {
             info.overrides.sorted.foreach(sym => println(s"  extends $sym"))
         }
       case _ =>
-        ()
+        println("")
     }
   }
 
