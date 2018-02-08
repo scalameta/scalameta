@@ -57,6 +57,17 @@ commands += Command.command("mima") { s =>
   s"very mimaReportBinaryIssues" ::
   s
 }
+commands += Command.command("ci-metac") { s =>
+  val out = file("target/scala-library")
+  if (!out.exists()) {
+    IO.unzipURL(
+      new URL(s"https://github.com/scala/scala/archive/v$LatestScala212.zip"),
+      toDirectory = out,
+      filter = s"scala-$LatestScala212/src/library/*"
+    )
+  }
+  "testsJVM/test:runMain scala.meta.tests.semanticdb.MetacScalaLibrary" :: s
+}
 // NOTE: These tasks are aliased here in order to support running "tests/test"
 // from a command. Running "test" inside a command will trigger the `test` task
 // to run in all defined modules, including ones like inputs/io/dialects which

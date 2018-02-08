@@ -40,6 +40,10 @@ matrix:
       - CI_SCALA_VERSION: 2.10.6
       - CI_PUBLISH: true
     - env:
+      - CI_TEST: ci-metac
+      - CI_SCALA_VERSION: 2.12.4
+      - CI_SCALA_JS: true
+    - env:
       - CI_TEST: mima
 
 cache:
