@@ -6,6 +6,7 @@ import java.nio.{file => nio}
 import java.net._
 import java.nio.file.Path
 import java.nio.file.Paths
+import scalapb.GeneratedMessage
 import org.langmeta.internal.io.PlatformPathIO
 import org.langmeta.internal.io.FileIO
 import org.langmeta.internal.io.PathIO
@@ -29,6 +30,7 @@ sealed abstract case class AbsolutePath(toNIO: nio.Path) {
   def isFile: Boolean = FileIO.isFile(this)
   def isDirectory: Boolean = FileIO.isDirectory(this)
   def readAllBytes: Array[Byte] = FileIO.readAllBytes(this)
+  def write(proto: GeneratedMessage): Unit = FileIO.write(this, proto)
 }
 
 object AbsolutePath {

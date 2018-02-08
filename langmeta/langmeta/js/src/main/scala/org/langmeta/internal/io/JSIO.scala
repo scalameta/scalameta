@@ -49,7 +49,7 @@ trait JSFs extends js.Any {
   def readFileSync(path: String, encoding: String): String = js.native
 
   /** Writes file contents using blocking apis */
-  def writeFileSync(path: String, contents: String): Unit = js.native
+  def writeFileSync(path: String, buffer: js.Array[Int]): Unit = js.native
 
   /** Returns an array of filenames excluding '.' and '..'. */
   def readdirSync(path: String): js.Array[String] = js.native
@@ -59,6 +59,9 @@ trait JSFs extends js.Any {
 
   /** Returns true if the file exists, false otherwise. */
   def existsSync(path: String): Boolean = js.native
+
+  /** Synchronously creates a directory. */
+  def mkdirSync(path: String): Unit = js.native
 }
 
 /** Facade for nodejs class fs.Stats.

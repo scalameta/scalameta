@@ -1,10 +1,13 @@
 package org.langmeta.internal.io
 
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Paths
+import scala.scalajs.js.JSConverters._
+import com.trueaccord.scalapb.GeneratedMessage
 import org.langmeta.io._
 
 object PlatformFileIO {
@@ -28,6 +31,14 @@ object PlatformFileIO {
       curr += 1
     }
     result
+  }
+
+  def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
+    JSIO.fs.mkdirSync(path.toNIO.getParent.toString)
+    val os = new ByteArrayOutputStream
+    proto.writeTo(os)
+    val buffer = os.toByteArray.toJSArray
+    JSIO.fs.writeFileSync(path.toString, buffer)
   }
 
   def slurp(path: AbsolutePath, charset: Charset): String =
