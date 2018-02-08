@@ -46,7 +46,7 @@ object Main {
               case _ => None
             }
             val semanticdbRoot = Paths.get(settings.d, "META-INF", "semanticdb")
-            val className = NameTransformer.decode(fragment.name.toString)
+            val className = NameTransformer.decode(fragment.name.toString.replace("\\", "/"))
             val semanticdbName = className.replace(".class", ".semanticdb")
             val semanticdbFile = semanticdbRoot.resolve(semanticdbName)
             semanticdbFile.getParent.toFile.mkdirs()

@@ -55,22 +55,6 @@ example.Example.x. => val x: : ClassTag[Int]
   ClassTag => scala.reflect.ClassTag#
   Int => scala.Int#
 
-example/local-file.scala
-------------------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => example/local-file.scala
-Text => empty
-Language => Scala
-Symbols => 2 entries
-
-Symbols:
-example.`local-file`# => class local-file.{+1 decls}
-  extends AnyRef
-example.`local-file`#`<init>`(0). => primaryctor <init>: (): local-file
-  local-file => example.`local-file`#
-
 example/Synthetic.scala
 -----------------------
 
@@ -86,6 +70,22 @@ example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
 example.Synthetic#`<init>`(0). => primaryctor <init>: (): Synthetic
   Synthetic => example.Synthetic#
+
+example/local-file.scala
+------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/local-file.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example.`local-file`# => class local-file.{+1 decls}
+  extends AnyRef
+example.`local-file`#`<init>`(0). => primaryctor <init>: (): local-file
+  local-file => example.`local-file`#
 
 exclude/Exclude.scala
 ---------------------
@@ -202,66 +202,6 @@ flags.p.package.z(1). => def z: (pp: Int): Int
   Int => scala.Int#
 flags.p.package.z(1).(pp) => param pp: Int
   Int => scala.Int#
-
-types/ann.scala
----------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => types/ann.scala
-Text => empty
-Language => Scala
-Symbols => 5 entries
-
-Symbols:
-types.ann# => class ann.{+3 decls}
-  extends Annotation
-  extends StaticAnnotation
-types.ann#(x) => param x: T
-  T => types.ann#[T]
-types.ann#[T] => typeparam T: >: Nothing <: Any
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-types.ann#`<init>`(1). => primaryctor <init>: (x: T): ann[T]
-  x => types.ann#`<init>`(1).(x)
-  ann => types.ann#
-  T => types.ann#[T]
-types.ann#`<init>`(1).(x) => param x: T
-  T => types.ann#[T]
-
-types/ann1.scala
-----------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => types/ann1.scala
-Text => empty
-Language => Scala
-Symbols => 2 entries
-
-Symbols:
-types.ann1# => class ann1.{+1 decls}
-  extends Annotation
-  extends StaticAnnotation
-types.ann1#`<init>`(0). => primaryctor <init>: (): ann1
-  ann1 => types.ann1#
-
-types/ann2.scala
-----------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => types/ann2.scala
-Text => empty
-Language => Scala
-Symbols => 2 entries
-
-Symbols:
-types.ann2# => class ann2.{+1 decls}
-  extends Annotation
-  extends StaticAnnotation
-types.ann2#`<init>`(0). => primaryctor <init>: (): ann2
-  ann2 => types.ann2#
 
 types/B.scala
 -------------
@@ -529,3 +469,63 @@ types.Test.N#`<init>`(0). => primaryctor <init>: (): N
   N => types.Test.N#
 types.Test.N#n(0). => def n: : Int
   Int => scala.Int#
+
+types/ann.scala
+---------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/ann.scala
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+types.ann# => class ann.{+3 decls}
+  extends Annotation
+  extends StaticAnnotation
+types.ann#(x) => param x: T
+  T => types.ann#[T]
+types.ann#[T] => typeparam T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+types.ann#`<init>`(1). => primaryctor <init>: (x: T): ann[T]
+  x => types.ann#`<init>`(1).(x)
+  ann => types.ann#
+  T => types.ann#[T]
+types.ann#`<init>`(1).(x) => param x: T
+  T => types.ann#[T]
+
+types/ann1.scala
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/ann1.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+types.ann1# => class ann1.{+1 decls}
+  extends Annotation
+  extends StaticAnnotation
+types.ann1#`<init>`(0). => primaryctor <init>: (): ann1
+  ann1 => types.ann1#
+
+types/ann2.scala
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/ann2.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+types.ann2# => class ann2.{+1 decls}
+  extends Annotation
+  extends StaticAnnotation
+types.ann2#`<init>`(0). => primaryctor <init>: (): ann2
+  ann2 => types.ann2#

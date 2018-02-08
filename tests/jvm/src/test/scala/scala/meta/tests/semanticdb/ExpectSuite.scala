@@ -65,7 +65,7 @@ object ConvertExpect extends ExpectHelpers {
     val (metacp_exitcode, _) = CliSuite.communicate(Metacp.process(metacp_settings))
     assert(metacp_exitcode == 0)
     val paths = Files.walk(target).iterator.asScala
-    val semanticdbs = paths.filter(_.toFile.isFile).map(_.toString).toArray
+    val semanticdbs = paths.filter(_.toFile.isFile).map(_.toString).toArray.sorted
     val (metap_exitcode, metap_stdout) = CliSuite.communicate(Metap.process(semanticdbs))
     assert(metap_exitcode == 0)
     metap_stdout
