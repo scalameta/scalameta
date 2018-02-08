@@ -9,8 +9,10 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-example.A# => trait A
-example.A#foo(0). => abstract def foo: <?>
+example.A# => trait A.{+1 decls}
+  extends AnyRef
+example.A#foo(0). => abstract def foo: : Int
+  Int => scala.Int#
 
 example/B.scala
 ---------------
@@ -23,9 +25,13 @@ Language => Scala
 Symbols => 3 entries
 
 Symbols:
-example.B# => class B
-example.B#`<init>`(0). => primaryctor <init>: <?>
-example.B#foo(0). => def foo: <?>
+example.B# => class B.{+2 decls}
+  extends AnyRef
+  extends A
+example.B#`<init>`(0). => primaryctor <init>: (): B
+  B => example.B#
+example.B#foo(0). => def foo: : Int
+  Int => scala.Int#
 
 example/Example.scala
 ---------------------
@@ -39,9 +45,15 @@ Symbols => 4 entries
 
 Symbols:
 example.Example. => final object Example
-example.Example.main(1). => def main: <?>
-example.Example.main(1).(args) => param args: <?>
-example.Example.x. => val x: <?>
+example.Example.main(1). => def main: (args: Array[String]): Unit
+  args => example.Example.main(1).(args)
+  Unit => scala.Unit#
+example.Example.main(1).(args) => param args: Array[String]
+  Array => scala.Array#
+  String => scala.Predef.String#
+example.Example.x. => val x: : ClassTag[Int]
+  ClassTag => scala.reflect.ClassTag#
+  Int => scala.Int#
 
 example/local-file.scala
 ------------------------
@@ -54,8 +66,10 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-example.`local-file`# => class local-file
-example.`local-file`#`<init>`(0). => primaryctor <init>: <?>
+example.`local-file`# => class local-file.{+1 decls}
+  extends AnyRef
+example.`local-file`#`<init>`(0). => primaryctor <init>: (): local-file
+  local-file => example.`local-file`#
 
 example/Synthetic.scala
 -----------------------
@@ -68,8 +82,10 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-example.Synthetic# => class Synthetic
-example.Synthetic#`<init>`(0). => primaryctor <init>: <?>
+example.Synthetic# => class Synthetic.{+1 decls}
+  extends AnyRef
+example.Synthetic#`<init>`(0). => primaryctor <init>: (): Synthetic
+  Synthetic => example.Synthetic#
 
 exclude/Exclude.scala
 ---------------------
@@ -82,8 +98,10 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-exclude.Exclude# => class Exclude
-exclude.Exclude#`<init>`(0). => primaryctor <init>: <?>
+exclude.Exclude# => class Exclude.{+1 decls}
+  extends AnyRef
+exclude.Exclude#`<init>`(0). => primaryctor <init>: (): Exclude
+  Exclude => exclude.Exclude#
 
 flags/p/package.scala
 ---------------------
@@ -97,40 +115,93 @@ Symbols => 35 entries
 
 Symbols:
 flags.p.package. => final package object package
-flags.p.package.AA# => class AA
-flags.p.package.AA#(x) => param x: <?>
-flags.p.package.AA#(y) => val param y: <?>
-flags.p.package.AA#(z) => val param z: <?>
-flags.p.package.AA#`<init>`(3). => primaryctor <init>: <?>
-flags.p.package.AA#`<init>`(3).(x) => param x: <?>
-flags.p.package.AA#`<init>`(3).(y) => param y: <?>
-flags.p.package.AA#`<init>`(3).(z) => param z: <?>
-flags.p.package.C# => abstract class C
-flags.p.package.C#(x) => param x: <?>
-flags.p.package.C#(y) => param y: <?>
-flags.p.package.C#(z) => param z: <?>
-flags.p.package.C#[T] => covariant typeparam T: <?>
-flags.p.package.C#[U] => contravariant typeparam U: <?>
-flags.p.package.C#[V] => typeparam V: <?>
-flags.p.package.C#`<init>`(0). => secondaryctor <init>: <?>
-flags.p.package.C#`<init>`(3). => primaryctor <init>: <?>
-flags.p.package.C#`<init>`(3).(x) => param x: <?>
-flags.p.package.C#`<init>`(3).(y) => param y: <?>
-flags.p.package.C#`<init>`(3).(z) => param z: <?>
-flags.p.package.C#w(0). => abstract def w: <?>
-flags.p.package.T# => type T: <?>
-flags.p.package.U# => abstract type U: <?>
-flags.p.package.V# => abstract type V: <?>
+flags.p.package.AA# => class AA.{+7 decls}
+  extends AnyRef
+flags.p.package.AA#(x) => param x: Int
+  Int => scala.Int#
+flags.p.package.AA#(y) => val param y: : Int
+  Int => scala.Int#
+flags.p.package.AA#(z) => val param z: : Int
+  Int => scala.Int#
+flags.p.package.AA#`<init>`(3). => primaryctor <init>: (x: Int, y: Int, z: Int): AA
+  x => flags.p.package.AA#`<init>`(3).(x)
+  y => flags.p.package.AA#`<init>`(3).(y)
+  z => flags.p.package.AA#`<init>`(3).(z)
+  AA => flags.p.package.AA#
+flags.p.package.AA#`<init>`(3).(x) => param x: Int
+  Int => scala.Int#
+flags.p.package.AA#`<init>`(3).(y) => param y: Int
+  Int => scala.Int#
+flags.p.package.AA#`<init>`(3).(z) => param z: Int
+  Int => scala.Int#
+flags.p.package.C# => abstract class C.{+9 decls}
+  extends AnyRef
+flags.p.package.C#(x) => param x: T
+  T => flags.p.package.C#[T]
+flags.p.package.C#(y) => param y: U
+  U => flags.p.package.C#[U]
+flags.p.package.C#(z) => param z: V
+  V => flags.p.package.C#[V]
+flags.p.package.C#[T] => covariant typeparam T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+flags.p.package.C#[U] => contravariant typeparam U: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+flags.p.package.C#[V] => typeparam V: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+flags.p.package.C#`<init>`(0). => secondaryctor <init>: (): C[T, U, V]
+  C => flags.p.package.C#
+  T => flags.p.package.C#[T]
+  U => flags.p.package.C#[U]
+  V => flags.p.package.C#[V]
+flags.p.package.C#`<init>`(3). => primaryctor <init>: (x: T, y: U, z: V): C[T, U, V]
+  x => flags.p.package.C#`<init>`(3).(x)
+  y => flags.p.package.C#`<init>`(3).(y)
+  z => flags.p.package.C#`<init>`(3).(z)
+  C => flags.p.package.C#
+  T => flags.p.package.C#[T]
+  U => flags.p.package.C#[U]
+  V => flags.p.package.C#[V]
+flags.p.package.C#`<init>`(3).(x) => param x: T
+  T => flags.p.package.C#[T]
+flags.p.package.C#`<init>`(3).(y) => param y: U
+  U => flags.p.package.C#[U]
+flags.p.package.C#`<init>`(3).(z) => param z: V
+  V => flags.p.package.C#[V]
+flags.p.package.C#w(0). => abstract def w: : Int
+  Int => scala.Int#
+flags.p.package.T# => type T: Int
+  Int => scala.Int#
+flags.p.package.U# => abstract type U: >: Nothing <: Int
+  Nothing => scala.Nothing#
+  Int => scala.Int#
+flags.p.package.V# => abstract type V: >: Int <: Any
+  Int => scala.Int#
+  Any => scala.Any#
 flags.p.package.X. => final case object X
-flags.p.package.Y# => final class Y
-flags.p.package.Y#`<init>`(0). => primaryctor <init>: <?>
+flags.p.package.Y# => final class Y.{+1 decls}
+  extends AnyRef
+flags.p.package.Y#`<init>`(0). => primaryctor <init>: (): Y
+  Y => flags.p.package.Y#
 flags.p.package.Z# => sealed trait Z
-flags.p.package.m(0). => macro m: <?>
-flags.p.package.m(0).[TT] => typeparam TT: <?>
-flags.p.package.x. => private lazy val x: <?>
-flags.p.package.y. => protected implicit val y: <?>
-flags.p.package.z(1). => def z: <?>
-flags.p.package.z(1).(pp) => param pp: <?>
+  extends AnyRef
+flags.p.package.m(0). => macro m: [TT >: Nothing <: Any] => : Nothing
+  TT => flags.p.package.m(0).[TT]
+  Nothing => scala.Nothing#
+flags.p.package.m(0).[TT] => typeparam TT: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+flags.p.package.x. => private lazy val x: : Int
+  Int => scala.Int#
+flags.p.package.y. => protected implicit val y: : Int
+  Int => scala.Int#
+flags.p.package.z(1). => def z: (pp: Int): Int
+  pp => flags.p.package.z(1).(pp)
+  Int => scala.Int#
+flags.p.package.z(1).(pp) => param pp: Int
+  Int => scala.Int#
 
 types/ann.scala
 ---------------
@@ -143,11 +214,20 @@ Language => Scala
 Symbols => 5 entries
 
 Symbols:
-types.ann# => class ann
-types.ann#(x) => param x: <?>
-types.ann#[T] => typeparam T: <?>
-types.ann#`<init>`(1). => primaryctor <init>: <?>
-types.ann#`<init>`(1).(x) => param x: <?>
+types.ann# => class ann.{+3 decls}
+  extends Annotation
+  extends StaticAnnotation
+types.ann#(x) => param x: T
+  T => types.ann#[T]
+types.ann#[T] => typeparam T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+types.ann#`<init>`(1). => primaryctor <init>: (x: T): ann[T]
+  x => types.ann#`<init>`(1).(x)
+  ann => types.ann#
+  T => types.ann#[T]
+types.ann#`<init>`(1).(x) => param x: T
+  T => types.ann#[T]
 
 types/ann1.scala
 ----------------
@@ -160,8 +240,11 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-types.ann1# => class ann1
-types.ann1#`<init>`(0). => primaryctor <init>: <?>
+types.ann1# => class ann1.{+1 decls}
+  extends Annotation
+  extends StaticAnnotation
+types.ann1#`<init>`(0). => primaryctor <init>: (): ann1
+  ann1 => types.ann1#
 
 types/ann2.scala
 ----------------
@@ -174,8 +257,11 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-types.ann2# => class ann2
-types.ann2#`<init>`(0). => primaryctor <init>: <?>
+types.ann2# => class ann2.{+1 decls}
+  extends Annotation
+  extends StaticAnnotation
+types.ann2#`<init>`(0). => primaryctor <init>: (): ann2
+  ann2 => types.ann2#
 
 types/B.scala
 -------------
@@ -188,8 +274,10 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-types.B# => class B
-types.B#`<init>`(0). => primaryctor <init>: <?>
+types.B# => class B.{+1 decls}
+  extends AnyRef
+types.B#`<init>`(0). => primaryctor <init>: (): B
+  B => types.B#
 
 types/C.scala
 -------------
@@ -202,8 +290,10 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-types.C# => class C
-types.C#`<init>`(0). => primaryctor <init>: <?>
+types.C# => class C.{+1 decls}
+  extends AnyRef
+types.C#`<init>`(0). => primaryctor <init>: (): C
+  C => types.C#
 
 types/P.scala
 -------------
@@ -216,13 +306,23 @@ Language => Scala
 Symbols => 7 entries
 
 Symbols:
-types.P# => class P
-types.P#C# => class C
-types.P#C#`<init>`(0). => primaryctor <init>: <?>
-types.P#X# => class X
-types.P#X#`<init>`(0). => primaryctor <init>: <?>
-types.P#`<init>`(0). => primaryctor <init>: <?>
-types.P#x. => val x: <?>
+types.P# => class P.{+5 decls}
+  extends AnyRef
+types.P#C# => class C.{+1 decls}
+  extends AnyRef
+types.P#C#`<init>`(0). => primaryctor <init>: (): P.this.C
+  P => types.P#
+  C => types.P#C#
+types.P#X# => class X.{+1 decls}
+  extends AnyRef
+types.P#X#`<init>`(0). => primaryctor <init>: (): P.this.X
+  P => types.P#
+  X => types.P#X#
+types.P#`<init>`(0). => primaryctor <init>: (): P
+  P => types.P#
+types.P#x. => val x: : P.this.X
+  P => types.P#
+  X => types.P#X#
 
 types/T.scala
 -------------
@@ -235,13 +335,23 @@ Language => Scala
 Symbols => 7 entries
 
 Symbols:
-types.T# => class T
-types.T#C# => class C
-types.T#C#`<init>`(0). => primaryctor <init>: <?>
-types.T#X# => class X
-types.T#X#`<init>`(0). => primaryctor <init>: <?>
-types.T#`<init>`(0). => primaryctor <init>: <?>
-types.T#x. => val x: <?>
+types.T# => class T.{+5 decls}
+  extends AnyRef
+types.T#C# => class C.{+1 decls}
+  extends AnyRef
+types.T#C#`<init>`(0). => primaryctor <init>: (): T.this.C
+  T => types.T#
+  C => types.T#C#
+types.T#X# => class X.{+1 decls}
+  extends AnyRef
+types.T#X#`<init>`(0). => primaryctor <init>: (): T.this.X
+  T => types.T#
+  X => types.T#X#
+types.T#`<init>`(0). => primaryctor <init>: (): T
+  T => types.T#
+types.T#x. => val x: : T.this.X
+  T => types.T#
+  X => types.T#X#
 
 types/Test.scala
 ----------------
@@ -255,71 +365,167 @@ Symbols => 69 entries
 
 Symbols:
 types.Test. => final object Test
-types.Test.C# => class C
+types.Test.C# => class C.{+55 decls}
+  extends M
 types.Test.C#ByNameType. => final object ByNameType
-types.Test.C#ByNameType.m1(1). => def m1: <?>
-types.Test.C#ByNameType.m1(1).(x) => param x: <?>
+types.Test.C#ByNameType.m1(1). => def m1: (x: => Int): Int
+  x => types.Test.C#ByNameType.m1(1).(x)
+  Int => scala.Int#
+types.Test.C#ByNameType.m1(1).(x) => param x: => Int
+  Int => scala.Int#
 types.Test.C#ClassInfoType1. => final object ClassInfoType1
-types.Test.C#ClassInfoType2# => class ClassInfoType2
-types.Test.C#ClassInfoType2#`<init>`(0). => primaryctor <init>: <?>
-types.Test.C#ClassInfoType2#x(0). => def x: <?>
-types.Test.C#ClassInfoType3# => trait ClassInfoType3
-types.Test.C#ClassInfoType3#[T] => typeparam T: <?>
+types.Test.C#ClassInfoType2# => class ClassInfoType2.{+2 decls}
+  extends B
+types.Test.C#ClassInfoType2#`<init>`(0). => primaryctor <init>: (): C.this.ClassInfoType2
+  C => types.Test.C#
+  ClassInfoType2 => types.Test.C#ClassInfoType2#
+types.Test.C#ClassInfoType2#x(0). => def x: : Int
+  Int => scala.Int#
+types.Test.C#ClassInfoType3# => trait ClassInfoType3.{+1 decls}
+  extends AnyRef
+types.Test.C#ClassInfoType3#[T] => typeparam T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
 types.Test.C#MethodType. => final object MethodType
-types.Test.C#MethodType.m3(0). => def m3: <?>
-types.Test.C#MethodType.m4(0). => def m4: <?>
-types.Test.C#MethodType.m5(1). => def m5: <?>
-types.Test.C#MethodType.m5(1).(x) => param x: <?>
-types.Test.C#MethodType.m6(1). => def m6: <?>
-types.Test.C#MethodType.m6(1).(x) => param x: <?>
-types.Test.C#MethodType.m6(1).[T] => typeparam T: <?>
-types.Test.C#MethodType.x1(0). => def x1: <?>
-types.Test.C#MethodType.x2(0). => def x2: <?>
+types.Test.C#MethodType.m3(0). => def m3: : Int
+  Int => scala.Int#
+types.Test.C#MethodType.m4(0). => def m4: (): Int
+  Int => scala.Int#
+types.Test.C#MethodType.m5(1). => def m5: (x: Int): Int
+  x => types.Test.C#MethodType.m5(1).(x)
+  Int => scala.Int#
+types.Test.C#MethodType.m5(1).(x) => param x: Int
+  Int => scala.Int#
+types.Test.C#MethodType.m6(1). => def m6: [T >: Nothing <: Any] => (x: T): T
+  T => types.Test.C#MethodType.m6(1).[T]
+  x => types.Test.C#MethodType.m6(1).(x)
+  T => types.Test.C#MethodType.m6(1).[T]
+types.Test.C#MethodType.m6(1).(x) => param x: T
+  T => types.Test.C#MethodType.m6(1).[T]
+types.Test.C#MethodType.m6(1).[T] => typeparam T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+types.Test.C#MethodType.x1(0). => def x1: : Int
+  Int => scala.Int#
+types.Test.C#MethodType.x2(0). => def x2: : Int
+  Int => scala.Int#
 types.Test.C#RepeatedType. => final object RepeatedType
-types.Test.C#RepeatedType.m1(1). => def m1: <?>
-types.Test.C#RepeatedType.m1(1).(x) => param x: <?>
+types.Test.C#RepeatedType.m1(1). => def m1: (x: Int*): Int
+  x => types.Test.C#RepeatedType.m1(1).(x)
+  Int => scala.Int#
+types.Test.C#RepeatedType.m1(1).(x) => param x: Int*
+  Int => scala.Int#
 types.Test.C#TypeType. => final object TypeType
-types.Test.C#TypeType.T1# => abstract type T1: <?>
-types.Test.C#TypeType.T4# => type T4: <?>
-types.Test.C#TypeType.T5# => type T5: <?>
-types.Test.C#TypeType.T5#[U] => typeparam U: <?>
-types.Test.C#TypeType.m2(0). => def m2: <?>
-types.Test.C#TypeType.m2(0).[T2] => typeparam T2: <?>
-types.Test.C#TypeType.m3(0). => def m3: <?>
-types.Test.C#TypeType.m3(0).[M3] => typeparam M3: <?>
-types.Test.C#TypeType.m3(0).[M3][_] => typeparam _: <?>
-types.Test.C#`<init>`(0). => primaryctor <init>: <?>
+types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+types.Test.C#TypeType.T4# => type T4: C
+  C => types.Test.C#
+types.Test.C#TypeType.T5# => type T5: [U >: Nothing <: Any] => U
+  U => types.Test.C#TypeType.T5#[U]
+  U => types.Test.C#TypeType.T5#[U]
+types.Test.C#TypeType.T5#[U] => typeparam U: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+types.Test.C#TypeType.m2(0). => def m2: [T2 >: C <: C] => : Nothing
+  T2 => types.Test.C#TypeType.m2(0).[T2]
+  Nothing => scala.Nothing#
+types.Test.C#TypeType.m2(0).[T2] => typeparam T2: >: C <: C
+  C => types.Test.C#
+  C => types.Test.C#
+types.Test.C#TypeType.m3(0). => def m3: [M3 [_ >: Nothing <: Any] => >: Nothing <: Any] => : Nothing
+  M3 => types.Test.C#TypeType.m3(0).[M3]
+  Nothing => scala.Nothing#
+types.Test.C#TypeType.m3(0).[M3] => typeparam M3: [_ >: Nothing <: Any] => >: Nothing <: Any
+  _ => types.Test.C#TypeType.m3(0).[M3][_]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+types.Test.C#TypeType.m3(0).[M3][_] => typeparam _: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+types.Test.C#`<init>`(0). => primaryctor <init>: (): C
+  C => types.Test.C#
 types.Test.C#`<refinement>`# => class <refinement>
 types.Test.C#`<refinement>`# => class <refinement>
 types.Test.C#`<refinement>`# => class <refinement>
-types.Test.C#`<refinement>`#k(0). => abstract def k: <?>
-types.Test.C#`<refinement>`#k(0). => abstract def k: <?>
-types.Test.C#`existentialType1 `<?>.T# => abstract type T: <?>
-types.Test.C#annType1. => val annType1: <?>
-types.Test.C#annType2. => val annType2: <?>
-types.Test.C#compoundType1. => val compoundType1: <?>
-types.Test.C#compoundType2. => val compoundType2: <?>
-types.Test.C#compoundType3. => val compoundType3: <?>
-types.Test.C#existentialType1. => val existentialType1: <?>
-types.Test.C#p. => val p: <?>
-types.Test.C#singleType1. => val singleType1: <?>
-types.Test.C#singleType2. => val singleType2: <?>
-types.Test.C#superType1. => val superType1: <?>
-types.Test.C#superType2. => val superType2: <?>
-types.Test.C#superType3. => val superType3: <?>
-types.Test.C#thisType1. => val thisType1: <?>
-types.Test.C#thisType2. => val thisType2: <?>
-types.Test.C#typeLambda1(0). => def typeLambda1: <?>
-types.Test.C#typeLambda1(0).[M] => typeparam M: <?>
-types.Test.C#typeLambda1(0).[M][_] => typeparam _: <?>
-types.Test.C#typeRef1. => val typeRef1: <?>
-types.Test.C#typeRef2. => val typeRef2: <?>
-types.Test.C#typeRef3. => val typeRef3: <?>
-types.Test.C#typeRef4. => val typeRef4: <?>
-types.Test.C#x. => val x: <?>
-types.Test.M# => class M
-types.Test.M#`<init>`(0). => primaryctor <init>: <?>
-types.Test.M#m(0). => def m: <?>
-types.Test.N# => class N
-types.Test.N#`<init>`(0). => primaryctor <init>: <?>
-types.Test.N#n(0). => def n: <?>
+types.Test.C#`<refinement>`#k(0). => abstract def k: : Int
+  Int => scala.Int#
+types.Test.C#`<refinement>`#k(0). => abstract def k: : Int
+  Int => scala.Int#
+types.Test.C#`existentialType1 `(0).T# => abstract type T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+types.Test.C#annType1. => val annType1: : T 
+  T => types.T#
+types.Test.C#annType2. => val annType2: : T 
+  T => types.T#
+types.Test.C#compoundType1. => val compoundType1: : AnyRef { abstract <?> }
+  AnyRef => scala.AnyRef#
+  k => types.Test.C#`<refinement>`#k(0).
+types.Test.C#compoundType2. => val compoundType2: : M with N
+  M => types.Test.M#
+  N => types.Test.N#
+types.Test.C#compoundType3. => val compoundType3: : M with N { abstract <?> }
+  M => types.Test.M#
+  N => types.Test.N#
+  k => types.Test.C#`<refinement>`#k(0).
+types.Test.C#existentialType1. => val existentialType1: : T forSome { abstract type T >: Nothing <: Any }
+  T => types.Test.C#`existentialType1 `(0).T#
+  T => types.Test.C#`existentialType1 `(0).T#
+types.Test.C#p. => val p: : P
+  P => types.P#
+types.Test.C#singleType1. => val singleType1: : C.this.x.type
+  C => types.Test.C#
+  x => types.Test.C#x.
+types.Test.C#singleType2. => val singleType2: : C.this.p.x.type
+  C => types.Test.C#
+  p => types.Test.C#p.
+  x => types.P.x#
+types.Test.C#superType1. => val superType1: : Int
+  Int => scala.Int#
+types.Test.C#superType2. => val superType2: : Int
+  Int => scala.Int#
+types.Test.C#superType3. => val superType3: : Int
+  Int => scala.Int#
+types.Test.C#thisType1. => val thisType1: : C.this.type
+  C => types.Test.C#
+types.Test.C#thisType2. => val thisType2: : C.this.type
+  C => types.Test.C#
+types.Test.C#typeLambda1(0). => def typeLambda1: [M [_ >: Nothing <: Any] => >: Nothing <: Any] => : Nothing
+  M => types.Test.C#typeLambda1(0).[M]
+  Nothing => scala.Nothing#
+types.Test.C#typeLambda1(0).[M] => typeparam M: [_ >: Nothing <: Any] => >: Nothing <: Any
+  _ => types.Test.C#typeLambda1(0).[M][_]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+types.Test.C#typeLambda1(0).[M][_] => typeparam _: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+types.Test.C#typeRef1. => val typeRef1: : C
+  C => types.Test.C#
+types.Test.C#typeRef2. => val typeRef2: : C.this.p.C
+  C => types.Test.C#
+  p => types.Test.C#p.
+  C => types.P.C#
+types.Test.C#typeRef3. => val typeRef3: : T#C
+  T => types.T#
+  C => types.T.C#
+types.Test.C#typeRef4. => val typeRef4: : List[Int]
+  List => scala.package.List#
+  Int => scala.Int#
+types.Test.C#x. => val x: : C.this.p.X
+  C => types.Test.C#
+  p => types.Test.C#p.
+  X => types.P.X#
+types.Test.M# => class M.{+2 decls}
+  extends AnyRef
+types.Test.M#`<init>`(0). => primaryctor <init>: (): M
+  M => types.Test.M#
+types.Test.M#m(0). => def m: : Int
+  Int => scala.Int#
+types.Test.N# => class N.{+2 decls}
+  extends AnyRef
+types.Test.N#`<init>`(0). => primaryctor <init>: (): N
+  N => types.Test.N#
+types.Test.N#n(0). => def n: : Int
+  Int => scala.Int#
