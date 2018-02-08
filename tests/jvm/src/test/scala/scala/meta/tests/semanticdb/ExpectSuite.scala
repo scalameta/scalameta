@@ -10,6 +10,7 @@ import scala.collection.JavaConverters._
 import scala.meta.testkit.DiffAssertions
 import scala.meta.internal.io.FileIO
 import scala.meta._
+import scala.meta.cli.metacp.{Main => Metacp, Settings => MetacpSettings}
 import scala.meta.cli.metap.{Main => Metap}
 import scala.meta.tests.cli._
 import org.langmeta.internal.io.PathIO
@@ -24,6 +25,10 @@ class ExpectSuite extends FunSuite with DiffAssertions {
     // output of 2.12. It's possible to add another expect file for 2.12
     // later down the road if that turns out to be useful.
     case "2" :: "12" :: Nil =>
+      test("convert.expect") {
+        import ConvertExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
       test("lowlevel.expect") {
         import LowlevelExpect._
         assertNoDiff(loadObtained, loadExpected)
@@ -50,12 +55,29 @@ trait ExpectHelpers {
     Files.write(path, value.getBytes(UTF_8))
 }
 
+object ConvertExpect extends ExpectHelpers {
+  def filename: String = "convert.expect"
+
+  def loadObtained: String = {
+    val classpath = BuildInfo.databaseClasspath
+    val target = Files.createTempDirectory("target_")
+    val metacp_settings = MetacpSettings.parse(List("-d", target.toString, classpath)).get
+    val (metacp_exitcode, _) = CliSuite.communicate(Metacp.process(metacp_settings))
+    assert(metacp_exitcode == 0)
+    val paths = Files.walk(target).iterator.asScala
+    val semanticdbs = paths.filter(_.toFile.isFile).map(_.toString).toArray
+    val (metap_exitcode, metap_stdout) = CliSuite.communicate(Metap.process(semanticdbs))
+    assert(metap_exitcode == 0)
+    metap_stdout
+  }
+}
+
 object LowlevelExpect extends ExpectHelpers {
   def filename: String = "lowlevel.expect"
 
   def loadObtained: String = {
-    val files = Files.walk(Paths.get(BuildInfo.databaseClasspath)).iterator.asScala
-    val semanticdbs = files.map(_.toString).filter(_.endsWith(".semanticdb")).toArray.sorted
+    val paths = Files.walk(Paths.get(BuildInfo.databaseClasspath)).iterator.asScala
+    val semanticdbs = paths.map(_.toString).filter(_.endsWith(".semanticdb")).toArray.sorted
     val (exitcode, stdout) = CliSuite.communicate(Metap.process(semanticdbs))
     assert(exitcode == 0)
     stdout
@@ -80,5 +102,6 @@ object SaveExpectTest {
   def main(args: Array[String]): Unit = {
     LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
     HighlevelExpect.saveExpected(HighlevelExpect.loadObtained)
+    ConvertExpect.saveExpected(ConvertExpect.loadObtained)
   }
 }

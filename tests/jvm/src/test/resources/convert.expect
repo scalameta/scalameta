@@ -1,0 +1,370 @@
+example/A.scala
+---------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/A.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+example.A# => trait A
+example.A#foo(0). => abstract def foo: <?>
+
+example/B.scala
+---------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/B.scala
+Text => empty
+Language => Scala
+Symbols => 3 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+example.B# => class B
+example.B#`<init>`(0). => primaryctor <init>: <?>
+example.B#foo(0). => def foo: <?>
+
+example/Example.scala
+---------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/Example.scala
+Text => empty
+Language => Scala
+Symbols => 4 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+example.Example. => final object Example
+example.Example.main(1). => def main: <?>
+example.Example.main(1).(args) => param args: <?>
+example.Example.x. => val x: <?>
+
+example/local-file.scala
+------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/local-file.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+example.`local-file`# => class local-file
+example.`local-file`#`<init>`(0). => primaryctor <init>: <?>
+
+example/Synthetic.scala
+-----------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/Synthetic.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+example.Synthetic# => class Synthetic
+example.Synthetic#`<init>`(0). => primaryctor <init>: <?>
+
+exclude/Exclude.scala
+---------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => exclude/Exclude.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+exclude.Exclude# => class Exclude
+exclude.Exclude#`<init>`(0). => primaryctor <init>: <?>
+
+flags/p/package.scala
+---------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => flags/p/package.scala
+Text => empty
+Language => Scala
+Symbols => 35 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+flags.p.package. => final package object package
+flags.p.package.AA# => class AA
+flags.p.package.AA#(x) => param x: <?>
+flags.p.package.AA#(y) => val param y: <?>
+flags.p.package.AA#(z) => val param z: <?>
+flags.p.package.AA#`<init>`(3). => primaryctor <init>: <?>
+flags.p.package.AA#`<init>`(3).(x) => param x: <?>
+flags.p.package.AA#`<init>`(3).(y) => param y: <?>
+flags.p.package.AA#`<init>`(3).(z) => param z: <?>
+flags.p.package.C# => abstract class C
+flags.p.package.C#(x) => param x: <?>
+flags.p.package.C#(y) => param y: <?>
+flags.p.package.C#(z) => param z: <?>
+flags.p.package.C#[T] => covariant typeparam T: <?>
+flags.p.package.C#[U] => contravariant typeparam U: <?>
+flags.p.package.C#[V] => typeparam V: <?>
+flags.p.package.C#`<init>`(0). => secondaryctor <init>: <?>
+flags.p.package.C#`<init>`(3). => primaryctor <init>: <?>
+flags.p.package.C#`<init>`(3).(x) => param x: <?>
+flags.p.package.C#`<init>`(3).(y) => param y: <?>
+flags.p.package.C#`<init>`(3).(z) => param z: <?>
+flags.p.package.C#w(0). => abstract def w: <?>
+flags.p.package.T# => type T: <?>
+flags.p.package.U# => abstract type U: <?>
+flags.p.package.V# => abstract type V: <?>
+flags.p.package.X. => final case object X
+flags.p.package.Y# => final class Y
+flags.p.package.Y#`<init>`(0). => primaryctor <init>: <?>
+flags.p.package.Z# => sealed trait Z
+flags.p.package.m(0). => macro m: <?>
+flags.p.package.m(0).[TT] => typeparam TT: <?>
+flags.p.package.x. => private lazy val x: <?>
+flags.p.package.y. => protected implicit val y: <?>
+flags.p.package.z(1). => def z: <?>
+flags.p.package.z(1).(pp) => param pp: <?>
+
+types/ann.scala
+---------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/ann.scala
+Text => empty
+Language => Scala
+Symbols => 5 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+types.ann# => class ann
+types.ann#(x) => param x: <?>
+types.ann#[T] => typeparam T: <?>
+types.ann#`<init>`(1). => primaryctor <init>: <?>
+types.ann#`<init>`(1).(x) => param x: <?>
+
+types/ann1.scala
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/ann1.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+types.ann1# => class ann1
+types.ann1#`<init>`(0). => primaryctor <init>: <?>
+
+types/ann2.scala
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/ann2.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+types.ann2# => class ann2
+types.ann2#`<init>`(0). => primaryctor <init>: <?>
+
+types/B.scala
+-------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/B.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+types.B# => class B
+types.B#`<init>`(0). => primaryctor <init>: <?>
+
+types/C.scala
+-------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/C.scala
+Text => empty
+Language => Scala
+Symbols => 2 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+types.C# => class C
+types.C#`<init>`(0). => primaryctor <init>: <?>
+
+types/P.scala
+-------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/P.scala
+Text => empty
+Language => Scala
+Symbols => 7 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+types.P# => class P
+types.P#C# => class C
+types.P#C#`<init>`(0). => primaryctor <init>: <?>
+types.P#X# => class X
+types.P#X#`<init>`(0). => primaryctor <init>: <?>
+types.P#`<init>`(0). => primaryctor <init>: <?>
+types.P#x. => val x: <?>
+
+types/T.scala
+-------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/T.scala
+Text => empty
+Language => Scala
+Symbols => 7 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+types.T# => class T
+types.T#C# => class C
+types.T#C#`<init>`(0). => primaryctor <init>: <?>
+types.T#X# => class X
+types.T#X#`<init>`(0). => primaryctor <init>: <?>
+types.T#`<init>`(0). => primaryctor <init>: <?>
+types.T#x. => val x: <?>
+
+types/Test.scala
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/Test.scala
+Text => empty
+Language => Scala
+Symbols => 69 entries
+Occurrences => 0 entries
+Diagnostics => 0 entries
+Synthetics => 0 entries
+
+Symbols:
+types.Test. => final object Test
+types.Test.C# => class C
+types.Test.C#ByNameType. => final object ByNameType
+types.Test.C#ByNameType.m1(1). => def m1: <?>
+types.Test.C#ByNameType.m1(1).(x) => param x: <?>
+types.Test.C#ClassInfoType1. => final object ClassInfoType1
+types.Test.C#ClassInfoType2# => class ClassInfoType2
+types.Test.C#ClassInfoType2#`<init>`(0). => primaryctor <init>: <?>
+types.Test.C#ClassInfoType2#x(0). => def x: <?>
+types.Test.C#ClassInfoType3# => trait ClassInfoType3
+types.Test.C#ClassInfoType3#[T] => typeparam T: <?>
+types.Test.C#MethodType. => final object MethodType
+types.Test.C#MethodType.m3(0). => def m3: <?>
+types.Test.C#MethodType.m4(0). => def m4: <?>
+types.Test.C#MethodType.m5(1). => def m5: <?>
+types.Test.C#MethodType.m5(1).(x) => param x: <?>
+types.Test.C#MethodType.m6(1). => def m6: <?>
+types.Test.C#MethodType.m6(1).(x) => param x: <?>
+types.Test.C#MethodType.m6(1).[T] => typeparam T: <?>
+types.Test.C#MethodType.x1(0). => def x1: <?>
+types.Test.C#MethodType.x2(0). => def x2: <?>
+types.Test.C#RepeatedType. => final object RepeatedType
+types.Test.C#RepeatedType.m1(1). => def m1: <?>
+types.Test.C#RepeatedType.m1(1).(x) => param x: <?>
+types.Test.C#TypeType. => final object TypeType
+types.Test.C#TypeType.T1# => abstract type T1: <?>
+types.Test.C#TypeType.T4# => type T4: <?>
+types.Test.C#TypeType.T5# => type T5: <?>
+types.Test.C#TypeType.T5#[U] => typeparam U: <?>
+types.Test.C#TypeType.m2(0). => def m2: <?>
+types.Test.C#TypeType.m2(0).[T2] => typeparam T2: <?>
+types.Test.C#TypeType.m3(0). => def m3: <?>
+types.Test.C#TypeType.m3(0).[M3] => typeparam M3: <?>
+types.Test.C#TypeType.m3(0).[M3][_] => typeparam _: <?>
+types.Test.C#`<init>`(0). => primaryctor <init>: <?>
+types.Test.C#`<refinement>`# => class <refinement>
+types.Test.C#`<refinement>`# => class <refinement>
+types.Test.C#`<refinement>`# => class <refinement>
+types.Test.C#`<refinement>`#k(0). => abstract def k: <?>
+types.Test.C#`<refinement>`#k(0). => abstract def k: <?>
+types.Test.C#`existentialType1 `<?>.T# => abstract type T: <?>
+types.Test.C#annType1. => val annType1: <?>
+types.Test.C#annType2. => val annType2: <?>
+types.Test.C#compoundType1. => val compoundType1: <?>
+types.Test.C#compoundType2. => val compoundType2: <?>
+types.Test.C#compoundType3. => val compoundType3: <?>
+types.Test.C#existentialType1. => val existentialType1: <?>
+types.Test.C#p. => val p: <?>
+types.Test.C#singleType1. => val singleType1: <?>
+types.Test.C#singleType2. => val singleType2: <?>
+types.Test.C#superType1. => val superType1: <?>
+types.Test.C#superType2. => val superType2: <?>
+types.Test.C#superType3. => val superType3: <?>
+types.Test.C#thisType1. => val thisType1: <?>
+types.Test.C#thisType2. => val thisType2: <?>
+types.Test.C#typeLambda1(0). => def typeLambda1: <?>
+types.Test.C#typeLambda1(0).[M] => typeparam M: <?>
+types.Test.C#typeLambda1(0).[M][_] => typeparam _: <?>
+types.Test.C#typeRef1. => val typeRef1: <?>
+types.Test.C#typeRef2. => val typeRef2: <?>
+types.Test.C#typeRef3. => val typeRef3: <?>
+types.Test.C#typeRef4. => val typeRef4: <?>
+types.Test.C#x. => val x: <?>
+types.Test.M# => class M
+types.Test.M#`<init>`(0). => primaryctor <init>: <?>
+types.Test.M#m(0). => def m: <?>
+types.Test.N# => class N
+types.Test.N#`<init>`(0). => primaryctor <init>: <?>
+types.Test.N#n(0). => def n: <?>
