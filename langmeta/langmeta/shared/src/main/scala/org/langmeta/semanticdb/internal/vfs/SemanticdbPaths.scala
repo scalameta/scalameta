@@ -17,8 +17,7 @@ object SemanticdbPaths {
 
   def toScala(path: RelativePath): RelativePath = {
     require(isSemanticdb(path))
-    val scalaSibling =
-      path.resolveSibling(_.stripSuffix(semanticdbExtension) + scalaExtension)
+    val scalaSibling = path.resolveSibling(_.stripSuffix("." + semanticdbExtension))
     semanticdbPrefix.relativize(scalaSibling)
   }
 
@@ -28,8 +27,7 @@ object SemanticdbPaths {
 
   def fromScala(path: RelativePath): RelativePath = {
     require(isScala(path))
-    val semanticdbSibling =
-      path.resolveSibling(_.stripSuffix(scalaExtension) + semanticdbExtension)
+    val semanticdbSibling = path.resolveSibling(_ + "." + semanticdbExtension)
     semanticdbPrefix.resolve(semanticdbSibling)
   }
 }

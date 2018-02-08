@@ -20,7 +20,7 @@ class CliSuite extends FunSuite with DiffAssertions {
     }
   """.getBytes(UTF_8))
   val target = Files.createTempDirectory("target_")
-  val helloWorldSemanticdb = target.resolve("META-INF/semanticdb/HelloWorld.semanticdb")
+  val helloWorldSemanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
 
   test("metac " + helloWorldScala) {
     val scalaLibraryJar = sys.props("sbt.paths.scalalibrary.classes")
