@@ -114,8 +114,8 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Flags.scala
 Text => non-empty
 Language => Scala212
-Symbols => 29 entries
-Occurrences => 42 entries
+Symbols => 36 entries
+Occurrences => 51 entries
 Diagnostics => 0 entries
 Synthetics => 0 entries
 
@@ -126,9 +126,9 @@ _root_.flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
 _root_.flags.p.package.AA#(x) => param x: Int
   Int => _root_.scala.Int#
-_root_.flags.p.package.AA#(y) => param y: : Int
+_root_.flags.p.package.AA#(y) => val param y: : Int
   Int => _root_.scala.Int#
-_root_.flags.p.package.AA#(z) => param z_=: (x$1: <?>): Unit
+_root_.flags.p.package.AA#(z) => var param z_=: (x$1: <?>): Unit
   x$1 => _root_.flags.p.package.AA#`z_=`(I)V.(x$1)
   Unit => _root_.scala.Unit#
 _root_.flags.p.package.AA#`<init>`(III)V. => primaryctor <init>: (x: <?>, y: <?>, z: <?>): AA
@@ -183,61 +183,84 @@ _root_.flags.p.package.Y#`<init>`()V. => primaryctor <init>: (): Y
   Y => _root_.flags.p.package.Y#
 _root_.flags.p.package.Z# => sealed trait Z
   extends AnyRef
+_root_.flags.p.package.m()Lscala/Nothing;. => macro m: [TT: <?>] => : Nothing
+  TT => _root_.flags.p.package.m()Lscala/Nothing;.[TT]
+  Nothing => _root_.scala.Nothing#
+_root_.flags.p.package.m()Lscala/Nothing;.TT# => typeparam TT: >: Nothing <: Any
+  Nothing => _root_.scala.Nothing#
+  Any => _root_.scala.Any#
 _root_.flags.p.package.x. => private lazy val x: : Int
   Int => _root_.scala.Int#
 _root_.flags.p.package.y. => protected var y_=: (x$1: <?>): Unit
   x$1 => _root_.flags.p.package.`y_=`(I)V.(x$1)
   Unit => _root_.scala.Unit#
-_root_.flags.p.package.z()I. => def z: : Int
+_root_.flags.p.package.z(I)I. => def z: (pp: Int): Int
+  pp => _root_.flags.p.package.z(I)I.(pp)
   Int => _root_.scala.Int#
+_root_.flags.p.package.z(I)I.(pp) => param pp: Int
+  Int => _root_.scala.Int#
+_root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
 _root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: : Nothing
   Nothing => _root_.scala.Nothing#
+_root_.scala.language. => final object language
+_root_.scala.language.experimental. => final object experimental
+_root_.scala.language.experimental.macros. => implicit lazy val macros: : macros
+  macros => _root_.scala.languageFeature.experimental.macros#
 
 Occurrences:
 [0:8..0:13): flags <= _root_.flags.
-[2:15..2:16): p <= _root_.flags.p.package.
-[3:19..3:20): x <= _root_.flags.p.package.x.
-[4:25..4:26): y <= _root_.flags.p.package.y.
-[4:28..4:31): Int => _root_.scala.Int#
-[5:6..5:7): z <= _root_.flags.p.package.z()I.
-[6:17..6:18): C <= _root_.flags.p.package.C#
-[6:20..6:21): T <= _root_.flags.p.package.C#[T]
-[6:24..6:25): U <= _root_.flags.p.package.C#[U]
-[6:27..6:28): V <= _root_.flags.p.package.C#[V]
-[6:29..6:29):  <= _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
-[6:30..6:31): x <= _root_.flags.p.package.C#(x)
-[6:33..6:34): T => _root_.flags.p.package.C#[T]
-[6:36..6:37): y <= _root_.flags.p.package.C#(y)
-[6:39..6:40): U => _root_.flags.p.package.C#[U]
-[6:42..6:43): z <= _root_.flags.p.package.C#(z)
-[6:45..6:46): V => _root_.flags.p.package.C#[V]
-[7:8..7:12): this <= _root_.flags.p.package.C#`<init>`()V.
-[7:21..7:21):  => _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
-[7:22..7:25): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
-[7:27..7:30): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
-[7:32..7:35): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
-[8:8..8:9): w <= _root_.flags.p.package.C#w()I.
-[8:11..8:14): Int => _root_.scala.Int#
-[10:7..10:8): T <= _root_.flags.p.package.T#
-[10:11..10:14): Int => _root_.scala.Int#
-[11:7..11:8): U <= _root_.flags.p.package.U#
-[11:12..11:15): Int => _root_.scala.Int#
-[12:7..12:8): V <= _root_.flags.p.package.V#
-[12:12..12:15): Int => _root_.scala.Int#
-[13:14..13:15): X <= _root_.flags.p.package.X.
-[14:14..14:15): Y <= _root_.flags.p.package.Y#
-[14:15..14:15):  <= _root_.flags.p.package.Y#`<init>`()V.
-[15:15..15:16): Z <= _root_.flags.p.package.Z#
-[16:8..16:10): AA <= _root_.flags.p.package.AA#
-[16:10..16:10):  <= _root_.flags.p.package.AA#`<init>`(III)V.
-[16:11..16:12): x <= _root_.flags.p.package.AA#(x)
-[16:14..16:17): Int => _root_.scala.Int#
-[16:23..16:24): y <= _root_.flags.p.package.AA#(y)
-[16:26..16:29): Int => _root_.scala.Int#
-[16:35..16:36): z <= _root_.flags.p.package.AA#(z)
-[16:38..16:41): Int => _root_.scala.Int#
+[2:7..2:12): scala => _root_.scala.
+[2:13..2:21): language => _root_.scala.language.
+[2:22..2:34): experimental => _root_.scala.language.experimental.
+[2:35..2:41): macros => _root_.scala.language.experimental.macros.
+[4:15..4:16): p <= _root_.flags.p.package.
+[5:19..5:20): x <= _root_.flags.p.package.x.
+[6:25..6:26): y <= _root_.flags.p.package.y.
+[6:28..6:31): Int => _root_.scala.Int#
+[7:6..7:7): z <= _root_.flags.p.package.z(I)I.
+[7:8..7:10): pp <= _root_.flags.p.package.z(I)I.(pp)
+[7:12..7:15): Int => _root_.scala.Int#
+[8:6..8:7): m <= _root_.flags.p.package.m()Lscala/Nothing;.
+[8:8..8:10): TT <= _root_.flags.p.package.m()Lscala/Nothing;.TT#
+[8:20..8:23): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[9:17..9:18): C <= _root_.flags.p.package.C#
+[9:20..9:21): T <= _root_.flags.p.package.C#[T]
+[9:24..9:25): U <= _root_.flags.p.package.C#[U]
+[9:27..9:28): V <= _root_.flags.p.package.C#[V]
+[9:29..9:29):  <= _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
+[9:30..9:31): x <= _root_.flags.p.package.C#(x)
+[9:33..9:34): T => _root_.flags.p.package.C#[T]
+[9:36..9:37): y <= _root_.flags.p.package.C#(y)
+[9:39..9:40): U => _root_.flags.p.package.C#[U]
+[9:42..9:43): z <= _root_.flags.p.package.C#(z)
+[9:45..9:46): V => _root_.flags.p.package.C#[V]
+[10:8..10:12): this <= _root_.flags.p.package.C#`<init>`()V.
+[10:21..10:21):  => _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V.
+[10:22..10:25): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[10:27..10:30): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[10:32..10:35): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[11:8..11:9): w <= _root_.flags.p.package.C#w()I.
+[11:11..11:14): Int => _root_.scala.Int#
+[13:7..13:8): T <= _root_.flags.p.package.T#
+[13:11..13:14): Int => _root_.scala.Int#
+[14:7..14:8): U <= _root_.flags.p.package.U#
+[14:12..14:15): Int => _root_.scala.Int#
+[15:7..15:8): V <= _root_.flags.p.package.V#
+[15:12..15:15): Int => _root_.scala.Int#
+[16:14..16:15): X <= _root_.flags.p.package.X.
+[17:14..17:15): Y <= _root_.flags.p.package.Y#
+[17:15..17:15):  <= _root_.flags.p.package.Y#`<init>`()V.
+[18:15..18:16): Z <= _root_.flags.p.package.Z#
+[19:8..19:10): AA <= _root_.flags.p.package.AA#
+[19:10..19:10):  <= _root_.flags.p.package.AA#`<init>`(III)V.
+[19:11..19:12): x <= _root_.flags.p.package.AA#(x)
+[19:14..19:17): Int => _root_.scala.Int#
+[19:23..19:24): y <= _root_.flags.p.package.AA#(y)
+[19:26..19:29): Int => _root_.scala.Int#
+[19:35..19:36): z <= _root_.flags.p.package.AA#(z)
+[19:38..19:41): Int => _root_.scala.Int#
 
 semanticdb/integration/src/main/scala/example/Overrides.scala
 -------------------------------------------------------------

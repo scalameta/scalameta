@@ -1,9 +1,12 @@
 package flags
 
+import scala.language.experimental.macros
+
 package object p {
   private lazy val x = 1
   protected implicit var y: Int = 2
-  def z = 3
+  def z(pp: Int) = 3
+  def m[TT] = macro ???
   abstract class C[+T, -U, V](x: T, y: U, z: V) {
     def this() = this(???, ???, ???)
     def w: Int
