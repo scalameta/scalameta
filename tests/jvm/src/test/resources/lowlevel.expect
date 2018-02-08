@@ -6,7 +6,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Example.scala
 Text => non-empty
 Language => Scala212
-Symbols => 18 entries
+Symbols => 19 entries
 Occurrences => 22 entries
 Diagnostics => 1 entries
 Synthetics => 1 entries
@@ -50,6 +50,9 @@ _root_.scala.collection.mutable.Stack#`<init>`()V. => secondaryctor <init>: (): 
   Stack => _root_.scala.collection.mutable.Stack#
   Stack#[A => _root_.scala.collection.mutable.Stack#[A]
 _root_.scala.concurrent. => package concurrent
+_root_.scala.deprecated# => class deprecated.{+3 decls}
+  extends Annotation
+  extends StaticAnnotation
 _root_.scala.reflect. => package reflect
 _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;. => def classTag: [T: <?>] => (ctag: <?>): ClassTag[T]
   T => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.[T]
@@ -832,7 +835,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/local-file.scala
 Text => non-empty
 Language => Scala212
-Symbols => 6 entries
+Symbols => 7 entries
 Occurrences => 7 entries
 Diagnostics => 0 entries
 Synthetics => 1 entries
@@ -850,6 +853,9 @@ _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;. => def locall
   T => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.[T]
   x => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.(x)
   T => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+_root_.scala.inline# => class inline.{+1 decls}
+  extends Annotation
+  extends StaticAnnotation
 local0 => val local: Int
   Int => _root_.scala.Int#
 
