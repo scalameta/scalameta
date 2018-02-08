@@ -1,6 +1,6 @@
-package scala.meta.cli
+package scala.meta.cli.metacp
 
-object Metacp {
+object Main {
   def main(args: Array[String]): Unit = {
     sys.exit(process(args))
   }

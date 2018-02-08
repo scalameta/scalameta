@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
 import scala.meta.testkit.DiffAssertions
 import scala.meta.internal.io.FileIO
 import scala.meta._
-import scala.meta.cli._
+import scala.meta.cli.metap.{Main => Metap}
 import scala.meta.tests.cli._
 import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb._

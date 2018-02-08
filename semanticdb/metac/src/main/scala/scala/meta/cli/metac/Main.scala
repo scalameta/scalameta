@@ -1,4 +1,4 @@
-package scala.meta.cli
+package scala.meta.cli.metac
 
 import java.io._
 import java.net._
@@ -7,7 +7,7 @@ import java.nio.file._
 import scala.meta.internal.semanticdb.scalac._
 import scala.tools.nsc.{Main => ScalacMain}
 
-object Metac {
+object Main {
   def main(args: Array[String]): Unit = {
     sys.exit(process(args))
   }

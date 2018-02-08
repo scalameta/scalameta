@@ -1,4 +1,4 @@
-package scala.meta.cli
+package scala.meta.cli.metap
 
 import java.nio.file._
 import java.util.WeakHashMap
@@ -13,7 +13,7 @@ import SymbolInformation._, Kind._, Property._
 import SymbolOccurrence._, Role._
 import Type.Tag._
 
-object Metap {
+object Main {
   def main(args: Array[String]): Unit = {
     sys.exit(process(args))
   }

@@ -143,7 +143,7 @@ lazy val metac = project
     ignoreMimaSettings,
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    mainClass := Some("scala.meta.cli.Metac")
+    mainClass := Some("scala.meta.cli.metac.Main")
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
@@ -155,7 +155,7 @@ lazy val metacp = project
     publishableSettings,
     ignoreMimaSettings,
     description := "Scala 2.x classpath to SemanticDB converter",
-    mainClass := Some("scala.meta.cli.Metacp")
+    mainClass := Some("scala.meta.cli.metacp.Main")
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
@@ -168,7 +168,7 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     publishableSettings,
     ignoreMimaSettings,
     description := "SemanticDB decompiler",
-    mainClass := Some("scala.meta.cli.Metap")
+    mainClass := Some("scala.meta.cli.metap.Main")
   )
   .nativeSettings(nativeSettings)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
