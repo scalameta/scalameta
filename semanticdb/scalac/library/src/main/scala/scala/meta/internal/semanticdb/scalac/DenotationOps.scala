@@ -122,24 +122,29 @@ trait DenotationOps { self: DatabaseOps =>
         if (saveOverrides && config.denotations.saveReferences) gsym.overrides
         else Nil
       }
-      config.signatures match {
-        case SignatureMode.None =>
-          val denot = m.Denotation(flags, name, "", Nil, Nil, over, None)
-          DenotationResult(denot, todoOverrides, Nil)
-        case SignatureMode.Old =>
-          val (signature, names) = oldInfo
-          val denot = m.Denotation(flags, name, signature, names, Nil, over, None)
-          DenotationResult(denot, todoOverrides, Nil)
-        case SignatureMode.New =>
-          val (tpe, todoTpe) = newInfo
-          val denot = m.Denotation(flags, name, "", Nil, Nil, over, tpe)
-          DenotationResult(denot, todoOverrides, todoTpe)
-        case SignatureMode.All =>
-          val (signature, names) = oldInfo
-          val (tpe, todoTpe) = newInfo
-          val denot = m.Denotation(flags, name, signature, names, Nil, over, tpe)
-          DenotationResult(denot, todoOverrides, todoTpe)
-      }
+      val todoAnnotations = gsym.annotations.map(_.symbol)
+      val annot = gsym.annotations.map(_.symbol.toSemantic)
+      val (denot, todoTpe) =
+        config.signatures match {
+          case SignatureMode.None =>
+            val denot = m.Denotation(flags, name, "", Nil, Nil, over, None, annot)
+            (denot, Nil)
+          case SignatureMode.Old =>
+            val (signature, names) = oldInfo
+            val denot = m.Denotation(flags, name, signature, names, Nil, over, None, annot)
+            (denot, Nil)
+          case SignatureMode.New =>
+            val (tpe, todoTpe) = newInfo
+            val denot = m.Denotation(flags, name, "", Nil, Nil, over, tpe, annot)
+            (denot, todoTpe)
+          case SignatureMode.All =>
+            val (signature, names) = oldInfo
+            val (tpe, todoTpe) = newInfo
+            val denot = m.Denotation(flags, name, signature, names, Nil, over, tpe, annot)
+            (denot, todoTpe)
+        }
+
+      DenotationResult(denot, todoOverrides, todoTpe, todoAnnotations)
     }
   }
 
@@ -147,5 +152,6 @@ trait DenotationOps { self: DatabaseOps =>
   case class DenotationResult(
       denot: m.Denotation,
       todoOverrides: List[g.Symbol],
-      todoTpe: List[g.Symbol])
+      todoTpe: List[g.Symbol],
+      todoAnnotations: List[g.Symbol])
 }

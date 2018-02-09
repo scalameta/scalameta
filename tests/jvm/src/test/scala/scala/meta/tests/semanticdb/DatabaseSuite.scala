@@ -243,4 +243,16 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
       assertNoDiff(obtained, expected)
     })
   }
+
+  def annotations(original: String, expected: String): Unit = {
+    targeted(original, { db =>
+      val obtained = db.symbols
+        .collect {
+          case rs if rs.denotation.annotations.nonEmpty =>
+            s"${rs.symbol}{\n  ${rs.denotation.annotations.mkString("\n  ")}\n}"
+        }
+        .mkString("\n")
+      assertNoDiff(obtained, expected)
+    })
+  }
 }

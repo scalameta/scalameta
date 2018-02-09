@@ -183,6 +183,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [0..3): Int => _root_.scala.Int#
        |_root_.f.C1#m1(I)I.T# => typeparam T
        |_root_.f.C1#m2()Lscala/Nothing;. => macro m2: Nothing
+       |  @_root_.scala.reflect.macros.internal.macroImpl#
        |  [0..7): Nothing => _root_.scala.Nothing#
        |_root_.f.C2# => abstract class C2
        |_root_.f.C2#`<init>`()V. => primaryctor <init>: (): C2
@@ -239,6 +240,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_root_.scala.language.experimental. => final object experimental
        |_root_.scala.language.experimental.macros. => implicit lazy val macros: macros
        |  [0..6): macros => _root_.scala.languageFeature.experimental.macros#
+       | _root_.scala.reflect.macros.internal.macroImpl# => private class macroImpl
   """.trim.stripMargin
   )
 
@@ -390,17 +392,20 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [4..10): Object => _root_.java.lang.Object#
        |_root_.scala. => package scala
        |_root_.scala.Int# => abstract final class Int
+       |_root_.scala.SerialVersionUID# => class SerialVersionUID
        |_root_.scala.collection. => package collection
        |_root_.scala.collection.generic.GenericCompanion#empty()Lscala/collection/GenTraversable;. => def empty: [A] => CC[A]
        |  [7..9): CC => _root_.scala.collection.generic.GenericCompanion#[CC]
        |  [10..11): A => _root_.scala.collection.generic.GenericCompanion#empty()Lscala/collection/GenTraversable;.[A]
        |_root_.scala.collection.mutable. => package mutable
        |_root_.scala.collection.mutable.HashSet# => class HashSet
+       |  @_root_.scala.SerialVersionUID#
        |_root_.scala.collection.mutable.HashSet. => final object HashSet
        |_root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;. => def empty: [A] => HashSet[A]
        |  [7..14): HashSet => _root_.scala.collection.mutable.HashSet#
        |  [15..16): A => _root_.scala.collection.mutable.HashSet.empty()Lscala/collection/mutable/HashSet;.[A]
        |_root_.scala.collection.mutable.ListBuffer# => final class ListBuffer
+       |   @_root_.scala.SerialVersionUID#
        |_root_.scala.collection.mutable.ListBuffer. => final object ListBuffer
        |local0 => val result: b.X
        |  [0..1): b => _root_.i.a.foo(Li/B;)Ljava/lang/Object;.(b)

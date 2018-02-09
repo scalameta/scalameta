@@ -56,10 +56,17 @@ _root_.scala.Unit# => abstract final class Unit
 _root_.scala.collection. => package collection
 _root_.scala.collection.mutable. => package mutable
 _root_.scala.collection.mutable.Stack# => class Stack
+  @_root_.scala.deprecated#
+  @_root_.scala.deprecated#
 _root_.scala.collection.mutable.Stack#`<init>`()V. => secondaryctor <init>: (): Stack[A]
   [4..9): Stack => _root_.scala.collection.mutable.Stack#
   [10..11): A => _root_.scala.collection.mutable.Stack#[A]
 _root_.scala.concurrent. => package concurrent
+_root_.scala.deprecated# => class deprecated
+  @_root_.scala.annotation.meta.getter#
+  @_root_.scala.annotation.meta.setter#
+  @_root_.scala.annotation.meta.beanGetter#
+  @_root_.scala.annotation.meta.beanSetter#
 _root_.scala.reflect. => package reflect
 _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;. => def classTag: [T] => (implicit ctag: ClassTag[T]): ClassTag[T]
   [23..31): ClassTag => _root_.scala.reflect.ClassTag#
@@ -726,8 +733,10 @@ _root_.scala.Int#`+`(I)I. => abstract def +: (x: Int): Int
   [4..7): Int => _root_.scala.Int#
   [10..13): Int => _root_.scala.Int#
 _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;. => def locally: [T] => (x: T): T
+  @_root_.scala.inline#
   [11..12): T => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.[T]
   [15..16): T => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+_root_.scala.inline# => class inline
 local0_semanticdb_integration_src_main_scala_example_local_file_scala => val local: Int
   [0..3): Int => _root_.scala.Int#
 

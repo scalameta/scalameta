@@ -491,6 +491,7 @@ message SymbolInformation {
   repeated string members = 8;
   repeated string overrides = 9;
   Type tpe = 11;
+  repeated string annotations = 12;
 }
 ```
 
@@ -501,7 +502,7 @@ In a sense, this section is analogous to symbol tables [\[21\]][21] in compiler.
 `SymbolInformation` contains assorted metadata for a `symbol`, as explained below.
 At the moment, the supported metadata is usecase-driven and is not supposed to
 be comprehensive or language-agnostic. In the future, we may add support for
-more metadata, for example information about overriding, documentation strings
+more metadata, for example information about documentation strings
 or features from other languages.
 
 `language`. Language that defines this symbol.
@@ -682,6 +683,8 @@ specifying it, we superseded it with `ClassInfoType.members` in `SymbolInformati
 `overrides`. Symbols that are overridden by this symbol either directly or transitively.
 
 `tpe`. [Type](#type) that represents the type signature of the definition.
+
+`annotations`. Symbols of the annotation attached to the denotation. Currently does not support annotation parameters.
 
 ### SymbolOccurrence
 

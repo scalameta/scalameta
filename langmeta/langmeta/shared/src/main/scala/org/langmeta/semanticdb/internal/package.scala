@@ -104,7 +104,7 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, _, ssignature, smembers, soverrides, stpe) =>
+          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, _, ssignature, smembers, soverrides, stpe, sannotations) =>
             val dsym = dSymbol(ssym)
             val dflags = {
               var dflags = 0L
@@ -166,7 +166,8 @@ package object semanticdb {
             }.toList
             val doverrides = soverrides.map(dSymbol).toList
             val dtpe = stpe
-            Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides, dtpe)))
+            val dannotations = sannotations.map(dSymbol).toList
+            Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides, dtpe, dannotations)))
           case other => sys.error(s"bad protobuf: unsupported symbol information $other")
         }
       }
@@ -339,8 +340,9 @@ package object semanticdb {
               }
               val smembers = ddenot.members.map(_.syntax)
               val soverrides = ddenot.overrides.map(sSymbol)
+              val sannotations = ddenot.annotations.map(sSymbol)
               val stpe = ddenot.tpe
-              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, srange, ssignature, smembers, soverrides, stpe))
+              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, srange, ssignature, smembers, soverrides, stpe, sannotations))
             }
           }
           object dSynthetic {
