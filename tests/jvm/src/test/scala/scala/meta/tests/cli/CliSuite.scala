@@ -5,8 +5,8 @@ import java.nio.charset.StandardCharsets._
 import java.nio.file._
 import scala.util.Properties.versionNumberString
 import org.scalatest.FunSuite
-import scala.meta.cli.metac.{Main => Metac}
-import scala.meta.cli.metap.{Main => Metap}
+import scala.meta.internal.metac.{Main => Metac}
+import scala.meta.internal.metap.{Main => Metap}
 import scala.meta.testkit.DiffAssertions
 
 class CliSuite extends FunSuite with DiffAssertions {

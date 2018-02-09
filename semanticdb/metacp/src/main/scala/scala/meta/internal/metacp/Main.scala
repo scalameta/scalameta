@@ -1,4 +1,4 @@
-package scala.meta.cli.metacp
+package scala.meta.internal.metacp
 
 import java.io._
 import java.nio.file._

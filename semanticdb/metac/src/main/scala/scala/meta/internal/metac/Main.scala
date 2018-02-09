@@ -1,4 +1,4 @@
-package scala.meta.cli.metac
+package scala.meta.internal.metac
 
 import java.io._
 import java.net._

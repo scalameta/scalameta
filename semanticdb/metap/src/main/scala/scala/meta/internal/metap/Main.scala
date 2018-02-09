@@ -1,4 +1,4 @@
-package scala.meta.cli.metap
+package scala.meta.internal.metap
 
 import java.nio.file._
 import java.util.WeakHashMap
