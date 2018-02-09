@@ -159,20 +159,17 @@ trait TypeOps { self: DatabaseOps =>
   }
 
   object ByNameType {
-    def unapply(gtpe: g.Type): Option[g.Type] =
-      if (g.definitions.isByNameParamType(gtpe)) {
-        gtpe match { case g.TypeRef(_, _, gtpe :: Nil) => Some(gtpe) }
-      } else None
+    def unapply(gtpe: g.Type): Option[g.Type] = gtpe match {
+      case g.TypeRef(_, g.definitions.ByNameParamClass, garg :: Nil) => Some(garg)
+      case _ => None
+    }
   }
 
   object RepeatedType {
-    def unapply(gtpe: g.Type): Option[g.Type] =
-      if (g.definitions.isRepeatedParamType(gtpe)) {
-        gtpe match {
-          case g.TypeRef(_, _, gtpe :: Nil) => Some(gtpe)
-          // accessor for repeated type
-          case g.NullaryMethodType(ref) => unapply(ref)
-        }
-      } else None
+    def unapply(gtpe: g.Type): Option[g.Type] = gtpe match {
+      case g.TypeRef(_, g.definitions.RepeatedParamClass, garg :: Nil) => Some(garg)
+      case g.TypeRef(_, g.definitions.JavaRepeatedParamClass, garg :: Nil) => Some(garg)
+      case _ => None
+    }
   }
 }
