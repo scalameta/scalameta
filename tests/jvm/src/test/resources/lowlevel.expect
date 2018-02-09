@@ -620,23 +620,15 @@ _root_.types.Test.C#x. => val x: : C.this.p.X
   X => _root_.types.P#X#
 _root_.types.Test.Literal. => final object Literal
 _root_.types.Test.Literal.bool. => final val bool: : true
-
 _root_.types.Test.Literal.char. => final val char: : 'a'
-
 _root_.types.Test.Literal.double. => final val double: : 2.0
-
 _root_.types.Test.Literal.float. => final val float: : 1.0f
-
 _root_.types.Test.Literal.int. => final val int: : 1
-
 _root_.types.Test.Literal.javaEnum. => final val javaEnum: : NOFOLLOW_LINKS.type
   NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS.
 _root_.types.Test.Literal.long. => final val long: : 1L
-
 _root_.types.Test.Literal.nil. => final val nil: : null
-
 _root_.types.Test.Literal.string. => final val string: : "a"
-
 _root_.types.Test.Literal.unit. => final val unit: : Unit
   Unit => _root_.scala.Unit#
 _root_.types.Test.M# => class M.{+1 members}
