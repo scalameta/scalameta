@@ -3,6 +3,7 @@ package scala.meta.internal.semanticdb.scalac
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.LiteralType.{Tag => l}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
+import scala.reflect.internal.{Flags=> gf}
 
 trait TypeOps { self: DatabaseOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
@@ -33,6 +34,8 @@ trait TypeOps { self: DatabaseOps =>
             val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else None
             val ssym = todo(gsym)
             Some(s.Type(tag = stag, singleType = Some(s.SingleType(spre, ssym))))
+          case g.ConstantType(g.Constant(sym: g.TermSymbol)) if sym.hasFlag(gf.JAVA_ENUM) =>
+            loop(g.SingleType(sym.owner.thisPrefix, sym))
           case g.ThisType(gsym) =>
             val stag = t.THIS_TYPE
             val ssym = todo(gsym)
@@ -59,8 +62,6 @@ trait TypeOps { self: DatabaseOps =>
               case g.Constant(x: Double) => s.LiteralType(l.DOUBLE, doubleBits(x), "")
               case g.Constant(x: String) => s.LiteralType(l.STRING, 0, x)
               case g.Constant(null) => s.LiteralType(l.NULL, 0, "")
-              case g.Constant(name: g.TermSymbol) if name.isJavaEnum =>
-                s.LiteralType(l.ENUM, 0, name.toSemantic.syntax)
               case gother =>
                 sys.error(s"unsupported const ${gother}: ${g.showRaw(gother)}")
             }

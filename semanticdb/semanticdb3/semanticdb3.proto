@@ -103,7 +103,6 @@ message LiteralType {
     DOUBLE = 9;
     STRING = 10;
     NULL = 11;
-    ENUM = 12;
   }
   Tag tag = 1;
   int64 primitive = 2;
@@ -176,6 +175,8 @@ message SymbolInformation {
     PACKAGE_OBJECT = 12;
     CLASS = 13;
     TRAIT = 14;
+    ENUM = 15;
+    ENUM_CONSTANT = 16;
   }
   enum Property {
     UNKNOWN_PROPERTY = 0;
