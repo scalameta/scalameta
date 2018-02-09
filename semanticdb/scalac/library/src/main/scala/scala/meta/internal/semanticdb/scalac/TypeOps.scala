@@ -3,7 +3,7 @@ package scala.meta.internal.semanticdb.scalac
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.LiteralType.{Tag => l}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
-import scala.reflect.internal.{Flags=> gf}
+import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps { self: DatabaseOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
@@ -62,8 +62,7 @@ trait TypeOps { self: DatabaseOps =>
               case g.Constant(x: Double) => s.LiteralType(l.DOUBLE, doubleBits(x), "")
               case g.Constant(x: String) => s.LiteralType(l.STRING, 0, x)
               case g.Constant(null) => s.LiteralType(l.NULL, 0, "")
-              case gother =>
-                sys.error(s"unsupported const ${gother}: ${g.showRaw(gother)}")
+              case gother => sys.error(s"unsupported const ${gother}: ${g.showRaw(gother)}")
             }
             Some(s.Type(tag = stag, literalType = Some(sconst)))
           case g.RefinedType(gparents, gdecls) =>

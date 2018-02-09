@@ -43,7 +43,6 @@ trait DenotationOps { self: DatabaseOps =>
         flags |= mf.VAL
       if (gsym.hasFlag(gf.JAVA) && !gsym.hasFlag(gf.PACKAGE))
         flags |= mf.JAVADEFINED
-      if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isModule) flags |= mf.ENUM
       flags
     }
 

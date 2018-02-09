@@ -125,8 +125,6 @@ package object semanticdb {
                 case k.PACKAGE_OBJECT => dflip(d.PACKAGEOBJECT)
                 case k.CLASS => dflip(d.CLASS)
                 case k.TRAIT => dflip(d.TRAIT)
-                case k.ENUM => dflip(d.ENUM)
-                case k.ENUM_CONSTANT => dflip(d.ENUM_CONSTANT)
                 case _ => ()
               }
               def stest(bit: Long) = (sproperties & bit) == bit
@@ -306,8 +304,6 @@ package object semanticdb {
                 else if (dtest(d.PACKAGEOBJECT)) k.PACKAGE_OBJECT
                 else if (dtest(d.CLASS)) k.CLASS
                 else if (dtest(d.TRAIT)) k.TRAIT
-                else if (dtest(d.ENUM)) k.ENUM
-                else if (dtest(d.ENUM_CONSTANT)) k.ENUM_CONSTANT
                 else k.UNKNOWN_KIND
               }
               val sproperties = {

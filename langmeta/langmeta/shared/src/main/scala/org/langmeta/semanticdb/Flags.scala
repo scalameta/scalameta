@@ -28,8 +28,6 @@ private[semanticdb] trait Flags {
   final val CONTRAVARIANT: Long = 1 << 23
   final val INLINE: Long = 1 << 24
   final val JAVADEFINED: Long = 1 << 25
-  final val ENUM: Long = 1 << 26
-  final val ENUM_CONSTANT: Long = 1 << 26
 }
 
 private[semanticdb] trait HasFlags {
@@ -96,8 +94,6 @@ private[semanticdb] trait HasFlags {
     if (hasFlag(PACKAGEOBJECT)) append("PACKAGEOBJECT")
     if (hasFlag(CLASS)) append("CLASS")
     if (hasFlag(TRAIT)) append("TRAIT")
-    if (hasFlag(ENUM)) append("ENUM")
-    if (hasFlag(ENUM_CONSTANT)) append("ENUM CONSTANT")
     buf.toString.toLowerCase
   }
 

@@ -175,8 +175,6 @@ message SymbolInformation {
     PACKAGE_OBJECT = 12;
     CLASS = 13;
     TRAIT = 14;
-    ENUM = 15;
-    ENUM_CONSTANT = 16;
   }
   enum Property {
     UNKNOWN_PROPERTY = 0;
