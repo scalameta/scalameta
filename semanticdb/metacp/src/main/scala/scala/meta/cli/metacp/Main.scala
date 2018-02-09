@@ -41,7 +41,7 @@ object Main {
               case _ => None
             }
             val semanticdbRoot = Paths.get(settings.d, "META-INF", "semanticdb")
-            val className = NameTransformer.decode(fragment.name.toString.replace("\\", "/"))
+            val className = NameTransformer.decode(PathIO.toUnix(fragment.name.toString))
             val semanticdbName = className + ".semanticdb"
             val semanticdbPath = AbsolutePath(semanticdbRoot.resolve(semanticdbName))
             val semanticdbDocument = s.TextDocument(
@@ -50,7 +50,7 @@ object Main {
               language = "Scala",
               symbols = semanticdbInfos)
             val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
-            semanticdbPath.write(semanticdbDocuments)
+            FileIO.write(semanticdbPath, semanticdbDocuments)
           case None =>
             // NOTE: If a classfile doesn't contain ScalaSignature,
             // we skip it for the time being. In the future, we may add support
