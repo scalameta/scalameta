@@ -9,6 +9,7 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.NameTransformer
+import scala.tools.scalap.scalax.rules.ScalaSigParserError
 import scala.tools.scalap.scalax.rules.scalasig._
 import scala.util.control.NonFatal
 import org.langmeta.internal.io._
@@ -333,7 +334,14 @@ object Main {
           sys.error(s"unsupported type $other")
       }
     }
-    loop(sym.infoType)
+
+    try loop(sym.infoType)
+    catch {
+      case ScalaSigParserError("Unexpected failure") =>
+        // See https://github.com/scalameta/scalameta/issues/1283
+        // when this can happen
+        None
+    }
   }
 
   private object ByNameType {
