@@ -80,8 +80,8 @@ object Test {
       def m1(x: => Int): Int = ???
     }
 
-    object RepeatedType {
-      def m1(x: Int*): Int = ???
+    case class RepeatedType(s: String*) {
+      def m1(x: Int*): Int = s.length
     }
 
     object TypeType {
