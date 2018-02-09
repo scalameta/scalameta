@@ -143,11 +143,24 @@ lazy val metac = project
     ignoreMimaSettings,
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    mainClass := Some("scala.meta.cli.Metac")
+    mainClass := Some("scala.meta.cli.metac.Main")
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbScalacPlugin)
+
+lazy val metacp = project
+  .in(file("semanticdb/metacp"))
+  .settings(
+    publishableSettings,
+    ignoreMimaSettings,
+    description := "Scala 2.x classpath to SemanticDB converter",
+    libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
+    mainClass := Some("scala.meta.cli.metacp.Main")
+  )
+  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
+  .disablePlugins(BackgroundRunPlugin)
+  .dependsOn(semanticdb3JVM, langmetaJVM)
 
 lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -156,7 +169,7 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     publishableSettings,
     ignoreMimaSettings,
     description := "SemanticDB decompiler",
-    mainClass := Some("scala.meta.cli.Metap")
+    mainClass := Some("scala.meta.cli.metap.Main")
   )
   .nativeSettings(nativeSettings)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
@@ -416,7 +429,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
     buildInfoPackage := "scala.meta.tests",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
-  .jvmConfigure(_.dependsOn(testkit, interactive, metac))
+  .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp))
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, contrib, metap)
 lazy val testsJVM = tests.jvm

@@ -5,7 +5,8 @@ import java.nio.charset.StandardCharsets._
 import java.nio.file._
 import scala.util.Properties.versionNumberString
 import org.scalatest.FunSuite
-import scala.meta.cli._
+import scala.meta.cli.metac.{Main => Metac}
+import scala.meta.cli.metap.{Main => Metap}
 import scala.meta.testkit.DiffAssertions
 
 class CliSuite extends FunSuite with DiffAssertions {
@@ -19,7 +20,7 @@ class CliSuite extends FunSuite with DiffAssertions {
     }
   """.getBytes(UTF_8))
   val target = Files.createTempDirectory("target_")
-  val helloWorldSemanticdb = target.resolve("META-INF/semanticdb/HelloWorld.semanticdb")
+  val helloWorldSemanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
 
   test("metac " + helloWorldScala) {
     val scalaLibraryJar = sys.props("sbt.paths.scalalibrary.classes")
@@ -59,8 +60,6 @@ class CliSuite extends FunSuite with DiffAssertions {
       |Language => $language
       |Symbols => 7 entries
       |Occurrences => 7 entries
-      |Diagnostics => 0 entries
-      |Synthetics => 0 entries
       |
       |Symbols:
       |_empty_.HelloWorld. => final object HelloWorld

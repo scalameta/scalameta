@@ -2,6 +2,7 @@ package org.langmeta.internal.io
 
 import java.net.URI
 import java.nio.charset.Charset
+import scalapb.GeneratedMessage
 import org.langmeta.io._
 
 object FileIO {
@@ -11,6 +12,9 @@ object FileIO {
 
   def readAllBytes(uri: URI): Array[Byte] =
     PlatformFileIO.readAllBytes(uri)
+
+  def write(path: AbsolutePath, proto: GeneratedMessage): Unit =
+    PlatformFileIO.write(path, proto)
 
   def slurp(path: AbsolutePath, charset: Charset): String =
     PlatformFileIO.slurp(path, charset)

@@ -1,4 +1,4 @@
-package scala.meta.cli
+package scala.meta.cli.metap
 
 import java.nio.file._
 import java.util.WeakHashMap
@@ -13,7 +13,7 @@ import SymbolInformation._, Kind._, Property._
 import SymbolOccurrence._, Role._
 import Type.Tag._
 
-object Metap {
+object Main {
   def main(args: Array[String]): Unit = {
     sys.exit(process(args))
   }
@@ -51,10 +51,10 @@ object Metap {
     println(s"Uri => ${doc.uri}")
     println(s"Text => ${if (doc.text.nonEmpty) "non-empty" else "empty"}")
     println(s"Language => ${doc.language}")
-    println(s"Symbols => ${doc.symbols.length} entries")
-    println(s"Occurrences => ${doc.occurrences.length} entries")
-    println(s"Diagnostics => ${doc.diagnostics.length} entries")
-    println(s"Synthetics => ${doc.synthetics.length} entries")
+    if (doc.symbols.nonEmpty) println(s"Symbols => ${doc.symbols.length} entries")
+    if (doc.occurrences.nonEmpty) println(s"Occurrences => ${doc.occurrences.length} entries")
+    if (doc.diagnostics.nonEmpty) println(s"Diagnostics => ${doc.diagnostics.length} entries")
+    if (doc.synthetics.nonEmpty) println(s"Synthetics => ${doc.synthetics.length} entries")
 
     if (doc.symbols.nonEmpty) {
       println("")
@@ -123,6 +123,11 @@ object Metap {
     }
   }
 
+  private def pprint(name: String, doc: TextDocument): Unit = {
+    if (name.nonEmpty) print(name)
+    else print("<?>")
+  }
+
   private val symCache = new WeakHashMap[TextDocument, immutable.Map[String, SymbolInformation]]
   private def pprint(sym: String, role: Role, doc: TextDocument): Unit = {
     var infos = symCache.get(doc)
@@ -134,7 +139,7 @@ object Metap {
       case Some(info) =>
         role match {
           case REFERENCE =>
-            print(info.name)
+            pprint(info.name, doc)
           case DEFINITION =>
             def has(prop: Property) = (info.properties & prop.value) != 0
             if (has(PRIVATE)) print("private ")
@@ -186,7 +191,7 @@ object Metap {
               val last2 = last1.stripSuffix(")").stripSuffix("]").stripSuffix("#")
               last2.stripPrefix("`").stripSuffix("`")
             }
-            print(approxName)
+            pprint(approxName, doc)
           case _ =>
             print("<?>")
         }
@@ -331,7 +336,8 @@ object Metap {
   }
 
   private def pprint(info: SymbolInformation, doc: TextDocument): Unit = {
-    print(s"${info.symbol} => ")
+    pprint(info.symbol, doc)
+    print(" => ")
     def has(prop: Property) = (info.properties & prop.value) != 0
     if (has(PRIVATE)) print("private ")
     if (has(PROTECTED)) print("protected ")
@@ -343,6 +349,8 @@ object Metap {
     if (has(CASE)) print("case ")
     if (has(COVARIANT)) print("covariant ")
     if (has(CONTRAVARIANT)) print("contravariant ")
+    if (has(VALPARAM)) print("val ")
+    if (has(VARPARAM)) print("var ")
     if (info.kind == VAL) print("val ")
     if (info.kind == VAR) print("var ")
     if (info.kind == DEF) print("def ")
@@ -357,7 +365,7 @@ object Metap {
     if (info.kind == PACKAGE_OBJECT) print("package object ")
     if (info.kind == CLASS) print("class ")
     if (info.kind == TRAIT) print("trait ")
-    print(info.name)
+    pprint(info.name, doc)
     info.kind match {
       case VAL | VAR | DEF | PRIMARY_CONSTRUCTOR |
            SECONDARY_CONSTRUCTOR | MACRO | TYPE | PARAMETER | TYPE_PARAMETER =>
@@ -405,7 +413,7 @@ object Metap {
             info.overrides.sorted.foreach(sym => println(s"  extends $sym"))
         }
       case _ =>
-        ()
+        println("")
     }
   }
 

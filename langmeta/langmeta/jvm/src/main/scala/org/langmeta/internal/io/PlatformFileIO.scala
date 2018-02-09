@@ -5,6 +5,7 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
+import scalapb.GeneratedMessage
 import org.langmeta.io._
 
 object PlatformFileIO {
@@ -20,6 +21,13 @@ object PlatformFileIO {
 
   def readAllBytes(path: AbsolutePath): Array[Byte] =
     Files.readAllBytes(path.toNIO)
+
+  def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
+    path.toFile.getParentFile.mkdirs()
+    val os = Files.newOutputStream(path.toNIO)
+    try proto.writeTo(os)
+    finally os.close()
+  }
 
   def slurp(path: AbsolutePath, charset: Charset): String =
     scala.io.Source.fromFile(path.toFile)(scala.io.Codec(charset)).mkString

@@ -6,6 +6,7 @@ import java.nio.{file => nio}
 import java.net._
 import java.nio.file.Path
 import java.nio.file.Paths
+import scalapb.GeneratedMessage
 import org.langmeta.internal.io.PlatformPathIO
 import org.langmeta.internal.io.FileIO
 import org.langmeta.internal.io.PathIO
