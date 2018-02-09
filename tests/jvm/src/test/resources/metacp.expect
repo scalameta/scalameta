@@ -301,11 +301,11 @@ Schema => SemanticDB v3
 Uri => types/Test.class
 Text => empty
 Language => Scala
-Symbols => 69 entries
+Symbols => 73 entries
 
 Symbols:
 types.Test. => final object Test
-types.Test.C# => class C.{+55 decls}
+types.Test.C# => class C.{+56 decls}
   extends M
 types.Test.C#ByNameType. => final object ByNameType
 types.Test.C#ByNameType.m1(1). => def m1: (x: => Int): Int
@@ -349,12 +349,25 @@ types.Test.C#MethodType.x1(0). => def x1: : Int
   Int => scala.Int#
 types.Test.C#MethodType.x2(0). => def x2: : Int
   Int => scala.Int#
-types.Test.C#RepeatedType. => final object RepeatedType
-types.Test.C#RepeatedType.m1(1). => def m1: (x: Int*): Int
-  x => types.Test.C#RepeatedType.m1(1).(x)
+types.Test.C#RepeatedType# => case class RepeatedType.{+12 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
+types.Test.C#RepeatedType#(s) => val param s: : String*
+  String => scala.Predef.String#
+types.Test.C#RepeatedType#`<init>`(1). => primaryctor <init>: (s: String*): C.this.RepeatedType
+  s => types.Test.C#RepeatedType#`<init>`(1).(s)
+  C => types.Test.C#
+  RepeatedType => types.Test.C#RepeatedType#
+types.Test.C#RepeatedType#`<init>`(1).(s) => param s: String*
+  String => scala.Predef.String#
+types.Test.C#RepeatedType#m1(1). => def m1: (x: Int*): Int
+  x => types.Test.C#RepeatedType#m1(1).(x)
   Int => scala.Int#
-types.Test.C#RepeatedType.m1(1).(x) => param x: Int*
+types.Test.C#RepeatedType#m1(1).(x) => param x: Int*
   Int => scala.Int#
+types.Test.C#RepeatedType.apply(1).(s) => param s: String*
+  String => scala.Predef.String#
 types.Test.C#TypeType. => final object TypeType
 types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
   Nothing => scala.Nothing#

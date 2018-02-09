@@ -508,7 +508,7 @@ _root_.types.Test.C#RepeatedType# => case class RepeatedType.{+12 decls}
   extends AnyRef
   extends Product
   extends Serializable
-_root_.types.Test.C#RepeatedType#(s) => param s: : String*
+_root_.types.Test.C#RepeatedType#(s) => val param s: : String*
   String => _root_.scala.Predef.String#
 _root_.types.Test.C#RepeatedType#`<init>`(Lscala/collection/Seq;)V. => primaryctor <init>: (s: <?>): C.this.RepeatedType
   s => _root_.types.Test.C#RepeatedType#`<init>`(Lscala/collection/Seq;)V.(s)
