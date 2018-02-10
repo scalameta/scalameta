@@ -472,22 +472,14 @@ types.Test.C#x. => val x: : C.this.p.X
   X => types.P.X#
 types.Test.Literal. => final object Literal
 types.Test.Literal.bool. => final val bool: : true
-
 types.Test.Literal.char. => final val char: : 'a'
-
 types.Test.Literal.double. => final val double: : 2.0
-
 types.Test.Literal.float. => final val float: : 1.0f
-
 types.Test.Literal.int. => final val int: : 1
-
 types.Test.Literal.javaEnum. => final val javaEnum
 types.Test.Literal.long. => final val long: : 1L
-
 types.Test.Literal.nil. => final val nil: : null
-
 types.Test.Literal.string. => final val string: : "a"
-
 types.Test.Literal.unit. => final val unit: : Unit
   Unit => scala.Unit#
 types.Test.M# => class M.{+2 decls}

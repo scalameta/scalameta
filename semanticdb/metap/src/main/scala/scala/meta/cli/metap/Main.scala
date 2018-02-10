@@ -248,29 +248,29 @@ object Main {
         case LITERAL_TYPE =>
           tpe.literalType match {
             case Some(LiteralType(UNIT, _, _)) =>
-              println("()")
+              print("()")
             case Some(LiteralType(BOOLEAN, 0, _)) =>
-              println("false")
+              print("false")
             case Some(LiteralType(BOOLEAN, 1, _)) =>
-              println("true")
+              print("true")
             case Some(LiteralType(BYTE | SHORT, x, _)) =>
-              println(x)
+              print(x)
             case Some(LiteralType(CHAR, x, _)) =>
-              println("'" + x.toChar + "'")
+              print("'" + x.toChar + "'")
             case Some(LiteralType(INT, x, _)) =>
-              println(x)
+              print(x)
             case Some(LiteralType(LONG, x, _)) =>
-              println(x + "L")
+              print(x + "L")
             case Some(LiteralType(FLOAT, x, _)) =>
-              println(java.lang.Float.intBitsToFloat(x.toInt) + "f")
+              print(java.lang.Float.intBitsToFloat(x.toInt) + "f")
             case Some(LiteralType(DOUBLE, x, _)) =>
-              println(java.lang.Double.longBitsToDouble(x))
+              print(java.lang.Double.longBitsToDouble(x))
             case Some(LiteralType(STRING, _, s)) =>
-              println("\"" + s + "\"")
+              print("\"" + s + "\"")
             case Some(LiteralType(NULL, _, _)) =>
-              println("null")
+              print("null")
             case _ =>
-              println("<?>")
+              print("<?>")
           }
         case COMPOUND_TYPE =>
           val Some(CompoundType(parents, decls)) = tpe.compoundType
