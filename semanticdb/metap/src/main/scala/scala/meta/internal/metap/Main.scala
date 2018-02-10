@@ -14,10 +14,6 @@ import SymbolOccurrence._, Role._
 import Type.Tag._
 
 object Main {
-  def main(args: Array[String]): Unit = {
-    sys.exit(process(args))
-  }
-
   def process(args: Array[String]): Int = {
     var failed = false
     args.zipWithIndex.foreach {

@@ -151,7 +151,7 @@ lazy val metac = project
     compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1299"),
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-    mainClass := Some("scala.meta.internal.metac.Main")
+    mainClass := Some("scala.meta.cli.Metac")
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
@@ -164,7 +164,7 @@ lazy val metacp = project
     compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1299"),
     description := "Scala 2.x classpath to SemanticDB converter",
     libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
-    mainClass := Some("scala.meta.internal.metacp.Main")
+    mainClass := Some("scala.meta.cli.Metacp")
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
@@ -177,7 +177,7 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     publishableSettings,
     compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1299"),
     description := "SemanticDB decompiler",
-    mainClass := Some("scala.meta.internal.metap.Main")
+    mainClass := Some("scala.meta.cli.Metap")
   )
   .nativeSettings(nativeSettings)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
