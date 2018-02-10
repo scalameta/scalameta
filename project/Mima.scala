@@ -6,13 +6,14 @@ import com.typesafe.tools.mima.core._
 // More details about Mima:
 // https://github.com/typesafehub/migration-manager/wiki/sbt-plugin#basic-usage
 object Mima {
-  val ignoredABIProblems: Seq[ProblemFilter] = {
-    Seq(
-      ProblemFilters.exclude[Problem]("org.langmeta.internal.*"),
-      ProblemFilters.exclude[Problem]("scala.meta.internal.*"),
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.parsers.Parsed.*"),
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.contrib.*"),
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.tokenizers.Tokenized.*")
-    )
+  val compatibilityPolicy: ProblemFilter = (problem: Problem) => {
+    val (ref, fullName) = problem match {
+      case problem: TemplateRef => (problem.ref, problem.ref.fullName)
+      case problem: MemberRef => (problem.ref, problem.ref.fullName)
+    }
+    val public = ref.isPublic
+    val include = fullName.startsWith("scala.meta.") || fullName.startsWith("org.langmeta.")
+    val exclude = fullName.contains(".internal.") || fullName.contains(".contrib.")
+    public && include && !exclude
   }
 }

@@ -1,8 +1,9 @@
 ## Public API
 
 "Public API" means all public definitions in the artifacts under the
-`org.scalameta` Maven groupId whose fully-qualified name does not include
-`internal` and `contrib`, e.g. `scala.meta.Tree` or `org.langmeta.Position`:
+`org.scalameta` Maven groupId whole fully-qualified name starts with
+`scala.meta.` or `org.langmeta.`, but does not include `.internal.` and `.contrib.`,
+e.g. `scala.meta.Tree` or `org.langmeta.Position`:
   * `{x+1}.0.0` is strongly encouraged to be backward compatible with `x.y.z`
     modulo deprecation warnings:
     * It is desirable for every program compilable against `x.y.z`

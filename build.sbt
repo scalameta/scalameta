@@ -93,7 +93,6 @@ lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("semanticdb/semanticdb3"))
   .settings(
     publishableSettings,
-    ignoreMimaSettings,
     protobufSettings,
     PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3"))
   )
@@ -113,7 +112,6 @@ lazy val semanticdbScalacCore = project
   .settings(
     publishableSettings,
     fullCrossVersionSettings,
-    ignoreMimaSettings,
     moduleName := "semanticdb-scalac-core",
     description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
@@ -128,7 +126,6 @@ lazy val semanticdbScalacPlugin = project
     publishableSettings,
     mergeSettings,
     fullCrossVersionSettings,
-    ignoreMimaSettings,
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
         private def isAbsorbedDependency(node: XmlNode): Boolean = {
@@ -151,7 +148,7 @@ lazy val metac = project
   .in(file("semanticdb/metac"))
   .settings(
     publishableSettings,
-    ignoreMimaSettings,
+    compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1299"),
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.metac.Main")
@@ -164,7 +161,7 @@ lazy val metacp = project
   .in(file("semanticdb/metacp"))
   .settings(
     publishableSettings,
-    ignoreMimaSettings,
+    compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1299"),
     description := "Scala 2.x classpath to SemanticDB converter",
     libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.metacp.Main")
@@ -178,7 +175,7 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("semanticdb/metap"))
   .settings(
     publishableSettings,
-    ignoreMimaSettings,
+    compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1299"),
     description := "SemanticDB decompiler",
     mainClass := Some("scala.meta.cli.metap.Main")
   )
@@ -368,7 +365,6 @@ lazy val contrib = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/contrib"))
   .settings(
     publishableSettings,
-    ignoreMimaSettings,
     description := "Incubator for Scalameta APIs"
   )
   .dependsOn(scalameta)
@@ -531,6 +527,9 @@ lazy val mergeSettings = Def.settings(
     val _ = assembly.value
     IO.copy(List(fatJar -> slimJar), overwrite = true)
     (art, slimJar)
+  },
+  mimaCurrentClassfiles := {
+    Keys.`package`.in(Compile).value
   }
 )
 
@@ -577,41 +576,45 @@ lazy val publishableSettings = Def.settings(
     false
   },
   mimaPreviousArtifacts := {
-    val rxVersion = """^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+))?$""".r
-    val previousVersion = version.value match {
-      case rxVersion(major, minor, patch, suffix) if suffix != null =>
-        Some(s"$major.$minor.$patch")
-      case rxVersion(major, "0", "0", null) =>
-        None
-      case rxVersion(major, minor, "0", null) =>
-        Some(s"$major.${minor.toInt - 1}.0")
-      case rxVersion(major, minor, patch, null) =>
-        Some(s"$major.$minor.0")
-      case _ =>
-        sys.error(s"Invalid version number: ${version.value}")
-    }
-    val previousArtifact = {
-      // TODO: Figure out whether there is a more satisfying solution.
-      // Here's what I'd like to do, but I can't because of deprecations:
-      //   val isJVM = crossPlatform.value == JVMPlatform
-      // Here's my second best guess, but it doesn't work due to some reason:
-      //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
-      val isJVM = {
-        val isJS = platformDepsCrossVersion.value == ScalaJSCrossVersion.binary
-        val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
-        !isJS && !isNative
+    if (organization.value == "org.scalameta") {
+      val rxVersion = """^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+))?$""".r
+      val previousVersion = version.value match {
+        case rxVersion(major, minor, patch, suffix) if suffix != null =>
+          Some(s"$major.$minor.$patch")
+        case rxVersion(major, "0", "0", null) =>
+          None
+        case rxVersion(major, minor, "0", null) =>
+          Some(s"$major.${minor.toInt - 1}.0")
+        case rxVersion(major, minor, patch, null) =>
+          Some(s"$major.$minor.0")
+        case _ =>
+          sys.error(s"Invalid version number: ${version.value}")
       }
-      if (isJVM) {
-        previousVersion.map { previousVersion =>
-          organization.value % moduleName.value % previousVersion cross crossVersion.value
+      val previousArtifact = {
+        // TODO: Figure out whether there is a more satisfying solution.
+        // Here's what I'd like to do, but I can't because of deprecations:
+        //   val isJVM = crossPlatform.value == JVMPlatform
+        // Here's my second best guess, but it doesn't work due to some reason:
+        //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
+        val isJVM = {
+          val isJS = platformDepsCrossVersion.value == ScalaJSCrossVersion.binary
+          val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
+          !isJS && !isNative
         }
-      } else {
-        None
+        if (isJVM) {
+          previousVersion.map { previousVersion =>
+            organization.value % moduleName.value % previousVersion cross crossVersion.value
+          }
+        } else {
+          None
+        }
       }
+      previousArtifact.toSet
+    } else {
+      Set()
     }
-    previousArtifact.toSet
   },
-  mimaBinaryIssueFilters ++= Mima.ignoredABIProblems,
+  mimaBinaryIssueFilters += Mima.compatibilityPolicy,
   licenses += "BSD" -> url("https://github.com/scalameta/scalameta/blob/master/LICENSE.md"),
   pomExtra := (
     <url>https://github.com/scalameta/scalameta</url>
@@ -669,7 +672,7 @@ lazy val nonPublishableSettings = Seq(
   publish := {}
 )
 
-lazy val ignoreMimaSettings = Seq(
+def compatibilityPolicyViolation(ticket: String) = Seq(
   mimaPreviousArtifacts := Set.empty
 )
 
