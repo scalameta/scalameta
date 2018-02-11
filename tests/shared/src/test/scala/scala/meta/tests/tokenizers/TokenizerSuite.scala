@@ -5,7 +5,6 @@ import org.scalatest._
 import scala.meta._
 import scala.meta.tokens.Token._
 import scala.meta.dialects.Scala211
-import scala.meta.testkit.DiffAssertions
 
 class TokenizerSuite extends BaseTokenizerSuite {
 
