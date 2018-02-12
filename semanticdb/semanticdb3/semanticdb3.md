@@ -1,18 +1,18 @@
 # SemanticDB Specification
 
-  * [Motivation](#motivation)
-  * [Data Model](#data-model)
-    * [TextDocument](#textdocument)
-    * [Range](#range)
-    * [Location](#location)
-    * [Symbol](#symbol)
-    * [Type](#type)
-    * [SymbolInformation](#symbolinformation)
-    * [SymbolOccurrence](#symboloccurrence)
-    * [Diagnostic](#diagnostic)
-    * [Synthetic](#synthetic)
-  * [Data Schemas](#data-schemas)
-    * [Protobuf](#protobuf)
+* [Motivation](#motivation)
+* [Data Model](#data-model)
+  * [TextDocument](#textdocument)
+  * [Range](#range)
+  * [Location](#location)
+  * [Symbol](#symbol)
+  * [Type](#type)
+  * [SymbolInformation](#symbolinformation)
+  * [SymbolOccurrence](#symboloccurrence)
+  * [Diagnostic](#diagnostic)
+  * [Synthetic](#synthetic)
+* [Data Schemas](#data-schemas)
+  * [Protobuf](#protobuf)
 
 ## Motivation
 
@@ -153,35 +153,36 @@ symbol categories.
 the compilation unit where the definition is defined.
 Global symbol format is a concatenation of signatures of the owner chain
 of the corresponding global definition, where:
-  * The owner chain of a definition is a list of its enclosing definitions
-    starting with the outermost one, with the outermost definition being
-    either `_empty_` (the special empty package [\[17\]][17]) or
-    `_root_` (the special root package [\[18\]][18]). For example,
-    for the standard `Int` class, the owner chain is `[_root_, scala, Int]`.
-  * The signature of a definition is:
-    * For a val, var, object, package or package object, concatenation of its
+
+* The owner chain of a definition is a list of its enclosing definitions
+  starting with the outermost one, with the outermost definition being
+  either `_empty_` (the special empty package [\[17\]][17]) or
+  `_root_` (the special root package [\[18\]][18]). For example,
+  for the standard `Int` class, the owner chain is `[_root_, scala, Int]`.
+* The signature of a definition is:
+  * For a val, var, object, package or package object, concatenation of its
     encoded name and a dot (`.`).
-    * For a method, primary constructor, secondary constructor or macro,
+  * For a method, primary constructor, secondary constructor or macro,
     concatenation of its encoded name, its JVM method descriptor [\[19\]][19]
     and a dot (`.`). The JVM method descriptor is used to distinguish overloaded
     methods as mandated by the Scala Language Specification [\[20\]][20].
-    * For an abstract type, type alias, class or trait, concatenation of its
+  * For an abstract type, type alias, class or trait, concatenation of its
     encoded name and a pound sign (`#`).
-    * For a parameter, concatenation of a left parenthesis (`(`), its
+  * For a parameter, concatenation of a left parenthesis (`(`), its
     encoded name and a right parenthesis (`)`).
-    * For a type parameter, concatenation of an left bracket (`[`), its
+  * For a type parameter, concatenation of an left bracket (`[`), its
     encoded name and a right bracket (`]`).
-  * The encoded name of a definition is:
-    * For a Java identifier [\[25\]][25], the name itself.
-    * Otherwise, concatenation of a backtick (`````), the name itself and
-    another backtick (`````).
+* The encoded name of a definition is:
+  * For a Java identifier [\[25\]][25], the name itself.
+  * Otherwise, concatenation of a backtick (`), the name itself and another backtick (`).
 
 For example, this is how some of the definitions from the Scala standard library
 must be modelled:
-  * The `scala` package: `_root_.scala.`
-  * The `Int` class: `_root_.scala.Int#`
-  * The single-parameter `println` method: `_root_.scala.Predef.println(Ljava/lang/Object;)V.`
-  * The integer addition method: ``_root_.scala.Int#`+`(I)I.``.
+
+* The `scala` package: `_root_.scala.`
+* The `Int` class: `_root_.scala.Int#`
+* The single-parameter `println` method: `_root_.scala.Predef.println(Ljava/lang/Object;)V.`
+* The integer addition method: `` _root_.scala.Int#`+`(I)I. ``.
 
 Global symbols must be unique across the universe of documents that
 a tool is working with at any given time. For example, if in such a universe,
@@ -197,9 +198,10 @@ accompany global symbols with `SymbolInformation.location`.
 
 **Local symbols**. Correspond to a definition that isn't global (see above).
 Local symbol format is defined by the following two rules:
-  * Local symbols must start with `local`, so that they can be easily
-    distinguished from global symbols.
-  * Local symbols must be unique within the underlying document.
+
+* Local symbols must start with `local`, so that they can be easily
+  distinguished from global symbols.
+* Local symbols must be unique within the underlying document.
 
 For example, `x` in `def identity[T](x: T): T` may be modelled by local symbols
 `local0`, `local_x`, `local_identity_x`, as long as these names are unique within
@@ -299,12 +301,13 @@ paths [\[28\]][28], parameterized types [\[29\]][29] and type projections
 [\[30\]][30]. Infix types [\[31\]][31], tuple types [\[32\]][32] and
 function types [\[33\]][33] are also represented by typerefs via desugaring
 to their canonical parameterized form:
-  * `C` ~ `TypeRef(null, <C>, List())`.
-  * `p.C` ~ `TypeRef(<p.type>, <C>, List())`.
-  * `T#C` ~ `TypeRef(<T>, <C>, List())`.
-  * `C[T1, ... Tn]` ~ `TypeRef(null, <C>, List(<T1>, ..., <TN>))`.
-  * `p.C[T1, ... Tn]` ~ `TypeRef(<p.type>, <C>, List(<T1>, ..., <TN>))`.
-  * `T#C[T1, ... Tn]` ~ `TypeRef(<T>, <C>, List(<T1>, ..., <TN>))`.
+
+* `C` ~ `TypeRef(null, <C>, List())`.
+* `p.C` ~ `TypeRef(<p.type>, <C>, List())`.
+* `T#C` ~ `TypeRef(<T>, <C>, List())`.
+* `C[T1, ... Tn]` ~ `TypeRef(null, <C>, List(<T1>, ..., <TN>))`.
+* `p.C[T1, ... Tn]` ~ `TypeRef(<p.type>, <C>, List(<T1>, ..., <TN>))`.
+* `T#C[T1, ... Tn]` ~ `TypeRef(<T>, <C>, List(<T1>, ..., <TN>))`.
 
 ```protobuf
 message SingleType {
@@ -314,8 +317,9 @@ message SingleType {
 ```
 
 `SingleType` represents the majority of singleton types [\[34\]][34]:
-  * `x.type` ~ `SingleType(null, <x>)`.
-  * `p.x.type` ~ `SingleType(<p.type>, <x>)`.
+
+* `x.type` ~ `SingleType(null, <x>)`.
+* `p.x.type` ~ `SingleType(<p.type>, <x>)`.
 
 ```protobuf
 message ThisType {
@@ -324,8 +328,9 @@ message ThisType {
 ```
 
 `ThisType` represents `this.type`:
-  * `this.type` ~ `ThisType(null)`.
-  * `C.this.type` ~ `ThisType(<C>)`.
+
+* `this.type` ~ `ThisType(null)`.
+* `C.this.type` ~ `ThisType(<C>)`.
 
 ```protobuf
 message SuperType {
@@ -335,9 +340,10 @@ message SuperType {
 ```
 
 `SuperType` represents types of `super` qualifiers [\[28\]][28]:
-  * Type of the qualifier in `super.x` ~ `SuperType(ThisType(...), null)`.
-  * Type of the qualifier in `super[M].x` ~ `SuperType(ThisType(...), <M>)`.
-  * Type of the qualifier in `C.super[M].x` ~ `SuperType(ThisType(<C>), <M>)`.
+
+* Type of the qualifier in `super.x` ~ `SuperType(ThisType(...), null)`.
+* Type of the qualifier in `super[M].x` ~ `SuperType(ThisType(...), <M>)`.
+* Type of the qualifier in `C.super[M].x` ~ `SuperType(ThisType(<C>), <M>)`.
 
 ```protobuf
 message LiteralType {
@@ -371,9 +377,10 @@ message CompoundType {
 ```
 
 `CompoundType` represents compound types [\[36\]][36]:
-  * `{ M1; ...; Mm }` ~ `CompoundType(List(), List(<M1>, ..., <Mm>))`.
-  * `T1 with ... with Tn` ~ `CompoundType(List(<T1>, ..., <Tn>), List())`.
-  * `T1 with ... with Tn { M1; ...; Mm }` ~ `CompoundType(List(<T1>, ..., <Tn>), List(<M1>, ..., <Mm>))`.
+
+* `{ M1; ...; Mm }` ~ `CompoundType(List(), List(<M1>, ..., <Mm>))`.
+* `T1 with ... with Tn` ~ `CompoundType(List(<T1>, ..., <Tn>), List())`.
+* `T1 with ... with Tn { M1; ...; Mm }` ~ `CompoundType(List(<T1>, ..., <Tn>), List(<M1>, ..., <Mm>))`.
 
 ```protobuf
 message AnnotatedType {
@@ -385,8 +392,9 @@ message AnnotatedType {
 `AnnotatedType` represents annotated types [\[37\]][37] with the caveat
 that annotation arguments are not represented in the corresponding payload.
 We may remove this limitation in the future:
-  * `T @ann(x1, ... xM)` ~ `AnnotatedType(<T>, List(<ann>))`.
-  * `T @ann1 ... @annN` ~ `AnnotatedType(<T>, List(<ann1>, ..., <annN>))`.
+
+* `T @ann(x1, ... xM)` ~ `AnnotatedType(<T>, List(<ann>))`.
+* `T @ann1 ... @annN` ~ `AnnotatedType(<T>, List(<ann1>, ..., <annN>))`.
 
 ```protobuf
 message ExistentialType {
@@ -396,7 +404,8 @@ message ExistentialType {
 ```
 
 `ExistentialType` represents existential types [\[38\]][38]:
-  * `T forSome { type T }` ~ `ExistentialType(<T>, List(<T>))`.
+
+* `T forSome { type T }` ~ `ExistentialType(<T>, List(<T>))`.
 
 ```protobuf
 message TypeLambda {
@@ -418,9 +427,10 @@ message ClassInfoType {
 
 `ClassInfoType` represents signatures of objects, package objects, classes
 and traits. It works along the same lines as `CompoundType`:
-  * Signature of `object M` ~ `ClassInfoType(List(), List(), List())`.
-  * Signature of `class C extends B { def x = 42 }` ~ `ClassInfoType(List(), List(<B>), List(<m>))`.
-  * Signature of `trait X[T]` ~ `ClassInfoType(List(<T>), List(), List())`.
+
+* Signature of `object M` ~ `ClassInfoType(List(), List(), List())`.
+* Signature of `class C extends B { def x = 42 }` ~ `ClassInfoType(List(), List(<B>), List(<m>))`.
+* Signature of `trait X[T]` ~ `ClassInfoType(List(<T>), List(), List())`.
 
 ```protobuf
 message MethodType {
@@ -435,12 +445,13 @@ message MethodType {
 
 `MethodType` represents signatures of vals, vars, methods, primary constructors,
 secondary constructors and macros:
-  * Signature of `val x: Int` ~ `MethodType(List(), List(), <Int>)`
-  * Signature of `var x: Int` ~ `MethodType(List(), List(), <Int>)`
-  * Signature of `def m: Int` ~ `MethodType(List(), List(), <Int>)`.
-  * Signature of `def m(): Int` ~ `MethodType(List(), List(List()), <Int>)`.
-  * Signature of `def m(x: Int): Int` ~ `MethodType(List(), List(List(<x>)), <Int>)`.
-  * Signature of `def m[T](x: T): T` ~ `MethodType(List(<T>), List(List(<x>)), <T>)`.
+
+* Signature of `val x: Int` ~ `MethodType(List(), List(), <Int>)`
+* Signature of `var x: Int` ~ `MethodType(List(), List(), <Int>)`
+* Signature of `def m: Int` ~ `MethodType(List(), List(), <Int>)`.
+* Signature of `def m(): Int` ~ `MethodType(List(), List(List()), <Int>)`.
+* Signature of `def m(x: Int): Int` ~ `MethodType(List(), List(List(<x>)), <Int>)`.
+* Signature of `def m[T](x: T): T` ~ `MethodType(List(<T>), List(List(<x>)), <T>)`.
 
 ```protobuf
 message ByNameType {
@@ -449,7 +460,8 @@ message ByNameType {
 ```
 
 `ByNameType` represents signatures of by-name parameters [\[40\]][40]:
-  * Signature of `x` in `def m(x: => Int): Int` ~ `ByNameType(<Int>)`.
+
+* Signature of `x` in `def m(x: => Int): Int` ~ `ByNameType(<Int>)`.
 
 ```protobuf
 message RepeatedType {
@@ -458,7 +470,8 @@ message RepeatedType {
 ```
 
 `RepeatedType` represents signatures of repeated parameters [\[41\]][41]:
-  * Signature of `xs` in `def m(xs: Int*): Int` ~ `RepeatedType(<Int>)`.
+
+* Signature of `xs` in `def m(xs: Int*): Int` ~ `RepeatedType(<Int>)`.
 
 ```protobuf
 message TypeType {
@@ -470,11 +483,12 @@ message TypeType {
 
 `TypeType` represents signatures of abstract type members and type parameters,
 but not type aliases:
-  * Signature of `type T` ~ `TypeBounds(List(), null, null)`.
-  * Signature of `T` in `def m[T <: C]` ~ `TypeBounds(List(), null, <C>)`.
-  * Signature of `M` in `def m[M[_]]` ~ `TypeBounds(List(<_>), null, null)`.
-  * Signature of `type T = C` ~ `TypeRef(..., <C>, List())`.
-  * Signature of `type T[U] = U` ~ `TypeLambda(List(<U>), TypeRef(null, <U>, List())`.
+
+* Signature of `type T` ~ `TypeBounds(List(), null, null)`.
+* Signature of `T` in `def m[T <: C]` ~ `TypeBounds(List(), null, <C>)`.
+* Signature of `M` in `def m[M[_]]` ~ `TypeBounds(List(<_>), null, null)`.
+* Signature of `type T = C` ~ `TypeRef(..., <C>, List())`.
+* Signature of `type T[U] = U` ~ `TypeLambda(List(<U>), TypeRef(null, <U>, List())`.
 
 ### SymbolInformation
 
@@ -507,6 +521,7 @@ or features from other languages.
 `language`. Language that defines this symbol.
 
 `kind`. Enumeration that defines the kind of the symbol:
+
 <table>
   <tr>
     <td width="100px"><b>Value</b></td>
@@ -778,19 +793,21 @@ of code synthesized by compilers, code rewriters and other developer tools.
 
 `range` refers to a [Range](#range) in the original code of the underlying document,
 and its value is determined as follows:
-  * If the synthetic replaces a snippet of code (e.g. if it represents an
-    implicit conversion applied to an expression), then its range must be equal
-    to that snippet's range.
-  * If the synthetic inserts new code (e.g. if it represents an inferred type argument
-    or implicit argument), then its range must be an empty range specifying the insertion point.
+
+* If the synthetic replaces a snippet of code (e.g. if it represents an
+  implicit conversion applied to an expression), then its range must be equal
+  to that snippet's range.
+* If the synthetic inserts new code (e.g. if it represents an inferred type argument
+  or implicit argument), then its range must be an empty range specifying the insertion point.
 
 `text` is a [TextDocument](#textdocument) that represents a synthetic snippet
 of code as follows:
-  * Its text contains a string prettyprinted by a producer.
-  * Its sections, e.g. [Occurences](#symboloccurrence), contain semantic information
-    associated with that string.
-  * An occurrence of a placeholder symbol means that the snippet of code includes
-    the fragment of the original code defined by `Synthetic.range`.
+
+* Its text contains a string prettyprinted by a producer.
+* Its sections, e.g. [Occurences](#symboloccurrence), contain semantic information
+  associated with that string.
+* An occurrence of a placeholder symbol means that the snippet of code includes
+  the fragment of the original code defined by `Synthetic.range`.
 
 Synthetics are unspecified in the Scala Language Specification, so we leave the
 synthetic format deliberately unspecified as well. Our experience [\[22\]][22] shows
