@@ -16,27 +16,30 @@
 
 ## Motivation
 
-Nowadays, there is a clear trend towards standards for communication between developer tools.
-Language Server Protocol (LSP) [\[2\]][2], a protocol that connects programming
-language implementations and text editors, has gained strong industrial support
-and at the time of writing has implementations for many programming languages and editors.
-Build Server Protocol (BSP) [\[3\]][3] follows in LSP's tracks with an ambition to
-define a protocol for communication between language servers and build tools.
+Nowadays, there is a clear trend towards standards for communication between
+developer tools. Language Server Protocol (LSP) [\[2\]][2], a protocol
+that connects programming language implementations and text editors, has gained
+strong industrial support and at the time of writing has implementations
+for many programming languages and editors. Build Server Protocol (BSP)
+[\[3\]][3] follows in LSP's tracks with an ambition to define a protocol
+for communication between language servers and build tools.
 
 While lots of work in the open-source community has been invested in unifying
 user experience (by codifying commonly used operations like go to definition or
-find all references), relatively less work went into unifying implementor experience.
-For example, at the moment, there exist five different LSP implementations for Scala
-[[4][4], [5][5], [6][6], [7][7], [8][8]]. They all implement the same protocol
-that works with code, but they all use different data structures to represent that code.
+find all references), relatively less work went into unifying implementor
+experience. For example, at the moment, there exist five different LSP
+implementations for Scala [[4][4], [5][5], [6][6], [7][7], [8][8]].
+They all implement the same protocol that works with code, but they all use
+different data structures to represent that code.
 
 Without a standard way to share information between tools, implementors have
 two unpleasant choices. First, they can use compiler internals, which are often
 underdocumented and lack compatibility guarantees. Otherwise, they reimplement
-compiler internals, which usually leads to duplication of effort and inconsistent UX.
-For example, Scala IDE [\[9\]][9] uses Scala compiler internals, which has known
-stability problems in interactive mode. To the contrast, IntelliJ [\[10\]][10] has
-its own Scala typechecker, which is more stable but is known for spurious red squiggles.
+compiler internals, which usually leads to duplication of effort and
+inconsistent UX. For example, Scala IDE [\[9\]][9] uses Scala compiler internals,
+which has known stability problems in interactive mode. To the contrast,
+IntelliJ [\[10\]][10] has its own Scala typechecker, which is more stable but
+is known for spurious red squiggles.
 
 This demonstrates the necessity for portable metaprogramming APIs -
 something that we have been working on within Scalameta [\[11\]][11].
@@ -47,8 +50,8 @@ SemanticDB is our take on portable semantic APIs.
 ## Data Model
 
 SemanticDB is a data model for semantic information about programs in Scala and
-other languages. SemanticDB decouples production and consumption of semantic information,
-establishing documented means for communication between tools.
+other languages. SemanticDB decouples production and consumption of semantic
+information, establishing documented means for communication between tools.
 
 In this section, we describe the SemanticDB data model by going through the
 individual sections of the associated Protocol Buffers [\[13\]][13] schema.
@@ -106,8 +109,8 @@ in one of three ways: 1) via a URI [\[16\]][16] provided in `uri`,
 
 Semantic information is stored in so called sections - repeated fields within
 the message definition - as described below. These sections are optional, which
-means that documents providing only part of semantic information for the corresponding snippet
-(or no semantic information at all) are completely legal.
+means that documents providing only part of semantic information for the
+corresponding snippet (or no semantic information at all) are completely legal.
 
 ### Range
 
@@ -140,8 +143,8 @@ It represents a location inside a document, such as a line inside a text file.
 ### Symbol
 
 Symbols are tokens that are used to correlate references and definitions.
-In the SemanticDB model, symbols are represented as strings.
-At the moment, the symbol format is defined by the needs of the Scala implementations.
+In the SemanticDB model, symbols are represented as strings. At the moment, 
+the symbol format is defined by the needs of the Scala implementations.
 In the future, we are planning to pay more attention to other languages.
 
 At the moment, symbols are not guaranteed to be globally unique, which means
@@ -174,7 +177,7 @@ of the corresponding global definition, where:
     encoded name and a right bracket (`]`).
 * The encoded name of a definition is:
   * For a Java identifier [\[25\]][25], the name itself.
-  * Otherwise, concatenation of a backtick (`), the name itself and another backtick (`).
+  * Otherwise, concatenation of a backtick, the name itself and another backtick.
 
 For example, this is how some of the definitions from the Scala standard library
 must be modelled:
@@ -189,7 +192,8 @@ a tool is working with at any given time. For example, if in such a universe,
 there exist multiple definitions of `Int` - e.g. coming from multiple different
 versions of Scala - then all references to those definitions will have
 `SymbolOccurrence.symbol` equal to the same `_root_.scala.Int#` symbol,
-and SemanticDB will not be able to provide information to disambiguate these references.
+and SemanticDB will not be able to provide information to disambiguate
+these references.
 
 In the future, we may extend SemanticDB to allow for multiple definitions
 that under current rules would correspond to the same global symbol.
@@ -218,22 +222,23 @@ but we haven't yet found a way to do that without sacrificing performance
 and payload size. In the meanwhile, when global uniqueness is required,
 tool authors are advised to accompany local symbols with `TextDocument.uri`.
 
-**Multi symbols**. Are used to model references to a set of multiple definitions at once.
-This is occasionally useful to support corner cases of Scala, e.g. identifiers
-in imports that can refer to both a class and an object with the same name,
-or references to unresolved overloaded methods.
+**Multi symbols**. Are used to model references to a set of multiple definitions
+at once. For example, this is occasionally useful to support corner cases
+of Scala, e.g. identifiers in imports that can refer to both a class and
+an object with the same name, or references to unresolved overloaded methods.
 
 Multi symbol format is a concatentation of the underlying symbol formats
 interspersed with a semicolon (`;`). Within a multi symbol, the underlying
 symbols must be ordered lexicographically in ascending order.
 
-For example, a reference to both the standard `Int` class and its companion object
-must be modelled by `_root_.scala.Int#;_root_.scala.Int.`. Because of the order
-requirement, `_root_.scala.Int.;_root_.scala.Int#` is not a valid symbol.
+For example, a reference to both the standard `Int` class and its companion
+object must be modelled by `_root_.scala.Int#;_root_.scala.Int.`. 
+Because of the order requirement, `_root_.scala.Int.;_root_.scala.Int#` 
+is not a valid symbol.
 
-**Placeholder symbols**. Are used to model original snippets of code in [Synthetics](#synthetic).
-Must not be used outside `Synthetic.text` documents. Placeholder symbols are
-always equal to an asterisk (`*`).
+**Placeholder symbols**. Are used to model original snippets of code in
+[Synthetics](#synthetic). Must not be used outside `Synthetic.text` documents.
+Placeholder symbols are always equal to an asterisk (`*`).
 
 ### Type
 
@@ -282,11 +287,11 @@ In this section, we describe various alternatives of `Type`, providing example
 SemanticDB data that corresponds to different Scala types,
 inspired by the scala.reflect documentation [\[27\]][27].
 
-In these examples, we will be using a simple notation to describe SemanticDB data.
-In this notation, `M(v1, v2, ...)` corresponds a message `M` with fields set to values
-`v1`, `v2`, etc. Literals correspond to scalar values, and `List(x1, x2, ...)`
-corresponds to repeated values. Moreover, `<X>` corresponds to a message that
-represents `X`.
+In these examples, we will be using a simple notation to describe 
+SemanticDB data.In this notation, `M(v1, v2, ...)` corresponds a message 
+`M` with fields set to values `v1`, `v2`, etc. Literals correspond to 
+scalar values, and `List(x1, x2, ...)` corresponds to repeated values. 
+Moreover, `<X>` corresponds to a message that represents `X`.
 
 ```protobuf
 message TypeRef {
@@ -512,11 +517,11 @@ message SymbolInformation {
 about [Symbols](#symbol) that are defined in the underlying snippet of code.
 In a sense, this section is analogous to symbol tables [\[21\]][21] in compiler.
 
-`SymbolInformation` contains assorted metadata for a `symbol`, as explained below.
-At the moment, the supported metadata is usecase-driven and is not supposed to
-be comprehensive or language-agnostic. In the future, we may add support for
-more metadata, for example information about overriding, documentation strings
-or features from other languages.
+`SymbolInformation` contains assorted metadata for a `symbol`, 
+as explained below. At the moment, the supported metadata is usecase-driven 
+and is not supposed to be comprehensive or language-agnostic. In the future, 
+we may add support for more metadata, for example information about overriding,
+documentation strings or features from other languages.
 
 `language`. Language that defines this symbol.
 
@@ -674,17 +679,20 @@ or features from other languages.
 
 `name`. String that represents the name of the symbol.
 
-`location`. [Location](#location) that represents the extent of the definition of the symbol.
+`location`. [Location](#location) that represents the extent of 
+the definition of the symbol.
 
-`signature`. [TextDocument](#textdocument) that represents the type signature of the definition.
-In this document, `text` contains a string prettyprinted by a producer and various
-sections, e.g. [Occurrences](#symboloccurrence), contain semantic information associated
-with that string. This document does not correspond to any compilation unit and
-is created solely for the purposes of storing an attributed snippet of text.
+`signature`. [TextDocument](#textdocument) that represents the type signature 
+of the definition. In this document, `text` contains a string prettyprinted 
+by a producer and various sections, e.g. [Occurrences](#symboloccurrence),
+contain semantic information associated with that string. This document does not
+correspond to any compilation unit and is created solely for the purposes of
+storing an attributed snippet of text.
 
 For example, for `def x = 42`, the corresponding signature may be a document with
 `text` equal to `Int` and `occurrences` featuring an identifier with `range`
-equal to `0:0..0:3`, `symbol` equal `_root_.scala.Int#` and `role` equal to `Reference`.
+equal to `0:0..0:3`, `symbol` equal `_root_.scala.Int#` and `role` equal to
+`Reference`.
 
 The signature format was historically unspecified. When we got around
 to specifying the format, we found out that representing type signatures
@@ -694,7 +702,8 @@ field with `tpe`.
 `members`. This field was historically unspecified. When we got around to
 specifying it, we superseded it with `ClassInfoType.members` in `SymbolInformation.tpe`.
 
-`overrides`. Symbols that are overridden by this symbol either directly or transitively.
+`overrides`. Symbols that are overridden by this symbol either 
+directly or transitively.
 
 `tpe`. [Type](#type) that represents the type signature of the definition.
 
@@ -711,10 +720,11 @@ message SymbolOccurrence {
 "Occurrences" is a section of a [TextDocument](#textdocument) that represents
 the results of name resolution for identifiers in the underlying snippet of code.
 
-`SymbolOccurrence` refers to a [Range](#range) in the code and has a symbol as explained
-in [Symbol](#symbol). `role` is an enumeration that describes the semantic role
-that the identifier performs in the snippet of code. Like many other enumerations
-in SemanticDB, this one is usecase-driven and will likely be updated in the future.
+`SymbolOccurrence` refers to a [Range](#range) in the code and has a symbol
+as explained in [Symbol](#symbol). `role` is an enumeration that describes
+the semantic role that the identifier performs in the snippet of code.
+Like many other enumerations in SemanticDB, this one is usecase-driven
+and will likely be updated in the future.
 
 <table>
   <tr>
@@ -747,9 +757,10 @@ message Diagnostic {
 "Diagnostics" is a section of a [TextDocument](#textdocument) that stores
 diagnostic messages produced by compilers, linters and other developer tools.
 
-`Diagnostic` in SemanticDB directly corresponds to `Diagnostic` in LSP [\[2\]][2].
-It has a [Range](#range), a severity and an associated message. If the severity
-is unknown, it is up to the consumer to interpret diagnostics as error, warning, info or hint.
+`Diagnostic` in SemanticDB directly correspond to `Diagnostic`
+in LSP [\[2\]][2]. It has a [Range](#range), a severity and an associated
+message. If the severity is unknown, it is up to the consumer to interpret
+diagnostics as error, warning, info or hint.
 
 <table>
   <tr>
@@ -788,31 +799,32 @@ message Synthetic {
 }
 ```
 
-"Synthetics" is a section of a [TextDocument](#textdocument) that stores snippets
-of code synthesized by compilers, code rewriters and other developer tools.
+"Synthetics" is a section of a [TextDocument](#textdocument) that stores
+code snippets synthesized by compilers, code rewriters and other
+developer tools.
 
-`range` refers to a [Range](#range) in the original code of the underlying document,
-and its value is determined as follows:
+`range` refers to a [Range](#range) in the original code of
+the underlying document, and its value is determined as follows:
 
-* If the synthetic replaces a snippet of code (e.g. if it represents an
+* If the synthetic replaces a code snippet (e.g. if it represents an
   implicit conversion applied to an expression), then its range must be equal
   to that snippet's range.
-* If the synthetic inserts new code (e.g. if it represents an inferred type argument
-  or implicit argument), then its range must be an empty range specifying the insertion point.
+* If the synthetic inserts new code (e.g. if it represents an inferred type
+  argument or implicit argument), then its range must be an empty range specifying the insertion point.
 
-`text` is a [TextDocument](#textdocument) that represents a synthetic snippet
-of code as follows:
+`text` is a [TextDocument](#textdocument) that represents a synthetic code
+snippet as follows:
 
 * Its text contains a string prettyprinted by a producer.
-* Its sections, e.g. [Occurences](#symboloccurrence), contain semantic information
-  associated with that string.
+* Its sections, e.g. [Occurences](#symboloccurrence), contain semantic
+  information associated with that string.
 * An occurrence of a placeholder symbol means that the snippet of code includes
   the fragment of the original code defined by `Synthetic.range`.
 
 Synthetics are unspecified in the Scala Language Specification, so we leave the
-synthetic format deliberately unspecified as well. Our experience [\[22\]][22] shows
-that reverse engineering Scala synthetics is very hard. We may improve on this
-in the future, but this is highly unlikely.
+synthetic format deliberately unspecified as well. Our experience [\[22\]][22] 
+shows that reverse engineering Scala synthetics is very hard. We may improve 
+on this in the future, but this is highly unlikely.
 
 ## Data Schemas
 
