@@ -6,13 +6,7 @@ import scala.meta._
 import scala.meta.tokens.Token._
 import scala.meta.dialects.Scala211
 
-class TokenizerSuite extends FunSuite {
-  def tokenize(code: String): Tokens = {
-    val convert = scala.meta.inputs.stringToInput
-    val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
-    val dialect = Scala211
-    code.tokenize(convert, tokenize, dialect).get
-  }
+class TokenizerSuite extends BaseTokenizerSuite {
 
   test("showCode without comments - simple") {
     assert(tokenize("class C  {\t val x = 2}\n\n").map(_.syntax).mkString === "class C  {\t val x = 2}\n\n")

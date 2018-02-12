@@ -1,0 +1,2 @@
+s"${x}\uef17"
+s"]2;SBT${titleName}${titleBranch}\u0007"
