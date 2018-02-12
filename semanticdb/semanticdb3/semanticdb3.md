@@ -92,7 +92,7 @@ to produce them in the `schema` field. The following versions are supported:
     <td><b>Data model<b></td>
   </tr>
   <tr>
-    <td>LEGACY</td>
+    <td><code>LEGACY<code></td>
     <td>Legacy SemanticDB payloads</td>
     <td><a href="https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb2/semanticdb2.proto">semanticdb2.proto</a></td>
   </tr>
@@ -668,12 +668,12 @@ documentation strings or features from other languages.
   <tr>
     <td><code>0x400</code></td>
     <td><code>VALPARAM</code></td>
-    <td>Is a `val` parameter of a primary constructor?</td>
+    <td>Is a <code>val</code> parameter of a primary constructor?</td>
   </tr>
   <tr>
     <td><code>0x800</code></td>
     <td><code>VARPARAM</code></td>
-    <td>Is a `var` parameter of a primary constructor?</td>
+    <td>Is a <code>var</code> parameter of a primary constructor?</td>
   </tr>
 </table>
 
