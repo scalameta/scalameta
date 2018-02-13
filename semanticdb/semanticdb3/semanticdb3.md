@@ -3,9 +3,11 @@
 * [Motivation](#motivation)
 * [Data Model](#data-model)
   * [TextDocument](#textdocument)
+  * [Language](#language)
   * [Range](#range)
   * [Location](#location)
   * [Symbol](#symbol)
+  * [Annotation](#annotation)
   * [Type](#type)
   * [SymbolInformation](#symbolinformation)
   * [SymbolOccurrence](#symboloccurrence)
@@ -13,6 +15,14 @@
   * [Synthetic](#synthetic)
 * [Data Schemas](#data-schemas)
   * [Protobuf](#protobuf)
+* [Languages](#languages)
+  * [Scala](#scala)
+    * [Language](#scala-language)
+    * [Symbol](#scala-symbol)
+    * [Annotation](#scala-annotation)
+    * [Type](#scala-type)
+    * [SymbolInformation](#scala-symbolinformation)
+    * [Synthetic](#scala-synthetic)
 
 ## Motivation
 
@@ -59,6 +69,13 @@ In the future, we may also support other kinds of schemas, including
 JSON [\[14\]][14] and SQL [\[15\]][15]. See [Data Schemas](#data-schemas)
 for more information.
 
+The types in the SemanticDB data model are language-agnostic, but the entities
+corresponding to these types may be language-dependent. For example,
+[Range](#range) and [Location](#location) mean the same thing in all languages,
+while [Symbol](#symbol) format relies on scoping rules that are generally vary
+across languages. See [Languages](#languages) for more information about
+language-dependent aspects of the specification.
+
 ### TextDocument
 
 ```protobuf
@@ -67,10 +84,11 @@ message TextDocuments {
 }
 
 message TextDocument {
+  reserved 4;
   Schema schema = 1;
   string uri = 2;
   string text = 3;
-  string language = 4;
+  Language language = 9;
   repeated SymbolOccurrence occurrences = 5;
   repeated SymbolInformation symbols = 6;
   repeated Diagnostic diagnostics = 7;
@@ -79,8 +97,8 @@ message TextDocument {
 ```
 
 `TextDocument` is the central data structure in the SemanticDB model.
-It provides semantic information about a snippet of code written in a programming
-language `language`.
+It provides semantic information about a snippet of code written in a
+[Language](#language).
 
 SemanticDB payloads must include the version of the data model that was used
 to produce them in the `schema` field. The following versions are supported:
@@ -111,6 +129,18 @@ Semantic information is stored in so called sections - repeated fields within
 the message definition - as described below. These sections are optional, which
 means that documents providing only part of semantic information for the
 corresponding snippet (or no semantic information at all) are completely legal.
+
+### Language
+
+```protobuf
+message Language {
+  string name = 1;
+}
+```
+
+`Language` represents a programming language that defines certain SemanticDB
+entities, e.g. [Document](#document) or [Symbol](#symbol).
+See [Languages](#languages) for a list of supported programming languages.
 
 ### Range
 
@@ -143,9 +173,7 @@ It represents a location inside a document, such as a line inside a text file.
 ### Symbol
 
 Symbols are tokens that are used to correlate references and definitions.
-In the SemanticDB model, symbols are represented as strings. At the moment, 
-the symbol format is defined by the needs of the Scala implementations.
-In the future, we are planning to pay more attention to other languages.
+In the SemanticDB model, symbols are represented as strings.
 
 At the moment, symbols are not guaranteed to be globally unique, which means
 that there may be limitations for using symbols as keys in maps or databases.
@@ -153,39 +181,15 @@ Read below for more information about uniqueness guarantees for different
 symbol categories.
 
 **Global symbols**. Correspond to a definition that can be referenced outside
-the compilation unit where the definition is defined.
-Global symbol format is a concatenation of signatures of the owner chain
-of the corresponding global definition, where:
+the document where the definition is located.
 
-* The owner chain of a definition is a list of its enclosing definitions
-  starting with the outermost one, with the outermost definition being
-  either `_empty_` (the special empty package [\[17\]][17]) or
-  `_root_` (the special root package [\[18\]][18]). For example,
-  for the standard `Int` class, the owner chain is `[_root_, scala, Int]`.
-* The signature of a definition is:
-  * For a val, var, object, package or package object, concatenation of its
-    encoded name and a dot (`.`).
-  * For a method, primary constructor, secondary constructor or macro,
-    concatenation of its encoded name, its JVM method descriptor [\[19\]][19]
-    and a dot (`.`). The JVM method descriptor is used to distinguish overloaded
-    methods as mandated by the Scala Language Specification [\[20\]][20].
-  * For an abstract type, type alias, class or trait, concatenation of its
-    encoded name and a pound sign (`#`).
-  * For a parameter, concatenation of a left parenthesis (`(`), its
-    encoded name and a right parenthesis (`)`).
-  * For a type parameter, concatenation of an left bracket (`[`), its
-    encoded name and a right bracket (`]`).
-* The encoded name of a definition is:
-  * For a Java identifier [\[25\]][25], the name itself.
-  * Otherwise, concatenation of a backtick, the name itself and another backtick.
-
-For example, this is how some of the definitions from the Scala standard library
-must be modelled:
-
-* The `scala` package: `_root_.scala.`
-* The `Int` class: `_root_.scala.Int#`
-* The single-parameter `println` method: `_root_.scala.Predef.println(Ljava/lang/Object;)V.`
-* The integer addition method: `` _root_.scala.Int#`+`(I)I. ``.
+Global symbol format accommodates scoping rules of the underlying language,
+and is therefore language-dependent. For example, the `Int` class in
+the Scala standard library must be modelled as `_root_.scala.Int#`.
+The `_root_` prefix stands for the root package defined in the Scala Language
+Specification [\[18\]][18], and the pound sign (`#`) at the end of the symbol
+means that the symbol corresponds to a class as opposed to objects that end
+with a dot (`.`). See [Languages](#languages) for more information.
 
 Global symbols must be unique across the universe of documents that
 a tool is working with at any given time. For example, if in such a universe,
@@ -201,16 +205,12 @@ In the meanwhile, when global uniqueness is required, tool authors are advised t
 accompany global symbols with `SymbolInformation.location`.
 
 **Local symbols**. Correspond to a definition that isn't global (see above).
-Local symbol format is defined by the following two rules:
 
-* Local symbols must start with `local`, so that they can be easily
-  distinguished from global symbols.
-* Local symbols must be unique within the underlying document.
-
-For example, `x` in `def identity[T](x: T): T` may be modelled by local symbols
-`local0`, `local_x`, `local_identity_x`, as long as these names are unique within
-the underlying document. The same logic applies to the type parameter `T`,
-which is also a local definition.
+Local symbol format is language-agnostic and is a concatenation of `local`
+and a decimal number. For example, `x` in a Scala method
+`def identity[T](x: T): T` may be modelled by local symbols `local0`, `local1`,
+etc. The same logic applies to the type parameter `T`, which is also a local
+definition.
 
 Local symbols must be unique within the underlying document, but they don't have
 to be unique across multiple documents. For example, at the time of writing
@@ -231,27 +231,38 @@ Multi symbol format is a concatentation of the underlying symbol formats
 interspersed with a semicolon (`;`). Within a multi symbol, the underlying
 symbols must be ordered lexicographically in ascending order.
 
-For example, a reference to both the standard `Int` class and its companion
-object must be modelled by `_root_.scala.Int#;_root_.scala.Int.`. 
-Because of the order requirement, `_root_.scala.Int.;_root_.scala.Int#` 
+For example, a reference to both the `Int` class in the Scala standard library
+and its companion object must be modelled by
+`_root_.scala.Int#;_root_.scala.Int.`.
+Because of the order requirement, `_root_.scala.Int.;_root_.scala.Int#`
 is not a valid symbol.
 
 **Placeholder symbols**. Are used to model original snippets of code in
 [Synthetics](#synthetic). Must not be used outside `Synthetic.text` documents.
 Placeholder symbols are always equal to an asterisk (`*`).
 
+### Annotation
+
+```protobuf
+message Annotation {
+  Type tpe = 1;
+}
+```
+
+`Annotation` represents annotations. See [Languages](#languages) for
+information on how annotations in supported languages map onto this
+data structure.
+
 ### Type
 
 ```protobuf
 message Type {
   enum Tag {
+    reserved 2, 3, 4, 5;
     UNKNOWN_TAG = 0;
     TYPE_REF = 1;
-    SINGLE_TYPE = 2;
-    THIS_TYPE = 3;
-    SUPER_TYPE = 4;
-    LITERAL_TYPE = 5;
-    COMPOUND_TYPE = 6;
+    SINGLETON_TYPE = 15;
+    STRUCTURAL_TYPE = 6;
     ANNOTATED_TYPE = 7;
     EXISTENTIAL_TYPE = 8;
     TYPE_LAMBDA = 9;
@@ -261,16 +272,14 @@ message Type {
     REPEATED_TYPE = 13;
     TYPE_TYPE = 14;
   }
+  reserved 3, 4, 5, 6;
   Tag tag = 1;
   TypeRef typeRef = 2;
-  SingleType singleType = 3;
-  ThisType thisType = 4;
-  SuperType superType = 5;
-  LiteralType literalType = 6;
-  CompoundType compoundType = 7;
+  SingletonType singletonType = 16;
+  StructuralType structuralType = 7;
   AnnotatedType annotatedType = 8;
   ExistentialType existentialType = 9;
-  TypeLambda typeLambda = 10;
+  UniversalType universalType = 10;
   ClassInfoType classInfoType = 11;
   MethodType methodType = 12;
   ByNameType byNameType = 13;
@@ -280,147 +289,99 @@ message Type {
 ```
 
 `Type` represents expression types and signatures of definitions.
-At the moment, types are are modelled after the Scala pickle format [\[26\]][26].
-In the future, we are planning to pay more attention to other languages.
 
-In this section, we describe various alternatives of `Type`, providing example
-SemanticDB data that corresponds to different Scala types,
-inspired by the scala.reflect documentation [\[27\]][27].
-
-In these examples, we will be using a simple notation to describe 
-SemanticDB data.In this notation, `M(v1, v2, ...)` corresponds a message 
-`M` with fields set to values `v1`, `v2`, etc. Literals correspond to 
-scalar values, and `List(x1, x2, ...)` corresponds to repeated values. 
-Moreover, `<X>` corresponds to a message that represents `X`.
+The SemanticDB type system is a language-agnostic superset of the type systems
+of supported languages - currently modelled after the Scala type system
+[\[19\]][19]. This section describes the language-agnostic model, while
+[Languages](#languages) elaborates on how language types map onto this model.
 
 ```protobuf
 message TypeRef {
   Type prefix = 1;
   string symbol = 2;
-  repeated Type arguments = 3;
+  repeated Type type_arguments = 3;
 }
 ```
 
-`TypeRef` is bread-and-butter type in SemanticDB. It represents identifiers,
-paths [\[28\]][28], parameterized types [\[29\]][29] and type projections
-[\[30\]][30]. Infix types [\[31\]][31], tuple types [\[32\]][32] and
-function types [\[33\]][33] are also represented by typerefs via desugaring
-to their canonical parameterized form:
-
-* `C` ~ `TypeRef(null, <C>, List())`.
-* `p.C` ~ `TypeRef(<p.type>, <C>, List())`.
-* `T#C` ~ `TypeRef(<T>, <C>, List())`.
-* `C[T1, ... Tn]` ~ `TypeRef(null, <C>, List(<T1>, ..., <TN>))`.
-* `p.C[T1, ... Tn]` ~ `TypeRef(<p.type>, <C>, List(<T1>, ..., <TN>))`.
-* `T#C[T1, ... Tn]` ~ `TypeRef(<T>, <C>, List(<T1>, ..., <TN>))`.
+`TypeRef` is bread-and-butter type in SemanticDB. It represents a reference
+to a [Symbol](#symbol), possibly parameterized by `type_arguments`. To model
+references to nested type definitions, e.g. path-dependent types in Scala,
+typerefs include `prefix`.
 
 ```protobuf
-message SingleType {
-  Type prefix = 1;
-  string symbol = 2;
-}
-```
-
-`SingleType` represents the majority of singleton types [\[34\]][34]:
-
-* `x.type` ~ `SingleType(null, <x>)`.
-* `p.x.type` ~ `SingleType(<p.type>, <x>)`.
-
-```protobuf
-message ThisType {
-  string symbol = 1;
-}
-```
-
-`ThisType` represents `this.type`:
-
-* `this.type` ~ `ThisType(null)`.
-* `C.this.type` ~ `ThisType(<C>)`.
-
-```protobuf
-message SuperType {
-  Type prefix = 1;
-  Type mix = 2;
-}
-```
-
-`SuperType` represents types of `super` qualifiers [\[28\]][28]:
-
-* Type of the qualifier in `super.x` ~ `SuperType(ThisType(...), null)`.
-* Type of the qualifier in `super[M].x` ~ `SuperType(ThisType(...), <M>)`.
-* Type of the qualifier in `C.super[M].x` ~ `SuperType(ThisType(<C>), <M>)`.
-
-```protobuf
-message LiteralType {
+message SingletonType {
   enum Tag {
     UNKNOWN_TAG = 0;
-    UNIT = 1;
-    BOOLEAN = 2;
-    BYTE = 3;
-    SHORT = 4;
-    CHAR = 5;
-    INT = 6;
-    LONG = 7;
-    FLOAT = 8;
-    DOUBLE = 9;
-    STRING = 10;
-    NULL = 11;
+    SYMBOL = 1;
+    THIS = 2;
+    SUPER = 3;
+    UNIT = 4;
+    BOOLEAN = 5;
+    BYTE = 6;
+    SHORT = 7;
+    CHAR = 8;
+    INT = 9;
+    LONG = 10;
+    FLOAT = 11;
+    DOUBLE = 12;
+    STRING = 13;
+    NULL = 14;
   }
   Tag tag = 1;
-  int64 primitive = 2;
-  string string = 3;
+  Type prefix = 2;
+  string symbol = 3;
+  int64 primitive = 4;
+  string string = 5;
 }
 ```
 
-`LiteralType` represents literal types [\[35\]][35].
+`SingletonType` represents a singleton type. Singletons may be specified: 1)
+via references (by [Symbol](#symbol) accompanied with a `prefix`), 2) via
+keywords (by `this` or `super`) or 3) via literals.
 
 ```protobuf
-message CompoundType {
+message StructuralType {
   repeated Type parents = 1;
   repeated string declarations = 2;
 }
 ```
 
-`CompoundType` represents compound types [\[36\]][36]:
-
-* `{ M1; ...; Mm }` ~ `CompoundType(List(), List(<M1>, ..., <Mm>))`.
-* `T1 with ... with Tn` ~ `CompoundType(List(<T1>, ..., <Tn>), List())`.
-* `T1 with ... with Tn { M1; ...; Mm }` ~ `CompoundType(List(<T1>, ..., <Tn>), List(<M1>, ..., <Mm>))`.
+`StructuralType` represents a structural type specified by its `parents`
+and `declarations`. Declarations are modelled as [Symbols](#symbol) whose
+metadata must be provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message AnnotatedType {
+  reserved 2;
+  repeated Annotation annotations = 3;
   Type tpe = 1;
-  repeated Type annotations = 2;
 }
 ```
 
-`AnnotatedType` represents annotated types [\[37\]][37] with the caveat
-that annotation arguments are not represented in the corresponding payload.
-We may remove this limitation in the future:
-
-* `T @ann(x1, ... xM)` ~ `AnnotatedType(<T>, List(<ann>))`.
-* `T @ann1 ... @annN` ~ `AnnotatedType(<T>, List(<ann1>, ..., <annN>))`.
+`AnnotatedType` represents a type `tpe` annotated by several
+[Annotations](#annotation).
 
 ```protobuf
 message ExistentialType {
+  repeated string type_parameters = 2;
   Type tpe = 1;
-  repeated string declarations = 2;
 }
 ```
 
-`ExistentialType` represents existential types [\[38\]][38]:
-
-* `T forSome { type T }` ~ `ExistentialType(<T>, List(<T>))`.
+`ExistentialType` represents a type `tpe` existentially quantified
+over `type_parameters`. Type parameters are modelled as [Symbols](#symbol) whose
+metadata must be provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
-message TypeLambda {
+message UniversalType {
   repeated string type_parameters = 1;
   Type tpe = 2;
 }
 ```
 
-`TypeLambda` represents types that are colloquially called "type lambdas"
-in the Scala community [\[39\]][39].
+`UniversalType` represents a type `tpe` universally quantified
+over `type_parameters`. Type parameters are modelled as [Symbols](#symbol) whose
+metadata must be provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message ClassInfoType {
@@ -430,12 +391,8 @@ message ClassInfoType {
 }
 ```
 
-`ClassInfoType` represents signatures of objects, package objects, classes
-and traits. It works along the same lines as `CompoundType`:
-
-* Signature of `object M` ~ `ClassInfoType(List(), List(), List())`.
-* Signature of `class C extends B { def x = 42 }` ~ `ClassInfoType(List(), List(<B>), List(<m>))`.
-* Signature of `trait X[T]` ~ `ClassInfoType(List(<T>), List(), List())`.
+`ClassInfoType` represents signatures of a class, a trait or the like.
+It is a nominal equivalent of `StructuralType`.
 
 ```protobuf
 message MethodType {
@@ -444,19 +401,16 @@ message MethodType {
   }
   repeated string type_parameters = 1;
   repeated ParameterList parameters = 2;
-  Type result = 3;
+  Type returnType = 3;
 }
 ```
 
-`MethodType` represents signatures of vals, vars, methods, primary constructors,
-secondary constructors and macros:
-
-* Signature of `val x: Int` ~ `MethodType(List(), List(), <Int>)`
-* Signature of `var x: Int` ~ `MethodType(List(), List(), <Int>)`
-* Signature of `def m: Int` ~ `MethodType(List(), List(), <Int>)`.
-* Signature of `def m(): Int` ~ `MethodType(List(), List(List()), <Int>)`.
-* Signature of `def m(x: Int): Int` ~ `MethodType(List(), List(List(<x>)), <Int>)`.
-* Signature of `def m[T](x: T): T` ~ `MethodType(List(<T>), List(List(<x>)), <T>)`.
+`MethodType` represents a signature of a method, a constructor or the like.
+It features `type_parameters`, `parameters` and a `returnType`. Both type
+parameters and paramteres are modelled as [Symbols](#symbol) whose
+metadata must be provided via [SymbolInformation](#symbolinformation).
+Moreover, in order to support multiple parameter lists in Scala methods,
+`parameters` is a list of lists.
 
 ```protobuf
 message ByNameType {
@@ -464,9 +418,7 @@ message ByNameType {
 }
 ```
 
-`ByNameType` represents signatures of by-name parameters [\[40\]][40]:
-
-* Signature of `x` in `def m(x: => Int): Int` ~ `ByNameType(<Int>)`.
+`ByNameType` represents a signature of a by-name parameter.
 
 ```protobuf
 message RepeatedType {
@@ -474,9 +426,7 @@ message RepeatedType {
 }
 ```
 
-`RepeatedType` represents signatures of repeated parameters [\[41\]][41]:
-
-* Signature of `xs` in `def m(xs: Int*): Int` ~ `RepeatedType(<Int>)`.
+`RepeatedType` represents a signature of a repeated parameter.
 
 ```protobuf
 message TypeType {
@@ -486,22 +436,18 @@ message TypeType {
 }
 ```
 
-`TypeType` represents signatures of abstract type members and type parameters,
-but not type aliases:
-
-* Signature of `type T` ~ `TypeBounds(List(), null, null)`.
-* Signature of `T` in `def m[T <: C]` ~ `TypeBounds(List(), null, <C>)`.
-* Signature of `M` in `def m[M[_]]` ~ `TypeBounds(List(<_>), null, null)`.
-* Signature of `type T = C` ~ `TypeRef(..., <C>, List())`.
-* Signature of `type T[U] = U` ~ `TypeLambda(List(<U>), TypeRef(null, <U>, List())`.
+`TypeType` represents a signature of a type parameter or a type member.
+It features `type_parameters` as well as `lower_bound` and `upper_bound`.
+Type parameters are modelled as [Symbols](#symbol) whose metadata must be
+provided via [SymbolInformation](#symbolinformation).
 
 ### SymbolInformation
 
 ```protobuf
 message SymbolInformation {
-  reserved 6;
+  reserved 2, 6;
   string symbol = 1;
-  string language = 2;
+  Language language = 12;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
@@ -513,19 +459,21 @@ message SymbolInformation {
 }
 ```
 
-"Symbols" is a section of a [TextDocument](#textdocument) that stores information
-about [Symbols](#symbol) that are defined in the underlying snippet of code.
-In a sense, this section is analogous to symbol tables [\[21\]][21] in compiler.
+"Symbols" is a section of a [TextDocument](#textdocument) that stores
+information about [Symbols](#symbol) that are defined in the underlying
+document. In a sense, this section is analogous to a symbol table
+[\[20\]][20] in a compiler.
 
-`SymbolInformation` contains assorted metadata for a `symbol`, 
-as explained below. At the moment, the supported metadata is usecase-driven 
-and is not supposed to be comprehensive or language-agnostic. In the future, 
-we may add support for more metadata, for example information about overriding,
-documentation strings or features from other languages.
+`SymbolInformation` contains assorted metadata for a `symbol`,
+as explained below. At the moment, the supported metadata is usecase-driven
+and is not supposed to be comprehensive. In the future,
+we may add support for more metadata, e.g. documentation strings.
 
-`language`. Language that defines this symbol.
+`language`. [Language](#language) that defines this symbol.
 
-`kind`. Enumeration that defines the kind of the symbol:
+`kind`. Enumeration that defines the kind of the symbol.
+See [Languages](#language) to learn how definitions in supported
+languages map onto these kinds.
 
 <table>
   <tr>
@@ -549,6 +497,16 @@ documentation strings or features from other languages.
     <td>Method, e.g. <code>def x = 42</code>.</td>
   </tr>
   <tr>
+    <td><code>15</code></td>
+    <td><code>GETTER</code></td>
+    <td>Getter method, e.g. <code>def x: Int</code> generated for <code>val x = 42</code>.</td>
+  </tr>
+  <tr>
+    <td><code>16</code></td>
+    <td><code>SETTER</code></td>
+    <td>Setter method, e.g. <code>def x_=(x$1: Int): Unit</code> generated for <code>var x = 42</code>.</td>
+  </tr>
+  <tr>
     <td><code>4</code></td>
     <td><code>PRIMARY_CONSTRUCTOR</code></td>
     <td>Primary constructor, e.g. <code>(x: Int)</code> in <code>class C(x: Int)</code>.</td>
@@ -566,7 +524,7 @@ documentation strings or features from other languages.
   <tr>
     <td><code>7</code></td>
     <td><code>TYPE</code></td>
-    <td>Abstract type or a type alias, e.g. <code>type T <: Int</code> or <code>type T = Int</code>.</td>
+    <td>Type member, e.g. <code>type T <: Int</code> or <code>type T = Int</code>.</td>
   </tr>
   <tr>
     <td><code>8</code></td>
@@ -665,47 +623,23 @@ documentation strings or features from other languages.
     <td><code>CONTRAVARIANT</code></td>
     <td>Has a contravariant (<code>-</code>) modifier?</td>
   </tr>
-  <tr>
-    <td><code>0x400</code></td>
-    <td><code>VALPARAM</code></td>
-    <td>Is a <code>val</code> parameter of a primary constructor?</td>
-  </tr>
-  <tr>
-    <td><code>0x800</code></td>
-    <td><code>VARPARAM</code></td>
-    <td>Is a <code>var</code> parameter of a primary constructor?</td>
-  </tr>
 </table>
 
-`name`. String that represents the name of the symbol.
+`name`. String that represents the name of the corresponding definition.
 
-`location`. [Location](#location) that represents the extent of 
-the definition of the symbol.
+`location`. [Location](#location) that represents the extent of
+the corresponding definition.
 
-`signature`. [TextDocument](#textdocument) that represents the type signature 
-of the definition. In this document, `text` contains a string prettyprinted 
-by a producer and various sections, e.g. [Occurrences](#symboloccurrence),
-contain semantic information associated with that string. This document does not
-correspond to any compilation unit and is created solely for the purposes of
-storing an attributed snippet of text.
+`signature`. Superseded by `SymbolInformation.tpe`.
 
-For example, for `def x = 42`, the corresponding signature may be a document with
-`text` equal to `Int` and `occurrences` featuring an identifier with `range`
-equal to `0:0..0:3`, `symbol` equal `_root_.scala.Int#` and `role` equal to
-`Reference`.
+`members`. Superseded by `ClassInfoType.members` in `SymbolInformation.tpe`.
 
-The signature format was historically unspecified. When we got around
-to specifying the format, we found out that representing type signatures
-with documents was an evolutionary dead end. Therefore, we superseded this
-field with `tpe`.
-
-`members`. This field was historically unspecified. When we got around to
-specifying it, we superseded it with `ClassInfoType.members` in `SymbolInformation.tpe`.
-
-`overrides`. Symbols that are overridden by this symbol either 
-directly or transitively.
+`overrides`. Symbols that are extended or overridden by this symbol
+either directly or transitively.
 
 `tpe`. [Type](#type) that represents the type signature of the definition.
+See [Languages](#language) for more information on which definitions have
+which type signatures in supported languages.
 
 ### SymbolOccurrence
 
@@ -815,22 +749,207 @@ the underlying document, and its value is determined as follows:
 `text` is a [TextDocument](#textdocument) that represents a synthetic code
 snippet as follows:
 
-* Its text contains a string prettyprinted by a producer.
+* Its text contains a language-dependent string that represents the synthetic
+  code snippet. See [Languages](#languages) for more information.
 * Its sections, e.g. [Occurences](#symboloccurrence), contain semantic
   information associated with that string.
-* An occurrence of a placeholder symbol means that the snippet of code includes
-  the fragment of the original code defined by `Synthetic.range`.
-
-Synthetics are unspecified in the Scala Language Specification, so we leave the
-synthetic format deliberately unspecified as well. Our experience [\[22\]][22] 
-shows that reverse engineering Scala synthetics is very hard. We may improve 
-on this in the future, but this is highly unlikely.
+* An occurrence of a placeholder symbol means that the synthetic code snippet
+  includes the original code snippet located at `Synthetic.range`.
 
 ## Data Schemas
 
 ### Protobuf
 
 [semanticdb3.proto][semanticdb3.proto]
+
+## Languages
+
+In this section, we describe language-dependent aspects of SemanticDB entities,
+namely:
+  * Valid names for [Language](#language).
+  * Format for global [Symbols](#symbol).
+  * Supported [Annotations](#annotation).
+  * Supported [Types](#type).
+  * Kinds and types of [SymbolInformation](#symbolinformation).
+  * Format for [Synthetics](#synthetic).
+
+We will be using a simple notation to describe SemanticDB entities.
+In this notation, `M(v1, v2, ...)` corresponds a Protocol Buffers message
+`M` with fields set to values `v1`, `v2`, etc. Literals correspond to
+scalar values, and `List(x1, x2, ...)` corresponds to repeated values.
+Moreover, `<X>` corresponds to a message that represents `X`.
+
+### Scala
+
+<a name="scala-language"></a>
+#### Language
+
+<table>
+  <tr>
+    <td><b>Value</b></td>
+    <td><b>Explanation</b></td>
+  </tr>
+  <tr>
+    <td><code>Language("Scala")</code></td>
+    <td>Scala of unknown or unspecified version.</td>
+  </tr>
+  <tr>
+    <td><code>Language("ScalaXYZ")</code></td>
+    <td>Scala, version <code>X.Y.Z</code>.</td>
+  </tr>
+</table>
+
+<a name="scala-symbol"></a>
+#### Symbol
+
+In Scala, global symbol format is a concatenation of signatures of
+the owner chain of the corresponding global definition, where:
+
+* The owner chain of a definition is a list of its enclosing definitions
+  starting with the outermost one, with the outermost definition being
+  either `_empty_` (the special empty package [\[17\]][17]) or
+  `_root_` (the special root package [\[18\]][18]). For example,
+  for the `Int` class in the Scala standard library,
+  the owner chain is `[_root_, scala, Int]`.
+* The signature of a definition is:
+  * For a val, var, object, package or package object, concatenation of its
+    encoded name and a dot (`.`).
+  * For a method, primary constructor, secondary constructor or macro,
+    concatenation of its encoded name, its SemanticDB method descriptor
+    and a dot (`.`). The method descriptor is used to distinguish
+    overloaded methods as described below.
+  * For an abstract type, type alias, class or trait, concatenation of its
+    encoded name and a pound sign (`#`).
+  * For a parameter, concatenation of a left parenthesis (`(`), its
+    encoded name and a right parenthesis (`)`).
+  * For a type parameter, concatenation of a left bracket (`[`), its
+    encoded name and a right bracket (`]`).
+* The encoded name of a definition is:
+  * For a Java identifier [\[21\]][21], the name itself.
+  * Otherwise, concatenation of a backtick, the name itself and another backtick.
+* The SemanticDB descriptor of a method is a concatenation of simplifications of
+  its parameter types interspersed by a comma (`,`), where a simplification
+  of a type is:
+  * For a type ref, the name of the underlying symbol without the prefix.
+  * For a singleton type, its syntax without the prefix.
+  * For a structural type, `{}`.
+  * For an annotated type, the simplification of the underlying type.
+  * For an existential type, the simplification of the underlying type.
+  * For a type lambda, the simplification of the underlying type.
+  * For a by-name type, the concatenation of the arrow sign (`=>`) and
+    the simplification of the underlying type.
+  * For a repeated type, the concatenation of the simplification of the
+    underlying type and a star (`*`).
+
+For example, this is how some of the definitions from the Scala standard library
+must be modelled:
+
+* The `scala` package: `_root_.scala.`
+* The `Int` class: `_root_.scala.Int#`
+* The `def println(x: Any)` method: `_root_.scala.Predef.println(Any).`
+* The `def +:[B >: A, That](elem: B)(implicit bf: CanBuildFrom[List[A], B, That]): That` method: ``_root_.scala.collection.immutable.List#`+:`(B,CanBuildFrom)``.
+* The integer addition method: ``_root_.scala.Int#`+`(Int).``
+
+<a name="scala-annotation"></a>
+#### Annotation
+
+<table>
+  <tr>
+    <td><b>Value</b></td>
+    <td><b>Explanation</b></td>
+  </tr>
+  <tr>
+    <td><code>Annotation(&lt;ann&gt;)</code></td>
+    <td>Definition annotation, e.g. <code>@ann def m: T</code>.</td>
+  </tr>
+  <tr>
+    <td><code>Annotation(&lt;ann&gt;)</code></td>
+    <td>Type annotation, e.g. <code>T @ann</code>.</td>
+  </tr>
+</table>
+
+At the moment, `Annotation` can't represent annotation arguments,
+which means that the annotation in `@ann(x, y, z) def m: T` will be represented
+as `Annotation(<ann>)`. We intend to improve on this in the future
+
+<a name="scala-type"></a>
+#### Type
+
+In Scala, `TypeRef` represents identifiers, paths [\[22\]][22], 
+parameterized types [\[23\]][23] and type projections [\[24\]][24]. 
+Infix types [\[25\]][25], tuple types [\[26\]][26] and
+function types [\[27\]][27] are also represented by typerefs via desugaring
+to their canonical parameterized form:
+
+* `C` ~ `TypeRef(null, <C>, List())`.
+* `p.C` ~ `TypeRef(<p.type>, <C>, List())`.
+* `T#C` ~ `TypeRef(<T>, <C>, List())`.
+* `C[T1, ..., Tn]` ~ `TypeRef(null, <C>, List(<T1>, ..., <Tn>))`.
+* `p.C[T1, ..., Tn]` ~ `TypeRef(<p.type>, <C>, List(<T1>, ..., <Tn>))`.
+* `T#C[T1, ..., Tn]` ~ `TypeRef(<T>, <C>, List(<T1>, ..., <Tn>))`.
+* `A T B` ~ `TypeRef(null, <T>, List(<A>, ..., <B>))`
+* `(T1, ..., Tn)` ~ `TypeRef(<scala.type>, <TupleN>, List(<T1>, ..., <Tn>))`.
+* `(T1, ..., Tn) => R` ~ `TypeRef(<scala.type>, <FunctionN>, List(<T1>, ..., <Tn>, <R>))`.
+
+In Scala, `SingletonType` represents singleton types [\[28\]][28]
+from Scala Language Specification, as well as the recently introduced
+literal types [\[29\]][29].
+
+* `x.type` ~ `SingletonType(SYMBOL, null, <x>, null, null)`.
+* `p.x.type` ~ `SingletonType(SYMBOL, <p.type>, <x>, null, null)`.
+* `this.type` ~ `SingletonType(THIS, null, null, null, null)`.
+* `C.this.type` ~ `SingletonType(THIS, <C>, null, null, null)`.
+* Type of the qualifier in `super.x` ~ `SingletonType(SUPER, ThisType(...), null, null, null)`.
+* Type of the qualifier in `super[M].x` ~ `SingletonType(SUPER, ThisType(...), <M>, null, null)`.
+* Type of the qualifier in `C.super[M].x` ~ `SingletonType(SUPER, ThisType(<C>), <M>, null, null)`.
+* Literal type ~ `SingletonType(<TAG>, null, null, <value>, null)` or `SingletonType(<TAG>, null, null, null, <value>)`.
+
+In Scala, `StructuralType` represents compound types [\[30\]][30].
+
+* `{ M1; ...; Mm }` ~ `StructuralType(List(), List(<M1>, ..., <Mm>))`.
+* `T1 with ... with Tn` ~ `StructuralType(List(<T1>, ..., <Tn>), List())`.
+* `T1 with ... with Tn { M1; ...; Mm }` ~ `StructuralType(List(<T1>, ..., <Tn>), List(<M1>, ..., <Mm>))`.
+
+In Scala, `AnnotatedType` represents annotated types [\[31\]][31].
+
+* `T @ann1 ... @annN` ~ `AnnotatedType(List(<ann1>, ..., <annN>), <T>)`.
+
+In Scala, `ExistentialType` represents existential types [\[32\]][32].
+
+* `T forSome { type T }` ~ `ExistentialType(List(<T>), <T>)`.
+
+In Scala, `UniversalType` represents types that are colloquially called 
+"type lambdas" in the community [\[33\]][33]. There is no surface syntax
+for these types in Scala 2.x.
+
+In Scala, `ByNameType` represents signatures of by-name parameters [\[34\]][34]
+as well as by-name type arguments of function types [\[27\]][27].
+
+* Signature of `x` in `def m(x: => T): T` ~ `ByNameType(<T>)`.
+* `(=> T) => T` ~ `TypeRef(<scala.this>, <Function1>, List(ByNameType(<T>))`.
+
+In Scala, `RepeatedType` represents signatures of repeated parameters 
+[\[35\]][35] as well as repeated type arguments of function types [\[27\]][27].
+
+* Signature of `xs` in `def m(xs: T*): T` ~ `RepeatedType(<T>)`.
+* `(T*) => T` ~ `TypeRef(<scala.this>, <Function1>, List(RepeatedType(<T>))`.
+
+In Scala, `ClassInfoType`, `MethodType`, and `TypeType` can only occur in type
+signatures of definitions. See [SymbolInformation](#scala-symbolinformation) 
+for more information about which definitions have which signatures.
+
+<a name="scala-symbolinformation"></a>
+#### SymbolInformation
+
+TODO
+
+<a name="scala-synthetic"></a>
+#### Synthetic
+
+Synthetics are unspecified in the Scala Language Specification, so we leave the
+synthetic format deliberately unspecified as well. Our experience [\[36\]][36]
+shows that reverse engineering Scala synthetics is very hard. We may improve
+on this in the future, but this is highly unlikely.
 
 [semanticdb2.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb2/semanticdb2.proto
 [semanticdb3.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb3/semanticdb3.proto
@@ -852,26 +971,21 @@ on this in the future, but this is highly unlikely.
 [16]: http://tools.ietf.org/html/rfc3986
 [17]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#packagings
 [18]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#package-references
-[19]: https://docs.oracle.com/javase/specs/jvms/se9/html/jvms-4.html#jvms-4.3.3
-[20]: https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#class-members
-[21]: https://en.wikipedia.org/wiki/Symbol_table
-[22]: http://scalamacros.org/paperstalks/2016-02-11-WhatDidWeLearnInScalaMeta.pdf
-[23]: https://docs.google.com/document/d/1cH2sTpgSnJZCkZtJl1aY-rzy4uGPcrI-6RrUpdATO2Q/edit
-[24]: https://www.youtube.com/watch?v=jGJhnIT-D2M
-[25]: https://docs.oracle.com/javase/specs/jls/se9/html/jls-3.html#jls-3.8
-[26]: https://github.com/scala/scala/blob/v2.12.4/src/reflect/scala/reflect/internal/pickling/PickleFormat.scala
-[27]: https://docs.scala-lang.org/overviews/reflection/overview.html
-[28]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#paths
-[29]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#parameterized-types
-[30]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-projection
-[31]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#infix-types
-[32]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#tuple-types
-[33]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#function-types
-[34]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types
-[35]: https://github.com/scala/scala/pull/5310
-[36]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types
-[37]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#annotated-types
-[38]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#existential-types
-[39]: https://stackoverflow.com/questions/8736164/what-are-type-lambdas-in-scala-and-what-are-their-benefits
-[40]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#by-name-parameters
-[41]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#repeated-parameters
+[19]: https://www.scala-lang.org/files/archive/spec/2.11/03-types.html
+[20]: https://en.wikipedia.org/wiki/Symbol_table
+[21]: https://docs.oracle.com/javase/specs/jls/se9/html/jls-3.html#jls-3.8
+[22]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#paths
+[23]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#parameterized-types
+[24]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-projection
+[25]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#infix-types
+[26]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#tuple-types
+[27]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#function-types
+[28]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types
+[29]: https://github.com/scala/scala/pull/5310
+[30]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types
+[31]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#annotated-types
+[32]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#existential-types
+[33]: https://stackoverflow.com/questions/8736164/what-are-type-lambdas-in-scala-and-what-are-their-benefits
+[34]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#by-name-parameters
+[35]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#repeated-parameters
+[36]: http://scalamacros.org/paperstalks/2016-02-11-WhatDidWeLearnInScalaMeta.pdf
