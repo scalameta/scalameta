@@ -69,6 +69,7 @@ object Main {
   }
 
   private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
+    if (sym.parent.get == NoSymbol) return None
     if (sym.isSynthetic) return None
     if (sym.isModuleClass) return None
     if (sym.name.endsWith(" ")) return None
@@ -168,8 +169,15 @@ object Main {
       case sym: ExternalSymbol =>
         // NOTE: Object and package external symbols
         // are indistinguishable from each other.
-        val nameEntryType = sym.entry.scalaSig.table(sym.entry.index + 1)._1
-        val hasTermName = nameEntryType == 1
+        val hasTermName = {
+          val idx = sym.entry.index + 1
+          if (sym.entry.scalaSig.hasEntry(idx)) {
+            val nameEntryType = sym.entry.scalaSig.table(idx)._1
+            nameEntryType == 1
+          } else {
+            false
+          }
+        }
         val isModuleClass = sym.entry.entryType == 10
         if (hasTermName || isModuleClass) k.OBJECT
         else k.CLASS

@@ -9,7 +9,7 @@ import scala.meta.internal.metac.{Main => Metac}
 import scala.meta.internal.metap.{Main => Metap}
 import scala.meta.testkit.DiffAssertions
 
-class CliSuite extends FunSuite with DiffAssertions {
+class CliSuite extends BaseCliSuite {
   val sourceroot = Files.createTempDirectory("sourceroot_")
   val helloWorldScala = sourceroot.resolve("HelloWorld.scala")
   Files.write(helloWorldScala, """
@@ -23,8 +23,6 @@ class CliSuite extends FunSuite with DiffAssertions {
   val helloWorldSemanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
 
   test("metac " + helloWorldScala) {
-    val scalaLibraryJar = sys.props("sbt.paths.scalalibrary.classes")
-    if (scalaLibraryJar == null) sys.error("sbt.paths.scalalibrary.classes not set. broken build?")
     val (exitcode, output) = CliSuite.communicate {
       Metac.process(Array(
         "-cp",
