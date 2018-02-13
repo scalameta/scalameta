@@ -875,68 +875,135 @@ as `Annotation(<ann>)`. We intend to improve on this in the future
 <a name="scala-type"></a>
 #### Type
 
-In Scala, `TypeRef` represents identifiers, paths [\[22\]][22], 
-parameterized types [\[23\]][23] and type projections [\[24\]][24]. 
-Infix types [\[25\]][25], tuple types [\[26\]][26] and
-function types [\[27\]][27] are also represented by typerefs via desugaring
-to their canonical parameterized form:
-
-* `C` ~ `TypeRef(null, <C>, List())`.
-* `p.C` ~ `TypeRef(<p.type>, <C>, List())`.
-* `T#C` ~ `TypeRef(<T>, <C>, List())`.
-* `C[T1, ..., Tn]` ~ `TypeRef(null, <C>, List(<T1>, ..., <Tn>))`.
-* `p.C[T1, ..., Tn]` ~ `TypeRef(<p.type>, <C>, List(<T1>, ..., <Tn>))`.
-* `T#C[T1, ..., Tn]` ~ `TypeRef(<T>, <C>, List(<T1>, ..., <Tn>))`.
-* `A T B` ~ `TypeRef(null, <T>, List(<A>, ..., <B>))`
-* `(T1, ..., Tn)` ~ `TypeRef(<scala.type>, <TupleN>, List(<T1>, ..., <Tn>))`.
-* `(T1, ..., Tn) => R` ~ `TypeRef(<scala.type>, <FunctionN>, List(<T1>, ..., <Tn>, <R>))`.
-
-In Scala, `SingletonType` represents singleton types [\[28\]][28]
-from Scala Language Specification, as well as the recently introduced
-literal types [\[29\]][29].
-
-* `x.type` ~ `SingletonType(SYMBOL, null, <x>, null, null)`.
-* `p.x.type` ~ `SingletonType(SYMBOL, <p.type>, <x>, null, null)`.
-* `this.type` ~ `SingletonType(THIS, null, null, null, null)`.
-* `C.this.type` ~ `SingletonType(THIS, <C>, null, null, null)`.
-* Type of the qualifier in `super.x` ~ `SingletonType(SUPER, ThisType(...), null, null, null)`.
-* Type of the qualifier in `super[M].x` ~ `SingletonType(SUPER, ThisType(...), <M>, null, null)`.
-* Type of the qualifier in `C.super[M].x` ~ `SingletonType(SUPER, ThisType(<C>), <M>, null, null)`.
-* Literal type ~ `SingletonType(<TAG>, null, null, <value>, null)` or `SingletonType(<TAG>, null, null, null, <value>)`.
-
-In Scala, `StructuralType` represents compound types [\[30\]][30].
-
-* `{ M1; ...; Mm }` ~ `StructuralType(List(), List(<M1>, ..., <Mm>))`.
-* `T1 with ... with Tn` ~ `StructuralType(List(<T1>, ..., <Tn>), List())`.
-* `T1 with ... with Tn { M1; ...; Mm }` ~ `StructuralType(List(<T1>, ..., <Tn>), List(<M1>, ..., <Mm>))`.
-
-In Scala, `AnnotatedType` represents annotated types [\[31\]][31].
-
-* `T @ann1 ... @annN` ~ `AnnotatedType(List(<ann1>, ..., <annN>), <T>)`.
-
-In Scala, `ExistentialType` represents existential types [\[32\]][32].
-
-* `T forSome { type T }` ~ `ExistentialType(List(<T>), <T>)`.
-
-In Scala, `UniversalType` represents types that are colloquially called 
-"type lambdas" in the community [\[33\]][33]. There is no surface syntax
-for these types in Scala 2.x.
-
-In Scala, `ByNameType` represents signatures of by-name parameters [\[34\]][34]
-as well as by-name type arguments of function types [\[27\]][27].
-
-* Signature of `x` in `def m(x: => T): T` ~ `ByNameType(<T>)`.
-* `(=> T) => T` ~ `TypeRef(<scala.this>, <Function1>, List(ByNameType(<T>))`.
-
-In Scala, `RepeatedType` represents signatures of repeated parameters 
-[\[35\]][35] as well as repeated type arguments of function types [\[27\]][27].
-
-* Signature of `xs` in `def m(xs: T*): T` ~ `RepeatedType(<T>)`.
-* `(T*) => T` ~ `TypeRef(<scala.this>, <Function1>, List(RepeatedType(<T>))`.
-
-In Scala, `ClassInfoType`, `MethodType`, and `TypeType` can only occur in type
-signatures of definitions. See [SymbolInformation](#scala-symbolinformation) 
-for more information about which definitions have which signatures.
+<table>
+  <tr>
+    <td width="220px"><b>Category</b></td>
+    <td><b>Examples</b></td>
+  </tr>
+  <tr>
+    <td valign="top">Singleton types [<a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types">22</a>, <a href="https://github.com/scala/scala/pull/5310">23</a>]</td>
+    <td>
+      <ul>
+        <li><code>x.type</code> ~ <code>SingletonType(SYMBOL, null, &lt;x&gt;, null, null)</code>.</li>
+        <li><code>p.x.type</code> ~ <code>SingletonType(SYMBOL, &lt;p.type&gt;, &lt;x&gt;, null, null)</code>.</li>
+        <li><code>this.type</code> ~ <code>SingletonType(THIS, null, null, null, null)</code>.</li>
+        <li><code>C.this.type</code> ~ <code>SingletonType(THIS, &lt;C&gt;, null, null, null)</code>.</li>
+        <li>Type of <code>super</code> ~ <code>SingletonType(SUPER, ThisType(...), null, null, null)</code>.</li>
+        <li>Type of <code>super[M]</code> ~ <code>SingletonType(SUPER, ThisType(...), &lt;M&gt;, null, null)</code>.</li>
+        <li>Type of <code>C.super[M]</code> ~ <code>SingletonType(SUPER, ThisType(&lt;C&gt;), &lt;M&gt;, null, null)</code>.</li>
+        <li>Literal type ~ <code>SingletonType(&lt;TAG&gt;, null, null, &lt;value&gt;, null)</code> or <code>SingletonType(&lt;TAG&gt;, null, null, null, &lt;value&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Type projections <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-projection">[24]</a></td>
+    <td>
+      <ul>
+        <li><code>T#C</code> ~ <code>TypeRef(&lt;T&gt;, &lt;C&gt;, List())</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Type designators <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-designators">[25]</a></td>
+    <td>
+      <ul>
+        <li><code>t</code> ~ <code>TypeRef(null, &lt;t&gt;, List())</code>.</li>
+        <li><code>Int</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code>.</li>
+        <li><code>scala.Int</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code>.</li>
+        <li><code>p.C</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List())</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Parameterized types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#parameterized-types">[26]</a></td>
+    <td>
+      <ul>
+        <li><code>T#C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;T&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+        <li><code>M[T1, ..., Tn]</code> ~ <code>TypeRef(null, &lt;M&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+        <li><code>List[Int]</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
+        <li><code>scala.List[Int]</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
+        <li><code>p.C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Tuple types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#tuple-types">[27]</a></td>
+    <td>
+      <ul>
+        <li><code>(T1, ..., Tn)</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;TupleN&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Annotated types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#annotated-types">[28]</a></td>
+    <td>
+      <ul>
+        <li><code>T @ann1 ... @annN</code> ~ <code>AnnotatedType(List(&lt;ann1&gt;, ..., &lt;annN&gt;), &lt;T&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Compound types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types">[29]</a></td>
+    <td>
+      <ul>
+        <li><code>{ M1; ...; Mm }</code> ~ <code>StructuralType(List(), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
+        <li><code>T1 with ... with Tn</code> ~ <code>StructuralType(List(&lt;T1&gt;, ..., &lt;Tn&gt;), List())</code>.</li>
+        <li><code>T1 with ... with Tn { M1; ...; Mm }</code> ~ <code>StructuralType(List(&lt;T1&gt;, ..., &lt;Tn&gt;), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Infix types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#infix-types">[30]</a></td>
+    <td>
+      <ul>
+        <li><code>A L B</code> ~ <code>TypeRef(..., &lt;L&gt;, List(&lt;A&gt;, &lt;B&gt;))</code> for left-associative <code>L</code>.</li>
+        <li><code>A R B</code> ~ <code>TypeRef(..., &lt;R&gt;, List(&lt;B&gt;, &lt;A&gt;))</code> for right-associative <code>R</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Function types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#function-types">[31]</a></td>
+    <td>
+      <ul>
+        <li><code>(T1, ..., Tn) =&gt; R</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;FunctionN&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;, &lt;R&gt;))</code>.</li>
+        <li><code>=&gt; Ti</code> ~ <code>ByNameType(&lt;Ti&gt;)</code>.</li>
+        <li><code>Ti*</code> ~ <code>RepeatedType(&lt;Ti&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Existential types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#existential-types">[32]</a></td>
+    <td>
+      <ul>
+        <li><code>T forSome { M1; ...; Mm }</code> ~ <code>ExistentialType(List(&lt;T&gt;), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Method types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#method-types">[33]</a></td>
+    <td>
+      <ul>
+        <li><code>(P1s)...(Pns)U</code> ~ <code>MethodType(List(), List(List(&lt;T11&gt;, ...), ..., List(&lt;Tn1&gt;, ...)), &lt;U&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Polymorphic method types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#polymorphic-method-types">[34]</a></td>
+    <td>
+      <ul>
+        <li><code>[ts](P1s)...(Pns)U</code> ~ <code>MethodType(List(&lt;t1&gt;, ..., &lt;tm&gt;), List(List(&lt;T11&gt;, ...), ..., List(&lt;Tn1&gt;, ...)), &lt;U&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Type constructors <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-constructors">[35]</a></td>
+    <td>
+      <ul>
+        <li><code>[ts]T</code> ~ <code>UniversalType(List(&lt;t1&gt;, ..., &lt;tm&gt;), &lt;T&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
 <a name="scala-symbolinformation"></a>
 #### SymbolInformation
@@ -974,18 +1041,4 @@ on this in the future, but this is highly unlikely.
 [19]: https://www.scala-lang.org/files/archive/spec/2.11/03-types.html
 [20]: https://en.wikipedia.org/wiki/Symbol_table
 [21]: https://docs.oracle.com/javase/specs/jls/se9/html/jls-3.html#jls-3.8
-[22]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#paths
-[23]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#parameterized-types
-[24]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-projection
-[25]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#infix-types
-[26]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#tuple-types
-[27]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#function-types
-[28]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types
-[29]: https://github.com/scala/scala/pull/5310
-[30]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types
-[31]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#annotated-types
-[32]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#existential-types
-[33]: https://stackoverflow.com/questions/8736164/what-are-type-lambdas-in-scala-and-what-are-their-benefits
-[34]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#by-name-parameters
-[35]: https://www.scala-lang.org/files/archive/spec/2.12/04-basic-declarations-and-definitions.html#repeated-parameters
 [36]: http://scalamacros.org/paperstalks/2016-02-11-WhatDidWeLearnInScalaMeta.pdf
