@@ -66,19 +66,15 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("scala.meta.cli.metac.Main.toString") {
+  test("scala.meta.cli.Metac.toString") {
     // n/a
   }
 
-  test("scala.meta.cli.metacp.Main.toString") {
+  test("scala.meta.cli.Metacp.toString") {
     // n/a
   }
 
-  test("scala.meta.cli.metacp.Settings.toString") {
-    // n/a
-  }
-
-  test("scala.meta.cli.metap.Main.toString") {
+  test("scala.meta.cli.Metap.toString") {
     // n/a
   }
 

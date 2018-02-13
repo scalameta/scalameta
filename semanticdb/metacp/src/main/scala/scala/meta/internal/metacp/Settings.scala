@@ -1,4 +1,4 @@
-package scala.meta.cli.metacp
+package scala.meta.internal.metacp
 
 final case class Settings(
     cps: List[String] = Nil,

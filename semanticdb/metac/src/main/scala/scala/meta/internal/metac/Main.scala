@@ -1,4 +1,4 @@
-package scala.meta.cli.metac
+package scala.meta.internal.metac
 
 import java.io._
 import java.net._
@@ -8,10 +8,6 @@ import scala.meta.internal.semanticdb.scalac._
 import scala.tools.nsc.{Main => ScalacMain}
 
 object Main {
-  def main(args: Array[String]): Unit = {
-    sys.exit(process(args))
-  }
-
   def process(args: Array[String]): Int = {
     val manifestDir = Files.createTempDirectory("semanticdb-scalac_")
     val resourceUrl = classOf[SemanticdbPlugin].getResource("/scalac-plugin.xml")

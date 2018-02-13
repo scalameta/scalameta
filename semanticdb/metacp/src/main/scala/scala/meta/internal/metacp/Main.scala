@@ -1,4 +1,4 @@
-package scala.meta.cli.metacp
+package scala.meta.internal.metacp
 
 import java.io._
 import java.nio.file._
@@ -16,7 +16,7 @@ import org.langmeta.internal.io._
 import org.langmeta.io._
 
 object Main {
-  def main(args: Array[String]): Unit = {
+  def process(args: Array[String]): Int = {
     Settings.parse(args.toList) match {
       case Some(settings) => sys.exit(process(settings))
       case None => sys.exit(1)

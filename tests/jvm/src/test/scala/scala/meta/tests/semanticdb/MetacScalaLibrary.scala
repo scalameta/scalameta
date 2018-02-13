@@ -4,7 +4,7 @@ import java.io.File
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Paths
-import scala.meta.cli.metac
+import scala.meta.internal.metac
 import scala.meta.tests.BuildInfo
 import org.langmeta.internal.io.FileIO
 import org.langmeta.io.AbsolutePath
