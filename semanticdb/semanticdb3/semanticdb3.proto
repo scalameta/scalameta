@@ -200,6 +200,7 @@ message SymbolInformation {
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
+  string owner = 15;
 }
 
 message Annotation {
@@ -215,6 +216,7 @@ message Accessibility {
     PROTECTED = 4;
     PROTECTED_THIS = 5;
     PROTECTED_WITHIN = 6;
+    PUBLIC = 7;
   }
   Tag tag = 1;
   string symbol = 2;

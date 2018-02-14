@@ -240,7 +240,7 @@ For example, this is occasionally useful to support corner cases of Scala,
 e.g. identifiers in imports that can refer to both a class and an object with
 the same name, or references to unresolved overloaded methods.
 
-Multi symbol format is a concatentation of the underlying symbol formats
+Multi symbol format is a concatentation of underlying symbols
 interspersed with a semicolon (`;`). Within a multi symbol, the underlying
 symbols must be ordered lexicographically in ascending order.
 
@@ -291,10 +291,10 @@ message Type {
 
 `Type` represents expression types and definition signatures.
 
-The SemanticDB type system is a language-agnostic superset of the type systems
-of supported languages - currently modelled after the Scala type system
-[\[18\]][18]. This section describes the language-agnostic model, while
-[Languages](#languages) elaborates on how language types map onto this model.
+The SemanticDB type system is a superset of the type systems of supported
+languages - currently modelled after the Scala type system [\[18\]][18].
+This section describes the model, while [Languages](#languages) elaborates
+on how language types map onto this model.
 
 ```protobuf
 message TypeRef {
@@ -461,6 +461,7 @@ message SymbolInformation {
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
+  string owner = 15;
 }
 ```
 
@@ -658,6 +659,9 @@ which signatures in supported languages.
 
 `accessibility`. [Accessibility](#accessibility) of the corresponding definition.
 
+`owner`. For a global symbol, directly enclosing definition. For other symbols,
+`null`.
+
 ### Annotation
 
 ```protobuf
@@ -682,6 +686,7 @@ message Accessibility {
     PROTECTED = 4;
     PROTECTED_THIS = 5;
     PROTECTED_WITHIN = 6;
+    PUBLIC = 7;
   }
   Tag tag = 1;
   string symbol = 2;
@@ -868,55 +873,117 @@ is incomplete or out of date.
 <a name="scala-symbol"></a>
 #### Symbol
 
-In Scala, global symbol format is a concatenation of signatures of
-the owner chain of the corresponding global definition:
+In this section, we describe Scala symbol format, but don't cover the details
+of how Scala definitions map onto symbols (e.g. which symbols are created for
+which Scala definitions, what their metadata is, etc). See
+[SymbolInformation](#scala-symbolinformation) for more information about that.
 
-* The owner chain of a definition is a list of its enclosing definitions
-  starting with the outermost one, with the outermost definition being
-  either `_empty_` (the special empty package [\[20\]][20]) or
-  `_root_` (the special root package [\[21\]][21]). For example,
-  for the `Int` class in the Scala standard library,
-  the owner chain is `[_root_, scala, Int]`.
-* The signature of a definition is:
-  * For a `VAL`, `VAR`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
+<table>
+  <tr>
+    <td><b>Symbols</b></td>
+    <td><b>Format</b></td>
+  </tr>
+  <tr>
+    <td>
+      Global symbols
+      <a href="#symbol">↑</a>
+    </td>
+    <td>
+      Concatenation of definition descriptors of the owner chain.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Local symbols
+      <a href="#symbol">↑</a>
+    </td>
+    <td>
+      Concatenation of <code>local</code> and a decimal number.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Multi symbols
+      <a href="#symbol">↑</a>
+    </td>
+    <td>
+      Concatentation of underlying symbols interspersed with a
+      semicolon (<code>;</code>). Within a multi symbol, the underlying
+      symbols must be ordered lexicographically in ascending order.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Placeholder symbols
+      <a href="#symbol">↑</a>
+    </td>
+    <td>
+      <code>*</code>
+    </td>
+  </tr>
+</table>
+
+**Owner chain** is a list of definitions enclosing a definition,
+starting with the outermost one and including the definition itself.
+The outermost definition must be either `_empty_` (the special empty package
+[\[20\]][20]) or `_root_` (the special root package [\[21\]][21]). For example,
+for the `Int` class in the Scala standard library,
+the owner chain is `[_root_, scala, Int]`.
+
+**Definition descriptor** is:
+  * For `VAL`, `VAR`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
     concatenation of its encoded name and a dot (`.`).
-  * For a `DEF`, `GETTER`, `SETTER`, `PRIMARY_CONSTRUCTOR`,
+  * For `DEF`, `GETTER`, `SETTER`, `PRIMARY_CONSTRUCTOR`,
     `SECONDARY_CONSTRUCTOR` or `MACRO`, concatenation of its encoded name,
-    its SemanticDB method descriptor and a dot (`.`). The method descriptor
-    is used to distinguish overloaded methods as described below.
-  * For a `TYPE`, `CLASS` or `TRAIT`, concatenation of its
+    its type descriptor and a dot (`.`). In the case when multiple methods
+    have the same name and type descriptor, the type descriptor is
+    appended with `+N`, with `+1` going to the method that is defined
+    first in the source code, `+2` going to the method that is defined
+    second, etc.
+  * For `TYPE`, `CLASS` or `TRAIT`, concatenation of its
     encoded name and a pound sign (`#`).
-  * For a `PARAMETER`, concatenation of a left parenthesis (`(`), its
+  * For `PARAMETER`, concatenation of a left parenthesis (`(`), its
     encoded name and a right parenthesis (`)`).
-  * For a `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its
+  * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its
     encoded name and a right bracket (`]`).
-* The encoded name of a definition is:
+  * See [SymbolInformation](#scala-symbolinformation) for details on
+    which Scala definitions are modelled by which symbols.
+
+**Type descriptor** is:
+
+  * For `TYPE_REF`, `SymbolInformation.name` of `symbol`.
+  * For `SINGLETON_TYPE`, its Scala syntax.
+  * For `STRUCTURAL_TYPE`, `{}`.
+  * For `ANNOTATED_TYPE`, simplification of `tpe`.
+  * For `EXISTENTIAL_TYPE`, simplification of `tpe`.
+  * For `UNIVERSAL_TYPE`, simplification of `tpe`.
+  * For `CLASS_INFO_TYPE`, unsupported.
+  * For `METHOD_TYPE`, concatenation of simplifications of
+    `SymbolInformation.tpe` of its parameter types interspersed with
+    a comma (`,`).
+  * For `BY_NAME_TYPE`, concatenation of the arrow sign (`=>`) and
+    the simplification of `tpe`.
+  * For `REPEATED_TYPE`, concatenation of simplification of `tpe`
+    and a star (`*`).
+  * For `TYPE_TYPE`, unsupported.
+  * See [Type](#scala-type) for details on
+    which Scala types are modelled by which `Type` entities.
+
+**Encoded name** is:
   * For a Java identifier [\[22\]][22], the name itself.
   * Otherwise, concatenation of a backtick, the name itself and another backtick.
-* The SemanticDB descriptor of a method is a concatenation of simplifications of
-  its parameter types interspersed by a comma (`,`), where a simplification
-  of a type is:
-  * For a `TYPE_REF`, the `SymbolInformation.name` of the underlying symbol.
-  * For a `SINGLETON_TYPE`, its Scala syntax.
-  * For a `STRUCTURAL_TYPE`, `{}`.
-  * For an `ANNOTATED_TYPE`, the simplification of `tpe`.
-  * For an `EXISTENTIAL_TYPE`, the simplification of `tpe`.
-  * For a `UNIVERSAL_TYPE`, the simplification of `tpe`.
-  * For a `BY_NAME_TYPE`, the concatenation of the arrow sign (`=>`) and
-    the simplification of `tpe`.
-  * For a `REPEATED_TYPE`, the concatenation of the simplification of `tpe`
-    and a star (`*`).
-  * Other SemanticDB types cannot be parameter types in Scala,
-    and therefore are not supported.
 
 For example, this is how some of the definitions from the Scala standard library
 must be modelled:
 
 * The `scala` package: `_root_.scala.`
 * The `Int` class: `_root_.scala.Int#`
-* The `def println(x: Any)` method: `_root_.scala.Predef.println(Any).`
-* The `def +:[B >: A, That](elem: B)(implicit bf: CanBuildFrom[List[A], B, That]): That` method: ``_root_.scala.collection.immutable.List#`+:`(B,CanBuildFrom).``
-* The integer addition method: ``_root_.scala.Int#`+`(Int).``
+* The `def implicitly[T](implicit e: T)` method:
+  `_root_.scala.Predef.implicitly(T).`
+* The `e` parameter of that method: `_root_.scala.Predef.implicitly(T).(e)`
+* The `T` type parameter of that method: `_root_.scala.Predef.implicitly(T).[T]`
+* The `def contains[A: Ordering](tree: Tree[A, _], x: A): Boolean` method:
+  `_root_.scala.collection.immutable.RedBlackTree#contains(Tree,A,Ordering).`
 
 <a name="scala-type"></a>
 #### Type
