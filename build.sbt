@@ -436,6 +436,12 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
     buildInfoPackage := "scala.meta.tests",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
+  .jvmSettings(
+    libraryDependencies ++= List(
+      "io.get-coursier" %% "coursier" % coursier.util.Properties.version,
+      "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
+    )
+  )
   .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp))
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, contrib, metap)
