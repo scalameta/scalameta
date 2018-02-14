@@ -24,6 +24,7 @@ object Main {
   }
 
   def process(settings: Settings): Int = {
+    val semanticdbRoot = AbsolutePath(settings.d).resolve("META-INF").resolve("semanticdb")
     var failed = false
     val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
     val fragments = classpath.deep.filter(_.uri.toString.endsWith(".class"))
@@ -41,17 +42,16 @@ object Main {
               case sym: SymbolInfoSymbol => sinfo(sym)
               case _ => None
             }
-            val semanticdbRoot = Paths.get(settings.d, "META-INF", "semanticdb")
             val className = NameTransformer.decode(PathIO.toUnix(fragment.name.toString))
-            val semanticdbName = className + ".semanticdb"
-            val semanticdbPath = AbsolutePath(semanticdbRoot.resolve(semanticdbName))
+            val semanticdbRelpath = fragment.name.resolveSibling(_ + ".semanticdb")
+            val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
             val semanticdbDocument = s.TextDocument(
               schema = s.Schema.SEMANTICDB3,
               uri = className,
               language = "Scala",
               symbols = semanticdbInfos)
             val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
-            FileIO.write(semanticdbPath, semanticdbDocuments)
+            FileIO.write(semanticdbAbspath, semanticdbDocuments)
           case None =>
             // NOTE: If a classfile doesn't contain ScalaSignature,
             // we skip it for the time being. In the future, we may add support
