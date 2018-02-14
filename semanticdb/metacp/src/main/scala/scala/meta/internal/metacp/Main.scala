@@ -249,6 +249,13 @@ object Main {
         //   val spre = loop(pre)
         //   val smix = loop(gmix)
         //   Some(s.Type(tag = stag, superType = Some(s.SuperType(spre, smix))))
+        case ConstantType(underlying: Type) =>
+          loop(underlying).map { sarg =>
+            val stag = t.TYPE_REF
+            val ssym = "_root_.java.lang.Class#"
+            val sargs = sarg :: Nil
+            s.Type(tag = stag, typeRef = Some(s.TypeRef(None, ssym, sargs)))
+          }
         case ConstantType(const) =>
           def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
           def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)

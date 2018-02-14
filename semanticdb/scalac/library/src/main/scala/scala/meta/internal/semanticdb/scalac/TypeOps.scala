@@ -45,6 +45,8 @@ trait TypeOps { self: DatabaseOps =>
             val spre = loop(gpre)
             val smix = loop(gmix)
             Some(s.Type(tag = stag, superType = Some(s.SuperType(spre, smix))))
+          case g.ConstantType(g.Constant(underlying: g.Type)) =>
+            loop(gtpe.widen)
           case g.ConstantType(gconst) =>
             def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
             def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
