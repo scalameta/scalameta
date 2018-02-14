@@ -42,7 +42,7 @@ message Location {
 message Type {
   enum Tag {
     // reserved 2, 3, 4, 5;
-    UNKNOWN_TAG = 0;
+    UNKNOWN_TYPE = 0;
     TYPE_REF = 1;
     SINGLETON_TYPE = 15;
     STRUCTURAL_TYPE = 6;
@@ -78,7 +78,7 @@ message TypeRef {
 
 message SingletonType {
   enum Tag {
-    UNKNOWN_TAG = 0;
+    UNKNOWN_SINGLETON = 0;
     SYMBOL = 1;
     THIS = 2;
     SUPER = 3;
@@ -184,8 +184,8 @@ message SymbolInformation {
     CASE = 0x80;
     COVARIANT = 0x100;
     CONTRAVARIANT = 0x200;
-    // reserved 0x400;
-    // reserved 0x800;
+    VALPARAM = 0x400;
+    VARPARAM = 0x800;
   }
   reserved 2, 6;
   string symbol = 1;
@@ -209,7 +209,7 @@ message Annotation {
 
 message Accessibility {
   enum Tag {
-    UNKNOWN_TAG = 0;
+    UNKNOWN_ACCESSIBILITY = 0;
     PRIVATE = 1;
     PRIVATE_THIS = 2;
     PRIVATE_WITHIN = 3;

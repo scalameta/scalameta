@@ -119,9 +119,9 @@ flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
 flags.p.package.AA#(x) => param x: Int
   Int => scala.Int#
-flags.p.package.AA#(y) => val param y: : Int
+flags.p.package.AA#(y) => valparam param y: : Int
   Int => scala.Int#
-flags.p.package.AA#(z) => val param z: : Int
+flags.p.package.AA#(z) => valparam param z: : Int
   Int => scala.Int#
 flags.p.package.AA#`<init>`(3). => primaryctor <init>: (x: Int, y: Int, z: Int): AA
   x => flags.p.package.AA#`<init>`(3).(x)
@@ -353,7 +353,7 @@ types.Test.C#RepeatedType# => case class RepeatedType.{+12 decls}
   extends AnyRef
   extends Product
   extends Serializable
-types.Test.C#RepeatedType#(s) => val param s: : String*
+types.Test.C#RepeatedType#(s) => valparam param s: : String*
   String => scala.Predef.String#
 types.Test.C#RepeatedType#`<init>`(1). => primaryctor <init>: (s: String*): C.this.RepeatedType
   s => types.Test.C#RepeatedType#`<init>`(1).(s)
@@ -412,17 +412,17 @@ types.Test.C#annType1. => val annType1: : T
   T => types.T#
 types.Test.C#annType2. => val annType2: : T 
   T => types.T#
-types.Test.C#compoundType1. => val compoundType1: : AnyRef { abstract <?> }
+types.Test.C#compoundType1. => val compoundType1: : AnyRef { <?> }
   AnyRef => scala.AnyRef#
   k => types.Test.C#`<refinement>`#k(0).
 types.Test.C#compoundType2. => val compoundType2: : M with N
   M => types.Test.M#
   N => types.Test.N#
-types.Test.C#compoundType3. => val compoundType3: : M with N { abstract <?> }
+types.Test.C#compoundType3. => val compoundType3: : M with N { <?> }
   M => types.Test.M#
   N => types.Test.N#
   k => types.Test.C#`<refinement>`#k(0).
-types.Test.C#existentialType1. => val existentialType1: : T forSome { abstract type T >: Nothing <: Any }
+types.Test.C#existentialType1. => val existentialType1: : T forSome { type T >: Nothing <: Any }
   T => types.Test.C#`existentialType1 `(0).T#
   T => types.Test.C#`existentialType1 `(0).T#
 types.Test.C#p. => val p: : P

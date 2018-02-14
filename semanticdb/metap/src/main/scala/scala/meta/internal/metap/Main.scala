@@ -8,10 +8,9 @@ import scala.math.Ordering
 import scala.util.control.NonFatal
 import scala.meta.internal.semanticdb3._
 import Diagnostic._, Severity._
-import LiteralType.Tag._
 import SymbolInformation._, Kind._, Property._
 import SymbolOccurrence._, Role._
-import Type.Tag._
+import Type.Tag._, SingletonType.Tag._, Accessibility.Tag._
 
 object Main {
   def process(args: Array[String]): Int = {
@@ -46,7 +45,7 @@ object Main {
     println(s"Schema => SemanticDB v${doc.schema.value}")
     println(s"Uri => ${doc.uri}")
     println(s"Text => ${if (doc.text.nonEmpty) "non-empty" else "empty"}")
-    println(s"Language => ${doc.language}")
+    if (doc.language.nonEmpty) println(s"Language => ${doc.language.get.name}")
     if (doc.symbols.nonEmpty) println(s"Symbols => ${doc.symbols.length} entries")
     if (doc.occurrences.nonEmpty) println(s"Occurrences => ${doc.occurrences.length} entries")
     if (doc.diagnostics.nonEmpty) println(s"Diagnostics => ${doc.diagnostics.length} entries")
@@ -137,26 +136,19 @@ object Main {
           case REFERENCE =>
             pprint(info.name, doc)
           case DEFINITION =>
-            def has(prop: Property) = (info.properties & prop.value) != 0
-            if (has(PRIVATE)) print("private ")
-            if (has(PROTECTED)) print("protected ")
-            if (has(ABSTRACT)) print("abstract ")
-            if (has(FINAL)) print("final ")
-            if (has(SEALED)) print("sealed ")
-            if (has(IMPLICIT)) print("implicit ")
-            if (has(LAZY)) print("lazy ")
-            if (has(CASE)) print("case ")
-            if (has(COVARIANT)) print("+")
-            if (has(CONTRAVARIANT)) print("-")
+            // NOTE: This mode is only used to print symbols that are part
+            // of complex types, so we don't need to fully support all symbols here.
+            rep(info.annotations, " ", " ")(pprint(_, doc))
+            opt(info.accessibility)(pprint(_, doc))
+            if ((info.properties & COVARIANT.value) != 0) print("+")
+            if ((info.properties & CONTRAVARIANT.value) != 0) print("-")
             info.kind match {
-              case VAL =>
-                print("val ")
+              case GETTER =>
+                print("getter ")
                 print(info.name)
-                print(": ")
-              case VAR =>
-                print("var ")
+              case SETTER =>
+                print("setter ")
                 print(info.name)
-                print(": ")
               case TYPE =>
                 print("type ")
                 print(info.name)
@@ -175,7 +167,7 @@ object Main {
               case Some(tpe) => pprint(tpe, doc)
               case None => print("<?>")
             }
-          case _ =>
+          case UNKNOWN_ROLE | Role.Unrecognized(_) =>
             ()
         }
       case None =>
@@ -194,7 +186,7 @@ object Main {
         role match {
           case REFERENCE => ()
           case DEFINITION => print(": <?>")
-          case _ => ()
+          case UNKNOWN_ROLE | Role.Unrecognized(_) => ()
         }
     }
   }
@@ -214,7 +206,7 @@ object Main {
         case TYPE_REF =>
           val Some(TypeRef(pre, sym, args)) = tpe.typeRef
           pre match {
-            case Some(pre) if pre.tag.isSingleType || pre.tag.isThisType || pre.tag.isSuperType =>
+            case Some(pre) if pre.tag.isSingletonType =>
               prefix(pre)
               print(".")
             case Some(pre) =>
@@ -225,51 +217,47 @@ object Main {
           }
           ref(sym)
           rep("[", args, ", ", "]")(normal)
-        case SINGLE_TYPE =>
-          val Some(SingleType(pre, sym)) = tpe.singleType
-          opt(pre, ".")(prefix)
-          ref(sym)
-        case THIS_TYPE =>
-          val Some(ThisType(sym)) = tpe.thisType
-          if (sym.nonEmpty) {
-            ref(sym)
-            print(".")
-          }
-          print("this")
-        case SUPER_TYPE =>
-          val Some(SuperType(pre, mix)) = tpe.superType
-          opt(pre, ".")(normal)
-          print("super")
-          opt("[", mix, "]")(normal)
-        case LITERAL_TYPE =>
-          tpe.literalType match {
-            case Some(LiteralType(UNIT, _, _)) =>
+        case SINGLETON_TYPE =>
+          val Some(SingletonType(tag, pre, sym, x, s)) = tpe.singletonType
+          tag match {
+            case SYMBOL =>
+              opt(pre, ".")(prefix)
+              ref(sym)
+            case THIS =>
+              opt(pre, ".")(prefix)
+              print("this")
+            case SUPER =>
+              opt(pre, ".")(prefix)
+              print("super")
+              opt("[", sym, "]")(ref)
+            case UNIT =>
               print("()")
-            case Some(LiteralType(BOOLEAN, 0, _)) =>
-              print("false")
-            case Some(LiteralType(BOOLEAN, 1, _)) =>
-              print("true")
-            case Some(LiteralType(BYTE | SHORT, x, _)) =>
+            case BOOLEAN =>
+              if (x == 0) print("false")
+              else if (x == 1) print("true")
+              else print("<?>")
+            case BYTE | SHORT =>
               print(x)
-            case Some(LiteralType(CHAR, x, _)) =>
+            case CHAR =>
               print("'" + x.toChar + "'")
-            case Some(LiteralType(INT, x, _)) =>
+            case INT =>
               print(x)
-            case Some(LiteralType(LONG, x, _)) =>
+            case LONG =>
               print(x + "L")
-            case Some(LiteralType(FLOAT, x, _)) =>
+            case FLOAT =>
               print(java.lang.Float.intBitsToFloat(x.toInt) + "f")
-            case Some(LiteralType(DOUBLE, x, _)) =>
+            case DOUBLE =>
               print(java.lang.Double.longBitsToDouble(x))
-            case Some(LiteralType(STRING, _, s)) =>
+            case STRING =>
               print("\"" + s + "\"")
-            case Some(LiteralType(NULL, _, _)) =>
+            case NULL =>
               print("null")
-            case _ =>
+            case UNKNOWN_SINGLETON | SingletonType.Tag.Unrecognized(_) =>
               print("<?>")
           }
-        case COMPOUND_TYPE =>
-          val Some(CompoundType(parents, decls)) = tpe.compoundType
+        case STRUCTURAL_TYPE =>
+          val Some(StructuralType(tparams, parents, decls)) = tpe.structuralType
+          rep("[", tparams, ", ", "] => ")(defn)
           rep(parents, " with ")(normal)
           if (decls.nonEmpty || parents.length == 1) {
             print(" { ")
@@ -277,16 +265,19 @@ object Main {
             print(" }")
           }
         case ANNOTATED_TYPE =>
-          val Some(AnnotatedType(utpe, anns)) = tpe.annotatedType
+          val Some(AnnotatedType(anns, utpe)) = tpe.annotatedType
           utpe.foreach(normal)
           print(" ")
-          rep("@", anns, " ", "")(normal)
+          rep(anns, " ", ""){ ann =>
+            val todo = pprint(ann, doc)
+            todo.foreach(buf.+=)
+          }
         case EXISTENTIAL_TYPE =>
-          val Some(ExistentialType(utpe, decls)) = tpe.existentialType
+          val Some(ExistentialType(tparams, utpe)) = tpe.existentialType
           utpe.foreach(normal)
-          rep(" forSome { ", decls, "; ", " }")(defn)
-        case TYPE_LAMBDA =>
-          val Some(TypeLambda(tparams, utpe)) = tpe.typeLambda
+          rep(" forSome { ", tparams, "; ", " }")(defn)
+        case UNIVERSAL_TYPE =>
+          val Some(UniversalType(tparams, utpe)) = tpe.universalType
           rep("[", tparams, ", ", "] => ")(defn)
           utpe.foreach(normal)
         case CLASS_INFO_TYPE =>
@@ -314,15 +305,21 @@ object Main {
           opt(">: ", lo, "")(normal)
           lo.foreach(_ => print(" "))
           opt("<: ", hi, "")(normal)
-        case _ =>
+        case UNKNOWN_TYPE | Type.Tag.Unrecognized(_) =>
           print("<?>")
       }
     }
     def normal(tpe: Type): Unit = {
       tpe.tag match {
-        case SINGLE_TYPE | THIS_TYPE | SUPER_TYPE =>
-          prefix(tpe)
-          print(".type")
+        case SINGLETON_TYPE =>
+          val Some(SingletonType(tag, _, _, _, _)) = tpe.singletonType
+          tag match {
+            case SYMBOL | THIS | SUPER =>
+              prefix(tpe)
+              print(".type")
+            case _ =>
+              prefix(tpe)
+          }
         case _ =>
           prefix(tpe)
       }
@@ -334,9 +331,9 @@ object Main {
   private def pprint(info: SymbolInformation, doc: TextDocument): Unit = {
     pprint(info.symbol, doc)
     print(" => ")
+    rep(info.annotations, " ", " ")(pprint(_, doc))
+    opt(info.accessibility)(pprint(_, doc))
     def has(prop: Property) = (info.properties & prop.value) != 0
-    if (has(PRIVATE)) print("private ")
-    if (has(PROTECTED)) print("protected ")
     if (has(ABSTRACT)) print("abstract ")
     if (has(FINAL)) print("final ")
     if (has(SEALED)) print("sealed ")
@@ -345,25 +342,30 @@ object Main {
     if (has(CASE)) print("case ")
     if (has(COVARIANT)) print("covariant ")
     if (has(CONTRAVARIANT)) print("contravariant ")
-    if (has(VALPARAM)) print("val ")
-    if (has(VARPARAM)) print("var ")
-    if (info.kind == VAL) print("val ")
-    if (info.kind == VAR) print("var ")
-    if (info.kind == DEF) print("def ")
-    if (info.kind == PRIMARY_CONSTRUCTOR) print("primaryctor ")
-    if (info.kind == SECONDARY_CONSTRUCTOR) print("secondaryctor ")
-    if (info.kind == MACRO) print("macro ")
-    if (info.kind == TYPE) print("type ")
-    if (info.kind == PARAMETER) print("param ")
-    if (info.kind == TYPE_PARAMETER) print("typeparam ")
-    if (info.kind == OBJECT) print("object ")
-    if (info.kind == PACKAGE) print("package ")
-    if (info.kind == PACKAGE_OBJECT) print("package object ")
-    if (info.kind == CLASS) print("class ")
-    if (info.kind == TRAIT) print("trait ")
+    if (has(VALPARAM)) print("valparam ")
+    if (has(VARPARAM)) print("varparam ")
+    info.kind match {
+      case VAL => print("val ")
+      case VAR => print("var ")
+      case DEF => print("def ")
+      case GETTER => print("getter ")
+      case SETTER => print("setter ")
+      case PRIMARY_CONSTRUCTOR => print("primaryctor ")
+      case SECONDARY_CONSTRUCTOR => print("secondaryctor ")
+      case MACRO => print("macro ")
+      case TYPE => print("type ")
+      case PARAMETER => print("param ")
+      case TYPE_PARAMETER => print("typeparam ")
+      case OBJECT => print("object ")
+      case PACKAGE => print("package ")
+      case PACKAGE_OBJECT => print("package object ")
+      case CLASS => print("class ")
+      case TRAIT => print("trait ")
+      case UNKNOWN_KIND | Kind.Unrecognized(_) => ()
+    }
     pprint(info.name, doc)
     info.kind match {
-      case VAL | VAR | DEF | PRIMARY_CONSTRUCTOR |
+      case VAL | VAR | DEF | GETTER | SETTER | PRIMARY_CONSTRUCTOR |
            SECONDARY_CONSTRUCTOR | MACRO | TYPE | PARAMETER | TYPE_PARAMETER =>
         info.tpe match {
           case Some(tpe) =>
@@ -408,8 +410,44 @@ object Main {
             else println("")
             info.overrides.sorted.foreach(sym => println(s"  extends $sym"))
         }
-      case _ =>
+      case UNKNOWN_KIND | Kind.Unrecognized(_) =>
         println("")
+    }
+  }
+
+  private def pprint(ann: Annotation, doc: TextDocument): List[String] = {
+    print("@")
+    ann.tpe match {
+      case Some(tpe) =>
+        pprint(tpe, doc)
+      case None =>
+        print("<?>")
+        Nil
+    }
+  }
+
+  private def pprint(acc: Accessibility, doc: TextDocument): Unit = {
+    acc.tag match {
+      case PUBLIC =>
+        print("")
+      case PRIVATE =>
+        print("private ")
+      case PRIVATE_THIS =>
+        print("private[this] ")
+      case PRIVATE_WITHIN =>
+        print("private[")
+        pprint(acc.symbol, REFERENCE, doc)
+        print("] ")
+      case PROTECTED =>
+        print("protected ")
+      case PROTECTED_THIS =>
+        print("protected[this] ")
+      case PROTECTED_WITHIN =>
+        print("protected[")
+        pprint(acc.symbol, REFERENCE, doc)
+        print("] ")
+      case UNKNOWN_ACCESSIBILITY | Accessibility.Tag.Unrecognized(_) =>
+        print("<?>")
     }
   }
 
@@ -418,7 +456,7 @@ object Main {
     occ.role match {
       case REFERENCE => print(" => ")
       case DEFINITION => print(" <= ")
-      case _ => print(" <?> ")
+      case UNKNOWN_ROLE | Role.Unrecognized(_) => print(" <?> ")
     }
     println(occ.symbol)
   }
@@ -430,7 +468,7 @@ object Main {
       case WARNING => print("[warning] ")
       case INFORMATION => print("[info] ")
       case HINT => print("[hint] ")
-      case _ => print("[<?>] ")
+      case UNKNOWN_SEVERITY | Severity.Unrecognized(_) => print("[<?>] ")
     }
     println(diag.message)
   }
@@ -467,6 +505,14 @@ object Main {
     }
   }
 
+  private def rep[T](pre: String, xs: Seq[T], sep: String)(f: T => Unit): Unit = {
+    rep(pre, xs, sep, "")(f)
+  }
+
+  private def rep[T](xs: Seq[T], sep: String, suf: String)(f: T => Unit): Unit = {
+    rep("", xs, sep, suf)(f)
+  }
+
   private def rep[T](xs: Seq[T], sep: String)(f: T => Unit): Unit = {
     xs.zipWithIndex.foreach {
       case (x, i) =>
@@ -493,5 +539,21 @@ object Main {
 
   private def opt[T](xs: Option[T])(f: T => Unit): Unit = {
     opt("", xs, "")(f)
+  }
+
+  private def opt(pre: String, s: String, suf: String)(f: String => Unit): Unit = {
+    if (s.nonEmpty) {
+      print(pre)
+      f(s)
+      print(suf)
+    }
+  }
+
+  private def opt(s: String, suf: String)(f: String => Unit): Unit = {
+    opt("", s, suf)(f)
+  }
+
+  private def opt(s: String)(f: String => Unit): Unit = {
+    opt("", s, "")(f)
   }
 }

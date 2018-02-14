@@ -628,13 +628,13 @@ languages map onto these properties.
   </tr>
   <tr>
     <td><code>0x400</code></td>
-    <td><code>RESERVED</code></td>
-    <td>Reserved for backward compatibility.</td>
+    <td><code>VALPARAM</code></td>
+    <td>Is a `val` parameter of a primary constructor?</td>
   </tr>
   <tr>
     <td><code>0x800</code></td>
-    <td><code>RESERVED</code></td>
-    <td>Reserved for backward compatibility.</td>
+    <td><code>VARPARAM</code></td>
+    <td>Is a `var` parameter of a primary constructor?</td>
   </tr>
 </table>
 
@@ -660,7 +660,7 @@ which signatures in supported languages.
 `accessibility`. [Accessibility](#accessibility) of the corresponding definition.
 
 `owner`. For a global symbol, directly enclosing definition. For other symbols,
-`null`.
+`None`.
 
 ### Annotation
 
@@ -841,7 +841,8 @@ namely:
 We use a simple notation to describe SemanticDB entities.
 In this notation, `M(v1, v2, ...)` corresponds a Protocol Buffers message
 `M` with fields set to values `v1`, `v2`, etc. Literals correspond to
-scalar values, and `List(x1, x2, ...)` corresponds to repeated values.
+scalar values, `List(x1, x2, ...)` corresponds to repeated values, `None`
+corresponds to missing optional values.
 Moreover, `<X>` corresponds to an entity that represents `X`.
 
 ### Scala
@@ -1016,14 +1017,14 @@ In the examples below:
     <td valign="top">Singleton types [<a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types">24</a>, <a href="https://github.com/scala/scala/pull/5310">25</a>]</td>
     <td>
       <ul>
-        <li><code>x.type</code> ~ <code>SingletonType(SYMBOL, null, &lt;x&gt;, null, null)</code>.</li>
-        <li><code>p.x.type</code> ~ <code>SingletonType(SYMBOL, &lt;p.type&gt;, &lt;x&gt;, null, null)</code>.</li>
-        <li><code>this.type</code> ~ <code>SingletonType(THIS, &lt;E&gt;, null, null, null)</code>.</li>
-        <li><code>C.this.type</code> ~ <code>SingletonType(THIS, &lt;C&gt;, null, null, null)</code>.</li>
-        <li>Type of <code>super</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, null, null, null)</code>.</li>
-        <li>Type of <code>super[M]</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, &lt;M&gt;, null, null)</code>.</li>
-        <li>Type of <code>C.super[M]</code> ~ <code>SingletonType(SUPER, &lt;C&gt;, &lt;M&gt;, null, null)</code>.</li>
-        <li>Literal type ~ <code>SingletonType(&lt;TAG&gt;, null, null, &lt;value&gt;, null)</code> or <code>SingletonType(&lt;TAG&gt;, null, null, null, &lt;value&gt;)</code>.</li>
+        <li><code>x.type</code> ~ <code>SingletonType(SYMBOL, None, &lt;x&gt;, None, None)</code>.</li>
+        <li><code>p.x.type</code> ~ <code>SingletonType(SYMBOL, &lt;p.type&gt;, &lt;x&gt;, None, None)</code>.</li>
+        <li><code>this.type</code> ~ <code>SingletonType(THIS, &lt;E&gt;, None, None, None)</code>.</li>
+        <li><code>C.this.type</code> ~ <code>SingletonType(THIS, &lt;C&gt;, None, None, None)</code>.</li>
+        <li>Type of <code>super</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, None, None, None)</code>.</li>
+        <li>Type of <code>super[M]</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, &lt;M&gt;, None, None)</code>.</li>
+        <li>Type of <code>C.super[M]</code> ~ <code>SingletonType(SUPER, &lt;C&gt;, &lt;M&gt;, None, None)</code>.</li>
+        <li>Literal type ~ <code>SingletonType(&lt;TAG&gt;, None, None, &lt;value&gt;, None)</code> or <code>SingletonType(&lt;TAG&gt;, None, None, None, &lt;value&gt;)</code>.</li>
       </ul>
     </td>
   </tr>
@@ -1039,7 +1040,7 @@ In the examples below:
     <td valign="top">Type designators <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-designators">[27]</a></td>
     <td>
       <ul>
-        <li><code>t</code> ~ <code>TypeRef(null, &lt;t&gt;, List())</code>.</li>
+        <li><code>t</code> ~ <code>TypeRef(None, &lt;t&gt;, List())</code>.</li>
         <li><code>Int</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code>.</li>
         <li><code>scala.Int</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code>.</li>
         <li><code>p.C</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List())</code>.</li>
@@ -1051,7 +1052,7 @@ In the examples below:
     <td>
       <ul>
         <li><code>T#C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;T&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
-        <li><code>t[T1, ..., Tn]</code> ~ <code>TypeRef(null, &lt;t&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+        <li><code>t[T1, ..., Tn]</code> ~ <code>TypeRef(None, &lt;t&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
         <li><code>List[Int]</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
         <li><code>scala.List[Int]</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
         <li><code>p.C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
@@ -1140,10 +1141,10 @@ In the examples below:
 Notes:
 * Since Scala supports path-dependent types, all `TYPE_REF` and `SINGLETON_TYPE`
   types must carry a correct prefix. For non-member definitions, e.g. local
-  values or types, the correct prefix is `null`. For member definitions,
+  values or types, the correct prefix is `None`. For member definitions,
   e.g. packages, top-level classes or other members, the correct prefix
   is defined by the qualifier if it is provided, or by the `this` type of the
-  enclosing definition if not. For example, `TypeRef(null, <Int>, List())`
+  enclosing definition if not. For example, `TypeRef(None, <Int>, List())`
   is not a valid Scala type. Its valid counterpart is
   `TypeRef(<scala.type>, <Int>, List())`.
 * We leave the mapping between type syntax written in source code and
@@ -1326,13 +1327,13 @@ class C {
     <td><code>T1</code></td>
     <td><code>_empty_.C#T1#</code></td>
     <td><code>TYPE</code></td>
-    <td><code>TypeType(List(), null, &lt;Hi&gt;)</code></td>
+    <td><code>TypeType(List(), None, &lt;Hi&gt;)</code></td>
   </tr>
   <tr>
     <td><code>T2</code></td>
     <td><code>_empty_.C#T2#</code></td>
     <td><code>TYPE</code></td>
-    <td><code>TypeType(List(), &lt;Lo&gt;, null)</code></td>
+    <td><code>TypeType(List(), &lt;Lo&gt;, None)</code></td>
   </tr>
   <tr>
     <td><code>T</code></td>
@@ -1374,25 +1375,25 @@ class C[T1] {
     <td><code>T1</code></td>
     <td><code>_empty_.C#[T1]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), null, null)</code></td>
+    <td><code>TypeType(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>T2</code></td>
     <td><code>_empty_.C#m()[T2]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), null, &lt;Hi&gt;)</code></td>
+    <td><code>TypeType(List(), None, &lt;Hi&gt;)</code></td>
   </tr>
   <tr>
     <td><code>T3</code></td>
     <td><code>_empty_.C#m()[T2][T3]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), null, null)</code></td>
+    <td><code>TypeType(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>T4</code></td>
     <td><code>_empty_.C#T#[T4]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), &lt;Lo&gt;, null)</code></td>
+    <td><code>TypeType(List(), &lt;Lo&gt;, None)</code></td>
   </tr>
 </table>
 
@@ -1677,37 +1678,37 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
     <td><code>T</code></td>
     <td><code>_empty_.C#[T]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), null, null)</code></td>
+    <td><code>TypeType(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>x</code></td>
     <td><code>_empty_.C#x.</code></td>
     <td><code>VAL</code></td>
-    <td><code>TypeRef(null, &lt;T&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>y</code></td>
     <td><code>_empty_.C#y.</code></td>
     <td><code>VAL</code></td>
-    <td><code>TypeRef(null, &lt;T&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>y</code></td>
     <td><code>_empty_.C#x().</code></td>
     <td><code>GETTER</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(null, &lt;T&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#z.</code></td>
     <td><code>VAL</code></td>
-    <td><code>TypeRef(null, &lt;T&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#z().</code></td>
     <td><code>GETTER</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(null, &lt;T&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
@@ -1731,19 +1732,19 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
     <td><code>x</code></td>
     <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).(x)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(null, &lt;T&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>y</code></td>
     <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).(y)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(null, &lt;T&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).(z)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(null, &lt;T&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td>m</td>

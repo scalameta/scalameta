@@ -10,6 +10,7 @@ import org.langmeta.internal.semanticdb.{vfs => v}
 import org.langmeta.io._
 import org.langmeta.{semanticdb => d}
 import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 
@@ -104,16 +105,18 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, _, ssignature, smembers, soverrides, stpe) =>
+          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, _, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner) =>
             val dsym = dSymbol(ssym)
             val dflags = {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
-              if (slanguage.startsWith("Java")) dflip(d.JAVADEFINED)
+              if (slanguage.map(_.name.startsWith("Java")).getOrElse(false)) dflip(d.JAVADEFINED)
               skind match {
                 case k.VAL => dflip(d.VAL)
                 case k.VAR => dflip(d.VAR)
                 case k.DEF => dflip(d.DEF)
+                case k.GETTER => dflip(d.GETTER)
+                case k.SETTER => dflip(d.SETTER)
                 case k.PRIMARY_CONSTRUCTOR => dflip(d.PRIMARYCTOR)
                 case k.SECONDARY_CONSTRUCTOR => dflip(d.SECONDARYCTOR)
                 case k.MACRO => dflip(d.MACRO)
@@ -128,8 +131,6 @@ package object semanticdb {
                 case _ => ()
               }
               def stest(bit: Long) = (sproperties & bit) == bit
-              if (stest(p.PRIVATE.value)) dflip(d.PRIVATE)
-              if (stest(p.PROTECTED.value)) dflip(d.PROTECTED)
               if (stest(p.ABSTRACT.value)) dflip(d.ABSTRACT)
               if (stest(p.FINAL.value)) dflip(d.FINAL)
               if (stest(p.SEALED.value)) dflip(d.SEALED)
@@ -140,6 +141,14 @@ package object semanticdb {
               if (stest(p.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
               if (stest(p.VALPARAM.value)) dflip(d.VAL)
               if (stest(p.VARPARAM.value)) dflip(d.VAR)
+              sacc.map(_.tag) match {
+                case Some(a.PRIVATE | a.PRIVATE_THIS | a.PRIVATE_WITHIN) =>
+                  dflip(d.PRIVATE)
+                case Some(a.PROTECTED | a.PROTECTED_THIS | a.PROTECTED_WITHIN) =>
+                  dflip(d.PROTECTED)
+                case _ =>
+                  ()
+              }
               dflags
             }
             val dname = sname
@@ -166,8 +175,12 @@ package object semanticdb {
             }.toList
             val doverrides = soverrides.map(dSymbol).toList
             val dtpe = stpe
-            Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides, dtpe)))
-          case other => sys.error(s"bad protobuf: unsupported symbol information $other")
+            val danns = sanns.toList
+            val dacc = sacc
+            val downer = dSymbol(sowner)
+            Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides, dtpe, danns, dacc, downer)))
+          case other =>
+            sys.error(s"bad protobuf: unsupported symbol information $other")
         }
       }
       object sSynthetic {
@@ -192,7 +205,7 @@ package object semanticdb {
             Some(dSynthetic(dpos, dtext, dnames))
         }
       }
-      val dlanguage = slanguage
+      val dlanguage = slanguage.map(_.name).getOrElse("")
       val dnames = soccurrences.map {
         case s.SymbolOccurrence(Some(sRange(dpos)), ssym, sRole(disDefinition)) =>
           val dsym = dSymbol(ssym)
@@ -254,7 +267,10 @@ package object semanticdb {
             case d.Symbol.Local(id) => id.stripSuffix(symbolSuffix)
             case _ => sym.syntax
           }
-          val slanguage = dlanguage
+          val slanguage = {
+            if (dlanguage.nonEmpty) Some(s.Language(dlanguage))
+            else None
+          }
           object dPosition {
             def unapply(dpos: dPosition): Option[s.Range] = dpos match {
               case dpos: org.langmeta.Position.Range =>
@@ -286,13 +302,15 @@ package object semanticdb {
               def dtest(bit: Long) = (ddenot.flags & bit) == bit
               val ssymbol = sSymbol(dsymbol)
               val slanguage = {
-                if (dtest(d.JAVADEFINED)) "Java"
-                else dlanguage
+                if (dtest(d.JAVADEFINED)) Some(s.Language("Java"))
+                else Some(s.Language(dlanguage))
               }
               val skind = {
                 if (dtest(d.VAL) && !dtest(d.PARAM)) k.VAL
                 else if (dtest(d.VAR) && !dtest(d.PARAM)) k.VAR
                 else if (dtest(d.DEF)) k.DEF
+                else if (dtest(d.GETTER)) k.GETTER
+                else if (dtest(d.SETTER)) k.SETTER
                 else if (dtest(d.PRIMARYCTOR)) k.PRIMARY_CONSTRUCTOR
                 else if (dtest(d.SECONDARYCTOR)) k.SECONDARY_CONSTRUCTOR
                 else if (dtest(d.MACRO)) k.MACRO
@@ -309,8 +327,6 @@ package object semanticdb {
               val sproperties = {
                 var sproperties = 0
                 def sflip(sbit: Int) = sproperties ^= sbit
-                if (dtest(d.PRIVATE)) sflip(p.PRIVATE.value)
-                if (dtest(d.PROTECTED)) sflip(p.PROTECTED.value)
                 if (dtest(d.ABSTRACT)) sflip(p.ABSTRACT.value)
                 if (dtest(d.FINAL)) sflip(p.FINAL.value)
                 if (dtest(d.SEALED)) sflip(p.SEALED.value)
@@ -324,7 +340,7 @@ package object semanticdb {
                 sproperties
               }
               val sname = ddenot.name
-              val srange = None
+              val slocation = None
               val ssignature = {
                 val stext = ddenot.signature
                 val soccurrences = ddenot.names.map {
@@ -340,7 +356,10 @@ package object semanticdb {
               val smembers = ddenot.members.map(_.syntax)
               val soverrides = ddenot.overrides.map(sSymbol)
               val stpe = ddenot.tpe
-              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, srange, ssignature, smembers, soverrides, stpe))
+              val sanns = ddenot.annotations
+              val sacc = ddenot.accessibility
+              val sowner = ddenot.owner.syntax
+              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, slocation, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner))
             }
           }
           object dSynthetic {

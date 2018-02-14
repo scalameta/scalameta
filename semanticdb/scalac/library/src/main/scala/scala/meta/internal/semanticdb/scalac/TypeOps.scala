@@ -1,7 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.LiteralType.{Tag => l}
+import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.internal.{Flags => gf}
 
@@ -30,58 +30,78 @@ trait TypeOps { self: DatabaseOps =>
             val sargs = gargs.flatMap(loop)
             Some(s.Type(tag = stag, typeRef = Some(s.TypeRef(spre, ssym, sargs))))
           case g.SingleType(gpre, gsym) =>
-            val stag = t.SINGLE_TYPE
-            val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else None
-            val ssym = todo(gsym)
-            Some(s.Type(tag = stag, singleType = Some(s.SingleType(spre, ssym))))
+            val stag = t.SINGLETON_TYPE
+            val stpe = {
+              val stag = st.SYMBOL
+              val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else None
+              val ssym = todo(gsym)
+              s.SingletonType(stag, spre, ssym, 0, "")
+            }
+            Some(s.Type(tag = stag, singletonType = Some(stpe)))
+          case g.ThisType(gsym) =>
+            val stag = t.SINGLETON_TYPE
+            val stpe = {
+              val stag = st.THIS
+              val spre = loop(gsym.tpe)
+              s.SingletonType(stag, spre, "", 0, "")
+            }
+            Some(s.Type(tag = stag, singletonType = Some(stpe)))
+          case g.SuperType(gpre, gmix) =>
+            val stag = t.SINGLETON_TYPE
+            val stpe = {
+              val stag = st.SUPER
+              val spre = loop(gpre.typeSymbol.tpe)
+              val ssym = todo(gmix.typeSymbol)
+              s.SingletonType(stag, spre, ssym, 0, "")
+            }
+            Some(s.Type(tag = stag, singletonType = Some(stpe)))
           case g.ConstantType(g.Constant(sym: g.TermSymbol)) if sym.hasFlag(gf.JAVA_ENUM) =>
             loop(g.SingleType(sym.owner.thisPrefix, sym))
-          case g.ThisType(gsym) =>
-            val stag = t.THIS_TYPE
-            val ssym = todo(gsym)
-            Some(s.Type(tag = stag, thisType = Some(s.ThisType(ssym))))
-          case g.SuperType(gpre, gmix) =>
-            val stag = t.SUPER_TYPE
-            val spre = loop(gpre)
-            val smix = loop(gmix)
-            Some(s.Type(tag = stag, superType = Some(s.SuperType(spre, smix))))
-          case g.ConstantType(g.Constant(underlying: g.Type)) =>
+          case g.ConstantType(g.Constant(_: g.Type)) =>
             loop(gtpe.widen)
           case g.ConstantType(gconst) =>
-            def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
-            def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
-            val stag = t.LITERAL_TYPE
-            val sconst = gconst match {
-              case g.Constant(()) => s.LiteralType(l.UNIT, 0, "")
-              case g.Constant(false) => s.LiteralType(l.BOOLEAN, 0, "")
-              case g.Constant(true) => s.LiteralType(l.BOOLEAN, 1, "")
-              case g.Constant(x: Byte) => s.LiteralType(l.BYTE, x.toLong, "")
-              case g.Constant(x: Short) => s.LiteralType(l.SHORT, x.toLong, "")
-              case g.Constant(x: Char) => s.LiteralType(l.CHAR, x.toLong, "")
-              case g.Constant(x: Int) => s.LiteralType(l.INT, x.toLong, "")
-              case g.Constant(x: Long) => s.LiteralType(l.LONG, x, "")
-              case g.Constant(x: Float) => s.LiteralType(l.FLOAT, floatBits(x), "")
-              case g.Constant(x: Double) => s.LiteralType(l.DOUBLE, doubleBits(x), "")
-              case g.Constant(x: String) => s.LiteralType(l.STRING, 0, x)
-              case g.Constant(null) => s.LiteralType(l.NULL, 0, "")
-              case gother => sys.error(s"unsupported const ${gother}: ${g.showRaw(gother)}")
+            val stag = t.SINGLETON_TYPE
+            val stpe = {
+              def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
+              def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
+              gconst.value match {
+                case () => s.SingletonType(st.UNIT, None, "", 0, "")
+                case false => s.SingletonType(st.BOOLEAN, None, "", 0, "")
+                case true => s.SingletonType(st.BOOLEAN, None, "", 1, "")
+                case x: Byte => s.SingletonType(st.BYTE, None, "", x.toLong, "")
+                case x: Short => s.SingletonType(st.SHORT, None, "", x.toLong, "")
+                case x: Char => s.SingletonType(st.CHAR, None, "", x.toLong, "")
+                case x: Int => s.SingletonType(st.INT, None, "", x.toLong, "")
+                case x: Long => s.SingletonType(st.LONG, None, "", x, "")
+                case x: Float => s.SingletonType(st.FLOAT, None, "", floatBits(x), "")
+                case x: Double => s.SingletonType(st.DOUBLE, None, "", doubleBits(x), "")
+                case x: String => s.SingletonType(st.STRING, None, "", 0, x)
+                case null => s.SingletonType(st.NULL, None, "", 0, "")
+                case _ => sys.error(s"unsupported const ${gconst}: ${g.showRaw(gconst)}")
+              }
             }
-            Some(s.Type(tag = stag, literalType = Some(sconst)))
+            Some(s.Type(tag = stag, singletonType = Some(stpe)))
           case g.RefinedType(gparents, gdecls) =>
-            val stag = t.COMPOUND_TYPE
+            val stag = t.STRUCTURAL_TYPE
             val sparents = gparents.flatMap(loop)
             val sdecls = gdecls.sorted.map(todo)
-            Some(s.Type(tag = stag, compoundType = Some(s.CompoundType(sparents, sdecls))))
+            Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(Nil, sparents, sdecls))))
           case g.AnnotatedType(ganns, gtpe) =>
             val stag = t.ANNOTATED_TYPE
+            val sanns = {
+              ganns.reverse.map { gann =>
+                val (sann, todo) = gann.toSemantic
+                todo.foreach(buf.+=)
+                sann
+              }
+            }
             val stpe = loop(gtpe)
-            val sanns = ganns.reverse.flatMap(gann => loop(gann.atp))
-            Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(stpe, sanns))))
-          case g.ExistentialType(gquants, gtpe) =>
+            Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(sanns, stpe))))
+          case g.ExistentialType(gtparams, gtpe) =>
             val stag = t.EXISTENTIAL_TYPE
+            val stparams = gtparams.map(todo)
             val stpe = loop(gtpe)
-            val ssyms = gquants.map(todo)
-            Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stpe, ssyms))))
+            Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stparams, stpe))))
           case g.ClassInfoType(gparents, gdecls, _) =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
@@ -118,15 +138,17 @@ trait TypeOps { self: DatabaseOps =>
             val stparams = gtparams.map(todo)
             val stpe = loop(gtpe)
             stpe.map { stpe =>
-              if (stpe.tag == t.CLASS_INFO_TYPE) {
+              if (stpe.tag == t.STRUCTURAL_TYPE) {
+                stpe.update(_.structuralType.typeParameters := stparams)
+              } else if (stpe.tag == t.CLASS_INFO_TYPE) {
                 stpe.update(_.classInfoType.typeParameters := stparams)
               } else if (stpe.tag == t.METHOD_TYPE) {
                 stpe.update(_.methodType.typeParameters := stparams)
               } else if (stpe.tag == t.TYPE_TYPE) {
                 stpe.update(_.typeType.typeParameters := stparams)
               } else {
-                val stag = t.TYPE_LAMBDA
-                s.Type(tag = stag, typeLambda = Some(s.TypeLambda(stparams, Some(stpe))))
+                val stag = t.UNIVERSAL_TYPE
+                s.Type(tag = stag, universalType = Some(s.UniversalType(stparams, Some(stpe))))
               }
             }
           case g.NoType =>

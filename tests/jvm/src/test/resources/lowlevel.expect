@@ -121,9 +121,9 @@ _root_.flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
 _root_.flags.p.package.AA#(x) => param x: Int
   Int => _root_.scala.Int#
-_root_.flags.p.package.AA#(y) => val param y: : Int
+_root_.flags.p.package.AA#(y) => valparam param y: : Int
   Int => _root_.scala.Int#
-_root_.flags.p.package.AA#(z) => var param z_=: (x$1: <?>): Unit
+_root_.flags.p.package.AA#(z) => varparam param z_=: (x$1: <?>): Unit
   x$1 => _root_.flags.p.package.AA#`z_=`(I)V.(x$1)
   Unit => _root_.scala.Unit#
 _root_.flags.p.package.AA#`<init>`(III)V. => primaryctor <init>: (x: <?>, y: <?>, z: <?>): AA
@@ -522,7 +522,7 @@ _root_.types.Test.C#RepeatedType# => case class RepeatedType.{+12 decls}
   extends AnyRef
   extends Product
   extends Serializable
-_root_.types.Test.C#RepeatedType#(s) => val param s: : String*
+_root_.types.Test.C#RepeatedType#(s) => valparam param s: : String*
   String => _root_.scala.Predef.String#
 _root_.types.Test.C#RepeatedType#`<init>`(Lscala/collection/Seq;)V. => primaryctor <init>: (s: <?>): C.this.RepeatedType
   s => _root_.types.Test.C#RepeatedType#`<init>`(Lscala/collection/Seq;)V.(s)
@@ -564,21 +564,21 @@ _root_.types.Test.C#annType1. => val annType1: : T @ann[Int]
   T => _root_.types.T#
   ann => _root_.types.ann#
   Int => _root_.scala.Int#
-_root_.types.Test.C#annType2. => val annType2: : T @ann1 ann2
+_root_.types.Test.C#annType2. => val annType2: : T @ann1 @ann2
   T => _root_.types.T#
   ann1 => _root_.types.ann1#
   ann2 => _root_.types.ann2#
-_root_.types.Test.C#compoundType1. => val compoundType1: : AnyRef { abstract <?> }
+_root_.types.Test.C#compoundType1. => val compoundType1: : AnyRef { <?> }
   AnyRef => _root_.scala.AnyRef#
   k => _root_.types.Test.C#$anon#k()I.
 _root_.types.Test.C#compoundType2. => val compoundType2: : M with N
   M => _root_.types.Test.M#
   N => _root_.types.Test.N#
-_root_.types.Test.C#compoundType3. => val compoundType3: : M with N { abstract <?> }
+_root_.types.Test.C#compoundType3. => val compoundType3: : M with N { <?> }
   M => _root_.types.Test.M#
   N => _root_.types.Test.N#
   k => _root_.types.Test.C#$anon#k()I.
-_root_.types.Test.C#existentialType1. => val existentialType1: : T forSome { abstract type T >: Nothing <: Any }
+_root_.types.Test.C#existentialType1. => val existentialType1: : T forSome { type T >: Nothing <: Any }
   T => _root_.types.Test.C#existentialType1.T#
   T => _root_.types.Test.C#existentialType1.T#
 _root_.types.Test.C#existentialType1.T# => abstract type T: >: Nothing <: Any
