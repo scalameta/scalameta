@@ -301,7 +301,7 @@ Schema => SemanticDB v3
 Uri => types/Test.class
 Text => empty
 Language => Scala
-Symbols => 84 entries
+Symbols => 85 entries
 
 Symbols:
 types.Test. => final object Test
@@ -473,6 +473,10 @@ types.Test.C#x. => val x: : C.this.p.X
 types.Test.Literal. => final object Literal
 types.Test.Literal.bool. => final val bool: : true
 types.Test.Literal.char. => final val char: : 'a'
+types.Test.Literal.clazzOf. => final val clazzOf: : Class[Option[Int]]
+  Class => _root_.java.lang.Class#
+  Option => scala.Option#
+  Int => scala.Int#
 types.Test.Literal.double. => final val double: : 2.0
 types.Test.Literal.float. => final val float: : 1.0f
 types.Test.Literal.int. => final val int: : 1

@@ -388,8 +388,8 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala212
-Symbols => 120 entries
-Occurrences => 220 entries
+Symbols => 123 entries
+Occurrences => 224 entries
 
 Symbols:
 _root_.java. => package java
@@ -401,8 +401,16 @@ _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS. => final val NOFOLLOW_LINKS: NOF
 _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
+_root_.scala.Option# => abstract sealed class Option.{+25 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
 _root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: : Nothing
   Nothing => _root_.scala.Nothing#
+_root_.scala.Predef.classOf()Ljava/lang/Class;. => def classOf: [T: <?>] => : Class[T]
+  T => _root_.scala.Predef.classOf()Ljava/lang/Class;.[T]
+  Class => _root_.scala.Predef.Class#
+  T => _root_.scala.Predef.classOf()Ljava/lang/Class;.[T]
 _root_.scala.annotation. => package annotation
 _root_.scala.annotation.StaticAnnotation# => trait StaticAnnotation
 _root_.scala.collection.SeqLike#length()I. => abstract def length: : Int
@@ -621,6 +629,10 @@ _root_.types.Test.C#x. => val x: : C.this.p.X
 _root_.types.Test.Literal. => final object Literal
 _root_.types.Test.Literal.bool. => final val bool: : true
 _root_.types.Test.Literal.char. => final val char: : 'a'
+_root_.types.Test.Literal.clazzOf. => final val clazzOf: : Class[Option[Int]]
+  Class => _root_.java.lang.Class#
+  Option => _root_.scala.Option#
+  Int => _root_.scala.Int#
 _root_.types.Test.Literal.double. => final val double: : 2.0
 _root_.types.Test.Literal.float. => final val float: : 1.0f
 _root_.types.Test.Literal.int. => final val int: : 1
@@ -886,6 +898,10 @@ Occurrences:
 [105:34..105:38): file => _root_.java.nio.file.
 [105:39..105:49): LinkOption => _root_.java.nio.file.LinkOption.
 [105:50..105:64): NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS.
+[106:14..106:21): clazzOf <= _root_.types.Test.Literal.clazzOf.
+[106:24..106:31): classOf => _root_.scala.Predef.classOf()Ljava/lang/Class;.
+[106:32..106:38): Option => _root_.scala.Option#
+[106:39..106:42): Int => _root_.scala.Int#
 
 semanticdb/integration/src/main/scala/example/local-file.scala
 --------------------------------------------------------------

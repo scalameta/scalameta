@@ -543,6 +543,10 @@ Names:
 [2087..2091): file => _root_.java.nio.file.
 [2092..2102): LinkOption => _root_.java.nio.file.LinkOption.
 [2103..2117): NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS.
+[2132..2139): clazzOf <= _root_.types.Test.Literal.clazzOf.
+[2142..2149): classOf => _root_.scala.Predef.classOf()Ljava/lang/Class;.
+[2150..2156): Option => _root_.scala.Option#
+[2157..2160): Int => _root_.scala.Int#
 
 Symbols:
 _root_.java. => package java
@@ -553,8 +557,12 @@ _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS. => final javadefined val NOFOLLO
   [0..10): LinkOption => _root_.java.nio.file.LinkOption#
 _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int
+_root_.scala.Option# => abstract sealed class Option
 _root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: Nothing
   [0..7): Nothing => _root_.scala.Nothing#
+_root_.scala.Predef.classOf()Ljava/lang/Class;. => def classOf: [T] => Class[T]
+  [7..12): Class => _root_.scala.Predef.Class#
+  [13..14): T => _root_.scala.Predef.classOf()Ljava/lang/Class;.[T]
 _root_.scala.annotation. => package annotation
 _root_.scala.annotation.StaticAnnotation# => trait StaticAnnotation
 _root_.scala.collection.SeqLike#length()I. => abstract def length: Int
@@ -724,6 +732,10 @@ _root_.types.Test.Literal.bool. => final val bool: Boolean
   [0..7): Boolean => _root_.scala.Boolean#
 _root_.types.Test.Literal.char. => final val char: Char
   [0..4): Char => _root_.scala.Char#
+_root_.types.Test.Literal.clazzOf. => final val clazzOf: Class[Option[Int]]
+  [0..5): Class => _root_.java.lang.Class#
+  [6..12): Option => _root_.scala.Option#
+  [13..16): Int => _root_.scala.Int#
 _root_.types.Test.Literal.double. => final val double: Double
   [0..6): Double => _root_.scala.Double#
 _root_.types.Test.Literal.float. => final val float: Float
