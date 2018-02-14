@@ -187,6 +187,7 @@ message SymbolInformation {
     CONTRAVARIANT = 0x200;
     reserved 0x400;
     reserved 0x800;
+    LOCAL = 0x1000;
   }
   reserved 2, 6;
   string symbol = 1;
