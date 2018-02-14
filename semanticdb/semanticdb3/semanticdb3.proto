@@ -17,8 +17,8 @@ message TextDocument {
   string uri = 2;
   string text = 3;
   Language language = 9;
-  repeated SymbolOccurrence occurrences = 5;
-  repeated SymbolInformation symbols = 6;
+  repeated SymbolInformation symbols = 5;
+  repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
   repeated Synthetic synthetics = 8;
 }
@@ -39,13 +39,9 @@ message Location {
   Range range = 2;
 }
 
-message Annotation {
-  Type tpe = 1;
-}
-
 message Type {
   enum Tag {
-    reserved 2, 3, 4, 5;
+    // reserved 2, 3, 4, 5;
     UNKNOWN_TAG = 0;
     TYPE_REF = 1;
     SINGLETON_TYPE = 15;
@@ -160,6 +156,8 @@ message SymbolInformation {
     UNKNOWN_KIND = 0;
     VAL = 1;
     VAR = 2;
+    GETTER = 15;
+    SETTER = 16;
     DEF = 3;
     PRIMARY_CONSTRUCTOR = 4;
     SECONDARY_CONSTRUCTOR = 5;
@@ -175,8 +173,8 @@ message SymbolInformation {
   }
   enum Property {
     UNKNOWN_PROPERTY = 0;
-    PRIVATE = 0x1;
-    PROTECTED = 0x2;
+    // reserved 0x1;
+    // reserved 0x2;
     ABSTRACT = 0x4;
     FINAL = 0x8;
     SEALED = 0x10;
@@ -185,9 +183,8 @@ message SymbolInformation {
     CASE = 0x80;
     COVARIANT = 0x100;
     CONTRAVARIANT = 0x200;
-    reserved 0x400;
-    reserved 0x800;
-    LOCAL = 0x1000;
+    // reserved 0x400;
+    // reserved 0x800;
   }
   reserved 2, 6;
   string symbol = 1;
@@ -200,6 +197,26 @@ message SymbolInformation {
   repeated string members = 8;
   repeated string overrides = 9;
   Type tpe = 11;
+  repeated Annotation annotations = 13;
+  Accessibility accessibility = 14;
+}
+
+message Annotation {
+  Type tpe = 1;
+}
+
+message Accessibility {
+  enum Tag {
+    UNKNOWN_TAG = 0;
+    PRIVATE = 1;
+    PRIVATE_THIS = 2;
+    PRIVATE_WITHIN = 3;
+    PROTECTED = 4;
+    PROTECTED_THIS = 5;
+    PROTECTED_WITHIN = 6;
+  }
+  Tag tag = 1;
+  string symbol = 2;
 }
 
 message SymbolOccurrence {

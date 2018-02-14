@@ -91,8 +91,8 @@ message TextDocument {
   string uri = 2;
   string text = 3;
   Language language = 9;
-  repeated SymbolOccurrence occurrences = 5;
-  repeated SymbolInformation symbols = 6;
+  repeated SymbolInformation symbols = 5;
+  repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
   repeated Synthetic synthetics = 8;
 }
@@ -203,8 +203,8 @@ these references.
 
 In the future, we may extend SemanticDB to allow for multiple definitions
 that under current rules would correspond to the same global symbol.
-In the meanwhile, when global uniqueness is required, tool authors are advised to
-accompany global symbols with `SymbolInformation.location`.
+In the meanwhile, when global uniqueness is required, tool authors are advised
+to accompany global symbols with `SymbolInformation.location`.
 
 **Local symbols**. Correspond to a definition that isn't global (see above).
 
@@ -391,7 +391,7 @@ message MethodType {
   }
   repeated string type_parameters = 1;
   repeated ParameterList parameters = 2;
-  Type returnType = 3;
+  Type return_type = 3;
 }
 ```
 
