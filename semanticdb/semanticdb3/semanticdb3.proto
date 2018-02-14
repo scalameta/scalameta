@@ -48,7 +48,7 @@ message Type {
     STRUCTURAL_TYPE = 6;
     ANNOTATED_TYPE = 7;
     EXISTENTIAL_TYPE = 8;
-    TYPE_LAMBDA = 9;
+    UNIVERSAL_TYPE = 9;
     CLASS_INFO_TYPE = 10;
     METHOD_TYPE = 11;
     BY_NAME_TYPE = 12;
@@ -102,8 +102,9 @@ message SingletonType {
 }
 
 message StructuralType {
-  repeated Type parents = 1;
-  repeated string declarations = 2;
+  repeated string type_parameters = 1;
+  repeated Type parents = 2;
+  repeated string declarations = 3;
 }
 
 message AnnotatedType {
