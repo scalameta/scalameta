@@ -12,14 +12,19 @@ message TextDocuments {
 }
 
 message TextDocument {
+  reserved 4;
   Schema schema = 1;
   string uri = 2;
   string text = 3;
-  string language = 4;
+  Language language = 9;
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
   repeated Synthetic synthetics = 8;
+}
+
+message Language {
+  string name = 1;
 }
 
 message Range {
@@ -36,32 +41,28 @@ message Location {
 
 message Type {
   enum Tag {
+    // reserved 2, 3, 4, 5;
     UNKNOWN_TAG = 0;
     TYPE_REF = 1;
-    SINGLE_TYPE = 2;
-    THIS_TYPE = 3;
-    SUPER_TYPE = 4;
-    LITERAL_TYPE = 5;
-    COMPOUND_TYPE = 6;
+    SINGLETON_TYPE = 15;
+    STRUCTURAL_TYPE = 6;
     ANNOTATED_TYPE = 7;
     EXISTENTIAL_TYPE = 8;
-    TYPE_LAMBDA = 9;
+    UNIVERSAL_TYPE = 9;
     CLASS_INFO_TYPE = 10;
     METHOD_TYPE = 11;
     BY_NAME_TYPE = 12;
     REPEATED_TYPE = 13;
     TYPE_TYPE = 14;
   }
+  reserved 3, 4, 5, 6;
   Tag tag = 1;
   TypeRef typeRef = 2;
-  SingleType singleType = 3;
-  ThisType thisType = 4;
-  SuperType superType = 5;
-  LiteralType literalType = 6;
-  CompoundType compoundType = 7;
+  SingletonType singletonType = 16;
+  StructuralType structuralType = 7;
   AnnotatedType annotatedType = 8;
   ExistentialType existentialType = 9;
-  TypeLambda typeLambda = 10;
+  UniversalType universalType = 10;
   ClassInfoType classInfoType = 11;
   MethodType methodType = 12;
   ByNameType byNameType = 13;
@@ -72,59 +73,52 @@ message Type {
 message TypeRef {
   Type prefix = 1;
   string symbol = 2;
-  repeated Type arguments = 3;
+  repeated Type type_arguments = 3;
 }
 
-message SingleType {
-  Type prefix = 1;
-  string symbol = 2;
-}
-
-message ThisType {
-  string symbol = 1;
-}
-
-message SuperType {
-  Type prefix = 1;
-  Type mix = 2;
-}
-
-message LiteralType {
+message SingletonType {
   enum Tag {
     UNKNOWN_TAG = 0;
-    UNIT = 1;
-    BOOLEAN = 2;
-    BYTE = 3;
-    SHORT = 4;
-    CHAR = 5;
-    INT = 6;
-    LONG = 7;
-    FLOAT = 8;
-    DOUBLE = 9;
-    STRING = 10;
-    NULL = 11;
+    SYMBOL = 1;
+    THIS = 2;
+    SUPER = 3;
+    UNIT = 4;
+    BOOLEAN = 5;
+    BYTE = 6;
+    SHORT = 7;
+    CHAR = 8;
+    INT = 9;
+    LONG = 10;
+    FLOAT = 11;
+    DOUBLE = 12;
+    STRING = 13;
+    NULL = 14;
   }
   Tag tag = 1;
-  int64 primitive = 2;
-  string string = 3;
+  Type prefix = 2;
+  string symbol = 3;
+  int64 primitive = 4;
+  string string = 5;
 }
 
-message CompoundType {
-  repeated Type parents = 1;
-  repeated string declarations = 2;
+message StructuralType {
+  repeated string type_parameters = 1;
+  repeated Type parents = 2;
+  repeated string declarations = 3;
 }
 
 message AnnotatedType {
+  reserved 2;
+  repeated Annotation annotations = 3;
   Type tpe = 1;
-  repeated Type annotations = 2;
 }
 
 message ExistentialType {
+  repeated string type_parameters = 2;
   Type tpe = 1;
-  repeated string declarations = 2;
 }
 
-message TypeLambda {
+message UniversalType {
   repeated string type_parameters = 1;
   Type tpe = 2;
 }
@@ -141,7 +135,7 @@ message MethodType {
   }
   repeated string type_parameters = 1;
   repeated ParameterList parameters = 2;
-  Type result = 3;
+  Type return_type = 3;
 }
 
 message ByNameType {
@@ -163,6 +157,8 @@ message SymbolInformation {
     UNKNOWN_KIND = 0;
     VAL = 1;
     VAR = 2;
+    GETTER = 15;
+    SETTER = 16;
     DEF = 3;
     PRIMARY_CONSTRUCTOR = 4;
     SECONDARY_CONSTRUCTOR = 5;
@@ -178,8 +174,8 @@ message SymbolInformation {
   }
   enum Property {
     UNKNOWN_PROPERTY = 0;
-    PRIVATE = 0x1;
-    PROTECTED = 0x2;
+    // reserved 0x1;
+    // reserved 0x2;
     ABSTRACT = 0x4;
     FINAL = 0x8;
     SEALED = 0x10;
@@ -188,12 +184,12 @@ message SymbolInformation {
     CASE = 0x80;
     COVARIANT = 0x100;
     CONTRAVARIANT = 0x200;
-    VALPARAM = 0x400;
-    VARPARAM = 0x800;
+    // reserved 0x400;
+    // reserved 0x800;
   }
-  reserved 6;
+  reserved 2, 6;
   string symbol = 1;
-  string language = 2;
+  Language language = 12;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
@@ -202,6 +198,26 @@ message SymbolInformation {
   repeated string members = 8;
   repeated string overrides = 9;
   Type tpe = 11;
+  repeated Annotation annotations = 13;
+  Accessibility accessibility = 14;
+}
+
+message Annotation {
+  Type tpe = 1;
+}
+
+message Accessibility {
+  enum Tag {
+    UNKNOWN_TAG = 0;
+    PRIVATE = 1;
+    PRIVATE_THIS = 2;
+    PRIVATE_WITHIN = 3;
+    PROTECTED = 4;
+    PROTECTED_THIS = 5;
+    PROTECTED_WITHIN = 6;
+  }
+  Tag tag = 1;
+  string symbol = 2;
 }
 
 message SymbolOccurrence {
