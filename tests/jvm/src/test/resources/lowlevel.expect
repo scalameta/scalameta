@@ -1,3 +1,58 @@
+semanticdb/integration/src/main/scala/example/Accessibility.scala
+-----------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Accessibility.scala
+Text => non-empty
+Language => Scala212
+Symbols => 11 entries
+Occurrences => 19 entries
+
+Symbols:
+_root_.example. => package example
+_root_.example.Acc# => class Acc.{+8 decls}
+  extends AnyRef
+_root_.example.Acc#`<init>`()V. => primaryctor <init>: (): Acc
+  Acc => _root_.example.Acc#
+_root_.example.Acc#m1()Lscala/Nothing;. => private def m1: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m2()Lscala/Nothing;. => private[this] def m2: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m3()Lscala/Nothing;. => private[Acc] def m3: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m4()Lscala/Nothing;. => protected def m4: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m5()Lscala/Nothing;. => protected[this] def m5: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m6()Lscala/Nothing;. => protected[example] def m6: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m7()Lscala/Nothing;. => def m7: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: : Nothing
+  Nothing => _root_.scala.Nothing#
+
+Occurrences:
+[0:8..0:15): example <= _root_.example.
+[2:6..2:9): Acc <= _root_.example.Acc#
+[2:10..2:10):  <= _root_.example.Acc#`<init>`()V.
+[3:14..3:16): m1 <= _root_.example.Acc#m1()Lscala/Nothing;.
+[3:19..3:22): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[4:20..4:22): m2 <= _root_.example.Acc#m2()Lscala/Nothing;.
+[4:25..4:28): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[5:10..5:13): Acc => _root_.example.Acc#
+[5:19..5:21): m3 <= _root_.example.Acc#m3()Lscala/Nothing;.
+[5:24..5:27): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[6:16..6:18): m4 <= _root_.example.Acc#m4()Lscala/Nothing;.
+[6:21..6:24): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[7:22..7:24): m5 <= _root_.example.Acc#m5()Lscala/Nothing;.
+[7:27..7:30): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[8:12..8:19): example => _root_.example.
+[8:25..8:27): m6 <= _root_.example.Acc#m6()Lscala/Nothing;.
+[8:30..8:33): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[9:6..9:8): m7 <= _root_.example.Acc#m7()Lscala/Nothing;.
+[9:11..9:14): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------
 
@@ -138,7 +193,7 @@ _root_.flags. => package flags
 _root_.flags.p.package. => package object package
 _root_.flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
-_root_.flags.p.package.AA#(x) => param x: Int
+_root_.flags.p.package.AA#(x) => private[this] param x: Int
   Int => _root_.scala.Int#
 _root_.flags.p.package.AA#(y) => valparam param y: : Int
   Int => _root_.scala.Int#
@@ -152,11 +207,11 @@ _root_.flags.p.package.AA#`<init>`(III)V. => primaryctor <init>: (x: <?>, y: <?>
   AA => _root_.flags.p.package.AA#
 _root_.flags.p.package.C# => abstract class C.{+6 decls}
   extends AnyRef
-_root_.flags.p.package.C#(x) => param x: T
+_root_.flags.p.package.C#(x) => private[this] param x: T
   T => _root_.flags.p.package.C#[T]
-_root_.flags.p.package.C#(y) => param y: U
+_root_.flags.p.package.C#(y) => private[this] param y: U
   U => _root_.flags.p.package.C#[U]
-_root_.flags.p.package.C#(z) => param z: V
+_root_.flags.p.package.C#(z) => private[this] param z: V
   V => _root_.flags.p.package.C#[V]
 _root_.flags.p.package.C#[T] => covariant typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -690,7 +745,7 @@ _root_.types.Test.N#n()I. => def n: : Int
 _root_.types.ann# => class ann.{+2 decls}
   extends Annotation
   extends StaticAnnotation
-_root_.types.ann#(x) => param x: T
+_root_.types.ann#(x) => private[this] param x: T
   T => _root_.types.ann#[T]
 _root_.types.ann#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#

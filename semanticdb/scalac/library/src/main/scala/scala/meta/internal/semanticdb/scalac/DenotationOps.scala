@@ -128,13 +128,16 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     private def acc: Option[s.Accessibility] = {
-      // TODO: Implement me.
-      if (!gsym.isParamAccessor && (gsym.isPrivate || gsym.isPrivateThis)) {
-        Some(s.Accessibility(a.PRIVATE))
-      } else if (gsym.isProtected || gsym.isProtectedThis) {
-        Some(s.Accessibility(a.PROTECTED))
+      if (gsym.privateWithin == NoSymbol) {
+        if (gsym.isPrivateThis) Some(s.Accessibility(a.PRIVATE_THIS))
+        else if (gsym.isPrivate) Some(s.Accessibility(a.PRIVATE))
+        else if (gsym.isProtectedThis) Some(s.Accessibility(a.PROTECTED_THIS))
+        else if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED))
+        else Some(s.Accessibility(a.PUBLIC))
       } else {
-        Some(s.Accessibility(a.PUBLIC))
+        val ssym = gsym.privateWithin.toSemantic.syntax
+        if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
+        else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
       }
     }
 

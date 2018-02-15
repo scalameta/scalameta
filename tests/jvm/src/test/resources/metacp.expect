@@ -30,6 +30,36 @@ _root_.example.A# => trait A.{+1 decls}
 _root_.example.A#foo(0). => abstract def foo: : Int
   Int => _root_.scala.Int#
 
+example/Acc.class
+-----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/Acc.class
+Text => empty
+Language => Scala
+Symbols => 9 entries
+
+Symbols:
+_root_.example.Acc# => class Acc.{+8 decls}
+  extends AnyRef
+_root_.example.Acc#`<init>`(0). => primaryctor <init>: (): Acc
+  Acc => _root_.example.Acc#
+_root_.example.Acc#m1(0). => private def m1: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m2(0). => private[this] def m2: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m3(0). => private[Acc] def m3: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m4(0). => protected def m4: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m5(0). => protected[this] def m5: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m6(0). => protected[example] def m6: : Nothing
+  Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m7(0). => def m7: : Nothing
+  Nothing => _root_.scala.Nothing#
+
 example/B.class
 ---------------
 
@@ -133,7 +163,7 @@ Symbols:
 _root_.flags.p.package. => final package object package
 _root_.flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
-_root_.flags.p.package.AA#(x) => param x: Int
+_root_.flags.p.package.AA#(x) => private[this] param x: Int
   Int => _root_.scala.Int#
 _root_.flags.p.package.AA#(y) => valparam param y: : Int
   Int => _root_.scala.Int#
@@ -152,11 +182,11 @@ _root_.flags.p.package.AA#`<init>`(3).(z) => param z: Int
   Int => _root_.scala.Int#
 _root_.flags.p.package.C# => abstract class C.{+9 decls}
   extends AnyRef
-_root_.flags.p.package.C#(x) => param x: T
+_root_.flags.p.package.C#(x) => private[this] param x: T
   T => _root_.flags.p.package.C#[T]
-_root_.flags.p.package.C#(y) => param y: U
+_root_.flags.p.package.C#(y) => private[this] param y: U
   U => _root_.flags.p.package.C#[U]
-_root_.flags.p.package.C#(z) => param z: V
+_root_.flags.p.package.C#(z) => private[this] param z: V
   V => _root_.flags.p.package.C#[V]
 _root_.flags.p.package.C#[T] => covariant typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -533,7 +563,7 @@ Symbols:
 _root_.types.ann# => class ann.{+3 decls}
   extends Annotation
   extends StaticAnnotation
-_root_.types.ann#(x) => param x: T
+_root_.types.ann#(x) => private[this] param x: T
   T => _root_.types.ann#[T]
 _root_.types.ann#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#

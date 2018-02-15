@@ -215,11 +215,16 @@ object Main {
   }
 
   private def sname(sym: Symbol): String = {
-    if (sym.name == "<no symbol>") ""
-    else if (sym.name == "<root>") "_root_"
-    else if (sym.name == "<empty>") "_empty_"
-    else if (sym.name == "<init>") "<init>"
-    else NameTransformer.decode(sym.name)
+    def loop(name: String): String = {
+      val i = name.lastIndexOf("$$")
+      if (i > 0) return loop(name.substring(i + 2))
+      if (name == "<no symbol>") return ""
+      if (name == "<root>") return "_root_"
+      if (name == "<empty>") return "_empty_"
+      if (name == "<init>") return "<init>"
+      NameTransformer.decode(name)
+    }
+    loop(sym.name)
   }
 
   private def stpe(sym: SymbolInfoSymbol): Option[s.Type] = {
@@ -375,10 +380,20 @@ object Main {
   }
 
   def sacc(sym: SymbolInfoSymbol): s.Accessibility = {
-    // TODO: Implement me.
-    if (!sym.isParamAccessor && (sym.isPrivate || sym.isLocal)) s.Accessibility(a.PRIVATE)
-    else if (sym.isProtected) s.Accessibility(a.PROTECTED)
-    else s.Accessibility(a.PUBLIC)
+    sym.symbolInfo.privateWithin match {
+      case Some(privateWithin: Symbol) =>
+        val sprivateWithin = ssymbol(privateWithin)
+        if (sym.isProtected) s.Accessibility(a.PROTECTED_WITHIN, sprivateWithin)
+        else s.Accessibility(a.PRIVATE_WITHIN, sprivateWithin)
+      case Some(other) =>
+        sys.error(s"unsupported privateWithin: ${other.getClass} $other")
+      case None =>
+        if (sym.isPrivate && sym.isLocal) s.Accessibility(a.PRIVATE_THIS)
+        else if (sym.isPrivate) s.Accessibility(a.PRIVATE)
+        else if (sym.isProtected && sym.isLocal) s.Accessibility(a.PROTECTED_THIS)
+        else if (sym.isProtected) s.Accessibility(a.PROTECTED)
+        else s.Accessibility(a.PUBLIC)
+    }
   }
 
   def sowner(sym: SymbolInfoSymbol): String = {

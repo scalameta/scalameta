@@ -1,3 +1,52 @@
+semanticdb/integration/src/main/scala/example/Accessibility.scala
+-----------------------------------------------------------------
+Language:
+Scala212
+
+Names:
+[8..15): example <= _root_.example.
+[23..26): Acc <= _root_.example.Acc#
+[27..27): ε <= _root_.example.Acc#`<init>`()V.
+[43..45): m1 <= _root_.example.Acc#m1()Lscala/Nothing;.
+[48..51): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[72..74): m2 <= _root_.example.Acc#m2()Lscala/Nothing;.
+[77..80): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[91..94): Acc => _root_.example.Acc#
+[100..102): m3 <= _root_.example.Acc#m3()Lscala/Nothing;.
+[105..108): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[125..127): m4 <= _root_.example.Acc#m4()Lscala/Nothing;.
+[130..133): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[156..158): m5 <= _root_.example.Acc#m5()Lscala/Nothing;.
+[161..164): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[177..184): example => _root_.example.
+[190..192): m6 <= _root_.example.Acc#m6()Lscala/Nothing;.
+[195..198): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+[205..207): m7 <= _root_.example.Acc#m7()Lscala/Nothing;.
+[210..213): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
+
+Symbols:
+_root_.example. => package example.{+6 members}
+_root_.example.Acc# => class Acc
+_root_.example.Acc#`<init>`()V. => primaryctor <init>: (): Acc
+  [4..7): Acc => _root_.example.Acc#
+_root_.example.Acc#m1()Lscala/Nothing;. => private def m1: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m2()Lscala/Nothing;. => private def m2: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m3()Lscala/Nothing;. => private def m3: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m4()Lscala/Nothing;. => protected def m4: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m5()Lscala/Nothing;. => protected def m5: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m6()Lscala/Nothing;. => protected def m6: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
+_root_.example.Acc#m7()Lscala/Nothing;. => def m7: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
+_root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
+
+
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------
 Language:
@@ -46,7 +95,7 @@ Messages:
 [72..107): [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 Symbols:
-_root_.example. => package example.{+5 members}
+_root_.example. => package example.{+6 members}
 _root_.example.Example. => final object Example
 _root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String]): Unit
   [7..12): Array => _root_.scala.Array#
@@ -156,7 +205,7 @@ Symbols:
 _root_.flags. => package flags.{+1 members}
 _root_.flags.p.package. => packageobject package
 _root_.flags.p.package.AA# => class AA
-_root_.flags.p.package.AA#(x) => param x: Int
+_root_.flags.p.package.AA#(x) => private param x: Int
   [0..3): Int => _root_.scala.Int#
 _root_.flags.p.package.AA#(y) => val param y: Int
   [0..3): Int => _root_.scala.Int#
@@ -169,11 +218,11 @@ _root_.flags.p.package.AA#`<init>`(III)V. => primaryctor <init>: (x: Int, y: Int
   [20..23): Int => _root_.scala.Int#
   [26..28): AA => _root_.flags.p.package.AA#
 _root_.flags.p.package.C# => abstract class C
-_root_.flags.p.package.C#(x) => param x: T
+_root_.flags.p.package.C#(x) => private param x: T
   [0..1): T => _root_.flags.p.package.C#[T]
-_root_.flags.p.package.C#(y) => param y: U
+_root_.flags.p.package.C#(y) => private param y: U
   [0..1): U => _root_.flags.p.package.C#[U]
-_root_.flags.p.package.C#(z) => param z: V
+_root_.flags.p.package.C#(z) => private param z: V
   [0..1): V => _root_.flags.p.package.C#[V]
 _root_.flags.p.package.C#[T] => covariant typeparam T
 _root_.flags.p.package.C#[U] => contravariant typeparam U
@@ -251,7 +300,7 @@ Names:
 [73..76): Int => _root_.scala.Int#
 
 Symbols:
-_root_.example. => package example.{+5 members}
+_root_.example. => package example.{+6 members}
 _root_.example.A# => trait A.{+1 members}
 _root_.example.A#foo()I. => abstract def foo: Int
   [0..3): Int => _root_.scala.Int#
@@ -285,7 +334,7 @@ Names:
 [95..106): stripPrefix => _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;.
 
 Symbols:
-_root_.example. => package example.{+5 members}
+_root_.example. => package example.{+6 members}
 _root_.example.Synthetic# => class Synthetic
 _root_.example.Synthetic#`<init>`()V. => primaryctor <init>: (): Synthetic
   [4..13): Synthetic => _root_.example.Synthetic#
@@ -790,7 +839,7 @@ _root_.types.Test.N#`<init>`()V. => primaryctor <init>: (): N
 _root_.types.Test.N#n()I. => def n: Int
   [0..3): Int => _root_.scala.Int#
 _root_.types.ann# => class ann
-_root_.types.ann#(x) => param x: T
+_root_.types.ann#(x) => private param x: T
   [0..1): T => _root_.types.ann#[T]
 _root_.types.ann#[T] => typeparam T
 _root_.types.ann#`<init>`(Ljava/lang/Object;)V. => primaryctor <init>: (x: T): ann[T]
@@ -820,7 +869,7 @@ Names:
 [79..80): + => _root_.scala.Int#`+`(I)I.
 
 Symbols:
-_root_.example. => package example.{+5 members}
+_root_.example. => package example.{+6 members}
 _root_.example.`local-file`# => class local-file
 _root_.example.`local-file`#`<init>`()V. => primaryctor <init>: (): `local-file`
   [4..16): `local-file` => _root_.example.`local-file`#

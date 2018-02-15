@@ -1917,6 +1917,11 @@ In Scala, `Accessibility` represents accessibility of definitions.
       <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#protected">[63]</a>.
     </td>
   </tr>
+  <tr>
+    <td><code>PUBLIC</code></td>
+    <td><code>def x = ???</code></td>
+    <td>None of the above.</td>
+  </tr>
 </table>
 
 Notes:
