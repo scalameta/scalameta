@@ -1,3 +1,5 @@
+_empty_.Empty# => _empty_.
+_empty_.Empty#`<init>`()V. => _empty_.Empty#
 _root_.example. => _root_.
 _root_.example.A# => _root_.example.
 _root_.example.A#foo()I. => _root_.example.A#

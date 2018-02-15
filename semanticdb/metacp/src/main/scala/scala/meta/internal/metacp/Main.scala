@@ -90,9 +90,14 @@ object Main {
   private def ssymbol(sym: Symbol): String = {
     val prefix = {
       sym match {
-        case sym: SymbolInfoSymbol => ssymbol(sym.parent.get)
-        case sym: ExternalSymbol => sym.parent.map(_.path + ".").getOrElse("")
-        case _ => sys.error(s"unsupported symbol $sym")
+        case sym: SymbolInfoSymbol =>
+          ssymbol(sym.parent.get)
+        case sym: ExternalSymbol =>
+          if (sym.name == "<root>") ""
+          else if (sym.name == "<empty>") ""
+          else "_root_." + sym.parent.map(_.path + ".").getOrElse("")
+        case _ =>
+          sys.error(s"unsupported symbol $sym")
       }
     }
     val encodedName = {

@@ -1,3 +1,23 @@
+semanticdb/integration/src/main/scala/example/Empty.scala
+---------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Empty.scala
+Text => non-empty
+Language => Scala212
+Symbols => 2 entries
+Occurrences => 1 entries
+
+Symbols:
+_empty_.Empty# => class Empty.{+1 decls}
+  extends AnyRef
+_empty_.Empty#`<init>`()V. => primaryctor <init>: (): Empty
+  Empty => _empty_.Empty#
+
+Occurrences:
+[0:6..0:11): Empty <= _empty_.Empty#
+
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 

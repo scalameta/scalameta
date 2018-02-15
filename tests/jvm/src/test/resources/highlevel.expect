@@ -1,3 +1,17 @@
+semanticdb/integration/src/main/scala/example/Empty.scala
+---------------------------------------------------------
+Language:
+Scala212
+
+Names:
+[6..11): Empty <= _empty_.Empty#
+
+Symbols:
+_empty_.Empty# => class Empty
+_empty_.Empty#`<init>`()V. => primaryctor <init>: (): Empty
+  [4..9): Empty => _empty_.Empty#
+
+
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 Language:
