@@ -103,15 +103,16 @@ object Main {
     if (sym.name.endsWith(" ")) return None // TODO: Implement me.
     if (sym.name.endsWith("_$eq")) return None // TODO: Implement me.
     if (sym.name == "<init>" && !sym.isClassConstructor) return None
-    Some(s.SymbolInformation(
-      symbol = ssymbol(sym),
-      kind = skind(sym),
-      properties = sproperties(sym),
-      name = sname(sym),
-      tpe = stpe(sym),
-      annotations = sanns(sym),
-      accessibility = Some(sacc(sym)),
-      owner = sowner(sym)))
+    Some(
+      s.SymbolInformation(
+        symbol = ssymbol(sym),
+        kind = skind(sym),
+        properties = sproperties(sym),
+        name = sname(sym),
+        tpe = stpe(sym),
+        annotations = sanns(sym),
+        accessibility = Some(sacc(sym)),
+        owner = sowner(sym)))
   }
 
   private def ssymbol(sym: Symbol): String = {
@@ -141,8 +142,8 @@ object Main {
     skind(sym) match {
       case k.VAL | k.VAR | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
         prefix + encodedName + "."
-      case k.DEF | k.GETTER | k.SETTER | k.PRIMARY_CONSTRUCTOR |
-           k.SECONDARY_CONSTRUCTOR | k.MACRO =>
+      case k.DEF | k.GETTER | k.SETTER | k.PRIMARY_CONSTRUCTOR | k.SECONDARY_CONSTRUCTOR |
+          k.MACRO =>
         val descriptor = {
           // TODO: Implement me.
           def loop(tpe: Type): String = {
@@ -311,7 +312,7 @@ object Main {
               case x: Char => s.SingletonType(st.CHAR, None, "", x.toLong, "")
               case x: Int => s.SingletonType(st.INT, None, "", x.toLong, "")
               case x: Long => s.SingletonType(st.LONG, None, "", x, "")
-              case x: Float => s.SingletonType(st.FLOAT,None, "", floatBits(x), "")
+              case x: Float => s.SingletonType(st.FLOAT, None, "", floatBits(x), "")
               case x: Double => s.SingletonType(st.DOUBLE, None, "", doubleBits(x), "")
               case x: String => s.SingletonType(st.STRING, None, "", 0, x)
               case null => s.SingletonType(st.NULL, None, "", 0, "")
