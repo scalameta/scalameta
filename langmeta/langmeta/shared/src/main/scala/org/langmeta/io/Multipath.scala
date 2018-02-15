@@ -4,9 +4,13 @@ package io
 import java.net._
 import java.io._
 import java.io.File.pathSeparator
+import java.nio.file.FileVisitor
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.zip._
 import scala.collection.mutable
 import org.langmeta.internal.io.FileIO
+import org.langmeta.internal.io.PathIO
 
 sealed trait Multipath {
   def shallow: List[AbsolutePath]
@@ -63,6 +67,26 @@ sealed trait Multipath {
   def find(name: RelativePath): Option[URI] = {
     deep.find(_.name == name).map(_.uri)
   }
+
+  def visit(getVisitor: AbsolutePath => FileVisitor[Path]): Unit = {
+    shallow.foreach { base =>
+      val path = base.toNIO
+      if (Files.isDirectory(path)) {
+        val visitor = getVisitor(base)
+        Files.walkFileTree(path, visitor)
+      } else {
+        PathIO.extension(path) match {
+          case "jar" =>
+            val root = FileIO.jarRootPath(base)
+            val visitor = getVisitor(root)
+            Files.walkFileTree(root.toNIO, visitor)
+          case _ =>
+            sys.error(s"Expected jar file, obtained $base")
+        }
+      }
+    }
+  }
+
 }
 
 final case class Classpath(shallow: List[AbsolutePath]) extends Multipath {

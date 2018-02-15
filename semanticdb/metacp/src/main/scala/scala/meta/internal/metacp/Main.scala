@@ -2,6 +2,7 @@ package scala.meta.internal.metacp
 
 import java.io._
 import java.nio.file._
+import java.nio.file.attribute.BasicFileAttributes
 import scala.collection.mutable
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.LiteralType.{Tag => l}
@@ -25,44 +26,64 @@ object Main {
 
   def process(settings: Settings): Int = {
     val semanticdbRoot = AbsolutePath(settings.d).resolve("META-INF").resolve("semanticdb")
+    Files.createDirectories(semanticdbRoot.toNIO)
     var failed = false
     val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
-    val fragments = classpath.deep.filter(_.uri.toString.endsWith(".class"))
-    fragments.sortBy(_.uri.toString).foreach { fragment =>
-      try {
-        val bytecode = {
-          val is = fragment.uri.toURL.openStream()
-          try ByteCode(InputStreamIO.readBytes(is))
-          finally is.close()
+    classpath.visit { root =>
+      new FileVisitor[Path] {
+
+        // Create relative directory in semanticdbRoot
+        override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          val relpath = AbsolutePath(dir).toRelative(root).toString
+          val out = semanticdbRoot.resolve(relpath)
+          if (!out.isDirectory) Files.createDirectory(out.toNIO)
+          FileVisitResult.CONTINUE
         }
-        val classfile = ClassFileParser.parse(bytecode)
-        ScalaSigParser.parse(classfile) match {
-          case Some(scalaSig) =>
-            val semanticdbInfos = scalaSig.symbols.flatMap {
-              case sym: SymbolInfoSymbol => sinfo(sym)
-              case _ => None
+
+        // convert classfile to .class.semanticdb file with symbols only
+        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          if (PathIO.extension(file) != "class") return FileVisitResult.CONTINUE
+          try {
+            val relpath = AbsolutePath(file).toRelative(root).toString
+            val bytecode = ByteCode(Files.readAllBytes(file))
+            val classfile = ClassFileParser.parse(bytecode)
+            ScalaSigParser.parse(classfile) match {
+              case Some(scalaSig) =>
+                val semanticdbInfos = scalaSig.symbols.flatMap {
+                  case sym: SymbolInfoSymbol => sinfo(sym)
+                  case _ => None
+                }
+                val className = NameTransformer.decode(PathIO.toUnix(relpath))
+                val semanticdbRelpath = relpath + ".semanticdb"
+                val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
+                val semanticdbDocument = s.TextDocument(
+                  schema = s.Schema.SEMANTICDB3,
+                  uri = className,
+                  language = "Scala",
+                  symbols = semanticdbInfos)
+                val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
+                FileIO.write(semanticdbAbspath, semanticdbDocuments)
+              case None =>
+                // NOTE: If a classfile doesn't contain ScalaSignature,
+                // we skip it for the time being. In the future, we may add support
+                // for parsing arbitrary Java classfiles.
+                ()
             }
-            val className = NameTransformer.decode(PathIO.toUnix(fragment.name.toString))
-            val semanticdbRelpath = fragment.name.resolveSibling(_ + ".semanticdb")
-            val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
-            val semanticdbDocument = s.TextDocument(
-              schema = s.Schema.SEMANTICDB3,
-              uri = className,
-              language = "Scala",
-              symbols = semanticdbInfos)
-            val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
-            FileIO.write(semanticdbAbspath, semanticdbDocuments)
-          case None =>
-            // NOTE: If a classfile doesn't contain ScalaSignature,
-            // we skip it for the time being. In the future, we may add support
-            // for parsing arbitrary Java classfiles.
-            ()
+          } catch {
+            case NonFatal(ex) =>
+              println(s"error: can't convert $file")
+              ex.printStackTrace()
+              failed = true
+          }
+          FileVisitResult.CONTINUE
         }
-      } catch {
-        case NonFatal(ex) =>
-          println(s"error: can't convert $fragment")
-          ex.printStackTrace()
-          failed = true
+
+        override def postVisitDirectory(dir: Path, e: IOException): FileVisitResult = {
+          if (e != null) throw e
+          FileVisitResult.CONTINUE
+        }
+
+        override def visitFileFailed(file: Path, e: IOException): FileVisitResult = throw e
       }
     }
     if (failed) 1 else 0

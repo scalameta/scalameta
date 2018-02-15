@@ -2,6 +2,8 @@ package org.langmeta.internal.io
 
 import java.net.URI
 import java.nio.charset.Charset
+import java.nio.file.FileSystemAlreadyExistsException
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
@@ -53,4 +55,14 @@ object PlatformFileIO {
       }
     new ListFiles(root, relativeFiles.toList)
   }
+
+  def jarRootPath(jarFile: AbsolutePath): AbsolutePath = {
+    val uri = URI.create("jar:file:" + jarFile.toNIO.toUri.getPath)
+    val roo = newFileSystem(uri, new java.util.HashMap[String, Any]()).getPath("/")
+    AbsolutePath(roo)
+  }
+
+  private def newFileSystem(uri: URI, map: java.util.Map[String, Any]) =
+    try FileSystems.newFileSystem(uri, map)
+    catch { case _: FileSystemAlreadyExistsException => FileSystems.getFileSystem(uri) }
 }
