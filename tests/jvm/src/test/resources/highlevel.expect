@@ -108,7 +108,7 @@ Names:
 [146..148): pp <= _root_.flags.p.package.z(I)I.(pp)
 [150..153): Int => _root_.scala.Int#
 [165..166): m <= _root_.flags.p.package.m()Lscala/Nothing;.
-[167..169): TT <= _root_.flags.p.package.m()Lscala/Nothing;.TT#
+[167..169): TT <= _root_.flags.p.package.m()Lscala/Nothing;.[TT]
 [179..182): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [200..201): C <= _root_.flags.p.package.C#
 [203..204): T <= _root_.flags.p.package.C#[T]
@@ -209,7 +209,7 @@ _root_.flags.p.package.Y#`<init>`()V. => primaryctor <init>: (): Y
 _root_.flags.p.package.Z# => sealed trait Z
 _root_.flags.p.package.m()Lscala/Nothing;. => macro m: [TT] => Nothing
   [8..15): Nothing => _root_.scala.Nothing#
-_root_.flags.p.package.m()Lscala/Nothing;.TT# => typeparam TT
+_root_.flags.p.package.m()Lscala/Nothing;.[TT] => typeparam TT
 _root_.flags.p.package.x. => private lazy val x: Int
   [0..3): Int => _root_.scala.Int#
 _root_.flags.p.package.y. => protected var y_=: (x$1: Int): Unit
@@ -483,7 +483,7 @@ Names:
 [1126..1127): T <= _root_.types.Test.C#existentialType1.T#
 [1132..1135): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [1145..1156): typeLambda1 <= _root_.types.Test.C#typeLambda1()Lscala/Nothing;.
-[1157..1158): M <= _root_.types.Test.C#typeLambda1()Lscala/Nothing;.M#
+[1157..1158): M <= _root_.types.Test.C#typeLambda1()Lscala/Nothing;.[M]
 [1165..1168): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [1173..1184): typeLambda1 => _root_.types.Test.C#typeLambda1()Lscala/Nothing;.
 [1193..1194): L <= _root_.types.Test.C#$anon#L#
@@ -518,10 +518,10 @@ Names:
 [1464..1467): Int => _root_.scala.Int#
 [1470..1473): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [1484..1486): m6 <= _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.
-[1487..1488): T <= _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.T#
+[1487..1488): T <= _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T]
 [1490..1491): x <= _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.(x)
-[1493..1494): T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.T#
-[1497..1498): T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.T#
+[1493..1494): T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+[1497..1498): T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T]
 [1501..1504): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [1523..1533): ByNameType <= _root_.types.Test.C#ByNameType.
 [1546..1548): m1 <= _root_.types.Test.C#ByNameType.m1(Lscala/Function0;)I.
@@ -542,12 +542,12 @@ Names:
 [1676..1684): TypeType <= _root_.types.Test.C#TypeType.
 [1698..1700): T1 <= _root_.types.Test.C#TypeType.T1#
 [1711..1713): m2 <= _root_.types.Test.C#TypeType.m2()Lscala/Nothing;.
-[1714..1716): T2 <= _root_.types.Test.C#TypeType.m2()Lscala/Nothing;.T2#
+[1714..1716): T2 <= _root_.types.Test.C#TypeType.m2()Lscala/Nothing;.[T2]
 [1720..1721): C => _root_.types.Test.C#
 [1725..1726): C => _root_.types.Test.C#
 [1730..1733): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [1744..1746): m3 <= _root_.types.Test.C#TypeType.m3()Lscala/Nothing;.
-[1747..1749): M3 <= _root_.types.Test.C#TypeType.m3()Lscala/Nothing;.M3#
+[1747..1749): M3 <= _root_.types.Test.C#TypeType.m3()Lscala/Nothing;.[M3]
 [1756..1759): ??? => _root_.scala.Predef.`???`()Lscala/Nothing;.
 [1771..1773): T4 <= _root_.types.Test.C#TypeType.T4#
 [1776..1777): C => _root_.types.Test.C#
@@ -673,8 +673,8 @@ _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;. => def 
   [11..12): T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T]
   [15..16): T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T]
 _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.(x) => param x: T
-  [0..1): T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.T#
-_root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.T# => typeparam T
+  [0..1): T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+_root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T] => typeparam T
 _root_.types.Test.C#MethodType.x1()I. => def x1: Int
   [0..3): Int => _root_.scala.Int#
 _root_.types.Test.C#MethodType.x2()I. => def x2: Int
@@ -700,10 +700,10 @@ _root_.types.Test.C#TypeType.T5# => type T5: [U] => U
 _root_.types.Test.C#TypeType.T5#[U] => typeparam U
 _root_.types.Test.C#TypeType.m2()Lscala/Nothing;. => def m2: [T2] => Nothing
   [8..15): Nothing => _root_.scala.Nothing#
-_root_.types.Test.C#TypeType.m2()Lscala/Nothing;.T2# => typeparam T2
+_root_.types.Test.C#TypeType.m2()Lscala/Nothing;.[T2] => typeparam T2
 _root_.types.Test.C#TypeType.m3()Lscala/Nothing;. => def m3: [M3] => Nothing
   [8..15): Nothing => _root_.scala.Nothing#
-_root_.types.Test.C#TypeType.m3()Lscala/Nothing;.M3# => typeparam M3
+_root_.types.Test.C#TypeType.m3()Lscala/Nothing;.[M3] => typeparam M3
 _root_.types.Test.C#`<init>`()V. => primaryctor <init>: (): C
   [4..5): C => _root_.types.Test.C#
 _root_.types.Test.C#annType1. => val annType1: T
@@ -740,7 +740,7 @@ _root_.types.Test.C#thisType2. => val thisType2: C.this.type
   [0..1): C => _root_.types.Test.C#
 _root_.types.Test.C#typeLambda1()Lscala/Nothing;. => def typeLambda1: [M] => Nothing
   [7..14): Nothing => _root_.scala.Nothing#
-_root_.types.Test.C#typeLambda1()Lscala/Nothing;.M# => typeparam M
+_root_.types.Test.C#typeLambda1()Lscala/Nothing;.[M] => typeparam M
 _root_.types.Test.C#typeRef1. => val typeRef1: C
   [0..1): C => _root_.types.Test.C#
 _root_.types.Test.C#typeRef2. => val typeRef2: p.C

@@ -181,7 +181,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [17..20): Int => _root_.scala.Int#
        |_root_.f.C1#m1(I)I.(x) => param x: Int
        |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#m1(I)I.T# => typeparam T
+       |_root_.f.C1#m1(I)I.[T] => typeparam T
        |_root_.f.C1#m2()Lscala/Nothing;. => macro m2: Nothing
        |  [0..7): Nothing => _root_.scala.Nothing#
        |_root_.f.C2# => abstract class C2
@@ -835,8 +835,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [11..12): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
       |  [15..16): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
       |_empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.(e) => param e: T
-      |  [0..1): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.T#
-      |_empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.T# => typeparam T
+      |  [0..1): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+      |_empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T] => typeparam T
       |_empty_.ad.z. => val z: AnyRef with Foo{val y: Int}
       |  [0..6): AnyRef => _root_.scala.AnyRef#
       |  [12..15): Foo => _empty_.ad.Foo#

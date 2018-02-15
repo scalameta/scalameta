@@ -15,6 +15,7 @@ trait SymbolOps { self: DatabaseOps =>
         if (sym == null || sym == g.NoSymbol) return m.Symbol.None
         if (sym.isOverloaded) return m.Symbol.Multi(sym.alternatives.map(_.toSemantic))
         if (sym.isModuleClass) return sym.asClass.module.toSemantic
+        if (sym.isTypeSkolem) return sym.deSkolemize.toSemantic
         if (sym.isRootPackage) return m.Symbol.Global(m.Symbol.None, m.Signature.Term("_root_"))
         if (sym.isEmptyPackage) return m.Symbol.Global(m.Symbol.None, m.Signature.Term("_empty_"))
 
