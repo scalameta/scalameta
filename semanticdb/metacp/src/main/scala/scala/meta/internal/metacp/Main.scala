@@ -29,6 +29,14 @@ object Main {
     val semanticdbRoot = AbsolutePath(settings.d).resolve("META-INF").resolve("semanticdb")
     Files.createDirectories(semanticdbRoot.toNIO)
     var failed = false
+    def fail(file: Path, ex: Throwable): FileVisitResult = {
+      println(s"error: can't convert $file")
+      if (ex != null) {
+        ex.printStackTrace()
+      }
+      failed = true
+      FileVisitResult.CONTINUE
+    }
     val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
     classpath.visit { root =>
       new FileVisitor[Path] {
@@ -72,19 +80,18 @@ object Main {
             }
           } catch {
             case NonFatal(ex) =>
-              println(s"error: can't convert $file")
-              ex.printStackTrace()
-              failed = true
+              fail(file, ex)
           }
           FileVisitResult.CONTINUE
         }
 
         override def postVisitDirectory(dir: Path, e: IOException): FileVisitResult = {
-          if (e != null) throw e
-          FileVisitResult.CONTINUE
+          fail(dir, e)
         }
 
-        override def visitFileFailed(file: Path, e: IOException): FileVisitResult = throw e
+        override def visitFileFailed(file: Path, e: IOException): FileVisitResult = {
+          fail(file, e)
+        }
       }
     }
     if (failed) 1 else 0
