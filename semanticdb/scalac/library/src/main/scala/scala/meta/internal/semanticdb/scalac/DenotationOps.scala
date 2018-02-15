@@ -115,15 +115,16 @@ trait DenotationOps { self: DatabaseOps =>
       else Nil
 
     private def anns: (List[s.Annotation], List[g.Symbol]) = {
-      // TODO: Implement me.
-      // val buf = List.newBuilder[g.Symbol]
-      // val sanns = gsym.annotations.map { gann =>
-      //   val (sann, todo) = gann.toSemantic
-      //   todo.foreach(buf.+=)
-      //   sann
-      // }
-      // (sanns, buf.result)
-      (Nil, Nil)
+      val buf = List.newBuilder[g.Symbol]
+      val ganns = gsym.annotations.filter { gann =>
+        gann.atp.typeSymbol != definitions.MacroImplAnnotation
+      }
+      val sanns = ganns.map { gann =>
+        val (sann, todo) = gann.toSemantic
+        todo.foreach(buf.+=)
+        sann
+      }
+      (sanns, buf.result)
     }
 
     private def acc: Option[s.Accessibility] = {

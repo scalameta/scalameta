@@ -289,11 +289,8 @@ object Main {
           Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(Nil, sparents, sdecls))))
         case AnnotatedType(tpe, anns) =>
           val stag = t.ANNOTATED_TYPE
-          val sanns = {
-            // TODO: Not supported by scalap.
-            // anns.reverse.flatMap(sann)
-            Nil
-          }
+          // TODO: Not supported by scalap.
+          val sanns = Nil
           val stpe = loop(tpe)
           Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(sanns, stpe))))
         case ExistentialType(tpe, tparams) =>
@@ -368,7 +365,7 @@ object Main {
   }
 
   def sanns(sym: SymbolInfoSymbol): List[s.Annotation] = {
-    // TODO: Implement me.
+    // TODO: Not supported by scalap.
     Nil
   }
 

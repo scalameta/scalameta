@@ -111,7 +111,7 @@ Schema => SemanticDB v3
 Uri => flags/p/package.class
 Text => empty
 Language => Scala
-Symbols => 35 entries
+Symbols => 38 entries
 
 Symbols:
 flags.p.package. => final package object package
@@ -172,6 +172,14 @@ flags.p.package.C#`<init>`(3).(z) => param z: V
   V => flags.p.package.C#[V]
 flags.p.package.C#w(0). => abstract def w: : Int
   Int => scala.Int#
+flags.p.package.S# => class S.{+2 decls}
+  extends AnyRef
+flags.p.package.S#[T] => typeparam T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+flags.p.package.S#`<init>`(0). => primaryctor <init>: (): S[T]
+  S => flags.p.package.S#
+  T => flags.p.package.S#[T]
 flags.p.package.T# => type T: Int
   Int => scala.Int#
 flags.p.package.U# => abstract type U: >: Nothing <: Int

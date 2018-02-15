@@ -132,6 +132,11 @@ Names:
 [411..414): Int => _root_.scala.Int#
 [420..421): z <= _root_.flags.p.package.AA#(z)
 [423..426): Int => _root_.scala.Int#
+[436..437): S <= _root_.flags.p.package.S#
+[439..450): specialized => _root_.scala.specialized#
+[451..452): T <= _root_.flags.p.package.S#[T]
+[451..451): ε => _root_.scala.specialized#`<init>`()V.
+[454..454): ε <= _root_.flags.p.package.S#`<init>`()V.
 
 Symbols:
 _root_.flags. => package flags.{+1 members}
@@ -174,6 +179,11 @@ _root_.flags.p.package.C#`<init>`(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang
   [28..29): V => _root_.flags.p.package.C#[V]
 _root_.flags.p.package.C#w()I. => abstract def w: Int
   [0..3): Int => _root_.scala.Int#
+_root_.flags.p.package.S# => class S
+_root_.flags.p.package.S#[T] => typeparam T
+_root_.flags.p.package.S#`<init>`()V. => primaryctor <init>: (): S[T]
+  [4..5): S => _root_.flags.p.package.S#
+  [6..7): T => _root_.flags.p.package.S#[T]
 _root_.flags.p.package.T# => type T: Int
   [0..3): Int => _root_.scala.Int#
 _root_.flags.p.package.U# => abstract type U
@@ -204,6 +214,9 @@ _root_.scala.language. => final object language
 _root_.scala.language.experimental. => final object experimental
 _root_.scala.language.experimental.macros. => implicit lazy val macros: macros
   [0..6): macros => _root_.scala.languageFeature.experimental.macros#
+_root_.scala.specialized# => class specialized
+_root_.scala.specialized#`<init>`()V. => secondaryctor <init>: (): specialized
+  [4..15): specialized => _root_.scala.specialized#
 
 
 semanticdb/integration/src/main/scala/example/Overrides.scala

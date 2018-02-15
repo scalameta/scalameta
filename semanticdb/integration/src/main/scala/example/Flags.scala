@@ -18,4 +18,5 @@ package object p {
   final class Y
   sealed trait Z
   class AA(x: Int, val y: Int, var z: Int)
+  class S[@specialized T]
 }
