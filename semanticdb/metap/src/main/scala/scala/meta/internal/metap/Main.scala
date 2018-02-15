@@ -495,11 +495,11 @@ object Main {
   private implicit def infoOrder: Ordering[SymbolInformation] =
     Ordering.by(_.symbol)
   private implicit def occOrder: Ordering[SymbolOccurrence] =
-    Ordering.by(_.range)
+    Ordering.by(o => (o.range, o.symbol, o.role.value))
   private implicit def diagOrder: Ordering[Diagnostic] =
-    Ordering.by(_.range)
+    Ordering.by(d => (d.range, d.severity.value, d.message))
   private implicit def synthOrder: Ordering[Synthetic] =
-    Ordering.by(_.range)
+    Ordering.by(s => (s.range, s.text.map(_.text)))
 
   private def rep[T](pre: String, xs: Seq[T], sep: String, suf: String)(f: T => Unit): Unit = {
     if (xs.nonEmpty) {

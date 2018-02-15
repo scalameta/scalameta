@@ -197,8 +197,8 @@ Names:
 [423..426): Int => _root_.scala.Int#
 [436..437): S <= _root_.flags.p.package.S#
 [439..450): specialized => _root_.scala.specialized#
-[451..452): T <= _root_.flags.p.package.S#[T]
 [451..451):  => _root_.scala.specialized#`<init>`()V.
+[451..452): T <= _root_.flags.p.package.S#[T]
 [454..454):  <= _root_.flags.p.package.S#`<init>`()V.
 
 Symbols:
