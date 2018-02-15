@@ -15,6 +15,7 @@ trait SymbolOps { self: DatabaseOps =>
         if (sym == null || sym == g.NoSymbol) return m.Symbol.None
         if (sym.isOverloaded) return m.Symbol.Multi(sym.alternatives.map(_.toSemantic))
         if (sym.isModuleClass) return sym.asClass.module.toSemantic
+        if (sym.isTypeSkolem) return sym.deSkolemize.toSemantic
         if (sym.isRootPackage) return m.Symbol.Global(m.Symbol.None, m.Signature.Term("_root_"))
         if (sym.isEmptyPackage) return m.Symbol.Global(m.Symbol.None, m.Signature.Term("_empty_"))
 
@@ -64,6 +65,7 @@ trait SymbolOps { self: DatabaseOps =>
               else if (sym == g.definitions.ArrayClass) "[" + encode(args.head)
               else "L" + sym.fullName.replace(".", "/") + ";"
             }
+            // TODO: Implement me.
             val g.MethodType(params, ret) = sym.info.erasure
             val jvmRet = if (!sym.isConstructor) ret else g.definitions.UnitClass.toType
             "(" + params.map(param => encode(param.info)).mkString("") + ")" + encode(jvmRet)

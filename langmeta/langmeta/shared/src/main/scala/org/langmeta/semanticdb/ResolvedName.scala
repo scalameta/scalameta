@@ -6,7 +6,7 @@ import org.langmeta.internal.inputs._
 
 final case class ResolvedName(position: Position, symbol: Symbol, isDefinition: Boolean) {
   def syntax: String = {
-    val text = if (position.text.nonEmpty) position.text else "ε"
+    val text = if (position.text.nonEmpty) position.text else ""
     val binder = if (isDefinition) "<=" else "=>"
     s"[${position.start}..${position.end}): $text $binder ${symbol.syntax}"
   }

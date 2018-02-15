@@ -28,6 +28,8 @@ private[semanticdb] trait Flags {
   final val CONTRAVARIANT: Long = 1 << 23
   final val INLINE: Long = 1 << 24
   final val JAVADEFINED: Long = 1 << 25
+  final val GETTER: Long = 1 << 26
+  final val SETTER: Long = 1 << 27
 }
 
 private[semanticdb] trait HasFlags {
@@ -37,6 +39,8 @@ private[semanticdb] trait HasFlags {
   def isVal: Boolean = hasFlag(VAL)
   def isVar: Boolean = hasFlag(VAR)
   def isDef: Boolean = hasFlag(DEF)
+  def isGetter: Boolean = hasFlag(GETTER)
+  def isSetter: Boolean = hasFlag(SETTER)
   def isPrimaryCtor: Boolean = hasFlag(PRIMARYCTOR)
   def isSecondaryCtor: Boolean = hasFlag(SECONDARYCTOR)
   def isMacro: Boolean = hasFlag(MACRO)
@@ -83,6 +87,8 @@ private[semanticdb] trait HasFlags {
     if (hasFlag(VAL)) append("VAL")
     if (hasFlag(VAR)) append("VAR")
     if (hasFlag(DEF)) append("DEF")
+    if (hasFlag(GETTER)) append("GETTER")
+    if (hasFlag(SETTER)) append("SETTER")
     if (hasFlag(PRIMARYCTOR)) append("PRIMARYCTOR")
     if (hasFlag(SECONDARYCTOR)) append("SECONDARYCTOR")
     if (hasFlag(MACRO)) append("MACRO")

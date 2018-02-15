@@ -27,7 +27,7 @@ final case class Database(documents: Seq[Document]) {
       val separator = EOL + "-" * s_input.toString.length + EOL
       s_input + separator + attrs.syntax
     }
-    s_entries.mkString(EOL + EOL)
+    s_entries.sorted.mkString(EOL + EOL)
   }
 
   def structure: String = {

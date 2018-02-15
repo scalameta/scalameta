@@ -2,11 +2,13 @@ package scala.meta.internal.metacp
 
 import java.io._
 import java.nio.file._
+import java.nio.file.attribute.BasicFileAttributes
 import scala.collection.mutable
 import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.LiteralType.{Tag => l}
+import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
+import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.NameTransformer
 import scala.tools.scalap.scalax.rules.ScalaSigParserError
@@ -25,44 +27,70 @@ object Main {
 
   def process(settings: Settings): Int = {
     val semanticdbRoot = AbsolutePath(settings.d).resolve("META-INF").resolve("semanticdb")
+    Files.createDirectories(semanticdbRoot.toNIO)
     var failed = false
+    def fail(file: Path, ex: Throwable): FileVisitResult = {
+      println(s"error: can't convert $file")
+      ex.printStackTrace()
+      failed = true
+      FileVisitResult.CONTINUE
+    }
     val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
-    val fragments = classpath.deep.filter(_.uri.toString.endsWith(".class"))
-    fragments.sortBy(_.uri.toString).foreach { fragment =>
-      try {
-        val bytecode = {
-          val is = fragment.uri.toURL.openStream()
-          try ByteCode(InputStreamIO.readBytes(is))
-          finally is.close()
+    classpath.visit { root =>
+      new FileVisitor[Path] {
+
+        // Create relative directory in semanticdbRoot
+        override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          val relpath = AbsolutePath(dir).toRelative(root).toString
+          val out = semanticdbRoot.resolve(relpath)
+          if (!out.isDirectory) Files.createDirectory(out.toNIO)
+          FileVisitResult.CONTINUE
         }
-        val classfile = ClassFileParser.parse(bytecode)
-        ScalaSigParser.parse(classfile) match {
-          case Some(scalaSig) =>
-            val semanticdbInfos = scalaSig.symbols.flatMap {
-              case sym: SymbolInfoSymbol => sinfo(sym)
-              case _ => None
+
+        // convert classfile to .class.semanticdb file with symbols only
+        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          if (PathIO.extension(file) != "class") return FileVisitResult.CONTINUE
+          try {
+            val relpath = AbsolutePath(file).toRelative(root).toString
+            val bytecode = ByteCode(Files.readAllBytes(file))
+            val classfile = ClassFileParser.parse(bytecode)
+            ScalaSigParser.parse(classfile) match {
+              case Some(scalaSig) =>
+                val semanticdbInfos = scalaSig.symbols.flatMap {
+                  case sym: SymbolInfoSymbol => sinfo(sym)
+                  case _ => None
+                }
+                val className = NameTransformer.decode(PathIO.toUnix(relpath))
+                val semanticdbRelpath = relpath + ".semanticdb"
+                val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
+                val semanticdbDocument = s.TextDocument(
+                  schema = s.Schema.SEMANTICDB3,
+                  uri = className,
+                  language = Some(s.Language("Scala")),
+                  symbols = semanticdbInfos)
+                val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
+                FileIO.write(semanticdbAbspath, semanticdbDocuments)
+              case None =>
+                // NOTE: If a classfile doesn't contain ScalaSignature,
+                // we skip it for the time being. In the future, we may add support
+                // for parsing arbitrary Java classfiles.
+                ()
             }
-            val className = NameTransformer.decode(PathIO.toUnix(fragment.name.toString))
-            val semanticdbRelpath = fragment.name.resolveSibling(_ + ".semanticdb")
-            val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
-            val semanticdbDocument = s.TextDocument(
-              schema = s.Schema.SEMANTICDB3,
-              uri = className,
-              language = "Scala",
-              symbols = semanticdbInfos)
-            val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
-            FileIO.write(semanticdbAbspath, semanticdbDocuments)
-          case None =>
-            // NOTE: If a classfile doesn't contain ScalaSignature,
-            // we skip it for the time being. In the future, we may add support
-            // for parsing arbitrary Java classfiles.
-            ()
+          } catch {
+            case NonFatal(ex) =>
+              fail(file, ex)
+          }
+          FileVisitResult.CONTINUE
         }
-      } catch {
-        case NonFatal(ex) =>
-          println(s"error: can't convert $fragment")
-          ex.printStackTrace()
-          failed = true
+
+        override def postVisitDirectory(dir: Path, e: IOException): FileVisitResult = {
+          if (e != null) fail(dir, e)
+          else FileVisitResult.CONTINUE
+        }
+
+        override def visitFileFailed(file: Path, e: IOException): FileVisitResult = {
+          fail(file, e)
+        }
       }
     }
     if (failed) 1 else 0
@@ -70,25 +98,33 @@ object Main {
 
   private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
     if (sym.parent.get == NoSymbol) return None
-    if (sym.isSynthetic) return None
+    if (sym.isSynthetic) return None // TODO: Implement me.
     if (sym.isModuleClass) return None
-    if (sym.name.endsWith(" ")) return None
-    if (sym.name.endsWith("_$eq")) return None
+    if (sym.name.endsWith(" ")) return None // TODO: Implement me.
+    if (sym.name.endsWith("_$eq")) return None // TODO: Implement me.
     if (sym.name == "<init>" && !sym.isClassConstructor) return None
     Some(s.SymbolInformation(
       symbol = ssymbol(sym),
       kind = skind(sym),
       properties = sproperties(sym),
       name = sname(sym),
-      tpe = stpe(sym)))
+      tpe = stpe(sym),
+      annotations = sanns(sym),
+      accessibility = Some(sacc(sym)),
+      owner = sowner(sym)))
   }
 
   private def ssymbol(sym: Symbol): String = {
     val prefix = {
       sym match {
-        case sym: SymbolInfoSymbol => ssymbol(sym.parent.get)
-        case sym: ExternalSymbol => sym.parent.map(_.path + ".").getOrElse("")
-        case _ => sys.error(s"unsupported symbol $sym")
+        case sym: SymbolInfoSymbol =>
+          ssymbol(sym.parent.get)
+        case sym: ExternalSymbol =>
+          if (sym.name == "<root>") ""
+          else if (sym.name == "<empty>") ""
+          else "_root_." + sym.parent.map(_.path + ".").getOrElse("")
+        case _ =>
+          sys.error(s"unsupported symbol $sym")
       }
     }
     val encodedName = {
@@ -105,10 +141,10 @@ object Main {
     skind(sym) match {
       case k.VAL | k.VAR | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
         prefix + encodedName + "."
-      case k.DEF | k.PRIMARY_CONSTRUCTOR | k.SECONDARY_CONSTRUCTOR | k.MACRO =>
+      case k.DEF | k.GETTER | k.SETTER | k.PRIMARY_CONSTRUCTOR |
+           k.SECONDARY_CONSTRUCTOR | k.MACRO =>
         val descriptor = {
-          // TODO: We're pretty much fatally blocked here.
-          // Looks like we'll have to change the specification of SemanticDB.
+          // TODO: Implement me.
           def loop(tpe: Type): String = {
             tpe match {
               case PolyType(tpe, _) => loop(tpe)
@@ -137,9 +173,7 @@ object Main {
   private def skind(sym: Symbol): s.SymbolInformation.Kind = {
     sym match {
       case sym: MethodSymbol if sym.isAccessor && !sym.isParamAccessor =>
-        // TODO: Implement k.VAR.
-        // Currently, we filter out methods that end in `_=`,
-        // which means that we never get symbols that are mutable.
+        // TODO: Implement me.
         if (sym.isMutable) k.VAR
         else k.VAL
       case sym: MethodSymbol if sym.isParamAccessor || sym.isParam =>
@@ -194,8 +228,6 @@ object Main {
     def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
     var sproperties = 0
     def sflip(sbit: Int) = sproperties ^= sbit
-    if (!sym.isParamAccessor && (sym.isPrivate || sym.isLocal)) sflip(p.PRIVATE.value)
-    if (sym.isProtected) sflip(p.PROTECTED.value)
     if (isAbstractClass || isAbstractMethod || isAbstractType) sflip(p.ABSTRACT.value)
     if (sym.isFinal || sym.isModule) sflip(p.FINAL.value)
     if (sym.isSealed) sflip(p.SEALED.value)
@@ -210,11 +242,16 @@ object Main {
   }
 
   private def sname(sym: Symbol): String = {
-    if (sym.name == "<no symbol>") ""
-    else if (sym.name == "<root>") "_root_"
-    else if (sym.name == "<empty>") "_empty_"
-    else if (sym.name == "<init>") "<init>"
-    else NameTransformer.decode(sym.name)
+    def loop(name: String): String = {
+      val i = name.lastIndexOf("$$")
+      if (i > 0) loop(name.substring(i + 2))
+      else if (name == "<no symbol>") ""
+      else if (name == "<root>") "_root_"
+      else if (name == "<empty>") "_empty_"
+      else if (name == "<init>") "<init>"
+      else NameTransformer.decode(name)
+    }
+    loop(sym.name)
   }
 
   private def stpe(sym: SymbolInfoSymbol): Option[s.Type] = {
@@ -235,66 +272,69 @@ object Main {
           val sargs = args.flatMap(loop)
           Some(s.Type(tag = stag, typeRef = Some(s.TypeRef(spre, ssym, sargs))))
         case SingleType(pre, sym) =>
-          val stag = t.SINGLE_TYPE
-          val spre = if (tpe.hasNontrivialPrefix) loop(pre) else None
-          val ssym = ssymbol(sym)
-          Some(s.Type(tag = stag, singleType = Some(s.SingleType(spre, ssym))))
+          val stag = t.SINGLETON_TYPE
+          val stpe = {
+            val stag = st.SYMBOL
+            val spre = if (tpe.hasNontrivialPrefix) loop(pre) else None
+            val ssym = ssymbol(sym)
+            s.SingletonType(stag, spre, ssym, 0, "")
+          }
+          Some(s.Type(tag = stag, singletonType = Some(stpe)))
         case ThisType(sym) =>
-          val stag = t.THIS_TYPE
-          val ssym = ssymbol(sym)
-          Some(s.Type(tag = stag, thisType = Some(s.ThisType(ssym))))
-        // TODO: Not supported by scalap.
-        // case SuperType(pre, gmix) =>
-        //   val stag = t.SUPER_TYPE
-        //   val spre = loop(pre)
-        //   val smix = loop(gmix)
-        //   Some(s.Type(tag = stag, superType = Some(s.SuperType(spre, smix))))
+          val stag = t.SINGLETON_TYPE
+          val stpe = {
+            val stag = st.THIS
+            // TODO: Implement me.
+            val spre = loop(TypeRefType(NoPrefixType, sym, Nil))
+            s.SingletonType(stag, spre, "", 0, "")
+          }
+          Some(s.Type(tag = stag, singletonType = Some(stpe)))
         case ConstantType(underlying: Type) =>
           loop(underlying).map { sarg =>
             val stag = t.TYPE_REF
             val ssym = "_root_.java.lang.Class#"
             val sargs = sarg :: Nil
+            // TODO: Implement me.
             s.Type(tag = stag, typeRef = Some(s.TypeRef(None, ssym, sargs)))
           }
         case ConstantType(const) =>
-          def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
-          def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
-          val stag = t.LITERAL_TYPE
-          val sconst = const match {
-            case () => s.LiteralType(l.UNIT, 0, "")
-            case false => s.LiteralType(l.BOOLEAN, 0, "")
-            case true => s.LiteralType(l.BOOLEAN, 1, "")
-            case x: Byte => s.LiteralType(l.BYTE, x.toLong, "")
-            case x: Short => s.LiteralType(l.SHORT, x.toLong, "")
-            case x: Char => s.LiteralType(l.CHAR, x.toLong, "")
-            case x: Int => s.LiteralType(l.INT, x.toLong, "")
-            case x: Long => s.LiteralType(l.LONG, x, "")
-            case x: Float => s.LiteralType(l.FLOAT, floatBits(x), "")
-            case x: Double => s.LiteralType(l.DOUBLE, doubleBits(x), "")
-            case x: String => s.LiteralType(l.STRING, 0, x)
-            case null => s.LiteralType(l.NULL, 0, "")
-            case other => sys.error(s"unsupported const $other")
+          val stag = t.SINGLETON_TYPE
+          val stpe = {
+            def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
+            def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
+            const match {
+              case () => s.SingletonType(st.UNIT, None, "", 0, "")
+              case false => s.SingletonType(st.BOOLEAN, None, "", 0, "")
+              case true => s.SingletonType(st.BOOLEAN, None, "", 1, "")
+              case x: Byte => s.SingletonType(st.BYTE, None, "", x.toLong, "")
+              case x: Short => s.SingletonType(st.SHORT, None, "", x.toLong, "")
+              case x: Char => s.SingletonType(st.CHAR, None, "", x.toLong, "")
+              case x: Int => s.SingletonType(st.INT, None, "", x.toLong, "")
+              case x: Long => s.SingletonType(st.LONG, None, "", x, "")
+              case x: Float => s.SingletonType(st.FLOAT,None, "", floatBits(x), "")
+              case x: Double => s.SingletonType(st.DOUBLE, None, "", doubleBits(x), "")
+              case x: String => s.SingletonType(st.STRING, None, "", 0, x)
+              case null => s.SingletonType(st.NULL, None, "", 0, "")
+              case other => sys.error(s"unsupported const $other")
+            }
           }
-          Some(s.Type(tag = stag, literalType = Some(sconst)))
+          Some(s.Type(tag = stag, singletonType = Some(stpe)))
         case RefinedType(sym, parents) =>
-          val stag = t.COMPOUND_TYPE
+          val stag = t.STRUCTURAL_TYPE
           val sparents = parents.flatMap(loop)
           val sdecls = sym.children.map(ssymbol)
-          Some(s.Type(tag = stag, compoundType = Some(s.CompoundType(sparents, sdecls))))
-        case AnnotatedType(tpe, raw) =>
+          Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(Nil, sparents, sdecls))))
+        case AnnotatedType(tpe, anns) =>
           val stag = t.ANNOTATED_TYPE
+          // TODO: Not supported by scalap.
+          val sanns = Nil
           val stpe = loop(tpe)
-          val sanns = {
-            // TODO: Not supported by scalap.
-            // anns.reverse.flatMap(gann => loop(gann.atp))
-            Nil
-          }
-          Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(stpe, sanns))))
-        case ExistentialType(tpe, quants) =>
+          Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(sanns, stpe))))
+        case ExistentialType(tpe, tparams) =>
           val stag = t.EXISTENTIAL_TYPE
+          val stparams = tparams.map(ssymbol)
           val stpe = loop(tpe)
-          val ssyms = quants.map(ssymbol)
-          Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stpe, ssyms))))
+          Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stparams, stpe))))
         case ClassInfoType(sym, parents) =>
           val stag = t.CLASS_INFO_TYPE
           val sparents = parents.flatMap(loop)
@@ -330,15 +370,17 @@ object Main {
         case PolyType(tpe, tparams) =>
           val stparams = tparams.map(ssymbol)
           loop(tpe).map { stpe =>
-            if (stpe.tag == t.CLASS_INFO_TYPE) {
+            if (stpe.tag == t.STRUCTURAL_TYPE) {
+              stpe.update(_.structuralType.typeParameters := stparams)
+            } else if (stpe.tag == t.CLASS_INFO_TYPE) {
               stpe.update(_.classInfoType.typeParameters := stparams)
             } else if (stpe.tag == t.METHOD_TYPE) {
               stpe.update(_.methodType.typeParameters := stparams)
             } else if (stpe.tag == t.TYPE_TYPE) {
               stpe.update(_.typeType.typeParameters := stparams)
             } else {
-              val stag = t.TYPE_LAMBDA
-              s.Type(tag = stag, typeLambda = Some(s.TypeLambda(stparams, Some(stpe))))
+              val stag = t.UNIVERSAL_TYPE
+              s.Type(tag = stag, universalType = Some(s.UniversalType(stparams, Some(stpe))))
             }
           }
         case NoType =>
@@ -357,6 +399,33 @@ object Main {
         // when this can happen
         None
     }
+  }
+
+  def sanns(sym: SymbolInfoSymbol): List[s.Annotation] = {
+    // TODO: Not supported by scalap.
+    Nil
+  }
+
+  def sacc(sym: SymbolInfoSymbol): s.Accessibility = {
+    sym.symbolInfo.privateWithin match {
+      case Some(privateWithin: Symbol) =>
+        val sprivateWithin = ssymbol(privateWithin)
+        if (sym.isProtected) s.Accessibility(a.PROTECTED_WITHIN, sprivateWithin)
+        else s.Accessibility(a.PRIVATE_WITHIN, sprivateWithin)
+      case Some(other) =>
+        sys.error(s"unsupported privateWithin: ${other.getClass} $other")
+      case None =>
+        if (sym.isPrivate && sym.isLocal) s.Accessibility(a.PRIVATE_THIS)
+        else if (sym.isPrivate) s.Accessibility(a.PRIVATE)
+        else if (sym.isProtected && sym.isLocal) s.Accessibility(a.PROTECTED_THIS)
+        else if (sym.isProtected) s.Accessibility(a.PROTECTED)
+        else s.Accessibility(a.PUBLIC)
+    }
+  }
+
+  def sowner(sym: SymbolInfoSymbol): String = {
+    if (sym.symbolInfo.owner == NoSymbol) return ""
+    ssymbol(sym.symbolInfo.owner)
   }
 
   private object ByNameType {
@@ -406,6 +475,7 @@ object Main {
         case _ => NoSymbol
       }
     }
+    // TODO: Implement me.
     def hasNontrivialPrefix: Boolean = {
       val kind = skind(tpe.prefix.symbol)
       kind != k.OBJECT && kind != k.PACKAGE && kind != k.PACKAGE_OBJECT

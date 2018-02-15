@@ -3,6 +3,7 @@ package org.langmeta.internal.io
 import java.net.URI
 import java.nio.charset.Charset
 import scalapb.GeneratedMessage
+import scala.meta.internal.semanticdb3._
 import org.langmeta.io._
 
 object FileIO {
@@ -12,6 +13,9 @@ object FileIO {
 
   def readAllBytes(uri: URI): Array[Byte] =
     PlatformFileIO.readAllBytes(uri)
+
+  def readAllDocuments(path: AbsolutePath): Seq[TextDocument] =
+    PlatformFileIO.readAllDocuments(path)
 
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit =
     PlatformFileIO.write(path, proto)
@@ -31,5 +35,7 @@ object FileIO {
   def listAllFilesRecursively(path: AbsolutePath): ListFiles =
     PlatformFileIO.listAllFilesRecursively(path)
 
+  def jarRootPath(jarFile: AbsolutePath): AbsolutePath =
+    PlatformFileIO.jarRootPath(jarFile)
 }
 

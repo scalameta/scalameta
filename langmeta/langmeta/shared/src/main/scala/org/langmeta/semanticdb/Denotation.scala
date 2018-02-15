@@ -13,18 +13,35 @@ final class Denotation(
     val names: List[ResolvedName],
     val members: List[Signature],
     val overrides: List[Symbol],
-    val tpe: Option[s.Type]
+    val tpe: Option[s.Type],
+    val annotations: List[s.Annotation],
+    val accessibility: Option[s.Accessibility],
+    val owner: Symbol
 ) extends HasFlags
     with Product
     with Serializable {
   def this(flags: Long, name: String, signature: String, names: List[ResolvedName]) =
-      this(flags, name, signature, names, Nil, Nil, None)
+      this(flags, name, signature, names, Nil, Nil, None, Nil, None, Symbol.None)
 
   def this(flags: Long, name: String, signature: String, names: List[ResolvedName], members: List[Signature]) =
-      this(flags, name, signature, names, members, Nil, None)
+      this(flags, name, signature, names, members, Nil, None, Nil, None, Symbol.None)
 
-  def this(flags: Long, name: String, signature: String, names: List[ResolvedName], members: List[Signature], overrides: List[Symbol]) =
-      this(flags, name, signature, names, members, overrides, None)
+  def this(flags: Long,
+           name: String,
+           signature: String,
+           names: List[ResolvedName],
+           members: List[Signature],
+           overrides: List[Symbol]) =
+      this(flags, name, signature, names, members, overrides, None, Nil, None, Symbol.None)
+
+  def this(flags: Long,
+           name: String,
+           signature: String,
+           names: List[ResolvedName],
+           members: List[Signature],
+           overrides: List[Symbol],
+           tpe: Option[s.Type]) =
+      this(flags, name, signature, names, members, overrides, tpe, Nil, None, Symbol.None)
 
   def syntax: String = {
     val s_overrides = if (overrides.isEmpty) "" else s"${EOL}  override ${overrides.head}"
@@ -59,6 +76,9 @@ final class Denotation(
     acc = scala.runtime.Statics.mix(acc, scala.runtime.Statics.anyHash(members))
     acc = scala.runtime.Statics.mix(acc, scala.runtime.Statics.anyHash(overrides))
     acc = scala.runtime.Statics.mix(acc, scala.runtime.Statics.anyHash(tpe))
+    acc = scala.runtime.Statics.mix(acc, scala.runtime.Statics.anyHash(annotations))
+    acc = scala.runtime.Statics.mix(acc, scala.runtime.Statics.anyHash(accessibility))
+    acc = scala.runtime.Statics.mix(acc, scala.runtime.Statics.anyHash(owner))
     scala.runtime.Statics.finalizeHash(acc, 4)
   }
   override def equals(x$1: scala.Any): Boolean = this.eq(x$1.asInstanceOf[Object]) || {
@@ -67,7 +87,13 @@ final class Denotation(
         flags == d.flags &&
           name == d.name &&
           signature == d.signature &&
-          names == d.names
+          names == d.names &&
+          members == d.members &&
+          overrides == d.overrides &&
+          tpe == d.tpe &&
+          annotations == d.annotations &&
+          accessibility == d.accessibility &&
+          owner == d.owner
     }
   }
   override def productElement(x$1: Int): Any = (x$1: @switch) match {
@@ -107,6 +133,18 @@ object Denotation extends AbstractFunction4[Long, String, String, List[ResolvedN
             overrides: List[Symbol],
             tpe: Option[s.Type]): Denotation =
     new Denotation(flags, name, signature, names, members, overrides, tpe)
+
+  def apply(flags: Long,
+            name: String,
+            signature: String,
+            names: List[ResolvedName],
+            members: List[Signature],
+            overrides: List[Symbol],
+            tpe: Option[s.Type],
+            annotations: List[s.Annotation],
+            accessibility: Option[s.Accessibility],
+            owner: Symbol): Denotation =
+    new Denotation(flags, name, signature, names, members, overrides, tpe, annotations, accessibility, owner)
 
   @deprecated("Use `case d: Denotation` instead.", "2.1.0")
   def unapply(x$0: Denotation): Option[(Long, String, String, List[ResolvedName])] =

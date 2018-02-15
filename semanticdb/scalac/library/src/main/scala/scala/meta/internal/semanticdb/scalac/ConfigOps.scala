@@ -15,7 +15,8 @@ case class SemanticdbConfig(
     profiling: ProfilingMode,
     fileFilter: FileFilter,
     messages: MessageMode,
-    synthetics: SyntheticMode) {
+    synthetics: SyntheticMode,
+    owners: OwnerMode) {
   def syntax: String = {
     val p = SemanticdbPlugin.name
     List(
@@ -30,7 +31,8 @@ case class SemanticdbConfig(
       "include" -> fileFilter.include,
       "exclude" -> fileFilter.exclude,
       "messages" -> messages.name,
-      "synthetics" -> synthetics.name
+      "synthetics" -> synthetics.name,
+      "owners" -> owners.name
     ).map { case (k, v) => s"-P:$p:$k:$v" }.mkString(" ")
   }
 
@@ -47,7 +49,8 @@ object SemanticdbConfig {
     ProfilingMode.Off,
     FileFilter.matchEverything,
     MessageMode.All,
-    SyntheticMode.All
+    SyntheticMode.All,
+    OwnerMode.All
   )
 }
 
@@ -184,6 +187,19 @@ object SyntheticMode {
   case object None extends SyntheticMode
 }
 
+sealed abstract class OwnerMode {
+  import OwnerMode._
+  def name: String = toString.toLowerCase
+  def isAll: Boolean = this == All
+}
+object OwnerMode {
+  def unapply(arg: String): Option[OwnerMode] =
+    all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, None)
+  case object All extends OwnerMode
+  case object None extends OwnerMode
+}
+
 trait ConfigOps { self: DatabaseOps =>
   val SetSourceroot = "sourceroot:(.*)".r
   val SetMode = "mode:(.*)".r
@@ -197,6 +213,7 @@ trait ConfigOps { self: DatabaseOps =>
   val SetExclude = "exclude:(.*)".r
   val SetMessages = "messages:(.*)".r
   val SetSynthetics = "synthetics:(.*)".r
+  val SetOwners = "owners:(.*)".r
 
   var config: SemanticdbConfig = SemanticdbConfig.default
   implicit class XtensionSemanticdbConfig(ignored: SemanticdbConfig) {
@@ -224,5 +241,7 @@ trait ConfigOps { self: DatabaseOps =>
       config = config.copy(messages = messages)
     def setSynthetics(synthetics: SyntheticMode): Unit =
       config = config.copy(synthetics = synthetics)
+    def setOwners(owners: OwnerMode): Unit =
+      config = config.copy(owners = owners)
   }
 }

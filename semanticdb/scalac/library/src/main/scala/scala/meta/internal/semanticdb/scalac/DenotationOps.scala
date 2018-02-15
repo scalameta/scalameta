@@ -6,6 +6,7 @@ import scala.reflect.internal.{Flags => gf}
 import scala.util.Sorting
 import org.scalameta.logger
 import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 
 trait DenotationOps { self: DatabaseOps =>
   import g._
@@ -113,6 +114,38 @@ trait DenotationOps { self: DatabaseOps =>
       if (config.overrides.isAll) gsym.overrides.map(_.toSemantic)
       else Nil
 
+    private def anns: (List[s.Annotation], List[g.Symbol]) = {
+      val buf = List.newBuilder[g.Symbol]
+      val ganns = gsym.annotations.filter { gann =>
+        gann.atp.typeSymbol != definitions.MacroImplAnnotation
+      }
+      val sanns = ganns.map { gann =>
+        val (sann, todo) = gann.toSemantic
+        todo.foreach(buf.+=)
+        sann
+      }
+      (sanns, buf.result)
+    }
+
+    private def acc: Option[s.Accessibility] = {
+      if (gsym.privateWithin == NoSymbol) {
+        if (gsym.isPrivateThis) Some(s.Accessibility(a.PRIVATE_THIS))
+        else if (gsym.isPrivate) Some(s.Accessibility(a.PRIVATE))
+        else if (gsym.isProtectedThis) Some(s.Accessibility(a.PROTECTED_THIS))
+        else if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED))
+        else Some(s.Accessibility(a.PUBLIC))
+      } else {
+        val ssym = gsym.privateWithin.toSemantic.syntax
+        if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
+        else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
+      }
+    }
+
+    private def owner: m.Symbol = {
+      if (config.owners.isAll && gsym.isSemanticdbGlobal) gsym.owner.toSemantic
+      else m.Symbol.None
+    }
+
     def toDenotation(saveOverrides: Boolean): DenotationResult = {
       val over = {
         if (saveOverrides) overrides
@@ -122,23 +155,24 @@ trait DenotationOps { self: DatabaseOps =>
         if (saveOverrides && config.denotations.saveReferences) gsym.overrides
         else Nil
       }
+      val (anns, todoAnns) = this.anns
       config.signatures match {
         case SignatureMode.None =>
-          val denot = m.Denotation(flags, name, "", Nil, Nil, over, None)
-          DenotationResult(denot, todoOverrides, Nil)
+          val denot = m.Denotation(flags, name, "", Nil, Nil, over, None, anns, acc, owner)
+          DenotationResult(denot, todoOverrides, todoAnns)
         case SignatureMode.Old =>
           val (signature, names) = oldInfo
-          val denot = m.Denotation(flags, name, signature, names, Nil, over, None)
-          DenotationResult(denot, todoOverrides, Nil)
+          val denot = m.Denotation(flags, name, signature, names, Nil, over, None, anns, acc, owner)
+          DenotationResult(denot, todoOverrides, todoAnns)
         case SignatureMode.New =>
           val (tpe, todoTpe) = newInfo
-          val denot = m.Denotation(flags, name, "", Nil, Nil, over, tpe)
-          DenotationResult(denot, todoOverrides, todoTpe)
+          val denot = m.Denotation(flags, name, "", Nil, Nil, over, tpe, anns, acc, owner)
+          DenotationResult(denot, todoOverrides, todoAnns ++ todoTpe)
         case SignatureMode.All =>
           val (signature, names) = oldInfo
           val (tpe, todoTpe) = newInfo
-          val denot = m.Denotation(flags, name, signature, names, Nil, over, tpe)
-          DenotationResult(denot, todoOverrides, todoTpe)
+          val denot = m.Denotation(flags, name, signature, names, Nil, over, tpe, anns, acc, owner)
+          DenotationResult(denot, todoOverrides, todoAnns ++ todoTpe)
       }
     }
   }

@@ -2,10 +2,13 @@ package org.langmeta.internal.io
 
 import java.net.URI
 import java.nio.charset.Charset
+import java.nio.file.FileSystemAlreadyExistsException
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
 import scalapb.GeneratedMessage
+import scala.meta.internal.semanticdb3._
 import org.langmeta.io._
 
 object PlatformFileIO {
@@ -21,6 +24,12 @@ object PlatformFileIO {
 
   def readAllBytes(path: AbsolutePath): Array[Byte] =
     Files.readAllBytes(path.toNIO)
+
+  def readAllDocuments(path: AbsolutePath): Seq[TextDocument] = {
+    val stream = Files.newInputStream(path.toNIO)
+    try TextDocuments.parseFrom(stream).documents
+    finally stream.close()
+  }
 
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
     path.toFile.getParentFile.mkdirs()
@@ -53,4 +62,14 @@ object PlatformFileIO {
       }
     new ListFiles(root, relativeFiles.toList)
   }
+
+  def jarRootPath(jarFile: AbsolutePath): AbsolutePath = {
+    val uri = URI.create("jar:file:" + jarFile.toNIO.toUri.getPath)
+    val roo = newFileSystem(uri, new java.util.HashMap[String, Any]()).getPath("/")
+    AbsolutePath(roo)
+  }
+
+  private def newFileSystem(uri: URI, map: java.util.Map[String, Any]) =
+    try FileSystems.newFileSystem(uri, map)
+    catch { case _: FileSystemAlreadyExistsException => FileSystems.getFileSystem(uri) }
 }

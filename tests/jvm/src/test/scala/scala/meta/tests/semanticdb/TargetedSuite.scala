@@ -65,7 +65,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     |[14..19): scala => _root_.scala.
     |[20..24): List => _root_.scala.package.List#;_root_.scala.package.List.
     |[32..33): C <= _empty_.C#
-    |[34..34): ε <= _empty_.C#`<init>`()V.
+    |[34..34):  <= _empty_.C#`<init>`()V.
     |[38..44): _root_ => _root_.
     |[45..50): scala => _root_.scala.
     |[51..55): List => _root_.scala.collection.immutable.
@@ -181,7 +181,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [17..20): Int => _root_.scala.Int#
        |_root_.f.C1#m1(I)I.(x) => param x: Int
        |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#m1(I)I.T# => typeparam T
+       |_root_.f.C1#m1(I)I.[T] => typeparam T
        |_root_.f.C1#m2()Lscala/Nothing;. => macro m2: Nothing
        |  [0..7): Nothing => _root_.scala.Nothing#
        |_root_.f.C2# => abstract class C2
@@ -473,18 +473,18 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """
       |[9..10): m <= _root_.m.
       |[17..18): C <= _root_.m.C#
-      |[18..18): ε <= _root_.m.C#`<init>`(I)V.
+      |[18..18):  <= _root_.m.C#`<init>`(I)V.
       |[19..20): x <= _root_.m.C#(x)
       |[22..25): Int => _root_.scala.Int#
       |[35..39): this <= _root_.m.C#`<init>`()V.
-      |[48..48): ε => _root_.m.C#`<init>`(I)V.
+      |[48..48):  => _root_.m.C#`<init>`(I)V.
       |[62..63): M <= _root_.m.M.
       |[72..74): c0 <= _root_.m.M.c0.
       |[81..82): C => _root_.m.C#
-      |[82..82): ε => _root_.m.C#`<init>`()V.
+      |[82..82):  => _root_.m.C#`<init>`()V.
       |[91..93): c1 <= _root_.m.M.c1.
       |[100..101): C => _root_.m.C#
-      |[101..101): ε => _root_.m.C#`<init>`(I)V.
+      |[101..101):  => _root_.m.C#`<init>`(I)V.
     """.stripMargin.trim
   )
 
@@ -678,7 +678,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |[32..41): scalatest => _root_.org.scalatest.
        |[51..52): x <= _empty_.x.
        |[61..69): FunSuite => _root_.org.scalatest.FunSuite#
-       |[70..70): ε => _root_.org.scalatest.FunSuite#`<init>`()V.
+       |[70..70):  => _root_.org.scalatest.FunSuite#`<init>`()V.
        |[78..79): x <= _empty_.x.x.
        |[82..83): q => _root_.scala.meta.internal.quasiquotes.Unlift.
        |[95..96): y <= _empty_.x.y.
@@ -835,8 +835,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  [11..12): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
       |  [15..16): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
       |_empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.(e) => param e: T
-      |  [0..1): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.T#
-      |_empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.T# => typeparam T
+      |  [0..1): T => _empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T]
+      |_empty_.ad.x.$anon#z(Ljava/lang/Object;)Ljava/lang/Object;.[T] => typeparam T
       |_empty_.ad.z. => val z: AnyRef with Foo{val y: Int}
       |  [0..6): AnyRef => _root_.scala.AnyRef#
       |  [12..15): Foo => _empty_.ad.Foo#

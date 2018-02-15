@@ -8,6 +8,7 @@ import java.nio.charset.Charset
 import java.nio.file.Paths
 import scala.scalajs.js.JSConverters._
 import scalapb.GeneratedMessage
+import scala.meta.internal.semanticdb3._
 import org.langmeta.io._
 
 object PlatformFileIO {
@@ -33,7 +34,12 @@ object PlatformFileIO {
     result
   }
 
-  def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
+  def readAllDocuments(path: AbsolutePath): Seq[TextDocument] = JSIO.inNode {
+    val bytes = readAllBytes(path)
+    TextDocuments.parseFrom(bytes).documents
+  }
+
+  def write(path: AbsolutePath, proto: GeneratedMessage): Unit = JSIO.inNode {
     JSIO.fs.mkdirSync(path.toNIO.getParent.toString)
     val os = new ByteArrayOutputStream
     proto.writeTo(os)
@@ -74,4 +80,7 @@ object PlatformFileIO {
     loop(root)
     new ListFiles(root, builder.result())
   }
+
+  def jarRootPath(jarFile: AbsolutePath): AbsolutePath =
+    throw new UnsupportedOperationException("Can't expand jar file in Scala.js")
 }
