@@ -31,5 +31,7 @@ object FileIO {
   def listAllFilesRecursively(path: AbsolutePath): ListFiles =
     PlatformFileIO.listAllFilesRecursively(path)
 
+  def jarRootPath(jarFile: AbsolutePath): AbsolutePath =
+    PlatformFileIO.jarRootPath(jarFile)
 }
 

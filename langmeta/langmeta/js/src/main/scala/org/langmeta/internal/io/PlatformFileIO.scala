@@ -74,4 +74,7 @@ object PlatformFileIO {
     loop(root)
     new ListFiles(root, builder.result())
   }
+
+  def jarRootPath(jarFile: AbsolutePath): AbsolutePath =
+    throw new UnsupportedOperationException("Can't expand jar file in Scala.js")
 }
