@@ -626,8 +626,8 @@ lazy val publishableSettings = Def.settings(
       Set()
     }
   },
-  mimaBinaryIssueFilters += Mima.compatibilityPolicy,
-  mimaBinaryIssueFilters ++= Mima.exceptions,
+  mimaBinaryIssueFilters += Mima.languageAgnosticCompatibilityPolicy,
+  mimaBinaryIssueFilters += Mima.scalaSpecificCompatibilityPolicy,
   licenses += "BSD" -> url("https://github.com/scalameta/scalameta/blob/master/LICENSE.md"),
   pomExtra := (
     <url>https://github.com/scalameta/scalameta</url>
