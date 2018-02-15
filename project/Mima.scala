@@ -16,4 +16,8 @@ object Mima {
     val exclude = fullName.contains(".internal.") || fullName.contains(".contrib.")
     public && include && !exclude
   }
+
+  def exceptions: List[ProblemFilter] = List(
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("org.langmeta.io.Multipath.visit")
+  )
 }
