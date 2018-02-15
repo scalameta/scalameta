@@ -36,7 +36,7 @@ object Main {
     if (failed) 1 else 0
   }
 
-  private def pprint(doc: TextDocument): Unit = {
+  def pprint(doc: TextDocument): Unit = {
     println(doc.uri)
     println(s"-" * doc.uri.length)
     println("")

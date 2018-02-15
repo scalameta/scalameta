@@ -1,7 +1,5 @@
 package example
 
-import scala.concurrent.Future
-
 object Example { self =>
   new scala.collection.mutable.Stack[Int]()
   def main(args: Array[String]): Unit = {
@@ -9,3 +7,4 @@ object Example { self =>
   }
   val x = scala.reflect.classTag[Int]
 }
+

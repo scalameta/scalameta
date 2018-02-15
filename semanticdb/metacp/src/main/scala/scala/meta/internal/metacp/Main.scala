@@ -11,6 +11,13 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.NameTransformer
+import scala.tools.asm.ClassReader
+import scala.tools.asm.ClassVisitor
+import scala.tools.asm.Opcodes
+import scala.tools.asm.tree.ClassNode
+import scala.tools.scalap.ByteArrayReader
+import scala.tools.scalap.Classfile
+import scala.tools.scalap.JavaWriter
 import scala.tools.scalap.scalax.rules.ScalaSigParserError
 import scala.tools.scalap.scalax.rules.scalasig._
 import scala.util.control.NonFatal
@@ -42,7 +49,8 @@ object Main {
           if (PathIO.extension(file) != "class") return FileVisitResult.CONTINUE
           try {
             val relpath = AbsolutePath(file).toRelative(root).toString
-            val bytecode = ByteCode(Files.readAllBytes(file))
+            val bytes = Files.readAllBytes(file)
+            val bytecode = ByteCode(bytes)
             val classfile = ClassFileParser.parse(bytecode)
             ScalaSigParser.parse(classfile) match {
               case Some(scalaSig) =>
@@ -57,10 +65,7 @@ object Main {
                 val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
                 FileIO.write(semanticdbAbspath, semanticdbDocuments)
               case None =>
-                // NOTE: If a classfile doesn't contain ScalaSignature,
-                // we skip it for the time being. In the future, we may add support
-                // for parsing arbitrary Java classfiles.
-                ()
+              // Do nothing
             }
           } catch {
             case NonFatal(ex) =>
@@ -141,7 +146,8 @@ object Main {
         tpe = stpe(sym),
         annotations = sanns(sym),
         accessibility = Some(sacc(sym)),
-        owner = sowner(sym)))
+        owner = sowner(sym)
+      ))
   }
 
   private def ssymbol(sym: Symbol): String = {

@@ -1,5 +1,10 @@
 package scala.meta.tests.metacp
 
+import scala.meta.internal.metacp.Main
+import scala.tools.asm.ClassReader
+import scala.tools.asm.tree.ClassNode
+import org.langmeta.io.AbsolutePath
+
 class MetacpSuite extends BaseMetacpSuite {
 
   check("scala-library", () => scalaLibraryJar)

@@ -169,7 +169,10 @@ lazy val metacp = project
   .settings(
     publishableSettings,
     description := "Scala 2.x classpath to SemanticDB converter",
-    libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
+    libraryDependencies ++= List(
+      "org.scala-lang" % "scalap" % scalaVersion.value,
+      "org.scala-lang.modules" % "scala-asm" % "5.1.0-scala-2"
+    ),
     mainClass := Some("scala.meta.cli.Metacp")
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
@@ -385,6 +388,7 @@ lazy val semanticdbIntegration = project
     description := "Sources to compile to build SemanticDB for tests.",
     sharedSettings,
     nonPublishableSettings,
+    javacOptions += "-parameters",
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions ++= {
       val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
@@ -444,6 +448,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= List(
+      "com.google.code.gson" % "gson" % "2.8.2",
       "io.get-coursier" %% "coursier" % coursier.util.Properties.version,
       "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
     )
