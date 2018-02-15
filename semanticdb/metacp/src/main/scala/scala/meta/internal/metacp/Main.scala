@@ -31,9 +31,7 @@ object Main {
     var failed = false
     def fail(file: Path, ex: Throwable): FileVisitResult = {
       println(s"error: can't convert $file")
-      if (ex != null) {
-        ex.printStackTrace()
-      }
+      ex.printStackTrace()
       failed = true
       FileVisitResult.CONTINUE
     }
@@ -86,7 +84,8 @@ object Main {
         }
 
         override def postVisitDirectory(dir: Path, e: IOException): FileVisitResult = {
-          fail(dir, e)
+          if (e != null) fail(dir, e)
+          else FileVisitResult.CONTINUE
         }
 
         override def visitFileFailed(file: Path, e: IOException): FileVisitResult = {
