@@ -75,7 +75,6 @@ _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/Cl
   T => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.[T]
   ctag => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.(ctag)
   ClassTag => _root_.scala.reflect.ClassTag#
-  T => _root_.scala.reflect.package.classTag(Lscala/reflect/ClassTag;)Lscala/reflect/ClassTag;.[T]
 
 Occurrences:
 [0:8..0:15): example <= _root_.example.
@@ -360,7 +359,6 @@ _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;. => def emp
   T => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.[T]
   evidence$1 => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.(evidence$1)
   Array => _root_.scala.Array#
-  T => _root_.scala.Array.empty(Lscala/reflect/ClassTag;)Ljava/lang/Object;.[T]
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
 _root_.scala.Int#`+`(I)I. => abstract def +: (x: <?>): Int
@@ -374,7 +372,6 @@ _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/ge
   That => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[That]
   f => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.(f)
   bf => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.(bf)
-  That => _root_.scala.collection.immutable.List#map(Lscala/Function1;Lscala/collection/generic/CanBuildFrom;)Ljava/lang/Object;.[That]
 _root_.scala.collection.immutable.List. => final object List
 _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;. => def stripPrefix: (prefix: <?>): String
   prefix => _root_.scala.collection.immutable.StringLike#stripPrefix(Ljava/lang/String;)Ljava/lang/String;.(prefix)
@@ -449,7 +446,6 @@ _root_.scala.Predef.`???`()Lscala/Nothing;. => def ???: : Nothing
 _root_.scala.Predef.classOf()Ljava/lang/Class;. => def classOf: [T: <?>] => : Class[T]
   T => _root_.scala.Predef.classOf()Ljava/lang/Class;.[T]
   Class => _root_.scala.Predef.Class#
-  T => _root_.scala.Predef.classOf()Ljava/lang/Class;.[T]
 _root_.scala.annotation. => package annotation
 _root_.scala.annotation.StaticAnnotation# => trait StaticAnnotation
   extends Annotation
@@ -511,7 +507,6 @@ _root_.types.Test.C# => class C.{+48 decls}
 _root_.types.Test.C#$anon#L# => type L: [T >: Nothing <: Any] => List[T]
   T => _root_.types.Test.C#$anon#L#[T]
   List => _root_.scala.package.List#
-  T => _root_.types.Test.C#$anon#L#[T]
 _root_.types.Test.C#$anon#L#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
@@ -549,7 +544,6 @@ _root_.types.Test.C#MethodType.m5(I)I.(x) => param x: Int
 _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;. => def m6: [T >: Nothing <: Any] => (x: T): T
   T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T]
   x => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.(x)
-  T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T]
 _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.(x) => param x: T
   T => _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T]
 _root_.types.Test.C#MethodType.m6(Ljava/lang/Object;)Ljava/lang/Object;.[T] => typeparam T: >: Nothing <: Any
@@ -582,7 +576,6 @@ _root_.types.Test.C#TypeType.T4# => type T4: C
   C => _root_.types.Test.C#
 _root_.types.Test.C#TypeType.T5# => type T5: [U >: Nothing <: Any] => U
   U => _root_.types.Test.C#TypeType.T5#[U]
-  U => _root_.types.Test.C#TypeType.T5#[U]
 _root_.types.Test.C#TypeType.T5#[U] => typeparam U: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
@@ -590,7 +583,6 @@ _root_.types.Test.C#TypeType.m2()Lscala/Nothing;. => def m2: [T2 >: C <: C] => :
   T2 => _root_.types.Test.C#TypeType.m2()Lscala/Nothing;.[T2]
   Nothing => _root_.scala.Nothing#
 _root_.types.Test.C#TypeType.m2()Lscala/Nothing;.[T2] => typeparam T2: >: C <: C
-  C => _root_.types.Test.C#
   C => _root_.types.Test.C#
 _root_.types.Test.C#TypeType.m3()Lscala/Nothing;. => def m3: [M3 [M3][_: <?>] => >: Nothing <: Any] => : Nothing
   M3 => _root_.types.Test.C#TypeType.m3()Lscala/Nothing;.[M3]
@@ -620,7 +612,6 @@ _root_.types.Test.C#compoundType3. => val compoundType3: : M with N { <?> }
   N => _root_.types.Test.N#
   k => _root_.types.Test.C#$anon#k()I.
 _root_.types.Test.C#existentialType1. => val existentialType1: : T forSome { type T >: Nothing <: Any }
-  T => _root_.types.Test.C#existentialType1.T#
   T => _root_.types.Test.C#existentialType1.T#
 _root_.types.Test.C#existentialType1.T# => abstract type T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -969,7 +960,6 @@ _root_.scala.Int#`+`(I)I. => abstract def +: (x: <?>): Int
 _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;. => @inline def locally: [T: <?>] => (x: <?>): T
   T => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.[T]
   x => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.(x)
-  T => _root_.scala.Predef.locally(Ljava/lang/Object;)Ljava/lang/Object;.[T]
 local0 => val local: Int
   Int => _root_.scala.Int#
 

@@ -363,7 +363,6 @@ _root_.types.Test.C#MethodType.m5(1).(x) => param x: Int
 _root_.types.Test.C#MethodType.m6(1). => def m6: [T >: Nothing <: Any] => (x: T): T
   T => _root_.types.Test.C#MethodType.m6(1).[T]
   x => _root_.types.Test.C#MethodType.m6(1).(x)
-  T => _root_.types.Test.C#MethodType.m6(1).[T]
 _root_.types.Test.C#MethodType.m6(1).(x) => param x: T
   T => _root_.types.Test.C#MethodType.m6(1).[T]
 _root_.types.Test.C#MethodType.m6(1).[T] => typeparam T: >: Nothing <: Any
@@ -400,7 +399,6 @@ _root_.types.Test.C#TypeType.T4# => type T4: C
   C => _root_.types.Test.C#
 _root_.types.Test.C#TypeType.T5# => type T5: [U >: Nothing <: Any] => U
   U => _root_.types.Test.C#TypeType.T5#[U]
-  U => _root_.types.Test.C#TypeType.T5#[U]
 _root_.types.Test.C#TypeType.T5#[U] => typeparam U: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
@@ -408,7 +406,6 @@ _root_.types.Test.C#TypeType.m2(0). => def m2: [T2 >: C <: C] => : Nothing
   T2 => _root_.types.Test.C#TypeType.m2(0).[T2]
   Nothing => _root_.scala.Nothing#
 _root_.types.Test.C#TypeType.m2(0).[T2] => typeparam T2: >: C <: C
-  C => _root_.types.Test.C#
   C => _root_.types.Test.C#
 _root_.types.Test.C#TypeType.m3(0). => def m3: [M3 [_ >: Nothing <: Any] => >: Nothing <: Any] => : Nothing
   M3 => _root_.types.Test.C#TypeType.m3(0).[M3]
@@ -447,7 +444,6 @@ _root_.types.Test.C#compoundType3. => val compoundType3: : M with N { <?> }
   N => _root_.types.Test.N#
   k => _root_.types.Test.C#`<refinement>`#k(0).
 _root_.types.Test.C#existentialType1. => val existentialType1: : T forSome { type T >: Nothing <: Any }
-  T => _root_.types.Test.C#`existentialType1 `(0).T#
   T => _root_.types.Test.C#`existentialType1 `(0).T#
 _root_.types.Test.C#p. => val p: : P
   P => _root_.types.P#

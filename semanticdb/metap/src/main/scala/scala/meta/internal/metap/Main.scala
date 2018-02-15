@@ -371,12 +371,16 @@ object Main {
           case Some(tpe) =>
             print(": ")
             val syms = pprint(tpe, doc)
+            val visited = mutable.Set[String]()
             println("")
             syms.foreach { sym =>
-              print("  ")
-              pprint(sym, REFERENCE, doc)
-              print(" => ")
-              println(sym)
+              if (!visited(sym)) {
+                visited += sym
+                print("  ")
+                pprint(sym, REFERENCE, doc)
+                print(" => ")
+                println(sym)
+              }
             }
           case None =>
             info.signature match {
