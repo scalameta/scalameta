@@ -166,8 +166,7 @@ object MetacOwnersExpect extends ExpectHelpers {
   def loadObtained: String = ownerSyntax(Paths.get(BuildInfo.databaseClasspath))
 }
 
-// To save the current behavior, run:
-// testsJVM/test:runMain scala.meta.tests.semanticdb.SaveExpectTest
+// To save the current behavior, run `sbt save-expect`.
 object SaveExpectTest {
   def main(args: Array[String]): Unit = {
     MetacpExpect.saveExpected(MetacpExpect.loadObtained)
