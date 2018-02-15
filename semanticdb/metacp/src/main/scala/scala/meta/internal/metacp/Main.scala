@@ -217,12 +217,12 @@ object Main {
   private def sname(sym: Symbol): String = {
     def loop(name: String): String = {
       val i = name.lastIndexOf("$$")
-      if (i > 0) return loop(name.substring(i + 2))
-      if (name == "<no symbol>") return ""
-      if (name == "<root>") return "_root_"
-      if (name == "<empty>") return "_empty_"
-      if (name == "<init>") return "<init>"
-      NameTransformer.decode(name)
+      if (i > 0) loop(name.substring(i + 2))
+      else if (name == "<no symbol>") ""
+      else if (name == "<root>") "_root_"
+      else if (name == "<empty>") "_empty_"
+      else if (name == "<init>") "<init>"
+      else NameTransformer.decode(name)
     }
     loop(sym.name)
   }

@@ -23,9 +23,9 @@ object PlatformFileIO {
   def readAllBytes(path: AbsolutePath): Array[Byte] =
     Files.readAllBytes(path.toNIO)
 
-  def readAllDocuments(path: AbsolutePath): List[TextDocument] = {
+  def readAllDocuments(path: AbsolutePath): Seq[TextDocument] = {
     val stream = Files.newInputStream(path.toNIO)
-    try TextDocuments.parseFrom(stream).documents.toList
+    try TextDocuments.parseFrom(stream).documents
     finally stream.close()
   }
 

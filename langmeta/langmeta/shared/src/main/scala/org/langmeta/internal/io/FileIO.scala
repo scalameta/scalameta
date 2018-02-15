@@ -14,7 +14,7 @@ object FileIO {
   def readAllBytes(uri: URI): Array[Byte] =
     PlatformFileIO.readAllBytes(uri)
 
-  def readAllDocuments(path: AbsolutePath): List[TextDocument] =
+  def readAllDocuments(path: AbsolutePath): Seq[TextDocument] =
     PlatformFileIO.readAllDocuments(path)
 
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit =

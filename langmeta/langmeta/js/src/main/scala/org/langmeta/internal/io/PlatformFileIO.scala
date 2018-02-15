@@ -34,7 +34,7 @@ object PlatformFileIO {
     result
   }
 
-  def readAllDocuments(path: AbsolutePath): List[TextDocument] = JSIO.inNode {
+  def readAllDocuments(path: AbsolutePath): Seq[TextDocument] = JSIO.inNode {
     val bytes = readAllBytes(path)
     TextDocuments.parseFrom(bytes).documents
   }

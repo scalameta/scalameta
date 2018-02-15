@@ -142,7 +142,7 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     private def owner: m.Symbol = {
-      if (gsym.isSemanticdbGlobal) gsym.owner.toSemantic
+      if (config.owners.isAll && gsym.isSemanticdbGlobal) gsym.owner.toSemantic
       else m.Symbol.None
     }
 
