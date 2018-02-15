@@ -12,7 +12,7 @@ Diagnostics => 1 entries
 Synthetics => 1 entries
 
 Symbols:
-_root_.example. => package example.{+5 members}
+_root_.example. => package example
 _root_.example.Example. => final object Example
 _root_.example.Example.main([Ljava/lang/String;)V. => def main: (args: Array[String]): Unit
   args => _root_.example.Example.main([Ljava/lang/String;)V.(args)
@@ -115,7 +115,7 @@ Symbols => 41 entries
 Occurrences => 56 entries
 
 Symbols:
-_root_.flags. => package flags.{+1 members}
+_root_.flags. => package flags
 _root_.flags.p.package. => package object package
 _root_.flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
@@ -287,8 +287,9 @@ Symbols => 8 entries
 Occurrences => 10 entries
 
 Symbols:
-_root_.example. => package example.{+5 members}
-_root_.example.A# => trait A.{+1 members}
+_root_.example. => package example
+_root_.example.A# => trait A.{+1 decls}
+  extends AnyRef
 _root_.example.A#foo()I. => abstract def foo: : Int
   Int => _root_.scala.Int#
 _root_.example.B# => class B.{+2 decls}
@@ -329,7 +330,7 @@ Occurrences => 11 entries
 Synthetics => 6 entries
 
 Symbols:
-_root_.example. => package example.{+5 members}
+_root_.example. => package example
 _root_.example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
 _root_.example.Synthetic#`<init>`()V. => primaryctor <init>: (): Synthetic
@@ -431,6 +432,7 @@ _root_.scala.Predef.classOf()Ljava/lang/Class;. => def classOf: [T: <?>] => : Cl
   T => _root_.scala.Predef.classOf()Ljava/lang/Class;.[T]
 _root_.scala.annotation. => package annotation
 _root_.scala.annotation.StaticAnnotation# => trait StaticAnnotation
+  extends Annotation
 _root_.scala.collection.SeqLike#length()I. => abstract def length: : Int
   Int => _root_.scala.Int#
 _root_.scala.language. => final object language
@@ -440,8 +442,9 @@ _root_.scala.language.higherKinds. => implicit lazy val higherKinds: : higherKin
   higherKinds => _root_.scala.languageFeature.higherKinds#
 _root_.scala.package.List# => val List: : List.type
   List => _root_.scala.collection.immutable.List.
-_root_.types. => package types.{+8 members}
-_root_.types.B# => class B
+_root_.types. => package types
+_root_.types.B# => class B.{+1 decls}
+  extends AnyRef
 _root_.types.B#`<init>`()V. => primaryctor <init>: (): B
   B => _root_.types.B#
 _root_.types.C# => class C.{+1 decls}
@@ -661,7 +664,8 @@ _root_.types.Test.Literal.nil. => final val nil: : null
 _root_.types.Test.Literal.string. => final val string: : "a"
 _root_.types.Test.Literal.unit. => final val unit: : Unit
   Unit => _root_.scala.Unit#
-_root_.types.Test.M# => class M.{+1 members}
+_root_.types.Test.M# => class M.{+2 decls}
+  extends AnyRef
 _root_.types.Test.M#`<init>`()V. => primaryctor <init>: (): M
   M => _root_.types.Test.M#
 _root_.types.Test.M#m()I. => def m: : Int
@@ -934,7 +938,7 @@ Occurrences => 7 entries
 Synthetics => 1 entries
 
 Symbols:
-_root_.example. => package example.{+5 members}
+_root_.example. => package example
 _root_.example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
 _root_.example.`local-file`#`<init>`()V. => primaryctor <init>: (): local-file

@@ -6,6 +6,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
 import scalapb.GeneratedMessage
+import scala.meta.internal.semanticdb3._
 import org.langmeta.io._
 
 object PlatformFileIO {
@@ -21,6 +22,12 @@ object PlatformFileIO {
 
   def readAllBytes(path: AbsolutePath): Array[Byte] =
     Files.readAllBytes(path.toNIO)
+
+  def readAllDocuments(path: AbsolutePath): List[TextDocument] = {
+    val stream = Files.newInputStream(path.toNIO)
+    try TextDocuments.parseFrom(stream).documents.toList
+    finally stream.close()
+  }
 
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
     path.toFile.getParentFile.mkdirs()

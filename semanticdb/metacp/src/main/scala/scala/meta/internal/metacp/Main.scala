@@ -377,8 +377,8 @@ object Main {
   }
 
   def sowner(sym: SymbolInfoSymbol): String = {
-    // TODO: Implement me.
-    ""
+    if (sym.symbolInfo.owner == NoSymbol) return ""
+    ssymbol(sym.symbolInfo.owner)
   }
 
   private object ByNameType {
