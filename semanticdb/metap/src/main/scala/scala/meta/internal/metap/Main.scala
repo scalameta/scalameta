@@ -268,7 +268,7 @@ object Main {
           val Some(AnnotatedType(anns, utpe)) = tpe.annotatedType
           utpe.foreach(normal)
           print(" ")
-          rep(anns, " ", ""){ ann =>
+          rep(anns, " ", "") { ann =>
             val todo = pprint(ann, doc)
             todo.foreach(buf.+=)
           }
@@ -365,8 +365,8 @@ object Main {
     }
     pprint(info.name, doc)
     info.kind match {
-      case VAL | VAR | DEF | GETTER | SETTER | PRIMARY_CONSTRUCTOR |
-           SECONDARY_CONSTRUCTOR | MACRO | TYPE | PARAMETER | TYPE_PARAMETER =>
+      case VAL | VAR | DEF | GETTER | SETTER | PRIMARY_CONSTRUCTOR | SECONDARY_CONSTRUCTOR | MACRO |
+          TYPE | PARAMETER | TYPE_PARAMETER =>
         info.tpe match {
           case Some(tpe) =>
             print(": ")
@@ -388,7 +388,7 @@ object Main {
                 print(s": ${sig.text}")
                 println("")
                 val occs = sig.occurrences.sorted
-                occs.foreach { occ => print("  "); pprint(occ, sig) }
+                rep("  ", occs, "  ")(pprint(_, sig))
               case _ =>
                 println("")
             }
@@ -401,7 +401,7 @@ object Main {
               case Some(ClassInfoType(_, parents, decls)) =>
                 if (decls.nonEmpty) println(s".{+${decls.length} decls}")
                 else println("")
-                parents.foreach{ tpe =>
+                parents.foreach { tpe =>
                   print("  extends ")
                   pprint(tpe, doc)
                   println("")
@@ -484,7 +484,7 @@ object Main {
       case Some(text) =>
         println(text.text)
         val occs = text.occurrences.sorted
-        occs.foreach { occ => print("  "); pprint(occ, text) }
+        rep("  ", occs, "  ")(pprint(_, text))
       case _ =>
         println("<?>")
     }

@@ -20,9 +20,10 @@ object Main {
       case cl: URLClassLoader => cl.getURLs.map(_.getFile).mkString(File.pathSeparator)
       case cl => sys.error(s"unsupported classloader: $cl")
     }
-    val semanticdbArgs = Array("-Xplugin:" + pluginClasspath, "-Xplugin-require:semanticdb", "-Yrangepos")
-    val stopAfterSemanticdb = Array("-Ystop-after:semanticdb-typer")
-    val scalacArgs = args ++ semanticdbArgs ++ stopAfterSemanticdb
+    val enablePluginArgs = Array("-Xplugin:" + pluginClasspath, "-Xplugin-require:semanticdb")
+    val enableRangeposArgs = Array("-Yrangepos")
+    val stopAfterPluginArgs = Array("-Ystop-after:semanticdb-typer")
+    val scalacArgs = args ++ enablePluginArgs ++ enableRangeposArgs ++ stopAfterPluginArgs
     ScalacMain.process(scalacArgs)
     if (ScalacMain.reporter.hasErrors) 1 else 0
   }
