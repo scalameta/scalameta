@@ -65,6 +65,7 @@ trait SymbolOps { self: DatabaseOps =>
               else if (sym == g.definitions.ArrayClass) "[" + encode(args.head)
               else "L" + sym.fullName.replace(".", "/") + ";"
             }
+            // TODO: Implement me.
             val g.MethodType(params, ret) = sym.info.erasure
             val jvmRet = if (!sym.isConstructor) ret else g.definitions.UnitClass.toType
             "(" + params.map(param => encode(param.info)).mkString("") + ")" + encode(jvmRet)
