@@ -17,14 +17,14 @@ class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = Over
        |class D extends C { def foo: Int = 2 }
        """.stripMargin,
     """
-       |_empty_.D#foo()I.{
-       |  _empty_.C#foo()I.
-       |  _empty_.B#foo()I.
-       |  _empty_.A#foo()I.
+       |_empty_.D#foo().{
+       |  _empty_.C#foo().
+       |  _empty_.B#foo().
+       |  _empty_.A#foo().
        |}
-       |_empty_.C#foo()I.{
-       |  _empty_.B#foo()I.
-       |  _empty_.A#foo()I.
+       |_empty_.C#foo().{
+       |  _empty_.B#foo().
+       |  _empty_.A#foo().
        |}""".stripMargin
   )
   // the denotation of B.foo overrides A.foo
@@ -35,15 +35,15 @@ class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = Over
        """.stripMargin,
     """
        |_empty_.A# => trait A
-       |_empty_.A#foo()I. => abstract def foo: Int
+       |_empty_.A#foo(). => abstract def foo: Int
        |  [0..3): Int => _root_.scala.Int#
        |_empty_.B# => class B
-       |_empty_.B#`<init>`()V. => primaryctor <init>: (): B
+       |_empty_.B#`<init>`(). => primaryctor <init>: (): B
        |  [4..5): B => _empty_.B#
-       |_empty_.B#foo()I. => def foo: Int
-       |  override _empty_.A#foo()I.
+       |_empty_.B#foo(). => def foo: Int
+       |  override _empty_.A#foo().
        |  [0..3): Int => _root_.scala.Int#
-       |_root_.java.lang.Object#`<init>`()V. => javadefined primaryctor <init>: (): Object
+       |_root_.java.lang.Object#`<init>`(). => javadefined primaryctor <init>: (): Object
        |  [4..10): Object => _root_.java.lang.Object#
        |_root_.scala.Int# => abstract final class Int""".stripMargin
   )
@@ -55,12 +55,12 @@ class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = Over
        |  }
        |}""".stripMargin,
      """
-       |_empty_.a.foo.$anon#run()V.{
-       |  _root_.java.util.TimerTask#run()V.
-       |  _root_.java.lang.Runnable#run()V.
+       |_root_.java.util.TimerTask#run().{
+       |  _root_.java.lang.Runnable#run().
        |}
-       |_root_.java.util.TimerTask#run()V.{
-       |  _root_.java.lang.Runnable#run()V.
+       |_empty_.a.foo.$anon#run().{
+       |  _root_.java.util.TimerTask#run().
+       |  _root_.java.lang.Runnable#run().
        |}""".stripMargin
   )
   overrides(
@@ -73,8 +73,8 @@ class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = Over
      |}
    """.stripMargin,
    """
-     |_empty_.Foobar#foo()I.{
-     |   _empty_.Foo#foo()I.
+     |_empty_.Foobar#foo().{
+     |   _empty_.Foo#foo().
      |}
    """.stripMargin
   )

@@ -355,6 +355,7 @@ object Main {
       case MACRO => print("macro ")
       case TYPE => print("type ")
       case PARAMETER => print("param ")
+      case SELF_PARAMETER => print("selfparam ")
       case TYPE_PARAMETER => print("typeparam ")
       case OBJECT => print("object ")
       case PACKAGE => print("package ")
@@ -366,7 +367,7 @@ object Main {
     pprint(info.name, doc)
     info.kind match {
       case VAL | VAR | DEF | GETTER | SETTER | PRIMARY_CONSTRUCTOR | SECONDARY_CONSTRUCTOR | MACRO |
-          TYPE | PARAMETER | TYPE_PARAMETER =>
+          TYPE | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER =>
         info.tpe match {
           case Some(tpe) =>
             print(": ")

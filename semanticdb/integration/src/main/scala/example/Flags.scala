@@ -19,4 +19,7 @@ package object p {
   sealed trait Z
   class AA(x: Int, val y: Int, var z: Int)
   class S[@specialized T]
+  val List(xs1) = ???
+  ??? match { case List(xs2) => ??? }
+  ??? match { case _: List[t] => ??? }
 }

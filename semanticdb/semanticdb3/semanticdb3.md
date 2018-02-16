@@ -533,6 +533,11 @@ languages map onto these kinds.
     <td>Parameter, e.g. <code>x</code> in <code>class C(x: Int)</code>.</td>
   </tr>
   <tr>
+    <td><code>17</code></td>
+    <td><code>SELF_PARAMETER</code></td>
+    <td>Self parameter, e.g. <code>self</code> in <code>class C { self => ... }</code>.</td>
+  </tr>
+  <tr>
     <td><code>9</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td>Type parameter, e.g. <code>T</code> in <code>class C[T](x: T)</code>.</td>
@@ -936,15 +941,16 @@ the owner chain is `[_root_, scala, Int]`.
     concatenation of its encoded name and a dot (`.`).
   * For `DEF`, `GETTER`, `SETTER`, `PRIMARY_CONSTRUCTOR`,
     `SECONDARY_CONSTRUCTOR` or `MACRO`, concatenation of its encoded name,
-    its type descriptor and a dot (`.`). In the case when multiple methods
-    have the same name and type descriptor, the type descriptor is
-    appended with `+N`, with `+1` going to the method that is defined
-    first in the source code, `+2` going to the method that is defined
-    second, etc.
+    a left parenthesis (`(`), its type descriptor, a right parenthesis (`)`)
+    and a dot (`.`). In the case when multiple methods have the same name
+    and type descriptor, the type descriptor is appended with `+N`,
+    with `+1` going to the method that is defined first in the source code,
+    `+2` going to the method that is defined second, etc.
   * For `TYPE`, `CLASS` or `TRAIT`, concatenation of its
     encoded name and a pound sign (`#`).
   * For `PARAMETER`, concatenation of a left parenthesis (`(`), its
     encoded name and a right parenthesis (`)`).
+  * For `SELF_PARAMETER`, unsupported.
   * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its
     encoded name and a right bracket (`]`).
   * See [SymbolInformation](#scala-symbolinformation) for details on
@@ -952,19 +958,18 @@ the owner chain is `[_root_, scala, Int]`.
 
 **Type descriptor** is:
 
-  * For `TYPE_REF`, `SymbolInformation.name` of `symbol`.
-  * For `SINGLETON_TYPE`, its Scala syntax.
+  * For `TYPE_REF`, encoded `SymbolInformation.name` of `symbol`.
+  * For `SINGLETON_TYPE`, `.type`.
   * For `STRUCTURAL_TYPE`, `{}`.
-  * For `ANNOTATED_TYPE`, simplification of `tpe`.
-  * For `EXISTENTIAL_TYPE`, simplification of `tpe`.
-  * For `UNIVERSAL_TYPE`, simplification of `tpe`.
+  * For `ANNOTATED_TYPE`, type descriptor of `tpe`.
+  * For `EXISTENTIAL_TYPE`, type descriptor of `tpe`.
+  * For `UNIVERSAL_TYPE`, type descriptor of `tpe`.
   * For `CLASS_INFO_TYPE`, unsupported.
-  * For `METHOD_TYPE`, concatenation of simplifications of
-    `SymbolInformation.tpe` of its parameter types interspersed with
-    a comma (`,`).
+  * For `METHOD_TYPE`, concatenation of type descriptors of
+    its parameter types interspersed with a comma (`,`).
   * For `BY_NAME_TYPE`, concatenation of the arrow sign (`=>`) and
-    the simplification of `tpe`.
-  * For `REPEATED_TYPE`, concatenation of simplification of `tpe`
+    the type descriptor of `tpe`.
+  * For `REPEATED_TYPE`, concatenation of type descriptor of `tpe`
     and a star (`*`).
   * For `TYPE_TYPE`, unsupported.
   * See [Type](#scala-type) for details on
@@ -1162,9 +1167,9 @@ Notes:
 **Value declarations and definitions** [\[39\]][39] are represented by multiple
 symbols, with the exact number of symbols, their kinds, properties, signatures
 and accessibilities dependent on the corresponding value:
-  * `VAL` symbol is created for all non-`ABSTRACT` values.
-  * `GETTER` symbol is created for all non-`PRIVATE_THIS` member values.
-  * `PARAMETER` symbol is created for `val` parameters of primary constructors.
+* `VAL` symbol is created for all non-`ABSTRACT` values.
+* `GETTER` symbol is created for all non-`PRIVATE_THIS` member values.
+* `PARAMETER` symbol is created for `val` parameters of primary constructors.
 
 ```scala
 abstract class C(val xp: Int) {
@@ -1290,20 +1295,92 @@ Notes:
 **Variable declarations and definitions** [\[41\]][41] are represented
 similarly to values (see above). Concretely, the following rules describe
 symbols created for variables:
-  * Whenever a `VAL` symbol would be created for a value, a `VAR` symbol is
-    created for a variable having the same properties, signature and
-    accessibility.
-  * Whenever a `GETTER` symbol would be created for a value, a `GETTER` symbol
-    is created for a variable having the same properties, signature and
-    accessibility.
-  * Whenever a `GETTER` symbol would be created for a value, a `SETTER` symbol
-    is created for a variable, having the same properties and accessibility
-    and (for `var x: T`) name `x_=`
-    and signature `MethodType(List(), List(List(<x$1>)), <Unit>)`
-    with the synthetic parameter `x$1` having signature `<T>`.
-  * Whenever a `PARAMETER` symbol would be created for a value, a `PARAMETER`
-    symbol is created for a variable having the same properties, signature
-    and accessibility.
+* Whenever a `VAL` symbol would be created for a value, a `VAR` symbol is
+  created for a variable having the same properties, signature and
+  accessibility.
+* Whenever a `GETTER` symbol would be created for a value, a `GETTER` symbol
+  is created for a variable having the same properties, signature and
+  accessibility.
+* Whenever a `GETTER` symbol would be created for a value, a `SETTER` symbol
+  is created for a variable, having the same properties and accessibility
+  and (for `var x: T`) name `x_=`
+  and signature `MethodType(List(), List(List(<x$1>)), <Unit>)`
+  with the synthetic parameter `x$1` having signature `<T>`.
+* Whenever a `PARAMETER` symbol would be created for a value, a `PARAMETER`
+  symbol is created for a variable having the same properties, signature
+  and accessibility.
+
+**Pattern variables** [\[65\]][65] are represented differently depending
+on their location:
+* `VAL` symbol is created for pattern variables in pattern matching
+  expressions [\[66\]][66].
+* A combination of `VAL`, `VAR`, `GETTER` and `SETTER` symbols is created
+  for pattern variables in pattern definitions [\[39\]][39].
+
+```scala
+class C {
+  ??? match { case List(x) => ??? }
+  val List(xval) = ???
+  var List(xvar) = ???
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>x</code></td>
+    <td><code>local0</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xval</code></td>
+    <td><code>_empty_.C#xval.</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xval</code></td>
+    <td><code>_empty_.C#xval().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>xvar</code></td>
+    <td><code>_empty_.C#xvar.</code></td>
+    <td><code>VAR</code></td>
+    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xvar</code></td>
+    <td><code>_empty_.C#xvar().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>xvar</code></td>
+    <td><code>_empty_.C#xvar_=(Nothing).</code></td>
+    <td><code>SETTER</code></td>
+    <td><code>MethodType(List(), List(&lt;x$1&gt;), TypeRef(&lt;scala.type&gt;, &lt;Unit&gt;, List()))</code></td>
+  </tr>
+</table>
+
+Notes:
+* In the future, we may decide to introduce a dedicated symbol kind
+  for regular pattern variables, so that they can be distinguished from
+  local value definitions.
+* Pattern variable symbols don't support any properties.
+* Pattern definitions [\[39\]][39] do not exist as a first-class language
+  feature. Instead, they are desugared into zero or more synthetic value
+  definitions and only then encoded into symbols as described in
+  "Value declarations and definitions" and "Variable declarations and
+  definitions".
+* Pattern variable symbols don't support any accessibilities.
 
 **Type declarations and type aliases** [\[42\]][42] are represented with
 `TYPE` symbols.
@@ -1355,6 +1432,83 @@ Notes:
   represented as described below in order of their appearance in source code.
 * Type symbols support [all Scala accessibilities](#scala-accessibility).
 
+**Type variables** [\[67\]][67] are represented with `TYPE` symbols.
+
+```scala
+class C {
+  ??? match { case _: List[t] => }
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>t</code></td>
+    <td><code>local0</code></td>
+    <td><code>TYPE</code></td>
+    <td><code>TypeType(List(), None, None)</code></td>
+  </tr>
+</table>
+
+Notes:
+* In the future, we may decide to introduce a dedicated symbol kind
+  for type variables, so that they can be distinguished from
+  local type definitions.
+* Type variable symbols are always `ABSTRACT`.
+* We leave the mapping between type syntax written in source code and
+  `Type` entities deliberately unspecified. For example, a producer may
+  represent the signature of `t` as `TypeType(List(), <Nothing>, <Any>)`.
+  See [Types](#scala-type) for more information.
+* Type variable symbols don't support any accessibilities.
+
+**Self parameters** [\[64\]][64] are represented with `SELF_PARAMETER` symbols.
+
+```scala
+class C1 {
+  self1 =>
+}
+
+class C2 {
+  self2: T =>
+}
+```
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>self1</code></td>
+    <td><code>local0</code></td>
+    <td><code>SELF_PARAMETER</code></td>
+    <td><code>TypeRef(&lt;_empty_.type&gt;, &lt;C1&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>self2</code></td>
+    <td><code>local0</code></td>
+    <td><code>SELF_PARAMETER</code></td>
+    <td><code>TypeRef(&lt;_empty_.type&gt;, &lt;T&gt;, List())</code></td>
+  </tr>
+</table>
+
+Notes:
+* Self parameters cannot be referenced outside the document where they are
+  located, which means that they are represented by local symbols.
+* Self parameter symbols don't support any properties.
+* We leave the mapping between type syntax written in source code and
+  `Type` entities deliberately unspecified. For example, a producer may
+  represent the signature of `self2` as
+  `StructuralType(List(), List(<C2>, <T>), List())`.
+  See [Types](#scala-type) for more information.
+* Self parameter symbols don't support any accessibilities.
+
 **Type parameters** [\[43\]][43] are represented with `TYPE_PARAMETER` symbols.
 
 ```scala
@@ -1362,7 +1516,6 @@ class C[T1] {
   def m[T2[T3] <: Hi] = ???
   type T[T4 >: Lo] = ???
 }
-
 ```
 <table>
   <tr>
@@ -2001,3 +2154,7 @@ on this in the future, but this is highly unlikely.
 [61]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#packagings
 [62]: https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#private
 [63]: https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#protected
+[64]: https://www.scala-lang.org/files/archive/spec/2.11/05-classes-and-objects.html#templates
+[65]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#variable-patterns
+[66]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#pattern-matching-expressions
+[67]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#type-patterns

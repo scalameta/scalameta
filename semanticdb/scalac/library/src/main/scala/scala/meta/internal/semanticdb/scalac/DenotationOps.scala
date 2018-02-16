@@ -82,11 +82,12 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     private def flags: Long = {
-      definitionFlags | accessQualifierFlags | otherFlags
+      if (gsym.owner.thisSym == gsym) mf.SELFPARAM
+      else definitionFlags | accessQualifierFlags | otherFlags
     }
 
     private def name: String = {
-      gsym.decodedName.toString
+      gsym.name.toSemantic
     }
 
     private def oldInfo: (String, List[m.ResolvedName]) = {

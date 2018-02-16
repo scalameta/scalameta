@@ -417,9 +417,21 @@ class PublicSuite extends FunSuite {
     val globalType @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Type("C")) = Symbol(syntaxGlobalType)
     assert(globalType.toString === syntaxGlobalType)
 
-    val syntaxGlobalMethod = "_root_.m(I)I."
-    val globalMethod @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Method("m", "(I)I")) = Symbol(syntaxGlobalMethod)
-    assert(globalMethod.toString === syntaxGlobalMethod)
+    val syntaxGlobalMethod1 = "_root_.m()."
+    val globalMethod1 @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Method("m", "()")) = Symbol(syntaxGlobalMethod1)
+    assert(globalMethod1.toString === syntaxGlobalMethod1)
+
+    val syntaxGlobalMethod2 = "_root_.m(Int)."
+    val globalMethod2 @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Method("m", "(Int)")) = Symbol(syntaxGlobalMethod2)
+    assert(globalMethod2.toString === syntaxGlobalMethod2)
+
+    val syntaxGlobalMethod3 = "_root_.m(`Int`)."
+    val globalMethod3 @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Method("m", "(`Int`)")) = Symbol(syntaxGlobalMethod3)
+    assert(globalMethod3.toString === syntaxGlobalMethod3)
+
+    val syntaxGlobalMethod4 = "_root_.m(`Int`,Int)."
+    val globalMethod4 @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Method("m", "(`Int`,Int)")) = Symbol(syntaxGlobalMethod4)
+    assert(globalMethod4.toString === syntaxGlobalMethod4)
 
     val syntaxGlobalTermParameter = "_root_.(x)"
     val globalTermParameter @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.TermParameter("x")) = Symbol(syntaxGlobalTermParameter)

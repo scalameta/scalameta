@@ -30,6 +30,7 @@ private[semanticdb] trait Flags {
   final val JAVADEFINED: Long = 1 << 25
   final val GETTER: Long = 1 << 26
   final val SETTER: Long = 1 << 27
+  final val SELFPARAM: Long = 1 << 28
 }
 
 private[semanticdb] trait HasFlags {
@@ -46,6 +47,7 @@ private[semanticdb] trait HasFlags {
   def isMacro: Boolean = hasFlag(MACRO)
   def isType: Boolean = hasFlag(TYPE)
   def isParam: Boolean = hasFlag(PARAM)
+  def isSelfParam: Boolean = hasFlag(SELFPARAM)
   def isTypeParam: Boolean = hasFlag(TYPEPARAM)
   def isObject: Boolean = hasFlag(OBJECT)
   def isPackage: Boolean = hasFlag(PACKAGE)
@@ -94,6 +96,7 @@ private[semanticdb] trait HasFlags {
     if (hasFlag(MACRO)) append("MACRO")
     if (hasFlag(TYPE)) append("TYPE")
     if (hasFlag(PARAM)) append("PARAM")
+    if (hasFlag(SELFPARAM)) append("SELFPARAM")
     if (hasFlag(TYPEPARAM)) append("TYPEPARAM")
     if (hasFlag(OBJECT)) append("OBJECT")
     if (hasFlag(PACKAGE)) append("PACKAGE")

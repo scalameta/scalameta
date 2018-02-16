@@ -11,6 +11,7 @@ trait DatabaseOps
     with LanguageOps
     with MemberOps
     with MessageOps
+    with NameOps
     with ParseOps
     with PrinterOps
     with ReporterOps
