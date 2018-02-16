@@ -29,25 +29,15 @@ object Main {
     val semanticdbRoot = AbsolutePath(settings.d).resolve("META-INF").resolve("semanticdb")
     Files.createDirectories(semanticdbRoot.toNIO)
     var failed = false
-    def fail(file: Path, ex: Throwable): FileVisitResult = {
+    def fail(file: Path, ex: Throwable): Unit = {
       println(s"error: can't convert $file")
       ex.printStackTrace()
       failed = true
-      FileVisitResult.CONTINUE
     }
     val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
     classpath.visit { root =>
       new FileVisitor[Path] {
-
-        // Create relative directory in semanticdbRoot
-        override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          val relpath = AbsolutePath(dir).toRelative(root).toString
-          val out = semanticdbRoot.resolve(relpath)
-          if (!out.isDirectory) Files.createDirectory(out.toNIO)
-          FileVisitResult.CONTINUE
-        }
-
-        // convert classfile to .class.semanticdb file with symbols only
+        // Convert a .class file to a .class.semanticdb file with symbols only.
         override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
           if (PathIO.extension(file) != "class") return FileVisitResult.CONTINUE
           try {
@@ -83,13 +73,18 @@ object Main {
           FileVisitResult.CONTINUE
         }
 
+        override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          FileVisitResult.CONTINUE
+        }
+
         override def postVisitDirectory(dir: Path, e: IOException): FileVisitResult = {
           if (e != null) fail(dir, e)
-          else FileVisitResult.CONTINUE
+          FileVisitResult.CONTINUE
         }
 
         override def visitFileFailed(file: Path, e: IOException): FileVisitResult = {
           fail(file, e)
+          FileVisitResult.CONTINUE
         }
       }
     }
