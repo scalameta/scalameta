@@ -115,7 +115,20 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
   def checkSection(code: String, expected: String, section: String): Unit = {
     test(code) {
       val obtained = computeDatabaseSectionFromSnippet(code, section)
-      assertNoDiff(obtained, expected)
+      try assertNoDiff(obtained, expected)
+      catch {
+        case ex: Exception =>
+          obtained.lines.toList match {
+            case head +: tail =>
+              println("    \"\"\"|" + head)
+              tail.foreach(line => println("       |" + line))
+            case head +: Nil =>
+              println(head)
+            case Nil =>
+              println("obtained is empty")
+          }
+          throw ex
+      }
     }
   }
 

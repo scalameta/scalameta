@@ -39,9 +39,9 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |[23..33): concurrent => _root_.scala.concurrent.
       |[34..40): Future => _root_.scala.concurrent.Future#;_root_.scala.concurrent.Future.
       |[48..49): a <= _root_.b.a.
-      |[58..59): x <= _root_.b.a.x.
+      |[58..59): x <= _root_.b.a.x().
       |[75..79): List => _root_.scala.collection.immutable.List.
-      |[84..85): x => _root_.b.a.x.
+      |[84..85): x => _root_.b.a.x().
       |[86..87): + => _root_.scala.Predef.any2stringadd#`+`(String).
       |
       |Messages:
@@ -50,7 +50,10 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Symbols:
       |_root_.b. => package b
       |_root_.b.a. => final object a
-      |_root_.b.a.x. => val x: List[Nothing]
+      |_root_.b.a.x(). => getter x: List[Nothing]
+      |  [0..4): List => _root_.scala.collection.immutable.List#
+      |  [5..12): Nothing => _root_.scala.Nothing#
+      |_root_.b.a.x. => private val x: List[Nothing]
       |  [0..4): List => _root_.scala.collection.immutable.List#
       |  [5..12): Nothing => _root_.scala.Nothing#
       |_root_.scala. => package scala

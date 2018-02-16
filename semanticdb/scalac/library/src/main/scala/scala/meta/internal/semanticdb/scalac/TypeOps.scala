@@ -166,6 +166,7 @@ trait TypeOps { self: DatabaseOps =>
   }
 
   implicit class XtensionGType(gtpe: g.Type) {
+    // TODO: Implement me.
     def hasNontrivialPrefix: Boolean = {
       val (gpre, gsym) = {
         gtpe match {

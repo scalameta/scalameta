@@ -89,7 +89,7 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
       |}
     """.stripMargin,
     """
-      |_empty_.b.c.{
+      |_empty_.b.c().{
       |  canEqual.
       |  productIterator.
       |  productElement.

@@ -30,7 +30,7 @@ class Methods[T] {
   def m16(x: Int*) = ???
 }
 
-class Usages {
+class MethodUsages {
   val m = new Methods[Int]
   m.m1
   m.m2()
