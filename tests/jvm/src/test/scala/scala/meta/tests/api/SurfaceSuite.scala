@@ -51,6 +51,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.common.Convert *
       |scala.meta.common.Optional *
       |scala.meta.dialects
+      |scala.meta.dialects.CrossCompat *
       |scala.meta.dialects.Dotty *
       |scala.meta.dialects.Paradise211 *
       |scala.meta.dialects.Paradise212 *

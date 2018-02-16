@@ -220,6 +220,18 @@ package object dialects {
     allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
   )
 
+  /** Dialect that tries to be compatible with all language versions. */
+  implicit val CrossCompat = Scala210.copy(
+    allowAtForExtractorVarargs = false, // Removed in Dotty
+    allowCaseClassWithoutParameterList = false, // Removed in 2.11
+    allowInlineIdents = false, // Only in Paradise
+    allowMultilinePrograms = true, // Remains true, as this only affect quasiquotes
+    allowViewBounds = false,  // Removed in Dotty
+    allowWithTypes = false,   // Only in Dotty
+    allowXmlLiterals = false, // Removed in Dotty
+    toplevelSeparator = "" // Technically will break with Sbt 0.13.6, but it cannot be helped.
+  )
+
   // TODO: https://github.com/scalameta/scalameta/issues/380
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
@@ -237,6 +249,7 @@ object Dialect extends InternalDialect {
   // NOTE: Spinning up a macro just for this is too hard.
   // Using JVM reflection won't be portable to Scala.js.
   private[meta] lazy val standards: Map[String, Dialect] = Map(
+    "CrossCompat" -> CrossCompat,
     "Dotty" -> Dotty,
     "Paradise211" -> Paradise211,
     "Paradise212" -> Paradise212,
