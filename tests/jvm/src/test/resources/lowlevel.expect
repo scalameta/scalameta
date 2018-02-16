@@ -188,8 +188,9 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Flags.scala
 Text => non-empty
 Language => Scala212
-Symbols => 41 entries
-Occurrences => 56 entries
+Symbols => 44 entries
+Occurrences => 63 entries
+Synthetics => 2 entries
 
 Symbols:
 _root_.flags. => package flags
@@ -271,6 +272,8 @@ _root_.flags.p.package.m().[TT] => typeparam TT: >: Nothing <: Any
   Any => _root_.scala.Any#
 _root_.flags.p.package.x. => private lazy val x: : Int
   Int => _root_.scala.Int#
+_root_.flags.p.package.xs1.xs1. => val xs1: Nothing
+  Nothing => _root_.scala.Nothing#
 _root_.flags.p.package.y. => protected var y_=: (x$1: <?>): Unit
   x$1 => _root_.flags.p.package.`y_=`(Int).(x$1)
   Unit => _root_.scala.Unit#
@@ -284,6 +287,7 @@ _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
 _root_.scala.Predef.`???`(). => def ???: : Nothing
   Nothing => _root_.scala.Nothing#
+_root_.scala.collection.immutable.List. => final object List
 _root_.scala.language. => final object language
 _root_.scala.language.experimental. => final object experimental
 _root_.scala.language.experimental.macros. => implicit lazy val macros: : macros
@@ -293,6 +297,8 @@ _root_.scala.specialized# => class specialized.{+4 decls}
   extends StaticAnnotation
 _root_.scala.specialized#`<init>`(). => secondaryctor <init>: (): specialized
   specialized => _root_.scala.specialized#
+local0 => val xs2: Nothing
+  Nothing => _root_.scala.Nothing#
 
 Occurrences:
 [0:8..0:13): flags <= _root_.flags.
@@ -350,7 +356,24 @@ Occurrences:
 [20:11..20:22): specialized => _root_.scala.specialized#
 [20:23..20:23):  => _root_.scala.specialized#`<init>`().
 [20:23..20:24): T <= _root_.flags.p.package.S#[T]
-[21:0..21:0):  <= _root_.flags.p.package.S#`<init>`().
+[20:25..20:25):  <= _root_.flags.p.package.S#`<init>`().
+[21:6..21:10): List => _root_.scala.collection.immutable.List.
+[21:11..21:14): xs1 <= _root_.flags.p.package.xs1.xs1.
+[21:18..21:21): ??? => _root_.scala.Predef.`???`().
+[22:2..22:5): ??? => _root_.scala.Predef.`???`().
+[22:19..22:23): List => _root_.scala.collection.immutable.List.
+[22:24..22:27): xs2 <= local0
+[22:32..22:35): ??? => _root_.scala.Predef.`???`().
+
+Synthetics:
+[21:10..21:10):  => *.unapplySeq[Nothing]
+  [0:0..0:1): * => _star_.
+  [0:2..0:12): unapplySeq => _root_.scala.collection.generic.SeqFactory#unapplySeq(CC).
+  [0:13..0:20): Nothing => _root_.scala.Nothing#
+[22:23..22:23):  => *.unapplySeq[Nothing]
+  [0:0..0:1): * => _star_.
+  [0:2..0:12): unapplySeq => _root_.scala.collection.generic.SeqFactory#unapplySeq(CC).
+  [0:13..0:20): Nothing => _root_.scala.Nothing#
 
 semanticdb/integration/src/main/scala/example/Methods.scala
 -----------------------------------------------------------

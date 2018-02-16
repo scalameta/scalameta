@@ -202,7 +202,14 @@ Names:
 [439..450): specialized => _root_.scala.specialized#
 [451..451):  => _root_.scala.specialized#`<init>`().
 [451..452): T <= _root_.flags.p.package.S#[T]
-[454..454):  <= _root_.flags.p.package.S#`<init>`().
+[453..453):  <= _root_.flags.p.package.S#`<init>`().
+[460..464): List => _root_.scala.collection.immutable.List.
+[465..468): xs1 <= _root_.flags.p.package.xs1.xs1.
+[472..475): ??? => _root_.scala.Predef.`???`().
+[478..481): ??? => _root_.scala.Predef.`???`().
+[495..499): List => _root_.scala.collection.immutable.List.
+[500..503): xs2 <= local0_semanticdb_integration_src_main_scala_example_Flags_scala
+[508..511): ??? => _root_.scala.Predef.`???`().
 
 Symbols:
 _root_.flags. => package flags.{+1 members}
@@ -264,6 +271,8 @@ _root_.flags.p.package.m(). => macro m: [TT] => Nothing
 _root_.flags.p.package.m().[TT] => typeparam TT
 _root_.flags.p.package.x. => private lazy val x: Int
   [0..3): Int => _root_.scala.Int#
+_root_.flags.p.package.xs1.xs1. => val xs1: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
 _root_.flags.p.package.y. => protected var y_=: (x$1: Int): Unit
   [6..9): Int => _root_.scala.Int#
   [12..16): Unit => _root_.scala.Unit#
@@ -276,6 +285,7 @@ _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int
 _root_.scala.Predef.`???`(). => def ???: Nothing
   [0..7): Nothing => _root_.scala.Nothing#
+_root_.scala.collection.immutable.List. => final object List
 _root_.scala.language. => final object language
 _root_.scala.language.experimental. => final object experimental
 _root_.scala.language.experimental.macros. => implicit lazy val macros: macros
@@ -283,6 +293,18 @@ _root_.scala.language.experimental.macros. => implicit lazy val macros: macros
 _root_.scala.specialized# => class specialized
 _root_.scala.specialized#`<init>`(). => secondaryctor <init>: (): specialized
   [4..15): specialized => _root_.scala.specialized#
+local0_semanticdb_integration_src_main_scala_example_Flags_scala => val xs2: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
+
+Synthetics:
+[464..464): *.unapplySeq[Nothing]
+  [0..1): * => _star_.
+  [2..12): unapplySeq => _root_.scala.collection.generic.SeqFactory#unapplySeq(CC).
+  [13..20): Nothing => _root_.scala.Nothing#
+[499..499): *.unapplySeq[Nothing]
+  [0..1): * => _star_.
+  [2..12): unapplySeq => _root_.scala.collection.generic.SeqFactory#unapplySeq(CC).
+  [13..20): Nothing => _root_.scala.Nothing#
 
 
 semanticdb/integration/src/main/scala/example/Methods.scala

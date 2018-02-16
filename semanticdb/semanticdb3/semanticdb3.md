@@ -1167,9 +1167,9 @@ Notes:
 **Value declarations and definitions** [\[39\]][39] are represented by multiple
 symbols, with the exact number of symbols, their kinds, properties, signatures
 and accessibilities dependent on the corresponding value:
-  * `VAL` symbol is created for all non-`ABSTRACT` values.
-  * `GETTER` symbol is created for all non-`PRIVATE_THIS` member values.
-  * `PARAMETER` symbol is created for `val` parameters of primary constructors.
+* `VAL` symbol is created for all non-`ABSTRACT` values.
+* `GETTER` symbol is created for all non-`PRIVATE_THIS` member values.
+* `PARAMETER` symbol is created for `val` parameters of primary constructors.
 
 ```scala
 abstract class C(val xp: Int) {
@@ -1295,20 +1295,92 @@ Notes:
 **Variable declarations and definitions** [\[41\]][41] are represented
 similarly to values (see above). Concretely, the following rules describe
 symbols created for variables:
-  * Whenever a `VAL` symbol would be created for a value, a `VAR` symbol is
-    created for a variable having the same properties, signature and
-    accessibility.
-  * Whenever a `GETTER` symbol would be created for a value, a `GETTER` symbol
-    is created for a variable having the same properties, signature and
-    accessibility.
-  * Whenever a `GETTER` symbol would be created for a value, a `SETTER` symbol
-    is created for a variable, having the same properties and accessibility
-    and (for `var x: T`) name `x_=`
-    and signature `MethodType(List(), List(List(<x$1>)), <Unit>)`
-    with the synthetic parameter `x$1` having signature `<T>`.
-  * Whenever a `PARAMETER` symbol would be created for a value, a `PARAMETER`
-    symbol is created for a variable having the same properties, signature
-    and accessibility.
+* Whenever a `VAL` symbol would be created for a value, a `VAR` symbol is
+  created for a variable having the same properties, signature and
+  accessibility.
+* Whenever a `GETTER` symbol would be created for a value, a `GETTER` symbol
+  is created for a variable having the same properties, signature and
+  accessibility.
+* Whenever a `GETTER` symbol would be created for a value, a `SETTER` symbol
+  is created for a variable, having the same properties and accessibility
+  and (for `var x: T`) name `x_=`
+  and signature `MethodType(List(), List(List(<x$1>)), <Unit>)`
+  with the synthetic parameter `x$1` having signature `<T>`.
+* Whenever a `PARAMETER` symbol would be created for a value, a `PARAMETER`
+  symbol is created for a variable having the same properties, signature
+  and accessibility.
+
+**Pattern variables** [\[65\]][65] are represented differently depending
+on their location:
+* `VAL` symbol is created for pattern variables in pattern matching
+  expressions [\[66\]][66].
+* A combination of `VAL`, `VAR`, `GETTER` and `SETTER` symbols is created
+  for pattern variables in pattern definitions [\[39\]][39].
+
+```scala
+class C {
+  ??? match { case List(x) => ??? }
+  val List(xval) = ???
+  var List(xvar) = ???
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>x</code></td>
+    <td><code>local0</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xval</code></td>
+    <td><code>_empty_.C#xval.</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xval</code></td>
+    <td><code>_empty_.C#xval().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>xvar</code></td>
+    <td><code>_empty_.C#xvar.</code></td>
+    <td><code>VAR</code></td>
+    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xvar</code></td>
+    <td><code>_empty_.C#xvar().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>xvar</code></td>
+    <td><code>_empty_.C#xvar_=(Nothing).</code></td>
+    <td><code>SETTER</code></td>
+    <td><code>MethodType(List(), List(&lt;x$1&gt;), TypeRef(&lt;scala.type&gt;, &lt;Unit&gt;, List()))</code></td>
+  </tr>
+</table>
+
+Notes:
+* In the future, we may decide to introduce a dedicated symbol kind
+  for regular pattern variables, so that they can be distinguished from
+  local value definitions.
+* Pattern variable symbols don't support any properties.
+* Pattern definitions [\[39\]][39] do not exist as a first-class language
+  feature. Instead, they are desugared into zero or more synthetic value
+  definitions and only then encoded into symbols as described in
+  "Value declarations and definitions" and "Variable declarations and
+  definitions".
+* Pattern variable symbols don't support any accessibilities.
 
 **Type declarations and type aliases** [\[42\]][42] are represented with
 `TYPE` symbols.
@@ -2049,3 +2121,5 @@ on this in the future, but this is highly unlikely.
 [62]: https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#private
 [63]: https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#protected
 [64]: https://www.scala-lang.org/files/archive/spec/2.11/05-classes-and-objects.html#templates
+[65]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#variable-patterns
+[66]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#pattern-matching-expressions

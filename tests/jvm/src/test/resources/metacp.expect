@@ -322,7 +322,7 @@ Schema => SemanticDB v3
 Uri => flags/p/package.class
 Text => empty
 Language => Scala
-Symbols => 38 entries
+Symbols => 39 entries
 
 Symbols:
 _root_.flags.p.package. => final package object package
@@ -414,6 +414,8 @@ _root_.flags.p.package.m().[TT] => typeparam TT: >: Nothing <: Any
   Any => _root_.scala.Any#
 _root_.flags.p.package.x. => private lazy val x: : Int
   Int => _root_.scala.Int#
+_root_.flags.p.package.xs1. => val xs1: : Nothing
+  Nothing => _root_.scala.Nothing#
 _root_.flags.p.package.y. => protected implicit val y: : Int
   Int => _root_.scala.Int#
 _root_.flags.p.package.z(Int). => def z: (pp: Int): Int
