@@ -188,8 +188,8 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Flags.scala
 Text => non-empty
 Language => Scala212
-Symbols => 44 entries
-Occurrences => 63 entries
+Symbols => 46 entries
+Occurrences => 67 entries
 Synthetics => 2 entries
 
 Symbols:
@@ -292,6 +292,8 @@ _root_.scala.language. => final object language
 _root_.scala.language.experimental. => final object experimental
 _root_.scala.language.experimental.macros. => implicit lazy val macros: : macros
   macros => _root_.scala.languageFeature.experimental.macros#
+_root_.scala.package.List# => val List: : List.type
+  List => _root_.scala.collection.immutable.List.
 _root_.scala.specialized# => class specialized.{+4 decls}
   extends Annotation
   extends StaticAnnotation
@@ -299,6 +301,9 @@ _root_.scala.specialized#`<init>`(). => secondaryctor <init>: (): specialized
   specialized => _root_.scala.specialized#
 local0 => val xs2: Nothing
   Nothing => _root_.scala.Nothing#
+local1 => abstract type t: >: Nothing <: Any
+  Nothing => _root_.scala.Nothing#
+  Any => _root_.scala.Any#
 
 Occurrences:
 [0:8..0:13): flags <= _root_.flags.
@@ -364,6 +369,10 @@ Occurrences:
 [22:19..22:23): List => _root_.scala.collection.immutable.List.
 [22:24..22:27): xs2 <= local0
 [22:32..22:35): ??? => _root_.scala.Predef.`???`().
+[23:2..23:5): ??? => _root_.scala.Predef.`???`().
+[23:22..23:26): List => _root_.scala.package.List#
+[23:27..23:28): t <= local1
+[23:33..23:36): ??? => _root_.scala.Predef.`???`().
 
 Synthetics:
 [21:10..21:10):  => *.unapplySeq[Nothing]

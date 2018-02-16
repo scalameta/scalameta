@@ -1432,6 +1432,40 @@ Notes:
   represented as described below in order of their appearance in source code.
 * Type symbols support [all Scala accessibilities](#scala-accessibility).
 
+**Type variables** [\[67\]][67] are represented with `TYPE` symbols.
+
+```scala
+class C {
+  ??? match { case _: List[t] => }
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>t</code></td>
+    <td><code>local0</code></td>
+    <td><code>TYPE</code></td>
+    <td><code>TypeType(List(), None, None)</code></td>
+  </tr>
+</table>
+
+Notes:
+* In the future, we may decide to introduce a dedicated symbol kind
+  for type variables, so that they can be distinguished from
+  local type definitions.
+* Type variable symbols are always `ABSTRACT`.
+* We leave the mapping between type syntax written in source code and
+  `Type` entities deliberately unspecified. For example, a producer may
+  represent the signature of `t` as `TypeType(List(), <Nothing>, <Any>)`.
+  See [Types](#scala-type) for more information.
+* Type variable symbols don't support any accessibilities.
+
 **Self parameters** [\[64\]][64] are represented with `SELF_PARAMETER` symbols.
 
 ```scala
@@ -2123,3 +2157,4 @@ on this in the future, but this is highly unlikely.
 [64]: https://www.scala-lang.org/files/archive/spec/2.11/05-classes-and-objects.html#templates
 [65]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#variable-patterns
 [66]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#pattern-matching-expressions
+[67]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#type-patterns

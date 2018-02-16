@@ -21,4 +21,5 @@ package object p {
   class S[@specialized T]
   val List(xs1) = ???
   ??? match { case List(xs2) => ??? }
+  ??? match { case _: List[t] => ??? }
 }

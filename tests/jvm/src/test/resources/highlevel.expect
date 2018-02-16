@@ -210,6 +210,10 @@ Names:
 [495..499): List => _root_.scala.collection.immutable.List.
 [500..503): xs2 <= local0_semanticdb_integration_src_main_scala_example_Flags_scala
 [508..511): ??? => _root_.scala.Predef.`???`().
+[516..519): ??? => _root_.scala.Predef.`???`().
+[536..540): List => _root_.scala.package.List#
+[541..542): t <= local1_semanticdb_integration_src_main_scala_example_Flags_scala
+[547..550): ??? => _root_.scala.Predef.`???`().
 
 Symbols:
 _root_.flags. => package flags.{+1 members}
@@ -290,11 +294,14 @@ _root_.scala.language. => final object language
 _root_.scala.language.experimental. => final object experimental
 _root_.scala.language.experimental.macros. => implicit lazy val macros: macros
   [0..6): macros => _root_.scala.languageFeature.experimental.macros#
+_root_.scala.package.List# => val List: List.type
+  [0..4): List => _root_.scala.collection.immutable.List.
 _root_.scala.specialized# => class specialized
 _root_.scala.specialized#`<init>`(). => secondaryctor <init>: (): specialized
   [4..15): specialized => _root_.scala.specialized#
 local0_semanticdb_integration_src_main_scala_example_Flags_scala => val xs2: Nothing
   [0..7): Nothing => _root_.scala.Nothing#
+local1_semanticdb_integration_src_main_scala_example_Flags_scala => abstract type t
 
 Synthetics:
 [464..464): *.unapplySeq[Nothing]
