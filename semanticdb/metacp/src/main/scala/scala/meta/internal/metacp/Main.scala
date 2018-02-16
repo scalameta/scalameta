@@ -128,37 +128,13 @@ object Main {
           sys.error(s"unsupported symbol $sym")
       }
     }
-    val encodedName = {
-      val name = sname(sym)
-      if (name.isEmpty) sys.error(s"unsupported symbol $sym")
-      else {
-        val (start, parts) = (name.head, name.tail)
-        val isStartOk = Character.isJavaIdentifierStart(start)
-        val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
-        if (isStartOk && isPartsOk) name
-        else "`" + name + "`"
-      }
-    }
+    val encodedName = sname(sym).encoded
     skind(sym) match {
       case k.VAL | k.VAR | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
         prefix + encodedName + "."
       case k.DEF | k.GETTER | k.SETTER | k.PRIMARY_CONSTRUCTOR | k.SECONDARY_CONSTRUCTOR |
           k.MACRO =>
-        val descriptor = {
-          // TODO: Implement me.
-          def loop(tpe: Type): String = {
-            tpe match {
-              case PolyType(tpe, _) => loop(tpe)
-              case MethodType(_, params) => "(" + params.length + ")"
-              case _ => "(0)"
-            }
-          }
-          sym match {
-            case sym: SymbolInfoSymbol => loop(sym.infoType)
-            case sym => sys.error(s"unsupported symbol $sym")
-          }
-        }
-        prefix + encodedName + descriptor + "."
+        prefix + encodedName + sym.disambiguator + "."
       case k.TYPE | k.CLASS | k.TRAIT =>
         prefix + encodedName + "#"
       case k.PARAMETER =>
@@ -341,27 +317,13 @@ object Main {
           val sparents = parents.flatMap(loop)
           val sdecls = sym.children.map(ssymbol)
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
-        case NullaryMethodType(tpe) =>
+        case _: NullaryMethodType | _: MethodType =>
           val stag = t.METHOD_TYPE
-          val stpe = loop(tpe)
-          Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, Nil, stpe))))
-        case tpe: MethodType =>
-          def flatten(tpe: Type): (List[List[Symbol]], Type) = {
-            tpe match {
-              case MethodType(tpe, head) =>
-                val (tail, ret) = flatten(tpe)
-                (head.toList +: tail, ret)
-              case other =>
-                (Nil, other)
-            }
-          }
-          val (paramss, ret) = flatten(tpe)
-          val stag = t.METHOD_TYPE
-          val sparamss = paramss.map { params =>
+          val sparamss = tpe.paramss.map { params =>
             val sparams = params.map(ssymbol)
             s.MethodType.ParameterList(sparams)
           }
-          val sret = loop(ret)
+          val sret = loop(tpe.ret)
           Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
         case TypeBoundsType(lo, hi) =>
           val stag = t.TYPE_TYPE
@@ -447,10 +409,24 @@ object Main {
     }
   }
 
-  private implicit class SymbolOps(sym: SymbolInfoSymbol) {
-    def isModuleClass = sym.isInstanceOf[ClassSymbol] && sym.isModule
-    def isType = sym.isInstanceOf[TypeSymbol]
-    def isClassConstructor = {
+  private implicit class NameOps(name: String) {
+    def encoded: String = {
+      if (name.isEmpty) {
+        sys.error(s"unsupported name")
+      } else {
+        val (start, parts) = (name.head, name.tail)
+        val isStartOk = Character.isJavaIdentifierStart(start)
+        val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
+        if (isStartOk && isPartsOk) name
+        else "`" + name + "`"
+      }
+    }
+  }
+
+  private implicit class SymbolOps(sym: Symbol) {
+    def isModuleClass: Boolean = sym.isInstanceOf[ClassSymbol] && sym.isModule
+    def isType: Boolean = sym.isInstanceOf[TypeSymbol]
+    def isClassConstructor: Boolean = {
       sym.parent match {
         case Some(parent: ClassSymbol) if !parent.isTrait && !parent.isModule =>
           sym.name == "<init>"
@@ -458,17 +434,33 @@ object Main {
           false
       }
     }
+    def descriptor: String = {
+      sym match {
+        case sym: SymbolInfoSymbol => sym.infoType.descriptor
+        case sym => sys.error(s"unsupported symbol $sym")
+      }
+    }
+    def disambiguator: String = {
+      val kindred = sym.parent.get.children.filter(other => skind(other) == skind(sym))
+      val siblings = kindred.filter(_.name == sym.name)
+      val synonyms = siblings.filter(_.descriptor == sym.descriptor)
+      val suffix = {
+        if (synonyms.length == 1) ""
+        else "+" + (synonyms.indexOf(sym) + 1)
+      }
+      "(" + descriptor + suffix + ")"
+    }
   }
 
   private implicit class TypeOps(tpe: Type) {
-    def prefix = {
+    def prefix: Type = {
       tpe match {
         case TypeRefType(pre, _, _) => pre
         case SingleType(pre, _) => pre
         case _ => NoType
       }
     }
-    def symbol = {
+    def symbol: Symbol = {
       tpe match {
         case TypeRefType(_, sym, _) => sym
         case SingleType(_, sym) => sym
@@ -480,6 +472,47 @@ object Main {
     def hasNontrivialPrefix: Boolean = {
       val kind = skind(tpe.prefix.symbol)
       kind != k.OBJECT && kind != k.PACKAGE && kind != k.PACKAGE_OBJECT
+    }
+    def paramss: List[List[SymbolInfoSymbol]] = {
+      tpe match {
+        case NullaryMethodType(_) =>
+          Nil
+        case MethodType(tpe, params) =>
+          val symbolInfoParams = params.map(_.asInstanceOf[SymbolInfoSymbol])
+          symbolInfoParams.toList +: tpe.paramss
+        case _ =>
+          Nil
+      }
+    }
+    def ret: Type = {
+      tpe match {
+        case NullaryMethodType(tpe) => tpe
+        case MethodType(tpe, _) => tpe
+        case _ => tpe
+      }
+    }
+    def descriptor: String = {
+      def unsupported = sys.error(s"unsupported type $tpe")
+      def paramDescriptors = tpe.paramss.flatten.map(_.infoType.descriptor)
+      tpe match {
+        case ByNameType(tpe) => "=>" + tpe.descriptor
+        case RepeatedType(tpe) => tpe.descriptor + "*"
+        case TypeRefType(_, sym, _) => sname(sym).encoded
+        case SingleType(_, _) => ".type"
+        case ThisType(_) => ".type"
+        case ConstantType(_: Type) => "Class"
+        case ConstantType(_) => ".type"
+        case RefinedType(_, _) => "{}"
+        case AnnotatedType(tpe, _) => tpe.descriptor
+        case ExistentialType(tpe, _) => tpe.descriptor
+        case ClassInfoType(_, _) => unsupported
+        case _: NullaryMethodType | _: MethodType => paramDescriptors.mkString(",")
+        case TypeBoundsType(_, _) => unsupported
+        case PolyType(tpe, _) => tpe.descriptor
+        case NoType => "<?>" // TODO: fixme
+        case NoPrefixType => unsupported
+        case other => unsupported
+      }
     }
   }
 }

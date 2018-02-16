@@ -33,51 +33,19 @@ trait SymbolOps { self: DatabaseOps =>
 
         val owner = sym.owner.toSemantic
         val signature = {
-          def name(sym: g.Symbol): String = {
-            if (sym.name == g.tpnme.REFINE_CLASS_NAME) {
-              // See https://github.com/scalameta/scalameta/pull/1109#discussion_r137194314
-              // for a motivation why <refinement> symbols should have $anon as names.
-              // This may be the wrong encoding of the symbol, but with the current
-              // implementation it makes the use-site symbols of this refinement
-              // decl match with the definition-site of the refinement decl.
-              g.nme.ANON_CLASS_NAME.decoded
-            } else {
-              sym.name.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
-            }
+          if (sym.isMethod && !sym.asMethod.isGetter) {
+            m.Signature.Method(sym.name.toSemantic, sym.disambiguator)
+          } else if (sym.isTypeParameter) {
+            m.Signature.TypeParameter(sym.name.toSemantic)
+          } else if (sym.isValueParameter || sym.isParamAccessor) {
+            m.Signature.TermParameter(sym.name.toSemantic)
+          } else if (sym.owner.thisSym == sym) {
+            m.Signature.Self(sym.name.toSemantic)
+          } else if (sym.isType) {
+            m.Signature.Type(sym.name.toSemantic)
+          } else {
+            m.Signature.Term(sym.name.toSemantic)
           }
-          def jvmSignature(sym: g.MethodSymbol): String = {
-            // NOTE: unfortunately, this simple-looking facility generates side effects that corrupt the state of the compiler
-            // in particular, mixin composition stops working correctly, at least for `object Main extends App`
-            // val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
-            // exitingDelambdafy(new genASM.JPlainBuilder(null, false).descriptor(sym))
-            def encode(tpe: g.Type): String = {
-              val g.TypeRef(_, sym, args) = tpe
-              require(args.isEmpty || sym == g.definitions.ArrayClass)
-              if (sym == g.definitions.UnitClass) "V"
-              else if (sym == g.definitions.BooleanClass) "Z"
-              else if (sym == g.definitions.CharClass) "C"
-              else if (sym == g.definitions.ByteClass) "B"
-              else if (sym == g.definitions.ShortClass) "S"
-              else if (sym == g.definitions.IntClass) "I"
-              else if (sym == g.definitions.FloatClass) "F"
-              else if (sym == g.definitions.LongClass) "J"
-              else if (sym == g.definitions.DoubleClass) "D"
-              else if (sym == g.definitions.ArrayClass) "[" + encode(args.head)
-              else "L" + sym.fullName.replace(".", "/") + ";"
-            }
-            // TODO: Implement me.
-            val g.MethodType(params, ret) = sym.info.erasure
-            val jvmRet = if (!sym.isConstructor) ret else g.definitions.UnitClass.toType
-            "(" + params.map(param => encode(param.info)).mkString("") + ")" + encode(jvmRet)
-          }
-
-          if (sym.isMethod && !sym.asMethod.isGetter)
-            m.Signature.Method(name(sym), jvmSignature(sym.asMethod))
-          else if (sym.isTypeParameter) m.Signature.TypeParameter(name(sym))
-          else if (sym.isValueParameter || sym.isParamAccessor) m.Signature.TermParameter(name(sym))
-          else if (sym.owner.thisSym == sym) m.Signature.Self(name(sym))
-          else if (sym.isType) m.Signature.Type(name(sym))
-          else m.Signature.Term(name(sym))
         }
         m.Symbol.Global(owner, signature)
       }
@@ -99,7 +67,7 @@ trait SymbolOps { self: DatabaseOps =>
     }
   }
 
-  implicit class XtensionGSymbolMCategories(sym: g.Symbol) {
+  implicit class XtensionGSymbolMSpec(sym: g.Symbol) {
     def isSemanticdbGlobal: Boolean = !isSemanticdbLocal
     def isSemanticdbLocal: Boolean = {
       def definitelyGlobal = sym.hasPackageFlag
@@ -111,5 +79,17 @@ trait SymbolOps { self: DatabaseOps =>
       !definitelyGlobal && (definitelyLocal || sym.owner.isSemanticdbLocal)
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
+    def descriptor: String = {
+      sym.info.descriptor
+    }
+    def disambiguator: String = {
+      val siblings = sym.owner.info.decls.sorted.filter(_.name == sym.name)
+      val synonyms = siblings.filter(_.descriptor == sym.descriptor)
+      val suffix = {
+        if (synonyms.length == 1) ""
+        else "+" + (synonyms.indexOf(sym) + 1)
+      }
+      "(" + descriptor + suffix + ")"
+    }
   }
 }

@@ -106,11 +106,17 @@ object Symbol {
             readChar()
             parseGlobal(Symbol.Global(curr, Signature.Term(name)))
           } else if (currChar == '(') {
-            val buf = new StringBuilder()
-            buf += currChar
-            while (readChar() != '.') buf += currChar
+            val start = i - 1
+            while (readChar() != ')') {
+              if (currChar == '`') {
+                while (readChar() != '`') {}
+              }
+            }
             readChar()
-            parseGlobal(Symbol.Global(curr, Signature.Method(name, buf.toString)))
+            if (currChar != '.') fail()
+            else readChar()
+            val disambiguator = s.substring(start, i - 2)
+            parseGlobal(Symbol.Global(curr, Signature.Method(name, disambiguator)))
           } else if (currChar == '=') {
             readChar()
             if (currChar != '>') fail()
@@ -176,9 +182,11 @@ object Signature {
     override def toString = syntax
   }
 
-  final case class Method(name: String, jvmSignature: String) extends Signature {
-    override def syntax = s"${encodeName(name)}$jvmSignature."
-    override def structure = s"""Signature.Method("$name", "$jvmSignature")"""
+  final case class Method(name: String, disambiguator: String) extends Signature {
+    @deprecated("Use `disambiguator` instead.", "3.3.0")
+    def jvmSignature: String = disambiguator
+    override def syntax = s"${encodeName(name)}${disambiguator}."
+    override def structure = s"""Signature.Method("$name", "$disambiguator")"""
     override def toString = syntax
   }
 

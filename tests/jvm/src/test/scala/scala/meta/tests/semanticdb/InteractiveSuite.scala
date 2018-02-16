@@ -42,7 +42,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |[58..59): x <= _root_.b.a.x.
       |[75..79): List => _root_.scala.collection.immutable.List.
       |[84..85): x => _root_.b.a.x.
-      |[86..87): + => _root_.scala.Predef.any2stringadd#`+`(Ljava/lang/String;)Ljava/lang/String;.
+      |[86..87): + => _root_.scala.Predef.any2stringadd#`+`(String).
       |
       |Messages:
       |[34..40): [warning] Unused import
@@ -54,7 +54,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |  [0..4): List => _root_.scala.collection.immutable.List#
       |  [5..12): Nothing => _root_.scala.Nothing#
       |_root_.scala. => package scala
-      |_root_.scala.Predef.any2stringadd#`+`(Ljava/lang/String;)Ljava/lang/String;. => def +: (other: String): String
+      |_root_.scala.Predef.any2stringadd#`+`(String). => def +: (other: String): String
       |  [8..14): String => _root_.scala.Predef.String#
       |  [17..23): String => _root_.scala.Predef.String#
       |_root_.scala.collection.immutable.List. => final object List
@@ -63,12 +63,12 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Synthetics:
       |[79..79): *.apply[Nothing]
       |  [0..1): * => _star_.
-      |  [2..7): apply => _root_.scala.collection.immutable.List.apply(Lscala/collection/Seq;)Lscala/collection/immutable/List;.
+      |  [2..7): apply => _root_.scala.collection.immutable.List.apply(A*).
       |  [8..15): Nothing => _root_.scala.Nothing#
       |[84..85): scala.Predef.any2stringadd[List[Nothing]](*)
       |  [27..31): List => _root_.scala.collection.immutable.List#
       |  [32..39): Nothing => _root_.scala.Nothing#
-      |  [13..26): any2stringadd => _root_.scala.Predef.any2stringadd(Ljava/lang/Object;)Ljava/lang/Object;.
+      |  [13..26): any2stringadd => _root_.scala.Predef.any2stringadd(A).
       |  [42..43): * => _star_.
     """.stripMargin
   )

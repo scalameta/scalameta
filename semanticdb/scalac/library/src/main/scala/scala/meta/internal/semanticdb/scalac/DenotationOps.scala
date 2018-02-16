@@ -86,7 +86,7 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     private def name: String = {
-      gsym.decodedName.toString
+      gsym.name.toSemantic
     }
 
     private def oldInfo: (String, List[m.ResolvedName]) = {

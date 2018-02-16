@@ -936,11 +936,11 @@ the owner chain is `[_root_, scala, Int]`.
     concatenation of its encoded name and a dot (`.`).
   * For `DEF`, `GETTER`, `SETTER`, `PRIMARY_CONSTRUCTOR`,
     `SECONDARY_CONSTRUCTOR` or `MACRO`, concatenation of its encoded name,
-    its type descriptor and a dot (`.`). In the case when multiple methods
-    have the same name and type descriptor, the type descriptor is
-    appended with `+N`, with `+1` going to the method that is defined
-    first in the source code, `+2` going to the method that is defined
-    second, etc.
+    a left parenthesis (`(`), its type descriptor, a right parenthesis (`)`)
+    and a dot (`.`). In the case when multiple methods have the same name
+    and type descriptor, the type descriptor is appended with `+N`,
+    with `+1` going to the method that is defined first in the source code,
+    `+2` going to the method that is defined second, etc.
   * For `TYPE`, `CLASS` or `TRAIT`, concatenation of its
     encoded name and a pound sign (`#`).
   * For `PARAMETER`, concatenation of a left parenthesis (`(`), its
@@ -952,19 +952,18 @@ the owner chain is `[_root_, scala, Int]`.
 
 **Type descriptor** is:
 
-  * For `TYPE_REF`, `SymbolInformation.name` of `symbol`.
-  * For `SINGLETON_TYPE`, its Scala syntax.
+  * For `TYPE_REF`, encoded `SymbolInformation.name` of `symbol`.
+  * For `SINGLETON_TYPE`, `.type`.
   * For `STRUCTURAL_TYPE`, `{}`.
-  * For `ANNOTATED_TYPE`, simplification of `tpe`.
-  * For `EXISTENTIAL_TYPE`, simplification of `tpe`.
-  * For `UNIVERSAL_TYPE`, simplification of `tpe`.
+  * For `ANNOTATED_TYPE`, type descriptor of `tpe`.
+  * For `EXISTENTIAL_TYPE`, type descriptor of `tpe`.
+  * For `UNIVERSAL_TYPE`, type descriptor of `tpe`.
   * For `CLASS_INFO_TYPE`, unsupported.
-  * For `METHOD_TYPE`, concatenation of simplifications of
-    `SymbolInformation.tpe` of its parameter types interspersed with
-    a comma (`,`).
+  * For `METHOD_TYPE`, concatenation of type descriptors of
+    its parameter types interspersed with a comma (`,`).
   * For `BY_NAME_TYPE`, concatenation of the arrow sign (`=>`) and
-    the simplification of `tpe`.
-  * For `REPEATED_TYPE`, concatenation of simplification of `tpe`
+    the type descriptor of `tpe`.
+  * For `REPEATED_TYPE`, concatenation of type descriptor of `tpe`
     and a star (`*`).
   * For `TYPE_TYPE`, unsupported.
   * See [Type](#scala-type) for details on

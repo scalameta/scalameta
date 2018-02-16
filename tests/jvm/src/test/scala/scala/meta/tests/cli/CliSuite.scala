@@ -61,10 +61,10 @@ class CliSuite extends BaseCliSuite {
       |
       |Symbols:
       |_empty_.HelloWorld. => final object HelloWorld
-      |_empty_.HelloWorld.main([Ljava/lang/String;)V. => def main: (args: Array[String]): Unit
-      |  args => _empty_.HelloWorld.main([Ljava/lang/String;)V.(args)
+      |_empty_.HelloWorld.main(Array). => def main: (args: Array[String]): Unit
+      |  args => _empty_.HelloWorld.main(Array).(args)
       |  Unit => _root_.scala.Unit#
-      |_empty_.HelloWorld.main([Ljava/lang/String;)V.(args) => param args: Array[String]
+      |_empty_.HelloWorld.main(Array).(args) => param args: Array[String]
       |  Array => _root_.scala.Array#
       |  String => _root_.scala.Predef.String#
       |_root_.scala.Array# => final class Array.{+6 decls}
@@ -73,20 +73,20 @@ class CliSuite extends BaseCliSuite {
       |  extends Cloneable
       |_root_.scala.Predef.String# => type String: String
       |  String => _root_.java.lang.String#
-      |_root_.scala.Predef.println(Ljava/lang/Object;)V. => def println: (x: <?>): Unit
-      |  x => _root_.scala.Predef.println(Ljava/lang/Object;)V.(x)
+      |_root_.scala.Predef.println(Any). => def println: (x: <?>): Unit
+      |  x => _root_.scala.Predef.println(Any).(x)
       |  Unit => _root_.scala.Unit#
       |_root_.scala.Unit# => abstract final class Unit.{+2 decls}
       |  extends AnyVal
       |
       |Occurrences:
       |[1:11..1:21): HelloWorld <= _empty_.HelloWorld.
-      |[2:10..2:14): main <= _empty_.HelloWorld.main([Ljava/lang/String;)V.
-      |[2:15..2:19): args <= _empty_.HelloWorld.main([Ljava/lang/String;)V.(args)
+      |[2:10..2:14): main <= _empty_.HelloWorld.main(Array).
+      |[2:15..2:19): args <= _empty_.HelloWorld.main(Array).(args)
       |[2:21..2:26): Array => _root_.scala.Array#
       |[2:27..2:33): String => _root_.scala.Predef.String#
       |[2:37..2:41): Unit => _root_.scala.Unit#
-      |[3:8..3:15): println => _root_.scala.Predef.println(Ljava/lang/Object;)V.
+      |[3:8..3:15): println => _root_.scala.Predef.println(Any).
     """.trim.stripMargin)
   }
 }
