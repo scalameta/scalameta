@@ -1152,4 +1152,27 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       )
     }
   )
+
+  targeted(
+    """
+      |package an
+      |object M1 {
+      |  class C
+      |}
+      |object M2 {
+      |  class C
+      |}
+      |object M {
+      |  def foo(c: M1.C) = ???
+      |  def foo(c: M2.C) = ???
+      |}
+      |object U {
+      |  M.<<foo>>(new M1.C)
+      |  M.<<foo>>(new M2.C)
+      |}
+    """.trim.stripMargin, { (db, foo1, foo2) =>
+      assert(foo1 === Symbol("_root_.an.M.foo(C+1)."))
+      assert(foo2 === Symbol("_root_.an.M.foo(C+2)."))
+    }
+  )
 }

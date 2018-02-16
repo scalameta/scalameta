@@ -109,10 +109,10 @@ Schema => SemanticDB v3
 Uri => example/Methods.class
 Text => empty
 Language => Scala
-Symbols => 56 entries
+Symbols => 59 entries
 
 Symbols:
-_root_.example.Methods# => class Methods.{+28 decls}
+_root_.example.Methods# => class Methods.{+29 decls}
   extends AnyRef
 _root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.this.List[T]
   T => _root_.example.Methods#AList#[T]
@@ -156,15 +156,15 @@ _root_.example.Methods#m10(AList).(x) => param x: Methods.this.AList[T]
   Methods => _root_.example.Methods#
   AList => _root_.example.Methods#AList#
   T => _root_.example.Methods#[T]
-_root_.example.Methods#m11a(.type). => def m11a: (x: Predef.type): Nothing
-  x => _root_.example.Methods#m11a(.type).(x)
+_root_.example.Methods#m11(.type+1). => def m11: (x: Predef.type): Nothing
+  x => _root_.example.Methods#m11(.type+1).(x)
   Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m11a(.type).(x) => param x: Predef.type
+_root_.example.Methods#m11(.type+1).(x) => param x: Predef.type
   Predef => _root_.scala.Predef.
-_root_.example.Methods#m11b(.type). => def m11b: (x: Example.type): Nothing
-  x => _root_.example.Methods#m11b(.type).(x)
+_root_.example.Methods#m11(.type+2). => def m11: (x: Example.type): Nothing
+  x => _root_.example.Methods#m11(.type+2).(x)
   Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m11b(.type).(x) => param x: Example.type
+_root_.example.Methods#m11(.type+2).(x) => param x: Example.type
   Example => _root_.example.Example.
 _root_.example.Methods#m12a({}). => def m12a: (x: AnyRef {  }): Nothing
   x => _root_.example.Methods#m12a({}).(x)
@@ -243,20 +243,32 @@ _root_.example.Methods#m6(List+2). => def m6: (x: List[T]): Nothing
 _root_.example.Methods#m6(List+2).(x) => param x: List[T]
   List => _root_.scala.package.List#
   T => _root_.example.Methods#[T]
-_root_.example.Methods#m7(Methods,List,Ordering). => def m7: [U >: Nothing <: Any] => (c: Methods[T], l: Methods.this.List[U])(evidence$1: <?>): (evidence$1: <?>): Nothing
-  U => _root_.example.Methods#m7(Methods,List,Ordering).[U]
-  c => _root_.example.Methods#m7(Methods,List,Ordering).(c)
-  l => _root_.example.Methods#m7(Methods,List,Ordering).(l)
-  evidence$1 => _root_.example.Methods#m7(Methods,List,Ordering).(evidence$1)
+_root_.example.Methods#m7a(Methods,List,Ordering). => def m7a: [U >: Nothing <: Any] => (c: Methods[T], l: Methods.this.List[U])(evidence$1: <?>): (evidence$1: <?>): Nothing
+  U => _root_.example.Methods#m7a(Methods,List,Ordering).[U]
+  c => _root_.example.Methods#m7a(Methods,List,Ordering).(c)
+  l => _root_.example.Methods#m7a(Methods,List,Ordering).(l)
+  evidence$1 => _root_.example.Methods#m7a(Methods,List,Ordering).(evidence$1)
   Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m7(Methods,List,Ordering).(c) => param c: Methods[T]
+_root_.example.Methods#m7a(Methods,List,Ordering).(c) => param c: Methods[T]
   Methods => _root_.example.Methods#
   T => _root_.example.Methods#[T]
-_root_.example.Methods#m7(Methods,List,Ordering).(l) => param l: Methods.this.List[U]
+_root_.example.Methods#m7a(Methods,List,Ordering).(l) => param l: Methods.this.List[U]
   Methods => _root_.example.Methods#
   List => _root_.example.Methods#List#
-  U => _root_.example.Methods#m7(Methods,List,Ordering).[U]
-_root_.example.Methods#m7(Methods,List,Ordering).[U] => typeparam U: >: Nothing <: Any
+  U => _root_.example.Methods#m7a(Methods,List,Ordering).[U]
+_root_.example.Methods#m7a(Methods,List,Ordering).[U] => typeparam U: >: Nothing <: Any
+  Nothing => _root_.scala.Nothing#
+  Any => _root_.scala.Any#
+_root_.example.Methods#m7b(List,Function1). => def m7b: [U >: Nothing <: Any] => (l: Methods.this.List[U])(evidence$2: <?>): (evidence$2: <?>): Nothing
+  U => _root_.example.Methods#m7b(List,Function1).[U]
+  l => _root_.example.Methods#m7b(List,Function1).(l)
+  evidence$2 => _root_.example.Methods#m7b(List,Function1).(evidence$2)
+  Nothing => _root_.scala.Nothing#
+_root_.example.Methods#m7b(List,Function1).(l) => param l: Methods.this.List[U]
+  Methods => _root_.example.Methods#
+  List => _root_.example.Methods#List#
+  U => _root_.example.Methods#m7b(List,Function1).[U]
+_root_.example.Methods#m7b(List,Function1).[U] => typeparam U: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
 _root_.example.Methods#m9(`m9().`). => def m9: (x: Methods.this.m9().): Nothing
@@ -281,6 +293,25 @@ _root_.example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
 _root_.example.Synthetic#`<init>`(). => primaryctor <init>: (): Synthetic
   Synthetic => _root_.example.Synthetic#
+
+example/Usages.class
+--------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/Usages.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+_root_.example.Usages# => class Usages.{+3 decls}
+  extends AnyRef
+_root_.example.Usages#`<init>`(). => primaryctor <init>: (): Usages
+  Usages => _root_.example.Usages#
+_root_.example.Usages#m. => val m: : Methods[Int]
+  Methods => _root_.example.Methods#
+  Int => _root_.scala.Int#
 
 example/local-file.class
 ------------------------

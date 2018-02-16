@@ -25,7 +25,7 @@ Names:
 [210..213): ??? => _root_.scala.Predef.`???`().
 
 Symbols:
-_root_.example. => package example.{+7 members}
+_root_.example. => package example.{+8 members}
 _root_.example.Acc# => class Acc
 _root_.example.Acc#`<init>`(). => primaryctor <init>: (): Acc
   [4..7): Acc => _root_.example.Acc#
@@ -96,7 +96,7 @@ Messages:
 [80..115): [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 Symbols:
-_root_.example. => package example.{+7 members}
+_root_.example. => package example.{+8 members}
 _root_.example.Example. => final object Example
 _root_.example.Example.main(Array). => def main: (args: Array[String]): Unit
   [7..12): Array => _root_.scala.Array#
@@ -371,69 +371,142 @@ Names:
 [309..313): List => _root_.scala.package.List#
 [314..315): T => _root_.example.Methods#[T]
 [320..323): ??? => _root_.scala.Predef.`???`().
-[330..332): m7 <= _root_.example.Methods#m7(Methods,List,Ordering).
-[333..334): U <= _root_.example.Methods#m7(Methods,List,Ordering).[U]
-[336..344): Ordering => _root_.scala.math.Ordering#
-[346..347): c <= _root_.example.Methods#m7(Methods,List,Ordering).(c)
-[349..356): Methods => _root_.example.Methods#
-[357..358): T => _root_.example.Methods#[T]
-[361..362): l <= _root_.example.Methods#m7(Methods,List,Ordering).(l)
-[364..368): List => _root_.example.Methods#List#
-[369..370): U => _root_.example.Methods#m7(Methods,List,Ordering).[U]
-[375..378): ??? => _root_.scala.Predef.`???`().
-[385..392): `m8().` <= _root_.example.Methods#`m8().`().
-[397..400): ??? => _root_.scala.Predef.`???`().
-[409..416): `m9().` <= _root_.example.Methods#`m9().`#
-[416..416):  <= _root_.example.Methods#`m9().`#`<init>`().
-[423..425): m9 <= _root_.example.Methods#m9(`m9().`).
-[426..427): x <= _root_.example.Methods#m9(`m9().`).(x)
-[429..436): `m9().` => _root_.example.Methods#`m9().`#
-[440..443): ??? => _root_.scala.Predef.`???`().
-[450..453): m10 <= _root_.example.Methods#m10(AList).
-[454..455): x <= _root_.example.Methods#m10(AList).(x)
-[457..462): AList => _root_.example.Methods#AList#
-[463..464): T => _root_.example.Methods#[T]
-[469..472): ??? => _root_.scala.Predef.`???`().
-[479..483): m11a <= _root_.example.Methods#m11a(.type).
-[484..485): x <= _root_.example.Methods#m11a(.type).(x)
-[487..493): Predef => _root_.scala.Predef.
-[502..505): ??? => _root_.scala.Predef.`???`().
-[512..516): m11b <= _root_.example.Methods#m11b(.type).
-[517..518): x <= _root_.example.Methods#m11b(.type).(x)
-[520..527): Example => _root_.example.Example.
-[536..539): ??? => _root_.scala.Predef.`???`().
-[546..550): m12a <= _root_.example.Methods#m12a({}).
-[551..552): x <= _root_.example.Methods#m12a({}).(x)
-[560..563): ??? => _root_.scala.Predef.`???`().
-[570..574): m12b <= _root_.example.Methods#m12b({}).
-[575..576): x <= _root_.example.Methods#m12b({}).(x)
-[584..585): x <= _root_.example.Methods#$anon#x.
-[587..590): Int => _root_.scala.Int#
-[596..599): ??? => _root_.scala.Predef.`???`().
-[606..609): m13 <= _root_.example.Methods#m13(Int).
-[610..611): x <= _root_.example.Methods#m13(Int).(x)
-[613..616): Int => _root_.scala.Int#
-[618..627): unchecked => _root_.scala.unchecked#
-[627..627):  => _root_.scala.unchecked#`<init>`().
+[330..333): m7a <= _root_.example.Methods#m7a(Methods,List,Ordering).
+[334..335): U <= _root_.example.Methods#m7a(Methods,List,Ordering).[U]
+[337..345): Ordering => _root_.scala.math.Ordering#
+[347..348): c <= _root_.example.Methods#m7a(Methods,List,Ordering).(c)
+[350..357): Methods => _root_.example.Methods#
+[358..359): T => _root_.example.Methods#[T]
+[362..363): l <= _root_.example.Methods#m7a(Methods,List,Ordering).(l)
+[365..369): List => _root_.example.Methods#List#
+[370..371): U => _root_.example.Methods#m7a(Methods,List,Ordering).[U]
+[376..379): ??? => _root_.scala.Predef.`???`().
+[386..389): m7b <= _root_.example.Methods#m7b(List,Function1).
+[390..391): U <= _root_.example.Methods#m7b(List,Function1).[U]
+[395..396): T => _root_.example.Methods#[T]
+[398..399): l <= _root_.example.Methods#m7b(List,Function1).(l)
+[401..405): List => _root_.example.Methods#List#
+[406..407): U => _root_.example.Methods#m7b(List,Function1).[U]
+[412..415): ??? => _root_.scala.Predef.`???`().
+[422..429): `m8().` <= _root_.example.Methods#`m8().`().
+[434..437): ??? => _root_.scala.Predef.`???`().
+[446..453): `m9().` <= _root_.example.Methods#`m9().`#
+[453..453):  <= _root_.example.Methods#`m9().`#`<init>`().
+[460..462): m9 <= _root_.example.Methods#m9(`m9().`).
+[463..464): x <= _root_.example.Methods#m9(`m9().`).(x)
+[466..473): `m9().` => _root_.example.Methods#`m9().`#
+[477..480): ??? => _root_.scala.Predef.`???`().
+[487..490): m10 <= _root_.example.Methods#m10(AList).
+[491..492): x <= _root_.example.Methods#m10(AList).(x)
+[494..499): AList => _root_.example.Methods#AList#
+[500..501): T => _root_.example.Methods#[T]
+[506..509): ??? => _root_.scala.Predef.`???`().
+[516..519): m11 <= _root_.example.Methods#m11(.type+1).
+[520..521): x <= _root_.example.Methods#m11(.type+1).(x)
+[523..529): Predef => _root_.scala.Predef.
+[538..541): ??? => _root_.scala.Predef.`???`().
+[548..551): m11 <= _root_.example.Methods#m11(.type+2).
+[552..553): x <= _root_.example.Methods#m11(.type+2).(x)
+[555..562): Example => _root_.example.Example.
+[571..574): ??? => _root_.scala.Predef.`???`().
+[581..585): m12a <= _root_.example.Methods#m12a({}).
+[586..587): x <= _root_.example.Methods#m12a({}).(x)
+[595..598): ??? => _root_.scala.Predef.`???`().
+[605..609): m12b <= _root_.example.Methods#m12b({}).
+[610..611): x <= _root_.example.Methods#m12b({}).(x)
+[619..620): x <= _root_.example.Methods#$anon#x.
+[622..625): Int => _root_.scala.Int#
 [631..634): ??? => _root_.scala.Predef.`???`().
-[641..644): m14 <= _root_.example.Methods#m14(T).
-[645..646): x <= _root_.example.Methods#m14(T).(x)
-[648..649): T => _root_.example.Methods#m14(T).(x)T#
-[665..666): T <= _root_.example.Methods#m14(T).(x)T#
-[672..675): ??? => _root_.scala.Predef.`???`().
-[682..685): m15 <= _root_.example.Methods#m15(=>Int).
-[686..687): x <= _root_.example.Methods#m15(=>Int).(x)
-[692..695): Int => _root_.scala.Int#
-[699..702): ??? => _root_.scala.Predef.`???`().
-[709..712): m16 <= _root_.example.Methods#m16(Int*).
-[713..714): x <= _root_.example.Methods#m16(Int*).(x)
-[716..719): Int => _root_.scala.`<repeated>`#
-[724..727): ??? => _root_.scala.Predef.`???`().
+[641..644): m13 <= _root_.example.Methods#m13(Int).
+[645..646): x <= _root_.example.Methods#m13(Int).(x)
+[648..651): Int => _root_.scala.Int#
+[653..662): unchecked => _root_.scala.unchecked#
+[662..662):  => _root_.scala.unchecked#`<init>`().
+[666..669): ??? => _root_.scala.Predef.`???`().
+[676..679): m14 <= _root_.example.Methods#m14(T).
+[680..681): x <= _root_.example.Methods#m14(T).(x)
+[683..684): T => _root_.example.Methods#m14(T).(x)T#
+[700..701): T <= _root_.example.Methods#m14(T).(x)T#
+[707..710): ??? => _root_.scala.Predef.`???`().
+[717..720): m15 <= _root_.example.Methods#m15(=>Int).
+[721..722): x <= _root_.example.Methods#m15(=>Int).(x)
+[727..730): Int => _root_.scala.Int#
+[734..737): ??? => _root_.scala.Predef.`???`().
+[744..747): m16 <= _root_.example.Methods#m16(Int*).
+[748..749): x <= _root_.example.Methods#m16(Int*).(x)
+[751..754): Int => _root_.scala.`<repeated>`#
+[759..762): ??? => _root_.scala.Predef.`???`().
+[772..778): Usages <= _root_.example.Usages#
+[779..779):  <= _root_.example.Usages#`<init>`().
+[787..788): m <= _root_.example.Usages#m.
+[795..802): Methods => _root_.example.Methods#
+[803..806): Int => _root_.scala.Int#
+[807..807):  => _root_.example.Methods#`<init>`().
+[810..811): m => _root_.example.Usages#m.
+[812..814): m1 => _root_.example.Methods#m1().
+[817..818): m => _root_.example.Usages#m.
+[819..821): m2 => _root_.example.Methods#m2().
+[826..827): m => _root_.example.Usages#m.
+[828..830): m3 => _root_.example.Methods#m3(Int).
+[836..837): m => _root_.example.Usages#m.
+[838..840): m4 => _root_.example.Methods#m4(Int,Int).
+[849..850): m => _root_.example.Usages#m.
+[851..853): m5 => _root_.example.Methods#m5(String).
+[860..861): m => _root_.example.Usages#m.
+[862..864): m5 => _root_.example.Methods#m5(Int).
+[870..871): m => _root_.example.Usages#m.
+[872..874): m6 => _root_.example.Methods#m6(Int).
+[880..881): m => _root_.example.Usages#m.
+[882..884): m6 => _root_.example.Methods#m6(List+1).
+[889..890): m => _root_.example.Usages#m.
+[891..895): List => _root_.example.Methods#List#
+[896..899): Int => _root_.scala.Int#
+[900..900):  => _root_.example.Methods#List#`<init>`().
+[904..905): m => _root_.example.Usages#m.
+[906..908): m6 => _root_.example.Methods#m6(List+2).
+[909..912): Nil => _root_.scala.collection.immutable.Nil.
+[916..917): m => _root_.example.Usages#m.
+[918..921): m7a => _root_.example.Methods#m7a(Methods,List,Ordering).
+[922..923): m => _root_.example.Usages#m.
+[929..930): m => _root_.example.Usages#m.
+[931..935): List => _root_.example.Methods#List#
+[936..939): Int => _root_.scala.Int#
+[940..940):  => _root_.example.Methods#List#`<init>`().
+[944..945): m => _root_.example.Usages#m.
+[946..949): m7b => _root_.example.Methods#m7b(List,Function1).
+[954..955): m => _root_.example.Usages#m.
+[956..960): List => _root_.example.Methods#List#
+[961..964): Int => _root_.scala.Int#
+[965..965):  => _root_.example.Methods#List#`<init>`().
+[969..970): m => _root_.example.Usages#m.
+[971..978): `m8().` => _root_.example.Methods#`m8().`().
+[983..984): m => _root_.example.Usages#m.
+[985..987): m9 => _root_.example.Methods#m9(`m9().`).
+[996..997): m => _root_.example.Usages#m.
+[998..1001): m10 => _root_.example.Methods#m10(AList).
+[1010..1011): m => _root_.example.Usages#m.
+[1012..1015): m11 => _root_.example.Methods#m11(.type+1).
+[1016..1022): Predef => _root_.scala.Predef.
+[1026..1027): m => _root_.example.Usages#m.
+[1028..1031): m11 => _root_.example.Methods#m11(.type+2).
+[1032..1039): Example => _root_.example.Example.
+[1043..1044): m => _root_.example.Usages#m.
+[1045..1049): m12a => _root_.example.Methods#m12a({}).
+[1058..1059): m => _root_.example.Usages#m.
+[1060..1064): m12b => _root_.example.Methods#m12b({}).
+[1073..1074): m => _root_.example.Usages#m.
+[1075..1078): m13 => _root_.example.Methods#m13(Int).
+[1084..1085): m => _root_.example.Usages#m.
+[1086..1089): m14 => _root_.example.Methods#m14(T).
+[1098..1099): m => _root_.example.Usages#m.
+[1100..1103): m15 => _root_.example.Methods#m15(=>Int).
+[1109..1110): m => _root_.example.Usages#m.
+[1111..1114): m16 => _root_.example.Methods#m16(Int*).
 
 Messages:
-[648..668): [warning] the existential type T forSome { type T }, which cannot be expressed by wildcards,  should be enabled
+[683..703): [warning] the existential type T forSome { type T }, which cannot be expressed by wildcards,  should be enabled
 by making the implicit value scala.language.existentials visible.
-[648..668): [warning] the existential type T forSome { type T }, which cannot be expressed by wildcards,  should be enabled
+[683..703): [warning] the existential type T forSome { type T }, which cannot be expressed by wildcards,  should be enabled
 by making the implicit value scala.language.existentials visible.
 This can be achieved by adding the import clause 'import scala.language.existentials'
 or by setting the compiler option -language:existentials.
@@ -441,7 +514,7 @@ See the Scaladoc for value scala.language.existentials for a discussion
 why the feature should be explicitly enabled.
 
 Symbols:
-_root_.example. => package example.{+7 members}
+_root_.example. => package example.{+8 members}
 _root_.example.Example. => final object Example
 _root_.example.Methods# => class Methods
 _root_.example.Methods#$anon#x. => abstract val x: Int
@@ -478,15 +551,15 @@ _root_.example.Methods#m10(AList).(x) => param x: Methods.this.AList[T]
   [0..7): Methods => _root_.example.Methods#
   [13..18): AList => _root_.example.Methods#AList#
   [19..20): T => _root_.example.Methods#[T]
-_root_.example.Methods#m11a(.type). => def m11a: (x: Predef.type): Nothing
+_root_.example.Methods#m11(.type+1). => def m11: (x: Predef.type): Nothing
   [4..10): Predef => _root_.scala.Predef.
   [18..25): Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m11a(.type).(x) => param x: Predef.type
+_root_.example.Methods#m11(.type+1).(x) => param x: Predef.type
   [0..6): Predef => _root_.scala.Predef.
-_root_.example.Methods#m11b(.type). => def m11b: (x: Example.type): Nothing
+_root_.example.Methods#m11(.type+2). => def m11: (x: Example.type): Nothing
   [4..11): Example => _root_.example.Example.
   [19..26): Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m11b(.type).(x) => param x: Example.type
+_root_.example.Methods#m11(.type+2).(x) => param x: Example.type
   [0..7): Example => _root_.example.Example.
 _root_.example.Methods#m12a({}). => def m12a: (x: AnyRef{}): Nothing
   [4..10): AnyRef => _root_.scala.AnyRef#
@@ -565,23 +638,36 @@ _root_.example.Methods#m6(List+2). => def m6: (x: List[T]): Nothing
 _root_.example.Methods#m6(List+2).(x) => param x: List[T]
   [0..4): List => _root_.scala.package.List#
   [5..6): T => _root_.example.Methods#[T]
-_root_.example.Methods#m7(Methods,List,Ordering). => def m7: [U] => (c: Methods[T], l: Methods.this.List[U])(implicit evidence$1: Ordering[U]): Nothing
+_root_.example.Methods#m7a(Methods,List,Ordering). => def m7a: [U] => (c: Methods[T], l: Methods.this.List[U])(implicit evidence$1: Ordering[U]): Nothing
   [11..18): Methods => _root_.example.Methods#
   [19..20): T => _root_.example.Methods#[T]
   [26..33): Methods => _root_.example.Methods#
   [39..43): List => _root_.example.Methods#List#
-  [44..45): U => _root_.example.Methods#m7(Methods,List,Ordering).[U]
+  [44..45): U => _root_.example.Methods#m7a(Methods,List,Ordering).[U]
   [69..77): Ordering => _root_.scala.math.Ordering#
-  [78..79): U => _root_.example.Methods#m7(Methods,List,Ordering).[U]
+  [78..79): U => _root_.example.Methods#m7a(Methods,List,Ordering).[U]
   [83..90): Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m7(Methods,List,Ordering).(c) => param c: Methods[T]
+_root_.example.Methods#m7a(Methods,List,Ordering).(c) => param c: Methods[T]
   [0..7): Methods => _root_.example.Methods#
   [8..9): T => _root_.example.Methods#[T]
-_root_.example.Methods#m7(Methods,List,Ordering).(l) => param l: Methods.this.List[U]
+_root_.example.Methods#m7a(Methods,List,Ordering).(l) => param l: Methods.this.List[U]
   [0..7): Methods => _root_.example.Methods#
   [13..17): List => _root_.example.Methods#List#
-  [18..19): U => _root_.example.Methods#m7(Methods,List,Ordering).[U]
-_root_.example.Methods#m7(Methods,List,Ordering).[U] => typeparam U
+  [18..19): U => _root_.example.Methods#m7a(Methods,List,Ordering).[U]
+_root_.example.Methods#m7a(Methods,List,Ordering).[U] => typeparam U
+_root_.example.Methods#m7b(List,Function1). => def m7b: [U] => (l: Methods.this.List[U])(implicit evidence$2: Function1[U, T]): Nothing
+  [11..18): Methods => _root_.example.Methods#
+  [24..28): List => _root_.example.Methods#List#
+  [29..30): U => _root_.example.Methods#m7b(List,Function1).[U]
+  [54..63): Function1 => _root_.scala.Function1#
+  [64..65): U => _root_.example.Methods#m7b(List,Function1).[U]
+  [67..68): T => _root_.example.Methods#[T]
+  [72..79): Nothing => _root_.scala.Nothing#
+_root_.example.Methods#m7b(List,Function1).(l) => param l: Methods.this.List[U]
+  [0..7): Methods => _root_.example.Methods#
+  [13..17): List => _root_.example.Methods#List#
+  [18..19): U => _root_.example.Methods#m7b(List,Function1).[U]
+_root_.example.Methods#m7b(List,Function1).[U] => typeparam U
 _root_.example.Methods#m9(`m9().`). => def m9: (x: Methods.this.`m9().`): Nothing
   [4..11): Methods => _root_.example.Methods#
   [17..24): `m9().` => _root_.example.Methods#`m9().`#
@@ -589,6 +675,12 @@ _root_.example.Methods#m9(`m9().`). => def m9: (x: Methods.this.`m9().`): Nothin
 _root_.example.Methods#m9(`m9().`).(x) => param x: Methods.this.`m9().`
   [0..7): Methods => _root_.example.Methods#
   [13..20): `m9().` => _root_.example.Methods#`m9().`#
+_root_.example.Usages# => class Usages
+_root_.example.Usages#`<init>`(). => primaryctor <init>: (): Usages
+  [4..10): Usages => _root_.example.Usages#
+_root_.example.Usages#m. => val m: Methods[Int]
+  [0..7): Methods => _root_.example.Methods#
+  [8..11): Int => _root_.scala.Int#
 _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int
 _root_.scala.Predef. => final object Predef
@@ -596,6 +688,7 @@ _root_.scala.Predef.String# => type String: String
   [0..6): String => _root_.java.lang.String#
 _root_.scala.Predef.`???`(). => def ???: Nothing
   [0..7): Nothing => _root_.scala.Nothing#
+_root_.scala.collection.immutable.Nil. => final case object Nil
 _root_.scala.math. => package math
 _root_.scala.math.Ordering# => trait Ordering
 _root_.scala.package.List# => val List: List.type
@@ -603,6 +696,21 @@ _root_.scala.package.List# => val List: List.type
 _root_.scala.unchecked# => class unchecked
 _root_.scala.unchecked#`<init>`(). => primaryctor <init>: (): unchecked
   [4..13): unchecked => _root_.scala.unchecked#
+
+Synthetics:
+[921..921): *[Int]
+  [0..1): * => _star_.
+  [2..5): Int => _root_.scala.Int#
+[941..941): *(scala.math.Ordering.Int)
+  [0..1): * => _star_.
+  [22..25): Int => _root_.scala.math.Ordering.Int.
+[949..949): *[Int]
+  [0..1): * => _star_.
+  [2..5): Int => _root_.scala.Int#
+[966..966): *(scala.Predef.$conforms[Int])
+  [0..1): * => _star_.
+  [15..24): $conforms => _root_.scala.Predef.$conforms().
+  [25..28): Int => _root_.scala.Int#
 
 
 semanticdb/integration/src/main/scala/example/Overrides.scala
@@ -623,7 +731,7 @@ Names:
 [73..76): Int => _root_.scala.Int#
 
 Symbols:
-_root_.example. => package example.{+7 members}
+_root_.example. => package example.{+8 members}
 _root_.example.A# => trait A.{+1 members}
 _root_.example.A#foo(). => abstract def foo: Int
   [0..3): Int => _root_.scala.Int#
@@ -657,7 +765,7 @@ Names:
 [95..106): stripPrefix => _root_.scala.collection.immutable.StringLike#stripPrefix(String).
 
 Symbols:
-_root_.example. => package example.{+7 members}
+_root_.example. => package example.{+8 members}
 _root_.example.Synthetic# => class Synthetic
 _root_.example.Synthetic#`<init>`(). => primaryctor <init>: (): Synthetic
   [4..13): Synthetic => _root_.example.Synthetic#
@@ -1192,7 +1300,7 @@ Names:
 [79..80): + => _root_.scala.Int#`+`(Int).
 
 Symbols:
-_root_.example. => package example.{+7 members}
+_root_.example. => package example.{+8 members}
 _root_.example.`local-file`# => class local-file
 _root_.example.`local-file`#`<init>`(). => primaryctor <init>: (): `local-file`
   [4..16): `local-file` => _root_.example.`local-file`#
