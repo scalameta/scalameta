@@ -81,8 +81,8 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Example.scala
 Text => non-empty
 Language => Scala212
-Symbols => 18 entries
-Occurrences => 22 entries
+Symbols => 19 entries
+Occurrences => 23 entries
 Diagnostics => 1 entries
 Synthetics => 1 entries
 
@@ -130,6 +130,8 @@ _root_.scala.reflect.package.classTag(ClassTag). => def classTag: [T: <?>] => (c
   T => _root_.scala.reflect.package.classTag(ClassTag).[T]
   ctag => _root_.scala.reflect.package.classTag(ClassTag).(ctag)
   ClassTag => _root_.scala.reflect.ClassTag#
+local0 => selfparam self: Example
+  Example => _root_.example.Example.
 
 Occurrences:
 [0:8..0:15): example <= _root_.example.
@@ -137,6 +139,7 @@ Occurrences:
 [2:13..2:23): concurrent => _root_.scala.concurrent.
 [2:24..2:30): Future => _root_.scala.concurrent.Future#;_root_.scala.concurrent.Future.
 [4:7..4:14): Example <= _root_.example.Example.
+[4:17..4:21): self <= local0
 [5:6..5:11): scala => _root_.scala.
 [5:12..5:22): collection => _root_.scala.collection.
 [5:23..5:30): mutable => _root_.scala.collection.mutable.

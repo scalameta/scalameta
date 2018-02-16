@@ -533,6 +533,11 @@ languages map onto these kinds.
     <td>Parameter, e.g. <code>x</code> in <code>class C(x: Int)</code>.</td>
   </tr>
   <tr>
+    <td><code>17</code></td>
+    <td><code>SELF_PARAMETER</code></td>
+    <td>Self parameter, e.g. <code>self</code> in <code>class C { self => ... }</code>.</td>
+  </tr>
+  <tr>
     <td><code>9</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td>Type parameter, e.g. <code>T</code> in <code>class C[T](x: T)</code>.</td>
@@ -945,6 +950,7 @@ the owner chain is `[_root_, scala, Int]`.
     encoded name and a pound sign (`#`).
   * For `PARAMETER`, concatenation of a left parenthesis (`(`), its
     encoded name and a right parenthesis (`)`).
+  * For `SELF_PARAMETER`, unsupported.
   * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its
     encoded name and a right bracket (`]`).
   * See [SymbolInformation](#scala-symbolinformation) for details on
@@ -1354,6 +1360,49 @@ Notes:
   represented as described below in order of their appearance in source code.
 * Type symbols support [all Scala accessibilities](#scala-accessibility).
 
+**Self parameters** [\[64\]][64] are represented with `SELF_PARAMETER` symbols.
+
+```scala
+class C1 {
+  self1 =>
+}
+
+class C2 {
+  self2: T =>
+}
+```
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>self1</code></td>
+    <td><code>local0</code></td>
+    <td><code>SELF_PARAMETER</code></td>
+    <td><code>TypeRef(&lt;_empty_.type&gt;, &lt;C1&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>self2</code></td>
+    <td><code>local0</code></td>
+    <td><code>SELF_PARAMETER</code></td>
+    <td><code>TypeRef(&lt;_empty_.type&gt;, &lt;T&gt;, List())</code></td>
+  </tr>
+</table>
+
+Notes:
+* Self parameters cannot be referenced outside the document where they are
+  located, which means that they are represented by local symbols.
+* Self parameter symbols don't support any properties.
+* We leave the mapping between type syntax written in source code and
+  `Type` entities deliberately unspecified. For example, a producer may
+  represent the signature of `self2` as
+  `StructuralType(List(), List(<C2>, <T>), List())`.
+  See [Types](#scala-type) for more information.
+* Self parameter symbols don't support any accessibilities.
+
 **Type parameters** [\[43\]][43] are represented with `TYPE_PARAMETER` symbols.
 
 ```scala
@@ -1361,7 +1410,6 @@ class C[T1] {
   def m[T2[T3] <: Hi] = ???
   type T[T4 >: Lo] = ???
 }
-
 ```
 <table>
   <tr>
@@ -2000,3 +2048,4 @@ on this in the future, but this is highly unlikely.
 [61]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#packagings
 [62]: https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#private
 [63]: https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#protected
+[64]: https://www.scala-lang.org/files/archive/spec/2.11/05-classes-and-objects.html#templates

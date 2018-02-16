@@ -122,6 +122,7 @@ package object semanticdb {
                 case k.MACRO => dflip(d.MACRO)
                 case k.TYPE => dflip(d.TYPE)
                 case k.PARAMETER => dflip(d.PARAM)
+                case k.SELF_PARAMETER => dflip(d.SELFPARAM)
                 case k.TYPE_PARAMETER => dflip(d.TYPEPARAM)
                 case k.OBJECT => dflip(d.OBJECT)
                 case k.PACKAGE => dflip(d.PACKAGE)
@@ -316,6 +317,7 @@ package object semanticdb {
                 else if (dtest(d.MACRO)) k.MACRO
                 else if (dtest(d.TYPE)) k.TYPE
                 else if (dtest(d.PARAM)) k.PARAMETER
+                else if (dtest(d.SELFPARAM)) k.SELF_PARAMETER
                 else if (dtest(d.TYPEPARAM)) k.TYPE_PARAMETER
                 else if (dtest(d.OBJECT)) k.OBJECT
                 else if (dtest(d.PACKAGE)) k.PACKAGE

@@ -165,6 +165,7 @@ message SymbolInformation {
     MACRO = 6;
     TYPE = 7;
     PARAMETER = 8;
+    SELF_PARAMETER = 17;
     TYPE_PARAMETER = 9;
     OBJECT = 10;
     PACKAGE = 11;

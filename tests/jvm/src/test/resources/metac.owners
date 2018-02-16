@@ -262,4 +262,5 @@ _root_.types.ann1# => _root_.types.
 _root_.types.ann1#`<init>`(). => _root_.types.ann1#
 _root_.types.ann2# => _root_.types.
 _root_.types.ann2#`<init>`(). => _root_.types.ann2#
+local0_semanticdb/integration/src/main/scala/example/Example.scala => <none>
 local0_semanticdb/integration/src/main/scala/example/local-file.scala => <none>
