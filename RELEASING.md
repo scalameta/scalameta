@@ -6,11 +6,22 @@
 * Tag the release:
   * The tag must be called `vx.y.x`, e.g. `v3.0.0`.
   * To create the tag:
-    * https://github.com/scalameta/scalameta/releases/new
+    * https://github.com/scalameta/scalameta/releases/new (don't spend time
+      filling in the release notes - leave this field empty and edit it later;
+      you'll have plenty of time for that while waiting for Travis).
     * Or, `git tag -a vx.y.z -m "vx.y.z"` && `git push upstream --tags`
-* Close the milestone corresponding to the release.
 * Wait for [the Travis CI job](https://travis-ci.org/scalameta/scalameta/branches)
-   in Active Branches to build the binaries and stage them to Sonatype.
+  in Active Branches to build the binaries and stage them to Sonatype.
+* While waiting for Travis, update the milestones:
+  * https://github.com/scalameta/scalameta/milestones
+  * Close the milestone or milestones corresponding to the release.
+    For example, for 3.3.0, we closed both 3.2.1 and 3.3.0 (we never
+    released 3.2.1, so all its tickets went straight to 3.3.0).
+  * Create the milestone or milestones corresponding to future releases.
+    For example, for 3.3.0, we created both 3.3.1 and 3.4.0.
+* While waiting for Travis, write the release notes. Use the
+  [3.3.0 release notes](https://github.com/scalameta/scalameta/releases/tag/v3.3.0)
+  as a template.
 * Finalize the release on Sonatype:
   * `sbt sonatypeReleaseAll`
   * Alternatively:
@@ -22,6 +33,8 @@
   * Make sure that the release shows up at https://oss.sonatype.org/content/repositories/releases/org/scalameta/.
   * Wait for 15-30 minutes.
   * Make sure that the release shows up at https://search.maven.org/#search%7Cga%7C1%7Corg.scalameta%20a%3A%22scalameta_2.12%22.
+  * If it's been a while, and the release doesn't show up at Maven Central,
+    ping Sonatype at [OSSRH-10192](https://issues.sonatype.org/browse/OSSRH-10192).
 * Update the website:
   * Submit a pull request like https://github.com/scalameta/tutorial/pull/33.
   * Wait for the Travis CI validation.
