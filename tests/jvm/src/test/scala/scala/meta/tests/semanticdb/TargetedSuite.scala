@@ -551,8 +551,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |[55..61): Stream => _root_.scala.package.Stream().
        |[75..79): Name => _empty_.n.Name().
        |[80..84): name <= _empty_.n.name.name.
-       |[103..106): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(B).
-       |[109..112): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(B).
+       |[103..106): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
+       |[109..112): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
        |[113..119): Stream => _root_.scala.package.Stream().
        |[120..125): empty => _root_.scala.collection.immutable.Stream.empty().
        |""".stripMargin.replace("$STREAM_CONS_TPARAM", streamConsTparam)
@@ -586,8 +586,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.stripMargin,
     """|[7..8): p <= _empty_.p.
        |[17..20): lst <= _empty_.p.lst().
-       |[25..28): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(B).
-       |[31..34): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`(B).
+       |[25..28): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
+       |[31..34): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
        |[35..41): Stream => _root_.scala.package.Stream().
        |[42..47): empty => _root_.scala.collection.immutable.Stream.empty().
        |[50..53): lst => _empty_.p.lst().
