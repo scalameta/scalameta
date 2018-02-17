@@ -98,183 +98,187 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     }
   )
 
-  symbols(
-    """
-      |import scala.language.experimental.macros
-      |
-      |package f {
-      |  class C1(p1: Int, val p2: Int, var p3: Int) {
-      |    def this() = this(0, 0, 0)
-      |    val f1 = {
-      |      val l1 = ???
-      |      var l2 = ???
-      |      ???
-      |    }
-      |    var f2 = ???
-      |    def m1[T](x: Int): Int = ???
-      |    def m2 = macro ???
-      |    type T1 <: Int
-      |    type T2 = Int
-      |  }
-      |
-      |  abstract class C2 {
-      |    def m3: Int
-      |    final def m4 = ???
-      |  }
-      |
-      |  sealed class C3 extends C2 {
-      |    def m3 = 42
-      |    override def toString = ""
-      |  }
-      |
-      |  trait T {
-      |    private val f1 = ???
-      |    private[this] val f2 = ???
-      |    private[f] val f3 = ???
-      |    protected var f4 = ???
-      |    protected[this] var f5 = ???
-      |    protected[f] var f6 = ???
-      |  }
-      |
-      |  object M {
-      |    implicit def i1 = ???
-      |    lazy val l1 = ???
-      |    case class C1()
-      |    class C2[+T, -U]
-      |  }
-      |}
-      |
-      |package object F {
-      |}
-  """.trim.stripMargin,
-    """|_root_.F.package. => packageobject package
-       |_root_.f. => package f
-       |_root_.f.C1# => class C1
-       |_root_.f.C1#T1# => abstract type T1
-       |_root_.f.C1#T2# => type T2: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#`<init>`(). => secondaryctor <init>: (): C1
-       |  [4..6): C1 => _root_.f.C1#
-       |_root_.f.C1#`<init>`(Int,Int,Int). => primaryctor <init>: (p1: Int, p2: Int, p3: Int): C1
-       |  [5..8): Int => _root_.scala.Int#
-       |  [14..17): Int => _root_.scala.Int#
-       |  [23..26): Int => _root_.scala.Int#
-       |  [29..31): C1 => _root_.f.C1#
-       |_root_.f.C1#`<init>`(Int,Int,Int).(p1) => param p1: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#`<init>`(Int,Int,Int).(p2) => val param p2: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#`<init>`(Int,Int,Int).(p3) => var param p3: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#`f2_=`(Nothing). => setter f2_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => _root_.scala.Nothing#
-       |  [16..20): Unit => _root_.scala.Unit#
-       |_root_.f.C1#`f2_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#`p3_=`(Int). => setter p3_=: (x$1: Int): Unit
-       |  [6..9): Int => _root_.scala.Int#
-       |  [12..16): Unit => _root_.scala.Unit#
-       |_root_.f.C1#`p3_=`(Int).(x$1) => param x$1: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#f1(). => getter f1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#f1. => private val f1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#f1.l1. => val l1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#f1.l2. => var l2: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#f2(). => getter f2: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#f2. => private var f2: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#m1(Int). => def m1: [T] => (x: Int): Int
-       |  [11..14): Int => _root_.scala.Int#
-       |  [17..20): Int => _root_.scala.Int#
-       |_root_.f.C1#m1(Int).(x) => param x: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#m1(Int).[T] => typeparam T
-       |_root_.f.C1#m2(). => macro m2: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#p1. => private val p1: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#p2(). => getter p2: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#p2. => private val p2: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#p3(). => getter p3: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#p3. => private var p3: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C2# => abstract class C2
-       |_root_.f.C2#`<init>`(). => primaryctor <init>: (): C2
-       |  [4..6): C2 => _root_.f.C2#
-       |_root_.f.C2#m3(). => abstract def m3: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C2#m4(). => final def m4: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C3# => sealed class C3
-       |_root_.f.C3#`<init>`(). => primaryctor <init>: (): C3
-       |  [4..6): C3 => _root_.f.C3#
-       |_root_.f.C3#m3(). => def m3: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C3#toString(). => def toString: (): String
-       |  [4..10): String => _root_.java.lang.String#
-       |_root_.f.M. => final object M
-       |_root_.f.M.C1# => case class C1
-       |_root_.f.M.C1#`<init>`(). => primaryctor <init>: (): C1
-       |  [4..6): C1 => _root_.f.M.C1#
-       |_root_.f.M.C2# => class C2
-       |_root_.f.M.C2#[T] => covariant typeparam T
-       |_root_.f.M.C2#[U] => contravariant typeparam U
-       |_root_.f.M.C2#`<init>`(). => primaryctor <init>: (): C2[T, U]
-       |  [4..6): C2 => _root_.f.M.C2#
-       |  [7..8): T => _root_.f.M.C2#[T]
-       |  [10..11): U => _root_.f.M.C2#[U]
-       |_root_.f.M.i1(). => implicit def i1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.M.l1(). => lazy val l1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T# => trait T
-       |_root_.f.T#$init$(). => primaryctor $init$: (): Unit
-       |  [4..8): Unit => _root_.scala.Unit#
-       |_root_.f.T#`f4_=`(Nothing). => protected setter f4_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => _root_.scala.Nothing#
-       |  [16..20): Unit => _root_.scala.Unit#
-       |_root_.f.T#`f4_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#`f5_=`(Nothing). => protected setter f5_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => _root_.scala.Nothing#
-       |  [16..20): Unit => _root_.scala.Unit#
-       |_root_.f.T#`f5_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#`f6_=`(Nothing). => protected setter f6_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => _root_.scala.Nothing#
-       |  [16..20): Unit => _root_.scala.Unit#
-       |_root_.f.T#`f6_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f1(). => private getter f1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f2(). => private getter f2: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f3(). => private getter f3: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f4(). => protected getter f4: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f5(). => protected getter f5: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f6(). => protected getter f6: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.scala. => package scala
-       |_root_.scala.Int# => abstract final class Int
-       |_root_.scala.Predef.`???`(). => def ???: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.scala.language. => final object language
-       |_root_.scala.language.experimental. => final object experimental
-       |_root_.scala.language.experimental.macros(). => implicit lazy val macros: macros
-       |  [0..6): macros => _root_.scala.languageFeature.experimental.macros#
-  """.trim.stripMargin
-  )
+  // TODO: Disabled under Scala 2.11 because of:
+  // https://github.com/scalameta/scalameta/issues/1328.
+  if (scala.util.Properties.versionNumberString.startsWith("2.12")) {
+    symbols(
+      """
+        |import scala.language.experimental.macros
+        |
+        |package f {
+        |  class C1(p1: Int, val p2: Int, var p3: Int) {
+        |    def this() = this(0, 0, 0)
+        |    val f1 = {
+        |      val l1 = ???
+        |      var l2 = ???
+        |      ???
+        |    }
+        |    var f2 = ???
+        |    def m1[T](x: Int): Int = ???
+        |    def m2 = macro ???
+        |    type T1 <: Int
+        |    type T2 = Int
+        |  }
+        |
+        |  abstract class C2 {
+        |    def m3: Int
+        |    final def m4 = ???
+        |  }
+        |
+        |  sealed class C3 extends C2 {
+        |    def m3 = 42
+        |    override def toString = ""
+        |  }
+        |
+        |  trait T {
+        |    private val f1 = ???
+        |    private[this] val f2 = ???
+        |    private[f] val f3 = ???
+        |    protected var f4 = ???
+        |    protected[this] var f5 = ???
+        |    protected[f] var f6 = ???
+        |  }
+        |
+        |  object M {
+        |    implicit def i1 = ???
+        |    lazy val l1 = ???
+        |    case class C1()
+        |    class C2[+T, -U]
+        |  }
+        |}
+        |
+        |package object F {
+        |}
+    """.trim.stripMargin,
+      """|_root_.F.package. => packageobject package
+         |_root_.f. => package f
+         |_root_.f.C1# => class C1
+         |_root_.f.C1#T1# => abstract type T1
+         |_root_.f.C1#T2# => type T2: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C1#`<init>`(). => secondaryctor <init>: (): C1
+         |  [4..6): C1 => _root_.f.C1#
+         |_root_.f.C1#`<init>`(Int,Int,Int). => primaryctor <init>: (p1: Int, p2: Int, p3: Int): C1
+         |  [5..8): Int => _root_.scala.Int#
+         |  [14..17): Int => _root_.scala.Int#
+         |  [23..26): Int => _root_.scala.Int#
+         |  [29..31): C1 => _root_.f.C1#
+         |_root_.f.C1#`<init>`(Int,Int,Int).(p1) => param p1: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C1#`<init>`(Int,Int,Int).(p2) => val param p2: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C1#`<init>`(Int,Int,Int).(p3) => var param p3: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C1#`f2_=`(Nothing). => setter f2_=: (x$1: Nothing): Unit
+         |  [6..13): Nothing => _root_.scala.Nothing#
+         |  [16..20): Unit => _root_.scala.Unit#
+         |_root_.f.C1#`f2_=`(Nothing).(x$1) => param x$1: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.C1#`p3_=`(Int). => setter p3_=: (x$1: Int): Unit
+         |  [6..9): Int => _root_.scala.Int#
+         |  [12..16): Unit => _root_.scala.Unit#
+         |_root_.f.C1#`p3_=`(Int).(x$1) => param x$1: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C1#f1(). => getter f1: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.C1#f1. => private val f1: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.C1#f1.l1. => val l1: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.C1#f1.l2. => var l2: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.C1#f2(). => getter f2: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.C1#f2. => private var f2: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.C1#m1(Int). => def m1: [T] => (x: Int): Int
+         |  [11..14): Int => _root_.scala.Int#
+         |  [17..20): Int => _root_.scala.Int#
+         |_root_.f.C1#m1(Int).(x) => param x: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C1#m1(Int).[T] => typeparam T
+         |_root_.f.C1#m2(). => macro m2: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.C1#p1. => private val p1: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C1#p2(). => getter p2: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C1#p2. => private val p2: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C1#p3(). => getter p3: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C1#p3. => private var p3: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C2# => abstract class C2
+         |_root_.f.C2#`<init>`(). => primaryctor <init>: (): C2
+         |  [4..6): C2 => _root_.f.C2#
+         |_root_.f.C2#m3(). => abstract def m3: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C2#m4(). => final def m4: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.C3# => sealed class C3
+         |_root_.f.C3#`<init>`(). => primaryctor <init>: (): C3
+         |  [4..6): C3 => _root_.f.C3#
+         |_root_.f.C3#m3(). => def m3: Int
+         |  [0..3): Int => _root_.scala.Int#
+         |_root_.f.C3#toString(). => def toString: (): String
+         |  [4..10): String => _root_.java.lang.String#
+         |_root_.f.M. => final object M
+         |_root_.f.M.C1# => case class C1
+         |_root_.f.M.C1#`<init>`(). => primaryctor <init>: (): C1
+         |  [4..6): C1 => _root_.f.M.C1#
+         |_root_.f.M.C2# => class C2
+         |_root_.f.M.C2#[T] => covariant typeparam T
+         |_root_.f.M.C2#[U] => contravariant typeparam U
+         |_root_.f.M.C2#`<init>`(). => primaryctor <init>: (): C2[T, U]
+         |  [4..6): C2 => _root_.f.M.C2#
+         |  [7..8): T => _root_.f.M.C2#[T]
+         |  [10..11): U => _root_.f.M.C2#[U]
+         |_root_.f.M.i1(). => implicit def i1: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.M.l1(). => lazy val l1: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.T# => trait T
+         |_root_.f.T#$init$(). => primaryctor $init$: (): Unit
+         |  [4..8): Unit => _root_.scala.Unit#
+         |_root_.f.T#`f4_=`(Nothing). => protected setter f4_=: (x$1: Nothing): Unit
+         |  [6..13): Nothing => _root_.scala.Nothing#
+         |  [16..20): Unit => _root_.scala.Unit#
+         |_root_.f.T#`f4_=`(Nothing).(x$1) => param x$1: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.T#`f5_=`(Nothing). => protected setter f5_=: (x$1: Nothing): Unit
+         |  [6..13): Nothing => _root_.scala.Nothing#
+         |  [16..20): Unit => _root_.scala.Unit#
+         |_root_.f.T#`f5_=`(Nothing).(x$1) => param x$1: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.T#`f6_=`(Nothing). => protected setter f6_=: (x$1: Nothing): Unit
+         |  [6..13): Nothing => _root_.scala.Nothing#
+         |  [16..20): Unit => _root_.scala.Unit#
+         |_root_.f.T#`f6_=`(Nothing).(x$1) => param x$1: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.T#f1(). => private getter f1: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.T#f2(). => private getter f2: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.T#f3(). => private getter f3: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.T#f4(). => protected getter f4: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.T#f5(). => protected getter f5: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.f.T#f6(). => protected getter f6: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.scala. => package scala
+         |_root_.scala.Int# => abstract final class Int
+         |_root_.scala.Predef.`???`(). => def ???: Nothing
+         |  [0..7): Nothing => _root_.scala.Nothing#
+         |_root_.scala.language. => final object language
+         |_root_.scala.language.experimental. => final object experimental
+         |_root_.scala.language.experimental.macros(). => implicit lazy val macros: macros
+         |  [0..6): macros => _root_.scala.languageFeature.experimental.macros#
+    """.trim.stripMargin
+    )
+  }
 
   synthetics(
     """
