@@ -52,7 +52,7 @@ This specification describes quasiquote syntax using a markedly condensed notati
  Infix Application | `t"$tpe $tname $tpe"`
  With              | `t"$tpe with $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
  And               | `t"$tpe & $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
- Or                | `t"$tpe | $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
+ Or                | `t"$tpe \| $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))
  Function          | `t"(..$tpes) => $tpe"`
  Implicit Function | `t"implicit (..$tpes) => $tpe"`
  Tuple             | `t"(..$tpesnel)"`
