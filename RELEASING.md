@@ -5,11 +5,10 @@
   * For more details, consult [versioning policy](VERSIONING.md).
 * Tag the release:
   * The tag must be called `vx.y.x`, e.g. `v3.0.0`.
-  * To create the tag:
-    * https://github.com/scalameta/scalameta/releases/new (don't spend time
-      filling in the release notes - leave this field empty and edit it later;
-      you'll have plenty of time for that while waiting for Travis).
-    * Or, `git tag -a vx.y.z -m "vx.y.z"` && `git push upstream --tags`
+  * `git tag -a vx.y.z -m "vx.y.z"`
+  * `git push upstream --tags`
+  * Do not create a release on GitHub just yet. Creating a release on GitHub
+    sends out a notification to repository watchers, and the release isn't ready for that yet.
 * Wait for [the Travis CI job](https://travis-ci.org/scalameta/scalameta/branches)
   in Active Branches to build the binaries and stage them to Sonatype.
 * While waiting for Travis, update the milestones:
@@ -19,9 +18,13 @@
     released 3.2.1, so all its tickets went straight to 3.3.0).
   * Create the milestone or milestones corresponding to future releases.
     For example, for 3.3.0, we created both 3.3.1 and 3.4.0.
-* While waiting for Travis, write the release notes. Use the
-  [3.3.0 release notes](https://github.com/scalameta/scalameta/releases/tag/v3.3.0)
-  as a template.
+* While waiting for Travis, draft a release on GitHub:
+  * https://github.com/scalameta/scalameta/releases/new.
+  * In the dropdown, pick the recently pushed tag.
+  * Write the release notes using [3.3.0 release notes](https://github.com/scalameta/scalameta/releases/tag/v3.3.0)
+    as a template.
+  * Click "Save draft". The release is still not ready for an announcement,
+    so we shouldn't "Publish release" just yet.
 * Finalize the release on Sonatype:
   * `sbt sonatypeReleaseAll`
   * Alternatively:
@@ -40,6 +43,10 @@
   * Wait for the Travis CI validation.
   * Merge the pull request immediately without waiting for approvals.
   * Apply the website hotfix (https://github.com/scalameta/scalameta.github.com/commit/adc7920ee56dfbe2cb615492554808ded922ae34).
+* Publish the release on GitHub
+  * https://github.com/scalameta/scalameta/releases
+  * Select the previously drafted release.
+  * Click "Publish rlease".
 * Upgrade the downstream projects:
   * https://github.com/scalameta/semanticdb-sbt
   * https://github.com/scalacenter/scalafix
