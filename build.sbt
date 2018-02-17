@@ -155,7 +155,6 @@ lazy val metac = project
   .in(file("semanticdb/metac"))
   .settings(
     publishableSettings,
-    compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1299"),
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.Metac")
@@ -168,7 +167,6 @@ lazy val metacp = project
   .in(file("semanticdb/metacp"))
   .settings(
     publishableSettings,
-    compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1299"),
     description := "Scala 2.x classpath to SemanticDB converter",
     libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.Metacp")
@@ -182,7 +180,6 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("semanticdb/metap"))
   .settings(
     publishableSettings,
-    compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1299"),
     description := "SemanticDB decompiler",
     mainClass := Some("scala.meta.cli.Metap")
   )
