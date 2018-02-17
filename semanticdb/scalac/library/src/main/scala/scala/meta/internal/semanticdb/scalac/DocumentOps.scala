@@ -221,6 +221,22 @@ trait DocumentOps { self: DatabaseOps =>
                     add(gprim.toSemantic, gprim)
                   }
                 }
+                if (gsym.isPrimaryConstructor) {
+                  val gclassParams = gsym.info.paramss.flatten
+                  gclassParams.foreach(gp => add(gp.toSemantic, gp))
+                }
+                if (gsym.isGetter) {
+                  val gfield = gsym.accessed
+                  if (gfield != g.NoSymbol) {
+                    add(gfield.toSemantic, gfield)
+                  }
+                  val gsetter = gsym.setterIn(gsym.owner)
+                  if (gsetter != g.NoSymbol) {
+                    add(gsetter.toSemantic, gsetter)
+                    val gsetterParams = gsetter.info.paramss.flatten
+                    gsetterParams.foreach(gp => add(gp.toSemantic, gp))
+                  }
+                }
               }
               if (mtree.isDefinition && config.denotations.saveDefinitions) saveDenotation()
               if (mtree.isReference && config.denotations.saveReferences) saveDenotation()
@@ -303,7 +319,7 @@ trait DocumentOps { self: DatabaseOps =>
             if (tryMpos(gstart, gend)) return
 
             gtree match {
-              case gtree: g.ValDef if gtree.symbol == gtree.symbol.owner.thisSym =>
+              case gtree: g.ValDef if gtree.symbol.isSelfParameter =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
               // NOTE: never interested in synthetics except for the ones above
@@ -318,8 +334,15 @@ trait DocumentOps { self: DatabaseOps =>
                 tryMstart(gpoint + 7)
                 tryMstart(gpoint)
               case gtree: g.ValDef =>
-                tryMstart(gstart)
-                tryMstart(gpoint)
+                val gsym = gtree.symbol
+                if (!gsym.isMethod && gsym.getterIn(gsym.owner) != g.NoSymbol) {
+                  // TODO: Skip the field definition in favor of the associated getter.
+                  // This will make sure that val/var class parameters are consistently
+                  // resolved to getter symbols both as definition and references.
+                } else {
+                  tryMstart(gstart)
+                  tryMstart(gpoint)
+                }
               case gtree: g.MemberDef =>
                 tryMstart(gpoint)
               case gtree: g.DefTree =>

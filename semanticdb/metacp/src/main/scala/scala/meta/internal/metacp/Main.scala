@@ -93,10 +93,7 @@ object Main {
 
   private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
     if (sym.parent.get == NoSymbol) return None
-    if (sym.isSynthetic) return None // TODO: Implement me.
     if (sym.isModuleClass) return None
-    if (sym.name.endsWith(" ")) return None // TODO: Implement me.
-    if (sym.name.endsWith("_$eq")) return None // TODO: Implement me.
     if (sym.name == "<init>" && !sym.isClassConstructor) return None
     Some(
       s.SymbolInformation(
@@ -141,40 +138,41 @@ object Main {
     }
   }
 
+  // NOTE: Cases in the pattern match are ordered
+  // similarly to DenotationOps.kindFlags in semanticdb/scalac.
   private val primaryCtors = mutable.Map[String, Int]()
   private def skind(sym: Symbol): s.SymbolInformation.Kind = {
     sym match {
-      case sym: MethodSymbol if sym.isAccessor && !sym.isParamAccessor =>
-        // TODO: Implement me.
-        if (sym.isMutable) k.VAR
-        else k.VAL
-      case sym: MethodSymbol if sym.isParamAccessor || sym.isParam =>
-        // NOTE: This is some craziness - parameters are modelled as methods.
-        // Not just class parameters, but also normal method parameters.
-        k.PARAMETER
-      case sym: MethodSymbol if sym.name == "<init>" =>
-        val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
-        if (sym.entry.index == primaryIndex) k.PRIMARY_CONSTRUCTOR
-        else k.SECONDARY_CONSTRUCTOR
-      case sym: MethodSymbol =>
-        // NOTE: More craziness - 0x8000 used to mean DEPRECATED back then.
-        // Since then, deprecated became an annotation, and 0x8000 got used by MACRO,
-        // but Scalap hasn't been updated.
-        if (sym.isDeprecated) k.MACRO
-        else k.DEF
-      case sym: TypeSymbol if sym.isParam =>
-        k.TYPE_PARAMETER
-      case _: TypeSymbol | _: AliasSymbol =>
-        k.TYPE
-      case sym: ClassSymbol if !sym.isModule =>
-        if (sym.isTrait) k.TRAIT
-        else k.CLASS
+      case sym: MethodSymbol if sym.isMethod =>
+        if (sym.name == "<init>") {
+          val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
+          if (sym.entry.index == primaryIndex) k.PRIMARY_CONSTRUCTOR
+          else k.SECONDARY_CONSTRUCTOR
+        } else {
+          if (sym.isAccessor && sym.name.endsWith("_$eq")) k.SETTER
+          else if (sym.isAccessor) k.GETTER
+          else if (sym.hasFlag(0x00008000)) k.MACRO
+          else k.DEF
+        }
       case _: ObjectSymbol | _: ClassSymbol if sym.isModule =>
         if (sym.name == "package") k.PACKAGE_OBJECT
         else k.OBJECT
+      case sym: MethodSymbol =>
+        // NOTE: This is craziness. In scalap, parameters, val and vars
+        // are also modelled with method symbols.
+        if (sym.isParam) k.PARAMETER
+        else if (sym.isMutable) k.VAR
+        else k.VAL
+      case sym: ClassSymbol if !sym.isModule =>
+        if (sym.isTrait) k.TRAIT
+        else k.CLASS
+      case _: TypeSymbol | _: AliasSymbol =>
+        if (sym.isParam) k.TYPE_PARAMETER
+        else k.TYPE
       case sym: ExternalSymbol =>
         // NOTE: Object and package external symbols
         // are indistinguishable from each other.
+        // This means that metacp never sets k.PACKAGE.
         val hasTermName = {
           val idx = sym.entry.index + 1
           if (sym.entry.scalaSig.hasEntry(idx)) {
@@ -195,7 +193,7 @@ object Main {
   }
 
   private def sproperties(sym: SymbolInfoSymbol): Int = {
-    def isAbstractClass = sym.isAbstract && !sym.isTrait
+    def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
     def isAbstractMethod = sym.isMethod && sym.isDeferred
     def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
     var sproperties = 0
@@ -208,8 +206,14 @@ object Main {
     if (sym.isCase) sflip(p.CASE.value)
     if (sym.isType && sym.isCovariant) sflip(p.COVARIANT.value)
     if (sym.isType && sym.isContravariant) sflip(p.CONTRAVARIANT.value)
-    if (sym.isAccessor && sym.isParamAccessor && !sym.isMutable) sflip(p.VALPARAM.value)
-    if (sym.isAccessor && sym.isParamAccessor && sym.isMutable) sflip(p.VARPARAM.value)
+    if (sym.isParam && skind(sym.parent.get) == k.PRIMARY_CONSTRUCTOR) {
+      val members = sym.parent.get.parent.get.children
+      val getter = members.find(m => skind(m) == k.GETTER && m.name == sym.name)
+      val setter = members.find(m => skind(m) == k.SETTER && m.name == sym.name + "_$eq")
+      if (setter.nonEmpty) sflip(p.VARPARAM.value)
+      else if (getter.nonEmpty) sflip(p.VALPARAM.value)
+      else ()
+    }
     sproperties
   }
 
@@ -217,6 +221,7 @@ object Main {
     def loop(name: String): String = {
       val i = name.lastIndexOf("$$")
       if (i > 0) loop(name.substring(i + 2))
+      else if (name.endsWith(" ")) loop(name.substring(0, name.length - 1))
       else if (name == "<no symbol>") ""
       else if (name == "<root>") "_root_"
       else if (name == "<empty>") "_empty_"
@@ -353,8 +358,8 @@ object Main {
     try loop(sym.infoType)
     catch {
       case ScalaSigParserError("Unexpected failure") =>
-        // See https://github.com/scalameta/scalameta/issues/1283
-        // when this can happen
+        // TODO: See https://github.com/scalameta/scalameta/issues/1283
+        // when this can happen.
         None
     }
   }
@@ -364,6 +369,8 @@ object Main {
     Nil
   }
 
+  // TODO: I'm not completely happy with the implementation of this method.
+  // See https://github.com/scalameta/scalameta/issues/1325 for details.
   def sacc(sym: SymbolInfoSymbol): s.Accessibility = {
     sym.symbolInfo.privateWithin match {
       case Some(privateWithin: Symbol) =>
@@ -420,6 +427,7 @@ object Main {
 
   private implicit class SymbolOps(sym: Symbol) {
     def isModuleClass: Boolean = sym.isInstanceOf[ClassSymbol] && sym.isModule
+    def isClass: Boolean = sym.isInstanceOf[ClassSymbol]
     def isType: Boolean = sym.isInstanceOf[TypeSymbol]
     def isClassConstructor: Boolean = {
       sym.parent match {
@@ -430,9 +438,20 @@ object Main {
       }
     }
     def descriptor: String = {
-      sym match {
-        case sym: SymbolInfoSymbol => sym.infoType.descriptor
-        case sym => sys.error(s"unsupported symbol $sym")
+      try {
+        sym match {
+          case sym: SymbolInfoSymbol => sym.infoType.descriptor
+          case sym => sys.error(s"unsupported symbol $sym")
+        }
+      } catch {
+        case ScalaSigParserError("Unexpected failure") =>
+          // TODO: MethodSymbol(javaEnum, owner=414, flags=8400202, info=486 ,None)
+          // aka "accessor stable method final javaEnum".
+          // Looks like the same problem as the one in
+          // https://github.com/scalameta/scalameta/issues/1283.
+          // It seems that Scalap doesn't support all the signatures that
+          // Scalac can emit.
+          "<?>"
       }
     }
     def disambiguator: String = {
@@ -481,8 +500,8 @@ object Main {
     }
     def ret: Type = {
       tpe match {
-        case NullaryMethodType(tpe) => tpe
-        case MethodType(tpe, _) => tpe
+        case NullaryMethodType(tpe) => tpe.ret
+        case MethodType(tpe, _) => tpe.ret
         case _ => tpe
       }
     }

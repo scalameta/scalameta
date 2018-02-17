@@ -33,11 +33,11 @@ trait SymbolOps { self: DatabaseOps =>
 
         val owner = sym.owner.toSemantic
         val signature = {
-          if (sym.isMethod && !sym.asMethod.isGetter) {
+          if (sym.isMethod) {
             m.Signature.Method(sym.name.toSemantic, sym.disambiguator)
           } else if (sym.isTypeParameter) {
             m.Signature.TypeParameter(sym.name.toSemantic)
-          } else if (sym.isValueParameter || sym.isParamAccessor) {
+          } else if (sym.isValueParameter) {
             m.Signature.TermParameter(sym.name.toSemantic)
           } else if (sym.isType) {
             m.Signature.Type(sym.name.toSemantic)
@@ -74,7 +74,7 @@ trait SymbolOps { self: DatabaseOps =>
           sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
           (sym.owner.isMethod && !sym.isParameter) ||
           ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter) ||
-          (sym.owner.thisSym == sym)
+          sym.isSelfParameter
       !definitelyGlobal && (definitelyLocal || sym.owner.isSemanticdbLocal)
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
@@ -89,6 +89,9 @@ trait SymbolOps { self: DatabaseOps =>
         else "+" + (synonyms.indexOf(sym) + 1)
       }
       "(" + descriptor + suffix + ")"
+    }
+    def isSelfParameter: Boolean = {
+      sym != g.NoSymbol && sym.owner.thisSym == sym
     }
   }
 }

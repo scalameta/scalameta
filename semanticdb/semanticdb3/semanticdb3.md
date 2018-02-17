@@ -634,12 +634,12 @@ languages map onto these properties.
   <tr>
     <td><code>0x400</code></td>
     <td><code>VALPARAM</code></td>
-    <td>Is a `val` parameter of a primary constructor?</td>
+    <td>Is a <code>val</code> parameter of a primary constructor?</td>
   </tr>
   <tr>
     <td><code>0x800</code></td>
     <td><code>VARPARAM</code></td>
-    <td>Is a `var` parameter of a primary constructor?</td>
+    <td>Is a <code>var</code> parameter of a primary constructor?</td>
   </tr>
 </table>
 
@@ -1269,12 +1269,14 @@ Notes:
        ..., `xm` that are defined in patterns `p1`, ..., `pn` in order of their
        appearance in source code).
 * Supported properties for value symbols are:
-  * `ABSTRACT`: set for getters of value declarations.
-  * `FINAL`: set for getters of `final` values.
-  * `IMPLICIT`: set for getters of `implicit` value members and for vals of
-    `implicit` local values.
-  * `LAZY`: set for getters of `lazy` value members and for vals of
-    `lazy` local values.
+  * `ABSTRACT`: set for all corresponding symbols of value declarations.
+  * `FINAL`: set for all corresponding symbols of `final` values.
+  * `IMPLICIT`:
+    * If a corresponding `PARAM` symbol exists, set for the `PARAM` symbol.
+    * If a corresponding `GETTER` symbol exists, set for the `GETTER` symbol.
+    * If a corresponding `VAL` symbol exists but no corresponding `GETTER`
+      symbol exists, set for the `VAL` symbol.
+  * `LAZY`: set for all corresponding symbols of `lazy` values.
 * `override` relationships exist only for `GETTER` and `SETTER` symbols.
   Corresponding `VAL` or `PARAM` symbols never override or get overridden.
 * If the type of the value is unspecified, it is inferred from the
@@ -1302,13 +1304,19 @@ symbols created for variables:
   is created for a variable having the same properties, signature and
   accessibility.
 * Whenever a `GETTER` symbol would be created for a value, a `SETTER` symbol
-  is created for a variable, having the same properties and accessibility
+  is created for a variable, having the same properties (except `IMPLICIT`)
+  and accessibility
   and (for `var x: T`) name `x_=`
   and signature `MethodType(List(), List(List(<x$1>)), <Unit>)`
   with the synthetic parameter `x$1` having signature `<T>`.
 * Whenever a `PARAMETER` symbol would be created for a value, a `PARAMETER`
   symbol is created for a variable having the same properties, signature
   and accessibility.
+* Variable declarations and definitions cannot be `lazy`, so variable symbols
+  cannot be `LAZY` either.
+* Only corresponding `GETTER` and `PARAM` symbols for `implicit` member
+  variables and only corresponding `VAR` symbols for `implicit` local
+  variables can be `IMPLICIT`. `SETTER` symbols can never be `IMPLICIT`.
 
 **Pattern variables** [\[65\]][65] are represented differently depending
 on their location:
@@ -1642,6 +1650,8 @@ Notes:
 * Supported properties for parameter symbols are:
   * `IMPLICIT`: set for `implicit` parameters, as well as desugared context
     bounds and view bounds (see above).
+  * `VALPARAM`: set for `val` parameters of primary constructors.
+  * `VARPARAM`: set for `var` parameters of primary constructors.
 * Unlike some other metaprogramming systems for Scala, we do not
   distinguish regular parameters from parameters with default arguments
   [\[45\]][45]. However, we do create method symbols for synthetic methods

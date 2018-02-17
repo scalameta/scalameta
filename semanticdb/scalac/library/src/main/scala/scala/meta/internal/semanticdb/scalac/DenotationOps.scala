@@ -15,61 +15,64 @@ trait DenotationOps { self: DatabaseOps =>
     private val gsym: g.Symbol = {
       if (gsym0.isModuleClass) gsym0.asClass.module
       else if (gsym0.isTypeSkolem) gsym0.deSkolemize
-      else gsym0.setterIn(gsym0.owner).orElse(gsym0.getterIn(gsym0.owner).orElse(gsym0))
+      else gsym0
     }
 
     private val isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE) && gsym.name != nme.PACKAGE
 
-    private def definitionFlags: Long = {
-      var flags = 0l
-      def maybeValOrVar =
-        (gsym.isTerm && flags == 0l) || (gsym.hasFlag(gf.PARAMACCESSOR) && flags == mf.PARAM)
-      if (gsym.isMethod && !gsym.isConstructor && !gsym.hasFlag(gf.MACRO) && !gsym.hasFlag(
-            gf.ACCESSOR) && !gsym.hasFlag(gf.PARAMACCESSOR)) flags |= mf.DEF
-      if (gsym.isPrimaryConstructor) flags |= mf.PRIMARYCTOR
-      if (gsym.isConstructor && !gsym.isPrimaryConstructor) flags |= mf.SECONDARYCTOR
-      if (gsym.hasFlag(gf.MACRO)) flags |= mf.MACRO
-      if (gsym.isType && !gsym.isClass && !gsym.hasFlag(gf.PARAM)) flags |= mf.TYPE
-      if (gsym.isTerm && (gsym.hasFlag(gf.PARAM) || gsym.hasFlag(gf.PARAMACCESSOR)))
-        flags |= mf.PARAM
-      if (gsym.isType && gsym.hasFlag(gf.PARAM)) flags |= mf.TYPEPARAM
-      if (isObject) flags |= mf.OBJECT
-      if (gsym.hasFlag(gf.PACKAGE)) flags |= mf.PACKAGE
-      if (gsym.isModule && gsym.name == nme.PACKAGE) flags |= mf.PACKAGEOBJECT
-      if (gsym.isClass && !gsym.hasFlag(gf.TRAIT)) flags |= mf.CLASS
-      if (gsym.isClass && gsym.hasFlag(gf.TRAIT)) flags |= mf.TRAIT
-      if (maybeValOrVar && (gsym.hasFlag(gf.MUTABLE) || nme.isSetterName(gsym.name)))
-        flags |= mf.VAR
-      if (maybeValOrVar && !(gsym.hasFlag(gf.LOCAL) && gsym.hasFlag(gf.PARAMACCESSOR)))
-        flags |= mf.VAL
-      if (gsym.hasFlag(gf.JAVA) && !gsym.hasFlag(gf.PACKAGE))
-        flags |= mf.JAVADEFINED
-      flags
-    }
-
-    private def accessQualifierFlags: Long = {
-      var flags = 0l
-      val gpriv = gsym.privateWithin.orElse(gsym.owner)
-      if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
-        // NOTE: some sick artifact vals produced by mkPatDef can be private to method (whatever that means)
-        // so here we just ignore them
-      } else {
-        if (gsym.hasFlag(gf.PROTECTED)) flags |= mf.PROTECTED
-        if (gsym.hasFlag(gf.PRIVATE) && !gsym.hasFlag(gf.PARAMACCESSOR)) flags |= mf.PRIVATE
-        // TODO: `private[pkg] class C` doesn't have PRIVATE in its flags
-        // so we need to account for that!
-        if (gsym.hasAccessBoundary && gpriv != g.NoSymbol && !gsym.hasFlag(gf.PROTECTED))
-          flags |= mf.PRIVATE
+    private def kindFlags: Long = {
+      gsym match {
+        case gsym: MethodSymbol =>
+          if (gsym.isConstructor) {
+            if (gsym.isPrimaryConstructor) mf.PRIMARYCTOR
+            else mf.SECONDARYCTOR
+          } else {
+            if (gsym.isSetter) mf.SETTER
+            else if (gsym.isGetter && gsym.isLazy && !gsym.isClass) mf.VAL
+            else if (gsym.isGetter) mf.GETTER
+            else if (gsym.isMacro) mf.MACRO
+            else mf.DEF
+          }
+        case gsym: ModuleSymbol =>
+          if (gsym.hasPackageFlag) mf.PACKAGE
+          else if (gsym.isPackageObject) mf.PACKAGEOBJECT
+          else mf.OBJECT
+        case gsym: TermSymbol =>
+          if (gsym.isParameter) mf.PARAM
+          else if (gsym.isMutable) mf.VAR
+          else mf.VAL
+        case gsym: ClassSymbol =>
+          if (gsym.isTrait) mf.TRAIT
+          else mf.CLASS
+        case gsym: TypeSymbol =>
+          if (gsym.isParameter) mf.TYPEPARAM
+          else mf.TYPE
+        case NoSymbol =>
+          0L
+        case _ =>
+          sys.error(s"unsupported symbol $gsym")
       }
-      flags
     }
 
-    private def otherFlags: Long = {
-      var flags = 0l
-      val isDeclaredDeferred = gsym.hasFlag(gf.DEFERRED) && !gsym.hasFlag(gf.PARAM)
-      val isDeclaredAbstract = (gsym.hasFlag(gf.ABSTRACT) && !gsym.hasFlag(gf.TRAIT)) || gsym
-        .hasFlag(gf.ABSOVERRIDE)
-      if (isDeclaredDeferred || isDeclaredAbstract) flags |= mf.ABSTRACT
+    private def accessibilityFlags: Long = {
+      val tag = acc.map(_.tag).getOrElse(a.UNKNOWN_ACCESSIBILITY)
+      tag match {
+        case a.PRIVATE => mf.PRIVATE
+        case a.PRIVATE_THIS => mf.PRIVATE
+        case a.PRIVATE_WITHIN => mf.PRIVATE
+        case a.PROTECTED => mf.PROTECTED
+        case a.PROTECTED_THIS => mf.PROTECTED
+        case a.PROTECTED_WITHIN => mf.PROTECTED
+        case _ => 0L
+      }
+    }
+
+    private def propertyFlags: Long = {
+      var flags = 0L
+      def isAbstractClass = gsym.isClass && gsym.isAbstract && !gsym.isTrait
+      def isAbstractMethod = gsym.isMethod && gsym.isDeferred
+      def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
+      if (isAbstractClass || isAbstractMethod || isAbstractType) flags |= mf.ABSTRACT
       if ((gsym.hasFlag(gf.FINAL) && !gsym.hasFlag(gf.PACKAGE)) || isObject) flags |= mf.FINAL
       if (gsym.hasFlag(gf.SEALED)) flags |= mf.SEALED
       if (gsym.hasFlag(gf.IMPLICIT)) flags |= mf.IMPLICIT
@@ -77,13 +80,19 @@ trait DenotationOps { self: DatabaseOps =>
       if (gsym.hasFlag(gf.CASE)) flags |= mf.CASE
       if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flags |= mf.CONTRAVARIANT
       if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flags |= mf.COVARIANT
-      // TODO: mf.INLINE
+      if (gsym.isParameter && gsym.owner.isPrimaryConstructor) {
+        val ggetter = gsym.getterIn(gsym.owner.owner)
+        if (ggetter != g.NoSymbol && !ggetter.isStable) flags |= mf.VAR
+        else if (ggetter != g.NoSymbol) flags |= mf.VAL
+        else ()
+      }
+      if (gsym.hasFlag(gf.JAVA) && !gsym.hasFlag(gf.PACKAGE)) flags |= mf.JAVADEFINED
       flags
     }
 
     private def flags: Long = {
-      if (gsym.owner.thisSym == gsym) mf.SELFPARAM
-      else definitionFlags | accessQualifierFlags | otherFlags
+      if (gsym.isSelfParameter) mf.SELFPARAM
+      else kindFlags | accessibilityFlags | propertyFlags
     }
 
     private def name: String = {
@@ -108,7 +117,11 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     private def newInfo: (Option[s.Type], List[g.Symbol]) = {
-      gsym.info.toSemantic
+      val ginfo = {
+        if (gsym.isGetter && gsym.isLazy && !gsym.isClass) gsym.info.finalResultType
+        else gsym.info
+      }
+      ginfo.toSemantic
     }
 
     private def overrides: List[m.Symbol] =
@@ -128,17 +141,25 @@ trait DenotationOps { self: DatabaseOps =>
       (sanns, buf.result)
     }
 
+    // TODO: I'm not completely happy with the implementation of this method.
+    // See https://github.com/scalameta/scalameta/issues/1325 for details.
     private def acc: Option[s.Accessibility] = {
-      if (gsym.privateWithin == NoSymbol) {
-        if (gsym.isPrivateThis) Some(s.Accessibility(a.PRIVATE_THIS))
-        else if (gsym.isPrivate) Some(s.Accessibility(a.PRIVATE))
-        else if (gsym.isProtectedThis) Some(s.Accessibility(a.PROTECTED_THIS))
-        else if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED))
-        else Some(s.Accessibility(a.PUBLIC))
+      if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
+        // NOTE: some sick artifact vals produced by mkPatDef can be
+        // private to method (whatever that means), so here we just ignore them.
+        Some(s.Accessibility(a.PUBLIC))
       } else {
-        val ssym = gsym.privateWithin.toSemantic.syntax
-        if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
-        else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
+        if (gsym.privateWithin == NoSymbol) {
+          if (gsym.isPrivateThis) Some(s.Accessibility(a.PRIVATE_THIS))
+          else if (gsym.isPrivate) Some(s.Accessibility(a.PRIVATE))
+          else if (gsym.isProtectedThis) Some(s.Accessibility(a.PROTECTED_THIS))
+          else if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED))
+          else Some(s.Accessibility(a.PUBLIC))
+        } else {
+          val ssym = gsym.privateWithin.toSemantic.syntax
+          if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
+          else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
+        }
       }
     }
 
