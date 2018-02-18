@@ -32,21 +32,23 @@
     * Close the repositories that have been created by the Travis CI job.
     There can be several respositories produced by the job (currently, there are three).
     * Release the repositories.
-* Verify the release:
+* Verify the Sonatype release:
   * Make sure that the release shows up at https://oss.sonatype.org/content/repositories/releases/org/scalameta/.
-  * Wait for 15-30 minutes.
-  * Make sure that the release shows up at https://search.maven.org/#search%7Cga%7C1%7Corg.scalameta%20a%3A%22scalameta_2.12%22.
-  * If it's been a while, and the release doesn't show up at Maven Central,
-    ping Sonatype at [OSSRH-10192](https://issues.sonatype.org/browse/OSSRH-10192).
 * Update the website:
   * Submit a pull request like https://github.com/scalameta/tutorial/pull/33.
   * Wait for the Travis CI validation.
   * Merge the pull request immediately without waiting for approvals.
   * Apply the website hotfix (https://github.com/scalameta/scalameta.github.com/commit/adc7920ee56dfbe2cb615492554808ded922ae34).
-* Publish the release on GitHub
+* Publish the release on GitHub:
   * https://github.com/scalameta/scalameta/releases
   * Select the previously drafted release.
-  * Click "Publish rlease".
+  * Click "Publish release".
+* Verify the Maven Central release:
+  * Wait for up to several hours (for 3.2.0, we waited for 15 minutes;
+    for 3.3.0, we waited for 1.5 hours).
+  * Make sure that the release shows up at https://search.maven.org/#search%7Cga%7C1%7Corg.scalameta%20a%3A%22scalameta_2.12%22.
+  * If it's been a while, and the release doesn't show up at Maven Central,
+    ping Sonatype at [OSSRH-10192](https://issues.sonatype.org/browse/OSSRH-10192).
 * Upgrade the downstream projects:
   * https://github.com/scalameta/semanticdb-sbt
   * https://github.com/scalacenter/scalafix
