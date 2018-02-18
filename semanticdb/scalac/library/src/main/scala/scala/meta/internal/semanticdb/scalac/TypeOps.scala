@@ -42,8 +42,8 @@ trait TypeOps { self: DatabaseOps =>
             val stag = t.SINGLETON_TYPE
             val stpe = {
               val stag = st.THIS
-              val spre = loop(gsym.tpe)
-              s.SingletonType(stag, spre, "", 0, "")
+              val ssym = todo(gsym)
+              s.SingletonType(stag, None, ssym, 0, "")
             }
             Some(s.Type(tag = stag, singletonType = Some(stpe)))
           case g.SuperType(gpre, gmix) =>

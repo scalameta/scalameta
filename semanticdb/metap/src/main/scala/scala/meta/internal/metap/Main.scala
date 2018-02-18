@@ -224,7 +224,7 @@ object Main {
               opt(pre, ".")(prefix)
               ref(sym)
             case THIS =>
-              opt(pre, ".")(prefix)
+              opt(sym, ".")(ref)
               print("this")
             case SUPER =>
               opt(pre, ".")(prefix)

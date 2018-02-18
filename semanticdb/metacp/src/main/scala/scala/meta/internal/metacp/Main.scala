@@ -302,9 +302,8 @@ object Main {
           val stag = t.SINGLETON_TYPE
           val stpe = {
             val stag = st.THIS
-            // TODO: Implement me.
-            val spre = loop(TypeRefType(NoPrefixType, sym, Nil))
-            s.SingletonType(stag, spre, "", 0, "")
+            val ssym = ssymbol(sym)
+            s.SingletonType(stag, None, ssym, 0, "")
           }
           Some(s.Type(tag = stag, singletonType = Some(stpe)))
         case ConstantType(underlying: Type) =>

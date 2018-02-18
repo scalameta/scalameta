@@ -1024,8 +1024,8 @@ In the examples below:
       <ul>
         <li><code>x.type</code> ~ <code>SingletonType(SYMBOL, None, &lt;x&gt;, None, None)</code>.</li>
         <li><code>p.x.type</code> ~ <code>SingletonType(SYMBOL, &lt;p.type&gt;, &lt;x&gt;, None, None)</code>.</li>
-        <li><code>this.type</code> ~ <code>SingletonType(THIS, &lt;E&gt;, None, None, None)</code>.</li>
-        <li><code>C.this.type</code> ~ <code>SingletonType(THIS, &lt;C&gt;, None, None, None)</code>.</li>
+        <li><code>this.type</code> ~ <code>SingletonType(THIS, None, &lt;E&gt;, None, None)</code>.</li>
+        <li><code>C.this.type</code> ~ <code>SingletonType(THIS, None, &lt;C&gt;, None, None)</code>.</li>
         <li>Type of <code>super</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, None, None, None)</code>.</li>
         <li>Type of <code>super[M]</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, &lt;M&gt;, None, None)</code>.</li>
         <li>Type of <code>C.super[M]</code> ~ <code>SingletonType(SUPER, &lt;C&gt;, &lt;M&gt;, None, None)</code>.</li>

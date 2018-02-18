@@ -69,6 +69,7 @@ commands += Command.command("ci-metac") { s =>
   "testsJVM/test:runMain scala.meta.tests.semanticdb.MetacScalaLibrary" :: s
 }
 commands += Command.command("save-expect") { s =>
+  "metapJVM/compile" ::
   "metacp/compile" ::
   "semanticdbScalacPlugin/compile" ::
   "semanticdbIntegration/clean" ::
