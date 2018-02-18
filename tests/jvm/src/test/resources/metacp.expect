@@ -9,7 +9,7 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-_empty_ => package _empty_
+_empty_. => package _empty_
 _empty_.A# => class A.{+2 decls}
   extends AnyRef
 _empty_.A#`<init>`(). => primaryctor <init>: (): A
@@ -28,7 +28,7 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-_empty_ => package _empty_
+_empty_. => package _empty_
 _empty_.B# => class B.{+2 decls}
   extends AnyRef
 _empty_.B#`<init>`(). => primaryctor <init>: (): B
@@ -47,8 +47,8 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-_root_ => package _root_
-_root_.example => package example
+_root_. => package _root_
+_root_.example. => package example
 _root_.example.A# => trait A.{+1 decls}
   extends AnyRef
 _root_.example.A#foo(). => abstract def foo: : Int
@@ -65,8 +65,8 @@ Language => Scala
 Symbols => 11 entries
 
 Symbols:
-_root_ => package _root_
-_root_.example => package example
+_root_. => package _root_
+_root_.example. => package example
 _root_.example.Acc# => class Acc.{+8 decls}
   extends AnyRef
 _root_.example.Acc#`<init>`(). => primaryctor <init>: (): Acc
@@ -97,8 +97,8 @@ Language => Scala
 Symbols => 5 entries
 
 Symbols:
-_root_ => package _root_
-_root_.example => package example
+_root_. => package _root_
+_root_.example. => package example
 _root_.example.B# => class B.{+2 decls}
   extends AnyRef
   extends A
@@ -118,8 +118,8 @@ Language => Scala
 Symbols => 7 entries
 
 Symbols:
-_root_ => package _root_
-_root_.example => package example
+_root_. => package _root_
+_root_.example. => package example
 _root_.example.Example. => final object Example
 _root_.example.Example.main(Array). => def main: (args: Array[String]): Unit
   args => _root_.example.Example.main(Array).(args)
@@ -145,8 +145,8 @@ Language => Scala
 Symbols => 6 entries
 
 Symbols:
-_root_ => package _root_
-_root_.example => package example
+_root_. => package _root_
+_root_.example. => package example
 _root_.example.MethodUsages# => class MethodUsages.{+3 decls}
   extends AnyRef
 _root_.example.MethodUsages#`<init>`(). => primaryctor <init>: (): MethodUsages
@@ -169,8 +169,8 @@ Language => Scala
 Symbols => 63 entries
 
 Symbols:
-_root_ => package _root_
-_root_.example => package example
+_root_. => package _root_
+_root_.example. => package example
 _root_.example.Methods# => class Methods.{+29 decls}
   extends AnyRef
 _root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.this.List[T]
@@ -355,8 +355,8 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-_root_ => package _root_
-_root_.example => package example
+_root_. => package _root_
+_root_.example. => package example
 _root_.example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
 _root_.example.Synthetic#`<init>`(). => primaryctor <init>: (): Synthetic
@@ -373,8 +373,8 @@ Language => Scala
 Symbols => 5 entries
 
 Symbols:
-_root_ => package _root_
-_root_.example => package example
+_root_. => package _root_
+_root_.example. => package example
 _root_.example.ValUsages. => final object ValUsages
 _root_.example.ValUsages.v(). => getter v: : Vals
   Vals => _root_.example.Vals#
@@ -392,8 +392,8 @@ Language => Scala
 Symbols => 41 entries
 
 Symbols:
-_root_ => package _root_
-_root_.example => package example
+_root_. => package _root_
+_root_.example. => package example
 _root_.example.Vals# => abstract class Vals.{+30 decls}
   extends AnyRef
 _root_.example.Vals#`<init>`(Int,Int,Int). => primaryctor <init>: (p: Int, xp: Int, yp: Int): Vals
@@ -492,8 +492,8 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-_root_ => package _root_
-_root_.example => package example
+_root_. => package _root_
+_root_.example. => package example
 _root_.example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
 _root_.example.`local-file`#`<init>`(). => primaryctor <init>: (): local-file
@@ -510,8 +510,8 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-_root_ => package _root_
-_root_.exclude => package exclude
+_root_. => package _root_
+_root_.exclude. => package exclude
 _root_.exclude.Exclude# => class Exclude.{+1 decls}
   extends AnyRef
 _root_.exclude.Exclude#`<init>`(). => primaryctor <init>: (): Exclude
@@ -528,9 +528,9 @@ Language => Scala
 Symbols => 60 entries
 
 Symbols:
-_root_ => package _root_
-_root_.flags => package flags
-_root_.flags.p => package p
+_root_. => package _root_
+_root_.flags. => package flags
+_root_.flags.p. => package p
 _root_.flags.p.package. => final package object package
 _root_.flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
@@ -682,8 +682,8 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-_root_ => package _root_
-_root_.types => package types
+_root_. => package _root_
+_root_.types. => package types
 _root_.types.B# => class B.{+1 decls}
   extends AnyRef
 _root_.types.B#`<init>`(). => primaryctor <init>: (): B
@@ -700,8 +700,8 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-_root_ => package _root_
-_root_.types => package types
+_root_. => package _root_
+_root_.types. => package types
 _root_.types.C# => class C.{+1 decls}
   extends AnyRef
 _root_.types.C#`<init>`(). => primaryctor <init>: (): C
@@ -718,8 +718,8 @@ Language => Scala
 Symbols => 10 entries
 
 Symbols:
-_root_ => package _root_
-_root_.types => package types
+_root_. => package _root_
+_root_.types. => package types
 _root_.types.P# => class P.{+5 decls}
   extends AnyRef
 _root_.types.P#C# => class C.{+1 decls}
@@ -752,8 +752,8 @@ Language => Scala
 Symbols => 10 entries
 
 Symbols:
-_root_ => package _root_
-_root_.types => package types
+_root_. => package _root_
+_root_.types. => package types
 _root_.types.T# => class T.{+5 decls}
   extends AnyRef
 _root_.types.T#C# => class C.{+1 decls}
@@ -786,8 +786,8 @@ Language => Scala
 Symbols => 134 entries
 
 Symbols:
-_root_ => package _root_
-_root_.types => package types
+_root_. => package _root_
+_root_.types. => package types
 _root_.types.Test. => final object Test
 _root_.types.Test.C# => class C.{+56 decls}
   extends M
@@ -1099,8 +1099,8 @@ Language => Scala
 Symbols => 7 entries
 
 Symbols:
-_root_ => package _root_
-_root_.types => package types
+_root_. => package _root_
+_root_.types. => package types
 _root_.types.ann# => class ann.{+3 decls}
   extends Annotation
   extends StaticAnnotation
@@ -1127,8 +1127,8 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-_root_ => package _root_
-_root_.types => package types
+_root_. => package _root_
+_root_.types. => package types
 _root_.types.ann1# => class ann1.{+1 decls}
   extends Annotation
   extends StaticAnnotation
@@ -1146,8 +1146,8 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-_root_ => package _root_
-_root_.types => package types
+_root_. => package _root_
+_root_.types. => package types
 _root_.types.ann2# => class ann2.{+1 decls}
   extends Annotation
   extends StaticAnnotation

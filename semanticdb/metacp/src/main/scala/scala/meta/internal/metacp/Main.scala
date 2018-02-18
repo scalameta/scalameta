@@ -106,13 +106,13 @@ object Main {
     transitivePackagePaths.map { transitivePackagePath =>
       val (owner, name) = {
         transitivePackagePath.split("\\.").toList match {
-          case ownerSteps :+ name if name.nonEmpty => (ownerSteps.mkString("."), name)
           case List(name) if name.nonEmpty => ("", name)
+          case ownerSteps :+ name if name.nonEmpty => (ownerSteps.mkString(".") + ".", name)
           case _ => sys.error(s"unsupported top-level symbols: $topLevelSymbols")
         }
       }
       s.SymbolInformation(
-        symbol = transitivePackagePath,
+        symbol = transitivePackagePath + ".",
         language = Some(s.Language("Scala")),
         kind = k.PACKAGE,
         name = name,
