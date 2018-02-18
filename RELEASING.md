@@ -4,7 +4,7 @@
   * `x.y.z` is reserved for bugfixes that don't change the public API or the SemanticDB schema.
   * For more details, consult [versioning policy](VERSIONING.md).
 * Tag the release:
-  * The tag must be called `vx.y.x`, e.g. `v3.0.0`.
+  * The tag must be called `vx.y.z`, e.g. `v3.0.0`.
   * `git tag -a vx.y.z -m "vx.y.z"`
   * `git push upstream --tags`
   * Do not create a release on GitHub just yet. Creating a release on GitHub
@@ -21,6 +21,7 @@
 * While waiting for Travis, draft a release on GitHub:
   * https://github.com/scalameta/scalameta/releases/new.
   * In the dropdown, pick the recently pushed tag.
+  * In the release title, say `Scalameta vx.y.z`.
   * Write the release notes using [3.3.0 release notes](https://github.com/scalameta/scalameta/releases/tag/v3.3.0)
     as a template.
   * Click "Save draft". The release is still not ready for an announcement,
@@ -34,6 +35,8 @@
     * Release the repositories.
 * Verify the Sonatype release:
   * Make sure that the release shows up at https://oss.sonatype.org/content/repositories/releases/org/scalameta/.
+  * Make sure that `coursier fetch org.scalameta:semanticdb-scalac-core_a.b.c:x.y.z -r sonatype:releases` succeeds
+    for the supported Scala versions.
 * Update the website:
   * Submit a pull request like https://github.com/scalameta/tutorial/pull/33.
   * Wait for the Travis CI validation.
@@ -47,6 +50,7 @@
   * Wait for up to several hours (for 3.2.0, we waited for 15 minutes;
     for 3.3.0, we waited for 1.5 hours).
   * Make sure that the release shows up at https://search.maven.org/#search%7Cga%7C1%7Corg.scalameta%20a%3A%22scalameta_2.12%22.
+  * Make sure that `coursier fetch org.scalameta:semanticdb-scalac-core_a.b.c:x.y.z` succeeds for the supported Scala versions.
   * If it's been a while, and the release doesn't show up at Maven Central,
     ping Sonatype at [OSSRH-10192](https://issues.sonatype.org/browse/OSSRH-10192).
 * Upgrade the downstream projects:

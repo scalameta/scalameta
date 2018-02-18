@@ -9,11 +9,6 @@ script:
 jdk:
   - oraclejdk8
 
-stages:
-  - name: test
-  - name: release
-    if: (type = push)
-
 matrix:
   include:
     - env:
@@ -50,8 +45,6 @@ matrix:
       - CI_SCALA_JS: true
     - env:
       - CI_TEST: mima
-    - stage: release
-      script: if [[ "$TRAVIS_TAG" ]]; then sbt "sonatypeReleaseAll"; else echo "only releasing on tag pushes"; fi
 
 cache:
   directories:
