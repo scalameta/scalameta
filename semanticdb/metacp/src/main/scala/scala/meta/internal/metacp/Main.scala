@@ -285,7 +285,7 @@ object Main {
           Some(s.Type(tag = stag, repeatedType = Some(s.RepeatedType(stpe))))
         case TypeRefType(pre, sym, args) =>
           val stag = t.TYPE_REF
-          val spre = loop(pre)
+          val spre = if (tpe.hasNontrivialPrefix) loop(pre) else None
           val ssym = ssymbol(sym)
           val sargs = args.flatMap(loop)
           Some(s.Type(tag = stag, typeRef = Some(s.TypeRef(spre, ssym, sargs))))
@@ -293,7 +293,7 @@ object Main {
           val stag = t.SINGLETON_TYPE
           val stpe = {
             val stag = st.SYMBOL
-            val spre = loop(pre)
+            val spre = if (tpe.hasNontrivialPrefix) loop(pre) else None
             val ssym = ssymbol(sym)
             s.SingletonType(stag, spre, ssym, 0, "")
           }
@@ -521,6 +521,11 @@ object Main {
         case ThisType(sym) => sym
         case _ => NoSymbol
       }
+    }
+    // TODO: Implement me.
+    def hasNontrivialPrefix: Boolean = {
+      val kind = skind(tpe.prefix.symbol)
+      kind != k.OBJECT && kind != k.PACKAGE && kind != k.PACKAGE_OBJECT
     }
     def paramss: List[List[SymbolInfoSymbol]] = {
       tpe match {
