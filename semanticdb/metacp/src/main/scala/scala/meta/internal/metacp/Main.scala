@@ -20,8 +20,8 @@ import org.langmeta.io._
 object Main {
   def process(args: Array[String]): Int = {
     Settings.parse(args.toList) match {
-      case Some(settings) => sys.exit(process(settings))
-      case None => sys.exit(1)
+      case Some(settings) => process(settings)
+      case None => 1
     }
   }
 
