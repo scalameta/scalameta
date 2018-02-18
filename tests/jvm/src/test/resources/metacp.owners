@@ -1,6 +1,10 @@
 _empty_ => <none>
-_empty_.Empty# => _empty_.
-_empty_.Empty#`<init>`(). => _empty_.Empty#
+_empty_.A# => _empty_.
+_empty_.A#`<init>`(). => _empty_.A#
+_empty_.A#b(). => _empty_.A#
+_empty_.B# => _empty_.
+_empty_.B#`<init>`(). => _empty_.B#
+_empty_.B#a(). => _empty_.B#
 _root_ => <none>
 _root_.example => _root_
 _root_.example.A# => _root_.example.

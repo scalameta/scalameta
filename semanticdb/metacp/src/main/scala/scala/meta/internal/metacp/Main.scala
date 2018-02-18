@@ -152,7 +152,11 @@ object Main {
         case sym: ExternalSymbol =>
           if (sym.name == "<root>") ""
           else if (sym.name == "<empty>") ""
-          else "_root_." + sym.parent.map(_.path + ".").getOrElse("")
+          else {
+            val path = sym.parent.map(_.path + ".").getOrElse("")
+            if (path.startsWith("<empty>")) "_empty_" + path.stripPrefix("<empty>")
+            else "_root_." + path
+          }
         case _ =>
           sys.error(s"unsupported symbol $sym")
       }

@@ -1,19 +1,40 @@
-Empty.class
------------
+A.class
+-------
 
 Summary:
 Schema => SemanticDB v3
-Uri => Empty.class
+Uri => A.class
 Text => empty
 Language => Scala
-Symbols => 3 entries
+Symbols => 4 entries
 
 Symbols:
 _empty_ => package _empty_
-_empty_.Empty# => class Empty.{+1 decls}
+_empty_.A# => class A.{+2 decls}
   extends AnyRef
-_empty_.Empty#`<init>`(). => primaryctor <init>: (): Empty
-  Empty => _empty_.Empty#
+_empty_.A#`<init>`(). => primaryctor <init>: (): A
+  A => _empty_.A#
+_empty_.A#b(). => def b: : B
+  B => _empty_.B#
+
+B.class
+-------
+
+Summary:
+Schema => SemanticDB v3
+Uri => B.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_empty_ => package _empty_
+_empty_.B# => class B.{+2 decls}
+  extends AnyRef
+_empty_.B#`<init>`(). => primaryctor <init>: (): B
+  B => _empty_.B#
+_empty_.B#a(). => def a: : A
+  A => _empty_.A#
 
 example/A.class
 ---------------

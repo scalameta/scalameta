@@ -61,17 +61,36 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Empty.scala
 Text => non-empty
 Language => Scala212
-Symbols => 2 entries
-Occurrences => 1 entries
+Symbols => 7 entries
+Occurrences => 10 entries
 
 Symbols:
-_empty_.Empty# => class Empty.{+1 decls}
+_empty_.A# => class A.{+2 decls}
   extends AnyRef
-_empty_.Empty#`<init>`(). => primaryctor <init>: (): Empty
-  Empty => _empty_.Empty#
+_empty_.A#`<init>`(). => primaryctor <init>: (): A
+  A => _empty_.A#
+_empty_.A#b(). => def b: : B
+  B => _empty_.B#
+_empty_.B# => class B.{+2 decls}
+  extends AnyRef
+_empty_.B#`<init>`(). => primaryctor <init>: (): B
+  B => _empty_.B#
+_empty_.B#a(). => def a: : A
+  A => _empty_.A#
+_root_.scala.Predef.`???`(). => def ???: : Nothing
+  Nothing => _root_.scala.Nothing#
 
 Occurrences:
-[0:6..0:11): Empty <= _empty_.Empty#
+[0:6..0:7): A <= _empty_.A#
+[0:8..0:8):  <= _empty_.A#`<init>`().
+[1:6..1:7): b <= _empty_.A#b().
+[1:9..1:10): B => _empty_.B#
+[1:13..1:16): ??? => _root_.scala.Predef.`???`().
+[4:6..4:7): B <= _empty_.B#
+[4:8..4:8):  <= _empty_.B#`<init>`().
+[5:6..5:7): a <= _empty_.B#a().
+[5:9..5:10): A => _empty_.A#
+[5:13..5:16): ??? => _root_.scala.Predef.`???`().
 
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
