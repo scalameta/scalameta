@@ -61,17 +61,36 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Empty.scala
 Text => non-empty
 Language => Scala212
-Symbols => 2 entries
-Occurrences => 1 entries
+Symbols => 7 entries
+Occurrences => 10 entries
 
 Symbols:
-_empty_.Empty# => class Empty.{+1 decls}
+_empty_.A# => class A.{+2 decls}
   extends AnyRef
-_empty_.Empty#`<init>`(). => primaryctor <init>: (): Empty
-  Empty => _empty_.Empty#
+_empty_.A#`<init>`(). => primaryctor <init>: (): A
+  A => _empty_.A#
+_empty_.A#b(). => def b: : B
+  B => _empty_.B#
+_empty_.B# => class B.{+2 decls}
+  extends AnyRef
+_empty_.B#`<init>`(). => primaryctor <init>: (): B
+  B => _empty_.B#
+_empty_.B#a(). => def a: : A
+  A => _empty_.A#
+_root_.scala.Predef.`???`(). => def ???: : Nothing
+  Nothing => _root_.scala.Nothing#
 
 Occurrences:
-[0:6..0:11): Empty <= _empty_.Empty#
+[0:6..0:7): A <= _empty_.A#
+[0:8..0:8):  <= _empty_.A#`<init>`().
+[1:6..1:7): b <= _empty_.A#b().
+[1:9..1:10): B => _empty_.B#
+[1:13..1:16): ??? => _root_.scala.Predef.`???`().
+[4:6..4:7): B <= _empty_.B#
+[4:8..4:8):  <= _empty_.B#`<init>`().
+[5:6..5:7): a <= _empty_.B#a().
+[5:9..5:10): A => _empty_.A#
+[5:13..5:16): ??? => _root_.scala.Predef.`???`().
 
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
@@ -444,10 +463,9 @@ _root_.example.Methods# => class Methods.{+26 decls}
   extends AnyRef
 _root_.example.Methods#$anon#x(). => abstract getter x: : Int
   Int => _root_.scala.Int#
-_root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods[T].this.List[T]
+_root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.this.List[T]
   T => _root_.example.Methods#AList#[T]
   Methods => _root_.example.Methods#
-  T => _root_.example.Methods#[T]
   List => _root_.example.Methods#List#
 _root_.example.Methods#AList#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -457,9 +475,8 @@ _root_.example.Methods#List# => class List.{+1 decls}
 _root_.example.Methods#List#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.example.Methods#List#`<init>`(). => primaryctor <init>: (): Methods[T].this.List[T]
+_root_.example.Methods#List#`<init>`(). => primaryctor <init>: (): Methods.this.List[T]
   Methods => _root_.example.Methods#
-  T => _root_.example.Methods#[T]
   List => _root_.example.Methods#List#
   T => _root_.example.Methods#List#[T]
 _root_.example.Methods#[T] => typeparam T: >: Nothing <: Any
@@ -472,19 +489,18 @@ _root_.example.Methods#`m8().`(). => def m8().: (): Nothing
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#`m9().`# => class m9()..{+1 decls}
   extends AnyRef
-_root_.example.Methods#`m9().`#`<init>`(). => primaryctor <init>: (): Methods[T].this.m9().
+_root_.example.Methods#`m9().`#`<init>`(). => primaryctor <init>: (): Methods.this.m9().
   Methods => _root_.example.Methods#
-  T => _root_.example.Methods#[T]
   m9(). => _root_.example.Methods#`m9().`#
 _root_.example.Methods#m1(). => def m1: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m10(AList). => def m10: (x: Methods[T].this.AList[T]): Nothing
+_root_.example.Methods#m10(AList). => def m10: (x: Methods.this.AList[T]): Nothing
   x => _root_.example.Methods#m10(AList).(x)
   Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m10(AList).(x) => param x: Methods[T].this.AList[T]
+_root_.example.Methods#m10(AList).(x) => param x: Methods.this.AList[T]
   Methods => _root_.example.Methods#
-  T => _root_.example.Methods#[T]
   AList => _root_.example.Methods#AList#
+  T => _root_.example.Methods#[T]
 _root_.example.Methods#m11(.type+1). => def m11: (x: Predef.type): Nothing
   x => _root_.example.Methods#m11(.type+1).(x)
   Nothing => _root_.scala.Nothing#
@@ -560,20 +576,20 @@ _root_.example.Methods#m6(Int). => def m6: (x: Int): Nothing
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m6(Int).(x) => param x: Int
   Int => _root_.scala.Int#
-_root_.example.Methods#m6(List+1). => def m6: (x: Methods[T].this.List[T]): Nothing
+_root_.example.Methods#m6(List+1). => def m6: (x: Methods.this.List[T]): Nothing
   x => _root_.example.Methods#m6(List+1).(x)
   Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m6(List+1).(x) => param x: Methods[T].this.List[T]
+_root_.example.Methods#m6(List+1).(x) => param x: Methods.this.List[T]
   Methods => _root_.example.Methods#
-  T => _root_.example.Methods#[T]
   List => _root_.example.Methods#List#
+  T => _root_.example.Methods#[T]
 _root_.example.Methods#m6(List+2). => def m6: (x: List[T]): Nothing
   x => _root_.example.Methods#m6(List+2).(x)
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m6(List+2).(x) => param x: List[T]
   List => _root_.scala.package.List#
   T => _root_.example.Methods#[T]
-_root_.example.Methods#m7a(Methods,List,Ordering). => def m7a: [U >: Nothing <: Any] => (c: Methods[T], l: Methods[T].this.List[U])(evidence$1: <?>): Nothing
+_root_.example.Methods#m7a(Methods,List,Ordering). => def m7a: [U >: Nothing <: Any] => (c: Methods[T], l: Methods.this.List[U])(evidence$1: <?>): Nothing
   U => _root_.example.Methods#m7a(Methods,List,Ordering).[U]
   c => _root_.example.Methods#m7a(Methods,List,Ordering).(c)
   l => _root_.example.Methods#m7a(Methods,List,Ordering).(l)
@@ -582,33 +598,30 @@ _root_.example.Methods#m7a(Methods,List,Ordering). => def m7a: [U >: Nothing <: 
 _root_.example.Methods#m7a(Methods,List,Ordering).(c) => param c: Methods[T]
   Methods => _root_.example.Methods#
   T => _root_.example.Methods#[T]
-_root_.example.Methods#m7a(Methods,List,Ordering).(l) => param l: Methods[T].this.List[U]
+_root_.example.Methods#m7a(Methods,List,Ordering).(l) => param l: Methods.this.List[U]
   Methods => _root_.example.Methods#
-  T => _root_.example.Methods#[T]
   List => _root_.example.Methods#List#
   U => _root_.example.Methods#m7a(Methods,List,Ordering).[U]
 _root_.example.Methods#m7a(Methods,List,Ordering).[U] => typeparam U: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.example.Methods#m7b(List,Function1). => def m7b: [U >: Nothing <: Any] => (l: Methods[T].this.List[U])(evidence$2: <?>): Nothing
+_root_.example.Methods#m7b(List,Function1). => def m7b: [U >: Nothing <: Any] => (l: Methods.this.List[U])(evidence$2: <?>): Nothing
   U => _root_.example.Methods#m7b(List,Function1).[U]
   l => _root_.example.Methods#m7b(List,Function1).(l)
   evidence$2 => _root_.example.Methods#m7b(List,Function1).(evidence$2)
   Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m7b(List,Function1).(l) => param l: Methods[T].this.List[U]
+_root_.example.Methods#m7b(List,Function1).(l) => param l: Methods.this.List[U]
   Methods => _root_.example.Methods#
-  T => _root_.example.Methods#[T]
   List => _root_.example.Methods#List#
   U => _root_.example.Methods#m7b(List,Function1).[U]
 _root_.example.Methods#m7b(List,Function1).[U] => typeparam U: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.example.Methods#m9(`m9().`). => def m9: (x: Methods[T].this.m9().): Nothing
+_root_.example.Methods#m9(`m9().`). => def m9: (x: Methods.this.m9().): Nothing
   x => _root_.example.Methods#m9(`m9().`).(x)
   Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m9(`m9().`).(x) => param x: Methods[T].this.m9().
+_root_.example.Methods#m9(`m9().`).(x) => param x: Methods.this.m9().
   Methods => _root_.example.Methods#
-  T => _root_.example.Methods#[T]
   m9(). => _root_.example.Methods#`m9().`#
 _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int.{+111 decls}

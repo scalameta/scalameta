@@ -20,8 +20,8 @@ import org.langmeta.io._
 object Main {
   def process(args: Array[String]): Int = {
     Settings.parse(args.toList) match {
-      case Some(settings) => sys.exit(process(settings))
-      case None => sys.exit(1)
+      case Some(settings) => process(settings)
+      case None => 1
     }
   }
 
@@ -46,10 +46,6 @@ object Main {
             val classfile = ClassFileParser.parse(bytecode)
             ScalaSigParser.parse(classfile) match {
               case Some(scalaSig) =>
-                val semanticdbInfos = scalaSig.symbols.flatMap {
-                  case sym: SymbolInfoSymbol => sinfo(sym)
-                  case _ => None
-                }
                 val className = NameTransformer.decode(PathIO.toUnix(relpath))
                 val semanticdbRelpath = relpath + ".semanticdb"
                 val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
@@ -57,7 +53,7 @@ object Main {
                   schema = s.Schema.SEMANTICDB3,
                   uri = className,
                   language = Some(s.Language("Scala")),
-                  symbols = semanticdbInfos)
+                  symbols = scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig))
                 val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
                 FileIO.write(semanticdbAbspath, semanticdbDocuments)
               case None =>
@@ -91,6 +87,46 @@ object Main {
     if (failed) 1 else 0
   }
 
+  private def scalaSigPackages(scalaSig: ScalaSig): List[s.SymbolInformation] = {
+    val topLevelSymbols = scalaSig.topLevelClasses ++ scalaSig.topLevelObjects
+    val directPackagePaths = topLevelSymbols.map { topLevelSymbol =>
+      val topLevelPath = topLevelSymbol.symbolInfo.owner.path.replace("<empty>", "_empty_")
+      if (topLevelPath.startsWith("_empty_")) topLevelPath
+      else "_root_." + topLevelPath
+    }
+    val transitivePackagePaths = directPackagePaths.flatMap { directPackagePath =>
+      val directPackageSteps = directPackagePath.split("\\.")
+      directPackageSteps
+        .scanLeft("") { (path, step) =>
+          if (path.nonEmpty) path + "." + step
+          else step
+        }
+        .tail
+    }.distinct
+    transitivePackagePaths.map { transitivePackagePath =>
+      val (owner, name) = {
+        transitivePackagePath.split("\\.").toList match {
+          case List(name) if name.nonEmpty => ("", name)
+          case ownerSteps :+ name if name.nonEmpty => (ownerSteps.mkString(".") + ".", name)
+          case _ => sys.error(s"unsupported top-level symbols: $topLevelSymbols")
+        }
+      }
+      s.SymbolInformation(
+        symbol = transitivePackagePath + ".",
+        language = Some(s.Language("Scala")),
+        kind = k.PACKAGE,
+        name = name,
+        owner = owner)
+    }
+  }
+
+  private def scalaSigSymbols(scalaSig: ScalaSig): List[s.SymbolInformation] = {
+    scalaSig.symbols.toList.flatMap {
+      case sym: SymbolInfoSymbol => sinfo(sym)
+      case _ => None
+    }
+  }
+
   private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
     if (sym.parent.get == NoSymbol) return None
     if (sym.isModuleClass) return None
@@ -98,6 +134,7 @@ object Main {
     Some(
       s.SymbolInformation(
         symbol = ssymbol(sym),
+        language = Some(s.Language("Scala")),
         kind = skind(sym),
         properties = sproperties(sym),
         name = sname(sym),
@@ -115,7 +152,11 @@ object Main {
         case sym: ExternalSymbol =>
           if (sym.name == "<root>") ""
           else if (sym.name == "<empty>") ""
-          else "_root_." + sym.parent.map(_.path + ".").getOrElse("")
+          else {
+            val path = sym.parent.map(_.path + ".").getOrElse("")
+            if (path.startsWith("<empty>")) "_empty_" + path.stripPrefix("<empty>")
+            else "_root_." + path
+          }
         case _ =>
           sys.error(s"unsupported symbol $sym")
       }
@@ -261,9 +302,8 @@ object Main {
           val stag = t.SINGLETON_TYPE
           val stpe = {
             val stag = st.THIS
-            // TODO: Implement me.
-            val spre = loop(TypeRefType(NoPrefixType, sym, Nil))
-            s.SingletonType(stag, spre, "", 0, "")
+            val ssym = ssymbol(sym)
+            s.SingletonType(stag, None, ssym, 0, "")
           }
           Some(s.Type(tag = stag, singletonType = Some(stpe)))
         case ConstantType(underlying: Type) =>

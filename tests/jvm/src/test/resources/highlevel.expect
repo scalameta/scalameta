@@ -53,12 +53,30 @@ Language:
 Scala212
 
 Names:
-[6..11): Empty <= _empty_.Empty#
+[6..7): A <= _empty_.A#
+[8..8):  <= _empty_.A#`<init>`().
+[16..17): b <= _empty_.A#b().
+[19..20): B => _empty_.B#
+[23..26): ??? => _root_.scala.Predef.`???`().
+[36..37): B <= _empty_.B#
+[38..38):  <= _empty_.B#`<init>`().
+[46..47): a <= _empty_.B#a().
+[49..50): A => _empty_.A#
+[53..56): ??? => _root_.scala.Predef.`???`().
 
 Symbols:
-_empty_.Empty# => class Empty
-_empty_.Empty#`<init>`(). => primaryctor <init>: (): Empty
-  [4..9): Empty => _empty_.Empty#
+_empty_.A# => class A
+_empty_.A#`<init>`(). => primaryctor <init>: (): A
+  [4..5): A => _empty_.A#
+_empty_.A#b(). => def b: B
+  [0..1): B => _empty_.B#
+_empty_.B# => class B
+_empty_.B#`<init>`(). => primaryctor <init>: (): B
+  [4..5): B => _empty_.B#
+_empty_.B#a(). => def a: A
+  [0..1): A => _empty_.A#
+_root_.scala.Predef.`???`(). => def ???: Nothing
+  [0..7): Nothing => _root_.scala.Nothing#
 
 
 semanticdb/integration/src/main/scala/example/Example.scala

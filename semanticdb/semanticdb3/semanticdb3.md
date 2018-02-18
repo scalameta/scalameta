@@ -1024,8 +1024,8 @@ In the examples below:
       <ul>
         <li><code>x.type</code> ~ <code>SingletonType(SYMBOL, None, &lt;x&gt;, None, None)</code>.</li>
         <li><code>p.x.type</code> ~ <code>SingletonType(SYMBOL, &lt;p.type&gt;, &lt;x&gt;, None, None)</code>.</li>
-        <li><code>this.type</code> ~ <code>SingletonType(THIS, &lt;E&gt;, None, None, None)</code>.</li>
-        <li><code>C.this.type</code> ~ <code>SingletonType(THIS, &lt;C&gt;, None, None, None)</code>.</li>
+        <li><code>this.type</code> ~ <code>SingletonType(THIS, None, &lt;E&gt;, None, None)</code>.</li>
+        <li><code>C.this.type</code> ~ <code>SingletonType(THIS, None, &lt;C&gt;, None, None)</code>.</li>
         <li>Type of <code>super</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, None, None, None)</code>.</li>
         <li>Type of <code>super[M]</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, &lt;M&gt;, None, None)</code>.</li>
         <li>Type of <code>C.super[M]</code> ~ <code>SingletonType(SUPER, &lt;C&gt;, &lt;M&gt;, None, None)</code>.</li>
@@ -1046,8 +1046,8 @@ In the examples below:
     <td>
       <ul>
         <li><code>t</code> ~ <code>TypeRef(None, &lt;t&gt;, List())</code>.</li>
-        <li><code>Int</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code>.</li>
-        <li><code>scala.Int</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code>.</li>
+        <li><code>Int</code> ~ <code>TypeRef(None, &lt;Int&gt;, List())</code>.</li>
+        <li><code>scala.Int</code> ~ <code>TypeRef(None, &lt;Int&gt;, List())</code>.</li>
         <li><code>p.C</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List())</code>.</li>
       </ul>
     </td>
@@ -1058,8 +1058,8 @@ In the examples below:
       <ul>
         <li><code>T#C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;T&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
         <li><code>t[T1, ..., Tn]</code> ~ <code>TypeRef(None, &lt;t&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
-        <li><code>List[Int]</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
-        <li><code>scala.List[Int]</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
+        <li><code>List[Int]</code> ~ <code>TypeRef(None, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
+        <li><code>scala.List[Int]</code> ~ <code>TypeRef(None, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
         <li><code>p.C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
       </ul>
     </td>
@@ -1068,7 +1068,7 @@ In the examples below:
     <td valign="top">Tuple types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#tuple-types">[29]</a></td>
     <td>
       <ul>
-        <li><code>(T1, ..., Tn)</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;TupleN&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+        <li><code>(T1, ..., Tn)</code> ~ <code>TypeRef(None, &lt;TupleN&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
       </ul>
     </td>
   </tr>
@@ -1094,8 +1094,8 @@ In the examples below:
     <td valign="top">Infix types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#infix-types">[32]</a></td>
     <td>
       <ul>
-        <li><code>A T B</code> ~ <code>TypeRef(..., &lt;T&gt;, List(&lt;A&gt;, &lt;B&gt;))</code> for left-associative <code>T</code>.</li>
-        <li><code>A T B</code> ~ <code>TypeRef(..., &lt;T&gt;, List(&lt;B&gt;, &lt;A&gt;))</code> for right-associative <code>T</code>.</li>
+        <li><code>A T B</code> ~ <code>TypeRef(None, &lt;T&gt;, List(&lt;A&gt;, &lt;B&gt;))</code> for left-associative <code>T</code>.</li>
+        <li><code>A T B</code> ~ <code>TypeRef(None, &lt;T&gt;, List(&lt;B&gt;, &lt;A&gt;))</code> for right-associative <code>T</code>.</li>
       </ul>
     </td>
   </tr>
@@ -1103,7 +1103,7 @@ In the examples below:
     <td valign="top">Function types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#function-types">[33]</a></td>
     <td>
       <ul>
-        <li><code>(T1, ..., Tn) =&gt; T</code> ~ <code>TypeRef(&lt;scala.type&gt;, &lt;FunctionN&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;, &lt;T&gt;))</code>.</li>
+        <li><code>(T1, ..., Tn) =&gt; T</code> ~ <code>TypeRef(None, &lt;FunctionN&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;, &lt;T&gt;))</code>.</li>
         <li><code>=&gt; Ti</code> ~ <code>ByNameType(&lt;Ti&gt;)</code>.</li>
         <li><code>Ti*</code> ~ <code>RepeatedType(&lt;Ti&gt;)</code>.</li>
       </ul>
@@ -1144,14 +1144,15 @@ In the examples below:
 </table>
 
 Notes:
-* Since Scala supports path-dependent types, all `TYPE_REF` and `SINGLETON_TYPE`
-  types must carry a correct prefix. For non-member definitions, e.g. local
-  values or types, the correct prefix is `None`. For member definitions,
-  e.g. packages, top-level classes or other members, the correct prefix
-  is defined by the qualifier if it is provided, or by the `this` type of the
-  enclosing definition if not. For example, `TypeRef(None, <Int>, List())`
-  is not a valid Scala type. Its valid counterpart is
-  `TypeRef(<scala.type>, <Int>, List())`.
+* We diverge from SLS on the matter of handling prefixes (see definitions of
+  `TYPE_REF` and `SINGLETON_TYPE` for more information).
+  * In SLS, all types that can have a prefix must have it specified
+    explicitly, even if the prefix is trivial. For example in Scalac, `Int` must
+    be represented as `TypeRef(<scala.this.type>, <Int>, List())` [\[27\]][27].
+  * In SemanticDB, all types that have a trivial prefix must not have it
+    specified explicitly. For example in SemanticDB, `Int` must be represented
+    as `TypeRef(None, <Int>, List())`. Moreover, even `scala.Int` must be
+    represented as `TypeRef(None, <Int>, List())`.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. Some producers may transform
   types in unspecified ways (e.g. Scalac transforms all `this.type` types
@@ -1195,61 +1196,61 @@ abstract class C(val xp: Int) {
     <td><code>xp</code></td>
     <td><code>_empty_.C#xp.</code></td>
     <td><code>VAL</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xp</code></td>
     <td><code>_empty_.C#xp().</code></td>
     <td><code>GETTER</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xp</code></td>
     <td><code>_empty_.C#`&lt;init&gt;`(Int).(xp)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xm</code></td>
     <td><code>_empty_.C#xm.</code></td>
     <td><code>VAL</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xm</code></td>
     <td><code>_empty_.C#xm().</code></td>
     <td><code>GETTER</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xam</code></td>
     <td><code>_empty_.C#xam().</code></td>
     <td><code>GETTER</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xlm</code></td>
     <td><code>_empty_.C#xlm.</code></td>
     <td><code>VAL</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xl</code></td>
     <td><code>local0</code></td>
     <td><code>VAL</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xs</code></td>
     <td><code>local1</code></td>
     <td><code>GETTER</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xe</code></td>
     <td><code>local2</code></td>
     <td><code>GETTER</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
 </table>
 
@@ -1344,37 +1345,37 @@ class C {
     <td><code>x</code></td>
     <td><code>local0</code></td>
     <td><code>VAL</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Nothing&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xval</code></td>
     <td><code>_empty_.C#xval.</code></td>
     <td><code>VAL</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Nothing&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xval</code></td>
     <td><code>_empty_.C#xval().</code></td>
     <td><code>GETTER</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
     <td><code>_empty_.C#xvar.</code></td>
     <td><code>VAR</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Nothing&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
     <td><code>_empty_.C#xvar().</code></td>
     <td><code>GETTER</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Nothing&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
     <td><code>_empty_.C#xvar_=(Nothing).</code></td>
     <td><code>SETTER</code></td>
-    <td><code>MethodType(List(), List(&lt;x$1&gt;), TypeRef(&lt;scala.type&gt;, &lt;Unit&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(&lt;x$1&gt;), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1424,7 +1425,7 @@ class C {
     <td><code>T</code></td>
     <td><code>_empty_.C#T#</code></td>
     <td><code>TYPE</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
 </table>
 
@@ -1496,13 +1497,13 @@ class C2 {
     <td><code>self1</code></td>
     <td><code>local0</code></td>
     <td><code>SELF_PARAMETER</code></td>
-    <td><code>TypeRef(&lt;_empty_.type&gt;, &lt;C1&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;C1&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>self2</code></td>
     <td><code>local0</code></td>
     <td><code>SELF_PARAMETER</code></td>
-    <td><code>TypeRef(&lt;_empty_.type&gt;, &lt;T&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
 </table>
 
@@ -1596,49 +1597,49 @@ class C(p1: Int) {
     <td><code>p1</code></td>
     <td><code>_empty_.C#`&lt;init&gt;`(Int).(p1)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>p2</code></td>
     <td><code>_empty_.C#m2(Int).(p2)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>p3</code></td>
     <td><code>_empty_.C#m3(Int).(p3)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>m3$default$1</code></td>
     <td><code>_empty_.C#m3$default$1().</code></td>
     <td><code>DEF</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>p4</code></td>
     <td><code>_empty_.C#m4(=>Int).(p4)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>ByNameType(TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>ByNameType(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>p5</code></td>
     <td><code>_empty_.C#m5(Int*).(p5)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>RepeatedType(TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>RepeatedType(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td>Context bound</td>
     <td><code>_empty_.C#m6(C,V).(x$1)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(..., &lt;C&gt;, List(&lt;T&gt;))</code></td>
+    <td><code>TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code></td>
   </tr>
   <tr>
     <td>View bound</td>
     <td><code>_empty_.C#m7(C,V).(x$2)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Function1&gt;, List(&lt;T&gt;, &lt;V&gt;))</code></td>
+    <td><code>TypeRef(None, &lt;Function1&gt;, List(&lt;T&gt;, &lt;V&gt;))</code></td>
   </tr>
 </table>
 
@@ -1687,25 +1688,25 @@ abstract class C {
     <td><code>m1</code></td>
     <td><code>_empty_.C#m1().</code></td>
     <td><code>DEF</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
     <td><code>_empty_.C#m2().</code></td>
     <td><code>DEF</code></td>
-    <td><code>MethodType(List(), List(List()), TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>_empty_.C#m3(Int).</code></td>
     <td><code>DEF</code></td>
-    <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m4</code></td>
     <td><code>_empty_.C#m4(Int,Int).</code></td>
     <td><code>DEF</code></td>
-    <td><code>MethodType(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1759,7 +1760,7 @@ object M {
     <td><code>m1</code></td>
     <td><code>_empty_.M.m().</code></td>
     <td><code>MACRO</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1793,13 +1794,13 @@ class C(x: Int) {
     <td>Primary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`(Int).</code></td>
     <td><code>PRIMARY_CONSTRUCTOR</code></td>
-    <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(&lt;_empty_.type&gt;, &lt;C&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;C&gt;, List()))</code></td>
   </tr>
   <tr>
     <td>Secondary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
     <td><code>SECONDARY_CONSTRUCTOR</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(&lt;_empty_.type&gt;, &lt;C&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;C&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1877,19 +1878,19 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
     <td><code>z</code></td>
     <td><code>_empty_.C#z_=(T).</code></td>
     <td><code>SETTER</code></td>
-    <td><code>MethodType(List(), List(List(&lt;x$1&gt;)), TypeRef(&lt;scala.type&gt;, &lt;Unit&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(List(&lt;x$1&gt;)), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#z_=(T).(x$1)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;T&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td>Primary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).</code></td>
     <td><code>PRIMARY_CONSTRUCTOR</code></td>
-    <td><code>TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>x</code></td>
@@ -1913,7 +1914,7 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
     <td>m</td>
     <td><code>_empty_.C#m().</code></td>
     <td><code>DEF</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(&lt;scala.type&gt;, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1978,6 +1979,7 @@ the only non-empty fields must be:
   * `language` (must be `"Scala"`).
   * `kind` (must be `PACKAGE`).
   * `name` (must be equal to the short name of the package).
+  * `owner` (must be equal to the symbol of the enclosing package).
 
 <a name="scala-annotation"></a>
 #### Annotation
