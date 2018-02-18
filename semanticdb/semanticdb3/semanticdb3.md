@@ -1978,6 +1978,7 @@ the only non-empty fields must be:
   * `language` (must be `"Scala"`).
   * `kind` (must be `PACKAGE`).
   * `name` (must be equal to the short name of the package).
+  * `owner` (must be equal to the symbol of the enclosing package).
 
 <a name="scala-annotation"></a>
 #### Annotation

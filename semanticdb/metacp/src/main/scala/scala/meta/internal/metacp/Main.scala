@@ -46,10 +46,6 @@ object Main {
             val classfile = ClassFileParser.parse(bytecode)
             ScalaSigParser.parse(classfile) match {
               case Some(scalaSig) =>
-                val semanticdbInfos = scalaSig.symbols.flatMap {
-                  case sym: SymbolInfoSymbol => sinfo(sym)
-                  case _ => None
-                }
                 val className = NameTransformer.decode(PathIO.toUnix(relpath))
                 val semanticdbRelpath = relpath + ".semanticdb"
                 val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
@@ -57,7 +53,7 @@ object Main {
                   schema = s.Schema.SEMANTICDB3,
                   uri = className,
                   language = Some(s.Language("Scala")),
-                  symbols = semanticdbInfos)
+                  symbols = scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig))
                 val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
                 FileIO.write(semanticdbAbspath, semanticdbDocuments)
               case None =>
@@ -91,6 +87,46 @@ object Main {
     if (failed) 1 else 0
   }
 
+  private def scalaSigPackages(scalaSig: ScalaSig): List[s.SymbolInformation] = {
+    val topLevelSymbols = scalaSig.topLevelClasses ++ scalaSig.topLevelObjects
+    val directPackagePaths = topLevelSymbols.map { topLevelSymbol =>
+      val topLevelPath = topLevelSymbol.symbolInfo.owner.path.replace("<empty>", "_empty_")
+      if (topLevelPath.startsWith("_empty_")) topLevelPath
+      else "_root_." + topLevelPath
+    }
+    val transitivePackagePaths = directPackagePaths.flatMap { directPackagePath =>
+      val directPackageSteps = directPackagePath.split("\\.")
+      directPackageSteps
+        .scanLeft("") { (path, step) =>
+          if (path.nonEmpty) path + "." + step
+          else step
+        }
+        .tail
+    }.distinct
+    transitivePackagePaths.map { transitivePackagePath =>
+      val (owner, name) = {
+        transitivePackagePath.split("\\.").toList match {
+          case ownerSteps :+ name if name.nonEmpty => (ownerSteps.mkString("."), name)
+          case List(name) if name.nonEmpty => ("", name)
+          case _ => sys.error(s"unsupported top-level symbols: $topLevelSymbols")
+        }
+      }
+      s.SymbolInformation(
+        symbol = transitivePackagePath,
+        language = Some(s.Language("Scala")),
+        kind = k.PACKAGE,
+        name = name,
+        owner = owner)
+    }
+  }
+
+  private def scalaSigSymbols(scalaSig: ScalaSig): List[s.SymbolInformation] = {
+    scalaSig.symbols.toList.flatMap {
+      case sym: SymbolInfoSymbol => sinfo(sym)
+      case _ => None
+    }
+  }
+
   private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
     if (sym.parent.get == NoSymbol) return None
     if (sym.isModuleClass) return None
@@ -98,6 +134,7 @@ object Main {
     Some(
       s.SymbolInformation(
         symbol = ssymbol(sym),
+        language = Some(s.Language("Scala")),
         kind = skind(sym),
         properties = sproperties(sym),
         name = sname(sym),

@@ -6,9 +6,10 @@ Schema => SemanticDB v3
 Uri => Empty.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 3 entries
 
 Symbols:
+_empty_ => package _empty_
 _empty_.Empty# => class Empty.{+1 decls}
   extends AnyRef
 _empty_.Empty#`<init>`(). => primaryctor <init>: (): Empty
@@ -22,9 +23,11 @@ Schema => SemanticDB v3
 Uri => example/A.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 4 entries
 
 Symbols:
+_root_ => package _root_
+_root_.example => package example
 _root_.example.A# => trait A.{+1 decls}
   extends AnyRef
 _root_.example.A#foo(). => abstract def foo: : Int
@@ -38,9 +41,11 @@ Schema => SemanticDB v3
 Uri => example/Acc.class
 Text => empty
 Language => Scala
-Symbols => 9 entries
+Symbols => 11 entries
 
 Symbols:
+_root_ => package _root_
+_root_.example => package example
 _root_.example.Acc# => class Acc.{+8 decls}
   extends AnyRef
 _root_.example.Acc#`<init>`(). => primaryctor <init>: (): Acc
@@ -68,9 +73,11 @@ Schema => SemanticDB v3
 Uri => example/B.class
 Text => empty
 Language => Scala
-Symbols => 3 entries
+Symbols => 5 entries
 
 Symbols:
+_root_ => package _root_
+_root_.example => package example
 _root_.example.B# => class B.{+2 decls}
   extends AnyRef
   extends A
@@ -87,9 +94,11 @@ Schema => SemanticDB v3
 Uri => example/Example.class
 Text => empty
 Language => Scala
-Symbols => 5 entries
+Symbols => 7 entries
 
 Symbols:
+_root_ => package _root_
+_root_.example => package example
 _root_.example.Example. => final object Example
 _root_.example.Example.main(Array). => def main: (args: Array[String]): Unit
   args => _root_.example.Example.main(Array).(args)
@@ -112,9 +121,11 @@ Schema => SemanticDB v3
 Uri => example/MethodUsages.class
 Text => empty
 Language => Scala
-Symbols => 4 entries
+Symbols => 6 entries
 
 Symbols:
+_root_ => package _root_
+_root_.example => package example
 _root_.example.MethodUsages# => class MethodUsages.{+3 decls}
   extends AnyRef
 _root_.example.MethodUsages#`<init>`(). => primaryctor <init>: (): MethodUsages
@@ -134,9 +145,11 @@ Schema => SemanticDB v3
 Uri => example/Methods.class
 Text => empty
 Language => Scala
-Symbols => 61 entries
+Symbols => 63 entries
 
 Symbols:
+_root_ => package _root_
+_root_.example => package example
 _root_.example.Methods# => class Methods.{+29 decls}
   extends AnyRef
 _root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.this.List[T]
@@ -318,9 +331,11 @@ Schema => SemanticDB v3
 Uri => example/Synthetic.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 4 entries
 
 Symbols:
+_root_ => package _root_
+_root_.example => package example
 _root_.example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
 _root_.example.Synthetic#`<init>`(). => primaryctor <init>: (): Synthetic
@@ -334,9 +349,11 @@ Schema => SemanticDB v3
 Uri => example/ValUsages.class
 Text => empty
 Language => Scala
-Symbols => 3 entries
+Symbols => 5 entries
 
 Symbols:
+_root_ => package _root_
+_root_.example => package example
 _root_.example.ValUsages. => final object ValUsages
 _root_.example.ValUsages.v(). => getter v: : Vals
   Vals => _root_.example.Vals#
@@ -351,9 +368,11 @@ Schema => SemanticDB v3
 Uri => example/Vals.class
 Text => empty
 Language => Scala
-Symbols => 39 entries
+Symbols => 41 entries
 
 Symbols:
+_root_ => package _root_
+_root_.example => package example
 _root_.example.Vals# => abstract class Vals.{+30 decls}
   extends AnyRef
 _root_.example.Vals#`<init>`(Int,Int,Int). => primaryctor <init>: (p: Int, xp: Int, yp: Int): Vals
@@ -449,9 +468,11 @@ Schema => SemanticDB v3
 Uri => example/local-file.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 4 entries
 
 Symbols:
+_root_ => package _root_
+_root_.example => package example
 _root_.example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
 _root_.example.`local-file`#`<init>`(). => primaryctor <init>: (): local-file
@@ -465,9 +486,11 @@ Schema => SemanticDB v3
 Uri => exclude/Exclude.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 4 entries
 
 Symbols:
+_root_ => package _root_
+_root_.exclude => package exclude
 _root_.exclude.Exclude# => class Exclude.{+1 decls}
   extends AnyRef
 _root_.exclude.Exclude#`<init>`(). => primaryctor <init>: (): Exclude
@@ -481,9 +504,12 @@ Schema => SemanticDB v3
 Uri => flags/p/package.class
 Text => empty
 Language => Scala
-Symbols => 57 entries
+Symbols => 60 entries
 
 Symbols:
+_root_ => package _root_
+_root_.flags => package flags
+_root_.flags.p => package p
 _root_.flags.p.package. => final package object package
 _root_.flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
@@ -632,9 +658,11 @@ Schema => SemanticDB v3
 Uri => types/B.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 4 entries
 
 Symbols:
+_root_ => package _root_
+_root_.types => package types
 _root_.types.B# => class B.{+1 decls}
   extends AnyRef
 _root_.types.B#`<init>`(). => primaryctor <init>: (): B
@@ -648,9 +676,11 @@ Schema => SemanticDB v3
 Uri => types/C.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 4 entries
 
 Symbols:
+_root_ => package _root_
+_root_.types => package types
 _root_.types.C# => class C.{+1 decls}
   extends AnyRef
 _root_.types.C#`<init>`(). => primaryctor <init>: (): C
@@ -664,9 +694,11 @@ Schema => SemanticDB v3
 Uri => types/P.class
 Text => empty
 Language => Scala
-Symbols => 8 entries
+Symbols => 10 entries
 
 Symbols:
+_root_ => package _root_
+_root_.types => package types
 _root_.types.P# => class P.{+5 decls}
   extends AnyRef
 _root_.types.P#C# => class C.{+1 decls}
@@ -696,9 +728,11 @@ Schema => SemanticDB v3
 Uri => types/T.class
 Text => empty
 Language => Scala
-Symbols => 8 entries
+Symbols => 10 entries
 
 Symbols:
+_root_ => package _root_
+_root_.types => package types
 _root_.types.T# => class T.{+5 decls}
   extends AnyRef
 _root_.types.T#C# => class C.{+1 decls}
@@ -728,9 +762,11 @@ Schema => SemanticDB v3
 Uri => types/Test.class
 Text => empty
 Language => Scala
-Symbols => 132 entries
+Symbols => 134 entries
 
 Symbols:
+_root_ => package _root_
+_root_.types => package types
 _root_.types.Test. => final object Test
 _root_.types.Test.C# => class C.{+56 decls}
   extends M
@@ -1039,9 +1075,11 @@ Schema => SemanticDB v3
 Uri => types/ann.class
 Text => empty
 Language => Scala
-Symbols => 5 entries
+Symbols => 7 entries
 
 Symbols:
+_root_ => package _root_
+_root_.types => package types
 _root_.types.ann# => class ann.{+3 decls}
   extends Annotation
   extends StaticAnnotation
@@ -1065,9 +1103,11 @@ Schema => SemanticDB v3
 Uri => types/ann1.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 4 entries
 
 Symbols:
+_root_ => package _root_
+_root_.types => package types
 _root_.types.ann1# => class ann1.{+1 decls}
   extends Annotation
   extends StaticAnnotation
@@ -1082,9 +1122,11 @@ Schema => SemanticDB v3
 Uri => types/ann2.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 4 entries
 
 Symbols:
+_root_ => package _root_
+_root_.types => package types
 _root_.types.ann2# => class ann2.{+1 decls}
   extends Annotation
   extends StaticAnnotation
