@@ -314,6 +314,7 @@ lazy val tokensJS = tokens.js
 lazy val transversers = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/transversers"))
   .settings(
+    requiresMacrosSetting,
     publishableSettings,
     description := "Scalameta traversal and transformation infrastructure for abstract syntax trees",
     enableMacros
@@ -497,6 +498,51 @@ lazy val bench = project
 // ==========================================
 // Settings
 // ==========================================
+
+lazy val requiresMacrosSetting = Def.settings(
+  scalacOptions += {
+    val base = file("scalameta/common/shared/src/main/scala")
+    val filesWithWhiteboxMacros =
+      List(
+        "org/scalameta" -> List(
+          "adt/Adt.scala",
+          "adt/Liftables.scala",
+          "data/data.scala",
+          "data/Macros.scala",
+          "explore/Macros.scala",
+          "internal/DebugFinder.scala",
+          "internal/FreeLocalFinder.scala",
+          "internal/ImplTransformers.scala",
+          "internal/MacroHelpers.scala",
+          "invariants/package.scala",
+          "package.scala"
+        ),
+        "scala/meta/internal" -> List(
+          "classifiers/Macros.scala",
+          "prettyprinters/ShowMacros.scala",
+          "tokens/root.scala",
+          "tokens/token.scala",
+          "transversers/transformer.scala",
+          "transversers/transverser.scala",
+          "transversers/traverser.scala",
+          "trees/ast.scala",
+          "trees/branch.scala",
+          "trees/Liftables.scala",
+          "trees/NamerMacros.scala",
+          "trees/quasiquote.scala",
+          "trees/registry.scala",
+          "trees/root.scala",
+          "trees/TyperMacros.scala"
+        )
+      )
+
+    val flat = filesWithWhiteboxMacros.flatMap{
+      case (k, vs) => vs.map(v => (base / k / v).lastModified)
+    }
+
+    "-J" + flat.hashCode
+  }
+)
 
 lazy val sharedSettings = Def.settings(
   scalaVersion := LanguageVersion,
