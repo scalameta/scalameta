@@ -4,23 +4,34 @@ package trees
 
 import org.scalatest._
 
+import scala.meta.contrib._
+
 class ParentSuite extends FunSuite {
 
   test("Tree.transform does not preserve parent chain origins") {
-    val code = """
-      object a {
-        def bar = 4
-        // comment
-        def foo = 2
-      }
-    """.parse[Source].get
+    val original = 
+      """|object a {
+         |  def bar = 4
+         |  // comment
+         |  def foo = 2
+         |}""".stripMargin.parse[Source].get
 
-    val originalPositions = code.collect { case t => t.pos }
+    val originalPositions = original.collect { case t => t.pos }
     assert(originalPositions.forall(_ != Position.None))
 
-    val obtained =
-      code.transform { case q"2" => q"3" }.collect { case t => t.pos }
+    val refactored = original.transform { case q"2" => q"3" }
 
-    assert(obtained.count(_ == Position.None) == 1)
+    val originalNodes = original.collect{ case t => t }
+    val refactoredNode = refactored.collect{ case t => t }
+
+    assert(originalNodes.size == refactoredNode.size)
+    
+    originalNodes.zip(refactoredNode).foreach{
+      case (o @ q"2", r @ q"3") => 
+        assert(o.pos != Position.None)
+        assert(r.pos == Position.None)
+      case (o, r) => 
+        assert(o.pos == r.pos)
+    }
   }
 }
