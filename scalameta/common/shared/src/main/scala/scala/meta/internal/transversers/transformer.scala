@@ -88,7 +88,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
       var same = true
       ..$transformedFields
       if (same) tree
-      else $constructor(..${transformedFields.map(_.name)})
+      else $constructor(..${transformedFields.map(_.name)}).withOrigin(tree.origin)
     """
   }
 
