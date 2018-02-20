@@ -62,4 +62,77 @@ class PositionSuite extends ParseSuite {
         | List(Term.Name{8..9}("c")))
     """.trim.stripMargin.split("\n").mkString)
   }
+
+  test("#1345 - Tree.transform does not preserve parent chain origins") {
+    val original = 
+      """|object a {
+         |  def bar = 4
+         |  // comment
+         |  def foo = 2
+         |}""".stripMargin.parse[Source].get
+
+    val originalPositions = """
+      |Source{0..53}(
+        |List(
+          |Defn.Object{0..53}(
+            |Nil,
+            | Term.Name{7..8}("a"),
+            | Template{9..53}(
+              |Nil,
+              | Nil,
+              | Self{13..13}(
+                  |Name.Anonymous{13..13}(),
+                  | None),
+              | List(
+                |Defn.Def{13..24}(
+                |Nil,
+                | Term.Name{17..20}("bar"),
+                | Nil,
+                | Nil,
+                | None,
+                | Lit.Int{23..24}(4)
+                |), 
+                |Defn.Def{40..51}(
+                  |Nil,
+                  | Term.Name{44..47}("foo"),
+                  | Nil,
+                  | Nil,
+                  | None,
+                  | Lit.Int{50..51}(2)))))))""".trim.stripMargin.split("\n").mkString
+    
+    assert(original.show[Positions] === originalPositions)
+
+    val refactored = original.transform { case q"2" => q"3" }
+
+    val refactoredPositions = """
+      |Source{0..53}(
+        |List(
+          |Defn.Object{0..53}(
+            |Nil,
+            | Term.Name{7..8}("a"),
+            | Template{9..53}(
+              |Nil,
+              | Nil,
+              | Self{13..13}(
+                  |Name.Anonymous{13..13}(),
+                  | None),
+              | List(
+                |Defn.Def{13..24}(
+                |Nil,
+                | Term.Name{17..20}("bar"),
+                | Nil,
+                | Nil,
+                | None,
+                | Lit.Int{23..24}(4)
+                |), 
+                |Defn.Def{40..51}(
+                  |Nil,
+                  | Term.Name{44..47}("foo"),
+                  | Nil,
+                  | Nil,
+                  | None,
+                  | Lit.Int(3)))))))""".trim.stripMargin.split("\n").mkString
+
+    assert(refactored.show[Positions] === refactoredPositions)
+  }
 }
