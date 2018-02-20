@@ -210,7 +210,6 @@ _root_.scala.collection.immutable.StringLike#stripPrefix(String). => _root_.scal
 _root_.scala.collection.mutable. => _root_.scala.collection.
 _root_.scala.collection.mutable.Stack# => _root_.scala.collection.mutable.
 _root_.scala.collection.mutable.Stack#`<init>`(). => _root_.scala.collection.mutable.Stack#
-_root_.scala.concurrent. => _root_.scala.
 _root_.scala.language. => _root_.scala.
 _root_.scala.language.existentials(). => _root_.scala.language.
 _root_.scala.language.experimental. => _root_.scala.language.

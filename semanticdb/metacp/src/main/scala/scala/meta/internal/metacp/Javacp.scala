@@ -15,6 +15,7 @@ import scala.tools.asm.ClassReader
 import scala.tools.asm.signature.SignatureReader
 import scala.tools.asm.signature.SignatureVisitor
 import scala.tools.asm.tree.ClassNode
+import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.MethodNode
 import scala.tools.asm.{Opcodes => o}
 import org.langmeta.internal.io.PathIO
@@ -228,20 +229,34 @@ object Javacp {
       (flag & n) != 0
   }
 
-  def getSignature(signature: String, desc: String): Declaration = {
+  def getSignature(method: MethodNode): Declaration = {
+    getSignature(method.name, method.signature, method.desc)
+  }
+  def getSignature(name: String, signature: String, desc: String): Declaration = {
     val toParse =
       if (signature != null) signature
       else desc
     val signatureReader = new SignatureReader(toParse)
     val v = new SemanticdbSignatureVisitor
     signatureReader.accept(v)
-    Declaration(toParse, v.parameterTypes, v.returnType)
+    Declaration(name, toParse, v.parameterTypes, v.returnType)
   }
 
-  case class Declaration(desc: String, parameterTypes: Seq[JType], returnType: Option[JType]) {
+  case class Declaration(
+      name: String,
+      desc: String,
+      parameterTypes: Seq[JType],
+      returnType: Option[JType]) {
     val descriptor = parameterTypes.map(_.name).mkString(",")
   }
 
+  def accessibility(tag: s.Accessibility.Tag): Option[s.Accessibility] = Some(s.Accessibility(tag))
+
+  def enclosingPackage(name: String): String = {
+    val slash = name.lastIndexOf('/')
+    if (slash < 0) sys.error(name)
+    else name.substring(0, slash)
+  }
 
   def process(root: Path, file: Path): s.TextDocument = {
     val bytes = Files.readAllBytes(file)
@@ -259,28 +274,43 @@ object Javacp {
     }
     val classSymbol = ssym(node.name)
     val className = getName(node.name)
-    val classOwner = ssym(node.name.substring(0, node.name.length - className.length - 1))
     val isTopLevelClass = !node.name.contains("$")
-    if (isTopLevelClass) {
+    val pkg = ssym(enclosingPackage(node.name))
+    pprint.log(pkg)
+    def saccessibility(access: Int): Option[s.Accessibility] = {
+      val a = s.Accessibility.Tag
+      if (access.hasFlag(o.ACC_PUBLIC)) accessibility(a.PUBLIC)
+      else if (access.hasFlag(o.ACC_PROTECTED)) accessibility(a.PROTECTED)
+      else if (access.hasFlag(o.ACC_PRIVATE)) accessibility(a.PRIVATE)
+      else Some(s.Accessibility(a.PRIVATE_WITHIN, pkg))
+    }
+    val classOwner = if (isTopLevelClass) {
       // Emit packages
-      addPackage("_root_", "")
-      node.name.split("/").foldLeft("_root_.") {
-        case (owner, name) => addPackage(name, owner)
-      }
+      val packages = node.name.split("/")
+      packages.iterator
+        .take(packages.length - 1)
+        .foldLeft(addPackage("_root_", "")) {
+          case (owner, name) => addPackage(name, owner)
+        }
+    } else {
+      ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
     val classKind =
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
       else k.CLASS
     val methods: Seq[MethodNode] = node.methods.asScala
     val descriptors: Seq[Declaration] = methods.map { method: MethodNode =>
-      getSignature(method.signature, method.desc)
+      getSignature(method)
     }
     methods.zip(descriptors).foreach {
-      case (method, descriptorPair: Declaration) =>
+      case (method: MethodNode, descriptorPair: Declaration) =>
         import descriptorPair._
 
         val finalDescriptor = {
-          val conflicting = descriptors.filter(_.descriptor == descriptor)
+          val conflicting = descriptors.filter { d =>
+            d.descriptor == descriptor &&
+            d.name == method.name
+          }
           if (conflicting.lengthCompare(1) == 0) descriptor
           else {
             val index = conflicting.indexOf(descriptorPair) + 1
@@ -319,18 +349,20 @@ object Javacp {
           kind = methodKind,
           name = method.name,
           owner = classSymbol,
-          tpe = Some(methodType)
+          tpe = Some(methodType),
+          accessibility = saccessibility(method.access)
         )
     }
 
-    node.fields.asScala.foreach { field =>
+    node.fields.asScala.foreach { field: FieldNode =>
       val fieldSymbol = classSymbol + field.name + "."
       val fieldKind = k.VAR
       buf += s.SymbolInformation(
         symbol = fieldSymbol,
         kind = fieldKind,
         name = field.name,
-        owner = classOwner
+        owner = classSymbol,
+        accessibility = saccessibility(field.access)
       )
     }
 
@@ -354,7 +386,8 @@ object Javacp {
       kind = classKind,
       name = className,
       owner = classOwner,
-      tpe = Some(classTpe)
+      tpe = Some(classTpe),
+      accessibility = saccessibility(node.access)
     )
 
     val uri = root.relativize(file).toString

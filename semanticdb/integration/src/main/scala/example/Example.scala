@@ -7,4 +7,3 @@ object Example { self =>
   }
   val x = scala.reflect.classTag[Int]
 }
-
