@@ -242,14 +242,32 @@ object Javacp {
     val descriptor = parameterTypes.map(_.name).mkString(",")
   }
 
+
   def process(root: Path, file: Path): s.TextDocument = {
     val bytes = Files.readAllBytes(file)
     val node = asmNodeFromBytes(bytes)
     val buf = ArrayBuffer.empty[s.SymbolInformation]
+    def addPackage(name: String, owner: String): String = {
+      val packageSymbol = owner + name + "."
+      buf += s.SymbolInformation(
+        symbol = packageSymbol,
+        kind = k.PACKAGE,
+        name = name,
+        owner = owner
+      )
+      packageSymbol
+    }
     val classSymbol = ssym(node.name)
     val className = getName(node.name)
-    val classOwner =
-      ssym(node.name.substring(0, node.name.length - className.length - 1))
+    val classOwner = ssym(node.name.substring(0, node.name.length - className.length - 1))
+    val isTopLevelClass = !node.name.contains("$")
+    if (isTopLevelClass) {
+      // Emit packages
+      addPackage("_root_", "")
+      node.name.split("/").foldLeft("_root_.") {
+        case (owner, name) => addPackage(name, owner)
+      }
+    }
     val classKind =
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
       else k.CLASS

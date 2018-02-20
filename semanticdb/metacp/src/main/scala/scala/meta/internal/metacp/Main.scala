@@ -65,6 +65,7 @@ object Main {
               }
             } else {
               val infos = Javacp.process(root.toNIO, file).symbols
+              pprint.log(infos)
               Some(infos)
             }
             semanticdbInfos.foreach { infos =>
