@@ -170,8 +170,9 @@ lazy val metacp = project
     publishableSettings,
     description := "Scala 2.x classpath to SemanticDB converter",
     libraryDependencies ++= List(
-      "org.scala-lang" % "scalap" % scalaVersion.value,
-      "org.scala-lang.modules" % "scala-asm" % "5.1.0-scala-2"
+      "org.scala-lang" % "scalap" % scalaVersion.value
+      // ASM comes with scala-compiler
+      // "org.scala-lang.modules" % "scala-asm" % "5.1.0-scala-2"
     ),
     mainClass := Some("scala.meta.cli.Metacp")
   )

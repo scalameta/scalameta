@@ -16,6 +16,7 @@ import scala.tools.asm.ClassVisitor
 import scala.tools.asm.Opcodes
 import scala.tools.asm.tree.ClassNode
 import scala.tools.scalap.ByteArrayReader
+import scala.tools.scalap
 import scala.tools.scalap.Classfile
 import scala.tools.scalap.JavaWriter
 import scala.tools.scalap.scalax.rules.ScalaSigParserError
@@ -52,20 +53,31 @@ object Main {
             val bytes = Files.readAllBytes(file)
             val bytecode = ByteCode(bytes)
             val classfile = ClassFileParser.parse(bytecode)
-            ScalaSigParser.parse(classfile) match {
-              case Some(scalaSig) =>
-                val className = NameTransformer.decode(PathIO.toUnix(relpath))
-                val semanticdbRelpath = relpath + ".semanticdb"
-                val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
-                val semanticdbDocument = s.TextDocument(
-                  schema = s.Schema.SEMANTICDB3,
-                  uri = className,
-                  language = Some(s.Language("Scala")),
-                  symbols = scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig))
-                val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
-                FileIO.write(semanticdbAbspath, semanticdbDocuments)
-              case None =>
-              // Do nothing
+
+            val isScalaFile =
+              classfile.attribute("ScalaSig").isDefined ||
+                classfile.attribute("ScalaInlineInfo").isDefined
+            val language = if (isScalaFile) "Scala" else "Java"
+            val semanticdbInfos: Option[Seq[s.SymbolInformation]] = if (isScalaFile) {
+              ScalaSigParser.parse(classfile).map { scalaSig =>
+                val semanticdbInfos = scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
+                semanticdbInfos
+              }
+            } else {
+              val infos = Javacp.process(root.toNIO, file).symbols
+              Some(infos)
+            }
+            semanticdbInfos.foreach { infos =>
+              val className = NameTransformer.decode(PathIO.toUnix(relpath))
+              val semanticdbRelpath = relpath + ".semanticdb"
+              val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
+              val semanticdbDocument = s.TextDocument(
+                schema = s.Schema.SEMANTICDB3,
+                uri = className,
+                language = Some(s.Language(language)),
+                symbols = infos)
+              val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
+              FileIO.write(semanticdbAbspath, semanticdbDocuments)
             }
           } catch {
             case NonFatal(ex) =>

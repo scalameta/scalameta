@@ -20,6 +20,7 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
         "-d",
         tmp.toString
       )
+      println(tmp)
       val settings = Settings.parse(args.toList).get
       val exit = Main.process(settings)
       assert(exit == 0)
