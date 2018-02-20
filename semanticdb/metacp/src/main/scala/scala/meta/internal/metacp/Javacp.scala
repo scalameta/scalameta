@@ -70,6 +70,7 @@ object Javacp {
 
   sealed trait SignatureMode
   object SignatureMode {
+    case object Start extends SignatureMode
     case object ParameterType extends SignatureMode
     case object FormalType extends SignatureMode
     case object ReturnType extends SignatureMode
@@ -92,11 +93,11 @@ object Javacp {
     var owners = List.empty[JType]
     var tpe: JType = newTpe
     def returnType: Option[JType] =
-      if (mode == ReturnType) Some(tpe)
+      if (mode == ReturnType || mode == Start) Some(tpe)
       else None
     val parameterTypes: ListBuffer[JType] = ListBuffer.empty[JType]
     val formatTypeParameters: ListBuffer[String] = ListBuffer.empty[String]
-    var mode: SignatureMode = FormalType
+    var mode: SignatureMode = Start
 
     override def visitParameterType(): SignatureVisitor = {
 //      pprint.log("Parameter type")
@@ -108,17 +109,18 @@ object Javacp {
     }
 
     override def visitClassType(name: String): Unit = {
-      // pprint.log(name)
+//       pprint.log(name)
       tpe.setSymbol(name)
     }
 
     override def visitFormalTypeParameter(name: String): Unit = {
-//      pprint.log(name)
+//            pprint.log(name)
+      mode = FormalType
       formatTypeParameters += name
     }
 
     override def visitTypeArgument(wildcard: Char): SignatureVisitor = {
-      // pprint.log(wildcard)
+//       pprint.log(wildcard)
       val arg = newTpe
       tpe.args += arg
       startType()
@@ -136,13 +138,7 @@ object Javacp {
     }
 
     override def visitEnd(): Unit = {
-      mode match {
-        case ParameterType =>
-          endType()
-        case ReturnType =>
-          endType()
-        case _ =>
-      }
+      endType()
       // pprint.log("END")
     }
 
@@ -158,6 +154,7 @@ object Javacp {
     }
 
     override def visitTypeVariable(name: String): Unit = {
+//      pprint.log(name)
       tpe.symbol = name
       tpe.name = name
       // endType()
@@ -193,6 +190,7 @@ object Javacp {
     }
 
     override def visitBaseType(descriptor: Char): Unit = {
+//      pprint.log(descriptor)
       descriptor match {
         case 'V' => tpe.setPrimitive("Unit")
         case 'B' => tpe.setPrimitive("Byte")
@@ -276,15 +274,7 @@ object Javacp {
     val className = getName(node.name)
     val isTopLevelClass = !node.name.contains("$")
     val pkg = ssym(enclosingPackage(node.name))
-    pprint.log(pkg)
-    def saccessibility(access: Int): Option[s.Accessibility] = {
-      val a = s.Accessibility.Tag
-      if (access.hasFlag(o.ACC_PUBLIC)) accessibility(a.PUBLIC)
-      else if (access.hasFlag(o.ACC_PROTECTED)) accessibility(a.PROTECTED)
-      else if (access.hasFlag(o.ACC_PRIVATE)) accessibility(a.PRIVATE)
-      else Some(s.Accessibility(a.PRIVATE_WITHIN, pkg))
-    }
-    val classOwner = if (isTopLevelClass) {
+    val classOwner: String = if (isTopLevelClass) {
       // Emit packages
       val packages = node.name.split("/")
       packages.iterator
@@ -294,6 +284,13 @@ object Javacp {
         }
     } else {
       ssym(node.name.substring(0, node.name.length - className.length - 1))
+    }
+    def saccessibility(access: Int): Option[s.Accessibility] = {
+      val a = s.Accessibility.Tag
+      if (access.hasFlag(o.ACC_PUBLIC)) accessibility(a.PUBLIC)
+      else if (access.hasFlag(o.ACC_PROTECTED)) accessibility(a.PROTECTED)
+      else if (access.hasFlag(o.ACC_PRIVATE)) accessibility(a.PRIVATE)
+      else Some(s.Accessibility(a.PRIVATE_WITHIN, classOwner.substring(0, classOwner.lastIndexOf('.'))))
     }
     val classKind =
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
@@ -356,12 +353,16 @@ object Javacp {
 
     node.fields.asScala.foreach { field: FieldNode =>
       val fieldSymbol = classSymbol + field.name + "."
-      val fieldKind = k.VAR
+      val fieldKind =
+        if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
+        else k.VAR
+      val declaration = getSignature(field.name, field.signature, field.desc)
       buf += s.SymbolInformation(
         symbol = fieldSymbol,
         kind = fieldKind,
         name = field.name,
         owner = classSymbol,
+        tpe = declaration.returnType.map(_.toType),
         accessibility = saccessibility(field.access)
       )
     }

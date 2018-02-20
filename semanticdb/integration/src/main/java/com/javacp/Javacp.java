@@ -1,5 +1,6 @@
 package com.javacp;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,5 +25,10 @@ public class Javacp {
     private int isPrivateMethod() { return 0; }
     protected int isProtectedMethod() { return 0; }
     public int isPublicMethod() { return 0; };
+
+    final int isVal = 0;
+
+    public void overload(File file) { }
+    public void overload(sourcecode.File file) { }
 
 }
