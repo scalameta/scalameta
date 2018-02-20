@@ -165,7 +165,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
           val fieldDefaultss = fieldParamss.map(_.map(p => q"this.${p.name}"))
           val copyParamss = fieldParamss.zip(fieldDefaultss).map{ case (f, d) => f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" } }
           val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
-          val copyBody = q"$mname.apply(...$copyArgss)"
+          val copyBody = q"$mname.apply(...$copyArgss).withOrigin(this.origin)"
           istats1 += q"def copy(...$copyParamss): $iname"
           stats1 += q"def copy(...$copyParamss): $iname = $copyBody"
         } else {
