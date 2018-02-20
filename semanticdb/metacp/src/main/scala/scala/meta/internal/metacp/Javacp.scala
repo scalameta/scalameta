@@ -77,6 +77,30 @@ object Javacp {
     val node = asmNodeFromBytes(bytes)
     val buf = ArrayBuffer.empty[s.SymbolInformation]
 
+    val classSymbol = ssym(node.name)
+    val className = getName(node.name)
+    val isTopLevelClass = !node.name.contains("$")
+
+    def addTypeParams(declaration: Declaration): Seq[String] = {
+      declaration.formalTypeParameters.map { tparam: JType =>
+        //          pprint.log(tparam.interfaceBound)
+        val tparamName = tparam.name
+        val tparamSymbol = classSymbol + "[" + tparamName + "]"
+        val tparamTpe = s.Type(
+          s.Type.Tag.TYPE_TYPE,
+          typeType = Some(s.TypeType(Nil, upperBound = tparam.interfaceBound.map(_.toType))))
+        buf += s.SymbolInformation(
+          tparamSymbol,
+          kind = k.TYPE_PARAMETER,
+          name = tparamName,
+          owner = classSymbol,
+          tpe = Some(tparamTpe)
+        )
+        tparamSymbol
+      }
+
+    }
+
     def addPackage(name: String, owner: String): String = {
       val packageSymbol = owner + name + "."
       buf += s.SymbolInformation(
@@ -87,10 +111,6 @@ object Javacp {
       )
       packageSymbol
     }
-
-    val classSymbol = ssym(node.name)
-    val className = getName(node.name)
-    val isTopLevelClass = !node.name.contains("$")
 //    pprint.log(node.signature)
 //    pprint.log(node.outerMethodDesc)
     val classOwner: String = if (isTopLevelClass) {
@@ -119,9 +139,7 @@ object Javacp {
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
       else k.CLASS
     val methods: Seq[MethodNode] = node.methods.asScala
-    val descriptors: Seq[Declaration] = methods.map { method: MethodNode =>
-      getSignature(method)
-    }
+    val descriptors: Seq[Declaration] = methods.map(getSignature)
     methods.zip(descriptors).foreach {
       case (method: MethodNode, declaration: Declaration) =>
         val finalDescriptor = {
@@ -163,12 +181,27 @@ object Javacp {
             )
           )
         )
+
+        val finalMethodType =
+          if (declaration.formalTypeParameters.isEmpty) methodType
+          else {
+            val tparams = addTypeParams(declaration)
+            s.Type(
+              s.Type.Tag.UNIVERSAL_TYPE,
+              universalType = Some(
+                s.UniversalType(
+                  tparams,
+                  Some(methodType)
+                ))
+            )
+          }
+
         buf += s.SymbolInformation(
           symbol = methodSymbol,
           kind = methodKind,
           name = method.name,
           owner = classSymbol,
-          tpe = Some(methodType),
+          tpe = Some(finalMethodType),
           accessibility = saccessibility(method.access)
         )
     }
@@ -198,22 +231,7 @@ object Javacp {
     val tparams = classDeclaration match {
       case None => Nil
       case Some(decl: Declaration) =>
-        decl.formalTypeParameters.map { tparam: JType =>
-//          pprint.log(tparam.interfaceBound)
-          val tparamName = tparam.name
-          val tparamSymbol = classSymbol + "[" + tparamName + "]"
-          val tparamTpe = s.Type(
-            s.Type.Tag.TYPE_TYPE,
-            typeType = Some(s.TypeType(Nil, upperBound = tparam.interfaceBound.map(_.toType))))
-          buf += s.SymbolInformation(
-            tparamSymbol,
-            kind = k.TYPE_PARAMETER,
-            name = tparamName,
-            owner = classSymbol,
-            tpe = Some(tparamTpe)
-          )
-          tparamSymbol
-        }
+        addTypeParams(decl)
     }
     val parents: Seq[s.Type] = classDeclaration match {
       case None =>
