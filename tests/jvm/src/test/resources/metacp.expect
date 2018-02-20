@@ -36,6 +36,36 @@ _empty_.B#`<init>`(). => primaryctor <init>: (): B
 _empty_.B#a(). => def a: : A
   A => _empty_.A#
 
+com/javacp/Javacp$Inner.class
+-----------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => com/javacp/Javacp$Inner.class
+Text => empty
+Language => Java
+Symbols => 8 entries
+
+Symbols:
+_root_.com.javacp.Javacp#Inner# => private[javacp] class Inner[T ].{+7 decls}
+  extends Object
+_root_.com.javacp.Javacp#Inner#<init>(Javacp). => private[javacp] def <init>: (arg0: Javacp): Unit
+  arg0 => _root_.com.javacp.Javacp#Inner#<init>(Javacp).(arg0)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#Inner#<init>(Javacp).(arg0) => param arg0: Javacp
+  Javacp => _root_.com.javacp.Javacp#
+_root_.com.javacp.Javacp#Inner#[T] => typeparam T: 
+_root_.com.javacp.Javacp#Inner#move(T,U). => def move: (arg0: T, arg1: Javacp#[U): Unit
+  arg0 => _root_.com.javacp.Javacp#Inner#move(T,U).(arg0)
+  arg1 => _root_.com.javacp.Javacp#Inner#move(T,U).(arg1)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#Inner#move(T,U).(arg0) => param arg0: T
+  T => _root_.com.javacp.Javacp#Inner#[T]
+_root_.com.javacp.Javacp#Inner#move(T,U).(arg1) => param arg1: Javacp#[U
+  Javacp#[U => _root_.com.javacp.Javacp#[U]
+_root_.com.javacp.Javacp#Inner#this$0. => private[javacp] val this$0: Javacp
+  Javacp => _root_.com.javacp.Javacp#
+
 com/javacp/Javacp.class
 -----------------------
 
@@ -44,70 +74,26 @@ Schema => SemanticDB v3
 Uri => com/javacp/Javacp.class
 Text => empty
 Language => Java
-Symbols => 26 entries
+Symbols => 9 entries
 
 Symbols:
 _root_. => package _root_
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.Javacp# => class Javacp[T <?>, U <?>].{+23 decls}
+_root_.com.javacp.Javacp# => class Javacp[T <: CharSequence, U ].{+8 decls}
   extends ArrayList[T]
-  extends Serializable
   extends Comparable[U]
-_root_.com.javacp.Javacp#<init>(Integer). => def <init>: (arg0: Integer): Unit
-  arg0 => _root_.com.javacp.Javacp#<init>(Integer).(arg0)
+  extends Serializable
+_root_.com.javacp.Javacp#<init>(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#<init>(Integer).(arg0) => param arg0: Integer
-  Integer => _root_.java.lang.Integer#
-_root_.com.javacp.Javacp#[T] => typeparam T
-_root_.com.javacp.Javacp#[U] => typeparam U
+_root_.com.javacp.Javacp#[T] => typeparam T: <: CharSequence
+  CharSequence => _root_.java.lang.CharSequence#
+_root_.com.javacp.Javacp#[U] => typeparam U: 
 _root_.com.javacp.Javacp#compareTo(U). => def compareTo: (arg0: U): Int
   arg0 => _root_.com.javacp.Javacp#compareTo(U).(arg0)
   Int => _root_.scala.Int#
 _root_.com.javacp.Javacp#compareTo(U).(arg0) => param arg0: U
-  U => U
-_root_.com.javacp.Javacp#isPackagePrivateField. => private[javacp] var isPackagePrivateField: Int
-  Int => _root_.scala.Int#
-_root_.com.javacp.Javacp#isPackagePrivateMethod(). => private[javacp] def isPackagePrivateMethod: (): Int
-  Int => _root_.scala.Int#
-_root_.com.javacp.Javacp#isPrivateField. => private var isPrivateField: Int
-  Int => _root_.scala.Int#
-_root_.com.javacp.Javacp#isPrivateMethod(). => private def isPrivateMethod: (): Int
-  Int => _root_.scala.Int#
-_root_.com.javacp.Javacp#isProtectedField. => protected var isProtectedField: Int
-  Int => _root_.scala.Int#
-_root_.com.javacp.Javacp#isProtectedMethod(). => protected def isProtectedMethod: (): Int
-  Int => _root_.scala.Int#
-_root_.com.javacp.Javacp#isPublicField. => var isPublicField: Int
-  Int => _root_.scala.Int#
-_root_.com.javacp.Javacp#isPublicMethod(). => def isPublicMethod: (): Int
-  Int => _root_.scala.Int#
-_root_.com.javacp.Javacp#isVal. => private[javacp] val isVal: Int
-  Int => _root_.scala.Int#
-_root_.com.javacp.Javacp#overload(File+1). => def overload: (arg0: File): Unit
-  arg0 => _root_.com.javacp.Javacp#overload(File+1).(arg0)
-  Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#overload(File+1).(arg0) => param arg0: File
-  File => _root_.java.io.File#
-_root_.com.javacp.Javacp#overload(File+2). => def overload: (arg0: File): Unit
-  arg0 => _root_.com.javacp.Javacp#overload(File+2).(arg0)
-  Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#overload(File+2).(arg0) => param arg0: File
-  File => _root_.sourcecode.File#
-_root_.com.javacp.Javacp#signature(HashMap,String). => def signature: (arg0: HashMap[ArrayList[HashMap[String, Array[Integer]]], Array[String]], arg1: Array[String]): HashSet[T]
-  arg0 => _root_.com.javacp.Javacp#signature(HashMap,String).(arg0)
-  arg1 => _root_.com.javacp.Javacp#signature(HashMap,String).(arg1)
-  HashSet => _root_.java.util.HashSet#
-  T => T
-_root_.com.javacp.Javacp#signature(HashMap,String).(arg0) => param arg0: HashMap[ArrayList[HashMap[String, Array[Integer]]], Array[String]]
-  HashMap => _root_.java.util.HashMap#
-  ArrayList => _root_.java.util.ArrayList#
-  String => _root_.java.lang.String#
-  Array => _root_.scala.Array#
-  Integer => _root_.java.lang.Integer#
-_root_.com.javacp.Javacp#signature(HashMap,String).(arg1) => param arg1: Array[String]
-  Array => _root_.scala.Array#
-  String => _root_.java.lang.String#
+  U => _root_.com.javacp.Javacp#[U]
 
 example/A.class
 ---------------
