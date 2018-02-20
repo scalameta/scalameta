@@ -31,7 +31,7 @@ class InfrastructureSuite extends FunSuite {
     val x1 = "foo".parse[Term].get.asInstanceOf[Term.Name]
     val x2 = x1.copy()
     assert(x1.pos != Position.None)
-    assert(x2.pos == Position.None)
+    assert(x2.pos == x1.pos)
   }
 
   test("copy tokens") {
