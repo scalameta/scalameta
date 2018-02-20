@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class Javacp<T extends CharSequence, U> extends ArrayList<T> implements Serializable, Comparable<U> {
+public class Javacp  <T extends CharSequence, U> extends ArrayList<T> implements Serializable, Comparable<U> {
 
     @Override
     public int compareTo(U o) {

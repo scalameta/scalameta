@@ -120,7 +120,7 @@ _root_.example.Example.x. => private[this] val x: ClassTag[Int]
   ClassTag => _root_.scala.reflect.ClassTag#
   Int => _root_.scala.Int#
 _root_.scala. => package scala
-_root_.scala.Array# => final class Array.{+6 decls}
+_root_.scala.Array# => final class Array[Array#[T: <?>].{+6 decls}
   extends AnyRef
   extends Serializable
   extends Cloneable
@@ -135,7 +135,7 @@ _root_.scala.Unit# => abstract final class Unit.{+2 decls}
   extends AnyVal
 _root_.scala.collection. => package collection
 _root_.scala.collection.mutable. => package mutable
-_root_.scala.collection.mutable.Stack# => @deprecated @deprecated class Stack.{+20 decls}
+_root_.scala.collection.mutable.Stack# => @deprecated @deprecated class Stack[Stack#[A: <?>].{+20 decls}
   extends AbstractSeq[Stack#[A]
   extends Seq[Stack#[A]
   extends SeqLike[Stack#[A, Stack[Stack#[A]]
@@ -237,7 +237,7 @@ _root_.flags.p.package.AA#z(). => getter z: : Int
   Int => _root_.scala.Int#
 _root_.flags.p.package.AA#z. => private[this] var z: Int
   Int => _root_.scala.Int#
-_root_.flags.p.package.C# => abstract class C.{+6 decls}
+_root_.flags.p.package.C# => abstract class C[+T >: Nothing <: Any, -U >: Nothing <: Any, V >: Nothing <: Any].{+6 decls}
   extends AnyRef
 _root_.flags.p.package.C#[T] => covariant typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -275,7 +275,7 @@ _root_.flags.p.package.C#y. => private[this] val y: U
   U => _root_.flags.p.package.C#[U]
 _root_.flags.p.package.C#z. => private[this] val z: V
   V => _root_.flags.p.package.C#[V]
-_root_.flags.p.package.S# => class S.{+1 decls}
+_root_.flags.p.package.S# => class S[@specialized T >: Nothing <: Any].{+1 decls}
   extends AnyRef
 _root_.flags.p.package.S#[T] => @specialized typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -451,7 +451,7 @@ _root_.example.MethodUsages#m(). => getter m: : Methods[Int]
 _root_.example.MethodUsages#m. => private[this] val m: Methods[Int]
   Methods => _root_.example.Methods#
   Int => _root_.scala.Int#
-_root_.example.Methods# => class Methods.{+26 decls}
+_root_.example.Methods# => class Methods[T >: Nothing <: Any].{+26 decls}
   extends AnyRef
 _root_.example.Methods#$anon#x(). => abstract getter x: : Int
   Int => _root_.scala.Int#
@@ -462,7 +462,7 @@ _root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.th
 _root_.example.Methods#AList#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.example.Methods#List# => class List.{+1 decls}
+_root_.example.Methods#List# => class List[T >: Nothing <: Any].{+1 decls}
   extends AnyRef
 _root_.example.Methods#List#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -625,7 +625,7 @@ _root_.scala.Predef.`???`(). => def ???: : Nothing
   Nothing => _root_.scala.Nothing#
 _root_.scala.collection.immutable.Nil. => @SerialVersionUID final case object Nil
 _root_.scala.math. => package math
-_root_.scala.math.Ordering# => @implicitNotFound trait Ordering.{+14 decls}
+_root_.scala.math.Ordering# => @implicitNotFound trait Ordering[Ordering#[T: <?>].{+14 decls}
   extends Object
   extends Comparator[Ordering#[T]
   extends PartialOrdering[Ordering#[T]
@@ -990,7 +990,7 @@ _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS. => final val NOFOLLOW_LINKS: NOF
 _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
-_root_.scala.Option# => @SerialVersionUID abstract sealed class Option.{+25 decls}
+_root_.scala.Option# => @SerialVersionUID abstract sealed class Option[Option#[A: <?>].{+25 decls}
   extends AnyRef
   extends Product
   extends Serializable
@@ -1086,7 +1086,7 @@ _root_.types.Test.C#ClassInfoType2#`<init>`(). => primaryctor <init>: (): C.this
   ClassInfoType2 => _root_.types.Test.C#ClassInfoType2#
 _root_.types.Test.C#ClassInfoType2#x(). => def x: : Int
   Int => _root_.scala.Int#
-_root_.types.Test.C#ClassInfoType3# => trait ClassInfoType3
+_root_.types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any]
   extends AnyRef
 _root_.types.Test.C#ClassInfoType3#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -1322,7 +1322,7 @@ _root_.types.Test.N#`<init>`(). => primaryctor <init>: (): N
   N => _root_.types.Test.N#
 _root_.types.Test.N#n(). => def n: : Int
   Int => _root_.scala.Int#
-_root_.types.ann# => class ann.{+2 decls}
+_root_.types.ann# => class ann[T >: Nothing <: Any].{+2 decls}
   extends Annotation
   extends StaticAnnotation
 _root_.types.ann#[T] => typeparam T: >: Nothing <: Any

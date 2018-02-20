@@ -44,20 +44,28 @@ Schema => SemanticDB v3
 Uri => com/javacp/Javacp.class
 Text => empty
 Language => Java
-Symbols => 23 entries
+Symbols => 26 entries
 
 Symbols:
 _root_. => package _root_
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.Javacp# => class Javacp
+_root_.com.javacp.Javacp# => class Javacp[T <?>, U <?>].{+23 decls}
+  extends ArrayList[T]
+  extends Serializable
+  extends Comparable[U]
 _root_.com.javacp.Javacp#<init>(Integer). => def <init>: (arg0: Integer): Unit
   arg0 => _root_.com.javacp.Javacp#<init>(Integer).(arg0)
   Unit => _root_.scala.Unit#
 _root_.com.javacp.Javacp#<init>(Integer).(arg0) => param arg0: Integer
   Integer => _root_.java.lang.Integer#
-_root_.com.javacp.Javacp#field. => var field: Integer
-  Integer => _root_.java.lang.Integer#
+_root_.com.javacp.Javacp#[T] => typeparam T
+_root_.com.javacp.Javacp#[U] => typeparam U
+_root_.com.javacp.Javacp#compareTo(U). => def compareTo: (arg0: U): Int
+  arg0 => _root_.com.javacp.Javacp#compareTo(U).(arg0)
+  Int => _root_.scala.Int#
+_root_.com.javacp.Javacp#compareTo(U).(arg0) => param arg0: U
+  U => U
 _root_.com.javacp.Javacp#isPackagePrivateField. => private[javacp] var isPackagePrivateField: Int
   Int => _root_.scala.Int#
 _root_.com.javacp.Javacp#isPackagePrivateMethod(). => private[javacp] def isPackagePrivateMethod: (): Int
@@ -236,7 +244,7 @@ Symbols => 63 entries
 Symbols:
 _root_. => package _root_
 _root_.example. => package example
-_root_.example.Methods# => class Methods.{+29 decls}
+_root_.example.Methods# => class Methods[T >: Nothing <: Any].{+29 decls}
   extends AnyRef
 _root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.this.List[T]
   T => _root_.example.Methods#AList#[T]
@@ -245,7 +253,7 @@ _root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.th
 _root_.example.Methods#AList#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.example.Methods#List# => class List.{+2 decls}
+_root_.example.Methods#List# => class List[T >: Nothing <: Any].{+2 decls}
   extends AnyRef
 _root_.example.Methods#List#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -625,7 +633,7 @@ _root_.flags.p.package.AA#z(). => getter z: : Int
   Int => _root_.scala.Int#
 _root_.flags.p.package.AA#z. => private[this] var z: Int
   Int => _root_.scala.Int#
-_root_.flags.p.package.C# => abstract class C.{+9 decls}
+_root_.flags.p.package.C# => abstract class C[+T >: Nothing <: Any, -U >: Nothing <: Any, V >: Nothing <: Any].{+9 decls}
   extends AnyRef
 _root_.flags.p.package.C#[T] => covariant typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -663,7 +671,7 @@ _root_.flags.p.package.C#y. => private[this] val y: U
   U => _root_.flags.p.package.C#[U]
 _root_.flags.p.package.C#z. => private[this] val z: V
   V => _root_.flags.p.package.C#[V]
-_root_.flags.p.package.S# => class S.{+2 decls}
+_root_.flags.p.package.S# => class S[T >: Nothing <: Any].{+2 decls}
   extends AnyRef
 _root_.flags.p.package.S#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -870,7 +878,7 @@ _root_.types.Test.C#ClassInfoType2#`<init>`(). => primaryctor <init>: (): C.this
   ClassInfoType2 => _root_.types.Test.C#ClassInfoType2#
 _root_.types.Test.C#ClassInfoType2#x(). => def x: : Int
   Int => _root_.scala.Int#
-_root_.types.Test.C#ClassInfoType3# => trait ClassInfoType3.{+1 decls}
+_root_.types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any].{+1 decls}
   extends AnyRef
 _root_.types.Test.C#ClassInfoType3#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
@@ -1166,7 +1174,7 @@ Symbols => 7 entries
 Symbols:
 _root_. => package _root_
 _root_.types. => package types
-_root_.types.ann# => class ann.{+3 decls}
+_root_.types.ann# => class ann[T >: Nothing <: Any].{+3 decls}
   extends Annotation
   extends StaticAnnotation
 _root_.types.ann#[T] => typeparam T: >: Nothing <: Any
