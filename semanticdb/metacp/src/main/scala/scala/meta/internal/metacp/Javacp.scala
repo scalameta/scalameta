@@ -220,7 +220,7 @@ object Javacp {
     ref("_root_.scala.Array#", tpe :: Nil)
 
   def ssym(string: String): String =
-    "_root_/" + string.replace('$', '/') + "/"
+    "_root_." + string.replace('$', '#').replace('/', '.') + "#"
 
   implicit class XtensionAccess(n: Int) {
     def hasFlag(flag: Int): Boolean =
