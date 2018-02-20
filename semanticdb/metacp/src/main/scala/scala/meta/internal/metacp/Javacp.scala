@@ -91,8 +91,8 @@ object Javacp {
     val classSymbol = ssym(node.name)
     val className = getName(node.name)
     val isTopLevelClass = !node.name.contains("$")
-    pprint.log(node.signature)
-    pprint.log(node.outerMethodDesc)
+//    pprint.log(node.signature)
+//    pprint.log(node.outerMethodDesc)
     val classOwner: String = if (isTopLevelClass) {
       // Emit packages
       val packages = node.name.split("/")
@@ -124,7 +124,6 @@ object Javacp {
     }
     methods.zip(descriptors).foreach {
       case (method: MethodNode, declaration: Declaration) =>
-
         val finalDescriptor = {
           val conflicting = descriptors.filter { d =>
             d.descriptor == declaration.descriptor &&
@@ -139,7 +138,7 @@ object Javacp {
         val methodSymbol = classSymbol + method.name + "(" + finalDescriptor + ")."
         val methodKind = k.DEF
         val paramSymbols = ListBuffer.empty[String]
-        pprint.log(declaration)
+//        pprint.log(declaration)
         declaration.parameterTypes.zipWithIndex.foreach {
           case (param, i) =>
             // TODO(olafur) use node.parameters.name if -parameters is set in javacOptions
@@ -180,7 +179,7 @@ object Javacp {
         if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
         else k.VAR
       val declaration = getSignature(field.name, field.signature, field.desc, isField = true)
-      pprint.log(declaration)
+//      pprint.log(declaration)
       buf += s.SymbolInformation(
         symbol = fieldSymbol,
         kind = fieldKind,
@@ -199,13 +198,19 @@ object Javacp {
     val tparams = classDeclaration match {
       case None => Nil
       case Some(decl: Declaration) =>
-        decl.formalTypeParameters.map { tparamName: String =>
+        decl.formalTypeParameters.map { tparam: JType =>
+//          pprint.log(tparam.interfaceBound)
+          val tparamName = tparam.name
           val tparamSymbol = classSymbol + "[" + tparamName + "]"
+          val tparamTpe = s.Type(
+            s.Type.Tag.TYPE_TYPE,
+            typeType = Some(s.TypeType(Nil, upperBound = tparam.interfaceBound.map(_.toType))))
           buf += s.SymbolInformation(
             tparamSymbol,
             kind = k.TYPE_PARAMETER,
             name = tparamName,
-            owner = classSymbol
+            owner = classSymbol,
+            tpe = Some(tparamTpe)
           )
           tparamSymbol
         }
@@ -296,10 +301,10 @@ object Javacp {
     val signatureReader = new SignatureReader(toParse)
     val v = new SemanticdbSignatureVisitor
     signatureReader.accept(v)
-    pprint.log(toParse)
-    pprint.log(v.mode)
-    pprint.log(v.returnType)
-    pprint.log(v.tpe)
+//    pprint.log(toParse)
+//    pprint.log(v.mode)
+//    pprint.log(v.returnType)
+//    pprint.log(v.tpe)
     // HACK(olafur) Fields have signature like "I" that trigger visitSuperClass,
     // which causes the mode to be SuperClass instead of Start (which I expected)
     // isField = true means we are computing a declaration for a field and can therefore
@@ -308,7 +313,7 @@ object Javacp {
     Declaration(
       name = name,
       desc = toParse,
-      formalTypeParameters = v.formatTypeParameters,
+      formalTypeParameters = v.formalTypeParameters,
       parameterTypes = v.parameterTypes,
       returnType = v.returnType,
       fieldType = fieldType,
@@ -325,7 +330,9 @@ object Javacp {
       var isArray: Boolean,
       var symbol: String,
       var name: String,
-      val args: ListBuffer[JType]) {
+      val args: ListBuffer[JType],
+      var interfaceBound: Option[JType]
+  ) {
     def setPrimitive(name: String): Unit = {
       this.symbol = s"_root_.scala.$name#"
       this.name = name
@@ -354,10 +361,11 @@ object Javacp {
     import SignatureMode._
 
     val parameterTypes: ListBuffer[JType] = ListBuffer.empty[JType]
-    val formatTypeParameters: ListBuffer[String] = ListBuffer.empty[String]
+    val formalTypeParameters: ListBuffer[JType] = ListBuffer.empty[JType]
     var owners = List.empty[JType]
     val interfaceTypes = ListBuffer.empty[JType]
     var superClassType = Option.empty[JType]
+    def newTpe = new JType(false, "", "", ListBuffer.empty[JType], None)
     var tpe: JType = newTpe
     var mode: SignatureMode = Start
 
@@ -369,27 +377,27 @@ object Javacp {
       }
 
     override def visitParameterType(): SignatureVisitor = {
-      pprint.log("Parameter type")
+//      pprint.log("Parameter type")
       mode = ParameterType
       tpe = newTpe
-//       require(owners == Nil)
       parameterTypes += tpe
       this
     }
 
     override def visitClassType(name: String): Unit = {
-      pprint.log(name)
+//      pprint.log(name)
       tpe.setSymbol(name)
     }
 
     override def visitFormalTypeParameter(name: String): Unit = {
-      pprint.log(name)
+//      pprint.log(name)
       mode = FormalType
-      formatTypeParameters += name
+      formalTypeParameters += newTpe
+      formalTypeParameters.last.name = name
     }
 
     override def visitTypeArgument(wildcard: Char): SignatureVisitor = {
-      pprint.log(wildcard)
+//      pprint.log(wildcard)
       val arg = newTpe
       tpe.args += arg
       startType()
@@ -407,7 +415,7 @@ object Javacp {
     }
 
     override def visitTypeArgument(): Unit = {
-      pprint.log("Type Argument")
+//      pprint.log("Type Argument")
     }
 
     override def visitEnd(): Unit = {
@@ -419,10 +427,16 @@ object Javacp {
           superClassType = Some(tpe)
         case ReturnType =>
           myReturnType = Some(tpe)
+        case InterfaceBound =>
+//          pprint.log(tpe)
+//          pprint.log(owners)
+          formalTypeParameters.last.interfaceBound = Some(tpe)
+          tpe = newTpe
+//          tpe.interfaceBound = Some()
         case _ =>
       }
-      pprint.log(tpe)
-      pprint.log("END")
+//      pprint.log(tpe)
+//      pprint.log("END")
     }
 
     def endType(): Unit = {
@@ -433,14 +447,14 @@ object Javacp {
     }
 
     override def visitTypeVariable(name: String): Unit = {
-      pprint.log(name)
+//      pprint.log(name)
       tpe.symbol = name
       tpe.name = name
       // endType()
     }
 
     override def visitExceptionType(): SignatureVisitor = {
-      pprint.log("exceptionType")
+//      pprint.log("exceptionType")
       this
     }
 
@@ -450,13 +464,13 @@ object Javacp {
     }
 
     override def visitSuperclass(): SignatureVisitor = {
-      pprint.log("superClass")
+//      pprint.log("superClass")
       setMode(SuperClass)
       this
     }
 
     override def visitInterface(): SignatureVisitor = {
-      pprint.log("Interface")
+//      pprint.log("Interface")
       setMode(Interface)
       this
     }
@@ -467,21 +481,22 @@ object Javacp {
     }
 
     override def visitInterfaceBound(): SignatureVisitor = {
-      pprint.log("interface bound")
+      setMode(InterfaceBound)
+//      pprint.log("interface bound")
       this
     }
 
     override def visitInnerClassType(name: String): Unit = {
-      pprint.log(name)
+//      pprint.log(name)
     }
 
     override def visitClassBound(): SignatureVisitor = {
-      pprint.log("classBound")
+//      pprint.log("classBound")
       this
     }
 
     override def visitBaseType(descriptor: Char): Unit = {
-      pprint.log(descriptor)
+//      pprint.log(descriptor)
       descriptor match {
         case 'V' => tpe.setPrimitive("Unit")
         case 'B' => tpe.setPrimitive("Byte")
@@ -497,14 +512,12 @@ object Javacp {
       // endType()
     }
 
-    def newTpe = new JType(false, "", "", ListBuffer.empty[JType])
-
   }
 
   case class Declaration(
       name: String,
       desc: String,
-      formalTypeParameters: Seq[String],
+      formalTypeParameters: Seq[JType],
       parameterTypes: Seq[JType],
       returnType: Option[JType],
       fieldType: Option[JType],
@@ -524,6 +537,7 @@ object Javacp {
     case object Interface extends SignatureMode
     case object FormalType extends SignatureMode
     case object ReturnType extends SignatureMode
+    case object InterfaceBound extends SignatureMode
 
   }
 }
