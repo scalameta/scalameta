@@ -6,6 +6,10 @@ import scala.meta.dialects.Scala211
 import scala.meta.internal.prettyprinters._
 
 class PositionSuite extends ParseSuite {
+  private implicit class TrimPosOps(in: String) {
+    def trimPos: String = in.trim.stripMargin.split("\n").mkString
+  }
+
   test("1 + (2 / 3) * 4") {
     val tree = term("1 + (2 / 3) * 4")
     assert(tree.show[Positions] === """
@@ -23,7 +27,7 @@ class PositionSuite extends ParseSuite {
             | Term.Name{12..13}("*"),
             | Nil,
             | List(Lit.Int{14..15}(4)))))
-    """.trim.stripMargin.split("\n").mkString)
+    """.trimPos)
   }
   test("(1 + 2).foo") {
     val tree = term("(1 + 2).foo")
@@ -35,7 +39,7 @@ class PositionSuite extends ParseSuite {
           | Nil,
           | List(Lit.Int{5..6}(2))),
         | Term.Name{8..11}("foo"))
-    """.trim.stripMargin.split("\n").mkString)
+    """.trimPos)
   }
   test("#333") {
     val tree = blockStat(""" def shortInfo: String = s"created=$x" """)
@@ -60,6 +64,103 @@ class PositionSuite extends ParseSuite {
         | Term.Name{6..7}("+"),
         | Nil,
         | List(Term.Name{8..9}("c")))
-    """.trim.stripMargin.split("\n").mkString)
+    """.trimPos)
+  }
+
+  test("#1345 - Tree.transform does not preserve parent chain origins") {
+    val original = 
+      """|object a {
+         |  def bar = 4
+         |  // comment
+         |  def foo = 2
+         |}""".stripMargin.parse[Source].get
+
+    val originalPositions = """
+      |Source{0..53}(
+        |List(
+          |Defn.Object{0..53}(
+            |Nil,
+            | Term.Name{7..8}("a"),
+            | Template{9..53}(
+              |Nil,
+              | Nil,
+              | Self{13..13}(
+                  |Name.Anonymous{13..13}(),
+                  | None),
+              | List(
+                |Defn.Def{13..24}(
+                |Nil,
+                | Term.Name{17..20}("bar"),
+                | Nil,
+                | Nil,
+                | None,
+                | Lit.Int{23..24}(4)
+                |), 
+                |Defn.Def{40..51}(
+                  |Nil,
+                  | Term.Name{44..47}("foo"),
+                  | Nil,
+                  | Nil,
+                  | None,
+                  | Lit.Int{50..51}(2)))))))""".trimPos
+    
+    assert(original.show[Positions] === originalPositions)
+
+    val refactored = original.transform { case q"2" => q"3" }
+
+    val refactoredPositions = """
+      |Source{0..53}(
+        |List(
+          |Defn.Object{0..53}(
+            |Nil,
+            | Term.Name{7..8}("a"),
+            | Template{9..53}(
+              |Nil,
+              | Nil,
+              | Self{13..13}(
+                  |Name.Anonymous{13..13}(),
+                  | None),
+              | List(
+                |Defn.Def{13..24}(
+                |Nil,
+                | Term.Name{17..20}("bar"),
+                | Nil,
+                | Nil,
+                | None,
+                | Lit.Int{23..24}(4)
+                |), 
+                |Defn.Def{40..51}(
+                  |Nil,
+                  | Term.Name{44..47}("foo"),
+                  | Nil,
+                  | Nil,
+                  | None,
+                  | Lit.Int(3)))))))""".trimPos
+
+    assert(refactored.show[Positions] === refactoredPositions)
+  }
+
+  test("#1350 - Tree.copy does not preserve the origin") {
+    import scala.meta._
+    val code ="object A { }".parse[Source].get
+    val codePositions = """
+      |Source{0..12}(
+        |List(Defn.Object{0..12}(
+          |Nil, 
+          |Term.Name{7..8}("A"), 
+          |Template{9..12}(
+            |Nil, 
+            |Nil, 
+            |Self{11..11}(
+              |Name.Anonymous{11..11}(), 
+              |None
+            |), 
+            |Nil))))""".trimPos
+
+    assert(code.show[Positions] === codePositions)
+
+    val refactored = code.copy(stats = Nil)
+    val refactoredPositions = """Source{0..12}(Nil)"""
+    assert(refactored.show[Positions] === refactoredPositions)
   }
 }

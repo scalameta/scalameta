@@ -215,6 +215,7 @@ lazy val langmetaJS = langmeta.js
 lazy val common = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/common"))
   .settings(
+    requiresMacrosSetting,
     publishableSettings,
     libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.3",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
