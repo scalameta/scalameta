@@ -399,7 +399,8 @@ object Main {
         info.tpe match {
           case Some(tpe: Type) =>
             tpe.classInfoType match {
-              case Some(ClassInfoType(_, parents, decls)) =>
+              case Some(ClassInfoType(typeParameters, parents, decls)) =>
+                if (typeParameters.nonEmpty) rep("[", typeParameters, ", ", "]")(pprint(_, DEFINITION, doc))
                 if (decls.nonEmpty) println(s".{+${decls.length} decls}")
                 else println("")
                 parents.foreach { tpe =>
