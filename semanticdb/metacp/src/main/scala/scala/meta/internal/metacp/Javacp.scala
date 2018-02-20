@@ -15,6 +15,7 @@ import scala.tools.asm.ClassReader
 import scala.tools.asm.signature.SignatureReader
 import scala.tools.asm.signature.SignatureVisitor
 import scala.tools.asm.tree.ClassNode
+import scala.tools.asm.tree.MethodNode
 import scala.tools.asm.{Opcodes => o}
 import org.langmeta.internal.io.PathIO
 import org.langmeta.io.AbsolutePath
@@ -216,7 +217,7 @@ object Javacp {
 
   }
 
-  def array(tpe: s.Type) =
+  def array(tpe: s.Type): s.Type =
     ref("_root_.scala.Array#", tpe :: Nil)
 
   def ssym(string: String): String =
@@ -227,14 +228,18 @@ object Javacp {
       (flag & n) != 0
   }
 
-  def getSignature(signature: String, desc: String): SemanticdbSignatureVisitor = {
+  def getSignature(signature: String, desc: String): Declaration = {
     val toParse =
       if (signature != null) signature
       else desc
     val signatureReader = new SignatureReader(toParse)
     val v = new SemanticdbSignatureVisitor
     signatureReader.accept(v)
-    v
+    Declaration(toParse, v.parameterTypes, v.returnType)
+  }
+
+  case class Declaration(desc: String, parameterTypes: Seq[JType], returnType: Option[JType]) {
+    val descriptor = parameterTypes.map(_.name).mkString(",")
   }
 
   def process(root: Path, file: Path): s.TextDocument = {
@@ -248,22 +253,16 @@ object Javacp {
     val classKind =
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
       else k.CLASS
-    val methods = node.methods.asScala
-    val decriptorUsage =
-      scala.collection.mutable.Map.empty[String, Int].withDefaultValue(0)
-    val descriptors = methods.map { method =>
-      val v = getSignature(method.signature, method.desc)
-      val names = v.parameterTypes.map(_.name)
-      val descriptor = v.parameterTypes.map(_.name).mkString(",")
-      (descriptor, method.desc, v.parameterTypes, v.returnType)
+    val methods: Seq[MethodNode] = node.methods.asScala
+    val descriptors: Seq[Declaration] = methods.map { method: MethodNode =>
+      getSignature(method.signature, method.desc)
     }
     methods.zip(descriptors).foreach {
-      case (
-          method,
-          descriptorPair @ (descriptor, desc, parameterTypes, Some(returnType))
-          ) =>
+      case (method, descriptorPair: Declaration) =>
+        import descriptorPair._
+
         val finalDescriptor = {
-          val conflicting = descriptors.filter(_._1 == descriptor)
+          val conflicting = descriptors.filter(_.descriptor == descriptor)
           if (conflicting.lengthCompare(1) == 0) descriptor
           else {
             val index = conflicting.indexOf(descriptorPair) + 1
@@ -293,7 +292,7 @@ object Javacp {
           methodType = Some(
             s.MethodType(
               parameters = s.MethodType.ParameterList(paramSymbols) :: Nil,
-              returnType = Some(returnType.toType)
+              returnType = returnType.map(_.toType)
             )
           )
         )

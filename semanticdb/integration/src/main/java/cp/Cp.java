@@ -8,10 +8,12 @@ import java.util.HashSet;
 public class Cp {
     public Integer field;
 
-    public <T> HashSet<T> signature(HashMap<ArrayList<HashMap<String, Integer[]>>, String[]> arg) {
+    public Cp(Integer i) {
+
+    }
+
+    public <T> HashSet<T> signature(HashMap<ArrayList<HashMap<String, Integer[]>>, String[]> arg, String[] arg2) {
         return null;
     }
 
-    class Inner {
-    }
 }
