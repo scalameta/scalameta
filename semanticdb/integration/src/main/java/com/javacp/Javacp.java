@@ -1,12 +1,17 @@
 package com.javacp;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class Javacp {
-    public Integer field;
+public class Javacp<T extends CharSequence, U> extends ArrayList<T> implements Serializable, Comparable<U> {
+
+    @Override
+    public int compareTo(U o) {
+        return 0;
+    }
 
     public Javacp(Integer i) {
 
