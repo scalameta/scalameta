@@ -3,6 +3,7 @@ package scala.meta.internal.metacp
 import java.io._
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
+import java.util.Comparator
 import scala.collection.mutable
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
@@ -43,10 +44,15 @@ object Main {
       failed = true
     }
     val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
+    val scopes = new Scopes()
     classpath.visit { root =>
       new FileVisitor[Path] {
         // Convert a .class file to a .class.semanticdb file with symbols only.
         override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          FileVisitResult.CONTINUE
+        }
+
+        def handleFile(file: Path): FileVisitResult = {
           if (PathIO.extension(file) != "class") return FileVisitResult.CONTINUE
           try {
             val relpath = AbsolutePath(file).toRelative(root).toString
@@ -64,7 +70,7 @@ object Main {
                 semanticdbInfos
               }
             } else {
-              val infos = Javacp.process(root.toNIO, file).symbols
+              val infos = Javacp.process(root.toNIO, file, scopes).symbols
               pprint.log(infos)
               Some(infos)
             }
@@ -88,6 +94,13 @@ object Main {
         }
 
         override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          val files = Files.list(dir).sorted(Comparator.reverseOrder())
+          import scala.collection.JavaConverters._
+          files
+            .iterator()
+            .asScala
+            .filter(f => Files.isRegularFile(f))
+            .foreach(handleFile)
           FileVisitResult.CONTINUE
         }
 

@@ -7,6 +7,7 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Locale.LanguageRange
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.metacp.Javacp.SignatureMode.Start
@@ -53,13 +54,14 @@ object Javacp {
 
   def run(args: Array[String]): Unit = {
     val root = AbsolutePath("core/target/scala-2.12/classes/test")
+    val scopes = Scopes()
     Files.walkFileTree(
       root.toNIO,
       new SimpleFileVisitor[Path] {
         override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
           if (PathIO.extension(file) == "class") {
 
-            val db = process(root.toNIO, file)
+            val db = process(root.toNIO, file, scopes)
             if (!file.toString.contains('$')) {
               // pprint.log(db.toProtoString, height = 1000)
               // Main.pprint(db)
@@ -72,7 +74,7 @@ object Javacp {
 
   }
 
-  def process(root: Path, file: Path): s.TextDocument = {
+  def process(root: Path, file: Path, scopes: Scopes): s.TextDocument = {
     val bytes = Files.readAllBytes(file)
     val node = asmNodeFromBytes(bytes)
     val buf = ArrayBuffer.empty[s.SymbolInformation]
@@ -81,14 +83,16 @@ object Javacp {
     val className = getName(node.name)
     val isTopLevelClass = !node.name.contains("$")
 
-    def addTypeParams(declaration: Declaration): Seq[String] = {
+    def addTypeParams(declaration: Declaration, ownerSymbol: String): Seq[Binding] = {
+      declaration.setFormatTypeParameters(ownerSymbol, scopes)
       declaration.formalTypeParameters.map { tparam: JType =>
         //          pprint.log(tparam.interfaceBound)
         val tparamName = tparam.name
-        val tparamSymbol = classSymbol + "[" + tparamName + "]"
+        val tparamSymbol = ownerSymbol + "[" + tparamName + "]"
         val tparamTpe = s.Type(
           s.Type.Tag.TYPE_TYPE,
-          typeType = Some(s.TypeType(Nil, upperBound = tparam.interfaceBound.map(_.toType))))
+          typeType = Some(
+            s.TypeType(Nil, upperBound = tparam.interfaceBound.map(_.toType(ownerSymbol, scopes)))))
         buf += s.SymbolInformation(
           tparamSymbol,
           kind = k.TYPE_PARAMETER,
@@ -96,7 +100,7 @@ object Javacp {
           owner = classSymbol,
           tpe = Some(tparamTpe)
         )
-        tparamSymbol
+        Binding(tparamName, tparamSymbol)
       }
 
     }
@@ -124,6 +128,7 @@ object Javacp {
     } else {
       ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
+    scopes.owners(classSymbol) = classOwner
 
     def saccessibility(access: Int): Option[s.Accessibility] = {
       val a = s.Accessibility.Tag
@@ -138,8 +143,26 @@ object Javacp {
     val classKind =
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
       else k.CLASS
+
+    val classDeclaration =
+      if (node.signature == null) None
+      else {
+        val signature = getSignature(className, node.signature, null)
+        Some(signature)
+      }
+    val tparams = classDeclaration match {
+      case None => Nil
+      case Some(decl: Declaration) =>
+        val bindings = addTypeParams(decl, classSymbol)
+        scopes.scopes(classSymbol) = bindings
+        bindings.map(_.symbol)
+    }
+
     val methods: Seq[MethodNode] = node.methods.asScala
-    val descriptors: Seq[Declaration] = methods.map(getSignature)
+    val descriptors: Seq[Declaration] = methods.map { m =>
+      // TODO(olafur) pass in methodSymbol instead of classSymbol
+      getSignature(m.name, m.signature, m.desc)
+    }
     methods.zip(descriptors).foreach {
       case (method: MethodNode, declaration: Declaration) =>
         val finalDescriptor = {
@@ -154,9 +177,20 @@ object Javacp {
           }
         }
         val methodSymbol = classSymbol + method.name + "(" + finalDescriptor + ")."
+        scopes.owners(methodSymbol) = classSymbol
         val methodKind = k.DEF
         val paramSymbols = ListBuffer.empty[String]
 //        pprint.log(declaration)
+        val tparams = addTypeParams(declaration, methodSymbol)
+        val methodType = s.Type(
+          s.Type.Tag.METHOD_TYPE,
+          methodType = Some(
+            s.MethodType(
+              parameters = s.MethodType.ParameterList(paramSymbols) :: Nil,
+              returnType = declaration.returnType.map(_.toType(methodSymbol, scopes))
+            )
+          )
+        )
         declaration.parameterTypes.zipWithIndex.foreach {
           case (param, i) =>
             // TODO(olafur) use node.parameters.name if -parameters is set in javacOptions
@@ -169,28 +203,18 @@ object Javacp {
               kind = paramKind,
               name = paramName,
               owner = methodSymbol,
-              tpe = Some(param.toType)
+              tpe = Some(param.toType(methodSymbol, scopes))
             )
         }
-        val methodType = s.Type(
-          s.Type.Tag.METHOD_TYPE,
-          methodType = Some(
-            s.MethodType(
-              parameters = s.MethodType.ParameterList(paramSymbols) :: Nil,
-              returnType = declaration.returnType.map(_.toType)
-            )
-          )
-        )
 
         val finalMethodType =
           if (declaration.formalTypeParameters.isEmpty) methodType
           else {
-            val tparams = addTypeParams(declaration)
             s.Type(
               s.Type.Tag.UNIVERSAL_TYPE,
               universalType = Some(
                 s.UniversalType(
-                  tparams,
+                  tparams.map(_.symbol),
                   Some(methodType)
                 ))
             )
@@ -218,21 +242,12 @@ object Javacp {
         kind = fieldKind,
         name = field.name,
         owner = classSymbol,
-        tpe = declaration.fieldType.map(_.toType),
+        tpe = declaration.fieldType.map(_.toType(fieldSymbol, scopes)),
         accessibility = saccessibility(field.access)
       )
     }
 
     val decls = buf.map(_.symbol)
-
-    val classDeclaration =
-      if (node.signature == null) None
-      else Some(getSignature(className, node.signature, null))
-    val tparams = classDeclaration match {
-      case None => Nil
-      case Some(decl: Declaration) =>
-        addTypeParams(decl)
-    }
     val parents: Seq[s.Type] = classDeclaration match {
       case None =>
         (node.superName +: node.interfaces.asScala).map { parent =>
@@ -240,9 +255,9 @@ object Javacp {
           s.Type(s.Type.Tag.TYPE_REF, typeRef = Some(s.TypeRef(symbol = symbol)))
         }
       case Some(decl: Declaration) =>
-        decl.superClass match {
-          case Some(superClass) => superClass +: decl.interfaceTypes
-          case None => decl.interfaceTypes
+        decl.superClass(classSymbol, scopes) match {
+          case Some(superClass) => superClass +: decl.interfaceTypes(classSymbol, scopes)
+          case None => decl.interfaceTypes(classSymbol, scopes)
         }
     }
     val classTpe = s.Type(
@@ -303,15 +318,12 @@ object Javacp {
       (flag & n) != 0
   }
 
-  def getSignature(method: MethodNode): Declaration = {
-    getSignature(method.name, method.signature, method.desc)
-  }
-
   def getSignature(
       name: String,
       signature: String,
       desc: String,
-      isField: Boolean = false): Declaration = {
+      isField: Boolean = false
+  ): Declaration = {
     val toParse =
       if (signature != null) signature
       else if (desc != null) desc
@@ -346,6 +358,7 @@ object Javacp {
 
   class JType(
       var isArray: Boolean,
+      var isTypeVariable: Boolean,
       var symbol: String,
       var name: String,
       val args: ListBuffer[JType],
@@ -361,8 +374,13 @@ object Javacp {
       name = getName(newSymbol)
     }
 
-    def toType: s.Type = {
-      val tpe = ref(symbol, args.iterator.map(_.toType).toList)
+    def toType(owner: String, scopes: Scopes): s.Type = {
+      if (isTypeVariable) {
+        this.symbol = scopes.resolve(name, owner)
+        pprint.log(this.symbol)
+        pprint.log(this.name)
+      }
+      val tpe = ref(symbol, args.iterator.map(_.toType(owner, scopes)).toList)
       if (isArray) array(tpe)
       else tpe
     }
@@ -374,7 +392,7 @@ object Javacp {
     }
   }
 
-  class SemanticdbSignatureVisitor extends SignatureVisitor(o.ASM5) {
+  class SemanticdbSignatureVisitor() extends SignatureVisitor(o.ASM5) {
 
     import SignatureMode._
 
@@ -383,7 +401,7 @@ object Javacp {
     var owners = List.empty[JType]
     val interfaceTypes = ListBuffer.empty[JType]
     var superClassType = Option.empty[JType]
-    def newTpe = new JType(false, "", "", ListBuffer.empty[JType], None)
+    def newTpe = new JType(false, false, "", "", ListBuffer.empty[JType], None)
     var tpe: JType = newTpe
     var mode: SignatureMode = Start
 
@@ -466,7 +484,7 @@ object Javacp {
 
     override def visitTypeVariable(name: String): Unit = {
 //      pprint.log(name)
-      tpe.symbol = name
+      tpe.isTypeVariable = true
       tpe.name = name
       // endType()
     }
@@ -542,8 +560,18 @@ object Javacp {
       mySuperClass: Option[JType],
       myInterfaceTypes: Seq[JType]
   ) {
-    def superClass: Option[s.Type] = mySuperClass.map(_.toType)
-    def interfaceTypes: Seq[s.Type] = myInterfaceTypes.map(_.toType)
+    def setFormatTypeParameters(owner: String, scopes: Scopes): Unit = {
+      formalTypeParameters.foreach { tparam: JType =>
+        tparam.symbol = owner + "[" + name + "]"
+      }
+      scopes.scopes(owner) = formalTypeParameters.map { tparam: JType =>
+        Binding(tparam.name, tparam.symbol)
+      }
+    }
+    def superClass(owner: String, scopes: Scopes): Option[s.Type] =
+      mySuperClass.map(_.toType(owner, scopes))
+    def interfaceTypes(owner: String, scopes: Scopes): Seq[s.Type] =
+      myInterfaceTypes.map(_.toType(owner, scopes))
     val descriptor = parameterTypes.map(_.name).mkString(",")
   }
 
