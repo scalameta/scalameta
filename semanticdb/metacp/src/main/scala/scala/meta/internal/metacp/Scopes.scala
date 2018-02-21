@@ -5,10 +5,20 @@ import scala.collection.mutable
 
 case class Binding(name: String, symbol: String)
 
-case class Scopes(
+class Scopes(
     owners: mutable.Map[String, String] = mutable.Map.empty,
     scopes: mutable.Map[String, Seq[Binding]] = mutable.Map.empty
 ) {
+
+  def update(symbol: String, owner: String, bindings: Seq[Binding]): Unit = {
+    owners(symbol) = owner
+    scopes(symbol) = bindings
+  }
+
+  def clear(): Unit = {
+    owners.clear()
+    scopes.clear()
+  }
   @tailrec
   final def resolve(name: String, owner: String): String = {
     scopes(owner).find(_.name == name) match {

@@ -54,7 +54,7 @@ object Javacp {
 
   def run(args: Array[String]): Unit = {
     val root = AbsolutePath("core/target/scala-2.12/classes/test")
-    val scopes = Scopes()
+    val scopes = new Scopes()
     Files.walkFileTree(
       root.toNIO,
       new SimpleFileVisitor[Path] {
@@ -83,12 +83,16 @@ object Javacp {
     val className = getName(node.name)
     val isTopLevelClass = !node.name.contains("$")
 
-    def addTypeParams(declaration: Declaration, ownerSymbol: String): Seq[Binding] = {
-      declaration.setFormatTypeParameters(ownerSymbol, scopes)
+    def addTypeParams(
+        declaration: Declaration,
+        ownerSymbol: String,
+        grandOwner: String): Seq[Binding] = {
+      // set formal parameters after the ownerSymbol has been computed.
+      // method symbols
+      declaration.setFormalTypeParameters(ownerSymbol, scopes, grandOwner)
       declaration.formalTypeParameters.map { tparam: JType =>
-        //          pprint.log(tparam.interfaceBound)
         val tparamName = tparam.name
-        val tparamSymbol = ownerSymbol + "[" + tparamName + "]"
+        val tparamSymbol = tparam.symbol
         val tparamTpe = s.Type(
           s.Type.Tag.TYPE_TYPE,
           typeType = Some(
@@ -115,8 +119,6 @@ object Javacp {
       )
       packageSymbol
     }
-//    pprint.log(node.signature)
-//    pprint.log(node.outerMethodDesc)
     val classOwner: String = if (isTopLevelClass) {
       // Emit packages
       val packages = node.name.split("/")
@@ -128,7 +130,6 @@ object Javacp {
     } else {
       ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
-    scopes.owners(classSymbol) = classOwner
 
     def saccessibility(access: Int): Option[s.Accessibility] = {
       val a = s.Accessibility.Tag
@@ -153,8 +154,7 @@ object Javacp {
     val tparams = classDeclaration match {
       case None => Nil
       case Some(decl: Declaration) =>
-        val bindings = addTypeParams(decl, classSymbol)
-        scopes.scopes(classSymbol) = bindings
+        val bindings = addTypeParams(decl, classSymbol, classOwner)
         bindings.map(_.symbol)
     }
 
@@ -177,11 +177,9 @@ object Javacp {
           }
         }
         val methodSymbol = classSymbol + method.name + "(" + finalDescriptor + ")."
-        scopes.owners(methodSymbol) = classSymbol
         val methodKind = k.DEF
         val paramSymbols = ListBuffer.empty[String]
-//        pprint.log(declaration)
-        val tparams = addTypeParams(declaration, methodSymbol)
+        val tparams = addTypeParams(declaration, methodSymbol, classSymbol)
         val methodType = s.Type(
           s.Type.Tag.METHOD_TYPE,
           methodType = Some(
@@ -192,18 +190,19 @@ object Javacp {
           )
         )
         declaration.parameterTypes.zipWithIndex.foreach {
-          case (param, i) =>
+          case (param: JType, i) =>
             // TODO(olafur) use node.parameters.name if -parameters is set in javacOptions
             val paramName = "arg" + i
             val paramSymbol = methodSymbol + "(" + paramName + ")"
             paramSymbols += paramSymbol
             val paramKind = k.PARAMETER
+            val paramTpe = param.toType(methodSymbol, scopes)
             buf += s.SymbolInformation(
               symbol = paramSymbol,
               kind = paramKind,
               name = paramName,
               owner = methodSymbol,
-              tpe = Some(param.toType(methodSymbol, scopes))
+              tpe = Some(paramTpe)
             )
         }
 
@@ -232,11 +231,11 @@ object Javacp {
 
     node.fields.asScala.foreach { field: FieldNode =>
       val fieldSymbol = classSymbol + field.name + "."
+      scopes.update(fieldSymbol, classSymbol, Nil)
       val fieldKind =
         if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
         else k.VAR
       val declaration = getSignature(field.name, field.signature, field.desc, isField = true)
-//      pprint.log(declaration)
       buf += s.SymbolInformation(
         symbol = fieldSymbol,
         kind = fieldKind,
@@ -331,10 +330,6 @@ object Javacp {
     val signatureReader = new SignatureReader(toParse)
     val v = new SemanticdbSignatureVisitor
     signatureReader.accept(v)
-//    pprint.log(toParse)
-//    pprint.log(v.mode)
-//    pprint.log(v.returnType)
-//    pprint.log(v.tpe)
     // HACK(olafur) Fields have signature like "I" that trigger visitSuperClass,
     // which causes the mode to be SuperClass instead of Start (which I expected)
     // isField = true means we are computing a declaration for a field and can therefore
@@ -377,8 +372,6 @@ object Javacp {
     def toType(owner: String, scopes: Scopes): s.Type = {
       if (isTypeVariable) {
         this.symbol = scopes.resolve(name, owner)
-        pprint.log(this.symbol)
-        pprint.log(this.name)
       }
       val tpe = ref(symbol, args.iterator.map(_.toType(owner, scopes)).toList)
       if (isArray) array(tpe)
@@ -455,6 +448,7 @@ object Javacp {
     }
 
     override def visitEnd(): Unit = {
+//      pprint.log("END")
       endType()
       mode match {
         case Interface =>
@@ -464,15 +458,10 @@ object Javacp {
         case ReturnType =>
           myReturnType = Some(tpe)
         case InterfaceBound =>
-//          pprint.log(tpe)
-//          pprint.log(owners)
           formalTypeParameters.last.interfaceBound = Some(tpe)
           tpe = newTpe
-//          tpe.interfaceBound = Some()
         case _ =>
       }
-//      pprint.log(tpe)
-//      pprint.log("END")
     }
 
     def endType(): Unit = {
@@ -486,7 +475,6 @@ object Javacp {
 //      pprint.log(name)
       tpe.isTypeVariable = true
       tpe.name = name
-      // endType()
     }
 
     override def visitExceptionType(): SignatureVisitor = {
@@ -545,7 +533,6 @@ object Javacp {
         case 'D' => tpe.setPrimitive("Double")
         case _ => sys.error(descriptor.toString)
       }
-      // endType()
     }
 
   }
@@ -560,14 +547,24 @@ object Javacp {
       mySuperClass: Option[JType],
       myInterfaceTypes: Seq[JType]
   ) {
-    def setFormatTypeParameters(owner: String, scopes: Scopes): Unit = {
-      formalTypeParameters.foreach { tparam: JType =>
-        tparam.symbol = owner + "[" + name + "]"
-      }
-      scopes.scopes(owner) = formalTypeParameters.map { tparam: JType =>
+
+    /** Set the symbols for formal type parameters.
+      *
+      * This needs to happen after we complete the declaration because we don't know the
+      * owner symbol for methods until after we have computed types for all parameters
+      * for all methods in this class.
+      */
+    def setFormalTypeParameters(owner: String, scopes: Scopes, grandOwner: String): Unit = {
+
+      val bindings = formalTypeParameters.map { tparam: JType =>
+//        pprint.log(tparam.name)
+        tparam.symbol = owner + "[" + tparam.name + "]"
         Binding(tparam.name, tparam.symbol)
       }
+
+      scopes.update(owner, grandOwner, bindings)
     }
+
     def superClass(owner: String, scopes: Scopes): Option[s.Type] =
       mySuperClass.map(_.toType(owner, scopes))
     def interfaceTypes(owner: String, scopes: Scopes): Seq[s.Type] =

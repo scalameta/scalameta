@@ -36,34 +36,34 @@ _empty_.B#`<init>`(). => primaryctor <init>: (): B
 _empty_.B#a(). => def a: : A
   A => _empty_.A#
 
-com/javacp/Javacp$Inner.class
------------------------------
+com/javacp/Javacp$InnerShadowTypeParam.class
+--------------------------------------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => com/javacp/Javacp$Inner.class
+Uri => com/javacp/Javacp$InnerShadowTypeParam.class
 Text => empty
 Language => Java
 Symbols => 8 entries
 
 Symbols:
-_root_.com.javacp.Javacp#Inner# => private[javacp] class Inner[T ].{+7 decls}
+_root_.com.javacp.Javacp#InnerShadowTypeParam# => private[javacp] class InnerShadowTypeParam[A ].{+7 decls}
   extends Object
-_root_.com.javacp.Javacp#Inner#<init>(Javacp). => private[javacp] def <init>: (arg0: Javacp): Unit
-  arg0 => _root_.com.javacp.Javacp#Inner#<init>(Javacp).(arg0)
+_root_.com.javacp.Javacp#InnerShadowTypeParam#<init>(Javacp). => private[javacp] def <init>: (arg0: Javacp): Unit
+  arg0 => _root_.com.javacp.Javacp#InnerShadowTypeParam#<init>(Javacp).(arg0)
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#Inner#<init>(Javacp).(arg0) => param arg0: Javacp
+_root_.com.javacp.Javacp#InnerShadowTypeParam#<init>(Javacp).(arg0) => param arg0: Javacp
   Javacp => _root_.com.javacp.Javacp#
-_root_.com.javacp.Javacp#Inner#[T] => typeparam T: 
-_root_.com.javacp.Javacp#Inner#move(T,U). => def move: (arg0: T, arg1: Javacp#[U): Unit
-  arg0 => _root_.com.javacp.Javacp#Inner#move(T,U).(arg0)
-  arg1 => _root_.com.javacp.Javacp#Inner#move(T,U).(arg1)
+_root_.com.javacp.Javacp#InnerShadowTypeParam#[A] => typeparam A: 
+_root_.com.javacp.Javacp#InnerShadowTypeParam#move(A,B). => def move: (arg0: A, arg1: Javacp#[B): Unit
+  arg0 => _root_.com.javacp.Javacp#InnerShadowTypeParam#move(A,B).(arg0)
+  arg1 => _root_.com.javacp.Javacp#InnerShadowTypeParam#move(A,B).(arg1)
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#Inner#move(T,U).(arg0) => param arg0: T
-  T => _root_.com.javacp.Javacp#Inner#[T]
-_root_.com.javacp.Javacp#Inner#move(T,U).(arg1) => param arg1: Javacp#[U
-  Javacp#[U => _root_.com.javacp.Javacp#[U]
-_root_.com.javacp.Javacp#Inner#this$0. => private[javacp] val this$0: Javacp
+_root_.com.javacp.Javacp#InnerShadowTypeParam#move(A,B).(arg0) => param arg0: A
+  A => _root_.com.javacp.Javacp#InnerShadowTypeParam#[A]
+_root_.com.javacp.Javacp#InnerShadowTypeParam#move(A,B).(arg1) => param arg1: Javacp#[B
+  Javacp#[B => _root_.com.javacp.Javacp#[B]
+_root_.com.javacp.Javacp#InnerShadowTypeParam#this$0. => private[javacp] val this$0: Javacp
   Javacp => _root_.com.javacp.Javacp#
 
 com/javacp/Javacp.class
@@ -74,26 +74,133 @@ Schema => SemanticDB v3
 Uri => com/javacp/Javacp.class
 Text => empty
 Language => Java
-Symbols => 9 entries
+Symbols => 50 entries
 
 Symbols:
 _root_. => package _root_
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.Javacp# => class Javacp[T <: CharSequence, U ].{+8 decls}
-  extends ArrayList[T]
-  extends Comparable[U]
+_root_.com.javacp.Javacp# => class Javacp[A <: CharSequence, B ].{+49 decls}
+  extends ArrayList[A]
+  extends Comparable[B]
   extends Serializable
 _root_.com.javacp.Javacp#<init>(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#[T] => typeparam T: <: CharSequence
-  CharSequence => _root_.java.lang.CharSequence#
-_root_.com.javacp.Javacp#[U] => typeparam U: 
-_root_.com.javacp.Javacp#compareTo(U). => def compareTo: (arg0: U): Int
-  arg0 => _root_.com.javacp.Javacp#compareTo(U).(arg0)
+_root_.com.javacp.Javacp#Boolean. => var Boolean: Boolean
+  Boolean => _root_.scala.Boolean#
+_root_.com.javacp.Javacp#Byte. => var Byte: Byte
+  Byte => _root_.scala.Byte#
+_root_.com.javacp.Javacp#Char. => var Char: Char
+  Char => _root_.scala.Char#
+_root_.com.javacp.Javacp#Float. => var Float: Float
+  Float => _root_.scala.Float#
+_root_.com.javacp.Javacp#Int. => var Int: Int
   Int => _root_.scala.Int#
-_root_.com.javacp.Javacp#compareTo(U).(arg0) => param arg0: U
-  U => _root_.com.javacp.Javacp#[U]
+_root_.com.javacp.Javacp#Long. => var Long: Long
+  Long => _root_.scala.Long#
+_root_.com.javacp.Javacp#Short. => var Short: Short
+  Short => _root_.scala.Short#
+_root_.com.javacp.Javacp#[A] => typeparam A: <: CharSequence
+  CharSequence => _root_.java.lang.CharSequence#
+_root_.com.javacp.Javacp#[B] => typeparam B: 
+_root_.com.javacp.Javacp#arrayField. => private[javacp] var arrayField: Array[Int]
+  Array => _root_.scala.Array#
+  Int => _root_.scala.Int#
+_root_.com.javacp.Javacp#arrayMethod(). => private[javacp] def arrayMethod: (): Array[Int]
+  Array => _root_.scala.Array#
+  Int => _root_.scala.Int#
+_root_.com.javacp.Javacp#compareTo(B). => def compareTo: (arg0: B): Int
+  arg0 => _root_.com.javacp.Javacp#compareTo(B).(arg0)
+  Int => _root_.scala.Int#
+_root_.com.javacp.Javacp#compareTo(B).(arg0) => param arg0: B
+  B => _root_.com.javacp.Javacp#[B]
+_root_.com.javacp.Javacp#genericField. => private[javacp] var genericField: ArrayList[A]
+  ArrayList => _root_.java.util.ArrayList#
+  A => _root_.com.javacp.Javacp#[A]
+_root_.com.javacp.Javacp#genericMethod(). => private[javacp] def genericMethod: (): ArrayList[A]
+  ArrayList => _root_.java.util.ArrayList#
+  A => _root_.com.javacp.Javacp#[A]
+_root_.com.javacp.Javacp#genericParams(A,B). => private[javacp] def genericParams: (arg0: A, arg1: B): Unit
+  arg0 => _root_.com.javacp.Javacp#genericParams(A,B).(arg0)
+  arg1 => _root_.com.javacp.Javacp#genericParams(A,B).(arg1)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#genericParams(A,B).(arg0) => param arg0: A
+  A => _root_.com.javacp.Javacp#[A]
+_root_.com.javacp.Javacp#genericParams(A,B).(arg1) => param arg1: B
+  B => _root_.com.javacp.Javacp#[B]
+_root_.com.javacp.Javacp#methodTypeParams(C). => private[javacp] def methodTypeParams: [C ] => (arg0: C): Unit
+  C => _root_.com.javacp.Javacp#methodTypeParams(C).[C]
+  arg0 => _root_.com.javacp.Javacp#methodTypeParams(C).(arg0)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#methodTypeParams(C).(arg0) => param arg0: C
+  C => _root_.com.javacp.Javacp#methodTypeParams(C).[C]
+_root_.com.javacp.Javacp#methodTypeParams(C).[C] => typeparam C: 
+_root_.com.javacp.Javacp#overload(File+1). => def overload: (arg0: File): Unit
+  arg0 => _root_.com.javacp.Javacp#overload(File+1).(arg0)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#overload(File+1).(arg0) => param arg0: File
+  File => _root_.java.io.File#
+_root_.com.javacp.Javacp#overload(File+2). => def overload: (arg0: File): Unit
+  arg0 => _root_.com.javacp.Javacp#overload(File+2).(arg0)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#overload(File+2).(arg0) => param arg0: File
+  File => _root_.sourcecode.File#
+_root_.com.javacp.Javacp#packagePrivateField. => private[javacp] var packagePrivateField: Int
+  Int => _root_.scala.Int#
+_root_.com.javacp.Javacp#packagePrivateMethod(). => private[javacp] def packagePrivateMethod: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char). => private[javacp] def primitiveParams: (arg0: Int, arg1: Long, arg2: Float, arg3: Double, arg4: Short, arg5: Byte, arg6: Boolean, arg7: Char): Unit
+  arg0 => _root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg0)
+  arg1 => _root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg1)
+  arg2 => _root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg2)
+  arg3 => _root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg3)
+  arg4 => _root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg4)
+  arg5 => _root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg5)
+  arg6 => _root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg6)
+  arg7 => _root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg7)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg0) => param arg0: Int
+  Int => _root_.scala.Int#
+_root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg1) => param arg1: Long
+  Long => _root_.scala.Long#
+_root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg2) => param arg2: Float
+  Float => _root_.scala.Float#
+_root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg3) => param arg3: Double
+  Double => _root_.scala.Double#
+_root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg4) => param arg4: Short
+  Short => _root_.scala.Short#
+_root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg5) => param arg5: Byte
+  Byte => _root_.scala.Byte#
+_root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg6) => param arg6: Boolean
+  Boolean => _root_.scala.Boolean#
+_root_.com.javacp.Javacp#primitiveParams(Int,Long,Float,Double,Short,Byte,Boolean,Char).(arg7) => param arg7: Char
+  Char => _root_.scala.Char#
+_root_.com.javacp.Javacp#privateField. => private var privateField: Int
+  Int => _root_.scala.Int#
+_root_.com.javacp.Javacp#privateMethod(). => private def privateMethod: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#protectedField. => protected var protectedField: Int
+  Int => _root_.scala.Int#
+_root_.com.javacp.Javacp#protectedMethod(). => protected def protectedMethod: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#publicField. => var publicField: Int
+  Int => _root_.scala.Int#
+_root_.com.javacp.Javacp#publicMethod(). => def publicMethod: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#typeParams(ArrayList,Hashtable). => private[javacp] def typeParams: (arg0: ArrayList[HashMap[A[Array[String]]]], arg1: Hashtable[String, B]): Unit
+  arg0 => _root_.com.javacp.Javacp#typeParams(ArrayList,Hashtable).(arg0)
+  arg1 => _root_.com.javacp.Javacp#typeParams(ArrayList,Hashtable).(arg1)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#typeParams(ArrayList,Hashtable).(arg0) => param arg0: ArrayList[HashMap[A[Array[String]]]]
+  ArrayList => _root_.java.util.ArrayList#
+  HashMap => _root_.java.util.HashMap#
+  A => _root_.com.javacp.Javacp#[A]
+  Array => _root_.scala.Array#
+  String => _root_.java.lang.String#
+_root_.com.javacp.Javacp#typeParams(ArrayList,Hashtable).(arg1) => param arg1: Hashtable[String, B]
+  Hashtable => _root_.java.util.Hashtable#
+  String => _root_.java.lang.String#
+  B => _root_.com.javacp.Javacp#[B]
 
 example/A.class
 ---------------

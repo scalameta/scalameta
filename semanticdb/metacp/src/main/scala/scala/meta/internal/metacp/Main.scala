@@ -71,7 +71,6 @@ object Main {
               }
             } else {
               val infos = Javacp.process(root.toNIO, file, scopes).symbols
-              pprint.log(infos)
               Some(infos)
             }
             semanticdbInfos.foreach { infos =>
@@ -94,6 +93,7 @@ object Main {
         }
 
         override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          scopes.clear()
           val files = Files.list(dir).sorted(Comparator.reverseOrder())
           import scala.collection.JavaConverters._
           files
