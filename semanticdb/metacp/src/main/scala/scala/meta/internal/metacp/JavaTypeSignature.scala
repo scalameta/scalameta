@@ -37,14 +37,16 @@ object JavaTypeSignature {
   object ReferenceTypeSignature {
     case class ClassTypeSignature(
         packageSpecifier: Option[PackageSpecifier],
-        simpleClassTypeSignature: SimpleClassTypeSignature)
-        extends ReferenceTypeSignature
+        simpleClassTypeSignature: SimpleClassTypeSignature,
+        classTypeSignatureSuffix: List[ClassTypeSignatureSuffix]
+    ) extends ReferenceTypeSignature
         with SuperclassSignature
         with SuperinterfaceSignature
         with ThrowsSignature {
       override def print(sb: StringBuilder): Unit = {
         sb.append('L')
         simpleClassTypeSignature.print(sb)
+        classTypeSignatureSuffix.foreach(_.print(sb))
         sb.append(';')
       }
     }
@@ -113,7 +115,12 @@ object JavaTypeSignature {
       // star here makes it easier to implement TypeArgumentVisitor.
       case object Star extends WildcardIndicator('*')
     }
-    case class ClassTypeSignatureSuffix(simpleClassTypeSignature: SimpleClassTypeSignature)
+    case class ClassTypeSignatureSuffix(simpleClassTypeSignature: SimpleClassTypeSignature) extends Pretty {
+      override def print(sb: StringBuilder): Unit = {
+        sb.append('.')
+        simpleClassTypeSignature.print(sb)
+      }
+    }
   }
 
   import ReferenceTypeSignature._
