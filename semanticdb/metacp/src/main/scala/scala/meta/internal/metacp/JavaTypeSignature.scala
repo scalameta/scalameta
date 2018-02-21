@@ -27,6 +27,10 @@ object JavaTypeSignature {
     case object J extends BaseType("Long")
     case object S extends BaseType("Short")
     case object Z extends BaseType("Boolean")
+
+    // NOTE(olafur) the void descriptor is stricly not part of BaseType
+    // but having it here simplifies things.
+    case object V extends BaseType("Unit")
   }
 
   sealed trait ReferenceTypeSignature extends JavaTypeSignature with FieldSignature

@@ -4,10 +4,13 @@ import java.util.NoSuchElementException
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
+import scala.meta.internal.metacp.JavaTypeSignature
+import scala.meta.internal.metacp.JavaTypeSignature.BaseType
 import scala.meta.internal.metacp.JavaTypeSignature.ClassBound
 import scala.meta.internal.metacp.JavaTypeSignature.ClassSignature
 import scala.meta.internal.metacp.JavaTypeSignature.InterfaceBound
 import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature
+import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.ArrayTypeSignature
 import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.ClassTypeSignature
 import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.ReferenceTypeArgument
 import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.SimpleClassTypeSignature
@@ -20,6 +23,7 @@ import scala.meta.internal.metacp.JavaTypeSignature.SuperclassSignature
 import scala.meta.internal.metacp.JavaTypeSignature.SuperinterfaceSignature
 import scala.meta.internal.metacp.JavaTypeSignature.TypeParameter
 import scala.meta.internal.metacp.JavaTypeSignature.TypeParameters
+import scala.meta.internal.metacp.JavaTypeSignature.VoidDescriptor
 //import scala.meta.internal.metacp.Javacp.SignatureMode
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
@@ -52,34 +56,83 @@ class TypeArgumentVisitor extends SignatureVisitor(o.ASM5) {
   }
 }
 
+class JavaTypeSignatureVisitor(isArray: Boolean) extends SignatureVisitor(o.ASM5) {
+  private var baseType: BaseType = _
+  private var referenceTypeSignature: ReferenceTypeSignatureVisitor = _
+
+  def result(): JavaTypeSignature = {
+    val obtained =
+      if (baseType == null) referenceTypeSignature.result()
+      else baseType
+    if (isArray) ArrayTypeSignature(obtained)
+    else obtained
+  }
+
+  override def visitBaseType(descriptor: Char): Unit = {
+    import BaseType._
+    baseType = descriptor match {
+      case 'V' => V
+      case 'B' => B
+      case 'J' => J
+      case 'Z' => Z
+      case 'I' => I
+      case 'S' => S
+      case 'C' => C
+      case 'F' => F
+      case 'D' => D
+      case _ => throw new IllegalArgumentException(s"Invalid base descriptor '$descriptor'")
+    }
+  }
+
+}
+
 class ReferenceTypeSignatureVisitor extends SignatureVisitor(o.ASM5) {
   private var referenceTypeSignature = Option.empty[ReferenceTypeSignature]
+  private var arrayTypeSignatureVisitor: JavaTypeSignatureVisitor = _
+  private var isArray = false
   private val typeArguments = List.newBuilder[TypeArgumentVisitor]
   def classTypeSignature(): ClassTypeSignature = result().asInstanceOf[ClassTypeSignature]
   def result(): ReferenceTypeSignature = resultOption().get
   def resultOption(): Option[ReferenceTypeSignature] = {
-    referenceTypeSignature.map {
-      case c: ClassTypeSignature =>
-        val targs = typeArguments.result()
-        targs match {
-          case Nil => c
-          case head :: tail =>
-            val rest = tail.map(_.result())
-//            pprint.log(rest)
-            ClassTypeSignature(
-              None,
-              SimpleClassTypeSignature(
-                c.simpleClassTypeSignature.identifier,
-                Some(TypeArguments(head.result(), rest))
+    if (arrayTypeSignatureVisitor != null) {
+      arrayTypeSignatureVisitor.result() match {
+        case r: ReferenceTypeSignature => Some(r)
+        case baseType =>
+          throw new IllegalArgumentException(s"Expected Reference Type, obtained $baseType")
+      }
+    } else {
+      referenceTypeSignature.map {
+        case c: ClassTypeSignature =>
+          val targs = typeArguments.result()
+          targs match {
+            case Nil => c
+            case head :: tail =>
+              val rest = tail.map(_.result())
+              //            pprint.log(rest)
+              ClassTypeSignature(
+                None,
+                SimpleClassTypeSignature(
+                  c.simpleClassTypeSignature.identifier,
+                  Some(TypeArguments(head.result(), rest))
+                )
               )
-            )
-        }
-      case t => t
+          }
+        case t => t
+      }
     }
   }
 
+  override def visitArrayType(): SignatureVisitor = {
+    val visitor = new JavaTypeSignatureVisitor(isArray = true)
+    arrayTypeSignatureVisitor = visitor
+    visitor
+  }
+
+  override def visitBaseType(descriptor: Char): Unit = {
+    ???
+  }
+
   override def visitClassType(name: String): Unit = {
-//    pprint.log(name)
     referenceTypeSignature = Some(
       ClassTypeSignature(
         None,
