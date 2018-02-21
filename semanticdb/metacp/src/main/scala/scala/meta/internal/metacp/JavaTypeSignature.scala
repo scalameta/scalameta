@@ -135,9 +135,7 @@ object JavaTypeSignature {
     override def print(sb: StringBuilder): Unit = {
       typeParameters match {
         case Some(tp: TypeParameters) =>
-          sb.append('<')
           tp.print(sb)
-          sb.append('>')
         case _ =>
       }
       superclassSignature.print(sb)
@@ -147,8 +145,10 @@ object JavaTypeSignature {
   case class TypeParameters(typeParameter: TypeParameter, tail: List[TypeParameter])
       extends Pretty {
     override def print(sb: StringBuilder): Unit = {
+      sb.append('<')
       typeParameter.print(sb)
       tail.foreach(_.print(sb))
+      sb.append('>')
     }
   }
   case class TypeParameter(
@@ -190,22 +190,16 @@ object JavaTypeSignature {
     override def print(sb: StringBuilder): Unit = {
       typeParameters match {
         case Some(tp: TypeParameters) =>
-          sb.append('[')
           tp.print(sb)
-          sb.append(']')
         case _ =>
       }
       sb.append('(')
       params.foreach { param =>
-        sb.append('{')
         param.print(sb)
-        sb.append('}')
       }
       sb.append(')')
       result.print(sb)
-      sb.append('{')
       throws.foreach(_.print(sb))
-      sb.append('}')
 
     }
   }
