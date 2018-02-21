@@ -44,6 +44,18 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
   val scalameta = Coordinates("org.scalameta", "scalameta_2.12", "3.2.0")
   val akka = Coordinates("com.typesafe.akka", "akka-testkit_2.12", "2.5.9")
   val spark = Coordinates("org.apache.spark", "spark-sql_2.11", "2.2.1")
+  val kafka = Coordinates("org.apache.kafka", "kafka_2.12", "1.0.0")
+  val flink = Coordinates("org.apache.flink", "flink-parent", "1.4.1")
+  val grpc = Coordinates("io.grpc", "grpc-all", "1.10.0")
+
+  val allLibraries = List(
+    scalameta,
+    akka,
+    spark,
+    kafka,
+    flink,
+    grpc
+  )
 
 }
 

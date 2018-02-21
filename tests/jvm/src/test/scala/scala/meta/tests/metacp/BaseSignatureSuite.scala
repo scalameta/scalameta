@@ -41,10 +41,14 @@ abstract class BaseSignatureSuite extends BaseMetacpSuite {
           }
         }
       }
-      Files.write(
-        java.nio.file.Paths.get("signatures.txt"),
-        failingSignatures.mkString("\n").getBytes(StandardCharsets.UTF_8)
-      )
+
+      if (failingSignatures.nonEmpty) {
+        Files.write(
+          java.nio.file.Paths.get("signatures.txt"),
+          failingSignatures.mkString("\n").getBytes(StandardCharsets.UTF_8)
+        )
+        fail("failures! See signatures.txt")
+      }
     }
   }
 }

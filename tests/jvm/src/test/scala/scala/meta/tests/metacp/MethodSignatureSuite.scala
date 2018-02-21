@@ -38,7 +38,10 @@ class MethodSignatureSuite extends BaseSignatureSuite {
     )
   }
 
-  checkMethodSignatureLibrary(scalameta)
-  checkMethodSignatureLibrary(akka)
-  checkMethodSignatureLibrary(spark)
+  allLibraries.foreach(checkMethodSignatureLibrary)
+
+//  checkMethodSignatureLibrary(scalameta)
+//  checkMethodSignatureLibrary(akka)
+  //  checkMethodSignatureLibrary(spark)
+//  checkMethodSignatureLibrary(kafka)
 }

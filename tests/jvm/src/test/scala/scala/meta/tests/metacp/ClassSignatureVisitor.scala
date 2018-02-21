@@ -163,7 +163,7 @@ class JavaTypeSignatureVisitor(isArray: Boolean)
     extends SignatureVisitor(o.ASM5)
     with FailingSignatureVisitor {
   private var baseType: BaseType = _
-  private var referenceTypeSignature: ReferenceTypeSignatureVisitor =
+  private val referenceTypeSignature: ReferenceTypeSignatureVisitor =
     new ReferenceTypeSignatureVisitor
 
   def result(): JavaTypeSignature = {
@@ -174,9 +174,6 @@ class JavaTypeSignatureVisitor(isArray: Boolean)
     else obtained
   }
 
-  override def visitFormalTypeParameter(name: String): Unit = {
-    referenceTypeSignature.visitFormalTypeParameter(name)
-  }
 
   override def visitArrayType: SignatureVisitor = {
     referenceTypeSignature.visitArrayType()
@@ -410,7 +407,7 @@ class ClassSignatureVisitor
     extends SignatureVisitor(o.ASM5)
     with FailingSignatureVisitor
     with TypeParametersVisitor {
-  private var superclassSignature = new ReferenceTypeSignatureVisitor
+  private val superclassSignature = new ReferenceTypeSignatureVisitor
   private val superinterfaceSignatures = List.newBuilder[ReferenceTypeSignatureVisitor]
 
   def result(): ClassSignature = {

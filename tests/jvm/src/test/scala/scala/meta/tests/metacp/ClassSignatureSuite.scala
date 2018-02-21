@@ -37,8 +37,10 @@ class ClassSignatureSuite extends BaseSignatureSuite {
     )
   }
 
-  checkClassSignatureLibrary(scalameta)
-  checkClassSignatureLibrary(akka)
-  checkClassSignatureLibrary(spark)
+  allLibraries.foreach(checkClassSignatureLibrary)
+//  checkClassSignatureLibrary(scalameta)
+//  checkClassSignatureLibrary(akka)
+//  checkClassSignatureLibrary(spark)
+//  checkClassSignatureLibrary(kafka)
 
 }
