@@ -115,7 +115,8 @@ object JavaTypeSignature {
       // star here makes it easier to implement TypeArgumentVisitor.
       case object Star extends WildcardIndicator('*')
     }
-    case class ClassTypeSignatureSuffix(simpleClassTypeSignature: SimpleClassTypeSignature) extends Pretty {
+    case class ClassTypeSignatureSuffix(simpleClassTypeSignature: SimpleClassTypeSignature)
+        extends Pretty {
       override def print(sb: StringBuilder): Unit = {
         sb.append('.')
         simpleClassTypeSignature.print(sb)
@@ -184,12 +185,52 @@ object JavaTypeSignature {
       typeParameters: Option[TypeParameters],
       params: List[JavaTypeSignature],
       result: Result,
-      throws: List[Either[ClassTypeSignature, TypeVariableSignature]])
-  sealed trait Result
-  sealed trait ThrowsSignature
+      throws: List[ThrowsSignature])
+      extends Pretty {
+    override def print(sb: StringBuilder): Unit = {
+      typeParameters match {
+        case Some(tp: TypeParameters) =>
+          sb.append('[')
+          tp.print(sb)
+          sb.append(']')
+        case _ =>
+      }
+      sb.append('(')
+      params.foreach { param =>
+        sb.append('{')
+        param.print(sb)
+        sb.append('}')
+      }
+      sb.append(')')
+      result.print(sb)
+      sb.append('{')
+      throws.foreach(_.print(sb))
+      sb.append('}')
+
+    }
+  }
+
+  trait ThrowsSignature extends Pretty
+  object ThrowsSignature {
+    case class ClassType(classTypeSignature: ClassTypeSignature) extends ThrowsSignature {
+      override def print(sb: StringBuilder): Unit = {
+        sb.append('^')
+        classTypeSignature.print(sb)
+      }
+    }
+    case class TypeVariable(typeVariableSignature: TypeVariableSignature) extends ThrowsSignature {
+      override def print(sb: StringBuilder): Unit = {
+        sb.append('^')
+        typeVariableSignature.print(sb)
+      }
+    }
+  }
+  sealed trait Result extends Pretty
 
   // void descriptor
-  case object VoidDescriptor extends Result
+  case object VoidDescriptor extends Result {
+    override def print(sb: StringBuilder): Unit = sb.append('V')
+  }
 
   // field signature
   trait FieldSignature

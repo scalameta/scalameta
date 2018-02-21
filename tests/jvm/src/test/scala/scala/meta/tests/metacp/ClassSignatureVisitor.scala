@@ -5,26 +5,9 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.metacp.JavaTypeSignature
-import scala.meta.internal.metacp.JavaTypeSignature.BaseType
-import scala.meta.internal.metacp.JavaTypeSignature.ClassBound
-import scala.meta.internal.metacp.JavaTypeSignature.ClassSignature
-import scala.meta.internal.metacp.JavaTypeSignature.InterfaceBound
+import scala.meta.internal.metacp.JavaTypeSignature._
 import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.ArrayTypeSignature
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.ClassTypeSignature
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.ClassTypeSignatureSuffix
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.ReferenceTypeArgument
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.SimpleClassTypeSignature
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.TypeArgument
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.TypeArguments
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.TypeVariableSignature
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.WildcardIndicator
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature.WildcardTypeArgument
-import scala.meta.internal.metacp.JavaTypeSignature.SuperclassSignature
-import scala.meta.internal.metacp.JavaTypeSignature.SuperinterfaceSignature
-import scala.meta.internal.metacp.JavaTypeSignature.TypeParameter
-import scala.meta.internal.metacp.JavaTypeSignature.TypeParameters
-import scala.meta.internal.metacp.JavaTypeSignature.VoidDescriptor
+import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature._
 //import scala.meta.internal.metacp.Javacp.SignatureMode
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
@@ -180,7 +163,8 @@ class JavaTypeSignatureVisitor(isArray: Boolean)
     extends SignatureVisitor(o.ASM5)
     with FailingSignatureVisitor {
   private var baseType: BaseType = _
-  private var referenceTypeSignature: ReferenceTypeSignatureVisitor = new ReferenceTypeSignatureVisitor
+  private var referenceTypeSignature: ReferenceTypeSignatureVisitor =
+    new ReferenceTypeSignatureVisitor
 
   def result(): JavaTypeSignature = {
     val obtained =
@@ -357,6 +341,64 @@ class TypeParameterVisitor(identifier: String)
 
 }
 
+class MethodSignatureVisitor extends SignatureVisitor(o.ASM5) with FailingSignatureVisitor {
+  val typeParameters = List.newBuilder[TypeParameterVisitor]
+  private var lastTypeParameterVisitor: TypeParameterVisitor = _
+  val params = List.newBuilder[JavaTypeSignatureVisitor]
+  val returnType = new JavaTypeSignatureVisitor(false)
+  val throws = List.newBuilder[ReferenceTypeSignatureVisitor]
+
+  def result(): MethodSignature = {
+    val tparams = typeParameters.result() match {
+      case Nil => None
+      case head :: tail =>
+        Some(TypeParameters(head.result(), tail.map(_.result())))
+    }
+    MethodSignature(
+      tparams,
+      params.result().map(_.result()),
+      returnType.result(),
+      throws.result().map(_.result()).map {
+        case cts: ClassTypeSignature => ThrowsSignature.ClassType(cts)
+        case tvs: TypeVariableSignature => ThrowsSignature.TypeVariable(tvs)
+        case els => throw new IllegalArgumentException(s"Expected ThrowsSignature, obtained $els")
+      }
+    )
+  }
+
+  override def visitFormalTypeParameter(name: String): Unit = {
+    val visitor = new TypeParameterVisitor(name)
+    typeParameters += visitor
+    lastTypeParameterVisitor = visitor
+  }
+
+  override def visitClassBound(): SignatureVisitor = {
+    //    pprint.log("classbound")
+    lastTypeParameterVisitor.visitClassBound()
+  }
+
+  override def visitInterfaceBound(): SignatureVisitor = {
+    //    pprint.log("interfaceBound")
+    lastTypeParameterVisitor.visitInterfaceBound()
+  }
+
+  override def visitParameterType: SignatureVisitor = {
+    val visitor = new JavaTypeSignatureVisitor(false)
+    params += visitor
+    visitor
+  }
+
+  override def visitReturnType: SignatureVisitor = {
+    returnType
+  }
+
+  override def visitExceptionType: SignatureVisitor = {
+    val visitor = new ReferenceTypeSignatureVisitor
+    throws += visitor
+    visitor
+  }
+
+}
 class ClassSignatureVisitor extends SignatureVisitor(o.ASM5) with FailingSignatureVisitor {
   private var typeParameters = List.newBuilder[TypeParameterVisitor]
   private var lastTypeParameterVisitor: TypeParameterVisitor = _

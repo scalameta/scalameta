@@ -11,6 +11,7 @@ import scala.meta.internal.metacp.Javacp
 import scala.meta.internal.metacp.Main
 import scala.meta.internal.metacp.Settings
 import scala.meta.tests.cli.BaseCliSuite
+import scala.tools.asm.tree.ClassNode
 import scala.util.control.NonFatal
 import org.langmeta.internal.io.PathIO
 import org.langmeta.io.Classpath
@@ -37,6 +38,33 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
   }
 
   def checkClassSignature(name: String, classpath: () => String): Unit = {
+    checkSignatureCallback(name, classpath) { node: ClassNode =>
+      List(
+        (node.signature, { () =>
+          if (node.signature != null) {
+            ClassSignatureSuite.assertRoundtrip(node.signature)
+          }
+        })
+      )
+    }
+  }
+
+  def checkMethodSignature(name: String, classpath: () => String): Unit = {
+    checkSignatureCallback(name, classpath) { node: ClassNode =>
+      import scala.collection.JavaConverters._
+      import scala.tools.asm.tree.MethodNode
+      node.methods.asScala.iterator.map { method: MethodNode =>
+        val signature = if (method.signature == null) method.desc else method.signature
+        (signature, { () =>
+          ClassSignatureSuite.assertMethodRoundtrip(signature)
+        })
+      }.toList
+    }
+  }
+
+  def checkSignatureCallback(name: String, classpath: () => String)(
+      callback: ClassNode => List[(String, () => Unit)]
+  ): Unit = {
     test(name) {
       val failingSignatures = ArrayBuffer.empty[String]
       Classpath(classpath()).visit { root =>
@@ -45,14 +73,16 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
             if (PathIO.extension(file) == "class") {
               val bytes = Files.readAllBytes(file)
               val node = Javacp.asmNodeFromBytes(bytes)
-              try {
-                if (node.signature != null) {
-                  ClassSignatureSuite.assertRoundtrip(node.signature)
-                }
-              } catch {
-                case NonFatal(e) =>
-                  println(node.signature)
-                  failingSignatures += node.signature
+              val tests = callback(node)
+              tests.foreach {
+                case (signature, unsafe) =>
+                  try {
+                    unsafe()
+                  } catch {
+                    case NonFatal(e) =>
+                      println(signature)
+                      failingSignatures += signature
+                  }
               }
             }
             FileVisitResult.CONTINUE
@@ -89,6 +119,13 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
 
   def checkClassSignatureLibrary(coordinates: Coordinates): Unit = {
     checkClassSignature(
+      coordinates.name,
+      coordinates.classpath
+    )
+  }
+
+  def checkMethodSignatureLibrary(coordinates: Coordinates): Unit = {
+    checkMethodSignature(
       coordinates.name,
       coordinates.classpath
     )
