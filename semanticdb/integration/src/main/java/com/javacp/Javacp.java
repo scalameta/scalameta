@@ -72,4 +72,7 @@ public class Javacp<A extends CharSequence, B> extends ArrayList<A> implements C
     void packagePrivateMethod() {
     }
 
+    public Serializable anon = new Serializable() {
+    };
+
 }

@@ -6,10 +6,12 @@ import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Locale.LanguageRange
+import java.util.NoSuchElementException
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
+import scala.meta.internal.metacp.JavaTypeSignature.ClassSignature
 import scala.meta.internal.metacp.Javacp.SignatureMode.Start
 import scala.meta.internal.metacp.Javacp.SignatureMode.SuperClass
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
@@ -93,10 +95,11 @@ object Javacp {
       declaration.formalTypeParameters.map { tparam: JType =>
         val tparamName = tparam.name
         val tparamSymbol = tparam.symbol
+        pprint.log(tparamSymbol)
+//        pprint.log(tparam.classBound.map(_.toType(ownerSymbol, scopes).toProtoString))
         val tparamTpe = s.Type(
           s.Type.Tag.TYPE_TYPE,
-          typeType = Some(
-            s.TypeType(Nil, upperBound = tparam.interfaceBound.map(_.toType(ownerSymbol, scopes)))))
+          typeType = Some(s.TypeType(Nil, upperBound = tparam.upperBound(ownerSymbol, scopes))))
         buf += s.SymbolInformation(
           tparamSymbol,
           kind = k.TYPE_PARAMETER,
@@ -259,6 +262,19 @@ object Javacp {
           case None => decl.interfaceTypes(classSymbol, scopes)
         }
     }
+//    def classSignatureToClassInfo(classSignature: ClassSignature, decls: Seq[String]): s.Type = {
+//      s.Type(
+//        tag = s.Type.Tag.CLASS_INFO_TYPE,
+//        classInfoType = Some(
+//          s.ClassInfoType(
+//            typeParameters = tparams,
+//            parents = parents,
+//            declarations = decls
+//          )
+//        )
+//      )
+//    }
+
     val classTpe = s.Type(
       tag = s.Type.Tag.CLASS_INFO_TYPE,
       classInfoType = Some(
@@ -329,6 +345,9 @@ object Javacp {
       else sys.error("Null pointer exception!! " + name)
     val signatureReader = new SignatureReader(toParse)
     val v = new SemanticdbSignatureVisitor
+    if (toParse.contains("Recursive")) {
+      pprint.log(toParse)
+    }
     signatureReader.accept(v)
     // HACK(olafur) Fields have signature like "I" that trigger visitSuperClass,
     // which causes the mode to be SuperClass instead of Start (which I expected)
@@ -357,21 +376,49 @@ object Javacp {
       var symbol: String,
       var name: String,
       val args: ListBuffer[JType],
-      var interfaceBound: Option[JType]
+      var classBound: Option[JType],
+      val interfaceBound: ListBuffer[JType]
   ) {
+    def upperBound(ownerSymbol: String, scopes: Scopes): Option[s.Type] =
+      if (classBound.isEmpty && interfaceBound.isEmpty) None
+      else {
+        val interfaceBounds = this.interfaceBound.map(_.toType(ownerSymbol, scopes))
+//        if (interfaceBounds.nonEmpty)
+//        pprint.log(interfaceBounds.map(_.toProtoString))
+        val parents = this.classBound match {
+          case Some(cb: JType) => cb.toType(ownerSymbol, scopes) +: interfaceBounds
+          case None => interfaceBounds
+        }
+        Some(
+          s.Type(
+            s.Type.Tag.STRUCTURAL_TYPE,
+            structuralType = Some(
+              s.StructuralType(
+                parents = parents
+              ))
+          )
+        )
+
+      }
     def setPrimitive(name: String): Unit = {
       this.symbol = s"_root_.scala.$name#"
       this.name = name
     }
 
     def setSymbol(newSymbol: String): Unit = {
-      symbol = ssym(newSymbol)
-      name = getName(newSymbol)
+      this.symbol = ssym(newSymbol)
+      this.name = getName(newSymbol)
     }
 
     def toType(owner: String, scopes: Scopes): s.Type = {
       if (isTypeVariable) {
-        this.symbol = scopes.resolve(name, owner)
+//        pprint.log(this)
+        try {
+          this.symbol = scopes.resolve(name, owner)
+        } catch {
+          case e: NoSuchElementException =>
+            throw new IllegalArgumentException(s"Failed to resolve name $name in owner $owner", e)
+        }
       }
       val tpe = ref(symbol, args.iterator.map(_.toType(owner, scopes)).toList)
       if (isArray) array(tpe)
@@ -394,7 +441,7 @@ object Javacp {
     var owners = List.empty[JType]
     val interfaceTypes = ListBuffer.empty[JType]
     var superClassType = Option.empty[JType]
-    def newTpe = new JType(false, false, "", "", ListBuffer.empty[JType], None)
+    def newTpe = new JType(false, false, "", "", ListBuffer.empty[JType], None, ListBuffer.empty)
     var tpe: JType = newTpe
     var mode: SignatureMode = Start
 
@@ -406,50 +453,58 @@ object Javacp {
       }
 
     override def visitParameterType(): SignatureVisitor = {
-//      pprint.log("Parameter type")
+      pprint.log("Parameter type")
       mode = ParameterType
       tpe = newTpe
       parameterTypes += tpe
+      startType()
       this
     }
 
     override def visitClassType(name: String): Unit = {
-//      pprint.log(name)
+      pprint.log(name)
       tpe.setSymbol(name)
     }
 
     override def visitFormalTypeParameter(name: String): Unit = {
-//      pprint.log(name)
+      pprint.log(name)
       mode = FormalType
       formalTypeParameters += newTpe
       formalTypeParameters.last.name = name
     }
 
     override def visitTypeArgument(wildcard: Char): SignatureVisitor = {
-//      pprint.log(wildcard)
+      pprint.log(mode)
+      pprint.log(wildcard)
+      pprint.log(tpe)
       val arg = newTpe
+      require(tpe.name.nonEmpty, "tpe.name was empty!")
       tpe.args += arg
-      startType()
+      owners = tpe :: owners
       tpe = arg
       this
     }
 
-    def startType(): Unit = {
-      owners = tpe :: owners
-    }
-
     override def visitArrayType(): SignatureVisitor = {
       tpe.isArray = true
+      startType()
       this
     }
 
     override def visitTypeArgument(): Unit = {
-//      pprint.log("Type Argument")
+      pprint.log("Type Argument")
+      startType()
+      ???
     }
 
     override def visitEnd(): Unit = {
-//      pprint.log("END")
-      endType()
+      pprint.log("END")
+      pprint.log(owners)
+//      endType()
+      if (owners.nonEmpty) {
+        tpe = owners.head
+        owners = owners.tail
+      }
       mode match {
         case Interface =>
           interfaceTypes += tpe
@@ -458,43 +513,48 @@ object Javacp {
         case ReturnType =>
           myReturnType = Some(tpe)
         case InterfaceBound =>
-          formalTypeParameters.last.interfaceBound = Some(tpe)
+          pprint.log(tpe)
+          formalTypeParameters.last.interfaceBound += tpe
+          tpe = newTpe
+        case ClassBound =>
+          formalTypeParameters.last.classBound = Some(tpe)
           tpe = newTpe
         case _ =>
       }
+//      tpe = newTpe
     }
 
-    def endType(): Unit = {
-      if (owners.nonEmpty) {
-        tpe = owners.head
-        owners = owners.tail
-      }
-    }
+    def startType(): Unit = {}
+
+    def endType(): Unit = {}
 
     override def visitTypeVariable(name: String): Unit = {
-//      pprint.log(name)
+      pprint.log(name)
       tpe.isTypeVariable = true
       tpe.name = name
+      endType()
     }
 
     override def visitExceptionType(): SignatureVisitor = {
-//      pprint.log("exceptionType")
+      pprint.log("exceptionType")
+      ???
       this
     }
 
     def setMode(mode: SignatureMode): Unit = {
       this.mode = mode
       tpe = newTpe
+      startType()
     }
 
     override def visitSuperclass(): SignatureVisitor = {
-//      pprint.log("superClass")
+      pprint.log("superClass")
       setMode(SuperClass)
       this
     }
 
     override def visitInterface(): SignatureVisitor = {
-//      pprint.log("Interface")
+      pprint.log("Interface")
       setMode(Interface)
       this
     }
@@ -506,16 +566,18 @@ object Javacp {
 
     override def visitInterfaceBound(): SignatureVisitor = {
       setMode(InterfaceBound)
-//      pprint.log("interface bound")
+      pprint.log("interface bound")
       this
     }
 
     override def visitInnerClassType(name: String): Unit = {
-//      pprint.log(name)
+      pprint.log(name)
+      ???
     }
 
     override def visitClassBound(): SignatureVisitor = {
-//      pprint.log("classBound")
+      pprint.log("classBound")
+      setMode(ClassBound)
       this
     }
 
@@ -533,6 +595,7 @@ object Javacp {
         case 'D' => tpe.setPrimitive("Double")
         case _ => sys.error(descriptor.toString)
       }
+      endType()
     }
 
   }
@@ -581,6 +644,7 @@ object Javacp {
     case object FormalType extends SignatureMode
     case object ReturnType extends SignatureMode
     case object InterfaceBound extends SignatureMode
+    case object ClassBound extends SignatureMode
 
   }
 }
