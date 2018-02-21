@@ -338,7 +338,6 @@ class TypeParameterVisitor(identifier: String)
     interfaceBounds += visitor
     visitor
   }
-
 }
 
 class MethodSignatureVisitor extends SignatureVisitor(o.ASM5) with FailingSignatureVisitor {
