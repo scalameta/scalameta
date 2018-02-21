@@ -340,19 +340,16 @@ class TypeParameterVisitor(identifier: String)
   }
 }
 
-class MethodSignatureVisitor extends SignatureVisitor(o.ASM5) with FailingSignatureVisitor {
-  val typeParameters = List.newBuilder[TypeParameterVisitor]
-  private var lastTypeParameterVisitor: TypeParameterVisitor = _
+class MethodSignatureVisitor
+    extends SignatureVisitor(o.ASM5)
+    with FailingSignatureVisitor
+    with TypeParametersVisitor {
   val params = List.newBuilder[JavaTypeSignatureVisitor]
   val returnType = new JavaTypeSignatureVisitor(false)
   val throws = List.newBuilder[ReferenceTypeSignatureVisitor]
 
   def result(): MethodSignature = {
-    val tparams = typeParameters.result() match {
-      case Nil => None
-      case head :: tail =>
-        Some(TypeParameters(head.result(), tail.map(_.result())))
-    }
+    val tparams = super.typeParametersResult()
     MethodSignature(
       tparams,
       params.result().map(_.result()),
@@ -363,22 +360,6 @@ class MethodSignatureVisitor extends SignatureVisitor(o.ASM5) with FailingSignat
         case els => throw new IllegalArgumentException(s"Expected ThrowsSignature, obtained $els")
       }
     )
-  }
-
-  override def visitFormalTypeParameter(name: String): Unit = {
-    val visitor = new TypeParameterVisitor(name)
-    typeParameters += visitor
-    lastTypeParameterVisitor = visitor
-  }
-
-  override def visitClassBound(): SignatureVisitor = {
-    //    pprint.log("classbound")
-    lastTypeParameterVisitor.visitClassBound()
-  }
-
-  override def visitInterfaceBound(): SignatureVisitor = {
-    //    pprint.log("interfaceBound")
-    lastTypeParameterVisitor.visitInterfaceBound()
   }
 
   override def visitParameterType: SignatureVisitor = {
@@ -398,18 +379,42 @@ class MethodSignatureVisitor extends SignatureVisitor(o.ASM5) with FailingSignat
   }
 
 }
-class ClassSignatureVisitor extends SignatureVisitor(o.ASM5) with FailingSignatureVisitor {
+
+trait TypeParametersVisitor { this: SignatureVisitor =>
   private var typeParameters = List.newBuilder[TypeParameterVisitor]
   private var lastTypeParameterVisitor: TypeParameterVisitor = _
+
+  def typeParametersResult(): Option[TypeParameters] = typeParameters.result() match {
+    case Nil => None
+    case head :: tail =>
+      Some(TypeParameters(head.result(), tail.map(_.result())))
+  }
+  override def visitFormalTypeParameter(name: String): Unit = {
+    val visitor = new TypeParameterVisitor(name)
+    typeParameters += visitor
+    lastTypeParameterVisitor = visitor
+  }
+
+  override def visitClassBound(): SignatureVisitor = {
+    //    pprint.log("classbound")
+    lastTypeParameterVisitor.visitClassBound()
+  }
+
+  override def visitInterfaceBound(): SignatureVisitor = {
+    //    pprint.log("interfaceBound")
+    lastTypeParameterVisitor.visitInterfaceBound()
+  }
+}
+
+class ClassSignatureVisitor
+    extends SignatureVisitor(o.ASM5)
+    with FailingSignatureVisitor
+    with TypeParametersVisitor {
   private var superclassSignature = new ReferenceTypeSignatureVisitor
   private val superinterfaceSignatures = List.newBuilder[ReferenceTypeSignatureVisitor]
 
   def result(): ClassSignature = {
-    val tparams = typeParameters.result() match {
-      case Nil => None
-      case head :: tail =>
-        Some(TypeParameters(head.result(), tail.map(_.result())))
-    }
+    val tparams = super.typeParametersResult()
     val superclass = superclassSignature.classTypeSignature()
     val interfaces = superinterfaceSignatures.result().map(_.classTypeSignature())
 //    pprint.log(superclass)
@@ -419,24 +424,7 @@ class ClassSignatureVisitor extends SignatureVisitor(o.ASM5) with FailingSignatu
 
 //  var mode: SignatureMode = Start
 
-  override def visitFormalTypeParameter(name: String): Unit = {
-    val visitor = new TypeParameterVisitor(name)
-    typeParameters += visitor
-    lastTypeParameterVisitor = visitor
-  }
-
-  override def visitClassBound(): SignatureVisitor = {
-//    pprint.log("classbound")
-    lastTypeParameterVisitor.visitClassBound()
-  }
-
-  override def visitInterfaceBound(): SignatureVisitor = {
-//    pprint.log("interfaceBound")
-    lastTypeParameterVisitor.visitInterfaceBound()
-  }
-
   override def visitSuperclass(): SignatureVisitor = {
-//    pprint.log("superclass")
     superclassSignature
   }
 
@@ -445,10 +433,6 @@ class ClassSignatureVisitor extends SignatureVisitor(o.ASM5) with FailingSignatu
     val visitor = new ReferenceTypeSignatureVisitor
     superinterfaceSignatures += visitor
     visitor
-  }
-
-  override def visitEnd(): Unit = {
-//    pprint.log("END")
   }
 
 }
