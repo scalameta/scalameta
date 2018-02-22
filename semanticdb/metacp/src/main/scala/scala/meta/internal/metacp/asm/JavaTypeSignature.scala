@@ -6,10 +6,7 @@ import scala.tools.asm.signature.SignatureReader
   *
   * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
   */
-sealed trait JavaTypeSignature
-    extends JavaTypeSignature.Result
-    with JavaTypeSignature.FieldSignature
-    with Pretty
+sealed trait JavaTypeSignature extends JavaTypeSignature.FieldSignature with Pretty
 object JavaTypeSignature {
   final def parse[T](signature: String, visitor: TypedSignatureVisitor[T]): T = {
     val signatureReader = new SignatureReader(signature)
@@ -17,7 +14,7 @@ object JavaTypeSignature {
     visitor.result()
   }
 
-  abstract class BaseType(name: String) extends JavaTypeSignature with Product {
+  abstract class BaseType(val name: String) extends JavaTypeSignature with Product {
     final override def print(sb: StringBuilder): Unit =
       sb.append(this.productPrefix)
   }
@@ -43,8 +40,6 @@ object JavaTypeSignature {
         simpleClassTypeSignature: SimpleClassTypeSignature,
         classTypeSignatureSuffix: List[ClassTypeSignatureSuffix]
     ) extends ReferenceTypeSignature
-        with SuperclassSignature
-        with SuperinterfaceSignature
         with ThrowsSignature {
       override def print(sb: StringBuilder): Unit = {
         sb.append('L')
@@ -55,7 +50,6 @@ object JavaTypeSignature {
     }
     case class TypeVariableSignature(identifier: String)
         extends ReferenceTypeSignature
-        with SuperclassSignature
         with ThrowsSignature {
       override def print(sb: StringBuilder): Unit = {
         sb.append('T')
@@ -133,9 +127,10 @@ object JavaTypeSignature {
   // class signature
   case class ClassSignature(
       typeParameters: Option[TypeParameters],
-      superclassSignature: SuperclassSignature,
-      superinterfaceSignature: List[SuperinterfaceSignature])
+      superclassSignature: ClassTypeSignature,
+      superinterfaceSignature: List[ClassTypeSignature])
       extends Pretty {
+    def parents: List[ClassTypeSignature] = superclassSignature :: superinterfaceSignature
     override def print(sb: StringBuilder): Unit = {
       typeParameters match {
         case Some(tp: TypeParameters) =>
@@ -185,14 +180,12 @@ object JavaTypeSignature {
       referenceTypeSignature.print(sb)
     }
   }
-  sealed trait SuperclassSignature extends Pretty
-  sealed trait SuperinterfaceSignature extends Pretty
 
   // method signature
   case class MethodSignature(
       typeParameters: Option[TypeParameters],
       params: List[JavaTypeSignature],
-      result: Result,
+      result: JavaTypeSignature,
       throws: List[ThrowsSignature])
       extends Pretty {
     override def print(sb: StringBuilder): Unit = {
@@ -227,12 +220,8 @@ object JavaTypeSignature {
       }
     }
   }
-  sealed trait Result extends Pretty
 
-  // void descriptor
-  case object VoidDescriptor extends Result {
-    override def print(sb: StringBuilder): Unit = sb.append('V')
-  }
+  // void descriptor, see BaseType.V
 
   // field signature
   trait FieldSignature extends Pretty

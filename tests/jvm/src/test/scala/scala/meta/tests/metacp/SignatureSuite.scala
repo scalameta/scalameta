@@ -116,13 +116,12 @@ class SignatureSuite extends BaseMetacpSuite {
       val k = SymbolInformation.Kind
       s.kind match {
         case k.TYPE_PARAMETER =>
+        case k.CLASS =>
           println(s.toProtoString)
         case _ =>
+          println(s.toProtoString)
       }
     }
-    //    pprint.log(node.signature)
-//    val clazz = parse(node.signature, new ClassSignatureVisitor)
-//    pprint.log(clazz)
   }
 
   ignore("print") {

@@ -15,6 +15,7 @@ import scala.meta.internal.metacp.asm.ClassSignatureVisitor
 import scala.meta.internal.metacp.asm.JavaTypeSignature
 import scala.meta.internal.metacp.asm.JavaTypeSignature._
 import scala.meta.internal.metacp.asm.JavaTypeSignature.ReferenceTypeSignature._
+import scala.meta.internal.metacp.asm.MethodSignatureVisitor
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.{semanticdb3 => s}
@@ -77,6 +78,10 @@ object Javacp { self =>
     }
   }
 
+  implicit class XtensionSymbolInformationJavacp(self: s.SymbolInformation) {
+    def toBinding: Binding = Binding(self.name, self.symbol)
+  }
+
   implicit class XtensionJavaTypeSignature(self: JavaTypeSignature) {
     def toType(implicit scopes: Scopes): s.Type =
       fromJVMS(self)(scopes)
@@ -91,22 +96,13 @@ object Javacp { self =>
 
   def fromJVMS(sig: JavaTypeSignature)(implicit scopes: Scopes): s.Type = sig match {
     case ClassTypeSignature(_, SimpleClassTypeSignature(identifier, targs), todo) =>
-      s.Type(
-        s.Type.Tag.TYPE_REF,
-        typeRef = Some(
-          s.TypeRef(
-            symbol = ssym(identifier),
-            typeArguments = targs.toType
-          )
-        )
-      )
-    case _ =>
-      // TODO(olafur):
-      // TypeVariableSignature
-      // ArrayTypeSignature
-      // BaseType
-      ???
-
+      ref(ssym(identifier), targs.toType)
+    case TypeVariableSignature(name) =>
+      ref(scopes.resolve(name))
+    case t: BaseType =>
+      ref("_root_.scala." + t.name + "#")
+    case ArrayTypeSignature(tpe) =>
+      array(tpe.toType)
   }
 
   def addTypeParameter(
@@ -128,20 +124,37 @@ object Javacp { self =>
       s.Type.Tag.TYPE_TYPE,
       typeType = Some(s.TypeType(upperBound = Some(upperBounds)))
     )
+
     s.SymbolInformation(
       symbol = symbol,
       language = language,
       kind = k.TYPE_PARAMETER,
       name = typeParameter.identifier,
-      tpe = Some(tpe)
+      tpe = Some(tpe),
+      owner = classSymbol
     )
   }
 
+  def methodDescriptor(signature: MethodSignature): String =
+    signature.params.iterator
+      .map {
+        case t: BaseType => t.name
+        case t: ClassTypeSignature => getName(t.simpleClassTypeSignature.identifier)
+        case t: TypeVariableSignature => t.identifier
+        case _: ArrayTypeSignature => "Array"
+      }
+      .mkString(",")
+
+  case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
+
   def process(node: ClassNode, scopes: Scopes): Seq[s.SymbolInformation] = {
+    implicit val implicitScopes = scopes
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
+    val decls = ListBuffer.empty[String]
 
     val classSymbol = ssym(node.name)
+    scopes.owner = classSymbol
     val className = getName(node.name)
     val isTopLevelClass = !node.name.contains("$")
 
@@ -169,17 +182,83 @@ object Javacp { self =>
         typeParameters.all.map(tparam => addTypeParameter(tparam, classSymbol, scopes))
       case _ => Nil
     }
-
-    scopes.update(classSymbol, classOwner, tparams.map(info => Binding(info.name, info.symbol)))
+    scopes.update(classSymbol, classOwner, tparams.map(_.toBinding))
     tparams.foreach(buf += _)
+
+    val parents = classSignature match {
+      case Some(c: ClassSignature) => c.parents.map(_.toType)
+      case _ => Nil
+    }
+
+    val methodSignatures = node.methods.asScala.map { method: MethodNode =>
+      val signature = JavaTypeSignature.parse[MethodSignature](
+        if (method.signature == null) method.desc else method.signature,
+        new MethodSignatureVisitor
+      )
+      MethodInfo(method, methodDescriptor(signature), signature)
+    }
+    methodSignatures.foreach {
+      case method: MethodInfo =>
+        val synonyms = methodSignatures.filter { m =>
+          m.node.name == method.node.name &&
+          m.descriptor == method.descriptor
+        }
+        val suffix =
+          if (synonyms.length == 1) ""
+          else "+" + (1 + synonyms.indexWhere(_.signature eq method.signature))
+        val methodSymbol = classSymbol + method.node.name + "(" + method.descriptor + suffix + ")"
+
+        scopes.owner = methodSymbol // Must happen before addTypeParameter
+        val methodTypeParameters = method.signature.typeParameters match {
+          case Some(tp: TypeParameters) => tp.all.map(t => addTypeParameter(t, classSymbol, scopes))
+          case _ => Nil
+        }
+        scopes.update(methodSymbol, classSymbol, methodTypeParameters.map(_.toBinding))
+        methodTypeParameters.foreach(buf += _)
+
+        val parameterSymbols = method.signature.params.zipWithIndex.map {
+          case (param: JavaTypeSignature, i) =>
+            val name = "arg" + i // TODO(olafur) use node.parameters for JDK 8 with -parameters
+            val paramSymbol = methodSymbol + "(" + name + ")"
+            buf += s.SymbolInformation(
+              symbol = paramSymbol,
+              language = language,
+              kind = k.PARAMETER,
+              name = name,
+              tpe = Some(param.toType)
+            )
+            paramSymbol
+        }
+
+        val methodType = s.Type(
+          s.Type.Tag.METHOD_TYPE,
+          methodType = Some(
+            s.MethodType(
+              typeParameters = methodTypeParameters.map(_.symbol),
+              parameters = s.MethodType.ParameterList(parameterSymbols) :: Nil,
+              returnType = Some(method.signature.result.toType)
+            )
+          )
+        )
+
+        buf += s.SymbolInformation(
+          symbol = methodSymbol,
+          language = language,
+          kind = k.DEF,
+          name = method.node.name,
+          tpe = Some(methodType)
+        )
+
+        decls += methodSymbol
+    }
 
     val classTpe = s.Type(
       tag = s.Type.Tag.CLASS_INFO_TYPE,
       classInfoType = Some(
         s.ClassInfoType(
           typeParameters = tparams.map(_.symbol),
-          parents = Nil,
-          declarations = Nil
+          parents = parents,
+          declarations = decls
         )
       )
     )
@@ -208,14 +287,14 @@ object Javacp { self =>
   }
 
   def getName(symbol: String): String = {
-    val dollar = symbol.lastIndexOf('$')
-    if (dollar < 0) {
-      val slash = symbol.lastIndexOf('/')
-      if (slash < 0) sys.error(s"Missing $$ or / from symbol '$symbol'")
-      else symbol.substring(slash + 1)
-    } else {
-      symbol.substring(dollar + 1)
+    var i = symbol.length - 1
+    while (i >= 0) {
+      symbol.charAt(i) match {
+        case '$' | '/' => return symbol.substring(i + 1)
+        case _ => i -= 1
+      }
     }
+    throw new IllegalArgumentException(s"Missing $$ or / from symbol '$symbol'")
   }
 
   def ssym(string: String): String =

@@ -10,6 +10,8 @@ class Scopes(
     scopes: mutable.Map[String, Seq[Binding]] = mutable.Map.empty
 ) {
 
+  var owner: String = _
+
   def update(symbol: String, owner: String, bindings: Seq[Binding]): Unit = {
     owners(symbol) = owner
     scopes(symbol) = bindings
@@ -19,6 +21,10 @@ class Scopes(
     owners.clear()
     scopes.clear()
   }
+  final def resolve(name: String): String = {
+    resolve(name, this.owner)
+  }
+
   @tailrec
   final def resolve(name: String, owner: String): String = {
     scopes(owner).find(_.name == name) match {
