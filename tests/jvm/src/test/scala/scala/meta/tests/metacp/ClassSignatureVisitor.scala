@@ -1,148 +1,45 @@
 package scala.meta.tests.metacp
 
-import java.util.NoSuchElementException
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ListBuffer
 import scala.meta.internal.metacp.JavaTypeSignature
 import scala.meta.internal.metacp.JavaTypeSignature._
 import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature
 import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature._
-//import scala.meta.internal.metacp.Javacp.SignatureMode
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
-import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.signature.SignatureVisitor
 import scala.tools.asm.{Opcodes => o}
-//import scala.meta.internal.metacp.Javacp.SignatureMode._
-import scala.meta.internal.metacp.Javacp._
 
-// Helper to catch unhandled cases. All default implementation do nothing
-// which makes it difficult to detect if for example an inner class is not handled.
-trait FailingSignatureVisitor { _: SignatureVisitor =>
-
+/** A more sane default SignatureVisitor that throws exceptions on unhandled cases. */
+abstract class FailFastSignatureVisitor extends SignatureVisitor(o.ASM5) {
   override def visitFormalTypeParameter(name: String): Unit = ???
-
-  /**
-    * Visits the class bound of the last visited formal type parameter.
-    *
-    * @return a non null visitor to visit the signature of the class bound.
-    */
   override def visitClassBound: SignatureVisitor = ???
-
-  /**
-    * Visits an interface bound of the last visited formal type parameter.
-    *
-    * @return a non null visitor to visit the signature of the interface bound.
-    */
   override def visitInterfaceBound: SignatureVisitor = ???
-
-  /**
-    * Visits the type of the super class.
-    *
-    * @return a non null visitor to visit the signature of the super class
-    *         type.
-    */
   override def visitSuperclass: SignatureVisitor = ???
-
-  /**
-    * Visits the type of an interface implemented by the class.
-    *
-    * @return a non null visitor to visit the signature of the interface type.
-    */
   override def visitInterface: SignatureVisitor = ???
-
-  /**
-    * Visits the type of a method parameter.
-    *
-    * @return a non null visitor to visit the signature of the parameter type.
-    */
   override def visitParameterType: SignatureVisitor = ???
-
-  /**
-    * Visits the return type of the method.
-    *
-    * @return a non null visitor to visit the signature of the return type.
-    */
   override def visitReturnType: SignatureVisitor = ???
-
-  /**
-    * Visits the type of a method exception.
-    *
-    * @return a non null visitor to visit the signature of the exception type.
-    */
   override def visitExceptionType: SignatureVisitor = ???
-
-  /**
-    * Visits a signature corresponding to a primitive type.
-    *
-    * @param descriptor
-    * the descriptor of the primitive type, or 'V' for <tt>void</tt>
-    * .
-    */
   override def visitBaseType(descriptor: Char): Unit = ???
-
-  /**
-    * Visits a signature corresponding to a type variable.
-    *
-    * @param name
-    * the name of the type variable.
-    */
   override def visitTypeVariable(name: String): Unit = ???
-
-  /**
-    * Visits a signature corresponding to an array type.
-    *
-    * @return a non null visitor to visit the signature of the array element
-    *         type.
-    */
   override def visitArrayType: SignatureVisitor = ???
-
-  /**
-    * Starts the visit of a signature corresponding to a class or interface
-    * type.
-    *
-    * @param name
-    * the internal name of the class or interface.
-    */
   override def visitClassType(name: String): Unit = ???
-
-  /**
-    * Visits an inner class.
-    *
-    * @param name
-    * the local name of the inner class in its enclosing class.
-    */
   override def visitInnerClassType(name: String): Unit = ???
-
-  /**
-    * Visits an unbounded type argument of the last visited class or inner
-    * class type.
-    */
   override def visitTypeArgument(): Unit = ???
-
-  /**
-    * Visits a type argument of the last visited class or inner class type.
-    *
-    * @param wildcard
-    * '+', '-' or '='.
-    * @return a non null visitor to visit the signature of the type argument.
-    */
   override def visitTypeArgument(wildcard: Char): SignatureVisitor = ???
-
-  /**
-    * Ends the visit of a signature corresponding to a class or interface type.
-    */
-  override def visitEnd(): Unit = ()
+  override def visitEnd(): Unit = () // OK to ignore.
 }
 
-class TypeArgumentVisitor extends SignatureVisitor(o.ASM5) with FailingSignatureVisitor {
+abstract class TypedSignatureVisitor[T] extends FailFastSignatureVisitor {
+  def result(): T
+}
+
+class TypeArgumentVisitor extends TypedSignatureVisitor[TypeArgument] {
   var wildcard = Option.empty[WildcardIndicator]
   val referenceTypeSignature = new ReferenceTypeSignatureVisitor
-  def result(): TypeArgument = wildcard match {
-    case Some(WildcardIndicator.Star) => WildcardTypeArgument
-    case _ => ReferenceTypeArgument(wildcard, referenceTypeSignature.result())
-  }
+  override def result(): TypeArgument =
+    wildcard match {
+      case Some(WildcardIndicator.Star) => WildcardTypeArgument
+      case _ => ReferenceTypeArgument(wildcard, referenceTypeSignature.result().get)
+    }
   // TODO(olafur) handle WildcardTypeARgument
 
   override def visitTypeArgument(wildcard: Char): SignatureVisitor = {
@@ -159,21 +56,18 @@ class TypeArgumentVisitor extends SignatureVisitor(o.ASM5) with FailingSignature
   }
 }
 
-class JavaTypeSignatureVisitor(isArray: Boolean)
-    extends SignatureVisitor(o.ASM5)
-    with FailingSignatureVisitor {
+class JavaTypeSignatureVisitor(isArray: Boolean) extends TypedSignatureVisitor[JavaTypeSignature] {
   private var baseType: BaseType = _
   private val referenceTypeSignature: ReferenceTypeSignatureVisitor =
     new ReferenceTypeSignatureVisitor
 
-  def result(): JavaTypeSignature = {
+  override def result(): JavaTypeSignature = {
     val obtained =
-      if (baseType == null) referenceTypeSignature.result()
+      if (baseType == null) referenceTypeSignature.result().get
       else baseType
     if (isArray) ArrayTypeSignature(obtained)
     else obtained
   }
-
 
   override def visitArrayType: SignatureVisitor = {
     referenceTypeSignature.visitArrayType()
@@ -241,14 +135,13 @@ class SimpleClassTypeSignatureBuilder(identifier: String) {
   }
 }
 
-class ReferenceTypeSignatureVisitor extends SignatureVisitor(o.ASM5) with FailingSignatureVisitor {
+class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[ReferenceTypeSignature]] {
   private var arrayTypeSignatureVisitor: JavaTypeSignatureVisitor = _
   private var typeVariable: TypeVariableSignature = _
   private val simpleClassTypeSignatures = List.newBuilder[SimpleClassTypeSignatureBuilder]
   private var lastSimpleClassTypeSignatures: SimpleClassTypeSignatureBuilder = _
-  def classTypeSignature(): ClassTypeSignature = result().asInstanceOf[ClassTypeSignature]
-  def result(): ReferenceTypeSignature = resultOption().get
-  def resultOption(): Option[ReferenceTypeSignature] = {
+  def classTypeSignature(): ClassTypeSignature = result().get.asInstanceOf[ClassTypeSignature]
+  override def result(): Option[ReferenceTypeSignature] = {
     if (arrayTypeSignatureVisitor != null) {
       arrayTypeSignatureVisitor.result() match {
         case r: ReferenceTypeSignature => Some(r)
@@ -311,20 +204,17 @@ class ReferenceTypeSignatureVisitor extends SignatureVisitor(o.ASM5) with Failin
 
 }
 
-class TypeParameterVisitor(identifier: String)
-    extends SignatureVisitor(o.ASM5)
-    with FailingSignatureVisitor {
+class TypeParameterVisitor(identifier: String) extends TypedSignatureVisitor[TypeParameter] {
   val classBound = new ReferenceTypeSignatureVisitor
   val interfaceBounds = List.newBuilder[ReferenceTypeSignatureVisitor]
-  def result(): TypeParameter = {
+  override def result(): TypeParameter =
     TypeParameter(
       identifier,
-      ClassBound(classBound.resultOption()),
+      ClassBound(classBound.result()),
       interfaceBounds.result().map { ib =>
-        InterfaceBound(ib.result())
+        InterfaceBound(ib.result().get)
       }
     )
-  }
 
   override def visitClassBound(): SignatureVisitor = {
     classBound
@@ -338,20 +228,19 @@ class TypeParameterVisitor(identifier: String)
 }
 
 class MethodSignatureVisitor
-    extends SignatureVisitor(o.ASM5)
-    with FailingSignatureVisitor
+    extends TypedSignatureVisitor[MethodSignature]
     with TypeParametersVisitor {
   val params = List.newBuilder[JavaTypeSignatureVisitor]
   val returnType = new JavaTypeSignatureVisitor(false)
   val throws = List.newBuilder[ReferenceTypeSignatureVisitor]
 
-  def result(): MethodSignature = {
+  override def result(): MethodSignature = {
     val tparams = super.typeParametersResult()
     MethodSignature(
       tparams,
       params.result().map(_.result()),
       returnType.result(),
-      throws.result().map(_.result()).map {
+      throws.result().map(_.result().get).map {
         case cts: ClassTypeSignature => ThrowsSignature.ClassType(cts)
         case tvs: TypeVariableSignature => ThrowsSignature.TypeVariable(tvs)
         case els => throw new IllegalArgumentException(s"Expected ThrowsSignature, obtained $els")
@@ -404,29 +293,23 @@ trait TypeParametersVisitor { this: SignatureVisitor =>
 }
 
 class ClassSignatureVisitor
-    extends SignatureVisitor(o.ASM5)
-    with FailingSignatureVisitor
+    extends TypedSignatureVisitor[ClassSignature]
     with TypeParametersVisitor {
   private val superclassSignature = new ReferenceTypeSignatureVisitor
   private val superinterfaceSignatures = List.newBuilder[ReferenceTypeSignatureVisitor]
 
-  def result(): ClassSignature = {
+  override def result(): ClassSignature = {
     val tparams = super.typeParametersResult()
     val superclass = superclassSignature.classTypeSignature()
     val interfaces = superinterfaceSignatures.result().map(_.classTypeSignature())
-//    pprint.log(superclass)
-//    pprint.log(interfaces)
     ClassSignature(tparams, superclass, interfaces)
   }
-
-//  var mode: SignatureMode = Start
 
   override def visitSuperclass(): SignatureVisitor = {
     superclassSignature
   }
 
   override def visitInterface(): SignatureVisitor = {
-//    pprint.log("interface")
     val visitor = new ReferenceTypeSignatureVisitor
     superinterfaceSignatures += visitor
     visitor
