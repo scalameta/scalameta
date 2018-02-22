@@ -6,7 +6,7 @@ import scala.tools.asm.signature.SignatureReader
   *
   * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
   */
-sealed trait JavaTypeSignature extends JavaTypeSignature.FieldSignature with Pretty
+sealed trait JavaTypeSignature extends Pretty
 object JavaTypeSignature {
   final def parse[T](signature: String, visitor: TypedSignatureVisitor[T]): T = {
     val signatureReader = new SignatureReader(signature)
@@ -221,8 +221,7 @@ object JavaTypeSignature {
     }
   }
 
-  // void descriptor, see BaseType.V
+  // field signature: merged into JavaTypeSignature
+  // void descriptor: see BaseType.V
 
-  // field signature
-  trait FieldSignature extends Pretty
 }

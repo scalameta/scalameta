@@ -12,6 +12,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.metacp.asm.ClassSignatureVisitor
+import scala.meta.internal.metacp.asm.FieldSignatureVisitor
 import scala.meta.internal.metacp.asm.JavaTypeSignature
 import scala.meta.internal.metacp.asm.JavaTypeSignature._
 import scala.meta.internal.metacp.asm.JavaTypeSignature.ReferenceTypeSignature._
@@ -190,6 +191,30 @@ object Javacp { self =>
       case _ => Nil
     }
 
+    node.fields.asScala.foreach { field: FieldNode =>
+      val fieldSymbol = classSymbol + field.name + "."
+      val fieldSignature = JavaTypeSignature.parse(
+        if (field.signature == null) field.desc else field.signature,
+        new FieldSignatureVisitor
+      )
+
+      buf += s.SymbolInformation(
+        symbol = fieldSymbol,
+        language = language,
+        kind =
+          if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
+          else k.VAR,
+        name = field.name,
+        accessibility = saccessibility(field.access, classSymbol),
+        properties = sproperties(field.access),
+        annotations = sannotations(field.access),
+        tpe = Some(fieldSignature.toType)
+      )
+
+      decls += fieldSymbol
+    }
+
+    // NOTE: this logic will soon change https://github.com/scalameta/scalameta/issues/1358
     val methodSignatures = node.methods.asScala.map { method: MethodNode =>
       val signature = JavaTypeSignature.parse[MethodSignature](
         if (method.signature == null) method.desc else method.signature,
@@ -197,6 +222,7 @@ object Javacp { self =>
       )
       MethodInfo(method, methodDescriptor(signature), signature)
     }
+
     methodSignatures.foreach {
       case method: MethodInfo =>
         val synonyms = methodSignatures.filter { m =>
@@ -246,6 +272,9 @@ object Javacp { self =>
           language = language,
           kind = k.DEF,
           name = method.node.name,
+          accessibility = saccessibility(method.node.access, classSymbol),
+          properties = sproperties(method.node.access),
+          annotations = sannotations(method.node.access),
           tpe = Some(methodType)
         )
 
@@ -269,7 +298,9 @@ object Javacp { self =>
       name = className,
       owner = classOwner,
       tpe = Some(classTpe),
-      accessibility = saccessibility(node.access, classOwner)
+      accessibility = saccessibility(node.access, classOwner),
+      properties = sproperties(node.access),
+      annotations = sannotations(node.access)
     )
 
     buf.result()
@@ -316,6 +347,26 @@ object Javacp { self =>
         s.Accessibility(a.PRIVATE_WITHIN, owner.substring(0, owner.lastIndexOf('.')))
       )
     }
+  }
+
+  def sannotations(access: Int): Seq[s.Annotation] = {
+    val buf = List.newBuilder[s.Annotation]
+
+    def push(symbol: String): Unit =
+      buf += s.Annotation(Some(ref(symbol)))
+
+    if (access.hasFlag(o.ACC_DEPRECATED)) push("_root_.scala.deprecated#")
+    if (access.hasFlag(o.ACC_STRICT)) push("_root_.scala.annotation.strictfp#")
+
+    buf.result()
+  }
+  def sproperties(access: Int): Int = {
+    val p = s.SymbolInformation.Property
+    var bits = 0
+    def sflip(sbit: Int) = bits ^= sbit
+    if (access.hasFlag(o.ACC_ABSTRACT)) sflip(p.ABSTRACT.value)
+    if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL.value)
+    bits
   }
 
   def array(tpe: s.Type): s.Type =

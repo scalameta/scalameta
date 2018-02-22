@@ -105,7 +105,7 @@ class SignatureSuite extends BaseMetacpSuite {
     fieldCallback(node) ::: methodCallback(node) ::: classCallback(node)
   }
 
-  test("s.Type") {
+  ignore("s.Type") {
     val path =
       AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/Javacp.class")
     val bytes = path.readAllBytes
@@ -116,10 +116,8 @@ class SignatureSuite extends BaseMetacpSuite {
       val k = SymbolInformation.Kind
       s.kind match {
         case k.TYPE_PARAMETER =>
-        case k.CLASS =>
-          println(s.toProtoString)
+        case k.VAR | k.VAL =>
         case _ =>
-          println(s.toProtoString)
       }
     }
   }
