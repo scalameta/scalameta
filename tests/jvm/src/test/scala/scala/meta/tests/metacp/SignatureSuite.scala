@@ -8,8 +8,10 @@ import java.nio.file.attribute.BasicFileAttributes
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.meta.internal.metacp.Javacp
+import scala.meta.internal.metacp.Scopes
 import scala.meta.internal.metacp.asm.ClassSignatureVisitor
 import scala.meta.internal.metacp.asm.FieldSignatureVisitor
+import scala.meta.internal.metacp.asm.JavaTypeSignature
 import scala.meta.internal.metacp.asm.MethodSignatureVisitor
 import scala.meta.internal.metacp.asm.Pretty
 import scala.meta.internal.metacp.asm.TypedSignatureVisitor
@@ -19,20 +21,26 @@ import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.MethodNode
 import scala.util.control.NonFatal
 import org.langmeta.internal.io.PathIO
+import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
+import scala.meta.internal.{semanticdb3 => s}
 
 class SignatureSuite extends BaseMetacpSuite {
 
-  final def assertRoundtrip(signature: String, visitor: TypedSignatureVisitor[Pretty]): Unit = {
+  final def parse[T](signature: String, visitor: TypedSignatureVisitor[T]): T = {
     val signatureReader = new SignatureReader(signature)
     signatureReader.accept(visitor)
-    val classSignature = visitor.result()
-    val obtained = classSignature.pretty
+    visitor.result()
+  }
+
+  final def assertRoundtrip(signature: String, visitor: TypedSignatureVisitor[Pretty]): Unit = {
+    val obtained = parse[Pretty](signature, visitor).pretty
     assertNoDiff(obtained, signature)
   }
 
   final def checkSignatureLibrary(coordinates: Coordinates): Unit = {
     test(coordinates.name) {
+      var longestSignature = ""
       val failingSignatures = ArrayBuffer.empty[String]
       Classpath(coordinates.classpath()).visit { root =>
         new java.nio.file.SimpleFileVisitor[Path] {
@@ -45,6 +53,8 @@ class SignatureSuite extends BaseMetacpSuite {
                 case (signature, unsafe) =>
                   try {
                     unsafe()
+                    if (signature.length > longestSignature.length)
+                      longestSignature = signature
                   } catch {
                     case NonFatal(e) =>
                       println(signature)
@@ -64,6 +74,7 @@ class SignatureSuite extends BaseMetacpSuite {
         )
         fail("failures! See signatures.txt")
       }
+      println(longestSignature)
     }
   }
 
@@ -84,18 +95,30 @@ class SignatureSuite extends BaseMetacpSuite {
     }.toList
 
   def classCallback(node: ClassNode): List[(String, () => Unit)] =
-    List(
-      (node.signature, { () =>
-        if (node.signature != null) {
+    if (node.signature == null) Nil
+    else {
+      List(
+        (node.signature, { () =>
           assertRoundtrip(node.signature, new ClassSignatureVisitor)
-        }
-      })
-    )
+        })
+      )
+    }
 
   def callback(node: ClassNode): List[(String, () => Unit)] = {
     fieldCallback(node) ::: methodCallback(node) ::: classCallback(node)
   }
 
-  allLibraries.foreach(checkSignatureLibrary)
+  test("s.Type") {
+    val path =
+      AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/Javacp.class")
+    val bytes = path.readAllBytes
+    val node = Javacp.asmNodeFromBytes(bytes)
+    val scopes = new Scopes()
+    val db = Javacp.process(node, scopes)
+    db.foreach(s => println(s.toProtoString))
+//    pprint.log(node.signature)
+//    val clazz = parse(node.signature, new ClassSignatureVisitor)
+//    pprint.log(clazz)
+  }
 
 }
