@@ -8,22 +8,23 @@ import java.nio.file.attribute.BasicFileAttributes
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.meta.internal.metacp.Javacp
+import scala.meta.internal.metacp.asm.ClassSignatureVisitor
+import scala.meta.internal.metacp.asm.FieldSignatureVisitor
+import scala.meta.internal.metacp.asm.MethodSignatureVisitor
 import scala.meta.internal.metacp.asm.Pretty
 import scala.meta.internal.metacp.asm.TypedSignatureVisitor
 import scala.tools.asm.signature.SignatureReader
 import scala.tools.asm.tree.ClassNode
+import scala.tools.asm.tree.FieldNode
+import scala.tools.asm.tree.MethodNode
 import scala.util.control.NonFatal
 import org.langmeta.internal.io.PathIO
 import org.langmeta.io.Classpath
 
-abstract class BaseSignatureSuite[T <: Pretty] extends BaseMetacpSuite {
+class SignatureSuite extends BaseMetacpSuite {
 
-  def newVisitor(): TypedSignatureVisitor[T]
-  def callback(node: ClassNode): List[(String, () => Unit)]
-
-  final def assertRoundtrip(signature: String): Unit = {
+  final def assertRoundtrip(signature: String, visitor: TypedSignatureVisitor[Pretty]): Unit = {
     val signatureReader = new SignatureReader(signature)
-    val visitor = newVisitor()
     signatureReader.accept(visitor)
     val classSignature = visitor.result()
     val obtained = classSignature.pretty
@@ -65,4 +66,36 @@ abstract class BaseSignatureSuite[T <: Pretty] extends BaseMetacpSuite {
       }
     }
   }
+
+  def fieldCallback(node: ClassNode): List[(String, () => Unit)] =
+    node.fields.asScala.iterator.map { field: FieldNode =>
+      val signature = if (field.signature == null) field.desc else field.signature
+      (signature, { () =>
+        assertRoundtrip(signature, new FieldSignatureVisitor())
+      })
+    }.toList
+
+  def methodCallback(node: ClassNode): List[(String, () => Unit)] =
+    node.methods.asScala.iterator.map { method: MethodNode =>
+      val signature = if (method.signature == null) method.desc else method.signature
+      (signature, { () =>
+        assertRoundtrip(signature, new MethodSignatureVisitor())
+      })
+    }.toList
+
+  def classCallback(node: ClassNode): List[(String, () => Unit)] =
+    List(
+      (node.signature, { () =>
+        if (node.signature != null) {
+          assertRoundtrip(node.signature, new ClassSignatureVisitor)
+        }
+      })
+    )
+
+  def callback(node: ClassNode): List[(String, () => Unit)] = {
+    fieldCallback(node) ::: methodCallback(node) ::: classCallback(node)
+  }
+
+  allLibraries.foreach(checkSignatureLibrary)
+
 }
