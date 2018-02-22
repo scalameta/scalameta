@@ -3,7 +3,7 @@ package scala.meta.tests.metacp
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.MethodNode
 import scala.collection.JavaConverters._
-import scala.meta.internal.metacp.JavaTypeSignature.MethodSignature
+import scala.meta.internal.metacp.asm.JavaTypeSignature.MethodSignature
 import scala.meta.internal.metacp.asm.MethodSignatureVisitor
 import scala.meta.internal.metacp.asm.TypedSignatureVisitor
 

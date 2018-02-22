@@ -1,6 +1,6 @@
 package scala.meta.tests.metacp
 
-import scala.meta.internal.metacp.JavaTypeSignature.ClassSignature
+import scala.meta.internal.metacp.asm.JavaTypeSignature.ClassSignature
 import scala.meta.internal.metacp.asm.ClassSignatureVisitor
 import scala.tools.asm.tree.ClassNode
 

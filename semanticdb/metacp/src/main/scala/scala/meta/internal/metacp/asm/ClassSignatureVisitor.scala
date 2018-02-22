@@ -1,10 +1,9 @@
 package scala.meta.internal.metacp.asm
 
 import scala.collection.JavaConverters._
-import scala.meta.internal.metacp.JavaTypeSignature
-import scala.meta.internal.metacp.JavaTypeSignature._
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature
-import scala.meta.internal.metacp.JavaTypeSignature.ReferenceTypeSignature._
+import scala.meta.internal.metacp.asm.JavaTypeSignature._
+import scala.meta.internal.metacp.asm.JavaTypeSignature.ReferenceTypeSignature
+import scala.meta.internal.metacp.asm.JavaTypeSignature.ReferenceTypeSignature._
 import scala.tools.asm.signature.SignatureVisitor
 import scala.tools.asm.{Opcodes => o}
 

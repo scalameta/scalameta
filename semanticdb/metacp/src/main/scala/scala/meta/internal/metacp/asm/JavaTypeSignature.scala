@@ -1,19 +1,11 @@
-package scala.meta.internal.metacp
+package scala.meta.internal.metacp.asm
 
-// Translation of JVMS to Scala
-// https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
-
-trait Pretty {
-  def print(sb: StringBuilder): Unit
-  final def pretty: String = {
-    val sb = new StringBuilder
-    this.print(sb)
-    sb.toString
-  }
-}
+/** Translation of "Signature" section from the JVM spec to Scala.
+  *
+  * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
+  */
 sealed trait JavaTypeSignature extends JavaTypeSignature.Result with Pretty
 object JavaTypeSignature {
-
   abstract class BaseType(name: String) extends JavaTypeSignature with Product {
     final override def print(sb: StringBuilder): Unit =
       sb.append(this.productPrefix)

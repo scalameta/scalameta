@@ -11,7 +11,6 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
-import scala.meta.internal.metacp.JavaTypeSignature.ClassSignature
 import scala.meta.internal.metacp.Javacp.SignatureMode.Start
 import scala.meta.internal.metacp.Javacp.SignatureMode.SuperClass
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
@@ -262,18 +261,6 @@ object Javacp {
           case None => decl.interfaceTypes(classSymbol, scopes)
         }
     }
-//    def classSignatureToClassInfo(classSignature: ClassSignature, decls: Seq[String]): s.Type = {
-//      s.Type(
-//        tag = s.Type.Tag.CLASS_INFO_TYPE,
-//        classInfoType = Some(
-//          s.ClassInfoType(
-//            typeParameters = tparams,
-//            parents = parents,
-//            declarations = decls
-//          )
-//        )
-//      )
-//    }
 
     val classTpe = s.Type(
       tag = s.Type.Tag.CLASS_INFO_TYPE,

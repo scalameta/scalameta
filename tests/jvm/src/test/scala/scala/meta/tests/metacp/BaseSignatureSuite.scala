@@ -8,7 +8,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.meta.internal.metacp.Javacp
-import scala.meta.internal.metacp.Pretty
+import scala.meta.internal.metacp.asm.Pretty
 import scala.meta.internal.metacp.asm.TypedSignatureVisitor
 import scala.tools.asm.signature.SignatureReader
 import scala.tools.asm.tree.ClassNode
@@ -21,7 +21,7 @@ abstract class BaseSignatureSuite[T <: Pretty] extends BaseMetacpSuite {
   def newVisitor(): TypedSignatureVisitor[T]
   def callback(node: ClassNode): List[(String, () => Unit)]
 
-  def assertRoundtrip(signature: String): Unit = {
+  final def assertRoundtrip(signature: String): Unit = {
     val signatureReader = new SignatureReader(signature)
     val visitor = newVisitor()
     signatureReader.accept(visitor)
@@ -30,7 +30,7 @@ abstract class BaseSignatureSuite[T <: Pretty] extends BaseMetacpSuite {
     assertNoDiff(obtained, signature)
   }
 
-  def checkSignatureLibrary(coordinates: Coordinates): Unit = {
+  final def checkSignatureLibrary(coordinates: Coordinates): Unit = {
     test(coordinates.name) {
       val failingSignatures = ArrayBuffer.empty[String]
       Classpath(coordinates.classpath()).visit { root =>
