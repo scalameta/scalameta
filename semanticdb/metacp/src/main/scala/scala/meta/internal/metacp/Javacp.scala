@@ -25,6 +25,7 @@ import scala.tools.asm.signature.SignatureReader
 import scala.tools.asm.signature.SignatureVisitor
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
+import scala.tools.asm.tree.InnerClassNode
 import scala.tools.asm.tree.MethodNode
 import scala.tools.asm.{Opcodes => o}
 import org.langmeta.internal.io.PathIO
@@ -32,10 +33,22 @@ import org.langmeta.io.AbsolutePath
 
 object Javacp { self =>
 
+  private[this] val IsNumber = "\\d+".r
+
   def process(root: Path, file: Path, scopes: Scopes): s.TextDocument = {
     val bytes = Files.readAllBytes(file)
     val node = asmNodeFromBytes(bytes)
-    val symbols = process(node, scopes)
+    val symbols =
+      try process(node, scopes)
+      catch {
+        case e: IllegalArgumentException =>
+          // TODO: implement inner annonymous classes
+          val hasNumberEntry = node.name
+            .split("\\$")
+            .exists(IsNumber.findFirstIn(_).isDefined)
+          if (!hasNumberEntry) throw e
+          else Nil
+      }
     val uri = root.relativize(file).toString
     s.TextDocument(
       schema = s.Schema.SEMANTICDB3,
@@ -77,10 +90,6 @@ object Javacp { self =>
       case WildcardTypeArgument =>
         ref("local_wildcard") // TODO: handle wildcard type arguments
     }
-  }
-
-  implicit class XtensionSymbolInformationJavacp(self: s.SymbolInformation) {
-    def toBinding: Binding = Binding(self.name, self.symbol)
   }
 
   implicit class XtensionJavaTypeSignature(self: JavaTypeSignature) {
@@ -170,10 +179,6 @@ object Javacp { self =>
     val className = getName(node.name)
     val isTopLevelClass = !node.name.contains("$")
 
-    if (node.outerClass != null) {
-      
-    }
-
     val classOwner: String = if (isTopLevelClass) {
       addPackages(node.name, buf)
     } else {
@@ -187,6 +192,7 @@ object Javacp { self =>
 
     val classSignature =
       if (node.signature == null) {
+        // TODO: node.superClass/node.interfaces
         None
       } else {
         val classSignature =
@@ -247,7 +253,7 @@ object Javacp { self =>
         val suffix =
           if (synonyms.length == 1) ""
           else "+" + (1 + synonyms.indexWhere(_.signature eq method.signature))
-        val methodSymbol = classSymbol + method.node.name + "(" + method.descriptor + suffix + ")"
+        val methodSymbol = classSymbol + method.node.name + "(" + method.descriptor + suffix + ")" + "."
         scopes.registerOwner(methodSymbol, classSymbol)
 
         val methodTypeParameters = method.signature.typeParameters match {

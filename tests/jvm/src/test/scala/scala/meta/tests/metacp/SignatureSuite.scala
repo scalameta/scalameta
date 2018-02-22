@@ -10,6 +10,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.meta.interactive.InteractiveSemanticdb
 import scala.meta.internal.metacp.Javacp
 import scala.meta.internal.metacp.Scopes
+import scala.meta.internal.metacp.Main
+import scala.meta.internal.metacp.Settings
 import scala.meta.internal.metacp.asm.ClassSignatureVisitor
 import scala.meta.internal.metacp.asm.FieldSignatureVisitor
 import scala.meta.internal.metacp.asm.JavaTypeSignature
@@ -105,9 +107,16 @@ class SignatureSuite extends BaseMetacpSuite {
     fieldCallback(node) ::: methodCallback(node) ::: classCallback(node)
   }
 
-  test("s.Type") {
+  test("metacp") {
+    val out = Files.createTempDirectory("metacp")
+    out.toFile.deleteOnExit()
+
+    Main.process(Settings("semanticdb/integration/target/scala-2.12/classes/" :: Nil, out.toString))
+  }
+
+  ignore("s.Type") {
     val path =
-      AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/Recursive.class")
+      AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/")
     val bytes = path.readAllBytes
     val node = Javacp.asmNodeFromBytes(bytes)
     val scopes = new Scopes()

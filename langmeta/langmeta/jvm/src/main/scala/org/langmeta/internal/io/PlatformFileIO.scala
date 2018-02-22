@@ -5,7 +5,9 @@ import java.nio.charset.Charset
 import java.nio.file.FileSystemAlreadyExistsException
 import java.nio.file.FileSystems
 import java.nio.file.Files
+import java.nio.file.OpenOption
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 import java.util.stream.Collectors
 import scalapb.GeneratedMessage
 import scala.meta.internal.semanticdb3._
@@ -32,8 +34,8 @@ object PlatformFileIO {
   }
 
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
-    path.toFile.getParentFile.mkdirs()
-    val os = Files.newOutputStream(path.toNIO)
+    Files.createDirectories(path.toNIO.getParent)
+    val os = Files.newOutputStream(path.toNIO, StandardOpenOption.APPEND, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
     try proto.writeTo(os)
     finally os.close()
   }

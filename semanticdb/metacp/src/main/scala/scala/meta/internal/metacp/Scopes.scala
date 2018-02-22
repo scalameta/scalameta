@@ -1,12 +1,11 @@
 package scala.meta.internal.metacp
 
+import java.nio.file.Path
 import java.util
 import java.util.NoSuchElementException
 import java.util.function
 import scala.annotation.tailrec
 import scala.util.control.NoStackTrace
-
-case class Binding(name: String, symbol: String)
 
 class Scopes(
     owners: util.Map[String, String] = new util.HashMap(),
