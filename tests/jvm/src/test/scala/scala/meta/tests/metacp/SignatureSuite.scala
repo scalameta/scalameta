@@ -105,9 +105,9 @@ class SignatureSuite extends BaseMetacpSuite {
     fieldCallback(node) ::: methodCallback(node) ::: classCallback(node)
   }
 
-  ignore("s.Type") {
+  test("s.Type") {
     val path =
-      AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/Javacp.class")
+      AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/Recursive.class")
     val bytes = path.readAllBytes
     val node = Javacp.asmNodeFromBytes(bytes)
     val scopes = new Scopes()

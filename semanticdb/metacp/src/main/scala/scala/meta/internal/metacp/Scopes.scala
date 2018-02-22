@@ -1,35 +1,65 @@
 package scala.meta.internal.metacp
 
+import java.util
+import java.util.function
 import scala.annotation.tailrec
-import scala.collection.mutable
 
 case class Binding(name: String, symbol: String)
 
 class Scopes(
-    owners: mutable.Map[String, String] = mutable.Map.empty,
-    scopes: mutable.Map[String, Seq[Binding]] = mutable.Map.empty
+    owners: util.Map[String, String] = new util.HashMap(),
+    scopes: util.Map[String, util.Map[String, String]] = new util.HashMap()
 ) {
 
-  var owner: String = _
+  override def toString: String = {
+    s"""Scopes(
+       |  owners = $owners
+       |  scopes = $scopes
+       |)""".stripMargin
+  }
 
-  def update(symbol: String, owner: String, bindings: Seq[Binding]): Unit = {
-    owners(symbol) = owner
-    scopes(symbol) = bindings
+  private[this] var myOwner: String = _
+
+  def owner: String = myOwner
+
+  def registerBinding(owner: String, name: String, symbol: String): Unit = {
+    val scope = scopes.computeIfAbsent(owner, Scopes.newTreeMap)
+    scope.put(name, symbol)
+  }
+
+  def registerOwner(newOwner: String, oldOwner: String): Unit = {
+    myOwner = newOwner
+    owners.put(newOwner, oldOwner)
   }
 
   def clear(): Unit = {
     owners.clear()
     scopes.clear()
   }
+
   final def resolve(name: String): String = {
-    resolve(name, this.owner)
+    resolve(name, owner)
   }
 
   @tailrec
-  final def resolve(name: String, owner: String): String = {
-    scopes(owner).find(_.name == name) match {
-      case Some(hit) => hit.symbol
-      case _ => resolve(name, owners(owner))
+  final def resolve(name: String, inOwner: String): String = {
+    val scope = scopes.computeIfAbsent(inOwner, Scopes.newTreeMap)
+    val hit = scope.get(name)
+    if (hit == null) {
+      val next = owners.get(inOwner)
+      if (next == null) {
+        throw new NoSuchElementException(s"Failed to resolve name '$name' in owner $inOwner")
+      }
+      resolve(name, next)
+    } else {
+      hit
     }
   }
+}
+
+object Scopes {
+  val newTreeMap: function.Function[String, util.Map[String, String]] =
+    new function.Function[String, util.Map[String, String]] {
+      override def apply(t: String): util.Map[String, String] = new util.TreeMap()
+    }
 }

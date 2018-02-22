@@ -85,7 +85,7 @@ object Javacp { self =>
 
   implicit class XtensionJavaTypeSignature(self: JavaTypeSignature) {
     def toType(implicit scopes: Scopes): s.Type =
-      fromJVMS(self)(scopes)
+      fromJavaTypeSignature(self)(scopes)
   }
 
   implicit class XtensionTypeArgumentsOption(self: Option[TypeArguments]) {
@@ -95,7 +95,7 @@ object Javacp { self =>
     }
   }
 
-  def fromJVMS(sig: JavaTypeSignature)(implicit scopes: Scopes): s.Type = sig match {
+  def fromJavaTypeSignature(sig: JavaTypeSignature)(implicit scopes: Scopes): s.Type = sig match {
     case ClassTypeSignature(_, SimpleClassTypeSignature(identifier, targs), todo) =>
       ref(ssym(identifier), targs.toType)
     case TypeVariableSignature(name) =>
@@ -106,12 +106,24 @@ object Javacp { self =>
       array(tpe.toType)
   }
 
+  case class TypeParameterInfo(value: TypeParameter, symbol: String)
+  def addTypeParameters(
+      typeParameters: TypeParameters,
+      ownerSymbol: String,
+      scopes: Scopes): List[s.SymbolInformation] = {
+    val infos = typeParameters.all.map { typeParameter: TypeParameter =>
+      val symbol = ownerSymbol + "[" + typeParameter.identifier + "]"
+      // need to register all tparams before computing rhs types
+      scopes.registerBinding(ownerSymbol, typeParameter.identifier, symbol)
+      TypeParameterInfo(typeParameter, symbol)
+    }
+    infos.map(info => addTypeParameter(info, ownerSymbol, scopes))
+  }
   def addTypeParameter(
-      typeParameter: TypeParameter,
-      classSymbol: String,
+      typeParameter: TypeParameterInfo,
+      ownerSymbol: String,
       scopes: Scopes): s.SymbolInformation = {
-    val symbol = classSymbol + "[" + typeParameter.identifier + "]"
-    val typeParameters = typeParameter.upperBounds.map(fromJVMS(_)(scopes))
+    val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_)(scopes))
     val upperBounds = typeParameters match {
       case upperBound :: Nil =>
         upperBound
@@ -127,12 +139,12 @@ object Javacp { self =>
     )
 
     s.SymbolInformation(
-      symbol = symbol,
+      symbol = typeParameter.symbol,
       language = language,
       kind = k.TYPE_PARAMETER,
-      name = typeParameter.identifier,
+      name = typeParameter.value.identifier,
       tpe = Some(tpe),
-      owner = classSymbol
+      owner = ownerSymbol
     )
   }
 
@@ -155,7 +167,6 @@ object Javacp { self =>
     val decls = ListBuffer.empty[String]
 
     val classSymbol = ssym(node.name)
-    scopes.owner = classSymbol
     val className = getName(node.name)
     val isTopLevelClass = !node.name.contains("$")
 
@@ -164,6 +175,7 @@ object Javacp { self =>
     } else {
       ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
+    scopes.registerOwner(classSymbol, classOwner)
 
     val classKind =
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
@@ -179,11 +191,10 @@ object Javacp { self =>
       }
 
     val tparams: Seq[s.SymbolInformation] = classSignature match {
-      case Some(ClassSignature(Some(typeParameters: TypeParameters), _, _)) =>
-        typeParameters.all.map(tparam => addTypeParameter(tparam, classSymbol, scopes))
+      case Some(ClassSignature(Some(typeParameters), _, _)) =>
+        addTypeParameters(typeParameters, classSymbol, scopes)
       case _ => Nil
     }
-    scopes.update(classSymbol, classOwner, tparams.map(_.toBinding))
     tparams.foreach(buf += _)
 
     val parents = classSignature match {
@@ -233,13 +244,12 @@ object Javacp { self =>
           if (synonyms.length == 1) ""
           else "+" + (1 + synonyms.indexWhere(_.signature eq method.signature))
         val methodSymbol = classSymbol + method.node.name + "(" + method.descriptor + suffix + ")"
+        scopes.registerOwner(methodSymbol, classSymbol)
 
-        scopes.owner = methodSymbol // Must happen before addTypeParameter
         val methodTypeParameters = method.signature.typeParameters match {
-          case Some(tp: TypeParameters) => tp.all.map(t => addTypeParameter(t, classSymbol, scopes))
+          case Some(tp: TypeParameters) => addTypeParameters(tp, methodSymbol, scopes)
           case _ => Nil
         }
-        scopes.update(methodSymbol, classSymbol, methodTypeParameters.map(_.toBinding))
         methodTypeParameters.foreach(buf += _)
 
         val parameterSymbols = method.signature.params.zipWithIndex.map {

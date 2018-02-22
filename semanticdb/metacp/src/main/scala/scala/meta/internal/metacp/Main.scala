@@ -54,6 +54,7 @@ object Main {
 
         def handleFile(file: Path): FileVisitResult = {
           if (PathIO.extension(file) != "class") return FileVisitResult.CONTINUE
+          if (file.getFileName.toString != "SmallSortedMap$Entry.class") return FileVisitResult.CONTINUE
           try {
             val relpath = AbsolutePath(file).toRelative(root).toString
             val bytes = Files.readAllBytes(file)
