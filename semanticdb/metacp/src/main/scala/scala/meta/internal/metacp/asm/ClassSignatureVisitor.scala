@@ -1,4 +1,4 @@
-package scala.meta.tests.metacp
+package scala.meta.internal.metacp.asm
 
 import scala.collection.JavaConverters._
 import scala.meta.internal.metacp.JavaTypeSignature

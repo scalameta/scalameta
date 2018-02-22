@@ -1,47 +1,24 @@
 package scala.meta.tests.metacp
 
-import scala.tools.asm.signature.SignatureReader
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.MethodNode
 import scala.collection.JavaConverters._
+import scala.meta.internal.metacp.JavaTypeSignature.MethodSignature
+import scala.meta.internal.metacp.asm.MethodSignatureVisitor
+import scala.meta.internal.metacp.asm.TypedSignatureVisitor
 
-class MethodSignatureSuite extends BaseSignatureSuite {
-  def assertMethodRoundtrip(signature: String): Unit = {
-    val signatureReader = new SignatureReader(signature)
-    val visitor = new MethodSignatureVisitor
-    signatureReader.accept(visitor)
-    val classSignature = visitor.result()
-    //      pprint.log(classSignature)
-    val obtained = classSignature.pretty
-    assertNoDiff(obtained, signature)
-  }
+class MethodSignatureSuite extends BaseSignatureSuite[MethodSignature] {
+  override def newVisitor(): TypedSignatureVisitor[MethodSignature] =
+    new MethodSignatureVisitor()
 
-  def checkMethodSignature(name: String, classpath: () => String): Unit = {
-    checkSignatureCallback(name, classpath) { node: ClassNode =>
-      node.methods.asScala.iterator.map { method: MethodNode =>
-        val signature = if (method.signature == null) method.desc else method.signature
-        (signature, { () =>
-          assertMethodRoundtrip(signature)
-        })
-      }.toList
-    }
-  }
+  override def callback(node: ClassNode): List[(String, () => Unit)] =
+    node.methods.asScala.iterator.map { method: MethodNode =>
+      val signature = if (method.signature == null) method.desc else method.signature
+      (signature, { () =>
+        assertRoundtrip(signature)
+      })
+    }.toList
 
-  def checkMethodRoundtrip(signature: String): Unit = {
-    test(signature) { assertMethodRoundtrip(signature) }
-  }
+  allLibraries.foreach(checkSignatureLibrary)
 
-  def checkMethodSignatureLibrary(coordinates: Coordinates): Unit = {
-    checkMethodSignature(
-      "method-" + coordinates.name,
-      coordinates.classpath
-    )
-  }
-
-  allLibraries.foreach(checkMethodSignatureLibrary)
-
-//  checkMethodSignatureLibrary(scalameta)
-//  checkMethodSignatureLibrary(akka)
-  //  checkMethodSignatureLibrary(spark)
-//  checkMethodSignatureLibrary(kafka)
 }

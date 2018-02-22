@@ -1,46 +1,22 @@
 package scala.meta.tests.metacp
 
-import scala.tools.asm.signature.SignatureReader
+import scala.meta.internal.metacp.JavaTypeSignature.ClassSignature
+import scala.meta.internal.metacp.asm.ClassSignatureVisitor
 import scala.tools.asm.tree.ClassNode
 
-class ClassSignatureSuite extends BaseSignatureSuite {
-  def assertClassRoundtrip(signature: String): Unit = {
-    val signatureReader = new SignatureReader(signature)
-    val visitor = new ClassSignatureVisitor
-    signatureReader.accept(visitor)
-    val classSignature = visitor.result()
-    //      pprint.log(classSignature)
-    val obtained = classSignature.pretty
-    assertNoDiff(obtained, signature)
-  }
+class ClassSignatureSuite extends BaseSignatureSuite[ClassSignature] {
 
-  def checkClassSignature(name: String, classpath: () => String): Unit = {
-    checkSignatureCallback(name, classpath) { node: ClassNode =>
-      List(
-        (node.signature, { () =>
-          if (node.signature != null) {
-            assertClassRoundtrip(node.signature)
-          }
-        })
-      )
-    }
-  }
+  override def newVisitor() = new ClassSignatureVisitor()
 
-  def checkClassRoundtrip(signature: String): Unit = {
-    test(signature) { assertClassRoundtrip(signature) }
-  }
-
-  def checkClassSignatureLibrary(coordinates: Coordinates): Unit = {
-    checkClassSignature(
-      "class-" + coordinates.name,
-      coordinates.classpath
+  override def callback(node: ClassNode): List[(String, () => Unit)] =
+    List(
+      (node.signature, { () =>
+        if (node.signature != null) {
+          assertRoundtrip(node.signature)
+        }
+      })
     )
-  }
 
-  allLibraries.foreach(checkClassSignatureLibrary)
-//  checkClassSignatureLibrary(scalameta)
-//  checkClassSignatureLibrary(akka)
-//  checkClassSignatureLibrary(spark)
-//  checkClassSignatureLibrary(kafka)
+  allLibraries.foreach(checkSignatureLibrary)
 
 }
