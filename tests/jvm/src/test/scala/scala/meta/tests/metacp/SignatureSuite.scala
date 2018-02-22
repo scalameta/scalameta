@@ -7,6 +7,7 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
+import scala.meta.interactive.InteractiveSemanticdb
 import scala.meta.internal.metacp.Javacp
 import scala.meta.internal.metacp.Scopes
 import scala.meta.internal.metacp.asm.ClassSignatureVisitor
@@ -20,21 +21,17 @@ import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.MethodNode
 import scala.util.control.NonFatal
+import scala.meta.internal.semanticdb3.TextDocuments
+import `scala`.meta.internal.semanticdb3.SymbolInformation
 import org.langmeta.internal.io.PathIO
 import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
-import scala.meta.internal.{semanticdb3 => s}
+import org.langmeta.semanticdb.Database
 
 class SignatureSuite extends BaseMetacpSuite {
 
-  final def parse[T](signature: String, visitor: TypedSignatureVisitor[T]): T = {
-    val signatureReader = new SignatureReader(signature)
-    signatureReader.accept(visitor)
-    visitor.result()
-  }
-
   final def assertRoundtrip(signature: String, visitor: TypedSignatureVisitor[Pretty]): Unit = {
-    val obtained = parse[Pretty](signature, visitor).pretty
+    val obtained = JavaTypeSignature.parse[Pretty](signature, visitor).pretty
     assertNoDiff(obtained, signature)
   }
 
@@ -115,10 +112,32 @@ class SignatureSuite extends BaseMetacpSuite {
     val node = Javacp.asmNodeFromBytes(bytes)
     val scopes = new Scopes()
     val db = Javacp.process(node, scopes)
-    db.foreach(s => println(s.toProtoString))
-//    pprint.log(node.signature)
+    db.foreach { s: SymbolInformation =>
+      val k = SymbolInformation.Kind
+      s.kind match {
+        case k.TYPE_PARAMETER =>
+          println(s.toProtoString)
+        case _ =>
+      }
+    }
+    //    pprint.log(node.signature)
 //    val clazz = parse(node.signature, new ClassSignatureVisitor)
 //    pprint.log(clazz)
+  }
+
+  ignore("print") {
+    val compiler = InteractiveSemanticdb.newCompiler()
+    import scala.meta.internal.semanticdb._
+    val doc = Database(
+      InteractiveSemanticdb
+        .toDocument(
+          compiler,
+          """
+            |class Foo[A <: CharSequence with java.io.Serializable] {
+            |  def foo[B <: Number] = null
+            |}
+      """.stripMargin) :: Nil).toSchema(PathIO.workingDirectory)
+    doc.documents.head.symbols.foreach(s => println(s.toProtoString))
   }
 
 }

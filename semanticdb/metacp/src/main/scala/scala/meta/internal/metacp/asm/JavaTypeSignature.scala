@@ -1,5 +1,7 @@
 package scala.meta.internal.metacp.asm
 
+import scala.tools.asm.signature.SignatureReader
+
 /** Translation of "Signature" section from the JVM spec to Scala.
   *
   * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
@@ -9,6 +11,12 @@ sealed trait JavaTypeSignature
     with JavaTypeSignature.FieldSignature
     with Pretty
 object JavaTypeSignature {
+  final def parse[T](signature: String, visitor: TypedSignatureVisitor[T]): T = {
+    val signatureReader = new SignatureReader(signature)
+    signatureReader.accept(visitor)
+    visitor.result()
+  }
+
   abstract class BaseType(name: String) extends JavaTypeSignature with Product {
     final override def print(sb: StringBuilder): Unit =
       sb.append(this.productPrefix)
@@ -78,9 +86,10 @@ object JavaTypeSignature {
       }
     }
 
-    case class TypeArguments(argument: TypeArgument, tail: List[TypeArgument]) extends Pretty {
+    case class TypeArguments(head: TypeArgument, tail: List[TypeArgument]) extends Pretty {
+      def all: List[TypeArgument] = head :: tail
       override def print(sb: StringBuilder): Unit = {
-        argument.print(sb)
+        head.print(sb)
         tail.foreach(_.print(sb))
       }
     }
@@ -137,11 +146,11 @@ object JavaTypeSignature {
       superinterfaceSignature.foreach(_.print(sb))
     }
   }
-  case class TypeParameters(typeParameter: TypeParameter, tail: List[TypeParameter])
-      extends Pretty {
+  case class TypeParameters(head: TypeParameter, tail: List[TypeParameter]) extends Pretty {
+    def all: List[TypeParameter] = head :: tail
     override def print(sb: StringBuilder): Unit = {
       sb.append('<')
-      typeParameter.print(sb)
+      head.print(sb)
       tail.foreach(_.print(sb))
       sb.append('>')
     }
@@ -151,6 +160,10 @@ object JavaTypeSignature {
       classBound: ClassBound,
       interfaceBounds: List[InterfaceBound])
       extends Pretty {
+    def upperBounds: List[ReferenceTypeSignature] = classBound match {
+      case ClassBound(Some(sig)) => sig :: interfaceBounds.map(_.referenceTypeSignature)
+      case ClassBound(_) => interfaceBounds.map(_.referenceTypeSignature)
+    }
     override def print(sb: StringBuilder): Unit = {
       sb.append(identifier)
       classBound.print(sb)

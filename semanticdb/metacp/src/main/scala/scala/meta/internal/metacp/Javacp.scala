@@ -11,6 +11,10 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
+import scala.meta.internal.metacp.asm.ClassSignatureVisitor
+import scala.meta.internal.metacp.asm.JavaTypeSignature
+import scala.meta.internal.metacp.asm.JavaTypeSignature._
+import scala.meta.internal.metacp.asm.JavaTypeSignature.ReferenceTypeSignature._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.{semanticdb3 => s}
@@ -24,54 +28,7 @@ import scala.tools.asm.{Opcodes => o}
 import org.langmeta.internal.io.PathIO
 import org.langmeta.io.AbsolutePath
 
-object Javacp {
-
-  def array(tpe: s.Type): s.Type =
-    ref("_root_.scala.Array#", tpe :: Nil)
-
-  def ref(symbol: String, args: List[s.Type] = Nil): s.Type = {
-    s.Type(
-      s.Type.Tag.TYPE_REF,
-      typeRef = Some(s.TypeRef(prefix = None, symbol, args))
-    )
-  }
-
-  def enclosingPackage(name: String): String = {
-    val slash = name.lastIndexOf('/')
-    if (slash < 0) sys.error(name)
-    else name.substring(0, slash)
-  }
-
-  def main(args: Array[String]): Unit = {
-    run(args)
-    //    val signature =
-    //      "<T:Ljava/lang/Object;>(Ljava/util/ArrayList<Ljava/util/ArrayList<[TT;>;>;)Ljava/util/ArrayList<Ljava/util/ArrayList<[TT;>;>;"
-    //    val sr = new SignatureReader(signature)
-    //    val v = new SemanticdbSignatureVisitor
-    //    sr.accept(v)
-  }
-
-  def run(args: Array[String]): Unit = {
-    val root = AbsolutePath("core/target/scala-2.12/classes/test")
-    val scopes = new Scopes()
-    Files.walkFileTree(
-      root.toNIO,
-      new SimpleFileVisitor[Path] {
-        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          if (PathIO.extension(file) == "class") {
-
-            val db = process(root.toNIO, file, scopes)
-            if (!file.toString.contains('$')) {
-              // pprint.log(db.toProtoString, height = 1000)
-              // Main.pprint(db)
-            }
-          }
-          FileVisitResult.CONTINUE
-        }
-      }
-    )
-
-  }
+object Javacp { self =>
 
   def process(root: Path, file: Path, scopes: Scopes): s.TextDocument = {
     val bytes = Files.readAllBytes(file)
@@ -85,14 +42,7 @@ object Javacp {
     )
   }
 
-  def process(node: ClassNode, scopes: Scopes): Seq[s.SymbolInformation] = {
-
-    val buf = ArrayBuffer.empty[s.SymbolInformation]
-
-    val classSymbol = ssym(node.name)
-    val className = getName(node.name)
-    val isTopLevelClass = !node.name.contains("$")
-
+  def addPackages(nodeName: String, buf: ArrayBuffer[s.SymbolInformation]): String = {
     def addPackage(name: String, owner: String): String = {
       val packageSymbol = owner + name + "."
       buf += s.SymbolInformation(
@@ -103,14 +53,100 @@ object Javacp {
       )
       packageSymbol
     }
-    val classOwner: String = if (isTopLevelClass) {
-      // Emit packages
-      val packages = node.name.split("/")
-      packages.iterator
-        .take(packages.length - 1)
-        .foldLeft(addPackage("_root_", "")) {
-          case (owner, name) => addPackage(name, owner)
+    val packages = nodeName.split("/")
+    packages.iterator
+      .take(packages.length - 1)
+      .foldLeft(addPackage("_root_", "")) {
+        case (owner, name) => addPackage(name, owner)
+      }
+  }
+
+  def language = Some(s.Language("Java"))
+
+  implicit class XtensionTypeParameter(self: TypeArgument) {
+    def toType(implicit scopes: Scopes): s.Type = self match {
+      case ReferenceTypeArgument(wildcard, referenceTypeSignature) =>
+        val tpe = referenceTypeSignature.toType
+        wildcard match {
+          case Some(WildcardIndicator.Plus) => tpe // TODO
+          case Some(WildcardIndicator.Minus) => tpe // TODO
+          case _ => tpe
         }
+      case WildcardTypeArgument =>
+        ref("local_wildcard") // TODO: handle wildcard type arguments
+    }
+  }
+
+  implicit class XtensionJavaTypeSignature(self: JavaTypeSignature) {
+    def toType(implicit scopes: Scopes): s.Type =
+      fromJVMS(self)(scopes)
+  }
+
+  implicit class XtensionTypeArgumentsOption(self: Option[TypeArguments]) {
+    def toType(implicit scopes: Scopes): List[s.Type] = self match {
+      case Some(targs: TypeArguments) => targs.all.map(_.toType)
+      case _ => Nil
+    }
+  }
+
+  def fromJVMS(sig: JavaTypeSignature)(implicit scopes: Scopes): s.Type = sig match {
+    case ClassTypeSignature(_, SimpleClassTypeSignature(identifier, targs), todo) =>
+      s.Type(
+        s.Type.Tag.TYPE_REF,
+        typeRef = Some(
+          s.TypeRef(
+            symbol = ssym(identifier),
+            typeArguments = targs.toType
+          )
+        )
+      )
+    case _ =>
+      // TODO(olafur):
+      // TypeVariableSignature
+      // ArrayTypeSignature
+      // BaseType
+      ???
+
+  }
+
+  def addTypeParameter(
+      typeParameter: TypeParameter,
+      classSymbol: String,
+      scopes: Scopes): s.SymbolInformation = {
+    val symbol = classSymbol + "[" + typeParameter.identifier + "]"
+    val typeParameters = typeParameter.upperBounds.map(fromJVMS(_)(scopes))
+    val upperBounds = typeParameters match {
+      case upperBound :: Nil =>
+        upperBound
+      case _ =>
+        s.Type(
+          s.Type.Tag.STRUCTURAL_TYPE,
+          structuralType = Some(s.StructuralType(parents = typeParameters))
+        )
+    }
+    val tpe = s.Type(
+      s.Type.Tag.TYPE_TYPE,
+      typeType = Some(s.TypeType(upperBound = Some(upperBounds)))
+    )
+    s.SymbolInformation(
+      symbol = symbol,
+      language = language,
+      kind = k.TYPE_PARAMETER,
+      name = typeParameter.identifier,
+      tpe = Some(tpe)
+    )
+  }
+
+  def process(node: ClassNode, scopes: Scopes): Seq[s.SymbolInformation] = {
+
+    val buf = ArrayBuffer.empty[s.SymbolInformation]
+
+    val classSymbol = ssym(node.name)
+    val className = getName(node.name)
+    val isTopLevelClass = !node.name.contains("$")
+
+    val classOwner: String = if (isTopLevelClass) {
+      addPackages(node.name, buf)
     } else {
       ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
@@ -119,22 +155,31 @@ object Javacp {
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
       else k.CLASS
 
-    val classDeclaration =
-      if (node.signature == null) None
-      else {
-        // TODO
+    val classSignature =
+      if (node.signature == null) {
         None
+      } else {
+        val classSignature =
+          JavaTypeSignature.parse[ClassSignature](node.signature, new ClassSignatureVisitor)
+        Some(classSignature)
       }
 
-    val decls = List.empty[String]
+    val tparams: Seq[s.SymbolInformation] = classSignature match {
+      case Some(ClassSignature(Some(typeParameters: TypeParameters), _, _)) =>
+        typeParameters.all.map(tparam => addTypeParameter(tparam, classSymbol, scopes))
+      case _ => Nil
+    }
+
+    scopes.update(classSymbol, classOwner, tparams.map(info => Binding(info.name, info.symbol)))
+    tparams.foreach(buf += _)
 
     val classTpe = s.Type(
       tag = s.Type.Tag.CLASS_INFO_TYPE,
       classInfoType = Some(
         s.ClassInfoType(
-          typeParameters = Nil,
+          typeParameters = tparams.map(_.symbol),
           parents = Nil,
-          declarations = decls
+          declarations = Nil
         )
       )
     )
@@ -192,6 +237,22 @@ object Javacp {
         s.Accessibility(a.PRIVATE_WITHIN, owner.substring(0, owner.lastIndexOf('.')))
       )
     }
+  }
+
+  def array(tpe: s.Type): s.Type =
+    ref("_root_.scala.Array#", tpe :: Nil)
+
+  def ref(symbol: String, args: List[s.Type] = Nil): s.Type = {
+    s.Type(
+      s.Type.Tag.TYPE_REF,
+      typeRef = Some(s.TypeRef(prefix = None, symbol, args))
+    )
+  }
+
+  def enclosingPackage(name: String): String = {
+    val slash = name.lastIndexOf('/')
+    if (slash < 0) sys.error(name)
+    else name.substring(0, slash)
   }
 
 }

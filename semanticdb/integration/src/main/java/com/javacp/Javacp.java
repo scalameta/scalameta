@@ -2,15 +2,20 @@ package com.javacp;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 
-public class Javacp<A extends CharSequence, B> extends ArrayList<A> implements Comparable<B>, Serializable {
+public class Javacp<A extends CharSequence & Serializable, B> extends ArrayList<A> implements Comparable<B>, Serializable {
 
     @Override
     public int compareTo(B b) {
         return 0;
     }
+
+    public void wildcard(ArrayList<?> wildcard) {}
+
+    public void wildcard(Collection<? extends Number> a, Collection<? super Number> b) {}
 
     class InnerShadowTypeParam<A> {
         public void move(A a, B b) {
