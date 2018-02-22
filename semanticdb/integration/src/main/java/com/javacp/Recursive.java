@@ -9,5 +9,6 @@ public abstract class Recursive<
             A extends Recursive<A, B> & Serializable,
             B extends Inner<A, B>> {
     }
+    public abstract class Inner2<C extends Comparable<C>> {}
 
 }

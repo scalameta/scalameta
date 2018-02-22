@@ -54,7 +54,8 @@ object Main {
 
         def handleFile(file: Path): FileVisitResult = {
           if (PathIO.extension(file) != "class") return FileVisitResult.CONTINUE
-          if (file.getFileName.toString != "SmallSortedMap$Entry.class") return FileVisitResult.CONTINUE
+          // HACK(olafur) investigate why Filename$1.class files crash with resolution errors.
+          if (file.getFileName.toString.exists(_.isDigit)) return FileVisitResult.CONTINUE
           try {
             val relpath = AbsolutePath(file).toRelative(root).toString
             val bytes = Files.readAllBytes(file)
@@ -91,6 +92,14 @@ object Main {
               fail(file, ex)
           }
           FileVisitResult.CONTINUE
+        }
+
+        val ByFilenameLength = new Comparator[Path] {
+          override def compare(o1: Path, o2: Path): Int = {
+            val f1 = o1.getFileName.toString
+            val f2 = o2.getFileName.toString
+            Integer.compare(f1.length, f2.length)
+          }
         }
 
         override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {

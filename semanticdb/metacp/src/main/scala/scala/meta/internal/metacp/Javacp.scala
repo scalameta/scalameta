@@ -170,6 +170,10 @@ object Javacp { self =>
     val className = getName(node.name)
     val isTopLevelClass = !node.name.contains("$")
 
+    if (node.outerClass != null) {
+      
+    }
+
     val classOwner: String = if (isTopLevelClass) {
       addPackages(node.name, buf)
     } else {

@@ -1,8 +1,10 @@
 package scala.meta.internal.metacp
 
 import java.util
+import java.util.NoSuchElementException
 import java.util.function
 import scala.annotation.tailrec
+import scala.util.control.NoStackTrace
 
 case class Binding(name: String, symbol: String)
 
@@ -38,7 +40,12 @@ class Scopes(
   }
 
   final def resolve(name: String): String = {
-    resolve(name, owner)
+    try {
+      resolve(name, owner)
+    } catch {
+      case e: NoSuchElementException =>
+        throw new IllegalArgumentException(owner, e) with NoStackTrace
+    }
   }
 
   @tailrec
