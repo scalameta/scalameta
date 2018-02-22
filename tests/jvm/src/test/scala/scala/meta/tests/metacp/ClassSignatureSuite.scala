@@ -2,7 +2,11 @@ package scala.meta.tests.metacp
 
 import scala.meta.internal.metacp.asm.JavaTypeSignature.ClassSignature
 import scala.meta.internal.metacp.asm.ClassSignatureVisitor
+import scala.meta.internal.metacp.asm.JavaTypeSignature.ReferenceTypeSignature
+import scala.meta.internal.metacp.asm.ReferenceTypeSignatureVisitor
 import scala.tools.asm.tree.ClassNode
+import scala.tools.asm.tree.FieldNode
+
 
 class ClassSignatureSuite extends BaseSignatureSuite[ClassSignature] {
 

@@ -8,3 +8,8 @@ trait Pretty {
     sb.toString
   }
 }
+object Pretty {
+  val empty: Pretty = new Pretty {
+    override def print(sb: StringBuilder): Unit = ()
+  }
+}

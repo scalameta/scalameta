@@ -27,7 +27,7 @@ abstract class FailFastSignatureVisitor extends SignatureVisitor(o.ASM5) {
   override def visitEnd(): Unit = () // OK to ignore.
 }
 
-abstract class TypedSignatureVisitor[T] extends FailFastSignatureVisitor {
+abstract class TypedSignatureVisitor[+T] extends FailFastSignatureVisitor {
   def result(): T
 }
 
@@ -67,6 +67,11 @@ class JavaTypeSignatureVisitor(isArray: Boolean) extends TypedSignatureVisitor[J
     if (isArray) ArrayTypeSignature(obtained)
     else obtained
   }
+
+  override def visitSuperclass: SignatureVisitor =
+    // visitSuperclass can be called for field signatures and followed with
+    // visitBaseType, which is not a reference.
+    this
 
   override def visitArrayType: SignatureVisitor = {
     referenceTypeSignature.visitArrayType()
@@ -163,6 +168,8 @@ class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[Referen
       }
     }
   }
+
+  override def visitSuperclass(): SignatureVisitor = this
 
   override def visitArrayType(): SignatureVisitor = {
     val visitor = new JavaTypeSignatureVisitor(isArray = true)
@@ -262,8 +269,9 @@ class MethodSignatureVisitor
     throws += visitor
     visitor
   }
-
 }
+
+class FieldSignatureVisitor extends JavaTypeSignatureVisitor(false)
 
 trait TypeParametersVisitor { this: SignatureVisitor =>
   private var typeParameters = List.newBuilder[TypeParameterVisitor]
@@ -305,7 +313,7 @@ class ClassSignatureVisitor
   }
 
   override def visitSuperclass(): SignatureVisitor = {
-    superclassSignature
+    superclassSignature.visitSuperclass()
   }
 
   override def visitInterface(): SignatureVisitor = {

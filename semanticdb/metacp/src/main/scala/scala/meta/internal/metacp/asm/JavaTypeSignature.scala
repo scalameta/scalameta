@@ -4,7 +4,10 @@ package scala.meta.internal.metacp.asm
   *
   * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
   */
-sealed trait JavaTypeSignature extends JavaTypeSignature.Result with Pretty
+sealed trait JavaTypeSignature
+    extends JavaTypeSignature.Result
+    with JavaTypeSignature.FieldSignature
+    with Pretty
 object JavaTypeSignature {
   abstract class BaseType(name: String) extends JavaTypeSignature with Product {
     final override def print(sb: StringBuilder): Unit =
@@ -25,7 +28,7 @@ object JavaTypeSignature {
     case object V extends BaseType("Unit")
   }
 
-  sealed trait ReferenceTypeSignature extends JavaTypeSignature with FieldSignature
+  sealed trait ReferenceTypeSignature extends JavaTypeSignature
   object ReferenceTypeSignature {
     case class ClassTypeSignature(
         packageSpecifier: Option[PackageSpecifier],
@@ -219,5 +222,5 @@ object JavaTypeSignature {
   }
 
   // field signature
-  trait FieldSignature
+  trait FieldSignature extends Pretty
 }
