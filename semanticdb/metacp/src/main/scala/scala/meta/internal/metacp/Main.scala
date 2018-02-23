@@ -55,8 +55,6 @@ object Main {
 
         def handleFile(file: Path): FileVisitResult = {
           if (PathIO.extension(file) != "class") return FileVisitResult.CONTINUE
-          // HACK(olafur) Enter inner classes before entering anonymous classes.
-//          if (file.getFileName.toString.exists(_.isDigit)) return FileVisitResult.CONTINUE
           try {
             val relpath = AbsolutePath(file).toRelative(root).toString
             val bytes = Files.readAllBytes(file)
@@ -97,9 +95,10 @@ object Main {
 
 
         override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
-//          if (!dir.getFileName.endsWith("javacp")) return FileVisitResult.CONTINUE
           scopes.clear()
-          val files = Files.list(dir).sorted((Comparator.reverseOrder()))
+          // Sort files in reverse order so that we process Outer.class before Outer$Inner.class.
+          // This ordering is necessary to resolve type variables correcly in generic signatures.
+          val files = Files.list(dir).sorted(Comparator.reverseOrder())
           import scala.collection.JavaConverters._
           files
             .iterator()
