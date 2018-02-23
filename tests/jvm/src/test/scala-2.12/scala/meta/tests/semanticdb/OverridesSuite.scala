@@ -74,7 +74,7 @@ class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = Over
    """.stripMargin,
    """
      |_empty_.Foobar#foo().{
-     |   _empty_.Foo#foo().
+     |  _empty_.Foo#foo().
      |}
    """.stripMargin
   )

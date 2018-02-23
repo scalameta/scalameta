@@ -72,7 +72,7 @@ class CliSuite extends BaseCliSuite {
       |_empty_.HelloWorld.main(Array).(args) => param args: Array[String]
       |  Array => _root_.scala.Array#
       |  String => _root_.scala.Predef.String#
-      |_root_.scala.Array# => final class Array.{+6 decls}
+      |_root_.scala.Array# => final class Array[Array#[T: <?>].{+6 decls}
       |  extends AnyRef
       |  extends Serializable
       |  extends Cloneable

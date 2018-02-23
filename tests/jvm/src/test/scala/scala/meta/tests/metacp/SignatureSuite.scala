@@ -7,54 +7,44 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
-import scala.meta.interactive.InteractiveSemanticdb
 import scala.meta.internal.metacp.Javacp
-import scala.meta.internal.metacp.Scopes
-import scala.meta.internal.metacp.Main
-import scala.meta.internal.metacp.Settings
 import scala.meta.internal.metacp.asm.ClassSignatureVisitor
 import scala.meta.internal.metacp.asm.FieldSignatureVisitor
 import scala.meta.internal.metacp.asm.JavaTypeSignature
 import scala.meta.internal.metacp.asm.MethodSignatureVisitor
 import scala.meta.internal.metacp.asm.JavaTypeSignature.Pretty
 import scala.meta.internal.metacp.asm.TypedSignatureVisitor
-import scala.tools.asm.signature.SignatureReader
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.MethodNode
 import scala.util.control.NonFatal
-import scala.meta.internal.semanticdb3.TextDocuments
-import scala.meta.internal.semanticdb3.SymbolInformation
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import org.langmeta.internal.io.PathIO
-import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
-import org.langmeta.semanticdb.Database
 
 class SignatureSuite extends BaseMetacpSuite {
 
-  final def assertRoundtrip(signature: String, visitor: TypedSignatureVisitor[Pretty]): Unit = {
+  // Validates that pretty(parse(signature) == signature
+  def assertSignatureRoundtrip(signature: String, visitor: TypedSignatureVisitor[Pretty]): Unit = {
     val obtained = JavaTypeSignature.parse[Pretty](signature, visitor).pretty
     assertNoDiff(obtained, signature)
   }
 
-  final def checkSignatureLibrary(coordinates: Coordinates): Unit = {
-    test(coordinates.name) {
-      var longestSignature = ""
+  // Validates that all signatures of the classfiles in the given
+  // library pass assertSignatureRoundtrip
+  def checkSignatureRoundtrip(library: Library): Unit = {
+    test(library.name) {
       val failingSignatures = ArrayBuffer.empty[String]
-      Classpath(coordinates.classpath()).visit { root =>
+      Classpath(library.classpath()).visit { root =>
         new java.nio.file.SimpleFileVisitor[Path] {
           override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
             if (PathIO.extension(file) == "class") {
               val bytes = Files.readAllBytes(file)
               val node = Javacp.parseClassNode(bytes)
-              val tests = callback(node)
+              val tests = checkAllSignatures(node)
               tests.foreach {
                 case (signature, unsafe) =>
                   try {
                     unsafe()
-                    if (signature.length > longestSignature.length)
-                      longestSignature = signature
                   } catch {
                     case NonFatal(e) =>
                       println(signature)
@@ -74,81 +64,40 @@ class SignatureSuite extends BaseMetacpSuite {
         )
         fail("failures! See signatures.txt")
       }
-      println(longestSignature)
     }
   }
 
-  def fieldCallback(node: ClassNode): List[(String, () => Unit)] =
+  def checkFields(node: ClassNode): List[(String, () => Unit)] =
     node.fields.asScala.iterator.map { field: FieldNode =>
       val signature = if (field.signature == null) field.desc else field.signature
       (signature, { () =>
-        assertRoundtrip(signature, new FieldSignatureVisitor())
+        assertSignatureRoundtrip(signature, new FieldSignatureVisitor())
       })
     }.toList
 
-  def methodCallback(node: ClassNode): List[(String, () => Unit)] =
+  def checkMethods(node: ClassNode): List[(String, () => Unit)] =
     node.methods.asScala.iterator.map { method: MethodNode =>
       val signature = if (method.signature == null) method.desc else method.signature
       (signature, { () =>
-        assertRoundtrip(signature, new MethodSignatureVisitor())
+        assertSignatureRoundtrip(signature, new MethodSignatureVisitor())
       })
     }.toList
 
-  def classCallback(node: ClassNode): List[(String, () => Unit)] =
+  // Test only class parsing
+  def checkClass(node: ClassNode): List[(String, () => Unit)] =
     if (node.signature == null) Nil
     else {
       List(
         (node.signature, { () =>
-          assertRoundtrip(node.signature, new ClassSignatureVisitor)
+          assertSignatureRoundtrip(node.signature, new ClassSignatureVisitor)
         })
       )
     }
 
-  def callback(node: ClassNode): List[(String, () => Unit)] = {
-    fieldCallback(node) ::: methodCallback(node) ::: classCallback(node)
+  def checkAllSignatures(node: ClassNode): List[(String, () => Unit)] = {
+    checkFields(node) ::: checkMethods(node) ::: checkClass(node)
   }
 
-  ignore("metacp") {
-    val out = Files.createTempDirectory("metacp")
-    out.toFile.deleteOnExit()
-
-    Main.process(Settings("semanticdb/integration/target/scala-2.12/classes/" :: Nil, out.toString))
-  }
-
-  ignore("s.Type") {
-
-    val path =
-      AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/ClassSuffix.class")
-    val bytes = path.readAllBytes
-    val node = Javacp.parseClassNode(bytes)
-    val scopes = new Scopes()
-    val db = Javacp.ssymbols(node, scopes)
-    db.foreach { s: SymbolInformation =>
-      s.kind match {
-        case k.TYPE_PARAMETER =>
-        case k.VAR | k.VAL =>
-        case _ =>
-      }
-    }
-  }
-
-  test("print") {
-    val compiler = InteractiveSemanticdb.newCompiler()
-    import scala.meta.internal.semanticdb._
-    val doc = Database(
-      InteractiveSemanticdb
-        .toDocument(
-          compiler,
-          """
-            |class Foo {
-            |  def foo(e: Map[_ <: Number, _ >: String]): String = null
-            |}
-      """.stripMargin) :: Nil).toSchema(PathIO.workingDirectory)
-    doc.documents.head.symbols.foreach { i: SymbolInformation =>
-      if (i.kind == k.PARAMETER) {
-        println(i.toProtoString)
-      }
-    }
-  }
+  allLibraries.take(2).foreach(checkSignatureRoundtrip)
 
 }
