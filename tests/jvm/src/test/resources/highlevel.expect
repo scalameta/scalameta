@@ -114,7 +114,7 @@ Messages:
 [80..115): [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 Symbols:
-_root_.example. => package example.{+10 members}
+_root_.example. => package example.{+25 members}
 _root_.example.Example. => final object Example
 _root_.example.Example.main(Array). => def main: (args: Array[String]): Unit
   [7..12): Array => _root_.scala.Array#

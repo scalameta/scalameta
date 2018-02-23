@@ -46,8 +46,7 @@ trait DiffAssertions extends FunSuiteLike {
 
   private def compareContents(original: Seq[String], revised: Seq[String]): String = {
     import collection.JavaConverters._
-    def trim(lines: Seq[String]) = lines.map(_.trim).asJava
-    val diff = difflib.DiffUtils.diff(trim(original), trim(revised))
+    val diff = difflib.DiffUtils.diff(original.asJava, revised.asJava)
     if (diff.getDeltas.isEmpty) ""
     else
       difflib.DiffUtils

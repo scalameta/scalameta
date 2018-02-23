@@ -32,7 +32,7 @@ object PlatformFileIO {
   }
 
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
-    path.toFile.getParentFile.mkdirs()
+    Files.createDirectories(path.toNIO.getParent)
     val os = Files.newOutputStream(path.toNIO)
     try proto.writeTo(os)
     finally os.close()

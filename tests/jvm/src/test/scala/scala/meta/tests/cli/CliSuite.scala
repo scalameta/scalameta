@@ -12,7 +12,9 @@ import scala.meta.testkit.DiffAssertions
 class CliSuite extends BaseCliSuite {
   val sourceroot = Files.createTempDirectory("sourceroot_")
   val helloWorldScala = sourceroot.resolve("HelloWorld.scala")
-  Files.write(helloWorldScala, """
+  Files.write(
+    helloWorldScala,
+    """
     object HelloWorld {
       def main(args: Array[String]): Unit = {
         println("hello world")
@@ -23,14 +25,15 @@ class CliSuite extends BaseCliSuite {
   val helloWorldSemanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
 
   test("metac " + helloWorldScala) {
-    val (exitcode, output) = CliSuite.communicate {
-      Metac.process(Array(
-        "-cp",
-        scalaLibraryJar,
-        "-P:semanticdb:sourceroot:" + sourceroot.toString,
-        "-d",
-        target.toString,
-        helloWorldScala.toString))
+    val (exitcode, output) = CliSuite.communicate { out =>
+      Metac.process(
+        Array(
+          "-cp",
+          scalaLibraryJar,
+          "-P:semanticdb:sourceroot:" + sourceroot.toString,
+          "-d",
+          target.toString,
+          helloWorldScala.toString))
     }
     assert(exitcode == 0)
     assert(output.isEmpty)
@@ -43,11 +46,13 @@ class CliSuite extends BaseCliSuite {
       else if (versionNumberString.startsWith("2.12")) "Scala212"
       else sys.error(s"unsupported Scala version: $versionNumberString")
     }
-    val (exitcode, output) = CliSuite.communicate {
-      Metap.process(Array(helloWorldSemanticdb.toString))
+    val (exitcode, output) = CliSuite.communicate { out =>
+      Metap.process(Array(helloWorldSemanticdb.toString), out)
     }
     assert(exitcode == 0)
-    assertNoDiff(output, s"""
+    assertNoDiff(
+      output,
+      s"""
       |HelloWorld.scala
       |----------------
       |
@@ -67,7 +72,7 @@ class CliSuite extends BaseCliSuite {
       |_empty_.HelloWorld.main(Array).(args) => param args: Array[String]
       |  Array => _root_.scala.Array#
       |  String => _root_.scala.Predef.String#
-      |_root_.scala.Array# => final class Array.{+6 decls}
+      |_root_.scala.Array# => final class Array[Array#[T: <?>].{+6 decls}
       |  extends AnyRef
       |  extends Serializable
       |  extends Cloneable
@@ -92,10 +97,10 @@ class CliSuite extends BaseCliSuite {
 }
 
 object CliSuite {
-  def communicate[T](op: => T): (T, String) = {
+  def communicate[T](op: PrintStream => T): (T, String) = {
     val baos = new ByteArrayOutputStream
     val ps = new PrintStream(baos, true, UTF_8.name)
-    val result = scala.Console.withOut(baos)(scala.Console.withErr(baos)(op))
+    val result = op(ps)
     (result, new String(baos.toByteArray, UTF_8))
   }
 }

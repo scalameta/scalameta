@@ -1,10 +1,12 @@
 package scala.meta.tests.metacp
 
+// TODO(olafur): move to slow/integration tests. Each run takes ~30s on my laptop
+// and produces ~350mb of artifacts in a temporary directory.
 class MetacpSuite extends BaseMetacpSuite {
 
-  check("scala-library", () => scalaLibraryJar)
-  checkLibrary("org.scalameta", "scalameta_2.12", "3.2.0")
-  checkLibrary("com.typesafe.akka", "akka-testkit_2.12", "2.5.9")
-  checkLibrary("org.apache.spark", "spark-sql_2.11", "2.2.1")
+  checkMetacp("scala-library", () => scalaLibraryJar)
+  checkNoCrashes(scalameta)
+  checkNoCrashes(akka)
+  checkNoCrashes(spark)
 
 }
