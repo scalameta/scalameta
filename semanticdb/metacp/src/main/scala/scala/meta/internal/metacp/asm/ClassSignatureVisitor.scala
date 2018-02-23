@@ -160,7 +160,6 @@ class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[Referen
         case simpleClass :: suffix =>
           Some(
             ClassTypeSignature(
-              None,
               simpleClass.result(),
               suffix.map(s => ClassTypeSignatureSuffix(s.result()))
             )

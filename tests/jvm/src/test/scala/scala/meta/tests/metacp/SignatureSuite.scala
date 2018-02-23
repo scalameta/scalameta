@@ -47,7 +47,7 @@ class SignatureSuite extends BaseMetacpSuite {
           override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
             if (PathIO.extension(file) == "class") {
               val bytes = Files.readAllBytes(file)
-              val node = Javacp.asmNodeFromBytes(bytes)
+              val node = Javacp.parseClassNode(bytes)
               val tests = callback(node)
               tests.foreach {
                 case (signature, unsafe) =>
@@ -120,7 +120,7 @@ class SignatureSuite extends BaseMetacpSuite {
     val path =
       AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/ClassSuffix.class")
     val bytes = path.readAllBytes
-    val node = Javacp.asmNodeFromBytes(bytes)
+    val node = Javacp.parseClassNode(bytes)
     val scopes = new Scopes()
     val db = Javacp.process(node, scopes)
     db.foreach { s: SymbolInformation =>

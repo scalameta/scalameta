@@ -1,48 +1,35 @@
 package scala.meta.internal.metacp
 
-import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes
-import java.util.Locale.LanguageRange
-import java.util.NoSuchElementException
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.metacp.asm.ClassSignatureVisitor
 import scala.meta.internal.metacp.asm.FieldSignatureVisitor
 import scala.meta.internal.metacp.asm.JavaTypeSignature
-import scala.meta.internal.metacp.asm.JavaTypeSignature._
 import scala.meta.internal.metacp.asm.JavaTypeSignature.ReferenceTypeSignature._
+import scala.meta.internal.metacp.asm.JavaTypeSignature._
 import scala.meta.internal.metacp.asm.MethodSignatureVisitor
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.ClassReader
-import scala.tools.asm.signature.SignatureReader
-import scala.tools.asm.signature.SignatureVisitor
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
-import scala.tools.asm.tree.InnerClassNode
 import scala.tools.asm.tree.MethodNode
 import scala.tools.asm.{Opcodes => o}
-import org.langmeta.internal.io.PathIO
-import org.langmeta.io.AbsolutePath
 
-object Javacp { self =>
-
-  private[this] val IsNumber = "\\d+".r
+object Javacp {
 
   def process(root: Path, file: Path, scopes: Scopes): s.TextDocument = {
     val bytes = Files.readAllBytes(file)
-    val node = asmNodeFromBytes(bytes)
+    val node = parseClassNode(bytes)
     val symbols =
       try process(node, scopes)
       catch {
-        case e: IllegalArgumentException =>
-          // TODO: implement inner annonymous classes
+        case e: ScopeResolutionError =>
+          // TODO: implement inner anonymous classes
+          val IsNumber = "\\d+".r
           val hasNumberEntry = node.name
             .split("\\$")
             .exists(IsNumber.findFirstIn(_).isDefined)
@@ -57,51 +44,10 @@ object Javacp { self =>
     )
   }
 
-  def addPackages(nodeName: String, buf: ArrayBuffer[s.SymbolInformation]): String = {
-    def addPackage(name: String, owner: String): String = {
-      val packageSymbol = owner + name + "."
-      buf += s.SymbolInformation(
-        symbol = packageSymbol,
-        kind = k.PACKAGE,
-        name = name,
-        owner = owner
-      )
-      packageSymbol
-    }
-    val packages = nodeName.split("/")
-    packages.iterator
-      .take(packages.length - 1)
-      .foldLeft(addPackage("_root_", "")) {
-        case (owner, name) => addPackage(name, owner)
-      }
-  }
-
-  def language = Some(s.Language("Java"))
-
-  implicit class XtensionTypeArgument(self: TypeArgument) {
-    // TODO: implement wildcards after https://github.com/scalameta/scalameta/issues/1357
-    def toType(implicit scopes: Scopes): s.Type = self match {
-      case ReferenceTypeArgument(_, referenceTypeSignature) =>
-        referenceTypeSignature.toType
-      case WildcardTypeArgument =>
-        ref("local_wildcard")
-    }
-  }
-
-  implicit class XtensionJavaTypeSignature(self: JavaTypeSignature) {
-    def toType(implicit scopes: Scopes): s.Type =
-      fromJavaTypeSignature(self)(scopes)
-  }
-
-  implicit class XtensionTypeArgumentsOption(self: Option[TypeArguments]) {
-    def toType(implicit scopes: Scopes): List[s.Type] = self match {
-      case Some(targs: TypeArguments) => targs.all.map(_.toType)
-      case _ => Nil
-    }
-  }
+  def javaLanguage = Some(s.Language("Java"))
 
   def fromJavaTypeSignature(sig: JavaTypeSignature)(implicit scopes: Scopes): s.Type = sig match {
-    case ClassTypeSignature(_, SimpleClassTypeSignature(identifier, targs), suffix) =>
+    case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
       val prefix = ref(ssym(identifier), targs.toType)
       suffix.foldLeft(prefix) {
         case (accum, s: ClassTypeSignatureSuffix) =>
@@ -153,7 +99,7 @@ object Javacp { self =>
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,
-      language = language,
+      language = javaLanguage,
       kind = k.TYPE_PARAMETER,
       name = typeParameter.value.identifier,
       tpe = Some(tpe),
@@ -165,7 +111,7 @@ object Javacp { self =>
     signature.params.iterator
       .map {
         case t: BaseType => t.name
-        case t: ClassTypeSignature => getName(t.simpleClassTypeSignature.identifier)
+        case t: ClassTypeSignature => sname(t.simpleClassTypeSignature.identifier)
         case t: TypeVariableSignature => t.identifier
         case _: ArrayTypeSignature => "Array"
       }
@@ -174,14 +120,14 @@ object Javacp { self =>
   case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
 
   def process(node: ClassNode, scopes: Scopes): Seq[s.SymbolInformation] = {
-    implicit val implicitScopes = scopes
+    implicit val implicitScopes: Scopes = scopes
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
 
     val decls = ListBuffer.empty[String]
 
     val classSymbol = ssym(node.name)
-    val className = getName(node.name)
+    val className = sname(node.name)
     val isTopLevelClass = !node.name.contains("$")
 
     val classOwner: String = if (isTopLevelClass) {
@@ -201,9 +147,9 @@ object Javacp { self =>
           ClassSignature.simple(node.superName, node.interfaces.asScala.toList)
         )
       } else {
-        val classSignature =
+        Some(
           JavaTypeSignature.parse[ClassSignature](node.signature, new ClassSignatureVisitor)
-        Some(classSignature)
+        )
       }
 
     val tparams: Seq[s.SymbolInformation] = classSignature match {
@@ -228,7 +174,7 @@ object Javacp { self =>
 
       buf += s.SymbolInformation(
         symbol = fieldSymbol,
-        language = language,
+        language = javaLanguage,
         kind =
           if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
           else k.VAR,
@@ -276,7 +222,7 @@ object Javacp { self =>
             val paramSymbol = methodSymbol + "(" + name + ")"
             buf += s.SymbolInformation(
               symbol = paramSymbol,
-              language = language,
+              language = javaLanguage,
               kind = k.PARAMETER,
               name = name,
               tpe = Some(param.toType)
@@ -297,7 +243,7 @@ object Javacp { self =>
 
         buf += s.SymbolInformation(
           symbol = methodSymbol,
-          language = language,
+          language = javaLanguage,
           kind = k.DEF,
           name = method.node.name,
           accessibility = saccessibility(method.node.access, classSymbol),
@@ -334,7 +280,7 @@ object Javacp { self =>
     buf.result()
   }
 
-  def asmNodeFromBytes(bytes: Array[Byte]): ClassNode = {
+  def parseClassNode(bytes: Array[Byte]): ClassNode = {
     val node = new ClassNode()
     new ClassReader(bytes).accept(
       node,
@@ -345,19 +291,19 @@ object Javacp { self =>
     node
   }
 
-  def getName(symbol: String): String = {
-    var i = symbol.length - 1
+  def sname(asmName: String): String = {
+    var i = asmName.length - 1
     while (i >= 0) {
-      symbol.charAt(i) match {
-        case '$' | '/' => return symbol.substring(i + 1)
+      asmName.charAt(i) match {
+        case '$' | '/' => return asmName.substring(i + 1)
         case _ => i -= 1
       }
     }
-    throw new IllegalArgumentException(s"Missing $$ or / from symbol '$symbol'")
+    throw new IllegalArgumentException(s"Missing $$ or / from symbol '$asmName'")
   }
 
-  def ssym(string: String): String =
-    "_root_." + string.replace('$', '#').replace('/', '.') + "#"
+  def ssym(asmName: String): String =
+    "_root_." + asmName.replace('$', '#').replace('/', '.') + "#"
 
   implicit class XtensionAccess(n: Int) {
     def hasFlag(flag: Int): Boolean =
@@ -388,6 +334,7 @@ object Javacp { self =>
 
     buf.result()
   }
+
   def sproperties(access: Int): Int = {
     val p = s.SymbolInformation.Property
     var bits = 0
@@ -413,4 +360,44 @@ object Javacp { self =>
     else name.substring(0, slash)
   }
 
+  def addPackages(nodeName: String, buf: ArrayBuffer[s.SymbolInformation]): String = {
+    def addPackage(name: String, owner: String): String = {
+      val packageSymbol = owner + name + "."
+      buf += s.SymbolInformation(
+        symbol = packageSymbol,
+        kind = k.PACKAGE,
+        name = name,
+        owner = owner
+      )
+      packageSymbol
+    }
+    val packages = nodeName.split("/")
+    packages.iterator
+      .take(packages.length - 1)
+      .foldLeft(addPackage("_root_", "")) {
+        case (owner, name) => addPackage(name, owner)
+      }
+  }
+
+  private implicit class XtensionTypeArgument(self: TypeArgument) {
+    // TODO: implement wildcards after https://github.com/scalameta/scalameta/issues/1357
+    def toType(implicit scopes: Scopes): s.Type = self match {
+      case ReferenceTypeArgument(_, referenceTypeSignature) =>
+        referenceTypeSignature.toType
+      case WildcardTypeArgument =>
+        ref("local_wildcard")
+    }
+  }
+
+  private implicit class XtensionJavaTypeSignature(self: JavaTypeSignature) {
+    def toType(implicit scopes: Scopes): s.Type =
+      fromJavaTypeSignature(self)(scopes)
+  }
+
+  private implicit class XtensionTypeArgumentsOption(self: Option[TypeArguments]) {
+    def toType(implicit scopes: Scopes): List[s.Type] = self match {
+      case Some(targs: TypeArguments) => targs.all.map(_.toType)
+      case _ => Nil
+    }
+  }
 }

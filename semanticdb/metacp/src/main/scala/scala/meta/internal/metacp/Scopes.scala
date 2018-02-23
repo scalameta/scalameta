@@ -7,6 +7,10 @@ import java.util.function
 import scala.annotation.tailrec
 import scala.util.control.NoStackTrace
 
+class ScopeResolutionError(identifier: String, owner: String, cause: Throwable)
+    extends Exception(s"Failed to resolve identifier '$identifier' in owner $owner", cause)
+    with NoStackTrace
+
 class Scopes(
     owners: util.Map[String, String] = new util.HashMap(),
     scopes: util.Map[String, util.Map[String, String]] = new util.HashMap()
@@ -43,7 +47,7 @@ class Scopes(
       resolve(name, owner)
     } catch {
       case e: NoSuchElementException =>
-        throw new IllegalArgumentException(owner, e) with NoStackTrace
+        throw new ScopeResolutionError(name, owner, e)
     }
   }
 

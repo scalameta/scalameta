@@ -37,7 +37,6 @@ object JavaTypeSignature {
   sealed trait ReferenceTypeSignature extends JavaTypeSignature
   object ReferenceTypeSignature {
     case class ClassTypeSignature(
-        packageSpecifier: Option[PackageSpecifier],
         simpleClassTypeSignature: SimpleClassTypeSignature,
         classTypeSignatureSuffix: List[ClassTypeSignatureSuffix]
     ) extends ReferenceTypeSignature
@@ -52,7 +51,6 @@ object JavaTypeSignature {
     object ClassTypeSignature {
       def simple(name: String): ClassTypeSignature =
         ClassTypeSignature(
-          None,
           SimpleClassTypeSignature(name, None),
           Nil
         )
@@ -74,8 +72,7 @@ object JavaTypeSignature {
         javaTypeSignature.print(sb)
       }
     }
-    // JVMS deviation. We don't use PackageSpecifier, the a/b/c path is encoded in the identifier.
-    case class PackageSpecifier(identifier: String, specifier: List[PackageSpecifier])
+    // JVMS deviation. There is no PackageSpecifier, we encode the path in the identifier instead because that's what we get from ASM.
     case class SimpleClassTypeSignature(identifier: String, typeArguments: Option[TypeArguments])
         extends Pretty {
       def print(sb: StringBuilder): Unit = {
