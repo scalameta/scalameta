@@ -107,16 +107,16 @@ class SignatureSuite extends BaseMetacpSuite {
     fieldCallback(node) ::: methodCallback(node) ::: classCallback(node)
   }
 
-  test("metacp") {
+  ignore("metacp") {
     val out = Files.createTempDirectory("metacp")
     out.toFile.deleteOnExit()
 
     Main.process(Settings("semanticdb/integration/target/scala-2.12/classes/" :: Nil, out.toString))
   }
 
-  ignore("s.Type") {
+  test("s.Type") {
     val path =
-      AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/")
+      AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/NonGeneric.class")
     val bytes = path.readAllBytes
     val node = Javacp.asmNodeFromBytes(bytes)
     val scopes = new Scopes()

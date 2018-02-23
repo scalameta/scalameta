@@ -83,12 +83,12 @@ object Javacp { self =>
       case ReferenceTypeArgument(wildcard, referenceTypeSignature) =>
         val tpe = referenceTypeSignature.toType
         wildcard match {
-          case Some(WildcardIndicator.Plus) => tpe // TODO
-          case Some(WildcardIndicator.Minus) => tpe // TODO
+          case Some(WildcardIndicator.Plus) => tpe // TODO implement me
+          case Some(WildcardIndicator.Minus) => tpe // TODO implement me
           case _ => tpe
         }
       case WildcardTypeArgument =>
-        ref("local_wildcard") // TODO: handle wildcard type arguments
+        ref("local_wildcard") // TODO: implement me
     }
   }
 
@@ -190,10 +190,11 @@ object Javacp { self =>
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
       else k.CLASS
 
-    val classSignature =
+    val classSignature: Option[ClassSignature] =
       if (node.signature == null) {
-        // TODO: node.superClass/node.interfaces
-        None
+        Some(
+          ClassSignature.simple(node.superName, node.interfaces.asScala.toList)
+        )
       } else {
         val classSignature =
           JavaTypeSignature.parse[ClassSignature](node.signature, new ClassSignatureVisitor)
@@ -208,7 +209,8 @@ object Javacp { self =>
     tparams.foreach(buf += _)
 
     val parents = classSignature match {
-      case Some(c: ClassSignature) => c.parents.map(_.toType)
+      case Some(c: ClassSignature) =>
+        c.parents.map(_.toType)
       case _ => Nil
     }
 

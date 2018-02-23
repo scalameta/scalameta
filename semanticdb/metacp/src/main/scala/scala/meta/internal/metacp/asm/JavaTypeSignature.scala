@@ -1,6 +1,7 @@
 package scala.meta.internal.metacp.asm
 
 import scala.tools.asm.signature.SignatureReader
+import scala.tools.asm.tree.ClassNode
 
 /** Translation of "Signature" section from the JVM spec to Scala.
   *
@@ -47,6 +48,15 @@ object JavaTypeSignature {
         classTypeSignatureSuffix.foreach(_.print(sb))
         sb.append(';')
       }
+    }
+    object ClassTypeSignature {
+      def simple(name: String): ClassTypeSignature =
+        ClassTypeSignature(
+          None,
+          SimpleClassTypeSignature(name, None),
+          Nil
+        )
+
     }
     case class TypeVariableSignature(identifier: String)
         extends ReferenceTypeSignature
@@ -139,6 +149,15 @@ object JavaTypeSignature {
       }
       superclassSignature.print(sb)
       superinterfaceSignature.foreach(_.print(sb))
+    }
+  }
+  object ClassSignature {
+    def simple(superClass: String, interfaces: List[String]): ClassSignature = {
+      ClassSignature(
+        None,
+        ClassTypeSignature.simple(superClass),
+        interfaces.map(ClassTypeSignature.simple)
+      )
     }
   }
   case class TypeParameters(head: TypeParameter, tail: List[TypeParameter]) extends Pretty {
