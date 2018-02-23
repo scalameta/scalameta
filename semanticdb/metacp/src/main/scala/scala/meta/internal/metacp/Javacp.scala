@@ -105,13 +105,18 @@ object Javacp { self =>
   }
 
   def fromJavaTypeSignature(sig: JavaTypeSignature)(implicit scopes: Scopes): s.Type = sig match {
-    case ClassTypeSignature(_, SimpleClassTypeSignature(identifier, targs), todo) =>
-      pprint.log(sig)
-      pprint.log(todo)
-      if (todo.nonEmpty) {
+    case ClassTypeSignature(_, SimpleClassTypeSignature(identifier, targs), suffix) =>
+      val prefix = ref(ssym(identifier), targs.toType)
+      val out = suffix.foldLeft(prefix) {
+        case (accum, s: ClassTypeSignatureSuffix) =>
+          ref(
+            prefix = Some(accum),
+            symbol = ssym(s.simpleClassTypeSignature.identifier),
+            args = s.simpleClassTypeSignature.typeArguments.toType
+          )
       }
-
-      ref(ssym(identifier), targs.toType)
+      pprint.log(out.toProtoString)
+      out
     case TypeVariableSignature(name) =>
       ref(scopes.resolve(name))
     case t: BaseType =>
@@ -400,10 +405,10 @@ object Javacp { self =>
   def array(tpe: s.Type): s.Type =
     ref("_root_.scala.Array#", tpe :: Nil)
 
-  def ref(symbol: String, args: List[s.Type] = Nil): s.Type = {
+  def ref(symbol: String, args: List[s.Type] = Nil, prefix: Option[s.Type] = None): s.Type = {
     s.Type(
       s.Type.Tag.TYPE_REF,
-      typeRef = Some(s.TypeRef(prefix = None, symbol, args))
+      typeRef = Some(s.TypeRef(prefix, symbol, args))
     )
   }
 

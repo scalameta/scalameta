@@ -21,6 +21,4 @@ public abstract class Recursive<
         };
     }
 
-    public abstract static class Builder <BuilderType extends Builder<BuilderType>> {}
-
 }

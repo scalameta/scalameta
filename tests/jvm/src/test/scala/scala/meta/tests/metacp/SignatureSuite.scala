@@ -115,8 +115,9 @@ class SignatureSuite extends BaseMetacpSuite {
   }
 
   ignore("s.Type") {
+
     val path =
-      AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/NonGeneric.class")
+      AbsolutePath("semanticdb/integration/target/scala-2.12/classes/com/javacp/ClassSuffix.class")
     val bytes = path.readAllBytes
     val node = Javacp.asmNodeFromBytes(bytes)
     val scopes = new Scopes()
