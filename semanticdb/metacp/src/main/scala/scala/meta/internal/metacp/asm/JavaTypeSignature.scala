@@ -6,9 +6,25 @@ import scala.tools.asm.signature.SignatureReader
   *
   * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
   */
-sealed trait JavaTypeSignature extends JavaTypeSignature.Pretty
+sealed trait JavaTypeSignature extends JavaTypeSignature.Printable
 object JavaTypeSignature {
-  trait Pretty {
+
+  /** Parse JVM signature using a custom traverser.
+    *
+    * Example:
+    *
+    * {{{
+    *   parse[ClassSignature]("...", new ClassSignatureVisitor)
+    * }}}
+    */
+  final def parse[T](signature: String, visitor: TypedSignatureVisitor[T]): T = {
+    val signatureReader = new SignatureReader(signature)
+    signatureReader.accept(visitor)
+    visitor.result()
+  }
+
+  /** Helper to print parsed JavaTypeSignature back into original signature */
+  trait Printable {
     def print(sb: StringBuilder): Unit
     final def pretty: String = {
       val sb = new StringBuilder
@@ -16,12 +32,8 @@ object JavaTypeSignature {
       sb.toString
     }
   }
-  final def parse[T](signature: String, visitor: TypedSignatureVisitor[T]): T = {
-    val signatureReader = new SignatureReader(signature)
-    signatureReader.accept(visitor)
-    visitor.result()
-  }
 
+  // NOTE: We use Scala-friendly names for base types instead of the Java primitive keywords.
   abstract class BaseType(val name: String) extends JavaTypeSignature with Product {
     final override def print(sb: StringBuilder): Unit =
       sb.append(this.productPrefix)
@@ -36,114 +48,115 @@ object JavaTypeSignature {
     case object S extends BaseType("Short")
     case object Z extends BaseType("Boolean")
 
-    // NOTE(olafur) the void descriptor is stricly not part of BaseType
+    // JVMS deviation. The void descriptor is not part of BaseType
     // but having it here simplifies things.
     case object V extends BaseType("Unit")
   }
 
   sealed trait ReferenceTypeSignature extends JavaTypeSignature
-  object ReferenceTypeSignature {
-    case class ClassTypeSignature(
-        simpleClassTypeSignature: SimpleClassTypeSignature,
-        classTypeSignatureSuffix: List[ClassTypeSignatureSuffix]
-    ) extends ReferenceTypeSignature
-        with ThrowsSignature {
-      override def print(sb: StringBuilder): Unit = {
-        sb.append('L')
-        simpleClassTypeSignature.print(sb)
-        classTypeSignatureSuffix.foreach(_.print(sb))
-        sb.append(';')
-      }
-    }
-    object ClassTypeSignature {
-      def simple(name: String): ClassTypeSignature =
-        ClassTypeSignature(
-          SimpleClassTypeSignature(name, None),
-          Nil
-        )
 
+  case class ClassTypeSignature(
+      simpleClassTypeSignature: SimpleClassTypeSignature,
+      classTypeSignatureSuffix: List[ClassTypeSignatureSuffix]
+  ) extends ReferenceTypeSignature
+      with ThrowsSignature {
+    override def print(sb: StringBuilder): Unit = {
+      sb.append('L')
+      simpleClassTypeSignature.print(sb)
+      classTypeSignatureSuffix.foreach(_.print(sb))
+      sb.append(';')
     }
-    case class TypeVariableSignature(identifier: String)
-        extends ReferenceTypeSignature
-        with ThrowsSignature {
-      override def print(sb: StringBuilder): Unit = {
-        sb.append('T')
-        sb.append(identifier)
-        sb.append(';')
-      }
-    }
-    case class ArrayTypeSignature(javaTypeSignature: JavaTypeSignature)
-        extends ReferenceTypeSignature {
-      override def print(sb: StringBuilder): Unit = {
-        sb.append("[")
-        javaTypeSignature.print(sb)
-      }
-    }
-    // JVMS deviation. There is no PackageSpecifier, we encode the path in the identifier instead because that's what we get from ASM.
-    case class SimpleClassTypeSignature(identifier: String, typeArguments: Option[TypeArguments])
-        extends Pretty {
-      def print(sb: StringBuilder): Unit = {
-        sb.append(identifier)
-        typeArguments match {
-          case Some(t: TypeArguments) =>
-            sb.append('<')
-            t.print(sb)
-            sb.append('>')
-          case None =>
-        }
-      }
-    }
+  }
+  object ClassTypeSignature {
+    def simple(name: String): ClassTypeSignature =
+      ClassTypeSignature(
+        SimpleClassTypeSignature(name, None),
+        Nil
+      )
+  }
 
-    case class TypeArguments(head: TypeArgument, tail: List[TypeArgument]) extends Pretty {
-      def all: List[TypeArgument] = head :: tail
-      override def print(sb: StringBuilder): Unit = {
-        head.print(sb)
-        tail.foreach(_.print(sb))
-      }
+  case class TypeVariableSignature(identifier: String)
+      extends ReferenceTypeSignature
+      with ThrowsSignature {
+    override def print(sb: StringBuilder): Unit = {
+      sb.append('T')
+      sb.append(identifier)
+      sb.append(';')
     }
-    trait TypeArgument extends Pretty
-    case object WildcardTypeArgument extends TypeArgument {
-      override def print(sb: StringBuilder): Unit = sb.append('*')
+  }
+
+  case class ArrayTypeSignature(javaTypeSignature: JavaTypeSignature)
+      extends ReferenceTypeSignature {
+    override def print(sb: StringBuilder): Unit = {
+      sb.append("[")
+      javaTypeSignature.print(sb)
     }
-    case class ReferenceTypeArgument(
-        wildcard: Option[WildcardIndicator],
-        referenceTypeSignature: ReferenceTypeSignature)
-        extends TypeArgument {
-      override def print(sb: StringBuilder): Unit = {
-        wildcard match {
-          case Some(w: WildcardIndicator) => w.print(sb)
-          case _ =>
-        }
-        referenceTypeSignature.print(sb)
-      }
-    }
-    sealed class WildcardIndicator(wildcard: Char) extends Pretty {
-      override def print(sb: StringBuilder): Unit = sb.append(wildcard)
-    }
-    object WildcardIndicator {
-      case object Plus extends WildcardIndicator('+')
-      case object Minus extends WildcardIndicator('-')
-      // NOTE(olafur) Star is strictly not a WildcardIndicator, however having
-      // star here makes it easier to implement TypeArgumentVisitor.
-      case object Star extends WildcardIndicator('*')
-    }
-    case class ClassTypeSignatureSuffix(simpleClassTypeSignature: SimpleClassTypeSignature)
-        extends Pretty {
-      override def print(sb: StringBuilder): Unit = {
-        sb.append('.')
-        simpleClassTypeSignature.print(sb)
+  }
+
+  // JVMS deviation. There is no PackageSpecifier, we encode the path in the
+  // identifier instead because that's what we get from ASM.
+  case class SimpleClassTypeSignature(identifier: String, typeArguments: Option[TypeArguments])
+      extends Printable {
+    def print(sb: StringBuilder): Unit = {
+      sb.append(identifier)
+      typeArguments match {
+        case Some(t: TypeArguments) =>
+          sb.append('<')
+          t.print(sb)
+          sb.append('>')
+        case None =>
       }
     }
   }
 
-  import ReferenceTypeSignature._
+  case class TypeArguments(head: TypeArgument, tail: List[TypeArgument]) extends Printable {
+    def all: List[TypeArgument] = head :: tail
+    override def print(sb: StringBuilder): Unit = {
+      head.print(sb)
+      tail.foreach(_.print(sb))
+    }
+  }
 
-  // class signature
+  trait TypeArgument extends Printable
+  case object WildcardTypeArgument extends TypeArgument {
+    override def print(sb: StringBuilder): Unit = sb.append('*')
+  }
+  case class ReferenceTypeArgument(
+      wildcard: Option[WildcardIndicator],
+      referenceTypeSignature: ReferenceTypeSignature)
+      extends TypeArgument {
+    override def print(sb: StringBuilder): Unit = {
+      wildcard match {
+        case Some(w: WildcardIndicator) => w.print(sb)
+        case _ =>
+      }
+      referenceTypeSignature.print(sb)
+    }
+  }
+
+  sealed class WildcardIndicator(wildcard: Char) extends Printable {
+    override def print(sb: StringBuilder): Unit = sb.append(wildcard)
+  }
+  object WildcardIndicator {
+    case object Plus extends WildcardIndicator('+')
+    case object Minus extends WildcardIndicator('-')
+    // NOTE: ? is strictly not a WildcardIndicator, however having
+    // star here makes it easier to implement TypeArgumentVisitor.
+    case object Star extends WildcardIndicator('*')
+  }
+  case class ClassTypeSignatureSuffix(simpleClassTypeSignature: SimpleClassTypeSignature)
+      extends Printable {
+    override def print(sb: StringBuilder): Unit = {
+      sb.append('.')
+      simpleClassTypeSignature.print(sb)
+    }
+  }
+
   case class ClassSignature(
       typeParameters: Option[TypeParameters],
       superclassSignature: ClassTypeSignature,
       superinterfaceSignature: List[ClassTypeSignature])
-      extends Pretty {
+      extends Printable {
     def parents: List[ClassTypeSignature] = superclassSignature :: superinterfaceSignature
     override def print(sb: StringBuilder): Unit = {
       typeParameters match {
@@ -164,7 +177,8 @@ object JavaTypeSignature {
       )
     }
   }
-  case class TypeParameters(head: TypeParameter, tail: List[TypeParameter]) extends Pretty {
+
+  case class TypeParameters(head: TypeParameter, tail: List[TypeParameter]) extends Printable {
     def all: List[TypeParameter] = head :: tail
     override def print(sb: StringBuilder): Unit = {
       sb.append('<')
@@ -173,11 +187,12 @@ object JavaTypeSignature {
       sb.append('>')
     }
   }
+
   case class TypeParameter(
       identifier: String,
       classBound: ClassBound,
       interfaceBounds: List[InterfaceBound])
-      extends Pretty {
+      extends Printable {
     def upperBounds: List[ReferenceTypeSignature] = classBound match {
       case ClassBound(Some(sig)) => sig :: interfaceBounds.map(_.referenceTypeSignature)
       case ClassBound(_) => interfaceBounds.map(_.referenceTypeSignature)
@@ -188,7 +203,8 @@ object JavaTypeSignature {
       interfaceBounds.foreach(_.print(sb))
     }
   }
-  case class ClassBound(referenceTypeSignature: Option[ReferenceTypeSignature]) extends Pretty {
+
+  case class ClassBound(referenceTypeSignature: Option[ReferenceTypeSignature]) extends Printable {
     override def print(sb: StringBuilder): Unit = {
       sb.append(':')
       referenceTypeSignature match {
@@ -197,20 +213,20 @@ object JavaTypeSignature {
       }
     }
   }
-  case class InterfaceBound(referenceTypeSignature: ReferenceTypeSignature) extends Pretty {
+
+  case class InterfaceBound(referenceTypeSignature: ReferenceTypeSignature) extends Printable {
     override def print(sb: StringBuilder): Unit = {
       sb.append(':')
       referenceTypeSignature.print(sb)
     }
   }
 
-  // method signature
   case class MethodSignature(
       typeParameters: Option[TypeParameters],
       params: List[JavaTypeSignature],
       result: JavaTypeSignature,
       throws: List[ThrowsSignature])
-      extends Pretty {
+      extends Printable {
     override def print(sb: StringBuilder): Unit = {
       typeParameters match {
         case Some(tp: TypeParameters) =>
@@ -228,7 +244,8 @@ object JavaTypeSignature {
     }
   }
 
-  trait ThrowsSignature extends Pretty
+  // Included for completeness, currently not used by metacp.
+  trait ThrowsSignature extends Printable
   object ThrowsSignature {
     case class ClassType(classTypeSignature: ClassTypeSignature) extends ThrowsSignature {
       override def print(sb: StringBuilder): Unit = {
@@ -244,7 +261,10 @@ object JavaTypeSignature {
     }
   }
 
-  // field signature: merged into JavaTypeSignature
-  // void descriptor: see BaseType.V
+  // NOTE: generic field signatures can only be ReferenceTypeSignature but the
+  // non-generic field signatures can include base types which are ReferenceTypeSignature.
+  type FieldSignature = JavaTypeSignature
+
+  type VoidDescriptor = BaseType.V.type
 
 }

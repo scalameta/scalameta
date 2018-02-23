@@ -1,15 +1,9 @@
-package scala.meta.internal.metacp
+package scala.meta.internal.metacp.asm
 
-import java.nio.file.Path
 import java.util
 import java.util.NoSuchElementException
-import java.util.function
 import scala.annotation.tailrec
 import scala.util.control.NoStackTrace
-
-class ScopeResolutionError(identifier: String, owner: String, cause: Throwable)
-    extends Exception(s"Failed to resolve identifier '$identifier' in owner $owner", cause)
-    with NoStackTrace
 
 class Scopes(
     owners: util.Map[String, String] = new util.HashMap(),
@@ -68,8 +62,13 @@ class Scopes(
 }
 
 object Scopes {
+  import java.util.function
   val newTreeMap: function.Function[String, util.Map[String, String]] =
     new function.Function[String, util.Map[String, String]] {
       override def apply(t: String): util.Map[String, String] = new util.TreeMap()
     }
 }
+
+class ScopeResolutionError(identifier: String, owner: String, cause: Throwable)
+    extends Exception(s"Failed to resolve identifier '$identifier' in owner $owner", cause)
+        with NoStackTrace

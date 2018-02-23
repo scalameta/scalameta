@@ -12,7 +12,7 @@ import scala.meta.internal.metacp.asm.ClassSignatureVisitor
 import scala.meta.internal.metacp.asm.FieldSignatureVisitor
 import scala.meta.internal.metacp.asm.JavaTypeSignature
 import scala.meta.internal.metacp.asm.MethodSignatureVisitor
-import scala.meta.internal.metacp.asm.JavaTypeSignature.Pretty
+import scala.meta.internal.metacp.asm.JavaTypeSignature.Printable
 import scala.meta.internal.metacp.asm.TypedSignatureVisitor
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
@@ -24,8 +24,8 @@ import org.langmeta.io.Classpath
 class SignatureSuite extends BaseMetacpSuite {
 
   // Validates that pretty(parse(signature) == signature
-  def assertSignatureRoundtrip(signature: String, visitor: TypedSignatureVisitor[Pretty]): Unit = {
-    val obtained = JavaTypeSignature.parse[Pretty](signature, visitor).pretty
+  def assertSignatureRoundtrip(signature: String, visitor: TypedSignatureVisitor[Printable]): Unit = {
+    val obtained = JavaTypeSignature.parse[Printable](signature, visitor).pretty
     assertNoDiff(obtained, signature)
   }
 

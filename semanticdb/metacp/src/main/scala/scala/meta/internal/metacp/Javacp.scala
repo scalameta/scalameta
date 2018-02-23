@@ -5,12 +5,8 @@ import java.nio.file.Path
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
-import scala.meta.internal.metacp.asm.ClassSignatureVisitor
-import scala.meta.internal.metacp.asm.FieldSignatureVisitor
-import scala.meta.internal.metacp.asm.JavaTypeSignature
-import scala.meta.internal.metacp.asm.JavaTypeSignature.ReferenceTypeSignature._
+import scala.meta.internal.metacp.asm._
 import scala.meta.internal.metacp.asm.JavaTypeSignature._
-import scala.meta.internal.metacp.asm.MethodSignatureVisitor
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.ClassReader

@@ -100,8 +100,9 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Example.scala
 Text => non-empty
 Language => Scala212
-Symbols => 19 entries
-Occurrences => 20 entries
+Symbols => 20 entries
+Occurrences => 23 entries
+Diagnostics => 1 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -145,6 +146,7 @@ _root_.scala.collection.mutable.Stack# => @deprecated @deprecated class Stack[St
 _root_.scala.collection.mutable.Stack#`<init>`(). => secondaryctor <init>: (): Stack[Stack#[A]
   Stack => _root_.scala.collection.mutable.Stack#
   Stack#[A => _root_.scala.collection.mutable.Stack#[A]
+_root_.scala.concurrent. => package concurrent
 _root_.scala.reflect. => package reflect
 _root_.scala.reflect.package.classTag(ClassTag). => def classTag: [T: <?>] => (ctag: <?>): ClassTag[T]
   T => _root_.scala.reflect.package.classTag(ClassTag).[T]
@@ -155,28 +157,34 @@ local0 => selfparam self: Example
 
 Occurrences:
 [0:8..0:15): example <= _root_.example.
-[2:7..2:14): Example <= _root_.example.Example.
-[2:17..2:21): self <= local0
-[3:6..3:11): scala => _root_.scala.
-[3:12..3:22): collection => _root_.scala.collection.
-[3:23..3:30): mutable => _root_.scala.collection.mutable.
-[3:31..3:36): Stack => _root_.scala.collection.mutable.Stack#
-[3:37..3:40): Int => _root_.scala.Int#
-[3:41..3:41):  => _root_.scala.collection.mutable.Stack#`<init>`().
-[4:6..4:10): main <= _root_.example.Example.main(Array).
-[4:11..4:15): args <= _root_.example.Example.main(Array).(args)
-[4:17..4:22): Array => _root_.scala.Array#
-[4:23..4:29): String => _root_.scala.Predef.String#
-[4:33..4:37): Unit => _root_.scala.Unit#
-[5:4..5:11): println => _root_.scala.Predef.println(Any).
-[7:6..7:7): x <= _root_.example.Example.x().
-[7:10..7:15): scala => _root_.scala.
-[7:16..7:23): reflect => _root_.scala.reflect.
-[7:24..7:32): classTag => _root_.scala.reflect.package.classTag(ClassTag).
-[7:33..7:36): Int => _root_.scala.Int#
+[2:7..2:12): scala => _root_.scala.
+[2:13..2:23): concurrent => _root_.scala.concurrent.
+[2:24..2:30): Future => _root_.scala.concurrent.Future#;_root_.scala.concurrent.Future.
+[4:7..4:14): Example <= _root_.example.Example.
+[4:17..4:21): self <= local0
+[5:6..5:11): scala => _root_.scala.
+[5:12..5:22): collection => _root_.scala.collection.
+[5:23..5:30): mutable => _root_.scala.collection.mutable.
+[5:31..5:36): Stack => _root_.scala.collection.mutable.Stack#
+[5:37..5:40): Int => _root_.scala.Int#
+[5:41..5:41):  => _root_.scala.collection.mutable.Stack#`<init>`().
+[6:6..6:10): main <= _root_.example.Example.main(Array).
+[6:11..6:15): args <= _root_.example.Example.main(Array).(args)
+[6:17..6:22): Array => _root_.scala.Array#
+[6:23..6:29): String => _root_.scala.Predef.String#
+[6:33..6:37): Unit => _root_.scala.Unit#
+[7:4..7:11): println => _root_.scala.Predef.println(Any).
+[9:6..9:7): x <= _root_.example.Example.x().
+[9:10..9:15): scala => _root_.scala.
+[9:16..9:23): reflect => _root_.scala.reflect.
+[9:24..9:32): classTag => _root_.scala.reflect.package.classTag(ClassTag).
+[9:33..9:36): Int => _root_.scala.Int#
+
+Diagnostics:
+[2:24..2:30)[warning] Unused import
 
 Synthetics:
-[7:37..7:37):  => *(((ClassTag.Int): ClassTag[Int]))
+[9:37..9:37):  => *(((ClassTag.Int): ClassTag[Int]))
   [0:0..0:1): * => _star_.
   [0:13..0:16): Int => _root_.scala.reflect.ClassTag.Int().
   [0:19..0:27): ClassTag => _root_.scala.reflect.ClassTag#
@@ -192,7 +200,7 @@ Language => Scala212
 Diagnostics => 1 entries
 
 Diagnostics:
-[3:6..3:41)[warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
+[5:6..5:41)[warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 semanticdb/integration/src/main/scala/example/Flags.scala
 ---------------------------------------------------------
