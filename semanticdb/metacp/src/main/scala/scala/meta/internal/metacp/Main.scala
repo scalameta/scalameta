@@ -72,7 +72,7 @@ object Main {
                 semanticdbInfos
               }
             } else {
-              val infos = Javacp.process(root.toNIO, file, scopes).symbols
+              val infos = Javacp.sdocument(root.toNIO, file, scopes).symbols
               Some(infos)
             }
             semanticdbInfos.foreach { infos =>

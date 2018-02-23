@@ -24,7 +24,6 @@ abstract class FailFastSignatureVisitor extends SignatureVisitor(o.ASM5) {
   override def visitInnerClassType(name: String): Unit = ???
   override def visitTypeArgument(): Unit = ???
   override def visitTypeArgument(wildcard: Char): SignatureVisitor = ???
-  override def visitEnd(): Unit = () // OK to ignore.
 }
 
 abstract class TypedSignatureVisitor[+T] extends FailFastSignatureVisitor {
@@ -42,7 +41,6 @@ class TypeArgumentVisitor extends TypedSignatureVisitor[TypeArgument] {
   // TODO(olafur) handle WildcardTypeARgument
 
   override def visitTypeArgument(wildcard: Char): SignatureVisitor = {
-//    pprint.log(wildcard)
     this.wildcard = wildcard match {
       case '+' => Some(WildcardIndicator.Plus)
       case '-' => Some(WildcardIndicator.Minus)
@@ -183,7 +181,6 @@ class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[Referen
   }
 
   override def visitClassType(name: String): Unit = {
-//    pprint.log(name)
     name match {
       // ASM does not strip off the L for java.lang.Object for some reason.
       case "Ljava/lang/Object" => startSimpleClass("java/lang/Object")
@@ -288,12 +285,10 @@ trait TypeParametersVisitor { this: SignatureVisitor =>
   }
 
   override def visitClassBound(): SignatureVisitor = {
-    //    pprint.log("classbound")
     lastTypeParameterVisitor.visitClassBound()
   }
 
   override def visitInterfaceBound(): SignatureVisitor = {
-    //    pprint.log("interfaceBound")
     lastTypeParameterVisitor.visitInterfaceBound()
   }
 }

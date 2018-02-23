@@ -16,7 +16,7 @@ import scala.meta.internal.metacp.asm.ClassSignatureVisitor
 import scala.meta.internal.metacp.asm.FieldSignatureVisitor
 import scala.meta.internal.metacp.asm.JavaTypeSignature
 import scala.meta.internal.metacp.asm.MethodSignatureVisitor
-import scala.meta.internal.metacp.asm.Pretty
+import scala.meta.internal.metacp.asm.JavaTypeSignature.Pretty
 import scala.meta.internal.metacp.asm.TypedSignatureVisitor
 import scala.tools.asm.signature.SignatureReader
 import scala.tools.asm.tree.ClassNode
@@ -122,7 +122,7 @@ class SignatureSuite extends BaseMetacpSuite {
     val bytes = path.readAllBytes
     val node = Javacp.parseClassNode(bytes)
     val scopes = new Scopes()
-    val db = Javacp.process(node, scopes)
+    val db = Javacp.ssymbols(node, scopes)
     db.foreach { s: SymbolInformation =>
       s.kind match {
         case k.TYPE_PARAMETER =>

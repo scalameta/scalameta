@@ -21,11 +21,11 @@ import scala.tools.asm.{Opcodes => o}
 
 object Javacp {
 
-  def process(root: Path, file: Path, scopes: Scopes): s.TextDocument = {
+  def sdocument(root: Path, file: Path, scopes: Scopes): s.TextDocument = {
     val bytes = Files.readAllBytes(file)
     val node = parseClassNode(bytes)
     val symbols =
-      try process(node, scopes)
+      try ssymbols(node, scopes)
       catch {
         case e: ScopeResolutionError =>
           // TODO: implement inner anonymous classes
@@ -48,21 +48,21 @@ object Javacp {
 
   def fromJavaTypeSignature(sig: JavaTypeSignature)(implicit scopes: Scopes): s.Type = sig match {
     case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
-      val prefix = ref(ssym(identifier), targs.toType)
+      val prefix = styperef(ssym(identifier), targs.toType)
       suffix.foldLeft(prefix) {
         case (accum, s: ClassTypeSignatureSuffix) =>
-          ref(
+          styperef(
             prefix = Some(accum),
             symbol = ssym(s.simpleClassTypeSignature.identifier),
             args = s.simpleClassTypeSignature.typeArguments.toType
           )
       }
     case TypeVariableSignature(name) =>
-      ref(scopes.resolve(name))
+      styperef(scopes.resolve(name))
     case t: BaseType =>
-      ref("_root_.scala." + t.name + "#")
+      styperef("_root_.scala." + t.name + "#")
     case ArrayTypeSignature(tpe) =>
-      array(tpe.toType)
+      sarray(tpe.toType)
   }
 
   case class TypeParameterInfo(value: TypeParameter, symbol: String)
@@ -119,19 +119,18 @@ object Javacp {
 
   case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
 
-  def process(node: ClassNode, scopes: Scopes): Seq[s.SymbolInformation] = {
+  def ssymbols(node: ClassNode, scopes: Scopes): Seq[s.SymbolInformation] = {
     implicit val implicitScopes: Scopes = scopes
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
-
     val decls = ListBuffer.empty[String]
 
     val classSymbol = ssym(node.name)
     val className = sname(node.name)
-    val isTopLevelClass = !node.name.contains("$")
 
+    val isTopLevelClass = !node.name.contains("$")
     val classOwner: String = if (isTopLevelClass) {
-      addPackages(node.name, buf)
+      spackages(node.name, buf)
     } else {
       ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
@@ -152,14 +151,14 @@ object Javacp {
         )
       }
 
-    val tparams: Seq[s.SymbolInformation] = classSignature match {
+    val classTypeParameters: Seq[s.SymbolInformation] = classSignature match {
       case Some(ClassSignature(Some(typeParameters), _, _)) =>
         addTypeParameters(typeParameters, classSymbol, scopes)
       case _ => Nil
     }
-    tparams.foreach(buf += _)
+    classTypeParameters.foreach(buf += _)
 
-    val parents = classSignature match {
+    val classParents = classSignature match {
       case Some(c: ClassSignature) =>
         c.parents.map(_.toType)
       case _ => Nil
@@ -259,8 +258,8 @@ object Javacp {
       tag = s.Type.Tag.CLASS_INFO_TYPE,
       classInfoType = Some(
         s.ClassInfoType(
-          typeParameters = tparams.map(_.symbol),
-          parents = parents,
+          typeParameters = classTypeParameters.map(_.symbol),
+          parents = classParents,
           declarations = decls
         )
       )
@@ -305,17 +304,12 @@ object Javacp {
   def ssym(asmName: String): String =
     "_root_." + asmName.replace('$', '#').replace('/', '.') + "#"
 
-  implicit class XtensionAccess(n: Int) {
-    def hasFlag(flag: Int): Boolean =
-      (flag & n) != 0
-  }
-
-  def accessibility(tag: s.Accessibility.Tag): Option[s.Accessibility] = Some(s.Accessibility(tag))
   def saccessibility(access: Int, owner: String): Option[s.Accessibility] = {
+    def sacc(tag: s.Accessibility.Tag): Option[s.Accessibility] = Some(s.Accessibility(tag))
     val a = s.Accessibility.Tag
-    if (access.hasFlag(o.ACC_PUBLIC)) accessibility(a.PUBLIC)
-    else if (access.hasFlag(o.ACC_PROTECTED)) accessibility(a.PROTECTED)
-    else if (access.hasFlag(o.ACC_PRIVATE)) accessibility(a.PRIVATE)
+    if (access.hasFlag(o.ACC_PUBLIC)) sacc(a.PUBLIC)
+    else if (access.hasFlag(o.ACC_PROTECTED)) sacc(a.PROTECTED)
+    else if (access.hasFlag(o.ACC_PRIVATE)) sacc(a.PRIVATE)
     else {
       Some(
         s.Accessibility(a.PRIVATE_WITHIN, owner.substring(0, owner.lastIndexOf('.')))
@@ -327,7 +321,7 @@ object Javacp {
     val buf = List.newBuilder[s.Annotation]
 
     def push(symbol: String): Unit =
-      buf += s.Annotation(Some(ref(symbol)))
+      buf += s.Annotation(Some(styperef(symbol)))
 
     if (access.hasFlag(o.ACC_DEPRECATED)) push("_root_.scala.deprecated#")
     if (access.hasFlag(o.ACC_STRICT)) push("_root_.scala.annotation.strictfp#")
@@ -344,23 +338,17 @@ object Javacp {
     bits
   }
 
-  def array(tpe: s.Type): s.Type =
-    ref("_root_.scala.Array#", tpe :: Nil)
+  def sarray(tpe: s.Type): s.Type =
+    styperef("_root_.scala.Array#", tpe :: Nil)
 
-  def ref(symbol: String, args: List[s.Type] = Nil, prefix: Option[s.Type] = None): s.Type = {
+  def styperef(symbol: String, args: List[s.Type] = Nil, prefix: Option[s.Type] = None): s.Type = {
     s.Type(
       s.Type.Tag.TYPE_REF,
       typeRef = Some(s.TypeRef(prefix, symbol, args))
     )
   }
 
-  def enclosingPackage(name: String): String = {
-    val slash = name.lastIndexOf('/')
-    if (slash < 0) sys.error(name)
-    else name.substring(0, slash)
-  }
-
-  def addPackages(nodeName: String, buf: ArrayBuffer[s.SymbolInformation]): String = {
+  def spackages(nodeName: String, buf: ArrayBuffer[s.SymbolInformation]): String = {
     def addPackage(name: String, owner: String): String = {
       val packageSymbol = owner + name + "."
       buf += s.SymbolInformation(
@@ -385,7 +373,7 @@ object Javacp {
       case ReferenceTypeArgument(_, referenceTypeSignature) =>
         referenceTypeSignature.toType
       case WildcardTypeArgument =>
-        ref("local_wildcard")
+        styperef("local_wildcard")
     }
   }
 
@@ -400,4 +388,10 @@ object Javacp {
       case _ => Nil
     }
   }
+
+  private implicit class XtensionAccess(asmAccess: Int) {
+    def hasFlag(flag: Int): Boolean =
+      (flag & asmAccess) != 0
+  }
+
 }

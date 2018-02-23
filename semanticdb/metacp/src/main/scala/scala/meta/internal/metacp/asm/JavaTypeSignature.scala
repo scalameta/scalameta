@@ -1,14 +1,21 @@
 package scala.meta.internal.metacp.asm
 
 import scala.tools.asm.signature.SignatureReader
-import scala.tools.asm.tree.ClassNode
 
 /** Translation of "Signature" section from the JVM spec to Scala.
   *
   * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
   */
-sealed trait JavaTypeSignature extends Pretty
+sealed trait JavaTypeSignature extends JavaTypeSignature.Pretty
 object JavaTypeSignature {
+  trait Pretty {
+    def print(sb: StringBuilder): Unit
+    final def pretty: String = {
+      val sb = new StringBuilder
+      this.print(sb)
+      sb.toString
+    }
+  }
   final def parse[T](signature: String, visitor: TypedSignatureVisitor[T]): T = {
     val signatureReader = new SignatureReader(signature)
     signatureReader.accept(visitor)
