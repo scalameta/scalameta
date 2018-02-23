@@ -5,7 +5,7 @@ import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Comparator
 import scala.collection.mutable
-import scala.meta.internal.metacp.asm.Scopes
+import scala.meta.internal.metacp.asm.TypeVariableScopes
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
@@ -45,7 +45,7 @@ object Main {
       failed = true
     }
     val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
-    val scopes = new Scopes()
+    val scopes = new TypeVariableScopes()
     classpath.visit { root =>
       new FileVisitor[Path] {
         // Convert a .class file to a .class.semanticdb file with symbols only.

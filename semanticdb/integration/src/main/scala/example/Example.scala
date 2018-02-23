@@ -8,5 +8,4 @@ object Example { self =>
     println(1)
   }
   val x = scala.reflect.classTag[Int]
-
 }

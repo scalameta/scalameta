@@ -24,7 +24,9 @@ import org.langmeta.io.Classpath
 class SignatureSuite extends BaseMetacpSuite {
 
   // Validates that pretty(parse(signature) == signature
-  def assertSignatureRoundtrip(signature: String, visitor: TypedSignatureVisitor[Printable]): Unit = {
+  def assertSignatureRoundtrip(
+      signature: String,
+      visitor: TypedSignatureVisitor[Printable]): Unit = {
     val obtained = JavaTypeSignature.parse[Printable](signature, visitor).pretty
     assertNoDiff(obtained, signature)
   }

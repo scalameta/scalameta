@@ -17,14 +17,22 @@ import scala.tools.asm.{Opcodes => o}
 
 object Javacp {
 
-  def sdocument(root: Path, file: Path, scopes: Scopes): s.TextDocument = {
+  def sdocument(root: Path, file: Path, scopes: TypeVariableScopes): s.TextDocument = {
     val bytes = Files.readAllBytes(file)
     val node = parseClassNode(bytes)
     val symbols =
       try ssymbols(node, scopes)
       catch {
-        case e: ScopeResolutionError =>
+        case e: TypeVariableScopeResolutionError =>
           // TODO: implement inner anonymous classes
+          // This error can happen when we process an anonymous clase
+          // that references type parameters from an enclosing inner class.
+          // We currently process class files in lexicographical order which means that an order like this here
+          // - Super.class
+          // - Super$1.class (inside Super$Inner)
+          // - Super$Inner.class
+          // causes the type variables defined in Super$Inner.class to not
+          // be entered when we process Super$1.class.
           val IsNumber = "\\d+".r
           val hasNumberEntry = node.name
             .split("\\$")
@@ -40,36 +48,37 @@ object Javacp {
     )
   }
 
-  def javaLanguage = Some(s.Language("Java"))
+  val javaLanguage = Some(s.Language("Java"))
 
-  def fromJavaTypeSignature(sig: JavaTypeSignature)(implicit scopes: Scopes): s.Type = sig match {
-    case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
-      val prefix = styperef(ssym(identifier), targs.toType)
-      suffix.foldLeft(prefix) {
-        case (accum, s: ClassTypeSignatureSuffix) =>
-          styperef(
-            prefix = Some(accum),
-            symbol = ssym(s.simpleClassTypeSignature.identifier),
-            args = s.simpleClassTypeSignature.typeArguments.toType
-          )
-      }
-    case TypeVariableSignature(name) =>
-      styperef(scopes.resolve(name))
-    case t: BaseType =>
-      styperef("_root_.scala." + t.name + "#")
-    case ArrayTypeSignature(tpe) =>
-      sarray(tpe.toType)
-  }
+  def fromJavaTypeSignature(sig: JavaTypeSignature)(implicit scopes: TypeVariableScopes): s.Type =
+    sig match {
+      case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
+        val prefix = styperef(ssym(identifier), targs.toType)
+        suffix.foldLeft(prefix) {
+          case (accum, s: ClassTypeSignatureSuffix) =>
+            styperef(
+              prefix = Some(accum),
+              symbol = ssym(s.simpleClassTypeSignature.identifier),
+              args = s.simpleClassTypeSignature.typeArguments.toType
+            )
+        }
+      case TypeVariableSignature(name) =>
+        styperef(scopes.resolve(name))
+      case t: BaseType =>
+        styperef("_root_.scala." + t.name + "#")
+      case ArrayTypeSignature(tpe) =>
+        sarray(tpe.toType)
+    }
 
   case class TypeParameterInfo(value: TypeParameter, symbol: String)
   def addTypeParameters(
       typeParameters: TypeParameters,
       ownerSymbol: String,
-      scopes: Scopes): List[s.SymbolInformation] = {
+      scopes: TypeVariableScopes): List[s.SymbolInformation] = {
     val infos = typeParameters.all.map { typeParameter: TypeParameter =>
       val symbol = ownerSymbol + "[" + typeParameter.identifier + "]"
       // need to register all tparams before computing rhs types
-      scopes.registerBinding(ownerSymbol, typeParameter.identifier, symbol)
+      scopes.enterBinding(ownerSymbol, typeParameter.identifier, symbol)
       TypeParameterInfo(typeParameter, symbol)
     }
     infos.map(info => addTypeParameter(info, ownerSymbol, scopes))
@@ -77,7 +86,7 @@ object Javacp {
   def addTypeParameter(
       typeParameter: TypeParameterInfo,
       ownerSymbol: String,
-      scopes: Scopes): s.SymbolInformation = {
+      scopes: TypeVariableScopes): s.SymbolInformation = {
     val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_)(scopes))
     val upperBounds = typeParameters match {
       case upperBound :: Nil =>
@@ -115,8 +124,8 @@ object Javacp {
 
   case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
 
-  def ssymbols(node: ClassNode, scopes: Scopes): Seq[s.SymbolInformation] = {
-    implicit val implicitScopes: Scopes = scopes
+  def ssymbols(node: ClassNode, scopes: TypeVariableScopes): Seq[s.SymbolInformation] = {
+    implicit val implicitScopes: TypeVariableScopes = scopes
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
     val decls = ListBuffer.empty[String]
@@ -130,7 +139,7 @@ object Javacp {
     } else {
       ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
-    scopes.registerOwner(classSymbol, classOwner)
+    scopes.enterOwner(classSymbol, classOwner)
 
     val classKind =
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
@@ -202,7 +211,7 @@ object Javacp {
           if (synonyms.length == 1) ""
           else "+" + (1 + synonyms.indexWhere(_.signature eq method.signature))
         val methodSymbol = classSymbol + method.node.name + "(" + method.descriptor + suffix + ")" + "."
-        scopes.registerOwner(methodSymbol, classSymbol)
+        scopes.enterOwner(methodSymbol, classSymbol)
 
         val methodTypeParameters = method.signature.typeParameters match {
           case Some(tp: TypeParameters) => addTypeParameters(tp, methodSymbol, scopes)
@@ -365,7 +374,7 @@ object Javacp {
 
   private implicit class XtensionTypeArgument(self: TypeArgument) {
     // TODO: implement wildcards after https://github.com/scalameta/scalameta/issues/1357
-    def toType(implicit scopes: Scopes): s.Type = self match {
+    def toType(implicit scopes: TypeVariableScopes): s.Type = self match {
       case ReferenceTypeArgument(_, referenceTypeSignature) =>
         referenceTypeSignature.toType
       case WildcardTypeArgument =>
@@ -374,12 +383,12 @@ object Javacp {
   }
 
   private implicit class XtensionJavaTypeSignature(self: JavaTypeSignature) {
-    def toType(implicit scopes: Scopes): s.Type =
+    def toType(implicit scopes: TypeVariableScopes): s.Type =
       fromJavaTypeSignature(self)(scopes)
   }
 
   private implicit class XtensionTypeArgumentsOption(self: Option[TypeArguments]) {
-    def toType(implicit scopes: Scopes): List[s.Type] = self match {
+    def toType(implicit scopes: TypeVariableScopes): List[s.Type] = self match {
       case Some(targs: TypeArguments) => targs.all.map(_.toType)
       case _ => Nil
     }
