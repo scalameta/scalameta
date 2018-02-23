@@ -24,7 +24,8 @@ import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.MethodNode
 import scala.util.control.NonFatal
 import scala.meta.internal.semanticdb3.TextDocuments
-import `scala`.meta.internal.semanticdb3.SymbolInformation
+import scala.meta.internal.semanticdb3.SymbolInformation
+import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import org.langmeta.internal.io.PathIO
 import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
@@ -107,7 +108,7 @@ class SignatureSuite extends BaseMetacpSuite {
     fieldCallback(node) ::: methodCallback(node) ::: classCallback(node)
   }
 
-  test("metacp") {
+  ignore("metacp") {
     val out = Files.createTempDirectory("metacp")
     out.toFile.deleteOnExit()
 
@@ -123,7 +124,6 @@ class SignatureSuite extends BaseMetacpSuite {
     val scopes = new Scopes()
     val db = Javacp.process(node, scopes)
     db.foreach { s: SymbolInformation =>
-      val k = SymbolInformation.Kind
       s.kind match {
         case k.TYPE_PARAMETER =>
         case k.VAR | k.VAL =>
@@ -132,7 +132,7 @@ class SignatureSuite extends BaseMetacpSuite {
     }
   }
 
-  ignore("print") {
+  test("print") {
     val compiler = InteractiveSemanticdb.newCompiler()
     import scala.meta.internal.semanticdb._
     val doc = Database(
@@ -140,11 +140,15 @@ class SignatureSuite extends BaseMetacpSuite {
         .toDocument(
           compiler,
           """
-            |class Foo[A <: CharSequence with java.io.Serializable] {
-            |  def foo[B <: Number] = null
+            |class Foo {
+            |  def foo(e: Map[_ <: Number, _ >: String]): String = null
             |}
       """.stripMargin) :: Nil).toSchema(PathIO.workingDirectory)
-    doc.documents.head.symbols.foreach(s => println(s.toProtoString))
+    doc.documents.head.symbols.foreach { i: SymbolInformation =>
+      if (i.kind == k.PARAMETER) {
+        println(i.toProtoString)
+      }
+    }
   }
 
 }

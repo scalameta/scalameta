@@ -78,17 +78,13 @@ object Javacp { self =>
 
   def language = Some(s.Language("Java"))
 
-  implicit class XtensionTypeParameter(self: TypeArgument) {
+  implicit class XtensionTypeArgument(self: TypeArgument) {
+    // TODO: implement wildcards after https://github.com/scalameta/scalameta/issues/1357
     def toType(implicit scopes: Scopes): s.Type = self match {
-      case ReferenceTypeArgument(wildcard, referenceTypeSignature) =>
-        val tpe = referenceTypeSignature.toType
-        wildcard match {
-          case Some(WildcardIndicator.Plus) => tpe // TODO implement me
-          case Some(WildcardIndicator.Minus) => tpe // TODO implement me
-          case _ => tpe
-        }
+      case ReferenceTypeArgument(_, referenceTypeSignature) =>
+        referenceTypeSignature.toType
       case WildcardTypeArgument =>
-        ref("local_wildcard") // TODO: implement me
+        ref("local_wildcard")
     }
   }
 
@@ -107,7 +103,7 @@ object Javacp { self =>
   def fromJavaTypeSignature(sig: JavaTypeSignature)(implicit scopes: Scopes): s.Type = sig match {
     case ClassTypeSignature(_, SimpleClassTypeSignature(identifier, targs), suffix) =>
       val prefix = ref(ssym(identifier), targs.toType)
-      val out = suffix.foldLeft(prefix) {
+      suffix.foldLeft(prefix) {
         case (accum, s: ClassTypeSignatureSuffix) =>
           ref(
             prefix = Some(accum),
@@ -115,8 +111,6 @@ object Javacp { self =>
             args = s.simpleClassTypeSignature.typeArguments.toType
           )
       }
-      pprint.log(out.toProtoString)
-      out
     case TypeVariableSignature(name) =>
       ref(scopes.resolve(name))
     case t: BaseType =>
@@ -277,7 +271,8 @@ object Javacp { self =>
 
         val parameterSymbols = method.signature.params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
-            val name = "arg" + i // TODO(olafur) use node.parameters for JDK 8 with -parameters
+            // TODO(olafur) use node.parameters for JDK 8 with -parameters
+            val name = "arg" + i
             val paramSymbol = methodSymbol + "(" + name + ")"
             buf += s.SymbolInformation(
               symbol = paramSymbol,

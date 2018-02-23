@@ -36,6 +36,98 @@ _empty_.B#`<init>`(). => primaryctor <init>: (): B
 _empty_.B#a(). => def a: : A
   A => _empty_.A#
 
+com/javacp/ClassSuffix$Inner$Bar$Fuz.class
+------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => com/javacp/ClassSuffix$Inner$Bar$Fuz.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_.com.javacp.ClassSuffix#Inner#Bar#Fuz# => private[javacp] class Fuz[B <: Object].{+2 decls}
+  extends Object
+_root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#<init>(Bar). => private[javacp] def <init>: (arg0: ClassSuffix#Inner#Bar): Unit
+  arg0 => _root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#<init>(Bar).(arg0)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#<init>(Bar).(arg0) => param arg0: ClassSuffix#Inner#Bar
+  ClassSuffix#Inner#Bar => _root_.com.javacp.ClassSuffix#Inner#Bar#
+_root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#[B] => typeparam B: <: Object
+  Object => _root_.java.lang.Object#
+_root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#this$2. => private[javacp] final val this$2: ClassSuffix#Inner#Bar
+  ClassSuffix#Inner#Bar => _root_.com.javacp.ClassSuffix#Inner#Bar#
+
+com/javacp/ClassSuffix$Inner$Bar.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => com/javacp/ClassSuffix$Inner$Bar.class
+Text => empty
+Language => Java
+Symbols => 4 entries
+
+Symbols:
+_root_.com.javacp.ClassSuffix#Inner#Bar# => private[javacp] class Bar.{+2 decls}
+  extends Object
+_root_.com.javacp.ClassSuffix#Inner#Bar#<init>(Inner). => private[javacp] def <init>: (arg0: ClassSuffix#Inner): Unit
+  arg0 => _root_.com.javacp.ClassSuffix#Inner#Bar#<init>(Inner).(arg0)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.ClassSuffix#Inner#Bar#<init>(Inner).(arg0) => param arg0: ClassSuffix#Inner
+  ClassSuffix#Inner => _root_.com.javacp.ClassSuffix#Inner#
+_root_.com.javacp.ClassSuffix#Inner#Bar#this$1. => private[javacp] final val this$1: ClassSuffix#Inner
+  ClassSuffix#Inner => _root_.com.javacp.ClassSuffix#Inner#
+
+com/javacp/ClassSuffix$Inner.class
+----------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => com/javacp/ClassSuffix$Inner.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_.com.javacp.ClassSuffix#Inner# => private[javacp] class Inner[A <: Object].{+2 decls}
+  extends Object
+_root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix). => private[javacp] def <init>: (arg0: ClassSuffix): Unit
+  arg0 => _root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix).(arg0)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix).(arg0) => param arg0: ClassSuffix
+  ClassSuffix => _root_.com.javacp.ClassSuffix#
+_root_.com.javacp.ClassSuffix#Inner#[A] => typeparam A: <: Object
+  Object => _root_.java.lang.Object#
+_root_.com.javacp.ClassSuffix#Inner#this$0. => private[javacp] final val this$0: ClassSuffix
+  ClassSuffix => _root_.com.javacp.ClassSuffix#
+
+com/javacp/ClassSuffix.class
+----------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => com/javacp/ClassSuffix.class
+Text => empty
+Language => Java
+Symbols => 6 entries
+
+Symbols:
+_root_. => package _root_
+_root_.com. => package com
+_root_.com.javacp. => package javacp
+_root_.com.javacp.ClassSuffix# => class ClassSuffix.{+2 decls}
+  extends Object
+_root_.com.javacp.ClassSuffix#<init>(). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.ClassSuffix#suffix. => var suffix: ClassSuffix#Inner[String]#Bar#Fuz[Integer]
+  ClassSuffix#Inner => _root_.com.javacp.ClassSuffix#Inner#
+  String => _root_.java.lang.String#
+  Bar => _root_.Bar#
+  Fuz => _root_.Fuz#
+  Integer => _root_.java.lang.Integer#
+
 com/javacp/Javacp$1.class
 -------------------------
 
