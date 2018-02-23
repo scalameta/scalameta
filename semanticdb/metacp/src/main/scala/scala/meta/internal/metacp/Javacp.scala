@@ -106,6 +106,11 @@ object Javacp { self =>
 
   def fromJavaTypeSignature(sig: JavaTypeSignature)(implicit scopes: Scopes): s.Type = sig match {
     case ClassTypeSignature(_, SimpleClassTypeSignature(identifier, targs), todo) =>
+      pprint.log(sig)
+      pprint.log(todo)
+      if (todo.nonEmpty) {
+      }
+
       ref(ssym(identifier), targs.toType)
     case TypeVariableSignature(name) =>
       ref(scopes.resolve(name))
@@ -173,6 +178,7 @@ object Javacp { self =>
     implicit val implicitScopes = scopes
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
+
     val decls = ListBuffer.empty[String]
 
     val classSymbol = ssym(node.name)

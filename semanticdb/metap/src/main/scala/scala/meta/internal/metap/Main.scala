@@ -1,5 +1,6 @@
 package scala.meta.internal.metap
 
+import java.io.PrintStream
 import java.nio.file._
 import java.util.WeakHashMap
 import scala.collection.{immutable, mutable}
@@ -7,34 +8,46 @@ import scala.compat.Platform.EOL
 import scala.math.Ordering
 import scala.util.control.NonFatal
 import scala.meta.internal.semanticdb3._
-import Diagnostic._, Severity._
-import SymbolInformation._, Kind._, Property._
-import SymbolOccurrence._, Role._
-import Type.Tag._, SingletonType.Tag._, Accessibility.Tag._
+import Diagnostic._
+import Severity._
+import SymbolInformation._
+import Kind._
+import Property._
+import SymbolOccurrence._
+import Role._
+import Type.Tag._
+import SingletonType.Tag._
+import Accessibility.Tag._
+import scala.Predef.{println => _, print => _, _}
 
 object Main {
-  def process(args: Array[String]): Int = {
+  def process(args: Array[String], out: PrintStream = System.out): Int = {
     var failed = false
+    val main = new Main(out)
     args.zipWithIndex.foreach {
       case (arg, i) =>
         try {
           val stream = Files.newInputStream(Paths.get(arg))
           try {
-            if (i != 0) println("")
+            if (i != 0) out.println("")
             val documents = TextDocuments.parseFrom(stream)
-            documents.documents.foreach(pprint)
+            documents.documents.foreach(main.pprint)
           } finally {
             stream.close()
           }
         } catch {
           case NonFatal(ex) =>
-            println(s"error: can't decompile $arg")
-            ex.printStackTrace()
+            out.println(s"error: can't decompile $arg")
+            ex.printStackTrace(out)
             failed = true
         }
     }
     if (failed) 1 else 0
   }
+}
+
+class Main(stdout: PrintStream) {
+  import stdout._
 
   def pprint(doc: TextDocument): Unit = {
     println(doc.uri)
@@ -400,7 +413,8 @@ object Main {
           case Some(tpe: Type) =>
             tpe.classInfoType match {
               case Some(ClassInfoType(typeParameters, parents, decls)) =>
-                if (typeParameters.nonEmpty) rep("[", typeParameters, ", ", "]")(pprint(_, DEFINITION, doc))
+                if (typeParameters.nonEmpty)
+                  rep("[", typeParameters, ", ", "]")(pprint(_, DEFINITION, doc))
                 if (decls.nonEmpty) println(s".{+${decls.length} decls}")
                 else println("")
                 parents.foreach { tpe =>
