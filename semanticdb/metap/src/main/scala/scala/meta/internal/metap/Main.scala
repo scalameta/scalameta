@@ -8,17 +8,10 @@ import scala.compat.Platform.EOL
 import scala.math.Ordering
 import scala.util.control.NonFatal
 import scala.meta.internal.semanticdb3._
-import Diagnostic._
-import Severity._
-import SymbolInformation._
-import Kind._
-import Property._
-import SymbolOccurrence._
-import Role._
-import Type.Tag._
-import SingletonType.Tag._
-import Accessibility.Tag._
-import scala.Predef.{println => _, print => _, _}
+import Diagnostic._, Severity._
+import SymbolInformation._, Kind._, Property._
+import SymbolOccurrence._, Role._
+import Type.Tag._, SingletonType.Tag._, Accessibility.Tag._
 
 object Main {
   def process(args: Array[String], out: PrintStream = System.out): Int = {
@@ -46,45 +39,44 @@ object Main {
   }
 }
 
-class Main(stdout: PrintStream) {
-  import stdout._
+class Main(out: PrintStream) {
 
   def pprint(doc: TextDocument): Unit = {
-    println(doc.uri)
-    println(s"-" * doc.uri.length)
-    println("")
+    out.println(doc.uri)
+    out.println(s"-" * doc.uri.length)
+    out.println("")
 
-    println(s"Summary:")
-    println(s"Schema => SemanticDB v${doc.schema.value}")
-    println(s"Uri => ${doc.uri}")
-    println(s"Text => ${if (doc.text.nonEmpty) "non-empty" else "empty"}")
-    if (doc.language.nonEmpty) println(s"Language => ${doc.language.get.name}")
-    if (doc.symbols.nonEmpty) println(s"Symbols => ${doc.symbols.length} entries")
-    if (doc.occurrences.nonEmpty) println(s"Occurrences => ${doc.occurrences.length} entries")
-    if (doc.diagnostics.nonEmpty) println(s"Diagnostics => ${doc.diagnostics.length} entries")
-    if (doc.synthetics.nonEmpty) println(s"Synthetics => ${doc.synthetics.length} entries")
+    out.println(s"Summary:")
+    out.println(s"Schema => SemanticDB v${doc.schema.value}")
+    out.println(s"Uri => ${doc.uri}")
+    out.println(s"Text => ${if (doc.text.nonEmpty) "non-empty" else "empty"}")
+    if (doc.language.nonEmpty) out.println(s"Language => ${doc.language.get.name}")
+    if (doc.symbols.nonEmpty) out.println(s"Symbols => ${doc.symbols.length} entries")
+    if (doc.occurrences.nonEmpty) out.println(s"Occurrences => ${doc.occurrences.length} entries")
+    if (doc.diagnostics.nonEmpty) out.println(s"Diagnostics => ${doc.diagnostics.length} entries")
+    if (doc.synthetics.nonEmpty) out.println(s"Synthetics => ${doc.synthetics.length} entries")
 
     if (doc.symbols.nonEmpty) {
-      println("")
-      println("Symbols:")
+      out.println("")
+      out.println("Symbols:")
       doc.symbols.sorted.foreach(pprint(_, doc))
     }
 
     if (doc.occurrences.nonEmpty) {
-      println("")
-      println("Occurrences:")
+      out.println("")
+      out.println("Occurrences:")
       doc.occurrences.sorted.foreach(pprint(_, doc))
     }
 
     if (doc.diagnostics.nonEmpty) {
-      println("")
-      println("Diagnostics:")
+      out.println("")
+      out.println("Diagnostics:")
       doc.diagnostics.sorted.foreach(pprint(_, doc))
     }
 
     if (doc.synthetics.nonEmpty) {
-      println("")
-      println("Synthetics:")
+      out.println("")
+      out.println("Synthetics:")
       doc.synthetics.sorted.foreach(pprint(_, doc))
     }
   }
@@ -110,21 +102,21 @@ class Main(stdout: PrintStream) {
 
   private def pprint(range: Option[Range], doc: Option[TextDocument]): Unit = {
     range.foreach { range =>
-      print("[")
-      print(range.startLine)
-      print(":")
-      print(range.startCharacter)
-      print("..")
-      print(range.endLine)
-      print(":")
-      print(range.endCharacter)
-      print(")")
+      out.print("[")
+      out.print(range.startLine)
+      out.print(":")
+      out.print(range.startCharacter)
+      out.print("..")
+      out.print(range.endLine)
+      out.print(":")
+      out.print(range.endCharacter)
+      out.print(")")
       doc match {
         case Some(doc) if doc.text.nonEmpty =>
           val startOffset = offset(doc, range.startLine) + range.startCharacter
           val endOffset = offset(doc, range.endLine) + range.endCharacter
           val text = doc.text.substring(startOffset, endOffset)
-          print(s": $text")
+          out.print(s": $text")
         case _ =>
           ()
       }
@@ -132,8 +124,8 @@ class Main(stdout: PrintStream) {
   }
 
   private def pprint(name: String, doc: TextDocument): Unit = {
-    if (name.nonEmpty) print(name)
-    else print("<?>")
+    if (name.nonEmpty) out.print(name)
+    else out.print("<?>")
   }
 
   private val symCache = new WeakHashMap[TextDocument, immutable.Map[String, SymbolInformation]]
@@ -153,32 +145,32 @@ class Main(stdout: PrintStream) {
             // of complex types, so we don't need to fully support all symbols here.
             rep(info.annotations, " ", " ")(pprint(_, doc))
             opt(info.accessibility)(pprint(_, doc))
-            if ((info.properties & COVARIANT.value) != 0) print("+")
-            if ((info.properties & CONTRAVARIANT.value) != 0) print("-")
+            if ((info.properties & COVARIANT.value) != 0) out.print("+")
+            if ((info.properties & CONTRAVARIANT.value) != 0) out.print("-")
             info.kind match {
               case GETTER =>
-                print("getter ")
-                print(info.name)
+                out.print("getter ")
+                out.print(info.name)
               case SETTER =>
-                print("setter ")
-                print(info.name)
+                out.print("setter ")
+                out.print(info.name)
               case TYPE =>
-                print("type ")
-                print(info.name)
-                print(" ")
+                out.print("type ")
+                out.print(info.name)
+                out.print(" ")
               case PARAMETER =>
-                print(info.name)
-                print(": ")
+                out.print(info.name)
+                out.print(": ")
               case TYPE_PARAMETER =>
-                print(info.name)
-                print(" ")
+                out.print(info.name)
+                out.print(" ")
               case _ =>
-                print("<?>")
+                out.print("<?>")
                 return
             }
             info.tpe match {
               case Some(tpe) => pprint(tpe, doc)
-              case None => print("<?>")
+              case None => out.print("<?>")
             }
           case UNKNOWN_ROLE | Role.Unrecognized(_) =>
             ()
@@ -194,11 +186,11 @@ class Main(stdout: PrintStream) {
             }
             pprint(approxName, doc)
           case _ =>
-            print("<?>")
+            out.print("<?>")
         }
         role match {
           case REFERENCE => ()
-          case DEFINITION => print(": <?>")
+          case DEFINITION => out.print(": <?>")
           case UNKNOWN_ROLE | Role.Unrecognized(_) => ()
         }
     }
@@ -221,10 +213,10 @@ class Main(stdout: PrintStream) {
           pre match {
             case Some(pre) if pre.tag.isSingletonType =>
               prefix(pre)
-              print(".")
+              out.print(".")
             case Some(pre) =>
               prefix(pre)
-              print("#")
+              out.print("#")
             case _ =>
               ()
           }
@@ -238,49 +230,49 @@ class Main(stdout: PrintStream) {
               ref(sym)
             case THIS =>
               opt(sym, ".")(ref)
-              print("this")
+              out.print("this")
             case SUPER =>
               opt(pre, ".")(prefix)
-              print("super")
+              out.print("super")
               opt("[", sym, "]")(ref)
             case UNIT =>
-              print("()")
+              out.print("()")
             case BOOLEAN =>
-              if (x == 0) print("false")
-              else if (x == 1) print("true")
-              else print("<?>")
+              if (x == 0) out.print("false")
+              else if (x == 1) out.print("true")
+              else out.print("<?>")
             case BYTE | SHORT =>
-              print(x)
+              out.print(x)
             case CHAR =>
-              print("'" + x.toChar + "'")
+              out.print("'" + x.toChar + "'")
             case INT =>
-              print(x)
+              out.print(x)
             case LONG =>
-              print(x + "L")
+              out.print(x + "L")
             case FLOAT =>
-              print(java.lang.Float.intBitsToFloat(x.toInt) + "f")
+              out.print(java.lang.Float.intBitsToFloat(x.toInt) + "f")
             case DOUBLE =>
-              print(java.lang.Double.longBitsToDouble(x))
+              out.print(java.lang.Double.longBitsToDouble(x))
             case STRING =>
-              print("\"" + s + "\"")
+              out.print("\"" + s + "\"")
             case NULL =>
-              print("null")
+              out.print("null")
             case UNKNOWN_SINGLETON | SingletonType.Tag.Unrecognized(_) =>
-              print("<?>")
+              out.print("<?>")
           }
         case STRUCTURAL_TYPE =>
           val Some(StructuralType(tparams, parents, decls)) = tpe.structuralType
           rep("[", tparams, ", ", "] => ")(defn)
           rep(parents, " with ")(normal)
           if (decls.nonEmpty || parents.length == 1) {
-            print(" { ")
+            out.print(" { ")
             rep(decls, "; ")(defn)
-            print(" }")
+            out.print(" }")
           }
         case ANNOTATED_TYPE =>
           val Some(AnnotatedType(anns, utpe)) = tpe.annotatedType
           utpe.foreach(normal)
-          print(" ")
+          out.print(" ")
           rep(anns, " ", "") { ann =>
             val todo = pprint(ann, doc)
             todo.foreach(buf.+=)
@@ -302,24 +294,24 @@ class Main(stdout: PrintStream) {
           val Some(MethodType(tparams, paramss, res)) = tpe.methodType
           rep("[", tparams, ", ", "] => ")(defn)
           rep("(", paramss, ")(", ")")(params => rep(params.symbols, ", ")(defn))
-          print(": ")
+          out.print(": ")
           res.foreach(normal)
         case BY_NAME_TYPE =>
           val Some(ByNameType(utpe)) = tpe.byNameType
-          print("=> ")
+          out.print("=> ")
           utpe.foreach(normal)
         case REPEATED_TYPE =>
           val Some(RepeatedType(utpe)) = tpe.repeatedType
           utpe.foreach(normal)
-          print("*")
+          out.print("*")
         case TYPE_TYPE =>
           val Some(TypeType(tparams, lo, hi)) = tpe.typeType
           rep("[", tparams, ", ", "] => ")(defn)
           opt(">: ", lo, "")(normal)
-          lo.foreach(_ => print(" "))
+          lo.foreach(_ => out.print(" "))
           opt("<: ", hi, "")(normal)
         case UNKNOWN_TYPE | Type.Tag.Unrecognized(_) =>
-          print("<?>")
+          out.print("<?>")
       }
     }
     def normal(tpe: Type): Unit = {
@@ -329,7 +321,7 @@ class Main(stdout: PrintStream) {
           tag match {
             case SYMBOL | THIS | SUPER =>
               prefix(tpe)
-              print(".type")
+              out.print(".type")
             case _ =>
               prefix(tpe)
           }
@@ -343,38 +335,38 @@ class Main(stdout: PrintStream) {
 
   private def pprint(info: SymbolInformation, doc: TextDocument): Unit = {
     pprint(info.symbol, doc)
-    print(" => ")
+    out.print(" => ")
     rep(info.annotations, " ", " ")(pprint(_, doc))
     opt(info.accessibility)(pprint(_, doc))
     def has(prop: Property) = (info.properties & prop.value) != 0
-    if (has(ABSTRACT)) print("abstract ")
-    if (has(FINAL)) print("final ")
-    if (has(SEALED)) print("sealed ")
-    if (has(IMPLICIT)) print("implicit ")
-    if (has(LAZY)) print("lazy ")
-    if (has(CASE)) print("case ")
-    if (has(COVARIANT)) print("covariant ")
-    if (has(CONTRAVARIANT)) print("contravariant ")
-    if (has(VALPARAM)) print("valparam ")
-    if (has(VARPARAM)) print("varparam ")
+    if (has(ABSTRACT)) out.print("abstract ")
+    if (has(FINAL)) out.print("final ")
+    if (has(SEALED)) out.print("sealed ")
+    if (has(IMPLICIT)) out.print("implicit ")
+    if (has(LAZY)) out.print("lazy ")
+    if (has(CASE)) out.print("case ")
+    if (has(COVARIANT)) out.print("covariant ")
+    if (has(CONTRAVARIANT)) out.print("contravariant ")
+    if (has(VALPARAM)) out.print("valparam ")
+    if (has(VARPARAM)) out.print("varparam ")
     info.kind match {
-      case VAL => print("val ")
-      case VAR => print("var ")
-      case DEF => print("def ")
-      case GETTER => print("getter ")
-      case SETTER => print("setter ")
-      case PRIMARY_CONSTRUCTOR => print("primaryctor ")
-      case SECONDARY_CONSTRUCTOR => print("secondaryctor ")
-      case MACRO => print("macro ")
-      case TYPE => print("type ")
-      case PARAMETER => print("param ")
-      case SELF_PARAMETER => print("selfparam ")
-      case TYPE_PARAMETER => print("typeparam ")
-      case OBJECT => print("object ")
-      case PACKAGE => print("package ")
-      case PACKAGE_OBJECT => print("package object ")
-      case CLASS => print("class ")
-      case TRAIT => print("trait ")
+      case VAL => out.print("val ")
+      case VAR => out.print("var ")
+      case DEF => out.print("def ")
+      case GETTER => out.print("getter ")
+      case SETTER => out.print("setter ")
+      case PRIMARY_CONSTRUCTOR => out.print("primaryctor ")
+      case SECONDARY_CONSTRUCTOR => out.print("secondaryctor ")
+      case MACRO => out.print("macro ")
+      case TYPE => out.print("type ")
+      case PARAMETER => out.print("param ")
+      case SELF_PARAMETER => out.print("selfparam ")
+      case TYPE_PARAMETER => out.print("typeparam ")
+      case OBJECT => out.print("object ")
+      case PACKAGE => out.print("package ")
+      case PACKAGE_OBJECT => out.print("package object ")
+      case CLASS => out.print("class ")
+      case TRAIT => out.print("trait ")
       case UNKNOWN_KIND | Kind.Unrecognized(_) => ()
     }
     pprint(info.name, doc)
@@ -383,31 +375,31 @@ class Main(stdout: PrintStream) {
           TYPE | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER =>
         info.tpe match {
           case Some(tpe) =>
-            print(": ")
+            out.print(": ")
             val syms = pprint(tpe, doc)
             val visited = mutable.Set[String]()
-            println("")
+            out.println("")
             syms.foreach { sym =>
               if (!visited(sym)) {
                 visited += sym
-                print("  ")
+                out.print("  ")
                 pprint(sym, REFERENCE, doc)
-                print(" => ")
-                println(sym)
+                out.print(" => ")
+                out.println(sym)
               }
             }
           case None =>
             info.signature match {
               case Some(sig) =>
-                print(s": ${sig.text}")
-                println("")
+                out.print(s": ${sig.text}")
+                out.println("")
                 val occs = sig.occurrences.sorted
                 rep("  ", occs, "  ")(pprint(_, sig))
               case _ =>
-                println("")
+                out.println("")
             }
         }
-        info.overrides.foreach(sym => println(s"  overrides $sym"))
+        info.overrides.foreach(sym => out.println(s"  overrides $sym"))
       case OBJECT | PACKAGE | PACKAGE_OBJECT | CLASS | TRAIT =>
         info.tpe match {
           case Some(tpe: Type) =>
@@ -415,33 +407,33 @@ class Main(stdout: PrintStream) {
               case Some(ClassInfoType(typeParameters, parents, decls)) =>
                 if (typeParameters.nonEmpty)
                   rep("[", typeParameters, ", ", "]")(pprint(_, DEFINITION, doc))
-                if (decls.nonEmpty) println(s".{+${decls.length} decls}")
-                else println("")
+                if (decls.nonEmpty) out.println(s".{+${decls.length} decls}")
+                else out.println("")
                 parents.foreach { tpe =>
-                  print("  extends ")
+                  out.print("  extends ")
                   pprint(tpe, doc)
-                  println("")
+                  out.println("")
                 }
               case _ =>
-                println("")
+                out.println("")
             }
           case None =>
-            if (info.members.nonEmpty) println(s".{+${info.members.length} members}")
-            else println("")
-            info.overrides.sorted.foreach(sym => println(s"  extends $sym"))
+            if (info.members.nonEmpty) out.println(s".{+${info.members.length} members}")
+            else out.println("")
+            info.overrides.sorted.foreach(sym => out.println(s"  extends $sym"))
         }
       case UNKNOWN_KIND | Kind.Unrecognized(_) =>
-        println("")
+        out.println("")
     }
   }
 
   private def pprint(ann: Annotation, doc: TextDocument): List[String] = {
-    print("@")
+    out.print("@")
     ann.tpe match {
       case Some(tpe) =>
         pprint(tpe, doc)
       case None =>
-        print("<?>")
+        out.print("<?>")
         Nil
     }
   }
@@ -449,60 +441,60 @@ class Main(stdout: PrintStream) {
   private def pprint(acc: Accessibility, doc: TextDocument): Unit = {
     acc.tag match {
       case PUBLIC =>
-        print("")
+        out.print("")
       case PRIVATE =>
-        print("private ")
+        out.print("private ")
       case PRIVATE_THIS =>
-        print("private[this] ")
+        out.print("private[this] ")
       case PRIVATE_WITHIN =>
-        print("private[")
+        out.print("private[")
         pprint(acc.symbol, REFERENCE, doc)
-        print("] ")
+        out.print("] ")
       case PROTECTED =>
-        print("protected ")
+        out.print("protected ")
       case PROTECTED_THIS =>
-        print("protected[this] ")
+        out.print("protected[this] ")
       case PROTECTED_WITHIN =>
-        print("protected[")
+        out.print("protected[")
         pprint(acc.symbol, REFERENCE, doc)
-        print("] ")
+        out.print("] ")
       case UNKNOWN_ACCESSIBILITY | Accessibility.Tag.Unrecognized(_) =>
-        print("<?>")
+        out.print("<?>")
     }
   }
 
   private def pprint(occ: SymbolOccurrence, doc: TextDocument): Unit = {
     pprint(occ.range, Some(doc))
     occ.role match {
-      case REFERENCE => print(" => ")
-      case DEFINITION => print(" <= ")
-      case UNKNOWN_ROLE | Role.Unrecognized(_) => print(" <?> ")
+      case REFERENCE => out.print(" => ")
+      case DEFINITION => out.print(" <= ")
+      case UNKNOWN_ROLE | Role.Unrecognized(_) => out.print(" <?> ")
     }
-    println(occ.symbol)
+    out.println(occ.symbol)
   }
 
   private def pprint(diag: Diagnostic, doc: TextDocument): Unit = {
     pprint(diag.range, None)
     diag.severity match {
-      case ERROR => print("[error] ")
-      case WARNING => print("[warning] ")
-      case INFORMATION => print("[info] ")
-      case HINT => print("[hint] ")
-      case UNKNOWN_SEVERITY | Severity.Unrecognized(_) => print("[<?>] ")
+      case ERROR => out.print("[error] ")
+      case WARNING => out.print("[warning] ")
+      case INFORMATION => out.print("[info] ")
+      case HINT => out.print("[hint] ")
+      case UNKNOWN_SEVERITY | Severity.Unrecognized(_) => out.print("[<?>] ")
     }
-    println(diag.message)
+    out.println(diag.message)
   }
 
   private def pprint(synth: Synthetic, doc: TextDocument): Unit = {
     pprint(synth.range, Some(doc))
-    print(" => ")
+    out.print(" => ")
     synth.text match {
       case Some(text) =>
-        println(text.text)
+        out.println(text.text)
         val occs = text.occurrences.sorted
         rep("  ", occs, "  ")(pprint(_, text))
       case _ =>
-        println("<?>")
+        out.println("<?>")
     }
   }
 
@@ -519,9 +511,9 @@ class Main(stdout: PrintStream) {
 
   private def rep[T](pre: String, xs: Seq[T], sep: String, suf: String)(f: T => Unit): Unit = {
     if (xs.nonEmpty) {
-      print(pre)
+      out.print(pre)
       rep(xs, sep)(f)
-      print(suf)
+      out.print(suf)
     }
   }
 
@@ -536,16 +528,16 @@ class Main(stdout: PrintStream) {
   private def rep[T](xs: Seq[T], sep: String)(f: T => Unit): Unit = {
     xs.zipWithIndex.foreach {
       case (x, i) =>
-        if (i != 0) print(sep)
+        if (i != 0) out.print(sep)
         f(x)
     }
   }
 
   private def opt[T](pre: String, xs: Option[T], suf: String)(f: T => Unit): Unit = {
     xs.foreach { x =>
-      print(pre)
+      out.print(pre)
       f(x)
-      print(suf)
+      out.print(suf)
     }
   }
 
@@ -563,9 +555,9 @@ class Main(stdout: PrintStream) {
 
   private def opt(pre: String, s: String, suf: String)(f: String => Unit): Unit = {
     if (s.nonEmpty) {
-      print(pre)
+      out.print(pre)
       f(s)
-      print(suf)
+      out.print(suf)
     }
   }
 

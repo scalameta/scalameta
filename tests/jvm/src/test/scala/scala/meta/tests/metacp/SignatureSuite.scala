@@ -70,7 +70,7 @@ class SignatureSuite extends BaseMetacpSuite {
   }
 
   def checkFields(node: ClassNode): List[(String, () => Unit)] =
-    node.fields.asScala.iterator.map { field: FieldNode =>
+    node.fields.asScala.map { field: FieldNode =>
       val signature = if (field.signature == null) field.desc else field.signature
       (signature, { () =>
         assertSignatureRoundtrip(signature, new FieldSignatureVisitor())
@@ -78,14 +78,13 @@ class SignatureSuite extends BaseMetacpSuite {
     }.toList
 
   def checkMethods(node: ClassNode): List[(String, () => Unit)] =
-    node.methods.asScala.iterator.map { method: MethodNode =>
+    node.methods.asScala.map { method: MethodNode =>
       val signature = if (method.signature == null) method.desc else method.signature
       (signature, { () =>
         assertSignatureRoundtrip(signature, new MethodSignatureVisitor())
       })
     }.toList
 
-  // Test only class parsing
   def checkClass(node: ClassNode): List[(String, () => Unit)] =
     if (node.signature == null) Nil
     else {

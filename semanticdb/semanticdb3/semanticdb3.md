@@ -2101,6 +2101,1264 @@ Synthetics are unspecified in SLS, and our experience [\[38\]][38] shows that
 reverse engineering synthetics is very hard. We may improve
 on this in the future, but this is highly unlikely.
 
+### Java
+
+In this section, we exhaustively map Java language features onto SemanticDB.
+As a reference, we use the Java Language Specification [\[68\]][68]
+(referred to as "JLS" in the text below), as well as the Java Virtual Machine Specification [\[69\]][69] (referred to as "JVMS" in the text below).
+
+<a name="java-language"></a>
+#### Language
+
+<table>
+  <tr>
+    <td><b>Value</b></td>
+    <td><b>Explanation</b></td>
+  </tr>
+  <tr>
+    <td><code>Language("Java")</code></td>
+    <td>Java of unknown or unspecified version.</td>
+  </tr>
+  <tr>
+    <td><code>Language("JavaXY")</code></td>
+    <td>Scala, version <code>X.Y</code>.</td>
+  </tr>
+</table>
+
+<a name="scala-symbol"></a>
+
+#### Symbol
+
+In this section, we describe Scala symbol format, but don't cover the details
+of how Scala definitions map onto symbols (e.g. which symbols are created for
+which Scala definitions, what their metadata is, etc). See
+[SymbolInformation](#scala-symbolinformation) for more information about that.
+
+<table>
+  <tr>
+    <td><b>Symbols</b></td>
+    <td><b>Format</b></td>
+  </tr>
+  <tr>
+    <td>
+      Global symbols
+      <a href="#symbol">↑</a>
+    </td>
+    <td>
+      Concatenation of definition descriptors of the owner chain.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Local symbols
+      <a href="#symbol">↑</a>
+    </td>
+    <td>
+      Concatenation of <code>local</code> and a decimal number.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Multi symbols
+      <a href="#symbol">↑</a>
+    </td>
+    <td>
+      Concatentation of underlying symbols interspersed with a
+      semicolon (<code>;</code>). Within a multi symbol, the underlying
+      symbols must be ordered lexicographically in ascending order.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Placeholder symbols
+      <a href="#symbol">↑</a>
+    </td>
+    <td>
+      <code>*</code>
+    </td>
+  </tr>
+</table>
+
+**Owner chain** is a list of definitions enclosing a definition,
+starting with the outermost one and including the definition itself.
+The outermost definition must be either `_empty_` (the special empty package
+[\[20\]][20]) or `_root_` (the special root package [\[21\]][21]). For example,
+for the `Int` class in the Scala standard library,
+the owner chain is `[_root_, scala, Int]`.
+
+**Definition descriptor** is:
+  * For `VAL`, `VAR`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
+    concatenation of its encoded name and a dot (`.`).
+  * For `DEF`, `GETTER`, `SETTER`, `PRIMARY_CONSTRUCTOR`,
+    `SECONDARY_CONSTRUCTOR` or `MACRO`, concatenation of its encoded name,
+    a left parenthesis (`(`), its type descriptor, a right parenthesis (`)`)
+    and a dot (`.`). In the case when multiple methods have the same name
+    and type descriptor, the type descriptor is appended with `+N`,
+    with `+1` going to the method that is defined first in the source code,
+    `+2` going to the method that is defined second, etc.
+  * For `TYPE`, `CLASS` or `TRAIT`, concatenation of its
+    encoded name and a pound sign (`#`).
+  * For `PARAMETER`, concatenation of a left parenthesis (`(`), its
+    encoded name and a right parenthesis (`)`).
+  * For `SELF_PARAMETER`, unsupported.
+  * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its
+    encoded name and a right bracket (`]`).
+  * See [SymbolInformation](#scala-symbolinformation) for details on
+    which Scala definitions are modelled by which symbols.
+
+**Type descriptor** is:
+
+  * For `TYPE_REF`, encoded `SymbolInformation.name` of `symbol`.
+  * For `SINGLETON_TYPE`, `.type`.
+  * For `STRUCTURAL_TYPE`, `{}`.
+  * For `ANNOTATED_TYPE`, type descriptor of `tpe`.
+  * For `EXISTENTIAL_TYPE`, type descriptor of `tpe`.
+  * For `UNIVERSAL_TYPE`, type descriptor of `tpe`.
+  * For `CLASS_INFO_TYPE`, unsupported.
+  * For `METHOD_TYPE`, concatenation of type descriptors of
+    its parameter types interspersed with a comma (`,`).
+  * For `BY_NAME_TYPE`, concatenation of the arrow sign (`=>`) and
+    the type descriptor of `tpe`.
+  * For `REPEATED_TYPE`, concatenation of type descriptor of `tpe`
+    and a star (`*`).
+  * For `TYPE_TYPE`, unsupported.
+  * See [Type](#scala-type) for details on
+    which Scala types are modelled by which `Type` entities.
+
+**Encoded name** is:
+  * For a Java identifier [\[22\]][22], the name itself.
+  * Otherwise, concatenation of a backtick, the name itself and another backtick.
+
+For example, this is how some of the definitions from the Scala standard library
+must be modelled:
+
+* The `scala` package: `_root_.scala.`
+* The `Int` class: `_root_.scala.Int#`
+* The `def implicitly[T](implicit e: T)` method:
+  `_root_.scala.Predef.implicitly(T).`
+* The `e` parameter of that method: `_root_.scala.Predef.implicitly(T).(e)`
+* The `T` type parameter of that method: `_root_.scala.Predef.implicitly(T).[T]`
+* The `def contains[A: Ordering](tree: Tree[A, _], x: A): Boolean` method:
+  `_root_.scala.collection.immutable.RedBlackTree#contains(Tree,A,Ordering).`
+
+<a name="scala-type"></a>
+#### Type
+
+In Scala, `Type` represents types [\[18\]][18].
+
+In the examples below:
+  * `E` is the lexically enclosing class of the location where the example
+    types are defined or computed.
+  * `C` is a class that extends a trait `M`.
+  * `T`, `T1`, `T2`, etc are type aliases.
+  * `t` is a type parameter.
+  * `p` and `x` are local values.
+  * `scala` is the `scala` package from the Scala standard library.
+  * `Int`, `List`, `TupleN` and `FunctionN` are classes from the Scala
+    standard library.
+  * `@ann1`, `@ann2`, etc are annotations.
+  * `M1`, `M2`, etc are members.
+  * `ts` is a type parameter list that consists of
+    type parameters `t1`, `t2`, etc.
+  * `P1s`, `P2s`, etc are parameter lists that consists of parameter types
+    `P11`, `P12`, etc.
+
+<table>
+  <tr>
+    <td width="220px"><b>Category</b></td>
+    <td><b>Examples</b></td>
+  </tr>
+  <tr>
+    <td valign="top">Singleton types [<a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types">24</a>, <a href="https://github.com/scala/scala/pull/5310">25</a>]</td>
+    <td>
+      <ul>
+        <li><code>x.type</code> ~ <code>SingletonType(SYMBOL, None, &lt;x&gt;, None, None)</code>.</li>
+        <li><code>p.x.type</code> ~ <code>SingletonType(SYMBOL, &lt;p.type&gt;, &lt;x&gt;, None, None)</code>.</li>
+        <li><code>this.type</code> ~ <code>SingletonType(THIS, None, &lt;E&gt;, None, None)</code>.</li>
+        <li><code>C.this.type</code> ~ <code>SingletonType(THIS, None, &lt;C&gt;, None, None)</code>.</li>
+        <li>Type of <code>super</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, None, None, None)</code>.</li>
+        <li>Type of <code>super[M]</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, &lt;M&gt;, None, None)</code>.</li>
+        <li>Type of <code>C.super[M]</code> ~ <code>SingletonType(SUPER, &lt;C&gt;, &lt;M&gt;, None, None)</code>.</li>
+        <li>Literal type ~ <code>SingletonType(&lt;TAG&gt;, None, None, &lt;value&gt;, None)</code> or <code>SingletonType(&lt;TAG&gt;, None, None, None, &lt;value&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Type projections <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-projection">[26]</a></td>
+    <td>
+      <ul>
+        <li><code>T#C</code> ~ <code>TypeRef(&lt;T&gt;, &lt;C&gt;, List())</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Type designators <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-designators">[27]</a></td>
+    <td>
+      <ul>
+        <li><code>t</code> ~ <code>TypeRef(None, &lt;t&gt;, List())</code>.</li>
+        <li><code>Int</code> ~ <code>TypeRef(None, &lt;Int&gt;, List())</code>.</li>
+        <li><code>scala.Int</code> ~ <code>TypeRef(None, &lt;Int&gt;, List())</code>.</li>
+        <li><code>p.C</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List())</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Parameterized types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#parameterized-types">[28]</a></td>
+    <td>
+      <ul>
+        <li><code>T#C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;T&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+        <li><code>t[T1, ..., Tn]</code> ~ <code>TypeRef(None, &lt;t&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+        <li><code>List[Int]</code> ~ <code>TypeRef(None, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
+        <li><code>scala.List[Int]</code> ~ <code>TypeRef(None, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
+        <li><code>p.C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Tuple types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#tuple-types">[29]</a></td>
+    <td>
+      <ul>
+        <li><code>(T1, ..., Tn)</code> ~ <code>TypeRef(None, &lt;TupleN&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Annotated types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#annotated-types">[30]</a></td>
+    <td>
+      <ul>
+        <li><code>T @ann1 ... @annN</code> ~ <code>AnnotatedType(List(&lt;ann1&gt;, ..., &lt;annN&gt;), &lt;T&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Compound types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types">[31]</a></td>
+    <td>
+      <ul>
+        <li><code>{ M1; ...; Mm }</code> ~ <code>StructuralType(List(), List(), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
+        <li><code>T1 with ... with Tn</code> ~ <code>StructuralType(List(), List(&lt;T1&gt;, ..., &lt;Tn&gt;), List())</code>.</li>
+        <li><code>T1 with ... with Tn { M1; ...; Mm }</code> ~ <code>StructuralType(List(), List(&lt;T1&gt;, ..., &lt;Tn&gt;), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Infix types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#infix-types">[32]</a></td>
+    <td>
+      <ul>
+        <li><code>A T B</code> ~ <code>TypeRef(None, &lt;T&gt;, List(&lt;A&gt;, &lt;B&gt;))</code> for left-associative <code>T</code>.</li>
+        <li><code>A T B</code> ~ <code>TypeRef(None, &lt;T&gt;, List(&lt;B&gt;, &lt;A&gt;))</code> for right-associative <code>T</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Function types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#function-types">[33]</a></td>
+    <td>
+      <ul>
+        <li><code>(T1, ..., Tn) =&gt; T</code> ~ <code>TypeRef(None, &lt;FunctionN&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;, &lt;T&gt;))</code>.</li>
+        <li><code>=&gt; Ti</code> ~ <code>ByNameType(&lt;Ti&gt;)</code>.</li>
+        <li><code>Ti*</code> ~ <code>RepeatedType(&lt;Ti&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Existential types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#existential-types">[34]</a></td>
+    <td>
+      <ul>
+        <li><code>T forSome { M1; ...; Mm }</code> ~ <code>ExistentialType(List(&lt;M1&gt;, ..., &lt;Mm&gt;), List(&lt;T&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Method types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#method-types">[35]</a></td>
+    <td>
+      <ul>
+        <li><code>(P1s)...(Pns)T</code> ~ <code>MethodType(List(), List(List(&lt;P11&gt;, ...), ..., List(&lt;Pn1&gt;, ...)), &lt;T&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Polymorphic method types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#polymorphic-method-types">[36]</a></td>
+    <td>
+      <ul>
+        <li><code>[ts](P1s)...(Pns)T</code> ~ <code>MethodType(List(&lt;t1&gt;, ..., &lt;tm&gt;), List(List(&lt;P11&gt;, ...), ..., List(&lt;Pn1&gt;, ...)), &lt;T&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Type constructors <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-constructors">[37]</a></td>
+    <td>
+      <ul>
+        <li><code>[ts]T</code> ~ <code>UniversalType(List(&lt;t1&gt;, ..., &lt;tm&gt;), &lt;T&gt;)</code>.</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+Notes:
+* We diverge from SLS on the matter of handling prefixes (see definitions of
+  `TYPE_REF` and `SINGLETON_TYPE` for more information).
+  * In SLS, all types that can have a prefix must have it specified
+    explicitly, even if the prefix is trivial. For example in Scalac, `Int` must
+    be represented as `TypeRef(<scala.this.type>, <Int>, List())` [\[27\]][27].
+  * In SemanticDB, all types that have a trivial prefix must not have it
+    specified explicitly. For example in SemanticDB, `Int` must be represented
+    as `TypeRef(None, <Int>, List())`. Moreover, even `scala.Int` must be
+    represented as `TypeRef(None, <Int>, List())`.
+* We leave the mapping between type syntax written in source code and
+  `Type` entities deliberately unspecified. Some producers may transform
+  types in unspecified ways (e.g. Scalac transforms all `this.type` types
+  into qualified `X.this.type` types), and our experience [\[38\]][38] shows
+  that reverse engineering these transformations is very hard. We may improve
+  on this in the future, but this is highly unlikely. In the meanwhile,
+  use [Occurrences](#symboloccurrence) for figuring out semantics of syntax
+  written in source code.
+
+<a name="scala-symbolinformation"></a>
+#### SymbolInformation
+
+**Value declarations and definitions** [\[39\]][39] are represented by multiple
+symbols, with the exact number of symbols, their kinds, properties, signatures
+and accessibilities dependent on the corresponding value:
+* `VAL` symbol is created for all non-`ABSTRACT` values.
+* `GETTER` symbol is created for all non-`PRIVATE_THIS` member values.
+* `PARAMETER` symbol is created for `val` parameters of primary constructors.
+
+```scala
+abstract class C(val xp: Int) {
+  val xm: Int = ???
+  val xam: Int
+  private[this] val xlm: Int = ???
+  def m = {
+    val xl: Int = ???
+    type S = { val xs: Int }
+    type E = xe.type forSome { val xe: AnyRef }
+  }
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td width="275px"><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>xp</code></td>
+    <td><code>_empty_.C#xp.</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xp</code></td>
+    <td><code>_empty_.C#xp().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>xp</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`(Int).(xp)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xm</code></td>
+    <td><code>_empty_.C#xm.</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xm</code></td>
+    <td><code>_empty_.C#xm().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>xam</code></td>
+    <td><code>_empty_.C#xam().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>xlm</code></td>
+    <td><code>_empty_.C#xlm.</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xl</code></td>
+    <td><code>local0</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xs</code></td>
+    <td><code>local1</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>xe</code></td>
+    <td><code>local2</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+</table>
+
+Notes:
+* As described in SLS [\[39\]][39], there are some language constructs
+  that are desugared into values. For these language constructs,
+  symbols are created from desugared values.
+    * `val p = e` (symbols are created for bound variables `x1`, ...,
+      `xm` that are defined in `p` in order of their appearance in source code;
+      symbols are NOT created for the synthetic value used in the desugaring).
+    * `val x1, ..., xn: T` (symbols are created for `x1`, ..., `xn`
+      in order of their appearance in source code).
+    * `val p1, ..., pn = e` (symbols are created for bound variables `x1`, ...,
+      `xm` that are defined in patterns `p1`, ..., `pn` in order of their
+      appearance in source code).
+    * `val p1, ..., pn: T = e` (symbols are created for bound variables `x1`,
+       ..., `xm` that are defined in patterns `p1`, ..., `pn` in order of their
+       appearance in source code).
+* Supported properties for value symbols are:
+  * `ABSTRACT`: set for all corresponding symbols of value declarations.
+  * `FINAL`: set for all corresponding symbols of `final` values.
+  * `IMPLICIT`:
+    * If a corresponding `PARAM` symbol exists, set for the `PARAM` symbol.
+    * If a corresponding `GETTER` symbol exists, set for the `GETTER` symbol.
+    * If a corresponding `VAL` symbol exists but no corresponding `GETTER`
+      symbol exists, set for the `VAL` symbol.
+  * `LAZY`: set for all corresponding symbols of `lazy` values.
+* `override` relationships exist only for `GETTER` and `SETTER` symbols.
+  Corresponding `VAL` or `PARAM` symbols never override or get overridden.
+* If the type of the value is unspecified, it is inferred from the
+  right-hand side of the value according to the rules described
+  in SLS [\[39\]][39]. Corresponding signature is computed from the inferred
+  type as explained in [Type](#scala-type).
+* Depending on their meta annotations, value annotations may end up as
+  `Annotation` entities associated with multiple corresponding symbols.
+  See [\[40\]][40] for more information.
+* Supported accessibilities for value symbols are:
+  * `PRIVATE`: set for getters of `private` values.
+  * `PRIVATE_THIS`: set for vals of value members.
+  * `PRIVATE_WITHIN`: set for getters of `private[...]` values.
+  * `PROTECTED`: set for getters of `protected` values.
+  * `PROTECTED_THIS`: set for getters of `protected[this]` values.
+  * `PROTECTED_WITHIN`: set for getters of `protected[...]` values.
+
+**Variable declarations and definitions** [\[41\]][41] are represented
+similarly to values (see above). Concretely, the following rules describe
+symbols created for variables:
+* Whenever a `VAL` symbol would be created for a value, a `VAR` symbol is
+  created for a variable having the same properties, signature and
+  accessibility.
+* Whenever a `GETTER` symbol would be created for a value, a `GETTER` symbol
+  is created for a variable having the same properties, signature and
+  accessibility.
+* Whenever a `GETTER` symbol would be created for a value, a `SETTER` symbol
+  is created for a variable, having the same properties (except `IMPLICIT`)
+  and accessibility
+  and (for `var x: T`) name `x_=`
+  and signature `MethodType(List(), List(List(<x$1>)), <Unit>)`
+  with the synthetic parameter `x$1` having signature `<T>`.
+* Whenever a `PARAMETER` symbol would be created for a value, a `PARAMETER`
+  symbol is created for a variable having the same properties, signature
+  and accessibility.
+* Variable declarations and definitions cannot be `lazy`, so variable symbols
+  cannot be `LAZY` either.
+* Only corresponding `GETTER` and `PARAM` symbols for `implicit` member
+  variables and only corresponding `VAR` symbols for `implicit` local
+  variables can be `IMPLICIT`. `SETTER` symbols can never be `IMPLICIT`.
+
+**Pattern variables** [\[65\]][65] are represented differently depending
+on their location:
+* `VAL` symbol is created for pattern variables in pattern matching
+  expressions [\[66\]][66].
+* A combination of `VAL`, `VAR`, `GETTER` and `SETTER` symbols is created
+  for pattern variables in pattern definitions [\[39\]][39].
+
+```scala
+class C {
+  ??? match { case List(x) => ??? }
+  val List(xval) = ???
+  var List(xvar) = ???
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>x</code></td>
+    <td><code>local0</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(None, &lt;Nothing&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xval</code></td>
+    <td><code>_empty_.C#xval.</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(None, &lt;Nothing&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xval</code></td>
+    <td><code>_empty_.C#xval().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>xvar</code></td>
+    <td><code>_empty_.C#xvar.</code></td>
+    <td><code>VAR</code></td>
+    <td><code>TypeRef(None, &lt;Nothing&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>xvar</code></td>
+    <td><code>_empty_.C#xvar().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>xvar</code></td>
+    <td><code>_empty_.C#xvar_=(Nothing).</code></td>
+    <td><code>SETTER</code></td>
+    <td><code>MethodType(List(), List(&lt;x$1&gt;), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
+  </tr>
+</table>
+
+Notes:
+* In the future, we may decide to introduce a dedicated symbol kind
+  for regular pattern variables, so that they can be distinguished from
+  local value definitions.
+* Pattern variable symbols don't support any properties.
+* Pattern definitions [\[39\]][39] do not exist as a first-class language
+  feature. Instead, they are desugared into zero or more synthetic value
+  definitions and only then encoded into symbols as described in
+  "Value declarations and definitions" and "Variable declarations and
+  definitions".
+* Pattern variable symbols don't support any accessibilities.
+
+**Type declarations and type aliases** [\[42\]][42] are represented with
+`TYPE` symbols.
+
+```scala
+class C {
+  type T1 <: Hi
+  type T2 >: Lo
+  type T = Int
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>T1</code></td>
+    <td><code>_empty_.C#T1#</code></td>
+    <td><code>TYPE</code></td>
+    <td><code>TypeType(List(), None, &lt;Hi&gt;)</code></td>
+  </tr>
+  <tr>
+    <td><code>T2</code></td>
+    <td><code>_empty_.C#T2#</code></td>
+    <td><code>TYPE</code></td>
+    <td><code>TypeType(List(), &lt;Lo&gt;, None)</code></td>
+  </tr>
+  <tr>
+    <td><code>T</code></td>
+    <td><code>_empty_.C#T#</code></td>
+    <td><code>TYPE</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+</table>
+
+Notes:
+* Supported properties for type symbols are:
+  * `ABSTRACT`: set for type declarations.
+  * `FINAL`: set for `final` type aliases.
+* We leave the mapping between type syntax written in source code and
+  `Type` entities deliberately unspecified. For example, a producer may
+  represent the signature of `T1` as `TypeType(List(), <Nothing>, <Hi>)`.
+  See [Types](#scala-type) for more information.
+* If present, type parameters of type declarations and type aliases are
+  represented as described below in order of their appearance in source code.
+* Type symbols support [all Scala accessibilities](#scala-accessibility).
+
+**Type variables** [\[67\]][67] are represented with `TYPE` symbols.
+
+```scala
+class C {
+  ??? match { case _: List[t] => }
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>t</code></td>
+    <td><code>local0</code></td>
+    <td><code>TYPE</code></td>
+    <td><code>TypeType(List(), None, None)</code></td>
+  </tr>
+</table>
+
+Notes:
+* In the future, we may decide to introduce a dedicated symbol kind
+  for type variables, so that they can be distinguished from
+  local type definitions.
+* Type variable symbols are always `ABSTRACT`.
+* We leave the mapping between type syntax written in source code and
+  `Type` entities deliberately unspecified. For example, a producer may
+  represent the signature of `t` as `TypeType(List(), <Nothing>, <Any>)`.
+  See [Types](#scala-type) for more information.
+* Type variable symbols don't support any accessibilities.
+
+**Self parameters** [\[64\]][64] are represented with `SELF_PARAMETER` symbols.
+
+```scala
+class C1 {
+  self1 =>
+}
+
+class C2 {
+  self2: T =>
+}
+```
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>self1</code></td>
+    <td><code>local0</code></td>
+    <td><code>SELF_PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;C1&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>self2</code></td>
+    <td><code>local0</code></td>
+    <td><code>SELF_PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+  </tr>
+</table>
+
+Notes:
+* Self parameters cannot be referenced outside the document where they are
+  located, which means that they are represented by local symbols.
+* Self parameter symbols don't support any properties.
+* We leave the mapping between type syntax written in source code and
+  `Type` entities deliberately unspecified. For example, a producer may
+  represent the signature of `self2` as
+  `StructuralType(List(), List(<C2>, <T>), List())`.
+  See [Types](#scala-type) for more information.
+* Self parameter symbols don't support any accessibilities.
+
+**Type parameters** [\[43\]][43] are represented with `TYPE_PARAMETER` symbols.
+
+```scala
+class C[T1] {
+  def m[T2[T3] <: Hi] = ???
+  type T[T4 >: Lo] = ???
+}
+```
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>T1</code></td>
+    <td><code>_empty_.C#[T1]</code></td>
+    <td><code>TYPE_PARAMETER</code></td>
+    <td><code>TypeType(List(), None, None)</code></td>
+  </tr>
+  <tr>
+    <td><code>T2</code></td>
+    <td><code>_empty_.C#m()[T2]</code></td>
+    <td><code>TYPE_PARAMETER</code></td>
+    <td><code>TypeType(List(), None, &lt;Hi&gt;)</code></td>
+  </tr>
+  <tr>
+    <td><code>T3</code></td>
+    <td><code>_empty_.C#m()[T2][T3]</code></td>
+    <td><code>TYPE_PARAMETER</code></td>
+    <td><code>TypeType(List(), None, None)</code></td>
+  </tr>
+  <tr>
+    <td><code>T4</code></td>
+    <td><code>_empty_.C#T#[T4]</code></td>
+    <td><code>TYPE_PARAMETER</code></td>
+    <td><code>TypeType(List(), &lt;Lo&gt;, None)</code></td>
+  </tr>
+</table>
+
+Notes:
+* Supported properties for type parameter symbols are:
+  * `COVARIANT`: set for covariant type parameters.
+  * `CONTRAVARIANT`: set for contravariant type parameters.
+* If present, (higher-order) type parameters of type parameters are
+  represented as described here in order of their appearance in source code.
+* We leave the mapping between type syntax written in source code and
+  `Type` entities deliberately unspecified. For example, a producer may
+  represent the signature of `T1` as `TypeType(List(), <Nothing>, <Any>)`.
+  See [Types](#scala-type) for more information.
+* If present, context bounds and value bounds of type parameters are desugared
+  into parameters of the enclosing definition as described in [\[44\]][44] and
+  are represented with corresponding `PARAMETER` symbols.
+
+**Parameters** are represented with `PARAMETER` symbols. (There is no section in SLS dedicated to parameters, so we aggregate information about parameters
+from multiple sections).
+
+```scala
+class C(p1: Int) {
+  def m2(p2: Int) = ???
+  def m3(p3: Int = 42) = ???
+  def m4(p4: => Int) = ???
+  def m5(p5: Int*) = ???
+  def m6[T: C <% V] = ???
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td width="275px"><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>p1</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`(Int).(p1)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>p2</code></td>
+    <td><code>_empty_.C#m2(Int).(p2)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>p3</code></td>
+    <td><code>_empty_.C#m3(Int).(p3)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>m3$default$1</code></td>
+    <td><code>_empty_.C#m3$default$1().</code></td>
+    <td><code>DEF</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>p4</code></td>
+    <td><code>_empty_.C#m4(=>Int).(p4)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>ByNameType(TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>p5</code></td>
+    <td><code>_empty_.C#m5(Int*).(p5)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>RepeatedType(TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td>Context bound</td>
+    <td><code>_empty_.C#m6(C,V).(x$1)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code></td>
+  </tr>
+  <tr>
+    <td>View bound</td>
+    <td><code>_empty_.C#m7(C,V).(x$2)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;Function1&gt;, List(&lt;T&gt;, &lt;V&gt;))</code></td>
+  </tr>
+</table>
+
+Notes:
+* As described above, some values and variables are represented with multiple
+  symbols, including parameter symbols. For more information, see
+  "Value declarations and definitions" and "Variable declarations and
+  definitions".
+* Supported properties for parameter symbols are:
+  * `IMPLICIT`: set for `implicit` parameters, as well as desugared context
+    bounds and view bounds (see above).
+  * `VALPARAM`: set for `val` parameters of primary constructors.
+  * `VARPARAM`: set for `var` parameters of primary constructors.
+* Unlike some other metaprogramming systems for Scala, we do not
+  distinguish regular parameters from parameters with default arguments
+  [\[45\]][45]. However, we do create method symbols for synthetic methods
+  that compute default arguments with names and signatures defined
+  by [\[45\]][45].
+* Signatures of by-name parameters [\[46\]][46] and repeated parameters
+  [\[47\]][47] are represented with special types (`ByNameType` and
+  `RepeatedType` correspondingly).
+* According to [\[44\]][44], context bounds and view bounds are desugared
+  as parameters of enclosing definitions. Since SLS does not specify
+  the names for such parameters (only their signatures), we also leave
+  the names unspecified.
+
+**Function declarations and definitions** [\[48\]][48] are represented
+with `DEF` symbols.
+
+```scala
+abstract class C {
+  def m1: Int = ???
+  def m2(): Int = ???
+  def m3(x: Int): Int = ???
+  def m4(x: Int)(y: Int): Int = ???
+}
+```
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>m1</code></td>
+    <td><code>_empty_.C#m1().</code></td>
+    <td><code>DEF</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m2</code></td>
+    <td><code>_empty_.C#m2().</code></td>
+    <td><code>DEF</code></td>
+    <td><code>MethodType(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m3</code></td>
+    <td><code>_empty_.C#m3(Int).</code></td>
+    <td><code>DEF</code></td>
+    <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m4</code></td>
+    <td><code>_empty_.C#m4(Int,Int).</code></td>
+    <td><code>DEF</code></td>
+    <td><code>MethodType(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+</table>
+
+Notes:
+* According to SLS, some language features involve synthetic methods that
+  are not written in source code. Symbols for synthetic methods must be included
+  in SemanticDB payloads alongside normal methods. Detailed information about
+  synthetic methods is provided in various subsections of
+  [SymbolInformation](#scala-symbolinformation) together with related language
+  features, and here we provide a comprehensive list of such methods:
+    * Getters for vals and vars.
+    * Setters for vals and vars.
+    * Methods that compute default arguments.
+    * Methods synthesized for `case` classes and objects.
+    * Implicit methods synthesized for `implicit` classes.
+    * Methods synthesized for value classes.
+* Supported properties for method symbols are:
+  * `ABSTRACT`: set for function declarations.
+  * `FINAL`: set for `final` methods.
+  * `IMPLICIT`: set for `implicit` methods.
+* If present, type parameters of methods are
+  represented as described above in order of their appearance in source code.
+* If present, parameters of methods are
+  represented as described above in order of their appearance in source code.
+* For procedures [\[49\]][49], the return type is assumed to be `Unit`.
+  Corresponding signature is computed using the assumed retyrb
+  type as explained in [Type](#scala-type).
+* If the return type is unspecified, it is inferred from the
+  right-hand side of the method according to the rules described
+  in SLS [\[50\]][50]. Corresponding signature is computed using the inferred
+  retyrb type as explained in [Type](#scala-type).
+* Method symbols support [all Scala accessibilities](#scala-accessibility).
+
+**Macro definitions** [\[51\]][51] are represented with `MACRO` symbols
+similarly to function definitions (see above).
+
+```scala
+object M {
+  def m: Int = macro impl
+}
+
+```
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>m1</code></td>
+    <td><code>_empty_.M.m().</code></td>
+    <td><code>MACRO</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+</table>
+
+Notes:
+* Supported properties for macro symbols are the same as for method symbols,
+  except for `ABSTRACT` because macros cannot be `abstract`.
+* Return type inference for macros is not supported.
+* At the moment, `SymbolInformation` for macros does not contain information
+  about corresponding macro implementations. We intend to improve this in the
+  future.
+* Macro symbols support [all Scala accessibilities](#scala-accessibility).
+
+**Constructors** [[52][52], [53][53]] are represented with `PRIMARY_CONSTRUCTOR`
+and `SECONDARY_CONSTRUCTOR` symbols similarly to function definitions (see
+above).
+
+```scala
+class C(x: Int) {
+  def this() = this(42)
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td>Primary constructor</td>
+    <td><code>_empty_.C#`&lt;init&gt;`(Int).</code></td>
+    <td><code>PRIMARY_CONSTRUCTOR</code></td>
+    <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;C&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td>Secondary constructor</td>
+    <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
+    <td><code>SECONDARY_CONSTRUCTOR</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;C&gt;, List()))</code></td>
+  </tr>
+</table>
+
+Notes:
+* Unlike some other metaprogramming systems for Scala, we do not create
+  synthetic constructor symbols for traits and objects.
+* Constructor symbols don't support any properties.
+* Constructors don't have type parameters and return types, but we still
+  represent their signatures with `MethodType`. In these signatures,
+  type parameters are equal to `List()` and the return type
+  is the type of the enclosing class parameterized with references to its
+  type parameters.
+* Primary constructor parameters with `val` and `var` modifiers give rise
+  to multiple different symbols as described above.
+* Constructor symbols support [all Scala accessibilities](#scala-accessibility).
+
+**Class definitions** [\[54\]][54] are represented with `CLASS` symbols.
+
+```scala
+class C[T](x: T, val y: T, var z: T) extends B with X {
+  def m: Int = ???
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td width="280px"><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>C</code></td>
+    <td><code>_empty_.C#</code></td>
+    <td><code>CLASS</code></td>
+    <td><code>ClassInfoType(List(&lt;T&gt;), List(&lt;B&gt;, &lt;X&gt;), List(&lt;x&gt;, &lt;y&gt;, &lt;y&gt;, &lt;z&gt;, &lt;z&gt;, &lt;z_=&gt;, &lt;&lt;init&gt;&gt;, &lt;m&gt;))</code></td>
+  </tr>
+  <tr>
+    <td><code>T</code></td>
+    <td><code>_empty_.C#[T]</code></td>
+    <td><code>TYPE_PARAMETER</code></td>
+    <td><code>TypeType(List(), None, None)</code></td>
+  </tr>
+  <tr>
+    <td><code>x</code></td>
+    <td><code>_empty_.C#x.</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>y</code></td>
+    <td><code>_empty_.C#y.</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>y</code></td>
+    <td><code>_empty_.C#x().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>z</code></td>
+    <td><code>_empty_.C#z.</code></td>
+    <td><code>VAL</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>z</code></td>
+    <td><code>_empty_.C#z().</code></td>
+    <td><code>GETTER</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>z</code></td>
+    <td><code>_empty_.C#z_=(T).</code></td>
+    <td><code>SETTER</code></td>
+    <td><code>MethodType(List(), List(List(&lt;x$1&gt;)), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>z</code></td>
+    <td><code>_empty_.C#z_=(T).(x$1)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td>Primary constructor</td>
+    <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).</code></td>
+    <td><code>PRIMARY_CONSTRUCTOR</code></td>
+    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>x</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).(x)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>y</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).(y)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>z</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).(z)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td>m</td>
+    <td><code>_empty_.C#m().</code></td>
+    <td><code>DEF</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+</table>
+
+Notes:
+* Supported properties for class symbols are:
+  * `ABSTRACT`: set for `abstract` classes.
+  * `FINAL`: set for `final` classes.
+  * `SEALED`: set for `sealed` classes.
+  * `IMPLICIT`: set for `implicit` classes.
+  * `CASE`: set for `case` classes.
+* We leave the mapping between parent syntax written in source code and
+  `ClassInfoType.parents` deliberately unspecified. Some producers are known
+  to insert `<AnyRef>` into `parents` under certain circumstances, so we can't
+  guarantee a one-to-one mapping of parent clauses in source code and
+  entities in `parents`. We may improve on this in the future.
+* `ClassInfoType.declarations` must be ordered as follows:
+  * For every parameter of the primary constructor, its `VAL`, then
+    its `GETTER`, then its `SETTER`.
+  * Symbol of the primary constructor.
+  * Symbols of declared members in order of their appearance in source code.
+    (Inherited members must not be part of `declarations`.)
+  * Synthetic symbols in unspecified order and positions in the declarations
+    list. We may provide more structure here in the future.
+* In some cases, SLS and its extensions mandate generation of synthetic members
+  and/or companions for certain classes. Symbols for such synthetic definitions
+  must be included in SemanticDB payloads alongside normal definitions. For
+  details, see:
+    * Case classes [\[55\]][55].
+    * Implicit classes [\[56\]][56].
+    * Value classes [\[57\]][57].
+* Class symbols support [all Scala accessibilities](#scala-accessibility).
+
+**Traits** [\[58\]][58] are represented by `TRAIT` symbols
+similarly to class definitions (see above). Concretely, the differences
+between trait symbols and class symbols are:
+* Trait symbols only support `SEALED` property.
+* Traits don't have constructors.
+
+**Object definitions** [\[59\]][59] are represented by `OBJECT` symbols
+similarly to class definitions (see above). Concretely, the differences
+between object symbols and class symbols are:
+* Object symbols are always `FINAL`.
+* Apart from `FINAL`, object symbols only support `CASE` and `IMPLICIT`
+  properties.
+* Objects don't have type parameters, but we still represent their signatures
+  with `ClassInfoType`. In these signatures, type parameters are equal
+  to `List()`.
+* Objects don't have constructors.
+
+**Package objects** [\[60\]][60] are represented by `PACKAGE_OBJECT` symbols
+similarly to object definitions (see above). Concretely, the differences
+between package object symbols and object symbols are:
+* Package object symbols are always `FINAL`.
+* Apart from `FINAL`, package object symbols don't support any properties.
+* Package objects don't have annotations.
+* Package objects don't support any accessibilities.
+
+**Packages** [\[61\]][61] are represented by `PACKAGE` symbols.
+In Scala, `SymbolInformation` for `PACKAGE` symbols is very modest -
+the only non-empty fields must be:
+  * `symbol` (must be defined as described in [Symbol](#scala-symbol)).
+  * `language` (must be `"Scala"`).
+  * `kind` (must be `PACKAGE`).
+  * `name` (must be equal to the short name of the package).
+  * `owner` (must be equal to the symbol of the enclosing package).
+
+<a name="scala-annotation"></a>
+#### Annotation
+
+In Scala, `Annotation` represents annotations [\[23\]][23].
+
+<table>
+  <tr>
+    <td><b>Value</b></td>
+    <td><b>Explanation</b></td>
+  </tr>
+  <tr>
+    <td><code>Annotation(&lt;ann&gt;)</code></td>
+    <td>Definition annotation, e.g. <code>@ann def m: T</code>.</td>
+  </tr>
+  <tr>
+    <td><code>Annotation(&lt;ann&gt;)</code></td>
+    <td>Type annotation, e.g. <code>T @ann</code>.</td>
+  </tr>
+  <tr>
+    <td>Not supported</td>
+    <td>Expression annotation, e.g. <code>e: @ann</code>.</td>
+  </tr>
+</table>
+
+* At the moment, `Annotation` can't represent annotation arguments,
+  which means that the annotation in `@ann(x, y, z) def m: T` is
+  represented as `Annotation(<ann>)`. We intend to improve on this
+  in the future.
+* At the moment, SemanticDB cannot represent expressions, which means
+  that it cannot represent expression annotations as well. We do not
+  plan to add support for expressions in SemanticDB, so it is highly
+  unlikely that expression annotations will be supported in the future.
+
+<a name="scala-accessibility"></a>
+#### Accessibility
+
+In Scala, `Accessibility` represents accessibility of definitions.
+
+<table>
+  <tr>
+    <td><b>Accessibility</b></td>
+    <td><b>Code</b></td>
+    <td><b>Explanation</b></td>
+  </tr>
+  <tr>
+    <td><code>PRIVATE</code></td>
+    <td><code>private def x = ???</code></td>
+    <td>
+      Can be accessed only from within the directly enclosing template
+      and its companion object or companion class
+      <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#private">[62]</a>.
+    </td>
+  </tr>
+  <tr>
+    <td><code>PRIVATE_THIS</code></td>
+    <td><code>private[this] def x = ???</code></td>
+    <td>
+      Can be accessed only from within the object in which the definition
+      is defined.
+      <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#private">[62]</a>.
+    </td>
+  </tr>
+  <tr>
+    <td><code>PRIVATE_WITHIN</code></td>
+    <td><code>private[X] def x = ???</code></td>
+    <td>
+      Can be accessed respectively only from code inside the package
+      <code>X</code> or only from code inside the class <code>X</code>
+      and its companion object.
+      <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#private">[62]</a>.
+    </td>
+  </tr>
+  <tr>
+    <td><code>PROTECTED</code></td>
+    <td><code>protected def x = ???</code></td>
+    <td>
+      Can be accessed from within: 1) the template of the defining class,
+      2) all templates that have the defining class as a base class,
+      3) the companion object of any of those classes.
+      <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#protected">[63]</a>.
+    </td>
+  </tr>
+  <tr>
+    <td><code>PROTECTED_THIS</code></td>
+    <td><code>protected[this] def x = ???</code></td>
+    <td>
+      Can be accessed as <code>PROTECTED</code> AND
+      only from within the object in which the definition is defined.
+      <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#protected">[63]</a>.
+    </td>
+  </tr>
+  <tr>
+    <td><code>PROTECTED_WITHIN</code></td>
+    <td><code>protected[X] def x = ???</code></td>
+    <td>
+      Can be accessed as <code>PROTECTED</code> OR
+      from code inside the package <code>X</code> or from code inside
+      the class <code>X</code> and its companion object.
+      <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#protected">[63]</a>.
+    </td>
+  </tr>
+  <tr>
+    <td><code>PUBLIC</code></td>
+    <td><code>def x = ???</code></td>
+    <td>None of the above.</td>
+  </tr>
+</table>
+
+Notes:
+* Not all kinds of symbols support all accessibilities. See
+  [SymbolInformation](#scala-symbolinformation) for more information.
+
+<a name="scala-synthetic"></a>
+#### Synthetic
+
+In Scala, we leave the synthetic format deliberately unspecified.
+Synthetics are unspecified in SLS, and our experience [\[38\]][38] shows that
+reverse engineering synthetics is very hard. We may improve
+on this in the future, but this is highly unlikely.
+
+### Java
+
+In this section, we exhaustively map Java language features onto SemanticDB.
+As a reference, we use the Java Language Specification [\[68\]][68]
+(referred to as "JLS" in the text below), as well as the Java Virtual Machine Specification [\[69\]][69] (referred to as "JVMS" in the text below).
+
+<a name="
+
 [semanticdb2.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb2/semanticdb2.proto
 [semanticdb3.proto]: semanticdb3.proto
 [1]: https://semver.org/
@@ -2170,3 +3428,5 @@ on this in the future, but this is highly unlikely.
 [65]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#variable-patterns
 [66]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#pattern-matching-expressions
 [67]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#type-patterns
+[68]: JLS
+[69]: JVMS

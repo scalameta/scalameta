@@ -20,8 +20,9 @@ object Javacp {
   def sdocument(root: Path, file: Path, scopes: TypeVariableScopes): s.TextDocument = {
     val bytes = Files.readAllBytes(file)
     val node = parseClassNode(bytes)
+    node.outerClass
     val symbols =
-      try ssymbols(node, scopes)
+      try sinfos(node, scopes)
       catch {
         case e: TypeVariableScopeResolutionError =>
           // TODO: implement inner anonymous classes
@@ -104,11 +105,11 @@ object Javacp {
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,
+      owner = ownerSymbol,
       language = javaLanguage,
       kind = k.TYPE_PARAMETER,
       name = typeParameter.value.identifier,
-      tpe = Some(tpe),
-      owner = ownerSymbol
+      tpe = Some(tpe)
     )
   }
 
@@ -124,7 +125,7 @@ object Javacp {
 
   case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
 
-  def ssymbols(node: ClassNode, scopes: TypeVariableScopes): Seq[s.SymbolInformation] = {
+  def sinfos(node: ClassNode, scopes: TypeVariableScopes): Seq[s.SymbolInformation] = {
     implicit val implicitScopes: TypeVariableScopes = scopes
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
@@ -178,6 +179,7 @@ object Javacp {
 
       buf += s.SymbolInformation(
         symbol = fieldSymbol,
+        owner = classSymbol,
         language = javaLanguage,
         kind =
           if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
@@ -226,6 +228,7 @@ object Javacp {
             val paramSymbol = methodSymbol + "(" + name + ")"
             buf += s.SymbolInformation(
               symbol = paramSymbol,
+              owner = methodSymbol,
               language = javaLanguage,
               kind = k.PARAMETER,
               name = name,
@@ -247,6 +250,7 @@ object Javacp {
 
         buf += s.SymbolInformation(
           symbol = methodSymbol,
+          owner = classSymbol,
           language = javaLanguage,
           kind = k.DEF,
           name = method.node.name,

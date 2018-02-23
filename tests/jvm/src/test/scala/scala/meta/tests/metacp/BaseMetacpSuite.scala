@@ -28,7 +28,7 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
   }
 
   def checkNoCrashes(library: Library): Unit = {
-    checkMetacp(library.name, library.classpath)
+    checkMetacp(library.name, () => library.classpath())
   }
 
   val scalameta = Library("org.scalameta", "scalameta_2.12", "3.2.0")
@@ -50,8 +50,8 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
 }
 
 case class Library(organization: String, artifact: String, version: String) {
-  def name = List(organization, artifact, version).mkString(File.pathSeparator)
-  def classpath: () => String = { () =>
+  def name = List(organization, artifact, version).mkString(":")
+  def classpath(): String = {
     val jars = Jars
       .fetch(organization, artifact, version)
       .filterNot(_.toString.contains("scala-lang"))

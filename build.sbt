@@ -385,7 +385,6 @@ lazy val semanticdbIntegration = project
     description := "Sources to compile to build SemanticDB for tests.",
     sharedSettings,
     nonPublishableSettings,
-    javacOptions += "-parameters",
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions ++= {
       val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath

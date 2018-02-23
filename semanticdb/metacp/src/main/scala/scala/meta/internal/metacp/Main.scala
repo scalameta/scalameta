@@ -3,6 +3,7 @@ package scala.meta.internal.metacp
 import java.io._
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
+import java.util
 import java.util.Comparator
 import scala.collection.mutable
 import scala.meta.internal.metacp.asm.TypeVariableScopes
@@ -63,7 +64,7 @@ object Main {
 
             val isScalaFile =
               classfile.attribute("ScalaSig").isDefined ||
-                classfile.attribute("ScalaInlineInfo").isDefined
+                classfile.attribute("Scala").isDefined
             val language = if (isScalaFile) "Scala" else "Java"
             val semanticdbInfos: Option[Seq[s.SymbolInformation]] = if (isScalaFile) {
               ScalaSigParser.parse(classfile).map { scalaSig =>
@@ -93,11 +94,13 @@ object Main {
           FileVisitResult.CONTINUE
         }
 
-
         override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
           scopes.clear()
-          // Sort files in reverse order so that we process Outer.class before Outer$Inner.class.
-          // This ordering is necessary to resolve type variables correcly in generic signatures.
+          // Sort files in reverse order so that we process class files in the following order:
+          // 1. Outer.class
+          // 2. Outer$Inner.class
+          // This ordering is necessary so that we enter type parameters in
+          // Outer.class before processing Outer$Inner.class
           val files = Files.list(dir).sorted(Comparator.reverseOrder())
           import scala.collection.JavaConverters._
           files
