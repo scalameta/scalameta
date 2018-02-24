@@ -201,40 +201,44 @@ Names:
 [265..268): ??? => _root_.scala.Predef.`???`().
 [278..279): w <= _root_.flags.p.package.C#w().
 [281..284): Int => _root_.scala.Int#
-[296..297): T <= _root_.flags.p.package.T#
-[300..303): Int => _root_.scala.Int#
-[311..312): U <= _root_.flags.p.package.U#
-[316..319): Int => _root_.scala.Int#
-[327..328): V <= _root_.flags.p.package.V#
-[332..335): Int => _root_.scala.Int#
-[350..351): X <= _root_.flags.p.package.X.
-[366..367): Y <= _root_.flags.p.package.Y#
-[367..367):  <= _root_.flags.p.package.Y#`<init>`().
-[383..384): Z <= _root_.flags.p.package.Z#
-[393..395): AA <= _root_.flags.p.package.AA#
-[395..395):  <= _root_.flags.p.package.AA#`<init>`(Int,Int,Int).
-[396..397): x <= _root_.flags.p.package.AA#x.
-[399..402): Int => _root_.scala.Int#
-[408..409): y <= _root_.flags.p.package.AA#y().
-[411..414): Int => _root_.scala.Int#
-[420..421): z <= _root_.flags.p.package.AA#z().
-[423..426): Int => _root_.scala.Int#
-[436..437): S <= _root_.flags.p.package.S#
-[439..450): specialized => _root_.scala.specialized#
-[451..451):  => _root_.scala.specialized#`<init>`().
-[451..452): T <= _root_.flags.p.package.S#[T]
-[453..453):  <= _root_.flags.p.package.S#`<init>`().
-[460..464): List => _root_.scala.collection.immutable.List.
-[465..468): xs1 <= _root_.flags.p.package.xs1.xs1.
-[472..475): ??? => _root_.scala.Predef.`???`().
-[478..481): ??? => _root_.scala.Predef.`???`().
-[495..499): List => _root_.scala.collection.immutable.List.
-[500..503): xs2 <= local0_semanticdb_integration_src_main_scala_example_Flags_scala
-[508..511): ??? => _root_.scala.Predef.`???`().
-[516..519): ??? => _root_.scala.Predef.`???`().
-[536..540): List => _root_.scala.package.List#
-[541..542): t <= local1_semanticdb_integration_src_main_scala_example_Flags_scala
-[547..550): ??? => _root_.scala.Predef.`???`().
+[296..298): T1 <= _root_.flags.p.package.T1#
+[301..304): Int => _root_.scala.Int#
+[312..314): T2 <= _root_.flags.p.package.T2#
+[315..316): T <= _root_.flags.p.package.T2#[T]
+[320..321): S => _root_.flags.p.package.S#
+[322..323): T => _root_.flags.p.package.T2#[T]
+[332..333): U <= _root_.flags.p.package.U#
+[337..340): Int => _root_.scala.Int#
+[348..349): V <= _root_.flags.p.package.V#
+[353..356): Int => _root_.scala.Int#
+[371..372): X <= _root_.flags.p.package.X.
+[387..388): Y <= _root_.flags.p.package.Y#
+[388..388):  <= _root_.flags.p.package.Y#`<init>`().
+[404..405): Z <= _root_.flags.p.package.Z#
+[414..416): AA <= _root_.flags.p.package.AA#
+[416..416):  <= _root_.flags.p.package.AA#`<init>`(Int,Int,Int).
+[417..418): x <= _root_.flags.p.package.AA#x.
+[420..423): Int => _root_.scala.Int#
+[429..430): y <= _root_.flags.p.package.AA#y().
+[432..435): Int => _root_.scala.Int#
+[441..442): z <= _root_.flags.p.package.AA#z().
+[444..447): Int => _root_.scala.Int#
+[457..458): S <= _root_.flags.p.package.S#
+[460..471): specialized => _root_.scala.specialized#
+[472..472):  => _root_.scala.specialized#`<init>`().
+[472..473): T <= _root_.flags.p.package.S#[T]
+[474..474):  <= _root_.flags.p.package.S#`<init>`().
+[481..485): List => _root_.scala.collection.immutable.List.
+[486..489): xs1 <= _root_.flags.p.package.xs1.xs1.
+[493..496): ??? => _root_.scala.Predef.`???`().
+[499..502): ??? => _root_.scala.Predef.`???`().
+[516..520): List => _root_.scala.collection.immutable.List.
+[521..524): xs2 <= local0_semanticdb_integration_src_main_scala_example_Flags_scala
+[529..532): ??? => _root_.scala.Predef.`???`().
+[537..540): ??? => _root_.scala.Predef.`???`().
+[557..561): List => _root_.scala.package.List#
+[562..563): t <= local1_semanticdb_integration_src_main_scala_example_Flags_scala
+[568..571): ??? => _root_.scala.Predef.`???`().
 
 Symbols:
 _root_.flags. => package flags.{+1 members}
@@ -302,8 +306,12 @@ _root_.flags.p.package.S#[T] => typeparam T
 _root_.flags.p.package.S#`<init>`(). => primaryctor <init>: (): S[T]
   [4..5): S => _root_.flags.p.package.S#
   [6..7): T => _root_.flags.p.package.S#[T]
-_root_.flags.p.package.T# => type T: Int
+_root_.flags.p.package.T1# => type T1: Int
   [0..3): Int => _root_.scala.Int#
+_root_.flags.p.package.T2# => type T2: [T] => S[T]
+  [7..8): S => _root_.flags.p.package.S#
+  [9..10): T => _root_.flags.p.package.T2#[T]
+_root_.flags.p.package.T2#[T] => typeparam T
 _root_.flags.p.package.U# => abstract type U
 _root_.flags.p.package.V# => abstract type V
 _root_.flags.p.package.X. => final case object X
@@ -352,11 +360,11 @@ local0_semanticdb_integration_src_main_scala_example_Flags_scala => val xs2: Not
 local1_semanticdb_integration_src_main_scala_example_Flags_scala => abstract type t
 
 Synthetics:
-[464..464): *.unapplySeq[Nothing]
+[485..485): *.unapplySeq[Nothing]
   [0..1): * => _star_.
   [2..12): unapplySeq => _root_.scala.collection.generic.SeqFactory#unapplySeq(CC).
   [13..20): Nothing => _root_.scala.Nothing#
-[499..499): *.unapplySeq[Nothing]
+[520..520): *.unapplySeq[Nothing]
   [0..1): * => _star_.
   [2..12): unapplySeq => _root_.scala.collection.generic.SeqFactory#unapplySeq(CC).
   [13..20): Nothing => _root_.scala.Nothing#

@@ -434,8 +434,19 @@ object Main {
       }
     }
 
-    try loop(sym.infoType)
-    catch {
+    try {
+      if (sym.isAlias) {
+        def preprocess(info: Type): Type = {
+          info match {
+            case PolyType(tpe, tparams) => PolyType(preprocess(tpe), tparams)
+            case tpe => TypeBoundsType(tpe, tpe)
+          }
+        }
+        loop(preprocess(sym.infoType))
+      } else {
+        loop(sym.infoType)
+      }
+    } catch {
       case ScalaSigParserError("Unexpected failure") =>
         // TODO: See https://github.com/scalameta/scalameta/issues/1283
         // when this can happen.
@@ -508,6 +519,7 @@ object Main {
     def isModuleClass: Boolean = sym.isInstanceOf[ClassSymbol] && sym.isModule
     def isClass: Boolean = sym.isInstanceOf[ClassSymbol]
     def isType: Boolean = sym.isInstanceOf[TypeSymbol]
+    def isAlias: Boolean = sym.isInstanceOf[AliasSymbol]
     def isClassConstructor: Boolean = {
       sym.parent match {
         case Some(parent: ClassSymbol) if !parent.isTrait && !parent.isModule =>

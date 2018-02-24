@@ -127,7 +127,7 @@ _root_.scala.Array# => final class Array[Array#[T: <?>].{+6 decls}
   extends Cloneable
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
-_root_.scala.Predef.String# => type String: String
+_root_.scala.Predef.String# => type String: >: String <: String
   String => _root_.java.lang.String#
 _root_.scala.Predef.println(Any). => def println: (x: <?>): Unit
   x => _root_.scala.Predef.println(Any).(x)
@@ -210,8 +210,8 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Flags.scala
 Text => non-empty
 Language => Scala212
-Symbols => 59 entries
-Occurrences => 67 entries
+Symbols => 61 entries
+Occurrences => 71 entries
 Synthetics => 2 entries
 
 Symbols:
@@ -291,8 +291,14 @@ _root_.flags.p.package.S#[T] => @specialized typeparam T: >: Nothing <: Any
 _root_.flags.p.package.S#`<init>`(). => primaryctor <init>: (): S[T]
   S => _root_.flags.p.package.S#
   T => _root_.flags.p.package.S#[T]
-_root_.flags.p.package.T# => type T: Int
+_root_.flags.p.package.T1# => type T1: >: Int <: Int
   Int => _root_.scala.Int#
+_root_.flags.p.package.T2# => type T2: [T >: Nothing <: Any] => >: S[T] <: S[T]
+  T => _root_.flags.p.package.T2#[T]
+  S => _root_.flags.p.package.S#
+_root_.flags.p.package.T2#[T] => typeparam T: >: Nothing <: Any
+  Nothing => _root_.scala.Nothing#
+  Any => _root_.scala.Any#
 _root_.flags.p.package.U# => abstract type U: >: Nothing <: Int
   Nothing => _root_.scala.Nothing#
   Int => _root_.scala.Int#
@@ -340,7 +346,7 @@ _root_.scala.language. => final object language
 _root_.scala.language.experimental. => final object experimental
 _root_.scala.language.experimental.macros(). => implicit lazy val macros: macros
   macros => _root_.scala.languageFeature.experimental.macros#
-_root_.scala.package.List# => type List: [List#[A: <?>] => List[List#[A]
+_root_.scala.package.List# => type List: [List#[A: <?>] => >: List[List#[A] <: List[List#[A]
   List#[A => _root_.scala.package.List#[A]
   List => _root_.scala.collection.immutable.List#
 _root_.scala.specialized# => class specialized.{+4 decls}
@@ -388,47 +394,51 @@ Occurrences:
 [10:32..10:35): ??? => _root_.scala.Predef.`???`().
 [11:8..11:9): w <= _root_.flags.p.package.C#w().
 [11:11..11:14): Int => _root_.scala.Int#
-[13:7..13:8): T <= _root_.flags.p.package.T#
-[13:11..13:14): Int => _root_.scala.Int#
-[14:7..14:8): U <= _root_.flags.p.package.U#
-[14:12..14:15): Int => _root_.scala.Int#
-[15:7..15:8): V <= _root_.flags.p.package.V#
+[13:7..13:9): T1 <= _root_.flags.p.package.T1#
+[13:12..13:15): Int => _root_.scala.Int#
+[14:7..14:9): T2 <= _root_.flags.p.package.T2#
+[14:10..14:11): T <= _root_.flags.p.package.T2#[T]
+[14:15..14:16): S => _root_.flags.p.package.S#
+[14:17..14:18): T => _root_.flags.p.package.T2#[T]
+[15:7..15:8): U <= _root_.flags.p.package.U#
 [15:12..15:15): Int => _root_.scala.Int#
-[16:14..16:15): X <= _root_.flags.p.package.X.
-[17:14..17:15): Y <= _root_.flags.p.package.Y#
-[17:15..17:15):  <= _root_.flags.p.package.Y#`<init>`().
-[18:15..18:16): Z <= _root_.flags.p.package.Z#
-[19:8..19:10): AA <= _root_.flags.p.package.AA#
-[19:10..19:10):  <= _root_.flags.p.package.AA#`<init>`(Int,Int,Int).
-[19:11..19:12): x <= _root_.flags.p.package.AA#x.
-[19:14..19:17): Int => _root_.scala.Int#
-[19:23..19:24): y <= _root_.flags.p.package.AA#y().
-[19:26..19:29): Int => _root_.scala.Int#
-[19:35..19:36): z <= _root_.flags.p.package.AA#z().
-[19:38..19:41): Int => _root_.scala.Int#
-[20:8..20:9): S <= _root_.flags.p.package.S#
-[20:11..20:22): specialized => _root_.scala.specialized#
-[20:23..20:23):  => _root_.scala.specialized#`<init>`().
-[20:23..20:24): T <= _root_.flags.p.package.S#[T]
-[20:25..20:25):  <= _root_.flags.p.package.S#`<init>`().
-[21:6..21:10): List => _root_.scala.collection.immutable.List.
-[21:11..21:14): xs1 <= _root_.flags.p.package.xs1.xs1.
-[21:18..21:21): ??? => _root_.scala.Predef.`???`().
-[22:2..22:5): ??? => _root_.scala.Predef.`???`().
-[22:19..22:23): List => _root_.scala.collection.immutable.List.
-[22:24..22:27): xs2 <= local0
-[22:32..22:35): ??? => _root_.scala.Predef.`???`().
+[16:7..16:8): V <= _root_.flags.p.package.V#
+[16:12..16:15): Int => _root_.scala.Int#
+[17:14..17:15): X <= _root_.flags.p.package.X.
+[18:14..18:15): Y <= _root_.flags.p.package.Y#
+[18:15..18:15):  <= _root_.flags.p.package.Y#`<init>`().
+[19:15..19:16): Z <= _root_.flags.p.package.Z#
+[20:8..20:10): AA <= _root_.flags.p.package.AA#
+[20:10..20:10):  <= _root_.flags.p.package.AA#`<init>`(Int,Int,Int).
+[20:11..20:12): x <= _root_.flags.p.package.AA#x.
+[20:14..20:17): Int => _root_.scala.Int#
+[20:23..20:24): y <= _root_.flags.p.package.AA#y().
+[20:26..20:29): Int => _root_.scala.Int#
+[20:35..20:36): z <= _root_.flags.p.package.AA#z().
+[20:38..20:41): Int => _root_.scala.Int#
+[21:8..21:9): S <= _root_.flags.p.package.S#
+[21:11..21:22): specialized => _root_.scala.specialized#
+[21:23..21:23):  => _root_.scala.specialized#`<init>`().
+[21:23..21:24): T <= _root_.flags.p.package.S#[T]
+[21:25..21:25):  <= _root_.flags.p.package.S#`<init>`().
+[22:6..22:10): List => _root_.scala.collection.immutable.List.
+[22:11..22:14): xs1 <= _root_.flags.p.package.xs1.xs1.
+[22:18..22:21): ??? => _root_.scala.Predef.`???`().
 [23:2..23:5): ??? => _root_.scala.Predef.`???`().
-[23:22..23:26): List => _root_.scala.package.List#
-[23:27..23:28): t <= local1
-[23:33..23:36): ??? => _root_.scala.Predef.`???`().
+[23:19..23:23): List => _root_.scala.collection.immutable.List.
+[23:24..23:27): xs2 <= local0
+[23:32..23:35): ??? => _root_.scala.Predef.`???`().
+[24:2..24:5): ??? => _root_.scala.Predef.`???`().
+[24:22..24:26): List => _root_.scala.package.List#
+[24:27..24:28): t <= local1
+[24:33..24:36): ??? => _root_.scala.Predef.`???`().
 
 Synthetics:
-[21:10..21:10):  => *.unapplySeq[Nothing]
+[22:10..22:10):  => *.unapplySeq[Nothing]
   [0:0..0:1): * => _star_.
   [0:2..0:12): unapplySeq => _root_.scala.collection.generic.SeqFactory#unapplySeq(CC).
   [0:13..0:20): Nothing => _root_.scala.Nothing#
-[22:23..22:23):  => *.unapplySeq[Nothing]
+[23:23..23:23):  => *.unapplySeq[Nothing]
   [0:0..0:1): * => _star_.
   [0:2..0:12): unapplySeq => _root_.scala.collection.generic.SeqFactory#unapplySeq(CC).
   [0:13..0:20): Nothing => _root_.scala.Nothing#
@@ -485,7 +495,7 @@ _root_.example.Methods# => class Methods[T >: Nothing <: Any].{+26 decls}
   extends AnyRef
 _root_.example.Methods#$anon#x(). => abstract getter x: : Int
   Int => _root_.scala.Int#
-_root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.this.List[T]
+_root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => >: Methods.this.List[T] <: Methods.this.List[T]
   T => _root_.example.Methods#AList#[T]
   Methods => _root_.example.Methods#
   List => _root_.example.Methods#List#
@@ -649,7 +659,7 @@ _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
 _root_.scala.Predef. => final object Predef
-_root_.scala.Predef.String# => type String: String
+_root_.scala.Predef.String# => type String: >: String <: String
   String => _root_.java.lang.String#
 _root_.scala.Predef.`???`(). => def ???: : Nothing
   Nothing => _root_.scala.Nothing#
@@ -660,7 +670,7 @@ _root_.scala.math.Ordering# => @implicitNotFound trait Ordering[Ordering#[T: <?>
   extends Comparator[Ordering#[T]
   extends PartialOrdering[Ordering#[T]
   extends Serializable
-_root_.scala.package.List# => type List: [List#[A: <?>] => List[List#[A]
+_root_.scala.package.List# => type List: [List#[A: <?>] => >: List[List#[A] <: List[List#[A]
   List#[A => _root_.scala.package.List#[A]
   List => _root_.scala.collection.immutable.List#
 _root_.scala.unchecked# => class unchecked.{+1 decls}
@@ -1039,7 +1049,7 @@ _root_.scala.language.existentials(). => implicit lazy val existentials: existen
   existentials => _root_.scala.languageFeature.existentials#
 _root_.scala.language.higherKinds(). => implicit lazy val higherKinds: higherKinds
   higherKinds => _root_.scala.languageFeature.higherKinds#
-_root_.scala.package.List# => type List: [List#[A: <?>] => List[List#[A]
+_root_.scala.package.List# => type List: [List#[A: <?>] => >: List[List#[A] <: List[List#[A]
   List#[A => _root_.scala.package.List#[A]
   List => _root_.scala.collection.immutable.List#
 _root_.types. => package types
@@ -1094,7 +1104,7 @@ _root_.types.T#x. => private[this] val x: T.this.X
 _root_.types.Test. => final object Test
 _root_.types.Test.C# => class C.{+48 decls}
   extends M
-_root_.types.Test.C#$anon#L# => type L: [T >: Nothing <: Any] => List[T]
+_root_.types.Test.C#$anon#L# => type L: [T >: Nothing <: Any] => >: List[T] <: List[T]
   T => _root_.types.Test.C#$anon#L#[T]
   List => _root_.scala.package.List#
 _root_.types.Test.C#$anon#L#[T] => typeparam T: >: Nothing <: Any
@@ -1166,9 +1176,9 @@ _root_.types.Test.C#TypeType. => final object TypeType
 _root_.types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.types.Test.C#TypeType.T4# => type T4: C
+_root_.types.Test.C#TypeType.T4# => type T4: >: C <: C
   C => _root_.types.Test.C#
-_root_.types.Test.C#TypeType.T5# => type T5: [U >: Nothing <: Any] => U
+_root_.types.Test.C#TypeType.T5# => type T5: [U >: Nothing <: Any] => >: U <: U
   U => _root_.types.Test.C#TypeType.T5#[U]
 _root_.types.Test.C#TypeType.T5#[U] => typeparam U: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#

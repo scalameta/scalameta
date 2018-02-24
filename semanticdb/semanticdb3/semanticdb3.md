@@ -1425,7 +1425,7 @@ class C {
     <td><code>T</code></td>
     <td><code>_empty_.C#T#</code></td>
     <td><code>TYPE</code></td>
-    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+    <td><code>TypeType(List(), TypeRef(None, &lt;Int&gt;, List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
 

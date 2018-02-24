@@ -607,7 +607,7 @@ _root_. => package _root_
 _root_.example. => package example
 _root_.example.Methods# => class Methods[T >: Nothing <: Any].{+29 decls}
   extends AnyRef
-_root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.this.List[T]
+_root_.example.Methods#AList# => type AList: [T >: Nothing <: Any] => >: Methods.this.List[T] <: Methods.this.List[T]
   T => _root_.example.Methods#AList#[T]
   Methods => _root_.example.Methods#
   List => _root_.example.Methods#List#
@@ -959,7 +959,7 @@ Schema => SemanticDB v3
 Uri => flags/p/package.class
 Text => empty
 Language => Scala
-Symbols => 60 entries
+Symbols => 62 entries
 
 Symbols:
 _root_. => package _root_
@@ -1040,8 +1040,14 @@ _root_.flags.p.package.S#[T] => typeparam T: >: Nothing <: Any
 _root_.flags.p.package.S#`<init>`(). => primaryctor <init>: (): S[T]
   S => _root_.flags.p.package.S#
   T => _root_.flags.p.package.S#[T]
-_root_.flags.p.package.T# => type T: Int
+_root_.flags.p.package.T1# => type T1: >: Int <: Int
   Int => _root_.scala.Int#
+_root_.flags.p.package.T2# => type T2: [T >: Nothing <: Any] => >: S[T] <: S[T]
+  T => _root_.flags.p.package.T2#[T]
+  S => _root_.flags.p.package.S#
+_root_.flags.p.package.T2#[T] => typeparam T: >: Nothing <: Any
+  Nothing => _root_.scala.Nothing#
+  Any => _root_.scala.Any#
 _root_.flags.p.package.U# => abstract type U: >: Nothing <: Int
   Nothing => _root_.scala.Nothing#
   Int => _root_.scala.Int#
@@ -1332,9 +1338,9 @@ _root_.types.Test.C#TypeType. => final object TypeType
 _root_.types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.types.Test.C#TypeType.T4# => type T4: C
+_root_.types.Test.C#TypeType.T4# => type T4: >: C <: C
   C => _root_.types.Test.C#
-_root_.types.Test.C#TypeType.T5# => type T5: [U >: Nothing <: Any] => U
+_root_.types.Test.C#TypeType.T5# => type T5: [U >: Nothing <: Any] => >: U <: U
   U => _root_.types.Test.C#TypeType.T5#[U]
 _root_.types.Test.C#TypeType.T5#[U] => typeparam U: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
