@@ -549,6 +549,10 @@ lazy val sharedSettings = Def.settings(
   crossScalaVersions := LanguageVersions,
   organization := "org.scalameta",
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+  scalacOptions ++= {
+    if (scalaVersion.value.startsWith("2.10")) Nil
+    else Seq("-target:jvm-1.8")
+  },
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
   scalacOptions.in(Compile, doc) ++= Seq("-skip-packages", ""),
   scalacOptions.in(Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
