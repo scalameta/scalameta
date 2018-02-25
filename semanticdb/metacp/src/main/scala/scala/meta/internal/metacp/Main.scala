@@ -3,7 +3,10 @@ package scala.meta.internal.metacp
 import java.io._
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
+import java.util
+import java.util.Comparator
 import scala.collection.mutable
+import scala.meta.internal.metacp.asm.TypeVariableScopes
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
@@ -11,6 +14,14 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.NameTransformer
+import scala.tools.asm.ClassReader
+import scala.tools.asm.ClassVisitor
+import scala.tools.asm.Opcodes
+import scala.tools.asm.tree.ClassNode
+import scala.tools.scalap.ByteArrayReader
+import scala.tools.scalap
+import scala.tools.scalap.Classfile
+import scala.tools.scalap.JavaWriter
 import scala.tools.scalap.scalax.rules.ScalaSigParserError
 import scala.tools.scalap.scalax.rules.scalasig._
 import scala.util.control.NonFatal
@@ -35,32 +46,46 @@ object Main {
       failed = true
     }
     val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
+    val scopes = new TypeVariableScopes()
     classpath.visit { root =>
       new FileVisitor[Path] {
         // Convert a .class file to a .class.semanticdb file with symbols only.
         override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          FileVisitResult.CONTINUE
+        }
+
+        def handleFile(file: Path): FileVisitResult = {
           if (PathIO.extension(file) != "class") return FileVisitResult.CONTINUE
           try {
             val relpath = AbsolutePath(file).toRelative(root).toString
-            val bytecode = ByteCode(Files.readAllBytes(file))
+            val bytes = Files.readAllBytes(file)
+            val bytecode = ByteCode(bytes)
             val classfile = ClassFileParser.parse(bytecode)
-            ScalaSigParser.parse(classfile) match {
-              case Some(scalaSig) =>
-                val className = NameTransformer.decode(PathIO.toUnix(relpath))
-                val semanticdbRelpath = relpath + ".semanticdb"
-                val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
-                val semanticdbDocument = s.TextDocument(
-                  schema = s.Schema.SEMANTICDB3,
-                  uri = className,
-                  language = Some(s.Language("Scala")),
-                  symbols = scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig))
-                val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
-                FileIO.write(semanticdbAbspath, semanticdbDocuments)
-              case None =>
-                // NOTE: If a classfile doesn't contain ScalaSignature,
-                // we skip it for the time being. In the future, we may add support
-                // for parsing arbitrary Java classfiles.
-                ()
+
+            val isScalaFile =
+              classfile.attribute("ScalaSig").isDefined ||
+                classfile.attribute("Scala").isDefined
+            val language = if (isScalaFile) "Scala" else "Java"
+            val semanticdbInfos: Option[Seq[s.SymbolInformation]] = if (isScalaFile) {
+              ScalaSigParser.parse(classfile).map { scalaSig =>
+                val semanticdbInfos = scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
+                semanticdbInfos
+              }
+            } else {
+              val infos = Javacp.sdocument(root.toNIO, file, scopes).symbols
+              Some(infos)
+            }
+            semanticdbInfos.foreach { infos =>
+              val className = NameTransformer.decode(PathIO.toUnix(relpath))
+              val semanticdbRelpath = relpath + ".semanticdb"
+              val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
+              val semanticdbDocument = s.TextDocument(
+                schema = s.Schema.SEMANTICDB3,
+                uri = className,
+                language = Some(s.Language(language)),
+                symbols = infos)
+              val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
+              FileIO.write(semanticdbAbspath, semanticdbDocuments)
             }
           } catch {
             case NonFatal(ex) =>
@@ -70,6 +95,19 @@ object Main {
         }
 
         override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          scopes.clear()
+          // Sort files in reverse order so that we process class files in the following order:
+          // 1. Outer.class
+          // 2. Outer$Inner.class
+          // This ordering is necessary so that we enter type parameters in
+          // Outer.class before processing Outer$Inner.class
+          val files = Files.list(dir).sorted(Comparator.reverseOrder())
+          import scala.collection.JavaConverters._
+          files
+            .iterator()
+            .asScala
+            .filter(f => Files.isRegularFile(f))
+            .foreach(handleFile)
           FileVisitResult.CONTINUE
         }
 
@@ -141,7 +179,8 @@ object Main {
         tpe = stpe(sym),
         annotations = sanns(sym),
         accessibility = Some(sacc(sym)),
-        owner = sowner(sym)))
+        owner = sowner(sym)
+      ))
   }
 
   private def ssymbol(sym: Symbol): String = {

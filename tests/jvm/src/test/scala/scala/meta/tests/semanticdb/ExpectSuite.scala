@@ -73,7 +73,7 @@ trait ExpectHelpers {
   protected def lowlevelSyntax(path: Path): String = {
     val paths = Files.walk(path).iterator.asScala
     val semanticdbs = paths.map(_.toString).filter(_.endsWith(".semanticdb")).toArray.sorted
-    val (exitcode, stdout) = CliSuite.communicate(Metap.process(semanticdbs))
+    val (exitcode, stdout) = CliSuite.communicate(out => Metap.process(semanticdbs, out))
     assert(exitcode == 0)
     stdout
   }
@@ -81,7 +81,7 @@ trait ExpectHelpers {
   protected def decompiledPath(path: Path): Path = {
     val target = Files.createTempDirectory("target_")
     val metacp_settings = MetacpSettings.parse(List("-d", target.toString, path.toString)).get
-    val (metacp_exitcode, _) = CliSuite.communicate(Metacp.process(metacp_settings))
+    val (metacp_exitcode, _) = CliSuite.communicate(out => Metacp.process(metacp_settings))
     assert(metacp_exitcode == 0)
     target
   }
