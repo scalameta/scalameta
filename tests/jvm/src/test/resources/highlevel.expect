@@ -25,7 +25,7 @@ Names:
 [210..213): ??? => _root_.scala.Predef.`???`().
 
 Symbols:
-_root_.example. => package example.{+10 members}
+_root_.example. => package example.{+11 members}
 _root_.example.Acc# => class Acc
 _root_.example.Acc#`<init>`(). => primaryctor <init>: (): Acc
   [4..7): Acc => _root_.example.Acc#
@@ -114,7 +114,7 @@ Messages:
 [80..115): [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 Symbols:
-_root_.example. => package example.{+25 members}
+_root_.example. => package example.{+11 members}
 _root_.example.Example. => final object Example
 _root_.example.Example.main(Array). => def main: (args: Array[String]): Unit
   [7..12): Array => _root_.scala.Array#
@@ -362,6 +362,22 @@ Synthetics:
   [13..20): Nothing => _root_.scala.Nothing#
 
 
+semanticdb/integration/src/main/scala/example/Javacp.scala
+----------------------------------------------------------
+Language:
+Scala212
+
+Names:
+[8..15): example <= _root_.example.
+[23..29): Javacp <= _root_.example.Javacp#
+
+Symbols:
+_root_.example. => package example.{+11 members}
+_root_.example.Javacp# => class Javacp
+_root_.example.Javacp#`<init>`(). => primaryctor <init>: (): Javacp
+  [4..10): Javacp => _root_.example.Javacp#
+
+
 semanticdb/integration/src/main/scala/example/Methods.scala
 -----------------------------------------------------------
 Language:
@@ -562,7 +578,7 @@ See the Scaladoc for value scala.language.existentials for a discussion
 why the feature should be explicitly enabled.
 
 Symbols:
-_root_.example. => package example.{+10 members}
+_root_.example. => package example.{+11 members}
 _root_.example.Example. => final object Example
 _root_.example.MethodUsages# => class MethodUsages
 _root_.example.MethodUsages#`<init>`(). => primaryctor <init>: (): MethodUsages
@@ -783,7 +799,7 @@ Names:
 [73..76): Int => _root_.scala.Int#
 
 Symbols:
-_root_.example. => package example.{+10 members}
+_root_.example. => package example.{+11 members}
 _root_.example.A# => trait A.{+1 members}
 _root_.example.A#foo(). => abstract def foo: Int
   [0..3): Int => _root_.scala.Int#
@@ -817,7 +833,7 @@ Names:
 [95..106): stripPrefix => _root_.scala.collection.immutable.StringLike#stripPrefix(String).
 
 Symbols:
-_root_.example. => package example.{+10 members}
+_root_.example. => package example.{+11 members}
 _root_.example.Synthetic# => class Synthetic
 _root_.example.Synthetic#`<init>`(). => primaryctor <init>: (): Synthetic
   [4..13): Synthetic => _root_.example.Synthetic#
@@ -1543,7 +1559,7 @@ Names:
 [1172..1175): yim => _root_.example.Vals#yim().
 
 Symbols:
-_root_.example. => package example.{+10 members}
+_root_.example. => package example.{+11 members}
 _root_.example.ValUsages. => final object ValUsages
 _root_.example.ValUsages.v(). => getter v: Vals
   [0..4): Vals => _root_.example.Vals#
@@ -1670,7 +1686,7 @@ Names:
 [79..80): + => _root_.scala.Int#`+`(Int).
 
 Symbols:
-_root_.example. => package example.{+10 members}
+_root_.example. => package example.{+11 members}
 _root_.example.`local-file`# => class local-file
 _root_.example.`local-file`#`<init>`(). => primaryctor <init>: (): `local-file`
   [4..16): `local-file` => _root_.example.`local-file`#

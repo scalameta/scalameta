@@ -255,16 +255,16 @@ _root_.com.javacp.Javacp#methodTypeParams(C).(arg0) => param arg0: C
   C => _root_.com.javacp.Javacp#methodTypeParams(C).[C]
 _root_.com.javacp.Javacp#methodTypeParams(C).[C] => typeparam C: <: Integer
   Integer => _root_.java.lang.Integer#
-_root_.com.javacp.Javacp#overload(File+1). => def overload: (arg0: File): Unit
-  arg0 => _root_.com.javacp.Javacp#overload(File+1).(arg0)
+_root_.com.javacp.Javacp#overload(Javacp+1). => def overload: (arg0: Javacp): Unit
+  arg0 => _root_.com.javacp.Javacp#overload(Javacp+1).(arg0)
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#overload(File+1).(arg0) => param arg0: File
-  File => _root_.java.io.File#
-_root_.com.javacp.Javacp#overload(File+2). => def overload: (arg0: File): Unit
-  arg0 => _root_.com.javacp.Javacp#overload(File+2).(arg0)
+_root_.com.javacp.Javacp#overload(Javacp+1).(arg0) => param arg0: Javacp
+  Javacp => _root_.com.javacp.Javacp#
+_root_.com.javacp.Javacp#overload(Javacp+2). => def overload: (arg0: Javacp): Unit
+  arg0 => _root_.com.javacp.Javacp#overload(Javacp+2).(arg0)
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#overload(File+2).(arg0) => param arg0: File
-  File => _root_.sourcecode.File#
+_root_.com.javacp.Javacp#overload(Javacp+2).(arg0) => param arg0: Javacp
+  Javacp => _root_.example.Javacp#
 _root_.com.javacp.Javacp#packagePrivateField. => private[javacp] var packagePrivateField: Int
   Int => _root_.scala.Int#
 _root_.com.javacp.Javacp#packagePrivateMethod(). => private[javacp] def packagePrivateMethod: (): Unit
@@ -549,6 +549,24 @@ _root_.example.Example.x(). => getter x: : ClassTag[Int]
 _root_.example.Example.x. => private[this] val x: ClassTag[Int]
   ClassTag => _root_.scala.reflect.ClassTag#
   Int => _root_.scala.Int#
+
+example/Javacp.class
+--------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/Javacp.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+_root_.example. => package example
+_root_.example.Javacp# => class Javacp.{+1 decls}
+  extends AnyRef
+_root_.example.Javacp#`<init>`(). => primaryctor <init>: (): Javacp
+  Javacp => _root_.example.Javacp#
 
 example/MethodUsages.class
 --------------------------

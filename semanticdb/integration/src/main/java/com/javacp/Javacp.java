@@ -34,8 +34,8 @@ public class Javacp<A extends CharSequence & Serializable, B> extends ArrayList<
     void typeParams(ArrayList<HashMap<A, String[]>> a, Hashtable<String, B> b) { }
     <C extends Integer> void methodTypeParams(C c) { }
 
-    public void overload(java.io.File a) { }
-    public void overload(sourcecode.File a) { }
+    public void overload(com.javacp.Javacp a) { }
+    public void overload(example.Javacp a) { }
 
     // primitive fields
     public int Int;
