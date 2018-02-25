@@ -37,16 +37,33 @@ object Main {
   }
 
   def process(settings: Settings): Int = {
-    val semanticdbRoot = AbsolutePath(settings.d).resolve("META-INF").resolve("semanticdb")
-    Files.createDirectories(semanticdbRoot.toNIO)
+    val metaInfRoot = AbsolutePath(settings.d).resolve("META-INF")
+    val semanticdbRoot = metaInfRoot.resolve("semanticdb")
     var failed = false
     def fail(file: Path, ex: Throwable): Unit = {
       println(s"error: can't convert $file")
       ex.printStackTrace()
       failed = true
     }
-    val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
+    val packageIndex = mutable.Map[String, mutable.Set[String]]()
+    packageIndex("_root_.") = mutable.Set[String]()
+    packageIndex("_empty_.") = mutable.Set[String]()
+    val toplevelIndex = mutable.Map[String, String]()
+    def indexToplevel(info: s.SymbolInformation, uri: String): Unit = {
+      toplevelIndex(info.symbol) = uri
+      if (info.symbol.stripSuffix("#").contains("#")) return
+      val ownerChain = info.owner.split("\\.")
+      ownerChain.scanLeft("") { (ancestorSym, name) =>
+        val sym = ancestorSym + name + "."
+        val decls = packageIndex.getOrElse(sym, mutable.Set[String]())
+        packageIndex(sym) = decls
+        if (ancestorSym != "") packageIndex(ancestorSym) += sym
+        sym
+      }
+      packageIndex(info.owner) += info.symbol
+    }
     val scopes = new TypeVariableScopes()
+    val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
     classpath.visit { root =>
       new FileVisitor[Path] {
         // Convert a .class file to a .class.semanticdb file with symbols only.
@@ -68,11 +85,16 @@ object Main {
             val language = if (isScalaFile) "Scala" else "Java"
             val semanticdbInfos: Option[Seq[s.SymbolInformation]] = if (isScalaFile) {
               ScalaSigParser.parse(classfile).map { scalaSig =>
-                val semanticdbInfos = scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
-                semanticdbInfos
+                val toplevelSyms = scalaSig.topLevelClasses ++ scalaSig.topLevelObjects
+                val toplevelInfos = toplevelSyms.map { toplevelSym =>
+                  s.SymbolInformation(symbol = ssymbol(toplevelSym), owner = sowner(toplevelSym))
+                }
+                toplevelInfos.foreach(indexToplevel(_, relpath + ".semanticdb"))
+                scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
               }
             } else {
               val infos = Javacp.sdocument(root.toNIO, file, scopes).symbols
+              if (infos.nonEmpty) indexToplevel(infos.last, relpath + ".semanticdb")
               Some(infos)
             }
             semanticdbInfos.foreach { infos =>
@@ -122,6 +144,13 @@ object Main {
         }
       }
     }
+    val index = {
+      val packages = packageIndex.map(kv => s.PackageEntry(symbol = kv._1, members = kv._2.toList))
+      val toplevels = toplevelIndex.map(kv => s.ToplevelEntry(symbol = kv._1, uri = kv._2))
+      s.Index(packages = packages.toList, toplevels = toplevels.toList)
+    }
+    val indexAbspath = metaInfRoot.resolve("semanticdb.semanticidx")
+    FileIO.write(indexAbspath, index)
     if (failed) 1 else 0
   }
 
