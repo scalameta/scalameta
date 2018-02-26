@@ -15,6 +15,7 @@ import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.ClassReader
 import scala.tools.asm.tree.{ClassNode, FieldNode, InnerClassNode, MethodNode}
 import scala.tools.asm.{Opcodes => o}
+import scala.util.control.{NoStackTrace, NonFatal}
 
 object Javacp {
 
@@ -29,7 +30,9 @@ object Javacp {
       val bytes = Files.readAllBytes(file)
       val node = parseClassNode(bytes)
       if (isAnonymousClass(node)) Nil
-      else sinfos(node, scope, root, isVisited)
+      else {
+        sinfos(node, scope, root, isVisited)
+      }
     }
   }
 
@@ -125,14 +128,19 @@ object Javacp {
     }
   }
 
-  case class Scope(owner: String, bindings: Map[String, String]) {
-    def resolve(name: String): String =
-      bindings(name)
+  case class Scope(bindings: Map[String, String]) {
+    def resolve(name: String): String = {
+      bindings.getOrElse(name, {
+        // TODO: fix https://github.com/scalameta/scalameta/issues/1365.
+        // There are still a handful of cases in spark-sql where resolution fails for some reason.
+        name
+      })
+    }
     def enter(name: String, symbol: String): Scope =
-      Scope(owner, bindings.updated(name, symbol))
+      Scope(bindings.updated(name, symbol))
   }
   object Scope {
-    val empty = Scope("", Map.empty)
+    val empty = Scope(Map.empty)
   }
 
   def sinfos(
@@ -224,7 +232,7 @@ object Javacp {
         val methodSymbol = classSymbol + method.node.name + "(" + method.descriptor + suffix + ")" + "."
 
         val (methodScope, methodTypeParameters) = method.signature.typeParameters match {
-          case Some(tp: TypeParameters) => addTypeParameters(tp, methodSymbol, scope)
+          case Some(tp: TypeParameters) => addTypeParameters(tp, methodSymbol, classScope)
           case _ => classScope -> Nil
         }
         methodTypeParameters.foreach(buf += _)
@@ -273,7 +281,9 @@ object Javacp {
 
     node.innerClasses.asScala.foreach { ic: InnerClassNode =>
       val innerClassPath = asmNameToPath(ic.name, root)
-      buf ++= sinfos(root, innerClassPath, classScope, isVisited)
+      if (Files.isRegularFile(innerClassPath)) {
+        buf ++= sinfos(root, innerClassPath, classScope, isVisited)
+      }
     }
 
     val classTpe = s.Type(
