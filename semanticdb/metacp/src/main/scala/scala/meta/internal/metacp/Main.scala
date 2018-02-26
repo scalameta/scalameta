@@ -535,6 +535,13 @@ object Main {
           }
         }
         loop(preprocess(sym.infoType))
+      } else if (sym.isObject) {
+        sym.infoType match {
+          case TypeRefType(_, moduleClassSym: SymbolInfoSymbol, _) =>
+            loop(moduleClassSym.infoType)
+          case other =>
+            sys.error(s"unsupported type $other")
+        }
       } else {
         loop(sym.infoType)
       }
@@ -609,7 +616,8 @@ object Main {
 
   private implicit class SymbolOps(sym: Symbol) {
     def isModuleClass: Boolean = sym.isInstanceOf[ClassSymbol] && sym.isModule
-    def isClass: Boolean = sym.isInstanceOf[ClassSymbol]
+    def isClass: Boolean = sym.isInstanceOf[ClassSymbol] && !sym.isModule
+    def isObject: Boolean = sym.isInstanceOf[ObjectSymbol]
     def isType: Boolean = sym.isInstanceOf[TypeSymbol]
     def isAlias: Boolean = sym.isInstanceOf[AliasSymbol]
     def isClassConstructor: Boolean = {

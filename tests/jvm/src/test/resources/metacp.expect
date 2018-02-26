@@ -536,7 +536,8 @@ Symbols => 7 entries
 Symbols:
 _root_. => package _root_
 _root_.example. => package example
-_root_.example.Example. => final object Example
+_root_.example.Example. => final object Example.{+4 decls}
+  extends AnyRef
 _root_.example.Example.main(Array). => def main: (args: Array[String]): Unit
   args => _root_.example.Example.main(Array).(args)
   Unit => _root_.scala.Unit#
@@ -809,7 +810,8 @@ Symbols => 5 entries
 Symbols:
 _root_. => package _root_
 _root_.example. => package example
-_root_.example.ValUsages. => final object ValUsages
+_root_.example.ValUsages. => final object ValUsages.{+3 decls}
+  extends AnyRef
 _root_.example.ValUsages.v(). => getter v: : Vals
   Vals => _root_.example.Vals#
 _root_.example.ValUsages.v. => private[this] val v: Vals
@@ -965,7 +967,8 @@ Symbols:
 _root_. => package _root_
 _root_.flags. => package flags
 _root_.flags.p. => package p
-_root_.flags.p.package. => final package object package
+_root_.flags.p.package. => final package object package.{+20 decls}
+  extends AnyRef
 _root_.flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
 _root_.flags.p.package.AA#`<init>`(Int,Int,Int). => primaryctor <init>: (x: Int, y: Int, z: Int): AA
@@ -1054,7 +1057,10 @@ _root_.flags.p.package.U# => abstract type U: >: Nothing <: Int
 _root_.flags.p.package.V# => abstract type V: >: Int <: Any
   Int => _root_.scala.Int#
   Any => _root_.scala.Any#
-_root_.flags.p.package.X. => final case object X
+_root_.flags.p.package.X. => final case object X.{+9 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
 _root_.flags.p.package.X.canEqual(Any). => def canEqual: (x$1: Any): Boolean
   x$1 => _root_.flags.p.package.X.canEqual(Any).(x$1)
   Boolean => _root_.scala.Boolean#
@@ -1283,16 +1289,19 @@ Symbols => 134 entries
 Symbols:
 _root_. => package _root_
 _root_.types. => package types
-_root_.types.Test. => final object Test
+_root_.types.Test. => final object Test.{+6 decls}
+  extends AnyRef
 _root_.types.Test.C# => class C.{+56 decls}
   extends M
-_root_.types.Test.C#ByNameType. => final object ByNameType
+_root_.types.Test.C#ByNameType. => final object ByNameType.{+2 decls}
+  extends AnyRef
 _root_.types.Test.C#ByNameType.m1(=>Int). => def m1: (x: => Int): Int
   x => _root_.types.Test.C#ByNameType.m1(=>Int).(x)
   Int => _root_.scala.Int#
 _root_.types.Test.C#ByNameType.m1(=>Int).(x) => param x: => Int
   Int => _root_.scala.Int#
-_root_.types.Test.C#ClassInfoType1. => final object ClassInfoType1
+_root_.types.Test.C#ClassInfoType1. => final object ClassInfoType1.{+1 decls}
+  extends AnyRef
 _root_.types.Test.C#ClassInfoType2# => class ClassInfoType2.{+2 decls}
   extends B
 _root_.types.Test.C#ClassInfoType2#`<init>`(). => primaryctor <init>: (): C.this.ClassInfoType2
@@ -1305,7 +1314,8 @@ _root_.types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any]
 _root_.types.Test.C#ClassInfoType3#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.types.Test.C#MethodType. => final object MethodType
+_root_.types.Test.C#MethodType. => final object MethodType.{+7 decls}
+  extends AnyRef
 _root_.types.Test.C#MethodType.m3(). => def m3: : Int
   Int => _root_.scala.Int#
 _root_.types.Test.C#MethodType.m4(). => def m4: (): Int
@@ -1372,7 +1382,9 @@ _root_.types.Test.C#RepeatedType#s. => private[this] val s: String*
   String => _root_.scala.Predef.String#
 _root_.types.Test.C#RepeatedType#toString(). => def toString: (): String
   String => _root_.java.lang.String#
-_root_.types.Test.C#RepeatedType. => final object RepeatedType
+_root_.types.Test.C#RepeatedType. => final object RepeatedType.{+4 decls}
+  extends AbstractFunction1[String*, C.this.RepeatedType]
+  extends Serializable
 _root_.types.Test.C#RepeatedType.apply(String*). => case def apply: (s: String*): C.this.RepeatedType
   s => _root_.types.Test.C#RepeatedType.apply(String*).(s)
   C => _root_.types.Test.C#
@@ -1389,7 +1401,8 @@ _root_.types.Test.C#RepeatedType.unapplySeq(RepeatedType). => case def unapplySe
 _root_.types.Test.C#RepeatedType.unapplySeq(RepeatedType).(x$0) => param x$0: C.this.RepeatedType
   C => _root_.types.Test.C#
   RepeatedType => _root_.types.Test.C#RepeatedType#
-_root_.types.Test.C#TypeType. => final object TypeType
+_root_.types.Test.C#TypeType. => final object TypeType.{+6 decls}
+  extends AnyRef
 _root_.types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
@@ -1539,7 +1552,8 @@ _root_.types.Test.C#x. => private[this] val x: C.this.p.X
   C => _root_.types.Test.C#
   p => _root_.types.Test.C#p().
   X => _root_.types.P.X#
-_root_.types.Test.Literal. => final object Literal
+_root_.types.Test.Literal. => final object Literal.{+23 decls}
+  extends AnyRef
 _root_.types.Test.Literal.bool(). => final getter bool: : true
 _root_.types.Test.Literal.bool. => private[this] final val bool: true
 _root_.types.Test.Literal.char(). => final getter char: : 'a'
