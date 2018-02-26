@@ -84,30 +84,20 @@ object Javacp {
 
     val isTopLevelClass = !node.name.contains("$")
     val classOwner: String = if (isTopLevelClass) {
-      addInfo(
-        "_root_.",
-        k.PACKAGE,
-        o.ACC_PUBLIC,
-        "_root_",
-        None,
-        ""
-      )
-      node.name
-        .substring(0, node.name.lastIndexOf("/"))
-        .split("/")
-        .foldLeft("_root_.") {
-          case (owner, pkgName) =>
-            val pkgSymbol = owner + pkgName + "."
-            addInfo(
-              pkgSymbol,
-              k.PACKAGE,
-              o.ACC_PUBLIC,
-              pkgName,
-              None,
-              owner
-            )
-            pkgSymbol
-        }
+      val parts = node.name.substring(0, node.name.lastIndexOf("/")).split("/").toList
+      ("_root_" :: parts).foldLeft("") {
+        case (owner, pkgName) =>
+          val pkgSymbol = owner + pkgName + "."
+          addInfo(
+            pkgSymbol,
+            k.PACKAGE,
+            o.ACC_PUBLIC,
+            pkgName,
+            None,
+            owner
+          )
+          pkgSymbol
+      }
     } else {
       ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
@@ -235,11 +225,16 @@ object Javacp {
 
     node.innerClasses.asScala.foreach { ic: InnerClassNode =>
       val innerClassPath = asmNameToPath(ic.name, root)
+
+      // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
+      val isDirectInnerClass = ic.outerName == node.name
+      if (isDirectInnerClass) {
+        val innerClassSymbol = ssym(ic.name)
+        decls += innerClassSymbol
+      }
+
       if (Files.isRegularFile(innerClassPath)) {
         buf ++= sinfosFromOuterClass(root, innerClassPath, ic.access, classScope, isVisited)
-      } else {
-        // TODO: fix https://github.com/scalameta/scalameta/issues/1366
-        ()
       }
     }
 
@@ -267,6 +262,8 @@ object Javacp {
 
   // The logic behind this method is an implementation of the answer in this SO question:
   // https://stackoverflow.com/questions/42676404/how-do-i-know-if-i-am-visiting-an-anonymous-class-in-asm
+  // ClassNode.innerClasses includes all inner classes of a compilation unit, both nested inner classes as well
+  // as enclosing outer classes. Anonymous classes are distinguished by InnerClassNode.innerName == null.
   def isAnonymousClass(node: ClassNode): Boolean = {
     node.innerClasses.asScala.exists { ic: InnerClassNode =>
       ic.name == node.name &&

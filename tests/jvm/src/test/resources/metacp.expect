@@ -50,18 +50,18 @@ Symbols:
 _root_. => package _root_
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.ClassSuffix# => class ClassSuffix.{+2 decls}
+_root_.com.javacp.ClassSuffix# => class ClassSuffix.{+3 decls}
   extends Object
 _root_.com.javacp.ClassSuffix#<init>(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.ClassSuffix#Inner# => private[javacp] class Inner[A <: Object].{+1 decls}
+_root_.com.javacp.ClassSuffix#Inner# => private[javacp] class Inner[A <: Object].{+2 decls}
   extends Object
 _root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix). => private[javacp] def <init>: (arg0: ClassSuffix): Unit
   arg0 => _root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix).(arg0)
   Unit => _root_.scala.Unit#
 _root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix).(arg0) => param arg0: ClassSuffix
   ClassSuffix => _root_.com.javacp.ClassSuffix#
-_root_.com.javacp.ClassSuffix#Inner#Bar# => private[javacp] class Bar.{+1 decls}
+_root_.com.javacp.ClassSuffix#Inner#Bar# => private[javacp] class Bar.{+2 decls}
   extends Object
 _root_.com.javacp.ClassSuffix#Inner#Bar#<init>(Inner). => private[javacp] def <init>: (arg0: Inner): Unit
   arg0 => _root_.com.javacp.ClassSuffix#Inner#Bar#<init>(Inner).(arg0)
@@ -94,13 +94,13 @@ Schema => SemanticDB v3
 Uri => com/javacp/Javacp.class
 Text => empty
 Language => Java
-Symbols => 66 entries
+Symbols => 67 entries
 
 Symbols:
 _root_. => package _root_
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.Javacp# => class Javacp[A <: CharSequence with Serializable, B <: Object].{+31 decls}
+_root_.com.javacp.Javacp# => class Javacp[A <: CharSequence with Serializable, B <: Object].{+34 decls}
   extends ArrayList[A]
   extends Comparable[B]
   extends Serializable
@@ -233,6 +233,8 @@ _root_.com.javacp.Javacp#publicField. => var publicField: Int
   Int => _root_.scala.Int#
 _root_.com.javacp.Javacp#publicMethod(). => def publicMethod: (): Unit
   Unit => _root_.scala.Unit#
+_root_.com.javacp.Javacp#staticField. => private[javacp] static var staticField: Int
+  Int => _root_.scala.Int#
 _root_.com.javacp.Javacp#staticMethod(). => private[javacp] static def staticMethod: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.Javacp#typeParams(ArrayList,Hashtable). => private[javacp] def typeParams: (arg0: ArrayList[HashMap[A, Array[String]]], arg1: Hashtable[String, B]): Unit
@@ -303,7 +305,7 @@ Symbols:
 _root_. => package _root_
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.Recursive# => abstract class Recursive[A <: Recursive[A, B] with Serializable, B <: Inner[A, B]].{+2 decls}
+_root_.com.javacp.Recursive# => abstract class Recursive[A <: Recursive[A, B] with Serializable, B <: Inner[A, B]].{+4 decls}
   extends Object
 _root_.com.javacp.Recursive#<init>(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
