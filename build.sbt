@@ -28,6 +28,8 @@ version.in(ThisBuild) ~= { old =>
 }
 name := {
   println(s"[info] Welcome to scalameta ${version.value}")
+  val javaVersion = sys.props("java.specification.version")
+  if (javaVersion != "1.8") sys.error(s"unsupported Java version: $javaVersion")
   "scalametaRoot"
 }
 nonPublishableSettings
