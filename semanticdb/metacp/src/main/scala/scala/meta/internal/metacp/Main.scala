@@ -27,21 +27,14 @@ import scala.util.control.NonFatal
 import org.langmeta.internal.io._
 import org.langmeta.io._
 
-object Main {
-  def process(args: Array[String]): Int = {
-    Settings.parse(args.toList) match {
-      case Some(settings) => process(settings)
-      case None => 1
-    }
-  }
-
-  def process(settings: Settings): Int = {
+class Main(settings: Settings, out: PrintStream, err: PrintStream) {
+  def process(): Int = {
     val metaInfRoot = AbsolutePath(settings.d).resolve("META-INF")
     val semanticdbRoot = metaInfRoot.resolve("semanticdb")
     var failed = false
     def fail(file: Path, ex: Throwable): Unit = {
-      println(s"error: can't convert $file")
-      ex.printStackTrace()
+      out.println(s"error: can't convert $file")
+      ex.printStackTrace(out)
       failed = true
     }
     val packageIndex = mutable.Map[String, mutable.Set[String]]()

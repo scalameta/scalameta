@@ -13,10 +13,9 @@ import SymbolInformation._, Kind._, Property._
 import SymbolOccurrence._, Role._
 import Type.Tag._, SingletonType.Tag._, Accessibility.Tag._
 
-object Main {
-  def process(args: Array[String], out: PrintStream = System.out): Int = {
+class Main(args: Array[String], out: PrintStream, err: PrintStream) {
+  def process(): Int = {
     var failed = false
-    val main = new Main(out)
     args.zipWithIndex.foreach {
       case (arg, i) =>
         try {
@@ -24,7 +23,7 @@ object Main {
           try {
             if (i != 0) out.println("")
             val documents = TextDocuments.parseFrom(stream)
-            documents.documents.foreach(main.pprint)
+            documents.documents.foreach(pprint)
           } finally {
             stream.close()
           }
@@ -37,9 +36,6 @@ object Main {
     }
     if (failed) 1 else 0
   }
-}
-
-class Main(out: PrintStream) {
 
   def pprint(doc: TextDocument): Unit = {
     out.println(doc.uri)

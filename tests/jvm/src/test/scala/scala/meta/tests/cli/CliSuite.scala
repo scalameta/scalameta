@@ -5,8 +5,7 @@ import java.nio.charset.StandardCharsets._
 import java.nio.file._
 import scala.util.Properties.versionNumberString
 import org.scalatest.FunSuite
-import scala.meta.internal.metac.{Main => Metac}
-import scala.meta.internal.metap.{Main => Metap}
+import scala.meta.cli._
 import scala.meta.testkit.DiffAssertions
 
 class CliSuite extends BaseCliSuite {
@@ -25,18 +24,18 @@ class CliSuite extends BaseCliSuite {
   val helloWorldSemanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
 
   test("metac " + helloWorldScala) {
-    val (exitcode, output) = CliSuite.communicate { out =>
-      Metac.process(
-        Array(
-          "-cp",
-          scalaLibraryJar,
-          "-P:semanticdb:sourceroot:" + sourceroot.toString,
-          "-d",
-          target.toString,
-          helloWorldScala.toString))
+    val (exitcode, out, err) = CliSuite.communicate { (out, err) =>
+      val args = Array(
+        "-cp",
+        scalaLibraryJar,
+        "-P:semanticdb:sourceroot:" + sourceroot.toString,
+        "-d",
+        target.toString,
+        helloWorldScala.toString)
+      Metac.process(args, out, err)
     }
     assert(exitcode == 0)
-    assert(output.isEmpty)
+    assert(out.isEmpty)
     assert(Files.exists(helloWorldSemanticdb))
   }
 
@@ -46,12 +45,12 @@ class CliSuite extends BaseCliSuite {
       else if (versionNumberString.startsWith("2.12")) "Scala212"
       else sys.error(s"unsupported Scala version: $versionNumberString")
     }
-    val (exitcode, output) = CliSuite.communicate { out =>
-      Metap.process(Array(helloWorldSemanticdb.toString), out)
+    val (exitcode, out, err) = CliSuite.communicate { (out, err) =>
+      Metap.process(Array(helloWorldSemanticdb.toString), out, err)
     }
     assert(exitcode == 0)
     assertNoDiff(
-      output,
+      out,
       s"""
       |HelloWorld.scala
       |----------------
@@ -93,14 +92,19 @@ class CliSuite extends BaseCliSuite {
       |[2:37..2:41): Unit => _root_.scala.Unit#
       |[3:8..3:15): println => _root_.scala.Predef.println(Any).
     """.trim.stripMargin)
+    assert(err.isEmpty)
   }
 }
 
 object CliSuite {
-  def communicate[T](op: PrintStream => T): (T, String) = {
-    val baos = new ByteArrayOutputStream
-    val ps = new PrintStream(baos, true, UTF_8.name)
-    val result = op(ps)
-    (result, new String(baos.toByteArray, UTF_8))
+  def communicate[T](op: (PrintStream, PrintStream) => T): (T, String, String) = {
+    val outbaos = new ByteArrayOutputStream
+    val outps = new PrintStream(outbaos, true, UTF_8.name)
+    val errbaos = new ByteArrayOutputStream
+    val errps = new PrintStream(errbaos, true, UTF_8.name)
+    val result = op(outps, errps)
+    val outs = new String(outbaos.toByteArray, UTF_8)
+    val errs = new String(errbaos.toByteArray, UTF_8)
+    (result, outs, errs)
   }
 }

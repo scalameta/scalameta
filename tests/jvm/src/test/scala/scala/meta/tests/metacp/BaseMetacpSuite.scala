@@ -5,8 +5,7 @@ import java.nio.file.Files
 
 import org.langmeta.io.Classpath
 
-import scala.meta.internal.metacp.Main
-import scala.meta.internal.metacp.Settings
+import scala.meta.cli.Metacp
 import scala.meta.tests.cli.BaseCliSuite
 
 abstract class BaseMetacpSuite extends BaseCliSuite {
@@ -24,8 +23,7 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
         tmp.toString
       )
       // println(tmp) // uncomment to manually inspect metacp artifacts
-      val settings = Settings.parse(args.toList).get
-      val exit = Main.process(settings)
+      val exit = Metacp.process(args, System.out, System.err)
       assert(exit == 0)
     }
   }

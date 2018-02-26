@@ -7,8 +7,8 @@ import java.nio.file._
 import scala.meta.internal.semanticdb.scalac._
 import scala.tools.nsc.{Main => ScalacMain}
 
-object Main {
-  def process(args: Array[String]): Int = {
+class Main(args: Array[String], out: PrintStream, err: PrintStream) {
+  def process(): Int = {
     val manifestDir = Files.createTempDirectory("semanticdb-scalac_")
     val resourceUrl = classOf[SemanticdbPlugin].getResource("/scalac-plugin.xml")
     val resourceChannel = Channels.newChannel(resourceUrl.openStream())
@@ -24,7 +24,11 @@ object Main {
     val enableRangeposArgs = Array("-Yrangepos")
     val stopAfterPluginArgs = Array("-Ystop-after:semanticdb-typer")
     val scalacArgs = args ++ enablePluginArgs ++ enableRangeposArgs ++ stopAfterPluginArgs
-    ScalacMain.process(scalacArgs)
+    scala.Console.withOut(out) {
+      scala.Console.withErr(err) {
+        ScalacMain.process(scalacArgs)
+      }
+    }
     if (ScalacMain.reporter.hasErrors) 1 else 0
   }
 }

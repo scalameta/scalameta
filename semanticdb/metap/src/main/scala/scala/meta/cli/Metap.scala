@@ -1,13 +1,20 @@
 package scala.meta.cli
 
+import java.io._
 import scala.meta.internal.metap._
 
 object Metap {
   def main(args: Array[String]): Unit = {
-    sys.exit(process(args))
+    sys.exit(process(args, System.out, System.err))
   }
 
+  @deprecated("Use `process(args, System.out, System.err)` instead.", "3.4.0")
   def process(args: Array[String]): Int = {
-    Main.process(args)
+    process(args, System.out, System.err)
+  }
+
+  def process(args: Array[String], out: PrintStream, err: PrintStream): Int = {
+    val main = new Main(args, out, err)
+    main.process()
   }
 }
