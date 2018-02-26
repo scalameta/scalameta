@@ -13,17 +13,21 @@ import SymbolInformation._, Kind._, Property._
 import SymbolOccurrence._, Role._
 import Type.Tag._, SingletonType.Tag._, Accessibility.Tag._
 
-class Main(args: Array[String], out: PrintStream, err: PrintStream) {
+class Main(settings: Settings, out: PrintStream, err: PrintStream) {
   def process(): Int = {
     var failed = false
-    args.zipWithIndex.foreach {
+    settings.paths.zipWithIndex.foreach {
       case (arg, i) =>
         try {
           val stream = Files.newInputStream(Paths.get(arg))
           try {
             if (i != 0) out.println("")
             val documents = TextDocuments.parseFrom(stream)
-            documents.documents.foreach(pprint)
+            if (settings.proto) {
+              out.println(documents.toProtoString)
+            } else {
+              documents.documents.foreach(pprint)
+            }
           } finally {
             stream.close()
           }

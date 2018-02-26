@@ -14,7 +14,12 @@ object Metap {
   }
 
   def process(args: Array[String], out: PrintStream, err: PrintStream): Int = {
-    val main = new Main(args, out, err)
-    main.process()
+    Settings.parse(args.toList) match {
+      case Some(settings) =>
+        val main = new Main(settings, out, err)
+        main.process()
+      case None =>
+        1
+    }
   }
 }
