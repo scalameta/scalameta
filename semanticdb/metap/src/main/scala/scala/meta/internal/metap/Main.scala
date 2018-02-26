@@ -401,9 +401,8 @@ class Main(args: Array[String], out: PrintStream, err: PrintStream) {
         info.tpe match {
           case Some(tpe: Type) =>
             tpe.classInfoType match {
-              case Some(ClassInfoType(typeParameters, parents, decls)) =>
-                if (typeParameters.nonEmpty)
-                  rep("[", typeParameters, ", ", "]")(pprint(_, DEFINITION, doc))
+              case Some(ClassInfoType(tparams, parents, decls)) =>
+                if (tparams.nonEmpty) rep("[", tparams, ", ", "]")(pprint(_, DEFINITION, doc))
                 if (decls.nonEmpty) out.println(s".{+${decls.length} decls}")
                 else out.println("")
                 parents.foreach { tpe =>
