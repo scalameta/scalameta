@@ -37,16 +37,33 @@ object Main {
   }
 
   def process(settings: Settings): Int = {
-    val semanticdbRoot = AbsolutePath(settings.d).resolve("META-INF").resolve("semanticdb")
-    Files.createDirectories(semanticdbRoot.toNIO)
+    val metaInfRoot = AbsolutePath(settings.d).resolve("META-INF")
+    val semanticdbRoot = metaInfRoot.resolve("semanticdb")
     var failed = false
     def fail(file: Path, ex: Throwable): Unit = {
       println(s"error: can't convert $file")
       ex.printStackTrace()
       failed = true
     }
-    val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
+    val packageIndex = mutable.Map[String, mutable.Set[String]]()
+    packageIndex("_root_.") = mutable.Set[String]()
+    packageIndex("_empty_.") = mutable.Set[String]()
+    val toplevelIndex = mutable.Map[String, String]()
+    def indexToplevel(info: s.SymbolInformation, uri: String): Unit = {
+      toplevelIndex(info.symbol) = uri
+      if (info.symbol.stripSuffix("#").contains("#")) return
+      val ownerChain = info.owner.split("\\.")
+      ownerChain.scanLeft("") { (ancestorSym, name) =>
+        val sym = ancestorSym + name + "."
+        val decls = packageIndex.getOrElse(sym, mutable.Set[String]())
+        packageIndex(sym) = decls
+        if (ancestorSym != "") packageIndex(ancestorSym) += sym
+        sym
+      }
+      packageIndex(info.owner) += info.symbol
+    }
     val scopes = new TypeVariableScopes()
+    val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
     classpath.visit { root =>
       new FileVisitor[Path] {
         // Convert a .class file to a .class.semanticdb file with symbols only.
@@ -68,11 +85,16 @@ object Main {
             val language = if (isScalaFile) "Scala" else "Java"
             val semanticdbInfos: Option[Seq[s.SymbolInformation]] = if (isScalaFile) {
               ScalaSigParser.parse(classfile).map { scalaSig =>
-                val semanticdbInfos = scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
-                semanticdbInfos
+                val toplevelSyms = scalaSig.topLevelClasses ++ scalaSig.topLevelObjects
+                val toplevelInfos = toplevelSyms.map { toplevelSym =>
+                  s.SymbolInformation(symbol = ssymbol(toplevelSym), owner = sowner(toplevelSym))
+                }
+                toplevelInfos.foreach(indexToplevel(_, relpath + ".semanticdb"))
+                scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
               }
             } else {
               val infos = Javacp.sdocument(root.toNIO, file, scopes).symbols
+              if (infos.nonEmpty) indexToplevel(infos.last, relpath + ".semanticdb")
               Some(infos)
             }
             semanticdbInfos.foreach { infos =>
@@ -122,6 +144,76 @@ object Main {
         }
       }
     }
+    locally {
+      def synthesizeBuiltin(name: String): s.SymbolInformation = {
+        val parent = s.TypeRef(None, "_root_.scala.Any#", Nil)
+        val tpe = s.ClassInfoType(Nil, List(s.Type(tag = t.TYPE_REF, typeRef = Some(parent))), Nil)
+        s.SymbolInformation(
+          symbol = "_root_.scala." + name + "#",
+          language = Some(s.Language("Scala")),
+          kind = k.CLASS,
+          name = name,
+          tpe = Some(s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))),
+          owner = "_root_.scala."
+        )
+      }
+      def synthesizeAny(): List[s.SymbolInformation] = {
+        val decls = {
+          // TODO: Implement me.
+          // lazy val Any_==       = enterNewMethod(AnyClass, nme.EQ, AnyTpe :: Nil, BooleanTpe, FINAL)
+          // lazy val Any_!=       = enterNewMethod(AnyClass, nme.NE, AnyTpe :: Nil, BooleanTpe, FINAL)
+          // lazy val Any_equals   = enterNewMethod(AnyClass, nme.equals_, AnyTpe :: Nil, BooleanTpe)
+          // lazy val Any_hashCode = enterNewMethod(AnyClass, nme.hashCode_, Nil, IntTpe)
+          // lazy val Any_toString = enterNewMethod(AnyClass, nme.toString_, Nil, StringTpe)
+          // lazy val Any_##       = enterNewMethod(AnyClass, nme.HASHHASH, Nil, IntTpe, FINAL)
+          // lazy val Any_getClass     = enterNewMethod(AnyClass, nme.getClass_, Nil, getMemberMethod(ObjectClass, nme.getClass_).tpe.resultType, DEFERRED)
+          // lazy val Any_isInstanceOf = newT1NullaryMethod(AnyClass, nme.isInstanceOf_, FINAL)(_ => BooleanTpe)
+          // lazy val Any_asInstanceOf = newT1NullaryMethod(AnyClass, nme.asInstanceOf_, FINAL)(_.typeConstructor)
+          List[s.SymbolInformation]()
+        }
+        val any0 = synthesizeBuiltin("Any")
+        val any1 = any0.update(_.tpe.classInfoType.parents := Nil)
+        val any = any1.update(_.tpe.classInfoType.declarations := decls.map(_.symbol))
+        any +: decls
+      }
+      def synthesizeAnyVal(): List[s.SymbolInformation] = {
+        List(synthesizeBuiltin("AnyVal"))
+      }
+      def synthesizeAnyRef(): List[s.SymbolInformation] = {
+        List(synthesizeBuiltin("AnyRef"))
+      }
+      def synthesizeNothing(): List[s.SymbolInformation] = {
+        List(synthesizeBuiltin("Nothing"))
+      }
+      val map = Map(
+        "Any" -> synthesizeAny(),
+        "AnyVal" -> synthesizeAnyVal(),
+        "AnyRef" -> synthesizeAnyRef(),
+        "Nothing" -> synthesizeNothing()
+      )
+      map.foreach {
+        case (name, infos) =>
+          val relpath = "scala/" + name + ".class"
+          val className = NameTransformer.decode(PathIO.toUnix(relpath))
+          val semanticdbRelpath = relpath + ".semanticdb"
+          val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
+          val semanticdbDocument = s.TextDocument(
+            schema = s.Schema.SEMANTICDB3,
+            uri = relpath,
+            language = Some(s.Language("Scala")),
+            symbols = infos)
+          val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
+          FileIO.write(semanticdbAbspath, semanticdbDocuments)
+          indexToplevel(infos.head, semanticdbRelpath)
+      }
+    }
+    val index = {
+      val packages = packageIndex.map(kv => s.PackageEntry(symbol = kv._1, members = kv._2.toList))
+      val toplevels = toplevelIndex.map(kv => s.ToplevelEntry(symbol = kv._1, uri = kv._2))
+      s.Index(packages = packages.toList, toplevels = toplevels.toList)
+    }
+    val indexAbspath = metaInfRoot.resolve("semanticdb.semanticidx")
+    FileIO.write(indexAbspath, index)
     if (failed) 1 else 0
   }
 
@@ -434,8 +526,26 @@ object Main {
       }
     }
 
-    try loop(sym.infoType)
-    catch {
+    try {
+      if (sym.isAlias) {
+        def preprocess(info: Type): Type = {
+          info match {
+            case PolyType(tpe, tparams) => PolyType(preprocess(tpe), tparams)
+            case tpe => TypeBoundsType(tpe, tpe)
+          }
+        }
+        loop(preprocess(sym.infoType))
+      } else if (sym.isObject) {
+        sym.infoType match {
+          case TypeRefType(_, moduleClassSym: SymbolInfoSymbol, _) =>
+            loop(moduleClassSym.infoType)
+          case other =>
+            sys.error(s"unsupported type $other")
+        }
+      } else {
+        loop(sym.infoType)
+      }
+    } catch {
       case ScalaSigParserError("Unexpected failure") =>
         // TODO: See https://github.com/scalameta/scalameta/issues/1283
         // when this can happen.
@@ -506,8 +616,10 @@ object Main {
 
   private implicit class SymbolOps(sym: Symbol) {
     def isModuleClass: Boolean = sym.isInstanceOf[ClassSymbol] && sym.isModule
-    def isClass: Boolean = sym.isInstanceOf[ClassSymbol]
+    def isClass: Boolean = sym.isInstanceOf[ClassSymbol] && !sym.isModule
+    def isObject: Boolean = sym.isInstanceOf[ObjectSymbol]
     def isType: Boolean = sym.isInstanceOf[TypeSymbol]
+    def isAlias: Boolean = sym.isInstanceOf[AliasSymbol]
     def isClassConstructor: Boolean = {
       sym.parent match {
         case Some(parent: ClassSymbol) if !parent.isTrait && !parent.isModule =>

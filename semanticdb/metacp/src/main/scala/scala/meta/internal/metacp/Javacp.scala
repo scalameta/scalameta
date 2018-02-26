@@ -166,7 +166,10 @@ object Javacp {
 
     val classParents = classSignature match {
       case Some(c: ClassSignature) =>
-        c.parents.map(_.toType)
+        try c.parents.map(_.toType)
+        catch {
+          case _: NullPointerException => Nil
+        }
       case _ => Nil
     }
 

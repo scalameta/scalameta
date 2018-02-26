@@ -11,7 +11,8 @@ package object p {
     def this() = this(???, ???, ???)
     def w: Int
   }
-  type T = Int
+  type T1 = Int
+  type T2[T] = S[T]
   type U <: Int
   type V >: Int
   case object X

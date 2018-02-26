@@ -76,7 +76,7 @@ class CliSuite extends BaseCliSuite {
       |  extends AnyRef
       |  extends Serializable
       |  extends Cloneable
-      |_root_.scala.Predef.String# => type String: String
+      |_root_.scala.Predef.String# => type String: >: String <: String
       |  String => _root_.java.lang.String#
       |_root_.scala.Predef.println(Any). => def println: (x: <?>): Unit
       |  x => _root_.scala.Predef.println(Any).(x)
