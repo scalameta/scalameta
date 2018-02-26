@@ -6,7 +6,6 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util
 import java.util.Comparator
 import scala.collection.mutable
-import scala.meta.internal.metacp.asm.TypeVariableScopes
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
@@ -62,7 +61,6 @@ object Main {
       }
       packageIndex(info.owner) += info.symbol
     }
-    val scopes = new TypeVariableScopes()
     val isVisited = mutable.Set.empty[Path]
     val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
     classpath.visit { root =>
@@ -94,7 +92,7 @@ object Main {
                 scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
               }
             } else {
-              val infos = Javacp.sinfos(root.toNIO, file, scopes, isVisited)
+              val infos = Javacp.sinfos(root.toNIO, file, Javacp.Scope.empty, isVisited)
               if (infos.nonEmpty) indexToplevel(infos.last, relpath + ".semanticdb")
               Some(infos)
             }
@@ -118,7 +116,6 @@ object Main {
         }
 
         override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          scopes.clear()
           // Sort files in reverse order so that we process class files in the following order:
           // 1. Outer.class
           // 2. Outer$Inner.class
