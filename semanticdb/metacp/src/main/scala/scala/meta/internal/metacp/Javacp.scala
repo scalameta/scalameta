@@ -1,21 +1,22 @@
 package scala.meta.internal.metacp
 
-import java.nio.file.{Files, Path, Paths}
-
-import org.langmeta.internal.io.PathIO
+import java.nio.file.Files
+import java.nio.file.Path
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
-import scala.collection.mutable
-import scala.meta.internal.metacp.asm._
 import scala.meta.internal.metacp.asm.JavaTypeSignature._
+import scala.meta.internal.metacp.asm._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.ClassReader
-import scala.tools.asm.tree.{ClassNode, FieldNode, InnerClassNode, MethodNode}
+import scala.tools.asm.tree.ClassNode
+import scala.tools.asm.tree.FieldNode
+import scala.tools.asm.tree.InnerClassNode
+import scala.tools.asm.tree.MethodNode
 import scala.tools.asm.{Opcodes => o}
-import scala.util.control.{NoStackTrace, NonFatal}
 
 object Javacp {
 
@@ -161,6 +162,26 @@ object Javacp {
       isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
+
+    def addInfo(
+        symbol: String,
+        kind: s.SymbolInformation.Kind,
+        access: Int,
+        name: String,
+        tpe: Option[s.Type],
+        owner: String): Unit = {
+      buf += s.SymbolInformation(
+        symbol = symbol,
+        language = javaLanguage,
+        kind = kind,
+        properties = sproperties(access),
+        name,
+        tpe = tpe,
+        annotations = sannotations(access),
+        accessibility = saccessibility(access, owner),
+        owner = owner
+      )
+    }
     val decls = ListBuffer.empty[String]
 
     val classSymbol = ssym(node.name)
@@ -169,7 +190,30 @@ object Javacp {
 
     val isTopLevelClass = !node.name.contains("$")
     val classOwner: String = if (isTopLevelClass) {
-      spackages(node.name, buf)
+      addInfo(
+        "_root_.",
+        k.PACKAGE,
+        o.ACC_PUBLIC,
+        "_root_",
+        None,
+        ""
+      )
+      node.name
+        .substring(0, node.name.lastIndexOf("/"))
+        .split("/")
+        .foldLeft("_root_.") {
+          case (owner, pkgName) =>
+            val pkgSymbol = owner + pkgName + "."
+            addInfo(
+              pkgSymbol,
+              k.PACKAGE,
+              o.ACC_PUBLIC,
+              pkgName,
+              None,
+              owner
+            )
+            pkgSymbol
+        }
     } else {
       ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
@@ -213,18 +257,17 @@ object Javacp {
           new FieldSignatureVisitor
         )
 
-        buf += s.SymbolInformation(
-          symbol = fieldSymbol,
-          owner = classSymbol,
-          language = javaLanguage,
-          kind =
-            if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
-            else k.VAR,
-          name = field.name,
-          accessibility = saccessibility(field.access, classSymbol),
-          properties = sproperties(field.access),
-          annotations = sannotations(field.access),
-          tpe = Some(fieldSignature.toType(classScope))
+        val fieldKind =
+          if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
+          else k.VAR
+
+        addInfo(
+          fieldSymbol,
+          fieldKind,
+          field.access,
+          field.name,
+          Some(fieldSignature.toType(classScope)),
+          classSymbol
         )
 
         decls += fieldSymbol
@@ -284,16 +327,13 @@ object Javacp {
           )
         )
 
-        buf += s.SymbolInformation(
-          symbol = methodSymbol,
-          owner = classSymbol,
-          language = javaLanguage,
-          kind = k.DEF,
-          name = method.node.name,
-          accessibility = saccessibility(method.node.access, classSymbol),
-          properties = sproperties(method.node.access),
-          annotations = sannotations(method.node.access),
-          tpe = Some(methodType)
+        addInfo(
+          methodSymbol,
+          k.DEF,
+          method.node.access,
+          method.node.name,
+          Some(methodType),
+          classSymbol
         )
 
         decls += methodSymbol
@@ -317,18 +357,14 @@ object Javacp {
       )
     )
 
-
-    buf += s.SymbolInformation(
-      symbol = classSymbol,
-      kind = classKind,
-      name = className,
-      owner = classOwner,
-      tpe = Some(classTpe),
-      accessibility = saccessibility(classAccess, classOwner),
-      properties = sproperties(classAccess),
-      annotations = sannotations(classAccess)
+    addInfo(
+      classSymbol,
+      classKind,
+      classAccess,
+      className,
+      Some(classTpe),
+      classOwner
     )
-
     buf.result()
   }
 
@@ -400,25 +436,6 @@ object Javacp {
       s.Type.Tag.TYPE_REF,
       typeRef = Some(s.TypeRef(prefix, symbol, args))
     )
-  }
-
-  def spackages(nodeName: String, buf: ArrayBuffer[s.SymbolInformation]): String = {
-    def addPackage(name: String, owner: String): String = {
-      val packageSymbol = owner + name + "."
-      buf += s.SymbolInformation(
-        symbol = packageSymbol,
-        kind = k.PACKAGE,
-        name = name,
-        owner = owner
-      )
-      packageSymbol
-    }
-    val packages = nodeName.split("/")
-    packages.iterator
-      .take(packages.length - 1)
-      .foldLeft(addPackage("_root_", "")) {
-        case (owner, name) => addPackage(name, owner)
-      }
   }
 
   private implicit class XtensionTypeArgument(self: TypeArgument) {
