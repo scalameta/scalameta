@@ -156,9 +156,9 @@ object JavaTypeSignature {
   case class ClassSignature(
       typeParameters: Option[TypeParameters],
       superclassSignature: ClassTypeSignature,
-      superinterfaceSignature: List[ClassTypeSignature])
+      superinterfaceSignatures: List[ClassTypeSignature])
       extends Printable {
-    def parents: List[ClassTypeSignature] = superclassSignature :: superinterfaceSignature
+    def parents: List[ClassTypeSignature] = superclassSignature :: superinterfaceSignatures
     override def print(sb: StringBuilder): Unit = {
       typeParameters match {
         case Some(tp: TypeParameters) =>
@@ -166,7 +166,7 @@ object JavaTypeSignature {
         case _ =>
       }
       superclassSignature.print(sb)
-      superinterfaceSignature.foreach(_.print(sb))
+      superinterfaceSignatures.foreach(_.print(sb))
     }
   }
   object ClassSignature {
