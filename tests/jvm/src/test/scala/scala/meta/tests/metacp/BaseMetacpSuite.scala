@@ -2,9 +2,7 @@ package scala.meta.tests.metacp
 
 import java.io.File
 import java.nio.file.Files
-
 import org.langmeta.io.Classpath
-
 import scala.meta.cli.Metacp
 import scala.meta.tests.cli.BaseCliSuite
 
