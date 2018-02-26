@@ -44,7 +44,7 @@ Schema => SemanticDB v3
 Uri => com/javacp/ClassSuffix.class
 Text => empty
 Language => Java
-Symbols => 17 entries
+Symbols => 14 entries
 
 Symbols:
 _root_. => package _root_
@@ -56,25 +56,16 @@ _root_.com.javacp.ClassSuffix#<init>(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.ClassSuffix#Inner# => private[javacp] class Inner[A <: Object].{+2 decls}
   extends Object
-_root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix). => private[javacp] def <init>: (arg0: ClassSuffix): Unit
-  arg0 => _root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix).(arg0)
+_root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix). => private[javacp] def <init>: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix).(arg0) => param arg0: ClassSuffix
-  ClassSuffix => _root_.com.javacp.ClassSuffix#
 _root_.com.javacp.ClassSuffix#Inner#Bar# => private[javacp] class Bar.{+2 decls}
   extends Object
-_root_.com.javacp.ClassSuffix#Inner#Bar#<init>(Inner). => private[javacp] def <init>: (arg0: Inner): Unit
-  arg0 => _root_.com.javacp.ClassSuffix#Inner#Bar#<init>(Inner).(arg0)
+_root_.com.javacp.ClassSuffix#Inner#Bar#<init>(Inner). => private[javacp] def <init>: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.ClassSuffix#Inner#Bar#<init>(Inner).(arg0) => param arg0: Inner
-  Inner => _root_.com.javacp.ClassSuffix#Inner#
 _root_.com.javacp.ClassSuffix#Inner#Bar#Fuz# => private[javacp] class Fuz[B <: Object].{+1 decls}
   extends Object
-_root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#<init>(Bar). => private[javacp] def <init>: (arg0: Bar): Unit
-  arg0 => _root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#<init>(Bar).(arg0)
+_root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#<init>(Bar). => private[javacp] def <init>: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#<init>(Bar).(arg0) => param arg0: Bar
-  Bar => _root_.com.javacp.ClassSuffix#Inner#Bar#
 _root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#[B] => typeparam B: <: Object
   Object => _root_.java.lang.Object#
 _root_.com.javacp.ClassSuffix#Inner#[A] => typeparam A: <: Object
@@ -94,7 +85,7 @@ Schema => SemanticDB v3
 Uri => com/javacp/Javacp.class
 Text => empty
 Language => Java
-Symbols => 67 entries
+Symbols => 66 entries
 
 Symbols:
 _root_. => package _root_
@@ -116,11 +107,8 @@ _root_.com.javacp.Javacp#Float. => var Float: Float
   Float => _root_.scala.Float#
 _root_.com.javacp.Javacp#InnerShadowTypeParam# => private[javacp] class InnerShadowTypeParam[A <: Object].{+2 decls}
   extends Object
-_root_.com.javacp.Javacp#InnerShadowTypeParam#<init>(Javacp). => private[javacp] def <init>: (arg0: Javacp): Unit
-  arg0 => _root_.com.javacp.Javacp#InnerShadowTypeParam#<init>(Javacp).(arg0)
+_root_.com.javacp.Javacp#InnerShadowTypeParam#<init>(Javacp). => private[javacp] def <init>: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#InnerShadowTypeParam#<init>(Javacp).(arg0) => param arg0: Javacp
-  Javacp => _root_.com.javacp.Javacp#
 _root_.com.javacp.Javacp#InnerShadowTypeParam#[A] => typeparam A: <: Object
   Object => _root_.java.lang.Object#
 _root_.com.javacp.Javacp#InnerShadowTypeParam#move(A,B). => def move: (arg0: A, arg1: B): Unit
@@ -299,7 +287,7 @@ Schema => SemanticDB v3
 Uri => com/javacp/Recursive.class
 Text => empty
 Language => Java
-Symbols => 17 entries
+Symbols => 16 entries
 
 Symbols:
 _root_. => package _root_
@@ -324,11 +312,8 @@ _root_.com.javacp.Recursive#Inner#[B] => typeparam B: <: Inner[A, B]
   B => _root_.com.javacp.Recursive#Inner#[B]
 _root_.com.javacp.Recursive#Inner2# => abstract class Inner2[C <: Comparable[C]].{+1 decls}
   extends Object
-_root_.com.javacp.Recursive#Inner2#<init>(Recursive). => def <init>: (arg0: Recursive): Unit
-  arg0 => _root_.com.javacp.Recursive#Inner2#<init>(Recursive).(arg0)
+_root_.com.javacp.Recursive#Inner2#<init>(Recursive). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Recursive#Inner2#<init>(Recursive).(arg0) => param arg0: Recursive
-  Recursive => _root_.com.javacp.Recursive#
 _root_.com.javacp.Recursive#Inner2#[C] => typeparam C: <: Comparable[C]
   Comparable => _root_.java.lang.Comparable#
   C => _root_.com.javacp.Recursive#Inner2#[C]

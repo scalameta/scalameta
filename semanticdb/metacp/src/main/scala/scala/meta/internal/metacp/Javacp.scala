@@ -81,6 +81,7 @@ object Javacp {
     val classSymbol = ssym(node.name)
     val className = sname(node.name)
     val classAccess = node.access | outerClassAccess
+    val hasOuterClassReference = node.fields.asScala.exists(isOuterClassReference)
 
     val isTopLevelClass = !node.name.contains("$")
     val classOwner: String = if (isTopLevelClass) {
@@ -131,8 +132,8 @@ object Javacp {
       else classSignature.parents.map(_.toType(classScope))
 
     node.fields.asScala.foreach { field: FieldNode =>
-      if (field.name.startsWith("this$")) {
-        // Skip synthetic this$0 fields for inner classes that reference the enclosing class.
+      if (isOuterClassReference(field)) {
+        // Drop the constructor argument that holds the reference to the outer class.
         ()
       } else {
         val fieldSymbol = classSymbol + field.name + "."
@@ -184,18 +185,26 @@ object Javacp {
         }
         methodTypeParameters.foreach(buf += _)
 
-        val parameterSymbols = method.signature.params.zipWithIndex.map {
+        val params =
+          if (method.node.name == "<init>" && hasOuterClassReference) {
+            // Drop the constructor argument that holds the reference to the outer class.
+            method.signature.params.tail
+          } else {
+            method.signature.params
+          }
+
+        val parameterSymbols = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
             // TODO(olafur) use node.parameters for JDK 8 with -parameters
-            val name = "arg" + i
-            val paramSymbol = methodSymbol + "(" + name + ")"
-            buf += s.SymbolInformation(
-              symbol = paramSymbol,
-              owner = methodSymbol,
-              language = javaLanguage,
-              kind = k.PARAMETER,
-              name = name,
-              tpe = Some(param.toType(methodScope))
+            val paramName = "arg" + i
+            val paramSymbol = methodSymbol + "(" + paramName + ")"
+            addInfo(
+              paramSymbol,
+              k.PARAMETER,
+              o.ACC_PUBLIC,
+              paramName,
+              Some(param.toType(methodScope)),
+              methodSymbol
             )
             paramSymbol
         }
@@ -259,6 +268,10 @@ object Javacp {
     )
     buf.result()
   }
+
+  // Returns true if this field holds a reference to an outer enclosing class.
+  def isOuterClassReference(field: FieldNode): Boolean =
+    field.name.startsWith("this$")
 
   // The logic behind this method is an implementation of the answer in this SO question:
   // https://stackoverflow.com/questions/42676404/how-do-i-know-if-i-am-visiting-an-anonymous-class-in-asm
