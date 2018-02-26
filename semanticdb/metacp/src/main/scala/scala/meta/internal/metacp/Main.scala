@@ -92,7 +92,7 @@ object Main {
                 scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
               }
             } else {
-              val infos = Javacp.sinfos(root.toNIO, file, Javacp.Scope.empty, isVisited)
+              val infos = Javacp.sinfos(root.toNIO, file, isVisited)
               if (infos.nonEmpty) indexToplevel(infos.last, relpath + ".semanticdb")
               Some(infos)
             }

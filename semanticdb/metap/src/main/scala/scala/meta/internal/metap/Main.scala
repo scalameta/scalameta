@@ -349,6 +349,7 @@ class Main(out: PrintStream) {
     if (has(CONTRAVARIANT)) out.print("contravariant ")
     if (has(VALPARAM)) out.print("valparam ")
     if (has(VARPARAM)) out.print("varparam ")
+    if (has(STATIC)) out.print("static ")
     info.kind match {
       case VAL => out.print("val ")
       case VAR => out.print("var ")

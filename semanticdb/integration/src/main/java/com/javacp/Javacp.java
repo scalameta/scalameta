@@ -59,4 +59,7 @@ public class Javacp<A extends CharSequence & Serializable, B> extends ArrayList<
 
     public Serializable anonymous = new Serializable() { };
 
+    static void staticMethod() {}
+    static class StaticClass {}
+
 }

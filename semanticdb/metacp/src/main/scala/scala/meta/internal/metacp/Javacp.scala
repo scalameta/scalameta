@@ -22,6 +22,15 @@ object Javacp {
   def sinfos(
       root: Path,
       file: Path,
+      isVisited: mutable.Set[Path]
+  ): Seq[s.SymbolInformation] = {
+    sinfos(root, file, 0, Scope.empty, isVisited)
+  }
+
+  def sinfos(
+      root: Path,
+      file: Path,
+      access: Int,
       scope: Scope,
       isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
     if (isVisited(file)) Nil
@@ -31,7 +40,7 @@ object Javacp {
       val node = parseClassNode(bytes)
       if (isAnonymousClass(node)) Nil
       else {
-        sinfos(node, scope, root, isVisited)
+        sinfos(node, access, scope, root, isVisited)
       }
     }
   }
@@ -146,6 +155,7 @@ object Javacp {
 
   def sinfos(
       node: ClassNode,
+      access: Int,
       scope: Scope,
       root: Path,
       isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
@@ -155,6 +165,7 @@ object Javacp {
 
     val classSymbol = ssym(node.name)
     val className = sname(node.name)
+    val classAccess = node.access | access
 
     val isTopLevelClass = !node.name.contains("$")
     val classOwner: String = if (isTopLevelClass) {
@@ -164,7 +175,7 @@ object Javacp {
     }
 
     val classKind =
-      if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
+      if (classAccess.hasFlag(o.ACC_INTERFACE)) k.TRAIT
       else k.CLASS
 
     val isJavaLangObject = node.name == "java/lang/Object"
@@ -291,7 +302,7 @@ object Javacp {
     node.innerClasses.asScala.foreach { ic: InnerClassNode =>
       val innerClassPath = asmNameToPath(ic.name, root)
       if (Files.isRegularFile(innerClassPath)) {
-        buf ++= sinfos(root, innerClassPath, classScope, isVisited)
+        buf ++= sinfos(root, innerClassPath, ic.access, classScope, isVisited)
       }
     }
 
@@ -306,15 +317,16 @@ object Javacp {
       )
     )
 
+
     buf += s.SymbolInformation(
       symbol = classSymbol,
       kind = classKind,
       name = className,
       owner = classOwner,
       tpe = Some(classTpe),
-      accessibility = saccessibility(node.access, classOwner),
-      properties = sproperties(node.access),
-      annotations = sannotations(node.access)
+      accessibility = saccessibility(classAccess, classOwner),
+      properties = sproperties(classAccess),
+      annotations = sannotations(classAccess)
     )
 
     buf.result()
@@ -376,6 +388,7 @@ object Javacp {
     def sflip(sbit: Int) = bits ^= sbit
     if (access.hasFlag(o.ACC_ABSTRACT)) sflip(p.ABSTRACT.value)
     if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL.value)
+    if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC.value)
     bits
   }
 
