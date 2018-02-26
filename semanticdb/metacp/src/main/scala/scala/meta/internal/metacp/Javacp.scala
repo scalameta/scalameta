@@ -186,7 +186,11 @@ object Javacp {
         methodTypeParameters.foreach(buf += _)
 
         val params =
-          if (method.node.name == "<init>" && hasOuterClassReference) {
+          if (method.node.name == "<init>" &&
+              hasOuterClassReference &&
+              // Guard against an empty parameter list, which seems to only happen
+              // in the JDK for java/util/regex/Pattern.class
+              method.signature.params.nonEmpty) {
             // Drop the constructor argument that holds the reference to the outer class.
             method.signature.params.tail
           } else {
