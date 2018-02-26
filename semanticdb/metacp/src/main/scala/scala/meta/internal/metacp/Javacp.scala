@@ -117,7 +117,7 @@ object Javacp {
       } else if (node.signature == null) {
         ClassSignature.simple(node.superName, node.interfaces.asScala.toList)
       } else {
-        JavaTypeSignature.parse[ClassSignature](node.signature, new ClassSignatureVisitor)
+        JavaTypeSignature.parse(node.signature, new ClassSignatureVisitor)
       }
 
     val (classScope: Scope, classTypeParameters) =
@@ -161,7 +161,7 @@ object Javacp {
 
     // NOTE: this logic will soon change https://github.com/scalameta/scalameta/issues/1358
     val methodSignatures = node.methods.asScala.map { method: MethodNode =>
-      val signature = JavaTypeSignature.parse[MethodSignature](
+      val signature = JavaTypeSignature.parse(
         if (method.signature == null) method.desc else method.signature,
         new MethodSignatureVisitor
       )
