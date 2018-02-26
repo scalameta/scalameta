@@ -5,6 +5,7 @@ import scala.meta.internal.metacp.asm.JavaTypeSignature.TypeArguments
 import scala.tools.asm.signature.SignatureVisitor
 
 class SimpleClassTypeSignatureBuilder(identifier: String) {
+  require(identifier != null)
   private val typeArguments = List.newBuilder[TypeArgumentVisitor]
   def result(): SimpleClassTypeSignature =
     typeArguments.result() match {

@@ -187,6 +187,7 @@ message SymbolInformation {
     CONTRAVARIANT = 0x200;
     VALPARAM = 0x400;
     VARPARAM = 0x800;
+    STATIC = 0x1000;
   }
   reserved 2, 6;
   string symbol = 1;

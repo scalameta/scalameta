@@ -97,6 +97,7 @@ object JavaTypeSignature {
   // identifier instead because that's what we get from ASM.
   case class SimpleClassTypeSignature(identifier: String, typeArguments: Option[TypeArguments])
       extends Printable {
+    require(identifier != null)
     def print(sb: StringBuilder): Unit = {
       sb.append(identifier)
       typeArguments match {

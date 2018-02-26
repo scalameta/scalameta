@@ -8,5 +8,6 @@ class MetacpSuite extends BaseMetacpSuite {
   checkNoCrashes(scalameta)
   checkNoCrashes(akka)
   checkNoCrashes(spark)
+  checkNoCrashes(jdk)
 
 }

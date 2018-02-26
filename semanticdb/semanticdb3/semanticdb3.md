@@ -641,6 +641,11 @@ languages map onto these properties.
     <td><code>VARPARAM</code></td>
     <td>Is a <code>var</code> parameter of a primary constructor?</td>
   </tr>
+  <tr>
+    <td><code>0x1000</code></td>
+    <td><code>STATIC</code></td>
+    <td>Is a <code>static</code> field, method or class?</td>
+  </tr>
 </table>
 
 `name`. String that represents the name of the corresponding definition.
