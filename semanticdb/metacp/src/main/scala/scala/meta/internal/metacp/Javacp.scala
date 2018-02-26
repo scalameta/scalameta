@@ -1,66 +1,59 @@
 package scala.meta.internal.metacp
 
-import java.nio.file.Files
-import java.nio.file.Path
+import java.nio.file.{Files, Path, Paths}
+
+import org.langmeta.internal.io.PathIO
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 import scala.meta.internal.metacp.asm._
 import scala.meta.internal.metacp.asm.JavaTypeSignature._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.ClassReader
-import scala.tools.asm.tree.ClassNode
-import scala.tools.asm.tree.FieldNode
-import scala.tools.asm.tree.MethodNode
+import scala.tools.asm.tree.{ClassNode, FieldNode, InnerClassNode, MethodNode}
 import scala.tools.asm.{Opcodes => o}
 
 object Javacp {
 
-  def sdocument(root: Path, file: Path, scopes: TypeVariableScopes): s.TextDocument = {
-    val bytes = Files.readAllBytes(file)
-    val node = parseClassNode(bytes)
-    node.outerClass
-    val symbols =
-      try sinfos(node, scopes)
-      catch {
-        case e: TypeVariableScopeResolutionError =>
-          // TODO: implement inner anonymous classes
-          // This error can happen when we process an anonymous clase
-          // that references type parameters from an enclosing inner class.
-          // We currently process class files in lexicographical order which means that an order like this here
-          // - Super.class
-          // - Super$1.class (inside Super$Inner)
-          // - Super$Inner.class
-          // causes the type variables defined in Super$Inner.class to not
-          // be entered when we process Super$1.class.
-          val IsNumber = "\\d+".r
-          val hasNumberEntry = node.name
-            .split("\\$")
-            .exists(IsNumber.findFirstIn(_).isDefined)
-          if (!hasNumberEntry) throw e
-          else Nil
-      }
-    val uri = root.relativize(file).toString
-    s.TextDocument(
-      schema = s.Schema.SEMANTICDB3,
-      uri = uri,
-      symbols = symbols
-    )
+  def sinfos(
+      root: Path,
+      file: Path,
+      scopes: TypeVariableScopes,
+      isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
+    if (isVisited(file)) Nil
+    else {
+      isVisited += file
+      val bytes = Files.readAllBytes(file)
+      val node = parseClassNode(bytes)
+      if (isAnonymousClass(node)) Nil
+      else sinfos(node, scopes, root, isVisited)
+    }
+  }
+
+  // The logic behind this method is an implementation of the answer in this SO question:
+  // https://stackoverflow.com/questions/42676404/how-do-i-know-if-i-am-visiting-an-anonymous-class-in-asm
+  def isAnonymousClass(node: ClassNode): Boolean = {
+    node.innerClasses.asScala.exists { ic: InnerClassNode =>
+      ic.name == node.name &&
+      ic.innerName == null
+    }
   }
 
   val javaLanguage = Some(s.Language("Java"))
 
-  def fromJavaTypeSignature(sig: JavaTypeSignature)(implicit scopes: TypeVariableScopes): s.Type =
+  def fromJavaTypeSignature(sig: JavaTypeSignature, scopes: TypeVariableScopes): s.Type =
     sig match {
       case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
-        val prefix = styperef(ssym(identifier), targs.toType)
+        val prefix = styperef(ssym(identifier), targs.toType(scopes))
         suffix.foldLeft(prefix) {
           case (accum, s: ClassTypeSignatureSuffix) =>
             styperef(
               prefix = Some(accum),
               symbol = ssym(s.simpleClassTypeSignature.identifier),
-              args = s.simpleClassTypeSignature.typeArguments.toType
+              args = s.simpleClassTypeSignature.typeArguments.toType(scopes)
             )
         }
       case TypeVariableSignature(name) =>
@@ -68,7 +61,7 @@ object Javacp {
       case t: BaseType =>
         styperef("_root_.scala." + t.name + "#")
       case ArrayTypeSignature(tpe) =>
-        sarray(tpe.toType)
+        sarray(tpe.toType(scopes))
     }
 
   case class TypeParameterInfo(value: TypeParameter, symbol: String)
@@ -88,7 +81,7 @@ object Javacp {
       typeParameter: TypeParameterInfo,
       ownerSymbol: String,
       scopes: TypeVariableScopes): s.SymbolInformation = {
-    val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_)(scopes))
+    val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_, scopes))
     val upperBounds = typeParameters match {
       case upperBound :: Nil =>
         upperBound
@@ -125,8 +118,17 @@ object Javacp {
 
   case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
 
-  def sinfos(node: ClassNode, scopes: TypeVariableScopes): Seq[s.SymbolInformation] = {
-    implicit val implicitScopes: TypeVariableScopes = scopes
+  def asmNameToPath(asmName: String, root: Path): Path = {
+    (asmName + ".class").split("/").foldLeft(root) {
+      case (accum, filename) => accum.resolve(filename)
+    }
+  }
+
+  def sinfos(
+      node: ClassNode,
+      scopes: TypeVariableScopes,
+      root: Path,
+      isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
     val decls = ListBuffer.empty[String]
@@ -146,55 +148,48 @@ object Javacp {
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
       else k.CLASS
 
-    val classSignature: Option[ClassSignature] =
+    val classSignature: ClassSignature =
       if (node.signature == null) {
-        Some(
-          ClassSignature.simple(node.superName, node.interfaces.asScala.toList)
-        )
+        ClassSignature.simple(node.superName, node.interfaces.asScala.toList)
       } else {
-        Some(
-          JavaTypeSignature.parse[ClassSignature](node.signature, new ClassSignatureVisitor)
-        )
+        JavaTypeSignature.parse[ClassSignature](node.signature, new ClassSignatureVisitor)
       }
 
-    val classTypeParameters: Seq[s.SymbolInformation] = classSignature match {
-      case Some(ClassSignature(Some(typeParameters), _, _)) =>
-        addTypeParameters(typeParameters, classSymbol, scopes)
+    val classTypeParameters: Seq[s.SymbolInformation] = classSignature.typeParameters match {
+      case Some(typeParameters) => addTypeParameters(typeParameters, classSymbol, scopes)
       case _ => Nil
     }
     classTypeParameters.foreach(buf += _)
 
-    val classParents = classSignature match {
-      case Some(c: ClassSignature) =>
-        try c.parents.map(_.toType)
-        catch {
-          case _: NullPointerException => Nil
-        }
-      case _ => Nil
-    }
+    val classParents = classSignature.parents.map(_.toType(scopes))
 
     node.fields.asScala.foreach { field: FieldNode =>
-      val fieldSymbol = classSymbol + field.name + "."
-      val fieldSignature = JavaTypeSignature.parse(
-        if (field.signature == null) field.desc else field.signature,
-        new FieldSignatureVisitor
-      )
+      if (field.name.startsWith("this$")) {
+        // Skip synthetic this$0 fields for inner classes that reference the enclosing class.
+        ()
+      } else {
+        val fieldSymbol = classSymbol + field.name + "."
+        val fieldSignature = JavaTypeSignature.parse(
+          if (field.signature == null) field.desc else field.signature,
+          new FieldSignatureVisitor
+        )
 
-      buf += s.SymbolInformation(
-        symbol = fieldSymbol,
-        owner = classSymbol,
-        language = javaLanguage,
-        kind =
-          if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
-          else k.VAR,
-        name = field.name,
-        accessibility = saccessibility(field.access, classSymbol),
-        properties = sproperties(field.access),
-        annotations = sannotations(field.access),
-        tpe = Some(fieldSignature.toType)
-      )
+        buf += s.SymbolInformation(
+          symbol = fieldSymbol,
+          owner = classSymbol,
+          language = javaLanguage,
+          kind =
+            if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
+            else k.VAR,
+          name = field.name,
+          accessibility = saccessibility(field.access, classSymbol),
+          properties = sproperties(field.access),
+          annotations = sannotations(field.access),
+          tpe = Some(fieldSignature.toType(scopes))
+        )
 
-      decls += fieldSymbol
+        decls += fieldSymbol
+      }
     }
 
     // NOTE: this logic will soon change https://github.com/scalameta/scalameta/issues/1358
@@ -235,7 +230,7 @@ object Javacp {
               language = javaLanguage,
               kind = k.PARAMETER,
               name = name,
-              tpe = Some(param.toType)
+              tpe = Some(param.toType(scopes))
             )
             paramSymbol
         }
@@ -246,7 +241,7 @@ object Javacp {
             s.MethodType(
               typeParameters = methodTypeParameters.map(_.symbol),
               parameters = s.MethodType.ParameterList(parameterSymbols) :: Nil,
-              returnType = Some(method.signature.result.toType)
+              returnType = Some(method.signature.result.toType(scopes))
             )
           )
         )
@@ -264,6 +259,11 @@ object Javacp {
         )
 
         decls += methodSymbol
+    }
+
+    node.innerClasses.asScala.foreach { ic: InnerClassNode =>
+      val innerClassPath = asmNameToPath(ic.name, root)
+      buf ++= sinfos(root, innerClassPath, scopes, isVisited)
     }
 
     val classTpe = s.Type(
@@ -381,22 +381,22 @@ object Javacp {
 
   private implicit class XtensionTypeArgument(self: TypeArgument) {
     // TODO: implement wildcards after https://github.com/scalameta/scalameta/issues/1357
-    def toType(implicit scopes: TypeVariableScopes): s.Type = self match {
+    def toType(scopes: TypeVariableScopes): s.Type = self match {
       case ReferenceTypeArgument(_, referenceTypeSignature) =>
-        referenceTypeSignature.toType
+        referenceTypeSignature.toType(scopes)
       case WildcardTypeArgument =>
         styperef("local_wildcard")
     }
   }
 
   private implicit class XtensionJavaTypeSignature(self: JavaTypeSignature) {
-    def toType(implicit scopes: TypeVariableScopes): s.Type =
-      fromJavaTypeSignature(self)(scopes)
+    def toType(scopes: TypeVariableScopes): s.Type =
+      fromJavaTypeSignature(self, scopes)
   }
 
   private implicit class XtensionTypeArgumentsOption(self: Option[TypeArguments]) {
-    def toType(implicit scopes: TypeVariableScopes): List[s.Type] = self match {
-      case Some(targs: TypeArguments) => targs.all.map(_.toType)
+    def toType(scopes: TypeVariableScopes): List[s.Type] = self match {
+      case Some(targs: TypeArguments) => targs.all.map(_.toType(scopes))
       case _ => Nil
     }
   }

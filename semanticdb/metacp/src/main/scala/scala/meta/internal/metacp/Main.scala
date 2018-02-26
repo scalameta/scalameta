@@ -63,6 +63,7 @@ object Main {
       packageIndex(info.owner) += info.symbol
     }
     val scopes = new TypeVariableScopes()
+    val isVisited = mutable.Set.empty[Path]
     val classpath = Classpath(settings.cps.mkString(File.pathSeparator))
     classpath.visit { root =>
       new FileVisitor[Path] {
@@ -93,7 +94,7 @@ object Main {
                 scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
               }
             } else {
-              val infos = Javacp.sdocument(root.toNIO, file, scopes).symbols
+              val infos = Javacp.sinfos(root.toNIO, file, scopes, isVisited)
               if (infos.nonEmpty) indexToplevel(infos.last, relpath + ".semanticdb")
               Some(infos)
             }
@@ -128,7 +129,10 @@ object Main {
           files
             .iterator()
             .asScala
-            .filter(f => Files.isRegularFile(f))
+            .filter { f =>
+              !isVisited(f) &&
+              Files.isRegularFile(f)
+            }
             .foreach(handleFile)
           FileVisitResult.CONTINUE
         }
