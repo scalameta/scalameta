@@ -50,6 +50,7 @@ object Javacp {
   def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type =
     sig match {
       case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
+        require(identifier != null, sig.toString)
         val prefix = styperef(ssym(identifier), targs.toType(scope))
         suffix.foldLeft(prefix) {
           case (accum, s: ClassTypeSignatureSuffix) =>
@@ -166,8 +167,14 @@ object Javacp {
       if (node.access.hasFlag(o.ACC_INTERFACE)) k.TRAIT
       else k.CLASS
 
+    val isJavaLangObject = node.name == "java/lang/Object"
     val classSignature: ClassSignature =
-      if (node.signature == null) {
+      if (isJavaLangObject) {
+        // java/lang/Object has no super class so node.superName == null.
+        // ClassSignature requires a non-null superName so we special-handle java/lang/Object
+        // when assigning classParents below.
+        ClassSignature.simple("impossible", Nil)
+      } else if (node.signature == null) {
         ClassSignature.simple(node.superName, node.interfaces.asScala.toList)
       } else {
         JavaTypeSignature.parse[ClassSignature](node.signature, new ClassSignatureVisitor)
@@ -180,7 +187,9 @@ object Javacp {
       }
     classTypeParameters.foreach(buf += _)
 
-    val classParents = classSignature.parents.map(_.toType(classScope))
+    val classParents =
+      if (isJavaLangObject) Nil
+      else classSignature.parents.map(_.toType(classScope))
 
     node.fields.asScala.foreach { field: FieldNode =>
       if (field.name.startsWith("this$")) {

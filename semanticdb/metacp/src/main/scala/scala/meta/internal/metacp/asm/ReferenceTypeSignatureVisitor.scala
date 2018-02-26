@@ -41,6 +41,7 @@ class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[Referen
   }
 
   def startSimpleClass(name: String): Unit = {
+    require(name != null)
     val builder = new SimpleClassTypeSignatureBuilder(name)
     simpleClassTypeSignatures += builder
     lastSimpleClassTypeSignatures = builder

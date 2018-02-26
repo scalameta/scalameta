@@ -99,6 +99,7 @@ class SignatureSuite extends BaseMetacpSuite {
     checkFields(node) ::: checkMethods(node) ::: checkClass(node)
   }
 
-  allLibraries.take(2).foreach(checkSignatureRoundtrip)
+//  allLibraries.take(2).foreach(checkSignatureRoundtrip)
+  checkSignatureRoundtrip(jdk)
 
 }

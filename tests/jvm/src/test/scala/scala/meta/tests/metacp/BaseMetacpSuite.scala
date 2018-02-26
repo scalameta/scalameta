@@ -37,24 +37,41 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
   val kafka = Library("org.apache.kafka", "kafka_2.12", "1.0.0")
   val flink = Library("org.apache.flink", "flink-parent", "1.4.1")
   val grpc = Library("io.grpc", "grpc-all", "1.10.0")
+  def bootClasspath: String =
+    org.langmeta.io
+      .Classpath(
+        sys.props
+          .collectFirst { case (k, v) if k.endsWith(".boot.class.path") => v }
+          .getOrElse("")
+      )
+      .shallow
+      .filter(p => Files.isRegularFile(p.toNIO))
+      .mkString(File.pathSeparator)
 
-  val allLibraries = List(
+  val jdk = Library("JDK", () => bootClasspath)
+  println(jdk)
+
+  val allLibraries = List[Library](
     scalameta,
     akka,
     spark,
     kafka,
     flink,
-    grpc
+    grpc,
+    jdk
   )
 
 }
 
-case class Library(organization: String, artifact: String, version: String) {
-  def name = List(organization, artifact, version).mkString(":")
-  def classpath(): String = {
-    val jars = Jars
-      .fetch(organization, artifact, version)
-      .filterNot(_.toString.contains("scala-lang"))
-    jars.mkString(File.pathSeparator)
-  }
+case class Library(name: String, classpath: () => String)
+object Library {
+  def apply(organization: String, artifact: String, version: String): Library =
+    Library(
+      List(organization, artifact, version).mkString(":"), { () =>
+        val jars = Jars
+          .fetch(organization, artifact, version)
+          .filterNot(_.toString.contains("scala-lang"))
+        jars.mkString(File.pathSeparator)
+      }
+    )
 }
