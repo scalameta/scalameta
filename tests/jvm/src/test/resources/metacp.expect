@@ -1111,6 +1111,61 @@ _root_.flags.p.package.z(Int). => def z: (pp: Int): Int
 _root_.flags.p.package.z(Int).(pp) => param pp: Int
   Int => _root_.scala.Int#
 
+scala/Any.class
+---------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => scala/Any.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+_root_.scala.Any# => class Any
+
+scala/AnyRef.class
+------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => scala/AnyRef.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+_root_.scala.AnyRef# => class AnyRef
+  extends Any
+
+scala/AnyVal.class
+------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => scala/AnyVal.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+_root_.scala.AnyVal# => class AnyVal
+  extends Any
+
+scala/Nothing.class
+-------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => scala/Nothing.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+_root_.scala.Nothing# => class Nothing
+  extends Any
+
 types/B.class
 -------------
 

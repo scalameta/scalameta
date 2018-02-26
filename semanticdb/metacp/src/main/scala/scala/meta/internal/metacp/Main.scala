@@ -144,6 +144,69 @@ object Main {
         }
       }
     }
+    locally {
+      def synthesizeBuiltin(name: String): s.SymbolInformation = {
+        val parent = s.TypeRef(None, "_root_.scala.Any#", Nil)
+        val tpe = s.ClassInfoType(Nil, List(s.Type(tag = t.TYPE_REF, typeRef = Some(parent))), Nil)
+        s.SymbolInformation(
+          symbol = "_root_.scala." + name + "#",
+          language = Some(s.Language("Scala")),
+          kind = k.CLASS,
+          name = name,
+          tpe = Some(s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))),
+          owner = "_root_.scala."
+        )
+      }
+      def synthesizeAny(): List[s.SymbolInformation] = {
+        val decls = {
+          // TODO: Implement me.
+          // lazy val Any_==       = enterNewMethod(AnyClass, nme.EQ, AnyTpe :: Nil, BooleanTpe, FINAL)
+          // lazy val Any_!=       = enterNewMethod(AnyClass, nme.NE, AnyTpe :: Nil, BooleanTpe, FINAL)
+          // lazy val Any_equals   = enterNewMethod(AnyClass, nme.equals_, AnyTpe :: Nil, BooleanTpe)
+          // lazy val Any_hashCode = enterNewMethod(AnyClass, nme.hashCode_, Nil, IntTpe)
+          // lazy val Any_toString = enterNewMethod(AnyClass, nme.toString_, Nil, StringTpe)
+          // lazy val Any_##       = enterNewMethod(AnyClass, nme.HASHHASH, Nil, IntTpe, FINAL)
+          // lazy val Any_getClass     = enterNewMethod(AnyClass, nme.getClass_, Nil, getMemberMethod(ObjectClass, nme.getClass_).tpe.resultType, DEFERRED)
+          // lazy val Any_isInstanceOf = newT1NullaryMethod(AnyClass, nme.isInstanceOf_, FINAL)(_ => BooleanTpe)
+          // lazy val Any_asInstanceOf = newT1NullaryMethod(AnyClass, nme.asInstanceOf_, FINAL)(_.typeConstructor)
+          List[s.SymbolInformation]()
+        }
+        val any0 = synthesizeBuiltin("Any")
+        val any1 = any0.update(_.tpe.classInfoType.parents := Nil)
+        val any = any1.update(_.tpe.classInfoType.declarations := decls.map(_.symbol))
+        any +: decls
+      }
+      def synthesizeAnyVal(): List[s.SymbolInformation] = {
+        List(synthesizeBuiltin("AnyVal"))
+      }
+      def synthesizeAnyRef(): List[s.SymbolInformation] = {
+        List(synthesizeBuiltin("AnyRef"))
+      }
+      def synthesizeNothing(): List[s.SymbolInformation] = {
+        List(synthesizeBuiltin("Nothing"))
+      }
+      val map = Map(
+        "Any" -> synthesizeAny(),
+        "AnyVal" -> synthesizeAnyVal(),
+        "AnyRef" -> synthesizeAnyRef(),
+        "Nothing" -> synthesizeNothing()
+      )
+      map.foreach {
+        case (name, infos) =>
+          val relpath = "scala/" + name + ".class"
+          val className = NameTransformer.decode(PathIO.toUnix(relpath))
+          val semanticdbRelpath = relpath + ".semanticdb"
+          val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
+          val semanticdbDocument = s.TextDocument(
+            schema = s.Schema.SEMANTICDB3,
+            uri = relpath,
+            language = Some(s.Language("Scala")),
+            symbols = infos)
+          val semanticdbDocuments = s.TextDocuments(List(semanticdbDocument))
+          FileIO.write(semanticdbAbspath, semanticdbDocuments)
+          indexToplevel(infos.head, semanticdbRelpath)
+      }
+    }
     val index = {
       val packages = packageIndex.map(kv => s.PackageEntry(symbol = kv._1, members = kv._2.toList))
       val toplevels = toplevelIndex.map(kv => s.ToplevelEntry(symbol = kv._1, uri = kv._2))
