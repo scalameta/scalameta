@@ -1,0 +1,123 @@
+package org.scalameta.bench
+
+import java.util.concurrent.TimeUnit
+
+import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Measurement, Mode, Fork}
+import org.langmeta.semanticdb.Symbol
+import org.langmeta.semanticdb.Signature
+
+object SymbolParser {
+  val symbols: Array[String] =
+    Array(
+      "_root_.scala.",
+      "_root_.scala.Int#",
+      "_root_.scala.Predef.`???`().",
+      "_root_.scala.`<repeated>`#",
+      "_root_.scala.annotation.",
+      "_root_.scala.annotation.StaticAnnotation#",
+      "_root_.scala.language.",
+      "_root_.scala.language.existentials.",
+      "_root_.scala.language.higherKinds.",
+      "_root_.scala.package.List#",
+      "_root_.types.",
+      "_root_.types.B#",
+      "_root_.types.B#`<init>`().",
+      "_root_.types.C#",
+      "_root_.types.P#",
+      "_root_.types.P#C#",
+      "_root_.types.P#C#`<init>`().",
+      "_root_.types.P#X#",
+      "_root_.types.P#X#`<init>`().",
+      "_root_.types.P#`<init>`().",
+      "_root_.types.P#x.",
+      "_root_.types.T#",
+      "_root_.types.T#C#",
+      "_root_.types.T#C#`<init>`().",
+      "_root_.types.T#X#",
+      "_root_.types.T#X#`<init>`().",
+      "_root_.types.T#`<init>`().",
+      "_root_.types.T#x.",
+      "_root_.types.Test.",
+      "_root_.types.Test.C#",
+      "_root_.types.Test.C#$anon#L#",
+      "_root_.types.Test.C#$anon#L#[T]",
+      "_root_.types.Test.C#$anon#k().",
+      "_root_.types.Test.C#ByNameType.",
+      "_root_.types.Test.C#ByNameType.m1(Lscala/Function0;).",
+      "_root_.types.Test.C#ByNameType.m1(Lscala/Function0;).(x)",
+      "_root_.types.Test.C#ClassInfoType1.",
+      "_root_.types.Test.C#ClassInfoType2#",
+      "_root_.types.Test.C#ClassInfoType2#`<init>`().",
+      "_root_.types.Test.C#ClassInfoType2#x().",
+      "_root_.types.Test.C#ClassInfoType3#",
+      "_root_.types.Test.C#ClassInfoType3#[T]",
+      "_root_.types.Test.C#MethodType.",
+      "_root_.types.Test.C#MethodType.m3().",
+      "_root_.types.Test.C#MethodType.m4().",
+      "_root_.types.Test.C#MethodType.m5(I).",
+      "_root_.types.Test.C#MethodType.m5(I).(x)",
+      "_root_.types.Test.C#MethodType.m6(Ljava/lang/Object;).",
+      "_root_.types.Test.C#MethodType.m6(Ljava/lang/Object;).(x)",
+      "_root_.types.Test.C#MethodType.m6(Ljava/lang/Object;).T#",
+      "_root_.types.Test.C#MethodType.x1().",
+      "_root_.types.Test.C#MethodType.x2().",
+      "_root_.types.Test.C#RepeatedType.",
+      "_root_.types.Test.C#RepeatedType.m1(Lscala/collection/Seq;).",
+      "_root_.types.Test.C#RepeatedType.m1(Lscala/collection/Seq;).(x)",
+      "_root_.types.Test.C#TypeType.",
+      "_root_.types.Test.C#TypeType.T1#",
+      "_root_.types.Test.C#TypeType.T4#",
+      "_root_.types.Test.C#TypeType.T5#",
+      "_root_.types.Test.C#TypeType.T5#[U]",
+      "_root_.types.Test.C#TypeType.m2().",
+      "_root_.types.Test.C#TypeType.m2().T2#",
+      "_root_.types.Test.C#TypeType.m3().",
+      "_root_.types.Test.C#TypeType.m3().M3#",
+      "_root_.types.Test.C#`<init>`().",
+      "_root_.types.Test.C#annType1.",
+      "_root_.types.Test.C#annType2.",
+      "_root_.types.Test.C#compoundType1.",
+      "_root_.types.Test.C#compoundType2.",
+      "_root_.types.Test.C#compoundType3.",
+      "_root_.types.Test.C#existentialType1.",
+      "_root_.types.Test.C#existentialType1.T#",
+      "_root_.types.Test.C#p.",
+      "_root_.types.Test.C#singleType1.",
+      "_root_.types.Test.C#singleType2.",
+      "_root_.types.Test.C#superType1.",
+      "_root_.types.Test.C#superType2.",
+      "_root_.types.Test.C#superType3.",
+      "_root_.types.Test.C#thisType1.",
+      "_root_.types.Test.C#thisType2.",
+      "_root_.types.Test.C#typeLambda1().",
+      "_root_.types.Test.C#typeLambda1().M#",
+      "_root_.types.Test.C#typeRef1.",
+      "_root_.types.Test.C#typeRef2.",
+      "_root_.types.Test.C#typeRef3.",
+      "_root_.types.Test.C#typeRef4.",
+      "_root_.types.Test.C#x.",
+      "_root_.types.Test.M#",
+      "_root_.types.Test.M#`<init>`().",
+      "_root_.types.Test.M#m().",
+      "_root_.types.Test.N#",
+      "_root_.types.Test.N#`<init>`().",
+      "_root_.types.Test.N#n().",
+      "_root_.types.ann#",
+      "_root_.types.ann#(x)",
+      "_root_.types.ann#[T]",
+      "_root_.types.ann#`<init>`(Ljava/lang/Object;).",
+      "_root_.types.ann1#",
+      "_root_.types.ann1#`<init>`().",
+      "_root_.types.ann2#",
+      "_root_.types.ann2#`<init>`()."
+    )
+}
+class SymbolParser {
+  @Benchmark
+  @BenchmarkMode(Array(Mode.Throughput))
+  @Fork(value = 1)
+  @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+  def run: Array[Symbol] = {
+    SymbolParser.symbols.map(Symbol.apply)
+  }
+}

@@ -33,134 +33,52 @@ object Symbol {
     override def structure = s"""Symbol.Multi(${symbols.map(_.structure).mkString(", ")})"""
   }
 
-  // TODO: This is obviously a very naive implementation.
-  // It'll do for prototyping, but in the future we'll have to replace it.
-  // upd. Ugh, I should've started with fastparse in the first place!!
-  def apply(s: String): Symbol = {
-    object naiveParser {
-      var i = 0
-      def fail() = {
-        val message = "invalid symbol format"
-        val caret = " " * (i - 1) + "^"
-        sys.error(s"$message$EOL$s$EOL$caret")
-      }
+  import fastparse.all._
+  private def charsExcept(chars: String) =
+    CharsWhile(c => ! chars.contains(c))
 
-      val BOF = '\u0000'
-      val EOF = '\u001A'
-      var currChar = BOF
-      def readChar(): Char = {
-        if (i >= s.length) {
-          if (i == s.length) {
-            currChar = EOF
-            i += 1
-            currChar
-          } else {
-            fail()
-          }
-        } else {
-          currChar = s(i)
-          i += 1
-          currChar
-        }
-      }
+  private val quotedName =
+    P("`" ~/ charsExcept("`").! ~ "`")
+  private val unquotedName =
+    P(CharPred(Character.isJavaIdentifierStart) ~ CharsWhile(Character.isJavaIdentifierPart, min = 0)).!
+  private val name =
+    P(quotedName | unquotedName)
 
-      def parseName(): String = {
-        val buf = new StringBuilder()
-        if (currChar == '`') {
-          while (readChar() != '`') buf += currChar
-          readChar()
-        } else {
-          if (!Character.isJavaIdentifierStart(currChar)) fail()
-          buf += currChar
-          while (Character.isJavaIdentifierPart(readChar())) {
-            if (currChar == EOF) return buf.toString
-            buf += currChar
-          }
-        }
-        buf.toString
-      }
+  private val method =
+    P(("(" ~/ (quotedName | charsExcept("`)")).rep(min = 0) ~ ")").! ~ ".")
 
-      def parseGlobal(curr: Symbol): Symbol = {
-        if (currChar == EOF) {
-          curr
-        } else if (currChar == ';') {
-          curr
-        } else if (currChar == '[') {
-          readChar()
-          val name = parseName()
-          if (currChar != ']') fail()
-          else readChar()
-          parseGlobal(Symbol.Global(curr, Signature.TypeParameter(name)))
-        } else if (currChar == '(') {
-          readChar()
-          val name = parseName()
-          if (currChar != ')') fail()
-          else readChar()
-          parseGlobal(Symbol.Global(curr, Signature.TermParameter(name)))
-        } else {
-          val name = parseName()
-          if (currChar == '#') {
-            readChar()
-            parseGlobal(Symbol.Global(curr, Signature.Type(name)))
-          } else if (currChar == '.') {
-            readChar()
-            parseGlobal(Symbol.Global(curr, Signature.Term(name)))
-          } else if (currChar == '(') {
-            val start = i - 1
-            while (readChar() != ')') {
-              if (currChar == '`') {
-                while (readChar() != '`') {}
-              }
-            }
-            readChar()
-            if (currChar != '.') fail()
-            else readChar()
-            val disambiguator = s.substring(start, i - 2)
-            parseGlobal(Symbol.Global(curr, Signature.Method(name, disambiguator)))
-          } else if (currChar == '=') {
-            readChar()
-            if (currChar != '>') fail()
-            else readChar()
-            parseGlobal(Symbol.Global(curr, Signature.Self(name)))
-          } else {
-            fail()
-          }
-        }
-      }
-      def parseLocal(): Symbol = {
-        val name = parseName()
-        if (name.startsWith("local")) Symbol.Local(name)
-        else fail()
-      }
-
-      def parseMulti(symbols: List[Symbol]): Symbol = {
-        if (currChar == EOF) {
-          symbols match {
-            case Nil => Symbol.None
-            case List(symbol) => symbol
-            case symbols => Symbol.Multi(symbols.sortBy(_.syntax))
-          }
-        } else {
-          val symbol = {
-            if (currChar == '_') parseGlobal(Symbol.None)
-            else parseLocal()
-          }
-          if (currChar == ';') {
-            readChar()
-            if (currChar == EOF) fail()
-          }
-          parseMulti(symbols :+ symbol)
-        }
-      }
-
-      def entryPoint(): Symbol = {
-        readChar()
-        parseMulti(Nil)
-      }
-    }
-    naiveParser.entryPoint()
+  private val signature = P {
+    ("[" ~/ name ~/ "]").map(Signature.TypeParameter) |
+    ("(" ~/ name ~/ ")").map(Signature.TermParameter) |
+    (name ~/ (
+      "#" ~/ PassWith(Signature.Type) |
+      "." ~/ PassWith(Signature.Term) |
+      method.map(sig => Signature.Method(_: String, sig)) |
+      ("=>" ~/ PassWith(Signature.Self)))
+    ).map { case (n, f) => f(n) }
   }
-  def unapply(sym: String): Option[Symbol] = scala.util.Try(apply(sym)).toOption
+
+  private val global = P {
+    signature.rep(min = 0).map {
+      _.foldLeft(Symbol.None: Symbol)(Symbol.Global)
+    }
+  }
+
+  private val local: Parser[Symbol] = P {
+    name.filter(_.startsWith("local")).map(Symbol.Local)
+  }
+
+  private val multi = P {
+    ((&("_") ~/ global) | local).rep(min = 0, sep = ";").map {
+      case Seq() => Symbol.None
+      case Seq(symbol) => symbol
+      case syms => Symbol.Multi(syms.sortBy(_.syntax).toList)
+    } ~ End
+  }
+
+  def apply(s: String): Symbol = multi.parse(s).get.value
+
+  def unapply(sym: String): Option[Symbol] = multi.unapply(sym)
 }
 
 sealed trait Signature {
