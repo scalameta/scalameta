@@ -2,6 +2,9 @@ package scala.meta.tests.metacp
 
 import java.io.File
 import java.nio.file.Files
+
+import org.langmeta.io.Classpath
+
 import scala.meta.internal.metacp.Main
 import scala.meta.internal.metacp.Settings
 import scala.meta.tests.cli.BaseCliSuite
@@ -37,19 +40,16 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
   val kafka = Library("org.apache.kafka", "kafka_2.12", "1.0.0")
   val flink = Library("org.apache.flink", "flink-parent", "1.4.1")
   val grpc = Library("io.grpc", "grpc-all", "1.10.0")
+
   def bootClasspath: String =
-    org.langmeta.io
-      .Classpath(
-        sys.props
-          .collectFirst { case (k, v) if k.endsWith(".boot.class.path") => v }
-          .getOrElse("")
-      )
-      .shallow
+    Classpath(
+      sys.props
+        .collectFirst { case (k, v) if k.endsWith(".boot.class.path") => v }
+        .getOrElse("")).shallow
       .filter(p => Files.isRegularFile(p.toNIO))
       .mkString(File.pathSeparator)
 
   val jdk = Library("JDK", () => bootClasspath)
-  println(jdk)
 
   val allLibraries = List[Library](
     scalameta,

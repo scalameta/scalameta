@@ -25,13 +25,13 @@ object Javacp {
       file: Path,
       isVisited: mutable.Set[Path]
   ): Seq[s.SymbolInformation] = {
-    sinfos(root, file, 0, Scope.empty, isVisited)
+    sinfosFromOuterClass(root, file, 0, Scope.empty, isVisited)
   }
 
-  def sinfos(
+  def sinfosFromOuterClass(
       root: Path,
       file: Path,
-      access: Int,
+      outerClassAccess: Int,
       scope: Scope,
       isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
     if (isVisited(file)) Nil
@@ -39,129 +39,24 @@ object Javacp {
       isVisited += file
       val bytes = Files.readAllBytes(file)
       val node = parseClassNode(bytes)
-      if (isAnonymousClass(node)) Nil
-      else {
-        sinfos(node, access, scope, root, isVisited)
+      if (isAnonymousClass(node)) {
+        // Skip anonymous classes like we do for Scala symbols.
+        Nil
+      } else {
+        sinfosClassNode(node, outerClassAccess, scope, root, isVisited)
       }
     }
   }
 
-  // The logic behind this method is an implementation of the answer in this SO question:
-  // https://stackoverflow.com/questions/42676404/how-do-i-know-if-i-am-visiting-an-anonymous-class-in-asm
-  def isAnonymousClass(node: ClassNode): Boolean = {
-    node.innerClasses.asScala.exists { ic: InnerClassNode =>
-      ic.name == node.name &&
-      ic.innerName == null
-    }
-  }
-
-  val javaLanguage = Some(s.Language("Java"))
-
-  def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type =
-    sig match {
-      case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
-        require(identifier != null, sig.toString)
-        val prefix = styperef(ssym(identifier), targs.toType(scope))
-        suffix.foldLeft(prefix) {
-          case (accum, s: ClassTypeSignatureSuffix) =>
-            styperef(
-              prefix = Some(accum),
-              symbol = ssym(s.simpleClassTypeSignature.identifier),
-              args = s.simpleClassTypeSignature.typeArguments.toType(scope)
-            )
-        }
-      case TypeVariableSignature(name) =>
-        styperef(scope.resolve(name))
-      case t: BaseType =>
-        styperef("_root_.scala." + t.name + "#")
-      case ArrayTypeSignature(tpe) =>
-        sarray(tpe.toType(scope))
-    }
-
-  case class TypeParameterInfo(value: TypeParameter, symbol: String)
-  def addTypeParameters(
-      typeParameters: TypeParameters,
-      ownerSymbol: String,
-      scope: Scope): (Scope, List[s.SymbolInformation]) = {
-    var nextScope = scope
-    val infos = typeParameters.all.map { typeParameter: TypeParameter =>
-      val symbol = ownerSymbol + "[" + typeParameter.identifier + "]"
-      nextScope = nextScope.enter(typeParameter.identifier, symbol)
-      TypeParameterInfo(typeParameter, symbol)
-    }
-    nextScope ->
-      infos.map(info => addTypeParameter(info, ownerSymbol, nextScope))
-  }
-  def addTypeParameter(
-      typeParameter: TypeParameterInfo,
-      ownerSymbol: String,
-      scope: Scope): s.SymbolInformation = {
-    val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_, scope))
-    val upperBounds = typeParameters match {
-      case upperBound :: Nil =>
-        upperBound
-      case _ =>
-        s.Type(
-          s.Type.Tag.STRUCTURAL_TYPE,
-          structuralType = Some(s.StructuralType(parents = typeParameters))
-        )
-    }
-    val tpe = s.Type(
-      s.Type.Tag.TYPE_TYPE,
-      typeType = Some(s.TypeType(upperBound = Some(upperBounds)))
-    )
-
-    s.SymbolInformation(
-      symbol = typeParameter.symbol,
-      owner = ownerSymbol,
-      language = javaLanguage,
-      kind = k.TYPE_PARAMETER,
-      name = typeParameter.value.identifier,
-      tpe = Some(tpe)
-    )
-  }
-
-  def methodDescriptor(signature: MethodSignature): String =
-    signature.params.iterator
-      .map {
-        case t: BaseType => t.name
-        case t: ClassTypeSignature => sname(t.simpleClassTypeSignature.identifier)
-        case t: TypeVariableSignature => t.identifier
-        case _: ArrayTypeSignature => "Array"
-      }
-      .mkString(",")
-
-  case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
-
-  def asmNameToPath(asmName: String, root: Path): Path = {
-    (asmName + ".class").split("/").foldLeft(root) {
-      case (accum, filename) => accum.resolve(filename)
-    }
-  }
-
-  case class Scope(bindings: Map[String, String]) {
-    def resolve(name: String): String = {
-      bindings.getOrElse(name, {
-        // TODO: fix https://github.com/scalameta/scalameta/issues/1365.
-        // There are still a handful of cases in spark-sql where resolution fails for some reason.
-        name
-      })
-    }
-    def enter(name: String, symbol: String): Scope =
-      Scope(bindings.updated(name, symbol))
-  }
-  object Scope {
-    val empty = Scope(Map.empty)
-  }
-
-  def sinfos(
+  def sinfosClassNode(
       node: ClassNode,
-      access: Int,
+      outerClassAccess: Int,
       scope: Scope,
       root: Path,
       isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
+    val decls = ListBuffer.empty[String]
 
     def addInfo(
         symbol: String,
@@ -182,11 +77,10 @@ object Javacp {
         owner = owner
       )
     }
-    val decls = ListBuffer.empty[String]
 
     val classSymbol = ssym(node.name)
     val className = sname(node.name)
-    val classAccess = node.access | access
+    val classAccess = node.access | outerClassAccess
 
     val isTopLevelClass = !node.name.contains("$")
     val classOwner: String = if (isTopLevelClass) {
@@ -342,7 +236,10 @@ object Javacp {
     node.innerClasses.asScala.foreach { ic: InnerClassNode =>
       val innerClassPath = asmNameToPath(ic.name, root)
       if (Files.isRegularFile(innerClassPath)) {
-        buf ++= sinfos(root, innerClassPath, ic.access, classScope, isVisited)
+        buf ++= sinfosFromOuterClass(root, innerClassPath, ic.access, classScope, isVisited)
+      } else {
+        // TODO: fix https://github.com/scalameta/scalameta/issues/1366
+        ()
       }
     }
 
@@ -366,6 +263,104 @@ object Javacp {
       classOwner
     )
     buf.result()
+  }
+
+  // The logic behind this method is an implementation of the answer in this SO question:
+  // https://stackoverflow.com/questions/42676404/how-do-i-know-if-i-am-visiting-an-anonymous-class-in-asm
+  def isAnonymousClass(node: ClassNode): Boolean = {
+    node.innerClasses.asScala.exists { ic: InnerClassNode =>
+      ic.name == node.name &&
+      ic.innerName == null
+    }
+  }
+
+  val javaLanguage = Some(s.Language("Java"))
+
+  def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type =
+    sig match {
+      case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
+        require(identifier != null, sig.toString)
+        val prefix = styperef(ssym(identifier), targs.toType(scope))
+        suffix.foldLeft(prefix) {
+          case (accum, s: ClassTypeSignatureSuffix) =>
+            styperef(
+              prefix = Some(accum),
+              symbol = ssym(s.simpleClassTypeSignature.identifier),
+              args = s.simpleClassTypeSignature.typeArguments.toType(scope)
+            )
+        }
+      case TypeVariableSignature(name) =>
+        styperef(scope.resolve(name))
+      case t: BaseType =>
+        styperef("_root_.scala." + t.name + "#")
+      case ArrayTypeSignature(tpe) =>
+        sarray(tpe.toType(scope))
+    }
+
+  case class TypeParameterInfo(value: TypeParameter, symbol: String)
+  def addTypeParameters(
+      typeParameters: TypeParameters,
+      ownerSymbol: String,
+      scope: Scope): (Scope, List[s.SymbolInformation]) = {
+    var nextScope = scope
+    // Enter all type variables before computing types for right hand side type parameter bounds.
+    // The bounds may forward reference type variables like here below:
+    // public abstract class Recursive<
+    //           A extends Recursive <A, B>,
+    //           B extends Recursive.Inner <A , B>>
+    val infos = typeParameters.all.map { typeParameter: TypeParameter =>
+      val symbol = ownerSymbol + "[" + typeParameter.identifier + "]"
+      nextScope = nextScope.enter(typeParameter.identifier, symbol)
+      TypeParameterInfo(typeParameter, symbol)
+    }
+    nextScope ->
+      infos.map(info => addTypeParameter(info, ownerSymbol, nextScope))
+  }
+  def addTypeParameter(
+      typeParameter: TypeParameterInfo,
+      ownerSymbol: String,
+      scope: Scope): s.SymbolInformation = {
+    val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_, scope))
+    val upperBounds = typeParameters match {
+      case upperBound :: Nil =>
+        upperBound
+      case _ =>
+        s.Type(
+          s.Type.Tag.STRUCTURAL_TYPE,
+          structuralType = Some(s.StructuralType(parents = typeParameters))
+        )
+    }
+    val tpe = s.Type(
+      s.Type.Tag.TYPE_TYPE,
+      typeType = Some(s.TypeType(upperBound = Some(upperBounds)))
+    )
+
+    s.SymbolInformation(
+      symbol = typeParameter.symbol,
+      owner = ownerSymbol,
+      language = javaLanguage,
+      kind = k.TYPE_PARAMETER,
+      name = typeParameter.value.identifier,
+      tpe = Some(tpe)
+    )
+  }
+
+  def methodDescriptor(signature: MethodSignature): String =
+    signature.params.iterator
+      .map {
+        case t: BaseType => t.name
+        case t: ClassTypeSignature => sname(t.simpleClassTypeSignature.identifier)
+        case t: TypeVariableSignature => t.identifier
+        case _: ArrayTypeSignature => "Array"
+      }
+      .mkString(",")
+
+  case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
+
+  def asmNameToPath(asmName: String, root: Path): Path = {
+    (asmName + ".class").split("/").foldLeft(root) {
+      case (accum, filename) => accum.resolve(filename)
+    }
   }
 
   def parseClassNode(bytes: Array[Byte]): ClassNode = {
