@@ -199,8 +199,10 @@ object Javacp {
 
         val parameterSymbols = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
-            // TODO(olafur) use node.parameters for JDK 8 with -parameters
-            val paramName = "arg" + i
+            val paramName = {
+              if (method.node.parameters == null) "arg" + i
+              else method.node.parameters.get(i).name
+            }
             val paramSymbol = methodSymbol + "(" + paramName + ")"
             addInfo(
               paramSymbol,

@@ -402,7 +402,8 @@ lazy val semanticdbIntegration = project
         s"-P:semanticdb:denotations:all",
         s"-Xplugin-require:semanticdb"
       )
-    }
+    },
+    javacOptions += "-parameters"
   )
 
 lazy val testkit = project
