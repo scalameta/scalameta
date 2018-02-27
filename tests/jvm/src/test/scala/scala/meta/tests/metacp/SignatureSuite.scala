@@ -9,6 +9,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.meta.internal.javacp._
 import scala.meta.internal.javacp.asm._
+import scala.meta.internal.metacp._
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.MethodNode
@@ -35,8 +36,7 @@ class SignatureSuite extends BaseMetacpSuite {
         new java.nio.file.SimpleFileVisitor[Path] {
           override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
             if (PathIO.extension(file) == "class") {
-              val bytes = Files.readAllBytes(file)
-              val node = Javacp.parseClassNode(bytes)
+              val node = file.toClassNode
               val tests = checkAllSignatures(node)
               tests.foreach {
                 case (signature, unsafe) =>

@@ -7,9 +7,9 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.javacp.asm._
+import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.{semanticdb3 => s}
-import scala.tools.asm.ClassReader
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.InnerClassNode
@@ -17,41 +17,20 @@ import scala.tools.asm.tree.MethodNode
 import scala.tools.asm.{Opcodes => o}
 
 object Javacp {
-
-  def sinfos(
-      root: Path,
-      file: Path,
-      isVisited: mutable.Set[Path]
-  ): Seq[s.SymbolInformation] = {
-    sinfosFromOuterClass(root, file, 0, Scope.empty, isVisited)
-  }
-
-  private def sinfosFromOuterClass(
-      root: Path,
-      file: Path,
-      outerClassAccess: Int,
-      scope: Scope,
-      isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
-    if (isVisited(file)) Nil
-    else {
-      isVisited += file
-      val bytes = Files.readAllBytes(file)
-      val node = parseClassNode(bytes)
-      if (isAnonymousClass(node)) {
-        // Skip anonymous classes like we do for Scala symbols.
-        Nil
-      } else {
-        sinfosClassNode(node, outerClassAccess, scope, root, isVisited)
-      }
+  def parse(classfile: ToplevelClassfile): Option[ToplevelInfos] = {
+    sinfos(classfile, classfile.node, 0, Scope.empty) match {
+      case others :+ toplevel =>
+        Some(ToplevelInfos(classfile, List(toplevel), others.toList))
+      case _ =>
+        None
     }
   }
 
-  private def sinfosClassNode(
+  private def sinfos(
+      toplevel: ToplevelClassfile,
       node: ClassNode,
-      outerClassAccess: Int,
-      scope: Scope,
-      root: Path,
-      isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
+      access: Int,
+      scope: Scope): Seq[s.SymbolInformation] = {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
     val decls = ListBuffer.empty[String]
@@ -59,9 +38,9 @@ object Javacp {
     def addInfo(
         symbol: String,
         kind: s.SymbolInformation.Kind,
-        access: Int,
         name: String,
         tpe: Option[s.Type],
+        access: Int,
         owner: String): Unit = {
       buf += s.SymbolInformation(
         symbol = symbol,
@@ -76,9 +55,10 @@ object Javacp {
       )
     }
 
+    if (isAnonymousClass(node)) return Nil
     val classSymbol = ssym(node.name)
     val className = sname(node.name)
-    val classAccess = node.access | outerClassAccess
+    val classAccess = node.access | access
     val hasOuterClassReference = node.fields.asScala.exists(isOuterClassReference)
 
     val isTopLevelClass = !node.name.contains("$")
@@ -90,9 +70,9 @@ object Javacp {
           addInfo(
             pkgSymbol,
             k.PACKAGE,
-            o.ACC_PUBLIC,
             pkgName,
             None,
+            o.ACC_PUBLIC,
             owner
           )
           pkgSymbol
@@ -147,9 +127,9 @@ object Javacp {
         addInfo(
           fieldSymbol,
           fieldKind,
-          field.access,
           field.name,
           Some(fieldSignature.toType(classScope)),
+          field.access,
           classSymbol
         )
 
@@ -205,9 +185,9 @@ object Javacp {
             addInfo(
               paramSymbol,
               k.PARAMETER,
-              o.ACC_PUBLIC,
               paramName,
               Some(param.toType(methodScope)),
+              o.ACC_PUBLIC,
               methodSymbol
             )
             paramSymbol
@@ -227,28 +207,23 @@ object Javacp {
         addInfo(
           methodSymbol,
           k.DEF,
-          method.node.access,
           method.node.name,
           Some(methodType),
+          method.node.access,
           classSymbol
         )
 
         decls += methodSymbol
     }
 
-    node.innerClasses.asScala.foreach { ic: InnerClassNode =>
-      val innerClassPath = asmNameToPath(ic.name, root)
-
-      // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
-      val isDirectInnerClass = ic.outerName == node.name
-      if (isDirectInnerClass) {
-        val innerClassSymbol = ssym(ic.name)
-        decls += innerClassSymbol
-      }
-
-      if (Files.isRegularFile(innerClassPath)) {
-        buf ++= sinfosFromOuterClass(root, innerClassPath, ic.access, classScope, isVisited)
-      }
+    // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
+    val directInnerClasses = node.innerClasses.asScala.filter(_.outerName == node.name)
+    directInnerClasses.foreach { ic =>
+      val innerClassSymbol = ssym(ic.name)
+      decls += innerClassSymbol
+      val innerPath = asmNameToPath(ic.name, toplevel.base)
+      val innerClassNode = innerPath.toClassNode
+      buf ++= sinfos(toplevel, innerClassNode, ic.access, classScope)
     }
 
     val classTpe = s.Type(
@@ -265,9 +240,9 @@ object Javacp {
     addInfo(
       classSymbol,
       classKind,
-      classAccess,
       className,
       Some(classTpe),
+      classAccess,
       classOwner
     )
     buf.result()
@@ -371,21 +346,10 @@ object Javacp {
 
   private case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
 
-  private def asmNameToPath(asmName: String, root: Path): Path = {
-    (asmName + ".class").split("/").foldLeft(root) {
+  private def asmNameToPath(asmName: String, base: Path): Path = {
+    (asmName + ".class").split("/").foldLeft(base) {
       case (accum, filename) => accum.resolve(filename)
     }
-  }
-
-  def parseClassNode(bytes: Array[Byte]): ClassNode = {
-    val node = new ClassNode()
-    new ClassReader(bytes).accept(
-      node,
-      ClassReader.SKIP_DEBUG |
-        ClassReader.SKIP_FRAMES |
-        ClassReader.SKIP_CODE
-    )
-    node
   }
 
   private def sname(asmName: String): String = {

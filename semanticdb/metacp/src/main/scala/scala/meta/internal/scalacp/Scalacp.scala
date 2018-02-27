@@ -1,6 +1,8 @@
 package scala.meta.internal.scalacp
 
+import java.nio.file._
 import scala.collection.mutable
+import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
@@ -8,36 +10,51 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.NameTransformer
+import scala.tools.scalap._
 import scala.tools.scalap.scalax.rules.ScalaSigParserError
 import scala.tools.scalap.scalax.rules.scalasig._
 
 object Scalacp {
-  def sinfos(scalaSig: ScalaSig): List[s.SymbolInformation] = {
-    scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
+  def parse(classfile: ToplevelClassfile): Option[ToplevelInfos] = {
+    // TODO: Parse scalaSig directly from classfile.node
+    // to avoid reading the bytes and parsing the classfile structure twice.
+    val bytes = Files.readAllBytes(classfile.path)
+    val scalapClassfile = ClassFileParser.parse(ByteCode(bytes))
+    ScalaSigParser.parse(scalapClassfile).map { scalaSig =>
+      val toplevels = scalaSig.topLevelClasses ++ scalaSig.topLevelObjects
+      val others = {
+        scalaSig.symbols.toList.flatMap {
+          case sym: SymbolInfoSymbol if !toplevels.contains(sym) => Some(sym)
+          case _ => None
+        }
+      }
+      val stoplevels = toplevels.flatMap(sinfo)
+      val sothers = toplevels.flatMap(spackages).distinct ++ others.flatMap(sinfo)
+      ToplevelInfos(classfile, stoplevels, sothers)
+    }
   }
 
-  private def scalaSigPackages(scalaSig: ScalaSig): List[s.SymbolInformation] = {
-    val topLevelSymbols = scalaSig.topLevelClasses ++ scalaSig.topLevelObjects
-    val directPackagePaths = topLevelSymbols.map { topLevelSymbol =>
-      val topLevelPath = topLevelSymbol.symbolInfo.owner.path.replace("<empty>", "_empty_")
+  private def spackages(sym: SymbolInfoSymbol): List[s.SymbolInformation] = {
+    val directPackagePath = {
+      val topLevelPath = sym.symbolInfo.owner.path.replace("<empty>", "_empty_")
       if (topLevelPath.startsWith("_empty_")) topLevelPath
       else "_root_." + topLevelPath
     }
-    val transitivePackagePaths = directPackagePaths.flatMap { directPackagePath =>
-      val directPackageSteps = directPackagePath.split("\\.")
+    val transitivePackagePaths = {
+      val directPackageSteps = directPackagePath.split("\\.").toList
       directPackageSteps
         .scanLeft("") { (path, step) =>
           if (path.nonEmpty) path + "." + step
           else step
         }
         .tail
-    }.distinct
+    }
     transitivePackagePaths.map { transitivePackagePath =>
       val (owner, name) = {
         transitivePackagePath.split("\\.").toList match {
           case List(name) if name.nonEmpty => ("", name)
           case ownerSteps :+ name if name.nonEmpty => (ownerSteps.mkString(".") + ".", name)
-          case _ => sys.error(s"unsupported top-level symbols: $topLevelSymbols")
+          case _ => sys.error(s"unsupported top-level symbol: $sym")
         }
       }
       s.SymbolInformation(
@@ -46,13 +63,6 @@ object Scalacp {
         kind = k.PACKAGE,
         name = name,
         owner = owner)
-    }
-  }
-
-  private def scalaSigSymbols(scalaSig: ScalaSig): List[s.SymbolInformation] = {
-    scalaSig.symbols.toList.flatMap {
-      case sym: SymbolInfoSymbol => sinfo(sym)
-      case _ => None
     }
   }
 
@@ -74,7 +84,7 @@ object Scalacp {
       ))
   }
 
-  def ssymbol(sym: Symbol): String = {
+  private def ssymbol(sym: Symbol): String = {
     val prefix = {
       sym match {
         case sym: SymbolInfoSymbol =>
@@ -376,7 +386,7 @@ object Scalacp {
     }
   }
 
-  def sowner(sym: SymbolInfoSymbol): String = {
+  private def sowner(sym: SymbolInfoSymbol): String = {
     if (sym.symbolInfo.owner == NoSymbol) return ""
     ssymbol(sym.symbolInfo.owner)
   }
