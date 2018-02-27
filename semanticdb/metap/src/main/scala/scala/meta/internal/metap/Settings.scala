@@ -2,6 +2,7 @@ package scala.meta.internal.metap
 
 final case class Settings(
     paths: List[String] = Nil,
+    pretty: Boolean = true,
     proto: Boolean = false
 )
 
@@ -11,8 +12,10 @@ object Settings {
       args match {
         case "--" +: rest =>
           loop(settings, false, args)
+        case "-pretty" +: rest if allowOptions =>
+          loop(settings.copy(pretty = true, proto = false), true, rest)
         case "-proto" +: rest if allowOptions =>
-          loop(settings.copy(proto = true), true, rest)
+          loop(settings.copy(pretty = false, proto = true), true, rest)
         case flag +: rest if allowOptions && flag.startsWith("-") =>
           println(s"unknown flag $flag")
           None
