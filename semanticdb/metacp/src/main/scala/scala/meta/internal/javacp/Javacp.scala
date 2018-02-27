@@ -26,7 +26,7 @@ object Javacp {
     sinfosFromOuterClass(root, file, 0, Scope.empty, isVisited)
   }
 
-  def sinfosFromOuterClass(
+  private def sinfosFromOuterClass(
       root: Path,
       file: Path,
       outerClassAccess: Int,
@@ -46,7 +46,7 @@ object Javacp {
     }
   }
 
-  def sinfosClassNode(
+  private def sinfosClassNode(
       node: ClassNode,
       outerClassAccess: Int,
       scope: Scope,
@@ -274,23 +274,23 @@ object Javacp {
   }
 
   // Returns true if this field holds a reference to an outer enclosing class.
-  def isOuterClassReference(field: FieldNode): Boolean =
+  private def isOuterClassReference(field: FieldNode): Boolean =
     field.name.startsWith("this$")
 
   // The logic behind this method is an implementation of the answer in this SO question:
   // https://stackoverflow.com/questions/42676404/how-do-i-know-if-i-am-visiting-an-anonymous-class-in-asm
   // ClassNode.innerClasses includes all inner classes of a compilation unit, both nested inner classes as well
   // as enclosing outer classes. Anonymous classes are distinguished by InnerClassNode.innerName == null.
-  def isAnonymousClass(node: ClassNode): Boolean = {
+  private def isAnonymousClass(node: ClassNode): Boolean = {
     node.innerClasses.asScala.exists { ic: InnerClassNode =>
       ic.name == node.name &&
       ic.innerName == null
     }
   }
 
-  val javaLanguage = Some(s.Language("Java"))
+  private val javaLanguage = Some(s.Language("Java"))
 
-  def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type =
+  private def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type =
     sig match {
       case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
         require(identifier != null, sig.toString)
@@ -311,8 +311,8 @@ object Javacp {
         sarray(tpe.toType(scope))
     }
 
-  case class TypeParameterInfo(value: TypeParameter, symbol: String)
-  def addTypeParameters(
+  private case class TypeParameterInfo(value: TypeParameter, symbol: String)
+  private def addTypeParameters(
       typeParameters: TypeParameters,
       ownerSymbol: String,
       scope: Scope): (Scope, List[s.SymbolInformation]) = {
@@ -330,7 +330,7 @@ object Javacp {
     nextScope ->
       infos.map(info => addTypeParameter(info, ownerSymbol, nextScope))
   }
-  def addTypeParameter(
+  private def addTypeParameter(
       typeParameter: TypeParameterInfo,
       ownerSymbol: String,
       scope: Scope): s.SymbolInformation = {
@@ -359,7 +359,7 @@ object Javacp {
     )
   }
 
-  def methodDescriptor(signature: MethodSignature): String =
+  private def methodDescriptor(signature: MethodSignature): String =
     signature.params.iterator
       .map {
         case t: BaseType => t.name
@@ -369,9 +369,9 @@ object Javacp {
       }
       .mkString(",")
 
-  case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
+  private case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
 
-  def asmNameToPath(asmName: String, root: Path): Path = {
+  private def asmNameToPath(asmName: String, root: Path): Path = {
     (asmName + ".class").split("/").foldLeft(root) {
       case (accum, filename) => accum.resolve(filename)
     }
@@ -388,7 +388,7 @@ object Javacp {
     node
   }
 
-  def sname(asmName: String): String = {
+  private def sname(asmName: String): String = {
     var i = asmName.length - 1
     while (i >= 0) {
       asmName.charAt(i) match {
@@ -399,10 +399,10 @@ object Javacp {
     throw new IllegalArgumentException(s"Missing $$ or / from symbol '$asmName'")
   }
 
-  def ssym(asmName: String): String =
+  private def ssym(asmName: String): String =
     "_root_." + asmName.replace('$', '#').replace('/', '.') + "#"
 
-  def saccessibility(access: Int, owner: String): Option[s.Accessibility] = {
+  private def saccessibility(access: Int, owner: String): Option[s.Accessibility] = {
     def sacc(tag: s.Accessibility.Tag): Option[s.Accessibility] = Some(s.Accessibility(tag))
     val a = s.Accessibility.Tag
     if (access.hasFlag(o.ACC_PUBLIC)) sacc(a.PUBLIC)
@@ -415,7 +415,7 @@ object Javacp {
     }
   }
 
-  def sannotations(access: Int): Seq[s.Annotation] = {
+  private def sannotations(access: Int): Seq[s.Annotation] = {
     val buf = List.newBuilder[s.Annotation]
 
     def push(symbol: String): Unit =
@@ -427,7 +427,7 @@ object Javacp {
     buf.result()
   }
 
-  def sproperties(access: Int): Int = {
+  private def sproperties(access: Int): Int = {
     val p = s.SymbolInformation.Property
     var bits = 0
     def sflip(sbit: Int) = bits ^= sbit
@@ -437,10 +437,10 @@ object Javacp {
     bits
   }
 
-  def sarray(tpe: s.Type): s.Type =
+  private def sarray(tpe: s.Type): s.Type =
     styperef("_root_.scala.Array#", tpe :: Nil)
 
-  def styperef(symbol: String, args: List[s.Type] = Nil, prefix: Option[s.Type] = None): s.Type = {
+  private def styperef(symbol: String, args: List[s.Type] = Nil, prefix: Option[s.Type] = None): s.Type = {
     s.Type(
       tag = s.Type.Tag.TYPE_REF,
       typeRef = Some(s.TypeRef(prefix, symbol, args))
