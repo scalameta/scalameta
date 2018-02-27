@@ -1,14 +1,12 @@
-package scala.meta.internal.metacp
+package scala.meta.internal.javacp
 
 import java.nio.file.Files
 import java.nio.file.Path
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
-import scala.meta.internal.metacp.asm.JavaTypeSignature._
-import scala.meta.internal.metacp.asm._
+import scala.meta.internal.javacp.asm._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.ClassReader

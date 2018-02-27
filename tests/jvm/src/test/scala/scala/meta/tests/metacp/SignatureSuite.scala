@@ -7,13 +7,8 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
-import scala.meta.internal.metacp.Javacp
-import scala.meta.internal.metacp.asm.ClassSignatureVisitor
-import scala.meta.internal.metacp.asm.FieldSignatureVisitor
-import scala.meta.internal.metacp.asm.JavaTypeSignature
-import scala.meta.internal.metacp.asm.MethodSignatureVisitor
-import scala.meta.internal.metacp.asm.JavaTypeSignature.Printable
-import scala.meta.internal.metacp.asm.TypedSignatureVisitor
+import scala.meta.internal.javacp._
+import scala.meta.internal.javacp.asm._
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.MethodNode

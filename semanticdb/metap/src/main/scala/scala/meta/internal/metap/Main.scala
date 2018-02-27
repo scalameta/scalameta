@@ -41,7 +41,7 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
     if (failed) 1 else 0
   }
 
-  def pprint(doc: TextDocument): Unit = {
+  private def pprint(doc: TextDocument): Unit = {
     out.println(doc.uri)
     out.println(s"-" * doc.uri.length)
     out.println("")

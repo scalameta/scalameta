@@ -6,6 +6,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util
 import java.util.Comparator
 import scala.collection.mutable
+import scala.meta.internal.javacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}

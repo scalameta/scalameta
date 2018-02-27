@@ -1,4 +1,4 @@
-package scala.meta.internal.metacp
+package scala.meta.internal.javacp
 
 /**
   * Minimal utility to resolve generic signature type variables to fully qualified symbols.
