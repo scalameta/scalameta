@@ -12,7 +12,11 @@ import scala.tools.scalap.scalax.rules.ScalaSigParserError
 import scala.tools.scalap.scalax.rules.scalasig._
 
 object Scalacp {
-  def scalaSigPackages(scalaSig: ScalaSig): List[s.SymbolInformation] = {
+  def sinfos(scalaSig: ScalaSig): List[s.SymbolInformation] = {
+    scalaSigPackages(scalaSig) ++ scalaSigSymbols(scalaSig)
+  }
+
+  private def scalaSigPackages(scalaSig: ScalaSig): List[s.SymbolInformation] = {
     val topLevelSymbols = scalaSig.topLevelClasses ++ scalaSig.topLevelObjects
     val directPackagePaths = topLevelSymbols.map { topLevelSymbol =>
       val topLevelPath = topLevelSymbol.symbolInfo.owner.path.replace("<empty>", "_empty_")
@@ -45,7 +49,7 @@ object Scalacp {
     }
   }
 
-  def scalaSigSymbols(scalaSig: ScalaSig): List[s.SymbolInformation] = {
+  private def scalaSigSymbols(scalaSig: ScalaSig): List[s.SymbolInformation] = {
     scalaSig.symbols.toList.flatMap {
       case sym: SymbolInfoSymbol => sinfo(sym)
       case _ => None

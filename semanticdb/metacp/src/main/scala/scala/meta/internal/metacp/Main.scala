@@ -81,7 +81,7 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
                     owner = Scalacp.sowner(toplevelSym))
                 }
                 toplevelInfos.foreach(indexToplevel(_, relpath + ".semanticdb"))
-                Scalacp.scalaSigPackages(scalaSig) ++ Scalacp.scalaSigSymbols(scalaSig)
+                Scalacp.sinfos(scalaSig)
               }
             } else {
               val infos = Javacp.sinfos(root.toNIO, file, isVisited)
