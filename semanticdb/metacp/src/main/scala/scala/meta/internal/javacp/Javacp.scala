@@ -1,17 +1,15 @@
-package scala.meta.internal.metacp
+package scala.meta.internal.javacp
 
 import java.nio.file.Files
 import java.nio.file.Path
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
-import scala.meta.internal.metacp.asm.JavaTypeSignature._
-import scala.meta.internal.metacp.asm._
+import scala.meta.internal.javacp.asm._
+import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.{semanticdb3 => s}
-import scala.tools.asm.ClassReader
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.InnerClassNode
@@ -19,41 +17,20 @@ import scala.tools.asm.tree.MethodNode
 import scala.tools.asm.{Opcodes => o}
 
 object Javacp {
-
-  def sinfos(
-      root: Path,
-      file: Path,
-      isVisited: mutable.Set[Path]
-  ): Seq[s.SymbolInformation] = {
-    sinfosFromOuterClass(root, file, 0, Scope.empty, isVisited)
-  }
-
-  def sinfosFromOuterClass(
-      root: Path,
-      file: Path,
-      outerClassAccess: Int,
-      scope: Scope,
-      isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
-    if (isVisited(file)) Nil
-    else {
-      isVisited += file
-      val bytes = Files.readAllBytes(file)
-      val node = parseClassNode(bytes)
-      if (isAnonymousClass(node)) {
-        // Skip anonymous classes like we do for Scala symbols.
-        Nil
-      } else {
-        sinfosClassNode(node, outerClassAccess, scope, root, isVisited)
-      }
+  def parse(classfile: ToplevelClassfile): Option[ToplevelInfos] = {
+    sinfos(classfile, classfile.node, 0, Scope.empty) match {
+      case others :+ toplevel =>
+        Some(ToplevelInfos(classfile, List(toplevel), others.toList))
+      case _ =>
+        None
     }
   }
 
-  def sinfosClassNode(
+  private def sinfos(
+      toplevel: ToplevelClassfile,
       node: ClassNode,
-      outerClassAccess: Int,
-      scope: Scope,
-      root: Path,
-      isVisited: mutable.Set[Path]): Seq[s.SymbolInformation] = {
+      access: Int,
+      scope: Scope): Seq[s.SymbolInformation] = {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
     val decls = ListBuffer.empty[String]
@@ -61,16 +38,16 @@ object Javacp {
     def addInfo(
         symbol: String,
         kind: s.SymbolInformation.Kind,
-        access: Int,
         name: String,
         tpe: Option[s.Type],
+        access: Int,
         owner: String): Unit = {
       buf += s.SymbolInformation(
         symbol = symbol,
         language = javaLanguage,
         kind = kind,
         properties = sproperties(access),
-        name,
+        name = name,
         tpe = tpe,
         annotations = sannotations(access),
         accessibility = saccessibility(access, owner),
@@ -78,9 +55,10 @@ object Javacp {
       )
     }
 
+    if (isAnonymousClass(node)) return Nil
     val classSymbol = ssym(node.name)
     val className = sname(node.name)
-    val classAccess = node.access | outerClassAccess
+    val classAccess = node.access | access
     val hasOuterClassReference = node.fields.asScala.exists(isOuterClassReference)
 
     val isTopLevelClass = !node.name.contains("$")
@@ -92,9 +70,9 @@ object Javacp {
           addInfo(
             pkgSymbol,
             k.PACKAGE,
-            o.ACC_PUBLIC,
             pkgName,
             None,
+            o.ACC_PUBLIC,
             owner
           )
           pkgSymbol
@@ -117,7 +95,7 @@ object Javacp {
       } else if (node.signature == null) {
         ClassSignature.simple(node.superName, node.interfaces.asScala.toList)
       } else {
-        JavaTypeSignature.parse[ClassSignature](node.signature, new ClassSignatureVisitor)
+        JavaTypeSignature.parse(node.signature, new ClassSignatureVisitor)
       }
 
     val (classScope: Scope, classTypeParameters) =
@@ -149,9 +127,9 @@ object Javacp {
         addInfo(
           fieldSymbol,
           fieldKind,
-          field.access,
           field.name,
           Some(fieldSignature.toType(classScope)),
+          field.access,
           classSymbol
         )
 
@@ -161,7 +139,7 @@ object Javacp {
 
     // NOTE: this logic will soon change https://github.com/scalameta/scalameta/issues/1358
     val methodSignatures = node.methods.asScala.map { method: MethodNode =>
-      val signature = JavaTypeSignature.parse[MethodSignature](
+      val signature = JavaTypeSignature.parse(
         if (method.signature == null) method.desc else method.signature,
         new MethodSignatureVisitor
       )
@@ -199,22 +177,24 @@ object Javacp {
 
         val parameterSymbols = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
-            // TODO(olafur) use node.parameters for JDK 8 with -parameters
-            val paramName = "arg" + i
+            val paramName = {
+              if (method.node.parameters == null) "arg" + i
+              else method.node.parameters.get(i).name
+            }
             val paramSymbol = methodSymbol + "(" + paramName + ")"
             addInfo(
               paramSymbol,
               k.PARAMETER,
-              o.ACC_PUBLIC,
               paramName,
               Some(param.toType(methodScope)),
+              o.ACC_PUBLIC,
               methodSymbol
             )
             paramSymbol
         }
 
         val methodType = s.Type(
-          s.Type.Tag.METHOD_TYPE,
+          tag = s.Type.Tag.METHOD_TYPE,
           methodType = Some(
             s.MethodType(
               typeParameters = methodTypeParameters.map(_.symbol),
@@ -227,28 +207,23 @@ object Javacp {
         addInfo(
           methodSymbol,
           k.DEF,
-          method.node.access,
           method.node.name,
           Some(methodType),
+          method.node.access,
           classSymbol
         )
 
         decls += methodSymbol
     }
 
-    node.innerClasses.asScala.foreach { ic: InnerClassNode =>
-      val innerClassPath = asmNameToPath(ic.name, root)
-
-      // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
-      val isDirectInnerClass = ic.outerName == node.name
-      if (isDirectInnerClass) {
-        val innerClassSymbol = ssym(ic.name)
-        decls += innerClassSymbol
-      }
-
-      if (Files.isRegularFile(innerClassPath)) {
-        buf ++= sinfosFromOuterClass(root, innerClassPath, ic.access, classScope, isVisited)
-      }
+    // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
+    val directInnerClasses = node.innerClasses.asScala.filter(_.outerName == node.name)
+    directInnerClasses.foreach { ic =>
+      val innerClassSymbol = ssym(ic.name)
+      decls += innerClassSymbol
+      val innerPath = asmNameToPath(ic.name, toplevel.base)
+      val innerClassNode = innerPath.toClassNode
+      buf ++= sinfos(toplevel, innerClassNode, ic.access, classScope)
     }
 
     val classTpe = s.Type(
@@ -265,32 +240,32 @@ object Javacp {
     addInfo(
       classSymbol,
       classKind,
-      classAccess,
       className,
       Some(classTpe),
+      classAccess,
       classOwner
     )
     buf.result()
   }
 
   // Returns true if this field holds a reference to an outer enclosing class.
-  def isOuterClassReference(field: FieldNode): Boolean =
+  private def isOuterClassReference(field: FieldNode): Boolean =
     field.name.startsWith("this$")
 
   // The logic behind this method is an implementation of the answer in this SO question:
   // https://stackoverflow.com/questions/42676404/how-do-i-know-if-i-am-visiting-an-anonymous-class-in-asm
   // ClassNode.innerClasses includes all inner classes of a compilation unit, both nested inner classes as well
   // as enclosing outer classes. Anonymous classes are distinguished by InnerClassNode.innerName == null.
-  def isAnonymousClass(node: ClassNode): Boolean = {
+  private def isAnonymousClass(node: ClassNode): Boolean = {
     node.innerClasses.asScala.exists { ic: InnerClassNode =>
       ic.name == node.name &&
       ic.innerName == null
     }
   }
 
-  val javaLanguage = Some(s.Language("Java"))
+  private val javaLanguage = Some(s.Language("Java"))
 
-  def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type =
+  private def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type =
     sig match {
       case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
         require(identifier != null, sig.toString)
@@ -311,8 +286,8 @@ object Javacp {
         sarray(tpe.toType(scope))
     }
 
-  case class TypeParameterInfo(value: TypeParameter, symbol: String)
-  def addTypeParameters(
+  private case class TypeParameterInfo(value: TypeParameter, symbol: String)
+  private def addTypeParameters(
       typeParameters: TypeParameters,
       ownerSymbol: String,
       scope: Scope): (Scope, List[s.SymbolInformation]) = {
@@ -330,7 +305,7 @@ object Javacp {
     nextScope ->
       infos.map(info => addTypeParameter(info, ownerSymbol, nextScope))
   }
-  def addTypeParameter(
+  private def addTypeParameter(
       typeParameter: TypeParameterInfo,
       ownerSymbol: String,
       scope: Scope): s.SymbolInformation = {
@@ -340,26 +315,26 @@ object Javacp {
         upperBound
       case _ =>
         s.Type(
-          s.Type.Tag.STRUCTURAL_TYPE,
+          tag = s.Type.Tag.STRUCTURAL_TYPE,
           structuralType = Some(s.StructuralType(parents = typeParameters))
         )
     }
     val tpe = s.Type(
-      s.Type.Tag.TYPE_TYPE,
+      tag = s.Type.Tag.TYPE_TYPE,
       typeType = Some(s.TypeType(upperBound = Some(upperBounds)))
     )
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,
-      owner = ownerSymbol,
       language = javaLanguage,
       kind = k.TYPE_PARAMETER,
       name = typeParameter.value.identifier,
-      tpe = Some(tpe)
+      tpe = Some(tpe),
+      owner = ownerSymbol
     )
   }
 
-  def methodDescriptor(signature: MethodSignature): String =
+  private def methodDescriptor(signature: MethodSignature): String =
     signature.params.iterator
       .map {
         case t: BaseType => t.name
@@ -369,26 +344,15 @@ object Javacp {
       }
       .mkString(",")
 
-  case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
+  private case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
 
-  def asmNameToPath(asmName: String, root: Path): Path = {
-    (asmName + ".class").split("/").foldLeft(root) {
+  private def asmNameToPath(asmName: String, base: Path): Path = {
+    (asmName + ".class").split("/").foldLeft(base) {
       case (accum, filename) => accum.resolve(filename)
     }
   }
 
-  def parseClassNode(bytes: Array[Byte]): ClassNode = {
-    val node = new ClassNode()
-    new ClassReader(bytes).accept(
-      node,
-      ClassReader.SKIP_DEBUG |
-        ClassReader.SKIP_FRAMES |
-        ClassReader.SKIP_CODE
-    )
-    node
-  }
-
-  def sname(asmName: String): String = {
+  private def sname(asmName: String): String = {
     var i = asmName.length - 1
     while (i >= 0) {
       asmName.charAt(i) match {
@@ -399,10 +363,10 @@ object Javacp {
     throw new IllegalArgumentException(s"Missing $$ or / from symbol '$asmName'")
   }
 
-  def ssym(asmName: String): String =
+  private def ssym(asmName: String): String =
     "_root_." + asmName.replace('$', '#').replace('/', '.') + "#"
 
-  def saccessibility(access: Int, owner: String): Option[s.Accessibility] = {
+  private def saccessibility(access: Int, owner: String): Option[s.Accessibility] = {
     def sacc(tag: s.Accessibility.Tag): Option[s.Accessibility] = Some(s.Accessibility(tag))
     val a = s.Accessibility.Tag
     if (access.hasFlag(o.ACC_PUBLIC)) sacc(a.PUBLIC)
@@ -410,12 +374,12 @@ object Javacp {
     else if (access.hasFlag(o.ACC_PRIVATE)) sacc(a.PRIVATE)
     else {
       Some(
-        s.Accessibility(a.PRIVATE_WITHIN, owner.substring(0, owner.lastIndexOf('.')))
+        s.Accessibility(tag = a.PRIVATE_WITHIN, symbol = owner.substring(0, owner.lastIndexOf('.')))
       )
     }
   }
 
-  def sannotations(access: Int): Seq[s.Annotation] = {
+  private def sannotations(access: Int): Seq[s.Annotation] = {
     val buf = List.newBuilder[s.Annotation]
 
     def push(symbol: String): Unit =
@@ -427,7 +391,7 @@ object Javacp {
     buf.result()
   }
 
-  def sproperties(access: Int): Int = {
+  private def sproperties(access: Int): Int = {
     val p = s.SymbolInformation.Property
     var bits = 0
     def sflip(sbit: Int) = bits ^= sbit
@@ -437,12 +401,12 @@ object Javacp {
     bits
   }
 
-  def sarray(tpe: s.Type): s.Type =
+  private def sarray(tpe: s.Type): s.Type =
     styperef("_root_.scala.Array#", tpe :: Nil)
 
-  def styperef(symbol: String, args: List[s.Type] = Nil, prefix: Option[s.Type] = None): s.Type = {
+  private def styperef(symbol: String, args: List[s.Type] = Nil, prefix: Option[s.Type] = None): s.Type = {
     s.Type(
-      s.Type.Tag.TYPE_REF,
+      tag = s.Type.Tag.TYPE_REF,
       typeRef = Some(s.TypeRef(prefix, symbol, args))
     )
   }

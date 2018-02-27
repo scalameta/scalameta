@@ -344,16 +344,20 @@ package object semanticdb {
               val sname = ddenot.name
               val slocation = None
               val ssignature = {
-                val stext = ddenot.signature
-                val soccurrences = ddenot.names.map {
-                  case d.ResolvedName(dpos: org.langmeta.Position.Range, dsym, disDefinition(srole)) =>
-                    val srange = s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn)
-                    val ssym = sSymbol(dsym)
-                    s.SymbolOccurrence(Some(srange), ssym, srole)
-                  case other =>
-                    sys.error(s"bad database: unsupported name $other")
+                if (ddenot.signature.nonEmpty) {
+                  val stext = ddenot.signature
+                  val soccurrences = ddenot.names.map {
+                    case d.ResolvedName(dpos: org.langmeta.Position.Range, dsym, disDefinition(srole)) =>
+                      val srange = s.Range(dpos.startLine, dpos.startColumn, dpos.endLine, dpos.endColumn)
+                      val ssym = sSymbol(dsym)
+                      s.SymbolOccurrence(Some(srange), ssym, srole)
+                    case other =>
+                      sys.error(s"bad database: unsupported name $other")
+                  }
+                  Some(s.TextDocument(text = stext, occurrences = soccurrences))
+                } else {
+                  None
                 }
-                Some(s.TextDocument(text = stext, occurrences = soccurrences))
               }
               val smembers = ddenot.members.map(_.syntax)
               val soverrides = ddenot.overrides.map(sSymbol)

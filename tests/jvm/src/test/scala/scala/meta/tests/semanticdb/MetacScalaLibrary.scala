@@ -4,7 +4,7 @@ import java.io.File
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Paths
-import scala.meta.internal.metac
+import scala.meta.cli._
 import scala.meta.tests.BuildInfo
 import org.langmeta.internal.io.FileIO
 import org.langmeta.io.AbsolutePath
@@ -32,15 +32,14 @@ object MetacScalaLibrary {
       .filter(_.endsWith("scala"))
     val out = Files.createTempDirectory("metac")
     println(s"Compiling ${files.length} sources from scala-library...")
-    val code = metac.Main.process(
-      Array(
-        "-d",
-        out.toString,
-        "-classpath",
-        classpath,
-        "-P:semanticdb:failures:error"
-      ) ++ files
-    )
+    val args = Array(
+      "-d",
+      out.toString,
+      "-classpath",
+      classpath,
+      "-P:semanticdb:failures:error"
+    ) ++ files
+    val code = Metac.process(args, System.out, System.err)
     println(out)
     sys.exit(code)
   }

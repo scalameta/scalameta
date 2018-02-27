@@ -11,8 +11,7 @@ import scala.collection.mutable
 import scala.meta.testkit.DiffAssertions
 import scala.meta.internal.io.FileIO
 import scala.meta._
-import scala.meta.internal.metacp.{Main => Metacp, Settings => MetacpSettings}
-import scala.meta.internal.metap.{Main => Metap}
+import scala.meta.cli._
 import scala.meta.tests.cli._
 import scala.compat.Platform.EOL
 import org.langmeta.internal.io.PathIO
@@ -73,16 +72,19 @@ trait ExpectHelpers {
   protected def lowlevelSyntax(path: Path): String = {
     val paths = Files.walk(path).iterator.asScala
     val semanticdbs = paths.map(_.toString).filter(_.endsWith(".semanticdb")).toArray.sorted
-    val (exitcode, stdout) = CliSuite.communicate(out => Metap.process(semanticdbs, out))
+    val (exitcode, out, err) = CliSuite.communicate(Metap.process(semanticdbs, _, _))
     assert(exitcode == 0)
-    stdout
+    assert(err.isEmpty)
+    out
   }
 
   protected def decompiledPath(path: Path): Path = {
     val target = Files.createTempDirectory("target_")
-    val metacp_settings = MetacpSettings.parse(List("-d", target.toString, path.toString)).get
-    val (metacp_exitcode, _) = CliSuite.communicate(out => Metacp.process(metacp_settings))
+    val metacp_args = Array("-d", target.toString, path.toString)
+    val (metacp_exitcode, out, err) = CliSuite.communicate(Metacp.process(metacp_args, _, _))
     assert(metacp_exitcode == 0)
+    assert(out.isEmpty)
+    assert(err.isEmpty)
     target
   }
 

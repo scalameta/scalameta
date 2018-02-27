@@ -13,18 +13,21 @@ import SymbolInformation._, Kind._, Property._
 import SymbolOccurrence._, Role._
 import Type.Tag._, SingletonType.Tag._, Accessibility.Tag._
 
-object Main {
-  def process(args: Array[String], out: PrintStream = System.out): Int = {
+class Main(settings: Settings, out: PrintStream, err: PrintStream) {
+  def process(): Int = {
     var failed = false
-    val main = new Main(out)
-    args.zipWithIndex.foreach {
+    settings.paths.zipWithIndex.foreach {
       case (arg, i) =>
         try {
           val stream = Files.newInputStream(Paths.get(arg))
           try {
             if (i != 0) out.println("")
             val documents = TextDocuments.parseFrom(stream)
-            documents.documents.foreach(main.pprint)
+            if (settings.format.isProto) {
+              out.println(documents.toProtoString)
+            } else {
+              documents.documents.foreach(pprint)
+            }
           } finally {
             stream.close()
           }
@@ -37,11 +40,8 @@ object Main {
     }
     if (failed) 1 else 0
   }
-}
 
-class Main(out: PrintStream) {
-
-  def pprint(doc: TextDocument): Unit = {
+  private def pprint(doc: TextDocument): Unit = {
     out.println(doc.uri)
     out.println(s"-" * doc.uri.length)
     out.println("")
@@ -177,7 +177,7 @@ class Main(out: PrintStream) {
         }
       case None =>
         // TODO: It would be nice to have a symbol parser in semanticdb3.
-        sym.split("\\.").toList match {
+        sym.split("[\\.|#]").toList match {
           case _ :+ last =>
             val approxName = {
               val last1 = last.stripPrefix("(").stripPrefix("[")
@@ -405,9 +405,8 @@ class Main(out: PrintStream) {
         info.tpe match {
           case Some(tpe: Type) =>
             tpe.classInfoType match {
-              case Some(ClassInfoType(typeParameters, parents, decls)) =>
-                if (typeParameters.nonEmpty)
-                  rep("[", typeParameters, ", ", "]")(pprint(_, DEFINITION, doc))
+              case Some(ClassInfoType(tparams, parents, decls)) =>
+                if (tparams.nonEmpty) rep("[", tparams, ", ", "]")(pprint(_, DEFINITION, doc))
                 if (decls.nonEmpty) out.println(s".{+${decls.length} decls}")
                 else out.println("")
                 parents.foreach { tpe =>

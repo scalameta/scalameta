@@ -42,8 +42,8 @@ object SemanticdbConfig {
     PathIO.workingDirectory,
     SemanticdbMode.Fat,
     FailureMode.Warning,
-    DenotationMode.All,
-    SignatureMode.All,
+    DenotationMode.Definitions,
+    SignatureMode.New,
     MemberMode.None,
     OverrideMode.None,
     ProfilingMode.Off,
@@ -52,6 +52,57 @@ object SemanticdbConfig {
     SyntheticMode.All,
     OwnerMode.All
   )
+
+  private val SetSourceroot = "sourceroot:(.*)".r
+  private val SetMode = "mode:(.*)".r
+  private val SetFailures = "failures:(.*)".r
+  private val SetDenotations = "denotations:(.*)".r
+  private val SetSignatures = "signatures:(.*)".r
+  private val SetMembers = "members:(.*)".r
+  private val SetOverrides = "overrides:(.*)".r
+  private val SetProfiling = "profiling:(.*)".r
+  private val SetInclude = "include:(.*)".r
+  private val SetExclude = "exclude:(.*)".r
+  private val SetMessages = "messages:(.*)".r
+  private val SetSynthetics = "synthetics:(.*)".r
+  private val SetOwners = "owners:(.*)".r
+
+  def parse(scalacOptions: List[String], errFn: String => Unit): SemanticdbConfig = {
+    var config = default
+    val relevantOptions = scalacOptions.filter(_.startsWith("-P:semanticdb:"))
+    val strippedOptions = relevantOptions.map(_.stripPrefix("-P:semanticdb:"))
+    strippedOptions.foreach {
+      case SetSourceroot(path) =>
+        config = config.copy(sourceroot = AbsolutePath(path))
+      case SetMode(SemanticdbMode(mode)) =>
+        config = config.copy(mode = mode)
+      case SetFailures(FailureMode(severity)) =>
+        config = config.copy(failures = severity)
+      case SetDenotations(DenotationMode(denotations)) =>
+        config = config.copy(denotations = denotations)
+      case SetSignatures(SignatureMode(signatures)) =>
+        config = config.copy(signatures = signatures)
+      case SetMembers(MemberMode(members)) =>
+        config = config.copy(members = members)
+      case SetOverrides(OverrideMode(overrides)) =>
+        config = config.copy(overrides = overrides)
+      case SetProfiling(ProfilingMode(profiling)) =>
+        config = config.copy(profiling = profiling)
+      case SetInclude(include) =>
+        config = config.copy(fileFilter = config.fileFilter.copy(include = include.r))
+      case SetExclude(exclude) =>
+        config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
+      case SetMessages(MessageMode(messages)) =>
+        config = config.copy(messages = messages)
+      case SetSynthetics(SyntheticMode(synthetics)) =>
+        config = config.copy(synthetics = synthetics)
+      case SetOwners(OwnerMode(owners)) =>
+        config = config.copy(owners = owners)
+      case els =>
+        errFn(s"Ignoring unknown option $els")
+    }
+    config
+  }
 }
 
 sealed abstract class SemanticdbMode {
@@ -198,50 +249,4 @@ object OwnerMode {
   def all = List(All, None)
   case object All extends OwnerMode
   case object None extends OwnerMode
-}
-
-trait ConfigOps { self: DatabaseOps =>
-  val SetSourceroot = "sourceroot:(.*)".r
-  val SetMode = "mode:(.*)".r
-  val SetFailures = "failures:(.*)".r
-  val SetDenotations = "denotations:(.*)".r
-  val SetSignatures = "signatures:(.*)".r
-  val SetMembers = "members:(.*)".r
-  val SetOverrides = "overrides:(.*)".r
-  val SetProfiling = "profiling:(.*)".r
-  val SetInclude = "include:(.*)".r
-  val SetExclude = "exclude:(.*)".r
-  val SetMessages = "messages:(.*)".r
-  val SetSynthetics = "synthetics:(.*)".r
-  val SetOwners = "owners:(.*)".r
-
-  var config: SemanticdbConfig = SemanticdbConfig.default
-  implicit class XtensionSemanticdbConfig(ignored: SemanticdbConfig) {
-    def setSourceroot(sourceroot: AbsolutePath): Unit =
-      config = config.copy(sourceroot = sourceroot)
-    def setMode(mode: SemanticdbMode): Unit =
-      config = config.copy(mode = mode)
-    def setFailures(severity: FailureMode): Unit =
-      config = config.copy(failures = severity)
-    def setDenotations(denotations: DenotationMode): Unit =
-      config = config.copy(denotations = denotations)
-    def setSignatures(signatures: SignatureMode): Unit =
-      config = config.copy(signatures = signatures)
-    def setMembers(members: MemberMode): Unit =
-      config = config.copy(members = members)
-    def setOverrides(overrides: OverrideMode): Unit =
-      config = config.copy(overrides = overrides)
-    def setProfiling(profiling: ProfilingMode): Unit =
-      config = config.copy(profiling = profiling)
-    def setInclude(include: String): Unit =
-      config = config.copy(fileFilter = config.fileFilter.copy(include = include.r))
-    def setExclude(exclude: String): Unit =
-      config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
-    def setMessages(messages: MessageMode): Unit =
-      config = config.copy(messages = messages)
-    def setSynthetics(synthetics: SyntheticMode): Unit =
-      config = config.copy(synthetics = synthetics)
-    def setOwners(owners: OwnerMode): Unit =
-      config = config.copy(owners = owners)
-  }
 }

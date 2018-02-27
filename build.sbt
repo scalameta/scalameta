@@ -28,6 +28,8 @@ version.in(ThisBuild) ~= { old =>
 }
 name := {
   println(s"[info] Welcome to scalameta ${version.value}")
+  val javaVersion = sys.props("java.specification.version")
+  if (javaVersion != "1.8") sys.error(s"Obtained Java version $javaVersion. Expected 1.8")
   "scalametaRoot"
 }
 nonPublishableSettings
@@ -398,9 +400,11 @@ lazy val semanticdbIntegration = project
         s"-P:semanticdb:exclude:Exclude.scala",
         s"-P:semanticdb:overrides:all",
         s"-P:semanticdb:denotations:all",
+        s"-P:semanticdb:signatures:all",
         s"-Xplugin-require:semanticdb"
       )
-    }
+    },
+    javacOptions += "-parameters"
   )
 
 lazy val testkit = project

@@ -448,15 +448,13 @@ provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6;
+  reserved 2, 6, 7, 8;
   string symbol = 1;
   Language language = 12;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
   Location location = 10;
-  TextDocument signature = 7;
-  repeated string members = 8;
   repeated string overrides = 9;
   Type tpe = 11;
   repeated Annotation annotations = 13;
@@ -652,11 +650,6 @@ languages map onto these properties.
 
 `location`. [Location](#location) that represents the extent of
 the corresponding definition.
-
-`signature`. Superseded by `SymbolInformation.tpe`.
-
-`members`. Superseded by `ClassInfoType.declarations` in
-`SymbolInformation.tpe`.
 
 `overrides`. Symbols that are extended or overridden by this symbol
 either directly or transitively.

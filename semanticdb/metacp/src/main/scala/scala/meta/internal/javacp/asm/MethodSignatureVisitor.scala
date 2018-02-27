@@ -1,9 +1,6 @@
-package scala.meta.internal.metacp.asm
+package scala.meta.internal.javacp.asm
 
-import scala.meta.internal.metacp.asm.JavaTypeSignature.MethodSignature
-import scala.meta.internal.metacp.asm.JavaTypeSignature.ClassTypeSignature
-import scala.meta.internal.metacp.asm.JavaTypeSignature.TypeVariableSignature
-import scala.meta.internal.metacp.asm.JavaTypeSignature.ThrowsSignature
+import scala.meta.internal.javacp._
 import scala.tools.asm.signature.SignatureVisitor
 
 class MethodSignatureVisitor

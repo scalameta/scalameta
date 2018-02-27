@@ -1,7 +1,6 @@
-package scala.meta.internal.metacp.asm
+package scala.meta.internal.javacp.asm
 
-import scala.meta.internal.metacp.asm.JavaTypeSignature.SimpleClassTypeSignature
-import scala.meta.internal.metacp.asm.JavaTypeSignature.TypeArguments
+import scala.meta.internal.javacp._
 import scala.tools.asm.signature.SignatureVisitor
 
 class SimpleClassTypeSignatureBuilder(identifier: String) {

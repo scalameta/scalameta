@@ -3,7 +3,7 @@ package semanticdb
 
 import scala.meta.internal.semanticdb.scalac._
 
-class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, MemberMode.All) {
+class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, members = MemberMode.All) {
   members(
     """
       |object a {

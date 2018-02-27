@@ -1,6 +1,6 @@
-package scala.meta.internal.metacp.asm
+package scala.meta.internal.javacp.asm
 
-import scala.meta.internal.metacp.asm.JavaTypeSignature._
+import scala.meta.internal.javacp._
 import scala.tools.asm.signature.SignatureVisitor
 
 class TypeParameterVisitor(identifier: String) extends TypedSignatureVisitor[TypeParameter] {

@@ -20,41 +20,9 @@ class SemanticdbPlugin(val global: Global)
     else Nil
   }
 
-  override def init(options: List[String], error: (String) => Unit): Boolean = {
-    def err(msg: String): Unit = {
-      g.reporter.error(g.NoPosition, s"[semanticdb] $msg")
-    }
-    options.foreach {
-      case SetSourceroot(path) =>
-        val abspath = AbsolutePath(path)
-        config.setSourceroot(abspath)
-      case SetMode(SemanticdbMode(mode)) =>
-        config.setMode(mode)
-      case SetFailures(FailureMode(severity)) =>
-        config.setFailures(severity)
-      case SetMembers(MemberMode(members)) =>
-        config.setMembers(members)
-      case SetMode(els) =>
-        err(s"Unknown mode $els. Expected one of: ${SemanticdbMode.all.mkString(", ")} ")
-      case SetFailures(FailureMode(severity)) =>
-        config.setFailures(severity)
-      case SetDenotations(DenotationMode(denotations)) =>
-        config.setDenotations(denotations)
-      case SetOverrides(OverrideMode(overrides)) =>
-        config.setOverrides(overrides)
-      case SetProfiling(ProfilingMode(profiling)) =>
-        config.setProfiling(profiling)
-      case SetInclude(include) =>
-        config.setInclude(include)
-      case SetExclude(exclude) =>
-        config.setExclude(exclude)
-      case SetMessages(MessageMode(messages)) =>
-        config.setMessages(messages)
-      case SetSynthetics(SyntheticMode(synthetics)) =>
-        config.setSynthetics(synthetics)
-      case els =>
-        err(s"Ignoring unknown option $els")
-    }
+  override def init(options: List[String], errFn: String => Unit): Boolean = {
+    val originalOptions = options.map(option => "-P:" + name + ":" + option)
+    config = SemanticdbConfig.parse(originalOptions, errFn)
     true
   }
 }

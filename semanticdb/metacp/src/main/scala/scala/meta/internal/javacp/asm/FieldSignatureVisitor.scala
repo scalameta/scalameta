@@ -1,3 +1,3 @@
-package scala.meta.internal.metacp.asm
+package scala.meta.internal.javacp.asm
 
 class FieldSignatureVisitor extends JavaTypeSignatureVisitor(false)

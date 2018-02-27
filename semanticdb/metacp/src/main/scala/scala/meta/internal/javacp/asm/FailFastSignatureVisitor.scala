@@ -1,4 +1,4 @@
-package scala.meta.internal.metacp.asm
+package scala.meta.internal.javacp.asm
 
 import scala.tools.asm.Opcodes
 import scala.tools.asm.signature.SignatureVisitor

@@ -121,7 +121,7 @@ _root_.example.Example.x. => private[this] val x: ClassTag[Int]
   ClassTag => _root_.scala.reflect.ClassTag#
   Int => _root_.scala.Int#
 _root_.scala. => package scala
-_root_.scala.Array# => final class Array[Array#[T: <?>].{+6 decls}
+_root_.scala.Array# => final class Array[T: <?>].{+6 decls}
   extends AnyRef
   extends Serializable
   extends Cloneable
@@ -136,16 +136,16 @@ _root_.scala.Unit# => abstract final class Unit.{+2 decls}
   extends AnyVal
 _root_.scala.collection. => package collection
 _root_.scala.collection.mutable. => package mutable
-_root_.scala.collection.mutable.Stack# => @deprecated @deprecated class Stack[Stack#[A: <?>].{+20 decls}
-  extends AbstractSeq[Stack#[A]
-  extends Seq[Stack#[A]
-  extends SeqLike[Stack#[A, Stack[Stack#[A]]
-  extends GenericTraversableTemplate[Stack#[A, Stack]
-  extends Cloneable[Stack[Stack#[A]]
+_root_.scala.collection.mutable.Stack# => @deprecated @deprecated class Stack[A: <?>].{+20 decls}
+  extends AbstractSeq[A]
+  extends Seq[A]
+  extends SeqLike[A, Stack[A]]
+  extends GenericTraversableTemplate[A, Stack]
+  extends Cloneable[Stack[A]]
   extends Serializable
-_root_.scala.collection.mutable.Stack#`<init>`(). => secondaryctor <init>: (): Stack[Stack#[A]
+_root_.scala.collection.mutable.Stack#`<init>`(). => secondaryctor <init>: (): Stack[A]
   Stack => _root_.scala.collection.mutable.Stack#
-  Stack#[A => _root_.scala.collection.mutable.Stack#[A]
+  A => _root_.scala.collection.mutable.Stack#[A]
 _root_.scala.concurrent. => package concurrent
 _root_.scala.reflect. => package reflect
 _root_.scala.reflect.package.classTag(ClassTag). => def classTag: [T: <?>] => (ctag: <?>): ClassTag[T]
@@ -346,8 +346,8 @@ _root_.scala.language. => final object language
 _root_.scala.language.experimental. => final object experimental
 _root_.scala.language.experimental.macros(). => implicit lazy val macros: macros
   macros => _root_.scala.languageFeature.experimental.macros#
-_root_.scala.package.List# => type List: [List#[A: <?>] => >: List[List#[A] <: List[List#[A]
-  List#[A => _root_.scala.package.List#[A]
+_root_.scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
+  A => _root_.scala.package.List#[A]
   List => _root_.scala.collection.immutable.List#
 _root_.scala.specialized# => class specialized.{+4 decls}
   extends Annotation
@@ -665,13 +665,13 @@ _root_.scala.Predef.`???`(). => def ???: : Nothing
   Nothing => _root_.scala.Nothing#
 _root_.scala.collection.immutable.Nil. => @SerialVersionUID final case object Nil
 _root_.scala.math. => package math
-_root_.scala.math.Ordering# => @implicitNotFound trait Ordering[Ordering#[T: <?>].{+14 decls}
+_root_.scala.math.Ordering# => @implicitNotFound trait Ordering[T: <?>].{+14 decls}
   extends Object
-  extends Comparator[Ordering#[T]
-  extends PartialOrdering[Ordering#[T]
+  extends Comparator[T]
+  extends PartialOrdering[T]
   extends Serializable
-_root_.scala.package.List# => type List: [List#[A: <?>] => >: List[List#[A] <: List[List#[A]
-  List#[A => _root_.scala.package.List#[A]
+_root_.scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
+  A => _root_.scala.package.List#[A]
   List => _root_.scala.collection.immutable.List#
 _root_.scala.unchecked# => class unchecked.{+1 decls}
   extends Annotation
@@ -957,9 +957,9 @@ _root_.scala.Int# => abstract final class Int.{+111 decls}
 _root_.scala.Int#`+`(Int). => abstract def +: (x: <?>): Int
   x => _root_.scala.Int#`+`(Int).(x)
   Int => _root_.scala.Int#
-_root_.scala.collection.TraversableLike#headOption(). => def headOption: : Option[TraversableLike#[A]
+_root_.scala.collection.TraversableLike#headOption(). => def headOption: : Option[A]
   Option => _root_.scala.Option#
-  TraversableLike#[A => _root_.scala.collection.TraversableLike#[A]
+  A => _root_.scala.collection.TraversableLike#[A]
 _root_.scala.collection.immutable.List#map(Function1,CanBuildFrom). => final def map: [B: <?>, That: <?>] => (f: <?>)(bf: <?>): That
   B => _root_.scala.collection.immutable.List#map(Function1,CanBuildFrom).[B]
   That => _root_.scala.collection.immutable.List#map(Function1,CanBuildFrom).[That]
@@ -1030,7 +1030,7 @@ _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS. => final val NOFOLLOW_LINKS: NOF
 _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
-_root_.scala.Option# => @SerialVersionUID abstract sealed class Option[Option#[A: <?>].{+25 decls}
+_root_.scala.Option# => @SerialVersionUID abstract sealed class Option[A: <?>].{+25 decls}
   extends AnyRef
   extends Product
   extends Serializable
@@ -1049,8 +1049,8 @@ _root_.scala.language.existentials(). => implicit lazy val existentials: existen
   existentials => _root_.scala.languageFeature.existentials#
 _root_.scala.language.higherKinds(). => implicit lazy val higherKinds: higherKinds
   higherKinds => _root_.scala.languageFeature.higherKinds#
-_root_.scala.package.List# => type List: [List#[A: <?>] => >: List[List#[A] <: List[List#[A]
-  List#[A => _root_.scala.package.List#[A]
+_root_.scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
+  A => _root_.scala.package.List#[A]
   List => _root_.scala.collection.immutable.List#
 _root_.types. => package types
 _root_.types.B# => class B.{+1 decls}
