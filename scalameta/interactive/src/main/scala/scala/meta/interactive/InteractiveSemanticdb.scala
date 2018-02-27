@@ -52,7 +52,8 @@ object InteractiveSemanticdb {
     * @param filename the name of the source file.
     * @param timeout max number of milliseconds to allow the presentation compiler
     *                to typecheck this file.
-    * @param options -P:semanticdb:* options to influence how the document is built.
+    * @param options configuration options to influence how the document is built.
+    *                Must start with -P:semanticdb: prefix, for example "-P:semanticdb:overrides:all".
     *  @throws Exception note that this method can fail in many different ways
     *                    with exceptions, including but not limited to tokenize/parse/type
     *                    errors.

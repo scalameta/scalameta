@@ -23,7 +23,7 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
           try {
             if (i != 0) out.println("")
             val documents = TextDocuments.parseFrom(stream)
-            if (settings.proto) {
+            if (settings.format.isProto) {
               out.println(documents.toProtoString)
             } else {
               documents.documents.foreach(pprint)
