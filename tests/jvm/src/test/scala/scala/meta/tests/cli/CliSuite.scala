@@ -60,7 +60,7 @@ class CliSuite extends BaseCliSuite {
       |Uri => HelloWorld.scala
       |Text => non-empty
       |Language => $language
-      |Symbols => 7 entries
+      |Symbols => 3 entries
       |Occurrences => 7 entries
       |
       |Symbols:
@@ -71,17 +71,6 @@ class CliSuite extends BaseCliSuite {
       |_empty_.HelloWorld.main(Array).(args) => param args: Array[String]
       |  Array => _root_.scala.Array#
       |  String => _root_.scala.Predef.String#
-      |_root_.scala.Array# => final class Array[Array#[T: <?>].{+6 decls}
-      |  extends AnyRef
-      |  extends Serializable
-      |  extends Cloneable
-      |_root_.scala.Predef.String# => type String: >: String <: String
-      |  String => _root_.java.lang.String#
-      |_root_.scala.Predef.println(Any). => def println: (x: <?>): Unit
-      |  x => _root_.scala.Predef.println(Any).(x)
-      |  Unit => _root_.scala.Unit#
-      |_root_.scala.Unit# => abstract final class Unit.{+2 decls}
-      |  extends AnyVal
       |
       |Occurrences:
       |[1:11..1:21): HelloWorld <= _empty_.HelloWorld.

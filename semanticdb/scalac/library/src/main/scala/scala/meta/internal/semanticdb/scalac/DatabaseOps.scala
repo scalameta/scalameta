@@ -4,7 +4,6 @@ import scala.tools.nsc.Global
 
 trait DatabaseOps
     extends AnnotationOps
-    with ConfigOps
     with DenotationOps
     with DocumentOps
     with InputOps
@@ -19,4 +18,5 @@ trait DatabaseOps
     with SymbolOps
     with TypeOps {
   val global: Global
+  var config: SemanticdbConfig = SemanticdbConfig.default
 }

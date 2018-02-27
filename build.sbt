@@ -400,6 +400,7 @@ lazy val semanticdbIntegration = project
         s"-P:semanticdb:exclude:Exclude.scala",
         s"-P:semanticdb:overrides:all",
         s"-P:semanticdb:denotations:all",
+        s"-P:semanticdb:signatures:all",
         s"-Xplugin-require:semanticdb"
       )
     },

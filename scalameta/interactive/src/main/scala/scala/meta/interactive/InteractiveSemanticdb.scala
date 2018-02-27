@@ -2,8 +2,7 @@ package scala.meta.interactive
 
 import java.io.File
 import java.net.URLClassLoader
-import scala.meta.internal.semanticdb.scalac.SemanticdbPlugin
-import scala.meta.internal.semanticdb.scalac.DatabaseOps
+import scala.meta.internal.semanticdb.scalac._
 import scala.reflect.io.VirtualDirectory
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
@@ -36,7 +35,14 @@ object InteractiveSemanticdb {
   }
 
   def toDocument(compiler: Global, code: String): Document =
-    toDocument(compiler, code, "interactive.scala", 10000)
+    toDocument(compiler, code, "interactive.scala", 10000, Nil)
+
+  def toDocument(compiler: Global, code: String, options: List[String]): Document =
+    toDocument(compiler, code, "interactive.scala", 10000, options)
+
+  def toDocument(compiler: Global, code: String, filename: String, timeout: Long): Document = {
+    toDocument(compiler, code, filename, timeout, Nil)
+  }
 
   /**
     * Build semanticdb document from this snippet of code.
@@ -46,11 +52,12 @@ object InteractiveSemanticdb {
     * @param filename the name of the source file.
     * @param timeout max number of milliseconds to allow the presentation compiler
     *                to typecheck this file.
+    * @param options -P:semanticdb:* options to influence how the document is built.
     *  @throws Exception note that this method can fail in many different ways
     *                    with exceptions, including but not limited to tokenize/parse/type
     *                    errors.
     */
-  def toDocument(compiler: Global, code: String, filename: String, timeout: Long): Document = {
+  def toDocument(compiler: Global, code: String, filename: String, timeout: Long, options: List[String]): Document = {
     val unit = addCompilationUnit(compiler, code, filename)
     // reload seems to be necessary before askLoadedType.
     ask[Unit](r => compiler.askReload(unit.source :: Nil, r)).get
@@ -67,6 +74,7 @@ object InteractiveSemanticdb {
     } = new DatabaseOps {
       val global: compiler.type = compiler
     }
+    databaseOps.config = SemanticdbConfig.parse(options, _ => ())
     import databaseOps._
     unit.body = tree
     val document = unit.asInstanceOf[databaseOps.global.CompilationUnit].toDocument

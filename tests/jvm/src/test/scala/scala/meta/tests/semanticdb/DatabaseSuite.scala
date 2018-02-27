@@ -14,6 +14,8 @@ import scala.meta.internal.semanticdb.scalac._
 import scala.meta.testkit.DiffAssertions
 
 abstract class DatabaseSuite(mode: SemanticdbMode,
+                             denotations: DenotationMode = DenotationMode.All,
+                             signatures: SignatureMode = SignatureMode.All,
                              members: MemberMode = MemberMode.None,
                              overrides: OverrideMode = OverrideMode.None)
     extends FunSuite
@@ -46,17 +48,20 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     val global: self.g.type = self.g
   }
   import databaseOps._
-  config.setMode(mode)
-  config.setFailures(FailureMode.Error)
-  config.setMembers(members)
-  config.setOverrides(overrides)
+  config = config.copy(
+    mode = mode,
+    failures = FailureMode.Error,
+    denotations = denotations,
+    signatures = signatures,
+    members = members,
+    overrides = overrides)
 
   private def computeDatabaseFromSnippet(code: String): m.Database = {
     val javaFile = File.createTempFile("paradise", ".scala")
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
     finally writer.close()
-    databaseOps.config.setSourceroot(AbsolutePath(javaFile.getParentFile))
+    config = config.copy(sourceroot = AbsolutePath(javaFile.getParentFile))
     val run = new g.Run
     val abstractFile = AbstractFile.getFile(javaFile)
     val sourceFile = g.getSourceFile(abstractFile)
