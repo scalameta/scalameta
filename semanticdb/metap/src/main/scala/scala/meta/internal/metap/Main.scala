@@ -177,7 +177,7 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
         }
       case None =>
         // TODO: It would be nice to have a symbol parser in semanticdb3.
-        sym.split("\\.").toList match {
+        sym.split("[\\.|#]").toList match {
           case _ :+ last =>
             val approxName = {
               val last1 = last.stripPrefix("(").stripPrefix("[")
