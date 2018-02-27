@@ -133,7 +133,7 @@ sealed class WildcardIndicator(wildcard: Char) extends Printable {
 object WildcardIndicator {
   case object Plus extends WildcardIndicator('+')
   case object Minus extends WildcardIndicator('-')
-  // NOTE: ? is strictly not a WildcardIndicator, however having
+  // NOTE: * is strictly not a WildcardIndicator, however having
   // star here makes it easier to implement TypeArgumentVisitor.
   case object Star extends WildcardIndicator('*')
 }
