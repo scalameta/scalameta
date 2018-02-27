@@ -70,7 +70,7 @@ object Javacp {
         language = javaLanguage,
         kind = kind,
         properties = sproperties(access),
-        name,
+        name = name,
         tpe = tpe,
         annotations = sannotations(access),
         accessibility = saccessibility(access, owner),
@@ -216,7 +216,7 @@ object Javacp {
         }
 
         val methodType = s.Type(
-          s.Type.Tag.METHOD_TYPE,
+          tag = s.Type.Tag.METHOD_TYPE,
           methodType = Some(
             s.MethodType(
               typeParameters = methodTypeParameters.map(_.symbol),
@@ -342,22 +342,22 @@ object Javacp {
         upperBound
       case _ =>
         s.Type(
-          s.Type.Tag.STRUCTURAL_TYPE,
+          tag = s.Type.Tag.STRUCTURAL_TYPE,
           structuralType = Some(s.StructuralType(parents = typeParameters))
         )
     }
     val tpe = s.Type(
-      s.Type.Tag.TYPE_TYPE,
+      tag = s.Type.Tag.TYPE_TYPE,
       typeType = Some(s.TypeType(upperBound = Some(upperBounds)))
     )
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,
-      owner = ownerSymbol,
       language = javaLanguage,
       kind = k.TYPE_PARAMETER,
       name = typeParameter.value.identifier,
-      tpe = Some(tpe)
+      tpe = Some(tpe),
+      owner = ownerSymbol
     )
   }
 
@@ -412,7 +412,7 @@ object Javacp {
     else if (access.hasFlag(o.ACC_PRIVATE)) sacc(a.PRIVATE)
     else {
       Some(
-        s.Accessibility(a.PRIVATE_WITHIN, owner.substring(0, owner.lastIndexOf('.')))
+        s.Accessibility(tag = a.PRIVATE_WITHIN, symbol = owner.substring(0, owner.lastIndexOf('.')))
       )
     }
   }
@@ -444,7 +444,7 @@ object Javacp {
 
   def styperef(symbol: String, args: List[s.Type] = Nil, prefix: Option[s.Type] = None): s.Type = {
     s.Type(
-      s.Type.Tag.TYPE_REF,
+      tag = s.Type.Tag.TYPE_REF,
       typeRef = Some(s.TypeRef(prefix, symbol, args))
     )
   }
