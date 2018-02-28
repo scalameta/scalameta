@@ -211,6 +211,7 @@ lazy val scalalib = project
   .in(file("semanticdb/scalalib/lib"))
   .settings(
     publishableSettings,
+    compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1377"),
     description := "SemanticDB payloads for definitions that are missing from scala-library.jar",
     resourceGenerators.in(Compile) += Def.taskDyn {
       val outDir = resourceManaged.in(Compile).value
