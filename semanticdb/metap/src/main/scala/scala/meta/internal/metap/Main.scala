@@ -129,7 +129,9 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
   }
 
   private val symCache = new WeakHashMap[TextDocument, immutable.Map[String, SymbolInformation]]
-  private def pprint(sym: String, role: Role, doc: TextDocument): Unit = {
+  private def pprint(sym: String, role: Role, doc: TextDocument): List[String] = {
+    val buf = List.newBuilder[String]
+    buf += sym
     var infos = symCache.get(doc)
     if (infos == null) {
       infos = doc.symbols.map(info => (info.symbol, info)).toMap
@@ -143,8 +145,14 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
           case DEFINITION =>
             // NOTE: This mode is only used to print symbols that are part
             // of complex types, so we don't need to fully support all symbols here.
-            rep(info.annotations, " ", " ")(pprint(_, doc))
-            opt(info.accessibility)(pprint(_, doc))
+            rep(info.annotations, " ", " ") { ann =>
+              val syms = pprint(ann, doc)
+              syms.foreach(buf.+=)
+            }
+            opt(info.accessibility) { acc =>
+              if (acc.symbol.nonEmpty) buf += acc.symbol
+              pprint(acc, doc)
+            }
             if ((info.properties & COVARIANT.value) != 0) out.print("+")
             if ((info.properties & CONTRAVARIANT.value) != 0) out.print("-")
             info.kind match {
@@ -166,11 +174,14 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
                 out.print(" ")
               case _ =>
                 out.print("<?>")
-                return
+                return buf.result
             }
             info.tpe match {
-              case Some(tpe) => pprint(tpe, doc)
-              case None => out.print("<?>")
+              case Some(tpe) =>
+                val syms = pprint(tpe, doc)
+                syms.foreach(buf.+=)
+              case None =>
+                out.print("<?>")
             }
           case UNKNOWN_ROLE | Role.Unrecognized(_) =>
             ()
@@ -194,17 +205,18 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
           case UNKNOWN_ROLE | Role.Unrecognized(_) => ()
         }
     }
+    buf.result
   }
 
   private def pprint(tpe: Type, doc: TextDocument): List[String] = {
     val buf = List.newBuilder[String]
     def ref(sym: String): Unit = {
-      buf += sym
-      pprint(sym, REFERENCE, doc)
+      val syms = pprint(sym, REFERENCE, doc)
+      syms.foreach(buf.+=)
     }
     def defn(sym: String): Unit = {
-      buf += sym
-      pprint(sym, DEFINITION, doc)
+      val syms = pprint(sym, DEFINITION, doc)
+      syms.foreach(buf.+=)
     }
     def prefix(tpe: Type): Unit = {
       tpe.tag match {

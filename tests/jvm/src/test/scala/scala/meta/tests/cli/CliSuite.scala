@@ -67,6 +67,8 @@ class CliSuite extends BaseCliSuite {
       |_empty_.HelloWorld. => final object HelloWorld
       |_empty_.HelloWorld.main(Array). => def main: (args: Array[String]): Unit
       |  args => _empty_.HelloWorld.main(Array).(args)
+      |  Array => _root_.scala.Array#
+      |  String => _root_.scala.Predef.String#
       |  Unit => _root_.scala.Unit#
       |_empty_.HelloWorld.main(Array).(args) => param args: Array[String]
       |  Array => _root_.scala.Array#
