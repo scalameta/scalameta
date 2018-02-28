@@ -1,0 +1,107 @@
+scala/Any.class
+---------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => scala/Any.class
+Text => empty
+Language => Scala
+Symbols => 16 entries
+
+Symbols:
+_root_.scala.Any# => abstract class Any.{+15 decls}
+_root_.scala.Any#`!=`(Any). => final def !=: (that: Any): Boolean
+  that => _root_.scala.Any#`!=`(Any).(that)
+  Boolean => _root_.scala.Boolean#
+_root_.scala.Any#`!=`(Any).(that) => param that: Any
+  Any => _root_.scala.Any#
+_root_.scala.Any#`##`(). => final def ##: (): Int
+  Int => _root_.scala.Int#
+_root_.scala.Any#`<init>`(). => primaryctor <init>: (): Any
+  Any => _root_.scala.Any#
+_root_.scala.Any#`==`(Any). => final def ==: (that: Any): Boolean
+  that => _root_.scala.Any#`==`(Any).(that)
+  Boolean => _root_.scala.Boolean#
+_root_.scala.Any#`==`(Any).(that) => param that: Any
+  Any => _root_.scala.Any#
+_root_.scala.Any#asInstanceOf(). => final def asInstanceOf: (): A
+  A => _root_.scala.Any.asInstanceOf(A).[A]
+_root_.scala.Any#asInstanceOf().[A] => typeparam A: 
+_root_.scala.Any#equals(Any). => abstract def equals: (that: Any): Boolean
+  that => _root_.scala.Any#equals(Any).(that)
+  Boolean => _root_.scala.Boolean#
+_root_.scala.Any#equals(Any).(that) => param that: Any
+  Any => _root_.scala.Any#
+_root_.scala.Any#getClass(). => final def getClass: (): Class
+  Class => _root_.java.lang.Class#
+_root_.scala.Any#hashCode(). => abstract def hashCode: (): Int
+  Int => _root_.scala.Int#
+_root_.scala.Any#isInstanceOf(). => final def isInstanceOf: (): Boolean
+  Boolean => _root_.scala.Boolean#
+_root_.scala.Any#isInstanceOf().[A] => typeparam A: 
+_root_.scala.Any#toString(). => abstract def toString: (): String
+  String => _root_.java.lang.String#
+
+scala/AnyRef.class
+------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => scala/AnyRef.class
+Text => empty
+Language => Scala
+Symbols => 9 entries
+
+Symbols:
+_root_.scala.AnyRef# => class AnyRef.{+8 decls}
+  extends Any
+_root_.scala.AnyRef#`<init>`(). => primaryctor <init>: (): AnyRef
+  AnyRef => _root_.scala.AnyRef#
+_root_.scala.AnyRef#eq(AnyRef). => final def eq: (that: AnyRef): Boolean
+  that => _root_.scala.AnyRef#eq(AnyRef).(that)
+  Boolean => _root_.scala.Boolean#
+_root_.scala.AnyRef#eq(AnyRef).(that) => param that: AnyRef
+  AnyRef => _root_.scala.AnyRef#
+_root_.scala.AnyRef#ne(AnyRef). => final def ne: (that: AnyRef): Boolean
+  that => _root_.scala.AnyRef#ne(AnyRef).(that)
+  Boolean => _root_.scala.Boolean#
+_root_.scala.AnyRef#ne(AnyRef).(that) => param that: AnyRef
+  AnyRef => _root_.scala.AnyRef#
+_root_.scala.AnyRef#synchronized(T). => final def synchronized: (body: T): T
+  body => _root_.scala.AnyRef#synchronized(T).(body)
+  T => _root_.scala.AnyRef.synchronized(T).[T]
+_root_.scala.AnyRef#synchronized(T).(body) => param body: T
+  T => _root_.scala.AnyRef.synchronized(T).[T]
+_root_.scala.AnyRef#synchronized(T).[T] => typeparam T: 
+
+scala/AnyVal.class
+------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => scala/AnyVal.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+_root_.scala.AnyVal# => abstract class AnyVal.{+1 decls}
+  extends Any
+_root_.scala.AnyVal#`<init>`(). => primaryctor <init>: (): AnyVal
+  AnyVal => _root_.scala.AnyVal#
+
+scala/Nothing.class
+-------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => scala/Nothing.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+_root_.scala.Nothing# => abstract final class Nothing.{+1 decls}
+  extends Any
+_root_.scala.Nothing#`<init>`(). => primaryctor <init>: (): Nothing
+  Nothing => _root_.scala.Nothing#

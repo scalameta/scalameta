@@ -1,11 +1,12 @@
 package scala.meta.tests
 package semanticdb
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.io._
+import java.net._
+import java.nio.file._
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets._
+import java.util.HashMap
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.meta.testkit.DiffAssertions
@@ -16,7 +17,6 @@ import scala.meta.tests.cli._
 import scala.compat.Platform.EOL
 import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb._
-import org.langmeta.io.AbsolutePath
 import org.scalatest.FunSuite
 
 class ExpectSuite extends FunSuite with DiffAssertions {
@@ -26,6 +26,10 @@ class ExpectSuite extends FunSuite with DiffAssertions {
     // output of 2.12. It's possible to add another expect file for 2.12
     // later down the road if that turns out to be useful.
     case "2" :: "12" :: Nil =>
+      test("scalalib.expect") {
+        import ScalalibExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
       test("metacp.expect") {
         import MetacpExpect._
         assertNoDiff(loadObtained, loadExpected)
@@ -69,8 +73,25 @@ trait ExpectHelpers {
     sorted
   }
 
-  protected def lowlevelSyntax(path: Path): String = {
-    val paths = Files.walk(path).iterator.asScala
+  protected def lowlevelSyntax(dirOrJar: Path): String = {
+    val dir = {
+      if (Files.isDirectory(dirOrJar)) {
+        dirOrJar
+      } else {
+        val tempDir = Files.createTempDirectory("jar_")
+        val jarRoot = FileIO.jarRootPath(AbsolutePath(dirOrJar.toAbsolutePath.toString)).toNIO
+        Files.walk(jarRoot).iterator.asScala.foreach { jarPath =>
+          if (jarPath.toString.endsWith(".semanticdb")) {
+            val bytes = Files.readAllBytes(jarPath)
+            val tempPath = tempDir.resolve(jarPath.toString.stripPrefix("/"))
+            Files.createDirectories(tempPath.getParent)
+            Files.write(tempPath, bytes)
+          }
+        }
+        tempDir
+      }
+    }
+    val paths = Files.walk(dir).iterator.asScala
     val semanticdbs = paths.map(_.toString).filter(_.endsWith(".semanticdb")).toArray.sorted
     val (exitcode, out, err) = CliSuite.communicate(Metap.process(semanticdbs, _, _))
     assert(exitcode == 0)
@@ -142,6 +163,11 @@ trait ExpectHelpers {
   }
 }
 
+object ScalalibExpect extends ExpectHelpers {
+  def filename: String = "scalalib.expect"
+  def loadObtained: String = lowlevelSyntax(Paths.get(sys.props("sbt.paths.scalalib.compile.jar")))
+}
+
 object MetacpExpect extends ExpectHelpers {
   def filename: String = "metacp.expect"
   def loadObtained: String = lowlevelSyntax(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
@@ -171,6 +197,7 @@ object MetacOwnersExpect extends ExpectHelpers {
 // To save the current behavior, run `sbt save-expect`.
 object SaveExpectTest {
   def main(args: Array[String]): Unit = {
+    ScalalibExpect.saveExpected(ScalalibExpect.loadObtained)
     MetacpExpect.saveExpected(MetacpExpect.loadObtained)
     MetacpOwnersExpect.saveExpected(MetacpOwnersExpect.loadObtained)
     LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
