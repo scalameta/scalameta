@@ -22,7 +22,7 @@ object Generator {
   }
 
   def any: ToplevelInfos = {
-    val decls = List(
+    val symbols = List(
       builtinMethod("Any", List(p.ABSTRACT), "equals", Nil, List("that" -> "_root_.scala.Any#"), "_root_.scala.Boolean#"),
       builtinMethod("Any", List(p.FINAL), "==", Nil, List("that" -> "_root_.scala.Any#"), "_root_.scala.Boolean#"),
       builtinMethod("Any", List(p.FINAL), "!=", Nil, List("that" -> "_root_.scala.Any#"), "_root_.scala.Boolean#"),
@@ -34,7 +34,7 @@ object Generator {
       builtinMethod("Any", List(p.FINAL), "getClass", Nil, Nil, "_root_.java.lang.Class#"),
       builtinMethod("Any", List(p.FINAL), "isInstanceOf", List("A"), Nil, "_root_.scala.Boolean#"),
       builtinMethod("Any", List(p.FINAL), "asInstanceOf", List("A"), Nil, "_root_.scala.Any.asInstanceOf(A).[A]"))
-    builtinClass(List(p.ABSTRACT), "Any", Nil, decls.flatten)
+    builtinClass(List(p.ABSTRACT), "Any", Nil, symbols.flatten)
   }
 
   def anyVal: ToplevelInfos = {
@@ -44,11 +44,11 @@ object Generator {
   def anyRef: ToplevelInfos = {
     // TODO: We're not including methods from java.lang.Object here.
     // The relationship between AnyRef and Object needs more thinking.
-    val decls = List(
+    val symbols = List(
       builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> "_root_.scala.AnyRef#"), "_root_.scala.Boolean#"),
       builtinMethod("AnyRef", List(p.FINAL), "ne", Nil, List("that" -> "_root_.scala.AnyRef#"), "_root_.scala.Boolean#"),
       builtinMethod("AnyRef", List(p.FINAL), "synchronized", List("T"), List("body" -> "_root_.scala.AnyRef.synchronized(T).[T]"), "_root_.scala.AnyRef.synchronized(T).[T]"))
-    builtinClass(Nil, "AnyRef", List("_root_.scala.Any#"), decls.flatten)
+    builtinClass(Nil, "AnyRef", List("_root_.scala.Any#"), symbols.flatten)
   }
 
   def nothing: ToplevelInfos = {
@@ -59,7 +59,7 @@ object Generator {
       props: List[s.SymbolInformation.Property],
       name: String,
       bases: List[String],
-      decls: List[s.SymbolInformation]): ToplevelInfos = {
+      symbols: List[s.SymbolInformation]): ToplevelInfos = {
     val parents = bases.map { base =>
       s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, base, Nil)))
     }
@@ -76,6 +76,7 @@ object Generator {
       owner = symbol
     )
     val builtinSig = {
+      val decls = symbols.filter(_.kind == k.DEF)
       val tpe = s.ClassInfoType(Nil, parents, ctor.symbol +: decls.map(_.symbol))
       s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))
     }
@@ -92,7 +93,7 @@ object Generator {
     val syntheticBase = Paths.get(".")
     val syntheticPath = syntheticBase.resolve("scala/" + name + ".class")
     val syntheticClassfile = ToplevelClassfile(syntheticBase, syntheticPath, null)
-    ToplevelInfos(syntheticClassfile, List(builtin), ctor +: decls)
+    ToplevelInfos(syntheticClassfile, List(builtin), ctor +: symbols)
   }
 
   def builtinMethod(

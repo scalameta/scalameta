@@ -9,7 +9,7 @@ Language => Scala
 Symbols => 16 entries
 
 Symbols:
-_root_.scala.Any# => abstract class Any.{+15 decls}
+_root_.scala.Any# => abstract class Any.{+10 decls}
 _root_.scala.Any#`!=`(Any). => final def !=: (that: Any): Boolean
   that => _root_.scala.Any#`!=`(Any).(that)
   Any => _root_.scala.Any#
@@ -56,7 +56,7 @@ Language => Scala
 Symbols => 9 entries
 
 Symbols:
-_root_.scala.AnyRef# => class AnyRef.{+8 decls}
+_root_.scala.AnyRef# => class AnyRef.{+4 decls}
   extends Any
 _root_.scala.AnyRef#`<init>`(). => primaryctor <init>: (): AnyRef
   AnyRef => _root_.scala.AnyRef#
