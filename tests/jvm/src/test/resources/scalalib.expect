@@ -12,6 +12,7 @@ Symbols:
 _root_.scala.Any# => abstract class Any.{+15 decls}
 _root_.scala.Any#`!=`(Any). => final def !=: (that: Any): Boolean
   that => _root_.scala.Any#`!=`(Any).(that)
+  Any => _root_.scala.Any#
   Boolean => _root_.scala.Boolean#
 _root_.scala.Any#`!=`(Any).(that) => param that: Any
   Any => _root_.scala.Any#
@@ -21,6 +22,7 @@ _root_.scala.Any#`<init>`(). => primaryctor <init>: (): Any
   Any => _root_.scala.Any#
 _root_.scala.Any#`==`(Any). => final def ==: (that: Any): Boolean
   that => _root_.scala.Any#`==`(Any).(that)
+  Any => _root_.scala.Any#
   Boolean => _root_.scala.Boolean#
 _root_.scala.Any#`==`(Any).(that) => param that: Any
   Any => _root_.scala.Any#
@@ -29,6 +31,7 @@ _root_.scala.Any#asInstanceOf(). => final def asInstanceOf: (): A
 _root_.scala.Any#asInstanceOf().[A] => typeparam A: 
 _root_.scala.Any#equals(Any). => abstract def equals: (that: Any): Boolean
   that => _root_.scala.Any#equals(Any).(that)
+  Any => _root_.scala.Any#
   Boolean => _root_.scala.Boolean#
 _root_.scala.Any#equals(Any).(that) => param that: Any
   Any => _root_.scala.Any#
@@ -59,11 +62,13 @@ _root_.scala.AnyRef#`<init>`(). => primaryctor <init>: (): AnyRef
   AnyRef => _root_.scala.AnyRef#
 _root_.scala.AnyRef#eq(AnyRef). => final def eq: (that: AnyRef): Boolean
   that => _root_.scala.AnyRef#eq(AnyRef).(that)
+  AnyRef => _root_.scala.AnyRef#
   Boolean => _root_.scala.Boolean#
 _root_.scala.AnyRef#eq(AnyRef).(that) => param that: AnyRef
   AnyRef => _root_.scala.AnyRef#
 _root_.scala.AnyRef#ne(AnyRef). => final def ne: (that: AnyRef): Boolean
   that => _root_.scala.AnyRef#ne(AnyRef).(that)
+  AnyRef => _root_.scala.AnyRef#
   Boolean => _root_.scala.Boolean#
 _root_.scala.AnyRef#ne(AnyRef).(that) => param that: AnyRef
   AnyRef => _root_.scala.AnyRef#
