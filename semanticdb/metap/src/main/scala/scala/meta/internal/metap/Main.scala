@@ -145,11 +145,11 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
           case DEFINITION =>
             // NOTE: This mode is only used to print symbols that are part
             // of complex types, so we don't need to fully support all symbols here.
-            rep(info.annotations, " ", " "){ ann =>
+            rep(info.annotations, " ", " ") { ann =>
               val syms = pprint(ann, doc)
               syms.foreach(buf.+=)
             }
-            opt(info.accessibility){ acc =>
+            opt(info.accessibility) { acc =>
               if (acc.symbol.nonEmpty) buf += acc.symbol
               pprint(acc, doc)
             }
