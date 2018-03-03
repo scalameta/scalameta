@@ -14,7 +14,8 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
   lazy val scalametaTargetroot = AbsolutePath(
     new File(
       global.settings.outputDirs.getSingleOutput
-        .map(_.file.getAbsolutePath)
+        .flatMap(so => Option(so.file))
+        .map(_.getAbsolutePath)
         .getOrElse(global.settings.d.value)))
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
   implicit class XtensionUnit(unit: g.CompilationUnit) {
