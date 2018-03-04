@@ -1,9 +1,8 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.collection.mutable
-import scala.tools.nsc.{Global => NscGlobal, SubComponent}
-import scala.tools.nsc.typechecker.AnalyzerPlugins
-import scala.tools.nsc.typechecker.SemanticdbAnalyzer
+import scala.tools.nsc.{SubComponent, Global => NscGlobal}
+import scala.tools.nsc.typechecker.{AnalyzerPlugins, Macros, SemanticdbAnalyzer}
 
 trait HijackAnalyzer extends SemanticdbAnalyzer { self: SemanticdbPlugin =>
 
@@ -20,7 +19,14 @@ trait HijackAnalyzer extends SemanticdbAnalyzer { self: SemanticdbPlugin =>
         classOf[AnalyzerPlugins].getDeclaredMethods.find(_.getName.endsWith("analyzerPlugins")).get
       analyzerPluginsGetter.invoke(global.analyzer).asInstanceOf[List[AnalyzerPlugin]]
     }
-    val newAnalyzer = new { val global: self.global.type = self.global } with SemanticdbAnalyzer
+    val oldMacroClassLoader = {
+      val macroPluginGetter =
+        classOf[Macros].getDeclaredMethods.find(_.getName.endsWith("findMacroClassLoader")).get
+      macroPluginGetter.invoke(global.analyzer).asInstanceOf[ClassLoader]
+    }
+    val newAnalyzer = new { val global: self.global.type = self.global } with SemanticdbAnalyzer {
+      override def findMacroClassLoader() = oldMacroClassLoader
+    }
     val analyzerField = classOf[NscGlobal].getDeclaredField("analyzer")
     analyzerField.setAccessible(true)
     analyzerField.set(global, newAnalyzer)
