@@ -171,9 +171,15 @@ lazy val metacp = project
   .settings(
     publishableSettings,
     description := "Scala 2.x classpath to SemanticDB converter",
-    libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
-    mainClass := Some("scala.meta.cli.Metacp")
+    libraryDependencies ++= List(
+      "org.scala-lang" % "scalap" % scalaVersion.value,
+      "io.github.soc" % "directories" % "5"
+    ),
+    mainClass := Some("scala.meta.cli.Metacp"),
+    buildInfoKeys := Seq[BuildInfoKey](version),
+    buildInfoPackage := "scala.meta.internal.metacp"
   )
+  .enablePlugins(BuildInfoPlugin)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdb3JVM, langmetaJVM)
@@ -651,6 +657,8 @@ lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
 lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
 
 lazy val publishableSettings = Def.settings(
+  SettingKey[Boolean]("ide-skip-project") :=
+    platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary,
   publishTo := Some {
     if (isCustomRepository) "adhoc" at adhocRepoUri
     else if (isSnapshot.value) Opts.resolver.sonatypeSnapshots

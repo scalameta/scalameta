@@ -1,4 +1,4 @@
-package scala.meta.internal.scalalib
+package scala.meta.internal.metacp
 
 import java.nio.file._
 import scala.meta.internal.metacp._
@@ -8,10 +8,9 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
-object Generator {
-  def main(args: Array[String]): Unit = {
-    val Array(outDir) = args
-    val settings = Settings(d = outDir)
+object Scalalib {
+  def process(out: Path): Int = {
+    val settings = Settings(d = out.toString)
     val index = new Index
     val synthetics = List(any, anyVal, anyRef, nothing)
     synthetics.foreach { infos =>
@@ -19,6 +18,7 @@ object Generator {
       infos.save(settings)
     }
     index.save(settings)
+    1
   }
 
   def any: ToplevelInfos = {
