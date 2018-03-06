@@ -4,6 +4,7 @@ import java.io.InputStream
 import java.io.PrintStream
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
+import java.util.Comparator
 import java.util.WeakHashMap
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
@@ -53,17 +54,23 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
       }
     }
 
+    _root_.pprint.log(settings.paths)
+
     settings.paths.foreach { path =>
       if (!path.getFileName.toString.endsWith(".jar")) {
         if (Files.isDirectory(path)) {
           import scala.collection.JavaConverters._
           Files
             .walk(path)
-            .sorted()
             .iterator()
             .asScala
-            .filter(p => p.getFileName.toString.endsWith(".semanticdb"))
+            .filter { p =>
+              p.getFileName.toString.endsWith(".semanticdb")
+            }
+            .toArray
+            .sortBy(p => (p.getNameCount, p.toString))
             .foreach { file =>
+              _root_.pprint.log(file)
               processPath(file, Files.newInputStream(file))
             }
         } else if (Files.isRegularFile(path)) {
