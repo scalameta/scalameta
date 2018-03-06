@@ -9,8 +9,8 @@ import scala.util.control.NonFatal
 import org.langmeta.internal.io._
 import org.langmeta.io._
 
-class Main(settings: Settings) {
-  def process(): Int = {
+object Main {
+  def process(settings: Settings): Int = {
     var failed = false
     val index = new Index
     settings.classpath.visit { base =>

@@ -1,6 +1,7 @@
 package scala.meta.cli
 
 import java.io._
+import java.nio.file.Files
 
 import io.github.soc.directories.ProjectDirectories
 import org.langmeta.internal.io.PlatformFileIO
@@ -35,9 +36,15 @@ object Metacp {
 
   def processPath(in: AbsolutePath, settings: Settings): AbsolutePath = {
     if (in.isDirectory) {
-      val exit = new Main(settings.copy(classpath = Classpath(in :: Nil))).process()
+      val out = settings.directories match {
+        case DirectoryOutput.TempDirectory =>
+          AbsolutePath(Files.createTempDirectory("semanticdb"))
+        case DirectoryOutput.InPlace =>
+          in
+      }
+      val exit = Main.process(settings.copy(classpath = Classpath(in :: Nil), d = out))
       assert(exit == 0, s"Failed to process $in")
-      settings.d
+      out
     } else if (!in.isFile) {
       throw new IllegalArgumentException(s"$in is not a regular file")
     } else {
@@ -46,7 +53,7 @@ object Metacp {
         cacheFile(settings, in.toNIO.getFileName.toString.stripSuffix(".jar") + "-" + checksum)
       if (!out.isFile) {
         PlatformFileIO.withJarFileSystem(out) { jar =>
-          val exit = new Main(settings.copy(classpath = Classpath(in :: Nil), d = jar)).process()
+          val exit = Main.process(settings.copy(classpath = Classpath(in :: Nil), d = jar))
           assert(exit == 0, s"Failed to process $in")
         }
       }

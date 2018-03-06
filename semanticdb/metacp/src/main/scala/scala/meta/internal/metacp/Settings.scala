@@ -11,10 +11,17 @@ final case class Settings(
     out: PrintStream = System.out,
     err: PrintStream = System.err,
     classpath: Classpath = Classpath(Nil),
-    d: AbsolutePath = Metacp.defaultCacheDir
+    d: AbsolutePath = Metacp.defaultCacheDir,
+    directories: DirectoryOutput = DirectoryOutput.TempDirectory
 ) {
   def withClasspath(e: String) =
     Classpath(classpath.shallow ++ Classpath(e).shallow)
+}
+
+sealed trait DirectoryOutput
+object DirectoryOutput {
+  case object TempDirectory extends DirectoryOutput
+  case object InPlace extends DirectoryOutput
 }
 
 object Settings {
@@ -28,7 +35,13 @@ object Settings {
           loop(settings.copy(classpath = cps1), true, rest)
         case "-d" +: d +: rest if allowOptions =>
           loop(settings.copy(d = AbsolutePath(d)), true, rest)
-        case flag +: rest if allowOptions && flag.startsWith("-") =>
+        case "-dirs" +: d +: rest if allowOptions =>
+          loop(settings.copy(d = AbsolutePath(d)), true, rest)
+        case "--dirs-in-place" :: rest =>
+          loop(settings.copy(directories = DirectoryOutput.InPlace), true, rest)
+        case "--dirs-in-tmp" :: rest =>
+          loop(settings.copy(directories = DirectoryOutput.TempDirectory), true, rest)
+        case flag +: _ if allowOptions && flag.startsWith("-") =>
           err.println(s"unknown flag $flag")
           None
         case cp +: rest =>

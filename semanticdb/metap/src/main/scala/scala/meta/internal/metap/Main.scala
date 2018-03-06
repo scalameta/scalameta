@@ -32,12 +32,12 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
     var failed = false
     var first = true
     def processPath(path: Path, stream: InputStream): Unit = {
+      if (first) {
+        first = false
+      } else {
+        out.println("")
+      }
       try {
-        if (first) {
-          first = false
-        } else {
-          out.println("")
-        }
         val documents = TextDocuments.parseFrom(stream)
         if (settings.format.isProto) {
           out.println(documents.toProtoString)
@@ -54,32 +54,9 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
       }
     }
 
-    _root_.pprint.log(settings.paths)
-
     settings.paths.foreach { path =>
-      if (!path.getFileName.toString.endsWith(".jar")) {
-        if (Files.isDirectory(path)) {
-          import scala.collection.JavaConverters._
-          Files
-            .walk(path)
-            .sorted()
-            .iterator()
-            .asScala
-            .filter { p =>
-              p.getFileName.toString.endsWith(".semanticdb")
-            }
-            .toArray
-            .foreach { file =>
-              _root_.pprint.log(file)
-              processPath(file, Files.newInputStream(file))
-            }
-        } else if (Files.isRegularFile(path)) {
-          processPath(path, Files.newInputStream(path))
-        } else {
-          err.println(s"Not a regular file $path")
-          failed = true
-        }
-      } else {
+      if (path.getFileName.toString.endsWith(".jar")) {
+        // Can't use nio.Files.walk because nio.FileSystems is not supported on Scala Native.
         val jarfile = new JarFile(path.toFile)
         val buf = ArrayBuffer.empty[JarEntry]
         val entries = jarfile.entries()
@@ -92,6 +69,22 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
         buf.sortBy(_.getName).foreach { entry =>
           processPath(Paths.get(entry.getName), jarfile.getInputStream(entry))
         }
+      } else if (Files.isDirectory(path)) {
+        import scala.collection.JavaConverters._
+        Files
+          .walk(path)
+          .sorted()
+          .iterator()
+          .asScala
+          .filter(_.getFileName.toString.endsWith(".semanticdb"))
+          .foreach { file =>
+            processPath(file, Files.newInputStream(file))
+          }
+      } else if (Files.isRegularFile(path)) {
+        processPath(path, Files.newInputStream(path))
+      } else {
+        err.println(s"Not a regular file $path")
+        failed = true
       }
     }
 
