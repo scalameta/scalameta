@@ -70,21 +70,27 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
           processPath(Paths.get(entry.getName), jarfile.getInputStream(entry))
         }
       } else if (Files.isDirectory(path)) {
-        import scala.collection.JavaConverters._
-        Files
-          .walk(path)
-          .iterator()
-          .asScala
-          .filter(_.getFileName.toString.endsWith(".semanticdb"))
-          .toArray
-          .sorted
-          .foreach { file =>
-            processPath(file, Files.newInputStream(file))
-          }
+        val root = path.resolve("META-INF").resolve("semanticdb")
+        if (Files.isRegularFile(root)) {
+          import scala.collection.JavaConverters._
+          Files
+            .walk(root)
+            .iterator()
+            .asScala
+            .filter(_.getFileName.toString.endsWith(".semanticdb"))
+            .toArray
+            .sorted
+            .foreach { file =>
+              processPath(file, Files.newInputStream(file))
+            }
+        } else {
+          err.println(s"classpath directory contains no semanticdbs: $path")
+          failed = true
+        }
       } else if (Files.isRegularFile(path)) {
         processPath(path, Files.newInputStream(path))
       } else {
-        err.println(s"Not a regular file $path")
+        err.println(s"not a regular file: $path")
         failed = true
       }
     }
