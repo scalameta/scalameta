@@ -34,15 +34,19 @@ object Metacp {
   }
 
   def processPath(in: AbsolutePath, settings: Settings): AbsolutePath = {
-    if (in.isDirectory) in
-    else if (!in.isFile) throw new IllegalArgumentException(s"$in is not a regular file")
-    else {
+    if (in.isDirectory) {
+      val exit = new Main(settings.copy(classpath = Classpath(in :: Nil))).process()
+      assert(exit == 0, s"Failed to process $in")
+      settings.d
+    } else if (!in.isFile) {
+      throw new IllegalArgumentException(s"$in is not a regular file")
+    } else {
       val checksum = Checksum(in)
       val out =
         cacheFile(settings, in.toNIO.getFileName.toString.stripSuffix(".jar") + "-" + checksum)
       if (!out.isFile) {
         PlatformFileIO.withJarFileSystem(out) { jar =>
-          val exit = new Main(Settings(classpath = Classpath(in :: Nil), d = jar)).process()
+          val exit = new Main(settings.copy(classpath = Classpath(in :: Nil), d = jar)).process()
           assert(exit == 0, s"Failed to process $in")
         }
       }
