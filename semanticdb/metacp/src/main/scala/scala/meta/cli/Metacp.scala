@@ -21,7 +21,8 @@ object Metacp {
   def process(args: Array[String], out: PrintStream, err: PrintStream): Int = {
     Settings.parse(args.toList, out, err) match {
       case Some(settings) =>
-        process(settings)
+        val mclasspath = process(settings)
+        out.println(mclasspath.mkString(File.pathSeparator))
         0
       case None =>
         1
