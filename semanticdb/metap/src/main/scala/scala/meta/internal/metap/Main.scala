@@ -71,7 +71,7 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
         }
       } else if (Files.isDirectory(path)) {
         val root = path.resolve("META-INF").resolve("semanticdb")
-        if (Files.isRegularFile(root)) {
+        if (Files.isDirectory(root)) {
           import scala.collection.JavaConverters._
           Files
             .walk(root)

@@ -1,5 +1,6 @@
 package com.javacp;
 
+import javax.naming.Context;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,8 +35,8 @@ public class Javacp<A extends CharSequence & Serializable, B> extends ArrayList<
     void typeParams(ArrayList<HashMap<A, String[]>> a, Hashtable<String, B> b) { }
     <C extends Integer> void methodTypeParams(C c) { }
 
-    public void overload(java.io.File a) { }
-    public void overload(sourcecode.File a) { }
+    public void overload(java.util.logging.Logger a) { }
+    public void overload(Logger a) { }
 
     // primitive fields
     public int Int;
