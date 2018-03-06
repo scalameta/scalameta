@@ -2,7 +2,6 @@ package scala.meta.internal.metacp
 
 import java.io.PrintStream
 
-import org.langmeta.internal.io.PathIO
 import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
 
@@ -12,7 +11,7 @@ final case class Settings(
     out: PrintStream = System.out,
     err: PrintStream = System.err,
     classpath: Classpath = Classpath(Nil),
-    d: AbsolutePath = PathIO.workingDirectory
+    d: AbsolutePath = Metacp.defaultCacheDir
 ) {
   def withClasspath(e: String) =
     Classpath(classpath.shallow ++ Classpath(e).shallow)
