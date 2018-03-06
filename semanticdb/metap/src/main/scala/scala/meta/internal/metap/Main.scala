@@ -73,10 +73,11 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
         import scala.collection.JavaConverters._
         Files
           .walk(path)
-          .sorted()
           .iterator()
           .asScala
           .filter(_.getFileName.toString.endsWith(".semanticdb"))
+          .toArray
+          .sorted
           .foreach { file =>
             processPath(file, Files.newInputStream(file))
           }
