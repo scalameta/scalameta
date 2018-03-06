@@ -3,7 +3,9 @@ package scala.meta.cli
 import java.io._
 
 import io.github.soc.directories.ProjectDirectories
+import org.langmeta.internal.io.PlatformFileIO
 import org.langmeta.io.AbsolutePath
+import org.langmeta.io.Classpath
 
 import scala.meta.internal.metacp._
 
@@ -17,45 +19,45 @@ object Metacp {
   }
 
   def process(args: Array[String], out: PrintStream, err: PrintStream): Int = {
-    Settings.parse(args.toList) match {
+    Settings.parse(args.toList, out, err) match {
       case Some(settings) =>
-        val main = new Main(settings, out, err)
-        main.process()
+        new Main(settings).process()
       case None =>
         1
     }
   }
 
-  def process(classpath: List[AbsolutePath], cache: AbsolutePath): List[AbsolutePath] = {
-    classpath.toParArray.map(p => process(p, cache)).toList
+  def process(settings: Settings): List[AbsolutePath] = {
+    settings.classpath.shallow.toParArray.map(p => processPath(p, settings)).toList
   }
 
-  def process(in: AbsolutePath, cache: AbsolutePath): AbsolutePath = {
+  def processPath(in: AbsolutePath, settings: Settings): AbsolutePath = {
     if (in.isDirectory) in
     else if (!in.isFile) throw new IllegalArgumentException(s"$in is not a regular file")
     else {
       val checksum = Checksum(in)
-      val out = cacheFile(cache, checksum)
-      if (!out.isDirectory) {
-        process(
-          Array("-cp", in.toString, "-d", out.toString),
-          System.out,
-          System.err
-        )
+      val out = cacheFile(settings, in.toNIO.getFileName.toString.stripSuffix(".jar") + "-" + checksum)
+      if (!out.isFile) {
+        PlatformFileIO.withJarFileSystem(out) { jar =>
+          val exit = new Main(Settings(classpath = Classpath(in :: Nil), d = jar)).process()
+          assert(exit == 0, s"Failed to process $in")
+        }
       }
       out
     }
   }
 
-  def scalaLibrarySynthetics(scalaVersion: String, cache: AbsolutePath): AbsolutePath = {
-    val out = cacheFile(cache, "scala-library-synthetics")
+  def scalaLibrarySynthetics(scalaVersion: String, settings: Settings): AbsolutePath = {
+    val out = cacheFile(settings, "scala-library-synthetics")
     if (!out.isDirectory) {
-      ScalaLibrarySynthetics.process(scalaVersion, out)
+      PlatformFileIO.withJarFileSystem(out) { jar =>
+        ScalaLibrarySynthetics.process(scalaVersion, jar)
+      }
     }
     out
   }
 
-  def bootClasspath(cache: AbsolutePath): List[AbsolutePath] = {
+  def bootClasspath(settings: Settings): List[AbsolutePath] = {
     val classpath = sys.props
       .collectFirst {
         case (k, v) if k.endsWith(".boot.class.path") =>
@@ -66,13 +68,13 @@ object Metacp {
             .toList
       }
       .getOrElse(sys.error("failed to detect JDK classpath"))
-    process(classpath, cache)
+    process(settings.copy(classpath = Classpath(classpath)))
   }
 
   def defaultCacheDir: AbsolutePath = AbsolutePath(
     ProjectDirectories.fromProjectName("semanticdb").projectCacheDir
   )
 
-  private def cacheFile(cache: AbsolutePath, name: String): AbsolutePath =
-    cache.resolve(BuildInfo.version).resolve(name)
+  private def cacheFile(settings: Settings, name: String): AbsolutePath =
+    settings.d.resolve(BuildInfo.version).resolve(name + ".jar")
 }

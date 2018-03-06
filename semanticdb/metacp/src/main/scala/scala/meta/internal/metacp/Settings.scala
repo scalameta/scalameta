@@ -1,34 +1,44 @@
 package scala.meta.internal.metacp
 
+import java.io.PrintStream
+
 import org.langmeta.internal.io.PathIO
 import org.langmeta.io.AbsolutePath
+import org.langmeta.io.Classpath
+
+import scala.meta.cli.Metacp
 
 final case class Settings(
-    cps: List[String] = Nil,
+    out: PrintStream = System.out,
+    err: PrintStream = System.err,
+    classpath: Classpath = Classpath(Nil),
     d: AbsolutePath = PathIO.workingDirectory
-)
+) {
+  def withClasspath(e: String) =
+    Classpath(classpath.shallow ++ Classpath(e).shallow)
+}
 
 object Settings {
-  def parse(args: List[String]): Option[Settings] = {
+  def parse(args: List[String], out: PrintStream, err: PrintStream): Option[Settings] = {
     def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
       args match {
         case "--" +: rest =>
-          loop(settings, false, args)
+          loop(settings, false, rest)
         case "-cp" +: cp +: rest if allowOptions =>
-          val cps1 = settings.cps :+ cp
-          loop(settings.copy(cps = cps1), true, rest)
+          val cps1 = settings.withClasspath(cp)
+          loop(settings.copy(classpath = cps1), true, rest)
         case "-d" +: d +: rest if allowOptions =>
           loop(settings.copy(d = AbsolutePath(d)), true, rest)
         case flag +: rest if allowOptions && flag.startsWith("-") =>
-          println(s"unknown flag $flag")
+          err.println(s"unknown flag $flag")
           None
         case cp +: rest =>
-          val cps1 = settings.cps :+ cp
-          loop(settings.copy(cps = cps1), true, rest)
+          val cps1 = settings.withClasspath(cp)
+          loop(settings.copy(classpath = cps1), true, rest)
         case Nil =>
           Some(settings)
       }
     }
-    loop(Settings(), true, args)
+    loop(Settings(out = out, err = err), allowOptions = true, args)
   }
 }
