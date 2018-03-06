@@ -1,7 +1,11 @@
 package scala.meta.internal.metap
 
+import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
+
 final case class Settings(
-    paths: List[String] = Nil,
+    paths: Vector[Path] = Vector.empty,
     format: OutputFormat = OutputFormat.Pretty
 )
 
@@ -28,7 +32,7 @@ object Settings {
           println(s"unknown flag $flag")
           None
         case path +: rest =>
-          val paths1 = settings.paths :+ path
+          val paths1 = settings.paths ++ path.split(File.pathSeparator).map(Paths.get(_))
           loop(settings.copy(paths = paths1), true, rest)
         case Nil =>
           Some(settings)
