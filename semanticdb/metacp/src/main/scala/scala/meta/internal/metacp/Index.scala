@@ -13,7 +13,7 @@ class Index {
 
   def append(infos: ToplevelInfos): Unit = {
     infos.toplevels.foreach { info =>
-      val uri = infos.classfile.base.relativize(infos.classfile.path) + ".semanticdb"
+      val uri = infos.classfile.relative.resolveSibling(_ + ".semanticdb").toString
       toplevels(info.symbol) = uri
       if (info.symbol.stripSuffix("#").contains("#")) return
       val ownerChain = info.owner.split("\\.")
@@ -29,7 +29,7 @@ class Index {
   }
 
   def save(settings: Settings): Unit = {
-    val indexAbspath = AbsolutePath(settings.d).resolve("META-INF/semanticdb.semanticidx")
+    val indexAbspath = settings.d.resolve("META-INF").resolve("semanticdb.semanticidx")
     val indexMessage = {
       val spackages = packages.map(kv => s.PackageEntry(symbol = kv._1, members = kv._2.toList))
       val stoplevels = toplevels.map(kv => s.ToplevelEntry(symbol = kv._1, uri = kv._2))

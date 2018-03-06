@@ -1,12 +1,8 @@
 package scala.meta.tests
 package semanticdb
 
-import java.io._
-import java.net._
 import java.nio.file._
-import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets._
-import java.util.HashMap
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.meta.testkit.DiffAssertions
@@ -17,7 +13,10 @@ import scala.meta.tests.cli._
 import scala.compat.Platform.EOL
 import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb._
+import org.langmeta.io.AbsolutePath
 import org.scalatest.FunSuite
+import org.scalatest.FunSuiteLike
+import scala.meta.internal.metacp.Settings
 
 class ExpectSuite extends FunSuite with DiffAssertions {
   BuildInfo.scalaVersion.split("\\.").take(2).toList match {
@@ -58,7 +57,7 @@ class ExpectSuite extends FunSuite with DiffAssertions {
   }
 }
 
-trait ExpectHelpers {
+trait ExpectHelpers extends FunSuiteLike {
   def filename: String
   def path: Path =
     Paths.get("tests", "jvm", "src", "test", "resources", filename)
@@ -74,39 +73,25 @@ trait ExpectHelpers {
   }
 
   protected def lowlevelSyntax(dirOrJar: Path): String = {
-    val dir = {
-      if (Files.isDirectory(dirOrJar)) {
-        dirOrJar
-      } else {
-        val tempDir = Files.createTempDirectory("jar_")
-        val jarRoot = FileIO.jarRootPath(AbsolutePath(dirOrJar.toAbsolutePath.toString)).toNIO
-        Files.walk(jarRoot).iterator.asScala.foreach { jarPath =>
-          if (jarPath.toString.endsWith(".semanticdb")) {
-            val bytes = Files.readAllBytes(jarPath)
-            val tempPath = tempDir.resolve(jarPath.toString.stripPrefix("/"))
-            Files.createDirectories(tempPath.getParent)
-            Files.write(tempPath, bytes)
-          }
-        }
-        tempDir
-      }
+    val args = Array(dirOrJar.toString)
+    val (exitcode, out, err) = CliSuite.communicate(Metap.process(args, _, _))
+    if (exitcode != 0) {
+      println(out)
+      println(err)
+      assert(exitcode == 0, s"non-zero exit code $exitcode")
     }
-    val paths = Files.walk(dir).iterator.asScala
-    val semanticdbs = paths.map(_.toString).filter(_.endsWith(".semanticdb")).toArray.sorted
-    val (exitcode, out, err) = CliSuite.communicate(Metap.process(semanticdbs, _, _))
-    assert(exitcode == 0)
     assert(err.isEmpty)
     out
   }
 
   protected def decompiledPath(path: Path): Path = {
     val target = Files.createTempDirectory("target_")
-    val metacp_args = Array("-d", target.toString, path.toString)
-    val (metacp_exitcode, out, err) = CliSuite.communicate(Metacp.process(metacp_args, _, _))
-    assert(metacp_exitcode == 0)
+    val (outJar, out, err) = CliSuite.communicate { (out, err) =>
+      Metacp.processPath(AbsolutePath(path), Settings(out, err, d = AbsolutePath(target)))
+    }
     assert(out.isEmpty)
     assert(err.isEmpty)
-    target
+    outJar.toNIO
   }
 
   protected def ownerSyntax(path: Path): String = {
@@ -165,7 +150,12 @@ trait ExpectHelpers {
 
 object ScalalibExpect extends ExpectHelpers {
   def filename: String = "scalalib.expect"
-  def loadObtained: String = lowlevelSyntax(Paths.get(sys.props("sbt.paths.scalalib.compile.jar")))
+  def loadObtained: String = {
+    val tmp = Files.createTempDirectory("scala-library-synthetics")
+    tmp.toFile.deleteOnExit()
+    val jar = Metacp.scalaLibrarySynthetics(BuildInfo.scalaVersion, Settings(d = AbsolutePath(tmp)))
+    lowlevelSyntax(jar.toNIO)
+  }
 }
 
 object MetacpExpect extends ExpectHelpers {

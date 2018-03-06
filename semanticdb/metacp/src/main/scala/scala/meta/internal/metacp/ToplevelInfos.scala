@@ -10,7 +10,7 @@ final case class ToplevelInfos(
     others: List[s.SymbolInformation]) {
   def save(settings: Settings): Unit = {
     assert(toplevels.nonEmpty)
-    val semanticdbRoot = AbsolutePath(settings.d).resolve("META-INF/semanticdb")
+    val semanticdbRoot = settings.d.resolve("META-INF").resolve("semanticdb")
     val semanticdbRelpath = classfile.name + ".semanticdb"
     val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
     val semanticdbDocument = s.TextDocument(

@@ -1,14 +1,19 @@
 package scala.meta.tests.metacp
 
 import java.io.File
+import java.io.OutputStream
+import java.io.PrintStream
 import java.nio.file.Files
+
+import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
+
 import scala.meta.cli.Metacp
 import scala.meta.tests.cli.BaseCliSuite
 
 abstract class BaseMetacpSuite extends BaseCliSuite {
 
-  private val tmp = Files.createTempDirectory("metacp")
+  val tmp: AbsolutePath = AbsolutePath(Files.createTempDirectory("metacp"))
   tmp.toFile.deleteOnExit()
 
   def checkMetacp(name: String, classpath: () => String): Unit = {
@@ -20,8 +25,10 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
         "-d",
         tmp.toString
       )
-      // println(tmp) // uncomment to manually inspect metacp artifacts
-      val exit = Metacp.process(args, System.out, System.err)
+      val devnull = new PrintStream(new OutputStream {
+        override def write(b: Int): Unit = ()
+      })
+      val exit = Metacp.process(args, devnull, System.err)
       assert(exit == 0)
     }
   }

@@ -2,11 +2,14 @@ package org.langmeta.internal.io
 
 import java.net.URI
 import java.nio.charset.Charset
+import java.nio.file.FileSystem
 import java.nio.file.FileSystemAlreadyExistsException
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util
 import java.util.stream.Collectors
+
 import scalapb.GeneratedMessage
 import scala.meta.internal.semanticdb3._
 import org.langmeta.io._
@@ -64,12 +67,27 @@ object PlatformFileIO {
   }
 
   def jarRootPath(jarFile: AbsolutePath): AbsolutePath = {
-    val uri = URI.create("jar:file:" + jarFile.toNIO.toUri.getPath)
-    val roo = newFileSystem(uri, new java.util.HashMap[String, Any]()).getPath("/")
-    AbsolutePath(roo)
+    val fs = newJarFileSystem(jarFile, create = false)
+    AbsolutePath(fs.getPath("/"))
   }
 
-  private def newFileSystem(uri: URI, map: java.util.Map[String, Any]) =
+  def withJarFileSystem[T](path: AbsolutePath, create: Boolean = true)(f: AbsolutePath => T): T = {
+    val fs = newJarFileSystem(path, create)
+    try f(AbsolutePath(fs.getPath("/")))
+    finally fs.close()
+  }
+
+  def newJarFileSystem(path: AbsolutePath, create: Boolean): FileSystem = {
+    Files.createDirectories(path.toNIO.getParent)
+    val map = new util.HashMap[String, String]()
+    if (create) {
+      map.put("create", "true")
+    }
+    val uri = URI.create("jar:file:" + path.toNIO.toUri.getPath)
+    newFileSystem(uri, map)
+  }
+
+  def newFileSystem(uri: URI, map: java.util.Map[String, _] = new util.HashMap()): FileSystem =
     try FileSystems.newFileSystem(uri, map)
     catch { case _: FileSystemAlreadyExistsException => FileSystems.getFileSystem(uri) }
 }
