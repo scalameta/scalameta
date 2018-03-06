@@ -20,18 +20,19 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
         override def visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult = {
           if (PathIO.extension(path) == "class") {
             try {
-              val node = path.toClassNode
+              val abspath = AbsolutePath(path)
+              val node = abspath.toClassNode
               val result = {
                 val attrs = if (node.attrs != null) node.attrs.asScala else Nil
                 if (attrs.exists(_.`type` == "ScalaSig")) {
-                  val classfile = ToplevelClassfile(base.toNIO, path, node)
+                  val classfile = ToplevelClassfile(base, abspath, node)
                   Scalacp.parse(classfile)
                 } else if (attrs.exists(_.`type` == "Scala")) {
                   None
                 } else {
                   val innerClassNode = node.innerClasses.asScala.find(_.name == node.name)
                   if (innerClassNode.isEmpty) {
-                    val classfile = ToplevelClassfile(base.toNIO, path, node)
+                    val classfile = ToplevelClassfile(base, abspath, node)
                     Javacp.parse(classfile)
                   } else {
                     None

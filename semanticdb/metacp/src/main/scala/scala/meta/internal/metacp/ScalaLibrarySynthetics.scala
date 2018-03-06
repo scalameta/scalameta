@@ -1,16 +1,19 @@
 package scala.meta.internal.metacp
 
-import java.nio.file._
-import scala.meta.internal.metacp._
+import org.langmeta.internal.io.PathIO
+import org.langmeta.io.AbsolutePath
+
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
-object Scalalib {
-  def process(out: Path): Int = {
-    val settings = Settings(d = out.toString)
+object ScalaLibrarySynthetics {
+  def process(scalaVersion: String, out: AbsolutePath): Unit = {
+    // NOTE: we currently discard scalaVersion because Any/AnyVal/AnyRef/Nothing are the same in 2.12/2.11.
+    // However, this may not be the case in future Scala versions.
+    val settings = Settings(d = out)
     val index = new Index
     val synthetics = List(any, anyVal, anyRef, nothing)
     synthetics.foreach { infos =>
@@ -18,7 +21,6 @@ object Scalalib {
       infos.save(settings)
     }
     index.save(settings)
-    1
   }
 
   def any: ToplevelInfos = {
@@ -90,7 +92,7 @@ object Scalalib {
       accessibility = Some(s.Accessibility(a.PUBLIC)),
       owner = "_root_.scala."
     )
-    val syntheticBase = Paths.get(".")
+    val syntheticBase = PathIO.workingDirectory
     val syntheticPath = syntheticBase.resolve("scala/" + name + ".class")
     val syntheticClassfile = ToplevelClassfile(syntheticBase, syntheticPath, null)
     ToplevelInfos(syntheticClassfile, List(builtin), ctor +: symbols)

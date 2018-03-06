@@ -18,7 +18,7 @@ object Scalacp {
   def parse(classfile: ToplevelClassfile): Option[ToplevelInfos] = {
     // TODO: Parse scalaSig directly from classfile.node
     // to avoid reading the bytes and parsing the classfile structure twice.
-    val bytes = Files.readAllBytes(classfile.path)
+    val bytes = Files.readAllBytes(classfile.path.toNIO)
     val scalapClassfile = ClassFileParser.parse(ByteCode(bytes))
     ScalaSigParser.parse(scalapClassfile).map { scalaSig =>
       val toplevels = scalaSig.topLevelClasses ++ scalaSig.topLevelObjects

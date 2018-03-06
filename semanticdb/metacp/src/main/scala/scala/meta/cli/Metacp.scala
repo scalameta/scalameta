@@ -1,11 +1,6 @@
 package scala.meta.cli
 
 import java.io._
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.security.MessageDigest
-import javax.xml.bind.DatatypeConverter
 
 import io.github.soc.directories.ProjectDirectories
 import org.langmeta.io.AbsolutePath
@@ -17,7 +12,6 @@ object Metacp {
     sys.exit(process(args, System.out, System.err))
   }
 
-  @deprecated("Use `process(args, System.out, System.err)` instead.", "3.4.0")
   def process(args: Array[String]): Int = {
     process(args, System.out, System.err)
   }
@@ -32,16 +26,17 @@ object Metacp {
     }
   }
 
-  def toMetacp(classpath: List[Path]): List[Path] = {
-    classpath.toParArray.map(toMetacp).toList
+  def process(classpath: List[AbsolutePath], cache: AbsolutePath): List[AbsolutePath] = {
+    classpath.toParArray.map(p => process(p, cache)).toList
   }
 
-  def toMetacp(in: Path): Path = {
-    if (Files.isDirectory(in)) in
+  def process(in: AbsolutePath, cache: AbsolutePath): AbsolutePath = {
+    if (in.isDirectory) in
+    else if (!in.isFile) throw new IllegalArgumentException(s"$in is not a regular file")
     else {
-      val hash = checksum(in)
-      val out = cacheFile(hash)
-      if (!Files.isDirectory(out)) {
+      val checksum = Checksum(in)
+      val out = cacheFile(cache, checksum)
+      if (!out.isDirectory) {
         process(
           Array("-cp", in.toString, "-d", out.toString),
           System.out,
@@ -52,49 +47,32 @@ object Metacp {
     }
   }
 
-  def scalalib: Path = {
-    val out = cacheFile("scalalib")
-    if (!Files.isDirectory(out)) {
-      Scalalib.process(out)
+  def scalaLibrarySynthetics(scalaVersion: String, cache: AbsolutePath): AbsolutePath = {
+    val out = cacheFile(cache, "scala-library-synthetics")
+    if (!out.isDirectory) {
+      ScalaLibrarySynthetics.process(scalaVersion, out)
     }
     out
   }
 
-  def jdk: List[Path] =
-    sys.props
+  def bootClasspath(cache: AbsolutePath): List[AbsolutePath] = {
+    val classpath = sys.props
       .collectFirst {
         case (k, v) if k.endsWith(".boot.class.path") =>
           v.split(java.io.File.pathSeparatorChar)
             .iterator
-            .map(p => Paths.get(p))
-            .filter(Files.isRegularFile(_))
+            .map(p => AbsolutePath(p))
+            .filter(_.isFile)
             .toList
       }
       .getOrElse(sys.error("failed to detect JDK classpath"))
-
-  private def checksum(fileOrDir: Path): String = {
-    val digest = MessageDigest.getInstance("md5")
-    if (Files.isRegularFile(fileOrDir)) checksumFile(fileOrDir, digest)
-    else checksumDirectory(fileOrDir, digest)
-    val hash = DatatypeConverter.printHexBinary(digest.digest())
-    hash
+    process(classpath, cache)
   }
 
-  private def checksumDirectory(dir: Path, digest: MessageDigest): Unit = {
-    checksumFile(dir, digest)
-  }
-
-  private def checksumFile(file: Path, digest: MessageDigest): Unit = {
-    digest.update(file.toString.getBytes())
-    digest.update(Files.getLastModifiedTime(file).toMillis.toByte)
-    digest.update(Files.size(file).toByte)
-  }
-
-  private def cacheDir: Path = Paths.get(
-    ProjectDirectories.fromProjectName("scalameta").projectCacheDir
+  def defaultCacheDir: AbsolutePath = AbsolutePath(
+    ProjectDirectories.fromProjectName("semanticdb").projectCacheDir
   )
 
-  private def cacheFile(hash: String): Path =
-    cacheDir.resolve(BuildInfo.version).resolve(hash)
-
+  private def cacheFile(cache: AbsolutePath, name: String): AbsolutePath =
+    cache.resolve(BuildInfo.version).resolve(name)
 }

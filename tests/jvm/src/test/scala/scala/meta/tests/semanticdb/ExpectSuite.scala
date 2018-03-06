@@ -7,6 +7,7 @@ import java.nio.file._
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets._
 import java.util.HashMap
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.meta.testkit.DiffAssertions
@@ -18,6 +19,8 @@ import scala.compat.Platform.EOL
 import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb._
 import org.scalatest.FunSuite
+
+import scala.meta.internal.metacp.ScalaLibrarySynthetics
 
 class ExpectSuite extends FunSuite with DiffAssertions {
   BuildInfo.scalaVersion.split("\\.").take(2).toList match {
@@ -165,7 +168,12 @@ trait ExpectHelpers {
 
 object ScalalibExpect extends ExpectHelpers {
   def filename: String = "scalalib.expect"
-  def loadObtained: String = lowlevelSyntax(Paths.get(sys.props("sbt.paths.scalalib.compile.jar")))
+  def loadObtained: String = {
+    val tmp = Files.createTempDirectory("scalalib")
+    tmp.toFile.deleteOnExit()
+    ScalaLibrarySynthetics.process(BuildInfo.scalaVersion, AbsolutePath(tmp))
+    lowlevelSyntax(tmp)
+  }
 }
 
 object MetacpExpect extends ExpectHelpers {

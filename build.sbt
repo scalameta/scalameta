@@ -200,36 +200,6 @@ lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
 lazy val metapNative = metap.native
 
-lazy val scalalibGen = project
-  .in(file("semanticdb/scalalib/gen"))
-  .settings(
-    sharedSettings,
-    nonPublishableSettings,
-    description := "SemanticDB generator for scalalib",
-    mainClass := Some("scala.meta.internal.scalalib.Generator")
-  )
-  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
-  .disablePlugins(BackgroundRunPlugin)
-  .enablePlugins(BuildInfoPlugin)
-  .dependsOn(metacp)
-
-lazy val scalalib = project
-  .in(file("semanticdb/scalalib/lib"))
-  .settings(
-    publishableSettings,
-    compatibilityPolicyViolation("https://github.com/scalameta/scalameta/issues/1377"),
-    description := "SemanticDB payloads for definitions that are missing from scala-library.jar",
-    resourceGenerators.in(Compile) += Def.taskDyn {
-      val outDir = resourceManaged.in(Compile).value
-      Def.task {
-        run.in(scalalibGen, Compile).toTask(s" $outDir").value
-        val semanticdbs = (outDir ** "*.semanticdb").get
-        val semanticidx = (outDir ** "*.semanticidx").get
-        semanticdbs ++ semanticidx
-      }
-    }.taskValue
-  )
-
 /** ======================== LANGMETA ======================== **/
 
 lazy val langmeta = crossProject(JSPlatform, JVMPlatform)
@@ -472,8 +442,6 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
     fullClasspath.in(Test) := {
       val semanticdbScalacJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
       sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
-      val scalalibJar = Keys.`package`.in(scalalib, Compile).value.getAbsolutePath
-      sys.props("sbt.paths.scalalib.compile.jar") = scalalibJar
       fullClasspath.in(Test).value
     },
     buildInfoKeys := Seq[BuildInfoKey](

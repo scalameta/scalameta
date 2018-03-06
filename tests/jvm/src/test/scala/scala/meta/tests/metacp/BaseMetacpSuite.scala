@@ -2,13 +2,14 @@ package scala.meta.tests.metacp
 
 import java.io.File
 import java.nio.file.Files
+import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
 import scala.meta.cli.Metacp
 import scala.meta.tests.cli.BaseCliSuite
 
 abstract class BaseMetacpSuite extends BaseCliSuite {
 
-  private val tmp = Files.createTempDirectory("metacp")
+  val tmp: AbsolutePath = AbsolutePath(Files.createTempDirectory("metacp"))
   tmp.toFile.deleteOnExit()
 
   def checkMetacp(name: String, classpath: () => String): Unit = {
