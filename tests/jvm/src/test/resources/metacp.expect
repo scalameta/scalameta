@@ -175,18 +175,18 @@ _root_.com.javacp.Javacp#methodTypeParams(C).(c) => param c: C
   C => _root_.com.javacp.Javacp#methodTypeParams(C).[C]
 _root_.com.javacp.Javacp#methodTypeParams(C).[C] => typeparam C: <: Integer
   Integer => _root_.java.lang.Integer#
-_root_.com.javacp.Javacp#overload(Javacp+1). => def overload: (a: Javacp): Unit
-  a => _root_.com.javacp.Javacp#overload(Javacp+1).(a)
-  Javacp => _root_.com.javacp.Javacp#
+_root_.com.javacp.Javacp#overload(File+1). => def overload: (a: File): Unit
+  a => _root_.com.javacp.Javacp#overload(File+1).(a)
+  File => _root_.java.io.File#
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#overload(Javacp+1).(a) => param a: Javacp
-  Javacp => _root_.com.javacp.Javacp#
-_root_.com.javacp.Javacp#overload(Javacp+2). => def overload: (a: Javacp): Unit
-  a => _root_.com.javacp.Javacp#overload(Javacp+2).(a)
-  Javacp => _root_.example.Javacp#
+_root_.com.javacp.Javacp#overload(File+1).(a) => param a: File
+  File => _root_.java.io.File#
+_root_.com.javacp.Javacp#overload(File+2). => def overload: (a: File): Unit
+  a => _root_.com.javacp.Javacp#overload(File+2).(a)
+  File => _root_.sourcecode.File#
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Javacp#overload(Javacp+2).(a) => param a: Javacp
-  Javacp => _root_.example.Javacp#
+_root_.com.javacp.Javacp#overload(File+2).(a) => param a: File
+  File => _root_.sourcecode.File#
 _root_.com.javacp.Javacp#packagePrivateField. => private[javacp] var packagePrivateField: Int
   Int => _root_.scala.Int#
 _root_.com.javacp.Javacp#packagePrivateMethod(). => private[javacp] def packagePrivateMethod: (): Unit
@@ -460,24 +460,6 @@ _root_.example.Example.x(). => getter x: : ClassTag[Int]
 _root_.example.Example.x. => private[this] val x: ClassTag[Int]
   ClassTag => _root_.scala.reflect.ClassTag#
   Int => _root_.scala.Int#
-
-example/Javacp.class
---------------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => example/Javacp.class
-Text => empty
-Language => Scala
-Symbols => 4 entries
-
-Symbols:
-_root_. => package _root_
-_root_.example. => package example
-_root_.example.Javacp# => class Javacp.{+1 decls}
-  extends AnyRef
-_root_.example.Javacp#`<init>`(). => primaryctor <init>: (): Javacp
-  Javacp => _root_.example.Javacp#
 
 example/MethodUsages.class
 --------------------------

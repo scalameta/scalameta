@@ -451,28 +451,6 @@ Synthetics:
   [0:2..0:12): unapplySeq => _root_.scala.collection.generic.SeqFactory#unapplySeq(CC).
   [0:13..0:20): Nothing => _root_.scala.Nothing#
 
-semanticdb/integration/src/main/scala/example/Javacp.scala
-----------------------------------------------------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => semanticdb/integration/src/main/scala/example/Javacp.scala
-Text => non-empty
-Language => Scala212
-Symbols => 3 entries
-Occurrences => 2 entries
-
-Symbols:
-_root_.example. => package example
-_root_.example.Javacp# => class Javacp.{+1 decls}
-  extends AnyRef
-_root_.example.Javacp#`<init>`(). => primaryctor <init>: (): Javacp
-  Javacp => _root_.example.Javacp#
-
-Occurrences:
-[0:8..0:15): example <= _root_.example.
-[2:6..2:12): Javacp <= _root_.example.Javacp#
-
 semanticdb/integration/src/main/scala/example/Methods.scala
 -----------------------------------------------------------
 
