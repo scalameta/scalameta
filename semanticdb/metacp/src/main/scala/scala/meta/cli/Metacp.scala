@@ -21,7 +21,8 @@ object Metacp {
   def process(args: Array[String], out: PrintStream, err: PrintStream): Int = {
     Settings.parse(args.toList, out, err) match {
       case Some(settings) =>
-        new Main(settings).process()
+        process(settings)
+        0
       case None =>
         1
     }
