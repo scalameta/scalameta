@@ -1,12 +1,7 @@
 package scala.meta.internal.javacp
 
-import java.nio.file.Files
-import java.nio.file.Path
-
 import org.langmeta.io.AbsolutePath
-
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.javacp.asm._

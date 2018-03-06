@@ -1,13 +1,8 @@
 package scala.meta.tests
 package semanticdb
 
-import java.io._
-import java.net._
 import java.nio.file._
-import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets._
-import java.util.HashMap
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.meta.testkit.DiffAssertions
@@ -17,13 +12,10 @@ import scala.meta.cli._
 import scala.meta.tests.cli._
 import scala.compat.Platform.EOL
 import org.langmeta.internal.io.PathIO
-import org.langmeta.internal.io.PlatformFileIO
 import org.langmeta.internal.semanticdb._
 import org.langmeta.io.AbsolutePath
 import org.scalatest.FunSuite
 import org.scalatest.FunSuiteLike
-
-import scala.meta.internal.metacp.ScalaLibrarySynthetics
 import scala.meta.internal.metacp.Settings
 
 class ExpectSuite extends FunSuite with DiffAssertions {

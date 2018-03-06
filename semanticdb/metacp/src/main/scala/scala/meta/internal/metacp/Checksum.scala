@@ -3,7 +3,6 @@ package scala.meta.internal.metacp
 import java.nio.file.Files
 import java.security.MessageDigest
 import javax.xml.bind.DatatypeConverter
-
 import org.langmeta.io.AbsolutePath
 
 object Checksum {

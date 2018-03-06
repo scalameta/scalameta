@@ -42,7 +42,7 @@ object Metacp {
         case DirectoryOutput.InPlace =>
           in
       }
-      val exit = Main.process(settings.copy(classpath = Classpath(in :: Nil), d = out))
+      val exit = new Main(settings.copy(classpath = Classpath(in :: Nil), d = out)).process()
       assert(exit == 0, s"Failed to process $in")
       out
     } else if (!in.isFile) {
@@ -53,7 +53,7 @@ object Metacp {
         cacheFile(settings, in.toNIO.getFileName.toString.stripSuffix(".jar") + "-" + checksum)
       if (!out.isFile) {
         PlatformFileIO.withJarFileSystem(out) { jar =>
-          val exit = Main.process(settings.copy(classpath = Classpath(in :: Nil), d = jar))
+          val exit = new Main(settings.copy(classpath = Classpath(in :: Nil), d = jar)).process()
           assert(exit == 0, s"Failed to process $in")
         }
       }

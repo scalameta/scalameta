@@ -3,8 +3,6 @@ package scala.meta.internal.metap
 import java.io.InputStream
 import java.io.PrintStream
 import java.nio.file._
-import java.nio.file.attribute.BasicFileAttributes
-import java.util.Comparator
 import java.util.WeakHashMap
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
