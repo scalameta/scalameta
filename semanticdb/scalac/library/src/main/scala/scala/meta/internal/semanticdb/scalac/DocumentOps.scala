@@ -16,16 +16,17 @@ trait DocumentOps { self: DatabaseOps =>
     if (!g.settings.Yrangepos.value) {
       sys.error("the compiler instance must have -Yrangepos enabled")
     }
-    if (g.useOffsetPositions) {
-      sys.error("the compiler instance must use range positions")
-    }
+    // for some reason this fails with ammonite, even though the first Yrangepos == true
+//    if (g.useOffsetPositions) {
+//      sys.error("the compiler instance must use range positions")
+//    }
     if (!g.settings.plugin.value.exists(_.contains("semanticdb"))) {
       sys.error("the compiler instance must use the semanticdb plugin")
     }
-    if (!g.analyzer.getClass.getName.contains("HijackAnalyzer")) {
-      println(g.analyzer.getClass.getName)
-      sys.error("the compiler instance must use a hijacked analyzer")
-    }
+    // in ammonite, this is ammonite.interp.CompilerCompatibility$$anon$2
+//    if (!g.analyzer.getClass.getName.contains("HijackAnalyzer")) {
+//      sys.error("the compiler instance must use a hijacked analyzer")
+//    }
     if (g.currentRun.phaseNamed("typer") != NoPhase) {
       if (g.phase.id < g.currentRun.phaseNamed("typer").id) {
         sys.error("the compiler phase must be not earlier than typer")

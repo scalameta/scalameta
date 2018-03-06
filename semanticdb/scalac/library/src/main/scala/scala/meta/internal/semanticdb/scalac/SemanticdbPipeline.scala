@@ -11,19 +11,15 @@ import scala.meta.io._
 import scala.meta.internal.semanticdb.{vfs => v}
 
 trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
-  lazy val scalametaTargetroot = AbsolutePath(
-    new File(
-      global.settings.outputDirs.getSingleOutput
-        .flatMap(so => Option(so.file))
-        .map(_.getAbsolutePath)
-        .getOrElse(global.settings.d.value)))
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
   implicit class XtensionUnit(unit: g.CompilationUnit) {
     def isIgnored: Boolean = {
-      config.mode.isDisabled ||
-      !unit.source.file.name.endsWith(".scala") || {
-        val fullName = unit.source.file.file.getAbsolutePath
-        !config.fileFilter.matches(fullName)
+      config.mode.isDisabled || {
+        !unit.source.file.name.endsWith(".scala") && !unit.source.file.name.endsWith(".sc")
+      } || {
+        Option(unit.source.file).flatMap(f => Option(f.file)).map(_.getAbsolutePath).exists(
+          fullName => !config.fileFilter.matches(fullName)
+        )
       }
     }
   }
@@ -58,12 +54,12 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
           validateCompilerState()
           val mdoc = unit.toDocument
           val mdb = m.Database(List(mdoc))
-          mdb.save(scalametaTargetroot, config.sourceroot)
+          mdb.save(config.targetroot, config.sourceroot)
         } catch handleError(unit)
       }
 
       private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
-        val vdb = v.Database.load(Classpath(scalametaTargetroot))
+        val vdb = v.Database.load(Classpath(config.targetroot))
         val orphanedVentries = vdb.entries.filter(ventry => {
           val scalaName = v.SemanticdbPaths.toScala(ventry.fragment.name)
           !config.sourceroot.resolve(scalaName).isFile
@@ -86,7 +82,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
 
       private def synchronizeSourcesAndSemanticdbIndex(): Unit = {
         // TODO: Support incremental compilation.
-        index.save(scalametaTargetroot)
+        index.save(config.targetroot)
       }
 
       override def run(): Unit = {
@@ -125,7 +121,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
                 synthetics = Nil
               )
               val mdb = m.Database(mdoc :: Nil)
-              mdb.append(scalametaTargetroot, config.sourceroot)
+              mdb.append(config.targetroot, config.sourceroot)
             }
           }
         } catch handleError(unit)
@@ -150,7 +146,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
     val createdSemanticdbsMessage = {
       val howMany = g.currentRun.units.length
       val what = if (howMany == 1) "file" else "files"
-      var where = scalametaTargetroot.toString
+      var where = config.targetroot.toString
       where = where.stripSuffix("/").stripSuffix("/.")
       where = where + "/META-INF/semanticdb"
       s"Created $howMany semanticdb $what in $where"

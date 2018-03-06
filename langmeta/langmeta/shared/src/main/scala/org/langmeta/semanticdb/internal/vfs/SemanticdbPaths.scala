@@ -9,6 +9,7 @@ object SemanticdbPaths {
   private val semanticdbPrefix = RelativePath("META-INF").resolve("semanticdb")
   private val semanticdbExtension = "semanticdb"
   private val scalaExtension = "scala"
+  private val scalaScriptExtension = "sc"
 
   def isSemanticdb(path: RelativePath): Boolean = {
     path.toNIO.startsWith(semanticdbPrefix.toNIO) &&
@@ -22,7 +23,8 @@ object SemanticdbPaths {
   }
 
   def isScala(path: RelativePath): Boolean = {
-    PathIO.extension(path.toNIO) == scalaExtension
+    val extension = PathIO.extension(path.toNIO)
+    extension == scalaExtension || extension == scalaScriptExtension
   }
 
   def fromScala(path: RelativePath): RelativePath = {

@@ -1,9 +1,12 @@
 package scala.meta.internal.semanticdb.scalac
 
-import scala.meta.internal.semanticdb._
+import java.io.File
+
+import org.langmeta.internal.io.PathIO
+
 import scala.meta.io.AbsolutePath
 import scala.tools.nsc.Global
-import scala.tools.nsc.plugins.{Plugin, PluginComponent}
+import scala.tools.nsc.plugins.Plugin
 
 class SemanticdbPlugin(val global: Global)
     extends Plugin
@@ -22,9 +25,28 @@ class SemanticdbPlugin(val global: Global)
 
   override def init(options: List[String], errFn: String => Unit): Boolean = {
     val originalOptions = options.map(option => "-P:" + name + ":" + option)
-    config = SemanticdbConfig.parse(originalOptions, errFn)
+    val parsedConf = SemanticdbConfig.parse(originalOptions, errFn)
+    config = amendTargetRoot(parsedConf)
     true
   }
+
+  def isAmmonite(): Boolean = {
+    global.getClass.getName.startsWith("ammonite")
+  }
+
+  private def amendTargetRoot(config: SemanticdbConfig): SemanticdbConfig = {
+    val targetRoot = if (isAmmonite()) {
+      PathIO.workingDirectory.resolve("out")
+    } else
+      AbsolutePath {
+        global.settings.outputDirs.getSingleOutput
+          .flatMap(so => Option(so.file))
+          .map(_.getAbsolutePath)
+          .getOrElse(global.settings.d.value)
+      }
+    config.copy(targetroot = targetRoot)
+  }
+
 }
 
 object SemanticdbPlugin {

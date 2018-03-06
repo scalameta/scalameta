@@ -6,6 +6,7 @@ import scala.util.matching.Regex
 
 case class SemanticdbConfig(
     sourceroot: AbsolutePath,
+    targetroot: AbsolutePath,
     mode: SemanticdbMode,
     failures: FailureMode,
     denotations: DenotationMode,
@@ -21,6 +22,7 @@ case class SemanticdbConfig(
     val p = SemanticdbPlugin.name
     List(
       "sourceroot" -> sourceroot,
+      "targetroot" -> targetroot,
       "mode" -> mode.name,
       "failures" -> failures.name,
       "signatures" -> signatures.name,
@@ -39,6 +41,7 @@ case class SemanticdbConfig(
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
+    PathIO.workingDirectory,
     PathIO.workingDirectory,
     SemanticdbMode.Fat,
     FailureMode.Warning,
