@@ -38,7 +38,8 @@ object Metacp {
     else if (!in.isFile) throw new IllegalArgumentException(s"$in is not a regular file")
     else {
       val checksum = Checksum(in)
-      val out = cacheFile(settings, in.toNIO.getFileName.toString.stripSuffix(".jar") + "-" + checksum)
+      val out =
+        cacheFile(settings, in.toNIO.getFileName.toString.stripSuffix(".jar") + "-" + checksum)
       if (!out.isFile) {
         PlatformFileIO.withJarFileSystem(out) { jar =>
           val exit = new Main(Settings(classpath = Classpath(in :: Nil), d = jar)).process()

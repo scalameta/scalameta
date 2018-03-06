@@ -3,7 +3,6 @@ package scala.meta.tests.metacp
 import org.langmeta.internal.io.FileIO
 import org.langmeta.internal.io.PlatformFileIO
 import org.langmeta.io.AbsolutePath
-import org.langmeta.io.RelativePath
 import org.scalatest.concurrent.TimeLimitedTests
 import org.scalatest.time.Minute
 import org.scalatest.time.Span
@@ -31,7 +30,6 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
   test("scala-library-synthetics") {
     val settings = Settings(d = tmp.resolve("scala-library-synthetics"))
     val obtained = Metacp.scalaLibrarySynthetics(BuildInfo.scalaVersion, settings)
-    pprint.log(obtained)
     assertDirectoryListingMatches(
       obtained,
       """
@@ -48,7 +46,6 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
     val settings = Settings(d = tmp.resolve("scala-library"))
     val jar = Metacp.processPath(AbsolutePath(scalaLibraryJar), settings)
     PlatformFileIO.withJarFileSystem(jar) { root =>
-      pprint.log(FileIO.listAllFilesRecursively(root))
       assert(root.resolve("META-INF/semanticdb/scala/Predef.class.semanticdb").isFile)
       assert(root.resolve("META-INF/semanticdb/scala/package.class.semanticdb").isFile)
       assert(root.resolve("META-INF/semanticdb/scala/Function16.class.semanticdb").isFile)
