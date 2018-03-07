@@ -21,9 +21,8 @@ class Main(settings: Settings, reporter: Reporter) {
           List(out)
         } else if (in.isFile) {
           val cacheEntry = {
-            val base = settings.cacheDir
             val checksum = Checksum(in)
-            base.resolve(in.toFile.getName.stripSuffix(".jar") + "-" + checksum + ".jar")
+            cacheFile(in.toFile.getName.stripSuffix(".jar") + "-" + checksum + ".jar")
           }
           if (cacheEntry.toFile.exists) {
             List(cacheEntry)
@@ -40,7 +39,7 @@ class Main(settings: Settings, reporter: Reporter) {
     }
     val synthetics = {
       if (settings.scalaLibrarySynthetics) {
-        val cacheEntry = settings.cacheDir.resolve("scala-library-synthetics.jar")
+        val cacheEntry = cacheFile("scala-library-synthetics.jar")
         if (cacheEntry.toFile.exists) {
           List(cacheEntry)
         } else {
@@ -103,6 +102,9 @@ class Main(settings: Settings, reporter: Reporter) {
     index.save(out)
     success
   }
+
+  private def cacheFile(name: String): AbsolutePath =
+    settings.cacheDir.resolve(BuildInfo.version).resolve(name)
 
   private def dumpScalaLibrarySynthetics(out: AbsolutePath): Boolean = {
     val index = new Index
