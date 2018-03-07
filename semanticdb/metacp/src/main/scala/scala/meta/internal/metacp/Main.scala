@@ -14,11 +14,11 @@ class Main(settings: Settings, reporter: Reporter) {
   def process(): Option[Classpath] = {
     var success = true
     val outs = {
-      settings.classpath.shallow.par.map { in =>
+      settings.classpath.shallow.par.flatMap { in =>
         if (in.isDirectory) {
           val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
           success &= convertClasspathEntry(in, out)
-          out
+          List(out)
         } else if (in.isFile) {
           val cacheEntry = {
             val base = settings.cacheDir
@@ -26,15 +26,15 @@ class Main(settings: Settings, reporter: Reporter) {
             base.resolve(in.toFile.getName.stripSuffix(".jar") + "-" + checksum + ".jar")
           }
           if (cacheEntry.toFile.exists) {
-            cacheEntry
+            List(cacheEntry)
           } else {
             PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
               success &= convertClasspathEntry(in, out)
-              cacheEntry
+              List(cacheEntry)
             }
           }
         } else {
-          throw new IllegalArgumentException(s"unsupported classpath entry $in")
+          Nil
         }
       }.toList
     }
