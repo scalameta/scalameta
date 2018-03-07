@@ -77,6 +77,71 @@ _root_.com.javacp.ClassSuffix#suffix. => var suffix: Inner[String]#Bar#Fuz[Integ
   Fuz => _root_.Fuz#
   Integer => _root_.java.lang.Integer#
 
+com/javacp/InnerClasses.class
+-----------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => com/javacp/InnerClasses.class
+Text => empty
+Language => Java
+Symbols => 25 entries
+
+Symbols:
+_root_. => package _root_
+_root_.com. => package com
+_root_.com.javacp. => package javacp
+_root_.com.javacp.InnerClasses# => class InnerClasses.{+6 decls}
+  extends Object
+_root_.com.javacp.InnerClasses#<init>(). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#Overload1# => class Overload1.{+2 decls}
+  extends Object
+_root_.com.javacp.InnerClasses#Overload1#<init>(InnerClasses). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#Overload1#A# => class A.{+1 decls}
+  extends Object
+_root_.com.javacp.InnerClasses#Overload1#A#<init>(Overload1). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#Overload2# => class Overload2.{+2 decls}
+  extends Object
+_root_.com.javacp.InnerClasses#Overload2#<init>(InnerClasses). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#Overload2#A# => class A.{+1 decls}
+  extends Object
+_root_.com.javacp.InnerClasses#Overload2#A#<init>(Overload2). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#StaticInner# => static class StaticInner.{+4 decls}
+  extends Object
+_root_.com.javacp.InnerClasses#StaticInner#<init>(). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#StaticInner#NonStatic# => class NonStatic.{+2 decls}
+  extends Object
+_root_.com.javacp.InnerClasses#StaticInner#NonStatic#<init>(StaticInner). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#StaticInner#NonStatic#method(NonStatic). => def method: (e: NonStatic): Unit
+  e => _root_.com.javacp.InnerClasses#StaticInner#NonStatic#method(NonStatic).(e)
+  NonStatic => _root_.com.javacp.InnerClasses#StaticInner#NonStatic#
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#StaticInner#NonStatic#method(NonStatic).(e) => param e: NonStatic
+  NonStatic => _root_.com.javacp.InnerClasses#StaticInner#NonStatic#
+_root_.com.javacp.InnerClasses#StaticInner#isNotStatic(). => def isNotStatic: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#StaticInner#isStatic(). => static def isStatic: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#overload(A+1). => def overload: (a: A): Unit
+  a => _root_.com.javacp.InnerClasses#overload(A+1).(a)
+  A => _root_.com.javacp.InnerClasses#Overload1#A#
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#overload(A+1).(a) => param a: A
+  A => _root_.com.javacp.InnerClasses#Overload1#A#
+_root_.com.javacp.InnerClasses#overload(A+2). => def overload: (a: A): Unit
+  a => _root_.com.javacp.InnerClasses#overload(A+2).(a)
+  A => _root_.com.javacp.InnerClasses#Overload2#A#
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.InnerClasses#overload(A+2).(a) => param a: A
+  A => _root_.com.javacp.InnerClasses#Overload2#A#
+
 com/javacp/Javacp.class
 -----------------------
 
@@ -497,6 +562,56 @@ _root_.example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
 _root_.example.`local-file`#`<init>`(). => primaryctor <init>: (): local-file
   local-file => _root_.example.`local-file`#
+
+example/MetacJava.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/MetacJava.class
+Text => empty
+Language => Scala
+Symbols => 14 entries
+
+Symbols:
+_root_. => package _root_
+_root_.example. => package example
+_root_.example.MetacJava# => class MetacJava.{+11 decls}
+  extends AnyRef
+_root_.example.MetacJava#`<init>`(). => primaryctor <init>: (): MetacJava
+  MetacJava => _root_.example.MetacJava#
+_root_.example.MetacJava#inner(). => getter inner: : InnerClasses
+  InnerClasses => _root_.com.javacp.InnerClasses#
+_root_.example.MetacJava#inner. => private[this] val inner: InnerClasses
+  InnerClasses => _root_.com.javacp.InnerClasses#
+_root_.example.MetacJava#nonStatic(). => getter nonStatic: : MetacJava.this.staticInner.NonStatic
+  MetacJava => _root_.example.MetacJava#
+  staticInner => _root_.example.MetacJava#staticInner().
+  NonStatic => _root_.com.javacp.InnerClasses.StaticInner.NonStatic#
+_root_.example.MetacJava#nonStatic. => private[this] val nonStatic: MetacJava.this.staticInner.NonStatic
+  MetacJava => _root_.example.MetacJava#
+  staticInner => _root_.example.MetacJava#staticInner().
+  NonStatic => _root_.com.javacp.InnerClasses.StaticInner.NonStatic#
+_root_.example.MetacJava#overload1(). => getter overload1: : MetacJava.this.inner.Overload1
+  MetacJava => _root_.example.MetacJava#
+  inner => _root_.example.MetacJava#inner().
+  Overload1 => _root_.com.javacp.InnerClasses.Overload1#
+_root_.example.MetacJava#overload1. => private[this] val overload1: MetacJava.this.inner.Overload1
+  MetacJava => _root_.example.MetacJava#
+  inner => _root_.example.MetacJava#inner().
+  Overload1 => _root_.com.javacp.InnerClasses.Overload1#
+_root_.example.MetacJava#overload2(). => getter overload2: : MetacJava.this.inner.Overload2
+  MetacJava => _root_.example.MetacJava#
+  inner => _root_.example.MetacJava#inner().
+  Overload2 => _root_.com.javacp.InnerClasses.Overload2#
+_root_.example.MetacJava#overload2. => private[this] val overload2: MetacJava.this.inner.Overload2
+  MetacJava => _root_.example.MetacJava#
+  inner => _root_.example.MetacJava#inner().
+  Overload2 => _root_.com.javacp.InnerClasses.Overload2#
+_root_.example.MetacJava#staticInner(). => getter staticInner: : StaticInner
+  StaticInner => _root_.com.javacp.InnerClasses.StaticInner#
+_root_.example.MetacJava#staticInner. => private[this] val staticInner: StaticInner
+  StaticInner => _root_.com.javacp.InnerClasses.StaticInner#
 
 example/Methods.class
 ---------------------
