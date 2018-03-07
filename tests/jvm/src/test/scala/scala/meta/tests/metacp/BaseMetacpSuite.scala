@@ -20,8 +20,8 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
       val devnull = new PrintStream(new OutputStream {
         override def write(b: Int): Unit = ()
       })
-      val settings = Settings(classpath = classpath(), cacheDir = tmp)
-      val reporter = Reporter(devnull, System.err)
+      val settings = Settings().withClasspath(classpath()).withCacheDir(tmp)
+      val reporter = Reporter().withOut(devnull).withErr(System.err)
       val result = Metacp.process(settings, reporter)
       assert(result.nonEmpty)
     }

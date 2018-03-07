@@ -7,17 +7,17 @@ import scala.meta.metacp._
 
 object Metacp {
   def main(args: Array[String]): Unit = {
-    sys.exit(process(args, Reporter.default))
+    sys.exit(process(args, Reporter()))
   }
 
-  @deprecated("Use `process(Settings.parse(args.toList).get, Reporter.default)`.", "3.5.0")
+  @deprecated("Use `process(Settings.parse(args.toList).get, Reporter())`.", "3.5.0")
   def process(args: Array[String]): Int = {
-    process(args, Reporter.default)
+    process(args, Reporter())
   }
 
   @deprecated("Use `process(Settings.parse(args.toList).get, Reporter(out, err))`.", "3.5.0")
   def process(args: Array[String], out: PrintStream, err: PrintStream): Int = {
-    process(args, Reporter(out, err))
+    process(args, Reporter().withOut(out).withErr(err))
   }
 
   private def process(args: Array[String], reporter: Reporter): Int = {

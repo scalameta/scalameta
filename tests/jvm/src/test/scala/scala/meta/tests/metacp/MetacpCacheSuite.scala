@@ -29,10 +29,11 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
   }
 
   test("scala-library-synthetics") {
-    val settings = Settings(
-        cacheDir = tmp.resolve("scala-library-synthetics"),
-        includeScalaLibrarySynthetics = true)
-    Metacp.process(settings, Reporter.default) match {
+    val settings = Settings()
+      .withCacheDir(tmp.resolve("scala-library-synthetics"))
+      .withIncludeScalaLibrarySynthetics(true)
+    val reporter = Reporter()
+    Metacp.process(settings, reporter) match {
       case Some(Classpath(List(scalaLibrarySyntheticsJar))) =>
         assertDirectoryListingMatches(
           scalaLibrarySyntheticsJar,
@@ -50,11 +51,12 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
   }
 
   test("scala-library") {
-    val settings = Settings(
-        cacheDir = tmp.resolve("scala-library"),
-        classpath = Classpath(AbsolutePath(scalaLibraryJar)),
-        includeScalaLibrarySynthetics = false)
-    Metacp.process(settings, Reporter.default) match {
+    val settings = Settings()
+        .withCacheDir(tmp.resolve("scala-library"))
+        .withClasspath(Classpath(AbsolutePath(scalaLibraryJar)))
+        .withIncludeScalaLibrarySynthetics(false)
+    val reporter = Reporter()
+    Metacp.process(settings, reporter) match {
       case result @ Some(Classpath(List(scalaLibrarySemanticdbJar))) =>
         PlatformFileIO.withJarFileSystem(scalaLibrarySemanticdbJar) { root =>
           assert(root.resolve("META-INF/semanticdb/scala/Predef.class.semanticdb").isFile)
@@ -62,7 +64,7 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
           assert(root.resolve("META-INF/semanticdb/scala/Function16.class.semanticdb").isFile)
           // Without caching, this test would fail because the test suite must run within 1 minute.
           1.to(100).foreach { _ =>
-            assert(result == Metacp.process(settings, Reporter.default))
+            assert(result == Metacp.process(settings, reporter))
           }
         }
       case other =>

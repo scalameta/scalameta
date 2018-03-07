@@ -7,11 +7,42 @@ import org.langmeta.io.Classpath
 import scala.meta.cli.Metacp
 import scala.meta.internal.metacp.BuildInfo
 
-final case class Settings(
-    cacheDir: AbsolutePath = Settings.defaultCacheDir,
-    classpath: Classpath = Classpath(Nil),
-    includeScalaLibrarySynthetics: Boolean = false
-)
+final class Settings private (
+    val cacheDir: AbsolutePath,
+    val classpath: Classpath,
+    val includeScalaLibrarySynthetics: Boolean
+) {
+  private def this() = {
+    this(
+        cacheDir = Settings.defaultCacheDir,
+        classpath = Classpath(Nil),
+        includeScalaLibrarySynthetics = false
+    )
+  }
+
+  def withCacheDir(cacheDir: AbsolutePath): Settings = {
+    copy(cacheDir = cacheDir)
+  }
+
+  def withClasspath(classpath: Classpath): Settings = {
+    copy(classpath = classpath)
+  }
+
+  def withIncludeScalaLibrarySynthetics(include: Boolean): Settings = {
+    copy(includeScalaLibrarySynthetics = include)
+  }
+
+  private def copy(
+      cacheDir: AbsolutePath = cacheDir,
+      classpath: Classpath = classpath,
+      includeScalaLibrarySynthetics: Boolean = includeScalaLibrarySynthetics): Settings = {
+    new Settings(
+      cacheDir = cacheDir,
+      classpath = classpath,
+      includeScalaLibrarySynthetics = includeScalaLibrarySynthetics
+    )
+  }
+}
 
 object Settings {
   def parse(args: List[String]): Option[Settings] = {
@@ -43,5 +74,9 @@ object Settings {
   def defaultCacheDir: AbsolutePath = {
     val cacheRoot = AbsolutePath(ProjectDirectories.fromProjectName("semanticdb").projectCacheDir)
     cacheRoot.resolve(BuildInfo.version)
+  }
+
+  def apply(): Settings = {
+    new Settings()
   }
 }

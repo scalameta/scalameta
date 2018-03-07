@@ -87,11 +87,11 @@ trait ExpectHelpers extends FunSuiteLike {
   protected def decompiledPath(in: Path): Path = {
     val target = Files.createTempDirectory("target_")
     val (outPath, out, err) = CliSuite.communicate { (out, err) =>
-      val settings = Settings(
-          cacheDir = AbsolutePath(target),
-          classpath = Classpath(AbsolutePath(in)),
-          includeScalaLibrarySynthetics = false)
-      val reporter = Reporter(out, err)
+      val settings = Settings()
+        .withCacheDir(AbsolutePath(target))
+        .withClasspath(Classpath(AbsolutePath(in)))
+        .withIncludeScalaLibrarySynthetics(false)
+      val reporter = Reporter().withOut(out).withErr(err)
       Metacp.process(settings, reporter) match {
         case Some(Classpath(List(outPath))) => outPath
         case other => sys.error(s"unexpected metacp result: $other")
@@ -161,11 +161,11 @@ object ScalalibExpect extends ExpectHelpers {
   def loadObtained: String = {
     val tmp = Files.createTempDirectory("scala-library-synthetics")
     tmp.toFile.deleteOnExit()
-    val settings = Settings(
-        cacheDir = AbsolutePath(tmp),
-        classpath = Classpath(Nil),
-        includeScalaLibrarySynthetics = true)
-    val reporter = Reporter.default
+    val settings = Settings()
+      .withCacheDir(AbsolutePath(tmp))
+      .withClasspath(Classpath(Nil))
+      .withIncludeScalaLibrarySynthetics(true)
+    val reporter = Reporter()
     Metacp.process(settings, reporter) match {
       case Some(Classpath(List(jar))) => lowlevelSyntax(jar.toNIO)
       case other => sys.error(s"unexpected metacp result: $other")
