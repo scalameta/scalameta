@@ -14,9 +14,9 @@ final class Settings private (
 ) {
   private def this() = {
     this(
-        cacheDir = Settings.defaultCacheDir,
-        classpath = Classpath(Nil),
-        scalaLibrarySynthetics = false
+      cacheDir = Settings.defaultCacheDir,
+      classpath = Classpath(Nil),
+      scalaLibrarySynthetics = false
     )
   }
 
