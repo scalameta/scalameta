@@ -39,7 +39,7 @@ class Main(settings: Settings, reporter: Reporter) {
       }.toList
     }
     val synthetics = {
-      if (settings.includeScalaLibrarySynthetics) {
+      if (settings.scalaLibrarySynthetics) {
         val cacheEntry = settings.cacheDir.resolve("scala-library-synthetics.jar")
         if (cacheEntry.toFile.exists) {
           List(cacheEntry)

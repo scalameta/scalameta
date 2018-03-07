@@ -31,7 +31,7 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
   test("scala-library-synthetics") {
     val settings = Settings()
       .withCacheDir(tmp.resolve("scala-library-synthetics"))
-      .withIncludeScalaLibrarySynthetics(true)
+      .withScalaLibrarySynthetics(true)
     val reporter = Reporter()
     Metacp.process(settings, reporter) match {
       case Some(Classpath(List(scalaLibrarySyntheticsJar))) =>
@@ -54,7 +54,7 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
     val settings = Settings()
         .withCacheDir(tmp.resolve("scala-library"))
         .withClasspath(Classpath(AbsolutePath(scalaLibraryJar)))
-        .withIncludeScalaLibrarySynthetics(false)
+        .withScalaLibrarySynthetics(false)
     val reporter = Reporter()
     Metacp.process(settings, reporter) match {
       case result @ Some(Classpath(List(scalaLibrarySemanticdbJar))) =>

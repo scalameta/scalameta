@@ -10,13 +10,13 @@ import scala.meta.internal.metacp.BuildInfo
 final class Settings private (
     val cacheDir: AbsolutePath,
     val classpath: Classpath,
-    val includeScalaLibrarySynthetics: Boolean
+    val scalaLibrarySynthetics: Boolean
 ) {
   private def this() = {
     this(
         cacheDir = Settings.defaultCacheDir,
         classpath = Classpath(Nil),
-        includeScalaLibrarySynthetics = false
+        scalaLibrarySynthetics = false
     )
   }
 
@@ -28,18 +28,18 @@ final class Settings private (
     copy(classpath = classpath)
   }
 
-  def withIncludeScalaLibrarySynthetics(include: Boolean): Settings = {
-    copy(includeScalaLibrarySynthetics = include)
+  def withScalaLibrarySynthetics(include: Boolean): Settings = {
+    copy(scalaLibrarySynthetics = include)
   }
 
   private def copy(
       cacheDir: AbsolutePath = cacheDir,
       classpath: Classpath = classpath,
-      includeScalaLibrarySynthetics: Boolean = includeScalaLibrarySynthetics): Settings = {
+      scalaLibrarySynthetics: Boolean = scalaLibrarySynthetics): Settings = {
     new Settings(
       cacheDir = cacheDir,
       classpath = classpath,
-      includeScalaLibrarySynthetics = includeScalaLibrarySynthetics
+      scalaLibrarySynthetics = scalaLibrarySynthetics
     )
   }
 }
@@ -53,9 +53,9 @@ object Settings {
         case "--cache-dir" +: cacheDir +: rest if allowOptions =>
           loop(settings.copy(cacheDir = AbsolutePath(cacheDir)), true, rest)
         case "--exclude-scala-library-synthetics" +: rest if allowOptions =>
-          loop(settings.copy(includeScalaLibrarySynthetics = false), true, rest)
+          loop(settings.copy(scalaLibrarySynthetics = false), true, rest)
         case "--include-scala-library-synthetics" +: rest if allowOptions =>
-          loop(settings.copy(includeScalaLibrarySynthetics = true), true, rest)
+          loop(settings.copy(scalaLibrarySynthetics = true), true, rest)
         case flag +: _ if allowOptions && flag.startsWith("-") =>
           println(s"unsupported flag $flag")
           None

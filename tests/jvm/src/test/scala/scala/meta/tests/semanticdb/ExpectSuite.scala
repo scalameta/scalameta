@@ -90,7 +90,7 @@ trait ExpectHelpers extends FunSuiteLike {
       val settings = Settings()
         .withCacheDir(AbsolutePath(target))
         .withClasspath(Classpath(AbsolutePath(in)))
-        .withIncludeScalaLibrarySynthetics(false)
+        .withScalaLibrarySynthetics(false)
       val reporter = Reporter().withOut(out).withErr(err)
       Metacp.process(settings, reporter) match {
         case Some(Classpath(List(outPath))) => outPath
@@ -164,7 +164,7 @@ object ScalalibExpect extends ExpectHelpers {
     val settings = Settings()
       .withCacheDir(AbsolutePath(tmp))
       .withClasspath(Classpath(Nil))
-      .withIncludeScalaLibrarySynthetics(true)
+      .withScalaLibrarySynthetics(true)
     val reporter = Reporter()
     Metacp.process(settings, reporter) match {
       case Some(Classpath(List(jar))) => lowlevelSyntax(jar.toNIO)
