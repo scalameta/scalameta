@@ -1,6 +1,7 @@
 package scala.meta.tests
 package semanticdb
 
+import scala.meta.internal.{semanticdb3 => s}
 import java.nio.file._
 import java.nio.charset.StandardCharsets._
 import scala.collection.JavaConverters._
@@ -49,6 +50,10 @@ class ExpectSuite extends FunSuite with DiffAssertions {
       }
       test("metac.owners") {
         import MetacOwnersExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
+      test("metac-metacp.diff") {
+        import MetacMetacpDiffExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
     case _ =>
@@ -201,6 +206,59 @@ object MetacOwnersExpect extends ExpectHelpers {
   def loadObtained: String = ownerSyntax(Paths.get(BuildInfo.databaseClasspath))
 }
 
+object MetacMetacpDiffExpect extends ExpectHelpers {
+  def filename: String = "metac-metacp.diff"
+  def load(path: Path): Map[String, s.SymbolInformation] = {
+    for {
+      file <- FileIO.listAllFilesRecursively(AbsolutePath(path))
+      if PathIO.extension(file.toNIO) == "semanticdb"
+      doc <- s.TextDocuments.parseFrom(file.readAllBytes).documents
+      sym <- doc.symbols
+    } yield sym.symbol -> sym
+  }.toMap
+  def loadObtained: String = {
+    val metacp = load(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
+    val metac = load(Paths.get(BuildInfo.databaseClasspath))
+    val diffs = for {
+      rawMetacpValue <- metacp.values
+      metacpValue = rawMetacpValue.copy(language = None)
+      rawMetacValue <- metac.get(metacpValue.symbol).toList
+      metacValue = rawMetacValue.copy(
+        language = None,
+        signature = None,
+        overrides = Nil,
+        members = Nil
+      )
+      if metacpValue != metacValue
+    } yield {
+      import scala.collection.JavaConverters._
+      val original = metacValue.toProtoString.split("\n").toSeq.asJava
+      val obtained = metacpValue.toProtoString.split("\n").toSeq.asJava
+      val OnlyCurlyBrace = "\\s+}".r
+      val diff = {
+        val lines = difflib.DiffUtils
+          .generateUnifiedDiff(
+            "metac",
+            "metacp",
+            original,
+            difflib.DiffUtils.diff(original, obtained),
+            3
+          )
+          .asScala
+        lines.remove(2) // remove lines like "@@ -3,18 +3,16 @@"
+        lines
+          .filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
+          .mkString("\n")
+      }
+      s"""symbol: ${metacpValue.symbol}
+         |$diff
+         |
+         |""".stripMargin
+    }
+    diffs.mkString
+  }
+}
+
 // To save the current behavior, run `sbt save-expect`.
 object SaveExpectTest {
   def main(args: Array[String]): Unit = {
@@ -210,5 +268,6 @@ object SaveExpectTest {
     LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
     HighlevelExpect.saveExpected(HighlevelExpect.loadObtained)
     MetacOwnersExpect.saveExpected(MetacOwnersExpect.loadObtained)
+    MetacMetacpDiffExpect.saveExpected(MetacMetacpDiffExpect.loadObtained)
   }
 }
