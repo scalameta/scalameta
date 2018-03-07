@@ -4,10 +4,10 @@ package scala.meta.tests.metacp
 // and produces ~60mb of artifacts in a temporary directory.
 class MetacpCrashSuite extends BaseMetacpSuite {
 
-  checkMetacp("scala-library", () => scalaLibraryJar)
-  checkNoCrashes(scalameta)
-  checkNoCrashes(akka)
-  checkNoCrashes(spark)
-  checkNoCrashes(jdk)
+  checkMetacp("scala-library", () => scalaLibraryClasspath)
+  checkMetacp(scalameta)
+  checkMetacp(akka)
+  checkMetacp(spark)
+  checkMetacp(jdk)
 
 }

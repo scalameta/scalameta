@@ -3,12 +3,13 @@ package scala.meta.tests.metacp
 import org.langmeta.internal.io.FileIO
 import org.langmeta.internal.io.PlatformFileIO
 import org.langmeta.io.AbsolutePath
+import org.langmeta.io.Classpath
 import org.scalatest.concurrent.TimeLimitedTests
 import org.scalatest.time.Minute
 import org.scalatest.time.Span
-
 import scala.meta.cli.Metacp
-import scala.meta.internal.metacp.Settings
+import scala.meta.metacp.Settings
+import scala.meta.metacp.Reporter
 import scala.meta.tests.BuildInfo
 
 class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
@@ -28,31 +29,44 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
   }
 
   test("scala-library-synthetics") {
-    val settings = Settings(d = tmp.resolve("scala-library-synthetics"))
-    val obtained = Metacp.scalaLibrarySynthetics(BuildInfo.scalaVersion, settings)
-    assertDirectoryListingMatches(
-      obtained,
-      """
-        |META-INF/semanticdb.semanticidx
-        |META-INF/semanticdb/scala/Any.class.semanticdb
-        |META-INF/semanticdb/scala/AnyRef.class.semanticdb
-        |META-INF/semanticdb/scala/AnyVal.class.semanticdb
-        |META-INF/semanticdb/scala/Nothing.class.semanticdb
-        |""".stripMargin
-    )
+    val settings = Settings(
+        cacheDir = tmp.resolve("scala-library-synthetics"),
+        includeScalaLibrarySynthetics = true)
+    Metacp.process(settings, Reporter.default) match {
+      case Some(Classpath(List(scalaLibrarySyntheticsJar))) =>
+        assertDirectoryListingMatches(
+          scalaLibrarySyntheticsJar,
+          """
+            |META-INF/semanticdb.semanticidx
+            |META-INF/semanticdb/scala/Any.class.semanticdb
+            |META-INF/semanticdb/scala/AnyRef.class.semanticdb
+            |META-INF/semanticdb/scala/AnyVal.class.semanticdb
+            |META-INF/semanticdb/scala/Nothing.class.semanticdb
+            |""".stripMargin
+        )
+      case other =>
+        fail(s"unexpected metacp result: $other")
+    }
   }
 
   test("scala-library") {
-    val settings = Settings(d = tmp.resolve("scala-library"))
-    val jar = Metacp.processPath(AbsolutePath(scalaLibraryJar), settings)
-    PlatformFileIO.withJarFileSystem(jar) { root =>
-      assert(root.resolve("META-INF/semanticdb/scala/Predef.class.semanticdb").isFile)
-      assert(root.resolve("META-INF/semanticdb/scala/package.class.semanticdb").isFile)
-      assert(root.resolve("META-INF/semanticdb/scala/Function16.class.semanticdb").isFile)
-      // Without caching, this test would fail because the test suite must run within 1 minute.
-      1.to(100).foreach { _ =>
-        assert(jar == Metacp.processPath(AbsolutePath(scalaLibraryJar), settings))
-      }
+    val settings = Settings(
+        cacheDir = tmp.resolve("scala-library"),
+        classpath = Classpath(AbsolutePath(scalaLibraryJar)),
+        includeScalaLibrarySynthetics = false)
+    Metacp.process(settings, Reporter.default) match {
+      case result @ Some(Classpath(List(scalaLibrarySemanticdbJar))) =>
+        PlatformFileIO.withJarFileSystem(scalaLibrarySemanticdbJar) { root =>
+          assert(root.resolve("META-INF/semanticdb/scala/Predef.class.semanticdb").isFile)
+          assert(root.resolve("META-INF/semanticdb/scala/package.class.semanticdb").isFile)
+          assert(root.resolve("META-INF/semanticdb/scala/Function16.class.semanticdb").isFile)
+          // Without caching, this test would fail because the test suite must run within 1 minute.
+          1.to(100).foreach { _ =>
+            assert(result == Metacp.process(settings, Reporter.default))
+          }
+        }
+      case other =>
+        fail(s"unexpected metacp result: $other")
     }
   }
 

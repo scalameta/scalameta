@@ -1,28 +1,14 @@
-package scala.meta.internal.metacp
+package scala.meta.internal.scalacp
 
 import org.langmeta.internal.io.PathIO
-import org.langmeta.io.AbsolutePath
-
+import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
-object ScalaLibrarySynthetics {
-  def process(scalaVersion: String, out: AbsolutePath): Unit = {
-    // NOTE: we currently discard scalaVersion because Any/AnyVal/AnyRef/Nothing are the same in 2.12/2.11.
-    // However, this may not be the case in future Scala versions.
-    val settings = Settings(d = out)
-    val index = new Index
-    val synthetics = List(any, anyVal, anyRef, nothing)
-    synthetics.foreach { infos =>
-      index.append(infos)
-      infos.save(settings)
-    }
-    index.save(settings)
-  }
-
+object Scalalib {
   def any: ToplevelInfos = {
     val symbols = List(
       builtinMethod("Any", List(p.ABSTRACT), "equals", Nil, List("that" -> "_root_.scala.Any#"), "_root_.scala.Boolean#"),

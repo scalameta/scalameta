@@ -34,7 +34,7 @@ class SignatureSuite extends BaseMetacpSuite {
   def checkSignatureRoundtrip(library: Library): Unit = {
     test(library.name) {
       val failingSignatures = ArrayBuffer.empty[String]
-      Classpath(library.classpath()).visit { root =>
+      library.classpath().visit { root =>
         new java.nio.file.SimpleFileVisitor[Path] {
           override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
             if (PathIO.extension(file) == "class") {

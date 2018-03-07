@@ -4,11 +4,10 @@ import java.io.File
 import java.io.OutputStream
 import java.io.PrintStream
 import java.nio.file.Files
-
 import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
-
 import scala.meta.cli.Metacp
+import scala.meta.metacp._
 import scala.meta.tests.cli.BaseCliSuite
 
 abstract class BaseMetacpSuite extends BaseCliSuite {
@@ -16,24 +15,19 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
   val tmp: AbsolutePath = AbsolutePath(Files.createTempDirectory("metacp"))
   tmp.toFile.deleteOnExit()
 
-  def checkMetacp(name: String, classpath: () => String): Unit = {
+  def checkMetacp(name: String, classpath: () => Classpath): Unit = {
     test(name) {
-      val cp = classpath()
-      val args = Array[String](
-        "-cp",
-        cp,
-        "-d",
-        tmp.toString
-      )
       val devnull = new PrintStream(new OutputStream {
         override def write(b: Int): Unit = ()
       })
-      val exit = Metacp.process(args, devnull, System.err)
-      assert(exit == 0)
+      val settings = Settings(classpath = classpath(), cacheDir = tmp)
+      val reporter = Reporter(devnull, System.err)
+      val result = Metacp.process(settings, reporter)
+      assert(result.nonEmpty)
     }
   }
 
-  def checkNoCrashes(library: Library): Unit = {
+  def checkMetacp(library: Library): Unit = {
     checkMetacp(library.name, () => library.classpath())
   }
 
@@ -43,16 +37,13 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
   val kafka = Library("org.apache.kafka", "kafka_2.12", "1.0.0")
   val flink = Library("org.apache.flink", "flink-parent", "1.4.1")
   val grpc = Library("io.grpc", "grpc-all", "1.10.0")
-
-  def bootClasspath: String =
-    Classpath(
+  val jdk = {
+    val bootClasspath = Classpath(
       sys.props
         .collectFirst { case (k, v) if k.endsWith(".boot.class.path") => v }
-        .getOrElse("")).shallow
-      .filter(p => Files.isRegularFile(p.toNIO))
-      .mkString(File.pathSeparator)
-
-  val jdk = Library("JDK", () => bootClasspath)
+        .getOrElse(""))
+    Library("JDK", () => bootClasspath)
+  }
 
   val allLibraries = List[Library](
     scalameta,
@@ -66,7 +57,7 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
 
 }
 
-case class Library(name: String, classpath: () => String)
+case class Library(name: String, classpath: () => Classpath)
 object Library {
   def apply(organization: String, artifact: String, version: String): Library =
     Library(
@@ -74,7 +65,7 @@ object Library {
         val jars = Jars
           .fetch(organization, artifact, version)
           .filterNot(_.toString.contains("scala-lang"))
-        jars.mkString(File.pathSeparator)
+        Classpath(jars)
       }
     )
 }

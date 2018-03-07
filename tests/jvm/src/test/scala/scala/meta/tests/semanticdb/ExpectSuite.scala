@@ -9,6 +9,7 @@ import scala.meta.testkit.DiffAssertions
 import scala.meta.internal.io.FileIO
 import scala.meta._
 import scala.meta.cli._
+import scala.meta.metacp._
 import scala.meta.tests.cli._
 import scala.compat.Platform.EOL
 import org.langmeta.internal.io.PathIO
@@ -16,7 +17,6 @@ import org.langmeta.internal.semanticdb._
 import org.langmeta.io.AbsolutePath
 import org.scalatest.FunSuite
 import org.scalatest.FunSuiteLike
-import scala.meta.internal.metacp.Settings
 
 class ExpectSuite extends FunSuite with DiffAssertions {
   BuildInfo.scalaVersion.split("\\.").take(2).toList match {
@@ -84,14 +84,22 @@ trait ExpectHelpers extends FunSuiteLike {
     out
   }
 
-  protected def decompiledPath(path: Path): Path = {
+  protected def decompiledPath(in: Path): Path = {
     val target = Files.createTempDirectory("target_")
-    val (outJar, out, err) = CliSuite.communicate { (out, err) =>
-      Metacp.processPath(AbsolutePath(path), Settings(out, err, d = AbsolutePath(target)))
+    val (outPath, out, err) = CliSuite.communicate { (out, err) =>
+      val settings = Settings(
+          cacheDir = AbsolutePath(target),
+          classpath = Classpath(AbsolutePath(in)),
+          includeScalaLibrarySynthetics = false)
+      val reporter = Reporter(out, err)
+      Metacp.process(settings, reporter) match {
+        case Some(Classpath(List(outPath))) => outPath
+        case other => sys.error(s"unexpected metacp result: $other")
+      }
     }
     assert(out.isEmpty)
     assert(err.isEmpty)
-    outJar.toNIO
+    outPath.toNIO
   }
 
   protected def ownerSyntax(path: Path): String = {
@@ -153,8 +161,15 @@ object ScalalibExpect extends ExpectHelpers {
   def loadObtained: String = {
     val tmp = Files.createTempDirectory("scala-library-synthetics")
     tmp.toFile.deleteOnExit()
-    val jar = Metacp.scalaLibrarySynthetics(BuildInfo.scalaVersion, Settings(d = AbsolutePath(tmp)))
-    lowlevelSyntax(jar.toNIO)
+    val settings = Settings(
+        cacheDir = AbsolutePath(tmp),
+        classpath = Classpath(Nil),
+        includeScalaLibrarySynthetics = true)
+    val reporter = Reporter.default
+    Metacp.process(settings, reporter) match {
+      case Some(Classpath(List(jar))) => lowlevelSyntax(jar.toNIO)
+      case other => sys.error(s"unexpected metacp result: $other")
+    }
   }
 }
 

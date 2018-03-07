@@ -242,6 +242,14 @@ class PublicSuite extends FunSuite {
     // TODO: come up with a platform-independent test
   }
 
+  test("scala.meta.metacp.Settings.toString") {
+    // n/a
+  }
+
+  test("scala.meta.metacp.Reporter.toString") {
+    // n/a
+  }
+
   test("scala.meta.parsers.Parse.toString") {
     // n/a
   }
