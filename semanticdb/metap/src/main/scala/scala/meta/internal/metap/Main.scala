@@ -69,7 +69,7 @@ class Main(settings: Settings, reporter: Reporter) {
               processSemanticdb(file, Files.newInputStream(file))
             }
         } else {
-          err.println(s"classpath directory contains no semanticdbs: $path")
+          out.println(s"classpath directory contains no semanticdbs: $path")
           success = false
         }
       } else if (Files.isRegularFile(path)) {
@@ -91,7 +91,7 @@ class Main(settings: Settings, reporter: Reporter) {
           processSemanticdb(path, Files.newInputStream(path))
         }
       } else {
-        err.println(s"not a regular file: $path")
+        out.println(s"not a regular file: $path")
         success = false
       }
     }
