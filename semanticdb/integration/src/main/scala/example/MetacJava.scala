@@ -1,16 +1,16 @@
 package example
 
-import com.javacp.InnerClasses
+import com.javacp
 
 class MetacJava {
-  InnerClasses.StaticInner.isStatic()
-  new InnerClasses.StaticInner().isNotStatic()
-  val inner = new InnerClasses()
+  javacp.MetacJava.StaticInner.isStatic()
+  new javacp.MetacJava.StaticInner().isNotStatic()
+  val inner = new javacp.MetacJava()
   val overload1 = new inner.Overload1()
   val overload2 = new inner.Overload2()
   inner.overload(new overload1.A())
   inner.overload(new overload2.A())
-  val staticInner = new InnerClasses.StaticInner()
+  val staticInner = new javacp.MetacJava.StaticInner()
   val nonStatic = new staticInner.NonStatic()
   nonStatic.method(nonStatic)
 }

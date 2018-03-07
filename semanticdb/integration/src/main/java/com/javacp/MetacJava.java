@@ -1,6 +1,6 @@
 package com.javacp;
 
-public class InnerClasses {
+public class MetacJava {
     public static class StaticInner {
         public void isNotStatic() {}
         public static void isStatic() {}

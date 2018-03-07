@@ -70,6 +70,55 @@ trait ExpectHelpers extends FunSuiteLike {
   def saveExpected(value: String): Unit =
     Files.write(path, value.getBytes(UTF_8))
 
+  def normalizeSymbol(sym: s.SymbolInformation): s.SymbolInformation = {
+    sym.copy(
+      language = None,
+      signature = None,
+      overrides = Nil,
+      members = Nil
+    )
+  }
+
+  def loadSymbols(path: Path): Map[String, s.SymbolInformation] = {
+    for {
+      file <- FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator
+      if PathIO.extension(file.toNIO) == "semanticdb"
+      doc <- s.TextDocuments.parseFrom(file.readAllBytes).documents
+      sym <- doc.symbols
+    } yield sym.symbol -> sym
+  }.toMap
+  def metacpSymbols = loadSymbols(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
+  def metacSymbols = loadSymbols(Paths.get(BuildInfo.databaseClasspath))
+
+  def unifiedDiff(
+      originalTitle: String,
+      revisedTitle: String,
+      original: String,
+      revised: String): String = {
+    import scala.collection.JavaConverters._
+    val originalLines = original.split("\n").toSeq.asJava
+    val revisedLines = revised.split("\n").toSeq.asJava
+    val OnlyCurlyBrace = "\\s+}".r
+    val diff = {
+      val lines = difflib.DiffUtils
+        .generateUnifiedDiff(
+          originalTitle,
+          revisedTitle,
+          originalLines,
+          difflib.DiffUtils.diff(originalLines, revisedLines),
+          3
+        )
+        .asScala
+      if (lines.lengthCompare(2) > 0) {
+        lines.remove(2) // remove lines like "@@ -3,18 +3,16 @@"
+      }
+      lines
+        .filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
+        .mkString("\n")
+    }
+    diff
+  }
+
   protected def highlevelDatabase(path: Path): Database = {
     val database = Database.load(Classpath(path.toString))
     val sorted = Database(database.documents.sortBy(_.input.syntax))
@@ -94,7 +143,8 @@ trait ExpectHelpers extends FunSuiteLike {
   protected def decompiledPath(in: Path): Path = {
     val target = Files.createTempDirectory("target_")
     val (outPath, out, err) = CliSuite.communicate { (out, err) =>
-      val settings = scala.meta.metacp.Settings()
+      val settings = scala.meta.metacp
+        .Settings()
         .withCacheDir(AbsolutePath(target))
         .withClasspath(Classpath(AbsolutePath(in)))
         .withScalaLibrarySynthetics(false)
@@ -168,7 +218,8 @@ object ScalalibExpect extends ExpectHelpers {
   def loadObtained: String = {
     val tmp = Files.createTempDirectory("scala-library-synthetics")
     tmp.toFile.deleteOnExit()
-    val settings = scala.meta.metacp.Settings()
+    val settings = scala.meta.metacp
+      .Settings()
       .withCacheDir(AbsolutePath(tmp))
       .withClasspath(Classpath(Nil))
       .withScalaLibrarySynthetics(true)
@@ -208,54 +259,35 @@ object MetacOwnersExpect extends ExpectHelpers {
 
 object MetacMetacpDiffExpect extends ExpectHelpers {
   def filename: String = "metac-metacp.diff"
-  def load(path: Path): Map[String, s.SymbolInformation] = {
-    for {
-      file <- FileIO.listAllFilesRecursively(AbsolutePath(path))
-      if PathIO.extension(file.toNIO) == "semanticdb"
-      doc <- s.TextDocuments.parseFrom(file.readAllBytes).documents
-      sym <- doc.symbols
-    } yield sym.symbol -> sym
-  }.toMap
   def loadObtained: String = {
-    val metacp = load(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
-    val metac = load(Paths.get(BuildInfo.databaseClasspath))
-    val diffs = for {
-      rawMetacpValue <- metacp.values
-      metacpValue = rawMetacpValue.copy(language = None)
-      rawMetacValue <- metac.get(metacpValue.symbol).toList
-      metacValue = rawMetacValue.copy(
-        language = None,
-        signature = None,
-        overrides = Nil,
-        members = Nil
-      )
-      if metacpValue != metacValue
-    } yield {
-      import scala.collection.JavaConverters._
-      val original = metacValue.toProtoString.split("\n").toSeq.asJava
-      val obtained = metacpValue.toProtoString.split("\n").toSeq.asJava
-      val OnlyCurlyBrace = "\\s+}".r
-      val diff = {
-        val lines = difflib.DiffUtils
-          .generateUnifiedDiff(
-            "metac",
-            "metacp",
-            original,
-            difflib.DiffUtils.diff(original, obtained),
-            3
-          )
-          .asScala
-        lines.remove(2) // remove lines like "@@ -3,18 +3,16 @@"
-        lines
-          .filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
-          .mkString("\n")
+    val javacp = metacpSymbols
+    val metac = metacSymbols.valuesIterator.toSeq.sortBy(_.symbol)
+    val symbols = for {
+      sym <- metac.iterator
+      javasym <- {
+        if (sym.symbol.contains("com.javacp")) Some(javacp.getOrElse(sym.symbol, s.SymbolInformation()))
+        else javacp.get(sym.symbol)
       }
-      s"""symbol: ${metacpValue.symbol}
-         |$diff
-         |
-         |""".stripMargin
+    } yield {
+      val header = "=" * sym.symbol.length
+      val diff = unifiedDiff(
+        "metac",
+        "javacp",
+        normalizeSymbol(sym).toProtoString,
+        normalizeSymbol(javasym).toProtoString
+      )
+      if (diff.isEmpty) ""
+      else {
+        s"""$header
+           |${sym.symbol}
+           |$header
+           |$diff
+           |
+           |
+           |""".stripMargin
+      }
     }
-    diffs.mkString
+    symbols.mkString
   }
 }
 
