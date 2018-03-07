@@ -1,0 +1,53 @@
+Packages:
+=========
+_empty_.
+  _empty_.A#
+  _empty_.B#
+_root_.
+  _root_.example.
+  _root_.types.
+_root_.example.
+  _root_.example.A#
+  _root_.example.Acc#
+  _root_.example.B#
+  _root_.example.Example.
+  _root_.example.MetacJava#
+  _root_.example.MethodUsages#
+  _root_.example.Methods#
+  _root_.example.Synthetic#
+  _root_.example.ValUsages.
+  _root_.example.Vals#
+  _root_.example.`local-file`#
+_root_.types.
+  _root_.types.B#
+  _root_.types.C#
+  _root_.types.P#
+  _root_.types.T#
+  _root_.types.Test.
+  _root_.types.ann#
+  _root_.types.ann1#
+  _root_.types.ann2#
+
+Toplevels:
+==========
+_empty_.A# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
+_empty_.B# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
+_root_.example.A# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
+_root_.example.Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scala.semanticdb
+_root_.example.B# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
+_root_.example.Example. => semanticdb/integration/src/main/scala/example/Example.scala.semanticdb
+_root_.example.MetacJava# => semanticdb/integration/src/main/scala/example/MetacJava.scala.semanticdb
+_root_.example.MethodUsages# => semanticdb/integration/src/main/scala/example/Methods.scala.semanticdb
+_root_.example.Methods# => semanticdb/integration/src/main/scala/example/Methods.scala.semanticdb
+_root_.example.Synthetic# => semanticdb/integration/src/main/scala/example/Synthetic.scala.semanticdb
+_root_.example.ValUsages. => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
+_root_.example.Vals# => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
+_root_.example.`local-file`# => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
+_root_.types.B# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
+_root_.types.C# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
+_root_.types.P# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
+_root_.types.T# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
+_root_.types.Test. => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
+_root_.types.ann# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
+_root_.types.ann1# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
+_root_.types.ann2# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb

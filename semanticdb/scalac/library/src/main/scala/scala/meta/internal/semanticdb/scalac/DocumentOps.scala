@@ -1,11 +1,15 @@
 package scala.meta.internal.semanticdb.scalac
 
+import org.langmeta.internal.io.PathIO
+import org.langmeta.internal.semanticdb.vfs.SemanticdbPaths
 import scala.collection.mutable
 import scala.reflect.internal._
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
+import scala.reflect.io.{PlainFile => GPlainFile}
 import scala.{meta => m}
 import scala.meta.internal.inputs._
+import scala.meta.internal.{semanticdb3 => s}
 
 trait DocumentOps { self: DatabaseOps =>
   def validateCompilerState(): Unit = {
@@ -189,7 +193,44 @@ trait DocumentOps { self: DatabaseOps =>
               todo -= mtree
 
               names(mtree.pos) = symbol
-              if (mtree.isDefinition) binders += mtree.pos
+              if (mtree.isDefinition) {
+                val isToplevel = {
+                  def loop(mtree: m.Tree): List[m.Tree] = {
+                    mtree.parent.map(p => p +: loop(p)).getOrElse(Nil)
+                  }
+                  val parentChain = loop(mtree)
+                  val member = parentChain.find(_.is[m.Member])
+                  member match {
+                    case Some(_: m.Defn.Class) | Some(_: m.Defn.Object) | Some(_: m.Defn.Trait) =>
+                      if (parentChain.exists(_.isInstanceOf[m.Source])) {
+                        !parentChain.exists(_.isInstanceOf[m.Template])
+                      } else {
+                        // NOTE: This shouldn't happen, but I'm not crashing.
+                        // Who knows what crazy stuff may be going on in semanticdb-scalac.
+                        false
+                      }
+                    case _ =>
+                      false
+                  }
+                }
+                if (isToplevel) {
+                  unit.source.file match {
+                    case gfile: GPlainFile =>
+                      val platformRelPath = m.AbsolutePath(gfile.file).toRelative(config.sourceroot)
+                      val unixRelPath = m.RelativePath(PathIO.toUnix(platformRelPath.toString))
+                      var suri = SemanticdbPaths.fromScala(unixRelPath).toString
+                      // TODO: Decide on the uri format for semanticdb.semanticidx.
+                      suri = suri.stripPrefix("META-INF/semanticdb/")
+                      val ssymbol = symbol.syntax
+                      val sowner = gsym.owner.toSemantic.syntax
+                      val sinfo = s.SymbolInformation(symbol = ssymbol, owner = sowner)
+                      index.append(suri, List(sinfo))
+                    case _ =>
+                      ()
+                  }
+                }
+                binders += mtree.pos
+              }
 
               def saveDenotation(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {

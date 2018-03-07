@@ -1,0 +1,79 @@
+Packages:
+=========
+_empty_.
+  _empty_.A#
+  _empty_.B#
+_root_.
+  _root_.com.
+  _root_.example.
+  _root_.exclude.
+  _root_.flags.
+  _root_.types.
+_root_.com.
+  _root_.com.javacp.
+_root_.com.javacp.
+  _root_.com.javacp.ClassSuffix#
+  _root_.com.javacp.Javacp#
+  _root_.com.javacp.Logger#
+  _root_.com.javacp.MetacJava#
+  _root_.com.javacp.NonGeneric#
+  _root_.com.javacp.Recursive#
+_root_.example.
+  _root_.example.A#
+  _root_.example.Acc#
+  _root_.example.B#
+  _root_.example.Example.
+  _root_.example.MetacJava#
+  _root_.example.MethodUsages#
+  _root_.example.Methods#
+  _root_.example.Synthetic#
+  _root_.example.ValUsages.
+  _root_.example.Vals#
+  _root_.example.`local-file`#
+_root_.exclude.
+  _root_.exclude.Exclude#
+_root_.flags.
+  _root_.flags.p.
+_root_.flags.p.
+  _root_.flags.p.package.
+_root_.types.
+  _root_.types.B#
+  _root_.types.C#
+  _root_.types.P#
+  _root_.types.T#
+  _root_.types.Test.
+  _root_.types.ann#
+  _root_.types.ann1#
+  _root_.types.ann2#
+
+Toplevels:
+==========
+_empty_.A# => A.class.semanticdb
+_empty_.B# => B.class.semanticdb
+_root_.com.javacp.ClassSuffix# => com/javacp/ClassSuffix.class.semanticdb
+_root_.com.javacp.Javacp# => com/javacp/Javacp.class.semanticdb
+_root_.com.javacp.Logger# => com/javacp/Logger.class.semanticdb
+_root_.com.javacp.MetacJava# => com/javacp/MetacJava.class.semanticdb
+_root_.com.javacp.NonGeneric# => com/javacp/NonGeneric.class.semanticdb
+_root_.com.javacp.Recursive# => com/javacp/Recursive.class.semanticdb
+_root_.example.A# => example/A.class.semanticdb
+_root_.example.Acc# => example/Acc.class.semanticdb
+_root_.example.B# => example/B.class.semanticdb
+_root_.example.Example. => example/Example.class.semanticdb
+_root_.example.MetacJava# => example/MetacJava.class.semanticdb
+_root_.example.MethodUsages# => example/MethodUsages.class.semanticdb
+_root_.example.Methods# => example/Methods.class.semanticdb
+_root_.example.Synthetic# => example/Synthetic.class.semanticdb
+_root_.example.ValUsages. => example/ValUsages.class.semanticdb
+_root_.example.Vals# => example/Vals.class.semanticdb
+_root_.example.`local-file`# => example/local$minusfile.class.semanticdb
+_root_.exclude.Exclude# => exclude/Exclude.class.semanticdb
+_root_.flags.p.package. => flags/p/package.class.semanticdb
+_root_.types.B# => types/B.class.semanticdb
+_root_.types.C# => types/C.class.semanticdb
+_root_.types.P# => types/P.class.semanticdb
+_root_.types.T# => types/T.class.semanticdb
+_root_.types.Test. => types/Test.class.semanticdb
+_root_.types.ann# => types/ann.class.semanticdb
+_root_.types.ann1# => types/ann1.class.semanticdb
+_root_.types.ann2# => types/ann2.class.semanticdb

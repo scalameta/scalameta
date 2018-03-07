@@ -34,6 +34,12 @@ object PlatformFileIO {
     finally stream.close()
   }
 
+  def readIndex(path: AbsolutePath): Index = {
+    val stream = Files.newInputStream(path.toNIO)
+    try Index.parseFrom(stream)
+    finally stream.close()
+  }
+
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
     Files.createDirectories(path.toNIO.getParent)
     val os = Files.newOutputStream(path.toNIO)

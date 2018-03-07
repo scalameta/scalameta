@@ -37,6 +37,10 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacpOwnersExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
+      test("metacp.index") {
+        import MetacpIndexExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
       test("lowlevel.expect") {
         import LowlevelExpect._
         assertNoDiff(loadObtained, loadExpected)
@@ -47,6 +51,10 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         val sourceroot = PathIO.workingDirectory
         val roundtrip = loadDatabase.toSchema(sourceroot).toDb(Some(Sourcepath(sourceroot)))
         assertNoDiff(roundtrip.toString, loadExpected, "Roundtrip")
+      }
+      test("index.expect") {
+        import IndexExpect._
+        assertNoDiff(loadObtained, loadExpected)
       }
       test("metac.owners") {
         import MetacOwnersExpect._
@@ -211,6 +219,29 @@ trait ExpectHelpers extends FunSuiteLike {
     // buf.toString
     owners.toList.sortBy(_._1).map(kv => s"${kv._1} => ${kv._2}").mkString(EOL)
   }
+
+  protected def indexSyntax(path: Path): String = {
+    val semanticdbSemanticidx = path.resolve("META-INF/semanticdb.semanticidx")
+    if (Files.exists(semanticdbSemanticidx)) {
+      val index = FileIO.readIndex(AbsolutePath(semanticdbSemanticidx))
+      val buf = new StringBuilder
+      buf.append("Packages:" + EOL)
+      buf.append("=========" + EOL)
+      index.packages.sortBy(_.symbol).foreach { entry =>
+        buf.append(entry.symbol + EOL)
+        entry.members.sorted.foreach(member => buf.append("  " + member + EOL))
+      }
+      buf.append(EOL)
+      buf.append("Toplevels:" + EOL)
+      buf.append("==========" + EOL)
+      index.toplevels.sortBy(_.symbol).foreach { entry =>
+        buf.append(s"${entry.symbol} => ${entry.uri}" + EOL)
+      }
+      buf.toString
+    } else {
+      ""
+    }
+  }
 }
 
 object ScalalibExpect extends ExpectHelpers {
@@ -241,6 +272,11 @@ object MetacpOwnersExpect extends ExpectHelpers {
   def loadObtained: String = ownerSyntax(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
 }
 
+object MetacpIndexExpect extends ExpectHelpers {
+  def filename: String = "metacp.index"
+  def loadObtained: String = indexSyntax(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
+}
+
 object LowlevelExpect extends ExpectHelpers {
   def filename: String = "lowlevel.expect"
   def loadObtained: String = lowlevelSyntax(Paths.get(BuildInfo.databaseClasspath))
@@ -250,6 +286,11 @@ object HighlevelExpect extends ExpectHelpers {
   def filename: String = "highlevel.expect"
   def loadObtained: String = loadDatabase.syntax
   def loadDatabase: Database = highlevelDatabase(Paths.get(BuildInfo.databaseClasspath))
+}
+
+object IndexExpect extends ExpectHelpers {
+  def filename: String = "index.expect"
+  def loadObtained: String = indexSyntax(Paths.get(BuildInfo.databaseClasspath))
 }
 
 object MetacOwnersExpect extends ExpectHelpers {
@@ -301,8 +342,10 @@ object SaveExpectTest {
     ScalalibExpect.saveExpected(ScalalibExpect.loadObtained)
     MetacpExpect.saveExpected(MetacpExpect.loadObtained)
     MetacpOwnersExpect.saveExpected(MetacpOwnersExpect.loadObtained)
+    MetacpIndexExpect.saveExpected(MetacpIndexExpect.loadObtained)
     LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
     HighlevelExpect.saveExpected(HighlevelExpect.loadObtained)
+    IndexExpect.saveExpected(IndexExpect.loadObtained)
     MetacOwnersExpect.saveExpected(MetacOwnersExpect.loadObtained)
     MetacMetacpDiffExpect.saveExpected(MetacMetacpDiffExpect.loadObtained)
   }

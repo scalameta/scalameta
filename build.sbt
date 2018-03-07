@@ -126,7 +126,7 @@ lazy val semanticdbScalacCore = project
     description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
   )
-  .dependsOn(scalametaJVM)
+  .dependsOn(scalametaJVM, metacp)
 
 lazy val semanticdbScalacPlugin = project
   .in(file("semanticdb/scalac/plugin"))

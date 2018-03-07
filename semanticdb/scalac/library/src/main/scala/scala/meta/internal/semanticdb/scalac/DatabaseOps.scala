@@ -1,5 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
+import scala.meta.internal.index._
 import scala.tools.nsc.Global
 
 trait DatabaseOps
@@ -19,4 +20,5 @@ trait DatabaseOps
     with TypeOps {
   val global: Global
   var config: SemanticdbConfig = SemanticdbConfig.default
+  val index: Index = new Index
 }

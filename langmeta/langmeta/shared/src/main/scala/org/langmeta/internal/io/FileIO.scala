@@ -17,6 +17,9 @@ object FileIO {
   def readAllDocuments(path: AbsolutePath): Seq[TextDocument] =
     PlatformFileIO.readAllDocuments(path)
 
+  def readIndex(path: AbsolutePath): Index =
+    PlatformFileIO.readIndex(path)
+
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit =
     PlatformFileIO.write(path, proto)
 

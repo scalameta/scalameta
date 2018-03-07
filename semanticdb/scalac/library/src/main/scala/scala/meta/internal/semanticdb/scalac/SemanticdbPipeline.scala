@@ -62,9 +62,38 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
         } catch handleError(unit)
       }
 
+      private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
+        val vdb = v.Database.load(Classpath(scalametaTargetroot))
+        val orphanedVentries = vdb.entries.filter(ventry => {
+          val scalaName = v.SemanticdbPaths.toScala(ventry.fragment.name)
+          !config.sourceroot.resolve(scalaName).isFile
+        })
+        orphanedVentries.map(ve => {
+          def cleanupUpwards(file: File): Unit = {
+            if (file != null) {
+              if (file.isFile) {
+                file.delete()
+              } else {
+                if (file.getAbsolutePath == ve.base.toString) return
+                if (file.listFiles.isEmpty) file.delete()
+              }
+              cleanupUpwards(file.getParentFile)
+            }
+          }
+          cleanupUpwards(ve.uri.toFile)
+        })
+      }
+
+      private def synchronizeSourcesAndSemanticdbIndex(): Unit = {
+        // TODO: Support incremental compilation.
+        index.save(scalametaTargetroot)
+      }
+
       override def run(): Unit = {
         timestampComputeStarted = System.nanoTime()
         super.run()
+        synchronizeSourcesAndSemanticdbFiles()
+        synchronizeSourcesAndSemanticdbIndex()
         timestampComputeFinished = System.nanoTime()
         idCache.clear()
         symbolCache.clear()
@@ -104,25 +133,6 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
 
       override def run(): Unit = {
         timestampPersistStarted = System.nanoTime()
-        val vdb = v.Database.load(Classpath(scalametaTargetroot))
-        val orphanedVentries = vdb.entries.filter(ventry => {
-          val scalaName = v.SemanticdbPaths.toScala(ventry.fragment.name)
-          !config.sourceroot.resolve(scalaName).isFile
-        })
-        orphanedVentries.map(ve => {
-          def cleanupUpwards(file: File): Unit = {
-            if (file != null) {
-              if (file.isFile) {
-                file.delete()
-              } else {
-                if (file.getAbsolutePath == ve.base.toString) return
-                if (file.listFiles.isEmpty) file.delete()
-              }
-              cleanupUpwards(file.getParentFile)
-            }
-          }
-          cleanupUpwards(ve.uri.toFile)
-        })
         super.run()
         timestampPersistFinished = System.nanoTime()
         reportSemanticdbSummary()
