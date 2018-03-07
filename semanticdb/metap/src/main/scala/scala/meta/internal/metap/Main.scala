@@ -69,8 +69,7 @@ class Main(settings: Settings, reporter: Reporter) {
               processSemanticdb(file, Files.newInputStream(file))
             }
         } else {
-          out.println(s"classpath directory contains no semanticdbs: $path")
-          success = false
+          ()
         }
       } else if (Files.isRegularFile(path)) {
         if (path.getFileName.toString.endsWith(".jar")) {
@@ -91,8 +90,7 @@ class Main(settings: Settings, reporter: Reporter) {
           processSemanticdb(path, Files.newInputStream(path))
         }
       } else {
-        out.println(s"not a regular file: $path")
-        success = false
+        ()
       }
     }
 
