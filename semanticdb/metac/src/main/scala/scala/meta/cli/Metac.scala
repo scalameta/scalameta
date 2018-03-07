@@ -2,19 +2,35 @@ package scala.meta.cli
 
 import java.io._
 import scala.meta.internal.metac._
+import scala.meta.metac._
 
 object Metac {
   def main(args: Array[String]): Unit = {
-    sys.exit(process(args, System.out, System.err))
+    sys.exit(process(args, Reporter()))
   }
 
-  @deprecated("Use `process(args, System.out)` instead.", "3.4.0")
+  @deprecated("Use `process(Settings.parse(args.toList).get, Reporter())`.", "3.5.0")
   def process(args: Array[String]): Int = {
-    process(args, System.out, System.err)
+    process(args, Reporter())
   }
 
+  @deprecated("Use `process(Settings.parse(args.toList).get, Reporter(out, err))`.", "3.5.0")
   def process(args: Array[String], out: PrintStream, err: PrintStream): Int = {
-    val main = new Main(args, out, err)
+    process(args, Reporter().withOut(out).withErr(err))
+  }
+
+  private def process(args: Array[String], reporter: Reporter): Int = {
+    Settings.parse(args.toList, reporter) match {
+      case Some(settings) =>
+        if (process(settings, reporter)) 0
+        else 1
+      case None =>
+        1
+    }
+  }
+
+  def process(settings: Settings, reporter: Reporter): Boolean = {
+    val main = new Main(settings, reporter)
     main.process()
   }
 }

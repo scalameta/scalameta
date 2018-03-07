@@ -6,11 +6,12 @@ import java.nio.file._
 import java.util.WeakHashMap
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
-
 import scala.collection.{immutable, mutable}
+import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 import scala.util.control.NonFatal
 import scala.meta.internal.semanticdb3._
+import scala.meta.metap._
 import Diagnostic._
 import Severity._
 import SymbolInformation._
@@ -22,14 +23,14 @@ import Type.Tag._
 import SingletonType.Tag._
 import Accessibility.Tag._
 
-import scala.collection.mutable.ArrayBuffer
+class Main(settings: Settings, reporter: Reporter) {
+  import reporter._
 
-class Main(settings: Settings, out: PrintStream, err: PrintStream) {
-  def process(): Int = {
+  def process(): Boolean = {
 
-    var failed = false
+    var success = true
     var first = true
-    def processPath(path: Path, stream: InputStream): Unit = {
+    def processSemanticdb(path: Path, stream: InputStream): Unit = {
       if (first) {
         first = false
       } else {
@@ -46,28 +47,14 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
         case NonFatal(ex) =>
           out.println(s"error: can't decompile $path")
           ex.printStackTrace(out)
-          failed = true
+          success = false
       } finally {
         stream.close()
       }
     }
 
     settings.paths.foreach { path =>
-      if (path.getFileName.toString.endsWith(".jar")) {
-        // Can't use nio.Files.walk because nio.FileSystems is not supported on Scala Native.
-        val jarfile = new JarFile(path.toFile)
-        val buf = ArrayBuffer.empty[JarEntry]
-        val entries = jarfile.entries()
-        while (entries.hasMoreElements) {
-          val entry = entries.nextElement()
-          if (entry.getName.endsWith(".semanticdb")) {
-            buf += entry
-          }
-        }
-        buf.sortBy(_.getName).foreach { entry =>
-          processPath(Paths.get(entry.getName), jarfile.getInputStream(entry))
-        }
-      } else if (Files.isDirectory(path)) {
+      if (Files.isDirectory(path)) {
         val root = path.resolve("META-INF").resolve("semanticdb")
         if (Files.isDirectory(root)) {
           import scala.collection.JavaConverters._
@@ -79,21 +66,37 @@ class Main(settings: Settings, out: PrintStream, err: PrintStream) {
             .toArray
             .sorted
             .foreach { file =>
-              processPath(file, Files.newInputStream(file))
+              processSemanticdb(file, Files.newInputStream(file))
             }
         } else {
           err.println(s"classpath directory contains no semanticdbs: $path")
-          failed = true
+          success = false
         }
       } else if (Files.isRegularFile(path)) {
-        processPath(path, Files.newInputStream(path))
+        if (path.getFileName.toString.endsWith(".jar")) {
+          // Can't use nio.Files.walk because nio.FileSystems is not supported on Scala Native.
+          val jarfile = new JarFile(path.toFile)
+          val buf = ArrayBuffer.empty[JarEntry]
+          val entries = jarfile.entries()
+          while (entries.hasMoreElements) {
+            val entry = entries.nextElement()
+            if (entry.getName.endsWith(".semanticdb")) {
+              buf += entry
+            }
+          }
+          buf.sortBy(_.getName).foreach { entry =>
+            processSemanticdb(Paths.get(entry.getName), jarfile.getInputStream(entry))
+          }
+        } else {
+          processSemanticdb(path, Files.newInputStream(path))
+        }
       } else {
         err.println(s"not a regular file: $path")
-        failed = true
+        success = false
       }
     }
 
-    if (failed) 1 else 0
+    success
   }
 
   private def pprint(doc: TextDocument): Unit = {

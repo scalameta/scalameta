@@ -9,7 +9,6 @@ import scala.meta.testkit.DiffAssertions
 import scala.meta.internal.io.FileIO
 import scala.meta._
 import scala.meta.cli._
-import scala.meta.metacp._
 import scala.meta.tests.cli._
 import scala.compat.Platform.EOL
 import org.langmeta.internal.io.PathIO
@@ -73,12 +72,15 @@ trait ExpectHelpers extends FunSuiteLike {
   }
 
   protected def lowlevelSyntax(dirOrJar: Path): String = {
-    val args = Array(dirOrJar.toString)
-    val (exitcode, out, err) = CliSuite.communicate(Metap.process(args, _, _))
-    if (exitcode != 0) {
+    val (success, out, err) = CliSuite.communicate { (out, err) =>
+      val settings = scala.meta.metap.Settings().withPaths(List(dirOrJar))
+      val reporter = scala.meta.metap.Reporter().withOut(out).withErr(err)
+      Metap.process(settings, reporter)
+    }
+    if (!success) {
       println(out)
       println(err)
-      assert(exitcode == 0, s"non-zero exit code $exitcode")
+      assert(success, "metap failed")
     }
     assert(err.isEmpty)
     out
@@ -87,11 +89,11 @@ trait ExpectHelpers extends FunSuiteLike {
   protected def decompiledPath(in: Path): Path = {
     val target = Files.createTempDirectory("target_")
     val (outPath, out, err) = CliSuite.communicate { (out, err) =>
-      val settings = Settings()
+      val settings = scala.meta.metacp.Settings()
         .withCacheDir(AbsolutePath(target))
         .withClasspath(Classpath(AbsolutePath(in)))
         .withScalaLibrarySynthetics(false)
-      val reporter = Reporter().withOut(out).withErr(err)
+      val reporter = scala.meta.metacp.Reporter().withOut(out).withErr(err)
       Metacp.process(settings, reporter) match {
         case Some(Classpath(List(outPath))) => outPath
         case other => sys.error(s"unexpected metacp result: $other")
@@ -161,11 +163,11 @@ object ScalalibExpect extends ExpectHelpers {
   def loadObtained: String = {
     val tmp = Files.createTempDirectory("scala-library-synthetics")
     tmp.toFile.deleteOnExit()
-    val settings = Settings()
+    val settings = scala.meta.metacp.Settings()
       .withCacheDir(AbsolutePath(tmp))
       .withClasspath(Classpath(Nil))
       .withScalaLibrarySynthetics(true)
-    val reporter = Reporter()
+    val reporter = scala.meta.metacp.Reporter()
     Metacp.process(settings, reporter) match {
       case Some(Classpath(List(jar))) => lowlevelSyntax(jar.toNIO)
       case other => sys.error(s"unexpected metacp result: $other")

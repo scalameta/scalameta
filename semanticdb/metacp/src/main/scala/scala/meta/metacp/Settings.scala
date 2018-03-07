@@ -45,7 +45,7 @@ final class Settings private (
 }
 
 object Settings {
-  def parse(args: List[String]): Option[Settings] = {
+  def parse(args: List[String], reporter: Reporter): Option[Settings] = {
     def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
       args match {
         case "--" +: rest =>
@@ -57,12 +57,12 @@ object Settings {
         case "--include-scala-library-synthetics" +: rest if allowOptions =>
           loop(settings.copy(scalaLibrarySynthetics = true), true, rest)
         case flag +: _ if allowOptions && flag.startsWith("-") =>
-          println(s"unsupported flag $flag")
+          reporter.out.println(s"unsupported flag $flag")
           None
         case classpath +: Nil =>
           Some(settings.copy(classpath = Classpath(classpath)))
         case classpath +: arg +: _ =>
-          println(s"unsupported argument $arg")
+          reporter.out.println(s"unsupported argument $arg")
           None
         case Nil =>
           Some(settings)

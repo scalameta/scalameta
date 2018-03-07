@@ -77,9 +77,18 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.io.Multipath
       |scala.meta.io.RelativePath
       |scala.meta.io.Sourcepath
+      |scala.meta.metac
+      |scala.meta.metac.Reporter *
+      |scala.meta.metac.Settings *
       |scala.meta.metacp
       |scala.meta.metacp.Reporter *
       |scala.meta.metacp.Settings *
+      |scala.meta.metap
+      |scala.meta.metap.Format *
+      |scala.meta.metap.Format.Pretty *
+      |scala.meta.metap.Format.Proto *
+      |scala.meta.metap.Reporter *
+      |scala.meta.metap.Settings *
       |scala.meta.parsers
       |scala.meta.parsers.Parse *
       |scala.meta.parsers.ParseException

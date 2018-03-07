@@ -21,7 +21,7 @@ object Metacp {
   }
 
   private def process(args: Array[String], reporter: Reporter): Int = {
-    Settings.parse(args.toList) match {
+    Settings.parse(args.toList, reporter) match {
       case Some(settings) =>
         process(settings, reporter) match {
           case Some(mclasspath) =>
