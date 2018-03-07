@@ -480,29 +480,23 @@ _root_.example.Example.x. => private[this] val x: ClassTag[Int]
   ClassTag => _root_.scala.reflect.ClassTag#
   Int => _root_.scala.Int#
 
-example/MethodUsages.class
---------------------------
+example/local$minusfile.class
+-----------------------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => example/MethodUsages.class
+Uri => example/local$minusfile.class
 Text => empty
 Language => Scala
-Symbols => 6 entries
+Symbols => 4 entries
 
 Symbols:
 _root_. => package _root_
 _root_.example. => package example
-_root_.example.MethodUsages# => class MethodUsages.{+3 decls}
+_root_.example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
-_root_.example.MethodUsages#`<init>`(). => primaryctor <init>: (): MethodUsages
-  MethodUsages => _root_.example.MethodUsages#
-_root_.example.MethodUsages#m(). => getter m: : Methods[Int]
-  Methods => _root_.example.Methods#
-  Int => _root_.scala.Int#
-_root_.example.MethodUsages#m. => private[this] val m: Methods[Int]
-  Methods => _root_.example.Methods#
-  Int => _root_.scala.Int#
+_root_.example.`local-file`#`<init>`(). => primaryctor <init>: (): local-file
+  local-file => _root_.example.`local-file`#
 
 example/Methods.class
 ---------------------
@@ -731,6 +725,30 @@ _root_.example.Methods#m9(`m9().`).(x) => param x: Methods.this.m9().
   Methods => _root_.example.Methods#
   m9(). => _root_.example.Methods#`m9().`#
 
+example/MethodUsages.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/MethodUsages.class
+Text => empty
+Language => Scala
+Symbols => 6 entries
+
+Symbols:
+_root_. => package _root_
+_root_.example. => package example
+_root_.example.MethodUsages# => class MethodUsages.{+3 decls}
+  extends AnyRef
+_root_.example.MethodUsages#`<init>`(). => primaryctor <init>: (): MethodUsages
+  MethodUsages => _root_.example.MethodUsages#
+_root_.example.MethodUsages#m(). => getter m: : Methods[Int]
+  Methods => _root_.example.Methods#
+  Int => _root_.scala.Int#
+_root_.example.MethodUsages#m. => private[this] val m: Methods[Int]
+  Methods => _root_.example.Methods#
+  Int => _root_.scala.Int#
+
 example/Synthetic.class
 -----------------------
 
@@ -748,26 +766,6 @@ _root_.example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
 _root_.example.Synthetic#`<init>`(). => primaryctor <init>: (): Synthetic
   Synthetic => _root_.example.Synthetic#
-
-example/ValUsages.class
------------------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => example/ValUsages.class
-Text => empty
-Language => Scala
-Symbols => 5 entries
-
-Symbols:
-_root_. => package _root_
-_root_.example. => package example
-_root_.example.ValUsages. => final object ValUsages.{+3 decls}
-  extends AnyRef
-_root_.example.ValUsages.v(). => getter v: : Vals
-  Vals => _root_.example.Vals#
-_root_.example.ValUsages.v. => private[this] val v: Vals
-  Vals => _root_.example.Vals#
 
 example/Vals.class
 ------------------
@@ -875,23 +873,25 @@ _root_.example.Vals#yp(). => getter yp: : Int
 _root_.example.Vals#yp. => private[this] var yp: Int
   Int => _root_.scala.Int#
 
-example/local$minusfile.class
------------------------------
+example/ValUsages.class
+-----------------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => example/local$minusfile.class
+Uri => example/ValUsages.class
 Text => empty
 Language => Scala
-Symbols => 4 entries
+Symbols => 5 entries
 
 Symbols:
 _root_. => package _root_
 _root_.example. => package example
-_root_.example.`local-file`# => class local-file.{+1 decls}
+_root_.example.ValUsages. => final object ValUsages.{+3 decls}
   extends AnyRef
-_root_.example.`local-file`#`<init>`(). => primaryctor <init>: (): local-file
-  local-file => _root_.example.`local-file`#
+_root_.example.ValUsages.v(). => getter v: : Vals
+  Vals => _root_.example.Vals#
+_root_.example.ValUsages.v. => private[this] val v: Vals
+  Vals => _root_.example.Vals#
 
 exclude/Exclude.class
 ---------------------
@@ -1082,6 +1082,72 @@ _root_.flags.p.package.z(Int). => def z: (pp: Int): Int
   Int => _root_.scala.Int#
 _root_.flags.p.package.z(Int).(pp) => param pp: Int
   Int => _root_.scala.Int#
+
+types/ann.class
+---------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/ann.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+_root_. => package _root_
+_root_.types. => package types
+_root_.types.ann# => class ann[T >: Nothing <: Any].{+3 decls}
+  extends Annotation
+  extends StaticAnnotation
+_root_.types.ann#[T] => typeparam T: >: Nothing <: Any
+  Nothing => _root_.scala.Nothing#
+  Any => _root_.scala.Any#
+_root_.types.ann#`<init>`(T). => primaryctor <init>: (x: T): ann[T]
+  x => _root_.types.ann#`<init>`(T).(x)
+  T => _root_.types.ann#[T]
+  ann => _root_.types.ann#
+_root_.types.ann#`<init>`(T).(x) => param x: T
+  T => _root_.types.ann#[T]
+_root_.types.ann#x. => private[this] val x: T
+  T => _root_.types.ann#[T]
+
+types/ann1.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/ann1.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+_root_.types. => package types
+_root_.types.ann1# => class ann1.{+1 decls}
+  extends Annotation
+  extends StaticAnnotation
+_root_.types.ann1#`<init>`(). => primaryctor <init>: (): ann1
+  ann1 => _root_.types.ann1#
+
+types/ann2.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => types/ann2.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+_root_.types. => package types
+_root_.types.ann2# => class ann2.{+1 decls}
+  extends Annotation
+  extends StaticAnnotation
+_root_.types.ann2#`<init>`(). => primaryctor <init>: (): ann2
+  ann2 => _root_.types.ann2#
 
 types/B.class
 -------------
@@ -1527,69 +1593,3 @@ _root_.types.Test.N#`<init>`(). => primaryctor <init>: (): N
   N => _root_.types.Test.N#
 _root_.types.Test.N#n(). => def n: : Int
   Int => _root_.scala.Int#
-
-types/ann.class
----------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => types/ann.class
-Text => empty
-Language => Scala
-Symbols => 7 entries
-
-Symbols:
-_root_. => package _root_
-_root_.types. => package types
-_root_.types.ann# => class ann[T >: Nothing <: Any].{+3 decls}
-  extends Annotation
-  extends StaticAnnotation
-_root_.types.ann#[T] => typeparam T: >: Nothing <: Any
-  Nothing => _root_.scala.Nothing#
-  Any => _root_.scala.Any#
-_root_.types.ann#`<init>`(T). => primaryctor <init>: (x: T): ann[T]
-  x => _root_.types.ann#`<init>`(T).(x)
-  T => _root_.types.ann#[T]
-  ann => _root_.types.ann#
-_root_.types.ann#`<init>`(T).(x) => param x: T
-  T => _root_.types.ann#[T]
-_root_.types.ann#x. => private[this] val x: T
-  T => _root_.types.ann#[T]
-
-types/ann1.class
-----------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => types/ann1.class
-Text => empty
-Language => Scala
-Symbols => 4 entries
-
-Symbols:
-_root_. => package _root_
-_root_.types. => package types
-_root_.types.ann1# => class ann1.{+1 decls}
-  extends Annotation
-  extends StaticAnnotation
-_root_.types.ann1#`<init>`(). => primaryctor <init>: (): ann1
-  ann1 => _root_.types.ann1#
-
-types/ann2.class
-----------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => types/ann2.class
-Text => empty
-Language => Scala
-Symbols => 4 entries
-
-Symbols:
-_root_. => package _root_
-_root_.types. => package types
-_root_.types.ann2# => class ann2.{+1 decls}
-  extends Annotation
-  extends StaticAnnotation
-_root_.types.ann2#`<init>`(). => primaryctor <init>: (): ann2
-  ann2 => _root_.types.ann2#

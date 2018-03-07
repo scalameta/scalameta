@@ -1,7 +1,6 @@
 package scala.meta.internal.metap
 
 import java.io.InputStream
-import java.io.PrintStream
 import java.nio.file._
 import java.util.WeakHashMap
 import java.util.jar.JarEntry
@@ -64,7 +63,9 @@ class Main(settings: Settings, reporter: Reporter) {
             .asScala
             .filter(_.getFileName.toString.endsWith(".semanticdb"))
             .toArray
-            .sorted
+            // nio.file.Path.compareTo is file system specific,
+            // and the behavior is different on windows vs. unix
+            .sortBy(_.toString.toLowerCase)
             .foreach { file =>
               processSemanticdb(file, Files.newInputStream(file))
             }
