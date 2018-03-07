@@ -265,8 +265,12 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
     val symbols = for {
       sym <- metac.iterator
       javasym <- {
-        if (sym.symbol.contains("com.javacp")) Some(javacp.getOrElse(sym.symbol, s.SymbolInformation()))
-        else javacp.get(sym.symbol)
+        if (sym.symbol.contains("com.javacp")) {
+          // metac references to java defined symbols in com.javacp must have a corresponding metacp entry.
+          Some(javacp.getOrElse(sym.symbol, s.SymbolInformation()))
+        } else {
+          javacp.get(sym.symbol)
+        }
       }
     } yield {
       val header = "=" * sym.symbol.length
