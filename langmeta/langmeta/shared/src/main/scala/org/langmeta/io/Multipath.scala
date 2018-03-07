@@ -70,12 +70,11 @@ sealed trait Multipath {
 
   def visit(getVisitor: AbsolutePath => FileVisitor[Path]): Unit = {
     shallow.foreach { base =>
-      val path = base.toNIO
-      if (Files.isDirectory(path)) {
+      if (base.isDirectory) {
         val visitor = getVisitor(base)
-        Files.walkFileTree(path, visitor)
-      } else {
-        PathIO.extension(path) match {
+        Files.walkFileTree(base.toNIO, visitor)
+      } else if (base.isFile) {
+        PathIO.extension(base.toNIO) match {
           case "jar" =>
             val root = FileIO.jarRootPath(base)
             val visitor = getVisitor(root)
@@ -83,6 +82,8 @@ sealed trait Multipath {
           case _ =>
             sys.error(s"Expected jar file, obtained $base")
         }
+      } else {
+        ()
       }
     }
   }

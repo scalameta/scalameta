@@ -1,9 +1,7 @@
 package scala.meta.internal.javacp
 
-import java.nio.file.Files
-import java.nio.file.Path
+import org.langmeta.io.AbsolutePath
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.javacp.asm._
@@ -346,7 +344,7 @@ object Javacp {
 
   private case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
 
-  private def asmNameToPath(asmName: String, base: Path): Path = {
+  private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath = {
     (asmName + ".class").split("/").foldLeft(base) {
       case (accum, filename) => accum.resolve(filename)
     }

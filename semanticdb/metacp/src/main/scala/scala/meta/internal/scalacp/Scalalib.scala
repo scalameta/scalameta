@@ -1,6 +1,6 @@
-package scala.meta.internal.scalalib
+package scala.meta.internal.scalacp
 
-import java.nio.file._
+import org.langmeta.internal.io.PathIO
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
@@ -8,19 +8,7 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
-object Generator {
-  def main(args: Array[String]): Unit = {
-    val Array(outDir) = args
-    val settings = Settings(d = outDir)
-    val index = new Index
-    val synthetics = List(any, anyVal, anyRef, nothing)
-    synthetics.foreach { infos =>
-      index.append(infos)
-      infos.save(settings)
-    }
-    index.save(settings)
-  }
-
+object Scalalib {
   def any: ToplevelInfos = {
     val symbols = List(
       builtinMethod("Any", List(p.ABSTRACT), "equals", Nil, List("that" -> "_root_.scala.Any#"), "_root_.scala.Boolean#"),
@@ -90,7 +78,7 @@ object Generator {
       accessibility = Some(s.Accessibility(a.PUBLIC)),
       owner = "_root_.scala."
     )
-    val syntheticBase = Paths.get(".")
+    val syntheticBase = PathIO.workingDirectory
     val syntheticPath = syntheticBase.resolve("scala/" + name + ".class")
     val syntheticClassfile = ToplevelClassfile(syntheticBase, syntheticPath, null)
     ToplevelInfos(syntheticClassfile, List(builtin), ctor +: symbols)

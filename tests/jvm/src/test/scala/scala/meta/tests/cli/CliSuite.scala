@@ -24,17 +24,19 @@ class CliSuite extends BaseCliSuite {
   val helloWorldSemanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
 
   test("metac " + helloWorldScala) {
-    val (exitcode, out, err) = CliSuite.communicate { (out, err) =>
-      val args = Array(
+    val (success, out, err) = CliSuite.communicate { (out, err) =>
+      val scalacArgs = List(
         "-cp",
         scalaLibraryJar,
         "-P:semanticdb:sourceroot:" + sourceroot.toString,
         "-d",
         target.toString,
         helloWorldScala.toString)
-      Metac.process(args, out, err)
+      val settings = scala.meta.metac.Settings().withScalacArgs(scalacArgs)
+      val reporter = scala.meta.metac.Reporter()
+      Metac.process(settings, reporter)
     }
-    assert(exitcode == 0)
+    assert(success)
     assert(out.isEmpty)
     assert(Files.exists(helloWorldSemanticdb))
   }
@@ -45,10 +47,12 @@ class CliSuite extends BaseCliSuite {
       else if (versionNumberString.startsWith("2.12")) "Scala212"
       else sys.error(s"unsupported Scala version: $versionNumberString")
     }
-    val (exitcode, out, err) = CliSuite.communicate { (out, err) =>
-      Metap.process(Array(helloWorldSemanticdb.toString), out, err)
+    val (success, out, err) = CliSuite.communicate { (out, err) =>
+      val settings = scala.meta.metap.Settings().withPaths(List(helloWorldSemanticdb))
+      val reporter = scala.meta.metap.Reporter().withOut(out).withErr(err)
+      Metap.process(settings, reporter)
     }
-    assert(exitcode == 0)
+    assert(success)
     assertNoDiff(
       out,
       s"""

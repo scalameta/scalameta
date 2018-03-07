@@ -5,10 +5,11 @@ import java.net._
 import java.nio.channels._
 import java.nio.file._
 import scala.meta.internal.semanticdb.scalac._
+import scala.meta.metac._
 import scala.tools.nsc.{Main => ScalacMain}
 
-class Main(args: Array[String], out: PrintStream, err: PrintStream) {
-  def process(): Int = {
+class Main(settings: Settings, reporter: Reporter) {
+  def process(): Boolean = {
     val manifestDir = Files.createTempDirectory("semanticdb-scalac_")
     val resourceUrl = classOf[SemanticdbPlugin].getResource("/scalac-plugin.xml")
     val resourceChannel = Channels.newChannel(resourceUrl.openStream())
@@ -20,15 +21,15 @@ class Main(args: Array[String], out: PrintStream, err: PrintStream) {
       case cl: URLClassLoader => cl.getURLs.map(_.getFile).mkString(File.pathSeparator)
       case cl => sys.error(s"unsupported classloader: $cl")
     }
-    val enablePluginArgs = Array("-Xplugin:" + pluginClasspath, "-Xplugin-require:semanticdb")
-    val enableRangeposArgs = Array("-Yrangepos")
-    val stopAfterPluginArgs = Array("-Ystop-after:semanticdb-typer")
-    val scalacArgs = args ++ enablePluginArgs ++ enableRangeposArgs ++ stopAfterPluginArgs
-    scala.Console.withOut(out) {
-      scala.Console.withErr(err) {
-        ScalacMain.process(scalacArgs)
+    val enablePluginArgs = List("-Xplugin:" + pluginClasspath, "-Xplugin-require:semanticdb")
+    val enableRangeposArgs = List("-Yrangepos")
+    val stopAfterPluginArgs = List("-Ystop-after:semanticdb-typer")
+    val args = settings.scalacArgs ++ enablePluginArgs ++ enableRangeposArgs ++ stopAfterPluginArgs
+    scala.Console.withOut(reporter.out) {
+      scala.Console.withErr(reporter.err) {
+        ScalacMain.process(args.toArray)
       }
     }
-    if (ScalacMain.reporter.hasErrors) 1 else 0
+    !ScalacMain.reporter.hasErrors
   }
 }

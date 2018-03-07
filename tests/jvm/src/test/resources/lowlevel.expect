@@ -451,27 +451,46 @@ Synthetics:
   [0:2..0:12): unapplySeq => _root_.scala.collection.generic.SeqFactory#unapplySeq(CC).
   [0:13..0:20): Nothing => _root_.scala.Nothing#
 
-semanticdb/integration/src/main/scala/example/Javacp.scala
-----------------------------------------------------------
+semanticdb/integration/src/main/scala/example/local-file.scala
+--------------------------------------------------------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => semanticdb/integration/src/main/scala/example/Javacp.scala
+Uri => semanticdb/integration/src/main/scala/example/local-file.scala
 Text => non-empty
 Language => Scala212
-Symbols => 3 entries
-Occurrences => 2 entries
+Symbols => 6 entries
+Occurrences => 7 entries
+Synthetics => 1 entries
 
 Symbols:
 _root_.example. => package example
-_root_.example.Javacp# => class Javacp.{+1 decls}
+_root_.example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
-_root_.example.Javacp#`<init>`(). => primaryctor <init>: (): Javacp
-  Javacp => _root_.example.Javacp#
+_root_.example.`local-file`#`<init>`(). => primaryctor <init>: (): local-file
+  local-file => _root_.example.`local-file`#
+_root_.scala.Int#`+`(Int). => abstract def +: (x: <?>): Int
+  x => _root_.scala.Int#`+`(Int).(x)
+  Int => _root_.scala.Int#
+_root_.scala.Predef.locally(T). => @inline def locally: [T: <?>] => (x: <?>): T
+  T => _root_.scala.Predef.locally(T).[T]
+  x => _root_.scala.Predef.locally(T).(x)
+local0 => val local: Int
+  Int => _root_.scala.Int#
 
 Occurrences:
 [0:8..0:15): example <= _root_.example.
-[2:6..2:12): Javacp <= _root_.example.Javacp#
+[2:6..2:18): `local-file` <= _root_.example.`local-file`#
+[2:19..2:19):  <= _root_.example.`local-file`#`<init>`().
+[3:2..3:9): locally => _root_.scala.Predef.locally(T).
+[4:8..4:13): local <= local0
+[5:4..5:9): local => local0
+[5:10..5:11): + => _root_.scala.Int#`+`(Int).
+
+Synthetics:
+[3:9..3:9):  => *[Int]
+  [0:0..0:1): * => _star_.
+  [0:2..0:5): Int => _root_.scala.Int#
 
 semanticdb/integration/src/main/scala/example/Methods.scala
 -----------------------------------------------------------
@@ -1925,44 +1944,3 @@ Occurrences:
 [45:16..45:17): + => _root_.scala.Int#`+`(Int).
 [45:18..45:19): v => _root_.example.ValUsages.v().
 [45:20..45:23): yim => _root_.example.Vals#yim().
-
-semanticdb/integration/src/main/scala/example/local-file.scala
---------------------------------------------------------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => semanticdb/integration/src/main/scala/example/local-file.scala
-Text => non-empty
-Language => Scala212
-Symbols => 6 entries
-Occurrences => 7 entries
-Synthetics => 1 entries
-
-Symbols:
-_root_.example. => package example
-_root_.example.`local-file`# => class local-file.{+1 decls}
-  extends AnyRef
-_root_.example.`local-file`#`<init>`(). => primaryctor <init>: (): local-file
-  local-file => _root_.example.`local-file`#
-_root_.scala.Int#`+`(Int). => abstract def +: (x: <?>): Int
-  x => _root_.scala.Int#`+`(Int).(x)
-  Int => _root_.scala.Int#
-_root_.scala.Predef.locally(T). => @inline def locally: [T: <?>] => (x: <?>): T
-  T => _root_.scala.Predef.locally(T).[T]
-  x => _root_.scala.Predef.locally(T).(x)
-local0 => val local: Int
-  Int => _root_.scala.Int#
-
-Occurrences:
-[0:8..0:15): example <= _root_.example.
-[2:6..2:18): `local-file` <= _root_.example.`local-file`#
-[2:19..2:19):  <= _root_.example.`local-file`#`<init>`().
-[3:2..3:9): locally => _root_.scala.Predef.locally(T).
-[4:8..4:13): local <= local0
-[5:4..5:9): local => local0
-[5:10..5:11): + => _root_.scala.Int#`+`(Int).
-
-Synthetics:
-[3:9..3:9):  => *[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => _root_.scala.Int#

@@ -5,6 +5,7 @@ import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.meta.internal.javacp._
@@ -15,6 +16,7 @@ import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.MethodNode
 import scala.util.control.NonFatal
 import org.langmeta.internal.io.PathIO
+import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
 
 class SignatureSuite extends BaseMetacpSuite {
@@ -32,11 +34,11 @@ class SignatureSuite extends BaseMetacpSuite {
   def checkSignatureRoundtrip(library: Library): Unit = {
     test(library.name) {
       val failingSignatures = ArrayBuffer.empty[String]
-      Classpath(library.classpath()).visit { root =>
+      library.classpath().visit { root =>
         new java.nio.file.SimpleFileVisitor[Path] {
           override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
             if (PathIO.extension(file) == "class") {
-              val node = file.toClassNode
+              val node = AbsolutePath(file).toClassNode
               val tests = checkAllSignatures(node)
               tests.foreach {
                 case (signature, unsafe) =>

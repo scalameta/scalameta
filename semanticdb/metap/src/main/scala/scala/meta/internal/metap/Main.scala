@@ -1,44 +1,101 @@
 package scala.meta.internal.metap
 
-import java.io.PrintStream
+import java.io.InputStream
 import java.nio.file._
 import java.util.WeakHashMap
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
 import scala.collection.{immutable, mutable}
-import scala.compat.Platform.EOL
+import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 import scala.util.control.NonFatal
 import scala.meta.internal.semanticdb3._
-import Diagnostic._, Severity._
-import SymbolInformation._, Kind._, Property._
-import SymbolOccurrence._, Role._
-import Type.Tag._, SingletonType.Tag._, Accessibility.Tag._
+import scala.meta.metap._
+import Diagnostic._
+import Severity._
+import SymbolInformation._
+import Kind._
+import Property._
+import SymbolOccurrence._
+import Role._
+import Type.Tag._
+import SingletonType.Tag._
+import Accessibility.Tag._
 
-class Main(settings: Settings, out: PrintStream, err: PrintStream) {
-  def process(): Int = {
-    var failed = false
-    settings.paths.zipWithIndex.foreach {
-      case (arg, i) =>
-        try {
-          val stream = Files.newInputStream(Paths.get(arg))
-          try {
-            if (i != 0) out.println("")
-            val documents = TextDocuments.parseFrom(stream)
-            if (settings.format.isProto) {
-              out.println(documents.toProtoString)
-            } else {
-              documents.documents.foreach(pprint)
-            }
-          } finally {
-            stream.close()
-          }
-        } catch {
-          case NonFatal(ex) =>
-            out.println(s"error: can't decompile $arg")
-            ex.printStackTrace(out)
-            failed = true
+class Main(settings: Settings, reporter: Reporter) {
+  import reporter._
+
+  def process(): Boolean = {
+
+    var success = true
+    var first = true
+    def processSemanticdb(path: Path, stream: InputStream): Unit = {
+      if (first) {
+        first = false
+      } else {
+        out.println("")
+      }
+      try {
+        val documents = TextDocuments.parseFrom(stream)
+        if (settings.format.isProto) {
+          out.println(documents.toProtoString)
+        } else {
+          documents.documents.foreach(pprint)
         }
+      } catch {
+        case NonFatal(ex) =>
+          out.println(s"error: can't decompile $path")
+          ex.printStackTrace(out)
+          success = false
+      } finally {
+        stream.close()
+      }
     }
-    if (failed) 1 else 0
+
+    settings.paths.foreach { path =>
+      if (Files.isDirectory(path)) {
+        val root = path.resolve("META-INF").resolve("semanticdb")
+        if (Files.isDirectory(root)) {
+          import scala.collection.JavaConverters._
+          Files
+            .walk(root)
+            .iterator()
+            .asScala
+            .filter(_.getFileName.toString.endsWith(".semanticdb"))
+            .toArray
+            // nio.file.Path.compareTo is file system specific,
+            // and the behavior is different on windows vs. unix
+            .sortBy(_.toString.toLowerCase)
+            .foreach { file =>
+              processSemanticdb(file, Files.newInputStream(file))
+            }
+        } else {
+          ()
+        }
+      } else if (Files.isRegularFile(path)) {
+        if (path.getFileName.toString.endsWith(".jar")) {
+          // Can't use nio.Files.walk because nio.FileSystems is not supported on Scala Native.
+          val jarfile = new JarFile(path.toFile)
+          val buf = ArrayBuffer.empty[JarEntry]
+          val entries = jarfile.entries()
+          while (entries.hasMoreElements) {
+            val entry = entries.nextElement()
+            if (entry.getName.endsWith(".semanticdb")) {
+              buf += entry
+            }
+          }
+          buf.sortBy(_.getName).foreach { entry =>
+            processSemanticdb(Paths.get(entry.getName), jarfile.getInputStream(entry))
+          }
+        } else {
+          processSemanticdb(path, Files.newInputStream(path))
+        }
+      } else {
+        ()
+      }
+    }
+
+    success
   }
 
   private def pprint(doc: TextDocument): Unit = {

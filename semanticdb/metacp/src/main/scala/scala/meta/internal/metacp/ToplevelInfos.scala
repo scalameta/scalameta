@@ -8,9 +8,9 @@ final case class ToplevelInfos(
     classfile: ToplevelClassfile,
     toplevels: List[s.SymbolInformation],
     others: List[s.SymbolInformation]) {
-  def save(settings: Settings): Unit = {
+  def save(out: AbsolutePath): Unit = {
     assert(toplevels.nonEmpty)
-    val semanticdbRoot = AbsolutePath(settings.d).resolve("META-INF/semanticdb")
+    val semanticdbRoot = out.resolve("META-INF").resolve("semanticdb")
     val semanticdbRelpath = classfile.name + ".semanticdb"
     val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
     val semanticdbDocument = s.TextDocument(
