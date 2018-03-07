@@ -1,10 +1,8 @@
 package scala.meta.metacp
 
-import java.io.PrintStream
 import io.github.soc.directories.ProjectDirectories
 import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
-import scala.meta.cli.Metacp
 import scala.meta.internal.metacp.BuildInfo
 
 final class Settings private (

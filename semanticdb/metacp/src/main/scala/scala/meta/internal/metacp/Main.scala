@@ -35,7 +35,7 @@ class Main(settings: Settings, reporter: Reporter) {
         } else {
           Nil
         }
-      }.toList
+      }
     }
     val synthetics = {
       if (settings.scalaLibrarySynthetics) {
