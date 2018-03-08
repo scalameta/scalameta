@@ -36,7 +36,7 @@ class SemanticdbPlugin(val global: Global)
 
   private def amendTargetRoot(config: SemanticdbConfig): SemanticdbConfig = {
     val targetRoot = if (isAmmonite()) {
-      PathIO.workingDirectory.resolve("out")
+      PathIO.workingDirectory.resolve("out/semanticdb-scalac")
     } else
       AbsolutePath {
         global.settings.outputDirs.getSingleOutput
