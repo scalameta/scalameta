@@ -28,7 +28,7 @@ class Index {
   }
 
   def save(out: AbsolutePath): Unit = {
-    val indexAbspath = out.resolve("META-INF/semanticdb.semanticidx")
+    val indexAbspath = out.resolve("META-INF").resolve("semanticdb.semanticidx")
     val indexMessage = {
       val spackages = packages.map(kv => s.PackageEntry(symbol = kv._1, members = kv._2.toList))
       val stoplevels = toplevels.map(kv => s.ToplevelEntry(symbol = kv._1, uri = kv._2))

@@ -5,6 +5,7 @@ _empty_.
   _empty_.B#
 _root_.
   _root_.example.
+  _root_.flags.
   _root_.types.
 _root_.example.
   _root_.example.A#
@@ -18,6 +19,10 @@ _root_.example.
   _root_.example.ValUsages.
   _root_.example.Vals#
   _root_.example.`local-file`#
+_root_.flags.
+  _root_.flags.p.
+_root_.flags.p.
+  _root_.flags.p.package.
 _root_.types.
   _root_.types.B#
   _root_.types.C#
@@ -32,6 +37,7 @@ Toplevels:
 ==========
 _empty_.A# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_.B# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
+_root_.example. => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 _root_.example.A# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 _root_.example.Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scala.semanticdb
 _root_.example.B# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
@@ -43,6 +49,9 @@ _root_.example.Synthetic# => semanticdb/integration/src/main/scala/example/Synth
 _root_.example.ValUsages. => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
 _root_.example.Vals# => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
 _root_.example.`local-file`# => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
+_root_.flags. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
+_root_.flags.p.package. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
+_root_.types. => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 _root_.types.B# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 _root_.types.C# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 _root_.types.P# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb

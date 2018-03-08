@@ -194,33 +194,14 @@ trait DocumentOps { self: DatabaseOps =>
 
               names(mtree.pos) = symbol
               if (mtree.isDefinition) {
-                val isToplevel = {
-                  def loop(mtree: m.Tree): List[m.Tree] = {
-                    mtree.parent.map(p => p +: loop(p)).getOrElse(Nil)
-                  }
-                  val parentChain = loop(mtree)
-                  val member = parentChain.find(_.is[m.Member])
-                  member match {
-                    case Some(_: m.Defn.Class) | Some(_: m.Defn.Object) | Some(_: m.Defn.Trait) =>
-                      if (parentChain.exists(_.isInstanceOf[m.Source])) {
-                        !parentChain.exists(_.isInstanceOf[m.Template])
-                      } else {
-                        // NOTE: This shouldn't happen, but I'm not crashing.
-                        // Who knows what crazy stuff may be going on in semanticdb-scalac.
-                        false
-                      }
-                    case _ =>
-                      false
-                  }
-                }
+                val isToplevel = gsym.owner.hasPackageFlag
                 if (isToplevel) {
                   unit.source.file match {
                     case gfile: GPlainFile =>
-                      val platformRelPath = m.AbsolutePath(gfile.file).toRelative(config.sourceroot)
-                      val unixRelPath = m.RelativePath(PathIO.toUnix(platformRelPath.toString))
-                      var suri = SemanticdbPaths.fromScala(unixRelPath).toString
                       // TODO: Decide on the uri format for semanticdb.semanticidx.
-                      suri = suri.stripPrefix("META-INF/semanticdb/")
+                      val scalaRelPath = m.AbsolutePath(gfile.file).toRelative(config.sourceroot)
+                      val semanticdbRelPath = scalaRelPath + ".semanticdb"
+                      val suri = PathIO.toUnix(semanticdbRelPath.toString)
                       val ssymbol = symbol.syntax
                       val sowner = gsym.owner.toSemantic.syntax
                       val sinfo = s.SymbolInformation(symbol = ssymbol, owner = sowner)

@@ -87,8 +87,7 @@ class Main(settings: Settings, reporter: Reporter) {
                 }
               }
               result.foreach { infos =>
-                val uri = infos.classfile.relative + ".semanticdb"
-                index.append(uri, infos.toplevels)
+                index.append(infos.uri, infos.toplevels)
                 infos.save(out)
               }
             } catch {
@@ -110,8 +109,7 @@ class Main(settings: Settings, reporter: Reporter) {
     val index = new Index
     val synthetics = List(Scalalib.any, Scalalib.anyVal, Scalalib.anyRef, Scalalib.nothing)
     synthetics.foreach { infos =>
-      val uri = infos.classfile.relative + ".semanticdb"
-      index.append(uri, infos.toplevels)
+      index.append(infos.uri, infos.toplevels)
       infos.save(out)
     }
     index.save(out)
