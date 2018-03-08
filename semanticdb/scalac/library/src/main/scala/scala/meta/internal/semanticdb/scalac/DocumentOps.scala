@@ -23,10 +23,9 @@ trait DocumentOps { self: DatabaseOps =>
     if (!g.settings.plugin.value.exists(_.contains("semanticdb"))) {
       sys.error("the compiler instance must use the semanticdb plugin")
     }
-    // in ammonite, this is ammonite.interp.CompilerCompatibility$$anon$2
-//    if (!g.analyzer.getClass.getName.contains("HijackAnalyzer")) {
-//      sys.error("the compiler instance must use a hijacked analyzer")
-//    }
+    if (!g.analyzer.getClass.getName.contains("HijackAnalyzer")) {
+      sys.error("the compiler instance must use a hijacked analyzer")
+    }
     if (g.currentRun.phaseNamed("typer") != NoPhase) {
       if (g.phase.id < g.currentRun.phaseNamed("typer").id) {
         sys.error("the compiler phase must be not earlier than typer")
