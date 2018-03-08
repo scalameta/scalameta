@@ -60,8 +60,12 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacOwnersExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("metac-metacp.diff") {
-        import MetacMetacpDiffExpect._
+      test("metac-metacp.expect.diff") {
+        import MetacMetacpExpectDiffExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
+      test("metac-metacp.index.diff") {
+        import MetacMetacpIndexDiffExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
     case _ =>
@@ -295,8 +299,8 @@ object MetacOwnersExpect extends ExpectHelpers {
   def loadObtained: String = ownerSyntax(Paths.get(BuildInfo.databaseClasspath))
 }
 
-object MetacMetacpDiffExpect extends ExpectHelpers {
-  def filename: String = "metac-metacp.diff"
+object MetacMetacpExpectDiffExpect extends ExpectHelpers {
+  def filename: String = "metac-metacp.expect.diff"
   def loadObtained: String = {
     val metacp = metacpSymbols
     val metac = metacSymbols.valuesIterator.toSeq.sortBy(_.symbol)
@@ -335,6 +339,15 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
   def metacSymbols = normalizedSymbols(Paths.get(BuildInfo.databaseClasspath))
 }
 
+object MetacMetacpIndexDiffExpect extends ExpectHelpers {
+  def filename: String = "metac-metacp.index.diff"
+  def loadObtained: String = {
+    val metac = IndexExpect.loadObtained
+    val metacp = MetacpIndexExpect.loadObtained
+    unifiedDiff("metac", "metacp", metac, metacp)
+  }
+}
+
 // To save the current behavior, run `sbt save-expect`.
 object SaveExpectTest {
   def main(args: Array[String]): Unit = {
@@ -346,6 +359,7 @@ object SaveExpectTest {
     HighlevelExpect.saveExpected(HighlevelExpect.loadObtained)
     IndexExpect.saveExpected(IndexExpect.loadObtained)
     MetacOwnersExpect.saveExpected(MetacOwnersExpect.loadObtained)
-    MetacMetacpDiffExpect.saveExpected(MetacMetacpDiffExpect.loadObtained)
+    MetacMetacpExpectDiffExpect.saveExpected(MetacMetacpExpectDiffExpect.loadObtained)
+    MetacMetacpIndexDiffExpect.saveExpected(MetacMetacpIndexDiffExpect.loadObtained)
   }
 }
