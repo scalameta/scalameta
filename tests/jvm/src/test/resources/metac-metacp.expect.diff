@@ -39,14 +39,6 @@ _root_.com.javacp.MetacJava#
 ============================
 --- metac
 +++ metacp
- symbol: "_root_.com.javacp.MetacJava#"
- kind: CLASS
--properties: 8
-+properties: 0
- name: "MetacJava"
- tpe {
-   tag: CLASS_INFO_TYPE
-@@ -12,17 +12,13 @@
      declarations: "_root_.com.javacp.MetacJava#`<init>`()."
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#"
@@ -265,7 +257,7 @@ _root_.com.javacp.MetacJava#Overload3#
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#Overload3#"
  kind: CLASS
--properties: 8
+-properties: 0
 +properties: 4096
  name: "Overload3"
  tpe {

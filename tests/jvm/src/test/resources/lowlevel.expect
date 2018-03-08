@@ -506,7 +506,7 @@ Occurrences => 56 entries
 Symbols:
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.MetacJava# => final class MetacJava.{+12 decls}
+_root_.com.javacp.MetacJava# => class MetacJava.{+12 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload1# => class Overload1.{+3 decls}
   extends Object
@@ -528,7 +528,7 @@ _root_.com.javacp.MetacJava#Overload2#A#`<init>`(). => primaryctor <init>: (): O
 _root_.com.javacp.MetacJava#Overload2#`<init>`(). => primaryctor <init>: (): MetacJava.this.Overload2
   MetacJava => _root_.com.javacp.MetacJava#
   Overload2 => _root_.com.javacp.MetacJava#Overload2#
-_root_.com.javacp.MetacJava#Overload3# => final class Overload3.{+3 decls}
+_root_.com.javacp.MetacJava#Overload3# => class Overload3.{+3 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload3#A# => class A.{+1 decls}
   extends Object
@@ -1255,7 +1255,7 @@ Symbols:
 _root_.java. => package java
 _root_.java.nio. => package nio
 _root_.java.nio.file. => package file
-_root_.java.nio.file.LinkOption# => final class LinkOption.{+4 decls}
+_root_.java.nio.file.LinkOption# => abstract final sealed class LinkOption.{+4 decls}
   extends Enum[LinkOption]
   extends OpenOption
   extends CopyOption

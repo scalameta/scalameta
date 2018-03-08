@@ -68,8 +68,8 @@ trait DenotationOps { self: DatabaseOps =>
       }
     }
 
-    private def propertyFlags: Long = {
-//      if (gsym.isJavaClass && gsym.isModule) return gsym.companionClass.propertyFlags
+    private[meta] def propertyFlags: Long = {
+      if (gsym.isJavaClass && gsym.isModule) return gsym.companionClass.propertyFlags
       var flags = 0L
       def isAbstractClass = gsym.isClass && gsym.isAbstract && !gsym.isTrait
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred

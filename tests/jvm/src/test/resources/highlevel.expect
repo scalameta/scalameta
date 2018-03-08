@@ -436,7 +436,7 @@ Names:
 Symbols:
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.MetacJava# => final javadefined class MetacJava
+_root_.com.javacp.MetacJava# => javadefined class MetacJava
 _root_.com.javacp.MetacJava#Overload1# => javadefined class Overload1
 _root_.com.javacp.MetacJava#Overload1#A# => javadefined class A
 _root_.com.javacp.MetacJava#Overload1#A#`<init>`(). => javadefined primaryctor <init>: (): Overload1.this.A
@@ -453,7 +453,7 @@ _root_.com.javacp.MetacJava#Overload2#A#`<init>`(). => javadefined primaryctor <
 _root_.com.javacp.MetacJava#Overload2#`<init>`(). => javadefined primaryctor <init>: (): MetacJava.this.Overload2
   [4..13): MetacJava => _root_.com.javacp.MetacJava#
   [19..28): Overload2 => _root_.com.javacp.MetacJava#Overload2#
-_root_.com.javacp.MetacJava#Overload3# => final javadefined class Overload3
+_root_.com.javacp.MetacJava#Overload3# => javadefined class Overload3
 _root_.com.javacp.MetacJava#Overload3#A# => javadefined class A
 _root_.com.javacp.MetacJava#Overload3#A#`<init>`(). => javadefined primaryctor <init>: (): A
   [4..5): A => _root_.com.javacp.MetacJava#Overload3#A#
@@ -1264,7 +1264,7 @@ Symbols:
 _root_.java. => package java
 _root_.java.nio. => package nio
 _root_.java.nio.file. => package file
-_root_.java.nio.file.LinkOption# => final javadefined class LinkOption
+_root_.java.nio.file.LinkOption# => abstract final sealed javadefined class LinkOption
 _root_.java.nio.file.LinkOption#NOFOLLOW_LINKS. => final javadefined val NOFOLLOW_LINKS: LinkOption
   [0..10): LinkOption => _root_.java.nio.file.LinkOption#
 _root_.scala. => package scala
