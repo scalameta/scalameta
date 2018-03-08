@@ -2,7 +2,7 @@
 _root_.com.
 ===========
 --- metac
-+++ javacp
++++ metacp
  kind: PACKAGE
  properties: 0
  name: "com"
@@ -20,7 +20,7 @@ _root_.com.
 _root_.com.javacp.
 ==================
 --- metac
-+++ javacp
++++ metacp
  kind: PACKAGE
  properties: 0
  name: "javacp"
@@ -38,7 +38,7 @@ _root_.com.javacp.
 _root_.com.javacp.MetacJava#
 ============================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#`<init>`()."
 -    declarations: "_root_.com.javacp.MetacJava#Overload1."
@@ -58,7 +58,7 @@ _root_.com.javacp.MetacJava#
 _root_.com.javacp.MetacJava#Overload1#
 ======================================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#`<init>`()."
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#A."
@@ -70,7 +70,7 @@ _root_.com.javacp.MetacJava#Overload1#
 _root_.com.javacp.MetacJava#Overload1#A#
 ========================================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#Overload1#A#<init>(Overload1)."
@@ -81,7 +81,7 @@ _root_.com.javacp.MetacJava#Overload1#A#
 _root_.com.javacp.MetacJava#Overload1#A#`<init>`().
 ===================================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
@@ -117,7 +117,7 @@ _root_.com.javacp.MetacJava#Overload1#A#`<init>`().
 _root_.com.javacp.MetacJava#Overload1#`<init>`().
 =================================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload1#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
@@ -153,7 +153,7 @@ _root_.com.javacp.MetacJava#Overload1#`<init>`().
 _root_.com.javacp.MetacJava#Overload2#
 ======================================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#`<init>`()."
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#A."
@@ -165,7 +165,7 @@ _root_.com.javacp.MetacJava#Overload2#
 _root_.com.javacp.MetacJava#Overload2#A#
 ========================================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#Overload2#A#<init>(Overload2)."
@@ -176,7 +176,7 @@ _root_.com.javacp.MetacJava#Overload2#A#
 _root_.com.javacp.MetacJava#Overload2#A#`<init>`().
 ===================================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
@@ -212,7 +212,7 @@ _root_.com.javacp.MetacJava#Overload2#A#`<init>`().
 _root_.com.javacp.MetacJava#Overload2#`<init>`().
 =================================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload2#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
@@ -248,7 +248,7 @@ _root_.com.javacp.MetacJava#Overload2#`<init>`().
 _root_.com.javacp.MetacJava#`<init>`().
 =======================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
@@ -277,7 +277,7 @@ _root_.com.javacp.MetacJava#`<init>`().
 _root_.com.javacp.MetacJava.
 ============================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava."
 -kind: OBJECT
 -properties: 8
@@ -303,7 +303,7 @@ _root_.com.javacp.MetacJava.
 _root_.com.javacp.MetacJava.StaticInner#
 ========================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava.StaticInner#"
 -kind: CLASS
 +symbol: ""
@@ -335,7 +335,7 @@ _root_.com.javacp.MetacJava.StaticInner#
 _root_.com.javacp.MetacJava.StaticInner#NonStatic#
 ==================================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava.StaticInner#NonStatic#"
 -kind: CLASS
 +symbol: ""
@@ -365,7 +365,7 @@ _root_.com.javacp.MetacJava.StaticInner#NonStatic#
 _root_.com.javacp.MetacJava.StaticInner#NonStatic#`<init>`().
 =============================================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava.StaticInner#NonStatic#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
@@ -401,7 +401,7 @@ _root_.com.javacp.MetacJava.StaticInner#NonStatic#`<init>`().
 _root_.com.javacp.MetacJava.StaticInner#NonStatic#method(NonStatic).
 ====================================================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava.StaticInner#NonStatic#method(NonStatic)."
 -kind: DEF
 +symbol: ""
@@ -431,7 +431,7 @@ _root_.com.javacp.MetacJava.StaticInner#NonStatic#method(NonStatic).
 _root_.com.javacp.MetacJava.StaticInner#`<init>`().
 ===================================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava.StaticInner#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
@@ -460,7 +460,7 @@ _root_.com.javacp.MetacJava.StaticInner#`<init>`().
 _root_.com.javacp.MetacJava.StaticInner#isNotStatic().
 ======================================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava.StaticInner#isNotStatic()."
 -kind: DEF
 +symbol: ""
@@ -489,7 +489,7 @@ _root_.com.javacp.MetacJava.StaticInner#isNotStatic().
 _root_.com.javacp.MetacJava.StaticInner.
 ========================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava.StaticInner."
 -kind: OBJECT
 -properties: 8
@@ -515,7 +515,7 @@ _root_.com.javacp.MetacJava.StaticInner.
 _root_.com.javacp.MetacJava.StaticInner.isStatic().
 ===================================================
 --- metac
-+++ javacp
++++ metacp
 -symbol: "_root_.com.javacp.MetacJava.StaticInner.isStatic()."
 -kind: DEF
 +symbol: ""
@@ -544,7 +544,7 @@ _root_.com.javacp.MetacJava.StaticInner.isStatic().
 _root_.example.
 ===============
 --- metac
-+++ javacp
++++ metacp
  kind: PACKAGE
  properties: 0
  name: "example"
@@ -564,7 +564,7 @@ _root_.example.
 _root_.example.Acc#
 ===================
 --- metac
-+++ javacp
++++ metacp
      declarations: "_root_.example.Acc#`<init>`()."
      declarations: "_root_.example.Acc#m1()."
      declarations: "_root_.example.Acc#m2()."
@@ -581,7 +581,7 @@ _root_.example.Acc#
 _root_.example.Example.
 =======================
 --- metac
-+++ javacp
++++ metacp
  properties: 8
  name: "Example"
  tpe {
@@ -605,7 +605,7 @@ _root_.example.Example.
 _root_.example.MetacJava#nonStatic().
 =====================================
 --- metac
-+++ javacp
++++ metacp
              string: ""
 -        symbol: "_root_.com.javacp.MetacJava.StaticInner#NonStatic#"
 +        symbol: "_root_.com.javacp.MetacJava.StaticInner.NonStatic#"
@@ -615,7 +615,7 @@ _root_.example.MetacJava#nonStatic().
 _root_.example.MetacJava#nonStatic.
 ===================================
 --- metac
-+++ javacp
++++ metacp
          string: ""
 -    symbol: "_root_.com.javacp.MetacJava.StaticInner#NonStatic#"
 +    symbol: "_root_.com.javacp.MetacJava.StaticInner.NonStatic#"
@@ -626,7 +626,7 @@ _root_.example.MetacJava#nonStatic.
 _root_.example.MetacJava#overload1().
 =====================================
 --- metac
-+++ javacp
++++ metacp
              string: ""
 -        symbol: "_root_.com.javacp.MetacJava#Overload1#"
 +        symbol: "_root_.com.javacp.MetacJava.Overload1#"
@@ -636,7 +636,7 @@ _root_.example.MetacJava#overload1().
 _root_.example.MetacJava#overload1.
 ===================================
 --- metac
-+++ javacp
++++ metacp
          string: ""
 -    symbol: "_root_.com.javacp.MetacJava#Overload1#"
 +    symbol: "_root_.com.javacp.MetacJava.Overload1#"
@@ -647,7 +647,7 @@ _root_.example.MetacJava#overload1.
 _root_.example.MetacJava#overload2().
 =====================================
 --- metac
-+++ javacp
++++ metacp
              string: ""
 -        symbol: "_root_.com.javacp.MetacJava#Overload2#"
 +        symbol: "_root_.com.javacp.MetacJava.Overload2#"
@@ -657,7 +657,7 @@ _root_.example.MetacJava#overload2().
 _root_.example.MetacJava#overload2.
 ===================================
 --- metac
-+++ javacp
++++ metacp
          string: ""
 -    symbol: "_root_.com.javacp.MetacJava#Overload2#"
 +    symbol: "_root_.com.javacp.MetacJava.Overload2#"
@@ -668,7 +668,7 @@ _root_.example.MetacJava#overload2.
 _root_.example.Methods#
 =======================
 --- metac
-+++ javacp
++++ metacp
      declarations: "_root_.example.Methods#`<init>`()."
 +    declarations: "_root_.example.Methods#[T]"
      declarations: "_root_.example.Methods#List#"
@@ -690,7 +690,7 @@ _root_.example.Methods#
 _root_.example.Methods#List#
 ============================
 --- metac
-+++ javacp
++++ metacp
      declarations: "_root_.example.Methods#List#`<init>`()."
 +    declarations: "_root_.example.Methods#List#[T]"
  accessibility {
@@ -700,7 +700,7 @@ _root_.example.Methods#List#
 _root_.example.Methods#m12b({}).(x)
 ===================================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.scala.AnyRef#"
 -    declarations: "_root_.example.Methods#$anon#x()."
 +    declarations: "_root_.example.Methods#`<refinement>`#x()."
@@ -711,7 +711,7 @@ _root_.example.Methods#m12b({}).(x)
 _root_.example.Methods#m13(Int).(x)
 ===================================
 --- metac
-+++ javacp
++++ metacp
  properties: 0
  name: "x"
  tpe {
@@ -736,7 +736,7 @@ _root_.example.Methods#m13(Int).(x)
 _root_.example.ValUsages.
 =========================
 --- metac
-+++ javacp
++++ metacp
  properties: 8
  name: "ValUsages"
  tpe {
@@ -759,7 +759,7 @@ _root_.example.ValUsages.
 _root_.example.Vals#xzlm().
 ===========================
 --- metac
-+++ javacp
++++ metacp
  symbol: "_root_.example.Vals#xzlm()."
 -kind: VAL
 +kind: GETTER
@@ -782,7 +782,7 @@ _root_.example.Vals#xzlm().
 _root_.example.Vals#xzm().
 ==========================
 --- metac
-+++ javacp
++++ metacp
  symbol: "_root_.example.Vals#xzm()."
 -kind: VAL
 +kind: GETTER
@@ -805,7 +805,7 @@ _root_.example.Vals#xzm().
 _root_.flags.
 =============
 --- metac
-+++ javacp
++++ metacp
  kind: PACKAGE
  properties: 0
  name: "flags"
@@ -825,7 +825,7 @@ _root_.flags.
 _root_.flags.p.package.
 =======================
 --- metac
-+++ javacp
++++ metacp
  symbol: "_root_.flags.p.package."
  kind: PACKAGE_OBJECT
 -properties: 0
@@ -868,7 +868,7 @@ _root_.flags.p.package.
 _root_.flags.p.package.C#
 =========================
 --- metac
-+++ javacp
++++ metacp
      declarations: "_root_.flags.p.package.C#x."
 +    declarations: "_root_.flags.p.package.C#[T]"
      declarations: "_root_.flags.p.package.C#y."
@@ -884,7 +884,7 @@ _root_.flags.p.package.C#
 _root_.flags.p.package.S#
 =========================
 --- metac
-+++ javacp
++++ metacp
      declarations: "_root_.flags.p.package.S#`<init>`()."
 +    declarations: "_root_.flags.p.package.S#[T]"
  accessibility {
@@ -894,7 +894,7 @@ _root_.flags.p.package.S#
 _root_.flags.p.package.S#[T]
 ============================
 --- metac
-+++ javacp
++++ metacp
 -annotations {
 -  tpe {
 -    tag: TYPE_REF
@@ -910,7 +910,7 @@ _root_.flags.p.package.S#[T]
 _root_.flags.p.package.X.
 =========================
 --- metac
-+++ javacp
++++ metacp
  properties: 136
  name: "X"
  tpe {
@@ -947,7 +947,7 @@ _root_.flags.p.package.X.
 _root_.flags.p.package.x().
 ===========================
 --- metac
-+++ javacp
++++ metacp
  symbol: "_root_.flags.p.package.x()."
 -kind: VAL
 +kind: GETTER
@@ -970,7 +970,7 @@ _root_.flags.p.package.x().
 _root_.types.
 =============
 --- metac
-+++ javacp
++++ metacp
  kind: PACKAGE
  properties: 0
  name: "types"
@@ -990,7 +990,7 @@ _root_.types.
 _root_.types.Test.
 ==================
 --- metac
-+++ javacp
++++ metacp
  properties: 8
  name: "Test"
  tpe {
@@ -1016,7 +1016,7 @@ _root_.types.Test.
 _root_.types.Test.C#
 ====================
 --- metac
-+++ javacp
++++ metacp
      declarations: "_root_.types.Test.C#superType3()."
      declarations: "_root_.types.Test.C#superType3."
      declarations: "_root_.types.Test.C#compoundType1()."
@@ -1053,7 +1053,7 @@ _root_.types.Test.C#
 _root_.types.Test.C#ByNameType.
 ===============================
 --- metac
-+++ javacp
++++ metacp
  properties: 8
  name: "ByNameType"
  tpe {
@@ -1082,7 +1082,7 @@ _root_.types.Test.C#ByNameType.
 _root_.types.Test.C#ClassInfoType1.
 ===================================
 --- metac
-+++ javacp
++++ metacp
  properties: 8
  name: "ClassInfoType1"
  tpe {
@@ -1110,7 +1110,7 @@ _root_.types.Test.C#ClassInfoType1.
 _root_.types.Test.C#ClassInfoType3#
 ===================================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.scala.AnyRef#"
 +    declarations: "_root_.types.Test.C#ClassInfoType3#[T]"
  accessibility {
@@ -1120,7 +1120,7 @@ _root_.types.Test.C#ClassInfoType3#
 _root_.types.Test.C#MethodType.
 ===============================
 --- metac
-+++ javacp
++++ metacp
  properties: 8
  name: "MethodType"
  tpe {
@@ -1154,7 +1154,7 @@ _root_.types.Test.C#MethodType.
 _root_.types.Test.C#TypeType.
 =============================
 --- metac
-+++ javacp
++++ metacp
  properties: 8
  name: "TypeType"
  tpe {
@@ -1187,7 +1187,7 @@ _root_.types.Test.C#TypeType.
 _root_.types.Test.C#annType1().
 ===============================
 --- metac
-+++ javacp
++++ metacp
              symbol: "_root_.types.T#"
 -        annotations {
 -          tpe {
@@ -1204,7 +1204,7 @@ _root_.types.Test.C#annType1().
 _root_.types.Test.C#annType1.
 =============================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.types.T#"
 -    annotations {
 -      tpe {
@@ -1222,7 +1222,7 @@ _root_.types.Test.C#annType1.
 _root_.types.Test.C#annType2().
 ===============================
 --- metac
-+++ javacp
++++ metacp
              symbol: "_root_.types.T#"
 -        annotations {
 -          tpe {
@@ -1240,7 +1240,7 @@ _root_.types.Test.C#annType2().
 _root_.types.Test.C#annType2.
 =============================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.types.T#"
 -    annotations {
 -      tpe {
@@ -1259,7 +1259,7 @@ _root_.types.Test.C#annType2.
 _root_.types.Test.C#compoundType1().
 ====================================
 --- metac
-+++ javacp
++++ metacp
              symbol: "_root_.scala.AnyRef#"
 -        declarations: "_root_.types.Test.C#$anon#k()."
 +        declarations: "_root_.types.Test.C#`<refinement>`#k()."
@@ -1269,7 +1269,7 @@ _root_.types.Test.C#compoundType1().
 _root_.types.Test.C#compoundType1.
 ==================================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.scala.AnyRef#"
 -    declarations: "_root_.types.Test.C#$anon#k()."
 +    declarations: "_root_.types.Test.C#`<refinement>`#k()."
@@ -1280,7 +1280,7 @@ _root_.types.Test.C#compoundType1.
 _root_.types.Test.C#compoundType3().
 ====================================
 --- metac
-+++ javacp
++++ metacp
              symbol: "_root_.types.Test.N#"
 -        declarations: "_root_.types.Test.C#$anon#k()."
 +        declarations: "_root_.types.Test.C#`<refinement>`#k()."
@@ -1290,7 +1290,7 @@ _root_.types.Test.C#compoundType3().
 _root_.types.Test.C#compoundType3.
 ==================================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.types.Test.N#"
 -    declarations: "_root_.types.Test.C#$anon#k()."
 +    declarations: "_root_.types.Test.C#`<refinement>`#k()."
@@ -1301,7 +1301,7 @@ _root_.types.Test.C#compoundType3.
 _root_.types.Test.C#singleType2().
 ==================================
 --- metac
-+++ javacp
++++ metacp
              string: ""
 -        symbol: "_root_.types.P#x()."
 +        symbol: "_root_.types.P.x#"
@@ -1313,7 +1313,7 @@ _root_.types.Test.C#singleType2().
 _root_.types.Test.C#singleType2.
 ================================
 --- metac
-+++ javacp
++++ metacp
          string: ""
 -    symbol: "_root_.types.P#x()."
 +    symbol: "_root_.types.P.x#"
@@ -1325,7 +1325,7 @@ _root_.types.Test.C#singleType2.
 _root_.types.Test.C#typeRef2().
 ===============================
 --- metac
-+++ javacp
++++ metacp
              string: ""
 -        symbol: "_root_.types.P#C#"
 +        symbol: "_root_.types.P.C#"
@@ -1335,7 +1335,7 @@ _root_.types.Test.C#typeRef2().
 _root_.types.Test.C#typeRef2.
 =============================
 --- metac
-+++ javacp
++++ metacp
          string: ""
 -    symbol: "_root_.types.P#C#"
 +    symbol: "_root_.types.P.C#"
@@ -1346,7 +1346,7 @@ _root_.types.Test.C#typeRef2.
 _root_.types.Test.C#typeRef3().
 ===============================
 --- metac
-+++ javacp
++++ metacp
              symbol: "_root_.types.T#"
 -        symbol: "_root_.types.T#C#"
 +        symbol: "_root_.types.T.C#"
@@ -1356,7 +1356,7 @@ _root_.types.Test.C#typeRef3().
 _root_.types.Test.C#typeRef3.
 =============================
 --- metac
-+++ javacp
++++ metacp
          symbol: "_root_.types.T#"
 -    symbol: "_root_.types.T#C#"
 +    symbol: "_root_.types.T.C#"
@@ -1367,7 +1367,7 @@ _root_.types.Test.C#typeRef3.
 _root_.types.Test.C#x().
 ========================
 --- metac
-+++ javacp
++++ metacp
              string: ""
 -        symbol: "_root_.types.P#X#"
 +        symbol: "_root_.types.P.X#"
@@ -1377,7 +1377,7 @@ _root_.types.Test.C#x().
 _root_.types.Test.C#x.
 ======================
 --- metac
-+++ javacp
++++ metacp
          string: ""
 -    symbol: "_root_.types.P#X#"
 +    symbol: "_root_.types.P.X#"
@@ -1388,7 +1388,7 @@ _root_.types.Test.C#x.
 _root_.types.Test.Literal.
 ==========================
 --- metac
-+++ javacp
++++ metacp
  properties: 8
  name: "Literal"
  tpe {
@@ -1431,7 +1431,7 @@ _root_.types.Test.Literal.
 _root_.types.Test.Literal.javaEnum.
 ===================================
 --- metac
-+++ javacp
++++ metacp
  kind: VAL
  properties: 8
  name: "javaEnum"
@@ -1452,7 +1452,7 @@ _root_.types.Test.Literal.javaEnum.
 _root_.types.ann#
 =================
 --- metac
-+++ javacp
++++ metacp
      declarations: "_root_.types.ann#x."
 +    declarations: "_root_.types.ann#[T]"
      declarations: "_root_.types.ann#`<init>`(T)."
