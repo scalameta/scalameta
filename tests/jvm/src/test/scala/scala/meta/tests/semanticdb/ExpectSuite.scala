@@ -37,6 +37,10 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacpOwnersExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
+      test("metacp.index") {
+        import MetacpIndexExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
       test("lowlevel.expect") {
         import LowlevelExpect._
         assertNoDiff(loadObtained, loadExpected)
@@ -48,12 +52,20 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         val roundtrip = loadDatabase.toSchema(sourceroot).toDb(Some(Sourcepath(sourceroot)))
         assertNoDiff(roundtrip.toString, loadExpected, "Roundtrip")
       }
+      test("index.expect") {
+        import IndexExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
       test("metac.owners") {
         import MetacOwnersExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("metac-metacp.diff") {
-        import MetacMetacpDiffExpect._
+      test("metac-metacp.expect.diff") {
+        import MetacMetacpExpectDiffExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
+      test("metac-metacp.index.diff") {
+        import MetacMetacpIndexDiffExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
     case _ =>
@@ -70,27 +82,7 @@ trait ExpectHelpers extends FunSuiteLike {
   def saveExpected(value: String): Unit =
     Files.write(path, value.getBytes(UTF_8))
 
-  def normalizeSymbol(sym: s.SymbolInformation): s.SymbolInformation = {
-    sym.copy(
-      language = None,
-      signature = None,
-      overrides = Nil,
-      members = Nil
-    )
-  }
-
-  def loadSymbols(path: Path): Map[String, s.SymbolInformation] = {
-    for {
-      file <- FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator
-      if PathIO.extension(file.toNIO) == "semanticdb"
-      doc <- s.TextDocuments.parseFrom(file.readAllBytes).documents
-      sym <- doc.symbols
-    } yield sym.symbol -> sym
-  }.toMap
-  def metacpSymbols = loadSymbols(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
-  def metacSymbols = loadSymbols(Paths.get(BuildInfo.databaseClasspath))
-
-  def unifiedDiff(
+  protected def unifiedDiff(
       originalTitle: String,
       revisedTitle: String,
       original: String,
@@ -124,6 +116,23 @@ trait ExpectHelpers extends FunSuiteLike {
     val sorted = Database(database.documents.sortBy(_.input.syntax))
     sorted
   }
+
+  protected def normalizedSymbols(path: Path): Map[String, s.SymbolInformation] = {
+    for {
+      file <- FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator
+      if PathIO.extension(file.toNIO) == "semanticdb"
+      doc <- s.TextDocuments.parseFrom(file.readAllBytes).documents
+      sym <- doc.symbols
+    } yield {
+      val normalizedSym = sym.copy(
+        language = None,
+        signature = None,
+        overrides = Nil,
+        members = Nil
+      )
+      sym.symbol -> normalizedSym
+    }
+  }.toMap
 
   protected def lowlevelSyntax(dirOrJar: Path): String = {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
@@ -211,6 +220,29 @@ trait ExpectHelpers extends FunSuiteLike {
     // buf.toString
     owners.toList.sortBy(_._1).map(kv => s"${kv._1} => ${kv._2}").mkString(EOL)
   }
+
+  protected def indexSyntax(path: Path): String = {
+    val semanticdbSemanticidx = path.resolve("META-INF/semanticdb.semanticidx")
+    if (Files.exists(semanticdbSemanticidx)) {
+      val index = FileIO.readIndex(AbsolutePath(semanticdbSemanticidx))
+      val buf = new StringBuilder
+      buf.append("Packages:" + EOL)
+      buf.append("=========" + EOL)
+      index.packages.sortBy(_.symbol).foreach { entry =>
+        buf.append(entry.symbol + EOL)
+        entry.members.sorted.foreach(member => buf.append("  " + member + EOL))
+      }
+      buf.append(EOL)
+      buf.append("Toplevels:" + EOL)
+      buf.append("==========" + EOL)
+      index.toplevels.sortBy(_.symbol).foreach { entry =>
+        buf.append(s"${entry.symbol} => ${entry.uri}" + EOL)
+      }
+      buf.toString
+    } else {
+      ""
+    }
+  }
 }
 
 object ScalalibExpect extends ExpectHelpers {
@@ -241,6 +273,11 @@ object MetacpOwnersExpect extends ExpectHelpers {
   def loadObtained: String = ownerSyntax(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
 }
 
+object MetacpIndexExpect extends ExpectHelpers {
+  def filename: String = "metacp.index"
+  def loadObtained: String = indexSyntax(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
+}
+
 object LowlevelExpect extends ExpectHelpers {
   def filename: String = "lowlevel.expect"
   def loadObtained: String = lowlevelSyntax(Paths.get(BuildInfo.databaseClasspath))
@@ -252,33 +289,38 @@ object HighlevelExpect extends ExpectHelpers {
   def loadDatabase: Database = highlevelDatabase(Paths.get(BuildInfo.databaseClasspath))
 }
 
+object IndexExpect extends ExpectHelpers {
+  def filename: String = "index.expect"
+  def loadObtained: String = indexSyntax(Paths.get(BuildInfo.databaseClasspath))
+}
+
 object MetacOwnersExpect extends ExpectHelpers {
   def filename: String = "metac.owners"
   def loadObtained: String = ownerSyntax(Paths.get(BuildInfo.databaseClasspath))
 }
 
-object MetacMetacpDiffExpect extends ExpectHelpers {
-  def filename: String = "metac-metacp.diff"
+object MetacMetacpExpectDiffExpect extends ExpectHelpers {
+  def filename: String = "metac-metacp.expect.diff"
   def loadObtained: String = {
-    val javacp = metacpSymbols
+    val metacp = metacpSymbols
     val metac = metacSymbols.valuesIterator.toSeq.sortBy(_.symbol)
     val symbols = for {
       sym <- metac.iterator
       javasym <- {
         if (sym.symbol.contains("com.javacp")) {
           // metac references to java defined symbols in com.javacp must have a corresponding metacp entry.
-          Some(javacp.getOrElse(sym.symbol, s.SymbolInformation()))
+          Some(metacp.getOrElse(sym.symbol, s.SymbolInformation()))
         } else {
-          javacp.get(sym.symbol)
+          metacp.get(sym.symbol)
         }
       }
     } yield {
       val header = "=" * sym.symbol.length
       val diff = unifiedDiff(
         "metac",
-        "javacp",
-        normalizeSymbol(sym).toProtoString,
-        normalizeSymbol(javasym).toProtoString
+        "metacp",
+        sym.toProtoString,
+        javasym.toProtoString
       )
       if (diff.isEmpty) ""
       else {
@@ -293,6 +335,17 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
     }
     symbols.mkString
   }
+  def metacpSymbols = normalizedSymbols(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
+  def metacSymbols = normalizedSymbols(Paths.get(BuildInfo.databaseClasspath))
+}
+
+object MetacMetacpIndexDiffExpect extends ExpectHelpers {
+  def filename: String = "metac-metacp.index.diff"
+  def loadObtained: String = {
+    val metac = IndexExpect.loadObtained
+    val metacp = MetacpIndexExpect.loadObtained
+    unifiedDiff("metac", "metacp", metac, metacp)
+  }
 }
 
 // To save the current behavior, run `sbt save-expect`.
@@ -301,9 +354,12 @@ object SaveExpectTest {
     ScalalibExpect.saveExpected(ScalalibExpect.loadObtained)
     MetacpExpect.saveExpected(MetacpExpect.loadObtained)
     MetacpOwnersExpect.saveExpected(MetacpOwnersExpect.loadObtained)
+    MetacpIndexExpect.saveExpected(MetacpIndexExpect.loadObtained)
     LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
     HighlevelExpect.saveExpected(HighlevelExpect.loadObtained)
+    IndexExpect.saveExpected(IndexExpect.loadObtained)
     MetacOwnersExpect.saveExpected(MetacOwnersExpect.loadObtained)
-    MetacMetacpDiffExpect.saveExpected(MetacMetacpDiffExpect.loadObtained)
+    MetacMetacpExpectDiffExpect.saveExpected(MetacMetacpExpectDiffExpect.loadObtained)
+    MetacMetacpIndexDiffExpect.saveExpected(MetacMetacpIndexDiffExpect.loadObtained)
   }
 }

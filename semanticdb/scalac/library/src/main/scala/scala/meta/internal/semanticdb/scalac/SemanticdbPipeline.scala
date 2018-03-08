@@ -49,7 +49,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
     val runsAfter = List("typer")
     override val runsRightAfter = Some("typer")
     val phaseName = "semanticdb-typer"
-    override val description = "computes and persists semanticdb after typer"
+    override val description = "compute and persist SemanticDB after typer"
     def newPhase(_prev: Phase) = new ComputeSemanticdbPhase(_prev)
     class ComputeSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
@@ -62,9 +62,38 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
         } catch handleError(unit)
       }
 
+      private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
+        val vdb = v.Database.load(Classpath(scalametaTargetroot))
+        val orphanedVentries = vdb.entries.filter(ventry => {
+          val scalaName = v.SemanticdbPaths.toScala(ventry.fragment.name)
+          !config.sourceroot.resolve(scalaName).isFile
+        })
+        orphanedVentries.map(ve => {
+          def cleanupUpwards(file: File): Unit = {
+            if (file != null) {
+              if (file.isFile) {
+                file.delete()
+              } else {
+                if (file.getAbsolutePath == ve.base.toString) return
+                if (file.listFiles.isEmpty) file.delete()
+              }
+              cleanupUpwards(file.getParentFile)
+            }
+          }
+          cleanupUpwards(ve.uri.toFile)
+        })
+      }
+
+      private def synchronizeSourcesAndSemanticdbIndex(): Unit = {
+        // TODO: Support incremental compilation.
+        index.save(scalametaTargetroot)
+      }
+
       override def run(): Unit = {
         timestampComputeStarted = System.nanoTime()
         super.run()
+        synchronizeSourcesAndSemanticdbFiles()
+        synchronizeSourcesAndSemanticdbIndex()
         timestampComputeFinished = System.nanoTime()
         idCache.clear()
         symbolCache.clear()
@@ -78,7 +107,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
     override val runsRightAfter = Some("jvm")
     val phaseName = "semanticdb-jvm"
     override val description =
-      "compute and persist additional semanticdb entries created after typer"
+      "compute and persist additional SemanticDB messages created after typer"
     def newPhase(_prev: Phase) = new PersistSemanticdbPhase(_prev)
     class PersistSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       override def apply(unit: g.CompilationUnit): Unit = {
@@ -104,25 +133,6 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
 
       override def run(): Unit = {
         timestampPersistStarted = System.nanoTime()
-        val vdb = v.Database.load(Classpath(scalametaTargetroot))
-        val orphanedVentries = vdb.entries.filter(ventry => {
-          val scalaName = v.SemanticdbPaths.toScala(ventry.fragment.name)
-          !config.sourceroot.resolve(scalaName).isFile
-        })
-        orphanedVentries.map(ve => {
-          def cleanupUpwards(file: File): Unit = {
-            if (file != null) {
-              if (file.isFile) {
-                file.delete()
-              } else {
-                if (file.getAbsolutePath == ve.base.toString) return
-                if (file.listFiles.isEmpty) file.delete()
-              }
-              cleanupUpwards(file.getParentFile)
-            }
-          }
-          cleanupUpwards(ve.uri.toFile)
-        })
         super.run()
         timestampPersistFinished = System.nanoTime()
         reportSemanticdbSummary()

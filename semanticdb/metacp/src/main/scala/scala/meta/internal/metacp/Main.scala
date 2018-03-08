@@ -3,6 +3,7 @@ package scala.meta.internal.metacp
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import scala.collection.JavaConverters._
+import scala.meta.internal.index._
 import scala.meta.internal.javacp._
 import scala.meta.internal.scalacp._
 import scala.meta.metacp._
@@ -86,7 +87,7 @@ class Main(settings: Settings, reporter: Reporter) {
                 }
               }
               result.foreach { infos =>
-                index.append(infos)
+                index.append(infos.uri, infos.toplevels)
                 infos.save(out)
               }
             } catch {
@@ -108,7 +109,7 @@ class Main(settings: Settings, reporter: Reporter) {
     val index = new Index
     val synthetics = List(Scalalib.any, Scalalib.anyVal, Scalalib.anyRef, Scalalib.nothing)
     synthetics.foreach { infos =>
-      index.append(infos)
+      index.append(infos.uri, infos.toplevels)
       infos.save(out)
     }
     index.save(out)

@@ -1,4 +1,4 @@
-package scala.meta.internal.metacp
+package scala.meta.internal.index
 
 import org.langmeta.internal.io._
 import org.langmeta.io._
@@ -11,9 +11,8 @@ class Index {
   packages("_root_.") = mutable.Set[String]()
   packages("_empty_.") = mutable.Set[String]()
 
-  def append(infos: ToplevelInfos): Unit = {
-    infos.toplevels.foreach { info =>
-      val uri = infos.classfile.relative.resolveSibling(_ + ".semanticdb").toString
+  def append(uri: String, infos: List[s.SymbolInformation]): Unit = {
+    infos.foreach { info =>
       toplevels(info.symbol) = uri
       if (info.symbol.stripSuffix("#").contains("#")) return
       val ownerChain = info.owner.split("\\.")

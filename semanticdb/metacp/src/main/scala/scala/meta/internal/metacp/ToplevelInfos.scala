@@ -8,14 +8,13 @@ final case class ToplevelInfos(
     classfile: ToplevelClassfile,
     toplevels: List[s.SymbolInformation],
     others: List[s.SymbolInformation]) {
+  def uri: String = classfile.uri + ".semanticdb"
   def save(out: AbsolutePath): Unit = {
     assert(toplevels.nonEmpty)
-    val semanticdbRoot = out.resolve("META-INF").resolve("semanticdb")
-    val semanticdbRelpath = classfile.name + ".semanticdb"
-    val semanticdbAbspath = semanticdbRoot.resolve(semanticdbRelpath)
+    val semanticdbAbspath = out.resolve("META-INF").resolve("semanticdb").resolve(uri)
     val semanticdbDocument = s.TextDocument(
       schema = s.Schema.SEMANTICDB3,
-      uri = classfile.name,
+      uri = classfile.uri,
       language = toplevels.head.language,
       symbols = toplevels ++ others)
     val semanticdbMessage = s.TextDocuments(List(semanticdbDocument))

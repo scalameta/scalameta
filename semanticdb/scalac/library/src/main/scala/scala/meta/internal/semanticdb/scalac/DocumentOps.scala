@@ -1,11 +1,15 @@
 package scala.meta.internal.semanticdb.scalac
 
+import org.langmeta.internal.io.PathIO
+import org.langmeta.internal.semanticdb.vfs.SemanticdbPaths
 import scala.collection.mutable
 import scala.reflect.internal._
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
+import scala.reflect.io.{PlainFile => GPlainFile}
 import scala.{meta => m}
 import scala.meta.internal.inputs._
+import scala.meta.internal.{semanticdb3 => s}
 
 trait DocumentOps { self: DatabaseOps =>
   def validateCompilerState(): Unit = {
@@ -189,7 +193,25 @@ trait DocumentOps { self: DatabaseOps =>
               todo -= mtree
 
               names(mtree.pos) = symbol
-              if (mtree.isDefinition) binders += mtree.pos
+              if (mtree.isDefinition) {
+                val isToplevel = gsym.owner.hasPackageFlag
+                if (isToplevel) {
+                  unit.source.file match {
+                    case gfile: GPlainFile =>
+                      // TODO: Decide on the uri format for semanticdb.semanticidx.
+                      val scalaRelPath = m.AbsolutePath(gfile.file).toRelative(config.sourceroot)
+                      val semanticdbRelPath = scalaRelPath + ".semanticdb"
+                      val suri = PathIO.toUnix(semanticdbRelPath.toString)
+                      val ssymbol = symbol.syntax
+                      val sowner = gsym.owner.toSemantic.syntax
+                      val sinfo = s.SymbolInformation(symbol = ssymbol, owner = sowner)
+                      index.append(suri, List(sinfo))
+                    case _ =>
+                      ()
+                  }
+                }
+                binders += mtree.pos
+              }
 
               def saveDenotation(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
