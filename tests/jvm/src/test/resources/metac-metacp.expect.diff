@@ -46,14 +46,12 @@ _root_.com.javacp.MetacJava#
  name: "MetacJava"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -11,18 +11,14 @@
-         symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#`<init>`()."
+@@ -12,17 +12,13 @@
+     declarations: "_root_.com.javacp.MetacJava#`<init>`()."
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#"
-+    declarations: "_root_.com.javacp.MetacJava#<init>()."
      declarations: "_root_.com.javacp.MetacJava#overload(A+1)."
      declarations: "_root_.com.javacp.MetacJava#overload(A+2)."
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#"
@@ -75,7 +73,7 @@ _root_.com.javacp.MetacJava#Overload1#
 +++ metacp
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#`<init>`()."
-+    declarations: "_root_.com.javacp.MetacJava#Overload1#<init>(MetacJava)."
++    declarations: "_root_.com.javacp.MetacJava#Overload1#`<init>`(MetacJava)."
      declarations: "_root_.com.javacp.MetacJava#Overload1#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#A#"
  accessibility {
@@ -88,7 +86,7 @@ _root_.com.javacp.MetacJava#Overload1#A#
 +++ metacp
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`()."
-+    declarations: "_root_.com.javacp.MetacJava#Overload1#A#<init>(Overload1)."
++    declarations: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`(Overload1)."
  accessibility {
 
 
@@ -171,7 +169,7 @@ _root_.com.javacp.MetacJava#Overload2#
 +++ metacp
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#`<init>`()."
-+    declarations: "_root_.com.javacp.MetacJava#Overload2#<init>(MetacJava)."
++    declarations: "_root_.com.javacp.MetacJava#Overload2#`<init>`(MetacJava)."
      declarations: "_root_.com.javacp.MetacJava#Overload2#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#A#"
  accessibility {
@@ -184,7 +182,7 @@ _root_.com.javacp.MetacJava#Overload2#A#
 +++ metacp
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`()."
-+    declarations: "_root_.com.javacp.MetacJava#Overload2#A#<init>(Overload2)."
++    declarations: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`(Overload2)."
  accessibility {
 
 
@@ -272,10 +270,8 @@ _root_.com.javacp.MetacJava#Overload3#
  name: "Overload3"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -11,9 +11,8 @@
-         symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#Overload3#`<init>`()."
-+    declarations: "_root_.com.javacp.MetacJava#Overload3#<init>()."
+@@ -13,7 +13,6 @@
+     declarations: "_root_.com.javacp.MetacJava#Overload3#`<init>`()."
      declarations: "_root_.com.javacp.MetacJava#Overload3#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload3#A#"
  accessibility {
@@ -293,11 +289,6 @@ _root_.com.javacp.MetacJava#Overload3#A#
  name: "A"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -11,7 +11,7 @@
-         symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`()."
-+    declarations: "_root_.com.javacp.MetacJava#Overload3#A#<init>()."
- accessibility {
 
 
 ===================================================
@@ -305,28 +296,18 @@ _root_.com.javacp.MetacJava#Overload3#A#`<init>`().
 ===================================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`()."
+ symbol: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
++kind: DEF
  properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
+ name: "<init>"
+ tpe {
+@@ -10,7 +10,7 @@
+     return_type {
+       tag: TYPE_REF
+       typeRef {
 -        symbol: "_root_.com.javacp.MetacJava#Overload3#A#"
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--owner: "_root_.com.javacp.MetacJava#Overload3#A#"
-+name: ""
-+owner: ""
++        symbol: "_root_.scala.Unit#"
 
 
 ========================================
@@ -341,10 +322,8 @@ _root_.com.javacp.MetacJava#StaticInner#
  name: "StaticInner"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -11,11 +11,10 @@
-         symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
-+    declarations: "_root_.com.javacp.MetacJava#StaticInner#<init>()."
+@@ -13,9 +13,8 @@
+     declarations: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
      declarations: "_root_.com.javacp.MetacJava#StaticInner#isNotStatic()."
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
@@ -360,7 +339,7 @@ _root_.com.javacp.MetacJava#StaticInner#NonStatic#
 +++ metacp
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`()."
-+    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#<init>(StaticInner)."
++    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(StaticInner)."
      declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic)."
 
 
@@ -405,28 +384,18 @@ _root_.com.javacp.MetacJava#StaticInner#`<init>`().
 ===================================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
+ symbol: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
++kind: DEF
  properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
+ name: "<init>"
+ tpe {
+@@ -10,7 +10,7 @@
+     return_type {
+       tag: TYPE_REF
+       typeRef {
 -        symbol: "_root_.com.javacp.MetacJava#StaticInner#"
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--owner: "_root_.com.javacp.MetacJava#StaticInner#"
-+name: ""
-+owner: ""
++        symbol: "_root_.scala.Unit#"
 
 
 ===================================================
@@ -448,28 +417,18 @@ _root_.com.javacp.MetacJava#`<init>`().
 =======================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#`<init>`()."
+ symbol: "_root_.com.javacp.MetacJava#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
++kind: DEF
  properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
+ name: "<init>"
+ tpe {
+@@ -10,7 +10,7 @@
+     return_type {
+       tag: TYPE_REF
+       typeRef {
 -        symbol: "_root_.com.javacp.MetacJava#"
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--owner: "_root_.com.javacp.MetacJava#"
-+name: ""
-+owner: ""
++        symbol: "_root_.scala.Unit#"
 
 
 ==========================================

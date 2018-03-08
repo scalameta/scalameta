@@ -157,9 +157,13 @@ object Javacp {
           m.descriptor == method.descriptor
         }
         val suffix =
-          if (synonyms.length == 1) ""
+          if (synonyms.lengthCompare(1) == 0) ""
           else "+" + (1 + synonyms.indexWhere(_.signature eq method.signature))
-        val methodSymbol = classSymbol + method.node.name + "(" + method.descriptor + suffix + ")" + "."
+        val isConstructor =method.node.name == "<init>"
+        val methodName =
+          if (isConstructor) "`" + method.node.name + "`"
+          else method.node.name
+        val methodSymbol = classSymbol + methodName + "(" + method.descriptor + suffix + ")" + "."
 
         val (methodScope, methodTypeParameters) = method.signature.typeParameters match {
           case Some(tp: TypeParameters) => addTypeParameters(tp, methodSymbol, classScope)
@@ -168,8 +172,7 @@ object Javacp {
         methodTypeParameters.foreach(buf += _)
 
         val params =
-          if (method.node.name == "<init>" &&
-              hasOuterClassReference &&
+          if (isConstructor && hasOuterClassReference &&
               // Guard against an empty parameter list, which seems to only happen
               // in the JDK for java/util/regex/Pattern.class
               method.signature.params.nonEmpty) {

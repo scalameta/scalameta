@@ -52,24 +52,24 @@ _root_.com. => package com
 _root_.com.javacp. => package javacp
 _root_.com.javacp.ClassSuffix# => class ClassSuffix.{+3 decls}
   extends Object
-_root_.com.javacp.ClassSuffix#<init>(). => def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.ClassSuffix#Inner# => private[javacp] class Inner[A <: Object].{+2 decls}
   extends Object
-_root_.com.javacp.ClassSuffix#Inner#<init>(ClassSuffix). => private[javacp] def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.ClassSuffix#Inner#Bar# => private[javacp] class Bar.{+2 decls}
   extends Object
-_root_.com.javacp.ClassSuffix#Inner#Bar#<init>(Inner). => private[javacp] def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.ClassSuffix#Inner#Bar#Fuz# => private[javacp] class Fuz[B <: Object].{+1 decls}
   extends Object
-_root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#<init>(Bar). => private[javacp] def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#[B] => typeparam B: <: Object
   Object => _root_.java.lang.Object#
+_root_.com.javacp.ClassSuffix#Inner#Bar#Fuz#`<init>`(Bar). => private[javacp] def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.ClassSuffix#Inner#Bar#`<init>`(Inner). => private[javacp] def <init>: (): Unit
+  Unit => _root_.scala.Unit#
 _root_.com.javacp.ClassSuffix#Inner#[A] => typeparam A: <: Object
   Object => _root_.java.lang.Object#
+_root_.com.javacp.ClassSuffix#Inner#`<init>`(ClassSuffix). => private[javacp] def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.ClassSuffix#`<init>`(). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
 _root_.com.javacp.ClassSuffix#suffix. => var suffix: Inner[String]#Bar#Fuz[Integer]
   Inner => _root_.com.javacp.ClassSuffix#Inner#
   String => _root_.java.lang.String#
@@ -95,8 +95,6 @@ _root_.com.javacp.Javacp# => class Javacp[A <: CharSequence with Serializable, B
   extends ArrayList[A]
   extends Comparable[B]
   extends Serializable
-_root_.com.javacp.Javacp#<init>(). => def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.Javacp#Boolean. => var Boolean: Boolean
   Boolean => _root_.scala.Boolean#
 _root_.com.javacp.Javacp#Byte. => var Byte: Byte
@@ -107,10 +105,10 @@ _root_.com.javacp.Javacp#Float. => var Float: Float
   Float => _root_.scala.Float#
 _root_.com.javacp.Javacp#InnerShadowTypeParam# => private[javacp] class InnerShadowTypeParam[A <: Object].{+2 decls}
   extends Object
-_root_.com.javacp.Javacp#InnerShadowTypeParam#<init>(Javacp). => private[javacp] def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.Javacp#InnerShadowTypeParam#[A] => typeparam A: <: Object
   Object => _root_.java.lang.Object#
+_root_.com.javacp.Javacp#InnerShadowTypeParam#`<init>`(Javacp). => private[javacp] def <init>: (): Unit
+  Unit => _root_.scala.Unit#
 _root_.com.javacp.Javacp#InnerShadowTypeParam#move(A,B). => def move: (a: A, b: B): Unit
   a => _root_.com.javacp.Javacp#InnerShadowTypeParam#move(A,B).(a)
   A => _root_.com.javacp.Javacp#InnerShadowTypeParam#[A]
@@ -129,13 +127,15 @@ _root_.com.javacp.Javacp#Short. => var Short: Short
   Short => _root_.scala.Short#
 _root_.com.javacp.Javacp#StaticClass# => private[javacp] static class StaticClass.{+1 decls}
   extends Object
-_root_.com.javacp.Javacp#StaticClass#<init>(). => private[javacp] def <init>: (): Unit
+_root_.com.javacp.Javacp#StaticClass#`<init>`(). => private[javacp] def <init>: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.Javacp#[A] => typeparam A: <: CharSequence with Serializable
   CharSequence => _root_.java.lang.CharSequence#
   Serializable => _root_.java.io.Serializable#
 _root_.com.javacp.Javacp#[B] => typeparam B: <: Object
   Object => _root_.java.lang.Object#
+_root_.com.javacp.Javacp#`<init>`(). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
 _root_.com.javacp.Javacp#anonymous. => var anonymous: Serializable
   Serializable => _root_.java.io.Serializable#
 _root_.com.javacp.Javacp#arrayField. => private[javacp] var arrayField: Array[Int]
@@ -299,7 +299,7 @@ _root_.com. => package com
 _root_.com.javacp. => package javacp
 _root_.com.javacp.Logger# => class Logger.{+1 decls}
   extends Object
-_root_.com.javacp.Logger#<init>(). => def <init>: (): Unit
+_root_.com.javacp.Logger#`<init>`(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
 
 com/javacp/MetacJava.class
@@ -318,39 +318,35 @@ _root_.com. => package com
 _root_.com.javacp. => package javacp
 _root_.com.javacp.MetacJava# => class MetacJava.{+8 decls}
   extends Object
-_root_.com.javacp.MetacJava#<init>(). => def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#Overload1# => class Overload1.{+2 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload1#<init>(MetacJava). => def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#Overload1#A# => class A.{+1 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload1#A#<init>(Overload1). => def <init>: (): Unit
+_root_.com.javacp.MetacJava#Overload1#A#`<init>`(Overload1). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.MetacJava#Overload1#`<init>`(MetacJava). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#Overload2# => class Overload2.{+2 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload2#<init>(MetacJava). => def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#Overload2#A# => class A.{+1 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload2#A#<init>(Overload2). => def <init>: (): Unit
+_root_.com.javacp.MetacJava#Overload2#A#`<init>`(Overload2). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.MetacJava#Overload2#`<init>`(MetacJava). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#Overload3# => static class Overload3.{+2 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload3#<init>(). => def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#Overload3#A# => static class A.{+1 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload3#A#<init>(). => def <init>: (): Unit
+_root_.com.javacp.MetacJava#Overload3#A#`<init>`(). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.MetacJava#Overload3#`<init>`(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#StaticInner# => static class StaticInner.{+4 decls}
   extends Object
-_root_.com.javacp.MetacJava#StaticInner#<init>(). => def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#StaticInner#NonStatic# => class NonStatic.{+2 decls}
   extends Object
-_root_.com.javacp.MetacJava#StaticInner#NonStatic#<init>(StaticInner). => def <init>: (): Unit
+_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(StaticInner). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic). => def method: (e: NonStatic): Unit
   e => _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).(e)
@@ -358,9 +354,13 @@ _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic). => def meth
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).(e) => param e: NonStatic
   NonStatic => _root_.com.javacp.MetacJava#StaticInner#NonStatic#
+_root_.com.javacp.MetacJava#StaticInner#`<init>`(). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#StaticInner#isNotStatic(). => def isNotStatic: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#StaticInner#isStatic(). => static def isStatic: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.MetacJava#`<init>`(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#overload(A+1). => def overload: (a: A): Unit
   a => _root_.com.javacp.MetacJava#overload(A+1).(a)
@@ -399,7 +399,7 @@ _root_.com.javacp.NonGeneric# => class NonGeneric.{+2 decls}
   extends Exception
   extends Serializable
   extends Flushable
-_root_.com.javacp.NonGeneric#<init>(). => def <init>: (): Unit
+_root_.com.javacp.NonGeneric#`<init>`(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.NonGeneric#flush(). => def flush: (): Unit
   Unit => _root_.scala.Unit#
@@ -420,12 +420,8 @@ _root_.com. => package com
 _root_.com.javacp. => package javacp
 _root_.com.javacp.Recursive# => abstract class Recursive[A <: Recursive[A, B] with Serializable, B <: Inner[A, B]].{+4 decls}
   extends Object
-_root_.com.javacp.Recursive#<init>(). => def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.Recursive#Inner# => abstract static class Inner[A <: Recursive[A, B] with Serializable, B <: Inner[A, B]].{+1 decls}
   extends Object
-_root_.com.javacp.Recursive#Inner#<init>(). => def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.Recursive#Inner#[A] => typeparam A: <: Recursive[A, B] with Serializable
   Recursive => _root_.com.javacp.Recursive#
   A => _root_.com.javacp.Recursive#Inner#[A]
@@ -435,13 +431,15 @@ _root_.com.javacp.Recursive#Inner#[B] => typeparam B: <: Inner[A, B]
   Inner => _root_.com.javacp.Recursive#Inner#
   A => _root_.com.javacp.Recursive#Inner#[A]
   B => _root_.com.javacp.Recursive#Inner#[B]
+_root_.com.javacp.Recursive#Inner#`<init>`(). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
 _root_.com.javacp.Recursive#Inner2# => abstract class Inner2[C <: Comparable[C]].{+1 decls}
   extends Object
-_root_.com.javacp.Recursive#Inner2#<init>(Recursive). => def <init>: (): Unit
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.Recursive#Inner2#[C] => typeparam C: <: Comparable[C]
   Comparable => _root_.java.lang.Comparable#
   C => _root_.com.javacp.Recursive#Inner2#[C]
+_root_.com.javacp.Recursive#Inner2#`<init>`(Recursive). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
 _root_.com.javacp.Recursive#[A] => typeparam A: <: Recursive[A, B] with Serializable
   Recursive => _root_.com.javacp.Recursive#
   A => _root_.com.javacp.Recursive#[A]
@@ -451,6 +449,8 @@ _root_.com.javacp.Recursive#[B] => typeparam B: <: Inner[A, B]
   Inner => _root_.com.javacp.Recursive#Inner#
   A => _root_.com.javacp.Recursive#[A]
   B => _root_.com.javacp.Recursive#[B]
+_root_.com.javacp.Recursive#`<init>`(). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
 _root_.com.javacp.Recursive#foo(). => def foo: [Anon <: Object] => (): ArrayList[Anon]
   Anon => _root_.com.javacp.Recursive#foo().[Anon]
   Object => _root_.java.lang.Object#
