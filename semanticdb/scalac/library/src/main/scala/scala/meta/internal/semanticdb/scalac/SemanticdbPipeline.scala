@@ -17,9 +17,12 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       config.mode.isDisabled || {
         !unit.source.file.name.endsWith(".scala") && !unit.source.file.name.endsWith(".sc")
       } || {
-        Option(unit.source.file).flatMap(f => Option(f.file)).map(_.getAbsolutePath).exists(
-          fullName => !config.fileFilter.matches(fullName)
-        )
+        Option(unit.source.file)
+          .flatMap(f => Option(f.file))
+          .map(_.getAbsolutePath)
+          .exists(
+            fullName => !config.fileFilter.matches(fullName)
+          )
       }
     }
   }
