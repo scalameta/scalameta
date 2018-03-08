@@ -512,54 +512,54 @@ _root_.com.javacp.MetacJava#Overload1# => class Overload1.{+4 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload1#A# => class A.{+2 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload1#A#`<init>`(). => primaryctor <init>: (): Overload1.this.A
+_root_.com.javacp.MetacJava#Overload1#A#`<init>`(+1). => primaryctor <init>: (): Overload1.this.A
   Overload1 => _root_.com.javacp.MetacJava#Overload1#
   A => _root_.com.javacp.MetacJava#Overload1#A#
-_root_.com.javacp.MetacJava#Overload1#`<init>`(). => primaryctor <init>: (): MetacJava.this.Overload1
+_root_.com.javacp.MetacJava#Overload1#`<init>`(+1). => primaryctor <init>: (): MetacJava.this.Overload1
   MetacJava => _root_.com.javacp.MetacJava#
   Overload1 => _root_.com.javacp.MetacJava#Overload1#
 _root_.com.javacp.MetacJava#Overload2# => class Overload2.{+4 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload2#A# => class A.{+2 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload2#A#`<init>`(). => primaryctor <init>: (): Overload2.this.A
+_root_.com.javacp.MetacJava#Overload2#A#`<init>`(+1). => primaryctor <init>: (): Overload2.this.A
   Overload2 => _root_.com.javacp.MetacJava#Overload2#
   A => _root_.com.javacp.MetacJava#Overload2#A#
-_root_.com.javacp.MetacJava#Overload2#`<init>`(). => primaryctor <init>: (): MetacJava.this.Overload2
+_root_.com.javacp.MetacJava#Overload2#`<init>`(+1). => primaryctor <init>: (): MetacJava.this.Overload2
   MetacJava => _root_.com.javacp.MetacJava#
   Overload2 => _root_.com.javacp.MetacJava#Overload2#
 _root_.com.javacp.MetacJava#Overload3# => final class Overload3.{+4 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload3#A# => class A.{+2 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload3#A#`<init>`(). => primaryctor <init>: (): A
+_root_.com.javacp.MetacJava#Overload3#A#`<init>`(+1). => primaryctor <init>: (): A
   A => _root_.com.javacp.MetacJava#Overload3#A#
 _root_.com.javacp.MetacJava#StaticInner# => class StaticInner.{+6 decls}
   extends Object
 _root_.com.javacp.MetacJava#StaticInner#NonStatic# => class NonStatic.{+3 decls}
   extends Object
-_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(). => primaryctor <init>: (): StaticInner.this.NonStatic
+_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(+1). => primaryctor <init>: (): StaticInner.this.NonStatic
   StaticInner => _root_.com.javacp.MetacJava#StaticInner#
   NonStatic => _root_.com.javacp.MetacJava#StaticInner#NonStatic#
 _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic). => def method: (e: <?>): Unit
   e => _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).(e)
   Unit => _root_.scala.Unit#
-_root_.com.javacp.MetacJava#StaticInner#`<init>`(). => primaryctor <init>: (): StaticInner
+_root_.com.javacp.MetacJava#StaticInner#`<init>`(+1). => primaryctor <init>: (): StaticInner
   StaticInner => _root_.com.javacp.MetacJava#StaticInner#
 _root_.com.javacp.MetacJava#StaticInner#isNotStatic(). => def isNotStatic: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#StaticInner#isStatic(). => def isStatic: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.MetacJava#`<init>`(). => primaryctor <init>: (): MetacJava
+_root_.com.javacp.MetacJava#`<init>`(+1). => primaryctor <init>: (): MetacJava
   MetacJava => _root_.com.javacp.MetacJava#
-_root_.com.javacp.MetacJava#overload(A). => def overload: (a: <?>): Unit
-  a => _root_.com.javacp.MetacJava#overload(A).(a)
-  Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#overload(A+1). => def overload: (a: <?>): Unit
   a => _root_.com.javacp.MetacJava#overload(A+1).(a)
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#overload(A+2). => def overload: (a: <?>): Unit
   a => _root_.com.javacp.MetacJava#overload(A+2).(a)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.MetacJava#overload(A+3). => def overload: (a: <?>): Unit
+  a => _root_.com.javacp.MetacJava#overload(A+3).(a)
   Unit => _root_.scala.Unit#
 _root_.example. => package example
 _root_.example.MetacJava# => class MetacJava.{+11 decls}
@@ -612,50 +612,50 @@ Occurrences:
 [6:6..6:12): javacp => _root_.com.javacp.
 [6:13..6:22): MetacJava => _root_.com.javacp.MetacJava#
 [6:23..6:34): StaticInner => _root_.com.javacp.MetacJava#StaticInner#
-[6:34..6:34):  => _root_.com.javacp.MetacJava#StaticInner#`<init>`().
+[6:34..6:34):  => _root_.com.javacp.MetacJava#StaticInner#`<init>`(+1).
 [6:37..6:48): isNotStatic => _root_.com.javacp.MetacJava#StaticInner#isNotStatic().
 [7:6..7:11): inner <= _root_.example.MetacJava#inner().
 [7:18..7:24): javacp => _root_.com.javacp.
 [7:25..7:34): MetacJava => _root_.com.javacp.MetacJava#
-[7:34..7:34):  => _root_.com.javacp.MetacJava#`<init>`().
+[7:34..7:34):  => _root_.com.javacp.MetacJava#`<init>`(+1).
 [8:6..8:15): overload1 <= _root_.example.MetacJava#overload1().
 [8:22..8:27): inner => _root_.example.MetacJava#inner().
 [8:28..8:37): Overload1 => _root_.com.javacp.MetacJava#Overload1#
-[8:37..8:37):  => _root_.com.javacp.MetacJava#Overload1#`<init>`().
+[8:37..8:37):  => _root_.com.javacp.MetacJava#Overload1#`<init>`(+1).
 [9:6..9:15): overload2 <= _root_.example.MetacJava#overload2().
 [9:22..9:27): inner => _root_.example.MetacJava#inner().
 [9:28..9:37): Overload2 => _root_.com.javacp.MetacJava#Overload2#
-[9:37..9:37):  => _root_.com.javacp.MetacJava#Overload2#`<init>`().
+[9:37..9:37):  => _root_.com.javacp.MetacJava#Overload2#`<init>`(+1).
 [10:2..10:7): inner => _root_.example.MetacJava#inner().
 [10:8..10:16): overload => _root_.com.javacp.MetacJava#overload(A+1).
 [10:21..10:30): overload1 => _root_.example.MetacJava#overload1().
 [10:31..10:32): A => _root_.com.javacp.MetacJava#Overload1#A#
-[10:32..10:32):  => _root_.com.javacp.MetacJava#Overload1#A#`<init>`().
+[10:32..10:32):  => _root_.com.javacp.MetacJava#Overload1#A#`<init>`(+1).
 [11:2..11:7): inner => _root_.example.MetacJava#inner().
 [11:8..11:16): overload => _root_.com.javacp.MetacJava#overload(A+2).
 [11:21..11:30): overload2 => _root_.example.MetacJava#overload2().
 [11:31..11:32): A => _root_.com.javacp.MetacJava#Overload2#A#
-[11:32..11:32):  => _root_.com.javacp.MetacJava#Overload2#A#`<init>`().
+[11:32..11:32):  => _root_.com.javacp.MetacJava#Overload2#A#`<init>`(+1).
 [12:6..12:17): staticInner <= _root_.example.MetacJava#staticInner().
 [12:24..12:30): javacp => _root_.com.javacp.
 [12:31..12:40): MetacJava => _root_.com.javacp.MetacJava#
 [12:41..12:52): StaticInner => _root_.com.javacp.MetacJava#StaticInner#
-[12:52..12:52):  => _root_.com.javacp.MetacJava#StaticInner#`<init>`().
+[12:52..12:52):  => _root_.com.javacp.MetacJava#StaticInner#`<init>`(+1).
 [13:6..13:15): nonStatic <= _root_.example.MetacJava#nonStatic().
 [13:22..13:33): staticInner => _root_.example.MetacJava#staticInner().
 [13:34..13:43): NonStatic => _root_.com.javacp.MetacJava#StaticInner#NonStatic#
-[13:43..13:43):  => _root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
+[13:43..13:43):  => _root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(+1).
 [14:2..14:11): nonStatic => _root_.example.MetacJava#nonStatic().
 [14:12..14:18): method => _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).
 [14:19..14:28): nonStatic => _root_.example.MetacJava#nonStatic().
 [15:2..15:8): javacp => _root_.com.javacp.
 [15:9..15:18): MetacJava => _root_.com.javacp.MetacJava#
-[15:19..15:27): overload => _root_.com.javacp.MetacJava#overload(A).
+[15:19..15:27): overload => _root_.com.javacp.MetacJava#overload(A+3).
 [15:32..15:38): javacp => _root_.com.javacp.
 [15:39..15:48): MetacJava => _root_.com.javacp.MetacJava#
 [15:49..15:58): Overload3 => _root_.com.javacp.MetacJava#Overload3#
 [15:59..15:60): A => _root_.com.javacp.MetacJava#Overload3#A#
-[15:60..15:60):  => _root_.com.javacp.MetacJava#Overload3#A#`<init>`().
+[15:60..15:60):  => _root_.com.javacp.MetacJava#Overload3#A#`<init>`(+1).
 
 semanticdb/integration/src/main/scala/example/Methods.scala
 -----------------------------------------------------------

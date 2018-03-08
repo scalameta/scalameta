@@ -208,7 +208,6 @@ trait DenotationOps { self: DatabaseOps =>
         case SignatureMode.All =>
           val (signature, names) = oldInfo
           val (tpe, todoTpe) = newInfo
-          pprint.log(tpe.get.toProtoString, height = 1000)
           val denot = m.Denotation(flags, name, signature, names, Nil, over, tpe, anns, acc, owner)
           DenotationResult(denot, todoOverrides, todoAnns ++ todoTpe)
       }

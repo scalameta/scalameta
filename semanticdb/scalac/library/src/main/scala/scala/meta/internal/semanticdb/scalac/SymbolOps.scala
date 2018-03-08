@@ -91,8 +91,8 @@ trait SymbolOps { self: DatabaseOps =>
       syms.filter(_.name == sym.name)
     }
     def alternatives: List[g.Symbol] = {
-      if (sym.isJavaClass) {
-        alternatives(sym.owner.info.decls.sorted) ++
+      if (sym.owner.isJavaClass) {
+        alternatives(sym.owner.companionClass.info.decls.sorted) ++
           alternatives(sym.owner.info.javaCompanionDecls)
       } else {
         alternatives(sym.owner.info.decls.sorted)
@@ -102,7 +102,7 @@ trait SymbolOps { self: DatabaseOps =>
       val siblings = alternatives
       val synonyms = siblings.filter(_.descriptor == sym.descriptor)
       val suffix = {
-        if (synonyms.length == 1) ""
+        if (synonyms.lengthCompare(1) == 0) ""
         else "+" + (synonyms.indexOf(sym) + 1)
       }
       "(" + descriptor + suffix + ")"
