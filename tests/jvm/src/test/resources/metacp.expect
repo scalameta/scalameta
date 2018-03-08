@@ -368,18 +368,18 @@ _root_.com.javacp.MetacJava#overload(A+1). => def overload: (a: A): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#overload(A+1).(a) => param a: A
   A => _root_.com.javacp.MetacJava#Overload1#A#
-_root_.com.javacp.MetacJava#overload(A+2). => static def overload: (a: A): Unit
+_root_.com.javacp.MetacJava#overload(A+2). => def overload: (a: A): Unit
   a => _root_.com.javacp.MetacJava#overload(A+2).(a)
-  A => _root_.com.javacp.MetacJava#Overload3#A#
+  A => _root_.com.javacp.MetacJava#Overload2#A#
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#overload(A+2).(a) => param a: A
-  A => _root_.com.javacp.MetacJava#Overload3#A#
-_root_.com.javacp.MetacJava#overload(A+3). => def overload: (a: A): Unit
-  a => _root_.com.javacp.MetacJava#overload(A+3).(a)
   A => _root_.com.javacp.MetacJava#Overload2#A#
+_root_.com.javacp.MetacJava#overload(A+3). => static def overload: (a: A): Unit
+  a => _root_.com.javacp.MetacJava#overload(A+3).(a)
+  A => _root_.com.javacp.MetacJava#Overload3#A#
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#overload(A+3).(a) => param a: A
-  A => _root_.com.javacp.MetacJava#Overload2#A#
+  A => _root_.com.javacp.MetacJava#Overload3#A#
 
 com/javacp/NonGeneric.class
 ---------------------------

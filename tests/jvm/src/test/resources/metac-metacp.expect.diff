@@ -473,11 +473,11 @@ _root_.com.javacp.MetacJava#`<init>`().
 
 
 ==========================================
-_root_.com.javacp.MetacJava#overload(A+2).
+_root_.com.javacp.MetacJava#overload(A+3).
 ==========================================
 --- metac
 +++ metacp
- symbol: "_root_.com.javacp.MetacJava#overload(A+2)."
+ symbol: "_root_.com.javacp.MetacJava#overload(A+3)."
  kind: DEF
 -properties: 0
 +properties: 4096
