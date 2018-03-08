@@ -1250,3 +1250,4 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     }
   )
 }
+

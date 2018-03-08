@@ -144,6 +144,8 @@ object Javacp {
       MethodInfo(method, methodDescriptor(signature), signature)
     }
 
+    // TODO: stable sort by .hasFlag(o.ACC_STATIC) comparator
+
     methodSignatures.foreach {
       case method: MethodInfo =>
         val synonyms = methodSignatures.filter { m =>

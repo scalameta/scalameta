@@ -310,13 +310,13 @@ Schema => SemanticDB v3
 Uri => com/javacp/MetacJava.class
 Text => empty
 Language => Java
-Symbols => 25 entries
+Symbols => 31 entries
 
 Symbols:
 _root_. => package _root_
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.MetacJava# => class MetacJava.{+6 decls}
+_root_.com.javacp.MetacJava# => class MetacJava.{+8 decls}
   extends Object
 _root_.com.javacp.MetacJava#<init>(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
@@ -335,6 +335,14 @@ _root_.com.javacp.MetacJava#Overload2#<init>(MetacJava). => def <init>: (): Unit
 _root_.com.javacp.MetacJava#Overload2#A# => class A.{+1 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload2#A#<init>(Overload2). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.MetacJava#Overload3# => static class Overload3.{+2 decls}
+  extends Object
+_root_.com.javacp.MetacJava#Overload3#<init>(). => def <init>: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.MetacJava#Overload3#A# => static class A.{+1 decls}
+  extends Object
+_root_.com.javacp.MetacJava#Overload3#A#<init>(). => def <init>: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#StaticInner# => static class StaticInner.{+4 decls}
   extends Object
@@ -360,11 +368,17 @@ _root_.com.javacp.MetacJava#overload(A+1). => def overload: (a: A): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#overload(A+1).(a) => param a: A
   A => _root_.com.javacp.MetacJava#Overload1#A#
-_root_.com.javacp.MetacJava#overload(A+2). => def overload: (a: A): Unit
+_root_.com.javacp.MetacJava#overload(A+2). => static def overload: (a: A): Unit
   a => _root_.com.javacp.MetacJava#overload(A+2).(a)
-  A => _root_.com.javacp.MetacJava#Overload2#A#
+  A => _root_.com.javacp.MetacJava#Overload3#A#
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#overload(A+2).(a) => param a: A
+  A => _root_.com.javacp.MetacJava#Overload3#A#
+_root_.com.javacp.MetacJava#overload(A+3). => def overload: (a: A): Unit
+  a => _root_.com.javacp.MetacJava#overload(A+3).(a)
+  A => _root_.com.javacp.MetacJava#Overload2#A#
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.MetacJava#overload(A+3).(a) => param a: A
   A => _root_.com.javacp.MetacJava#Overload2#A#
 
 com/javacp/NonGeneric.class
