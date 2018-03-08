@@ -136,7 +136,7 @@ object Javacp {
       }
     }
 
-    // NOTE: we sort methods by whether they're static or not in order to compute same method symbols as meta.
+    // NOTE: we sort methods by whether they're static or not in order to compute same method symbols as metac.
     // In scalac, static class members are separated from non-static members, which makes it impossible
     // to recover the original mixed static/non-static member order in the classfile.
     node.methods.sort(ByStaticAccess)
@@ -159,7 +159,7 @@ object Javacp {
         val suffix =
           if (synonyms.lengthCompare(1) == 0) ""
           else "+" + (1 + synonyms.indexWhere(_.signature eq method.signature))
-        val isConstructor =method.node.name == "<init>"
+        val isConstructor = method.node.name == "<init>"
         val methodName =
           if (isConstructor) "`" + method.node.name + "`"
           else method.node.name

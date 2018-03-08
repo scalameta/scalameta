@@ -87,19 +87,19 @@ trait SymbolOps { self: DatabaseOps =>
     def descriptor: String = {
       sym.info.descriptor
     }
-    def alternatives(syms: List[g.Symbol]): List[g.Symbol] = {
+    def filterSiblings(syms: List[g.Symbol]): List[g.Symbol] = {
       syms.filter(_.name == sym.name)
     }
-    def alternatives: List[g.Symbol] = {
+    def filterSiblings: List[g.Symbol] = {
       if (sym.owner.isJavaClass) {
-        alternatives(sym.owner.companionClass.info.decls.sorted) ++
-          alternatives(sym.owner.info.javaCompanionDecls)
+        filterSiblings(sym.owner.companionClass.info.decls.sorted) ++
+          filterSiblings(sym.owner.info.javaCompanionDecls)
       } else {
-        alternatives(sym.owner.info.decls.sorted)
+        filterSiblings(sym.owner.info.decls.sorted)
       }
     }
     def disambiguator: String = {
-      val siblings = alternatives
+      val siblings = filterSiblings
       val synonyms = siblings.filter(_.descriptor == sym.descriptor)
       val suffix = {
         if (synonyms.lengthCompare(1) == 0) ""
