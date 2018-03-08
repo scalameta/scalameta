@@ -46,9 +46,9 @@ _root_.com.javacp.MetacJava#
  name: "MetacJava"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -11,19 +11,14 @@
+@@ -11,18 +11,14 @@
          symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#`<init>`(+1)."
+-    declarations: "_root_.com.javacp.MetacJava#`<init>`()."
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#"
@@ -56,7 +56,6 @@ _root_.com.javacp.MetacJava#
 +    declarations: "_root_.com.javacp.MetacJava#<init>()."
      declarations: "_root_.com.javacp.MetacJava#overload(A+1)."
      declarations: "_root_.com.javacp.MetacJava#overload(A+2)."
--    declarations: "_root_.com.javacp.MetacJava#`<init>`(+2)."
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#"
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload3#"
@@ -75,11 +74,10 @@ _root_.com.javacp.MetacJava#Overload1#
 --- metac
 +++ metacp
          symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#Overload1#`<init>`(+1)."
+-    declarations: "_root_.com.javacp.MetacJava#Overload1#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#Overload1#<init>(MetacJava)."
      declarations: "_root_.com.javacp.MetacJava#Overload1#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#A#"
--    declarations: "_root_.com.javacp.MetacJava#Overload1#`<init>`(+2)."
  accessibility {
 
 
@@ -89,18 +87,17 @@ _root_.com.javacp.MetacJava#Overload1#A#
 --- metac
 +++ metacp
          symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`(+1)."
--    declarations: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`(+2)."
+-    declarations: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#Overload1#A#<init>(Overload1)."
  accessibility {
 
 
-=====================================================
-_root_.com.javacp.MetacJava#Overload1#A#`<init>`(+1).
-=====================================================
+===================================================
+_root_.com.javacp.MetacJava#Overload1#A#`<init>`().
+===================================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`(+1)."
+-symbol: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
@@ -131,12 +128,12 @@ _root_.com.javacp.MetacJava#Overload1#A#`<init>`(+1).
 +owner: ""
 
 
-===================================================
-_root_.com.javacp.MetacJava#Overload1#`<init>`(+1).
-===================================================
+=================================================
+_root_.com.javacp.MetacJava#Overload1#`<init>`().
+=================================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#Overload1#`<init>`(+1)."
+-symbol: "_root_.com.javacp.MetacJava#Overload1#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
@@ -173,11 +170,10 @@ _root_.com.javacp.MetacJava#Overload2#
 --- metac
 +++ metacp
          symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#Overload2#`<init>`(+1)."
+-    declarations: "_root_.com.javacp.MetacJava#Overload2#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#Overload2#<init>(MetacJava)."
      declarations: "_root_.com.javacp.MetacJava#Overload2#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#A#"
--    declarations: "_root_.com.javacp.MetacJava#Overload2#`<init>`(+2)."
  accessibility {
 
 
@@ -187,18 +183,17 @@ _root_.com.javacp.MetacJava#Overload2#A#
 --- metac
 +++ metacp
          symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`(+1)."
--    declarations: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`(+2)."
+-    declarations: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#Overload2#A#<init>(Overload2)."
  accessibility {
 
 
-=====================================================
-_root_.com.javacp.MetacJava#Overload2#A#`<init>`(+1).
-=====================================================
+===================================================
+_root_.com.javacp.MetacJava#Overload2#A#`<init>`().
+===================================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`(+1)."
+-symbol: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
@@ -229,12 +224,12 @@ _root_.com.javacp.MetacJava#Overload2#A#`<init>`(+1).
 +owner: ""
 
 
-===================================================
-_root_.com.javacp.MetacJava#Overload2#`<init>`(+1).
-===================================================
+=================================================
+_root_.com.javacp.MetacJava#Overload2#`<init>`().
+=================================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#Overload2#`<init>`(+1)."
+-symbol: "_root_.com.javacp.MetacJava#Overload2#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
@@ -277,10 +272,9 @@ _root_.com.javacp.MetacJava#Overload3#
  name: "Overload3"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -11,10 +11,8 @@
+@@ -11,9 +11,8 @@
          symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#Overload3#`<init>`(+1)."
--    declarations: "_root_.com.javacp.MetacJava#Overload3#`<init>`(+2)."
+-    declarations: "_root_.com.javacp.MetacJava#Overload3#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#Overload3#<init>()."
      declarations: "_root_.com.javacp.MetacJava#Overload3#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload3#A#"
@@ -299,20 +293,19 @@ _root_.com.javacp.MetacJava#Overload3#A#
  name: "A"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -11,8 +11,7 @@
+@@ -11,7 +11,7 @@
          symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`(+1)."
--    declarations: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`(+2)."
+-    declarations: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#Overload3#A#<init>()."
  accessibility {
 
 
-=====================================================
-_root_.com.javacp.MetacJava#Overload3#A#`<init>`(+1).
-=====================================================
+===================================================
+_root_.com.javacp.MetacJava#Overload3#A#`<init>`().
+===================================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`(+1)."
+-symbol: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
@@ -348,14 +341,13 @@ _root_.com.javacp.MetacJava#StaticInner#
  name: "StaticInner"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -11,12 +11,10 @@
+@@ -11,11 +11,10 @@
          symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#StaticInner#`<init>`(+1)."
+-    declarations: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#StaticInner#<init>()."
      declarations: "_root_.com.javacp.MetacJava#StaticInner#isNotStatic()."
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
--    declarations: "_root_.com.javacp.MetacJava#StaticInner#`<init>`(+2)."
      declarations: "_root_.com.javacp.MetacJava#StaticInner#isStatic()."
 +    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
  accessibility {
@@ -367,19 +359,17 @@ _root_.com.javacp.MetacJava#StaticInner#NonStatic#
 --- metac
 +++ metacp
          symbol: "_root_.java.lang.Object#"
--    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(+1)."
+-    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#<init>(StaticInner)."
      declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic)."
--    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(+2)."
- accessibility {
 
 
-===============================================================
-_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(+1).
-===============================================================
+=============================================================
+_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
+=============================================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(+1)."
+-symbol: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
@@ -410,12 +400,12 @@ _root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(+1).
 +owner: ""
 
 
-=====================================================
-_root_.com.javacp.MetacJava#StaticInner#`<init>`(+1).
-=====================================================
+===================================================
+_root_.com.javacp.MetacJava#StaticInner#`<init>`().
+===================================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#StaticInner#`<init>`(+1)."
+-symbol: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
@@ -453,12 +443,12 @@ _root_.com.javacp.MetacJava#StaticInner#isStatic().
    tag: METHOD_TYPE
 
 
-=========================================
-_root_.com.javacp.MetacJava#`<init>`(+1).
-=========================================
+=======================================
+_root_.com.javacp.MetacJava#`<init>`().
+=======================================
 --- metac
 +++ metacp
--symbol: "_root_.com.javacp.MetacJava#`<init>`(+1)."
+-symbol: "_root_.com.javacp.MetacJava#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND

@@ -170,7 +170,9 @@ trait TypeOps { self: DatabaseOps =>
       if (gtpe.typeSymbol.isJavaClass) {
         gtpe.typeSymbol.companionModule.info match {
           case m: g.ModuleTypeRef =>
-            m.sym.info.decls.sorted
+            val decls = m.sym.info.decls.sorted
+            // static java classes don't have <init> constructors.
+            decls.dropWhile(_.name == g.nme.CONSTRUCTOR)
           case _ => Nil
         }
       } else {
