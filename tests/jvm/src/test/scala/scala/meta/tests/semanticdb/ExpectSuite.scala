@@ -1,6 +1,7 @@
 package scala.meta.tests
 package semanticdb
 
+import scala.meta.internal.{semanticdb3 => s}
 import java.nio.file._
 import java.nio.charset.StandardCharsets._
 import scala.collection.JavaConverters._
@@ -51,6 +52,10 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacOwnersExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
+      test("metac-metacp.diff") {
+        import MetacMetacpDiffExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
     case _ =>
       ()
   }
@@ -64,6 +69,55 @@ trait ExpectHelpers extends FunSuiteLike {
     new String(Files.readAllBytes(path), UTF_8)
   def saveExpected(value: String): Unit =
     Files.write(path, value.getBytes(UTF_8))
+
+  def normalizeSymbol(sym: s.SymbolInformation): s.SymbolInformation = {
+    sym.copy(
+      language = None,
+      signature = None,
+      overrides = Nil,
+      members = Nil
+    )
+  }
+
+  def loadSymbols(path: Path): Map[String, s.SymbolInformation] = {
+    for {
+      file <- FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator
+      if PathIO.extension(file.toNIO) == "semanticdb"
+      doc <- s.TextDocuments.parseFrom(file.readAllBytes).documents
+      sym <- doc.symbols
+    } yield sym.symbol -> sym
+  }.toMap
+  def metacpSymbols = loadSymbols(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
+  def metacSymbols = loadSymbols(Paths.get(BuildInfo.databaseClasspath))
+
+  def unifiedDiff(
+      originalTitle: String,
+      revisedTitle: String,
+      original: String,
+      revised: String): String = {
+    import scala.collection.JavaConverters._
+    val originalLines = original.split("\n").toSeq.asJava
+    val revisedLines = revised.split("\n").toSeq.asJava
+    val OnlyCurlyBrace = "\\s+}".r
+    val diff = {
+      val lines = difflib.DiffUtils
+        .generateUnifiedDiff(
+          originalTitle,
+          revisedTitle,
+          originalLines,
+          difflib.DiffUtils.diff(originalLines, revisedLines),
+          3
+        )
+        .asScala
+      if (lines.lengthCompare(2) > 0) {
+        lines.remove(2) // remove lines like "@@ -3,18 +3,16 @@"
+      }
+      lines
+        .filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
+        .mkString("\n")
+    }
+    diff
+  }
 
   protected def highlevelDatabase(path: Path): Database = {
     val database = Database.load(Classpath(path.toString))
@@ -89,7 +143,8 @@ trait ExpectHelpers extends FunSuiteLike {
   protected def decompiledPath(in: Path): Path = {
     val target = Files.createTempDirectory("target_")
     val (outPath, out, err) = CliSuite.communicate { (out, err) =>
-      val settings = scala.meta.metacp.Settings()
+      val settings = scala.meta.metacp
+        .Settings()
         .withCacheDir(AbsolutePath(target))
         .withClasspath(Classpath(AbsolutePath(in)))
         .withScalaLibrarySynthetics(false)
@@ -163,7 +218,8 @@ object ScalalibExpect extends ExpectHelpers {
   def loadObtained: String = {
     val tmp = Files.createTempDirectory("scala-library-synthetics")
     tmp.toFile.deleteOnExit()
-    val settings = scala.meta.metacp.Settings()
+    val settings = scala.meta.metacp
+      .Settings()
       .withCacheDir(AbsolutePath(tmp))
       .withClasspath(Classpath(Nil))
       .withScalaLibrarySynthetics(true)
@@ -201,6 +257,44 @@ object MetacOwnersExpect extends ExpectHelpers {
   def loadObtained: String = ownerSyntax(Paths.get(BuildInfo.databaseClasspath))
 }
 
+object MetacMetacpDiffExpect extends ExpectHelpers {
+  def filename: String = "metac-metacp.diff"
+  def loadObtained: String = {
+    val javacp = metacpSymbols
+    val metac = metacSymbols.valuesIterator.toSeq.sortBy(_.symbol)
+    val symbols = for {
+      sym <- metac.iterator
+      javasym <- {
+        if (sym.symbol.contains("com.javacp")) {
+          // metac references to java defined symbols in com.javacp must have a corresponding metacp entry.
+          Some(javacp.getOrElse(sym.symbol, s.SymbolInformation()))
+        } else {
+          javacp.get(sym.symbol)
+        }
+      }
+    } yield {
+      val header = "=" * sym.symbol.length
+      val diff = unifiedDiff(
+        "metac",
+        "javacp",
+        normalizeSymbol(sym).toProtoString,
+        normalizeSymbol(javasym).toProtoString
+      )
+      if (diff.isEmpty) ""
+      else {
+        s"""$header
+           |${sym.symbol}
+           |$header
+           |$diff
+           |
+           |
+           |""".stripMargin
+      }
+    }
+    symbols.mkString
+  }
+}
+
 // To save the current behavior, run `sbt save-expect`.
 object SaveExpectTest {
   def main(args: Array[String]): Unit = {
@@ -210,5 +304,6 @@ object SaveExpectTest {
     LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
     HighlevelExpect.saveExpected(HighlevelExpect.loadObtained)
     MetacOwnersExpect.saveExpected(MetacOwnersExpect.loadObtained)
+    MetacMetacpDiffExpect.saveExpected(MetacMetacpDiffExpect.loadObtained)
   }
 }
