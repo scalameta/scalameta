@@ -75,30 +75,37 @@ trait DenotationOps { self: DatabaseOps =>
       def isAbstractClass = gsym.isClass && gsym.isAbstract && !gsym.isTrait
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
-      if (isAbstractClass || isAbstractMethod || isAbstractType) flags |= mf.ABSTRACT
-      if ((gsym.hasFlag(gf.FINAL) && !gsym.hasFlag(gf.PACKAGE)) || isObject) flags |= mf.FINAL
-      if (gsym.hasFlag(gf.SEALED)) flags |= mf.SEALED
-      if (gsym.hasFlag(gf.IMPLICIT)) flags |= mf.IMPLICIT
-      if (gsym.hasFlag(gf.LAZY)) flags |= mf.LAZY
-      if (gsym.hasFlag(gf.CASE)) flags |= mf.CASE
-      if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flags |= mf.CONTRAVARIANT
-      if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flags |= mf.COVARIANT
-      if ((kindFlags & (mf.LOCAL | mf.FIELD)) != 0) {
-        if (gsym.isMutable) flags |= mf.VAR
-        else flags |= mf.VAL
+      if (gsym.hasFlag(gf.PACKAGE)) {
+        ()
+      } else if (gsym.hasFlag(gf.JAVA)) {
+        if (isAbstractClass || isAbstractMethod) flags |= mf.ABSTRACT
+        if (gsym.hasFlag(gf.FINAL)) flags |= mf.FINAL
+        flags |= mf.JAVADEFINED
+      } else {
+        if (isAbstractClass || isAbstractMethod || isAbstractType) flags |= mf.ABSTRACT
+        if (gsym.hasFlag(gf.FINAL) || isObject) flags |= mf.FINAL
+        if (gsym.hasFlag(gf.SEALED)) flags |= mf.SEALED
+        if (gsym.hasFlag(gf.IMPLICIT)) flags |= mf.IMPLICIT
+        if (gsym.hasFlag(gf.LAZY)) flags |= mf.LAZY
+        if (gsym.hasFlag(gf.CASE)) flags |= mf.CASE
+        if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flags |= mf.CONTRAVARIANT
+        if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flags |= mf.COVARIANT
+        if ((kindFlags & (mf.LOCAL | mf.FIELD)) != 0) {
+          if (gsym.isMutable) flags |= mf.VAR
+          else flags |= mf.VAL
+        }
+        if (gsym.isGetter || gsym.isSetter) {
+          if (gsym.isStable) flags |= mf.VAL
+          else flags |= mf.VAR
+        }
+        if (gsym.isParameter && gsym.owner.isPrimaryConstructor) {
+          val ggetter = gsym.getterIn(gsym.owner.owner)
+          if (ggetter != g.NoSymbol && !ggetter.isStable) flags |= mf.VAR
+          else if (ggetter != g.NoSymbol) flags |= mf.VAL
+          else ()
+        }
+        if (gsym.isPrimaryConstructor) flags |= mf.PRIMARY
       }
-      if (gsym.isGetter || gsym.isSetter) {
-        if (gsym.isStable) flags |= mf.VAL
-        else flags |= mf.VAR
-      }
-      if (gsym.isParameter && gsym.owner.isPrimaryConstructor) {
-        val ggetter = gsym.getterIn(gsym.owner.owner)
-        if (ggetter != g.NoSymbol && !ggetter.isStable) flags |= mf.VAR
-        else if (ggetter != g.NoSymbol) flags |= mf.VAL
-        else ()
-      }
-      if (gsym.hasFlag(gf.JAVA) && !gsym.hasFlag(gf.PACKAGE)) flags |= mf.JAVADEFINED
-      if (gsym.isPrimaryConstructor) flags |= mf.PRIMARY
       flags
     }
 

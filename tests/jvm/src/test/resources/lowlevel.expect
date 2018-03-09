@@ -512,45 +512,45 @@ _root_.com.javacp.MetacJava#Overload1# => class Overload1.{+3 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload1#A# => class A.{+1 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload1#A#`<init>`(). => primary ctor <init>: (): Overload1.this.A
+_root_.com.javacp.MetacJava#Overload1#A#`<init>`(). => ctor <init>: (): Overload1.this.A
   Overload1 => _root_.com.javacp.MetacJava#Overload1#
   A => _root_.com.javacp.MetacJava#Overload1#A#
-_root_.com.javacp.MetacJava#Overload1#`<init>`(). => primary ctor <init>: (): MetacJava.this.Overload1
+_root_.com.javacp.MetacJava#Overload1#`<init>`(). => ctor <init>: (): MetacJava.this.Overload1
   MetacJava => _root_.com.javacp.MetacJava#
   Overload1 => _root_.com.javacp.MetacJava#Overload1#
 _root_.com.javacp.MetacJava#Overload2# => class Overload2.{+3 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload2#A# => class A.{+1 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload2#A#`<init>`(). => primary ctor <init>: (): Overload2.this.A
+_root_.com.javacp.MetacJava#Overload2#A#`<init>`(). => ctor <init>: (): Overload2.this.A
   Overload2 => _root_.com.javacp.MetacJava#Overload2#
   A => _root_.com.javacp.MetacJava#Overload2#A#
-_root_.com.javacp.MetacJava#Overload2#`<init>`(). => primary ctor <init>: (): MetacJava.this.Overload2
+_root_.com.javacp.MetacJava#Overload2#`<init>`(). => ctor <init>: (): MetacJava.this.Overload2
   MetacJava => _root_.com.javacp.MetacJava#
   Overload2 => _root_.com.javacp.MetacJava#Overload2#
 _root_.com.javacp.MetacJava#Overload3# => class Overload3.{+3 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload3#A# => class A.{+1 decls}
   extends Object
-_root_.com.javacp.MetacJava#Overload3#A#`<init>`(). => primary ctor <init>: (): A
+_root_.com.javacp.MetacJava#Overload3#A#`<init>`(). => ctor <init>: (): A
   A => _root_.com.javacp.MetacJava#Overload3#A#
 _root_.com.javacp.MetacJava#StaticInner# => class StaticInner.{+5 decls}
   extends Object
 _root_.com.javacp.MetacJava#StaticInner#NonStatic# => class NonStatic.{+2 decls}
   extends Object
-_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(). => primary ctor <init>: (): StaticInner.this.NonStatic
+_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(). => ctor <init>: (): StaticInner.this.NonStatic
   StaticInner => _root_.com.javacp.MetacJava#StaticInner#
   NonStatic => _root_.com.javacp.MetacJava#StaticInner#NonStatic#
 _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic). => method method: (e: <?>): Unit
   e => _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).(e)
   Unit => _root_.scala.Unit#
-_root_.com.javacp.MetacJava#StaticInner#`<init>`(). => primary ctor <init>: (): StaticInner
+_root_.com.javacp.MetacJava#StaticInner#`<init>`(). => ctor <init>: (): StaticInner
   StaticInner => _root_.com.javacp.MetacJava#StaticInner#
 _root_.com.javacp.MetacJava#StaticInner#isNotStatic(). => method isNotStatic: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#StaticInner#isStatic(). => method isStatic: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.MetacJava#`<init>`(). => primary ctor <init>: (): MetacJava
+_root_.com.javacp.MetacJava#`<init>`(). => ctor <init>: (): MetacJava
   MetacJava => _root_.com.javacp.MetacJava#
 _root_.com.javacp.MetacJava#overload(A+1). => method overload: (a: <?>): Unit
   a => _root_.com.javacp.MetacJava#overload(A+1).(a)
@@ -1143,7 +1143,7 @@ _root_.example.B#`<init>`(). => primary ctor <init>: (): B
 _root_.example.B#foo(). => method foo: : Int
   Int => _root_.scala.Int#
   overrides _root_.example.A#foo().
-_root_.java.lang.Object#`<init>`(). => primary ctor <init>: (): Object
+_root_.java.lang.Object#`<init>`(). => ctor <init>: (): Object
   Object => _root_.java.lang.Object#
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
@@ -1255,11 +1255,11 @@ Symbols:
 _root_.java. => package java
 _root_.java.nio. => package nio
 _root_.java.nio.file. => package file
-_root_.java.nio.file.LinkOption# => abstract final sealed class LinkOption.{+4 decls}
+_root_.java.nio.file.LinkOption# => abstract final class LinkOption.{+4 decls}
   extends Enum[LinkOption]
   extends OpenOption
   extends CopyOption
-_root_.java.nio.file.LinkOption#NOFOLLOW_LINKS. => final val field NOFOLLOW_LINKS: NOFOLLOW_LINKS.type
+_root_.java.nio.file.LinkOption#NOFOLLOW_LINKS. => final field NOFOLLOW_LINKS: NOFOLLOW_LINKS.type
   NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption#NOFOLLOW_LINKS.
 _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int.{+111 decls}

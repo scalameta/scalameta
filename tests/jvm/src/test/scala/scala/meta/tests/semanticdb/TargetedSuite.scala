@@ -430,7 +430,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_root_.i.a.y. => private val field y: HashSet[Int]
        |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
        |  [8..11): Int => _root_.scala.Int#
-       |_root_.java.lang.Object#`<init>`(). => javadefined primary ctor <init>: (): Object
+       |_root_.java.lang.Object#`<init>`(). => javadefined ctor <init>: (): Object
        |  [4..10): Object => _root_.java.lang.Object#
        |_root_.scala. => package scala
        |_root_.scala.Int# => abstract final class Int
@@ -929,7 +929,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [0..3): Int => _root_.scala.Int#
        |_empty_.ad.zz.$anon#y. => private val field y: Int
        |  [0..3): Int => _root_.scala.Int#
-       |_root_.java.lang.Object#`<init>`(). => javadefined primary ctor <init>: (): Object
+       |_root_.java.lang.Object#`<init>`(). => javadefined ctor <init>: (): Object
        |  [4..10): Object => _root_.java.lang.Object#
        |_root_.scala.Any# => abstract class Any
        |_root_.scala.AnyRef# => type AnyRef: Object
