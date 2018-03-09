@@ -274,7 +274,7 @@ Placeholder symbols are always equal to an asterisk (`*`).
 message Type {
   enum Tag {
     reserved 2, 3, 4, 5;
-    UNKNOWN_TAG = 0;
+    UNKNOWN_TYPE = 0;
     TYPE_REF = 1;
     SINGLETON_TYPE = 15;
     INTERSECTION_TYPE = 16;
@@ -332,7 +332,7 @@ type refs include `prefix`.
 ```protobuf
 message SingletonType {
   enum Tag {
-    UNKNOWN_TAG = 0;
+    UNKNOWN_SINGLETON = 0;
     SYMBOL = 1;
     THIS = 2;
     SUPER = 3;
@@ -725,7 +725,7 @@ data structure.
 ```protobuf
 message Accessibility {
   enum Tag {
-    UNKNOWN_TAG = 0;
+    UNKNOWN_ACCESSIBILITY = 0;
     PRIVATE = 1;
     PRIVATE_THIS = 2;
     PRIVATE_WITHIN = 3;
