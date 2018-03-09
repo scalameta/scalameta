@@ -4,6 +4,7 @@ import org.langmeta.internal.io.PathIO
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
@@ -56,21 +57,22 @@ object Scalalib {
     val ctorSig = s.MethodType(Nil, List(s.MethodType.ParameterList(Nil)), Some(builtinTpe))
     val ctor = s.SymbolInformation(
       symbol = symbol + "`<init>`().",
-      language = Some(builtinLanguage),
-      kind = k.PRIMARY_CONSTRUCTOR,
+      language = l.SCALA,
+      kind = k.CONSTRUCTOR,
+      properties = p.PRIMARY.value,
       name = "<init>",
       tpe = Some(s.Type(tag = t.METHOD_TYPE, methodType = Some(ctorSig))),
       accessibility = Some(s.Accessibility(a.PUBLIC)),
       owner = symbol
     )
     val builtinSig = {
-      val decls = symbols.filter(_.kind == k.DEF)
+      val decls = symbols.filter(_.kind == k.METHOD)
       val tpe = s.ClassInfoType(Nil, parents, ctor.symbol +: decls.map(_.symbol))
       s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))
     }
     val builtin = s.SymbolInformation(
       symbol = symbol,
-      language = Some(builtinLanguage),
+      language = l.SCALA,
       kind = k.CLASS,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = name,
@@ -112,7 +114,7 @@ object Scalalib {
       val tparamSig = s.Type(tag = t.TYPE_TYPE, typeType = Some(s.TypeType()))
       s.SymbolInformation(
         symbol = tparamSymbol,
-        language = Some(builtinLanguage),
+        language = l.SCALA,
         kind = k.TYPE_PARAMETER,
         properties = 0,
         name = tparamName,
@@ -126,7 +128,7 @@ object Scalalib {
         val paramSig = s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, paramTpeSymbol, Nil)))
         s.SymbolInformation(
           symbol = paramSymbol,
-          language = Some(builtinLanguage),
+          language = l.SCALA,
           kind = k.PARAMETER,
           properties = 0,
           name = paramName,
@@ -141,17 +143,13 @@ object Scalalib {
     }
     val method = s.SymbolInformation(
       symbol = methodSymbol,
-      language = Some(builtinLanguage),
-      kind = k.DEF,
+      language = l.SCALA,
+      kind = k.METHOD,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = methodName,
       tpe = Some(methodSig),
       accessibility = Some(s.Accessibility(a.PUBLIC)),
       owner = classSymbol)
     List(method) ++ tparams ++ params
-  }
-
-  def builtinLanguage: s.Language = {
-    s.Language("Scala")
   }
 }

@@ -5,6 +5,7 @@ import scala.collection.mutable
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
@@ -59,7 +60,7 @@ object Scalacp {
       }
       s.SymbolInformation(
         symbol = transitivePackagePath + ".",
-        language = Some(s.Language("Scala")),
+        language = l.SCALA,
         kind = k.PACKAGE,
         name = name,
         owner = owner)
@@ -73,7 +74,7 @@ object Scalacp {
     Some(
       s.SymbolInformation(
         symbol = ssymbol(sym),
-        language = Some(s.Language("Scala")),
+        language = l.SCALA,
         kind = skind(sym),
         properties = sproperties(sym),
         name = sname(sym),
@@ -103,10 +104,9 @@ object Scalacp {
     }
     val encodedName = sname(sym).encoded
     skind(sym) match {
-      case k.VAL | k.VAR | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
+      case k.FIELD | k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
         prefix + encodedName + "."
-      case k.DEF | k.GETTER | k.SETTER | k.PRIMARY_CONSTRUCTOR | k.SECONDARY_CONSTRUCTOR |
-          k.MACRO =>
+      case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
         prefix + encodedName + sym.disambiguator + "."
       case k.TYPE | k.CLASS | k.TRAIT =>
         prefix + encodedName + "#"
@@ -121,20 +121,12 @@ object Scalacp {
 
   // NOTE: Cases in the pattern match are ordered
   // similarly to DenotationOps.kindFlags in semanticdb/scalac.
-  private val primaryCtors = mutable.Map[String, Int]()
   private def skind(sym: Symbol): s.SymbolInformation.Kind = {
     sym match {
       case sym: MethodSymbol if sym.isMethod =>
-        if (sym.name == "<init>") {
-          val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
-          if (sym.entry.index == primaryIndex) k.PRIMARY_CONSTRUCTOR
-          else k.SECONDARY_CONSTRUCTOR
-        } else {
-          if (sym.isAccessor && sym.name.endsWith("_$eq")) k.SETTER
-          else if (sym.isAccessor) k.GETTER
-          else if (sym.hasFlag(0x00008000)) k.MACRO
-          else k.DEF
-        }
+        if (sym.name == "<init>") k.CONSTRUCTOR
+        else if (sym.hasFlag(0x00008000)) k.MACRO
+        else k.METHOD
       case _: ObjectSymbol | _: ClassSymbol if sym.isModule =>
         if (sym.name == "package") k.PACKAGE_OBJECT
         else k.OBJECT
@@ -142,8 +134,7 @@ object Scalacp {
         // NOTE: This is craziness. In scalap, parameters, val and vars
         // are also modelled with method symbols.
         if (sym.isParam) k.PARAMETER
-        else if (sym.isMutable) k.VAR
-        else k.VAL
+        else k.FIELD
       case sym: ClassSymbol if !sym.isModule =>
         if (sym.isTrait) k.TRAIT
         else k.CLASS
@@ -173,29 +164,45 @@ object Scalacp {
     }
   }
 
+  private val primaryCtors = mutable.Map[String, Int]()
   private def sproperties(sym: SymbolInfoSymbol): Int = {
     def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
     def isAbstractMethod = sym.isMethod && sym.isDeferred
     def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
-    var sproperties = 0
-    def sflip(sbit: Int) = sproperties ^= sbit
-    if (isAbstractClass || isAbstractMethod || isAbstractType) sflip(p.ABSTRACT.value)
-    if (sym.isFinal || sym.isModule) sflip(p.FINAL.value)
-    if (sym.isSealed) sflip(p.SEALED.value)
-    if (sym.isImplicit) sflip(p.IMPLICIT.value)
-    if (sym.isLazy) sflip(p.LAZY.value)
-    if (sym.isCase) sflip(p.CASE.value)
-    if (sym.isType && sym.isCovariant) sflip(p.COVARIANT.value)
-    if (sym.isType && sym.isContravariant) sflip(p.CONTRAVARIANT.value)
-    if (sym.isParam && skind(sym.parent.get) == k.PRIMARY_CONSTRUCTOR) {
-      val members = sym.parent.get.parent.get.children
-      val getter = members.find(m => skind(m) == k.GETTER && m.name == sym.name)
-      val setter = members.find(m => skind(m) == k.SETTER && m.name == sym.name + "_$eq")
-      if (setter.nonEmpty) sflip(p.VARPARAM.value)
-      else if (getter.nonEmpty) sflip(p.VALPARAM.value)
-      else ()
+    var sprops = 0
+    def sflip(sprop: s.SymbolInformation.Property) = sprops ^= sprop.value
+    if (isAbstractClass || isAbstractMethod || isAbstractType) sflip(p.ABSTRACT)
+    if (sym.isFinal || sym.isModule) sflip(p.FINAL)
+    if (sym.isSealed) sflip(p.SEALED)
+    if (sym.isImplicit) sflip(p.IMPLICIT)
+    if (sym.isLazy) sflip(p.LAZY)
+    if (sym.isCase) sflip(p.CASE)
+    if (sym.isType && sym.isCovariant) sflip(p.COVARIANT)
+    if (sym.isType && sym.isContravariant) sflip(p.CONTRAVARIANT)
+    if (skind(sym) == k.FIELD) {
+      if (sym.isMutable) sflip(p.VAR)
+      else sflip(p.VAL)
     }
-    sproperties
+    if (sym.isAccessor) {
+      if (sym.isStable) sflip(p.VAL)
+      else sflip(p.VAR)
+    }
+    if (sym.isParam) {
+      val methodSym = sym.parent.get.asInstanceOf[SymbolInfoSymbol]
+      if ((sproperties(methodSym) & p.PRIMARY.value) != 0) {
+        val classMembers = methodSym.parent.get.children
+        val getter = classMembers.find(m => m.isAccessor && m.name == sym.name)
+        val setter = classMembers.find(m => m.isAccessor && m.name == sym.name + "_$eq")
+        if (setter.nonEmpty) sflip(p.VAR)
+        else if (getter.nonEmpty) sflip(p.VAL)
+        else ()
+      }
+    }
+    if (sym.isMethod && sym.name == "<init>") {
+      val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
+      if (sym.entry.index == primaryIndex) sflip(p.PRIMARY)
+    }
+    sprops
   }
 
   private def sname(sym: Symbol): String = {
@@ -278,9 +285,12 @@ object Scalacp {
           Some(s.Type(tag = stag, singletonType = Some(stpe)))
         case RefinedType(sym, parents) =>
           val stag = t.STRUCTURAL_TYPE
-          val sparents = parents.flatMap(loop)
+          val stpe = {
+            val sparents = parents.flatMap(loop)
+            Some(s.Type(tag = t.WITH_TYPE, withType = Some(s.WithType(sparents))))
+          }
           val sdecls = sym.children.map(ssymbol)
-          Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(Nil, sparents, sdecls))))
+          Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
         case AnnotatedType(tpe, anns) =>
           val stag = t.ANNOTATED_TYPE
           // TODO: Not supported by scalap.
@@ -313,9 +323,7 @@ object Scalacp {
         case PolyType(tpe, tparams) =>
           val stparams = tparams.map(ssymbol)
           loop(tpe).map { stpe =>
-            if (stpe.tag == t.STRUCTURAL_TYPE) {
-              stpe.update(_.structuralType.typeParameters := stparams)
-            } else if (stpe.tag == t.CLASS_INFO_TYPE) {
+            if (stpe.tag == t.CLASS_INFO_TYPE) {
               stpe.update(_.classInfoType.typeParameters := stparams)
             } else if (stpe.tag == t.METHOD_TYPE) {
               stpe.update(_.methodType.typeParameters := stparams)

@@ -12,19 +12,21 @@ message TextDocuments {
 }
 
 message TextDocument {
-  reserved 4;
+  reserved 4, 9;
   Schema schema = 1;
   string uri = 2;
   string text = 3;
-  Language language = 9;
+  Language language = 10;
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
   repeated Synthetic synthetics = 8;
 }
 
-message Language {
-  string name = 1;
+enum Language {
+  UNKNOWN_LANGUAGE = 0;
+  SCALA = 1;
+  JAVA = 2;
 }
 
 message Range {
@@ -45,6 +47,9 @@ message Type {
     UNKNOWN_TYPE = 0;
     TYPE_REF = 1;
     SINGLETON_TYPE = 15;
+    INTERSECTION_TYPE = 16;
+    UNION_TYPE = 17;
+    WITH_TYPE = 18;
     STRUCTURAL_TYPE = 6;
     ANNOTATED_TYPE = 7;
     EXISTENTIAL_TYPE = 8;
@@ -55,10 +60,13 @@ message Type {
     REPEATED_TYPE = 13;
     TYPE_TYPE = 14;
   }
-  reserved 3, 4, 5, 6;
+  // reserved 3, 4, 5, 6;
   Tag tag = 1;
   TypeRef typeRef = 2;
   SingletonType singletonType = 16;
+  IntersectionType intersectionType = 17;
+  UnionType unionType = 18;
+  WithType withType = 19;
   StructuralType structuralType = 7;
   AnnotatedType annotatedType = 8;
   ExistentialType existentialType = 9;
@@ -101,9 +109,21 @@ message SingletonType {
   string string = 5;
 }
 
+message IntersectionType {
+  repeated Type types = 1;
+}
+
+message UnionType {
+  repeated Type types = 1;
+}
+
+message WithType {
+  repeated Type types = 1;
+}
+
 message StructuralType {
-  repeated string type_parameters = 1;
-  repeated Type parents = 2;
+  reserved 1, 2;
+  Type tpe = 4;
   repeated string declarations = 3;
 }
 
@@ -154,14 +174,12 @@ message TypeType {
 
 message SymbolInformation {
   enum Kind {
+    // reserved 1, 2, 4, 5, 15, 16;
     UNKNOWN_KIND = 0;
-    VAL = 1;
-    VAR = 2;
-    GETTER = 15;
-    SETTER = 16;
-    DEF = 3;
-    PRIMARY_CONSTRUCTOR = 4;
-    SECONDARY_CONSTRUCTOR = 5;
+    LOCAL = 19;
+    FIELD = 20;
+    METHOD = 3;
+    CONSTRUCTOR = 21;
     MACRO = 6;
     TYPE = 7;
     PARAMETER = 8;
@@ -172,6 +190,7 @@ message SymbolInformation {
     PACKAGE_OBJECT = 12;
     CLASS = 13;
     TRAIT = 14;
+    INTERFACE = 18;
   }
   enum Property {
     UNKNOWN_PROPERTY = 0;
@@ -185,13 +204,14 @@ message SymbolInformation {
     CASE = 0x80;
     COVARIANT = 0x100;
     CONTRAVARIANT = 0x200;
-    VALPARAM = 0x400;
-    VARPARAM = 0x800;
+    VAL = 0x400;
+    VAR = 0x800;
     STATIC = 0x1000;
+    PRIMARY = 0x2000;
   }
-  reserved 2, 6;
+  reserved 2, 6, 12;
   string symbol = 1;
-  Language language = 12;
+  Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;

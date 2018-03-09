@@ -12,15 +12,15 @@
 +  _root_.com.javacp.
 +_root_.com.javacp.
 +  _root_.com.javacp.ClassSuffix#
-+  _root_.com.javacp.Javacp#
++  _root_.com.javacp.Interface#
 +  _root_.com.javacp.Logger#
 +  _root_.com.javacp.MetacJava#
 +  _root_.com.javacp.NonGeneric#
 +  _root_.com.javacp.Recursive#
++  _root_.com.javacp.Test#
  _root_.example.
    _root_.example.A#
    _root_.example.Acc#
-@@ -19,6 +30,8 @@
    _root_.example.ValUsages.
    _root_.example.Vals#
    _root_.example.`local-file`#
@@ -29,7 +29,6 @@
  _root_.flags.
    _root_.flags.p.
  _root_.flags.p.
-@@ -35,28 +48,32 @@
  
  Toplevels:
  ==========
@@ -61,11 +60,12 @@
 +_empty_.A# => A.class.semanticdb
 +_empty_.B# => B.class.semanticdb
 +_root_.com.javacp.ClassSuffix# => com/javacp/ClassSuffix.class.semanticdb
-+_root_.com.javacp.Javacp# => com/javacp/Javacp.class.semanticdb
++_root_.com.javacp.Interface# => com/javacp/Interface.class.semanticdb
 +_root_.com.javacp.Logger# => com/javacp/Logger.class.semanticdb
 +_root_.com.javacp.MetacJava# => com/javacp/MetacJava.class.semanticdb
 +_root_.com.javacp.NonGeneric# => com/javacp/NonGeneric.class.semanticdb
 +_root_.com.javacp.Recursive# => com/javacp/Recursive.class.semanticdb
++_root_.com.javacp.Test# => com/javacp/Test.class.semanticdb
 +_root_.example.A# => example/A.class.semanticdb
 +_root_.example.Acc# => example/Acc.class.semanticdb
 +_root_.example.B# => example/B.class.semanticdb

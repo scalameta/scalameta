@@ -21,6 +21,7 @@ import Role._
 import Type.Tag._
 import SingletonType.Tag._
 import Accessibility.Tag._
+import Language._
 
 class Main(settings: Settings, reporter: Reporter) {
   import reporter._
@@ -107,7 +108,9 @@ class Main(settings: Settings, reporter: Reporter) {
     out.println(s"Schema => SemanticDB v${doc.schema.value}")
     out.println(s"Uri => ${doc.uri}")
     out.println(s"Text => ${if (doc.text.nonEmpty) "non-empty" else "empty"}")
-    if (doc.language.nonEmpty) out.println(s"Language => ${doc.language.get.name}")
+    out.print("Language => ")
+    pprint(doc.language)
+    out.println()
     if (doc.symbols.nonEmpty) out.println(s"Symbols => ${doc.symbols.length} entries")
     if (doc.occurrences.nonEmpty) out.println(s"Occurrences => ${doc.occurrences.length} entries")
     if (doc.diagnostics.nonEmpty) out.println(s"Diagnostics => ${doc.diagnostics.length} entries")
@@ -135,6 +138,14 @@ class Main(settings: Settings, reporter: Reporter) {
       out.println("")
       out.println("Synthetics:")
       doc.synthetics.sorted.foreach(pprint(_, doc))
+    }
+  }
+
+  private def pprint(language: Language): Unit = {
+    language match {
+      case SCALA => out.print("Scala")
+      case JAVA => out.print("Java")
+      case _ => out.print("Unknown")
     }
   }
 
@@ -212,12 +223,17 @@ class Main(settings: Settings, reporter: Reporter) {
             }
             if ((info.properties & COVARIANT.value) != 0) out.print("+")
             if ((info.properties & CONTRAVARIANT.value) != 0) out.print("-")
+            if ((info.properties & VAL.value) != 0) out.print("val ")
+            if ((info.properties & VAR.value) != 0) out.print("var ")
             info.kind match {
-              case GETTER =>
-                out.print("getter ")
+              case LOCAL =>
+                out.print("local ")
                 out.print(info.name)
-              case SETTER =>
-                out.print("setter ")
+              case FIELD =>
+                out.print("field ")
+                out.print(info.name)
+              case METHOD =>
+                out.print("method ")
                 out.print(info.name)
               case TYPE =>
                 out.print("type ")
@@ -329,15 +345,21 @@ class Main(settings: Settings, reporter: Reporter) {
             case UNKNOWN_SINGLETON | SingletonType.Tag.Unrecognized(_) =>
               out.print("<?>")
           }
+        case INTERSECTION_TYPE =>
+          val Some(IntersectionType(types)) = tpe.intersectionType
+          rep(types, " & ")(normal)
+        case UNION_TYPE =>
+          val Some(UnionType(types)) = tpe.unionType
+          rep(types, " | ")(normal)
+        case WITH_TYPE =>
+          val Some(WithType(types)) = tpe.withType
+          rep(types, " with ")(normal)
         case STRUCTURAL_TYPE =>
-          val Some(StructuralType(tparams, parents, decls)) = tpe.structuralType
-          rep("[", tparams, ", ", "] => ")(defn)
-          rep(parents, " with ")(normal)
-          if (decls.nonEmpty || parents.length == 1) {
-            out.print(" { ")
-            rep(decls, "; ")(defn)
-            out.print(" }")
-          }
+          val Some(StructuralType(utpe, decls)) = tpe.structuralType
+          utpe.foreach(normal)
+          out.print(" { ")
+          rep(decls, "; ")(defn)
+          out.print(" }")
         case ANNOTATED_TYPE =>
           val Some(AnnotatedType(anns, utpe)) = tpe.annotatedType
           utpe.foreach(normal)
@@ -416,17 +438,15 @@ class Main(settings: Settings, reporter: Reporter) {
     if (has(CASE)) out.print("case ")
     if (has(COVARIANT)) out.print("covariant ")
     if (has(CONTRAVARIANT)) out.print("contravariant ")
-    if (has(VALPARAM)) out.print("valparam ")
-    if (has(VARPARAM)) out.print("varparam ")
+    if (has(VAL)) out.print("val ")
+    if (has(VAR)) out.print("var ")
     if (has(STATIC)) out.print("static ")
+    if (has(PRIMARY)) out.print("primary ")
     info.kind match {
-      case VAL => out.print("val ")
-      case VAR => out.print("var ")
-      case DEF => out.print("def ")
-      case GETTER => out.print("getter ")
-      case SETTER => out.print("setter ")
-      case PRIMARY_CONSTRUCTOR => out.print("primaryctor ")
-      case SECONDARY_CONSTRUCTOR => out.print("secondaryctor ")
+      case FIELD => out.print("field ")
+      case LOCAL => out.print("local ")
+      case METHOD => out.print("method ")
+      case CONSTRUCTOR => out.print("ctor ")
       case MACRO => out.print("macro ")
       case TYPE => out.print("type ")
       case PARAMETER => out.print("param ")
@@ -437,12 +457,13 @@ class Main(settings: Settings, reporter: Reporter) {
       case PACKAGE_OBJECT => out.print("package object ")
       case CLASS => out.print("class ")
       case TRAIT => out.print("trait ")
+      case INTERFACE => out.print("interface ")
       case UNKNOWN_KIND | Kind.Unrecognized(_) => ()
     }
     pprint(info.name, doc)
     info.kind match {
-      case VAL | VAR | DEF | GETTER | SETTER | PRIMARY_CONSTRUCTOR | SECONDARY_CONSTRUCTOR | MACRO |
-          TYPE | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER =>
+      case LOCAL | FIELD | METHOD | CONSTRUCTOR | MACRO | TYPE | PARAMETER | SELF_PARAMETER |
+          TYPE_PARAMETER =>
         info.tpe match {
           case Some(tpe) =>
             out.print(": ")
@@ -470,7 +491,7 @@ class Main(settings: Settings, reporter: Reporter) {
             }
         }
         info.overrides.foreach(sym => out.println(s"  overrides $sym"))
-      case OBJECT | PACKAGE | PACKAGE_OBJECT | CLASS | TRAIT =>
+      case OBJECT | PACKAGE | PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
         info.tpe match {
           case Some(tpe: Type) =>
             tpe.classInfoType match {

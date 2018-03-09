@@ -19,13 +19,19 @@
   * [Protobuf](#protobuf)
 * [Languages](#languages)
   * [Scala](#scala)
-    * [Language](#scala-language)
     * [Symbol](#scala-symbol)
     * [Type](#scala-type)
     * [SymbolInformation](#scala-symbolinformation)
     * [Annotation](#scala-annotation)
     * [Accessibility](#scala-accessibility)
     * [Synthetic](#scala-synthetic)
+  * [Java](#java)
+    * [Symbol](#java)
+    * [Type](#java)
+    * [SymbolInformation](#java)
+    * [Annotation](#java)
+    * [Accessibility](#java)
+    * [Synthetic](#java)
 
 ## Motivation
 
@@ -87,11 +93,11 @@ message TextDocuments {
 }
 
 message TextDocument {
-  reserved 4;
+  reserved 4, 9;
   Schema schema = 1;
   string uri = 2;
   string text = 3;
-  Language language = 9;
+  Language language = 10;
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
@@ -141,14 +147,22 @@ of semantic information for the corresponding snippet
 ### Language
 
 ```protobuf
-message Language {
-  string name = 1;
+enum Language {
+  UNKNOWN_LANGUAGE = 0;
+  SCALA = 1;
+  JAVA = 2;
 }
 ```
 
 `Language` represents a programming language that defines certain SemanticDB
-entities, e.g. [Document](#document) or [Symbol](#symbol).
-See [Languages](#languages) for the list of supported programming languages.
+entities, e.g. [Document](#document) or [Symbol](#symbol). Currently,
+See [Languages](#languages) for the details of how features of supported
+programming languages map onto SemanticDB.
+
+At the moment, SemanticDB does not have official support for modelling languages
+that are not included in the list above. Moreover, `Language` does not have
+capabilities to specify the associated language or compiler version. We may
+improve on this in the future.
 
 ### URI
 
@@ -260,9 +274,12 @@ Placeholder symbols are always equal to an asterisk (`*`).
 message Type {
   enum Tag {
     reserved 2, 3, 4, 5;
-    UNKNOWN_TAG = 0;
+    UNKNOWN_TYPE = 0;
     TYPE_REF = 1;
     SINGLETON_TYPE = 15;
+    INTERSECTION_TYPE = 16;
+    UNION_TYPE = 17;
+    WITH_TYPE = 18;
     STRUCTURAL_TYPE = 6;
     ANNOTATED_TYPE = 7;
     EXISTENTIAL_TYPE = 8;
@@ -277,6 +294,9 @@ message Type {
   Tag tag = 1;
   TypeRef typeRef = 2;
   SingletonType singletonType = 16;
+  IntersectionType intersectionType = 17;
+  UnionType unionType = 18;
+  WithType withType = 19;
   StructuralType structuralType = 7;
   AnnotatedType annotatedType = 8;
   ExistentialType existentialType = 9;
@@ -312,7 +332,7 @@ type refs include `prefix`.
 ```protobuf
 message SingletonType {
   enum Tag {
-    UNKNOWN_TAG = 0;
+    UNKNOWN_SINGLETON = 0;
     SYMBOL = 1;
     THIS = 2;
     SUPER = 3;
@@ -341,17 +361,41 @@ via a [Symbol](#symbol) accompanied with a `prefix`, 2) via
 a keyword (by `this` or `super`) or 3) via a literal.
 
 ```protobuf
+message IntersectionType {
+  repeated Type types = 1;
+}
+```
+
+`IntersectionType` represents an intersection of `types`.
+
+```protobuf
+message UnionType {
+  repeated Type types = 1;
+}
+```
+
+`UnionType` represents a union of `types`.
+
+```protobuf
+message WithType {
+  repeated Type types = 1;
+}
+```
+
+`WithType` represents a Scala-like compound type [\[31\]][31] based on `types`.
+Unlike intersection types, compound types are not commutative.
+
+```protobuf
 message StructuralType {
-  repeated string type_parameters = 1;
-  repeated Type parents = 2;
+  reserved 1, 2;
+  Type tpe = 4;
   repeated string declarations = 3;
 }
 ```
 
-`StructuralType` represents a structural type specified by its
-`type_parameters`, `parents` and `declarations`. Both type parameters and
-declarations are modelled as [Symbols](#symbol) whose metadata must be provided
-via [SymbolInformation](#symbolinformation).
+`StructuralType` represents a structural type specified by its base type `tpe`
+and `declarations`. Declarations are modelled as [Symbols](#symbol)
+whose metadata must be provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message AnnotatedType {
@@ -395,7 +439,6 @@ message ClassInfoType {
 ```
 
 `ClassInfoType` represents a signature of a class, a trait or the like.
-It is a nominal equivalent of `StructuralType`.
 
 ```protobuf
 message MethodType {
@@ -448,9 +491,9 @@ provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8;
+  reserved 2, 6, 7, 8, 12;
   string symbol = 1;
-  Language language = 12;
+  Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
@@ -481,39 +524,27 @@ languages map onto these kinds.
     <td><b>Explanation</b></td>
   </tr>
   <tr>
-    <td><code>1</code></td>
-    <td><code>VAL</code></td>
-    <td>Value, e.g. <code>val x = 42</code>.</td>
+    <td><code>19</code></td>
+    <td><code>LOCAL</code></td>
+    <td>Local value or variable, e.g. <code>val x = 42</code> or
+    <code>var x = 42</code> inside a method.</td>
   </tr>
   <tr>
-    <td><code>2</code></td>
-    <td><code>VAR</code></td>
-    <td>Variable, e.g. <code>var x = 42</code>.</td>
+    <td><code>20</code></td>
+    <td><code>FIELD</code></td>
+    <td>Member value or variable, e.g. <code>val x = 42</code> or
+    <code>var x = 42</code> inside a class or an object</td>
   </tr>
   <tr>
     <td><code>3</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td>Method, e.g. <code>def x = 42</code>.</td>
   </tr>
   <tr>
-    <td><code>15</code></td>
-    <td><code>GETTER</code></td>
-    <td>Getter, e.g. <code>def x: Int</code> generated for <code>val x = 42</code>.</td>
-  </tr>
-  <tr>
-    <td><code>16</code></td>
-    <td><code>SETTER</code></td>
-    <td>Setter, e.g. <code>def x_=(x$1: Int): Unit</code> generated for <code>var x = 42</code>.</td>
-  </tr>
-  <tr>
-    <td><code>4</code></td>
-    <td><code>PRIMARY_CONSTRUCTOR</code></td>
-    <td>Primary constructor, e.g. <code>(x: Int)</code> in <code>class C(x: Int)</code>.</td>
-  </tr>
-  <tr>
-    <td><code>5</code></td>
-    <td><code>SECONDARY_CONSTRUCTOR</code></td>
-    <td>Secondary constructor, e.g. <code>def this() = this(42)</code>.</td>
+    <td><code>21</code></td>
+    <td><code>CONSTRUCTOR</code></td>
+    <td>Constructor, e.g. <code>(x: Int)</code> or
+    <code>def this() = this(42)</code> in <code>class C(x: Int)</code>.</td>
   </tr>
   <tr>
     <td><code>6</code></td>
@@ -564,6 +595,11 @@ languages map onto these kinds.
     <td><code>14</code></td>
     <td><code>TRAIT</code></td>
     <td>Trait, e.g. <code>trait T</code>.</td>
+  </tr>
+  <tr>
+    <td><code>18</code></td>
+    <td><code>INTERFACE</code></td>
+    <td>Interface, e.g. <code>interface I</code>.</td>
   </tr>
 </table>
 
@@ -631,18 +667,25 @@ languages map onto these properties.
   </tr>
   <tr>
     <td><code>0x400</code></td>
-    <td><code>VALPARAM</code></td>
-    <td>Is a <code>val</code> parameter of a primary constructor?</td>
+    <td><code>VAL</code></td>
+    <td>Is a <code>val</code> (local value, member value or
+    <code>val</code> parameter of a constructor)?</td>
   </tr>
   <tr>
     <td><code>0x800</code></td>
-    <td><code>VARPARAM</code></td>
-    <td>Is a <code>var</code> parameter of a primary constructor?</td>
+    <td><code>VAR</code></td>
+    <td>Is a <code>var</code> (local variable, member variable or
+    <code>var</code> parameter of a constructor)?</td>
   </tr>
   <tr>
     <td><code>0x1000</code></td>
     <td><code>STATIC</code></td>
     <td>Is a <code>static</code> field, method or class?</td>
+  </tr>
+  <tr>
+    <td><code>0x2000</code></td>
+    <td><code>PRIMARY</code></td>
+    <td>Is a primary constructor?</td>
   </tr>
 </table>
 
@@ -682,7 +725,7 @@ data structure.
 ```protobuf
 message Accessibility {
   enum Tag {
-    UNKNOWN_TAG = 0;
+    UNKNOWN_ACCESSIBILITY = 0;
     PRIVATE = 1;
     PRIVATE_THIS = 2;
     PRIVATE_WITHIN = 3;
@@ -833,7 +876,6 @@ code snippet as follows:
 
 In this section, we describe language-dependent aspects of SemanticDB entities,
 namely:
-  * Valid names for [Language](#language).
   * Format for global [Symbols](#symbol).
   * Supported [Annotations](#annotation).
   * Supported [Types](#type).
@@ -855,24 +897,6 @@ As a reference, we use the Scala Language Specification [\[17\]][17]
 (referred to as "SLS" in the text below), as well as additional resources
 [[25][25], [40][40], [51][51], [56][56], [57][57]] in the areas where SLS
 is incomplete or out of date.
-
-<a name="scala-language"></a>
-#### Language
-
-<table>
-  <tr>
-    <td><b>Value</b></td>
-    <td><b>Explanation</b></td>
-  </tr>
-  <tr>
-    <td><code>Language("Scala")</code></td>
-    <td>Scala of unknown or unspecified version.</td>
-  </tr>
-  <tr>
-    <td><code>Language("ScalaXY")</code></td>
-    <td>Scala, version <code>X.Y</code>.</td>
-  </tr>
-</table>
 
 <a name="scala-symbol"></a>
 #### Symbol
@@ -935,15 +959,15 @@ for the `Int` class in the Scala standard library,
 the owner chain is `[_root_, scala, Int]`.
 
 **Definition descriptor** is:
-  * For `VAL`, `VAR`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
+  * For `LOCAL`, `FIELD`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
     concatenation of its encoded name and a dot (`.`).
-  * For `DEF`, `GETTER`, `SETTER`, `PRIMARY_CONSTRUCTOR`,
-    `SECONDARY_CONSTRUCTOR` or `MACRO`, concatenation of its encoded name,
-    a left parenthesis (`(`), its type descriptor, a right parenthesis (`)`)
-    and a dot (`.`). In the case when multiple methods have the same name
-    and type descriptor, the type descriptor is appended with `+N`,
-    with `+1` going to the method that is defined first in the source code,
-    `+2` going to the method that is defined second, etc.
+  * For `METHOD`, `CONSTRUCTOR`, or `MACRO`,
+    concatenation of its encoded name, a left parenthesis (`(`),
+    its type descriptor, a right parenthesis (`)`) and a dot (`.`).
+    In the case when multiple methods have the same name and type descriptor,
+    the type descriptor is appended with `+N`, with `+1` going to the method
+    that is defined first in the source code, `+2` going to the method that
+    is defined second, etc.
   * For `TYPE`, `CLASS` or `TRAIT`, concatenation of its
     encoded name and a pound sign (`#`).
   * For `PARAMETER`, concatenation of a left parenthesis (`(`), its
@@ -1082,9 +1106,9 @@ In the examples below:
     <td valign="top">Compound types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types">[31]</a></td>
     <td>
       <ul>
-        <li><code>{ M1; ...; Mm }</code> ~ <code>StructuralType(List(), List(), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
-        <li><code>T1 with ... with Tn</code> ~ <code>StructuralType(List(), List(&lt;T1&gt;, ..., &lt;Tn&gt;), List())</code>.</li>
-        <li><code>T1 with ... with Tn { M1; ...; Mm }</code> ~ <code>StructuralType(List(), List(&lt;T1&gt;, ..., &lt;Tn&gt;), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
+        <li><code>{ M1; ...; Mm }</code> ~ <code>StructuralType(None, List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
+        <li><code>T1 with ... with Tn</code> ~ <code>WithType(List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+        <li><code>T1 with ... with Tn { M1; ...; Mm }</code> ~ <code>StructuralType(WithType(List(&lt;T1&gt;, ..., &lt;Tn&gt;)), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
       </ul>
     </td>
   </tr>
@@ -1166,9 +1190,14 @@ Notes:
 **Value declarations and definitions** [\[39\]][39] are represented by multiple
 symbols, with the exact number of symbols, their kinds, properties, signatures
 and accessibilities dependent on the corresponding value:
-* `VAL` symbol is created for all non-`ABSTRACT` values.
-* `GETTER` symbol is created for all non-`PRIVATE_THIS` member values.
-* `PARAMETER` symbol is created for `val` parameters of primary constructors.
+* Local symbol of kind `LOCAL` is created for all local values.
+* Field symbol of kind `FIELD` is created for non-`ABSTRACT` member values
+  to model the field generated by the Scala compiler.
+* Getter symbol of kind `METHOD` is created for all non-`PRIVATE_THIS` member
+  values to model the corresponding getter method generated by the Scala
+  compiler.
+* Parameter symbol of kind `PARAMETER` is created for `val` parameters
+  of primary constructors to model the corresponding constructor parameter.
 
 ```scala
 abstract class C(val xp: Int) {
@@ -1193,13 +1222,13 @@ abstract class C(val xp: Int) {
   <tr>
     <td><code>xp</code></td>
     <td><code>_empty_.C#xp.</code></td>
-    <td><code>VAL</code></td>
+    <td><code>FIELD</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xp</code></td>
     <td><code>_empty_.C#xp().</code></td>
-    <td><code>GETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
@@ -1211,43 +1240,43 @@ abstract class C(val xp: Int) {
   <tr>
     <td><code>xm</code></td>
     <td><code>_empty_.C#xm.</code></td>
-    <td><code>VAL</code></td>
+    <td><code>FIELD</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xm</code></td>
     <td><code>_empty_.C#xm().</code></td>
-    <td><code>GETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xam</code></td>
     <td><code>_empty_.C#xam().</code></td>
-    <td><code>GETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xlm</code></td>
     <td><code>_empty_.C#xlm.</code></td>
-    <td><code>VAL</code></td>
+    <td><code>FIELD</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xl</code></td>
     <td><code>local0</code></td>
-    <td><code>VAL</code></td>
+    <td><code>LOCAL</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xs</code></td>
     <td><code>local1</code></td>
-    <td><code>GETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xe</code></td>
     <td><code>local2</code></td>
-    <td><code>GETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
 </table>
@@ -1271,13 +1300,14 @@ Notes:
   * `ABSTRACT`: set for all corresponding symbols of value declarations.
   * `FINAL`: set for all corresponding symbols of `final` values.
   * `IMPLICIT`:
-    * If a corresponding `PARAM` symbol exists, set for the `PARAM` symbol.
-    * If a corresponding `GETTER` symbol exists, set for the `GETTER` symbol.
-    * If a corresponding `VAL` symbol exists but no corresponding `GETTER`
-      symbol exists, set for the `VAL` symbol.
+    * If a corresponding parameter symbol exists, set for the parameter symbol.
+    * If a corresponding getter symbol exists, set for the getter symbol.
+    * If a corresponding local symbol exists, set for the local symbol.
   * `LAZY`: set for all corresponding symbols of `lazy` values.
-* `override` relationships exist only for `GETTER` and `SETTER` symbols.
-  Corresponding `VAL` or `PARAM` symbols never override or get overridden.
+  * `VAL`: set for all corresponding symbols.
+* `override` relationships exist only for getter symbols.
+  Corresponding local, field and parameter symbols never override or
+  get overridden.
 * If the type of the value is unspecified, it is inferred from the
   right-hand side of the value according to the rules described
   in SLS [\[39\]][39]. Corresponding signature is computed from the inferred
@@ -1293,35 +1323,47 @@ Notes:
   * `PROTECTED_THIS`: set for getters of `protected[this]` values.
   * `PROTECTED_WITHIN`: set for getters of `protected[...]` values.
 
-**Variable declarations and definitions** [\[41\]][41] are represented
-similarly to values (see above). Concretely, the following rules describe
-symbols created for variables:
-* Whenever a `VAL` symbol would be created for a value, a `VAR` symbol is
-  created for a variable having the same properties, signature and
-  accessibility.
-* Whenever a `GETTER` symbol would be created for a value, a `GETTER` symbol
-  is created for a variable having the same properties, signature and
-  accessibility.
-* Whenever a `GETTER` symbol would be created for a value, a `SETTER` symbol
-  is created for a variable, having the same properties (except `IMPLICIT`)
-  and accessibility
-  and (for `var x: T`) name `x_=`
-  and signature `MethodType(List(), List(List(<x$1>)), <Unit>)`
-  with the synthetic parameter `x$1` having signature `<T>`.
-* Whenever a `PARAMETER` symbol would be created for a value, a `PARAMETER`
-  symbol is created for a variable having the same properties, signature
-  and accessibility.
-* Variable declarations and definitions cannot be `lazy`, so variable symbols
-  cannot be `LAZY` either.
-* Only corresponding `GETTER` and `PARAM` symbols for `implicit` member
-  variables and only corresponding `VAR` symbols for `implicit` local
-  variables can be `IMPLICIT`. `SETTER` symbols can never be `IMPLICIT`.
+**Variable declarations and definitions** [\[41\]][41] are represented by
+multiple symbols, with the exact number of symbols, their kinds, properties,
+signatures and accessibilities dependent on the corresponding value:
+* Local symbol of kind `LOCAL` is created for all local variables.
+* Field symbol of kind `FIELD` is created for non-`ABSTRACT` member variables
+  to model the field generated by the Scala compiler.
+* Getter and setter symbols of kind `METHOD` are created for all
+  non-`PRIVATE_THIS` member variables to model the corresponding
+  getter and setter methods generated by the Scala compiler.
+* Parameter symbol of kind `PARAMETER` is created for `var` parameters
+  of primary constructors to model the corresponding constructor parameter.
+
+Notes:
+* Variable symbols are modelled exactly the same as value symbols
+  (see "Value symbols and declarations"), with the exceptions described below.
+* Setter symbols have the following metadata:
+  * `kind`: `METHOD`.
+  * `properties`: see below.
+  * `name`: concatenation of the name of the variable followed by `_=`.
+  * `tpe`: `MethodType(List(), List(List(<x$1>)), <Unit>)`, where `x$1` is
+    a `PARAMETER` symbol having `tpe` equal to the type of the variable.
+  * `annotations` and `accessibility`: same as value symbols.
+* Supported properties for variable symbols are:
+  * `ABSTRACT`: set for all corresponding symbols of variable declarations.
+  * `FINAL`: set for all corresponding symbols of `final` variables.
+  * `IMPLICIT`:
+    * If a corresponding parameter symbol exists, set for the parameter symbol.
+    * If a corresponding getter symbol exists, set for the getter symbol.
+    * If a corresponding local symbol exists, set for the local symbol.
+  * `LAZY`: never set for variable symbols, since variable declarations and
+    definitions cannot be `lazy`.
+  * `VAR`: set for all corresponding symbols.
+* `override` relationships exist only for getter and setter symbols.
+  Corresponding local, field and parameter symbols never override or
+  get overridden.
 
 **Pattern variables** [\[65\]][65] are represented differently depending
 on their location:
-* `VAL` symbol is created for pattern variables in pattern matching
+* Local symbol is created for pattern variables in pattern matching
   expressions [\[66\]][66].
-* A combination of `VAL`, `VAR`, `GETTER` and `SETTER` symbols is created
+* A combination of local, field, getter and setter symbols is created
   for pattern variables in pattern definitions [\[39\]][39].
 
 ```scala
@@ -1342,37 +1384,37 @@ class C {
   <tr>
     <td><code>x</code></td>
     <td><code>local0</code></td>
-    <td><code>VAL</code></td>
+    <td><code>FIELD</code></td>
     <td><code>TypeRef(None, &lt;Nothing&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xval</code></td>
     <td><code>_empty_.C#xval.</code></td>
-    <td><code>VAL</code></td>
+    <td><code>LOCAL</code></td>
     <td><code>TypeRef(None, &lt;Nothing&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xval</code></td>
     <td><code>_empty_.C#xval().</code></td>
-    <td><code>GETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
     <td><code>_empty_.C#xvar.</code></td>
-    <td><code>VAR</code></td>
+    <td><code>FIELD</code></td>
     <td><code>TypeRef(None, &lt;Nothing&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
     <td><code>_empty_.C#xvar().</code></td>
-    <td><code>GETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
     <td><code>_empty_.C#xvar_=(Nothing).</code></td>
-    <td><code>SETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(&lt;x$1&gt;), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
   </tr>
 </table>
@@ -1612,7 +1654,7 @@ class C(p1: Int) {
   <tr>
     <td><code>m3$default$1</code></td>
     <td><code>_empty_.C#m3$default$1().</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
@@ -1649,8 +1691,8 @@ Notes:
 * Supported properties for parameter symbols are:
   * `IMPLICIT`: set for `implicit` parameters, as well as desugared context
     bounds and view bounds (see above).
-  * `VALPARAM`: set for `val` parameters of primary constructors.
-  * `VARPARAM`: set for `var` parameters of primary constructors.
+  * `VAL`: set for `val` parameters of primary constructors.
+  * `VAR`: set for `var` parameters of primary constructors.
 * Unlike some other metaprogramming systems for Scala, we do not
   distinguish regular parameters from parameters with default arguments
   [\[45\]][45]. However, we do create method symbols for synthetic methods
@@ -1665,7 +1707,7 @@ Notes:
   the names unspecified.
 
 **Function declarations and definitions** [\[48\]][48] are represented
-with `DEF` symbols.
+with `METHOD` symbols.
 
 ```scala
 abstract class C {
@@ -1685,25 +1727,25 @@ abstract class C {
   <tr>
     <td><code>m1</code></td>
     <td><code>_empty_.C#m1().</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
     <td><code>_empty_.C#m2().</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>_empty_.C#m3(Int).</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m4</code></td>
     <td><code>_empty_.C#m4(Int,Int).</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
@@ -1771,9 +1813,8 @@ Notes:
   future.
 * Macro symbols support [all Scala accessibilities](#scala-accessibility).
 
-**Constructors** [[52][52], [53][53]] are represented with `PRIMARY_CONSTRUCTOR`
-and `SECONDARY_CONSTRUCTOR` symbols similarly to function definitions (see
-above).
+**Constructors** [[52][52], [53][53]] are represented with `CONSTRUCTOR`
+symbols similarly to function definitions (see above).
 
 ```scala
 class C(x: Int) {
@@ -1791,13 +1832,13 @@ class C(x: Int) {
   <tr>
     <td>Primary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`(Int).</code></td>
-    <td><code>PRIMARY_CONSTRUCTOR</code></td>
+    <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;C&gt;, List()))</code></td>
   </tr>
   <tr>
     <td>Secondary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
-    <td><code>SECONDARY_CONSTRUCTOR</code></td>
+    <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;C&gt;, List()))</code></td>
   </tr>
 </table>
@@ -1805,7 +1846,8 @@ class C(x: Int) {
 Notes:
 * Unlike some other metaprogramming systems for Scala, we do not create
   synthetic constructor symbols for traits and objects.
-* Constructor symbols don't support any properties.
+* Supported properties for constructor symbols are:
+  * `PRIMARY`: set for primary constructors.
 * Constructors don't have type parameters and return types, but we still
   represent their signatures with `MethodType`. In these signatures,
   type parameters are equal to `List()` and the return type
@@ -1845,37 +1887,37 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
   <tr>
     <td><code>x</code></td>
     <td><code>_empty_.C#x.</code></td>
-    <td><code>VAL</code></td>
+    <td><code>FIELD</code></td>
     <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>y</code></td>
     <td><code>_empty_.C#y.</code></td>
-    <td><code>VAL</code></td>
+    <td><code>FIELD</code></td>
     <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>y</code></td>
     <td><code>_empty_.C#x().</code></td>
-    <td><code>GETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#z.</code></td>
-    <td><code>VAL</code></td>
+    <td><code>FIELD</code></td>
     <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#z().</code></td>
-    <td><code>GETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#z_=(T).</code></td>
-    <td><code>SETTER</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List(&lt;x$1&gt;)), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
   </tr>
   <tr>
@@ -1887,7 +1929,7 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
   <tr>
     <td>Primary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).</code></td>
-    <td><code>PRIMARY_CONSTRUCTOR</code></td>
+    <td><code>CONSTRUCTOR</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
@@ -1911,7 +1953,7 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
   <tr>
     <td>m</td>
     <td><code>_empty_.C#m().</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
@@ -1929,8 +1971,8 @@ Notes:
   guarantee a one-to-one mapping of parent clauses in source code and
   entities in `parents`. We may improve on this in the future.
 * `ClassInfoType.declarations` must be ordered as follows:
-  * For every parameter of the primary constructor, its `VAL`, then
-    its `GETTER`, then its `SETTER`.
+  * For every parameter of the primary constructor, its field symbol, then
+    its getter symbol, then its setter symbol.
   * Symbol of the primary constructor.
   * Symbols of declared members in order of their appearance in source code.
     (Inherited members must not be part of `declarations`.)
@@ -2099,6 +2141,14 @@ Synthetics are unspecified in SLS, and our experience [\[38\]][38] shows that
 reverse engineering synthetics is very hard. We may improve
 on this in the future, but this is highly unlikely.
 
+### Java
+
+Java `class` file format [\[68\]][68] can be mapped onto SemanticDB.
+This has been validated in an experimental implementation [\[69\]][69],
+but we do not yet have a specification that comprehensively describes how
+Java language features map onto SemanticDB. We intend to improve on this
+in the future.
+
 [semanticdb2.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb2/semanticdb2.proto
 [semanticdb3.proto]: semanticdb3.proto
 [1]: https://semver.org/
@@ -2168,3 +2218,5 @@ on this in the future, but this is highly unlikely.
 [65]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#variable-patterns
 [66]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#pattern-matching-expressions
 [67]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#type-patterns
+[68]: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
+[69]: https://github.com/scalameta/scalameta/blob/master/semanticdb/metacp/src/main/scala/scala/meta/internal/javacp/Javacp.scala

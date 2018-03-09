@@ -42,11 +42,6 @@ class CliSuite extends BaseCliSuite {
   }
 
   test("metap " + helloWorldSemanticdb) {
-    val language = {
-      if (versionNumberString.startsWith("2.11")) "Scala211"
-      else if (versionNumberString.startsWith("2.12")) "Scala212"
-      else sys.error(s"unsupported Scala version: $versionNumberString")
-    }
     val (success, out, err) = CliSuite.communicate { (out, err) =>
       val settings = scala.meta.metap.Settings().withPaths(List(helloWorldSemanticdb))
       val reporter = scala.meta.metap.Reporter().withOut(out).withErr(err)
@@ -55,7 +50,7 @@ class CliSuite extends BaseCliSuite {
     assert(success)
     assertNoDiff(
       out,
-      s"""
+      """
       |HelloWorld.scala
       |----------------
       |
@@ -63,13 +58,13 @@ class CliSuite extends BaseCliSuite {
       |Schema => SemanticDB v3
       |Uri => HelloWorld.scala
       |Text => non-empty
-      |Language => $language
+      |Language => Scala
       |Symbols => 3 entries
       |Occurrences => 7 entries
       |
       |Symbols:
       |_empty_.HelloWorld. => final object HelloWorld
-      |_empty_.HelloWorld.main(Array). => def main: (args: Array[String]): Unit
+      |_empty_.HelloWorld.main(Array). => method main: (args: Array[String]): Unit
       |  args => _empty_.HelloWorld.main(Array).(args)
       |  Array => _root_.scala.Array#
       |  String => _root_.scala.Predef.String#

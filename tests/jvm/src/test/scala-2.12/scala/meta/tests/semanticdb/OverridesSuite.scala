@@ -33,17 +33,16 @@ class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = Over
        |trait A { def foo: Int }
        |class B() extends A { def foo: Int = 2 }
        """.stripMargin,
-    """
-       |_empty_.A# => trait A
-       |_empty_.A#foo(). => abstract def foo: Int
+    """|_empty_.A# => trait A
+       |_empty_.A#foo(). => abstract method foo: Int
        |  [0..3): Int => _root_.scala.Int#
        |_empty_.B# => class B
-       |_empty_.B#`<init>`(). => primaryctor <init>: (): B
+       |_empty_.B#`<init>`(). => primary ctor <init>: (): B
        |  [4..5): B => _empty_.B#
-       |_empty_.B#foo(). => def foo: Int
+       |_empty_.B#foo(). => method foo: Int
        |  override _empty_.A#foo().
        |  [0..3): Int => _root_.scala.Int#
-       |_root_.java.lang.Object#`<init>`(). => javadefined primaryctor <init>: (): Object
+       |_root_.java.lang.Object#`<init>`(). => javadefined ctor <init>: (): Object
        |  [4..10): Object => _root_.java.lang.Object#
        |_root_.scala.Int# => abstract final class Int""".stripMargin
   )

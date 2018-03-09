@@ -106,6 +106,7 @@ trait ExpectHelpers extends FunSuiteLike {
       }
       lines
         .filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
+        .filterNot(_.startsWith("@@"))
         .mkString("\n")
     }
     diff
@@ -125,7 +126,6 @@ trait ExpectHelpers extends FunSuiteLike {
       sym <- doc.symbols
     } yield {
       val normalizedSym = sym.copy(
-        language = None,
         signature = None,
         overrides = Nil,
         members = Nil

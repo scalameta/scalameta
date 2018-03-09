@@ -11,6 +11,7 @@ import org.langmeta.io._
 import org.langmeta.{semanticdb => d}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 
@@ -110,15 +111,12 @@ package object semanticdb {
             val dflags = {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
-              if (slanguage.map(_.name.startsWith("Java")).getOrElse(false)) dflip(d.JAVADEFINED)
+              if (slanguage == l.JAVA) dflip(d.JAVADEFINED)
               skind match {
-                case k.VAL => dflip(d.VAL)
-                case k.VAR => dflip(d.VAR)
-                case k.DEF => dflip(d.DEF)
-                case k.GETTER => dflip(d.GETTER)
-                case k.SETTER => dflip(d.SETTER)
-                case k.PRIMARY_CONSTRUCTOR => dflip(d.PRIMARYCTOR)
-                case k.SECONDARY_CONSTRUCTOR => dflip(d.SECONDARYCTOR)
+                case k.LOCAL => dflip(d.LOCAL)
+                case k.FIELD => dflip(d.FIELD)
+                case k.METHOD => dflip(d.METHOD)
+                case k.CONSTRUCTOR => dflip(d.CTOR)
                 case k.MACRO => dflip(d.MACRO)
                 case k.TYPE => dflip(d.TYPE)
                 case k.PARAMETER => dflip(d.PARAM)
@@ -129,6 +127,7 @@ package object semanticdb {
                 case k.PACKAGE_OBJECT => dflip(d.PACKAGEOBJECT)
                 case k.CLASS => dflip(d.CLASS)
                 case k.TRAIT => dflip(d.TRAIT)
+                case k.INTERFACE => dflip(d.INTERFACE)
                 case _ => ()
               }
               def stest(bit: Long) = (sproperties & bit) == bit
@@ -140,8 +139,9 @@ package object semanticdb {
               if (stest(p.CASE.value)) dflip(d.CASE)
               if (stest(p.COVARIANT.value)) dflip(d.COVARIANT)
               if (stest(p.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
-              if (stest(p.VALPARAM.value)) dflip(d.VAL)
-              if (stest(p.VARPARAM.value)) dflip(d.VAR)
+              if (stest(p.VAL.value)) dflip(d.VAL)
+              if (stest(p.VAR.value)) dflip(d.VAR)
+              if (stest(p.PRIMARY.value)) dflip(d.PRIMARY)
               sacc.map(_.tag) match {
                 case Some(a.PRIVATE | a.PRIVATE_THIS | a.PRIVATE_WITHIN) =>
                   dflip(d.PRIVATE)
@@ -206,7 +206,13 @@ package object semanticdb {
             Some(dSynthetic(dpos, dtext, dnames))
         }
       }
-      val dlanguage = slanguage.map(_.name).getOrElse("")
+      val dlanguage = {
+        slanguage match {
+          case l.SCALA => "Scala"
+          case l.JAVA => "Java"
+          case _ => ""
+        }
+      }
       val dnames = soccurrences.map {
         case s.SymbolOccurrence(Some(sRange(dpos)), ssym, sRole(disDefinition)) =>
           val dsym = dSymbol(ssym)
@@ -269,8 +275,9 @@ package object semanticdb {
             case _ => sym.syntax
           }
           val slanguage = {
-            if (dlanguage.nonEmpty) Some(s.Language(dlanguage))
-            else None
+            if (dlanguage.startsWith("Scala")) l.SCALA
+            else if (dlanguage.startsWith("Java")) l.JAVA
+            else l.UNKNOWN_LANGUAGE
           }
           object dPosition {
             def unapply(dpos: dPosition): Option[s.Range] = dpos match {
@@ -302,18 +309,12 @@ package object semanticdb {
               val d.ResolvedSymbol(dsymbol, ddenot) = dresolvedSymbol
               def dtest(bit: Long) = (ddenot.flags & bit) == bit
               val ssymbol = sSymbol(dsymbol)
-              val slanguage = {
-                if (dtest(d.JAVADEFINED)) Some(s.Language("Java"))
-                else Some(s.Language(dlanguage))
-              }
+              val ssymbolLanguage = if (dtest(d.JAVADEFINED)) l.JAVA else l.SCALA
               val skind = {
-                if (dtest(d.VAL) && !dtest(d.PARAM)) k.VAL
-                else if (dtest(d.VAR) && !dtest(d.PARAM)) k.VAR
-                else if (dtest(d.DEF)) k.DEF
-                else if (dtest(d.GETTER)) k.GETTER
-                else if (dtest(d.SETTER)) k.SETTER
-                else if (dtest(d.PRIMARYCTOR)) k.PRIMARY_CONSTRUCTOR
-                else if (dtest(d.SECONDARYCTOR)) k.SECONDARY_CONSTRUCTOR
+                if (dtest(d.LOCAL)) k.LOCAL
+                else if (dtest(d.FIELD)) k.FIELD
+                else if (dtest(d.METHOD)) k.METHOD
+                else if (dtest(d.CTOR)) k.CONSTRUCTOR
                 else if (dtest(d.MACRO)) k.MACRO
                 else if (dtest(d.TYPE)) k.TYPE
                 else if (dtest(d.PARAM)) k.PARAMETER
@@ -324,21 +325,23 @@ package object semanticdb {
                 else if (dtest(d.PACKAGEOBJECT)) k.PACKAGE_OBJECT
                 else if (dtest(d.CLASS)) k.CLASS
                 else if (dtest(d.TRAIT)) k.TRAIT
+                else if (dtest(d.INTERFACE)) k.INTERFACE
                 else k.UNKNOWN_KIND
               }
               val sproperties = {
                 var sproperties = 0
-                def sflip(sbit: Int) = sproperties ^= sbit
-                if (dtest(d.ABSTRACT)) sflip(p.ABSTRACT.value)
-                if (dtest(d.FINAL)) sflip(p.FINAL.value)
-                if (dtest(d.SEALED)) sflip(p.SEALED.value)
-                if (dtest(d.IMPLICIT)) sflip(p.IMPLICIT.value)
-                if (dtest(d.LAZY)) sflip(p.LAZY.value)
-                if (dtest(d.CASE)) sflip(p.CASE.value)
-                if (dtest(d.COVARIANT)) sflip(p.COVARIANT.value)
-                if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT.value)
-                if (dtest(d.VAL) && dtest(d.PARAM)) sflip(p.VALPARAM.value)
-                if (dtest(d.VAR) && dtest(d.PARAM)) sflip(p.VARPARAM.value)
+                def sflip(sprop: s.SymbolInformation.Property) = sproperties ^= sprop.value
+                if (dtest(d.ABSTRACT)) sflip(p.ABSTRACT)
+                if (dtest(d.FINAL)) sflip(p.FINAL)
+                if (dtest(d.SEALED)) sflip(p.SEALED)
+                if (dtest(d.IMPLICIT)) sflip(p.IMPLICIT)
+                if (dtest(d.LAZY)) sflip(p.LAZY)
+                if (dtest(d.CASE)) sflip(p.CASE)
+                if (dtest(d.COVARIANT)) sflip(p.COVARIANT)
+                if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT)
+                if (dtest(d.VAL)) sflip(p.VAL)
+                if (dtest(d.VAR)) sflip(p.VAR)
+                if (dtest(d.PRIMARY)) sflip(p.PRIMARY)
                 sproperties
               }
               val sname = ddenot.name
@@ -365,7 +368,7 @@ package object semanticdb {
               val sanns = ddenot.annotations
               val sacc = ddenot.accessibility
               val sowner = ddenot.owner.syntax
-              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, slocation, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner))
+              Some(s.SymbolInformation(ssymbol, ssymbolLanguage, skind, sproperties, sname, slocation, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner))
             }
           }
           object dSynthetic {

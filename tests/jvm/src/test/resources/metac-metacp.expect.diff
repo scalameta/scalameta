@@ -14,6 +14,9 @@ _root_.com.
  accessibility {
    tag: PUBLIC
    symbol: ""
+ owner: "_root_."
+-language: SCALA
++language: JAVA
 
 
 ==================
@@ -32,6 +35,19 @@ _root_.com.javacp.
  accessibility {
    tag: PUBLIC
    symbol: ""
+ owner: "_root_.com."
+-language: SCALA
++language: JAVA
+
+
+============================
+_root_.com.javacp.Interface#
+============================
+--- metac
++++ metacp
+         symbol: "_root_.java.lang.Object#"
+-    declarations: "_root_.com.javacp.Interface#`<init>`()."
+ accessibility {
 
 
 ============================
@@ -88,7 +104,7 @@ _root_.com.javacp.MetacJava#Overload1#A#`<init>`().
 --- metac
 +++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
+-kind: CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
  properties: 0
@@ -114,8 +130,10 @@ _root_.com.javacp.MetacJava#Overload1#A#`<init>`().
 -  symbol: ""
 -}
 -owner: "_root_.com.javacp.MetacJava#Overload1#A#"
+-language: JAVA
 +name: ""
 +owner: ""
++language: UNKNOWN_LANGUAGE
 
 
 =================================================
@@ -124,7 +142,7 @@ _root_.com.javacp.MetacJava#Overload1#`<init>`().
 --- metac
 +++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload1#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
+-kind: CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
  properties: 0
@@ -150,8 +168,10 @@ _root_.com.javacp.MetacJava#Overload1#`<init>`().
 -  symbol: ""
 -}
 -owner: "_root_.com.javacp.MetacJava#Overload1#"
+-language: JAVA
 +name: ""
 +owner: ""
++language: UNKNOWN_LANGUAGE
 
 
 ======================================
@@ -184,7 +204,7 @@ _root_.com.javacp.MetacJava#Overload2#A#`<init>`().
 --- metac
 +++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
+-kind: CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
  properties: 0
@@ -210,8 +230,10 @@ _root_.com.javacp.MetacJava#Overload2#A#`<init>`().
 -  symbol: ""
 -}
 -owner: "_root_.com.javacp.MetacJava#Overload2#A#"
+-language: JAVA
 +name: ""
 +owner: ""
++language: UNKNOWN_LANGUAGE
 
 
 =================================================
@@ -220,7 +242,7 @@ _root_.com.javacp.MetacJava#Overload2#`<init>`().
 --- metac
 +++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload2#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
+-kind: CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
  properties: 0
@@ -246,8 +268,10 @@ _root_.com.javacp.MetacJava#Overload2#`<init>`().
 -  symbol: ""
 -}
 -owner: "_root_.com.javacp.MetacJava#Overload2#"
+-language: JAVA
 +name: ""
 +owner: ""
++language: UNKNOWN_LANGUAGE
 
 
 ======================================
@@ -262,7 +286,6 @@ _root_.com.javacp.MetacJava#Overload3#
  name: "Overload3"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -13,7 +13,6 @@
      declarations: "_root_.com.javacp.MetacJava#Overload3#`<init>`()."
      declarations: "_root_.com.javacp.MetacJava#Overload3#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload3#A#"
@@ -288,13 +311,6 @@ _root_.com.javacp.MetacJava#Overload3#A#`<init>`().
 ===================================================
 --- metac
 +++ metacp
- symbol: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
-+kind: DEF
- properties: 0
- name: "<init>"
- tpe {
-@@ -10,7 +10,7 @@
      return_type {
        tag: TYPE_REF
        typeRef {
@@ -314,7 +330,6 @@ _root_.com.javacp.MetacJava#StaticInner#
  name: "StaticInner"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -13,9 +13,8 @@
      declarations: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
      declarations: "_root_.com.javacp.MetacJava#StaticInner#isNotStatic()."
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
@@ -341,7 +356,7 @@ _root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
 --- metac
 +++ metacp
 -symbol: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
+-kind: CONSTRUCTOR
 +symbol: ""
 +kind: UNKNOWN_KIND
  properties: 0
@@ -367,8 +382,10 @@ _root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
 -  symbol: ""
 -}
 -owner: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
+-language: JAVA
 +name: ""
 +owner: ""
++language: UNKNOWN_LANGUAGE
 
 
 ===================================================
@@ -376,13 +393,6 @@ _root_.com.javacp.MetacJava#StaticInner#`<init>`().
 ===================================================
 --- metac
 +++ metacp
- symbol: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
-+kind: DEF
- properties: 0
- name: "<init>"
- tpe {
-@@ -10,7 +10,7 @@
      return_type {
        tag: TYPE_REF
        typeRef {
@@ -396,7 +406,7 @@ _root_.com.javacp.MetacJava#StaticInner#isStatic().
 --- metac
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#StaticInner#isStatic()."
- kind: DEF
+ kind: METHOD
 -properties: 0
 +properties: 4096
  name: "isStatic"
@@ -409,13 +419,6 @@ _root_.com.javacp.MetacJava#`<init>`().
 =======================================
 --- metac
 +++ metacp
- symbol: "_root_.com.javacp.MetacJava#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
-+kind: DEF
- properties: 0
- name: "<init>"
- tpe {
-@@ -10,7 +10,7 @@
      return_type {
        tag: TYPE_REF
        typeRef {
@@ -429,7 +432,7 @@ _root_.com.javacp.MetacJava#overload(A+3).
 --- metac
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#overload(A+3)."
- kind: DEF
+ kind: METHOD
 -properties: 0
 +properties: 4096
  name: "overload"
@@ -455,6 +458,7 @@ _root_.example.
 -  symbol: ""
 -}
  owner: "_root_."
+ language: SCALA
 
 
 ===================
@@ -596,7 +600,6 @@ _root_.example.Methods#
      declarations: "_root_.example.Methods#List#"
      declarations: "_root_.example.Methods#AList#"
      declarations: "_root_.example.Methods#m1()."
-@@ -33,7 +34,9 @@
      declarations: "_root_.example.Methods#m11(.type+1)."
      declarations: "_root_.example.Methods#m11(.type+2)."
      declarations: "_root_.example.Methods#m12a({})."
@@ -623,10 +626,14 @@ _root_.example.Methods#m12b({}).(x)
 ===================================
 --- metac
 +++ metacp
-         symbol: "_root_.scala.AnyRef#"
+ tpe {
+   tag: STRUCTURAL_TYPE
+   structuralType {
 -    declarations: "_root_.example.Methods#$anon#x()."
 +    declarations: "_root_.example.Methods#`<refinement>`#x()."
- accessibility {
+     tpe {
+       tag: WITH_TYPE
+       withType {
 
 
 ===================================
@@ -683,9 +690,9 @@ _root_.example.Vals#xzlm().
 --- metac
 +++ metacp
  symbol: "_root_.example.Vals#xzlm()."
--kind: VAL
-+kind: GETTER
- properties: 64
+-kind: FIELD
++kind: METHOD
+ properties: 1088
  name: "xzlm"
  tpe {
 -  tag: TYPE_REF
@@ -706,9 +713,9 @@ _root_.example.Vals#xzm().
 --- metac
 +++ metacp
  symbol: "_root_.example.Vals#xzm()."
--kind: VAL
-+kind: GETTER
- properties: 64
+-kind: FIELD
++kind: METHOD
+ properties: 1088
  name: "xzm"
  tpe {
 -  tag: TYPE_REF
@@ -741,6 +748,7 @@ _root_.flags.
 -  symbol: ""
 -}
  owner: "_root_."
+ language: SCALA
 
 
 =======================
@@ -871,9 +879,9 @@ _root_.flags.p.package.x().
 --- metac
 +++ metacp
  symbol: "_root_.flags.p.package.x()."
--kind: VAL
-+kind: GETTER
- properties: 64
+-kind: FIELD
++kind: METHOD
+ properties: 1088
  name: "x"
  tpe {
 -  tag: TYPE_REF
@@ -906,6 +914,7 @@ _root_.types.
 -  symbol: ""
 -}
  owner: "_root_."
+ language: SCALA
 
 
 ==================
@@ -952,7 +961,6 @@ _root_.types.Test.C#
      declarations: "_root_.types.Test.C#compoundType3."
      declarations: "_root_.types.Test.C#annType1()."
      declarations: "_root_.types.Test.C#annType1."
-@@ -52,13 +55,18 @@
      declarations: "_root_.types.Test.C#existentialType1."
      declarations: "_root_.types.Test.C#typeLambda1()."
      declarations: "_root_.types.Test.C#ClassInfoType1."
@@ -1182,9 +1190,14 @@ _root_.types.Test.C#compoundType1().
 ====================================
 --- metac
 +++ metacp
-             symbol: "_root_.scala.AnyRef#"
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
 -        declarations: "_root_.types.Test.C#$anon#k()."
 +        declarations: "_root_.types.Test.C#`<refinement>`#k()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
 
 
 ==================================
@@ -1192,10 +1205,14 @@ _root_.types.Test.C#compoundType1.
 ==================================
 --- metac
 +++ metacp
-         symbol: "_root_.scala.AnyRef#"
+ tpe {
+   tag: STRUCTURAL_TYPE
+   structuralType {
 -    declarations: "_root_.types.Test.C#$anon#k()."
 +    declarations: "_root_.types.Test.C#`<refinement>`#k()."
- accessibility {
+     tpe {
+       tag: WITH_TYPE
+       withType {
 
 
 ====================================
@@ -1203,9 +1220,14 @@ _root_.types.Test.C#compoundType3().
 ====================================
 --- metac
 +++ metacp
-             symbol: "_root_.types.Test.N#"
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
 -        declarations: "_root_.types.Test.C#$anon#k()."
 +        declarations: "_root_.types.Test.C#`<refinement>`#k()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
 
 
 ==================================
@@ -1213,10 +1235,14 @@ _root_.types.Test.C#compoundType3.
 ==================================
 --- metac
 +++ metacp
-         symbol: "_root_.types.Test.N#"
+ tpe {
+   tag: STRUCTURAL_TYPE
+   structuralType {
 -    declarations: "_root_.types.Test.C#$anon#k()."
 +    declarations: "_root_.types.Test.C#`<refinement>`#k()."
- accessibility {
+     tpe {
+       tag: WITH_TYPE
+       withType {
 
 
 ==================================
@@ -1354,8 +1380,8 @@ _root_.types.Test.Literal.javaEnum.
 ===================================
 --- metac
 +++ metacp
- kind: VAL
- properties: 8
+ kind: FIELD
+ properties: 1032
  name: "javaEnum"
 -tpe {
 -  tag: SINGLETON_TYPE

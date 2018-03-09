@@ -13,7 +13,8 @@ trait DenotationOps { self: DatabaseOps =>
 
   implicit class XtensionGSymbolMDenotation(gsym0: g.Symbol) {
     private val gsym: g.Symbol = {
-      if (gsym0.isModuleClass) gsym0.asClass.module
+      if (gsym0.isJavaClass) gsym0.companionClass
+      else if (gsym0.isModuleClass) gsym0.asClass.module
       else if (gsym0.isTypeSkolem) gsym0.deSkolemize
       else gsym0
     }
@@ -24,26 +25,28 @@ trait DenotationOps { self: DatabaseOps =>
       gsym match {
         case gsym: MethodSymbol =>
           if (gsym.isConstructor) {
-            if (gsym.isPrimaryConstructor) mf.PRIMARYCTOR
-            else mf.SECONDARYCTOR
+            mf.CTOR
           } else {
-            if (gsym.isSetter) mf.SETTER
-            else if (gsym.isGetter && gsym.isLazy && !gsym.isClass) mf.VAL
-            else if (gsym.isGetter) mf.GETTER
-            else if (gsym.isMacro) mf.MACRO
-            else mf.DEF
+            if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
+              if (gsym.isLocalToBlock) mf.LOCAL
+              else mf.FIELD
+            } else if (gsym.isMacro) {
+              mf.MACRO
+            } else {
+              mf.METHOD
+            }
           }
         case gsym: ModuleSymbol =>
           if (gsym.hasPackageFlag) mf.PACKAGE
           else if (gsym.isPackageObject) mf.PACKAGEOBJECT
-          else if (gsym.isJavaClass) mf.CLASS
           else mf.OBJECT
         case gsym: TermSymbol =>
           if (gsym.isParameter) mf.PARAM
-          else if (gsym.isMutable) mf.VAR
-          else mf.VAL
+          else if (gsym.isLocalToBlock) mf.LOCAL
+          else mf.FIELD
         case gsym: ClassSymbol =>
-          if (gsym.isTrait) mf.TRAIT
+          if (gsym.isTrait && gsym.hasFlag(gf.JAVA)) mf.INTERFACE
+          else if (gsym.isTrait) mf.TRAIT
           else mf.CLASS
         case gsym: TypeSymbol =>
           if (gsym.isParameter) mf.TYPEPARAM
@@ -69,26 +72,42 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     private[meta] def propertyFlags: Long = {
-      if (gsym.isJavaClass && gsym.isModule) return gsym.companionClass.propertyFlags
       var flags = 0L
       def isAbstractClass = gsym.isClass && gsym.isAbstract && !gsym.isTrait
+      def isAbstractInterface = (kindFlags & mf.INTERFACE) != 0
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
-      if (isAbstractClass || isAbstractMethod || isAbstractType) flags |= mf.ABSTRACT
-      if ((gsym.hasFlag(gf.FINAL) && !gsym.hasFlag(gf.PACKAGE)) || isObject) flags |= mf.FINAL
-      if (gsym.hasFlag(gf.SEALED)) flags |= mf.SEALED
-      if (gsym.hasFlag(gf.IMPLICIT)) flags |= mf.IMPLICIT
-      if (gsym.hasFlag(gf.LAZY)) flags |= mf.LAZY
-      if (gsym.hasFlag(gf.CASE)) flags |= mf.CASE
-      if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flags |= mf.CONTRAVARIANT
-      if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flags |= mf.COVARIANT
-      if (gsym.isParameter && gsym.owner.isPrimaryConstructor) {
-        val ggetter = gsym.getterIn(gsym.owner.owner)
-        if (ggetter != g.NoSymbol && !ggetter.isStable) flags |= mf.VAR
-        else if (ggetter != g.NoSymbol) flags |= mf.VAL
-        else ()
+      if (gsym.hasFlag(gf.PACKAGE)) {
+        ()
+      } else if (gsym.hasFlag(gf.JAVA)) {
+        if (isAbstractClass || isAbstractInterface || isAbstractMethod) flags |= mf.ABSTRACT
+        if (gsym.hasFlag(gf.FINAL)) flags |= mf.FINAL
+        flags |= mf.JAVADEFINED
+      } else {
+        if (isAbstractClass || isAbstractMethod || isAbstractType) flags |= mf.ABSTRACT
+        if (gsym.hasFlag(gf.FINAL) || isObject) flags |= mf.FINAL
+        if (gsym.hasFlag(gf.SEALED)) flags |= mf.SEALED
+        if (gsym.hasFlag(gf.IMPLICIT)) flags |= mf.IMPLICIT
+        if (gsym.hasFlag(gf.LAZY)) flags |= mf.LAZY
+        if (gsym.hasFlag(gf.CASE)) flags |= mf.CASE
+        if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flags |= mf.CONTRAVARIANT
+        if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flags |= mf.COVARIANT
+        if ((kindFlags & (mf.LOCAL | mf.FIELD)) != 0) {
+          if (gsym.isMutable) flags |= mf.VAR
+          else flags |= mf.VAL
+        }
+        if (gsym.isGetter || gsym.isSetter) {
+          if (gsym.isStable) flags |= mf.VAL
+          else flags |= mf.VAR
+        }
+        if (gsym.isParameter && gsym.owner.isPrimaryConstructor) {
+          val ggetter = gsym.getterIn(gsym.owner.owner)
+          if (ggetter != g.NoSymbol && !ggetter.isStable) flags |= mf.VAR
+          else if (ggetter != g.NoSymbol) flags |= mf.VAL
+          else ()
+        }
+        if (gsym.isPrimaryConstructor) flags |= mf.PRIMARY
       }
-      if (gsym.hasFlag(gf.JAVA) && !gsym.hasFlag(gf.PACKAGE)) flags |= mf.JAVADEFINED
       flags
     }
 
@@ -120,9 +139,7 @@ trait DenotationOps { self: DatabaseOps =>
 
     private def newInfo: (Option[s.Type], List[g.Symbol]) = {
       val ginfo = {
-        if (gsym.isJavaClass) {
-          gsym.companionClass.info
-        } else if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
+        if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
           gsym.info.finalResultType
         } else if (gsym.isAliasType) {
           def preprocess(info: g.Type): g.Type = {

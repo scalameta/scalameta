@@ -8,6 +8,7 @@ import scala.collection.mutable.ListBuffer
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
@@ -43,7 +44,7 @@ object Javacp {
         owner: String): Unit = {
       buf += s.SymbolInformation(
         symbol = symbol,
-        language = javaLanguage,
+        language = l.JAVA,
         kind = kind,
         properties = sproperties(access),
         name = name,
@@ -81,7 +82,7 @@ object Javacp {
     }
 
     val classKind =
-      if (classAccess.hasFlag(o.ACC_INTERFACE)) k.TRAIT
+      if (classAccess.hasFlag(o.ACC_INTERFACE)) k.INTERFACE
       else k.CLASS
 
     val isJavaLangObject = node.name == "java/lang/Object"
@@ -118,14 +119,9 @@ object Javacp {
           if (field.signature == null) field.desc else field.signature,
           new FieldSignatureVisitor
         )
-
-        val fieldKind =
-          if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
-          else k.VAR
-
         addInfo(
           fieldSymbol,
-          fieldKind,
+          k.FIELD,
           field.name,
           Some(fieldSignature.toType(classScope)),
           field.access,
@@ -200,6 +196,8 @@ object Javacp {
             paramSymbol
         }
 
+        val methodKind = if (isConstructor) k.CONSTRUCTOR else k.METHOD
+
         val methodType = s.Type(
           tag = s.Type.Tag.METHOD_TYPE,
           methodType = Some(
@@ -213,7 +211,7 @@ object Javacp {
 
         addInfo(
           methodSymbol,
-          k.DEF,
+          methodKind,
           method.node.name,
           Some(methodType),
           method.node.access,
@@ -270,8 +268,6 @@ object Javacp {
     }
   }
 
-  private val javaLanguage = Some(s.Language("Java"))
-
   private def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type =
     sig match {
       case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
@@ -322,8 +318,8 @@ object Javacp {
         upperBound
       case _ =>
         s.Type(
-          tag = s.Type.Tag.STRUCTURAL_TYPE,
-          structuralType = Some(s.StructuralType(parents = typeParameters))
+          tag = s.Type.Tag.INTERSECTION_TYPE,
+          intersectionType = Some(s.IntersectionType(types = typeParameters))
         )
     }
     val tpe = s.Type(
@@ -333,7 +329,7 @@ object Javacp {
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,
-      language = javaLanguage,
+      language = l.JAVA,
       kind = k.TYPE_PARAMETER,
       name = typeParameter.value.identifier,
       tpe = Some(tpe),
