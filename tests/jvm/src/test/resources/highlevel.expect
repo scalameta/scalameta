@@ -1,7 +1,7 @@
 semanticdb/integration/src/main/scala/example/Accessibility.scala
 -----------------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [8..15): example <= _root_.example.
@@ -50,7 +50,7 @@ _root_.scala.Predef.`???`(). => def ???: Nothing
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [6..7): A <= _empty_.A#
@@ -82,7 +82,7 @@ _root_.scala.Predef.`???`(). => def ???: Nothing
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [8..15): example <= _root_.example.
@@ -165,7 +165,7 @@ Synthetics:
 semanticdb/integration/src/main/scala/example/Flags.scala
 ---------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [8..13): flags <= _root_.flags.
@@ -373,7 +373,7 @@ Synthetics:
 semanticdb/integration/src/main/scala/example/MetacJava.scala
 -------------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [8..15): example <= _root_.example.
@@ -518,7 +518,7 @@ _root_.example.MetacJava#staticInner. => private val staticInner: StaticInner
 semanticdb/integration/src/main/scala/example/Methods.scala
 -----------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [8..15): example <= _root_.example.
@@ -921,7 +921,7 @@ Synthetics:
 semanticdb/integration/src/main/scala/example/Overrides.scala
 -------------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [8..15): example <= _root_.example.
@@ -954,7 +954,7 @@ _root_.scala.Int# => abstract final class Int
 semanticdb/integration/src/main/scala/example/Synthetic.scala
 -------------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [8..15): example <= _root_.example.
@@ -1032,7 +1032,7 @@ Synthetics:
 semanticdb/integration/src/main/scala/example/Types.scala
 ---------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [8..13): types <= _root_.types.
@@ -1574,7 +1574,7 @@ _root_.types.ann2#`<init>`(). => primaryctor <init>: (): ann2
 semanticdb/integration/src/main/scala/example/Vals.scala
 --------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [8..15): example <= _root_.example.
@@ -1811,7 +1811,7 @@ local4_semanticdb_integration_src_main_scala_example_Vals_scala => implicit var 
 semanticdb/integration/src/main/scala/example/local-file.scala
 --------------------------------------------------------------
 Language:
-Scala212
+Scala
 
 Names:
 [8..15): example <= _root_.example.

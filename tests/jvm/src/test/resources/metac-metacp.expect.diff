@@ -11,9 +11,11 @@ _root_.com.
 -  typeRef {
 -    symbol: "_root_.com."
 -}
+ language {
+-  tag: SCALA
++  tag: JAVA
  accessibility {
    tag: PUBLIC
-   symbol: ""
 
 
 ==================
@@ -29,9 +31,11 @@ _root_.com.javacp.
 -  typeRef {
 -    symbol: "_root_.com.javacp."
 -}
+ language {
+-  tag: SCALA
++  tag: JAVA
  accessibility {
    tag: PUBLIC
-   symbol: ""
 
 
 ============================
@@ -55,7 +59,7 @@ _root_.com.javacp.MetacJava#
 +    declarations: "_root_.com.javacp.MetacJava#Overload3#"
 +    declarations: "_root_.com.javacp.MetacJava#Overload1#"
 +    declarations: "_root_.com.javacp.MetacJava#StaticInner#"
- accessibility {
+ language {
 
 
 ======================================
@@ -68,7 +72,7 @@ _root_.com.javacp.MetacJava#Overload1#
 +    declarations: "_root_.com.javacp.MetacJava#Overload1#`<init>`(MetacJava)."
      declarations: "_root_.com.javacp.MetacJava#Overload1#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#A#"
- accessibility {
+ language {
 
 
 ========================================
@@ -79,7 +83,7 @@ _root_.com.javacp.MetacJava#Overload1#A#
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`(Overload1)."
- accessibility {
+ language {
 
 
 ===================================================
@@ -108,6 +112,9 @@ _root_.com.javacp.MetacJava#Overload1#A#`<init>`().
 -            primitive: 0
 -            string: ""
 -        symbol: "_root_.com.javacp.MetacJava#Overload1#A#"
+-}
+-language {
+-  tag: JAVA
 -}
 -accessibility {
 -  tag: PUBLIC
@@ -145,6 +152,9 @@ _root_.com.javacp.MetacJava#Overload1#`<init>`().
 -            string: ""
 -        symbol: "_root_.com.javacp.MetacJava#Overload1#"
 -}
+-language {
+-  tag: JAVA
+-}
 -accessibility {
 -  tag: PUBLIC
 -  symbol: ""
@@ -164,7 +174,7 @@ _root_.com.javacp.MetacJava#Overload2#
 +    declarations: "_root_.com.javacp.MetacJava#Overload2#`<init>`(MetacJava)."
      declarations: "_root_.com.javacp.MetacJava#Overload2#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#A#"
- accessibility {
+ language {
 
 
 ========================================
@@ -175,7 +185,7 @@ _root_.com.javacp.MetacJava#Overload2#A#
          symbol: "_root_.java.lang.Object#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`()."
 +    declarations: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`(Overload2)."
- accessibility {
+ language {
 
 
 ===================================================
@@ -204,6 +214,9 @@ _root_.com.javacp.MetacJava#Overload2#A#`<init>`().
 -            primitive: 0
 -            string: ""
 -        symbol: "_root_.com.javacp.MetacJava#Overload2#A#"
+-}
+-language {
+-  tag: JAVA
 -}
 -accessibility {
 -  tag: PUBLIC
@@ -241,6 +254,9 @@ _root_.com.javacp.MetacJava#Overload2#`<init>`().
 -            string: ""
 -        symbol: "_root_.com.javacp.MetacJava#Overload2#"
 -}
+-language {
+-  tag: JAVA
+-}
 -accessibility {
 -  tag: PUBLIC
 -  symbol: ""
@@ -266,7 +282,7 @@ _root_.com.javacp.MetacJava#Overload3#
      declarations: "_root_.com.javacp.MetacJava#Overload3#`<init>`()."
      declarations: "_root_.com.javacp.MetacJava#Overload3#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload3#A#"
- accessibility {
+ language {
 
 
 ========================================
@@ -321,7 +337,7 @@ _root_.com.javacp.MetacJava#StaticInner#
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
      declarations: "_root_.com.javacp.MetacJava#StaticInner#isStatic()."
 +    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
- accessibility {
+ language {
 
 
 ==================================================
@@ -361,6 +377,9 @@ _root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
 -            primitive: 0
 -            string: ""
 -        symbol: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
+-}
+-language {
+-  tag: JAVA
 -}
 -accessibility {
 -  tag: PUBLIC
@@ -450,6 +469,8 @@ _root_.example.
 -  typeRef {
 -    symbol: "_root_.example."
 -}
+ language {
+   tag: SCALA
 -accessibility {
 -  tag: PUBLIC
 -  symbol: ""
@@ -471,7 +492,7 @@ _root_.example.Acc#
      declarations: "_root_.example.Acc#m6()."
      declarations: "_root_.example.Acc#m7()."
 +    declarations: "_root_.example.Acc#m3()."
- accessibility {
+ language {
 
 
 =======================
@@ -495,7 +516,7 @@ _root_.example.Example.
 +    declarations: "_root_.example.Example.main(Array)."
 +    declarations: "_root_.example.Example.x()."
 +    declarations: "_root_.example.Example.x."
- accessibility {
+ language {
 
 
 =====================================
@@ -516,7 +537,7 @@ _root_.example.MetacJava#nonStatic.
          string: ""
 -    symbol: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
 +    symbol: "_root_.com.javacp.MetacJava.StaticInner.NonStatic#"
- accessibility {
+ language {
 
 
 =====================================
@@ -537,7 +558,7 @@ _root_.example.MetacJava#overload1.
          string: ""
 -    symbol: "_root_.com.javacp.MetacJava#Overload1#"
 +    symbol: "_root_.com.javacp.MetacJava.Overload1#"
- accessibility {
+ language {
 
 
 =====================================
@@ -558,7 +579,7 @@ _root_.example.MetacJava#overload2.
          string: ""
 -    symbol: "_root_.com.javacp.MetacJava#Overload2#"
 +    symbol: "_root_.com.javacp.MetacJava.Overload2#"
- accessibility {
+ language {
 
 
 =======================================
@@ -583,7 +604,7 @@ _root_.example.MetacJava#staticInner.
    typeRef {
 -    symbol: "_root_.com.javacp.MetacJava#StaticInner#"
 +    symbol: "_root_.com.javacp.MetacJava.StaticInner#"
- accessibility {
+ language {
 
 
 =======================
@@ -615,7 +636,7 @@ _root_.example.Methods#List#
 +++ metacp
      declarations: "_root_.example.Methods#List#`<init>`()."
 +    declarations: "_root_.example.Methods#List#[T]"
- accessibility {
+ language {
 
 
 ===================================
@@ -626,7 +647,7 @@ _root_.example.Methods#m12b({}).(x)
          symbol: "_root_.scala.AnyRef#"
 -    declarations: "_root_.example.Methods#$anon#x()."
 +    declarations: "_root_.example.Methods#`<refinement>`#x()."
- accessibility {
+ language {
 
 
 ===================================
@@ -651,7 +672,7 @@ _root_.example.Methods#m13(Int).(x)
 +  tag: TYPE_REF
 +  typeRef {
 +    symbol: "_root_.scala.Int#"
- accessibility {
+ language {
 
 
 =========================
@@ -674,7 +695,7 @@ _root_.example.ValUsages.
 +    declarations: "_root_.example.ValUsages.`<init>`()."
 +    declarations: "_root_.example.ValUsages.v()."
 +    declarations: "_root_.example.ValUsages.v."
- accessibility {
+ language {
 
 
 ===========================
@@ -697,7 +718,7 @@ _root_.example.Vals#xzlm().
 +      tag: TYPE_REF
 +      typeRef {
 +        symbol: "_root_.scala.Int#"
- accessibility {
+ language {
 
 
 ==========================
@@ -720,7 +741,7 @@ _root_.example.Vals#xzm().
 +      tag: TYPE_REF
 +      typeRef {
 +        symbol: "_root_.scala.Int#"
- accessibility {
+ language {
 
 
 =============
@@ -736,6 +757,8 @@ _root_.flags.
 -  typeRef {
 -    symbol: "_root_.flags."
 -}
+ language {
+   tag: SCALA
 -accessibility {
 -  tag: PUBLIC
 -  symbol: ""
@@ -783,7 +806,7 @@ _root_.flags.p.package.
 +    declarations: "_root_.flags.p.package.AA#"
 +    declarations: "_root_.flags.p.package.xs1()."
 +    declarations: "_root_.flags.p.package.xs1."
- accessibility {
+ language {
 
 
 =========================
@@ -809,7 +832,7 @@ _root_.flags.p.package.S#
 +++ metacp
      declarations: "_root_.flags.p.package.S#`<init>`()."
 +    declarations: "_root_.flags.p.package.S#[T]"
- accessibility {
+ language {
 
 
 ============================
@@ -817,6 +840,8 @@ _root_.flags.p.package.S#[T]
 ============================
 --- metac
 +++ metacp
+ language {
+   tag: SCALA
 -annotations {
 -  tpe {
 -    tag: TYPE_REF
@@ -862,7 +887,7 @@ _root_.flags.p.package.X.
 +    declarations: "_root_.flags.p.package.X.hashCode()."
 +    declarations: "_root_.flags.p.package.X.toString()."
 +    declarations: "_root_.flags.p.package.X.readResolve()."
- accessibility {
+ language {
 
 
 ===========================
@@ -885,7 +910,7 @@ _root_.flags.p.package.x().
 +      tag: TYPE_REF
 +      typeRef {
 +        symbol: "_root_.scala.Int#"
- accessibility {
+ language {
 
 
 =============
@@ -901,6 +926,8 @@ _root_.types.
 -  typeRef {
 -    symbol: "_root_.types."
 -}
+ language {
+   tag: SCALA
 -accessibility {
 -  tag: PUBLIC
 -  symbol: ""
@@ -931,7 +958,7 @@ _root_.types.Test.
 +    declarations: "_root_.types.Test.C#"
 +    declarations: "_root_.types.Test.Literal."
 +    declarations: "_root_.types.Test.Literal."
- accessibility {
+ language {
 
 
 ====================
@@ -968,7 +995,7 @@ _root_.types.Test.C#
 +    declarations: "_root_.types.Test.C#RepeatedType."
      declarations: "_root_.types.Test.C#TypeType."
 +    declarations: "_root_.types.Test.C#TypeType."
- accessibility {
+ language {
 
 
 ===============================
@@ -997,7 +1024,7 @@ _root_.types.Test.C#ByNameType.
 -    symbol: "_root_.types.Test.C#ByNameType."
 +    declarations: "_root_.types.Test.C#ByNameType.`<init>`()."
 +    declarations: "_root_.types.Test.C#ByNameType.m1(=>Int)."
- accessibility {
+ language {
 
 
 ===================================
@@ -1025,7 +1052,7 @@ _root_.types.Test.C#ClassInfoType1.
 +        symbol: "_root_.scala.AnyRef#"
 -    symbol: "_root_.types.Test.C#ClassInfoType1."
 +    declarations: "_root_.types.Test.C#ClassInfoType1.`<init>`()."
- accessibility {
+ language {
 
 
 ===================================
@@ -1035,7 +1062,7 @@ _root_.types.Test.C#ClassInfoType3#
 +++ metacp
          symbol: "_root_.scala.AnyRef#"
 +    declarations: "_root_.types.Test.C#ClassInfoType3#[T]"
- accessibility {
+ language {
 
 
 ===============================
@@ -1069,7 +1096,7 @@ _root_.types.Test.C#MethodType.
 +    declarations: "_root_.types.Test.C#MethodType.m4()."
 +    declarations: "_root_.types.Test.C#MethodType.m5(Int)."
 +    declarations: "_root_.types.Test.C#MethodType.m6(T)."
- accessibility {
+ language {
 
 
 =============================
@@ -1102,7 +1129,7 @@ _root_.types.Test.C#TypeType.
 +    declarations: "_root_.types.Test.C#TypeType.m3()."
 +    declarations: "_root_.types.Test.C#TypeType.T4#"
 +    declarations: "_root_.types.Test.C#TypeType.T5#"
- accessibility {
+ language {
 
 
 ===============================
@@ -1137,7 +1164,7 @@ _root_.types.Test.C#annType1.
 -            tag: TYPE_REF
 -            typeRef {
 -              symbol: "_root_.scala.Int#"
- accessibility {
+ language {
 
 
 ===============================
@@ -1174,7 +1201,7 @@ _root_.types.Test.C#annType2.
 -        tag: TYPE_REF
 -        typeRef {
 -          symbol: "_root_.types.ann2#"
- accessibility {
+ language {
 
 
 ====================================
@@ -1195,7 +1222,7 @@ _root_.types.Test.C#compoundType1.
          symbol: "_root_.scala.AnyRef#"
 -    declarations: "_root_.types.Test.C#$anon#k()."
 +    declarations: "_root_.types.Test.C#`<refinement>`#k()."
- accessibility {
+ language {
 
 
 ====================================
@@ -1216,7 +1243,7 @@ _root_.types.Test.C#compoundType3.
          symbol: "_root_.types.Test.N#"
 -    declarations: "_root_.types.Test.C#$anon#k()."
 +    declarations: "_root_.types.Test.C#`<refinement>`#k()."
- accessibility {
+ language {
 
 
 ==================================
@@ -1261,7 +1288,7 @@ _root_.types.Test.C#typeRef2.
          string: ""
 -    symbol: "_root_.types.P#C#"
 +    symbol: "_root_.types.P.C#"
- accessibility {
+ language {
 
 
 ===============================
@@ -1282,7 +1309,7 @@ _root_.types.Test.C#typeRef3.
          symbol: "_root_.types.T#"
 -    symbol: "_root_.types.T#C#"
 +    symbol: "_root_.types.T.C#"
- accessibility {
+ language {
 
 
 ========================
@@ -1303,7 +1330,7 @@ _root_.types.Test.C#x.
          string: ""
 -    symbol: "_root_.types.P#X#"
 +    symbol: "_root_.types.P.X#"
- accessibility {
+ language {
 
 
 ==========================
@@ -1346,7 +1373,7 @@ _root_.types.Test.Literal.
 +    declarations: "_root_.types.Test.Literal.javaEnum."
 +    declarations: "_root_.types.Test.Literal.clazzOf()."
 +    declarations: "_root_.types.Test.Literal.clazzOf."
- accessibility {
+ language {
 
 
 ===================================
@@ -1365,9 +1392,8 @@ _root_.types.Test.Literal.javaEnum.
 -    primitive: 0
 -    string: ""
 -}
- accessibility {
-   tag: PRIVATE_THIS
-   symbol: ""
+ language {
+   tag: SCALA
 
 
 =================

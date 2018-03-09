@@ -19,7 +19,6 @@
   * [Protobuf](#protobuf)
 * [Languages](#languages)
   * [Scala](#scala)
-    * [Language](#scala-language)
     * [Symbol](#scala-symbol)
     * [Type](#scala-type)
     * [SymbolInformation](#scala-symbolinformation)
@@ -27,7 +26,6 @@
     * [Accessibility](#scala-accessibility)
     * [Synthetic](#scala-synthetic)
   * [Java](#java)
-    * [Language](#java)
     * [Symbol](#java)
     * [Type](#java)
     * [SymbolInformation](#java)
@@ -150,13 +148,25 @@ of semantic information for the corresponding snippet
 
 ```protobuf
 message Language {
-  string name = 1;
+  enum Tag {
+    UNKNOWN_LANGUAGE = 0;
+    SCALA = 1;
+    JAVA = 2;
+  }
+  reserved 1;
+  Tag tag = 2;
 }
 ```
 
 `Language` represents a programming language that defines certain SemanticDB
-entities, e.g. [Document](#document) or [Symbol](#symbol).
-See [Languages](#languages) for the list of supported programming languages.
+entities, e.g. [Document](#document) or [Symbol](#symbol). Currently,
+See [Languages](#languages) for the details of how features of supported
+programming languages map onto SemanticDB.
+
+At the moment, SemanticDB does not have official support for modelling languages
+that are not included in the list above. Moreover, `Language` does not have
+capabilities to specify the associated language or compiler version. We may
+improve on this in the future.
 
 ### URI
 
@@ -841,7 +851,6 @@ code snippet as follows:
 
 In this section, we describe language-dependent aspects of SemanticDB entities,
 namely:
-  * Valid names for [Language](#language).
   * Format for global [Symbols](#symbol).
   * Supported [Annotations](#annotation).
   * Supported [Types](#type).
@@ -863,24 +872,6 @@ As a reference, we use the Scala Language Specification [\[17\]][17]
 (referred to as "SLS" in the text below), as well as additional resources
 [[25][25], [40][40], [51][51], [56][56], [57][57]] in the areas where SLS
 is incomplete or out of date.
-
-<a name="scala-language"></a>
-#### Language
-
-<table>
-  <tr>
-    <td><b>Value</b></td>
-    <td><b>Explanation</b></td>
-  </tr>
-  <tr>
-    <td><code>Language("Scala")</code></td>
-    <td>Scala of unknown or unspecified version.</td>
-  </tr>
-  <tr>
-    <td><code>Language("ScalaXY")</code></td>
-    <td>Scala, version <code>X.Y</code>.</td>
-  </tr>
-</table>
 
 <a name="scala-symbol"></a>
 #### Symbol

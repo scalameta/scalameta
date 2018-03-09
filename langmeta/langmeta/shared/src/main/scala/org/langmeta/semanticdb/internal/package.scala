@@ -11,6 +11,7 @@ import org.langmeta.io._
 import org.langmeta.{semanticdb => d}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb3.Language.{Tag => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 
@@ -110,7 +111,7 @@ package object semanticdb {
             val dflags = {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
-              if (slanguage.map(_.name.startsWith("Java")).getOrElse(false)) dflip(d.JAVADEFINED)
+              if (slanguage.map(_.tag == l.JAVA).getOrElse(false)) dflip(d.JAVADEFINED)
               skind match {
                 case k.VAL => dflip(d.VAL)
                 case k.VAR => dflip(d.VAR)
@@ -206,7 +207,13 @@ package object semanticdb {
             Some(dSynthetic(dpos, dtext, dnames))
         }
       }
-      val dlanguage = slanguage.map(_.name).getOrElse("")
+      val dlanguage = {
+        slanguage match {
+          case Some(s.Language(l.SCALA)) => "Scala"
+          case Some(s.Language(l.JAVA)) => "Java"
+          case _ => ""
+        }
+      }
       val dnames = soccurrences.map {
         case s.SymbolOccurrence(Some(sRange(dpos)), ssym, sRole(disDefinition)) =>
           val dsym = dSymbol(ssym)
@@ -269,7 +276,8 @@ package object semanticdb {
             case _ => sym.syntax
           }
           val slanguage = {
-            if (dlanguage.nonEmpty) Some(s.Language(dlanguage))
+            if (dlanguage.startsWith("Scala")) Some(s.Language(l.SCALA))
+            else if (dlanguage.startsWith("Java")) Some(s.Language(l.JAVA))
             else None
           }
           object dPosition {
@@ -302,9 +310,9 @@ package object semanticdb {
               val d.ResolvedSymbol(dsymbol, ddenot) = dresolvedSymbol
               def dtest(bit: Long) = (ddenot.flags & bit) == bit
               val ssymbol = sSymbol(dsymbol)
-              val slanguage = {
-                if (dtest(d.JAVADEFINED)) Some(s.Language("Java"))
-                else Some(s.Language(dlanguage))
+              val ssymbolLanguage = {
+                if (dtest(d.JAVADEFINED)) Some(s.Language(l.JAVA))
+                else slanguage
               }
               val skind = {
                 if (dtest(d.VAL) && !dtest(d.PARAM)) k.VAL
@@ -365,7 +373,7 @@ package object semanticdb {
               val sanns = ddenot.annotations
               val sacc = ddenot.accessibility
               val sowner = ddenot.owner.syntax
-              Some(s.SymbolInformation(ssymbol, slanguage, skind, sproperties, sname, slocation, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner))
+              Some(s.SymbolInformation(ssymbol, ssymbolLanguage, skind, sproperties, sname, slocation, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner))
             }
           }
           object dSynthetic {

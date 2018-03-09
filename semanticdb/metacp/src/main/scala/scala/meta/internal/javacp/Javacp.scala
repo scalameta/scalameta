@@ -8,6 +8,7 @@ import scala.collection.mutable.ListBuffer
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb3.Language.{Tag => l}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
@@ -43,7 +44,7 @@ object Javacp {
         owner: String): Unit = {
       buf += s.SymbolInformation(
         symbol = symbol,
-        language = javaLanguage,
+        language = Some(s.Language(l.JAVA)),
         kind = kind,
         properties = sproperties(access),
         name = name,
@@ -270,8 +271,6 @@ object Javacp {
     }
   }
 
-  private val javaLanguage = Some(s.Language("Java"))
-
   private def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type =
     sig match {
       case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
@@ -333,7 +332,7 @@ object Javacp {
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,
-      language = javaLanguage,
+      language = Some(s.Language(l.JAVA)),
       kind = k.TYPE_PARAMETER,
       name = typeParameter.value.identifier,
       tpe = Some(tpe),

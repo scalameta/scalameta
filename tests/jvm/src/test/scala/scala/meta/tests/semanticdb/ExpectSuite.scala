@@ -125,7 +125,6 @@ trait ExpectHelpers extends FunSuiteLike {
       sym <- doc.symbols
     } yield {
       val normalizedSym = sym.copy(
-        language = None,
         signature = None,
         overrides = Nil,
         members = Nil

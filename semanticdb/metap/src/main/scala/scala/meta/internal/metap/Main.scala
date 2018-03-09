@@ -21,6 +21,7 @@ import Role._
 import Type.Tag._
 import SingletonType.Tag._
 import Accessibility.Tag._
+import Language.Tag._
 
 class Main(settings: Settings, reporter: Reporter) {
   import reporter._
@@ -107,7 +108,9 @@ class Main(settings: Settings, reporter: Reporter) {
     out.println(s"Schema => SemanticDB v${doc.schema.value}")
     out.println(s"Uri => ${doc.uri}")
     out.println(s"Text => ${if (doc.text.nonEmpty) "non-empty" else "empty"}")
-    if (doc.language.nonEmpty) out.println(s"Language => ${doc.language.get.name}")
+    out.print("Language => ")
+    pprint(doc.language)
+    out.println()
     if (doc.symbols.nonEmpty) out.println(s"Symbols => ${doc.symbols.length} entries")
     if (doc.occurrences.nonEmpty) out.println(s"Occurrences => ${doc.occurrences.length} entries")
     if (doc.diagnostics.nonEmpty) out.println(s"Diagnostics => ${doc.diagnostics.length} entries")
@@ -135,6 +138,14 @@ class Main(settings: Settings, reporter: Reporter) {
       out.println("")
       out.println("Synthetics:")
       doc.synthetics.sorted.foreach(pprint(_, doc))
+    }
+  }
+
+  private def pprint(language: Option[Language]): Unit = {
+    language match {
+      case Some(Language(SCALA)) => out.print("Scala")
+      case Some(Language(JAVA)) => out.print("Java")
+      case _ => out.print("Unknown")
     }
   }
 

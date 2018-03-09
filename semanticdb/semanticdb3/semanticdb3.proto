@@ -24,7 +24,13 @@ message TextDocument {
 }
 
 message Language {
-  string name = 1;
+  enum Tag {
+    UNKNOWN_LANGUAGE = 0;
+    SCALA = 1;
+    JAVA = 2;
+  }
+  reserved 1;
+  Tag tag = 2;
 }
 
 message Range {
