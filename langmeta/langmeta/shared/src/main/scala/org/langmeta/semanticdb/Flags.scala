@@ -31,6 +31,7 @@ private[semanticdb] trait Flags {
   final val GETTER: Long = 1 << 26
   final val SETTER: Long = 1 << 27
   final val SELFPARAM: Long = 1 << 28
+  final val INTERFACE: Long = 1 << 29
 }
 
 private[semanticdb] trait HasFlags {
@@ -54,6 +55,7 @@ private[semanticdb] trait HasFlags {
   def isPackageObject: Boolean = hasFlag(PACKAGEOBJECT)
   def isClass: Boolean = hasFlag(CLASS)
   def isTrait: Boolean = hasFlag(TRAIT)
+  def isInterface: Boolean = hasFlag(INTERFACE)
   def isPrivate: Boolean = hasFlag(PRIVATE)
   def isProtected: Boolean = hasFlag(PROTECTED)
   def isAbstract: Boolean = hasFlag(ABSTRACT)
@@ -103,6 +105,7 @@ private[semanticdb] trait HasFlags {
     if (hasFlag(PACKAGEOBJECT)) append("PACKAGEOBJECT")
     if (hasFlag(CLASS)) append("CLASS")
     if (hasFlag(TRAIT)) append("TRAIT")
+    if (hasFlag(INTERFACE)) append("INTERFACE")
     buf.toString.toLowerCase
   }
 

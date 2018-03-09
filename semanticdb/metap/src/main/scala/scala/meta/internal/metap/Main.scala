@@ -448,6 +448,7 @@ class Main(settings: Settings, reporter: Reporter) {
       case PACKAGE_OBJECT => out.print("package object ")
       case CLASS => out.print("class ")
       case TRAIT => out.print("trait ")
+      case INTERFACE => out.print("interface ")
       case UNKNOWN_KIND | Kind.Unrecognized(_) => ()
     }
     pprint(info.name, doc)
@@ -481,7 +482,7 @@ class Main(settings: Settings, reporter: Reporter) {
             }
         }
         info.overrides.foreach(sym => out.println(s"  overrides $sym"))
-      case OBJECT | PACKAGE | PACKAGE_OBJECT | CLASS | TRAIT =>
+      case OBJECT | PACKAGE | PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
         info.tpe match {
           case Some(tpe: Type) =>
             tpe.classInfoType match {

@@ -82,7 +82,7 @@ object Javacp {
     }
 
     val classKind =
-      if (classAccess.hasFlag(o.ACC_INTERFACE)) k.TRAIT
+      if (classAccess.hasFlag(o.ACC_INTERFACE)) k.INTERFACE
       else k.CLASS
 
     val isJavaLangObject = node.name == "java/lang/Object"

@@ -77,6 +77,23 @@ _root_.com.javacp.ClassSuffix#suffix. => var suffix: Inner[String]#Bar#Fuz[Integ
   Fuz => _root_.Fuz#
   Integer => _root_.java.lang.Integer#
 
+com/javacp/Interface.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => com/javacp/Interface.class
+Text => empty
+Language => Java
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+_root_.com. => package com
+_root_.com.javacp. => package javacp
+_root_.com.javacp.Interface# => abstract interface Interface
+  extends Object
+
 com/javacp/Javacp.class
 -----------------------
 

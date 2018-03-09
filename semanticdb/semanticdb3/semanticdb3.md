@@ -579,6 +579,11 @@ languages map onto these kinds.
     <td><code>TRAIT</code></td>
     <td>Trait, e.g. <code>trait T</code>.</td>
   </tr>
+  <tr>
+    <td><code>18</code></td>
+    <td><code>INTERFACE</code></td>
+    <td>Interface, e.g. <code>interface I</code>.</td>
+  </tr>
 </table>
 
 `properties`. Bitmask of miscellaneous bits of metadata.

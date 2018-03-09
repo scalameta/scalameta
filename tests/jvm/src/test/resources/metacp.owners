@@ -19,6 +19,7 @@ _root_.com.javacp.ClassSuffix#Inner#[A] => _root_.com.javacp.ClassSuffix#Inner#
 _root_.com.javacp.ClassSuffix#Inner#`<init>`(ClassSuffix). => _root_.com.javacp.ClassSuffix#Inner#
 _root_.com.javacp.ClassSuffix#`<init>`(). => _root_.com.javacp.ClassSuffix#
 _root_.com.javacp.ClassSuffix#suffix. => _root_.com.javacp.ClassSuffix#
+_root_.com.javacp.Interface# => _root_.com.javacp.
 _root_.com.javacp.Javacp# => _root_.com.javacp.
 _root_.com.javacp.Javacp#Boolean. => _root_.com.javacp.Javacp#
 _root_.com.javacp.Javacp#Byte. => _root_.com.javacp.Javacp#

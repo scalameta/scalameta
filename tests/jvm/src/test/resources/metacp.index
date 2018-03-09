@@ -13,6 +13,7 @@ _root_.com.
   _root_.com.javacp.
 _root_.com.javacp.
   _root_.com.javacp.ClassSuffix#
+  _root_.com.javacp.Interface#
   _root_.com.javacp.Javacp#
   _root_.com.javacp.Logger#
   _root_.com.javacp.MetacJava#
@@ -51,6 +52,7 @@ Toplevels:
 _empty_.A# => A.class.semanticdb
 _empty_.B# => B.class.semanticdb
 _root_.com.javacp.ClassSuffix# => com/javacp/ClassSuffix.class.semanticdb
+_root_.com.javacp.Interface# => com/javacp/Interface.class.semanticdb
 _root_.com.javacp.Javacp# => com/javacp/Javacp.class.semanticdb
 _root_.com.javacp.Logger# => com/javacp/Logger.class.semanticdb
 _root_.com.javacp.MetacJava# => com/javacp/MetacJava.class.semanticdb
