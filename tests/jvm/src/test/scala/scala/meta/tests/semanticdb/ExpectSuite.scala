@@ -106,6 +106,7 @@ trait ExpectHelpers extends FunSuiteLike {
       }
       lines
         .filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
+        .filterNot(_.startsWith("@@"))
         .mkString("\n")
     }
     diff

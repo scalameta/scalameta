@@ -4,10 +4,13 @@ package semanticdb
 private[semanticdb] trait Flags {
   final val VAL: Long = 1L << 0
   final val VAR: Long = 1L << 1
-  @deprecated("Use `METHOD` instead.", "3.6.0") final val DEF: Long = METHOD
+  @deprecated("Use `METHOD` instead.", "3.6.0")
+  final val DEF: Long = METHOD
   final val METHOD: Long = 1L << 2
-  @deprecated("Use `PRIMARY | CTOR` instead.", "3.6.0") final val PRIMARYCTOR: Long = 1L << 3
-  @deprecated("Use `~PRIMARY` and `CTOR` instead.", "3.6.0") final val SECONDARYCTOR: Long = 1L << 4
+  @deprecated("Use `PRIMARY | CTOR` instead.", "3.6.0")
+  final val PRIMARYCTOR: Long = 1L << 3
+  @deprecated("Use `~PRIMARY` and `CTOR` instead.", "3.6.0")
+  final val SECONDARYCTOR: Long = 1L << 4
   final val MACRO: Long = 1L << 5
   final val TYPE: Long = 1L << 6
   final val PARAM: Long = 1L << 7
@@ -29,8 +32,10 @@ private[semanticdb] trait Flags {
   final val CONTRAVARIANT: Long = 1L << 23
   final val INLINE: Long = 1L << 24
   final val JAVADEFINED: Long = 1L << 25
-  @deprecated("Use `METHOD | VAL` instead.", "3.6.0") final val GETTER: Long = 1L << 26
-  @deprecated("Use `METHOD | VAR` instead.", "3.6.0") final val SETTER: Long = 1L << 27
+  @deprecated("Use `METHOD | VAL` instead.", "3.6.0")
+  final val GETTER: Long = 1L << 26
+  @deprecated("Use `METHOD | VAR` instead.", "3.6.0")
+  final val SETTER: Long = 1L << 27
   final val SELFPARAM: Long = 1L << 28
   final val INTERFACE: Long = 1L << 29
   final val LOCAL: Long = 1L << 30
@@ -45,12 +50,17 @@ private[semanticdb] trait HasFlags {
 
   def isVal: Boolean = hasFlag(VAL)
   def isVar: Boolean = hasFlag(VAR)
-  @deprecated("Use `isMethod` instead.", "3.6.0") def isDef: Boolean = isMethod
+  @deprecated("Use `isMethod` instead.", "3.6.0")
+  def isDef: Boolean = isMethod
   def isMethod: Boolean = hasFlag(METHOD)
-  @deprecated("Use `isDef && isVal` instead.", "3.6.0") def isGetter: Boolean = hasFlag(GETTER)
-  @deprecated("Use `isDef && isVar` instead.", "3.6.0") def isSetter: Boolean = hasFlag(SETTER)
-  @deprecated("Use `isPrimary && isCtor` instead.", "3.6.0") def isPrimaryCtor: Boolean = hasFlag(PRIMARYCTOR)
-  @deprecated("Use `!isPrimary && isCtor` instead.", "3.6.0") def isSecondaryCtor: Boolean = hasFlag(SECONDARYCTOR)
+  @deprecated("Use `isDef && isVal` instead.", "3.6.0")
+  def isGetter: Boolean = hasFlag(GETTER)
+  @deprecated("Use `isDef && isVar` instead.", "3.6.0")
+  def isSetter: Boolean = hasFlag(SETTER)
+  @deprecated("Use `isPrimary && isCtor` instead.", "3.6.0")
+  def isPrimaryCtor: Boolean = hasFlag(PRIMARYCTOR)
+  @deprecated("Use `!isPrimary && isCtor` instead.", "3.6.0")
+  def isSecondaryCtor: Boolean = hasFlag(SECONDARYCTOR)
   def isMacro: Boolean = hasFlag(MACRO)
   def isType: Boolean = hasFlag(TYPE)
   def isParam: Boolean = hasFlag(PARAM)

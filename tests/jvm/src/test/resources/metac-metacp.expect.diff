@@ -286,7 +286,6 @@ _root_.com.javacp.MetacJava#Overload3#
  name: "Overload3"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -13,7 +13,6 @@
      declarations: "_root_.com.javacp.MetacJava#Overload3#`<init>`()."
      declarations: "_root_.com.javacp.MetacJava#Overload3#A#"
 -    declarations: "_root_.com.javacp.MetacJava#Overload3#A#"
@@ -331,7 +330,6 @@ _root_.com.javacp.MetacJava#StaticInner#
  name: "StaticInner"
  tpe {
    tag: CLASS_INFO_TYPE
-@@ -13,9 +13,8 @@
      declarations: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
      declarations: "_root_.com.javacp.MetacJava#StaticInner#isNotStatic()."
 -    declarations: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
@@ -602,7 +600,6 @@ _root_.example.Methods#
      declarations: "_root_.example.Methods#List#"
      declarations: "_root_.example.Methods#AList#"
      declarations: "_root_.example.Methods#m1()."
-@@ -33,7 +34,9 @@
      declarations: "_root_.example.Methods#m11(.type+1)."
      declarations: "_root_.example.Methods#m11(.type+2)."
      declarations: "_root_.example.Methods#m12a({})."
@@ -964,7 +961,6 @@ _root_.types.Test.C#
      declarations: "_root_.types.Test.C#compoundType3."
      declarations: "_root_.types.Test.C#annType1()."
      declarations: "_root_.types.Test.C#annType1."
-@@ -52,13 +55,18 @@
      declarations: "_root_.types.Test.C#existentialType1."
      declarations: "_root_.types.Test.C#typeLambda1()."
      declarations: "_root_.types.Test.C#ClassInfoType1."

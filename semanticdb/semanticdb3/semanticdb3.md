@@ -1338,6 +1338,13 @@ signatures and accessibilities dependent on the corresponding value:
 Notes:
 * Variable symbols are modelled exactly the same as value symbols
   (see "Value symbols and declarations"), with the exceptions described below.
+* Setter symbols have the following metadata:
+  * `kind`: `METHOD`.
+  * `properties`: see below.
+  * `name`: concatenation of the name of the variable followed by `_=`.
+  * `tpe`: `MethodType(List(), List(List(<x$1>)), <Unit>)`, where `x$1` is
+    a `PARAMETER` symbol having `tpe` equal to the type of the variable.
+  * `annotations` and `accessibility`: same as value symbols.
 * Supported properties for variable symbols are:
   * `ABSTRACT`: set for all corresponding symbols of variable declarations.
   * `FINAL`: set for all corresponding symbols of `final` variables.
@@ -1351,7 +1358,6 @@ Notes:
 * `override` relationships exist only for getter and setter symbols.
   Corresponding local, field and parameter symbols never override or
   get overridden.
-* See "Class definitions" for examples of setter symbols and their signatures.
 
 **Pattern variables** [\[65\]][65] are represented differently depending
 on their location:

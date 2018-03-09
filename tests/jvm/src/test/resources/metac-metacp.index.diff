@@ -21,7 +21,6 @@
  _root_.example.
    _root_.example.A#
    _root_.example.Acc#
-@@ -19,6 +31,8 @@
    _root_.example.ValUsages.
    _root_.example.Vals#
    _root_.example.`local-file`#
@@ -30,7 +29,6 @@
  _root_.flags.
    _root_.flags.p.
  _root_.flags.p.
-@@ -35,28 +49,33 @@
  
  Toplevels:
  ==========
