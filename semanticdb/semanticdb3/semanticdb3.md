@@ -277,6 +277,9 @@ message Type {
     UNKNOWN_TAG = 0;
     TYPE_REF = 1;
     SINGLETON_TYPE = 15;
+    INTERSECTION_TYPE = 16;
+    UNION_TYPE = 17;
+    WITH_TYPE = 18;
     STRUCTURAL_TYPE = 6;
     ANNOTATED_TYPE = 7;
     EXISTENTIAL_TYPE = 8;
@@ -291,6 +294,9 @@ message Type {
   Tag tag = 1;
   TypeRef typeRef = 2;
   SingletonType singletonType = 16;
+  IntersectionType intersectionType = 17;
+  UnionType unionType = 18;
+  WithType withType = 19;
   StructuralType structuralType = 7;
   AnnotatedType annotatedType = 8;
   ExistentialType existentialType = 9;
@@ -355,17 +361,41 @@ via a [Symbol](#symbol) accompanied with a `prefix`, 2) via
 a keyword (by `this` or `super`) or 3) via a literal.
 
 ```protobuf
+message IntersectionType {
+  repeated Type types = 1;
+}
+```
+
+`IntersectionType` represents an intersection of `types`.
+
+```protobuf
+message UnionType {
+  repeated Type types = 1;
+}
+```
+
+`UnionType` represents a union of `types`.
+
+```protobuf
+message WithType {
+  repeated Type types = 1;
+}
+```
+
+`WithType` represents a Scala-like compound type [\[31\]][31] based on `types`.
+Unlike intersection types, compound types are not commutative.
+
+```protobuf
 message StructuralType {
-  repeated string type_parameters = 1;
-  repeated Type parents = 2;
+  reserved 1, 2;
+  Type tpe = 4;
   repeated string declarations = 3;
 }
 ```
 
-`StructuralType` represents a structural type specified by its
-`type_parameters`, `parents` and `declarations`. Both type parameters and
-declarations are modelled as [Symbols](#symbol) whose metadata must be provided
-via [SymbolInformation](#symbolinformation).
+`StructuralType` represents a structural type specified by its base type `tpe`
+and `declarations`. Declarations are modelled as [Symbols](#symbol)
+whose metadata must be provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message AnnotatedType {
@@ -409,7 +439,6 @@ message ClassInfoType {
 ```
 
 `ClassInfoType` represents a signature of a class, a trait or the like.
-It is a nominal equivalent of `StructuralType`.
 
 ```protobuf
 message MethodType {
@@ -1077,9 +1106,9 @@ In the examples below:
     <td valign="top">Compound types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#compound-types">[31]</a></td>
     <td>
       <ul>
-        <li><code>{ M1; ...; Mm }</code> ~ <code>StructuralType(List(), List(), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
-        <li><code>T1 with ... with Tn</code> ~ <code>StructuralType(List(), List(&lt;T1&gt;, ..., &lt;Tn&gt;), List())</code>.</li>
-        <li><code>T1 with ... with Tn { M1; ...; Mm }</code> ~ <code>StructuralType(List(), List(&lt;T1&gt;, ..., &lt;Tn&gt;), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
+        <li><code>{ M1; ...; Mm }</code> ~ <code>StructuralType(None, List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
+        <li><code>T1 with ... with Tn</code> ~ <code>WithType(List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+        <li><code>T1 with ... with Tn { M1; ...; Mm }</code> ~ <code>StructuralType(WithType(List(&lt;T1&gt;, ..., &lt;Tn&gt;)), List(&lt;M1&gt;, ..., &lt;Mm&gt;))</code>.</li>
       </ul>
     </td>
   </tr>

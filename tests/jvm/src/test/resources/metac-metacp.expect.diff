@@ -629,10 +629,14 @@ _root_.example.Methods#m12b({}).(x)
 ===================================
 --- metac
 +++ metacp
-         symbol: "_root_.scala.AnyRef#"
+ tpe {
+   tag: STRUCTURAL_TYPE
+   structuralType {
 -    declarations: "_root_.example.Methods#$anon#x()."
 +    declarations: "_root_.example.Methods#`<refinement>`#x()."
- accessibility {
+     tpe {
+       tag: WITH_TYPE
+       withType {
 
 
 ===================================
@@ -1190,9 +1194,14 @@ _root_.types.Test.C#compoundType1().
 ====================================
 --- metac
 +++ metacp
-             symbol: "_root_.scala.AnyRef#"
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
 -        declarations: "_root_.types.Test.C#$anon#k()."
 +        declarations: "_root_.types.Test.C#`<refinement>`#k()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
 
 
 ==================================
@@ -1200,10 +1209,14 @@ _root_.types.Test.C#compoundType1.
 ==================================
 --- metac
 +++ metacp
-         symbol: "_root_.scala.AnyRef#"
+ tpe {
+   tag: STRUCTURAL_TYPE
+   structuralType {
 -    declarations: "_root_.types.Test.C#$anon#k()."
 +    declarations: "_root_.types.Test.C#`<refinement>`#k()."
- accessibility {
+     tpe {
+       tag: WITH_TYPE
+       withType {
 
 
 ====================================
@@ -1211,9 +1224,14 @@ _root_.types.Test.C#compoundType3().
 ====================================
 --- metac
 +++ metacp
-             symbol: "_root_.types.Test.N#"
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
 -        declarations: "_root_.types.Test.C#$anon#k()."
 +        declarations: "_root_.types.Test.C#`<refinement>`#k()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
 
 
 ==================================
@@ -1221,10 +1239,14 @@ _root_.types.Test.C#compoundType3.
 ==================================
 --- metac
 +++ metacp
-         symbol: "_root_.types.Test.N#"
+ tpe {
+   tag: STRUCTURAL_TYPE
+   structuralType {
 -    declarations: "_root_.types.Test.C#$anon#k()."
 +    declarations: "_root_.types.Test.C#`<refinement>`#k()."
- accessibility {
+     tpe {
+       tag: WITH_TYPE
+       withType {
 
 
 ==================================

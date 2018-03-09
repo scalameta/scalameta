@@ -83,9 +83,12 @@ trait TypeOps { self: DatabaseOps =>
             Some(s.Type(tag = stag, singletonType = Some(stpe)))
           case g.RefinedType(gparents, gdecls) =>
             val stag = t.STRUCTURAL_TYPE
-            val sparents = gparents.flatMap(loop)
+            val stpe = {
+              val sparents = gparents.flatMap(loop)
+              Some(s.Type(tag = t.WITH_TYPE, withType = Some(s.WithType(sparents))))
+            }
             val sdecls = gdecls.sorted.map(todo)
-            Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(Nil, sparents, sdecls))))
+            Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
           case g.AnnotatedType(ganns, gtpe) =>
             val stag = t.ANNOTATED_TYPE
             val sanns = {
@@ -138,9 +141,7 @@ trait TypeOps { self: DatabaseOps =>
             val stparams = gtparams.map(todo)
             val stpe = loop(gtpe)
             stpe.map { stpe =>
-              if (stpe.tag == t.STRUCTURAL_TYPE) {
-                stpe.update(_.structuralType.typeParameters := stparams)
-              } else if (stpe.tag == t.CLASS_INFO_TYPE) {
+              if (stpe.tag == t.CLASS_INFO_TYPE) {
                 stpe.update(_.classInfoType.typeParameters := stparams)
               } else if (stpe.tag == t.METHOD_TYPE) {
                 stpe.update(_.methodType.typeParameters := stparams)

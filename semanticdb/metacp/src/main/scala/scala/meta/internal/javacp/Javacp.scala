@@ -318,8 +318,8 @@ object Javacp {
         upperBound
       case _ =>
         s.Type(
-          tag = s.Type.Tag.STRUCTURAL_TYPE,
-          structuralType = Some(s.StructuralType(parents = typeParameters))
+          tag = s.Type.Tag.INTERSECTION_TYPE,
+          intersectionType = Some(s.IntersectionType(types = typeParameters))
         )
     }
     val tpe = s.Type(

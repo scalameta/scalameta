@@ -345,15 +345,21 @@ class Main(settings: Settings, reporter: Reporter) {
             case UNKNOWN_SINGLETON | SingletonType.Tag.Unrecognized(_) =>
               out.print("<?>")
           }
+        case INTERSECTION_TYPE =>
+          val Some(IntersectionType(types)) = tpe.intersectionType
+          rep(types, " & ")(normal)
+        case UNION_TYPE =>
+          val Some(UnionType(types)) = tpe.unionType
+          rep(types, " | ")(normal)
+        case WITH_TYPE =>
+          val Some(WithType(types)) = tpe.withType
+          rep(types, " with ")(normal)
         case STRUCTURAL_TYPE =>
-          val Some(StructuralType(tparams, parents, decls)) = tpe.structuralType
-          rep("[", tparams, ", ", "] => ")(defn)
-          rep(parents, " with ")(normal)
-          if (decls.nonEmpty || parents.length == 1) {
-            out.print(" { ")
-            rep(decls, "; ")(defn)
-            out.print(" }")
-          }
+          val Some(StructuralType(utpe, decls)) = tpe.structuralType
+          utpe.foreach(normal)
+          out.print(" { ")
+          rep(decls, "; ")(defn)
+          out.print(" }")
         case ANNOTATED_TYPE =>
           val Some(AnnotatedType(anns, utpe)) = tpe.annotatedType
           utpe.foreach(normal)

@@ -229,11 +229,11 @@ Symbols:
 _root_. => package _root_
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.Recursive# => abstract class Recursive[A <: Recursive[A, B] with Serializable, B <: Inner[A, B]].{+4 decls}
+_root_.com.javacp.Recursive# => abstract class Recursive[A <: Recursive[A, B] & Serializable, B <: Inner[A, B]].{+4 decls}
   extends Object
-_root_.com.javacp.Recursive#Inner# => abstract static class Inner[A <: Recursive[A, B] with Serializable, B <: Inner[A, B]].{+1 decls}
+_root_.com.javacp.Recursive#Inner# => abstract static class Inner[A <: Recursive[A, B] & Serializable, B <: Inner[A, B]].{+1 decls}
   extends Object
-_root_.com.javacp.Recursive#Inner#[A] => typeparam A: <: Recursive[A, B] with Serializable
+_root_.com.javacp.Recursive#Inner#[A] => typeparam A: <: Recursive[A, B] & Serializable
   Recursive => _root_.com.javacp.Recursive#
   A => _root_.com.javacp.Recursive#Inner#[A]
   B => _root_.com.javacp.Recursive#Inner#[B]
@@ -251,7 +251,7 @@ _root_.com.javacp.Recursive#Inner2#[C] => typeparam C: <: Comparable[C]
   C => _root_.com.javacp.Recursive#Inner2#[C]
 _root_.com.javacp.Recursive#Inner2#`<init>`(Recursive). => ctor <init>: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Recursive#[A] => typeparam A: <: Recursive[A, B] with Serializable
+_root_.com.javacp.Recursive#[A] => typeparam A: <: Recursive[A, B] & Serializable
   Recursive => _root_.com.javacp.Recursive#
   A => _root_.com.javacp.Recursive#[A]
   B => _root_.com.javacp.Recursive#[B]
@@ -283,7 +283,7 @@ Symbols:
 _root_. => package _root_
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.Test# => final class Test[A <: CharSequence with Serializable, B <: Object].{+34 decls}
+_root_.com.javacp.Test# => final class Test[A <: CharSequence & Serializable, B <: Object].{+34 decls}
   extends ArrayList[A]
   extends Comparable[B]
   extends Serializable
@@ -321,7 +321,7 @@ _root_.com.javacp.Test#StaticClass# => private[javacp] static class StaticClass.
   extends Object
 _root_.com.javacp.Test#StaticClass#`<init>`(). => private[javacp] ctor <init>: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.Test#[A] => typeparam A: <: CharSequence with Serializable
+_root_.com.javacp.Test#[A] => typeparam A: <: CharSequence & Serializable
   CharSequence => _root_.java.lang.CharSequence#
   Serializable => _root_.java.io.Serializable#
 _root_.com.javacp.Test#[B] => typeparam B: <: Object
@@ -1594,10 +1594,10 @@ _root_.types.Test.C#compoundType1. => private[this] val field compoundType1: Any
   AnyRef => _root_.scala.AnyRef#
   k => _root_.types.Test.C#`<refinement>`#k().
   Int => _root_.scala.Int#
-_root_.types.Test.C#compoundType2(). => val method compoundType2: : M with N
+_root_.types.Test.C#compoundType2(). => val method compoundType2: : M with N {  }
   M => _root_.types.Test.M#
   N => _root_.types.Test.N#
-_root_.types.Test.C#compoundType2. => private[this] val field compoundType2: M with N
+_root_.types.Test.C#compoundType2. => private[this] val field compoundType2: M with N {  }
   M => _root_.types.Test.M#
   N => _root_.types.Test.N#
 _root_.types.Test.C#compoundType3(). => val method compoundType3: : M with N { method k: Int }

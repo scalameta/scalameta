@@ -47,6 +47,9 @@ message Type {
     UNKNOWN_TYPE = 0;
     TYPE_REF = 1;
     SINGLETON_TYPE = 15;
+    INTERSECTION_TYPE = 16;
+    UNION_TYPE = 17;
+    WITH_TYPE = 18;
     STRUCTURAL_TYPE = 6;
     ANNOTATED_TYPE = 7;
     EXISTENTIAL_TYPE = 8;
@@ -57,10 +60,13 @@ message Type {
     REPEATED_TYPE = 13;
     TYPE_TYPE = 14;
   }
-  reserved 3, 4, 5, 6;
+  // reserved 3, 4, 5, 6;
   Tag tag = 1;
   TypeRef typeRef = 2;
   SingletonType singletonType = 16;
+  IntersectionType intersectionType = 17;
+  UnionType unionType = 18;
+  WithType withType = 19;
   StructuralType structuralType = 7;
   AnnotatedType annotatedType = 8;
   ExistentialType existentialType = 9;
@@ -103,9 +109,21 @@ message SingletonType {
   string string = 5;
 }
 
+message IntersectionType {
+  repeated Type types = 1;
+}
+
+message UnionType {
+  repeated Type types = 1;
+}
+
+message WithType {
+  repeated Type types = 1;
+}
+
 message StructuralType {
-  repeated string type_parameters = 1;
-  repeated Type parents = 2;
+  reserved 1, 2;
+  Type tpe = 4;
   repeated string declarations = 3;
 }
 
