@@ -10,12 +10,6 @@ trait SymbolOps { self: DatabaseOps =>
   lazy val idCache = new HashMap[String, Int]
   lazy val symbolCache = new HashMap[g.Symbol, m.Symbol]
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
-
-    def isJavaClass: Boolean =
-      sym.isJavaDefined &&
-        !sym.hasPackageFlag &&
-        (sym.isClass || sym.isModule)
-
     def toSemantic: m.Symbol = {
       def uncached(sym: g.Symbol): m.Symbol = {
         if (sym == null || sym == g.NoSymbol) return m.Symbol.None
@@ -110,5 +104,12 @@ trait SymbolOps { self: DatabaseOps =>
     def isSelfParameter: Boolean = {
       sym != g.NoSymbol && sym.owner.thisSym == sym
     }
+  }
+
+  implicit class XtensionGSymbol(sym: g.Symbol) {
+    def isJavaClass: Boolean =
+      sym.isJavaDefined &&
+        !sym.hasPackageFlag &&
+        (sym.isClass || sym.isModule)
   }
 }
