@@ -304,7 +304,7 @@ _root_.com.javacp.MetacJava#Overload3#A#`<init>`().
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
-+kind: DEF
++kind: METHOD
  properties: 0
  name: "<init>"
  tpe {
@@ -394,7 +394,7 @@ _root_.com.javacp.MetacJava#StaticInner#`<init>`().
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
-+kind: DEF
++kind: METHOD
  properties: 0
  name: "<init>"
  tpe {
@@ -412,7 +412,7 @@ _root_.com.javacp.MetacJava#StaticInner#isStatic().
 --- metac
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#StaticInner#isStatic()."
- kind: DEF
+ kind: METHOD
 -properties: 0
 +properties: 4096
  name: "isStatic"
@@ -427,7 +427,7 @@ _root_.com.javacp.MetacJava#`<init>`().
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#`<init>`()."
 -kind: PRIMARY_CONSTRUCTOR
-+kind: DEF
++kind: METHOD
  properties: 0
  name: "<init>"
  tpe {
@@ -445,7 +445,7 @@ _root_.com.javacp.MetacJava#overload(A+3).
 --- metac
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#overload(A+3)."
- kind: DEF
+ kind: METHOD
 -properties: 0
 +properties: 4096
  name: "overload"

@@ -15,21 +15,21 @@ _root_.example.Acc# => class Acc.{+8 decls}
   extends AnyRef
 _root_.example.Acc#`<init>`(). => primaryctor <init>: (): Acc
   Acc => _root_.example.Acc#
-_root_.example.Acc#m1(). => private def m1: : Nothing
+_root_.example.Acc#m1(). => private method m1: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.example.Acc#m2(). => private[this] def m2: : Nothing
+_root_.example.Acc#m2(). => private[this] method m2: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.example.Acc#m3(). => private[Acc] def m3: : Nothing
+_root_.example.Acc#m3(). => private[Acc] method m3: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.example.Acc#m4(). => protected def m4: : Nothing
+_root_.example.Acc#m4(). => protected method m4: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.example.Acc#m5(). => protected[this] def m5: : Nothing
+_root_.example.Acc#m5(). => protected[this] method m5: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.example.Acc#m6(). => protected[example] def m6: : Nothing
+_root_.example.Acc#m6(). => protected[example] method m6: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.example.Acc#m7(). => def m7: : Nothing
+_root_.example.Acc#m7(). => method m7: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.scala.Predef.`???`(). => def ???: : Nothing
+_root_.scala.Predef.`???`(). => method ???: : Nothing
   Nothing => _root_.scala.Nothing#
 
 Occurrences:
@@ -69,15 +69,15 @@ _empty_.A# => class A.{+2 decls}
   extends AnyRef
 _empty_.A#`<init>`(). => primaryctor <init>: (): A
   A => _empty_.A#
-_empty_.A#b(). => def b: : B
+_empty_.A#b(). => method b: : B
   B => _empty_.B#
 _empty_.B# => class B.{+2 decls}
   extends AnyRef
 _empty_.B#`<init>`(). => primaryctor <init>: (): B
   B => _empty_.B#
-_empty_.B#a(). => def a: : A
+_empty_.B#a(). => method a: : A
   A => _empty_.A#
-_root_.scala.Predef.`???`(). => def ???: : Nothing
+_root_.scala.Predef.`???`(). => method ???: : Nothing
   Nothing => _root_.scala.Nothing#
 
 Occurrences:
@@ -108,7 +108,7 @@ Synthetics => 1 entries
 Symbols:
 _root_.example. => package example
 _root_.example.Example. => final object Example
-_root_.example.Example.main(Array). => def main: (args: Array[String]): Unit
+_root_.example.Example.main(Array). => method main: (args: Array[String]): Unit
   args => _root_.example.Example.main(Array).(args)
   Array => _root_.scala.Array#
   String => _root_.scala.Predef.String#
@@ -131,7 +131,7 @@ _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
 _root_.scala.Predef.String# => type String: >: String <: String
   String => _root_.java.lang.String#
-_root_.scala.Predef.println(Any). => def println: (x: <?>): Unit
+_root_.scala.Predef.println(Any). => method println: (x: <?>): Unit
   x => _root_.scala.Predef.println(Any).(x)
   Unit => _root_.scala.Unit#
 _root_.scala.Unit# => abstract final class Unit.{+2 decls}
@@ -150,7 +150,7 @@ _root_.scala.collection.mutable.Stack#`<init>`(). => secondaryctor <init>: (): S
   A => _root_.scala.collection.mutable.Stack#[A]
 _root_.scala.concurrent. => package concurrent
 _root_.scala.reflect. => package reflect
-_root_.scala.reflect.package.classTag(ClassTag). => def classTag: [T: <?>] => (ctag: <?>): ClassTag[T]
+_root_.scala.reflect.package.classTag(ClassTag). => method classTag: [T: <?>] => (ctag: <?>): ClassTag[T]
   T => _root_.scala.reflect.package.classTag(ClassTag).[T]
   ctag => _root_.scala.reflect.package.classTag(ClassTag).(ctag)
   ClassTag => _root_.scala.reflect.ClassTag#
@@ -279,7 +279,7 @@ _root_.flags.p.package.C#`<init>`(T,U,V).(y) => param y: U
   U => _root_.flags.p.package.C#[U]
 _root_.flags.p.package.C#`<init>`(T,U,V).(z) => param z: V
   V => _root_.flags.p.package.C#[V]
-_root_.flags.p.package.C#w(). => abstract def w: : Int
+_root_.flags.p.package.C#w(). => abstract method w: : Int
   Int => _root_.scala.Int#
 _root_.flags.p.package.C#x. => private[this] val x: T
   T => _root_.flags.p.package.C#[T]
@@ -339,7 +339,7 @@ _root_.flags.p.package.y(). => protected implicit getter y: : Int
   Int => _root_.scala.Int#
 _root_.flags.p.package.y. => private[this] var y: Int
   Int => _root_.scala.Int#
-_root_.flags.p.package.z(Int). => def z: (pp: Int): Int
+_root_.flags.p.package.z(Int). => method z: (pp: Int): Int
   pp => _root_.flags.p.package.z(Int).(pp)
   Int => _root_.scala.Int#
 _root_.flags.p.package.z(Int).(pp) => param pp: Int
@@ -347,7 +347,7 @@ _root_.flags.p.package.z(Int).(pp) => param pp: Int
 _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
-_root_.scala.Predef.`???`(). => def ???: : Nothing
+_root_.scala.Predef.`???`(). => method ???: : Nothing
   Nothing => _root_.scala.Nothing#
 _root_.scala.collection.immutable.List. => final object List
 _root_.scala.language. => final object language
@@ -469,10 +469,10 @@ _root_.example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
 _root_.example.`local-file`#`<init>`(). => primaryctor <init>: (): local-file
   local-file => _root_.example.`local-file`#
-_root_.scala.Int#`+`(Int). => abstract def +: (x: <?>): Int
+_root_.scala.Int#`+`(Int). => abstract method +: (x: <?>): Int
   x => _root_.scala.Int#`+`(Int).(x)
   Int => _root_.scala.Int#
-_root_.scala.Predef.locally(T). => @inline def locally: [T: <?>] => (x: <?>): T
+_root_.scala.Predef.locally(T). => @inline method locally: [T: <?>] => (x: <?>): T
   T => _root_.scala.Predef.locally(T).[T]
   x => _root_.scala.Predef.locally(T).(x)
 local0 => val local: Int
@@ -541,24 +541,24 @@ _root_.com.javacp.MetacJava#StaticInner#NonStatic# => class NonStatic.{+2 decls}
 _root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(). => primaryctor <init>: (): StaticInner.this.NonStatic
   StaticInner => _root_.com.javacp.MetacJava#StaticInner#
   NonStatic => _root_.com.javacp.MetacJava#StaticInner#NonStatic#
-_root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic). => def method: (e: <?>): Unit
+_root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic). => method method: (e: <?>): Unit
   e => _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).(e)
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#StaticInner#`<init>`(). => primaryctor <init>: (): StaticInner
   StaticInner => _root_.com.javacp.MetacJava#StaticInner#
-_root_.com.javacp.MetacJava#StaticInner#isNotStatic(). => def isNotStatic: (): Unit
+_root_.com.javacp.MetacJava#StaticInner#isNotStatic(). => method isNotStatic: (): Unit
   Unit => _root_.scala.Unit#
-_root_.com.javacp.MetacJava#StaticInner#isStatic(). => def isStatic: (): Unit
+_root_.com.javacp.MetacJava#StaticInner#isStatic(). => method isStatic: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#`<init>`(). => primaryctor <init>: (): MetacJava
   MetacJava => _root_.com.javacp.MetacJava#
-_root_.com.javacp.MetacJava#overload(A+1). => def overload: (a: <?>): Unit
+_root_.com.javacp.MetacJava#overload(A+1). => method overload: (a: <?>): Unit
   a => _root_.com.javacp.MetacJava#overload(A+1).(a)
   Unit => _root_.scala.Unit#
-_root_.com.javacp.MetacJava#overload(A+2). => def overload: (a: <?>): Unit
+_root_.com.javacp.MetacJava#overload(A+2). => method overload: (a: <?>): Unit
   a => _root_.com.javacp.MetacJava#overload(A+2).(a)
   Unit => _root_.scala.Unit#
-_root_.com.javacp.MetacJava#overload(A+3). => def overload: (a: <?>): Unit
+_root_.com.javacp.MetacJava#overload(A+3). => method overload: (a: <?>): Unit
   a => _root_.com.javacp.MetacJava#overload(A+3).(a)
   Unit => _root_.scala.Unit#
 _root_.example. => package example
@@ -711,16 +711,16 @@ _root_.example.Methods#[T] => typeparam T: >: Nothing <: Any
 _root_.example.Methods#`<init>`(). => primaryctor <init>: (): Methods[T]
   Methods => _root_.example.Methods#
   T => _root_.example.Methods#[T]
-_root_.example.Methods#`m8().`(). => def m8().: (): Nothing
+_root_.example.Methods#`m8().`(). => method m8().: (): Nothing
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#`m9().`# => class m9()..{+1 decls}
   extends AnyRef
 _root_.example.Methods#`m9().`#`<init>`(). => primaryctor <init>: (): Methods.this.m9().
   Methods => _root_.example.Methods#
   m9(). => _root_.example.Methods#`m9().`#
-_root_.example.Methods#m1(). => def m1: : Nothing
+_root_.example.Methods#m1(). => method m1: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m10(AList). => def m10: (x: Methods.this.AList[T]): Nothing
+_root_.example.Methods#m10(AList). => method m10: (x: Methods.this.AList[T]): Nothing
   x => _root_.example.Methods#m10(AList).(x)
   Methods => _root_.example.Methods#
   AList => _root_.example.Methods#AList#
@@ -730,25 +730,25 @@ _root_.example.Methods#m10(AList).(x) => param x: Methods.this.AList[T]
   Methods => _root_.example.Methods#
   AList => _root_.example.Methods#AList#
   T => _root_.example.Methods#[T]
-_root_.example.Methods#m11(.type+1). => def m11: (x: Predef.type): Nothing
+_root_.example.Methods#m11(.type+1). => method m11: (x: Predef.type): Nothing
   x => _root_.example.Methods#m11(.type+1).(x)
   Predef => _root_.scala.Predef.
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m11(.type+1).(x) => param x: Predef.type
   Predef => _root_.scala.Predef.
-_root_.example.Methods#m11(.type+2). => def m11: (x: Example.type): Nothing
+_root_.example.Methods#m11(.type+2). => method m11: (x: Example.type): Nothing
   x => _root_.example.Methods#m11(.type+2).(x)
   Example => _root_.example.Example.
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m11(.type+2).(x) => param x: Example.type
   Example => _root_.example.Example.
-_root_.example.Methods#m12a({}). => def m12a: (x: AnyRef {  }): Nothing
+_root_.example.Methods#m12a({}). => method m12a: (x: AnyRef {  }): Nothing
   x => _root_.example.Methods#m12a({}).(x)
   AnyRef => _root_.scala.AnyRef#
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m12a({}).(x) => param x: AnyRef {  }
   AnyRef => _root_.scala.AnyRef#
-_root_.example.Methods#m12b({}). => def m12b: (x: AnyRef { getter x: Int }): Nothing
+_root_.example.Methods#m12b({}). => method m12b: (x: AnyRef { getter x: Int }): Nothing
   x => _root_.example.Methods#m12b({}).(x)
   AnyRef => _root_.scala.AnyRef#
   x => _root_.example.Methods#$anon#x().
@@ -758,7 +758,7 @@ _root_.example.Methods#m12b({}).(x) => param x: AnyRef { getter x: Int }
   AnyRef => _root_.scala.AnyRef#
   x => _root_.example.Methods#$anon#x().
   Int => _root_.scala.Int#
-_root_.example.Methods#m13(Int). => def m13: (x: Int @unchecked): Nothing
+_root_.example.Methods#m13(Int). => method m13: (x: Int @unchecked): Nothing
   x => _root_.example.Methods#m13(Int).(x)
   Int => _root_.scala.Int#
   unchecked => _root_.scala.unchecked#
@@ -766,7 +766,7 @@ _root_.example.Methods#m13(Int). => def m13: (x: Int @unchecked): Nothing
 _root_.example.Methods#m13(Int).(x) => param x: Int @unchecked
   Int => _root_.scala.Int#
   unchecked => _root_.scala.unchecked#
-_root_.example.Methods#m14(T). => def m14: (x: T forSome { type T >: Nothing <: Any }): Nothing
+_root_.example.Methods#m14(T). => method m14: (x: T forSome { type T >: Nothing <: Any }): Nothing
   x => _root_.example.Methods#m14(T).(x)
   T => _root_.example.Methods#m14(T).(x)T#
   Nothing => _root_.scala.Nothing#
@@ -778,27 +778,27 @@ _root_.example.Methods#m14(T).(x) => param x: T forSome { type T >: Nothing <: A
 _root_.example.Methods#m14(T).(x)T# => abstract type T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.example.Methods#m15(=>Int). => def m15: (x: => Int): Nothing
+_root_.example.Methods#m15(=>Int). => method m15: (x: => Int): Nothing
   x => _root_.example.Methods#m15(=>Int).(x)
   Int => _root_.scala.Int#
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m15(=>Int).(x) => param x: => Int
   Int => _root_.scala.Int#
-_root_.example.Methods#m16(Int*). => def m16: (x: Int*): Nothing
+_root_.example.Methods#m16(Int*). => method m16: (x: Int*): Nothing
   x => _root_.example.Methods#m16(Int*).(x)
   Int => _root_.scala.Int#
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m16(Int*).(x) => param x: Int*
   Int => _root_.scala.Int#
-_root_.example.Methods#m2(). => def m2: (): Nothing
+_root_.example.Methods#m2(). => method m2: (): Nothing
   Nothing => _root_.scala.Nothing#
-_root_.example.Methods#m3(Int). => def m3: (x: Int): Nothing
+_root_.example.Methods#m3(Int). => method m3: (x: Int): Nothing
   x => _root_.example.Methods#m3(Int).(x)
   Int => _root_.scala.Int#
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m3(Int).(x) => param x: Int
   Int => _root_.scala.Int#
-_root_.example.Methods#m4(Int,Int). => def m4: (x: Int)(y: Int): Nothing
+_root_.example.Methods#m4(Int,Int). => method m4: (x: Int)(y: Int): Nothing
   x => _root_.example.Methods#m4(Int,Int).(x)
   Int => _root_.scala.Int#
   y => _root_.example.Methods#m4(Int,Int).(y)
@@ -807,25 +807,25 @@ _root_.example.Methods#m4(Int,Int).(x) => param x: Int
   Int => _root_.scala.Int#
 _root_.example.Methods#m4(Int,Int).(y) => param y: Int
   Int => _root_.scala.Int#
-_root_.example.Methods#m5(Int). => def m5: (x: Int): Nothing
+_root_.example.Methods#m5(Int). => method m5: (x: Int): Nothing
   x => _root_.example.Methods#m5(Int).(x)
   Int => _root_.scala.Int#
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m5(Int).(x) => param x: Int
   Int => _root_.scala.Int#
-_root_.example.Methods#m5(String). => def m5: (x: String): Nothing
+_root_.example.Methods#m5(String). => method m5: (x: String): Nothing
   x => _root_.example.Methods#m5(String).(x)
   String => _root_.scala.Predef.String#
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m5(String).(x) => param x: String
   String => _root_.scala.Predef.String#
-_root_.example.Methods#m6(Int). => def m6: (x: Int): Nothing
+_root_.example.Methods#m6(Int). => method m6: (x: Int): Nothing
   x => _root_.example.Methods#m6(Int).(x)
   Int => _root_.scala.Int#
   Nothing => _root_.scala.Nothing#
 _root_.example.Methods#m6(Int).(x) => param x: Int
   Int => _root_.scala.Int#
-_root_.example.Methods#m6(List+1). => def m6: (x: Methods.this.List[T]): Nothing
+_root_.example.Methods#m6(List+1). => method m6: (x: Methods.this.List[T]): Nothing
   x => _root_.example.Methods#m6(List+1).(x)
   Methods => _root_.example.Methods#
   List => _root_.example.Methods#List#
@@ -835,7 +835,7 @@ _root_.example.Methods#m6(List+1).(x) => param x: Methods.this.List[T]
   Methods => _root_.example.Methods#
   List => _root_.example.Methods#List#
   T => _root_.example.Methods#[T]
-_root_.example.Methods#m6(List+2). => def m6: (x: List[T]): Nothing
+_root_.example.Methods#m6(List+2). => method m6: (x: List[T]): Nothing
   x => _root_.example.Methods#m6(List+2).(x)
   List => _root_.scala.package.List#
   T => _root_.example.Methods#[T]
@@ -843,7 +843,7 @@ _root_.example.Methods#m6(List+2). => def m6: (x: List[T]): Nothing
 _root_.example.Methods#m6(List+2).(x) => param x: List[T]
   List => _root_.scala.package.List#
   T => _root_.example.Methods#[T]
-_root_.example.Methods#m7a(Methods,List,Ordering). => def m7a: [U >: Nothing <: Any] => (c: Methods[T], l: Methods.this.List[U])(evidence$1: <?>): Nothing
+_root_.example.Methods#m7a(Methods,List,Ordering). => method m7a: [U >: Nothing <: Any] => (c: Methods[T], l: Methods.this.List[U])(evidence$1: <?>): Nothing
   U => _root_.example.Methods#m7a(Methods,List,Ordering).[U]
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
@@ -863,7 +863,7 @@ _root_.example.Methods#m7a(Methods,List,Ordering).(l) => param l: Methods.this.L
 _root_.example.Methods#m7a(Methods,List,Ordering).[U] => typeparam U: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.example.Methods#m7b(List,Function1). => def m7b: [U >: Nothing <: Any] => (l: Methods.this.List[U])(evidence$2: <?>): Nothing
+_root_.example.Methods#m7b(List,Function1). => method m7b: [U >: Nothing <: Any] => (l: Methods.this.List[U])(evidence$2: <?>): Nothing
   U => _root_.example.Methods#m7b(List,Function1).[U]
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
@@ -878,7 +878,7 @@ _root_.example.Methods#m7b(List,Function1).(l) => param l: Methods.this.List[U]
 _root_.example.Methods#m7b(List,Function1).[U] => typeparam U: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.example.Methods#m9(`m9().`). => def m9: (x: Methods.this.m9().): Nothing
+_root_.example.Methods#m9(`m9().`). => method m9: (x: Methods.this.m9().): Nothing
   x => _root_.example.Methods#m9(`m9().`).(x)
   Methods => _root_.example.Methods#
   m9(). => _root_.example.Methods#`m9().`#
@@ -892,7 +892,7 @@ _root_.scala.Int# => abstract final class Int.{+111 decls}
 _root_.scala.Predef. => final object Predef
 _root_.scala.Predef.String# => type String: >: String <: String
   String => _root_.java.lang.String#
-_root_.scala.Predef.`???`(). => def ???: : Nothing
+_root_.scala.Predef.`???`(). => method ???: : Nothing
   Nothing => _root_.scala.Nothing#
 _root_.scala.collection.immutable.Nil. => @SerialVersionUID final case object Nil
 _root_.scala.math. => package math
@@ -1133,14 +1133,14 @@ Symbols:
 _root_.example. => package example
 _root_.example.A# => trait A.{+1 decls}
   extends AnyRef
-_root_.example.A#foo(). => abstract def foo: : Int
+_root_.example.A#foo(). => abstract method foo: : Int
   Int => _root_.scala.Int#
 _root_.example.B# => class B.{+2 decls}
   extends AnyRef
   extends A
 _root_.example.B#`<init>`(). => primaryctor <init>: (): B
   B => _root_.example.B#
-_root_.example.B#foo(). => def foo: : Int
+_root_.example.B#foo(). => method foo: : Int
   Int => _root_.scala.Int#
   overrides _root_.example.A#foo().
 _root_.java.lang.Object#`<init>`(). => primaryctor <init>: (): Object
@@ -1179,25 +1179,25 @@ _root_.example.Synthetic# => class Synthetic.{+1 decls}
 _root_.example.Synthetic#`<init>`(). => primaryctor <init>: (): Synthetic
   Synthetic => _root_.example.Synthetic#
 _root_.scala.Array. => final object Array
-_root_.scala.Array.empty(ClassTag). => def empty: [T: <?>] => (evidence$1: <?>): Array[T]
+_root_.scala.Array.empty(ClassTag). => method empty: [T: <?>] => (evidence$1: <?>): Array[T]
   T => _root_.scala.Array.empty(ClassTag).[T]
   evidence$1 => _root_.scala.Array.empty(ClassTag).(evidence$1)
   Array => _root_.scala.Array#
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
-_root_.scala.Int#`+`(Int). => abstract def +: (x: <?>): Int
+_root_.scala.Int#`+`(Int). => abstract method +: (x: <?>): Int
   x => _root_.scala.Int#`+`(Int).(x)
   Int => _root_.scala.Int#
-_root_.scala.collection.TraversableLike#headOption(). => def headOption: : Option[A]
+_root_.scala.collection.TraversableLike#headOption(). => method headOption: : Option[A]
   Option => _root_.scala.Option#
   A => _root_.scala.collection.TraversableLike#[A]
-_root_.scala.collection.immutable.List#map(Function1,CanBuildFrom). => final def map: [B: <?>, That: <?>] => (f: <?>)(bf: <?>): That
+_root_.scala.collection.immutable.List#map(Function1,CanBuildFrom). => final method map: [B: <?>, That: <?>] => (f: <?>)(bf: <?>): That
   B => _root_.scala.collection.immutable.List#map(Function1,CanBuildFrom).[B]
   That => _root_.scala.collection.immutable.List#map(Function1,CanBuildFrom).[That]
   f => _root_.scala.collection.immutable.List#map(Function1,CanBuildFrom).(f)
   bf => _root_.scala.collection.immutable.List#map(Function1,CanBuildFrom).(bf)
 _root_.scala.collection.immutable.List. => final object List
-_root_.scala.collection.immutable.StringLike#stripPrefix(String). => def stripPrefix: (prefix: <?>): String
+_root_.scala.collection.immutable.StringLike#stripPrefix(String). => method stripPrefix: (prefix: <?>): String
   prefix => _root_.scala.collection.immutable.StringLike#stripPrefix(String).(prefix)
   String => _root_.java.lang.String#
 
@@ -1268,15 +1268,15 @@ _root_.scala.Option# => @SerialVersionUID abstract sealed class Option[A: <?>].{
   extends AnyRef
   extends Product
   extends Serializable
-_root_.scala.Predef.`???`(). => def ???: : Nothing
+_root_.scala.Predef.`???`(). => method ???: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.scala.Predef.classOf(). => def classOf: [T: <?>] => : Class[T]
+_root_.scala.Predef.classOf(). => method classOf: [T: <?>] => : Class[T]
   T => _root_.scala.Predef.classOf().[T]
   Class => _root_.scala.Predef.Class#
 _root_.scala.annotation. => package annotation
 _root_.scala.annotation.StaticAnnotation# => trait StaticAnnotation
   extends Annotation
-_root_.scala.collection.SeqLike#length(). => abstract def length: : Int
+_root_.scala.collection.SeqLike#length(). => abstract method length: : Int
   Int => _root_.scala.Int#
 _root_.scala.language. => final object language
 _root_.scala.language.existentials(). => implicit lazy val existentials: existentials
@@ -1346,10 +1346,10 @@ _root_.types.Test.C#$anon#L# => type L: [T >: Nothing <: Any] => >: List[T] <: L
 _root_.types.Test.C#$anon#L#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.types.Test.C#$anon#k(). => abstract def k: : Int
+_root_.types.Test.C#$anon#k(). => abstract method k: : Int
   Int => _root_.scala.Int#
 _root_.types.Test.C#ByNameType. => final object ByNameType
-_root_.types.Test.C#ByNameType.m1(=>Int). => def m1: (x: => Int): Int
+_root_.types.Test.C#ByNameType.m1(=>Int). => method m1: (x: => Int): Int
   x => _root_.types.Test.C#ByNameType.m1(=>Int).(x)
   Int => _root_.scala.Int#
 _root_.types.Test.C#ByNameType.m1(=>Int).(x) => param x: => Int
@@ -1360,7 +1360,7 @@ _root_.types.Test.C#ClassInfoType2# => class ClassInfoType2.{+2 decls}
 _root_.types.Test.C#ClassInfoType2#`<init>`(). => primaryctor <init>: (): C.this.ClassInfoType2
   C => _root_.types.Test.C#
   ClassInfoType2 => _root_.types.Test.C#ClassInfoType2#
-_root_.types.Test.C#ClassInfoType2#x(). => def x: : Int
+_root_.types.Test.C#ClassInfoType2#x(). => method x: : Int
   Int => _root_.scala.Int#
 _root_.types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any]
   extends AnyRef
@@ -1368,16 +1368,16 @@ _root_.types.Test.C#ClassInfoType3#[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
 _root_.types.Test.C#MethodType. => final object MethodType
-_root_.types.Test.C#MethodType.m3(). => def m3: : Int
+_root_.types.Test.C#MethodType.m3(). => method m3: : Int
   Int => _root_.scala.Int#
-_root_.types.Test.C#MethodType.m4(). => def m4: (): Int
+_root_.types.Test.C#MethodType.m4(). => method m4: (): Int
   Int => _root_.scala.Int#
-_root_.types.Test.C#MethodType.m5(Int). => def m5: (x: Int): Int
+_root_.types.Test.C#MethodType.m5(Int). => method m5: (x: Int): Int
   x => _root_.types.Test.C#MethodType.m5(Int).(x)
   Int => _root_.scala.Int#
 _root_.types.Test.C#MethodType.m5(Int).(x) => param x: Int
   Int => _root_.scala.Int#
-_root_.types.Test.C#MethodType.m6(T). => def m6: [T >: Nothing <: Any] => (x: T): T
+_root_.types.Test.C#MethodType.m6(T). => method m6: [T >: Nothing <: Any] => (x: T): T
   T => _root_.types.Test.C#MethodType.m6(T).[T]
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
@@ -1387,9 +1387,9 @@ _root_.types.Test.C#MethodType.m6(T).(x) => param x: T
 _root_.types.Test.C#MethodType.m6(T).[T] => typeparam T: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.types.Test.C#MethodType.x1(). => def x1: : Int
+_root_.types.Test.C#MethodType.x1(). => method x1: : Int
   Int => _root_.scala.Int#
-_root_.types.Test.C#MethodType.x2(). => def x2: : Int
+_root_.types.Test.C#MethodType.x2(). => method x2: : Int
   Int => _root_.scala.Int#
 _root_.types.Test.C#RepeatedType# => case class RepeatedType.{+12 decls}
   extends AnyRef
@@ -1402,7 +1402,7 @@ _root_.types.Test.C#RepeatedType#`<init>`(String*). => primaryctor <init>: (s: S
   RepeatedType => _root_.types.Test.C#RepeatedType#
 _root_.types.Test.C#RepeatedType#`<init>`(String*).(s) => valparam param s: String*
   String => _root_.scala.Predef.String#
-_root_.types.Test.C#RepeatedType#m1(Int*). => def m1: (x: Int*): Int
+_root_.types.Test.C#RepeatedType#m1(Int*). => method m1: (x: Int*): Int
   x => _root_.types.Test.C#RepeatedType#m1(Int*).(x)
   Int => _root_.scala.Int#
 _root_.types.Test.C#RepeatedType#m1(Int*).(x) => param x: Int*
@@ -1424,13 +1424,13 @@ _root_.types.Test.C#TypeType.T5# => type T5: [U >: Nothing <: Any] => >: U <: U
 _root_.types.Test.C#TypeType.T5#[U] => typeparam U: >: Nothing <: Any
   Nothing => _root_.scala.Nothing#
   Any => _root_.scala.Any#
-_root_.types.Test.C#TypeType.m2(). => def m2: [T2 >: C <: C] => : Nothing
+_root_.types.Test.C#TypeType.m2(). => method m2: [T2 >: C <: C] => : Nothing
   T2 => _root_.types.Test.C#TypeType.m2().[T2]
   C => _root_.types.Test.C#
   Nothing => _root_.scala.Nothing#
 _root_.types.Test.C#TypeType.m2().[T2] => typeparam T2: >: C <: C
   C => _root_.types.Test.C#
-_root_.types.Test.C#TypeType.m3(). => def m3: [M3 [M3][_: <?>] => >: Nothing <: Any] => : Nothing
+_root_.types.Test.C#TypeType.m3(). => method m3: [M3 [M3][_: <?>] => >: Nothing <: Any] => : Nothing
   M3 => _root_.types.Test.C#TypeType.m3().[M3]
   M3][_ => _root_.types.Test.C#TypeType.m3().[M3][_]
   Nothing => _root_.scala.Nothing#
@@ -1526,7 +1526,7 @@ _root_.types.Test.C#thisType2(). => getter thisType2: : C.this.type
   C => _root_.types.Test.C#
 _root_.types.Test.C#thisType2. => private[this] val thisType2: C.this.type
   C => _root_.types.Test.C#
-_root_.types.Test.C#typeLambda1(). => def typeLambda1: [M [M][_: <?>] => >: Nothing <: Any] => : Nothing
+_root_.types.Test.C#typeLambda1(). => method typeLambda1: [M [M][_: <?>] => >: Nothing <: Any] => : Nothing
   M => _root_.types.Test.C#typeLambda1().[M]
   M][_ => _root_.types.Test.C#typeLambda1().[M][_]
   Nothing => _root_.scala.Nothing#
@@ -1604,13 +1604,13 @@ _root_.types.Test.M# => class M.{+2 decls}
   extends AnyRef
 _root_.types.Test.M#`<init>`(). => primaryctor <init>: (): M
   M => _root_.types.Test.M#
-_root_.types.Test.M#m(). => def m: : Int
+_root_.types.Test.M#m(). => method m: : Int
   Int => _root_.scala.Int#
 _root_.types.Test.N# => class N.{+2 decls}
   extends AnyRef
 _root_.types.Test.N#`<init>`(). => primaryctor <init>: (): N
   N => _root_.types.Test.N#
-_root_.types.Test.N#n(). => def n: : Int
+_root_.types.Test.N#n(). => method n: : Int
   Int => _root_.scala.Int#
 _root_.types.ann# => class ann[T >: Nothing <: Any].{+2 decls}
   extends Annotation
@@ -1925,7 +1925,7 @@ _root_.example.Vals#`yp_=`(Int). => setter yp_=: (x$1: Int): Unit
   Unit => _root_.scala.Unit#
 _root_.example.Vals#`yp_=`(Int).(x$1) => param x$1: Int
   Int => _root_.scala.Int#
-_root_.example.Vals#m(). => def m: : Unit
+_root_.example.Vals#m(). => method m: : Unit
   Unit => _root_.scala.Unit#
 _root_.example.Vals#p. => private[this] val p: Int
   Int => _root_.scala.Int#
@@ -1975,12 +1975,12 @@ _root_.example.Vals#yp. => private[this] var yp: Int
   Int => _root_.scala.Int#
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
-_root_.scala.Int#`+`(Int). => abstract def +: (x: <?>): Int
+_root_.scala.Int#`+`(Int). => abstract method +: (x: <?>): Int
   x => _root_.scala.Int#`+`(Int).(x)
   Int => _root_.scala.Int#
-_root_.scala.Predef.`???`(). => def ???: : Nothing
+_root_.scala.Predef.`???`(). => method ???: : Nothing
   Nothing => _root_.scala.Nothing#
-_root_.scala.Predef.println(Any). => def println: (x: <?>): Unit
+_root_.scala.Predef.println(Any). => method println: (x: <?>): Unit
   x => _root_.scala.Predef.println(Any).(x)
   Unit => _root_.scala.Unit#
 local0 => val xl: Int

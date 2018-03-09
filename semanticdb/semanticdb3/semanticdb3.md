@@ -506,7 +506,7 @@ languages map onto these kinds.
   </tr>
   <tr>
     <td><code>3</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td>Method, e.g. <code>def x = 42</code>.</td>
   </tr>
   <tr>
@@ -937,7 +937,7 @@ the owner chain is `[_root_, scala, Int]`.
 **Definition descriptor** is:
   * For `VAL`, `VAR`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
     concatenation of its encoded name and a dot (`.`).
-  * For `DEF`, `GETTER`, `SETTER`, `PRIMARY_CONSTRUCTOR`,
+  * For `METHOD`, `GETTER`, `SETTER`, `PRIMARY_CONSTRUCTOR`,
     `SECONDARY_CONSTRUCTOR` or `MACRO`, concatenation of its encoded name,
     a left parenthesis (`(`), its type descriptor, a right parenthesis (`)`)
     and a dot (`.`). In the case when multiple methods have the same name
@@ -1612,7 +1612,7 @@ class C(p1: Int) {
   <tr>
     <td><code>m3$default$1</code></td>
     <td><code>_empty_.C#m3$default$1().</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
@@ -1665,7 +1665,7 @@ Notes:
   the names unspecified.
 
 **Function declarations and definitions** [\[48\]][48] are represented
-with `DEF` symbols.
+with `METHOD` symbols.
 
 ```scala
 abstract class C {
@@ -1685,25 +1685,25 @@ abstract class C {
   <tr>
     <td><code>m1</code></td>
     <td><code>_empty_.C#m1().</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
     <td><code>_empty_.C#m2().</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>_empty_.C#m3(Int).</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m4</code></td>
     <td><code>_empty_.C#m4(Int,Int).</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
@@ -1911,7 +1911,7 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
   <tr>
     <td>m</td>
     <td><code>_empty_.C#m().</code></td>
-    <td><code>DEF</code></td>
+    <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>

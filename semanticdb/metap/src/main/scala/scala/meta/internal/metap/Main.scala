@@ -433,7 +433,7 @@ class Main(settings: Settings, reporter: Reporter) {
     info.kind match {
       case VAL => out.print("val ")
       case VAR => out.print("var ")
-      case DEF => out.print("def ")
+      case METHOD => out.print("method ")
       case GETTER => out.print("getter ")
       case SETTER => out.print("setter ")
       case PRIMARY_CONSTRUCTOR => out.print("primaryctor ")
@@ -453,8 +453,8 @@ class Main(settings: Settings, reporter: Reporter) {
     }
     pprint(info.name, doc)
     info.kind match {
-      case VAL | VAR | DEF | GETTER | SETTER | PRIMARY_CONSTRUCTOR | SECONDARY_CONSTRUCTOR | MACRO |
-          TYPE | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER =>
+      case VAL | VAR | METHOD | GETTER | SETTER | PRIMARY_CONSTRUCTOR | SECONDARY_CONSTRUCTOR |
+           MACRO | TYPE | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER =>
         info.tpe match {
           case Some(tpe) =>
             out.print(": ")

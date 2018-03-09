@@ -161,7 +161,7 @@ message SymbolInformation {
     VAR = 2;
     GETTER = 15;
     SETTER = 16;
-    DEF = 3;
+    METHOD = 3;
     PRIMARY_CONSTRUCTOR = 4;
     SECONDARY_CONSTRUCTOR = 5;
     MACRO = 6;

@@ -115,7 +115,7 @@ package object semanticdb {
               skind match {
                 case k.VAL => dflip(d.VAL)
                 case k.VAR => dflip(d.VAR)
-                case k.DEF => dflip(d.DEF)
+                case k.METHOD => dflip(d.DEF)
                 case k.GETTER => dflip(d.GETTER)
                 case k.SETTER => dflip(d.SETTER)
                 case k.PRIMARY_CONSTRUCTOR => dflip(d.PRIMARYCTOR)
@@ -315,7 +315,7 @@ package object semanticdb {
               val skind = {
                 if (dtest(d.VAL) && !dtest(d.PARAM)) k.VAL
                 else if (dtest(d.VAR) && !dtest(d.PARAM)) k.VAR
-                else if (dtest(d.DEF)) k.DEF
+                else if (dtest(d.DEF)) k.METHOD
                 else if (dtest(d.GETTER)) k.GETTER
                 else if (dtest(d.SETTER)) k.SETTER
                 else if (dtest(d.PRIMARYCTOR)) k.PRIMARY_CONSTRUCTOR

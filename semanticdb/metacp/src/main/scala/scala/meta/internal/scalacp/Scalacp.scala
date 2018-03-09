@@ -106,7 +106,7 @@ object Scalacp {
     skind(sym) match {
       case k.VAL | k.VAR | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
         prefix + encodedName + "."
-      case k.DEF | k.GETTER | k.SETTER | k.PRIMARY_CONSTRUCTOR | k.SECONDARY_CONSTRUCTOR |
+      case k.METHOD | k.GETTER | k.SETTER | k.PRIMARY_CONSTRUCTOR | k.SECONDARY_CONSTRUCTOR |
           k.MACRO =>
         prefix + encodedName + sym.disambiguator + "."
       case k.TYPE | k.CLASS | k.TRAIT =>
@@ -134,7 +134,7 @@ object Scalacp {
           if (sym.isAccessor && sym.name.endsWith("_$eq")) k.SETTER
           else if (sym.isAccessor) k.GETTER
           else if (sym.hasFlag(0x00008000)) k.MACRO
-          else k.DEF
+          else k.METHOD
         }
       case _: ObjectSymbol | _: ClassSymbol if sym.isModule =>
         if (sym.name == "package") k.PACKAGE_OBJECT

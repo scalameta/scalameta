@@ -65,7 +65,7 @@ object Scalalib {
       owner = symbol
     )
     val builtinSig = {
-      val decls = symbols.filter(_.kind == k.DEF)
+      val decls = symbols.filter(_.kind == k.METHOD)
       val tpe = s.ClassInfoType(Nil, parents, ctor.symbol +: decls.map(_.symbol))
       s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))
     }
@@ -143,7 +143,7 @@ object Scalalib {
     val method = s.SymbolInformation(
       symbol = methodSymbol,
       language = l.SCALA,
-      kind = k.DEF,
+      kind = k.METHOD,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = methodName,
       tpe = Some(methodSig),

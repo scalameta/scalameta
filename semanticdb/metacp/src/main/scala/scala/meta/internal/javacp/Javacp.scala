@@ -214,7 +214,7 @@ object Javacp {
 
         addInfo(
           methodSymbol,
-          k.DEF,
+          k.METHOD,
           method.node.name,
           Some(methodType),
           method.node.access,
