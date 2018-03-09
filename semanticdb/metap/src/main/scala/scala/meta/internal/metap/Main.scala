@@ -435,12 +435,12 @@ class Main(settings: Settings, reporter: Reporter) {
     if (has(VAL)) out.print("val ")
     if (has(VAR)) out.print("var ")
     if (has(STATIC)) out.print("static ")
+    if (has(PRIMARY)) out.print("primary ")
     info.kind match {
       case FIELD => out.print("field ")
       case LOCAL => out.print("local ")
       case METHOD => out.print("method ")
-      case PRIMARY_CONSTRUCTOR => out.print("primaryctor ")
-      case SECONDARY_CONSTRUCTOR => out.print("secondaryctor ")
+      case CONSTRUCTOR => out.print("ctor ")
       case MACRO => out.print("macro ")
       case TYPE => out.print("type ")
       case PARAMETER => out.print("param ")
@@ -456,8 +456,8 @@ class Main(settings: Settings, reporter: Reporter) {
     }
     pprint(info.name, doc)
     info.kind match {
-      case LOCAL | FIELD | METHOD | PRIMARY_CONSTRUCTOR | SECONDARY_CONSTRUCTOR | MACRO | TYPE |
-          PARAMETER | SELF_PARAMETER | TYPE_PARAMETER =>
+      case LOCAL | FIELD | METHOD | CONSTRUCTOR | MACRO | TYPE | PARAMETER | SELF_PARAMETER |
+          TYPE_PARAMETER =>
         info.tpe match {
           case Some(tpe) =>
             out.print(": ")

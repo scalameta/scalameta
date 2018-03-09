@@ -37,12 +37,12 @@ class OverridesSuite extends DatabaseSuite(SemanticdbMode.Slim, overrides = Over
        |_empty_.A#foo(). => abstract method foo: Int
        |  [0..3): Int => _root_.scala.Int#
        |_empty_.B# => class B
-       |_empty_.B#`<init>`(). => primaryctor <init>: (): B
+       |_empty_.B#`<init>`(). => primary ctor <init>: (): B
        |  [4..5): B => _empty_.B#
        |_empty_.B#foo(). => method foo: Int
        |  override _empty_.A#foo().
        |  [0..3): Int => _root_.scala.Int#
-       |_root_.java.lang.Object#`<init>`(). => javadefined primaryctor <init>: (): Object
+       |_root_.java.lang.Object#`<init>`(). => javadefined primary ctor <init>: (): Object
        |  [4..10): Object => _root_.java.lang.Object#
        |_root_.scala.Int# => abstract final class Int""".stripMargin
   )

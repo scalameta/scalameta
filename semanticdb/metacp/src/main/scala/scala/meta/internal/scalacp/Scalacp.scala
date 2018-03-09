@@ -106,7 +106,7 @@ object Scalacp {
     skind(sym) match {
       case k.FIELD | k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
         prefix + encodedName + "."
-      case k.METHOD | k.PRIMARY_CONSTRUCTOR | k.SECONDARY_CONSTRUCTOR | k.MACRO =>
+      case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
         prefix + encodedName + sym.disambiguator + "."
       case k.TYPE | k.CLASS | k.TRAIT =>
         prefix + encodedName + "#"
@@ -121,18 +121,12 @@ object Scalacp {
 
   // NOTE: Cases in the pattern match are ordered
   // similarly to DenotationOps.kindFlags in semanticdb/scalac.
-  private val primaryCtors = mutable.Map[String, Int]()
   private def skind(sym: Symbol): s.SymbolInformation.Kind = {
     sym match {
       case sym: MethodSymbol if sym.isMethod =>
-        if (sym.name == "<init>") {
-          val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
-          if (sym.entry.index == primaryIndex) k.PRIMARY_CONSTRUCTOR
-          else k.SECONDARY_CONSTRUCTOR
-        } else {
-          if (sym.hasFlag(0x00008000)) k.MACRO
-          else k.METHOD
-        }
+        if (sym.name == "<init>") k.CONSTRUCTOR
+        else if (sym.hasFlag(0x00008000)) k.MACRO
+        else k.METHOD
       case _: ObjectSymbol | _: ClassSymbol if sym.isModule =>
         if (sym.name == "package") k.PACKAGE_OBJECT
         else k.OBJECT
@@ -170,12 +164,13 @@ object Scalacp {
     }
   }
 
+  private val primaryCtors = mutable.Map[String, Int]()
   private def sproperties(sym: SymbolInfoSymbol): Int = {
     def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
     def isAbstractMethod = sym.isMethod && sym.isDeferred
     def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
-    var sproperties = 0
-    def sflip(sprop: s.SymbolInformation.Property) = sproperties ^= sprop.value
+    var sprops = 0
+    def sflip(sprop: s.SymbolInformation.Property) = sprops ^= sprop.value
     if (isAbstractClass || isAbstractMethod || isAbstractType) sflip(p.ABSTRACT)
     if (sym.isFinal || sym.isModule) sflip(p.FINAL)
     if (sym.isSealed) sflip(p.SEALED)
@@ -192,15 +187,22 @@ object Scalacp {
       if (sym.isStable) sflip(p.VAL)
       else sflip(p.VAR)
     }
-    if (sym.isParam && skind(sym.parent.get) == k.PRIMARY_CONSTRUCTOR) {
-      val classMembers = sym.parent.get.parent.get.children
-      val getter = classMembers.find(m => m.isAccessor && m.name == sym.name)
-      val setter = classMembers.find(m => m.isAccessor && m.name == sym.name + "_$eq")
-      if (setter.nonEmpty) sflip(p.VAR)
-      else if (getter.nonEmpty) sflip(p.VAL)
-      else ()
+    if (sym.isParam) {
+      val methodSym = sym.parent.get.asInstanceOf[SymbolInfoSymbol]
+      if ((sproperties(methodSym) & p.PRIMARY.value) != 0) {
+        val classMembers = methodSym.parent.get.children
+        val getter = classMembers.find(m => m.isAccessor && m.name == sym.name)
+        val setter = classMembers.find(m => m.isAccessor && m.name == sym.name + "_$eq")
+        if (setter.nonEmpty) sflip(p.VAR)
+        else if (getter.nonEmpty) sflip(p.VAL)
+        else ()
+      }
     }
-    sproperties
+    if (sym.isMethod && sym.name == "<init>") {
+      val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
+      if (sym.entry.index == primaryIndex) sflip(p.PRIMARY)
+    }
+    sprops
   }
 
   private def sname(sym: Symbol): String = {

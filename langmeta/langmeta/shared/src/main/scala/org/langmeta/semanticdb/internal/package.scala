@@ -116,8 +116,7 @@ package object semanticdb {
                 case k.LOCAL => dflip(d.LOCAL)
                 case k.FIELD => dflip(d.FIELD)
                 case k.METHOD => dflip(d.METHOD)
-                case k.PRIMARY_CONSTRUCTOR => dflip(d.PRIMARYCTOR)
-                case k.SECONDARY_CONSTRUCTOR => dflip(d.SECONDARYCTOR)
+                case k.CONSTRUCTOR => dflip(d.CTOR)
                 case k.MACRO => dflip(d.MACRO)
                 case k.TYPE => dflip(d.TYPE)
                 case k.PARAMETER => dflip(d.PARAM)
@@ -142,6 +141,7 @@ package object semanticdb {
               if (stest(p.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
               if (stest(p.VAL.value)) dflip(d.VAL)
               if (stest(p.VAR.value)) dflip(d.VAR)
+              if (stest(p.PRIMARY.value)) dflip(d.PRIMARY)
               sacc.map(_.tag) match {
                 case Some(a.PRIVATE | a.PRIVATE_THIS | a.PRIVATE_WITHIN) =>
                   dflip(d.PRIVATE)
@@ -314,8 +314,7 @@ package object semanticdb {
                 if (dtest(d.LOCAL)) k.LOCAL
                 else if (dtest(d.FIELD)) k.FIELD
                 else if (dtest(d.METHOD)) k.METHOD
-                else if (dtest(d.PRIMARYCTOR)) k.PRIMARY_CONSTRUCTOR
-                else if (dtest(d.SECONDARYCTOR)) k.SECONDARY_CONSTRUCTOR
+                else if (dtest(d.CTOR)) k.CONSTRUCTOR
                 else if (dtest(d.MACRO)) k.MACRO
                 else if (dtest(d.TYPE)) k.TYPE
                 else if (dtest(d.PARAM)) k.PARAMETER
@@ -342,6 +341,7 @@ package object semanticdb {
                 if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT)
                 if (dtest(d.VAL)) sflip(p.VAL)
                 if (dtest(d.VAR)) sflip(p.VAR)
+                if (dtest(d.PRIMARY)) sflip(p.PRIMARY)
                 sproperties
               }
               val sname = ddenot.name

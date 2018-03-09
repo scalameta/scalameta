@@ -94,10 +94,8 @@ _root_.com.javacp.MetacJava#Overload1#A#`<init>`().
 --- metac
 +++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload1#A#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
+-kind: CONSTRUCTOR
+-properties: 8192
 -name: "<init>"
 -tpe {
 -  tag: METHOD_TYPE
@@ -121,6 +119,9 @@ _root_.com.javacp.MetacJava#Overload1#A#`<init>`().
 -}
 -owner: "_root_.com.javacp.MetacJava#Overload1#A#"
 -language: JAVA
++symbol: ""
++kind: UNKNOWN_KIND
++properties: 0
 +name: ""
 +owner: ""
 +language: UNKNOWN_LANGUAGE
@@ -132,10 +133,8 @@ _root_.com.javacp.MetacJava#Overload1#`<init>`().
 --- metac
 +++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload1#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
+-kind: CONSTRUCTOR
+-properties: 8192
 -name: "<init>"
 -tpe {
 -  tag: METHOD_TYPE
@@ -159,6 +158,9 @@ _root_.com.javacp.MetacJava#Overload1#`<init>`().
 -}
 -owner: "_root_.com.javacp.MetacJava#Overload1#"
 -language: JAVA
++symbol: ""
++kind: UNKNOWN_KIND
++properties: 0
 +name: ""
 +owner: ""
 +language: UNKNOWN_LANGUAGE
@@ -194,10 +196,8 @@ _root_.com.javacp.MetacJava#Overload2#A#`<init>`().
 --- metac
 +++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload2#A#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
+-kind: CONSTRUCTOR
+-properties: 8192
 -name: "<init>"
 -tpe {
 -  tag: METHOD_TYPE
@@ -221,6 +221,9 @@ _root_.com.javacp.MetacJava#Overload2#A#`<init>`().
 -}
 -owner: "_root_.com.javacp.MetacJava#Overload2#A#"
 -language: JAVA
++symbol: ""
++kind: UNKNOWN_KIND
++properties: 0
 +name: ""
 +owner: ""
 +language: UNKNOWN_LANGUAGE
@@ -232,10 +235,8 @@ _root_.com.javacp.MetacJava#Overload2#`<init>`().
 --- metac
 +++ metacp
 -symbol: "_root_.com.javacp.MetacJava#Overload2#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
+-kind: CONSTRUCTOR
+-properties: 8192
 -name: "<init>"
 -tpe {
 -  tag: METHOD_TYPE
@@ -259,6 +260,9 @@ _root_.com.javacp.MetacJava#Overload2#`<init>`().
 -}
 -owner: "_root_.com.javacp.MetacJava#Overload2#"
 -language: JAVA
++symbol: ""
++kind: UNKNOWN_KIND
++properties: 0
 +name: ""
 +owner: ""
 +language: UNKNOWN_LANGUAGE
@@ -303,11 +307,13 @@ _root_.com.javacp.MetacJava#Overload3#A#`<init>`().
 --- metac
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#Overload3#A#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
+-kind: CONSTRUCTOR
+-properties: 8192
 +kind: METHOD
- properties: 0
++properties: 0
  name: "<init>"
  tpe {
+   tag: METHOD_TYPE
 @@ -10,7 +10,7 @@
      return_type {
        tag: TYPE_REF
@@ -355,10 +361,8 @@ _root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
 --- metac
 +++ metacp
 -symbol: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
+-kind: CONSTRUCTOR
+-properties: 8192
 -name: "<init>"
 -tpe {
 -  tag: METHOD_TYPE
@@ -382,6 +386,9 @@ _root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
 -}
 -owner: "_root_.com.javacp.MetacJava#StaticInner#NonStatic#"
 -language: JAVA
++symbol: ""
++kind: UNKNOWN_KIND
++properties: 0
 +name: ""
 +owner: ""
 +language: UNKNOWN_LANGUAGE
@@ -393,11 +400,13 @@ _root_.com.javacp.MetacJava#StaticInner#`<init>`().
 --- metac
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#StaticInner#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
+-kind: CONSTRUCTOR
+-properties: 8192
 +kind: METHOD
- properties: 0
++properties: 0
  name: "<init>"
  tpe {
+   tag: METHOD_TYPE
 @@ -10,7 +10,7 @@
      return_type {
        tag: TYPE_REF
@@ -426,11 +435,13 @@ _root_.com.javacp.MetacJava#`<init>`().
 --- metac
 +++ metacp
  symbol: "_root_.com.javacp.MetacJava#`<init>`()."
--kind: PRIMARY_CONSTRUCTOR
+-kind: CONSTRUCTOR
+-properties: 8192
 +kind: METHOD
- properties: 0
++properties: 0
  name: "<init>"
  tpe {
+   tag: METHOD_TYPE
 @@ -10,7 +10,7 @@
      return_type {
        tag: TYPE_REF

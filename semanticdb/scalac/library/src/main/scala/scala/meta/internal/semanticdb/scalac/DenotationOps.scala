@@ -25,8 +25,7 @@ trait DenotationOps { self: DatabaseOps =>
       gsym match {
         case gsym: MethodSymbol =>
           if (gsym.isConstructor) {
-            if (gsym.isPrimaryConstructor) mf.PRIMARYCTOR
-            else mf.SECONDARYCTOR
+            mf.CTOR
           } else {
             if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
               if (gsym.isLocalToBlock) mf.LOCAL
@@ -99,6 +98,7 @@ trait DenotationOps { self: DatabaseOps =>
         else ()
       }
       if (gsym.hasFlag(gf.JAVA) && !gsym.hasFlag(gf.PACKAGE)) flags |= mf.JAVADEFINED
+      if (gsym.isPrimaryConstructor) flags |= mf.PRIMARY
       flags
     }
 

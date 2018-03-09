@@ -512,14 +512,10 @@ languages map onto these kinds.
     <td>Method, e.g. <code>def x = 42</code>.</td>
   </tr>
   <tr>
-    <td><code>4</code></td>
-    <td><code>PRIMARY_CONSTRUCTOR</code></td>
-    <td>Primary constructor, e.g. <code>(x: Int)</code> in <code>class C(x: Int)</code>.</td>
-  </tr>
-  <tr>
-    <td><code>5</code></td>
-    <td><code>SECONDARY_CONSTRUCTOR</code></td>
-    <td>Secondary constructor, e.g. <code>def this() = this(42)</code>.</td>
+    <td><code>21</code></td>
+    <td><code>CONSTRUCTOR</code></td>
+    <td>Constructor, e.g. <code>(x: Int)</code> or
+    <code>def this() = this(42)</code> in <code>class C(x: Int)</code>.</td>
   </tr>
   <tr>
     <td><code>6</code></td>
@@ -644,18 +640,23 @@ languages map onto these properties.
     <td><code>0x400</code></td>
     <td><code>VAL</code></td>
     <td>Is a <code>val</code> (local value, member value or
-    <code>val</code> parameter of a primary constructor)?</td>
+    <code>val</code> parameter of a constructor)?</td>
   </tr>
   <tr>
     <td><code>0x800</code></td>
     <td><code>VAR</code></td>
     <td>Is a <code>var</code> (local variable, member variable or
-    <code>var</code> parameter of a primary constructor)?</td>
+    <code>var</code> parameter of a constructor)?</td>
   </tr>
   <tr>
     <td><code>0x1000</code></td>
     <td><code>STATIC</code></td>
     <td>Is a <code>static</code> field, method or class?</td>
+  </tr>
+  <tr>
+    <td><code>0x2000</code></td>
+    <td><code>PRIMARY</code></td>
+    <td>Is a primary constructor?</td>
   </tr>
 </table>
 
@@ -931,7 +932,7 @@ the owner chain is `[_root_, scala, Int]`.
 **Definition descriptor** is:
   * For `LOCAL`, `FIELD`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
     concatenation of its encoded name and a dot (`.`).
-  * For `METHOD`, `PRIMARY_CONSTRUCTOR`, `SECONDARY_CONSTRUCTOR` or `MACRO`,
+  * For `METHOD`, `CONSTRUCTOR`, or `MACRO`,
     concatenation of its encoded name, a left parenthesis (`(`),
     its type descriptor, a right parenthesis (`)`) and a dot (`.`).
     In the case when multiple methods have the same name and type descriptor,
@@ -1777,9 +1778,8 @@ Notes:
   future.
 * Macro symbols support [all Scala accessibilities](#scala-accessibility).
 
-**Constructors** [[52][52], [53][53]] are represented with `PRIMARY_CONSTRUCTOR`
-and `SECONDARY_CONSTRUCTOR` symbols similarly to function definitions (see
-above).
+**Constructors** [[52][52], [53][53]] are represented with `CONSTRUCTOR`
+symbols similarly to function definitions (see above).
 
 ```scala
 class C(x: Int) {
@@ -1797,13 +1797,13 @@ class C(x: Int) {
   <tr>
     <td>Primary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`(Int).</code></td>
-    <td><code>PRIMARY_CONSTRUCTOR</code></td>
+    <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;C&gt;, List()))</code></td>
   </tr>
   <tr>
     <td>Secondary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
-    <td><code>SECONDARY_CONSTRUCTOR</code></td>
+    <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;C&gt;, List()))</code></td>
   </tr>
 </table>
@@ -1811,7 +1811,8 @@ class C(x: Int) {
 Notes:
 * Unlike some other metaprogramming systems for Scala, we do not create
   synthetic constructor symbols for traits and objects.
-* Constructor symbols don't support any properties.
+* Supported properties for constructor symbols are:
+  * `PRIMARY`: set for primary constructors.
 * Constructors don't have type parameters and return types, but we still
   represent their signatures with `MethodType`. In these signatures,
   type parameters are equal to `List()` and the return type
@@ -1893,7 +1894,7 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
   <tr>
     <td>Primary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).</code></td>
-    <td><code>PRIMARY_CONSTRUCTOR</code></td>
+    <td><code>CONSTRUCTOR</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>

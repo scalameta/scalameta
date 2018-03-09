@@ -156,13 +156,12 @@ message TypeType {
 
 message SymbolInformation {
   enum Kind {
-    // reserved 1, 2, 15, 16;
+    // reserved 1, 2, 4, 5, 15, 16;
     UNKNOWN_KIND = 0;
     LOCAL = 19;
     FIELD = 20;
     METHOD = 3;
-    PRIMARY_CONSTRUCTOR = 4;
-    SECONDARY_CONSTRUCTOR = 5;
+    CONSTRUCTOR = 21;
     MACRO = 6;
     TYPE = 7;
     PARAMETER = 8;
@@ -190,6 +189,7 @@ message SymbolInformation {
     VAL = 0x400;
     VAR = 0x800;
     STATIC = 0x1000;
+    PRIMARY = 0x2000;
   }
   reserved 2, 6, 12;
   string symbol = 1;

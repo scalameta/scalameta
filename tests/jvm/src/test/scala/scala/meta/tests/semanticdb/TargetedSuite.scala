@@ -156,9 +156,9 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_root_.f.C1#T1# => abstract type T1
        |_root_.f.C1#T2# => type T2: Int
        |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#`<init>`(). => secondaryctor <init>: (): C1
+       |_root_.f.C1#`<init>`(). => ctor <init>: (): C1
        |  [4..6): C1 => _root_.f.C1#
-       |_root_.f.C1#`<init>`(Int,Int,Int). => primaryctor <init>: (p1: Int, p2: Int, p3: Int): C1
+       |_root_.f.C1#`<init>`(Int,Int,Int). => primary ctor <init>: (p1: Int, p2: Int, p3: Int): C1
        |  [5..8): Int => _root_.scala.Int#
        |  [14..17): Int => _root_.scala.Int#
        |  [23..26): Int => _root_.scala.Int#
@@ -210,14 +210,14 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_root_.f.C1#p3. => private var field p3: Int
        |  [0..3): Int => _root_.scala.Int#
        |_root_.f.C2# => abstract class C2
-       |_root_.f.C2#`<init>`(). => primaryctor <init>: (): C2
+       |_root_.f.C2#`<init>`(). => primary ctor <init>: (): C2
        |  [4..6): C2 => _root_.f.C2#
        |_root_.f.C2#m3(). => abstract method m3: Int
        |  [0..3): Int => _root_.scala.Int#
        |_root_.f.C2#m4(). => final method m4: Nothing
        |  [0..7): Nothing => _root_.scala.Nothing#
        |_root_.f.C3# => sealed class C3
-       |_root_.f.C3#`<init>`(). => primaryctor <init>: (): C3
+       |_root_.f.C3#`<init>`(). => primary ctor <init>: (): C3
        |  [4..6): C3 => _root_.f.C3#
        |_root_.f.C3#m3(). => method m3: Int
        |  [0..3): Int => _root_.scala.Int#
@@ -225,12 +225,12 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [4..10): String => _root_.java.lang.String#
        |_root_.f.M. => final object M
        |_root_.f.M.C1# => case class C1
-       |_root_.f.M.C1#`<init>`(). => primaryctor <init>: (): C1
+       |_root_.f.M.C1#`<init>`(). => primary ctor <init>: (): C1
        |  [4..6): C1 => _root_.f.M.C1#
        |_root_.f.M.C2# => class C2
        |_root_.f.M.C2#[T] => covariant typeparam T
        |_root_.f.M.C2#[U] => contravariant typeparam U
-       |_root_.f.M.C2#`<init>`(). => primaryctor <init>: (): C2[T, U]
+       |_root_.f.M.C2#`<init>`(). => primary ctor <init>: (): C2[T, U]
        |  [4..6): C2 => _root_.f.M.C2#
        |  [7..8): T => _root_.f.M.C2#[T]
        |  [10..11): U => _root_.f.M.C2#[U]
@@ -239,7 +239,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_root_.f.M.l1(). => lazy val field l1: Nothing
        |  [0..7): Nothing => _root_.scala.Nothing#
        |_root_.f.T# => trait T
-       |_root_.f.T#$init$(). => primaryctor $init$: (): Unit
+       |_root_.f.T#$init$(). => primary ctor $init$: (): Unit
        |  [4..8): Unit => _root_.scala.Unit#
        |_root_.f.T#`f4_=`(Nothing). => protected var method f4_=: (x$1: Nothing): Unit
        |  [6..13): Nothing => _root_.scala.Nothing#
@@ -397,7 +397,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_root_.i.D#X# => type X: HashSet[Int]
        |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
        |  [8..11): Int => _root_.scala.Int#
-       |_root_.i.D#`<init>`(). => primaryctor <init>: (): D
+       |_root_.i.D#`<init>`(). => primary ctor <init>: (): D
        |  [4..5): D => _root_.i.D#
        |_root_.i.D#x(). => method x: HashSet[Int]
        |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
@@ -406,7 +406,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_root_.i.E#X# => type X: ListBuffer[Int]
        |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
        |  [11..14): Int => _root_.scala.Int#
-       |_root_.i.E#`<init>`(). => primaryctor <init>: (): E
+       |_root_.i.E#`<init>`(). => primary ctor <init>: (): E
        |  [4..5): E => _root_.i.E#
        |_root_.i.E#x(). => method x: ListBuffer[Int]
        |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
@@ -430,7 +430,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_root_.i.a.y. => private val field y: HashSet[Int]
        |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
        |  [8..11): Int => _root_.scala.Int#
-       |_root_.java.lang.Object#`<init>`(). => javadefined primaryctor <init>: (): Object
+       |_root_.java.lang.Object#`<init>`(). => javadefined primary ctor <init>: (): Object
        |  [4..10): Object => _root_.java.lang.Object#
        |_root_.scala. => package scala
        |_root_.scala.Int# => abstract final class Int
@@ -761,13 +761,13 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_empty_.y.Path# => class Path
        |_empty_.y.Path#B# => class B
        |_empty_.y.Path#B#C# => class C
-       |_empty_.y.Path#B#C#`<init>`(). => primaryctor <init>: (): B.this.C
+       |_empty_.y.Path#B#C#`<init>`(). => primary ctor <init>: (): B.this.C
        |  [4..5): B => _empty_.y.Path#B#
        |  [11..12): C => _empty_.y.Path#B#C#
-       |_empty_.y.Path#B#`<init>`(). => primaryctor <init>: (): Path.this.B
+       |_empty_.y.Path#B#`<init>`(). => primary ctor <init>: (): Path.this.B
        |  [4..8): Path => _empty_.y.Path#
        |  [14..15): B => _empty_.y.Path#B#
-       |_empty_.y.Path#`<init>`(). => primaryctor <init>: (): Path
+       |_empty_.y.Path#`<init>`(). => primary ctor <init>: (): Path
        |  [4..8): Path => _empty_.y.Path#
        |_empty_.y.Path#x(). => val method x: Path.this.B
        |  [0..4): Path => _empty_.y.Path#
@@ -810,7 +810,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
     """.stripMargin,
     """|_empty_.aa# => class aa
-       |_empty_.aa#`<init>`(). => primaryctor <init>: (): aa
+       |_empty_.aa#`<init>`(). => primary ctor <init>: (): aa
        |  [4..6): aa => _empty_.aa#
        |_empty_.aa#x(). => val method x: aa
        |  [0..2): aa => _empty_.aa#
@@ -880,7 +880,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |_empty_.ad.$anon#y(). => abstract val method y: Any
        |  [0..3): Any => _root_.scala.Any#
        |_empty_.ad.Bar# => class Bar
-       |_empty_.ad.Bar#`<init>`(). => primaryctor <init>: (): Bar
+       |_empty_.ad.Bar#`<init>`(). => primary ctor <init>: (): Bar
        |  [4..7): Bar => _empty_.ad.Bar#
        |_empty_.ad.Foo# => trait Foo
        |_empty_.ad.k(). => val method k: AnyRef with Foo{val y: Any}
@@ -929,7 +929,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [0..3): Int => _root_.scala.Int#
        |_empty_.ad.zz.$anon#y. => private val field y: Int
        |  [0..3): Int => _root_.scala.Int#
-       |_root_.java.lang.Object#`<init>`(). => javadefined primaryctor <init>: (): Object
+       |_root_.java.lang.Object#`<init>`(). => javadefined primary ctor <init>: (): Object
        |  [4..10): Object => _root_.java.lang.Object#
        |_root_.scala.Any# => abstract class Any
        |_root_.scala.AnyRef# => type AnyRef: Object

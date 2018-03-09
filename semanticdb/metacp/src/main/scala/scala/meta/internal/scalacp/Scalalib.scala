@@ -58,7 +58,8 @@ object Scalalib {
     val ctor = s.SymbolInformation(
       symbol = symbol + "`<init>`().",
       language = l.SCALA,
-      kind = k.PRIMARY_CONSTRUCTOR,
+      kind = k.CONSTRUCTOR,
+      properties = p.PRIMARY.value,
       name = "<init>",
       tpe = Some(s.Type(tag = t.METHOD_TYPE, methodType = Some(ctorSig))),
       accessibility = Some(s.Accessibility(a.PUBLIC)),
