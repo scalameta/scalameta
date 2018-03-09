@@ -26,6 +26,14 @@
     * [Annotation](#scala-annotation)
     * [Accessibility](#scala-accessibility)
     * [Synthetic](#scala-synthetic)
+  * [Java](#java)
+    * [Language](#java)
+    * [Symbol](#java)
+    * [Type](#java)
+    * [SymbolInformation](#java)
+    * [Annotation](#java)
+    * [Accessibility](#java)
+    * [Synthetic](#java)
 
 ## Motivation
 
@@ -2099,6 +2107,14 @@ Synthetics are unspecified in SLS, and our experience [\[38\]][38] shows that
 reverse engineering synthetics is very hard. We may improve
 on this in the future, but this is highly unlikely.
 
+### Java
+
+Java `class` file format [\[68\]][68] can be mapped onto SemanticDB.
+This has been validated in an experimental implementation [\[69\]][69],
+but we do not yet have a specification that comprehensively describes how
+Java language features map onto SemanticDB. We intend to improve on this
+in the future.
+
 [semanticdb2.proto]: https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb2/semanticdb2.proto
 [semanticdb3.proto]: semanticdb3.proto
 [1]: https://semver.org/
@@ -2168,3 +2184,5 @@ on this in the future, but this is highly unlikely.
 [65]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#variable-patterns
 [66]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#pattern-matching-expressions
 [67]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#type-patterns
+[68]: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
+[69]: https://github.com/scalameta/scalameta/blob/master/semanticdb/metacp/src/main/scala/scala/meta/internal/javacp/Javacp.scala
