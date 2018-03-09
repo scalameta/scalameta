@@ -105,7 +105,7 @@ trait TypeOps { self: DatabaseOps =>
           case g.ClassInfoType(gparents, gdecls, _) =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
-            val sdecls = gdecls.sorted.map(todo)
+            val sdecls = gdecls.sorted.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
             Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE
@@ -166,6 +166,19 @@ trait TypeOps { self: DatabaseOps =>
   }
 
   implicit class XtensionGType(gtpe: g.Type) {
+    def javaCompanionDecls: List[g.Symbol] = {
+      if (gtpe.typeSymbol.isJavaClass) {
+        gtpe.typeSymbol.companionModule.info match {
+          case m: g.ModuleTypeRef =>
+            val decls = m.sym.info.decls.sorted
+            // static java classes don't have <init> constructors.
+            decls.dropWhile(_.name == g.nme.CONSTRUCTOR)
+          case _ => Nil
+        }
+      } else {
+        Nil
+      }
+    }
     // TODO: Implement me.
     def hasNontrivialPrefix: Boolean = {
       val (gpre, gsym) = {

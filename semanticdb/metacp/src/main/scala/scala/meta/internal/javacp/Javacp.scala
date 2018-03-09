@@ -1,5 +1,6 @@
 package scala.meta.internal.javacp
 
+import java.util.Comparator
 import org.langmeta.io.AbsolutePath
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
@@ -135,6 +136,11 @@ object Javacp {
       }
     }
 
+    // NOTE: we sort methods by whether they're static or not in order to compute same method symbols as metac.
+    // In scalac, static class members are separated from non-static members, which makes it impossible
+    // to recover the original mixed static/non-static member order in the classfile.
+    node.methods.sort(ByStaticAccess)
+
     // NOTE: this logic will soon change https://github.com/scalameta/scalameta/issues/1358
     val methodSignatures = node.methods.asScala.map { method: MethodNode =>
       val signature = JavaTypeSignature.parse(
@@ -151,9 +157,13 @@ object Javacp {
           m.descriptor == method.descriptor
         }
         val suffix =
-          if (synonyms.length == 1) ""
+          if (synonyms.lengthCompare(1) == 0) ""
           else "+" + (1 + synonyms.indexWhere(_.signature eq method.signature))
-        val methodSymbol = classSymbol + method.node.name + "(" + method.descriptor + suffix + ")" + "."
+        val isConstructor = method.node.name == "<init>"
+        val methodName =
+          if (isConstructor) "`" + method.node.name + "`"
+          else method.node.name
+        val methodSymbol = classSymbol + methodName + "(" + method.descriptor + suffix + ")" + "."
 
         val (methodScope, methodTypeParameters) = method.signature.typeParameters match {
           case Some(tp: TypeParameters) => addTypeParameters(tp, methodSymbol, classScope)
@@ -162,8 +172,7 @@ object Javacp {
         methodTypeParameters.foreach(buf += _)
 
         val params =
-          if (method.node.name == "<init>" &&
-              hasOuterClassReference &&
+          if (isConstructor && hasOuterClassReference &&
               // Guard against an empty parameter list, which seems to only happen
               // in the JDK for java/util/regex/Pattern.class
               method.signature.params.nonEmpty) {
@@ -402,7 +411,10 @@ object Javacp {
   private def sarray(tpe: s.Type): s.Type =
     styperef("_root_.scala.Array#", tpe :: Nil)
 
-  private def styperef(symbol: String, args: List[s.Type] = Nil, prefix: Option[s.Type] = None): s.Type = {
+  private def styperef(
+      symbol: String,
+      args: List[s.Type] = Nil,
+      prefix: Option[s.Type] = None): s.Type = {
     s.Type(
       tag = s.Type.Tag.TYPE_REF,
       typeRef = Some(s.TypeRef(prefix, symbol, args))
@@ -434,6 +446,15 @@ object Javacp {
   private implicit class XtensionAccess(asmAccess: Int) {
     def hasFlag(flag: Int): Boolean =
       (flag & asmAccess) != 0
+  }
+
+  private val ByStaticAccess: Comparator[MethodNode] = new Comparator[MethodNode] {
+    override def compare(o1: MethodNode, o2: MethodNode): Int = {
+      java.lang.Boolean.compare(
+        o1.access.hasFlag(o.ACC_STATIC),
+        o2.access.hasFlag(o.ACC_STATIC)
+      )
+    }
   }
 
 }

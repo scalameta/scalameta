@@ -500,13 +500,13 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/MetacJava.scala
 Text => non-empty
 Language => Scala212
-Symbols => 36 entries
-Occurrences => 48 entries
+Symbols => 38 entries
+Occurrences => 56 entries
 
 Symbols:
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.MetacJava# => class MetacJava.{+7 decls}
+_root_.com.javacp.MetacJava# => class MetacJava.{+12 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload1# => class Overload1.{+3 decls}
   extends Object
@@ -528,6 +528,28 @@ _root_.com.javacp.MetacJava#Overload2#A#`<init>`(). => primaryctor <init>: (): O
 _root_.com.javacp.MetacJava#Overload2#`<init>`(). => primaryctor <init>: (): MetacJava.this.Overload2
   MetacJava => _root_.com.javacp.MetacJava#
   Overload2 => _root_.com.javacp.MetacJava#Overload2#
+_root_.com.javacp.MetacJava#Overload3# => class Overload3.{+3 decls}
+  extends Object
+_root_.com.javacp.MetacJava#Overload3#A# => class A.{+1 decls}
+  extends Object
+_root_.com.javacp.MetacJava#Overload3#A#`<init>`(). => primaryctor <init>: (): A
+  A => _root_.com.javacp.MetacJava#Overload3#A#
+_root_.com.javacp.MetacJava#StaticInner# => class StaticInner.{+5 decls}
+  extends Object
+_root_.com.javacp.MetacJava#StaticInner#NonStatic# => class NonStatic.{+2 decls}
+  extends Object
+_root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(). => primaryctor <init>: (): StaticInner.this.NonStatic
+  StaticInner => _root_.com.javacp.MetacJava#StaticInner#
+  NonStatic => _root_.com.javacp.MetacJava#StaticInner#NonStatic#
+_root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic). => def method: (e: <?>): Unit
+  e => _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).(e)
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.MetacJava#StaticInner#`<init>`(). => primaryctor <init>: (): StaticInner
+  StaticInner => _root_.com.javacp.MetacJava#StaticInner#
+_root_.com.javacp.MetacJava#StaticInner#isNotStatic(). => def isNotStatic: (): Unit
+  Unit => _root_.scala.Unit#
+_root_.com.javacp.MetacJava#StaticInner#isStatic(). => def isStatic: (): Unit
+  Unit => _root_.scala.Unit#
 _root_.com.javacp.MetacJava#`<init>`(). => primaryctor <init>: (): MetacJava
   MetacJava => _root_.com.javacp.MetacJava#
 _root_.com.javacp.MetacJava#overload(A+1). => def overload: (a: <?>): Unit
@@ -536,23 +558,8 @@ _root_.com.javacp.MetacJava#overload(A+1). => def overload: (a: <?>): Unit
 _root_.com.javacp.MetacJava#overload(A+2). => def overload: (a: <?>): Unit
   a => _root_.com.javacp.MetacJava#overload(A+2).(a)
   Unit => _root_.scala.Unit#
-_root_.com.javacp.MetacJava. => final object MetacJava
-_root_.com.javacp.MetacJava.StaticInner# => class StaticInner.{+4 decls}
-  extends Object
-_root_.com.javacp.MetacJava.StaticInner#NonStatic# => class NonStatic.{+2 decls}
-  extends Object
-_root_.com.javacp.MetacJava.StaticInner#NonStatic#`<init>`(). => primaryctor <init>: (): StaticInner.this.NonStatic
-  StaticInner => _root_.com.javacp.MetacJava.StaticInner#
-  NonStatic => _root_.com.javacp.MetacJava.StaticInner#NonStatic#
-_root_.com.javacp.MetacJava.StaticInner#NonStatic#method(NonStatic). => def method: (e: <?>): Unit
-  e => _root_.com.javacp.MetacJava.StaticInner#NonStatic#method(NonStatic).(e)
-  Unit => _root_.scala.Unit#
-_root_.com.javacp.MetacJava.StaticInner#`<init>`(). => primaryctor <init>: (): StaticInner
-  StaticInner => _root_.com.javacp.MetacJava.StaticInner#
-_root_.com.javacp.MetacJava.StaticInner#isNotStatic(). => def isNotStatic: (): Unit
-  Unit => _root_.scala.Unit#
-_root_.com.javacp.MetacJava.StaticInner. => final object StaticInner
-_root_.com.javacp.MetacJava.StaticInner.isStatic(). => def isStatic: (): Unit
+_root_.com.javacp.MetacJava#overload(A+3). => def overload: (a: <?>): Unit
+  a => _root_.com.javacp.MetacJava#overload(A+3).(a)
   Unit => _root_.scala.Unit#
 _root_.example. => package example
 _root_.example.MetacJava# => class MetacJava.{+11 decls}
@@ -566,11 +573,11 @@ _root_.example.MetacJava#inner. => private[this] val inner: MetacJava
 _root_.example.MetacJava#nonStatic(). => getter nonStatic: : MetacJava.this.staticInner.NonStatic
   MetacJava => _root_.example.MetacJava#
   staticInner => _root_.example.MetacJava#staticInner().
-  NonStatic => _root_.com.javacp.MetacJava.StaticInner#NonStatic#
+  NonStatic => _root_.com.javacp.MetacJava#StaticInner#NonStatic#
 _root_.example.MetacJava#nonStatic. => private[this] val nonStatic: MetacJava.this.staticInner.NonStatic
   MetacJava => _root_.example.MetacJava#
   staticInner => _root_.example.MetacJava#staticInner().
-  NonStatic => _root_.com.javacp.MetacJava.StaticInner#NonStatic#
+  NonStatic => _root_.com.javacp.MetacJava#StaticInner#NonStatic#
 _root_.example.MetacJava#overload1(). => getter overload1: : MetacJava.this.inner.Overload1
   MetacJava => _root_.example.MetacJava#
   inner => _root_.example.MetacJava#inner().
@@ -588,9 +595,9 @@ _root_.example.MetacJava#overload2. => private[this] val overload2: MetacJava.th
   inner => _root_.example.MetacJava#inner().
   Overload2 => _root_.com.javacp.MetacJava#Overload2#
 _root_.example.MetacJava#staticInner(). => getter staticInner: : StaticInner
-  StaticInner => _root_.com.javacp.MetacJava.StaticInner#
+  StaticInner => _root_.com.javacp.MetacJava#StaticInner#
 _root_.example.MetacJava#staticInner. => private[this] val staticInner: StaticInner
-  StaticInner => _root_.com.javacp.MetacJava.StaticInner#
+  StaticInner => _root_.com.javacp.MetacJava#StaticInner#
 
 Occurrences:
 [0:8..0:15): example <= _root_.example.
@@ -599,14 +606,14 @@ Occurrences:
 [4:6..4:15): MetacJava <= _root_.example.MetacJava#
 [4:16..4:16):  <= _root_.example.MetacJava#`<init>`().
 [5:2..5:8): javacp => _root_.com.javacp.
-[5:9..5:18): MetacJava => _root_.com.javacp.MetacJava.
-[5:19..5:30): StaticInner => _root_.com.javacp.MetacJava.StaticInner.
-[5:31..5:39): isStatic => _root_.com.javacp.MetacJava.StaticInner.isStatic().
+[5:9..5:18): MetacJava => _root_.com.javacp.MetacJava#
+[5:19..5:30): StaticInner => _root_.com.javacp.MetacJava#StaticInner#
+[5:31..5:39): isStatic => _root_.com.javacp.MetacJava#StaticInner#isStatic().
 [6:6..6:12): javacp => _root_.com.javacp.
-[6:13..6:22): MetacJava => _root_.com.javacp.MetacJava.
-[6:23..6:34): StaticInner => _root_.com.javacp.MetacJava.StaticInner#
-[6:34..6:34):  => _root_.com.javacp.MetacJava.StaticInner#`<init>`().
-[6:37..6:48): isNotStatic => _root_.com.javacp.MetacJava.StaticInner#isNotStatic().
+[6:13..6:22): MetacJava => _root_.com.javacp.MetacJava#
+[6:23..6:34): StaticInner => _root_.com.javacp.MetacJava#StaticInner#
+[6:34..6:34):  => _root_.com.javacp.MetacJava#StaticInner#`<init>`().
+[6:37..6:48): isNotStatic => _root_.com.javacp.MetacJava#StaticInner#isNotStatic().
 [7:6..7:11): inner <= _root_.example.MetacJava#inner().
 [7:18..7:24): javacp => _root_.com.javacp.
 [7:25..7:34): MetacJava => _root_.com.javacp.MetacJava#
@@ -631,16 +638,24 @@ Occurrences:
 [11:32..11:32):  => _root_.com.javacp.MetacJava#Overload2#A#`<init>`().
 [12:6..12:17): staticInner <= _root_.example.MetacJava#staticInner().
 [12:24..12:30): javacp => _root_.com.javacp.
-[12:31..12:40): MetacJava => _root_.com.javacp.MetacJava.
-[12:41..12:52): StaticInner => _root_.com.javacp.MetacJava.StaticInner#
-[12:52..12:52):  => _root_.com.javacp.MetacJava.StaticInner#`<init>`().
+[12:31..12:40): MetacJava => _root_.com.javacp.MetacJava#
+[12:41..12:52): StaticInner => _root_.com.javacp.MetacJava#StaticInner#
+[12:52..12:52):  => _root_.com.javacp.MetacJava#StaticInner#`<init>`().
 [13:6..13:15): nonStatic <= _root_.example.MetacJava#nonStatic().
 [13:22..13:33): staticInner => _root_.example.MetacJava#staticInner().
-[13:34..13:43): NonStatic => _root_.com.javacp.MetacJava.StaticInner#NonStatic#
-[13:43..13:43):  => _root_.com.javacp.MetacJava.StaticInner#NonStatic#`<init>`().
+[13:34..13:43): NonStatic => _root_.com.javacp.MetacJava#StaticInner#NonStatic#
+[13:43..13:43):  => _root_.com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
 [14:2..14:11): nonStatic => _root_.example.MetacJava#nonStatic().
-[14:12..14:18): method => _root_.com.javacp.MetacJava.StaticInner#NonStatic#method(NonStatic).
+[14:12..14:18): method => _root_.com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).
 [14:19..14:28): nonStatic => _root_.example.MetacJava#nonStatic().
+[15:2..15:8): javacp => _root_.com.javacp.
+[15:9..15:18): MetacJava => _root_.com.javacp.MetacJava#
+[15:19..15:27): overload => _root_.com.javacp.MetacJava#overload(A+3).
+[15:32..15:38): javacp => _root_.com.javacp.
+[15:39..15:48): MetacJava => _root_.com.javacp.MetacJava#
+[15:49..15:58): Overload3 => _root_.com.javacp.MetacJava#Overload3#
+[15:59..15:60): A => _root_.com.javacp.MetacJava#Overload3#A#
+[15:60..15:60):  => _root_.com.javacp.MetacJava#Overload3#A#`<init>`().
 
 semanticdb/integration/src/main/scala/example/Methods.scala
 -----------------------------------------------------------
@@ -1240,9 +1255,12 @@ Symbols:
 _root_.java. => package java
 _root_.java.nio. => package nio
 _root_.java.nio.file. => package file
-_root_.java.nio.file.LinkOption. => final object LinkOption
-_root_.java.nio.file.LinkOption.NOFOLLOW_LINKS. => final val NOFOLLOW_LINKS: NOFOLLOW_LINKS.type
-  NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS.
+_root_.java.nio.file.LinkOption# => abstract final sealed class LinkOption.{+4 decls}
+  extends Enum[LinkOption]
+  extends OpenOption
+  extends CopyOption
+_root_.java.nio.file.LinkOption#NOFOLLOW_LINKS. => final val NOFOLLOW_LINKS: NOFOLLOW_LINKS.type
+  NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption#NOFOLLOW_LINKS.
 _root_.scala. => package scala
 _root_.scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
@@ -1569,9 +1587,9 @@ _root_.types.Test.Literal.float. => private[this] final val float: 1.0f
 _root_.types.Test.Literal.int(). => final getter int: : 1
 _root_.types.Test.Literal.int. => private[this] final val int: 1
 _root_.types.Test.Literal.javaEnum(). => final getter javaEnum: : NOFOLLOW_LINKS.type
-  NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS.
+  NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption#NOFOLLOW_LINKS.
 _root_.types.Test.Literal.javaEnum. => private[this] final val javaEnum: NOFOLLOW_LINKS.type
-  NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS.
+  NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption#NOFOLLOW_LINKS.
 _root_.types.Test.Literal.long(). => final getter long: : 1L
 _root_.types.Test.Literal.long. => private[this] final val long: 1L
 _root_.types.Test.Literal.nil(). => final getter nil: : null
@@ -1838,8 +1856,8 @@ Occurrences:
 [105:25..105:29): java => _root_.java.
 [105:30..105:33): nio => _root_.java.nio.
 [105:34..105:38): file => _root_.java.nio.file.
-[105:39..105:49): LinkOption => _root_.java.nio.file.LinkOption.
-[105:50..105:64): NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption.NOFOLLOW_LINKS.
+[105:39..105:49): LinkOption => _root_.java.nio.file.LinkOption#
+[105:50..105:64): NOFOLLOW_LINKS => _root_.java.nio.file.LinkOption#NOFOLLOW_LINKS.
 [106:14..106:21): clazzOf <= _root_.types.Test.Literal.clazzOf().
 [106:24..106:31): classOf => _root_.scala.Predef.classOf().
 [106:32..106:38): Option => _root_.scala.Option#

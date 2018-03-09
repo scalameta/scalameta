@@ -10,6 +10,12 @@ trait SymbolOps { self: DatabaseOps =>
   lazy val idCache = new HashMap[String, Int]
   lazy val symbolCache = new HashMap[g.Symbol, m.Symbol]
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
+
+    def isJavaClass: Boolean =
+      sym.isJavaDefined &&
+        !sym.hasPackageFlag &&
+        (sym.isClass || sym.isModule)
+
     def toSemantic: m.Symbol = {
       def uncached(sym: g.Symbol): m.Symbol = {
         if (sym == null || sym == g.NoSymbol) return m.Symbol.None
@@ -39,7 +45,7 @@ trait SymbolOps { self: DatabaseOps =>
             m.Signature.TypeParameter(sym.name.toSemantic)
           } else if (sym.isValueParameter) {
             m.Signature.TermParameter(sym.name.toSemantic)
-          } else if (sym.isType) {
+          } else if (sym.isType || sym.isJavaClass) {
             m.Signature.Type(sym.name.toSemantic)
           } else {
             m.Signature.Term(sym.name.toSemantic)
@@ -81,11 +87,22 @@ trait SymbolOps { self: DatabaseOps =>
     def descriptor: String = {
       sym.info.descriptor
     }
+    def filterSiblings(syms: List[g.Symbol]): List[g.Symbol] = {
+      syms.filter(_.name == sym.name)
+    }
+    def filterSiblings: List[g.Symbol] = {
+      if (sym.owner.isJavaClass) {
+        filterSiblings(sym.owner.companionClass.info.decls.sorted) ++
+          filterSiblings(sym.owner.info.javaCompanionDecls)
+      } else {
+        filterSiblings(sym.owner.info.decls.sorted)
+      }
+    }
     def disambiguator: String = {
-      val siblings = sym.owner.info.decls.sorted.filter(_.name == sym.name)
+      val siblings = filterSiblings
       val synonyms = siblings.filter(_.descriptor == sym.descriptor)
       val suffix = {
-        if (synonyms.length == 1) ""
+        if (synonyms.lengthCompare(1) == 0) ""
         else "+" + (synonyms.indexOf(sym) + 1)
       }
       "(" + descriptor + suffix + ")"

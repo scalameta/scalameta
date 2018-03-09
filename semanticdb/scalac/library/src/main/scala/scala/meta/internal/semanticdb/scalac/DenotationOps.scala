@@ -36,6 +36,7 @@ trait DenotationOps { self: DatabaseOps =>
         case gsym: ModuleSymbol =>
           if (gsym.hasPackageFlag) mf.PACKAGE
           else if (gsym.isPackageObject) mf.PACKAGEOBJECT
+          else if (gsym.isJavaClass) mf.CLASS
           else mf.OBJECT
         case gsym: TermSymbol =>
           if (gsym.isParameter) mf.PARAM
@@ -67,7 +68,8 @@ trait DenotationOps { self: DatabaseOps =>
       }
     }
 
-    private def propertyFlags: Long = {
+    private[meta] def propertyFlags: Long = {
+      if (gsym.isJavaClass && gsym.isModule) return gsym.companionClass.propertyFlags
       var flags = 0L
       def isAbstractClass = gsym.isClass && gsym.isAbstract && !gsym.isTrait
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
@@ -118,7 +120,9 @@ trait DenotationOps { self: DatabaseOps =>
 
     private def newInfo: (Option[s.Type], List[g.Symbol]) = {
       val ginfo = {
-        if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
+        if (gsym.isJavaClass) {
+          gsym.companionClass.info
+        } else if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
           gsym.info.finalResultType
         } else if (gsym.isAliasType) {
           def preprocess(info: g.Type): g.Type = {

@@ -13,4 +13,5 @@ class MetacJava {
   val staticInner = new javacp.MetacJava.StaticInner()
   val nonStatic = new staticInner.NonStatic()
   nonStatic.method(nonStatic)
+  javacp.MetacJava.overload(new javacp.MetacJava.Overload3.A())
 }
