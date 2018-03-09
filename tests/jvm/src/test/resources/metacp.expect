@@ -283,7 +283,7 @@ Symbols:
 _root_. => package _root_
 _root_.com. => package com
 _root_.com.javacp. => package javacp
-_root_.com.javacp.Test# => class Test[A <: CharSequence with Serializable, B <: Object].{+34 decls}
+_root_.com.javacp.Test# => final class Test[A <: CharSequence with Serializable, B <: Object].{+34 decls}
   extends ArrayList[A]
   extends Comparable[B]
   extends Serializable
@@ -330,13 +330,13 @@ _root_.com.javacp.Test#`<init>`(). => method <init>: (): Unit
   Unit => _root_.scala.Unit#
 _root_.com.javacp.Test#anonymous. => field anonymous: Serializable
   Serializable => _root_.java.io.Serializable#
-_root_.com.javacp.Test#arrayField. => private[javacp] field arrayField: Array[Int]
+_root_.com.javacp.Test#arrayField. => private[javacp] final field arrayField: Array[Int]
   Array => _root_.scala.Array#
   Int => _root_.scala.Int#
 _root_.com.javacp.Test#arrayMethod(). => private[javacp] method arrayMethod: (): Array[Int]
   Array => _root_.scala.Array#
   Int => _root_.scala.Int#
-_root_.com.javacp.Test#compareTo(B). => method compareTo: (b: B): Int
+_root_.com.javacp.Test#compareTo(B). => final method compareTo: (b: B): Int
   b => _root_.com.javacp.Test#compareTo(B).(b)
   B => _root_.com.javacp.Test#[B]
   Int => _root_.scala.Int#

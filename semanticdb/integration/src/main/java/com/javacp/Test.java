@@ -7,10 +7,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 
-public class Test<A extends CharSequence & Serializable, B> extends ArrayList<A> implements Comparable<B>, Serializable {
+public final class Test<A extends CharSequence & Serializable, B> extends ArrayList<A> implements Comparable<B>, Serializable {
 
     @Override
-    public int compareTo(B b) {
+    public final int compareTo(B b) {
         return 0;
     }
 
@@ -22,7 +22,7 @@ public class Test<A extends CharSequence & Serializable, B> extends ArrayList<A>
     }
 
     ArrayList<A> genericField;
-    int[] arrayField;
+    final int[] arrayField = null;
 
     ArrayList<A> genericMethod() {
         return null;
