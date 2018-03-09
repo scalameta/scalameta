@@ -51,14 +51,14 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Symbols:
       |_root_.b. => package b
       |_root_.b.a. => final object a
-      |_root_.b.a.x(). => getter x: List[Nothing]
+      |_root_.b.a.x(). => val method x: List[Nothing]
       |  [0..4): List => _root_.scala.collection.immutable.List#
       |  [5..12): Nothing => _root_.scala.Nothing#
-      |_root_.b.a.x. => private val x: List[Nothing]
+      |_root_.b.a.x. => private val field x: List[Nothing]
       |  [0..4): List => _root_.scala.collection.immutable.List#
       |  [5..12): Nothing => _root_.scala.Nothing#
       |_root_.scala. => package scala
-      |_root_.scala.Predef.any2stringadd#`+`(String). => def +: (other: String): String
+      |_root_.scala.Predef.any2stringadd#`+`(String). => method +: (other: String): String
       |  [8..14): String => _root_.scala.Predef.String#
       |  [17..23): String => _root_.scala.Predef.String#
       |_root_.scala.collection.immutable.List. => final object List

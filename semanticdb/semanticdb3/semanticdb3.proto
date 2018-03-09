@@ -156,11 +156,10 @@ message TypeType {
 
 message SymbolInformation {
   enum Kind {
+    // reserved 1, 2, 15, 16;
     UNKNOWN_KIND = 0;
-    VAL = 1;
-    VAR = 2;
-    GETTER = 15;
-    SETTER = 16;
+    LOCAL = 19;
+    FIELD = 20;
     METHOD = 3;
     PRIMARY_CONSTRUCTOR = 4;
     SECONDARY_CONSTRUCTOR = 5;
@@ -188,8 +187,8 @@ message SymbolInformation {
     CASE = 0x80;
     COVARIANT = 0x100;
     CONTRAVARIANT = 0x200;
-    VALPARAM = 0x400;
-    VARPARAM = 0x800;
+    VAL = 0x400;
+    VAR = 0x800;
     STATIC = 0x1000;
   }
   reserved 2, 6, 12;

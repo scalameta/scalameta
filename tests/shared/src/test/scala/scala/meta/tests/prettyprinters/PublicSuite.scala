@@ -349,9 +349,9 @@ class PublicSuite extends FunSuite {
     val names = List(ResolvedName(pos, symbol, isDefinition = false))
     val classC = Denotation(PRIVATE | CASE | CLASS, "C", "", Nil)
     assert(classC.toString === "private case class C")
-    val defIdentity = Denotation(DEF | FINAL, "identity", info, names)
+    val defIdentity = Denotation(METHOD | FINAL, "identity", info, names)
     assert(defIdentity.toString ===
-      """final def identity: [T](e: E)T
+      """final method identity: [T](e: E)T
         |  [7..8): E => _root_.E#""".stripMargin.split('\n').mkString(EOL)
     )
   }

@@ -223,12 +223,17 @@ class Main(settings: Settings, reporter: Reporter) {
             }
             if ((info.properties & COVARIANT.value) != 0) out.print("+")
             if ((info.properties & CONTRAVARIANT.value) != 0) out.print("-")
+            if ((info.properties & VAL.value) != 0) out.print("val ")
+            if ((info.properties & VAR.value) != 0) out.print("var ")
             info.kind match {
-              case GETTER =>
-                out.print("getter ")
+              case LOCAL =>
+                out.print("local ")
                 out.print(info.name)
-              case SETTER =>
-                out.print("setter ")
+              case FIELD =>
+                out.print("field ")
+                out.print(info.name)
+              case METHOD =>
+                out.print("method ")
                 out.print(info.name)
               case TYPE =>
                 out.print("type ")
@@ -427,15 +432,13 @@ class Main(settings: Settings, reporter: Reporter) {
     if (has(CASE)) out.print("case ")
     if (has(COVARIANT)) out.print("covariant ")
     if (has(CONTRAVARIANT)) out.print("contravariant ")
-    if (has(VALPARAM)) out.print("valparam ")
-    if (has(VARPARAM)) out.print("varparam ")
+    if (has(VAL)) out.print("val ")
+    if (has(VAR)) out.print("var ")
     if (has(STATIC)) out.print("static ")
     info.kind match {
-      case VAL => out.print("val ")
-      case VAR => out.print("var ")
+      case FIELD => out.print("field ")
+      case LOCAL => out.print("local ")
       case METHOD => out.print("method ")
-      case GETTER => out.print("getter ")
-      case SETTER => out.print("setter ")
       case PRIMARY_CONSTRUCTOR => out.print("primaryctor ")
       case SECONDARY_CONSTRUCTOR => out.print("secondaryctor ")
       case MACRO => out.print("macro ")
@@ -453,8 +456,8 @@ class Main(settings: Settings, reporter: Reporter) {
     }
     pprint(info.name, doc)
     info.kind match {
-      case VAL | VAR | METHOD | GETTER | SETTER | PRIMARY_CONSTRUCTOR | SECONDARY_CONSTRUCTOR |
-           MACRO | TYPE | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER =>
+      case LOCAL | FIELD | METHOD | PRIMARY_CONSTRUCTOR | SECONDARY_CONSTRUCTOR | MACRO | TYPE |
+          PARAMETER | SELF_PARAMETER | TYPE_PARAMETER =>
         info.tpe match {
           case Some(tpe) =>
             out.print(": ")

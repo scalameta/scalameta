@@ -113,11 +113,9 @@ package object semanticdb {
               def dflip(dbit: Long) = dflags ^= dbit
               if (slanguage == l.JAVA) dflip(d.JAVADEFINED)
               skind match {
-                case k.VAL => dflip(d.VAL)
-                case k.VAR => dflip(d.VAR)
-                case k.METHOD => dflip(d.DEF)
-                case k.GETTER => dflip(d.GETTER)
-                case k.SETTER => dflip(d.SETTER)
+                case k.LOCAL => dflip(d.LOCAL)
+                case k.FIELD => dflip(d.FIELD)
+                case k.METHOD => dflip(d.METHOD)
                 case k.PRIMARY_CONSTRUCTOR => dflip(d.PRIMARYCTOR)
                 case k.SECONDARY_CONSTRUCTOR => dflip(d.SECONDARYCTOR)
                 case k.MACRO => dflip(d.MACRO)
@@ -142,8 +140,8 @@ package object semanticdb {
               if (stest(p.CASE.value)) dflip(d.CASE)
               if (stest(p.COVARIANT.value)) dflip(d.COVARIANT)
               if (stest(p.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
-              if (stest(p.VALPARAM.value)) dflip(d.VAL)
-              if (stest(p.VARPARAM.value)) dflip(d.VAR)
+              if (stest(p.VAL.value)) dflip(d.VAL)
+              if (stest(p.VAR.value)) dflip(d.VAR)
               sacc.map(_.tag) match {
                 case Some(a.PRIVATE | a.PRIVATE_THIS | a.PRIVATE_WITHIN) =>
                   dflip(d.PRIVATE)
@@ -313,11 +311,9 @@ package object semanticdb {
               val ssymbol = sSymbol(dsymbol)
               val ssymbolLanguage = if (dtest(d.JAVADEFINED)) l.JAVA else l.SCALA
               val skind = {
-                if (dtest(d.VAL) && !dtest(d.PARAM)) k.VAL
-                else if (dtest(d.VAR) && !dtest(d.PARAM)) k.VAR
-                else if (dtest(d.DEF)) k.METHOD
-                else if (dtest(d.GETTER)) k.GETTER
-                else if (dtest(d.SETTER)) k.SETTER
+                if (dtest(d.LOCAL)) k.LOCAL
+                else if (dtest(d.FIELD)) k.FIELD
+                else if (dtest(d.METHOD)) k.METHOD
                 else if (dtest(d.PRIMARYCTOR)) k.PRIMARY_CONSTRUCTOR
                 else if (dtest(d.SECONDARYCTOR)) k.SECONDARY_CONSTRUCTOR
                 else if (dtest(d.MACRO)) k.MACRO
@@ -344,8 +340,8 @@ package object semanticdb {
                 if (dtest(d.CASE)) sflip(p.CASE.value)
                 if (dtest(d.COVARIANT)) sflip(p.COVARIANT.value)
                 if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT.value)
-                if (dtest(d.VAL) && dtest(d.PARAM)) sflip(p.VALPARAM.value)
-                if (dtest(d.VAR) && dtest(d.PARAM)) sflip(p.VARPARAM.value)
+                if (dtest(d.VAL)) sflip(p.VAL.value)
+                if (dtest(d.VAR)) sflip(p.VAR.value)
                 sproperties
               }
               val sname = ddenot.name

@@ -4,7 +4,8 @@ package semanticdb
 private[semanticdb] trait Flags {
   final val VAL: Long = 1 << 0
   final val VAR: Long = 1 << 1
-  final val DEF: Long = 1 << 2
+  @deprecated("Use `METHOD` instead.", "3.6.0") final val DEF: Long = METHOD
+  final val METHOD: Long = 1 << 2
   final val PRIMARYCTOR: Long = 1 << 3
   final val SECONDARYCTOR: Long = 1 << 4
   final val MACRO: Long = 1 << 5
@@ -28,10 +29,12 @@ private[semanticdb] trait Flags {
   final val CONTRAVARIANT: Long = 1 << 23
   final val INLINE: Long = 1 << 24
   final val JAVADEFINED: Long = 1 << 25
-  final val GETTER: Long = 1 << 26
-  final val SETTER: Long = 1 << 27
+  @deprecated("Use `METHOD | VAL` instead.", "3.6.0") final val GETTER: Long = 1 << 26
+  @deprecated("Use `METHOD | VAR` instead.", "3.6.0") final val SETTER: Long = 1 << 27
   final val SELFPARAM: Long = 1 << 28
   final val INTERFACE: Long = 1 << 29
+  final val LOCAL: Long = 1 << 30
+  final val FIELD: Long = 1 << 31
 }
 
 private[semanticdb] trait HasFlags {
@@ -40,9 +43,10 @@ private[semanticdb] trait HasFlags {
 
   def isVal: Boolean = hasFlag(VAL)
   def isVar: Boolean = hasFlag(VAR)
-  def isDef: Boolean = hasFlag(DEF)
-  def isGetter: Boolean = hasFlag(GETTER)
-  def isSetter: Boolean = hasFlag(SETTER)
+  @deprecated("Use `isMethod` instead.", "3.6.0") def isDef: Boolean = isMethod
+  def isMethod: Boolean = hasFlag(METHOD)
+  @deprecated("Use `isDef && isVal` instead.", "3.6.0") def isGetter: Boolean = hasFlag(GETTER)
+  @deprecated("Use `isDef && isVar` instead.", "3.6.0") def isSetter: Boolean = hasFlag(SETTER)
   def isPrimaryCtor: Boolean = hasFlag(PRIMARYCTOR)
   def isSecondaryCtor: Boolean = hasFlag(SECONDARYCTOR)
   def isMacro: Boolean = hasFlag(MACRO)
@@ -68,6 +72,8 @@ private[semanticdb] trait HasFlags {
   def isContravariant: Boolean = hasFlag(CONTRAVARIANT)
   def isInline: Boolean = hasFlag(INLINE)
   def isJavaDefined: Boolean = hasFlag(JAVADEFINED)
+  def isLocal: Boolean = hasFlag(LOCAL)
+  def isField: Boolean = hasFlag(FIELD)
 
   protected def flagSyntax: String = {
     val buf = new StringBuilder
@@ -90,9 +96,7 @@ private[semanticdb] trait HasFlags {
     if (hasFlag(JAVADEFINED)) append("JAVADEFINED")
     if (hasFlag(VAL)) append("VAL")
     if (hasFlag(VAR)) append("VAR")
-    if (hasFlag(DEF)) append("DEF")
-    if (hasFlag(GETTER)) append("GETTER")
-    if (hasFlag(SETTER)) append("SETTER")
+    if (hasFlag(METHOD)) append("METHOD")
     if (hasFlag(PRIMARYCTOR)) append("PRIMARYCTOR")
     if (hasFlag(SECONDARYCTOR)) append("SECONDARYCTOR")
     if (hasFlag(MACRO)) append("MACRO")
@@ -106,6 +110,8 @@ private[semanticdb] trait HasFlags {
     if (hasFlag(CLASS)) append("CLASS")
     if (hasFlag(TRAIT)) append("TRAIT")
     if (hasFlag(INTERFACE)) append("INTERFACE")
+    if (hasFlag(LOCAL)) append("LOCAL")
+    if (hasFlag(FIELD)) append("FIELD")
     buf.toString.toLowerCase
   }
 

@@ -104,10 +104,9 @@ object Scalacp {
     }
     val encodedName = sname(sym).encoded
     skind(sym) match {
-      case k.VAL | k.VAR | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
+      case k.FIELD | k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
         prefix + encodedName + "."
-      case k.METHOD | k.GETTER | k.SETTER | k.PRIMARY_CONSTRUCTOR | k.SECONDARY_CONSTRUCTOR |
-          k.MACRO =>
+      case k.METHOD | k.PRIMARY_CONSTRUCTOR | k.SECONDARY_CONSTRUCTOR | k.MACRO =>
         prefix + encodedName + sym.disambiguator + "."
       case k.TYPE | k.CLASS | k.TRAIT =>
         prefix + encodedName + "#"
@@ -131,9 +130,7 @@ object Scalacp {
           if (sym.entry.index == primaryIndex) k.PRIMARY_CONSTRUCTOR
           else k.SECONDARY_CONSTRUCTOR
         } else {
-          if (sym.isAccessor && sym.name.endsWith("_$eq")) k.SETTER
-          else if (sym.isAccessor) k.GETTER
-          else if (sym.hasFlag(0x00008000)) k.MACRO
+          if (sym.hasFlag(0x00008000)) k.MACRO
           else k.METHOD
         }
       case _: ObjectSymbol | _: ClassSymbol if sym.isModule =>
@@ -143,8 +140,7 @@ object Scalacp {
         // NOTE: This is craziness. In scalap, parameters, val and vars
         // are also modelled with method symbols.
         if (sym.isParam) k.PARAMETER
-        else if (sym.isMutable) k.VAR
-        else k.VAL
+        else k.FIELD
       case sym: ClassSymbol if !sym.isModule =>
         if (sym.isTrait) k.TRAIT
         else k.CLASS
@@ -188,12 +184,20 @@ object Scalacp {
     if (sym.isCase) sflip(p.CASE.value)
     if (sym.isType && sym.isCovariant) sflip(p.COVARIANT.value)
     if (sym.isType && sym.isContravariant) sflip(p.CONTRAVARIANT.value)
+    if (skind(sym) == k.FIELD) {
+      if (sym.isMutable) sflip(p.VAR.value)
+      else sflip(p.VAL.value)
+    }
+    if (sym.isAccessor) {
+      if (sym.isStable) sflip(p.VAL.value)
+      else sflip(p.VAR.value)
+    }
     if (sym.isParam && skind(sym.parent.get) == k.PRIMARY_CONSTRUCTOR) {
-      val members = sym.parent.get.parent.get.children
-      val getter = members.find(m => skind(m) == k.GETTER && m.name == sym.name)
-      val setter = members.find(m => skind(m) == k.SETTER && m.name == sym.name + "_$eq")
-      if (setter.nonEmpty) sflip(p.VARPARAM.value)
-      else if (getter.nonEmpty) sflip(p.VALPARAM.value)
+      val classMembers = sym.parent.get.parent.get.children
+      val getter = classMembers.find(m => m.isAccessor && m.name == sym.name)
+      val setter = classMembers.find(m => m.isAccessor && m.name == sym.name + "_$eq")
+      if (setter.nonEmpty) sflip(p.VAR.value)
+      else if (getter.nonEmpty) sflip(p.VAL.value)
       else ()
     }
     sproperties

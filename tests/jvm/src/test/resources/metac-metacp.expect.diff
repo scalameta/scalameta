@@ -700,9 +700,9 @@ _root_.example.Vals#xzlm().
 --- metac
 +++ metacp
  symbol: "_root_.example.Vals#xzlm()."
--kind: VAL
-+kind: GETTER
- properties: 64
+-kind: FIELD
++kind: METHOD
+ properties: 1088
  name: "xzlm"
  tpe {
 -  tag: TYPE_REF
@@ -723,9 +723,9 @@ _root_.example.Vals#xzm().
 --- metac
 +++ metacp
  symbol: "_root_.example.Vals#xzm()."
--kind: VAL
-+kind: GETTER
- properties: 64
+-kind: FIELD
++kind: METHOD
+ properties: 1088
  name: "xzm"
  tpe {
 -  tag: TYPE_REF
@@ -889,9 +889,9 @@ _root_.flags.p.package.x().
 --- metac
 +++ metacp
  symbol: "_root_.flags.p.package.x()."
--kind: VAL
-+kind: GETTER
- properties: 64
+-kind: FIELD
++kind: METHOD
+ properties: 1088
  name: "x"
  tpe {
 -  tag: TYPE_REF
@@ -1373,8 +1373,8 @@ _root_.types.Test.Literal.javaEnum.
 ===================================
 --- metac
 +++ metacp
- kind: VAL
- properties: 8
+ kind: FIELD
+ properties: 1032
  name: "javaEnum"
 -tpe {
 -  tag: SINGLETON_TYPE

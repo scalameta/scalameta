@@ -28,11 +28,14 @@ trait DenotationOps { self: DatabaseOps =>
             if (gsym.isPrimaryConstructor) mf.PRIMARYCTOR
             else mf.SECONDARYCTOR
           } else {
-            if (gsym.isSetter) mf.SETTER
-            else if (gsym.isGetter && gsym.isLazy && !gsym.isClass) mf.VAL
-            else if (gsym.isGetter) mf.GETTER
-            else if (gsym.isMacro) mf.MACRO
-            else mf.DEF
+            if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
+              if (gsym.isLocalToBlock) mf.LOCAL
+              else mf.FIELD
+            } else if (gsym.isMacro) {
+              mf.MACRO
+            } else {
+              mf.METHOD
+            }
           }
         case gsym: ModuleSymbol =>
           if (gsym.hasPackageFlag) mf.PACKAGE
@@ -40,8 +43,8 @@ trait DenotationOps { self: DatabaseOps =>
           else mf.OBJECT
         case gsym: TermSymbol =>
           if (gsym.isParameter) mf.PARAM
-          else if (gsym.isMutable) mf.VAR
-          else mf.VAL
+          else if (gsym.isLocalToBlock) mf.LOCAL
+          else mf.FIELD
         case gsym: ClassSymbol =>
           if (gsym.isTrait) mf.TRAIT
           else mf.CLASS
@@ -81,6 +84,14 @@ trait DenotationOps { self: DatabaseOps =>
       if (gsym.hasFlag(gf.CASE)) flags |= mf.CASE
       if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flags |= mf.CONTRAVARIANT
       if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flags |= mf.COVARIANT
+      if ((kindFlags & (mf.LOCAL | mf.FIELD)) != 0) {
+        if (gsym.isMutable) flags |= mf.VAR
+        else flags |= mf.VAL
+      }
+      if (gsym.isGetter || gsym.isSetter) {
+        if (gsym.isStable) flags |= mf.VAL
+        else flags |= mf.VAR
+      }
       if (gsym.isParameter && gsym.owner.isPrimaryConstructor) {
         val ggetter = gsym.getterIn(gsym.owner.owner)
         if (ggetter != g.NoSymbol && !ggetter.isStable) flags |= mf.VAR

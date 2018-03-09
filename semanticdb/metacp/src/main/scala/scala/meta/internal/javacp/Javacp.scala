@@ -119,14 +119,9 @@ object Javacp {
           if (field.signature == null) field.desc else field.signature,
           new FieldSignatureVisitor
         )
-
-        val fieldKind =
-          if (field.access.hasFlag(o.ACC_FINAL)) k.VAL
-          else k.VAR
-
         addInfo(
           fieldSymbol,
-          fieldKind,
+          k.FIELD,
           field.name,
           Some(fieldSignature.toType(classScope)),
           field.access,
