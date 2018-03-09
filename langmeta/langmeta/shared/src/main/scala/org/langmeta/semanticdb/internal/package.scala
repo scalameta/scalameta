@@ -331,17 +331,17 @@ package object semanticdb {
               }
               val sproperties = {
                 var sproperties = 0
-                def sflip(sbit: Int) = sproperties ^= sbit
-                if (dtest(d.ABSTRACT)) sflip(p.ABSTRACT.value)
-                if (dtest(d.FINAL)) sflip(p.FINAL.value)
-                if (dtest(d.SEALED)) sflip(p.SEALED.value)
-                if (dtest(d.IMPLICIT)) sflip(p.IMPLICIT.value)
-                if (dtest(d.LAZY)) sflip(p.LAZY.value)
-                if (dtest(d.CASE)) sflip(p.CASE.value)
-                if (dtest(d.COVARIANT)) sflip(p.COVARIANT.value)
-                if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT.value)
-                if (dtest(d.VAL)) sflip(p.VAL.value)
-                if (dtest(d.VAR)) sflip(p.VAR.value)
+                def sflip(sprop: s.SymbolInformation.Property) = sproperties ^= sprop.value
+                if (dtest(d.ABSTRACT)) sflip(p.ABSTRACT)
+                if (dtest(d.FINAL)) sflip(p.FINAL)
+                if (dtest(d.SEALED)) sflip(p.SEALED)
+                if (dtest(d.IMPLICIT)) sflip(p.IMPLICIT)
+                if (dtest(d.LAZY)) sflip(p.LAZY)
+                if (dtest(d.CASE)) sflip(p.CASE)
+                if (dtest(d.COVARIANT)) sflip(p.COVARIANT)
+                if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT)
+                if (dtest(d.VAL)) sflip(p.VAL)
+                if (dtest(d.VAR)) sflip(p.VAR)
                 sproperties
               }
               val sname = ddenot.name

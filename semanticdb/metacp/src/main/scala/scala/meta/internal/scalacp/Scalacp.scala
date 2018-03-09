@@ -175,29 +175,29 @@ object Scalacp {
     def isAbstractMethod = sym.isMethod && sym.isDeferred
     def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
     var sproperties = 0
-    def sflip(sbit: Int) = sproperties ^= sbit
-    if (isAbstractClass || isAbstractMethod || isAbstractType) sflip(p.ABSTRACT.value)
-    if (sym.isFinal || sym.isModule) sflip(p.FINAL.value)
-    if (sym.isSealed) sflip(p.SEALED.value)
-    if (sym.isImplicit) sflip(p.IMPLICIT.value)
-    if (sym.isLazy) sflip(p.LAZY.value)
-    if (sym.isCase) sflip(p.CASE.value)
-    if (sym.isType && sym.isCovariant) sflip(p.COVARIANT.value)
-    if (sym.isType && sym.isContravariant) sflip(p.CONTRAVARIANT.value)
+    def sflip(sprop: s.SymbolInformation.Property) = sproperties ^= sprop.value
+    if (isAbstractClass || isAbstractMethod || isAbstractType) sflip(p.ABSTRACT)
+    if (sym.isFinal || sym.isModule) sflip(p.FINAL)
+    if (sym.isSealed) sflip(p.SEALED)
+    if (sym.isImplicit) sflip(p.IMPLICIT)
+    if (sym.isLazy) sflip(p.LAZY)
+    if (sym.isCase) sflip(p.CASE)
+    if (sym.isType && sym.isCovariant) sflip(p.COVARIANT)
+    if (sym.isType && sym.isContravariant) sflip(p.CONTRAVARIANT)
     if (skind(sym) == k.FIELD) {
-      if (sym.isMutable) sflip(p.VAR.value)
-      else sflip(p.VAL.value)
+      if (sym.isMutable) sflip(p.VAR)
+      else sflip(p.VAL)
     }
     if (sym.isAccessor) {
-      if (sym.isStable) sflip(p.VAL.value)
-      else sflip(p.VAR.value)
+      if (sym.isStable) sflip(p.VAL)
+      else sflip(p.VAR)
     }
     if (sym.isParam && skind(sym.parent.get) == k.PRIMARY_CONSTRUCTOR) {
       val classMembers = sym.parent.get.parent.get.children
       val getter = classMembers.find(m => m.isAccessor && m.name == sym.name)
       val setter = classMembers.find(m => m.isAccessor && m.name == sym.name + "_$eq")
-      if (setter.nonEmpty) sflip(p.VAR.value)
-      else if (getter.nonEmpty) sflip(p.VAL.value)
+      if (setter.nonEmpty) sflip(p.VAR)
+      else if (getter.nonEmpty) sflip(p.VAL)
       else ()
     }
     sproperties
