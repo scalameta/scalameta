@@ -500,12 +500,14 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/MetacJava.scala
 Text => non-empty
 Language => Scala
-Symbols => 38 entries
-Occurrences => 56 entries
+Symbols => 41 entries
+Occurrences => 59 entries
 
 Symbols:
 _root_.com. => package com
 _root_.com.javacp. => package javacp
+_root_.com.javacp.Interface# => abstract interface Interface.{+1 decls}
+  extends Object
 _root_.com.javacp.MetacJava# => class MetacJava.{+12 decls}
   extends Object
 _root_.com.javacp.MetacJava#Overload1# => class Overload1.{+3 decls}
@@ -562,7 +564,7 @@ _root_.com.javacp.MetacJava#overload(A+3). => method overload: (a: <?>): Unit
   a => _root_.com.javacp.MetacJava#overload(A+3).(a)
   Unit => _root_.scala.Unit#
 _root_.example. => package example
-_root_.example.MetacJava# => class MetacJava.{+11 decls}
+_root_.example.MetacJava# => class MetacJava.{+13 decls}
   extends AnyRef
 _root_.example.MetacJava#`<init>`(). => primary ctor <init>: (): MetacJava
   MetacJava => _root_.example.MetacJava#
@@ -570,6 +572,10 @@ _root_.example.MetacJava#inner(). => val method inner: : MetacJava
   MetacJava => _root_.com.javacp.MetacJava#
 _root_.example.MetacJava#inner. => private[this] val field inner: MetacJava
   MetacJava => _root_.com.javacp.MetacJava#
+_root_.example.MetacJava#interface(). => val method interface: : Interface
+  Interface => _root_.com.javacp.Interface#
+_root_.example.MetacJava#interface. => private[this] val field interface: Interface
+  Interface => _root_.com.javacp.Interface#
 _root_.example.MetacJava#nonStatic(). => val method nonStatic: : MetacJava.this.staticInner.NonStatic
   MetacJava => _root_.example.MetacJava#
   staticInner => _root_.example.MetacJava#staticInner().
@@ -656,6 +662,9 @@ Occurrences:
 [15:49..15:58): Overload3 => _root_.com.javacp.MetacJava#Overload3#
 [15:59..15:60): A => _root_.com.javacp.MetacJava#Overload3#A#
 [15:60..15:60):  => _root_.com.javacp.MetacJava#Overload3#A#`<init>`().
+[16:6..16:15): interface <= _root_.example.MetacJava#interface().
+[16:17..16:23): javacp => _root_.com.javacp.
+[16:24..16:33): Interface => _root_.com.javacp.Interface#
 
 semanticdb/integration/src/main/scala/example/Methods.scala
 -----------------------------------------------------------

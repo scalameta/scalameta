@@ -602,12 +602,12 @@ Schema => SemanticDB v3
 Uri => example/MetacJava.class
 Text => empty
 Language => Scala
-Symbols => 14 entries
+Symbols => 16 entries
 
 Symbols:
 _root_. => package _root_
 _root_.example. => package example
-_root_.example.MetacJava# => class MetacJava.{+11 decls}
+_root_.example.MetacJava# => class MetacJava.{+13 decls}
   extends AnyRef
 _root_.example.MetacJava#`<init>`(). => primary ctor <init>: (): MetacJava
   MetacJava => _root_.example.MetacJava#
@@ -615,6 +615,10 @@ _root_.example.MetacJava#inner(). => val method inner: : MetacJava
   MetacJava => _root_.com.javacp.MetacJava#
 _root_.example.MetacJava#inner. => private[this] val field inner: MetacJava
   MetacJava => _root_.com.javacp.MetacJava#
+_root_.example.MetacJava#interface(). => val method interface: : Interface
+  Interface => _root_.com.javacp.Interface#
+_root_.example.MetacJava#interface. => private[this] val field interface: Interface
+  Interface => _root_.com.javacp.Interface#
 _root_.example.MetacJava#nonStatic(). => val method nonStatic: : MetacJava.this.staticInner.NonStatic
   MetacJava => _root_.example.MetacJava#
   staticInner => _root_.example.MetacJava#staticInner().

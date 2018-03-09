@@ -432,10 +432,14 @@ Names:
 [516..525): Overload3 => _root_.com.javacp.MetacJava#Overload3#
 [526..527): A => _root_.com.javacp.MetacJava#Overload3#A#
 [527..527):  => _root_.com.javacp.MetacJava#Overload3#A#`<init>`().
+[537..546): interface <= _root_.example.MetacJava#interface().
+[548..554): javacp => _root_.com.javacp.
+[555..564): Interface => _root_.com.javacp.Interface#
 
 Symbols:
 _root_.com. => package com
 _root_.com.javacp. => package javacp
+_root_.com.javacp.Interface# => abstract javadefined interface Interface
 _root_.com.javacp.MetacJava# => javadefined class MetacJava
 _root_.com.javacp.MetacJava#Overload1# => javadefined class Overload1
 _root_.com.javacp.MetacJava#Overload1#A# => javadefined class A
@@ -491,6 +495,10 @@ _root_.example.MetacJava#inner(). => val method inner: MetacJava
   [0..9): MetacJava => _root_.com.javacp.MetacJava#
 _root_.example.MetacJava#inner. => private val field inner: MetacJava
   [0..9): MetacJava => _root_.com.javacp.MetacJava#
+_root_.example.MetacJava#interface(). => val method interface: Interface
+  [0..9): Interface => _root_.com.javacp.Interface#
+_root_.example.MetacJava#interface. => private val field interface: Interface
+  [0..9): Interface => _root_.com.javacp.Interface#
 _root_.example.MetacJava#nonStatic(). => val method nonStatic: staticInner.NonStatic
   [0..11): staticInner => _root_.example.MetacJava#staticInner().
   [12..21): NonStatic => _root_.com.javacp.MetacJava#StaticInner#NonStatic#

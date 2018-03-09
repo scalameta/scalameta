@@ -41,6 +41,16 @@ _root_.com.javacp.
 
 
 ============================
+_root_.com.javacp.Interface#
+============================
+--- metac
++++ metacp
+         symbol: "_root_.java.lang.Object#"
+-    declarations: "_root_.com.javacp.Interface#`<init>`()."
+ accessibility {
+
+
+============================
 _root_.com.javacp.MetacJava#
 ============================
 --- metac

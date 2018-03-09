@@ -45,7 +45,8 @@ trait DenotationOps { self: DatabaseOps =>
           else if (gsym.isLocalToBlock) mf.LOCAL
           else mf.FIELD
         case gsym: ClassSymbol =>
-          if (gsym.isTrait) mf.TRAIT
+          if (gsym.isTrait && gsym.hasFlag(gf.JAVA)) mf.INTERFACE
+          else if (gsym.isTrait) mf.TRAIT
           else mf.CLASS
         case gsym: TypeSymbol =>
           if (gsym.isParameter) mf.TYPEPARAM
@@ -73,12 +74,13 @@ trait DenotationOps { self: DatabaseOps =>
     private[meta] def propertyFlags: Long = {
       var flags = 0L
       def isAbstractClass = gsym.isClass && gsym.isAbstract && !gsym.isTrait
+      def isAbstractInterface = (kindFlags & mf.INTERFACE) != 0
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
       if (gsym.hasFlag(gf.PACKAGE)) {
         ()
       } else if (gsym.hasFlag(gf.JAVA)) {
-        if (isAbstractClass || isAbstractMethod) flags |= mf.ABSTRACT
+        if (isAbstractClass || isAbstractInterface || isAbstractMethod) flags |= mf.ABSTRACT
         if (gsym.hasFlag(gf.FINAL)) flags |= mf.FINAL
         flags |= mf.JAVADEFINED
       } else {
