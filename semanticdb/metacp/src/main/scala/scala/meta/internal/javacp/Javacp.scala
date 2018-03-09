@@ -196,6 +196,8 @@ object Javacp {
             paramSymbol
         }
 
+        val methodKind = if (isConstructor) k.CONSTRUCTOR else k.METHOD
+
         val methodType = s.Type(
           tag = s.Type.Tag.METHOD_TYPE,
           methodType = Some(
@@ -209,7 +211,7 @@ object Javacp {
 
         addInfo(
           methodSymbol,
-          k.METHOD,
+          methodKind,
           method.node.name,
           Some(methodType),
           method.node.access,
