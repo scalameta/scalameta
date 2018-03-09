@@ -77,8 +77,7 @@ case class TypeVariableSignature(identifier: String)
   }
 }
 
-case class ArrayTypeSignature(javaTypeSignature: JavaTypeSignature)
-    extends ReferenceTypeSignature {
+case class ArrayTypeSignature(javaTypeSignature: JavaTypeSignature) extends ReferenceTypeSignature {
   override def print(sb: StringBuilder): Unit = {
     sb.append("[")
     javaTypeSignature.print(sb)
