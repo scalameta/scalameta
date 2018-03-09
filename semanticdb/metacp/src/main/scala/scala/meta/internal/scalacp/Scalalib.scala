@@ -4,7 +4,7 @@ import org.langmeta.internal.io.PathIO
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
-import scala.meta.internal.semanticdb3.Language.{Tag => l}
+import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
@@ -57,7 +57,7 @@ object Scalalib {
     val ctorSig = s.MethodType(Nil, List(s.MethodType.ParameterList(Nil)), Some(builtinTpe))
     val ctor = s.SymbolInformation(
       symbol = symbol + "`<init>`().",
-      language = Some(s.Language(l.SCALA)),
+      language = l.SCALA,
       kind = k.PRIMARY_CONSTRUCTOR,
       name = "<init>",
       tpe = Some(s.Type(tag = t.METHOD_TYPE, methodType = Some(ctorSig))),
@@ -71,7 +71,7 @@ object Scalalib {
     }
     val builtin = s.SymbolInformation(
       symbol = symbol,
-      language = Some(s.Language(l.SCALA)),
+      language = l.SCALA,
       kind = k.CLASS,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = name,
@@ -113,7 +113,7 @@ object Scalalib {
       val tparamSig = s.Type(tag = t.TYPE_TYPE, typeType = Some(s.TypeType()))
       s.SymbolInformation(
         symbol = tparamSymbol,
-        language = Some(s.Language(l.SCALA)),
+        language = l.SCALA,
         kind = k.TYPE_PARAMETER,
         properties = 0,
         name = tparamName,
@@ -127,7 +127,7 @@ object Scalalib {
         val paramSig = s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, paramTpeSymbol, Nil)))
         s.SymbolInformation(
           symbol = paramSymbol,
-          language = Some(s.Language(l.SCALA)),
+          language = l.SCALA,
           kind = k.PARAMETER,
           properties = 0,
           name = paramName,
@@ -142,7 +142,7 @@ object Scalalib {
     }
     val method = s.SymbolInformation(
       symbol = methodSymbol,
-      language = Some(s.Language(l.SCALA)),
+      language = l.SCALA,
       kind = k.DEF,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = methodName,

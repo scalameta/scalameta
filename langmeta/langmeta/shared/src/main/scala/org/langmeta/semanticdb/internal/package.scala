@@ -11,7 +11,7 @@ import org.langmeta.io._
 import org.langmeta.{semanticdb => d}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
-import scala.meta.internal.semanticdb3.Language.{Tag => l}
+import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 
@@ -111,7 +111,7 @@ package object semanticdb {
             val dflags = {
               var dflags = 0L
               def dflip(dbit: Long) = dflags ^= dbit
-              if (slanguage.map(_.tag == l.JAVA).getOrElse(false)) dflip(d.JAVADEFINED)
+              if (slanguage == l.JAVA) dflip(d.JAVADEFINED)
               skind match {
                 case k.VAL => dflip(d.VAL)
                 case k.VAR => dflip(d.VAR)
@@ -209,8 +209,8 @@ package object semanticdb {
       }
       val dlanguage = {
         slanguage match {
-          case Some(s.Language(l.SCALA)) => "Scala"
-          case Some(s.Language(l.JAVA)) => "Java"
+          case l.SCALA => "Scala"
+          case l.JAVA => "Java"
           case _ => ""
         }
       }
@@ -276,9 +276,9 @@ package object semanticdb {
             case _ => sym.syntax
           }
           val slanguage = {
-            if (dlanguage.startsWith("Scala")) Some(s.Language(l.SCALA))
-            else if (dlanguage.startsWith("Java")) Some(s.Language(l.JAVA))
-            else None
+            if (dlanguage.startsWith("Scala")) l.SCALA
+            else if (dlanguage.startsWith("Java")) l.JAVA
+            else l.UNKNOWN_LANGUAGE
           }
           object dPosition {
             def unapply(dpos: dPosition): Option[s.Range] = dpos match {
@@ -310,10 +310,7 @@ package object semanticdb {
               val d.ResolvedSymbol(dsymbol, ddenot) = dresolvedSymbol
               def dtest(bit: Long) = (ddenot.flags & bit) == bit
               val ssymbol = sSymbol(dsymbol)
-              val ssymbolLanguage = {
-                if (dtest(d.JAVADEFINED)) Some(s.Language(l.JAVA))
-                else slanguage
-              }
+              val ssymbolLanguage = if (dtest(d.JAVADEFINED)) l.JAVA else l.SCALA
               val skind = {
                 if (dtest(d.VAL) && !dtest(d.PARAM)) k.VAL
                 else if (dtest(d.VAR) && !dtest(d.PARAM)) k.VAR

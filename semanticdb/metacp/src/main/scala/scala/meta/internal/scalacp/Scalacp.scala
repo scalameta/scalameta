@@ -5,7 +5,7 @@ import scala.collection.mutable
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
-import scala.meta.internal.semanticdb3.Language.{Tag => l}
+import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
@@ -60,7 +60,7 @@ object Scalacp {
       }
       s.SymbolInformation(
         symbol = transitivePackagePath + ".",
-        language = Some(s.Language(l.SCALA)),
+        language = l.SCALA,
         kind = k.PACKAGE,
         name = name,
         owner = owner)
@@ -74,7 +74,7 @@ object Scalacp {
     Some(
       s.SymbolInformation(
         symbol = ssymbol(sym),
-        language = Some(s.Language(l.SCALA)),
+        language = l.SCALA,
         kind = skind(sym),
         properties = sproperties(sym),
         name = sname(sym),

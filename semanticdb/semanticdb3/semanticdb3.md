@@ -93,11 +93,11 @@ message TextDocuments {
 }
 
 message TextDocument {
-  reserved 4;
+  reserved 4, 9;
   Schema schema = 1;
   string uri = 2;
   string text = 3;
-  Language language = 9;
+  Language language = 10;
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
@@ -147,14 +147,10 @@ of semantic information for the corresponding snippet
 ### Language
 
 ```protobuf
-message Language {
-  enum Tag {
-    UNKNOWN_LANGUAGE = 0;
-    SCALA = 1;
-    JAVA = 2;
-  }
-  reserved 1;
-  Tag tag = 2;
+enum Language {
+  UNKNOWN_LANGUAGE = 0;
+  SCALA = 1;
+  JAVA = 2;
 }
 ```
 
@@ -466,9 +462,9 @@ provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8;
+  reserved 2, 6, 7, 8, 12;
   string symbol = 1;
-  Language language = 12;
+  Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;

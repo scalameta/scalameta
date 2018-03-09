@@ -21,7 +21,7 @@ import Role._
 import Type.Tag._
 import SingletonType.Tag._
 import Accessibility.Tag._
-import Language.Tag._
+import Language._
 
 class Main(settings: Settings, reporter: Reporter) {
   import reporter._
@@ -141,10 +141,10 @@ class Main(settings: Settings, reporter: Reporter) {
     }
   }
 
-  private def pprint(language: Option[Language]): Unit = {
+  private def pprint(language: Language): Unit = {
     language match {
-      case Some(Language(SCALA)) => out.print("Scala")
-      case Some(Language(JAVA)) => out.print("Java")
+      case SCALA => out.print("Scala")
+      case JAVA => out.print("Java")
       case _ => out.print("Unknown")
     }
   }
