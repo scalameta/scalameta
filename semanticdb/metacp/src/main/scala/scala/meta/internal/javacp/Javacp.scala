@@ -403,11 +403,11 @@ object Javacp {
   private def sproperties(access: Int): Int = {
     val p = s.SymbolInformation.Property
     var bits = 0
-    def sflip(sbit: Int) = bits ^= sbit
-    if (access.hasFlag(o.ACC_ABSTRACT)) sflip(p.ABSTRACT.value)
-    if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL.value)
-    if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC.value)
-    if (access.hasFlag(o.ACC_ENUM)) sflip(p.ENUM.value)
+    def sflip(p: s.SymbolInformation.Property) = bits ^= p.value
+    if (access.hasFlag(o.ACC_ABSTRACT)) sflip(p.ABSTRACT)
+    if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL)
+    if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC)
+    if (access.hasFlag(o.ACC_ENUM)) sflip(p.ENUM)
     bits
   }
 
