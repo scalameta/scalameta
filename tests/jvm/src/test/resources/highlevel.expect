@@ -435,10 +435,19 @@ Names:
 [537..546): interface <= example.MetacJava#interface().
 [548..554): javacp => com.javacp.
 [555..564): Interface => com.javacp.Interface#
+[578..582): coin <= example.MetacJava#coin().
+[584..590): javacp => com.javacp.
+[591..595): Coin => com.javacp.Coin#
+[598..604): javacp => com.javacp.
+[605..609): Coin => com.javacp.Coin#
+[610..615): PENNY => com.javacp.Coin#PENNY.
 
 Symbols:
 com. => package com
 com.javacp. => package javacp
+com.javacp.Coin# => abstract final javadefined class Coin
+com.javacp.Coin#PENNY. => javadefined field PENNY: Coin
+  [0..4): Coin => com.javacp.Coin#
 com.javacp.Interface# => abstract javadefined interface Interface
 com.javacp.MetacJava# => javadefined class MetacJava
 com.javacp.MetacJava#Overload1# => javadefined class Overload1
@@ -491,6 +500,10 @@ example. => package example.{+11 members}
 example.MetacJava# => class MetacJava
 example.MetacJava#`<init>`(). => primary ctor <init>: (): MetacJava
   [4..13): MetacJava => example.MetacJava#
+example.MetacJava#coin(). => val method coin: Coin
+  [0..4): Coin => com.javacp.Coin#
+example.MetacJava#coin. => private val field coin: Coin
+  [0..4): Coin => com.javacp.Coin#
 example.MetacJava#inner(). => val method inner: MetacJava
   [0..9): MetacJava => com.javacp.MetacJava#
 example.MetacJava#inner. => private val field inner: MetacJava

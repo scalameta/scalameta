@@ -15,4 +15,5 @@ class MetacJava {
   nonStatic.method(nonStatic)
   javacp.MetacJava.overload(new javacp.MetacJava.Overload3.A())
   val interface: javacp.Interface = null
+  val coin: javacp.Coin = javacp.Coin.PENNY
 }

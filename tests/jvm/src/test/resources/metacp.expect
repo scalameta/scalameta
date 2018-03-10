@@ -79,6 +79,55 @@ com.javacp.ClassSuffix#suffix. => field suffix: Inner[String]#Bar#Fuz[Integer]
   Fuz => Fuz#
   Integer => java.lang.Integer#
 
+com/javacp/Coin.class
+---------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => com/javacp/Coin.class
+Text => empty
+Language => Java
+Symbols => 17 entries
+
+Symbols:
+_root_. => package _root_
+com. => package com
+com.javacp. => package javacp
+com.javacp.Coin# => final class Coin.{+11 decls}
+  extends Enum[Coin]
+com.javacp.Coin#$VALUES. => private final static field $VALUES: Array[Coin]
+  Array => scala.Array#
+  Coin => com.javacp.Coin#
+com.javacp.Coin#<clinit>(). => private[javacp] static method <clinit>: (): Unit
+  Unit => scala.Unit#
+com.javacp.Coin#DIME. => final static field DIME: Coin
+  Coin => com.javacp.Coin#
+com.javacp.Coin#NICKEL. => final static field NICKEL: Coin
+  Coin => com.javacp.Coin#
+com.javacp.Coin#PENNY. => final static field PENNY: Coin
+  Coin => com.javacp.Coin#
+com.javacp.Coin#QUARTER. => final static field QUARTER: Coin
+  Coin => com.javacp.Coin#
+com.javacp.Coin#`<init>`(Int). => private ctor <init>: ($enum$name: Int): Unit
+  $enum$name => com.javacp.Coin#`<init>`(Int).($enum$name)
+  Int => scala.Int#
+  Unit => scala.Unit#
+com.javacp.Coin#`<init>`(Int).($enum$name) => param $enum$name: Int
+  Int => scala.Int#
+com.javacp.Coin#value(). => method value: (): Int
+  Int => scala.Int#
+com.javacp.Coin#value. => private final field value: Int
+  Int => scala.Int#
+com.javacp.Coin#valueOf(String). => static method valueOf: (name: String): Coin
+  name => com.javacp.Coin#valueOf(String).(name)
+  String => java.lang.String#
+  Coin => com.javacp.Coin#
+com.javacp.Coin#valueOf(String).(name) => param name: String
+  String => java.lang.String#
+com.javacp.Coin#values(). => static method values: (): Array[Coin]
+  Array => scala.Array#
+  Coin => com.javacp.Coin#
+
 com/javacp/Interface.class
 --------------------------
 
@@ -604,15 +653,19 @@ Schema => SemanticDB v3
 Uri => example/MetacJava.class
 Text => empty
 Language => Scala
-Symbols => 16 entries
+Symbols => 18 entries
 
 Symbols:
 _root_. => package _root_
 example. => package example
-example.MetacJava# => class MetacJava.{+13 decls}
+example.MetacJava# => class MetacJava.{+15 decls}
   extends AnyRef
 example.MetacJava#`<init>`(). => primary ctor <init>: (): MetacJava
   MetacJava => example.MetacJava#
+example.MetacJava#coin(). => val method coin: : Coin
+  Coin => com.javacp.Coin#
+example.MetacJava#coin. => private[this] val field coin: Coin
+  Coin => com.javacp.Coin#
 example.MetacJava#inner(). => val method inner: : MetacJava
   MetacJava => com.javacp.MetacJava#
 example.MetacJava#inner. => private[this] val field inner: MetacJava

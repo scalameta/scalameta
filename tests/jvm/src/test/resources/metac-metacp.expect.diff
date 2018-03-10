@@ -40,6 +40,58 @@ com.javacp.
 +language: JAVA
 
 
+================
+com.javacp.Coin#
+================
+--- metac
++++ metacp
+ symbol: "com.javacp.Coin#"
+ kind: CLASS
+-properties: 12
++properties: 8
+ name: "Coin"
+ tpe {
+   tag: CLASS_INFO_TYPE
+-    declarations: "com.javacp.Coin#`<init>`(Int)."
+-    declarations: "com.javacp.Coin#value."
+-    declarations: "com.javacp.Coin#value()."
+     declarations: "com.javacp.Coin#PENNY."
+     declarations: "com.javacp.Coin#NICKEL."
+     declarations: "com.javacp.Coin#DIME."
+     declarations: "com.javacp.Coin#QUARTER."
++    declarations: "com.javacp.Coin#value."
++    declarations: "com.javacp.Coin#$VALUES."
++    declarations: "com.javacp.Coin#`<init>`(Int)."
++    declarations: "com.javacp.Coin#value()."
+     declarations: "com.javacp.Coin#values()."
+     declarations: "com.javacp.Coin#valueOf(String)."
++    declarations: "com.javacp.Coin#<clinit>()."
+ accessibility {
+
+
+======================
+com.javacp.Coin#PENNY.
+======================
+--- metac
++++ metacp
+ symbol: "com.javacp.Coin#PENNY."
+ kind: FIELD
+-properties: 0
++properties: 4104
+ name: "PENNY"
+ tpe {
+-  tag: SINGLETON_TYPE
+-  singletonType {
+-    tag: SYMBOL
+-    symbol: "com.javacp.Coin#PENNY."
+-    primitive: 0
+-    string: ""
++  tag: TYPE_REF
++  typeRef {
++    symbol: "com.javacp.Coin#"
+ accessibility {
+
+
 =====================
 com.javacp.Interface#
 =====================

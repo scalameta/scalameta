@@ -500,12 +500,16 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/MetacJava.scala
 Text => non-empty
 Language => Scala
-Symbols => 41 entries
-Occurrences => 59 entries
+Symbols => 45 entries
+Occurrences => 65 entries
 
 Symbols:
 com. => package com
 com.javacp. => package javacp
+com.javacp.Coin# => abstract final class Coin.{+9 decls}
+  extends Enum[Coin]
+com.javacp.Coin#PENNY. => field PENNY: PENNY.type
+  PENNY => com.javacp.Coin#PENNY.
 com.javacp.Interface# => abstract interface Interface.{+1 decls}
   extends Object
 com.javacp.MetacJava# => class MetacJava.{+12 decls}
@@ -564,10 +568,14 @@ com.javacp.MetacJava#overload(A+3). => method overload: (a: <?>): Unit
   a => com.javacp.MetacJava#overload(A+3).(a)
   Unit => scala.Unit#
 example. => package example
-example.MetacJava# => class MetacJava.{+13 decls}
+example.MetacJava# => class MetacJava.{+15 decls}
   extends AnyRef
 example.MetacJava#`<init>`(). => primary ctor <init>: (): MetacJava
   MetacJava => example.MetacJava#
+example.MetacJava#coin(). => val method coin: : Coin
+  Coin => com.javacp.Coin#
+example.MetacJava#coin. => private[this] val field coin: Coin
+  Coin => com.javacp.Coin#
 example.MetacJava#inner(). => val method inner: : MetacJava
   MetacJava => com.javacp.MetacJava#
 example.MetacJava#inner. => private[this] val field inner: MetacJava
@@ -665,6 +673,12 @@ Occurrences:
 [16:6..16:15): interface <= example.MetacJava#interface().
 [16:17..16:23): javacp => com.javacp.
 [16:24..16:33): Interface => com.javacp.Interface#
+[17:6..17:10): coin <= example.MetacJava#coin().
+[17:12..17:18): javacp => com.javacp.
+[17:19..17:23): Coin => com.javacp.Coin#
+[17:26..17:32): javacp => com.javacp.
+[17:33..17:37): Coin => com.javacp.Coin#
+[17:38..17:43): PENNY => com.javacp.Coin#PENNY.
 
 semanticdb/integration/src/main/scala/example/Methods.scala
 -----------------------------------------------------------

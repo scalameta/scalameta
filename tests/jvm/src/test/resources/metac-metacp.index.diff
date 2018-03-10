@@ -10,6 +10,7 @@
 +  com.javacp.
 +com.javacp.
 +  com.javacp.ClassSuffix#
++  com.javacp.Coin#
 +  com.javacp.Interface#
 +  com.javacp.Logger#
 +  com.javacp.MetacJava#
@@ -58,6 +59,7 @@
 +_empty_.A# => A.class.semanticdb
 +_empty_.B# => B.class.semanticdb
 +com.javacp.ClassSuffix# => com/javacp/ClassSuffix.class.semanticdb
++com.javacp.Coin# => com/javacp/Coin.class.semanticdb
 +com.javacp.Interface# => com/javacp/Interface.class.semanticdb
 +com.javacp.Logger# => com/javacp/Logger.class.semanticdb
 +com.javacp.MetacJava# => com/javacp/MetacJava.class.semanticdb
