@@ -10,7 +10,7 @@ Symbols => 11 entries
 Occurrences => 19 entries
 
 Symbols:
-example. => package example
+example. => package example.{+11 members}
 example.Acc# => class Acc.{+8 decls}
   extends AnyRef
 example.Acc#`<init>`(). => primary ctor <init>: (): Acc
@@ -106,7 +106,7 @@ Diagnostics => 1 entries
 Synthetics => 1 entries
 
 Symbols:
-example. => package example
+example. => package example.{+11 members}
 example.Example. => final object Example
 example.Example.main(Array). => method main: (args: Array[String]): Unit
   args => example.Example.main(Array).(args)
@@ -217,7 +217,7 @@ Occurrences => 71 entries
 Synthetics => 2 entries
 
 Symbols:
-flags. => package flags
+flags. => package flags.{+1 members}
 flags.p.package. => package object package
 flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
@@ -464,7 +464,7 @@ Occurrences => 7 entries
 Synthetics => 1 entries
 
 Symbols:
-example. => package example
+example. => package example.{+11 members}
 example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
 example.`local-file`#`<init>`(). => primary ctor <init>: (): local-file
@@ -567,7 +567,7 @@ com.javacp.MetacJava#overload(A+2). => method overload: (a: <?>): Unit
 com.javacp.MetacJava#overload(A+3). => static method overload: (a: <?>): Unit
   a => com.javacp.MetacJava#overload(A+3).(a)
   Unit => scala.Unit#
-example. => package example
+example. => package example.{+11 members}
 example.MetacJava# => class MetacJava.{+15 decls}
   extends AnyRef
 example.MetacJava#`<init>`(). => primary ctor <init>: (): MetacJava
@@ -694,7 +694,7 @@ Diagnostics => 2 entries
 Synthetics => 4 entries
 
 Symbols:
-example. => package example
+example. => package example.{+11 members}
 example.Example. => final object Example
 example.MethodUsages# => class MethodUsages.{+3 decls}
   extends AnyRef
@@ -1153,7 +1153,7 @@ Symbols => 8 entries
 Occurrences => 10 entries
 
 Symbols:
-example. => package example
+example. => package example.{+11 members}
 example.A# => trait A.{+1 decls}
   extends AnyRef
 example.A#foo(). => abstract method foo: : Int
@@ -1196,7 +1196,7 @@ Occurrences => 11 entries
 Synthetics => 6 entries
 
 Symbols:
-example. => package example
+example. => package example.{+11 members}
 example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
 example.Synthetic#`<init>`(). => primary ctor <init>: (): Synthetic
@@ -1309,7 +1309,7 @@ scala.language.higherKinds(). => implicit lazy val field higherKinds: higherKind
 scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
   A => scala.package.List#[A]
   List => scala.collection.immutable.List#
-types. => package types
+types. => package types.{+8 members}
 types.B# => class B.{+1 decls}
   extends AnyRef
 types.B#`<init>`(). => primary ctor <init>: (): B
@@ -1902,7 +1902,7 @@ Symbols => 52 entries
 Occurrences => 117 entries
 
 Symbols:
-example. => package example
+example. => package example.{+11 members}
 example.ValUsages. => final object ValUsages
 example.ValUsages.v(). => val method v: : Vals
   Vals => example.Vals#

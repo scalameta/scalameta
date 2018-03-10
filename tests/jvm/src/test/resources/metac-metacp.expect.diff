@@ -3,16 +3,6 @@ com.
 ====
 --- metac
 +++ metacp
- kind: PACKAGE
- properties: 0
- name: "com"
--tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "com."
--}
- accessibility {
-   tag: PUBLIC
    symbol: ""
  owner: "_root_."
 -language: SCALA
@@ -24,16 +14,6 @@ com.javacp.
 ===========
 --- metac
 +++ metacp
- kind: PACKAGE
- properties: 0
- name: "javacp"
--tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "com.javacp."
--}
- accessibility {
-   tag: PUBLIC
    symbol: ""
  owner: "com."
 -language: SCALA
@@ -428,11 +408,6 @@ example.
  kind: PACKAGE
  properties: 0
  name: "example"
--tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "example."
--}
 -accessibility {
 -  tag: PUBLIC
 -  symbol: ""
@@ -718,11 +693,6 @@ flags.
  kind: PACKAGE
  properties: 0
  name: "flags"
--tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "flags."
--}
 -accessibility {
 -  tag: PUBLIC
 -  symbol: ""
@@ -884,11 +854,6 @@ types.
  kind: PACKAGE
  properties: 0
  name: "types"
--tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "types."
--}
 -accessibility {
 -  tag: PUBLIC
 -  symbol: ""

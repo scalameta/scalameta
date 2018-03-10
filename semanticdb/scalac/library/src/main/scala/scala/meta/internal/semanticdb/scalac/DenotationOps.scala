@@ -140,24 +140,27 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     private def newInfo: (Option[s.Type], List[g.Symbol]) = {
-      val ginfo = {
-        if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
-          gsym.info.finalResultType
-        } else if (gsym.isJavaEnum && gsym.isStatic) {
-          gsym.info.widen
-        } else if (gsym.isAliasType) {
-          def preprocess(info: g.Type): g.Type = {
-            info match {
-              case g.PolyType(tparams, tpe) => g.PolyType(tparams, preprocess(tpe))
-              case tpe => g.TypeBounds(tpe, tpe)
+      if (gsym.hasPackageFlag) (None, Nil)
+      else {
+        val ginfo = {
+          if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
+            gsym.info.finalResultType
+          } else if (gsym.isJavaEnum && gsym.isStatic) {
+            gsym.info.widen
+          } else if (gsym.isAliasType) {
+            def preprocess(info: g.Type): g.Type = {
+              info match {
+                case g.PolyType(tparams, tpe) => g.PolyType(tparams, preprocess(tpe))
+                case tpe => g.TypeBounds(tpe, tpe)
+              }
             }
+            preprocess(gsym.info)
+          } else {
+            gsym.info
           }
-          preprocess(gsym.info)
-        } else {
-          gsym.info
         }
+        ginfo.toSemantic
       }
-      ginfo.toSemantic
     }
 
     private def overrides: List[m.Symbol] =
