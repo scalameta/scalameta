@@ -38,20 +38,22 @@ object Scalacp {
   private def spackages(sym: SymbolInfoSymbol): List[s.SymbolInformation] = {
     var parts = sym.symbolInfo.owner.path.replace("<empty>", "_empty_").split("\\.").toList
     if (parts != List("_root_")) parts = "_root_" +: parts
-    parts.scanLeft(s.SymbolInformation()) {
-      case (ownerInfo, name) =>
-        val owner = ownerInfo.symbol
-        val symbol = {
-          if (owner == "_root_.") name + "."
-          else owner + name + "."
-        }
-        s.SymbolInformation(
-          symbol = symbol,
-          language = l.SCALA,
-          kind = k.PACKAGE,
-          name = name,
-          owner = owner)
-    }.tail
+    parts
+      .scanLeft(s.SymbolInformation()) {
+        case (ownerInfo, name) =>
+          val owner = ownerInfo.symbol
+          val symbol = {
+            if (owner == "_root_.") name + "."
+            else owner + name + "."
+          }
+          s.SymbolInformation(
+            symbol = symbol,
+            language = l.SCALA,
+            kind = k.PACKAGE,
+            name = name,
+            owner = owner)
+      }
+      .tail
   }
 
   private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
