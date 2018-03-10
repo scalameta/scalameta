@@ -477,10 +477,6 @@ class PublicSuite extends FunSuite {
     val globalTypeParameter @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.TypeParameter("T")) = Symbol(syntaxGlobalTypeParameter)
     assert(globalTypeParameter.toString === syntaxGlobalTypeParameter)
 
-    val syntaxGlobalSelf = "self=>"
-    val globalSelf @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Self("self")) = Symbol(syntaxGlobalSelf)
-    assert(globalSelf.toString === syntaxGlobalSelf)
-
     val syntaxLocal = "local0"
     val local @ Symbol.Local(`syntaxLocal`) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)

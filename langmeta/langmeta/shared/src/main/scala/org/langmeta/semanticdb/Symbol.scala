@@ -132,11 +132,6 @@ object Symbol {
             else readChar()
             val disambiguator = s.substring(start, i - 2)
             parseSingle(global(Signature.Method(name, disambiguator)))
-          } else if (currChar == '=') {
-            readChar()
-            if (currChar != '>') fail()
-            else readChar()
-            parseSingle(global(Signature.Self(name)))
           } else {
             if (owner == Symbol.None && name.startsWith("local")) local(name)
             else fail()
