@@ -73,7 +73,8 @@ trait DenotationOps { self: DatabaseOps =>
 
     private[meta] def propertyFlags: Long = {
       var flags = 0L
-      def isAbstractClass = gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
+      def isAbstractClass =
+        gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractInterface = (kindFlags & mf.INTERFACE) != 0
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
