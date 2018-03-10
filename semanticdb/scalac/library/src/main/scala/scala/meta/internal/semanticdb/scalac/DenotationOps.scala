@@ -73,7 +73,8 @@ trait DenotationOps { self: DatabaseOps =>
 
     private[meta] def propertyFlags: Long = {
       var flags = 0L
-      def isAbstractClass = gsym.isClass && gsym.isAbstract && !gsym.isTrait
+      def isAbstractClass =
+        gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractInterface = (kindFlags & mf.INTERFACE) != 0
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
@@ -81,7 +82,9 @@ trait DenotationOps { self: DatabaseOps =>
         ()
       } else if (gsym.hasFlag(gf.JAVA)) {
         if (isAbstractClass || isAbstractInterface || isAbstractMethod) flags |= mf.ABSTRACT
-        if (gsym.hasFlag(gf.FINAL)) flags |= mf.FINAL
+        if (gsym.hasFlag(gf.FINAL) || gsym.hasFlag(gf.JAVA_ENUM)) flags |= mf.FINAL
+        if (gsym.hasFlag(gf.JAVA_ENUM)) flags |= mf.ENUM
+        if (gsym.hasFlag(gf.STATIC)) flags |= mf.STATIC
         flags |= mf.JAVADEFINED
       } else {
         if (isAbstractClass || isAbstractMethod || isAbstractType) flags |= mf.ABSTRACT
@@ -138,22 +141,27 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     private def newInfo: (Option[s.Type], List[g.Symbol]) = {
-      val ginfo = {
-        if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
-          gsym.info.finalResultType
-        } else if (gsym.isAliasType) {
-          def preprocess(info: g.Type): g.Type = {
-            info match {
-              case g.PolyType(tparams, tpe) => g.PolyType(tparams, preprocess(tpe))
-              case tpe => g.TypeBounds(tpe, tpe)
+      if (gsym.hasPackageFlag) (None, Nil)
+      else {
+        val ginfo = {
+          if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
+            gsym.info.finalResultType
+          } else if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
+            gsym.info.widen
+          } else if (gsym.isAliasType) {
+            def preprocess(info: g.Type): g.Type = {
+              info match {
+                case g.PolyType(tparams, tpe) => g.PolyType(tparams, preprocess(tpe))
+                case tpe => g.TypeBounds(tpe, tpe)
+              }
             }
+            preprocess(gsym.info)
+          } else {
+            gsym.info
           }
-          preprocess(gsym.info)
-        } else {
-          gsym.info
         }
+        ginfo.toSemantic
       }
-      ginfo.toSemantic
     }
 
     private def overrides: List[m.Symbol] =

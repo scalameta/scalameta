@@ -30,12 +30,12 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     |[7..8): A <= _empty_.A.
     |[17..21): main <= _empty_.A.main(Array).
     |[22..26): args <= _empty_.A.main(Array).(args)
-    |[28..33): Array => _root_.scala.Array#
-    |[34..40): String => _root_.scala.Predef.String#
-    |[44..48): Unit => _root_.scala.Unit#
+    |[28..33): Array => scala.Array#
+    |[34..40): String => scala.Predef.String#
+    |[44..48): Unit => scala.Unit#
     |[61..65): list <= local0
-    |[68..72): List => _root_.scala.collection.immutable.List.
-    |[86..93): println => _root_.scala.Predef.println(Any).
+    |[68..72): List => scala.collection.immutable.List.
+    |[86..93): println => scala.Predef.println(Any).
     |[94..98): list => local0
   """.trim.stripMargin
   )
@@ -62,13 +62,13 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   """.trim.stripMargin,
     """
     |[7..13): _root_ => _root_.
-    |[14..19): scala => _root_.scala.
-    |[20..24): List => _root_.scala.package.List#;_root_.scala.package.List().
+    |[14..19): scala => scala.
+    |[20..24): List => scala.package.List#;scala.package.List().
     |[32..33): C <= _empty_.C#
     |[34..34):  <= _empty_.C#`<init>`().
     |[38..44): _root_ => _root_.
-    |[45..50): scala => _root_.scala.
-    |[51..55): List => _root_.scala.collection.immutable.
+    |[45..50): scala => scala.
+    |[51..55): List => scala.collection.immutable.
   """.trim.stripMargin
   )
 
@@ -93,8 +93,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  u.<<copy>>(<<age>> = 43)
       |}
     """.trim.stripMargin, { (db, copy, age) =>
-      assert(copy === Symbol("_root_.e.User#copy(String,Int)."))
-      assert(age === Symbol("_root_.e.User#copy(String,Int).(age)"))
+      assert(copy === Symbol("e.User#copy(String,Int)."))
+      assert(age === Symbol("e.User#copy(String,Int).(age)"))
     }
   )
 
@@ -150,132 +150,132 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
         |package object F {
         |}
     """.trim.stripMargin,
-    """|_root_.F.package. => packageobject package
-       |_root_.f. => package f
-       |_root_.f.C1# => class C1
-       |_root_.f.C1#T1# => abstract type T1
-       |_root_.f.C1#T2# => type T2: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#`<init>`(). => ctor <init>: (): C1
-       |  [4..6): C1 => _root_.f.C1#
-       |_root_.f.C1#`<init>`(Int,Int,Int). => primary ctor <init>: (p1: Int, p2: Int, p3: Int): C1
-       |  [5..8): Int => _root_.scala.Int#
-       |  [14..17): Int => _root_.scala.Int#
-       |  [23..26): Int => _root_.scala.Int#
-       |  [29..31): C1 => _root_.f.C1#
-       |_root_.f.C1#`<init>`(Int,Int,Int).(p1) => param p1: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#`<init>`(Int,Int,Int).(p2) => val param p2: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#`<init>`(Int,Int,Int).(p3) => var param p3: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#`f2_=`(Nothing). => var method f2_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => _root_.scala.Nothing#
-       |  [16..20): Unit => _root_.scala.Unit#
-       |_root_.f.C1#`f2_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#`p3_=`(Int). => var method p3_=: (x$1: Int): Unit
-       |  [6..9): Int => _root_.scala.Int#
-       |  [12..16): Unit => _root_.scala.Unit#
-       |_root_.f.C1#`p3_=`(Int).(x$1) => param x$1: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#f1(). => val method f1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#f1. => private val field f1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#f1.l1. => val local l1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#f1.l2. => var local l2: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#f2(). => var method f2: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#f2. => private var field f2: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#m1(Int). => method m1: [T] => (x: Int): Int
-       |  [11..14): Int => _root_.scala.Int#
-       |  [17..20): Int => _root_.scala.Int#
-       |_root_.f.C1#m1(Int).(x) => param x: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#m1(Int).[T] => typeparam T
-       |_root_.f.C1#m2(). => macro m2: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C1#p1. => private val field p1: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#p2(). => val method p2: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#p2. => private val field p2: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#p3(). => var method p3: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C1#p3. => private var field p3: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C2# => abstract class C2
-       |_root_.f.C2#`<init>`(). => primary ctor <init>: (): C2
-       |  [4..6): C2 => _root_.f.C2#
-       |_root_.f.C2#m3(). => abstract method m3: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C2#m4(). => final method m4: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.C3# => sealed class C3
-       |_root_.f.C3#`<init>`(). => primary ctor <init>: (): C3
-       |  [4..6): C3 => _root_.f.C3#
-       |_root_.f.C3#m3(). => method m3: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.f.C3#toString(). => method toString: (): String
-       |  [4..10): String => _root_.java.lang.String#
-       |_root_.f.M. => final object M
-       |_root_.f.M.C1# => case class C1
-       |_root_.f.M.C1#`<init>`(). => primary ctor <init>: (): C1
-       |  [4..6): C1 => _root_.f.M.C1#
-       |_root_.f.M.C2# => class C2
-       |_root_.f.M.C2#[T] => covariant typeparam T
-       |_root_.f.M.C2#[U] => contravariant typeparam U
-       |_root_.f.M.C2#`<init>`(). => primary ctor <init>: (): C2[T, U]
-       |  [4..6): C2 => _root_.f.M.C2#
-       |  [7..8): T => _root_.f.M.C2#[T]
-       |  [10..11): U => _root_.f.M.C2#[U]
-       |_root_.f.M.i1(). => implicit method i1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.M.l1(). => lazy val field l1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T# => trait T
-       |_root_.f.T#$init$(). => primary ctor $init$: (): Unit
-       |  [4..8): Unit => _root_.scala.Unit#
-       |_root_.f.T#`f4_=`(Nothing). => protected var method f4_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => _root_.scala.Nothing#
-       |  [16..20): Unit => _root_.scala.Unit#
-       |_root_.f.T#`f4_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#`f5_=`(Nothing). => protected var method f5_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => _root_.scala.Nothing#
-       |  [16..20): Unit => _root_.scala.Unit#
-       |_root_.f.T#`f5_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#`f6_=`(Nothing). => protected var method f6_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => _root_.scala.Nothing#
-       |  [16..20): Unit => _root_.scala.Unit#
-       |_root_.f.T#`f6_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f1(). => private val method f1: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f2(). => private val method f2: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f3(). => private val method f3: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f4(). => protected var method f4: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f5(). => protected var method f5: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.f.T#f6(). => protected var method f6: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.scala. => package scala
-       |_root_.scala.Int# => abstract final class Int
-       |_root_.scala.Predef.`???`(). => method ???: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
-       |_root_.scala.language. => final object language
-       |_root_.scala.language.experimental. => final object experimental
-       |_root_.scala.language.experimental.macros(). => implicit lazy val field macros: macros
-       |  [0..6): macros => _root_.scala.languageFeature.experimental.macros#
+    """|F.package. => packageobject package
+       |f. => package f
+       |f.C1# => class C1
+       |f.C1#T1# => abstract type T1
+       |f.C1#T2# => type T2: Int
+       |  [0..3): Int => scala.Int#
+       |f.C1#`<init>`(). => ctor <init>: (): C1
+       |  [4..6): C1 => f.C1#
+       |f.C1#`<init>`(Int,Int,Int). => primary ctor <init>: (p1: Int, p2: Int, p3: Int): C1
+       |  [5..8): Int => scala.Int#
+       |  [14..17): Int => scala.Int#
+       |  [23..26): Int => scala.Int#
+       |  [29..31): C1 => f.C1#
+       |f.C1#`<init>`(Int,Int,Int).(p1) => param p1: Int
+       |  [0..3): Int => scala.Int#
+       |f.C1#`<init>`(Int,Int,Int).(p2) => val param p2: Int
+       |  [0..3): Int => scala.Int#
+       |f.C1#`<init>`(Int,Int,Int).(p3) => var param p3: Int
+       |  [0..3): Int => scala.Int#
+       |f.C1#`f2_=`(Nothing). => var method f2_=: (x$1: Nothing): Unit
+       |  [6..13): Nothing => scala.Nothing#
+       |  [16..20): Unit => scala.Unit#
+       |f.C1#`f2_=`(Nothing).(x$1) => param x$1: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.C1#`p3_=`(Int). => var method p3_=: (x$1: Int): Unit
+       |  [6..9): Int => scala.Int#
+       |  [12..16): Unit => scala.Unit#
+       |f.C1#`p3_=`(Int).(x$1) => param x$1: Int
+       |  [0..3): Int => scala.Int#
+       |f.C1#f1(). => val method f1: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.C1#f1. => private val field f1: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.C1#f1.l1. => val local l1: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.C1#f1.l2. => var local l2: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.C1#f2(). => var method f2: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.C1#f2. => private var field f2: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.C1#m1(Int). => method m1: [T] => (x: Int): Int
+       |  [11..14): Int => scala.Int#
+       |  [17..20): Int => scala.Int#
+       |f.C1#m1(Int).(x) => param x: Int
+       |  [0..3): Int => scala.Int#
+       |f.C1#m1(Int).[T] => typeparam T
+       |f.C1#m2(). => macro m2: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.C1#p1. => private val field p1: Int
+       |  [0..3): Int => scala.Int#
+       |f.C1#p2(). => val method p2: Int
+       |  [0..3): Int => scala.Int#
+       |f.C1#p2. => private val field p2: Int
+       |  [0..3): Int => scala.Int#
+       |f.C1#p3(). => var method p3: Int
+       |  [0..3): Int => scala.Int#
+       |f.C1#p3. => private var field p3: Int
+       |  [0..3): Int => scala.Int#
+       |f.C2# => abstract class C2
+       |f.C2#`<init>`(). => primary ctor <init>: (): C2
+       |  [4..6): C2 => f.C2#
+       |f.C2#m3(). => abstract method m3: Int
+       |  [0..3): Int => scala.Int#
+       |f.C2#m4(). => final method m4: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.C3# => sealed class C3
+       |f.C3#`<init>`(). => primary ctor <init>: (): C3
+       |  [4..6): C3 => f.C3#
+       |f.C3#m3(). => method m3: Int
+       |  [0..3): Int => scala.Int#
+       |f.C3#toString(). => method toString: (): String
+       |  [4..10): String => java.lang.String#
+       |f.M. => final object M
+       |f.M.C1# => case class C1
+       |f.M.C1#`<init>`(). => primary ctor <init>: (): C1
+       |  [4..6): C1 => f.M.C1#
+       |f.M.C2# => class C2
+       |f.M.C2#[T] => covariant typeparam T
+       |f.M.C2#[U] => contravariant typeparam U
+       |f.M.C2#`<init>`(). => primary ctor <init>: (): C2[T, U]
+       |  [4..6): C2 => f.M.C2#
+       |  [7..8): T => f.M.C2#[T]
+       |  [10..11): U => f.M.C2#[U]
+       |f.M.i1(). => implicit method i1: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.M.l1(). => lazy val field l1: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.T# => trait T
+       |f.T#$init$(). => primary ctor $init$: (): Unit
+       |  [4..8): Unit => scala.Unit#
+       |f.T#`f4_=`(Nothing). => protected var method f4_=: (x$1: Nothing): Unit
+       |  [6..13): Nothing => scala.Nothing#
+       |  [16..20): Unit => scala.Unit#
+       |f.T#`f4_=`(Nothing).(x$1) => param x$1: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.T#`f5_=`(Nothing). => protected var method f5_=: (x$1: Nothing): Unit
+       |  [6..13): Nothing => scala.Nothing#
+       |  [16..20): Unit => scala.Unit#
+       |f.T#`f5_=`(Nothing).(x$1) => param x$1: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.T#`f6_=`(Nothing). => protected var method f6_=: (x$1: Nothing): Unit
+       |  [6..13): Nothing => scala.Nothing#
+       |  [16..20): Unit => scala.Unit#
+       |f.T#`f6_=`(Nothing).(x$1) => param x$1: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.T#f1(). => private val method f1: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.T#f2(). => private val method f2: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.T#f3(). => private val method f3: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.T#f4(). => protected var method f4: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.T#f5(). => protected var method f5: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |f.T#f6(). => protected var method f6: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |scala. => package scala
+       |scala.Int# => abstract final class Int
+       |scala.Predef.`???`(). => method ???: Nothing
+       |  [0..7): Nothing => scala.Nothing#
+       |scala.language. => final object language
+       |scala.language.experimental. => final object experimental
+       |scala.language.experimental.macros(). => implicit lazy val field macros: macros
+       |  [0..6): macros => scala.languageFeature.experimental.macros#
     """.trim.stripMargin
     )
   }
@@ -299,12 +299,12 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.trim.stripMargin,
     """|[324..324): *.apply[Foo, FooDSL]
        |  [0..1): * => _star_.
-       |  [2..7): apply => _root_.g.CommandeerDSL.apply(Host,DSL).
-       |  [8..11): Foo => _root_.g.Foo#
-       |  [13..19): FooDSL => _root_.g.FooDSL#
+       |  [2..7): apply => g.CommandeerDSL.apply(Host,DSL).
+       |  [8..11): Foo => g.Foo#
+       |  [13..19): FooDSL => g.FooDSL#
        |[348..348): *(g.Foo.fooDSL)
        |  [0..1): * => _star_.
-       |  [8..14): fooDSL => _root_.g.Foo.fooDSL().
+       |  [8..14): fooDSL => g.Foo.fooDSL().
     """.trim.stripMargin
   )
 
@@ -337,27 +337,27 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   """.trim.stripMargin,
     """|[201..201): *[Int, List[Int]]
        |  [0..1): * => _star_.
-       |  [2..5): Int => _root_.scala.Int#
-       |  [12..15): Int => _root_.scala.Int#
-       |  [7..11): List => _root_.scala.collection.immutable.List#
+       |  [2..5): Int => scala.Int#
+       |  [12..15): Int => scala.Int#
+       |  [7..11): List => scala.collection.immutable.List#
        |[209..209): *(scala.collection.immutable.List.canBuildFrom[Int])
        |  [0..1): * => _star_.
-       |  [47..50): Int => _root_.scala.Int#
-       |  [34..46): canBuildFrom => _root_.scala.collection.immutable.List.canBuildFrom().
+       |  [47..50): Int => scala.Int#
+       |  [34..46): canBuildFrom => scala.collection.immutable.List.canBuildFrom().
        |[247..247): *(h.C.list[Int](h.C.int))
        |  [0..1): * => _star_.
-       |  [11..14): Int => _root_.scala.Int#
-       |  [6..10): list => _root_.h.C.list(C).
-       |  [20..23): int => _root_.h.C.int().
+       |  [11..14): Int => scala.Int#
+       |  [6..10): list => h.C.list(C).
+       |  [20..23): int => h.C.int().
        |[273..275): h.X.cvt[Int](*)(h.C.int)
-       |  [8..11): Int => _root_.scala.Int#
-       |  [4..7): cvt => _root_.h.X.cvt(T,C).
+       |  [8..11): Int => scala.Int#
+       |  [4..7): cvt => h.X.cvt(T,C).
        |  [13..14): * => _star_.
-       |  [20..23): int => _root_.h.C.int().
+       |  [20..23): int => h.C.int().
        |[304..304): *[C[Int]]
        |  [0..1): * => _star_.
-       |  [4..7): Int => _root_.scala.Int#
-       |  [2..3): C => _root_.h.C#
+       |  [4..7): Int => scala.Int#
+       |  [2..3): C => h.C#
   """.trim.stripMargin
   )
 
@@ -387,68 +387,68 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  }
       |}
     """.stripMargin,
-    """|_root_.i. => package i
-       |_root_.i.B# => trait B
-       |_root_.i.B#X# => abstract type X
-       |_root_.i.B#x(). => abstract method x: B.this.X
-       |  [0..1): B => _root_.i.B#
-       |  [7..8): X => _root_.i.B#X#
-       |_root_.i.D# => class D
-       |_root_.i.D#X# => type X: HashSet[Int]
-       |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
-       |  [8..11): Int => _root_.scala.Int#
-       |_root_.i.D#`<init>`(). => primary ctor <init>: (): D
-       |  [4..5): D => _root_.i.D#
-       |_root_.i.D#x(). => method x: HashSet[Int]
-       |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
-       |  [8..11): Int => _root_.scala.Int#
-       |_root_.i.E# => class E
-       |_root_.i.E#X# => type X: ListBuffer[Int]
-       |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
-       |  [11..14): Int => _root_.scala.Int#
-       |_root_.i.E#`<init>`(). => primary ctor <init>: (): E
-       |  [4..5): E => _root_.i.E#
-       |_root_.i.E#x(). => method x: ListBuffer[Int]
-       |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
-       |  [11..14): Int => _root_.scala.Int#
-       |_root_.i.a. => final object a
-       |_root_.i.a.foo(B). => method foo: (implicit b: B): b.X
-       |  [13..14): B => _root_.i.B#
-       |  [17..18): b => _root_.i.a.foo(B).(b)
-       |  [19..20): X => _root_.i.B#X#
-       |_root_.i.a.foo(B).(b) => implicit param b: B
-       |  [0..1): B => _root_.i.B#
-       |_root_.i.a.x(). => val method x: ListBuffer[Int]
-       |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
-       |  [11..14): Int => _root_.scala.Int#
-       |_root_.i.a.x. => private val field x: ListBuffer[Int]
-       |  [0..10): ListBuffer => _root_.scala.collection.mutable.ListBuffer#
-       |  [11..14): Int => _root_.scala.Int#
-       |_root_.i.a.y(). => val method y: HashSet[Int]
-       |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
-       |  [8..11): Int => _root_.scala.Int#
-       |_root_.i.a.y. => private val field y: HashSet[Int]
-       |  [0..7): HashSet => _root_.scala.collection.mutable.HashSet#
-       |  [8..11): Int => _root_.scala.Int#
-       |_root_.java.lang.Object#`<init>`(). => javadefined ctor <init>: (): Object
-       |  [4..10): Object => _root_.java.lang.Object#
-       |_root_.scala. => package scala
-       |_root_.scala.Int# => abstract final class Int
-       |_root_.scala.collection. => package collection
-       |_root_.scala.collection.generic.GenericCompanion#empty(). => method empty: [A] => CC[A]
-       |  [7..9): CC => _root_.scala.collection.generic.GenericCompanion#[CC]
-       |  [10..11): A => _root_.scala.collection.generic.GenericCompanion#empty().[A]
-       |_root_.scala.collection.mutable. => package mutable
-       |_root_.scala.collection.mutable.HashSet# => class HashSet
-       |_root_.scala.collection.mutable.HashSet. => final object HashSet
-       |_root_.scala.collection.mutable.HashSet.empty(). => method empty: [A] => HashSet[A]
-       |  [7..14): HashSet => _root_.scala.collection.mutable.HashSet#
-       |  [15..16): A => _root_.scala.collection.mutable.HashSet.empty().[A]
-       |_root_.scala.collection.mutable.ListBuffer# => final class ListBuffer
-       |_root_.scala.collection.mutable.ListBuffer. => final object ListBuffer
+    """|i. => package i
+       |i.B# => trait B
+       |i.B#X# => abstract type X
+       |i.B#x(). => abstract method x: B.this.X
+       |  [0..1): B => i.B#
+       |  [7..8): X => i.B#X#
+       |i.D# => class D
+       |i.D#X# => type X: HashSet[Int]
+       |  [0..7): HashSet => scala.collection.mutable.HashSet#
+       |  [8..11): Int => scala.Int#
+       |i.D#`<init>`(). => primary ctor <init>: (): D
+       |  [4..5): D => i.D#
+       |i.D#x(). => method x: HashSet[Int]
+       |  [0..7): HashSet => scala.collection.mutable.HashSet#
+       |  [8..11): Int => scala.Int#
+       |i.E# => class E
+       |i.E#X# => type X: ListBuffer[Int]
+       |  [0..10): ListBuffer => scala.collection.mutable.ListBuffer#
+       |  [11..14): Int => scala.Int#
+       |i.E#`<init>`(). => primary ctor <init>: (): E
+       |  [4..5): E => i.E#
+       |i.E#x(). => method x: ListBuffer[Int]
+       |  [0..10): ListBuffer => scala.collection.mutable.ListBuffer#
+       |  [11..14): Int => scala.Int#
+       |i.a. => final object a
+       |i.a.foo(B). => method foo: (implicit b: B): b.X
+       |  [13..14): B => i.B#
+       |  [17..18): b => i.a.foo(B).(b)
+       |  [19..20): X => i.B#X#
+       |i.a.foo(B).(b) => implicit param b: B
+       |  [0..1): B => i.B#
+       |i.a.x(). => val method x: ListBuffer[Int]
+       |  [0..10): ListBuffer => scala.collection.mutable.ListBuffer#
+       |  [11..14): Int => scala.Int#
+       |i.a.x. => private val field x: ListBuffer[Int]
+       |  [0..10): ListBuffer => scala.collection.mutable.ListBuffer#
+       |  [11..14): Int => scala.Int#
+       |i.a.y(). => val method y: HashSet[Int]
+       |  [0..7): HashSet => scala.collection.mutable.HashSet#
+       |  [8..11): Int => scala.Int#
+       |i.a.y. => private val field y: HashSet[Int]
+       |  [0..7): HashSet => scala.collection.mutable.HashSet#
+       |  [8..11): Int => scala.Int#
+       |java.lang.Object#`<init>`(). => javadefined ctor <init>: (): Object
+       |  [4..10): Object => java.lang.Object#
        |local0 => val local result: b.X
-       |  [0..1): b => _root_.i.a.foo(B).(b)
-       |  [2..3): X => _root_.i.B#X#
+       |  [0..1): b => i.a.foo(B).(b)
+       |  [2..3): X => i.B#X#
+       |scala. => package scala
+       |scala.Int# => abstract final class Int
+       |scala.collection. => package collection
+       |scala.collection.generic.GenericCompanion#empty(). => method empty: [A] => CC[A]
+       |  [7..9): CC => scala.collection.generic.GenericCompanion#[CC]
+       |  [10..11): A => scala.collection.generic.GenericCompanion#empty().[A]
+       |scala.collection.mutable. => package mutable
+       |scala.collection.mutable.HashSet# => class HashSet
+       |scala.collection.mutable.HashSet. => final object HashSet
+       |scala.collection.mutable.HashSet.empty(). => method empty: [A] => HashSet[A]
+       |  [7..14): HashSet => scala.collection.mutable.HashSet#
+       |  [15..16): A => scala.collection.mutable.HashSet.empty().[A]
+       |scala.collection.mutable.ListBuffer# => final class ListBuffer
+       |scala.collection.mutable.ListBuffer. => final object ListBuffer
     """.stripMargin.trim
   )
 
@@ -469,15 +469,15 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  foo.apply(2, true)
        |}
     """.stripMargin,
-    """|[9..10): k <= _root_.k.
-       |[18..21): tup <= _root_.k.tup.
-       |[30..33): foo <= _root_.k.tup.foo().
-       |[37..38): a <= _root_.k.tup.foo.$anonfun.(a)
-       |[41..44): Int => _root_.scala.Int#
-       |[46..53): Boolean => _root_.scala.Boolean#
-       |[63..66): foo => _root_.k.tup.foo().
-       |[78..81): foo => _root_.k.tup.foo().
-       |[82..87): apply => _root_.scala.Function1#apply(T1).
+    """|[9..10): k <= k.
+       |[18..21): tup <= k.tup.
+       |[30..33): foo <= k.tup.foo().
+       |[37..38): a <= k.tup.foo.$anonfun.(a)
+       |[41..44): Int => scala.Int#
+       |[46..53): Boolean => scala.Boolean#
+       |[63..66): foo => k.tup.foo().
+       |[78..81): foo => k.tup.foo().
+       |[82..87): apply => scala.Function1#apply(T1).
     """.stripMargin.trim
   )
 
@@ -513,26 +513,26 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  val c1 = new C(1)
        |}
     """.stripMargin,
-    """|[9..10): m <= _root_.m.
-       |[17..18): C <= _root_.m.C#
-       |[18..18):  <= _root_.m.C#`<init>`(Int).
-       |[19..20): x <= _root_.m.C#x.
-       |[22..25): Int => _root_.scala.Int#
-       |[35..39): this <= _root_.m.C#`<init>`().
-       |[48..48):  => _root_.m.C#`<init>`(Int).
-       |[62..63): M <= _root_.m.M.
-       |[72..74): c0 <= _root_.m.M.c0().
-       |[81..82): C => _root_.m.C#
-       |[82..82):  => _root_.m.C#`<init>`().
-       |[91..93): c1 <= _root_.m.M.c1().
-       |[100..101): C => _root_.m.C#
-       |[101..101):  => _root_.m.C#`<init>`(Int).
+    """|[9..10): m <= m.
+       |[17..18): C <= m.C#
+       |[18..18):  <= m.C#`<init>`(Int).
+       |[19..20): x <= m.C#x.
+       |[22..25): Int => scala.Int#
+       |[35..39): this <= m.C#`<init>`().
+       |[48..48):  => m.C#`<init>`(Int).
+       |[62..63): M <= m.M.
+       |[72..74): c0 <= m.M.c0().
+       |[81..82): C => m.C#
+       |[82..82):  => m.C#`<init>`().
+       |[91..93): c1 <= m.M.c1().
+       |[100..101): C => m.C#
+       |[101..101):  => m.C#`<init>`(Int).
     """.stripMargin.trim
   )
 
   lazy val streamConsTparam: String = {
     import scala.reflect.runtime.universe._
-    val consWrapper = typeOf[_root_.scala.collection.immutable.Stream.ConsWrapper[_]]
+    val consWrapper = typeOf[scala.collection.immutable.Stream.ConsWrapper[_]]
     val streamCons = consWrapper.decl(TermName("#::").encodedName)
     val List(List(param)) = streamCons.info.paramLists
     param.info.toString
@@ -548,17 +548,17 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |}""".stripMargin,
     """|[7..8): n <= _empty_.n.
        |[17..21): Name <= _empty_.n.Name().
-       |[36..37): r => _root_.scala.collection.immutable.StringLike#r().
+       |[36..37): r => scala.collection.immutable.StringLike#r().
        |[44..45): x <= _empty_.n.x$1.x.
-       |[46..49): #:: => _root_.scala.package.`#::`().
+       |[46..49): #:: => scala.package.`#::`().
        |[50..52): xs <= _empty_.n.x$1.xs.
-       |[55..61): Stream => _root_.scala.package.Stream().
+       |[55..61): Stream => scala.package.Stream().
        |[75..79): Name => _empty_.n.Name().
        |[80..84): name <= _empty_.n.name.name.
-       |[103..106): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
-       |[109..112): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
-       |[113..119): Stream => _root_.scala.package.Stream().
-       |[120..125): empty => _root_.scala.collection.immutable.Stream.empty().
+       |[103..106): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
+       |[109..112): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
+       |[113..119): Stream => scala.package.Stream().
+       |[120..125): empty => scala.collection.immutable.Stream.empty().
        |""".stripMargin.replace("$STREAM_CONS_TPARAM", streamConsTparam)
   )
 
@@ -568,17 +568,17 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  List(1).head
       |}""".stripMargin,
     """|_empty_.o. => final object o
-       |_root_.scala.Int# => abstract final class Int
-       |_root_.scala.collection.IterableLike#head(). => method head: A
-       |  [0..1): A => _root_.scala.collection.IterableLike#[A]
-       |_root_.scala.collection.immutable.List. => final object List
-       |_root_.scala.collection.immutable.List.newBuilder(). => method newBuilder: [A] => Builder[A, List[A]]
-       |  [7..14): Builder => _root_.scala.collection.mutable.Builder#
-       |  [15..16): A => _root_.scala.collection.immutable.List.newBuilder().[A]
-       |  [18..22): List => _root_.scala.collection.immutable.List#
-       |  [23..24): A => _root_.scala.collection.immutable.List.newBuilder().[A]
-       |_root_.scala.collection.mutable.Builder#result(). => abstract method result: (): To
-       |  [4..6): To => _root_.scala.collection.mutable.Builder#[To]
+       |scala.Int# => abstract final class Int
+       |scala.collection.IterableLike#head(). => method head: A
+       |  [0..1): A => scala.collection.IterableLike#[A]
+       |scala.collection.immutable.List. => final object List
+       |scala.collection.immutable.List.newBuilder(). => method newBuilder: [A] => Builder[A, List[A]]
+       |  [7..14): Builder => scala.collection.mutable.Builder#
+       |  [15..16): A => scala.collection.immutable.List.newBuilder().[A]
+       |  [18..22): List => scala.collection.immutable.List#
+       |  [23..24): A => scala.collection.immutable.List.newBuilder().[A]
+       |scala.collection.mutable.Builder#result(). => abstract method result: (): To
+       |  [4..6): To => scala.collection.mutable.Builder#[To]
     """.stripMargin.trim
   )
 
@@ -590,12 +590,12 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.stripMargin,
     """|[7..8): p <= _empty_.p.
        |[17..20): lst <= _empty_.p.lst().
-       |[25..28): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
-       |[31..34): #:: => _root_.scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
-       |[35..41): Stream => _root_.scala.package.Stream().
-       |[42..47): empty => _root_.scala.collection.immutable.Stream.empty().
+       |[25..28): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
+       |[31..34): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`($STREAM_CONS_TPARAM).
+       |[35..41): Stream => scala.package.Stream().
+       |[42..47): empty => scala.collection.immutable.Stream.empty().
        |[50..53): lst => _empty_.p.lst().
-       |[54..55): + => _root_.scala.Predef.any2stringadd#`+`(String).
+       |[54..55): + => scala.Predef.any2stringadd#`+`(String).
        |""".stripMargin.replace("$STREAM_CONS_TPARAM", streamConsTparam)
   )
 
@@ -605,14 +605,14 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |}
     """.stripMargin,
     """|[13..20): scala.Predef.any2stringadd[List[Int]](*)
-       |  [27..31): List => _root_.scala.collection.immutable.List#
-       |  [13..26): any2stringadd => _root_.scala.Predef.any2stringadd(A).
-       |  [32..35): Int => _root_.scala.Int#
+       |  [27..31): List => scala.collection.immutable.List#
+       |  [13..26): any2stringadd => scala.Predef.any2stringadd(A).
+       |  [32..35): Int => scala.Int#
        |  [38..39): * => _star_.
        |[17..17): *.apply[Int]
        |  [0..1): * => _star_.
-       |  [2..7): apply => _root_.scala.collection.immutable.List.apply(A*).
-       |  [8..11): Int => _root_.scala.Int#
+       |  [2..7): apply => scala.collection.immutable.List.apply(A*).
+       |  [8..11): Int => scala.Int#
        |""".stripMargin
   )
 
@@ -624,7 +624,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |}
     """.stripMargin,
     """|[86..91): scala.math.Ordered.orderingToOrdered[F](*)(r.this.ordering)
-       |  [19..36): orderingToOrdered => _root_.scala.math.Ordered.orderingToOrdered(T,Ordering).
+       |  [19..36): orderingToOrdered => scala.math.Ordered.orderingToOrdered(T,Ordering).
        |  [37..38): F => _empty_.r.F#
        |  [40..41): * => _star_.
        |  [50..58): ordering => _empty_.r.ordering().
@@ -649,7 +649,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [2..7): apply => _empty_.s.Bar.apply().
        |[102..102): *.apply
        |  [0..1): * => _star_.
-       |  [2..7): apply => _root_.scala.Function1#apply(T1).
+       |  [2..7): apply => scala.Function1#apply(T1).
        |""".stripMargin
   )
 
@@ -669,8 +669,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
         denotation.toString,
         """case method unapply: (x$0: u): Option[Int]
           |  [6..7): u => _empty_.u#
-          |  [10..16): Option => _root_.scala.Option#
-          |  [17..20): Int => _root_.scala.Int#
+          |  [10..16): Option => scala.Option#
+          |  [17..20): Int => scala.Int#
         """.stripMargin
       )
     }
@@ -721,29 +721,29 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  assert(x.value == "Foo")
        |}
     """.stripMargin,
-    """|[8..13): scala => _root_.scala.
-       |[14..18): meta => _root_.scala.meta.
-       |[28..31): org => _root_.org.
-       |[32..41): scalatest => _root_.org.scalatest.
+    """|[8..13): scala => scala.
+       |[14..18): meta => scala.meta.
+       |[28..31): org => org.
+       |[32..41): scalatest => org.scalatest.
        |[51..52): x <= _empty_.x.
-       |[61..69): FunSuite => _root_.org.scalatest.FunSuite#
-       |[70..70):  => _root_.org.scalatest.FunSuite#`<init>`().
+       |[61..69): FunSuite => org.scalatest.FunSuite#
+       |[70..70):  => org.scalatest.FunSuite#`<init>`().
        |[78..79): x <= _empty_.x.x().
-       |[82..83): q => _root_.scala.meta.internal.quasiquotes.Unlift.
+       |[82..83): q => scala.meta.internal.quasiquotes.Unlift.
        |[95..96): y <= _empty_.x.y().
-       |[99..100): q => _root_.scala.meta.internal.quasiquotes.Unlift.
+       |[99..100): q => scala.meta.internal.quasiquotes.Unlift.
        |[112..113): z <= _empty_.x.z().
-       |[116..117): q => _root_.scala.meta.internal.quasiquotes.Unlift.
+       |[116..117): q => scala.meta.internal.quasiquotes.Unlift.
        |[119..120): x => _empty_.x.x().
        |[124..125): y => _empty_.x.y().
        |[133..134): k <= _empty_.x.k().
-       |[137..147): sourcecode => _root_.sourcecode.
-       |[148..152): Name => _root_.sourcecode.Name.
-       |[153..161): generate => _root_.sourcecode.Name.generate().
-       |[164..170): assert => _root_.org.scalatest.Assertions#assert(Boolean,Prettifier,Position).
+       |[137..147): sourcecode => sourcecode.
+       |[148..152): Name => sourcecode.Name.
+       |[153..161): generate => sourcecode.Name.generate().
+       |[164..170): assert => org.scalatest.Assertions#assert(Boolean,Prettifier,Position).
        |[171..172): x => _empty_.x.x().
-       |[173..178): value => _root_.scala.meta.Term.Name#value().
-       |[179..181): == => _root_.java.lang.Object#`==`(Any).
+       |[173..178): value => scala.meta.Term.Name#value().
+       |[179..181): == => java.lang.Object#`==`(Any).
        |""".stripMargin
   )
 
@@ -841,21 +841,21 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.stripMargin,
     """|_empty_.ac. => final object ac
        |_empty_.ac.x(). => val method x: Int
-       |  [0..3): Int => _root_.scala.Int#
+       |  [0..3): Int => scala.Int#
        |_empty_.ac.x. => private val field x: Int
-       |  [0..3): Int => _root_.scala.Int#
+       |  [0..3): Int => scala.Int#
        |_empty_.ac.y(). => val method y: Class[_]
        |_empty_.ac.y. => private val field y: Class[_]
-       |_root_.scala.Int. => final object Int
-       |_root_.scala.Int.MaxValue(). => final val method MaxValue: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.scala.Int.MaxValue. => private final val field MaxValue: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.scala.Predef.Class# => type Class: [T] => Class[T]
-       |  [7..12): Class => _root_.java.lang.Class#
-       |  [13..14): T => _root_.scala.Predef.Class#[T]
-       |_root_.scala.Predef.`???`(). => method ???: Nothing
-       |  [0..7): Nothing => _root_.scala.Nothing#
+       |scala.Int. => final object Int
+       |scala.Int.MaxValue(). => final val method MaxValue: Int
+       |  [0..3): Int => scala.Int#
+       |scala.Int.MaxValue. => private final val field MaxValue: Int
+       |  [0..3): Int => scala.Int#
+       |scala.Predef.Class# => type Class: [T] => Class[T]
+       |  [7..12): Class => java.lang.Class#
+       |  [13..14): T => scala.Predef.Class#[T]
+       |scala.Predef.`???`(). => method ???: Nothing
+       |  [0..7): Nothing => scala.Nothing#
     """.stripMargin
   )
 
@@ -878,33 +878,33 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     // Note that _empty_.ab.$anon#y. matches both y: Int and  y: Any.
     """|_empty_.ad. => final object ad
        |_empty_.ad.$anon#y(). => abstract val method y: Any
-       |  [0..3): Any => _root_.scala.Any#
+       |  [0..3): Any => scala.Any#
        |_empty_.ad.Bar# => class Bar
        |_empty_.ad.Bar#`<init>`(). => primary ctor <init>: (): Bar
        |  [4..7): Bar => _empty_.ad.Bar#
        |_empty_.ad.Foo# => trait Foo
        |_empty_.ad.k(). => val method k: AnyRef with Foo{val y: Any}
-       |  [0..6): AnyRef => _root_.scala.AnyRef#
+       |  [0..6): AnyRef => scala.AnyRef#
        |  [12..15): Foo => _empty_.ad.Foo#
        |  [20..21): y => _empty_.ad.$anon#y().
        |_empty_.ad.k. => private val field k: AnyRef with Foo{val y: Any}
-       |  [0..6): AnyRef => _root_.scala.AnyRef#
+       |  [0..6): AnyRef => scala.AnyRef#
        |  [12..15): Foo => _empty_.ad.Foo#
        |  [20..21): y => _empty_.ad.$anon#y().
        |_empty_.ad.x(). => val method x: AnyRef with Foo{val y: Int; def z[T](e: T): T}
-       |  [0..6): AnyRef => _root_.scala.AnyRef#
+       |  [0..6): AnyRef => scala.AnyRef#
        |  [12..15): Foo => _empty_.ad.Foo#
        |  [20..21): y => _empty_.ad.x.$anon#y().
        |  [32..33): z => _empty_.ad.x.$anon#z(T).
        |_empty_.ad.x. => private val field x: AnyRef with Foo{val y: Int; def z[T](e: T): T}
-       |  [0..6): AnyRef => _root_.scala.AnyRef#
+       |  [0..6): AnyRef => scala.AnyRef#
        |  [12..15): Foo => _empty_.ad.Foo#
        |  [20..21): y => _empty_.ad.x.$anon#y().
        |  [32..33): z => _empty_.ad.x.$anon#z(T).
        |_empty_.ad.x.$anon#y(). => val method y: Int
-       |  [0..3): Int => _root_.scala.Int#
+       |  [0..3): Int => scala.Int#
        |_empty_.ad.x.$anon#y. => private val field y: Int
-       |  [0..3): Int => _root_.scala.Int#
+       |  [0..3): Int => scala.Int#
        |_empty_.ad.x.$anon#z(T). => method z: [T] => (e: T): T
        |  [11..12): T => _empty_.ad.x.$anon#z(T).[T]
        |  [15..16): T => _empty_.ad.x.$anon#z(T).[T]
@@ -912,11 +912,11 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [0..1): T => _empty_.ad.x.$anon#z(T).[T]
        |_empty_.ad.x.$anon#z(T).[T] => typeparam T
        |_empty_.ad.z(). => val method z: AnyRef with Foo{val y: Int}
-       |  [0..6): AnyRef => _root_.scala.AnyRef#
+       |  [0..6): AnyRef => scala.AnyRef#
        |  [12..15): Foo => _empty_.ad.Foo#
        |  [20..21): y => _empty_.ad.$anon#y().
        |_empty_.ad.z. => private val field z: AnyRef with Foo{val y: Int}
-       |  [0..6): AnyRef => _root_.scala.AnyRef#
+       |  [0..6): AnyRef => scala.AnyRef#
        |  [12..15): Foo => _empty_.ad.Foo#
        |  [20..21): y => _empty_.ad.$anon#y().
        |_empty_.ad.zz(). => val method zz: Bar{val y: Int}
@@ -926,15 +926,15 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [0..3): Bar => _empty_.ad.Bar#
        |  [8..9): y => _empty_.ad.zz.$anon#y().
        |_empty_.ad.zz.$anon#y(). => val method y: Int
-       |  [0..3): Int => _root_.scala.Int#
+       |  [0..3): Int => scala.Int#
        |_empty_.ad.zz.$anon#y. => private val field y: Int
-       |  [0..3): Int => _root_.scala.Int#
-       |_root_.java.lang.Object#`<init>`(). => javadefined ctor <init>: (): Object
-       |  [4..10): Object => _root_.java.lang.Object#
-       |_root_.scala.Any# => abstract class Any
-       |_root_.scala.AnyRef# => type AnyRef: Object
-       |  [0..6): Object => _root_.java.lang.Object#
-       |_root_.scala.Int# => abstract final class Int
+       |  [0..3): Int => scala.Int#
+       |java.lang.Object#`<init>`(). => javadefined ctor <init>: (): Object
+       |  [4..10): Object => java.lang.Object#
+       |scala.Any# => abstract class Any
+       |scala.AnyRef# => type AnyRef: Object
+       |  [0..6): Object => java.lang.Object#
+       |scala.Int# => abstract final class Int
     """.stripMargin
   )
 
@@ -968,26 +968,26 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """
       |[7..9): ag <= _empty_.ag.
       |[18..19): x <= local0
-      |[25..27): to => _root_.scala.runtime.RichInt#to(Int).
+      |[25..27): to => scala.runtime.RichInt#to(Int).
       |[32..33): y <= local1
-      |[39..44): until => _root_.scala.runtime.RichInt#until(Int).
-      |[49..56): println => _root_.scala.Predef.println(Any).
+      |[39..44): until => scala.runtime.RichInt#until(Int).
+      |[49..56): println => scala.Predef.println(Any).
       |[57..58): x => local0
-      |[59..61): -> => _root_.scala.Predef.ArrowAssoc#`->`(B).
+      |[59..61): -> => scala.Predef.ArrowAssoc#`->`(B).
       |[62..63): x => local0
       |[71..72): i <= local2
-      |[78..80): to => _root_.scala.runtime.RichInt#to(Int).
+      |[78..80): to => scala.runtime.RichInt#to(Int).
       |[85..86): j <= local3
-      |[92..97): until => _root_.scala.runtime.RichInt#until(Int).
+      |[92..97): until => scala.runtime.RichInt#until(Int).
       |[109..110): i => local2
       |[112..113): j => local3
       |[121..122): i <= local4
-      |[128..130): to => _root_.scala.runtime.RichInt#to(Int).
+      |[128..130): to => scala.runtime.RichInt#to(Int).
       |[135..136): j <= local5
-      |[142..147): until => _root_.scala.runtime.RichInt#until(Int).
+      |[142..147): until => scala.runtime.RichInt#until(Int).
       |[154..155): i => local4
-      |[156..157): % => _root_.scala.Int#`%`(Int).
-      |[160..162): == => _root_.scala.Int#`==`(Int).
+      |[156..157): % => scala.Int#`%`(Int).
+      |[160..162): == => scala.Int#`==`(Int).
       |[173..174): i => local4
       |[176..177): j => local6
     """.trim.stripMargin
@@ -1003,101 +1003,101 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.trim.stripMargin,
     """
       |[23..24): scala.Predef.intWrapper(*)
-      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(Int).
+      |  [13..23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
       |  [24..25): * => _star_.
       |[30..30): *.foreach[Unit]
       |  [0..1): * => _star_.
-      |  [2..9): foreach => _root_.scala.collection.immutable.Range#foreach(Function1).
-      |  [10..14): Unit => _root_.scala.Unit#
+      |  [2..9): foreach => scala.collection.immutable.Range#foreach(Function1).
+      |  [10..14): Unit => scala.Unit#
       |[37..38): scala.Predef.intWrapper(*)
-      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(Int).
+      |  [13..23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
       |  [24..25): * => _star_.
       |[47..47): *.foreach[Unit]
       |  [0..1): * => _star_.
-      |  [2..9): foreach => _root_.scala.collection.immutable.Range#foreach(Function1).
-      |  [10..14): Unit => _root_.scala.Unit#
+      |  [2..9): foreach => scala.collection.immutable.Range#foreach(Function1).
+      |  [10..14): Unit => scala.Unit#
       |[57..58): scala.Predef.ArrowAssoc[Int](*)
-      |  [13..23): ArrowAssoc => _root_.scala.Predef.ArrowAssoc(A).
-      |  [24..27): Int => _root_.scala.Int#
+      |  [13..23): ArrowAssoc => scala.Predef.ArrowAssoc(A).
+      |  [24..27): Int => scala.Int#
       |  [29..30): * => _star_.
       |[61..61): *[Int]
       |  [0..1): * => _star_.
-      |  [2..5): Int => _root_.scala.Int#
+      |  [2..5): Int => scala.Int#
       |[76..77): scala.Predef.intWrapper(*)
-      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(Int).
+      |  [13..23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
       |  [24..25): * => _star_.
       |[83..83): *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
       |  [0..1): * => _star_.
-      |  [2..9): flatMap => _root_.scala.collection.TraversableLike#flatMap(Function1,CanBuildFrom).
-      |  [22..25): Int => _root_.scala.Int#
-      |  [10..16): Tuple2 => _root_.scala.Tuple2#
-      |  [17..20): Int => _root_.scala.Int#
-      |  [28..38): IndexedSeq => _root_.scala.collection.immutable.IndexedSeq#
-      |  [39..45): Tuple2 => _root_.scala.Tuple2#
-      |  [46..49): Int => _root_.scala.Int#
-      |  [51..54): Int => _root_.scala.Int#
+      |  [2..9): flatMap => scala.collection.TraversableLike#flatMap(Function1,CanBuildFrom).
+      |  [22..25): Int => scala.Int#
+      |  [10..16): Tuple2 => scala.Tuple2#
+      |  [17..20): Int => scala.Int#
+      |  [28..38): IndexedSeq => scala.collection.immutable.IndexedSeq#
+      |  [39..45): Tuple2 => scala.Tuple2#
+      |  [46..49): Int => scala.Int#
+      |  [51..54): Int => scala.Int#
       |  [58..59): * => _star_.
-      |  [112..118): Tuple2 => _root_.scala.Tuple2#
-      |  [119..122): Int => _root_.scala.Int#
-      |  [124..127): Int => _root_.scala.Int#
-      |  [99..111): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom().
+      |  [112..118): Tuple2 => scala.Tuple2#
+      |  [119..122): Int => scala.Int#
+      |  [124..127): Int => scala.Int#
+      |  [99..111): canBuildFrom => scala.collection.immutable.IndexedSeq.canBuildFrom().
       |[90..91): scala.Predef.intWrapper(*)
-      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(Int).
+      |  [13..23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
       |  [24..25): * => _star_.
       |[100..100): *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
       |  [0..1): * => _star_.
-      |  [2..5): map => _root_.scala.collection.TraversableLike#map(Function1,CanBuildFrom).
-      |  [18..21): Int => _root_.scala.Int#
-      |  [6..12): Tuple2 => _root_.scala.Tuple2#
-      |  [13..16): Int => _root_.scala.Int#
-      |  [24..34): IndexedSeq => _root_.scala.collection.immutable.IndexedSeq#
-      |  [35..41): Tuple2 => _root_.scala.Tuple2#
-      |  [42..45): Int => _root_.scala.Int#
-      |  [47..50): Int => _root_.scala.Int#
+      |  [2..5): map => scala.collection.TraversableLike#map(Function1,CanBuildFrom).
+      |  [18..21): Int => scala.Int#
+      |  [6..12): Tuple2 => scala.Tuple2#
+      |  [13..16): Int => scala.Int#
+      |  [24..34): IndexedSeq => scala.collection.immutable.IndexedSeq#
+      |  [35..41): Tuple2 => scala.Tuple2#
+      |  [42..45): Int => scala.Int#
+      |  [47..50): Int => scala.Int#
       |  [54..55): * => _star_.
-      |  [108..114): Tuple2 => _root_.scala.Tuple2#
-      |  [115..118): Int => _root_.scala.Int#
-      |  [120..123): Int => _root_.scala.Int#
-      |  [95..107): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom().
+      |  [108..114): Tuple2 => scala.Tuple2#
+      |  [115..118): Int => scala.Int#
+      |  [120..123): Int => scala.Int#
+      |  [95..107): canBuildFrom => scala.collection.immutable.IndexedSeq.canBuildFrom().
       |[126..127): scala.Predef.intWrapper(*)
-      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(Int).
+      |  [13..23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
       |  [24..25): * => _star_.
       |[133..133): *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
       |  [0..1): * => _star_.
-      |  [2..9): flatMap => _root_.scala.collection.TraversableLike#flatMap(Function1,CanBuildFrom).
-      |  [22..25): Int => _root_.scala.Int#
-      |  [10..16): Tuple2 => _root_.scala.Tuple2#
-      |  [17..20): Int => _root_.scala.Int#
-      |  [28..38): IndexedSeq => _root_.scala.collection.immutable.IndexedSeq#
-      |  [39..45): Tuple2 => _root_.scala.Tuple2#
-      |  [46..49): Int => _root_.scala.Int#
-      |  [51..54): Int => _root_.scala.Int#
+      |  [2..9): flatMap => scala.collection.TraversableLike#flatMap(Function1,CanBuildFrom).
+      |  [22..25): Int => scala.Int#
+      |  [10..16): Tuple2 => scala.Tuple2#
+      |  [17..20): Int => scala.Int#
+      |  [28..38): IndexedSeq => scala.collection.immutable.IndexedSeq#
+      |  [39..45): Tuple2 => scala.Tuple2#
+      |  [46..49): Int => scala.Int#
+      |  [51..54): Int => scala.Int#
       |  [58..59): * => _star_.
-      |  [112..118): Tuple2 => _root_.scala.Tuple2#
-      |  [119..122): Int => _root_.scala.Int#
-      |  [124..127): Int => _root_.scala.Int#
-      |  [99..111): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom().
+      |  [112..118): Tuple2 => scala.Tuple2#
+      |  [119..122): Int => scala.Int#
+      |  [124..127): Int => scala.Int#
+      |  [99..111): canBuildFrom => scala.collection.immutable.IndexedSeq.canBuildFrom().
       |[140..141): scala.Predef.intWrapper(*)
-      |  [13..23): intWrapper => _root_.scala.LowPriorityImplicits#intWrapper(Int).
+      |  [13..23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
       |  [24..25): * => _star_.
       |[150..150): *.withFilter
       |  [0..1): * => _star_.
-      |  [2..12): withFilter => _root_.scala.collection.TraversableLike#withFilter(Function1).
+      |  [2..12): withFilter => scala.collection.TraversableLike#withFilter(Function1).
       |[164..164): *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
       |  [0..1): * => _star_.
-      |  [2..5): map => _root_.scala.collection.generic.FilterMonadic#map(Function1,CanBuildFrom).
-      |  [18..21): Int => _root_.scala.Int#
-      |  [6..12): Tuple2 => _root_.scala.Tuple2#
-      |  [13..16): Int => _root_.scala.Int#
-      |  [24..34): IndexedSeq => _root_.scala.collection.immutable.IndexedSeq#
-      |  [35..41): Tuple2 => _root_.scala.Tuple2#
-      |  [42..45): Int => _root_.scala.Int#
-      |  [47..50): Int => _root_.scala.Int#
+      |  [2..5): map => scala.collection.generic.FilterMonadic#map(Function1,CanBuildFrom).
+      |  [18..21): Int => scala.Int#
+      |  [6..12): Tuple2 => scala.Tuple2#
+      |  [13..16): Int => scala.Int#
+      |  [24..34): IndexedSeq => scala.collection.immutable.IndexedSeq#
+      |  [35..41): Tuple2 => scala.Tuple2#
+      |  [42..45): Int => scala.Int#
+      |  [47..50): Int => scala.Int#
       |  [54..55): * => _star_.
-      |  [108..114): Tuple2 => _root_.scala.Tuple2#
-      |  [115..118): Int => _root_.scala.Int#
-      |  [120..123): Int => _root_.scala.Int#
-      |  [95..107): canBuildFrom => _root_.scala.collection.immutable.IndexedSeq.canBuildFrom().
+      |  [108..114): Tuple2 => scala.Tuple2#
+      |  [115..118): Int => scala.Int#
+      |  [120..123): Int => scala.Int#
+      |  [95..107): canBuildFrom => scala.collection.immutable.IndexedSeq.canBuildFrom().
     """.trim.stripMargin
   )
 
@@ -1119,45 +1119,45 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """
       |[123..123): *[Int]
       |  [0..1): * => _star_.
-      |  [2..5): Int => _root_.scala.Int#
+      |  [2..5): Int => scala.Int#
       |[126..126): *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
       |  [0..1): * => _star_.
-      |  [2..9): foreach => _root_.scala.concurrent.Future#foreach(Function1,ExecutionContext).
-      |  [10..14): Unit => _root_.scala.Unit#
+      |  [2..9): foreach => scala.concurrent.Future#foreach(Function1,ExecutionContext).
+      |  [10..14): Unit => scala.Unit#
       |  [16..17): * => _star_.
-      |  [63..69): global => _root_.scala.concurrent.ExecutionContext.Implicits.global().
+      |  [63..69): global => scala.concurrent.ExecutionContext.Implicits.global().
       |[170..170): *[Int]
       |  [0..1): * => _star_.
-      |  [2..5): Int => _root_.scala.Int#
+      |  [2..5): Int => scala.Int#
       |[173..173): *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
       |  [0..1): * => _star_.
-      |  [2..9): foreach => _root_.scala.concurrent.Future#foreach(Function1,ExecutionContext).
-      |  [10..14): Unit => _root_.scala.Unit#
+      |  [2..9): foreach => scala.concurrent.Future#foreach(Function1,ExecutionContext).
+      |  [10..14): Unit => scala.Unit#
       |  [16..17): * => _star_.
-      |  [63..69): global => _root_.scala.concurrent.ExecutionContext.Implicits.global().
+      |  [63..69): global => scala.concurrent.ExecutionContext.Implicits.global().
       |[240..240): *[Int]
       |  [0..1): * => _star_.
-      |  [2..5): Int => _root_.scala.Int#
+      |  [2..5): Int => scala.Int#
       |[243..243): *.flatMap[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
       |  [0..1): * => _star_.
-      |  [2..9): flatMap => _root_.scala.concurrent.Future#flatMap(Function1,ExecutionContext).
-      |  [10..13): Int => _root_.scala.Int#
+      |  [2..9): flatMap => scala.concurrent.Future#flatMap(Function1,ExecutionContext).
+      |  [10..13): Int => scala.Int#
       |  [15..16): * => _star_.
-      |  [62..68): global => _root_.scala.concurrent.ExecutionContext.Implicits.global().
+      |  [62..68): global => scala.concurrent.ExecutionContext.Implicits.global().
       |[287..287): *[Int]
       |  [0..1): * => _star_.
-      |  [2..5): Int => _root_.scala.Int#
+      |  [2..5): Int => scala.Int#
       |[290..290): *.withFilter(*)(scala.concurrent.ExecutionContext.Implicits.global)
       |  [0..1): * => _star_.
-      |  [2..12): withFilter => _root_.scala.concurrent.Future#withFilter(Function1,ExecutionContext).
+      |  [2..12): withFilter => scala.concurrent.Future#withFilter(Function1,ExecutionContext).
       |  [13..14): * => _star_.
-      |  [60..66): global => _root_.scala.concurrent.ExecutionContext.Implicits.global().
+      |  [60..66): global => scala.concurrent.ExecutionContext.Implicits.global().
       |[303..303): *.map[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
       |  [0..1): * => _star_.
-      |  [2..5): map => _root_.scala.concurrent.Future#map(Function1,ExecutionContext).
-      |  [6..9): Int => _root_.scala.Int#
+      |  [2..5): map => scala.concurrent.Future#map(Function1,ExecutionContext).
+      |  [6..9): Int => scala.Int#
       |  [11..12): * => _star_.
-      |  [58..64): global => _root_.scala.concurrent.ExecutionContext.Implicits.global().
+      |  [58..64): global => scala.concurrent.ExecutionContext.Implicits.global().
     """.trim.stripMargin
   )
 
@@ -1186,7 +1186,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  new <<Foo>> {}
       |}
     """.stripMargin, { (_, Foo) =>
-      assertNoDiff(Foo.syntax, "_root_.ak.Foo#")
+      assertNoDiff(Foo.syntax, "ak.Foo#")
     }
   )
 
@@ -1214,14 +1214,14 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |}
     """.trim.stripMargin, { (db, foo) =>
       val symbol = db.symbols.find(_.symbol == foo).get
-      assertNoDiff(foo.syntax, "_root_.am.A.foo().")
+      assertNoDiff(foo.syntax, "am.A.foo().")
       assertNoDiff(
         symbol.syntax,
         """
-          |_root_.am.A.foo(). => method foo: [T] => A[T]#Self
-          |  [7..8): A => _root_.am.A#
-          |  [9..10): T => _root_.am.A.foo().[T]
-          |  [12..16): Self => _root_.am.A#Self#
+          |am.A.foo(). => method foo: [T] => A[T]#Self
+          |  [7..8): A => am.A#
+          |  [9..10): T => am.A.foo().[T]
+          |  [12..16): Self => am.A#Self#
         """.stripMargin
       )
     }
@@ -1245,8 +1245,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  M.<<foo>>(new M2.C)
       |}
     """.trim.stripMargin, { (db, foo1, foo2) =>
-      assert(foo1 === Symbol("_root_.an.M.foo(C+1)."))
-      assert(foo2 === Symbol("_root_.an.M.foo(C+2)."))
+      assert(foo1 === Symbol("an.M.foo(C+1)."))
+      assert(foo2 === Symbol("an.M.foo(C+2)."))
     }
   )
 }

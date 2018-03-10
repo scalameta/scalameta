@@ -14,7 +14,6 @@
   * [Accessibility](#accessibility)
   * [SymbolOccurrence](#symboloccurrence)
   * [Diagnostic](#diagnostic)
-  * [Synthetic](#synthetic)
 * [Data Schemas](#data-schemas)
   * [Protobuf](#protobuf)
 * [Languages](#languages)
@@ -24,14 +23,14 @@
     * [SymbolInformation](#scala-symbolinformation)
     * [Annotation](#scala-annotation)
     * [Accessibility](#scala-accessibility)
-    * [Synthetic](#scala-synthetic)
+    * [SymbolOccurrence](#scala-symboloccurrence)
   * [Java](#java)
     * [Symbol](#java)
     * [Type](#java)
     * [SymbolInformation](#java)
     * [Annotation](#java)
     * [Accessibility](#java)
-    * [Synthetic](#java)
+    * [SymbolOccurrence](#java)
 
 ## Motivation
 
@@ -93,7 +92,7 @@ message TextDocuments {
 }
 
 message TextDocument {
-  reserved 4, 9;
+  reserved 4, 8, 9;
   Schema schema = 1;
   string uri = 2;
   string text = 3;
@@ -101,7 +100,6 @@ message TextDocument {
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
-  repeated Synthetic synthetics = 8;
 }
 ```
 
@@ -212,24 +210,23 @@ the document where the definition is located.
 
 Global symbol format accommodates scoping rules of the underlying language,
 and is therefore language-dependent. For example, the `Int` class in
-the Scala standard library is modelled as `_root_.scala.Int#`, where
-the `_root_` prefix stands for the root package defined in the Scala Language
-Specification [\[17\]][17], and the pound sign (`#`) at the end of the symbol
-means that the symbol corresponds to a class as opposed to an object that
-would end with a dot (`.`). See [Languages](#languages) for more information.
+the Scala standard library is modelled as `scala.Int#`, where
+the pound sign (`#`) at the end of the symbol means that the symbol corresponds
+to a class as opposed to an object that would end with a dot (`.`).
+See [Languages](#languages) for more information.
 
 Global symbols must be unique across the universe of documents that
 a SemanticDB-based is working with at any given time. For example,
 if in such a universe, there exist multiple definitions of `Int` -
 e.g. coming from multiple different versions of Scala - then all references
 to those definitions will have `SymbolOccurrence.symbol` equal to the same
-`_root_.scala.Int#` symbol, and SemanticDB will not be able to provide
+`scala.Int#` symbol, and SemanticDB will not be able to provide
 information to distinguish these references from each other.
 
 In the future, we may extend SemanticDB to allow for multiple definitions
 that under current rules would correspond to the same global symbol.
 In the meanwhile, when global uniqueness is required, tool authors are advised
-to accompany global symbols with `SymbolInformation.location`.
+to accompany global symbols with out-of-band metadata.
 
 **Local symbols**. Correspond to a definition that isn't global (see above).
 
@@ -259,14 +256,8 @@ interspersed with a semicolon (`;`). Within a multi symbol, the underlying
 symbols must be ordered lexicographically in ascending order.
 
 For example, a reference to both the `Int` class in the Scala standard library
-and its companion object must be modelled by
-`_root_.scala.Int#;_root_.scala.Int.`.
-Because of the order requirement, `_root_.scala.Int.;_root_.scala.Int#`
-is not a valid symbol.
-
-**Placeholder symbols**. Are used to model original code snippets in
-[Synthetics](#synthetic). Must not be used outside `Synthetic.text` documents.
-Placeholder symbols are always equal to an asterisk (`*`).
+and its companion object must be modelled by `scala.Int#;.scala.Int.`.
+Because of the order requirement, `scala.Int.;scala.Int#` is not a valid symbol.
 
 ### Type
 
@@ -491,14 +482,12 @@ provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 12;
+  reserved 2, 6, 7, 8, 9, 10, 12;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  Location location = 10;
-  repeated string overrides = 9;
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
@@ -514,7 +503,7 @@ document. In a sense, this section is analogous to a symbol table
 `language`. [Language](#language) that defines the corresponding definition.
 
 `kind`. Enumeration that defines the kind of the corresponding definition.
-See [Languages](#language) for information on how definitions in supported
+See [Languages](#languages) for information on how definitions in supported
 languages map onto these kinds.
 
 <table>
@@ -604,7 +593,7 @@ languages map onto these kinds.
 </table>
 
 `properties`. Bitmask of miscellaneous bits of metadata.
-See [Languages](#language) for information on how definitions in supported
+See [Languages](#languages) for information on how definitions in supported
 languages map onto these properties.
 
 <table>
@@ -687,26 +676,25 @@ languages map onto these properties.
     <td><code>PRIMARY</code></td>
     <td>Is a primary constructor?</td>
   </tr>
+  <tr>
+    <td><code>0x4000</code></td>
+    <td><code>ENUM</code></td>
+    <td>Is an <code>enum</code> field or class?</td>
+  </tr>
 </table>
 
 `name`. String that represents the name of the corresponding definition.
 
-`location`. [Location](#location) that represents the extent of
-the corresponding definition.
-
-`overrides`. Symbols that are extended or overridden by this symbol
-either directly or transitively.
-
 `tpe`. [Type](#type) that represents the definition signature.
-See [Languages](#language) for more information on which definitions have
+See [Languages](#languages) for more information on which definitions have
 which signatures in supported languages.
 
 `annotation`. [Annotations](#annotation) of the corresponding definition.
 
 `accessibility`. [Accessibility](#accessibility) of the corresponding definition.
 
-`owner`. For a global symbol, directly enclosing definition. For other symbols,
-`None`.
+`owner`. See [Languages](#languages) for more information on which definitions
+have which owners in supported languages.
 
 ### Annotation
 
@@ -782,11 +770,8 @@ that the identifier performs in the code.
   </tr>
 </table>
 
-There may be situations when: 1) a range references multiple symbols, e.g. when
-an identifier in a Scala import refers to both a class and an object with the
-same name, or 2) when a range defines multiple symbols, e.g. when a Scala `val`
-or `var` gives rise to multiple symbols. In these situations, multiple symbols
-must be packed into a [multi symbol](#symbol).
+See [Languages](#languages) for information on how language features in
+supported languages map onto this data structure.
 
 ### Diagnostic
 
@@ -834,38 +819,6 @@ diagnostics as error, warning, information or hint.
   </tr>
 </table>
 
-### Synthetic
-
-```protobuf
-message Synthetic {
-  Range range = 1;
-  TextDocument text = 2;
-}
-```
-
-"Synthetics" is a section of a [TextDocument](#textdocument) that stores
-code snippets synthesized by compilers, code rewriters and other
-developer tools.
-
-`range` refers to a [Range](#range) in the original code of
-the enclosing document, and its value is determined as follows:
-
-* If the synthetic replaces a code snippet (e.g. if it represents an
-  implicit conversion applied to an expression), then its range must be equal
-  to that snippet's range.
-* If the synthetic inserts new code (e.g. if it represents an inferred type
-  argument or implicit argument), then its range must be an empty range specifying the insertion point.
-
-`text` is a synthetic [TextDocument](#textdocument) that represents a synthetic
-code snippet as follows:
-
-* Its text contains a language-dependent string that represents the
-  synthetic code snippet. See [Languages](#languages) for more information.
-* Its sections, e.g. [Occurences](#symboloccurrence), contain semantic
-  information associated with the synthetic code snippet.
-* An occurrence of a placeholder symbol means that the synthetic code snippet
-  includes the original code snippet located at `Synthetic.range`.
-
 ## Data Schemas
 
 ### Protobuf
@@ -874,14 +827,26 @@ code snippet as follows:
 
 ## Languages
 
-In this section, we describe language-dependent aspects of SemanticDB entities,
-namely:
-  * Format for global [Symbols](#symbol).
-  * Supported [Annotations](#annotation).
-  * Supported [Types](#type).
-  * Kinds, properties, signatures and accessibilities of [SymbolInformation](#symbolinformation).
-  * Supported [Accessibilities](#accessibility).
-  * Format for [Synthetics](#synthetic).
+In this section, we describe language-dependent SemanticDB entities, i.e.
+symbols, types, symbol informations, annotations, accessibilities and
+symbol occurrences:
+
+  * [Scala](#scala)
+    * [Symbol](#scala-symbol)
+    * [Type](#scala-type)
+    * [SymbolInformation](#scala-symbolinformation)
+    * [Annotation](#scala-annotation)
+    * [Accessibility](#scala-accessibility)
+    * [SymbolOccurrence](#scala-symboloccurrence)
+  * [Java](#java)
+    * [Symbol](#java)
+    * [Type](#java)
+    * [SymbolInformation](#java)
+    * [Annotation](#java)
+    * [Accessibility](#java)
+    * [SymbolOccurrence](#java)
+
+### Notation
 
 We use a simple notation to describe SemanticDB entities.
 In this notation, `M(v1, v2, ...)` corresponds a Protocol Buffers message
@@ -940,23 +905,28 @@ which Scala definitions, what their metadata is, etc). See
       symbols must be ordered lexicographically in ascending order.
     </td>
   </tr>
-  <tr>
-    <td>
-      Placeholder symbols
-      <a href="#symbol">↑</a>
-    </td>
-    <td>
-      <code>*</code>
-    </td>
-  </tr>
 </table>
 
-**Owner chain** is a list of definitions enclosing a definition,
-starting with the outermost one and including the definition itself.
-The outermost definition must be either `_empty_` (the special empty package
-[\[20\]][20]) or `_root_` (the special root package [\[21\]][21]). For example,
-for the `Int` class in the Scala standard library,
-the owner chain is `[_root_, scala, Int]`.
+**Owner chain** is:
+  * For the root package [\[20\]][20], list that contains just that package.
+  * For the empty package [\[21\]][21], list that contains just that package.
+  * For top-level package, list that contains just that package.
+  * For other global definition, owner chain of its owner appended
+    by the original definition.
+  * For other definition, empty list.
+
+**Owner** is:
+  * For the root package [\[20\]][20], `None`.
+  * For the empty package [\[21\]][21], root package.
+  * For top-level package, root package.
+  * For other package, parent package.
+  * For package object, its package, e.g. `package scala`
+    for `package object scala`.
+  * For other top-level definition, its package.
+  * For other global definition, the innermost enclosing definition,
+    i.e. the definition whose [Location](#location) in source code most
+    tightly encloses the [Location](#location) of the original definition.
+  * For other definition, `None`.
 
 **Definition descriptor** is:
   * For `LOCAL`, `FIELD`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
@@ -978,9 +948,24 @@ the owner chain is `[_root_, scala, Int]`.
   * See [SymbolInformation](#scala-symbolinformation) for details on
     which Scala definitions are modelled by which symbols.
 
+**Encoded name** is:
+  * If name is a Java identifier [\[22\]][22], the name itself.
+  * Otherwise, concatenation of a backtick, the name itself and
+    another backtick.
+
+**Name** is:
+  * For the root package [\[20\]][20], `_root_`.
+  * For the empty package [\[21\]][21], `_empty_`.
+  * For package object, `package`.
+  * For constructor, `<init>`.
+  * For anonymous parameter, self parameter or type parameter,
+    the underscore sign (`_`).
+  * For other definition, the name of the binding introduced by the definition
+    [\[70\]][70].
+
 **Type descriptor** is:
 
-  * For `TYPE_REF`, encoded `SymbolInformation.name` of `symbol`.
+  * For `TYPE_REF`, encoded name of `symbol`.
   * For `SINGLETON_TYPE`, `.type`.
   * For `STRUCTURAL_TYPE`, `{}`.
   * For `ANNOTATED_TYPE`, type descriptor of `tpe`.
@@ -997,26 +982,60 @@ the owner chain is `[_root_, scala, Int]`.
   * See [Type](#scala-type) for details on
     which Scala types are modelled by which `Type` entities.
 
-**Encoded name** is:
-  * For a Java identifier [\[22\]][22], the name itself.
-  * Otherwise, concatenation of a backtick, the name itself and another backtick.
-
 For example, this is how some of the definitions from the Scala standard library
 must be modelled:
 
-* The `scala` package: `_root_.scala.`
-* The `Int` class: `_root_.scala.Int#`
-* The `def implicitly[T](implicit e: T)` method:
-  `_root_.scala.Predef.implicitly(T).`
-* The `e` parameter of that method: `_root_.scala.Predef.implicitly(T).(e)`
-* The `T` type parameter of that method: `_root_.scala.Predef.implicitly(T).[T]`
+* The `scala` package: `scala.`
+* The `Int` class: `scala.Int#`
+* The `def implicitly[T](implicit e: T)` method: `scala.Predef.implicitly(T).`
+* The `e` parameter of that method: `scala.Predef.implicitly(T).(e)`
+* The `T` type parameter of that method: `scala.Predef.implicitly(T).[T]`
 * The `def contains[A: Ordering](tree: Tree[A, _], x: A): Boolean` method:
-  `_root_.scala.collection.immutable.RedBlackTree#contains(Tree,A,Ordering).`
+  `scala.collection.immutable.RedBlackTree#contains(Tree,A,Ordering).`
 
 <a name="scala-type"></a>
 #### Type
 
-In Scala, `Type` represents types [\[18\]][18].
+```protobuf
+message Type {
+  enum Tag {
+    reserved 2, 3, 4, 5;
+    UNKNOWN_TYPE = 0;
+    TYPE_REF = 1;
+    SINGLETON_TYPE = 15;
+    INTERSECTION_TYPE = 16;
+    UNION_TYPE = 17;
+    WITH_TYPE = 18;
+    STRUCTURAL_TYPE = 6;
+    ANNOTATED_TYPE = 7;
+    EXISTENTIAL_TYPE = 8;
+    UNIVERSAL_TYPE = 9;
+    CLASS_INFO_TYPE = 10;
+    METHOD_TYPE = 11;
+    BY_NAME_TYPE = 12;
+    REPEATED_TYPE = 13;
+    TYPE_TYPE = 14;
+  }
+  reserved 3, 4, 5, 6;
+  Tag tag = 1;
+  TypeRef typeRef = 2;
+  SingletonType singletonType = 16;
+  IntersectionType intersectionType = 17;
+  UnionType unionType = 18;
+  WithType withType = 19;
+  StructuralType structuralType = 7;
+  AnnotatedType annotatedType = 8;
+  ExistentialType existentialType = 9;
+  UniversalType universalType = 10;
+  ClassInfoType classInfoType = 11;
+  MethodType methodType = 12;
+  ByNameType byNameType = 13;
+  RepeatedType repeatedType = 14;
+  TypeType typeType = 15;
+}
+```
+
+In Scala, [Type](#type) represents types [\[18\]][18].
 
 In the examples below:
   * `E` is the lexically enclosing class of the location where the example
@@ -1187,6 +1206,64 @@ Notes:
 <a name="scala-symbolinformation"></a>
 #### SymbolInformation
 
+```protobuf
+message SymbolInformation {
+  reserved 2, 6, 7, 8, 9, 10, 12;
+  string symbol = 1;
+  Language language = 16;
+  Kind kind = 3;
+  int32 properties = 4;
+  string name = 5;
+  Type tpe = 11;
+  repeated Annotation annotations = 13;
+  Accessibility accessibility = 14;
+  string owner = 15;
+}
+```
+
+<table>
+  <tr>
+    <td><b>Field</b></td>
+    <td><b>Explanation</b></td>
+  </tr>
+  <tr>
+    <td><code>symbol</code></td>
+    <td>See <a href="#scala-symbol">Symbol</a>.</td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td><code>SCALA</code>.</td>
+  </tr>
+  <tr>
+    <td><code>kind</code></td>
+    <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>properties</code></td>
+    <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>name</code></td>
+    <td>See <a href="#scala-symbol">Symbol</a>.</td>
+  </tr>
+  <tr>
+    <td><code>tpe</code></td>
+    <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>annotations</code></td>
+    <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>accessibility</code></td>
+    <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>owner</code></td>
+    <td>See <a href="#scala-symbol">Symbol</a>.</td>
+  </tr>
+</table>
+
 **Value declarations and definitions** [\[39\]][39] are represented by multiple
 symbols, with the exact number of symbols, their kinds, properties, signatures
 and accessibilities dependent on the corresponding value:
@@ -1305,11 +1382,8 @@ Notes:
     * If a corresponding local symbol exists, set for the local symbol.
   * `LAZY`: set for all corresponding symbols of `lazy` values.
   * `VAL`: set for all corresponding symbols.
-* `override` relationships exist only for getter symbols.
-  Corresponding local, field and parameter symbols never override or
-  get overridden.
-* If the type of the value is unspecified, it is inferred from the
-  right-hand side of the value according to the rules described
+* If the type of the value is not provided in source code, it is inferred
+  from the right-hand side of the value according to the rules described
   in SLS [\[39\]][39]. Corresponding signature is computed from the inferred
   type as explained in [Type](#scala-type).
 * Depending on their meta annotations, value annotations may end up as
@@ -1355,12 +1429,9 @@ Notes:
   * `LAZY`: never set for variable symbols, since variable declarations and
     definitions cannot be `lazy`.
   * `VAR`: set for all corresponding symbols.
-* `override` relationships exist only for getter and setter symbols.
-  Corresponding local, field and parameter symbols never override or
-  get overridden.
 
 **Pattern variables** [\[65\]][65] are represented differently depending
-on their location:
+on where they are defined:
 * Local symbol is created for pattern variables in pattern matching
   expressions [\[66\]][66].
 * A combination of local, field, getter and setter symbols is created
@@ -1774,7 +1845,7 @@ Notes:
 * For procedures [\[49\]][49], the return type is assumed to be `Unit`.
   Corresponding signature is computed using the assumed retyrb
   type as explained in [Type](#scala-type).
-* If the return type is unspecified, it is inferred from the
+* If the return type is not provided in source code, it is inferred from the
   right-hand side of the method according to the rules described
   in SLS [\[50\]][50]. Corresponding signature is computed using the inferred
   retyrb type as explained in [Type](#scala-type).
@@ -2015,16 +2086,22 @@ between package object symbols and object symbols are:
 **Packages** [\[61\]][61] are represented by `PACKAGE` symbols.
 In Scala, `SymbolInformation` for `PACKAGE` symbols is very modest -
 the only non-empty fields must be:
-  * `symbol` (must be defined as described in [Symbol](#scala-symbol)).
-  * `language` (must be `"Scala"`).
-  * `kind` (must be `PACKAGE`).
-  * `name` (must be equal to the short name of the package).
-  * `owner` (must be equal to the symbol of the enclosing package).
+  * `symbol` (as described in [Symbol](#scala-symbol)).
+  * `language` (`SCALA`).
+  * `kind` (`PACKAGE`).
+  * `name` (as described in [Symbol](#scala-symbol)).
+  * `owner` (as described in [Symbol](#scala-symbol)).
 
 <a name="scala-annotation"></a>
 #### Annotation
 
-In Scala, `Annotation` represents annotations [\[23\]][23].
+```protobuf
+message Annotation {
+  Type tpe = 1;
+}
+```
+
+In Scala, [Annotation](#annotation) represents annotations [\[23\]][23].
 
 <table>
   <tr>
@@ -2057,7 +2134,25 @@ In Scala, `Annotation` represents annotations [\[23\]][23].
 <a name="scala-accessibility"></a>
 #### Accessibility
 
-In Scala, `Accessibility` represents accessibility of definitions.
+```protobuf
+message Accessibility {
+  enum Tag {
+    UNKNOWN_ACCESSIBILITY = 0;
+    PRIVATE = 1;
+    PRIVATE_THIS = 2;
+    PRIVATE_WITHIN = 3;
+    PROTECTED = 4;
+    PROTECTED_THIS = 5;
+    PROTECTED_WITHIN = 6;
+    PUBLIC = 7;
+  }
+  Tag tag = 1;
+  string symbol = 2;
+}
+```
+
+In Scala, [Accessibility](#accessibility) represents accessibility of
+definitions.
 
 <table>
   <tr>
@@ -2133,18 +2228,29 @@ Notes:
 * Not all kinds of symbols support all accessibilities. See
   [SymbolInformation](#scala-symbolinformation) for more information.
 
-<a name="scala-synthetic"></a>
-#### Synthetic
+<a name="scala-symboloccurrence"></a>
+#### SymbolOccurrence
 
-In Scala, we leave the synthetic format deliberately unspecified.
-Synthetics are unspecified in SLS, and our experience [\[38\]][38] shows that
-reverse engineering synthetics is very hard. We may improve
-on this in the future, but this is highly unlikely.
+```protobuf
+message SymbolOccurrence {
+  Range range = 1;
+  string symbol = 2;
+  Role role = 3;
+}
+```
+
+There is a Scala compiler plugin
+that generates [SymbolOccurrences](#symboloccurrence) for Scala code.
+The implementation [\[71\]][71] is used at Twitter scale, and it works well -
+both in terms of handling sizeable codebases and understanding esoteric
+language constructs and idioms. However, but we do not yet have a specification
+that comprehensively describes how Scala language features map onto symbol
+occurrences. We intend to improve on this in the future.
 
 ### Java
 
 Java `class` file format [\[68\]][68] can be mapped onto SemanticDB.
-This has been validated in an experimental implementation [\[69\]][69],
+There is an experimental implementation [\[69\]][69] that does that,
 but we do not yet have a specification that comprehensively describes how
 Java language features map onto SemanticDB. We intend to improve on this
 in the future.
@@ -2170,8 +2276,8 @@ in the future.
 [17]: https://www.scala-lang.org/files/archive/spec/2.12/
 [18]: https://www.scala-lang.org/files/archive/spec/2.11/03-types.html
 [19]: https://en.wikipedia.org/wiki/Symbol_table
-[20]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#packagings
-[21]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#package-references
+[20]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#package-references
+[21]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#packagings
 [22]: https://docs.oracle.com/javase/specs/jls/se9/html/jls-3.html#jls-3.8
 [23]: https://www.scala-lang.org/files/archive/spec/2.12/11-annotations.html
 [24]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types
@@ -2220,3 +2326,5 @@ in the future.
 [67]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#type-patterns
 [68]: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
 [69]: https://github.com/scalameta/scalameta/blob/master/semanticdb/metacp/src/main/scala/scala/meta/internal/javacp/Javacp.scala
+[70]: https://www.scala-lang.org/files/archive/spec/2.12/02-identifiers-names-and-scopes.html
+[71]: https://github.com/scalameta/scalameta/blob/master/semanticdb/scalac/library/src/main/scala/scala/meta/internal/semanticdb/scalac/DocumentOps.scala

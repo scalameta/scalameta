@@ -106,7 +106,7 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, _, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner) =>
+          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner) =>
             val dsym = dSymbol(ssym)
             val dflags = {
               var dflags = 0L
@@ -141,7 +141,9 @@ package object semanticdb {
               if (stest(p.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
               if (stest(p.VAL.value)) dflip(d.VAL)
               if (stest(p.VAR.value)) dflip(d.VAR)
+              if (stest(p.STATIC.value)) dflip(d.STATIC)
               if (stest(p.PRIMARY.value)) dflip(d.PRIMARY)
+              if (stest(p.ENUM.value)) dflip(d.ENUM)
               sacc.map(_.tag) match {
                 case Some(a.PRIVATE | a.PRIVATE_THIS | a.PRIVATE_WITHIN) =>
                   dflip(d.PRIVATE)
@@ -341,11 +343,12 @@ package object semanticdb {
                 if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT)
                 if (dtest(d.VAL)) sflip(p.VAL)
                 if (dtest(d.VAR)) sflip(p.VAR)
+                if (dtest(d.STATIC)) sflip(p.STATIC)
                 if (dtest(d.PRIMARY)) sflip(p.PRIMARY)
+                if (dtest(d.ENUM)) sflip(p.ENUM)
                 sproperties
               }
               val sname = ddenot.name
-              val slocation = None
               val ssignature = {
                 if (ddenot.signature.nonEmpty) {
                   val stext = ddenot.signature
@@ -368,7 +371,7 @@ package object semanticdb {
               val sanns = ddenot.annotations
               val sacc = ddenot.accessibility
               val sowner = ddenot.owner.syntax
-              Some(s.SymbolInformation(ssymbol, ssymbolLanguage, skind, sproperties, sname, slocation, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner))
+              Some(s.SymbolInformation(ssymbol, ssymbolLanguage, skind, sproperties, sname, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner))
             }
           }
           object dSynthetic {

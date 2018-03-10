@@ -47,8 +47,8 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, members = MemberMod
       |import scala.util._
     """.stripMargin,
     """
-      |_root_.scala. => package scala
-      |_root_.scala.util. => package util.{+72 members}
+      |scala. => package scala
+      |scala.util. => package util.{+72 members}
     """.stripMargin
   )
 
@@ -57,7 +57,7 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, members = MemberMod
       |import scala.concurrent.Future._
     """.stripMargin,
     """
-      |_root_.scala.concurrent.Future.{
+      |scala.concurrent.Future.{
       |  InternalCallbackExecutor.
       |  traverse.
       |  reduceLeft.
@@ -128,7 +128,7 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, members = MemberMod
       |package scala.util.matching
     """.stripMargin,
     """
-      |_root_.scala.util.matching.{
+      |scala.util.matching.{
       |  Regex$MatchData.
       |  Regex$MatchData#
       |  Regex$Groups$.
@@ -167,7 +167,7 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, members = MemberMod
       |  }
       |}""".stripMargin,
     """
-      |_root_.java.lang.Runnable#{
+      |java.lang.Runnable#{
       |  run.
       |}
       |""".stripMargin
@@ -181,7 +181,7 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, members = MemberMod
       |  }
       |}""".stripMargin,
     """
-      |_root_.java.util.TimerTask#{
+      |java.util.TimerTask#{
       |  scheduledExecutionTime.
       |  cancel.
       |  period.
@@ -202,12 +202,12 @@ class MemberSuite extends DatabaseSuite(SemanticdbMode.Slim, members = MemberMod
       |  }
       |}""".stripMargin,
     """
-      |_root_.java.lang.Iterable#{
+      |java.lang.Iterable#{
       |  spliterator.
       |  forEach.
       |  iterator.
       |}
-      |_root_.java.lang.AutoCloseable#{
+      |java.lang.AutoCloseable#{
       |  close.
       |}
       |""".stripMargin
