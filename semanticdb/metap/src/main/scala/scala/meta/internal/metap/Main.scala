@@ -357,9 +357,8 @@ class Main(settings: Settings, reporter: Reporter) {
         case STRUCTURAL_TYPE =>
           val Some(StructuralType(utpe, decls)) = tpe.structuralType
           utpe.foreach(normal)
-          out.print(" { ")
-          rep(decls, "; ")(defn)
-          out.print(" }")
+          if (decls.nonEmpty) rep(" { ", decls, "; ", " }")(defn)
+          else out.print(" {}")
         case ANNOTATED_TYPE =>
           val Some(AnnotatedType(anns, utpe)) = tpe.annotatedType
           utpe.foreach(normal)
