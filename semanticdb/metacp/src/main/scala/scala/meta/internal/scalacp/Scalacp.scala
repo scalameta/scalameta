@@ -36,35 +36,22 @@ object Scalacp {
   }
 
   private def spackages(sym: SymbolInfoSymbol): List[s.SymbolInformation] = {
-    val directPackagePath = {
-      val topLevelPath = sym.symbolInfo.owner.path.replace("<empty>", "_empty_")
-      if (topLevelPath.startsWith("_empty_")) topLevelPath
-      else "_root_." + topLevelPath
-    }
-    val transitivePackagePaths = {
-      val directPackageSteps = directPackagePath.split("\\.").toList
-      directPackageSteps
-        .scanLeft("") { (path, step) =>
-          if (path.nonEmpty) path + "." + step
-          else step
+    var parts = sym.symbolInfo.owner.path.replace("<empty>", "_empty_").split("\\.").toList
+    if (parts != List("_root_")) parts = "_root_" +: parts
+    parts.scanLeft(s.SymbolInformation()) {
+      case (ownerInfo, name) =>
+        val owner = ownerInfo.symbol
+        val symbol = {
+          if (owner == "_root_.") name + "."
+          else owner + name + "."
         }
-        .tail
-    }
-    transitivePackagePaths.map { transitivePackagePath =>
-      val (owner, name) = {
-        transitivePackagePath.split("\\.").toList match {
-          case List(name) if name.nonEmpty => ("", name)
-          case ownerSteps :+ name if name.nonEmpty => (ownerSteps.mkString(".") + ".", name)
-          case _ => sys.error(s"unsupported top-level symbol: $sym")
-        }
-      }
-      s.SymbolInformation(
-        symbol = transitivePackagePath + ".",
-        language = l.SCALA,
-        kind = k.PACKAGE,
-        name = name,
-        owner = owner)
-    }
+        s.SymbolInformation(
+          symbol = symbol,
+          language = l.SCALA,
+          kind = k.PACKAGE,
+          name = name,
+          owner = owner)
+    }.tail
   }
 
   private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
@@ -94,9 +81,8 @@ object Scalacp {
           if (sym.name == "<root>") ""
           else if (sym.name == "<empty>") ""
           else {
-            val path = sym.parent.map(_.path + ".").getOrElse("")
-            if (path.startsWith("<empty>")) "_empty_" + path.stripPrefix("<empty>")
-            else "_root_." + path
+            val parentPath = sym.parent.map(_.path + ".").getOrElse("")
+            parentPath.replace("<empty>", "_empty_")
           }
         case _ =>
           sys.error(s"unsupported symbol $sym")
@@ -256,7 +242,7 @@ object Scalacp {
         case ConstantType(underlying: Type) =>
           loop(underlying).map { sarg =>
             val stag = t.TYPE_REF
-            val ssym = "_root_.java.lang.Class#"
+            val ssym = "java.lang.Class#"
             val sargs = sarg :: Nil
             // TODO: Implement me.
             s.Type(tag = stag, typeRef = Some(s.TypeRef(None, ssym, sargs)))

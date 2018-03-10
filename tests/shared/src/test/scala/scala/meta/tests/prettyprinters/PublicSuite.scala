@@ -342,7 +342,7 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semanticdb.Denotation.toString") {
-    val symbol = Symbol("_root_.E#")
+    val symbol = Symbol("E#")
     val info = "[T](e: E)T"
     val input = Input.Denotation(info, symbol)
     val pos = Position.Range(input, 7, 8)
@@ -352,7 +352,7 @@ class PublicSuite extends FunSuite {
     val defIdentity = Denotation(METHOD | FINAL, "identity", info, names)
     assert(defIdentity.toString ===
       """final method identity: [T](e: E)T
-        |  [7..8): E => _root_.E#""".stripMargin.split('\n').mkString(EOL)
+        |  [7..8): E => E#""".stripMargin.split('\n').mkString(EOL)
     )
   }
 
@@ -432,10 +432,10 @@ class PublicSuite extends FunSuite {
     val original = Input.String("input")
     val input = Input.Synthetic("synthetic", original, 1, 1)
     val pos = Position.Range(input, 0, 9)
-    val synthetic = Synthetic(pos, "synthetic", List(ResolvedName(pos, Symbol("_root_.synthetic."), isDefinition = false)))
+    val synthetic = Synthetic(pos, "synthetic", List(ResolvedName(pos, Symbol("synthetic."), isDefinition = false)))
     assert(synthetic.syntax == """
       |[0..9): synthetic
-      |  [0..9): synthetic => _root_.synthetic.
+      |  [0..9): synthetic => synthetic.
     """.trim.stripMargin.split('\n').mkString(EOL))
     assert(synthetic.structure == """Synthetic(Position.Range(Input.Synthetic("synthetic", Input.String("input"), 1, 1), 0, 9), "synthetic", List(ResolvedName(Position.Range(Input.Synthetic("synthetic", Input.String("input"), 1, 1), 0, 9), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("synthetic")), false)))""")
   }
@@ -445,39 +445,39 @@ class PublicSuite extends FunSuite {
     val none @ Symbol.None = Symbol(syntaxNone)
     assert(none.toString === syntaxNone)
 
-    val syntaxGlobalTerm = "_root_.scala."
+    val syntaxGlobalTerm = "scala."
     val globalTerm @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("scala")) = Symbol(syntaxGlobalTerm)
     assert(globalTerm.toString === syntaxGlobalTerm)
 
-    val syntaxGlobalType = "_root_.C#"
+    val syntaxGlobalType = "C#"
     val globalType @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Type("C")) = Symbol(syntaxGlobalType)
     assert(globalType.toString === syntaxGlobalType)
 
-    val syntaxGlobalMethod1 = "_root_.m()."
+    val syntaxGlobalMethod1 = "m()."
     val globalMethod1 @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Method("m", "()")) = Symbol(syntaxGlobalMethod1)
     assert(globalMethod1.toString === syntaxGlobalMethod1)
 
-    val syntaxGlobalMethod2 = "_root_.m(Int)."
+    val syntaxGlobalMethod2 = "m(Int)."
     val globalMethod2 @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Method("m", "(Int)")) = Symbol(syntaxGlobalMethod2)
     assert(globalMethod2.toString === syntaxGlobalMethod2)
 
-    val syntaxGlobalMethod3 = "_root_.m(`Int`)."
+    val syntaxGlobalMethod3 = "m(`Int`)."
     val globalMethod3 @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Method("m", "(`Int`)")) = Symbol(syntaxGlobalMethod3)
     assert(globalMethod3.toString === syntaxGlobalMethod3)
 
-    val syntaxGlobalMethod4 = "_root_.m(`Int`,Int)."
+    val syntaxGlobalMethod4 = "m(`Int`,Int)."
     val globalMethod4 @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Method("m", "(`Int`,Int)")) = Symbol(syntaxGlobalMethod4)
     assert(globalMethod4.toString === syntaxGlobalMethod4)
 
-    val syntaxGlobalTermParameter = "_root_.(x)"
+    val syntaxGlobalTermParameter = "(x)"
     val globalTermParameter @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.TermParameter("x")) = Symbol(syntaxGlobalTermParameter)
     assert(globalTermParameter.toString === syntaxGlobalTermParameter)
 
-    val syntaxGlobalTypeParameter = "_root_.[T]"
+    val syntaxGlobalTypeParameter = "[T]"
     val globalTypeParameter @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.TypeParameter("T")) = Symbol(syntaxGlobalTypeParameter)
     assert(globalTypeParameter.toString === syntaxGlobalTypeParameter)
 
-    val syntaxGlobalSelf = "_root_.self=>"
+    val syntaxGlobalSelf = "self=>"
     val globalSelf @ Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Self("self")) = Symbol(syntaxGlobalSelf)
     assert(globalSelf.toString === syntaxGlobalSelf)
 
@@ -485,7 +485,7 @@ class PublicSuite extends FunSuite {
     val local @ Symbol.Local(`syntaxLocal`) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
 
-    val syntaxMulti = "_root_.C#;_root_.C."
+    val syntaxMulti = "C#;C."
     val multi @ Symbol.Multi(List(Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Type("C")), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("C")))) = Symbol(syntaxMulti)
     assert(multi.toString === syntaxMulti)
   }

@@ -175,7 +175,7 @@ trait ExpectHelpers extends FunSuiteLike {
     semanticdbs.foreach { semanticdb =>
       FileIO.readAllDocuments(AbsolutePath(semanticdb)).foreach { document =>
         document.symbols.foreach { info =>
-          if (!info.symbol.startsWith(info.owner)) {
+          if (!info.symbol.startsWith(info.owner) && info.owner != "_root_.") {
             sys.error(s"invalid owner ${info.owner} for ${info.symbol}")
           }
           if (info.symbol.startsWith("local") && info.owner != "") {

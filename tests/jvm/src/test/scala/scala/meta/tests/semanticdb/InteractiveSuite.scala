@@ -28,51 +28,51 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |  x + "string"
       |}
     """.stripMargin,
-    // Note that _root_.scala don't resolve to a symbol, this is a sign that the
+    // Note that scala don't resolve to a symbol, this is a sign that the
     // typer hijacking is not working as expected with interactive.Global.
     """
       |Language:
       |Interactive
       |
       |Names:
-      |[8..9): b <= _root_.b.
-      |[17..22): scala => _root_.scala.
-      |[23..33): concurrent => _root_.scala.concurrent.
-      |[34..40): Future => _root_.scala.concurrent.Future#;_root_.scala.concurrent.Future.
-      |[48..49): a <= _root_.b.a.
-      |[58..59): x <= _root_.b.a.x().
-      |[75..79): List => _root_.scala.collection.immutable.List.
-      |[84..85): x => _root_.b.a.x().
-      |[86..87): + => _root_.scala.Predef.any2stringadd#`+`(String).
+      |[8..9): b <= b.
+      |[17..22): scala => scala.
+      |[23..33): concurrent => scala.concurrent.
+      |[34..40): Future => scala.concurrent.Future#;scala.concurrent.Future.
+      |[48..49): a <= b.a.
+      |[58..59): x <= b.a.x().
+      |[75..79): List => scala.collection.immutable.List.
+      |[84..85): x => b.a.x().
+      |[86..87): + => scala.Predef.any2stringadd#`+`(String).
       |
       |Messages:
       |[34..40): [warning] Unused import
       |
       |Symbols:
-      |_root_.b. => package b
-      |_root_.b.a. => final object a
-      |_root_.b.a.x(). => val method x: List[Nothing]
-      |  [0..4): List => _root_.scala.collection.immutable.List#
-      |  [5..12): Nothing => _root_.scala.Nothing#
-      |_root_.b.a.x. => private val field x: List[Nothing]
-      |  [0..4): List => _root_.scala.collection.immutable.List#
-      |  [5..12): Nothing => _root_.scala.Nothing#
-      |_root_.scala. => package scala
-      |_root_.scala.Predef.any2stringadd#`+`(String). => method +: (other: String): String
-      |  [8..14): String => _root_.scala.Predef.String#
-      |  [17..23): String => _root_.scala.Predef.String#
-      |_root_.scala.collection.immutable.List. => final object List
-      |_root_.scala.concurrent. => package concurrent
+      |b. => package b
+      |b.a. => final object a
+      |b.a.x(). => val method x: List[Nothing]
+      |  [0..4): List => scala.collection.immutable.List#
+      |  [5..12): Nothing => scala.Nothing#
+      |b.a.x. => private val field x: List[Nothing]
+      |  [0..4): List => scala.collection.immutable.List#
+      |  [5..12): Nothing => scala.Nothing#
+      |scala. => package scala
+      |scala.Predef.any2stringadd#`+`(String). => method +: (other: String): String
+      |  [8..14): String => scala.Predef.String#
+      |  [17..23): String => scala.Predef.String#
+      |scala.collection.immutable.List. => final object List
+      |scala.concurrent. => package concurrent
       |
       |Synthetics:
       |[79..79): *.apply[Nothing]
       |  [0..1): * => _star_.
-      |  [2..7): apply => _root_.scala.collection.immutable.List.apply(A*).
-      |  [8..15): Nothing => _root_.scala.Nothing#
+      |  [2..7): apply => scala.collection.immutable.List.apply(A*).
+      |  [8..15): Nothing => scala.Nothing#
       |[84..85): scala.Predef.any2stringadd[List[Nothing]](*)
-      |  [27..31): List => _root_.scala.collection.immutable.List#
-      |  [32..39): Nothing => _root_.scala.Nothing#
-      |  [13..26): any2stringadd => _root_.scala.Predef.any2stringadd(A).
+      |  [27..31): List => scala.collection.immutable.List#
+      |  [32..39): Nothing => scala.Nothing#
+      |  [13..26): any2stringadd => scala.Predef.any2stringadd(A).
       |  [42..43): * => _star_.
     """.stripMargin
   )

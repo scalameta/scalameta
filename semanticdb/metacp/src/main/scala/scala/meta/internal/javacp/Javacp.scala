@@ -66,7 +66,10 @@ object Javacp {
       val parts = node.name.substring(0, node.name.lastIndexOf("/")).split("/").toList
       ("_root_" :: parts).foldLeft("") {
         case (owner, pkgName) =>
-          val pkgSymbol = owner + pkgName + "."
+          val pkgSymbol = {
+            if (owner == "_root_.") pkgName + "."
+            else owner + pkgName + "."
+          }
           addInfo(
             pkgSymbol,
             k.PACKAGE,
@@ -284,7 +287,7 @@ object Javacp {
       case TypeVariableSignature(name) =>
         styperef(scope.resolve(name))
       case t: BaseType =>
-        styperef("_root_.scala." + t.name + "#")
+        styperef("scala." + t.name + "#")
       case ArrayTypeSignature(tpe) =>
         sarray(tpe.toType(scope))
     }
@@ -367,7 +370,7 @@ object Javacp {
   }
 
   private def ssym(asmName: String): String =
-    "_root_." + asmName.replace('$', '#').replace('/', '.') + "#"
+    asmName.replace('$', '#').replace('/', '.') + "#"
 
   private def saccessibility(access: Int, owner: String): Option[s.Accessibility] = {
     def sacc(tag: s.Accessibility.Tag): Option[s.Accessibility] = Some(s.Accessibility(tag))
@@ -388,8 +391,8 @@ object Javacp {
     def push(symbol: String): Unit =
       buf += s.Annotation(Some(styperef(symbol)))
 
-    if (access.hasFlag(o.ACC_DEPRECATED)) push("_root_.scala.deprecated#")
-    if (access.hasFlag(o.ACC_STRICT)) push("_root_.scala.annotation.strictfp#")
+    if (access.hasFlag(o.ACC_DEPRECATED)) push("scala.deprecated#")
+    if (access.hasFlag(o.ACC_STRICT)) push("scala.annotation.strictfp#")
 
     buf.result()
   }
@@ -405,7 +408,7 @@ object Javacp {
   }
 
   private def sarray(tpe: s.Type): s.Type =
-    styperef("_root_.scala.Array#", tpe :: Nil)
+    styperef("scala.Array#", tpe :: Nil)
 
   private def styperef(
       symbol: String,

@@ -66,21 +66,21 @@ class CliSuite extends BaseCliSuite {
       |_empty_.HelloWorld. => final object HelloWorld
       |_empty_.HelloWorld.main(Array). => method main: (args: Array[String]): Unit
       |  args => _empty_.HelloWorld.main(Array).(args)
-      |  Array => _root_.scala.Array#
-      |  String => _root_.scala.Predef.String#
-      |  Unit => _root_.scala.Unit#
+      |  Array => scala.Array#
+      |  String => scala.Predef.String#
+      |  Unit => scala.Unit#
       |_empty_.HelloWorld.main(Array).(args) => param args: Array[String]
-      |  Array => _root_.scala.Array#
-      |  String => _root_.scala.Predef.String#
+      |  Array => scala.Array#
+      |  String => scala.Predef.String#
       |
       |Occurrences:
       |[1:11..1:21): HelloWorld <= _empty_.HelloWorld.
       |[2:10..2:14): main <= _empty_.HelloWorld.main(Array).
       |[2:15..2:19): args <= _empty_.HelloWorld.main(Array).(args)
-      |[2:21..2:26): Array => _root_.scala.Array#
-      |[2:27..2:33): String => _root_.scala.Predef.String#
-      |[2:37..2:41): Unit => _root_.scala.Unit#
-      |[3:8..3:15): println => _root_.scala.Predef.println(Any).
+      |[2:21..2:26): Array => scala.Array#
+      |[2:27..2:33): String => scala.Predef.String#
+      |[2:37..2:41): Unit => scala.Unit#
+      |[3:8..3:15): println => scala.Predef.println(Any).
     """.trim.stripMargin)
     assert(err.isEmpty)
   }

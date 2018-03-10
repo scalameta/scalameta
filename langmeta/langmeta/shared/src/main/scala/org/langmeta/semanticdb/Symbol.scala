@@ -23,7 +23,11 @@ object Symbol {
 
   final case class Global(owner: Symbol, signature: Signature) extends Symbol {
     override def toString = syntax
-    override def syntax = s"${owner.syntax}${signature.syntax}"
+    override def syntax = {
+      val ownerSyntax = owner.syntax
+      val prefix = if (ownerSyntax != "_root_.") ownerSyntax else ""
+      s"${prefix}${signature.syntax}"
+    }
     override def structure = s"""Symbol.Global(${owner.structure}, ${signature.structure})"""
   }
 
@@ -80,31 +84,42 @@ object Symbol {
         buf.toString
       }
 
-      def parseGlobal(curr: Symbol): Symbol = {
+      def parseSingle(owner: Symbol): Symbol = {
+        def global(signature: Signature): Symbol.Global = {
+          if (owner == Symbol.None && signature != Signature.Term("_root_")) {
+            val root = Symbol.Global(Symbol.None, Signature.Term("_root_"))
+            Symbol.Global(root, signature)
+          } else {
+            Symbol.Global(owner, signature)
+          }
+        }
+        def local(name: String): Symbol.Local = {
+          Symbol.Local(name)
+        }
         if (currChar == EOF) {
-          curr
+          owner
         } else if (currChar == ';') {
-          curr
+          owner
         } else if (currChar == '[') {
           readChar()
           val name = parseName()
           if (currChar != ']') fail()
           else readChar()
-          parseGlobal(Symbol.Global(curr, Signature.TypeParameter(name)))
+          parseSingle(global(Signature.TypeParameter(name)))
         } else if (currChar == '(') {
           readChar()
           val name = parseName()
           if (currChar != ')') fail()
           else readChar()
-          parseGlobal(Symbol.Global(curr, Signature.TermParameter(name)))
+          parseSingle(global(Signature.TermParameter(name)))
         } else {
           val name = parseName()
           if (currChar == '#') {
             readChar()
-            parseGlobal(Symbol.Global(curr, Signature.Type(name)))
+            parseSingle(global(Signature.Type(name)))
           } else if (currChar == '.') {
             readChar()
-            parseGlobal(Symbol.Global(curr, Signature.Term(name)))
+            parseSingle(global(Signature.Term(name)))
           } else if (currChar == '(') {
             val start = i - 1
             while (readChar() != ')') {
@@ -116,21 +131,17 @@ object Symbol {
             if (currChar != '.') fail()
             else readChar()
             val disambiguator = s.substring(start, i - 2)
-            parseGlobal(Symbol.Global(curr, Signature.Method(name, disambiguator)))
+            parseSingle(global(Signature.Method(name, disambiguator)))
           } else if (currChar == '=') {
             readChar()
             if (currChar != '>') fail()
             else readChar()
-            parseGlobal(Symbol.Global(curr, Signature.Self(name)))
+            parseSingle(global(Signature.Self(name)))
           } else {
-            fail()
+            if (owner == Symbol.None && name.startsWith("local")) local(name)
+            else fail()
           }
         }
-      }
-      def parseLocal(): Symbol = {
-        val name = parseName()
-        if (name.startsWith("local")) Symbol.Local(name)
-        else fail()
       }
 
       def parseMulti(symbols: List[Symbol]): Symbol = {
@@ -141,10 +152,7 @@ object Symbol {
             case symbols => Symbol.Multi(symbols.sortBy(_.syntax))
           }
         } else {
-          val symbol = {
-            if (currChar == '_') parseGlobal(Symbol.None)
-            else parseLocal()
-          }
+          val symbol = parseSingle(Symbol.None)
           if (currChar == ';') {
             readChar()
             if (currChar == EOF) fail()

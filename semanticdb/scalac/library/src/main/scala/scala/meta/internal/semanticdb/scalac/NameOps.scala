@@ -6,7 +6,11 @@ trait NameOps { self: DatabaseOps =>
 
   implicit class XtensionName(gname: g.Name) {
     def toSemantic: String = {
-      if (gname == g.tpnme.REFINE_CLASS_NAME) {
+      if (gname == g.nme.ROOTPKG) {
+        "_root_"
+      } else if (gname == g.nme.EMPTY_PACKAGE_NAME) {
+        "_empty_"
+      } else if (gname == g.tpnme.REFINE_CLASS_NAME) {
         // See https://github.com/scalameta/scalameta/pull/1109#discussion_r137194314
         // for a motivation why <refinement> symbols should have $anon as names.
         // This may be the wrong encoding of the symbol, but with the current
