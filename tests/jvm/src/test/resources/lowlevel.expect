@@ -508,8 +508,8 @@ com. => package com
 com.javacp. => package javacp
 com.javacp.Coin# => final enum class Coin.{+9 decls}
   extends Enum[Coin]
-com.javacp.Coin#PENNY. => static enum field PENNY: PENNY.type
-  PENNY => com.javacp.Coin#PENNY.
+com.javacp.Coin#PENNY. => static enum field PENNY: Coin
+  Coin => com.javacp.Coin#
 com.javacp.Interface# => abstract interface Interface.{+1 decls}
   extends Object
 com.javacp.MetacJava# => class MetacJava.{+12 decls}
@@ -1282,8 +1282,8 @@ java.nio.file.LinkOption# => final enum class LinkOption.{+4 decls}
   extends Enum[LinkOption]
   extends OpenOption
   extends CopyOption
-java.nio.file.LinkOption#NOFOLLOW_LINKS. => final static enum field NOFOLLOW_LINKS: NOFOLLOW_LINKS.type
-  NOFOLLOW_LINKS => java.nio.file.LinkOption#NOFOLLOW_LINKS.
+java.nio.file.LinkOption#NOFOLLOW_LINKS. => final static enum field NOFOLLOW_LINKS: LinkOption
+  LinkOption => java.nio.file.LinkOption#
 scala. => package scala
 scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal

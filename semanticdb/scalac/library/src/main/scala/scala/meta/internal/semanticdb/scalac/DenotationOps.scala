@@ -143,6 +143,8 @@ trait DenotationOps { self: DatabaseOps =>
       val ginfo = {
         if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
           gsym.info.finalResultType
+        } else if (gsym.isJavaEnum && gsym.isStatic) {
+          gsym.info.widen
         } else if (gsym.isAliasType) {
           def preprocess(info: g.Type): g.Type = {
             info match {

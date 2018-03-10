@@ -73,16 +73,7 @@ com.javacp.Coin#PENNY.
 +properties: 20488
  name: "PENNY"
  tpe {
--  tag: SINGLETON_TYPE
--  singletonType {
--    tag: SYMBOL
--    symbol: "com.javacp.Coin#PENNY."
--    primitive: 0
--    string: ""
-+  tag: TYPE_REF
-+  typeRef {
-+    symbol: "com.javacp.Coin#"
- accessibility {
+   tag: TYPE_REF
 
 
 =====================
