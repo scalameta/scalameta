@@ -508,7 +508,7 @@ com. => package com
 com.javacp. => package javacp
 com.javacp.Coin# => final enum class Coin.{+9 decls}
   extends Enum[Coin]
-com.javacp.Coin#PENNY. => static enum field PENNY: Coin
+com.javacp.Coin#PENNY. => final static enum field PENNY: Coin
   Coin => com.javacp.Coin#
 com.javacp.Interface# => abstract interface Interface.{+1 decls}
   extends Object

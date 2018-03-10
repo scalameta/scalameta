@@ -446,7 +446,7 @@ Symbols:
 com. => package com
 com.javacp. => package javacp
 com.javacp.Coin# => final javadefined enum class Coin
-com.javacp.Coin#PENNY. => javadefined enum static field PENNY: Coin
+com.javacp.Coin#PENNY. => final javadefined enum static field PENNY: Coin
   [0..4): Coin => com.javacp.Coin#
 com.javacp.Interface# => abstract javadefined interface Interface
 com.javacp.MetacJava# => javadefined class MetacJava

@@ -81,7 +81,7 @@ trait DenotationOps { self: DatabaseOps =>
         ()
       } else if (gsym.hasFlag(gf.JAVA)) {
         if (isAbstractClass || isAbstractInterface || isAbstractMethod) flags |= mf.ABSTRACT
-        if (gsym.hasFlag(gf.FINAL)) flags |= mf.FINAL
+        if (gsym.hasFlag(gf.FINAL) || gsym.hasFlag(gf.JAVA_ENUM)) flags |= mf.FINAL
         if (gsym.hasFlag(gf.JAVA_ENUM)) flags |= mf.ENUM
         if (gsym.hasFlag(gf.STATIC)) flags |= mf.STATIC
         flags |= mf.JAVADEFINED

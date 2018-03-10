@@ -40,20 +40,6 @@ com.javacp.Coin#
      declarations: "com.javacp.Coin#valueOf(String)."
 
 
-======================
-com.javacp.Coin#PENNY.
-======================
---- metac
-+++ metacp
- symbol: "com.javacp.Coin#PENNY."
- kind: FIELD
--properties: 20480
-+properties: 20488
- name: "PENNY"
- tpe {
-   tag: TYPE_REF
-
-
 =====================
 com.javacp.Interface#
 =====================
