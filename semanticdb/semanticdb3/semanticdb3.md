@@ -480,13 +480,12 @@ provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 10, 12;
+  reserved 2, 6, 7, 8, 9, 10, 12;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  repeated string overrides = 9;
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
@@ -678,9 +677,6 @@ languages map onto these properties.
 </table>
 
 `name`. String that represents the name of the corresponding definition.
-
-`overrides`. Symbols that are extended or overridden by this symbol
-either directly or transitively.
 
 `tpe`. [Type](#type) that represents the definition signature.
 See [Languages](#languages) for more information on which definitions have
@@ -1195,13 +1191,12 @@ Notes:
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 10, 12;
+  reserved 2, 6, 7, 8, 9, 10, 12;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  repeated string overrides = 9;
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
@@ -1370,9 +1365,6 @@ Notes:
     * If a corresponding local symbol exists, set for the local symbol.
   * `LAZY`: set for all corresponding symbols of `lazy` values.
   * `VAL`: set for all corresponding symbols.
-* `override` relationships exist only for getter symbols.
-  Corresponding local, field and parameter symbols never override or
-  get overridden.
 * If the type of the value is not provided in source code, it is inferred
   from the right-hand side of the value according to the rules described
   in SLS [\[39\]][39]. Corresponding signature is computed from the inferred
@@ -1420,9 +1412,6 @@ Notes:
   * `LAZY`: never set for variable symbols, since variable declarations and
     definitions cannot be `lazy`.
   * `VAR`: set for all corresponding symbols.
-* `override` relationships exist only for getter and setter symbols.
-  Corresponding local, field and parameter symbols never override or
-  get overridden.
 
 **Pattern variables** [\[65\]][65] are represented differently depending
 on where they are defined:
