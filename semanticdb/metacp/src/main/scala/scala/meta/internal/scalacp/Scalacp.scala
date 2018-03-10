@@ -202,6 +202,7 @@ object Scalacp {
       else if (name == "<root>") "_root_"
       else if (name == "<empty>") "_empty_"
       else if (name == "<init>") "<init>"
+      else if (name == "<refinement>") "$anon"
       else NameTransformer.decode(name)
     }
     loop(sym.name)

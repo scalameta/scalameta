@@ -542,9 +542,9 @@ example.Methods#
      declarations: "example.Methods#m11(.type+1)."
      declarations: "example.Methods#m11(.type+2)."
      declarations: "example.Methods#m12a({})."
-+    declarations: "example.Methods#`<refinement>`#"
++    declarations: "example.Methods#$anon#"
      declarations: "example.Methods#m12b({})."
-+    declarations: "example.Methods#`<refinement>`#"
++    declarations: "example.Methods#$anon#"
      declarations: "example.Methods#m13(Int)."
      declarations: "example.Methods#m14(T)."
      declarations: "example.Methods#m15(=>Int)."
@@ -558,21 +558,6 @@ example.Methods#List#
      declarations: "example.Methods#List#`<init>`()."
 +    declarations: "example.Methods#List#[T]"
  accessibility {
-
-
-============================
-example.Methods#m12b({}).(x)
-============================
---- metac
-+++ metacp
- tpe {
-   tag: STRUCTURAL_TYPE
-   structuralType {
--    declarations: "example.Methods#$anon#x()."
-+    declarations: "example.Methods#`<refinement>`#x()."
-     tpe {
-       tag: WITH_TYPE
-       withType {
 
 
 ============================
@@ -880,13 +865,13 @@ types.Test.C#
      declarations: "types.Test.C#superType3()."
      declarations: "types.Test.C#superType3."
      declarations: "types.Test.C#compoundType1()."
-+    declarations: "types.Test.C#`<refinement>`#"
++    declarations: "types.Test.C#$anon#"
      declarations: "types.Test.C#compoundType1."
      declarations: "types.Test.C#compoundType2()."
-+    declarations: "types.Test.C#`<refinement>`#"
++    declarations: "types.Test.C#$anon#"
      declarations: "types.Test.C#compoundType2."
      declarations: "types.Test.C#compoundType3()."
-+    declarations: "types.Test.C#`<refinement>`#"
++    declarations: "types.Test.C#$anon#"
      declarations: "types.Test.C#compoundType3."
      declarations: "types.Test.C#annType1()."
      declarations: "types.Test.C#annType1."
@@ -1112,66 +1097,6 @@ types.Test.C#annType2.
 -        typeRef {
 -          symbol: "types.ann2#"
  accessibility {
-
-
-=============================
-types.Test.C#compoundType1().
-=============================
---- metac
-+++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "types.Test.C#$anon#k()."
-+        declarations: "types.Test.C#`<refinement>`#k()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
-
-
-===========================
-types.Test.C#compoundType1.
-===========================
---- metac
-+++ metacp
- tpe {
-   tag: STRUCTURAL_TYPE
-   structuralType {
--    declarations: "types.Test.C#$anon#k()."
-+    declarations: "types.Test.C#`<refinement>`#k()."
-     tpe {
-       tag: WITH_TYPE
-       withType {
-
-
-=============================
-types.Test.C#compoundType3().
-=============================
---- metac
-+++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "types.Test.C#$anon#k()."
-+        declarations: "types.Test.C#`<refinement>`#k()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
-
-
-===========================
-types.Test.C#compoundType3.
-===========================
---- metac
-+++ metacp
- tpe {
-   tag: STRUCTURAL_TYPE
-   structuralType {
--    declarations: "types.Test.C#$anon#k()."
-+    declarations: "types.Test.C#`<refinement>`#k()."
-     tpe {
-       tag: WITH_TYPE
-       withType {
 
 
 ===========================
