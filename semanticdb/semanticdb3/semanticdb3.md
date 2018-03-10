@@ -14,7 +14,6 @@
   * [Accessibility](#accessibility)
   * [SymbolOccurrence](#symboloccurrence)
   * [Diagnostic](#diagnostic)
-  * [Synthetic](#synthetic)
 * [Data Schemas](#data-schemas)
   * [Protobuf](#protobuf)
 * [Languages](#languages)
@@ -24,14 +23,12 @@
     * [SymbolInformation](#scala-symbolinformation)
     * [Annotation](#scala-annotation)
     * [Accessibility](#scala-accessibility)
-    * [Synthetic](#scala-synthetic)
   * [Java](#java)
     * [Symbol](#java)
     * [Type](#java)
     * [SymbolInformation](#java)
     * [Annotation](#java)
     * [Accessibility](#java)
-    * [Synthetic](#java)
 
 ## Motivation
 
@@ -93,7 +90,7 @@ message TextDocuments {
 }
 
 message TextDocument {
-  reserved 4, 9;
+  reserved 4, 8, 9;
   Schema schema = 1;
   string uri = 2;
   string text = 3;
@@ -101,7 +98,6 @@ message TextDocument {
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
-  repeated Synthetic synthetics = 8;
 }
 ```
 
@@ -260,10 +256,6 @@ symbols must be ordered lexicographically in ascending order.
 For example, a reference to both the `Int` class in the Scala standard library
 and its companion object must be modelled by `scala.Int#;.scala.Int.`.
 Because of the order requirement, `scala.Int.;scala.Int#` is not a valid symbol.
-
-**Placeholder symbols**. Are used to model original code snippets in
-[Synthetics](#synthetic). Must not be used outside `Synthetic.text` documents.
-Placeholder symbols are always equal to an asterisk (`*`).
 
 ### Type
 
@@ -831,38 +823,6 @@ diagnostics as error, warning, information or hint.
   </tr>
 </table>
 
-### Synthetic
-
-```protobuf
-message Synthetic {
-  Range range = 1;
-  TextDocument text = 2;
-}
-```
-
-"Synthetics" is a section of a [TextDocument](#textdocument) that stores
-code snippets synthesized by compilers, code rewriters and other
-developer tools.
-
-`range` refers to a [Range](#range) in the original code of
-the enclosing document, and its value is determined as follows:
-
-* If the synthetic replaces a code snippet (e.g. if it represents an
-  implicit conversion applied to an expression), then its range must be equal
-  to that snippet's range.
-* If the synthetic inserts new code (e.g. if it represents an inferred type
-  argument or implicit argument), then its range must be an empty range specifying the insertion point.
-
-`text` is a synthetic [TextDocument](#textdocument) that represents a synthetic
-code snippet as follows:
-
-* Its text contains a language-dependent string that represents the
-  synthetic code snippet. See [Languages](#languages) for more information.
-* Its sections, e.g. [Occurences](#symboloccurrence), contain semantic
-  information associated with the synthetic code snippet.
-* An occurrence of a placeholder symbol means that the synthetic code snippet
-  includes the original code snippet located at `Synthetic.range`.
-
 ## Data Schemas
 
 ### Protobuf
@@ -878,7 +838,6 @@ namely:
   * Supported [SymbolInformations](#symbolinformation).
   * Supported [Annotations](#annotation).
   * Supported [Accessibilities](#accessibility).
-  * Format for [Synthetics](#synthetic).
 
 We use a simple notation to describe SemanticDB entities.
 In this notation, `M(v1, v2, ...)` corresponds a Protocol Buffers message
@@ -935,15 +894,6 @@ which Scala definitions, what their metadata is, etc). See
       Concatentation of underlying symbols interspersed with a
       semicolon (<code>;</code>). Within a multi symbol, the underlying
       symbols must be ordered lexicographically in ascending order.
-    </td>
-  </tr>
-  <tr>
-    <td>
-      Placeholder symbols
-      <a href="#symbol">↑</a>
-    </td>
-    <td>
-      <code>*</code>
     </td>
   </tr>
 </table>
@@ -2276,14 +2226,6 @@ definitions.
 Notes:
 * Not all kinds of symbols support all accessibilities. See
   [SymbolInformation](#scala-symbolinformation) for more information.
-
-<a name="scala-synthetic"></a>
-#### Synthetic
-
-In Scala, we leave the synthetic format deliberately unspecified.
-Synthetics are unspecified in SLS, and our experience [\[38\]][38] shows that
-reverse engineering synthetics is very hard. We may improve
-on this in the future, but this is highly unlikely.
 
 ### Java
 
