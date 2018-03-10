@@ -1378,8 +1378,8 @@ Notes:
 * `override` relationships exist only for getter symbols.
   Corresponding local, field and parameter symbols never override or
   get overridden.
-* If the type of the value is unspecified, it is inferred from the
-  right-hand side of the value according to the rules described
+* If the type of the value is not provided in source code, it is inferred
+  from the right-hand side of the value according to the rules described
   in SLS [\[39\]][39]. Corresponding signature is computed from the inferred
   type as explained in [Type](#scala-type).
 * Depending on their meta annotations, value annotations may end up as
@@ -1844,7 +1844,7 @@ Notes:
 * For procedures [\[49\]][49], the return type is assumed to be `Unit`.
   Corresponding signature is computed using the assumed retyrb
   type as explained in [Type](#scala-type).
-* If the return type is unspecified, it is inferred from the
+* If the return type is not provided in source code, it is inferred from the
   right-hand side of the method according to the rules described
   in SLS [\[50\]][50]. Corresponding signature is computed using the inferred
   retyrb type as explained in [Type](#scala-type).
