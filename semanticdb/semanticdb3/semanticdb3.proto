@@ -208,6 +208,7 @@ message SymbolInformation {
     VAR = 0x800;
     STATIC = 0x1000;
     PRIMARY = 0x2000;
+    ENUM = 0x4000;
   }
   reserved 2, 6, 10, 12;
   string symbol = 1;

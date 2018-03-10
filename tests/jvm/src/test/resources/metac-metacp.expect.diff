@@ -45,13 +45,6 @@ com.javacp.Coin#
 ================
 --- metac
 +++ metacp
- symbol: "com.javacp.Coin#"
- kind: CLASS
--properties: 12
-+properties: 8
- name: "Coin"
- tpe {
-   tag: CLASS_INFO_TYPE
 -    declarations: "com.javacp.Coin#`<init>`(Int)."
 -    declarations: "com.javacp.Coin#value."
 -    declarations: "com.javacp.Coin#value()."
@@ -76,8 +69,8 @@ com.javacp.Coin#PENNY.
 +++ metacp
  symbol: "com.javacp.Coin#PENNY."
  kind: FIELD
--properties: 0
-+properties: 4104
+-properties: 20480
++properties: 20488
  name: "PENNY"
  tpe {
 -  tag: SINGLETON_TYPE
@@ -331,31 +324,10 @@ com.javacp.MetacJava#Overload3#
 ===============================
 --- metac
 +++ metacp
- symbol: "com.javacp.MetacJava#Overload3#"
- kind: CLASS
--properties: 0
-+properties: 4096
- name: "Overload3"
- tpe {
-   tag: CLASS_INFO_TYPE
      declarations: "com.javacp.MetacJava#Overload3#`<init>`()."
      declarations: "com.javacp.MetacJava#Overload3#A#"
 -    declarations: "com.javacp.MetacJava#Overload3#A#"
  accessibility {
-
-
-=================================
-com.javacp.MetacJava#Overload3#A#
-=================================
---- metac
-+++ metacp
- symbol: "com.javacp.MetacJava#Overload3#A#"
- kind: CLASS
--properties: 0
-+properties: 4096
- name: "A"
- tpe {
-   tag: CLASS_INFO_TYPE
 
 
 ============================================
@@ -375,13 +347,6 @@ com.javacp.MetacJava#StaticInner#
 =================================
 --- metac
 +++ metacp
- symbol: "com.javacp.MetacJava#StaticInner#"
- kind: CLASS
--properties: 0
-+properties: 4096
- name: "StaticInner"
- tpe {
-   tag: CLASS_INFO_TYPE
      declarations: "com.javacp.MetacJava#StaticInner#`<init>`()."
      declarations: "com.javacp.MetacJava#StaticInner#isNotStatic()."
 -    declarations: "com.javacp.MetacJava#StaticInner#NonStatic#"
@@ -452,20 +417,6 @@ com.javacp.MetacJava#StaticInner#`<init>`().
 +        symbol: "scala.Unit#"
 
 
-============================================
-com.javacp.MetacJava#StaticInner#isStatic().
-============================================
---- metac
-+++ metacp
- symbol: "com.javacp.MetacJava#StaticInner#isStatic()."
- kind: METHOD
--properties: 0
-+properties: 4096
- name: "isStatic"
- tpe {
-   tag: METHOD_TYPE
-
-
 ================================
 com.javacp.MetacJava#`<init>`().
 ================================
@@ -476,20 +427,6 @@ com.javacp.MetacJava#`<init>`().
        typeRef {
 -        symbol: "com.javacp.MetacJava#"
 +        symbol: "scala.Unit#"
-
-
-===================================
-com.javacp.MetacJava#overload(A+3).
-===================================
---- metac
-+++ metacp
- symbol: "com.javacp.MetacJava#overload(A+3)."
- kind: METHOD
--properties: 0
-+properties: 4096
- name: "overload"
- tpe {
-   tag: METHOD_TYPE
 
 
 ========

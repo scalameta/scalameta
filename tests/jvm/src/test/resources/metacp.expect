@@ -93,20 +93,20 @@ Symbols:
 _root_. => package _root_
 com. => package com
 com.javacp. => package javacp
-com.javacp.Coin# => final class Coin.{+11 decls}
+com.javacp.Coin# => final enum class Coin.{+11 decls}
   extends Enum[Coin]
 com.javacp.Coin#$VALUES. => private final static field $VALUES: Array[Coin]
   Array => scala.Array#
   Coin => com.javacp.Coin#
 com.javacp.Coin#<clinit>(). => private[javacp] static method <clinit>: (): Unit
   Unit => scala.Unit#
-com.javacp.Coin#DIME. => final static field DIME: Coin
+com.javacp.Coin#DIME. => final static enum field DIME: Coin
   Coin => com.javacp.Coin#
-com.javacp.Coin#NICKEL. => final static field NICKEL: Coin
+com.javacp.Coin#NICKEL. => final static enum field NICKEL: Coin
   Coin => com.javacp.Coin#
-com.javacp.Coin#PENNY. => final static field PENNY: Coin
+com.javacp.Coin#PENNY. => final static enum field PENNY: Coin
   Coin => com.javacp.Coin#
-com.javacp.Coin#QUARTER. => final static field QUARTER: Coin
+com.javacp.Coin#QUARTER. => final static enum field QUARTER: Coin
   Coin => com.javacp.Coin#
 com.javacp.Coin#`<init>`(Int). => private ctor <init>: ($enum$name: Int): Unit
   $enum$name => com.javacp.Coin#`<init>`(Int).($enum$name)

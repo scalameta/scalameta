@@ -506,9 +506,9 @@ Occurrences => 65 entries
 Symbols:
 com. => package com
 com.javacp. => package javacp
-com.javacp.Coin# => abstract final class Coin.{+9 decls}
+com.javacp.Coin# => final enum class Coin.{+9 decls}
   extends Enum[Coin]
-com.javacp.Coin#PENNY. => field PENNY: PENNY.type
+com.javacp.Coin#PENNY. => static enum field PENNY: PENNY.type
   PENNY => com.javacp.Coin#PENNY.
 com.javacp.Interface# => abstract interface Interface.{+1 decls}
   extends Object
@@ -534,13 +534,13 @@ com.javacp.MetacJava#Overload2#A#`<init>`(). => ctor <init>: (): Overload2.this.
 com.javacp.MetacJava#Overload2#`<init>`(). => ctor <init>: (): MetacJava.this.Overload2
   MetacJava => com.javacp.MetacJava#
   Overload2 => com.javacp.MetacJava#Overload2#
-com.javacp.MetacJava#Overload3# => class Overload3.{+3 decls}
+com.javacp.MetacJava#Overload3# => static class Overload3.{+3 decls}
   extends Object
-com.javacp.MetacJava#Overload3#A# => class A.{+1 decls}
+com.javacp.MetacJava#Overload3#A# => static class A.{+1 decls}
   extends Object
 com.javacp.MetacJava#Overload3#A#`<init>`(). => ctor <init>: (): A
   A => com.javacp.MetacJava#Overload3#A#
-com.javacp.MetacJava#StaticInner# => class StaticInner.{+5 decls}
+com.javacp.MetacJava#StaticInner# => static class StaticInner.{+5 decls}
   extends Object
 com.javacp.MetacJava#StaticInner#NonStatic# => class NonStatic.{+2 decls}
   extends Object
@@ -554,7 +554,7 @@ com.javacp.MetacJava#StaticInner#`<init>`(). => ctor <init>: (): StaticInner
   StaticInner => com.javacp.MetacJava#StaticInner#
 com.javacp.MetacJava#StaticInner#isNotStatic(). => method isNotStatic: (): Unit
   Unit => scala.Unit#
-com.javacp.MetacJava#StaticInner#isStatic(). => method isStatic: (): Unit
+com.javacp.MetacJava#StaticInner#isStatic(). => static method isStatic: (): Unit
   Unit => scala.Unit#
 com.javacp.MetacJava#`<init>`(). => ctor <init>: (): MetacJava
   MetacJava => com.javacp.MetacJava#
@@ -564,7 +564,7 @@ com.javacp.MetacJava#overload(A+1). => method overload: (a: <?>): Unit
 com.javacp.MetacJava#overload(A+2). => method overload: (a: <?>): Unit
   a => com.javacp.MetacJava#overload(A+2).(a)
   Unit => scala.Unit#
-com.javacp.MetacJava#overload(A+3). => method overload: (a: <?>): Unit
+com.javacp.MetacJava#overload(A+3). => static method overload: (a: <?>): Unit
   a => com.javacp.MetacJava#overload(A+3).(a)
   Unit => scala.Unit#
 example. => package example
@@ -1278,11 +1278,11 @@ Symbols:
 java. => package java
 java.nio. => package nio
 java.nio.file. => package file
-java.nio.file.LinkOption# => abstract final class LinkOption.{+4 decls}
+java.nio.file.LinkOption# => final enum class LinkOption.{+4 decls}
   extends Enum[LinkOption]
   extends OpenOption
   extends CopyOption
-java.nio.file.LinkOption#NOFOLLOW_LINKS. => final field NOFOLLOW_LINKS: NOFOLLOW_LINKS.type
+java.nio.file.LinkOption#NOFOLLOW_LINKS. => final static enum field NOFOLLOW_LINKS: NOFOLLOW_LINKS.type
   NOFOLLOW_LINKS => java.nio.file.LinkOption#NOFOLLOW_LINKS.
 scala. => package scala
 scala.Int# => abstract final class Int.{+111 decls}

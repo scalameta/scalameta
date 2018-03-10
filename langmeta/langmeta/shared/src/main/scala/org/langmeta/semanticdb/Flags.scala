@@ -42,6 +42,8 @@ private[semanticdb] trait Flags {
   final val FIELD: Long = 1L << 31
   final val CTOR: Long = 1L << 32
   final val PRIMARY: Long = 1L << 33
+  final val ENUM: Long = 1L << 34
+  final val STATIC: Long = 1L << 35
 }
 
 private[semanticdb] trait HasFlags {
@@ -88,6 +90,8 @@ private[semanticdb] trait HasFlags {
   def isField: Boolean = hasFlag(FIELD)
   def isCtor: Boolean = hasFlag(CTOR)
   def isPrimary: Boolean = hasFlag(PRIMARY)
+  def isEnum: Boolean = hasFlag(ENUM)
+  def isStatic: Boolean = hasFlag(STATIC)
 
   protected def flagSyntax: String = {
     val buf = new StringBuilder
@@ -109,6 +113,8 @@ private[semanticdb] trait HasFlags {
     if (hasFlag(INLINE)) append("INLINE")
     if (hasFlag(JAVADEFINED)) append("JAVADEFINED")
     if (hasFlag(PRIMARY)) append("PRIMARY")
+    if (hasFlag(ENUM)) append("ENUM")
+    if (hasFlag(STATIC)) append("STATIC")
     if (hasFlag(VAL)) append("VAL")
     if (hasFlag(VAR)) append("VAR")
     if (hasFlag(METHOD)) append("METHOD")

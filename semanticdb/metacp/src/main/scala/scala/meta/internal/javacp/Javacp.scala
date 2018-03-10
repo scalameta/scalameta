@@ -404,6 +404,7 @@ object Javacp {
     if (access.hasFlag(o.ACC_ABSTRACT)) sflip(p.ABSTRACT.value)
     if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL.value)
     if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC.value)
+    if (access.hasFlag(o.ACC_ENUM)) sflip(p.ENUM.value)
     bits
   }
 

@@ -141,7 +141,9 @@ package object semanticdb {
               if (stest(p.CONTRAVARIANT.value)) dflip(d.CONTRAVARIANT)
               if (stest(p.VAL.value)) dflip(d.VAL)
               if (stest(p.VAR.value)) dflip(d.VAR)
+              if (stest(p.STATIC.value)) dflip(d.STATIC)
               if (stest(p.PRIMARY.value)) dflip(d.PRIMARY)
+              if (stest(p.ENUM.value)) dflip(d.ENUM)
               sacc.map(_.tag) match {
                 case Some(a.PRIVATE | a.PRIVATE_THIS | a.PRIVATE_WITHIN) =>
                   dflip(d.PRIVATE)
@@ -341,7 +343,9 @@ package object semanticdb {
                 if (dtest(d.CONTRAVARIANT)) sflip(p.CONTRAVARIANT)
                 if (dtest(d.VAL)) sflip(p.VAL)
                 if (dtest(d.VAR)) sflip(p.VAR)
+                if (dtest(d.STATIC)) sflip(p.STATIC)
                 if (dtest(d.PRIMARY)) sflip(p.PRIMARY)
+                if (dtest(d.ENUM)) sflip(p.ENUM)
                 sproperties
               }
               val sname = ddenot.name

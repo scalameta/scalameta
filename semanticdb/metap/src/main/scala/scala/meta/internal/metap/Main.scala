@@ -441,6 +441,7 @@ class Main(settings: Settings, reporter: Reporter) {
     if (has(VAR)) out.print("var ")
     if (has(STATIC)) out.print("static ")
     if (has(PRIMARY)) out.print("primary ")
+    if (has(ENUM)) out.print("enum ")
     info.kind match {
       case FIELD => out.print("field ")
       case LOCAL => out.print("local ")
