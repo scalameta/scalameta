@@ -511,7 +511,7 @@ document. In a sense, this section is analogous to a symbol table
 `language`. [Language](#language) that defines the corresponding definition.
 
 `kind`. Enumeration that defines the kind of the corresponding definition.
-See [Languages](#language) for information on how definitions in supported
+See [Languages](#languages) for information on how definitions in supported
 languages map onto these kinds.
 
 <table>
@@ -601,7 +601,7 @@ languages map onto these kinds.
 </table>
 
 `properties`. Bitmask of miscellaneous bits of metadata.
-See [Languages](#language) for information on how definitions in supported
+See [Languages](#languages) for information on how definitions in supported
 languages map onto these properties.
 
 <table>
@@ -695,7 +695,7 @@ the corresponding definition.
 either directly or transitively.
 
 `tpe`. [Type](#type) that represents the definition signature.
-See [Languages](#language) for more information on which definitions have
+See [Languages](#languages) for more information on which definitions have
 which signatures in supported languages.
 
 `annotation`. [Annotations](#annotation) of the corresponding definition.
@@ -873,10 +873,10 @@ code snippet as follows:
 
 In this section, we describe language-dependent aspects of SemanticDB entities,
 namely:
-  * Format for global [Symbols](#symbol).
-  * Supported [Annotations](#annotation).
+  * Format for [Symbols](#symbol).
   * Supported [Types](#type).
-  * Kinds, properties, signatures and accessibilities of [SymbolInformation](#symbolinformation).
+  * Supported [SymbolInformations](#symbolinformation).
+  * Supported [Annotations](#annotation).
   * Supported [Accessibilities](#accessibility).
   * Format for [Synthetics](#synthetic).
 
@@ -1037,7 +1037,46 @@ must be modelled:
 <a name="scala-type"></a>
 #### Type
 
-In Scala, `Type` represents types [\[18\]][18].
+```protobuf
+message Type {
+  enum Tag {
+    reserved 2, 3, 4, 5;
+    UNKNOWN_TYPE = 0;
+    TYPE_REF = 1;
+    SINGLETON_TYPE = 15;
+    INTERSECTION_TYPE = 16;
+    UNION_TYPE = 17;
+    WITH_TYPE = 18;
+    STRUCTURAL_TYPE = 6;
+    ANNOTATED_TYPE = 7;
+    EXISTENTIAL_TYPE = 8;
+    UNIVERSAL_TYPE = 9;
+    CLASS_INFO_TYPE = 10;
+    METHOD_TYPE = 11;
+    BY_NAME_TYPE = 12;
+    REPEATED_TYPE = 13;
+    TYPE_TYPE = 14;
+  }
+  reserved 3, 4, 5, 6;
+  Tag tag = 1;
+  TypeRef typeRef = 2;
+  SingletonType singletonType = 16;
+  IntersectionType intersectionType = 17;
+  UnionType unionType = 18;
+  WithType withType = 19;
+  StructuralType structuralType = 7;
+  AnnotatedType annotatedType = 8;
+  ExistentialType existentialType = 9;
+  UniversalType universalType = 10;
+  ClassInfoType classInfoType = 11;
+  MethodType methodType = 12;
+  ByNameType byNameType = 13;
+  RepeatedType repeatedType = 14;
+  TypeType typeType = 15;
+}
+```
+
+In Scala, [Type](#type) represents types [\[18\]][18].
 
 In the examples below:
   * `E` is the lexically enclosing class of the location where the example
@@ -1207,6 +1246,66 @@ Notes:
 
 <a name="scala-symbolinformation"></a>
 #### SymbolInformation
+
+```protobuf
+message SymbolInformation {
+  reserved 2, 6, 7, 8, 12;
+  string symbol = 1;
+  Language language = 16;
+  Kind kind = 3;
+  int32 properties = 4;
+  string name = 5;
+  Location location = 10;
+  repeated string overrides = 9;
+  Type tpe = 11;
+  repeated Annotation annotations = 13;
+  Accessibility accessibility = 14;
+  string owner = 15;
+}
+```
+
+<table>
+  <tr>
+    <td><b>Field</b></td>
+    <td><b>Explanation</b></td>
+  </tr>
+  <tr>
+    <td><code>symbol</code></td>
+    <td>See <a href="#scala-symbol">Symbol</a>.</td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td><code>SCALA</code>.</td>
+  </tr>
+  <tr>
+    <td><code>kind</code></td>
+    <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>properties</code></td>
+    <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>name</code></td>
+    <td>See <a href="#scala-symbol">Symbol</a>.</td>
+  </tr>
+  <tr>
+    <td><code>tpe</code></td>
+    <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>annotations</code></td>
+    <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>accessibility</code></td>
+    <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>owner</code></td>
+    <td>See <a href="#scala-symbol">Symbol</a>.</td>
+  </tr>
+</table>
 
 **Value declarations and definitions** [\[39\]][39] are represented by multiple
 symbols, with the exact number of symbols, their kinds, properties, signatures
@@ -2045,7 +2144,13 @@ the only non-empty fields must be:
 <a name="scala-annotation"></a>
 #### Annotation
 
-In Scala, `Annotation` represents annotations [\[23\]][23].
+```protobuf
+message Annotation {
+  Type tpe = 1;
+}
+```
+
+In Scala, [Annotation](#annotation) represents annotations [\[23\]][23].
 
 <table>
   <tr>
@@ -2078,7 +2183,25 @@ In Scala, `Annotation` represents annotations [\[23\]][23].
 <a name="scala-accessibility"></a>
 #### Accessibility
 
-In Scala, `Accessibility` represents accessibility of definitions.
+```protobuf
+message Accessibility {
+  enum Tag {
+    UNKNOWN_ACCESSIBILITY = 0;
+    PRIVATE = 1;
+    PRIVATE_THIS = 2;
+    PRIVATE_WITHIN = 3;
+    PROTECTED = 4;
+    PROTECTED_THIS = 5;
+    PROTECTED_WITHIN = 6;
+    PUBLIC = 7;
+  }
+  Tag tag = 1;
+  string symbol = 2;
+}
+```
+
+In Scala, [Accessibility](#accessibility) represents accessibility of
+definitions.
 
 <table>
   <tr>
