@@ -882,7 +882,23 @@ which Scala definitions, what their metadata is, etc). See
       <a href="#symbol">↑</a>
     </td>
     <td>
-      Concatenation of definition descriptors of the owner chain.
+      <ul>
+        <li>
+          For root package <a href="https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#package-references">[20]</a>,
+          its descriptor.
+        </li>
+        <li>
+          For empty package <a href="https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#packagings">[21]</a>,
+          its descriptor.
+        </li>
+        <li>
+          For top-level package, its descriptor.
+        </li>
+        <li>
+          For other definition, concatenation of owner symbol and
+          definition descriptor.
+        </li>
+      </ul>
     </td>
   </tr>
   <tr>
@@ -907,29 +923,20 @@ which Scala definitions, what their metadata is, etc). See
   </tr>
 </table>
 
-**Owner chain** is:
-  * For the root package [\[20\]][20], list that contains just that package.
-  * For the empty package [\[21\]][21], list that contains just that package.
-  * For top-level package, list that contains just that package.
-  * For other global definition, owner chain of its owner appended
-    by the original definition.
-  * For other definition, empty list.
-
 **Owner** is:
-  * For the root package [\[20\]][20], `None`.
-  * For the empty package [\[21\]][21], root package.
+  * For root package, `None`.
+  * For empty package, root package.
   * For top-level package, root package.
   * For other package, parent package.
-  * For package object, its package, e.g. `package scala`
-    for `package object scala`.
   * For other top-level definition, its package.
   * For other global definition, the innermost enclosing definition,
     i.e. the definition whose [Location](#location) in source code most
     tightly encloses the [Location](#location) of the original definition.
   * For other definition, `None`.
 
-**Definition descriptor** is:
-  * For `LOCAL`, `FIELD`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
+**Descriptor** is:
+  * For `LOCAL`, unsupported.
+  * For `FIELD`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
     concatenation of its encoded name and a dot (`.`).
   * For `METHOD`, `CONSTRUCTOR`, or `MACRO`,
     concatenation of its encoded name, a left parenthesis (`(`),
@@ -954,31 +961,20 @@ which Scala definitions, what their metadata is, etc). See
     another backtick.
 
 **Name** is:
-  * For the root package [\[20\]][20], `_root_`.
-  * For the empty package [\[21\]][21], `_empty_`.
-  * For package object, `package`.
+  * For root package, `_root_`.
+  * For empty package, `_empty_`.
   * For constructor, `<init>`.
   * For anonymous parameter, self parameter or type parameter,
-    the underscore sign (`_`).
+    an underscore (`_`).
   * For other definition, the name of the binding introduced by the definition
     [\[70\]][70].
 
 **Type descriptor** is:
 
   * For `TYPE_REF`, encoded name of `symbol`.
-  * For `SINGLETON_TYPE`, `.type`.
-  * For `STRUCTURAL_TYPE`, `{}`.
-  * For `ANNOTATED_TYPE`, type descriptor of `tpe`.
-  * For `EXISTENTIAL_TYPE`, type descriptor of `tpe`.
-  * For `UNIVERSAL_TYPE`, type descriptor of `tpe`.
-  * For `CLASS_INFO_TYPE`, unsupported.
   * For `METHOD_TYPE`, concatenation of type descriptors of
     its parameter types interspersed with a comma (`,`).
-  * For `BY_NAME_TYPE`, concatenation of the arrow sign (`=>`) and
-    the type descriptor of `tpe`.
-  * For `REPEATED_TYPE`, concatenation of type descriptor of `tpe`
-    and a star (`*`).
-  * For `TYPE_TYPE`, unsupported.
+  * For other type, a question mark (`?`).
   * See [Type](#scala-type) for details on
     which Scala types are modelled by which `Type` entities.
 

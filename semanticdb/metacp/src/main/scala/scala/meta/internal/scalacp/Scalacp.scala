@@ -8,6 +8,10 @@ import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
+import scala.meta.internal.semanticdb3.Scala._
+import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb3.Scala.{Names => n}
+import scala.meta.internal.semanticdb3.Scala.{TypeDescriptor => td}
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.NameTransformer
@@ -35,31 +39,22 @@ object Scalacp {
     }
   }
 
-  private def spackages(sym: SymbolInfoSymbol): List[s.SymbolInformation] = {
-    var parts = sym.symbolInfo.owner.path.replace("<empty>", "_empty_").split("\\.").toList
-    if (parts != List("_root_")) parts = "_root_" +: parts
-    parts
-      .scanLeft(s.SymbolInformation()) {
-        case (ownerInfo, name) =>
-          val owner = ownerInfo.symbol
-          val symbol = {
-            if (owner == "_root_.") name + "."
-            else owner + name + "."
-          }
-          s.SymbolInformation(
-            symbol = symbol,
-            language = l.SCALA,
-            kind = k.PACKAGE,
-            name = name,
-            owner = owner)
-      }
-      .tail
+  private def spackages(toplevelSym: SymbolInfoSymbol): List[s.SymbolInformation] = {
+    val enclosingPackages = ssymbol(toplevelSym).ownerChain.init
+    enclosingPackages.map { enclosingPackage =>
+      s.SymbolInformation(
+        symbol = enclosingPackage,
+        language = l.SCALA,
+        kind = k.PACKAGE,
+        name = enclosingPackage.desc.name,
+        owner = enclosingPackage.owner)
+    }
   }
 
   private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
     if (sym.parent.get == NoSymbol) return None
     if (sym.isModuleClass) return None
-    if (sym.name == "<init>" && !sym.isClassConstructor) return None
+    if (sym.isConstructor && !sym.isClassConstructor) return None
     Some(
       s.SymbolInformation(
         symbol = ssymbol(sym),
@@ -75,36 +70,7 @@ object Scalacp {
   }
 
   private def ssymbol(sym: Symbol): String = {
-    val prefix = {
-      sym match {
-        case sym: SymbolInfoSymbol =>
-          ssymbol(sym.parent.get)
-        case sym: ExternalSymbol =>
-          if (sym.name == "<root>") ""
-          else if (sym.name == "<empty>") ""
-          else {
-            val parentPath = sym.parent.map(_.path + ".").getOrElse("")
-            parentPath.replace("<empty>", "_empty_")
-          }
-        case _ =>
-          sys.error(s"unsupported symbol $sym")
-      }
-    }
-    val encodedName = sname(sym).encoded
-    skind(sym) match {
-      case k.FIELD | k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
-        prefix + encodedName + "."
-      case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
-        prefix + encodedName + sym.disambiguator + "."
-      case k.TYPE | k.CLASS | k.TRAIT =>
-        prefix + encodedName + "#"
-      case k.PARAMETER =>
-        prefix + "(" + encodedName + ")"
-      case k.TYPE_PARAMETER =>
-        prefix + "[" + encodedName + "]"
-      case skind =>
-        sys.error(s"unsupported kind $skind for symbol $sym")
-    }
+    Symbols.Global(sowner(sym), sym.descriptor)
   }
 
   // NOTE: Cases in the pattern match are ordered
@@ -112,8 +78,8 @@ object Scalacp {
   private def skind(sym: Symbol): s.SymbolInformation.Kind = {
     sym match {
       case sym: MethodSymbol if sym.isMethod =>
-        if (sym.name == "<init>") k.CONSTRUCTOR
-        else if (sym.hasFlag(0x00008000)) k.MACRO
+        if (sym.isConstructor) k.CONSTRUCTOR
+        else if (sym.isMacro) k.MACRO
         else k.METHOD
       case _: ObjectSymbol | _: ClassSymbol if sym.isModule =>
         if (sym.name == "package") k.PACKAGE_OBJECT
@@ -186,7 +152,7 @@ object Scalacp {
         else ()
       }
     }
-    if (sym.isMethod && sym.name == "<init>") {
+    if (sym.isConstructor) {
       val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
       if (sym.entry.index == primaryIndex) sflip(p.PRIMARY)
     }
@@ -198,10 +164,9 @@ object Scalacp {
       val i = name.lastIndexOf("$$")
       if (i > 0) loop(name.substring(i + 2))
       else if (name.endsWith(" ")) loop(name.substring(0, name.length - 1))
-      else if (name == "<no symbol>") ""
-      else if (name == "<root>") "_root_"
-      else if (name == "<empty>") "_empty_"
-      else if (name == "<init>") "<init>"
+      else if (name == "<root>") n.RootPackage
+      else if (name == "<empty>") n.EmptyPackage
+      else if (name == "<init>") n.Constructor
       else if (name == "<refinement>") "$anon"
       else NameTransformer.decode(name)
     }
@@ -256,18 +221,18 @@ object Scalacp {
             def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
             def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
             const match {
-              case () => s.SingletonType(st.UNIT, None, "", 0, "")
-              case false => s.SingletonType(st.BOOLEAN, None, "", 0, "")
-              case true => s.SingletonType(st.BOOLEAN, None, "", 1, "")
-              case x: Byte => s.SingletonType(st.BYTE, None, "", x.toLong, "")
-              case x: Short => s.SingletonType(st.SHORT, None, "", x.toLong, "")
-              case x: Char => s.SingletonType(st.CHAR, None, "", x.toLong, "")
-              case x: Int => s.SingletonType(st.INT, None, "", x.toLong, "")
-              case x: Long => s.SingletonType(st.LONG, None, "", x, "")
-              case x: Float => s.SingletonType(st.FLOAT, None, "", floatBits(x), "")
-              case x: Double => s.SingletonType(st.DOUBLE, None, "", doubleBits(x), "")
-              case x: String => s.SingletonType(st.STRING, None, "", 0, x)
-              case null => s.SingletonType(st.NULL, None, "", 0, "")
+              case () => s.SingletonType(st.UNIT, None, Symbols.None, 0, "")
+              case false => s.SingletonType(st.BOOLEAN, None, Symbols.None, 0, "")
+              case true => s.SingletonType(st.BOOLEAN, None, Symbols.None, 1, "")
+              case x: Byte => s.SingletonType(st.BYTE, None, Symbols.None, x.toLong, "")
+              case x: Short => s.SingletonType(st.SHORT, None, Symbols.None, x.toLong, "")
+              case x: Char => s.SingletonType(st.CHAR, None, Symbols.None, x.toLong, "")
+              case x: Int => s.SingletonType(st.INT, None, Symbols.None, x.toLong, "")
+              case x: Long => s.SingletonType(st.LONG, None, Symbols.None, x, "")
+              case x: Float => s.SingletonType(st.FLOAT, None, Symbols.None, floatBits(x), "")
+              case x: Double => s.SingletonType(st.DOUBLE, None, Symbols.None, doubleBits(x), "")
+              case x: String => s.SingletonType(st.STRING, None, Symbols.None, 0, x)
+              case null => s.SingletonType(st.NULL, None, Symbols.None, 0, "")
               case other => sys.error(s"unsupported const $other")
             }
           }
@@ -383,9 +348,23 @@ object Scalacp {
     }
   }
 
-  private def sowner(sym: SymbolInfoSymbol): String = {
-    if (sym.symbolInfo.owner == NoSymbol) return ""
-    ssymbol(sym.symbolInfo.owner)
+  private def sowner(sym: Symbol): String = {
+    sym match {
+      case sym: SymbolInfoSymbol =>
+        ssymbol(sym.symbolInfo.owner)
+      case sym: ExternalSymbol =>
+        if (sym.isRootPackage) Symbols.None
+        else if (sym.isEmptyPackage) Symbols.RootPackage
+        else if (sym.isToplevelPackage) Symbols.RootPackage
+        else {
+          // TODO: I wish there was an API to obtain owners for external symbols.
+          // Since there's no such API, we have to do the legwork ourselves.
+          val parentPackage = sym.parent.get.path + "."
+          parentPackage.replace("<empty>", n.EmptyPackage)
+        }
+      case _ =>
+        sys.error(s"unsupported symbol $sym")
+    }
   }
 
   private object ByNameType {
@@ -406,35 +385,26 @@ object Scalacp {
     }
   }
 
-  private implicit class NameOps(name: String) {
-    def encoded: String = {
-      if (name.isEmpty) {
-        sys.error(s"unsupported name")
-      } else {
-        val (start, parts) = (name.head, name.tail)
-        val isStartOk = Character.isJavaIdentifierStart(start)
-        val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
-        if (isStartOk && isPartsOk) name
-        else "`" + name + "`"
-      }
-    }
-  }
-
   private implicit class SymbolOps(sym: Symbol) {
+    def isRootPackage: Boolean = sym.path == "<root>"
+    def isEmptyPackage: Boolean = sym.path == "<empty>"
+    def isToplevelPackage: Boolean = !isRootPackage && !isEmptyPackage && !sym.path.contains(".")
     def isModuleClass: Boolean = sym.isInstanceOf[ClassSymbol] && sym.isModule
     def isClass: Boolean = sym.isInstanceOf[ClassSymbol] && !sym.isModule
     def isObject: Boolean = sym.isInstanceOf[ObjectSymbol]
     def isType: Boolean = sym.isInstanceOf[TypeSymbol]
     def isAlias: Boolean = sym.isInstanceOf[AliasSymbol]
+    def isMacro: Boolean = sym.isMethod && sym.hasFlag(0x00008000)
+    def isConstructor: Boolean = sym.isMethod && sym.name == "<init>"
     def isClassConstructor: Boolean = {
       sym.parent match {
         case Some(parent: ClassSymbol) if !parent.isTrait && !parent.isModule =>
-          sym.name == "<init>"
+          sym.isConstructor
         case _ =>
           false
       }
     }
-    def descriptor: String = {
+    def typeDescriptor: TypeDescriptor = {
       try {
         sym match {
           case sym: SymbolInfoSymbol => sym.infoType.descriptor
@@ -448,18 +418,34 @@ object Scalacp {
           // https://github.com/scalameta/scalameta/issues/1283.
           // It seems that Scalap doesn't support all the signatures that
           // Scalac can emit.
-          "<?>"
+          td.Other
       }
     }
-    def disambiguator: String = {
-      val kindred = sym.parent.get.children.filter(other => skind(other) == skind(sym))
-      val siblings = kindred.filter(_.name == sym.name)
-      val synonyms = siblings.filter(_.descriptor == sym.descriptor)
-      val suffix = {
-        if (synonyms.length == 1) ""
-        else "+" + (synonyms.indexOf(sym) + 1)
+    def descriptor: Descriptor = {
+      skind(sym) match {
+        case k.FIELD | k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
+          d.Term(sname(sym))
+        case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
+          val typeDescriptor = sym.typeDescriptor
+          val kindred = sym.parent.get.children.filter(other => skind(other) == skind(sym))
+          val synonyms = kindred.filter { kin =>
+            kin.name == sym.name &&
+            kin.typeDescriptor == typeDescriptor
+          }
+          val index = {
+            if (synonyms.length == 1) 0
+            else 1 + synonyms.indexOf(sym)
+          }
+          d.Method(sname(sym), typeDescriptor, index)
+        case k.TYPE | k.CLASS | k.TRAIT =>
+          d.Type(sname(sym))
+        case k.PARAMETER =>
+          d.Parameter(sname(sym))
+        case k.TYPE_PARAMETER =>
+          d.TypeParameter(sname(sym))
+        case skind =>
+          sys.error(s"unsupported kind $skind for symbol $sym")
       }
-      "(" + descriptor + suffix + ")"
     }
   }
 
@@ -502,27 +488,15 @@ object Scalacp {
         case _ => tpe
       }
     }
-    def descriptor: String = {
-      def unsupported = sys.error(s"unsupported type $tpe")
+    def descriptor: TypeDescriptor = {
       def paramDescriptors = tpe.paramss.flatten.map(_.infoType.descriptor)
       tpe match {
-        case ByNameType(tpe) => "=>" + tpe.descriptor
-        case RepeatedType(tpe) => tpe.descriptor + "*"
-        case TypeRefType(_, sym, _) => sname(sym).encoded
-        case SingleType(_, _) => ".type"
-        case ThisType(_) => ".type"
-        case ConstantType(_: Type) => "Class"
-        case ConstantType(_) => ".type"
-        case RefinedType(_, _) => "{}"
-        case AnnotatedType(tpe, _) => tpe.descriptor
-        case ExistentialType(tpe, _) => tpe.descriptor
-        case ClassInfoType(_, _) => unsupported
-        case _: NullaryMethodType | _: MethodType => paramDescriptors.mkString(",")
-        case TypeBoundsType(_, _) => unsupported
+        case ByNameType(_) => td.Other
+        case RepeatedType(_) => td.Other
+        case TypeRefType(_, sym, _) => td.Ref(sname(sym))
+        case _: NullaryMethodType | _: MethodType => td.Method(paramDescriptors)
         case PolyType(tpe, _) => tpe.descriptor
-        case NoType => "<?>" // TODO: fixme
-        case NoPrefixType => unsupported
-        case other => unsupported
+        case other => td.Other
       }
     }
   }

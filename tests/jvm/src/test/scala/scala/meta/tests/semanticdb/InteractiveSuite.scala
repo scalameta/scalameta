@@ -67,7 +67,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Synthetics:
       |[79..79): *.apply[Nothing]
       |  [0..1): * => _star_.
-      |  [2..7): apply => scala.collection.immutable.List.apply(A*).
+      |  [2..7): apply => scala.collection.immutable.List.apply(?).
       |  [8..15): Nothing => scala.Nothing#
       |[84..85): scala.Predef.any2stringadd[List[Nothing]](*)
       |  [27..31): List => scala.collection.immutable.List#
@@ -89,16 +89,19 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |
       |Names:
       |[8..9): b <= _empty_.b.
-      |[22..23): a <= (a)
-      |[25..27): In => (a)`<error: <none>>`#
+      |[18..21): add <= _empty_.b.add(?).
+      |[22..23): a <= _empty_.b.add(?).(a)
+      |[25..27): In => _empty_.b.add(?).(a)`<error: <none>>`#
       |
       |Messages:
       |[25..27): [error] not found: type In
       |
       |Symbols:
-      |(a) => param a: <error>
-      |(a)`<error: <none>>`# => class `<error: <none>>`
       |_empty_.b. => final object b
+      |_empty_.b.add(?). => method add: (a: <error>): Int
+      |  [14..17): Int => scala.Int#
+      |_empty_.b.add(?).(a) => param a: <error>
+      |_empty_.b.add(?).(a)`<error: <none>>`# => class `<error: <none>>`
     """.stripMargin
   )
 }

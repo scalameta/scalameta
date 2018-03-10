@@ -2,6 +2,8 @@ package org.langmeta
 package semanticdb
 
 import scala.compat.Platform.EOL
+import scala.meta.internal.semanticdb3.Scala._
+import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 
 sealed trait Symbol extends Product {
   def syntax: String
@@ -11,23 +13,19 @@ sealed trait Symbol extends Product {
 object Symbol {
   case object None extends Symbol {
     override def toString = syntax
-    override def syntax = ""
+    override def syntax = Symbols.None
     override def structure = s"""Symbol.None"""
   }
 
   final case class Local(id: String) extends Symbol {
     override def toString = syntax
-    override def syntax = id
+    override def syntax = Symbols.Local(id)
     override def structure = s"""Symbol.Local("$id")"""
   }
 
   final case class Global(owner: Symbol, signature: Signature) extends Symbol {
     override def toString = syntax
-    override def syntax = {
-      val ownerSyntax = owner.syntax
-      val prefix = if (ownerSyntax != "_root_.") ownerSyntax else ""
-      s"${prefix}${signature.syntax}"
-    }
+    override def syntax = Symbols.Global(owner.syntax, signature.syntax)
     override def structure = s"""Symbol.Global(${owner.structure}, ${signature.structure})"""
   }
 
@@ -175,13 +173,13 @@ sealed trait Signature {
 
 object Signature {
   final case class Type(name: String) extends Signature {
-    override def syntax = s"${encodeName(name)}#"
+    override def syntax = d.Type(name).toString
     override def structure = s"""Signature.Type("$name")"""
     override def toString = syntax
   }
 
   final case class Term(name: String) extends Signature {
-    override def syntax = s"${encodeName(name)}."
+    override def syntax = d.Term(name).toString
     override def structure = s"""Signature.Term("$name")"""
     override def toString = syntax
   }
@@ -189,19 +187,19 @@ object Signature {
   final case class Method(name: String, disambiguator: String) extends Signature {
     @deprecated("Use `disambiguator` instead.", "3.3.0")
     def jvmSignature: String = disambiguator
-    override def syntax = s"${encodeName(name)}${disambiguator}."
+    override def syntax = s"${name.encoded}${disambiguator}."
     override def structure = s"""Signature.Method("$name", "$disambiguator")"""
     override def toString = syntax
   }
 
   final case class TypeParameter(name: String) extends Signature {
-    override def syntax = s"[${encodeName(name)}]"
+    override def syntax = d.TypeParameter(name).toString
     override def structure = s"""Signature.TypeParameter("$name")"""
     override def toString = syntax
   }
 
   final case class TermParameter(name: String) extends Signature {
-    override def syntax = s"(${encodeName(name)})"
+    override def syntax = d.Parameter(name).toString
     override def structure = s"""Signature.TermParameter("$name")"""
     override def toString = syntax
   }
@@ -210,11 +208,5 @@ object Signature {
     override def syntax = throw new UnsupportedOperationException("No longer supported.")
     override def structure = s"""Signature.Self("$name")"""
     override def toString = syntax
-  }
-
-  private def encodeName(name: String): String = {
-    val headOk = Character.isJavaIdentifierStart(name.head)
-    val tailOk = name.tail.forall(Character.isJavaIdentifierPart)
-    if (headOk && tailOk) name else "`" + name + "`"
   }
 }

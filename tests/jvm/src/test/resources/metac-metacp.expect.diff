@@ -539,15 +539,17 @@ example.Methods#
      declarations: "example.Methods#List#"
      declarations: "example.Methods#AList#"
      declarations: "example.Methods#m1()."
-     declarations: "example.Methods#m11(.type+1)."
-     declarations: "example.Methods#m11(.type+2)."
-     declarations: "example.Methods#m12a({})."
+     declarations: "example.Methods#m11(?+1)."
+     declarations: "example.Methods#m11(?+2)."
+     declarations: "example.Methods#m12a(?)."
 +    declarations: "example.Methods#$anon#"
-     declarations: "example.Methods#m12b({})."
+     declarations: "example.Methods#m12b(?)."
+-    declarations: "example.Methods#m13(?)."
 +    declarations: "example.Methods#$anon#"
-     declarations: "example.Methods#m13(Int)."
-     declarations: "example.Methods#m14(T)."
-     declarations: "example.Methods#m15(=>Int)."
++    declarations: "example.Methods#m13(Int)."
+     declarations: "example.Methods#m14(?)."
+     declarations: "example.Methods#m15(?)."
+     declarations: "example.Methods#m16(?)."
 
 
 =====================
@@ -557,31 +559,6 @@ example.Methods#List#
 +++ metacp
      declarations: "example.Methods#List#`<init>`()."
 +    declarations: "example.Methods#List#[T]"
- accessibility {
-
-
-============================
-example.Methods#m13(Int).(x)
-============================
---- metac
-+++ metacp
- properties: 0
- name: "x"
- tpe {
--  tag: ANNOTATED_TYPE
--  annotatedType {
--    tpe {
--      tag: TYPE_REF
--      typeRef {
--        symbol: "scala.Int#"
--    annotations {
--      tpe {
--        tag: TYPE_REF
--        typeRef {
--          symbol: "scala.unchecked#"
-+  tag: TYPE_REF
-+  typeRef {
-+    symbol: "scala.Int#"
  accessibility {
 
 
@@ -918,7 +895,7 @@ types.Test.C#ByNameType.
 +        symbol: "scala.AnyRef#"
 -    symbol: "types.Test.C#ByNameType."
 +    declarations: "types.Test.C#ByNameType.`<init>`()."
-+    declarations: "types.Test.C#ByNameType.m1(=>Int)."
++    declarations: "types.Test.C#ByNameType.m1(?)."
  accessibility {
 
 
@@ -1222,7 +1199,7 @@ types.Test.Literal.
 +    declarations: "types.Test.Literal.bool."
 +    declarations: "types.Test.Literal.unit()."
 +    declarations: "types.Test.Literal.unit."
-+    declarations: "types.Test.Literal.javaEnum(<?>)."
++    declarations: "types.Test.Literal.javaEnum(?)."
 +    declarations: "types.Test.Literal.javaEnum."
 +    declarations: "types.Test.Literal.clazzOf()."
 +    declarations: "types.Test.Literal.clazzOf."

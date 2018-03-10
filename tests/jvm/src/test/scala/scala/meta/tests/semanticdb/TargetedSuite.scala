@@ -611,7 +611,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [38..39): * => _star_.
        |[17..17): *.apply[Int]
        |  [0..1): * => _star_.
-       |  [2..7): apply => scala.collection.immutable.List.apply(A*).
+       |  [2..7): apply => scala.collection.immutable.List.apply(?).
        |  [8..11): Int => scala.Int#
        |""".stripMargin
   )
