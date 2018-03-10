@@ -87,19 +87,17 @@ Schema => SemanticDB v3
 Uri => com/javacp/Coin.class
 Text => empty
 Language => Java
-Symbols => 17 entries
+Symbols => 16 entries
 
 Symbols:
 _root_. => package _root_
 com. => package com
 com.javacp. => package javacp
-com.javacp.Coin# => final enum class Coin.{+11 decls}
+com.javacp.Coin# => final enum class Coin.{+10 decls}
   extends Enum[Coin]
 com.javacp.Coin#$VALUES. => private final static field $VALUES: Array[Coin]
   Array => scala.Array#
   Coin => com.javacp.Coin#
-com.javacp.Coin#<clinit>(). => private[javacp] static method <clinit>: (): Unit
-  Unit => scala.Unit#
 com.javacp.Coin#DIME. => final static enum field DIME: Coin
   Coin => com.javacp.Coin#
 com.javacp.Coin#NICKEL. => final static enum field NICKEL: Coin

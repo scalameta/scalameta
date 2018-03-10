@@ -150,6 +150,8 @@ object Javacp {
     }
 
     methodSignatures.foreach {
+      case method: MethodInfo if method.node.name == "<clinit>" =>
+        ()
       case method: MethodInfo =>
         val synonyms = methodSignatures.filter { m =>
           m.node.name == method.node.name &&

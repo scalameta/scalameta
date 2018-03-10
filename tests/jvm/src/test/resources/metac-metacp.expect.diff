@@ -38,8 +38,6 @@ com.javacp.Coin#
 +    declarations: "com.javacp.Coin#value()."
      declarations: "com.javacp.Coin#values()."
      declarations: "com.javacp.Coin#valueOf(String)."
-+    declarations: "com.javacp.Coin#<clinit>()."
- accessibility {
 
 
 ======================

@@ -21,7 +21,6 @@ com.javacp.ClassSuffix#`<init>`(). => com.javacp.ClassSuffix#
 com.javacp.ClassSuffix#suffix. => com.javacp.ClassSuffix#
 com.javacp.Coin# => com.javacp.
 com.javacp.Coin#$VALUES. => com.javacp.Coin#
-com.javacp.Coin#<clinit>(). => com.javacp.Coin#
 com.javacp.Coin#DIME. => com.javacp.Coin#
 com.javacp.Coin#NICKEL. => com.javacp.Coin#
 com.javacp.Coin#PENNY. => com.javacp.Coin#
