@@ -212,18 +212,17 @@ the document where the definition is located.
 
 Global symbol format accommodates scoping rules of the underlying language,
 and is therefore language-dependent. For example, the `Int` class in
-the Scala standard library is modelled as `_root_.scala.Int#`, where
-the `_root_` prefix stands for the root package defined in the Scala Language
-Specification [\[17\]][17], and the pound sign (`#`) at the end of the symbol
-means that the symbol corresponds to a class as opposed to an object that
-would end with a dot (`.`). See [Languages](#languages) for more information.
+the Scala standard library is modelled as `scala.Int#`, where
+the pound sign (`#`) at the end of the symbol means that the symbol corresponds
+to a class as opposed to an object that would end with a dot (`.`).
+See [Languages](#languages) for more information.
 
 Global symbols must be unique across the universe of documents that
 a SemanticDB-based is working with at any given time. For example,
 if in such a universe, there exist multiple definitions of `Int` -
 e.g. coming from multiple different versions of Scala - then all references
 to those definitions will have `SymbolOccurrence.symbol` equal to the same
-`_root_.scala.Int#` symbol, and SemanticDB will not be able to provide
+`scala.Int#` symbol, and SemanticDB will not be able to provide
 information to distinguish these references from each other.
 
 In the future, we may extend SemanticDB to allow for multiple definitions
@@ -259,10 +258,8 @@ interspersed with a semicolon (`;`). Within a multi symbol, the underlying
 symbols must be ordered lexicographically in ascending order.
 
 For example, a reference to both the `Int` class in the Scala standard library
-and its companion object must be modelled by
-`_root_.scala.Int#;_root_.scala.Int.`.
-Because of the order requirement, `_root_.scala.Int.;_root_.scala.Int#`
-is not a valid symbol.
+and its companion object must be modelled by `scala.Int#;.scala.Int.`.
+Because of the order requirement, `scala.Int.;scala.Int#` is not a valid symbol.
 
 **Placeholder symbols**. Are used to model original code snippets in
 [Synthetics](#synthetic). Must not be used outside `Synthetic.text` documents.
@@ -705,8 +702,8 @@ which signatures in supported languages.
 
 `accessibility`. [Accessibility](#accessibility) of the corresponding definition.
 
-`owner`. For a global symbol, directly enclosing definition. For other symbols,
-`None`.
+`owner`. See [Languages](#languages) for more information on which definitions
+have which owners in supported languages.
 
 ### Annotation
 
@@ -951,12 +948,26 @@ which Scala definitions, what their metadata is, etc). See
   </tr>
 </table>
 
-**Owner chain** is a list of definitions enclosing a definition,
-starting with the outermost one and including the definition itself.
-The outermost definition must be either `_empty_` (the special empty package
-[\[20\]][20]) or `_root_` (the special root package [\[21\]][21]). For example,
-for the `Int` class in the Scala standard library,
-the owner chain is `[_root_, scala, Int]`.
+**Owner chain** is:
+  * For the root package [\[20\]][20], list that contains just that package.
+  * For the empty package [\[21\]][21], list that contains just that package.
+  * For top-level package, list that contains just that package.
+  * For other global definition, owner chain of its owner appended
+    by the original definition.
+  * For other definition, empty list.
+
+**Owner** is:
+  * For the root package [\[20\]][20], `None`.
+  * For the empty package [\[21\]][21], root package.
+  * For top-level package, root package.
+  * For other package, parent package.
+  * For package object, its package, e.g. `package scala`
+    for `package object scala`.
+  * For other top-level definition, its package.
+  * For other global definition, the innermost enclosing definition,
+    i.e. the definition whose [Location](#location) in source code most
+    tightly encloses the [Location](#location) of the original definition.
+  * For other definition, `None`.
 
 **Definition descriptor** is:
   * For `LOCAL`, `FIELD`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
@@ -978,9 +989,24 @@ the owner chain is `[_root_, scala, Int]`.
   * See [SymbolInformation](#scala-symbolinformation) for details on
     which Scala definitions are modelled by which symbols.
 
+**Encoded name** is:
+  * If name is a Java identifier [\[22\]][22], the name itself.
+  * Otherwise, concatenation of a backtick, the name itself and
+    another backtick.
+
+**Name** is:
+  * For the root package [\[20\]][20], `_root_`.
+  * For the empty package [\[21\]][21], `_empty_`.
+  * For package object, `package`.
+  * For constructor, `<init>`.
+  * For anonymous parameter, self parameter or type parameter,
+    the underscore sign (`_`).
+  * For other definition, the name of the binding introduced by the definition
+    [\[70\]][70].
+
 **Type descriptor** is:
 
-  * For `TYPE_REF`, encoded `SymbolInformation.name` of `symbol`.
+  * For `TYPE_REF`, encoded name of `symbol`.
   * For `SINGLETON_TYPE`, `.type`.
   * For `STRUCTURAL_TYPE`, `{}`.
   * For `ANNOTATED_TYPE`, type descriptor of `tpe`.
@@ -997,21 +1023,16 @@ the owner chain is `[_root_, scala, Int]`.
   * See [Type](#scala-type) for details on
     which Scala types are modelled by which `Type` entities.
 
-**Encoded name** is:
-  * For a Java identifier [\[22\]][22], the name itself.
-  * Otherwise, concatenation of a backtick, the name itself and another backtick.
-
 For example, this is how some of the definitions from the Scala standard library
 must be modelled:
 
-* The `scala` package: `_root_.scala.`
-* The `Int` class: `_root_.scala.Int#`
-* The `def implicitly[T](implicit e: T)` method:
-  `_root_.scala.Predef.implicitly(T).`
-* The `e` parameter of that method: `_root_.scala.Predef.implicitly(T).(e)`
-* The `T` type parameter of that method: `_root_.scala.Predef.implicitly(T).[T]`
+* The `scala` package: `scala.`
+* The `Int` class: `scala.Int#`
+* The `def implicitly[T](implicit e: T)` method: `scala.Predef.implicitly(T).`
+* The `e` parameter of that method: `scala.Predef.implicitly(T).(e)`
+* The `T` type parameter of that method: `scala.Predef.implicitly(T).[T]`
 * The `def contains[A: Ordering](tree: Tree[A, _], x: A): Boolean` method:
-  `_root_.scala.collection.immutable.RedBlackTree#contains(Tree,A,Ordering).`
+  `scala.collection.immutable.RedBlackTree#contains(Tree,A,Ordering).`
 
 <a name="scala-type"></a>
 #### Type
@@ -2015,11 +2036,11 @@ between package object symbols and object symbols are:
 **Packages** [\[61\]][61] are represented by `PACKAGE` symbols.
 In Scala, `SymbolInformation` for `PACKAGE` symbols is very modest -
 the only non-empty fields must be:
-  * `symbol` (must be defined as described in [Symbol](#scala-symbol)).
-  * `language` (must be `"Scala"`).
-  * `kind` (must be `PACKAGE`).
-  * `name` (must be equal to the short name of the package).
-  * `owner` (must be equal to the symbol of the enclosing package).
+  * `symbol` (as described in [Symbol](#scala-symbol)).
+  * `language` (`SCALA`).
+  * `kind` (`PACKAGE`).
+  * `name` (as described in [Symbol](#scala-symbol)).
+  * `owner` (as described in [Symbol](#scala-symbol)).
 
 <a name="scala-annotation"></a>
 #### Annotation
@@ -2170,8 +2191,8 @@ in the future.
 [17]: https://www.scala-lang.org/files/archive/spec/2.12/
 [18]: https://www.scala-lang.org/files/archive/spec/2.11/03-types.html
 [19]: https://en.wikipedia.org/wiki/Symbol_table
-[20]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#packagings
-[21]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#package-references
+[20]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#package-references
+[21]: https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#packagings
 [22]: https://docs.oracle.com/javase/specs/jls/se9/html/jls-3.html#jls-3.8
 [23]: https://www.scala-lang.org/files/archive/spec/2.12/11-annotations.html
 [24]: https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types
@@ -2220,3 +2241,4 @@ in the future.
 [67]: https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#type-patterns
 [68]: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
 [69]: https://github.com/scalameta/scalameta/blob/master/semanticdb/metacp/src/main/scala/scala/meta/internal/javacp/Javacp.scala
+[70]: https://www.scala-lang.org/files/archive/spec/2.12/02-identifiers-names-and-scopes.html
