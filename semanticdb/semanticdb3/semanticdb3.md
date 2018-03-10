@@ -224,7 +224,7 @@ information to distinguish these references from each other.
 In the future, we may extend SemanticDB to allow for multiple definitions
 that under current rules would correspond to the same global symbol.
 In the meanwhile, when global uniqueness is required, tool authors are advised
-to accompany global symbols with `SymbolInformation.location`.
+to accompany global symbols with out-of-band metadata.
 
 **Local symbols**. Correspond to a definition that isn't global (see above).
 
@@ -480,13 +480,12 @@ provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 12;
+  reserved 2, 6, 7, 8, 10, 12;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  Location location = 10;
   repeated string overrides = 9;
   Type tpe = 11;
   repeated Annotation annotations = 13;
@@ -679,9 +678,6 @@ languages map onto these properties.
 </table>
 
 `name`. String that represents the name of the corresponding definition.
-
-`location`. [Location](#location) that represents the extent of
-the corresponding definition.
 
 `overrides`. Symbols that are extended or overridden by this symbol
 either directly or transitively.
@@ -1199,13 +1195,12 @@ Notes:
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 12;
+  reserved 2, 6, 7, 8, 10, 12;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  Location location = 10;
   repeated string overrides = 9;
   Type tpe = 11;
   repeated Annotation annotations = 13;
@@ -1430,7 +1425,7 @@ Notes:
   get overridden.
 
 **Pattern variables** [\[65\]][65] are represented differently depending
-on their location:
+on where they are defined:
 * Local symbol is created for pattern variables in pattern matching
   expressions [\[66\]][66].
 * A combination of local, field, getter and setter symbols is created

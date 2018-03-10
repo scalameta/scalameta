@@ -106,7 +106,7 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, _, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner) =>
+          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner) =>
             val dsym = dSymbol(ssym)
             val dflags = {
               var dflags = 0L
@@ -345,7 +345,6 @@ package object semanticdb {
                 sproperties
               }
               val sname = ddenot.name
-              val slocation = None
               val ssignature = {
                 if (ddenot.signature.nonEmpty) {
                   val stext = ddenot.signature
@@ -368,7 +367,7 @@ package object semanticdb {
               val sanns = ddenot.annotations
               val sacc = ddenot.accessibility
               val sowner = ddenot.owner.syntax
-              Some(s.SymbolInformation(ssymbol, ssymbolLanguage, skind, sproperties, sname, slocation, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner))
+              Some(s.SymbolInformation(ssymbol, ssymbolLanguage, skind, sproperties, sname, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner))
             }
           }
           object dSynthetic {

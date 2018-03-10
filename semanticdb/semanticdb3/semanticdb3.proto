@@ -209,13 +209,12 @@ message SymbolInformation {
     STATIC = 0x1000;
     PRIMARY = 0x2000;
   }
-  reserved 2, 6, 12;
+  reserved 2, 6, 10, 12;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  Location location = 10;
   TextDocument signature = 7;
   repeated string members = 8;
   repeated string overrides = 9;
