@@ -1,11 +1,13 @@
 --- metac
 +++ metacp
-   _empty_.A#
    _empty_.B#
  _root_.
--  example.
--  flags.
--  types.
+   _empty_.
++  com.
+   example.
++  exclude.
+   flags.
+   types.
 +com.
 +  com.javacp.
 +com.javacp.

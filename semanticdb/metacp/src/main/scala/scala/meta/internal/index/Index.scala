@@ -16,8 +16,12 @@ class Index {
       toplevels(info.symbol) = uri
       if (info.symbol.stripSuffix("#").contains("#")) return
       val ownerChain = info.owner.split("\\.")
-      ownerChain.scanLeft("") { (ancestorSym, name) =>
-        val sym = ancestorSym + name + "."
+      ownerChain.scanLeft("") { (prefix, name) =>
+        val ancestorSym = {
+          if (prefix == "" && name != "_root_") "_root_."
+          else prefix
+        }
+        val sym = prefix + name + "."
         val decls = packages.getOrElse(sym, mutable.Set[String]())
         packages(sym) = decls
         if (ancestorSym != "") packages(ancestorSym) += sym

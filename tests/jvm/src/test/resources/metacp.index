@@ -4,6 +4,12 @@ _empty_.
   _empty_.A#
   _empty_.B#
 _root_.
+  _empty_.
+  com.
+  example.
+  exclude.
+  flags.
+  types.
 com.
   com.javacp.
 com.javacp.
