@@ -23,12 +23,14 @@
     * [SymbolInformation](#scala-symbolinformation)
     * [Annotation](#scala-annotation)
     * [Accessibility](#scala-accessibility)
+    * [SymbolOccurrence](#scala-symboloccurrence)
   * [Java](#java)
     * [Symbol](#java)
     * [Type](#java)
     * [SymbolInformation](#java)
     * [Annotation](#java)
     * [Accessibility](#java)
+    * [SymbolOccurrence](#java)
 
 ## Motivation
 
@@ -763,11 +765,8 @@ that the identifier performs in the code.
   </tr>
 </table>
 
-There may be situations when: 1) a range references multiple symbols, e.g. when
-an identifier in a Scala import refers to both a class and an object with the
-same name, or 2) when a range defines multiple symbols, e.g. when a Scala `val`
-or `var` gives rise to multiple symbols. In these situations, multiple symbols
-must be packed into a [multi symbol](#symbol).
+See [Languages](#languages) for information on how language features in
+supported languages map onto this data structure.
 
 ### Diagnostic
 
@@ -2211,10 +2210,29 @@ Notes:
 * Not all kinds of symbols support all accessibilities. See
   [SymbolInformation](#scala-symbolinformation) for more information.
 
+<a name="scala-symboloccurrence"></a>
+#### SymbolOccurrence
+
+```protobuf
+message SymbolOccurrence {
+  Range range = 1;
+  string symbol = 2;
+  Role role = 3;
+}
+```
+
+There is a Scala compiler plugin
+that generates [SymbolOccurrences](#symboloccurrence) for Scala code.
+The implementation [\[71\]][71] is used at Twitter scale, and it works well -
+both in terms of handling sizeable codebases and understanding esoteric
+language constructs and idioms. However, but we do not yet have a specification
+that comprehensively describes how Scala language features map onto symbol
+occurrences. We intend to improve on this in the future.
+
 ### Java
 
 Java `class` file format [\[68\]][68] can be mapped onto SemanticDB.
-This has been validated in an experimental implementation [\[69\]][69],
+There is an experimental implementation [\[69\]][69] that does that,
 but we do not yet have a specification that comprehensively describes how
 Java language features map onto SemanticDB. We intend to improve on this
 in the future.
@@ -2291,3 +2309,4 @@ in the future.
 [68]: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
 [69]: https://github.com/scalameta/scalameta/blob/master/semanticdb/metacp/src/main/scala/scala/meta/internal/javacp/Javacp.scala
 [70]: https://www.scala-lang.org/files/archive/spec/2.12/02-identifiers-names-and-scopes.html
+[71]: https://github.com/scalameta/scalameta/blob/master/semanticdb/scalac/library/src/main/scala/scala/meta/internal/semanticdb/scalac/DocumentOps.scala
