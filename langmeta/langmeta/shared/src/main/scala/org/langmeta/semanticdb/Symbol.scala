@@ -37,9 +37,10 @@ object Symbol {
     override def structure = s"""Symbol.Multi(${symbols.map(_.structure).mkString(", ")})"""
   }
 
-  // TODO: This is obviously a very naive implementation.
-  // It'll do for prototyping, but in the future we'll have to replace it.
-  // upd. Ugh, I should've started with fastparse in the first place!!
+  // NOTE: The implementation is really tedious, and something like Fastparse
+  // would definitely make it more palatable. However, as we have benchmarked,
+  // that will also significantly slow down parsing. For more details, check out:
+  // https://github.com/scalameta/scalameta/pull/1241.
   def apply(s: String): Symbol = {
     object naiveParser {
       var i = 0
@@ -206,7 +207,7 @@ object Signature {
   }
 
   final case class Self(name: String) extends Signature {
-    override def syntax = s"${encodeName(name)}=>"
+    override def syntax = throw new UnsupportedOperationException("No longer supported.")
     override def structure = s"""Signature.Self("$name")"""
     override def toString = syntax
   }
