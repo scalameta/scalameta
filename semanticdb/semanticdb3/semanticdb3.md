@@ -822,13 +822,26 @@ diagnostics as error, warning, information or hint.
 
 ## Languages
 
-In this section, we describe language-dependent aspects of SemanticDB entities,
-namely:
-  * Format for [Symbols](#symbol).
-  * Supported [Types](#type).
-  * Supported [SymbolInformations](#symbolinformation).
-  * Supported [Annotations](#annotation).
-  * Supported [Accessibilities](#accessibility).
+In this section, we describe language-dependent SemanticDB entities, i.e.
+symbols, types, symbol informations, annotations, accessibilities and
+symbol occurrences:
+
+  * [Scala](#scala)
+    * [Symbol](#scala-symbol)
+    * [Type](#scala-type)
+    * [SymbolInformation](#scala-symbolinformation)
+    * [Annotation](#scala-annotation)
+    * [Accessibility](#scala-accessibility)
+    * [SymbolOccurrence](#scala-symboloccurrence)
+  * [Java](#java)
+    * [Symbol](#java)
+    * [Type](#java)
+    * [SymbolInformation](#java)
+    * [Annotation](#java)
+    * [Accessibility](#java)
+    * [SymbolOccurrence](#java)
+
+### Notation
 
 We use a simple notation to describe SemanticDB entities.
 In this notation, `M(v1, v2, ...)` corresponds a Protocol Buffers message
