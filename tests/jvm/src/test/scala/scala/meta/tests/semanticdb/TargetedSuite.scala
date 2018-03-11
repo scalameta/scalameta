@@ -60,16 +60,16 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     |  _root_.scala.List
     |}
   """.trim.stripMargin,
-    """
-    |[7..13): _root_ => _root_.
-    |[14..19): scala => scala.
-    |[20..24): List => scala.package.List#;scala.package.List().
-    |[32..33): C <= _empty_.C#
-    |[34..34):  <= _empty_.C#`<init>`().
-    |[38..44): _root_ => _root_.
-    |[45..50): scala => scala.
-    |[51..55): List => scala.collection.immutable.
-  """.trim.stripMargin
+    """|[7..13): _root_ => _root_.
+       |[14..19): scala => scala.
+       |[20..24): List => scala.package.List#
+       |[20..24): List => scala.package.List().
+       |[32..33): C <= _empty_.C#
+       |[34..34):  <= _empty_.C#`<init>`().
+       |[38..44): _root_ => _root_.
+       |[45..50): scala => scala.
+       |[51..55): List => scala.collection.immutable.
+    """.trim.stripMargin
   )
 
   targeted(

@@ -88,7 +88,8 @@ Names:
 [8..15): example <= example.
 [24..29): scala => scala.
 [30..40): concurrent => scala.concurrent.
-[41..47): Future => scala.concurrent.Future#;scala.concurrent.Future.
+[41..47): Future => scala.concurrent.Future#
+[41..47): Future => scala.concurrent.Future.
 [56..63): Example <= example.Example.
 [66..70): self <= local0_semanticdb_integration_src_main_scala_example_Example_scala
 [80..85): scala => scala.
@@ -545,7 +546,8 @@ Names:
 [8..15): example <= example.
 [24..29): scala => scala.
 [30..34): math => scala.math.
-[35..43): Ordering => scala.math.Ordering#;scala.math.Ordering.
+[35..43): Ordering => scala.math.Ordering#
+[35..43): Ordering => scala.math.Ordering.
 [51..58): Methods <= example.Methods#
 [59..60): T <= example.Methods#[T]
 [62..62):  <= example.Methods#`<init>`().

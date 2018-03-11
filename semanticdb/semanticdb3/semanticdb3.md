@@ -246,19 +246,6 @@ but we haven't yet found a way to do that without sacrificing performance
 and payload size. In the meanwhile, when global uniqueness is required,
 tool authors are advised to accompany local symbols with `TextDocument.uri`.
 
-**Multi symbols**. Represent references to multiple definitions at once.
-For example, this is occasionally useful to support corner cases of Scala,
-e.g. identifiers in imports that can refer to both a class and an object with
-the same name, or references to unresolved overloaded methods.
-
-Multi symbol format is a concatentation of underlying symbols
-interspersed with a semicolon (`;`). Within a multi symbol, the underlying
-symbols must be ordered lexicographically in ascending order.
-
-For example, a reference to both the `Int` class in the Scala standard library
-and its companion object must be modelled by `scala.Int#;.scala.Int.`.
-Because of the order requirement, `scala.Int.;scala.Int#` is not a valid symbol.
-
 ### Type
 
 ```protobuf
@@ -908,17 +895,6 @@ which Scala definitions, what their metadata is, etc). See
     </td>
     <td>
       Concatenation of <code>local</code> and a decimal number.
-    </td>
-  </tr>
-  <tr>
-    <td>
-      Multi symbols
-      <a href="#symbol">↑</a>
-    </td>
-    <td>
-      Concatentation of underlying symbols interspersed with a
-      semicolon (<code>;</code>). Within a multi symbol, the underlying
-      symbols must be ordered lexicographically in ascending order.
     </td>
   </tr>
 </table>

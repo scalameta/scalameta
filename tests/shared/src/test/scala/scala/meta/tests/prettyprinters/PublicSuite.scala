@@ -480,10 +480,6 @@ class PublicSuite extends FunSuite {
     val syntaxLocal = "local0"
     val local @ Symbol.Local(`syntaxLocal`) = Symbol(syntaxLocal)
     assert(local.toString === syntaxLocal)
-
-    val syntaxMulti = "C#;C."
-    val multi @ Symbol.Multi(List(Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Type("C")), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("C")))) = Symbol(syntaxMulti)
-    assert(multi.toString === syntaxMulti)
   }
 
   test("scala.meta.semanticdb.Symbol.Global.toString") {
