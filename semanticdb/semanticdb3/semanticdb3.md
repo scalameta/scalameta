@@ -246,19 +246,6 @@ but we haven't yet found a way to do that without sacrificing performance
 and payload size. In the meanwhile, when global uniqueness is required,
 tool authors are advised to accompany local symbols with `TextDocument.uri`.
 
-**Multi symbols**. Represent references to multiple definitions at once.
-For example, this is occasionally useful to support corner cases of Scala,
-e.g. identifiers in imports that can refer to both a class and an object with
-the same name, or references to unresolved overloaded methods.
-
-Multi symbol format is a concatentation of underlying symbols
-interspersed with a semicolon (`;`). Within a multi symbol, the underlying
-symbols must be ordered lexicographically in ascending order.
-
-For example, a reference to both the `Int` class in the Scala standard library
-and its companion object must be modelled by `scala.Int#;.scala.Int.`.
-Because of the order requirement, `scala.Int.;scala.Int#` is not a valid symbol.
-
 ### Type
 
 ```protobuf
@@ -882,7 +869,23 @@ which Scala definitions, what their metadata is, etc). See
       <a href="#symbol">↑</a>
     </td>
     <td>
-      Concatenation of definition descriptors of the owner chain.
+      <ul>
+        <li>
+          For root package <a href="https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#package-references">[20]</a>,
+          its descriptor.
+        </li>
+        <li>
+          For empty package <a href="https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#packagings">[21]</a>,
+          its descriptor.
+        </li>
+        <li>
+          For top-level package, its descriptor.
+        </li>
+        <li>
+          For other definition, concatenation of owner symbol and
+          definition descriptor.
+        </li>
+      </ul>
     </td>
   </tr>
   <tr>
@@ -894,50 +897,25 @@ which Scala definitions, what their metadata is, etc). See
       Concatenation of <code>local</code> and a decimal number.
     </td>
   </tr>
-  <tr>
-    <td>
-      Multi symbols
-      <a href="#symbol">↑</a>
-    </td>
-    <td>
-      Concatentation of underlying symbols interspersed with a
-      semicolon (<code>;</code>). Within a multi symbol, the underlying
-      symbols must be ordered lexicographically in ascending order.
-    </td>
-  </tr>
 </table>
 
-**Owner chain** is:
-  * For the root package [\[20\]][20], list that contains just that package.
-  * For the empty package [\[21\]][21], list that contains just that package.
-  * For top-level package, list that contains just that package.
-  * For other global definition, owner chain of its owner appended
-    by the original definition.
-  * For other definition, empty list.
-
 **Owner** is:
-  * For the root package [\[20\]][20], `None`.
-  * For the empty package [\[21\]][21], root package.
+  * For root package, `None`.
+  * For empty package, root package.
   * For top-level package, root package.
   * For other package, parent package.
-  * For package object, its package, e.g. `package scala`
-    for `package object scala`.
   * For other top-level definition, its package.
   * For other global definition, the innermost enclosing definition,
     i.e. the definition whose [Location](#location) in source code most
     tightly encloses the [Location](#location) of the original definition.
   * For other definition, `None`.
 
-**Definition descriptor** is:
-  * For `LOCAL`, `FIELD`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
+**Descriptor** is:
+  * For `LOCAL`, unsupported.
+  * For `FIELD`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
     concatenation of its encoded name and a dot (`.`).
   * For `METHOD`, `CONSTRUCTOR`, or `MACRO`,
-    concatenation of its encoded name, a left parenthesis (`(`),
-    its type descriptor, a right parenthesis (`)`) and a dot (`.`).
-    In the case when multiple methods have the same name and type descriptor,
-    the type descriptor is appended with `+N`, with `+1` going to the method
-    that is defined first in the source code, `+2` going to the method that
-    is defined second, etc.
+    concatenation of its encoded name, a disambiguator and a dot (`.`).
   * For `TYPE`, `CLASS` or `TRAIT`, concatenation of its
     encoded name and a pound sign (`#`).
   * For `PARAMETER`, concatenation of a left parenthesis (`(`), its
@@ -948,18 +926,25 @@ which Scala definitions, what their metadata is, etc). See
   * See [SymbolInformation](#scala-symbolinformation) for details on
     which Scala definitions are modelled by which symbols.
 
+**Disambiguator** is:
+  * Concatenation of a left parenthesis (`(`), a type descriptor
+    and a right parenthesis (`)`).
+    In the case when multiple definitions have the same kind, name and
+    type descriptor, the type descriptor is appended with `+N`,
+    with `+1` going to the method that is defined first in the source code,
+    `+2` going to the method that is defined second, etc.
+
 **Encoded name** is:
   * If name is a Java identifier [\[22\]][22], the name itself.
   * Otherwise, concatenation of a backtick, the name itself and
     another backtick.
 
 **Name** is:
-  * For the root package [\[20\]][20], `_root_`.
-  * For the empty package [\[21\]][21], `_empty_`.
-  * For package object, `package`.
+  * For root package, `_root_`.
+  * For empty package, `_empty_`.
   * For constructor, `<init>`.
   * For anonymous parameter, self parameter or type parameter,
-    the underscore sign (`_`).
+    an underscore (`_`).
   * For other definition, the name of the binding introduced by the definition
     [\[70\]][70].
 
@@ -968,17 +953,17 @@ which Scala definitions, what their metadata is, etc). See
   * For `TYPE_REF`, encoded name of `symbol`.
   * For `SINGLETON_TYPE`, `.type`.
   * For `STRUCTURAL_TYPE`, `{}`.
+  * For `WITH_TYPE`, `{}`.
   * For `ANNOTATED_TYPE`, type descriptor of `tpe`.
   * For `EXISTENTIAL_TYPE`, type descriptor of `tpe`.
   * For `UNIVERSAL_TYPE`, type descriptor of `tpe`.
-  * For `CLASS_INFO_TYPE`, unsupported.
   * For `METHOD_TYPE`, concatenation of type descriptors of
     its parameter types interspersed with a comma (`,`).
   * For `BY_NAME_TYPE`, concatenation of the arrow sign (`=>`) and
     the type descriptor of `tpe`.
   * For `REPEATED_TYPE`, concatenation of type descriptor of `tpe`
     and a star (`*`).
-  * For `TYPE_TYPE`, unsupported.
+  * For other type, `?`.
   * See [Type](#scala-type) for details on
     which Scala types are modelled by which `Type` entities.
 

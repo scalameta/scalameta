@@ -38,7 +38,8 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |[8..9): b <= b.
       |[17..22): scala => scala.
       |[23..33): concurrent => scala.concurrent.
-      |[34..40): Future => scala.concurrent.Future#;scala.concurrent.Future.
+      |[34..40): Future => scala.concurrent.Future#
+      |[34..40): Future => scala.concurrent.Future.
       |[48..49): a <= b.a.
       |[58..59): x <= b.a.x().
       |[75..79): List => scala.collection.immutable.List.
@@ -89,16 +90,19 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |
       |Names:
       |[8..9): b <= _empty_.b.
-      |[22..23): a <= (a)
-      |[25..27): In => (a)`<error: <none>>`#
+      |[18..21): add <= _empty_.b.add(?).
+      |[22..23): a <= _empty_.b.add(?).(a)
+      |[25..27): In => _empty_.b.add(?).(a)`<error: <none>>`#
       |
       |Messages:
       |[25..27): [error] not found: type In
       |
       |Symbols:
-      |(a) => param a: <error>
-      |(a)`<error: <none>>`# => class `<error: <none>>`
       |_empty_.b. => final object b
+      |_empty_.b.add(?). => method add: (a: <error>): Int
+      |  [14..17): Int => scala.Int#
+      |_empty_.b.add(?).(a) => param a: <error>
+      |_empty_.b.add(?).(a)`<error: <none>>`# => class `<error: <none>>`
     """.stripMargin
   )
 }

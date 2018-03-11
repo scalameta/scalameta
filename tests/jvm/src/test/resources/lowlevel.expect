@@ -101,7 +101,7 @@ Uri => semanticdb/integration/src/main/scala/example/Example.scala
 Text => non-empty
 Language => Scala
 Symbols => 20 entries
-Occurrences => 23 entries
+Occurrences => 24 entries
 Diagnostics => 1 entries
 Synthetics => 1 entries
 
@@ -161,7 +161,8 @@ Occurrences:
 [0:8..0:15): example <= example.
 [2:7..2:12): scala => scala.
 [2:13..2:23): concurrent => scala.concurrent.
-[2:24..2:30): Future => scala.concurrent.Future#;scala.concurrent.Future.
+[2:24..2:30): Future => scala.concurrent.Future#
+[2:24..2:30): Future => scala.concurrent.Future.
 [4:7..4:14): Example <= example.Example.
 [4:17..4:21): self <= local0
 [5:6..5:11): scala => scala.
@@ -689,7 +690,7 @@ Uri => semanticdb/integration/src/main/scala/example/Methods.scala
 Text => non-empty
 Language => Scala
 Symbols => 74 entries
-Occurrences => 182 entries
+Occurrences => 183 entries
 Diagnostics => 2 entries
 Synthetics => 4 entries
 
@@ -936,7 +937,8 @@ Occurrences:
 [0:8..0:15): example <= example.
 [2:7..2:12): scala => scala.
 [2:13..2:17): math => scala.math.
-[2:18..2:26): Ordering => scala.math.Ordering#;scala.math.Ordering.
+[2:18..2:26): Ordering => scala.math.Ordering#
+[2:18..2:26): Ordering => scala.math.Ordering.
 [4:6..4:13): Methods <= example.Methods#
 [4:14..4:15): T <= example.Methods#[T]
 [4:17..4:17):  <= example.Methods#`<init>`().

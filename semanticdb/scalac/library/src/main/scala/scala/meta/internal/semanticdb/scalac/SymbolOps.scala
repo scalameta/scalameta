@@ -77,7 +77,7 @@ trait SymbolOps { self: DatabaseOps =>
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
     def descriptor: String = {
-      sym.info.descriptor
+      sym.info.descriptor.toString
     }
     def filterSiblings(syms: List[g.Symbol]): List[g.Symbol] = {
       syms.filter(_.name == sym.name)

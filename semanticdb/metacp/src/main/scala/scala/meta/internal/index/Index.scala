@@ -4,6 +4,7 @@ import org.langmeta.internal.io._
 import org.langmeta.io._
 import scala.collection.mutable
 import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.semanticdb3.Scala._
 
 class Index {
   private val packages = mutable.Map[String, mutable.Set[String]]()
@@ -14,20 +15,12 @@ class Index {
   def append(uri: String, infos: List[s.SymbolInformation]): Unit = {
     infos.foreach { info =>
       toplevels(info.symbol) = uri
-      if (info.symbol.stripSuffix("#").contains("#")) return
-      val ownerChain = info.owner.split("\\.")
-      ownerChain.scanLeft("") { (prefix, name) =>
-        val ancestorSym = {
-          if (prefix == "" && name != "_root_") "_root_."
-          else prefix
-        }
-        val sym = prefix + name + "."
-        val decls = packages.getOrElse(sym, mutable.Set[String]())
-        packages(sym) = decls
-        if (ancestorSym != "") packages(ancestorSym) += sym
-        sym
+      info.symbol.ownerChain.sliding(2).foreach {
+        case List(owner, decl) =>
+          val decls = packages.getOrElse(owner, mutable.Set[String]())
+          decls += decl
+          packages(owner) = decls
       }
-      packages(info.owner) += info.symbol
     }
   }
 

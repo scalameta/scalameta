@@ -1,6 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.internal.{Flags => gf}
@@ -199,12 +200,11 @@ trait TypeOps { self: DatabaseOps =>
       }
     }
     def descriptor: String = {
-      def unsupported = sys.error(s"unsupported type $gtpe")
       def paramDescriptors = gtpe.paramss.flatten.map(_.info.descriptor)
       gtpe match {
         case ByNameType(gtpe) => "=>" + gtpe.descriptor
         case RepeatedType(gtpe) => gtpe.descriptor + "*"
-        case g.TypeRef(_, gsym, _) => gsym.name.toEncodedSemantic
+        case g.TypeRef(_, gsym, _) => gsym.name.toSemantic.encoded
         case g.SingleType(_, _) => ".type"
         case g.ThisType(_) => ".type"
         case g.ConstantType(g.Constant(_: g.Type)) => "Class"
@@ -212,13 +212,9 @@ trait TypeOps { self: DatabaseOps =>
         case g.RefinedType(_, _) => "{}"
         case g.AnnotatedType(_, gtpe) => gtpe.descriptor
         case g.ExistentialType(_, gtpe) => gtpe.descriptor
-        case g.ClassInfoType(_, _, _) => unsupported
         case _: g.NullaryMethodType | _: g.MethodType => paramDescriptors.mkString(",")
-        case g.TypeBounds(_, _) => unsupported
         case g.PolyType(_, gtpe) => gtpe.descriptor
-        case g.NoType => unsupported
-        case g.NoPrefix => unsupported
-        case other => unsupported
+        case other => "?"
       }
     }
   }

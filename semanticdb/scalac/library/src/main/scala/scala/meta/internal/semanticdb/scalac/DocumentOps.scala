@@ -534,9 +534,12 @@ trait DocumentOps { self: DatabaseOps =>
 
       val input = unit.source.toInput
 
-      val synthetics = inferred.toIterator.map {
-        case (pos, inferred) => inferred.toSynthetic(input, pos)
-      }
+      val flattenedNames = names.flatMap {
+        case (pos, sym) =>
+          val syms = sym match { case m.Symbol.Multi(syms) => syms; case sym => List(sym) }
+          syms.map(m.ResolvedName(pos, _, binders(pos)))
+      }.toList
+      val messages = unit.reportedMessages(mstarts)
       val symbols = denotations.map {
         case (sym, denot) =>
           val denotationWithMembers = members.get(sym).fold(denot) { members =>
@@ -554,14 +557,17 @@ trait DocumentOps { self: DatabaseOps =>
           }
           m.ResolvedSymbol(sym, denotationWithMembers)
       }.toList
+      val synthetics = inferred.toIterator.map {
+        case (pos, inferred) => inferred.toSynthetic(input, pos)
+      }.toList
 
       m.Document(
         input,
         language,
-        names.map { case (pos, sym) => m.ResolvedName(pos, sym, binders(pos)) }.toList,
-        unit.reportedMessages(mstarts),
+        flattenedNames,
+        messages,
         symbols,
-        synthetics.toList
+        synthetics
       )
     }
   }

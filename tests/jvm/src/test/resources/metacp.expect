@@ -75,8 +75,8 @@ com.javacp.ClassSuffix#`<init>`(). => ctor <init>: (): Unit
 com.javacp.ClassSuffix#suffix. => field suffix: Inner[String]#Bar#Fuz[Integer]
   Inner => com.javacp.ClassSuffix#Inner#
   String => java.lang.String#
-  Bar => Bar#
-  Fuz => Fuz#
+  Bar => _empty_.Bar#
+  Fuz => _empty_.Fuz#
   Integer => java.lang.Integer#
 
 com/javacp/Coin.class
@@ -1776,7 +1776,7 @@ types.Test.Literal.float(). => final val method float: : 1.0f
 types.Test.Literal.float. => private[this] final val field float: 1.0f
 types.Test.Literal.int(). => final val method int: : 1
 types.Test.Literal.int. => private[this] final val field int: 1
-types.Test.Literal.javaEnum(<?>). => final val method javaEnum
+types.Test.Literal.javaEnum(?). => final val method javaEnum
 types.Test.Literal.javaEnum. => private[this] final val field javaEnum
 types.Test.Literal.long(). => final val method long: : 1L
 types.Test.Literal.long. => private[this] final val field long: 1L

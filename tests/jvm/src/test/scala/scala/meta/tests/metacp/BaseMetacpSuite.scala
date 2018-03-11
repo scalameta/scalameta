@@ -17,11 +17,8 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
 
   def checkMetacp(name: String, classpath: () => Classpath): Unit = {
     test(name) {
-      val devnull = new PrintStream(new OutputStream {
-        override def write(b: Int): Unit = ()
-      })
       val settings = Settings().withClasspath(classpath()).withCacheDir(tmp)
-      val reporter = Reporter().withOut(devnull).withErr(System.err)
+      val reporter = Reporter().withOut(System.out).withErr(System.err)
       val result = Metacp.process(settings, reporter)
       assert(result.nonEmpty)
     }

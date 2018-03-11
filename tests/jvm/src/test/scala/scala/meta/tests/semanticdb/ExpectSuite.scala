@@ -143,7 +143,7 @@ trait ExpectHelpers extends FunSuiteLike {
     if (!success) {
       println(out)
       println(err)
-      assert(success, "metap failed")
+      fail("metap failed")
     }
     assert(err.isEmpty)
     out
@@ -160,10 +160,15 @@ trait ExpectHelpers extends FunSuiteLike {
       val reporter = scala.meta.metacp.Reporter().withOut(out).withErr(err)
       Metacp.process(settings, reporter) match {
         case Some(Classpath(List(outPath))) => outPath
-        case other => sys.error(s"unexpected metacp result: $other")
+        case Some(other) => sys.error(s"unexpected metacp result: $other")
+        case None => null
       }
     }
-    assert(out.isEmpty)
+    if (outPath == null) {
+      println(out)
+      println(err)
+      fail("metacp failed")
+    }
     assert(err.isEmpty)
     outPath.toNIO
   }

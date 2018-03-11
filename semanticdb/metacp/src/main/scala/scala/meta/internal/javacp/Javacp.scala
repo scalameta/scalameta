@@ -7,6 +7,9 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
+import scala.meta.internal.semanticdb3.Scala._
+import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb3.Scala.{Names => n}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.{semanticdb3 => s}
@@ -50,7 +53,7 @@ object Javacp {
         name = name,
         tpe = tpe,
         annotations = sannotations(access),
-        accessibility = saccessibility(access, owner),
+        accessibility = saccessibility(access, symbol),
         owner = owner
       )
     }
@@ -63,23 +66,18 @@ object Javacp {
 
     val isTopLevelClass = !node.name.contains("$")
     val classOwner: String = if (isTopLevelClass) {
-      val parts = node.name.substring(0, node.name.lastIndexOf("/")).split("/").toList
-      ("_root_" :: parts).foldLeft("") {
-        case (owner, pkgName) =>
-          val pkgSymbol = {
-            if (owner == "_root_.") pkgName + "."
-            else owner + pkgName + "."
-          }
-          addInfo(
-            pkgSymbol,
-            k.PACKAGE,
-            pkgName,
-            None,
-            o.ACC_PUBLIC,
-            owner
-          )
-          pkgSymbol
+      val enclosingPackages = classSymbol.ownerChain.init
+      enclosingPackages.foreach { enclosingPackage =>
+        addInfo(
+          enclosingPackage,
+          k.PACKAGE,
+          enclosingPackage.desc.name,
+          None,
+          o.ACC_PUBLIC,
+          enclosingPackage.owner
+        )
       }
+      classSymbol.owner
     } else {
       ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
@@ -117,7 +115,7 @@ object Javacp {
         // Drop the constructor argument that holds the reference to the outer class.
         ()
       } else {
-        val fieldSymbol = classSymbol + field.name + "."
+        val fieldSymbol = Symbols.Global(classSymbol, d.Term(field.name))
         val fieldSignature = JavaTypeSignature.parse(
           if (field.signature == null) field.desc else field.signature,
           new FieldSignatureVisitor
@@ -140,31 +138,42 @@ object Javacp {
     // to recover the original mixed static/non-static member order in the classfile.
     node.methods.sort(ByStaticAccess)
 
-    // NOTE: this logic will soon change https://github.com/scalameta/scalameta/issues/1358
     val methodSignatures = node.methods.asScala.map { method: MethodNode =>
       val signature = JavaTypeSignature.parse(
         if (method.signature == null) method.desc else method.signature,
         new MethodSignatureVisitor
       )
-      MethodInfo(method, methodDescriptor(signature), signature)
+      val typeDescriptor = {
+        val paramTypeDescriptors = signature.params.map {
+          case t: BaseType => sname(t.name)
+          case t: ClassTypeSignature => sname(t.simpleClassTypeSignature.identifier)
+          case t: TypeVariableSignature => sname(t.identifier)
+          case _: ArrayTypeSignature => "Array"
+        }
+        paramTypeDescriptors.mkString(",")
+      }
+      MethodInfo(method, typeDescriptor, signature)
     }
 
     methodSignatures.foreach {
       case method: MethodInfo if method.node.name == "<clinit>" =>
         ()
       case method: MethodInfo =>
-        val synonyms = methodSignatures.filter { m =>
-          m.node.name == method.node.name &&
-          m.descriptor == method.descriptor
-        }
-        val suffix =
-          if (synonyms.lengthCompare(1) == 0) ""
-          else "+" + (1 + synonyms.indexWhere(_.signature eq method.signature))
         val isConstructor = method.node.name == "<init>"
-        val methodName =
-          if (isConstructor) "`" + method.node.name + "`"
-          else method.node.name
-        val methodSymbol = classSymbol + methodName + "(" + method.descriptor + suffix + ")" + "."
+        val methodName = if (isConstructor) n.Constructor else method.node.name
+        val methodDisambiguator = {
+          val synonyms = methodSignatures.filter { m =>
+            m.node.name == method.node.name &&
+            m.typeDescriptor == method.typeDescriptor
+          }
+          if (synonyms.lengthCompare(1) == 0) s"(${method.typeDescriptor})"
+          else {
+            val index = 1 + synonyms.indexWhere(_.signature eq method.signature)
+            s"(${method.typeDescriptor}+${index})"
+          }
+        }
+        val methodDescriptor = d.Method(method.node.name, methodDisambiguator)
+        val methodSymbol = Symbols.Global(classSymbol, methodDescriptor)
 
         val (methodScope, methodTypeParameters) = method.signature.typeParameters match {
           case Some(tp: TypeParameters) => addTypeParameters(tp, methodSymbol, classScope)
@@ -186,10 +195,10 @@ object Javacp {
         val parameterSymbols = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
             val paramName = {
-              if (method.node.parameters == null) "arg" + i
+              if (method.node.parameters == null) "param" + i
               else method.node.parameters.get(i).name
             }
-            val paramSymbol = methodSymbol + "(" + paramName + ")"
+            val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
             addInfo(
               paramSymbol,
               k.PARAMETER,
@@ -306,7 +315,7 @@ object Javacp {
     //           A extends Recursive <A, B>,
     //           B extends Recursive.Inner <A , B>>
     val infos = typeParameters.all.map { typeParameter: TypeParameter =>
-      val symbol = ownerSymbol + "[" + typeParameter.identifier + "]"
+      val symbol = Symbols.Global(ownerSymbol, d.TypeParameter(typeParameter.identifier))
       nextScope = nextScope.enter(typeParameter.identifier, symbol)
       TypeParameterInfo(typeParameter, symbol)
     }
@@ -342,17 +351,10 @@ object Javacp {
     )
   }
 
-  private def methodDescriptor(signature: MethodSignature): String =
-    signature.params.iterator
-      .map {
-        case t: BaseType => t.name
-        case t: ClassTypeSignature => sname(t.simpleClassTypeSignature.identifier)
-        case t: TypeVariableSignature => t.identifier
-        case _: ArrayTypeSignature => "Array"
-      }
-      .mkString(",")
-
-  private case class MethodInfo(node: MethodNode, descriptor: String, signature: MethodSignature)
+  private case class MethodInfo(
+      node: MethodNode,
+      typeDescriptor: String,
+      signature: MethodSignature)
 
   private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath = {
     (asmName + ".class").split("/").foldLeft(base) {
@@ -364,26 +366,56 @@ object Javacp {
     var i = asmName.length - 1
     while (i >= 0) {
       asmName.charAt(i) match {
-        case '$' | '/' => return asmName.substring(i + 1)
+        case '$' | '/' => return asmName.substring(i + 1).encoded
         case _ => i -= 1
       }
     }
-    throw new IllegalArgumentException(s"Missing $$ or / from symbol '$asmName'")
+    asmName
   }
 
-  private def ssym(asmName: String): String =
-    asmName.replace('$', '#').replace('/', '.') + "#"
+  private def ssym(asmName: String): String = {
+    var i = 0
+    var slash = false
+    val result = new StringBuilder
+    val part = new StringBuilder
+    def put(c: Char): Unit = {
+      part.append(c)
+    }
+    def flush(): Unit = {
+      result.append(part.toString.encoded)
+      part.clear()
+    }
+    while (i < asmName.length) {
+      val c = asmName.charAt(i)
+      if (c == '/') {
+        slash = true
+        flush()
+        result.append('.')
+      } else if (c == '$') {
+        flush()
+        result.append('#')
+      } else {
+        put(c)
+      }
+      i += 1
+    }
+    if (part.nonEmpty) {
+      flush()
+    }
+    result.append('#')
+    if (slash) result.toString
+    else Symbols.EmptyPackage + result.toString
+  }
 
-  private def saccessibility(access: Int, owner: String): Option[s.Accessibility] = {
+  private def saccessibility(access: Int, symbol: String): Option[s.Accessibility] = {
     def sacc(tag: s.Accessibility.Tag): Option[s.Accessibility] = Some(s.Accessibility(tag))
     val a = s.Accessibility.Tag
     if (access.hasFlag(o.ACC_PUBLIC)) sacc(a.PUBLIC)
     else if (access.hasFlag(o.ACC_PROTECTED)) sacc(a.PROTECTED)
     else if (access.hasFlag(o.ACC_PRIVATE)) sacc(a.PRIVATE)
     else {
-      Some(
-        s.Accessibility(tag = a.PRIVATE_WITHIN, symbol = owner.substring(0, owner.lastIndexOf('.')))
-      )
+      val within = symbol.ownerChain.reverse.tail.find(_.desc.isTerm).get
+      Some(s.Accessibility(tag = a.PRIVATE_WITHIN, symbol = within))
     }
   }
 
@@ -402,11 +434,11 @@ object Javacp {
   private def sproperties(access: Int): Int = {
     val p = s.SymbolInformation.Property
     var bits = 0
-    def sflip(sbit: Int) = bits ^= sbit
-    if (access.hasFlag(o.ACC_ABSTRACT)) sflip(p.ABSTRACT.value)
-    if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL.value)
-    if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC.value)
-    if (access.hasFlag(o.ACC_ENUM)) sflip(p.ENUM.value)
+    def sflip(p: s.SymbolInformation.Property) = bits ^= p.value
+    if (access.hasFlag(o.ACC_ABSTRACT)) sflip(p.ABSTRACT)
+    if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL)
+    if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC)
+    if (access.hasFlag(o.ACC_ENUM)) sflip(p.ENUM)
     bits
   }
 

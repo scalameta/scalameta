@@ -1222,7 +1222,7 @@ types.Test.Literal.
 +    declarations: "types.Test.Literal.bool."
 +    declarations: "types.Test.Literal.unit()."
 +    declarations: "types.Test.Literal.unit."
-+    declarations: "types.Test.Literal.javaEnum(<?>)."
++    declarations: "types.Test.Literal.javaEnum(?)."
 +    declarations: "types.Test.Literal.javaEnum."
 +    declarations: "types.Test.Literal.clazzOf()."
 +    declarations: "types.Test.Literal.clazzOf."
