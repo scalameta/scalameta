@@ -170,7 +170,7 @@ object Signature {
   final case class Method(name: String, disambiguator: String) extends Signature {
     @deprecated("Use `disambiguator` instead.", "3.3.0")
     def jvmSignature: String = disambiguator
-    override def syntax = s"${name.encoded}${disambiguator}."
+    override def syntax = d.Method(name, disambiguator).toString
     override def structure = s"""Signature.Method("$name", "$disambiguator")"""
     override def toString = syntax
   }

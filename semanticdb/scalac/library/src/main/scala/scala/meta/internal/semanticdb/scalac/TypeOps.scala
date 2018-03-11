@@ -2,7 +2,6 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.Scala.{TypeDescriptor => td}
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.internal.{Flags => gf}
@@ -200,15 +199,22 @@ trait TypeOps { self: DatabaseOps =>
           true
       }
     }
-    def descriptor: TypeDescriptor = {
+    def descriptor: String = {
       def paramDescriptors = gtpe.paramss.flatten.map(_.info.descriptor)
       gtpe match {
-        case ByNameType(_) => td.Other
-        case RepeatedType(_) => td.Other
-        case g.TypeRef(_, gsym, _) => td.Ref(gsym.name.toSemantic)
-        case _: g.NullaryMethodType | _: g.MethodType => td.Method(paramDescriptors)
+        case ByNameType(gtpe) => "=>" + gtpe.descriptor
+        case RepeatedType(gtpe) => gtpe.descriptor + "*"
+        case g.TypeRef(_, gsym, _) => gsym.name.toSemantic.encoded
+        case g.SingleType(_, _) => ".type"
+        case g.ThisType(_) => ".type"
+        case g.ConstantType(g.Constant(_: g.Type)) => "Class"
+        case g.ConstantType(_) => ".type"
+        case g.RefinedType(_, _) => "{}"
+        case g.AnnotatedType(_, gtpe) => gtpe.descriptor
+        case g.ExistentialType(_, gtpe) => gtpe.descriptor
+        case _: g.NullaryMethodType | _: g.MethodType => paramDescriptors.mkString(",")
         case g.PolyType(_, gtpe) => gtpe.descriptor
-        case other => td.Other
+        case other => "?"
       }
     }
   }

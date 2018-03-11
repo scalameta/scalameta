@@ -763,31 +763,31 @@ example.Methods#m10(AList).(x) => param x: Methods.this.AList[T]
   Methods => example.Methods#
   AList => example.Methods#AList#
   T => example.Methods#[T]
-example.Methods#m11(?+1). => method m11: (x: Predef.type): Nothing
-  x => example.Methods#m11(?+1).(x)
+example.Methods#m11(.type+1). => method m11: (x: Predef.type): Nothing
+  x => example.Methods#m11(.type+1).(x)
   Predef => scala.Predef.
   Nothing => scala.Nothing#
-example.Methods#m11(?+1).(x) => param x: Predef.type
+example.Methods#m11(.type+1).(x) => param x: Predef.type
   Predef => scala.Predef.
-example.Methods#m11(?+2). => method m11: (x: Example.type): Nothing
-  x => example.Methods#m11(?+2).(x)
+example.Methods#m11(.type+2). => method m11: (x: Example.type): Nothing
+  x => example.Methods#m11(.type+2).(x)
   Example => example.Example.
   Nothing => scala.Nothing#
-example.Methods#m11(?+2).(x) => param x: Example.type
+example.Methods#m11(.type+2).(x) => param x: Example.type
   Example => example.Example.
-example.Methods#m12a(?). => method m12a: (x: AnyRef {}): Nothing
-  x => example.Methods#m12a(?).(x)
+example.Methods#m12a({}). => method m12a: (x: AnyRef {}): Nothing
+  x => example.Methods#m12a({}).(x)
   AnyRef => scala.AnyRef#
   Nothing => scala.Nothing#
-example.Methods#m12a(?).(x) => param x: AnyRef {}
+example.Methods#m12a({}).(x) => param x: AnyRef {}
   AnyRef => scala.AnyRef#
-example.Methods#m12b(?). => method m12b: (x: AnyRef { val method x: Int }): Nothing
-  x => example.Methods#m12b(?).(x)
+example.Methods#m12b({}). => method m12b: (x: AnyRef { val method x: Int }): Nothing
+  x => example.Methods#m12b({}).(x)
   AnyRef => scala.AnyRef#
   x => example.Methods#$anon#x().
   Int => scala.Int#
   Nothing => scala.Nothing#
-example.Methods#m12b(?).(x) => param x: AnyRef { val method x: Int }
+example.Methods#m12b({}).(x) => param x: AnyRef { val method x: Int }
   AnyRef => scala.AnyRef#
   x => example.Methods#$anon#x().
   Int => scala.Int#
@@ -797,29 +797,29 @@ example.Methods#m13(Int). => method m13: (x: Int): Nothing
   Nothing => scala.Nothing#
 example.Methods#m13(Int).(x) => param x: Int
   Int => scala.Int#
-example.Methods#m14(?). => method m14: (x: T forSome { type T >: Nothing <: Any }): Nothing
-  x => example.Methods#m14(?).(x)
-  T => example.Methods#m14(?).(x)T#
+example.Methods#m14(T). => method m14: (x: T forSome { type T >: Nothing <: Any }): Nothing
+  x => example.Methods#m14(T).(x)
+  T => example.Methods#m14(T).(x)T#
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#m14(?).(x) => param x: T forSome { type T >: Nothing <: Any }
-  T => example.Methods#m14(?).(x)T#
+example.Methods#m14(T).(x) => param x: T forSome { type T >: Nothing <: Any }
+  T => example.Methods#m14(T).(x)T#
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#m14(?).(x)T# => abstract type T: >: Nothing <: Any
+example.Methods#m14(T).(x)T# => abstract type T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#m15(?). => method m15: (x: => Int): Nothing
-  x => example.Methods#m15(?).(x)
+example.Methods#m15(=>Int). => method m15: (x: => Int): Nothing
+  x => example.Methods#m15(=>Int).(x)
   Int => scala.Int#
   Nothing => scala.Nothing#
-example.Methods#m15(?).(x) => param x: => Int
+example.Methods#m15(=>Int).(x) => param x: => Int
   Int => scala.Int#
-example.Methods#m16(?). => method m16: (x: Int*): Nothing
-  x => example.Methods#m16(?).(x)
+example.Methods#m16(Int*). => method m16: (x: Int*): Nothing
+  x => example.Methods#m16(Int*).(x)
   Int => scala.Int#
   Nothing => scala.Nothing#
-example.Methods#m16(?).(x) => param x: Int*
+example.Methods#m16(Int*).(x) => param x: Int*
   Int => scala.Int#
 example.Methods#m2(). => method m2: (): Nothing
   Nothing => scala.Nothing#
@@ -1482,10 +1482,10 @@ types.Test.C#$anon#k(). => abstract method k: : Int
   Int => scala.Int#
 types.Test.C#ByNameType. => final object ByNameType.{+2 decls}
   extends AnyRef
-types.Test.C#ByNameType.m1(?). => method m1: (x: => Int): Int
-  x => types.Test.C#ByNameType.m1(?).(x)
+types.Test.C#ByNameType.m1(=>Int). => method m1: (x: => Int): Int
+  x => types.Test.C#ByNameType.m1(=>Int).(x)
   Int => scala.Int#
-types.Test.C#ByNameType.m1(?).(x) => param x: => Int
+types.Test.C#ByNameType.m1(=>Int).(x) => param x: => Int
   Int => scala.Int#
 types.Test.C#ClassInfoType1. => final object ClassInfoType1.{+1 decls}
   extends AnyRef
@@ -1530,12 +1530,12 @@ types.Test.C#RepeatedType# => case class RepeatedType.{+12 decls}
   extends AnyRef
   extends Product
   extends Serializable
-types.Test.C#RepeatedType#`<init>`(?). => primary ctor <init>: (val s: String*): C.this.RepeatedType
-  s => types.Test.C#RepeatedType#`<init>`(?).(s)
+types.Test.C#RepeatedType#`<init>`(String*). => primary ctor <init>: (val s: String*): C.this.RepeatedType
+  s => types.Test.C#RepeatedType#`<init>`(String*).(s)
   String => scala.Predef.String#
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
-types.Test.C#RepeatedType#`<init>`(?).(s) => val param s: String*
+types.Test.C#RepeatedType#`<init>`(String*).(s) => val param s: String*
   String => scala.Predef.String#
 types.Test.C#RepeatedType#canEqual(Any). => method canEqual: (x$1: Any): Boolean
   x$1 => types.Test.C#RepeatedType#canEqual(Any).(x$1)
@@ -1551,10 +1551,10 @@ types.Test.C#RepeatedType#equals(Any).(x$1) => param x$1: Any
   Any => scala.Any#
 types.Test.C#RepeatedType#hashCode(). => method hashCode: (): Int
   Int => scala.Int#
-types.Test.C#RepeatedType#m1(?). => method m1: (x: Int*): Int
-  x => types.Test.C#RepeatedType#m1(?).(x)
+types.Test.C#RepeatedType#m1(Int*). => method m1: (x: Int*): Int
+  x => types.Test.C#RepeatedType#m1(Int*).(x)
   Int => scala.Int#
-types.Test.C#RepeatedType#m1(?).(x) => param x: Int*
+types.Test.C#RepeatedType#m1(Int*).(x) => param x: Int*
   Int => scala.Int#
 types.Test.C#RepeatedType#productArity(). => method productArity: : Int
   Int => scala.Int#
@@ -1578,12 +1578,12 @@ types.Test.C#RepeatedType#toString(). => method toString: (): String
 types.Test.C#RepeatedType. => final object RepeatedType.{+4 decls}
   extends AbstractFunction1[String*, C.this.RepeatedType]
   extends Serializable
-types.Test.C#RepeatedType.apply(?). => case method apply: (s: String*): C.this.RepeatedType
-  s => types.Test.C#RepeatedType.apply(?).(s)
+types.Test.C#RepeatedType.apply(String*). => case method apply: (s: String*): C.this.RepeatedType
+  s => types.Test.C#RepeatedType.apply(String*).(s)
   String => scala.Predef.String#
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
-types.Test.C#RepeatedType.apply(?).(s) => param s: String*
+types.Test.C#RepeatedType.apply(String*).(s) => param s: String*
   String => scala.Predef.String#
 types.Test.C#RepeatedType.toString(). => final method toString: (): String
   String => java.lang.String#

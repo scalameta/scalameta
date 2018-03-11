@@ -915,12 +915,7 @@ which Scala definitions, what their metadata is, etc). See
   * For `FIELD`, `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
     concatenation of its encoded name and a dot (`.`).
   * For `METHOD`, `CONSTRUCTOR`, or `MACRO`,
-    concatenation of its encoded name, a left parenthesis (`(`),
-    its type descriptor, a right parenthesis (`)`) and a dot (`.`).
-    In the case when multiple methods have the same name and type descriptor,
-    the type descriptor is appended with `+N`, with `+1` going to the method
-    that is defined first in the source code, `+2` going to the method that
-    is defined second, etc.
+    concatenation of its encoded name, a disambiguator and a dot (`.`).
   * For `TYPE`, `CLASS` or `TRAIT`, concatenation of its
     encoded name and a pound sign (`#`).
   * For `PARAMETER`, concatenation of a left parenthesis (`(`), its
@@ -930,6 +925,14 @@ which Scala definitions, what their metadata is, etc). See
     encoded name and a right bracket (`]`).
   * See [SymbolInformation](#scala-symbolinformation) for details on
     which Scala definitions are modelled by which symbols.
+
+**Disambiguator** is:
+  * Concatenation of a left parenthesis (`(`), a type descriptor
+    and a right parenthesis (`)`).
+    In the case when multiple definitions have the same kind, name and
+    type descriptor, the type descriptor is appended with `+N`,
+    with `+1` going to the method that is defined first in the source code,
+    `+2` going to the method that is defined second, etc.
 
 **Encoded name** is:
   * If name is a Java identifier [\[22\]][22], the name itself.
@@ -948,9 +951,19 @@ which Scala definitions, what their metadata is, etc). See
 **Type descriptor** is:
 
   * For `TYPE_REF`, encoded name of `symbol`.
+  * For `SINGLETON_TYPE`, `.type`.
+  * For `STRUCTURAL_TYPE`, `{}`.
+  * For `WITH_TYPE`, `{}`.
+  * For `ANNOTATED_TYPE`, type descriptor of `tpe`.
+  * For `EXISTENTIAL_TYPE`, type descriptor of `tpe`.
+  * For `UNIVERSAL_TYPE`, type descriptor of `tpe`.
   * For `METHOD_TYPE`, concatenation of type descriptors of
     its parameter types interspersed with a comma (`,`).
-  * For other type, a question mark (`?`).
+  * For `BY_NAME_TYPE`, concatenation of the arrow sign (`=>`) and
+    the type descriptor of `tpe`.
+  * For `REPEATED_TYPE`, concatenation of type descriptor of `tpe`
+    and a star (`*`).
+  * For other type, `?`.
   * See [Type](#scala-type) for details on
     which Scala types are modelled by which `Type` entities.
 

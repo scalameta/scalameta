@@ -11,7 +11,6 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb3.Scala.{Names => n}
-import scala.meta.internal.semanticdb3.Scala.{TypeDescriptor => td}
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.NameTransformer
@@ -405,7 +404,7 @@ object Scalacp {
           false
       }
     }
-    def typeDescriptor: TypeDescriptor = {
+    def typeDescriptor: String = {
       try {
         sym match {
           case sym: SymbolInfoSymbol => sym.infoType.descriptor
@@ -419,7 +418,7 @@ object Scalacp {
           // https://github.com/scalameta/scalameta/issues/1283.
           // It seems that Scalap doesn't support all the signatures that
           // Scalac can emit.
-          td.Other
+          "?"
       }
     }
     def descriptor: Descriptor = {
@@ -433,11 +432,14 @@ object Scalacp {
             kin.name == sym.name &&
             kin.typeDescriptor == typeDescriptor
           }
-          val index = {
-            if (synonyms.length == 1) 0
-            else 1 + synonyms.indexOf(sym)
+          val disambiguator = {
+            if (synonyms.length == 1) s"(${typeDescriptor})"
+            else {
+              val index = 1 + synonyms.indexOf(sym)
+              s"(${typeDescriptor}+${index})"
+            }
           }
-          d.Method(sname(sym), typeDescriptor, index)
+          d.Method(sname(sym), disambiguator)
         case k.TYPE | k.CLASS | k.TRAIT =>
           d.Type(sname(sym))
         case k.PARAMETER =>
@@ -489,15 +491,22 @@ object Scalacp {
         case _ => tpe
       }
     }
-    def descriptor: TypeDescriptor = {
+    def descriptor: String = {
       def paramDescriptors = tpe.paramss.flatten.map(_.infoType.descriptor)
       tpe match {
-        case ByNameType(_) => td.Other
-        case RepeatedType(_) => td.Other
-        case TypeRefType(_, sym, _) => td.Ref(sname(sym))
-        case _: NullaryMethodType | _: MethodType => td.Method(paramDescriptors)
+        case ByNameType(tpe) => "=>" + tpe.descriptor
+        case RepeatedType(tpe) => tpe.descriptor + "*"
+        case TypeRefType(_, sym, _) => sname(sym).encoded
+        case SingleType(_, _) => ".type"
+        case ThisType(_) => ".type"
+        case ConstantType(_: Type) => "Class"
+        case ConstantType(_) => ".type"
+        case RefinedType(_, _) => "{}"
+        case AnnotatedType(tpe, _) => tpe.descriptor
+        case ExistentialType(tpe, _) => tpe.descriptor
+        case _: NullaryMethodType | _: MethodType => paramDescriptors.mkString(",")
         case PolyType(tpe, _) => tpe.descriptor
-        case other => td.Other
+        case other => "?"
       }
     }
   }

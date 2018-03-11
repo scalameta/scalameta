@@ -625,39 +625,39 @@ Names:
 [494..499): AList => example.Methods#AList#
 [500..501): T => example.Methods#[T]
 [506..509): ??? => scala.Predef.`???`().
-[516..519): m11 <= example.Methods#m11(?+1).
-[520..521): x <= example.Methods#m11(?+1).(x)
+[516..519): m11 <= example.Methods#m11(.type+1).
+[520..521): x <= example.Methods#m11(.type+1).(x)
 [523..529): Predef => scala.Predef.
 [538..541): ??? => scala.Predef.`???`().
-[548..551): m11 <= example.Methods#m11(?+2).
-[552..553): x <= example.Methods#m11(?+2).(x)
+[548..551): m11 <= example.Methods#m11(.type+2).
+[552..553): x <= example.Methods#m11(.type+2).(x)
 [555..562): Example => example.Example.
 [571..574): ??? => scala.Predef.`???`().
-[581..585): m12a <= example.Methods#m12a(?).
-[586..587): x <= example.Methods#m12a(?).(x)
+[581..585): m12a <= example.Methods#m12a({}).
+[586..587): x <= example.Methods#m12a({}).(x)
 [595..598): ??? => scala.Predef.`???`().
-[605..609): m12b <= example.Methods#m12b(?).
-[610..611): x <= example.Methods#m12b(?).(x)
+[605..609): m12b <= example.Methods#m12b({}).
+[610..611): x <= example.Methods#m12b({}).(x)
 [619..620): x <= example.Methods#$anon#x().
 [622..625): Int => scala.Int#
 [631..634): ??? => scala.Predef.`???`().
-[641..644): m13 <= example.Methods#m13(?).
-[645..646): x <= example.Methods#m13(?).(x)
+[641..644): m13 <= example.Methods#m13(Int).
+[645..646): x <= example.Methods#m13(Int).(x)
 [648..651): Int => scala.Int#
 [653..662): unchecked => scala.unchecked#
 [662..662):  => scala.unchecked#`<init>`().
 [666..669): ??? => scala.Predef.`???`().
-[676..679): m14 <= example.Methods#m14(?).
-[680..681): x <= example.Methods#m14(?).(x)
-[683..684): T => example.Methods#m14(?).(x)T#
-[700..701): T <= example.Methods#m14(?).(x)T#
+[676..679): m14 <= example.Methods#m14(T).
+[680..681): x <= example.Methods#m14(T).(x)
+[683..684): T => example.Methods#m14(T).(x)T#
+[700..701): T <= example.Methods#m14(T).(x)T#
 [707..710): ??? => scala.Predef.`???`().
-[717..720): m15 <= example.Methods#m15(?).
-[721..722): x <= example.Methods#m15(?).(x)
+[717..720): m15 <= example.Methods#m15(=>Int).
+[721..722): x <= example.Methods#m15(=>Int).(x)
 [727..730): Int => scala.Int#
 [734..737): ??? => scala.Predef.`???`().
-[744..747): m16 <= example.Methods#m16(?).
-[748..749): x <= example.Methods#m16(?).(x)
+[744..747): m16 <= example.Methods#m16(Int*).
+[748..749): x <= example.Methods#m16(Int*).(x)
 [751..754): Int => scala.`<repeated>`#
 [759..762): ??? => scala.Predef.`???`().
 [772..784): MethodUsages <= example.MethodUsages#
@@ -709,23 +709,23 @@ Names:
 [1002..1003): m => example.MethodUsages#m().
 [1004..1007): m10 => example.Methods#m10(AList).
 [1016..1017): m => example.MethodUsages#m().
-[1018..1021): m11 => example.Methods#m11(?+1).
+[1018..1021): m11 => example.Methods#m11(.type+1).
 [1022..1028): Predef => scala.Predef.
 [1032..1033): m => example.MethodUsages#m().
-[1034..1037): m11 => example.Methods#m11(?+2).
+[1034..1037): m11 => example.Methods#m11(.type+2).
 [1038..1045): Example => example.Example.
 [1049..1050): m => example.MethodUsages#m().
-[1051..1055): m12a => example.Methods#m12a(?).
+[1051..1055): m12a => example.Methods#m12a({}).
 [1064..1065): m => example.MethodUsages#m().
-[1066..1070): m12b => example.Methods#m12b(?).
+[1066..1070): m12b => example.Methods#m12b({}).
 [1079..1080): m => example.MethodUsages#m().
-[1081..1084): m13 => example.Methods#m13(?).
+[1081..1084): m13 => example.Methods#m13(Int).
 [1090..1091): m => example.MethodUsages#m().
-[1092..1095): m14 => example.Methods#m14(?).
+[1092..1095): m14 => example.Methods#m14(T).
 [1104..1105): m => example.MethodUsages#m().
-[1106..1109): m15 => example.Methods#m15(?).
+[1106..1109): m15 => example.Methods#m15(=>Int).
 [1115..1116): m => example.MethodUsages#m().
-[1117..1120): m16 => example.Methods#m16(?).
+[1117..1120): m16 => example.Methods#m16(Int*).
 
 Messages:
 [683..703): [warning] the existential type T forSome { type T }, which cannot be expressed by wildcards,  should be enabled
@@ -784,46 +784,46 @@ example.Methods#m10(AList).(x) => param x: Methods.this.AList[T]
   [0..7): Methods => example.Methods#
   [13..18): AList => example.Methods#AList#
   [19..20): T => example.Methods#[T]
-example.Methods#m11(?+1). => method m11: (x: Predef.type): Nothing
+example.Methods#m11(.type+1). => method m11: (x: Predef.type): Nothing
   [4..10): Predef => scala.Predef.
   [18..25): Nothing => scala.Nothing#
-example.Methods#m11(?+1).(x) => param x: Predef.type
+example.Methods#m11(.type+1).(x) => param x: Predef.type
   [0..6): Predef => scala.Predef.
-example.Methods#m11(?+2). => method m11: (x: Example.type): Nothing
+example.Methods#m11(.type+2). => method m11: (x: Example.type): Nothing
   [4..11): Example => example.Example.
   [19..26): Nothing => scala.Nothing#
-example.Methods#m11(?+2).(x) => param x: Example.type
+example.Methods#m11(.type+2).(x) => param x: Example.type
   [0..7): Example => example.Example.
-example.Methods#m12a(?). => method m12a: (x: AnyRef{}): Nothing
+example.Methods#m12a({}). => method m12a: (x: AnyRef{}): Nothing
   [4..10): AnyRef => scala.AnyRef#
   [15..22): Nothing => scala.Nothing#
-example.Methods#m12a(?).(x) => param x: AnyRef{}
+example.Methods#m12a({}).(x) => param x: AnyRef{}
   [0..6): AnyRef => scala.AnyRef#
-example.Methods#m12b(?). => method m12b: (x: AnyRef{val x: Int}): Nothing
+example.Methods#m12b({}). => method m12b: (x: AnyRef{val x: Int}): Nothing
   [4..10): AnyRef => scala.AnyRef#
   [15..16): x => example.Methods#$anon#x().
   [25..32): Nothing => scala.Nothing#
-example.Methods#m12b(?).(x) => param x: AnyRef{val x: Int}
+example.Methods#m12b({}).(x) => param x: AnyRef{val x: Int}
   [0..6): AnyRef => scala.AnyRef#
   [11..12): x => example.Methods#$anon#x().
-example.Methods#m13(?). => method m13: (x: Int): Nothing
+example.Methods#m13(Int). => method m13: (x: Int): Nothing
   [4..7): Int => scala.Int#
   [10..17): Nothing => scala.Nothing#
-example.Methods#m13(?).(x) => param x: Int
+example.Methods#m13(Int).(x) => param x: Int
   [0..3): Int => scala.Int#
-example.Methods#m14(?). => method m14: (x: T forSome { type T }): Nothing
+example.Methods#m14(T). => method m14: (x: T forSome { type T }): Nothing
   [27..34): Nothing => scala.Nothing#
-example.Methods#m14(?).(x) => param x: T forSome { type T }
-example.Methods#m14(?).(x)T# => abstract type T
-example.Methods#m15(?). => method m15: (x: =>Int): Nothing
+example.Methods#m14(T).(x) => param x: T forSome { type T }
+example.Methods#m14(T).(x)T# => abstract type T
+example.Methods#m15(=>Int). => method m15: (x: =>Int): Nothing
   [6..9): Int => scala.Int#
   [12..19): Nothing => scala.Nothing#
-example.Methods#m15(?).(x) => param x: =>Int
+example.Methods#m15(=>Int).(x) => param x: =>Int
   [2..5): Int => scala.Int#
-example.Methods#m16(?). => method m16: (x: Int*): Nothing
+example.Methods#m16(Int*). => method m16: (x: Int*): Nothing
   [4..7): Int => scala.Int#
   [11..18): Nothing => scala.Nothing#
-example.Methods#m16(?).(x) => param x: Int*
+example.Methods#m16(Int*).(x) => param x: Int*
   [0..3): Int => scala.Int#
 example.Methods#m2(). => method m2: (): Nothing
   [4..11): Nothing => scala.Nothing#
@@ -1028,7 +1028,7 @@ scala.collection.immutable.StringLike#stripPrefix(String). => method stripPrefix
 Synthetics:
 [41..41): *.apply[Int]
   [0..1): * => _star_.
-  [2..7): apply => scala.collection.immutable.List.apply(?).
+  [2..7): apply => scala.collection.immutable.List.apply(A*).
   [8..11): Int => scala.Int#
 [48..48): *[Int, List[Int]]
   [0..1): * => _star_.
@@ -1232,17 +1232,17 @@ Names:
 [1497..1498): T => types.Test.C#MethodType.m6(T).[T]
 [1501..1504): ??? => scala.Predef.`???`().
 [1523..1533): ByNameType <= types.Test.C#ByNameType.
-[1546..1548): m1 <= types.Test.C#ByNameType.m1(?).
-[1549..1550): x <= types.Test.C#ByNameType.m1(?).(x)
+[1546..1548): m1 <= types.Test.C#ByNameType.m1(=>Int).
+[1549..1550): x <= types.Test.C#ByNameType.m1(=>Int).(x)
 [1555..1558): Int => scala.Int#
 [1561..1564): Int => scala.Int#
 [1567..1570): ??? => scala.Predef.`???`().
 [1593..1605): RepeatedType <= types.Test.C#RepeatedType#
-[1605..1605):  <= types.Test.C#RepeatedType#`<init>`(?).
+[1605..1605):  <= types.Test.C#RepeatedType#`<init>`(String*).
 [1606..1607): s <= types.Test.C#RepeatedType#s().
 [1609..1615): String => scala.`<repeated>`#
-[1630..1632): m1 <= types.Test.C#RepeatedType#m1(?).
-[1633..1634): x <= types.Test.C#RepeatedType#m1(?).(x)
+[1630..1632): m1 <= types.Test.C#RepeatedType#m1(Int*).
+[1633..1634): x <= types.Test.C#RepeatedType#m1(Int*).(x)
 [1636..1639): Int => scala.`<repeated>`#
 [1643..1646): Int => scala.Int#
 [1649..1650): s => types.Test.C#RepeatedType#s().
@@ -1360,10 +1360,10 @@ types.Test.C#$anon#L#[T] => typeparam T
 types.Test.C#$anon#k(). => abstract method k: Int
   [0..3): Int => scala.Int#
 types.Test.C#ByNameType. => final object ByNameType
-types.Test.C#ByNameType.m1(?). => method m1: (x: =>Int): Int
+types.Test.C#ByNameType.m1(=>Int). => method m1: (x: =>Int): Int
   [6..9): Int => scala.Int#
   [12..15): Int => scala.Int#
-types.Test.C#ByNameType.m1(?).(x) => param x: =>Int
+types.Test.C#ByNameType.m1(=>Int).(x) => param x: =>Int
   [2..5): Int => scala.Int#
 types.Test.C#ClassInfoType1. => final object ClassInfoType1
 types.Test.C#ClassInfoType2# => class ClassInfoType2
@@ -1395,16 +1395,16 @@ types.Test.C#MethodType.x1(). => method x1: Int
 types.Test.C#MethodType.x2(). => method x2: Int
   [0..3): Int => scala.Int#
 types.Test.C#RepeatedType# => case class RepeatedType
-types.Test.C#RepeatedType#`<init>`(?). => primary ctor <init>: (s: String*): C.this.RepeatedType
+types.Test.C#RepeatedType#`<init>`(String*). => primary ctor <init>: (s: String*): C.this.RepeatedType
   [4..10): String => scala.Predef.String#
   [14..15): C => types.Test.C#
   [21..33): RepeatedType => types.Test.C#RepeatedType#
-types.Test.C#RepeatedType#`<init>`(?).(s) => val param s: String*
+types.Test.C#RepeatedType#`<init>`(String*).(s) => val param s: String*
   [0..6): String => scala.Predef.String#
-types.Test.C#RepeatedType#m1(?). => method m1: (x: Int*): Int
+types.Test.C#RepeatedType#m1(Int*). => method m1: (x: Int*): Int
   [4..7): Int => scala.Int#
   [11..14): Int => scala.Int#
-types.Test.C#RepeatedType#m1(?).(x) => param x: Int*
+types.Test.C#RepeatedType#m1(Int*).(x) => param x: Int*
   [0..3): Int => scala.Int#
 types.Test.C#RepeatedType#s(). => val method s: String*
   [0..6): String => scala.Predef.String#

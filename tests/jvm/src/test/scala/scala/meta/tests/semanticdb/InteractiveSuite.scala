@@ -68,7 +68,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Synthetics:
       |[79..79): *.apply[Nothing]
       |  [0..1): * => _star_.
-      |  [2..7): apply => scala.collection.immutable.List.apply(?).
+      |  [2..7): apply => scala.collection.immutable.List.apply(A*).
       |  [8..15): Nothing => scala.Nothing#
       |[84..85): scala.Predef.any2stringadd[List[Nothing]](*)
       |  [27..31): List => scala.collection.immutable.List#

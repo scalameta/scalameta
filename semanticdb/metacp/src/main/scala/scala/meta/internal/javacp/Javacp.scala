@@ -10,7 +10,6 @@ import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb3.Scala.{Names => n}
-import scala.meta.internal.semanticdb3.Scala.{TypeDescriptor => td}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.{semanticdb3 => s}
@@ -146,12 +145,12 @@ object Javacp {
       )
       val typeDescriptor = {
         val paramTypeDescriptors = signature.params.map {
-          case t: BaseType => td.Ref(t.name)
-          case t: ClassTypeSignature => td.Ref(sname(t.simpleClassTypeSignature.identifier))
-          case t: TypeVariableSignature => td.Ref(t.identifier)
-          case _: ArrayTypeSignature => td.Ref("Array")
+          case t: BaseType => sname(t.name)
+          case t: ClassTypeSignature => sname(t.simpleClassTypeSignature.identifier)
+          case t: TypeVariableSignature => sname(t.identifier)
+          case _: ArrayTypeSignature => "Array"
         }
-        td.Method(paramTypeDescriptors)
+        paramTypeDescriptors.mkString(",")
       }
       MethodInfo(method, typeDescriptor, signature)
     }
@@ -162,14 +161,18 @@ object Javacp {
       case method: MethodInfo =>
         val isConstructor = method.node.name == "<init>"
         val methodName = if (isConstructor) n.Constructor else method.node.name
-        val synonyms = methodSignatures.filter { m =>
-          m.node.name == method.node.name &&
-          m.typeDescriptor == method.typeDescriptor
+        val methodDisambiguator = {
+          val synonyms = methodSignatures.filter { m =>
+            m.node.name == method.node.name &&
+            m.typeDescriptor == method.typeDescriptor
+          }
+          if (synonyms.lengthCompare(1) == 0) s"(${method.typeDescriptor})"
+          else {
+            val index = 1 + synonyms.indexWhere(_.signature eq method.signature)
+            s"(${method.typeDescriptor}+${index})"
+          }
         }
-        val index =
-          if (synonyms.lengthCompare(1) == 0) 0
-          else 1 + synonyms.indexWhere(_.signature eq method.signature)
-        val methodDescriptor = d.Method(method.node.name, method.typeDescriptor, index)
+        val methodDescriptor = d.Method(method.node.name, methodDisambiguator)
         val methodSymbol = Symbols.Global(classSymbol, methodDescriptor)
 
         val (methodScope, methodTypeParameters) = method.signature.typeParameters match {
@@ -350,7 +353,7 @@ object Javacp {
 
   private case class MethodInfo(
       node: MethodNode,
-      typeDescriptor: TypeDescriptor,
+      typeDescriptor: String,
       signature: MethodSignature)
 
   private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath = {
@@ -363,7 +366,7 @@ object Javacp {
     var i = asmName.length - 1
     while (i >= 0) {
       asmName.charAt(i) match {
-        case '$' | '/' => return asmName.substring(i + 1)
+        case '$' | '/' => return asmName.substring(i + 1).encoded
         case _ => i -= 1
       }
     }

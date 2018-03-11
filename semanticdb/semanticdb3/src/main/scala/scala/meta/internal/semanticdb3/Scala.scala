@@ -4,7 +4,6 @@ import scala.annotation.tailrec
 import scala.compat.Platform.EOL
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb3.Scala.{Names => n}
-import scala.meta.internal.semanticdb3.Scala.{TypeDescriptor => td}
 
 // NOTE: This API is not meant to be the only true way of interacting with symbols.
 //
@@ -78,8 +77,7 @@ object Scala {
       this match {
         case d.None => sys.error("unsupported descriptor")
         case d.Term(name) => s"${name.encoded}."
-        case d.Method(name, tpe, 0) => s"${name.encoded}(${tpe})."
-        case d.Method(name, tpe, n) => s"${name.encoded}(${tpe}+${n})."
+        case d.Method(name, disambiguator) => s"${name.encoded}${disambiguator}."
         case d.Type(name) => s"${name.encoded}#"
         case d.Parameter(name) => s"(${name.encoded})"
         case d.TypeParameter(name) => s"[${name.encoded}]"
@@ -89,7 +87,7 @@ object Scala {
   object Descriptor {
     final case object None extends Descriptor { def name: String = n.None }
     final case class Term(name: String) extends Descriptor
-    final case class Method(name: String, tpe: TypeDescriptor, index: Int) extends Descriptor
+    final case class Method(name: String, disambiguator: String) extends Descriptor
     final case class Type(name: String) extends Descriptor
     final case class Parameter(name: String) extends Descriptor
     final case class TypeParameter(name: String) extends Descriptor
@@ -121,21 +119,6 @@ object Scala {
     val Anonymous: String = "_"
   }
 
-  sealed trait TypeDescriptor {
-    override def toString: String = {
-      this match {
-        case td.Ref(name) => name.encoded
-        case td.Method(params) => params.mkString(",")
-        case td.Other => "?"
-      }
-    }
-  }
-  object TypeDescriptor {
-    final case class Ref(name: String) extends TypeDescriptor
-    final case class Method(params: List[TypeDescriptor]) extends TypeDescriptor
-    final case object Other extends TypeDescriptor
-  }
-
   private class DescriptorParser(s: String) {
     var i = s.length
     def fail() = {
@@ -164,65 +147,34 @@ object Scala {
     }
 
     def parseName(): String = {
-      val buf = new StringBuilder()
       if (currChar == '`') {
-        while (readChar() != '`') buf += currChar
+        val end = i
+        while (readChar() != '`') {}
         readChar()
+        s.substring(i + 2, end)
       } else {
+        val end = i + 1
         if (!Character.isJavaIdentifierPart(currChar)) fail()
-        buf += currChar
-        while (Character.isJavaIdentifierPart(readChar())) {
-          if (currChar == BOF) return buf.reverse.toString
-          buf += currChar
-        }
+        while (Character.isJavaIdentifierPart(readChar()) && currChar != BOF) {}
+        s.substring(i + 1, end)
       }
-      buf.reverse.toString
     }
 
-    def parseDisambiguator(): (TypeDescriptor, Int) = {
-      def merge(typeDesc1: TypeDescriptor, typeDesc2: TypeDescriptor): TypeDescriptor = {
-        typeDesc2 match {
-          case null => typeDesc1
-          case td.Method(typeDescs2) => td.Method(typeDesc1 +: typeDescs2)
-          case _ => td.Method(typeDesc1 +: List(typeDesc2))
-        }
-      }
-      @tailrec def loop(typeDesc: TypeDescriptor, index: Int): (TypeDescriptor, Int) = {
-        if (currChar == '(') {
-          if (typeDesc != null) (typeDesc, index)
-          else (td.Method(Nil), index)
-        } else if (currChar == ',') {
-          readChar()
-          loop(typeDesc, index)
-        } else if (currChar == '?') {
-          loop(merge(td.Other, typeDesc), index)
-        } else {
-          val backtick = currChar == '`'
-          val name = parseName()
-          if (currChar == '+') {
-            if (!backtick && index == 0) {
-              readChar()
-              loop(typeDesc, name.toInt)
-            } else {
-              fail()
-            }
-          } else {
-            loop(merge(td.Ref(name), typeDesc), index)
-          }
-        }
-      }
-      loop(null, 0)
+    def parseDisambiguator(): String = {
+      val end = i + 1
+      if (currChar != ')') fail()
+      while (readChar() != '(') {}
+      readChar()
+      s.substring(i + 1, end)
     }
 
     def parseDescriptor(): Descriptor = {
       if (currChar == '.') {
         readChar()
         if (currChar == ')') {
-          readChar()
-          val (typeDesc, index) = parseDisambiguator()
-          if (currChar != '(') fail()
-          else readChar()
-          d.Method(parseName(), typeDesc, index)
+          val disambiguator = parseDisambiguator()
+          val name = parseName()
+          d.Method(name, disambiguator)
         } else {
           d.Term(parseName())
         }
