@@ -371,7 +371,15 @@ object Javacp {
   }
 
   private def ssym(asmName: String): String = {
-    val fqName = asmName.replace('$', '#').replace('/', '.')
+    var fqName = asmName.replace('$', '#').replace('/', '.')
+    locally {
+      // TODO: Implement SemanticDB-compliant name escaping,
+      // since JVM names may contain almost arbitrary characters:
+      // https://github.com/scalameta/scalameta/issues/1428.
+      // In the meanwhile, work around like there's no tomorrow.
+      fqName = fqName.replace("package-info", "`package-info`")
+      fqName = fqName.replace(".#", ".$")
+    }
     if (asmName.contains("/")) fqName + "#"
     else Symbols.EmptyPackage + fqName + "#"
   }

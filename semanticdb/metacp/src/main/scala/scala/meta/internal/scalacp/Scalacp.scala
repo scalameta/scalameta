@@ -359,6 +359,7 @@ object Scalacp {
         else {
           // TODO: I wish there was an API to obtain owners for external symbols.
           // Since there's no such API, we have to do the legwork ourselves.
+          // https://github.com/scalameta/scalameta/issues/1429.
           val parentPackage = sym.parent.get.path + "."
           parentPackage.replace("<empty>", n.EmptyPackage)
         }
