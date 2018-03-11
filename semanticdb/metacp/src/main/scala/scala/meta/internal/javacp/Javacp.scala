@@ -192,7 +192,7 @@ object Javacp {
         val parameterSymbols = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
             val paramName = {
-              if (method.node.parameters == null) "arg" + i
+              if (method.node.parameters == null) "param" + i
               else method.node.parameters.get(i).name
             }
             val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
