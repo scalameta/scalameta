@@ -5,23 +5,6 @@ import scala.compat.Platform.EOL
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb3.Scala.{Names => n}
 
-// NOTE: This API is not meant to be the only true way of interacting with symbols.
-//
-// Some producers may find it easier to work directly with strings.
-// For example, in Javacp it's more convenient to go from JVM class names
-// directly to class symbols, forgoing the tedium of repeated invocations of
-// Symbol.Global. That's alright.
-//
-// Most consumers will find it easier to talk to their symbol index directly,
-// since SymbolInformation contains most of the information provided here
-// and then some more. That's alright as well.
-//
-// Instead, this API is meant to assist with reducing the hassle of string
-// manipulation by abstracting away common tasks of constructing and deconstructing
-// symbols. If you find yourself doing substrings for symbol analysis or
-// concatenations / magic strings for symbol creation, you will most likely
-// find this API helpful.
-
 object Scala {
   object Symbols {
     val None: String = ""
