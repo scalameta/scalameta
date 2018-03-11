@@ -371,17 +371,37 @@ object Javacp {
   }
 
   private def ssym(asmName: String): String = {
-    var fqName = asmName.replace('$', '#').replace('/', '.')
-    locally {
-      // TODO: Implement SemanticDB-compliant name escaping,
-      // since JVM names may contain almost arbitrary characters:
-      // https://github.com/scalameta/scalameta/issues/1428.
-      // In the meanwhile, work around like there's no tomorrow.
-      fqName = fqName.replace("package-info", "`package-info`")
-      fqName = fqName.replace(".#", ".$")
+    var i = 0
+    var slash = false
+    val result = new StringBuilder
+    val part = new StringBuilder
+    def put(c: Char): Unit = {
+      part.append(c)
     }
-    if (asmName.contains("/")) fqName + "#"
-    else Symbols.EmptyPackage + fqName + "#"
+    def flush(): Unit = {
+      result.append(part.toString.encoded)
+      part.clear()
+    }
+    while (i < asmName.length) {
+      val c = asmName.charAt(i)
+      if (c == '/') {
+        slash = true
+        flush()
+        result.append('.')
+      } else if (c == '$') {
+        flush()
+        result.append('#')
+      } else {
+        put(c)
+      }
+      i += 1
+    }
+    if (part.nonEmpty) {
+      flush()
+    }
+    result.append('#')
+    if (slash) result.toString
+    else Symbols.EmptyPackage + result.toString
   }
 
   private def saccessibility(access: Int, symbol: String): Option[s.Accessibility] = {

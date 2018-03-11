@@ -40,8 +40,17 @@ object Scala {
     def isEmptyPackage: Boolean = symbol == Symbols.EmptyPackage
     def isGlobal: Boolean = !isNone && Descriptor.descriptorLasts.contains(symbol.last)
     def isLocal: Boolean = !isNone && !isGlobal
-    def isValid: Boolean = ??? // TODO: If we find ourselves needing this, we'll need a parser.
-    def ownerChain: List[String] = if (!owner.isNone) owner.ownerChain :+ symbol else List(symbol)
+    def ownerChain: List[String] = {
+      val buf = List.newBuilder[String]
+      def loop(symbol: String): Unit = {
+        if (!symbol.isNone) {
+          loop(symbol.owner)
+          buf += symbol
+        }
+      }
+      loop(symbol)
+      buf.result
+    }
     def owner: String = {
       if (isGlobal) {
         if (isRootPackage) Symbols.None
@@ -90,7 +99,7 @@ object Scala {
   implicit class ScalaNameOps(name: String) {
     def encoded: String = {
       if (name == n.None) {
-        n.None
+        "``"
       } else {
         val (start, parts) = (name.head, name.tail)
         val isStartOk = Character.isJavaIdentifierStart(start)
