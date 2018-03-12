@@ -371,6 +371,27 @@ Synthetics:
   [13..20): Nothing => scala.Nothing#
 
 
+semanticdb/integration/src/main/scala/example/Imports.scala
+-----------------------------------------------------------
+Language:
+Scala
+
+Names:
+[7..12): scala => scala.
+[13..17): util => scala.util.
+[18..25): control => scala.util.control.
+[26..34): NonFatal => scala.util.control.NonFatal#
+[26..34): NonFatal => scala.util.control.NonFatal.
+
+Messages:
+[26..34): [warning] Unused import
+
+Symbols:
+scala. => package scala
+scala.util. => package util
+scala.util.control. => package control
+
+
 semanticdb/integration/src/main/scala/example/MetacJava.scala
 -------------------------------------------------------------
 Language:
