@@ -27,7 +27,11 @@ trait HijackAnalyzer extends SemanticdbAnalyzer { self: SemanticdbPlugin =>
     val newAnalyzer = new { val global: self.global.type = self.global } with SemanticdbAnalyzer {
       override def findMacroClassLoader() = oldMacroClassLoader
     }
-    val analyzerField = classOf[NscGlobal].getDeclaredField("analyzer")
+
+    val analyzerField =
+      (if (self.isAmmonite()) global.getClass
+       else classOf[NscGlobal]).getDeclaredField("analyzer")
+
     analyzerField.setAccessible(true)
     analyzerField.set(global, newAnalyzer)
     // Restore macro and analyzer plugins from old analyzer, see https://github.com/scalameta/scalameta/issues/1135

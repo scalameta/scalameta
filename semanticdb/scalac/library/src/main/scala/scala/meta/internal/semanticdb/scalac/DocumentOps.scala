@@ -22,9 +22,10 @@ trait DocumentOps { self: DatabaseOps =>
     if (!g.settings.plugin.value.exists(_.contains("semanticdb"))) {
       sys.error("the compiler instance must use the semanticdb plugin")
     }
-    if (!g.analyzer.getClass.getName.contains("HijackAnalyzer")) {
-      println(g.analyzer.getClass.getName)
-      sys.error("the compiler instance must use a hijacked analyzer")
+    val analyzerClassName = g.analyzer.getClass.getName
+    if (!analyzerClassName.contains("HijackAnalyzer")) {
+      sys.error(
+        s"the compiler instance must use a hijacked analyzer, instead of $analyzerClassName")
     }
     if (g.currentRun.phaseNamed("typer") != NoPhase) {
       if (g.phase.id < g.currentRun.phaseNamed("typer").id) {
