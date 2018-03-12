@@ -460,20 +460,20 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Imports.scala
 Text => non-empty
 Language => Scala
-Symbols => 3 entries
-Occurrences => 5 entries
+Symbols => 4 entries
+Occurrences => 4 entries
 Diagnostics => 1 entries
 
 Symbols:
 scala. => package scala
 scala.util. => package util
 scala.util.control. => package control
+scala.util.control.NonFatal. => final object NonFatal
 
 Occurrences:
 [0:7..0:12): scala => scala.
 [0:13..0:17): util => scala.util.
 [0:18..0:25): control => scala.util.control.
-[0:26..0:34): NonFatal => scala.util.control.NonFatal#
 [0:26..0:34): NonFatal => scala.util.control.NonFatal.
 
 Diagnostics:

@@ -597,7 +597,7 @@ trait DocumentOps { self: DatabaseOps =>
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
     val normalizedAlts = {
-      val alts1 = alts.toList.filter(_ != g.NoSymbol)
+      val alts1 = alts.toList.filter(_.exists)
       val alts2 = alts1.map(alt => if (alt.isModuleClass) alt.asClass.module else alt)
       alts2.distinct
     }

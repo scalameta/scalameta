@@ -380,7 +380,6 @@ Names:
 [7..12): scala => scala.
 [13..17): util => scala.util.
 [18..25): control => scala.util.control.
-[26..34): NonFatal => scala.util.control.NonFatal#
 [26..34): NonFatal => scala.util.control.NonFatal.
 
 Messages:
@@ -390,6 +389,7 @@ Symbols:
 scala. => package scala
 scala.util. => package util
 scala.util.control. => package control
+scala.util.control.NonFatal. => final object NonFatal
 
 
 semanticdb/integration/src/main/scala/example/MetacJava.scala
