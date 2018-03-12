@@ -536,8 +536,7 @@ trait DocumentOps { self: DatabaseOps =>
 
       val flattenedNames = names.flatMap {
         case (pos, sym) =>
-          val syms = sym match { case m.Symbol.Multi(syms) => syms; case sym => List(sym) }
-          syms.map(m.ResolvedName(pos, _, binders(pos)))
+          flatten(sym).map(m.ResolvedName(pos, _, binders(pos)))
       }.toList
       val messages = unit.reportedMessages(mstarts)
       val symbols = denotations.map {
@@ -597,7 +596,7 @@ trait DocumentOps { self: DatabaseOps =>
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
     val normalizedAlts = {
-      val alts1 = alts.toList.filter(_ != g.NoSymbol)
+      val alts1 = alts.toList.filter(_.exists)
       val alts2 = alts1.map(alt => if (alt.isModuleClass) alt.asClass.module else alt)
       alts2.distinct
     }
@@ -608,6 +607,13 @@ trait DocumentOps { self: DatabaseOps =>
         val wrapper = g.NoSymbol.newTermSymbol(g.TermName(name))
         wrapper.setFlag(gf.OVERLOADED)
         wrapper.setInfo(g.OverloadedType(g.NoType, normalizedAlts))
+    }
+  }
+
+  private def flatten(msym: m.Symbol): List[m.Symbol] = {
+    msym match {
+      case m.Symbol.Multi(msyms) => msyms.flatMap(flatten)
+      case mother => List(mother)
     }
   }
 }
