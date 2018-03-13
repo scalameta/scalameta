@@ -206,7 +206,8 @@ lazy val langmeta = crossProject(JSPlatform, JVMPlatform)
   .in(file("langmeta/langmeta"))
   .settings(
     publishableSettings,
-    description := "Langmeta umbrella module that includes all public APIs"
+    description := "Langmeta umbrella module that includes all public APIs",
+    libraryDependencies += "com.lihaoyi" %% "pprint" % "0.5.3"
   )
   .jvmSettings(
     crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
