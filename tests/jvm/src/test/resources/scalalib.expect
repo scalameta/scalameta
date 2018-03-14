@@ -110,3 +110,19 @@ scala.Nothing# => abstract final class Nothing.{+1 decls}
   extends Any
 scala.Nothing#`<init>`(). => primary ctor <init>: (): Nothing
   Nothing => scala.Nothing#
+
+scala/Null.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => scala/Null.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+scala.Null# => abstract final class Null.{+1 decls}
+  extends AnyRef
+scala.Null#`<init>`(). => primary ctor <init>: (): Null
+  Null => scala.Null#

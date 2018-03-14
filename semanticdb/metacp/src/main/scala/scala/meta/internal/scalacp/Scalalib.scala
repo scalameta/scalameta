@@ -10,7 +10,7 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
 object Scalalib {
-  def any: ToplevelInfos = {
+  def anyClass: ToplevelInfos = {
     val symbols = List(
       builtinMethod("Any", List(p.ABSTRACT), "equals", Nil, List("that" -> "scala.Any#"), "scala.Boolean#"),
       builtinMethod("Any", List(p.FINAL), "==", Nil, List("that" -> "scala.Any#"), "scala.Boolean#"),
@@ -26,11 +26,11 @@ object Scalalib {
     builtinClass(List(p.ABSTRACT), "Any", Nil, symbols.flatten)
   }
 
-  def anyVal: ToplevelInfos = {
+  def anyValClass: ToplevelInfos = {
     builtinClass(List(p.ABSTRACT), "AnyVal", List("scala.Any#"), Nil)
   }
 
-  def anyRef: ToplevelInfos = {
+  def anyRefClass: ToplevelInfos = {
     // TODO: We're not including methods from java.lang.Object here.
     // The relationship between AnyRef and Object needs more thinking.
     val symbols = List(
@@ -40,8 +40,12 @@ object Scalalib {
     builtinClass(Nil, "AnyRef", List("scala.Any#"), symbols.flatten)
   }
 
-  def nothing: ToplevelInfos = {
+  def nothingClass: ToplevelInfos = {
     builtinClass(List(p.ABSTRACT, p.FINAL), "Nothing", List("scala.Any#"), Nil)
+  }
+
+  def nullClass: ToplevelInfos = {
+    builtinClass(List(p.ABSTRACT, p.FINAL), "Null", List("scala.AnyRef#"), Nil)
   }
 
   private def builtinClass(
