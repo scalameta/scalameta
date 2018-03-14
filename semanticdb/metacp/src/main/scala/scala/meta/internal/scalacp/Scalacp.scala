@@ -348,22 +348,15 @@ object Scalacp {
   }
 
   private def sowner(sym: Symbol): String = {
-    sym match {
-      case sym: SymbolInfoSymbol =>
-        ssymbol(sym.symbolInfo.owner)
-      case sym: ExternalSymbol =>
-        if (sym.isRootPackage) Symbols.None
-        else if (sym.isEmptyPackage) Symbols.RootPackage
-        else if (sym.isToplevelPackage) Symbols.RootPackage
-        else {
-          // TODO: I wish there was an API to obtain owners for external symbols.
-          // Since there's no such API, we have to do the legwork ourselves.
-          // https://github.com/scalameta/scalameta/issues/1429.
-          val parentPackage = sym.parent.get.path + "."
-          parentPackage.replace("<empty>", n.EmptyPackage)
-        }
-      case _ =>
-        sys.error(s"unsupported symbol $sym")
+    if (sym.isRootPackage) Symbols.None
+    else if (sym.isEmptyPackage) Symbols.RootPackage
+    else if (sym.isToplevelPackage) Symbols.RootPackage
+    else {
+      sym.parent match {
+        case Some(NoSymbol) => ""
+        case Some(parent) => ssymbol(parent)
+        case None => sys.error(s"unsupported symbol $sym")
+      }
     }
   }
 
@@ -388,7 +381,7 @@ object Scalacp {
   private implicit class SymbolOps(sym: Symbol) {
     def isRootPackage: Boolean = sym.path == "<root>"
     def isEmptyPackage: Boolean = sym.path == "<empty>"
-    def isToplevelPackage: Boolean = !isRootPackage && !isEmptyPackage && !sym.path.contains(".")
+    def isToplevelPackage: Boolean = sym.parent.isEmpty
     def isModuleClass: Boolean = sym.isInstanceOf[ClassSymbol] && sym.isModule
     def isClass: Boolean = sym.isInstanceOf[ClassSymbol] && !sym.isModule
     def isObject: Boolean = sym.isInstanceOf[ObjectSymbol]

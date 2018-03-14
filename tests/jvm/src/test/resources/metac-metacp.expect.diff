@@ -448,7 +448,7 @@ example.MetacJava#nonStatic().
 +++ metacp
              string: ""
 -        symbol: "com.javacp.MetacJava#StaticInner#NonStatic#"
-+        symbol: "com.javacp.MetacJava.StaticInner.NonStatic#"
++        symbol: "com.javacp.MetacJava.StaticInner#NonStatic#"
 
 
 ============================
@@ -458,49 +458,7 @@ example.MetacJava#nonStatic.
 +++ metacp
          string: ""
 -    symbol: "com.javacp.MetacJava#StaticInner#NonStatic#"
-+    symbol: "com.javacp.MetacJava.StaticInner.NonStatic#"
- accessibility {
-
-
-==============================
-example.MetacJava#overload1().
-==============================
---- metac
-+++ metacp
-             string: ""
--        symbol: "com.javacp.MetacJava#Overload1#"
-+        symbol: "com.javacp.MetacJava.Overload1#"
-
-
-============================
-example.MetacJava#overload1.
-============================
---- metac
-+++ metacp
-         string: ""
--    symbol: "com.javacp.MetacJava#Overload1#"
-+    symbol: "com.javacp.MetacJava.Overload1#"
- accessibility {
-
-
-==============================
-example.MetacJava#overload2().
-==============================
---- metac
-+++ metacp
-             string: ""
--        symbol: "com.javacp.MetacJava#Overload2#"
-+        symbol: "com.javacp.MetacJava.Overload2#"
-
-
-============================
-example.MetacJava#overload2.
-============================
---- metac
-+++ metacp
-         string: ""
--    symbol: "com.javacp.MetacJava#Overload2#"
-+    symbol: "com.javacp.MetacJava.Overload2#"
++    symbol: "com.javacp.MetacJava.StaticInner#NonStatic#"
  accessibility {
 
 
@@ -1106,7 +1064,7 @@ types.Test.C#singleType2().
 +++ metacp
              string: ""
 -        symbol: "types.P#x()."
-+        symbol: "types.P.x#"
++        symbol: "types.P#x#"
          primitive: 0
          string: ""
 
@@ -1118,72 +1076,9 @@ types.Test.C#singleType2.
 +++ metacp
          string: ""
 -    symbol: "types.P#x()."
-+    symbol: "types.P.x#"
++    symbol: "types.P#x#"
      primitive: 0
      string: ""
-
-
-========================
-types.Test.C#typeRef2().
-========================
---- metac
-+++ metacp
-             string: ""
--        symbol: "types.P#C#"
-+        symbol: "types.P.C#"
-
-
-======================
-types.Test.C#typeRef2.
-======================
---- metac
-+++ metacp
-         string: ""
--    symbol: "types.P#C#"
-+    symbol: "types.P.C#"
- accessibility {
-
-
-========================
-types.Test.C#typeRef3().
-========================
---- metac
-+++ metacp
-             symbol: "types.T#"
--        symbol: "types.T#C#"
-+        symbol: "types.T.C#"
-
-
-======================
-types.Test.C#typeRef3.
-======================
---- metac
-+++ metacp
-         symbol: "types.T#"
--    symbol: "types.T#C#"
-+    symbol: "types.T.C#"
- accessibility {
-
-
-=================
-types.Test.C#x().
-=================
---- metac
-+++ metacp
-             string: ""
--        symbol: "types.P#X#"
-+        symbol: "types.P.X#"
-
-
-===============
-types.Test.C#x.
-===============
---- metac
-+++ metacp
-         string: ""
--    symbol: "types.P#X#"
-+    symbol: "types.P.X#"
- accessibility {
 
 
 ===================
