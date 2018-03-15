@@ -107,7 +107,12 @@ class Main(settings: Settings, reporter: Reporter) {
 
   private def dumpScalaLibrarySynthetics(out: AbsolutePath): Boolean = {
     val index = new Index
-    val synthetics = List(Scalalib.any, Scalalib.anyVal, Scalalib.anyRef, Scalalib.nothing)
+    val synthetics = List(
+      Scalalib.anyClass,
+      Scalalib.anyValClass,
+      Scalalib.anyRefClass,
+      Scalalib.nothingClass,
+      Scalalib.nullClass)
     synthetics.foreach { infos =>
       index.append(infos.uri, infos.toplevels)
       infos.save(out)
