@@ -1,8 +1,8 @@
 ### Java
 
 In this section, we exhaustively map Java language features onto SemanticDB.
-As a reference, we use the [JVM Specification][jvms] (referred to as "JVMS" in the text below)
-and [Java Language Specification][jls] (referred to as "JLS" in the text below).
+As a reference, we use the Java Language Specification [\[85\]][85] (referred
+to as "JLS" in the text below).
 
 <a name="java-symbol"></a>
 #### Symbol
@@ -22,11 +22,10 @@ In this section, we describe the Java symbol format.
     <td>
       <ul>
         <li>
-          For root package <a href="https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#package-references">[20]</a>,
-          its descriptor.
+          For <a href="#java-root-package">root package</a>, its descriptor.
         </li>
         <li>
-          For empty package <a href="https://www.scala-lang.org/files/archive/spec/2.12/09-top-level-definitions.html#packagings">[21]</a>,
+          For unnamed packages <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-7.html#jls-7.4.2">[21]</a>,
           its descriptor.
         </li>
         <li>
@@ -39,26 +38,35 @@ In this section, we describe the Java symbol format.
       </ul>
     </td>
   </tr>
+  <tr>
+    <td>
+      Local symbols
+      <a href="#symbol">↑</a>
+    </td>
+    <td>
+      Concatenation of <code>local</code> and a decimal number.
+    </td>
+  </tr>
 </table>
-
-Note that Java symbols do not have [local symbols](#symbol), unlike the [Scala symbol format](#scala-symbol).
 
 **Owner** is:
   * For root package, `None`.
-  * For empty package, root package.
-  * For top-level package, root package.
-  * For other package, parent package.
-  * For other top-level definition, its package.
-  * For other other global definition, the innermost enclosing definition.
-  * For other definitions, `None`.
+  * For unnamed package, root package.
+  * For top-level named package, root package.
+  * For other named package, enclosing package that holds the named package as
+    a member.
+  * For other top-level declaration, innermost enclosing package that holds
+    the top-level declaration as a member.
+  * For other other global definition, innermost enclosing declaration that
+    holds the global declaration as a member.
+  * For other declarations, `None`.
 
 **Descriptor** is:
-  * For `LOCAL`, `MACRO`, `OBJECT`, `TRAIT`, `SELF_PARAMETER`, `TYPE` or `PACKAGE_OBJECT`, unsupported.
   * For `FIELD` or `PACKAGE`, concatenation of its simple name and a dot (`.`).
-  * For `METHOD` or `CONSTRUCTOR`, concatenation of its simple name, a disambiguator, and a dot (`.`).
-  * For `CLASS` or `INTERFACE`, concatenation of its simple name and a pound sign (`#`).
-  * For `PARAMETER`, concatenation of a left parenthesis (`(`), its simple name and a right parenthesis (`)`).
-  * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its simple name and a right bracket (`]`).
+  * For `METHOD` or `CONSTRUCTOR`, concatenation of its identifier, a disambiguator, and a dot (`.`).
+  * For `CLASS` or `INTERFACE`, concatenation of its identifier and a pound sign (`#`).
+  * For `PARAMETER`, concatenation of a left parenthesis (`(`), its identifier and a right parenthesis (`)`).
+  * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its identifier and a right bracket (`]`).
   * See [SymbolInformation](#java-symbolinformation) for details on
     which Scala definitions are modelled by which symbols.
 
@@ -72,14 +80,18 @@ Note that Java symbols do not have [local symbols](#symbol), unlike the [Scala s
 
 **Name** is:
   * For root package, `_root_`.
-  * For empty package, `_empty_`.
+  * For unnamed package, `_empty_`.
+  * For named package, the latest identifier of its package declaration.
   * For constructor, `<init>`.
-  * For fields, methods, classes and interfaces, the simple name of the binding introduced by the definition.
+  * For fields, methods, classes and interfaces, the identifer of the binding introduced by the definition.
 
 **Type descriptor** is:
   * For `TYPE_REF`, encoded name of `symbol`.
+  * For `ANNOTATED_TYPE`, type descriptor of `tpe`.
+  * For `EXISTENTIAL_TYPE`, type descriptor of `tpe`.
+  * For `METHOD_TYPE`, concatenation of type descriptor of its formal parameter types
+    interspered with a comma (`,`).
   * For `REPEATED_TYPE`, concatenation of type descriptor of `tpe` and a star (`*`).
-  * For other types, unsupported.
   * See [Type](#java-type) for details on which Java types are modelled by which `Type` entities.
 
   For example, this is how some of the definitions from the Java standard library must be modeled.
@@ -90,6 +102,16 @@ Note that Java symbols do not have [local symbols](#symbol), unlike the [Scala s
   * The `Arrays.asList` method: `java.util.Arrays#asList(T*).`
   * The `a` parameter of that method: `java.util.Arrays#asList(T*).(a)`
   * The `T` type parameter of that method: `java.util.Arrays#asList(T*).[T]`
+
+
+<a name="java-root-package"></a>
+##### Root package
+
+The root package is a synthetic package that does not exist in the JLS but
+has an equivalent in the SLS [\[20\]][20].
+The root package is the owner of the unnamed and all top-level named packages.
+The motivation to define a root package for the Java language is to keep
+consistency with how package owners are encoded in [Scala symbols](#scala-symbol).
 
 <a name="java-type"></a>
 #### Type
@@ -265,10 +287,10 @@ message SymbolInformation {
 ```java
 package a;
 class C extends S1 implements I {
-  String m1;
-  static unit m2();
-  int m3(String e) throws E;
-  static class D1<T1 extends S2 & S3, T2> { }
+  T1 m1;
+  static T2 m2();
+  T3 m3(T4 e) throws E;
+  static class D1<T5 extends S2 & S3, T6> { }
   class D2 { }
 }
 ```
@@ -284,25 +306,25 @@ class C extends S1 implements I {
     <td><code>C</code></td>
     <td><code>a.C#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(), List(&lt;S1&gt;, &lt;I&gt;), List(&lt;a.C#m1&gt;, &lt;a.C#m3(String).&gt;, &lt;a.C#D2#&gt;, &lt;a.C#m2().&gt;, &lt;a.C#D1#&gt;))</code></td>
+    <td><code>ClassInfoType(List(), List(&lt;S1&gt;, &lt;I&gt;), List(&lt;m1&gt;, &lt;m3&gt;, &lt;D2&gt;, &lt;m2&gt;, &lt;D1&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m1</code></td>
     <td><code>a.C#m1.</code></td>
     <td><code>FIELD</code></td>
-    <td><code>TypeRef(None, &lt;java.lang.String&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;T1&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
     <td><code>a.C#m2().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List() TypeRef(None, &lt;scala.Unit#&gt;))</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;T2&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>a.C#m3(String).</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(&lt;a.C#m3(String).(e)&gt;) TypeRef(None, &lt;scala.Int#&gt;))</code></td>
+    <td><code>MethodType(List(), List(&lt;a.C#m3(T4).(e)&gt;) TypeRef(None, &lt;T3&gt;))</code></td>
   </tr>
   <tr>
     <td><code>e</code></td>
@@ -312,7 +334,7 @@ class C extends S1 implements I {
   </tr>
   <tr>
     <td><code>e</code></td>
-    <td><code>a.C#D1#[T1]</code></td>
+    <td><code>a.C#D1#[T5]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeType(List(), None, Some(IntersectionType(List(&lt;S2&gt;, &lt;S2&gt;))))</code></td>
   </tr>
@@ -326,7 +348,7 @@ class C extends S1 implements I {
     <td><code>D1</code></td>
     <td><code>a.C#D1#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(&lt;a.C#D1#[T1]&gt;, &lt;a.C#D1#[T2]&gt;), List(&lt;java.lang.Object#&gt;), List())</code></td>
+    <td><code>ClassInfoType(List(&lt;T5&gt;, &lt;T6&gt;), List(&lt;java.lang.Object#&gt;), List())</code></td>
   </tr>
   <tr>
     <td><code>D2</code></td>
@@ -337,7 +359,9 @@ class C extends S1 implements I {
 </table>
 
 Notes:
-* Class members must appear in the following order:
+* Class members must appear in the order specified below. This requirement is
+  necessary to compute consistent method symbol disambiguators in the Scala
+  compiler where static and non-static members have separate owners.
   * non-static members first, following the same order as they appear in the original source
   * static members secondly, following the same order as they appear in the original source
 * A Java class maps to a single symbol with type `ClassInfoType` including all static and non-static members.
@@ -346,8 +370,10 @@ Notes:
 * Supported properties for `CLASS` symbols are
   * `FINAL` set for all final classes
   * `ABSTRACT` set for all final classes
-  * `STATIC` set for static classes
-  * `ENUM` set for enum declarations
+  * `STATIC` set for static inner classes
+  * `ENUM` set for enum types
+* Supported accessibilities for `CLASS` symbols are
+  * `PRIVATE`: set for `private` inner classes
 
 **Enum types** [\[84\]][84] are represented by a single symbol with the `CLASS` kind.
 
@@ -370,19 +396,31 @@ public enum Coin {
     <td><code>Coin</code></td>
     <td><code>a.Coin#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(), List(&lt;Enum&lt;Coin&gt;&gt;), List(a.Coin#PENNY., a.Coin#NICKEL., ))</code></td>
+    <td><code>ClassInfoType(List(), List(&lt;Enum&lt;Coin&gt;&gt;), List(&lt;PENNY&gt;, &lt;NICKEL&gt;))</code></td>
   </tr>
   <tr>
     <td><code>Coin</code></td>
     <td><code>a.Coin#PENNY.</code></td>
     <td><code>FIELD</code></td>
-    <td><code>TypeRef(None, &lt;a.Coin#&gt;), List())</code></td>
+    <td><code>TypeRef(None, &lt;Coin&gt;), List())</code></td>
   </tr>
   <tr>
     <td><code>Coin</code></td>
     <td><code>a.Coin#NICKEL.</code></td>
     <td><code>FIELD</code></td>
-    <td><code>TypeRef(None, &lt;a.Coin#&gt;), List())</code></td>
+    <td><code>TypeRef(None, &lt;Coin&gt;), List())</code></td>
+  </tr>
+  <tr>
+    <td><code>Coin</code></td>
+    <td><code>a.Coin#values().</code></td>
+    <td><code>METHOD</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Array&gt;, List(&lt;Coin&gt;)))</code></td>
+  </tr>
+  <tr>
+    <td><code>Coin</code></td>
+    <td><code>a.Coin#valueOf(String).</code></td>
+    <td><code>METHOD</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Coin&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -390,15 +428,30 @@ Notes:
 * Enum types follow the same rules as class declarations.
 * Enum type classes and enum fields must have the property `ENUM` set.
 * Enum fields have the type of their enclosing class.
+* Enum members include the implicitly declared methods [\[86\]][86] `valueOf` and `values`.
 
-**Interface declarations** [\[77\]][77] are represented by a single symbol like classes but with the `INTERFACE` kind.
-Concretely, the differences between interface symbols and class symbols are:
-* Interface symbols don't any properties.
-* Traits don't have symbols.
+**Interface declarations** [\[77\]][77] are represented by a single symbol
+like classes but with the `INTERFACE` kind. Concretely, the differences
+between interface symbols and class symbols are:
+* Interface symbols do not support properties.
+* Interface members without explicit access modifiers have accessibility
+  `PUBLIC` by default instead of `PRIVATE_WITHIN`.
 
-**Method declarations** [\[82\]][82] are represented by a single symbol with the `METHOD` kind and one symbol for each method parameter with kind `PARAMETER`.
+**Method declarations** [\[82\]][82] are represented by a single symbol with
+the `METHOD` kind and one symbol for each type parameter with kind
+`TYPE_PARAMETER` and formal parameter with kind `PARAMETER`.
 Notes:
-* When compiled with `-parameters` , the name of method parameters matches their name written in source. Otherwise, parameters have the name `paramN` where `N` is the index of that given parameter starting at index 0.
+* When compiled with the compiler option `-parameters`, the name of method
+  parameters matches their name written in source. Otherwise, parameters have
+  the name `paramN` where `N` is the index of that given parameter starting at
+  index 0.
+
+**Field declarations** [\[83\]][83] are represented by a single symbol with
+with the `FIELD` kind.
+
+**Constructor declarations** [\90\]][90] are represented by a single symbol with
+name `<init>` and the `CONSTRUCTOR` kind. Constructor formal parameters are represented
+the same way as method declaration formal parameters.
 
 <a name="java-accessibility"></a>
 #### Accessibility
@@ -420,7 +473,7 @@ message Accessibility {
 }
 ```
 
-In Java, [Accessibility](#accessibility) represents accessibility of definitions.
+In Java, [Accessibility](#accessibility) represents access control [\[87\]][87] of names
 <table>
   <tr>
     <td><b>Accessibility</b></td>
@@ -429,30 +482,43 @@ In Java, [Accessibility](#accessibility) represents accessibility of definitions
   </tr>
   <tr>
     <td><code>PRIVATE</code></td>
-    <td><code>private unit m() {}</code></td>
+    <td><code>private void m() {}</code></td>
     <td>
       Can be accessed only from within the directly enclosing class.
+      TODO!!!
+      <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1">[88]</a>.
     </td>
   </tr>
   <tr>
     <td><code>PRIVATE_WITHIN</code></td>
     <td><code>package x; class A {}</code></td>
     <td>
-      Class `A` can be accessed only from within the package <code>x</code>.
+      A class, interface, member or constructor declared without an access
+      modifier is implicitly private within within the package in which is
+      declared.
+      <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1">[88]</a>.
     </td>
   </tr>
   <tr>
     <td><code>PROTECTED</code></td>
-    <td><code>protected unit m() {}</code></td>
+    <td><code>protected void m() {}</code></td>
     <td>
-      Can be accessed from within: 1) the enclosing class, 2) all classes that have the enclosing class as a base class.
+      A protected member of constructor of an object can be accessed from
+      within: 1) the enclosing class, 2) all classes that are responsible for
+      the implementation of that object.
+      <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.2">[89]</a>.
     </td>
   </tr>
   <tr>
     <td><code>PUBLIC</code></td>
     <td><code>public void m() {}</code></td>
     <td>
-      Can be accessed from anywhere.
+      Can be accessed from from any code provided that the compilation unit
+      in which it is declared is observable. Packages are always implicitly
+      public. Members of interfaces lacking interface modifiers are
+      implicitly public. Other members are public only if explicitly declared
+      `public`.
+      <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1">[88]</a>.
     </td>
   </tr>
 </table>
@@ -466,7 +532,7 @@ Notes:
 At this moment, there is no tool that supports SymbolOccurrences for the Java language.
 
 [72]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-10.html#jls-10.1
-[73]: https://docs.oracle.com/javase/specs/jls/kkkkse8/html/jls-4.html#jls-PrimitiveType
+[73]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-PrimitiveType
 [74]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html
 [75]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.2
 [76]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.1
@@ -478,3 +544,9 @@ At this moment, there is no tool that supports SymbolOccurrences for the Java la
 [82]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4
 [83]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.3
 [84]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.9
+[85]: https://docs.oracle.com/javase/specs/jls/se8/html
+[86]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.9.3
+[87]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6
+[88]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1
+[89]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.2
+[90]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.8
