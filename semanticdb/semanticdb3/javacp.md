@@ -333,13 +333,13 @@ class C extends S1 implements I {
     <td><code>TypeRef(None, &lt;java.lang.String#&gt;, List())</code></td>
   </tr>
   <tr>
-    <td><code>e</code></td>
+    <td><code>T5</code></td>
     <td><code>a.C#D1#[T5]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeType(List(), None, Some(IntersectionType(List(&lt;S2&gt;, &lt;S2&gt;))))</code></td>
   </tr>
   <tr>
-    <td><code>e</code></td>
+    <td><code>T2</code></td>
     <td><code>a.C#D1#[T2]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeType(List(), None, None)</code></td>
@@ -447,9 +447,9 @@ Notes:
   index 0.
 
 **Field declarations** [\[83\]][83] are represented by a single symbol with
-with the `FIELD` kind.
+the `FIELD` kind.
 
-**Constructor declarations** [\90\]][90] are represented by a single symbol with
+**Constructor declarations** [\[90\]][90] are represented by a single symbol with
 name `<init>` and the `CONSTRUCTOR` kind. Constructor formal parameters are represented
 the same way as method declaration formal parameters.
 
@@ -485,7 +485,6 @@ In Java, [Accessibility](#accessibility) represents access control [\[87\]][87] 
     <td><code>private void m() {}</code></td>
     <td>
       Can be accessed only from within the directly enclosing class.
-      TODO!!!
       <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1">[88]</a>.
     </td>
   </tr>
@@ -493,7 +492,7 @@ In Java, [Accessibility](#accessibility) represents access control [\[87\]][87] 
     <td><code>PRIVATE_WITHIN</code></td>
     <td><code>package x; class A {}</code></td>
     <td>
-      A class, interface, member or constructor declared without an access
+      A class, interface, class member or constructor declared without an access
       modifier is implicitly private within within the package in which is
       declared.
       <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1">[88]</a>.
