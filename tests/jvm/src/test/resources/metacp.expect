@@ -326,13 +326,13 @@ Schema => SemanticDB v3
 Uri => com/javacp/Test.class
 Text => empty
 Language => Java
-Symbols => 66 entries
+Symbols => 67 entries
 
 Symbols:
 _root_. => package _root_
 com. => package com
 com.javacp. => package javacp
-com.javacp.Test# => final class Test[A <: CharSequence & Serializable, B <: Object].{+34 decls}
+com.javacp.Test# => final class Test[A <: CharSequence & Serializable, B <: Object].{+35 decls}
   extends ArrayList[A]
   extends Comparable[B]
   extends Serializable
@@ -481,6 +481,8 @@ com.javacp.Test#publicMethod(). => method publicMethod: (): Unit
 com.javacp.Test#staticField. => private[javacp] static field staticField: Int
   Int => scala.Int#
 com.javacp.Test#staticMethod(). => private[javacp] static method staticMethod: (): Unit
+  Unit => scala.Unit#
+com.javacp.Test#strictfpMethod(). => @strictfp private[javacp] method strictfpMethod: (): Unit
   Unit => scala.Unit#
 com.javacp.Test#typeParams(ArrayList,Hashtable). => private[javacp] method typeParams: (a: ArrayList[HashMap[A, Array[String]]], b: Hashtable[String, B]): Unit
   a => com.javacp.Test#typeParams(ArrayList,Hashtable).(a)

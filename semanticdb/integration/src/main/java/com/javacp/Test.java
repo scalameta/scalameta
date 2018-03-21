@@ -64,4 +64,6 @@ public final class Test<A extends CharSequence & Serializable, B> extends ArrayL
     static void staticMethod() {}
     static class StaticClass {}
 
+    strictfp void strictfpMethod() {}
+
 }

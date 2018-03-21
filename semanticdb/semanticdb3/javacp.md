@@ -2,7 +2,7 @@
 
 In this section, we exhaustively map Java language features onto SemanticDB.
 As a reference, we use the Java Language Specification [\[85\]][85] (referred
-to as "JLS" in the text below).
+to as "JLS" in the text below) and Java Virtual Machine Specification [\[91\]][91] (referred to as "JVMS" in the text below).
 
 <a name="java-symbol"></a>
 #### Symbol
@@ -25,7 +25,7 @@ In this section, we describe the Java symbol format.
           For <a href="#java-root-package">root package</a>, its descriptor.
         </li>
         <li>
-          For unnamed packages <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-7.html#jls-7.4.2">[21]</a>,
+          For unnamed package <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-7.html#jls-7.4.2">[21]</a>,
           its descriptor.
         </li>
         <li>
@@ -53,12 +53,11 @@ In this section, we describe the Java symbol format.
   * For root package, `None`.
   * For unnamed package, root package.
   * For top-level named package, root package.
-  * For other named package, enclosing package that holds the named package as
-    a member.
-  * For other top-level declaration, innermost enclosing package that holds
-    the top-level declaration as a member.
-  * For other other global definition, innermost enclosing declaration that
-    holds the global declaration as a member.
+  * For other named package, parent package.
+  * For other top-level declaration, its package.
+  * For other global definition, the innermost enclosing definition,
+    i.e. the definition whose [Location](#location) in source code most
+    tightly encloses the [Location](#location) of the original definition.
   * For other declarations, `None`.
 
 **Descriptor** is:
@@ -68,7 +67,7 @@ In this section, we describe the Java symbol format.
   * For `PARAMETER`, concatenation of a left parenthesis (`(`), its identifier and a right parenthesis (`)`).
   * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its identifier and a right bracket (`]`).
   * See [SymbolInformation](#java-symbolinformation) for details on
-    which Scala definitions are modelled by which symbols.
+    which Java definitions are modelled by which symbols.
 
 **Disambiguator** is:
   * Concatenation of a left parenthesis (`(`), a type descriptor
@@ -81,9 +80,8 @@ In this section, we describe the Java symbol format.
 **Name** is:
   * For root package, `_root_`.
   * For unnamed package, `_empty_`.
-  * For named package, the latest identifier of its package declaration.
   * For constructor, `<init>`.
-  * For fields, methods, classes and interfaces, the identifer of the binding introduced by the definition.
+  * For named package, fields, methods, classes and interfaces, the identifer of the binding introduced by the definition.
 
 **Type descriptor** is:
   * For `TYPE_REF`, encoded name of `symbol`.
@@ -109,7 +107,7 @@ In this section, we describe the Java symbol format.
 
 The root package is a synthetic package that does not exist in the JLS but
 has an equivalent in the SLS [\[20\]][20].
-The root package is the owner of the unnamed and all top-level named packages.
+The root package is the owner of all unnamed and all top-level named packages.
 The motivation to define a root package for the Java language is to keep
 consistency with how package owners are encoded in [Scala symbols](#scala-symbol).
 
@@ -181,9 +179,9 @@ In Java, [Type](#type) represents types [\[74\]][74].
     <td valign="top">Type variable [<a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.4">78</a>]</td>
     <td>
       <ul>
-        <li><code>T</code> ~ <code>TypeType(List(), None, None)</code>.</li>
-        <li><code>T extends S</code> ~ <code>TypeType(List(), None, Some(&lt;S&gt;))</code>.</li>
-        <li><code>T extends S1 &amp; ... &amp; Sn </code> ~ <code>TypeType(List(), None, Some(IntersectionType(&lt;S1&gt;, ..., &lt;Sn&gt;)))</code>.</li>
+        <li>Signature of <code>T</code> ~ <code>TypeType(List(), None, None)</code>.</li>
+        <li>Signature of <code>T extends S</code> ~ <code>TypeType(List(), None, Some(&lt;S&gt;))</code>.</li>
+        <li>Signature of <code>T extends S1 &amp; ... &amp; Sn </code> ~ <code>TypeType(List(), None, Some(IntersectionType(&lt;S1&gt;, ..., &lt;Sn&gt;)))</code>.</li>
       </ul>
     </td>
   </tr>
@@ -192,7 +190,7 @@ In Java, [Type](#type) represents types [\[74\]][74].
     <td>
       <ul>
         <li><code>C&lt;T1, ..., Tn&gt;</code> ~ <code>TypeRef(None, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
-        <li><code>C&lt;?&gt;</code> ~ <code>TypeRef(None, &lt;C&gt;, List(&lt;local_wildcard&gt;))</code>.</li>
+        <li><code>C&lt;?&gt;</code> ~ <code>ExistentialType(List(&lt;T&gt;), TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code> where signature of <code>&lt;T&gt;</code> is <code>TypeType(List(), None, None)</code>.</li>
         <li><code>C&lt;? extends T&gt;</code> ~ <code>TypeRef(None, &lt;C&gt;, List(&lt;local_wildcard&gt;))</code>.</li>
       </ul>
     </td>
@@ -217,7 +215,7 @@ In Java, [Type](#type) represents types [\[74\]][74].
 </table>
 
 Notes:
-* Primitive and array types are converted to their equivalent [Scala type](#scala-type) representations.
+* Primitive and array types are converted to their equivalent [Scala type](#scala-type) representations. We may improve on this in the future.
 * Wildcard type arguments of parameterized types are currently incorrectly represented as `local_wildcard`,
   this behavior is expected to change in the future and should not be relied upon.
 * Method throws clauses are discarded.
@@ -369,11 +367,13 @@ Notes:
   are grouped under a `CLASS` symbol and static members are grouped under an `OBJECT` symbol.
 * Supported properties for `CLASS` symbols are
   * `FINAL` set for all final classes
-  * `ABSTRACT` set for all final classes
+  * `ABSTRACT` set for all abstract classes
   * `STATIC` set for static inner classes
   * `ENUM` set for enum types
 * Supported accessibilities for `CLASS` symbols are
   * `PRIVATE`: set for `private` inner classes
+  * `PRIVATE_WITHIN`: set for classes without explicit access modifiers
+  * `PUBLIC`: set for `public` classes
 
 **Enum types** [\[84\]][84] are represented by a single symbol with the `CLASS` kind.
 
@@ -399,25 +399,25 @@ public enum Coin {
     <td><code>ClassInfoType(List(), List(&lt;Enum&lt;Coin&gt;&gt;), List(&lt;PENNY&gt;, &lt;NICKEL&gt;))</code></td>
   </tr>
   <tr>
-    <td><code>Coin</code></td>
+    <td><code>PENNY</code></td>
     <td><code>a.Coin#PENNY.</code></td>
     <td><code>FIELD</code></td>
     <td><code>TypeRef(None, &lt;Coin&gt;), List())</code></td>
   </tr>
   <tr>
-    <td><code>Coin</code></td>
+    <td><code>NICKEL</code></td>
     <td><code>a.Coin#NICKEL.</code></td>
     <td><code>FIELD</code></td>
     <td><code>TypeRef(None, &lt;Coin&gt;), List())</code></td>
   </tr>
   <tr>
-    <td><code>Coin</code></td>
+    <td><code>values</code></td>
     <td><code>a.Coin#values().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Array&gt;, List(&lt;Coin&gt;)))</code></td>
   </tr>
   <tr>
-    <td><code>Coin</code></td>
+    <td><code>valueOf</code></td>
     <td><code>a.Coin#valueOf(String).</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Coin&gt;, List()))</code></td>
@@ -426,14 +426,15 @@ public enum Coin {
 
 Notes:
 * Enum types follow the same rules as class declarations.
-* Enum type classes and enum fields must have the property `ENUM` set.
+* Enum types and enum fields must have the property `ENUM` set.
 * Enum fields have the type of their enclosing class.
 * Enum members include the implicitly declared methods [\[86\]][86] `valueOf` and `values`.
 
 **Interface declarations** [\[77\]][77] are represented by a single symbol
 like classes but with the `INTERFACE` kind. Concretely, the differences
 between interface symbols and class symbols are:
-* Interface symbols do not support properties.
+* Interface symbols are always `ABSTRACT`
+* Interface symbols do not support other properties.
 * Interface members without explicit access modifiers have accessibility
   `PUBLIC` by default instead of `PRIVATE_WITHIN`.
 
@@ -445,13 +446,54 @@ Notes:
   parameters matches their name written in source. Otherwise, parameters have
   the name `paramN` where `N` is the index of that given parameter starting at
   index 0.
+* Supported accessibilities for `METHOD` symbols are
+  * `PRIVATE`: set for `private` methods
+  * `PRIVATE_WITHIN`: set for methods with package access
+  * `PUBLIC`: set for `public` methods
 
 **Field declarations** [\[83\]][83] are represented by a single symbol with
 the `FIELD` kind.
+* Supported accessibilities for `FIELD` symbols are
+  * `PRIVATE`: set for `private` fields
+  * `PRIVATE_WITHIN`: set for fields with package access
+  * `PUBLIC`: set for `public` fields
 
 **Constructor declarations** [\[90\]][90] are represented by a single symbol with
 name `<init>` and the `CONSTRUCTOR` kind. Constructor formal parameters are represented
 the same way as method declaration formal parameters.
+* Supported accessibilities for `CONSTRUCTOR` symbols are the same as for `METHOD` symbols.
+
+**Packages** [\[94\]][94] are represented by `PACKAGE` symbols.
+* Packages have no `tpe`
+* Package only support `PUBLIC` accessibility
+* Package support no properties
+
+<a name="java-annotation"></a>
+#### Annotation
+
+```protobuf
+message Annotation {
+  Type tpe = 1;
+}
+```
+
+In Java, [Annotation](#annotation) represents `access_flags` in the JVMS `class` file format [\[92\]][92].
+We may improve on this in the future.
+
+<table>
+  <tr>
+    <td><b>Value</b></td>
+    <td><b>Explanation</b></td>
+  </tr>
+  <tr>
+    <td><code>Annotation(TypeRef(None, &lt;scala.annotation.strictfp&gt;, List()))</code></td>
+    <td> Declared <code>strictfp</code>; floating-point mode is FP-strict e.g. <code>strictfp class MyClass</code>.</td>
+  </tr>
+  <tr>
+    <td>Not supported</td>
+    <td>JLS annotations <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-9.html#jls-9.7">[93]</a></td>
+  </tr>
+</table>
 
 <a name="java-accessibility"></a>
 #### Accessibility
@@ -549,3 +591,7 @@ At this moment, there is no tool that supports SymbolOccurrences for the Java la
 [88]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1
 [89]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.2
 [90]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.8
+[91]: https://docs.oracle.com/javase/specs/jvms/se8/html/index.html
+[92]: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
+[93]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-9.html#jls-9.7
+[94]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-7.html

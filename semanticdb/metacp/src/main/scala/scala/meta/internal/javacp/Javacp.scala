@@ -427,7 +427,6 @@ object Javacp {
     def push(symbol: String): Unit =
       buf += s.Annotation(Some(styperef(symbol)))
 
-    if (access.hasFlag(o.ACC_DEPRECATED)) push("scala.deprecated#")
     if (access.hasFlag(o.ACC_STRICT)) push("scala.annotation.strictfp#")
 
     buf.result()
