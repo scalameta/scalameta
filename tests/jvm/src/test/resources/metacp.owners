@@ -134,6 +134,7 @@ com.javacp.Test#publicField. => com.javacp.Test#
 com.javacp.Test#publicMethod(). => com.javacp.Test#
 com.javacp.Test#staticField. => com.javacp.Test#
 com.javacp.Test#staticMethod(). => com.javacp.Test#
+com.javacp.Test#strictfpMethod(). => com.javacp.Test#
 com.javacp.Test#typeParams(ArrayList,Hashtable). => com.javacp.Test#
 com.javacp.Test#typeParams(ArrayList,Hashtable).(a) => com.javacp.Test#typeParams(ArrayList,Hashtable).
 com.javacp.Test#typeParams(ArrayList,Hashtable).(b) => com.javacp.Test#typeParams(ArrayList,Hashtable).

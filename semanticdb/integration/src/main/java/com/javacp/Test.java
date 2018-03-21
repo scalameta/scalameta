@@ -66,4 +66,5 @@ public final class Test<A extends CharSequence & Serializable, B> extends ArrayL
 
     void vararg(int a, String... args) {}
 
+    strictfp void strictfpMethod() {}
 }
