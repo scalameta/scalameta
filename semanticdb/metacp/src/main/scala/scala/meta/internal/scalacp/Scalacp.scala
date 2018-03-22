@@ -426,10 +426,12 @@ object Scalacp {
             kin.typeDescriptor == typeDescriptor
           }
           val disambiguator = {
-            if (synonyms.length == 1) s"(${typeDescriptor})"
+            def defaultDescriptor = s"(${typeDescriptor})"
+            if (synonyms.lengthCompare(1) == 0) defaultDescriptor
             else {
-              val index = 1 + synonyms.indexOf(sym)
-              s"(${typeDescriptor}+${index})"
+              val index = synonyms.indexOf(sym)
+              if (index == 0) defaultDescriptor
+              else s"(${typeDescriptor}+${index})"
             }
           }
           d.Method(sname(sym), disambiguator)

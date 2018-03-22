@@ -166,10 +166,12 @@ object Javacp {
             m.node.name == method.node.name &&
             m.typeDescriptor == method.typeDescriptor
           }
-          if (synonyms.lengthCompare(1) == 0) s"(${method.typeDescriptor})"
+          def defaultDescriptor = s"(${method.typeDescriptor})"
+          if (synonyms.lengthCompare(1) == 0) defaultDescriptor
           else {
-            val index = 1 + synonyms.indexWhere(_.signature eq method.signature)
-            s"(${method.typeDescriptor}+${index})"
+            val index = synonyms.indexWhere(_.signature eq method.signature)
+            if (index == 0) defaultDescriptor
+            else s"(${method.typeDescriptor}+${index})"
           }
         }
         val methodDescriptor = d.Method(method.node.name, methodDisambiguator)

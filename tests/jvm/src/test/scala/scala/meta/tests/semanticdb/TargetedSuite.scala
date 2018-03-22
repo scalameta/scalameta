@@ -1245,8 +1245,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  M.<<foo>>(new M2.C)
       |}
     """.trim.stripMargin, { (db, foo1, foo2) =>
-      assert(foo1 === Symbol("an.M.foo(C+1)."))
-      assert(foo2 === Symbol("an.M.foo(C+2)."))
+      assert(foo1 === Symbol("an.M.foo(C)."))
+      assert(foo2 === Symbol("an.M.foo(C+1)."))
     }
   )
 }

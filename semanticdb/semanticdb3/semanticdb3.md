@@ -853,7 +853,7 @@ is incomplete or out of date.
 <a name="scala-symbol"></a>
 #### Symbol
 
-In this section, we describe Scala symbol format, but don't cover the details
+In this section, we describe the Scala symbol format, but don't cover the details
 of how Scala definitions map onto symbols (e.g. which symbols are created for
 which Scala definitions, what their metadata is, etc). See
 [SymbolInformation](#scala-symbolinformation) for more information about that.
@@ -931,8 +931,11 @@ which Scala definitions, what their metadata is, etc). See
     and a right parenthesis (`)`).
     In the case when multiple definitions have the same kind, name and
     type descriptor, the type descriptor is appended with `+N`,
-    with `+1` going to the method that is defined first in the source code,
-    `+2` going to the method that is defined second, etc.
+    with no suffix appended to the method that is defined first in the source code,
+    with `+1` appended to the method that is defined second in the source code,
+    `+2` appended to the method that is defined third, etc.
+    See section on Scala "function declarations and definitions" below
+    for an example.
 
 **Encoded name** is:
   * If name is a Java identifier [\[22\]][22], the name itself.
@@ -1770,6 +1773,7 @@ abstract class C {
   def m1: Int = ???
   def m2(): Int = ???
   def m3(x: Int): Int = ???
+  def m3(x: org.Int): Int = ???
   def m4(x: Int)(y: Int): Int = ???
 }
 ```
@@ -1797,6 +1801,12 @@ abstract class C {
     <td><code>_empty_.C#m3(Int).</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m3</code></td>
+    <td><code>_empty_.C#m3(Int+1).</code></td>
+    <td><code>METHOD</code></td>
+    <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;org.Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m4</code></td>

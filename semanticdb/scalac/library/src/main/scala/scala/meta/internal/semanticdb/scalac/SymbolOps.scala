@@ -95,7 +95,11 @@ trait SymbolOps { self: DatabaseOps =>
       val synonyms = siblings.filter(_.descriptor == sym.descriptor)
       val suffix = {
         if (synonyms.lengthCompare(1) == 0) ""
-        else "+" + (synonyms.indexOf(sym) + 1)
+        else {
+          val index = synonyms.indexOf(sym)
+          if (index == 0) ""
+          else "+" + index
+        }
       }
       "(" + descriptor + suffix + ")"
     }
