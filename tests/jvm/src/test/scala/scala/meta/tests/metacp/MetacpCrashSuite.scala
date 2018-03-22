@@ -9,5 +9,6 @@ class MetacpCrashSuite extends BaseMetacpSuite {
   checkMetacp(akkaStream211)
   checkMetacp(spark)
   checkMetacp(jdk)
+  checkMetacp(play)
 
 }

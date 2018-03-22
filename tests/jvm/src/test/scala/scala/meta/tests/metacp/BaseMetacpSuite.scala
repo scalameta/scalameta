@@ -35,6 +35,7 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
   val kafka = Library("org.apache.kafka", "kafka_2.12", "1.0.0")
   val flink = Library("org.apache.flink", "flink-parent", "1.4.1")
   val grpc = Library("io.grpc", "grpc-all", "1.10.0")
+  val play = Library("com.typesafe.play", "play_2.12", "2.6.12")
   val jdk = {
     val bootClasspath = Classpath(
       sys.props
@@ -50,6 +51,7 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
     kafka,
     flink,
     grpc,
+    play,
     jdk
   )
 
