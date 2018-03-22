@@ -54,7 +54,6 @@
   * If it's been a while, and the release doesn't show up at Maven Central,
     ping Sonatype at [OSSRH-10192](https://issues.sonatype.org/browse/OSSRH-10192).
 * Upgrade the downstream projects:
-  * https://github.com/scalameta/semanticdb-sbt
   * https://github.com/scalacenter/scalafix
   * https://github.com/scalameta/metadoc
   * https://github.com/scalameta/metals
