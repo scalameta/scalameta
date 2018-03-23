@@ -81,7 +81,7 @@ In this section, we describe the Java symbol format.
   * For root package, `_root_`.
   * For unnamed package, `_empty_`.
   * For constructor, `<init>`.
-  * For named package, fields, methods, classes and interfaces, the identifer of the binding introduced by the definition.
+  * For other definition, the identifer of the binding introduced by the definition.
 
 **Type descriptor** is:
   * For `TYPE_REF`, encoded name of `symbol`.
@@ -176,12 +176,31 @@ In Java, [Type](#type) represents types [\[74\]][74].
       </ul>
     </td> </tr>
   <tr>
+    <td valign="top">Reference types [<a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.3">96</a>]</td>
+    <td>
+      <ul>
+        <li><code>T</code> ~ <code>TypeRef(None, &lt;T&gt;, List())</code>.</li>
+        <li><code>S.T</code> ~ <code>TypeRef(Some(&lt;S&gt;), &lt;T&gt;, List())</code>.</li>
+        <li><code>C&lt;T&gt;</code> ~ <code>TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code>.</li>
+        <li><code>T[]</code> ~ <code>TypeRef(None, &lt;scala.Array#&gt;, List(&lt;T&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
     <td valign="top">Type variable [<a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.4">78</a>]</td>
     <td>
       <ul>
         <li>Signature of <code>T</code> ~ <code>TypeType(List(), None, None)</code>.</li>
         <li>Signature of <code>T extends S</code> ~ <code>TypeType(List(), None, Some(&lt;S&gt;))</code>.</li>
-        <li>Signature of <code>T extends S1 &amp; ... &amp; Sn </code> ~ <code>TypeType(List(), None, Some(IntersectionType(&lt;S1&gt;, ..., &lt;Sn&gt;)))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Type variable [<a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.4">78</a>]</td>
+    <td>
+      <ul>
+        <li>Signature of <code>T</code> ~ <code>TypeType(List(), None, None)</code>.</li>
+        <li>Signature of <code>T extends S</code> ~ <code>TypeType(List(), None, Some(&lt;S&gt;))</code>.</li>
       </ul>
     </td>
   </tr>
@@ -192,6 +211,14 @@ In Java, [Type](#type) represents types [\[74\]][74].
         <li><code>C&lt;T1, ..., Tn&gt;</code> ~ <code>TypeRef(None, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
         <li><code>C&lt;?&gt;</code> ~ <code>ExistentialType(List(&lt;T&gt;), TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code> where signature of <code>&lt;T&gt;</code> is <code>TypeType(List(), None, None)</code>.</li>
         <li><code>C&lt;? extends T&gt;</code> ~ <code>TypeRef(None, &lt;C&gt;, List(&lt;local_wildcard&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Raw types [<a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.8">95</a>]</td>
+    <td>
+      <ul>
+        <li><code>T</code> ~ <code>TypeRef(None, &lt;T&gt;, List())</code>.</li>
       </ul>
     </td>
   </tr>
@@ -218,7 +245,6 @@ Notes:
 * Primitive and array types are converted to their equivalent [Scala type](#scala-type) representations. We may improve on this in the future.
 * Wildcard type arguments of parameterized types are currently incorrectly represented as `local_wildcard`,
   this behavior is expected to change in the future and should not be relied upon.
-* Method throws clauses are discarded.
 
 <a name="java-symbolinformation"></a>
 #### SymbolInformation
@@ -287,8 +313,10 @@ package a;
 class C extends S1 implements I {
   T1 m1;
   static T2 m2();
-  T3 m3(T4 e) throws E;
-  static class D1<T5 extends S2 & S3, T6> { }
+  T3 m3(one.Overload e1);
+  static T4 m3(two.Overload e2);
+  T5 m3(three.Overload e3);
+  static class D1<T6 extends S2 & S3, T7> { }
   class D2 { }
 }
 ```
@@ -304,7 +332,7 @@ class C extends S1 implements I {
     <td><code>C</code></td>
     <td><code>a.C#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(), List(&lt;S1&gt;, &lt;I&gt;), List(&lt;m1&gt;, &lt;m3&gt;, &lt;D2&gt;, &lt;m2&gt;, &lt;D1&gt;))</code></td>
+    <td><code>ClassInfoType(List(), List(&lt;S1&gt;, &lt;I&gt;), List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3(Overload)&gt;, &lt;m3(Overload+1)&gt;, &lt;m3(Overload+2)&gt;, &lt;D1&gt;, &lt;D2&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m1</code></td>
@@ -320,25 +348,49 @@ class C extends S1 implements I {
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.C#m3(String).</code></td>
+    <td><code>a.C#m3(Overload).</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(&lt;a.C#m3(T4).(e)&gt;) TypeRef(None, &lt;T3&gt;))</code></td>
+    <td><code>MethodType(List(), List(&lt;a.C#m3(one.Overload).(e1)&gt;), TypeRef(None, &lt;T3&gt;))</code></td>
   </tr>
   <tr>
-    <td><code>e</code></td>
-    <td><code>a.C#m3(String).(e)</code></td>
+    <td><code>e1</code></td>
+    <td><code>a.C#m3(Overload).(e1)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;java.lang.String#&gt;, List())</code></td>
+    <td><code>TypeRef(None, &lt;one.Overload&gt;, List())</code></td>
   </tr>
   <tr>
-    <td><code>T5</code></td>
-    <td><code>a.C#D1#[T5]</code></td>
+    <td><code>m3</code></td>
+    <td><code>a.C#m3(Overload+1).</code></td>
+    <td><code>METHOD</code></td>
+    <td><code>MethodType(List(), List(&lt;a.C#m3(Overload+1).(e3)&gt;), TypeRef(None, &lt;T5&gt;))</code></td>
+  </tr>
+  <tr>
+    <td><code>e3</code></td>
+    <td><code>a.C#m3(Overload+1).(e3)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;three.Overload&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>m3</code></td>
+    <td><code>a.C#m3(Overload+2).</code></td>
+    <td><code>METHOD</code></td>
+    <td><code>MethodType(List(), List(&lt;a.C#m3(Overload+2).(e3)&gt;) TypeRef(None, &lt;T4&gt;))</code></td>
+  </tr>
+  <tr>
+    <td><code>e2</code></td>
+    <td><code>a.C#m3(Overload+2).(e2)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;two.Overload&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>T6</code></td>
+    <td><code>a.C#D1#[T6]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), None, Some(IntersectionType(List(&lt;S2&gt;, &lt;S2&gt;))))</code></td>
+    <td><code>TypeType(List(), None, Some(IntersectionType(List(&lt;S2&gt;, &lt;S3&gt;))))</code></td>
   </tr>
   <tr>
-    <td><code>T2</code></td>
-    <td><code>a.C#D1#[T2]</code></td>
+    <td><code>T7</code></td>
+    <td><code>a.C#D1#[T7]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeType(List(), None, None)</code></td>
   </tr>
@@ -346,7 +398,7 @@ class C extends S1 implements I {
     <td><code>D1</code></td>
     <td><code>a.C#D1#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(&lt;T5&gt;, &lt;T6&gt;), List(&lt;java.lang.Object#&gt;), List())</code></td>
+    <td><code>ClassInfoType(List(&lt;T6&gt;, &lt;T7&gt;), List(&lt;java.lang.Object#&gt;), List())</code></td>
   </tr>
   <tr>
     <td><code>D2</code></td>
@@ -360,7 +412,7 @@ Notes:
 * Class members must appear in the order specified below. This requirement is
   necessary to compute consistent method symbol disambiguators in the Scala
   compiler where static and non-static members have separate owners.
-  * non-static members first, following the same order as they appear in the original source
+  * non-static members first, following the same order as they appear in the original source. In the example above, observe that 
   * static members secondly, following the same order as they appear in the original source
 * A Java class maps to a single symbol with type `ClassInfoType` including all static and non-static members.
   This departs from the Scala compiler internal representation of Java classes where non-static members
@@ -429,39 +481,218 @@ Notes:
 * Enum types and enum fields must have the property `ENUM` set.
 * Enum fields have the type of their enclosing class.
 * Enum members include the implicitly declared methods [\[86\]][86] `valueOf` and `values`.
+* Supported properties for enum symbols are:
+  * `STATIC`: implicitly set for all enum types.
+  * `FINAL`: implicitly set for all enum types.
 
 **Interface declarations** [\[77\]][77] are represented by a single symbol
-like classes but with the `INTERFACE` kind. Concretely, the differences
-between interface symbols and class symbols are:
-* Interface symbols are always `ABSTRACT`
-* Interface symbols do not support other properties.
+like classes but with the `INTERFACE` kind.
+
+```java
+package a;
+
+public interface List<T> extends I {
+  T head();
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td width="275px"><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>List</code></td>
+    <td><code>a.List#</code></td>
+    <td><code>CLASS</code></td>
+    <td><code>ClassInfoType(List(&lt;T&gt;), List(&lt;I&gt;), List(&lt;head&gt;))</code></td>
+  </tr>
+  <tr>
+    <td><code>head</code></td>
+    <td><code>a.List#head().</code></td>
+    <td><code>METHOD</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
+  </tr>
+</table>
+
+The differences between interface symbols and class symbols are:
+
+* Interfaces do not have constructors.
+* Supported properties for interface symbols are:
+  * `ABSTRACT`: implicitly set for all interface symbols.
 * Interface members without explicit access modifiers have accessibility
   `PUBLIC` by default instead of `PRIVATE_WITHIN`.
 
 **Method declarations** [\[82\]][82] are represented by a single symbol with
 the `METHOD` kind and one symbol for each type parameter with kind
 `TYPE_PARAMETER` and formal parameter with kind `PARAMETER`.
+
+```java
+package a;
+class A {
+  A m1();
+  A m2(T1 t1) throws E;
+  <T2> T2 m3(T2 t2);
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td width="275px"><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>A</code></td>
+    <td><code>a.A#</code></td>
+    <td><code>CLASS</code></td>
+    <td><code>ClassInfoType(List(), List(), List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3&gt;))</code></td>
+  </tr>
+  <tr>
+    <td><code>m1</code></td>
+    <td><code>a.A#m1().</code></td>
+    <td><code>METHOD</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;A&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m2</code></td>
+    <td><code>a.A#m2(T1).</code></td>
+    <td><code>METHOD</code></td>
+    <td><code>MethodType(List(), List(&lt;t1&gt;), TypeRef(None, &lt;A&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>t1</code></td>
+    <td><code>a.A#m2(T1).(t1)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;T1&gt;, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>m3</code></td>
+    <td><code>a.A#m3(T2).</code></td>
+    <td><code>METHOD</code></td>
+    <td><code>MethodType(List(&lt;T2&gt;), List(&lt;t2&gt;), TypeRef(None, &lt;T2&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m3</code></td>
+    <td><code>a.A#m3(T2).[T2]</code></td>
+    <td><code>TYPE_PARAMETER</code></td>
+    <td><code>TypeType(List(), None, None)</code></td>
+  </tr>
+  <tr>
+    <td><code>t2</code></td>
+    <td><code>a.A#m3(T2).(t2)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>TypeRef(None, &lt;T2&gt;, List())</code></td>
+  </tr>
+</table>
+
 Notes:
 * When compiled with the compiler option `-parameters`, the name of method
   parameters matches their name written in source. Otherwise, parameters have
   the name `paramN` where `N` is the index of that given parameter starting at
   index 0.
-* Supported accessibilities for `METHOD` symbols are
-  * `PRIVATE`: set for `private` methods
-  * `PRIVATE_WITHIN`: set for methods with package access
-  * `PUBLIC`: set for `public` methods
+* Method throws clauses are discarded.
+* Supported properties for method symbols are:
+  * `FINAL`: set for `final` methods.
+  * `STATIC`: set for `static` methods.
+  * `ABSTRACT`: set for `abstract` methods.
+* Method declarations support [all Java accessibilities](#java-accessibility).
 
 **Field declarations** [\[83\]][83] are represented by a single symbol with
 the `FIELD` kind.
-* Supported accessibilities for `FIELD` symbols are
-  * `PRIVATE`: set for `private` fields
-  * `PRIVATE_WITHIN`: set for fields with package access
-  * `PUBLIC`: set for `public` fields
+
+```java
+package a;
+class A {
+  A field;
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td width="275px"><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>A</code></td>
+    <td><code>a.A#</code></td>
+    <td><code>CLASS</code></td>
+    <td><code>ClassInfoType(List(), List(), List(&lt;head&gt;))</code></td>
+  </tr>
+  <tr>
+    <td><code>field</code></td>
+    <td><code>a.A#field.</code></td>
+    <td><code>FIELD</code></td>
+    <td><code>TypeRef(None, &lt;A&gt;, List())</code></td>
+  </tr>
+</table>
+
+Notes:
+* Supported properties for field symbols are:
+  * `FINAL`: set for `final` fields.
+  * `STATIC`: set for `static` fields.
+* Field declarations support [all Java accessibilities](#java-accessibility).
 
 **Constructor declarations** [\[90\]][90] are represented by a single symbol with
 name `<init>` and the `CONSTRUCTOR` kind. Constructor formal parameters are represented
 the same way as method declaration formal parameters.
-* Supported accessibilities for `CONSTRUCTOR` symbols are the same as for `METHOD` symbols.
+
+```java
+package a;
+class Outer {
+  Outer() {}
+  class Inner {
+    Inner() {}
+  }
+}
+```
+
+<table>
+  <tr>
+    <td><b>Definition</b></td>
+    <td width="275px"><b>Symbol</b></td>
+    <td><b>Kind</b></td>
+    <td><b>Signature</b></td>
+  </tr>
+  <tr>
+    <td><code>Outer</code></td>
+    <td><code>a.Outer#</code></td>
+    <td><code>CLASS</code></td>
+    <td><code>ClassInfoType(List(), List(), List(&lt;a.Outer#&lt;init&gt;, &lt;Inner&gt;))</code></td>
+  </tr>
+  <tr>
+    <td><code>&lt;init&gt;</code></td>
+    <td><code>a.Outer#&lt;init&gt;().</code></td>
+    <td><code>CONSTRUCTOR</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Outer&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>Inner</code></td>
+    <td><code>a.Outer#Inner#</code></td>
+    <td><code>CLASS</code></td>
+    <td><code>ClassInfoType(List(), List(), List(&lt;a.Outer#Inner#&lt;init&gt;))</code></td>
+  </tr>
+  <tr>
+    <td><code>&lt;init&gt;</code></td>
+    <td><code>a.Outer#Inner#&lt;init&gt;().</code></td>
+    <td><code>CONSTRUCTOR</code></td>
+    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Inner&gt;, List()))</code></td>
+  </tr>
+</table>
+
+Notes:
+* Constructors don't have type parameters and return types, but we still
+  represent their signatures with `MethodType`. In these signatures,
+  type parameters are equal to `List()` and the return type
+  is the type of the enclosing class parameterized with references to its
+  type parameters.
+* Constructor declarations support no properties.
+* Constructor declarations support [all Java accessibilities](#java-accessibility).
 
 **Packages** [\[94\]][94] are represented by `PACKAGE` symbols.
 * Packages have no `tpe`
@@ -477,7 +708,7 @@ message Annotation {
 }
 ```
 
-In Java, [Annotation](#annotation) represents `access_flags` in the JVMS `class` file format [\[92\]][92].
+In Java, [Annotation](#annotation) represents `access_flags` in the JVMS `class` file format [\[92\]][92] but not the actual annotations [\[93\]][93].
 We may improve on this in the future.
 
 <table>
@@ -595,3 +826,5 @@ At this moment, there is no tool that supports SymbolOccurrences for the Java la
 [92]: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
 [93]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-9.html#jls-9.7
 [94]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-7.html
+[95]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.8
+[96]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.3
