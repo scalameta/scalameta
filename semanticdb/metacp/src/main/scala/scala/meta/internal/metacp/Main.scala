@@ -10,15 +10,17 @@ import scala.meta.metacp._
 import scala.util.control.NonFatal
 import org.langmeta.internal.io._
 import org.langmeta.io._
+import java.util.concurrent.atomic.AtomicBoolean
 
 class Main(settings: Settings, reporter: Reporter) {
   def process(): Option[Classpath] = {
-    var success = true
+    val success = new AtomicBoolean(true)
     val outs = {
-      settings.classpath.shallow.flatMap { in =>
+      settings.classpath.shallow.par.flatMap { in =>
         if (in.isDirectory) {
           val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
-          success &= convertClasspathEntry(in, out)
+          val res = convertClasspathEntry(in, out)
+          success.compareAndSet(true, res)
           List(out)
         } else if (in.isFile) {
           val cacheEntry = {
@@ -30,7 +32,8 @@ class Main(settings: Settings, reporter: Reporter) {
             List(cacheEntry)
           } else {
             PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
-              success &= convertClasspathEntry(in, out)
+              val res = convertClasspathEntry(in, out)
+              success.compareAndSet(true, res)
               List(cacheEntry)
             }
           }
@@ -46,7 +49,8 @@ class Main(settings: Settings, reporter: Reporter) {
           List(cacheEntry)
         } else {
           PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
-            success &= dumpScalaLibrarySynthetics(out)
+            val res = dumpScalaLibrarySynthetics(out)
+            success.compareAndSet(true, res)
             List(cacheEntry)
           }
         }
@@ -54,7 +58,7 @@ class Main(settings: Settings, reporter: Reporter) {
         Nil
       }
     }
-    if (success) Some(Classpath(outs ++ synthetics))
+    if (success.get) Some(Classpath(outs.toList ++ synthetics))
     else None
   }
 
