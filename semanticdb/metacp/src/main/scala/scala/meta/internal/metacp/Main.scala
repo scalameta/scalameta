@@ -15,7 +15,7 @@ class Main(settings: Settings, reporter: Reporter) {
   def process(): Option[Classpath] = {
     var success = true
     val outs = {
-      settings.classpath.shallow.flatMap { in =>
+      settings.classpath.shallow.par.flatMap { in =>
         if (in.isDirectory) {
           val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
           success &= convertClasspathEntry(in, out)
@@ -54,7 +54,7 @@ class Main(settings: Settings, reporter: Reporter) {
         Nil
       }
     }
-    if (success) Some(Classpath(outs ++ synthetics))
+    if (success) Some(Classpath(outs.toList ++ synthetics))
     else None
   }
 
