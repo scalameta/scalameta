@@ -5,6 +5,7 @@ import scala.util.control.NonFatal
 import org.langmeta.inputs.{Input => dInput}
 import org.langmeta.inputs.{Position => dPosition}
 import org.langmeta.semanticdb.{Synthetic => dSynthetic}
+import org.langmeta.semanticdb.{Denotation => dDenotation}
 import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb.{vfs => v}
 import org.langmeta.io._
@@ -427,5 +428,14 @@ package object semanticdb {
   // append the URI to the ID.
   private def localSymbolSuffix(uri: String): String = {
     "_" + uri.replaceAll("[^A-Za-z0-9]", "_")
+  }
+
+  // ScalaPB generated classes are not part of the Scalameta public API so Denotation.{tpe,annotations,accessibility} are
+  // package private to langmeta. However, we need to access these fields from scala.meta.internal so these extension
+  // methods are here to open access.
+  implicit class XtensionDenotationsInternal(denot: dDenotation) {
+    def tpeInternal: Option[s.Type] = denot.tpe
+    def annotationsInternal: List[s.Annotation] = denot.annotations
+    def accessibilityInternal: Option[s.Accessibility] = denot.accessibility
   }
 }

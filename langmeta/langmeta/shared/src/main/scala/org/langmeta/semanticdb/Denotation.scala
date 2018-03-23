@@ -13,9 +13,11 @@ final class Denotation(
     val names: List[ResolvedName],
     val members: List[Signature],
     val overrides: List[Symbol],
-    val tpe: Option[s.Type],
-    val annotations: List[s.Annotation],
-    val accessibility: Option[s.Accessibility],
+    // These fields are package private because ScalaPB generated classes are not part of the
+    // Scalameta public API. See https://github.com/scalameta/scalameta/blob/master/COMPATIBILITY.md
+    private[langmeta] val tpe: Option[s.Type],
+    private[langmeta] val annotations: List[s.Annotation],
+    private[langmeta] val accessibility: Option[s.Accessibility],
     val owner: Symbol
 ) extends HasFlags
     with Product

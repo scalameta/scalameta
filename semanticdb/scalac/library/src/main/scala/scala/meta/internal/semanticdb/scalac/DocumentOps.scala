@@ -1,7 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import org.langmeta.internal.io.PathIO
-import org.langmeta.internal.semanticdb.vfs.SemanticdbPaths
+import org.langmeta.internal.semanticdb._
 import scala.collection.mutable
 import scala.reflect.internal._
 import scala.reflect.internal.util._
@@ -550,9 +550,9 @@ trait DocumentOps { self: DatabaseOps =>
               denot.names,
               members,
               denot.overrides,
-              denot.tpe,
-              denot.annotations,
-              denot.accessibility,
+              denot.tpeInternal,
+              denot.annotationsInternal,
+              denot.accessibilityInternal,
               denot.owner)
           }
           m.ResolvedSymbol(sym, denotationWithMembers)
