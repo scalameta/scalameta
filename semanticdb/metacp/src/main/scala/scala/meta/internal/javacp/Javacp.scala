@@ -11,6 +11,7 @@ import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb3.Scala.{Names => n}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.tree.ClassNode
@@ -194,18 +195,29 @@ object Javacp {
             method.signature.params
           }
 
-        val parameterSymbols = params.zipWithIndex.map {
+        val parameterSymbols: List[String] = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
             val paramName = {
               if (method.node.parameters == null) "param" + i
               else method.node.parameters.get(i).name
             }
             val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
+            val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
+            val tpe =
+              if (isRepeatedType)
+                s.Type(
+                  tag = t.REPEATED_TYPE,
+                  repeatedType = Some(s.RepeatedType(
+                    param.toType(methodScope).typeRef.flatMap(_.typeArguments.headOption)
+                  ))
+                )
+              else
+                param.toType(methodScope)
             addInfo(
               paramSymbol,
               k.PARAMETER,
               paramName,
-              Some(param.toType(methodScope)),
+              Some(tpe),
               o.ACC_PUBLIC,
               methodSymbol
             )

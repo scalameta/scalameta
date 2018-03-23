@@ -326,13 +326,13 @@ Schema => SemanticDB v3
 Uri => com/javacp/Test.class
 Text => empty
 Language => Java
-Symbols => 66 entries
+Symbols => 69 entries
 
 Symbols:
 _root_. => package _root_
 com. => package com
 com.javacp. => package javacp
-com.javacp.Test# => final class Test[A <: CharSequence & Serializable, B <: Object].{+34 decls}
+com.javacp.Test# => final class Test[A <: CharSequence & Serializable, B <: Object].{+35 decls}
   extends ArrayList[A]
   extends Comparable[B]
   extends Serializable
@@ -503,6 +503,16 @@ com.javacp.Test#typeParams(ArrayList,Hashtable).(b) => param b: Hashtable[String
   Hashtable => java.util.Hashtable#
   String => java.lang.String#
   B => com.javacp.Test#[B]
+com.javacp.Test#vararg(Int,Array). => private[javacp] method vararg: (a: Int, args: String*): Unit
+a => com.javacp.Test#vararg(Int,Array).(a)
+Int => scala.Int#
+args => com.javacp.Test#vararg(Int,Array).(args)
+String => java.lang.String#
+Unit => scala.Unit#
+com.javacp.Test#vararg(Int,Array).(a) => param a: Int
+Int => scala.Int#
+com.javacp.Test#vararg(Int,Array).(args) => param args: String*
+String => java.lang.String#
 com.javacp.Test#wildcard(ArrayList). => method wildcard: (wildcard: ArrayList[local_wildcard]): Unit
   wildcard => com.javacp.Test#wildcard(ArrayList).(wildcard)
   ArrayList => java.util.ArrayList#
