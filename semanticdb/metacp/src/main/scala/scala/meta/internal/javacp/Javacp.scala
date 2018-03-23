@@ -204,15 +204,17 @@ object Javacp {
             val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
-              if (isRepeatedType)
+              if (isRepeatedType) {
+                val tpe = param.toType(methodScope)
+                require(
+                  tpe.typeRef.isDefined && tpe.typeRef.get.symbol == "scala.Array#",
+                  s"expected $paramName to be a scala.Array#, found $tpe"
+                )
                 s.Type(
                   tag = t.REPEATED_TYPE,
-                  repeatedType = Some(s.RepeatedType(
-                    param.toType(methodScope).typeRef.flatMap(_.typeArguments.headOption)
-                  ))
+                  repeatedType = Some(s.RepeatedType(Some(tpe.typeRef.get.typeArguments.head)))
                 )
-              else
-                param.toType(methodScope)
+              } else param.toType(methodScope)
             addInfo(
               paramSymbol,
               k.PARAMETER,
