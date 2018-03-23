@@ -203,7 +203,7 @@ object Javacp {
             }
             val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
-            val tpe =
+            val paramTpe =
               if (isRepeatedType)
                 s.Type(
                   tag = t.REPEATED_TYPE,
@@ -217,7 +217,7 @@ object Javacp {
               paramSymbol,
               k.PARAMETER,
               paramName,
-              Some(tpe),
+              Some(paramTpe),
               o.ACC_PUBLIC,
               methodSymbol
             )
