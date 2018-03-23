@@ -165,7 +165,6 @@ object Javacp {
         ()
       case method: MethodInfo =>
         val isConstructor = method.node.name == "<init>"
-        val methodName = if (isConstructor) n.Constructor else method.node.name
         val methodDisambiguator = {
           val synonyms = methodSignatures.filter { m =>
             m.node.name == method.node.name &&
