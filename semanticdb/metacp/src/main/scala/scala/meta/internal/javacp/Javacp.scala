@@ -145,12 +145,16 @@ object Javacp {
         new MethodSignatureVisitor
       )
       val typeDescriptor = {
-        val paramTypeDescriptors = signature.params.map {
+        val hasVarArg = method.access.hasFlag(o.ACC_VARARGS)
+        def toTypeDescriptor(t: JavaTypeSignature, i: Int): String = t match {
           case t: BaseType => sname(t.name)
           case t: ClassTypeSignature => sname(t.simpleClassTypeSignature.identifier)
           case t: TypeVariableSignature => sname(t.identifier)
+          case t: ArrayTypeSignature if hasVarArg && i == signature.params.length - 1 =>
+            s"${toTypeDescriptor(t.javaTypeSignature, i)}*"
           case _: ArrayTypeSignature => "Array"
         }
+        val paramTypeDescriptors = signature.params.zipWithIndex.map((toTypeDescriptor _).tupled)
         paramTypeDescriptors.mkString(",")
       }
       MethodInfo(method, typeDescriptor, signature)
