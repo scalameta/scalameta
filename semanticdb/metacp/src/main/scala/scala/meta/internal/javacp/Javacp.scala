@@ -11,6 +11,7 @@ import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb3.Scala.{Names => n}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.tools.asm.tree.ClassNode
@@ -144,12 +145,16 @@ object Javacp {
         new MethodSignatureVisitor
       )
       val typeDescriptor = {
-        val paramTypeDescriptors = signature.params.map {
+        val hasVarArg = method.access.hasFlag(o.ACC_VARARGS)
+        def toTypeDescriptor(t: JavaTypeSignature, i: Int): String = t match {
           case t: BaseType => sname(t.name)
           case t: ClassTypeSignature => sname(t.simpleClassTypeSignature.identifier)
           case t: TypeVariableSignature => sname(t.identifier)
+          case t: ArrayTypeSignature if hasVarArg && i == signature.params.length - 1 =>
+            s"${toTypeDescriptor(t.javaTypeSignature, i)}*"
           case _: ArrayTypeSignature => "Array"
         }
+        val paramTypeDescriptors = signature.params.zipWithIndex.map((toTypeDescriptor _).tupled)
         paramTypeDescriptors.mkString(",")
       }
       MethodInfo(method, typeDescriptor, signature)
@@ -194,18 +199,31 @@ object Javacp {
             method.signature.params
           }
 
-        val parameterSymbols = params.zipWithIndex.map {
+        val parameterSymbols: List[String] = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
             val paramName = {
               if (method.node.parameters == null) "param" + i
               else method.node.parameters.get(i).name
             }
             val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
+            val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
+            val paramTpe =
+              if (isRepeatedType) {
+                val tpe = param.toType(methodScope)
+                require(
+                  tpe.typeRef.isDefined && tpe.typeRef.get.symbol == "scala.Array#",
+                  s"expected $paramName to be a scala.Array#, found $tpe"
+                )
+                s.Type(
+                  tag = t.REPEATED_TYPE,
+                  repeatedType = Some(s.RepeatedType(Some(tpe.typeRef.get.typeArguments.head)))
+                )
+              } else param.toType(methodScope)
             addInfo(
               paramSymbol,
               k.PARAMETER,
               paramName,
-              Some(param.toType(methodScope)),
+              Some(paramTpe),
               o.ACC_PUBLIC,
               methodSymbol
             )
