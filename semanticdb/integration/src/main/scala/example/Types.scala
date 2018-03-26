@@ -43,6 +43,7 @@ object Test {
 
     val singleType1: x.type = ???
     val singleType2: p.x.type = ???
+    val Either = scala.util.Either
 
     val thisType1: this.type = ???
     val thisType2: C.this.type = ???
