@@ -165,7 +165,6 @@ object Javacp {
         ()
       case method: MethodInfo =>
         val isConstructor = method.node.name == "<init>"
-        val methodName = if (isConstructor) n.Constructor else method.node.name
         val methodDisambiguator = {
           val synonyms = methodSignatures.filter { m =>
             m.node.name == method.node.name &&
@@ -445,7 +444,6 @@ object Javacp {
     def push(symbol: String): Unit =
       buf += s.Annotation(Some(styperef(symbol)))
 
-    if (access.hasFlag(o.ACC_DEPRECATED)) push("scala.deprecated#")
     if (access.hasFlag(o.ACC_STRICT)) push("scala.annotation.strictfp#")
 
     buf.result()
