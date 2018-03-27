@@ -2742,7 +2742,6 @@ like classes but with the `INTERFACE` kind.
 
 ```java
 package a;
-
 public interface List<T> extends I {
   T head();
 }
@@ -2856,7 +2855,8 @@ Notes:
   * `FINAL`: set for `final` methods.
   * `STATIC`: set for `static` methods.
   * `ABSTRACT`: set for `abstract` methods.
-* Method declarations support [all Java accessibilities](#java-accessibility).
+* Method declarations support [all Java accessibilities](#java-accessibility),
+  however method declarations in interfaces can only be `PUBLIC`.
 
 **Field declarations** [\[83\]][83] are represented by a single symbol with
 the `FIELD` kind.
@@ -2891,9 +2891,10 @@ class A {
 
 Notes:
 * Supported properties for field symbols are:
-  * `FINAL`: set for `final` fields.
-  * `STATIC`: set for `static` fields.
+  * `FINAL`: set for `final` fields and interface fields.
+  * `STATIC`: set for `static` fields and interface fields.
 * Field declarations support [all Java accessibilities](#java-accessibility).
+  However, field declarations in interfaces can only be `PUBLIC`.
 
 **Constructor declarations** [\[90\]][90] are represented by a single symbol
 with name `<init>` and the `CONSTRUCTOR` kind. Constructor formal parameters
