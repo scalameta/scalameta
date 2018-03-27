@@ -48,7 +48,7 @@ object PlatformFileIO {
   }
 
   def slurp(path: AbsolutePath, charset: Charset): String =
-    scala.io.Source.fromFile(path.toFile)(scala.io.Codec(charset)).mkString
+    new String(Files.readAllBytes(path.toNIO), charset)
 
   def listFiles(path: AbsolutePath): ListFiles =
     new ListFiles(path, Option(path.toFile.list()).toList.flatten.map(RelativePath.apply))
