@@ -196,9 +196,9 @@ object Scalacp {
             val spre = if (tpe.hasNontrivialPrefix) loop(pre) else None
             val ssym = {
               // NOTE: Due to some unclear reason, Scalac sometimes saves
-              // (or Scala sometimes loads) single types that point to
-              // companion classes, not module classes. We assume that it's
-              // a mistake and work around accordingly.
+              // (or Scalap sometimes loads) single types that point to
+              // companion classes, not module classes (see #1392).
+              // We assume that it's a mistake and work around accordingly.
               val raw = ssymbol(sym)
               if (raw.endsWith("#")) raw.stripSuffix("#") + "."
               else raw
