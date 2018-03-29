@@ -194,7 +194,15 @@ object Scalacp {
           val stpe = {
             val stag = st.SYMBOL
             val spre = if (tpe.hasNontrivialPrefix) loop(pre) else None
-            val ssym = ssymbol(sym)
+            val ssym = {
+              // NOTE: Due to some unclear reason, Scalac sometimes saves
+              // (or Scalap sometimes loads) single types that point to
+              // companion classes, not module classes (see #1392).
+              // We assume that it's a mistake and work around accordingly.
+              val raw = ssymbol(sym)
+              if (raw.endsWith("#")) raw.stripSuffix("#") + "."
+              else raw
+            }
             s.SingletonType(stag, spre, ssym, 0, "")
           }
           Some(s.Type(tag = stag, singletonType = Some(stpe)))

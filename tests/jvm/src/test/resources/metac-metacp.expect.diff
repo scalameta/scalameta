@@ -1064,7 +1064,7 @@ types.Test.C#singleType2().
 +++ metacp
              string: ""
 -        symbol: "types.P#x()."
-+        symbol: "types.P#x#"
++        symbol: "types.P#x."
          primitive: 0
          string: ""
 
@@ -1076,7 +1076,7 @@ types.Test.C#singleType2.
 +++ metacp
          string: ""
 -    symbol: "types.P#x()."
-+    symbol: "types.P#x#"
++    symbol: "types.P#x."
      primitive: 0
      string: ""
 

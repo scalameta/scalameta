@@ -1476,14 +1476,14 @@ Schema => SemanticDB v3
 Uri => types/Test.class
 Text => empty
 Language => Scala
-Symbols => 134 entries
+Symbols => 136 entries
 
 Symbols:
 _root_. => package _root_
 types. => package types
 types.Test. => final object Test.{+6 decls}
   extends AnyRef
-types.Test.C# => class C.{+56 decls}
+types.Test.C# => class C.{+58 decls}
   extends M
 types.Test.C#$anon# => class $anon
 types.Test.C#$anon# => class $anon
@@ -1513,6 +1513,10 @@ types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any].{+1 de
 types.Test.C#ClassInfoType3#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
+types.Test.C#Either(). => val method Either: : Either.type
+  Either => scala.util.Either.
+types.Test.C#Either. => private[this] val field Either: Either.type
+  Either => scala.util.Either.
 types.Test.C#MethodType. => final object MethodType.{+7 decls}
   extends AnyRef
 types.Test.C#MethodType.m3(). => method m3: : Int
@@ -1699,11 +1703,11 @@ types.Test.C#singleType1. => private[this] val field singleType1: C.this.x.type
 types.Test.C#singleType2(). => val method singleType2: : C.this.p.x.type
   C => types.Test.C#
   p => types.Test.C#p().
-  x => types.P#x#
+  x => types.P#x.
 types.Test.C#singleType2. => private[this] val field singleType2: C.this.p.x.type
   C => types.Test.C#
   p => types.Test.C#p().
-  x => types.P#x#
+  x => types.P#x.
 types.Test.C#superType1(). => val method superType1: : Int
   Int => scala.Int#
 types.Test.C#superType1. => private[this] val field superType1: Int
