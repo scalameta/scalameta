@@ -771,11 +771,7 @@ lazy val nativeSettings = Seq(
   scalacOptions -= "-Xfatal-warnings",
   nativeGC := "immix",
   nativeMode := "release",
-  nativeLinkStubs := false,
-  // These builds are published from my private fork of Scala Native
-  // https://github.com/xeno-by/scalapb/commits/topic/scalameta
-  libraryDependencies -= "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
-  libraryDependencies += "com.github.xenoby" %%% "scalapb-runtime" % scalapbVersion
+  nativeLinkStubs := false
 )
 
 def exposePaths(projectName: String, config: Configuration) = {
