@@ -1,14 +1,16 @@
 * Choose the right version number:
   * `x.0.0` is reserved for incompatible changes and require a milestone cycle.
   * `x.y.0` is reserved for compatible changes.
-  * `x.y.z` is reserved for bugfixes that don't change the public API or the SemanticDB schema.
+  * `x.y.z` is reserved for bugfixes that don't change the public API,
+    the SemanticDB schema and major/minor versions of our dependencies.
   * For more details, consult [versioning policy](VERSIONING.md).
 * Tag the release:
   * The tag must be called `vx.y.z`, e.g. `v3.0.0`.
   * `git tag -a vx.y.z -m "vx.y.z"`
   * `git push upstream --tags`
   * Do not create a release on GitHub just yet. Creating a release on GitHub
-    sends out a notification to repository watchers, and the release isn't ready for that yet.
+    sends out a notification to repository watchers, and the release isn't ready
+    for that yet.
 * Wait for [the Travis CI job](https://travis-ci.org/scalameta/scalameta/branches)
   in Active Branches to build the binaries and stage them to Sonatype.
 * While waiting for Travis, update the milestones:
@@ -22,8 +24,8 @@
   * https://github.com/scalameta/scalameta/releases/new.
   * In the dropdown, pick the recently pushed tag.
   * In the release title, say `Scalameta vx.y.z`.
-  * Write the release notes using [3.3.0 release notes](https://github.com/scalameta/scalameta/releases/tag/v3.3.0)
-    as a template.
+  * Write the release notes using [3.7.0 release notes](https://github.com/scalameta/scalameta/releases/edit/v3.7.0)
+    as a template. In the future, we may automate this step.
   * Click "Save draft". The release is still not ready for an announcement,
     so we shouldn't "Publish release" just yet.
 * Finalize the release on Sonatype:
@@ -31,12 +33,12 @@
   * Alternatively:
     * Go to [Staging Repositories](https://oss.sonatype.org/#stagingRepositories).
     * Close the repositories that have been created by the Travis CI job.
-    There can be several respositories produced by the job (currently, there are three).
+      There can be several respositories produced by the job.
     * Release the repositories.
 * Verify the Sonatype release:
   * Make sure that the release shows up at https://oss.sonatype.org/content/repositories/releases/org/scalameta/.
-  * Make sure that `coursier fetch org.scalameta:semanticdb-scalac-core_a.b.c:x.y.z -r sonatype:releases` succeeds
-    for the supported Scala versions.
+  * Make sure that `coursier fetch org.scalameta:semanticdb-scalac-core_a.b.c:x.y.z -r sonatype:releases`
+    succeeds for the supported Scala versions.
 * Update the website:
   * Submit a pull request like https://github.com/scalameta/tutorial/pull/33.
   * Wait for the Travis CI validation.
@@ -50,10 +52,17 @@
   * Wait for up to several hours (for 3.2.0, we waited for 15 minutes;
     for 3.3.0, we waited for 1.5 hours).
   * Make sure that the release shows up at https://search.maven.org/#search%7Cga%7C1%7Corg.scalameta%20a%3A%22scalameta_2.12%22.
-  * Make sure that `coursier fetch org.scalameta:semanticdb-scalac-core_a.b.c:x.y.z` succeeds for the supported Scala versions.
+  * Make sure that `coursier fetch org.scalameta:semanticdb-scalac-core_a.b.c:x.y.z`
+    succeeds for the supported Scala versions.
   * If it's been a while, and the release doesn't show up at Maven Central,
     ping Sonatype at [OSSRH-10192](https://issues.sonatype.org/browse/OSSRH-10192).
 * Upgrade the downstream projects:
   * https://github.com/scalacenter/scalafix
+    (upgrade to Scalameta 3.4+ is currently blocked, so feel free to
+    skip upgrading this project for the time being).
   * https://github.com/scalameta/metadoc
+    (upgrade to Scalameta 3.0+ is currently blocked, so feel free to
+    skip upgrading this project for the time being).
   * https://github.com/scalameta/metals
+    (upgrade to Scalameta 3.0+ is currently blocked, so feel free to
+    skip upgrading this project for the time being).
