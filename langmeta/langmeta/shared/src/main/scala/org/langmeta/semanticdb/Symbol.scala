@@ -42,10 +42,9 @@ object Symbol {
   def apply(s: String): Symbol = {
     object naiveParser {
       var i = 0
-      def fail() = {
-        val message = "invalid symbol format"
+      def fail(message: String = "invalid symbol format") = {
         val caret = " " * (i - 1) + "^"
-        sys.error(s"$message$EOL$s$EOL$caret")
+        throw new IllegalArgumentException(s"$message$EOL$s$EOL$caret")
       }
 
       val BOF = '\u0000'
@@ -98,7 +97,7 @@ object Symbol {
         if (currChar == EOF) {
           owner
         } else if (currChar == ';') {
-          owner
+          fail("multi symbols are not supported")
         } else if (currChar == '[') {
           readChar()
           val name = parseName()
