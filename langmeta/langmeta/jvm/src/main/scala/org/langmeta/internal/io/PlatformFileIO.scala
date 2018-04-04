@@ -84,7 +84,9 @@ object PlatformFileIO {
   }
 
   def newJarFileSystem(path: AbsolutePath, create: Boolean): FileSystem = {
-    Files.createDirectories(path.toNIO.getParent)
+    if (create && !Files.exists(path.toNIO.getParent)) {
+      Files.createDirectories(path.toNIO.getParent)
+    }
     val map = new util.HashMap[String, String]()
     if (create) {
       map.put("create", "true")
