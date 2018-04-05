@@ -1,8 +1,5 @@
 package scala.meta.tests.metacp
 
-import java.io.File
-import java.io.OutputStream
-import java.io.PrintStream
 import java.nio.file.Files
 import org.langmeta.io.AbsolutePath
 import org.langmeta.io.Classpath
@@ -17,7 +14,7 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
 
   def checkMetacp(name: String, classpath: () => Classpath): Unit = {
     test(name) {
-      val settings = Settings().withClasspath(classpath()).withCacheDir(tmp)
+      val settings = Settings().withClasspath(classpath()).withCacheDir(tmp).withPar(true)
       val reporter = Reporter().withOut(System.out).withErr(System.err)
       val result = Metacp.process(settings, reporter)
       assert(result.nonEmpty)

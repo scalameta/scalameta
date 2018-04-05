@@ -2,6 +2,7 @@ package scala.meta.internal.metacp
 
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
+import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.JavaConverters._
 import scala.meta.internal.index._
 import scala.meta.internal.javacp._
@@ -11,55 +12,77 @@ import scala.util.control.NonFatal
 import org.langmeta.internal.io._
 import org.langmeta.io._
 import java.util.concurrent.atomic.AtomicBoolean
+import scala.collection.GenSeq
 
 class Main(settings: Settings, reporter: Reporter) {
   def process(): Option[Classpath] = {
     val success = new AtomicBoolean(true)
-    val outs = {
-      settings.classpath.shallow.par.flatMap { in =>
-        if (in.isDirectory) {
-          val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
-          val res = convertClasspathEntry(in, out)
-          success.compareAndSet(true, res)
-          List(out)
-        } else if (in.isFile) {
-          val cacheEntry = {
-            val base = settings.cacheDir
-            val checksum = Checksum(in)
-            base.resolve(in.toFile.getName.stripSuffix(".jar") + "-" + checksum + ".jar")
-          }
-          if (cacheEntry.toFile.exists) {
-            List(cacheEntry)
-          } else {
-            PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
-              val res = convertClasspathEntry(in, out)
-              success.compareAndSet(true, res)
-              List(cacheEntry)
-            }
-          }
-        } else {
-          Nil
+
+    val classpath: GenSeq[AbsolutePath] =
+      if (settings.par) settings.classpath.shallow.par
+      else settings.classpath.shallow
+
+    val buffer = new ConcurrentLinkedQueue[AbsolutePath]()
+
+    classpath.foreach { entry =>
+      val processedEntry: Option[AbsolutePath] = if (entry.isDirectory) {
+        val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
+        val res = convertClasspathEntry(entry, out)
+        success.compareAndSet(true, res)
+        Some(out)
+      } else if (entry.isFile) {
+        val cacheEntry = {
+          val base = settings.cacheDir
+          val checksum = Checksum(entry)
+          base.resolve(entry.toFile.getName.stripSuffix(".jar") + "-" + checksum + ".jar")
         }
+        if (cacheEntry.toFile.exists) {
+          Some(cacheEntry)
+        } else {
+          PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
+            val res = convertClasspathEntry(entry, out)
+            success.compareAndSet(true, res)
+            Some(cacheEntry)
+          }
+        }
+      } else {
+        None
+      }
+      processedEntry match {
+        case Some(path) =>
+          buffer.add(path)
+        case _ =>
       }
     }
-    val synthetics = {
+
+    val synthetics: Option[AbsolutePath] = {
       if (settings.scalaLibrarySynthetics) {
         val cacheEntry = settings.cacheDir.resolve("scala-library-synthetics.jar")
         if (cacheEntry.toFile.exists) {
-          List(cacheEntry)
+          Some(cacheEntry)
         } else {
           PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
             val res = dumpScalaLibrarySynthetics(out)
             success.compareAndSet(true, res)
-            List(cacheEntry)
+            Some(cacheEntry)
           }
         }
       } else {
-        Nil
+        None
       }
     }
-    if (success.get) Some(Classpath(outs.toList ++ synthetics))
-    else None
+    synthetics match {
+      case Some(path) =>
+        buffer.add(path)
+      case _ =>
+    }
+
+    if (success.get) {
+      import scala.collection.JavaConverters._
+      Some(Classpath(buffer.iterator().asScala.toList))
+    } else {
+      None
+    }
   }
 
   private def convertClasspathEntry(in: AbsolutePath, out: AbsolutePath): Boolean = {

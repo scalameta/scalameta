@@ -8,13 +8,15 @@ import scala.meta.internal.metacp.BuildInfo
 final class Settings private (
     val cacheDir: AbsolutePath,
     val classpath: Classpath,
-    val scalaLibrarySynthetics: Boolean
+    val scalaLibrarySynthetics: Boolean,
+    val par: Boolean
 ) {
   private def this() = {
     this(
       cacheDir = Settings.defaultCacheDir,
       classpath = Classpath(Nil),
-      scalaLibrarySynthetics = false
+      scalaLibrarySynthetics = false,
+      par = false
     )
   }
 
@@ -30,14 +32,21 @@ final class Settings private (
     copy(scalaLibrarySynthetics = include)
   }
 
+  def withPar(par: Boolean): Settings = {
+    copy(par = par)
+  }
+
   private def copy(
       cacheDir: AbsolutePath = cacheDir,
       classpath: Classpath = classpath,
-      scalaLibrarySynthetics: Boolean = scalaLibrarySynthetics): Settings = {
+      scalaLibrarySynthetics: Boolean = scalaLibrarySynthetics,
+      par: Boolean = par
+  ): Settings = {
     new Settings(
       cacheDir = cacheDir,
       classpath = classpath,
-      scalaLibrarySynthetics = scalaLibrarySynthetics
+      scalaLibrarySynthetics = scalaLibrarySynthetics,
+      par = par
     )
   }
 }
@@ -54,6 +63,8 @@ object Settings {
           loop(settings.copy(scalaLibrarySynthetics = false), true, rest)
         case "--include-scala-library-synthetics" +: rest if allowOptions =>
           loop(settings.copy(scalaLibrarySynthetics = true), true, rest)
+        case "--par" +: rest if allowOptions =>
+          loop(settings.copy(par = true), true, rest)
         case flag +: _ if allowOptions && flag.startsWith("-") =>
           reporter.out.println(s"unsupported flag $flag")
           None
