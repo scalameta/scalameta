@@ -25,11 +25,11 @@ class Main(settings: Settings, reporter: Reporter) {
     val buffer = new ConcurrentLinkedQueue[AbsolutePath]()
 
     classpath.foreach { entry =>
-      val processedEntry: Option[AbsolutePath] = if (entry.isDirectory) {
+      if (entry.isDirectory) {
         val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
         val res = convertClasspathEntry(entry, out)
         success.compareAndSet(true, res)
-        Some(out)
+        buffer.add(out)
       } else if (entry.isFile) {
         val cacheEntry = {
           val base = settings.cacheDir
@@ -37,44 +37,28 @@ class Main(settings: Settings, reporter: Reporter) {
           base.resolve(entry.toFile.getName.stripSuffix(".jar") + "-" + checksum + ".jar")
         }
         if (cacheEntry.toFile.exists) {
-          Some(cacheEntry)
+          buffer.add(cacheEntry)
         } else {
           PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
             val res = convertClasspathEntry(entry, out)
             success.compareAndSet(true, res)
-            Some(cacheEntry)
+            buffer.add(cacheEntry)
           }
         }
-      } else {
-        None
-      }
-      processedEntry match {
-        case Some(path) =>
-          buffer.add(path)
-        case _ =>
       }
     }
 
-    val synthetics: Option[AbsolutePath] = {
-      if (settings.scalaLibrarySynthetics) {
-        val cacheEntry = settings.cacheDir.resolve("scala-library-synthetics.jar")
-        if (cacheEntry.toFile.exists) {
-          Some(cacheEntry)
-        } else {
-          PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
-            val res = dumpScalaLibrarySynthetics(out)
-            success.compareAndSet(true, res)
-            Some(cacheEntry)
-          }
-        }
+    if (settings.scalaLibrarySynthetics) {
+      val cacheEntry = settings.cacheDir.resolve("scala-library-synthetics.jar")
+      if (cacheEntry.toFile.exists) {
+        buffer.add(cacheEntry)
       } else {
-        None
+        PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
+          val res = dumpScalaLibrarySynthetics(out)
+          success.compareAndSet(true, res)
+          buffer.add(cacheEntry)
+        }
       }
-    }
-    synthetics match {
-      case Some(path) =>
-        buffer.add(path)
-      case _ =>
     }
 
     if (success.get) {
