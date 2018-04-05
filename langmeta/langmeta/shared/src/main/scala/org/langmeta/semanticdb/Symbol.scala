@@ -31,7 +31,7 @@ object Symbol {
 
   final case class Multi(symbols: List[Symbol]) extends Symbol {
     override def toString = syntax
-    override def syntax = throw new UnsupportedOperationException("No longer supported.")
+    override def syntax = symbols.mkString(";")
     override def structure = s"""Symbol.Multi(${symbols.map(_.structure).mkString(", ")})"""
   }
 
