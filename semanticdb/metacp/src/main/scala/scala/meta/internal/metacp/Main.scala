@@ -39,7 +39,7 @@ class Main(settings: Settings, reporter: Reporter) {
         if (cacheEntry.toFile.exists) {
           buffer.add(cacheEntry)
         } else {
-          PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
+          PlatformFileIO.withJarFileSystem(cacheEntry, create = true) { out =>
             val res = convertClasspathEntry(entry, out)
             success.compareAndSet(true, res)
             buffer.add(cacheEntry)
@@ -53,7 +53,7 @@ class Main(settings: Settings, reporter: Reporter) {
       if (cacheEntry.toFile.exists) {
         buffer.add(cacheEntry)
       } else {
-        PlatformFileIO.withJarFileSystem(cacheEntry) { out =>
+        PlatformFileIO.withJarFileSystem(cacheEntry, create = true) { out =>
           val res = dumpScalaLibrarySynthetics(out)
           success.compareAndSet(true, res)
           buffer.add(cacheEntry)
