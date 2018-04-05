@@ -17,7 +17,7 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
   override val timeLimit = Span(1L, Minute)
 
   def assertDirectoryListingMatches(jar: AbsolutePath, expected: String): Unit = {
-    PlatformFileIO.withJarFileSystem(jar) { root =>
+    PlatformFileIO.withJarFileSystem(jar, create = false) { root =>
       val obtained = FileIO
         .listAllFilesRecursively(root)
         .files
@@ -59,7 +59,7 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
     val reporter = Reporter()
     Metacp.process(settings, reporter) match {
       case result @ Some(Classpath(List(scalaLibrarySemanticdbJar))) =>
-        PlatformFileIO.withJarFileSystem(scalaLibrarySemanticdbJar) { root =>
+        PlatformFileIO.withJarFileSystem(scalaLibrarySemanticdbJar, create = false) { root =>
           assert(root.resolve("META-INF/semanticdb/scala/Predef.class.semanticdb").isFile)
           assert(root.resolve("META-INF/semanticdb/scala/package.class.semanticdb").isFile)
           assert(root.resolve("META-INF/semanticdb/scala/Function16.class.semanticdb").isFile)

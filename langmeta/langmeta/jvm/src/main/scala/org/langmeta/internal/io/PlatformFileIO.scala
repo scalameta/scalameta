@@ -77,13 +77,19 @@ object PlatformFileIO {
     AbsolutePath(fs.getPath("/"))
   }
 
-  def withJarFileSystem[T](path: AbsolutePath, create: Boolean = true)(f: AbsolutePath => T): T = {
+  def withJarFileSystem[T](path: AbsolutePath, create: Boolean)(f: AbsolutePath => T): T = {
     val fs = newJarFileSystem(path, create)
-    // NOTE(olafur): We don't fs.close() because that can affect another place where `FileSystems.getFileSystems`
-    // was used due to a `FileSystemAlreadyExistsException`. This leaks resources, but I see no alternative that does
-    // not involve refactoring everything to java.io or global mutable state for reference counting open file systems
-    // per zip file.
-    f(AbsolutePath(fs.getPath("/")))
+    val root = AbsolutePath(fs.getPath("/"))
+    if (create) {
+      try f(root)
+      finally fs.close()
+    } else {
+      // NOTE(olafur): We don't fs.close() because that can affect another place where `FileSystems.getFileSystems`
+      // was used due to a `FileSystemAlreadyExistsException`. This leaks resources, but I see no alternative that does
+      // not involve refactoring everything to java.io or global mutable state for reference counting open file systems
+      // per zip file.
+      f(root)
+    }
   }
 
   def newJarFileSystem(path: AbsolutePath, create: Boolean): FileSystem = {
