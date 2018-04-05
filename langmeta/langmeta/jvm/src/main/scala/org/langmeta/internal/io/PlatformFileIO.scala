@@ -79,8 +79,11 @@ object PlatformFileIO {
 
   def withJarFileSystem[T](path: AbsolutePath, create: Boolean = true)(f: AbsolutePath => T): T = {
     val fs = newJarFileSystem(path, create)
-    try f(AbsolutePath(fs.getPath("/")))
-    finally fs.close()
+    // NOTE(olafur): We don't fs.close() because that can affect another place where `FileSystems.getFileSystems`
+    // was used due to a `FileSystemAlreadyExistsException`. This leaks resources, but I see no alternative that does
+    // not involve refactoring everything to java.io or global mutable state for reference counting open file systems
+    // per zip file.
+    f(AbsolutePath(fs.getPath("/")))
   }
 
   def newJarFileSystem(path: AbsolutePath, create: Boolean): FileSystem = {
