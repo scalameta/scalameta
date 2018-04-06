@@ -1,6 +1,7 @@
 package scala.meta.tests
 package semanticdb
 
+import org.langmeta.internal.semanticdb._
 import scala.meta._
 import scala.meta.internal.semanticdb.scalac._
 
@@ -150,133 +151,175 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
         |package object F {
         |}
     """.trim.stripMargin,
-    """|F.package. => packageobject package
-       |f. => package f
-       |f.C1# => class C1
-       |f.C1#T1# => abstract type T1
-       |f.C1#T2# => type T2: Int
-       |  [0..3): Int => scala.Int#
-       |f.C1#`<init>`(). => ctor <init>: (): C1
-       |  [4..6): C1 => f.C1#
-       |f.C1#`<init>`(Int,Int,Int). => primary ctor <init>: (p1: Int, p2: Int, p3: Int): C1
-       |  [5..8): Int => scala.Int#
-       |  [14..17): Int => scala.Int#
-       |  [23..26): Int => scala.Int#
-       |  [29..31): C1 => f.C1#
-       |f.C1#`<init>`(Int,Int,Int).(p1) => param p1: Int
-       |  [0..3): Int => scala.Int#
-       |f.C1#`<init>`(Int,Int,Int).(p2) => val param p2: Int
-       |  [0..3): Int => scala.Int#
-       |f.C1#`<init>`(Int,Int,Int).(p3) => var param p3: Int
-       |  [0..3): Int => scala.Int#
-       |f.C1#`f2_=`(Nothing). => var method f2_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => scala.Nothing#
-       |  [16..20): Unit => scala.Unit#
-       |f.C1#`f2_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.C1#`p3_=`(Int). => var method p3_=: (x$1: Int): Unit
-       |  [6..9): Int => scala.Int#
-       |  [12..16): Unit => scala.Unit#
-       |f.C1#`p3_=`(Int).(x$1) => param x$1: Int
-       |  [0..3): Int => scala.Int#
-       |f.C1#f1(). => val method f1: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.C1#f1. => private val field f1: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.C1#f1.l1. => val local l1: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.C1#f1.l2. => var local l2: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.C1#f2(). => var method f2: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.C1#f2. => private var field f2: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.C1#m1(Int). => method m1: [T] => (x: Int): Int
-       |  [11..14): Int => scala.Int#
-       |  [17..20): Int => scala.Int#
-       |f.C1#m1(Int).(x) => param x: Int
-       |  [0..3): Int => scala.Int#
-       |f.C1#m1(Int).[T] => typeparam T
-       |f.C1#m2(). => macro m2: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.C1#p1. => private val field p1: Int
-       |  [0..3): Int => scala.Int#
-       |f.C1#p2(). => val method p2: Int
-       |  [0..3): Int => scala.Int#
-       |f.C1#p2. => private val field p2: Int
-       |  [0..3): Int => scala.Int#
-       |f.C1#p3(). => var method p3: Int
-       |  [0..3): Int => scala.Int#
-       |f.C1#p3. => private var field p3: Int
-       |  [0..3): Int => scala.Int#
-       |f.C2# => abstract class C2
-       |f.C2#`<init>`(). => primary ctor <init>: (): C2
-       |  [4..6): C2 => f.C2#
-       |f.C2#m3(). => abstract method m3: Int
-       |  [0..3): Int => scala.Int#
-       |f.C2#m4(). => final method m4: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.C3# => sealed class C3
-       |f.C3#`<init>`(). => primary ctor <init>: (): C3
-       |  [4..6): C3 => f.C3#
-       |f.C3#m3(). => method m3: Int
-       |  [0..3): Int => scala.Int#
-       |f.C3#toString(). => method toString: (): String
-       |  [4..10): String => java.lang.String#
-       |f.M. => final object M
-       |f.M.C1# => case class C1
-       |f.M.C1#`<init>`(). => primary ctor <init>: (): C1
-       |  [4..6): C1 => f.M.C1#
-       |f.M.C2# => class C2
-       |f.M.C2#[T] => covariant typeparam T
-       |f.M.C2#[U] => contravariant typeparam U
-       |f.M.C2#`<init>`(). => primary ctor <init>: (): C2[T, U]
-       |  [4..6): C2 => f.M.C2#
-       |  [7..8): T => f.M.C2#[T]
-       |  [10..11): U => f.M.C2#[U]
-       |f.M.i1(). => implicit method i1: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.M.l1(). => lazy val field l1: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.T# => trait T
-       |f.T#$init$(). => primary ctor $init$: (): Unit
-       |  [4..8): Unit => scala.Unit#
-       |f.T#`f4_=`(Nothing). => protected var method f4_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => scala.Nothing#
-       |  [16..20): Unit => scala.Unit#
-       |f.T#`f4_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.T#`f5_=`(Nothing). => protected var method f5_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => scala.Nothing#
-       |  [16..20): Unit => scala.Unit#
-       |f.T#`f5_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.T#`f6_=`(Nothing). => protected var method f6_=: (x$1: Nothing): Unit
-       |  [6..13): Nothing => scala.Nothing#
-       |  [16..20): Unit => scala.Unit#
-       |f.T#`f6_=`(Nothing).(x$1) => param x$1: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.T#f1(). => private val method f1: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.T#f2(). => private val method f2: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.T#f3(). => private val method f3: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.T#f4(). => protected var method f4: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.T#f5(). => protected var method f5: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |f.T#f6(). => protected var method f6: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |scala. => package scala
-       |scala.Int# => abstract final class Int
-       |scala.Predef.`???`(). => method ???: Nothing
-       |  [0..7): Nothing => scala.Nothing#
-       |scala.language. => final object language
-       |scala.language.experimental. => final object experimental
-       |scala.language.experimental.macros(). => implicit lazy val field macros: macros
-       |  [0..6): macros => scala.languageFeature.experimental.macros#
-    """.trim.stripMargin
+      """
+        |F.package. => packageobject package
+        |f. => package f
+        |f.C1# => class C1
+        |f.C1#T1# => abstract type T1
+        |f.C1#T2# => type T2: Int
+        |  [0..3): Int => scala.Int#
+        |f.C1#`<init>`(). => ctor <init>: (): C1
+        |  [4..6): C1 => f.C1#
+        |f.C1#`<init>`(Int,Int,Int). => primary ctor <init>: (p1: Int, p2: Int, p3: Int): C1
+        |  [5..8): Int => scala.Int#
+        |  [14..17): Int => scala.Int#
+        |  [23..26): Int => scala.Int#
+        |  [29..31): C1 => f.C1#
+        |f.C1#`<init>`(Int,Int,Int).(p1) => param p1: Int
+        |  [0..3): Int => scala.Int#
+        |f.C1#`<init>`(Int,Int,Int).(p2) => val param p2: Int
+        |  [0..3): Int => scala.Int#
+        |f.C1#`<init>`(Int,Int,Int).(p3) => var param p3: Int
+        |  [0..3): Int => scala.Int#
+        |f.C1#`f2_=`(Nothing). => var method f2_=: (x$1: Nothing): Unit
+        |  [6..13): Nothing => scala.Nothing#
+        |  [16..20): Unit => scala.Unit#
+        |f.C1#`f2_=`(Nothing).(x$1) => param x$1: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.C1#`p3_=`(Int). => var method p3_=: (x$1: Int): Unit
+        |  [6..9): Int => scala.Int#
+        |  [12..16): Unit => scala.Unit#
+        |f.C1#`p3_=`(Int).(x$1) => param x$1: Int
+        |  [0..3): Int => scala.Int#
+        |f.C1#f1(). => val method f1: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.C1#f1. => private val field f1: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.C1#f1.l1. => val local l1: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.C1#f1.l2. => var local l2: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.C1#f2(). => var method f2: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.C1#f2. => private var field f2: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.C1#m1(Int). => method m1: [T] => (x: Int): Int
+        |  [11..14): Int => scala.Int#
+        |  [17..20): Int => scala.Int#
+        |f.C1#m1(Int).(x) => param x: Int
+        |  [0..3): Int => scala.Int#
+        |f.C1#m1(Int).[T] => typeparam T
+        |f.C1#m2(). => macro m2: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.C1#p1. => private val field p1: Int
+        |  [0..3): Int => scala.Int#
+        |f.C1#p2(). => val method p2: Int
+        |  [0..3): Int => scala.Int#
+        |f.C1#p2. => private val field p2: Int
+        |  [0..3): Int => scala.Int#
+        |f.C1#p3(). => var method p3: Int
+        |  [0..3): Int => scala.Int#
+        |f.C1#p3. => private var field p3: Int
+        |  [0..3): Int => scala.Int#
+        |f.C2# => abstract class C2
+        |f.C2#`<init>`(). => primary ctor <init>: (): C2
+        |  [4..6): C2 => f.C2#
+        |f.C2#m3(). => abstract method m3: Int
+        |  [0..3): Int => scala.Int#
+        |f.C2#m4(). => final method m4: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.C3# => sealed class C3
+        |f.C3#`<init>`(). => primary ctor <init>: (): C3
+        |  [4..6): C3 => f.C3#
+        |f.C3#m3(). => method m3: Int
+        |  [0..3): Int => scala.Int#
+        |f.C3#toString(). => method toString: (): String
+        |  [4..10): String => java.lang.String#
+        |f.M. => final object M
+        |f.M.C1# => case class C1
+        |f.M.C1#`<init>`(). => primary ctor <init>: (): C1
+        |  [4..6): C1 => f.M.C1#
+        |f.M.C1#canEqual(Any). => method canEqual: (x$1: Any): Boolean
+        |  [6..9): Any => scala.Any#
+        |  [12..19): Boolean => scala.Boolean#
+        |f.M.C1#canEqual(Any).(x$1) => param x$1: Any
+        |  [0..3): Any => scala.Any#
+        |f.M.C1#copy(). => method copy: (): C1
+        |  [4..6): C1 => f.M.C1#
+        |f.M.C1#equals(Any). => method equals: (x$1: Any): Boolean
+        |  [6..9): Any => scala.Any#
+        |  [12..19): Boolean => scala.Boolean#
+        |f.M.C1#equals(Any).(x$1) => param x$1: Any
+        |  [0..3): Any => scala.Any#
+        |f.M.C1#hashCode(). => method hashCode: (): Int
+        |  [4..7): Int => scala.Int#
+        |f.M.C1#productArity(). => method productArity: Int
+        |  [0..3): Int => scala.Int#
+        |f.M.C1#productElement(Int). => method productElement: (x$1: Int): Any
+        |  [6..9): Int => scala.Int#
+        |  [12..15): Any => scala.Any#
+        |f.M.C1#productElement(Int).(x$1) => param x$1: Int
+        |  [0..3): Int => scala.Int#
+        |f.M.C1#productIterator(). => method productIterator: Iterator[Any]
+        |  [0..8): Iterator => scala.collection.Iterator#
+        |  [9..12): Any => scala.Any#
+        |f.M.C1#productPrefix(). => method productPrefix: String
+        |  [0..6): String => java.lang.String#
+        |f.M.C1#toString(). => method toString: (): String
+        |  [4..10): String => java.lang.String#
+        |f.M.C1. => final object C1
+        |f.M.C1.apply(). => case method apply: (): C1
+        |  [4..6): C1 => f.M.C1#
+        |f.M.C1.readResolve(). => private method readResolve: (): Object
+        |  [4..10): Object => java.lang.Object#
+        |f.M.C1.toString(). => final method toString: (): String
+        |  [4..10): String => java.lang.String#
+        |f.M.C1.unapply(C1). => case method unapply: (x$0: C1): Boolean
+        |  [6..8): C1 => f.M.C1#
+        |  [11..18): Boolean => scala.Boolean#
+        |f.M.C1.unapply(C1).(x$0) => param x$0: C1
+        |  [0..2): C1 => f.M.C1#
+        |f.M.C2# => class C2
+        |f.M.C2#[T] => covariant typeparam T
+        |f.M.C2#[U] => contravariant typeparam U
+        |f.M.C2#`<init>`(). => primary ctor <init>: (): C2[T, U]
+        |  [4..6): C2 => f.M.C2#
+        |  [7..8): T => f.M.C2#[T]
+        |  [10..11): U => f.M.C2#[U]
+        |f.M.i1(). => implicit method i1: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.M.l1(). => lazy val field l1: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.T# => trait T
+        |f.T#$init$(). => primary ctor $init$: (): Unit
+        |  [4..8): Unit => scala.Unit#
+        |f.T#`f4_=`(Nothing). => protected var method f4_=: (x$1: Nothing): Unit
+        |  [6..13): Nothing => scala.Nothing#
+        |  [16..20): Unit => scala.Unit#
+        |f.T#`f4_=`(Nothing).(x$1) => param x$1: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.T#`f5_=`(Nothing). => protected var method f5_=: (x$1: Nothing): Unit
+        |  [6..13): Nothing => scala.Nothing#
+        |  [16..20): Unit => scala.Unit#
+        |f.T#`f5_=`(Nothing).(x$1) => param x$1: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.T#`f6_=`(Nothing). => protected var method f6_=: (x$1: Nothing): Unit
+        |  [6..13): Nothing => scala.Nothing#
+        |  [16..20): Unit => scala.Unit#
+        |f.T#`f6_=`(Nothing).(x$1) => param x$1: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.T#f1(). => private val method f1: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.T#f2(). => private val method f2: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.T#f3(). => private val method f3: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.T#f4(). => protected var method f4: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.T#f5(). => protected var method f5: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |f.T#f6(). => protected var method f6: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |scala. => package scala
+        |scala.Int# => abstract final class Int
+        |scala.Predef.`???`(). => method ???: Nothing
+        |  [0..7): Nothing => scala.Nothing#
+        |scala.language. => final object language
+        |scala.language.experimental. => final object experimental
+        |scala.language.experimental.macros(). => implicit lazy val field macros: macros
+        |  [0..6): macros => scala.languageFeature.experimental.macros#
+        |
+     """.trim.stripMargin
     )
   }
 
@@ -846,6 +889,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  [0..3): Int => scala.Int#
        |_empty_.ac.y(). => val method y: Class[_]
        |_empty_.ac.y. => private val field y: Class[_]
+       |_empty_.ac.y._$1# => abstract type _$1
        |scala.Int. => final object Int
        |scala.Int.MaxValue(). => final val method MaxValue: Int
        |  [0..3): Int => scala.Int#
@@ -1247,6 +1291,28 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """.trim.stripMargin, { (db, foo1, foo2) =>
       assert(foo1 === Symbol("an.M.foo(C)."))
       assert(foo2 === Symbol("an.M.foo(C+1)."))
+    }
+  )
+
+  targeted(
+    """
+      |package a
+      |case class <<Foo>>(b: Foo)
+    """.stripMargin, { (db, fooType) =>
+      val Symbol.Global(qual, Signature.Type(foo)) = fooType
+      val companion = Symbol.Global(qual, Signature.Term(foo))
+      val objectDenot = db.symbols.find(_.symbol == companion).get.denotation
+      assert(objectDenot.isObject)
+      assert(!objectDenot.isCase)
+      val classDenot = db.symbols.find(_.symbol == fooType).get.denotation
+      assert(classDenot.isClass)
+      assert(classDenot.isCase)
+      val decls = classDenot.tpeInternal.get.classInfoType.get.declarations
+      assert(decls.nonEmpty)
+      decls.foreach { decl =>
+        val declDenot = db.symbols.find(_.symbol.syntax == decl)
+        assert(declDenot.isDefined, decl)
+      }
     }
   )
 }

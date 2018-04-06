@@ -4,7 +4,6 @@ import scala.{meta => m}
 import scala.{meta => mf}
 import scala.reflect.internal.{Flags => gf}
 import scala.util.Sorting
-import org.scalameta.logger
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 
