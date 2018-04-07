@@ -100,8 +100,7 @@ object PlatformFileIO {
     if (create) {
       map.put("create", "true")
     }
-//    val uri = URI.create("jar:" + path.toNIO.toUri.toString)
-    val uri = URI.create("jar:file:" + path.toNIO.toUri.getPath)
+    val uri = URI.create("jar:" + path.toNIO.toUri.toString)
     newFileSystem(uri, map)
   }
 
