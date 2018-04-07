@@ -45,14 +45,14 @@ commands += Command.command("ci-fast") { s =>
       "langmetaTestsJVM/test" ::
       s
   } else {
-    val tail =
-      if (ciPlatform == "JVM") "langmetaTestsJVM/test" :: s
-      else s
+    val langmetaTests =
+      if (ciPlatform == "JVM") "langmetaTestsJVM/test"
+      else "version" // dummy task on JS
     s"wow $ciScalaVersion" ::
-      ("langmetaTests" + ciPlatform + "/test") ::
+      langmetaTests ::
       ("tests" + ciPlatform + "/test") ::
       ci("doc") :: // skips 2.10 projects
-      tail
+      s
   }
 }
 commands += Command.command("ci-native") { s =>
