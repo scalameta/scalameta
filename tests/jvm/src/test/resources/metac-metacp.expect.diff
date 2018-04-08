@@ -952,6 +952,59 @@ types.Test.C#MethodType.
  accessibility {
 
 
+==========================
+types.Test.C#RepeatedType.
+==========================
+--- metac
++++ metacp
+ properties: 8
+ name: "RepeatedType"
+ tpe {
+-  tag: TYPE_REF
+-  typeRef {
+-    prefix {
+-      tag: SINGLETON_TYPE
+-      singletonType {
+-        tag: THIS
+-        symbol: "types.Test.C#"
+-        primitive: 0
+-        string: ""
++  tag: CLASS_INFO_TYPE
++  classInfoType {
++    parents {
++      tag: TYPE_REF
++      typeRef {
++        symbol: "scala.runtime.AbstractFunction1#"
++        type_arguments {
++          tag: REPEATED_TYPE
++          repeatedType {
++            tpe {
++              tag: TYPE_REF
++              typeRef {
++                symbol: "scala.Predef.String#"
++        type_arguments {
++          tag: TYPE_REF
++          typeRef {
++            prefix {
++              tag: SINGLETON_TYPE
++              singletonType {
++                tag: THIS
++                symbol: "types.Test.C#"
++                primitive: 0
++                string: ""
++            symbol: "types.Test.C#RepeatedType#"
+-    symbol: "types.Test.C#RepeatedType."
++    parents {
++      tag: TYPE_REF
++      typeRef {
++        symbol: "scala.Serializable#"
++    declarations: "types.Test.C#RepeatedType.`<init>`()."
++    declarations: "types.Test.C#RepeatedType.toString()."
++    declarations: "types.Test.C#RepeatedType.apply(String*)."
++    declarations: "types.Test.C#RepeatedType.unapplySeq(RepeatedType)."
+ accessibility {
+
+
 ======================
 types.Test.C#TypeType.
 ======================

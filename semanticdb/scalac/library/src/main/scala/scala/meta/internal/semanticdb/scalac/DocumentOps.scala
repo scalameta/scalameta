@@ -345,7 +345,9 @@ trait DocumentOps { self: DatabaseOps =>
               case gtree: g.ValDef if gtree.symbol.isSelfParameter =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
-              // NOTE: never interested in synthetics except for the ones above
+                if (!gtree.symbol.isSemanticdbLocal) {
+                  denotations(gtree.symbol.toSemantic) = gtree.symbol.toDenotation(false).denot
+                }
               case gtree: g.PackageDef =>
                 if (config.members.isAll) {
                   members(gtree.symbol.toSemantic) = gtree.pid.tpe.lookupMembers
