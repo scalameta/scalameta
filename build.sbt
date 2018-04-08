@@ -41,9 +41,15 @@ addCommandAlias("benchQuick", benchQuick.command)
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
   if (ciScalaVersion.startsWith("2.10")) {
-    s"wow $ciScalaVersion" :: "langmetaTestsJVM/test" :: s
-  } else {
     s"wow $ciScalaVersion" ::
+      "langmetaTestsJVM/test" ::
+      s
+  } else {
+    val langmetaTests =
+      if (ciPlatform == "JVM") "langmetaTestsJVM/test"
+      else "version" // dummy task on JS
+    s"wow $ciScalaVersion" ::
+      langmetaTests ::
       ("tests" + ciPlatform + "/test") ::
       ci("doc") :: // skips 2.10 projects
       s
@@ -57,7 +63,7 @@ commands += CiCommand("ci-publish")(
 )
 commands += Command.command("mima") { s =>
   s"very mimaReportBinaryIssues" ::
-  s
+    s
 }
 commands += Command.command("ci-metac") { s =>
   val out = file("target/scala-library")
@@ -72,11 +78,11 @@ commands += Command.command("ci-metac") { s =>
 }
 commands += Command.command("save-expect") { s =>
   "metapJVM/compile" ::
-  "metacp/compile" ::
-  "semanticdbScalacPlugin/compile" ::
-  "semanticdbIntegration/clean" ::
-  "semanticdbIntegration/compile" ::
-  "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
+    "metacp/compile" ::
+    "semanticdbScalacPlugin/compile" ::
+    "semanticdbIntegration/clean" ::
+    "semanticdbIntegration/compile" ::
+    "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
 }
 // NOTE: These tasks are aliased here in order to support running "tests/test"
 // from a command. Running "test" inside a command will trigger the `test` task
@@ -90,14 +96,14 @@ test := {
       |- testsJVM/testQuick # Bread and butter tests
       |- testsJS/testQuick  # Ensure crosscompilability
       |- testkit/test       # Ensure additional reliability thanks to property tests
-      |""".stripMargin)
+      |""".stripMargin
+  )
 }
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
 
 /** ======================== SEMANTICDB ======================== **/
-
 lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("semanticdb/semanticdb3"))
@@ -201,7 +207,6 @@ lazy val metapJS = metap.js
 lazy val metapNative = metap.native
 
 /** ======================== LANGMETA ======================== **/
-
 lazy val langmeta = crossProject(JSPlatform, JVMPlatform)
   .in(file("langmeta/langmeta"))
   .settings(
@@ -220,7 +225,6 @@ lazy val langmetaJVM = langmeta.jvm
 lazy val langmetaJS = langmeta.js
 
 /** ======================== SCALAMETA ======================== **/
-
 lazy val common = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/common"))
   .settings(
@@ -387,7 +391,6 @@ lazy val contribJVM = contrib.jvm
 lazy val contribJS = contrib.js
 
 /** ======================== TESTS ======================== **/
-
 lazy val semanticdbIntegration = project
   .in(file("semanticdb/integration"))
   .settings(
@@ -439,9 +442,11 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
     exposePaths("tests", Test),
-    compile.in(Test) := compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
+    compile.in(Test) :=
+      compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
     fullClasspath.in(Test) := {
-      val semanticdbScalacJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+      val semanticdbScalacJar =
+        Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
       sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
       fullClasspath.in(Test).value
     },
@@ -480,7 +485,6 @@ lazy val langmetaTestsJVM = project
   .dependsOn(langmetaJVM)
 
 /** ======================== BENCHES ======================== **/
-
 lazy val bench = project
   .in(file("bench/suite"))
   .enablePlugins(BuildInfoPlugin)
@@ -495,7 +499,8 @@ lazy val bench = project
     buildInfoPackage := "org.scalameta.bench",
     run.in(Jmh) := (Def.inputTaskDyn {
       val args = spaceDelimited("<arg>").parsed
-      val semanticdbScalacJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+      val semanticdbScalacJar =
+        Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
       val buf = List.newBuilder[String]
       buf += "org.openjdk.jmh.Main"
       buf ++= args
@@ -547,7 +552,7 @@ lazy val requiresMacrosSetting = Def.settings(
         )
       )
 
-    val flat = filesWithWhiteboxMacros.flatMap{
+    val flat = filesWithWhiteboxMacros.flatMap {
       case (k, vs) => vs.map(v => (base / k / v).lastModified)
     }
 
@@ -613,7 +618,7 @@ lazy val protobufSettings = Def.settings(
     if (isNixOS) {
       // must have protoc installed
       // nix-env -i protobuf-3.3.0
-      (args => Process("protoc", args)!)
+      (args => Process("protoc", args) !)
     } else {
       (PB.runProtoc in Compile).value
     }
@@ -738,7 +743,7 @@ lazy val nonPublishableSettings = Seq(
   mimaPreviousArtifacts := Set.empty,
   publishArtifact in (Compile, packageDoc) := false,
   publishArtifact in packageDoc := false,
-  sources in (Compile,doc) := Seq.empty,
+  sources in (Compile, doc) := Seq.empty,
   publishArtifact := false,
   PgpKeys.publishSigned := {},
   publish := {}
@@ -845,7 +850,8 @@ inScope(Global)(
     credentials ++= (for {
       username <- sys.env.get("SONATYPE_USERNAME")
       password <- sys.env.get("SONATYPE_PASSWORD")
-    } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq,
+    } yield
+      Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq,
     PgpKeys.pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray())
   )
 )
