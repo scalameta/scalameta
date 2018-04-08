@@ -89,13 +89,15 @@ commands += Command.command("save-expect") { s =>
 // to run in all defined modules, including ones like inputs/io/dialects which
 // have no tests.
 test := {
-  println("""Welcome to the scalameta build! This is a big project with lots of tests :)
-            |Running "test" may take a really long time. Here are some other useful commands
-            |that give a tighter edit/run/debug cycle.
-            |- testsJVM/testQuick # Bread and butter tests
-            |- testsJS/testQuick  # Ensure crosscompilability
-            |- testkit/test       # Ensure additional reliability thanks to property tests
-            |""".stripMargin)
+  println(
+    """Welcome to the scalameta build! This is a big project with lots of tests :)
+      |Running "test" may take a really long time. Here are some other useful commands
+      |that give a tighter edit/run/debug cycle.
+      |- testsJVM/testQuick # Bread and butter tests
+      |- testsJS/testQuick  # Ensure crosscompilability
+      |- testkit/test       # Ensure additional reliability thanks to property tests
+      |""".stripMargin
+  )
 }
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
@@ -440,8 +442,8 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
     exposePaths("tests", Test),
-    compile
-      .in(Test) := compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
+    compile.in(Test) :=
+      compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
     fullClasspath.in(Test) := {
       val semanticdbScalacJar =
         Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
