@@ -24,6 +24,36 @@ class Main(settings: Settings, reporter: Reporter) {
 
     val buffer = new ConcurrentLinkedQueue[AbsolutePath]()
 
+    if (!Files.exists(Files.createDirectories(settings.cacheDir.toNIO))) {
+      Files.createDirectories(settings.cacheDir.toNIO)
+    }
+
+    // Writes to a temporary jar file and atomically moves the resulting jar file to cacheEntry once processing
+    // completes. This guarantees the cached jar is never available in half-processed form.
+    def createCachedJar(cacheEntry: AbsolutePath)(f: AbsolutePath => Boolean): Unit = {
+      val tmp = Files.createTempDirectory("metacp").resolve(cacheEntry.toNIO.getFileName)
+      PlatformFileIO.withJarFileSystem(AbsolutePath(tmp), create = true) { out =>
+        val res = f(out)
+        success.compareAndSet(true, res)
+        buffer.add(cacheEntry)
+      }
+      try {
+        Files.move(
+          tmp,
+          cacheEntry.toNIO,
+          StandardCopyOption.ATOMIC_MOVE,
+          StandardCopyOption.REPLACE_EXISTING
+        )
+      } catch {
+        case _: AtomicMoveNotSupportedException =>
+          Files.move(
+            tmp,
+            cacheEntry.toNIO,
+            StandardCopyOption.REPLACE_EXISTING
+          )
+      }
+    }
+
     classpath.foreach { entry =>
       if (entry.isDirectory) {
         val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
@@ -32,18 +62,14 @@ class Main(settings: Settings, reporter: Reporter) {
         buffer.add(out)
       } else if (entry.isFile) {
         val cacheEntry = {
-          val base = settings.cacheDir
           val checksum = Checksum(entry)
-          base.resolve(entry.toFile.getName.stripSuffix(".jar") + "-" + checksum + ".jar")
+          settings.cacheDir.resolve(
+            entry.toFile.getName.stripSuffix(".jar") + "-" + checksum + ".jar")
         }
         if (cacheEntry.toFile.exists) {
           buffer.add(cacheEntry)
         } else {
-          PlatformFileIO.withJarFileSystem(cacheEntry, create = true) { out =>
-            val res = convertClasspathEntry(entry, out)
-            success.compareAndSet(true, res)
-            buffer.add(cacheEntry)
-          }
+          createCachedJar(cacheEntry)(out => convertClasspathEntry(entry, out))
         }
       }
     }
@@ -53,11 +79,7 @@ class Main(settings: Settings, reporter: Reporter) {
       if (cacheEntry.toFile.exists) {
         buffer.add(cacheEntry)
       } else {
-        PlatformFileIO.withJarFileSystem(cacheEntry, create = true) { out =>
-          val res = dumpScalaLibrarySynthetics(out)
-          success.compareAndSet(true, res)
-          buffer.add(cacheEntry)
-        }
+        createCachedJar(cacheEntry)(dumpScalaLibrarySynthetics)
       }
     }
 
