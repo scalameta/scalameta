@@ -696,7 +696,7 @@ class ErrorSuite extends FunSuite {
       | found   : ...$
       | required: $ or ..$
       |      q"x + (...$argss)"
-      |            ^
+      |             ^
     """.trim.stripMargin)
   }
 

@@ -885,4 +885,14 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
     assert(dialects.Dotty("s\"$enum\"").tokenize.isInstanceOf[Tokenized.Error])
   }
+
+  test("#1083 - wrapped identifiers Select") {
+    val Term.Select(qual, _) = "(a).b".parse[Term].get
+    assert(qual.tokens.toString == "a")
+  }
+
+  test("#1083 - wrapped identifiers ApplyInfix") {
+    val Term.ApplyInfix(_, _, _, List(arg)) = "a f (b)".parse[Term].get
+    assert(arg.tokens.toString == "b")
+  }
 }
