@@ -34,7 +34,14 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
       }
     }
 
-  def check[T <: Tree, R <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
+  implicit val params: Projection[Decl.Def, Term.Param] = 
+    new Projection[Decl.Def, Term.Param] {
+      def apply(d: Decl.Def): Term.Param = {
+        d.paramss.head.head
+      }
+    }
+
+  def check[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree))
 
   def check[T <: Tree](annotedSource: String): Unit =
@@ -92,14 +99,14 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     val markedSource = markers.foldLeft(fansi.Str(source)) {
       case (acc, (start, end)) => 
         val color =
-          if(odd) fansi.Back.Green ++ fansi.Color.LightBlue
-          else fansi.Back.LightBlue ++ fansi.Color.Green
+          if(odd) fansi.Back.Cyan ++ fansi.Color.Magenta
+          else fansi.Back.Magenta ++ fansi.Color.Cyan
         odd = !odd
         acc.overlay(color, start, end)
     }
 
     test(markedSource.toString) {
-      val tree = project(source.parse[Term].get.asInstanceOf[T])
+      val tree = project(source.parse[Stat].get.asInstanceOf[T])
       val tokens = tree.children.map(_.tokens).filter(_.nonEmpty)
       val tokensSorted = 
         tokens.map{ token =>
