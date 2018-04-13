@@ -170,24 +170,34 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
         in.mods.head.asInstanceOf[Mod.Inline]
       }
     }
-  
-  def check[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
-    check0[T](annotedSource)(tree => projection(tree), dialect = dialects.Scala212)
 
-  def checkSelf[R <: Tree, T <: Tree](annotedSource: String, dialect: Dialect)(implicit projection: Projection[T, R]): Unit =
+  implicit val defTypeParam: Projection[Decl.Def, Type.Param] =
+    new Projection[Decl.Def, Type.Param] {
+      def apply(in: Decl.Def): Type.Param = {
+        in.tparams.head
+      }
+    }
+  
+  def check[T <: Tree](annotedSource: String): Unit =
+    check0[T](annotedSource)()
+
+  def check[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
+    check0[T](annotedSource)(tree => projection(tree))
+
+  def checkSelf[R <: Tree, T <: Tree](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree), checkChilds = false, dialect = dialect)
 
-  def checkSelf[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
-    check0[T](annotedSource)(tree => projection(tree), checkChilds = false)
-
-  def check[T <: Tree](annotedSource: String): Unit =
-    check0[T](annotedSource)(identity[Tree] _)
-
   def checkType[T <: Tree](annotedSource: String): Unit =
-    check0[T](annotedSource)(identity[Tree] _, parser = Parse.parseType)    
+    check0[T](annotedSource)(parser = Parse.parseType)
+
+  def checkType[T <: Tree](annotedSource: String, dialect: Dialect): Unit =
+    check0[T](annotedSource)(parser = Parse.parseType, dialect = dialect)
+
+  def checkType[R <: Tree, T <: Tree](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
+    check0[T](annotedSource)(tree => projection(tree), dialect = dialect)    
 
   private def check0[T <: Tree](annotedSource: String)(
-                                project: T => Tree, 
+                                project: T => Tree = identity[Tree] _, 
                                 checkChilds: Boolean = true, 
                                 parser: Parse[_ <: Tree] = Parse.parseStat,
                                 dialect: Dialect = dialects.Scala212): Unit = {

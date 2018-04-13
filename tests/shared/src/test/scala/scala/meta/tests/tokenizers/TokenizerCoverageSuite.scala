@@ -4,6 +4,39 @@ import scala.meta._
 
 class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
 
+  // Type
+  checkType[Type.Name]("B")
+  checkType[Type.Select]("→a←.→B←")
+  checkType[Type.Project]("→a←#→B←")
+  checkType[Type.Singleton]("→this←.type")
+  checkType[Type.Singleton]("→t←.type")
+  checkType[Type.Apply]("→F←[→T←]")
+  checkType[Type.ApplyInfix]("→K← →Map← →V←")
+  checkType[Type.Function]("() => →B←")
+  checkType[Type.Function]("→A← => →B←")
+  checkType[Type.Function]("(→A←, →B←) => →C←")
+  checkType[Type.ImplicitFunction]("implicit →A← => →B←", dotty)
+  checkType[Type.Tuple]("(→A←, →B←)")
+  checkType[Type.With]("→A← with →B←")
+  checkType[Type.And]("→A← →&← →B←")
+  checkType[Type.And]("→A← & →B←", dotty)
+  checkType[Type.Or]("→A← | →B←", dotty)
+  checkType[Type.Refine]("→A← { →def f: B← }")
+  checkType[Type.Refine]("→A←{}")
+  checkType[Type.Refine]("{ →def f: B← }")
+  checkType[Type.Existential]("→A← forSome { →type T← }")
+  checkType[Type.Annotate]("→T← →@A←")
+  checkType[Type.Lambda]("[→X←] => →(X, X)←", dotty)
+  checkType[Type.Placeholder]("_")
+  checkType[Type.Bounds]("_ →>: A <: B←")
+  checkType[Type.Bounds]("_ →<: B←")
+  checkType[Type.Bounds]("_ →>: A←")
+  checkType[Type.ByName]("=> →T←")
+  checkType[Type.Repeated]("→Any←*")
+  checkType[Type.Param, Decl.Def]("def f[→A← <% →B[A]←]: C")
+  checkType[Type.Param, Decl.Def]("def f[→A←: →B←]: C")
+  checkType[Type.Param, Decl.Def]("def f[→A← : →B← : →C←]: D")
+
   // Term
   check[Term.Annotate]("→(a)←: →@A←")
   check[Term.Apply]("→(f)←(→(((a)))←)")
@@ -59,16 +92,6 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   check[Importer, Import]("import →a←.{ →b => c← }") // Rename
   check[Importer, Import]("import →a←.{ →b => _← }") // Unimport
 
-  check[Self, Defn.Trait]("trait A { →self←: →B← => }")
-  check[Self, Defn.Trait]("trait A { →_←: →B← => }")
-  check[Self, Defn.Trait]("trait A { →self← => }")
-  check[Self, Defn.Trait]("trait A { →this←: →B← => }")
-
-  check[Template, Term.NewAnonymous]("new →A← {}")
-  check[Template, Term.NewAnonymous]("new { →val a = 1← } with →A← {}")
-  check[Template, Defn.Class]("class A extends →B← with →C← with →D←")
-  check[Template, Defn.Class]("class Y extends { →val a = 1← } with →X←")
-
   // Decl
   check[Decl.Val]("val →a←: →Int←")
   check[Decl.Var]("var →b←: →Long←")
@@ -89,7 +112,7 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   check[Defn.Object]("object →A←")
   check[Ctor.Secondary, Defn.Class]("class A { def →this←(→a: A←) = →this()← }")
 
-  // meta.Mod
+  // Mod
   checkSelf[Mod.Annot, Defn.Def]("→@tailrec← def f = 1")
   check[Mod.Annot, Defn.Def]("@→tailrec← def f = 1")
   check[Mod.Annot, Defn.Def]("@→a← def b = 1")
@@ -112,4 +135,15 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   checkSelf[Mod.ValParam, Defn.Class]("class A(→val← b: B)")
   checkSelf[Mod.VarParam, Defn.Class]("class A(→var← b: B)")
   checkSelf[Mod.Inline, Defn.Def]("→inline← def f = 1", dotty)
+
+  // Misc
+  check[Self, Defn.Trait]("trait A { →self←: →B← => }")
+  check[Self, Defn.Trait]("trait A { →_←: →B← => }")
+  check[Self, Defn.Trait]("trait A { →self← => }")
+  check[Self, Defn.Trait]("trait A { →this←: →B← => }")
+
+  check[Template, Term.NewAnonymous]("new →A← {}")
+  check[Template, Term.NewAnonymous]("new { →val a = 1← } with →A← {}")
+  check[Template, Defn.Class]("class A extends →B← with →C← with →D←")
+  check[Template, Defn.Class]("class Y extends { →val a = 1← } with →X←")
 }
