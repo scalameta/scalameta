@@ -26,7 +26,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     def apply(root: R): T
   }
 
-  implicit val repeated: Projection[Term.Apply, Term.Repeated] =
+  implicit val applyRepeated: Projection[Term.Apply, Term.Repeated] =
     new Projection[Term.Apply, Term.Repeated] {
       def apply(ap: Term.Apply): Term.Repeated = {
         val Term.Apply(_, List(r: Term.Repeated)) = ap
@@ -34,20 +34,42 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
       }
     }
 
-  implicit val params: Projection[Decl.Def, Term.Param] = 
+  implicit val defParams: Projection[Decl.Def, Term.Param] = 
     new Projection[Decl.Def, Term.Param] {
       def apply(d: Decl.Def): Term.Param = {
         d.paramss.head.head
       }
     }
 
-  implicit val importer: Projection[Import, Importer] = 
+  implicit val importImporter: Projection[Import, Importer] = 
     new Projection[Import, Importer] {
       def apply(im: Import): Importer = {
         im.importers.head
       }
     }
 
+  implicit val traitSelf: Projection[Defn.Trait, Self] = 
+    new Projection[Defn.Trait, Self] {
+      def apply(tr: Defn.Trait): Self = {
+        tr.templ.self
+      }
+    }
+
+
+  implicit val anonTemplate: Projection[Term.NewAnonymous, Template] = 
+    new Projection[Term.NewAnonymous, Template] {
+      def apply(anon: Term.NewAnonymous): Template = {
+        anon.templ
+      }
+    }
+
+  implicit val classTemplate: Projection[Defn.Class, Template] = 
+    new Projection[Defn.Class, Template] {
+      def apply(cls: Defn.Class): Template = {
+        cls.templ
+      }
+    }
+  
   def check[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree))
 

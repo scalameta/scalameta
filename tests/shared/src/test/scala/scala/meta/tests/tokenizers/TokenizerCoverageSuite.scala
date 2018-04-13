@@ -52,9 +52,19 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
 
   // Import
   check[Import]("import →a.b←")
-  check[Import]("import →a.b←, →c.d←") // 
-  check[Importer, Import]("import →a←.→_←")        // Wildcard
+  check[Import]("import →a.b←, →c.d←")
+  check[Importer, Import]("import →a←.→_←")          // Wildcard
   check[Importer, Import]("import →a←.{ →b←, →c← }") // Name
   check[Importer, Import]("import →a←.{ →b => c← }") // Rename
-  check[Importer, Import]("import →a←.{ →b => _← }") // Unimport  
+  check[Importer, Import]("import →a←.{ →b => _← }") // Unimport
+
+  check[Self, Defn.Trait]("trait A { →self←: →B← => }")
+  check[Self, Defn.Trait]("trait A { →_←: →B← => }")
+  check[Self, Defn.Trait]("trait A { →self← => }")
+  check[Self, Defn.Trait]("trait A { →this←: →B← => }")
+
+  check[Template, Term.NewAnonymous]("new →A← {}")
+  check[Template, Term.NewAnonymous]("new { →val a = 1← } with →A← {}")
+  check[Template, Defn.Class]("class A extends →B← with →C← with →D←")
+  check[Template, Defn.Class]("class Y extends { →val a = 1← } with →X←")
 }
