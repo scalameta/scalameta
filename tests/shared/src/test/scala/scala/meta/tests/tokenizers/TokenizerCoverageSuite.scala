@@ -67,4 +67,23 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   check[Template, Term.NewAnonymous]("new { →val a = 1← } with →A← {}")
   check[Template, Defn.Class]("class A extends →B← with →C← with →D←")
   check[Template, Defn.Class]("class Y extends { →val a = 1← } with →X←")
+
+  // Decl
+  check[Decl.Val]("val →a←: →Int←")
+  check[Decl.Var]("var →b←: →Long←")
+  check[Decl.Def]("def →f←: →String←")
+  check[Decl.Type]("type →T←")
+
+  // Defn
+  check[Defn.Val]("val →a← = →1←")
+  check[Defn.Var]("var →a← = →1←")
+  check[Defn.Var]("var →a←: →A← = _")
+  check[Defn.Def]("def →a← = →1←")
+  check[Defn.Macro]("def →f← = macro →m←")
+  check[Defn.Type]("type →T← = →Int←")
+  check[Defn.Class]("class →A←")
+  check[Defn.Class]("class →A←→(b: B)←")
+  check[Defn.Class]("class →A← →private (b: B)←")
+  check[Defn.Trait]("trait →A←")
+  check[Defn.Object]("object →A←")
 }

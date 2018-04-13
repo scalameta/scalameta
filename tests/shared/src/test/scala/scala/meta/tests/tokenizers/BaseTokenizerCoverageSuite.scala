@@ -7,9 +7,11 @@ import org.scalatest.FunSuite
 
 abstract class BaseTokenizerCoverageSuite extends FunSuite {
   private val nl = "\n"
+  private val whiteOnBlack = fansi.Back.Black ++ fansi.Color.White
 
   def checkNone[T <: Tree](source: String): Unit = {
-    test(source) {
+    val testName = fansi.Str(source).overlay(whiteOnBlack, 0, source.size)
+    test(testName.toString) {
       val tree = source.parse[Term].get.asInstanceOf[T]
       val tokens = tree.children
       assert(tokens.isEmpty)
@@ -84,8 +86,8 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
       .replaceAllLiterally(startMarker.toString, "")
       .replaceAllLiterally(stopMarker.toString, "")
 
-    val overlayColor1 = fansi.Back.Cyan ++ fansi.Color.Magenta
-    val overlayColor2 = fansi.Back.Magenta ++ fansi.Color.Cyan
+    val overlayColor1 = fansi.Back.Blue
+    val overlayColor2 = fansi.Back.Magenta
 
     def assertPos(positions: List[((Int, Int), (Int, Int))]): Unit = {
       val fSource = fansi.Str(source)
@@ -149,7 +151,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
 
     val markers = markersBuilder.result()
     var odd = true
-    val markedSource = markers.foldLeft(fansi.Str(source)) {
+    val markedSource = markers.foldLeft(fansi.Str(source).overlay(whiteOnBlack, 0, source.size)) {
       case (acc, (start, end)) => 
         val color =
           if(odd) overlayColor1
