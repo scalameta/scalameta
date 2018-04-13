@@ -199,6 +199,12 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
   def checkPat[T <: Tree : Manifest](annotedSource: String): Unit =
     check0[T](annotedSource)(parser = Parse.parsePat)
 
+  def checkEnumerator[T <: Tree : Manifest](annotedSource: String): Unit =
+    check0[T](annotedSource)(parser = Parse.parseEnumerator)
+
+  def checkCase0(annotedSource: String): Unit =
+    check0[Case](annotedSource)(parser = Parse.parseCase)
+
   def checkType[T <: Tree : Manifest](annotedSource: String, dialect: Dialect): Unit =
     check0[T](annotedSource)(parser = Parse.parseType, dialect = dialect)
 

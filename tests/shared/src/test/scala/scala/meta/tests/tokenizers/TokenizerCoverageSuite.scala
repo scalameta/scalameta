@@ -9,7 +9,19 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
 
   // Enumerator
 
+  checkEnumerator[Enumerator.Generator]("→`a`← <- →b←")
+  checkEnumerator[Enumerator.Val]("→a← = →1←")
+  checkEnumerator[Enumerator.Guard]("if →x←")
+
   // Case
+  checkCase0("case →`a`← =>")
+  checkCase0("case →`a` :: `b` :: _← =>")
+  checkCase0("case →a b `c`← =>")
+  checkCase0("case →_ op (a | b)← =>")
+  checkCase0("case →x `.y` ()← =>")
+  checkCase0("case →a← if →p← =>")
+  checkCase0("case →_← => →()←")
+  checkCase0("case →_← => →{}←")
 
   // Type
   checkType[Type.Name]("B")
