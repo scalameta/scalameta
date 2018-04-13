@@ -3,7 +3,7 @@ package scala.meta.tests.tokenizers
 import scala.meta._
 
 class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
-  
+
   // Term
   check[Term.Annotate]("→(a)←: →@A←")
   check[Term.Apply]("→(f)←(→(((a)))←)")
@@ -14,6 +14,7 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   check[Term.ApplyInfix]("→(a, b)← →op← (→c←, →d←)")
   check[Term.ApplyInfix]("→(a, b)← →op← →((c, d))←")
   check[Term.ApplyInfix]("→1← →+← →1←")
+  check[Term.ApplyInfix]("→a← →f← ()")
   check[Term.ApplyInfix]("→a← →f← →(b)←")
   check[Term.ApplyType]("→(f)← [→A←,→B←]")
   check[Term.ApplyType]("→(f)← [→A←]")
@@ -110,5 +111,5 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   checkSelf[Mod.Lazy, Defn.Val]("→lazy← val a = 1")
   checkSelf[Mod.ValParam, Defn.Class]("class A(→val← b: B)")
   checkSelf[Mod.VarParam, Defn.Class]("class A(→var← b: B)")
-  // check[Mod.Inline, Defn.Def]("→inline← def f = 1", dotty)
+  checkSelf[Mod.Inline, Defn.Def]("→inline← def f = 1", dotty)
 }

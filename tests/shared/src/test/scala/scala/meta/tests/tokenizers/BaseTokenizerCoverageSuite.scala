@@ -8,6 +8,7 @@ import org.scalatest.FunSuite
 abstract class BaseTokenizerCoverageSuite extends FunSuite {
   private val nl = "\n"
   private val whiteOnBlack = fansi.Back.Black ++ fansi.Color.White
+  val dotty = dialects.Dotty
 
   def checkNone[T <: Tree](source: String): Unit = {
     val testName = fansi.Str(source).overlay(whiteOnBlack)
@@ -171,7 +172,10 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     }
   
   def check[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
-    check0[T](annotedSource)(tree => projection(tree))
+    check0[T](annotedSource)(tree => projection(tree), dialect = dialects.Scala212)
+
+  def checkSelf[R <: Tree, T <: Tree](annotedSource: String, dialect: Dialect)(implicit projection: Projection[T, R]): Unit =
+    check0[T](annotedSource)(tree => projection(tree), checkChilds = false, dialect = dialect)
 
   def checkSelf[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree), checkChilds = false)
@@ -179,7 +183,14 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
   def check[T <: Tree](annotedSource: String): Unit =
     check0[T](annotedSource)(identity[Tree] _)
 
-  private def check0[T <: Tree](annotedSource: String)(project: T => Tree, checkChilds: Boolean = true): Unit = {
+  def checkType[T <: Tree](annotedSource: String): Unit =
+    check0[T](annotedSource)(identity[Tree] _, parser = Parse.parseType)    
+
+  private def check0[T <: Tree](annotedSource: String)(
+                                project: T => Tree, 
+                                checkChilds: Boolean = true, 
+                                parser: Parse[_ <: Tree] = Parse.parseStat,
+                                dialect: Dialect = dialects.Scala212): Unit = {
     val startMarker = '→'
     val stopMarker = '←'
 
@@ -265,7 +276,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     }
 
     test(markedSource.toString) {
-      val tree = project(source.parse[Stat].get.asInstanceOf[T])
+      val tree = project(parser(Input.String(source), dialect).get.asInstanceOf[T])
 
       val toCheck = 
         if (checkChilds) tree.children
