@@ -10,7 +10,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
   private val whiteOnBlack = fansi.Back.Black ++ fansi.Color.White
 
   def checkNone[T <: Tree](source: String): Unit = {
-    val testName = fansi.Str(source).overlay(whiteOnBlack, 0, source.size)
+    val testName = fansi.Str(source).overlay(whiteOnBlack)
     test(testName.toString) {
       val tree = source.parse[Term].get.asInstanceOf[T]
       val tokens = tree.children
@@ -71,14 +71,115 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
         cls.templ
       }
     }
+
+  implicit val classCtorSecondary: Projection[Defn.Class, Ctor.Secondary] =
+    new Projection[Defn.Class, Ctor.Secondary] {
+      def apply(cls: Defn.Class): Ctor.Secondary = {
+        cls.templ.stats.head.asInstanceOf[Ctor.Secondary]
+      }
+    }
+
+  implicit val defAnnotation: Projection[Defn.Def, Mod.Annot] =
+    new Projection[Defn.Def, Mod.Annot] {
+      def apply(in: Defn.Def): Mod.Annot = {
+        in.mods.head.asInstanceOf[Mod.Annot]
+      }
+    }
+  implicit val valPrivate: Projection[Defn.Val, Mod.Private] =
+    new Projection[Defn.Val, Mod.Private] {
+      def apply(in: Defn.Val): Mod.Private = {
+        in.mods.head.asInstanceOf[Mod.Private]
+      }
+    }
+  implicit val valProtected: Projection[Defn.Val, Mod.Protected] =
+    new Projection[Defn.Val, Mod.Protected] {
+      def apply(in: Defn.Val): Mod.Protected = {
+        in.mods.head.asInstanceOf[Mod.Protected]
+      }
+    }
+  implicit val valImplicit: Projection[Defn.Val, Mod.Implicit] =
+    new Projection[Defn.Val, Mod.Implicit] {
+      def apply(in: Defn.Val): Mod.Implicit = {
+        in.mods.head.asInstanceOf[Mod.Implicit]
+      }
+    }
+  implicit val valFinal: Projection[Defn.Val, Mod.Final] =
+    new Projection[Defn.Val, Mod.Final] {
+      def apply(in: Defn.Val): Mod.Final = {
+        in.mods.head.asInstanceOf[Mod.Final]
+      }
+    }
+  implicit val traitSealed: Projection[Defn.Trait, Mod.Sealed] =
+    new Projection[Defn.Trait, Mod.Sealed] {
+      def apply(in: Defn.Trait): Mod.Sealed = {
+        in.mods.head.asInstanceOf[Mod.Sealed]
+      }
+    }
+  implicit val defOverride: Projection[Defn.Def, Mod.Override] =
+    new Projection[Defn.Def, Mod.Override] {
+      def apply(in: Defn.Def): Mod.Override = {
+        in.mods.head.asInstanceOf[Mod.Override]
+      }
+    }
+  implicit val objectCase: Projection[Defn.Object, Mod.Case] =
+    new Projection[Defn.Object, Mod.Case] {
+      def apply(in: Defn.Object): Mod.Case = {
+        in.mods.head.asInstanceOf[Mod.Case]
+      }
+    }
+  implicit val classAbstract: Projection[Defn.Class, Mod.Abstract] =
+    new Projection[Defn.Class, Mod.Abstract] {
+      def apply(in: Defn.Class): Mod.Abstract = {
+        in.mods.head.asInstanceOf[Mod.Abstract]
+      }
+    }
+  implicit val classCovariant: Projection[Defn.Class, Mod.Covariant] =
+    new Projection[Defn.Class, Mod.Covariant] {
+      def apply(in: Defn.Class): Mod.Covariant = {
+        in.tparams.head.mods.head.asInstanceOf[Mod.Covariant]
+      }
+    }
+  implicit val classContravariant: Projection[Defn.Class, Mod.Contravariant] =
+    new Projection[Defn.Class, Mod.Contravariant] {
+      def apply(in: Defn.Class): Mod.Contravariant = {
+        in.tparams.head.mods.head.asInstanceOf[Mod.Contravariant]
+      }
+    }
+  implicit val valLazy: Projection[Defn.Val, Mod.Lazy] =
+    new Projection[Defn.Val, Mod.Lazy] {
+      def apply(in: Defn.Val): Mod.Lazy = {
+        in.mods.head.asInstanceOf[Mod.Lazy]
+      }
+    }
+  implicit val valValParam: Projection[Defn.Class, Mod.ValParam] =
+    new Projection[Defn.Class, Mod.ValParam] {
+      def apply(in: Defn.Class): Mod.ValParam = {
+        in.ctor.paramss.head.head.mods.head.asInstanceOf[Mod.ValParam]
+      }
+    }
+  implicit val varVarParam: Projection[Defn.Class, Mod.VarParam] =
+    new Projection[Defn.Class, Mod.VarParam] {
+      def apply(in: Defn.Class): Mod.VarParam = {
+        in.ctor.paramss.head.head.mods.head.asInstanceOf[Mod.VarParam]
+      }
+    }
+  implicit val defInline: Projection[Defn.Def, Mod.Inline] =
+    new Projection[Defn.Def, Mod.Inline] {
+      def apply(in: Defn.Def): Mod.Inline = {
+        in.mods.head.asInstanceOf[Mod.Inline]
+      }
+    }
   
   def check[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree))
 
+  def checkSelf[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
+    check0[T](annotedSource)(tree => projection(tree), checkChilds = false)
+
   def check[T <: Tree](annotedSource: String): Unit =
     check0[T](annotedSource)(identity[Tree] _)
 
-  private def check0[T <: Tree](annotedSource: String)(project: T => Tree): Unit = {
+  private def check0[T <: Tree](annotedSource: String)(project: T => Tree, checkChilds: Boolean = true): Unit = {
     val startMarker = '→'
     val stopMarker = '←'
 
@@ -90,7 +191,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     val overlayColor2 = fansi.Back.Magenta
 
     def assertPos(positions: List[((Int, Int), (Int, Int))]): Unit = {
-      val fSource = fansi.Str(source)
+      val fSource = fansi.Str(source).overlay(fansi.Color.White)
       var odd = true
 
       val (tokens, markers, correct) = 
@@ -108,13 +209,16 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
             (tokens, markers, correct)
         }
 
+      val sep = 
+        if(source.lines.size > 1) nl
+        else ""
+
       if(!correct) {
         assert(
           false,
           s"""|mis-positionned children:
-              |  obtained: ${tokens}
-              |  expected: ${markers}
-              |""".stripMargin
+              |  obtained: ${sep}${tokens}
+              |  expected: ${sep}${markers}""".stripMargin
         )  
       }
     }
@@ -151,7 +255,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
 
     val markers = markersBuilder.result()
     var odd = true
-    val markedSource = markers.foldLeft(fansi.Str(source).overlay(whiteOnBlack, 0, source.size)) {
+    val markedSource = markers.foldLeft(fansi.Str(source).overlay(whiteOnBlack)) {
       case (acc, (start, end)) => 
         val color =
           if(odd) overlayColor1
@@ -162,7 +266,11 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
 
     test(markedSource.toString) {
       val tree = project(source.parse[Stat].get.asInstanceOf[T])
-      val tokens = tree.children.map(_.tokens).filter(_.nonEmpty)
+
+      val toCheck = 
+        if (checkChilds) tree.children
+        else List(tree)
+      val tokens = toCheck.map(_.tokens).filter(_.nonEmpty)
       val tokensSorted = 
         tokens.map{ token =>
           val tokenStart = token.head.start

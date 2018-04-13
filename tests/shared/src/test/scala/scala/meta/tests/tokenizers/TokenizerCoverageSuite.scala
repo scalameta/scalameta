@@ -3,7 +3,7 @@ package scala.meta.tests.tokenizers
 import scala.meta._
 
 class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
-
+  
   // Term
   check[Term.Annotate]("→(a)←: →@A←")
   check[Term.Apply]("→(f)←(→(((a)))←)")
@@ -86,4 +86,29 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   check[Defn.Class]("class →A← →private (b: B)←")
   check[Defn.Trait]("trait →A←")
   check[Defn.Object]("object →A←")
+  check[Ctor.Secondary, Defn.Class]("class A { def →this←(→a: A←) = →this()← }")
+
+  // meta.Mod
+  checkSelf[Mod.Annot, Defn.Def]("→@tailrec← def f = 1")
+  check[Mod.Annot, Defn.Def]("@→tailrec← def f = 1")
+  check[Mod.Annot, Defn.Def]("@→a← def b = 1")
+  check[Mod.Annot, Defn.Def]("@→a(1)← def b = 1")
+  check[Mod.Annot, Defn.Def]("@→(a @b)← def x = 1")
+  check[Mod.Annot, Defn.Def]("@→(a @b(1, 2)(3))← def x = 1")
+  checkSelf[Mod.Private, Defn.Val]("→private[foo]← val a = 1")
+  check[Mod.Private, Defn.Val]("private[→foo←] val a = 1")
+  checkSelf[Mod.Protected, Defn.Val]("→protected[foo]← val a = 1")
+  check[Mod.Protected, Defn.Val]("protected[→foo←] val a = 1")
+  checkSelf[Mod.Implicit, Defn.Val]("→implicit← val a = 1")
+  checkSelf[Mod.Final, Defn.Val]("→final← val a = 1")
+  checkSelf[Mod.Sealed, Defn.Trait]("→sealed← trait a")
+  checkSelf[Mod.Override, Defn.Def]("→override← def f = 1")
+  checkSelf[Mod.Case, Defn.Object]("→case← object B")
+  checkSelf[Mod.Abstract, Defn.Class]("→abstract← class A")
+  checkSelf[Mod.Covariant, Defn.Class]("class A[→+← T]")
+  checkSelf[Mod.Contravariant, Defn.Class]("class A[→-← T]")
+  checkSelf[Mod.Lazy, Defn.Val]("→lazy← val a = 1")
+  checkSelf[Mod.ValParam, Defn.Class]("class A(→val← b: B)")
+  checkSelf[Mod.VarParam, Defn.Class]("class A(→var← b: B)")
+  // check[Mod.Inline, Defn.Def]("→inline← def f = 1", dotty)
 }
