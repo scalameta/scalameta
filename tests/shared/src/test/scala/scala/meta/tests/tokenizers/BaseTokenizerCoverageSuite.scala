@@ -178,29 +178,39 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
       }
     }
   
-  def check[T <: Tree](annotedSource: String): Unit =
+  def check[T <: Tree : Manifest](annotedSource: String): Unit =
     check0[T](annotedSource)()
 
-  def check[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
+  def check[R <: Tree, T <: Tree : Manifest](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree))
 
-  def checkSelf[R <: Tree, T <: Tree](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
+  def checkSelf[R <: Tree, T <: Tree : Manifest](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree), checkChilds = false, dialect = dialect)
 
-  def checkType[T <: Tree](annotedSource: String): Unit =
+  def checkSource[T <: Tree : Manifest](annotedSource: String): Unit =
+    check0[T](annotedSource)(project = _.children.head, parser = Parse.parseSource)
+
+  def checkType[T <: Tree : Manifest](annotedSource: String): Unit =
     check0[T](annotedSource)(parser = Parse.parseType)
 
-  def checkType[T <: Tree](annotedSource: String, dialect: Dialect): Unit =
+  def checkCase[T <: Tree : Manifest](annotedSource: String): Unit =
+    check0[T](annotedSource)(parser = Parse.parseCase)
+
+  def checkPat[T <: Tree : Manifest](annotedSource: String): Unit =
+    check0[T](annotedSource)(parser = Parse.parsePat)
+
+  def checkType[T <: Tree : Manifest](annotedSource: String, dialect: Dialect): Unit =
     check0[T](annotedSource)(parser = Parse.parseType, dialect = dialect)
 
-  def checkType[R <: Tree, T <: Tree](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
+  def checkType[R <: Tree, T <: Tree : Manifest](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree), dialect = dialect)    
 
   private def check0[T <: Tree](annotedSource: String)(
                                 project: T => Tree = identity[Tree] _, 
                                 checkChilds: Boolean = true, 
                                 parser: Parse[_ <: Tree] = Parse.parseStat,
-                                dialect: Dialect = dialects.Scala212): Unit = {
+                                dialect: Dialect = dialects.Scala212)(
+                                implicit m: Manifest[T]): Unit = {
     val startMarker = '→'
     val stopMarker = '←'
 
@@ -276,7 +286,11 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
 
     val markers = markersBuilder.result()
     var odd = true
-    val markedSource = markers.foldLeft(fansi.Str(source).overlay(whiteOnBlack)) {
+
+    val className = m.toString
+    val shortClassName = className.stripPrefix("scala.meta.").replaceAllLiterally("$", ".")
+
+    val markedSource = markers.foldLeft(fansi.Str(source.padTo(60, " ").mkString + shortClassName).overlay(whiteOnBlack)) {
       case (acc, (start, end)) => 
         val color =
           if(odd) overlayColor1

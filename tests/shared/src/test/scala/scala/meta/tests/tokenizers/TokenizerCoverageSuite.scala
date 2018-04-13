@@ -4,6 +4,13 @@ import scala.meta._
 
 class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
 
+  // Lit
+  // not required
+
+  // Enumerator
+
+  // Case
+
   // Type
   checkType[Type.Name]("B")
   checkType[Type.Select]("→a←.→B←")
@@ -84,6 +91,10 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   checkNone[Term.Name]("(x)")
   checkNone[Term.Placeholder]("(_)")
 
+  // Pkg
+  checkSource[Pkg]("package →a←")
+  checkSource[Pkg]("package →a.b←")
+
   // Import
   check[Import]("import →a.b←")
   check[Import]("import →a.b←, →c.d←")
@@ -146,4 +157,18 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   check[Template, Term.NewAnonymous]("new { →val a = 1← } with →A← {}")
   check[Template, Defn.Class]("class A extends →B← with →C← with →D←")
   check[Template, Defn.Class]("class Y extends { →val a = 1← } with →X←")
+
+  // Pat
+  checkCase[Lit]("case →`1`← =>")
+  checkPat[Pat.Bind]("→a← @ →A←")
+  checkPat[Pat.Wildcard]("_")
+  checkPat[Pat.SeqWildcard]("_*")
+  checkPat[Pat.Alternative]("→a← | →b←")
+  checkPat[Pat.Tuple]("(→a←, →b←)")
+  checkPat[Pat.Extract]("→E←(→a←, →b←)")
+  checkPat[Pat.ExtractInfix]("→a← →E← →b←")
+  checkPat[Pat.Interpolate](""" →s←"→start ←${→(a)←}→ end←" """)
+  checkPat[Pat.Xml]("→<h1>a←{→b←}→c←{→d←}→e←{→f←}→g</h1>←")
+  checkPat[Pat.Typed]("→x←: →T←")
+  checkPat[Pat.Typed]("→y←: →T←")
 }
