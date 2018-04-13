@@ -51,14 +51,14 @@ class Main(settings: Settings, reporter: Reporter) {
             cacheEntry.toNIO,
             StandardCopyOption.REPLACE_EXISTING
           )
-        case _: AccessDeniedException if scala.util.Properties.isWin =>
-          // AccessDeniedException seems to be thrown on Windows when ATOMIC_MOVE is provided
-          // and the target file is being used elsewhere, see https://github.com/scalameta/scalameta/issues/1499
-          Files.move(
-            tmp,
-            cacheEntry.toNIO,
-            StandardCopyOption.REPLACE_EXISTING
-          )
+//        case _: AccessDeniedException if scala.util.Properties.isWin =>
+        // AccessDeniedException seems to be thrown on Windows when ATOMIC_MOVE is provided
+        // and the target file is being used elsewhere, see https://github.com/scalameta/scalameta/issues/1499
+//          Files.move(
+//            tmp,
+//            cacheEntry.toNIO,
+//            StandardCopyOption.REPLACE_EXISTING
+//          )
       }
     }
 
