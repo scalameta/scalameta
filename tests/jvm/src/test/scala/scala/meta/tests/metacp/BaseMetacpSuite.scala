@@ -12,11 +12,15 @@ abstract class BaseMetacpSuite extends BaseCliSuite {
   val tmp: AbsolutePath = AbsolutePath(Files.createTempDirectory("metacp"))
   tmp.toFile.deleteOnExit()
 
+  def runMetacp(classpath: Classpath): Option[Classpath] = {
+    val settings = Settings().withClasspath(classpath).withCacheDir(tmp).withPar(true)
+    val reporter = Reporter().withOut(System.out).withErr(System.err)
+    Metacp.process(settings, reporter)
+  }
+
   def checkMetacp(name: String, classpath: () => Classpath): Unit = {
     test(name) {
-      val settings = Settings().withClasspath(classpath()).withCacheDir(tmp).withPar(true)
-      val reporter = Reporter().withOut(System.out).withErr(System.err)
-      val result = Metacp.process(settings, reporter)
+      val result = runMetacp(classpath())
       assert(result.nonEmpty)
     }
   }
