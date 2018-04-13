@@ -3,6 +3,8 @@ package scala.meta.tests.tokenizers
 import scala.meta._
 
 class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
+
+  // Term
   check[Term.Annotate]("→(a)←: →@A←")
   check[Term.Apply]("→(f)←(→(((a)))←)")
   check[Term.Apply]("→(f)←(→(a)←)")
@@ -47,5 +49,12 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   check[Term.Xml]("→<a>b←{→c←}→d</a>←")
   checkNone[Term.Name]("(x)")
   checkNone[Term.Placeholder]("(_)")
-  
+
+  // Import
+  check[Import]("import →a.b←")
+  check[Import]("import →a.b←, →c.d←") // 
+  check[Importer, Import]("import →a←.→_←")        // Wildcard
+  check[Importer, Import]("import →a←.{ →b←, →c← }") // Name
+  check[Importer, Import]("import →a←.{ →b => c← }") // Rename
+  check[Importer, Import]("import →a←.{ →b => _← }") // Unimport  
 }

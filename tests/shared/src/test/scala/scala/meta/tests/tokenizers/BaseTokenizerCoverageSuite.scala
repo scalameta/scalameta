@@ -41,6 +41,13 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
       }
     }
 
+  implicit val importer: Projection[Import, Importer] = 
+    new Projection[Import, Importer] {
+      def apply(im: Import): Importer = {
+        im.importers.head
+      }
+    }
+
   def check[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree))
 
@@ -55,13 +62,37 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
       .replaceAllLiterally(startMarker.toString, "")
       .replaceAllLiterally(stopMarker.toString, "")
 
-    def assertPos(obtained: Int, expected: Int): Unit = {
-      assert(
-        obtained == expected,
-        nl + source + nl +
-          (" " * expected) + "^ expected" + nl +
-          (" " * obtained) + "^ obtained"
-      )
+    val overlayColor1 = fansi.Back.Cyan ++ fansi.Color.Magenta
+    val overlayColor2 = fansi.Back.Magenta ++ fansi.Color.Cyan
+
+    def assertPos(positions: List[((Int, Int), (Int, Int))]): Unit = {
+      val fSource = fansi.Str(source)
+      var odd = true
+
+      val (tokens, markers, correct) = 
+        positions.foldLeft((fSource, fSource, true)) {
+          case ((tokens0, markers0, correct0), ((markerStart, markerEnd), (tokenStart, tokenEnd))) =>
+            val color =
+              if(odd) overlayColor1
+              else overlayColor2
+            odd = !odd
+
+            val correct = correct0 && (tokenStart == markerStart && tokenEnd == markerEnd)
+            val tokens = tokens0.overlay(color, tokenStart, tokenEnd)
+            val markers = markers0.overlay(color, markerStart, markerEnd)
+
+            (tokens, markers, correct)
+        }
+
+      if(!correct) {
+        assert(
+          false,
+          s"""|mis-positionned children:
+              |  obtained: ${tokens}
+              |  expected: ${markers}
+              |""".stripMargin
+        )  
+      }
     }
 
     var markersOffset = 0
@@ -99,8 +130,8 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     val markedSource = markers.foldLeft(fansi.Str(source)) {
       case (acc, (start, end)) => 
         val color =
-          if(odd) fansi.Back.Cyan ++ fansi.Color.Magenta
-          else fansi.Back.Magenta ++ fansi.Color.Cyan
+          if(odd) overlayColor1
+          else overlayColor2
         odd = !odd
         acc.overlay(color, start, end)
     }
@@ -115,12 +146,8 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
           (tokenStart, tokenEnd)
         }.sorted
 
-      tokensSorted.zip(markers).foreach {
-        case ((tokenStart, tokenEnd), (markerStart, markerEnd)) => {
-          assertPos(tokenStart, markerStart)
-          assertPos(tokenEnd, markerEnd)
-        }
-      }
+      val noPosition = (0, 0)
+      assertPos(tokensSorted.zipAll(markers, noPosition, noPosition))
 
       assert(
         tokens.size == markers.size,
