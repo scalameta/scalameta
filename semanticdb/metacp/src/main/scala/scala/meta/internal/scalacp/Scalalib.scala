@@ -94,7 +94,9 @@ object Scalalib {
     )
     val builtinSig = {
       val decls = symbols.filter(_.kind == k.METHOD)
-      val tpe = s.ClassInfoType(Nil, parents, ctor.symbol +: decls.map(_.symbol))
+      val declSymbols = decls.map(_.symbol)
+      val declarations = if (isTrait) declSymbols else ctor.symbol +: declSymbols
+      val tpe = s.ClassInfoType(Nil, parents, declarations)
       s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))
     }
     val builtin = s.SymbolInformation(
