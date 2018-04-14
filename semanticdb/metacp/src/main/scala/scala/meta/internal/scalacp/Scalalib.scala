@@ -23,11 +23,11 @@ object Scalalib {
       builtinMethod("Any", List(p.FINAL), "getClass", Nil, Nil, "java.lang.Class#"),
       builtinMethod("Any", List(p.FINAL), "isInstanceOf", List("A"), Nil, "scala.Boolean#"),
       builtinMethod("Any", List(p.FINAL), "asInstanceOf", List("A"), Nil, "scala.Any.asInstanceOf(A).[A]"))
-    builtinClass(List(p.ABSTRACT), "Any", Nil, symbols.flatten)
+    builtin(k.CLASS, List(p.ABSTRACT), "Any", Nil, symbols.flatten)
   }
 
   def anyValClass: ToplevelInfos = {
-    builtinClass(List(p.ABSTRACT), "AnyVal", List("scala.Any#"), Nil)
+    builtin(k.CLASS, List(p.ABSTRACT), "AnyVal", List("scala.Any#"), Nil)
   }
 
   def anyRefClass: ToplevelInfos = {
@@ -37,45 +37,27 @@ object Scalalib {
       builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> "scala.AnyRef#"), "scala.Boolean#"),
       builtinMethod("AnyRef", List(p.FINAL), "ne", Nil, List("that" -> "scala.AnyRef#"), "scala.Boolean#"),
       builtinMethod("AnyRef", List(p.FINAL), "synchronized", List("T"), List("body" -> "scala.AnyRef.synchronized(T).[T]"), "scala.AnyRef.synchronized(T).[T]"))
-    builtinClass(Nil, "AnyRef", List("scala.Any#"), symbols.flatten)
+    builtin(k.CLASS, Nil, "AnyRef", List("scala.Any#"), symbols.flatten)
   }
 
   def nothingClass: ToplevelInfos = {
-    builtinClass(List(p.ABSTRACT, p.FINAL), "Nothing", List("scala.Any#"), Nil)
+    builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Nothing", List("scala.Any#"), Nil)
   }
 
   def nullClass: ToplevelInfos = {
-    builtinClass(List(p.ABSTRACT, p.FINAL), "Null", List("scala.AnyRef#"), Nil)
+    builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Null", List("scala.AnyRef#"), Nil)
   }
 
   def singletonTrait: ToplevelInfos = {
-    builtinTrait(List(p.FINAL), "Singleton", List("scala.Any#"), Nil)
+    builtin(k.TRAIT, List(p.FINAL), "Singleton", List("scala.Any#"), Nil)
   }
 
-  private def builtinClass(
+  private def builtin(
+      kind: s.SymbolInformation.Kind,
       props: List[s.SymbolInformation.Property],
       name: String,
       bases: List[String],
-      symbols: List[s.SymbolInformation]
-  ): ToplevelInfos = {
-    builtinClassOrTrait(props, name, bases, symbols, isTrait = false)
-  }
-
-  private def builtinTrait(
-      props: List[s.SymbolInformation.Property],
-      name: String,
-      bases: List[String],
-      symbols: List[s.SymbolInformation]
-  ): ToplevelInfos = {
-    builtinClassOrTrait(props, name, bases, symbols, isTrait = true)
-  }
-
-  private def builtinClassOrTrait(
-      props: List[s.SymbolInformation.Property],
-      name: String,
-      bases: List[String],
-      symbols: List[s.SymbolInformation],
-      isTrait: Boolean): ToplevelInfos = {
+      symbols: List[s.SymbolInformation]): ToplevelInfos = {
     val parents = bases.map { base =>
       s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, base, Nil)))
     }
@@ -95,14 +77,14 @@ object Scalalib {
     val builtinSig = {
       val decls = symbols.filter(_.kind == k.METHOD)
       val declSymbols = decls.map(_.symbol)
-      val declarations = if (isTrait) declSymbols else ctor.symbol +: declSymbols
+      val declarations = if (kind == k.CLASS) ctor.symbol +: declSymbols else declSymbols
       val tpe = s.ClassInfoType(Nil, parents, declarations)
       s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))
     }
     val builtin = s.SymbolInformation(
       symbol = symbol,
       language = l.SCALA,
-      kind = if (isTrait) k.TRAIT else k.CLASS,
+      kind = kind,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = name,
       tpe = Some(builtinSig),
