@@ -44,6 +44,7 @@ class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {
             |META-INF/semanticdb/scala/AnyVal.class.semanticdb
             |META-INF/semanticdb/scala/Nothing.class.semanticdb
             |META-INF/semanticdb/scala/Null.class.semanticdb
+            |META-INF/semanticdb/scala/Singleton.class.semanticdb
             |""".stripMargin
         )
       case other =>
