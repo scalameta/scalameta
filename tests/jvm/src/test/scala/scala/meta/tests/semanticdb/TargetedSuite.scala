@@ -4,6 +4,7 @@ package semanticdb
 import org.langmeta.internal.semanticdb._
 import scala.meta._
 import scala.meta.internal.semanticdb.scalac._
+import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 
 // Contributing tips:
 // - Create another suite like YYY.scala that extends DatabaseSuite,
@@ -1313,6 +1314,22 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
         val declDenot = db.symbols.find(_.symbol.syntax == decl)
         assert(declDenot.isDefined, decl)
       }
+    }
+  )
+
+  targeted(
+    """
+      |object a {
+      |  for {
+      |    i <- List(1, 2)
+      |    <<j>> <- List(3, 4)
+      |  } yield j
+      |}
+      """.stripMargin, { (db, j) =>
+      val denot = db.symbols.find(_.symbol == j).get.denotation
+      val kind = denot.skind
+
+      assert(kind == k.LOCAL)
     }
   )
 }

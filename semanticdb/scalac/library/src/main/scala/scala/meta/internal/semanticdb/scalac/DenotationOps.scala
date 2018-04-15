@@ -109,6 +109,8 @@ trait DenotationOps { self: DatabaseOps =>
           else ()
         }
         if (gsym.isPrimaryConstructor) flags |= mf.PRIMARY
+        if (gsym.isSemanticdbLocal)
+          flags |= mf.LOCAL
       }
       flags
     }
