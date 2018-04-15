@@ -75,9 +75,9 @@ object Scalalib {
       owner = symbol
     )
     val builtinSig = {
-      val decls = symbols.filter(_.kind == k.METHOD)
+      val decls = symbols.filter(_.kind.isMethod)
       val declSymbols = decls.map(_.symbol)
-      val declarations = if (kind == k.CLASS) ctor.symbol +: declSymbols else declSymbols
+      val declarations = if (kind.isClass) ctor.symbol +: declSymbols else declSymbols
       val tpe = s.ClassInfoType(Nil, parents, declarations)
       s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))
     }
