@@ -8,11 +8,13 @@ import org.scalatest.FunSuite
 abstract class BaseTokenizerCoverageSuite extends FunSuite {
   private val nl = "\n"
   private val whiteOnBlack = fansi.Back.Black ++ fansi.Color.White
+  private val whiteOnGray = fansi.Back.DarkGray ++ fansi.Color.White
   val dotty = dialects.Dotty
+  val maxCol = 73
 
-  def checkNone[T <: Tree](source: String): Unit = {
-    val testName = fansi.Str(source).overlay(whiteOnBlack)
-    test(testName.toString) {
+
+  def checkNone[T <: Tree](source: String)(implicit m: Manifest[T]): Unit = {
+    test(testName(source, m).toString) {
       val tree = source.parse[Term].get.asInstanceOf[T]
       val tokens = tree.children
       assert(tokens.isEmpty)
@@ -211,6 +213,8 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
   def checkType[R <: Tree, T <: Tree : Manifest](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree), dialect = dialect)    
 
+  private var oddTest = true
+
   private def check0[T <: Tree](annotedSource: String)(
                                 project: T => Tree = identity[Tree] _, 
                                 checkChilds: Boolean = true, 
@@ -293,10 +297,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     val markers = markersBuilder.result()
     var odd = true
 
-    val className = m.toString
-    val shortClassName = className.stripPrefix("scala.meta.").replaceAllLiterally("$", ".")
-
-    val markedSource = markers.foldLeft(fansi.Str(source.padTo(60, " ").mkString + shortClassName).overlay(whiteOnBlack)) {
+    val markedSource = markers.foldLeft(testName(source, m)) {
       case (acc, (start, end)) => 
         val color =
           if(odd) overlayColor1
@@ -327,5 +328,21 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
         s"incorrect number of tokens, expected: ${markers.size}, obtained: ${tokens.size}"
       )
     }
+  }
+
+
+
+  private def testName(source: String, m: Manifest[_]): fansi.Str = {
+    val className = m.toString.stripPrefix("scala.meta.").replaceAllLiterally("$", ".")
+    
+    val padSize = maxCol - (source + className).size
+
+    val testColor =
+      if(oddTest) whiteOnBlack
+      else whiteOnGray
+
+    oddTest = !oddTest
+
+    fansi.Str(source + (" " * padSize) + className).overlay(testColor)
   }
 }
