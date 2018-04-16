@@ -23,11 +23,11 @@ object Scalalib {
       builtinMethod("Any", List(p.FINAL), "getClass", Nil, Nil, "java.lang.Class#"),
       builtinMethod("Any", List(p.FINAL), "isInstanceOf", List("A"), Nil, "scala.Boolean#"),
       builtinMethod("Any", List(p.FINAL), "asInstanceOf", List("A"), Nil, "scala.Any.asInstanceOf(A).[A]"))
-    builtinClass(List(p.ABSTRACT), "Any", Nil, symbols.flatten)
+    builtin(k.CLASS, List(p.ABSTRACT), "Any", Nil, symbols.flatten)
   }
 
   def anyValClass: ToplevelInfos = {
-    builtinClass(List(p.ABSTRACT), "AnyVal", List("scala.Any#"), Nil)
+    builtin(k.CLASS, List(p.ABSTRACT), "AnyVal", List("scala.Any#"), Nil)
   }
 
   def anyRefClass: ToplevelInfos = {
@@ -37,18 +37,23 @@ object Scalalib {
       builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> "scala.AnyRef#"), "scala.Boolean#"),
       builtinMethod("AnyRef", List(p.FINAL), "ne", Nil, List("that" -> "scala.AnyRef#"), "scala.Boolean#"),
       builtinMethod("AnyRef", List(p.FINAL), "synchronized", List("T"), List("body" -> "scala.AnyRef.synchronized(T).[T]"), "scala.AnyRef.synchronized(T).[T]"))
-    builtinClass(Nil, "AnyRef", List("scala.Any#"), symbols.flatten)
+    builtin(k.CLASS, Nil, "AnyRef", List("scala.Any#"), symbols.flatten)
   }
 
   def nothingClass: ToplevelInfos = {
-    builtinClass(List(p.ABSTRACT, p.FINAL), "Nothing", List("scala.Any#"), Nil)
+    builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Nothing", List("scala.Any#"), Nil)
   }
 
   def nullClass: ToplevelInfos = {
-    builtinClass(List(p.ABSTRACT, p.FINAL), "Null", List("scala.AnyRef#"), Nil)
+    builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Null", List("scala.AnyRef#"), Nil)
   }
 
-  private def builtinClass(
+  def singletonTrait: ToplevelInfos = {
+    builtin(k.TRAIT, Nil, "Singleton", List("scala.Any#"), Nil)
+  }
+
+  private def builtin(
+      kind: s.SymbolInformation.Kind,
       props: List[s.SymbolInformation.Property],
       name: String,
       bases: List[String],
@@ -70,14 +75,16 @@ object Scalalib {
       owner = symbol
     )
     val builtinSig = {
-      val decls = symbols.filter(_.kind == k.METHOD)
-      val tpe = s.ClassInfoType(Nil, parents, ctor.symbol +: decls.map(_.symbol))
+      val decls = symbols.filter(_.kind.isMethod)
+      val declSymbols = decls.map(_.symbol)
+      val declarations = if (kind.isClass) ctor.symbol +: declSymbols else declSymbols
+      val tpe = s.ClassInfoType(Nil, parents, declarations)
       s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))
     }
     val builtin = s.SymbolInformation(
       symbol = symbol,
       language = l.SCALA,
-      kind = k.CLASS,
+      kind = kind,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = name,
       tpe = Some(builtinSig),
@@ -87,7 +94,7 @@ object Scalalib {
     val syntheticBase = PathIO.workingDirectory
     val syntheticPath = syntheticBase.resolve("scala/" + name + ".class")
     val syntheticClassfile = ToplevelClassfile(syntheticBase, syntheticPath, null)
-    ToplevelInfos(syntheticClassfile, List(builtin), ctor +: symbols)
+    ToplevelInfos(syntheticClassfile, List(builtin), if (kind.isClass) ctor +: symbols else symbols)
   }
 
   def builtinMethod(

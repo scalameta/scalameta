@@ -153,7 +153,8 @@ class Main(settings: Settings, reporter: Reporter) {
       Scalalib.anyValClass,
       Scalalib.anyRefClass,
       Scalalib.nothingClass,
-      Scalalib.nullClass)
+      Scalalib.nullClass,
+      Scalalib.singletonTrait)
     synthetics.foreach { infos =>
       index.append(infos.uri, infos.toplevels)
       infos.save(out)

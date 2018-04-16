@@ -126,3 +126,17 @@ scala.Null# => abstract final class Null.{+1 decls}
   extends AnyRef
 scala.Null#`<init>`(). => primary ctor <init>: (): Null
   Null => scala.Null#
+
+scala/Singleton.class
+---------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => scala/Singleton.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+scala.Singleton# => trait Singleton
+  extends Any
