@@ -49,7 +49,7 @@ object Scalalib {
   }
 
   def singletonTrait: ToplevelInfos = {
-    builtin(k.TRAIT, List(p.FINAL), "Singleton", List("scala.Any#"), Nil)
+    builtin(k.TRAIT, Nil, "Singleton", List("scala.Any#"), Nil)
   }
 
   private def builtin(
@@ -94,7 +94,7 @@ object Scalalib {
     val syntheticBase = PathIO.workingDirectory
     val syntheticPath = syntheticBase.resolve("scala/" + name + ".class")
     val syntheticClassfile = ToplevelClassfile(syntheticBase, syntheticPath, null)
-    ToplevelInfos(syntheticClassfile, List(builtin), ctor +: symbols)
+    ToplevelInfos(syntheticClassfile, List(builtin), if (kind.isClass) ctor +: symbols else symbols)
   }
 
   def builtinMethod(

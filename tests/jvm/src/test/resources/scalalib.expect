@@ -135,10 +135,8 @@ Schema => SemanticDB v3
 Uri => scala/Singleton.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 1 entries
 
 Symbols:
-scala.Singleton# => final trait Singleton
+scala.Singleton# => trait Singleton
   extends Any
-scala.Singleton#`<init>`(). => primary ctor <init>: (): Singleton
-  Singleton => scala.Singleton#
