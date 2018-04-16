@@ -13,9 +13,9 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
   val maxCol = 73
 
 
-  def checkNone[T <: Tree](source: String)(implicit m: Manifest[T]): Unit = {
-    test(testName(source, m).toString) {
-      val tree = source.parse[Term].get.asInstanceOf[T]
+  def checkNone[T <: Tree](source: String): Unit = {
+    val tree = source.parse[Term].get.asInstanceOf[T]
+    test(testName(source, tree).toString) {
       val tokens = tree.children
       assert(tokens.isEmpty)
     }
@@ -180,37 +180,37 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
       }
     }
   
-  def check[T <: Tree : Manifest](annotedSource: String): Unit =
+  def check[T <: Tree](annotedSource: String): Unit =
     check0[T](annotedSource)()
 
-  def check[R <: Tree, T <: Tree : Manifest](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
+  def check[R <: Tree, T <: Tree](annotedSource: String)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree))
 
-  def checkSelf[R <: Tree, T <: Tree : Manifest](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
+  def checkSelf[R <: Tree, T <: Tree](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree), checkChilds = false, dialect = dialect)
 
-  def checkSource[T <: Tree : Manifest](annotedSource: String): Unit =
+  def checkSource[T <: Tree](annotedSource: String): Unit =
     check0[T](annotedSource)(project = _.children.head, parser = Parse.parseSource)
 
-  def checkType[T <: Tree : Manifest](annotedSource: String): Unit =
+  def checkType[T <: Tree](annotedSource: String): Unit =
     check0[T](annotedSource)(parser = Parse.parseType)
 
-  def checkCase[T <: Tree : Manifest](annotedSource: String): Unit =
+  def checkCase[T <: Tree](annotedSource: String): Unit =
     check0[T](annotedSource)(parser = Parse.parseCase)
 
-  def checkPat[T <: Tree : Manifest](annotedSource: String): Unit =
+  def checkPat[T <: Tree](annotedSource: String): Unit =
     check0[T](annotedSource)(parser = Parse.parsePat)
 
-  def checkEnumerator[T <: Tree : Manifest](annotedSource: String): Unit =
+  def checkEnumerator[T <: Tree](annotedSource: String): Unit =
     check0[T](annotedSource)(parser = Parse.parseEnumerator)
 
   def checkCase0(annotedSource: String): Unit =
     check0[Case](annotedSource)(parser = Parse.parseCase)
 
-  def checkType[T <: Tree : Manifest](annotedSource: String, dialect: Dialect): Unit =
+  def checkType[T <: Tree](annotedSource: String, dialect: Dialect): Unit =
     check0[T](annotedSource)(parser = Parse.parseType, dialect = dialect)
 
-  def checkType[R <: Tree, T <: Tree : Manifest](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
+  def checkType[R <: Tree, T <: Tree](annotedSource: String, dialect: Dialect = dialects.Scala212)(implicit projection: Projection[T, R]): Unit =
     check0[T](annotedSource)(tree => projection(tree), dialect = dialect)    
 
   private var oddTest = true
@@ -219,8 +219,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
                                 project: T => Tree = identity[Tree] _, 
                                 checkChilds: Boolean = true, 
                                 parser: Parse[_ <: Tree] = Parse.parseStat,
-                                dialect: Dialect = dialects.Scala212)(
-                                implicit m: Manifest[T]): Unit = {
+                                dialect: Dialect = dialects.Scala212): Unit = {
     val startMarker = '→'
     val stopMarker = '←'
 
@@ -297,7 +296,10 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     val markers = markersBuilder.result()
     var odd = true
 
-    val markedSource = markers.foldLeft(testName(source, m)) {
+    val tree = 
+      project(parser(Input.String(source), dialect).get.asInstanceOf[T])
+
+    val markedSource = markers.foldLeft(testName(source, tree)) {
       case (acc, (start, end)) => 
         val color =
           if(odd) overlayColor1
@@ -307,8 +309,6 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     }
 
     test(markedSource.toString) {
-      val tree = project(parser(Input.String(source), dialect).get.asInstanceOf[T])
-
       val toCheck = 
         if (checkChilds) tree.children
         else List(tree)
@@ -332,9 +332,11 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
 
 
 
-  private def testName(source: String, m: Manifest[_]): fansi.Str = {
-    val className = m.toString.stripPrefix("scala.meta.").replaceAllLiterally("$", ".")
-    
+  private def testName(source: String, tree: Tree): fansi.Str = {
+    val fullClassName = tree.getClass.toString.stripPrefix("class scala.meta.").replaceAllLiterally("$", ".")
+    val lastDot = fullClassName.lastIndexOf(".")
+    val className = fullClassName.slice(0, lastDot)
+
     val padSize = maxCol - (source + className).size
 
     val testColor =
