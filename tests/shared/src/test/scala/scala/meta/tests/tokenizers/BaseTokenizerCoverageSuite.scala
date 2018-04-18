@@ -31,155 +31,60 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     def apply(root: R): T
   }
 
+  def projection[R, T](f: R => T): Projection[R, T] =
+    new Projection[R, T] {
+      def apply(tree: R): T = f(tree)
+    }
+
+  def mod[R <: Defn, T]: Projection[R, T] = 
+    projection[R, T](
+      in => {
+        val mods = 
+          in match {
+            case r: Defn.Def => r.mods
+            case r: Defn.Val => r.mods
+            case r: Defn.Trait => r.mods
+            case r: Defn.Object => r.mods
+            case r: Defn.Class => r.mods
+            case _ => ???
+          }
+        
+        mods.head.asInstanceOf[T]
+      }
+    )
+
+  def tmod[T]: Projection[Defn.Class, T] = projection[Defn.Class, T](_.tparams.head.mods.head.asInstanceOf[T])
+  def ctorMod[T]: Projection[Defn.Class, T] = projection[Defn.Class, T](_.ctor.paramss.head.head.mods.head.asInstanceOf[T])
+
   implicit val applyRepeated: Projection[Term.Apply, Term.Repeated] =
-    new Projection[Term.Apply, Term.Repeated] {
-      def apply(ap: Term.Apply): Term.Repeated = {
-        val Term.Apply(_, List(r: Term.Repeated)) = ap
-        r
-      }
+    projection[Term.Apply, Term.Repeated] {
+      case Term.Apply(_, List(r: Term.Repeated)) => r
+      case _ => ???
     }
 
-  implicit val defParams: Projection[Decl.Def, Term.Param] = 
-    new Projection[Decl.Def, Term.Param] {
-      def apply(d: Decl.Def): Term.Param = {
-        d.paramss.head.head
-      }
-    }
+  implicit val defParams         : Projection[Decl.Def, Term.Param]          = projection[Decl.Def, Term.Param](_.paramss.head.head)
+  implicit val importImporter    : Projection[Import, Importer]              = projection[Import, Importer](_.importers.head)
+  implicit val traitSelf         : Projection[Defn.Trait, Self]              = projection[Defn.Trait, Self](_.templ.self)
+  implicit val anonTemplate      : Projection[Term.NewAnonymous, Template]   = projection[Term.NewAnonymous, Template](_.templ)
+  implicit val classTemplate     : Projection[Defn.Class, Template]          = projection[Defn.Class, Template](_.templ)
+  implicit val classCtorSecondary: Projection[Defn.Class, Ctor.Secondary]    = projection[Defn.Class, Ctor.Secondary](_.templ.stats.head.asInstanceOf[Ctor.Secondary])
+  implicit val defTypeParam      : Projection[Decl.Def, Type.Param]          = projection[Decl.Def, Type.Param](_.tparams.head)
+  implicit val defAnnotation     : Projection[Defn.Def, Mod.Annot]           = mod[Defn.Def, Mod.Annot]
+  implicit val valPrivate        : Projection[Defn.Val, Mod.Private]         = mod[Defn.Val, Mod.Private]
+  implicit val valProtected      : Projection[Defn.Val, Mod.Protected]       = mod[Defn.Val, Mod.Protected]
+  implicit val valImplicit       : Projection[Defn.Val, Mod.Implicit]        = mod[Defn.Val, Mod.Implicit]
+  implicit val valFinal          : Projection[Defn.Val, Mod.Final]           = mod[Defn.Val, Mod.Final]
+  implicit val traitSealed       : Projection[Defn.Trait, Mod.Sealed]        = mod[Defn.Trait, Mod.Sealed]
+  implicit val defOverride       : Projection[Defn.Def, Mod.Override]        = mod[Defn.Def, Mod.Override]
+  implicit val objectCase        : Projection[Defn.Object, Mod.Case]         = mod[Defn.Object, Mod.Case]
+  implicit val classAbstract     : Projection[Defn.Class, Mod.Abstract]      = mod[Defn.Class, Mod.Abstract]
+  implicit val valLazy           : Projection[Defn.Val, Mod.Lazy]            = mod[Defn.Val, Mod.Lazy]
+  implicit val defInline         : Projection[Defn.Def, Mod.Inline]          = mod[Defn.Def, Mod.Inline]
+  implicit val classCovariant    : Projection[Defn.Class, Mod.Covariant]     = tmod[Mod.Covariant]
+  implicit val classContravariant: Projection[Defn.Class, Mod.Contravariant] = tmod[Mod.Contravariant]
+  implicit val valValParam       : Projection[Defn.Class, Mod.ValParam]      = ctorMod[Mod.ValParam]
+  implicit val varVarParam       : Projection[Defn.Class, Mod.VarParam]      = ctorMod[Mod.VarParam]
 
-  implicit val importImporter: Projection[Import, Importer] = 
-    new Projection[Import, Importer] {
-      def apply(im: Import): Importer = {
-        im.importers.head
-      }
-    }
-
-  implicit val traitSelf: Projection[Defn.Trait, Self] = 
-    new Projection[Defn.Trait, Self] {
-      def apply(tr: Defn.Trait): Self = {
-        tr.templ.self
-      }
-    }
-
-
-  implicit val anonTemplate: Projection[Term.NewAnonymous, Template] = 
-    new Projection[Term.NewAnonymous, Template] {
-      def apply(anon: Term.NewAnonymous): Template = {
-        anon.templ
-      }
-    }
-
-  implicit val classTemplate: Projection[Defn.Class, Template] = 
-    new Projection[Defn.Class, Template] {
-      def apply(cls: Defn.Class): Template = {
-        cls.templ
-      }
-    }
-
-  implicit val classCtorSecondary: Projection[Defn.Class, Ctor.Secondary] =
-    new Projection[Defn.Class, Ctor.Secondary] {
-      def apply(cls: Defn.Class): Ctor.Secondary = {
-        cls.templ.stats.head.asInstanceOf[Ctor.Secondary]
-      }
-    }
-
-  implicit val defAnnotation: Projection[Defn.Def, Mod.Annot] =
-    new Projection[Defn.Def, Mod.Annot] {
-      def apply(in: Defn.Def): Mod.Annot = {
-        in.mods.head.asInstanceOf[Mod.Annot]
-      }
-    }
-  implicit val valPrivate: Projection[Defn.Val, Mod.Private] =
-    new Projection[Defn.Val, Mod.Private] {
-      def apply(in: Defn.Val): Mod.Private = {
-        in.mods.head.asInstanceOf[Mod.Private]
-      }
-    }
-  implicit val valProtected: Projection[Defn.Val, Mod.Protected] =
-    new Projection[Defn.Val, Mod.Protected] {
-      def apply(in: Defn.Val): Mod.Protected = {
-        in.mods.head.asInstanceOf[Mod.Protected]
-      }
-    }
-  implicit val valImplicit: Projection[Defn.Val, Mod.Implicit] =
-    new Projection[Defn.Val, Mod.Implicit] {
-      def apply(in: Defn.Val): Mod.Implicit = {
-        in.mods.head.asInstanceOf[Mod.Implicit]
-      }
-    }
-  implicit val valFinal: Projection[Defn.Val, Mod.Final] =
-    new Projection[Defn.Val, Mod.Final] {
-      def apply(in: Defn.Val): Mod.Final = {
-        in.mods.head.asInstanceOf[Mod.Final]
-      }
-    }
-  implicit val traitSealed: Projection[Defn.Trait, Mod.Sealed] =
-    new Projection[Defn.Trait, Mod.Sealed] {
-      def apply(in: Defn.Trait): Mod.Sealed = {
-        in.mods.head.asInstanceOf[Mod.Sealed]
-      }
-    }
-  implicit val defOverride: Projection[Defn.Def, Mod.Override] =
-    new Projection[Defn.Def, Mod.Override] {
-      def apply(in: Defn.Def): Mod.Override = {
-        in.mods.head.asInstanceOf[Mod.Override]
-      }
-    }
-  implicit val objectCase: Projection[Defn.Object, Mod.Case] =
-    new Projection[Defn.Object, Mod.Case] {
-      def apply(in: Defn.Object): Mod.Case = {
-        in.mods.head.asInstanceOf[Mod.Case]
-      }
-    }
-  implicit val classAbstract: Projection[Defn.Class, Mod.Abstract] =
-    new Projection[Defn.Class, Mod.Abstract] {
-      def apply(in: Defn.Class): Mod.Abstract = {
-        in.mods.head.asInstanceOf[Mod.Abstract]
-      }
-    }
-  implicit val classCovariant: Projection[Defn.Class, Mod.Covariant] =
-    new Projection[Defn.Class, Mod.Covariant] {
-      def apply(in: Defn.Class): Mod.Covariant = {
-        in.tparams.head.mods.head.asInstanceOf[Mod.Covariant]
-      }
-    }
-  implicit val classContravariant: Projection[Defn.Class, Mod.Contravariant] =
-    new Projection[Defn.Class, Mod.Contravariant] {
-      def apply(in: Defn.Class): Mod.Contravariant = {
-        in.tparams.head.mods.head.asInstanceOf[Mod.Contravariant]
-      }
-    }
-  implicit val valLazy: Projection[Defn.Val, Mod.Lazy] =
-    new Projection[Defn.Val, Mod.Lazy] {
-      def apply(in: Defn.Val): Mod.Lazy = {
-        in.mods.head.asInstanceOf[Mod.Lazy]
-      }
-    }
-  implicit val valValParam: Projection[Defn.Class, Mod.ValParam] =
-    new Projection[Defn.Class, Mod.ValParam] {
-      def apply(in: Defn.Class): Mod.ValParam = {
-        in.ctor.paramss.head.head.mods.head.asInstanceOf[Mod.ValParam]
-      }
-    }
-  implicit val varVarParam: Projection[Defn.Class, Mod.VarParam] =
-    new Projection[Defn.Class, Mod.VarParam] {
-      def apply(in: Defn.Class): Mod.VarParam = {
-        in.ctor.paramss.head.head.mods.head.asInstanceOf[Mod.VarParam]
-      }
-    }
-  implicit val defInline: Projection[Defn.Def, Mod.Inline] =
-    new Projection[Defn.Def, Mod.Inline] {
-      def apply(in: Defn.Def): Mod.Inline = {
-        in.mods.head.asInstanceOf[Mod.Inline]
-      }
-    }
-
-  implicit val defTypeParam: Projection[Decl.Def, Type.Param] =
-    new Projection[Decl.Def, Type.Param] {
-      def apply(in: Decl.Def): Type.Param = {
-        in.tparams.head
-      }
-    }
-  
   def check[T <: Tree](annotedSource: String): Unit =
     check0[T](annotedSource)()
 
