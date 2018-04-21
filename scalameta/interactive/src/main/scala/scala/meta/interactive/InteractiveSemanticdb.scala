@@ -10,7 +10,6 @@ import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.reporters.StoreReporter
 import scala.meta.semanticdb.Document
 import scala.meta.internal.{semanticdb3 => s}
-import org.langmeta.internal.semanticdb._
 
 object InteractiveSemanticdb {
 
@@ -95,16 +94,15 @@ object InteractiveSemanticdb {
 
   @deprecated("Use toTextDocument instead.", "3.8.0")
   def toDocument(compiler: Global, code: String): Document =
-    toDocument(compiler, code, "interactive.scala", 10000, Nil)
+    throw new UnsupportedOperationException()
 
   @deprecated("Use toTextDocument instead.", "3.8.0")
   def toDocument(compiler: Global, code: String, options: List[String]): Document =
-    toDocument(compiler, code, "interactive.scala", 10000, options)
+    throw new UnsupportedOperationException()
 
   @deprecated("Use toTextDocument instead.", "3.8.0")
-  def toDocument(compiler: Global, code: String, filename: String, timeout: Long): Document = {
-    toDocument(compiler, code, filename, timeout, Nil)
-  }
+  def toDocument(compiler: Global, code: String, filename: String, timeout: Long): Document =
+    throw new UnsupportedOperationException()
 
   @deprecated("Use toTextDocument instead.", "3.8.0")
   def toDocument(
@@ -112,11 +110,8 @@ object InteractiveSemanticdb {
       code: String,
       filename: String,
       timeout: Long,
-      options: List[String]): Document = {
-    val sdoc = toTextDocument(compiler, code, filename, timeout, options)
-    val mdb = s.TextDocuments(sdoc :: Nil).toDb(None)
-    mdb.documents.head
-  }
+      options: List[String]): Document =
+    throw new UnsupportedOperationException()
 
   /**
     * Inserts "_CURSOR_" at given offset.

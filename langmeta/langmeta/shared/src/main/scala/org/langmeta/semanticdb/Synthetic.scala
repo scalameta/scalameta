@@ -2,7 +2,9 @@ package org.langmeta.semanticdb
 
 import org.langmeta.inputs._
 import org.langmeta.internal.inputs._
+import org.langmeta.internal.semanticdb.DeprecationMessage
 
+@deprecated(DeprecationMessage, "3.8.0")
 final case class Synthetic(position: Position, text: String, names: List[ResolvedName]) {
   def input = Input.Synthetic(text, position.input, position.start, position.end)
   def syntax = {

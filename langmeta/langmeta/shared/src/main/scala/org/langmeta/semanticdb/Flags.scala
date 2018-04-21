@@ -1,141 +1,165 @@
 package org.langmeta
 package semanticdb
 
+import org.langmeta.internal.semanticdb.DeprecationMessage
 private[semanticdb] trait Flags {
+  @deprecated(DeprecationMessage, "3.8.0")
   final val VAL: Long = 1L << 0
+  @deprecated(DeprecationMessage, "3.8.0")
   final val VAR: Long = 1L << 1
-  @deprecated("Use `METHOD` instead.", "3.6.0")
-  final val DEF: Long = METHOD
+  @deprecated(DeprecationMessage, "3.8.0")
+  final val DEF: Long = 0
+  @deprecated(DeprecationMessage, "3.8.0")
   final val METHOD: Long = 1L << 2
-  @deprecated("Use `PRIMARY | CTOR` instead.", "3.6.0")
+  @deprecated(DeprecationMessage, "3.8.0")
   final val PRIMARYCTOR: Long = 1L << 3
-  @deprecated("Use `~PRIMARY` and `CTOR` instead.", "3.6.0")
+  @deprecated(DeprecationMessage, "3.8.0")
   final val SECONDARYCTOR: Long = 1L << 4
+  @deprecated(DeprecationMessage, "3.8.0")
   final val MACRO: Long = 1L << 5
+  @deprecated(DeprecationMessage, "3.8.0")
   final val TYPE: Long = 1L << 6
+  @deprecated(DeprecationMessage, "3.8.0")
   final val PARAM: Long = 1L << 7
+  @deprecated(DeprecationMessage, "3.8.0")
   final val TYPEPARAM: Long = 1L << 8
+  @deprecated(DeprecationMessage, "3.8.0")
   final val OBJECT: Long = 1L << 9
+  @deprecated(DeprecationMessage, "3.8.0")
   final val PACKAGE: Long = 1L << 10
+  @deprecated(DeprecationMessage, "3.8.0")
   final val PACKAGEOBJECT: Long = 1L << 11
+  @deprecated(DeprecationMessage, "3.8.0")
   final val CLASS: Long = 1L << 12
+  @deprecated(DeprecationMessage, "3.8.0")
   final val TRAIT: Long = 1L << 13
+  @deprecated(DeprecationMessage, "3.8.0")
   final val PRIVATE: Long = 1L << 14
+  @deprecated(DeprecationMessage, "3.8.0")
   final val PROTECTED: Long = 1L << 15
+  @deprecated(DeprecationMessage, "3.8.0")
   final val ABSTRACT: Long = 1L << 16
+  @deprecated(DeprecationMessage, "3.8.0")
   final val FINAL: Long = 1L << 17
+  @deprecated(DeprecationMessage, "3.8.0")
   final val SEALED: Long = 1L << 18
+  @deprecated(DeprecationMessage, "3.8.0")
   final val IMPLICIT: Long = 1L << 19
+  @deprecated(DeprecationMessage, "3.8.0")
   final val LAZY: Long = 1L << 20
+  @deprecated(DeprecationMessage, "3.8.0")
   final val CASE: Long = 1L << 21
+  @deprecated(DeprecationMessage, "3.8.0")
   final val COVARIANT: Long = 1L << 22
+  @deprecated(DeprecationMessage, "3.8.0")
   final val CONTRAVARIANT: Long = 1L << 23
+  @deprecated(DeprecationMessage, "3.8.0")
   final val INLINE: Long = 1L << 24
+  @deprecated(DeprecationMessage, "3.8.0")
   final val JAVADEFINED: Long = 1L << 25
-  @deprecated("Use `METHOD | VAL` instead.", "3.6.0")
+  @deprecated(DeprecationMessage, "3.8.0")
   final val GETTER: Long = 1L << 26
-  @deprecated("Use `METHOD | VAR` instead.", "3.6.0")
+  @deprecated(DeprecationMessage, "3.8.0")
   final val SETTER: Long = 1L << 27
+  @deprecated(DeprecationMessage, "3.8.0")
   final val SELFPARAM: Long = 1L << 28
+  @deprecated(DeprecationMessage, "3.8.0")
   final val INTERFACE: Long = 1L << 29
+  @deprecated(DeprecationMessage, "3.8.0")
   final val LOCAL: Long = 1L << 30
+  @deprecated(DeprecationMessage, "3.8.0")
   final val FIELD: Long = 1L << 31
+  @deprecated(DeprecationMessage, "3.8.0")
   final val CTOR: Long = 1L << 32
+  @deprecated(DeprecationMessage, "3.8.0")
   final val PRIMARY: Long = 1L << 33
+  @deprecated(DeprecationMessage, "3.8.0")
   final val ENUM: Long = 1L << 34
+  @deprecated(DeprecationMessage, "3.8.0")
   final val STATIC: Long = 1L << 35
 }
 
 private[semanticdb] trait HasFlags {
+  @deprecated(DeprecationMessage, "3.8.0")
   def flags: Long
-  def hasFlag(flag: Long): Boolean = (flags & flag) == flag
-
-  def isVal: Boolean = hasFlag(VAL)
-  def isVar: Boolean = hasFlag(VAR)
-  @deprecated("Use `isMethod` instead.", "3.6.0")
+  @deprecated(DeprecationMessage, "3.8.0")
+  def hasFlag(flag: Long): Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isVal: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isVar: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
   def isDef: Boolean = isMethod
-  def isMethod: Boolean = hasFlag(METHOD)
-  @deprecated("Use `isDef && isVal` instead.", "3.6.0")
-  def isGetter: Boolean = hasFlag(GETTER)
-  @deprecated("Use `isDef && isVar` instead.", "3.6.0")
-  def isSetter: Boolean = hasFlag(SETTER)
-  @deprecated("Use `isPrimary && isCtor` instead.", "3.6.0")
-  def isPrimaryCtor: Boolean = hasFlag(PRIMARYCTOR)
-  @deprecated("Use `!isPrimary && isCtor` instead.", "3.6.0")
-  def isSecondaryCtor: Boolean = hasFlag(SECONDARYCTOR)
-  def isMacro: Boolean = hasFlag(MACRO)
-  def isType: Boolean = hasFlag(TYPE)
-  def isParam: Boolean = hasFlag(PARAM)
-  def isSelfParam: Boolean = hasFlag(SELFPARAM)
-  def isTypeParam: Boolean = hasFlag(TYPEPARAM)
-  def isObject: Boolean = hasFlag(OBJECT)
-  def isPackage: Boolean = hasFlag(PACKAGE)
-  def isPackageObject: Boolean = hasFlag(PACKAGEOBJECT)
-  def isClass: Boolean = hasFlag(CLASS)
-  def isTrait: Boolean = hasFlag(TRAIT)
-  def isInterface: Boolean = hasFlag(INTERFACE)
-  def isPrivate: Boolean = hasFlag(PRIVATE)
-  def isProtected: Boolean = hasFlag(PROTECTED)
-  def isAbstract: Boolean = hasFlag(ABSTRACT)
-  def isFinal: Boolean = hasFlag(FINAL)
-  def isSealed: Boolean = hasFlag(SEALED)
-  def isImplicit: Boolean = hasFlag(IMPLICIT)
-  def isLazy: Boolean = hasFlag(LAZY)
-  def isCase: Boolean = hasFlag(CASE)
-  def isCovariant: Boolean = hasFlag(COVARIANT)
-  def isContravariant: Boolean = hasFlag(CONTRAVARIANT)
-  def isInline: Boolean = hasFlag(INLINE)
-  def isJavaDefined: Boolean = hasFlag(JAVADEFINED)
-  def isLocal: Boolean = hasFlag(LOCAL)
-  def isField: Boolean = hasFlag(FIELD)
-  def isCtor: Boolean = hasFlag(CTOR)
-  def isPrimary: Boolean = hasFlag(PRIMARY)
-  def isEnum: Boolean = hasFlag(ENUM)
-  def isStatic: Boolean = hasFlag(STATIC)
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isMethod: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isGetter: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isSetter: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isPrimaryCtor: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isSecondaryCtor: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isMacro: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isType: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isParam: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isSelfParam: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isTypeParam: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isObject: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isPackage: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isPackageObject: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isClass: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isTrait: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isInterface: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isPrivate: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isProtected: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isAbstract: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isFinal: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isSealed: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isImplicit: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isLazy: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isCase: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isCovariant: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isContravariant: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isInline: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isJavaDefined: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isLocal: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isField: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isCtor: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isPrimary: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isEnum: Boolean = throw new UnsupportedOperationException()
+  @deprecated(DeprecationMessage, "3.8.0")
+  def isStatic: Boolean = throw new UnsupportedOperationException()
 
-  protected def flagSyntax: String = {
-    val buf = new StringBuilder
-    def append(flag: String) = {
-      if (buf.isEmpty) buf ++= flag
-      else buf ++= (" " + flag)
-    }
-    def hasFlag(flag: Long) = (flags & flag) == flag
-    if (hasFlag(PRIVATE)) append("PRIVATE")
-    if (hasFlag(PROTECTED)) append("PROTECTED")
-    if (hasFlag(ABSTRACT)) append("ABSTRACT")
-    if (hasFlag(FINAL)) append("FINAL")
-    if (hasFlag(SEALED)) append("SEALED")
-    if (hasFlag(IMPLICIT)) append("IMPLICIT")
-    if (hasFlag(LAZY)) append("LAZY")
-    if (hasFlag(CASE)) append("CASE")
-    if (hasFlag(COVARIANT)) append("COVARIANT")
-    if (hasFlag(CONTRAVARIANT)) append("CONTRAVARIANT")
-    if (hasFlag(INLINE)) append("INLINE")
-    if (hasFlag(JAVADEFINED)) append("JAVADEFINED")
-    if (hasFlag(PRIMARY)) append("PRIMARY")
-    if (hasFlag(ENUM)) append("ENUM")
-    if (hasFlag(STATIC)) append("STATIC")
-    if (hasFlag(VAL)) append("VAL")
-    if (hasFlag(VAR)) append("VAR")
-    if (hasFlag(METHOD)) append("METHOD")
-    if (hasFlag(MACRO)) append("MACRO")
-    if (hasFlag(TYPE)) append("TYPE")
-    if (hasFlag(PARAM)) append("PARAM")
-    if (hasFlag(SELFPARAM)) append("SELFPARAM")
-    if (hasFlag(TYPEPARAM)) append("TYPEPARAM")
-    if (hasFlag(OBJECT)) append("OBJECT")
-    if (hasFlag(PACKAGE)) append("PACKAGE")
-    if (hasFlag(PACKAGEOBJECT)) append("PACKAGEOBJECT")
-    if (hasFlag(CLASS)) append("CLASS")
-    if (hasFlag(TRAIT)) append("TRAIT")
-    if (hasFlag(INTERFACE)) append("INTERFACE")
-    if (hasFlag(LOCAL)) append("LOCAL")
-    if (hasFlag(FIELD)) append("FIELD")
-    if (hasFlag(CTOR)) append("CTOR")
-    buf.toString.toLowerCase
-  }
+  protected def flagSyntax: String = throw new UnsupportedOperationException()
 
-  protected def flagStructure: String = {
-    flagSyntax.replace(" ", " | ").toUpperCase
-  }
+  protected def flagStructure: String = throw new UnsupportedOperationException()
 }

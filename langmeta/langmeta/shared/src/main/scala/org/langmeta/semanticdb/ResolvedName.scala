@@ -3,7 +3,10 @@ package org.langmeta.semanticdb
 import scala.compat.Platform.EOL
 import org.langmeta.inputs._
 import org.langmeta.internal.inputs._
+import org.langmeta.internal.semanticdb.DeprecationMessage
 
+
+@deprecated(DeprecationMessage, "3.8.0")
 final case class ResolvedName(position: Position, symbol: Symbol, isDefinition: Boolean) {
   def syntax: String = {
     val text = if (position.text.nonEmpty) position.text else ""
@@ -14,6 +17,7 @@ final case class ResolvedName(position: Position, symbol: Symbol, isDefinition: 
   override def toString = syntax
 }
 
+@deprecated(DeprecationMessage, "3.8.0")
 object ResolvedName {
   def syntax(names: List[ResolvedName]): String = {
     if (names.isEmpty) ""

@@ -212,6 +212,7 @@ lazy val langmeta = crossProject(JSPlatform, JVMPlatform)
   .settings(
     publishableSettings,
     description := "Langmeta umbrella module that includes all public APIs",
+    scalacOptions -= "-Xfatal-warnings", // suppress deprecation warnings
     libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.5.3"
   )
   .jvmSettings(

@@ -5,7 +5,9 @@ import scala.annotation.switch
 import scala.runtime.AbstractFunction4
 import scala.compat.Platform.EOL
 import scala.meta.internal.{semanticdb3 => s}
+import org.langmeta.internal.semanticdb.DeprecationMessage
 
+@deprecated(DeprecationMessage, "3.8.0")
 final class Denotation(
     val flags: Long,
     val name: String,
@@ -108,6 +110,7 @@ final class Denotation(
   override def productArity = 4
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Denotation]
 }
+@deprecated(DeprecationMessage, "3.8.0")
 object Denotation extends AbstractFunction4[Long, String, String, List[ResolvedName], Denotation] {
   def apply(flags: Long, name: String, signature: String, names: List[ResolvedName]): Denotation =
     new Denotation(flags, name, signature, names)

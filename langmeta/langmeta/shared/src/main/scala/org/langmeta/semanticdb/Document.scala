@@ -4,7 +4,9 @@ import scala.compat.Platform.EOL
 import scala.math.Ordering
 import org.langmeta.inputs._
 import org.langmeta.internal.inputs._
+import org.langmeta.internal.semanticdb.DeprecationMessage
 
+@deprecated(DeprecationMessage, "3.8.0")
 final case class Document(
   input: Input,
   language: String,

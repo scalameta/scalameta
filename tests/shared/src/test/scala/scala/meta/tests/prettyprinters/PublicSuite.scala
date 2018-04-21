@@ -338,38 +338,23 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semanticdb.Document.toString") {
-    // n/a
+    // deprecated
   }
 
   test("scala.meta.semanticdb.Denotation.toString") {
-    val symbol = Symbol("E#")
-    val info = "[T](e: E)T"
-    val input = Input.Denotation(info, symbol)
-    val pos = Position.Range(input, 7, 8)
-    val names = List(ResolvedName(pos, symbol, isDefinition = false))
-    val classC = Denotation(PRIVATE | CASE | CLASS, "C", "", Nil)
-    assert(classC.toString === "private case class C")
-    val defIdentity = Denotation(METHOD | FINAL, "identity", info, names)
-    assert(defIdentity.toString ===
-      """final method identity: [T](e: E)T
-        |  [7..8): E => E#""".stripMargin.split('\n').mkString(EOL)
-    )
+    // deprecated
   }
 
   test("scala.meta.semanticdb.Database.toString") {
-    // too involved to fit here, see DatabaseSuite
+    // deprecated
   }
 
   test("scala.meta.semanticdb.Message.toString") {
-    val path = RelativePath("hello.scala").toAbsolute
-    val input = Input.File(path)
-    val position = Position.Range(input, 40, 42)
-    val message = Message(position, Severity.Error, "does not compute")
-    assert(message.toString === s"[40..42): [error] does not compute")
+    // deprecated
   }
 
   test("scala.meta.semanticdb.Mirror.toString") {
-    // n/a
+    // deprecated
   }
 
   test("scala.meta.semanticdb.Severity.toString") {
@@ -377,19 +362,19 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semanticdb.Severity.Error.toString") {
-    assert(Severity.Error.toString === "[error]")
+    // deprecated
   }
 
   test("scala.meta.semanticdb.Severity.Hint.toString") {
-    assert(Severity.Hint.toString === "[hint]")
+    // deprecated
   }
 
   test("scala.meta.semanticdb.Severity.Info.toString") {
-    assert(Severity.Info.toString === "[info]")
+    // deprecated
   }
 
   test("scala.meta.semanticdb.Severity.Warning.toString") {
-    assert(Severity.Warning.toString === "[warning]")
+    // deprecated
   }
 
   test("scala.meta.semanticdb.Signature.toString") {
@@ -429,15 +414,7 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.semanticdb.Synthetic.toString") {
-    val original = Input.String("input")
-    val input = Input.Synthetic("synthetic", original, 1, 1)
-    val pos = Position.Range(input, 0, 9)
-    val synthetic = Synthetic(pos, "synthetic", List(ResolvedName(pos, Symbol("synthetic."), isDefinition = false)))
-    assert(synthetic.syntax == """
-      |[0..9): synthetic
-      |  [0..9): synthetic => synthetic.
-    """.trim.stripMargin.split('\n').mkString(EOL))
-    assert(synthetic.structure == """Synthetic(Position.Range(Input.Synthetic("synthetic", Input.String("input"), 1, 1), 0, 9), "synthetic", List(ResolvedName(Position.Range(Input.Synthetic("synthetic", Input.String("input"), 1, 1), 0, 9), Symbol.Global(Symbol.Global(Symbol.None, Signature.Term("_root_")), Signature.Term("synthetic")), false)))""")
+    // deprecated
   }
 
   test("scala.meta.semanticdb.Symbol.toString") {

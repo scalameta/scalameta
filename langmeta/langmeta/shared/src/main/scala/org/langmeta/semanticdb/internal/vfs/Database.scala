@@ -17,12 +17,9 @@ object Database {
 }
 
 final case class Database(entries: List[Entry]) {
+  @deprecated(DeprecationMessage, "3.8.0")
   def toSchema: s.TextDocuments = {
-    val sentries = entries.flatMap { ventry =>
-      val sdocs = s.TextDocuments.parseFrom(ventry.bytes)
-      sdocs.mergeDiagnosticOnlyDocuments.documents
-    }
-    s.TextDocuments(sentries)
+    throw new UnsupportedOperationException()
   }
 
   def save(append: Boolean): Unit = {

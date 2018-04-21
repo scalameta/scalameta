@@ -1,13 +1,13 @@
 package org.langmeta.semanticdb
 
 import scala.compat.Platform.EOL
-import org.langmeta.inputs._
 import org.langmeta.io._
 import org.langmeta.internal.io.PathIO
 import org.langmeta.internal.semanticdb._
 import org.langmeta.internal.semanticdb.{vfs => v}
 import scala.meta.internal.{semanticdb3 => s}
 
+@deprecated(DeprecationMessage, "3.8.0")
 final case class Database(documents: Seq[Document]) {
   lazy val names: Seq[ResolvedName] = documents.flatMap(_.names)
   lazy val messages: Seq[Message] = documents.flatMap(_.messages)
@@ -15,10 +15,10 @@ final case class Database(documents: Seq[Document]) {
   lazy val synthetics: Seq[Synthetic] = documents.flatMap(_.synthetics)
 
   def save(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
-    this.toSchema(sourceroot).toVfs(targetroot).save(append = false)
+    throw new UnsupportedOperationException()
   }
   def append(targetroot: AbsolutePath, sourceroot: AbsolutePath): Unit = {
-    this.toSchema(sourceroot).toVfs(targetroot).save(append = true)
+    throw new UnsupportedOperationException()
   }
 
   def syntax: String = {
@@ -38,18 +38,17 @@ final case class Database(documents: Seq[Document]) {
   override def toString: String = syntax
 }
 
+@deprecated(DeprecationMessage, "3.8.0")
 object Database {
   def load(classpath: Classpath, sourcepath: Sourcepath): Database = {
-    v.Database.load(classpath).toSchema.toDb(Some(sourcepath))
+    throw new UnsupportedOperationException()
   }
 
   def load(classpath: Classpath): Database = {
-    v.Database.load(classpath).toSchema.toDb(None)
+    throw new UnsupportedOperationException()
   }
 
   def load(bytes: Array[Byte]): Database = {
-    val sdocs = s.TextDocuments.parseFrom(bytes)
-    val mdb = sdocs.mergeDiagnosticOnlyDocuments.toDb(None)
-    mdb
+    throw new UnsupportedOperationException()
   }
 }
