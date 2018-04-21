@@ -9,6 +9,7 @@ import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.reporters.StoreReporter
 import scala.meta.semanticdb.Document
+import scala.meta.internal.{semanticdb3 => s}
 
 object InteractiveSemanticdb {
 
@@ -58,7 +59,12 @@ object InteractiveSemanticdb {
     *                    with exceptions, including but not limited to tokenize/parse/type
     *                    errors.
     */
-  def toDocument(compiler: Global, code: String, filename: String, timeout: Long, options: List[String]): Document = {
+  def toTextDocument(
+      compiler: Global,
+      code: String,
+      filename: String,
+      timeout: Long,
+      options: List[String]): s.TextDocument = {
     val unit = addCompilationUnit(compiler, code, filename)
     // reload seems to be necessary before askLoadedType.
     ask[Unit](r => compiler.askReload(unit.source :: Nil, r)).get
@@ -80,6 +86,15 @@ object InteractiveSemanticdb {
     unit.body = tree
     val document = unit.asInstanceOf[databaseOps.global.CompilationUnit].toDocument
     document
+  }
+
+  def toDocument(
+      compiler: Global,
+      code: String,
+      filename: String,
+      timeout: Long,
+      options: List[String]): Document = {
+    ???
   }
 
   /**

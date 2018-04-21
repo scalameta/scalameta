@@ -253,6 +253,10 @@ package object semanticdb {
       d.Database(dentries.toList)
     }
   }
+  implicit class XtensionSymbolInformationProperty(info: s.SymbolInformation) {
+    def has(prop: s.SymbolInformation.Property): Boolean =
+      (info.properties & prop.value) != 0
+  }
   implicit class XtensionDenotation(ddenot: d.Denotation) {
     def dtest(bit: Long) = (ddenot.flags & bit) == bit
     def sproperties: Int = {

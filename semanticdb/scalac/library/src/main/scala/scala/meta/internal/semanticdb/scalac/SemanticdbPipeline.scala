@@ -8,6 +8,8 @@ import scala.tools.nsc.plugins.PluginComponent
 import scala.util.control.NonFatal
 import scala.{meta => m}
 import scala.meta.io._
+import org.langmeta.internal.semanticdb._
+import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb.{vfs => v}
 
 trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
@@ -56,8 +58,8 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
           if (unit.isIgnored) return
           validateCompilerState()
           val mdoc = unit.toDocument
-          val mdb = m.Database(List(mdoc))
-          mdb.save(config.targetroot, config.sourceroot)
+          val mdb = s.TextDocuments(List(mdoc))
+          mdb.toVfs(config.targetroot).save(append = false)
         } catch handleError(unit)
       }
 

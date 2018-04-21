@@ -8,9 +8,12 @@ import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
+import scala.meta.internal.metap.Main
 import scala.{meta => m}
 import scala.meta.io._
 import scala.meta.internal.semanticdb.scalac._
+import scala.meta.internal.{semanticdb3 => s}
+import org.langmeta.internal.inputs._
 import scala.meta.testkit.DiffAssertions
 
 abstract class DatabaseSuite(mode: SemanticdbMode,
@@ -56,7 +59,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     members = members,
     overrides = overrides)
 
-  private def computeDatabaseFromSnippet(code: String): m.Database = {
+  private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
     val javaFile = File.createTempFile("paradise", ".scala")
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
@@ -90,31 +93,14 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    val mdoc = unit.toDocument
-    m.Database(List(mdoc))
+    unit.toDocument
   }
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
-    val database = computeDatabaseFromSnippet(code)
-    val payload = database.toString.split(EOL)
+    val document = computeDatabaseFromSnippet(code)
+    val payload = Main.print(document).toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
-    assertDenotationSignaturesAreParseable(database)
     section.mkString(EOL)
-  }
-
-  private def assertDenotationSignaturesAreParseable(database: m.Database): Unit = {
-    import scala.meta._
-    // TODO(olafur): remove this once we have "Default" dialect, see
-    // https://github.com/scalameta/scalameta/issues/253#issuecomment-312634924
-    val dialect = dialects.Scala212.copy(
-      allowTypeLambdas = true,
-      allowMethodTypes = true
-    )
-    database.symbols.foreach { sym =>
-      if (sym.denotation.signature.nonEmpty && sym.symbol.isInstanceOf[m.Symbol.Global]) {
-        (dialect, sym.input).parse[Type].get // assert no parse error.
-      }
-    }
   }
 
   def checkSection(code: String, expected: String, section: String): Unit = {
@@ -153,7 +139,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     checkSection(code, expected, "Synthetics")
   }
 
-  private def computeDatabaseAndNamesFromMarkup(markup: String): (m.Database, List[m.Symbol]) = {
+  private def computeDatabaseAndNamesFromMarkup(markup: String): (s.TextDocument, List[String]) = {
     val chevrons = "<<(.*?)>>".r
     val ps0 = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList
     val ps = ps0.zipWithIndex.map { case ((s, e), i) => (s - 4 * i, e - 4 * i - 4) }
@@ -165,7 +151,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
       case (s, e) =>
         val symbols = source.collect {
           case name: m.Name if name.pos.start == s && name.pos.end == e =>
-            database.names.find(_.position == name.pos).map(_.symbol)
+            database.occurrences.find(_.range.contains(name.pos.toRange)).map(_.symbol)
         }
         val chevron = "<<" + code.substring(s, e) + ">>"
         symbols match {
@@ -183,7 +169,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
   trait OverloadHack4; implicit object OverloadHack4 extends OverloadHack4
   trait OverloadHack5; implicit object OverloadHack5 extends OverloadHack5
 
-  def targeted(markup: String, fn: m.Database => Unit)(implicit hack: OverloadHack1): Unit = {
+  def targeted(markup: String, fn: s.TextDocument => Unit)(implicit hack: OverloadHack1): Unit = {
     test(markup) {
       val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
       names match {
@@ -193,7 +179,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     }
   }
 
-  def targeted(markup: String, fn: (m.Database, m.Symbol) => Unit)(
+  def targeted(markup: String, fn: (s.TextDocument, String) => Unit)(
       implicit hack: OverloadHack2): Unit = {
     test(markup) {
       val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
@@ -204,7 +190,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     }
   }
 
-  def targeted(markup: String, fn: (m.Database, m.Symbol, m.Symbol) => Unit)(
+  def targeted(markup: String, fn: (s.TextDocument, String, String) => Unit)(
       implicit hack: OverloadHack3): Unit = {
     test(markup) {
       val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
@@ -215,7 +201,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     }
   }
 
-  def targeted(markup: String, fn: (m.Database, m.Symbol, m.Symbol, m.Symbol) => Unit)(
+  def targeted(markup: String, fn: (s.TextDocument, String, String, String) => Unit)(
       implicit hack: OverloadHack4): Unit = {
     test(markup) {
       val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
@@ -226,7 +212,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     }
   }
 
-  def targeted(markup: String, fn: (m.Database, m.Symbol, m.Symbol, m.Symbol, m.Symbol) => Unit)(
+  def targeted(markup: String, fn: (s.TextDocument, String, String, String, String) => Unit)(
       implicit hack: OverloadHack5): Unit = {
     test(markup) {
       val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
@@ -237,28 +223,4 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     }
   }
 
-  def members(original: String, expected: String): Unit = {
-    targeted(original, { db =>
-      val obtained = db.symbols
-        .collect {
-          case rs if rs.denotation.members.nonEmpty =>
-            s"${rs.symbol}{\n  ${rs.denotation.members.mkString("\n  ")}\n}"
-        }
-        .mkString("\n")
-      // println(obtained)
-      assertNoDiff(obtained, expected)
-    })
-  }
-
-  def overrides(original: String, expected: String): Unit = {
-    targeted(original, { db =>
-      val obtained = db.symbols
-        .collect {
-          case rs if rs.denotation.overrides.nonEmpty =>
-            s"${rs.symbol}{\n  ${rs.denotation.overrides.mkString("\n  ")}\n}"
-        }
-        .mkString("\n")
-      assertNoDiff(obtained, expected)
-    })
-  }
 }

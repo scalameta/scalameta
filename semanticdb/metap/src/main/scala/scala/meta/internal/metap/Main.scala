@@ -22,6 +22,8 @@ import Type.Tag._
 import SingletonType.Tag._
 import Accessibility.Tag._
 import Language._
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 class Main(settings: Settings, reporter: Reporter) {
   import reporter._
@@ -657,5 +659,14 @@ class Main(settings: Settings, reporter: Reporter) {
 
   private def opt(s: String)(f: String => Unit): Unit = {
     opt("", s, "")(f)
+  }
+}
+
+object Main {
+  def print(doc: TextDocument): String = {
+    val baos = new ByteArrayOutputStream()
+    val main = new Main(Settings(), Reporter().withOut(new PrintStream(baos)))
+    main.pprint(doc)
+    baos.toString()
   }
 }

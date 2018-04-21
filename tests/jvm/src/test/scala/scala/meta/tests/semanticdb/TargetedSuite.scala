@@ -5,6 +5,7 @@ import org.langmeta.internal.semanticdb._
 import scala.meta._
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 
 // Contributing tips:
 // - Create another suite like YYY.scala that extends DatabaseSuite,
@@ -50,7 +51,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     |  }
     |}
   """.trim.stripMargin, { (db, second) =>
-      assert(second === Symbol("_empty_.B."))
+      assert(second === "_empty_.B.")
     }
   )
 
@@ -81,8 +82,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  def bar(children: Int)(x: Int) = children + x
       |  <<bar>>(children = 4)(3)
       |}
-    """.trim.stripMargin, { (db, second) =>
-      assert(second === Symbol("_empty_.D.bar(Int,Int)."))
+    """.trim.stripMargin, { (_, second) =>
+      assert(second === "_empty_.D.bar(Int,Int).")
     }
   )
 
@@ -94,9 +95,9 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  val u: User = ???
       |  u.<<copy>>(<<age>> = 43)
       |}
-    """.trim.stripMargin, { (db, copy, age) =>
-      assert(copy === Symbol("e.User#copy(String,Int)."))
-      assert(age === Symbol("e.User#copy(String,Int).(age)"))
+    """.trim.stripMargin, { (_, copy, age) =>
+      assert(copy === "e.User#copy(String,Int).")
+      assert(age === "e.User#copy(String,Int).(age)")
     }
   )
 
@@ -707,16 +708,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   targeted(
     // See https://github.com/scalameta/scalameta/issues/830
     "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", { (db, first) =>
-      val denotation = db.symbols.find(_.symbol == first).get.denotation
-      assert(first == Symbol("_empty_.u.unapply(u)."))
-      assertNoDiff(
-        denotation.toString,
-        """case method unapply: (x$0: u): Option[Int]
-          |  [6..7): u => _empty_.u#
-          |  [10..16): Option => scala.Option#
-          |  [17..20): Int => scala.Int#
-        """.stripMargin
-      )
+      val denotation = db.symbols.find(_.symbol == first).get
+      assert(first == "_empty_.u.unapply(u).")
     }
   )
 
@@ -727,29 +720,10 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       List(1).<<toString>>
     }
     """, { (db, objectToString, listToString) =>
-      val denotation1 = db.symbols.find(_.symbol == objectToString).get.denotation
-      val denotation2 = db.symbols.find(_.symbol == listToString).get.denotation
-      assert(denotation1.isJavaDefined)
-      assert(!denotation2.isJavaDefined)
-    }
-  )
-
-  targeted(
-    """
-      |object w {
-      |  val <<a>> = new java.lang.StringBuilder
-      |  val <<b>> = new StringBuilder
-      |  val <<c>>: Traversable[Int] = List(1)
-      |  val <<d>> = Map(1 -> 2)
-      |}
-    """.stripMargin, { (db, a, b, c, d) =>
-      def check(symbol: Symbol, info: String) = {
-        assertNoDiff(db.symbols.find(_.symbol == symbol).get.denotation.signature, info)
-      }
-      check(a, "StringBuilder")
-      check(b, "StringBuilder")
-      check(c, "Traversable[Int]")
-      check(d, "Map[Int, Int]")
+      val denotation1 = db.symbols.find(_.symbol == objectToString).get
+      val denotation2 = db.symbols.find(_.symbol == listToString).get
+      assert(denotation1.language.isJava)
+      assert(!denotation2.language.isJava)
     }
   )
 
@@ -1207,68 +1181,13 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
   )
 
   targeted(
-    """
-      |object aj {
-      |  None.<<fold>>(1)(identity)
-      |  java.lang.String.<<format>>("%s%s", "", "")
-      |  def <<a>>(b: => Int, c: String*): Unit = ()
-      |}
-    """.stripMargin, { (db, fold, format, a) =>
-      val aDenot = db.symbols.find(_.symbol == a).get.denotation
-      assertNoDiff(aDenot.signature, "(b: =>Int, c: String*): Unit")
-      val foldDenot = db.symbols.find(_.symbol == fold).get.denotation
-      assertNoDiff(foldDenot.signature, "[B] => (ifEmpty: =>B)(f: Function1[A, B]): B")
-      // Check java repeated params have same * syntax
-      val formatDenot = db.symbols.find(_.symbol == format).get.denotation
-      assertNoDiff(formatDenot.signature, "(x$1: String, x$2: Object*): String")
-    }
-  )
-
-  targeted(
     """package ak
       |trait Foo
       |object Foo {
       |  new <<Foo>> {}
       |}
     """.stripMargin, { (_, Foo) =>
-      assertNoDiff(Foo.syntax, "ak.Foo#")
-    }
-  )
-
-  targeted(
-    """
-      |package al
-      |
-      |trait EventBus {
-      |  type Classifier
-      |}
-      |trait Foo { this: EventBus =>
-      |  val <<x>>: Classifier
-      |}
-      |""".stripMargin, { (db, x) =>
-      val sig = db.symbols.find(_.symbol == x).get.denotation.signature
-      assertNoDiff(sig, "Foo.this.Classifier")
-    }
-  )
-
-  targeted(
-    """package am
-      |trait A[T] { type Self; def self: Self }
-      |object A {
-      |  def <<foo>>[T] = null.asInstanceOf[A[T]].self
-      |}
-    """.trim.stripMargin, { (db, foo) =>
-      val symbol = db.symbols.find(_.symbol == foo).get
-      assertNoDiff(foo.syntax, "am.A.foo().")
-      assertNoDiff(
-        symbol.syntax,
-        """
-          |am.A.foo(). => method foo: [T] => A[T]#Self
-          |  [7..8): A => am.A#
-          |  [9..10): T => am.A.foo().[T]
-          |  [12..16): Self => am.A#Self#
-        """.stripMargin
-      )
+      assertNoDiff(Foo, "ak.Foo#")
     }
   )
 
@@ -1289,9 +1208,9 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  M.<<foo>>(new M1.C)
       |  M.<<foo>>(new M2.C)
       |}
-    """.trim.stripMargin, { (db, foo1, foo2) =>
-      assert(foo1 === Symbol("an.M.foo(C)."))
-      assert(foo2 === Symbol("an.M.foo(C+1)."))
+    """.trim.stripMargin, { (_, foo1, foo2) =>
+      assert(foo1 === "an.M.foo(C).")
+      assert(foo2 === "an.M.foo(C+1).")
     }
   )
 
@@ -1299,19 +1218,20 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
     """
       |package a
       |case class <<Foo>>(b: Foo)
-    """.stripMargin, { (db, fooType) =>
+    """.stripMargin, { (db, FooTypeString) =>
+      val fooType = Symbol(FooTypeString)
       val Symbol.Global(qual, Signature.Type(foo)) = fooType
       val companion = Symbol.Global(qual, Signature.Term(foo))
-      val objectDenot = db.symbols.find(_.symbol == companion).get.denotation
-      assert(objectDenot.isObject)
-      assert(!objectDenot.isCase)
-      val classDenot = db.symbols.find(_.symbol == fooType).get.denotation
-      assert(classDenot.isClass)
-      assert(classDenot.isCase)
-      val decls = classDenot.tpeInternal.get.classInfoType.get.declarations
+      val objectDenot = db.symbols.find(_.symbol == companion).get
+      assert(objectDenot.kind.isObject)
+      assert(!objectDenot.has(p.CASE))
+      val classDenot = db.symbols.find(_.symbol == fooType).get
+      assert(classDenot.kind.isClass)
+      assert(classDenot.has(p.CASE))
+      val decls = classDenot.tpe.get.classInfoType.get.declarations
       assert(decls.nonEmpty)
       decls.foreach { decl =>
-        val declDenot = db.symbols.find(_.symbol.syntax == decl)
+        val declDenot = db.symbols.find(_.symbol == decl)
         assert(declDenot.isDefined, decl)
       }
     }
@@ -1326,10 +1246,8 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
       |  } yield j
       |}
       """.stripMargin, { (db, j) =>
-      val denot = db.symbols.find(_.symbol == j).get.denotation
-      val kind = denot.skind
-
-      assert(kind == k.LOCAL)
+      val denot = db.symbols.find(_.symbol == j).get
+      assert(denot.kind.isLocal)
     }
   )
 }
