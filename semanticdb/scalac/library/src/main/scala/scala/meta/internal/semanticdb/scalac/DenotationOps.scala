@@ -6,6 +6,7 @@ import scala.reflect.internal.{Flags => gf}
 import scala.util.Sorting
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 
 trait DenotationOps { self: DatabaseOps =>
@@ -24,6 +25,7 @@ trait DenotationOps { self: DatabaseOps =>
     private def kind: s.SymbolInformation.Kind = {
       gsym match {
         case _ if gsym.isSelfParameter => k.SELF_PARAMETER
+        case _ if gsym.isSemanticdbLocal => k.LOCAL
         case gsym: MethodSymbol =>
           if (gsym.isConstructor) {
             k.CONSTRUCTOR
@@ -59,9 +61,11 @@ trait DenotationOps { self: DatabaseOps =>
       }
     }
 
-    private[meta] def propertyFlags: Long = {
+    private[meta] def properties: Int = {
       val kind = this.kind
-      var flags = 0L
+      var flags = 0
+      def flip(prop: s.SymbolInformation.Property) =
+        flags ^= prop.value
       def isAbstractClass =
         gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
@@ -69,60 +73,40 @@ trait DenotationOps { self: DatabaseOps =>
       if (gsym.hasFlag(gf.PACKAGE)) {
         ()
       } else if (gsym.hasFlag(gf.JAVA)) {
-        if (isAbstractClass || kind.isInterface || isAbstractMethod) flags |= mf.ABSTRACT
-        if (gsym.hasFlag(gf.FINAL) || gsym.hasFlag(gf.JAVA_ENUM)) flags |= mf.FINAL
-        if (gsym.hasFlag(gf.JAVA_ENUM)) flags |= mf.ENUM
-        if (gsym.hasFlag(gf.STATIC)) flags |= mf.STATIC
-        flags |= mf.JAVADEFINED
+        if (isAbstractClass || kind.isInterface || isAbstractMethod) flip(p.ABSTRACT)
+        if (gsym.hasFlag(gf.FINAL) || gsym.hasFlag(gf.JAVA_ENUM)) flip(p.FINAL)
+        if (gsym.hasFlag(gf.JAVA_ENUM)) flip(p.ENUM)
+        if (gsym.hasFlag(gf.STATIC)) flip(p.STATIC)
       } else {
-        if (isAbstractClass || isAbstractMethod || isAbstractType) flags |= mf.ABSTRACT
-        if (gsym.hasFlag(gf.FINAL) || isObject) flags |= mf.FINAL
-        if (gsym.hasFlag(gf.SEALED)) flags |= mf.SEALED
-        if (gsym.hasFlag(gf.IMPLICIT)) flags |= mf.IMPLICIT
-        if (gsym.hasFlag(gf.LAZY)) flags |= mf.LAZY
-        if (gsym.hasFlag(gf.CASE)) flags |= mf.CASE
-        if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flags |= mf.CONTRAVARIANT
-        if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flags |= mf.COVARIANT
+        if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
+        if (gsym.hasFlag(gf.FINAL) || isObject) flip(p.FINAL)
+        if (gsym.hasFlag(gf.SEALED)) flip(p.SEALED)
+        if (gsym.hasFlag(gf.IMPLICIT)) flip(p.IMPLICIT)
+        if (gsym.hasFlag(gf.LAZY)) flip(p.LAZY)
+        if (gsym.hasFlag(gf.CASE)) flip(p.CASE)
+        if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flip(p.CONTRAVARIANT)
+        if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flip(p.COVARIANT)
         if (kind.isLocal || kind.isField) {
-          if (gsym.isMutable) flags |= mf.VAR
-          else flags |= mf.VAL
+          if (gsym.isMutable) flip(p.VAR)
+          else flip(p.VAL)
         }
         if (gsym.isGetter || gsym.isSetter) {
-          if (gsym.isStable) flags |= mf.VAL
-          else flags |= mf.VAR
+          if (gsym.isStable) flip(p.VAL)
+          else flip(p.VAR)
         }
         if (gsym.isParameter && gsym.owner.isPrimaryConstructor) {
           val ggetter = gsym.getterIn(gsym.owner.owner)
-          if (ggetter != g.NoSymbol && !ggetter.isStable) flags |= mf.VAR
-          else if (ggetter != g.NoSymbol) flags |= mf.VAL
+          if (ggetter != g.NoSymbol && !ggetter.isStable) flip(p.VAR)
+          else if (ggetter != g.NoSymbol) flip(p.VAL)
           else ()
         }
-        if (gsym.isPrimaryConstructor) flags |= mf.PRIMARY
-        if (gsym.isSemanticdbLocal)
-          flags |= mf.LOCAL
+        if (gsym.isPrimaryConstructor) flip(p.PRIMARY)
       }
       flags
     }
 
     private def name: String = {
       gsym.name.toSemantic
-    }
-
-    private def oldInfo: (String, List[m.ResolvedName]) = {
-      if (gsym.isClass || gsym.isModule) "" -> Nil
-      else {
-        val synthetic = showSynthetic(gsym.info)
-        val input = m.Input.Denotation(synthetic.text, gsym.toSemantic)
-        val names = synthetic.names.toIterator.map {
-          case SyntheticRange(start, end, syntheticSymbol) =>
-            m.ResolvedName(
-              m.Position.Range(input, start, end),
-              syntheticSymbol,
-              isDefinition = false)
-        }.toArray
-        Sorting.quickSort(names)(Ordering.by[m.ResolvedName, Int](_.position.start))
-        synthetic.text -> names.toList
-      }
     }
 
     private def newInfo: (Option[s.Type], List[g.Symbol]) = {
@@ -214,7 +198,7 @@ trait DenotationOps { self: DatabaseOps =>
             language = s.Language.SCALA,
             kind = kind,
             accessibility = Some(acc),
-            properties = ???,
+            properties = properties,
             name = name,
             signature = None,
             members = Nil,
