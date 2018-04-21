@@ -16,11 +16,12 @@ import scala.meta.internal.{semanticdb3 => s}
 import org.langmeta.internal.inputs._
 import scala.meta.testkit.DiffAssertions
 
-abstract class DatabaseSuite(mode: SemanticdbMode,
-                             denotations: DenotationMode = DenotationMode.All,
-                             signatures: SignatureMode = SignatureMode.New,
-                             members: MemberMode = MemberMode.None,
-                             overrides: OverrideMode = OverrideMode.None)
+abstract class DatabaseSuite(
+    mode: SemanticdbMode,
+    denotations: DenotationMode = DenotationMode.All,
+    signatures: SignatureMode = SignatureMode.New,
+    members: MemberMode = MemberMode.None,
+    overrides: OverrideMode = OverrideMode.None)
     extends FunSuite
     with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
@@ -124,11 +125,11 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
   }
 
   def names(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Names")
+    checkSection(code, expected, "Occurrences")
   }
 
   def messages(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Messages")
+    checkSection(code, expected, "Diagnostics")
   }
 
   def symbols(code: String, expected: String): Unit = {

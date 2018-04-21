@@ -61,6 +61,10 @@ trait DenotationOps { self: DatabaseOps =>
       }
     }
 
+    def language: s.Language =
+      if (gsym.isJavaDefined) s.Language.JAVA
+      else s.Language.SCALA
+
     private[meta] def properties: Int = {
       val kind = this.kind
       var flags = 0
@@ -195,7 +199,7 @@ trait DenotationOps { self: DatabaseOps =>
           val (tpe, todoTpe) = newInfo
           val denot = s.SymbolInformation(
             symbol = gsym.toSemantic.syntax,
-            language = s.Language.SCALA,
+            language = language,
             kind = kind,
             accessibility = Some(acc),
             properties = properties,

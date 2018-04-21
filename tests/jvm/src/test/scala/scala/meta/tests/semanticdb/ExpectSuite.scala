@@ -45,13 +45,6 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import LowlevelExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("highlevel.expect") {
-        import HighlevelExpect._
-        assertNoDiff(loadObtained, loadExpected)
-        val sourceroot = PathIO.workingDirectory
-        val roundtrip = loadDatabase.toSchema(sourceroot).toDb(Some(Sourcepath(sourceroot)))
-        assertNoDiff(roundtrip.toString, loadExpected, "Roundtrip")
-      }
       test("index.expect") {
         import IndexExpect._
         assertNoDiff(loadObtained, loadExpected)
@@ -110,12 +103,6 @@ trait ExpectHelpers extends FunSuiteLike {
         .mkString("\n")
     }
     diff
-  }
-
-  protected def highlevelDatabase(path: Path): Database = {
-    val database = Database.load(Classpath(path.toString))
-    val sorted = Database(database.documents.sortBy(_.input.syntax))
-    sorted
   }
 
   protected def normalizedSymbols(path: Path): Map[String, s.SymbolInformation] = {
@@ -288,12 +275,6 @@ object LowlevelExpect extends ExpectHelpers {
   def loadObtained: String = lowlevelSyntax(Paths.get(BuildInfo.databaseClasspath))
 }
 
-object HighlevelExpect extends ExpectHelpers {
-  def filename: String = "highlevel.expect"
-  def loadObtained: String = loadDatabase.syntax
-  def loadDatabase: Database = highlevelDatabase(Paths.get(BuildInfo.databaseClasspath))
-}
-
 object IndexExpect extends ExpectHelpers {
   def filename: String = "index.expect"
   def loadObtained: String = indexSyntax(Paths.get(BuildInfo.databaseClasspath))
@@ -361,7 +342,6 @@ object SaveExpectTest {
     MetacpOwnersExpect.saveExpected(MetacpOwnersExpect.loadObtained)
     MetacpIndexExpect.saveExpected(MetacpIndexExpect.loadObtained)
     LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
-    HighlevelExpect.saveExpected(HighlevelExpect.loadObtained)
     IndexExpect.saveExpected(IndexExpect.loadObtained)
     MetacOwnersExpect.saveExpected(MetacOwnersExpect.loadObtained)
     MetacMetacpExpectDiffExpect.saveExpected(MetacMetacpExpectDiffExpect.loadObtained)
