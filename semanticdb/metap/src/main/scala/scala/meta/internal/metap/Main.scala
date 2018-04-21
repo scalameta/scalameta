@@ -510,8 +510,7 @@ class Main(settings: Settings, reporter: Reporter) {
                 out.println("")
             }
           case None =>
-            if (info.members.nonEmpty) out.println(s".{+${info.members.length} members}")
-            else out.println("")
+            out.println("")
             info.overrides.sorted.foreach(sym => out.println(s"  extends $sym"))
         }
       case UNKNOWN_KIND | Kind.Unrecognized(_) =>

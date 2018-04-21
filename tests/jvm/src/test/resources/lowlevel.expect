@@ -10,7 +10,7 @@ Symbols => 11 entries
 Occurrences => 19 entries
 
 Symbols:
-example. => package example.{+11 members}
+example. => package example
 example.Acc# => class Acc.{+8 decls}
   extends AnyRef
 example.Acc#`<init>`(). => primary ctor <init>: (): Acc
@@ -106,7 +106,7 @@ Diagnostics => 1 entries
 Synthetics => 1 entries
 
 Symbols:
-example. => package example.{+11 members}
+example. => package example
 example.Example. => final object Example
 example.Example.main(Array). => method main: (args: Array[String]): Unit
   args => example.Example.main(Array).(args)
@@ -196,7 +196,7 @@ semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v0
 Uri => semanticdb/integration/src/main/scala/example/Example.scala
 Text => empty
 Language => Scala
@@ -218,7 +218,7 @@ Occurrences => 71 entries
 Synthetics => 2 entries
 
 Symbols:
-flags. => package flags.{+1 members}
+flags. => package flags
 flags.p.package. => package object package
 flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
@@ -372,7 +372,7 @@ flags.p.package.z(Int).(pp) => param pp: Int
   Int => scala.Int#
 local0 => val local xs2: Nothing
   Nothing => scala.Nothing#
-local1 => abstract local t: >: Nothing <: Any
+local1 => abstract val local t: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
 scala. => package scala
@@ -517,7 +517,7 @@ Occurrences => 7 entries
 Synthetics => 1 entries
 
 Symbols:
-example. => package example.{+11 members}
+example. => package example
 example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
 example.`local-file`#`<init>`(). => primary ctor <init>: (): local-file
@@ -620,7 +620,7 @@ com.javacp.MetacJava#overload(A+1). => method overload: (a: <?>): Unit
 com.javacp.MetacJava#overload(A+2). => static method overload: (a: <?>): Unit
   a => com.javacp.MetacJava#overload(A+2).(a)
   Unit => scala.Unit#
-example. => package example.{+11 members}
+example. => package example
 example.MetacJava# => class MetacJava.{+15 decls}
   extends AnyRef
 example.MetacJava#`<init>`(). => primary ctor <init>: (): MetacJava
@@ -747,7 +747,7 @@ Diagnostics => 2 entries
 Synthetics => 4 entries
 
 Symbols:
-example. => package example.{+11 members}
+example. => package example
 example.Example. => final object Example
 example.MethodUsages# => class MethodUsages.{+3 decls}
   extends AnyRef
@@ -1217,7 +1217,7 @@ Symbols => 8 entries
 Occurrences => 10 entries
 
 Symbols:
-example. => package example.{+11 members}
+example. => package example
 example.A# => trait A.{+1 decls}
   extends AnyRef
 example.A#foo(). => abstract method foo: : Int
@@ -1229,7 +1229,6 @@ example.B#`<init>`(). => primary ctor <init>: (): B
   B => example.B#
 example.B#foo(). => method foo: : Int
   Int => scala.Int#
-  overrides example.A#foo().
 java.lang.Object#`<init>`(). => ctor <init>: (): Object
   Object => java.lang.Object#
 scala.Int# => abstract final class Int.{+111 decls}
@@ -1260,7 +1259,7 @@ Occurrences => 11 entries
 Synthetics => 6 entries
 
 Symbols:
-example. => package example.{+11 members}
+example. => package example
 example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
 example.Synthetic#`<init>`(). => primary ctor <init>: (): Synthetic
@@ -1375,7 +1374,7 @@ scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
   List => scala.collection.immutable.List#
 scala.util. => package util
 scala.util.Either. => final object Either
-types. => package types.{+8 members}
+types. => package types
 types.B# => class B.{+1 decls}
   extends AnyRef
 types.B#`<init>`(). => primary ctor <init>: (): B
@@ -2022,7 +2021,7 @@ Symbols => 52 entries
 Occurrences => 117 entries
 
 Symbols:
-example. => package example.{+11 members}
+example. => package example
 example.ValUsages. => final object ValUsages
 example.ValUsages.v(). => val method v: : Vals
   Vals => example.Vals#

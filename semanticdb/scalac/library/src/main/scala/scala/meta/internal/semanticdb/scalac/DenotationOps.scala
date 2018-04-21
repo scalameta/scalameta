@@ -1,9 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.{meta => m}
-import scala.{meta => mf}
 import scala.reflect.internal.{Flags => gf}
-import scala.util.Sorting
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
@@ -62,14 +60,15 @@ trait DenotationOps { self: DatabaseOps =>
     }
 
     def language: s.Language =
-      if (gsym.isJavaDefined) s.Language.JAVA
+      if (gsym.hasPackageFlag) s.Language.SCALA
+      else if (gsym.hasFlag(gf.JAVA)) s.Language.JAVA
       else s.Language.SCALA
 
     private[meta] def properties: Int = {
       val kind = this.kind
       var flags = 0
-      def flip(prop: s.SymbolInformation.Property) =
-        flags ^= prop.value
+      def flip(prop: s.SymbolInformation.Property): Unit =
+        flags |= prop.value
       def isAbstractClass =
         gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred

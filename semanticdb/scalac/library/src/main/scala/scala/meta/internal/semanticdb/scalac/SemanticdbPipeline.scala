@@ -117,16 +117,15 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
           if (config.messages.saveMessages) {
             val messages = unit.reportedMessages(Map.empty)
             if (messages.nonEmpty) {
-              val mdoc = m.Document(
-                input = m.Input.File(unit.source.file.file),
-                language = language,
-                names = Nil,
-                messages = ???,
-                symbols = Nil,
-                synthetics = Nil
+              val uri =
+                m.AbsolutePath(unit.source.file.file).toRelative(config.sourceroot)
+              val sdoc = s.TextDocument(
+                uri = uri.syntax,
+                language = s.Language.SCALA,
+                diagnostics = messages
               )
-              val mdb = m.Database(mdoc :: Nil)
-              mdb.append(config.targetroot, config.sourceroot)
+              val sdocs = s.TextDocuments(sdoc :: Nil)
+              sdocs.toVfs(config.targetroot).save(append = true)
             }
           }
         } catch handleError(unit)
