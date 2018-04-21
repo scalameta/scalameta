@@ -15,7 +15,7 @@ import scala.meta.testkit.DiffAssertions
 
 abstract class DatabaseSuite(mode: SemanticdbMode,
                              denotations: DenotationMode = DenotationMode.All,
-                             signatures: SignatureMode = SignatureMode.All,
+                             signatures: SignatureMode = SignatureMode.New,
                              members: MemberMode = MemberMode.None,
                              overrides: OverrideMode = OverrideMode.None)
     extends FunSuite

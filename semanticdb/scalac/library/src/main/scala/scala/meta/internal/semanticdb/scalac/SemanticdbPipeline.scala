@@ -119,7 +119,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
                 input = m.Input.File(unit.source.file.file),
                 language = language,
                 names = Nil,
-                messages = messages,
+                messages = ???,
                 symbols = Nil,
                 synthetics = Nil
               )

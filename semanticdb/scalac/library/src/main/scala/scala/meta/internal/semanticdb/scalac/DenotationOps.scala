@@ -6,6 +6,7 @@ import scala.reflect.internal.{Flags => gf}
 import scala.util.Sorting
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 
 trait DenotationOps { self: DatabaseOps =>
   import g._
@@ -20,67 +21,55 @@ trait DenotationOps { self: DatabaseOps =>
 
     private val isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE) && gsym.name != nme.PACKAGE
 
-    private def kindFlags: Long = {
+    private def kind: s.SymbolInformation.Kind = {
       gsym match {
+        case _ if gsym.isSelfParameter => k.SELF_PARAMETER
         case gsym: MethodSymbol =>
           if (gsym.isConstructor) {
-            mf.CTOR
+            k.CONSTRUCTOR
           } else {
             if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
-              if (gsym.isLocalToBlock) mf.LOCAL
-              else mf.FIELD
+              if (gsym.isLocalToBlock) k.LOCAL
+              else k.FIELD
             } else if (gsym.isMacro) {
-              mf.MACRO
+              k.MACRO
             } else {
-              mf.METHOD
+              k.METHOD
             }
           }
         case gsym: ModuleSymbol =>
-          if (gsym.hasPackageFlag) mf.PACKAGE
-          else if (gsym.isPackageObject) mf.PACKAGEOBJECT
-          else mf.OBJECT
+          if (gsym.hasPackageFlag) k.PACKAGE
+          else if (gsym.isPackageObject) k.PACKAGE_OBJECT
+          else k.OBJECT
         case gsym: TermSymbol =>
-          if (gsym.isParameter) mf.PARAM
-          else if (gsym.isLocalToBlock) mf.LOCAL
-          else mf.FIELD
+          if (gsym.isParameter) k.PARAMETER
+          else if (gsym.isLocalToBlock) k.LOCAL
+          else k.FIELD
         case gsym: ClassSymbol =>
-          if (gsym.isTrait && gsym.hasFlag(gf.JAVA)) mf.INTERFACE
-          else if (gsym.isTrait) mf.TRAIT
-          else mf.CLASS
+          if (gsym.isTrait && gsym.hasFlag(gf.JAVA)) k.INTERFACE
+          else if (gsym.isTrait) k.TRAIT
+          else k.CLASS
         case gsym: TypeSymbol =>
-          if (gsym.isParameter) mf.TYPEPARAM
-          else mf.TYPE
+          if (gsym.isParameter) k.TYPE_PARAMETER
+          else k.TYPE
         case NoSymbol =>
-          0L
+          k.UNKNOWN_KIND
         case _ =>
           sys.error(s"unsupported symbol $gsym")
       }
     }
 
-    private def accessibilityFlags: Long = {
-      val tag = acc.map(_.tag).getOrElse(a.UNKNOWN_ACCESSIBILITY)
-      tag match {
-        case a.PRIVATE => mf.PRIVATE
-        case a.PRIVATE_THIS => mf.PRIVATE
-        case a.PRIVATE_WITHIN => mf.PRIVATE
-        case a.PROTECTED => mf.PROTECTED
-        case a.PROTECTED_THIS => mf.PROTECTED
-        case a.PROTECTED_WITHIN => mf.PROTECTED
-        case _ => 0L
-      }
-    }
-
     private[meta] def propertyFlags: Long = {
+      val kind = this.kind
       var flags = 0L
       def isAbstractClass =
         gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
-      def isAbstractInterface = (kindFlags & mf.INTERFACE) != 0
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
       if (gsym.hasFlag(gf.PACKAGE)) {
         ()
       } else if (gsym.hasFlag(gf.JAVA)) {
-        if (isAbstractClass || isAbstractInterface || isAbstractMethod) flags |= mf.ABSTRACT
+        if (isAbstractClass || kind.isInterface || isAbstractMethod) flags |= mf.ABSTRACT
         if (gsym.hasFlag(gf.FINAL) || gsym.hasFlag(gf.JAVA_ENUM)) flags |= mf.FINAL
         if (gsym.hasFlag(gf.JAVA_ENUM)) flags |= mf.ENUM
         if (gsym.hasFlag(gf.STATIC)) flags |= mf.STATIC
@@ -94,7 +83,7 @@ trait DenotationOps { self: DatabaseOps =>
         if (gsym.hasFlag(gf.CASE)) flags |= mf.CASE
         if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flags |= mf.CONTRAVARIANT
         if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flags |= mf.COVARIANT
-        if ((kindFlags & (mf.LOCAL | mf.FIELD)) != 0) {
+        if (kind.isLocal || kind.isField) {
           if (gsym.isMutable) flags |= mf.VAR
           else flags |= mf.VAL
         }
@@ -113,11 +102,6 @@ trait DenotationOps { self: DatabaseOps =>
           flags |= mf.LOCAL
       }
       flags
-    }
-
-    private def flags: Long = {
-      if (gsym.isSelfParameter) mf.SELFPARAM
-      else kindFlags | accessibilityFlags | propertyFlags
     }
 
     private def name: String = {
@@ -184,22 +168,22 @@ trait DenotationOps { self: DatabaseOps =>
 
     // TODO: I'm not completely happy with the implementation of this method.
     // See https://github.com/scalameta/scalameta/issues/1325 for details.
-    private def acc: Option[s.Accessibility] = {
+    private def acc: s.Accessibility = {
       if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
         // NOTE: some sick artifact vals produced by mkPatDef can be
         // private to method (whatever that means), so here we just ignore them.
-        Some(s.Accessibility(a.PUBLIC))
+        s.Accessibility(a.PUBLIC)
       } else {
         if (gsym.privateWithin == NoSymbol) {
-          if (gsym.isPrivateThis) Some(s.Accessibility(a.PRIVATE_THIS))
-          else if (gsym.isPrivate) Some(s.Accessibility(a.PRIVATE))
-          else if (gsym.isProtectedThis) Some(s.Accessibility(a.PROTECTED_THIS))
-          else if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED))
-          else Some(s.Accessibility(a.PUBLIC))
+          if (gsym.isPrivateThis) s.Accessibility(a.PRIVATE_THIS)
+          else if (gsym.isPrivate) s.Accessibility(a.PRIVATE)
+          else if (gsym.isProtectedThis) s.Accessibility(a.PROTECTED_THIS)
+          else if (gsym.isProtected) s.Accessibility(a.PROTECTED)
+          else s.Accessibility(a.PUBLIC)
         } else {
           val ssym = gsym.privateWithin.toSemantic.syntax
-          if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
-          else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
+          if (gsym.isProtected) s.Accessibility(a.PROTECTED_WITHIN, ssym)
+          else s.Accessibility(a.PRIVATE_WITHIN, ssym)
         }
       }
     }
@@ -221,28 +205,34 @@ trait DenotationOps { self: DatabaseOps =>
       val (anns, todoAnns) = this.anns
       config.signatures match {
         case SignatureMode.None =>
-          val denot = m.Denotation(flags, name, "", Nil, Nil, over, None, anns, acc, owner)
-          DenotationResult(denot, todoOverrides, todoAnns)
-        case SignatureMode.Old =>
-          val (signature, names) = oldInfo
-          val denot = m.Denotation(flags, name, signature, names, Nil, over, None, anns, acc, owner)
+          val denot = s.SymbolInformation()
           DenotationResult(denot, todoOverrides, todoAnns)
         case SignatureMode.New =>
           val (tpe, todoTpe) = newInfo
-          val denot = m.Denotation(flags, name, "", Nil, Nil, over, tpe, anns, acc, owner)
+          val denot = s.SymbolInformation(
+            symbol = gsym.toSemantic.syntax,
+            language = s.Language.SCALA,
+            kind = kind,
+            accessibility = Some(acc),
+            properties = ???,
+            name = name,
+            signature = None,
+            members = Nil,
+            overrides = Nil,
+            tpe = tpe,
+            annotations = anns,
+            owner = owner.syntax
+          )
           DenotationResult(denot, todoOverrides, todoAnns ++ todoTpe)
-        case SignatureMode.All =>
-          val (signature, names) = oldInfo
-          val (tpe, todoTpe) = newInfo
-          val denot = m.Denotation(flags, name, signature, names, Nil, over, tpe, anns, acc, owner)
-          DenotationResult(denot, todoOverrides, todoAnns ++ todoTpe)
+        case _ =>
+          throw new UnsupportedOperationException(config.signatures.toString)
       }
     }
   }
 
   // NOTE: Holds a denotation along with todo lists of symbols to persist.
   case class DenotationResult(
-      denot: m.Denotation,
+      denot: s.SymbolInformation,
       todoOverrides: List[g.Symbol],
       todoTpe: List[g.Symbol])
 }

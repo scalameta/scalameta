@@ -73,6 +73,7 @@ object Input {
 
   final case class VirtualFile(path: scala.Predef.String, value: scala.Predef.String) extends Input {
     lazy val chars = value.toArray
+    override def text: scala.Predef.String = value
     override def toString = s"""Input.VirtualFile("$path", "$value")"""
   }
 

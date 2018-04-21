@@ -8,7 +8,7 @@ import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.reflect.io.{PlainFile => GPlainFile}
 import scala.{meta => m}
-import scala.meta.internal.inputs._
+import org.langmeta.internal.inputs._
 import scala.meta.internal.{semanticdb3 => s}
 
 trait DocumentOps { self: DatabaseOps =>
@@ -44,10 +44,10 @@ trait DocumentOps { self: DatabaseOps =>
   }
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
-    def toDocument: m.Document = {
+    def toDocument: s.TextDocument = {
       val binders = mutable.Set[m.Position]()
       val names = mutable.Map[m.Position, m.Symbol]()
-      val denotations = mutable.Map[m.Symbol, m.Denotation]()
+      val denotations = mutable.Map[m.Symbol, s.SymbolInformation]()
       val members = mutable.Map[m.Symbol, List[m.Signature]]()
       val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
       val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
@@ -539,37 +539,28 @@ trait DocumentOps { self: DatabaseOps =>
 
       val flattenedNames = names.flatMap {
         case (pos, sym) =>
-          flatten(sym).map(m.ResolvedName(pos, _, binders(pos)))
+          flatten(sym).map { flatSym =>
+            val role =
+              if (binders.contains(pos)) s.SymbolOccurrence.Role.DEFINITION
+              else s.SymbolOccurrence.Role.REFERENCE
+            s.SymbolOccurrence(Some(pos.toRange), flatSym.syntax, role)
+          }
       }.toList
       val messages = unit.reportedMessages(mstarts)
-      val symbols = denotations.map {
-        case (sym, denot) =>
-          val denotationWithMembers = members.get(sym).fold(denot) { members =>
-            new m.Denotation(
-              denot.flags,
-              denot.name,
-              denot.signature,
-              denot.names,
-              members,
-              denot.overrides,
-              denot.tpeInternal,
-              denot.annotationsInternal,
-              denot.accessibilityInternal,
-              denot.owner)
-          }
-          m.ResolvedSymbol(sym, denotationWithMembers)
-      }.toList
+      val symbols = denotations.values
+
       val synthetics = inferred.toIterator.map {
         case (pos, inferred) => inferred.toSynthetic(input, pos)
       }.toList
 
-      m.Document(
-        input,
-        language,
-        flattenedNames,
-        messages,
-        symbols,
-        synthetics
+      s.TextDocument(
+        schema = s.Schema.SEMANTICDB3,
+        uri = input.syntax,
+        text = input.text,
+        language = s.Language.SCALA,
+        symbols = denotations.values.toSeq,
+        occurrences = flattenedNames,
+        diagnostics = messages
       )
     }
   }
