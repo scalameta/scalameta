@@ -18,6 +18,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       val options = List("-P:semanticdb:denotations:all")
       val document = toTextDocument(compiler, original, options)
       val syntax = Main.print(document)
+      println(syntax)
       assertNoDiff(syntax, expected)
     }
   }
@@ -44,6 +45,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Symbols => 8 entries
       |Occurrences => 10 entries
       |Diagnostics => 1 entries
+      |Synthetics => 2 entries
       |
       |Symbols:
       |b. => package b
@@ -75,6 +77,17 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |
       |Diagnostics:
       |[1:24..1:30)[warning] Unused import
+      |
+      |Synthetics:
+      |[3:27..3:27):  => *.apply[Nothing]
+      |  [0:0..0:1): * => _star_.
+      |  [0:2..0:7): apply => scala.collection.immutable.List.apply(A*).
+      |  [0:8..0:15): Nothing => scala.Nothing#
+      |[4:2..4:3): x => scala.Predef.any2stringadd[List[Nothing]](*)
+      |  [0:13..0:26): any2stringadd => scala.Predef.any2stringadd(A).
+      |  [0:27..0:31): List => scala.collection.immutable.List#
+      |  [0:32..0:39): Nothing => scala.Nothing#
+      |  [0:42..0:43): * => _star_.
     """.stripMargin
   )
 

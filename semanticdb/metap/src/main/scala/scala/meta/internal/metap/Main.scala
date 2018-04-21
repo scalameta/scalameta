@@ -482,17 +482,8 @@ class Main(settings: Settings, reporter: Reporter) {
               }
             }
           case None =>
-            info.signature match {
-              case Some(sig) =>
-                out.print(s": ${sig.text}")
-                out.println("")
-                val occs = sig.occurrences.sorted
-                rep("  ", occs, "  ")(pprint(_, sig))
-              case _ =>
-                out.println("")
-            }
+            out.println("")
         }
-        info.overrides.foreach(sym => out.println(s"  overrides $sym"))
       case OBJECT | PACKAGE | PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
         info.tpe match {
           case Some(tpe: Type) =>
@@ -511,7 +502,6 @@ class Main(settings: Settings, reporter: Reporter) {
             }
           case None =>
             out.println("")
-            info.overrides.sorted.foreach(sym => out.println(s"  extends $sym"))
         }
       case UNKNOWN_KIND | Kind.Unrecognized(_) =>
         out.println("")

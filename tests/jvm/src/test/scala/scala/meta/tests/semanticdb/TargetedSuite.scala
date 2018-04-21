@@ -303,7 +303,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  U => f.M.C2#[U]
        |f.M.i1(). => implicit method i1: : Nothing
        |  Nothing => scala.Nothing#
-       |f.M.l1(). => lazy field l1: Nothing
+       |f.M.l1(). => lazy val field l1: Nothing
        |  Nothing => scala.Nothing#
        |f.T# => trait T.{+10 decls}
        |  extends AnyRef
@@ -346,7 +346,7 @@ class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
        |  Nothing => scala.Nothing#
        |scala.language. => final object language
        |scala.language.experimental. => final object experimental
-       |scala.language.experimental.macros(). => implicit lazy field macros: macros
+       |scala.language.experimental.macros(). => implicit lazy val field macros: macros
        |  macros => scala.languageFeature.experimental.macros#
      """.trim.stripMargin
     )

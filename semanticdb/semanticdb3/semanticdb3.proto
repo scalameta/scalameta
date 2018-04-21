@@ -174,7 +174,7 @@ message TypeType {
 
 message SymbolInformation {
   enum Kind {
-    // reserved 1, 2, 4, 5, 15, 16;
+    // reserved 1, 2, 4, 5, 7, 8, 9, 15, 16;
     UNKNOWN_KIND = 0;
     LOCAL = 19;
     FIELD = 20;
@@ -216,9 +216,6 @@ message SymbolInformation {
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  TextDocument signature = 7;
-  repeated string members = 8;
-  repeated string overrides = 9;
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;

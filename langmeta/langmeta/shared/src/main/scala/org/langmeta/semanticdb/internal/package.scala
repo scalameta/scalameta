@@ -107,7 +107,7 @@ package object semanticdb {
       }
       object sSymbolInformation {
         def unapply(ssymbolInformation: s.SymbolInformation): Option[d.ResolvedSymbol] = ssymbolInformation match {
-          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner) =>
+          case s.SymbolInformation(ssym, slanguage, skind, sproperties, sname, stpe, sanns, sacc, sowner) =>
             val dsym = dSymbol(ssym)
             val dflags = {
               var dflags = 0L
@@ -156,33 +156,12 @@ package object semanticdb {
               dflags
             }
             val dname = sname
-            val dsignature = ssignature.map(_.text).getOrElse("")
-            val dnames = {
-              ssignature.map { ssignature =>
-                val dinput = dInput.Denotation(dsignature, dsym)
-                ssignature.occurrences.toIterator.map {
-                  case s.SymbolOccurrence(Some(srange), ssym, sRole(disDefinition)) =>
-                    val dstartOffset = dinput.lineToOffset(srange.startLine) + srange.startCharacter
-                    val dendOffset = dinput.lineToOffset(srange.endLine) + srange.endCharacter
-                    val ddefnpos = dPosition.Range(dinput, dstartOffset, dendOffset)
-                    val dsym = dSymbol(ssym)
-                    d.ResolvedName(ddefnpos, dsym, disDefinition)
-                  case other =>
-                    sys.error(s"bad protobuf: unsupported occurrence $other")
-                }.toList
-              }.getOrElse(Nil)
-            }
-            val dmembers: List[d.Signature] = smembers.toIterator.map { smember =>
-              if (smember.endsWith("#")) d.Signature.Type(smember.stripSuffix("#"))
-              else if (smember.endsWith(".")) d.Signature.Term(smember.stripSuffix("."))
-              else sys.error(s"Unexpected signature $smember")
-            }.toList
-            val doverrides = soverrides.map(dSymbol).toList
+            val dnames = Nil
             val dtpe = stpe
             val danns = sanns.toList
             val dacc = sacc
             val downer = dSymbol(sowner)
-            Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, dsignature, dnames, dmembers, doverrides, dtpe, danns, dacc, downer)))
+            Some(d.ResolvedSymbol(dsym, d.Denotation(dflags, dname, "", Nil, Nil, Nil, dtpe, danns, dacc, downer)))
           case other =>
             sys.error(s"bad protobuf: unsupported symbol information $other")
         }
@@ -374,13 +353,11 @@ package object semanticdb {
                   None
                 }
               }
-              val smembers = ddenot.members.map(_.syntax)
-              val soverrides = ddenot.overrides.map(sSymbol)
               val stpe = ddenot.tpe
               val sanns = ddenot.annotations
               val sacc = ddenot.accessibility
               val sowner = ddenot.owner.syntax
-              Some(s.SymbolInformation(ssymbol, ssymbolLanguage, skind, sproperties, sname, ssignature, smembers, soverrides, stpe, sanns, sacc, sowner))
+              Some(s.SymbolInformation(ssymbol, ssymbolLanguage, skind, sproperties, sname, stpe, sanns, sacc, sowner))
             }
           }
           object dSynthetic {

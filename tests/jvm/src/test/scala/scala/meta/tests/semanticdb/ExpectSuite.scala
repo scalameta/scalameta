@@ -111,14 +111,7 @@ trait ExpectHelpers extends FunSuiteLike {
       if PathIO.extension(file.toNIO) == "semanticdb"
       doc <- s.TextDocuments.parseFrom(file.readAllBytes).documents
       sym <- doc.symbols
-    } yield {
-      val normalizedSym = sym.copy(
-        signature = None,
-        overrides = Nil,
-        members = Nil
-      )
-      sym.symbol -> normalizedSym
-    }
+    } yield sym.symbol -> sym
   }.toMap
 
   protected def lowlevelSyntax(dirOrJar: Path): String = {

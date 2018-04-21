@@ -469,7 +469,7 @@ provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 9, 10, 12;
+  reserved 1, 2, 4, 5, 7, 8, 9, 15, 16;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
@@ -1195,7 +1195,7 @@ Notes:
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 9, 10, 12;
+  reserved 1, 2, 4, 5, 7, 8, 9, 15, 16;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
