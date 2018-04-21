@@ -83,12 +83,17 @@ object SemanticdbConfig {
         config = config.copy(failures = severity)
       case SetDenotations(DenotationMode(denotations)) =>
         config = config.copy(denotations = denotations)
-      case SetSignatures(SignatureMode(signatures)) =>
-        config = config.copy(signatures = signatures)
-      case SetMembers(MemberMode(members)) =>
-        config = config.copy(members = members)
-      case SetOverrides(OverrideMode(overrides)) =>
-        config = config.copy(overrides = overrides)
+      case option @ SetSignatures(SignatureMode(signatures)) =>
+        signatures match {
+          case SignatureMode.All | SignatureMode.Old =>
+            errFn(s"$option is no longer supported. Use signatures:{new,none} instead.")
+          case _ =>
+            config = config.copy(signatures = signatures)
+        }
+      case option @ SetMembers(MemberMode(_)) =>
+        errFn(s"$option is no longer supported.")
+      case option @ SetOverrides(OverrideMode(_)) =>
+        errFn(s"$option is no longer supported")
       case SetProfiling(ProfilingMode(profiling)) =>
         config = config.copy(profiling = profiling)
       case SetInclude(include) =>
@@ -161,10 +166,11 @@ sealed abstract class SignatureMode {
 object SignatureMode {
   def unapply(arg: String): Option[SignatureMode] = all.find(_.toString.equalsIgnoreCase(arg))
   def all = List(All, New, Old, None)
-  case object All extends SignatureMode
   case object New extends SignatureMode
-  case object Old extends SignatureMode
   case object None extends SignatureMode
+  // Deprecated
+  case object Old extends SignatureMode
+  case object All extends SignatureMode
 }
 
 sealed abstract class MemberMode {

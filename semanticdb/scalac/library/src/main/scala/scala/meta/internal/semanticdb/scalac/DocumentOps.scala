@@ -560,7 +560,8 @@ trait DocumentOps { self: DatabaseOps =>
         language = s.Language.SCALA,
         symbols = denotations.values.toSeq,
         occurrences = flattenedNames,
-        diagnostics = messages
+        diagnostics = messages,
+        synthetics = synthetics
       )
     }
   }
