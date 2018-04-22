@@ -20,7 +20,6 @@ abstract class DatabaseSuite(
     mode: SemanticdbMode = SemanticdbMode.Fat,
     denotations: DenotationMode = DenotationMode.All,
     signatures: SignatureMode = SignatureMode.New,
-    members: MemberMode = MemberMode.None,
     overrides: OverrideMode = OverrideMode.None)
     extends FunSuite
     with DiffAssertions { self =>
@@ -57,7 +56,6 @@ abstract class DatabaseSuite(
     failures = FailureMode.Error,
     denotations = denotations,
     signatures = signatures,
-    members = members,
     overrides = overrides)
 
   private def computeDatabaseFromSnippet(code: String): s.TextDocument = {

@@ -9,7 +9,6 @@ trait DatabaseOps
     with DocumentOps
     with InputOps
     with LanguageOps
-    with MemberOps
     with MessageOps
     with NameOps
     with ParseOps

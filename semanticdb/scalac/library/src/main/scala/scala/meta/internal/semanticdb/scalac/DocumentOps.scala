@@ -48,7 +48,6 @@ trait DocumentOps { self: DatabaseOps =>
       val binders = mutable.Set[m.Position]()
       val names = mutable.Map[m.Position, m.Symbol]()
       val denotations = mutable.Map[m.Symbol, s.SymbolInformation]()
-      val members = mutable.Map[m.Symbol, List[m.Signature]]()
       val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
       val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
       val todo = mutable.Set[m.Name]() // names to map to global trees
@@ -166,20 +165,7 @@ trait DocumentOps { self: DatabaseOps =>
               // https://github.com/scalameta/scalameta/issues/665
               // Instead of crashing with "unsupported file", we ignore these cases.
               if (gsym0 == null) return
-              if (gsym0.isAnonymousClass) {
-                if (config.members.isAll) {
-                  gsym0.asClass.parentSymbols
-                    .filterNot(_ == g.definitions.ObjectClass)
-                    .foreach { parent =>
-                      val symbol = parent.toSemantic
-                      if (!members.contains(symbol)) {
-                        members(symbol) = parent.tpe.lookupMembers
-                      }
-                    }
-                }
-
-                return
-              }
+              if (gsym0.isAnonymousClass) return
               if (mtree.pos == m.Position.None) return
               if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
@@ -315,11 +301,6 @@ trait DocumentOps { self: DatabaseOps =>
               val mname = mctordefs(gstart)
               gtree match {
                 case gtree: g.Template =>
-                  if (config.members.isAll) {
-                    gtree.parents.foreach { parent =>
-                      members(parent.symbol.toSemantic) = parent.tpe.lookupMembers
-                    }
-                  }
                   val gctor =
                     gtree.body.find(x => Option(x.symbol).exists(_.isPrimaryConstructor))
                   success(mname, gctor.map(_.symbol).getOrElse(g.NoSymbol))
@@ -349,9 +330,6 @@ trait DocumentOps { self: DatabaseOps =>
                   denotations(gtree.symbol.toSemantic) = gtree.symbol.toDenotation(false).denot
                 }
               case gtree: g.PackageDef =>
-                if (config.members.isAll) {
-                  members(gtree.symbol.toSemantic) = gtree.pid.tpe.lookupMembers
-                }
               // NOTE: capture PackageDef.pid instead
               case gtree: g.ModuleDef if gtree.name == g.nme.PACKAGE =>
                 // TODO: if a package object comes first in the compilation unit
@@ -388,8 +366,7 @@ trait DocumentOps { self: DatabaseOps =>
                 tryMstart(gpoint)
               case gtree: g.Import =>
                 val sels = gtree.selectors.flatMap { sel =>
-                  if (sel.name == g.nme.WILDCARD && config.members.isAll) {
-                    members(gtree.expr.symbol.toSemantic) = gtree.expr.tpe.lookupMembers
+                  if (sel.name == g.nme.WILDCARD) {
                     Nil
                   } else {
                     mstarts.get(sel.namePos).map(mname => (sel.name, mname))
