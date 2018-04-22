@@ -6,6 +6,7 @@ import scala.meta._
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
+import Compat._
 
 // Contributing tips:
 // - Create another suite like YYY.scala that extends DatabaseSuite,
@@ -463,6 +464,14 @@ class TargetedSuite extends DatabaseSuite() {
        |  extends Serializable
        |scala.collection.mutable.ListBuffer. => final object ListBuffer
     """.stripMargin.trim
+      .replaceAllLiterally(
+        ListBufferDeclsInString,
+        ListBufferDeclsActual
+      )
+      .replaceAllLiterally(
+        ReusableBuilderInString,
+        ReusableBuilderActual
+      )
   )
 
   names(
@@ -534,14 +543,6 @@ class TargetedSuite extends DatabaseSuite() {
     """.stripMargin.trim
   )
 
-  lazy val streamConsTparam: String = {
-    import scala.reflect.runtime.universe._
-    val consWrapper = typeOf[scala.collection.immutable.Stream.ConsWrapper[_]]
-    val streamCons = consWrapper.decl(TermName("#::").encodedName)
-    val List(List(param)) = streamCons.info.paramLists
-    param.info.toString
-  }
-
   names(
     // See https://github.com/scalameta/scalameta/issues/977
     """|object n {
@@ -563,7 +564,7 @@ class TargetedSuite extends DatabaseSuite() {
        |[4:10..4:13): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`(B).
        |[4:14..4:20): Stream => scala.package.Stream().
        |[4:21..4:26): empty => scala.collection.immutable.Stream.empty().
-       |""".stripMargin.replace("$STREAM_CONS_TPARAM", streamConsTparam)
+       |""".stripMargin.replaceAllLiterally(ConsWrapperInString, ConsWrapperActual)
   )
 
   symbols(
@@ -600,7 +601,7 @@ class TargetedSuite extends DatabaseSuite() {
        |[1:31..1:36): empty => scala.collection.immutable.Stream.empty().
        |[2:2..2:5): lst => _empty_.p.lst().
        |[2:6..2:7): + => scala.Predef.any2stringadd#`+`(String).
-       |""".stripMargin.replace("$STREAM_CONS_TPARAM", streamConsTparam)
+       |""".stripMargin.replaceAllLiterally(ConsWrapperInString, ConsWrapperActual)
   )
 
   messages(
@@ -1024,4 +1025,34 @@ class TargetedSuite extends DatabaseSuite() {
       assert(denot.kind.isLocal)
     }
   )
+}
+
+object Compat {
+  import scala.reflect.runtime.universe._
+
+  val ConsWrapperInString = "Stream.ConsWrapper#`#::`(B)."
+  lazy val ConsWrapperActual: String = {
+    val consWrapper = typeOf[scala.collection.immutable.Stream.ConsWrapper[_]]
+    val streamCons = consWrapper.decl(TermName("#::").encodedName)
+    val List(List(param)) = streamCons.info.paramLists
+    val name = param.info.toString
+    s"Stream.ConsWrapper#`#::`($name)."
+  }
+
+  val ListBufferDeclsInString = "+43 decls"
+  lazy val ListBufferDeclsActual: String = {
+    val consWrapper = typeOf[scala.collection.mutable.ListBuffer[_]]
+    val decls = consWrapper.decls.size
+    s"+$decls decls"
+  }
+
+  val ReusableBuilderInString = "extends ReusableBuilder[A, List[A]]"
+  lazy val ReusableBuilderActual: String = {
+    if (scala.util.Properties.versionNumberString.startsWith("2.11")) {
+      "extends Builder[A, List[A]]"
+    } else {
+      ReusableBuilderInString
+    }
+  }
+
 }
