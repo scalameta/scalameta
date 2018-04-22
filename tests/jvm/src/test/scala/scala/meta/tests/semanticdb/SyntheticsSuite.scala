@@ -1,6 +1,6 @@
 package scala.meta.tests.semanticdb
 
-class SyntheticsSuite extends DatabaseSuite() {
+class SyntheticsSuite extends SemanticDBSuite() {
 
   synthetics(
     """

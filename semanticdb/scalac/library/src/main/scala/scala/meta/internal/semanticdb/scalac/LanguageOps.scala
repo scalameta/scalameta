@@ -3,7 +3,7 @@ package scala.meta.internal.semanticdb.scalac
 import scala.util.Properties
 import scala.{meta => m}
 
-trait LanguageOps { self: DatabaseOps =>
+trait LanguageOps { self: SemanticDBOps =>
 
   lazy val language: String = {
     val version = Properties.versionNumberString

@@ -5,7 +5,7 @@ import scala.{meta => m}
 import scala.meta.internal.{semanticdb3 => s}
 import org.langmeta.internal.inputs._
 
-trait DiagnosticOps { self: DatabaseOps =>
+trait DiagnosticOps { self: SemanticDBOps =>
   implicit class XtensionCompilationUnitDiagnostics(unit: g.CompilationUnit) {
     def reportedDiagnostics(mstarts: collection.Map[Int, m.Name]): List[s.Diagnostic] = {
       unit.hijackedDiagnostics.map {

@@ -11,7 +11,7 @@ import scala.{meta => m}
 import org.langmeta.internal.inputs._
 import scala.meta.internal.{semanticdb3 => s}
 
-trait DocumentOps { self: DatabaseOps =>
+trait TextDocumentOps { self: SemanticDBOps =>
   def validateCompilerState(): Unit = {
     if (!g.settings.Yrangepos.value) {
       sys.error("the compiler instance must have -Yrangepos enabled")
@@ -44,7 +44,7 @@ trait DocumentOps { self: DatabaseOps =>
   }
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
-    def toDocument: s.TextDocument = {
+    def toTextDocument: s.TextDocument = {
       val binders = mutable.Set[m.Position]()
       val occurrences = mutable.Map[m.Position, m.Symbol]()
       val symbols = mutable.Map[m.Symbol, s.SymbolInformation]()

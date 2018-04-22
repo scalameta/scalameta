@@ -2,7 +2,7 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.{meta => m}
 
-trait ParseOps { self: DatabaseOps =>
+trait ParseOps { self: SemanticDBOps =>
 
   implicit class XtensionCompilationUnitSource(unit: g.CompilationUnit) {
     def toSource: m.Source = {

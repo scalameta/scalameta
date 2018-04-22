@@ -6,7 +6,7 @@ import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.internal.{Flags => gf}
 
-trait TypeOps { self: DatabaseOps =>
+trait TypeOps { self: SemanticDBOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
     def toSemantic: (Option[s.Type], List[g.Symbol]) = {
       val buf = List.newBuilder[g.Symbol]

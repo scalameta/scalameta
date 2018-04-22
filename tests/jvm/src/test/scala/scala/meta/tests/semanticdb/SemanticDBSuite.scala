@@ -16,7 +16,7 @@ import scala.meta.internal.{semanticdb3 => s}
 import org.langmeta.internal.inputs._
 import scala.meta.testkit.DiffAssertions
 
-abstract class DatabaseSuite(
+abstract class SemanticDBSuite(
     mode: SemanticdbMode = SemanticdbMode.Fat,
     symbols: SymbolMode = SymbolMode.All,
     types: TypeMode = TypeMode.All
@@ -29,7 +29,7 @@ abstract class DatabaseSuite(
   }
 
   lazy val g: Global = {
-    def fail(msg: String) = sys.error(s"DatabaseSuite initialization failed: $msg")
+    def fail(msg: String) = sys.error(s"SemanticDBSuite initialization failed: $msg")
     val classpath = sys.props("sbt.paths.tests.test.classes")
     if (classpath == null) fail("classpath not set. broken build?")
     val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
@@ -46,7 +46,7 @@ abstract class DatabaseSuite(
     g.globalPhase = run.parserPhase
     g
   }
-  private lazy val databaseOps: DatabaseOps { val global: self.g.type } = new DatabaseOps {
+  private lazy val databaseOps: SemanticDBOps { val global: self.g.type } = new SemanticDBOps {
     val global: self.g.type = self.g
   }
   import databaseOps._
@@ -91,7 +91,7 @@ abstract class DatabaseSuite(
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    unit.toDocument
+    unit.toTextDocument
   }
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {

@@ -3,10 +3,10 @@ package scala.meta.internal.semanticdb.scalac
 import scala.meta.internal.index._
 import scala.tools.nsc.Global
 
-trait DatabaseOps
+trait SemanticDBOps
     extends AnnotationOps
     with SymbolInformationOps
-    with DocumentOps
+    with TextDocumentOps
     with InputOps
     with LanguageOps
     with DiagnosticOps

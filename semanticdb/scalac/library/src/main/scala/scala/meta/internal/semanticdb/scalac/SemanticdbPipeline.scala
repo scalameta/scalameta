@@ -12,7 +12,7 @@ import org.langmeta.internal.semanticdb._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb.{vfs => v}
 
-trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
+trait SemanticdbPipeline extends SemanticDBOps { self: SemanticdbPlugin =>
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
   implicit class XtensionUnit(unit: g.CompilationUnit) {
     def isIgnored: Boolean = {
@@ -57,7 +57,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
         try {
           if (unit.isIgnored) return
           validateCompilerState()
-          val mdoc = unit.toDocument
+          val mdoc = unit.toTextDocument
           val mdb = s.TextDocuments(List(mdoc))
           mdb.toVfs(config.targetroot).save(append = false)
         } catch handleError(unit)

@@ -7,7 +7,7 @@ import java.io.Writer
 import scala.collection.mutable
 import scala.reflect.internal.ModifierFlags._
 
-trait PrinterOps { self: DatabaseOps =>
+trait PrinterOps { self: SemanticDBOps =>
   import g._
 
   def showSynthetic(tpe: g.Type): AttributedSynthetic = tpe match {

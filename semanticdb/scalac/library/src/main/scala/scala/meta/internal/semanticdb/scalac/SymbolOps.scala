@@ -5,7 +5,7 @@ import scala.{meta => m}
 import scala.meta.internal.inputs._
 import scala.util.control.NonFatal
 
-trait SymbolOps { self: DatabaseOps =>
+trait SymbolOps { self: SemanticDBOps =>
 
   lazy val idCache = new HashMap[String, Int]
   lazy val symbolCache = new HashMap[g.Symbol, m.Symbol]
