@@ -167,7 +167,6 @@ object SignatureMode {
   case object All extends SignatureMode
 }
 
-
 sealed abstract class ProfilingMode {
   def name: String = toString.toLowerCase
   import ProfilingMode._
