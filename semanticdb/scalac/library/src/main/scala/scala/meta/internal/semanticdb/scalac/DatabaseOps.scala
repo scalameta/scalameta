@@ -5,11 +5,11 @@ import scala.tools.nsc.Global
 
 trait DatabaseOps
     extends AnnotationOps
-    with DenotationOps
+    with SymbolInformationOps
     with DocumentOps
     with InputOps
     with LanguageOps
-    with MessageOps
+    with DiagnosticOps
     with NameOps
     with ParseOps
     with PrinterOps

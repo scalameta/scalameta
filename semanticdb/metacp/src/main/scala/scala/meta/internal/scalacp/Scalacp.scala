@@ -73,7 +73,7 @@ object Scalacp {
   }
 
   // NOTE: Cases in the pattern match are ordered
-  // similarly to DenotationOps.kindFlags in semanticdb/scalac.
+  // similarly to SymbolInformationOps.kind in semanticdb/scalac.
   private def skind(sym: Symbol): s.SymbolInformation.Kind = {
     sym match {
       case sym: MethodSymbol if sym.isMethod =>

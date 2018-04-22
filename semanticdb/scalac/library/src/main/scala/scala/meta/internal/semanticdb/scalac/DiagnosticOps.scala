@@ -5,10 +5,10 @@ import scala.{meta => m}
 import scala.meta.internal.{semanticdb3 => s}
 import org.langmeta.internal.inputs._
 
-trait MessageOps { self: DatabaseOps =>
-  implicit class XtensionCompilationUnitMessages(unit: g.CompilationUnit) {
-    def reportedMessages(mstarts: collection.Map[Int, m.Name]): List[s.Diagnostic] = {
-      val messages = unit.hijackedMessages.map {
+trait DiagnosticOps { self: DatabaseOps =>
+  implicit class XtensionCompilationUnitDiagnostics(unit: g.CompilationUnit) {
+    def reportedDiagnostics(mstarts: collection.Map[Int, m.Name]): List[s.Diagnostic] = {
+      unit.hijackedDiagnostics.map {
         case (gpos, gseverity, text) =>
           val mpos: m.Position = {
             // NOTE: The caret in unused import warnings points to Importee.pos, but
@@ -32,7 +32,6 @@ trait MessageOps { self: DatabaseOps =>
           }
           s.Diagnostic(Some(mpos.toRange), sseverity, text)
       }
-      messages
     }
   }
 }

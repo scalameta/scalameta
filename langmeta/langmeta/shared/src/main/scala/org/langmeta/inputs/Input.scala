@@ -3,6 +3,7 @@ package org.langmeta.inputs
 import java.nio.{file => nio}
 import java.nio.charset.Charset
 import org.langmeta.internal.inputs._
+import org.langmeta.internal.semanticdb.DeprecationMessage
 import org.langmeta.semanticdb.Symbol
 import org.langmeta.io._
 
@@ -77,11 +78,13 @@ object Input {
     override def toString = s"""Input.VirtualFile("$path", "$value")"""
   }
 
+  @deprecated(DeprecationMessage, "3.8.0")
   final case class Synthetic(value: scala.Predef.String, input: Input, start: Int, end: Int) extends Input {
     lazy val chars = value.toCharArray
     override def toString = s"""Input.Synthetic("$value", $input, $start, $end)"""
   }
 
+  @deprecated(DeprecationMessage, "3.8.0")
   final case class Denotation(value: scala.Predef.String, symbol: Symbol) extends Input {
     lazy val chars = value.toCharArray
     override def toString = s"""Input.Denotation("$value", "$symbol")"""

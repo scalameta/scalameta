@@ -7,10 +7,10 @@ import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 
-trait DenotationOps { self: DatabaseOps =>
+trait SymbolInformationOps { self: DatabaseOps =>
   import g._
 
-  implicit class XtensionGSymbolMDenotation(gsym0: g.Symbol) {
+  implicit class XtensionGSymbolMSymbolInformation(gsym0: g.Symbol) {
     private val gsym: g.Symbol = {
       if (gsym0.isJavaClass) gsym0.companionClass
       else if (gsym0.isModuleClass) gsym0.asClass.module
@@ -176,12 +176,12 @@ trait DenotationOps { self: DatabaseOps =>
       else m.Symbol.None
     }
 
-    def toDenotation(): DenotationResult = {
+    def toSymbolInformation(): SymbolInformationResult = {
       val (anns, todoAnns) = this.anns
       config.types match {
         case TypeMode.None =>
           val denot = s.SymbolInformation()
-          DenotationResult(denot, todoAnns)
+          SymbolInformationResult(denot, todoAnns)
         case TypeMode.All =>
           val (tpe, todoTpe) = newInfo
           val denot = s.SymbolInformation(
@@ -195,11 +195,11 @@ trait DenotationOps { self: DatabaseOps =>
             annotations = anns,
             owner = owner.syntax
           )
-          DenotationResult(denot, todoAnns ++ todoTpe)
+          SymbolInformationResult(denot, todoAnns ++ todoTpe)
       }
     }
   }
 
-  // NOTE: Holds a denotation along with todo lists of symbols to persist.
-  case class DenotationResult(denot: s.SymbolInformation, todoTpe: List[g.Symbol])
+  // NOTE: Holds a symbol information along with todo lists of symbols to persist.
+  case class SymbolInformationResult(denot: s.SymbolInformation, todoTpe: List[g.Symbol])
 }

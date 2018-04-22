@@ -46,9 +46,9 @@ trait DocumentOps { self: DatabaseOps =>
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toDocument: s.TextDocument = {
       val binders = mutable.Set[m.Position]()
-      val names = mutable.Map[m.Position, m.Symbol]()
-      val infos = mutable.Map[m.Symbol, s.SymbolInformation]()
-      val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
+      val occurrences = mutable.Map[m.Position, m.Symbol]()
+      val symbols = mutable.Map[m.Symbol, s.SymbolInformation]()
+      val synthetics = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
       val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
       val todo = mutable.Set[m.Name]() // names to map to global trees
       val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
@@ -167,7 +167,7 @@ trait DocumentOps { self: DatabaseOps =>
               if (gsym0 == null) return
               if (gsym0.isAnonymousClass) return
               if (mtree.pos == m.Position.None) return
-              if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
+              if (occurrences.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
               val gsym = {
                 def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
@@ -179,7 +179,7 @@ trait DocumentOps { self: DatabaseOps =>
 
               todo -= mtree
 
-              names(mtree.pos) = symbol
+              occurrences(mtree.pos) = symbol
               if (mtree.isDefinition) {
                 val isToplevel = gsym.owner.hasPackageFlag
                 if (isToplevel) {
@@ -200,14 +200,14 @@ trait DocumentOps { self: DatabaseOps =>
                 binders += mtree.pos
               }
 
-              def saveDenotation(): Unit = {
+              def saveSymbol(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  val DenotationResult(denot, todoTpe1) = gs.toDenotation()
-                  infos(ms) = denot
+                  val SymbolInformationResult(denot, todoTpe1) = gs.toSymbolInformation()
+                  symbols(ms) = denot
                   todoTpe1.foreach { tgs =>
                     if (tgs.isSemanticdbLocal) {
                       val tms = tgs.toSemantic
-                      if (tms != m.Symbol.None && !infos.contains(tms)) {
+                      if (tms != m.Symbol.None && !symbols.contains(tms)) {
                         add(tms, tgs)
                       }
                     }
@@ -239,8 +239,8 @@ trait DocumentOps { self: DatabaseOps =>
                   }
                 }
               }
-              if (mtree.isDefinition && config.symbols.saveDefinitions) saveDenotation()
-              if (mtree.isReference && config.symbols.saveReferences) saveDenotation()
+              if (mtree.isDefinition && config.symbols.saveDefinitions) saveSymbol()
+              if (mtree.isReference && config.symbols.saveReferences) saveSymbol()
 
               def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
                 if (map.contains(mtree)) {
@@ -319,7 +319,7 @@ trait DocumentOps { self: DatabaseOps =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
                 if (!gtree.symbol.isSemanticdbLocal) {
-                  infos(gtree.symbol.toSemantic) = gtree.symbol.toDenotation().denot
+                  symbols(gtree.symbol.toSemantic) = gtree.symbol.toSymbolInformation().denot
                 }
               case gtree: g.PackageDef =>
               // NOTE: capture PackageDef.pid instead
@@ -384,7 +384,7 @@ trait DocumentOps { self: DatabaseOps =>
 
             import scala.meta.internal.semanticdb.scalac.{AttributedSynthetic => S}
             def success(pos: m.Position, f: Inferred => Inferred): Unit = {
-              inferred(pos) = f(inferred(pos))
+              synthetics(pos) = f(synthetics(pos))
             }
 
             if (!gtree.pos.isRange) return
@@ -506,7 +506,7 @@ trait DocumentOps { self: DatabaseOps =>
 
       val input = unit.source.toInput
 
-      val flattenedNames = names.flatMap {
+      val finalOccurrences = occurrences.flatMap {
         case (pos, sym) =>
           flatten(sym).map { flatSym =>
             val role =
@@ -515,10 +515,11 @@ trait DocumentOps { self: DatabaseOps =>
             s.SymbolOccurrence(Some(pos.toRange), flatSym.syntax, role)
           }
       }.toList
-      val messages = unit.reportedMessages(mstarts)
 
-      val synthetics = inferred.toIterator.map {
-        case (pos, inferred) => inferred.toSynthetic(input, pos)
+      val diagnostics = unit.reportedDiagnostics(mstarts)
+
+      val finalSynthetics = synthetics.toIterator.map {
+        case (pos, synthetic) => synthetic.toSynthetic(input, pos)
       }.toList
 
       s.TextDocument(
@@ -526,10 +527,10 @@ trait DocumentOps { self: DatabaseOps =>
         uri = unit.source.toUri,
         text = unit.source.toText,
         language = s.Language.SCALA,
-        symbols = infos.values.toSeq,
-        occurrences = flattenedNames,
-        diagnostics = messages,
-        synthetics = synthetics
+        symbols = symbols.values.toSeq,
+        occurrences = finalOccurrences,
+        diagnostics = diagnostics,
+        synthetics = finalSynthetics
       )
     }
   }

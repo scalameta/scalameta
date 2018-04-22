@@ -102,7 +102,7 @@ object SemanticdbConfig {
       case option @ SetMembers(_) =>
         errFn(s"$option is no longer supported.")
       case option @ SetOverrides(_) =>
-        errFn(s"$option is no longer supported")
+        errFn(s"$option is no longer supported.")
       case SetProfiling(ProfilingMode(profiling)) =>
         config = config.copy(profiling = profiling)
       case SetInclude(include) =>

@@ -12,10 +12,8 @@ import Compat._
 // - Create another suite like YYY.scala that extends DatabaseSuite,
 //   add YYY.scala to your .gitignore, and run `> ~testsJVM/testOnly *YYY`.
 //   That should give you a tight edit/run/debug cycle.
-// - Go to DatabaseSuite and uncomment the "println" right above
-//   "assertDenotationSignaturesAreParseable", that will print out the obtained
-//   output into the console. You can copy-paste that output to put into the
-//   expected part of the  multiline strings.
+// - On test failure, the obtained output is printed to the console for
+//   easy copy-paste to replace the current expected output.
 // - Try to follow the alphabetical order of the enclosing object, at the time
 //   of this writing the latest object is `object ad`, so the next object should
 //   be `object ae`.

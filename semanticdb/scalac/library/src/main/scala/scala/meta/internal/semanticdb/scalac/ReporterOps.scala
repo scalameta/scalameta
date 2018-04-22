@@ -9,7 +9,7 @@ trait ReporterOps { self: DatabaseOps =>
   // duplicate messages. The key is System.identityHashCode to keep memory usage low.
   private val returnedMessagesByPath = mutable.Map.empty[g.CompilationUnit, Int]
   implicit class XtensionCompilationUnitReporter(unit: g.CompilationUnit) {
-    def hijackedMessages: List[(gPosition, Int, String)] = {
+    def hijackedDiagnostics: List[(gPosition, Int, String)] = {
       g.reporter match {
         case r: StoreReporter =>
           object RelevantMessage {
