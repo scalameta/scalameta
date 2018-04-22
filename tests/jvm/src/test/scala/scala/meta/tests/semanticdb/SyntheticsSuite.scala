@@ -1,8 +1,6 @@
 package scala.meta.tests.semanticdb
 
-import scala.meta.internal.semanticdb.scalac.SemanticdbMode
-
-class SyntheticsSuite extends DatabaseSuite(SemanticdbMode.Slim) {
+class SyntheticsSuite extends DatabaseSuite() {
 
   synthetics(
     """

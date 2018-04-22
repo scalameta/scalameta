@@ -17,7 +17,7 @@ import org.langmeta.internal.inputs._
 import scala.meta.testkit.DiffAssertions
 
 abstract class DatabaseSuite(
-    mode: SemanticdbMode,
+    mode: SemanticdbMode = SemanticdbMode.Fat,
     denotations: DenotationMode = DenotationMode.All,
     signatures: SignatureMode = SignatureMode.New,
     members: MemberMode = MemberMode.None,

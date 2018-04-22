@@ -117,10 +117,8 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
           if (config.messages.saveMessages) {
             val messages = unit.reportedMessages(Map.empty)
             if (messages.nonEmpty) {
-              val uri =
-                m.AbsolutePath(unit.source.file.file).toRelative(config.sourceroot)
               val sdoc = s.TextDocument(
-                uri = uri.syntax,
+                uri = unit.source.toUri,
                 language = s.Language.SCALA,
                 diagnostics = messages
               )

@@ -555,8 +555,8 @@ trait DocumentOps { self: DatabaseOps =>
 
       s.TextDocument(
         schema = s.Schema.SEMANTICDB3,
-        uri = input.syntax,
-        text = input.text,
+        uri = unit.source.toUri,
+        text = unit.source.toText,
         language = s.Language.SCALA,
         symbols = denotations.values.toSeq,
         occurrences = flattenedNames,

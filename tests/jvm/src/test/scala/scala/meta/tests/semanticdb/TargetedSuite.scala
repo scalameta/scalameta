@@ -19,7 +19,7 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 //   of this writing the latest object is `object ad`, so the next object should
 //   be `object ae`.
 // - glhf, and if you have any questions don't hesitate to ask in the gitter channel :)
-class TargetedSuite extends DatabaseSuite(SemanticdbMode.Slim) {
+class TargetedSuite extends DatabaseSuite() {
   names(
     """
     |object A {
