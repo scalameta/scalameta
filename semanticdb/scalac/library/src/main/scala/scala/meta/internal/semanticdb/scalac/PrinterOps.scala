@@ -23,12 +23,12 @@ trait PrinterOps { self: SemanticDBOps =>
     val out = new StringWriter()
     val printer = SyntheticCodePrinter(out)
     printer.print(what)
-    val names = printer.names.map {
+    val occurrences = printer.occurrences.map {
       case ((start, end), symbol) => SyntheticRange(start, end, symbol)
     }.toList
-    printer.names.clear()
+    printer.occurrences.clear()
     val syntax = out.toString
-    AttributedSynthetic(syntax, names)
+    AttributedSynthetic(syntax, occurrences)
   }
 
   private object SyntheticCodePrinter {
@@ -46,7 +46,7 @@ trait PrinterOps { self: SemanticDBOps =>
       def apply(sym: g.Symbol): ResolvedName =
         ResolvedName(printedName(sym.name), sym.toSemantic)
     }
-    val names = mutable.HashMap.empty[(Int, Int), m.Symbol]
+    val occurrences = mutable.HashMap.empty[(Int, Int), m.Symbol]
     def printWithTrailingSpace(string: String): Unit =
       if (string.isEmpty) ()
       else {
@@ -59,7 +59,7 @@ trait PrinterOps { self: SemanticDBOps =>
         super.print(syntax)
         val end = out.length
         if (symbol != m.Symbol.None) {
-          names(start -> end) = symbol
+          occurrences(start -> end) = symbol
         }
       case els => super.print(els)
     }

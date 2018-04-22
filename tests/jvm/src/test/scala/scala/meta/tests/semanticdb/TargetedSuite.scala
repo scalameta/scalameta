@@ -19,7 +19,7 @@ import Compat._
 //   be `object ae`.
 // - glhf, and if you have any questions don't hesitate to ask in the gitter channel :)
 class TargetedSuite extends SemanticDBSuite() {
-  names(
+  occurrences(
     """
     |object A {
     |  def main(args: Array[String]): Unit = {
@@ -53,7 +53,7 @@ class TargetedSuite extends SemanticDBSuite() {
     }
   )
 
-  names(
+  occurrences(
     """
     |import _root_.scala.List
     |
@@ -472,7 +472,7 @@ class TargetedSuite extends SemanticDBSuite() {
       )
   )
 
-  names(
+  occurrences(
     s"""
        |package k
        |object tup {
@@ -493,7 +493,7 @@ class TargetedSuite extends SemanticDBSuite() {
     """.stripMargin.trim
   )
 
-  messages(
+  diagnostics(
     """
       |package l
       |import scala.collection.mutable. /* comment */{ Map, Set, ListBuffer }
@@ -512,7 +512,7 @@ class TargetedSuite extends SemanticDBSuite() {
     """.stripMargin.trim
   )
 
-  names(
+  occurrences(
     s"""
        |package m
        |class C(x: Int) {
@@ -541,7 +541,7 @@ class TargetedSuite extends SemanticDBSuite() {
     """.stripMargin.trim
   )
 
-  names(
+  occurrences(
     // See https://github.com/scalameta/scalameta/issues/977
     """|object n {
        |  val Name = "name:(.*)".r
@@ -585,7 +585,7 @@ class TargetedSuite extends SemanticDBSuite() {
     """.stripMargin.trim
   )
 
-  names(
+  occurrences(
     """|object p {
        |  val lst = 1 #:: 2 #:: Stream.empty
        |  lst + "foo"
@@ -602,7 +602,7 @@ class TargetedSuite extends SemanticDBSuite() {
        |""".stripMargin.replaceAllLiterally(ConsWrapperInString, ConsWrapperActual)
   )
 
-  messages(
+  diagnostics(
     // See https://github.com/scalameta/scalameta/issues/899
     """import scala.io._
       |object t""".stripMargin,
@@ -631,7 +631,7 @@ class TargetedSuite extends SemanticDBSuite() {
     }
   )
 
-  names(
+  occurrences(
     """|
        |import scala.meta._
        |import org.scalatest._
@@ -918,7 +918,7 @@ class TargetedSuite extends SemanticDBSuite() {
     }
   )
 
-  names(
+  occurrences(
     """
       |object ag {
       | for (x <- 1 to 10; y <- 0 until 10) println(x -> x)
