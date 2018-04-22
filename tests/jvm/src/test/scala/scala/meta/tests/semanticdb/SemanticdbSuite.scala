@@ -16,7 +16,7 @@ import scala.meta.internal.{semanticdb3 => s}
 import org.langmeta.internal.inputs._
 import scala.meta.testkit.DiffAssertions
 
-abstract class SemanticDBSuite(
+abstract class SemanticdbSuite(
     mode: SemanticdbMode = SemanticdbMode.Fat,
     symbols: SymbolMode = SymbolMode.All,
     types: TypeMode = TypeMode.All
@@ -46,7 +46,7 @@ abstract class SemanticDBSuite(
     g.globalPhase = run.parserPhase
     g
   }
-  private lazy val databaseOps: SemanticDBOps { val global: self.g.type } = new SemanticDBOps {
+  private lazy val databaseOps: SemanticdbOps { val global: self.g.type } = new SemanticdbOps {
     val global: self.g.type = self.g
   }
   import databaseOps._

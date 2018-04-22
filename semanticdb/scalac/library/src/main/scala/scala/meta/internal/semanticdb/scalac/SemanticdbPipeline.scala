@@ -12,7 +12,7 @@ import org.langmeta.internal.semanticdb._
 import org.langmeta.semanticdb.internal.vfs.RemoveOrphanSemanticdbFiles
 import scala.meta.internal.{semanticdb3 => s}
 
-trait SemanticdbPipeline extends SemanticDBOps { self: SemanticdbPlugin =>
+trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
   implicit class XtensionUnit(unit: g.CompilationUnit) {
     def isIgnored: Boolean = {

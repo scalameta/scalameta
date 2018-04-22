@@ -18,7 +18,7 @@ import Compat._
 //   of this writing the latest object is `object ad`, so the next object should
 //   be `object ae`.
 // - glhf, and if you have any questions don't hesitate to ask in the gitter channel :)
-class TargetedSuite extends SemanticDBSuite() {
+class TargetedSuite extends SemanticdbSuite() {
   occurrences(
     """
     |object A {

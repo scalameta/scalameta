@@ -7,7 +7,7 @@ import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 
-trait SymbolInformationOps { self: SemanticDBOps =>
+trait SymbolInformationOps { self: SemanticdbOps =>
   import g._
 
   implicit class XtensionGSymbolMSymbolInformation(gsym0: g.Symbol) {

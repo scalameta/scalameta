@@ -11,7 +11,7 @@ import scala.{meta => m}
 import org.langmeta.internal.inputs._
 import scala.meta.internal.{semanticdb3 => s}
 
-trait TextDocumentOps { self: SemanticDBOps =>
+trait TextDocumentOps { self: SemanticdbOps =>
   def validateCompilerState(): Unit = {
     if (!g.settings.Yrangepos.value) {
       sys.error("the compiler instance must have -Yrangepos enabled")

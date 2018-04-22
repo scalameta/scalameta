@@ -80,9 +80,9 @@ object InteractiveSemanticdb {
       case Some(Right(ex)) => throw ex
       case None => throw new IllegalArgumentException("Presentation compiler timed out")
     }
-    lazy val semanticdbOps: SemanticDBOps {
+    lazy val semanticdbOps: SemanticdbOps {
       val global: compiler.type
-    } = new SemanticDBOps {
+    } = new SemanticdbOps {
       val global: compiler.type = compiler
     }
     semanticdbOps.config = SemanticdbConfig.parse(options, _ => (), compiler.reporter)

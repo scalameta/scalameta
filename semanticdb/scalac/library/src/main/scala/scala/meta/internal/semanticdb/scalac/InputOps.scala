@@ -9,7 +9,7 @@ import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSource
 import scala.reflect.io.VirtualFile
 import scala.reflect.io.{PlainFile => GPlainFile}
 
-trait InputOps { self: SemanticDBOps =>
+trait InputOps { self: SemanticdbOps =>
 
   private lazy val gSourceFileInputCache = mutable.Map[GSourceFile, m.Input]()
   implicit class XtensionGSourceFileInput(gsource: GSourceFile) {

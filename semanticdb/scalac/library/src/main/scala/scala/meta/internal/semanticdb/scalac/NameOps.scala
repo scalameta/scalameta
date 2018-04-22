@@ -3,7 +3,7 @@ package scala.meta.internal.semanticdb.scalac
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala.{Names => n}
 
-trait NameOps { self: SemanticDBOps =>
+trait NameOps { self: SemanticdbOps =>
 
   implicit class XtensionName(gname: g.Name) {
     def toSemantic: String = {
