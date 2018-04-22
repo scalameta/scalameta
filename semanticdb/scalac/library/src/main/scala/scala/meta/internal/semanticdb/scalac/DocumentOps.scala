@@ -47,7 +47,7 @@ trait DocumentOps { self: DatabaseOps =>
     def toDocument: s.TextDocument = {
       val binders = mutable.Set[m.Position]()
       val names = mutable.Map[m.Position, m.Symbol]()
-      val denotations = mutable.Map[m.Symbol, s.SymbolInformation]()
+      val infos = mutable.Map[m.Symbol, s.SymbolInformation]()
       val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
       val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
       val todo = mutable.Set[m.Name]() // names to map to global trees
@@ -203,11 +203,11 @@ trait DocumentOps { self: DatabaseOps =>
               def saveDenotation(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
                   val DenotationResult(denot, todoTpe1) = gs.toDenotation()
-                  denotations(ms) = denot
+                  infos(ms) = denot
                   todoTpe1.foreach { tgs =>
                     if (tgs.isSemanticdbLocal) {
                       val tms = tgs.toSemantic
-                      if (tms != m.Symbol.None && !denotations.contains(tms)) {
+                      if (tms != m.Symbol.None && !infos.contains(tms)) {
                         add(tms, tgs)
                       }
                     }
@@ -239,8 +239,8 @@ trait DocumentOps { self: DatabaseOps =>
                   }
                 }
               }
-              if (mtree.isDefinition && config.denotations.saveDefinitions) saveDenotation()
-              if (mtree.isReference && config.denotations.saveReferences) saveDenotation()
+              if (mtree.isDefinition && config.symbols.saveDefinitions) saveDenotation()
+              if (mtree.isReference && config.symbols.saveReferences) saveDenotation()
 
               def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
                 if (map.contains(mtree)) {
@@ -319,7 +319,7 @@ trait DocumentOps { self: DatabaseOps =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
                 if (!gtree.symbol.isSemanticdbLocal) {
-                  denotations(gtree.symbol.toSemantic) = gtree.symbol.toDenotation().denot
+                  infos(gtree.symbol.toSemantic) = gtree.symbol.toDenotation().denot
                 }
               case gtree: g.PackageDef =>
               // NOTE: capture PackageDef.pid instead
@@ -516,7 +516,6 @@ trait DocumentOps { self: DatabaseOps =>
           }
       }.toList
       val messages = unit.reportedMessages(mstarts)
-      val symbols = denotations.values
 
       val synthetics = inferred.toIterator.map {
         case (pos, inferred) => inferred.toSynthetic(input, pos)
@@ -527,7 +526,7 @@ trait DocumentOps { self: DatabaseOps =>
         uri = unit.source.toUri,
         text = unit.source.toText,
         language = s.Language.SCALA,
-        symbols = denotations.values.toSeq,
+        symbols = infos.values.toSeq,
         occurrences = flattenedNames,
         diagnostics = messages,
         synthetics = synthetics

@@ -15,7 +15,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       expected: String
   ): Unit = {
     test(logger.revealWhitespace(original)) {
-      val options = List("-P:semanticdb:denotations:all")
+      val options = List("-P:semanticdb:symbols:all")
       val document = toTextDocument(compiler, original, options)
       val syntax = Main.print(document)
       println(syntax)

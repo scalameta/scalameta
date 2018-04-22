@@ -58,7 +58,7 @@ object InteractiveSemanticdb {
     * @param timeout max number of milliseconds to allow the presentation compiler
     *                to typecheck this file.
     * @param options configuration options to influence how the document is built.
-    *                Must start with -P:semanticdb: prefix, for example "-P:semanticdb:denotations:all".
+    *                Must start with -P:semanticdb: prefix, for example "-P:semanticdb:symbols:all".
     *  @throws Exception note that this method can fail in many different ways
     *                    with exceptions, including but not limited to tokenize/parse/type
     *                    errors.
@@ -85,7 +85,7 @@ object InteractiveSemanticdb {
     } = new DatabaseOps {
       val global: compiler.type = compiler
     }
-    databaseOps.config = SemanticdbConfig.parse(options, _ => ())
+    databaseOps.config = SemanticdbConfig.parse(options, _ => (), compiler.reporter)
     import databaseOps._
     unit.body = tree
     val document = unit.asInstanceOf[databaseOps.global.CompilationUnit].toDocument

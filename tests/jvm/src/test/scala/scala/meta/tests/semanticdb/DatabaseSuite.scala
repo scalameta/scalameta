@@ -18,7 +18,7 @@ import scala.meta.testkit.DiffAssertions
 
 abstract class DatabaseSuite(
     mode: SemanticdbMode = SemanticdbMode.Fat,
-    denotations: DenotationMode = DenotationMode.All,
+    symbols: SymbolMode = SymbolMode.All,
     types: TypeMode = TypeMode.All
 ) extends FunSuite
     with DiffAssertions { self =>
@@ -53,7 +53,7 @@ abstract class DatabaseSuite(
   config = config.copy(
     mode = mode,
     failures = FailureMode.Error,
-    denotations = denotations,
+    symbols = symbols,
     types = types
   )
 

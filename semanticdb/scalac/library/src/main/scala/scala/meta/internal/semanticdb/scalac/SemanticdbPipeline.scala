@@ -114,7 +114,7 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       override def apply(unit: g.CompilationUnit): Unit = {
         if (unit.isIgnored) return
         try {
-          if (config.messages.saveMessages) {
+          if (config.diagnostics.saveMessages) {
             val messages = unit.reportedMessages(Map.empty)
             if (messages.nonEmpty) {
               val sdoc = s.TextDocument(
