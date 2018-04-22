@@ -6,7 +6,7 @@ import org.langmeta.internal.inputs._
 
 case class SyntheticRange(start: Int, end: Int, symbol: Symbol) {
   def addOffset(offset: Int) = SyntheticRange(start + offset, end + offset, symbol)
-  def toMeta(input: Input): s.SymbolOccurrence =
+  def toSymbolOccurrence(input: Input): s.SymbolOccurrence =
     s.SymbolOccurrence(
       Some(
         Position.Range(input, start, end).toRange
@@ -71,7 +71,7 @@ case class Inferred(
       all.foldLeft(start)(_ + _)
     }
     val syntheticInput = Input.Synthetic(synthetic.text, input, pos.start, pos.end)
-    val occurrences = synthetic.occurrences.map(_.toMeta(syntheticInput))
+    val occurrences = synthetic.occurrences.map(_.toSymbolOccurrence(syntheticInput))
     s.Synthetic(
       range = Some(pos.toRange),
       text = Some(
