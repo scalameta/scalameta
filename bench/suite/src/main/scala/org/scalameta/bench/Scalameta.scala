@@ -50,26 +50,6 @@ trait Scalameta {
 @Warmup(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class QuickScalametaFullOverrides extends Scalameta {
-  @Benchmark
-  def run(bs: BenchmarkState): Unit = {
-    runImpl(bs)
-  }
-  override def mkSettings(bs: BenchmarkState): Settings = {
-    val settings = super.mkSettings(bs)
-    settings.pluginOptions.value ::= "semanticdb:overrides:all"
-    settings.pluginOptions.value ::= "semanticdb:synthetics:all"
-    settings.pluginOptions.value ::= "semanticdb:denotations:all"
-    settings.pluginOptions.value ::= "semanticdb:mode:fat"
-    settings
-  }
-}
-
-@BenchmarkMode(Array(SampleTime))
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Warmup(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
 class QuickScalametaFullSynthetics extends Scalameta {
   @Benchmark
   def run(bs: BenchmarkState): Unit = {
@@ -77,7 +57,6 @@ class QuickScalametaFullSynthetics extends Scalameta {
   }
   override def mkSettings(bs: BenchmarkState): Settings = {
     val settings = super.mkSettings(bs)
-    settings.pluginOptions.value ::= "semanticdb:overrides:none"
     settings.pluginOptions.value ::= "semanticdb:synthetics:all"
     settings.pluginOptions.value ::= "semanticdb:denotations:all"
     settings.pluginOptions.value ::= "semanticdb:mode:fat"
@@ -97,7 +76,6 @@ class QuickScalametaFullDenotations extends Scalameta {
   }
   override def mkSettings(bs: BenchmarkState): Settings = {
     val settings = super.mkSettings(bs)
-    settings.pluginOptions.value ::= "semanticdb:overrides:none"
     settings.pluginOptions.value ::= "semanticdb:synthetics:none"
     settings.pluginOptions.value ::= "semanticdb:denotations:all"
     settings.pluginOptions.value ::= "semanticdb:mode:fat"
@@ -117,7 +95,6 @@ class QuickScalametaFullContents extends Scalameta {
   }
   override def mkSettings(bs: BenchmarkState): Settings = {
     val settings = super.mkSettings(bs)
-    settings.pluginOptions.value ::= "semanticdb:overrides:none"
     settings.pluginOptions.value ::= "semanticdb:synthetics:none"
     settings.pluginOptions.value ::= "semanticdb:denotations:definitions"
     settings.pluginOptions.value ::= "semanticdb:mode:fat"
@@ -137,7 +114,6 @@ class QuickScalametaBaseline extends Scalameta {
   }
   override def mkSettings(bs: BenchmarkState): Settings = {
     val settings = super.mkSettings(bs)
-    settings.pluginOptions.value ::= "semanticdb:overrides:none"
     settings.pluginOptions.value ::= "semanticdb:synthetics:none"
     settings.pluginOptions.value ::= "semanticdb:denotations:definitions"
     settings.pluginOptions.value ::= "semanticdb:mode:slim"

@@ -136,10 +136,6 @@ trait DenotationOps { self: DatabaseOps =>
       }
     }
 
-    private def overrides: List[m.Symbol] =
-      if (config.overrides.isAll) gsym.overrides.map(_.toSemantic)
-      else Nil
-
     private def anns: (List[s.Annotation], List[g.Symbol]) = {
       val buf = List.newBuilder[g.Symbol]
       val ganns = gsym.annotations.filter { gann =>
@@ -180,20 +176,12 @@ trait DenotationOps { self: DatabaseOps =>
       else m.Symbol.None
     }
 
-    def toDenotation(saveOverrides: Boolean): DenotationResult = {
-      val over = {
-        if (saveOverrides) overrides
-        else Nil
-      }
-      val todoOverrides = {
-        if (saveOverrides && config.denotations.saveReferences) gsym.overrides
-        else Nil
-      }
+    def toDenotation(): DenotationResult = {
       val (anns, todoAnns) = this.anns
       config.signatures match {
         case SignatureMode.None =>
           val denot = s.SymbolInformation()
-          DenotationResult(denot, todoOverrides, todoAnns)
+          DenotationResult(denot, todoAnns)
         case SignatureMode.New =>
           val (tpe, todoTpe) = newInfo
           val denot = s.SymbolInformation(
@@ -207,7 +195,7 @@ trait DenotationOps { self: DatabaseOps =>
             annotations = anns,
             owner = owner.syntax
           )
-          DenotationResult(denot, todoOverrides, todoAnns ++ todoTpe)
+          DenotationResult(denot, todoAnns ++ todoTpe)
         case _ =>
           throw new UnsupportedOperationException(config.signatures.toString)
       }
@@ -217,6 +205,5 @@ trait DenotationOps { self: DatabaseOps =>
   // NOTE: Holds a denotation along with todo lists of symbols to persist.
   case class DenotationResult(
       denot: s.SymbolInformation,
-      todoOverrides: List[g.Symbol],
       todoTpe: List[g.Symbol])
 }

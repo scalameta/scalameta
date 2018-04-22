@@ -11,7 +11,6 @@ case class SemanticdbConfig(
     failures: FailureMode,
     denotations: DenotationMode,
     signatures: SignatureMode,
-    overrides: OverrideMode,
     profiling: ProfilingMode,
     fileFilter: FileFilter,
     messages: MessageMode,
@@ -26,7 +25,6 @@ case class SemanticdbConfig(
       "failures" -> failures.name,
       "signatures" -> signatures.name,
       "denotations" -> denotations.name,
-      "overrides" -> overrides.name,
       "profiling" -> profiling.name,
       "include" -> fileFilter.include,
       "exclude" -> fileFilter.exclude,
@@ -45,7 +43,6 @@ object SemanticdbConfig {
     FailureMode.Warning,
     DenotationMode.Definitions,
     SignatureMode.New,
-    OverrideMode.None,
     ProfilingMode.Off,
     FileFilter.matchEverything,
     MessageMode.All,
@@ -89,7 +86,7 @@ object SemanticdbConfig {
         }
       case option @ SetMembers(_) =>
         errFn(s"$option is no longer supported.")
-      case option @ SetOverrides(OverrideMode(_)) =>
+      case option @ SetOverrides(_) =>
         errFn(s"$option is no longer supported")
       case SetProfiling(ProfilingMode(profiling)) =>
         config = config.copy(profiling = profiling)
@@ -170,19 +167,6 @@ object SignatureMode {
   case object All extends SignatureMode
 }
 
-
-sealed abstract class OverrideMode {
-  import OverrideMode._
-  def name: String = toString.toLowerCase
-  def isAll: Boolean = this == All
-}
-object OverrideMode {
-  def unapply(arg: String): Option[OverrideMode] =
-    all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, None)
-  case object All extends OverrideMode
-  case object None extends OverrideMode
-}
 
 sealed abstract class ProfilingMode {
   def name: String = toString.toLowerCase

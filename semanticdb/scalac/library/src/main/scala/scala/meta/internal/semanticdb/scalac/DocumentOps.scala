@@ -202,17 +202,9 @@ trait DocumentOps { self: DatabaseOps =>
 
               def saveDenotation(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  val saveOverrides = config.overrides.isAll && mtree.isDefinition
-                  val DenotationResult(denot, todoOverrides, todoTpe1) =
-                    gs.toDenotation(saveOverrides)
+                  val DenotationResult(denot, todoTpe1) = gs.toDenotation()
                   denotations(ms) = denot
-                  val todoTpe2 = todoOverrides.flatMap { ogs =>
-                    val DenotationResult(odenot, _, otodoTpe) =
-                      ogs.toDenotation(saveOverrides = true)
-                    denotations(ogs.toSemantic) = odenot
-                    otodoTpe
-                  }
-                  (todoTpe1 ++ todoTpe2).foreach { tgs =>
+                  todoTpe1.foreach { tgs =>
                     if (tgs.isSemanticdbLocal) {
                       val tms = tgs.toSemantic
                       if (tms != m.Symbol.None && !denotations.contains(tms)) {
@@ -327,7 +319,7 @@ trait DocumentOps { self: DatabaseOps =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
                 if (!gtree.symbol.isSemanticdbLocal) {
-                  denotations(gtree.symbol.toSemantic) = gtree.symbol.toDenotation(false).denot
+                  denotations(gtree.symbol.toSemantic) = gtree.symbol.toDenotation().denot
                 }
               case gtree: g.PackageDef =>
               // NOTE: capture PackageDef.pid instead

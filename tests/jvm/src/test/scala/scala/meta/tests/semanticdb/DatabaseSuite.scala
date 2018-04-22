@@ -19,9 +19,8 @@ import scala.meta.testkit.DiffAssertions
 abstract class DatabaseSuite(
     mode: SemanticdbMode = SemanticdbMode.Fat,
     denotations: DenotationMode = DenotationMode.All,
-    signatures: SignatureMode = SignatureMode.New,
-    overrides: OverrideMode = OverrideMode.None)
-    extends FunSuite
+    signatures: SignatureMode = SignatureMode.New
+) extends FunSuite
     with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
@@ -55,8 +54,8 @@ abstract class DatabaseSuite(
     mode = mode,
     failures = FailureMode.Error,
     denotations = denotations,
-    signatures = signatures,
-    overrides = overrides)
+    signatures = signatures
+  )
 
   private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
     val javaFile = File.createTempFile("paradise", ".scala")

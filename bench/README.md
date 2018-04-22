@@ -25,14 +25,12 @@ ScalametaBaseline corresponds to the following compiler plugin options:
 -P:semanticdb:mode:slim
 -P:semanticdb:denotations:definitions
 -P:semanticdb:synthetics:none
--P:semanticdb:overrides:none
 ```
 
 Other Scalameta configurations progressively enable more and more features:
   * ScalametaFullContents enables `-P:semanticdb:mode:fat`
   * ScalametaFullDenotations further enables `-P:semanticdb:denotations:all`
   * ScalametaFullSynthetics further enables `-P:semanticdb:synthetics:all`
-  * ScalametaFullOverrides further enables `-P:semanticdb:overrides:all`
 
 ## Results
 
@@ -46,5 +44,4 @@ QuickScalametaBaseline         sample  50  1035.070 ± 23.457 ms/op   (40% overh
 QuickScalametaFullContents     sample  50  1064.116 ± 24.879 ms/op   (44% overhead)
 QuickScalametaFullDenotations  sample  45  1208.193 ± 36.802 ms/op   (63% overhead)
 QuickScalametaFullSynthetics   sample  48  1146.530 ± 34.069 ms/op   (55% overhead)
-QuickScalametaFullOverrides    sample  44  1248.187 ± 43.677 ms/op   (69% overhead)
 ```
