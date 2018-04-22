@@ -18,7 +18,6 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       val options = List("-P:semanticdb:symbols:all")
       val document = toTextDocument(compiler, original, options)
       val syntax = Main.print(document)
-      println(syntax)
       assertNoDiff(syntax, expected)
     }
   }

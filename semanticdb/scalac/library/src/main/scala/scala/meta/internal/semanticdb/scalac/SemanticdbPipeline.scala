@@ -9,8 +9,8 @@ import scala.util.control.NonFatal
 import scala.{meta => m}
 import scala.meta.io._
 import org.langmeta.internal.semanticdb._
+import org.langmeta.semanticdb.internal.vfs.RemoveOrphanSemanticdbFiles
 import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb.{vfs => v}
 
 trait SemanticdbPipeline extends SemanticDBOps { self: SemanticdbPlugin =>
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
@@ -57,32 +57,13 @@ trait SemanticdbPipeline extends SemanticDBOps { self: SemanticdbPlugin =>
         try {
           if (unit.isIgnored) return
           validateCompilerState()
-          val mdoc = unit.toTextDocument
-          val mdb = s.TextDocuments(List(mdoc))
-          mdb.toVfs(config.targetroot).save(append = false)
+          val sdoc = unit.toTextDocument
+          sdoc.save(config.targetroot)
         } catch handleError(unit)
       }
 
       private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
-        val vdb = v.Database.load(Classpath(config.targetroot))
-        val orphanedVentries = vdb.entries.filter(ventry => {
-          val scalaName = v.SemanticdbPaths.toScala(ventry.fragment.name)
-          !config.sourceroot.resolve(scalaName).isFile
-        })
-        orphanedVentries.map(ve => {
-          def cleanupUpwards(file: File): Unit = {
-            if (file != null) {
-              if (file.isFile) {
-                file.delete()
-              } else {
-                if (file.getAbsolutePath == ve.base.toString) return
-                if (file.listFiles.isEmpty) file.delete()
-              }
-              cleanupUpwards(file.getParentFile)
-            }
-          }
-          cleanupUpwards(ve.uri.toFile)
-        })
+        RemoveOrphanSemanticdbFiles.process(config.sourceroot, config.targetroot)
       }
 
       private def synchronizeSourcesAndSemanticdbIndex(): Unit = {
@@ -122,8 +103,7 @@ trait SemanticdbPipeline extends SemanticDBOps { self: SemanticdbPlugin =>
                 language = s.Language.SCALA,
                 diagnostics = messages
               )
-              val sdocs = s.TextDocuments(sdoc :: Nil)
-              sdocs.toVfs(config.targetroot).save(append = true)
+              sdoc.append(config.targetroot)
             }
           }
         } catch handleError(unit)

@@ -3,10 +3,7 @@ package scala.meta.tests.cli
 import java.io._
 import java.nio.charset.StandardCharsets._
 import java.nio.file._
-import scala.util.Properties.versionNumberString
-import org.scalatest.FunSuite
 import scala.meta.cli._
-import scala.meta.testkit.DiffAssertions
 
 class CliSuite extends BaseCliSuite {
   val sourceroot = Files.createTempDirectory("sourceroot_")
