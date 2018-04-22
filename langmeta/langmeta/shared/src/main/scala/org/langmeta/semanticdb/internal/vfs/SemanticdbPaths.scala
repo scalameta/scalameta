@@ -42,6 +42,12 @@ object SemanticdbPaths {
     semanticdbPrefix.resolve(semanticdbSibling)
   }
 
+  def toSemanticdb(path: RelativePath, targetroot: AbsolutePath): AbsolutePath = {
+    require(isScala(path))
+    val semanticdbPath = path.resolveSibling(_ + "." + semanticdbExtension)
+    targetroot.resolve(semanticdbPrefix).resolve(semanticdbPath)
+  }
+
   def toSemanticdb(doc: s.TextDocument, targetroot: AbsolutePath): AbsolutePath = {
     targetroot.resolve(semanticdbPrefix).resolve(doc.uri + "." + semanticdbExtension)
   }
