@@ -409,7 +409,7 @@ lazy val semanticdbIntegration = project
         s"-P:semanticdb:failures:error", // fail fast during development.
         s"-P:semanticdb:exclude:Exclude.scala",
         s"-P:semanticdb:denotations:all",
-        s"-P:semanticdb:signatures:new",
+        s"-P:semanticdb:types:all",
         s"-Xplugin-require:semanticdb"
       )
     },

@@ -19,7 +19,7 @@ import scala.meta.testkit.DiffAssertions
 abstract class DatabaseSuite(
     mode: SemanticdbMode = SemanticdbMode.Fat,
     denotations: DenotationMode = DenotationMode.All,
-    signatures: SignatureMode = SignatureMode.New
+    types: TypeMode = TypeMode.All
 ) extends FunSuite
     with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
@@ -54,7 +54,7 @@ abstract class DatabaseSuite(
     mode = mode,
     failures = FailureMode.Error,
     denotations = denotations,
-    signatures = signatures
+    types = types
   )
 
   private def computeDatabaseFromSnippet(code: String): s.TextDocument = {

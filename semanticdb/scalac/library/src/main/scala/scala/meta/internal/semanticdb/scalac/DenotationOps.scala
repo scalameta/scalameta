@@ -178,11 +178,11 @@ trait DenotationOps { self: DatabaseOps =>
 
     def toDenotation(): DenotationResult = {
       val (anns, todoAnns) = this.anns
-      config.signatures match {
-        case SignatureMode.None =>
+      config.types match {
+        case TypeMode.None =>
           val denot = s.SymbolInformation()
           DenotationResult(denot, todoAnns)
-        case SignatureMode.New =>
+        case TypeMode.All =>
           val (tpe, todoTpe) = newInfo
           val denot = s.SymbolInformation(
             symbol = gsym.toSemantic.syntax,
@@ -196,8 +196,6 @@ trait DenotationOps { self: DatabaseOps =>
             owner = owner.syntax
           )
           DenotationResult(denot, todoAnns ++ todoTpe)
-        case _ =>
-          throw new UnsupportedOperationException(config.signatures.toString)
       }
     }
   }

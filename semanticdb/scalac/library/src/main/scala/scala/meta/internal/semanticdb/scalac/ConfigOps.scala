@@ -10,7 +10,7 @@ case class SemanticdbConfig(
     mode: SemanticdbMode,
     failures: FailureMode,
     denotations: DenotationMode,
-    signatures: SignatureMode,
+    types: TypeMode,
     profiling: ProfilingMode,
     fileFilter: FileFilter,
     messages: MessageMode,
@@ -23,7 +23,7 @@ case class SemanticdbConfig(
       "targetroot" -> targetroot,
       "mode" -> mode.name,
       "failures" -> failures.name,
-      "signatures" -> signatures.name,
+      "types" -> types.name,
       "denotations" -> denotations.name,
       "profiling" -> profiling.name,
       "include" -> fileFilter.include,
@@ -42,7 +42,7 @@ object SemanticdbConfig {
     SemanticdbMode.Fat,
     FailureMode.Warning,
     DenotationMode.Definitions,
-    SignatureMode.New,
+    TypeMode.All,
     ProfilingMode.Off,
     FileFilter.matchEverything,
     MessageMode.All,
@@ -55,6 +55,7 @@ object SemanticdbConfig {
   private val SetFailures = "failures:(.*)".r
   private val SetDenotations = "denotations:(.*)".r
   private val SetSignatures = "signatures:(.*)".r
+  private val SetTypes = "types:(.*)".r
   private val SetMembers = "members:(.*)".r
   private val SetOverrides = "overrides:(.*)".r
   private val SetProfiling = "profiling:(.*)".r
@@ -77,13 +78,10 @@ object SemanticdbConfig {
         config = config.copy(failures = severity)
       case SetDenotations(DenotationMode(denotations)) =>
         config = config.copy(denotations = denotations)
-      case option @ SetSignatures(SignatureMode(signatures)) =>
-        signatures match {
-          case SignatureMode.All | SignatureMode.Old =>
-            errFn(s"$option is no longer supported. Use signatures:{new,none} instead.")
-          case _ =>
-            config = config.copy(signatures = signatures)
-        }
+      case option @ SetSignatures(_) =>
+        errFn(s"$option is no longer supported. Use -P:semanticdb:types:{all,none} instead.")
+      case SetTypes(TypeMode(types)) =>
+        config = config.copy(types = types)
       case option @ SetMembers(_) =>
         errFn(s"$option is no longer supported.")
       case option @ SetOverrides(_) =>
@@ -149,22 +147,17 @@ object DenotationMode {
   case object None extends DenotationMode
 }
 
-sealed abstract class SignatureMode {
+sealed abstract class TypeMode {
   def name: String = toString.toLowerCase
-  import SignatureMode._
+  import TypeMode._
   def isAll: Boolean = this == All
-  def isNew: Boolean = this == New
-  def isOld: Boolean = this == Old
   def isNone: Boolean = this == None
 }
-object SignatureMode {
-  def unapply(arg: String): Option[SignatureMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, New, Old, None)
-  case object New extends SignatureMode
-  case object None extends SignatureMode
-  // Deprecated
-  case object Old extends SignatureMode
-  case object All extends SignatureMode
+object TypeMode {
+  def unapply(arg: String): Option[TypeMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, None)
+  case object None extends TypeMode
+  case object All extends TypeMode
 }
 
 sealed abstract class ProfilingMode {
