@@ -4,79 +4,79 @@ package semanticdb
 import org.langmeta.internal.semanticdb.DeprecationMessage
 private[semanticdb] trait Flags {
   @deprecated(DeprecationMessage, "3.8.0")
-  final val VAL: Long = 1L << 0
+  final val VAL: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val VAR: Long = 1L << 1
+  final val VAR: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
   final val DEF: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val METHOD: Long = 1L << 2
+  final val METHOD: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val PRIMARYCTOR: Long = 1L << 3
+  final val PRIMARYCTOR: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val SECONDARYCTOR: Long = 1L << 4
+  final val SECONDARYCTOR: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val MACRO: Long = 1L << 5
+  final val MACRO: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val TYPE: Long = 1L << 6
+  final val TYPE: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val PARAM: Long = 1L << 7
+  final val PARAM: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val TYPEPARAM: Long = 1L << 8
+  final val TYPEPARAM: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val OBJECT: Long = 1L << 9
+  final val OBJECT: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val PACKAGE: Long = 1L << 10
+  final val PACKAGE: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val PACKAGEOBJECT: Long = 1L << 11
+  final val PACKAGEOBJECT: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val CLASS: Long = 1L << 12
+  final val CLASS: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val TRAIT: Long = 1L << 13
+  final val TRAIT: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val PRIVATE: Long = 1L << 14
+  final val PRIVATE: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val PROTECTED: Long = 1L << 15
+  final val PROTECTED: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val ABSTRACT: Long = 1L << 16
+  final val ABSTRACT: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val FINAL: Long = 1L << 17
+  final val FINAL: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val SEALED: Long = 1L << 18
+  final val SEALED: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val IMPLICIT: Long = 1L << 19
+  final val IMPLICIT: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val LAZY: Long = 1L << 20
+  final val LAZY: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val CASE: Long = 1L << 21
+  final val CASE: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val COVARIANT: Long = 1L << 22
+  final val COVARIANT: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val CONTRAVARIANT: Long = 1L << 23
+  final val CONTRAVARIANT: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val INLINE: Long = 1L << 24
+  final val INLINE: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val JAVADEFINED: Long = 1L << 25
+  final val JAVADEFINED: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val GETTER: Long = 1L << 26
+  final val GETTER: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val SETTER: Long = 1L << 27
+  final val SETTER: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val SELFPARAM: Long = 1L << 28
+  final val SELFPARAM: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val INTERFACE: Long = 1L << 29
+  final val INTERFACE: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val LOCAL: Long = 1L << 30
+  final val LOCAL: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val FIELD: Long = 1L << 31
+  final val FIELD: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val CTOR: Long = 1L << 32
+  final val CTOR: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val PRIMARY: Long = 1L << 33
+  final val PRIMARY: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val ENUM: Long = 1L << 34
+  final val ENUM: Long = 0
   @deprecated(DeprecationMessage, "3.8.0")
-  final val STATIC: Long = 1L << 35
+  final val STATIC: Long = 0
 }
 
 private[semanticdb] trait HasFlags {
@@ -89,7 +89,7 @@ private[semanticdb] trait HasFlags {
   @deprecated(DeprecationMessage, "3.8.0")
   def isVar: Boolean = throw new UnsupportedOperationException()
   @deprecated(DeprecationMessage, "3.8.0")
-  def isDef: Boolean = isMethod
+  def isDef: Boolean = throw new UnsupportedOperationException()
   @deprecated(DeprecationMessage, "3.8.0")
   def isMethod: Boolean = throw new UnsupportedOperationException()
   @deprecated(DeprecationMessage, "3.8.0")
