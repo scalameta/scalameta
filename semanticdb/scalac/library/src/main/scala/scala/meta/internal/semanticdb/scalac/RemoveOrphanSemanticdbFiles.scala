@@ -1,4 +1,4 @@
-package org.langmeta.semanticdb.internal.vfs
+package scala.meta.internal.semanticdb.scalac
 
 import java.io.IOException
 import java.nio.file.FileVisitResult

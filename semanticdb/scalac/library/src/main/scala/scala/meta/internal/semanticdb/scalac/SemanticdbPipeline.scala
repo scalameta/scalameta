@@ -9,7 +9,6 @@ import scala.util.control.NonFatal
 import scala.{meta => m}
 import scala.meta.io._
 import org.langmeta.internal.semanticdb._
-import org.langmeta.semanticdb.internal.vfs.RemoveOrphanSemanticdbFiles
 import scala.meta.internal.{semanticdb3 => s}
 
 trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
