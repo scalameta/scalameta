@@ -91,7 +91,11 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flip(p.COVARIANT)
         if (kind.isLocal || kind.isField) {
           if (gsym.isMutable) flip(p.VAR)
-          else flip(p.VAL)
+          else if (gsym.isVal) flip(p.VAL)
+          else {
+            // NOTE(olafur): this branch is for local symbols that are not val/var. To make things more intuitive,
+            // Kind.LOCAL should be a property, see https://github.com/scalameta/scalameta/issues/1503
+          }
         }
         if (gsym.isGetter || gsym.isSetter) {
           if (gsym.isStable) flip(p.VAL)
