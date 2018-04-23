@@ -196,7 +196,7 @@ semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v0
+Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Example.scala
 Text => empty
 Language => Scala
