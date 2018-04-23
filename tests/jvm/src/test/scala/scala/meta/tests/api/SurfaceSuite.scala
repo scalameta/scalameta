@@ -103,20 +103,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.quasiquotes.Lift
       |scala.meta.quasiquotes.Unlift
       |scala.meta.semanticdb
-      |scala.meta.semanticdb.Database
-      |scala.meta.semanticdb.Denotation
-      |scala.meta.semanticdb.Document
-      |scala.meta.semanticdb.Message
-      |scala.meta.semanticdb.ResolvedName
-      |scala.meta.semanticdb.ResolvedSymbol
-      |scala.meta.semanticdb.Severity
-      |scala.meta.semanticdb.Severity.Error
-      |scala.meta.semanticdb.Severity.Hint
-      |scala.meta.semanticdb.Severity.Info
-      |scala.meta.semanticdb.Severity.Warning
       |scala.meta.semanticdb.Signature
       |scala.meta.semanticdb.Symbol
-      |scala.meta.semanticdb.Synthetic
       |scala.meta.tokenizers
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException

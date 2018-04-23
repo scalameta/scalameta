@@ -8,7 +8,6 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.reporters.StoreReporter
-import scala.meta.semanticdb.Document
 import scala.meta.internal.{semanticdb3 => s}
 
 object InteractiveSemanticdb {
@@ -91,27 +90,6 @@ object InteractiveSemanticdb {
     val document = unit.asInstanceOf[semanticdbOps.global.CompilationUnit].toTextDocument
     document
   }
-
-  @deprecated("Use toTextDocument instead.", "3.8.0")
-  def toDocument(compiler: Global, code: String): Document =
-    throw new UnsupportedOperationException()
-
-  @deprecated("Use toTextDocument instead.", "3.8.0")
-  def toDocument(compiler: Global, code: String, options: List[String]): Document =
-    throw new UnsupportedOperationException()
-
-  @deprecated("Use toTextDocument instead.", "3.8.0")
-  def toDocument(compiler: Global, code: String, filename: String, timeout: Long): Document =
-    throw new UnsupportedOperationException()
-
-  @deprecated("Use toTextDocument instead.", "3.8.0")
-  def toDocument(
-      compiler: Global,
-      code: String,
-      filename: String,
-      timeout: Long,
-      options: List[String]): Document =
-    throw new UnsupportedOperationException()
 
   /**
     * Inserts "_CURSOR_" at given offset.

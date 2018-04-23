@@ -33,7 +33,6 @@ package object inputs {
       case Input.None => "<none>"
       case Input.File(path, _) => path.toString
       case Input.VirtualFile(path, _) => path
-      case Input.Denotation(_, symbol) => symbol.syntax
       case _ => "<input>"
     }
     def structure: String = input.toString

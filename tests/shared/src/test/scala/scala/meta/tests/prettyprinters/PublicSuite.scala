@@ -192,12 +192,6 @@ class PublicSuite extends FunSuite {
     assert(input.toString == """Input.String("foo")""")
   }
 
-  test("scala.meta.inputs.Input.Synthetic.toString") {
-    val input = Input.Synthetic("foo", Input.String("blah"), 0, 0)
-    input match { case _: Input.Synthetic => }
-    assert(input.toString == """Input.Synthetic("foo", Input.String("blah"), 0, 0)""")
-  }
-
   test("scala.meta.inputs.Input.VirtualFile.toString") {
     val input = Input.VirtualFile("foo.scala", "foo")
     input match { case _: Input.VirtualFile => }
@@ -337,45 +331,6 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
-  test("scala.meta.semanticdb.Document.toString") {
-    // deprecated
-  }
-
-  test("scala.meta.semanticdb.Denotation.toString") {
-    // deprecated
-  }
-
-  test("scala.meta.semanticdb.Database.toString") {
-    // deprecated
-  }
-
-  test("scala.meta.semanticdb.Message.toString") {
-    // deprecated
-  }
-
-  test("scala.meta.semanticdb.Mirror.toString") {
-    // deprecated
-  }
-
-  test("scala.meta.semanticdb.Severity.toString") {
-    // covered below
-  }
-
-  test("scala.meta.semanticdb.Severity.Error.toString") {
-    // deprecated
-  }
-
-  test("scala.meta.semanticdb.Severity.Hint.toString") {
-    // deprecated
-  }
-
-  test("scala.meta.semanticdb.Severity.Info.toString") {
-    // deprecated
-  }
-
-  test("scala.meta.semanticdb.Severity.Warning.toString") {
-    // deprecated
-  }
 
   test("scala.meta.semanticdb.Signature.toString") {
     // covered below
@@ -403,18 +358,6 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.semanticdb.Signature.TypeParameter.toString") {
     // covered below
-  }
-
-  test("scala.meta.semanticdb.ResolvedName.toString") {
-    // covered below
-  }
-
-  test("scala.meta.semanticdb.ResolvedSymbol.toString") {
-    // covered below
-  }
-
-  test("scala.meta.semanticdb.Synthetic.toString") {
-    // deprecated
   }
 
   test("scala.meta.semanticdb.Symbol.toString") {

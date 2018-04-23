@@ -70,7 +70,7 @@ case class Inferred(
         else AttributedSynthetic.empty
       all.foldLeft(start)(_ + _)
     }
-    val syntheticInput = Input.Synthetic(synthetic.text, input, pos.start, pos.end)
+    val syntheticInput = Input.String(synthetic.text)
     val occurrences = synthetic.occurrences.map(_.toSymbolOccurrence(syntheticInput))
     s.Synthetic(
       range = Some(pos.toRange),
