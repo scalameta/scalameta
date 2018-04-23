@@ -652,4 +652,3 @@ class Main(settings: Settings, reporter: Reporter) {
     opt("", s, "")(f)
   }
 }
-

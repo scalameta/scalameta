@@ -92,12 +92,13 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
         if (unit.isIgnored) return
         try {
           if (config.diagnostics.saveMessages) {
-            val messages = unit.reportedDiagnostics(Map.empty)
-            if (messages.nonEmpty) {
+            val diagnostics = unit.reportedDiagnostics(Map.empty)
+            if (diagnostics.nonEmpty) {
               val sdoc = s.TextDocument(
+                schema = s.Schema.SEMANTICDB3,
                 uri = unit.source.toUri,
                 language = s.Language.SCALA,
-                diagnostics = messages
+                diagnostics = diagnostics
               )
               sdoc.append(config.targetroot)
             }
