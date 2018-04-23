@@ -62,8 +62,9 @@ commands += CiCommand("ci-publish")(
   "publishSigned" :: Nil
 )
 commands += Command.command("mima") { s =>
-  s"very mimaReportBinaryIssues" ::
-    s
+  // MiMa is disabled until we have a 4.0.0-RC1 out.
+  // s"very mimaReportBinaryIssues" ::
+  s
 }
 commands += Command.command("ci-metac") { s =>
   val out = file("target/scala-library")
