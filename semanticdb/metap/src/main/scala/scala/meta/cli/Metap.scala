@@ -3,6 +3,7 @@ package scala.meta.cli
 import java.io._
 import scala.meta.internal.metap._
 import scala.meta.metap._
+import scala.meta.internal.semanticdb3.TextDocument
 
 object Metap {
   def main(args: Array[String]): Unit = {
@@ -33,4 +34,12 @@ object Metap {
     val main = new Main(settings, reporter)
     main.process()
   }
+
+  def print(doc: TextDocument): String = {
+    val baos = new ByteArrayOutputStream()
+    val main = new Main(Settings(), Reporter().withOut(new PrintStream(baos)))
+    main.pprint(doc)
+    baos.toString()
+  }
+
 }

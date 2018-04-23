@@ -101,7 +101,7 @@ class Main(settings: Settings, reporter: Reporter) {
     success
   }
 
-  private def pprint(doc: TextDocument): Unit = {
+  def pprint(doc: TextDocument): Unit = {
     out.println(doc.uri)
     out.println(s"-" * doc.uri.length)
     out.println("")
@@ -482,9 +482,9 @@ class Main(settings: Settings, reporter: Reporter) {
               }
             }
           case None =>
-            out.println("")
+            out.println("<?>")
         }
-      case OBJECT | PACKAGE | PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
+      case OBJECT | PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
         info.tpe match {
           case Some(tpe: Type) =>
             tpe.classInfoType match {
@@ -501,8 +501,10 @@ class Main(settings: Settings, reporter: Reporter) {
                 out.println("")
             }
           case None =>
-            out.println("")
+            out.println("<?>")
         }
+      case PACKAGE =>
+        out.println("")
       case UNKNOWN_KIND | Kind.Unrecognized(_) =>
         out.println("")
     }
@@ -651,11 +653,3 @@ class Main(settings: Settings, reporter: Reporter) {
   }
 }
 
-object Main {
-  def print(doc: TextDocument): String = {
-    val baos = new ByteArrayOutputStream()
-    val main = new Main(Settings(), Reporter().withOut(new PrintStream(baos)))
-    main.pprint(doc)
-    baos.toString()
-  }
-}

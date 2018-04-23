@@ -14,6 +14,7 @@ import scala.meta.io._
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.{semanticdb3 => s}
 import org.langmeta.internal.inputs._
+import scala.meta.cli.Metap
 import scala.meta.testkit.DiffAssertions
 
 abstract class SemanticdbSuite(
@@ -96,7 +97,7 @@ abstract class SemanticdbSuite(
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
     val document = computeDatabaseFromSnippet(code)
-    val payload = Main.print(document).toString.split(EOL)
+    val payload = Metap.print(document).toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
     section.mkString(EOL)
   }
