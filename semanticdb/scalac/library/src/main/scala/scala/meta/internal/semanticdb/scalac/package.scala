@@ -2,7 +2,6 @@ package scala.meta.internal.semanticdb
 
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
-import org.langmeta.internal.semanticdb.{vfs => v}
 import org.langmeta.io.AbsolutePath
 import scala.meta.internal.{semanticdb3 => s}
 
@@ -13,7 +12,7 @@ package object scalac {
       val openOption =
         if (append) StandardOpenOption.APPEND
         else StandardOpenOption.TRUNCATE_EXISTING
-      val out = v.SemanticdbPaths.toSemanticdb(sdocument, targetroot)
+      val out = SemanticdbPaths.toSemanticdb(sdocument, targetroot)
       if (!Files.exists(out.toNIO.getParent)) {
         Files.createDirectories(out.toNIO.getParent)
       }

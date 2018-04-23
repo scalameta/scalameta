@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import org.scalatest.FunSuite
 import org.langmeta.io.AbsolutePath
 import org.langmeta.io.RelativePath
-import org.langmeta.internal.semanticdb.vfs.SemanticdbPaths._
+import scala.meta.internal.semanticdb.scalac.SemanticdbPaths._
 import scala.meta.internal.semanticdb.scalac.RemoveOrphanSemanticdbFiles
 
 class RemoveOrphanSemantidbFilesSuite extends FunSuite {

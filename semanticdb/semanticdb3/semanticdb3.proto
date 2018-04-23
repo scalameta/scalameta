@@ -174,7 +174,7 @@ message TypeType {
 
 message SymbolInformation {
   enum Kind {
-    // reserved 1, 2, 4, 5, 7, 8, 9, 15, 16;
+    // reserved 1, 2, 4, 5, 15, 16;
     UNKNOWN_KIND = 0;
     LOCAL = 19;
     FIELD = 20;
@@ -210,7 +210,7 @@ message SymbolInformation {
     PRIMARY = 0x2000;
     ENUM = 0x4000;
   }
-  reserved 2, 6, 10, 12;
+  reserved 2, 6, 7, 8, 9, 10, 12;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;

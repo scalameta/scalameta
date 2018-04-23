@@ -1,6 +1,4 @@
-package org.langmeta.internal
-package semanticdb
-package vfs
+package scala.meta.internal.semanticdb.scalac
 
 import org.langmeta.internal.io.PathIO
 import org.langmeta.io.AbsolutePath
