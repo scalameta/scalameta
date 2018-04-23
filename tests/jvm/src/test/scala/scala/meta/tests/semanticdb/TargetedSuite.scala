@@ -10,7 +10,7 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import Compat._
 
 // Contributing tips:
-// - Create another suite like YYY.scala that extends SemanticDBSuite,
+// - Create another suite like YYY.scala that extends SemanticdbSuite,
 //   add YYY.scala to your .gitignore, and run `> ~testsJVM/testOnly *YYY`.
 //   That should give you a tight edit/run/debug cycle.
 // - On test failure, the obtained output is printed to the console for

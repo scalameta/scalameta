@@ -8,7 +8,6 @@ import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
-import scala.meta.internal.metap.Main
 import scala.{meta => m}
 import scala.meta.io._
 import scala.meta.internal.semanticdb.scalac._
@@ -30,7 +29,7 @@ abstract class SemanticdbSuite(
   }
 
   lazy val g: Global = {
-    def fail(msg: String) = sys.error(s"SemanticDBSuite initialization failed: $msg")
+    def fail(msg: String) = sys.error(s"SemanticdbSuite initialization failed: $msg")
     val classpath = sys.props("sbt.paths.tests.test.classes")
     if (classpath == null) fail("classpath not set. broken build?")
     val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
