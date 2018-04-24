@@ -3,8 +3,6 @@ set -eux
 
 version=$1
 
-coursier fetch org.scalameta:langmeta_2.10:$version -r sonatype:releases
-
 coursier fetch org.scalameta:contrib_2.12:$version -r sonatype:releases
 coursier fetch org.scalameta:metacp_2.12:$version -r sonatype:releases
 coursier fetch org.scalameta:metap_2.12:$version -r sonatype:releases

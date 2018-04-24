@@ -5,10 +5,10 @@ import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Paths
 import scala.meta.cli._
+import scala.meta.internal.io.FileIO
+import scala.meta.io.AbsolutePath
 import scala.meta.metac._
 import scala.meta.tests.BuildInfo
-import org.langmeta.internal.io.FileIO
-import org.langmeta.io.AbsolutePath
 
 // Compile all of scala-library with metac and report any semanticdb errors.
 object MetacScalaLibrary {

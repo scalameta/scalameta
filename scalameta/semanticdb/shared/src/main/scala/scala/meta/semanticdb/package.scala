@@ -1,3 +1,3 @@
 package scala.meta
 
-package object semanticdb extends Api with Aliases
+package object semanticdb extends semanticdb.Api

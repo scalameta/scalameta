@@ -5,19 +5,18 @@ import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
+import scala.meta.internal.io.PathIO
 import scala.meta.internal.javacp._
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
+import scala.meta.io.AbsolutePath
+import scala.meta.io.Classpath
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.MethodNode
 import scala.util.control.NonFatal
-import org.langmeta.internal.io.PathIO
-import org.langmeta.io.AbsolutePath
-import org.langmeta.io.Classpath
 
 class SignatureSuite extends BaseMetacpSuite {
 

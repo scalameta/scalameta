@@ -1,9 +1,9 @@
 package scala.meta.internal.semanticdb.scalac
 
-import org.langmeta.internal.io.PathIO
-import org.langmeta.io.AbsolutePath
-import org.langmeta.io.RelativePath
+import scala.meta.internal.io.PathIO
 import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.io.AbsolutePath
+import scala.meta.io.RelativePath
 
 object SemanticdbPaths {
   val semanticdbPrefix: RelativePath = RelativePath("META-INF").resolve("semanticdb")

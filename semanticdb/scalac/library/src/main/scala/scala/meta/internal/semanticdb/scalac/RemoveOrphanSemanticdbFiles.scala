@@ -6,8 +6,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
-import org.langmeta.internal.io.PathIO
-import org.langmeta.io.AbsolutePath
+import scala.meta.internal.io.PathIO
+import scala.meta.io.AbsolutePath
 
 object RemoveOrphanSemanticdbFiles {
 

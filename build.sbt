@@ -40,20 +40,10 @@ addCommandAlias("benchQuick", benchQuick.command)
 // ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
-  if (ciScalaVersion.startsWith("2.10")) {
-    s"wow $ciScalaVersion" ::
-      "langmetaTestsJVM/test" ::
-      s
-  } else {
-    val langmetaTests =
-      if (ciPlatform == "JVM") "langmetaTestsJVM/test"
-      else "version" // dummy task on JS
-    s"wow $ciScalaVersion" ::
-      langmetaTests ::
-      ("tests" + ciPlatform + "/test") ::
-      ci("doc") :: // skips 2.10 projects
-      s
-  }
+  s"wow $ciScalaVersion" ::
+    ("tests" + ciPlatform + "/test") ::
+    ci("doc") ::
+    s
 }
 commands += Command.command("ci-native") { s =>
   "metapNative/nativeLink" :: s
@@ -115,7 +105,7 @@ lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   )
   .nativeSettings(nativeSettings)
   .jvmSettings(
-    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
+    crossScalaVersions := List(LatestScala211, LatestScala212)
   )
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
@@ -189,7 +179,7 @@ lazy val metacp = project
   .enablePlugins(BuildInfoPlugin)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdb3JVM, langmetaJVM)
+  .dependsOn(semanticdb3JVM, ioJVM)
 
 lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -207,25 +197,6 @@ lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
 lazy val metapNative = metap.native
 
-/** ======================== LANGMETA ======================== **/
-lazy val langmeta = crossProject(JSPlatform, JVMPlatform)
-  .in(file("langmeta/langmeta"))
-  .settings(
-    publishableSettings,
-    description := "Langmeta umbrella module that includes all public APIs",
-    scalacOptions -= "-Xfatal-warnings", // suppress deprecation warnings
-    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.5.3"
-  )
-  .jvmSettings(
-    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212)
-  )
-  .jsSettings(
-    crossScalaVersions := List(LatestScala211, LatestScala212)
-  )
-  .dependsOn(semanticdb3)
-lazy val langmetaJVM = langmeta.jvm
-lazy val langmetaJS = langmeta.js
-
 /** ======================== SCALAMETA ======================== **/
 lazy val common = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/common"))
@@ -235,6 +206,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform)
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
+  .dependsOn(semanticdb3)
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
 
@@ -244,7 +216,7 @@ lazy val io = crossProject(JSPlatform, JVMPlatform)
     publishableSettings,
     description := "Scalameta APIs for input/output"
   )
-  .dependsOn(langmeta, common)
+  .dependsOn(common)
 
 lazy val ioJVM = io.jvm
 lazy val ioJS = io.js
@@ -267,7 +239,7 @@ lazy val inputs = crossProject(JSPlatform, JVMPlatform)
     description := "Scalameta APIs for source code",
     enableMacros
   )
-  .dependsOn(langmeta, common, io)
+  .dependsOn(common, io)
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
 
@@ -357,7 +329,7 @@ lazy val semanticdb = crossProject(JSPlatform, JVMPlatform)
     publishableSettings,
     description := "Scalameta semantic database APIs"
   )
-  .dependsOn(langmeta)
+  .dependsOn(common)
 lazy val semanticdbJVM = semanticdb.jvm
 lazy val semanticdbJS = semanticdb.js
 
@@ -456,6 +428,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
       "databaseClasspath" -> classDirectory.in(semanticdbIntegration, Compile).value.getAbsolutePath
     ),
     buildInfoPackage := "scala.meta.tests",
+    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.5" % "test",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
   .jvmSettings(
@@ -469,20 +442,6 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(scalameta, contrib, metap)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
-
-// NOTE: Most of the tests that could be part of the project still live in testsJVM.
-// At some point, we plan to explore splitting langmeta into a separate repo,
-// and at this point we will deal with splitting the tests appropriately.
-lazy val langmetaTestsJVM = project
-  .in(file("langmeta/tests"))
-  .settings(
-    sharedSettings,
-    nonPublishableSettings,
-    crossScalaVersions := List(LatestScala210, LatestScala211, LatestScala212),
-    description := "Tests for scalameta APIs that are published for Scala 2.10",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
-  )
-  .dependsOn(langmetaJVM)
 
 /** ======================== BENCHES ======================== **/
 lazy val bench = project
@@ -824,12 +783,7 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
       Seq("org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided")
     else Nil
   }
-  val backwardCompat210 = {
-    if (scalaVersion.value.startsWith("2.10"))
-      Seq("org.scalamacros" %% "quasiquotes" % "2.1.0")
-    else Seq()
-  }
-  scalaReflect ++ scalaCompiler ++ backwardCompat210
+  scalaReflect ++ scalaCompiler
 }
 
 lazy val isTagPush = sys.env.get("TRAVIS_TAG").exists(_.nonEmpty)

@@ -1,9 +1,9 @@
 package scala.meta.tests.metacp
 
 import java.nio.file.Files
-import org.langmeta.io.AbsolutePath
-import org.langmeta.io.Classpath
 import scala.meta.cli.Metacp
+import scala.meta.io.AbsolutePath
+import scala.meta.io.Classpath
 import scala.meta.metacp._
 import scala.meta.tests.cli.BaseCliSuite
 

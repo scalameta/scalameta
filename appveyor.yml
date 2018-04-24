@@ -12,7 +12,7 @@ environment:
 build_script:
   - sbt version # dummy step, a build_script step is required by appveyor.
 test_script:
-  - sbt langmetaTestsJVM/test testsJVM/test # testsJS/test is disabled because of OOM errors
+  - sbt testsJVM/test # testsJS/test is disabled because of OOM errors
 cache:
   - C:\Users\appveyor\.m2
   - C:\Users\appveyor\.ivy2

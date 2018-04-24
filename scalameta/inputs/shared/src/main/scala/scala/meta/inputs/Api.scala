@@ -1,22 +1,34 @@
-package org.langmeta.internal.inputs {
-  trait Api extends org.langmeta.inputs.Api
-  trait Aliases extends org.langmeta.inputs.Aliases
+package scala.meta.inputs
+
+private[meta] trait Api {
 }
 
-package scala.meta.inputs {
-  private[meta] trait Api extends org.langmeta.internal.inputs.Api {
-    import java.nio.charset._
-    import scala.meta.common._
-    import org.langmeta.io.AbsolutePath
-    implicit val charsToInput: Convert[Array[Char], Input] = Convert(chars => Input.String(new scala.Predef.String(chars)))
-    implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String(_))
-    implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] = Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
-    // NOTE: fileToInput is lazy to avoid linking errors in Scala.js
-    implicit lazy val fileToInput: Convert[java.io.File, Input] = Convert(Input.File.apply)
-    implicit lazy val nioPathToInput: Convert[java.nio.file.Path, Input] = Convert(Input.File.apply)
-    implicit lazy val absolutePathToInput: Convert[AbsolutePath, Input] = Convert(Input.File.apply)
+private[meta] trait Aliases {
+  type Input = scala.meta.inputs.Input
+  object Input {
+    val None = scala.meta.inputs.Input.None
+
+    type String = scala.meta.inputs.Input.String
+    val String = scala.meta.inputs.Input.String
+
+    type Stream = scala.meta.inputs.Input.Stream
+    val Stream = scala.meta.inputs.Input.Stream
+
+    type File = scala.meta.inputs.Input.File
+    val File = scala.meta.inputs.Input.File
+
+    type VirtualFile = scala.meta.inputs.Input.VirtualFile
+    val VirtualFile = scala.meta.inputs.Input.VirtualFile
+
+    type Slice = scala.meta.inputs.Input.Slice
+    val Slice = scala.meta.inputs.Input.Slice
   }
 
-  private[meta] trait Aliases extends org.langmeta.internal.inputs.Aliases {
+  type Position = scala.meta.inputs.Position
+  object Position {
+    val None = scala.meta.inputs.Position.None
+
+    type Range = scala.meta.inputs.Position.Range
+    val Range = scala.meta.inputs.Position.Range
   }
 }

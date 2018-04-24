@@ -2,8 +2,8 @@ package scala.meta.internal.semanticdb
 
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
-import org.langmeta.io.AbsolutePath
 import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.io.AbsolutePath
 
 package object scalac {
 

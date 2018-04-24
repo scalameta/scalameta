@@ -3,10 +3,10 @@ package scala.meta.tests.vfs
 import java.nio.file.Files
 import java.nio.file.Paths
 import org.scalatest.FunSuite
-import org.langmeta.io.AbsolutePath
-import org.langmeta.io.RelativePath
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths._
 import scala.meta.internal.semanticdb.scalac.RemoveOrphanSemanticdbFiles
+import scala.meta.io.AbsolutePath
+import scala.meta.io.RelativePath
 
 class RemoveOrphanSemantidbFilesSuite extends FunSuite {
 

@@ -9,10 +9,10 @@ import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
-import scala.meta.io._
+import scala.meta.internal.inputs._
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.{semanticdb3 => s}
-import org.langmeta.internal.inputs._
+import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
 
 abstract class SemanticdbSuite(

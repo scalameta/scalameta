@@ -1,7 +1,6 @@
 package scala.meta.internal.javacp
 
 import java.util.Comparator
-import org.langmeta.io.AbsolutePath
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
@@ -14,6 +13,7 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.io.AbsolutePath
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.InnerClassNode
