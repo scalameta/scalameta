@@ -1,13 +1,12 @@
 package scala.meta.testkit
 
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.GenIterable
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.meta._
 import scala.util.control.NonFatal
-
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.atomic.AtomicInteger
 
 object SyntaxAnalysis {
 

@@ -1,10 +1,10 @@
 package scala.meta.internal.index
 
-import org.langmeta.internal.io._
-import org.langmeta.io._
 import scala.collection.mutable
+import scala.meta.internal.io._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
+import scala.meta.io._
 
 class Index {
   private val packages = mutable.Map[String, mutable.Set[String]]()

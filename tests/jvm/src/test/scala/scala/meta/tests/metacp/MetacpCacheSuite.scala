@@ -1,13 +1,13 @@
 package scala.meta.tests.metacp
 
-import org.langmeta.internal.io.FileIO
-import org.langmeta.internal.io.PlatformFileIO
-import org.langmeta.io.AbsolutePath
-import org.langmeta.io.Classpath
 import org.scalatest.concurrent.TimeLimitedTests
 import org.scalatest.time.Minute
 import org.scalatest.time.Span
 import scala.meta.cli.Metacp
+import scala.meta.internal.io.FileIO
+import scala.meta.internal.io.PlatformFileIO
+import scala.meta.io.AbsolutePath
+import scala.meta.io.Classpath
 import scala.meta.metacp.Settings
 import scala.meta.metacp.Reporter
 import scala.meta.tests.BuildInfo

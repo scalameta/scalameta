@@ -68,7 +68,15 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.dialects.Typelevel212 *
       |scala.meta.inputs
       |scala.meta.inputs.Input
+      |scala.meta.inputs.Input.File *
+      |scala.meta.inputs.Input.None *
+      |scala.meta.inputs.Input.Slice *
+      |scala.meta.inputs.Input.Stream *
+      |scala.meta.inputs.Input.String *
+      |scala.meta.inputs.Input.VirtualFile *
       |scala.meta.inputs.Position
+      |scala.meta.inputs.Position.None *
+      |scala.meta.inputs.Position.Range *
       |scala.meta.internal
       |scala.meta.io
       |scala.meta.io.AbsolutePath
@@ -104,7 +112,17 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.quasiquotes.Unlift
       |scala.meta.semanticdb
       |scala.meta.semanticdb.Signature
+      |scala.meta.semanticdb.Signature.Method *
+      |scala.meta.semanticdb.Signature.Self *
+      |scala.meta.semanticdb.Signature.Term *
+      |scala.meta.semanticdb.Signature.TermParameter *
+      |scala.meta.semanticdb.Signature.Type *
+      |scala.meta.semanticdb.Signature.TypeParameter *
       |scala.meta.semanticdb.Symbol
+      |scala.meta.semanticdb.Symbol.Global *
+      |scala.meta.semanticdb.Symbol.Local *
+      |scala.meta.semanticdb.Symbol.Multi *
+      |scala.meta.semanticdb.Symbol.None *
       |scala.meta.tokenizers
       |scala.meta.tokenizers.Tokenize *
       |scala.meta.tokenizers.TokenizeException
@@ -140,23 +158,23 @@ class SurfaceSuite extends FunSuite {
 
     // println(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL))
     assert(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL) === """
-      |* (meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
-      |* (meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
-      |* (scala.meta.Dialect, meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
-      |* (scala.meta.Dialect, meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* (scala.meta.Dialect, scala.meta.Tree).syntax: String
+      |* (scala.meta.Dialect, scala.meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
+      |* (scala.meta.Dialect, scala.meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* (scala.meta.Dialect, scala.meta.tokens.Token).syntax: String
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).syntax: String
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
+      |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
+      |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
       |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
       |* T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
-      |* T.parse(implicit scala.meta.common.Convert[T,meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
+      |* T.parse(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]
       |* T.show(implicit Style[T]): String
-      |* T.tokenize(implicit scala.meta.common.Convert[T,meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
-      |* scala.meta.Dialect.apply(T)(implicit scala.meta.common.Convert[T,meta.inputs.Input]): (scala.meta.Dialect, meta.inputs.Input)
+      |* T.tokenize(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input], scala.meta.tokenizers.Tokenize, scala.meta.Dialect): scala.meta.tokenizers.Tokenized
+      |* scala.meta.Dialect.apply(T)(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input]): (scala.meta.Dialect, scala.meta.inputs.Input)
       |* scala.meta.Dialect.apply(scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)

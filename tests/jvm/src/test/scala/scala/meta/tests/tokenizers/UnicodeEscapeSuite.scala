@@ -1,8 +1,8 @@
 package scala.meta.tests.tokenizers
 
 import java.nio.charset.StandardCharsets
+import scala.meta.internal.io.InputStreamIO
 import scala.meta.testkit.DiffAssertions
-import org.langmeta.internal.io.InputStreamIO
 import org.scalameta.logger
 
 class UnicodeEscapeSuite extends BaseTokenizerSuite with DiffAssertions {

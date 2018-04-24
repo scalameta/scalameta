@@ -1,9 +1,24 @@
-package org.langmeta.internal.io {
-  trait Api extends org.langmeta.io.Api
-  trait Aliases extends org.langmeta.io.Aliases
+package scala.meta.io
+
+private[meta] trait Api {
 }
 
-package scala.meta.io {
-  private[meta] trait Api extends org.langmeta.internal.io.Api
-  private[meta] trait Aliases extends org.langmeta.internal.io.Aliases
+private[meta] trait Aliases {
+  type AbsolutePath = scala.meta.io.AbsolutePath
+  lazy val AbsolutePath = scala.meta.io.AbsolutePath
+
+  type RelativePath = scala.meta.io.RelativePath
+  lazy val RelativePath = scala.meta.io.RelativePath
+
+  type Multipath = scala.meta.io.Multipath
+  // there's no term Multipath, so we don't have a term alias here
+
+  type Fragment = scala.meta.io.Fragment
+  val Fragment = scala.meta.io.Fragment
+
+  type Classpath = scala.meta.io.Classpath
+  lazy val Classpath = scala.meta.io.Classpath
+
+  type Sourcepath = scala.meta.io.Sourcepath
+  lazy val Sourcepath = scala.meta.io.Sourcepath
 }

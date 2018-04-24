@@ -1,9 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import java.io.File
-
-import org.langmeta.internal.io.PathIO
-
+import scala.meta.internal.io.PathIO
 import scala.meta.io.AbsolutePath
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.Plugin

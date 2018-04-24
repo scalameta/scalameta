@@ -1,9 +1,7 @@
 package scala.meta.internal
 
 import java.nio.file._
-
-import org.langmeta.io.AbsolutePath
-
+import scala.meta.io.AbsolutePath
 import scala.tools.asm._
 import scala.tools.asm.ClassReader._
 import scala.tools.asm.tree._

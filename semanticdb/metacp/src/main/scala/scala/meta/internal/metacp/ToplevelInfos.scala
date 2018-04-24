@@ -1,8 +1,8 @@
 package scala.meta.internal.metacp
 
-import org.langmeta.internal.io._
-import org.langmeta.io._
+import scala.meta.internal.io._
 import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.io._
 
 final case class ToplevelInfos(
     classfile: ToplevelClassfile,

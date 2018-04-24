@@ -1,8 +1,8 @@
 package scala.meta.cli
 
 import java.io._
-import org.langmeta._
 import scala.meta.internal.metacp._
+import scala.meta.io._
 import scala.meta.metacp._
 
 object Metacp {

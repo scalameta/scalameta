@@ -1,7 +1,7 @@
 package scala.meta.tests.semanticdb
 
-import org.langmeta.semanticdb.Symbol
-import org.langmeta.semanticdb.Signature
+import scala.meta.semanticdb.Symbol
+import scala.meta.semanticdb.Signature
 import org.scalatest.FunSuite
 
 class SymbolSuite extends FunSuite {

@@ -3,7 +3,7 @@ package scala.meta.internal.metacp
 import java.nio.file.Files
 import java.security.MessageDigest
 import javax.xml.bind.DatatypeConverter
-import org.langmeta.io.AbsolutePath
+import scala.meta.io.AbsolutePath
 
 object Checksum {
   def apply(file: AbsolutePath): String = {

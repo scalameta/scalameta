@@ -1,8 +1,8 @@
 package scala.meta.tests
 package semanticdb
 
-import org.langmeta.internal.semanticdb._
 import scala.meta._
+import scala.meta.internal.semanticdb._
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.semanticdb3._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}

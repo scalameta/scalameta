@@ -7,10 +7,10 @@ import scala.collection.JavaConverters._
 import scala.meta.internal.index._
 import scala.meta.internal.javacp._
 import scala.meta.internal.scalacp._
+import scala.meta.internal.io._
+import scala.meta.io._
 import scala.meta.metacp._
 import scala.util.control.NonFatal
-import org.langmeta.internal.io._
-import org.langmeta.io._
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.GenSeq
 

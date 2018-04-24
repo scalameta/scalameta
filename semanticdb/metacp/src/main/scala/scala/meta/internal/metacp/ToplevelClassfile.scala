@@ -1,7 +1,7 @@
 package scala.meta.internal.metacp
 
-import org.langmeta.internal.io._
-import org.langmeta.io.AbsolutePath
+import scala.meta.internal.io._
+import scala.meta.io._
 import scala.tools.asm.tree._
 
 final case class ToplevelClassfile(base: AbsolutePath, path: AbsolutePath, node: ClassNode) {

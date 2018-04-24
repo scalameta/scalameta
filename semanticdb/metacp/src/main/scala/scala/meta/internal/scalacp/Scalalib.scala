@@ -1,6 +1,6 @@
 package scala.meta.internal.scalacp
 
-import org.langmeta.internal.io.PathIO
+import scala.meta.internal.io.PathIO
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
