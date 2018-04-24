@@ -1,7 +1,6 @@
 package scala.meta.semanticdb
 
-private[meta] trait Api {
-}
+private[meta] trait Api {}
 
 private[meta] trait Aliases {
   type Symbol = scala.meta.semanticdb.Symbol
