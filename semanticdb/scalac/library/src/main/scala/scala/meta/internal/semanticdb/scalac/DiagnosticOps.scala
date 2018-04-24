@@ -2,11 +2,13 @@ package scala.meta.internal.semanticdb.scalac
 
 import org.scalameta.unreachable
 import scala.{meta => m}
+import scala.meta.internal.{semanticdb3 => s}
+import org.langmeta.internal.inputs._
 
-trait MessageOps { self: DatabaseOps =>
-  implicit class XtensionCompilationUnitMessages(unit: g.CompilationUnit) {
-    def reportedMessages(mstarts: collection.Map[Int, m.Name]): List[m.Message] = {
-      val messages = unit.hijackedMessages.map {
+trait DiagnosticOps { self: SemanticdbOps =>
+  implicit class XtensionCompilationUnitDiagnostics(unit: g.CompilationUnit) {
+    def reportedDiagnostics(mstarts: collection.Map[Int, m.Name]): List[s.Diagnostic] = {
+      unit.hijackedDiagnostics.map {
         case (gpos, gseverity, text) =>
           val mpos: m.Position = {
             // NOTE: The caret in unused import warnings points to Importee.pos, but
@@ -22,15 +24,14 @@ trait MessageOps { self: DatabaseOps =>
               }
             } else gpos.toMeta
           }
-          val mseverity = gseverity match {
-            case 0 => m.Severity.Info
-            case 1 => m.Severity.Warning
-            case 2 => m.Severity.Error
+          val sseverity = gseverity match {
+            case 0 => s.Diagnostic.Severity.INFORMATION
+            case 1 => s.Diagnostic.Severity.WARNING
+            case 2 => s.Diagnostic.Severity.ERROR
             case _ => unreachable
           }
-          m.Message(mpos, mseverity, text)
+          s.Diagnostic(Some(mpos.toRange), sseverity, text)
       }
-      messages
     }
   }
 }

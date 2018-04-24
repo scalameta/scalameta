@@ -6,11 +6,9 @@ import scala.compat.Platform.EOL
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
 import scala.util.control.NonFatal
-import scala.{meta => m}
-import scala.meta.io._
-import scala.meta.internal.semanticdb.{vfs => v}
+import scala.meta.internal.{semanticdb3 => s}
 
-trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
+trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
   implicit class XtensionUnit(unit: g.CompilationUnit) {
     def isIgnored: Boolean = {
@@ -55,32 +53,13 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
         try {
           if (unit.isIgnored) return
           validateCompilerState()
-          val mdoc = unit.toDocument
-          val mdb = m.Database(List(mdoc))
-          mdb.save(config.targetroot, config.sourceroot)
+          val sdoc = unit.toTextDocument
+          sdoc.save(config.targetroot)
         } catch handleError(unit)
       }
 
       private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
-        val vdb = v.Database.load(Classpath(config.targetroot))
-        val orphanedVentries = vdb.entries.filter(ventry => {
-          val scalaName = v.SemanticdbPaths.toScala(ventry.fragment.name)
-          !config.sourceroot.resolve(scalaName).isFile
-        })
-        orphanedVentries.map(ve => {
-          def cleanupUpwards(file: File): Unit = {
-            if (file != null) {
-              if (file.isFile) {
-                file.delete()
-              } else {
-                if (file.getAbsolutePath == ve.base.toString) return
-                if (file.listFiles.isEmpty) file.delete()
-              }
-              cleanupUpwards(file.getParentFile)
-            }
-          }
-          cleanupUpwards(ve.uri.toFile)
-        })
+        RemoveOrphanSemanticdbFiles.process(config.sourceroot, config.targetroot)
       }
 
       private def synchronizeSourcesAndSemanticdbIndex(): Unit = {
@@ -112,19 +91,16 @@ trait SemanticdbPipeline extends DatabaseOps { self: SemanticdbPlugin =>
       override def apply(unit: g.CompilationUnit): Unit = {
         if (unit.isIgnored) return
         try {
-          if (config.messages.saveMessages) {
-            val messages = unit.reportedMessages(Map.empty)
-            if (messages.nonEmpty) {
-              val mdoc = m.Document(
-                input = m.Input.File(unit.source.file.file),
-                language = language,
-                names = Nil,
-                messages = messages,
-                symbols = Nil,
-                synthetics = Nil
+          if (config.diagnostics.saveMessages) {
+            val diagnostics = unit.reportedDiagnostics(Map.empty)
+            if (diagnostics.nonEmpty) {
+              val sdoc = s.TextDocument(
+                schema = s.Schema.SEMANTICDB3,
+                uri = unit.source.toUri,
+                language = s.Language.SCALA,
+                diagnostics = diagnostics
               )
-              val mdb = m.Database(mdoc :: Nil)
-              mdb.append(config.targetroot, config.sourceroot)
+              sdoc.append(config.targetroot)
             }
           }
         } catch handleError(unit)

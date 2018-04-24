@@ -1,21 +1,9 @@
-package org.langmeta
-package semanticdb
+package org.langmeta.semanticdb
 
-import org.langmeta.inputs._
-import org.langmeta
-
-private[langmeta] trait Api extends Flags {
+private[langmeta] trait Api {
 }
 
 private[langmeta] trait Aliases {
-  type Database = org.langmeta.semanticdb.Database
-  val Database = org.langmeta.semanticdb.Database
-
-  type Document = org.langmeta.semanticdb.Document
-  val Document = org.langmeta.semanticdb.Document
-
-  type Synthetic = org.langmeta.semanticdb.Synthetic
-  val Synthetic = org.langmeta.semanticdb.Synthetic
 
   type Symbol = org.langmeta.semanticdb.Symbol
   object Symbol {
@@ -55,18 +43,4 @@ private[langmeta] trait Aliases {
     val Self = org.langmeta.semanticdb.Signature.Self
   }
 
-  type Message = org.langmeta.semanticdb.Message
-  val Message = org.langmeta.semanticdb.Message
-
-  type Severity = org.langmeta.semanticdb.Severity
-  val Severity = org.langmeta.semanticdb.Severity
-
-  type Denotation = org.langmeta.semanticdb.Denotation
-  val Denotation = org.langmeta.semanticdb.Denotation
-
-  type ResolvedName = org.langmeta.semanticdb.ResolvedName
-  val ResolvedName = org.langmeta.semanticdb.ResolvedName
-
-  type ResolvedSymbol = org.langmeta.semanticdb.ResolvedSymbol
-  val ResolvedSymbol = org.langmeta.semanticdb.ResolvedSymbol
 }

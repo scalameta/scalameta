@@ -2,6 +2,7 @@ package org.langmeta.internal
 
 import scala.compat.Platform.EOL
 import org.langmeta.inputs._
+import scala.meta.internal.{semanticdb3 => s}
 
 package object inputs {
   implicit class XtensionPositionFormatMessage(pos: Position) {
@@ -32,10 +33,18 @@ package object inputs {
       case Input.None => "<none>"
       case Input.File(path, _) => path.toString
       case Input.VirtualFile(path, _) => path
-      case Input.Denotation(_, symbol) => symbol.syntax
       case _ => "<input>"
     }
     def structure: String = input.toString
+  }
+
+  implicit class XtensionPositionSemanticDB(pos: Position) {
+    def toRange: s.Range = s.Range(
+      startLine = pos.startLine,
+      startCharacter = pos.startColumn,
+      endLine = pos.endLine,
+      endCharacter = pos.endColumn
+    )
   }
 
   implicit class XtensionPositionSyntaxStructure(pos: Position) {

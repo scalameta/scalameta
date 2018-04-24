@@ -3,7 +3,6 @@ package org.langmeta.inputs
 import java.nio.{file => nio}
 import java.nio.charset.Charset
 import org.langmeta.internal.inputs._
-import org.langmeta.semanticdb.Symbol
 import org.langmeta.io._
 
 sealed trait Input extends Product with Serializable with InternalInput {
@@ -73,17 +72,8 @@ object Input {
 
   final case class VirtualFile(path: scala.Predef.String, value: scala.Predef.String) extends Input {
     lazy val chars = value.toArray
+    override def text: scala.Predef.String = value
     override def toString = s"""Input.VirtualFile("$path", "$value")"""
-  }
-
-  final case class Synthetic(value: scala.Predef.String, input: Input, start: Int, end: Int) extends Input {
-    lazy val chars = value.toCharArray
-    override def toString = s"""Input.Synthetic("$value", $input, $start, $end)"""
-  }
-
-  final case class Denotation(value: scala.Predef.String, symbol: Symbol) extends Input {
-    lazy val chars = value.toCharArray
-    override def toString = s"""Input.Denotation("$value", "$symbol")"""
   }
 
   // NOTE: `start` and `end` are String.substring-style,

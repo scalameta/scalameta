@@ -1,19 +1,26 @@
-package org.langmeta.internal
-package semanticdb
-package vfs
+package scala.meta.internal.semanticdb.scalac
 
 import org.langmeta.internal.io.PathIO
+import org.langmeta.io.AbsolutePath
 import org.langmeta.io.RelativePath
+import scala.meta.internal.{semanticdb3 => s}
 
 object SemanticdbPaths {
-  private val semanticdbPrefix = RelativePath("META-INF").resolve("semanticdb")
-  private val semanticdbExtension = "semanticdb"
+  val semanticdbPrefix: RelativePath = RelativePath("META-INF").resolve("semanticdb")
+  val semanticdbExtension = "semanticdb"
   private val scalaExtension = "scala"
   private val scalaScriptExtension = "sc"
 
   def isSemanticdb(path: RelativePath): Boolean = {
     path.toNIO.startsWith(semanticdbPrefix.toNIO) &&
     PathIO.extension(path.toNIO) == semanticdbExtension
+  }
+
+  def toScala(
+      semanticdb: AbsolutePath,
+      sourceroot: AbsolutePath,
+      targetroot: AbsolutePath): AbsolutePath = {
+    sourceroot.resolve(toScala(semanticdb.toRelative(targetroot)))
   }
 
   def toScala(path: RelativePath): RelativePath = {
@@ -31,5 +38,15 @@ object SemanticdbPaths {
     require(isScala(path))
     val semanticdbSibling = path.resolveSibling(_ + "." + semanticdbExtension)
     semanticdbPrefix.resolve(semanticdbSibling)
+  }
+
+  def toSemanticdb(path: RelativePath, targetroot: AbsolutePath): AbsolutePath = {
+    require(isScala(path))
+    val semanticdbPath = path.resolveSibling(_ + "." + semanticdbExtension)
+    targetroot.resolve(semanticdbPrefix).resolve(semanticdbPath)
+  }
+
+  def toSemanticdb(doc: s.TextDocument, targetroot: AbsolutePath): AbsolutePath = {
+    targetroot.resolve(semanticdbPrefix).resolve(doc.uri + "." + semanticdbExtension)
   }
 }

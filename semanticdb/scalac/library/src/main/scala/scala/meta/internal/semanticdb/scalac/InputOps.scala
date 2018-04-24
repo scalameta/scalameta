@@ -1,6 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
-import java.nio.charset.Charset
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets.UTF_8
 import scala.collection.mutable
 import scala.{meta => m}
 import scala.meta.internal.io._
@@ -8,32 +9,47 @@ import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSource
 import scala.reflect.io.VirtualFile
 import scala.reflect.io.{PlainFile => GPlainFile}
 
-trait InputOps { self: DatabaseOps =>
+trait InputOps { self: SemanticdbOps =>
 
   private lazy val gSourceFileInputCache = mutable.Map[GSourceFile, m.Input]()
   implicit class XtensionGSourceFileInput(gsource: GSourceFile) {
+    def toUri: String = toInput match {
+      case input: m.Input.File =>
+        config.sourceroot.toURI.relativize(input.path.toURI).toString
+      case input: m.Input.VirtualFile =>
+        input.path
+      case _ =>
+        ""
+    }
+    def toText: String = toInput match {
+      case _: m.Input.File =>
+        "" // slim mode, don't embed contents
+      case input: m.Input.VirtualFile =>
+        input.value
+      case _ =>
+        ""
+    }
     def toInput: m.Input =
       gSourceFileInputCache.getOrElseUpdate(gsource, {
         gsource.file match {
           case gfile: GPlainFile =>
-            val path = m.AbsolutePath(gfile.file)
             import SemanticdbMode._
             config.mode match {
               case Slim =>
-                m.Input.File(path)
+                m.Input.File(gfile.file)
               case Fat =>
-                val label = path.toRelative(config.sourceroot).toString
+                val path = m.AbsolutePath(gfile.file)
+                val label = config.sourceroot.toURI.relativize(path.toURI).toString
                 // NOTE: Can't use gsource.content because it's preprocessed by scalac.
-                // TODO: Obtain charset from Global.reader.
-                val charset = Charset.forName("UTF-8")
-                val contents = FileIO.slurp(path, charset)
+                val contents = FileIO.slurp(path, UTF_8)
                 m.Input.VirtualFile(label, contents)
               case Disabled =>
                 m.Input.None
             }
           case gfile: VirtualFile =>
-            m.Input.VirtualFile(gfile.path, gsource.content.mkString)
-          case other =>
+            val uri = URLEncoder.encode(gfile.path, UTF_8.name)
+            m.Input.VirtualFile(uri, gsource.content.mkString)
+          case _ =>
             m.Input.None
         }
       })

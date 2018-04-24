@@ -7,6 +7,7 @@ import org.scalatest.exceptions.TestFailedException
 trait DiffAssertions extends FunSuiteLike {
 
   def assertNoDiff(obtained: String, expected: String, title: String = ""): Boolean = {
+    if (obtained.isEmpty && !expected.isEmpty) fail("Obtained empty output!")
     val result = compareContents(obtained, expected)
     if (result.isEmpty) true
     else {

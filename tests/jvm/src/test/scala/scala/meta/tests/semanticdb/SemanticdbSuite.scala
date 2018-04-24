@@ -11,14 +11,15 @@ import scala.compat.Platform.EOL
 import scala.{meta => m}
 import scala.meta.io._
 import scala.meta.internal.semanticdb.scalac._
+import scala.meta.internal.{semanticdb3 => s}
+import org.langmeta.internal.inputs._
 import scala.meta.testkit.DiffAssertions
 
-abstract class DatabaseSuite(mode: SemanticdbMode,
-                             denotations: DenotationMode = DenotationMode.All,
-                             signatures: SignatureMode = SignatureMode.All,
-                             members: MemberMode = MemberMode.None,
-                             overrides: OverrideMode = OverrideMode.None)
-    extends FunSuite
+abstract class SemanticdbSuite(
+    mode: SemanticdbMode = SemanticdbMode.Fat,
+    symbols: SymbolMode = SymbolMode.All,
+    types: TypeMode = TypeMode.All
+) extends FunSuite
     with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
@@ -27,7 +28,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
   }
 
   lazy val g: Global = {
-    def fail(msg: String) = sys.error(s"DatabaseSuite initialization failed: $msg")
+    def fail(msg: String) = sys.error(s"SemanticdbSuite initialization failed: $msg")
     val classpath = sys.props("sbt.paths.tests.test.classes")
     if (classpath == null) fail("classpath not set. broken build?")
     val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
@@ -44,19 +45,18 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     g.globalPhase = run.parserPhase
     g
   }
-  private lazy val databaseOps: DatabaseOps { val global: self.g.type } = new DatabaseOps {
+  private lazy val databaseOps: SemanticdbOps { val global: self.g.type } = new SemanticdbOps {
     val global: self.g.type = self.g
   }
   import databaseOps._
   config = config.copy(
     mode = mode,
     failures = FailureMode.Error,
-    denotations = denotations,
-    signatures = signatures,
-    members = members,
-    overrides = overrides)
+    symbols = symbols,
+    types = types
+  )
 
-  private def computeDatabaseFromSnippet(code: String): m.Database = {
+  private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
     val javaFile = File.createTempFile("paradise", ".scala")
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
@@ -90,31 +90,14 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    val mdoc = unit.toDocument
-    m.Database(List(mdoc))
+    unit.toTextDocument
   }
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
-    val database = computeDatabaseFromSnippet(code)
-    val payload = database.toString.split(EOL)
+    val document = computeDatabaseFromSnippet(code)
+    val payload = s.Print.document(document).toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
-    assertDenotationSignaturesAreParseable(database)
     section.mkString(EOL)
-  }
-
-  private def assertDenotationSignaturesAreParseable(database: m.Database): Unit = {
-    import scala.meta._
-    // TODO(olafur): remove this once we have "Default" dialect, see
-    // https://github.com/scalameta/scalameta/issues/253#issuecomment-312634924
-    val dialect = dialects.Scala212.copy(
-      allowTypeLambdas = true,
-      allowMethodTypes = true
-    )
-    database.symbols.foreach { sym =>
-      if (sym.denotation.signature.nonEmpty && sym.symbol.isInstanceOf[m.Symbol.Global]) {
-        (dialect, sym.input).parse[Type].get // assert no parse error.
-      }
-    }
   }
 
   def checkSection(code: String, expected: String, section: String): Unit = {
@@ -137,12 +120,12 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     }
   }
 
-  def names(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Names")
+  def occurrences(code: String, expected: String): Unit = {
+    checkSection(code, expected, "Occurrences")
   }
 
-  def messages(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Messages")
+  def diagnostics(code: String, expected: String): Unit = {
+    checkSection(code, expected, "Diagnostics")
   }
 
   def symbols(code: String, expected: String): Unit = {
@@ -153,7 +136,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
     checkSection(code, expected, "Synthetics")
   }
 
-  private def computeDatabaseAndNamesFromMarkup(markup: String): (m.Database, List[m.Symbol]) = {
+  private def computeDatabaseAndOccurrencesFromMarkup(markup: String): (s.TextDocument, List[String]) = {
     val chevrons = "<<(.*?)>>".r
     val ps0 = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList
     val ps = ps0.zipWithIndex.map { case ((s, e), i) => (s - 4 * i, e - 4 * i - 4) }
@@ -165,7 +148,7 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
       case (s, e) =>
         val symbols = source.collect {
           case name: m.Name if name.pos.start == s && name.pos.end == e =>
-            database.names.find(_.position == name.pos).map(_.symbol)
+            database.occurrences.find(_.range.contains(name.pos.toRange)).map(_.symbol)
         }
         val chevron = "<<" + code.substring(s, e) + ">>"
         symbols match {
@@ -183,82 +166,58 @@ abstract class DatabaseSuite(mode: SemanticdbMode,
   trait OverloadHack4; implicit object OverloadHack4 extends OverloadHack4
   trait OverloadHack5; implicit object OverloadHack5 extends OverloadHack5
 
-  def targeted(markup: String, fn: m.Database => Unit)(implicit hack: OverloadHack1): Unit = {
+  def targeted(markup: String, fn: s.TextDocument => Unit)(implicit hack: OverloadHack1): Unit = {
     test(markup) {
-      val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
-      names match {
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      occurrences match {
         case List() => fn(database)
-        case _ => sys.error(s"0 chevrons expected, ${names.length} chevrons found")
+        case _ => sys.error(s"0 chevrons expected, ${occurrences.length} chevrons found")
       }
     }
   }
 
-  def targeted(markup: String, fn: (m.Database, m.Symbol) => Unit)(
+  def targeted(markup: String, fn: (s.TextDocument, String) => Unit)(
       implicit hack: OverloadHack2): Unit = {
     test(markup) {
-      val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
-      names match {
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      occurrences match {
         case List(name1) => fn(database, name1)
-        case _ => sys.error(s"1 chevron expected, ${names.length} chevrons found")
+        case _ => sys.error(s"1 chevron expected, ${occurrences.length} chevrons found")
       }
     }
   }
 
-  def targeted(markup: String, fn: (m.Database, m.Symbol, m.Symbol) => Unit)(
+  def targeted(markup: String, fn: (s.TextDocument, String, String) => Unit)(
       implicit hack: OverloadHack3): Unit = {
     test(markup) {
-      val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
-      names match {
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      occurrences match {
         case List(name1, name2) => fn(database, name1, name2)
-        case _ => sys.error(s"2 chevrons expected, ${names.length} chevrons found")
+        case _ => sys.error(s"2 chevrons expected, ${occurrences.length} chevrons found")
       }
     }
   }
 
-  def targeted(markup: String, fn: (m.Database, m.Symbol, m.Symbol, m.Symbol) => Unit)(
+  def targeted(markup: String, fn: (s.TextDocument, String, String, String) => Unit)(
       implicit hack: OverloadHack4): Unit = {
     test(markup) {
-      val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
-      names match {
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      occurrences match {
         case List(name1, name2, name3) => fn(database, name1, name2, name3)
-        case _ => sys.error(s"3 chevrons expected, ${names.length} chevrons found")
+        case _ => sys.error(s"3 chevrons expected, ${occurrences.length} chevrons found")
       }
     }
   }
 
-  def targeted(markup: String, fn: (m.Database, m.Symbol, m.Symbol, m.Symbol, m.Symbol) => Unit)(
+  def targeted(markup: String, fn: (s.TextDocument, String, String, String, String) => Unit)(
       implicit hack: OverloadHack5): Unit = {
     test(markup) {
-      val (database, names) = computeDatabaseAndNamesFromMarkup(markup)
-      names match {
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      occurrences match {
         case List(name1, name2, name3, name4) => fn(database, name1, name2, name3, name4)
-        case _ => sys.error(s"4 chevrons expected, ${names.length} chevrons found")
+        case _ => sys.error(s"4 chevrons expected, ${occurrences.length} chevrons found")
       }
     }
   }
 
-  def members(original: String, expected: String): Unit = {
-    targeted(original, { db =>
-      val obtained = db.symbols
-        .collect {
-          case rs if rs.denotation.members.nonEmpty =>
-            s"${rs.symbol}{\n  ${rs.denotation.members.mkString("\n  ")}\n}"
-        }
-        .mkString("\n")
-      // println(obtained)
-      assertNoDiff(obtained, expected)
-    })
-  }
-
-  def overrides(original: String, expected: String): Unit = {
-    targeted(original, { db =>
-      val obtained = db.symbols
-        .collect {
-          case rs if rs.denotation.overrides.nonEmpty =>
-            s"${rs.symbol}{\n  ${rs.denotation.overrides.mkString("\n  ")}\n}"
-        }
-        .mkString("\n")
-      assertNoDiff(obtained, expected)
-    })
-  }
 }

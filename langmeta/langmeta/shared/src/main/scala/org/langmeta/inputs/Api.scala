@@ -21,12 +21,6 @@ private[langmeta] trait Aliases {
     type VirtualFile = org.langmeta.inputs.Input.VirtualFile
     val VirtualFile = org.langmeta.inputs.Input.VirtualFile
 
-    type Synthetic = org.langmeta.inputs.Input.Synthetic
-    val Synthetic = org.langmeta.inputs.Input.Synthetic
-
-    type Denotation = org.langmeta.inputs.Input.Denotation
-    val Denotation = org.langmeta.inputs.Input.Denotation
-
     type Slice = org.langmeta.inputs.Input.Slice
     val Slice = org.langmeta.inputs.Input.Slice
   }

@@ -5,6 +5,7 @@ import org.scalameta.logger
 import org.scalatest.FunSuite
 import scala.meta.interactive.InteractiveSemanticdb._
 import scala.meta.testkit.DiffAssertions
+import scala.meta.internal.semanticdb3.Print
 import scala.tools.nsc.interactive.Global
 
 class InteractiveSuite extends FunSuite with DiffAssertions {
@@ -14,9 +15,10 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       expected: String
   ): Unit = {
     test(logger.revealWhitespace(original)) {
-      val options = List("-P:semanticdb:denotations:all", "-P:semanticdb:signatures:all")
-      val document = toDocument(compiler, original, options).copy(language = "Interactive")
-      assertNoDiff(document.syntax, expected)
+      val options = List("-P:semanticdb:symbols:all")
+      val document = toTextDocument(compiler, original, options)
+      val syntax = Print.document(document)
+      assertNoDiff(syntax, expected)
     }
   }
 
@@ -31,50 +33,60 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
     // Note that scala don't resolve to a symbol, this is a sign that the
     // typer hijacking is not working as expected with interactive.Global.
     """
-      |Language:
-      |Interactive
+      |interactive.scala
+      |-----------------
       |
-      |Names:
-      |[8..9): b <= b.
-      |[17..22): scala => scala.
-      |[23..33): concurrent => scala.concurrent.
-      |[34..40): Future => scala.concurrent.Future#
-      |[34..40): Future => scala.concurrent.Future.
-      |[48..49): a <= b.a.
-      |[58..59): x <= b.a.x().
-      |[75..79): List => scala.collection.immutable.List.
-      |[84..85): x => b.a.x().
-      |[86..87): + => scala.Predef.any2stringadd#`+`(String).
-      |
-      |Messages:
-      |[34..40): [warning] Unused import
+      |Summary:
+      |Schema => SemanticDB v3
+      |Uri => interactive.scala
+      |Text => non-empty
+      |Language => Scala
+      |Symbols => 8 entries
+      |Occurrences => 10 entries
+      |Diagnostics => 1 entries
+      |Synthetics => 2 entries
       |
       |Symbols:
       |b. => package b
       |b.a. => final object a
-      |b.a.x(). => val method x: List[Nothing]
-      |  [0..4): List => scala.collection.immutable.List#
-      |  [5..12): Nothing => scala.Nothing#
-      |b.a.x. => private val field x: List[Nothing]
-      |  [0..4): List => scala.collection.immutable.List#
-      |  [5..12): Nothing => scala.Nothing#
+      |b.a.x(). => val method x: : List[Nothing]
+      |  List => scala.collection.immutable.List#
+      |  Nothing => scala.Nothing#
+      |b.a.x. => private[this] val field x: List[Nothing]
+      |  List => scala.collection.immutable.List#
+      |  Nothing => scala.Nothing#
       |scala. => package scala
-      |scala.Predef.any2stringadd#`+`(String). => method +: (other: String): String
-      |  [8..14): String => scala.Predef.String#
-      |  [17..23): String => scala.Predef.String#
+      |scala.Predef.any2stringadd#`+`(String). => method +: (other: <?>): String
+      |  other => scala.Predef.any2stringadd#`+`(String).(other)
+      |  String => scala.Predef.String#
       |scala.collection.immutable.List. => final object List
       |scala.concurrent. => package concurrent
       |
+      |Occurrences:
+      |[0:8..0:9): b <= b.
+      |[1:7..1:12): scala => scala.
+      |[1:13..1:23): concurrent => scala.concurrent.
+      |[1:24..1:30): Future => scala.concurrent.Future#
+      |[1:24..1:30): Future => scala.concurrent.Future.
+      |[2:7..2:8): a <= b.a.
+      |[3:6..3:7): x <= b.a.x().
+      |[3:23..3:27): List => scala.collection.immutable.List.
+      |[4:2..4:3): x => b.a.x().
+      |[4:4..4:5): + => scala.Predef.any2stringadd#`+`(String).
+      |
+      |Diagnostics:
+      |[1:24..1:30)[warning] Unused import
+      |
       |Synthetics:
-      |[79..79): *.apply[Nothing]
-      |  [0..1): * => _star_.
-      |  [2..7): apply => scala.collection.immutable.List.apply(A*).
-      |  [8..15): Nothing => scala.Nothing#
-      |[84..85): scala.Predef.any2stringadd[List[Nothing]](*)
-      |  [27..31): List => scala.collection.immutable.List#
-      |  [32..39): Nothing => scala.Nothing#
-      |  [13..26): any2stringadd => scala.Predef.any2stringadd(A).
-      |  [42..43): * => _star_.
+      |[3:27..3:27):  => *.apply[Nothing]
+      |  [0:0..0:1): * => _star_.
+      |  [0:2..0:7): apply => scala.collection.immutable.List.apply(A*).
+      |  [0:8..0:15): Nothing => scala.Nothing#
+      |[4:2..4:3): x => scala.Predef.any2stringadd[List[Nothing]](*)
+      |  [0:13..0:26): any2stringadd => scala.Predef.any2stringadd(A).
+      |  [0:27..0:31): List => scala.collection.immutable.List#
+      |  [0:32..0:39): Nothing => scala.Nothing#
+      |  [0:42..0:43): * => _star_.
     """.stripMargin
   )
 
@@ -85,24 +97,34 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |  def add(a: In) = 1
       |}""".stripMargin,
     """
-      |Language:
-      |Interactive
+      |interactive.scala
+      |-----------------
       |
-      |Names:
-      |[8..9): b <= _empty_.b.
-      |[18..21): add <= _empty_.b.add(?).
-      |[22..23): a <= _empty_.b.add(?).(a)
-      |[25..27): In => _empty_.b.add(?).(a)`<error: <none>>`#
-      |
-      |Messages:
-      |[25..27): [error] not found: type In
+      |Summary:
+      |Schema => SemanticDB v3
+      |Uri => interactive.scala
+      |Text => non-empty
+      |Language => Scala
+      |Symbols => 4 entries
+      |Occurrences => 4 entries
+      |Diagnostics => 1 entries
       |
       |Symbols:
       |_empty_.b. => final object b
-      |_empty_.b.add(?). => method add: (a: <error>): Int
-      |  [14..17): Int => scala.Int#
-      |_empty_.b.add(?).(a) => param a: <error>
-      |_empty_.b.add(?).(a)`<error: <none>>`# => class `<error: <none>>`
+      |_empty_.b.add(?). => method add: (a: <?>): Int
+      |  a => _empty_.b.add(?).(a)
+      |  Int => scala.Int#
+      |_empty_.b.add(?).(a) => param a<?>
+      |_empty_.b.add(?).(a)`<error: <none>>`# => class <error: <none>>
+      |
+      |Occurrences:
+      |[1:7..1:8): b <= _empty_.b.
+      |[2:6..2:9): add <= _empty_.b.add(?).
+      |[2:10..2:11): a <= _empty_.b.add(?).(a)
+      |[2:13..2:15): In => _empty_.b.add(?).(a)`<error: <none>>`#
+      |
+      |Diagnostics:
+      |[2:13..2:15)[error] not found: type In
     """.stripMargin
   )
 }

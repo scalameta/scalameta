@@ -25,7 +25,7 @@ class SemanticdbPlugin(val global: Global)
 
   override def init(options: List[String], errFn: String => Unit): Boolean = {
     val originalOptions = options.map(option => "-P:" + name + ":" + option)
-    val parsedConf = SemanticdbConfig.parse(originalOptions, errFn)
+    val parsedConf = SemanticdbConfig.parse(originalOptions, errFn, g.reporter)
     config = amendTargetRoot(parsedConf)
     true
   }

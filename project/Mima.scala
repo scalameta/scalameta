@@ -33,10 +33,5 @@ object Mima {
   }
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
-    // Symbol.Multi.{syntax,toString} previously returned `Nothing` and now it returns `String`.
-    // These are binary breaking changes only for clients that statically resolved to
-    // `Symbol.Multi.{toString,syntax}`, which would have unconditionally resulted in an exception.
-    ProblemFilters.exclude[IncompatibleResultTypeProblem]("org.langmeta.semanticdb.Symbol#Multi.toString"),
-    ProblemFilters.exclude[IncompatibleResultTypeProblem]("org.langmeta.semanticdb.Symbol#Multi.syntax")
   )
 }

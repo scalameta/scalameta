@@ -22,6 +22,8 @@ import Type.Tag._
 import SingletonType.Tag._
 import Accessibility.Tag._
 import Language._
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 class Main(settings: Settings, reporter: Reporter) {
   import reporter._
@@ -99,7 +101,7 @@ class Main(settings: Settings, reporter: Reporter) {
     success
   }
 
-  private def pprint(doc: TextDocument): Unit = {
+  def pprint(doc: TextDocument): Unit = {
     out.println(doc.uri)
     out.println(s"-" * doc.uri.length)
     out.println("")
@@ -480,18 +482,9 @@ class Main(settings: Settings, reporter: Reporter) {
               }
             }
           case None =>
-            info.signature match {
-              case Some(sig) =>
-                out.print(s": ${sig.text}")
-                out.println("")
-                val occs = sig.occurrences.sorted
-                rep("  ", occs, "  ")(pprint(_, sig))
-              case _ =>
-                out.println("")
-            }
+            out.println("<?>")
         }
-        info.overrides.foreach(sym => out.println(s"  overrides $sym"))
-      case OBJECT | PACKAGE | PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
+      case OBJECT | PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
         info.tpe match {
           case Some(tpe: Type) =>
             tpe.classInfoType match {
@@ -508,10 +501,10 @@ class Main(settings: Settings, reporter: Reporter) {
                 out.println("")
             }
           case None =>
-            if (info.members.nonEmpty) out.println(s".{+${info.members.length} members}")
-            else out.println("")
-            info.overrides.sorted.foreach(sym => out.println(s"  extends $sym"))
+            out.println("<?>")
         }
+      case PACKAGE =>
+        out.println("")
       case UNKNOWN_KIND | Kind.Unrecognized(_) =>
         out.println("")
     }

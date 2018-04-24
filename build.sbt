@@ -62,8 +62,9 @@ commands += CiCommand("ci-publish")(
   "publishSigned" :: Nil
 )
 commands += Command.command("mima") { s =>
-  s"very mimaReportBinaryIssues" ::
-    s
+  // MiMa is disabled until we have a 4.0.0-RC1 out.
+  // s"very mimaReportBinaryIssues" ::
+  s
 }
 commands += Command.command("ci-metac") { s =>
   val out = file("target/scala-library")
@@ -212,6 +213,7 @@ lazy val langmeta = crossProject(JSPlatform, JVMPlatform)
   .settings(
     publishableSettings,
     description := "Langmeta umbrella module that includes all public APIs",
+    scalacOptions -= "-Xfatal-warnings", // suppress deprecation warnings
     libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.5.3"
   )
   .jvmSettings(
@@ -406,11 +408,9 @@ lazy val semanticdbIntegration = project
         s"-Yrangepos",
         s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
         s"-P:semanticdb:failures:error", // fail fast during development.
-        s"-P:semanticdb:members:all",
         s"-P:semanticdb:exclude:Exclude.scala",
-        s"-P:semanticdb:overrides:all",
-        s"-P:semanticdb:denotations:all",
-        s"-P:semanticdb:signatures:all",
+        s"-P:semanticdb:symbols:all",
+        s"-P:semanticdb:types:all",
         s"-Xplugin-require:semanticdb"
       )
     },

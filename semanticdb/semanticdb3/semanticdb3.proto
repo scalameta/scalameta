@@ -210,15 +210,12 @@ message SymbolInformation {
     PRIMARY = 0x2000;
     ENUM = 0x4000;
   }
-  reserved 2, 6, 10, 12;
+  reserved 2, 6, 7, 8, 9, 10, 12;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  TextDocument signature = 7;
-  repeated string members = 8;
-  repeated string overrides = 9;
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;

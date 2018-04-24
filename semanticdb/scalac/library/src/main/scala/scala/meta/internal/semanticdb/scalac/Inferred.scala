@@ -1,15 +1,26 @@
 package scala.meta
 package internal.semanticdb.scalac
 
+import scala.meta.internal.{semanticdb3 => s}
+import org.langmeta.internal.inputs._
+
 case class SyntheticRange(start: Int, end: Int, symbol: Symbol) {
   def addOffset(offset: Int) = SyntheticRange(start + offset, end + offset, symbol)
-  def toMeta(input: Input): ResolvedName =
-    ResolvedName(Position.Range(input, start, end), symbol, isDefinition = false)
+  def toSymbolOccurrence(input: Input): s.SymbolOccurrence =
+    s.SymbolOccurrence(
+      Some(
+        Position.Range(input, start, end).toRange
+      ),
+      symbol.syntax,
+      s.SymbolOccurrence.Role.REFERENCE
+    )
 }
-case class AttributedSynthetic(text: String, names: List[SyntheticRange]) {
-  def +(other: String) = AttributedSynthetic(text + other, names)
+case class AttributedSynthetic(text: String, occurrences: List[SyntheticRange]) {
+  def +(other: String) = AttributedSynthetic(text + other, occurrences)
   def +(other: AttributedSynthetic) =
-    AttributedSynthetic(text + other.text, names ++ other.names.map(_.addOffset(text.length)))
+    AttributedSynthetic(
+      text + other.text,
+      occurrences ++ other.occurrences.map(_.addOffset(text.length)))
 }
 
 object AttributedSynthetic {
@@ -43,7 +54,7 @@ case class Inferred(
   private def all: List[AttributedSynthetic] =
     (select :: targs :: conversion :: args :: Nil).flatten
 
-  def toSynthetic(input: Input, pos: Position): Synthetic = {
+  def toSynthetic(input: Input, pos: Position): s.Synthetic = {
     def onlyConversionIsDefined =
       conversion.isDefined &&
         select.isEmpty &&
@@ -59,8 +70,16 @@ case class Inferred(
         else AttributedSynthetic.empty
       all.foldLeft(start)(_ + _)
     }
-    val syntheticInput = Input.Synthetic(synthetic.text, input, pos.start, pos.end)
-    val names = synthetic.names.map(_.toMeta(syntheticInput))
-    new Synthetic(pos, synthetic.text, names)
+    val syntheticInput = Input.String(synthetic.text)
+    val occurrences = synthetic.occurrences.map(_.toSymbolOccurrence(syntheticInput))
+    s.Synthetic(
+      range = Some(pos.toRange),
+      text = Some(
+        s.TextDocument(
+          text = synthetic.text,
+          occurrences = occurrences
+        )
+      )
+    )
   }
 }

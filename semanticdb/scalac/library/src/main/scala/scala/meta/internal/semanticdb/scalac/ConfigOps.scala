@@ -2,6 +2,8 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.io.PathIO
 import scala.meta.io._
+import scala.reflect.internal.util.NoPosition
+import scala.tools.nsc.reporters.Reporter
 import scala.util.matching.Regex
 
 case class SemanticdbConfig(
@@ -9,13 +11,11 @@ case class SemanticdbConfig(
     targetroot: AbsolutePath,
     mode: SemanticdbMode,
     failures: FailureMode,
-    denotations: DenotationMode,
-    signatures: SignatureMode,
-    members: MemberMode,
-    overrides: OverrideMode,
+    symbols: SymbolMode,
+    types: TypeMode,
     profiling: ProfilingMode,
     fileFilter: FileFilter,
-    messages: MessageMode,
+    diagnostics: DiagnosticMode,
     synthetics: SyntheticMode,
     owners: OwnerMode) {
   def syntax: String = {
@@ -25,14 +25,12 @@ case class SemanticdbConfig(
       "targetroot" -> targetroot,
       "mode" -> mode.name,
       "failures" -> failures.name,
-      "signatures" -> signatures.name,
-      "denotations" -> denotations.name,
-      "members" -> members.name,
-      "overrides" -> overrides.name,
+      "types" -> types.name,
+      "symbols" -> symbols.name,
       "profiling" -> profiling.name,
       "include" -> fileFilter.include,
       "exclude" -> fileFilter.exclude,
-      "messages" -> messages.name,
+      "diagnostics" -> diagnostics.name,
       "synthetics" -> synthetics.name,
       "owners" -> owners.name
     ).map { case (k, v) => s"-P:$p:$k:$v" }.mkString(" ")
@@ -45,13 +43,11 @@ object SemanticdbConfig {
     PathIO.workingDirectory,
     SemanticdbMode.Fat,
     FailureMode.Warning,
-    DenotationMode.Definitions,
-    SignatureMode.New,
-    MemberMode.None,
-    OverrideMode.None,
+    SymbolMode.Definitions,
+    TypeMode.All,
     ProfilingMode.Off,
     FileFilter.matchEverything,
-    MessageMode.All,
+    DiagnosticMode.All,
     SyntheticMode.All,
     OwnerMode.All
   )
@@ -60,17 +56,24 @@ object SemanticdbConfig {
   private val SetMode = "mode:(.*)".r
   private val SetFailures = "failures:(.*)".r
   private val SetDenotations = "denotations:(.*)".r
+  private val SetSymbolInformation = "symbols:(.*)".r
   private val SetSignatures = "signatures:(.*)".r
+  private val SetTypes = "types:(.*)".r
   private val SetMembers = "members:(.*)".r
   private val SetOverrides = "overrides:(.*)".r
   private val SetProfiling = "profiling:(.*)".r
   private val SetInclude = "include:(.*)".r
   private val SetExclude = "exclude:(.*)".r
   private val SetMessages = "messages:(.*)".r
+  private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "synthetics:(.*)".r
   private val SetOwners = "owners:(.*)".r
 
-  def parse(scalacOptions: List[String], errFn: String => Unit): SemanticdbConfig = {
+  def parse(
+      scalacOptions: List[String],
+      errFn: String => Unit,
+      reporter: Reporter
+  ): SemanticdbConfig = {
     var config = default
     val relevantOptions = scalacOptions.filter(_.startsWith("-P:semanticdb:"))
     val strippedOptions = relevantOptions.map(_.stripPrefix("-P:semanticdb:"))
@@ -81,22 +84,39 @@ object SemanticdbConfig {
         config = config.copy(mode = mode)
       case SetFailures(FailureMode(severity)) =>
         config = config.copy(failures = severity)
-      case SetDenotations(DenotationMode(denotations)) =>
-        config = config.copy(denotations = denotations)
-      case SetSignatures(SignatureMode(signatures)) =>
-        config = config.copy(signatures = signatures)
-      case SetMembers(MemberMode(members)) =>
-        config = config.copy(members = members)
-      case SetOverrides(OverrideMode(overrides)) =>
-        config = config.copy(overrides = overrides)
+      case option @ SetDenotations(SymbolMode(denotations)) =>
+        // TODO(olafur): remove this on next breaking release
+        reporter.warning(
+          NoPosition,
+          s"-P:semanticdb:$option is deprecated. " +
+            s"Use -P:semanticdb:symbols:{definitions,all,none} instead.")
+        config = config.copy(symbols = denotations)
+      case SetSymbolInformation(SymbolMode(infos)) =>
+        config = config.copy(symbols = infos)
+      case option @ SetSignatures(_) =>
+        errFn(
+          s"-P:semanticb:$option is no longer supported. " +
+            s"Use -P:semanticdb:types:{all,none} instead.")
+      case SetTypes(TypeMode(types)) =>
+        config = config.copy(types = types)
+      case option @ SetMembers(_) =>
+        errFn(s"$option is no longer supported.")
+      case option @ SetOverrides(_) =>
+        errFn(s"$option is no longer supported.")
       case SetProfiling(ProfilingMode(profiling)) =>
         config = config.copy(profiling = profiling)
       case SetInclude(include) =>
         config = config.copy(fileFilter = config.fileFilter.copy(include = include.r))
       case SetExclude(exclude) =>
         config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
-      case SetMessages(MessageMode(messages)) =>
-        config = config.copy(messages = messages)
+      case option @ SetMessages(DiagnosticMode(messages)) =>
+        reporter.warning(
+          NoPosition,
+          s"-P:semanticdb:$option is deprecated. " +
+            s"Use -P:semanticdb:diagnostics:{all,none} instead.")
+        config = config.copy(diagnostics = messages)
+      case SetDiagnostics(DiagnosticMode(diagnostics)) =>
+        config = config.copy(diagnostics = diagnostics)
       case SetSynthetics(SyntheticMode(synthetics)) =>
         config = config.copy(synthetics = synthetics)
       case SetOwners(OwnerMode(owners)) =>
@@ -135,62 +155,33 @@ object FailureMode {
   case object Ignore extends FailureMode
 }
 
-sealed abstract class DenotationMode {
-  import DenotationMode._
+sealed abstract class SymbolMode {
+  import SymbolMode._
   def name: String = toString.toLowerCase
   def saveDefinitions: Boolean = this == All || this == Definitions
   def saveReferences: Boolean = this == All
 }
-object DenotationMode {
+object SymbolMode {
   def name: String = toString.toLowerCase
-  def unapply(arg: String): Option[DenotationMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def unapply(arg: String): Option[SymbolMode] =
+    all.find(_.toString.equalsIgnoreCase(arg))
   def all = List(All, Definitions, None)
-  case object All extends DenotationMode
-  case object Definitions extends DenotationMode
-  case object None extends DenotationMode
+  case object All extends SymbolMode
+  case object Definitions extends SymbolMode
+  case object None extends SymbolMode
 }
 
-sealed abstract class SignatureMode {
+sealed abstract class TypeMode {
   def name: String = toString.toLowerCase
-  import SignatureMode._
+  import TypeMode._
   def isAll: Boolean = this == All
-  def isNew: Boolean = this == New
-  def isOld: Boolean = this == Old
   def isNone: Boolean = this == None
 }
-object SignatureMode {
-  def unapply(arg: String): Option[SignatureMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, New, Old, None)
-  case object All extends SignatureMode
-  case object New extends SignatureMode
-  case object Old extends SignatureMode
-  case object None extends SignatureMode
-}
-
-sealed abstract class MemberMode {
-  import MemberMode._
-  def name: String = toString.toLowerCase
-  def isAll: Boolean = this == All
-}
-object MemberMode {
-  def unapply(arg: String): Option[MemberMode] =
-    all.find(_.toString.equalsIgnoreCase(arg))
+object TypeMode {
+  def unapply(arg: String): Option[TypeMode] = all.find(_.toString.equalsIgnoreCase(arg))
   def all = List(All, None)
-  case object All extends MemberMode
-  case object None extends MemberMode
-}
-
-sealed abstract class OverrideMode {
-  import OverrideMode._
-  def name: String = toString.toLowerCase
-  def isAll: Boolean = this == All
-}
-object OverrideMode {
-  def unapply(arg: String): Option[OverrideMode] =
-    all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, None)
-  case object All extends OverrideMode
-  case object None extends OverrideMode
+  case object None extends TypeMode
+  case object All extends TypeMode
 }
 
 sealed abstract class ProfilingMode {
@@ -217,16 +208,16 @@ object FileFilter {
   val matchEverything = FileFilter(".*", "$a")
 }
 
-sealed abstract class MessageMode {
+sealed abstract class DiagnosticMode {
   def name: String = toString.toLowerCase
-  import MessageMode._
+  import DiagnosticMode._
   def saveMessages: Boolean = this == All
 }
-object MessageMode {
-  def unapply(arg: String): Option[MessageMode] = all.find(_.toString.equalsIgnoreCase(arg))
+object DiagnosticMode {
+  def unapply(arg: String): Option[DiagnosticMode] = all.find(_.toString.equalsIgnoreCase(arg))
   def all = List(All, None)
-  case object All extends MessageMode
-  case object None extends MessageMode
+  case object All extends DiagnosticMode
+  case object None extends DiagnosticMode
 }
 
 sealed abstract class SyntheticMode {

@@ -8,7 +8,7 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.reporters.StoreReporter
-import scala.meta.semanticdb.Document
+import scala.meta.internal.{semanticdb3 => s}
 
 object InteractiveSemanticdb {
 
@@ -34,14 +34,18 @@ object InteractiveSemanticdb {
     compiler
   }
 
-  def toDocument(compiler: Global, code: String): Document =
-    toDocument(compiler, code, "interactive.scala", 10000, Nil)
+  def toTextDocument(compiler: Global, code: String): s.TextDocument =
+    toTextDocument(compiler, code, "interactive.scala", 10000, Nil)
 
-  def toDocument(compiler: Global, code: String, options: List[String]): Document =
-    toDocument(compiler, code, "interactive.scala", 10000, options)
+  def toTextDocument(compiler: Global, code: String, options: List[String]): s.TextDocument =
+    toTextDocument(compiler, code, "interactive.scala", 10000, options)
 
-  def toDocument(compiler: Global, code: String, filename: String, timeout: Long): Document = {
-    toDocument(compiler, code, filename, timeout, Nil)
+  def toTextDocument(
+      compiler: Global,
+      code: String,
+      filename: String,
+      timeout: Long): s.TextDocument = {
+    toTextDocument(compiler, code, filename, timeout, Nil)
   }
 
   /**
@@ -53,12 +57,17 @@ object InteractiveSemanticdb {
     * @param timeout max number of milliseconds to allow the presentation compiler
     *                to typecheck this file.
     * @param options configuration options to influence how the document is built.
-    *                Must start with -P:semanticdb: prefix, for example "-P:semanticdb:overrides:all".
+    *                Must start with -P:semanticdb: prefix, for example "-P:semanticdb:symbols:all".
     *  @throws Exception note that this method can fail in many different ways
     *                    with exceptions, including but not limited to tokenize/parse/type
     *                    errors.
     */
-  def toDocument(compiler: Global, code: String, filename: String, timeout: Long, options: List[String]): Document = {
+  def toTextDocument(
+      compiler: Global,
+      code: String,
+      filename: String,
+      timeout: Long,
+      options: List[String]): s.TextDocument = {
     val unit = addCompilationUnit(compiler, code, filename)
     // reload seems to be necessary before askLoadedType.
     ask[Unit](r => compiler.askReload(unit.source :: Nil, r)).get
@@ -70,15 +79,15 @@ object InteractiveSemanticdb {
       case Some(Right(ex)) => throw ex
       case None => throw new IllegalArgumentException("Presentation compiler timed out")
     }
-    lazy val databaseOps: DatabaseOps {
+    lazy val semanticdbOps: SemanticdbOps {
       val global: compiler.type
-    } = new DatabaseOps {
+    } = new SemanticdbOps {
       val global: compiler.type = compiler
     }
-    databaseOps.config = SemanticdbConfig.parse(options, _ => ())
-    import databaseOps._
+    semanticdbOps.config = SemanticdbConfig.parse(options, _ => (), compiler.reporter)
+    import semanticdbOps._
     unit.body = tree
-    val document = unit.asInstanceOf[databaseOps.global.CompilationUnit].toDocument
+    val document = unit.asInstanceOf[semanticdbOps.global.CompilationUnit].toTextDocument
     document
   }
 

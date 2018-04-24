@@ -8,10 +8,10 @@ import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.reflect.io.{PlainFile => GPlainFile}
 import scala.{meta => m}
-import scala.meta.internal.inputs._
+import org.langmeta.internal.inputs._
 import scala.meta.internal.{semanticdb3 => s}
 
-trait DocumentOps { self: DatabaseOps =>
+trait TextDocumentOps { self: SemanticdbOps =>
   def validateCompilerState(): Unit = {
     if (!g.settings.Yrangepos.value) {
       sys.error("the compiler instance must have -Yrangepos enabled")
@@ -44,12 +44,11 @@ trait DocumentOps { self: DatabaseOps =>
   }
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
-    def toDocument: m.Document = {
+    def toTextDocument: s.TextDocument = {
       val binders = mutable.Set[m.Position]()
-      val names = mutable.Map[m.Position, m.Symbol]()
-      val denotations = mutable.Map[m.Symbol, m.Denotation]()
-      val members = mutable.Map[m.Symbol, List[m.Signature]]()
-      val inferred = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
+      val occurrences = mutable.Map[m.Position, m.Symbol]()
+      val symbols = mutable.Map[m.Symbol, s.SymbolInformation]()
+      val synthetics = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
       val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
       val todo = mutable.Set[m.Name]() // names to map to global trees
       val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
@@ -166,22 +165,9 @@ trait DocumentOps { self: DatabaseOps =>
               // https://github.com/scalameta/scalameta/issues/665
               // Instead of crashing with "unsupported file", we ignore these cases.
               if (gsym0 == null) return
-              if (gsym0.isAnonymousClass) {
-                if (config.members.isAll) {
-                  gsym0.asClass.parentSymbols
-                    .filterNot(_ == g.definitions.ObjectClass)
-                    .foreach { parent =>
-                      val symbol = parent.toSemantic
-                      if (!members.contains(symbol)) {
-                        members(symbol) = parent.tpe.lookupMembers
-                      }
-                    }
-                }
-
-                return
-              }
+              if (gsym0.isAnonymousClass) return
               if (mtree.pos == m.Position.None) return
-              if (names.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
+              if (occurrences.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
               val gsym = {
                 def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
@@ -193,7 +179,7 @@ trait DocumentOps { self: DatabaseOps =>
 
               todo -= mtree
 
-              names(mtree.pos) = symbol
+              occurrences(mtree.pos) = symbol
               if (mtree.isDefinition) {
                 val isToplevel = gsym.owner.hasPackageFlag
                 if (isToplevel) {
@@ -214,22 +200,14 @@ trait DocumentOps { self: DatabaseOps =>
                 binders += mtree.pos
               }
 
-              def saveDenotation(): Unit = {
+              def saveSymbol(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  val saveOverrides = config.overrides.isAll && mtree.isDefinition
-                  val DenotationResult(denot, todoOverrides, todoTpe1) =
-                    gs.toDenotation(saveOverrides)
-                  denotations(ms) = denot
-                  val todoTpe2 = todoOverrides.flatMap { ogs =>
-                    val DenotationResult(odenot, _, otodoTpe) =
-                      ogs.toDenotation(saveOverrides = true)
-                    denotations(ogs.toSemantic) = odenot
-                    otodoTpe
-                  }
-                  (todoTpe1 ++ todoTpe2).foreach { tgs =>
+                  val SymbolInformationResult(denot, todoTpe1) = gs.toSymbolInformation()
+                  symbols(ms) = denot
+                  todoTpe1.foreach { tgs =>
                     if (tgs.isSemanticdbLocal) {
                       val tms = tgs.toSemantic
-                      if (tms != m.Symbol.None && !denotations.contains(tms)) {
+                      if (tms != m.Symbol.None && !symbols.contains(tms)) {
                         add(tms, tgs)
                       }
                     }
@@ -261,8 +239,8 @@ trait DocumentOps { self: DatabaseOps =>
                   }
                 }
               }
-              if (mtree.isDefinition && config.denotations.saveDefinitions) saveDenotation()
-              if (mtree.isReference && config.denotations.saveReferences) saveDenotation()
+              if (mtree.isDefinition && config.symbols.saveDefinitions) saveSymbol()
+              if (mtree.isReference && config.symbols.saveReferences) saveSymbol()
 
               def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
                 if (map.contains(mtree)) {
@@ -315,11 +293,6 @@ trait DocumentOps { self: DatabaseOps =>
               val mname = mctordefs(gstart)
               gtree match {
                 case gtree: g.Template =>
-                  if (config.members.isAll) {
-                    gtree.parents.foreach { parent =>
-                      members(parent.symbol.toSemantic) = parent.tpe.lookupMembers
-                    }
-                  }
                   val gctor =
                     gtree.body.find(x => Option(x.symbol).exists(_.isPrimaryConstructor))
                   success(mname, gctor.map(_.symbol).getOrElse(g.NoSymbol))
@@ -346,12 +319,9 @@ trait DocumentOps { self: DatabaseOps =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
                 if (!gtree.symbol.isSemanticdbLocal) {
-                  denotations(gtree.symbol.toSemantic) = gtree.symbol.toDenotation(false).denot
+                  symbols(gtree.symbol.toSemantic) = gtree.symbol.toSymbolInformation().denot
                 }
               case gtree: g.PackageDef =>
-                if (config.members.isAll) {
-                  members(gtree.symbol.toSemantic) = gtree.pid.tpe.lookupMembers
-                }
               // NOTE: capture PackageDef.pid instead
               case gtree: g.ModuleDef if gtree.name == g.nme.PACKAGE =>
                 // TODO: if a package object comes first in the compilation unit
@@ -388,8 +358,7 @@ trait DocumentOps { self: DatabaseOps =>
                 tryMstart(gpoint)
               case gtree: g.Import =>
                 val sels = gtree.selectors.flatMap { sel =>
-                  if (sel.name == g.nme.WILDCARD && config.members.isAll) {
-                    members(gtree.expr.symbol.toSemantic) = gtree.expr.tpe.lookupMembers
+                  if (sel.name == g.nme.WILDCARD) {
                     Nil
                   } else {
                     mstarts.get(sel.namePos).map(mname => (sel.name, mname))
@@ -415,7 +384,7 @@ trait DocumentOps { self: DatabaseOps =>
 
             import scala.meta.internal.semanticdb.scalac.{AttributedSynthetic => S}
             def success(pos: m.Position, f: Inferred => Inferred): Unit = {
-              inferred(pos) = f(inferred(pos))
+              synthetics(pos) = f(synthetics(pos))
             }
 
             if (!gtree.pos.isRange) return
@@ -537,39 +506,31 @@ trait DocumentOps { self: DatabaseOps =>
 
       val input = unit.source.toInput
 
-      val flattenedNames = names.flatMap {
+      val finalOccurrences = occurrences.flatMap {
         case (pos, sym) =>
-          flatten(sym).map(m.ResolvedName(pos, _, binders(pos)))
-      }.toList
-      val messages = unit.reportedMessages(mstarts)
-      val symbols = denotations.map {
-        case (sym, denot) =>
-          val denotationWithMembers = members.get(sym).fold(denot) { members =>
-            new m.Denotation(
-              denot.flags,
-              denot.name,
-              denot.signature,
-              denot.names,
-              members,
-              denot.overrides,
-              denot.tpeInternal,
-              denot.annotationsInternal,
-              denot.accessibilityInternal,
-              denot.owner)
+          flatten(sym).map { flatSym =>
+            val role =
+              if (binders.contains(pos)) s.SymbolOccurrence.Role.DEFINITION
+              else s.SymbolOccurrence.Role.REFERENCE
+            s.SymbolOccurrence(Some(pos.toRange), flatSym.syntax, role)
           }
-          m.ResolvedSymbol(sym, denotationWithMembers)
-      }.toList
-      val synthetics = inferred.toIterator.map {
-        case (pos, inferred) => inferred.toSynthetic(input, pos)
       }.toList
 
-      m.Document(
-        input,
-        language,
-        flattenedNames,
-        messages,
-        symbols,
-        synthetics
+      val diagnostics = unit.reportedDiagnostics(mstarts)
+
+      val finalSynthetics = synthetics.toIterator.map {
+        case (pos, synthetic) => synthetic.toSynthetic(input, pos)
+      }.toList
+
+      s.TextDocument(
+        schema = s.Schema.SEMANTICDB3,
+        uri = unit.source.toUri,
+        text = unit.source.toText,
+        language = s.Language.SCALA,
+        symbols = symbols.values.toSeq,
+        occurrences = finalOccurrences,
+        diagnostics = diagnostics,
+        synthetics = finalSynthetics
       )
     }
   }
