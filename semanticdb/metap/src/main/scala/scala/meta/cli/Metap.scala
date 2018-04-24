@@ -35,11 +35,4 @@ object Metap {
     main.process()
   }
 
-  def print(doc: TextDocument): String = {
-    val baos = new ByteArrayOutputStream()
-    val main = new Main(Settings(), Reporter().withOut(new PrintStream(baos)))
-    main.pprint(doc)
-    baos.toString()
-  }
-
 }

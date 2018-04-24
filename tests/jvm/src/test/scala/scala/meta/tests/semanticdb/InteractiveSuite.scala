@@ -3,10 +3,9 @@ package semanticdb
 
 import org.scalameta.logger
 import org.scalatest.FunSuite
-import scala.meta.cli.Metap
 import scala.meta.interactive.InteractiveSemanticdb._
-import scala.meta.internal.metap.Main
 import scala.meta.testkit.DiffAssertions
+import scala.meta.internal.semanticdb3.Print
 import scala.tools.nsc.interactive.Global
 
 class InteractiveSuite extends FunSuite with DiffAssertions {
@@ -18,7 +17,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
     test(logger.revealWhitespace(original)) {
       val options = List("-P:semanticdb:symbols:all")
       val document = toTextDocument(compiler, original, options)
-      val syntax = Metap.print(document)
+      val syntax = Print.document(document)
       assertNoDiff(syntax, expected)
     }
   }
