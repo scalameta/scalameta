@@ -25,7 +25,7 @@ object Metacp {
       case Some(settings) =>
         process(settings, reporter) match {
           case Some(mclasspath) =>
-            reporter.out.println(mclasspath.shallow.mkString(File.pathSeparator))
+            reporter.out.println(mclasspath.entries.mkString(File.pathSeparator))
             0
           case None =>
             1

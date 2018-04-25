@@ -81,10 +81,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.io
       |scala.meta.io.AbsolutePath
       |scala.meta.io.Classpath
-      |scala.meta.io.Fragment
-      |scala.meta.io.Multipath
       |scala.meta.io.RelativePath
-      |scala.meta.io.Sourcepath
       |scala.meta.metac
       |scala.meta.metac.Reporter *
       |scala.meta.metac.Settings *

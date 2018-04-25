@@ -10,15 +10,6 @@ private[meta] trait Aliases {
   type RelativePath = scala.meta.io.RelativePath
   lazy val RelativePath = scala.meta.io.RelativePath
 
-  type Multipath = scala.meta.io.Multipath
-  // there's no term Multipath, so we don't have a term alias here
-
-  type Fragment = scala.meta.io.Fragment
-  val Fragment = scala.meta.io.Fragment
-
   type Classpath = scala.meta.io.Classpath
   lazy val Classpath = scala.meta.io.Classpath
-
-  type Sourcepath = scala.meta.io.Sourcepath
-  lazy val Sourcepath = scala.meta.io.Sourcepath
 }
