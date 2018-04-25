@@ -29,7 +29,7 @@ class PositionSuite extends ParseSuite {
     val tree = term("(1 + 2).foo")
     assert(tree.show[Positions] === """
       |Term.Select{0..11}(
-        |Term.ApplyInfix{0..7}(
+        |Term.ApplyInfix{1..6}(
           |Lit.Int{1..2}(1),
           | Term.Name{3..4}("+"),
           | Nil,

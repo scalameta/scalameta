@@ -1860,21 +1860,23 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           next()
           atPos(in.prevTokenPos, in.prevTokenPos)(Term.Placeholder())
         case LeftParen() =>
-          autoPos {
-            val maybeTupleArgs = inParens({
-              if (token.is[RightParen]) Nil
-              else commaSeparated(expr(location = NoStat, allowRepeated = allowRepeated))
-            })
-            maybeTupleArgs match {
-              case List(Term.Quasi(1, _)) =>
+          val maybeTupleArgs = inParens({
+            if (token.is[RightParen]) Nil
+            else commaSeparated(expr(location = NoStat, allowRepeated = allowRepeated))
+          })
+          maybeTupleArgs match {
+            case List(Term.Quasi(1, _)) =>
+              autoPos {
                 makeTupleTerm(maybeTupleArgs)
-              case List(singleArg) =>
-                singleArg
-              case multipleArgs =>
-                val repeatedArgs = multipleArgs.collect{ case repeated: Term.Repeated => repeated }
-                repeatedArgs.foreach(arg => syntaxError("repeated argument not allowed here", at = arg.tokens.last.prev))
+              }
+            case List(singleArg) =>
+              singleArg
+            case multipleArgs =>
+              val repeatedArgs = multipleArgs.collect{ case repeated: Term.Repeated => repeated }
+              repeatedArgs.foreach(arg => syntaxError("repeated argument not allowed here", at = arg.tokens.last.prev))
+              autoPos {
                 makeTupleTerm(multipleArgs)
-            }
+              }
           }
         case LeftBrace() =>
           canApply = false
@@ -1947,7 +1949,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           simpleExprRest(argsToTerm(args, openParenPos, closeParenPos), canApply = true) :: Nil
         case _ =>
           args match {
-            case arg :: Nil => atPos(openParenPos, closeParenPos)(arg) :: Nil
+            case arg :: Nil => atPos(openParenPos + 1, closeParenPos - 1)(arg) :: Nil
             case other => other
           }
       }
