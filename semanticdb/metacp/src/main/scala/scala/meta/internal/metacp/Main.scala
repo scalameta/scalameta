@@ -19,8 +19,8 @@ class Main(settings: Settings, reporter: Reporter) {
     val success = new AtomicBoolean(true)
 
     val classpath: GenSeq[AbsolutePath] =
-      if (settings.par) settings.classpath.shallow.par
-      else settings.classpath.shallow
+      if (settings.par) settings.classpath.entries.par
+      else settings.classpath.entries
 
     val buffer = new ConcurrentLinkedQueue[AbsolutePath]()
 
