@@ -4,7 +4,7 @@ import java.io.File.pathSeparator
 
 final case class Classpath(entries: List[AbsolutePath]) {
 
-  @deprecated("Use .entries instead", "v4.0.0")
+  @deprecated("Use .entries instead", "4.0.0")
   def shallow: List[AbsolutePath] = entries
 
   def syntax: String = entries.mkString(pathSeparator)
