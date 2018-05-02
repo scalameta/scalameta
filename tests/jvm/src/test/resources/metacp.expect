@@ -900,7 +900,7 @@ example.Methods#m7a(Methods,List,Ordering). => method m7a: [U >: Nothing <: Any]
 example.Methods#m7a(Methods,List,Ordering).(c) => param c: Methods[T]
   Methods => example.Methods#
   T => example.Methods#[T]
-example.Methods#m7a(Methods,List,Ordering).(evidence$1) => implicit param evidence$1: Ordering[U]
+example.Methods#m7a(Methods,List,Ordering).(evidence$1) => implicit synthetic param evidence$1: Ordering[U]
   Ordering => scala.math.Ordering#
   U => example.Methods#m7a(Methods,List,Ordering).[U]
 example.Methods#m7a(Methods,List,Ordering).(l) => param l: Methods.this.List[U]
@@ -920,7 +920,7 @@ example.Methods#m7b(List,Function1). => method m7b: [U >: Nothing <: Any] => (l:
   evidence$2 => example.Methods#m7b(List,Function1).(evidence$2)
   Function1 => scala.Function1#
   T => example.Methods#[T]
-example.Methods#m7b(List,Function1).(evidence$2) => implicit param evidence$2: Function1[U, T]
+example.Methods#m7b(List,Function1).(evidence$2) => implicit synthetic param evidence$2: Function1[U, T]
   Function1 => scala.Function1#
   U => example.Methods#m7b(List,Function1).[U]
   T => example.Methods#[T]
@@ -1013,31 +1013,31 @@ example.Vals#`yam_=`(Int). => abstract var method yam_=: (x$1: Int): Unit
   x$1 => example.Vals#`yam_=`(Int).(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-example.Vals#`yam_=`(Int).(x$1) => param x$1: Int
+example.Vals#`yam_=`(Int).(x$1) => synthetic param x$1: Int
   Int => scala.Int#
 example.Vals#`yfm_=`(Int). => final var method yfm_=: (x$1: Int): Unit
   x$1 => example.Vals#`yfm_=`(Int).(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-example.Vals#`yfm_=`(Int).(x$1) => param x$1: Int
+example.Vals#`yfm_=`(Int).(x$1) => synthetic param x$1: Int
   Int => scala.Int#
 example.Vals#`yim_=`(Int). => var method yim_=: (x$1: Int): Unit
   x$1 => example.Vals#`yim_=`(Int).(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-example.Vals#`yim_=`(Int).(x$1) => param x$1: Int
+example.Vals#`yim_=`(Int).(x$1) => synthetic param x$1: Int
   Int => scala.Int#
 example.Vals#`ym_=`(Int). => var method ym_=: (x$1: Int): Unit
   x$1 => example.Vals#`ym_=`(Int).(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-example.Vals#`ym_=`(Int).(x$1) => param x$1: Int
+example.Vals#`ym_=`(Int).(x$1) => synthetic param x$1: Int
   Int => scala.Int#
 example.Vals#`yp_=`(Int). => var method yp_=: (x$1: Int): Unit
   x$1 => example.Vals#`yp_=`(Int).(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-example.Vals#`yp_=`(Int).(x$1) => param x$1: Int
+example.Vals#`yp_=`(Int).(x$1) => synthetic param x$1: Int
   Int => scala.Int#
 example.Vals#m(). => method m: : Unit
   Unit => scala.Unit#
@@ -1160,7 +1160,7 @@ flags.p.package.AA#`z_=`(Int). => var method z_=: (x$1: Int): Unit
   x$1 => flags.p.package.AA#`z_=`(Int).(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-flags.p.package.AA#`z_=`(Int).(x$1) => param x$1: Int
+flags.p.package.AA#`z_=`(Int).(x$1) => synthetic param x$1: Int
   Int => scala.Int#
 flags.p.package.AA#x. => private[this] val field x: Int
   Int => scala.Int#
@@ -1238,30 +1238,30 @@ flags.p.package.X. => final case object X.{+9 decls}
   extends AnyRef
   extends Product
   extends Serializable
-flags.p.package.X.canEqual(Any). => method canEqual: (x$1: Any): Boolean
+flags.p.package.X.canEqual(Any). => synthetic method canEqual: (x$1: Any): Boolean
   x$1 => flags.p.package.X.canEqual(Any).(x$1)
   Any => scala.Any#
   Boolean => scala.Boolean#
-flags.p.package.X.canEqual(Any).(x$1) => param x$1: Any
+flags.p.package.X.canEqual(Any).(x$1) => synthetic param x$1: Any
   Any => scala.Any#
-flags.p.package.X.hashCode(). => method hashCode: (): Int
+flags.p.package.X.hashCode(). => synthetic method hashCode: (): Int
   Int => scala.Int#
-flags.p.package.X.productArity(). => method productArity: : Int
+flags.p.package.X.productArity(). => synthetic method productArity: : Int
   Int => scala.Int#
-flags.p.package.X.productElement(Int). => method productElement: (x$1: Int): Any
+flags.p.package.X.productElement(Int). => synthetic method productElement: (x$1: Int): Any
   x$1 => flags.p.package.X.productElement(Int).(x$1)
   Int => scala.Int#
   Any => scala.Any#
-flags.p.package.X.productElement(Int).(x$1) => param x$1: Int
+flags.p.package.X.productElement(Int).(x$1) => synthetic param x$1: Int
   Int => scala.Int#
-flags.p.package.X.productIterator(). => method productIterator: : Iterator[Any]
+flags.p.package.X.productIterator(). => synthetic method productIterator: : Iterator[Any]
   Iterator => scala.collection.Iterator#
   Any => scala.Any#
-flags.p.package.X.productPrefix(). => method productPrefix: : String
+flags.p.package.X.productPrefix(). => synthetic method productPrefix: : String
   String => java.lang.String#
-flags.p.package.X.readResolve(). => private method readResolve: (): Object
+flags.p.package.X.readResolve(). => private synthetic method readResolve: (): Object
   Object => java.lang.Object#
-flags.p.package.X.toString(). => method toString: (): String
+flags.p.package.X.toString(). => synthetic method toString: (): String
   String => java.lang.String#
 flags.p.package.Y# => final class Y.{+1 decls}
   extends AnyRef
@@ -1273,7 +1273,7 @@ flags.p.package.`y_=`(Int). => protected var method y_=: (x$1: Int): Unit
   x$1 => flags.p.package.`y_=`(Int).(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-flags.p.package.`y_=`(Int).(x$1) => param x$1: Int
+flags.p.package.`y_=`(Int).(x$1) => synthetic param x$1: Int
   Int => scala.Int#
 flags.p.package.m(). => macro m: [TT >: Nothing <: Any] => : Nothing
   TT => flags.p.package.m().[TT]
@@ -1553,64 +1553,64 @@ types.Test.C#RepeatedType#`<init>`(String*). => primary ctor <init>: (val s: Str
   RepeatedType => types.Test.C#RepeatedType#
 types.Test.C#RepeatedType#`<init>`(String*).(s) => val param s: String*
   String => scala.Predef.String#
-types.Test.C#RepeatedType#canEqual(Any). => method canEqual: (x$1: Any): Boolean
+types.Test.C#RepeatedType#canEqual(Any). => synthetic method canEqual: (x$1: Any): Boolean
   x$1 => types.Test.C#RepeatedType#canEqual(Any).(x$1)
   Any => scala.Any#
   Boolean => scala.Boolean#
-types.Test.C#RepeatedType#canEqual(Any).(x$1) => param x$1: Any
+types.Test.C#RepeatedType#canEqual(Any).(x$1) => synthetic param x$1: Any
   Any => scala.Any#
-types.Test.C#RepeatedType#equals(Any). => method equals: (x$1: Any): Boolean
+types.Test.C#RepeatedType#equals(Any). => synthetic method equals: (x$1: Any): Boolean
   x$1 => types.Test.C#RepeatedType#equals(Any).(x$1)
   Any => scala.Any#
   Boolean => scala.Boolean#
-types.Test.C#RepeatedType#equals(Any).(x$1) => param x$1: Any
+types.Test.C#RepeatedType#equals(Any).(x$1) => synthetic param x$1: Any
   Any => scala.Any#
-types.Test.C#RepeatedType#hashCode(). => method hashCode: (): Int
+types.Test.C#RepeatedType#hashCode(). => synthetic method hashCode: (): Int
   Int => scala.Int#
 types.Test.C#RepeatedType#m1(Int*). => method m1: (x: Int*): Int
   x => types.Test.C#RepeatedType#m1(Int*).(x)
   Int => scala.Int#
 types.Test.C#RepeatedType#m1(Int*).(x) => param x: Int*
   Int => scala.Int#
-types.Test.C#RepeatedType#productArity(). => method productArity: : Int
+types.Test.C#RepeatedType#productArity(). => synthetic method productArity: : Int
   Int => scala.Int#
-types.Test.C#RepeatedType#productElement(Int). => method productElement: (x$1: Int): Any
+types.Test.C#RepeatedType#productElement(Int). => synthetic method productElement: (x$1: Int): Any
   x$1 => types.Test.C#RepeatedType#productElement(Int).(x$1)
   Int => scala.Int#
   Any => scala.Any#
-types.Test.C#RepeatedType#productElement(Int).(x$1) => param x$1: Int
+types.Test.C#RepeatedType#productElement(Int).(x$1) => synthetic param x$1: Int
   Int => scala.Int#
-types.Test.C#RepeatedType#productIterator(). => method productIterator: : Iterator[Any]
+types.Test.C#RepeatedType#productIterator(). => synthetic method productIterator: : Iterator[Any]
   Iterator => scala.collection.Iterator#
   Any => scala.Any#
-types.Test.C#RepeatedType#productPrefix(). => method productPrefix: : String
+types.Test.C#RepeatedType#productPrefix(). => synthetic method productPrefix: : String
   String => java.lang.String#
 types.Test.C#RepeatedType#s(). => val method s: : String*
   String => scala.Predef.String#
 types.Test.C#RepeatedType#s. => private[this] val field s: String*
   String => scala.Predef.String#
-types.Test.C#RepeatedType#toString(). => method toString: (): String
+types.Test.C#RepeatedType#toString(). => synthetic method toString: (): String
   String => java.lang.String#
-types.Test.C#RepeatedType. => final object RepeatedType.{+4 decls}
+types.Test.C#RepeatedType. => final synthetic object RepeatedType.{+4 decls}
   extends AbstractFunction1[String*, C.this.RepeatedType]
   extends Serializable
-types.Test.C#RepeatedType.apply(String*). => case method apply: (s: String*): C.this.RepeatedType
+types.Test.C#RepeatedType.apply(String*). => case synthetic method apply: (s: String*): C.this.RepeatedType
   s => types.Test.C#RepeatedType.apply(String*).(s)
   String => scala.Predef.String#
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
 types.Test.C#RepeatedType.apply(String*).(s) => param s: String*
   String => scala.Predef.String#
-types.Test.C#RepeatedType.toString(). => final method toString: (): String
+types.Test.C#RepeatedType.toString(). => final synthetic method toString: (): String
   String => java.lang.String#
-types.Test.C#RepeatedType.unapplySeq(RepeatedType). => case method unapplySeq: (x$0: C.this.RepeatedType): Option[Seq[String]]
+types.Test.C#RepeatedType.unapplySeq(RepeatedType). => case synthetic method unapplySeq: (x$0: C.this.RepeatedType): Option[Seq[String]]
   x$0 => types.Test.C#RepeatedType.unapplySeq(RepeatedType).(x$0)
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
   Option => scala.Option#
   Seq => scala.package.Seq#
   String => scala.Predef.String#
-types.Test.C#RepeatedType.unapplySeq(RepeatedType).(x$0) => param x$0: C.this.RepeatedType
+types.Test.C#RepeatedType.unapplySeq(RepeatedType).(x$0) => synthetic param x$0: C.this.RepeatedType
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
 types.Test.C#TypeType. => final object TypeType.{+6 decls}

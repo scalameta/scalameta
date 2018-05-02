@@ -179,13 +179,13 @@ class TargetedSuite extends SemanticdbSuite() {
        |  x$1 => f.C1#`f2_=`(Nothing).(x$1)
        |  Nothing => scala.Nothing#
        |  Unit => scala.Unit#
-       |f.C1#`f2_=`(Nothing).(x$1) => param x$1: Nothing
+       |f.C1#`f2_=`(Nothing).(x$1) => synthetic param x$1: Nothing
        |  Nothing => scala.Nothing#
        |f.C1#`p3_=`(Int). => var method p3_=: (x$1: Int): Unit
        |  x$1 => f.C1#`p3_=`(Int).(x$1)
        |  Int => scala.Int#
        |  Unit => scala.Unit#
-       |f.C1#`p3_=`(Int).(x$1) => param x$1: Int
+       |f.C1#`p3_=`(Int).(x$1) => synthetic param x$1: Int
        |  Int => scala.Int#
        |f.C1#f1(). => val method f1: : Nothing
        |  Nothing => scala.Nothing#
@@ -245,49 +245,49 @@ class TargetedSuite extends SemanticdbSuite() {
        |  extends Serializable
        |f.M.C1#`<init>`(). => primary ctor <init>: (): C1
        |  C1 => f.M.C1#
-       |f.M.C1#canEqual(Any). => method canEqual: (x$1: Any): Boolean
+       |f.M.C1#canEqual(Any). => synthetic method canEqual: (x$1: Any): Boolean
        |  x$1 => f.M.C1#canEqual(Any).(x$1)
        |  Any => scala.Any#
        |  Boolean => scala.Boolean#
-       |f.M.C1#canEqual(Any).(x$1) => param x$1: Any
+       |f.M.C1#canEqual(Any).(x$1) => synthetic param x$1: Any
        |  Any => scala.Any#
-       |f.M.C1#copy(). => method copy: (): C1
+       |f.M.C1#copy(). => synthetic method copy: (): C1
        |  C1 => f.M.C1#
-       |f.M.C1#equals(Any). => method equals: (x$1: Any): Boolean
+       |f.M.C1#equals(Any). => synthetic method equals: (x$1: Any): Boolean
        |  x$1 => f.M.C1#equals(Any).(x$1)
        |  Any => scala.Any#
        |  Boolean => scala.Boolean#
-       |f.M.C1#equals(Any).(x$1) => param x$1: Any
+       |f.M.C1#equals(Any).(x$1) => synthetic param x$1: Any
        |  Any => scala.Any#
-       |f.M.C1#hashCode(). => method hashCode: (): Int
+       |f.M.C1#hashCode(). => synthetic method hashCode: (): Int
        |  Int => scala.Int#
-       |f.M.C1#productArity(). => method productArity: : Int
+       |f.M.C1#productArity(). => synthetic method productArity: : Int
        |  Int => scala.Int#
-       |f.M.C1#productElement(Int). => method productElement: (x$1: Int): Any
+       |f.M.C1#productElement(Int). => synthetic method productElement: (x$1: Int): Any
        |  x$1 => f.M.C1#productElement(Int).(x$1)
        |  Int => scala.Int#
        |  Any => scala.Any#
-       |f.M.C1#productElement(Int).(x$1) => param x$1: Int
+       |f.M.C1#productElement(Int).(x$1) => synthetic param x$1: Int
        |  Int => scala.Int#
-       |f.M.C1#productIterator(). => method productIterator: : Iterator[Any]
+       |f.M.C1#productIterator(). => synthetic method productIterator: : Iterator[Any]
        |  Iterator => scala.collection.Iterator#
        |  Any => scala.Any#
-       |f.M.C1#productPrefix(). => method productPrefix: : String
+       |f.M.C1#productPrefix(). => synthetic method productPrefix: : String
        |  String => java.lang.String#
-       |f.M.C1#toString(). => method toString: (): String
+       |f.M.C1#toString(). => synthetic method toString: (): String
        |  String => java.lang.String#
-       |f.M.C1. => final object C1
-       |f.M.C1.apply(). => case method apply: (): C1
+       |f.M.C1. => final synthetic object C1
+       |f.M.C1.apply(). => case synthetic method apply: (): C1
        |  C1 => f.M.C1#
-       |f.M.C1.readResolve(). => private method readResolve: (): Object
+       |f.M.C1.readResolve(). => private synthetic method readResolve: (): Object
        |  Object => java.lang.Object#
-       |f.M.C1.toString(). => final method toString: (): String
+       |f.M.C1.toString(). => final synthetic method toString: (): String
        |  String => java.lang.String#
-       |f.M.C1.unapply(C1). => case method unapply: (x$0: C1): Boolean
+       |f.M.C1.unapply(C1). => case synthetic method unapply: (x$0: C1): Boolean
        |  x$0 => f.M.C1.unapply(C1).(x$0)
        |  C1 => f.M.C1#
        |  Boolean => scala.Boolean#
-       |f.M.C1.unapply(C1).(x$0) => param x$0: C1
+       |f.M.C1.unapply(C1).(x$0) => synthetic param x$0: C1
        |  C1 => f.M.C1#
        |f.M.C2# => class C2[+T >: Nothing <: Any, -U >: Nothing <: Any].{+1 decls}
        |  extends AnyRef
@@ -313,19 +313,19 @@ class TargetedSuite extends SemanticdbSuite() {
        |  x$1 => f.T#`f4_=`(Nothing).(x$1)
        |  Nothing => scala.Nothing#
        |  Unit => scala.Unit#
-       |f.T#`f4_=`(Nothing).(x$1) => param x$1: Nothing
+       |f.T#`f4_=`(Nothing).(x$1) => synthetic param x$1: Nothing
        |  Nothing => scala.Nothing#
        |f.T#`f5_=`(Nothing). => protected[this] var method f5_=: (x$1: Nothing): Unit
        |  x$1 => f.T#`f5_=`(Nothing).(x$1)
        |  Nothing => scala.Nothing#
        |  Unit => scala.Unit#
-       |f.T#`f5_=`(Nothing).(x$1) => param x$1: Nothing
+       |f.T#`f5_=`(Nothing).(x$1) => synthetic param x$1: Nothing
        |  Nothing => scala.Nothing#
        |f.T#`f6_=`(Nothing). => protected[f] var method f6_=: (x$1: Nothing): Unit
        |  x$1 => f.T#`f6_=`(Nothing).(x$1)
        |  Nothing => scala.Nothing#
        |  Unit => scala.Unit#
-       |f.T#`f6_=`(Nothing).(x$1) => param x$1: Nothing
+       |f.T#`f6_=`(Nothing).(x$1) => synthetic param x$1: Nothing
        |  Nothing => scala.Nothing#
        |f.T#f1(). => private val method f1: : Nothing
        |  Nothing => scala.Nothing#
@@ -784,7 +784,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |  _$1 => _empty_.ac.y._$1#
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
-       |_empty_.ac.y._$1# => abstract type _$1: >: Nothing <: Any
+       |_empty_.ac.y._$1# => abstract synthetic type _$1: >: Nothing <: Any
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
        |scala.Int. => final object Int
@@ -1022,6 +1022,51 @@ class TargetedSuite extends SemanticdbSuite() {
       """.stripMargin, { (db, j) =>
       val denot = db.symbols.find(_.symbol == j).get
       assert(denot.kind.isLocal)
+    }
+  )
+
+  targeted(
+    """
+      |package ao
+      |case class <<Foo>>(i: Int)
+    """.stripMargin, { (db, foo) =>
+      val syntheticSymbols = db.symbols.filter(_.has(p.SYNTHETIC))
+      val obtainedSymbols = syntheticSymbols.map(_.symbol).sorted.mkString("\n")
+      val expectedSymbols =
+        """
+          |ao.Foo#canEqual(Any).
+          |ao.Foo#canEqual(Any).(x$1)
+          |ao.Foo#copy$default$1().
+          |ao.Foo#copy(Int).
+          |ao.Foo#equals(Any).
+          |ao.Foo#equals(Any).(x$1)
+          |ao.Foo#hashCode().
+          |ao.Foo#productArity().
+          |ao.Foo#productElement(Int).
+          |ao.Foo#productElement(Int).(x$1)
+          |ao.Foo#productIterator().
+          |ao.Foo#productPrefix().
+          |ao.Foo#toString().
+          |ao.Foo.
+          |ao.Foo.apply(Int).
+          |ao.Foo.readResolve().
+          |ao.Foo.toString().
+          |ao.Foo.unapply(Foo).
+          |ao.Foo.unapply(Foo).(x$0)
+        """.stripMargin.trim
+      assertNoDiff(obtainedSymbols,  expectedSymbols)
+    }
+  )
+
+  targeted(
+    """
+      |package ap
+      |case class Foo() {
+      |  override def <<equals>>(that: Any): Boolean = false
+      |}
+    """.stripMargin, { (db, equals) =>
+      val equalsInfo = db.symbols.find(_.symbol == equals).get
+      assert(!equalsInfo.has(p.SYNTHETIC))
     }
   )
 }

@@ -668,6 +668,11 @@ languages map onto these properties.
     <td><code>ENUM</code></td>
     <td>Is an <code>enum</code> field or class?</td>
   </tr>
+  <tr>
+    <td><code>0x8000</code></td>
+    <td><code>SYNTHETIC</code></td>
+    <td>Is a <code>synthetic</code> field or method?</td>
+  </tr>
 </table>
 
 `name`. String that represents the name of the corresponding definition.

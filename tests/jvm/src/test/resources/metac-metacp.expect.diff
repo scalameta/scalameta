@@ -957,7 +957,7 @@ types.Test.C#RepeatedType.
 ==========================
 --- metac
 +++ metacp
- properties: 8
+ properties: 32776
  name: "RepeatedType"
  tpe {
 -  tag: TYPE_REF

@@ -437,6 +437,7 @@ class Main(settings: Settings, reporter: Reporter) {
     if (has(IMPLICIT)) out.print("implicit ")
     if (has(LAZY)) out.print("lazy ")
     if (has(CASE)) out.print("case ")
+    if (has(SYNTHETIC)) out.print("synthetic ")
     if (has(COVARIANT)) out.print("covariant ")
     if (has(CONTRAVARIANT)) out.print("contravariant ")
     if (has(VAL)) out.print("val ")
