@@ -216,6 +216,7 @@ message SymbolInformation {
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
+  string docstring = 17;
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
