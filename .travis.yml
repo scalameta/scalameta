@@ -1,7 +1,8 @@
 sudo: required
-language: scala
 os: linux
 dist: trusty
+jdk: oraclejdk8
+language: scala
 git:
   depth: 9999
 install:
@@ -9,8 +10,6 @@ install:
   - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install 8
 script:
   - ./bin/runci.sh $CI_TEST
-jdk:
-  - oraclejdk8
 
 matrix:
   include:
