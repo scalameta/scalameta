@@ -1,4 +1,6 @@
 language: scala
+os: linux
+dist: trusty
 git:
   depth: 9999
 install:
