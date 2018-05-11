@@ -1,3 +1,7 @@
+sudo: required
+os: linux
+dist: trusty
+jdk: oraclejdk8
 language: scala
 git:
   depth: 9999
@@ -6,8 +10,9 @@ install:
   - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install 8
 script:
   - ./bin/runci.sh $CI_TEST
-jdk:
-  - oraclejdk8
+addons:
+  apt:
+    update: true
 
 matrix:
   include:
@@ -26,7 +31,7 @@ matrix:
         - CI_SCALA_VERSION: 2.11.12
         - CI_SCALA_NATIVE: true
       before_install:
-        - bin/travis_before_install
+        - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.12.4
