@@ -202,12 +202,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       // If a comma is followed by a new line & then a closing paren, bracket or brace
       // then it is a trailing comma and is ignored.
       def isTrailingComma: Boolean =
-        if (dialect.allowTrailingCommas && curr.is[Comma] && next.is[CloseDelim]) {
-          var i = currPos + 1
-          val end = Math.min(scannerTokens.length - 1, nextPos - 1)
-          while (i < end && !scannerTokens(i).is[LineEnd]) i += 1
-          scannerTokens(i).is[LineEnd]
-        } else false
+        dialect.allowTrailingCommas &&
+          curr.is[Comma] &&
+          next.is[CloseDelim] &&
+          next.pos.startLine > curr.pos.endLine
       if (curr.isNot[Trivia] && !isTrailingComma) {
         parserTokens += curr
         parserTokenPositions += currPos
