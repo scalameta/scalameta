@@ -220,4 +220,13 @@ class TrailingCommaSuite extends ParseSuite {
        |}
        |""".stripMargin
   )
+  checkOK(
+    """|trait Comments {
+       |  def f(
+       |    a: String,
+       |    b: String, // a comment
+       |  )
+       |}
+       |""".stripMargin
+  )
 }

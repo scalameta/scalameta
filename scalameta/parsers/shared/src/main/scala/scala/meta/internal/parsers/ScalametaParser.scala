@@ -198,9 +198,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         i
       }
       val next = if (nextPos != -1) scannerTokens(nextPos) else null
-      def nextScannerToken: Option[Token] =
-        if (currPos + 1 < scannerTokens.length) Some(scannerTokens(currPos + 1))
-        else None
       // SIP-27 Trailing comma (multi-line only) support.
       // If a comma is followed by a new line & then a closing paren, bracket or brace
       // then it is a trailing comma and is ignored.
@@ -208,7 +205,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         dialect.allowTrailingCommas &&
           curr.is[Comma] &&
           next.is[CloseDelim] &&
-          nextScannerToken.exists(_.is[LineEnd])
+          next.pos.startLine > curr.pos.endLine
       if (curr.isNot[Trivia] && !isTrailingComma) {
         parserTokens += curr
         parserTokenPositions += currPos
