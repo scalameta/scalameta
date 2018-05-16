@@ -160,12 +160,14 @@ sealed abstract class SymbolMode {
   def name: String = toString.toLowerCase
   def saveDefinitions: Boolean = this == All || this == Definitions
   def saveReferences: Boolean = this == All
+  def saveMaterializedTypes: Boolean = this == AllWithMaterializedTypes
 }
 object SymbolMode {
   def name: String = toString.toLowerCase
   def unapply(arg: String): Option[SymbolMode] =
     all.find(_.toString.equalsIgnoreCase(arg))
   def all = List(All, Definitions, None)
+  case object AllWithMaterializedTypes extends SymbolMode
   case object All extends SymbolMode
   case object Definitions extends SymbolMode
   case object None extends SymbolMode

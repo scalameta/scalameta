@@ -46,7 +46,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toTextDocument: s.TextDocument = {
       val binders = mutable.Set[m.Position]()
-      val occurrences = mutable.Map[m.Position, m.Symbol]()
+      val occurrences = mutable.Map[m.Position, (m.Symbol, Option[s.Type])]()
       val symbols = mutable.Map[m.Symbol, s.SymbolInformation]()
       val synthetics = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
       val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
@@ -159,6 +159,29 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
       locally {
         object traverser extends g.Traverser {
+
+          private var currentTress = List[g.Tree]()
+
+          private def materializedTpe(in: g.Tree, currentStack: List[g.Tree] = currentTress) = {
+            def computeTpe(fromTree: g.Tree) = fromTree.tpe match {
+              case null =>
+                None
+              case _ if !config.symbols.saveMaterializedTypes =>
+                None
+              case _ if currentStack.isEmpty =>
+                None
+              case tpe =>
+                tpe.widen.toSemantic._1
+            }
+
+            currentStack.tail match { // Current tree is head...
+              case (tpeApply @ g.TypeApply(_, _)) :: _ =>
+                computeTpe(tpeApply)
+              case _ =>
+                computeTpe(in)
+            }
+          }
+
           private def tryFindMtree(gtree: g.Tree): Unit = {
             def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
               // We cannot be guaranteed that all symbols have a position, see
@@ -179,7 +202,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
               todo -= mtree
 
-              occurrences(mtree.pos) = symbol
+              occurrences(mtree.pos) = (symbol, materializedTpe(gtree))
               if (mtree.isDefinition) {
                 val isToplevel = gsym.owner.hasPackageFlag
                 if (isToplevel) {
@@ -417,16 +440,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
             gtree match {
               case gview: g.ApplyImplicitView =>
                 val pos = gtree.pos.toMeta
-                val syntax = showSynthetic(gview.fun) + "(" + S.star + ")"
+                val syntax = showSynthetic(gview.fun, materializedTpe(gview)) + "(" + S.star + ")"
                 success(pos, _.copy(conversion = Some(syntax)))
                 isVisited += gview.fun
               case gimpl: g.ApplyToImplicitArgs =>
-                val args = S.mkString(gimpl.args.map(showSynthetic), ", ")
+                val mTpe = materializedTpe(gimpl)
+                val args = S.mkString(gimpl.args.map(arg => showSynthetic(arg, mTpe)), ", ")
                 gimpl.fun match {
                   case gview: g.ApplyImplicitView =>
                     isVisited += gview
                     val pos = gtree.pos.toMeta
-                    val syntax = showSynthetic(gview.fun) + "(" + S.star + ")(" + args + ")"
+                    val syntax = showSynthetic(gview.fun, mTpe) + "(" + S.star + ")(" + args + ")"
                     success(pos, _.copy(conversion = Some(syntax)))
                   case ForComprehensionImplicitArg(qual) =>
                     val morePrecisePos = qual.pos.withStart(qual.pos.end).toMeta
@@ -437,17 +461,18 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     val syntax = S("(") + args + ")"
                     success(morePrecisePos, _.copy(args = Some(syntax)))
                 }
-              case g.TypeApply(fun, targs @ List(targ, _*)) =>
+              case tpeApply @ g.TypeApply(fun, targs @ List(targ, _*)) =>
                 if (targ.pos.isRange) return
+                val mTpe = materializedTpe(tpeApply)
                 val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
-                val args = S.mkString(targs.map(showSynthetic), ", ")
+                val args = S.mkString(targs.map(arg => showSynthetic(arg, mTpe)), ", ")
                 val syntax = S("[") + args + "]"
                 success(morePrecisePos, _.copy(targs = Some(syntax)))
               case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
                 val pos = qual.pos.withStart(qual.pos.end).toMeta
                 val symbol = select.symbol.toSemantic
                 val name = nme.decoded
-                val names = List(SyntheticRange(0, name.length, symbol))
+                val names = List(SyntheticRange(0, name.length, symbol, materializedTpe(select)))
                 val syntax = S(".") + S(nme.decoded, names)
                 success(pos, _.copy(select = Some(syntax)))
               case _ =>
@@ -455,51 +480,53 @@ trait TextDocumentOps { self: SemanticdbOps =>
             }
           }
 
-          override def traverse(gtree: g.Tree): Unit = {
-            if (isVisited(gtree)) return else isVisited += gtree
-            gtree.attachments.all.foreach {
-              case att: g.analyzer.MacroExpansionAttachment =>
-                traverse(att.expandee)
-              case _ =>
-            }
-            gtree match {
-              case ConstfoldOf(original) =>
-                traverse(original)
-              case ClassOf(original) =>
-                traverse(original)
-              case NewArrayOf(original) =>
-                traverse(original)
-              case SingletonTypeTreeOf(original) =>
-                traverse(original)
-              case CompoundTypeTreeOf(original) =>
-                traverse(original)
-              case ExistentialTypeTreeOf(original) =>
-                traverse(original)
-              case AnnotatedOf(original) =>
-                traverse(original)
-              case SelfTypeOf(original) =>
-                traverse(original)
-              case SelectOf(original) =>
-                traverse(original)
-              case g.Function(params, body) if params.exists(_.name.decoded.startsWith("x$")) =>
-                traverse(body)
-              case gtree: g.TypeTree if gtree.original != null =>
-                traverse(gtree.original)
-              case gtree: g.TypeTreeWithDeferredRefCheck =>
-                traverse(gtree.check())
-              case gtree: g.MemberDef =>
-                gtree.symbol.annotations.map(ann => traverse(ann.original))
-                tryFindMtree(gtree)
-              case _: g.Apply | _: g.TypeApply =>
-                tryFindInferred(gtree)
-              case select: g.Select if isSyntheticName(select) =>
-                tryFindMtree(select.qualifier)
-                tryFindInferred(select)
-              case _ =>
-                tryFindMtree(gtree)
-            }
-            super.traverse(gtree)
-          }
+          override def traverse(gtree: g.Tree): Unit =
+            try {
+              currentTress ::= gtree
+              if (isVisited(gtree)) return else isVisited += gtree
+              gtree.attachments.all.foreach {
+                case att: g.analyzer.MacroExpansionAttachment =>
+                  traverse(att.expandee)
+                case _ =>
+              }
+              gtree match {
+                case ConstfoldOf(original) =>
+                  traverse(original)
+                case ClassOf(original) =>
+                  traverse(original)
+                case NewArrayOf(original) =>
+                  traverse(original)
+                case SingletonTypeTreeOf(original) =>
+                  traverse(original)
+                case CompoundTypeTreeOf(original) =>
+                  traverse(original)
+                case ExistentialTypeTreeOf(original) =>
+                  traverse(original)
+                case AnnotatedOf(original) =>
+                  traverse(original)
+                case SelfTypeOf(original) =>
+                  traverse(original)
+                case SelectOf(original) =>
+                  traverse(original)
+                case g.Function(params, body) if params.exists(_.name.decoded.startsWith("x$")) =>
+                  traverse(body)
+                case gtree: g.TypeTree if gtree.original != null =>
+                  traverse(gtree.original)
+                case gtree: g.TypeTreeWithDeferredRefCheck =>
+                  traverse(gtree.check())
+                case gtree: g.MemberDef =>
+                  gtree.symbol.annotations.map(ann => traverse(ann.original))
+                  tryFindMtree(gtree)
+                case _: g.Apply | _: g.TypeApply =>
+                  tryFindInferred(gtree)
+                case select: g.Select if isSyntheticName(select) =>
+                  tryFindMtree(select.qualifier)
+                  tryFindInferred(select)
+                case _ =>
+                  tryFindMtree(gtree)
+              }
+              super.traverse(gtree)
+            } finally currentTress = currentTress.tail
         }
         traverser.traverse(unit.body)
       }
@@ -507,12 +534,12 @@ trait TextDocumentOps { self: SemanticdbOps =>
       val input = unit.source.toInput
 
       val finalOccurrences = occurrences.flatMap {
-        case (pos, sym) =>
+        case (pos, (sym, tpe)) =>
           flatten(sym).map { flatSym =>
             val role =
               if (binders.contains(pos)) s.SymbolOccurrence.Role.DEFINITION
               else s.SymbolOccurrence.Role.REFERENCE
-            s.SymbolOccurrence(Some(pos.toRange), flatSym.syntax, role)
+            s.SymbolOccurrence(Some(pos.toRange), flatSym.syntax, role, tpe)
           }
       }.toList
 
