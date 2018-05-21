@@ -33,7 +33,7 @@ abstract class SemanticdbSuite(
     if (classpath == null) fail("classpath not set. broken build?")
     val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
     if (pluginjar == null) fail("pluginjar not set. broken build?")
-    val options = "-Yrangepos -Ywarn-unused-import -cp " + classpath + " -Xplugin:" + pluginjar + " -Xplugin-require:semanticdb"
+    val options = "-Yrangepos -Ywarn-unused-import -Ywarn-unused -cp " + classpath + " -Xplugin:" + pluginjar + " -Xplugin-require:semanticdb"
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
     val reporter = new StoreReporter()
