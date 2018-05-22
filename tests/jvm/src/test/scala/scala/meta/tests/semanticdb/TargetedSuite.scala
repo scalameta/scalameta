@@ -515,6 +515,7 @@ class TargetedSuite extends SemanticdbSuite() {
 
   diagnostics(
     """
+      |package l2
       |class A {
       |  private val a = 1
       |}
@@ -528,10 +529,10 @@ class TargetedSuite extends SemanticdbSuite() {
       |  private val a = 1
       |}
     """.stripMargin.trim,
-    """|[1:14..1:14)[warning] private val a in class A is never used
-       |[4:14..4:14)[warning] private val a in object B is never used
-       |[7:14..7:14)[warning] private val a in package object C is never used
-       |[10:2..10:19)[warning] private val a in trait D is never used
+    """|[2:14..2:14)[warning] private val a in class A is never used
+       |[5:14..5:14)[warning] private val a in object B is never used
+       |[8:14..8:14)[warning] private val a in package object C is never used
+       |[11:2..11:19)[warning] private val a in trait D is never used
     """.stripMargin.trim
   )
 
