@@ -4,10 +4,11 @@ package trees
 import org.scalatest._
 import scala.compat.Platform.EOL
 import scala.collection.mutable.ListBuffer
+import scala.meta.testkit.DiffAssertions
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
-class ReflectionSuite extends FunSuite {
+class ReflectionSuite extends FunSuite with DiffAssertions {
   object TreeReflection extends {
     val u: ru.type = ru
     val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
@@ -50,33 +51,36 @@ class ReflectionSuite extends FunSuite {
     // NOTE: we can't just do `duplicateRelevantFieldTpes.distinct`, because that doesn't account for `=:=`
     val distinctRelevantFieldTpes = ListBuffer[Type]()
     duplicateRelevantFieldTpes.foreach(tpe => if (!distinctRelevantFieldTpes.exists(_ =:= tpe)) distinctRelevantFieldTpes += tpe)
-    assert(distinctRelevantFieldTpes.sortBy(_.toString).mkString(EOL) === """
+    val obtained = distinctRelevantFieldTpes.sortBy(_.toString).mkString(EOL)
+    assertNoDiff(
+      obtained,
+      """
+      |Boolean
+      |Byte
+      |Char
+      |Int
+      |List[List[scala.meta.Term.Param]]
+      |List[List[scala.meta.Term]]
+      |List[scala.meta.Case]
+      |List[scala.meta.Enumerator]
+      |List[scala.meta.Importee]
+      |List[scala.meta.Importer]
+      |List[scala.meta.Init]
+      |List[scala.meta.Lit]
+      |List[scala.meta.Mod.Annot]
+      |List[scala.meta.Mod]
+      |List[scala.meta.Pat]
+      |List[scala.meta.Stat]
+      |List[scala.meta.Term.Param]
+      |List[scala.meta.Term]
+      |List[scala.meta.Type.Param]
+      |List[scala.meta.Type]
+      |Long
+      |Option[scala.meta.Term]
+      |Option[scala.meta.Type]
+      |Short
       |String
-      |scala.Boolean
-      |scala.Byte
-      |scala.Char
-      |scala.Int
-      |scala.List[scala.List[scala.meta.Term.Param]]
-      |scala.List[scala.List[scala.meta.Term]]
-      |scala.List[scala.meta.Case]
-      |scala.List[scala.meta.Enumerator]
-      |scala.List[scala.meta.Importee]
-      |scala.List[scala.meta.Importer]
-      |scala.List[scala.meta.Init]
-      |scala.List[scala.meta.Lit]
-      |scala.List[scala.meta.Mod.Annot]
-      |scala.List[scala.meta.Mod]
-      |scala.List[scala.meta.Pat]
-      |scala.List[scala.meta.Stat]
-      |scala.List[scala.meta.Term.Param]
-      |scala.List[scala.meta.Term]
-      |scala.List[scala.meta.Type.Param]
-      |scala.List[scala.meta.Type]
-      |scala.Long
-      |scala.Option[scala.meta.Term]
-      |scala.Option[scala.meta.Type]
-      |scala.Short
-      |scala.Symbol
+      |Symbol
       |scala.meta.Ctor.Primary
       |scala.meta.Init
       |scala.meta.Name
@@ -90,6 +94,7 @@ class ReflectionSuite extends FunSuite {
       |scala.meta.Type
       |scala.meta.Type.Bounds
       |scala.meta.Type.Name
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 }
