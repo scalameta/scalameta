@@ -19,5 +19,6 @@ coursier fetch org.scalameta:metac_2.11:$version -r sonatype:releases
 coursier fetch org.scalameta:semanticdb-scalac_2.11.12:$version -r sonatype:releases
 coursier fetch org.scalameta:semanticdb-scalac-core_2.11.12:$version -r sonatype:releases
 
+coursier fetch org.scalameta:contrib_native0.3_2.11:$version -r sonatype:releases
 coursier fetch org.scalameta:contrib_sjs0.6_2.11:$version -r sonatype:releases
 coursier fetch org.scalameta:metap_native0.3_2.11:$version -r sonatype:releases
