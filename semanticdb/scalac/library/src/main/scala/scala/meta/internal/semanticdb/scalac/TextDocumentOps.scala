@@ -489,8 +489,18 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 val names = List(SyntheticRange(0, name.length, symbol, materializeTpe(select)))
                 val syntax = S(".") + S(nme.decoded, names)
                 success(pos, _.copy(select = Some(syntax)))
-              case _ =>
-              // do nothing
+              case setter @ g.Apply(fun, List(value)) if setter.symbol.isSetter && setter.pos == value.pos =>
+                val variableName = {
+                  import g._
+                  setter.symbol.unexpandedName.getterName
+                }
+                val varSymbol = setter.symbol.owner.info.decl(variableName)
+                val getterTpe = materializeTpe(varSymbol.tpe).flatMap(_.methodType).flatMap(_.returnType)
+                occurrences(fun.pos.toMeta) = varSymbol.toSemantic -> getterTpe
+                val syntax = showSynthetic(fun, materializeTpe(setter)) + "(" + S.star + ")"
+                success(setter.pos.toMeta, _.copy(conversion = Some(syntax)))
+              case other =>
+                // do nothing
             }
           }
 
