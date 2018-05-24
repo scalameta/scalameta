@@ -130,6 +130,7 @@ object Scalacp {
     if (sym.isImplicit) sflip(p.IMPLICIT)
     if (sym.isLazy) sflip(p.LAZY)
     if (sym.isCase) sflip(p.CASE)
+    if (sym.isSynthetic) sflip(p.SYNTHETIC)
     if (sym.isType && sym.isCovariant) sflip(p.COVARIANT)
     if (sym.isType && sym.isContravariant) sflip(p.CONTRAVARIANT)
     if (skind(sym) == k.FIELD) {
