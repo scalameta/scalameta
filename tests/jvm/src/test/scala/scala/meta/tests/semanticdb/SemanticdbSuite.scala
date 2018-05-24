@@ -56,7 +56,7 @@ abstract class SemanticdbSuite(
     types = types
   )
 
-  private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
+  protected def computeDatabaseFromSnippet(code: String): s.TextDocument = {
     val javaFile = File.createTempFile("paradise", ".scala")
     val writer = new PrintWriter(javaFile)
     try writer.write(code)

@@ -1201,6 +1201,7 @@ message SymbolInformation {
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
+  string docstring = 17;
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
@@ -1232,6 +1233,10 @@ message SymbolInformation {
   <tr>
     <td><code>name</code></td>
     <td>See <a href="#scala-symbol">Symbol</a>.</td>
+  </tr>
+  <tr>
+    <td><code>docstring</code></td>
+    <td>The plaintext docstring associated with the symbol</td>
   </tr>
   <tr>
     <td><code>tpe</code></td>
