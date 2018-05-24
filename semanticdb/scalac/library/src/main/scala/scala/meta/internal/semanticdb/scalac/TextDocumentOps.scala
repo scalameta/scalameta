@@ -62,20 +62,20 @@ trait TextDocumentOps { self: SemanticdbOps =>
       val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
       val mctorrefs = mutable.Map[Int, m.Name]() // start offset of new/init -> new's anonymous name
 
-	    def saveTypeSymbols(symbols: List[g.Symbol]) = symbols.foreach { tgs =>
-		    if (tgs.isSemanticdbLocal) {
-			    val tms = tgs.toSemantic
-			    if (tms != m.Symbol.None && !symbols.contains(tms)) {
-				    addSymbol(tms, tgs)
-			    }
-		    }
-	    }
+      def saveTypeSymbols(symbols: List[g.Symbol]) = symbols.foreach { tgs =>
+        if (tgs.isSemanticdbLocal) {
+          val tms = tgs.toSemantic
+          if (tms != m.Symbol.None && !symbols.contains(tms)) {
+            addSymbol(tms, tgs)
+          }
+        }
+      }
 
-	    def addSymbol(ms: m.Symbol, gs: g.Symbol): Unit = {
-		    val SymbolInformationResult(denot, todoTpes) = gs.toSymbolInformation()
-		    symbols(ms) = denot
-		    saveTypeSymbols(todoTpes)
-	    }
+      def addSymbol(ms: m.Symbol, gs: g.Symbol): Unit = {
+        val SymbolInformationResult(denot, todoTpes) = gs.toSymbolInformation()
+        symbols(ms) = denot
+        saveTypeSymbols(todoTpes)
+      }
 
       locally {
         object traverser extends m.Traverser {
@@ -181,12 +181,14 @@ trait TextDocumentOps { self: SemanticdbOps =>
           private var currentTrees = List[g.Tree]()
 
           private def materializeTpe(tpe: g.Type) = {
-            val (sTpe, todo) = tpe.widen.toSemantic
+            val (sTpe, todo) = tpe.widen.toSemantic(true)
             saveTypeSymbols(todo)
             sTpe
           }
 
-          private def materializeTpe(in: g.Tree, currentStack: List[g.Tree] = currentTrees): Option[Type] = {
+          private def materializeTpe(
+              in: g.Tree,
+              currentStack: List[g.Tree] = currentTrees): Option[Type] = {
             def computeTpe(fromTree: g.Tree) = fromTree.tpe match {
               case null =>
                 None

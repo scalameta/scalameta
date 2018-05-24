@@ -8,11 +8,21 @@ import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps { self: SemanticdbOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
-    def toSemantic: (Option[s.Type], List[g.Symbol]) = {
+    def toSemantic: (Option[s.Type], List[g.Symbol]) = toSemantic(false)
+
+    def toSemantic(widen: Boolean): (Option[s.Type], List[g.Symbol]) = {
       val buf = List.newBuilder[g.Symbol]
       def todo(gsym: g.Symbol): String = {
-        buf += gsym
-        gsym.toSemantic.syntax
+        def finalize(finalSymbol: g.Symbol) = finalSymbol.toSemantic.syntax
+        if (!widen) finalize(gsym)
+        else
+          gsym.tpe match {
+            case RepeatedType(tpe) =>
+              val nestedSymbol = todo(tpe.typeSymbol)
+              nestedSymbol + "*"
+            case tpe =>
+              finalize(tpe.typeSymbol)
+          }
       }
       def loop(gtpe: g.Type): Option[s.Type] = {
         gtpe match {
@@ -126,13 +136,22 @@ trait TypeOps { self: SemanticdbOps =>
               }
             }
             val (gparamss, gret) = flatten(gtpe)
-            val stag = t.METHOD_TYPE
-            val sparamss = gparamss.map { gparams =>
-              val sparams = gparams.map(todo)
-              s.MethodType.ParameterList(sparams)
-            }
             val sret = loop(gret)
-            Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
+
+            if (widen) {
+              val paramTypes = gparamss.map(params =>
+                s.AppliedMethodType.ParameterList(params.map(s => loop(s.tpe).get)))
+              val appliedMethodType = s.AppliedMethodType(paramTypes, sret)
+              Some(s.Type(tag = t.APPLIED_METHOD_TYPE, appliedMethodType = Some(appliedMethodType)))
+            } else {
+              val stag = t.METHOD_TYPE
+
+              val sparamss = gparamss.map { gparams =>
+                val sparams = gparams.map(todo)
+                s.MethodType.ParameterList(sparams)
+              }
+              Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
+            }
           case g.TypeBounds(glo, ghi) =>
             val stag = t.TYPE_TYPE
             val slo = loop(glo)
