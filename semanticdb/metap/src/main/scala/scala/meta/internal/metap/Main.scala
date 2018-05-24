@@ -170,23 +170,26 @@ class Main(settings: Settings, reporter: Reporter) {
     lineIndices(line)
   }
 
-  def pprint(range: Range, doc: Option[TextDocument]): String = {
-    val docString = doc match {
-      case Some(doc) if doc.text.nonEmpty =>
-        val startOffset = offset(doc, range.startLine) + range.startCharacter
-        val endOffset = offset(doc, range.endLine) + range.endCharacter
-        val text = doc.text.substring(startOffset, endOffset)
-        s": $text"
-      case _ =>
-        ""
-    }
-    import range._
-    s"[$startLine:$startCharacter..$endLine:$endCharacter)$docString"
-  }
-
   private def pprint(range: Option[Range], doc: Option[TextDocument]): Unit = {
     range.foreach { range =>
-      out.print(pprint(range, doc))
+      out.print("[")
+      out.print(range.startLine)
+      out.print(":")
+      out.print(range.startCharacter)
+      out.print("..")
+      out.print(range.endLine)
+      out.print(":")
+      out.print(range.endCharacter)
+      out.print(")")
+      doc match {
+        case Some(doc) if doc.text.nonEmpty =>
+          val startOffset = offset(doc, range.startLine) + range.startCharacter
+          val endOffset = offset(doc, range.endLine) + range.endCharacter
+          val text = doc.text.substring(startOffset, endOffset)
+          out.print(s": $text")
+        case _ =>
+          ()
+      }
     }
   }
 
@@ -280,7 +283,7 @@ class Main(settings: Settings, reporter: Reporter) {
     buf.result
   }
 
-  def pprint(tpe: Type, doc: TextDocument): List[String] = {
+  private def pprint(tpe: Type, doc: TextDocument): List[String] = {
     val buf = List.newBuilder[String]
     def ref(sym: String): Unit = {
       val syms = pprint(sym, REFERENCE, doc)
@@ -550,7 +553,15 @@ class Main(settings: Settings, reporter: Reporter) {
       case DEFINITION => out.print(" <= ")
       case UNKNOWN_ROLE | Role.Unrecognized(_) => out.print(" <?> ")
     }
-    out.println(occ.symbol)
+    out.print(occ.symbol)
+	  occ.tpe match {
+		  case Some(tpe) =>
+			  out.print(" (")
+			  pprint(tpe, doc)
+			  out.print(")")
+		  case _ =>
+	  }
+	  out.println("")
   }
 
   private def pprint(diag: Diagnostic, doc: TextDocument): Unit = {

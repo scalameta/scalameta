@@ -1,5 +1,8 @@
 package scala.meta.internal.semanticdb.scalac
 
+import scala.meta.internal.semanticdb3.SymbolOccurrence
+import scala.meta.internal.semanticdb3.Type
+
 import scala.collection.mutable
 import scala.meta.internal.inputs._
 import scala.meta.internal.io.PathIO
@@ -58,6 +61,21 @@ trait TextDocumentOps { self: SemanticdbOps =>
       val mwithinctors = mutable.Map[m.Tree, m.Name]() // name of enclosing class -> name of private/protected within for primary ctor
       val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
       val mctorrefs = mutable.Map[Int, m.Name]() // start offset of new/init -> new's anonymous name
+
+	    def saveTypeSymbols(symbols: List[g.Symbol]) = symbols.foreach { tgs =>
+		    if (tgs.isSemanticdbLocal) {
+			    val tms = tgs.toSemantic
+			    if (tms != m.Symbol.None && !symbols.contains(tms)) {
+				    addSymbol(tms, tgs)
+			    }
+		    }
+	    }
+
+	    def addSymbol(ms: m.Symbol, gs: g.Symbol): Unit = {
+		    val SymbolInformationResult(denot, todoTpes) = gs.toSymbolInformation()
+		    symbols(ms) = denot
+		    saveTypeSymbols(todoTpes)
+	    }
 
       locally {
         object traverser extends m.Traverser {
@@ -160,18 +178,24 @@ trait TextDocumentOps { self: SemanticdbOps =>
       locally {
         object traverser extends g.Traverser {
 
-          private var currentTress = List[g.Tree]()
+          private var currentTrees = List[g.Tree]()
 
-          private def materializedTpe(in: g.Tree, currentStack: List[g.Tree] = currentTress) = {
+          private def materializeTpe(tpe: g.Type) = {
+            val (sTpe, todo) = tpe.widen.toSemantic
+            saveTypeSymbols(todo)
+            sTpe
+          }
+
+          private def materializeTpe(in: g.Tree, currentStack: List[g.Tree] = currentTrees): Option[Type] = {
             def computeTpe(fromTree: g.Tree) = fromTree.tpe match {
               case null =>
                 None
-              case _ if !config.symbols.saveMaterializedTypes =>
+              case _ if !config.occurences.storeType() =>
                 None
               case _ if currentStack.isEmpty =>
                 None
               case tpe =>
-                tpe.widen.toSemantic._1
+                materializeTpe(tpe)
             }
 
             currentStack.tail match { // Current tree is head...
@@ -202,7 +226,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
               todo -= mtree
 
-              occurrences(mtree.pos) = (symbol, materializedTpe(gtree))
+              occurrences(mtree.pos) = (symbol, materializeTpe(gtree))
               if (mtree.isDefinition) {
                 val isToplevel = gsym.owner.hasPackageFlag
                 if (isToplevel) {
@@ -224,41 +248,29 @@ trait TextDocumentOps { self: SemanticdbOps =>
               }
 
               def saveSymbol(): Unit = {
-                def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  val SymbolInformationResult(denot, todoTpe1) = gs.toSymbolInformation()
-                  symbols(ms) = denot
-                  todoTpe1.foreach { tgs =>
-                    if (tgs.isSemanticdbLocal) {
-                      val tms = tgs.toSemantic
-                      if (tms != m.Symbol.None && !symbols.contains(tms)) {
-                        add(tms, tgs)
-                      }
-                    }
-                  }
-                }
                 if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
-                  add(symbol, gsym)
+                  addSymbol(symbol, gsym)
                 }
                 if (gsym.isClass && !gsym.isTrait && mtree.isDefinition) {
                   val gprim = gsym.primaryConstructor
                   if (gprim != g.NoSymbol) {
-                    add(gprim.toSemantic, gprim)
+                    addSymbol(gprim.toSemantic, gprim)
                   }
                 }
                 if (gsym.isPrimaryConstructor) {
                   val gclassParams = gsym.info.paramss.flatten
-                  gclassParams.foreach(gp => add(gp.toSemantic, gp))
+                  gclassParams.foreach(gp => addSymbol(gp.toSemantic, gp))
                 }
                 if (gsym.isGetter) {
                   val gfield = gsym.accessed
                   if (gfield != g.NoSymbol) {
-                    add(gfield.toSemantic, gfield)
+                    addSymbol(gfield.toSemantic, gfield)
                   }
                   val gsetter = gsym.setterIn(gsym.owner)
                   if (gsetter != g.NoSymbol) {
-                    add(gsetter.toSemantic, gsetter)
+                    addSymbol(gsetter.toSemantic, gsetter)
                     val gsetterParams = gsetter.info.paramss.flatten
-                    gsetterParams.foreach(gp => add(gp.toSemantic, gp))
+                    gsetterParams.foreach(gp => addSymbol(gp.toSemantic, gp))
                   }
                 }
               }
@@ -440,11 +452,11 @@ trait TextDocumentOps { self: SemanticdbOps =>
             gtree match {
               case gview: g.ApplyImplicitView =>
                 val pos = gtree.pos.toMeta
-                val syntax = showSynthetic(gview.fun, materializedTpe(gview)) + "(" + S.star + ")"
+                val syntax = showSynthetic(gview.fun, materializeTpe(gview)) + "(" + S.star + ")"
                 success(pos, _.copy(conversion = Some(syntax)))
                 isVisited += gview.fun
               case gimpl: g.ApplyToImplicitArgs =>
-                val mTpe = materializedTpe(gimpl)
+                val mTpe = materializeTpe(gimpl)
                 val args = S.mkString(gimpl.args.map(arg => showSynthetic(arg, mTpe)), ", ")
                 gimpl.fun match {
                   case gview: g.ApplyImplicitView =>
@@ -463,7 +475,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 }
               case tpeApply @ g.TypeApply(fun, targs @ List(targ, _*)) =>
                 if (targ.pos.isRange) return
-                val mTpe = materializedTpe(tpeApply)
+                val mTpe = materializeTpe(tpeApply)
                 val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                 val args = S.mkString(targs.map(arg => showSynthetic(arg, mTpe)), ", ")
                 val syntax = S("[") + args + "]"
@@ -472,7 +484,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 val pos = qual.pos.withStart(qual.pos.end).toMeta
                 val symbol = select.symbol.toSemantic
                 val name = nme.decoded
-                val names = List(SyntheticRange(0, name.length, symbol, materializedTpe(select)))
+                val names = List(SyntheticRange(0, name.length, symbol, materializeTpe(select)))
                 val syntax = S(".") + S(nme.decoded, names)
                 success(pos, _.copy(select = Some(syntax)))
               case _ =>
@@ -482,7 +494,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
           override def traverse(gtree: g.Tree): Unit =
             try {
-              currentTress ::= gtree
+              currentTrees ::= gtree
               if (isVisited(gtree)) return else isVisited += gtree
               gtree.attachments.all.foreach {
                 case att: g.analyzer.MacroExpansionAttachment =>
@@ -526,7 +538,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   tryFindMtree(gtree)
               }
               super.traverse(gtree)
-            } finally currentTress = currentTress.tail
+            } finally currentTrees = currentTrees.tail
         }
         traverser.traverse(unit.body)
       }

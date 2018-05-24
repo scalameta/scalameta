@@ -16,9 +16,10 @@ import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
 
 abstract class SemanticdbSuite(
-    mode: SemanticdbMode = SemanticdbMode.Fat,
-    symbols: SymbolMode = SymbolMode.All,
-    types: TypeMode = TypeMode.All
+	                              mode: SemanticdbMode = SemanticdbMode.Fat,
+	                              occurences: OccurrenceMode = OccurrenceMode.JustSymbol,
+	                              symbols: SymbolMode = SymbolMode.All,
+	                              types: TypeMode = TypeMode.All
 ) extends FunSuite
     with DiffAssertions { self =>
   protected def test(code: String)(fn: => Unit): Unit = {
@@ -52,6 +53,7 @@ abstract class SemanticdbSuite(
   config = config.copy(
     mode = mode,
     failures = FailureMode.Error,
+	  occurences = occurences,
     symbols = symbols,
     types = types
   )

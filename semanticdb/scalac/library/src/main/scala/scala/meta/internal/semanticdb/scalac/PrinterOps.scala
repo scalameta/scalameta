@@ -6,27 +6,27 @@ import java.io.StringWriter
 import java.io.Writer
 import scala.collection.mutable
 import scala.reflect.internal.ModifierFlags._
-import `scala`.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb3 => s}
 
 trait PrinterOps { self: SemanticdbOps =>
   import g._
 
-  def showSynthetic(tpe: g.Type, materializedType: Option[s.Type]): AttributedSynthetic =
-    tpe match {
+  def showSynthetic(gTpe: g.Type, sTpe: Option[s.Type]): AttributedSynthetic =
+    gTpe match {
       case g.TypeBounds(_, _) =>
         // Skip signature for abstract type members, e.g. type T <: Int
         AttributedSynthetic.empty
       case PolyType(_, _: TypeBounds) =>
         // Type lambda with no body
         AttributedSynthetic.empty
-      case _ => showSynthetic(g.TypeTree(tpe), materializedType)
+      case _ => showSynthetic(g.TypeTree(gTpe), sTpe)
     }
-  def showSynthetic(what: g.Tree, materializedType: Option[s.Type]): AttributedSynthetic = {
+  def showSynthetic(what: g.Tree, sTpe: Option[s.Type]): AttributedSynthetic = {
     val out = new StringWriter()
     val printer = SyntheticCodePrinter(out)
     printer.print(what)
     val occurrences = printer.occurrences.map {
-      case ((start, end), symbol) => SyntheticRange(start, end, symbol, materializedType)
+      case ((start, end), symbol) => SyntheticRange(start, end, symbol, sTpe)
     }.toList
     printer.occurrences.clear()
     val syntax = out.toString
