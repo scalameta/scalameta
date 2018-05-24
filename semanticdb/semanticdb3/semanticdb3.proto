@@ -59,6 +59,7 @@ message Type {
     BY_NAME_TYPE = 12;
     REPEATED_TYPE = 13;
     TYPE_TYPE = 14;
+    APPLIED_METHOD_TYPE = 20;
   }
   // reserved 3, 4, 5, 6;
   Tag tag = 1;
@@ -76,6 +77,7 @@ message Type {
   ByNameType byNameType = 13;
   RepeatedType repeatedType = 14;
   TypeType typeType = 15;
+  AppliedMethodType appliedMethodType = 20;
 }
 
 message TypeRef {
@@ -156,6 +158,14 @@ message MethodType {
   repeated string type_parameters = 1;
   repeated ParameterList parameters = 2;
   Type return_type = 3;
+}
+
+message AppliedMethodType {
+  message ParameterList {
+    repeated Type parameters = 1;
+  }
+  repeated ParameterList parameters = 1;
+  Type return_type = 2;
 }
 
 message ByNameType {
@@ -250,6 +260,7 @@ message SymbolOccurrence {
   Range range = 1;
   string symbol = 2;
   Role role = 3;
+  Type tpe = 4;
 }
 
 message Diagnostic {

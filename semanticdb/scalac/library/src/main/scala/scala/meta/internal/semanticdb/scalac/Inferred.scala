@@ -4,15 +4,16 @@ package internal.semanticdb.scalac
 import scala.meta.internal.inputs._
 import scala.meta.internal.{semanticdb3 => s}
 
-case class SyntheticRange(start: Int, end: Int, symbol: Symbol) {
-  def addOffset(offset: Int) = SyntheticRange(start + offset, end + offset, symbol)
+case class SyntheticRange(start: Int, end: Int, symbol: Symbol, tpe: Option[s.Type]) {
+  def addOffset(offset: Int) = SyntheticRange(start + offset, end + offset, symbol, tpe)
   def toSymbolOccurrence(input: Input): s.SymbolOccurrence =
     s.SymbolOccurrence(
       Some(
         Position.Range(input, start, end).toRange
       ),
       symbol.syntax,
-      s.SymbolOccurrence.Role.REFERENCE
+      s.SymbolOccurrence.Role.REFERENCE,
+      tpe
     )
 }
 case class AttributedSynthetic(text: String, occurrences: List[SyntheticRange]) {
@@ -25,7 +26,7 @@ case class AttributedSynthetic(text: String, occurrences: List[SyntheticRange]) 
 
 object AttributedSynthetic {
   val empty = AttributedSynthetic("", Nil)
-  val star = AttributedSynthetic("*", List(SyntheticRange(0, 1, Symbol("_star_."))))
+  val star = AttributedSynthetic("*", List(SyntheticRange(0, 1, Symbol("_star_."), None)))
   def apply(text: String): AttributedSynthetic = AttributedSynthetic(text, Nil)
   def mkString(synthetics: List[AttributedSynthetic], sep: String): AttributedSynthetic =
     synthetics match {

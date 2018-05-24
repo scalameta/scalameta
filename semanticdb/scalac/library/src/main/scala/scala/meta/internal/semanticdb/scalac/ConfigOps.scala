@@ -1,5 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
+import scala.meta.internal.semanticdb3.WithType
+
 import scala.meta.internal.io.PathIO
 import scala.meta.io._
 import scala.reflect.internal.util.NoPosition
@@ -11,6 +13,7 @@ case class SemanticdbConfig(
     targetroot: AbsolutePath,
     mode: SemanticdbMode,
     failures: FailureMode,
+    occurences: OccurrenceMode,
     symbols: SymbolMode,
     types: TypeMode,
     profiling: ProfilingMode,
@@ -25,6 +28,7 @@ case class SemanticdbConfig(
       "targetroot" -> targetroot,
       "mode" -> mode.name,
       "failures" -> failures.name,
+      "occurences" -> occurences.name,
       "types" -> types.name,
       "symbols" -> symbols.name,
       "profiling" -> profiling.name,
@@ -43,6 +47,7 @@ object SemanticdbConfig {
     PathIO.workingDirectory,
     SemanticdbMode.Fat,
     FailureMode.Warning,
+    OccurrenceMode.JustSymbol,
     SymbolMode.Definitions,
     TypeMode.All,
     ProfilingMode.Off,
@@ -55,6 +60,7 @@ object SemanticdbConfig {
   private val SetSourceroot = "sourceroot:(.*)".r
   private val SetMode = "mode:(.*)".r
   private val SetFailures = "failures:(.*)".r
+  private val SetOccurences = "occurrences:(.*)".r
   private val SetDenotations = "denotations:(.*)".r
   private val SetSymbolInformation = "symbols:(.*)".r
   private val SetSignatures = "signatures:(.*)".r
@@ -84,6 +90,8 @@ object SemanticdbConfig {
         config = config.copy(mode = mode)
       case SetFailures(FailureMode(severity)) =>
         config = config.copy(failures = severity)
+      case SetOccurences(OccurrenceMode(mode)) =>
+        config = config.copy(occurences = mode)
       case option @ SetDenotations(SymbolMode(denotations)) =>
         // TODO(olafur): remove this on next breaking release
         reporter.warning(
@@ -153,6 +161,20 @@ object FailureMode {
   case object Warning extends FailureMode
   case object Info extends FailureMode
   case object Ignore extends FailureMode
+}
+
+sealed abstract class OccurrenceMode {
+  import OccurrenceMode._
+  def storeType(): Boolean = this == SymbolAndType
+  def name: String = toString.toLowerCase
+}
+
+object OccurrenceMode {
+  def name: String = toString.toLowerCase
+  def unapply(arg: String): Option[OccurrenceMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = Seq(SymbolAndType, JustSymbol)
+  case object SymbolAndType extends OccurrenceMode
+  case object JustSymbol extends OccurrenceMode
 }
 
 sealed abstract class SymbolMode {

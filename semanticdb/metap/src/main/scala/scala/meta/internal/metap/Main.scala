@@ -402,6 +402,10 @@ class Main(settings: Settings, reporter: Reporter) {
           opt(">: ", lo, "")(normal)
           lo.foreach(_ => out.print(" "))
           opt("<: ", hi, "")(normal)
+        case APPLIED_METHOD_TYPE =>
+          val Some(AppliedMethodType(tparams, res)) = tpe.appliedMethodType
+          rep(tparams, "", " => ")(params => rep("(", params.parameters, ", ", ")")(normal))
+          res.foreach(normal)
         case UNKNOWN_TYPE | Type.Tag.Unrecognized(_) =>
           out.print("<?>")
       }
@@ -553,7 +557,15 @@ class Main(settings: Settings, reporter: Reporter) {
       case DEFINITION => out.print(" <= ")
       case UNKNOWN_ROLE | Role.Unrecognized(_) => out.print(" <?> ")
     }
-    out.println(occ.symbol)
+    out.print(occ.symbol)
+    occ.tpe match {
+      case Some(tpe) =>
+        out.print(" (")
+        pprint(tpe, doc)
+        out.print(")")
+      case _ =>
+    }
+    out.println("")
   }
 
   private def pprint(diag: Diagnostic, doc: TextDocument): Unit = {

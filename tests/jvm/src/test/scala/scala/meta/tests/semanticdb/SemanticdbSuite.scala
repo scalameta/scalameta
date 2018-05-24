@@ -16,12 +16,13 @@ import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
 
 abstract class SemanticdbSuite(
-    mode: SemanticdbMode = SemanticdbMode.Fat,
-    symbols: SymbolMode = SymbolMode.All,
-    types: TypeMode = TypeMode.All
+	                              mode: SemanticdbMode = SemanticdbMode.Fat,
+	                              occurences: OccurrenceMode = OccurrenceMode.JustSymbol,
+	                              symbols: SymbolMode = SymbolMode.All,
+	                              types: TypeMode = TypeMode.All
 ) extends FunSuite
     with DiffAssertions { self =>
-  private def test(code: String)(fn: => Unit): Unit = {
+  protected def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
     super.test(name)(fn)
@@ -52,11 +53,12 @@ abstract class SemanticdbSuite(
   config = config.copy(
     mode = mode,
     failures = FailureMode.Error,
+	  occurences = occurences,
     symbols = symbols,
     types = types
   )
 
-  private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
+  protected def computeDatabaseFromSnippet(code: String): s.TextDocument = {
     val javaFile = File.createTempFile("paradise", ".scala")
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
