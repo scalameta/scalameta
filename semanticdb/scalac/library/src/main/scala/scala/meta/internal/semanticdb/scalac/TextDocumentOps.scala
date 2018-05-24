@@ -489,18 +489,20 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 val names = List(SyntheticRange(0, name.length, symbol, materializeTpe(select)))
                 val syntax = S(".") + S(nme.decoded, names)
                 success(pos, _.copy(select = Some(syntax)))
-              case setter @ g.Apply(fun, List(value)) if setter.symbol.isSetter && setter.pos == value.pos =>
+              case setter @ g.Apply(fun, List(value))
+                  if setter.symbol.isSetter && setter.pos == value.pos =>
                 val variableName = {
                   import g._
                   setter.symbol.unexpandedName.getterName
                 }
                 val varSymbol = setter.symbol.owner.info.decl(variableName)
-                val getterTpe = materializeTpe(varSymbol.tpe).flatMap(_.methodType).flatMap(_.returnType)
+                val getterTpe =
+                  materializeTpe(varSymbol.tpe).flatMap(_.methodType).flatMap(_.returnType)
                 occurrences(fun.pos.toMeta) = varSymbol.toSemantic -> getterTpe
                 val syntax = showSynthetic(fun, materializeTpe(setter)) + "(" + S.star + ")"
                 success(setter.pos.toMeta, _.copy(conversion = Some(syntax)))
               case other =>
-                // do nothing
+              // do nothing
             }
           }
 
@@ -532,8 +534,12 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   traverse(original)
                 case SelectOf(original) =>
                   traverse(original)
-                case g.Function(params, body) if params.exists(_.name.decoded.startsWith("x$")) =>
-                  traverse(body)
+                case fun @ g.Function(params, body) =>
+                  if (config.occurences.storeType())
+                    occurrences(fun.pos.toMeta) = m.Symbol("_.lambda.") -> materializeTpe(fun)
+
+                  if (params.exists(_.name.decoded.startsWith("x$"))) traverse(body)
+                  else tryFindMtree(gtree)
                 case gtree: g.TypeTree if gtree.original != null =>
                   traverse(gtree.original)
                 case gtree: g.TypeTreeWithDeferredRefCheck =>

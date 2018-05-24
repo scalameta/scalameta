@@ -81,4 +81,17 @@ class OccurencesTypeSuite extends SemanticdbSuite(occurences = OccurrenceMode.Sy
 			|[0:37..0:38): a => _empty_.L3.param(Seq).(a) (Seq[Int])
 			|[0:39..0:43): head => scala.collection.IterableLike#head(). (Int)""".stripMargin
 	)
+
+	occurrences(
+		"""object L4 { val a = List.empty[Int].map(_ + 1) } """
+	,
+		"""[0:7..0:9): L4 <= _empty_.L4.
+			|[0:16..0:17): a <= _empty_.L4.a().
+			|[0:20..0:24): List => scala.collection.immutable.List. (List)
+			|[0:25..0:30): empty => scala.collection.immutable.List.empty(). (List[Int])
+			|[0:31..0:34): Int => scala.Int# (Int)
+			|[0:36..0:39): map => scala.collection.immutable.List#map(Function1,CanBuildFrom). ((Function1[Int, Int])(CanBuildFrom[List[Int], Int, List[Int]]) => List[Int])
+			|[0:40..0:45): _ + 1 => _.lambda. (Function1[Int, Int])
+			|[0:42..0:43): + => scala.Int#`+`(Int). ((Int) => Int)""".stripMargin
+	)
 }
