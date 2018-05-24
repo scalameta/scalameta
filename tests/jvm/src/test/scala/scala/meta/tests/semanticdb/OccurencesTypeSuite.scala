@@ -94,4 +94,31 @@ class OccurencesTypeSuite extends SemanticdbSuite(occurences = OccurrenceMode.Sy
 			|[0:40..0:45): _ + 1 => _.lambda. (Function1[Int, Int])
 			|[0:42..0:43): + => scala.Int#`+`(Int). ((Int) => Int)""".stripMargin
 	)
+
+	occurrences(
+		"""import scala.concurrent.Future
+			|import scala.concurrent.ExecutionContext.Implicits.global
+			|
+			|class Futures {
+			|  val unitFuture = Future(println("ala"))
+			|  val nonUnitFuture = Future("ala")
+			|}""".stripMargin
+		,
+		"""[0:7..0:12): scala => scala. (scala)
+			|[0:13..0:23): concurrent => scala.concurrent. (concurrent)
+			|[0:24..0:30): Future => scala.concurrent.Future#
+			|[0:24..0:30): Future => scala.concurrent.Future.
+			|[1:7..1:12): scala => scala. (scala)
+			|[1:13..1:23): concurrent => scala.concurrent. (concurrent)
+			|[1:24..1:40): ExecutionContext => scala.concurrent.ExecutionContext. (ExecutionContext)
+			|[1:41..1:50): Implicits => scala.concurrent.ExecutionContext.Implicits. (Implicits)
+			|[1:51..1:57): global => scala.concurrent.ExecutionContext.Implicits.global().
+			|[3:6..3:13): Futures <= _empty_.Futures#
+			|[3:14..3:14):  <= _empty_.Futures#`<init>`(). (Futures)
+			|[4:6..4:16): unitFuture <= _empty_.Futures#unitFuture().
+			|[4:19..4:25): Future => scala.concurrent.Future. ((=> Unit)(ExecutionContext) => Future[Unit])
+			|[4:26..4:33): println => scala.Predef.println(Any). ((Any) => Unit)
+			|[5:6..5:19): nonUnitFuture <= _empty_.Futures#nonUnitFuture().
+			|[5:22..5:28): Future => scala.concurrent.Future. ((=> String)(ExecutionContext) => Future[String])""".stripMargin
+	)
 }
