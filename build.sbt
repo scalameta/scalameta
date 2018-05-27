@@ -640,7 +640,8 @@ lazy val publishableSettings = Def.settings(
     platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary,
   publishTo := Some {
     if (isCustomRepository) "adhoc" at adhocRepoUri
-    else if (isSnapshot.value) Opts.resolver.sonatypeSnapshots
+    // NOTE: isSnapshot.value does not work with sbt-dynver
+    else if (version.value.endsWith("SNAPSHOT")) Opts.resolver.sonatypeSnapshots
     else Opts.resolver.sonatypeStaging
   },
   credentials ++= {
