@@ -12,6 +12,7 @@ example.
   example.A#
   example.Acc#
   example.B#
+  example.EmptyObject.
   example.Example.
   example.MetacJava#
   example.MethodUsages#
@@ -42,6 +43,7 @@ example. => semanticdb/integration/src/main/scala/example/local-file.scala.seman
 example.A# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 example.Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scala.semanticdb
 example.B# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
+example.EmptyObject. => semanticdb/integration/src/main/scala/example/EmptyObject.scala.semanticdb
 example.Example. => semanticdb/integration/src/main/scala/example/Example.scala.semanticdb
 example.MetacJava# => semanticdb/integration/src/main/scala/example/MetacJava.scala.semanticdb
 example.MethodUsages# => semanticdb/integration/src/main/scala/example/Methods.scala.semanticdb

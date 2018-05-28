@@ -417,6 +417,26 @@ example.Acc#
  accessibility {
 
 
+====================
+example.EmptyObject.
+====================
+--- metac
++++ metacp
+ properties: 8
+ name: "EmptyObject"
+ tpe {
+-  tag: TYPE_REF
+-  typeRef {
+-    symbol: "example.EmptyObject."
++  tag: CLASS_INFO_TYPE
++  classInfoType {
++    parents {
++      tag: TYPE_REF
++      typeRef {
++        symbol: "scala.AnyRef#"
+ accessibility {
+
+
 ================
 example.Example.
 ================
@@ -434,7 +454,6 @@ example.Example.
 +      tag: TYPE_REF
 +      typeRef {
 +        symbol: "scala.AnyRef#"
-+    declarations: "example.Example.`<init>`()."
 +    declarations: "example.Example.main(Array)."
 +    declarations: "example.Example.x()."
 +    declarations: "example.Example.x."
@@ -560,7 +579,6 @@ example.ValUsages.
 +      tag: TYPE_REF
 +      typeRef {
 +        symbol: "scala.AnyRef#"
-+    declarations: "example.ValUsages.`<init>`()."
 +    declarations: "example.ValUsages.v()."
 +    declarations: "example.ValUsages.v."
  accessibility {
@@ -648,7 +666,6 @@ flags.p.package.
 +      tag: TYPE_REF
 +      typeRef {
 +        symbol: "scala.AnyRef#"
-+    declarations: "flags.p.package.`<init>`()."
 +    declarations: "flags.p.package.x()."
 +    declarations: "flags.p.package.y()."
 +    declarations: "flags.p.package.`y_=`(Int)."
@@ -738,7 +755,6 @@ flags.p.package.X.
 +      tag: TYPE_REF
 +      typeRef {
 +        symbol: "scala.Serializable#"
-+    declarations: "flags.p.package.X.`<init>`()."
 +    declarations: "flags.p.package.X.productPrefix()."
 +    declarations: "flags.p.package.X.productArity()."
 +    declarations: "flags.p.package.X.productElement(Int)."
@@ -806,7 +822,6 @@ types.Test.
 +      tag: TYPE_REF
 +      typeRef {
 +        symbol: "scala.AnyRef#"
-+    declarations: "types.Test.`<init>`()."
 +    declarations: "types.Test.M#"
 +    declarations: "types.Test.N#"
 +    declarations: "types.Test.C#"
@@ -875,7 +890,6 @@ types.Test.C#ByNameType.
 +      typeRef {
 +        symbol: "scala.AnyRef#"
 -    symbol: "types.Test.C#ByNameType."
-+    declarations: "types.Test.C#ByNameType.`<init>`()."
 +    declarations: "types.Test.C#ByNameType.m1(=>Int)."
  accessibility {
 
@@ -904,7 +918,6 @@ types.Test.C#ClassInfoType1.
 +      typeRef {
 +        symbol: "scala.AnyRef#"
 -    symbol: "types.Test.C#ClassInfoType1."
-+    declarations: "types.Test.C#ClassInfoType1.`<init>`()."
  accessibility {
 
 
@@ -942,7 +955,6 @@ types.Test.C#MethodType.
 +      typeRef {
 +        symbol: "scala.AnyRef#"
 -    symbol: "types.Test.C#MethodType."
-+    declarations: "types.Test.C#MethodType.`<init>`()."
 +    declarations: "types.Test.C#MethodType.x1()."
 +    declarations: "types.Test.C#MethodType.x2()."
 +    declarations: "types.Test.C#MethodType.m3()."
@@ -998,7 +1010,6 @@ types.Test.C#RepeatedType.
 +      tag: TYPE_REF
 +      typeRef {
 +        symbol: "scala.Serializable#"
-+    declarations: "types.Test.C#RepeatedType.`<init>`()."
 +    declarations: "types.Test.C#RepeatedType.toString()."
 +    declarations: "types.Test.C#RepeatedType.apply(String*)."
 +    declarations: "types.Test.C#RepeatedType.unapplySeq(RepeatedType)."
@@ -1029,7 +1040,6 @@ types.Test.C#TypeType.
 +      typeRef {
 +        symbol: "scala.AnyRef#"
 -    symbol: "types.Test.C#TypeType."
-+    declarations: "types.Test.C#TypeType.`<init>`()."
 +    declarations: "types.Test.C#TypeType.T1#"
 +    declarations: "types.Test.C#TypeType.m2()."
 +    declarations: "types.Test.C#TypeType.m3()."
@@ -1151,7 +1161,6 @@ types.Test.Literal.
 +      tag: TYPE_REF
 +      typeRef {
 +        symbol: "scala.AnyRef#"
-+    declarations: "types.Test.Literal.`<init>`()."
 +    declarations: "types.Test.Literal.int()."
 +    declarations: "types.Test.Literal.int."
 +    declarations: "types.Test.Literal.long()."
