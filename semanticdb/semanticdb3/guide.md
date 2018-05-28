@@ -253,7 +253,7 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td>
       <code>all</code>,<br/>
       <code>definitions</code>,<br/>
-      <code>none</code>,<br/>
+      <code>none</code><br/>
     </td>
     <td>
       Specifies what symbols will appear <code>TextDocument.symbols</code>
@@ -268,7 +268,7 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td><code>-P:semanticdb:types:&lt;value&gt;</code></td>
     <td>
       <code>all</code>,<br/>
-      <code>none</code>,<br/>
+      <code>none</code><br/>
     </td>
     <td>
       Says whether to save type signatures in
@@ -281,7 +281,7 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td><code>-P:semanticdb:profiling:&lt;value&gt;</code></td>
     <td>
       <code>console</code>,<br/>
-      <code>off</code>,<br/>
+      <code>off</code><br/>
     </td>
     <td>
       Controls basic profiling functionality that computes the overhead of
@@ -307,7 +307,7 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td><code>-P:semanticdb:diagnostics:&lt;value&gt;</code></td>
     <td>
       <code>all</code>,<br/>
-      <code>none</code>,<br/>
+      <code>none</code><br/>
     </td>
     <td>
       Says whether to save compiler messages in
@@ -320,10 +320,10 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td><code>-P:semanticdb:synthetics:&lt;value&gt;</code></td>
     <td>
       <code>all</code>,<br/>
-      <code>none</code>,<br/>
+      <code>none</code><br/>
     </td>
     <td>
-      Specifies whether to save compiler-generated code in the undocumented
+      Specifies whether to save compiler-generated code in the unspecified
       `Synthetics` section of SemanticDB (<code>all</code> for yes,
       <code>none</code> for no).
     </td>
@@ -333,7 +333,7 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td><code>-P:semanticdb:owners:&lt;value&gt;</code></td>
     <td>
       <code>all</code>,<br/>
-      <code>none</code>,<br/>
+      <code>none</code><br/>
     </td>
     <td>
       Specifies whether to save <code>SymbolInformation.owner</code>
