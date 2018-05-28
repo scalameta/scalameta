@@ -181,7 +181,7 @@ trait TypeOps { self: SemanticdbOps =>
         Nil
       }
     }
-    // TODO: Implement me.
+    // FIXME: https://github.com/scalameta/scalameta/issues/1343
     def hasNontrivialPrefix: Boolean = {
       val (gpre, gsym) = {
         gtpe match {

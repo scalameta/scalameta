@@ -18,7 +18,7 @@ import scalapb.GeneratedMessage
 object PlatformFileIO {
 
   def readAllBytes(uri: URI): Array[Byte] = {
-    // TODO: URI.toURL isn't yet available in Scala Native,
+    // NOTE: URI.toURL isn't yet available in Scala Native,
     // so I had to steal the Scala.js implementation from js/.
     // Please find below the reference implementation from jvm/.
     //
@@ -71,7 +71,7 @@ object PlatformFileIO {
     Files.isDirectory(path.toNIO)
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
-    // TODO: Some Java stream APIs aren't yet available in Scala Native,
+    // NOTE: Some Java stream APIs aren't yet available in Scala Native,
     // so I had to steal the Scala.js implementation from js/.
     // Please find below the reference implementation from jvm/.
     //

@@ -4,8 +4,6 @@ package parsers
 
 import scala.compat.Platform.EOL
 
-// TODO: Would be nice to take all errors/warnings in tokenization and parsing,
-// and then externalize them into dedicated objects.
 object Messages {
   def QuasiquoteRankMismatch(found: Int, required: Int, hint: String = ""): String = {
     val s_found = "." * (found + 1) + "$"

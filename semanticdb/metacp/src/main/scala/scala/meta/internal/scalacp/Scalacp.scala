@@ -20,8 +20,6 @@ import scala.tools.scalap.scalax.rules.scalasig._
 
 object Scalacp {
   def parse(classfile: ToplevelClassfile): Option[ToplevelInfos] = {
-    // TODO: Parse scalaSig directly from classfile.node
-    // to avoid reading the bytes and parsing the classfile structure twice.
     val bytes = Files.readAllBytes(classfile.path.toNIO)
     val scalapClassfile = ClassFileParser.parse(ByteCode(bytes))
     ScalaSigParser.parse(scalapClassfile).map { scalaSig =>
@@ -219,7 +217,6 @@ object Scalacp {
             val stag = t.TYPE_REF
             val ssym = "java.lang.Class#"
             val sargs = sarg :: Nil
-            // TODO: Implement me.
             s.Type(tag = stag, typeRef = Some(s.TypeRef(None, ssym, sargs)))
           }
         case ConstantType(const) =>
@@ -254,7 +251,7 @@ object Scalacp {
           Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
         case AnnotatedType(tpe, anns) =>
           val stag = t.ANNOTATED_TYPE
-          // TODO: Not supported by scalap.
+          // FIXME: https://github.com/scalameta/scalameta/issues/1292
           val sanns = Nil
           val stpe = loop(tpe)
           Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(sanns, stpe))))
@@ -325,19 +322,17 @@ object Scalacp {
       }
     } catch {
       case ScalaSigParserError("Unexpected failure") =>
-        // TODO: See https://github.com/scalameta/scalameta/issues/1283
-        // when this can happen.
+        // FIXME: https://github.com/scalameta/scalameta/issues/1494
         None
     }
   }
 
   def sanns(sym: SymbolInfoSymbol): List[s.Annotation] = {
-    // TODO: Not supported by scalap.
+    // FIXME: https://github.com/scalameta/scalameta/issues/1315
     Nil
   }
 
-  // TODO: I'm not completely happy with the implementation of this method.
-  // See https://github.com/scalameta/scalameta/issues/1325 for details.
+  // FIXME: https://github.com/scalameta/scalameta/issues/1325
   def sacc(sym: SymbolInfoSymbol): s.Accessibility = {
     sym.symbolInfo.privateWithin match {
       case Some(privateWithin: Symbol) =>
@@ -413,12 +408,7 @@ object Scalacp {
         }
       } catch {
         case ScalaSigParserError("Unexpected failure") =>
-          // TODO: MethodSymbol(javaEnum, owner=414, flags=8400202, info=486 ,None)
-          // aka "accessor stable method final javaEnum".
-          // Looks like the same problem as the one in
-          // https://github.com/scalameta/scalameta/issues/1283.
-          // It seems that Scalap doesn't support all the signatures that
-          // Scalac can emit.
+          // FIXME: https://github.com/scalameta/scalameta/issues/1494
           "?"
       }
     }
@@ -471,7 +461,7 @@ object Scalacp {
         case _ => NoSymbol
       }
     }
-    // TODO: Implement me.
+    // FIXME: https://github.com/scalameta/scalameta/issues/1343
     def hasNontrivialPrefix: Boolean = {
       val kind = skind(tpe.prefix.symbol)
       kind != k.OBJECT && kind != k.PACKAGE && kind != k.PACKAGE_OBJECT

@@ -8,8 +8,8 @@ import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
 
-// TODO: better API for the Tokens collection (#385)
-// TODO: better internal representation for tokens (#150)
+// WONTFIX: https://github.com/scalameta/scalameta/issues/385
+// WONTFIX: https://github.com/scalameta/scalameta/issues/150
 //
 // NOTE: `Tokens` is no longer a general-purpose wrapper over arbitrary lists of tokens.
 // Now, it has a representation specialized to ensure that:

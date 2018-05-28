@@ -100,8 +100,7 @@ class TargetedSuite extends SemanticdbSuite() {
     }
   )
 
-  // TODO: Disabled under Scala 2.11 because of:
-  // https://github.com/scalameta/scalameta/issues/1328.
+  // FIXME: https://github.com/scalameta/scalameta/issues/1538
   if (scala.util.Properties.versionNumberString.startsWith("2.12")) {
     symbols(
       """

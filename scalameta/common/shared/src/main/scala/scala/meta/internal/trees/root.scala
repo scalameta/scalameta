@@ -28,7 +28,7 @@ class RootNamerMacros(val c: Context) extends AstReflection with CommonNamerMacr
 
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "@root traits cannot be sealed")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@root traits cannot be final")
-      val flags1 = flags // TODO: flags | SEALED
+      val flags1 = flags
       mstats1 += q"$CommonTyperMacrosModule.hierarchyCheck[$name]"
       val anns1 = anns :+ q"new $AdtMetadataModule.root" :+ q"new $AstMetadataModule.root"
       val parents1 = parents :+ tq"$AstMetadataModule.Ast" :+ tq"$ProductClass" :+ tq"$SerializableClass"

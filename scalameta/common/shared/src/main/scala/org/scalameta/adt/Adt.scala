@@ -196,7 +196,7 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
       vars = vars.filter(!_.hasAnnotation[AdtMetadata.byNeedField])
       vars.foreach(v => fail("leafs can't have mutable state: " + v.owner.fullName + "." + v.name))
       val vals = sym.info.members.collect { case x: TermSymbol if !x.isMethod && !x.isVar => x }
-      vals.foreach(v => ()) // TODO: deep immutability check
+      vals.foreach(v => ())
     }
     check(T.tpe.typeSymbol.asClass)
     q"()"

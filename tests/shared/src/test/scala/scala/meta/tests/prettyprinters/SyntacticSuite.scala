@@ -182,19 +182,19 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("and types") {
-    val Scala211 = null // TODO: #389
+    val Scala211 = null
     import scala.meta.dialects.Dotty
     assert(tpe("Foo & Bar").syntax === "Foo & Bar")
   }
 
   test("or types") {
-    val Scala211 = null // TODO: #389
+    val Scala211 = null
     import scala.meta.dialects.Dotty
     assert(tpe("Foo | Bar").syntax === "Foo | Bar")
   }
 
   test("trait parameters") {
-    val Scala211 = null // TODO: #389
+    val Scala211 = null
     import scala.meta.dialects.Dotty
     assert(Dotty(q"trait T(a: Int)").syntax === "trait T(a: Int)")
   }
@@ -203,7 +203,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     intercept[ParseException] {
       dialects.Scala211("val a : 42 = 42").parse[Stat].get.syntax
     }
-    val Scala211 = null // TODO: #389
+    val Scala211 = null
     import scala.meta.dialects.Dotty
     assert(q"val a: 42 = 42".syntax === "val a: 42 = 42")
     assert(q"val a: 42L = 42L".syntax === "val a: 42L = 42L")
@@ -317,7 +317,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("Lit.Double") {
     assert(templStat("1.4d").structure == """Lit.Double(1.4d)""")
     assert(templStat("1.40d").structure == """Lit.Double(1.40d)""")
-    // TODO: This fails under Scala Native:
+    // NOTE: This fails under Scala Native:
     // [info] - Lit.Double *** FAILED ***
     // [info]   "Lit.Double(1.4[00000]d)" did not equal "Lit.Double(1.4[]d)" (SyntacticSuite.scala:321)
     // assert(Lit.Double(1.40d).structure == "Lit.Double(1.4d)") // trailing 0 is lost
@@ -487,11 +487,6 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("case _: F[_]") {
     assert(pat("_: F[_]").syntax === "_: F[_]")
-  }
-
-  test("case _: (t Map u)") {
-    // TODO: fixme
-    // assert(pat("_: (t Map u)").syntax === "_: (t Map u)")
   }
 
   test("constructors") {

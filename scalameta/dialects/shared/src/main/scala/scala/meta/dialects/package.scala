@@ -220,13 +220,11 @@ package object dialects {
     allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
   )
 
-  // TODO: https://github.com/scalameta/scalameta/issues/380
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
     underlying.copy(allowTermUnquotes = true, allowMethodTypes = true, allowMultilinePrograms = multiline, allowTypeLambdas = true)
   }
 
-  // TODO: https://github.com/scalameta/scalameta/issues/380
   private[meta] def QuasiquotePat(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
     underlying.copy(allowPatUnquotes = true, allowMethodTypes = true, allowMultilinePrograms = multiline, allowTypeLambdas = true)

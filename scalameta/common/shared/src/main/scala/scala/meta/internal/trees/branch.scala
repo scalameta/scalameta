@@ -29,7 +29,7 @@ class BranchNamerMacros(val c: Context) extends AstReflection with CommonNamerMa
 
       if (mods.hasFlag(SEALED)) c.abort(cdef.pos, "@branch traits cannot be sealed")
       if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "@branch traits cannot be final")
-      val flags1 = flags // TODO: flags | SEALED
+      val flags1 = flags
       mstats1 += q"$CommonTyperMacrosModule.hierarchyCheck[$name]"
       val anns1 = anns :+ q"new $AdtMetadataModule.branch" :+ q"new $AstMetadataModule.branch"
       mstats1 ++= mkClassifier(name)

@@ -153,8 +153,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       (sanns, buf.result)
     }
 
-    // TODO: I'm not completely happy with the implementation of this method.
-    // See https://github.com/scalameta/scalameta/issues/1325 for details.
+    // FIXME: https://github.com/scalameta/scalameta/issues/1325
     private def acc: s.Accessibility = {
       if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
         // NOTE: some sick artifact vals produced by mkPatDef can be

@@ -1,4 +1,4 @@
-// TODO: Workaround for what seems to be a bug in ScalaTest Native 3.2.0-SNAP10.
+// FIXME: https://github.com/scalatest/scalatest/issues/1112
 // If a test suite is defined in an empty package (i.e. outside any package declarations),
 // then it will spuriously fail to compile.
 // Discussion: https://github.com/scalameta/scalameta/issues/772#issuecomment-362380136
@@ -11,7 +11,7 @@ import org.scalameta.tests._
 import typecheckError.Options.WithPositions
 import compat.Platform.EOL
 
-// TODO: Workaround for what seems to be a bug in ScalaTest 3.2.0-SNAP10.
+// FIXME: https://github.com/scalatest/scalatest/issues/1112
 // I had to remove $ characters from all test names in this file.
 // This is because ScalaTest seems to erroneously consider dollars to be name terminators,
 // so it would spuriously crash with "duplicated test" exceptions for e.g.:
@@ -472,17 +472,6 @@ class ErrorSuite extends FunSuite {
     """.replace("QQQ", "\"\"\"").trim.stripMargin.replace("\r", ""))
   }
 
-  test("unquote into multi-line string literals") {
-    // TODO: no idea how to test this
-    // assert(typecheckError("""
-    //   import scala.meta._
-    //   import scala.meta.dialects.Scala211
-    //   val foo = "foo"
-    //   qQQQ QQQ$fooQQQ QQQ
-    // """) === """
-    // """.trim.stripMargin)
-  }
-
   test("unquote into single-line string interpolations") {
     assert(typecheckError("""
       import scala.meta._
@@ -494,17 +483,6 @@ class ErrorSuite extends FunSuite {
       |      qQQQ s"$foo" QQQ
       |             ^
     """.replace("QQQ", "\"\"\"").trim.stripMargin)
-  }
-
-  test("unquote into multiline string interpolations") {
-    // TODO: no idea how to test this
-    // assert(typecheckError("""
-    //   import scala.meta._
-    //   import scala.meta.dialects.Scala211
-    //   val foo = "foo"
-    //   qQQQ QQQ$fooQQQ QQQ
-    // """) === """
-    // """.trim.stripMargin)
   }
 
   test("unquote into xml literals") {

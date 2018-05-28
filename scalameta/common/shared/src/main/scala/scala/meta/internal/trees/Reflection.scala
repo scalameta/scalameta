@@ -71,7 +71,7 @@ trait Reflection extends AdtReflection {
         object Path {
           private def path(s: String): Path = new Path { override def toString = s }
           implicit def nameToPath(name: Name): Path = path(name.decodedName.toString)
-          implicit def reftreeToPath(tree: RefTree): Path = path(tree.toString) // TODO: call decodedName on all components of tree
+          implicit def reftreeToPath(tree: RefTree): Path = path(tree.toString)
         }
         def drilldown[T](current: Path, inner: Boolean)(op: => T) = {
           val savedModule = this.module

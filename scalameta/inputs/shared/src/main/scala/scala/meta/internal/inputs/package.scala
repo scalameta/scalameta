@@ -7,8 +7,7 @@ import scala.meta.internal.{semanticdb3 => s}
 package object inputs {
   implicit class XtensionPositionFormatMessage(pos: Position) {
     def formatMessage(severity: String, message: String): String = {
-      // TODO: In order to be completely compatible with scalac, we need to support Position.point.
-      // On the other hand, do we really need to? Let's try without it. See #383 for discussion.
+      // WONTFIX: https://github.com/scalameta/scalameta/issues/383
       if (pos != Position.None) {
         val input = pos.input
         val header = s"${input.syntax}:${pos.startLine + 1}: $severity: $message"
@@ -25,8 +24,6 @@ package object inputs {
       }
     }
   }
-
-  // TODO: the extension methods below are temporary stubs that should be moved to the public API
 
   implicit class XtensionInputSyntaxStructure(input: Input) {
     def syntax: String = input match {

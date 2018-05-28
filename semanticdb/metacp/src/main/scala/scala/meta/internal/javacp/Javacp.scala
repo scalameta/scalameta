@@ -474,7 +474,7 @@ object Javacp {
   }
 
   private implicit class XtensionTypeArgument(self: TypeArgument) {
-    // TODO: implement wildcards after https://github.com/scalameta/scalameta/issues/1357
+    // FIXME: https://github.com/scalameta/scalameta/issues/1563
     def toType(scope: Scope): s.Type = self match {
       case ReferenceTypeArgument(_, referenceTypeSignature) =>
         referenceTypeSignature.toType(scope)

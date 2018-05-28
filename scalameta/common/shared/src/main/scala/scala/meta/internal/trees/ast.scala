@@ -26,7 +26,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       def is(abbrev: String) = abbrevName == abbrev
       def isQuasi = cdef.name.toString == "Quasi"
       val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$stats }" = cdef
-      // TODO: For stack traces, we'd like to have short class names, because stack traces print full names anyway.
+      // NOTE: For stack traces, we'd like to have short class names, because stack traces print full names anyway.
       // However debugging macro expansion errors is much-much easier with full names for Api and Impl classes
       // because the typechecker only uses short names in error messages.
       // E.g. compare:
@@ -177,7 +177,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       stats1 += q"def children: $ListClass[$TreeClass] = $CommonTyperMacrosModule.children[$iname, $TreeClass]"
 
       // step 9: generate boilerplate required by the @ast infrastructure
-      // TODO: remove leafClass and leafCompanion from here
       ianns1 += q"new $AstMetadataModule.astClass"
       ianns1 += q"new $AdtMetadataModule.leafClass"
       manns1 += q"new $AstMetadataModule.astCompanion"
@@ -251,13 +250,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
       val needsUnapply = !mstats.exists(stat => stat match { case DefDef(_, TermName("unapply"), _, _, _, _) => true; case _ => false })
       if (needsUnapply) {
         if (unapplyParams.length != 0) {
-          // TODO: re-enable name-based pattern matching once https://issues.scala-lang.org/browse/SI-9029 is fixed
-          // stats1 += q"@$InlineAnnotation final def isDefined = !isEmpty"
-          // stats1 += q"@$InlineAnnotation final def isEmpty = false"
-          // val getBody = if (unapplyParams.length == 1) q"this.${unapplyParams.head.name}" else q"this"
-          // stats1 += q"@$InlineAnnotation final def get = $getBody"
-          // unapplyParams.zipWithIndex.foreach({ case (p, i) => stats1 += q"@$InlineAnnotation final def ${TermName("_" + (i + 1))} = this.${p.name}" })
-          // mstats1 += q"@$InlineAnnotation final def unapply(x: $name): $name = x"
           val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
           val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
           mstats1 += q"@$InlineAnnotation final def unapply(x: $iname): $OptionClass[$successTargs] = if (x == null) $NoneModule else $SomeModule($successArgs)"

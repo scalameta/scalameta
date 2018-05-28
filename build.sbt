@@ -460,7 +460,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test"
   )
   .jvmSettings(
-    // TODO: Workaround for what seems to be a bug in ScalaTest 3.2.0-SNAP10.
+    // FIXME: https://github.com/scalatest/scalatest/issues/1112
     // Without adding scalacheck to library dependencies, we get the following error:
     // > testsJVM/test
     // [info] Compiling 79 Scala sources to /Users/eburmako/Projects/scalameta/tests/jvm/target/scala-2.12/test-classes...
@@ -476,7 +476,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp))
   .nativeSettings(
     nativeSettings,
-    // TODO: set nativeLinkStubs := false
+    // FIXME: https://github.com/scalatest/scalatest/issues/1112
     // discussion: https://github.com/scalameta/scalameta/pull/1243/files#r165529377
     // [error] cannot link: @java.lang.Thread::getStackTrace_scala.scalanative.runtime.ObjectArray
     // [error] unable to link
@@ -672,8 +672,7 @@ lazy val publishableSettings = Def.settings(
           sys.error(s"Invalid version number: ${version.value}")
       }
       val previousArtifact = {
-        // TODO: Figure out whether there is a more satisfying solution.
-        // Here's what I'd like to do, but I can't because of deprecations:
+        // NOTE: Here's what I'd like to do, but I can't because of deprecations:
         //   val isJVM = crossPlatform.value == JVMPlatform
         // Here's my second best guess, but it doesn't work due to some reason:
         //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary

@@ -54,7 +54,6 @@ package object trees {
         case _               => 10
       }
 
-    // TODO: deduplicate with Chars.scala in tokenizers
     private final val otherLetters = Set[Char]('\u0024', '\u005F')  // '$' and '_'
     private final val letterGroups = {
       import JCharacter._

@@ -262,7 +262,7 @@ class Main(settings: Settings, reporter: Reporter) {
             ()
         }
       case None =>
-        // TODO: It would be nice to have a symbol parser in semanticdb3.
+        // FIXME: https://github.com/scalameta/scalameta/issues/1555
         sym.split("[\\.|#]").toList match {
           case _ :+ last =>
             val approxName = {

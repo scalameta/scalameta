@@ -9,7 +9,6 @@ case object TripleQuotes extends QuoteStyle { override def toString = "\"\"\"" }
 
 object enquote {
   def apply(s: String, style: QuoteStyle): String = {
-    // TODO: comprehensive handling (e.g. escape triple quotes in triple quotes)
     val sb = new StringBuilder(style.toString)
     if(style == TripleQuotes)
       sb.append(s)

@@ -129,7 +129,6 @@ object Token {
   @freeform("beginning of file") class BOF extends Token { def start = 0; def end = 0 }
   @freeform("end of file") class EOF extends Token { def start = input.chars.length; def end = input.chars.length }
 
-  // TODO: Rewrite the parser so that it doesn't need LFLF anymore.
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
   @freeform("\n\n") private[meta] class LFLF extends Token

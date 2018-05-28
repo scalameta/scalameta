@@ -96,10 +96,10 @@ object ParentChecks {
   }
 
   def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = {
-    parent.is[Type] // TODO: better checks for non-value types not being used where value types are expected
+    parent.is[Type]
   }
 
   def TypeMethod(tree: Type.Method, parent: Tree, destination: String): Boolean = {
-    parent.is[Type] // TODO: better checks for non-value types not being used where value types are expected
+    parent.is[Type]
   }
 }

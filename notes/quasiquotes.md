@@ -224,7 +224,7 @@ The tables above define quasiquote syntax using a notation called *quasiquote te
           1. `..$smth` means an arbitrary mix of `$smth` and `..$smth` unquote templates separated according to their location (e.g. an empty string, `[$tpe]`, `[..$tpes, $tpe]` all conform to `[..$tpes]`, and the separator is a comma, as appropriate for a list of type arguments).
           1. `...$smth` means an arbitrary mix of `$smth`, `..$smth` and  `...$smth` unquote templates, separated according to their location (e.g. an empty string, `(...$exprss)`, `(..$exprs)($expr1, $expr2)()` all conform to `(...$exprss)`, and the separator are matching parentheses, as appropriate for a list of arguments).
           1. If a suffix of `smth` says that it's a non-empty list, then replication can't result in an empty list.
-          1. If a quasiquote is used as a pattern, then some replications may be illegal (TODO: to be elaborated!).
+          1. If a quasiquote is used as a pattern, then some replications may be illegal.
 
       1. Finally, we match the unquotes after replication against the corresponding parts of the quasiquote under conformance test. There are three possibilities for a match: scala syntax, unquote, lifted unquote.
 

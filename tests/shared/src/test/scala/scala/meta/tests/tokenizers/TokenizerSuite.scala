@@ -813,7 +813,6 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("simple xml literal - 2") {
-    // TODO: the whitespace shouldn't be included here - looks like a bug in scalac's MarkupParser
     assert(tokenize("<foo>bar</foo> ").map(_.structure).mkString("\n") === """
       |BOF [0..0)
       | [0..0)
@@ -855,10 +854,6 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("Interpolation.Part.value") {
     val Tokens(bof, _, _, _, part: Interpolation.Part, _, _, eof) = """ q"foo" """.tokenize.get
     assert(part.value === "foo")
-  }
-
-  test("Xml.Part.value") {
-    // TODO: not implemented yet
   }
 
   test("Comment.value") {

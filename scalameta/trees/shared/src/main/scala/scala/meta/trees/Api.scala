@@ -2,7 +2,6 @@ package scala.meta
 package trees
 
 private[meta] trait Api {
-  // TODO: https://github.com/scalameta/scalameta/issues/872
 }
 
 private[meta] trait Aliases {

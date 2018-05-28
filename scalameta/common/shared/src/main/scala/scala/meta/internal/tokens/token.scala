@@ -84,7 +84,6 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       """
 
       // step 4: generate implementation of `def name: String`
-      // TODO: deduplicate with scala.meta.internal.prettyprinters.escape
       val codepage = Map("\t" -> "\\t", "\b" -> "\\b", "\n" -> "\\n", "\r" -> "\\r", "\f" -> "\\f", "\\" -> "\\\\")
       val tokenName = providedTokenName.flatMap(c => codepage.getOrElse(c.toString, c.toString))
       stats1 += q"private[meta] def name: _root_.scala.Predef.String = $tokenName"
@@ -96,7 +95,6 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       }
 
       // step 6: generate implementation of `Companion.unapply`
-      // TODO: deduplicate wrt @data
       val unapplyParams = paramss.head
       if (unapplyParams.length != 0) {
         val successTargs = unapplyParams.map(_.tpt)
@@ -119,7 +117,6 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
       var paramss1 = (boilerplateParams ++ paramss.head) +: paramss.tail
 
       // step 8: generate implementation of `Companion.apply`
-      // TODO: deduplicate wrt @data
       val applyParamss = paramss1.map(_.map(_.duplicate))
       val applyArgss = paramss1.map(_.map(p => q"${p.name}"))
       mstats1 += q"private[meta] def apply(...$applyParamss): $name = new $name(...$applyArgss)"

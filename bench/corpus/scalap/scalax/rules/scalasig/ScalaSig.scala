@@ -210,7 +210,7 @@ object ScalaSigEntryParsers extends RulesWithState with MemoisableRules {
       19 -~ symbolRef ~ (typeRef*) ^~^ ClassInfoType,
       20 -~ typeRef ~ (symbolRef*) ^~^ MethodType,
       21 -~ typeRef ~ (refTo(typeSymbol)+) ^~^ PolyType,
-      // TODO: make future safe for past by doing the same transformation as in the
+      // TODO make future safe for past by doing the same transformation as in the
       // full unpickler in case we're reading pre-2.9 classfiles
       21 -~ typeRef ^^ NullaryMethodType,
       22 -~ typeRef ~ (symbolRef*) ^~^ MethodType,
