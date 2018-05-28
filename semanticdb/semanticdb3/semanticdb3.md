@@ -67,9 +67,10 @@ SemanticDB is our take on portable semantic APIs.
 
 ## Data Model
 
-SemanticDB is a data model for semantic information about programs in Scala and
-other languages. SemanticDB decouples production and consumption of semantic
-information, establishing documented means for communication between tools.
+SemanticDB is a data model for semantic information such as symbols and types
+about programs in Scala and other languages. SemanticDB decouples production
+and consumption of semantic information, establishing documented means for
+communication between tools.
 
 In this section, we describe the SemanticDB data model by going through the
 individual sections of the associated Protocol Buffers [\[13\]][13] schema.
