@@ -1,4 +1,4 @@
-package scala.meta.metac
+package scala.meta.cli
 
 import java.io._
 

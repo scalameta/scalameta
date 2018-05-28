@@ -117,7 +117,7 @@ trait ExpectHelpers extends FunSuiteLike {
   protected def lowlevelSyntax(dirOrJar: Path): String = {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
       val settings = scala.meta.metap.Settings().withPaths(List(dirOrJar))
-      val reporter = scala.meta.metap.Reporter().withOut(out).withErr(err)
+      val reporter = Reporter().withOut(out).withErr(err)
       Metap.process(settings, reporter)
     }
     if (!success) {
@@ -137,7 +137,7 @@ trait ExpectHelpers extends FunSuiteLike {
         .withCacheDir(AbsolutePath(target))
         .withClasspath(Classpath(AbsolutePath(in)))
         .withScalaLibrarySynthetics(false)
-      val reporter = scala.meta.metacp.Reporter().withOut(out).withErr(err)
+      val reporter = Reporter().withOut(out).withErr(err)
       Metacp.process(settings, reporter) match {
         case Some(Classpath(List(outPath))) => outPath
         case Some(other) => sys.error(s"unexpected metacp result: $other")
@@ -240,7 +240,7 @@ object ScalalibExpect extends ExpectHelpers {
       .withCacheDir(AbsolutePath(tmp))
       .withClasspath(Classpath(Nil))
       .withScalaLibrarySynthetics(true)
-    val reporter = scala.meta.metacp.Reporter()
+    val reporter = Reporter()
     Metacp.process(settings, reporter) match {
       case Some(Classpath(List(jar))) => lowlevelSyntax(jar.toNIO)
       case other => sys.error(s"unexpected metacp result: $other")

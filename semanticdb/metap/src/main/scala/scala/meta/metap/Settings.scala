@@ -2,6 +2,7 @@ package scala.meta.metap
 
 import java.io._
 import java.nio.file._
+import scala.meta.cli._
 
 final class Settings private (
     val format: Format,

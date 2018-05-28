@@ -4,6 +4,7 @@ import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.JavaConverters._
+import scala.meta.cli._
 import scala.meta.internal.index._
 import scala.meta.internal.javacp._
 import scala.meta.internal.scalacp._

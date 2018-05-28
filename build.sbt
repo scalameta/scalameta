@@ -153,6 +153,18 @@ lazy val semanticdbScalacPlugin = project
   )
   .dependsOn(semanticdbScalacCore)
 
+lazy val cli = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .in(file("semanticdb/cli"))
+  .settings(
+    publishableSettings,
+    description := "Shared CLI infrastructure for Scalameta tools"
+  )
+  .nativeSettings(nativeSettings)
+lazy val cliJVM = cli.jvm
+lazy val cliJS = cli.js
+lazy val cliNative = cli.native
+
 lazy val metac = project
   .in(file("semanticdb/metac"))
   .settings(
@@ -164,7 +176,7 @@ lazy val metac = project
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdbScalacPlugin)
+  .dependsOn(cliJVM, semanticdbScalacPlugin)
 
 lazy val metacp = project
   .in(file("semanticdb/metacp"))
@@ -182,7 +194,7 @@ lazy val metacp = project
   .enablePlugins(BuildInfoPlugin)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdb3JVM, ioJVM)
+  .dependsOn(semanticdb3JVM, cliJVM, ioJVM)
 
 lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -195,7 +207,7 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .nativeSettings(nativeSettings)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdb3)
+  .dependsOn(semanticdb3, cli)
 lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
 lazy val metapNative = metap.native

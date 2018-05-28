@@ -30,7 +30,7 @@ class CliSuite extends BaseCliSuite {
         target.toString,
         helloWorldScala.toString)
       val settings = scala.meta.metac.Settings().withScalacArgs(scalacArgs)
-      val reporter = scala.meta.metac.Reporter()
+      val reporter = Reporter()
       Metac.process(settings, reporter)
     }
     assert(success)
@@ -41,7 +41,7 @@ class CliSuite extends BaseCliSuite {
   test("metap " + helloWorldSemanticdb) {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
       val settings = scala.meta.metap.Settings().withPaths(List(helloWorldSemanticdb))
-      val reporter = scala.meta.metap.Reporter().withOut(out).withErr(err)
+      val reporter = Reporter().withOut(out).withErr(err)
       Metap.process(settings, reporter)
     }
     assert(success)

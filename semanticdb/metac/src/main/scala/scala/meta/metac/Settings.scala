@@ -1,5 +1,7 @@
 package scala.meta.metac
 
+import scala.meta.cli._
+
 final class Settings private (val scalacArgs: List[String]) {
   private def this() = {
     this(scalacArgs = Nil)

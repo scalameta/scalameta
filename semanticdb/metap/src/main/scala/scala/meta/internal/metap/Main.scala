@@ -9,6 +9,7 @@ import scala.collection.{immutable, mutable}
 import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 import scala.util.control.NonFatal
+import scala.meta.cli._
 import scala.meta.internal.semanticdb3._
 import scala.meta.metap._
 import Diagnostic._
