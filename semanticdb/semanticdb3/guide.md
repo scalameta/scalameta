@@ -1,8 +1,9 @@
 # SemanticDB Guide
 
-SemanticDB is a data model for semantic information about programs in Scala and
-other languages. SemanticDB decouples production and consumption of semantic
-information, establishing documented means for communication between tools.
+SemanticDB is a data model for semantic information such as symbols and types
+about programs in Scala and other languages. SemanticDB decouples production
+and consumption of semantic information, establishing documented means for 
+communication between tools.
 
 In this document, we introduce practical aspects of working with SemanticDB.
 We describe the tools that can be used to produce SemanticDB payloads, the tools
@@ -10,17 +11,41 @@ can be used to consume SemanticDB payloads and useful tips & tricks for working
 with SemanticDB. If you're looking for a comprehensive reference of SemanticDB
 features, check out [the specification](semanticdb3.md).
 
+* [Install](#install)
 * [SemanticDB example](#semanticdb-example)
 * [What is SemanticDB good for?](#what-is-semanticdb-good-for)
 * [Producing SemanticDB](#producing-semanticdb)
   * [Scalac compiler plugin](#scalac-compiler-plugin)
   * [Metac](#metac)
-  * [Sbt](#sbt)
+  * [sbt](#sbt)
   * [Metacp](#metacp)
 * [Consuming SemanticDB](#consuming-semanticdb)
   * [Scalameta](#scalameta)
   * [Protoc](#protoc)
   * [Metap](#metap)
+
+## Install
+
+This guide covers several SemanticDB-based command-line tools: `metac`, `metacp`, `metap`.
+To install these tools locally:
+1. install the `coursier` command-line tool by following the [instructions here](https://github.com/coursier/coursier/#command-line).
+Make sure you are using the latest coursier version (1.1.0-M4 or newer).
+2. add the following aliases to your `~/.zshrc` or `~/.bashrc`:
+
+```bash
+alias metac="coursier launch org.scalameta:metac_2.11:3.7.4 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.11.12)"
+alias metacp="coursier launch org.scalameta:metacp_2.11:3.7.4 --"
+alias metap="coursier launch org.scalameta:metap_2.11:3.7.4 --"
+```
+
+(Optional) Instead of running `metap` on the JVM, build a native binary of on macOS or Linux:
+
+1. setup the [environment for Scala Native](http://www.scala-native.org/en/latest/user/setup.html#installing-clang-and-runtime-dependencies)
+2. link a native `metap` binary
+
+```bash
+coursier bootstrap org.scalameta:metap_native0.3_2.11:3.7.4 -o metap -f --native --main scala.meta.cli.Metap
+```
 
 ## SemanticDB example
 
@@ -171,6 +196,12 @@ compiler and then harvests and dumps semantic information from Scalac
 in SemanticDB format. The plugin supports the following options that can
 be passed through Scalac:
 
+```
+Usage: scalac -Xplugin:semanticdb-scalac.jar -Yrangepos [options] [<path> ...]
+       scalac -Xplugin:semanticdb-scalac.jar -Yrangepos -P:semanticdb:failures:ignore [<path> ...]
+       scalac -Xplugin:semanticdb-scalac.jar -Yrangepos -P:semanticdb:symbols:all [<path> ...]
+```
+
 <table>
   <tr>
     <td width="250px">Option</td>
@@ -185,17 +216,11 @@ be passed through Scalac:
       Used to relativize source file paths into
       <code>TextDocument.uri</code>.
     </td>
-    <td>Current directory</td>
-  </tr>
-  <tr>
-    <td><code>-P:semanticdb:targetroot</code></td>
-    <td>Absolute or relative path</td>
-    <td>Designates a directory that will contain generated SemanticDB files.</td>
-    <td>Output directory of the Scala compiler</td>
+    <td>Current working directory</td>
   </tr>
   <tr>
     <td><code>-P:semanticdb:mode</code></td>
-    <td>Enumeration</td>
+    <td><code>fat | slim</code></td>
     <td>
       Specifies whether to include source code in
       <code>TextDocument.text</code> (<code>fat</code> for yes,
@@ -205,11 +230,10 @@ be passed through Scalac:
   </tr>
   <tr>
     <td><code>-P:semanticdb:failures</code></td>
-    <td>Enumeration</td>
+    <td><code>error | warning | info | ignore</code></td>
     <td>
-      Tells the Scala compiler how to report failures that may arise during
-      SemanticDB generation (<code>error</code>, <code>warning</code>,
-      <code>info</code>, <code>ignore</code>).
+      The level at which the Scala compiler should report failures arise during
+      SemanticDB generation.
     </td>
     <td><code>warning</code></td>
   </tr>
@@ -296,40 +320,41 @@ into Scala build tools.
 ### Metac
 
 Metac is a command-line tool that serves as a drop-in replacement for `scalac`
-and produces .semanticdb files instead of .class files. It supports the same
-command-line arguments as `scalac` and automatically installs
-`semanticdb-scalac` into the compilation pipeline, saving its users the hassle
-of configuring compiler plugins. Metac is ideal for quick experiments
-with SemanticDB.
+and produces `*.semanticdb` files instead of `*.class` files. It supports the same
+command-line arguments as `scalac` and automatically installs `semanticdb-scalac` 
+into the compilation pipeline. With metac, it is not necessary to provide the flags
+`-Xplugin:/path/to/semanticdb.jar` and `-Yrangepos`, making it ideal for quick experiments 
+with SemanticDB. For an example of using Metac, check out [SemanticDB example](#semanticdb-example).
 
-```bash
-alias metac="coursier launch org.scalameta:metac_2.11:3.7.4 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.11.12)"
+```
+Usage: metac [options] [<path> ...]
+       metac -P:semanticdb:synthetics:none [<path> ...]
+       metac -P:semanticdb:symbols:all -P:semanticdb:failures:ignore [<path> ...]
 ```
 
-For an example of using Metac, check out [SemanticDB example](#semanticdb-example).
-
-### Sbt
+### sbt
 
 In order to enable `semanticdb-scalac` for your sbt project, add the following
-to your build. Note that the compiler plugin requires the -Yrangepos compiler
+to your build. Note that the compiler plugin requires the `-Yrangepos` compiler
 option to be enabled.
 
 ```scala
 addCompilerPlugin("org.scalameta" % "semanticdb-scalac" % "3.7.4" cross CrossVersion.full)
-scalacOptions += "-Xplugin-require:semanticdb"
 scalacOptions += "-Yrangepos"
 ```
 
 ### Metacp
 
-Metacp is a command-line tool that takes a classpath, dumps its metadata in
-SemanticDB format and returns a classpath of SemanticDB files.
-Advanced command-line options control caching, parallelization
-and interaction with some quirks of the Scala standard library.
 
-```bash
-alias metacp="coursier launch org.scalameta:metacp_2.11:3.7.4 --"
-```
+Metacp is a command-line tool that takes a classpath and returns a new classpath of SemanticDB files containing only the `Symbols` section.
+Metacp understands classfiles produced by both the Scala and Java compiler.
+The compiler plugin `semanticdb-scalac` is not required when using metacp.
+
+Results from processed jar files are cached per machine while directories are never cached.
+By convention, cached artifacts are stored in the OS cache directory keyed by the project name "semanticdb", Scalameta version and MD5 fingerprint.
+The exact cache location depends on the OS and is computed using the library [directories-jvm](https://github.com/soc/directories-jvm).
+For example, on macOS the location for scala-library would be `$HOME/Library/Caches/semanticdb/3.7.4/scala-library-MD5_FINGERPRINT.jar`.
+Advanced command-line options control caching, parallelization and interaction with some quirks of the Scala standard library.
 
 As an example of using Metacp, let's compile Test.scala from
 [SemanticDB example](#semanticdb-example) using Scalac and then convert
@@ -383,8 +408,15 @@ _root_. => package _root_
 ```
 
 Note how the resulting SemanticDB payload is missing the `Text` attribute and
-the `Occurrences` section. That's because Metacp doesn't know anything about
-sources and only works with classes.
+the `Occurrences` section. That's because Metacp doesn't know about sources
+and only works with classes.
+
+```
+Usage: metacp [options] <classpath>
+       metacp <classpath>
+       metacp --include-scala-library-synthetics <classpath>
+       metacp --par --cache-dir <dir> <classpath>
+```
 
 <table>
   <tr>
@@ -394,7 +426,7 @@ sources and only works with classes.
     <td>Default</td>
   </tr>
   <tr>
-    <td></td>
+    <td><code>&lt;classpath&gt;</code></td>
     <td>Java classpath</td>
     <td>
       Specifies classpath to be converted to SemanticDB. Can contain classfiles
@@ -460,12 +492,12 @@ Scalameta includes the `semanticdb3` library that contains
 one can model SemanticDB entities as Scala case classes and serialize/deserialize
 them into bytes and streams. For more information, check out [the Scaladoc](https://static.javadoc.io/org.scalameta/semanticdb3_2.11/3.7.4/index.html#scala.meta.internal.semanticdb3.TextDocuments).
 
-NOTE: At this point, it's not very easy to take a classpath, traverse it and
-load all available SemanticDB payloads. SemanticDB-based tools are currently
-responsible for implementing discovery and deserialization on their own.
-However, we recognize this as a usability problem and are planning to
-[improve the situation](https://github.com/scalameta/scalameta/issues/1566)
-very soon.
+NOTE: At this point, there is no stable public library API for loading SemanticDB
+payloads. SemanticDB-based tools are currently responsible for implementing discovery
+and de-serialization on their own using internal APIs that are subject to binary and
+source breaking changes between releases. However, we recognize this as a usability
+problem and are planning to [improve the situation](https://github.com/scalameta/scalameta/issues/1566)
+soon.
 
 For examples of developer tools that consume SemanticDB, take a look at:
   * [Scalafix](https://github.com/scalacenter/scalafix/)
@@ -526,11 +558,12 @@ Metap is a command-line tool that takes a list of paths and then prettyprints
 all .semanticdb files that it finds in these paths. Advanced options control
 prettyprinting format.
 
-```bash
-alias metap="coursier launch org.scalameta:metap_2.11:3.7.4 --"
-```
-
 For an example of using Metap, check out [SemanticDB example](#semanticdb-example).
+
+```
+Usage: metap [options] <classpath>
+       metap --proto <classpath>
+```
 
 <table>
   <tr>
@@ -540,8 +573,8 @@ For an example of using Metap, check out [SemanticDB example](#semanticdb-exampl
     <td width="125px">Default</td>
   </tr>
   <tr>
-    <td></td>
-    <td>Absolute or relative path</td>
+    <td><code>&lt;classpath&gt;</code></td>
+    <td>Java classpath</td>
     <td>
       Supported paths:
       <ul>
