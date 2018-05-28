@@ -21,8 +21,8 @@ features, check out [the specification](semanticdb3.md).
   * [Metacp](#metacp)
 * [Consuming SemanticDB](#consuming-semanticdb)
   * [Scalameta](#scalameta)
-  * [Protoc](#protoc)
   * [Metap](#metap)
+  * [Protoc](#protoc)
 
 ## Install
 
@@ -490,7 +490,7 @@ Scalameta includes the `semanticdb3` library that contains
 [ScalaPB](https://scalapb.github.io/) bindings to
 [the SemanticDB protobuf schema](semanticdb3.proto). Using this library,
 one can model SemanticDB entities as Scala case classes and serialize/deserialize
-them into bytes and streams. For more information, check out [the Scaladoc](https://static.javadoc.io/org.scalameta/semanticdb3_2.11/3.7.4/index.html#scala.meta.internal.semanticdb3.TextDocuments).
+them into bytes and streams. For more information, check out [the Scaladoc](https://static.javadoc.io/org.scalameta/semanticdb3_2.12/3.7.4/scala/meta/internal/semanticdb3/TextDocuments.html).
 
 NOTE: At this point, there is no stable public library API for loading SemanticDB
 payloads. SemanticDB-based tools are currently responsible for implementing discovery
@@ -503,54 +503,6 @@ For examples of developer tools that consume SemanticDB, take a look at:
   * [Scalafix](https://github.com/scalacenter/scalafix/)
   * [Metadoc](https://github.com/scalameta/metadoc)
   * [Metals](https://github.com/scalameta/metals)
-
-### Protoc
-
-The Protocol Compiler tool (`protoc`) can inspect protobuf payloads in
-`--decode` (takes a schema) and `--decode_raw` (doesn't need a schema) modes.
-For the reference, here's [the SemanticDB protobuf schema](semanticdb3.proto).
-
-```
-$ tree
-.
-├── META-INF
-│   └── semanticdb
-│       └── Test.scala.semanticdb
-└── Test.scala
-
-$ protoc --proto_path <directory with the .proto file>\
---decode scala.meta.internal.semanticdb3.TextDocuments\
-semanticdb3.proto < META-INF/semanticdb/Test.scala.semanticdb
-
-documents {
-  schema: SEMANTICDB3
-  uri: "Test.scala"
-  text: "object Test {\n  def main(args: Array[String]): Unit = {\n    println(\"hello world\")\n  }\n}\n"
-  symbols {
-    symbol: "_empty_.Test."
-    kind: OBJECT
-    properties: 8
-    name: "Test"
-    tpe {
-      tag: TYPE_REF
-      typeRef {
-        symbol: "_empty_.Test."
-      }
-    }
-    accessibility {
-      tag: PUBLIC
-    }
-    owner: "_empty_."
-    language: SCALA
-  }
-  ...
-}
-```
-
-`protoc` was useful for getting things done in the early days of SemanticDB,
-but nowadays it's a bit too low-level. In order to provide SemanticDB users
-more control over prettyprinting and automate classpath traversal, we developed
-Metap.
 
 ### Metap
 
@@ -607,3 +559,50 @@ Usage: metap [options] <classpath>
     </td>
   </tr>
 </table>
+
+### Protoc
+
+The Protocol Compiler tool (`protoc`) can inspect protobuf payloads in
+`--decode` (takes a schema) and `--decode_raw` (doesn't need a schema) modes.
+For the reference, here's [the SemanticDB protobuf schema](semanticdb3.proto).
+
+```
+$ tree
+.
+├── META-INF
+│   └── semanticdb
+│       └── Test.scala.semanticdb
+└── Test.scala
+
+$ protoc --proto_path <directory with the .proto file>\
+--decode scala.meta.internal.semanticdb3.TextDocuments\
+semanticdb3.proto < META-INF/semanticdb/Test.scala.semanticdb
+
+documents {
+  schema: SEMANTICDB3
+  uri: "Test.scala"
+  text: "object Test {\n  def main(args: Array[String]): Unit = {\n    println(\"hello world\")\n  }\n}\n"
+  symbols {
+    symbol: "_empty_.Test."
+    kind: OBJECT
+    properties: 8
+    name: "Test"
+    tpe {
+      tag: TYPE_REF
+      typeRef {
+        symbol: "_empty_.Test."
+      }
+    }
+    accessibility {
+      tag: PUBLIC
+    }
+    owner: "_empty_."
+    language: SCALA
+  }
+  ...
+}
+```
+
+`protoc` was useful for getting things done in the early days of SemanticDB,
+but nowadays it's a bit too low-level. 
+It is recommended to use `metap` instead of `protoc` when possible.
