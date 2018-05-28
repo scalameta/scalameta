@@ -157,6 +157,7 @@ lazy val metac = project
   .in(file("semanticdb/metac"))
   .settings(
     publishableSettings,
+    fullCrossVersionSettings,
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.Metac")
