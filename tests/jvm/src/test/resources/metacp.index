@@ -25,6 +25,7 @@ example.
   example.A#
   example.Acc#
   example.B#
+  example.EmptyObject.
   example.Example.
   example.MetacJava#
   example.MethodUsages#
@@ -64,6 +65,7 @@ com.javacp.Test# => com/javacp/Test.class.semanticdb
 example.A# => example/A.class.semanticdb
 example.Acc# => example/Acc.class.semanticdb
 example.B# => example/B.class.semanticdb
+example.EmptyObject. => example/EmptyObject.class.semanticdb
 example.Example. => example/Example.class.semanticdb
 example.MetacJava# => example/MetacJava.class.semanticdb
 example.MethodUsages# => example/MethodUsages.class.semanticdb

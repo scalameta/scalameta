@@ -47,6 +47,7 @@ example.Acc#m7(). => example.Acc#
 example.B# => example.
 example.B#`<init>`(). => example.B#
 example.B#foo(). => example.B#
+example.EmptyObject. => example.
 example.Example. => example.
 example.Example.main(Array). => example.Example.
 example.Example.main(Array).(args) => example.Example.main(Array).

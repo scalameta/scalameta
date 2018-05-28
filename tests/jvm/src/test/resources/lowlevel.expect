@@ -92,6 +92,25 @@ Occurrences:
 [5:9..5:10): A => _empty_.A#
 [5:13..5:16): ??? => scala.Predef.`???`().
 
+semanticdb/integration/src/main/scala/example/EmptyObject.scala
+---------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/EmptyObject.scala
+Text => non-empty
+Language => Scala
+Symbols => 2 entries
+Occurrences => 2 entries
+
+Symbols:
+example. => package example
+example.EmptyObject. => final object EmptyObject
+
+Occurrences:
+[0:8..0:15): example <= example.
+[2:7..2:18): EmptyObject <= example.EmptyObject.
+
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 

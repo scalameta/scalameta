@@ -39,6 +39,7 @@
 -example.A# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 -example.Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scala.semanticdb
 -example.B# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
+-example.EmptyObject. => semanticdb/integration/src/main/scala/example/EmptyObject.scala.semanticdb
 -example.Example. => semanticdb/integration/src/main/scala/example/Example.scala.semanticdb
 -example.MetacJava# => semanticdb/integration/src/main/scala/example/MetacJava.scala.semanticdb
 -example.MethodUsages# => semanticdb/integration/src/main/scala/example/Methods.scala.semanticdb
@@ -71,6 +72,7 @@
 +example.A# => example/A.class.semanticdb
 +example.Acc# => example/Acc.class.semanticdb
 +example.B# => example/B.class.semanticdb
++example.EmptyObject. => example/EmptyObject.class.semanticdb
 +example.Example. => example/Example.class.semanticdb
 +example.MetacJava# => example/MetacJava.class.semanticdb
 +example.MethodUsages# => example/MethodUsages.class.semanticdb

@@ -607,6 +607,22 @@ example.B#`<init>`(). => primary ctor <init>: (): B
 example.B#foo(). => method foo: : Int
   Int => scala.Int#
 
+example/EmptyObject.class
+-------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => example/EmptyObject.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+_root_. => package _root_
+example. => package example
+example.EmptyObject. => final object EmptyObject
+  extends AnyRef
+
 example/Example.class
 ---------------------
 
@@ -620,7 +636,7 @@ Symbols => 7 entries
 Symbols:
 _root_. => package _root_
 example. => package example
-example.Example. => final object Example.{+4 decls}
+example.Example. => final object Example.{+3 decls}
   extends AnyRef
 example.Example.main(Array). => method main: (args: Array[String]): Unit
   args => example.Example.main(Array).(args)
@@ -1101,7 +1117,7 @@ Symbols => 5 entries
 Symbols:
 _root_. => package _root_
 example. => package example
-example.ValUsages. => final object ValUsages.{+3 decls}
+example.ValUsages. => final object ValUsages.{+2 decls}
   extends AnyRef
 example.ValUsages.v(). => val method v: : Vals
   Vals => example.Vals#
@@ -1140,7 +1156,7 @@ Symbols:
 _root_. => package _root_
 flags. => package flags
 flags.p. => package p
-flags.p.package. => final package object package.{+20 decls}
+flags.p.package. => final package object package.{+19 decls}
   extends AnyRef
 flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
@@ -1234,7 +1250,7 @@ flags.p.package.U# => abstract type U: >: Nothing <: Int
 flags.p.package.V# => abstract type V: >: Int <: Any
   Int => scala.Int#
   Any => scala.Any#
-flags.p.package.X. => final case object X.{+9 decls}
+flags.p.package.X. => final case object X.{+8 decls}
   extends AnyRef
   extends Product
   extends Serializable
@@ -1481,7 +1497,7 @@ Symbols => 136 entries
 Symbols:
 _root_. => package _root_
 types. => package types
-types.Test. => final object Test.{+6 decls}
+types.Test. => final object Test.{+5 decls}
   extends AnyRef
 types.Test.C# => class C.{+58 decls}
   extends M
@@ -1492,14 +1508,14 @@ types.Test.C#$anon#k(). => abstract method k: : Int
   Int => scala.Int#
 types.Test.C#$anon#k(). => abstract method k: : Int
   Int => scala.Int#
-types.Test.C#ByNameType. => final object ByNameType.{+2 decls}
+types.Test.C#ByNameType. => final object ByNameType.{+1 decls}
   extends AnyRef
 types.Test.C#ByNameType.m1(=>Int). => method m1: (x: => Int): Int
   x => types.Test.C#ByNameType.m1(=>Int).(x)
   Int => scala.Int#
 types.Test.C#ByNameType.m1(=>Int).(x) => param x: => Int
   Int => scala.Int#
-types.Test.C#ClassInfoType1. => final object ClassInfoType1.{+1 decls}
+types.Test.C#ClassInfoType1. => final object ClassInfoType1
   extends AnyRef
 types.Test.C#ClassInfoType2# => class ClassInfoType2.{+2 decls}
   extends B
@@ -1517,7 +1533,7 @@ types.Test.C#Either(). => val method Either: : Either.type
   Either => scala.util.Either.
 types.Test.C#Either. => private[this] val field Either: Either.type
   Either => scala.util.Either.
-types.Test.C#MethodType. => final object MethodType.{+7 decls}
+types.Test.C#MethodType. => final object MethodType.{+6 decls}
   extends AnyRef
 types.Test.C#MethodType.m3(). => method m3: : Int
   Int => scala.Int#
@@ -1591,7 +1607,7 @@ types.Test.C#RepeatedType#s. => private[this] val field s: String*
   String => scala.Predef.String#
 types.Test.C#RepeatedType#toString(). => method toString: (): String
   String => java.lang.String#
-types.Test.C#RepeatedType. => final object RepeatedType.{+4 decls}
+types.Test.C#RepeatedType. => final object RepeatedType.{+3 decls}
   extends AbstractFunction1[String*, C.this.RepeatedType]
   extends Serializable
 types.Test.C#RepeatedType.apply(String*). => case method apply: (s: String*): C.this.RepeatedType
@@ -1613,7 +1629,7 @@ types.Test.C#RepeatedType.unapplySeq(RepeatedType). => case method unapplySeq: (
 types.Test.C#RepeatedType.unapplySeq(RepeatedType).(x$0) => param x$0: C.this.RepeatedType
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
-types.Test.C#TypeType. => final object TypeType.{+6 decls}
+types.Test.C#TypeType. => final object TypeType.{+5 decls}
   extends AnyRef
 types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
   Nothing => scala.Nothing#
@@ -1772,7 +1788,7 @@ types.Test.C#x. => private[this] val field x: C.this.p.X
   C => types.Test.C#
   p => types.Test.C#p().
   X => types.P#X#
-types.Test.Literal. => final object Literal.{+23 decls}
+types.Test.Literal. => final object Literal.{+22 decls}
   extends AnyRef
 types.Test.Literal.bool(). => final val method bool: : true
 types.Test.Literal.bool. => private[this] final val field bool: true
