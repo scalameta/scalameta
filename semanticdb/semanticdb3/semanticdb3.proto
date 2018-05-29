@@ -210,7 +210,7 @@ message SymbolInformation {
     PRIMARY = 0x2000;
     ENUM = 0x4000;
   }
-  reserved 2, 6, 7, 8, 9, 10, 12;
+  reserved 2, 6, 7, 8, 9, 10, 12, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
@@ -219,7 +219,6 @@ message SymbolInformation {
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
-  string owner = 15;
 }
 
 message Annotation {

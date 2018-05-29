@@ -70,8 +70,7 @@ object Scalalib {
       properties = p.PRIMARY.value,
       name = "<init>",
       tpe = Some(s.Type(tag = t.METHOD_TYPE, methodType = Some(ctorSig))),
-      accessibility = Some(s.Accessibility(a.PUBLIC)),
-      owner = symbol
+      accessibility = Some(s.Accessibility(a.PUBLIC))
     )
     val builtinSig = {
       val decls = symbols.filter(_.kind.isMethod)
@@ -87,8 +86,7 @@ object Scalalib {
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = name,
       tpe = Some(builtinSig),
-      accessibility = Some(s.Accessibility(a.PUBLIC)),
-      owner = "scala."
+      accessibility = Some(s.Accessibility(a.PUBLIC))
     )
     val syntheticBase = PathIO.workingDirectory
     val syntheticPath = syntheticBase.resolve("scala/" + name + ".class")
@@ -129,8 +127,7 @@ object Scalalib {
         properties = 0,
         name = tparamName,
         tpe = Some(tparamSig),
-        accessibility = None,
-        owner = methodSymbol)
+        accessibility = None)
     }
     val params = paramDsls.map {
       case (paramName, paramTpeSymbol) =>
@@ -142,8 +139,7 @@ object Scalalib {
           kind = k.PARAMETER,
           properties = 0,
           name = paramName,
-          tpe = Some(paramSig),
-          owner = methodSymbol)
+          tpe = Some(paramSig))
     }
     val methodSig = {
       val paramSymbols = params.map(_.symbol)
@@ -158,8 +154,7 @@ object Scalalib {
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = methodName,
       tpe = Some(methodSig),
-      accessibility = Some(s.Accessibility(a.PUBLIC)),
-      owner = classSymbol)
+      accessibility = Some(s.Accessibility(a.PUBLIC)))
     List(method) ++ tparams ++ params
   }
 }

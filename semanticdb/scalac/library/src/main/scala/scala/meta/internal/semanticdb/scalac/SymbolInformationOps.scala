@@ -182,11 +182,6 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    private def owner: m.Symbol = {
-      if (config.owners.isAll && gsym.isSemanticdbGlobal) gsym.owner.toSemantic
-      else m.Symbol.None
-    }
-
     def toSymbolInformation(): SymbolInformationResult = {
       val (anns, todoAnns) = this.anns
       config.types match {
@@ -203,8 +198,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
             properties = properties,
             name = name,
             tpe = tpe,
-            annotations = anns,
-            owner = owner.syntax
+            annotations = anns
           )
           SymbolInformationResult(denot, todoAnns ++ todoTpe)
       }

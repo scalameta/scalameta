@@ -470,7 +470,7 @@ provided via [SymbolInformation](#symbolinformation).
 
 ```protobuf
 message SymbolInformation {
-  reserved 1, 2, 4, 5, 7, 8, 9, 15, 16;
+  reserved 2, 6, 7, 8, 9, 10, 12, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
@@ -479,7 +479,6 @@ message SymbolInformation {
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
-  string owner = 15;
 }
 ```
 
@@ -680,9 +679,6 @@ which signatures in supported languages.
 `annotation`. [Annotations](#annotation) of the corresponding definition.
 
 `accessibility`. [Accessibility](#accessibility) of the corresponding definition.
-
-`owner`. See [Languages](#languages) for more information on which definitions
-have which owners in supported languages.
 
 ### Annotation
 
@@ -1196,7 +1192,7 @@ Notes:
 
 ```protobuf
 message SymbolInformation {
-  reserved 1, 2, 4, 5, 7, 8, 9, 15, 16;
+  reserved 2, 6, 7, 8, 9, 10, 12, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
@@ -1205,7 +1201,6 @@ message SymbolInformation {
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
-  string owner = 15;
 }
 ```
 
@@ -1245,10 +1240,6 @@ message SymbolInformation {
   <tr>
     <td><code>accessibility</code></td>
     <td>Explained below on per-definition basis.</td>
-  </tr>
-  <tr>
-    <td><code>owner</code></td>
-    <td>See <a href="#scala-symbol">Symbol</a>.</td>
   </tr>
 </table>
 
@@ -2082,7 +2073,6 @@ the only non-empty fields must be:
   * `language` (`SCALA`).
   * `kind` (`PACKAGE`).
   * `name` (as described in [Symbol](#scala-symbol)).
-  * `owner` (as described in [Symbol](#scala-symbol)).
 
 <a name="scala-annotation"></a>
 #### Annotation
@@ -2490,7 +2480,7 @@ always empty.
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 9, 10, 12;
+  reserved 2, 6, 7, 8, 9, 10, 12, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
@@ -2499,7 +2489,6 @@ message SymbolInformation {
   Type tpe = 11;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
-  string owner = 15;
 }
 ```
 
@@ -2538,10 +2527,6 @@ message SymbolInformation {
   <tr>
     <td><code>accessibility</code></td>
     <td>Explained below on per-definition basis.</td>
-  </tr>
-  <tr>
-    <td><code>owner</code></td>
-    <td>See <a href="#java-symbol">Symbol</a>.</td>
   </tr>
 </table>
 
@@ -2957,7 +2942,6 @@ the only non-empty fields must be:
   * language (`JAVA`).
   * kind (`PACKAGE`).
   * name (as described in [Symbol](#java-symbol)).
-  * owner (as described in [Symbol](#java-symbol)).
 
 <a name="java-root-package"></a>
 ##### Root package

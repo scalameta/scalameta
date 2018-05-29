@@ -16,8 +16,7 @@ case class SemanticdbConfig(
     profiling: ProfilingMode,
     fileFilter: FileFilter,
     diagnostics: DiagnosticMode,
-    synthetics: SyntheticMode,
-    owners: OwnerMode) {
+    synthetics: SyntheticMode) {
   def syntax: String = {
     val p = SemanticdbPlugin.name
     List(
@@ -31,8 +30,7 @@ case class SemanticdbConfig(
       "include" -> fileFilter.include,
       "exclude" -> fileFilter.exclude,
       "diagnostics" -> diagnostics.name,
-      "synthetics" -> synthetics.name,
-      "owners" -> owners.name
+      "synthetics" -> synthetics.name
     ).map { case (k, v) => s"-P:$p:$k:$v" }.mkString(" ")
   }
 
@@ -48,8 +46,7 @@ object SemanticdbConfig {
     ProfilingMode.Off,
     FileFilter.matchEverything,
     DiagnosticMode.All,
-    SyntheticMode.All,
-    OwnerMode.All
+    SyntheticMode.All
   )
 
   private val SetSourceroot = "sourceroot:(.*)".r
@@ -67,7 +64,6 @@ object SemanticdbConfig {
   private val SetMessages = "messages:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "synthetics:(.*)".r
-  private val SetOwners = "owners:(.*)".r
 
   def parse(
       scalacOptions: List[String],
@@ -119,8 +115,6 @@ object SemanticdbConfig {
         config = config.copy(diagnostics = diagnostics)
       case SetSynthetics(SyntheticMode(synthetics)) =>
         config = config.copy(synthetics = synthetics)
-      case SetOwners(OwnerMode(owners)) =>
-        config = config.copy(owners = owners)
       case els =>
         errFn(s"Ignoring unknown option $els")
     }
@@ -230,17 +224,4 @@ object SyntheticMode {
   def all = List(All, None)
   case object All extends SyntheticMode
   case object None extends SyntheticMode
-}
-
-sealed abstract class OwnerMode {
-  import OwnerMode._
-  def name: String = toString.toLowerCase
-  def isAll: Boolean = this == All
-}
-object OwnerMode {
-  def unapply(arg: String): Option[OwnerMode] =
-    all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, None)
-  case object All extends OwnerMode
-  case object None extends OwnerMode
 }

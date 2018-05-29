@@ -44,8 +44,7 @@ object Javacp {
         kind: s.SymbolInformation.Kind,
         name: String,
         tpe: Option[s.Type],
-        access: Int,
-        owner: String): Unit = {
+        access: Int): Unit = {
       buf += s.SymbolInformation(
         symbol = symbol,
         language = l.JAVA,
@@ -54,8 +53,7 @@ object Javacp {
         name = name,
         tpe = tpe,
         annotations = sannotations(access),
-        accessibility = saccessibility(access, symbol),
-        owner = owner
+        accessibility = saccessibility(access, symbol)
       )
     }
 
@@ -66,7 +64,7 @@ object Javacp {
     val hasOuterClassReference = node.fields.asScala.exists(isOuterClassReference)
 
     val isTopLevelClass = !node.name.contains("$")
-    val classOwner: String = if (isTopLevelClass) {
+    if (isTopLevelClass) {
       val enclosingPackages = classSymbol.ownerChain.init
       enclosingPackages.foreach { enclosingPackage =>
         addInfo(
@@ -74,13 +72,9 @@ object Javacp {
           k.PACKAGE,
           enclosingPackage.desc.name,
           None,
-          o.ACC_PUBLIC,
-          enclosingPackage.owner
+          o.ACC_PUBLIC
         )
       }
-      classSymbol.owner
-    } else {
-      ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
 
     val classKind =
@@ -126,8 +120,7 @@ object Javacp {
           k.FIELD,
           field.name,
           Some(fieldSignature.toType(classScope)),
-          field.access,
-          classSymbol
+          field.access
         )
 
         decls += fieldSymbol
@@ -223,8 +216,7 @@ object Javacp {
               k.PARAMETER,
               paramName,
               Some(paramTpe),
-              o.ACC_PUBLIC,
-              methodSymbol
+              o.ACC_PUBLIC
             )
             paramSymbol
         }
@@ -252,8 +244,7 @@ object Javacp {
           methodKind,
           method.node.name,
           Some(methodType),
-          method.node.access,
-          classSymbol
+          method.node.access
         )
 
         decls += methodSymbol
@@ -285,8 +276,7 @@ object Javacp {
       classKind,
       className,
       Some(classTpe),
-      classAccess,
-      classOwner
+      classAccess
     )
     buf.result()
   }
@@ -370,8 +360,7 @@ object Javacp {
       language = l.JAVA,
       kind = k.TYPE_PARAMETER,
       name = typeParameter.value.identifier,
-      tpe = Some(tpe),
-      owner = ownerSymbol
+      tpe = Some(tpe)
     )
   }
 

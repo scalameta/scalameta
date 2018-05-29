@@ -10,7 +10,6 @@ classes.
 -  tag: PUBLIC
 -  symbol: ""
 -}
- owner: "_root_."
  language: SCALA
 
 
@@ -45,8 +44,8 @@ com.
 ====
 --- metac
 +++ metacp
+   tag: PUBLIC
    symbol: ""
- owner: "_root_."
 -language: SCALA
 +language: JAVA
 
@@ -56,8 +55,8 @@ com.javacp.
 ===========
 --- metac
 +++ metacp
+   tag: PUBLIC
    symbol: ""
- owner: "com."
 -language: SCALA
 +language: JAVA
 
@@ -150,10 +149,8 @@ com.javacp.MetacJava#Overload1#A#`<init>`().
 -  tag: PUBLIC
 -  symbol: ""
 -}
--owner: "com.javacp.MetacJava#Overload1#A#"
 -language: JAVA
 +name: ""
-+owner: ""
 +language: UNKNOWN_LANGUAGE
 
 
@@ -177,10 +174,8 @@ com.javacp.MetacJava#Overload1#`<init>`().
 -  tag: PUBLIC
 -  symbol: ""
 -}
--owner: "com.javacp.MetacJava#Overload1#"
 -language: JAVA
 +name: ""
-+owner: ""
 +language: UNKNOWN_LANGUAGE
 
 
@@ -228,10 +223,8 @@ com.javacp.MetacJava#Overload2#A#`<init>`().
 -  tag: PUBLIC
 -  symbol: ""
 -}
--owner: "com.javacp.MetacJava#Overload2#A#"
 -language: JAVA
 +name: ""
-+owner: ""
 +language: UNKNOWN_LANGUAGE
 
 
@@ -255,10 +248,8 @@ com.javacp.MetacJava#Overload2#`<init>`().
 -  tag: PUBLIC
 -  symbol: ""
 -}
--owner: "com.javacp.MetacJava#Overload2#"
 -language: JAVA
 +name: ""
-+owner: ""
 +language: UNKNOWN_LANGUAGE
 
 
@@ -318,10 +309,8 @@ com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
 -  tag: PUBLIC
 -  symbol: ""
 -}
--owner: "com.javacp.MetacJava#StaticInner#NonStatic#"
 -language: JAVA
 +name: ""
-+owner: ""
 +language: UNKNOWN_LANGUAGE
 
 
@@ -337,7 +326,6 @@ example.
 -  tag: PUBLIC
 -  symbol: ""
 -}
- owner: "_root_."
  language: SCALA
 
 
@@ -503,7 +491,6 @@ flags.
 -  tag: PUBLIC
 -  symbol: ""
 -}
- owner: "_root_."
  language: SCALA
 
 
@@ -578,7 +565,6 @@ objects.
 -  tag: PUBLIC
 -  symbol: ""
 -}
- owner: "_root_."
  language: SCALA
 
 
@@ -594,7 +580,6 @@ traits.
 -  tag: PUBLIC
 -  symbol: ""
 -}
- owner: "_root_."
  language: SCALA
 
 
@@ -620,7 +605,6 @@ types.
 -  tag: PUBLIC
 -  symbol: ""
 -}
- owner: "_root_."
  language: SCALA
 
 

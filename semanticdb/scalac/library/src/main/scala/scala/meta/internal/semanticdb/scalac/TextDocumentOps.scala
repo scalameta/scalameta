@@ -190,8 +190,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       val semanticdbRelPath = scalaRelPath + ".semanticdb"
                       val suri = PathIO.toUnix(semanticdbRelPath.toString)
                       val ssymbol = symbol.syntax
-                      val sowner = gsym.owner.toSemantic.syntax
-                      val sinfo = s.SymbolInformation(symbol = ssymbol, owner = sowner)
+                      val sinfo = s.SymbolInformation(symbol = ssymbol)
                       index.append(suri, List(sinfo))
                     case _ =>
                       ()

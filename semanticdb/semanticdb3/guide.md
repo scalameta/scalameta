@@ -329,18 +329,6 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     </td>
     <td><code>all</code></td>
   </tr>
-  <tr>
-    <td><code>-P:semanticdb:owners:&lt;value&gt;</code></td>
-    <td>
-      <code>all</code>,<br/>
-      <code>none</code><br/>
-    </td>
-    <td>
-      Specifies whether to save <code>SymbolInformation.owner</code>
-      (<code>all</code> for yes, <code>none</code> for no).
-    </td>
-    <td><code>all</code></td>
-  </tr>
 </table>
 
 `semanticdb-scalac` can be hooked into Scala builds in a number of ways.
@@ -633,7 +621,6 @@ documents {
     accessibility {
       tag: PUBLIC
     }
-    owner: "_empty_."
     language: SCALA
   }
   ...

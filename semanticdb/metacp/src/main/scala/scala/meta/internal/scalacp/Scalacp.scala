@@ -43,8 +43,7 @@ object Scalacp {
         symbol = enclosingPackage,
         language = l.SCALA,
         kind = k.PACKAGE,
-        name = enclosingPackage.desc.name,
-        owner = enclosingPackage.owner)
+        name = enclosingPackage.desc.name)
     }
   }
 
@@ -65,8 +64,7 @@ object Scalacp {
         name = sname(sym),
         tpe = stpe(sym),
         annotations = sanns(sym),
-        accessibility = Some(sacc(sym)),
-        owner = sowner(sym)
+        accessibility = Some(sacc(sym))
       ))
   }
 
