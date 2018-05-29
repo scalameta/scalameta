@@ -61,6 +61,14 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacMetacpIndexDiffExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
+      test("manifest.metap") {
+        import ManifestMetap._
+        assertNoDiff(loadObtained, loadExpected)
+      }
+      test("manifest.metacp") {
+        import ManifestMetacp._
+        assertNoDiff(loadObtained, loadExpected)
+      }
     case _ =>
       ()
   }
@@ -327,6 +335,22 @@ object MetacMetacpIndexDiffExpect extends ExpectHelpers {
   }
 }
 
+object ManifestMetap extends ExpectHelpers {
+  def filename: String = "manifest.metap"
+  def loadObtained: String = {
+    val manifestJar = path.getParent.resolve("manifest.jar")
+    lowlevelSyntax(manifestJar)
+  }
+}
+
+object ManifestMetacp extends ExpectHelpers {
+  def filename: String = "manifest.metacp"
+  def loadObtained: String = {
+    val manifestJar = path.getParent.resolve("manifest.jar")
+    lowlevelSyntax(decompiledPath(manifestJar))
+  }
+}
+
 // To save the current behavior, run `sbt save-expect`.
 object SaveExpectTest {
   def main(args: Array[String]): Unit = {
@@ -339,5 +363,7 @@ object SaveExpectTest {
     MetacOwnersExpect.saveExpected(MetacOwnersExpect.loadObtained)
     MetacMetacpExpectDiffExpect.saveExpected(MetacMetacpExpectDiffExpect.loadObtained)
     MetacMetacpIndexDiffExpect.saveExpected(MetacMetacpIndexDiffExpect.loadObtained)
+    ManifestMetap.saveExpected(ManifestMetap.loadObtained)
+    ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)
   }
 }

@@ -45,6 +45,16 @@ object Locator {
           try fn(path, TextDocuments.parseFrom(stream))
           finally stream.close()
         }
+        val manifest = jar.getManifest
+        if (manifest != null) {
+          val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
+          if (classpathAttr != null) {
+            classpathAttr.split(" ").foreach { relativePath =>
+              val parentPath = path.toAbsolutePath.getParent
+              apply(parentPath.resolve(relativePath))(fn)
+            }
+          }
+        }
       } else if (path.toString.endsWith(".semanticdb")) {
         val stream = Files.newInputStream(path)
         try fn(path, TextDocuments.parseFrom(stream))

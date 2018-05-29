@@ -3,6 +3,7 @@ package scala.meta.internal.metacp
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.jar._
 import scala.collection.JavaConverters._
 import scala.meta.cli._
 import scala.meta.internal.index._
@@ -66,7 +67,9 @@ class Main(settings: Settings, reporter: Reporter) {
     classpath.foreach { entry =>
       if (entry.isDirectory) {
         val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
-        val res = convertClasspathEntry(entry, out)
+        val index = new Index
+        val res = convertClasspathEntry(entry, out, index)
+        index.save(out)
         success.compareAndSet(true, res)
         buffer.add(out)
       } else if (entry.isFile) {
@@ -78,7 +81,29 @@ class Main(settings: Settings, reporter: Reporter) {
         if (cacheEntry.toFile.exists) {
           buffer.add(cacheEntry)
         } else {
-          createCachedJar(cacheEntry)(out => convertClasspathEntry(entry, out))
+          createCachedJar(cacheEntry){ out =>
+            val index = new Index
+            def loop(entry: AbsolutePath): Boolean = {
+              var result = convertClasspathEntry(entry, out, index)
+              if (entry.isFile) {
+                val jar = new JarFile(entry.toFile)
+                val manifest = jar.getManifest
+                if (manifest != null) {
+                  val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
+                  if (classpathAttr != null) {
+                    classpathAttr.split(" ").foreach { classpathEntry =>
+                      val path = entry.toNIO.getParent.resolve(classpathEntry)
+                      result &= loop(AbsolutePath(path))
+                    }
+                  }
+                }
+              }
+              result
+            }
+            val result = loop(entry)
+            index.save(out)
+            result
+          }
         }
       }
     }
@@ -100,9 +125,8 @@ class Main(settings: Settings, reporter: Reporter) {
     }
   }
 
-  private def convertClasspathEntry(in: AbsolutePath, out: AbsolutePath): Boolean = {
+  private def convertClasspathEntry(in: AbsolutePath, out: AbsolutePath, index: Index): Boolean = {
     var success = true
-    val index = new Index
     val classpath = Classpath(in)
     classpath.visit { base =>
       new SimpleFileVisitor[Path] {
@@ -143,7 +167,6 @@ class Main(settings: Settings, reporter: Reporter) {
         }
       }
     }
-    index.save(out)
     success
   }
 
