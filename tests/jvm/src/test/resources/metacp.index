@@ -9,6 +9,7 @@ _root_.
   example.
   exclude.
   flags.
+  traits.
   types.
 com.
   com.javacp.
@@ -40,6 +41,8 @@ flags.
   flags.p.
 flags.p.
   flags.p.package.
+traits.
+  traits.T#
 types.
   types.B#
   types.C#
@@ -76,6 +79,7 @@ example.Vals# => example/Vals.class.semanticdb
 example.`local-file`# => example/local$minusfile.class.semanticdb
 exclude.Exclude# => exclude/Exclude.class.semanticdb
 flags.p.package. => flags/p/package.class.semanticdb
+traits.T# => traits/T.class.semanticdb
 types.B# => types/B.class.semanticdb
 types.C# => types/C.class.semanticdb
 types.P# => types/P.class.semanticdb

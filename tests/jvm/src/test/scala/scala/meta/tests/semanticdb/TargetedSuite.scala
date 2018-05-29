@@ -302,7 +302,6 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Nothing => scala.Nothing#
        |f.T# => trait T.{+9 decls}
        |  extends AnyRef
-       |f.T#$init$(). => primary ctor $init$: ()
        |f.T#`f4_=`(Nothing). => protected var method f4_=: (x$1: Nothing): Unit
        |  x$1 => f.T#`f4_=`(Nothing).(x$1)
        |  Nothing => scala.Nothing#

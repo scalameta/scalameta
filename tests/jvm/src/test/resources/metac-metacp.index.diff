@@ -7,6 +7,7 @@
    example.
 +  exclude.
    flags.
+   traits.
    types.
 +com.
 +  com.javacp.
@@ -50,6 +51,8 @@
 -example.`local-file`# => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 -flags. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 -flags.p.package. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
+-traits. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+-traits.T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 -types. => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 -types.B# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 -types.C# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
@@ -83,6 +86,7 @@
 +example.`local-file`# => example/local$minusfile.class.semanticdb
 +exclude.Exclude# => exclude/Exclude.class.semanticdb
 +flags.p.package. => flags/p/package.class.semanticdb
++traits.T# => traits/T.class.semanticdb
 +types.B# => types/B.class.semanticdb
 +types.C# => types/C.class.semanticdb
 +types.P# => types/P.class.semanticdb

@@ -111,7 +111,8 @@ trait TypeOps { self: SemanticdbOps =>
             val sparents = gparents.flatMap(loop)
             val gfilteredDecls = gdecls.filter { gdecl =>
               val isSyntheticConstructor = {
-                gdecl.isConstructor && (gclass.isModuleClass || gclass.isTrait)
+                (gdecl.isConstructor || gdecl.isMixinConstructor) &&
+                (gclass.isModuleClass || gclass.isTrait)
               }
               !isSyntheticConstructor
             }

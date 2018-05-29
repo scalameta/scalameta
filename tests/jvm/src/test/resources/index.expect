@@ -7,6 +7,7 @@ _root_.
   _empty_.
   example.
   flags.
+  traits.
   types.
 example.
   example.A#
@@ -25,6 +26,8 @@ flags.
   flags.p.
 flags.p.
   flags.p.package.
+traits.
+  traits.T#
 types.
   types.B#
   types.C#
@@ -54,6 +57,8 @@ example.Vals# => semanticdb/integration/src/main/scala/example/Vals.scala.semant
 example.`local-file`# => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 flags. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 flags.p.package. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
+traits. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+traits.T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 types. => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types.B# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types.C# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb

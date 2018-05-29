@@ -525,6 +525,22 @@ flags.p.package.x().
  accessibility {
 
 
+=======
+traits.
+=======
+--- metac
++++ metacp
+ kind: PACKAGE
+ properties: 0
+ name: "traits"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ owner: "_root_."
+ language: SCALA
+
+
 ======
 types.
 ======

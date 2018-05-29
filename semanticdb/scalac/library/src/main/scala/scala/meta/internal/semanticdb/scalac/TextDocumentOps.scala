@@ -164,6 +164,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               // Instead of crashing with "unsupported file", we ignore these cases.
               if (gsym0 == null) return
               if (gsym0.isAnonymousClass) return
+              if (gsym0.isMixinConstructor) return
               if (mtree.pos == m.Position.None) return
               if (occurrences.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
@@ -505,6 +506,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
       val input = unit.source.toInput
 
+      val finalSymbols = symbols.values.toList
+
       val finalOccurrences = occurrences.flatMap {
         case (pos, sym) =>
           flatten(sym).map { flatSym =>
@@ -526,7 +529,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
         uri = unit.source.toUri,
         text = unit.source.toText,
         language = s.Language.SCALA,
-        symbols = symbols.values.toSeq,
+        symbols = finalSymbols,
         occurrences = finalOccurrences,
         diagnostics = diagnostics,
         synthetics = finalSynthetics

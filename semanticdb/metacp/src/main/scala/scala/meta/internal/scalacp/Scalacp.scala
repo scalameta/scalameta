@@ -400,7 +400,7 @@ object Scalacp {
     def isType: Boolean = sym.isInstanceOf[TypeSymbol]
     def isAlias: Boolean = sym.isInstanceOf[AliasSymbol]
     def isMacro: Boolean = sym.isMethod && sym.hasFlag(0x00008000)
-    def isConstructor: Boolean = sym.isMethod && sym.name == "<init>"
+    def isConstructor: Boolean = sym.isMethod && (sym.name == "<init>" || sym.name == "$init$")
     def isClassConstructor: Boolean = {
       sym.parent match {
         case Some(parent: ClassSymbol) if !parent.isTrait && !parent.isModule =>

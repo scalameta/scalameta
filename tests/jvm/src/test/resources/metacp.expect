@@ -1266,6 +1266,24 @@ flags.p.package.z(Int). => method z: (pp: Int): Int
 flags.p.package.z(Int).(pp) => param pp: Int
   Int => scala.Int#
 
+traits/T.class
+--------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => traits/T.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+traits. => package traits
+traits.T# => trait T.{+1 decls}
+  extends AnyRef
+traits.T#x(). => method x: : Int
+  Int => scala.Int#
+
 types/ann.class
 ---------------
 

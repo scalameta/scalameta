@@ -1324,6 +1324,29 @@ Synthetics:
   [0:13..0:26): augmentString => scala.Predef.augmentString(String).
   [0:27..0:28): * => _star_.
 
+semanticdb/integration/src/main/scala/example/Traits.scala
+----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Traits.scala
+Text => non-empty
+Language => Scala
+Symbols => 3 entries
+Occurrences => 3 entries
+
+Symbols:
+traits. => package traits
+traits.T# => trait T.{+1 decls}
+  extends AnyRef
+traits.T#x(). => method x: : Int
+  Int => scala.Int#
+
+Occurrences:
+[0:8..0:14): traits <= traits.
+[2:6..2:7): T <= traits.T#
+[3:6..3:7): x <= traits.T#x().
+
 semanticdb/integration/src/main/scala/example/Types.scala
 ---------------------------------------------------------
 
