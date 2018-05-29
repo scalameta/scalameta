@@ -87,7 +87,7 @@ class SyntheticsSuite extends SemanticdbSuite() {
     "class J[T: Manifest] { val arr = Array.empty[T] }",
     """|[0:47..0:47):  => *(J.this.evidence$1)
        |  [0:0..0:1): * => _star_.
-       |  [0:9..0:19): evidence$1 => _empty_.J#evidence$1.
+       |  [0:9..0:19): evidence$1 => _empty_.J#evidence$1().
        |""".trim.stripMargin
   )
   synthetics(

@@ -22,7 +22,7 @@ class ExpectSuite extends FunSuite with DiffAssertions {
   BuildInfo.scalaVersion.split("\\.").take(2).toList match {
     // both the compiler and stdlib are different between Scala versions.
     // For the sake of simplicity, we only run the expect test against the
-    // output of 2.12. It's possible to add another expect file for 2.12
+    // output of 2.12. It's possible to add another expect file for 2.11
     // later down the road if that turns out to be useful.
     case "2" :: "12" :: Nil =>
       test("scalalib.expect") {

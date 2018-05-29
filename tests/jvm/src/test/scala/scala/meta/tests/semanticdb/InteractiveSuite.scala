@@ -41,26 +41,23 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Uri => interactive.scala
       |Text => non-empty
       |Language => Scala
-      |Symbols => 8 entries
+      |Symbols => 7 entries
       |Occurrences => 10 entries
       |Diagnostics => 1 entries
       |Synthetics => 2 entries
       |
       |Symbols:
       |b. => package b
-      |b.a. => final object a.{+2 decls}
+      |b.a. => final object a.{+1 decls}
       |  extends AnyRef
       |b.a.x(). => val method x: : List[Nothing]
-      |  List => scala.collection.immutable.List#
-      |  Nothing => scala.Nothing#
-      |b.a.x. => private[this] val field x: List[Nothing]
       |  List => scala.collection.immutable.List#
       |  Nothing => scala.Nothing#
       |scala. => package scala
       |scala.Predef.any2stringadd#`+`(String). => method +: (other: <?>): String
       |  other => scala.Predef.any2stringadd#`+`(String).(other)
       |  String => scala.Predef.String#
-      |scala.collection.immutable.List. => final object List.{+8 decls}
+      |scala.collection.immutable.List. => final object List.{+7 decls}
       |  extends SeqFactory[List]
       |  extends Serializable
       |scala.concurrent. => package concurrent

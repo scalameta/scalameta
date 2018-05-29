@@ -49,10 +49,7 @@ object Scalacp {
 
   private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
     if (sym.parent.get == NoSymbol) return None
-    if (sym.isModuleClass) return None
-    if (sym.isConstructor && !sym.isClassConstructor) return None
-    if (sym.isLocalChild) return None
-    if (sym.isSyntheticValueClassCompanion) return None
+    if (sym.isUseless) return None
     val ssym = ssymbol(sym)
     if (ssym.contains("$extension")) return None
     Some(
@@ -87,7 +84,12 @@ object Scalacp {
         // NOTE: This is craziness. In scalap, parameters, val and vars
         // are also modelled with method symbols.
         if (sym.isParam) k.PARAMETER
-        else k.FIELD
+        else {
+          // NOTE: More craziness. Useful fields are persisted as methods
+          // to accommodate the disparity between the Scalac symbol table
+          // and the SemanticDB spec.
+          k.METHOD
+        }
       case sym: ClassSymbol if !sym.isModule =>
         if (sym.isTrait) k.TRAIT
         else k.CLASS
@@ -132,7 +134,7 @@ object Scalacp {
     if (sym.isCase && (sym.isClass || sym.isModule)) sflip(p.CASE)
     if (sym.isType && sym.isCovariant) sflip(p.COVARIANT)
     if (sym.isType && sym.isContravariant) sflip(p.CONTRAVARIANT)
-    if (skind(sym) == k.FIELD) {
+    if (sym.isScalacField) {
       if (sym.isMutable) sflip(p.VAR)
       else sflip(p.VAL)
     }
@@ -257,7 +259,7 @@ object Scalacp {
         case ClassInfoType(sym, parents) =>
           val stag = t.CLASS_INFO_TYPE
           val sparents = parents.flatMap(loop)
-          val sdecls = sym.children.filtered.map(ssymbol)
+          val sdecls = sym.children.useful.map(ssymbol)
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
         case _: NullaryMethodType | _: MethodType =>
           val stag = t.METHOD_TYPE
@@ -314,6 +316,11 @@ object Scalacp {
       } else if (sym.isConstructor) {
         val tpe = loop(sym.infoType)
         tpe.map(_.update(_.methodType.optionalReturnType := None))
+      } else if (sym.isScalacField) {
+        val stag = t.METHOD_TYPE
+        val sparamss = Nil
+        val sret = loop(sym.infoType)
+        Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
       } else {
         loop(sym.infoType)
       }
@@ -398,14 +405,6 @@ object Scalacp {
     def isAlias: Boolean = sym.isInstanceOf[AliasSymbol]
     def isMacro: Boolean = sym.isMethod && sym.hasFlag(0x00008000)
     def isConstructor: Boolean = sym.isMethod && (sym.name == "<init>" || sym.name == "$init$")
-    def isClassConstructor: Boolean = {
-      sym.parent match {
-        case Some(parent: ClassSymbol) if !parent.isTrait && !parent.isModule =>
-          sym.isConstructor
-        case _ =>
-          false
-      }
-    }
     def isTypeParam = sym.isType && sym.isParam
     def isSyntheticConstructor = sym match {
       case sym: SymbolInfoSymbol =>
@@ -422,7 +421,7 @@ object Scalacp {
           if (sym.isModuleClass) {
             sym.infoType match {
               case ClassInfoType(_, List(TypeRefType(_, anyRef, _))) =>
-                sym.isSynthetic && sym.children.filtered.isEmpty
+                sym.isSynthetic && sym.children.useful.isEmpty
               case _ =>
                 false
             }
@@ -435,11 +434,34 @@ object Scalacp {
           false
       }
     }
+    def isScalacField: Boolean = {
+      val isField = sym.isInstanceOf[MethodSymbol] && !sym.isMethod && !sym.isParam
+      val isJavaDefined = sym.isJava
+      isField && !isJavaDefined
+    }
+    def isUselessField: Boolean = {
+      val peers = sym.parent.map(_.children.toList).getOrElse(Nil)
+      val getter = peers.find(m => m.isAccessor && m.name == sym.name.stripSuffix(" "))
+      sym.isScalacField && getter.nonEmpty
+    }
+    def isUsefulField: Boolean = sym.isScalacField && !sym.isUselessField
+    def isUseless: Boolean = {
+      sym.isSyntheticConstructor ||
+      sym.isModuleClass ||
+      sym.isLocalChild ||
+      sym.isExtensionMethod ||
+      sym.isSyntheticValueClassCompanion ||
+      sym.isUselessField
+    }
+    def isUseful: Boolean = !sym.isUseless
     def typeDescriptor: String = {
       try {
         sym match {
-          case sym: SymbolInfoSymbol => sym.infoType.descriptor
-          case sym => sys.error(s"unsupported symbol $sym")
+          case sym: SymbolInfoSymbol =>
+            if (sym.isUsefulField) ""
+            else sym.infoType.descriptor
+          case sym =>
+            sys.error(s"unsupported symbol $sym")
         }
       } catch {
         case ScalaSigParserError("Unexpected failure") =>
@@ -462,7 +484,7 @@ object Scalacp {
         loop(sym.name)
       }
       skind(sym) match {
-        case k.FIELD | k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
+        case k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
           d.Term(name)
         case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
           val typeDescriptor = sym.typeDescriptor
@@ -494,14 +516,7 @@ object Scalacp {
   }
 
   private implicit class ScopeOps(decls: Seq[Symbol]) {
-    def filtered: Seq[Symbol] = decls.filter { decl =>
-      !decl.isTypeParam &&
-      !decl.isSyntheticConstructor &&
-      !decl.isModuleClass &&
-      !decl.isLocalChild &&
-      !decl.isExtensionMethod &&
-      !decl.isSyntheticValueClassCompanion
-    }
+    def useful: Seq[Symbol] = decls.filter(decl => decl.isUseful && !decl.isTypeParam)
   }
 
   private implicit class TypeOps(tpe: Type) {

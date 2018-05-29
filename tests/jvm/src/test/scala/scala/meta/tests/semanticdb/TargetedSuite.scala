@@ -154,7 +154,7 @@ class TargetedSuite extends SemanticdbSuite() {
     """|F.package. => final package object F
        |  extends AnyRef
        |f. => package f
-       |f.C1# => class C1.{+17 decls}
+       |f.C1# => class C1.{+13 decls}
        |  extends AnyRef
        |f.C1#T1# => abstract type T1: >: Nothing <: Int
        |  Nothing => scala.Nothing#
@@ -187,15 +187,11 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Int => scala.Int#
        |f.C1#f1(). => val method f1: : Nothing
        |  Nothing => scala.Nothing#
-       |f.C1#f1. => private[this] val field f1: Nothing
-       |  Nothing => scala.Nothing#
        |f.C1#f1.l1. => val local l1: Nothing
        |  Nothing => scala.Nothing#
        |f.C1#f1.l2. => var local l2: Nothing
        |  Nothing => scala.Nothing#
        |f.C1#f2(). => var method f2: : Nothing
-       |  Nothing => scala.Nothing#
-       |f.C1#f2. => private[this] var field f2: Nothing
        |  Nothing => scala.Nothing#
        |f.C1#m1(Int). => method m1: [T >: Nothing <: Any] => (x: Int): Int
        |  T => f.C1#m1(Int).[T]
@@ -210,15 +206,11 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Any => scala.Any#
        |f.C1#m2(). => macro m2: : Nothing
        |  Nothing => scala.Nothing#
-       |f.C1#p1. => private[this] val field p1: Int
+       |f.C1#p1(). => private[this] val method p1: : Int
        |  Int => scala.Int#
        |f.C1#p2(). => val method p2: : Int
        |  Int => scala.Int#
-       |f.C1#p2. => private[this] val field p2: Int
-       |  Int => scala.Int#
        |f.C1#p3(). => var method p3: : Int
-       |  Int => scala.Int#
-       |f.C1#p3. => private[this] var field p3: Int
        |  Int => scala.Int#
        |f.C2# => abstract class C2.{+3 decls}
        |  extends AnyRef
@@ -298,7 +290,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |f.M.C2#`<init>`(). => primary ctor <init>: ()
        |f.M.i1(). => implicit method i1: : Nothing
        |  Nothing => scala.Nothing#
-       |f.M.l1(). => lazy val field l1: Nothing
+       |f.M.l1(). => lazy val method l1: : Nothing
        |  Nothing => scala.Nothing#
        |f.T# => trait T.{+9 decls}
        |  extends AnyRef
@@ -341,7 +333,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |  extends AnyRef
        |scala.language.experimental. => final object experimental.{+1 decls}
        |  extends AnyRef
-       |scala.language.experimental.macros(). => implicit lazy val field macros: macros
+       |scala.language.experimental.macros(). => implicit lazy val method macros: : macros
        |  macros => scala.languageFeature.experimental.macros#
      """.trim.stripMargin
     )
@@ -402,7 +394,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |i.E#x(). => method x: : ListBuffer[Int]
        |  ListBuffer => scala.collection.mutable.ListBuffer#
        |  Int => scala.Int#
-       |i.a. => final object a.{+5 decls}
+       |i.a. => final object a.{+3 decls}
        |  extends AnyRef
        |i.a.foo(B). => method foo: (b: B): b.X
        |  b => i.a.foo(B).(b)
@@ -413,13 +405,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |i.a.x(). => val method x: : ListBuffer[Int]
        |  ListBuffer => scala.collection.mutable.ListBuffer#
        |  Int => scala.Int#
-       |i.a.x. => private[this] val field x: ListBuffer[Int]
-       |  ListBuffer => scala.collection.mutable.ListBuffer#
-       |  Int => scala.Int#
        |i.a.y(). => val method y: : HashSet[Int]
-       |  HashSet => scala.collection.mutable.HashSet#
-       |  Int => scala.Int#
-       |i.a.y. => private[this] val field y: HashSet[Int]
        |  HashSet => scala.collection.mutable.HashSet#
        |  Int => scala.Int#
        |java.lang.Object#`<init>`(). => ctor <init>: ()
@@ -448,7 +434,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |scala.collection.mutable.HashSet.empty(). => method empty: [A: <?>] => : HashSet[A]
        |  A => scala.collection.mutable.HashSet.empty().[A]
        |  HashSet => scala.collection.mutable.HashSet#
-       |scala.collection.mutable.ListBuffer# => @SerialVersionUID final class ListBuffer[A: <?>].{+43 decls}
+       |scala.collection.mutable.ListBuffer# => @SerialVersionUID final class ListBuffer[A: <?>].{+39 decls}
        |  extends AbstractBuffer[A]
        |  extends Buffer[A]
        |  extends GenericTraversableTemplate[A, ListBuffer]
@@ -525,7 +511,7 @@ class TargetedSuite extends SemanticdbSuite() {
     """|[1:8..1:9): m <= m.
        |[2:6..2:7): C <= m.C#
        |[2:7..2:7):  <= m.C#`<init>`(Int).
-       |[2:8..2:9): x <= m.C#x.
+       |[2:8..2:9): x <= m.C#x().
        |[2:11..2:14): Int => scala.Int#
        |[3:6..3:10): this <= m.C#`<init>`().
        |[3:19..3:19):  => m.C#`<init>`(Int).
@@ -550,9 +536,9 @@ class TargetedSuite extends SemanticdbSuite() {
     """|[0:7..0:8): n <= _empty_.n.
        |[1:6..1:10): Name <= _empty_.n.Name().
        |[1:25..1:26): r => scala.collection.immutable.StringLike#r().
-       |[2:6..2:7): x <= _empty_.n.x$1.x.
+       |[2:6..2:7): x <= _empty_.n.x$1().x.
        |[2:8..2:11): #:: => scala.package.`#::`().
-       |[2:12..2:14): xs <= _empty_.n.x$1.xs.
+       |[2:12..2:14): xs <= _empty_.n.x$1().xs.
        |[2:17..2:23): Stream => scala.package.Stream().
        |[3:6..3:10): Name => _empty_.n.Name().
        |[3:11..3:15): name <= _empty_.n.name.name.
@@ -574,7 +560,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |  extends AnyVal
        |scala.collection.IterableLike#head(). => method head: : A
        |  A => scala.collection.IterableLike#[A]
-       |scala.collection.immutable.List. => final object List.{+8 decls}
+       |scala.collection.immutable.List. => final object List.{+7 decls}
        |  extends SeqFactory[List]
        |  extends Serializable
        |scala.collection.immutable.List.newBuilder(). => method newBuilder: [A: <?>] => : Builder[A, List[A]]
@@ -680,9 +666,9 @@ class TargetedSuite extends SemanticdbSuite() {
       |  implicit val b = new Path().x
       |}
     """.stripMargin,
-    """|_empty_.y. => final object y.{+3 decls}
+    """|_empty_.y. => final object y.{+2 decls}
        |  extends AnyRef
-       |_empty_.y.Path# => class Path.{+6 decls}
+       |_empty_.y.Path# => class Path.{+4 decls}
        |  extends AnyRef
        |_empty_.y.Path#B# => class B.{+2 decls}
        |  extends AnyRef
@@ -694,21 +680,11 @@ class TargetedSuite extends SemanticdbSuite() {
        |_empty_.y.Path#x(). => val method x: : Path.this.B
        |  Path => _empty_.y.Path#
        |  B => _empty_.y.Path#B#
-       |_empty_.y.Path#x. => private[this] val field x: Path.this.B
-       |  Path => _empty_.y.Path#
-       |  B => _empty_.y.Path#B#
        |_empty_.y.Path#y(). => val method y: : Path.this.x.C
        |  Path => _empty_.y.Path#
        |  x => _empty_.y.Path#x().
        |  C => _empty_.y.Path#B#C#
-       |_empty_.y.Path#y. => private[this] val field y: Path.this.x.C
-       |  Path => _empty_.y.Path#
-       |  x => _empty_.y.Path#x().
-       |  C => _empty_.y.Path#B#C#
        |_empty_.y.b(). => implicit val method b: : Path#B
-       |  Path => _empty_.y.Path#
-       |  B => _empty_.y.Path#B#
-       |_empty_.y.b. => private[this] val field b: Path#B
        |  Path => _empty_.y.Path#
        |  B => _empty_.y.Path#B#
     """.stripMargin
@@ -720,11 +696,9 @@ class TargetedSuite extends SemanticdbSuite() {
       |  val x = z
       |}
     """.stripMargin,
-    """|_empty_.z. => final object z.{+2 decls}
+    """|_empty_.z. => final object z.{+1 decls}
        |  extends AnyRef
        |_empty_.z.x(). => val method x: : z.type
-       |  z => _empty_.z.
-       |_empty_.z.x. => private[this] val field x: z.type
        |  z => _empty_.z.
     """.stripMargin
   )
@@ -736,16 +710,12 @@ class TargetedSuite extends SemanticdbSuite() {
       |  val y: aa.this.type = this
       |}
     """.stripMargin,
-    """|_empty_.aa# => class aa.{+5 decls}
+    """|_empty_.aa# => class aa.{+3 decls}
        |  extends AnyRef
        |_empty_.aa#`<init>`(). => primary ctor <init>: ()
        |_empty_.aa#x(). => val method x: : aa
        |  aa => _empty_.aa#
-       |_empty_.aa#x. => private[this] val field x: aa
-       |  aa => _empty_.aa#
        |_empty_.aa#y(). => val method y: : aa.this.type
-       |  aa => _empty_.aa#
-       |_empty_.aa#y. => private[this] val field y: aa.this.type
        |  aa => _empty_.aa#
     """.stripMargin
   )
@@ -766,18 +736,11 @@ class TargetedSuite extends SemanticdbSuite() {
       |  val y: Class[_] = ???
       |}
     """.stripMargin,
-    """|_empty_.ac. => final object ac.{+4 decls}
+    """|_empty_.ac. => final object ac.{+2 decls}
        |  extends AnyRef
        |_empty_.ac.x(). => val method x: : Int
        |  Int => scala.Int#
-       |_empty_.ac.x. => private[this] val field x: Int
-       |  Int => scala.Int#
        |_empty_.ac.y(). => val method y: : Class[_$1] forSome { type _$1 >: Nothing <: Any }
-       |  Class => scala.Predef.Class#
-       |  _$1 => _empty_.ac.y._$1#
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
-       |_empty_.ac.y. => private[this] val field y: Class[_$1] forSome { type _$1 >: Nothing <: Any }
        |  Class => scala.Predef.Class#
        |  _$1 => _empty_.ac.y._$1#
        |  Nothing => scala.Nothing#
@@ -785,11 +748,10 @@ class TargetedSuite extends SemanticdbSuite() {
        |_empty_.ac.y._$1# => abstract type _$1: >: Nothing <: Any
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
-       |scala.Int. => final object Int.{+10 decls}
+       |scala.Int. => final object Int.{+8 decls}
        |  extends AnyRef
        |  extends AnyValCompanion
        |scala.Int.MaxValue(). => final val method MaxValue: : 2147483647
-       |scala.Int.MaxValue. => private[this] final val field MaxValue: 2147483647
        |scala.Predef.Class# => type Class: [T: <?>] => >: Class[T] <: Class[T]
        |  T => scala.Predef.Class#[T]
        |  Class => java.lang.Class#
@@ -815,7 +777,7 @@ class TargetedSuite extends SemanticdbSuite() {
       |}
     """.stripMargin,
     // Note that _empty_.ab.$anon#y. matches both y: Int and  y: Any.
-    """|_empty_.ad. => final object ad.{+10 decls}
+    """|_empty_.ad. => final object ad.{+6 decls}
        |  extends AnyRef
        |_empty_.ad.$anon#y(). => abstract val method y: : Any
        |  Any => scala.Any#
@@ -825,11 +787,6 @@ class TargetedSuite extends SemanticdbSuite() {
        |_empty_.ad.Foo# => trait Foo
        |  extends AnyRef
        |_empty_.ad.k(). => val method k: : AnyRef with Foo { val method y: Any }
-       |  AnyRef => scala.AnyRef#
-       |  Foo => _empty_.ad.Foo#
-       |  y => _empty_.ad.$anon#y().
-       |  Any => scala.Any#
-       |_empty_.ad.k. => private[this] val field k: AnyRef with Foo { val method y: Any }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
        |  y => _empty_.ad.$anon#y().
@@ -844,19 +801,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
        |  e => _empty_.ad.x.$anon#z(T).(e)
-       |_empty_.ad.x. => private[this] val field x: AnyRef with Foo { val method y: Int; method z[T >: Nothing <: Any] => (e: T): T }
-       |  AnyRef => scala.AnyRef#
-       |  Foo => _empty_.ad.Foo#
-       |  y => _empty_.ad.x.$anon#y().
-       |  Int => scala.Int#
-       |  z => _empty_.ad.x.$anon#z(T).
-       |  T => _empty_.ad.x.$anon#z(T).[T]
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
-       |  e => _empty_.ad.x.$anon#z(T).(e)
        |_empty_.ad.x.$anon#y(). => val method y: : Int
-       |  Int => scala.Int#
-       |_empty_.ad.x.$anon#y. => private[this] val field y: Int
        |  Int => scala.Int#
        |_empty_.ad.x.$anon#z(T). => method z: [T >: Nothing <: Any] => (e: T): T
        |  T => _empty_.ad.x.$anon#z(T).[T]
@@ -873,22 +818,11 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Foo => _empty_.ad.Foo#
        |  y => _empty_.ad.$anon#y().
        |  Any => scala.Any#
-       |_empty_.ad.z. => private[this] val field z: AnyRef with Foo { val method y: Any }
-       |  AnyRef => scala.AnyRef#
-       |  Foo => _empty_.ad.Foo#
-       |  y => _empty_.ad.$anon#y().
-       |  Any => scala.Any#
        |_empty_.ad.zz(). => val method zz: : Bar { val method y: Int }
        |  Bar => _empty_.ad.Bar#
        |  y => _empty_.ad.zz.$anon#y().
        |  Int => scala.Int#
-       |_empty_.ad.zz. => private[this] val field zz: Bar { val method y: Int }
-       |  Bar => _empty_.ad.Bar#
-       |  y => _empty_.ad.zz.$anon#y().
-       |  Int => scala.Int#
        |_empty_.ad.zz.$anon#y(). => val method y: : Int
-       |  Int => scala.Int#
-       |_empty_.ad.zz.$anon#y. => private[this] val field y: Int
        |  Int => scala.Int#
        |java.lang.Object#`<init>`(). => ctor <init>: ()
        |scala.Any# => abstract class Any.{+9 decls}

@@ -109,7 +109,7 @@ trait TypeOps { self: SemanticdbOps =>
           case g.ClassInfoType(gparents, gdecls, gclass) =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
-            val sdecls = gdecls.filtered.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
+            val sdecls = gdecls.useful.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
             Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE

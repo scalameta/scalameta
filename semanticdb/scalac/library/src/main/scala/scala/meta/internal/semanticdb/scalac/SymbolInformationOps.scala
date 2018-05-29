@@ -29,7 +29,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           } else {
             if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
               if (gsym.isLocalToBlock) k.LOCAL
-              else k.FIELD
+              else k.METHOD
             } else if (gsym.isMacro) {
               k.MACRO
             } else {
@@ -43,7 +43,8 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         case gsym: TermSymbol =>
           if (gsym.isParameter) k.PARAMETER
           else if (gsym.isLocalToBlock) k.LOCAL
-          else k.FIELD
+          else if (gsym.isJavaDefined || gsym.hasJavaEnumFlag) k.FIELD
+          else k.METHOD
         case gsym: ClassSymbol =>
           if (gsym.isTrait && gsym.hasFlag(gf.JAVA)) k.INTERFACE
           else if (gsym.isTrait) k.TRAIT
@@ -89,7 +90,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (gsym.hasFlag(gf.CASE) && (gsym.isClass || gsym.isModule)) flip(p.CASE)
         if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flip(p.CONTRAVARIANT)
         if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flip(p.COVARIANT)
-        if (kind.isLocal || kind.isField) {
+        if (kind.isLocal || gsym.isUsefulField) {
           if (gsym.isMutable) flip(p.VAR)
           else if (gsym.isVal) flip(p.VAL)
           else {
@@ -124,9 +125,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       if (gsym.hasPackageFlag) (None, Nil)
       else {
         val ginfo = {
-          if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
-            gsym.info.finalResultType
-          } else if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
+          if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
             gsym.info.widen
           } else if (gsym.isAliasType) {
             def preprocess(info: g.Type): g.Type = {
@@ -146,6 +145,12 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           val (tpe, todo) = ginfo.toSemantic
           val tpeWithoutReturnType = tpe.map(_.update(_.methodType.optionalReturnType := None))
           (tpeWithoutReturnType, todo)
+        } else if (gsym.isScalacField) {
+          val stag = t.METHOD_TYPE
+          val sparamss = Nil
+          val (sret, todo) = ginfo.toSemantic
+          val tpe = Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
+          (tpe, todo)
         } else {
           ginfo.toSemantic
         }

@@ -356,17 +356,6 @@ example.MetacJava#nonStatic().
 +        symbol: "com.javacp.MetacJava.StaticInner#NonStatic#"
 
 
-============================
-example.MetacJava#nonStatic.
-============================
---- metac
-+++ metacp
-         string: ""
--    symbol: "com.javacp.MetacJava#StaticInner#NonStatic#"
-+    symbol: "com.javacp.MetacJava.StaticInner#NonStatic#"
- accessibility {
-
-
 ================================
 example.MetacJava#staticInner().
 ================================
@@ -377,19 +366,6 @@ example.MetacJava#staticInner().
        typeRef {
 -        symbol: "com.javacp.MetacJava#StaticInner#"
 +        symbol: "com.javacp.MetacJava.StaticInner#"
-
-
-==============================
-example.MetacJava#staticInner.
-==============================
---- metac
-+++ metacp
- tpe {
-   tag: TYPE_REF
-   typeRef {
--    symbol: "com.javacp.MetacJava#StaticInner#"
-+    symbol: "com.javacp.MetacJava.StaticInner#"
- accessibility {
 
 
 ================
@@ -433,52 +409,6 @@ example.Methods#m13(Int).(x)
  accessibility {
 
 
-====================
-example.Vals#xzlm().
-====================
---- metac
-+++ metacp
- symbol: "example.Vals#xzlm()."
--kind: FIELD
-+kind: METHOD
- properties: 1088
- name: "xzlm"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "scala.Int#"
-+  tag: METHOD_TYPE
-+  methodType {
-+    return_type {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Int#"
- accessibility {
-
-
-===================
-example.Vals#xzm().
-===================
---- metac
-+++ metacp
- symbol: "example.Vals#xzm()."
--kind: FIELD
-+kind: METHOD
- properties: 1088
- name: "xzm"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "scala.Int#"
-+  tag: METHOD_TYPE
-+  methodType {
-+    return_type {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Int#"
- accessibility {
-
-
 ======
 flags.
 ======
@@ -511,7 +441,6 @@ flags.p.package.
      declarations: "flags.p.package.AA#"
 -    declarations: "flags.p.package.S#"
      declarations: "flags.p.package.xs1()."
-     declarations: "flags.p.package.xs1."
 
 
 =====================
@@ -528,29 +457,6 @@ flags.p.package.S#[T]
  accessibility {
    tag: PUBLIC
    symbol: ""
-
-
-====================
-flags.p.package.x().
-====================
---- metac
-+++ metacp
- symbol: "flags.p.package.x()."
--kind: FIELD
-+kind: METHOD
- properties: 1088
- name: "x"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "scala.Int#"
-+  tag: METHOD_TYPE
-+  methodType {
-+    return_type {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Int#"
- accessibility {
 
 
 ========
@@ -613,19 +519,17 @@ types.Test.C#
 =============
 --- metac
 +++ metacp
+     declarations: "types.Test.C#superType2()."
      declarations: "types.Test.C#superType3()."
-     declarations: "types.Test.C#superType3."
      declarations: "types.Test.C#compoundType1()."
 +    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#compoundType1."
      declarations: "types.Test.C#compoundType2()."
 +    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#compoundType2."
      declarations: "types.Test.C#compoundType3()."
 +    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#compoundType3."
      declarations: "types.Test.C#annType1()."
-     declarations: "types.Test.C#annType1."
+     declarations: "types.Test.C#annType2()."
+     declarations: "types.Test.C#existentialType1()."
 
 
 ========================
@@ -643,24 +547,6 @@ types.Test.C#annType1().
 -                tag: TYPE_REF
 -                typeRef {
 -                  symbol: "scala.Int#"
-
-
-======================
-types.Test.C#annType1.
-======================
---- metac
-+++ metacp
-         symbol: "types.T#"
--    annotations {
--      tpe {
--        tag: TYPE_REF
--        typeRef {
--          symbol: "types.ann#"
--          type_arguments {
--            tag: TYPE_REF
--            typeRef {
--              symbol: "scala.Int#"
- accessibility {
 
 
 ========================
@@ -681,23 +567,18 @@ types.Test.C#annType2().
 -              symbol: "types.ann2#"
 
 
-======================
-types.Test.C#annType2.
-======================
+================================
+types.Test.C#existentialType1().
+================================
 --- metac
 +++ metacp
-         symbol: "types.T#"
--    annotations {
--      tpe {
--        tag: TYPE_REF
--        typeRef {
--          symbol: "types.ann1#"
--    annotations {
--      tpe {
--        tag: TYPE_REF
--        typeRef {
--          symbol: "types.ann2#"
- accessibility {
+         tpe {
+           tag: TYPE_REF
+           typeRef {
+-            symbol: "types.Test.C#existentialType1.T#"
++            symbol: "types.Test.C#existentialType1(T).T#"
+-        type_parameters: "types.Test.C#existentialType1.T#"
++        type_parameters: "types.Test.C#existentialType1(T).T#"
 
 
 ===========================
@@ -712,51 +593,16 @@ types.Test.C#singleType2().
          string: ""
 
 
-=========================
-types.Test.C#singleType2.
-=========================
---- metac
-+++ metacp
-         string: ""
--    symbol: "types.P#x()."
-+    symbol: "types.P#x."
-     primitive: 0
-     string: ""
-
-
 ===================
 types.Test.Literal.
 ===================
 --- metac
 +++ metacp
-     declarations: "types.Test.Literal.bool."
+     declarations: "types.Test.Literal.string()."
+     declarations: "types.Test.Literal.bool()."
      declarations: "types.Test.Literal.unit()."
-     declarations: "types.Test.Literal.unit."
 -    declarations: "types.Test.Literal.javaEnum()."
 +    declarations: "types.Test.Literal.javaEnum(?)."
-     declarations: "types.Test.Literal.javaEnum."
      declarations: "types.Test.Literal.clazzOf()."
-     declarations: "types.Test.Literal.clazzOf."
-
-
-============================
-types.Test.Literal.javaEnum.
-============================
---- metac
-+++ metacp
- kind: FIELD
- properties: 1032
- name: "javaEnum"
--tpe {
--  tag: SINGLETON_TYPE
--  singletonType {
--    tag: SYMBOL
--    symbol: "java.nio.file.LinkOption#NOFOLLOW_LINKS."
--    primitive: 0
--    string: ""
--}
- accessibility {
-   tag: PRIVATE_THIS
-   symbol: ""
 
 

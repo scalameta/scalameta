@@ -164,8 +164,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               // Instead of crashing with "unsupported file", we ignore these cases.
               if (gsym0 == null) return
               if (gsym0.isAnonymousClass) return
-              if (gsym0.isMixinConstructor) return
-              if (gsym0.isSyntheticValueClassCompanion) return
+              if (gsym0.isUseless) return
               if (mtree.pos == m.Position.None) return
               if (occurrences.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
@@ -201,13 +200,15 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
               def saveSymbol(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  val SymbolInformationResult(denot, todoTpe1) = gs.toSymbolInformation()
-                  symbols(ms) = denot
-                  todoTpe1.foreach { tgs =>
-                    if (tgs.isSemanticdbLocal) {
-                      val tms = tgs.toSemantic
-                      if (tms != m.Symbol.None && !symbols.contains(tms)) {
-                        add(tms, tgs)
+                  if (gs.isUseful) {
+                    val SymbolInformationResult(denot, todoTpe1) = gs.toSymbolInformation()
+                    symbols(ms) = denot
+                    todoTpe1.foreach { tgs =>
+                      if (tgs.isSemanticdbLocal) {
+                        val tms = tgs.toSemantic
+                        if (tms != m.Symbol.None && !symbols.contains(tms)) {
+                          add(tms, tgs)
+                        }
                       }
                     }
                   }
@@ -318,7 +319,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case gtree: g.ValDef if gsym.isSelfParameter =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
-                if (!gsym.isSemanticdbLocal && !gsym.isSyntheticValueClassCompanion) {
+                if (!gsym.isSemanticdbLocal && !gsym.isUseless) {
                   symbols(gsym.toSemantic) = gsym.toSymbolInformation().denot
                 }
               case gtree: g.PackageDef =>

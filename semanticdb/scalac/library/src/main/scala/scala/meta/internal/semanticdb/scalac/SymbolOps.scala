@@ -31,7 +31,7 @@ trait SymbolOps { self: SemanticdbOps =>
 
         val owner = sym.owner.toSemantic
         val signature = {
-          if (sym.isMethod) {
+          if (sym.isMethod || sym.isUsefulField) {
             m.Signature.Method(sym.name.toSemantic, sym.disambiguator)
           } else if (sym.isTypeParameter) {
             m.Signature.TypeParameter(sym.name.toSemantic)
@@ -77,7 +77,8 @@ trait SymbolOps { self: SemanticdbOps =>
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
     def descriptor: String = {
-      sym.info.descriptor.toString
+      if (sym.isUsefulField) ""
+      else sym.info.descriptor.toString
     }
     def filterSiblings(syms: List[g.Symbol]): List[g.Symbol] = {
       syms.filter(_.name == sym.name)
@@ -125,18 +126,31 @@ trait SymbolOps { self: SemanticdbOps =>
       } else {
         sym.isModuleClass &&
         sym.isSynthetic &&
-        sym.info.decls.filtered.isEmpty
+        sym.info.decls.useful.isEmpty
       }
     }
+    def isScalacField: Boolean = {
+      val isFieldForPrivateThis = sym.isPrivateThis && sym.isTerm && !sym.isMethod && !sym.isModule
+      val isFieldForOther = sym.name.endsWith(g.nme.LOCAL_SUFFIX_STRING)
+      val isJavaDefined = sym.isJavaDefined || sym.hasJavaEnumFlag
+      (isFieldForPrivateThis || isFieldForOther) && !isJavaDefined
+    }
+    def isUselessField: Boolean = {
+      sym.isScalacField && sym.getterIn(sym.owner) != g.NoSymbol
+    }
+    def isUsefulField: Boolean = {
+      sym.isScalacField && !sym.isUselessField
+    }
+    def isUseless: Boolean = {
+      sym.isSyntheticConstructor ||
+      sym.isLocalChild ||
+      sym.isSyntheticValueClassCompanion ||
+      sym.isUselessField
+    }
+    def isUseful: Boolean = !sym.isUseless
   }
 
   implicit class XtensionGScope(decls: g.Scope) {
-    def filtered: List[g.Symbol] = {
-      decls.sorted.filter { decl =>
-        !decl.isSyntheticConstructor &&
-        !decl.isLocalChild &&
-        !decl.isSyntheticValueClassCompanion
-      }
-    }
+    def useful: List[g.Symbol] = decls.sorted.filter(_.isUseful)
   }
 }
