@@ -626,10 +626,7 @@ flags.p.package.
 ================
 --- metac
 +++ metacp
- symbol: "flags.p.package."
- kind: PACKAGE_OBJECT
--properties: 0
-+properties: 8
+ properties: 8
  name: "package"
  tpe {
 -  tag: TYPE_REF

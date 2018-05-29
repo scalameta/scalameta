@@ -18,8 +18,6 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       else gsym0
     }
 
-    private val isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE) && gsym.name != nme.PACKAGE
-
     private def kind: s.SymbolInformation.Kind = {
       gsym match {
         case _ if gsym.isSelfParameter => k.SELF_PARAMETER
@@ -73,6 +71,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
+      def isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE)
       if (gsym.hasFlag(gf.PACKAGE)) {
         ()
       } else if (gsym.hasFlag(gf.JAVA)) {

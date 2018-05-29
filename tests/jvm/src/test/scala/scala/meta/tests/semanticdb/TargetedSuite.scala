@@ -151,7 +151,8 @@ class TargetedSuite extends SemanticdbSuite() {
         |package object F {
         |}
     """.trim.stripMargin,
-      """|F.package. => package object package
+    """|F.package. => final package object package
+       |  extends AnyRef
        |f. => package f
        |f.C1# => class C1.{+17 decls}
        |  extends AnyRef

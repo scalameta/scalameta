@@ -238,7 +238,7 @@ Synthetics => 2 entries
 
 Symbols:
 flags. => package flags
-flags.p.package. => package object package
+flags.p.package. => final package object package
 flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
 flags.p.package.AA#`<init>`(Int,Int,Int). => primary ctor <init>: (x: Int, val y: Int, var z: Int): AA
