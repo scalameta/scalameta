@@ -407,49 +407,6 @@ example.Acc#
  accessibility {
 
 
-====================
-example.EmptyObject.
-====================
---- metac
-+++ metacp
- properties: 8
- name: "EmptyObject"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "example.EmptyObject."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
- accessibility {
-
-
-================
-example.Example.
-================
---- metac
-+++ metacp
- properties: 8
- name: "Example"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "example.Example."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    declarations: "example.Example.main(Array)."
-+    declarations: "example.Example.x()."
-+    declarations: "example.Example.x."
- accessibility {
-
-
 ==============================
 example.MetacJava#nonStatic().
 ==============================
@@ -537,28 +494,6 @@ example.Methods#m13(Int).(x)
  accessibility {
 
 
-==================
-example.ValUsages.
-==================
---- metac
-+++ metacp
- properties: 8
- name: "ValUsages"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "example.ValUsages."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    declarations: "example.ValUsages.v()."
-+    declarations: "example.ValUsages.v."
- accessibility {
-
-
 ====================
 example.Vals#xzlm().
 ====================
@@ -626,38 +561,20 @@ flags.p.package.
 ================
 --- metac
 +++ metacp
- properties: 8
- name: "package"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "flags.p.package."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    declarations: "flags.p.package.x()."
-+    declarations: "flags.p.package.y()."
-+    declarations: "flags.p.package.`y_=`(Int)."
-+    declarations: "flags.p.package.y."
-+    declarations: "flags.p.package.z(Int)."
-+    declarations: "flags.p.package.m()."
-+    declarations: "flags.p.package.C#"
-+    declarations: "flags.p.package.T1#"
-+    declarations: "flags.p.package.T2#"
+     declarations: "flags.p.package.C#"
+     declarations: "flags.p.package.T1#"
+     declarations: "flags.p.package.T2#"
 +    declarations: "flags.p.package.S#"
-+    declarations: "flags.p.package.U#"
-+    declarations: "flags.p.package.V#"
+     declarations: "flags.p.package.U#"
+     declarations: "flags.p.package.V#"
+     declarations: "flags.p.package.X."
 +    declarations: "flags.p.package.X."
-+    declarations: "flags.p.package.X."
-+    declarations: "flags.p.package.Y#"
-+    declarations: "flags.p.package.Z#"
-+    declarations: "flags.p.package.AA#"
-+    declarations: "flags.p.package.xs1()."
-+    declarations: "flags.p.package.xs1."
- accessibility {
+     declarations: "flags.p.package.Y#"
+     declarations: "flags.p.package.Z#"
+     declarations: "flags.p.package.AA#"
+-    declarations: "flags.p.package.S#"
+     declarations: "flags.p.package.xs1()."
+     declarations: "flags.p.package.xs1."
 
 
 =====================
@@ -674,42 +591,6 @@ flags.p.package.S#[T]
  accessibility {
    tag: PUBLIC
    symbol: ""
-
-
-==================
-flags.p.package.X.
-==================
---- metac
-+++ metacp
- properties: 136
- name: "X"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "flags.p.package.X."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Product#"
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Serializable#"
-+    declarations: "flags.p.package.X.productPrefix()."
-+    declarations: "flags.p.package.X.productArity()."
-+    declarations: "flags.p.package.X.productElement(Int)."
-+    declarations: "flags.p.package.X.productIterator()."
-+    declarations: "flags.p.package.X.canEqual(Any)."
-+    declarations: "flags.p.package.X.hashCode()."
-+    declarations: "flags.p.package.X.toString()."
-+    declarations: "flags.p.package.X.readResolve()."
- accessibility {
 
 
 ====================
@@ -756,22 +637,9 @@ types.Test.
 ===========
 --- metac
 +++ metacp
- properties: 8
- name: "Test"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "types.Test."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    declarations: "types.Test.M#"
-+    declarations: "types.Test.N#"
-+    declarations: "types.Test.C#"
-+    declarations: "types.Test.Literal."
+     declarations: "types.Test.N#"
+     declarations: "types.Test.C#"
+     declarations: "types.Test.Literal."
 +    declarations: "types.Test.Literal."
  accessibility {
 
@@ -809,178 +677,6 @@ types.Test.C#
 +    declarations: "types.Test.C#RepeatedType."
      declarations: "types.Test.C#TypeType."
 +    declarations: "types.Test.C#TypeType."
- accessibility {
-
-
-========================
-types.Test.C#ByNameType.
-========================
---- metac
-+++ metacp
- properties: 8
- name: "ByNameType"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    prefix {
--      tag: SINGLETON_TYPE
--      singletonType {
--        tag: THIS
--        symbol: "types.Test.C#"
--        primitive: 0
--        string: ""
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
--    symbol: "types.Test.C#ByNameType."
-+    declarations: "types.Test.C#ByNameType.m1(=>Int)."
- accessibility {
-
-
-============================
-types.Test.C#ClassInfoType1.
-============================
---- metac
-+++ metacp
- properties: 8
- name: "ClassInfoType1"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    prefix {
--      tag: SINGLETON_TYPE
--      singletonType {
--        tag: THIS
--        symbol: "types.Test.C#"
--        primitive: 0
--        string: ""
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
--    symbol: "types.Test.C#ClassInfoType1."
- accessibility {
-
-
-========================
-types.Test.C#MethodType.
-========================
---- metac
-+++ metacp
- properties: 8
- name: "MethodType"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    prefix {
--      tag: SINGLETON_TYPE
--      singletonType {
--        tag: THIS
--        symbol: "types.Test.C#"
--        primitive: 0
--        string: ""
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
--    symbol: "types.Test.C#MethodType."
-+    declarations: "types.Test.C#MethodType.x1()."
-+    declarations: "types.Test.C#MethodType.x2()."
-+    declarations: "types.Test.C#MethodType.m3()."
-+    declarations: "types.Test.C#MethodType.m4()."
-+    declarations: "types.Test.C#MethodType.m5(Int)."
-+    declarations: "types.Test.C#MethodType.m6(T)."
- accessibility {
-
-
-==========================
-types.Test.C#RepeatedType.
-==========================
---- metac
-+++ metacp
- properties: 8
- name: "RepeatedType"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    prefix {
--      tag: SINGLETON_TYPE
--      singletonType {
--        tag: THIS
--        symbol: "types.Test.C#"
--        primitive: 0
--        string: ""
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.runtime.AbstractFunction1#"
-+        type_arguments {
-+          tag: REPEATED_TYPE
-+          repeatedType {
-+            tpe {
-+              tag: TYPE_REF
-+              typeRef {
-+                symbol: "scala.Predef.String#"
-+        type_arguments {
-+          tag: TYPE_REF
-+          typeRef {
-+            prefix {
-+              tag: SINGLETON_TYPE
-+              singletonType {
-+                tag: THIS
-+                symbol: "types.Test.C#"
-+                primitive: 0
-+                string: ""
-+            symbol: "types.Test.C#RepeatedType#"
--    symbol: "types.Test.C#RepeatedType."
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Serializable#"
-+    declarations: "types.Test.C#RepeatedType.toString()."
-+    declarations: "types.Test.C#RepeatedType.apply(String*)."
-+    declarations: "types.Test.C#RepeatedType.unapplySeq(RepeatedType)."
- accessibility {
-
-
-======================
-types.Test.C#TypeType.
-======================
---- metac
-+++ metacp
- properties: 8
- name: "TypeType"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    prefix {
--      tag: SINGLETON_TYPE
--      singletonType {
--        tag: THIS
--        symbol: "types.Test.C#"
--        primitive: 0
--        string: ""
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
--    symbol: "types.Test.C#TypeType."
-+    declarations: "types.Test.C#TypeType.T1#"
-+    declarations: "types.Test.C#TypeType.m2()."
-+    declarations: "types.Test.C#TypeType.m3()."
-+    declarations: "types.Test.C#TypeType.T4#"
-+    declarations: "types.Test.C#TypeType.T5#"
  accessibility {
 
 
@@ -1085,41 +781,14 @@ types.Test.Literal.
 ===================
 --- metac
 +++ metacp
- properties: 8
- name: "Literal"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "types.Test.Literal."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    declarations: "types.Test.Literal.int()."
-+    declarations: "types.Test.Literal.int."
-+    declarations: "types.Test.Literal.long()."
-+    declarations: "types.Test.Literal.long."
-+    declarations: "types.Test.Literal.float()."
-+    declarations: "types.Test.Literal.float."
-+    declarations: "types.Test.Literal.double()."
-+    declarations: "types.Test.Literal.double."
-+    declarations: "types.Test.Literal.nil()."
-+    declarations: "types.Test.Literal.nil."
-+    declarations: "types.Test.Literal.char()."
-+    declarations: "types.Test.Literal.char."
-+    declarations: "types.Test.Literal.string()."
-+    declarations: "types.Test.Literal.string."
-+    declarations: "types.Test.Literal.bool()."
-+    declarations: "types.Test.Literal.bool."
-+    declarations: "types.Test.Literal.unit()."
-+    declarations: "types.Test.Literal.unit."
+     declarations: "types.Test.Literal.bool."
+     declarations: "types.Test.Literal.unit()."
+     declarations: "types.Test.Literal.unit."
+-    declarations: "types.Test.Literal.javaEnum()."
 +    declarations: "types.Test.Literal.javaEnum(?)."
-+    declarations: "types.Test.Literal.javaEnum."
-+    declarations: "types.Test.Literal.clazzOf()."
-+    declarations: "types.Test.Literal.clazzOf."
- accessibility {
+     declarations: "types.Test.Literal.javaEnum."
+     declarations: "types.Test.Literal.clazzOf()."
+     declarations: "types.Test.Literal.clazzOf."
 
 
 ============================

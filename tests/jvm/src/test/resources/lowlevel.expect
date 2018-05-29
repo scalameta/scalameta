@@ -106,6 +106,7 @@ Occurrences => 2 entries
 Symbols:
 example. => package example
 example.EmptyObject. => final object EmptyObject
+  extends AnyRef
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -126,7 +127,8 @@ Synthetics => 1 entries
 
 Symbols:
 example. => package example
-example.Example. => final object Example
+example.Example. => final object Example.{+3 decls}
+  extends AnyRef
 example.Example.main(Array). => method main: (args: Array[String]): Unit
   args => example.Example.main(Array).(args)
   Array => scala.Array#
@@ -238,7 +240,8 @@ Synthetics => 2 entries
 
 Symbols:
 flags. => package flags
-flags.p.package. => final package object package
+flags.p.package. => final package object package.{+18 decls}
+  extends AnyRef
 flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
 flags.p.package.AA#`<init>`(Int,Int,Int). => primary ctor <init>: (x: Int, val y: Int, var z: Int): AA
@@ -331,7 +334,10 @@ flags.p.package.U# => abstract type U: >: Nothing <: Int
 flags.p.package.V# => abstract type V: >: Int <: Any
   Int => scala.Int#
   Any => scala.Any#
-flags.p.package.X. => final case object X
+flags.p.package.X. => final case object X.{+8 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
 flags.p.package.X.canEqual(Any). => method canEqual: (x$1: Any): Boolean
   x$1 => flags.p.package.X.canEqual(Any).(x$1)
   Any => scala.Any#
@@ -399,9 +405,13 @@ scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
 scala.Predef.`???`(). => method ???: : Nothing
   Nothing => scala.Nothing#
-scala.collection.immutable.List. => final object List
-scala.language. => final object language
-scala.language.experimental. => final object experimental
+scala.collection.immutable.List. => final object List.{+8 decls}
+  extends SeqFactory[List]
+  extends Serializable
+scala.language. => final object language.{+7 decls}
+  extends AnyRef
+scala.language.experimental. => final object experimental.{+1 decls}
+  extends AnyRef
 scala.language.experimental.macros(). => implicit lazy val field macros: macros
   macros => scala.languageFeature.experimental.macros#
 scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
@@ -512,7 +522,8 @@ Symbols:
 scala. => package scala
 scala.util. => package util
 scala.util.control. => package control
-scala.util.control.NonFatal. => final object NonFatal
+scala.util.control.NonFatal. => final object NonFatal.{+2 decls}
+  extends AnyRef
 
 Occurrences:
 [0:7..0:12): scala => scala.
@@ -767,7 +778,8 @@ Synthetics => 4 entries
 
 Symbols:
 example. => package example
-example.Example. => final object Example
+example.Example. => final object Example.{+3 decls}
+  extends AnyRef
 example.MethodUsages# => class MethodUsages.{+3 decls}
   extends AnyRef
 example.MethodUsages#`<init>`(). => primary ctor <init>: (): MethodUsages
@@ -994,12 +1006,17 @@ example.Methods#m9(`m9().`).(x) => param x: Methods.this.m9().
 scala. => package scala
 scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
-scala.Predef. => final object Predef
+scala.Predef. => final object Predef.{+101 decls}
+  extends LowPriorityImplicits
+  extends DeprecatedPredef
 scala.Predef.String# => type String: >: String <: String
   String => java.lang.String#
 scala.Predef.`???`(). => method ???: : Nothing
   Nothing => scala.Nothing#
-scala.collection.immutable.Nil. => @SerialVersionUID final case object Nil
+scala.collection.immutable.Nil. => @SerialVersionUID final case object Nil.{+9 decls}
+  extends List[Nothing]
+  extends Product
+  extends Serializable
 scala.math. => package math
 scala.math.Ordering# => @implicitNotFound trait Ordering[T: <?>].{+13 decls}
   extends Object
@@ -1283,7 +1300,9 @@ example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
 example.Synthetic#`<init>`(). => primary ctor <init>: (): Synthetic
   Synthetic => example.Synthetic#
-scala.Array. => final object Array
+scala.Array. => final object Array.{+54 decls}
+  extends FallbackArrayBuilding
+  extends Serializable
 scala.Array.empty(ClassTag). => method empty: [T: <?>] => (evidence$1: <?>): Array[T]
   T => scala.Array.empty(ClassTag).[T]
   evidence$1 => scala.Array.empty(ClassTag).(evidence$1)
@@ -1301,7 +1320,9 @@ scala.collection.immutable.List#map(Function1,CanBuildFrom). => final method map
   That => scala.collection.immutable.List#map(Function1,CanBuildFrom).[That]
   f => scala.collection.immutable.List#map(Function1,CanBuildFrom).(f)
   bf => scala.collection.immutable.List#map(Function1,CanBuildFrom).(bf)
-scala.collection.immutable.List. => final object List
+scala.collection.immutable.List. => final object List.{+8 decls}
+  extends SeqFactory[List]
+  extends Serializable
 scala.collection.immutable.StringLike#stripPrefix(String). => method stripPrefix: (prefix: <?>): String
   prefix => scala.collection.immutable.StringLike#stripPrefix(String).(prefix)
   String => java.lang.String#
@@ -1383,7 +1404,8 @@ scala.annotation.StaticAnnotation# => trait StaticAnnotation
   extends Annotation
 scala.collection.SeqLike#length(). => abstract method length: : Int
   Int => scala.Int#
-scala.language. => final object language
+scala.language. => final object language.{+7 decls}
+  extends AnyRef
 scala.language.existentials(). => implicit lazy val field existentials: existentials
   existentials => scala.languageFeature.existentials#
 scala.language.higherKinds(). => implicit lazy val field higherKinds: higherKinds
@@ -1392,7 +1414,9 @@ scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
   A => scala.package.List#[A]
   List => scala.collection.immutable.List#
 scala.util. => package util
-scala.util.Either. => final object Either
+scala.util.Either. => final object Either.{+9 decls}
+  extends AnyRef
+  extends Serializable
 types. => package types
 types.B# => class B.{+1 decls}
   extends AnyRef
@@ -1442,7 +1466,8 @@ types.T#x(). => val method x: : T.this.X
 types.T#x. => private[this] val field x: T.this.X
   T => types.T#
   X => types.T#X#
-types.Test. => final object Test
+types.Test. => final object Test.{+4 decls}
+  extends AnyRef
 types.Test.C# => class C.{+50 decls}
   extends M
 types.Test.C#$anon#L# => type L: [T >: Nothing <: Any] => >: List[T] <: List[T]
@@ -1455,13 +1480,15 @@ types.Test.C#$anon#L#[T] => typeparam T: >: Nothing <: Any
   Any => scala.Any#
 types.Test.C#$anon#k(). => abstract method k: : Int
   Int => scala.Int#
-types.Test.C#ByNameType. => final object ByNameType
+types.Test.C#ByNameType. => final object ByNameType.{+1 decls}
+  extends AnyRef
 types.Test.C#ByNameType.m1(=>Int). => method m1: (x: => Int): Int
   x => types.Test.C#ByNameType.m1(=>Int).(x)
   Int => scala.Int#
 types.Test.C#ByNameType.m1(=>Int).(x) => param x: => Int
   Int => scala.Int#
 types.Test.C#ClassInfoType1. => final object ClassInfoType1
+  extends AnyRef
 types.Test.C#ClassInfoType2# => class ClassInfoType2.{+2 decls}
   extends B
 types.Test.C#ClassInfoType2#`<init>`(). => primary ctor <init>: (): C.this.ClassInfoType2
@@ -1478,7 +1505,8 @@ types.Test.C#Either(). => val method Either: : Either.type
   Either => scala.util.Either.
 types.Test.C#Either. => private[this] val field Either: Either.type
   Either => scala.util.Either.
-types.Test.C#MethodType. => final object MethodType
+types.Test.C#MethodType. => final object MethodType.{+6 decls}
+  extends AnyRef
 types.Test.C#MethodType.m3(). => method m3: : Int
   Int => scala.Int#
 types.Test.C#MethodType.m4(). => method m4: (): Int
@@ -1551,7 +1579,9 @@ types.Test.C#RepeatedType#s. => private[this] val field s: String*
   String => scala.Predef.String#
 types.Test.C#RepeatedType#toString(). => method toString: (): String
   String => java.lang.String#
-types.Test.C#RepeatedType. => final object RepeatedType
+types.Test.C#RepeatedType. => final object RepeatedType.{+3 decls}
+  extends AbstractFunction1[String*, C.this.RepeatedType]
+  extends Serializable
 types.Test.C#RepeatedType.apply(String*). => case method apply: (s: <?>): C.this.RepeatedType
   s => types.Test.C#RepeatedType.apply(String*).(s)
   C => types.Test.C#
@@ -1568,7 +1598,8 @@ types.Test.C#RepeatedType.unapplySeq(RepeatedType). => case method unapplySeq: (
 types.Test.C#RepeatedType.unapplySeq(RepeatedType).(x$0) => param x$0: C.this.RepeatedType
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
-types.Test.C#TypeType. => final object TypeType
+types.Test.C#TypeType. => final object TypeType.{+5 decls}
+  extends AnyRef
 types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1728,7 +1759,8 @@ types.Test.C#x. => private[this] val field x: C.this.p.X
   C => types.Test.C#
   p => types.Test.C#p().
   X => types.P#X#
-types.Test.Literal. => final object Literal
+types.Test.Literal. => final object Literal.{+22 decls}
+  extends AnyRef
 types.Test.Literal.bool(). => final val method bool: : true
 types.Test.Literal.bool. => private[this] final val field bool: true
 types.Test.Literal.char(). => final val method char: : 'a'
@@ -2041,7 +2073,8 @@ Occurrences => 117 entries
 
 Symbols:
 example. => package example
-example.ValUsages. => final object ValUsages
+example.ValUsages. => final object ValUsages.{+2 decls}
+  extends AnyRef
 example.ValUsages.v(). => val method v: : Vals
   Vals => example.Vals#
 example.ValUsages.v. => private[this] val field v: Vals

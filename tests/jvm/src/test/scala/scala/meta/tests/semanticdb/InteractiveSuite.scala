@@ -48,7 +48,8 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |
       |Symbols:
       |b. => package b
-      |b.a. => final object a
+      |b.a. => final object a.{+2 decls}
+      |  extends AnyRef
       |b.a.x(). => val method x: : List[Nothing]
       |  List => scala.collection.immutable.List#
       |  Nothing => scala.Nothing#
@@ -59,7 +60,9 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |scala.Predef.any2stringadd#`+`(String). => method +: (other: <?>): String
       |  other => scala.Predef.any2stringadd#`+`(String).(other)
       |  String => scala.Predef.String#
-      |scala.collection.immutable.List. => final object List
+      |scala.collection.immutable.List. => final object List.{+8 decls}
+      |  extends SeqFactory[List]
+      |  extends Serializable
       |scala.concurrent. => package concurrent
       |
       |Occurrences:
@@ -110,7 +113,8 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Diagnostics => 1 entries
       |
       |Symbols:
-      |_empty_.b. => final object b
+      |_empty_.b. => final object b.{+1 decls}
+      |  extends AnyRef
       |_empty_.b.add(?). => method add: (a: <?>): Int
       |  a => _empty_.b.add(?).(a)
       |  Int => scala.Int#

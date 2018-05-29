@@ -60,7 +60,8 @@ class CliSuite extends BaseCliSuite {
       |Occurrences => 7 entries
       |
       |Symbols:
-      |_empty_.HelloWorld. => final object HelloWorld
+      |_empty_.HelloWorld. => final object HelloWorld.{+1 decls}
+      |  extends AnyRef
       |_empty_.HelloWorld.main(Array). => method main: (args: Array[String]): Unit
       |  args => _empty_.HelloWorld.main(Array).(args)
       |  Array => scala.Array#

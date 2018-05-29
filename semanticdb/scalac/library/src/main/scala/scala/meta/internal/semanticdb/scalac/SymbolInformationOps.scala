@@ -131,6 +131,8 @@ trait SymbolInformationOps { self: SemanticdbOps =>
               }
             }
             preprocess(gsym.info)
+          } else if (gsym.isModule) {
+            gsym.moduleClass.info
           } else {
             gsym.info
           }
