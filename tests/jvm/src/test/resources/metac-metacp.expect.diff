@@ -1,3 +1,19 @@
+========
+classes.
+========
+--- metac
++++ metacp
+ kind: PACKAGE
+ properties: 0
+ name: "classes"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ owner: "_root_."
+ language: SCALA
+
+
 ====
 com.
 ====

@@ -5,6 +5,7 @@ _empty_.
   _empty_.B#
 _root_.
   _empty_.
+  classes.
   com.
   example.
   exclude.
@@ -12,6 +13,9 @@ _root_.
   objects.
   traits.
   types.
+classes.
+  classes.C#
+  classes.C.
 com.
   com.javacp.
 com.javacp.
@@ -64,6 +68,8 @@ Toplevels:
 ==========
 _empty_.A# => A.class.semanticdb
 _empty_.B# => B.class.semanticdb
+classes.C# => classes/C.class.semanticdb
+classes.C. => classes/C.class.semanticdb
 com.javacp.ClassSuffix# => com/javacp/ClassSuffix.class.semanticdb
 com.javacp.Coin# => com/javacp/Coin.class.semanticdb
 com.javacp.Interface# => com/javacp/Interface.class.semanticdb

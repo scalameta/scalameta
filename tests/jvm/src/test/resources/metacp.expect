@@ -36,6 +36,41 @@ _empty_.B#a(). => method a: : A
   A => _empty_.A#
 _root_. => package _root_
 
+classes/C.class
+---------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => classes/C.class
+Text => empty
+Language => Scala
+Symbols => 11 entries
+
+Symbols:
+_root_. => package _root_
+classes. => package classes
+classes.C# => final class C.{+5 decls}
+  extends AnyVal
+classes.C#`<init>`(Int). => primary ctor <init>: (val x: Int)
+  x => classes.C#`<init>`(Int).(x)
+  Int => scala.Int#
+classes.C#`<init>`(Int).(x) => val param x: Int
+  Int => scala.Int#
+classes.C#equals(Any). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C#equals(Any).(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C#equals(Any).(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C#hashCode(). => method hashCode: (): Int
+  Int => scala.Int#
+classes.C#x(). => val method x: : Int
+  Int => scala.Int#
+classes.C#x. => private[this] val field x: Int
+  Int => scala.Int#
+classes.C. => final object C
+  extends AnyRef
+
 com/javacp/ClassSuffix.class
 ----------------------------
 

@@ -53,9 +53,11 @@ object Scalacp {
     if (sym.isModuleClass) return None
     if (sym.isConstructor && !sym.isClassConstructor) return None
     if (sym.isLocalChild) return None
+    val ssym = ssymbol(sym)
+    if (ssym.contains("$extension")) return None
     Some(
       s.SymbolInformation(
-        symbol = ssymbol(sym),
+        symbol = ssym,
         language = l.SCALA,
         kind = skind(sym),
         properties = sproperties(sym),
@@ -270,7 +272,9 @@ object Scalacp {
             val isSyntheticConstructor = child.isConstructor && (sym.isModuleClass || sym.isTrait)
             val isModuleClass = child.isModuleClass
             val isLocalChild = child.isLocalChild
-            !isTypeParam && !isSyntheticConstructor && !isModuleClass && !isLocalChild
+            val isExtension = child.isExtensionMethod
+            !isTypeParam && !isSyntheticConstructor && !isModuleClass &&
+            !isLocalChild && !isExtension
           }
           val sdecls = filteredDecls.map(ssymbol)
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
@@ -413,6 +417,7 @@ object Scalacp {
       }
     }
     def isLocalChild: Boolean = sym.name == "<local child>"
+    def isExtensionMethod: Boolean = sym.name.contains("$extension")
     def typeDescriptor: String = {
       try {
         sym match {

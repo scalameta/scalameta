@@ -5,11 +5,14 @@ _empty_.
   _empty_.B#
 _root_.
   _empty_.
+  classes.
   example.
   flags.
   objects.
   traits.
   types.
+classes.
+  classes.C#
 example.
   example.A#
   example.Acc#
@@ -49,6 +52,8 @@ Toplevels:
 ==========
 _empty_.A# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_.B# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
+classes. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 example. => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 example.A# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 example.Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scala.semanticdb

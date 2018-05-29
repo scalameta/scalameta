@@ -52,6 +52,55 @@ Occurrences:
 [9:6..9:8): m7 <= example.Acc#m7().
 [9:11..9:14): ??? => scala.Predef.`???`().
 
+semanticdb/integration/src/main/scala/example/Classes.scala
+-----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Classes.scala
+Text => non-empty
+Language => Scala
+Symbols => 13 entries
+Occurrences => 7 entries
+
+Symbols:
+classes. => package classes
+classes.C# => final class C.{+5 decls}
+  extends AnyVal
+classes.C#`<init>`(Int). => primary ctor <init>: (val x: Int)
+  x => classes.C#`<init>`(Int).(x)
+  Int => scala.Int#
+classes.C#`<init>`(Int).(x) => val param x: Int
+  Int => scala.Int#
+classes.C#equals(Any). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C#equals(Any).(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C#equals(Any).(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C#hashCode(). => method hashCode: (): Int
+  Int => scala.Int#
+classes.C#x(). => val method x: : Int
+  Int => scala.Int#
+classes.C#x. => private[this] val field x: Int
+  Int => scala.Int#
+classes.C. => final object C
+  extends AnyRef
+scala.AnyVal# => abstract class AnyVal.{+2 decls}
+  extends Any
+scala.AnyVal#`<init>`(). => primary ctor <init>: ()
+scala.Int# => abstract final class Int.{+111 decls}
+  extends AnyVal
+
+Occurrences:
+[0:8..0:15): classes <= classes.
+[2:6..2:7): C <= classes.C#
+[2:7..2:7):  <= classes.C#`<init>`(Int).
+[2:12..2:13): x <= classes.C#x().
+[2:15..2:18): Int => scala.Int#
+[2:28..2:34): AnyVal => scala.AnyVal#
+[3:0..3:0):  => scala.AnyVal#`<init>`().
+
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------
 
