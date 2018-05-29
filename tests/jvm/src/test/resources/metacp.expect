@@ -1351,7 +1351,7 @@ Symbols:
 _root_. => package _root_
 flags. => package flags
 flags.p. => package p
-flags.p.package. => final package object package.{+18 decls}
+flags.p.package. => final package object p.{+18 decls}
   extends AnyRef
 flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef

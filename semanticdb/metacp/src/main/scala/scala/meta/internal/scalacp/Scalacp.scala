@@ -159,17 +159,9 @@ object Scalacp {
   }
 
   private def sname(sym: Symbol): String = {
-    def loop(name: String): String = {
-      val i = name.lastIndexOf("$$")
-      if (i > 0) loop(name.substring(i + 2))
-      else if (name.endsWith(" ")) loop(name.substring(0, name.length - 1))
-      else if (name == "<root>") n.RootPackage
-      else if (name == "<empty>") n.EmptyPackage
-      else if (name == "<init>") n.Constructor
-      else if (name == "<refinement>") "$anon"
-      else NameTransformer.decode(name)
-    }
-    loop(sym.name)
+    val ssym = ssymbol(sym)
+    if (skind(sym) == k.PACKAGE_OBJECT) ssym.owner.desc.name
+    else ssym.desc.name
   }
 
   private def stpe(sym: SymbolInfoSymbol): Option[s.Type] = {
@@ -456,9 +448,22 @@ object Scalacp {
       }
     }
     def descriptor: Descriptor = {
+      val name = {
+        def loop(name: String): String = {
+          val i = name.lastIndexOf("$$")
+          if (i > 0) loop(name.substring(i + 2))
+          else if (name.endsWith(" ")) loop(name.substring(0, name.length - 1))
+          else if (name == "<root>") n.RootPackage
+          else if (name == "<empty>") n.EmptyPackage
+          else if (name == "<init>") n.Constructor
+          else if (name == "<refinement>") "$anon"
+          else NameTransformer.decode(name)
+        }
+        loop(sym.name)
+      }
       skind(sym) match {
         case k.FIELD | k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
-          d.Term(sname(sym))
+          d.Term(name)
         case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
           val typeDescriptor = sym.typeDescriptor
           val kindred = sym.parent.get.children.filter(other => skind(other) == skind(sym))
@@ -475,13 +480,13 @@ object Scalacp {
               else s"(${typeDescriptor}+${index})"
             }
           }
-          d.Method(sname(sym), disambiguator)
+          d.Method(name, disambiguator)
         case k.TYPE | k.CLASS | k.TRAIT =>
-          d.Type(sname(sym))
+          d.Type(name)
         case k.PARAMETER =>
-          d.Parameter(sname(sym))
+          d.Parameter(name)
         case k.TYPE_PARAMETER =>
-          d.TypeParameter(sname(sym))
+          d.TypeParameter(name)
         case skind =>
           sys.error(s"unsupported kind $skind for symbol $sym")
       }
@@ -543,7 +548,7 @@ object Scalacp {
       tpe match {
         case ByNameType(tpe) => "=>" + tpe.descriptor
         case RepeatedType(tpe) => tpe.descriptor + "*"
-        case TypeRefType(_, sym, _) => sname(sym).encoded
+        case TypeRefType(_, sym, _) => sym.descriptor.name.encoded
         case SingleType(_, _) => ".type"
         case ThisType(_) => ".type"
         case ConstantType(_: Type) => "Class"

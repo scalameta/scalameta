@@ -113,7 +113,11 @@ trait SymbolInformationOps { self: SemanticdbOps =>
     }
 
     private def name: String = {
-      gsym.name.toSemantic
+      if (gsym.isPackageObject || gsym.isPackageObjectClass) {
+        gsym.owner.name.toSemantic
+      } else {
+        gsym.name.toSemantic
+      }
     }
 
     private def newInfo: (Option[s.Type], List[g.Symbol]) = {

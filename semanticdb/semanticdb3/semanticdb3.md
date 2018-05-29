@@ -670,7 +670,9 @@ languages map onto these properties.
   </tr>
 </table>
 
-`name`. String that represents the name of the corresponding definition.
+`name`. Display name of the definition. Usually, it's the same as the name
+of the corresponding [Symbol](#symbol), except for package objects whose
+display name is their name in source code and symbol name is `package`.
 
 `tpe`. [Type](#type) that represents the definition signature.
 See [Languages](#languages) for more information on which definitions have
@@ -901,6 +903,7 @@ which Scala definitions, what their metadata is, etc). See
   * For empty package, root package.
   * For top-level package, root package.
   * For other package, parent package.
+  * For package object, its associated package.
   * For other top-level definition, its package.
   * For other global definition, the innermost enclosing definition,
     i.e. the definition whose [Location](#location) in source code most
@@ -941,6 +944,7 @@ which Scala definitions, what their metadata is, etc). See
 **Name** is:
   * For root package, `_root_`.
   * For empty package, `_empty_`.
+  * For package object, `package`.
   * For constructor, `<init>`.
   * For anonymous parameter, self parameter or type parameter,
     an underscore (`_`).

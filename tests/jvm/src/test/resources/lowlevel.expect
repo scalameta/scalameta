@@ -447,7 +447,7 @@ Synthetics => 2 entries
 
 Symbols:
 flags. => package flags
-flags.p.package. => final package object package.{+18 decls}
+flags.p.package. => final package object p.{+18 decls}
   extends AnyRef
 flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
