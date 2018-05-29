@@ -106,10 +106,16 @@ trait TypeOps { self: SemanticdbOps =>
             val stparams = gtparams.map(todo)
             val stpe = loop(gtpe)
             Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stparams, stpe))))
-          case g.ClassInfoType(gparents, gdecls, _) =>
+          case g.ClassInfoType(gparents, gdecls, gclass) =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
-            val sdecls = gdecls.sorted.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
+            val gfilteredDecls = gdecls.filter { gdecl =>
+              val isSyntheticConstructor = {
+                gdecl.isConstructor && (gclass.isModuleClass || gclass.isTrait)
+              }
+              !isSyntheticConstructor
+            }
+            val sdecls = gfilteredDecls.sorted.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
             Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE

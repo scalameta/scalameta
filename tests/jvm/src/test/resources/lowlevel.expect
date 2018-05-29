@@ -582,7 +582,7 @@ com.javacp.Coin# => final enum class Coin.{+9 decls}
   extends Enum[Coin]
 com.javacp.Coin#PENNY. => final static enum field PENNY: Coin
   Coin => com.javacp.Coin#
-com.javacp.Interface# => abstract interface Interface.{+1 decls}
+com.javacp.Interface# => abstract interface Interface
   extends Object
 com.javacp.MetacJava# => class MetacJava.{+12 decls}
   extends Object
@@ -1001,7 +1001,7 @@ scala.Predef.`???`(). => method ???: : Nothing
   Nothing => scala.Nothing#
 scala.collection.immutable.Nil. => @SerialVersionUID final case object Nil
 scala.math. => package math
-scala.math.Ordering# => @implicitNotFound trait Ordering[T: <?>].{+14 decls}
+scala.math.Ordering# => @implicitNotFound trait Ordering[T: <?>].{+13 decls}
   extends Object
   extends Comparator[T]
   extends PartialOrdering[T]

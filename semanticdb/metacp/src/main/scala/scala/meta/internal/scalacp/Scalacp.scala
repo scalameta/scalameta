@@ -170,11 +170,6 @@ object Scalacp {
     loop(sym.name)
   }
 
-  private def isConstructor(s: Symbol): Boolean = s match {
-    case ms: MethodSymbol => ms.name == "<init>"
-    case _ => false
-  }
-
   private def stpe(sym: SymbolInfoSymbol): Option[s.Type] = {
     def loop(tpe: Type): Option[s.Type] = {
       tpe match {
@@ -268,10 +263,12 @@ object Scalacp {
         case ClassInfoType(sym, parents) =>
           val stag = t.CLASS_INFO_TYPE
           val sparents = parents.flatMap(loop)
-          val children =
-            if (sym.isModule) sym.children.filterNot(isConstructor)
-            else sym.children
-          val sdecls = children.map(ssymbol)
+          val decls = sym.children
+          val filteredDecls = decls.filter { child =>
+            val isSyntheticConstructor = child.isConstructor && (sym.isModuleClass || sym.isTrait)
+            !isSyntheticConstructor
+          }
+          val sdecls = filteredDecls.map(ssymbol)
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
         case _: NullaryMethodType | _: MethodType =>
           val stag = t.METHOD_TYPE

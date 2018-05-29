@@ -41,16 +41,6 @@ com.javacp.Coin#
 
 
 =====================
-com.javacp.Interface#
-=====================
---- metac
-+++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.Interface#`<init>`()."
- accessibility {
-
-
-=====================
 com.javacp.MetacJava#
 =====================
 --- metac

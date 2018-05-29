@@ -304,7 +304,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Nothing => scala.Nothing#
        |f.M.l1(). => lazy val field l1: Nothing
        |  Nothing => scala.Nothing#
-       |f.T# => trait T.{+10 decls}
+       |f.T# => trait T.{+9 decls}
        |  extends AnyRef
        |f.T#$init$(). => primary ctor $init$: (): Unit
        |  Unit => scala.Unit#
