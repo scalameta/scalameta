@@ -742,7 +742,7 @@ Symbols => 63 entries
 Symbols:
 _root_. => package _root_
 example. => package example
-example.Methods# => class Methods[T >: Nothing <: Any].{+29 decls}
+example.Methods# => class Methods[T >: Nothing <: Any].{+28 decls}
   extends AnyRef
 example.Methods#$anon# => class $anon
 example.Methods#$anon# => class $anon
@@ -757,7 +757,7 @@ example.Methods#AList# => type AList: [T >: Nothing <: Any] => >: Methods.this.L
 example.Methods#AList#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#List# => class List[T >: Nothing <: Any].{+2 decls}
+example.Methods#List# => class List[T >: Nothing <: Any].{+1 decls}
   extends AnyRef
 example.Methods#List#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
@@ -1188,7 +1188,7 @@ flags.p.package.AA#z(). => var method z: : Int
   Int => scala.Int#
 flags.p.package.AA#z. => private[this] var field z: Int
   Int => scala.Int#
-flags.p.package.C# => abstract class C[+T >: Nothing <: Any, -U >: Nothing <: Any, V >: Nothing <: Any].{+9 decls}
+flags.p.package.C# => abstract class C[+T >: Nothing <: Any, -U >: Nothing <: Any, V >: Nothing <: Any].{+6 decls}
   extends AnyRef
 flags.p.package.C#[T] => covariant typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
@@ -1226,7 +1226,7 @@ flags.p.package.C#y. => private[this] val field y: U
   U => flags.p.package.C#[U]
 flags.p.package.C#z. => private[this] val field z: V
   V => flags.p.package.C#[V]
-flags.p.package.S# => class S[T >: Nothing <: Any].{+2 decls}
+flags.p.package.S# => class S[T >: Nothing <: Any].{+1 decls}
   extends AnyRef
 flags.p.package.S#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
@@ -1327,7 +1327,7 @@ Symbols => 7 entries
 Symbols:
 _root_. => package _root_
 types. => package types
-types.ann# => class ann[T >: Nothing <: Any].{+3 decls}
+types.ann# => class ann[T >: Nothing <: Any].{+2 decls}
   extends Annotation
   extends StaticAnnotation
 types.ann#[T] => typeparam T: >: Nothing <: Any
@@ -1524,7 +1524,7 @@ types.Test.C#ClassInfoType2#`<init>`(). => primary ctor <init>: (): C.this.Class
   ClassInfoType2 => types.Test.C#ClassInfoType2#
 types.Test.C#ClassInfoType2#x(). => method x: : Int
   Int => scala.Int#
-types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any].{+1 decls}
+types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any]
   extends AnyRef
 types.Test.C#ClassInfoType3#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#

@@ -501,11 +501,6 @@ example.Methods#
 ================
 --- metac
 +++ metacp
-     declarations: "example.Methods#`<init>`()."
-+    declarations: "example.Methods#[T]"
-     declarations: "example.Methods#List#"
-     declarations: "example.Methods#AList#"
-     declarations: "example.Methods#m1()."
      declarations: "example.Methods#m11(.type)."
      declarations: "example.Methods#m11(.type+1)."
      declarations: "example.Methods#m12a({})."
@@ -515,16 +510,6 @@ example.Methods#
      declarations: "example.Methods#m13(Int)."
      declarations: "example.Methods#m14(T)."
      declarations: "example.Methods#m15(=>Int)."
-
-
-=====================
-example.Methods#List#
-=====================
---- metac
-+++ metacp
-     declarations: "example.Methods#List#`<init>`()."
-+    declarations: "example.Methods#List#[T]"
- accessibility {
 
 
 ============================
@@ -675,32 +660,6 @@ flags.p.package.
 +    declarations: "flags.p.package.AA#"
 +    declarations: "flags.p.package.xs1()."
 +    declarations: "flags.p.package.xs1."
- accessibility {
-
-
-==================
-flags.p.package.C#
-==================
---- metac
-+++ metacp
-     declarations: "flags.p.package.C#x."
-+    declarations: "flags.p.package.C#[T]"
-     declarations: "flags.p.package.C#y."
-+    declarations: "flags.p.package.C#[U]"
-     declarations: "flags.p.package.C#z."
-+    declarations: "flags.p.package.C#[V]"
-     declarations: "flags.p.package.C#`<init>`(T,U,V)."
-     declarations: "flags.p.package.C#`<init>`()."
-     declarations: "flags.p.package.C#w()."
-
-
-==================
-flags.p.package.S#
-==================
---- metac
-+++ metacp
-     declarations: "flags.p.package.S#`<init>`()."
-+    declarations: "flags.p.package.S#[T]"
  accessibility {
 
 
@@ -908,16 +867,6 @@ types.Test.C#ClassInfoType1.
 +      typeRef {
 +        symbol: "scala.AnyRef#"
 -    symbol: "types.Test.C#ClassInfoType1."
- accessibility {
-
-
-============================
-types.Test.C#ClassInfoType3#
-============================
---- metac
-+++ metacp
-         symbol: "scala.AnyRef#"
-+    declarations: "types.Test.C#ClassInfoType3#[T]"
  accessibility {
 
 
@@ -1195,15 +1144,5 @@ types.Test.Literal.javaEnum.
  accessibility {
    tag: PRIVATE_THIS
    symbol: ""
-
-
-==========
-types.ann#
-==========
---- metac
-+++ metacp
-     declarations: "types.ann#x."
-+    declarations: "types.ann#[T]"
-     declarations: "types.ann#`<init>`(T)."
 
 
