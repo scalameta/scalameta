@@ -1202,6 +1202,29 @@ Synthetics:
   [0:15..0:24): $conforms => scala.Predef.$conforms().
   [0:25..0:28): Int => scala.Int#
 
+semanticdb/integration/src/main/scala/example/Objects.scala
+-----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Objects.scala
+Text => non-empty
+Language => Scala
+Symbols => 3 entries
+Occurrences => 3 entries
+
+Symbols:
+objects. => package objects
+objects.X. => final object X.{+1 decls}
+  extends AnyRef
+objects.X.Y. => final object Y
+  extends AnyRef
+
+Occurrences:
+[0:8..0:15): objects <= objects.
+[2:7..2:8): X <= objects.X.
+[3:9..3:10): Y <= objects.X.Y.
+
 semanticdb/integration/src/main/scala/example/Overrides.scala
 -------------------------------------------------------------
 

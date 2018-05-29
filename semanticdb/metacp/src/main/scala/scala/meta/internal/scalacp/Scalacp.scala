@@ -267,7 +267,8 @@ object Scalacp {
           val filteredDecls = decls.filter { child =>
             val isTypeParam = child.isType && child.isParam
             val isSyntheticConstructor = child.isConstructor && (sym.isModuleClass || sym.isTrait)
-            !isTypeParam && !isSyntheticConstructor
+            val isModuleClass = child.isModuleClass
+            !isTypeParam && !isSyntheticConstructor && !isModuleClass
           }
           val sdecls = filteredDecls.map(ssymbol)
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))

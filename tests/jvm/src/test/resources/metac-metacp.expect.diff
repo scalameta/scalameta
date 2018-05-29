@@ -477,7 +477,6 @@ flags.p.package.
      declarations: "flags.p.package.U#"
      declarations: "flags.p.package.V#"
      declarations: "flags.p.package.X."
-+    declarations: "flags.p.package.X."
      declarations: "flags.p.package.Y#"
      declarations: "flags.p.package.Z#"
      declarations: "flags.p.package.AA#"
@@ -525,6 +524,22 @@ flags.p.package.x().
  accessibility {
 
 
+========
+objects.
+========
+--- metac
++++ metacp
+ kind: PACKAGE
+ properties: 0
+ name: "objects"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ owner: "_root_."
+ language: SCALA
+
+
 =======
 traits.
 =======
@@ -557,18 +572,6 @@ types.
  language: SCALA
 
 
-===========
-types.Test.
-===========
---- metac
-+++ metacp
-     declarations: "types.Test.N#"
-     declarations: "types.Test.C#"
-     declarations: "types.Test.Literal."
-+    declarations: "types.Test.Literal."
- accessibility {
-
-
 =============
 types.Test.C#
 =============
@@ -587,22 +590,6 @@ types.Test.C#
      declarations: "types.Test.C#compoundType3."
      declarations: "types.Test.C#annType1()."
      declarations: "types.Test.C#annType1."
-     declarations: "types.Test.C#existentialType1."
-     declarations: "types.Test.C#typeLambda1()."
-     declarations: "types.Test.C#ClassInfoType1."
-+    declarations: "types.Test.C#ClassInfoType1."
-     declarations: "types.Test.C#ClassInfoType2#"
-     declarations: "types.Test.C#ClassInfoType3#"
-     declarations: "types.Test.C#MethodType."
-+    declarations: "types.Test.C#MethodType."
-     declarations: "types.Test.C#ByNameType."
-+    declarations: "types.Test.C#ByNameType."
-     declarations: "types.Test.C#RepeatedType#"
-     declarations: "types.Test.C#RepeatedType."
-+    declarations: "types.Test.C#RepeatedType."
-     declarations: "types.Test.C#TypeType."
-+    declarations: "types.Test.C#TypeType."
- accessibility {
 
 
 ========================
