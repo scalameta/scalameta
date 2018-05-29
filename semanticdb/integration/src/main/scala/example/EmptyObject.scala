@@ -1,5 +1,3 @@
 package example
 
-object EmptyObject {
-
-}
+object EmptyObject {}

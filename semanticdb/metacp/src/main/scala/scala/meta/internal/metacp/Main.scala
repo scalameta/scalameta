@@ -81,7 +81,7 @@ class Main(settings: Settings, reporter: Reporter) {
         if (cacheEntry.toFile.exists) {
           buffer.add(cacheEntry)
         } else {
-          createCachedJar(cacheEntry){ out =>
+          createCachedJar(cacheEntry) { out =>
             val index = new Index
             def loop(entry: AbsolutePath): Boolean = {
               var result = convertClasspathEntry(entry, out, index)

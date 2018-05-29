@@ -33,7 +33,7 @@ class Main(settings: Settings, reporter: Reporter) {
 
     var success = true
     var first = true
-    Locator(settings.paths){ (path, payload) =>
+    Locator(settings.paths) { (path, payload) =>
       if (first) {
         first = false
       } else {
