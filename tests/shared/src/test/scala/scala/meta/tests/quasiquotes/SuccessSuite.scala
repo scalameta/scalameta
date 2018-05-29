@@ -7,7 +7,7 @@ import scala.meta.dialects.Scala211
 
 import compat.Platform.EOL
 
-// TODO: Workaround for what seems to be a bug in ScalaTest 3.2.0-SNAP10.
+// FIXME: https://github.com/scalatest/scalatest/issues/1112
 // I had to remove $ characters from all test names in this file.
 // This is because ScalaTest seems to erroneously consider dollars to be name terminators,
 // so it would spuriously crash with "duplicated test" exceptions for e.g.:
@@ -636,10 +636,6 @@ class SuccessSuite extends FunSuite {
     val ab = List(a,b)
     assert(q"for (..$ab) foo".structure === "Term.For(List(Enumerator.Generator(Pat.Var(Term.Name(\"a\")), Term.Name(\"as\")), Enumerator.Generator(Pat.Var(Term.Name(\"b\")), Term.Name(\"bs\"))), Term.Name(\"foo\"))")
   }
-
-//  test("3 q\"for (..enumerators) expr\"") {
-//    val q"for (a <- as; if $cond; ..$enums) bar" = q"for (a <- as; if foo; b <- bs) bar" // TODO review after #203 resolved
-//  }
 
   test("1 q\"for (..enumerators) yield expr\"") {
     val q"for (a <- as; ..$enumerators; b <- bs) yield $expr" = q"for (a <- as; x <- xs; y <- ys; b <- bs) yield foo(x, y)"
@@ -1824,7 +1820,7 @@ class SuccessSuite extends FunSuite {
     assert(iname.structure === "Name(\"x\")")
   }
 
-  test("2 importee\"iname => _\"") { // TODO review after #219 solved
+  test("2 importee\"iname => _\"") {
   // $iname can't be constructed, only extracted from importee"..." and mod"..."
   val importee"$iname => _" = importee"x => _"
     assert(importee"$iname => _".structure === "Importee.Unimport(Name(\"x\"))")

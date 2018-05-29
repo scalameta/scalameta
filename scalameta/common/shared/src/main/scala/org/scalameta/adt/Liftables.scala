@@ -22,11 +22,12 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val root = weakTypeOf[T].typeSymbol.asAdt.root
     val unsortedAdts = customAdts(root).getOrElse(root.allLeafs)
     val adts = {
-      // TODO: This doesn't quite work, because we can have `A` and `B`, none of which inherits each other,
+      // NOTE: The code below doesn't quite work, because we can have `A` and `B`, none of which inherits each other,
       // but then at runtime we get `C` which inherits both and then execution suddenly takes the wrong path.
       // Real life example: Term.Name and Quasi, none of them are related, so we kinda can reorder their cases, right?
       // Nope! If we get Term.Name.Quasi, then we really need it to go into Quasi, but not into Term.Name.
       // Therefore, simple sorting doesn't work.
+      //
       // // NOTE: need to make sure that more specific leafs come before less specific ones
       // // so that we don't get dead code during pattern matching
       // val cache = mutable.Map[Symbol, Int]()

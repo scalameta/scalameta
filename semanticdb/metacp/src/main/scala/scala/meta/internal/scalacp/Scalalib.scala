@@ -18,7 +18,7 @@ object Scalalib {
       builtinMethod("Any", List(p.ABSTRACT), "hashCode", Nil, Nil, "scala.Int#"),
       builtinMethod("Any", List(p.FINAL), "##", Nil, Nil, "scala.Int#"),
       builtinMethod("Any", List(p.ABSTRACT), "toString", Nil, Nil, "java.lang.String#"),
-      // TODO: Return type of getClass can't be expressed in the SemanticDB type system.
+      // NOTE: Return type of getClass can't be expressed in the SemanticDB type system.
       // The method is special-cased in both the Java and Scala compilers, so we'll slack a little bit too for the time being.
       builtinMethod("Any", List(p.FINAL), "getClass", Nil, Nil, "java.lang.Class#"),
       builtinMethod("Any", List(p.FINAL), "isInstanceOf", List("A"), Nil, "scala.Boolean#"),
@@ -31,8 +31,7 @@ object Scalalib {
   }
 
   def anyRefClass: ToplevelInfos = {
-    // TODO: We're not including methods from java.lang.Object here.
-    // The relationship between AnyRef and Object needs more thinking.
+    // FIXME: https://github.com/scalameta/scalameta/issues/1564
     val symbols = List(
       builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> "scala.AnyRef#"), "scala.Boolean#"),
       builtinMethod("AnyRef", List(p.FINAL), "ne", Nil, List("that" -> "scala.AnyRef#"), "scala.Boolean#"),
@@ -71,8 +70,7 @@ object Scalalib {
       properties = p.PRIMARY.value,
       name = "<init>",
       tpe = Some(s.Type(tag = t.METHOD_TYPE, methodType = Some(ctorSig))),
-      accessibility = Some(s.Accessibility(a.PUBLIC)),
-      owner = symbol
+      accessibility = Some(s.Accessibility(a.PUBLIC))
     )
     val builtinSig = {
       val decls = symbols.filter(_.kind.isMethod)
@@ -88,8 +86,7 @@ object Scalalib {
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = name,
       tpe = Some(builtinSig),
-      accessibility = Some(s.Accessibility(a.PUBLIC)),
-      owner = "scala."
+      accessibility = Some(s.Accessibility(a.PUBLIC))
     )
     val syntheticBase = PathIO.workingDirectory
     val syntheticPath = syntheticBase.resolve("scala/" + name + ".class")
@@ -111,7 +108,7 @@ object Scalalib {
     }
     val disambiguator = {
       val paramTypeDescriptors = paramDsls.map(_._2).map { symbol =>
-        // TODO: It would be nice to have a symbol parser in semanticdb3.
+        // FIXME: https://github.com/scalameta/scalameta/issues/1550
         val _ :+ last = symbol.split("[\\.|#]").toList
         val last1 = last.stripPrefix("(").stripPrefix("[")
         val last2 = last1.stripSuffix(")").stripSuffix("]").stripSuffix("#")
@@ -130,8 +127,7 @@ object Scalalib {
         properties = 0,
         name = tparamName,
         tpe = Some(tparamSig),
-        accessibility = None,
-        owner = methodSymbol)
+        accessibility = None)
     }
     val params = paramDsls.map {
       case (paramName, paramTpeSymbol) =>
@@ -143,8 +139,7 @@ object Scalalib {
           kind = k.PARAMETER,
           properties = 0,
           name = paramName,
-          tpe = Some(paramSig),
-          owner = methodSymbol)
+          tpe = Some(paramSig))
     }
     val methodSig = {
       val paramSymbols = params.map(_.symbol)
@@ -159,8 +154,7 @@ object Scalalib {
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = methodName,
       tpe = Some(methodSig),
-      accessibility = Some(s.Accessibility(a.PUBLIC)),
-      owner = classSymbol)
+      accessibility = Some(s.Accessibility(a.PUBLIC)))
     List(method) ++ tparams ++ params
   }
 }

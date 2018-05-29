@@ -106,10 +106,10 @@ trait TypeOps { self: SemanticdbOps =>
             val stparams = gtparams.map(todo)
             val stpe = loop(gtpe)
             Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stparams, stpe))))
-          case g.ClassInfoType(gparents, gdecls, _) =>
+          case g.ClassInfoType(gparents, gdecls, gclass) =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
-            val sdecls = gdecls.sorted.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
+            val sdecls = gdecls.useful.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
             Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE
@@ -181,7 +181,7 @@ trait TypeOps { self: SemanticdbOps =>
         Nil
       }
     }
-    // TODO: Implement me.
+    // FIXME: https://github.com/scalameta/scalameta/issues/1343
     def hasNontrivialPrefix: Boolean = {
       val (gpre, gsym) = {
         gtpe match {
@@ -197,24 +197,6 @@ trait TypeOps { self: SemanticdbOps =>
           !gpresym.hasPackageFlag && !gpresym.isModuleOrModuleClass && !gpresym.isConstructor
         case _ =>
           true
-      }
-    }
-    def descriptor: String = {
-      def paramDescriptors = gtpe.paramss.flatten.map(_.info.descriptor)
-      gtpe match {
-        case ByNameType(gtpe) => "=>" + gtpe.descriptor
-        case RepeatedType(gtpe) => gtpe.descriptor + "*"
-        case g.TypeRef(_, gsym, _) => gsym.name.toSemantic.encoded
-        case g.SingleType(_, _) => ".type"
-        case g.ThisType(_) => ".type"
-        case g.ConstantType(g.Constant(_: g.Type)) => "Class"
-        case g.ConstantType(_) => ".type"
-        case g.RefinedType(_, _) => "{}"
-        case g.AnnotatedType(_, gtpe) => gtpe.descriptor
-        case g.ExistentialType(_, gtpe) => gtpe.descriptor
-        case _: g.NullaryMethodType | _: g.MethodType => paramDescriptors.mkString(",")
-        case g.PolyType(_, gtpe) => gtpe.descriptor
-        case other => "?"
       }
     }
   }

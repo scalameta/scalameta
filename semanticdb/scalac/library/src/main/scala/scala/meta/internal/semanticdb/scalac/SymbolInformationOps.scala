@@ -6,6 +6,7 @@ import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
 trait SymbolInformationOps { self: SemanticdbOps =>
   import g._
@@ -18,8 +19,6 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       else gsym0
     }
 
-    private val isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE) && gsym.name != nme.PACKAGE
-
     private def kind: s.SymbolInformation.Kind = {
       gsym match {
         case _ if gsym.isSelfParameter => k.SELF_PARAMETER
@@ -30,7 +29,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           } else {
             if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
               if (gsym.isLocalToBlock) k.LOCAL
-              else k.FIELD
+              else k.METHOD
             } else if (gsym.isMacro) {
               k.MACRO
             } else {
@@ -44,7 +43,8 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         case gsym: TermSymbol =>
           if (gsym.isParameter) k.PARAMETER
           else if (gsym.isLocalToBlock) k.LOCAL
-          else k.FIELD
+          else if (gsym.isJavaDefined || gsym.hasJavaEnumFlag) k.FIELD
+          else k.METHOD
         case gsym: ClassSymbol =>
           if (gsym.isTrait && gsym.hasFlag(gf.JAVA)) k.INTERFACE
           else if (gsym.isTrait) k.TRAIT
@@ -73,6 +73,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
+      def isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE)
       if (gsym.hasFlag(gf.PACKAGE)) {
         ()
       } else if (gsym.hasFlag(gf.JAVA)) {
@@ -86,10 +87,10 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (gsym.hasFlag(gf.SEALED)) flip(p.SEALED)
         if (gsym.hasFlag(gf.IMPLICIT)) flip(p.IMPLICIT)
         if (gsym.hasFlag(gf.LAZY)) flip(p.LAZY)
-        if (gsym.hasFlag(gf.CASE)) flip(p.CASE)
+        if (gsym.hasFlag(gf.CASE) && (gsym.isClass || gsym.isModule)) flip(p.CASE)
         if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flip(p.CONTRAVARIANT)
         if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flip(p.COVARIANT)
-        if (kind.isLocal || kind.isField) {
+        if (kind.isLocal || gsym.isUsefulField) {
           if (gsym.isMutable) flip(p.VAR)
           else if (gsym.isVal) flip(p.VAL)
           else {
@@ -113,16 +114,18 @@ trait SymbolInformationOps { self: SemanticdbOps =>
     }
 
     private def name: String = {
-      gsym.name.toSemantic
+      if (gsym.isPackageObject || gsym.isPackageObjectClass) {
+        gsym.owner.name.toSemantic
+      } else {
+        gsym.name.toSemantic
+      }
     }
 
-    private def newInfo: (Option[s.Type], List[g.Symbol]) = {
+    private def tpe: (Option[s.Type], List[g.Symbol]) = {
       if (gsym.hasPackageFlag) (None, Nil)
       else {
         val ginfo = {
-          if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
-            gsym.info.finalResultType
-          } else if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
+          if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
             gsym.info.widen
           } else if (gsym.isAliasType) {
             def preprocess(info: g.Type): g.Type = {
@@ -132,11 +135,25 @@ trait SymbolInformationOps { self: SemanticdbOps =>
               }
             }
             preprocess(gsym.info)
+          } else if (gsym.isModule) {
+            gsym.moduleClass.info
           } else {
             gsym.info
           }
         }
-        ginfo.toSemantic
+        if (gsym.isConstructor) {
+          val (tpe, todo) = ginfo.toSemantic
+          val tpeWithoutReturnType = tpe.map(_.update(_.methodType.optionalReturnType := None))
+          (tpeWithoutReturnType, todo)
+        } else if (gsym.isScalacField) {
+          val stag = t.METHOD_TYPE
+          val sparamss = Nil
+          val (sret, todo) = ginfo.toSemantic
+          val tpe = Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
+          (tpe, todo)
+        } else {
+          ginfo.toSemantic
+        }
       }
     }
 
@@ -153,8 +170,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       (sanns, buf.result)
     }
 
-    // TODO: I'm not completely happy with the implementation of this method.
-    // See https://github.com/scalameta/scalameta/issues/1325 for details.
+    // FIXME: https://github.com/scalameta/scalameta/issues/1325
     private def acc: s.Accessibility = {
       if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
         // NOTE: some sick artifact vals produced by mkPatDef can be
@@ -175,11 +191,6 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    private def owner: m.Symbol = {
-      if (config.owners.isAll && gsym.isSemanticdbGlobal) gsym.owner.toSemantic
-      else m.Symbol.None
-    }
-
     def toSymbolInformation(): SymbolInformationResult = {
       val (anns, todoAnns) = this.anns
       config.types match {
@@ -187,7 +198,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           val denot = s.SymbolInformation()
           SymbolInformationResult(denot, todoAnns)
         case TypeMode.All =>
-          val (tpe, todoTpe) = newInfo
+          val (tpe, todoTpe) = this.tpe
           val denot = s.SymbolInformation(
             symbol = gsym.toSemantic.syntax,
             language = language,
@@ -196,8 +207,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
             properties = properties,
             name = name,
             tpe = tpe,
-            annotations = anns,
-            owner = owner.syntax
+            annotations = anns
           )
           SymbolInformationResult(denot, todoAnns ++ todoTpe)
       }

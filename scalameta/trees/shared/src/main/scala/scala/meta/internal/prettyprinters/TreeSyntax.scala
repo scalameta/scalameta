@@ -114,21 +114,15 @@ object TreeSyntax {
       })
 
       def templ(templ: Template) =
-        // TODO: consider XXX.isEmpty
         if (templ.early.isEmpty && templ.inits.isEmpty && templ.self.name.is[Name.Anonymous] && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
         else if (templ.inits.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
         else s(" ", templ)
 
       def guessIsBackquoted(t: Name): Boolean = {
         def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
-          // TODO: this requires a more thorough implementation
-          // TODO: the `this` check is actually here to correctly prettyprint primary ctor calls in secondary ctors
-          // this is purely an implementation artifact and will be fixed once we have tokens
           t.value != "this" && (keywords.contains(t.value) || t.value.contains(" "))
         }
         def isAmbiguousWithPatVarTerm(t: Term.Name, p: Tree): Boolean = {
-          // TODO: the `eq` trick is very unreliable, but I can't come up with anything better at the moment
-          // since the whole guessXXX business is going to be obsoleted by tokens very soon, I'm leaving this as is
           val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter
           val thisLocationAlsoAcceptsPatVars = p match {
             case p: Term.Name => unreachable
@@ -153,11 +147,6 @@ object TreeSyntax {
           looksLikePatVar && thisLocationAlsoAcceptsPatVars
         }
         def isAmbiguousWithPatVarType(t: Type.Name, p: Tree): Boolean = {
-          // TODO: figure this out with Martin
-          // `x match { case _: t => }` produces a Type.Name
-          // `x match { case _: List[t] => }` produces a Type.Var
-          // `x match { case _: List[`t`] => }` produces a Type.Var as well
-          // the rules look really inconsistent and probably that's just an oversight
           false
         }
         (t, t.parent) match {
@@ -181,7 +170,6 @@ object TreeSyntax {
       }
 
       // Branches
-      // TODO: this match is not exhaustive: if I remove Mod.Package, then I get no warning
       implicit def syntaxTree[T <: Tree]: Syntax[T] = Syntax {
         // Bottom
         case t: Quasi =>

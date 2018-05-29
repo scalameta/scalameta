@@ -63,7 +63,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       }
 
       private def synchronizeSourcesAndSemanticdbIndex(): Unit = {
-        // TODO: Support incremental compilation.
+        // FIXME: https://github.com/scalameta/scalameta/issues/1528
         index.save(config.targetroot)
       }
 

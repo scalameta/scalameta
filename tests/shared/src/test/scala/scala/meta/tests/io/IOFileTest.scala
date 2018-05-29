@@ -50,7 +50,7 @@ class IOFileTest extends FunSuite {
   }
 
   test(".toURI") {
-    // TODO: File.toURI is not available on Scala Native
+    // NOTE: File.toURI is not available on Scala Native
 //    assert(file.toURI.getPath.endsWith("build.sbt"))
 //    assert(project.toURI.getPath.endsWith("project/"))
   }

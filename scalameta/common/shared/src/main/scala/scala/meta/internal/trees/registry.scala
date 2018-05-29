@@ -22,7 +22,6 @@ class RegistryMacros(val c: Context) extends AstReflection with MacroHelpers {
   def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
     override def transformModule(mdef: ModuleDef): ModuleDef = {
       val ModuleDef(mods @ Modifiers(flags, privateWithin, anns), name, Template(parents, self, stats)) = mdef
-      // TODO: works around the deprecation warning
       val enclosingUnit = c.asInstanceOf[{ def enclosingUnit: { def body: Tree } }].enclosingUnit.body
       val anns1 = anns :+ q"new $AstMetadataModule.registry(${enclosingUnit.detectAst})"
       ModuleDef(Modifiers(flags, privateWithin, anns1), name, Template(parents, self, stats))

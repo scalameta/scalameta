@@ -20,8 +20,6 @@ import scala.tools.scalap.scalax.rules.scalasig._
 
 object Scalacp {
   def parse(classfile: ToplevelClassfile): Option[ToplevelInfos] = {
-    // TODO: Parse scalaSig directly from classfile.node
-    // to avoid reading the bytes and parsing the classfile structure twice.
     val bytes = Files.readAllBytes(classfile.path.toNIO)
     val scalapClassfile = ClassFileParser.parse(ByteCode(bytes))
     ScalaSigParser.parse(scalapClassfile).map { scalaSig =>
@@ -45,26 +43,25 @@ object Scalacp {
         symbol = enclosingPackage,
         language = l.SCALA,
         kind = k.PACKAGE,
-        name = enclosingPackage.desc.name,
-        owner = enclosingPackage.owner)
+        name = enclosingPackage.desc.name)
     }
   }
 
   private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
     if (sym.parent.get == NoSymbol) return None
-    if (sym.isModuleClass) return None
-    if (sym.isConstructor && !sym.isClassConstructor) return None
+    if (sym.isUseless) return None
+    val ssym = ssymbol(sym)
+    if (ssym.contains("$extension")) return None
     Some(
       s.SymbolInformation(
-        symbol = ssymbol(sym),
+        symbol = ssym,
         language = l.SCALA,
         kind = skind(sym),
         properties = sproperties(sym),
         name = sname(sym),
         tpe = stpe(sym),
         annotations = sanns(sym),
-        accessibility = Some(sacc(sym)),
-        owner = sowner(sym)
+        accessibility = Some(sacc(sym))
       ))
   }
 
@@ -87,7 +84,12 @@ object Scalacp {
         // NOTE: This is craziness. In scalap, parameters, val and vars
         // are also modelled with method symbols.
         if (sym.isParam) k.PARAMETER
-        else k.FIELD
+        else {
+          // NOTE: More craziness. Useful fields are persisted as methods
+          // to accommodate the disparity between the Scalac symbol table
+          // and the SemanticDB spec.
+          k.METHOD
+        }
       case sym: ClassSymbol if !sym.isModule =>
         if (sym.isTrait) k.TRAIT
         else k.CLASS
@@ -129,10 +131,10 @@ object Scalacp {
     if (sym.isSealed) sflip(p.SEALED)
     if (sym.isImplicit) sflip(p.IMPLICIT)
     if (sym.isLazy) sflip(p.LAZY)
-    if (sym.isCase) sflip(p.CASE)
+    if (sym.isCase && (sym.isClass || sym.isModule)) sflip(p.CASE)
     if (sym.isType && sym.isCovariant) sflip(p.COVARIANT)
     if (sym.isType && sym.isContravariant) sflip(p.CONTRAVARIANT)
-    if (skind(sym) == k.FIELD) {
+    if (sym.isScalacField) {
       if (sym.isMutable) sflip(p.VAR)
       else sflip(p.VAL)
     }
@@ -159,17 +161,9 @@ object Scalacp {
   }
 
   private def sname(sym: Symbol): String = {
-    def loop(name: String): String = {
-      val i = name.lastIndexOf("$$")
-      if (i > 0) loop(name.substring(i + 2))
-      else if (name.endsWith(" ")) loop(name.substring(0, name.length - 1))
-      else if (name == "<root>") n.RootPackage
-      else if (name == "<empty>") n.EmptyPackage
-      else if (name == "<init>") n.Constructor
-      else if (name == "<refinement>") "$anon"
-      else NameTransformer.decode(name)
-    }
-    loop(sym.name)
+    val ssym = ssymbol(sym)
+    if (skind(sym) == k.PACKAGE_OBJECT) ssym.owner.desc.name
+    else ssym.desc.name
   }
 
   private def stpe(sym: SymbolInfoSymbol): Option[s.Type] = {
@@ -219,7 +213,6 @@ object Scalacp {
             val stag = t.TYPE_REF
             val ssym = "java.lang.Class#"
             val sargs = sarg :: Nil
-            // TODO: Implement me.
             s.Type(tag = stag, typeRef = Some(s.TypeRef(None, ssym, sargs)))
           }
         case ConstantType(const) =>
@@ -254,7 +247,7 @@ object Scalacp {
           Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
         case AnnotatedType(tpe, anns) =>
           val stag = t.ANNOTATED_TYPE
-          // TODO: Not supported by scalap.
+          // FIXME: https://github.com/scalameta/scalameta/issues/1292
           val sanns = Nil
           val stpe = loop(tpe)
           Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(sanns, stpe))))
@@ -266,7 +259,7 @@ object Scalacp {
         case ClassInfoType(sym, parents) =>
           val stag = t.CLASS_INFO_TYPE
           val sparents = parents.flatMap(loop)
-          val sdecls = sym.children.map(ssymbol)
+          val sdecls = sym.children.useful.map(ssymbol)
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
         case _: NullaryMethodType | _: MethodType =>
           val stag = t.METHOD_TYPE
@@ -320,24 +313,30 @@ object Scalacp {
           case other =>
             sys.error(s"unsupported type $other")
         }
+      } else if (sym.isConstructor) {
+        val tpe = loop(sym.infoType)
+        tpe.map(_.update(_.methodType.optionalReturnType := None))
+      } else if (sym.isScalacField) {
+        val stag = t.METHOD_TYPE
+        val sparamss = Nil
+        val sret = loop(sym.infoType)
+        Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
       } else {
         loop(sym.infoType)
       }
     } catch {
       case ScalaSigParserError("Unexpected failure") =>
-        // TODO: See https://github.com/scalameta/scalameta/issues/1283
-        // when this can happen.
+        // FIXME: https://github.com/scalameta/scalameta/issues/1494
         None
     }
   }
 
   def sanns(sym: SymbolInfoSymbol): List[s.Annotation] = {
-    // TODO: Not supported by scalap.
+    // FIXME: https://github.com/scalameta/scalameta/issues/1315
     Nil
   }
 
-  // TODO: I'm not completely happy with the implementation of this method.
-  // See https://github.com/scalameta/scalameta/issues/1325 for details.
+  // FIXME: https://github.com/scalameta/scalameta/issues/1325
   def sacc(sym: SymbolInfoSymbol): s.Accessibility = {
     sym.symbolInfo.privateWithin match {
       case Some(privateWithin: Symbol) =>
@@ -391,68 +390,112 @@ object Scalacp {
     def isEmptyPackage: Boolean = sym.path == "<empty>"
     def isToplevelPackage: Boolean = sym.parent.isEmpty
     def isModuleClass: Boolean = sym.isInstanceOf[ClassSymbol] && sym.isModule
+    def moduleClass: Symbol = sym match {
+      case sym: SymbolInfoSymbol if sym.isModule =>
+        sym.infoType match {
+          case TypeRefType(_, moduleClass, _) => moduleClass
+          case _ => NoSymbol
+        }
+      case _ =>
+        NoSymbol
+    }
     def isClass: Boolean = sym.isInstanceOf[ClassSymbol] && !sym.isModule
     def isObject: Boolean = sym.isInstanceOf[ObjectSymbol]
     def isType: Boolean = sym.isInstanceOf[TypeSymbol]
     def isAlias: Boolean = sym.isInstanceOf[AliasSymbol]
     def isMacro: Boolean = sym.isMethod && sym.hasFlag(0x00008000)
-    def isConstructor: Boolean = sym.isMethod && sym.name == "<init>"
-    def isClassConstructor: Boolean = {
-      sym.parent match {
-        case Some(parent: ClassSymbol) if !parent.isTrait && !parent.isModule =>
-          sym.isConstructor
+    def isConstructor: Boolean = sym.isMethod && (sym.name == "<init>" || sym.name == "$init$")
+    def isTypeParam = sym.isType && sym.isParam
+    def isSyntheticConstructor = sym match {
+      case sym: SymbolInfoSymbol =>
+        val owner = sym.symbolInfo.owner
+        sym.isConstructor && (owner.isModuleClass || owner.isTrait)
+      case _ =>
+        false
+    }
+    def isLocalChild: Boolean = sym.name == "<local child>"
+    def isExtensionMethod: Boolean = sym.name.contains("$extension")
+    def isSyntheticValueClassCompanion: Boolean = {
+      sym match {
+        case sym: SymbolInfoSymbol =>
+          if (sym.isModuleClass) {
+            sym.infoType match {
+              case ClassInfoType(_, List(TypeRefType(_, anyRef, _))) =>
+                sym.isSynthetic && sym.children.useful.isEmpty
+              case _ =>
+                false
+            }
+          } else if (sym.isModule) {
+            sym.moduleClass.isSyntheticValueClassCompanion
+          } else {
+            false
+          }
         case _ =>
           false
       }
     }
-    def typeDescriptor: String = {
-      try {
-        sym match {
-          case sym: SymbolInfoSymbol => sym.infoType.descriptor
-          case sym => sys.error(s"unsupported symbol $sym")
-        }
-      } catch {
-        case ScalaSigParserError("Unexpected failure") =>
-          // TODO: MethodSymbol(javaEnum, owner=414, flags=8400202, info=486 ,None)
-          // aka "accessor stable method final javaEnum".
-          // Looks like the same problem as the one in
-          // https://github.com/scalameta/scalameta/issues/1283.
-          // It seems that Scalap doesn't support all the signatures that
-          // Scalac can emit.
-          "?"
-      }
+    def isScalacField: Boolean = {
+      val isField = sym.isInstanceOf[MethodSymbol] && !sym.isMethod && !sym.isParam
+      val isJavaDefined = sym.isJava
+      isField && !isJavaDefined
     }
+    def isUselessField: Boolean = {
+      val peers = sym.parent.map(_.children.toList).getOrElse(Nil)
+      val getter = peers.find(m => m.isAccessor && m.name == sym.name.stripSuffix(" "))
+      sym.isScalacField && getter.nonEmpty
+    }
+    def isUsefulField: Boolean = sym.isScalacField && !sym.isUselessField
+    def isUseless: Boolean = {
+      sym.isSyntheticConstructor ||
+      sym.isModuleClass ||
+      sym.isLocalChild ||
+      sym.isExtensionMethod ||
+      sym.isSyntheticValueClassCompanion ||
+      sym.isUselessField
+    }
+    def isUseful: Boolean = !sym.isUseless
     def descriptor: Descriptor = {
+      val name = {
+        def loop(name: String): String = {
+          val i = name.lastIndexOf("$$")
+          if (i > 0) loop(name.substring(i + 2))
+          else if (name.endsWith(" ")) loop(name.substring(0, name.length - 1))
+          else if (name == "<root>") n.RootPackage
+          else if (name == "<empty>") n.EmptyPackage
+          else if (name == "<init>") n.Constructor
+          else if (name == "<refinement>") "$anon"
+          else NameTransformer.decode(name)
+        }
+        loop(sym.name)
+      }
       skind(sym) match {
-        case k.FIELD | k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
-          d.Term(sname(sym))
+        case k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
+          d.Term(name)
         case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
-          val typeDescriptor = sym.typeDescriptor
-          val kindred = sym.parent.get.children.filter(other => skind(other) == skind(sym))
-          val synonyms = kindred.filter { kin =>
-            kin.name == sym.name &&
-            kin.typeDescriptor == typeDescriptor
-          }
+          val synonyms = sym.parent.get.children.filter(_.name == sym.name)
           val disambiguator = {
-            def defaultDescriptor = s"(${typeDescriptor})"
-            if (synonyms.lengthCompare(1) == 0) defaultDescriptor
+            if (synonyms.lengthCompare(1) == 0) "()"
             else {
               val index = synonyms.indexOf(sym)
-              if (index == 0) defaultDescriptor
-              else s"(${typeDescriptor}+${index})"
+              if (index == 0) "()"
+              else s"(+${index})"
             }
           }
-          d.Method(sname(sym), disambiguator)
+          d.Method(name, disambiguator)
         case k.TYPE | k.CLASS | k.TRAIT =>
-          d.Type(sname(sym))
+          d.Type(name)
         case k.PARAMETER =>
-          d.Parameter(sname(sym))
+          d.Parameter(name)
         case k.TYPE_PARAMETER =>
-          d.TypeParameter(sname(sym))
+          d.TypeParameter(name)
         case skind =>
           sys.error(s"unsupported kind $skind for symbol $sym")
       }
     }
+  }
+
+  private implicit class ScopeOps(decls: Seq[Symbol]) {
+    def useful: Seq[Symbol] = decls.filter(decl => decl.isUseful && !decl.isTypeParam)
   }
 
   private implicit class TypeOps(tpe: Type) {
@@ -471,7 +514,7 @@ object Scalacp {
         case _ => NoSymbol
       }
     }
-    // TODO: Implement me.
+    // FIXME: https://github.com/scalameta/scalameta/issues/1343
     def hasNontrivialPrefix: Boolean = {
       val kind = skind(tpe.prefix.symbol)
       kind != k.OBJECT && kind != k.PACKAGE && kind != k.PACKAGE_OBJECT
@@ -492,24 +535,6 @@ object Scalacp {
         case NullaryMethodType(tpe) => tpe.ret
         case MethodType(tpe, _) => tpe.ret
         case _ => tpe
-      }
-    }
-    def descriptor: String = {
-      def paramDescriptors = tpe.paramss.flatten.map(_.infoType.descriptor)
-      tpe match {
-        case ByNameType(tpe) => "=>" + tpe.descriptor
-        case RepeatedType(tpe) => tpe.descriptor + "*"
-        case TypeRefType(_, sym, _) => sname(sym).encoded
-        case SingleType(_, _) => ".type"
-        case ThisType(_) => ".type"
-        case ConstantType(_: Type) => "Class"
-        case ConstantType(_) => ".type"
-        case RefinedType(_, _) => "{}"
-        case AnnotatedType(tpe, _) => tpe.descriptor
-        case ExistentialType(tpe, _) => tpe.descriptor
-        case _: NullaryMethodType | _: MethodType => paramDescriptors.mkString(",")
-        case PolyType(tpe, _) => tpe.descriptor
-        case other => "?"
       }
     }
   }

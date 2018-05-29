@@ -192,7 +192,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
         val copyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
           case VarargParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
-          // TODO: This doesn't compile, producing nonsensical errors
+          // NOTE: This doesn't compile, producing nonsensical errors
           // about incompatibility between the default value and the type of the parameter
           // e.g. "expected: => T, actual: T"
           // Therefore, I'm making the parameter of copy eager, even though I'd like it to be lazy.
@@ -208,7 +208,6 @@ class DataMacros(val c: Context) extends MacroHelpers {
       }
 
       // step 7: generate Companion.apply
-      // TODO: try change this to duplicate=true and see what happens
       if (needs(TermName("apply"), companion = true, duplicate = false)) {
         val applyParamss = paramss.map(_.map({
           case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
@@ -224,7 +223,6 @@ class DataMacros(val c: Context) extends MacroHelpers {
       }
 
       // step 8: generate Companion.unapply
-      // TODO: go for name-based pattern matching once blocking bugs (e.g. SI-9029) are fixed
       val unapplyName = if (isVararg) TermName("unapplySeq") else TermName("unapply")
       if (needs(TermName("unapply"), companion = true, duplicate = false) &&
           needs(TermName("unapplySeq"), companion = true, duplicate = false)) {
@@ -262,9 +260,6 @@ class DataMacros(val c: Context) extends MacroHelpers {
       // step 1: validate the shape of the module
       if (mmods.hasFlag(FINAL)) c.abort(mdef.pos, "final is redundant for @data objects")
       if (mmods.hasFlag(CASE)) c.abort(mdef.pos, "case is redundant for @data objects")
-
-      // TODO: later on we could migrate data modules to hand-rolled codegen, much like data classes.
-      // However, for now it's quite fine to implement them as case objects.
 
       q"${mmods.mkCase} object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }"
     }

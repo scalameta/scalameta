@@ -22,7 +22,7 @@ class ExpectSuite extends FunSuite with DiffAssertions {
   BuildInfo.scalaVersion.split("\\.").take(2).toList match {
     // both the compiler and stdlib are different between Scala versions.
     // For the sake of simplicity, we only run the expect test against the
-    // output of 2.12. It's possible to add another expect file for 2.12
+    // output of 2.12. It's possible to add another expect file for 2.11
     // later down the road if that turns out to be useful.
     case "2" :: "12" :: Nil =>
       test("scalalib.expect") {
@@ -31,10 +31,6 @@ class ExpectSuite extends FunSuite with DiffAssertions {
       }
       test("metacp.expect") {
         import MetacpExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("metacp.owners") {
-        import MetacpOwnersExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
       test("metacp.index") {
@@ -49,16 +45,16 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import IndexExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("metac.owners") {
-        import MetacOwnersExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
       test("metac-metacp.expect.diff") {
         import MetacMetacpExpectDiffExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("metac-metacp.index.diff") {
-        import MetacMetacpIndexDiffExpect._
+      test("manifest.metap") {
+        import ManifestMetap._
+        assertNoDiff(loadObtained, loadExpected)
+      }
+      test("manifest.metacp") {
+        import ManifestMetacp._
         assertNoDiff(loadObtained, loadExpected)
       }
     case _ =>
@@ -117,7 +113,7 @@ trait ExpectHelpers extends FunSuiteLike {
   protected def lowlevelSyntax(dirOrJar: Path): String = {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
       val settings = scala.meta.metap.Settings().withPaths(List(dirOrJar))
-      val reporter = scala.meta.metap.Reporter().withOut(out).withErr(err)
+      val reporter = Reporter().withOut(out).withErr(err)
       Metap.process(settings, reporter)
     }
     if (!success) {
@@ -137,7 +133,7 @@ trait ExpectHelpers extends FunSuiteLike {
         .withCacheDir(AbsolutePath(target))
         .withClasspath(Classpath(AbsolutePath(in)))
         .withScalaLibrarySynthetics(false)
-      val reporter = scala.meta.metacp.Reporter().withOut(out).withErr(err)
+      val reporter = Reporter().withOut(out).withErr(err)
       Metacp.process(settings, reporter) match {
         case Some(Classpath(List(outPath))) => outPath
         case Some(other) => sys.error(s"unexpected metacp result: $other")
@@ -151,59 +147,6 @@ trait ExpectHelpers extends FunSuiteLike {
     }
     assert(err.isEmpty)
     outPath.toNIO
-  }
-
-  protected def ownerSyntax(path: Path): String = {
-    val paths = Files.walk(path).iterator.asScala
-    val semanticdbs = paths.map(_.toString).filter(_.endsWith(".semanticdb")).toArray.sorted
-    val owners = mutable.Map[String, String]()
-    semanticdbs.foreach { semanticdb =>
-      FileIO.readAllDocuments(AbsolutePath(semanticdb)).foreach { document =>
-        document.symbols.foreach { info =>
-          if (!info.symbol.startsWith(info.owner) && info.owner != "_root_.") {
-            sys.error(s"invalid owner ${info.owner} for ${info.symbol}")
-          }
-          if (info.symbol.startsWith("local") && info.owner != "") {
-            sys.error(s"invalid owner ${info.owner} for ${info.symbol}")
-          }
-          val key = {
-            if (info.symbol.startsWith("local")) info.symbol + "_" + document.uri
-            else info.symbol
-          }
-          val value = {
-            if (info.owner.nonEmpty) info.owner
-            else "<none>"
-          }
-          owners.get(key) match {
-            case Some(existingValue) =>
-              if (value != existingValue) {
-                sys.error(s"conflicting owners for $key: $existingValue, $value")
-              }
-            case None =>
-              owners(key) = value
-          }
-        }
-      }
-    }
-    // NOTE: This logic arranges the symbols into a neat tree,
-    // but unfortunately we can't enable it right now, because we don't
-    // save SymbolInformation for owners.
-    //
-    // val children = owners.toList.groupBy(_._2).mapValues(_.map(_._1))
-    // val visited = mutable.Set[String]()
-    // val buf = new StringBuilder
-    // def loop(sym: String, level: Int): Unit = {
-    //   visited += sym
-    //   if (sym != "<none>") buf.append((" " * level) + sym + EOL)
-    //   children.getOrElse(sym, Nil).sorted.foreach(loop(_, level + 2))
-    // }
-    // loop("<none>", -2)
-    // if (owners.size != visited.size) {
-    //   sys.error(s"dangling owners: ${(owners.keySet -- visited).mkString(", ")}")
-    // }
-    // buf.append(EOL)
-    // buf.toString
-    owners.toList.sortBy(_._1).map(kv => s"${kv._1} => ${kv._2}").mkString(EOL)
   }
 
   protected def indexSyntax(path: Path): String = {
@@ -240,7 +183,7 @@ object ScalalibExpect extends ExpectHelpers {
       .withCacheDir(AbsolutePath(tmp))
       .withClasspath(Classpath(Nil))
       .withScalaLibrarySynthetics(true)
-    val reporter = scala.meta.metacp.Reporter()
+    val reporter = Reporter()
     Metacp.process(settings, reporter) match {
       case Some(Classpath(List(jar))) => lowlevelSyntax(jar.toNIO)
       case other => sys.error(s"unexpected metacp result: $other")
@@ -251,11 +194,6 @@ object ScalalibExpect extends ExpectHelpers {
 object MetacpExpect extends ExpectHelpers {
   def filename: String = "metacp.expect"
   def loadObtained: String = lowlevelSyntax(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
-}
-
-object MetacpOwnersExpect extends ExpectHelpers {
-  def filename: String = "metacp.owners"
-  def loadObtained: String = ownerSyntax(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
 }
 
 object MetacpIndexExpect extends ExpectHelpers {
@@ -271,11 +209,6 @@ object LowlevelExpect extends ExpectHelpers {
 object IndexExpect extends ExpectHelpers {
   def filename: String = "index.expect"
   def loadObtained: String = indexSyntax(Paths.get(BuildInfo.databaseClasspath))
-}
-
-object MetacOwnersExpect extends ExpectHelpers {
-  def filename: String = "metac.owners"
-  def loadObtained: String = ownerSyntax(Paths.get(BuildInfo.databaseClasspath))
 }
 
 object MetacMetacpExpectDiffExpect extends ExpectHelpers {
@@ -318,12 +251,19 @@ object MetacMetacpExpectDiffExpect extends ExpectHelpers {
   def metacSymbols = normalizedSymbols(Paths.get(BuildInfo.databaseClasspath))
 }
 
-object MetacMetacpIndexDiffExpect extends ExpectHelpers {
-  def filename: String = "metac-metacp.index.diff"
+object ManifestMetap extends ExpectHelpers {
+  def filename: String = "manifest.metap"
   def loadObtained: String = {
-    val metac = IndexExpect.loadObtained
-    val metacp = MetacpIndexExpect.loadObtained
-    unifiedDiff("metac", "metacp", metac, metacp)
+    val manifestJar = path.getParent.resolve("manifest.jar")
+    lowlevelSyntax(manifestJar)
+  }
+}
+
+object ManifestMetacp extends ExpectHelpers {
+  def filename: String = "manifest.metacp"
+  def loadObtained: String = {
+    val manifestJar = path.getParent.resolve("manifest.jar")
+    lowlevelSyntax(decompiledPath(manifestJar))
   }
 }
 
@@ -332,12 +272,11 @@ object SaveExpectTest {
   def main(args: Array[String]): Unit = {
     ScalalibExpect.saveExpected(ScalalibExpect.loadObtained)
     MetacpExpect.saveExpected(MetacpExpect.loadObtained)
-    MetacpOwnersExpect.saveExpected(MetacpOwnersExpect.loadObtained)
     MetacpIndexExpect.saveExpected(MetacpIndexExpect.loadObtained)
     LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
     IndexExpect.saveExpected(IndexExpect.loadObtained)
-    MetacOwnersExpect.saveExpected(MetacOwnersExpect.loadObtained)
     MetacMetacpExpectDiffExpect.saveExpected(MetacMetacpExpectDiffExpect.loadObtained)
-    MetacMetacpIndexDiffExpect.saveExpected(MetacMetacpIndexDiffExpect.loadObtained)
+    ManifestMetap.saveExpected(ManifestMetap.loadObtained)
+    ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)
   }
 }

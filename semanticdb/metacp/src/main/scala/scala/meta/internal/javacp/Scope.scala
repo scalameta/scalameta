@@ -10,7 +10,7 @@ class Scope(bindings: Map[String, String]) {
   /** Resolve a type variable name to a symbol */
   def resolve(name: String): String = {
     bindings.getOrElse(name, {
-      // TODO: fix https://github.com/scalameta/scalameta/issues/1365.
+      // FIXME: fix https://github.com/scalameta/scalameta/issues/1365
       // There are still a handful of cases in spark-sql where resolution fails for some reason.
       name
     })

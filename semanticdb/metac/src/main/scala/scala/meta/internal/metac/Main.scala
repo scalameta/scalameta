@@ -4,6 +4,7 @@ import java.io._
 import java.net._
 import java.nio.channels._
 import java.nio.file._
+import scala.meta.cli._
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.metac._
 import scala.tools.nsc.{Main => ScalacMain}

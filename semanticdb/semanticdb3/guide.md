@@ -101,15 +101,15 @@ files store protobuf payloads.
 
 ```
 $ xxd META-INF/semanticdb/Test.scala.semanticdb
-00000000: 0a96 0508 0312 0a54 6573 742e 7363 616c  .......Test.scal
+00000000: 0ae4 0408 0312 0a54 6573 742e 7363 616c  .......Test.scal
 00000010: 611a 596f 626a 6563 7420 5465 7374 207b  a.Yobject Test {
 00000020: 0a20 2064 6566 206d 6169 6e28 6172 6773  .  def main(args
 00000030: 3a20 4172 7261 795b 5374 7269 6e67 5d29  : Array[String])
 00000040: 3a20 556e 6974 203d 207b 0a20 2020 2070  : Unit = {.    p
 00000050: 7269 6e74 6c6e 2822 6865 6c6c 6f20 776f  rintln("hello wo
-00000060: 726c 6422 290a 2020 7d0a 7d0a 2a3f 0a0d  rld").  }.}.*?..
-00000070: 5f65 6d70 7479 5f2e 5465 7374 2e18 0a20  _empty_.Test...
-00000080: 082a 0454 6573 745a 1308 0112 0f12 0d5f  .*.TestZ......._
+00000060: 726c 6422 290a 2020 7d0a 7d0a 2a5b 0a1a  rld").  }.}.*[..
+00000070: 5f65 6d70 7479 5f2e 5465 7374 2e6d 6169  _empty_.Test.mai
+00000080: 6e28 292e 2861 7267 7329 1808 2a04 6172  n().(args)..*.ar
 ...
 ```
 
@@ -131,24 +131,25 @@ Symbols => 3 entries
 Occurrences => 7 entries
 
 Symbols:
-_empty_.Test. => final object Test
-_empty_.Test.main(Array). => method main: (args: Array[String]): Unit
-  args => _empty_.Test.main(Array).(args)
+_empty_.Test. => final object Test.{+1 decls}
+  extends AnyRef
+_empty_.Test.main(). => method main: (args: Array[String]): Unit
+  args => _empty_.Test.main().(args)
   Array => scala.Array#
   String => scala.Predef.String#
   Unit => scala.Unit#
-_empty_.Test.main(Array).(args) => param args: Array[String]
+_empty_.Test.main().(args) => param args: Array[String]
   Array => scala.Array#
   String => scala.Predef.String#
 
 Occurrences:
 [0:7..0:11): Test <= _empty_.Test.
-[1:6..1:10): main <= _empty_.Test.main(Array).
-[1:11..1:15): args <= _empty_.Test.main(Array).(args)
+[1:6..1:10): main <= _empty_.Test.main().
+[1:11..1:15): args <= _empty_.Test.main().(args)
 [1:17..1:22): Array => scala.Array#
 [1:23..1:29): String => scala.Predef.String#
 [1:33..1:37): Unit => scala.Unit#
-[2:4..2:11): println => scala.Predef.println(Any).
+[2:4..2:11): println => scala.Predef.println(+1).
 ```
 
 Metap prettyprints various parts of the SemanticDB payload in correspondence
@@ -159,7 +160,7 @@ important parts:
   * `Symbols` contains information about definitions in the source
     file, including modifiers, signatures, etc.
 
-    For example, `_empty_.Test.main(Array). => method main: (args: Array[String]): Unit`
+    For example, `_empty_.Test.main(). => method main: (args: Array[String]): Unit`
     says that `main` is a method with one parameter of type `Array[String]`.
     Further lines of the printout establish that `Array` in that type
     refers to `scala.Array#`, etc.
@@ -167,9 +168,9 @@ important parts:
     their line/column-based positions and unique identifiers pointing to
     corresponding definitions resolved by the compiler.
 
-    For example, `[2:4..2:11): println => scala.Predef.println(Any).` says that
+    For example, `[2:4..2:11): println => scala.Predef.println(+1).` says that
     the identifier `println` on line 3 (zero-based numbering scheme!) refers
-    to the one-argument `println` overload from `scala.Predef`.
+    to the second overload of `println` from `scala.Predef`.
 
 ## What is SemanticDB good for?
 
@@ -200,7 +201,7 @@ The `semanticdb-scalac` compiler plugin injects itself immediately after the
 information from Scalac in SemanticDB format.
 
 ```
-Usage: scalac -Xplugin:path/to.jar -Yrangepos [<pluginOption> ...] [<scalacOption> ...] [<sourceFile> ...]
+scalac -Xplugin:path/to.jar -Yrangepos [<pluginOption> ...] [<scalacOption> ...] [<sourceFile> ...]
 ```
 
 The compiler plugin supports the following options that can
@@ -329,18 +330,6 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     </td>
     <td><code>all</code></td>
   </tr>
-  <tr>
-    <td><code>-P:semanticdb:owners:&lt;value&gt;</code></td>
-    <td>
-      <code>all</code>,<br/>
-      <code>none</code><br/>
-    </td>
-    <td>
-      Specifies whether to save <code>SymbolInformation.owner</code>
-      (<code>all</code> for yes, <code>none</code> for no).
-    </td>
-    <td><code>all</code></td>
-  </tr>
 </table>
 
 `semanticdb-scalac` can be hooked into Scala builds in a number of ways.
@@ -355,7 +344,7 @@ same command-line arguments as `scalac`, including the compiler plugin options
 [described above](#scalac-compiler-plugin).
 
 ```
-Usage: metac [<pluginOption> ...] [<scalacOption> ...] [<sourceFile> ...]
+metac [<pluginOption> ...] [<scalacOption> ...] [<sourceFile> ...]
 ```
 
 With metac, it is not necessary to provide the flags
@@ -382,7 +371,7 @@ Advanced command-line options control caching, parallelization and interaction
 with some quirks of the Scala standard library.
 
 ```
-Usage: metacp [options] <classpath>
+metacp [options] <classpath>
 ```
 
 <table>
@@ -503,14 +492,14 @@ Symbols => 5 entries
 
 Symbols:
 _empty_. => package _empty_
-_empty_.Test. => final object Test.{+2 decls}
+_empty_.Test. => final object Test.{+1 decls}
   extends AnyRef
-_empty_.Test.main(Array). => method main: (args: Array[String]): Unit
-  args => _empty_.Test.main(Array).(args)
+_empty_.Test.main(). => method main: (args: Array[String]): Unit
+  args => _empty_.Test.main().(args)
   Array => scala.Array#
   String => scala.Predef.String#
   Unit => scala.Unit#
-_empty_.Test.main(Array).(args) => param args: Array[String]
+_empty_.Test.main().(args) => param args: Array[String]
   Array => scala.Array#
   String => scala.Predef.String#
 _root_. => package _root_
@@ -555,7 +544,7 @@ all .semanticdb files that it finds in these paths. Advanced options control
 prettyprinting format.
 
 ```
-Usage: metap [options] <classpath>
+metap [options] <classpath>
 ```
 
 <table>
@@ -626,20 +615,24 @@ documents {
   uri: "Test.scala"
   text: "object Test {\n  def main(args: Array[String]): Unit = {\n    println(\"hello world\")\n  }\n}\n"
   symbols {
-    symbol: "_empty_.Test."
-    kind: OBJECT
-    properties: 8
-    name: "Test"
+    symbol: "_empty_.Test.main().(args)"
+    kind: PARAMETER
+    name: "args"
     tpe {
       tag: TYPE_REF
       typeRef {
-        symbol: "_empty_.Test."
+        symbol: "scala.Array#"
+        type_arguments {
+          tag: TYPE_REF
+          typeRef {
+            symbol: "scala.Predef.String#"
+          }
+        }
       }
     }
     accessibility {
       tag: PUBLIC
     }
-    owner: "_empty_."
     language: SCALA
   }
   ...

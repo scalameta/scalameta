@@ -44,8 +44,7 @@ object Javacp {
         kind: s.SymbolInformation.Kind,
         name: String,
         tpe: Option[s.Type],
-        access: Int,
-        owner: String): Unit = {
+        access: Int): Unit = {
       buf += s.SymbolInformation(
         symbol = symbol,
         language = l.JAVA,
@@ -54,8 +53,7 @@ object Javacp {
         name = name,
         tpe = tpe,
         annotations = sannotations(access),
-        accessibility = saccessibility(access, symbol),
-        owner = owner
+        accessibility = saccessibility(access, symbol)
       )
     }
 
@@ -66,7 +64,7 @@ object Javacp {
     val hasOuterClassReference = node.fields.asScala.exists(isOuterClassReference)
 
     val isTopLevelClass = !node.name.contains("$")
-    val classOwner: String = if (isTopLevelClass) {
+    if (isTopLevelClass) {
       val enclosingPackages = classSymbol.ownerChain.init
       enclosingPackages.foreach { enclosingPackage =>
         addInfo(
@@ -74,13 +72,9 @@ object Javacp {
           k.PACKAGE,
           enclosingPackage.desc.name,
           None,
-          o.ACC_PUBLIC,
-          enclosingPackage.owner
+          o.ACC_PUBLIC
         )
       }
-      classSymbol.owner
-    } else {
-      ssym(node.name.substring(0, node.name.length - className.length - 1))
     }
 
     val classKind =
@@ -126,8 +120,7 @@ object Javacp {
           k.FIELD,
           field.name,
           Some(fieldSignature.toType(classScope)),
-          field.access,
-          classSymbol
+          field.access
         )
 
         decls += fieldSymbol
@@ -144,20 +137,7 @@ object Javacp {
         if (method.signature == null) method.desc else method.signature,
         new MethodSignatureVisitor
       )
-      val typeDescriptor = {
-        val hasVarArg = method.access.hasFlag(o.ACC_VARARGS)
-        def toTypeDescriptor(t: JavaTypeSignature, i: Int): String = t match {
-          case t: BaseType => sname(t.name)
-          case t: ClassTypeSignature => sname(t.simpleClassTypeSignature.identifier)
-          case t: TypeVariableSignature => sname(t.identifier)
-          case t: ArrayTypeSignature if hasVarArg && i == signature.params.length - 1 =>
-            s"${toTypeDescriptor(t.javaTypeSignature, i)}*"
-          case _: ArrayTypeSignature => "Array"
-        }
-        val paramTypeDescriptors = signature.params.zipWithIndex.map((toTypeDescriptor _).tupled)
-        paramTypeDescriptors.mkString(",")
-      }
-      MethodInfo(method, typeDescriptor, signature)
+      MethodInfo(method, signature)
     }
 
     methodSignatures.foreach {
@@ -166,16 +146,12 @@ object Javacp {
       case method: MethodInfo =>
         val isConstructor = method.node.name == "<init>"
         val methodDisambiguator = {
-          val synonyms = methodSignatures.filter { m =>
-            m.node.name == method.node.name &&
-            m.typeDescriptor == method.typeDescriptor
-          }
-          def defaultDescriptor = s"(${method.typeDescriptor})"
-          if (synonyms.lengthCompare(1) == 0) defaultDescriptor
+          val synonyms = methodSignatures.filter(_.node.name == method.node.name)
+          if (synonyms.lengthCompare(1) == 0) "()"
           else {
             val index = synonyms.indexWhere(_.signature eq method.signature)
-            if (index == 0) defaultDescriptor
-            else s"(${method.typeDescriptor}+${index})"
+            if (index == 0) "()"
+            else s"(+${index})"
           }
         }
         val methodDescriptor = d.Method(method.node.name, methodDisambiguator)
@@ -223,10 +199,14 @@ object Javacp {
               k.PARAMETER,
               paramName,
               Some(paramTpe),
-              o.ACC_PUBLIC,
-              methodSymbol
+              o.ACC_PUBLIC
             )
             paramSymbol
+        }
+
+        val returnType = {
+          if (isConstructor) None
+          else Some(method.signature.result.toType(methodScope))
         }
 
         val methodKind = if (isConstructor) k.CONSTRUCTOR else k.METHOD
@@ -237,7 +217,7 @@ object Javacp {
             s.MethodType(
               typeParameters = methodTypeParameters.map(_.symbol),
               parameters = s.MethodType.ParameterList(parameterSymbols) :: Nil,
-              returnType = Some(method.signature.result.toType(methodScope))
+              returnType = returnType
             )
           )
         )
@@ -247,8 +227,7 @@ object Javacp {
           methodKind,
           method.node.name,
           Some(methodType),
-          method.node.access,
-          classSymbol
+          method.node.access
         )
 
         decls += methodSymbol
@@ -280,8 +259,7 @@ object Javacp {
       classKind,
       className,
       Some(classTpe),
-      classAccess,
-      classOwner
+      classAccess
     )
     buf.result()
   }
@@ -365,15 +343,11 @@ object Javacp {
       language = l.JAVA,
       kind = k.TYPE_PARAMETER,
       name = typeParameter.value.identifier,
-      tpe = Some(tpe),
-      owner = ownerSymbol
+      tpe = Some(tpe)
     )
   }
 
-  private case class MethodInfo(
-      node: MethodNode,
-      typeDescriptor: String,
-      signature: MethodSignature)
+  private case class MethodInfo(node: MethodNode, signature: MethodSignature)
 
   private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath = {
     (asmName + ".class").split("/").foldLeft(base) {
@@ -474,7 +448,7 @@ object Javacp {
   }
 
   private implicit class XtensionTypeArgument(self: TypeArgument) {
-    // TODO: implement wildcards after https://github.com/scalameta/scalameta/issues/1357
+    // FIXME: https://github.com/scalameta/scalameta/issues/1563
     def toType(scope: Scope): s.Type = self match {
       case ReferenceTypeArgument(_, referenceTypeSignature) =>
         referenceTypeSignature.toType(scope)

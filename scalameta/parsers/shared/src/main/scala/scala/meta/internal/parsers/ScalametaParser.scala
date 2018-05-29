@@ -175,10 +175,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
 /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
 
-  // TODO: Scala's parser isn't ready to accept whitespace and comment tokens,
+  // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
   // However, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted.
-  // This leads to extremely dirty and seriously crazy code, which I'd like to replace in the future.
+  // This leads to extremely dirty and seriously crazy code.
   private val XtensionParsersDialectApply = "shadow conflicting implicit"
   lazy val scannerTokens = input.tokenize match {
     case Tokenized.Success(tokens) => tokens
@@ -338,7 +338,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
 /* ------------- POSITION HANDLING ------------------------------------------- */
 
-  // TODO: `startTokenPos` and `endTokenPos` are BOTH INCLUSIVE.
+  // NOTE: `startTokenPos` and `endTokenPos` are BOTH INCLUSIVE.
   // This is at odds with the rest of scala.meta, where ends are non-inclusive.
   sealed trait Pos {
     def startTokenPos: Int
@@ -712,7 +712,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case unquote: Unquote =>
         require(unquote.input.chars(unquote.start + 1) != '$')
         if (dialect.allowUnquotes) {
-          // TODO: The necessity to do position fixup for error messages is unsatisfying.
           // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
           // but then such positions wouldn't be usable with Input.Slice.chars.
           val unquotedTree = {
@@ -778,7 +777,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  // TODO: make zero tuple for types Lit.Unit() too?
   def makeTupleType(body: List[Type]): Type = {
     // NOTE: we can't make this autoPos
     // because, by the time control reaches this method, we're already past the closing parenthesis
@@ -1160,7 +1158,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def termName(advance: Boolean = true): Term.Name = name(Term.Name(_), advance)
   def typeName(advance: Boolean = true): Type.Name = name(Type.Name(_), advance)
 
-  // TODO: this has to be rewritten
   def path(thisOK: Boolean = true): Term.Ref = {
     val startsAtBof = token.prev.is[BOF]
     def endsAtEof = token.is[EOF]
@@ -1424,9 +1421,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     unquoteExpr()
   }
 
-  // TODO: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
+  // FIXME: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
   // if yes, then nothing has to change here
   // if no, we need eschew autoPos here, because it forces those parentheses on the result of calling prefixExpr
+  // see https://github.com/scalameta/scalameta/issues/1083 and https://github.com/scalameta/scalameta/issues/1223
   def expr(location: Location, allowRepeated: Boolean): Term = autoPos(token match {
     case KwIf() =>
       next()
@@ -1797,8 +1795,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         } else {
           // Infix chain has ended with a postfix expression.
           // This never happens in the running example.
-          // TODO: The two type conversions that I have to do here are unfortunate,
-          // but I don't have time to figure our an elegant way of approaching this
           val lhsQual = ctx.reduceStack(base, rhsK, rhsEndK, Some(op))
           val finQual = lhsQual match { case List(finQual) => finQual; case _ => unreachable(debug(lhsQual)) }
           if (targs.nonEmpty) syntaxError("type application is not allowed for postfix operators", at = token)
@@ -2827,12 +2823,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (token.is[StatSep] || token.is[RightBrace]) {
       if (restype.isEmpty) {
         warnProcedureDeprecation
-        Decl.Def(mods, name, tparams, paramss, atPos(in.tokenPos, in.prevTokenPos)(Type.Name("Unit"))) // TODO: hygiene!
+        Decl.Def(mods, name, tparams, paramss, atPos(in.tokenPos, in.prevTokenPos)(Type.Name("Unit")))
       } else
         Decl.Def(mods, name, tparams, paramss, restype.get)
     } else if (restype.isEmpty && token.is[LeftBrace]) {
       warnProcedureDeprecation
-      Defn.Def(mods, name, tparams, paramss, Some(atPos(in.tokenPos, in.prevTokenPos)(Type.Name("Unit"))), expr()) // TODO: hygiene!
+      Defn.Def(mods, name, tparams, paramss, Some(atPos(in.tokenPos, in.prevTokenPos)(Type.Name("Unit"))), expr())
     } else {
       var isMacro = false
       val rhs = {
@@ -2927,14 +2923,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                   at = token)
     }
 
-    // TODO:
-    // if (owner == nme.CONSTRUCTOR && (result.isEmpty || (result.head take 1 exists (_.mods.isImplicit)))) {
-    //  token match {
-    //    case LeftBracket() => syntaxError("no type parameters allowed here")
-    //    case EOF()       => incompleteInputError("auxiliary constructor needs non-implicit parameter list")
-    //    case _           => syntaxError(start, "auxiliary constructor needs non-implicit parameter list")
-    //  }
-    // }
     Defn.Class(mods, className, typeParams, ctor, templateOpt(OwnedByClass))
   }
 
@@ -2948,7 +2936,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
 /* -------- CONSTRUCTORS ------------------------------------------- */
 
-  // TODO: we need to store some string in Ctor.Name in order to represent constructor calls (which also use Ctor.Name)
+  // NOTE: we need to store some string in Ctor.Name in order to represent constructor calls (which also use Ctor.Name)
   // however, when representing constructor defns, we can't easily figure out that name
   // a natural desire would be to have this name equal to the name of the enclosing class/trait/object
   // but unfortunately we can't do that, because we can create ctors in isolation from their enclosures
@@ -2972,8 +2960,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     val name = atPos(in.tokenPos, in.tokenPos)(Name.Anonymous())
     accept[KwThis]
-    // TODO: ownerIsType = true is most likely a bug here
-    // secondary constructors can't have val/var parameters
     val paramss = paramClauses(ownerIsType = true)
     secondaryCtorRest(mods, name, paramss)
   }
@@ -2992,7 +2978,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def entrypointCtor(): Ctor = {
-    // TODO: implement me
     ???
   }
 
@@ -3409,9 +3394,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def entrypointSource(): Source = source()
 
   def scriptSource(): Source = autoPos {
-    // TODO: Faithfully reimplement the logic in SBT (see #368 in details).
-    // So far, our use case is to reformat already valid programs,
-    // so we can afford accepting more than necessary.
+    // WONTFIX: https://github.com/scalameta/scalameta/issues/368
     if (dialect.toplevelSeparator == "") {
       Source(parser.statSeq(consumeStat))
     } else {

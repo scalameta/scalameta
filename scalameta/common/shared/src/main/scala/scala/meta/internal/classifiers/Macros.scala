@@ -5,7 +5,7 @@ package classifiers
 import scala.reflect.macros.whitebox.Context
 import org.scalameta.internal.MacroHelpers
 
-// TODO: It really sucks that `@foo object Bar` can't produce `class Bar`.
+// NOTE: It really sucks that `@foo object Bar` can't produce `class Bar`.
 // Because of that, we have to uglify our classifier DSL.
 class ClassifierMacros(val c: Context) extends MacroHelpers {
   import c.universe._
@@ -22,7 +22,7 @@ class ClassifierMacros(val c: Context) extends MacroHelpers {
       }
       val unapplySig = collectUnapplySig(mstats).orElse(collectUnapplySig(stats))
       val t = unapplySig match {
-        case Some((t, _)) => t // TODO: validate ret or emit different code if it's not Boolean
+        case Some((t, _)) => t
         case None => c.abort(c.enclosingPosition, "only traits with an unapply method can be @classifier")
       }
       val evidence = q"""

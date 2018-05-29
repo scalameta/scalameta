@@ -6,7 +6,6 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.parsers._
 
-// TODO: when I grow up I want to become a monad, just like my daddy
 trait Reporter {
   def deprecationWarning(msg: String, at: Position): Unit = ()
   def deprecationWarning(msg: String, at: Token): Unit = deprecationWarning(msg, at.pos)

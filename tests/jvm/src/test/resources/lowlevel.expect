@@ -13,8 +13,7 @@ Symbols:
 example. => package example
 example.Acc# => class Acc.{+8 decls}
   extends AnyRef
-example.Acc#`<init>`(). => primary ctor <init>: (): Acc
-  Acc => example.Acc#
+example.Acc#`<init>`(). => primary ctor <init>: ()
 example.Acc#m1(). => private method m1: : Nothing
   Nothing => scala.Nothing#
 example.Acc#m2(). => private[this] method m2: : Nothing
@@ -53,6 +52,210 @@ Occurrences:
 [9:6..9:8): m7 <= example.Acc#m7().
 [9:11..9:14): ??? => scala.Predef.`???`().
 
+semanticdb/integration/src/main/scala/example/Classes.scala
+-----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Classes.scala
+Text => non-empty
+Language => Scala
+Symbols => 64 entries
+Occurrences => 23 entries
+
+Symbols:
+classes. => package classes
+classes.C1# => final class C1.{+4 decls}
+  extends AnyVal
+classes.C1#`<init>`(). => primary ctor <init>: (val x1: Int)
+  x1 => classes.C1#`<init>`().(x1)
+  Int => scala.Int#
+classes.C1#`<init>`().(x1) => val param x1: Int
+  Int => scala.Int#
+classes.C1#equals(). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C1#equals().(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C1#equals().(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C1#hashCode(). => method hashCode: (): Int
+  Int => scala.Int#
+classes.C1#x1(). => val method x1: : Int
+  Int => scala.Int#
+classes.C2# => final class C2.{+4 decls}
+  extends AnyVal
+classes.C2#`<init>`(). => primary ctor <init>: (val x2: Int)
+  x2 => classes.C2#`<init>`().(x2)
+  Int => scala.Int#
+classes.C2#`<init>`().(x2) => val param x2: Int
+  Int => scala.Int#
+classes.C2#equals(). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C2#equals().(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C2#equals().(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C2#hashCode(). => method hashCode: (): Int
+  Int => scala.Int#
+classes.C2#x2(). => val method x2: : Int
+  Int => scala.Int#
+classes.C2. => final object C2
+  extends AnyRef
+classes.C3# => case class C3.{+12 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
+classes.C3#`<init>`(). => primary ctor <init>: (val x: Int)
+  x => classes.C3#`<init>`().(x)
+  Int => scala.Int#
+classes.C3#`<init>`().(x) => val param x: Int
+  Int => scala.Int#
+classes.C3#canEqual(). => method canEqual: (x$1: Any): Boolean
+  x$1 => classes.C3#canEqual().(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C3#canEqual().(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C3#copy$default$1(). => method copy$default$1: : Int @uncheckedVariance
+  Int => scala.Int#
+  uncheckedVariance => scala.annotation.unchecked.uncheckedVariance#
+classes.C3#copy(). => method copy: (x: <?>): C3
+  x => classes.C3#copy().(x)
+  C3 => classes.C3#
+classes.C3#equals(). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C3#equals().(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C3#equals().(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C3#hashCode(). => method hashCode: (): Int
+  Int => scala.Int#
+classes.C3#productArity(). => method productArity: : Int
+  Int => scala.Int#
+classes.C3#productElement(). => method productElement: (x$1: Int): Any
+  x$1 => classes.C3#productElement().(x$1)
+  Int => scala.Int#
+  Any => scala.Any#
+classes.C3#productElement().(x$1) => param x$1: Int
+  Int => scala.Int#
+classes.C3#productIterator(). => method productIterator: : Iterator[Any]
+  Iterator => scala.collection.Iterator#
+  Any => scala.Any#
+classes.C3#productPrefix(). => method productPrefix: : String
+  String => java.lang.String#
+classes.C3#toString(). => method toString: (): String
+  String => java.lang.String#
+classes.C3#x(). => val method x: : Int
+  Int => scala.Int#
+classes.C3. => final object C3.{+4 decls}
+  extends AbstractFunction1[Int, C3]
+  extends Serializable
+classes.C3.apply(). => method apply: (x: <?>): C3
+  x => classes.C3.apply().(x)
+  C3 => classes.C3#
+classes.C3.readResolve(). => private method readResolve: (): Object
+  Object => java.lang.Object#
+classes.C3.toString(). => final method toString: (): String
+  String => java.lang.String#
+classes.C3.unapply(). => method unapply: (x$0: C3): Option[Int]
+  x$0 => classes.C3.unapply().(x$0)
+  C3 => classes.C3#
+  Option => scala.Option#
+  Int => scala.Int#
+classes.C3.unapply().(x$0) => param x$0: C3
+  C3 => classes.C3#
+classes.C4# => case class C4.{+12 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
+classes.C4#`<init>`(). => primary ctor <init>: (val x: Int)
+  x => classes.C4#`<init>`().(x)
+  Int => scala.Int#
+classes.C4#`<init>`().(x) => val param x: Int
+  Int => scala.Int#
+classes.C4#canEqual(). => method canEqual: (x$1: Any): Boolean
+  x$1 => classes.C4#canEqual().(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C4#canEqual().(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C4#copy$default$1(). => method copy$default$1: : Int @uncheckedVariance
+  Int => scala.Int#
+  uncheckedVariance => scala.annotation.unchecked.uncheckedVariance#
+classes.C4#copy(). => method copy: (x: <?>): C4
+  x => classes.C4#copy().(x)
+  C4 => classes.C4#
+classes.C4#equals(). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C4#equals().(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C4#equals().(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C4#hashCode(). => method hashCode: (): Int
+  Int => scala.Int#
+classes.C4#productArity(). => method productArity: : Int
+  Int => scala.Int#
+classes.C4#productElement(). => method productElement: (x$1: Int): Any
+  x$1 => classes.C4#productElement().(x$1)
+  Int => scala.Int#
+  Any => scala.Any#
+classes.C4#productElement().(x$1) => param x$1: Int
+  Int => scala.Int#
+classes.C4#productIterator(). => method productIterator: : Iterator[Any]
+  Iterator => scala.collection.Iterator#
+  Any => scala.Any#
+classes.C4#productPrefix(). => method productPrefix: : String
+  String => java.lang.String#
+classes.C4#toString(). => method toString: (): String
+  String => java.lang.String#
+classes.C4#x(). => val method x: : Int
+  Int => scala.Int#
+classes.C4. => final object C4.{+3 decls}
+  extends AnyRef
+  extends Serializable
+classes.C4.apply(). => method apply: (x: <?>): C4
+  x => classes.C4.apply().(x)
+  C4 => classes.C4#
+classes.C4.readResolve(). => private method readResolve: (): Object
+  Object => java.lang.Object#
+classes.C4.unapply(). => method unapply: (x$0: C4): Option[Int]
+  x$0 => classes.C4.unapply().(x$0)
+  C4 => classes.C4#
+  Option => scala.Option#
+  Int => scala.Int#
+classes.C4.unapply().(x$0) => param x$0: C4
+  C4 => classes.C4#
+scala.AnyVal# => abstract class AnyVal.{+2 decls}
+  extends Any
+scala.AnyVal#`<init>`(). => primary ctor <init>: ()
+scala.Int# => abstract final class Int.{+111 decls}
+  extends AnyVal
+
+Occurrences:
+[0:8..0:15): classes <= classes.
+[2:6..2:8): C1 <= classes.C1#
+[2:8..2:8):  <= classes.C1#`<init>`().
+[2:13..2:15): x1 <= classes.C1#x1().
+[2:17..2:20): Int => scala.Int#
+[2:30..2:36): AnyVal => scala.AnyVal#
+[3:0..3:0):  => scala.AnyVal#`<init>`().
+[4:6..4:8): C2 <= classes.C2#
+[4:8..4:8):  <= classes.C2#`<init>`().
+[4:13..4:15): x2 <= classes.C2#x2().
+[4:17..4:20): Int => scala.Int#
+[4:30..4:36): AnyVal => scala.AnyVal#
+[4:36..4:36):  => scala.AnyVal#`<init>`().
+[5:7..5:9): C2 <= classes.C2.
+[7:11..7:13): C3 <= classes.C3#
+[7:13..7:13):  <= classes.C3#`<init>`().
+[7:14..7:15): x <= classes.C3#x().
+[7:17..7:20): Int => scala.Int#
+[9:11..9:13): C4 <= classes.C4#
+[9:13..9:13):  <= classes.C4#`<init>`().
+[9:14..9:15): x <= classes.C4#x().
+[9:17..9:20): Int => scala.Int#
+[10:7..10:9): C4 <= classes.C4.
+
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------
 
@@ -67,14 +270,12 @@ Occurrences => 10 entries
 Symbols:
 _empty_.A# => class A.{+2 decls}
   extends AnyRef
-_empty_.A#`<init>`(). => primary ctor <init>: (): A
-  A => _empty_.A#
+_empty_.A#`<init>`(). => primary ctor <init>: ()
 _empty_.A#b(). => method b: : B
   B => _empty_.B#
 _empty_.B# => class B.{+2 decls}
   extends AnyRef
-_empty_.B#`<init>`(). => primary ctor <init>: (): B
-  B => _empty_.B#
+_empty_.B#`<init>`(). => primary ctor <init>: ()
 _empty_.B#a(). => method a: : A
   A => _empty_.A#
 scala.Predef.`???`(). => method ???: : Nothing
@@ -92,6 +293,26 @@ Occurrences:
 [5:9..5:10): A => _empty_.A#
 [5:13..5:16): ??? => scala.Predef.`???`().
 
+semanticdb/integration/src/main/scala/example/EmptyObject.scala
+---------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/EmptyObject.scala
+Text => non-empty
+Language => Scala
+Symbols => 2 entries
+Occurrences => 2 entries
+
+Symbols:
+example. => package example
+example.EmptyObject. => final object EmptyObject
+  extends AnyRef
+
+Occurrences:
+[0:8..0:15): example <= example.
+[2:7..2:18): EmptyObject <= example.EmptyObject.
+
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 
@@ -100,26 +321,24 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Example.scala
 Text => non-empty
 Language => Scala
-Symbols => 20 entries
+Symbols => 19 entries
 Occurrences => 24 entries
 Diagnostics => 1 entries
 Synthetics => 1 entries
 
 Symbols:
 example. => package example
-example.Example. => final object Example
-example.Example.main(Array). => method main: (args: Array[String]): Unit
-  args => example.Example.main(Array).(args)
+example.Example. => final object Example.{+2 decls}
+  extends AnyRef
+example.Example.main(). => method main: (args: Array[String]): Unit
+  args => example.Example.main().(args)
   Array => scala.Array#
   String => scala.Predef.String#
   Unit => scala.Unit#
-example.Example.main(Array).(args) => param args: Array[String]
+example.Example.main().(args) => param args: Array[String]
   Array => scala.Array#
   String => scala.Predef.String#
 example.Example.x(). => val method x: : ClassTag[Int]
-  ClassTag => scala.reflect.ClassTag#
-  Int => scala.Int#
-example.Example.x. => private[this] val field x: ClassTag[Int]
   ClassTag => scala.reflect.ClassTag#
   Int => scala.Int#
 local0 => selfparam self: Example
@@ -133,28 +352,26 @@ scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
 scala.Predef.String# => type String: >: String <: String
   String => java.lang.String#
-scala.Predef.println(Any). => method println: (x: <?>): Unit
-  x => scala.Predef.println(Any).(x)
+scala.Predef.println(+1). => method println: (x: <?>): Unit
+  x => scala.Predef.println(+1).(x)
   Unit => scala.Unit#
 scala.Unit# => abstract final class Unit.{+2 decls}
   extends AnyVal
 scala.collection. => package collection
 scala.collection.mutable. => package mutable
-scala.collection.mutable.Stack# => @deprecated @deprecated class Stack[A: <?>].{+20 decls}
+scala.collection.mutable.Stack# => @deprecated @deprecated class Stack[A: <?>].{+19 decls}
   extends AbstractSeq[A]
   extends Seq[A]
   extends SeqLike[A, Stack[A]]
   extends GenericTraversableTemplate[A, Stack]
   extends Cloneable[Stack[A]]
   extends Serializable
-scala.collection.mutable.Stack#`<init>`(). => ctor <init>: (): Stack[A]
-  Stack => scala.collection.mutable.Stack#
-  A => scala.collection.mutable.Stack#[A]
+scala.collection.mutable.Stack#`<init>`(+1). => ctor <init>: ()
 scala.concurrent. => package concurrent
 scala.reflect. => package reflect
-scala.reflect.package.classTag(ClassTag). => method classTag: [T: <?>] => (ctag: <?>): ClassTag[T]
-  T => scala.reflect.package.classTag(ClassTag).[T]
-  ctag => scala.reflect.package.classTag(ClassTag).(ctag)
+scala.reflect.package.classTag(). => method classTag: [T: <?>] => (ctag: <?>): ClassTag[T]
+  T => scala.reflect.package.classTag().[T]
+  ctag => scala.reflect.package.classTag().(ctag)
   ClassTag => scala.reflect.ClassTag#
 
 Occurrences:
@@ -170,17 +387,17 @@ Occurrences:
 [5:23..5:30): mutable => scala.collection.mutable.
 [5:31..5:36): Stack => scala.collection.mutable.Stack#
 [5:37..5:40): Int => scala.Int#
-[5:41..5:41):  => scala.collection.mutable.Stack#`<init>`().
-[6:6..6:10): main <= example.Example.main(Array).
-[6:11..6:15): args <= example.Example.main(Array).(args)
+[5:41..5:41):  => scala.collection.mutable.Stack#`<init>`(+1).
+[6:6..6:10): main <= example.Example.main().
+[6:11..6:15): args <= example.Example.main().(args)
 [6:17..6:22): Array => scala.Array#
 [6:23..6:29): String => scala.Predef.String#
 [6:33..6:37): Unit => scala.Unit#
-[7:4..7:11): println => scala.Predef.println(Any).
+[7:4..7:11): println => scala.Predef.println(+1).
 [9:6..9:7): x <= example.Example.x().
 [9:10..9:15): scala => scala.
 [9:16..9:23): reflect => scala.reflect.
-[9:24..9:32): classTag => scala.reflect.package.classTag(ClassTag).
+[9:24..9:32): classTag => scala.reflect.package.classTag().
 [9:33..9:36): Int => scala.Int#
 
 Diagnostics:
@@ -213,42 +430,38 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Flags.scala
 Text => non-empty
 Language => Scala
-Symbols => 71 entries
+Symbols => 68 entries
 Occurrences => 71 entries
 Synthetics => 2 entries
 
 Symbols:
 flags. => package flags
-flags.p.package. => package object package
-flags.p.package.AA# => class AA.{+7 decls}
+flags.p.package. => final package object p.{+16 decls}
   extends AnyRef
-flags.p.package.AA#`<init>`(Int,Int,Int). => primary ctor <init>: (x: Int, val y: Int, var z: Int): AA
-  x => flags.p.package.AA#`<init>`(Int,Int,Int).(x)
+flags.p.package.AA# => class AA.{+5 decls}
+  extends AnyRef
+flags.p.package.AA#`<init>`(). => primary ctor <init>: (x: Int, val y: Int, var z: Int)
+  x => flags.p.package.AA#`<init>`().(x)
   Int => scala.Int#
-  y => flags.p.package.AA#`<init>`(Int,Int,Int).(y)
-  z => flags.p.package.AA#`<init>`(Int,Int,Int).(z)
-  AA => flags.p.package.AA#
-flags.p.package.AA#`<init>`(Int,Int,Int).(x) => param x: Int
+  y => flags.p.package.AA#`<init>`().(y)
+  z => flags.p.package.AA#`<init>`().(z)
+flags.p.package.AA#`<init>`().(x) => param x: Int
   Int => scala.Int#
-flags.p.package.AA#`<init>`(Int,Int,Int).(y) => val param y: Int
+flags.p.package.AA#`<init>`().(y) => val param y: Int
   Int => scala.Int#
-flags.p.package.AA#`<init>`(Int,Int,Int).(z) => var param z: Int
+flags.p.package.AA#`<init>`().(z) => var param z: Int
   Int => scala.Int#
-flags.p.package.AA#`z_=`(Int). => var method z_=: (x$1: Int): Unit
-  x$1 => flags.p.package.AA#`z_=`(Int).(x$1)
+flags.p.package.AA#`z_=`(). => var method z_=: (x$1: Int): Unit
+  x$1 => flags.p.package.AA#`z_=`().(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-flags.p.package.AA#`z_=`(Int).(x$1) => param x$1: Int
+flags.p.package.AA#`z_=`().(x$1) => param x$1: Int
   Int => scala.Int#
-flags.p.package.AA#x. => private[this] val field x: Int
+flags.p.package.AA#x(). => private[this] val method x: : Int
   Int => scala.Int#
 flags.p.package.AA#y(). => val method y: : Int
   Int => scala.Int#
-flags.p.package.AA#y. => private[this] val field y: Int
-  Int => scala.Int#
 flags.p.package.AA#z(). => var method z: : Int
-  Int => scala.Int#
-flags.p.package.AA#z. => private[this] var field z: Int
   Int => scala.Int#
 flags.p.package.C# => abstract class C[+T >: Nothing <: Any, -U >: Nothing <: Any, V >: Nothing <: Any].{+6 decls}
   extends AnyRef
@@ -261,41 +474,34 @@ flags.p.package.C#[U] => contravariant typeparam U: >: Nothing <: Any
 flags.p.package.C#[V] => typeparam V: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-flags.p.package.C#`<init>`(). => ctor <init>: (): C[T, U, V]
-  C => flags.p.package.C#
+flags.p.package.C#`<init>`(). => primary ctor <init>: (x: T, y: U, z: V)
+  x => flags.p.package.C#`<init>`().(x)
   T => flags.p.package.C#[T]
+  y => flags.p.package.C#`<init>`().(y)
   U => flags.p.package.C#[U]
+  z => flags.p.package.C#`<init>`().(z)
   V => flags.p.package.C#[V]
-flags.p.package.C#`<init>`(T,U,V). => primary ctor <init>: (x: T, y: U, z: V): C[T, U, V]
-  x => flags.p.package.C#`<init>`(T,U,V).(x)
+flags.p.package.C#`<init>`().(x) => param x: T
   T => flags.p.package.C#[T]
-  y => flags.p.package.C#`<init>`(T,U,V).(y)
+flags.p.package.C#`<init>`().(y) => param y: U
   U => flags.p.package.C#[U]
-  z => flags.p.package.C#`<init>`(T,U,V).(z)
+flags.p.package.C#`<init>`().(z) => param z: V
   V => flags.p.package.C#[V]
-  C => flags.p.package.C#
-flags.p.package.C#`<init>`(T,U,V).(x) => param x: T
-  T => flags.p.package.C#[T]
-flags.p.package.C#`<init>`(T,U,V).(y) => param y: U
-  U => flags.p.package.C#[U]
-flags.p.package.C#`<init>`(T,U,V).(z) => param z: V
-  V => flags.p.package.C#[V]
+flags.p.package.C#`<init>`(+1). => ctor <init>: ()
 flags.p.package.C#w(). => abstract method w: : Int
   Int => scala.Int#
-flags.p.package.C#x. => private[this] val field x: T
+flags.p.package.C#x(). => private[this] val method x: : T
   T => flags.p.package.C#[T]
-flags.p.package.C#y. => private[this] val field y: U
+flags.p.package.C#y(). => private[this] val method y: : U
   U => flags.p.package.C#[U]
-flags.p.package.C#z. => private[this] val field z: V
+flags.p.package.C#z(). => private[this] val method z: : V
   V => flags.p.package.C#[V]
 flags.p.package.S# => class S[@specialized T >: Nothing <: Any].{+1 decls}
   extends AnyRef
 flags.p.package.S#[T] => @specialized typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-flags.p.package.S#`<init>`(). => primary ctor <init>: (): S[T]
-  S => flags.p.package.S#
-  T => flags.p.package.S#[T]
+flags.p.package.S#`<init>`(). => primary ctor <init>: ()
 flags.p.package.T1# => type T1: >: Int <: Int
   Int => scala.Int#
 flags.p.package.T2# => type T2: [T >: Nothing <: Any] => >: S[T] <: S[T]
@@ -312,22 +518,25 @@ flags.p.package.U# => abstract type U: >: Nothing <: Int
 flags.p.package.V# => abstract type V: >: Int <: Any
   Int => scala.Int#
   Any => scala.Any#
-flags.p.package.X. => final case object X
-flags.p.package.X.canEqual(Any). => method canEqual: (x$1: Any): Boolean
-  x$1 => flags.p.package.X.canEqual(Any).(x$1)
+flags.p.package.X. => final case object X.{+8 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
+flags.p.package.X.canEqual(). => method canEqual: (x$1: Any): Boolean
+  x$1 => flags.p.package.X.canEqual().(x$1)
   Any => scala.Any#
   Boolean => scala.Boolean#
-flags.p.package.X.canEqual(Any).(x$1) => param x$1: Any
+flags.p.package.X.canEqual().(x$1) => param x$1: Any
   Any => scala.Any#
 flags.p.package.X.hashCode(). => method hashCode: (): Int
   Int => scala.Int#
 flags.p.package.X.productArity(). => method productArity: : Int
   Int => scala.Int#
-flags.p.package.X.productElement(Int). => method productElement: (x$1: Int): Any
-  x$1 => flags.p.package.X.productElement(Int).(x$1)
+flags.p.package.X.productElement(). => method productElement: (x$1: Int): Any
+  x$1 => flags.p.package.X.productElement().(x$1)
   Int => scala.Int#
   Any => scala.Any#
-flags.p.package.X.productElement(Int).(x$1) => param x$1: Int
+flags.p.package.X.productElement().(x$1) => param x$1: Int
   Int => scala.Int#
 flags.p.package.X.productIterator(). => method productIterator: : Iterator[Any]
   Iterator => scala.collection.Iterator#
@@ -340,15 +549,14 @@ flags.p.package.X.toString(). => method toString: (): String
   String => java.lang.String#
 flags.p.package.Y# => final class Y.{+1 decls}
   extends AnyRef
-flags.p.package.Y#`<init>`(). => primary ctor <init>: (): Y
-  Y => flags.p.package.Y#
+flags.p.package.Y#`<init>`(). => primary ctor <init>: ()
 flags.p.package.Z# => sealed trait Z
   extends AnyRef
-flags.p.package.`y_=`(Int). => protected var method y_=: (x$1: Int): Unit
-  x$1 => flags.p.package.`y_=`(Int).(x$1)
+flags.p.package.`y_=`(). => protected var method y_=: (x$1: Int): Unit
+  x$1 => flags.p.package.`y_=`().(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-flags.p.package.`y_=`(Int).(x$1) => param x$1: Int
+flags.p.package.`y_=`().(x$1) => param x$1: Int
   Int => scala.Int#
 flags.p.package.m(). => macro m: [TT >: Nothing <: Any] => : Nothing
   TT => flags.p.package.m().[TT]
@@ -357,18 +565,16 @@ flags.p.package.m(). => macro m: [TT >: Nothing <: Any] => : Nothing
 flags.p.package.m().[TT] => typeparam TT: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-flags.p.package.x(). => private lazy val field x: Int
+flags.p.package.x(). => private lazy val method x: : Int
   Int => scala.Int#
 flags.p.package.xs1.xs1. => val local xs1: Nothing
   Nothing => scala.Nothing#
 flags.p.package.y(). => protected implicit var method y: : Int
   Int => scala.Int#
-flags.p.package.y. => private[this] var field y: Int
+flags.p.package.z(). => method z: (pp: Int): Int
+  pp => flags.p.package.z().(pp)
   Int => scala.Int#
-flags.p.package.z(Int). => method z: (pp: Int): Int
-  pp => flags.p.package.z(Int).(pp)
-  Int => scala.Int#
-flags.p.package.z(Int).(pp) => param pp: Int
+flags.p.package.z().(pp) => param pp: Int
   Int => scala.Int#
 local0 => val local xs2: Nothing
   Nothing => scala.Nothing#
@@ -380,10 +586,14 @@ scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
 scala.Predef.`???`(). => method ???: : Nothing
   Nothing => scala.Nothing#
-scala.collection.immutable.List. => final object List
-scala.language. => final object language
-scala.language.experimental. => final object experimental
-scala.language.experimental.macros(). => implicit lazy val field macros: macros
+scala.collection.immutable.List. => final object List.{+7 decls}
+  extends SeqFactory[List]
+  extends Serializable
+scala.language. => final object language.{+7 decls}
+  extends AnyRef
+scala.language.experimental. => final object experimental.{+1 decls}
+  extends AnyRef
+scala.language.experimental.macros(). => implicit lazy val method macros: : macros
   macros => scala.languageFeature.experimental.macros#
 scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
   A => scala.package.List#[A]
@@ -391,8 +601,7 @@ scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
 scala.specialized# => class specialized.{+4 decls}
   extends Annotation
   extends StaticAnnotation
-scala.specialized#`<init>`(). => ctor <init>: (): specialized
-  specialized => scala.specialized#
+scala.specialized#`<init>`(+2). => ctor <init>: ()
 
 Occurrences:
 [0:8..0:13): flags <= flags.
@@ -404,8 +613,8 @@ Occurrences:
 [5:19..5:20): x <= flags.p.package.x().
 [6:25..6:26): y <= flags.p.package.y().
 [6:28..6:31): Int => scala.Int#
-[7:6..7:7): z <= flags.p.package.z(Int).
-[7:8..7:10): pp <= flags.p.package.z(Int).(pp)
+[7:6..7:7): z <= flags.p.package.z().
+[7:8..7:10): pp <= flags.p.package.z().(pp)
 [7:12..7:15): Int => scala.Int#
 [8:6..8:7): m <= flags.p.package.m().
 [8:8..8:10): TT <= flags.p.package.m().[TT]
@@ -414,15 +623,15 @@ Occurrences:
 [9:20..9:21): T <= flags.p.package.C#[T]
 [9:24..9:25): U <= flags.p.package.C#[U]
 [9:27..9:28): V <= flags.p.package.C#[V]
-[9:29..9:29):  <= flags.p.package.C#`<init>`(T,U,V).
-[9:30..9:31): x <= flags.p.package.C#x.
+[9:29..9:29):  <= flags.p.package.C#`<init>`().
+[9:30..9:31): x <= flags.p.package.C#x().
 [9:33..9:34): T => flags.p.package.C#[T]
-[9:36..9:37): y <= flags.p.package.C#y.
+[9:36..9:37): y <= flags.p.package.C#y().
 [9:39..9:40): U => flags.p.package.C#[U]
-[9:42..9:43): z <= flags.p.package.C#z.
+[9:42..9:43): z <= flags.p.package.C#z().
 [9:45..9:46): V => flags.p.package.C#[V]
-[10:8..10:12): this <= flags.p.package.C#`<init>`().
-[10:21..10:21):  => flags.p.package.C#`<init>`(T,U,V).
+[10:8..10:12): this <= flags.p.package.C#`<init>`(+1).
+[10:21..10:21):  => flags.p.package.C#`<init>`().
 [10:22..10:25): ??? => scala.Predef.`???`().
 [10:27..10:30): ??? => scala.Predef.`???`().
 [10:32..10:35): ??? => scala.Predef.`???`().
@@ -443,8 +652,8 @@ Occurrences:
 [18:15..18:15):  <= flags.p.package.Y#`<init>`().
 [19:15..19:16): Z <= flags.p.package.Z#
 [20:8..20:10): AA <= flags.p.package.AA#
-[20:10..20:10):  <= flags.p.package.AA#`<init>`(Int,Int,Int).
-[20:11..20:12): x <= flags.p.package.AA#x.
+[20:10..20:10):  <= flags.p.package.AA#`<init>`().
+[20:11..20:12): x <= flags.p.package.AA#x().
 [20:14..20:17): Int => scala.Int#
 [20:23..20:24): y <= flags.p.package.AA#y().
 [20:26..20:29): Int => scala.Int#
@@ -452,7 +661,7 @@ Occurrences:
 [20:38..20:41): Int => scala.Int#
 [21:8..21:9): S <= flags.p.package.S#
 [21:11..21:22): specialized => scala.specialized#
-[21:23..21:23):  => scala.specialized#`<init>`().
+[21:23..21:23):  => scala.specialized#`<init>`(+2).
 [21:23..21:24): T <= flags.p.package.S#[T]
 [21:25..21:25):  <= flags.p.package.S#`<init>`().
 [22:6..22:10): List => scala.collection.immutable.List.
@@ -470,11 +679,11 @@ Occurrences:
 Synthetics:
 [22:10..22:10):  => *.unapplySeq[Nothing]
   [0:0..0:1): * => _star_.
-  [0:2..0:12): unapplySeq => scala.collection.generic.SeqFactory#unapplySeq(CC).
+  [0:2..0:12): unapplySeq => scala.collection.generic.SeqFactory#unapplySeq().
   [0:13..0:20): Nothing => scala.Nothing#
 [23:23..23:23):  => *.unapplySeq[Nothing]
   [0:0..0:1): * => _star_.
-  [0:2..0:12): unapplySeq => scala.collection.generic.SeqFactory#unapplySeq(CC).
+  [0:2..0:12): unapplySeq => scala.collection.generic.SeqFactory#unapplySeq().
   [0:13..0:20): Nothing => scala.Nothing#
 
 semanticdb/integration/src/main/scala/example/Imports.scala
@@ -493,7 +702,8 @@ Symbols:
 scala. => package scala
 scala.util. => package util
 scala.util.control. => package control
-scala.util.control.NonFatal. => final object NonFatal
+scala.util.control.NonFatal. => final object NonFatal.{+2 decls}
+  extends AnyRef
 
 Occurrences:
 [0:7..0:12): scala => scala.
@@ -520,25 +730,24 @@ Symbols:
 example. => package example
 example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
-example.`local-file`#`<init>`(). => primary ctor <init>: (): local-file
-  local-file => example.`local-file`#
+example.`local-file`#`<init>`(). => primary ctor <init>: ()
 local0 => val local local: Int
   Int => scala.Int#
-scala.Int#`+`(Int). => abstract method +: (x: <?>): Int
-  x => scala.Int#`+`(Int).(x)
+scala.Int#`+`(+4). => abstract method +: (x: <?>): Int
+  x => scala.Int#`+`(+4).(x)
   Int => scala.Int#
-scala.Predef.locally(T). => @inline method locally: [T: <?>] => (x: <?>): T
-  T => scala.Predef.locally(T).[T]
-  x => scala.Predef.locally(T).(x)
+scala.Predef.locally(). => @inline method locally: [T: <?>] => (x: <?>): T
+  T => scala.Predef.locally().[T]
+  x => scala.Predef.locally().(x)
 
 Occurrences:
 [0:8..0:15): example <= example.
 [2:6..2:18): `local-file` <= example.`local-file`#
 [2:19..2:19):  <= example.`local-file`#`<init>`().
-[3:2..3:9): locally => scala.Predef.locally(T).
+[3:2..3:9): locally => scala.Predef.locally().
 [4:8..4:13): local <= local0
 [5:4..5:9): local => local0
-[5:10..5:11): + => scala.Int#`+`(Int).
+[5:10..5:11): + => scala.Int#`+`(+4).
 
 Synthetics:
 [3:9..3:9):  => *[Int]
@@ -553,7 +762,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/MetacJava.scala
 Text => non-empty
 Language => Scala
-Symbols => 45 entries
+Symbols => 38 entries
 Occurrences => 65 entries
 
 Symbols:
@@ -563,7 +772,7 @@ com.javacp.Coin# => final enum class Coin.{+9 decls}
   extends Enum[Coin]
 com.javacp.Coin#PENNY. => final static enum field PENNY: Coin
   Coin => com.javacp.Coin#
-com.javacp.Interface# => abstract interface Interface.{+1 decls}
+com.javacp.Interface# => abstract interface Interface
   extends Object
 com.javacp.MetacJava# => class MetacJava.{+12 decls}
   extends Object
@@ -571,77 +780,53 @@ com.javacp.MetacJava#Overload1# => class Overload1.{+3 decls}
   extends Object
 com.javacp.MetacJava#Overload1#A# => class A.{+1 decls}
   extends Object
-com.javacp.MetacJava#Overload1#A#`<init>`(). => ctor <init>: (): Overload1.this.A
-  Overload1 => com.javacp.MetacJava#Overload1#
-  A => com.javacp.MetacJava#Overload1#A#
-com.javacp.MetacJava#Overload1#`<init>`(). => ctor <init>: (): MetacJava.this.Overload1
-  MetacJava => com.javacp.MetacJava#
-  Overload1 => com.javacp.MetacJava#Overload1#
+com.javacp.MetacJava#Overload1#A#`<init>`(). => ctor <init>: ()
+com.javacp.MetacJava#Overload1#`<init>`(). => ctor <init>: ()
 com.javacp.MetacJava#Overload2# => class Overload2.{+3 decls}
   extends Object
 com.javacp.MetacJava#Overload2#A# => class A.{+1 decls}
   extends Object
-com.javacp.MetacJava#Overload2#A#`<init>`(). => ctor <init>: (): Overload2.this.A
-  Overload2 => com.javacp.MetacJava#Overload2#
-  A => com.javacp.MetacJava#Overload2#A#
-com.javacp.MetacJava#Overload2#`<init>`(). => ctor <init>: (): MetacJava.this.Overload2
-  MetacJava => com.javacp.MetacJava#
-  Overload2 => com.javacp.MetacJava#Overload2#
+com.javacp.MetacJava#Overload2#A#`<init>`(). => ctor <init>: ()
+com.javacp.MetacJava#Overload2#`<init>`(). => ctor <init>: ()
 com.javacp.MetacJava#Overload3# => static class Overload3.{+3 decls}
   extends Object
 com.javacp.MetacJava#Overload3#A# => static class A.{+1 decls}
   extends Object
-com.javacp.MetacJava#Overload3#A#`<init>`(). => ctor <init>: (): A
-  A => com.javacp.MetacJava#Overload3#A#
+com.javacp.MetacJava#Overload3#A#`<init>`(). => ctor <init>: ()
 com.javacp.MetacJava#StaticInner# => static class StaticInner.{+5 decls}
   extends Object
 com.javacp.MetacJava#StaticInner#NonStatic# => class NonStatic.{+2 decls}
   extends Object
-com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(). => ctor <init>: (): StaticInner.this.NonStatic
-  StaticInner => com.javacp.MetacJava#StaticInner#
-  NonStatic => com.javacp.MetacJava#StaticInner#NonStatic#
-com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic). => method method: (e: <?>): Unit
-  e => com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).(e)
+com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(). => ctor <init>: ()
+com.javacp.MetacJava#StaticInner#NonStatic#method(). => method method: (e: <?>): Unit
+  e => com.javacp.MetacJava#StaticInner#NonStatic#method().(e)
   Unit => scala.Unit#
-com.javacp.MetacJava#StaticInner#`<init>`(). => ctor <init>: (): StaticInner
-  StaticInner => com.javacp.MetacJava#StaticInner#
+com.javacp.MetacJava#StaticInner#`<init>`(). => ctor <init>: ()
 com.javacp.MetacJava#StaticInner#isNotStatic(). => method isNotStatic: (): Unit
   Unit => scala.Unit#
 com.javacp.MetacJava#StaticInner#isStatic(). => static method isStatic: (): Unit
   Unit => scala.Unit#
-com.javacp.MetacJava#`<init>`(). => ctor <init>: (): MetacJava
-  MetacJava => com.javacp.MetacJava#
-com.javacp.MetacJava#overload(A). => method overload: (a: <?>): Unit
-  a => com.javacp.MetacJava#overload(A).(a)
+com.javacp.MetacJava#`<init>`(). => ctor <init>: ()
+com.javacp.MetacJava#overload(). => method overload: (a: <?>): Unit
+  a => com.javacp.MetacJava#overload().(a)
   Unit => scala.Unit#
-com.javacp.MetacJava#overload(A+1). => method overload: (a: <?>): Unit
-  a => com.javacp.MetacJava#overload(A+1).(a)
+com.javacp.MetacJava#overload(+1). => method overload: (a: <?>): Unit
+  a => com.javacp.MetacJava#overload(+1).(a)
   Unit => scala.Unit#
-com.javacp.MetacJava#overload(A+2). => static method overload: (a: <?>): Unit
-  a => com.javacp.MetacJava#overload(A+2).(a)
+com.javacp.MetacJava#overload(+2). => static method overload: (a: <?>): Unit
+  a => com.javacp.MetacJava#overload(+2).(a)
   Unit => scala.Unit#
 example. => package example
-example.MetacJava# => class MetacJava.{+15 decls}
+example.MetacJava# => class MetacJava.{+8 decls}
   extends AnyRef
-example.MetacJava#`<init>`(). => primary ctor <init>: (): MetacJava
-  MetacJava => example.MetacJava#
+example.MetacJava#`<init>`(). => primary ctor <init>: ()
 example.MetacJava#coin(). => val method coin: : Coin
-  Coin => com.javacp.Coin#
-example.MetacJava#coin. => private[this] val field coin: Coin
   Coin => com.javacp.Coin#
 example.MetacJava#inner(). => val method inner: : MetacJava
   MetacJava => com.javacp.MetacJava#
-example.MetacJava#inner. => private[this] val field inner: MetacJava
-  MetacJava => com.javacp.MetacJava#
 example.MetacJava#interface(). => val method interface: : Interface
   Interface => com.javacp.Interface#
-example.MetacJava#interface. => private[this] val field interface: Interface
-  Interface => com.javacp.Interface#
 example.MetacJava#nonStatic(). => val method nonStatic: : MetacJava.this.staticInner.NonStatic
-  MetacJava => example.MetacJava#
-  staticInner => example.MetacJava#staticInner().
-  NonStatic => com.javacp.MetacJava#StaticInner#NonStatic#
-example.MetacJava#nonStatic. => private[this] val field nonStatic: MetacJava.this.staticInner.NonStatic
   MetacJava => example.MetacJava#
   staticInner => example.MetacJava#staticInner().
   NonStatic => com.javacp.MetacJava#StaticInner#NonStatic#
@@ -649,21 +834,11 @@ example.MetacJava#overload1(). => val method overload1: : MetacJava.this.inner.O
   MetacJava => example.MetacJava#
   inner => example.MetacJava#inner().
   Overload1 => com.javacp.MetacJava#Overload1#
-example.MetacJava#overload1. => private[this] val field overload1: MetacJava.this.inner.Overload1
-  MetacJava => example.MetacJava#
-  inner => example.MetacJava#inner().
-  Overload1 => com.javacp.MetacJava#Overload1#
 example.MetacJava#overload2(). => val method overload2: : MetacJava.this.inner.Overload2
   MetacJava => example.MetacJava#
   inner => example.MetacJava#inner().
   Overload2 => com.javacp.MetacJava#Overload2#
-example.MetacJava#overload2. => private[this] val field overload2: MetacJava.this.inner.Overload2
-  MetacJava => example.MetacJava#
-  inner => example.MetacJava#inner().
-  Overload2 => com.javacp.MetacJava#Overload2#
 example.MetacJava#staticInner(). => val method staticInner: : StaticInner
-  StaticInner => com.javacp.MetacJava#StaticInner#
-example.MetacJava#staticInner. => private[this] val field staticInner: StaticInner
   StaticInner => com.javacp.MetacJava#StaticInner#
 
 Occurrences:
@@ -694,12 +869,12 @@ Occurrences:
 [9:28..9:37): Overload2 => com.javacp.MetacJava#Overload2#
 [9:37..9:37):  => com.javacp.MetacJava#Overload2#`<init>`().
 [10:2..10:7): inner => example.MetacJava#inner().
-[10:8..10:16): overload => com.javacp.MetacJava#overload(A).
+[10:8..10:16): overload => com.javacp.MetacJava#overload().
 [10:21..10:30): overload1 => example.MetacJava#overload1().
 [10:31..10:32): A => com.javacp.MetacJava#Overload1#A#
 [10:32..10:32):  => com.javacp.MetacJava#Overload1#A#`<init>`().
 [11:2..11:7): inner => example.MetacJava#inner().
-[11:8..11:16): overload => com.javacp.MetacJava#overload(A+1).
+[11:8..11:16): overload => com.javacp.MetacJava#overload(+1).
 [11:21..11:30): overload2 => example.MetacJava#overload2().
 [11:31..11:32): A => com.javacp.MetacJava#Overload2#A#
 [11:32..11:32):  => com.javacp.MetacJava#Overload2#A#`<init>`().
@@ -713,11 +888,11 @@ Occurrences:
 [13:34..13:43): NonStatic => com.javacp.MetacJava#StaticInner#NonStatic#
 [13:43..13:43):  => com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
 [14:2..14:11): nonStatic => example.MetacJava#nonStatic().
-[14:12..14:18): method => com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).
+[14:12..14:18): method => com.javacp.MetacJava#StaticInner#NonStatic#method().
 [14:19..14:28): nonStatic => example.MetacJava#nonStatic().
 [15:2..15:8): javacp => com.javacp.
 [15:9..15:18): MetacJava => com.javacp.MetacJava#
-[15:19..15:27): overload => com.javacp.MetacJava#overload(A+2).
+[15:19..15:27): overload => com.javacp.MetacJava#overload(+2).
 [15:32..15:38): javacp => com.javacp.
 [15:39..15:48): MetacJava => com.javacp.MetacJava#
 [15:49..15:58): Overload3 => com.javacp.MetacJava#Overload3#
@@ -741,22 +916,19 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Methods.scala
 Text => non-empty
 Language => Scala
-Symbols => 76 entries
+Symbols => 75 entries
 Occurrences => 183 entries
 Diagnostics => 2 entries
 Synthetics => 4 entries
 
 Symbols:
 example. => package example
-example.Example. => final object Example
-example.MethodUsages# => class MethodUsages.{+3 decls}
+example.Example. => final object Example.{+2 decls}
   extends AnyRef
-example.MethodUsages#`<init>`(). => primary ctor <init>: (): MethodUsages
-  MethodUsages => example.MethodUsages#
+example.MethodUsages# => class MethodUsages.{+2 decls}
+  extends AnyRef
+example.MethodUsages#`<init>`(). => primary ctor <init>: ()
 example.MethodUsages#m(). => val method m: : Methods[Int]
-  Methods => example.Methods#
-  Int => scala.Int#
-example.MethodUsages#m. => private[this] val field m: Methods[Int]
   Methods => example.Methods#
   Int => scala.Int#
 example.Methods# => class Methods[T >: Nothing <: Any].{+26 decls}
@@ -777,212 +949,210 @@ example.Methods#List# => class List[T >: Nothing <: Any].{+1 decls}
 example.Methods#List#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#List#`<init>`(). => primary ctor <init>: (): Methods.this.List[T]
-  Methods => example.Methods#
-  List => example.Methods#List#
-  T => example.Methods#List#[T]
+example.Methods#List#`<init>`(). => primary ctor <init>: ()
 example.Methods#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#`<init>`(). => primary ctor <init>: (): Methods[T]
-  Methods => example.Methods#
-  T => example.Methods#[T]
+example.Methods#`<init>`(). => primary ctor <init>: ()
 example.Methods#`m8().`(). => method m8().: (): Nothing
   Nothing => scala.Nothing#
 example.Methods#`m9().`# => class m9()..{+1 decls}
   extends AnyRef
-example.Methods#`m9().`#`<init>`(). => primary ctor <init>: (): Methods.this.m9().
-  Methods => example.Methods#
-  m9(). => example.Methods#`m9().`#
+example.Methods#`m9().`#`<init>`(). => primary ctor <init>: ()
 example.Methods#m1(). => method m1: : Nothing
   Nothing => scala.Nothing#
-example.Methods#m10(AList). => method m10: (x: Methods.this.AList[T]): Nothing
-  x => example.Methods#m10(AList).(x)
+example.Methods#m10(). => method m10: (x: Methods.this.AList[T]): Nothing
+  x => example.Methods#m10().(x)
   Methods => example.Methods#
   AList => example.Methods#AList#
   T => example.Methods#[T]
   Nothing => scala.Nothing#
-example.Methods#m10(AList).(x) => param x: Methods.this.AList[T]
+example.Methods#m10().(x) => param x: Methods.this.AList[T]
   Methods => example.Methods#
   AList => example.Methods#AList#
   T => example.Methods#[T]
-example.Methods#m11(.type). => method m11: (x: Predef.type): Nothing
-  x => example.Methods#m11(.type).(x)
+example.Methods#m11(). => method m11: (x: Predef.type): Nothing
+  x => example.Methods#m11().(x)
   Predef => scala.Predef.
   Nothing => scala.Nothing#
-example.Methods#m11(.type).(x) => param x: Predef.type
+example.Methods#m11().(x) => param x: Predef.type
   Predef => scala.Predef.
-example.Methods#m11(.type+1). => method m11: (x: Example.type): Nothing
-  x => example.Methods#m11(.type+1).(x)
+example.Methods#m11(+1). => method m11: (x: Example.type): Nothing
+  x => example.Methods#m11(+1).(x)
   Example => example.Example.
   Nothing => scala.Nothing#
-example.Methods#m11(.type+1).(x) => param x: Example.type
+example.Methods#m11(+1).(x) => param x: Example.type
   Example => example.Example.
-example.Methods#m12a({}). => method m12a: (x: AnyRef {}): Nothing
-  x => example.Methods#m12a({}).(x)
+example.Methods#m12a(). => method m12a: (x: AnyRef {}): Nothing
+  x => example.Methods#m12a().(x)
   AnyRef => scala.AnyRef#
   Nothing => scala.Nothing#
-example.Methods#m12a({}).(x) => param x: AnyRef {}
+example.Methods#m12a().(x) => param x: AnyRef {}
   AnyRef => scala.AnyRef#
-example.Methods#m12b({}). => method m12b: (x: AnyRef { val method x: Int }): Nothing
-  x => example.Methods#m12b({}).(x)
+example.Methods#m12b(). => method m12b: (x: AnyRef { val method x: Int }): Nothing
+  x => example.Methods#m12b().(x)
   AnyRef => scala.AnyRef#
   x => example.Methods#$anon#x().
   Int => scala.Int#
   Nothing => scala.Nothing#
-example.Methods#m12b({}).(x) => param x: AnyRef { val method x: Int }
+example.Methods#m12b().(x) => param x: AnyRef { val method x: Int }
   AnyRef => scala.AnyRef#
   x => example.Methods#$anon#x().
   Int => scala.Int#
-example.Methods#m13(Int). => method m13: (x: Int @unchecked): Nothing
-  x => example.Methods#m13(Int).(x)
+example.Methods#m13(). => method m13: (x: Int @unchecked): Nothing
+  x => example.Methods#m13().(x)
   Int => scala.Int#
   unchecked => scala.unchecked#
   Nothing => scala.Nothing#
-example.Methods#m13(Int).(x) => param x: Int @unchecked
+example.Methods#m13().(x) => param x: Int @unchecked
   Int => scala.Int#
   unchecked => scala.unchecked#
-example.Methods#m14(T). => method m14: (x: T forSome { type T >: Nothing <: Any }): Nothing
-  x => example.Methods#m14(T).(x)
-  T => example.Methods#m14(T).(x)T#
+example.Methods#m14(). => method m14: (x: T forSome { type T >: Nothing <: Any }): Nothing
+  x => example.Methods#m14().(x)
+  T => example.Methods#m14().(x)T#
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#m14(T).(x) => param x: T forSome { type T >: Nothing <: Any }
-  T => example.Methods#m14(T).(x)T#
+example.Methods#m14().(x) => param x: T forSome { type T >: Nothing <: Any }
+  T => example.Methods#m14().(x)T#
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#m14(T).(x)T# => abstract type T: >: Nothing <: Any
+example.Methods#m14().(x)T# => abstract type T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#m15(=>Int). => method m15: (x: => Int): Nothing
-  x => example.Methods#m15(=>Int).(x)
+example.Methods#m15(). => method m15: (x: => Int): Nothing
+  x => example.Methods#m15().(x)
   Int => scala.Int#
   Nothing => scala.Nothing#
-example.Methods#m15(=>Int).(x) => param x: => Int
+example.Methods#m15().(x) => param x: => Int
   Int => scala.Int#
-example.Methods#m16(Int*). => method m16: (x: Int*): Nothing
-  x => example.Methods#m16(Int*).(x)
+example.Methods#m16(). => method m16: (x: Int*): Nothing
+  x => example.Methods#m16().(x)
   Int => scala.Int#
   Nothing => scala.Nothing#
-example.Methods#m16(Int*).(x) => param x: Int*
+example.Methods#m16().(x) => param x: Int*
   Int => scala.Int#
 example.Methods#m2(). => method m2: (): Nothing
   Nothing => scala.Nothing#
-example.Methods#m3(Int). => method m3: (x: Int): Nothing
-  x => example.Methods#m3(Int).(x)
+example.Methods#m3(). => method m3: (x: Int): Nothing
+  x => example.Methods#m3().(x)
   Int => scala.Int#
   Nothing => scala.Nothing#
-example.Methods#m3(Int).(x) => param x: Int
+example.Methods#m3().(x) => param x: Int
   Int => scala.Int#
-example.Methods#m4(Int,Int). => method m4: (x: Int)(y: Int): Nothing
-  x => example.Methods#m4(Int,Int).(x)
+example.Methods#m4(). => method m4: (x: Int)(y: Int): Nothing
+  x => example.Methods#m4().(x)
   Int => scala.Int#
-  y => example.Methods#m4(Int,Int).(y)
+  y => example.Methods#m4().(y)
   Nothing => scala.Nothing#
-example.Methods#m4(Int,Int).(x) => param x: Int
+example.Methods#m4().(x) => param x: Int
   Int => scala.Int#
-example.Methods#m4(Int,Int).(y) => param y: Int
+example.Methods#m4().(y) => param y: Int
   Int => scala.Int#
-example.Methods#m5(Int). => method m5: (x: Int): Nothing
-  x => example.Methods#m5(Int).(x)
-  Int => scala.Int#
-  Nothing => scala.Nothing#
-example.Methods#m5(Int).(x) => param x: Int
-  Int => scala.Int#
-example.Methods#m5(String). => method m5: (x: String): Nothing
-  x => example.Methods#m5(String).(x)
+example.Methods#m5(). => method m5: (x: String): Nothing
+  x => example.Methods#m5().(x)
   String => scala.Predef.String#
   Nothing => scala.Nothing#
-example.Methods#m5(String).(x) => param x: String
+example.Methods#m5().(x) => param x: String
   String => scala.Predef.String#
-example.Methods#m6(Int). => method m6: (x: Int): Nothing
-  x => example.Methods#m6(Int).(x)
+example.Methods#m5(+1). => method m5: (x: Int): Nothing
+  x => example.Methods#m5(+1).(x)
   Int => scala.Int#
   Nothing => scala.Nothing#
-example.Methods#m6(Int).(x) => param x: Int
+example.Methods#m5(+1).(x) => param x: Int
   Int => scala.Int#
-example.Methods#m6(List). => method m6: (x: Methods.this.List[T]): Nothing
-  x => example.Methods#m6(List).(x)
+example.Methods#m6(). => method m6: (x: Int): Nothing
+  x => example.Methods#m6().(x)
+  Int => scala.Int#
+  Nothing => scala.Nothing#
+example.Methods#m6().(x) => param x: Int
+  Int => scala.Int#
+example.Methods#m6(+1). => method m6: (x: Methods.this.List[T]): Nothing
+  x => example.Methods#m6(+1).(x)
   Methods => example.Methods#
   List => example.Methods#List#
   T => example.Methods#[T]
   Nothing => scala.Nothing#
-example.Methods#m6(List).(x) => param x: Methods.this.List[T]
+example.Methods#m6(+1).(x) => param x: Methods.this.List[T]
   Methods => example.Methods#
   List => example.Methods#List#
   T => example.Methods#[T]
-example.Methods#m6(List+1). => method m6: (x: List[T]): Nothing
-  x => example.Methods#m6(List+1).(x)
+example.Methods#m6(+2). => method m6: (x: List[T]): Nothing
+  x => example.Methods#m6(+2).(x)
   List => scala.package.List#
   T => example.Methods#[T]
   Nothing => scala.Nothing#
-example.Methods#m6(List+1).(x) => param x: List[T]
+example.Methods#m6(+2).(x) => param x: List[T]
   List => scala.package.List#
   T => example.Methods#[T]
-example.Methods#m7a(Methods,List,Ordering). => method m7a: [U >: Nothing <: Any] => (c: Methods[T], l: Methods.this.List[U])(evidence$1: Ordering[U]): Nothing
-  U => example.Methods#m7a(Methods,List,Ordering).[U]
+example.Methods#m7a(). => method m7a: [U >: Nothing <: Any] => (c: Methods[T], l: Methods.this.List[U])(evidence$1: Ordering[U]): Nothing
+  U => example.Methods#m7a().[U]
   Nothing => scala.Nothing#
   Any => scala.Any#
-  c => example.Methods#m7a(Methods,List,Ordering).(c)
+  c => example.Methods#m7a().(c)
   Methods => example.Methods#
   T => example.Methods#[T]
-  l => example.Methods#m7a(Methods,List,Ordering).(l)
+  l => example.Methods#m7a().(l)
   List => example.Methods#List#
-  evidence$1 => example.Methods#m7a(Methods,List,Ordering).(evidence$1)
+  evidence$1 => example.Methods#m7a().(evidence$1)
   Ordering => scala.math.Ordering#
-example.Methods#m7a(Methods,List,Ordering).(c) => param c: Methods[T]
+example.Methods#m7a().(c) => param c: Methods[T]
   Methods => example.Methods#
   T => example.Methods#[T]
-example.Methods#m7a(Methods,List,Ordering).(evidence$1) => implicit param evidence$1: Ordering[U]
+example.Methods#m7a().(evidence$1) => implicit param evidence$1: Ordering[U]
   Ordering => scala.math.Ordering#
-  U => example.Methods#m7a(Methods,List,Ordering).[U]
-example.Methods#m7a(Methods,List,Ordering).(l) => param l: Methods.this.List[U]
+  U => example.Methods#m7a().[U]
+example.Methods#m7a().(l) => param l: Methods.this.List[U]
   Methods => example.Methods#
   List => example.Methods#List#
-  U => example.Methods#m7a(Methods,List,Ordering).[U]
-example.Methods#m7a(Methods,List,Ordering).[U] => typeparam U: >: Nothing <: Any
+  U => example.Methods#m7a().[U]
+example.Methods#m7a().[U] => typeparam U: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#m7b(List,Function1). => method m7b: [U >: Nothing <: Any] => (l: Methods.this.List[U])(evidence$2: Function1[U, T]): Nothing
-  U => example.Methods#m7b(List,Function1).[U]
+example.Methods#m7b(). => method m7b: [U >: Nothing <: Any] => (l: Methods.this.List[U])(evidence$2: Function1[U, T]): Nothing
+  U => example.Methods#m7b().[U]
   Nothing => scala.Nothing#
   Any => scala.Any#
-  l => example.Methods#m7b(List,Function1).(l)
+  l => example.Methods#m7b().(l)
   Methods => example.Methods#
   List => example.Methods#List#
-  evidence$2 => example.Methods#m7b(List,Function1).(evidence$2)
+  evidence$2 => example.Methods#m7b().(evidence$2)
   Function1 => scala.Function1#
   T => example.Methods#[T]
-example.Methods#m7b(List,Function1).(evidence$2) => implicit param evidence$2: Function1[U, T]
+example.Methods#m7b().(evidence$2) => implicit param evidence$2: Function1[U, T]
   Function1 => scala.Function1#
-  U => example.Methods#m7b(List,Function1).[U]
+  U => example.Methods#m7b().[U]
   T => example.Methods#[T]
-example.Methods#m7b(List,Function1).(l) => param l: Methods.this.List[U]
+example.Methods#m7b().(l) => param l: Methods.this.List[U]
   Methods => example.Methods#
   List => example.Methods#List#
-  U => example.Methods#m7b(List,Function1).[U]
-example.Methods#m7b(List,Function1).[U] => typeparam U: >: Nothing <: Any
+  U => example.Methods#m7b().[U]
+example.Methods#m7b().[U] => typeparam U: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#m9(`m9().`). => method m9: (x: Methods.this.m9().): Nothing
-  x => example.Methods#m9(`m9().`).(x)
+example.Methods#m9(). => method m9: (x: Methods.this.m9().): Nothing
+  x => example.Methods#m9().(x)
   Methods => example.Methods#
   m9(). => example.Methods#`m9().`#
   Nothing => scala.Nothing#
-example.Methods#m9(`m9().`).(x) => param x: Methods.this.m9().
+example.Methods#m9().(x) => param x: Methods.this.m9().
   Methods => example.Methods#
   m9(). => example.Methods#`m9().`#
 scala. => package scala
 scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
-scala.Predef. => final object Predef
+scala.Predef. => final object Predef.{+95 decls}
+  extends LowPriorityImplicits
+  extends DeprecatedPredef
 scala.Predef.String# => type String: >: String <: String
   String => java.lang.String#
 scala.Predef.`???`(). => method ???: : Nothing
   Nothing => scala.Nothing#
-scala.collection.immutable.Nil. => @SerialVersionUID final case object Nil
+scala.collection.immutable.Nil. => @SerialVersionUID final case object Nil.{+9 decls}
+  extends List[Nothing]
+  extends Product
+  extends Serializable
 scala.math. => package math
-scala.math.Ordering# => @implicitNotFound trait Ordering[T: <?>].{+14 decls}
+scala.math.Ordering# => @implicitNotFound trait Ordering[T: <?>].{+13 decls}
   extends Object
   extends Comparator[T]
   extends PartialOrdering[T]
@@ -992,8 +1162,7 @@ scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
   List => scala.collection.immutable.List#
 scala.unchecked# => class unchecked.{+1 decls}
   extends Annotation
-scala.unchecked#`<init>`(). => primary ctor <init>: (): unchecked
-  unchecked => scala.unchecked#
+scala.unchecked#`<init>`(). => primary ctor <init>: ()
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -1015,102 +1184,102 @@ Occurrences:
 [7:11..7:14): ??? => scala.Predef.`???`().
 [8:6..8:8): m2 <= example.Methods#m2().
 [8:13..8:16): ??? => scala.Predef.`???`().
-[9:6..9:8): m3 <= example.Methods#m3(Int).
-[9:9..9:10): x <= example.Methods#m3(Int).(x)
+[9:6..9:8): m3 <= example.Methods#m3().
+[9:9..9:10): x <= example.Methods#m3().(x)
 [9:12..9:15): Int => scala.Int#
 [9:19..9:22): ??? => scala.Predef.`???`().
-[10:6..10:8): m4 <= example.Methods#m4(Int,Int).
-[10:9..10:10): x <= example.Methods#m4(Int,Int).(x)
+[10:6..10:8): m4 <= example.Methods#m4().
+[10:9..10:10): x <= example.Methods#m4().(x)
 [10:12..10:15): Int => scala.Int#
-[10:17..10:18): y <= example.Methods#m4(Int,Int).(y)
+[10:17..10:18): y <= example.Methods#m4().(y)
 [10:20..10:23): Int => scala.Int#
 [10:27..10:30): ??? => scala.Predef.`???`().
-[11:6..11:8): m5 <= example.Methods#m5(String).
-[11:9..11:10): x <= example.Methods#m5(String).(x)
+[11:6..11:8): m5 <= example.Methods#m5().
+[11:9..11:10): x <= example.Methods#m5().(x)
 [11:12..11:18): String => scala.Predef.String#
 [11:22..11:25): ??? => scala.Predef.`???`().
-[12:6..12:8): m5 <= example.Methods#m5(Int).
-[12:9..12:10): x <= example.Methods#m5(Int).(x)
+[12:6..12:8): m5 <= example.Methods#m5(+1).
+[12:9..12:10): x <= example.Methods#m5(+1).(x)
 [12:12..12:15): Int => scala.Int#
 [12:19..12:22): ??? => scala.Predef.`???`().
-[13:6..13:8): m6 <= example.Methods#m6(Int).
-[13:9..13:10): x <= example.Methods#m6(Int).(x)
+[13:6..13:8): m6 <= example.Methods#m6().
+[13:9..13:10): x <= example.Methods#m6().(x)
 [13:12..13:15): Int => scala.Int#
 [13:19..13:22): ??? => scala.Predef.`???`().
-[14:6..14:8): m6 <= example.Methods#m6(List).
-[14:9..14:10): x <= example.Methods#m6(List).(x)
+[14:6..14:8): m6 <= example.Methods#m6(+1).
+[14:9..14:10): x <= example.Methods#m6(+1).(x)
 [14:12..14:16): List => example.Methods#List#
 [14:17..14:18): T => example.Methods#[T]
 [14:23..14:26): ??? => scala.Predef.`???`().
-[15:6..15:8): m6 <= example.Methods#m6(List+1).
-[15:9..15:10): x <= example.Methods#m6(List+1).(x)
+[15:6..15:8): m6 <= example.Methods#m6(+2).
+[15:9..15:10): x <= example.Methods#m6(+2).(x)
 [15:12..15:17): scala => scala.
 [15:18..15:22): List => scala.package.List#
 [15:23..15:24): T => example.Methods#[T]
 [15:29..15:32): ??? => scala.Predef.`???`().
-[16:6..16:9): m7a <= example.Methods#m7a(Methods,List,Ordering).
-[16:10..16:11): U <= example.Methods#m7a(Methods,List,Ordering).[U]
+[16:6..16:9): m7a <= example.Methods#m7a().
+[16:10..16:11): U <= example.Methods#m7a().[U]
 [16:13..16:21): Ordering => scala.math.Ordering#
-[16:23..16:24): c <= example.Methods#m7a(Methods,List,Ordering).(c)
+[16:23..16:24): c <= example.Methods#m7a().(c)
 [16:26..16:33): Methods => example.Methods#
 [16:34..16:35): T => example.Methods#[T]
-[16:38..16:39): l <= example.Methods#m7a(Methods,List,Ordering).(l)
+[16:38..16:39): l <= example.Methods#m7a().(l)
 [16:41..16:45): List => example.Methods#List#
-[16:46..16:47): U => example.Methods#m7a(Methods,List,Ordering).[U]
+[16:46..16:47): U => example.Methods#m7a().[U]
 [16:52..16:55): ??? => scala.Predef.`???`().
-[17:6..17:9): m7b <= example.Methods#m7b(List,Function1).
-[17:10..17:11): U <= example.Methods#m7b(List,Function1).[U]
+[17:6..17:9): m7b <= example.Methods#m7b().
+[17:10..17:11): U <= example.Methods#m7b().[U]
 [17:15..17:16): T => example.Methods#[T]
-[17:18..17:19): l <= example.Methods#m7b(List,Function1).(l)
+[17:18..17:19): l <= example.Methods#m7b().(l)
 [17:21..17:25): List => example.Methods#List#
-[17:26..17:27): U => example.Methods#m7b(List,Function1).[U]
+[17:26..17:27): U => example.Methods#m7b().[U]
 [17:32..17:35): ??? => scala.Predef.`???`().
 [18:6..18:13): `m8().` <= example.Methods#`m8().`().
 [18:18..18:21): ??? => scala.Predef.`???`().
 [19:8..19:15): `m9().` <= example.Methods#`m9().`#
 [19:15..19:15):  <= example.Methods#`m9().`#`<init>`().
-[20:6..20:8): m9 <= example.Methods#m9(`m9().`).
-[20:9..20:10): x <= example.Methods#m9(`m9().`).(x)
+[20:6..20:8): m9 <= example.Methods#m9().
+[20:9..20:10): x <= example.Methods#m9().(x)
 [20:12..20:19): `m9().` => example.Methods#`m9().`#
 [20:23..20:26): ??? => scala.Predef.`???`().
-[21:6..21:9): m10 <= example.Methods#m10(AList).
-[21:10..21:11): x <= example.Methods#m10(AList).(x)
+[21:6..21:9): m10 <= example.Methods#m10().
+[21:10..21:11): x <= example.Methods#m10().(x)
 [21:13..21:18): AList => example.Methods#AList#
 [21:19..21:20): T => example.Methods#[T]
 [21:25..21:28): ??? => scala.Predef.`???`().
-[22:6..22:9): m11 <= example.Methods#m11(.type).
-[22:10..22:11): x <= example.Methods#m11(.type).(x)
+[22:6..22:9): m11 <= example.Methods#m11().
+[22:10..22:11): x <= example.Methods#m11().(x)
 [22:13..22:19): Predef => scala.Predef.
 [22:28..22:31): ??? => scala.Predef.`???`().
-[23:6..23:9): m11 <= example.Methods#m11(.type+1).
-[23:10..23:11): x <= example.Methods#m11(.type+1).(x)
+[23:6..23:9): m11 <= example.Methods#m11(+1).
+[23:10..23:11): x <= example.Methods#m11(+1).(x)
 [23:13..23:20): Example => example.Example.
 [23:29..23:32): ??? => scala.Predef.`???`().
-[24:6..24:10): m12a <= example.Methods#m12a({}).
-[24:11..24:12): x <= example.Methods#m12a({}).(x)
+[24:6..24:10): m12a <= example.Methods#m12a().
+[24:11..24:12): x <= example.Methods#m12a().(x)
 [24:20..24:23): ??? => scala.Predef.`???`().
-[25:6..25:10): m12b <= example.Methods#m12b({}).
-[25:11..25:12): x <= example.Methods#m12b({}).(x)
+[25:6..25:10): m12b <= example.Methods#m12b().
+[25:11..25:12): x <= example.Methods#m12b().(x)
 [25:20..25:21): x <= example.Methods#$anon#x().
 [25:23..25:26): Int => scala.Int#
 [25:32..25:35): ??? => scala.Predef.`???`().
-[26:6..26:9): m13 <= example.Methods#m13(Int).
-[26:10..26:11): x <= example.Methods#m13(Int).(x)
+[26:6..26:9): m13 <= example.Methods#m13().
+[26:10..26:11): x <= example.Methods#m13().(x)
 [26:13..26:16): Int => scala.Int#
 [26:18..26:27): unchecked => scala.unchecked#
 [26:27..26:27):  => scala.unchecked#`<init>`().
 [26:31..26:34): ??? => scala.Predef.`???`().
-[27:6..27:9): m14 <= example.Methods#m14(T).
-[27:10..27:11): x <= example.Methods#m14(T).(x)
-[27:13..27:14): T => example.Methods#m14(T).(x)T#
-[27:30..27:31): T <= example.Methods#m14(T).(x)T#
+[27:6..27:9): m14 <= example.Methods#m14().
+[27:10..27:11): x <= example.Methods#m14().(x)
+[27:13..27:14): T => example.Methods#m14().(x)T#
+[27:30..27:31): T <= example.Methods#m14().(x)T#
 [27:37..27:40): ??? => scala.Predef.`???`().
-[28:6..28:9): m15 <= example.Methods#m15(=>Int).
-[28:10..28:11): x <= example.Methods#m15(=>Int).(x)
+[28:6..28:9): m15 <= example.Methods#m15().
+[28:10..28:11): x <= example.Methods#m15().(x)
 [28:16..28:19): Int => scala.Int#
 [28:23..28:26): ??? => scala.Predef.`???`().
-[29:6..29:9): m16 <= example.Methods#m16(Int*).
-[29:10..29:11): x <= example.Methods#m16(Int*).(x)
+[29:6..29:9): m16 <= example.Methods#m16().
+[29:10..29:11): x <= example.Methods#m16().(x)
 [29:13..29:16): Int => scala.`<repeated>`#
 [29:21..29:24): ??? => scala.Predef.`???`().
 [32:6..32:18): MethodUsages <= example.MethodUsages#
@@ -1124,33 +1293,33 @@ Occurrences:
 [35:2..35:3): m => example.MethodUsages#m().
 [35:4..35:6): m2 => example.Methods#m2().
 [36:2..36:3): m => example.MethodUsages#m().
-[36:4..36:6): m3 => example.Methods#m3(Int).
+[36:4..36:6): m3 => example.Methods#m3().
 [37:2..37:3): m => example.MethodUsages#m().
-[37:4..37:6): m4 => example.Methods#m4(Int,Int).
+[37:4..37:6): m4 => example.Methods#m4().
 [38:2..38:3): m => example.MethodUsages#m().
-[38:4..38:6): m5 => example.Methods#m5(String).
+[38:4..38:6): m5 => example.Methods#m5().
 [39:2..39:3): m => example.MethodUsages#m().
-[39:4..39:6): m5 => example.Methods#m5(Int).
+[39:4..39:6): m5 => example.Methods#m5(+1).
 [40:2..40:3): m => example.MethodUsages#m().
-[40:4..40:6): m6 => example.Methods#m6(Int).
+[40:4..40:6): m6 => example.Methods#m6().
 [41:2..41:3): m => example.MethodUsages#m().
-[41:4..41:6): m6 => example.Methods#m6(List).
+[41:4..41:6): m6 => example.Methods#m6(+1).
 [41:11..41:12): m => example.MethodUsages#m().
 [41:13..41:17): List => example.Methods#List#
 [41:18..41:21): Int => scala.Int#
 [41:22..41:22):  => example.Methods#List#`<init>`().
 [42:2..42:3): m => example.MethodUsages#m().
-[42:4..42:6): m6 => example.Methods#m6(List+1).
+[42:4..42:6): m6 => example.Methods#m6(+2).
 [42:7..42:10): Nil => scala.collection.immutable.Nil.
 [43:2..43:3): m => example.MethodUsages#m().
-[43:4..43:7): m7a => example.Methods#m7a(Methods,List,Ordering).
+[43:4..43:7): m7a => example.Methods#m7a().
 [43:8..43:9): m => example.MethodUsages#m().
 [43:15..43:16): m => example.MethodUsages#m().
 [43:17..43:21): List => example.Methods#List#
 [43:22..43:25): Int => scala.Int#
 [43:26..43:26):  => example.Methods#List#`<init>`().
 [44:2..44:3): m => example.MethodUsages#m().
-[44:4..44:7): m7b => example.Methods#m7b(List,Function1).
+[44:4..44:7): m7b => example.Methods#m7b().
 [44:12..44:13): m => example.MethodUsages#m().
 [44:14..44:18): List => example.Methods#List#
 [44:19..44:22): Int => scala.Int#
@@ -1158,27 +1327,27 @@ Occurrences:
 [45:2..45:3): m => example.MethodUsages#m().
 [45:4..45:11): `m8().` => example.Methods#`m8().`().
 [46:2..46:3): m => example.MethodUsages#m().
-[46:4..46:6): m9 => example.Methods#m9(`m9().`).
+[46:4..46:6): m9 => example.Methods#m9().
 [47:2..47:3): m => example.MethodUsages#m().
-[47:4..47:7): m10 => example.Methods#m10(AList).
+[47:4..47:7): m10 => example.Methods#m10().
 [48:2..48:3): m => example.MethodUsages#m().
-[48:4..48:7): m11 => example.Methods#m11(.type).
+[48:4..48:7): m11 => example.Methods#m11().
 [48:8..48:14): Predef => scala.Predef.
 [49:2..49:3): m => example.MethodUsages#m().
-[49:4..49:7): m11 => example.Methods#m11(.type+1).
+[49:4..49:7): m11 => example.Methods#m11(+1).
 [49:8..49:15): Example => example.Example.
 [50:2..50:3): m => example.MethodUsages#m().
-[50:4..50:8): m12a => example.Methods#m12a({}).
+[50:4..50:8): m12a => example.Methods#m12a().
 [51:2..51:3): m => example.MethodUsages#m().
-[51:4..51:8): m12b => example.Methods#m12b({}).
+[51:4..51:8): m12b => example.Methods#m12b().
 [52:2..52:3): m => example.MethodUsages#m().
-[52:4..52:7): m13 => example.Methods#m13(Int).
+[52:4..52:7): m13 => example.Methods#m13().
 [53:2..53:3): m => example.MethodUsages#m().
-[53:4..53:7): m14 => example.Methods#m14(T).
+[53:4..53:7): m14 => example.Methods#m14().
 [54:2..54:3): m => example.MethodUsages#m().
-[54:4..54:7): m15 => example.Methods#m15(=>Int).
+[54:4..54:7): m15 => example.Methods#m15().
 [55:2..55:3): m => example.MethodUsages#m().
-[55:4..55:7): m16 => example.Methods#m16(Int*).
+[55:4..55:7): m16 => example.Methods#m16().
 
 Diagnostics:
 [27:13..27:33)[warning] the existential type T forSome { type T }, which cannot be expressed by wildcards,  should be enabled
@@ -1205,6 +1374,29 @@ Synthetics:
   [0:15..0:24): $conforms => scala.Predef.$conforms().
   [0:25..0:28): Int => scala.Int#
 
+semanticdb/integration/src/main/scala/example/Objects.scala
+-----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Objects.scala
+Text => non-empty
+Language => Scala
+Symbols => 3 entries
+Occurrences => 3 entries
+
+Symbols:
+objects. => package objects
+objects.X. => final object X.{+1 decls}
+  extends AnyRef
+objects.X.Y. => final object Y
+  extends AnyRef
+
+Occurrences:
+[0:8..0:15): objects <= objects.
+[2:7..2:8): X <= objects.X.
+[3:9..3:10): Y <= objects.X.Y.
+
 semanticdb/integration/src/main/scala/example/Overrides.scala
 -------------------------------------------------------------
 
@@ -1225,12 +1417,10 @@ example.A#foo(). => abstract method foo: : Int
 example.B# => class B.{+2 decls}
   extends AnyRef
   extends A
-example.B#`<init>`(). => primary ctor <init>: (): B
-  B => example.B#
+example.B#`<init>`(). => primary ctor <init>: ()
 example.B#foo(). => method foo: : Int
   Int => scala.Int#
-java.lang.Object#`<init>`(). => ctor <init>: (): Object
-  Object => java.lang.Object#
+java.lang.Object#`<init>`(). => ctor <init>: ()
 scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
 
@@ -1262,29 +1452,32 @@ Symbols:
 example. => package example
 example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
-example.Synthetic#`<init>`(). => primary ctor <init>: (): Synthetic
-  Synthetic => example.Synthetic#
-scala.Array. => final object Array
-scala.Array.empty(ClassTag). => method empty: [T: <?>] => (evidence$1: <?>): Array[T]
-  T => scala.Array.empty(ClassTag).[T]
-  evidence$1 => scala.Array.empty(ClassTag).(evidence$1)
+example.Synthetic#`<init>`(). => primary ctor <init>: ()
+scala.Array. => final object Array.{+45 decls}
+  extends FallbackArrayBuilding
+  extends Serializable
+scala.Array.empty(). => method empty: [T: <?>] => (evidence$1: <?>): Array[T]
+  T => scala.Array.empty().[T]
+  evidence$1 => scala.Array.empty().(evidence$1)
   Array => scala.Array#
 scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
-scala.Int#`+`(Int). => abstract method +: (x: <?>): Int
-  x => scala.Int#`+`(Int).(x)
+scala.Int#`+`(+4). => abstract method +: (x: <?>): Int
+  x => scala.Int#`+`(+4).(x)
   Int => scala.Int#
 scala.collection.TraversableLike#headOption(). => method headOption: : Option[A]
   Option => scala.Option#
   A => scala.collection.TraversableLike#[A]
-scala.collection.immutable.List#map(Function1,CanBuildFrom). => final method map: [B: <?>, That: <?>] => (f: <?>)(bf: <?>): That
-  B => scala.collection.immutable.List#map(Function1,CanBuildFrom).[B]
-  That => scala.collection.immutable.List#map(Function1,CanBuildFrom).[That]
-  f => scala.collection.immutable.List#map(Function1,CanBuildFrom).(f)
-  bf => scala.collection.immutable.List#map(Function1,CanBuildFrom).(bf)
-scala.collection.immutable.List. => final object List
-scala.collection.immutable.StringLike#stripPrefix(String). => method stripPrefix: (prefix: <?>): String
-  prefix => scala.collection.immutable.StringLike#stripPrefix(String).(prefix)
+scala.collection.immutable.List#map(). => final method map: [B: <?>, That: <?>] => (f: <?>)(bf: <?>): That
+  B => scala.collection.immutable.List#map().[B]
+  That => scala.collection.immutable.List#map().[That]
+  f => scala.collection.immutable.List#map().(f)
+  bf => scala.collection.immutable.List#map().(bf)
+scala.collection.immutable.List. => final object List.{+7 decls}
+  extends SeqFactory[List]
+  extends Serializable
+scala.collection.immutable.StringLike#stripPrefix(). => method stripPrefix: (prefix: <?>): String
+  prefix => scala.collection.immutable.StringLike#stripPrefix().(prefix)
   String => java.lang.String#
 
 Occurrences:
@@ -1292,18 +1485,18 @@ Occurrences:
 [2:6..2:15): Synthetic <= example.Synthetic#
 [2:16..2:16):  <= example.Synthetic#`<init>`().
 [3:2..3:6): List => scala.collection.immutable.List.
-[3:10..3:13): map => scala.collection.immutable.List#map(Function1,CanBuildFrom).
-[3:16..3:17): + => scala.Int#`+`(Int).
+[3:10..3:13): map => scala.collection.immutable.List#map().
+[3:16..3:17): + => scala.Int#`+`(+4).
 [4:2..4:7): Array => scala.Array.
-[4:8..4:13): empty => scala.Array.empty(ClassTag).
+[4:8..4:13): empty => scala.Array.empty().
 [4:14..4:17): Int => scala.Int#
 [4:19..4:29): headOption => scala.collection.TraversableLike#headOption().
-[5:9..5:20): stripPrefix => scala.collection.immutable.StringLike#stripPrefix(String).
+[5:9..5:20): stripPrefix => scala.collection.immutable.StringLike#stripPrefix().
 
 Synthetics:
 [3:6..3:6):  => *.apply[Int]
   [0:0..0:1): * => _star_.
-  [0:2..0:7): apply => scala.collection.immutable.List.apply(A*).
+  [0:2..0:7): apply => scala.collection.immutable.List.apply().
   [0:8..0:11): Int => scala.Int#
 [3:13..3:13):  => *[Int, List[Int]]
   [0:0..0:1): * => _star_.
@@ -1315,7 +1508,7 @@ Synthetics:
   [0:34..0:46): canBuildFrom => scala.collection.immutable.List.canBuildFrom().
   [0:47..0:50): Int => scala.Int#
 [4:2..4:18): Array.empty[Int] => scala.Predef.intArrayOps(*)
-  [0:13..0:24): intArrayOps => scala.Predef.intArrayOps(Array).
+  [0:13..0:24): intArrayOps => scala.Predef.intArrayOps().
   [0:25..0:26): * => _star_.
 [4:18..4:18):  => *(((ClassTag.Int): ClassTag[Int]))
   [0:0..0:1): * => _star_.
@@ -1323,8 +1516,57 @@ Synthetics:
   [0:19..0:27): ClassTag => scala.reflect.ClassTag#
   [0:28..0:31): Int => scala.Int#
 [5:2..5:8): "fooo" => scala.Predef.augmentString(*)
-  [0:13..0:26): augmentString => scala.Predef.augmentString(String).
+  [0:13..0:26): augmentString => scala.Predef.augmentString().
   [0:27..0:28): * => _star_.
+
+semanticdb/integration/src/main/scala/example/Traits.scala
+----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Traits.scala
+Text => non-empty
+Language => Scala
+Symbols => 11 entries
+Occurrences => 14 entries
+
+Symbols:
+java.lang.Object#`<init>`(). => ctor <init>: ()
+local0 => selfparam self: V with C {}
+  V => traits.V#
+  C => traits.C#
+traits. => package traits
+traits.C# => class C.{+1 decls}
+  extends AnyRef
+traits.C#`<init>`(). => primary ctor <init>: ()
+traits.T# => trait T.{+1 decls}
+  extends AnyRef
+traits.T#x(). => method x: : Int
+  Int => scala.Int#
+traits.U# => sealed trait U
+  extends AnyRef
+traits.U. => final object U.{+1 decls}
+  extends AnyRef
+traits.U.u(). => method u: : U
+  U => traits.U#
+traits.V# => trait V
+  extends AnyRef
+
+Occurrences:
+[0:8..0:14): traits <= traits.
+[2:6..2:7): T <= traits.T#
+[3:6..3:7): x <= traits.T#x().
+[6:13..6:14): U <= traits.U#
+[7:7..7:8): U <= traits.U.
+[8:6..8:7): u <= traits.U.u().
+[8:9..8:10): U => traits.U#
+[8:17..8:18): U => traits.U#
+[8:19..8:19):  => java.lang.Object#`<init>`().
+[11:6..11:7): C <= traits.C#
+[11:7..11:7):  <= traits.C#`<init>`().
+[12:6..12:7): V <= traits.V#
+[12:10..12:14): self <= local0
+[12:16..12:17): C => traits.C#
 
 semanticdb/integration/src/main/scala/example/Types.scala
 ---------------------------------------------------------
@@ -1334,7 +1576,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
-Symbols => 178 entries
+Symbols => 144 entries
 Occurrences => 228 entries
 
 Symbols:
@@ -1364,67 +1606,53 @@ scala.annotation.StaticAnnotation# => trait StaticAnnotation
   extends Annotation
 scala.collection.SeqLike#length(). => abstract method length: : Int
   Int => scala.Int#
-scala.language. => final object language
-scala.language.existentials(). => implicit lazy val field existentials: existentials
+scala.language. => final object language.{+7 decls}
+  extends AnyRef
+scala.language.existentials(). => implicit lazy val method existentials: : existentials
   existentials => scala.languageFeature.existentials#
-scala.language.higherKinds(). => implicit lazy val field higherKinds: higherKinds
+scala.language.higherKinds(). => implicit lazy val method higherKinds: : higherKinds
   higherKinds => scala.languageFeature.higherKinds#
 scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
   A => scala.package.List#[A]
   List => scala.collection.immutable.List#
 scala.util. => package util
-scala.util.Either. => final object Either
+scala.util.Either. => final object Either.{+9 decls}
+  extends AnyRef
+  extends Serializable
 types. => package types
 types.B# => class B.{+1 decls}
   extends AnyRef
-types.B#`<init>`(). => primary ctor <init>: (): B
-  B => types.B#
+types.B#`<init>`(). => primary ctor <init>: ()
 types.C# => class C.{+1 decls}
   extends AnyRef
-types.C#`<init>`(). => primary ctor <init>: (): C
-  C => types.C#
-types.P# => class P.{+5 decls}
+types.C#`<init>`(). => primary ctor <init>: ()
+types.P# => class P.{+4 decls}
   extends AnyRef
 types.P#C# => class C.{+1 decls}
   extends AnyRef
-types.P#C#`<init>`(). => primary ctor <init>: (): P.this.C
-  P => types.P#
-  C => types.P#C#
+types.P#C#`<init>`(). => primary ctor <init>: ()
 types.P#X# => class X.{+1 decls}
   extends AnyRef
-types.P#X#`<init>`(). => primary ctor <init>: (): P.this.X
-  P => types.P#
-  X => types.P#X#
-types.P#`<init>`(). => primary ctor <init>: (): P
-  P => types.P#
+types.P#X#`<init>`(). => primary ctor <init>: ()
+types.P#`<init>`(). => primary ctor <init>: ()
 types.P#x(). => val method x: : P.this.X
   P => types.P#
   X => types.P#X#
-types.P#x. => private[this] val field x: P.this.X
-  P => types.P#
-  X => types.P#X#
-types.T# => class T.{+5 decls}
+types.T# => class T.{+4 decls}
   extends AnyRef
 types.T#C# => class C.{+1 decls}
   extends AnyRef
-types.T#C#`<init>`(). => primary ctor <init>: (): T.this.C
-  T => types.T#
-  C => types.T#C#
+types.T#C#`<init>`(). => primary ctor <init>: ()
 types.T#X# => class X.{+1 decls}
   extends AnyRef
-types.T#X#`<init>`(). => primary ctor <init>: (): T.this.X
-  T => types.T#
-  X => types.T#X#
-types.T#`<init>`(). => primary ctor <init>: (): T
-  T => types.T#
+types.T#X#`<init>`(). => primary ctor <init>: ()
+types.T#`<init>`(). => primary ctor <init>: ()
 types.T#x(). => val method x: : T.this.X
   T => types.T#
   X => types.T#X#
-types.T#x. => private[this] val field x: T.this.X
-  T => types.T#
-  X => types.T#X#
-types.Test. => final object Test
-types.Test.C# => class C.{+50 decls}
+types.Test. => final object Test.{+4 decls}
+  extends AnyRef
+types.Test.C# => class C.{+30 decls}
   extends M
 types.Test.C#$anon#L# => type L: [T >: Nothing <: Any] => >: List[T] <: List[T]
   T => types.Test.C#$anon#L#[T]
@@ -1436,18 +1664,18 @@ types.Test.C#$anon#L#[T] => typeparam T: >: Nothing <: Any
   Any => scala.Any#
 types.Test.C#$anon#k(). => abstract method k: : Int
   Int => scala.Int#
-types.Test.C#ByNameType. => final object ByNameType
-types.Test.C#ByNameType.m1(=>Int). => method m1: (x: => Int): Int
-  x => types.Test.C#ByNameType.m1(=>Int).(x)
+types.Test.C#ByNameType. => final object ByNameType.{+1 decls}
+  extends AnyRef
+types.Test.C#ByNameType.m1(). => method m1: (x: => Int): Int
+  x => types.Test.C#ByNameType.m1().(x)
   Int => scala.Int#
-types.Test.C#ByNameType.m1(=>Int).(x) => param x: => Int
+types.Test.C#ByNameType.m1().(x) => param x: => Int
   Int => scala.Int#
 types.Test.C#ClassInfoType1. => final object ClassInfoType1
+  extends AnyRef
 types.Test.C#ClassInfoType2# => class ClassInfoType2.{+2 decls}
   extends B
-types.Test.C#ClassInfoType2#`<init>`(). => primary ctor <init>: (): C.this.ClassInfoType2
-  C => types.Test.C#
-  ClassInfoType2 => types.Test.C#ClassInfoType2#
+types.Test.C#ClassInfoType2#`<init>`(). => primary ctor <init>: ()
 types.Test.C#ClassInfoType2#x(). => method x: : Int
   Int => scala.Int#
 types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any]
@@ -1457,69 +1685,66 @@ types.Test.C#ClassInfoType3#[T] => typeparam T: >: Nothing <: Any
   Any => scala.Any#
 types.Test.C#Either(). => val method Either: : Either.type
   Either => scala.util.Either.
-types.Test.C#Either. => private[this] val field Either: Either.type
-  Either => scala.util.Either.
-types.Test.C#MethodType. => final object MethodType
+types.Test.C#MethodType. => final object MethodType.{+6 decls}
+  extends AnyRef
 types.Test.C#MethodType.m3(). => method m3: : Int
   Int => scala.Int#
 types.Test.C#MethodType.m4(). => method m4: (): Int
   Int => scala.Int#
-types.Test.C#MethodType.m5(Int). => method m5: (x: Int): Int
-  x => types.Test.C#MethodType.m5(Int).(x)
+types.Test.C#MethodType.m5(). => method m5: (x: Int): Int
+  x => types.Test.C#MethodType.m5().(x)
   Int => scala.Int#
-types.Test.C#MethodType.m5(Int).(x) => param x: Int
+types.Test.C#MethodType.m5().(x) => param x: Int
   Int => scala.Int#
-types.Test.C#MethodType.m6(T). => method m6: [T >: Nothing <: Any] => (x: T): T
-  T => types.Test.C#MethodType.m6(T).[T]
+types.Test.C#MethodType.m6(). => method m6: [T >: Nothing <: Any] => (x: T): T
+  T => types.Test.C#MethodType.m6().[T]
   Nothing => scala.Nothing#
   Any => scala.Any#
-  x => types.Test.C#MethodType.m6(T).(x)
-types.Test.C#MethodType.m6(T).(x) => param x: T
-  T => types.Test.C#MethodType.m6(T).[T]
-types.Test.C#MethodType.m6(T).[T] => typeparam T: >: Nothing <: Any
+  x => types.Test.C#MethodType.m6().(x)
+types.Test.C#MethodType.m6().(x) => param x: T
+  T => types.Test.C#MethodType.m6().[T]
+types.Test.C#MethodType.m6().[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
 types.Test.C#MethodType.x1(). => method x1: : Int
   Int => scala.Int#
 types.Test.C#MethodType.x2(). => method x2: : Int
   Int => scala.Int#
-types.Test.C#RepeatedType# => case class RepeatedType.{+12 decls}
+types.Test.C#RepeatedType# => case class RepeatedType.{+11 decls}
   extends AnyRef
   extends Product
   extends Serializable
-types.Test.C#RepeatedType#`<init>`(String*). => primary ctor <init>: (val s: String*): C.this.RepeatedType
-  s => types.Test.C#RepeatedType#`<init>`(String*).(s)
+types.Test.C#RepeatedType#`<init>`(). => primary ctor <init>: (val s: String*)
+  s => types.Test.C#RepeatedType#`<init>`().(s)
   String => scala.Predef.String#
-  C => types.Test.C#
-  RepeatedType => types.Test.C#RepeatedType#
-types.Test.C#RepeatedType#`<init>`(String*).(s) => val param s: String*
+types.Test.C#RepeatedType#`<init>`().(s) => val param s: String*
   String => scala.Predef.String#
-types.Test.C#RepeatedType#canEqual(Any). => method canEqual: (x$1: Any): Boolean
-  x$1 => types.Test.C#RepeatedType#canEqual(Any).(x$1)
+types.Test.C#RepeatedType#canEqual(). => method canEqual: (x$1: Any): Boolean
+  x$1 => types.Test.C#RepeatedType#canEqual().(x$1)
   Any => scala.Any#
   Boolean => scala.Boolean#
-types.Test.C#RepeatedType#canEqual(Any).(x$1) => param x$1: Any
+types.Test.C#RepeatedType#canEqual().(x$1) => param x$1: Any
   Any => scala.Any#
-types.Test.C#RepeatedType#equals(Any). => method equals: (x$1: Any): Boolean
-  x$1 => types.Test.C#RepeatedType#equals(Any).(x$1)
+types.Test.C#RepeatedType#equals(). => method equals: (x$1: Any): Boolean
+  x$1 => types.Test.C#RepeatedType#equals().(x$1)
   Any => scala.Any#
   Boolean => scala.Boolean#
-types.Test.C#RepeatedType#equals(Any).(x$1) => param x$1: Any
+types.Test.C#RepeatedType#equals().(x$1) => param x$1: Any
   Any => scala.Any#
 types.Test.C#RepeatedType#hashCode(). => method hashCode: (): Int
   Int => scala.Int#
-types.Test.C#RepeatedType#m1(Int*). => method m1: (x: Int*): Int
-  x => types.Test.C#RepeatedType#m1(Int*).(x)
+types.Test.C#RepeatedType#m1(). => method m1: (x: Int*): Int
+  x => types.Test.C#RepeatedType#m1().(x)
   Int => scala.Int#
-types.Test.C#RepeatedType#m1(Int*).(x) => param x: Int*
+types.Test.C#RepeatedType#m1().(x) => param x: Int*
   Int => scala.Int#
 types.Test.C#RepeatedType#productArity(). => method productArity: : Int
   Int => scala.Int#
-types.Test.C#RepeatedType#productElement(Int). => method productElement: (x$1: Int): Any
-  x$1 => types.Test.C#RepeatedType#productElement(Int).(x$1)
+types.Test.C#RepeatedType#productElement(). => method productElement: (x$1: Int): Any
+  x$1 => types.Test.C#RepeatedType#productElement().(x$1)
   Int => scala.Int#
   Any => scala.Any#
-types.Test.C#RepeatedType#productElement(Int).(x$1) => param x$1: Int
+types.Test.C#RepeatedType#productElement().(x$1) => param x$1: Int
   Int => scala.Int#
 types.Test.C#RepeatedType#productIterator(). => method productIterator: : Iterator[Any]
   Iterator => scala.collection.Iterator#
@@ -1528,28 +1753,29 @@ types.Test.C#RepeatedType#productPrefix(). => method productPrefix: : String
   String => java.lang.String#
 types.Test.C#RepeatedType#s(). => val method s: : String*
   String => scala.Predef.String#
-types.Test.C#RepeatedType#s. => private[this] val field s: String*
-  String => scala.Predef.String#
 types.Test.C#RepeatedType#toString(). => method toString: (): String
   String => java.lang.String#
-types.Test.C#RepeatedType. => final object RepeatedType
-types.Test.C#RepeatedType.apply(String*). => case method apply: (s: <?>): C.this.RepeatedType
-  s => types.Test.C#RepeatedType.apply(String*).(s)
+types.Test.C#RepeatedType. => final object RepeatedType.{+3 decls}
+  extends AbstractFunction1[String*, C.this.RepeatedType]
+  extends Serializable
+types.Test.C#RepeatedType.apply(). => method apply: (s: <?>): C.this.RepeatedType
+  s => types.Test.C#RepeatedType.apply().(s)
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
 types.Test.C#RepeatedType.toString(). => final method toString: (): String
   String => java.lang.String#
-types.Test.C#RepeatedType.unapplySeq(RepeatedType). => case method unapplySeq: (x$0: C.this.RepeatedType): Option[Seq[String]]
-  x$0 => types.Test.C#RepeatedType.unapplySeq(RepeatedType).(x$0)
+types.Test.C#RepeatedType.unapplySeq(). => method unapplySeq: (x$0: C.this.RepeatedType): Option[Seq[String]]
+  x$0 => types.Test.C#RepeatedType.unapplySeq().(x$0)
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
   Option => scala.Option#
   Seq => scala.package.Seq#
   String => scala.Predef.String#
-types.Test.C#RepeatedType.unapplySeq(RepeatedType).(x$0) => param x$0: C.this.RepeatedType
+types.Test.C#RepeatedType.unapplySeq().(x$0) => param x$0: C.this.RepeatedType
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
-types.Test.C#TypeType. => final object TypeType
+types.Test.C#TypeType. => final object TypeType.{+5 decls}
+  extends AnyRef
 types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1577,13 +1803,8 @@ types.Test.C#TypeType.m3().[M3] => typeparam M3: [M3][_: <?>] => >: Nothing <: A
   M3][_ => types.Test.C#TypeType.m3().[M3][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#`<init>`(). => primary ctor <init>: (): C
-  C => types.Test.C#
+types.Test.C#`<init>`(). => primary ctor <init>: ()
 types.Test.C#annType1(). => val method annType1: : T @ann[Int]
-  T => types.T#
-  ann => types.ann#
-  Int => scala.Int#
-types.Test.C#annType1. => private[this] val field annType1: T @ann[Int]
   T => types.T#
   ann => types.ann#
   Int => scala.Int#
@@ -1591,30 +1812,14 @@ types.Test.C#annType2(). => val method annType2: : T @ann1 @ann2
   T => types.T#
   ann1 => types.ann1#
   ann2 => types.ann2#
-types.Test.C#annType2. => private[this] val field annType2: T @ann1 @ann2
-  T => types.T#
-  ann1 => types.ann1#
-  ann2 => types.ann2#
 types.Test.C#compoundType1(). => val method compoundType1: : AnyRef { method k: Int }
-  AnyRef => scala.AnyRef#
-  k => types.Test.C#$anon#k().
-  Int => scala.Int#
-types.Test.C#compoundType1. => private[this] val field compoundType1: AnyRef { method k: Int }
   AnyRef => scala.AnyRef#
   k => types.Test.C#$anon#k().
   Int => scala.Int#
 types.Test.C#compoundType2(). => val method compoundType2: : M with N {}
   M => types.Test.M#
   N => types.Test.N#
-types.Test.C#compoundType2. => private[this] val field compoundType2: M with N {}
-  M => types.Test.M#
-  N => types.Test.N#
 types.Test.C#compoundType3(). => val method compoundType3: : M with N { method k: Int }
-  M => types.Test.M#
-  N => types.Test.N#
-  k => types.Test.C#$anon#k().
-  Int => scala.Int#
-types.Test.C#compoundType3. => private[this] val field compoundType3: M with N { method k: Int }
   M => types.Test.M#
   N => types.Test.N#
   k => types.Test.C#$anon#k().
@@ -1623,50 +1828,27 @@ types.Test.C#existentialType1(). => val method existentialType1: : T forSome { t
   T => types.Test.C#existentialType1.T#
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#existentialType1. => private[this] val field existentialType1: T forSome { type T >: Nothing <: Any }
-  T => types.Test.C#existentialType1.T#
-  Nothing => scala.Nothing#
-  Any => scala.Any#
 types.Test.C#existentialType1.T# => abstract type T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
 types.Test.C#p(). => val method p: : P
   P => types.P#
-types.Test.C#p. => private[this] val field p: P
-  P => types.P#
 types.Test.C#singleType1(). => val method singleType1: : C.this.x.type
-  C => types.Test.C#
-  x => types.Test.C#x().
-types.Test.C#singleType1. => private[this] val field singleType1: C.this.x.type
   C => types.Test.C#
   x => types.Test.C#x().
 types.Test.C#singleType2(). => val method singleType2: : C.this.p.x.type
   C => types.Test.C#
   p => types.Test.C#p().
   x => types.P#x().
-types.Test.C#singleType2. => private[this] val field singleType2: C.this.p.x.type
-  C => types.Test.C#
-  p => types.Test.C#p().
-  x => types.P#x().
 types.Test.C#superType1(). => val method superType1: : Int
-  Int => scala.Int#
-types.Test.C#superType1. => private[this] val field superType1: Int
   Int => scala.Int#
 types.Test.C#superType2(). => val method superType2: : Int
   Int => scala.Int#
-types.Test.C#superType2. => private[this] val field superType2: Int
-  Int => scala.Int#
 types.Test.C#superType3(). => val method superType3: : Int
-  Int => scala.Int#
-types.Test.C#superType3. => private[this] val field superType3: Int
   Int => scala.Int#
 types.Test.C#thisType1(). => val method thisType1: : C.this.type
   C => types.Test.C#
-types.Test.C#thisType1. => private[this] val field thisType1: C.this.type
-  C => types.Test.C#
 types.Test.C#thisType2(). => val method thisType2: : C.this.type
-  C => types.Test.C#
-types.Test.C#thisType2. => private[this] val field thisType2: C.this.type
   C => types.Test.C#
 types.Test.C#typeLambda1(). => method typeLambda1: [M [M][_: <?>] => >: Nothing <: Any] => : Nothing
   M => types.Test.C#typeLambda1().[M]
@@ -1679,79 +1861,46 @@ types.Test.C#typeLambda1().[M] => typeparam M: [M][_: <?>] => >: Nothing <: Any
   Any => scala.Any#
 types.Test.C#typeRef1(). => val method typeRef1: : C
   C => types.Test.C#
-types.Test.C#typeRef1. => private[this] val field typeRef1: C
-  C => types.Test.C#
 types.Test.C#typeRef2(). => val method typeRef2: : C.this.p.C
-  C => types.Test.C#
-  p => types.Test.C#p().
-  C => types.P#C#
-types.Test.C#typeRef2. => private[this] val field typeRef2: C.this.p.C
   C => types.Test.C#
   p => types.Test.C#p().
   C => types.P#C#
 types.Test.C#typeRef3(). => val method typeRef3: : T#C
   T => types.T#
   C => types.T#C#
-types.Test.C#typeRef3. => private[this] val field typeRef3: T#C
-  T => types.T#
-  C => types.T#C#
 types.Test.C#typeRef4(). => val method typeRef4: : List[Int]
-  List => scala.package.List#
-  Int => scala.Int#
-types.Test.C#typeRef4. => private[this] val field typeRef4: List[Int]
   List => scala.package.List#
   Int => scala.Int#
 types.Test.C#x(). => val method x: : C.this.p.X
   C => types.Test.C#
   p => types.Test.C#p().
   X => types.P#X#
-types.Test.C#x. => private[this] val field x: C.this.p.X
-  C => types.Test.C#
-  p => types.Test.C#p().
-  X => types.P#X#
-types.Test.Literal. => final object Literal
+types.Test.Literal. => final object Literal.{+11 decls}
+  extends AnyRef
 types.Test.Literal.bool(). => final val method bool: : true
-types.Test.Literal.bool. => private[this] final val field bool: true
 types.Test.Literal.char(). => final val method char: : 'a'
-types.Test.Literal.char. => private[this] final val field char: 'a'
 types.Test.Literal.clazzOf(). => final val method clazzOf: : Class[Option[Int]]
   Class => java.lang.Class#
   Option => scala.Option#
   Int => scala.Int#
-types.Test.Literal.clazzOf. => private[this] final val field clazzOf: Class[Option[Int]]
-  Class => java.lang.Class#
-  Option => scala.Option#
-  Int => scala.Int#
 types.Test.Literal.double(). => final val method double: : 2.0
-types.Test.Literal.double. => private[this] final val field double: 2.0
 types.Test.Literal.float(). => final val method float: : 1.0f
-types.Test.Literal.float. => private[this] final val field float: 1.0f
 types.Test.Literal.int(). => final val method int: : 1
-types.Test.Literal.int. => private[this] final val field int: 1
 types.Test.Literal.javaEnum(). => final val method javaEnum: : NOFOLLOW_LINKS.type
   NOFOLLOW_LINKS => java.nio.file.LinkOption#NOFOLLOW_LINKS.
-types.Test.Literal.javaEnum. => private[this] final val field javaEnum: NOFOLLOW_LINKS.type
-  NOFOLLOW_LINKS => java.nio.file.LinkOption#NOFOLLOW_LINKS.
 types.Test.Literal.long(). => final val method long: : 1L
-types.Test.Literal.long. => private[this] final val field long: 1L
 types.Test.Literal.nil(). => final val method nil: : null
-types.Test.Literal.nil. => private[this] final val field nil: null
 types.Test.Literal.string(). => final val method string: : "a"
-types.Test.Literal.string. => private[this] final val field string: "a"
 types.Test.Literal.unit(). => final val method unit: : Unit
-  Unit => scala.Unit#
-types.Test.Literal.unit. => private[this] final val field unit: Unit
   Unit => scala.Unit#
 types.Test.M# => class M.{+2 decls}
   extends AnyRef
-types.Test.M#`<init>`(). => primary ctor <init>: (): M
-  M => types.Test.M#
+types.Test.M#`<init>`(). => primary ctor <init>: ()
 types.Test.M#m(). => method m: : Int
   Int => scala.Int#
 types.Test.N# => class N.{+2 decls}
   extends AnyRef
-types.Test.N#`<init>`(). => primary ctor <init>: (): N
-  N => types.Test.N#
+types.Test.N#`<init>`(). => primary ctor <init>: ()
 types.Test.N#n(). => method n: : Int
   Int => scala.Int#
 types.ann# => class ann[T >: Nothing <: Any].{+2 decls}
@@ -1760,24 +1909,21 @@ types.ann# => class ann[T >: Nothing <: Any].{+2 decls}
 types.ann#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.ann#`<init>`(T). => primary ctor <init>: (x: T): ann[T]
-  x => types.ann#`<init>`(T).(x)
+types.ann#`<init>`(). => primary ctor <init>: (x: T)
+  x => types.ann#`<init>`().(x)
   T => types.ann#[T]
-  ann => types.ann#
-types.ann#`<init>`(T).(x) => param x: T
+types.ann#`<init>`().(x) => param x: T
   T => types.ann#[T]
-types.ann#x. => private[this] val field x: T
+types.ann#x(). => private[this] val method x: : T
   T => types.ann#[T]
 types.ann1# => class ann1.{+1 decls}
   extends Annotation
   extends StaticAnnotation
-types.ann1#`<init>`(). => primary ctor <init>: (): ann1
-  ann1 => types.ann1#
+types.ann1#`<init>`(). => primary ctor <init>: ()
 types.ann2# => class ann2.{+1 decls}
   extends Annotation
   extends StaticAnnotation
-types.ann2#`<init>`(). => primary ctor <init>: (): ann2
-  ann2 => types.ann2#
+types.ann2#`<init>`(). => primary ctor <init>: ()
 
 Occurrences:
 [0:8..0:13): types <= types.
@@ -1789,8 +1935,8 @@ Occurrences:
 [3:22..3:33): higherKinds => scala.language.higherKinds().
 [5:6..5:9): ann <= types.ann#
 [5:10..5:11): T <= types.ann#[T]
-[5:12..5:12):  <= types.ann#`<init>`(T).
-[5:13..5:14): x <= types.ann#x.
+[5:12..5:12):  <= types.ann#`<init>`().
+[5:13..5:14): x <= types.ann#x().
 [5:16..5:17): T => types.ann#[T]
 [5:27..5:32): scala => scala.
 [5:33..5:43): annotation => scala.annotation.
@@ -1903,7 +2049,7 @@ Occurrences:
 [58:8..58:16): annType1 <= types.Test.C#annType1().
 [58:18..58:19): T => types.T#
 [58:21..58:24): ann => types.ann#
-[58:24..58:24):  => types.ann#`<init>`(T).
+[58:24..58:24):  => types.ann#`<init>`().
 [58:31..58:34): ??? => scala.Predef.`???`().
 [59:8..59:16): annType2 <= types.Test.C#annType2().
 [59:18..59:19): T => types.T#
@@ -1946,29 +2092,29 @@ Occurrences:
 [74:10..74:12): m4 <= types.Test.C#MethodType.m4().
 [74:16..74:19): Int => scala.Int#
 [74:22..74:25): ??? => scala.Predef.`???`().
-[75:10..75:12): m5 <= types.Test.C#MethodType.m5(Int).
-[75:13..75:14): x <= types.Test.C#MethodType.m5(Int).(x)
+[75:10..75:12): m5 <= types.Test.C#MethodType.m5().
+[75:13..75:14): x <= types.Test.C#MethodType.m5().(x)
 [75:16..75:19): Int => scala.Int#
 [75:22..75:25): Int => scala.Int#
 [75:28..75:31): ??? => scala.Predef.`???`().
-[76:10..76:12): m6 <= types.Test.C#MethodType.m6(T).
-[76:13..76:14): T <= types.Test.C#MethodType.m6(T).[T]
-[76:16..76:17): x <= types.Test.C#MethodType.m6(T).(x)
-[76:19..76:20): T => types.Test.C#MethodType.m6(T).[T]
-[76:23..76:24): T => types.Test.C#MethodType.m6(T).[T]
+[76:10..76:12): m6 <= types.Test.C#MethodType.m6().
+[76:13..76:14): T <= types.Test.C#MethodType.m6().[T]
+[76:16..76:17): x <= types.Test.C#MethodType.m6().(x)
+[76:19..76:20): T => types.Test.C#MethodType.m6().[T]
+[76:23..76:24): T => types.Test.C#MethodType.m6().[T]
 [76:27..76:30): ??? => scala.Predef.`???`().
 [79:11..79:21): ByNameType <= types.Test.C#ByNameType.
-[80:10..80:12): m1 <= types.Test.C#ByNameType.m1(=>Int).
-[80:13..80:14): x <= types.Test.C#ByNameType.m1(=>Int).(x)
+[80:10..80:12): m1 <= types.Test.C#ByNameType.m1().
+[80:13..80:14): x <= types.Test.C#ByNameType.m1().(x)
 [80:19..80:22): Int => scala.Int#
 [80:25..80:28): Int => scala.Int#
 [80:31..80:34): ??? => scala.Predef.`???`().
 [83:15..83:27): RepeatedType <= types.Test.C#RepeatedType#
-[83:27..83:27):  <= types.Test.C#RepeatedType#`<init>`(String*).
+[83:27..83:27):  <= types.Test.C#RepeatedType#`<init>`().
 [83:28..83:29): s <= types.Test.C#RepeatedType#s().
 [83:31..83:37): String => scala.`<repeated>`#
-[84:10..84:12): m1 <= types.Test.C#RepeatedType#m1(Int*).
-[84:13..84:14): x <= types.Test.C#RepeatedType#m1(Int*).(x)
+[84:10..84:12): m1 <= types.Test.C#RepeatedType#m1().
+[84:13..84:14): x <= types.Test.C#RepeatedType#m1().(x)
 [84:16..84:19): Int => scala.`<repeated>`#
 [84:23..84:26): Int => scala.Int#
 [84:29..84:30): s => types.Test.C#RepeatedType#s().
@@ -2017,111 +2163,93 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Vals.scala
 Text => non-empty
 Language => Scala
-Symbols => 52 entries
+Symbols => 43 entries
 Occurrences => 117 entries
 
 Symbols:
 example. => package example
-example.ValUsages. => final object ValUsages
+example.ValUsages. => final object ValUsages.{+1 decls}
+  extends AnyRef
 example.ValUsages.v(). => val method v: : Vals
   Vals => example.Vals#
-example.ValUsages.v. => private[this] val field v: Vals
-  Vals => example.Vals#
-example.Vals# => abstract class Vals.{+30 decls}
+example.Vals# => abstract class Vals.{+22 decls}
   extends AnyRef
-example.Vals#`<init>`(Int,Int,Int). => primary ctor <init>: (p: Int, val xp: Int, var yp: Int): Vals
-  p => example.Vals#`<init>`(Int,Int,Int).(p)
+example.Vals#`<init>`(). => primary ctor <init>: (p: Int, val xp: Int, var yp: Int)
+  p => example.Vals#`<init>`().(p)
   Int => scala.Int#
-  xp => example.Vals#`<init>`(Int,Int,Int).(xp)
-  yp => example.Vals#`<init>`(Int,Int,Int).(yp)
-  Vals => example.Vals#
-example.Vals#`<init>`(Int,Int,Int).(p) => param p: Int
+  xp => example.Vals#`<init>`().(xp)
+  yp => example.Vals#`<init>`().(yp)
+example.Vals#`<init>`().(p) => param p: Int
   Int => scala.Int#
-example.Vals#`<init>`(Int,Int,Int).(xp) => val param xp: Int
+example.Vals#`<init>`().(xp) => val param xp: Int
   Int => scala.Int#
-example.Vals#`<init>`(Int,Int,Int).(yp) => var param yp: Int
+example.Vals#`<init>`().(yp) => var param yp: Int
   Int => scala.Int#
-example.Vals#`yam_=`(Int). => abstract var method yam_=: (x$1: Int): Unit
-  x$1 => example.Vals#`yam_=`(Int).(x$1)
-  Int => scala.Int#
-  Unit => scala.Unit#
-example.Vals#`yam_=`(Int).(x$1) => param x$1: Int
-  Int => scala.Int#
-example.Vals#`yfm_=`(Int). => final var method yfm_=: (x$1: Int): Unit
-  x$1 => example.Vals#`yfm_=`(Int).(x$1)
+example.Vals#`yam_=`(). => abstract var method yam_=: (x$1: Int): Unit
+  x$1 => example.Vals#`yam_=`().(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-example.Vals#`yfm_=`(Int).(x$1) => param x$1: Int
+example.Vals#`yam_=`().(x$1) => param x$1: Int
   Int => scala.Int#
-example.Vals#`yim_=`(Int). => var method yim_=: (x$1: Int): Unit
-  x$1 => example.Vals#`yim_=`(Int).(x$1)
-  Int => scala.Int#
-  Unit => scala.Unit#
-example.Vals#`yim_=`(Int).(x$1) => param x$1: Int
-  Int => scala.Int#
-example.Vals#`ym_=`(Int). => var method ym_=: (x$1: Int): Unit
-  x$1 => example.Vals#`ym_=`(Int).(x$1)
+example.Vals#`yfm_=`(). => final var method yfm_=: (x$1: Int): Unit
+  x$1 => example.Vals#`yfm_=`().(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-example.Vals#`ym_=`(Int).(x$1) => param x$1: Int
+example.Vals#`yfm_=`().(x$1) => param x$1: Int
   Int => scala.Int#
-example.Vals#`yp_=`(Int). => var method yp_=: (x$1: Int): Unit
-  x$1 => example.Vals#`yp_=`(Int).(x$1)
+example.Vals#`yim_=`(). => var method yim_=: (x$1: Int): Unit
+  x$1 => example.Vals#`yim_=`().(x$1)
   Int => scala.Int#
   Unit => scala.Unit#
-example.Vals#`yp_=`(Int).(x$1) => param x$1: Int
+example.Vals#`yim_=`().(x$1) => param x$1: Int
+  Int => scala.Int#
+example.Vals#`ym_=`(). => var method ym_=: (x$1: Int): Unit
+  x$1 => example.Vals#`ym_=`().(x$1)
+  Int => scala.Int#
+  Unit => scala.Unit#
+example.Vals#`ym_=`().(x$1) => param x$1: Int
+  Int => scala.Int#
+example.Vals#`yp_=`(). => var method yp_=: (x$1: Int): Unit
+  x$1 => example.Vals#`yp_=`().(x$1)
+  Int => scala.Int#
+  Unit => scala.Unit#
+example.Vals#`yp_=`().(x$1) => param x$1: Int
   Int => scala.Int#
 example.Vals#m(). => method m: : Unit
   Unit => scala.Unit#
-example.Vals#p. => private[this] val field p: Int
+example.Vals#p(). => private[this] val method p: : Int
   Int => scala.Int#
 example.Vals#xam(). => abstract val method xam: : Int
   Int => scala.Int#
 example.Vals#xfm(). => final val method xfm: : Int
   Int => scala.Int#
-example.Vals#xfm. => private[this] final val field xfm: Int
-  Int => scala.Int#
 example.Vals#xim(). => implicit val method xim: : Int
   Int => scala.Int#
-example.Vals#xim. => private[this] val field xim: Int
-  Int => scala.Int#
-example.Vals#xlm. => private[this] val field xlm: Int
+example.Vals#xlm(). => private[this] val method xlm: : Int
   Int => scala.Int#
 example.Vals#xm(). => val method xm: : Int
   Int => scala.Int#
-example.Vals#xm. => private[this] val field xm: Int
-  Int => scala.Int#
 example.Vals#xp(). => val method xp: : Int
   Int => scala.Int#
-example.Vals#xp. => private[this] val field xp: Int
+example.Vals#xzlm(). => private[this] lazy val method xzlm: : Int
   Int => scala.Int#
-example.Vals#xzlm(). => private[this] lazy val field xzlm: Int
-  Int => scala.Int#
-example.Vals#xzm(). => lazy val field xzm: Int
+example.Vals#xzm(). => lazy val method xzm: : Int
   Int => scala.Int#
 example.Vals#yam(). => abstract var method yam: : Int
   Int => scala.Int#
 example.Vals#yfm(). => final var method yfm: : Int
   Int => scala.Int#
-example.Vals#yfm. => private[this] final var field yfm: Int
-  Int => scala.Int#
 example.Vals#yim(). => implicit var method yim: : Int
   Int => scala.Int#
-example.Vals#yim. => private[this] var field yim: Int
-  Int => scala.Int#
-example.Vals#ylm. => private[this] var field ylm: Int
+example.Vals#ylm(). => private[this] var method ylm: : Int
   Int => scala.Int#
 example.Vals#ym(). => var method ym: : Int
   Int => scala.Int#
-example.Vals#ym. => private[this] var field ym: Int
-  Int => scala.Int#
 example.Vals#yp(). => var method yp: : Int
-  Int => scala.Int#
-example.Vals#yp. => private[this] var field yp: Int
   Int => scala.Int#
 local0 => val local xl: Int
   Int => scala.Int#
-local1 => lazy val local xzl: Int
+local1 => lazy val local xzl: : Int
   Int => scala.Int#
 local2 => implicit val local xil: Int
   Int => scala.Int#
@@ -2131,20 +2259,20 @@ local4 => implicit var local yil: Int
   Int => scala.Int#
 scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
-scala.Int#`+`(Int). => abstract method +: (x: <?>): Int
-  x => scala.Int#`+`(Int).(x)
+scala.Int#`+`(+4). => abstract method +: (x: <?>): Int
+  x => scala.Int#`+`(+4).(x)
   Int => scala.Int#
 scala.Predef.`???`(). => method ???: : Nothing
   Nothing => scala.Nothing#
-scala.Predef.println(Any). => method println: (x: <?>): Unit
-  x => scala.Predef.println(Any).(x)
+scala.Predef.println(+1). => method println: (x: <?>): Unit
+  x => scala.Predef.println(+1).(x)
   Unit => scala.Unit#
 
 Occurrences:
 [0:8..0:15): example <= example.
 [2:15..2:19): Vals <= example.Vals#
-[2:19..2:19):  <= example.Vals#`<init>`(Int,Int,Int).
-[2:20..2:21): p <= example.Vals#p.
+[2:19..2:19):  <= example.Vals#`<init>`().
+[2:20..2:21): p <= example.Vals#p().
 [2:23..2:26): Int => scala.Int#
 [2:32..2:34): xp <= example.Vals#xp().
 [2:36..2:39): Int => scala.Int#
@@ -2155,7 +2283,7 @@ Occurrences:
 [3:16..3:19): ??? => scala.Predef.`???`().
 [4:6..4:9): xam <= example.Vals#xam().
 [4:11..4:14): Int => scala.Int#
-[5:20..5:23): xlm <= example.Vals#xlm.
+[5:20..5:23): xlm <= example.Vals#xlm().
 [5:25..5:28): Int => scala.Int#
 [5:31..5:34): ??? => scala.Predef.`???`().
 [6:11..6:14): xzm <= example.Vals#xzm().
@@ -2175,7 +2303,7 @@ Occurrences:
 [10:16..10:19): ??? => scala.Predef.`???`().
 [11:6..11:9): yam <= example.Vals#yam().
 [11:11..11:14): Int => scala.Int#
-[12:20..12:23): ylm <= example.Vals#ylm.
+[12:20..12:23): ylm <= example.Vals#ylm().
 [12:25..12:28): Int => scala.Int#
 [12:31..12:34): ??? => scala.Predef.`???`().
 [16:12..16:15): yfm <= example.Vals#yfm().
@@ -2202,59 +2330,59 @@ Occurrences:
 [29:28..29:31): ??? => scala.Predef.`???`().
 [30:4..30:6): yl => local3
 [30:9..30:11): xl => local0
-[30:12..30:13): + => scala.Int#`+`(Int).
+[30:12..30:13): + => scala.Int#`+`(+4).
 [30:14..30:16): yl => local3
-[31:4..31:11): println => scala.Predef.println(Any).
+[31:4..31:11): println => scala.Predef.println(+1).
 [31:12..31:15): xzl => local1
 [32:4..32:7): yil => local4
 [32:10..32:13): xil => local2
-[32:14..32:15): + => scala.Int#`+`(Int).
+[32:14..32:15): + => scala.Int#`+`(+4).
 [32:16..32:19): yil => local4
-[34:2..34:9): println => scala.Predef.println(Any).
+[34:2..34:9): println => scala.Predef.println(+1).
 [34:10..34:14): xzlm => example.Vals#xzlm().
-[35:2..35:5): ylm => example.Vals#ylm.
-[35:8..35:11): xlm => example.Vals#xlm.
-[35:12..35:13): + => scala.Int#`+`(Int).
-[35:14..35:17): ylm => example.Vals#ylm.
+[35:2..35:5): ylm => example.Vals#ylm().
+[35:8..35:11): xlm => example.Vals#xlm().
+[35:12..35:13): + => scala.Int#`+`(+4).
+[35:14..35:17): ylm => example.Vals#ylm().
 [38:7..38:16): ValUsages <= example.ValUsages.
 [39:6..39:7): v <= example.ValUsages.v().
 [39:9..39:13): Vals => example.Vals#
 [39:16..39:19): ??? => scala.Predef.`???`().
 [40:2..40:3): v => example.ValUsages.v().
-[40:4..40:6): yp => example.Vals#`yp_=`(Int).
+[40:4..40:6): yp => example.Vals#`yp_=`().
 [40:9..40:10): v => example.ValUsages.v().
 [40:11..40:13): xp => example.Vals#xp().
-[40:14..40:15): + => scala.Int#`+`(Int).
+[40:14..40:15): + => scala.Int#`+`(+4).
 [40:16..40:17): v => example.ValUsages.v().
 [40:18..40:20): yp => example.Vals#yp().
 [41:2..41:3): v => example.ValUsages.v().
-[41:4..41:6): ym => example.Vals#`ym_=`(Int).
+[41:4..41:6): ym => example.Vals#`ym_=`().
 [41:9..41:10): v => example.ValUsages.v().
 [41:11..41:13): xm => example.Vals#xm().
-[41:14..41:15): + => scala.Int#`+`(Int).
+[41:14..41:15): + => scala.Int#`+`(+4).
 [41:16..41:17): v => example.ValUsages.v().
 [41:18..41:20): ym => example.Vals#ym().
 [42:2..42:3): v => example.ValUsages.v().
-[42:4..42:7): yam => example.Vals#`yam_=`(Int).
+[42:4..42:7): yam => example.Vals#`yam_=`().
 [42:10..42:11): v => example.ValUsages.v().
 [42:12..42:15): xam => example.Vals#xam().
-[42:16..42:17): + => scala.Int#`+`(Int).
+[42:16..42:17): + => scala.Int#`+`(+4).
 [42:18..42:19): v => example.ValUsages.v().
 [42:20..42:23): yam => example.Vals#yam().
-[43:2..43:9): println => scala.Predef.println(Any).
+[43:2..43:9): println => scala.Predef.println(+1).
 [43:10..43:11): v => example.ValUsages.v().
 [43:12..43:15): xzm => example.Vals#xzm().
 [44:2..44:3): v => example.ValUsages.v().
-[44:4..44:7): yfm => example.Vals#`yfm_=`(Int).
+[44:4..44:7): yfm => example.Vals#`yfm_=`().
 [44:10..44:11): v => example.ValUsages.v().
 [44:12..44:15): xfm => example.Vals#xfm().
-[44:16..44:17): + => scala.Int#`+`(Int).
+[44:16..44:17): + => scala.Int#`+`(+4).
 [44:18..44:19): v => example.ValUsages.v().
 [44:20..44:23): yfm => example.Vals#yfm().
 [45:2..45:3): v => example.ValUsages.v().
-[45:4..45:7): yim => example.Vals#`yim_=`(Int).
+[45:4..45:7): yim => example.Vals#`yim_=`().
 [45:10..45:11): v => example.ValUsages.v().
 [45:12..45:15): xim => example.Vals#xim().
-[45:16..45:17): + => scala.Int#`+`(Int).
+[45:16..45:17): + => scala.Int#`+`(+4).
 [45:18..45:19): v => example.ValUsages.v().
 [45:20..45:23): yim => example.Vals#yim().

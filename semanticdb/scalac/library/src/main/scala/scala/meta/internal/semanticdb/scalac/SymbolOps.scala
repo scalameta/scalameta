@@ -31,7 +31,7 @@ trait SymbolOps { self: SemanticdbOps =>
 
         val owner = sym.owner.toSemantic
         val signature = {
-          if (sym.isMethod) {
+          if (sym.isMethod || sym.isUsefulField) {
             m.Signature.Method(sym.name.toSemantic, sym.disambiguator)
           } else if (sym.isTypeParameter) {
             m.Signature.TypeParameter(sym.name.toSemantic)
@@ -76,9 +76,6 @@ trait SymbolOps { self: SemanticdbOps =>
       !definitelyGlobal && (definitelyLocal || sym.owner.isSemanticdbLocal)
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
-    def descriptor: String = {
-      sym.info.descriptor.toString
-    }
     def filterSiblings(syms: List[g.Symbol]): List[g.Symbol] = {
       syms.filter(_.name == sym.name)
     }
@@ -91,8 +88,7 @@ trait SymbolOps { self: SemanticdbOps =>
       }
     }
     def disambiguator: String = {
-      val siblings = filterSiblings
-      val synonyms = siblings.filter(_.descriptor == sym.descriptor)
+      val synonyms = filterSiblings
       val suffix = {
         if (synonyms.lengthCompare(1) == 0) ""
         else {
@@ -101,7 +97,7 @@ trait SymbolOps { self: SemanticdbOps =>
           else "+" + index
         }
       }
-      "(" + descriptor + suffix + ")"
+      "(" + suffix + ")"
     }
     def isSelfParameter: Boolean = {
       sym != g.NoSymbol && sym.owner.thisSym == sym
@@ -113,5 +109,43 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isJavaDefined &&
         !sym.hasPackageFlag &&
         (sym.isClass || sym.isModule)
+    def isSyntheticConstructor: Boolean = {
+      (sym.isConstructor || sym.isMixinConstructor) &&
+      (sym.owner.isModuleClass || sym.owner.isTrait)
+    }
+    def isLocalChild: Boolean =
+      sym.name == g.tpnme.LOCAL_CHILD
+    def isSyntheticValueClassCompanion: Boolean = {
+      if (sym.isModule) {
+        sym.moduleClass.isSyntheticValueClassCompanion
+      } else {
+        sym.isModuleClass &&
+        sym.isSynthetic &&
+        sym.info.decls.useful.isEmpty
+      }
+    }
+    def isScalacField: Boolean = {
+      val isFieldForPrivateThis = sym.isPrivateThis && sym.isTerm && !sym.isMethod && !sym.isModule
+      val isFieldForOther = sym.name.endsWith(g.nme.LOCAL_SUFFIX_STRING)
+      val isJavaDefined = sym.isJavaDefined || sym.hasJavaEnumFlag
+      (isFieldForPrivateThis || isFieldForOther) && !isJavaDefined
+    }
+    def isUselessField: Boolean = {
+      sym.isScalacField && sym.getterIn(sym.owner) != g.NoSymbol
+    }
+    def isUsefulField: Boolean = {
+      sym.isScalacField && !sym.isUselessField
+    }
+    def isUseless: Boolean = {
+      sym.isSyntheticConstructor ||
+      sym.isLocalChild ||
+      sym.isSyntheticValueClassCompanion ||
+      sym.isUselessField
+    }
+    def isUseful: Boolean = !sym.isUseless
+  }
+
+  implicit class XtensionGScope(decls: g.Scope) {
+    def useful: List[g.Symbol] = decls.sorted.filter(_.isUseful)
   }
 }

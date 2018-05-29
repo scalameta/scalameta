@@ -63,7 +63,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
         object traverser extends m.Traverser {
           private def indexName(mname: m.Name): Unit = {
             todo += mname
-            // TODO: also drop trivia (no idea how to formulate this concisely)
             val tok = mname.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption
             val mstart1 = tok.map(_.start).getOrElse(mname.pos.start)
             val mend1 = tok.map(_.end).getOrElse(mname.pos.end)
@@ -81,7 +80,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
           private def indexArgNames(mapp: m.Tree, mnames: List[m.Name]): Unit = {
             if (mnames.isEmpty) return
             todo ++= mnames
-            // TODO: also drop trivia (no idea how to formulate this concisely)
             val mstart1 = mapp.tokens
               .dropWhile(_.is[m.Token.LeftParen])
               .headOption
@@ -139,7 +137,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 indexName(mname)
                 return // NOTE: ignore mrename for now, we may decide to make it a binder
               case mtree @ m.Name.Anonymous() =>
-              // TODO: support non-ctor-related use cases for anonymous names
+                ()
               case mtree: m.Ctor =>
                 mctordefs(mtree.pos.start) = mtree.name
               case mtree: m.Term.New =>
@@ -149,7 +147,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case mtree: m.Name =>
                 indexName(mtree)
               case _ =>
-              // do nothing
+                ()
             }
             super.apply(mtree)
           }
@@ -166,13 +164,14 @@ trait TextDocumentOps { self: SemanticdbOps =>
               // Instead of crashing with "unsupported file", we ignore these cases.
               if (gsym0 == null) return
               if (gsym0.isAnonymousClass) return
+              if (gsym0.isUseless) return
               if (mtree.pos == m.Position.None) return
               if (occurrences.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
               val gsym = {
                 def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
                 if (gsym0 != null && isClassRefInCtorCall) gsym0.owner
-                else gsym0 // TODO: fix this in callers of `success`
+                else gsym0
               }
               val symbol = gsym.toSemantic
               if (symbol == m.Symbol.None) return
@@ -185,13 +184,12 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 if (isToplevel) {
                   unit.source.file match {
                     case gfile: GPlainFile =>
-                      // TODO: Decide on the uri format for semanticdb.semanticidx.
+                      // FIXME: https://github.com/scalameta/scalameta/issues/1396
                       val scalaRelPath = m.AbsolutePath(gfile.file).toRelative(config.sourceroot)
                       val semanticdbRelPath = scalaRelPath + ".semanticdb"
                       val suri = PathIO.toUnix(semanticdbRelPath.toString)
                       val ssymbol = symbol.syntax
-                      val sowner = gsym.owner.toSemantic.syntax
-                      val sinfo = s.SymbolInformation(symbol = ssymbol, owner = sowner)
+                      val sinfo = s.SymbolInformation(symbol = ssymbol)
                       index.append(suri, List(sinfo))
                     case _ =>
                       ()
@@ -202,13 +200,15 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
               def saveSymbol(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  val SymbolInformationResult(denot, todoTpe1) = gs.toSymbolInformation()
-                  symbols(ms) = denot
-                  todoTpe1.foreach { tgs =>
-                    if (tgs.isSemanticdbLocal) {
-                      val tms = tgs.toSemantic
-                      if (tms != m.Symbol.None && !symbols.contains(tms)) {
-                        add(tms, tgs)
+                  if (gs.isUseful) {
+                    val SymbolInformationResult(denot, todoTpe1) = gs.toSymbolInformation()
+                    symbols(ms) = denot
+                    todoTpe1.foreach { tgs =>
+                      if (tgs.isSemanticdbLocal) {
+                        val tms = tgs.toSemantic
+                        if (tms != m.Symbol.None && !symbols.contains(tms)) {
+                          add(tms, tgs)
+                        }
                       }
                     }
                   }
@@ -314,24 +314,27 @@ trait TextDocumentOps { self: SemanticdbOps =>
             // Unfortunately, this is often not the case as demonstrated by a bunch of cases above and below.
             if (tryMpos(gstart, gend)) return
 
+            val gsym = gtree.symbol
             gtree match {
-              case gtree: g.ValDef if gtree.symbol.isSelfParameter =>
+              case gtree: g.ValDef if gsym.isSelfParameter =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
-                if (!gtree.symbol.isSemanticdbLocal) {
-                  symbols(gtree.symbol.toSemantic) = gtree.symbol.toSymbolInformation().denot
+                if (!gsym.isSemanticdbLocal && !gsym.isUseless) {
+                  symbols(gsym.toSemantic) = gsym.toSymbolInformation().denot
                 }
               case gtree: g.PackageDef =>
-              // NOTE: capture PackageDef.pid instead
+                // NOTE: capture PackageDef.pid instead
+                ()
               case gtree: g.ModuleDef if gtree.name == g.nme.PACKAGE =>
-                // TODO: if a package object comes first in the compilation unit
+                // NOTE: if a package object comes first in the compilation unit
                 // then its positions are completely mental, so we just hack around
                 tryMstart(gpoint + 7)
                 tryMstart(gpoint)
               case gtree: g.ValDef =>
                 val gsym = gtree.symbol
                 if (!gsym.isMethod && gsym.getterIn(gsym.owner) != g.NoSymbol) {
-                  // TODO: Skip the field definition in favor of the associated getter.
+                  // FIXME: https://github.com/scalameta/scalameta/issues/1538
+                  // Skip the field definition in favor of the associated getter.
                   // This will make sure that val/var class parameters are consistently
                   // resolved to getter symbols both as definition and references.
                 } else {
@@ -345,7 +348,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case gtree: g.This =>
                 tryMstart(gpoint)
               case gtree: g.Super =>
-                // TODO: change the delta to account for whitespace and comments
                 tryMend(gend - 1)
               case gtree: g.Select if gtree.symbol == g.definitions.NilModule =>
                 // NOTE: List() gets desugared into mkAttributedRef(NilModule)
@@ -506,6 +508,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
       val input = unit.source.toInput
 
+      val finalSymbols = symbols.values.toList
+
       val finalOccurrences = occurrences.flatMap {
         case (pos, sym) =>
           flatten(sym).map { flatSym =>
@@ -527,7 +531,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
         uri = unit.source.toUri,
         text = unit.source.toText,
         language = s.Language.SCALA,
-        symbols = symbols.values.toSeq,
+        symbols = finalSymbols,
         occurrences = finalOccurrences,
         diagnostics = diagnostics,
         synthetics = finalSynthetics

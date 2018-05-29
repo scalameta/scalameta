@@ -18,8 +18,6 @@ import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
 import scala.compat.Platform.EOL
 
-// TODO: ideally, we would like to bootstrap these macros on top of scala.meta
-// so that quasiquotes can be interpreted by any host, not just scalac
 class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
@@ -69,7 +67,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       def mkHole(argi: (ReflectTree, Int)) = {
         val (arg, i) = argi
         val name = TermName(QuasiquotePrefix + "$hole$" + i)
-        Hole(name, arg, reifier = EmptyTree) // TODO: make reifier immutable somehow
+        Hole(name, arg, reifier = EmptyTree)
       }
       try {
         c.macroApplication match {
@@ -112,21 +110,21 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   }
 
   private implicit def metaPositionToReflectPosition(pos: MetaPosition): ReflectPosition = {
-    // TODO: this is another instance of #383
+    // WONTFIX: https://github.com/scalameta/scalameta/issues/383
     c.macroApplication.pos.focus.withPoint(pos.absolutize.start)
   }
 
   private def instantiateDialect(dialectTree: ReflectTree, mode: Mode): Dialect = {
-    // We want to have a higher-order way to abstract over differences in dialects
+    // NOTE: We want to have a higher-order way to abstract over differences in dialects
     // and we're using implicits for that (implicits are values => values are higher-order => good).
     //
     // However, quasiquotes use macros, and macros are first-order, so we have a problem here.
     // Concretely, here we need to convert an implicit argument to a macro (the `dialectTree` tree)
     // into an instance of `Dialect` that we'll pass to the parser.
     //
-    // TODO: For now I'll just prohibit quasiquotes for situations when `dialectTree` doesn't point to one of the predefined dialects.
+    // For now I'll just prohibit quasiquotes for situations when `dialectTree` doesn't point to one of the predefined dialects.
     // A natural extension to this would be to allow any static value, not just predefined dialects.
-    // Later on, we could further relax this restriction by doing parsing for a superset of all dialects and then
+    // Furthermore, we could further relax this restriction by doing parsing for a superset of all dialects and then
     // delaying validation of resulting ASTs until runtime.
     val underlyingDialect = {
       def instantiateStandardDialect(sym: ReflectSymbol): Option[Dialect] = {
@@ -225,7 +223,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       }
       def liftTrees(trees: List[MetaTree]): ReflectTree = {
         def loop(trees: List[MetaTree], acc: ReflectTree, prefix: List[MetaTree]): ReflectTree = trees match {
-          // TODO: instead of checking against 1, we should also take pendingQuasis into account
           case (quasi: Quasi) +: rest if quasi.rank == 1 =>
             if (acc.isEmpty) {
               if (prefix.isEmpty) loop(rest, liftQuasi(quasi), Nil)
@@ -286,7 +283,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                 val liftedPt = inferredPt
                 q"$InternalLift[$liftedPt](${quasi.hole.arg})"
               case Mode.Pattern(_, _, _) =>
-                // TODO: Here, we would like to say q"$InternalUnlift[$inferredPt](${quasi.hole.arg})".
+                // NOTE: Here, we would like to say q"$InternalUnlift[$inferredPt](${quasi.hole.arg})".
                 // Unfortunately, the way how patterns work prevents us from having it this easy:
                 // 1) unapplications can't have explicitly specified type arguments
                 // 2) pattern language is very limited and can't express what we want to express in Unlift
@@ -298,7 +295,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                   case pq"$_: $explicitPt" => explicitPt
                   case _ => TypeTree(inferredPt)
                 }
-                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$unliftedPt](${hole.name})") // TODO: make `reifier` immutable somehow
+                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$unliftedPt](${hole.name})")
                 pq"${hole.name}"
             }
             atPos(quasi.pos)(lifted)
@@ -356,7 +353,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           println(internalResult)
           // println(showRaw(internalResult))
         }
-        internalResult // TODO: q"InternalLift[${unapplySelector.tpe}]($internalResult)"
+        internalResult
     }
   }
 }

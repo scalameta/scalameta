@@ -13,8 +13,6 @@ package object meta extends classifiers.Api with classifiers.Aliases
                        with transversers.Api with transversers.Aliases
                        with trees.Api with trees.Aliases {
 
-  // TODO: The necessity of scalameta/package.scala being non-empty is unsatisfying.
-  // We seriously need to come up with a better way of achieving similar functionality.
   type XtensionParsersDialectApply // shadow conflicting implicit class
   type XtensionTokenizersDialectApply // shadow conflicting implicit class
   implicit class XtensionDialectApply(dialect: scala.meta.Dialect) {

@@ -1,10 +1,51 @@
+========
+classes.
+========
+--- metac
++++ metacp
+ kind: PACKAGE
+ properties: 0
+ name: "classes"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: SCALA
+
+
+============================
+classes.C3#copy$default$1().
+============================
+--- metac
++++ metacp
+             symbol: "scala.Int#"
+-        annotations {
+-          tpe {
+-            tag: TYPE_REF
+-            typeRef {
+-              symbol: "scala.annotation.unchecked.uncheckedVariance#"
+
+
+============================
+classes.C4#copy$default$1().
+============================
+--- metac
++++ metacp
+             symbol: "scala.Int#"
+-        annotations {
+-          tpe {
+-            tag: TYPE_REF
+-            typeRef {
+-              symbol: "scala.annotation.unchecked.uncheckedVariance#"
+
+
 ====
 com.
 ====
 --- metac
 +++ metacp
+   tag: PUBLIC
    symbol: ""
- owner: "_root_."
 -language: SCALA
 +language: JAVA
 
@@ -14,8 +55,8 @@ com.javacp.
 ===========
 --- metac
 +++ metacp
+   tag: PUBLIC
    symbol: ""
- owner: "com."
 -language: SCALA
 +language: JAVA
 
@@ -25,29 +66,19 @@ com.javacp.Coin#
 ================
 --- metac
 +++ metacp
--    declarations: "com.javacp.Coin#`<init>`(Int)."
+-    declarations: "com.javacp.Coin#`<init>`()."
 -    declarations: "com.javacp.Coin#value."
--    declarations: "com.javacp.Coin#value()."
+-    declarations: "com.javacp.Coin#value(+1)."
      declarations: "com.javacp.Coin#PENNY."
      declarations: "com.javacp.Coin#NICKEL."
      declarations: "com.javacp.Coin#DIME."
      declarations: "com.javacp.Coin#QUARTER."
 +    declarations: "com.javacp.Coin#value."
 +    declarations: "com.javacp.Coin#$VALUES."
-+    declarations: "com.javacp.Coin#`<init>`(Int)."
++    declarations: "com.javacp.Coin#`<init>`()."
 +    declarations: "com.javacp.Coin#value()."
      declarations: "com.javacp.Coin#values()."
-     declarations: "com.javacp.Coin#valueOf(String)."
-
-
-=====================
-com.javacp.Interface#
-=====================
---- metac
-+++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.Interface#`<init>`()."
- accessibility {
+     declarations: "com.javacp.Coin#valueOf()."
 
 
 =====================
@@ -60,13 +91,13 @@ com.javacp.MetacJava#
 -    declarations: "com.javacp.MetacJava#Overload1#"
 -    declarations: "com.javacp.MetacJava#Overload2#"
 -    declarations: "com.javacp.MetacJava#Overload2#"
-     declarations: "com.javacp.MetacJava#overload(A)."
-     declarations: "com.javacp.MetacJava#overload(A+1)."
+     declarations: "com.javacp.MetacJava#overload()."
+     declarations: "com.javacp.MetacJava#overload(+1)."
 -    declarations: "com.javacp.MetacJava#StaticInner#"
 -    declarations: "com.javacp.MetacJava#StaticInner#"
 -    declarations: "com.javacp.MetacJava#Overload3#"
 -    declarations: "com.javacp.MetacJava#Overload3#"
-     declarations: "com.javacp.MetacJava#overload(A+2)."
+     declarations: "com.javacp.MetacJava#overload(+2)."
 +    declarations: "com.javacp.MetacJava#Overload2#"
 +    declarations: "com.javacp.MetacJava#Overload3#"
 +    declarations: "com.javacp.MetacJava#Overload1#"
@@ -79,99 +110,10 @@ com.javacp.MetacJava#Overload1#
 ===============================
 --- metac
 +++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.MetacJava#Overload1#`<init>`()."
-+    declarations: "com.javacp.MetacJava#Overload1#`<init>`(MetacJava)."
+     declarations: "com.javacp.MetacJava#Overload1#`<init>`()."
      declarations: "com.javacp.MetacJava#Overload1#A#"
 -    declarations: "com.javacp.MetacJava#Overload1#A#"
  accessibility {
-
-
-=================================
-com.javacp.MetacJava#Overload1#A#
-=================================
---- metac
-+++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.MetacJava#Overload1#A#`<init>`()."
-+    declarations: "com.javacp.MetacJava#Overload1#A#`<init>`(Overload1)."
- accessibility {
-
-
-============================================
-com.javacp.MetacJava#Overload1#A#`<init>`().
-============================================
---- metac
-+++ metacp
--symbol: "com.javacp.MetacJava#Overload1#A#`<init>`()."
--kind: CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
--        prefix {
--          tag: SINGLETON_TYPE
--          singletonType {
--            tag: THIS
--            symbol: "com.javacp.MetacJava#Overload1#"
--            primitive: 0
--            string: ""
--        symbol: "com.javacp.MetacJava#Overload1#A#"
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--owner: "com.javacp.MetacJava#Overload1#A#"
--language: JAVA
-+name: ""
-+owner: ""
-+language: UNKNOWN_LANGUAGE
-
-
-==========================================
-com.javacp.MetacJava#Overload1#`<init>`().
-==========================================
---- metac
-+++ metacp
--symbol: "com.javacp.MetacJava#Overload1#`<init>`()."
--kind: CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
--        prefix {
--          tag: SINGLETON_TYPE
--          singletonType {
--            tag: THIS
--            symbol: "com.javacp.MetacJava#"
--            primitive: 0
--            string: ""
--        symbol: "com.javacp.MetacJava#Overload1#"
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--owner: "com.javacp.MetacJava#Overload1#"
--language: JAVA
-+name: ""
-+owner: ""
-+language: UNKNOWN_LANGUAGE
 
 
 ===============================
@@ -179,99 +121,10 @@ com.javacp.MetacJava#Overload2#
 ===============================
 --- metac
 +++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.MetacJava#Overload2#`<init>`()."
-+    declarations: "com.javacp.MetacJava#Overload2#`<init>`(MetacJava)."
+     declarations: "com.javacp.MetacJava#Overload2#`<init>`()."
      declarations: "com.javacp.MetacJava#Overload2#A#"
 -    declarations: "com.javacp.MetacJava#Overload2#A#"
  accessibility {
-
-
-=================================
-com.javacp.MetacJava#Overload2#A#
-=================================
---- metac
-+++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.MetacJava#Overload2#A#`<init>`()."
-+    declarations: "com.javacp.MetacJava#Overload2#A#`<init>`(Overload2)."
- accessibility {
-
-
-============================================
-com.javacp.MetacJava#Overload2#A#`<init>`().
-============================================
---- metac
-+++ metacp
--symbol: "com.javacp.MetacJava#Overload2#A#`<init>`()."
--kind: CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
--        prefix {
--          tag: SINGLETON_TYPE
--          singletonType {
--            tag: THIS
--            symbol: "com.javacp.MetacJava#Overload2#"
--            primitive: 0
--            string: ""
--        symbol: "com.javacp.MetacJava#Overload2#A#"
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--owner: "com.javacp.MetacJava#Overload2#A#"
--language: JAVA
-+name: ""
-+owner: ""
-+language: UNKNOWN_LANGUAGE
-
-
-==========================================
-com.javacp.MetacJava#Overload2#`<init>`().
-==========================================
---- metac
-+++ metacp
--symbol: "com.javacp.MetacJava#Overload2#`<init>`()."
--kind: CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
--        prefix {
--          tag: SINGLETON_TYPE
--          singletonType {
--            tag: THIS
--            symbol: "com.javacp.MetacJava#"
--            primitive: 0
--            string: ""
--        symbol: "com.javacp.MetacJava#Overload2#"
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--owner: "com.javacp.MetacJava#Overload2#"
--language: JAVA
-+name: ""
-+owner: ""
-+language: UNKNOWN_LANGUAGE
 
 
 ===============================
@@ -283,18 +136,6 @@ com.javacp.MetacJava#Overload3#
      declarations: "com.javacp.MetacJava#Overload3#A#"
 -    declarations: "com.javacp.MetacJava#Overload3#A#"
  accessibility {
-
-
-============================================
-com.javacp.MetacJava#Overload3#A#`<init>`().
-============================================
---- metac
-+++ metacp
-     return_type {
-       tag: TYPE_REF
-       typeRef {
--        symbol: "com.javacp.MetacJava#Overload3#A#"
-+        symbol: "scala.Unit#"
 
 
 =================================
@@ -311,79 +152,6 @@ com.javacp.MetacJava#StaticInner#
  accessibility {
 
 
-===========================================
-com.javacp.MetacJava#StaticInner#NonStatic#
-===========================================
---- metac
-+++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.MetacJava#StaticInner#NonStatic#`<init>`()."
-+    declarations: "com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(StaticInner)."
-     declarations: "com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic)."
-
-
-======================================================
-com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
-======================================================
---- metac
-+++ metacp
--symbol: "com.javacp.MetacJava#StaticInner#NonStatic#`<init>`()."
--kind: CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
--        prefix {
--          tag: SINGLETON_TYPE
--          singletonType {
--            tag: THIS
--            symbol: "com.javacp.MetacJava#StaticInner#"
--            primitive: 0
--            string: ""
--        symbol: "com.javacp.MetacJava#StaticInner#NonStatic#"
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--owner: "com.javacp.MetacJava#StaticInner#NonStatic#"
--language: JAVA
-+name: ""
-+owner: ""
-+language: UNKNOWN_LANGUAGE
-
-
-============================================
-com.javacp.MetacJava#StaticInner#`<init>`().
-============================================
---- metac
-+++ metacp
-     return_type {
-       tag: TYPE_REF
-       typeRef {
--        symbol: "com.javacp.MetacJava#StaticInner#"
-+        symbol: "scala.Unit#"
-
-
-================================
-com.javacp.MetacJava#`<init>`().
-================================
---- metac
-+++ metacp
-     return_type {
-       tag: TYPE_REF
-       typeRef {
--        symbol: "com.javacp.MetacJava#"
-+        symbol: "scala.Unit#"
-
-
 ========
 example.
 ========
@@ -396,7 +164,6 @@ example.
 -  tag: PUBLIC
 -  symbol: ""
 -}
- owner: "_root_."
  language: SCALA
 
 
@@ -417,30 +184,6 @@ example.Acc#
  accessibility {
 
 
-================
-example.Example.
-================
---- metac
-+++ metacp
- properties: 8
- name: "Example"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "example.Example."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    declarations: "example.Example.`<init>`()."
-+    declarations: "example.Example.main(Array)."
-+    declarations: "example.Example.x()."
-+    declarations: "example.Example.x."
- accessibility {
-
-
 ==============================
 example.MetacJava#nonStatic().
 ==============================
@@ -449,17 +192,6 @@ example.MetacJava#nonStatic().
              string: ""
 -        symbol: "com.javacp.MetacJava#StaticInner#NonStatic#"
 +        symbol: "com.javacp.MetacJava.StaticInner#NonStatic#"
-
-
-============================
-example.MetacJava#nonStatic.
-============================
---- metac
-+++ metacp
-         string: ""
--    symbol: "com.javacp.MetacJava#StaticInner#NonStatic#"
-+    symbol: "com.javacp.MetacJava.StaticInner#NonStatic#"
- accessibility {
 
 
 ================================
@@ -474,53 +206,25 @@ example.MetacJava#staticInner().
 +        symbol: "com.javacp.MetacJava.StaticInner#"
 
 
-==============================
-example.MetacJava#staticInner.
-==============================
---- metac
-+++ metacp
- tpe {
-   tag: TYPE_REF
-   typeRef {
--    symbol: "com.javacp.MetacJava#StaticInner#"
-+    symbol: "com.javacp.MetacJava.StaticInner#"
- accessibility {
-
-
 ================
 example.Methods#
 ================
 --- metac
 +++ metacp
-     declarations: "example.Methods#`<init>`()."
-+    declarations: "example.Methods#[T]"
-     declarations: "example.Methods#List#"
-     declarations: "example.Methods#AList#"
-     declarations: "example.Methods#m1()."
-     declarations: "example.Methods#m11(.type)."
-     declarations: "example.Methods#m11(.type+1)."
-     declarations: "example.Methods#m12a({})."
+     declarations: "example.Methods#m11()."
+     declarations: "example.Methods#m11(+1)."
+     declarations: "example.Methods#m12a()."
 +    declarations: "example.Methods#$anon#"
-     declarations: "example.Methods#m12b({})."
+     declarations: "example.Methods#m12b()."
 +    declarations: "example.Methods#$anon#"
-     declarations: "example.Methods#m13(Int)."
-     declarations: "example.Methods#m14(T)."
-     declarations: "example.Methods#m15(=>Int)."
+     declarations: "example.Methods#m13()."
+     declarations: "example.Methods#m14()."
+     declarations: "example.Methods#m15()."
 
 
-=====================
-example.Methods#List#
-=====================
---- metac
-+++ metacp
-     declarations: "example.Methods#List#`<init>`()."
-+    declarations: "example.Methods#List#[T]"
- accessibility {
-
-
-============================
-example.Methods#m13(Int).(x)
-============================
+=========================
+example.Methods#m13().(x)
+=========================
 --- metac
 +++ metacp
  properties: 0
@@ -543,75 +247,6 @@ example.Methods#m13(Int).(x)
  accessibility {
 
 
-==================
-example.ValUsages.
-==================
---- metac
-+++ metacp
- properties: 8
- name: "ValUsages"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "example.ValUsages."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    declarations: "example.ValUsages.`<init>`()."
-+    declarations: "example.ValUsages.v()."
-+    declarations: "example.ValUsages.v."
- accessibility {
-
-
-====================
-example.Vals#xzlm().
-====================
---- metac
-+++ metacp
- symbol: "example.Vals#xzlm()."
--kind: FIELD
-+kind: METHOD
- properties: 1088
- name: "xzlm"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "scala.Int#"
-+  tag: METHOD_TYPE
-+  methodType {
-+    return_type {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Int#"
- accessibility {
-
-
-===================
-example.Vals#xzm().
-===================
---- metac
-+++ metacp
- symbol: "example.Vals#xzm()."
--kind: FIELD
-+kind: METHOD
- properties: 1088
- name: "xzm"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "scala.Int#"
-+  tag: METHOD_TYPE
-+  methodType {
-+    return_type {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Int#"
- accessibility {
-
-
 ======
 flags.
 ======
@@ -624,7 +259,6 @@ flags.
 -  tag: PUBLIC
 -  symbol: ""
 -}
- owner: "_root_."
  language: SCALA
 
 
@@ -633,68 +267,18 @@ flags.p.package.
 ================
 --- metac
 +++ metacp
- symbol: "flags.p.package."
- kind: PACKAGE_OBJECT
--properties: 0
-+properties: 8
- name: "package"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "flags.p.package."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    declarations: "flags.p.package.`<init>`()."
-+    declarations: "flags.p.package.x()."
-+    declarations: "flags.p.package.y()."
-+    declarations: "flags.p.package.`y_=`(Int)."
-+    declarations: "flags.p.package.y."
-+    declarations: "flags.p.package.z(Int)."
-+    declarations: "flags.p.package.m()."
-+    declarations: "flags.p.package.C#"
-+    declarations: "flags.p.package.T1#"
-+    declarations: "flags.p.package.T2#"
+     declarations: "flags.p.package.C#"
+     declarations: "flags.p.package.T1#"
+     declarations: "flags.p.package.T2#"
 +    declarations: "flags.p.package.S#"
-+    declarations: "flags.p.package.U#"
-+    declarations: "flags.p.package.V#"
-+    declarations: "flags.p.package.X."
-+    declarations: "flags.p.package.X."
-+    declarations: "flags.p.package.Y#"
-+    declarations: "flags.p.package.Z#"
-+    declarations: "flags.p.package.AA#"
-+    declarations: "flags.p.package.xs1()."
-+    declarations: "flags.p.package.xs1."
- accessibility {
-
-
-==================
-flags.p.package.C#
-==================
---- metac
-+++ metacp
-     declarations: "flags.p.package.C#x."
-+    declarations: "flags.p.package.C#[T]"
-     declarations: "flags.p.package.C#y."
-+    declarations: "flags.p.package.C#[U]"
-     declarations: "flags.p.package.C#z."
-+    declarations: "flags.p.package.C#[V]"
-     declarations: "flags.p.package.C#`<init>`(T,U,V)."
-     declarations: "flags.p.package.C#`<init>`()."
-     declarations: "flags.p.package.C#w()."
-
-
-==================
-flags.p.package.S#
-==================
---- metac
-+++ metacp
-     declarations: "flags.p.package.S#`<init>`()."
-+    declarations: "flags.p.package.S#[T]"
- accessibility {
+     declarations: "flags.p.package.U#"
+     declarations: "flags.p.package.V#"
+     declarations: "flags.p.package.X."
+     declarations: "flags.p.package.Y#"
+     declarations: "flags.p.package.Z#"
+     declarations: "flags.p.package.AA#"
+-    declarations: "flags.p.package.S#"
+     declarations: "flags.p.package.xs1()."
 
 
 =====================
@@ -713,63 +297,43 @@ flags.p.package.S#[T]
    symbol: ""
 
 
-==================
-flags.p.package.X.
-==================
+========
+objects.
+========
 --- metac
 +++ metacp
- properties: 136
- name: "X"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "flags.p.package.X."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Product#"
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Serializable#"
-+    declarations: "flags.p.package.X.`<init>`()."
-+    declarations: "flags.p.package.X.productPrefix()."
-+    declarations: "flags.p.package.X.productArity()."
-+    declarations: "flags.p.package.X.productElement(Int)."
-+    declarations: "flags.p.package.X.productIterator()."
-+    declarations: "flags.p.package.X.canEqual(Any)."
-+    declarations: "flags.p.package.X.hashCode()."
-+    declarations: "flags.p.package.X.toString()."
-+    declarations: "flags.p.package.X.readResolve()."
- accessibility {
+ kind: PACKAGE
+ properties: 0
+ name: "objects"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: SCALA
 
 
-====================
-flags.p.package.x().
-====================
+=======
+traits.
+=======
 --- metac
 +++ metacp
- symbol: "flags.p.package.x()."
--kind: FIELD
-+kind: METHOD
- properties: 1088
- name: "x"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "scala.Int#"
-+  tag: METHOD_TYPE
-+  methodType {
-+    return_type {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Int#"
+ kind: PACKAGE
+ properties: 0
+ name: "traits"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: SCALA
+
+
+=========
+traits.V#
+=========
+--- metac
++++ metacp
+         symbol: "scala.AnyRef#"
++    declarations: "traits.V#$anon#"
  accessibility {
 
 
@@ -785,34 +349,7 @@ types.
 -  tag: PUBLIC
 -  symbol: ""
 -}
- owner: "_root_."
  language: SCALA
-
-
-===========
-types.Test.
-===========
---- metac
-+++ metacp
- properties: 8
- name: "Test"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "types.Test."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    declarations: "types.Test.`<init>`()."
-+    declarations: "types.Test.M#"
-+    declarations: "types.Test.N#"
-+    declarations: "types.Test.C#"
-+    declarations: "types.Test.Literal."
-+    declarations: "types.Test.Literal."
- accessibility {
 
 
 =============
@@ -820,222 +357,17 @@ types.Test.C#
 =============
 --- metac
 +++ metacp
+     declarations: "types.Test.C#superType2()."
      declarations: "types.Test.C#superType3()."
-     declarations: "types.Test.C#superType3."
      declarations: "types.Test.C#compoundType1()."
 +    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#compoundType1."
      declarations: "types.Test.C#compoundType2()."
 +    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#compoundType2."
      declarations: "types.Test.C#compoundType3()."
 +    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#compoundType3."
      declarations: "types.Test.C#annType1()."
-     declarations: "types.Test.C#annType1."
-     declarations: "types.Test.C#existentialType1."
-     declarations: "types.Test.C#typeLambda1()."
-     declarations: "types.Test.C#ClassInfoType1."
-+    declarations: "types.Test.C#ClassInfoType1."
-     declarations: "types.Test.C#ClassInfoType2#"
-     declarations: "types.Test.C#ClassInfoType3#"
-     declarations: "types.Test.C#MethodType."
-+    declarations: "types.Test.C#MethodType."
-     declarations: "types.Test.C#ByNameType."
-+    declarations: "types.Test.C#ByNameType."
-     declarations: "types.Test.C#RepeatedType#"
-     declarations: "types.Test.C#RepeatedType."
-+    declarations: "types.Test.C#RepeatedType."
-     declarations: "types.Test.C#TypeType."
-+    declarations: "types.Test.C#TypeType."
- accessibility {
-
-
-========================
-types.Test.C#ByNameType.
-========================
---- metac
-+++ metacp
- properties: 8
- name: "ByNameType"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    prefix {
--      tag: SINGLETON_TYPE
--      singletonType {
--        tag: THIS
--        symbol: "types.Test.C#"
--        primitive: 0
--        string: ""
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
--    symbol: "types.Test.C#ByNameType."
-+    declarations: "types.Test.C#ByNameType.`<init>`()."
-+    declarations: "types.Test.C#ByNameType.m1(=>Int)."
- accessibility {
-
-
-============================
-types.Test.C#ClassInfoType1.
-============================
---- metac
-+++ metacp
- properties: 8
- name: "ClassInfoType1"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    prefix {
--      tag: SINGLETON_TYPE
--      singletonType {
--        tag: THIS
--        symbol: "types.Test.C#"
--        primitive: 0
--        string: ""
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
--    symbol: "types.Test.C#ClassInfoType1."
-+    declarations: "types.Test.C#ClassInfoType1.`<init>`()."
- accessibility {
-
-
-============================
-types.Test.C#ClassInfoType3#
-============================
---- metac
-+++ metacp
-         symbol: "scala.AnyRef#"
-+    declarations: "types.Test.C#ClassInfoType3#[T]"
- accessibility {
-
-
-========================
-types.Test.C#MethodType.
-========================
---- metac
-+++ metacp
- properties: 8
- name: "MethodType"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    prefix {
--      tag: SINGLETON_TYPE
--      singletonType {
--        tag: THIS
--        symbol: "types.Test.C#"
--        primitive: 0
--        string: ""
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
--    symbol: "types.Test.C#MethodType."
-+    declarations: "types.Test.C#MethodType.`<init>`()."
-+    declarations: "types.Test.C#MethodType.x1()."
-+    declarations: "types.Test.C#MethodType.x2()."
-+    declarations: "types.Test.C#MethodType.m3()."
-+    declarations: "types.Test.C#MethodType.m4()."
-+    declarations: "types.Test.C#MethodType.m5(Int)."
-+    declarations: "types.Test.C#MethodType.m6(T)."
- accessibility {
-
-
-==========================
-types.Test.C#RepeatedType.
-==========================
---- metac
-+++ metacp
- properties: 8
- name: "RepeatedType"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    prefix {
--      tag: SINGLETON_TYPE
--      singletonType {
--        tag: THIS
--        symbol: "types.Test.C#"
--        primitive: 0
--        string: ""
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.runtime.AbstractFunction1#"
-+        type_arguments {
-+          tag: REPEATED_TYPE
-+          repeatedType {
-+            tpe {
-+              tag: TYPE_REF
-+              typeRef {
-+                symbol: "scala.Predef.String#"
-+        type_arguments {
-+          tag: TYPE_REF
-+          typeRef {
-+            prefix {
-+              tag: SINGLETON_TYPE
-+              singletonType {
-+                tag: THIS
-+                symbol: "types.Test.C#"
-+                primitive: 0
-+                string: ""
-+            symbol: "types.Test.C#RepeatedType#"
--    symbol: "types.Test.C#RepeatedType."
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.Serializable#"
-+    declarations: "types.Test.C#RepeatedType.`<init>`()."
-+    declarations: "types.Test.C#RepeatedType.toString()."
-+    declarations: "types.Test.C#RepeatedType.apply(String*)."
-+    declarations: "types.Test.C#RepeatedType.unapplySeq(RepeatedType)."
- accessibility {
-
-
-======================
-types.Test.C#TypeType.
-======================
---- metac
-+++ metacp
- properties: 8
- name: "TypeType"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    prefix {
--      tag: SINGLETON_TYPE
--      singletonType {
--        tag: THIS
--        symbol: "types.Test.C#"
--        primitive: 0
--        string: ""
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
--    symbol: "types.Test.C#TypeType."
-+    declarations: "types.Test.C#TypeType.`<init>`()."
-+    declarations: "types.Test.C#TypeType.T1#"
-+    declarations: "types.Test.C#TypeType.m2()."
-+    declarations: "types.Test.C#TypeType.m3()."
-+    declarations: "types.Test.C#TypeType.T4#"
-+    declarations: "types.Test.C#TypeType.T5#"
- accessibility {
+     declarations: "types.Test.C#annType2()."
+     declarations: "types.Test.C#existentialType1()."
 
 
 ========================
@@ -1053,24 +385,6 @@ types.Test.C#annType1().
 -                tag: TYPE_REF
 -                typeRef {
 -                  symbol: "scala.Int#"
-
-
-======================
-types.Test.C#annType1.
-======================
---- metac
-+++ metacp
-         symbol: "types.T#"
--    annotations {
--      tpe {
--        tag: TYPE_REF
--        typeRef {
--          symbol: "types.ann#"
--          type_arguments {
--            tag: TYPE_REF
--            typeRef {
--              symbol: "scala.Int#"
- accessibility {
 
 
 ========================
@@ -1091,23 +405,18 @@ types.Test.C#annType2().
 -              symbol: "types.ann2#"
 
 
-======================
-types.Test.C#annType2.
-======================
+================================
+types.Test.C#existentialType1().
+================================
 --- metac
 +++ metacp
-         symbol: "types.T#"
--    annotations {
--      tpe {
--        tag: TYPE_REF
--        typeRef {
--          symbol: "types.ann1#"
--    annotations {
--      tpe {
--        tag: TYPE_REF
--        typeRef {
--          symbol: "types.ann2#"
- accessibility {
+         tpe {
+           tag: TYPE_REF
+           typeRef {
+-            symbol: "types.Test.C#existentialType1.T#"
++            symbol: "types.Test.C#existentialType1().T#"
+-        type_parameters: "types.Test.C#existentialType1.T#"
++        type_parameters: "types.Test.C#existentialType1().T#"
 
 
 ===========================
@@ -1122,89 +431,27 @@ types.Test.C#singleType2().
          string: ""
 
 
-=========================
-types.Test.C#singleType2.
-=========================
+==============================
+types.Test.Literal.javaEnum().
+==============================
 --- metac
 +++ metacp
-         string: ""
--    symbol: "types.P#x()."
-+    symbol: "types.P#x."
-     primitive: 0
-     string: ""
-
-
-===================
-types.Test.Literal.
-===================
---- metac
-+++ metacp
- properties: 8
- name: "Literal"
- tpe {
--  tag: TYPE_REF
--  typeRef {
--    symbol: "types.Test.Literal."
-+  tag: CLASS_INFO_TYPE
-+  classInfoType {
-+    parents {
-+      tag: TYPE_REF
-+      typeRef {
-+        symbol: "scala.AnyRef#"
-+    declarations: "types.Test.Literal.`<init>`()."
-+    declarations: "types.Test.Literal.int()."
-+    declarations: "types.Test.Literal.int."
-+    declarations: "types.Test.Literal.long()."
-+    declarations: "types.Test.Literal.long."
-+    declarations: "types.Test.Literal.float()."
-+    declarations: "types.Test.Literal.float."
-+    declarations: "types.Test.Literal.double()."
-+    declarations: "types.Test.Literal.double."
-+    declarations: "types.Test.Literal.nil()."
-+    declarations: "types.Test.Literal.nil."
-+    declarations: "types.Test.Literal.char()."
-+    declarations: "types.Test.Literal.char."
-+    declarations: "types.Test.Literal.string()."
-+    declarations: "types.Test.Literal.string."
-+    declarations: "types.Test.Literal.bool()."
-+    declarations: "types.Test.Literal.bool."
-+    declarations: "types.Test.Literal.unit()."
-+    declarations: "types.Test.Literal.unit."
-+    declarations: "types.Test.Literal.javaEnum(?)."
-+    declarations: "types.Test.Literal.javaEnum."
-+    declarations: "types.Test.Literal.clazzOf()."
-+    declarations: "types.Test.Literal.clazzOf."
- accessibility {
-
-
-============================
-types.Test.Literal.javaEnum.
-============================
---- metac
-+++ metacp
- kind: FIELD
+ kind: METHOD
  properties: 1032
  name: "javaEnum"
 -tpe {
--  tag: SINGLETON_TYPE
--  singletonType {
--    tag: SYMBOL
--    symbol: "java.nio.file.LinkOption#NOFOLLOW_LINKS."
--    primitive: 0
--    string: ""
+-  tag: METHOD_TYPE
+-  methodType {
+-    return_type {
+-      tag: SINGLETON_TYPE
+-      singletonType {
+-        tag: SYMBOL
+-        symbol: "java.nio.file.LinkOption#NOFOLLOW_LINKS."
+-        primitive: 0
+-        string: ""
 -}
  accessibility {
-   tag: PRIVATE_THIS
+   tag: PUBLIC
    symbol: ""
-
-
-==========
-types.ann#
-==========
---- metac
-+++ metacp
-     declarations: "types.ann#x."
-+    declarations: "types.ann#[T]"
-     declarations: "types.ann#`<init>`(T)."
 
 

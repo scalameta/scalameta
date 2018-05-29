@@ -2,8 +2,8 @@ package scala.meta.internal.semanticdb3
 
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import scala.meta.cli._
 import scala.meta.internal.metap.Main
-import scala.meta.metap.Reporter
 import scala.meta.metap.Settings
 
 object Print {

@@ -4,13 +4,6 @@ package quasiquotes
 import scala.meta.internal.trees.quasiquote
 
 private[meta] trait Api {
-  // TODO: it would be ideal to have these as annotations on corresponding AST nodes
-  // e.g. instead of `@branch trait Stat extends Tree`
-  // we will have `@quasiquote('q) @branch trait Stat extends Tree`
-  // that would probably allow us for every AST node to have an associated quasiquote interpolator in the doc
-  // upd. this might also require non-local macro expansion because of hierarchical structure of the `scala.meta` package.
-  // TODO: overloading Case and Pat within p"..." is probably not the best idea
-  // however, cas"..." is so ugly that I'm willing to be conceptually impure here
   @quasiquote[Ctor, Stat]('q)          implicit class XtensionQuasiquoteTerm(ctx: StringContext)
   @quasiquote[Term.Param]('param)      implicit class XtensionQuasiquoteTermParam(ctx: StringContext)
   @quasiquote[Type]('t)                implicit class XtensionQuasiquoteType(ctx: StringContext)

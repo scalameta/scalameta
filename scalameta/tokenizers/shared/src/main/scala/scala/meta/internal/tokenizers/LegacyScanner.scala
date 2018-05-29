@@ -795,11 +795,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         }
         val alt = if (oct == LF) "\\n" else "\\u%04x" format oct
         def msg(what: String) = s"Octal escape literals are $what, use $alt instead."
-        // TODO: syntax profile?
-        // if (settings.future)
-        //   syntaxError(start, msg("unsupported"))
-        // else
-          deprecationWarning(msg("deprecated"), at = start)
+        deprecationWarning(msg("deprecated"), at = start)
         putChar(oct.toChar)
       } else {
         ch match {
@@ -1018,9 +1014,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     require(ch == '$')
     val start = charOffset
     val endInclusive = {
-      // TODO: It's a bit unsatisfying that we kinda duplicate the logic of string interpolation tokenizer.
-      // Ideally we would move it from ScalametaTokenizer to here and then reuse it,
-      // but that's too much hassle at the moment.
       val exploratoryInput = Input.Slice(input, start, input.chars.length)
       val exploratoryDialect = this.dialect.copy(allowTermUnquotes = false, allowPatUnquotes = false, allowMultilinePrograms = true)
       val exploratoryScanner = new LegacyScanner(exploratoryInput, exploratoryDialect)

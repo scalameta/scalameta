@@ -14,7 +14,6 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
       def artefact = sym.name.decodedName.toString.contains("$")
       def trivial = sym.owner == symbolOf[Any] || sym.owner == symbolOf[Object]
       def arbitrary = {
-        // TODO: figure out why this is necessary
         val banned = List("scala.collection.generic", "scala.Enumeration", "scala.math", "scala.Int", "scala.meta.inline.Api")
         banned.exists(prefix => sym.fullName.startsWith(prefix))
       }

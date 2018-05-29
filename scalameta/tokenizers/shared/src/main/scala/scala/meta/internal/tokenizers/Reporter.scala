@@ -6,8 +6,6 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokenizers._
 
-// TODO: when I grow up I want to become a monad, just like my daddy
-// TODO: distinguish flavors of errors with exception types
 trait Reporter {
   // NOTE: not making this public, e.g. by exposing Position.Offset
   // because I don't want to advertise this style of positioning

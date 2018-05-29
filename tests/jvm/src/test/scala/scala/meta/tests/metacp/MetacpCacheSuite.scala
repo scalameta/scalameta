@@ -3,13 +3,12 @@ package scala.meta.tests.metacp
 import org.scalatest.concurrent.TimeLimitedTests
 import org.scalatest.time.Minute
 import org.scalatest.time.Span
-import scala.meta.cli.Metacp
+import scala.meta.cli._
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PlatformFileIO
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.metacp.Settings
-import scala.meta.metacp.Reporter
 import scala.meta.tests.BuildInfo
 
 class MetacpCacheSuite extends BaseMetacpSuite with TimeLimitedTests {

@@ -9,6 +9,7 @@ import scala.collection.{immutable, mutable}
 import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 import scala.util.control.NonFatal
+import scala.meta.cli._
 import scala.meta.internal.semanticdb3._
 import scala.meta.metap._
 import Diagnostic._
@@ -32,72 +33,25 @@ class Main(settings: Settings, reporter: Reporter) {
 
     var success = true
     var first = true
-    def processSemanticdb(path: Path, stream: InputStream): Unit = {
+    Locator(settings.paths) { (path, payload) =>
       if (first) {
         first = false
       } else {
         out.println("")
       }
       try {
-        val documents = TextDocuments.parseFrom(stream)
         if (settings.format.isProto) {
-          out.println(documents.toProtoString)
+          out.println(payload.toProtoString)
         } else {
-          documents.documents.foreach(pprint)
+          payload.documents.foreach(pprint)
         }
       } catch {
         case NonFatal(ex) =>
           out.println(s"error: can't decompile $path")
           ex.printStackTrace(out)
           success = false
-      } finally {
-        stream.close()
       }
     }
-
-    settings.paths.foreach { path =>
-      if (Files.isDirectory(path)) {
-        val root = path.resolve("META-INF").resolve("semanticdb")
-        if (Files.isDirectory(root)) {
-          import scala.collection.JavaConverters._
-          Files
-            .walk(root)
-            .iterator()
-            .asScala
-            .filter(_.getFileName.toString.endsWith(".semanticdb"))
-            .toArray
-            // nio.file.Path.compareTo is file system specific,
-            // and the behavior is different on windows vs. unix
-            .sortBy(_.toString.toLowerCase)
-            .foreach { file =>
-              processSemanticdb(file, Files.newInputStream(file))
-            }
-        } else {
-          ()
-        }
-      } else if (Files.isRegularFile(path)) {
-        if (path.getFileName.toString.endsWith(".jar")) {
-          // Can't use nio.Files.walk because nio.FileSystems is not supported on Scala Native.
-          val jarfile = new JarFile(path.toFile)
-          val buf = ArrayBuffer.empty[JarEntry]
-          val entries = jarfile.entries()
-          while (entries.hasMoreElements) {
-            val entry = entries.nextElement()
-            if (entry.getName.endsWith(".semanticdb")) {
-              buf += entry
-            }
-          }
-          buf.sortBy(_.getName).foreach { entry =>
-            processSemanticdb(Paths.get(entry.getName), jarfile.getInputStream(entry))
-          }
-        } else {
-          processSemanticdb(path, Files.newInputStream(path))
-        }
-      } else {
-        ()
-      }
-    }
-
     success
   }
 
@@ -262,7 +216,7 @@ class Main(settings: Settings, reporter: Reporter) {
             ()
         }
       case None =>
-        // TODO: It would be nice to have a symbol parser in semanticdb3.
+        // FIXME: https://github.com/scalameta/scalameta/issues/1555
         sym.split("[\\.|#]").toList match {
           case _ :+ last =>
             val approxName = {
@@ -386,8 +340,7 @@ class Main(settings: Settings, reporter: Reporter) {
           val Some(MethodType(tparams, paramss, res)) = tpe.methodType
           rep("[", tparams, ", ", "] => ")(defn)
           rep("(", paramss, ")(", ")")(params => rep(params.symbols, ", ")(defn))
-          out.print(": ")
-          res.foreach(normal)
+          opt(": ", res, "")(normal)
         case BY_NAME_TYPE =>
           val Some(ByNameType(utpe)) = tpe.byNameType
           out.print("=> ")

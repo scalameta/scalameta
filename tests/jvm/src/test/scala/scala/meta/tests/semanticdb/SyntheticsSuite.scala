@@ -21,7 +21,7 @@ class SyntheticsSuite extends SemanticdbSuite() {
     """.trim.stripMargin,
     """|[12:15..12:15):  => *.apply[Foo, FooDSL]
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:7): apply => g.CommandeerDSL.apply(Host,DSL).
+       |  [0:2..0:7): apply => g.CommandeerDSL.apply().
        |  [0:8..0:11): Foo => g.Foo#
        |  [0:13..0:19): FooDSL => g.FooDSL#
        |[12:39..12:39):  => *(g.Foo.fooDSL)
@@ -68,11 +68,11 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |  [0:47..0:50): Int => scala.Int#
        |[16:16..16:16):  => *(h.C.list[Int](h.C.int))
        |  [0:0..0:1): * => _star_.
-       |  [0:6..0:10): list => h.C.list(C).
+       |  [0:6..0:10): list => h.C.list().
        |  [0:11..0:14): Int => scala.Int#
        |  [0:20..0:23): int => h.C.int().
        |[19:4..19:6): 42 => h.X.cvt[Int](*)(h.C.int)
-       |  [0:4..0:7): cvt => h.X.cvt(T,C).
+       |  [0:4..0:7): cvt => h.X.cvt().
        |  [0:8..0:11): Int => scala.Int#
        |  [0:13..0:14): * => _star_.
        |  [0:20..0:23): int => h.C.int().
@@ -87,7 +87,7 @@ class SyntheticsSuite extends SemanticdbSuite() {
     "class J[T: Manifest] { val arr = Array.empty[T] }",
     """|[0:47..0:47):  => *(J.this.evidence$1)
        |  [0:0..0:1): * => _star_.
-       |  [0:9..0:19): evidence$1 => _empty_.J#evidence$1.
+       |  [0:9..0:19): evidence$1 => _empty_.J#evidence$1().
        |""".trim.stripMargin
   )
   synthetics(
@@ -96,13 +96,13 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |}
     """.stripMargin,
     """|[1:2..1:9): List(1) => scala.Predef.any2stringadd[List[Int]](*)
-       |  [0:13..0:26): any2stringadd => scala.Predef.any2stringadd(A).
+       |  [0:13..0:26): any2stringadd => scala.Predef.any2stringadd().
        |  [0:27..0:31): List => scala.collection.immutable.List#
        |  [0:32..0:35): Int => scala.Int#
        |  [0:38..0:39): * => _star_.
        |[1:6..1:6):  => *.apply[Int]
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:7): apply => scala.collection.immutable.List.apply(A*).
+       |  [0:2..0:7): apply => scala.collection.immutable.List.apply().
        |  [0:8..0:11): Int => scala.Int#
        |""".stripMargin
   )
@@ -115,7 +115,7 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |}
     """.stripMargin,
     """|[3:22..3:27): new F => scala.math.Ordered.orderingToOrdered[F](*)(r.this.ordering)
-       |  [0:19..0:36): orderingToOrdered => scala.math.Ordered.orderingToOrdered(T,Ordering).
+       |  [0:19..0:36): orderingToOrdered => scala.math.Ordered.orderingToOrdered().
        |  [0:37..0:38): F => _empty_.r.F#
        |  [0:40..0:41): * => _star_.
        |  [0:50..0:58): ordering => _empty_.r.ordering().
@@ -140,7 +140,7 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |  [0:2..0:7): apply => _empty_.s.Bar.apply().
        |[6:28..6:28):  => *.apply
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:7): apply => scala.Function1#apply(T1).
+       |  [0:2..0:7): apply => scala.Function1#apply().
        |""".stripMargin
   )
 
@@ -153,32 +153,32 @@ class SyntheticsSuite extends SemanticdbSuite() {
       |}
     """.trim.stripMargin,
     """|[1:11..1:12): 1 => scala.Predef.intWrapper(*)
-       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
+       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper().
        |  [0:24..0:25): * => _star_.
        |[1:18..1:18):  => *.foreach[Unit]
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:9): foreach => scala.collection.immutable.Range#foreach(Function1).
+       |  [0:2..0:9): foreach => scala.collection.immutable.Range#foreach().
        |  [0:10..0:14): Unit => scala.Unit#
        |[1:25..1:26): 0 => scala.Predef.intWrapper(*)
-       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
+       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper().
        |  [0:24..0:25): * => _star_.
        |[1:35..1:35):  => *.foreach[Unit]
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:9): foreach => scala.collection.immutable.Range#foreach(Function1).
+       |  [0:2..0:9): foreach => scala.collection.immutable.Range#foreach().
        |  [0:10..0:14): Unit => scala.Unit#
        |[1:45..1:46): x => scala.Predef.ArrowAssoc[Int](*)
-       |  [0:13..0:23): ArrowAssoc => scala.Predef.ArrowAssoc(A).
+       |  [0:13..0:23): ArrowAssoc => scala.Predef.ArrowAssoc().
        |  [0:24..0:27): Int => scala.Int#
        |  [0:29..0:30): * => _star_.
        |[1:49..1:49):  => *[Int]
        |  [0:0..0:1): * => _star_.
        |  [0:2..0:5): Int => scala.Int#
        |[2:11..2:12): 1 => scala.Predef.intWrapper(*)
-       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
+       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper().
        |  [0:24..0:25): * => _star_.
        |[2:18..2:18):  => *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:9): flatMap => scala.collection.TraversableLike#flatMap(Function1,CanBuildFrom).
+       |  [0:2..0:9): flatMap => scala.collection.TraversableLike#flatMap().
        |  [0:10..0:16): Tuple2 => scala.Tuple2#
        |  [0:17..0:20): Int => scala.Int#
        |  [0:22..0:25): Int => scala.Int#
@@ -192,11 +192,11 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |  [0:119..0:122): Int => scala.Int#
        |  [0:124..0:127): Int => scala.Int#
        |[2:25..2:26): 0 => scala.Predef.intWrapper(*)
-       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
+       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper().
        |  [0:24..0:25): * => _star_.
        |[2:35..2:35):  => *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:5): map => scala.collection.TraversableLike#map(Function1,CanBuildFrom).
+       |  [0:2..0:5): map => scala.collection.TraversableLike#map().
        |  [0:6..0:12): Tuple2 => scala.Tuple2#
        |  [0:13..0:16): Int => scala.Int#
        |  [0:18..0:21): Int => scala.Int#
@@ -210,11 +210,11 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |  [0:115..0:118): Int => scala.Int#
        |  [0:120..0:123): Int => scala.Int#
        |[3:11..3:12): 1 => scala.Predef.intWrapper(*)
-       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
+       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper().
        |  [0:24..0:25): * => _star_.
        |[3:18..3:18):  => *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:9): flatMap => scala.collection.TraversableLike#flatMap(Function1,CanBuildFrom).
+       |  [0:2..0:9): flatMap => scala.collection.TraversableLike#flatMap().
        |  [0:10..0:16): Tuple2 => scala.Tuple2#
        |  [0:17..0:20): Int => scala.Int#
        |  [0:22..0:25): Int => scala.Int#
@@ -228,14 +228,14 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |  [0:119..0:122): Int => scala.Int#
        |  [0:124..0:127): Int => scala.Int#
        |[3:25..3:26): 0 => scala.Predef.intWrapper(*)
-       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper(Int).
+       |  [0:13..0:23): intWrapper => scala.LowPriorityImplicits#intWrapper().
        |  [0:24..0:25): * => _star_.
        |[3:35..3:35):  => *.withFilter
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:12): withFilter => scala.collection.TraversableLike#withFilter(Function1).
+       |  [0:2..0:12): withFilter => scala.collection.TraversableLike#withFilter().
        |[3:49..3:49):  => *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:5): map => scala.collection.generic.FilterMonadic#map(Function1,CanBuildFrom).
+       |  [0:2..0:5): map => scala.collection.generic.FilterMonadic#map().
        |  [0:6..0:12): Tuple2 => scala.Tuple2#
        |  [0:13..0:16): Int => scala.Int#
        |  [0:18..0:21): Int => scala.Int#
@@ -271,7 +271,7 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |  [0:2..0:5): Int => scala.Int#
        |[3:46..3:46):  => *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:9): foreach => scala.concurrent.Future#foreach(Function1,ExecutionContext).
+       |  [0:2..0:9): foreach => scala.concurrent.Future#foreach().
        |  [0:10..0:14): Unit => scala.Unit#
        |  [0:16..0:17): * => _star_.
        |  [0:63..0:69): global => scala.concurrent.ExecutionContext.Implicits.global().
@@ -280,7 +280,7 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |  [0:2..0:5): Int => scala.Int#
        |[4:46..4:46):  => *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:9): foreach => scala.concurrent.Future#foreach(Function1,ExecutionContext).
+       |  [0:2..0:9): foreach => scala.concurrent.Future#foreach().
        |  [0:10..0:14): Unit => scala.Unit#
        |  [0:16..0:17): * => _star_.
        |  [0:63..0:69): global => scala.concurrent.ExecutionContext.Implicits.global().
@@ -289,7 +289,7 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |  [0:2..0:5): Int => scala.Int#
        |[7:46..7:46):  => *.flatMap[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:9): flatMap => scala.concurrent.Future#flatMap(Function1,ExecutionContext).
+       |  [0:2..0:9): flatMap => scala.concurrent.Future#flatMap().
        |  [0:10..0:13): Int => scala.Int#
        |  [0:15..0:16): * => _star_.
        |  [0:62..0:68): global => scala.concurrent.ExecutionContext.Implicits.global().
@@ -298,12 +298,12 @@ class SyntheticsSuite extends SemanticdbSuite() {
        |  [0:2..0:5): Int => scala.Int#
        |[8:46..8:46):  => *.withFilter(*)(scala.concurrent.ExecutionContext.Implicits.global)
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:12): withFilter => scala.concurrent.Future#withFilter(Function1,ExecutionContext).
+       |  [0:2..0:12): withFilter => scala.concurrent.Future#withFilter().
        |  [0:13..0:14): * => _star_.
        |  [0:60..0:66): global => scala.concurrent.ExecutionContext.Implicits.global().
        |[9:12..9:12):  => *.map[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
        |  [0:0..0:1): * => _star_.
-       |  [0:2..0:5): map => scala.concurrent.Future#map(Function1,ExecutionContext).
+       |  [0:2..0:5): map => scala.concurrent.Future#map().
        |  [0:6..0:9): Int => scala.Int#
        |  [0:11..0:12): * => _star_.
        |  [0:58..0:64): global => scala.concurrent.ExecutionContext.Implicits.global().

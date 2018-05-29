@@ -153,17 +153,30 @@ lazy val semanticdbScalacPlugin = project
   )
   .dependsOn(semanticdbScalacCore)
 
+lazy val cli = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .in(file("semanticdb/cli"))
+  .settings(
+    publishableSettings,
+    description := "Shared CLI infrastructure for Scalameta tools"
+  )
+  .nativeSettings(nativeSettings)
+lazy val cliJVM = cli.jvm
+lazy val cliJS = cli.js
+lazy val cliNative = cli.native
+
 lazy val metac = project
   .in(file("semanticdb/metac"))
   .settings(
     publishableSettings,
+    fullCrossVersionSettings,
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.Metac")
   )
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdbScalacPlugin)
+  .dependsOn(cliJVM, semanticdbScalacPlugin)
 
 lazy val metacp = project
   .in(file("semanticdb/metacp"))
@@ -181,7 +194,7 @@ lazy val metacp = project
   .enablePlugins(BuildInfoPlugin)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdb3JVM, ioJVM)
+  .dependsOn(semanticdb3JVM, cliJVM, ioJVM)
 
 lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -194,7 +207,7 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .nativeSettings(nativeSettings)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdb3)
+  .dependsOn(semanticdb3, cli)
 lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
 lazy val metapNative = metap.native
@@ -460,7 +473,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test"
   )
   .jvmSettings(
-    // TODO: Workaround for what seems to be a bug in ScalaTest 3.2.0-SNAP10.
+    // FIXME: https://github.com/scalatest/scalatest/issues/1112
     // Without adding scalacheck to library dependencies, we get the following error:
     // > testsJVM/test
     // [info] Compiling 79 Scala sources to /Users/eburmako/Projects/scalameta/tests/jvm/target/scala-2.12/test-classes...
@@ -476,7 +489,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp))
   .nativeSettings(
     nativeSettings,
-    // TODO: set nativeLinkStubs := false
+    // FIXME: https://github.com/scalatest/scalatest/issues/1112
     // discussion: https://github.com/scalameta/scalameta/pull/1243/files#r165529377
     // [error] cannot link: @java.lang.Thread::getStackTrace_scala.scalanative.runtime.ObjectArray
     // [error] unable to link
@@ -672,8 +685,7 @@ lazy val publishableSettings = Def.settings(
           sys.error(s"Invalid version number: ${version.value}")
       }
       val previousArtifact = {
-        // TODO: Figure out whether there is a more satisfying solution.
-        // Here's what I'd like to do, but I can't because of deprecations:
+        // NOTE: Here's what I'd like to do, but I can't because of deprecations:
         //   val isJVM = crossPlatform.value == JVMPlatform
         // Here's my second best guess, but it doesn't work due to some reason:
         //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary

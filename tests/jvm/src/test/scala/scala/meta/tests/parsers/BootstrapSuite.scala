@@ -47,32 +47,6 @@ class BootstrapSuite extends ParseSuite {
           }
           assert(!isFail)
         }
-        // TODO: fix performance, see #382
-        // test("parse " + src.getAbsolutePath) {
-        //   val tree = src.parse[Source].get
-        //   // check #1: everything's positioned
-        //   tree.traverse {
-        //     case sub =>
-        //       if (sub.pos.isEmpty) {
-        //         import scala.meta.internal.prettyprinters.PositionStyle.Colorful
-        //         println(tree.show[Positions])
-        //         fail()
-        //       }
-        //       if (sub.tokens.nonEmpty) {
-        //         assert(!sub.tokens.head.is[BOF])
-        //         assert(!sub.tokens.last.is[EOF])
-        //         assert(sub.pos.start.offset == sub.tokens.head.start)
-        //         assert(sub.pos.end.offset == sub.tokens.last.end)
-        //       }
-        //   }
-        //   // check #2: everything's covered
-        //   val codec = scala.io.Codec(java.nio.charset.Charset.forName("UTF-8"))
-        //   val content = scala.io.Source.fromFile(src)(codec).mkString
-        //   assert(tree.pos.start.offset == 0)
-        //   assert(tree.pos.end.offset == content.length)
-        //   assert(tree.pos.start.line == 0)
-        //   assert(tree.pos.end.line == content.count(_ == '\n'))
-        // }
       }
       dir.listFiles.filter(_.isFile).filter(_.getName.endsWith(".scala")).map(bootstrapTest)
       dir.listFiles.filter(_.isDirectory).map(loop)

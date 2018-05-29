@@ -5,13 +5,24 @@ _empty_.
   _empty_.B#
 _root_.
   _empty_.
+  classes.
   example.
   flags.
+  objects.
+  traits.
   types.
+classes.
+  classes.C1#
+  classes.C2#
+  classes.C2.
+  classes.C3#
+  classes.C4#
+  classes.C4.
 example.
   example.A#
   example.Acc#
   example.B#
+  example.EmptyObject.
   example.Example.
   example.MetacJava#
   example.MethodUsages#
@@ -24,6 +35,14 @@ flags.
   flags.p.
 flags.p.
   flags.p.package.
+objects.
+  objects.X.
+traits.
+  traits.C#
+  traits.T#
+  traits.U#
+  traits.U.
+  traits.V#
 types.
   types.B#
   types.C#
@@ -38,10 +57,18 @@ Toplevels:
 ==========
 _empty_.A# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_.B# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
+classes. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C1# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C2# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C2. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C3# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C4# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C4. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 example. => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 example.A# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 example.Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scala.semanticdb
 example.B# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
+example.EmptyObject. => semanticdb/integration/src/main/scala/example/EmptyObject.scala.semanticdb
 example.Example. => semanticdb/integration/src/main/scala/example/Example.scala.semanticdb
 example.MetacJava# => semanticdb/integration/src/main/scala/example/MetacJava.scala.semanticdb
 example.MethodUsages# => semanticdb/integration/src/main/scala/example/Methods.scala.semanticdb
@@ -52,6 +79,14 @@ example.Vals# => semanticdb/integration/src/main/scala/example/Vals.scala.semant
 example.`local-file`# => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 flags. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 flags.p.package. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
+objects. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
+objects.X. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
+traits. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+traits.C# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+traits.T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+traits.U# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+traits.U. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+traits.V# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 types. => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types.B# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types.C# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb

@@ -42,7 +42,6 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
     import typeDebug.ptTree
     import runDefinitions._
 
-    // TODO: No idea whether this is gonna work well in the batch compilation mode.
     override def canTranslateEmptyListToNil = false
 
     override def typed1(tree: Tree, mode: Mode, pt: Type): Tree = {
@@ -144,7 +143,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
       }
 
       def normalTypedApply(tree: Tree, fun: Tree, args: List[Tree]) = {
-        // TODO: replace `fun.symbol.isStable` by `treeInfo.isStableIdentifierPattern(fun)`
+        // (todo) replace `fun.symbol.isStable` by `treeInfo.isStableIdentifierPattern(fun)`
         val stableApplication = (fun.symbol ne null) && fun.symbol.isMethod && fun.symbol.isStable
         val funpt = if (mode.inPatternMode) pt else WildcardType
         val appStart = if (Statistics.canEnable) Statistics.startTimer(failedApplyNanos) else null
@@ -481,11 +480,11 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
 
           result match {
             // could checkAccessible (called by makeAccessible) potentially have skipped checking a type application in qual?
-            case SelectFromTypeTree(qual@TypeTree(), name) if qual.tpe.typeArgs.nonEmpty => // TODO: somehow the new qual is not checked in refchecks
+            case SelectFromTypeTree(qual@TypeTree(), name) if qual.tpe.typeArgs.nonEmpty => // (todo) somehow the new qual is not checked in refchecks
               treeCopy.SelectFromTypeTree(
                 result,
                 (TypeTreeWithDeferredRefCheck(){ () => val tp = qual.tpe; val sym = tp.typeSymbolDirect
-                  // will execute during refchecks -- TODO: make private checkTypeRef in refchecks public and call that one?
+                  // will execute during refchecks -- (todo) make private checkTypeRef in refchecks public and call that one?
                   checkBounds(qual, tp.prefix, sym.owner, sym.typeParams, tp.typeArgs, "")
                   qual // you only get to see the wrapped tree after running this check :-p
                 }) setType qual.tpe setPos qual.pos,
@@ -616,7 +615,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
         //
         val fun1 = adaptAfterOverloadResolution(fun, mode.forFunMode | TAPPmode)
 
-        val tparams = fun1.symbol.typeParams //@M TODO: fun.symbol.info.typeParams ? (as in typedAppliedTypeTree)
+        val tparams = fun1.symbol.typeParams //@M (todo) fun.symbol.info.typeParams ? (as in typedAppliedTypeTree)
         val args1 = if (sameLength(args, tparams)) {
           //@M: in case TypeApply we can't check the kind-arities of the type arguments,
           // as we don't know which alternative to choose... here we do
@@ -854,7 +853,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
         // @M When not typing a type constructor (!context.inTypeConstructorAllowed)
         // or raw type, types must be of kind *,
         // and thus parameterized types must be applied to their type arguments
-        // @M TODO: why do kind-* tree's have symbols, while higher-kinded ones don't?
+        // @M (todo) why do kind-* tree's have symbols, while higher-kinded ones don't?
         def properTypeRequired = (
              tree.hasSymbolField
           && !context.inTypeConstructorAllowed
@@ -983,7 +982,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
           else adaptMismatchedSkolems()
         }
 
-        // TODO: should we even get to fallbackAfterVanillaAdapt for an ill-typed tree?
+        // (todo) should we even get to fallbackAfterVanillaAdapt for an ill-typed tree?
         if (mode.typingExprNotFun && !tree.tpe.isErroneous) {
           @inline def tpdPos(transformed: Tree) = typedPos(tree.pos, mode, pt)(transformed)
           @inline def tpd(transformed: Tree)    = typed(transformed, mode, pt)
@@ -1012,7 +1011,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
               if (hasUndets) instantiate(tree, mode, pt)
               else {
                 // (14) sam conversion
-                // TODO: figure out how to avoid partially duplicating typedFunction (samMatchingFunction)
+                // (todo) figure out how to avoid partially duplicating typedFunction (samMatchingFunction)
                 // Could we infer the SAM type, assign it to the tree and add the attachment,
                 // all in one fell swoop at the end of typedFunction?
                 val samAttach = inferSamType(tree, pt, mode)
@@ -1102,7 +1101,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
         case TypeRef(_, ByNameParamClass, arg :: Nil) if mode.inExprMode => // (2)
           adapt(tree setType arg, mode, pt, original)
         case tp if mode.typingExprNotLhs && isExistentialType(tp) &&
-             // TODO: this is a private method, unfortunately: !isSyntheticAccessor(context.owner) =>
+             // (todo) this is a private method, unfortunately: !isSyntheticAccessor(context.owner) =>
              !(context.owner.isAccessor && (!context.owner.isLazy || isPastTyper)) =>
           adapt(tree setType tp.dealias.skolemizeExistential(context.owner, tree), mode, pt, original)
         case PolyType(tparams, restpe) if mode.inNone(TAPPmode | PATTERNmode) && !context.inTypeConstructorAllowed => // (3)

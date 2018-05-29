@@ -35,9 +35,6 @@ class ConversionMacros(val c: Context) extends AstReflection {
   private def typeMismatchMessage(found: c.Type, req: c.Type): String = {
     val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
     val msg = g.analyzer.foundReqMsg(found.asInstanceOf[g.Type], req.asInstanceOf[g.Type])
-    // TODO: somehow, error reporting facilities are now printing
-    // some types as `meta.XXX` and some types as `scala.meta.XXX`
-    // find out why and fix this ugliness
     val foundReqMessage = msg.replace("meta.", "scala.meta.").replace("scala.scala.", "scala.")
     var wholeMessage = "type mismatch when unquoting" + foundReqMessage
     if (req.typeSymbol == MetaTemplate) {
@@ -67,15 +64,14 @@ class ConversionMacros(val c: Context) extends AstReflection {
   }
 
   def liftUnapply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {
-    // TODO: Here's an interesting idea that I'd like to explore.
+    // NOTE: Here's an interesting idea that I'd like to explore.
     // How about we allow things like `42 match { case q"$x" => x }`?
     // For that to work, we just need to wrap the reification result into `Lift.unapply`!
-    // NOTE: also see the TODO in the last lines in ReificationMacros.reifySkeleton
     ???
   }
 
   def unliftApply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {
-    // TODO: here we just disregard the expected outside type, because I can't find uses for it
+    // NOTE: here we just disregard the expected outside type, because I can't find uses for it
     // duality is a fun thing, but it looks like here it just led me into a dead-end
     q"$inside"
   }

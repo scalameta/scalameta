@@ -47,6 +47,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.cli.Metac *
       |scala.meta.cli.Metacp *
       |scala.meta.cli.Metap *
+      |scala.meta.cli.Reporter *
       |scala.meta.common
       |scala.meta.common.Convert *
       |scala.meta.common.Optional *
@@ -83,16 +84,13 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.io.Classpath
       |scala.meta.io.RelativePath
       |scala.meta.metac
-      |scala.meta.metac.Reporter *
       |scala.meta.metac.Settings *
       |scala.meta.metacp
-      |scala.meta.metacp.Reporter *
       |scala.meta.metacp.Settings *
       |scala.meta.metap
       |scala.meta.metap.Format *
       |scala.meta.metap.Format.Pretty *
       |scala.meta.metap.Format.Proto *
-      |scala.meta.metap.Reporter *
       |scala.meta.metap.Settings *
       |scala.meta.parsers
       |scala.meta.parsers.Parse *

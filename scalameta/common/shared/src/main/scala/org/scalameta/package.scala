@@ -25,7 +25,6 @@ package object scalameta {
 
   // A marker method used to denote debugging boundaries for `org.scalameta.unreachable`
   // and `org.scalameta.invariants.requireXXX`. See corresponding documentation for more info.
-  // TODO: change this from `always true` to `@compileTimeOnly`.
   def debug(xs: Any*): Boolean = true
 }
 

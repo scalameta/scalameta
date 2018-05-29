@@ -38,7 +38,6 @@ object Show {
         case Meta(_, res) =>
           loop(res)
         case Wrap(prefix, res, suffix, cond) =>
-          // TODO: think of an effective implementation for this
           val s_res = res.toString
           if (cond(s_res)) sb.append(prefix)
           sb.append(s_res)
