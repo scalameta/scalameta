@@ -121,7 +121,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    private def newInfo: (Option[s.Type], List[g.Symbol]) = {
+    private def tpe: (Option[s.Type], List[g.Symbol]) = {
       if (gsym.hasPackageFlag) (None, Nil)
       else {
         val ginfo = {
@@ -198,7 +198,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           val denot = s.SymbolInformation()
           SymbolInformationResult(denot, todoAnns)
         case TypeMode.All =>
-          val (tpe, todoTpe) = newInfo
+          val (tpe, todoTpe) = this.tpe
           val denot = s.SymbolInformation(
             symbol = gsym.toSemantic.syntax,
             language = language,
