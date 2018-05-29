@@ -49,10 +49,6 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacMetacpExpectDiffExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("metac-metacp.index.diff") {
-        import MetacMetacpIndexDiffExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
       test("manifest.metap") {
         import ManifestMetap._
         assertNoDiff(loadObtained, loadExpected)
@@ -255,15 +251,6 @@ object MetacMetacpExpectDiffExpect extends ExpectHelpers {
   def metacSymbols = normalizedSymbols(Paths.get(BuildInfo.databaseClasspath))
 }
 
-object MetacMetacpIndexDiffExpect extends ExpectHelpers {
-  def filename: String = "metac-metacp.index.diff"
-  def loadObtained: String = {
-    val metac = IndexExpect.loadObtained
-    val metacp = MetacpIndexExpect.loadObtained
-    unifiedDiff("metac", "metacp", metac, metacp)
-  }
-}
-
 object ManifestMetap extends ExpectHelpers {
   def filename: String = "manifest.metap"
   def loadObtained: String = {
@@ -289,7 +276,6 @@ object SaveExpectTest {
     LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
     IndexExpect.saveExpected(IndexExpect.loadObtained)
     MetacMetacpExpectDiffExpect.saveExpected(MetacMetacpExpectDiffExpect.loadObtained)
-    MetacMetacpIndexDiffExpect.saveExpected(MetacMetacpIndexDiffExpect.loadObtained)
     ManifestMetap.saveExpected(ManifestMetap.loadObtained)
     ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)
   }
