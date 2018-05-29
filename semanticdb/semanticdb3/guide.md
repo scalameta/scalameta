@@ -200,7 +200,7 @@ The `semanticdb-scalac` compiler plugin injects itself immediately after the
 information from Scalac in SemanticDB format.
 
 ```
-Usage: scalac -Xplugin:path/to.jar -Yrangepos [<pluginOption> ...] [<scalacOption> ...] [<sourceFile> ...]
+scalac -Xplugin:path/to.jar -Yrangepos [<pluginOption> ...] [<scalacOption> ...] [<sourceFile> ...]
 ```
 
 The compiler plugin supports the following options that can
@@ -355,7 +355,7 @@ same command-line arguments as `scalac`, including the compiler plugin options
 [described above](#scalac-compiler-plugin).
 
 ```
-Usage: metac [<pluginOption> ...] [<scalacOption> ...] [<sourceFile> ...]
+metac [<pluginOption> ...] [<scalacOption> ...] [<sourceFile> ...]
 ```
 
 With metac, it is not necessary to provide the flags
@@ -382,7 +382,7 @@ Advanced command-line options control caching, parallelization and interaction
 with some quirks of the Scala standard library.
 
 ```
-Usage: metacp [options] <classpath>
+metacp [options] <classpath>
 ```
 
 <table>
@@ -549,7 +549,7 @@ all .semanticdb files that it finds in these paths. Advanced options control
 prettyprinting format.
 
 ```
-Usage: metap [options] <classpath>
+metap [options] <classpath>
 ```
 
 <table>
