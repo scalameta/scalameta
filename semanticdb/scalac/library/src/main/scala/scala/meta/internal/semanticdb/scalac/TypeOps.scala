@@ -114,7 +114,8 @@ trait TypeOps { self: SemanticdbOps =>
                 (gdecl.isConstructor || gdecl.isMixinConstructor) &&
                 (gclass.isModuleClass || gclass.isTrait)
               }
-              !isSyntheticConstructor
+              val isLocalChild = gdecl.name == g.tpnme.LOCAL_CHILD
+              !isSyntheticConstructor && !isLocalChild
             }
             val sdecls = gfilteredDecls.sorted.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
             Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))

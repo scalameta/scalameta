@@ -46,6 +46,8 @@ objects.
   objects.X.
 traits.
   traits.T#
+  traits.U#
+  traits.U.
 types.
   types.B#
   types.C#
@@ -84,6 +86,8 @@ exclude.Exclude# => exclude/Exclude.class.semanticdb
 flags.p.package. => flags/p/package.class.semanticdb
 objects.X. => objects/X.class.semanticdb
 traits.T# => traits/T.class.semanticdb
+traits.U# => traits/U.class.semanticdb
+traits.U. => traits/U.class.semanticdb
 types.B# => types/B.class.semanticdb
 types.C# => types/C.class.semanticdb
 types.P# => types/P.class.semanticdb

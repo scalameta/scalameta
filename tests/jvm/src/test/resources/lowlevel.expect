@@ -1355,20 +1355,33 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Traits.scala
 Text => non-empty
 Language => Scala
-Symbols => 3 entries
-Occurrences => 3 entries
+Symbols => 7 entries
+Occurrences => 9 entries
 
 Symbols:
+java.lang.Object#`<init>`(). => ctor <init>: ()
 traits. => package traits
 traits.T# => trait T.{+1 decls}
   extends AnyRef
 traits.T#x(). => method x: : Int
   Int => scala.Int#
+traits.U# => sealed trait U
+  extends AnyRef
+traits.U. => final object U.{+1 decls}
+  extends AnyRef
+traits.U.u(). => method u: : U
+  U => traits.U#
 
 Occurrences:
 [0:8..0:14): traits <= traits.
 [2:6..2:7): T <= traits.T#
 [3:6..3:7): x <= traits.T#x().
+[6:13..6:14): U <= traits.U#
+[7:7..7:8): U <= traits.U.
+[8:6..8:7): u <= traits.U.u().
+[8:9..8:10): U => traits.U#
+[8:17..8:18): U => traits.U#
+[8:19..8:19):  => java.lang.Object#`<init>`().
 
 semanticdb/integration/src/main/scala/example/Types.scala
 ---------------------------------------------------------

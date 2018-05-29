@@ -52,6 +52,7 @@ object Scalacp {
     if (sym.parent.get == NoSymbol) return None
     if (sym.isModuleClass) return None
     if (sym.isConstructor && !sym.isClassConstructor) return None
+    if (sym.isLocalChild) return None
     Some(
       s.SymbolInformation(
         symbol = ssymbol(sym),
@@ -268,7 +269,8 @@ object Scalacp {
             val isTypeParam = child.isType && child.isParam
             val isSyntheticConstructor = child.isConstructor && (sym.isModuleClass || sym.isTrait)
             val isModuleClass = child.isModuleClass
-            !isTypeParam && !isSyntheticConstructor && !isModuleClass
+            val isLocalChild = child.isLocalChild
+            !isTypeParam && !isSyntheticConstructor && !isModuleClass && !isLocalChild
           }
           val sdecls = filteredDecls.map(ssymbol)
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
@@ -410,6 +412,7 @@ object Scalacp {
           false
       }
     }
+    def isLocalChild: Boolean = sym.name == "<local child>"
     def typeDescriptor: String = {
       try {
         sym match {

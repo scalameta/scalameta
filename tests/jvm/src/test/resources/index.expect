@@ -31,6 +31,8 @@ objects.
   objects.X.
 traits.
   traits.T#
+  traits.U#
+  traits.U.
 types.
   types.B#
   types.C#
@@ -64,6 +66,8 @@ objects. => semanticdb/integration/src/main/scala/example/Objects.scala.semantic
 objects.X. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
 traits. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+traits.U# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+traits.U. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 types. => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types.B# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types.C# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb

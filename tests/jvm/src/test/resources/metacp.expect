@@ -1302,6 +1302,26 @@ traits.T# => trait T.{+1 decls}
 traits.T#x(). => method x: : Int
   Int => scala.Int#
 
+traits/U.class
+--------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => traits/U.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+_root_. => package _root_
+traits. => package traits
+traits.U# => sealed trait U
+  extends AnyRef
+traits.U. => final object U.{+1 decls}
+  extends AnyRef
+traits.U.u(). => method u: : U
+  U => traits.U#
+
 types/ann.class
 ---------------
 
