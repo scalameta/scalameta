@@ -530,6 +530,12 @@ Caveats:
     compatibility across different versions of the `semanticdb3` library.
     We are planning to [improve the situation](https://github.com/scalameta/scalameta/issues/1300)
     in the future.
+  * At the moment, SemanticDB-based tools are responsible for implementing discovery of
+    SemanticDB payloads on their own. For example, the non-trivial logic that
+    Metap uses to traverse its inputs and detect SemanticDB files must be
+    reproduced by Scalafix, Metadoc and others. We are planning to
+    [improve the situation](https://github.com/scalameta/scalameta/issues/1566)
+    in the future.
 
 ### Metap
 
