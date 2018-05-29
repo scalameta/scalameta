@@ -556,6 +556,16 @@ traits.
  language: SCALA
 
 
+=========
+traits.V#
+=========
+--- metac
++++ metacp
+         symbol: "scala.AnyRef#"
++    declarations: "traits.V#$anon#"
+ accessibility {
+
+
 ======
 types.
 ======

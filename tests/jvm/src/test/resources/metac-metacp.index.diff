@@ -55,9 +55,11 @@
 -objects. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
 -objects.X. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
 -traits. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+-traits.C# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 -traits.T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 -traits.U# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 -traits.U. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+-traits.V# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 -types. => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 -types.B# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 -types.C# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
@@ -92,9 +94,11 @@
 +exclude.Exclude# => exclude/Exclude.class.semanticdb
 +flags.p.package. => flags/p/package.class.semanticdb
 +objects.X. => objects/X.class.semanticdb
++traits.C# => traits/C.class.semanticdb
 +traits.T# => traits/T.class.semanticdb
 +traits.U# => traits/U.class.semanticdb
 +traits.U. => traits/U.class.semanticdb
++traits.V# => traits/V.class.semanticdb
 +types.B# => types/B.class.semanticdb
 +types.C# => types/C.class.semanticdb
 +types.P# => types/P.class.semanticdb

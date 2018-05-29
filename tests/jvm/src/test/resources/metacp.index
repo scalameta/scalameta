@@ -45,9 +45,11 @@ flags.p.
 objects.
   objects.X.
 traits.
+  traits.C#
   traits.T#
   traits.U#
   traits.U.
+  traits.V#
 types.
   types.B#
   types.C#
@@ -85,9 +87,11 @@ example.`local-file`# => example/local$minusfile.class.semanticdb
 exclude.Exclude# => exclude/Exclude.class.semanticdb
 flags.p.package. => flags/p/package.class.semanticdb
 objects.X. => objects/X.class.semanticdb
+traits.C# => traits/C.class.semanticdb
 traits.T# => traits/T.class.semanticdb
 traits.U# => traits/U.class.semanticdb
 traits.U. => traits/U.class.semanticdb
+traits.V# => traits/V.class.semanticdb
 types.B# => types/B.class.semanticdb
 types.C# => types/C.class.semanticdb
 types.P# => types/P.class.semanticdb

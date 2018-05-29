@@ -30,9 +30,11 @@ flags.p.
 objects.
   objects.X.
 traits.
+  traits.C#
   traits.T#
   traits.U#
   traits.U.
+  traits.V#
 types.
   types.B#
   types.C#
@@ -65,9 +67,11 @@ flags.p.package. => semanticdb/integration/src/main/scala/example/Flags.scala.se
 objects. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
 objects.X. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
 traits. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+traits.C# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.U# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.U. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
+traits.V# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 types. => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types.B# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types.C# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb

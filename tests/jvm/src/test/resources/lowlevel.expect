@@ -1355,12 +1355,18 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Traits.scala
 Text => non-empty
 Language => Scala
-Symbols => 7 entries
-Occurrences => 9 entries
+Symbols => 11 entries
+Occurrences => 14 entries
 
 Symbols:
 java.lang.Object#`<init>`(). => ctor <init>: ()
+local0 => selfparam self: V with C {}
+  V => traits.V#
+  C => traits.C#
 traits. => package traits
+traits.C# => class C.{+1 decls}
+  extends AnyRef
+traits.C#`<init>`(). => primary ctor <init>: ()
 traits.T# => trait T.{+1 decls}
   extends AnyRef
 traits.T#x(). => method x: : Int
@@ -1371,6 +1377,8 @@ traits.U. => final object U.{+1 decls}
   extends AnyRef
 traits.U.u(). => method u: : U
   U => traits.U#
+traits.V# => trait V
+  extends AnyRef
 
 Occurrences:
 [0:8..0:14): traits <= traits.
@@ -1382,6 +1390,11 @@ Occurrences:
 [8:9..8:10): U => traits.U#
 [8:17..8:18): U => traits.U#
 [8:19..8:19):  => java.lang.Object#`<init>`().
+[11:6..11:7): C <= traits.C#
+[11:7..11:7):  <= traits.C#`<init>`().
+[12:6..12:7): V <= traits.V#
+[12:10..12:14): self <= local0
+[12:16..12:17): C => traits.C#
 
 semanticdb/integration/src/main/scala/example/Types.scala
 ---------------------------------------------------------
