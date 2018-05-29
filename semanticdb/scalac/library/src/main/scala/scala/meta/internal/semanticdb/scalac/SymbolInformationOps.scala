@@ -6,6 +6,7 @@ import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
 trait SymbolInformationOps { self: SemanticdbOps =>
   import g._
@@ -137,7 +138,13 @@ trait SymbolInformationOps { self: SemanticdbOps =>
             gsym.info
           }
         }
-        ginfo.toSemantic
+        if (gsym.isConstructor) {
+          val (tpe, todo) = ginfo.toSemantic
+          val tpeWithoutReturnType = tpe.map(_.update(_.methodType.optionalReturnType := None))
+          (tpeWithoutReturnType, todo)
+        } else {
+          ginfo.toSemantic
+        }
       }
     }
 

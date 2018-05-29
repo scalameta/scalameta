@@ -13,8 +13,7 @@ Symbols:
 example. => package example
 example.Acc# => class Acc.{+8 decls}
   extends AnyRef
-example.Acc#`<init>`(). => primary ctor <init>: (): Acc
-  Acc => example.Acc#
+example.Acc#`<init>`(). => primary ctor <init>: ()
 example.Acc#m1(). => private method m1: : Nothing
   Nothing => scala.Nothing#
 example.Acc#m2(). => private[this] method m2: : Nothing
@@ -67,14 +66,12 @@ Occurrences => 10 entries
 Symbols:
 _empty_.A# => class A.{+2 decls}
   extends AnyRef
-_empty_.A#`<init>`(). => primary ctor <init>: (): A
-  A => _empty_.A#
+_empty_.A#`<init>`(). => primary ctor <init>: ()
 _empty_.A#b(). => method b: : B
   B => _empty_.B#
 _empty_.B# => class B.{+2 decls}
   extends AnyRef
-_empty_.B#`<init>`(). => primary ctor <init>: (): B
-  B => _empty_.B#
+_empty_.B#`<init>`(). => primary ctor <init>: ()
 _empty_.B#a(). => method a: : A
   A => _empty_.A#
 scala.Predef.`???`(). => method ???: : Nothing
@@ -168,9 +165,7 @@ scala.collection.mutable.Stack# => @deprecated @deprecated class Stack[A: <?>].{
   extends GenericTraversableTemplate[A, Stack]
   extends Cloneable[Stack[A]]
   extends Serializable
-scala.collection.mutable.Stack#`<init>`(). => ctor <init>: (): Stack[A]
-  Stack => scala.collection.mutable.Stack#
-  A => scala.collection.mutable.Stack#[A]
+scala.collection.mutable.Stack#`<init>`(). => ctor <init>: ()
 scala.concurrent. => package concurrent
 scala.reflect. => package reflect
 scala.reflect.package.classTag(ClassTag). => method classTag: [T: <?>] => (ctag: <?>): ClassTag[T]
@@ -244,12 +239,11 @@ flags.p.package. => final package object package.{+18 decls}
   extends AnyRef
 flags.p.package.AA# => class AA.{+7 decls}
   extends AnyRef
-flags.p.package.AA#`<init>`(Int,Int,Int). => primary ctor <init>: (x: Int, val y: Int, var z: Int): AA
+flags.p.package.AA#`<init>`(Int,Int,Int). => primary ctor <init>: (x: Int, val y: Int, var z: Int)
   x => flags.p.package.AA#`<init>`(Int,Int,Int).(x)
   Int => scala.Int#
   y => flags.p.package.AA#`<init>`(Int,Int,Int).(y)
   z => flags.p.package.AA#`<init>`(Int,Int,Int).(z)
-  AA => flags.p.package.AA#
 flags.p.package.AA#`<init>`(Int,Int,Int).(x) => param x: Int
   Int => scala.Int#
 flags.p.package.AA#`<init>`(Int,Int,Int).(y) => val param y: Int
@@ -283,19 +277,14 @@ flags.p.package.C#[U] => contravariant typeparam U: >: Nothing <: Any
 flags.p.package.C#[V] => typeparam V: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-flags.p.package.C#`<init>`(). => ctor <init>: (): C[T, U, V]
-  C => flags.p.package.C#
-  T => flags.p.package.C#[T]
-  U => flags.p.package.C#[U]
-  V => flags.p.package.C#[V]
-flags.p.package.C#`<init>`(T,U,V). => primary ctor <init>: (x: T, y: U, z: V): C[T, U, V]
+flags.p.package.C#`<init>`(). => ctor <init>: ()
+flags.p.package.C#`<init>`(T,U,V). => primary ctor <init>: (x: T, y: U, z: V)
   x => flags.p.package.C#`<init>`(T,U,V).(x)
   T => flags.p.package.C#[T]
   y => flags.p.package.C#`<init>`(T,U,V).(y)
   U => flags.p.package.C#[U]
   z => flags.p.package.C#`<init>`(T,U,V).(z)
   V => flags.p.package.C#[V]
-  C => flags.p.package.C#
 flags.p.package.C#`<init>`(T,U,V).(x) => param x: T
   T => flags.p.package.C#[T]
 flags.p.package.C#`<init>`(T,U,V).(y) => param y: U
@@ -315,9 +304,7 @@ flags.p.package.S# => class S[@specialized T >: Nothing <: Any].{+1 decls}
 flags.p.package.S#[T] => @specialized typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-flags.p.package.S#`<init>`(). => primary ctor <init>: (): S[T]
-  S => flags.p.package.S#
-  T => flags.p.package.S#[T]
+flags.p.package.S#`<init>`(). => primary ctor <init>: ()
 flags.p.package.T1# => type T1: >: Int <: Int
   Int => scala.Int#
 flags.p.package.T2# => type T2: [T >: Nothing <: Any] => >: S[T] <: S[T]
@@ -365,8 +352,7 @@ flags.p.package.X.toString(). => method toString: (): String
   String => java.lang.String#
 flags.p.package.Y# => final class Y.{+1 decls}
   extends AnyRef
-flags.p.package.Y#`<init>`(). => primary ctor <init>: (): Y
-  Y => flags.p.package.Y#
+flags.p.package.Y#`<init>`(). => primary ctor <init>: ()
 flags.p.package.Z# => sealed trait Z
   extends AnyRef
 flags.p.package.`y_=`(Int). => protected var method y_=: (x$1: Int): Unit
@@ -420,8 +406,7 @@ scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
 scala.specialized# => class specialized.{+4 decls}
   extends Annotation
   extends StaticAnnotation
-scala.specialized#`<init>`(). => ctor <init>: (): specialized
-  specialized => scala.specialized#
+scala.specialized#`<init>`(). => ctor <init>: ()
 
 Occurrences:
 [0:8..0:13): flags <= flags.
@@ -550,8 +535,7 @@ Symbols:
 example. => package example
 example.`local-file`# => class local-file.{+1 decls}
   extends AnyRef
-example.`local-file`#`<init>`(). => primary ctor <init>: (): local-file
-  local-file => example.`local-file`#
+example.`local-file`#`<init>`(). => primary ctor <init>: ()
 local0 => val local local: Int
   Int => scala.Int#
 scala.Int#`+`(Int). => abstract method +: (x: <?>): Int
@@ -601,46 +585,33 @@ com.javacp.MetacJava#Overload1# => class Overload1.{+3 decls}
   extends Object
 com.javacp.MetacJava#Overload1#A# => class A.{+1 decls}
   extends Object
-com.javacp.MetacJava#Overload1#A#`<init>`(). => ctor <init>: (): Overload1.this.A
-  Overload1 => com.javacp.MetacJava#Overload1#
-  A => com.javacp.MetacJava#Overload1#A#
-com.javacp.MetacJava#Overload1#`<init>`(). => ctor <init>: (): MetacJava.this.Overload1
-  MetacJava => com.javacp.MetacJava#
-  Overload1 => com.javacp.MetacJava#Overload1#
+com.javacp.MetacJava#Overload1#A#`<init>`(). => ctor <init>: ()
+com.javacp.MetacJava#Overload1#`<init>`(). => ctor <init>: ()
 com.javacp.MetacJava#Overload2# => class Overload2.{+3 decls}
   extends Object
 com.javacp.MetacJava#Overload2#A# => class A.{+1 decls}
   extends Object
-com.javacp.MetacJava#Overload2#A#`<init>`(). => ctor <init>: (): Overload2.this.A
-  Overload2 => com.javacp.MetacJava#Overload2#
-  A => com.javacp.MetacJava#Overload2#A#
-com.javacp.MetacJava#Overload2#`<init>`(). => ctor <init>: (): MetacJava.this.Overload2
-  MetacJava => com.javacp.MetacJava#
-  Overload2 => com.javacp.MetacJava#Overload2#
+com.javacp.MetacJava#Overload2#A#`<init>`(). => ctor <init>: ()
+com.javacp.MetacJava#Overload2#`<init>`(). => ctor <init>: ()
 com.javacp.MetacJava#Overload3# => static class Overload3.{+3 decls}
   extends Object
 com.javacp.MetacJava#Overload3#A# => static class A.{+1 decls}
   extends Object
-com.javacp.MetacJava#Overload3#A#`<init>`(). => ctor <init>: (): A
-  A => com.javacp.MetacJava#Overload3#A#
+com.javacp.MetacJava#Overload3#A#`<init>`(). => ctor <init>: ()
 com.javacp.MetacJava#StaticInner# => static class StaticInner.{+5 decls}
   extends Object
 com.javacp.MetacJava#StaticInner#NonStatic# => class NonStatic.{+2 decls}
   extends Object
-com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(). => ctor <init>: (): StaticInner.this.NonStatic
-  StaticInner => com.javacp.MetacJava#StaticInner#
-  NonStatic => com.javacp.MetacJava#StaticInner#NonStatic#
+com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(). => ctor <init>: ()
 com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic). => method method: (e: <?>): Unit
   e => com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic).(e)
   Unit => scala.Unit#
-com.javacp.MetacJava#StaticInner#`<init>`(). => ctor <init>: (): StaticInner
-  StaticInner => com.javacp.MetacJava#StaticInner#
+com.javacp.MetacJava#StaticInner#`<init>`(). => ctor <init>: ()
 com.javacp.MetacJava#StaticInner#isNotStatic(). => method isNotStatic: (): Unit
   Unit => scala.Unit#
 com.javacp.MetacJava#StaticInner#isStatic(). => static method isStatic: (): Unit
   Unit => scala.Unit#
-com.javacp.MetacJava#`<init>`(). => ctor <init>: (): MetacJava
-  MetacJava => com.javacp.MetacJava#
+com.javacp.MetacJava#`<init>`(). => ctor <init>: ()
 com.javacp.MetacJava#overload(A). => method overload: (a: <?>): Unit
   a => com.javacp.MetacJava#overload(A).(a)
   Unit => scala.Unit#
@@ -653,8 +624,7 @@ com.javacp.MetacJava#overload(A+2). => static method overload: (a: <?>): Unit
 example. => package example
 example.MetacJava# => class MetacJava.{+15 decls}
   extends AnyRef
-example.MetacJava#`<init>`(). => primary ctor <init>: (): MetacJava
-  MetacJava => example.MetacJava#
+example.MetacJava#`<init>`(). => primary ctor <init>: ()
 example.MetacJava#coin(). => val method coin: : Coin
   Coin => com.javacp.Coin#
 example.MetacJava#coin. => private[this] val field coin: Coin
@@ -782,8 +752,7 @@ example.Example. => final object Example.{+3 decls}
   extends AnyRef
 example.MethodUsages# => class MethodUsages.{+3 decls}
   extends AnyRef
-example.MethodUsages#`<init>`(). => primary ctor <init>: (): MethodUsages
-  MethodUsages => example.MethodUsages#
+example.MethodUsages#`<init>`(). => primary ctor <init>: ()
 example.MethodUsages#m(). => val method m: : Methods[Int]
   Methods => example.Methods#
   Int => scala.Int#
@@ -808,23 +777,16 @@ example.Methods#List# => class List[T >: Nothing <: Any].{+1 decls}
 example.Methods#List#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#List#`<init>`(). => primary ctor <init>: (): Methods.this.List[T]
-  Methods => example.Methods#
-  List => example.Methods#List#
-  T => example.Methods#List#[T]
+example.Methods#List#`<init>`(). => primary ctor <init>: ()
 example.Methods#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#`<init>`(). => primary ctor <init>: (): Methods[T]
-  Methods => example.Methods#
-  T => example.Methods#[T]
+example.Methods#`<init>`(). => primary ctor <init>: ()
 example.Methods#`m8().`(). => method m8().: (): Nothing
   Nothing => scala.Nothing#
 example.Methods#`m9().`# => class m9()..{+1 decls}
   extends AnyRef
-example.Methods#`m9().`#`<init>`(). => primary ctor <init>: (): Methods.this.m9().
-  Methods => example.Methods#
-  m9(). => example.Methods#`m9().`#
+example.Methods#`m9().`#`<init>`(). => primary ctor <init>: ()
 example.Methods#m1(). => method m1: : Nothing
   Nothing => scala.Nothing#
 example.Methods#m10(AList). => method m10: (x: Methods.this.AList[T]): Nothing
@@ -1028,8 +990,7 @@ scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
   List => scala.collection.immutable.List#
 scala.unchecked# => class unchecked.{+1 decls}
   extends Annotation
-scala.unchecked#`<init>`(). => primary ctor <init>: (): unchecked
-  unchecked => scala.unchecked#
+scala.unchecked#`<init>`(). => primary ctor <init>: ()
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -1261,12 +1222,10 @@ example.A#foo(). => abstract method foo: : Int
 example.B# => class B.{+2 decls}
   extends AnyRef
   extends A
-example.B#`<init>`(). => primary ctor <init>: (): B
-  B => example.B#
+example.B#`<init>`(). => primary ctor <init>: ()
 example.B#foo(). => method foo: : Int
   Int => scala.Int#
-java.lang.Object#`<init>`(). => ctor <init>: (): Object
-  Object => java.lang.Object#
+java.lang.Object#`<init>`(). => ctor <init>: ()
 scala.Int# => abstract final class Int.{+111 decls}
   extends AnyVal
 
@@ -1298,8 +1257,7 @@ Symbols:
 example. => package example
 example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
-example.Synthetic#`<init>`(). => primary ctor <init>: (): Synthetic
-  Synthetic => example.Synthetic#
+example.Synthetic#`<init>`(). => primary ctor <init>: ()
 scala.Array. => final object Array.{+54 decls}
   extends FallbackArrayBuilding
   extends Serializable
@@ -1420,26 +1378,19 @@ scala.util.Either. => final object Either.{+9 decls}
 types. => package types
 types.B# => class B.{+1 decls}
   extends AnyRef
-types.B#`<init>`(). => primary ctor <init>: (): B
-  B => types.B#
+types.B#`<init>`(). => primary ctor <init>: ()
 types.C# => class C.{+1 decls}
   extends AnyRef
-types.C#`<init>`(). => primary ctor <init>: (): C
-  C => types.C#
+types.C#`<init>`(). => primary ctor <init>: ()
 types.P# => class P.{+5 decls}
   extends AnyRef
 types.P#C# => class C.{+1 decls}
   extends AnyRef
-types.P#C#`<init>`(). => primary ctor <init>: (): P.this.C
-  P => types.P#
-  C => types.P#C#
+types.P#C#`<init>`(). => primary ctor <init>: ()
 types.P#X# => class X.{+1 decls}
   extends AnyRef
-types.P#X#`<init>`(). => primary ctor <init>: (): P.this.X
-  P => types.P#
-  X => types.P#X#
-types.P#`<init>`(). => primary ctor <init>: (): P
-  P => types.P#
+types.P#X#`<init>`(). => primary ctor <init>: ()
+types.P#`<init>`(). => primary ctor <init>: ()
 types.P#x(). => val method x: : P.this.X
   P => types.P#
   X => types.P#X#
@@ -1450,16 +1401,11 @@ types.T# => class T.{+5 decls}
   extends AnyRef
 types.T#C# => class C.{+1 decls}
   extends AnyRef
-types.T#C#`<init>`(). => primary ctor <init>: (): T.this.C
-  T => types.T#
-  C => types.T#C#
+types.T#C#`<init>`(). => primary ctor <init>: ()
 types.T#X# => class X.{+1 decls}
   extends AnyRef
-types.T#X#`<init>`(). => primary ctor <init>: (): T.this.X
-  T => types.T#
-  X => types.T#X#
-types.T#`<init>`(). => primary ctor <init>: (): T
-  T => types.T#
+types.T#X#`<init>`(). => primary ctor <init>: ()
+types.T#`<init>`(). => primary ctor <init>: ()
 types.T#x(). => val method x: : T.this.X
   T => types.T#
   X => types.T#X#
@@ -1491,9 +1437,7 @@ types.Test.C#ClassInfoType1. => final object ClassInfoType1
   extends AnyRef
 types.Test.C#ClassInfoType2# => class ClassInfoType2.{+2 decls}
   extends B
-types.Test.C#ClassInfoType2#`<init>`(). => primary ctor <init>: (): C.this.ClassInfoType2
-  C => types.Test.C#
-  ClassInfoType2 => types.Test.C#ClassInfoType2#
+types.Test.C#ClassInfoType2#`<init>`(). => primary ctor <init>: ()
 types.Test.C#ClassInfoType2#x(). => method x: : Int
   Int => scala.Int#
 types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any]
@@ -1534,11 +1478,9 @@ types.Test.C#RepeatedType# => case class RepeatedType.{+12 decls}
   extends AnyRef
   extends Product
   extends Serializable
-types.Test.C#RepeatedType#`<init>`(String*). => primary ctor <init>: (val s: String*): C.this.RepeatedType
+types.Test.C#RepeatedType#`<init>`(String*). => primary ctor <init>: (val s: String*)
   s => types.Test.C#RepeatedType#`<init>`(String*).(s)
   String => scala.Predef.String#
-  C => types.Test.C#
-  RepeatedType => types.Test.C#RepeatedType#
 types.Test.C#RepeatedType#`<init>`(String*).(s) => val param s: String*
   String => scala.Predef.String#
 types.Test.C#RepeatedType#canEqual(Any). => method canEqual: (x$1: Any): Boolean
@@ -1627,8 +1569,7 @@ types.Test.C#TypeType.m3().[M3] => typeparam M3: [M3][_: <?>] => >: Nothing <: A
   M3][_ => types.Test.C#TypeType.m3().[M3][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#`<init>`(). => primary ctor <init>: (): C
-  C => types.Test.C#
+types.Test.C#`<init>`(). => primary ctor <init>: ()
 types.Test.C#annType1(). => val method annType1: : T @ann[Int]
   T => types.T#
   ann => types.ann#
@@ -1795,14 +1736,12 @@ types.Test.Literal.unit. => private[this] final val field unit: Unit
   Unit => scala.Unit#
 types.Test.M# => class M.{+2 decls}
   extends AnyRef
-types.Test.M#`<init>`(). => primary ctor <init>: (): M
-  M => types.Test.M#
+types.Test.M#`<init>`(). => primary ctor <init>: ()
 types.Test.M#m(). => method m: : Int
   Int => scala.Int#
 types.Test.N# => class N.{+2 decls}
   extends AnyRef
-types.Test.N#`<init>`(). => primary ctor <init>: (): N
-  N => types.Test.N#
+types.Test.N#`<init>`(). => primary ctor <init>: ()
 types.Test.N#n(). => method n: : Int
   Int => scala.Int#
 types.ann# => class ann[T >: Nothing <: Any].{+2 decls}
@@ -1811,10 +1750,9 @@ types.ann# => class ann[T >: Nothing <: Any].{+2 decls}
 types.ann#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.ann#`<init>`(T). => primary ctor <init>: (x: T): ann[T]
+types.ann#`<init>`(T). => primary ctor <init>: (x: T)
   x => types.ann#`<init>`(T).(x)
   T => types.ann#[T]
-  ann => types.ann#
 types.ann#`<init>`(T).(x) => param x: T
   T => types.ann#[T]
 types.ann#x. => private[this] val field x: T
@@ -1822,13 +1760,11 @@ types.ann#x. => private[this] val field x: T
 types.ann1# => class ann1.{+1 decls}
   extends Annotation
   extends StaticAnnotation
-types.ann1#`<init>`(). => primary ctor <init>: (): ann1
-  ann1 => types.ann1#
+types.ann1#`<init>`(). => primary ctor <init>: ()
 types.ann2# => class ann2.{+1 decls}
   extends Annotation
   extends StaticAnnotation
-types.ann2#`<init>`(). => primary ctor <init>: (): ann2
-  ann2 => types.ann2#
+types.ann2#`<init>`(). => primary ctor <init>: ()
 
 Occurrences:
 [0:8..0:13): types <= types.
@@ -2081,12 +2017,11 @@ example.ValUsages.v. => private[this] val field v: Vals
   Vals => example.Vals#
 example.Vals# => abstract class Vals.{+30 decls}
   extends AnyRef
-example.Vals#`<init>`(Int,Int,Int). => primary ctor <init>: (p: Int, val xp: Int, var yp: Int): Vals
+example.Vals#`<init>`(Int,Int,Int). => primary ctor <init>: (p: Int, val xp: Int, var yp: Int)
   p => example.Vals#`<init>`(Int,Int,Int).(p)
   Int => scala.Int#
   xp => example.Vals#`<init>`(Int,Int,Int).(xp)
   yp => example.Vals#`<init>`(Int,Int,Int).(yp)
-  Vals => example.Vals#
 example.Vals#`<init>`(Int,Int,Int).(p) => param p: Int
   Int => scala.Int#
 example.Vals#`<init>`(Int,Int,Int).(xp) => val param xp: Int

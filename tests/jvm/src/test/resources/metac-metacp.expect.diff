@@ -103,17 +103,6 @@ com.javacp.MetacJava#Overload1#A#`<init>`().
 -  tag: METHOD_TYPE
 -  methodType {
 -    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
--        prefix {
--          tag: SINGLETON_TYPE
--          singletonType {
--            tag: THIS
--            symbol: "com.javacp.MetacJava#Overload1#"
--            primitive: 0
--            string: ""
--        symbol: "com.javacp.MetacJava#Overload1#A#"
 -}
 -accessibility {
 -  tag: PUBLIC
@@ -141,17 +130,6 @@ com.javacp.MetacJava#Overload1#`<init>`().
 -  tag: METHOD_TYPE
 -  methodType {
 -    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
--        prefix {
--          tag: SINGLETON_TYPE
--          singletonType {
--            tag: THIS
--            symbol: "com.javacp.MetacJava#"
--            primitive: 0
--            string: ""
--        symbol: "com.javacp.MetacJava#Overload1#"
 -}
 -accessibility {
 -  tag: PUBLIC
@@ -203,17 +181,6 @@ com.javacp.MetacJava#Overload2#A#`<init>`().
 -  tag: METHOD_TYPE
 -  methodType {
 -    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
--        prefix {
--          tag: SINGLETON_TYPE
--          singletonType {
--            tag: THIS
--            symbol: "com.javacp.MetacJava#Overload2#"
--            primitive: 0
--            string: ""
--        symbol: "com.javacp.MetacJava#Overload2#A#"
 -}
 -accessibility {
 -  tag: PUBLIC
@@ -241,17 +208,6 @@ com.javacp.MetacJava#Overload2#`<init>`().
 -  tag: METHOD_TYPE
 -  methodType {
 -    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
--        prefix {
--          tag: SINGLETON_TYPE
--          singletonType {
--            tag: THIS
--            symbol: "com.javacp.MetacJava#"
--            primitive: 0
--            string: ""
--        symbol: "com.javacp.MetacJava#Overload2#"
 -}
 -accessibility {
 -  tag: PUBLIC
@@ -273,18 +229,6 @@ com.javacp.MetacJava#Overload3#
      declarations: "com.javacp.MetacJava#Overload3#A#"
 -    declarations: "com.javacp.MetacJava#Overload3#A#"
  accessibility {
-
-
-============================================
-com.javacp.MetacJava#Overload3#A#`<init>`().
-============================================
---- metac
-+++ metacp
-     return_type {
-       tag: TYPE_REF
-       typeRef {
--        symbol: "com.javacp.MetacJava#Overload3#A#"
-+        symbol: "scala.Unit#"
 
 
 =================================
@@ -327,17 +271,6 @@ com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
 -  tag: METHOD_TYPE
 -  methodType {
 -    parameters {
--    return_type {
--      tag: TYPE_REF
--      typeRef {
--        prefix {
--          tag: SINGLETON_TYPE
--          singletonType {
--            tag: THIS
--            symbol: "com.javacp.MetacJava#StaticInner#"
--            primitive: 0
--            string: ""
--        symbol: "com.javacp.MetacJava#StaticInner#NonStatic#"
 -}
 -accessibility {
 -  tag: PUBLIC
@@ -348,30 +281,6 @@ com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
 +name: ""
 +owner: ""
 +language: UNKNOWN_LANGUAGE
-
-
-============================================
-com.javacp.MetacJava#StaticInner#`<init>`().
-============================================
---- metac
-+++ metacp
-     return_type {
-       tag: TYPE_REF
-       typeRef {
--        symbol: "com.javacp.MetacJava#StaticInner#"
-+        symbol: "scala.Unit#"
-
-
-================================
-com.javacp.MetacJava#`<init>`().
-================================
---- metac
-+++ metacp
-     return_type {
-       tag: TYPE_REF
-       typeRef {
--        symbol: "com.javacp.MetacJava#"
-+        symbol: "scala.Unit#"
 
 
 ========

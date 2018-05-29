@@ -340,8 +340,7 @@ class Main(settings: Settings, reporter: Reporter) {
           val Some(MethodType(tparams, paramss, res)) = tpe.methodType
           rep("[", tparams, ", ", "] => ")(defn)
           rep("(", paramss, ")(", ")")(params => rep(params.symbols, ", ")(defn))
-          out.print(": ")
-          res.foreach(normal)
+          opt(": ", res, "")(normal)
         case BY_NAME_TYPE =>
           val Some(ByNameType(utpe)) = tpe.byNameType
           out.print("=> ")

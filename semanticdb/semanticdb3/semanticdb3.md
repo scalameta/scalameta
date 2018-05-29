@@ -1898,13 +1898,13 @@ class C(x: Int) {
     <td>Primary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`(Int).</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;C&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(List(&lt;x&gt;)), None)</code></td>
   </tr>
   <tr>
     <td>Secondary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;C&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), None)</code></td>
   </tr>
 </table>
 
@@ -1915,9 +1915,7 @@ Notes:
   * `PRIMARY`: set for primary constructors.
 * Constructors don't have type parameters and return types, but we still
   represent their signatures with `MethodType`. In these signatures,
-  type parameters are equal to `List()` and the return type
-  is the type of the enclosing class parameterized with references to its
-  type parameters.
+  type parameters are equal to `List()` and the return type is `None`.
 * Primary constructor parameters with `val` and `var` modifiers give rise
   to multiple different symbols as described above.
 * Constructor symbols support [all Scala accessibilities](#scala-accessibility).
@@ -2928,7 +2926,7 @@ class Outer {
     <td>Constructor of <code>Outer</code></td>
     <td><code>a.Outer#&lt;init&gt;().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Outer&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), None)</code></td>
   </tr>
   <tr>
     <td><code>Inner</code></td>
@@ -2940,16 +2938,14 @@ class Outer {
     <td>Constructor of <code>Inner</code></td>
     <td><code>a.Outer#Inner#&lt;init&gt;().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Inner&gt;, List()))</code></td>
+    <td><code>MethodType(List(), List(), None)</code></td>
   </tr>
 </table>
 
 Notes:
 * Constructors don't have type parameters and return types, but we still
   represent their signatures with `MethodType`. In these signatures,
-  type parameters are equal to `List()` and the return type
-  is the type of the enclosing class parameterized with references to its
-  type parameters.
+  type parameters are equal to `List()` and the return type is `None`.
 * Constructor declarations support no properties.
 * Constructor declarations support
   [all Java accessibilities](#java-accessibility).

@@ -229,6 +229,11 @@ object Javacp {
             paramSymbol
         }
 
+        val returnType = {
+          if (isConstructor) None
+          else Some(method.signature.result.toType(methodScope))
+        }
+
         val methodKind = if (isConstructor) k.CONSTRUCTOR else k.METHOD
 
         val methodType = s.Type(
@@ -237,7 +242,7 @@ object Javacp {
             s.MethodType(
               typeParameters = methodTypeParameters.map(_.symbol),
               parameters = s.MethodType.ParameterList(parameterSymbols) :: Nil,
-              returnType = Some(method.signature.result.toType(methodScope))
+              returnType = returnType
             )
           )
         )

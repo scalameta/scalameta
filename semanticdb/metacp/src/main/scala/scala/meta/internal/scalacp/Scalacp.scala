@@ -323,6 +323,9 @@ object Scalacp {
           case other =>
             sys.error(s"unsupported type $other")
         }
+      } else if (sym.isConstructor) {
+        val tpe = loop(sym.infoType)
+        tpe.map(_.update(_.methodType.optionalReturnType := None))
       } else {
         loop(sym.infoType)
       }
