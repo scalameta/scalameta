@@ -1570,13 +1570,13 @@ types.Test.C#RepeatedType#toString(). => method toString: (): String
 types.Test.C#RepeatedType. => final object RepeatedType.{+3 decls}
   extends AbstractFunction1[String*, C.this.RepeatedType]
   extends Serializable
-types.Test.C#RepeatedType.apply(String*). => case method apply: (s: <?>): C.this.RepeatedType
+types.Test.C#RepeatedType.apply(String*). => method apply: (s: <?>): C.this.RepeatedType
   s => types.Test.C#RepeatedType.apply(String*).(s)
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
 types.Test.C#RepeatedType.toString(). => final method toString: (): String
   String => java.lang.String#
-types.Test.C#RepeatedType.unapplySeq(RepeatedType). => case method unapplySeq: (x$0: C.this.RepeatedType): Option[Seq[String]]
+types.Test.C#RepeatedType.unapplySeq(RepeatedType). => method unapplySeq: (x$0: C.this.RepeatedType): Option[Seq[String]]
   x$0 => types.Test.C#RepeatedType.unapplySeq(RepeatedType).(x$0)
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#

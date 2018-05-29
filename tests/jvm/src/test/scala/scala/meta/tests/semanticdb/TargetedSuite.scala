@@ -275,13 +275,13 @@ class TargetedSuite extends SemanticdbSuite() {
        |f.M.C1. => final object C1.{+4 decls}
        |  extends AbstractFunction0[C1]
        |  extends Serializable
-       |f.M.C1.apply(). => case method apply: (): C1
+       |f.M.C1.apply(). => method apply: (): C1
        |  C1 => f.M.C1#
        |f.M.C1.readResolve(). => private method readResolve: (): Object
        |  Object => java.lang.Object#
        |f.M.C1.toString(). => final method toString: (): String
        |  String => java.lang.String#
-       |f.M.C1.unapply(C1). => case method unapply: (x$0: C1): Boolean
+       |f.M.C1.unapply(C1). => method unapply: (x$0: C1): Boolean
        |  x$0 => f.M.C1.unapply(C1).(x$0)
        |  C1 => f.M.C1#
        |  Boolean => scala.Boolean#

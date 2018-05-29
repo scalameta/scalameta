@@ -86,7 +86,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (gsym.hasFlag(gf.SEALED)) flip(p.SEALED)
         if (gsym.hasFlag(gf.IMPLICIT)) flip(p.IMPLICIT)
         if (gsym.hasFlag(gf.LAZY)) flip(p.LAZY)
-        if (gsym.hasFlag(gf.CASE)) flip(p.CASE)
+        if (gsym.hasFlag(gf.CASE) && (gsym.isClass || gsym.isModule)) flip(p.CASE)
         if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flip(p.CONTRAVARIANT)
         if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flip(p.COVARIANT)
         if (kind.isLocal || kind.isField) {

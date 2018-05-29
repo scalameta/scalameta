@@ -127,7 +127,7 @@ object Scalacp {
     if (sym.isSealed) sflip(p.SEALED)
     if (sym.isImplicit) sflip(p.IMPLICIT)
     if (sym.isLazy) sflip(p.LAZY)
-    if (sym.isCase) sflip(p.CASE)
+    if (sym.isCase && (sym.isClass || sym.isModule)) sflip(p.CASE)
     if (sym.isType && sym.isCovariant) sflip(p.COVARIANT)
     if (sym.isType && sym.isContravariant) sflip(p.CONTRAVARIANT)
     if (skind(sym) == k.FIELD) {
