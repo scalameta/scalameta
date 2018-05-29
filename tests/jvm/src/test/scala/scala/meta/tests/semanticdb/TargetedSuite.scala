@@ -7,6 +7,7 @@ import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.semanticdb3._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
+import scala.util.Properties.{versionNumberString => scalaVersion}
 import Compat._
 
 // Contributing tips:
@@ -971,20 +972,16 @@ object Compat {
     s"Stream.ConsWrapper#`#::`($name)."
   }
 
-  val ListBufferDeclsInString = "+43 decls"
+  val ListBufferDeclsInString = "+39 decls"
   lazy val ListBufferDeclsActual: String = {
-    val consWrapper = typeOf[scala.collection.mutable.ListBuffer[_]]
-    val decls = consWrapper.decls.size
-    s"+$decls decls"
+    if (scalaVersion.startsWith("2.11")) "+36 decls"
+    else ListBufferDeclsInString
   }
 
   val ReusableBuilderInString = "extends ReusableBuilder[A, List[A]]"
   lazy val ReusableBuilderActual: String = {
-    if (scala.util.Properties.versionNumberString.startsWith("2.11")) {
-      "extends Builder[A, List[A]]"
-    } else {
-      ReusableBuilderInString
-    }
+    if (scalaVersion.startsWith("2.11")) "extends Builder[A, List[A]]"
+    else ReusableBuilderInString
   }
 
 }
