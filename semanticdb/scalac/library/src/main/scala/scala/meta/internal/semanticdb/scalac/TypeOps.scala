@@ -199,24 +199,6 @@ trait TypeOps { self: SemanticdbOps =>
           true
       }
     }
-    def descriptor: String = {
-      def paramDescriptors = gtpe.paramss.flatten.map(_.info.descriptor)
-      gtpe match {
-        case ByNameType(gtpe) => "=>" + gtpe.descriptor
-        case RepeatedType(gtpe) => gtpe.descriptor + "*"
-        case g.TypeRef(_, gsym, _) => gsym.name.toSemantic.encoded
-        case g.SingleType(_, _) => ".type"
-        case g.ThisType(_) => ".type"
-        case g.ConstantType(g.Constant(_: g.Type)) => "Class"
-        case g.ConstantType(_) => ".type"
-        case g.RefinedType(_, _) => "{}"
-        case g.AnnotatedType(_, gtpe) => gtpe.descriptor
-        case g.ExistentialType(_, gtpe) => gtpe.descriptor
-        case _: g.NullaryMethodType | _: g.MethodType => paramDescriptors.mkString(",")
-        case g.PolyType(_, gtpe) => gtpe.descriptor
-        case other => "?"
-      }
-    }
   }
 
   object ByNameType {

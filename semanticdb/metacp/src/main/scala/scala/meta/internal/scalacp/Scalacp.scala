@@ -454,21 +454,6 @@ object Scalacp {
       sym.isUselessField
     }
     def isUseful: Boolean = !sym.isUseless
-    def typeDescriptor: String = {
-      try {
-        sym match {
-          case sym: SymbolInfoSymbol =>
-            if (sym.isUsefulField) ""
-            else sym.infoType.descriptor
-          case sym =>
-            sys.error(s"unsupported symbol $sym")
-        }
-      } catch {
-        case ScalaSigParserError("Unexpected failure") =>
-          // FIXME: https://github.com/scalameta/scalameta/issues/1494
-          "?"
-      }
-    }
     def descriptor: Descriptor = {
       val name = {
         def loop(name: String): String = {
@@ -487,19 +472,13 @@ object Scalacp {
         case k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
           d.Term(name)
         case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
-          val typeDescriptor = sym.typeDescriptor
-          val kindred = sym.parent.get.children.filter(other => skind(other) == skind(sym))
-          val synonyms = kindred.filter { kin =>
-            kin.name == sym.name &&
-            kin.typeDescriptor == typeDescriptor
-          }
+          val synonyms = sym.parent.get.children.filter(_.name == sym.name)
           val disambiguator = {
-            def defaultDescriptor = s"(${typeDescriptor})"
-            if (synonyms.lengthCompare(1) == 0) defaultDescriptor
+            if (synonyms.lengthCompare(1) == 0) "()"
             else {
               val index = synonyms.indexOf(sym)
-              if (index == 0) defaultDescriptor
-              else s"(${typeDescriptor}+${index})"
+              if (index == 0) "()"
+              else s"(+${index})"
             }
           }
           d.Method(name, disambiguator)
@@ -556,24 +535,6 @@ object Scalacp {
         case NullaryMethodType(tpe) => tpe.ret
         case MethodType(tpe, _) => tpe.ret
         case _ => tpe
-      }
-    }
-    def descriptor: String = {
-      def paramDescriptors = tpe.paramss.flatten.map(_.infoType.descriptor)
-      tpe match {
-        case ByNameType(tpe) => "=>" + tpe.descriptor
-        case RepeatedType(tpe) => tpe.descriptor + "*"
-        case TypeRefType(_, sym, _) => sym.descriptor.name.encoded
-        case SingleType(_, _) => ".type"
-        case ThisType(_) => ".type"
-        case ConstantType(_: Type) => "Class"
-        case ConstantType(_) => ".type"
-        case RefinedType(_, _) => "{}"
-        case AnnotatedType(tpe, _) => tpe.descriptor
-        case ExistentialType(tpe, _) => tpe.descriptor
-        case _: NullaryMethodType | _: MethodType => paramDescriptors.mkString(",")
-        case PolyType(tpe, _) => tpe.descriptor
-        case other => "?"
       }
     }
   }

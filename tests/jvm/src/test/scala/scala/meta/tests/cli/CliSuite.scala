@@ -62,23 +62,23 @@ class CliSuite extends BaseCliSuite {
       |Symbols:
       |_empty_.HelloWorld. => final object HelloWorld.{+1 decls}
       |  extends AnyRef
-      |_empty_.HelloWorld.main(Array). => method main: (args: Array[String]): Unit
-      |  args => _empty_.HelloWorld.main(Array).(args)
+      |_empty_.HelloWorld.main(). => method main: (args: Array[String]): Unit
+      |  args => _empty_.HelloWorld.main().(args)
       |  Array => scala.Array#
       |  String => scala.Predef.String#
       |  Unit => scala.Unit#
-      |_empty_.HelloWorld.main(Array).(args) => param args: Array[String]
+      |_empty_.HelloWorld.main().(args) => param args: Array[String]
       |  Array => scala.Array#
       |  String => scala.Predef.String#
       |
       |Occurrences:
       |[1:11..1:21): HelloWorld <= _empty_.HelloWorld.
-      |[2:10..2:14): main <= _empty_.HelloWorld.main(Array).
-      |[2:15..2:19): args <= _empty_.HelloWorld.main(Array).(args)
+      |[2:10..2:14): main <= _empty_.HelloWorld.main().
+      |[2:15..2:19): args <= _empty_.HelloWorld.main().(args)
       |[2:21..2:26): Array => scala.Array#
       |[2:27..2:33): String => scala.Predef.String#
       |[2:37..2:41): Unit => scala.Unit#
-      |[3:8..3:15): println => scala.Predef.println(Any).
+      |[3:8..3:15): println => scala.Predef.println(+1).
     """.trim.stripMargin)
     assert(err.isEmpty)
   }

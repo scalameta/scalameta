@@ -66,19 +66,19 @@ com.javacp.Coin#
 ================
 --- metac
 +++ metacp
--    declarations: "com.javacp.Coin#`<init>`(Int)."
+-    declarations: "com.javacp.Coin#`<init>`()."
 -    declarations: "com.javacp.Coin#value."
--    declarations: "com.javacp.Coin#value()."
+-    declarations: "com.javacp.Coin#value(+1)."
      declarations: "com.javacp.Coin#PENNY."
      declarations: "com.javacp.Coin#NICKEL."
      declarations: "com.javacp.Coin#DIME."
      declarations: "com.javacp.Coin#QUARTER."
 +    declarations: "com.javacp.Coin#value."
 +    declarations: "com.javacp.Coin#$VALUES."
-+    declarations: "com.javacp.Coin#`<init>`(Int)."
++    declarations: "com.javacp.Coin#`<init>`()."
 +    declarations: "com.javacp.Coin#value()."
      declarations: "com.javacp.Coin#values()."
-     declarations: "com.javacp.Coin#valueOf(String)."
+     declarations: "com.javacp.Coin#valueOf()."
 
 
 =====================
@@ -91,13 +91,13 @@ com.javacp.MetacJava#
 -    declarations: "com.javacp.MetacJava#Overload1#"
 -    declarations: "com.javacp.MetacJava#Overload2#"
 -    declarations: "com.javacp.MetacJava#Overload2#"
-     declarations: "com.javacp.MetacJava#overload(A)."
-     declarations: "com.javacp.MetacJava#overload(A+1)."
+     declarations: "com.javacp.MetacJava#overload()."
+     declarations: "com.javacp.MetacJava#overload(+1)."
 -    declarations: "com.javacp.MetacJava#StaticInner#"
 -    declarations: "com.javacp.MetacJava#StaticInner#"
 -    declarations: "com.javacp.MetacJava#Overload3#"
 -    declarations: "com.javacp.MetacJava#Overload3#"
-     declarations: "com.javacp.MetacJava#overload(A+2)."
+     declarations: "com.javacp.MetacJava#overload(+2)."
 +    declarations: "com.javacp.MetacJava#Overload2#"
 +    declarations: "com.javacp.MetacJava#Overload3#"
 +    declarations: "com.javacp.MetacJava#Overload1#"
@@ -110,73 +110,10 @@ com.javacp.MetacJava#Overload1#
 ===============================
 --- metac
 +++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.MetacJava#Overload1#`<init>`()."
-+    declarations: "com.javacp.MetacJava#Overload1#`<init>`(MetacJava)."
+     declarations: "com.javacp.MetacJava#Overload1#`<init>`()."
      declarations: "com.javacp.MetacJava#Overload1#A#"
 -    declarations: "com.javacp.MetacJava#Overload1#A#"
  accessibility {
-
-
-=================================
-com.javacp.MetacJava#Overload1#A#
-=================================
---- metac
-+++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.MetacJava#Overload1#A#`<init>`()."
-+    declarations: "com.javacp.MetacJava#Overload1#A#`<init>`(Overload1)."
- accessibility {
-
-
-============================================
-com.javacp.MetacJava#Overload1#A#`<init>`().
-============================================
---- metac
-+++ metacp
--symbol: "com.javacp.MetacJava#Overload1#A#`<init>`()."
--kind: CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--language: JAVA
-+name: ""
-+language: UNKNOWN_LANGUAGE
-
-
-==========================================
-com.javacp.MetacJava#Overload1#`<init>`().
-==========================================
---- metac
-+++ metacp
--symbol: "com.javacp.MetacJava#Overload1#`<init>`()."
--kind: CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--language: JAVA
-+name: ""
-+language: UNKNOWN_LANGUAGE
 
 
 ===============================
@@ -184,73 +121,10 @@ com.javacp.MetacJava#Overload2#
 ===============================
 --- metac
 +++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.MetacJava#Overload2#`<init>`()."
-+    declarations: "com.javacp.MetacJava#Overload2#`<init>`(MetacJava)."
+     declarations: "com.javacp.MetacJava#Overload2#`<init>`()."
      declarations: "com.javacp.MetacJava#Overload2#A#"
 -    declarations: "com.javacp.MetacJava#Overload2#A#"
  accessibility {
-
-
-=================================
-com.javacp.MetacJava#Overload2#A#
-=================================
---- metac
-+++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.MetacJava#Overload2#A#`<init>`()."
-+    declarations: "com.javacp.MetacJava#Overload2#A#`<init>`(Overload2)."
- accessibility {
-
-
-============================================
-com.javacp.MetacJava#Overload2#A#`<init>`().
-============================================
---- metac
-+++ metacp
--symbol: "com.javacp.MetacJava#Overload2#A#`<init>`()."
--kind: CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--language: JAVA
-+name: ""
-+language: UNKNOWN_LANGUAGE
-
-
-==========================================
-com.javacp.MetacJava#Overload2#`<init>`().
-==========================================
---- metac
-+++ metacp
--symbol: "com.javacp.MetacJava#Overload2#`<init>`()."
--kind: CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--language: JAVA
-+name: ""
-+language: UNKNOWN_LANGUAGE
 
 
 ===============================
@@ -276,42 +150,6 @@ com.javacp.MetacJava#StaticInner#
      declarations: "com.javacp.MetacJava#StaticInner#isStatic()."
 +    declarations: "com.javacp.MetacJava#StaticInner#NonStatic#"
  accessibility {
-
-
-===========================================
-com.javacp.MetacJava#StaticInner#NonStatic#
-===========================================
---- metac
-+++ metacp
-         symbol: "java.lang.Object#"
--    declarations: "com.javacp.MetacJava#StaticInner#NonStatic#`<init>`()."
-+    declarations: "com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(StaticInner)."
-     declarations: "com.javacp.MetacJava#StaticInner#NonStatic#method(NonStatic)."
-
-
-======================================================
-com.javacp.MetacJava#StaticInner#NonStatic#`<init>`().
-======================================================
---- metac
-+++ metacp
--symbol: "com.javacp.MetacJava#StaticInner#NonStatic#`<init>`()."
--kind: CONSTRUCTOR
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "<init>"
--tpe {
--  tag: METHOD_TYPE
--  methodType {
--    parameters {
--}
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--language: JAVA
-+name: ""
-+language: UNKNOWN_LANGUAGE
 
 
 ========
@@ -373,20 +211,20 @@ example.Methods#
 ================
 --- metac
 +++ metacp
-     declarations: "example.Methods#m11(.type)."
-     declarations: "example.Methods#m11(.type+1)."
-     declarations: "example.Methods#m12a({})."
+     declarations: "example.Methods#m11()."
+     declarations: "example.Methods#m11(+1)."
+     declarations: "example.Methods#m12a()."
 +    declarations: "example.Methods#$anon#"
-     declarations: "example.Methods#m12b({})."
+     declarations: "example.Methods#m12b()."
 +    declarations: "example.Methods#$anon#"
-     declarations: "example.Methods#m13(Int)."
-     declarations: "example.Methods#m14(T)."
-     declarations: "example.Methods#m15(=>Int)."
+     declarations: "example.Methods#m13()."
+     declarations: "example.Methods#m14()."
+     declarations: "example.Methods#m15()."
 
 
-============================
-example.Methods#m13(Int).(x)
-============================
+=========================
+example.Methods#m13().(x)
+=========================
 --- metac
 +++ metacp
  properties: 0
@@ -576,9 +414,9 @@ types.Test.C#existentialType1().
            tag: TYPE_REF
            typeRef {
 -            symbol: "types.Test.C#existentialType1.T#"
-+            symbol: "types.Test.C#existentialType1(T).T#"
++            symbol: "types.Test.C#existentialType1().T#"
 -        type_parameters: "types.Test.C#existentialType1.T#"
-+        type_parameters: "types.Test.C#existentialType1(T).T#"
++        type_parameters: "types.Test.C#existentialType1().T#"
 
 
 ===========================
@@ -593,16 +431,27 @@ types.Test.C#singleType2().
          string: ""
 
 
-===================
-types.Test.Literal.
-===================
+==============================
+types.Test.Literal.javaEnum().
+==============================
 --- metac
 +++ metacp
-     declarations: "types.Test.Literal.string()."
-     declarations: "types.Test.Literal.bool()."
-     declarations: "types.Test.Literal.unit()."
--    declarations: "types.Test.Literal.javaEnum()."
-+    declarations: "types.Test.Literal.javaEnum(?)."
-     declarations: "types.Test.Literal.clazzOf()."
+ kind: METHOD
+ properties: 1032
+ name: "javaEnum"
+-tpe {
+-  tag: METHOD_TYPE
+-  methodType {
+-    return_type {
+-      tag: SINGLETON_TYPE
+-      singletonType {
+-        tag: SYMBOL
+-        symbol: "java.nio.file.LinkOption#NOFOLLOW_LINKS."
+-        primitive: 0
+-        string: ""
+-}
+ accessibility {
+   tag: PUBLIC
+   symbol: ""
 
 

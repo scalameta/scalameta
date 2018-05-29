@@ -137,20 +137,7 @@ object Javacp {
         if (method.signature == null) method.desc else method.signature,
         new MethodSignatureVisitor
       )
-      val typeDescriptor = {
-        val hasVarArg = method.access.hasFlag(o.ACC_VARARGS)
-        def toTypeDescriptor(t: JavaTypeSignature, i: Int): String = t match {
-          case t: BaseType => sname(t.name)
-          case t: ClassTypeSignature => sname(t.simpleClassTypeSignature.identifier)
-          case t: TypeVariableSignature => sname(t.identifier)
-          case t: ArrayTypeSignature if hasVarArg && i == signature.params.length - 1 =>
-            s"${toTypeDescriptor(t.javaTypeSignature, i)}*"
-          case _: ArrayTypeSignature => "Array"
-        }
-        val paramTypeDescriptors = signature.params.zipWithIndex.map((toTypeDescriptor _).tupled)
-        paramTypeDescriptors.mkString(",")
-      }
-      MethodInfo(method, typeDescriptor, signature)
+      MethodInfo(method, signature)
     }
 
     methodSignatures.foreach {
@@ -159,16 +146,12 @@ object Javacp {
       case method: MethodInfo =>
         val isConstructor = method.node.name == "<init>"
         val methodDisambiguator = {
-          val synonyms = methodSignatures.filter { m =>
-            m.node.name == method.node.name &&
-            m.typeDescriptor == method.typeDescriptor
-          }
-          def defaultDescriptor = s"(${method.typeDescriptor})"
-          if (synonyms.lengthCompare(1) == 0) defaultDescriptor
+          val synonyms = methodSignatures.filter(_.node.name == method.node.name)
+          if (synonyms.lengthCompare(1) == 0) "()"
           else {
             val index = synonyms.indexWhere(_.signature eq method.signature)
-            if (index == 0) defaultDescriptor
-            else s"(${method.typeDescriptor}+${index})"
+            if (index == 0) "()"
+            else s"(+${index})"
           }
         }
         val methodDescriptor = d.Method(method.node.name, methodDisambiguator)
@@ -366,7 +349,6 @@ object Javacp {
 
   private case class MethodInfo(
       node: MethodNode,
-      typeDescriptor: String,
       signature: MethodSignature)
 
   private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath = {

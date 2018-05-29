@@ -30,16 +30,16 @@ class TargetedSuite extends SemanticdbSuite() {
     |}
   """.trim.stripMargin,
     """|[0:7..0:8): A <= _empty_.A.
-       |[1:6..1:10): main <= _empty_.A.main(Array).
-       |[1:11..1:15): args <= _empty_.A.main(Array).(args)
+       |[1:6..1:10): main <= _empty_.A.main().
+       |[1:11..1:15): args <= _empty_.A.main().(args)
        |[1:17..1:22): Array => scala.Array#
        |[1:23..1:29): String => scala.Predef.String#
        |[1:33..1:37): Unit => scala.Unit#
        |[2:8..2:12): list <= local0
        |[2:15..2:19): List => scala.collection.immutable.List.
-       |[3:4..3:11): println => scala.Predef.println(Any).
+       |[3:4..3:11): println => scala.Predef.println(+1).
        |[3:12..3:16): list => local0
-  """.trim.stripMargin
+    """.trim.stripMargin
   )
 
   targeted(
@@ -82,7 +82,7 @@ class TargetedSuite extends SemanticdbSuite() {
       |  <<bar>>(children = 4)(3)
       |}
     """.trim.stripMargin, { (_, second) =>
-      assert(second === "_empty_.D.bar(Int,Int).")
+      assert(second === "_empty_.D.bar().")
     }
   )
 
@@ -95,8 +95,8 @@ class TargetedSuite extends SemanticdbSuite() {
       |  u.<<copy>>(<<age>> = 43)
       |}
     """.trim.stripMargin, { (_, copy, age) =>
-      assert(copy === "e.User#copy(String,Int).")
-      assert(age === "e.User#copy(String,Int).(age)")
+      assert(copy === "e.User#copy().")
+      assert(age === "e.User#copy().(age)")
     }
   )
 
@@ -161,29 +161,29 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Int => scala.Int#
        |f.C1#T2# => type T2: >: Int <: Int
        |  Int => scala.Int#
-       |f.C1#`<init>`(). => ctor <init>: ()
-       |f.C1#`<init>`(Int,Int,Int). => primary ctor <init>: (p1: Int, val p2: Int, var p3: Int)
-       |  p1 => f.C1#`<init>`(Int,Int,Int).(p1)
+       |f.C1#`<init>`(). => primary ctor <init>: (p1: Int, val p2: Int, var p3: Int)
+       |  p1 => f.C1#`<init>`().(p1)
        |  Int => scala.Int#
-       |  p2 => f.C1#`<init>`(Int,Int,Int).(p2)
-       |  p3 => f.C1#`<init>`(Int,Int,Int).(p3)
-       |f.C1#`<init>`(Int,Int,Int).(p1) => param p1: Int
+       |  p2 => f.C1#`<init>`().(p2)
+       |  p3 => f.C1#`<init>`().(p3)
+       |f.C1#`<init>`().(p1) => param p1: Int
        |  Int => scala.Int#
-       |f.C1#`<init>`(Int,Int,Int).(p2) => val param p2: Int
+       |f.C1#`<init>`().(p2) => val param p2: Int
        |  Int => scala.Int#
-       |f.C1#`<init>`(Int,Int,Int).(p3) => var param p3: Int
+       |f.C1#`<init>`().(p3) => var param p3: Int
        |  Int => scala.Int#
-       |f.C1#`f2_=`(Nothing). => var method f2_=: (x$1: Nothing): Unit
-       |  x$1 => f.C1#`f2_=`(Nothing).(x$1)
+       |f.C1#`<init>`(+1). => ctor <init>: ()
+       |f.C1#`f2_=`(). => var method f2_=: (x$1: Nothing): Unit
+       |  x$1 => f.C1#`f2_=`().(x$1)
        |  Nothing => scala.Nothing#
        |  Unit => scala.Unit#
-       |f.C1#`f2_=`(Nothing).(x$1) => param x$1: Nothing
+       |f.C1#`f2_=`().(x$1) => param x$1: Nothing
        |  Nothing => scala.Nothing#
-       |f.C1#`p3_=`(Int). => var method p3_=: (x$1: Int): Unit
-       |  x$1 => f.C1#`p3_=`(Int).(x$1)
+       |f.C1#`p3_=`(). => var method p3_=: (x$1: Int): Unit
+       |  x$1 => f.C1#`p3_=`().(x$1)
        |  Int => scala.Int#
        |  Unit => scala.Unit#
-       |f.C1#`p3_=`(Int).(x$1) => param x$1: Int
+       |f.C1#`p3_=`().(x$1) => param x$1: Int
        |  Int => scala.Int#
        |f.C1#f1(). => val method f1: : Nothing
        |  Nothing => scala.Nothing#
@@ -193,15 +193,15 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Nothing => scala.Nothing#
        |f.C1#f2(). => var method f2: : Nothing
        |  Nothing => scala.Nothing#
-       |f.C1#m1(Int). => method m1: [T >: Nothing <: Any] => (x: Int): Int
-       |  T => f.C1#m1(Int).[T]
+       |f.C1#m1(). => method m1: [T >: Nothing <: Any] => (x: Int): Int
+       |  T => f.C1#m1().[T]
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
-       |  x => f.C1#m1(Int).(x)
+       |  x => f.C1#m1().(x)
        |  Int => scala.Int#
-       |f.C1#m1(Int).(x) => param x: Int
+       |f.C1#m1().(x) => param x: Int
        |  Int => scala.Int#
-       |f.C1#m1(Int).[T] => typeparam T: >: Nothing <: Any
+       |f.C1#m1().[T] => typeparam T: >: Nothing <: Any
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
        |f.C1#m2(). => macro m2: : Nothing
@@ -233,29 +233,29 @@ class TargetedSuite extends SemanticdbSuite() {
        |  extends Product
        |  extends Serializable
        |f.M.C1#`<init>`(). => primary ctor <init>: ()
-       |f.M.C1#canEqual(Any). => method canEqual: (x$1: Any): Boolean
-       |  x$1 => f.M.C1#canEqual(Any).(x$1)
+       |f.M.C1#canEqual(). => method canEqual: (x$1: Any): Boolean
+       |  x$1 => f.M.C1#canEqual().(x$1)
        |  Any => scala.Any#
        |  Boolean => scala.Boolean#
-       |f.M.C1#canEqual(Any).(x$1) => param x$1: Any
+       |f.M.C1#canEqual().(x$1) => param x$1: Any
        |  Any => scala.Any#
        |f.M.C1#copy(). => method copy: (): C1
        |  C1 => f.M.C1#
-       |f.M.C1#equals(Any). => method equals: (x$1: Any): Boolean
-       |  x$1 => f.M.C1#equals(Any).(x$1)
+       |f.M.C1#equals(). => method equals: (x$1: Any): Boolean
+       |  x$1 => f.M.C1#equals().(x$1)
        |  Any => scala.Any#
        |  Boolean => scala.Boolean#
-       |f.M.C1#equals(Any).(x$1) => param x$1: Any
+       |f.M.C1#equals().(x$1) => param x$1: Any
        |  Any => scala.Any#
        |f.M.C1#hashCode(). => method hashCode: (): Int
        |  Int => scala.Int#
        |f.M.C1#productArity(). => method productArity: : Int
        |  Int => scala.Int#
-       |f.M.C1#productElement(Int). => method productElement: (x$1: Int): Any
-       |  x$1 => f.M.C1#productElement(Int).(x$1)
+       |f.M.C1#productElement(). => method productElement: (x$1: Int): Any
+       |  x$1 => f.M.C1#productElement().(x$1)
        |  Int => scala.Int#
        |  Any => scala.Any#
-       |f.M.C1#productElement(Int).(x$1) => param x$1: Int
+       |f.M.C1#productElement().(x$1) => param x$1: Int
        |  Int => scala.Int#
        |f.M.C1#productIterator(). => method productIterator: : Iterator[Any]
        |  Iterator => scala.collection.Iterator#
@@ -273,11 +273,11 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Object => java.lang.Object#
        |f.M.C1.toString(). => final method toString: (): String
        |  String => java.lang.String#
-       |f.M.C1.unapply(C1). => method unapply: (x$0: C1): Boolean
-       |  x$0 => f.M.C1.unapply(C1).(x$0)
+       |f.M.C1.unapply(). => method unapply: (x$0: C1): Boolean
+       |  x$0 => f.M.C1.unapply().(x$0)
        |  C1 => f.M.C1#
        |  Boolean => scala.Boolean#
-       |f.M.C1.unapply(C1).(x$0) => param x$0: C1
+       |f.M.C1.unapply().(x$0) => param x$0: C1
        |  C1 => f.M.C1#
        |f.M.C2# => class C2[+T >: Nothing <: Any, -U >: Nothing <: Any].{+1 decls}
        |  extends AnyRef
@@ -294,23 +294,23 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Nothing => scala.Nothing#
        |f.T# => trait T.{+9 decls}
        |  extends AnyRef
-       |f.T#`f4_=`(Nothing). => protected var method f4_=: (x$1: Nothing): Unit
-       |  x$1 => f.T#`f4_=`(Nothing).(x$1)
+       |f.T#`f4_=`(). => protected var method f4_=: (x$1: Nothing): Unit
+       |  x$1 => f.T#`f4_=`().(x$1)
        |  Nothing => scala.Nothing#
        |  Unit => scala.Unit#
-       |f.T#`f4_=`(Nothing).(x$1) => param x$1: Nothing
+       |f.T#`f4_=`().(x$1) => param x$1: Nothing
        |  Nothing => scala.Nothing#
-       |f.T#`f5_=`(Nothing). => protected[this] var method f5_=: (x$1: Nothing): Unit
-       |  x$1 => f.T#`f5_=`(Nothing).(x$1)
-       |  Nothing => scala.Nothing#
-       |  Unit => scala.Unit#
-       |f.T#`f5_=`(Nothing).(x$1) => param x$1: Nothing
-       |  Nothing => scala.Nothing#
-       |f.T#`f6_=`(Nothing). => protected[f] var method f6_=: (x$1: Nothing): Unit
-       |  x$1 => f.T#`f6_=`(Nothing).(x$1)
+       |f.T#`f5_=`(). => protected[this] var method f5_=: (x$1: Nothing): Unit
+       |  x$1 => f.T#`f5_=`().(x$1)
        |  Nothing => scala.Nothing#
        |  Unit => scala.Unit#
-       |f.T#`f6_=`(Nothing).(x$1) => param x$1: Nothing
+       |f.T#`f5_=`().(x$1) => param x$1: Nothing
+       |  Nothing => scala.Nothing#
+       |f.T#`f6_=`(). => protected[f] var method f6_=: (x$1: Nothing): Unit
+       |  x$1 => f.T#`f6_=`().(x$1)
+       |  Nothing => scala.Nothing#
+       |  Unit => scala.Unit#
+       |f.T#`f6_=`().(x$1) => param x$1: Nothing
        |  Nothing => scala.Nothing#
        |f.T#f1(). => private val method f1: : Nothing
        |  Nothing => scala.Nothing#
@@ -396,11 +396,11 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Int => scala.Int#
        |i.a. => final object a.{+3 decls}
        |  extends AnyRef
-       |i.a.foo(B). => method foo: (b: B): b.X
-       |  b => i.a.foo(B).(b)
+       |i.a.foo(). => method foo: (b: B): b.X
+       |  b => i.a.foo().(b)
        |  B => i.B#
        |  X => i.B#X#
-       |i.a.foo(B).(b) => implicit param b: B
+       |i.a.foo().(b) => implicit param b: B
        |  B => i.B#
        |i.a.x(). => val method x: : ListBuffer[Int]
        |  ListBuffer => scala.collection.mutable.ListBuffer#
@@ -410,7 +410,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Int => scala.Int#
        |java.lang.Object#`<init>`(). => ctor <init>: ()
        |local0 => val local result: b.X
-       |  b => i.a.foo(B).(b)
+       |  b => i.a.foo().(b)
        |  X => i.B#X#
        |scala. => package scala
        |scala.Int# => abstract final class Int.{+111 decls}
@@ -473,7 +473,7 @@ class TargetedSuite extends SemanticdbSuite() {
        |[3:22..3:29): Boolean => scala.Boolean#
        |[4:2..4:5): foo => k.tup.foo().
        |[5:2..5:5): foo => k.tup.foo().
-       |[5:6..5:11): apply => scala.Function1#apply(T1).
+       |[5:6..5:11): apply => scala.Function1#apply().
     """.stripMargin.trim
   )
 
@@ -510,18 +510,18 @@ class TargetedSuite extends SemanticdbSuite() {
     """.stripMargin,
     """|[1:8..1:9): m <= m.
        |[2:6..2:7): C <= m.C#
-       |[2:7..2:7):  <= m.C#`<init>`(Int).
+       |[2:7..2:7):  <= m.C#`<init>`().
        |[2:8..2:9): x <= m.C#x().
        |[2:11..2:14): Int => scala.Int#
-       |[3:6..3:10): this <= m.C#`<init>`().
-       |[3:19..3:19):  => m.C#`<init>`(Int).
+       |[3:6..3:10): this <= m.C#`<init>`(+1).
+       |[3:19..3:19):  => m.C#`<init>`().
        |[6:7..6:8): M <= m.M.
        |[7:6..7:8): c0 <= m.M.c0().
        |[7:15..7:16): C => m.C#
-       |[7:16..7:16):  => m.C#`<init>`().
+       |[7:16..7:16):  => m.C#`<init>`(+1).
        |[8:6..8:8): c1 <= m.M.c1().
        |[8:15..8:16): C => m.C#
-       |[8:16..8:16):  => m.C#`<init>`(Int).
+       |[8:16..8:16):  => m.C#`<init>`().
     """.stripMargin.trim
   )
 
@@ -542,8 +542,8 @@ class TargetedSuite extends SemanticdbSuite() {
        |[2:17..2:23): Stream => scala.package.Stream().
        |[3:6..3:10): Name => _empty_.n.Name().
        |[3:11..3:15): name <= _empty_.n.name.name.
-       |[4:4..4:7): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`(B).
-       |[4:10..4:13): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`(B).
+       |[4:4..4:7): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`().
+       |[4:10..4:13): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`().
        |[4:14..4:20): Stream => scala.package.Stream().
        |[4:21..4:26): empty => scala.collection.immutable.Stream.empty().
        |""".stripMargin.replaceAllLiterally(ConsWrapperInString, ConsWrapperActual)
@@ -580,12 +580,12 @@ class TargetedSuite extends SemanticdbSuite() {
     """.stripMargin,
     """|[0:7..0:8): p <= _empty_.p.
        |[1:6..1:9): lst <= _empty_.p.lst().
-       |[1:14..1:17): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`(B).
-       |[1:20..1:23): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`(B).
+       |[1:14..1:17): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`().
+       |[1:20..1:23): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`().
        |[1:24..1:30): Stream => scala.package.Stream().
        |[1:31..1:36): empty => scala.collection.immutable.Stream.empty().
        |[2:2..2:5): lst => _empty_.p.lst().
-       |[2:6..2:7): + => scala.Predef.any2stringadd#`+`(String).
+       |[2:6..2:7): + => scala.Predef.any2stringadd#`+`().
        |""".stripMargin.replaceAllLiterally(ConsWrapperInString, ConsWrapperActual)
   )
 
@@ -600,7 +600,7 @@ class TargetedSuite extends SemanticdbSuite() {
     // See https://github.com/scalameta/scalameta/issues/830
     "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", { (db, first) =>
       val denotation = db.symbols.find(_.symbol == first).get
-      assert(first == "_empty_.u.unapply(u).")
+      assert(first == "_empty_.u.unapply().")
     }
   )
 
@@ -649,10 +649,10 @@ class TargetedSuite extends SemanticdbSuite() {
        |[7:10..7:20): sourcecode => sourcecode.
        |[7:21..7:25): Name => sourcecode.Name.
        |[7:26..7:34): generate => sourcecode.Name.generate().
-       |[8:2..8:8): assert => org.scalatest.Assertions#assert(Boolean,Prettifier,Position).
+       |[8:2..8:8): assert => org.scalatest.Assertions#assert().
        |[8:9..8:10): x => _empty_.x.x().
        |[8:11..8:16): value => scala.meta.Term.Name#value().
-       |[8:17..8:19): == => java.lang.Object#`==`(Any).
+       |[8:17..8:19): == => java.lang.Object#`==`().
        |""".stripMargin
   )
 
@@ -796,21 +796,21 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Foo => _empty_.ad.Foo#
        |  y => _empty_.ad.x.$anon#y().
        |  Int => scala.Int#
-       |  z => _empty_.ad.x.$anon#z(T).
-       |  T => _empty_.ad.x.$anon#z(T).[T]
+       |  z => _empty_.ad.x.$anon#z().
+       |  T => _empty_.ad.x.$anon#z().[T]
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
-       |  e => _empty_.ad.x.$anon#z(T).(e)
+       |  e => _empty_.ad.x.$anon#z().(e)
        |_empty_.ad.x.$anon#y(). => val method y: : Int
        |  Int => scala.Int#
-       |_empty_.ad.x.$anon#z(T). => method z: [T >: Nothing <: Any] => (e: T): T
-       |  T => _empty_.ad.x.$anon#z(T).[T]
+       |_empty_.ad.x.$anon#z(). => method z: [T >: Nothing <: Any] => (e: T): T
+       |  T => _empty_.ad.x.$anon#z().[T]
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
-       |  e => _empty_.ad.x.$anon#z(T).(e)
-       |_empty_.ad.x.$anon#z(T).(e) => param e: T
-       |  T => _empty_.ad.x.$anon#z(T).[T]
-       |_empty_.ad.x.$anon#z(T).[T] => typeparam T: >: Nothing <: Any
+       |  e => _empty_.ad.x.$anon#z().(e)
+       |_empty_.ad.x.$anon#z().(e) => param e: T
+       |  T => _empty_.ad.x.$anon#z().[T]
+       |_empty_.ad.x.$anon#z().[T] => typeparam T: >: Nothing <: Any
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
        |_empty_.ad.z(). => val method z: : AnyRef with Foo { val method y: Any }
@@ -862,26 +862,26 @@ class TargetedSuite extends SemanticdbSuite() {
     """.trim.stripMargin,
     """|[0:7..0:9): ag <= _empty_.ag.
        |[1:6..1:7): x <= local0
-       |[1:13..1:15): to => scala.runtime.RichInt#to(Int).
+       |[1:13..1:15): to => scala.runtime.RichInt#to().
        |[1:20..1:21): y <= local1
-       |[1:27..1:32): until => scala.runtime.RichInt#until(Int).
-       |[1:37..1:44): println => scala.Predef.println(Any).
+       |[1:27..1:32): until => scala.runtime.RichInt#until().
+       |[1:37..1:44): println => scala.Predef.println(+1).
        |[1:45..1:46): x => local0
-       |[1:47..1:49): -> => scala.Predef.ArrowAssoc#`->`(B).
+       |[1:47..1:49): -> => scala.Predef.ArrowAssoc#`->`().
        |[1:50..1:51): x => local0
        |[2:6..2:7): i <= local2
-       |[2:13..2:15): to => scala.runtime.RichInt#to(Int).
+       |[2:13..2:15): to => scala.runtime.RichInt#to().
        |[2:20..2:21): j <= local3
-       |[2:27..2:32): until => scala.runtime.RichInt#until(Int).
+       |[2:27..2:32): until => scala.runtime.RichInt#until().
        |[2:44..2:45): i => local2
        |[2:47..2:48): j => local3
        |[3:6..3:7): i <= local4
-       |[3:13..3:15): to => scala.runtime.RichInt#to(Int).
+       |[3:13..3:15): to => scala.runtime.RichInt#to().
        |[3:20..3:21): j <= local5
-       |[3:27..3:32): until => scala.runtime.RichInt#until(Int).
+       |[3:27..3:32): until => scala.runtime.RichInt#until().
        |[3:39..3:40): i => local4
-       |[3:41..3:42): % => scala.Int#`%`(Int).
-       |[3:45..3:47): == => scala.Int#`==`(Int).
+       |[3:41..3:42): % => scala.Int#`%`(+3).
+       |[3:45..3:47): == => scala.Int#`==`(+3).
        |[3:58..3:59): i => local4
        |[3:61..3:62): j => local6
     """.trim.stripMargin
@@ -916,8 +916,8 @@ class TargetedSuite extends SemanticdbSuite() {
       |  M.<<foo>>(new M2.C)
       |}
     """.trim.stripMargin, { (_, foo1, foo2) =>
-      assert(foo1 === "an.M.foo(C).")
-      assert(foo2 === "an.M.foo(C+1).")
+      assert(foo1 === "an.M.foo().")
+      assert(foo2 === "an.M.foo(+1).")
     }
   )
 

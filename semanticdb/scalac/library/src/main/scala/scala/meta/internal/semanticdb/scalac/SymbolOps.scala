@@ -76,10 +76,6 @@ trait SymbolOps { self: SemanticdbOps =>
       !definitelyGlobal && (definitelyLocal || sym.owner.isSemanticdbLocal)
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
-    def descriptor: String = {
-      if (sym.isUsefulField) ""
-      else sym.info.descriptor.toString
-    }
     def filterSiblings(syms: List[g.Symbol]): List[g.Symbol] = {
       syms.filter(_.name == sym.name)
     }
@@ -92,8 +88,7 @@ trait SymbolOps { self: SemanticdbOps =>
       }
     }
     def disambiguator: String = {
-      val siblings = filterSiblings
-      val synonyms = siblings.filter(_.descriptor == sym.descriptor)
+      val synonyms = filterSiblings
       val suffix = {
         if (synonyms.lengthCompare(1) == 0) ""
         else {
@@ -102,7 +97,7 @@ trait SymbolOps { self: SemanticdbOps =>
           else "+" + index
         }
       }
-      "(" + descriptor + suffix + ")"
+      "(" + suffix + ")"
     }
     def isSelfParameter: Boolean = {
       sym != g.NoSymbol && sym.owner.thisSym == sym

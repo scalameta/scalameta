@@ -926,14 +926,16 @@ which Scala definitions, what their metadata is, etc). See
     which Scala definitions are modelled by which symbols.
 
 **Disambiguator** is:
-  * Concatenation of a left parenthesis (`(`), a type descriptor
+  * Concatenation of a left parenthesis (`(`), a tag
     and a right parenthesis (`)`).
-    In the case when multiple definitions have the same kind, name and
-    type descriptor, the type descriptor is appended with `+N`,
-    with no suffix appended to the method that is defined first in the source code,
-    with `+1` appended to the method that is defined second in the source code,
-    `+2` appended to the method that is defined third, etc.
-    See "Function declarations and definitions" below for an example.
+    If the definition is not overloaded, the tag is empty.
+    If the definition is overloaded, the tag is computed from the order of
+    appearance of overloads in the source code (see
+    "Function declarations and definitions" below for an example):
+      * Empty string for the definition that appears first.
+      * `+1` for the definition that appears second.
+      * `+2` for the definition that appears third.
+      * ...
 
 **Encoded name** is:
   * If name is a Java identifier [\[22\]][22], the name itself.
@@ -974,11 +976,11 @@ must be modelled:
 
 * The `scala` package: `scala.`
 * The `Int` class: `scala.Int#`
-* The `def implicitly[T](implicit e: T)` method: `scala.Predef.implicitly(T).`
-* The `e` parameter of that method: `scala.Predef.implicitly(T).(e)`
-* The `T` type parameter of that method: `scala.Predef.implicitly(T).[T]`
+* The `def implicitly[T](implicit e: T)` method: `scala.Predef.implicitly().`
+* The `e` parameter of that method: `scala.Predef.implicitly().(e)`
+* The `T` type parameter of that method: `scala.Predef.implicitly().[T]`
 * The `def contains[A: Ordering](tree: Tree[A, _], x: A): Boolean` method:
-  `scala.collection.immutable.RedBlackTree#contains(Tree,A,Ordering).`
+  `scala.collection.immutable.RedBlackTree#contains().`
 
 <a name="scala-type"></a>
 #### Type
@@ -1283,7 +1285,7 @@ abstract class C(val xp: Int) {
   </tr>
   <tr>
     <td><code>xp</code></td>
-    <td><code>_empty_.C#`&lt;init&gt;`(Int).(xp)</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`().(xp)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
@@ -1437,7 +1439,7 @@ class C {
   </tr>
   <tr>
     <td><code>xvar</code></td>
-    <td><code>_empty_.C#xvar_=(Nothing).</code></td>
+    <td><code>_empty_.C#xvar_=().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(&lt;x$1&gt;), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
   </tr>
@@ -1659,19 +1661,19 @@ class C(p1: Int) {
   </tr>
   <tr>
     <td><code>p1</code></td>
-    <td><code>_empty_.C#`&lt;init&gt;`(Int).(p1)</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`().(p1)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>p2</code></td>
-    <td><code>_empty_.C#m2(Int).(p2)</code></td>
+    <td><code>_empty_.C#m2().(p2)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>p3</code></td>
-    <td><code>_empty_.C#m3(Int).(p3)</code></td>
+    <td><code>_empty_.C#m3().(p3)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
@@ -1683,25 +1685,25 @@ class C(p1: Int) {
   </tr>
   <tr>
     <td><code>p4</code></td>
-    <td><code>_empty_.C#m4(=>Int).(p4)</code></td>
+    <td><code>_empty_.C#m4().(p4)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ByNameType(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>p5</code></td>
-    <td><code>_empty_.C#m5(Int*).(p5)</code></td>
+    <td><code>_empty_.C#m5().(p5)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>RepeatedType(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td>Context bound</td>
-    <td><code>_empty_.C#m6(C,V).(x$1)</code></td>
+    <td><code>_empty_.C#m6().(x$1)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code></td>
   </tr>
   <tr>
     <td>View bound</td>
-    <td><code>_empty_.C#m7(C,V).(x$2)</code></td>
+    <td><code>_empty_.C#m7().(x$2)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;Function1&gt;, List(&lt;T&gt;, &lt;V&gt;))</code></td>
   </tr>
@@ -1763,19 +1765,19 @@ abstract class C {
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>_empty_.C#m3(Int).</code></td>
+    <td><code>_empty_.C#m3().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>_empty_.C#m3(Int+1).</code></td>
+    <td><code>_empty_.C#m3(+1).</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;org.Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m4</code></td>
-    <td><code>_empty_.C#m4(Int,Int).</code></td>
+    <td><code>_empty_.C#m4().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
@@ -1861,13 +1863,13 @@ class C(x: Int) {
   </tr>
   <tr>
     <td>Primary constructor</td>
-    <td><code>_empty_.C#`&lt;init&gt;`(Int).</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
     <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodType(List(), List(List(&lt;x&gt;)), None)</code></td>
   </tr>
   <tr>
     <td>Secondary constructor</td>
-    <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`(+1).</code></td>
     <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodType(List(), List(), None)</code></td>
   </tr>
@@ -1932,37 +1934,37 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
   </tr>
   <tr>
     <td><code>z</code></td>
-    <td><code>_empty_.C#z_=(T).</code></td>
+    <td><code>_empty_.C#z_=().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(List(&lt;x$1&gt;)), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
-    <td><code>_empty_.C#z_=(T).(x$1)</code></td>
+    <td><code>_empty_.C#z_=().(x$1)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td>Primary constructor</td>
-    <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
     <td><code>CONSTRUCTOR</code></td>
     <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>x</code></td>
-    <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).(x)</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`().(x)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>y</code></td>
-    <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).(y)</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`().(y)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
-    <td><code>_empty_.C#`&lt;init&gt;`(T,T,T).(z)</code></td>
+    <td><code>_empty_.C#`&lt;init&gt;`().(z)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
   </tr>
@@ -2269,14 +2271,16 @@ In this section, we describe the Java symbol format.
     which Java definitions are modelled by which symbols.
 
 **Disambiguator** is:
-  * Concatenation of a left parenthesis (`(`), a type descriptor
+  * Concatenation of a left parenthesis (`(`), a tag
     and a right parenthesis (`)`).
-    In the case when multiple definitions have the same kind, name and
-    type descriptor, the type descriptor is appended with `+N`,
-    with no suffix appended to the method that is defined first in the source code,
-    with `+1` appended to the method that is defined second in the source code,
-    `+2` appended to the method that is defined third, etc.
-    See "Class declarations" below for an example.
+    If the definition is not overloaded, the tag is empty.
+    If the definition is overloaded, the tag is computed from the order of
+    appearance of overloads in the source code (see "Class declarations" below
+    for an example):
+      * Empty string for the definition that appears first.
+      * `+1` for the definition that appears second.
+      * `+2` for the definition that appears third.
+      * ...
 
 **Name** is:
   * For root package, `_root_`.
@@ -2300,9 +2304,9 @@ must be modelled:
   * The `java` package: `java.`
   * The `Integer` class: `java.lang.Integer#`
   * The `int` primitive: `scala.Int#`
-  * The `Arrays.asList` method: `java.util.Arrays#asList(T*).`
-  * The `a` parameter of that method: `java.util.Arrays#asList(T*).(a)`
-  * The `T` type parameter of that method: `java.util.Arrays#asList(T*).[T]`
+  * The `Arrays.asList` method: `java.util.Arrays#asList().`
+  * The `a` parameter of that method: `java.util.Arrays#asList().(a)`
+  * The `T` type parameter of that method: `java.util.Arrays#asList().[T]`
 
 <a name="java-type"></a>
 #### Type
@@ -2534,37 +2538,37 @@ class C extends S1 implements I {
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.C#m3(Overload).</code></td>
+    <td><code>a.C#m3().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(&lt;e1&gt;), TypeRef(None, &lt;T3&gt;))</code></td>
   </tr>
   <tr>
     <td><code>e1</code></td>
-    <td><code>a.C#m3(Overload).(e1)</code></td>
+    <td><code>a.C#m3().(e1)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;one.Overload&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.C#m3(Overload+1).</code></td>
+    <td><code>a.C#m3(+1).</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(&lte3&gt;), TypeRef(None, &lt;T5&gt;))</code></td>
   </tr>
   <tr>
     <td><code>e3</code></td>
-    <td><code>a.C#m3(Overload+1).(e3)</code></td>
+    <td><code>a.C#m3(+1).(e3)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;three.Overload&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.C#m3(Overload+2).</code></td>
+    <td><code>a.C#m3(+2).</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(&lt;e2&gt;) TypeRef(None, &lt;T4&gt;))</code></td>
   </tr>
   <tr>
     <td><code>e2</code></td>
-    <td><code>a.C#m3(Overload+2).(e2)</code></td>
+    <td><code>a.C#m3(+2).(e2)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;two.Overload&gt;, List())</code></td>
   </tr>
@@ -2658,7 +2662,7 @@ public enum Coin {
   </tr>
   <tr>
     <td></td>
-    <td><code>a.Coin#valueOf(String).</code></td>
+    <td><code>a.Coin#valueOf().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(), TypeRef(None, &lt;Coin&gt;, List()))</code></td>
   </tr>
@@ -2758,31 +2762,31 @@ class A {
   </tr>
   <tr>
     <td><code>m2</code></td>
-    <td><code>a.A#m2(T1).</code></td>
+    <td><code>a.A#m2().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(), List(&lt;t1&gt;), TypeRef(None, &lt;A&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>t1</code></td>
-    <td><code>a.A#m2(T1).(t1)</code></td>
+    <td><code>a.A#m2().(t1)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;T1&gt;, List())</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.A#m3(T2).</code></td>
+    <td><code>a.A#m3().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodType(List(&lt;T2&gt;), List(&lt;t2&gt;), TypeRef(None, &lt;T2&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.A#m3(T2).[T2]</code></td>
+    <td><code>a.A#m3().[T2]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeType(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>t2</code></td>
-    <td><code>a.A#m3(T2).(t2)</code></td>
+    <td><code>a.A#m3().(t2)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>TypeRef(None, &lt;T2&gt;, List())</code></td>
   </tr>
