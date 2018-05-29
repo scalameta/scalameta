@@ -36,12 +36,45 @@ _empty_.B#a(). => method a: : A
   A => _empty_.A#
 _root_. => package _root_
 
-classes/C.class
----------------
+classes/C1.class
+----------------
 
 Summary:
 Schema => SemanticDB v3
-Uri => classes/C.class
+Uri => classes/C1.class
+Text => empty
+Language => Scala
+Symbols => 10 entries
+
+Symbols:
+_root_. => package _root_
+classes. => package classes
+classes.C1# => final class C1.{+5 decls}
+  extends AnyVal
+classes.C1#`<init>`(Int). => primary ctor <init>: (val x1: Int)
+  x1 => classes.C1#`<init>`(Int).(x1)
+  Int => scala.Int#
+classes.C1#`<init>`(Int).(x1) => val param x1: Int
+  Int => scala.Int#
+classes.C1#equals(Any). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C1#equals(Any).(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C1#equals(Any).(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C1#hashCode(). => method hashCode: (): Int
+  Int => scala.Int#
+classes.C1#x1(). => val method x1: : Int
+  Int => scala.Int#
+classes.C1#x1. => private[this] val field x1: Int
+  Int => scala.Int#
+
+classes/C2.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => classes/C2.class
 Text => empty
 Language => Scala
 Symbols => 11 entries
@@ -49,27 +82,193 @@ Symbols => 11 entries
 Symbols:
 _root_. => package _root_
 classes. => package classes
-classes.C# => final class C.{+5 decls}
+classes.C2# => final class C2.{+5 decls}
   extends AnyVal
-classes.C#`<init>`(Int). => primary ctor <init>: (val x: Int)
-  x => classes.C#`<init>`(Int).(x)
+classes.C2#`<init>`(Int). => primary ctor <init>: (val x2: Int)
+  x2 => classes.C2#`<init>`(Int).(x2)
   Int => scala.Int#
-classes.C#`<init>`(Int).(x) => val param x: Int
+classes.C2#`<init>`(Int).(x2) => val param x2: Int
   Int => scala.Int#
-classes.C#equals(Any). => method equals: (x$1: Any): Boolean
-  x$1 => classes.C#equals(Any).(x$1)
+classes.C2#equals(Any). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C2#equals(Any).(x$1)
   Any => scala.Any#
   Boolean => scala.Boolean#
-classes.C#equals(Any).(x$1) => param x$1: Any
+classes.C2#equals(Any).(x$1) => param x$1: Any
   Any => scala.Any#
-classes.C#hashCode(). => method hashCode: (): Int
+classes.C2#hashCode(). => method hashCode: (): Int
   Int => scala.Int#
-classes.C#x(). => val method x: : Int
+classes.C2#x2(). => val method x2: : Int
   Int => scala.Int#
-classes.C#x. => private[this] val field x: Int
+classes.C2#x2. => private[this] val field x2: Int
   Int => scala.Int#
-classes.C. => final object C
+classes.C2. => final object C2
   extends AnyRef
+
+classes/C3.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => classes/C3.class
+Text => empty
+Language => Scala
+Symbols => 28 entries
+
+Symbols:
+_root_. => package _root_
+classes. => package classes
+classes.C3# => case class C3.{+13 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
+classes.C3#`<init>`(Int). => primary ctor <init>: (val x: Int)
+  x => classes.C3#`<init>`(Int).(x)
+  Int => scala.Int#
+classes.C3#`<init>`(Int).(x) => val param x: Int
+  Int => scala.Int#
+classes.C3#canEqual(Any). => method canEqual: (x$1: Any): Boolean
+  x$1 => classes.C3#canEqual(Any).(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C3#canEqual(Any).(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C3#copy$default$1(). => method copy$default$1: : Int 
+  Int => scala.Int#
+classes.C3#copy(Int). => method copy: (x: Int): C3
+  x => classes.C3#copy(Int).(x)
+  Int => scala.Int#
+  C3 => classes.C3#
+classes.C3#copy(Int).(x) => param x: Int
+  Int => scala.Int#
+classes.C3#equals(Any). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C3#equals(Any).(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C3#equals(Any).(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C3#hashCode(). => method hashCode: (): Int
+  Int => scala.Int#
+classes.C3#productArity(). => method productArity: : Int
+  Int => scala.Int#
+classes.C3#productElement(Int). => method productElement: (x$1: Int): Any
+  x$1 => classes.C3#productElement(Int).(x$1)
+  Int => scala.Int#
+  Any => scala.Any#
+classes.C3#productElement(Int).(x$1) => param x$1: Int
+  Int => scala.Int#
+classes.C3#productIterator(). => method productIterator: : Iterator[Any]
+  Iterator => scala.collection.Iterator#
+  Any => scala.Any#
+classes.C3#productPrefix(). => method productPrefix: : String
+  String => java.lang.String#
+classes.C3#toString(). => method toString: (): String
+  String => java.lang.String#
+classes.C3#x(). => val method x: : Int
+  Int => scala.Int#
+classes.C3#x. => private[this] val field x: Int
+  Int => scala.Int#
+classes.C3. => final object C3.{+4 decls}
+  extends AbstractFunction1[Int, C3]
+  extends Serializable
+classes.C3.apply(Int). => method apply: (x: Int): C3
+  x => classes.C3.apply(Int).(x)
+  Int => scala.Int#
+  C3 => classes.C3#
+classes.C3.apply(Int).(x) => param x: Int
+  Int => scala.Int#
+classes.C3.readResolve(). => private method readResolve: (): Object
+  Object => java.lang.Object#
+classes.C3.toString(). => final method toString: (): String
+  String => java.lang.String#
+classes.C3.unapply(C3). => method unapply: (x$0: C3): Option[Int]
+  x$0 => classes.C3.unapply(C3).(x$0)
+  C3 => classes.C3#
+  Option => scala.Option#
+  Int => scala.Int#
+classes.C3.unapply(C3).(x$0) => param x$0: C3
+  C3 => classes.C3#
+
+classes/C4.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => classes/C4.class
+Text => empty
+Language => Scala
+Symbols => 27 entries
+
+Symbols:
+_root_. => package _root_
+classes. => package classes
+classes.C4# => case class C4.{+13 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
+classes.C4#`<init>`(Int). => primary ctor <init>: (val x: Int)
+  x => classes.C4#`<init>`(Int).(x)
+  Int => scala.Int#
+classes.C4#`<init>`(Int).(x) => val param x: Int
+  Int => scala.Int#
+classes.C4#canEqual(Any). => method canEqual: (x$1: Any): Boolean
+  x$1 => classes.C4#canEqual(Any).(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C4#canEqual(Any).(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C4#copy$default$1(). => method copy$default$1: : Int 
+  Int => scala.Int#
+classes.C4#copy(Int). => method copy: (x: Int): C4
+  x => classes.C4#copy(Int).(x)
+  Int => scala.Int#
+  C4 => classes.C4#
+classes.C4#copy(Int).(x) => param x: Int
+  Int => scala.Int#
+classes.C4#equals(Any). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C4#equals(Any).(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C4#equals(Any).(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C4#hashCode(). => method hashCode: (): Int
+  Int => scala.Int#
+classes.C4#productArity(). => method productArity: : Int
+  Int => scala.Int#
+classes.C4#productElement(Int). => method productElement: (x$1: Int): Any
+  x$1 => classes.C4#productElement(Int).(x$1)
+  Int => scala.Int#
+  Any => scala.Any#
+classes.C4#productElement(Int).(x$1) => param x$1: Int
+  Int => scala.Int#
+classes.C4#productIterator(). => method productIterator: : Iterator[Any]
+  Iterator => scala.collection.Iterator#
+  Any => scala.Any#
+classes.C4#productPrefix(). => method productPrefix: : String
+  String => java.lang.String#
+classes.C4#toString(). => method toString: (): String
+  String => java.lang.String#
+classes.C4#x(). => val method x: : Int
+  Int => scala.Int#
+classes.C4#x. => private[this] val field x: Int
+  Int => scala.Int#
+classes.C4. => final object C4.{+3 decls}
+  extends AnyRef
+  extends Serializable
+classes.C4.apply(Int). => method apply: (x: Int): C4
+  x => classes.C4.apply(Int).(x)
+  Int => scala.Int#
+  C4 => classes.C4#
+classes.C4.apply(Int).(x) => param x: Int
+  Int => scala.Int#
+classes.C4.readResolve(). => private method readResolve: (): Object
+  Object => java.lang.Object#
+classes.C4.unapply(C4). => method unapply: (x$0: C4): Option[Int]
+  x$0 => classes.C4.unapply(C4).(x$0)
+  C4 => classes.C4#
+  Option => scala.Option#
+  Int => scala.Int#
+classes.C4.unapply(C4).(x$0) => param x$0: C4
+  C4 => classes.C4#
 
 com/javacp/ClassSuffix.class
 ----------------------------

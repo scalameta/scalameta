@@ -165,6 +165,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               if (gsym0 == null) return
               if (gsym0.isAnonymousClass) return
               if (gsym0.isMixinConstructor) return
+              if (gsym0.isSyntheticValueClassCompanion) return
               if (mtree.pos == m.Position.None) return
               if (occurrences.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
 
@@ -313,12 +314,13 @@ trait TextDocumentOps { self: SemanticdbOps =>
             // Unfortunately, this is often not the case as demonstrated by a bunch of cases above and below.
             if (tryMpos(gstart, gend)) return
 
+            val gsym = gtree.symbol
             gtree match {
-              case gtree: g.ValDef if gtree.symbol.isSelfParameter =>
+              case gtree: g.ValDef if gsym.isSelfParameter =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
-                if (!gtree.symbol.isSemanticdbLocal) {
-                  symbols(gtree.symbol.toSemantic) = gtree.symbol.toSymbolInformation().denot
+                if (!gsym.isSemanticdbLocal && !gsym.isSyntheticValueClassCompanion) {
+                  symbols(gsym.toSemantic) = gsym.toSymbolInformation().denot
                 }
               case gtree: g.PackageDef =>
                 // NOTE: capture PackageDef.pid instead

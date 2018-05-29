@@ -53,6 +53,7 @@ object Scalacp {
     if (sym.isModuleClass) return None
     if (sym.isConstructor && !sym.isClassConstructor) return None
     if (sym.isLocalChild) return None
+    if (sym.isSyntheticValueClassCompanion) return None
     val ssym = ssymbol(sym)
     if (ssym.contains("$extension")) return None
     Some(
@@ -266,17 +267,7 @@ object Scalacp {
         case ClassInfoType(sym, parents) =>
           val stag = t.CLASS_INFO_TYPE
           val sparents = parents.flatMap(loop)
-          val decls = sym.children
-          val filteredDecls = decls.filter { child =>
-            val isTypeParam = child.isType && child.isParam
-            val isSyntheticConstructor = child.isConstructor && (sym.isModuleClass || sym.isTrait)
-            val isModuleClass = child.isModuleClass
-            val isLocalChild = child.isLocalChild
-            val isExtension = child.isExtensionMethod
-            !isTypeParam && !isSyntheticConstructor && !isModuleClass &&
-            !isLocalChild && !isExtension
-          }
-          val sdecls = filteredDecls.map(ssymbol)
+          val sdecls = sym.children.filtered.map(ssymbol)
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
         case _: NullaryMethodType | _: MethodType =>
           val stag = t.METHOD_TYPE
@@ -402,6 +393,15 @@ object Scalacp {
     def isEmptyPackage: Boolean = sym.path == "<empty>"
     def isToplevelPackage: Boolean = sym.parent.isEmpty
     def isModuleClass: Boolean = sym.isInstanceOf[ClassSymbol] && sym.isModule
+    def moduleClass: Symbol = sym match {
+      case sym: SymbolInfoSymbol if sym.isModule =>
+        sym.infoType match {
+          case TypeRefType(_, moduleClass, _) => moduleClass
+          case _ => NoSymbol
+        }
+      case _ =>
+        NoSymbol
+    }
     def isClass: Boolean = sym.isInstanceOf[ClassSymbol] && !sym.isModule
     def isObject: Boolean = sym.isInstanceOf[ObjectSymbol]
     def isType: Boolean = sym.isInstanceOf[TypeSymbol]
@@ -416,8 +416,35 @@ object Scalacp {
           false
       }
     }
+    def isTypeParam = sym.isType && sym.isParam
+    def isSyntheticConstructor = sym match {
+      case sym: SymbolInfoSymbol =>
+        val owner = sym.symbolInfo.owner
+        sym.isConstructor && (owner.isModuleClass || owner.isTrait)
+      case _ =>
+        false
+    }
     def isLocalChild: Boolean = sym.name == "<local child>"
     def isExtensionMethod: Boolean = sym.name.contains("$extension")
+    def isSyntheticValueClassCompanion: Boolean = {
+      sym match {
+        case sym: SymbolInfoSymbol =>
+          if (sym.isModuleClass) {
+            sym.infoType match {
+              case ClassInfoType(_, List(TypeRefType(_, anyRef, _))) =>
+                sym.isSynthetic && sym.children.filtered.isEmpty
+              case _ =>
+                false
+            }
+          } else if (sym.isModule) {
+            sym.moduleClass.isSyntheticValueClassCompanion
+          } else {
+            false
+          }
+        case _ =>
+          false
+      }
+    }
     def typeDescriptor: String = {
       try {
         sym match {
@@ -460,6 +487,17 @@ object Scalacp {
         case skind =>
           sys.error(s"unsupported kind $skind for symbol $sym")
       }
+    }
+  }
+
+  private implicit class ScopeOps(decls: Seq[Symbol]) {
+    def filtered: Seq[Symbol] = decls.filter { decl =>
+      !decl.isTypeParam &&
+      !decl.isSyntheticConstructor &&
+      !decl.isModuleClass &&
+      !decl.isLocalChild &&
+      !decl.isExtensionMethod &&
+      !decl.isSyntheticValueClassCompanion
     }
   }
 

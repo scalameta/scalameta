@@ -109,15 +109,7 @@ trait TypeOps { self: SemanticdbOps =>
           case g.ClassInfoType(gparents, gdecls, gclass) =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
-            val gfilteredDecls = gdecls.filter { gdecl =>
-              val isSyntheticConstructor = {
-                (gdecl.isConstructor || gdecl.isMixinConstructor) &&
-                (gclass.isModuleClass || gclass.isTrait)
-              }
-              val isLocalChild = gdecl.name == g.tpnme.LOCAL_CHILD
-              !isSyntheticConstructor && !isLocalChild
-            }
-            val sdecls = gfilteredDecls.sorted.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
+            val sdecls = gdecls.filtered.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
             Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE

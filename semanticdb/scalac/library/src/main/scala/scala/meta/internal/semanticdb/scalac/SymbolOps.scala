@@ -113,5 +113,30 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isJavaDefined &&
         !sym.hasPackageFlag &&
         (sym.isClass || sym.isModule)
+    def isSyntheticConstructor: Boolean = {
+      (sym.isConstructor || sym.isMixinConstructor) &&
+      (sym.owner.isModuleClass || sym.owner.isTrait)
+    }
+    def isLocalChild: Boolean =
+      sym.name == g.tpnme.LOCAL_CHILD
+    def isSyntheticValueClassCompanion: Boolean = {
+      if (sym.isModule) {
+        sym.moduleClass.isSyntheticValueClassCompanion
+      } else {
+        sym.isModuleClass &&
+        sym.isSynthetic &&
+        sym.info.decls.filtered.isEmpty
+      }
+    }
+  }
+
+  implicit class XtensionGScope(decls: g.Scope) {
+    def filtered: List[g.Symbol] = {
+      decls.sorted.filter { decl =>
+        !decl.isSyntheticConstructor &&
+        !decl.isLocalChild &&
+        !decl.isSyntheticValueClassCompanion
+      }
+    }
   }
 }
