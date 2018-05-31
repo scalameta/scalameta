@@ -106,11 +106,12 @@ trait TypeOps { self: SemanticdbOps =>
             val stparams = gtparams.map(todo)
             val stpe = loop(gtpe)
             Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stparams, stpe))))
-          case g.ClassInfoType(gparents, gdecls, gclass) =>
+          case g.ClassInfoType(gparents, _, gclass) =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
-            val sdecls = gdecls.useful.map(todo) ++ gtpe.javaCompanionDecls.map(todo)
-            Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
+            val decls = gclass.semanticdbDecls
+            decls.gsyms.foreach(buf.+=)
+            Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, decls.ssyms))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE
             val stpe = loop(gtpe)
@@ -168,13 +169,6 @@ trait TypeOps { self: SemanticdbOps =>
   }
 
   implicit class XtensionGType(gtpe: g.Type) {
-    def javaCompanionDecls: List[g.Symbol] = {
-      if (gtpe.typeSymbol.isJavaClass) {
-        gtpe.typeSymbol.companionModule.info.decls.useful
-      } else {
-        Nil
-      }
-    }
     // FIXME: https://github.com/scalameta/scalameta/issues/1343
     def hasNontrivialPrefix: Boolean = {
       val (gpre, gsym) = {

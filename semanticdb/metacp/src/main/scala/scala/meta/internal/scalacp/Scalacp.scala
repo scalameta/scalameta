@@ -263,7 +263,7 @@ object Scalacp {
         case ClassInfoType(sym, parents) =>
           val stag = t.CLASS_INFO_TYPE
           val sparents = parents.flatMap(loop)
-          val sdecls = sym.children.useful.map(ssymbol)
+          val sdecls = sym.semanticdbDecls.ssyms
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
         case _: NullaryMethodType | _: MethodType =>
           val stag = t.METHOD_TYPE
@@ -425,7 +425,7 @@ object Scalacp {
           if (sym.isModuleClass) {
             sym.infoType match {
               case ClassInfoType(_, List(TypeRefType(_, anyRef, _))) =>
-                sym.isSynthetic && sym.children.useful.isEmpty
+                sym.isSynthetic && sym.semanticdbDecls.syms.isEmpty
               case _ =>
                 false
             }
@@ -476,12 +476,12 @@ object Scalacp {
         case k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
           d.Term(name)
         case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
-          val synonyms = sym.parent.get.children.filter(_.name == sym.name)
+          val synonyms = sym.parent.get.semanticdbDecls.syms.filter(_.name == sym.name)
           val disambiguator = {
             if (synonyms.lengthCompare(1) == 0) "()"
             else {
               val index = synonyms.indexOf(sym)
-              if (index == 0) "()"
+              if (index <= 0) "()"
               else s"(+${index})"
             }
           }
@@ -496,10 +496,21 @@ object Scalacp {
           sys.error(s"unsupported kind $skind for symbol $sym")
       }
     }
+    def semanticdbDecls: SemanticdbDecls = {
+      val decls = sym.children.filter(decl => decl.isUseful && !decl.isTypeParam)
+      SemanticdbDecls(decls.toList)
+    }
   }
 
-  private implicit class ScopeOps(decls: Seq[Symbol]) {
-    def useful: Seq[Symbol] = decls.filter(decl => decl.isUseful && !decl.isTypeParam)
+  case class SemanticdbDecls(syms: List[Symbol]) {
+    lazy val ssyms: List[String] = {
+      val sbuf = List.newBuilder[String]
+      syms.foreach { sym =>
+        val ssym = ssymbol(sym)
+        sbuf += ssym
+      }
+      sbuf.result
+    }
   }
 
   private implicit class TypeOps(tpe: Type) {
