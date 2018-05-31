@@ -768,7 +768,7 @@ Occurrences => 65 entries
 Symbols:
 com. => package com
 com.javacp. => package javacp
-com.javacp.Coin# => final enum class Coin.{+9 decls}
+com.javacp.Coin# => final enum class Coin.{+8 decls}
   extends Enum[Coin]
 com.javacp.Coin#PENNY. => final static enum field PENNY: Coin
   Coin => com.javacp.Coin#
@@ -1583,7 +1583,7 @@ Symbols:
 java. => package java
 java.nio. => package nio
 java.nio.file. => package file
-java.nio.file.LinkOption# => final enum class LinkOption.{+4 decls}
+java.nio.file.LinkOption# => final enum class LinkOption.{+3 decls}
   extends Enum[LinkOption]
   extends OpenOption
   extends CopyOption
@@ -2163,7 +2163,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Vals.scala
 Text => non-empty
 Language => Scala
-Symbols => 43 entries
+Symbols => 45 entries
 Occurrences => 117 entries
 
 Symbols:
@@ -2172,7 +2172,7 @@ example.ValUsages. => final object ValUsages.{+1 decls}
   extends AnyRef
 example.ValUsages.v(). => val method v: : Vals
   Vals => example.Vals#
-example.Vals# => abstract class Vals.{+22 decls}
+example.Vals# => abstract class Vals.{+23 decls}
   extends AnyRef
 example.Vals#`<init>`(). => primary ctor <init>: (p: Int, val xp: Int, var yp: Int)
   p => example.Vals#`<init>`().(p)
@@ -2202,6 +2202,12 @@ example.Vals#`yim_=`(). => var method yim_=: (x$1: Int): Unit
   Int => scala.Int#
   Unit => scala.Unit#
 example.Vals#`yim_=`().(x$1) => param x$1: Int
+  Int => scala.Int#
+example.Vals#`ylm_=`(). => private[this] var method ylm_=: (x$1: Int): Unit
+  x$1 => example.Vals#`ylm_=`().(x$1)
+  Int => scala.Int#
+  Unit => scala.Unit#
+example.Vals#`ylm_=`().(x$1) => param x$1: Int
   Int => scala.Int#
 example.Vals#`ym_=`(). => var method ym_=: (x$1: Int): Unit
   x$1 => example.Vals#`ym_=`().(x$1)

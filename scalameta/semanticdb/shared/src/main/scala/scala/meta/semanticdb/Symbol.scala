@@ -90,8 +90,8 @@ object Symbol {
             Symbol.Global(owner, signature)
           }
         }
-        def local(name: String): Symbol.Local = {
-          Symbol.Local(name)
+        def local(id: String): Symbol.Local = {
+          Symbol.Local(id)
         }
         if (currChar == EOF) {
           owner
@@ -130,8 +130,18 @@ object Symbol {
             val disambiguator = s.substring(start, i - 2)
             parseSymbol(global(Signature.Method(name, disambiguator)))
           } else {
-            if (owner == Symbol.None && name.startsWith("local")) local(name)
-            else fail()
+            if (owner == Symbol.None && name.startsWith("local")) {
+              if (currChar == '+') {
+                val buf = new StringBuilder(name)
+                def isDecimalDigit(ch: Char) = '0' <= ch && ch <= '9'
+                while (isDecimalDigit(readChar())) buf += currChar
+                local(buf.toString)
+              } else {
+                local(name)
+              }
+            } else {
+              fail()
+            }
           }
         }
       }

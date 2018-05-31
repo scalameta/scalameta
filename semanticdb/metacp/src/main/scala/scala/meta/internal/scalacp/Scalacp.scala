@@ -30,8 +30,8 @@ object Scalacp {
           case _ => None
         }
       }
-      val stoplevels = toplevels.flatMap(sinfo)
-      val sothers = toplevels.flatMap(spackages).distinct ++ others.flatMap(sinfo)
+      val stoplevels = toplevels.flatMap(sinfos)
+      val sothers = toplevels.flatMap(spackages).distinct ++ others.flatMap(sinfos)
       ToplevelInfos(classfile, stoplevels, sothers)
     }
   }
@@ -47,22 +47,26 @@ object Scalacp {
     }
   }
 
-  private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
-    if (sym.parent.get == NoSymbol) return None
-    if (sym.isUseless) return None
+  private def sinfos(sym: SymbolInfoSymbol): List[s.SymbolInformation] = {
+    if (sym.parent.get == NoSymbol) return Nil
+    if (sym.isUseless) return Nil
     val ssym = ssymbol(sym)
-    if (ssym.contains("$extension")) return None
-    Some(
-      s.SymbolInformation(
-        symbol = ssym,
-        language = l.SCALA,
-        kind = skind(sym),
-        properties = sproperties(sym),
-        name = sname(sym),
-        tpe = stpe(sym),
-        annotations = sanns(sym),
-        accessibility = Some(sacc(sym))
-      ))
+    if (ssym.contains("$extension")) return Nil
+    val sinfo = s.SymbolInformation(
+      symbol = ssym,
+      language = l.SCALA,
+      kind = skind(sym),
+      properties = sproperties(sym),
+      name = sname(sym),
+      tpe = stpe(sym),
+      annotations = sanns(sym),
+      accessibility = Some(sacc(sym))
+    )
+    if (sym.isUsefulField && sym.isMutable) {
+      List(sinfo) ++ Synthetics.setterInfos(sinfo)
+    } else {
+      List(sinfo)
+    }
   }
 
   private def ssymbol(sym: Symbol): String = {
@@ -259,7 +263,7 @@ object Scalacp {
         case ClassInfoType(sym, parents) =>
           val stag = t.CLASS_INFO_TYPE
           val sparents = parents.flatMap(loop)
-          val sdecls = sym.children.useful.map(ssymbol)
+          val sdecls = sym.semanticdbDecls.ssyms
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
         case _: NullaryMethodType | _: MethodType =>
           val stag = t.METHOD_TYPE
@@ -421,7 +425,7 @@ object Scalacp {
           if (sym.isModuleClass) {
             sym.infoType match {
               case ClassInfoType(_, List(TypeRefType(_, anyRef, _))) =>
-                sym.isSynthetic && sym.children.useful.isEmpty
+                sym.isSynthetic && sym.semanticdbDecls.syms.isEmpty
               case _ =>
                 false
             }
@@ -472,12 +476,12 @@ object Scalacp {
         case k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
           d.Term(name)
         case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
-          val synonyms = sym.parent.get.children.filter(_.name == sym.name)
+          val synonyms = sym.parent.get.semanticdbDecls.syms.filter(_.name == sym.name)
           val disambiguator = {
             if (synonyms.lengthCompare(1) == 0) "()"
             else {
               val index = synonyms.indexOf(sym)
-              if (index == 0) "()"
+              if (index <= 0) "()"
               else s"(+${index})"
             }
           }
@@ -492,10 +496,25 @@ object Scalacp {
           sys.error(s"unsupported kind $skind for symbol $sym")
       }
     }
+    def semanticdbDecls: SemanticdbDecls = {
+      val decls = sym.children.filter(decl => decl.isUseful && !decl.isTypeParam)
+      SemanticdbDecls(decls.toList)
+    }
   }
 
-  private implicit class ScopeOps(decls: Seq[Symbol]) {
-    def useful: Seq[Symbol] = decls.filter(decl => decl.isUseful && !decl.isTypeParam)
+  case class SemanticdbDecls(syms: List[Symbol]) {
+    lazy val ssyms: List[String] = {
+      val sbuf = List.newBuilder[String]
+      syms.foreach { sym =>
+        val ssym = ssymbol(sym)
+        sbuf += ssym
+        if (sym.isUsefulField && sym.isMutable) {
+          val setterName = ssym.desc.name + "_="
+          sbuf += Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+        }
+      }
+      sbuf.result
+    }
   }
 
   private implicit class TypeOps(tpe: Type) {

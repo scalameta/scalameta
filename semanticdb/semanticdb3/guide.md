@@ -28,7 +28,7 @@ features, check out [the specification](semanticdb3.md).
   * [Metadoc](#metadoc)
   * [Metals](#metals)
 
-## Install
+## Installation
 
 This guide covers several non-standard command-line tools: `metac`, `metacp`,
 `metap`. To install these tools on your computer, you can do the following:

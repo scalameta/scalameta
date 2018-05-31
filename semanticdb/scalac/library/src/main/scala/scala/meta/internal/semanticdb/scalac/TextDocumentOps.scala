@@ -3,6 +3,7 @@ package scala.meta.internal.semanticdb.scalac
 import scala.collection.mutable
 import scala.meta.internal.inputs._
 import scala.meta.internal.io.PathIO
+import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.reflect.internal._
@@ -236,6 +237,14 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     add(gsetter.toSemantic, gsetter)
                     val gsetterParams = gsetter.info.paramss.flatten
                     gsetterParams.foreach(gp => add(gp.toSemantic, gp))
+                  }
+                }
+                if (gsym.isUsefulField && gsym.isMutable) {
+                  val getterInfo = symbols(symbol)
+                  val setterInfos = Synthetics.setterInfos(getterInfo)
+                  setterInfos.foreach { info =>
+                    val msymbol = m.Symbol(info.symbol)
+                    symbols(msymbol) = info
                   }
                 }
               }
