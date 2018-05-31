@@ -110,8 +110,12 @@ trait SymbolOps { self: SemanticdbOps =>
         !sym.hasPackageFlag &&
         (sym.isClass || sym.isModule)
     def isSyntheticConstructor: Boolean = {
-      (sym.isConstructor || sym.isMixinConstructor) &&
-      (sym.owner.isModuleClass || sym.owner.isTrait)
+      val isModuleConstructor = sym.isConstructor && sym.owner.isModuleClass
+      val isTraitConstructor = sym.isMixinConstructor
+      val isInterfaceConstructor = sym.isConstructor && sym.owner.isJavaDefined && sym.owner.isInterface
+      val isEnumConstructor = sym.isConstructor && sym.owner.isJavaEnum
+      val isStaticConstructor = sym.name == g.TermName("<clinit>")
+      isModuleConstructor || isTraitConstructor || isInterfaceConstructor || isEnumConstructor || isStaticConstructor
     }
     def isLocalChild: Boolean =
       sym.name == g.tpnme.LOCAL_CHILD
@@ -138,6 +142,7 @@ trait SymbolOps { self: SemanticdbOps =>
     }
     def isUseless: Boolean = {
       sym.isSyntheticConstructor ||
+      sym.isStaticConstructor ||
       sym.isLocalChild ||
       sym.isSyntheticValueClassCompanion ||
       sym.isUselessField

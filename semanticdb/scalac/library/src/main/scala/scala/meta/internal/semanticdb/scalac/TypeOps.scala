@@ -170,13 +170,7 @@ trait TypeOps { self: SemanticdbOps =>
   implicit class XtensionGType(gtpe: g.Type) {
     def javaCompanionDecls: List[g.Symbol] = {
       if (gtpe.typeSymbol.isJavaClass) {
-        gtpe.typeSymbol.companionModule.info match {
-          case m: g.ModuleTypeRef =>
-            val decls = m.sym.info.decls.sorted
-            // static java classes don't have <init> constructors.
-            decls.dropWhile(_.name == g.nme.CONSTRUCTOR)
-          case _ => Nil
-        }
+        gtpe.typeSymbol.companionModule.info.decls.useful
       } else {
         Nil
       }
