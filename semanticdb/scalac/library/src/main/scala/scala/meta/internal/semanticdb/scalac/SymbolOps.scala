@@ -10,7 +10,6 @@ import scala.util.control.NonFatal
 
 trait SymbolOps { self: SemanticdbOps =>
 
-  lazy val idCache = new HashMap[String, Int]
   lazy val symbolCache = new HashMap[g.Symbol, m.Symbol]
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     def toSemantic: m.Symbol = {
@@ -19,18 +18,7 @@ trait SymbolOps { self: SemanticdbOps =>
         if (sym.isOverloaded) return m.Symbol.Multi(sym.alternatives.map(_.toSemantic))
         if (sym.isModuleClass) return sym.asClass.module.toSemantic
         if (sym.isTypeSkolem) return sym.deSkolemize.toSemantic
-
-        if (sym.isSemanticdbLocal) {
-          val mpos = sym.pos.toMeta
-          return {
-            if (mpos == m.Position.None) m.Symbol.None
-            else {
-              val id = idCache.get(mpos.input.syntax)
-              idCache.put(mpos.input.syntax, id + 1)
-              m.Symbol.Local("local" + id.toString)
-            }
-          }
-        }
+        if (sym.isSemanticdbLocal) return freshSymbol(sym.pos.toMeta.input)
 
         val owner = sym.owner.toSemantic
         val signature = {
@@ -132,8 +120,12 @@ trait SymbolOps { self: SemanticdbOps =>
         val ssym = gsym.toSemantic.syntax
         sbuf += ssym
         if (gsym.isUsefulField && gsym.isMutable) {
-          val setterName = ssym.desc.name + "_="
-          sbuf += Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+          if (ssym.isGlobal) {
+            val setterName = ssym.desc.name + "_="
+            sbuf += Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+          } else {
+            sbuf += (ssym + "+1")
+          }
         }
       }
       sbuf.result
@@ -184,5 +176,15 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isUselessField
     }
     def isUseful: Boolean = !sym.isUseless
+  }
+
+  lazy val idCache = new HashMap[String, Int]
+  private def freshSymbol(minput: m.Input): m.Symbol = {
+    if (minput == m.Input.None) m.Symbol.None
+    else {
+      val id = idCache.get(minput.syntax)
+      idCache.put(minput.syntax, id + 1)
+      m.Symbol.Local("local" + id.toString)
+    }
   }
 }

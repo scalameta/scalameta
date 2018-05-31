@@ -231,11 +231,12 @@ to accompany global symbols with out-of-band metadata.
 
 **Local symbols**. Correspond to a definition that isn't global (see above).
 
-Local symbol format is language-agnostic and is a concatenation of `local`
-and a decimal number. For example, `x` in a Scala method
+Local symbol format is language-agnostic and is a concatenation of `local`,
+a decimal number and an optional suffix that consists of a plus (`+`) and
+another decimal number. For example, `x` in a Scala method
 `def identity[T](x: T): T` may be modelled by local symbols `local0`, `local1`,
-etc. The same logic applies to the type parameter `T`, which is also a local
-definition.
+`local2+1`, etc. The same logic applies to the type parameter `T`, which is
+also a local definition.
 
 Local symbols must be unique within the underlying document, but they don't have
 to be unique across multiple documents. For example, at the time of writing
