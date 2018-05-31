@@ -149,7 +149,7 @@ trait SymbolOps { self: SemanticdbOps =>
       val isModuleConstructor = sym.isConstructor && sym.owner.isModuleClass
       val isTraitConstructor = sym.isMixinConstructor
       val isInterfaceConstructor = sym.isConstructor && sym.owner.isJavaDefined && sym.owner.isInterface
-      val isEnumConstructor = sym.isConstructor && sym.owner.isJavaEnum
+      val isEnumConstructor = sym.isConstructor && sym.owner.hasJavaEnumFlag
       val isStaticConstructor = sym.name == g.TermName("<clinit>")
       isModuleConstructor || isTraitConstructor || isInterfaceConstructor || isEnumConstructor || isStaticConstructor
     }
