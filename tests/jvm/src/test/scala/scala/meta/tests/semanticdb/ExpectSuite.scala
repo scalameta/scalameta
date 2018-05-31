@@ -37,8 +37,8 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacpIndexExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("lowlevel.expect") {
-        import LowlevelExpect._
+      test("metac.expect") {
+        import MetacExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
       test("index.expect") {
@@ -110,7 +110,7 @@ trait ExpectHelpers extends FunSuiteLike {
     } yield sym.symbol -> sym
   }.toMap
 
-  protected def lowlevelSyntax(dirOrJar: Path): String = {
+  protected def metap(dirOrJar: Path): String = {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
       val settings = scala.meta.metap.Settings().withPaths(List(dirOrJar))
       val reporter = Reporter().withOut(out).withErr(err)
@@ -125,7 +125,7 @@ trait ExpectHelpers extends FunSuiteLike {
     out
   }
 
-  protected def decompiledPath(in: Path): Path = {
+  protected def metacp(in: Path): Path = {
     val target = Files.createTempDirectory("target_")
     val (outPath, out, err) = CliSuite.communicate { (out, err) =>
       val settings = scala.meta.metacp
@@ -149,7 +149,7 @@ trait ExpectHelpers extends FunSuiteLike {
     outPath.toNIO
   }
 
-  protected def indexSyntax(path: Path): String = {
+  protected def index(path: Path): String = {
     val semanticdbSemanticidx = path.resolve("META-INF/semanticdb.semanticidx")
     if (Files.exists(semanticdbSemanticidx)) {
       val index = FileIO.readIndex(AbsolutePath(semanticdbSemanticidx))
@@ -185,7 +185,7 @@ object ScalalibExpect extends ExpectHelpers {
       .withScalaLibrarySynthetics(true)
     val reporter = Reporter()
     Metacp.process(settings, reporter) match {
-      case Some(Classpath(List(jar))) => lowlevelSyntax(jar.toNIO)
+      case Some(Classpath(List(jar))) => metap(jar.toNIO)
       case other => sys.error(s"unexpected metacp result: $other")
     }
   }
@@ -193,22 +193,22 @@ object ScalalibExpect extends ExpectHelpers {
 
 object MetacpExpect extends ExpectHelpers {
   def filename: String = "metacp.expect"
-  def loadObtained: String = lowlevelSyntax(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
+  def loadObtained: String = metap(metacp(Paths.get(BuildInfo.databaseClasspath)))
 }
 
 object MetacpIndexExpect extends ExpectHelpers {
   def filename: String = "metacp.index"
-  def loadObtained: String = indexSyntax(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
+  def loadObtained: String = index(metacp(Paths.get(BuildInfo.databaseClasspath)))
 }
 
-object LowlevelExpect extends ExpectHelpers {
-  def filename: String = "lowlevel.expect"
-  def loadObtained: String = lowlevelSyntax(Paths.get(BuildInfo.databaseClasspath))
+object MetacExpect extends ExpectHelpers {
+  def filename: String = "metac.expect"
+  def loadObtained: String = metap(Paths.get(BuildInfo.databaseClasspath))
 }
 
 object IndexExpect extends ExpectHelpers {
   def filename: String = "index.expect"
-  def loadObtained: String = indexSyntax(Paths.get(BuildInfo.databaseClasspath))
+  def loadObtained: String = index(Paths.get(BuildInfo.databaseClasspath))
 }
 
 object MetacMetacpExpectDiffExpect extends ExpectHelpers {
@@ -247,7 +247,7 @@ object MetacMetacpExpectDiffExpect extends ExpectHelpers {
     }
     symbols.mkString
   }
-  def metacpSymbols = normalizedSymbols(decompiledPath(Paths.get(BuildInfo.databaseClasspath)))
+  def metacpSymbols = normalizedSymbols(metacp(Paths.get(BuildInfo.databaseClasspath)))
   def metacSymbols = normalizedSymbols(Paths.get(BuildInfo.databaseClasspath))
 }
 
@@ -255,7 +255,7 @@ object ManifestMetap extends ExpectHelpers {
   def filename: String = "manifest.metap"
   def loadObtained: String = {
     val manifestJar = path.getParent.resolve("manifest.jar")
-    lowlevelSyntax(manifestJar)
+    metap(manifestJar)
   }
 }
 
@@ -263,7 +263,7 @@ object ManifestMetacp extends ExpectHelpers {
   def filename: String = "manifest.metacp"
   def loadObtained: String = {
     val manifestJar = path.getParent.resolve("manifest.jar")
-    lowlevelSyntax(decompiledPath(manifestJar))
+    metap(metacp(manifestJar))
   }
 }
 
@@ -273,7 +273,7 @@ object SaveExpectTest {
     ScalalibExpect.saveExpected(ScalalibExpect.loadObtained)
     MetacpExpect.saveExpected(MetacpExpect.loadObtained)
     MetacpIndexExpect.saveExpected(MetacpIndexExpect.loadObtained)
-    LowlevelExpect.saveExpected(LowlevelExpect.loadObtained)
+    MetacExpect.saveExpected(MetacExpect.loadObtained)
     IndexExpect.saveExpected(IndexExpect.loadObtained)
     MetacMetacpExpectDiffExpect.saveExpected(MetacMetacpExpectDiffExpect.loadObtained)
     ManifestMetap.saveExpected(ManifestMetap.loadObtained)
