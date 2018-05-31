@@ -111,7 +111,8 @@ trait TypeOps { self: SemanticdbOps =>
             val sparents = gparents.flatMap(loop)
             val decls = gclass.semanticdbDecls
             decls.gsyms.foreach(buf.+=)
-            Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, decls.ssyms))))
+            Some(
+              s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, decls.ssyms))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE
             val stpe = loop(gtpe)
