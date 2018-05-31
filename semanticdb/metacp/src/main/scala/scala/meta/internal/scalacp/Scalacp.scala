@@ -30,8 +30,8 @@ object Scalacp {
           case _ => None
         }
       }
-      val stoplevels = toplevels.flatMap(sinfo)
-      val sothers = toplevels.flatMap(spackages).distinct ++ others.flatMap(sinfo)
+      val stoplevels = toplevels.flatMap(sinfos)
+      val sothers = toplevels.flatMap(spackages).distinct ++ others.flatMap(sinfos)
       ToplevelInfos(classfile, stoplevels, sothers)
     }
   }
@@ -47,22 +47,26 @@ object Scalacp {
     }
   }
 
-  private def sinfo(sym: SymbolInfoSymbol): Option[s.SymbolInformation] = {
-    if (sym.parent.get == NoSymbol) return None
-    if (sym.isUseless) return None
+  private def sinfos(sym: SymbolInfoSymbol): List[s.SymbolInformation] = {
+    if (sym.parent.get == NoSymbol) return Nil
+    if (sym.isUseless) return Nil
     val ssym = ssymbol(sym)
-    if (ssym.contains("$extension")) return None
-    Some(
-      s.SymbolInformation(
-        symbol = ssym,
-        language = l.SCALA,
-        kind = skind(sym),
-        properties = sproperties(sym),
-        name = sname(sym),
-        tpe = stpe(sym),
-        annotations = sanns(sym),
-        accessibility = Some(sacc(sym))
-      ))
+    if (ssym.contains("$extension")) return Nil
+    val sinfo = s.SymbolInformation(
+      symbol = ssym,
+      language = l.SCALA,
+      kind = skind(sym),
+      properties = sproperties(sym),
+      name = sname(sym),
+      tpe = stpe(sym),
+      annotations = sanns(sym),
+      accessibility = Some(sacc(sym))
+    )
+    if (sym.isUsefulField && sym.isMutable) {
+      List(sinfo) ++ Synthetics.setterInfos(sinfo)
+    } else {
+      List(sinfo)
+    }
   }
 
   private def ssymbol(sym: Symbol): String = {

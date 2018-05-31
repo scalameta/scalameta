@@ -2163,7 +2163,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Vals.scala
 Text => non-empty
 Language => Scala
-Symbols => 43 entries
+Symbols => 45 entries
 Occurrences => 117 entries
 
 Symbols:
@@ -2202,6 +2202,12 @@ example.Vals#`yim_=`(). => var method yim_=: (x$1: Int): Unit
   Int => scala.Int#
   Unit => scala.Unit#
 example.Vals#`yim_=`().(x$1) => param x$1: Int
+  Int => scala.Int#
+example.Vals#`ylm_=`(). => private[this] var method ylm_=: (x$1: Int): Unit
+  x$1 => example.Vals#`ylm_=`().(x$1)
+  Int => scala.Int#
+  Unit => scala.Unit#
+example.Vals#`ylm_=`().(x$1) => param x$1: Int
   Int => scala.Int#
 example.Vals#`ym_=`(). => var method ym_=: (x$1: Int): Unit
   x$1 => example.Vals#`ym_=`().(x$1)
