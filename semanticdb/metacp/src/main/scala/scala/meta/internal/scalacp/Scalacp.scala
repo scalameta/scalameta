@@ -508,6 +508,10 @@ object Scalacp {
       syms.foreach { sym =>
         val ssym = ssymbol(sym)
         sbuf += ssym
+        if (sym.isUsefulField && sym.isMutable) {
+          val setterName = ssym.desc.name + "_="
+          sbuf += Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+        }
       }
       sbuf.result
     }

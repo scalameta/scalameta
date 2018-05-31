@@ -131,6 +131,10 @@ trait SymbolOps { self: SemanticdbOps =>
       gsyms.foreach { gsym =>
         val ssym = gsym.toSemantic.syntax
         sbuf += ssym
+        if (gsym.isUsefulField && gsym.isMutable) {
+          val setterName = ssym.desc.name + "_="
+          sbuf += Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+        }
       }
       sbuf.result
     }

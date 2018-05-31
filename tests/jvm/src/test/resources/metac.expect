@@ -2172,7 +2172,7 @@ example.ValUsages. => final object ValUsages.{+1 decls}
   extends AnyRef
 example.ValUsages.v(). => val method v: : Vals
   Vals => example.Vals#
-example.Vals# => abstract class Vals.{+22 decls}
+example.Vals# => abstract class Vals.{+23 decls}
   extends AnyRef
 example.Vals#`<init>`(). => primary ctor <init>: (p: Int, val xp: Int, var yp: Int)
   p => example.Vals#`<init>`().(p)
