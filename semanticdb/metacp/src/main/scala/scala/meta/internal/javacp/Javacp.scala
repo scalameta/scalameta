@@ -146,10 +146,10 @@ object Javacp {
       case method: MethodInfo =>
         val isConstructor = method.node.name == "<init>"
         val methodDisambiguator = {
-          val synonyms = methodSignatures.filter(_.node.name == method.node.name)
-          if (synonyms.lengthCompare(1) == 0) "()"
+          val overloads = methodSignatures.filter(_.node.name == method.node.name)
+          if (overloads.lengthCompare(1) == 0) "()"
           else {
-            val index = synonyms.indexWhere(_.signature eq method.signature)
+            val index = overloads.indexWhere(_.signature eq method.signature)
             if (index == 0) "()"
             else s"(+${index})"
           }

@@ -262,6 +262,37 @@ classes.C4.unapply(). => method unapply: (x$0: C4): Option[Int]
 classes.C4.unapply().(x$0) => param x$0: C4
   C4 => classes.C4#
 
+classes/M.class
+---------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => classes/M.class
+Text => empty
+Language => Scala
+Symbols => 9 entries
+
+Symbols:
+_root_. => package _root_
+classes. => package classes
+classes.M. => final object M.{+2 decls}
+  extends AnyRef
+classes.M.C5# => implicit class C5.{+2 decls}
+  extends AnyRef
+classes.M.C5#`<init>`(). => primary ctor <init>: (x: Int)
+  x => classes.M.C5#`<init>`().(x)
+  Int => scala.Int#
+classes.M.C5#`<init>`().(x) => param x: Int
+  Int => scala.Int#
+classes.M.C5#x(). => private[this] val method x: : Int
+  Int => scala.Int#
+classes.M.C5(). => implicit method C5: (x: Int): C5
+  x => classes.M.C5().(x)
+  Int => scala.Int#
+  C5 => classes.M.C5#
+classes.M.C5().(x) => param x: Int
+  Int => scala.Int#
+
 com/javacp/ClassSuffix.class
 ----------------------------
 

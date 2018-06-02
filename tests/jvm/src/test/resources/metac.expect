@@ -60,8 +60,8 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Classes.scala
 Text => non-empty
 Language => Scala
-Symbols => 64 entries
-Occurrences => 23 entries
+Symbols => 70 entries
+Occurrences => 28 entries
 
 Symbols:
 classes. => package classes
@@ -225,6 +225,20 @@ classes.C4.unapply(). => method unapply: (x$0: C4): Option[Int]
   Int => scala.Int#
 classes.C4.unapply().(x$0) => param x$0: C4
   C4 => classes.C4#
+classes.M. => final object M.{+2 decls}
+  extends AnyRef
+classes.M.C5# => implicit class C5.{+2 decls}
+  extends AnyRef
+classes.M.C5#`<init>`(). => primary ctor <init>: (x: Int)
+  x => classes.M.C5#`<init>`().(x)
+  Int => scala.Int#
+classes.M.C5#`<init>`().(x) => param x: Int
+  Int => scala.Int#
+classes.M.C5#x(). => private[this] val method x: : Int
+  Int => scala.Int#
+classes.M.C5(). => implicit method C5: (x: <?>): C5
+  x => classes.M.C5().(x)
+  C5 => classes.M.C5#
 scala.AnyVal# => abstract class AnyVal.{+2 decls}
   extends Any
 scala.AnyVal#`<init>`(). => primary ctor <init>: ()
@@ -255,6 +269,11 @@ Occurrences:
 [9:14..9:15): x <= classes.C4#x().
 [9:17..9:20): Int => scala.Int#
 [10:7..10:9): C4 <= classes.C4.
+[12:7..12:8): M <= classes.M.
+[13:17..13:19): C5 <= classes.M.C5#
+[13:19..13:19):  <= classes.M.C5#`<init>`().
+[13:20..13:21): x <= classes.M.C5#x().
+[13:23..13:26): Int => scala.Int#
 
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------

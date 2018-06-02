@@ -68,11 +68,12 @@ trait SymbolOps { self: SemanticdbOps =>
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
     def disambiguator: String = {
-      val synonyms = sym.owner.semanticdbDecls.gsyms.filter(_.name == sym.name)
+      val peers = sym.owner.semanticdbDecls.gsyms
+      val overloads = peers.filter(_.name == sym.name)
       val suffix = {
-        if (synonyms.lengthCompare(1) == 0) ""
+        if (overloads.lengthCompare(1) == 0) ""
         else {
-          val index = synonyms.indexOf(sym)
+          val index = overloads.indexOf(sym)
           if (index <= 0) ""
           else "+" + index
         }

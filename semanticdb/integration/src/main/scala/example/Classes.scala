@@ -9,3 +9,7 @@ case class C3(x: Int)
 
 case class C4(x: Int)
 object C4
+
+object M {
+  implicit class C5(x: Int)
+}

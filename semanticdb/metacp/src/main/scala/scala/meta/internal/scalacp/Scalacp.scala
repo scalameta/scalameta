@@ -476,11 +476,18 @@ object Scalacp {
         case k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
           d.Term(name)
         case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
-          val synonyms = sym.parent.get.semanticdbDecls.syms.filter(_.name == sym.name)
+          val overloads = {
+            val peers = sym.parent.get.semanticdbDecls.syms
+            peers.filter {
+              case peer: ObjectSymbol => peer.name == sym.name
+              case peer: MethodSymbol => peer.name == sym.name
+              case _ => false
+            }
+          }
           val disambiguator = {
-            if (synonyms.lengthCompare(1) == 0) "()"
+            if (overloads.lengthCompare(1) == 0) "()"
             else {
-              val index = synonyms.indexOf(sym)
+              val index = overloads.indexOf(sym)
               if (index <= 0) "()"
               else s"(+${index})"
             }
