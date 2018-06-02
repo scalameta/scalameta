@@ -39,6 +39,19 @@ classes.C4#copy$default$1().
 -              symbol: "scala.annotation.unchecked.uncheckedVariance#"
 
 
+============================
+classes.C6#copy$default$1().
+============================
+--- metac
++++ metacp
+             symbol: "scala.Int#"
+-        annotations {
+-          tpe {
+-            tag: TYPE_REF
+-            typeRef {
+-              symbol: "scala.annotation.unchecked.uncheckedVariance#"
+
+
 ====
 com.
 ====

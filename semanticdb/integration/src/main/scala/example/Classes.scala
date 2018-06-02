@@ -13,3 +13,5 @@ object C4
 object M {
   implicit class C5(x: Int)
 }
+
+case class C6(private val x: Int)

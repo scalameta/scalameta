@@ -449,13 +449,17 @@ object Scalacp {
       sym.isScalacField && getter.nonEmpty
     }
     def isUsefulField: Boolean = sym.isScalacField && !sym.isUselessField
+    def isSyntheticCaseAccessor: Boolean = {
+      sym.isCaseAccessor && sym.name.contains("$")
+    }
     def isUseless: Boolean = {
       sym.isSyntheticConstructor ||
       sym.isModuleClass ||
       sym.isLocalChild ||
       sym.isExtensionMethod ||
       sym.isSyntheticValueClassCompanion ||
-      sym.isUselessField
+      sym.isUselessField ||
+      sym.isSyntheticCaseAccessor
     }
     def isUseful: Boolean = !sym.isUseless
     def descriptor: Descriptor = {

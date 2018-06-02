@@ -169,12 +169,16 @@ trait SymbolOps { self: SemanticdbOps =>
     def isUsefulField: Boolean = {
       sym.isScalacField && !sym.isUselessField
     }
+    def isSyntheticCaseAccessor: Boolean = {
+      sym.isCaseAccessor && sym.name.toString.contains("$")
+    }
     def isUseless: Boolean = {
       sym.isSyntheticConstructor ||
       sym.isStaticConstructor ||
       sym.isLocalChild ||
       sym.isSyntheticValueClassCompanion ||
-      sym.isUselessField
+      sym.isUselessField ||
+      sym.isSyntheticCaseAccessor
     }
     def isUseful: Boolean = !sym.isUseless
   }

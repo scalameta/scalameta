@@ -60,8 +60,8 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Classes.scala
 Text => non-empty
 Language => Scala
-Symbols => 70 entries
-Occurrences => 28 entries
+Symbols => 92 entries
+Occurrences => 32 entries
 
 Symbols:
 classes. => package classes
@@ -225,6 +225,67 @@ classes.C4.unapply(). => method unapply: (x$0: C4): Option[Int]
   Int => scala.Int#
 classes.C4.unapply().(x$0) => param x$0: C4
   C4 => classes.C4#
+classes.C6# => case class C6.{+12 decls}
+  extends AnyRef
+  extends Product
+  extends Serializable
+classes.C6#`<init>`(). => primary ctor <init>: (val x: Int)
+  x => classes.C6#`<init>`().(x)
+  Int => scala.Int#
+classes.C6#`<init>`().(x) => val param x: Int
+  Int => scala.Int#
+classes.C6#canEqual(). => method canEqual: (x$1: Any): Boolean
+  x$1 => classes.C6#canEqual().(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C6#canEqual().(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C6#copy$default$1(). => method copy$default$1: : Int @uncheckedVariance
+  Int => scala.Int#
+  uncheckedVariance => scala.annotation.unchecked.uncheckedVariance#
+classes.C6#copy(). => method copy: (x: <?>): C6
+  x => classes.C6#copy().(x)
+  C6 => classes.C6#
+classes.C6#equals(). => method equals: (x$1: Any): Boolean
+  x$1 => classes.C6#equals().(x$1)
+  Any => scala.Any#
+  Boolean => scala.Boolean#
+classes.C6#equals().(x$1) => param x$1: Any
+  Any => scala.Any#
+classes.C6#hashCode(). => method hashCode: (): Int
+  Int => scala.Int#
+classes.C6#productArity(). => method productArity: : Int
+  Int => scala.Int#
+classes.C6#productElement(). => method productElement: (x$1: Int): Any
+  x$1 => classes.C6#productElement().(x$1)
+  Int => scala.Int#
+  Any => scala.Any#
+classes.C6#productElement().(x$1) => param x$1: Int
+  Int => scala.Int#
+classes.C6#productIterator(). => method productIterator: : Iterator[Any]
+  Iterator => scala.collection.Iterator#
+  Any => scala.Any#
+classes.C6#productPrefix(). => method productPrefix: : String
+  String => java.lang.String#
+classes.C6#toString(). => method toString: (): String
+  String => java.lang.String#
+classes.C6. => final object C6.{+4 decls}
+  extends AbstractFunction1[Int, C6]
+  extends Serializable
+classes.C6.apply(). => method apply: (x: <?>): C6
+  x => classes.C6.apply().(x)
+  C6 => classes.C6#
+classes.C6.readResolve(). => private method readResolve: (): Object
+  Object => java.lang.Object#
+classes.C6.toString(). => final method toString: (): String
+  String => java.lang.String#
+classes.C6.unapply(). => method unapply: (x$0: C6): Option[Int]
+  x$0 => classes.C6.unapply().(x$0)
+  C6 => classes.C6#
+  Option => scala.Option#
+  Int => scala.Int#
+classes.C6.unapply().(x$0) => param x$0: C6
+  C6 => classes.C6#
 classes.M. => final object M.{+2 decls}
   extends AnyRef
 classes.M.C5# => implicit class C5.{+2 decls}
@@ -274,6 +335,10 @@ Occurrences:
 [13:19..13:19):  <= classes.M.C5#`<init>`().
 [13:20..13:21): x <= classes.M.C5#x().
 [13:23..13:26): Int => scala.Int#
+[16:11..16:13): C6 <= classes.C6#
+[16:13..16:13):  <= classes.C6#`<init>`().
+[16:26..16:27): x <= classes.C6#
+[16:29..16:32): Int => scala.Int#
 
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------
