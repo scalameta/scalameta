@@ -21,8 +21,8 @@ trait SymbolInformationOps { self: SemanticdbOps =>
 
     private def kind: s.SymbolInformation.Kind = {
       gsym match {
-        case _ if gsym.isSelfParameter => k.SELF_PARAMETER
-        case _ if gsym.isSemanticdbLocal => k.LOCAL
+        case _ if gsym.isSelfParameter =>
+          k.SELF_PARAMETER
         case gsym: MethodSymbol =>
           if (gsym.isConstructor) {
             k.CONSTRUCTOR
@@ -93,10 +93,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (kind.isLocal || gsym.isUsefulField) {
           if (gsym.isMutable) flip(p.VAR)
           else if (gsym.isVal) flip(p.VAL)
-          else {
-            // NOTE(olafur): this branch is for local symbols that are not val/var. To make things more intuitive,
-            // Kind.LOCAL should be a property, see https://github.com/scalameta/scalameta/issues/1503
-          }
+          else ()
         }
         if (gsym.isGetter || gsym.isSetter) {
           if (gsym.isStable) flip(p.VAL)

@@ -901,7 +901,7 @@ class TargetedSuite extends SemanticdbSuite() {
 
   targeted(
     """
-      |package an
+      |package al
       |object M1 {
       |  class C
       |}
@@ -917,14 +917,14 @@ class TargetedSuite extends SemanticdbSuite() {
       |  M.<<foo>>(new M2.C)
       |}
     """.trim.stripMargin, { (_, foo1, foo2) =>
-      assert(foo1 === "an.M.foo().")
-      assert(foo2 === "an.M.foo(+1).")
+      assert(foo1 === "al.M.foo().")
+      assert(foo2 === "al.M.foo(+1).")
     }
   )
 
   targeted(
     """
-      |package a
+      |package am
       |case class <<Foo>>(b: Foo)
     """.stripMargin, { (db, FooTypeString) =>
       val fooType = Symbol(FooTypeString)
@@ -947,7 +947,7 @@ class TargetedSuite extends SemanticdbSuite() {
 
   targeted(
     """
-      |object a {
+      |object an {
       |  for {
       |    i <- List(1, 2)
       |    <<j>> <- List(3, 4)
@@ -955,7 +955,7 @@ class TargetedSuite extends SemanticdbSuite() {
       |}
       """.stripMargin, { (db, j) =>
       val denot = db.symbols.find(_.symbol == j).get
-      assert(denot.kind.isLocal)
+      assert(denot.symbol.startsWith("local"))
     }
   )
 }
