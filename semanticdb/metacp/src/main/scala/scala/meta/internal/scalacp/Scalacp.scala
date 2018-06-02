@@ -150,11 +150,13 @@ object Scalacp {
       val methodSym = sym.parent.get.asInstanceOf[SymbolInfoSymbol]
       if ((sproperties(methodSym) & p.PRIMARY.value) != 0) {
         val classMembers = methodSym.parent.get.children
-        val getter = classMembers.find(m => m.isAccessor && m.name == sym.name)
-        val setter = classMembers.find(m => m.isAccessor && m.name == sym.name + "_$eq")
-        if (setter.nonEmpty) sflip(p.VAR)
-        else if (getter.nonEmpty) sflip(p.VAL)
-        else ()
+        val accessor = classMembers.find(m => m.isParamAccessor && m.name == sym.name)
+        accessor.foreach { accessor =>
+          val isStable = if (accessor.isMethod) accessor.isStable else !accessor.isMutable
+          if (!isStable) sflip(p.VAR)
+          else if (accessor.isMethod) sflip(p.VAL)
+          else ()
+        }
       }
     }
     if (sym.isConstructor) {

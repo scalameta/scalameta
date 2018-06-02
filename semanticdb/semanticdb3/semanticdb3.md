@@ -1640,8 +1640,9 @@ Notes:
   into parameters of the enclosing definition as described in [\[44\]][44] and
   are represented with corresponding `PARAMETER` symbols.
 
-**Parameters** are represented with `PARAMETER` symbols. (There is no section in SLS dedicated to parameters, so we aggregate information about parameters
-from multiple sections).
+**Parameters** are represented with `PARAMETER` symbols.
+(There is no section in SLS dedicated to parameters, so we aggregate information
+about parameters from multiple sections).
 
 ```scala
 class C(p1: Int) {
@@ -1720,6 +1721,10 @@ Notes:
     bounds and view bounds (see above).
   * `VAL`: set for `val` parameters of primary constructors.
   * `VAR`: set for `var` parameters of primary constructors.
+* Scalac semantic model does not distinguish parameters in `class C(x: Int)`
+  and `class C(private[this] val x: Int)`. As a result, due to implementation
+  restrictions `private[this] val` parameters currently don't have the `VAL`
+  property.
 * Unlike some other metaprogramming systems for Scala, we do not
   distinguish regular parameters from parameters with default arguments
   [\[45\]][45]. However, we do create method symbols for synthetic methods

@@ -60,8 +60,8 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Classes.scala
 Text => non-empty
 Language => Scala
-Symbols => 92 entries
-Occurrences => 32 entries
+Symbols => 106 entries
+Occurrences => 44 entries
 
 Symbols:
 classes. => package classes
@@ -286,6 +286,39 @@ classes.C6.unapply(). => method unapply: (x$0: C6): Option[Int]
   Int => scala.Int#
 classes.C6.unapply().(x$0) => param x$0: C6
   C6 => classes.C6#
+classes.C7# => class C7.{+2 decls}
+  extends AnyRef
+classes.C7#`<init>`(). => primary ctor <init>: (x: Int)
+  x => classes.C7#`<init>`().(x)
+  Int => scala.Int#
+classes.C7#`<init>`().(x) => param x: Int
+  Int => scala.Int#
+classes.C7#x(). => private[this] val method x: : Int
+  Int => scala.Int#
+classes.C8# => class C8.{+2 decls}
+  extends AnyRef
+classes.C8#`<init>`(). => primary ctor <init>: (x: Int)
+  x => classes.C8#`<init>`().(x)
+  Int => scala.Int#
+classes.C8#`<init>`().(x) => param x: Int
+  Int => scala.Int#
+classes.C8#x(). => private[this] val method x: : Int
+  Int => scala.Int#
+classes.C9# => class C9.{+3 decls}
+  extends AnyRef
+classes.C9#`<init>`(). => primary ctor <init>: (var x: Int)
+  x => classes.C9#`<init>`().(x)
+  Int => scala.Int#
+classes.C9#`<init>`().(x) => var param x: Int
+  Int => scala.Int#
+classes.C9#`x_=`(). => private[this] var method x_=: (x$1: Int): Unit
+  x$1 => classes.C9#`x_=`().(x$1)
+  Int => scala.Int#
+  Unit => scala.Unit#
+classes.C9#`x_=`().(x$1) => param x$1: Int
+  Int => scala.Int#
+classes.C9#x(). => private[this] var method x: : Int
+  Int => scala.Int#
 classes.M. => final object M.{+2 decls}
   extends AnyRef
 classes.M.C5# => implicit class C5.{+2 decls}
@@ -339,6 +372,18 @@ Occurrences:
 [16:13..16:13):  <= classes.C6#`<init>`().
 [16:26..16:27): x <= classes.C6#
 [16:29..16:32): Int => scala.Int#
+[18:6..18:8): C7 <= classes.C7#
+[18:8..18:8):  <= classes.C7#`<init>`().
+[18:9..18:10): x <= classes.C7#x().
+[18:12..18:15): Int => scala.Int#
+[20:6..20:8): C8 <= classes.C8#
+[20:8..20:8):  <= classes.C8#`<init>`().
+[20:27..20:28): x <= classes.C8#x().
+[20:30..20:33): Int => scala.Int#
+[22:6..22:8): C9 <= classes.C9#
+[22:8..22:8):  <= classes.C9#`<init>`().
+[22:27..22:28): x <= classes.C9#x().
+[22:30..22:33): Int => scala.Int#
 
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------

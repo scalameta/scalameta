@@ -103,9 +103,9 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           else flip(p.VAR)
         }
         if (gsym.isParameter && gsym.owner.isPrimaryConstructor) {
-          val ggetter = gsym.getterIn(gsym.owner.owner)
-          if (ggetter != g.NoSymbol && !ggetter.isStable) flip(p.VAR)
-          else if (ggetter != g.NoSymbol) flip(p.VAL)
+          val gaccessor = gsym.owner.owner.info.decl(gsym.name)
+          if (gaccessor != g.NoSymbol && !gaccessor.isStable) flip(p.VAR)
+          else if (gaccessor != g.NoSymbol && gaccessor.isMethod) flip(p.VAL)
           else ()
         }
         if (gsym.isPrimaryConstructor) flip(p.PRIMARY)

@@ -19,6 +19,9 @@ classes.
   classes.C4#
   classes.C4.
   classes.C6#
+  classes.C7#
+  classes.C8#
+  classes.C9#
   classes.M.
 example.
   example.A#
@@ -67,6 +70,9 @@ classes.C3# => semanticdb/integration/src/main/scala/example/Classes.scala.seman
 classes.C4# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C4. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C6# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C7# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C8# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C9# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.M. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 example. => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 example.A# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb

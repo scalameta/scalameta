@@ -15,3 +15,9 @@ object M {
 }
 
 case class C6(private val x: Int)
+
+class C7(x: Int)
+
+class C8(private[this] val x: Int)
+
+class C9(private[this] var x: Int)

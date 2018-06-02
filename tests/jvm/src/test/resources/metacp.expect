@@ -344,6 +344,81 @@ classes.C6.unapply(). => method unapply: (x$0: C6): Option[Int]
 classes.C6.unapply().(x$0) => param x$0: C6
   C6 => classes.C6#
 
+classes/C7.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => classes/C7.class
+Text => empty
+Language => Scala
+Symbols => 6 entries
+
+Symbols:
+_root_. => package _root_
+classes. => package classes
+classes.C7# => class C7.{+2 decls}
+  extends AnyRef
+classes.C7#`<init>`(). => primary ctor <init>: (x: Int)
+  x => classes.C7#`<init>`().(x)
+  Int => scala.Int#
+classes.C7#`<init>`().(x) => param x: Int
+  Int => scala.Int#
+classes.C7#x(). => private[this] val method x: : Int
+  Int => scala.Int#
+
+classes/C8.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => classes/C8.class
+Text => empty
+Language => Scala
+Symbols => 6 entries
+
+Symbols:
+_root_. => package _root_
+classes. => package classes
+classes.C8# => class C8.{+2 decls}
+  extends AnyRef
+classes.C8#`<init>`(). => primary ctor <init>: (x: Int)
+  x => classes.C8#`<init>`().(x)
+  Int => scala.Int#
+classes.C8#`<init>`().(x) => param x: Int
+  Int => scala.Int#
+classes.C8#x(). => private[this] val method x: : Int
+  Int => scala.Int#
+
+classes/C9.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => classes/C9.class
+Text => empty
+Language => Scala
+Symbols => 8 entries
+
+Symbols:
+_root_. => package _root_
+classes. => package classes
+classes.C9# => class C9.{+3 decls}
+  extends AnyRef
+classes.C9#`<init>`(). => primary ctor <init>: (var x: Int)
+  x => classes.C9#`<init>`().(x)
+  Int => scala.Int#
+classes.C9#`<init>`().(x) => var param x: Int
+  Int => scala.Int#
+classes.C9#`x_=`(). => private[this] var method x_=: (x$1: Int): Unit
+  x$1 => classes.C9#`x_=`().(x$1)
+  Int => scala.Int#
+  Unit => scala.Unit#
+classes.C9#`x_=`().(x$1) => param x$1: Int
+  Int => scala.Int#
+classes.C9#x(). => private[this] var method x: : Int
+  Int => scala.Int#
+
 classes/M.class
 ---------------
 

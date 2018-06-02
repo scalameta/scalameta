@@ -23,6 +23,9 @@ classes.
   classes.C4.
   classes.C6#
   classes.C6.
+  classes.C7#
+  classes.C8#
+  classes.C9#
   classes.M.
 com.
   com.javacp.
@@ -85,6 +88,9 @@ classes.C4# => classes/C4.class.semanticdb
 classes.C4. => classes/C4.class.semanticdb
 classes.C6# => classes/C6.class.semanticdb
 classes.C6. => classes/C6.class.semanticdb
+classes.C7# => classes/C7.class.semanticdb
+classes.C8# => classes/C8.class.semanticdb
+classes.C9# => classes/C9.class.semanticdb
 classes.M. => classes/M.class.semanticdb
 com.javacp.ClassSuffix# => com/javacp/ClassSuffix.class.semanticdb
 com.javacp.Coin# => com/javacp/Coin.class.semanticdb
