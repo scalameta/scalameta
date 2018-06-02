@@ -454,6 +454,9 @@ object Scalacp {
     def isSyntheticCaseAccessor: Boolean = {
       sym.isCaseAccessor && sym.name.contains("$")
     }
+    def isRefinementDummy: Boolean = {
+      sym.name == "<refinement>"
+    }
     def isUseless: Boolean = {
       sym.isSyntheticConstructor ||
       sym.isModuleClass ||
@@ -461,7 +464,8 @@ object Scalacp {
       sym.isExtensionMethod ||
       sym.isSyntheticValueClassCompanion ||
       sym.isUselessField ||
-      sym.isSyntheticCaseAccessor
+      sym.isSyntheticCaseAccessor ||
+      sym.isRefinementDummy
     }
     def isUseful: Boolean = !sym.isUseless
     def descriptor: Descriptor = {

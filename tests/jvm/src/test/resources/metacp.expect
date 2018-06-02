@@ -1100,15 +1100,13 @@ Schema => SemanticDB v3
 Uri => example/Methods.class
 Text => empty
 Language => Scala
-Symbols => 63 entries
+Symbols => 61 entries
 
 Symbols:
 _root_. => package _root_
 example. => package example
-example.Methods# => class Methods[T >: Nothing <: Any].{+28 decls}
+example.Methods# => class Methods[T >: Nothing <: Any].{+26 decls}
   extends AnyRef
-example.Methods#$anon# => class $anon
-example.Methods#$anon# => class $anon
 example.Methods#$anon#x(). => abstract val method x: : Int
   Int => scala.Int#
 example.Methods#AList# => type AList: [T >: Nothing <: Any] => >: Methods.this.List[T] <: Methods.this.List[T]
@@ -1715,14 +1713,13 @@ Schema => SemanticDB v3
 Uri => traits/V.class
 Text => empty
 Language => Scala
-Symbols => 4 entries
+Symbols => 3 entries
 
 Symbols:
 _root_. => package _root_
 traits. => package traits
-traits.V# => trait V.{+1 decls}
+traits.V# => trait V
   extends AnyRef
-traits.V#$anon# => class $anon
 
 types/ann.class
 ---------------
@@ -1881,18 +1878,15 @@ Schema => SemanticDB v3
 Uri => types/Test.class
 Text => empty
 Language => Scala
-Symbols => 104 entries
+Symbols => 101 entries
 
 Symbols:
 _root_. => package _root_
 types. => package types
 types.Test. => final object Test.{+4 decls}
   extends AnyRef
-types.Test.C# => class C.{+33 decls}
+types.Test.C# => class C.{+30 decls}
   extends M
-types.Test.C#$anon# => class $anon
-types.Test.C#$anon# => class $anon
-types.Test.C#$anon# => class $anon
 types.Test.C#$anon#k(). => abstract method k: : Int
   Int => scala.Int#
 types.Test.C#$anon#k(). => abstract method k: : Int

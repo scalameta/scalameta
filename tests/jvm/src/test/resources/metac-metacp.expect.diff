@@ -218,22 +218,6 @@ example.MetacJava#staticInner().
 +        symbol: "com.javacp.MetacJava.StaticInner#"
 
 
-================
-example.Methods#
-================
---- metac
-+++ metacp
-     declarations: "example.Methods#m11()."
-     declarations: "example.Methods#m11(+1)."
-     declarations: "example.Methods#m12a()."
-+    declarations: "example.Methods#$anon#"
-     declarations: "example.Methods#m12b()."
-+    declarations: "example.Methods#$anon#"
-     declarations: "example.Methods#m13()."
-     declarations: "example.Methods#m14()."
-     declarations: "example.Methods#m15()."
-
-
 =========================
 example.Methods#m13().(x)
 =========================
@@ -339,16 +323,6 @@ traits.
  language: SCALA
 
 
-=========
-traits.V#
-=========
---- metac
-+++ metacp
-         symbol: "scala.AnyRef#"
-+    declarations: "traits.V#$anon#"
- accessibility {
-
-
 ======
 types.
 ======
@@ -362,24 +336,6 @@ types.
 -  symbol: ""
 -}
  language: SCALA
-
-
-=============
-types.Test.C#
-=============
---- metac
-+++ metacp
-     declarations: "types.Test.C#superType2()."
-     declarations: "types.Test.C#superType3()."
-     declarations: "types.Test.C#compoundType1()."
-+    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#compoundType2()."
-+    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#compoundType3()."
-+    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#annType1()."
-     declarations: "types.Test.C#annType2()."
-     declarations: "types.Test.C#existentialType1()."
 
 
 ========================
