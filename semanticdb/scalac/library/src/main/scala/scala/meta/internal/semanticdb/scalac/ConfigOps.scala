@@ -188,5 +188,5 @@ case class FileFilter(include: Regex, exclude: Regex) {
 object FileFilter {
   def apply(include: String, exclude: String): FileFilter =
     FileFilter(include.r, exclude.r)
-  val matchEverything = FileFilter(".*", "$a")
+  val matchEverything = FileFilter(".*", "$^")
 }
