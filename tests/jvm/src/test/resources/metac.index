@@ -5,13 +5,18 @@ _empty_.
   _empty_.B#
 _root_.
   _empty_.
+  advanced.
   classes.
   example.
   flags.
   objects.
-  selects.
   traits.
   types.
+advanced.
+  advanced.C#
+  advanced.Existential#
+  advanced.Structural#
+  advanced.Test.
 classes.
   classes.C1#
   classes.C2#
@@ -43,11 +48,6 @@ flags.p.
   flags.p.package.
 objects.
   objects.X.
-selects.
-  selects.C#
-  selects.Existential#
-  selects.Structural#
-  selects.Test.
 traits.
   traits.C#
   traits.T#
@@ -68,6 +68,11 @@ Toplevels:
 ==========
 _empty_.A# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_.B# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
+advanced. => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+advanced.C# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+advanced.Existential# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+advanced.Structural# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+advanced.Test. => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 classes. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C1# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C2# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
@@ -97,11 +102,6 @@ flags. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 flags.p.package. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 objects. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
 objects.X. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
-selects. => semanticdb/integration/src/main/scala/example/Selects.scala.semanticdb
-selects.C# => semanticdb/integration/src/main/scala/example/Selects.scala.semanticdb
-selects.Existential# => semanticdb/integration/src/main/scala/example/Selects.scala.semanticdb
-selects.Structural# => semanticdb/integration/src/main/scala/example/Selects.scala.semanticdb
-selects.Test. => semanticdb/integration/src/main/scala/example/Selects.scala.semanticdb
 traits. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.C# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb

@@ -17,6 +17,146 @@ _empty_.A#b(). => method b: : B
   B => _empty_.B#
 _root_. => package _root_
 
+advanced/C.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => advanced/C.class
+Text => empty
+Language => Scala
+Symbols => 6 entries
+
+Symbols:
+_root_. => package _root_
+advanced. => package advanced
+advanced.C# => class C[T >: Nothing <: Any].{+2 decls}
+  extends AnyRef
+advanced.C#[T] => typeparam T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+advanced.C#`<init>`(). => primary ctor <init>: ()
+advanced.C#t(). => method t: : T
+  T => advanced.C#[T]
+
+advanced/Existential.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => advanced/Existential.class
+Text => empty
+Language => Scala
+Symbols => 8 entries
+
+Symbols:
+_root_. => package _root_
+advanced. => package advanced
+advanced.Existential# => class Existential.{+3 decls}
+  extends AnyRef
+advanced.Existential#`<init>`(). => primary ctor <init>: ()
+advanced.Existential#e1(). => method e1: : List[_$1] forSome { type _$1 >: Nothing <: Any }
+  List => scala.package.List#
+  _$1 => advanced.Existential#e1()._$1#
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+advanced.Existential#e1()._$1# => abstract type _$1: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+advanced.Existential#e2(). => method e2: : C[List[T] forSome { type T >: Nothing <: Any }]
+  C => advanced.C#
+  List => scala.package.List#
+  T => advanced.Existential#e2().T#
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+advanced.Existential#e2().T# => abstract type T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+
+advanced/Structural.class
+-------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => advanced/Structural.class
+Text => empty
+Language => Scala
+Symbols => 8 entries
+
+Symbols:
+_root_. => package _root_
+advanced. => package advanced
+advanced.Structural# => class Structural.{+3 decls}
+  extends AnyRef
+advanced.Structural#$anon#x(). => abstract val method x: : Int
+  Int => scala.Int#
+advanced.Structural#`<init>`(). => primary ctor <init>: ()
+advanced.Structural#s1(). => method s1: : AnyRef { val method x: Int }
+  AnyRef => scala.AnyRef#
+  x => advanced.Structural#$anon#x().
+  Int => scala.Int#
+advanced.Structural#s2(). => method s2: : AnyRef { val method x: Int }
+  AnyRef => scala.AnyRef#
+  x => advanced.Structural#s2().$anon#x().
+  Int => scala.Int#
+advanced.Structural#s2().$anon#x(). => val method x: : Int
+  Int => scala.Int#
+
+advanced/Test.class
+-------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => advanced/Test.class
+Text => empty
+Language => Scala
+Symbols => 17 entries
+
+Symbols:
+_root_. => package _root_
+advanced. => package advanced
+advanced.Test. => final object Test.{+11 decls}
+  extends AnyRef
+advanced.Test.$anon#x(). => abstract val method x: : Int
+  Int => scala.Int#
+advanced.Test.$anon#x(). => val method x: : Int
+  Int => scala.Int#
+advanced.Test.T# => abstract type T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+advanced.Test.e(). => val method e: : Existential
+  Existential => advanced.Existential#
+advanced.Test.e1(). => val method e1: : List[Any]
+  List => scala.collection.immutable.List#
+  Any => scala.Any#
+advanced.Test.e1x(). => val method e1x: : Any
+  Any => scala.Any#
+advanced.Test.e2(). => val method e2: : C[List[T] forSome { type T >: Nothing <: Any }]
+  C => advanced.C#
+  List => scala.package.List#
+  T => advanced.Test.T#
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+advanced.Test.e2x(). => val method e2x: : List[Any]
+  List => scala.collection.immutable.List#
+  Any => scala.Any#
+advanced.Test.e2xx(). => val method e2xx: : Any
+  Any => scala.Any#
+advanced.Test.s(). => val method s: : Structural
+  Structural => advanced.Structural#
+advanced.Test.s1(). => val method s1: : AnyRef { val method x: Int }
+  AnyRef => scala.AnyRef#
+  x => advanced.Test.$anon#x().
+  Int => scala.Int#
+advanced.Test.s1x(). => val method s1x: : Int
+  Int => scala.Int#
+advanced.Test.s2(). => val method s2: : AnyRef { val method x: Int }
+  AnyRef => scala.AnyRef#
+  x => advanced.Test.$anon#x().
+  Int => scala.Int#
+advanced.Test.s2x(). => val method s2x: : Int
+  Int => scala.Int#
+
 B.class
 -------
 
@@ -1649,146 +1789,6 @@ objects.X. => final object X.{+1 decls}
   extends AnyRef
 objects.X.Y. => final object Y
   extends AnyRef
-
-selects/C.class
----------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => selects/C.class
-Text => empty
-Language => Scala
-Symbols => 6 entries
-
-Symbols:
-_root_. => package _root_
-selects. => package selects
-selects.C# => class C[T >: Nothing <: Any].{+2 decls}
-  extends AnyRef
-selects.C#[T] => typeparam T: >: Nothing <: Any
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-selects.C#`<init>`(). => primary ctor <init>: ()
-selects.C#t(). => method t: : T
-  T => selects.C#[T]
-
-selects/Existential.class
--------------------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => selects/Existential.class
-Text => empty
-Language => Scala
-Symbols => 8 entries
-
-Symbols:
-_root_. => package _root_
-selects. => package selects
-selects.Existential# => class Existential.{+3 decls}
-  extends AnyRef
-selects.Existential#`<init>`(). => primary ctor <init>: ()
-selects.Existential#e1(). => method e1: : List[_$1] forSome { type _$1 >: Nothing <: Any }
-  List => scala.package.List#
-  _$1 => selects.Existential#e1()._$1#
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-selects.Existential#e1()._$1# => abstract type _$1: >: Nothing <: Any
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-selects.Existential#e2(). => method e2: : C[List[T] forSome { type T >: Nothing <: Any }]
-  C => selects.C#
-  List => scala.package.List#
-  T => selects.Existential#e2().T#
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-selects.Existential#e2().T# => abstract type T: >: Nothing <: Any
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-
-selects/Structural.class
-------------------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => selects/Structural.class
-Text => empty
-Language => Scala
-Symbols => 8 entries
-
-Symbols:
-_root_. => package _root_
-selects. => package selects
-selects.Structural# => class Structural.{+3 decls}
-  extends AnyRef
-selects.Structural#$anon#x(). => abstract val method x: : Int
-  Int => scala.Int#
-selects.Structural#`<init>`(). => primary ctor <init>: ()
-selects.Structural#s1(). => method s1: : AnyRef { val method x: Int }
-  AnyRef => scala.AnyRef#
-  x => selects.Structural#$anon#x().
-  Int => scala.Int#
-selects.Structural#s2(). => method s2: : AnyRef { val method x: Int }
-  AnyRef => scala.AnyRef#
-  x => selects.Structural#s2().$anon#x().
-  Int => scala.Int#
-selects.Structural#s2().$anon#x(). => val method x: : Int
-  Int => scala.Int#
-
-selects/Test.class
-------------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => selects/Test.class
-Text => empty
-Language => Scala
-Symbols => 17 entries
-
-Symbols:
-_root_. => package _root_
-selects. => package selects
-selects.Test. => final object Test.{+11 decls}
-  extends AnyRef
-selects.Test.$anon#x(). => abstract val method x: : Int
-  Int => scala.Int#
-selects.Test.$anon#x(). => val method x: : Int
-  Int => scala.Int#
-selects.Test.T# => abstract type T: >: Nothing <: Any
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-selects.Test.e(). => val method e: : Existential
-  Existential => selects.Existential#
-selects.Test.e1(). => val method e1: : List[Any]
-  List => scala.collection.immutable.List#
-  Any => scala.Any#
-selects.Test.e1x(). => val method e1x: : Any
-  Any => scala.Any#
-selects.Test.e2(). => val method e2: : C[List[T] forSome { type T >: Nothing <: Any }]
-  C => selects.C#
-  List => scala.package.List#
-  T => selects.Test.T#
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-selects.Test.e2x(). => val method e2x: : List[Any]
-  List => scala.collection.immutable.List#
-  Any => scala.Any#
-selects.Test.e2xx(). => val method e2xx: : Any
-  Any => scala.Any#
-selects.Test.s(). => val method s: : Structural
-  Structural => selects.Structural#
-selects.Test.s1(). => val method s1: : AnyRef { val method x: Int }
-  AnyRef => scala.AnyRef#
-  x => selects.Test.$anon#x().
-  Int => scala.Int#
-selects.Test.s1x(). => val method s1x: : Int
-  Int => scala.Int#
-selects.Test.s2(). => val method s2: : AnyRef { val method x: Int }
-  AnyRef => scala.AnyRef#
-  x => selects.Test.$anon#x().
-  Int => scala.Int#
-selects.Test.s2x(). => val method s2x: : Int
-  Int => scala.Int#
 
 traits/C.class
 --------------

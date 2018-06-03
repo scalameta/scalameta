@@ -5,15 +5,20 @@ _empty_.
   _empty_.B#
 _root_.
   _empty_.
+  advanced.
   classes.
   com.
   example.
   exclude.
   flags.
   objects.
-  selects.
   traits.
   types.
+advanced.
+  advanced.C#
+  advanced.Existential#
+  advanced.Structural#
+  advanced.Test.
 classes.
   classes.C1#
   classes.C2#
@@ -60,11 +65,6 @@ flags.p.
   flags.p.package.
 objects.
   objects.X.
-selects.
-  selects.C#
-  selects.Existential#
-  selects.Structural#
-  selects.Test.
 traits.
   traits.C#
   traits.T#
@@ -85,6 +85,10 @@ Toplevels:
 ==========
 _empty_.A# => A.class.semanticdb
 _empty_.B# => B.class.semanticdb
+advanced.C# => advanced/C.class.semanticdb
+advanced.Existential# => advanced/Existential.class.semanticdb
+advanced.Structural# => advanced/Structural.class.semanticdb
+advanced.Test. => advanced/Test.class.semanticdb
 classes.C1# => classes/C1.class.semanticdb
 classes.C2# => classes/C2.class.semanticdb
 classes.C2. => classes/C2.class.semanticdb
@@ -121,10 +125,6 @@ example.`local-file`# => example/local$minusfile.class.semanticdb
 exclude.Exclude# => exclude/Exclude.class.semanticdb
 flags.p.package. => flags/p/package.class.semanticdb
 objects.X. => objects/X.class.semanticdb
-selects.C# => selects/C.class.semanticdb
-selects.Existential# => selects/Existential.class.semanticdb
-selects.Structural# => selects/Structural.class.semanticdb
-selects.Test. => selects/Test.class.semanticdb
 traits.C# => traits/C.class.semanticdb
 traits.T# => traits/T.class.semanticdb
 traits.U# => traits/U.class.semanticdb

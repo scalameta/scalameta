@@ -1,3 +1,120 @@
+=========
+advanced.
+=========
+--- metac
++++ metacp
+ kind: PACKAGE
+ properties: 0
+ name: "advanced"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: SCALA
+
+
+==========================
+advanced.Existential#e1().
+==========================
+--- metac
++++ metacp
+             type_arguments {
+               tag: TYPE_REF
+               typeRef {
+-                symbol: "local3"
++                symbol: "advanced.Existential#e1()._$1#"
+-        type_parameters: "local3"
++        type_parameters: "advanced.Existential#e1()._$1#"
+
+
+==========================
+advanced.Existential#e2().
+==========================
+--- metac
++++ metacp
+                 type_arguments {
+                   tag: TYPE_REF
+                   typeRef {
+-                    symbol: "local4"
++                    symbol: "advanced.Existential#e2().T#"
+-            type_parameters: "local4"
++            type_parameters: "advanced.Existential#e2().T#"
+
+
+=========================
+advanced.Structural#s1().
+=========================
+--- metac
++++ metacp
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
+-        declarations: "local0"
++        declarations: "advanced.Structural#$anon#x()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
+
+
+=========================
+advanced.Structural#s2().
+=========================
+--- metac
++++ metacp
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
+-        declarations: "local1"
++        declarations: "advanced.Structural#s2().$anon#x()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
+
+
+===================
+advanced.Test.e2().
+===================
+--- metac
++++ metacp
+                 type_arguments {
+                   tag: TYPE_REF
+                   typeRef {
+-                    symbol: "local4"
++                    symbol: "advanced.Test.T#"
+-            type_parameters: "local4"
++            type_parameters: "advanced.Test.T#"
+
+
+===================
+advanced.Test.s1().
+===================
+--- metac
++++ metacp
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
+-        declarations: "local0"
++        declarations: "advanced.Test.$anon#x()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
+
+
+===================
+advanced.Test.s2().
+===================
+--- metac
++++ metacp
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
+-        declarations: "local1"
++        declarations: "advanced.Test.$anon#x()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
+
+
 ========
 classes.
 ========
@@ -224,123 +341,6 @@ objects.
 -  symbol: ""
 -}
  language: SCALA
-
-
-========
-selects.
-========
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "selects"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
-
-
-=========================
-selects.Existential#e1().
-=========================
---- metac
-+++ metacp
-             type_arguments {
-               tag: TYPE_REF
-               typeRef {
--                symbol: "local3"
-+                symbol: "selects.Existential#e1()._$1#"
--        type_parameters: "local3"
-+        type_parameters: "selects.Existential#e1()._$1#"
-
-
-=========================
-selects.Existential#e2().
-=========================
---- metac
-+++ metacp
-                 type_arguments {
-                   tag: TYPE_REF
-                   typeRef {
--                    symbol: "local4"
-+                    symbol: "selects.Existential#e2().T#"
--            type_parameters: "local4"
-+            type_parameters: "selects.Existential#e2().T#"
-
-
-========================
-selects.Structural#s1().
-========================
---- metac
-+++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local0"
-+        declarations: "selects.Structural#$anon#x()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
-
-
-========================
-selects.Structural#s2().
-========================
---- metac
-+++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local1"
-+        declarations: "selects.Structural#s2().$anon#x()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
-
-
-==================
-selects.Test.e2().
-==================
---- metac
-+++ metacp
-                 type_arguments {
-                   tag: TYPE_REF
-                   typeRef {
--                    symbol: "local4"
-+                    symbol: "selects.Test.T#"
--            type_parameters: "local4"
-+            type_parameters: "selects.Test.T#"
-
-
-==================
-selects.Test.s1().
-==================
---- metac
-+++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local0"
-+        declarations: "selects.Test.$anon#x()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
-
-
-==================
-selects.Test.s2().
-==================
---- metac
-+++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local1"
-+        declarations: "selects.Test.$anon#x()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
 
 
 =======

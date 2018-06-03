@@ -50,6 +50,176 @@ Occurrences:
 [9:6..9:8): m7 <= example.Acc#m7().
 [9:11..9:14): ??? => scala.Predef.`???`().
 
+semanticdb/integration/src/main/scala/example/Advanced.scala
+------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Advanced.scala
+Text => non-empty
+Language => Scala
+Symbols => 30 entries
+Occurrences => 77 entries
+Synthetics => 1 entries
+
+Symbols:
+advanced. => package advanced
+advanced.C# => class C[T >: Nothing <: Any].{+2 decls}
+  extends AnyRef
+advanced.C#[T] => typeparam T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+advanced.C#`<init>`(). => primary ctor <init>: ()
+advanced.C#t(). => method t: : T
+  T => advanced.C#[T]
+advanced.Existential# => class Existential.{+3 decls}
+  extends AnyRef
+advanced.Existential#`<init>`(). => primary ctor <init>: ()
+advanced.Existential#e1(). => method e1: : List[local3] forSome { local3: <?> }
+  List => scala.package.List#
+  local3 => local3
+advanced.Existential#e2(). => method e2: : C[List[local4] forSome { local4: <?> }]
+  C => advanced.C#
+  List => scala.package.List#
+  local4 => local4
+advanced.Structural# => class Structural.{+3 decls}
+  extends AnyRef
+advanced.Structural#`<init>`(). => primary ctor <init>: ()
+advanced.Structural#s1(). => method s1: : AnyRef { val method x: Int }
+  AnyRef => scala.AnyRef#
+  x => local0
+  Int => scala.Int#
+advanced.Structural#s2(). => method s2: : AnyRef { local1: <?> }
+  AnyRef => scala.AnyRef#
+  local1 => local1
+advanced.Test. => final object Test.{+11 decls}
+  extends AnyRef
+advanced.Test.e(). => val method e: : Existential
+  Existential => advanced.Existential#
+advanced.Test.e1(). => val method e1: : List[Any]
+  List => scala.collection.immutable.List#
+  Any => scala.Any#
+advanced.Test.e1x(). => val method e1x: : Any
+  Any => scala.Any#
+advanced.Test.e2(). => val method e2: : C[List[local4] forSome { local4: <?> }]
+  C => advanced.C#
+  List => scala.package.List#
+  local4 => local4
+advanced.Test.e2x(). => val method e2x: : List[Any]
+  List => scala.collection.immutable.List#
+  Any => scala.Any#
+advanced.Test.e2xx(). => val method e2xx: : Any
+  Any => scala.Any#
+advanced.Test.s(). => val method s: : Structural
+  Structural => advanced.Structural#
+advanced.Test.s1(). => val method s1: : AnyRef { val method x: Int }
+  AnyRef => scala.AnyRef#
+  x => local0
+  Int => scala.Int#
+advanced.Test.s1x(). => val method s1x: : Int
+  Int => scala.Int#
+advanced.Test.s2(). => val method s2: : AnyRef { local1: <?> }
+  AnyRef => scala.AnyRef#
+  local1 => local1
+advanced.Test.s2x(). => val method s2x: : Int
+  Int => scala.Int#
+local0 => abstract val method x: : Int
+  Int => scala.Int#
+local2 => val method x: : Int
+  Int => scala.Int#
+local5 => abstract type T: >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+local6 => val local e3: List[local7]
+  List => scala.package.List#
+  local7 => local7
+local8 => val local e3x: local7
+  local7 => local7
+
+Occurrences:
+[0:8..0:16): advanced <= advanced.
+[2:7..2:12): scala => scala.
+[2:13..2:21): language => scala.language.
+[2:22..2:37): reflectiveCalls => scala.language.reflectiveCalls().
+[4:6..4:7): C <= advanced.C#
+[4:8..4:9): T <= advanced.C#[T]
+[4:11..4:11):  <= advanced.C#`<init>`().
+[5:6..5:7): t <= advanced.C#t().
+[5:9..5:10): T => advanced.C#[T]
+[5:13..5:16): ??? => scala.Predef.`???`().
+[8:6..8:16): Structural <= advanced.Structural#
+[8:17..8:17):  <= advanced.Structural#`<init>`().
+[9:6..9:8): s1 <= advanced.Structural#s1().
+[9:16..9:17): x <= local0
+[9:19..9:22): Int => scala.Int#
+[9:27..9:30): ??? => scala.Predef.`???`().
+[10:6..10:8): s2 <= advanced.Structural#s2().
+[10:21..10:22): x <= local2
+[10:24..10:27): Int => scala.Int#
+[10:30..10:33): ??? => scala.Predef.`???`().
+[13:6..13:17): Existential <= advanced.Existential#
+[13:18..13:18):  <= advanced.Existential#`<init>`().
+[14:6..14:8): e1 <= advanced.Existential#e1().
+[14:10..14:14): List => scala.package.List#
+[14:20..14:23): ??? => scala.Predef.`???`().
+[15:6..15:8): e2 <= advanced.Existential#e2().
+[15:10..15:11): C => advanced.C#
+[15:12..15:16): List => scala.package.List#
+[15:17..15:18): T => local5
+[15:35..15:36): T <= local5
+[15:42..15:45): ??? => scala.Predef.`???`().
+[18:7..18:11): Test <= advanced.Test.
+[19:6..19:7): s <= advanced.Test.s().
+[19:14..19:24): Structural => advanced.Structural#
+[19:24..19:24):  => advanced.Structural#`<init>`().
+[20:6..20:8): s1 <= advanced.Test.s1().
+[20:11..20:12): s => advanced.Test.s().
+[20:13..20:15): s1 => advanced.Structural#s1().
+[21:6..21:9): s1x <= advanced.Test.s1x().
+[21:12..21:13): s => advanced.Test.s().
+[21:14..21:16): s1 => advanced.Structural#s1().
+[22:6..22:8): s2 <= advanced.Test.s2().
+[22:11..22:12): s => advanced.Test.s().
+[22:13..22:15): s2 => advanced.Structural#s2().
+[23:6..23:9): s2x <= advanced.Test.s2x().
+[23:12..23:13): s => advanced.Test.s().
+[23:14..23:16): s2 => advanced.Structural#s2().
+[25:6..25:7): e <= advanced.Test.e().
+[25:14..25:25): Existential => advanced.Existential#
+[25:25..25:25):  => advanced.Existential#`<init>`().
+[26:6..26:8): e1 <= advanced.Test.e1().
+[26:11..26:12): e => advanced.Test.e().
+[26:13..26:15): e1 => advanced.Existential#e1().
+[27:6..27:9): e1x <= advanced.Test.e1x().
+[27:12..27:13): e => advanced.Test.e().
+[27:14..27:16): e1 => advanced.Existential#e1().
+[27:17..27:21): head => scala.collection.IterableLike#head().
+[28:6..28:8): e2 <= advanced.Test.e2().
+[28:11..28:12): e => advanced.Test.e().
+[28:13..28:15): e2 => advanced.Existential#e2().
+[29:6..29:9): e2x <= advanced.Test.e2x().
+[29:12..29:13): e => advanced.Test.e().
+[29:14..29:16): e2 => advanced.Existential#e2().
+[29:17..29:18): t => advanced.C#t().
+[30:6..30:10): e2xx <= advanced.Test.e2xx().
+[30:13..30:14): e => advanced.Test.e().
+[30:15..30:17): e2 => advanced.Existential#e2().
+[30:18..30:19): t => advanced.C#t().
+[30:20..30:24): head => scala.collection.IterableLike#head().
+[31:2..31:9): locally => scala.Predef.locally().
+[32:5..32:8): ??? => scala.Predef.`???`().
+[32:11..32:14): Any => scala.Any#
+[33:11..33:13): e3 <= local6
+[33:15..33:19): List => scala.package.List#
+[34:12..34:15): e3x <= local8
+[34:18..34:20): e3 => local6
+[34:21..34:25): head => scala.collection.IterableLike#head().
+
+Synthetics:
+[31:9..31:9):  => *[Unit]
+  [0:0..0:1): * => _star_.
+  [0:2..0:6): Unit => scala.Unit#
+
 semanticdb/integration/src/main/scala/example/Classes.scala
 -----------------------------------------------------------
 
@@ -1398,176 +1568,6 @@ Occurrences:
 [3:20..3:20):  => java.lang.Object#`<init>`().
 [3:26..3:29): foo <= example.B#foo().
 [3:31..3:34): Int => scala.Int#
-
-semanticdb/integration/src/main/scala/example/Selects.scala
------------------------------------------------------------
-
-Summary:
-Schema => SemanticDB v3
-Uri => semanticdb/integration/src/main/scala/example/Selects.scala
-Text => non-empty
-Language => Scala
-Symbols => 30 entries
-Occurrences => 77 entries
-Synthetics => 1 entries
-
-Symbols:
-local0 => abstract val method x: : Int
-  Int => scala.Int#
-local2 => val method x: : Int
-  Int => scala.Int#
-local5 => abstract type T: >: Nothing <: Any
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-local6 => val local e3: List[local7]
-  List => scala.package.List#
-  local7 => local7
-local8 => val local e3x: local7
-  local7 => local7
-selects. => package selects
-selects.C# => class C[T >: Nothing <: Any].{+2 decls}
-  extends AnyRef
-selects.C#[T] => typeparam T: >: Nothing <: Any
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-selects.C#`<init>`(). => primary ctor <init>: ()
-selects.C#t(). => method t: : T
-  T => selects.C#[T]
-selects.Existential# => class Existential.{+3 decls}
-  extends AnyRef
-selects.Existential#`<init>`(). => primary ctor <init>: ()
-selects.Existential#e1(). => method e1: : List[local3] forSome { local3: <?> }
-  List => scala.package.List#
-  local3 => local3
-selects.Existential#e2(). => method e2: : C[List[local4] forSome { local4: <?> }]
-  C => selects.C#
-  List => scala.package.List#
-  local4 => local4
-selects.Structural# => class Structural.{+3 decls}
-  extends AnyRef
-selects.Structural#`<init>`(). => primary ctor <init>: ()
-selects.Structural#s1(). => method s1: : AnyRef { val method x: Int }
-  AnyRef => scala.AnyRef#
-  x => local0
-  Int => scala.Int#
-selects.Structural#s2(). => method s2: : AnyRef { local1: <?> }
-  AnyRef => scala.AnyRef#
-  local1 => local1
-selects.Test. => final object Test.{+11 decls}
-  extends AnyRef
-selects.Test.e(). => val method e: : Existential
-  Existential => selects.Existential#
-selects.Test.e1(). => val method e1: : List[Any]
-  List => scala.collection.immutable.List#
-  Any => scala.Any#
-selects.Test.e1x(). => val method e1x: : Any
-  Any => scala.Any#
-selects.Test.e2(). => val method e2: : C[List[local4] forSome { local4: <?> }]
-  C => selects.C#
-  List => scala.package.List#
-  local4 => local4
-selects.Test.e2x(). => val method e2x: : List[Any]
-  List => scala.collection.immutable.List#
-  Any => scala.Any#
-selects.Test.e2xx(). => val method e2xx: : Any
-  Any => scala.Any#
-selects.Test.s(). => val method s: : Structural
-  Structural => selects.Structural#
-selects.Test.s1(). => val method s1: : AnyRef { val method x: Int }
-  AnyRef => scala.AnyRef#
-  x => local0
-  Int => scala.Int#
-selects.Test.s1x(). => val method s1x: : Int
-  Int => scala.Int#
-selects.Test.s2(). => val method s2: : AnyRef { local1: <?> }
-  AnyRef => scala.AnyRef#
-  local1 => local1
-selects.Test.s2x(). => val method s2x: : Int
-  Int => scala.Int#
-
-Occurrences:
-[0:8..0:15): selects <= selects.
-[2:7..2:12): scala => scala.
-[2:13..2:21): language => scala.language.
-[2:22..2:37): reflectiveCalls => scala.language.reflectiveCalls().
-[4:6..4:7): C <= selects.C#
-[4:8..4:9): T <= selects.C#[T]
-[4:11..4:11):  <= selects.C#`<init>`().
-[5:6..5:7): t <= selects.C#t().
-[5:9..5:10): T => selects.C#[T]
-[5:13..5:16): ??? => scala.Predef.`???`().
-[8:6..8:16): Structural <= selects.Structural#
-[8:17..8:17):  <= selects.Structural#`<init>`().
-[9:6..9:8): s1 <= selects.Structural#s1().
-[9:16..9:17): x <= local0
-[9:19..9:22): Int => scala.Int#
-[9:27..9:30): ??? => scala.Predef.`???`().
-[10:6..10:8): s2 <= selects.Structural#s2().
-[10:21..10:22): x <= local2
-[10:24..10:27): Int => scala.Int#
-[10:30..10:33): ??? => scala.Predef.`???`().
-[13:6..13:17): Existential <= selects.Existential#
-[13:18..13:18):  <= selects.Existential#`<init>`().
-[14:6..14:8): e1 <= selects.Existential#e1().
-[14:10..14:14): List => scala.package.List#
-[14:20..14:23): ??? => scala.Predef.`???`().
-[15:6..15:8): e2 <= selects.Existential#e2().
-[15:10..15:11): C => selects.C#
-[15:12..15:16): List => scala.package.List#
-[15:17..15:18): T => local5
-[15:35..15:36): T <= local5
-[15:42..15:45): ??? => scala.Predef.`???`().
-[18:7..18:11): Test <= selects.Test.
-[19:6..19:7): s <= selects.Test.s().
-[19:14..19:24): Structural => selects.Structural#
-[19:24..19:24):  => selects.Structural#`<init>`().
-[20:6..20:8): s1 <= selects.Test.s1().
-[20:11..20:12): s => selects.Test.s().
-[20:13..20:15): s1 => selects.Structural#s1().
-[21:6..21:9): s1x <= selects.Test.s1x().
-[21:12..21:13): s => selects.Test.s().
-[21:14..21:16): s1 => selects.Structural#s1().
-[22:6..22:8): s2 <= selects.Test.s2().
-[22:11..22:12): s => selects.Test.s().
-[22:13..22:15): s2 => selects.Structural#s2().
-[23:6..23:9): s2x <= selects.Test.s2x().
-[23:12..23:13): s => selects.Test.s().
-[23:14..23:16): s2 => selects.Structural#s2().
-[25:6..25:7): e <= selects.Test.e().
-[25:14..25:25): Existential => selects.Existential#
-[25:25..25:25):  => selects.Existential#`<init>`().
-[26:6..26:8): e1 <= selects.Test.e1().
-[26:11..26:12): e => selects.Test.e().
-[26:13..26:15): e1 => selects.Existential#e1().
-[27:6..27:9): e1x <= selects.Test.e1x().
-[27:12..27:13): e => selects.Test.e().
-[27:14..27:16): e1 => selects.Existential#e1().
-[27:17..27:21): head => scala.collection.IterableLike#head().
-[28:6..28:8): e2 <= selects.Test.e2().
-[28:11..28:12): e => selects.Test.e().
-[28:13..28:15): e2 => selects.Existential#e2().
-[29:6..29:9): e2x <= selects.Test.e2x().
-[29:12..29:13): e => selects.Test.e().
-[29:14..29:16): e2 => selects.Existential#e2().
-[29:17..29:18): t => selects.C#t().
-[30:6..30:10): e2xx <= selects.Test.e2xx().
-[30:13..30:14): e => selects.Test.e().
-[30:15..30:17): e2 => selects.Existential#e2().
-[30:18..30:19): t => selects.C#t().
-[30:20..30:24): head => scala.collection.IterableLike#head().
-[31:2..31:9): locally => scala.Predef.locally().
-[32:5..32:8): ??? => scala.Predef.`???`().
-[32:11..32:14): Any => scala.Any#
-[33:11..33:13): e3 <= local6
-[33:15..33:19): List => scala.package.List#
-[34:12..34:15): e3x <= local8
-[34:18..34:20): e3 => local6
-[34:21..34:25): head => scala.collection.IterableLike#head().
-
-Synthetics:
-[31:9..31:9):  => *[Unit]
-  [0:0..0:1): * => _star_.
-  [0:2..0:6): Unit => scala.Unit#
 
 semanticdb/integration/src/main/scala/example/Synthetic.scala
 -------------------------------------------------------------
