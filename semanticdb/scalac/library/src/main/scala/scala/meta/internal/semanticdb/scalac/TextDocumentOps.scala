@@ -212,8 +212,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     gclassParams.foreach(saveSymbol)
                   }
                   if (gsym.isGetter) {
-                    val gfield = gsym.accessed
-                    saveSymbol(gfield)
                     val gsetter = gsym.setterIn(gsym.owner)
                     saveSymbol(gsetter)
                     val gsetterParams = gsetter.info.paramss.flatten
