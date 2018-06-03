@@ -29,4 +29,11 @@ object Test {
   val e2 = e.e2
   val e2x = e.e2.t
   val e2xx = e.e2.t.head
+  locally {
+    (??? : Any) match {
+      case e3: List[_] =>
+        val e3x = e3.head
+        ()
+    }
+  }
 }
