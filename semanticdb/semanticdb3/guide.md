@@ -215,6 +215,19 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td>Default</td>
   </tr>
   <tr>
+    <td><code>-P:semanticdb:crashes:&lt;value&gt;</code></td>
+    <td>
+      <code>error</code>,<br/>
+      <code>warning</code>,<br/>
+      <code>info</code>,<br/>
+      <code>ignore</code></td>
+    <td>
+      The level at which the Scala compiler should report crashes that may
+      happen during SemanticDB generation.
+    </td>
+    <td><code>warning</code></td>
+  </tr>
+  <tr>
     <td><code>-P:semanticdb:sourceroot:&lt;value&gt;</code></td>
     <td>Absolute or relative path</td>
     <td>
@@ -235,19 +248,6 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
       <code>slim</code> for no).
     </td>
     <td><code>fat</code></td>
-  </tr>
-  <tr>
-    <td><code>-P:semanticdb:failures:&lt;value&gt;</code></td>
-    <td>
-      <code>error</code>,<br/>
-      <code>warning</code>,<br/>
-      <code>info</code>,<br/>
-      <code>ignore</code></td>
-    <td>
-      The level at which the Scala compiler should report failures arise during
-      SemanticDB generation.
-    </td>
-    <td><code>warning</code></td>
   </tr>
   <tr>
     <td><code>-P:semanticdb:symbols:&lt;value&gt;</code></td>

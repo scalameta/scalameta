@@ -25,15 +25,15 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
     }
   }
 
-  def handleError(unit: g.CompilationUnit): PartialFunction[Throwable, Unit] = {
+  def handleCrash(unit: g.CompilationUnit): PartialFunction[Throwable, Unit] = {
     case NonFatal(ex) =>
       val writer = new StringWriter()
       val path = unit.source.file.path
       writer.write(s"failed to generate semanticdb for $path:$EOL")
       ex.printStackTrace(new PrintWriter(writer))
       val msg = writer.toString
-      import scala.meta.internal.semanticdb.scalac.FailureMode._
-      config.failures match {
+      import scala.meta.internal.semanticdb.scalac.CrashMode._
+      config.crashes match {
         case Error => global.reporter.error(g.NoPosition, msg)
         case Warning => global.reporter.warning(g.NoPosition, msg)
         case Info => global.reporter.info(g.NoPosition, msg, force = true)
@@ -55,7 +55,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
           validateCompilerState()
           val sdoc = unit.toTextDocument
           sdoc.save(config.targetroot)
-        } catch handleError(unit)
+        } catch handleCrash(unit)
       }
 
       private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
@@ -103,7 +103,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
               sdoc.append(config.targetroot)
             }
           }
-        } catch handleError(unit)
+        } catch handleCrash(unit)
       }
 
       override def run(): Unit = {
