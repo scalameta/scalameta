@@ -592,9 +592,9 @@ flags.p.package.S#[T] => @specialized typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
 flags.p.package.S#`<init>`(). => primary ctor <init>: ()
-flags.p.package.T1# => type T1: >: Int <: Int
+flags.p.package.T1# => type T1: Int
   Int => scala.Int#
-flags.p.package.T2# => type T2: [T >: Nothing <: Any] => >: S[T] <: S[T]
+flags.p.package.T2# => type T2: [T >: Nothing <: Any] => S[T]
   T => flags.p.package.T2#[T]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -938,7 +938,7 @@ example.Methods# => class Methods[T >: Nothing <: Any].{+26 decls}
   extends AnyRef
 example.Methods#$anon#x(). => abstract val method x: : Int
   Int => scala.Int#
-example.Methods#AList# => type AList: [T >: Nothing <: Any] => >: Methods.this.List[T] <: Methods.this.List[T]
+example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.this.List[T]
   T => example.Methods#AList#[T]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1562,7 +1562,7 @@ types.Test. => final object Test.{+4 decls}
   extends AnyRef
 types.Test.C# => class C.{+30 decls}
   extends M
-types.Test.C#$anon#L# => type L: [T >: Nothing <: Any] => >: List[T] <: List[T]
+types.Test.C#$anon#L# => type L: [T >: Nothing <: Any] => List[T]
   T => types.Test.C#$anon#L#[T]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1687,20 +1687,20 @@ types.Test.C#TypeType. => final object TypeType.{+5 decls}
 types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#TypeType.T4# => type T4: >: C <: C
+types.Test.C#TypeType.T4# => type T4: C
   C => types.Test.C#
-types.Test.C#TypeType.T5# => type T5: [U >: Nothing <: Any] => >: U <: U
+types.Test.C#TypeType.T5# => type T5: [U >: Nothing <: Any] => U
   U => types.Test.C#TypeType.T5#[U]
   Nothing => scala.Nothing#
   Any => scala.Any#
 types.Test.C#TypeType.T5#[U] => typeparam U: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#TypeType.m2(). => method m2: [T2 >: C <: C] => : Nothing
+types.Test.C#TypeType.m2(). => method m2: [T2 C] => : Nothing
   T2 => types.Test.C#TypeType.m2().[T2]
   C => types.Test.C#
   Nothing => scala.Nothing#
-types.Test.C#TypeType.m2().[T2] => typeparam T2: >: C <: C
+types.Test.C#TypeType.m2().[T2] => typeparam T2: C
   C => types.Test.C#
 types.Test.C#TypeType.m3(). => method m3: [M3 [M3][_: <?>] => >: Nothing <: Any] => : Nothing
   M3 => types.Test.C#TypeType.m3().[M3]

@@ -352,9 +352,14 @@ class Main(settings: Settings, reporter: Reporter) {
         case TYPE_TYPE =>
           val Some(TypeType(tparams, lo, hi)) = tpe.typeType
           rep("[", tparams, ", ", "] => ")(defn)
-          opt(">: ", lo, "")(normal)
-          lo.foreach(_ => out.print(" "))
-          opt("<: ", hi, "")(normal)
+          if (lo != hi) {
+            opt(">: ", lo, "")(normal)
+            lo.foreach(_ => out.print(" "))
+            opt("<: ", hi, "")(normal)
+          } else {
+            val alias = lo
+            opt("", alias, "")(normal)
+          }
         case UNKNOWN_TYPE | Type.Tag.Unrecognized(_) =>
           out.print("<?>")
       }

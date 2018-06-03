@@ -160,7 +160,7 @@ class TargetedSuite extends SemanticdbSuite {
        |f.C1#T1# => abstract type T1: >: Nothing <: Int
        |  Nothing => scala.Nothing#
        |  Int => scala.Int#
-       |f.C1#T2# => type T2: >: Int <: Int
+       |f.C1#T2# => type T2: Int
        |  Int => scala.Int#
        |f.C1#`<init>`(). => primary ctor <init>: (p1: Int, val p2: Int, var p3: Int)
        |  p1 => f.C1#`<init>`().(p1)
@@ -367,7 +367,7 @@ class TargetedSuite extends SemanticdbSuite {
        |i.D# => class D.{+3 decls}
        |  extends AnyRef
        |  extends B
-       |i.D#X# => type X: >: HashSet[Int] <: HashSet[Int]
+       |i.D#X# => type X: HashSet[Int]
        |  HashSet => scala.collection.mutable.HashSet#
        |  Int => scala.Int#
        |i.D#`<init>`(). => primary ctor <init>: ()
@@ -377,7 +377,7 @@ class TargetedSuite extends SemanticdbSuite {
        |i.E# => class E.{+3 decls}
        |  extends AnyRef
        |  extends B
-       |i.E#X# => type X: >: ListBuffer[Int] <: ListBuffer[Int]
+       |i.E#X# => type X: ListBuffer[Int]
        |  ListBuffer => scala.collection.mutable.ListBuffer#
        |  Int => scala.Int#
        |i.E#`<init>`(). => primary ctor <init>: ()
