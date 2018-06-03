@@ -8,10 +8,8 @@ import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps { self: SemanticdbOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
-    def toSemantic: (Option[s.Type], List[g.Symbol]) = {
-      val buf = List.newBuilder[g.Symbol]
+    def toSemantic: Option[s.Type] = {
       def todo(gsym: g.Symbol): String = {
-        buf += gsym
         gsym.toSemantic.syntax
       }
       def loop(gtpe: g.Type): Option[s.Type] = {
@@ -92,13 +90,7 @@ trait TypeOps { self: SemanticdbOps =>
             Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
           case g.AnnotatedType(ganns, gtpe) =>
             val stag = t.ANNOTATED_TYPE
-            val sanns = {
-              ganns.reverse.map { gann =>
-                val (sann, todo) = gann.toSemantic
-                todo.foreach(buf.+=)
-                sann
-              }
-            }
+            val sanns = ganns.reverse.map(_.toSemantic)
             val stpe = loop(gtpe)
             Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(sanns, stpe))))
           case g.ExistentialType(gtparams, gtpe) =>
@@ -110,7 +102,7 @@ trait TypeOps { self: SemanticdbOps =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
             val decls = gclass.semanticdbDecls
-            decls.gsyms.foreach(buf.+=)
+            decls.gsyms.foreach(todo)
             Some(
               s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, decls.ssyms))))
           case g.NullaryMethodType(gtpe) =>
@@ -165,7 +157,7 @@ trait TypeOps { self: SemanticdbOps =>
             sys.error(s"unsupported type ${gother}: ${g.showRaw(gother)}")
         }
       }
-      (loop(gtpe), buf.result)
+      loop(gtpe)
     }
   }
 

@@ -202,16 +202,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               def saveSymbol(): Unit = {
                 def add(ms: m.Symbol, gs: g.Symbol): Unit = {
                   if (gs.isUseful) {
-                    val SymbolInformationResult(denot, todoTpe1) = gs.toSymbolInformation()
-                    symbols(ms) = denot
-                    todoTpe1.foreach { tgs =>
-                      if (tgs.isSemanticdbLocal) {
-                        val tms = tgs.toSemantic
-                        if (tms != m.Symbol.None && !symbols.contains(tms)) {
-                          add(tms, tgs)
-                        }
-                      }
-                    }
+                    symbols(ms) = gs.toSymbolInformation
                   }
                 }
                 if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
@@ -328,7 +319,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
                 if (!gsym.isSemanticdbLocal && !gsym.isUseless) {
-                  symbols(gsym.toSemantic) = gsym.toSymbolInformation().denot
+                  symbols(gsym.toSemantic) = gsym.toSymbolInformation
                 }
               case gtree: g.PackageDef =>
                 // NOTE: capture PackageDef.pid instead

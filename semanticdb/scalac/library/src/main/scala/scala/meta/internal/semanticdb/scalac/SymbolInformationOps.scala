@@ -118,9 +118,10 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    private def tpe: (Option[s.Type], List[g.Symbol]) = {
-      if (gsym.hasPackageFlag) (None, Nil)
-      else {
+    private def tpe: Option[s.Type] = {
+      if (gsym.hasPackageFlag) {
+        None
+      } else {
         val ginfo = {
           if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
             gsym.info.widen
@@ -139,32 +140,23 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           }
         }
         if (gsym.isConstructor) {
-          val (tpe, todo) = ginfo.toSemantic
-          val tpeWithoutReturnType = tpe.map(_.update(_.methodType.optionalReturnType := None))
-          (tpeWithoutReturnType, todo)
+          ginfo.toSemantic.map(_.update(_.methodType.optionalReturnType := None))
         } else if (gsym.isScalacField) {
           val stag = t.METHOD_TYPE
           val sparamss = Nil
-          val (sret, todo) = ginfo.toSemantic
-          val tpe = Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
-          (tpe, todo)
+          val sret = ginfo.toSemantic
+          Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
         } else {
           ginfo.toSemantic
         }
       }
     }
 
-    private def anns: (List[s.Annotation], List[g.Symbol]) = {
-      val buf = List.newBuilder[g.Symbol]
+    private def anns: List[s.Annotation] = {
       val ganns = gsym.annotations.filter { gann =>
         gann.atp.typeSymbol != definitions.MacroImplAnnotation
       }
-      val sanns = ganns.map { gann =>
-        val (sann, todo) = gann.toSemantic
-        todo.foreach(buf.+=)
-        sann
-      }
-      (sanns, buf.result)
+      ganns.map(_.toSemantic)
     }
 
     // FIXME: https://github.com/scalameta/scalameta/issues/1325
@@ -188,10 +180,8 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    def toSymbolInformation(): SymbolInformationResult = {
-      val (anns, todoAnns) = this.anns
-      val (tpe, todoTpe) = this.tpe
-      val denot = s.SymbolInformation(
+    def toSymbolInformation: s.SymbolInformation = {
+      s.SymbolInformation(
         symbol = gsym.toSemantic.syntax,
         language = language,
         kind = kind,
@@ -201,10 +191,6 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         tpe = tpe,
         annotations = anns
       )
-      SymbolInformationResult(denot, todoAnns ++ todoTpe)
     }
   }
-
-  // NOTE: Holds a symbol information along with todo lists of symbols to persist.
-  case class SymbolInformationResult(denot: s.SymbolInformation, todoTpe: List[g.Symbol])
 }
