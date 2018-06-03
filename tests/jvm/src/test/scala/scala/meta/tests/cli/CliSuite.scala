@@ -3,9 +3,12 @@ package scala.meta.tests.cli
 import java.io._
 import java.nio.charset.StandardCharsets._
 import java.nio.file._
+import org.scalatest._
 import scala.meta.cli._
+import scala.meta.testkit._
+import scala.meta.tests.metacp._
 
-class CliSuite extends BaseCliSuite {
+class CliSuite extends FunSuite with DiffAssertions {
   val sourceroot = Files.createTempDirectory("sourceroot_")
   val helloWorldScala = sourceroot.resolve("HelloWorld.scala")
   Files.write(
@@ -24,7 +27,7 @@ class CliSuite extends BaseCliSuite {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
       val scalacArgs = List(
         "-cp",
-        scalaLibraryJar,
+        Library.scalaLibrary.classpath().syntax,
         "-P:semanticdb:sourceroot:" + sourceroot.toString,
         "-d",
         target.toString,

@@ -45,6 +45,10 @@ matrix:
       - CI_SCALA_VERSION: 2.12.6
       - CI_SCALA_JS: true
     - env:
+      - CI_TEST: ci-metacp
+      - CI_SCALA_VERSION: 2.12.6
+      - CI_SCALA_JS: true
+    - env:
       - CI_TEST: mima
 
 cache:

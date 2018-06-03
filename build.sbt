@@ -69,6 +69,9 @@ commands += Command.command("ci-metac") { s =>
   }
   "testsJVM/test:runMain scala.meta.tests.semanticdb.MetacScalaLibrary" :: s
 }
+commands += Command.command("ci-metacp") { s =>
+  "testsJVM/test:runMain scala.meta.tests.metacp.MetacpAllLibraries" :: s
+}
 commands += Command.command("save-expect") { s =>
   "metapJVM/compile" ::
     "metacp/compile" ::
@@ -818,9 +821,6 @@ def exposePaths(projectName: String, config: Configuration) = {
     fullClasspath.in(config) := {
       val defaultValue = fullClasspath.in(config).value
       val classpath = defaultValue.files.map(_.getAbsolutePath)
-      val scalaLibrary =
-        classpath.map(_.toString).find(_.contains("scala-library")).get
-      System.setProperty("sbt.paths.scalalibrary.classes", scalaLibrary)
       System.setProperty(prefix + "classes", classpath.mkString(java.io.File.pathSeparator))
       defaultValue
     }
