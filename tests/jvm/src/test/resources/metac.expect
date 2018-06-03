@@ -6,7 +6,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Accessibility.scala
 Text => non-empty
 Language => Scala
-Symbols => 11 entries
+Symbols => 10 entries
 Occurrences => 19 entries
 
 Symbols:
@@ -27,8 +27,6 @@ example.Acc#m5(). => protected[this] method m5: : Nothing
 example.Acc#m6(). => protected[example] method m6: : Nothing
   Nothing => scala.Nothing#
 example.Acc#m7(). => method m7: : Nothing
-  Nothing => scala.Nothing#
-scala.Predef.`???`(). => method ???: : Nothing
   Nothing => scala.Nothing#
 
 Occurrences:
@@ -60,7 +58,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Classes.scala
 Text => non-empty
 Language => Scala
-Symbols => 106 entries
+Symbols => 103 entries
 Occurrences => 44 entries
 
 Symbols:
@@ -333,11 +331,6 @@ classes.M.C5#x(). => private[this] val method x: : Int
 classes.M.C5(). => implicit method C5: (x: <?>): C5
   x => classes.M.C5().(x)
   C5 => classes.M.C5#
-scala.AnyVal# => abstract class AnyVal.{+2 decls}
-  extends Any
-scala.AnyVal#`<init>`(). => primary ctor <init>: ()
-scala.Int# => abstract final class Int.{+111 decls}
-  extends AnyVal
 
 Occurrences:
 [0:8..0:15): classes <= classes.
@@ -393,7 +386,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Empty.scala
 Text => non-empty
 Language => Scala
-Symbols => 7 entries
+Symbols => 6 entries
 Occurrences => 10 entries
 
 Symbols:
@@ -407,8 +400,6 @@ _empty_.B# => class B.{+2 decls}
 _empty_.B#`<init>`(). => primary ctor <init>: ()
 _empty_.B#a(). => method a: : A
   A => _empty_.A#
-scala.Predef.`???`(). => method ???: : Nothing
-  Nothing => scala.Nothing#
 
 Occurrences:
 [0:6..0:7): A <= _empty_.A#
@@ -450,7 +441,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Example.scala
 Text => non-empty
 Language => Scala
-Symbols => 19 entries
+Symbols => 6 entries
 Occurrences => 24 entries
 Diagnostics => 1 entries
 Synthetics => 1 entries
@@ -472,36 +463,6 @@ example.Example.x(). => val method x: : ClassTag[Int]
   Int => scala.Int#
 local0 => selfparam self: Example
   Example => example.Example.
-scala. => package scala
-scala.Array# => final class Array[T: <?>].{+6 decls}
-  extends AnyRef
-  extends Serializable
-  extends Cloneable
-scala.Int# => abstract final class Int.{+111 decls}
-  extends AnyVal
-scala.Predef.String# => type String: >: String <: String
-  String => java.lang.String#
-scala.Predef.println(+1). => method println: (x: <?>): Unit
-  x => scala.Predef.println(+1).(x)
-  Unit => scala.Unit#
-scala.Unit# => abstract final class Unit.{+2 decls}
-  extends AnyVal
-scala.collection. => package collection
-scala.collection.mutable. => package mutable
-scala.collection.mutable.Stack# => @deprecated @deprecated class Stack[A: <?>].{+19 decls}
-  extends AbstractSeq[A]
-  extends Seq[A]
-  extends SeqLike[A, Stack[A]]
-  extends GenericTraversableTemplate[A, Stack]
-  extends Cloneable[Stack[A]]
-  extends Serializable
-scala.collection.mutable.Stack#`<init>`(+1). => ctor <init>: ()
-scala.concurrent. => package concurrent
-scala.reflect. => package reflect
-scala.reflect.package.classTag(). => method classTag: [T: <?>] => (ctag: <?>): ClassTag[T]
-  T => scala.reflect.package.classTag().[T]
-  ctag => scala.reflect.package.classTag().(ctag)
-  ClassTag => scala.reflect.ClassTag#
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -559,7 +520,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Flags.scala
 Text => non-empty
 Language => Scala
-Symbols => 68 entries
+Symbols => 58 entries
 Occurrences => 71 entries
 Synthetics => 2 entries
 
@@ -710,27 +671,6 @@ local0 => val local xs2: Nothing
 local1 => abstract type t: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-scala. => package scala
-scala.Int# => abstract final class Int.{+111 decls}
-  extends AnyVal
-scala.Predef.`???`(). => method ???: : Nothing
-  Nothing => scala.Nothing#
-scala.collection.immutable.List. => final object List.{+7 decls}
-  extends SeqFactory[List]
-  extends Serializable
-scala.language. => final object language.{+7 decls}
-  extends AnyRef
-scala.language.experimental. => final object experimental.{+1 decls}
-  extends AnyRef
-scala.language.experimental.macros(). => implicit lazy val method macros: : macros
-  macros => scala.languageFeature.experimental.macros#
-scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
-  A => scala.package.List#[A]
-  List => scala.collection.immutable.List#
-scala.specialized# => class specialized.{+4 decls}
-  extends Annotation
-  extends StaticAnnotation
-scala.specialized#`<init>`(+2). => ctor <init>: ()
 
 Occurrences:
 [0:8..0:13): flags <= flags.
@@ -823,16 +763,8 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Imports.scala
 Text => non-empty
 Language => Scala
-Symbols => 4 entries
 Occurrences => 4 entries
 Diagnostics => 1 entries
-
-Symbols:
-scala. => package scala
-scala.util. => package util
-scala.util.control. => package control
-scala.util.control.NonFatal. => final object NonFatal.{+2 decls}
-  extends AnyRef
 
 Occurrences:
 [0:7..0:12): scala => scala.
@@ -851,7 +783,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/local-file.scala
 Text => non-empty
 Language => Scala
-Symbols => 6 entries
+Symbols => 4 entries
 Occurrences => 7 entries
 Synthetics => 1 entries
 
@@ -862,12 +794,6 @@ example.`local-file`# => class local-file.{+1 decls}
 example.`local-file`#`<init>`(). => primary ctor <init>: ()
 local0 => val local local: Int
   Int => scala.Int#
-scala.Int#`+`(+4). => abstract method +: (x: <?>): Int
-  x => scala.Int#`+`(+4).(x)
-  Int => scala.Int#
-scala.Predef.locally(). => @inline method locally: [T: <?>] => (x: <?>): T
-  T => scala.Predef.locally().[T]
-  x => scala.Predef.locally().(x)
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -891,60 +817,10 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/MetacJava.scala
 Text => non-empty
 Language => Scala
-Symbols => 38 entries
+Symbols => 10 entries
 Occurrences => 65 entries
 
 Symbols:
-com. => package com
-com.javacp. => package javacp
-com.javacp.Coin# => final enum class Coin.{+8 decls}
-  extends Enum[Coin]
-com.javacp.Coin#PENNY. => final static enum field PENNY: Coin
-  Coin => com.javacp.Coin#
-com.javacp.Interface# => abstract interface Interface
-  extends Object
-com.javacp.MetacJava# => class MetacJava.{+12 decls}
-  extends Object
-com.javacp.MetacJava#Overload1# => class Overload1.{+3 decls}
-  extends Object
-com.javacp.MetacJava#Overload1#A# => class A.{+1 decls}
-  extends Object
-com.javacp.MetacJava#Overload1#A#`<init>`(). => ctor <init>: ()
-com.javacp.MetacJava#Overload1#`<init>`(). => ctor <init>: ()
-com.javacp.MetacJava#Overload2# => class Overload2.{+3 decls}
-  extends Object
-com.javacp.MetacJava#Overload2#A# => class A.{+1 decls}
-  extends Object
-com.javacp.MetacJava#Overload2#A#`<init>`(). => ctor <init>: ()
-com.javacp.MetacJava#Overload2#`<init>`(). => ctor <init>: ()
-com.javacp.MetacJava#Overload3# => static class Overload3.{+3 decls}
-  extends Object
-com.javacp.MetacJava#Overload3#A# => static class A.{+1 decls}
-  extends Object
-com.javacp.MetacJava#Overload3#A#`<init>`(). => ctor <init>: ()
-com.javacp.MetacJava#StaticInner# => static class StaticInner.{+5 decls}
-  extends Object
-com.javacp.MetacJava#StaticInner#NonStatic# => class NonStatic.{+2 decls}
-  extends Object
-com.javacp.MetacJava#StaticInner#NonStatic#`<init>`(). => ctor <init>: ()
-com.javacp.MetacJava#StaticInner#NonStatic#method(). => method method: (e: <?>): Unit
-  e => com.javacp.MetacJava#StaticInner#NonStatic#method().(e)
-  Unit => scala.Unit#
-com.javacp.MetacJava#StaticInner#`<init>`(). => ctor <init>: ()
-com.javacp.MetacJava#StaticInner#isNotStatic(). => method isNotStatic: (): Unit
-  Unit => scala.Unit#
-com.javacp.MetacJava#StaticInner#isStatic(). => static method isStatic: (): Unit
-  Unit => scala.Unit#
-com.javacp.MetacJava#`<init>`(). => ctor <init>: ()
-com.javacp.MetacJava#overload(). => method overload: (a: <?>): Unit
-  a => com.javacp.MetacJava#overload().(a)
-  Unit => scala.Unit#
-com.javacp.MetacJava#overload(+1). => method overload: (a: <?>): Unit
-  a => com.javacp.MetacJava#overload(+1).(a)
-  Unit => scala.Unit#
-com.javacp.MetacJava#overload(+2). => static method overload: (a: <?>): Unit
-  a => com.javacp.MetacJava#overload(+2).(a)
-  Unit => scala.Unit#
 example. => package example
 example.MetacJava# => class MetacJava.{+8 decls}
   extends AnyRef
@@ -1045,15 +921,13 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Methods.scala
 Text => non-empty
 Language => Scala
-Symbols => 75 entries
+Symbols => 63 entries
 Occurrences => 183 entries
 Diagnostics => 2 entries
 Synthetics => 4 entries
 
 Symbols:
 example. => package example
-example.Example. => final object Example.{+2 decls}
-  extends AnyRef
 example.MethodUsages# => class MethodUsages.{+2 decls}
   extends AnyRef
 example.MethodUsages#`<init>`(). => primary ctor <init>: ()
@@ -1266,32 +1140,6 @@ example.Methods#m9(). => method m9: (x: Methods.this.m9().): Nothing
 example.Methods#m9().(x) => param x: Methods.this.m9().
   Methods => example.Methods#
   m9(). => example.Methods#`m9().`#
-scala. => package scala
-scala.Int# => abstract final class Int.{+111 decls}
-  extends AnyVal
-scala.Predef. => final object Predef.{+95 decls}
-  extends LowPriorityImplicits
-  extends DeprecatedPredef
-scala.Predef.String# => type String: >: String <: String
-  String => java.lang.String#
-scala.Predef.`???`(). => method ???: : Nothing
-  Nothing => scala.Nothing#
-scala.collection.immutable.Nil. => @SerialVersionUID final case object Nil.{+9 decls}
-  extends List[Nothing]
-  extends Product
-  extends Serializable
-scala.math. => package math
-scala.math.Ordering# => @implicitNotFound trait Ordering[T: <?>].{+13 decls}
-  extends Object
-  extends Comparator[T]
-  extends PartialOrdering[T]
-  extends Serializable
-scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
-  A => scala.package.List#[A]
-  List => scala.collection.immutable.List#
-scala.unchecked# => class unchecked.{+1 decls}
-  extends Annotation
-scala.unchecked#`<init>`(). => primary ctor <init>: ()
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -1534,7 +1382,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Overrides.scala
 Text => non-empty
 Language => Scala
-Symbols => 8 entries
+Symbols => 6 entries
 Occurrences => 10 entries
 
 Symbols:
@@ -1549,9 +1397,6 @@ example.B# => class B.{+2 decls}
 example.B#`<init>`(). => primary ctor <init>: ()
 example.B#foo(). => method foo: : Int
   Int => scala.Int#
-java.lang.Object#`<init>`(). => ctor <init>: ()
-scala.Int# => abstract final class Int.{+111 decls}
-  extends AnyVal
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -1573,7 +1418,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Synthetic.scala
 Text => non-empty
 Language => Scala
-Symbols => 11 entries
+Symbols => 3 entries
 Occurrences => 11 entries
 Synthetics => 6 entries
 
@@ -1582,32 +1427,6 @@ example. => package example
 example.Synthetic# => class Synthetic.{+1 decls}
   extends AnyRef
 example.Synthetic#`<init>`(). => primary ctor <init>: ()
-scala.Array. => final object Array.{+45 decls}
-  extends FallbackArrayBuilding
-  extends Serializable
-scala.Array.empty(). => method empty: [T: <?>] => (evidence$1: <?>): Array[T]
-  T => scala.Array.empty().[T]
-  evidence$1 => scala.Array.empty().(evidence$1)
-  Array => scala.Array#
-scala.Int# => abstract final class Int.{+111 decls}
-  extends AnyVal
-scala.Int#`+`(+4). => abstract method +: (x: <?>): Int
-  x => scala.Int#`+`(+4).(x)
-  Int => scala.Int#
-scala.collection.TraversableLike#headOption(). => method headOption: : Option[A]
-  Option => scala.Option#
-  A => scala.collection.TraversableLike#[A]
-scala.collection.immutable.List#map(). => final method map: [B: <?>, That: <?>] => (f: <?>)(bf: <?>): That
-  B => scala.collection.immutable.List#map().[B]
-  That => scala.collection.immutable.List#map().[That]
-  f => scala.collection.immutable.List#map().(f)
-  bf => scala.collection.immutable.List#map().(bf)
-scala.collection.immutable.List. => final object List.{+7 decls}
-  extends SeqFactory[List]
-  extends Serializable
-scala.collection.immutable.StringLike#stripPrefix(). => method stripPrefix: (prefix: <?>): String
-  prefix => scala.collection.immutable.StringLike#stripPrefix().(prefix)
-  String => java.lang.String#
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -1656,11 +1475,10 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Traits.scala
 Text => non-empty
 Language => Scala
-Symbols => 11 entries
+Symbols => 10 entries
 Occurrences => 14 entries
 
 Symbols:
-java.lang.Object#`<init>`(). => ctor <init>: ()
 local0 => selfparam self: V with C {}
   V => traits.V#
   C => traits.C#
@@ -1705,49 +1523,10 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
-Symbols => 144 entries
+Symbols => 125 entries
 Occurrences => 228 entries
 
 Symbols:
-java. => package java
-java.nio. => package nio
-java.nio.file. => package file
-java.nio.file.LinkOption# => final enum class LinkOption.{+3 decls}
-  extends Enum[LinkOption]
-  extends OpenOption
-  extends CopyOption
-java.nio.file.LinkOption#NOFOLLOW_LINKS. => final static enum field NOFOLLOW_LINKS: LinkOption
-  LinkOption => java.nio.file.LinkOption#
-scala. => package scala
-scala.Int# => abstract final class Int.{+111 decls}
-  extends AnyVal
-scala.Option# => @SerialVersionUID abstract sealed class Option[A: <?>].{+25 decls}
-  extends AnyRef
-  extends Product
-  extends Serializable
-scala.Predef.`???`(). => method ???: : Nothing
-  Nothing => scala.Nothing#
-scala.Predef.classOf(). => method classOf: [T: <?>] => : Class[T]
-  T => scala.Predef.classOf().[T]
-  Class => scala.Predef.Class#
-scala.annotation. => package annotation
-scala.annotation.StaticAnnotation# => trait StaticAnnotation
-  extends Annotation
-scala.collection.SeqLike#length(). => abstract method length: : Int
-  Int => scala.Int#
-scala.language. => final object language.{+7 decls}
-  extends AnyRef
-scala.language.existentials(). => implicit lazy val method existentials: : existentials
-  existentials => scala.languageFeature.existentials#
-scala.language.higherKinds(). => implicit lazy val method higherKinds: : higherKinds
-  higherKinds => scala.languageFeature.higherKinds#
-scala.package.List# => type List: [A: <?>] => >: List[A] <: List[A]
-  A => scala.package.List#[A]
-  List => scala.collection.immutable.List#
-scala.util. => package util
-scala.util.Either. => final object Either.{+9 decls}
-  extends AnyRef
-  extends Serializable
 types. => package types
 types.B# => class B.{+1 decls}
   extends AnyRef
@@ -2292,7 +2071,7 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Vals.scala
 Text => non-empty
 Language => Scala
-Symbols => 45 entries
+Symbols => 41 entries
 Occurrences => 117 entries
 
 Symbols:
@@ -2392,16 +2171,6 @@ local3 => var local yl: Int
   Int => scala.Int#
 local4 => implicit var local yil: Int
   Int => scala.Int#
-scala.Int# => abstract final class Int.{+111 decls}
-  extends AnyVal
-scala.Int#`+`(+4). => abstract method +: (x: <?>): Int
-  x => scala.Int#`+`(+4).(x)
-  Int => scala.Int#
-scala.Predef.`???`(). => method ???: : Nothing
-  Nothing => scala.Nothing#
-scala.Predef.println(+1). => method println: (x: <?>): Unit
-  x => scala.Predef.println(+1).(x)
-  Unit => scala.Unit#
 
 Occurrences:
 [0:8..0:15): example <= example.

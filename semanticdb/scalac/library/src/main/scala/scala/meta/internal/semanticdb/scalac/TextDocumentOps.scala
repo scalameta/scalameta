@@ -248,8 +248,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   }
                 }
               }
-              if (mtree.isDefinition && config.symbols.saveDefinitions) saveSymbol()
-              if (mtree.isReference && config.symbols.saveReferences) saveSymbol()
+              if (mtree.isDefinition && config.symbols.isDefinitions) saveSymbol()
 
               def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
                 if (map.contains(mtree)) {

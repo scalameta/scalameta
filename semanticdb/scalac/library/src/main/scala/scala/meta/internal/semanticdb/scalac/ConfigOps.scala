@@ -80,6 +80,8 @@ object SemanticdbConfig {
         config = config.copy(mode = mode)
       case SetFailures(FailureMode(severity)) =>
         config = config.copy(failures = severity)
+      case option @ SetDenotations("all") =>
+        errFn(s"$option is no longer supported.")
       case option @ SetDenotations(SymbolMode(denotations)) =>
         // TODO(olafur): remove this on next breaking release
         reporter.warning(
@@ -150,17 +152,14 @@ object FailureMode {
 }
 
 sealed abstract class SymbolMode {
-  import SymbolMode._
   def name: String = toString.toLowerCase
-  def saveDefinitions: Boolean = this == All || this == Definitions
-  def saveReferences: Boolean = this == All
+  import SymbolMode._
+  def isDefinitions: Boolean = this == Definitions
+  def isNone: Boolean = this == None
 }
 object SymbolMode {
-  def name: String = toString.toLowerCase
-  def unapply(arg: String): Option[SymbolMode] =
-    all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, Definitions, None)
-  case object All extends SymbolMode
+  def unapply(arg: String): Option[SymbolMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(Definitions, None)
   case object Definitions extends SymbolMode
   case object None extends SymbolMode
 }

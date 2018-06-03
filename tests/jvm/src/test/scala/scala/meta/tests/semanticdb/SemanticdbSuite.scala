@@ -17,7 +17,7 @@ import scala.meta.testkit.DiffAssertions
 
 abstract class SemanticdbSuite(
     mode: SemanticdbMode = SemanticdbMode.Fat,
-    symbols: SymbolMode = SymbolMode.All,
+    symbols: SymbolMode = SymbolMode.Definitions,
     types: TypeMode = TypeMode.All
 ) extends FunSuite
     with DiffAssertions { self =>

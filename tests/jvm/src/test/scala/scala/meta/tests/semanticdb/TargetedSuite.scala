@@ -325,17 +325,6 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Nothing => scala.Nothing#
        |f.T#f6(). => protected[f] var method f6: : Nothing
        |  Nothing => scala.Nothing#
-       |scala. => package scala
-       |scala.Int# => abstract final class Int.{+111 decls}
-       |  extends AnyVal
-       |scala.Predef.`???`(). => method ???: : Nothing
-       |  Nothing => scala.Nothing#
-       |scala.language. => final object language.{+7 decls}
-       |  extends AnyRef
-       |scala.language.experimental. => final object experimental.{+1 decls}
-       |  extends AnyRef
-       |scala.language.experimental.macros(). => implicit lazy val method macros: : macros
-       |  macros => scala.languageFeature.experimental.macros#
      """.trim.stripMargin
     )
   }
@@ -409,43 +398,9 @@ class TargetedSuite extends SemanticdbSuite() {
        |i.a.y(). => val method y: : HashSet[Int]
        |  HashSet => scala.collection.mutable.HashSet#
        |  Int => scala.Int#
-       |java.lang.Object#`<init>`(). => ctor <init>: ()
        |local0 => val local result: b.X
        |  b => i.a.foo().(b)
        |  X => i.B#X#
-       |scala. => package scala
-       |scala.Int# => abstract final class Int.{+111 decls}
-       |  extends AnyVal
-       |scala.collection. => package collection
-       |scala.collection.generic.GenericCompanion#empty(). => method empty: [A: <?>] => : CC[A]
-       |  A => scala.collection.generic.GenericCompanion#empty().[A]
-       |  CC => scala.collection.generic.GenericCompanion#[CC]
-       |scala.collection.mutable. => package mutable
-       |scala.collection.mutable.HashSet# => @SerialVersionUID class HashSet[A: <?>].{+18 decls}
-       |  extends AbstractSet[A]
-       |  extends Set[A]
-       |  extends GenericSetTemplate[A, HashSet]
-       |  extends SetLike[A, HashSet[A]]
-       |  extends FlatHashTable[A]
-       |  extends CustomParallelizable[A, ParHashSet[A]]
-       |  extends Serializable
-       |scala.collection.mutable.HashSet. => final object HashSet.{+3 decls}
-       |  extends MutableSetFactory[HashSet]
-       |  extends Serializable
-       |scala.collection.mutable.HashSet.empty(). => method empty: [A: <?>] => : HashSet[A]
-       |  A => scala.collection.mutable.HashSet.empty().[A]
-       |  HashSet => scala.collection.mutable.HashSet#
-       |scala.collection.mutable.ListBuffer# => @SerialVersionUID final class ListBuffer[A: <?>].{+39 decls}
-       |  extends AbstractBuffer[A]
-       |  extends Buffer[A]
-       |  extends GenericTraversableTemplate[A, ListBuffer]
-       |  extends BufferLike[A, ListBuffer[A]]
-       |  extends ReusableBuilder[A, List[A]]
-       |  extends SeqForwarder[A]
-       |  extends Serializable
-       |scala.collection.mutable.ListBuffer. => final object ListBuffer.{+3 decls}
-       |  extends SeqFactory[ListBuffer]
-       |  extends Serializable
     """.stripMargin.trim
       .replaceAllLiterally(
         ListBufferDeclsInString,
@@ -557,19 +512,6 @@ class TargetedSuite extends SemanticdbSuite() {
       |}""".stripMargin,
     """|_empty_.o. => final object o
        |  extends AnyRef
-       |scala.Int# => abstract final class Int.{+111 decls}
-       |  extends AnyVal
-       |scala.collection.IterableLike#head(). => method head: : A
-       |  A => scala.collection.IterableLike#[A]
-       |scala.collection.immutable.List. => final object List.{+7 decls}
-       |  extends SeqFactory[List]
-       |  extends Serializable
-       |scala.collection.immutable.List.newBuilder(). => method newBuilder: [A: <?>] => : Builder[A, List[A]]
-       |  A => scala.collection.immutable.List.newBuilder().[A]
-       |  Builder => scala.collection.mutable.Builder#
-       |  List => scala.collection.immutable.List#
-       |scala.collection.mutable.Builder#result(). => abstract method result: (): To
-       |  To => scala.collection.mutable.Builder#[To]
     """.stripMargin.trim
   )
 
@@ -602,20 +544,6 @@ class TargetedSuite extends SemanticdbSuite() {
     "case class u(a: Int); object ya { u.<<unapply>>(u(2)) }", { (db, first) =>
       val denotation = db.symbols.find(_.symbol == first).get
       assert(first == "_empty_.u.unapply().")
-    }
-  )
-
-  targeted(
-    """
-    object v {
-      new Object().<<toString>>
-      List(1).<<toString>>
-    }
-    """, { (db, objectToString, listToString) =>
-      val denotation1 = db.symbols.find(_.symbol == objectToString).get
-      val denotation2 = db.symbols.find(_.symbol == listToString).get
-      assert(denotation1.language.isJava)
-      assert(!denotation2.language.isJava)
     }
   )
 
@@ -749,15 +677,6 @@ class TargetedSuite extends SemanticdbSuite() {
        |_empty_.ac.y._$1# => abstract type _$1: >: Nothing <: Any
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
-       |scala.Int. => final object Int.{+8 decls}
-       |  extends AnyRef
-       |  extends AnyValCompanion
-       |scala.Int.MaxValue(). => final val method MaxValue: : 2147483647
-       |scala.Predef.Class# => type Class: [T: <?>] => >: Class[T] <: Class[T]
-       |  T => scala.Predef.Class#[T]
-       |  Class => java.lang.Class#
-       |scala.Predef.`???`(). => method ???: : Nothing
-       |  Nothing => scala.Nothing#
     """.stripMargin
   )
 
@@ -825,12 +744,6 @@ class TargetedSuite extends SemanticdbSuite() {
        |  Int => scala.Int#
        |_empty_.ad.zz.$anon#y(). => val method y: : Int
        |  Int => scala.Int#
-       |java.lang.Object#`<init>`(). => ctor <init>: ()
-       |scala.Any# => abstract class Any.{+9 decls}
-       |scala.AnyRef# => type AnyRef: >: Object <: Object
-       |  Object => java.lang.Object#
-       |scala.Int# => abstract final class Int.{+111 decls}
-       |  extends AnyVal
     """.stripMargin
   )
 

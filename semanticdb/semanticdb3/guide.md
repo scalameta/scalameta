@@ -252,16 +252,13 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
   <tr>
     <td><code>-P:semanticdb:symbols:&lt;value&gt;</code></td>
     <td>
-      <code>all</code>,<br/>
       <code>definitions</code>,<br/>
       <code>none</code><br/>
     </td>
     <td>
       Specifies what symbols will appear <code>TextDocument.symbols</code>
       (<code>none</code> for none,
-      <code>definitions</code> for just symbols defined in the current program,
-      <code>all</code> for symbols either defined or referenced from the current
-      program).
+      <code>definitions</code> for just symbols defined in the current program).
     </td>
     <td><code>definitions</code></td>
   </tr>

@@ -15,7 +15,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       expected: String
   ): Unit = {
     test(logger.revealWhitespace(original)) {
-      val options = List("-P:semanticdb:symbols:all")
+      val options = List("-P:semanticdb:symbols:definitions")
       val document = toTextDocument(compiler, original, options)
       val syntax = Print.document(document)
       assertNoDiff(syntax, expected)
@@ -41,7 +41,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Uri => interactive.scala
       |Text => non-empty
       |Language => Scala
-      |Symbols => 7 entries
+      |Symbols => 3 entries
       |Occurrences => 10 entries
       |Diagnostics => 1 entries
       |Synthetics => 2 entries
@@ -53,14 +53,6 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |b.a.x(). => val method x: : List[Nothing]
       |  List => scala.collection.immutable.List#
       |  Nothing => scala.Nothing#
-      |scala. => package scala
-      |scala.Predef.any2stringadd#`+`(). => method +: (other: <?>): String
-      |  other => scala.Predef.any2stringadd#`+`().(other)
-      |  String => scala.Predef.String#
-      |scala.collection.immutable.List. => final object List.{+7 decls}
-      |  extends SeqFactory[List]
-      |  extends Serializable
-      |scala.concurrent. => package concurrent
       |
       |Occurrences:
       |[0:8..0:9): b <= b.
@@ -105,7 +97,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Uri => interactive.scala
       |Text => non-empty
       |Language => Scala
-      |Symbols => 4 entries
+      |Symbols => 3 entries
       |Occurrences => 4 entries
       |Diagnostics => 1 entries
       |
@@ -116,7 +108,6 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |  a => _empty_.b.add().(a)
       |  Int => scala.Int#
       |_empty_.b.add().(a) => param a<?>
-      |_empty_.b.add().(a)`<error: <none>>`# => class <error: <none>>
       |
       |Occurrences:
       |[1:7..1:8): b <= _empty_.b.
