@@ -74,9 +74,8 @@ object Scalalib {
     )
     val builtinSig = {
       val decls = symbols.filter(_.kind.isMethod)
-      val declSymbols = decls.map(_.symbol)
-      val declarations = if (kind.isClass) ctor.symbol +: declSymbols else declSymbols
-      val tpe = s.ClassInfoType(Nil, parents, declarations)
+      val declarations = if (kind.isClass) ctor +: decls else decls
+      val tpe = s.ClassInfoType(Nil, parents, declarations.map(_.strip))
       s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))
     }
     val builtin = s.SymbolInformation(
@@ -132,9 +131,8 @@ object Scalalib {
           tpe = Some(paramSig))
     }
     val methodSig = {
-      val paramSymbols = params.map(_.symbol)
       val returnType = s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, retTpeSymbol, Nil)))
-      val methodType = s.MethodType(Nil, List(s.MethodType.ParameterList(paramSymbols)), Some(returnType))
+      val methodType = s.MethodType(Nil, List(s.MethodType.ParameterList(params.map(_.strip))), Some(returnType))
       s.Type(tag = t.METHOD_TYPE, methodType = Some(methodType))
     }
     val method = s.SymbolInformation(

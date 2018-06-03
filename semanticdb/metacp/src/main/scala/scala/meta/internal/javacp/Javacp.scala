@@ -37,15 +37,15 @@ object Javacp {
       scope: Scope): Seq[s.SymbolInformation] = {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
-    val decls = ListBuffer.empty[String]
+    val decls = ListBuffer.empty[s.SymbolInformation]
 
     def addInfo(
         symbol: String,
         kind: s.SymbolInformation.Kind,
         name: String,
         tpe: Option[s.Type],
-        access: Int): Unit = {
-      buf += s.SymbolInformation(
+        access: Int): s.SymbolInformation = {
+      val info = s.SymbolInformation(
         symbol = symbol,
         language = l.JAVA,
         kind = kind,
@@ -55,6 +55,8 @@ object Javacp {
         annotations = sannotations(access),
         accessibility = saccessibility(access, symbol)
       )
+      buf += info
+      info
     }
 
     if (isAnonymousClass(node)) return Nil
@@ -115,7 +117,7 @@ object Javacp {
           if (field.signature == null) field.desc else field.signature,
           new FieldSignatureVisitor
         )
-        addInfo(
+        val fieldInfo = addInfo(
           fieldSymbol,
           k.FIELD,
           field.name,
@@ -123,7 +125,7 @@ object Javacp {
           field.access
         )
 
-        decls += fieldSymbol
+        decls += fieldInfo.strip
       }
     }
 
@@ -174,7 +176,7 @@ object Javacp {
             method.signature.params
           }
 
-        val parameterSymbols: List[String] = params.zipWithIndex.map {
+        val parameters = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
             val paramName = {
               if (method.node.parameters == null) "param" + i
@@ -200,8 +202,7 @@ object Javacp {
               paramName,
               Some(paramTpe),
               o.ACC_PUBLIC
-            )
-            paramSymbol
+            ).strip
         }
 
         val returnType = {
@@ -215,14 +216,14 @@ object Javacp {
           tag = s.Type.Tag.METHOD_TYPE,
           methodType = Some(
             s.MethodType(
-              typeParameters = methodTypeParameters.map(_.symbol),
-              parameters = s.MethodType.ParameterList(parameterSymbols) :: Nil,
+              typeParameters = methodTypeParameters.map(_.strip),
+              parameters = s.MethodType.ParameterList(parameters) :: Nil,
               returnType = returnType
             )
           )
         )
 
-        addInfo(
+        val methodInfo = addInfo(
           methodSymbol,
           methodKind,
           method.node.name,
@@ -230,14 +231,14 @@ object Javacp {
           method.node.access
         )
 
-        decls += methodSymbol
+        decls += methodInfo.strip
     }
 
     // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
     val directInnerClasses = node.innerClasses.asScala.filter(_.outerName == node.name)
     directInnerClasses.foreach { ic =>
       val innerClassSymbol = ssym(ic.name)
-      decls += innerClassSymbol
+      decls += s.SymbolInformation(symbol = innerClassSymbol)
       val innerPath = asmNameToPath(ic.name, toplevel.base)
       val innerClassNode = innerPath.toClassNode
       buf ++= sinfos(toplevel, innerClassNode, ic.access, classScope)
@@ -247,7 +248,7 @@ object Javacp {
       tag = s.Type.Tag.CLASS_INFO_TYPE,
       classInfoType = Some(
         s.ClassInfoType(
-          typeParameters = classTypeParameters.map(_.symbol),
+          typeParameters = classTypeParameters.map(_.strip),
           parents = classParents,
           declarations = decls
         )

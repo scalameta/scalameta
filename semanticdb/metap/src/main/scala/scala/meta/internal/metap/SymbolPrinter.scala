@@ -12,10 +12,6 @@ import scala.meta.internal.semanticdb3.SymbolInformation.Property._
 import scala.meta.internal.semanticdb3.Type.Tag._
 
 trait SymbolPrinter extends BasePrinter {
-  private lazy val symtab: Map[String, SymbolInformation] = {
-    doc.symbols.map(info => (info.symbol, info)).toMap
-  }
-
   def pprint(info: SymbolInformation): Unit = {
     out.print(info.symbol)
     out.print(" => ")
@@ -44,20 +40,19 @@ trait SymbolPrinter extends BasePrinter {
       notes.visit(info)
       rep(info.annotations, " ", " ")(pprint)
       opt(info.accessibility)(pprint)
-      def has(prop: Property) = (info.properties & prop.value) != 0
-      if (has(ABSTRACT)) out.print("abstract ")
-      if (has(FINAL)) out.print("final ")
-      if (has(SEALED)) out.print("sealed ")
-      if (has(IMPLICIT)) out.print("implicit ")
-      if (has(LAZY)) out.print("lazy ")
-      if (has(CASE)) out.print("case ")
-      if (has(COVARIANT)) out.print("covariant ")
-      if (has(CONTRAVARIANT)) out.print("contravariant ")
-      if (has(VAL)) out.print("val ")
-      if (has(VAR)) out.print("var ")
-      if (has(STATIC)) out.print("static ")
-      if (has(PRIMARY)) out.print("primary ")
-      if (has(ENUM)) out.print("enum ")
+      if (info.has(ABSTRACT)) out.print("abstract ")
+      if (info.has(FINAL)) out.print("final ")
+      if (info.has(SEALED)) out.print("sealed ")
+      if (info.has(IMPLICIT)) out.print("implicit ")
+      if (info.has(LAZY)) out.print("lazy ")
+      if (info.has(CASE)) out.print("case ")
+      if (info.has(COVARIANT)) out.print("covariant ")
+      if (info.has(CONTRAVARIANT)) out.print("contravariant ")
+      if (info.has(VAL)) out.print("val ")
+      if (info.has(VAR)) out.print("var ")
+      if (info.has(STATIC)) out.print("static ")
+      if (info.has(PRIMARY)) out.print("primary ")
+      if (info.has(ENUM)) out.print("enum ")
       info.kind match {
         case LOCAL => out.print("local ")
         case FIELD => out.print("field ")
@@ -120,8 +115,9 @@ trait SymbolPrinter extends BasePrinter {
       def ref(sym: String): Unit = {
         pprint(sym, Reference)
       }
-      def defn(sym: String): Unit = {
-        pprint(sym, Definition)
+      def defn(info: SymbolInformation): Unit = {
+        notes.discover(info)
+        pprint(info.symbol, Definition)
       }
       def prefix(tpe: Type): Unit = {
         tpe.tag match {
@@ -197,9 +193,9 @@ trait SymbolPrinter extends BasePrinter {
             out.print(" ")
             rep(anns, " ", "")(pprint)
           case EXISTENTIAL_TYPE =>
-            val Some(ExistentialType(tparams, utpe)) = tpe.existentialType
+            val Some(ExistentialType(utpe, decls)) = tpe.existentialType
             utpe.foreach(normal)
-            rep(" forSome { ", tparams, "; ", " }")(defn)
+            rep(" forSome { ", decls, "; ", " }")(defn)
           case UNIVERSAL_TYPE =>
             val Some(UniversalType(tparams, utpe)) = tpe.universalType
             rep("[", tparams, ", ", "] => ")(defn)
@@ -269,20 +265,19 @@ trait SymbolPrinter extends BasePrinter {
           // since there are subtle differences in behavior.
           rep(info.annotations, " ", " ")(pprint)
           opt(info.accessibility)(pprint)
-          def has(prop: Property) = (info.properties & prop.value) != 0
-          if (has(ABSTRACT)) out.print("abstract ")
-          if (has(FINAL)) out.print("final ")
-          if (has(SEALED)) out.print("sealed ")
-          if (has(IMPLICIT)) out.print("implicit ")
-          if (has(LAZY)) out.print("lazy ")
-          if (has(CASE)) out.print("case ")
-          if (has(COVARIANT)) out.print("+")
-          if (has(CONTRAVARIANT)) out.print("-")
-          if (has(VAL)) out.print("val ")
-          if (has(VAR)) out.print("var ")
-          if (has(STATIC)) out.print("static ")
-          if (has(PRIMARY)) out.print("")
-          if (has(ENUM)) out.print("enum ")
+          if (info.has(ABSTRACT)) out.print("abstract ")
+          if (info.has(FINAL)) out.print("final ")
+          if (info.has(SEALED)) out.print("sealed ")
+          if (info.has(IMPLICIT)) out.print("implicit ")
+          if (info.has(LAZY)) out.print("lazy ")
+          if (info.has(CASE)) out.print("case ")
+          if (info.has(COVARIANT)) out.print("+")
+          if (info.has(CONTRAVARIANT)) out.print("-")
+          if (info.has(VAL)) out.print("val ")
+          if (info.has(VAR)) out.print("var ")
+          if (info.has(STATIC)) out.print("static ")
+          if (info.has(PRIMARY)) out.print("")
+          if (info.has(ENUM)) out.print("enum ")
           info.kind match {
             case LOCAL => out.print("")
             case FIELD => out.print("")
@@ -324,14 +319,26 @@ trait SymbolPrinter extends BasePrinter {
     }
   }
 
+  private lazy val docSymtab: Map[String, SymbolInformation] = {
+    doc.symbols.map(info => (info.symbol, info)).toMap
+  }
+
   private class InfoNotes {
     private val buf = mutable.ListBuffer[SymbolInformation]()
+    private val noteSymtab = mutable.Map[String, SymbolInformation]()
+
+    def discover(info: SymbolInformation): Unit = {
+      if (!docSymtab.contains(info.symbol) && info.kind != UNKNOWN_KIND) {
+        noteSymtab(info.symbol) = info
+      }
+    }
 
     def visit(sym: String): SymbolInformation = {
-      val info = symtab.getOrElse(sym, {
+      val symtabInfo = noteSymtab.get(sym).orElse(docSymtab.get(sym))
+      val info = symtabInfo.getOrElse {
         val name = if (sym.isGlobal) sym.desc.name else sym
         SymbolInformation(symbol = sym, name = name)
-      })
+      }
       visit(info)
     }
 

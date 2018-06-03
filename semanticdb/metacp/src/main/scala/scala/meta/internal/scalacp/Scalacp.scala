@@ -249,7 +249,7 @@ object Scalacp {
             val sparents = parents.flatMap(loop)
             Some(s.Type(tag = t.WITH_TYPE, withType = Some(s.WithType(sparents))))
           }
-          val sdecls = sym.children.map(ssymbol)
+          val sdecls = sym.children.map(sym => s.SymbolInformation(symbol = ssymbol(sym)))
           Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
         case AnnotatedType(tpe, anns) =>
           val stag = t.ANNOTATED_TYPE
@@ -259,18 +259,18 @@ object Scalacp {
           Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(sanns, stpe))))
         case ExistentialType(tpe, tparams) =>
           val stag = t.EXISTENTIAL_TYPE
-          val stparams = tparams.map(ssymbol)
           val stpe = loop(tpe)
-          Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stparams, stpe))))
+          val sdecls = tparams.map(sym => s.SymbolInformation(symbol = ssymbol(sym)))
+          Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stpe, sdecls))))
         case ClassInfoType(sym, parents) =>
           val stag = t.CLASS_INFO_TYPE
           val sparents = parents.flatMap(loop)
-          val sdecls = sym.semanticdbDecls.ssyms
+          val sdecls = sym.semanticdbDecls.sinfos
           Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
         case _: NullaryMethodType | _: MethodType =>
           val stag = t.METHOD_TYPE
           val sparamss = tpe.paramss.map { params =>
-            val sparams = params.map(ssymbol)
+            val sparams = params.map(sym => s.SymbolInformation(symbol = ssymbol(sym)))
             s.MethodType.ParameterList(sparams)
           }
           val sret = loop(tpe.ret)
@@ -281,7 +281,7 @@ object Scalacp {
           val shi = loop(hi)
           Some(s.Type(tag = stag, typeType = Some(s.TypeType(Nil, slo, shi))))
         case PolyType(tpe, tparams) =>
-          val stparams = tparams.map(ssymbol)
+          val stparams = tparams.map(sym => s.SymbolInformation(symbol = ssymbol(sym)))
           loop(tpe).map { stpe =>
             if (stpe.tag == t.CLASS_INFO_TYPE) {
               stpe.update(_.classInfoType.typeParameters := stparams)
@@ -520,14 +520,15 @@ object Scalacp {
   }
 
   case class SemanticdbDecls(syms: List[Symbol]) {
-    lazy val ssyms: List[String] = {
-      val sbuf = List.newBuilder[String]
+    lazy val sinfos: List[s.SymbolInformation] = {
+      val sbuf = List.newBuilder[s.SymbolInformation]
       syms.foreach { sym =>
         val ssym = ssymbol(sym)
-        sbuf += ssym
+        sbuf += s.SymbolInformation(symbol = ssym)
         if (sym.isUsefulField && sym.isMutable) {
           val setterName = ssym.desc.name + "_="
-          sbuf += Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+          val setterSym = Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+          sbuf += s.SymbolInformation(symbol = setterSym)
         }
       }
       sbuf.result

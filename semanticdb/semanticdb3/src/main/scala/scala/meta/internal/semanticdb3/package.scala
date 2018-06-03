@@ -10,6 +10,9 @@ package object semanticdb3 {
       has(prop) && has(prop2) && props.forall(has)
     def has(prop: SymbolInformation.Property): Boolean =
       (info.properties & prop.value) != 0
+    def strip: SymbolInformation = {
+      SymbolInformation(symbol = info.symbol)
+    }
   }
 
 }

@@ -39,7 +39,7 @@ object Synthetics {
     val setterTpe = {
       val unitTpe = s.TypeRef(None, "scala.Unit#", Nil)
       val unit = s.Type(tag = t.TYPE_REF, typeRef = Some(unitTpe))
-      val setterParams = s.MethodType.ParameterList(List(paramSym))
+      val setterParams = s.MethodType.ParameterList(List(paramInfo.strip))
       val setterTpe = s.MethodType(Nil, List(setterParams), Some(unit))
       s.Type(tag = t.METHOD_TYPE, methodType = Some(setterTpe))
     }

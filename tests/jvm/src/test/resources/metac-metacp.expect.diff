@@ -23,8 +23,12 @@ advanced.Existential#e1().
                typeRef {
 -                symbol: "local3"
 +                symbol: "advanced.Existential#e1()._$1#"
--        type_parameters: "local3"
-+        type_parameters: "advanced.Existential#e1()._$1#"
+         declarations {
+-          symbol: "local3"
++          symbol: "advanced.Existential#e1()._$1#"
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 ==========================
@@ -37,8 +41,12 @@ advanced.Existential#e2().
                    typeRef {
 -                    symbol: "local4"
 +                    symbol: "advanced.Existential#e2().T#"
--            type_parameters: "local4"
-+            type_parameters: "advanced.Existential#e2().T#"
+             declarations {
+-              symbol: "local4"
++              symbol: "advanced.Existential#e2().T#"
+               kind: UNKNOWN_KIND
+               properties: 0
+               name: ""
 
 
 =========================
@@ -46,14 +54,12 @@ advanced.Structural#s1().
 =========================
 --- metac
 +++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local0"
-+        declarations: "advanced.Structural#$anon#x()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
+         declarations {
+-          symbol: "local0"
++          symbol: "advanced.Structural#$anon#x()."
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 =========================
@@ -61,14 +67,12 @@ advanced.Structural#s2().
 =========================
 --- metac
 +++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local1"
-+        declarations: "advanced.Structural#s2().$anon#x()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
+         declarations {
+-          symbol: "local1"
++          symbol: "advanced.Structural#s2().$anon#x()."
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 ===================
@@ -81,8 +85,12 @@ advanced.Test.e2().
                    typeRef {
 -                    symbol: "local4"
 +                    symbol: "advanced.Test.T#"
--            type_parameters: "local4"
-+            type_parameters: "advanced.Test.T#"
+             declarations {
+-              symbol: "local4"
++              symbol: "advanced.Test.T#"
+               kind: UNKNOWN_KIND
+               properties: 0
+               name: ""
 
 
 ===================
@@ -90,14 +98,12 @@ advanced.Test.s1().
 ===================
 --- metac
 +++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local0"
-+        declarations: "advanced.Test.$anon#x()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
+         declarations {
+-          symbol: "local0"
++          symbol: "advanced.Test.$anon#x()."
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 ===================
@@ -105,14 +111,12 @@ advanced.Test.s2().
 ===================
 --- metac
 +++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local1"
-+        declarations: "advanced.Test.$anon#x()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
+         declarations {
+-          symbol: "local1"
++          symbol: "advanced.Test.$anon#x()."
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 ========
@@ -174,14 +178,12 @@ classes.N.anonClass().
 ======================
 --- metac
 +++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local1"
-+        declarations: "classes.N.anonClass().$anon#local()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
+         declarations {
+-          symbol: "local1"
++          symbol: "classes.N.anonClass().$anon#local()."
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 ========
@@ -204,16 +206,41 @@ example.Acc#
 ============
 --- metac
 +++ metacp
-     declarations: "example.Acc#`<init>`()."
-     declarations: "example.Acc#m1()."
-     declarations: "example.Acc#m2()."
--    declarations: "example.Acc#m3()."
-     declarations: "example.Acc#m4()."
-     declarations: "example.Acc#m5()."
-     declarations: "example.Acc#m6()."
-     declarations: "example.Acc#m7()."
-+    declarations: "example.Acc#m3()."
- accessibility {
+       language: UNKNOWN_LANGUAGE
+     declarations {
+-      symbol: "example.Acc#m3()."
++      symbol: "example.Acc#m4()."
+       kind: UNKNOWN_KIND
+       properties: 0
+       name: ""
+       language: UNKNOWN_LANGUAGE
+     declarations {
+-      symbol: "example.Acc#m4()."
++      symbol: "example.Acc#m5()."
+       kind: UNKNOWN_KIND
+       properties: 0
+       name: ""
+       language: UNKNOWN_LANGUAGE
+     declarations {
+-      symbol: "example.Acc#m5()."
++      symbol: "example.Acc#m6()."
+       kind: UNKNOWN_KIND
+       properties: 0
+       name: ""
+       language: UNKNOWN_LANGUAGE
+     declarations {
+-      symbol: "example.Acc#m6()."
++      symbol: "example.Acc#m7()."
+       kind: UNKNOWN_KIND
+       properties: 0
+       name: ""
+       language: UNKNOWN_LANGUAGE
+     declarations {
+-      symbol: "example.Acc#m7()."
++      symbol: "example.Acc#m3()."
+       kind: UNKNOWN_KIND
+       properties: 0
+       name: ""
 
 
 ==============================
@@ -243,14 +270,12 @@ example.Methods#m12b().(x)
 ==========================
 --- metac
 +++ metacp
- tpe {
-   tag: STRUCTURAL_TYPE
-   structuralType {
--    declarations: "local0"
-+    declarations: "example.Methods#$anon#x()."
-     tpe {
-       tag: WITH_TYPE
-       withType {
+     declarations {
+-      symbol: "local0"
++      symbol: "example.Methods#$anon#x()."
+       kind: UNKNOWN_KIND
+       properties: 0
+       name: ""
 
 
 =========================
@@ -288,9 +313,12 @@ example.Methods#m14().(x)
        typeRef {
 -        symbol: "local1"
 +        symbol: "example.Methods#m14().(x)T#"
--    type_parameters: "local1"
-+    type_parameters: "example.Methods#m14().(x)T#"
- accessibility {
+     declarations {
+-      symbol: "local1"
++      symbol: "example.Methods#m14().(x)T#"
+       kind: UNKNOWN_KIND
+       properties: 0
+       name: ""
 
 
 ======
@@ -313,18 +341,28 @@ flags.p.package.
 ================
 --- metac
 +++ metacp
-     declarations: "flags.p.package.C#"
-     declarations: "flags.p.package.T1#"
-     declarations: "flags.p.package.T2#"
-+    declarations: "flags.p.package.S#"
-     declarations: "flags.p.package.U#"
-     declarations: "flags.p.package.V#"
-     declarations: "flags.p.package.X."
-     declarations: "flags.p.package.Y#"
-     declarations: "flags.p.package.Z#"
-     declarations: "flags.p.package.AA#"
--    declarations: "flags.p.package.S#"
-     declarations: "flags.p.package.xs1()."
+       language: UNKNOWN_LANGUAGE
+     declarations {
++      symbol: "flags.p.package.S#"
++      kind: UNKNOWN_KIND
++      properties: 0
++      name: ""
++      language: UNKNOWN_LANGUAGE
++    declarations {
+       symbol: "flags.p.package.U#"
+       kind: UNKNOWN_KIND
+       properties: 0
+       language: UNKNOWN_LANGUAGE
+     declarations {
+-      symbol: "flags.p.package.S#"
+-      kind: UNKNOWN_KIND
+-      properties: 0
+-      name: ""
+-      language: UNKNOWN_LANGUAGE
+-    declarations {
+       symbol: "flags.p.package.xs1()."
+       kind: UNKNOWN_KIND
+       properties: 0
 
 
 =====================
@@ -428,14 +466,12 @@ types.Test.C#compoundType1().
 =============================
 --- metac
 +++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local0"
-+        declarations: "types.Test.C#$anon#k()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
+         declarations {
+-          symbol: "local0"
++          symbol: "types.Test.C#$anon#k()."
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 =============================
@@ -443,14 +479,12 @@ types.Test.C#compoundType3().
 =============================
 --- metac
 +++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local1"
-+        declarations: "types.Test.C#$anon#k()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
+         declarations {
+-          symbol: "local1"
++          symbol: "types.Test.C#$anon#k()."
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 =============================
@@ -458,14 +492,12 @@ types.Test.C#compoundType4().
 =============================
 --- metac
 +++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local3"
-+        declarations: "types.Test.C#compoundType4().$anon#k()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
+         declarations {
+-          symbol: "local3"
++          symbol: "types.Test.C#compoundType4().$anon#k()."
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 =============================
@@ -473,14 +505,12 @@ types.Test.C#compoundType6().
 =============================
 --- metac
 +++ metacp
-     return_type {
-       tag: STRUCTURAL_TYPE
-       structuralType {
--        declarations: "local5"
-+        declarations: "types.Test.C#compoundType6().$anon#k()."
-         tpe {
-           tag: WITH_TYPE
-           withType {
+         declarations {
+-          symbol: "local5"
++          symbol: "types.Test.C#compoundType6().$anon#k()."
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 ================================
@@ -493,8 +523,12 @@ types.Test.C#existentialType1().
            typeRef {
 -            symbol: "local7"
 +            symbol: "types.Test.C#existentialType1().T#"
--        type_parameters: "local7"
-+        type_parameters: "types.Test.C#existentialType1().T#"
+         declarations {
+-          symbol: "local7"
++          symbol: "types.Test.C#existentialType1().T#"
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 ================================
@@ -507,8 +541,12 @@ types.Test.C#existentialType2().
                typeRef {
 -                symbol: "local8"
 +                symbol: "types.Test.C#existentialType2()._$1#"
--        type_parameters: "local8"
-+        type_parameters: "types.Test.C#existentialType2()._$1#"
+         declarations {
+-          symbol: "local8"
++          symbol: "types.Test.C#existentialType2()._$1#"
+           kind: UNKNOWN_KIND
+           properties: 0
+           name: ""
 
 
 ===========================

@@ -831,7 +831,7 @@ class TargetedSuite extends SemanticdbSuite {
       val decls = classDenot.tpe.get.classInfoType.get.declarations
       assert(decls.nonEmpty)
       decls.foreach { decl =>
-        val declDenot = db.symbols.find(_.symbol == decl)
+        val declDenot = db.symbols.find(_.symbol == decl.symbol)
         assert(declDenot.isDefined, decl)
       }
     }

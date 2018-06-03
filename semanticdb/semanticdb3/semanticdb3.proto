@@ -122,9 +122,9 @@ message WithType {
 }
 
 message StructuralType {
-  reserved 1, 2;
+  reserved 1, 2, 3;
   Type tpe = 4;
-  repeated string declarations = 3;
+  repeated SymbolInformation declarations = 5;
 }
 
 message AnnotatedType {
@@ -134,26 +134,31 @@ message AnnotatedType {
 }
 
 message ExistentialType {
-  repeated string type_parameters = 2;
+  reserved 2;
   Type tpe = 1;
+  repeated SymbolInformation declarations = 3;
 }
 
 message UniversalType {
-  repeated string type_parameters = 1;
+  reserved 1;
+  repeated SymbolInformation type_parameters = 3;
   Type tpe = 2;
 }
 
 message ClassInfoType {
-  repeated string type_parameters = 1;
+  reserved 1, 3;
+  repeated SymbolInformation type_parameters = 4;
   repeated Type parents = 2;
-  repeated string declarations = 3;
+  repeated SymbolInformation declarations = 5;
 }
 
 message MethodType {
+  reserved 1;
   message ParameterList {
-    repeated string symbols = 1;
+    reserved 1;
+    repeated SymbolInformation symbols = 2;
   }
-  repeated string type_parameters = 1;
+  repeated SymbolInformation type_parameters = 4;
   repeated ParameterList parameters = 2;
   Type return_type = 3;
 }
@@ -167,7 +172,8 @@ message RepeatedType {
 }
 
 message TypeType {
-  repeated string type_parameters = 1;
+  reserved 1;
+  repeated SymbolInformation type_parameters = 4;
   Type lower_bound = 2;
   Type upper_bound = 3;
 }
