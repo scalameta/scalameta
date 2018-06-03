@@ -37,16 +37,16 @@ case class SemanticdbConfig(
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
-    CrashMode.Warning,
-    BinaryMode.Off,
-    FileFilter.matchEverything,
-    PathIO.workingDirectory,
-    PathIO.workingDirectory,
-    BinaryMode.On,
-    BinaryMode.On,
-    BinaryMode.On,
-    BinaryMode.On,
-    BinaryMode.On
+    crashes = CrashMode.Warning,
+    profiling = BinaryMode.Off,
+    fileFilter = FileFilter.matchEverything,
+    sourceroot = PathIO.workingDirectory,
+    targetroot = PathIO.workingDirectory,
+    text = BinaryMode.On,
+    symbols = BinaryMode.On,
+    occurrences = BinaryMode.On,
+    diagnostics = BinaryMode.On,
+    synthetics = BinaryMode.Off
   )
 
   private val SetCrashes = "crashes:(.*)".r
@@ -58,7 +58,7 @@ object SemanticdbConfig {
   private val SetSymbols = "symbols:(.*)".r
   private val SetOccurrences = "occurrences:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
-  private val SetSynthetics = "synthetics:(.*)".r
+  private val SetSynthetics = "experimental:synthetics:(.*)".r
   // ============ COMPATIBILITY WITH 3.X STARTS ============
   private val SetMode = "mode:(.*)".r
   private val SetFailures = "failures:(.*)".r
@@ -139,11 +139,11 @@ object SemanticdbConfig {
       case option @ SetMessages("none") =>
         deprecated(option, "diagnostics:off")
         config = config.copy(diagnostics = BinaryMode.Off)
-      case option @ SetSynthetics("all") =>
-        deprecated(option, "synthetics:on")
+      case option @ "synthetics:all" =>
+        deprecated(option, "experimental:synthetics:on")
         config = config.copy(synthetics = BinaryMode.On)
-      case option @ SetSynthetics("none") =>
-        deprecated(option, "synthetics:off")
+      case option @ "synthetics:none" =>
+        deprecated(option, "experimental:synthetics:off")
         config = config.copy(synthetics = BinaryMode.Off)
       case option @ SetOwners(_) =>
         unsupported(option)

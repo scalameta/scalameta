@@ -1,6 +1,11 @@
 package scala.meta.tests.semanticdb
 
+import scala.meta.internal.semanticdb.scalac._
+
 class SyntheticsSuite extends SemanticdbSuite {
+  override def customizeConfig(config: SemanticdbConfig) = {
+    config.copy(synthetics = BinaryMode.On)
+  }
 
   synthetics(
     """

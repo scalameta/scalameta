@@ -43,9 +43,11 @@ abstract class SemanticdbSuite extends FunSuite
   }
   private lazy val databaseOps: SemanticdbOps { val global: self.g.type } = new SemanticdbOps {
     val global: self.g.type = self.g
+    config = config.copy(crashes = CrashMode.Error)
+    config = customizeConfig(config)
   }
+  def customizeConfig(config: SemanticdbConfig): SemanticdbConfig = config
   import databaseOps._
-  config = config.copy(crashes = CrashMode.Error)
 
   private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
     val javaFile = File.createTempFile("paradise", ".scala")

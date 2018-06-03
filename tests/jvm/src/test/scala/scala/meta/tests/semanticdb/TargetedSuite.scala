@@ -499,9 +499,9 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:6..3:10): Name => _empty_.n.Name().
        |[3:11..3:15): name <= _empty_.n.name.name.
        |[4:4..4:7): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`().
-       |[4:10..4:13): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`().
+       |[4:10..4:13): #:: => scala.collection.immutable.Stream.consWrapper().
        |[4:14..4:20): Stream => scala.package.Stream().
-       |[4:21..4:26): empty => scala.collection.immutable.Stream.empty().
+       |[4:21..4:26): empty => scala.collection.immutable.Stream.consWrapper().
        |""".stripMargin.replaceAllLiterally(ConsWrapperInString, ConsWrapperActual)
   )
 
@@ -524,10 +524,10 @@ class TargetedSuite extends SemanticdbSuite {
     """|[0:7..0:8): p <= _empty_.p.
        |[1:6..1:9): lst <= _empty_.p.lst().
        |[1:14..1:17): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`().
-       |[1:20..1:23): #:: => scala.collection.immutable.Stream.ConsWrapper#`#::`().
+       |[1:20..1:23): #:: => scala.collection.immutable.Stream.consWrapper().
        |[1:24..1:30): Stream => scala.package.Stream().
-       |[1:31..1:36): empty => scala.collection.immutable.Stream.empty().
-       |[2:2..2:5): lst => _empty_.p.lst().
+       |[1:31..1:36): empty => scala.collection.immutable.Stream.consWrapper().
+       |[2:2..2:5): lst => scala.Predef.any2stringadd().
        |[2:6..2:7): + => scala.Predef.any2stringadd#`+`().
        |""".stripMargin.replaceAllLiterally(ConsWrapperInString, ConsWrapperActual)
   )
@@ -780,7 +780,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[1:20..1:21): y <= local1
        |[1:27..1:32): until => scala.runtime.RichInt#until().
        |[1:37..1:44): println => scala.Predef.println(+1).
-       |[1:45..1:46): x => local0
+       |[1:45..1:46): x => scala.Predef.ArrowAssoc().
        |[1:47..1:49): -> => scala.Predef.ArrowAssoc#`->`().
        |[1:50..1:51): x => local0
        |[2:6..2:7): i <= local2

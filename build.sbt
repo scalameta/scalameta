@@ -422,7 +422,8 @@ lazy val semanticdbIntegration = project
         s"-Yrangepos",
         s"-P:semanticdb:crashes:error", // fail fast during development.
         s"-P:semanticdb:exclude:Exclude.scala",
-        s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}"
+        s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
+        s"-P:semanticdb:experimental:synthetics:on"
       )
     },
     javacOptions += "-parameters"
