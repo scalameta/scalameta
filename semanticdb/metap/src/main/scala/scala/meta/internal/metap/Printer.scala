@@ -122,12 +122,16 @@ class Printer(out: PrintStream, doc: TextDocument) {
   private def pprint(sym: String, role: Role): List[String] = {
     val buf = List.newBuilder[String]
     buf += sym
-    symtab.get(sym) match {
-      case Some(info) =>
-        role match {
-          case REFERENCE =>
-            pprint(info.name)
-          case DEFINITION =>
+    role match {
+      case REFERENCE =>
+        symtab.get(sym) match {
+          case Some(info) => pprint(info.name)
+          case None if sym.isGlobal => pprint(sym.desc.name)
+          case _ => pprint(sym)
+        }
+      case DEFINITION =>
+        symtab.get(sym) match {
+          case Some(info) =>
             // NOTE: This mode is only used to print symbols that are part
             // of complex types, so we don't need to fully support all symbols here.
             rep(info.annotations, " ", " ") { ann =>
@@ -167,17 +171,12 @@ class Printer(out: PrintStream, doc: TextDocument) {
               case None =>
                 out.print("<?>")
             }
-          case UNKNOWN_ROLE | Role.Unrecognized(_) =>
-            ()
+          case None =>
+            if (sym.isGlobal) pprint(sym.desc.name) else pprint(sym)
+            out.print(": <?>")
         }
-      case None =>
-        if (sym.isGlobal) pprint(sym.desc.name)
-        else pprint(sym)
-        role match {
-          case REFERENCE => ()
-          case DEFINITION => out.print(": <?>")
-          case UNKNOWN_ROLE | Role.Unrecognized(_) => ()
-        }
+      case UNKNOWN_ROLE | Role.Unrecognized(_) =>
+        ()
     }
     buf.result
   }
