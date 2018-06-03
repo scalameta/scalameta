@@ -11,6 +11,7 @@ _root_.
   exclude.
   flags.
   objects.
+  selects.
   traits.
   types.
 classes.
@@ -59,6 +60,11 @@ flags.p.
   flags.p.package.
 objects.
   objects.X.
+selects.
+  selects.C#
+  selects.Existential#
+  selects.Structural#
+  selects.Test.
 traits.
   traits.C#
   traits.T#
@@ -115,6 +121,10 @@ example.`local-file`# => example/local$minusfile.class.semanticdb
 exclude.Exclude# => exclude/Exclude.class.semanticdb
 flags.p.package. => flags/p/package.class.semanticdb
 objects.X. => objects/X.class.semanticdb
+selects.C# => selects/C.class.semanticdb
+selects.Existential# => selects/Existential.class.semanticdb
+selects.Structural# => selects/Structural.class.semanticdb
+selects.Test. => selects/Test.class.semanticdb
 traits.C# => traits/C.class.semanticdb
 traits.T# => traits/T.class.semanticdb
 traits.U# => traits/U.class.semanticdb

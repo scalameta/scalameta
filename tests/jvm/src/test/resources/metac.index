@@ -9,6 +9,7 @@ _root_.
   example.
   flags.
   objects.
+  selects.
   traits.
   types.
 classes.
@@ -42,6 +43,11 @@ flags.p.
   flags.p.package.
 objects.
   objects.X.
+selects.
+  selects.C#
+  selects.Existential#
+  selects.Structural#
+  selects.Test.
 traits.
   traits.C#
   traits.T#
@@ -91,6 +97,11 @@ flags. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 flags.p.package. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 objects. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
 objects.X. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
+selects. => semanticdb/integration/src/main/scala/example/Selects.scala.semanticdb
+selects.C# => semanticdb/integration/src/main/scala/example/Selects.scala.semanticdb
+selects.Existential# => semanticdb/integration/src/main/scala/example/Selects.scala.semanticdb
+selects.Structural# => semanticdb/integration/src/main/scala/example/Selects.scala.semanticdb
+selects.Test. => semanticdb/integration/src/main/scala/example/Selects.scala.semanticdb
 traits. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.C# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb

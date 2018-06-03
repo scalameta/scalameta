@@ -28,7 +28,7 @@ object Test {
     def m: Int = ???
   }
 
-  class N {
+  trait N {
     def n: Int = ???
   }
 
@@ -55,11 +55,15 @@ object Test {
     val compoundType1: { def k: Int } = ???
     val compoundType2: M with N = ???
     val compoundType3: M with N { def k: Int } = ???
+    val compoundType4 = new { def k: Int = ??? }
+    val compoundType5 = new M with N
+    val compoundType6 = new M with N { def k: Int = ??? }
 
     val annType1: T @ann(42) = ???
     val annType2: T @ann1 @ann2 = ???
 
     val existentialType1: T forSome { type T } = ???
+    val existentialType2: List[_] = ???
 
     def typeLambda1[M[_]] = ???
     typeLambda1[({ type L[T] = List[T] })#L]

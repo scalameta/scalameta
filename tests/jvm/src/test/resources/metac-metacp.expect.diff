@@ -196,6 +196,108 @@ objects.
  language: SCALA
 
 
+========
+selects.
+========
+--- metac
++++ metacp
+ kind: PACKAGE
+ properties: 0
+ name: "selects"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: SCALA
+
+
+=========================
+selects.Existential#e1().
+=========================
+--- metac
++++ metacp
+             type_arguments {
+               tag: TYPE_REF
+               typeRef {
+-                symbol: "local3"
++                symbol: "selects.Existential#e1()._$1#"
+-        type_parameters: "local3"
++        type_parameters: "selects.Existential#e1()._$1#"
+
+
+=========================
+selects.Existential#e2().
+=========================
+--- metac
++++ metacp
+                 type_arguments {
+                   tag: TYPE_REF
+                   typeRef {
+-                    symbol: "local4"
++                    symbol: "selects.Existential#e2().T#"
+-            type_parameters: "local4"
++            type_parameters: "selects.Existential#e2().T#"
+
+
+========================
+selects.Structural#s2().
+========================
+--- metac
++++ metacp
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
+-        declarations: "local0"
++        declarations: "selects.Structural#s2().$anon#x()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
+
+
+==================
+selects.Test.e2().
+==================
+--- metac
++++ metacp
+                 type_arguments {
+                   tag: TYPE_REF
+                   typeRef {
+-                    symbol: "local4"
++                    symbol: "selects.Test.T#"
+-            type_parameters: "local4"
++            type_parameters: "selects.Test.T#"
+
+
+==================
+selects.Test.s1().
+==================
+--- metac
++++ metacp
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
+-        declarations: "selects.Structural#$anon#x()."
++        declarations: "selects.Test.$anon#x()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
+
+
+==================
+selects.Test.s2().
+==================
+--- metac
++++ metacp
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
+-        declarations: "local0"
++        declarations: "selects.Test.$anon#x()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
+
+
 =======
 traits.
 =======
@@ -261,6 +363,36 @@ types.Test.C#annType2().
 -              symbol: "types.ann2#"
 
 
+=============================
+types.Test.C#compoundType4().
+=============================
+--- metac
++++ metacp
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
+-        declarations: "types.Test.C#compoundType4.$anon#k()."
++        declarations: "types.Test.C#compoundType4().$anon#k()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
+
+
+=============================
+types.Test.C#compoundType6().
+=============================
+--- metac
++++ metacp
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
+-        declarations: "types.Test.C#compoundType6.$anon#k()."
++        declarations: "types.Test.C#compoundType6().$anon#k()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
+
+
 ================================
 types.Test.C#existentialType1().
 ================================
@@ -273,6 +405,20 @@ types.Test.C#existentialType1().
 +            symbol: "types.Test.C#existentialType1().T#"
 -        type_parameters: "types.Test.C#existentialType1.T#"
 +        type_parameters: "types.Test.C#existentialType1().T#"
+
+
+================================
+types.Test.C#existentialType2().
+================================
+--- metac
++++ metacp
+             type_arguments {
+               tag: TYPE_REF
+               typeRef {
+-                symbol: "types.Test.C#existentialType2._$1#"
++                symbol: "types.Test.C#existentialType2()._$1#"
+-        type_parameters: "types.Test.C#existentialType2._$1#"
++        type_parameters: "types.Test.C#existentialType2()._$1#"
 
 
 ===========================
