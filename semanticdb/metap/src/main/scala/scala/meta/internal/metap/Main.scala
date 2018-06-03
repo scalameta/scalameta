@@ -11,6 +11,7 @@ import scala.math.Ordering
 import scala.util.control.NonFatal
 import scala.meta.cli._
 import scala.meta.internal.semanticdb3._
+import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.metap._
 import Diagnostic._
 import Severity._
@@ -216,18 +217,8 @@ class Main(settings: Settings, reporter: Reporter) {
             ()
         }
       case None =>
-        // FIXME: https://github.com/scalameta/scalameta/issues/1555
-        sym.split("[\\.|#]").toList match {
-          case _ :+ last =>
-            val approxName = {
-              val last1 = last.stripPrefix("(").stripPrefix("[")
-              val last2 = last1.stripSuffix(")").stripSuffix("]").stripSuffix("#")
-              last2.stripPrefix("`").stripSuffix("`")
-            }
-            pprint(approxName, doc)
-          case _ =>
-            out.print("<?>")
-        }
+        if (sym.isGlobal) pprint(sym.desc.name, doc)
+        else pprint(sym, doc)
         role match {
           case REFERENCE => ()
           case DEFINITION => out.print(": <?>")

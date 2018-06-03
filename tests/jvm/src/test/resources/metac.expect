@@ -1913,13 +1913,13 @@ types.Test.C#TypeType.m2(). => method m2: [T2 C] => : Nothing
   Nothing => scala.Nothing#
 types.Test.C#TypeType.m2().[T2] => typeparam T2: C
   C => types.Test.C#
-types.Test.C#TypeType.m3(). => method m3: [M3 [M3][_: <?>] => >: Nothing <: Any] => : Nothing
+types.Test.C#TypeType.m3(). => method m3: [M3 [_: <?>] => >: Nothing <: Any] => : Nothing
   M3 => types.Test.C#TypeType.m3().[M3]
-  M3][_ => types.Test.C#TypeType.m3().[M3][_]
+  _ => types.Test.C#TypeType.m3().[M3][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#TypeType.m3().[M3] => typeparam M3: [M3][_: <?>] => >: Nothing <: Any
-  M3][_ => types.Test.C#TypeType.m3().[M3][_]
+types.Test.C#TypeType.m3().[M3] => typeparam M3: [_: <?>] => >: Nothing <: Any
+  _ => types.Test.C#TypeType.m3().[M3][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
 types.Test.C#`<init>`(). => primary ctor <init>: ()
@@ -1977,13 +1977,13 @@ types.Test.C#thisType1(). => val method thisType1: : C.this.type
   C => types.Test.C#
 types.Test.C#thisType2(). => val method thisType2: : C.this.type
   C => types.Test.C#
-types.Test.C#typeLambda1(). => method typeLambda1: [M [M][_: <?>] => >: Nothing <: Any] => : Nothing
+types.Test.C#typeLambda1(). => method typeLambda1: [M [_: <?>] => >: Nothing <: Any] => : Nothing
   M => types.Test.C#typeLambda1().[M]
-  M][_ => types.Test.C#typeLambda1().[M][_]
+  _ => types.Test.C#typeLambda1().[M][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#typeLambda1().[M] => typeparam M: [M][_: <?>] => >: Nothing <: Any
-  M][_ => types.Test.C#typeLambda1().[M][_]
+types.Test.C#typeLambda1().[M] => typeparam M: [_: <?>] => >: Nothing <: Any
+  _ => types.Test.C#typeLambda1().[M][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
 types.Test.C#typeRef1(). => val method typeRef1: : C
