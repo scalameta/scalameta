@@ -183,12 +183,6 @@ class Main(settings: Settings, reporter: Reporter) {
             if ((info.properties & VAL.value) != 0) out.print("val ")
             if ((info.properties & VAR.value) != 0) out.print("var ")
             info.kind match {
-              case LOCAL =>
-                out.print("local ")
-                out.print(info.name)
-              case FIELD =>
-                out.print("field ")
-                out.print(info.name)
               case METHOD =>
                 out.print("method ")
                 out.print(info.name)
