@@ -1,6 +1,6 @@
 package scala.meta.tests.semanticdb
 
-class TargetedSuite2_11 extends SemanticdbSuite() {
+class TargetedSuite2_11 extends SemanticdbSuite {
 
   diagnostics(
     """

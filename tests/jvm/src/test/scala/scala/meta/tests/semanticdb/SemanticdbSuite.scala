@@ -15,10 +15,7 @@ import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
 
-abstract class SemanticdbSuite(
-    text: BinaryMode = BinaryMode.On,
-    symbols: BinaryMode = BinaryMode.On
-) extends FunSuite
+abstract class SemanticdbSuite extends FunSuite
     with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
@@ -48,11 +45,7 @@ abstract class SemanticdbSuite(
     val global: self.g.type = self.g
   }
   import databaseOps._
-  config = config.copy(
-    crashes = CrashMode.Error,
-    text = text,
-    symbols = symbols
-  )
+  config = config.copy(crashes = CrashMode.Error)
 
   private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
     val javaFile = File.createTempFile("paradise", ".scala")
