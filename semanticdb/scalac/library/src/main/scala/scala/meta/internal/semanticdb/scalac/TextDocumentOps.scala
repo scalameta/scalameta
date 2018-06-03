@@ -197,32 +197,32 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 binders += mtree.pos
                 occurrences(mtree.pos) = symbol
                 if (config.symbols.isOn) {
-                  def add(ms: m.Symbol, gs: g.Symbol): Unit = {
+                  def saveSymbol(ms: m.Symbol, gs: g.Symbol): Unit = {
                     if (gs.isUseful) {
                       symbols(ms) = gs.toSymbolInformation
                     }
                   }
-                  add(symbol, gsym)
+                  saveSymbol(symbol, gsym)
                   if (gsym.isClass && !gsym.isTrait) {
                     val gprim = gsym.primaryConstructor
                     if (gprim != g.NoSymbol) {
-                      add(gprim.toSemantic, gprim)
+                      saveSymbol(gprim.toSemantic, gprim)
                     }
                   }
                   if (gsym.isPrimaryConstructor) {
                     val gclassParams = gsym.info.paramss.flatten
-                    gclassParams.foreach(gp => add(gp.toSemantic, gp))
+                    gclassParams.foreach(gp => saveSymbol(gp.toSemantic, gp))
                   }
                   if (gsym.isGetter) {
                     val gfield = gsym.accessed
                     if (gfield != g.NoSymbol) {
-                      add(gfield.toSemantic, gfield)
+                      saveSymbol(gfield.toSemantic, gfield)
                     }
                     val gsetter = gsym.setterIn(gsym.owner)
                     if (gsetter != g.NoSymbol) {
-                      add(gsetter.toSemantic, gsetter)
+                      saveSymbol(gsetter.toSemantic, gsetter)
                       val gsetterParams = gsetter.info.paramss.flatten
-                      gsetterParams.foreach(gp => add(gp.toSemantic, gp))
+                      gsetterParams.foreach(gp => saveSymbol(gp.toSemantic, gp))
                     }
                   }
                   if (gsym.isUsefulField && gsym.isMutable) {
