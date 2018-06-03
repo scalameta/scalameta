@@ -205,9 +205,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   saveSymbol(symbol, gsym)
                   if (gsym.isClass && !gsym.isTrait) {
                     val gprim = gsym.primaryConstructor
-                    if (gprim != g.NoSymbol) {
-                      saveSymbol(gprim.toSemantic, gprim)
-                    }
+                    saveSymbol(gprim.toSemantic, gprim)
                   }
                   if (gsym.isPrimaryConstructor) {
                     val gclassParams = gsym.info.paramss.flatten
@@ -215,15 +213,11 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   }
                   if (gsym.isGetter) {
                     val gfield = gsym.accessed
-                    if (gfield != g.NoSymbol) {
-                      saveSymbol(gfield.toSemantic, gfield)
-                    }
+                    saveSymbol(gfield.toSemantic, gfield)
                     val gsetter = gsym.setterIn(gsym.owner)
-                    if (gsetter != g.NoSymbol) {
-                      saveSymbol(gsetter.toSemantic, gsetter)
-                      val gsetterParams = gsetter.info.paramss.flatten
-                      gsetterParams.foreach(gp => saveSymbol(gp.toSemantic, gp))
-                    }
+                    saveSymbol(gsetter.toSemantic, gsetter)
+                    val gsetterParams = gsetter.info.paramss.flatten
+                    gsetterParams.foreach(gp => saveSymbol(gp.toSemantic, gp))
                   }
                   if (gsym.isUsefulField && gsym.isMutable) {
                     val getterInfo = symbols(symbol)
