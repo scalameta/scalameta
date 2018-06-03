@@ -180,6 +180,7 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.name == g.tpnme.REFINE_CLASS_NAME
     }
     def isUseless: Boolean = {
+      sym == g.NoSymbol ||
       sym.isAnonymousClass ||
       sym.isSyntheticConstructor ||
       sym.isStaticConstructor ||
