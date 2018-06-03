@@ -118,7 +118,7 @@ trait SymbolOps { self: SemanticdbOps =>
     lazy val ssyms: List[String] = {
       val sbuf = List.newBuilder[String]
       gsyms.foreach { gsym =>
-        val ssym = gsym.toSemantic.syntax
+        val ssym = gsym.ssym
         sbuf += ssym
         if (gsym.isUsefulField && gsym.isMutable) {
           if (ssym.isGlobal) {
@@ -134,6 +134,7 @@ trait SymbolOps { self: SemanticdbOps =>
   }
 
   implicit class XtensionGSymbol(sym: g.Symbol) {
+    def ssym: String = sym.toSemantic.syntax
     def isJavaClass: Boolean =
       sym.isJavaDefined &&
         !sym.hasPackageFlag &&
@@ -173,6 +174,7 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isCaseAccessor && sym.name.toString.contains("$")
     }
     def isUseless: Boolean = {
+      sym.isAnonymousClass ||
       sym.isSyntheticConstructor ||
       sym.isStaticConstructor ||
       sym.isLocalChild ||

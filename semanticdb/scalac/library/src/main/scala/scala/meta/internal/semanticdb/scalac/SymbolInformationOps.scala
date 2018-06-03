@@ -152,7 +152,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    private def anns: List[s.Annotation] = {
+    private def annotations: List[s.Annotation] = {
       val ganns = gsym.annotations.filter { gann =>
         gann.atp.typeSymbol != definitions.MacroImplAnnotation
       }
@@ -160,36 +160,36 @@ trait SymbolInformationOps { self: SemanticdbOps =>
     }
 
     // FIXME: https://github.com/scalameta/scalameta/issues/1325
-    private def acc: s.Accessibility = {
+    private def accessibility: Option[s.Accessibility] = {
       if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
         // NOTE: some sick artifact vals produced by mkPatDef can be
         // private to method (whatever that means), so here we just ignore them.
-        s.Accessibility(a.PUBLIC)
+        Some(s.Accessibility(a.PUBLIC))
       } else {
         if (gsym.privateWithin == NoSymbol) {
-          if (gsym.isPrivateThis) s.Accessibility(a.PRIVATE_THIS)
-          else if (gsym.isPrivate) s.Accessibility(a.PRIVATE)
-          else if (gsym.isProtectedThis) s.Accessibility(a.PROTECTED_THIS)
-          else if (gsym.isProtected) s.Accessibility(a.PROTECTED)
-          else s.Accessibility(a.PUBLIC)
+          if (gsym.isPrivateThis) Some(s.Accessibility(a.PRIVATE_THIS))
+          else if (gsym.isPrivate) Some(s.Accessibility(a.PRIVATE))
+          else if (gsym.isProtectedThis) Some(s.Accessibility(a.PROTECTED_THIS))
+          else if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED))
+          else Some(s.Accessibility(a.PUBLIC))
         } else {
-          val ssym = gsym.privateWithin.toSemantic.syntax
-          if (gsym.isProtected) s.Accessibility(a.PROTECTED_WITHIN, ssym)
-          else s.Accessibility(a.PRIVATE_WITHIN, ssym)
+          val ssym = gsym.privateWithin.ssym
+          if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
+          else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
         }
       }
     }
 
     def toSymbolInformation: s.SymbolInformation = {
       s.SymbolInformation(
-        symbol = gsym.toSemantic.syntax,
+        symbol = gsym.ssym,
         language = language,
         kind = kind,
-        accessibility = Some(acc),
+        accessibility = accessibility,
         properties = properties,
         name = name,
         tpe = tpe,
-        annotations = anns
+        annotations = annotations
       )
     }
   }

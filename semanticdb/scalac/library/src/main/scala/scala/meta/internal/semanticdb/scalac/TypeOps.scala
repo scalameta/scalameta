@@ -9,9 +9,6 @@ import scala.reflect.internal.{Flags => gf}
 trait TypeOps { self: SemanticdbOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
     def toSemantic: Option[s.Type] = {
-      def todo(gsym: g.Symbol): String = {
-        gsym.toSemantic.syntax
-      }
       def loop(gtpe: g.Type): Option[s.Type] = {
         gtpe match {
           case ByNameType(gtpe) =>
@@ -25,7 +22,7 @@ trait TypeOps { self: SemanticdbOps =>
           case g.TypeRef(gpre, gsym, gargs) =>
             val stag = t.TYPE_REF
             val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else None
-            val ssym = todo(gsym)
+            val ssym = gsym.ssym
             val sargs = gargs.flatMap(loop)
             Some(s.Type(tag = stag, typeRef = Some(s.TypeRef(spre, ssym, sargs))))
           case g.SingleType(gpre, gsym) =>
@@ -33,7 +30,7 @@ trait TypeOps { self: SemanticdbOps =>
             val stpe = {
               val stag = st.SYMBOL
               val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else None
-              val ssym = todo(gsym)
+              val ssym = gsym.ssym
               s.SingletonType(stag, spre, ssym, 0, "")
             }
             Some(s.Type(tag = stag, singletonType = Some(stpe)))
@@ -41,7 +38,7 @@ trait TypeOps { self: SemanticdbOps =>
             val stag = t.SINGLETON_TYPE
             val stpe = {
               val stag = st.THIS
-              val ssym = todo(gsym)
+              val ssym = gsym.ssym
               s.SingletonType(stag, None, ssym, 0, "")
             }
             Some(s.Type(tag = stag, singletonType = Some(stpe)))
@@ -50,7 +47,7 @@ trait TypeOps { self: SemanticdbOps =>
             val stpe = {
               val stag = st.SUPER
               val spre = loop(gpre.typeSymbol.tpe)
-              val ssym = todo(gmix.typeSymbol)
+              val ssym = gmix.typeSymbol.ssym
               s.SingletonType(stag, spre, ssym, 0, "")
             }
             Some(s.Type(tag = stag, singletonType = Some(stpe)))
@@ -86,7 +83,7 @@ trait TypeOps { self: SemanticdbOps =>
               val sparents = gparents.flatMap(loop)
               Some(s.Type(tag = t.WITH_TYPE, withType = Some(s.WithType(sparents))))
             }
-            val sdecls = gdecls.sorted.map(todo)
+            val sdecls = gdecls.sorted.map(_.ssym)
             Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
           case g.AnnotatedType(ganns, gtpe) =>
             val stag = t.ANNOTATED_TYPE
@@ -95,14 +92,13 @@ trait TypeOps { self: SemanticdbOps =>
             Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(sanns, stpe))))
           case g.ExistentialType(gtparams, gtpe) =>
             val stag = t.EXISTENTIAL_TYPE
-            val stparams = gtparams.map(todo)
+            val stparams = gtparams.map(_.ssym)
             val stpe = loop(gtpe)
             Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stparams, stpe))))
           case g.ClassInfoType(gparents, _, gclass) =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
             val decls = gclass.semanticdbDecls
-            decls.gsyms.foreach(todo)
             Some(
               s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, decls.ssyms))))
           case g.NullaryMethodType(gtpe) =>
@@ -122,7 +118,7 @@ trait TypeOps { self: SemanticdbOps =>
             val (gparamss, gret) = flatten(gtpe)
             val stag = t.METHOD_TYPE
             val sparamss = gparamss.map { gparams =>
-              val sparams = gparams.map(todo)
+              val sparams = gparams.map(_.ssym)
               s.MethodType.ParameterList(sparams)
             }
             val sret = loop(gret)
@@ -133,7 +129,7 @@ trait TypeOps { self: SemanticdbOps =>
             val shi = loop(ghi)
             Some(s.Type(tag = stag, typeType = Some(s.TypeType(Nil, slo, shi))))
           case g.PolyType(gtparams, gtpe) =>
-            val stparams = gtparams.map(todo)
+            val stparams = gtparams.map(_.ssym)
             val stpe = loop(gtpe)
             stpe.map { stpe =>
               if (stpe.tag == t.CLASS_INFO_TYPE) {

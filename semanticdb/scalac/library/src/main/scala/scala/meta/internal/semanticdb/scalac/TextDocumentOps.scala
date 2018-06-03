@@ -164,10 +164,9 @@ trait TextDocumentOps { self: SemanticdbOps =>
               // https://github.com/scalameta/scalameta/issues/665
               // Instead of crashing with "unsupported file", we ignore these cases.
               if (gsym0 == null) return
-              if (gsym0.isAnonymousClass) return
               if (gsym0.isUseless) return
               if (mtree.pos == m.Position.None) return
-              if (occurrences.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
+              if (occurrences.contains(mtree.pos)) return
 
               val gsym = {
                 def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
