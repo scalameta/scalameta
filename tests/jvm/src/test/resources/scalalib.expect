@@ -10,30 +10,30 @@ Symbols => 16 entries
 
 Symbols:
 scala.Any# => abstract class Any.{+10 decls}
-scala.Any#`!=`(Any). => final method !=: (that: Any): Boolean
-  that => scala.Any#`!=`(Any).(that)
+scala.Any#`!=`(). => final method !=: (that: Any): Boolean
+  that => scala.Any#`!=`().(that)
   Any => scala.Any#
   Boolean => scala.Boolean#
-scala.Any#`!=`(Any).(that) => param that: Any
+scala.Any#`!=`().(that) => param that: Any
   Any => scala.Any#
 scala.Any#`##`(). => final method ##: (): Int
   Int => scala.Int#
 scala.Any#`<init>`(). => primary ctor <init>: (): Any
   Any => scala.Any#
-scala.Any#`==`(Any). => final method ==: (that: Any): Boolean
-  that => scala.Any#`==`(Any).(that)
+scala.Any#`==`(). => final method ==: (that: Any): Boolean
+  that => scala.Any#`==`().(that)
   Any => scala.Any#
   Boolean => scala.Boolean#
-scala.Any#`==`(Any).(that) => param that: Any
+scala.Any#`==`().(that) => param that: Any
   Any => scala.Any#
 scala.Any#asInstanceOf(). => final method asInstanceOf: (): A
   A => scala.Any.asInstanceOf(A).[A]
 scala.Any#asInstanceOf().[A] => typeparam A: 
-scala.Any#equals(Any). => abstract method equals: (that: Any): Boolean
-  that => scala.Any#equals(Any).(that)
+scala.Any#equals(). => abstract method equals: (that: Any): Boolean
+  that => scala.Any#equals().(that)
   Any => scala.Any#
   Boolean => scala.Boolean#
-scala.Any#equals(Any).(that) => param that: Any
+scala.Any#equals().(that) => param that: Any
   Any => scala.Any#
 scala.Any#getClass(). => final method getClass: (): Class
   Class => java.lang.Class#
@@ -60,24 +60,24 @@ scala.AnyRef# => class AnyRef.{+4 decls}
   extends Any
 scala.AnyRef#`<init>`(). => primary ctor <init>: (): AnyRef
   AnyRef => scala.AnyRef#
-scala.AnyRef#eq(AnyRef). => final method eq: (that: AnyRef): Boolean
-  that => scala.AnyRef#eq(AnyRef).(that)
+scala.AnyRef#eq(). => final method eq: (that: AnyRef): Boolean
+  that => scala.AnyRef#eq().(that)
   AnyRef => scala.AnyRef#
   Boolean => scala.Boolean#
-scala.AnyRef#eq(AnyRef).(that) => param that: AnyRef
+scala.AnyRef#eq().(that) => param that: AnyRef
   AnyRef => scala.AnyRef#
-scala.AnyRef#ne(AnyRef). => final method ne: (that: AnyRef): Boolean
-  that => scala.AnyRef#ne(AnyRef).(that)
+scala.AnyRef#ne(). => final method ne: (that: AnyRef): Boolean
+  that => scala.AnyRef#ne().(that)
   AnyRef => scala.AnyRef#
   Boolean => scala.Boolean#
-scala.AnyRef#ne(AnyRef).(that) => param that: AnyRef
+scala.AnyRef#ne().(that) => param that: AnyRef
   AnyRef => scala.AnyRef#
-scala.AnyRef#synchronized(T). => final method synchronized: (body: T): T
-  body => scala.AnyRef#synchronized(T).(body)
+scala.AnyRef#synchronized(). => final method synchronized: (body: T): T
+  body => scala.AnyRef#synchronized().(body)
   T => scala.AnyRef.synchronized(T).[T]
-scala.AnyRef#synchronized(T).(body) => param body: T
+scala.AnyRef#synchronized().(body) => param body: T
   T => scala.AnyRef.synchronized(T).[T]
-scala.AnyRef#synchronized(T).[T] => typeparam T: 
+scala.AnyRef#synchronized().[T] => typeparam T: 
 
 scala/AnyVal.class
 ------------------

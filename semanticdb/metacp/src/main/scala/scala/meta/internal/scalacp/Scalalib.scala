@@ -106,17 +106,7 @@ object Scalalib {
       if (Character.isJavaIdentifierStart(methodName.head)) methodName
       else "`" + methodName + "`"
     }
-    val disambiguator = {
-      val paramTypeDescriptors = paramDsls.map(_._2).map { symbol =>
-        // FIXME: https://github.com/scalameta/scalameta/issues/1550
-        val _ :+ last = symbol.split("[\\.|#]").toList
-        val last1 = last.stripPrefix("(").stripPrefix("[")
-        val last2 = last1.stripSuffix(")").stripSuffix("]").stripSuffix("#")
-        last2.stripPrefix("`").stripSuffix("`")
-      }
-      paramTypeDescriptors.mkString(",")
-    }
-    val methodSymbol = classSymbol + encodedMethodName + "(" + disambiguator + ")."
+    val methodSymbol = classSymbol + encodedMethodName + "()."
     val tparams = tparamDsls.map { tparamName =>
       val tparamSymbol = methodSymbol + "[" + tparamName + "]"
       val tparamSig = s.Type(tag = t.TYPE_TYPE, typeType = Some(s.TypeType()))
