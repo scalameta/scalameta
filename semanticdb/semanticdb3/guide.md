@@ -230,13 +230,13 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
   <tr>
     <td><code>-P:semanticdb:profiling:&lt;value&gt;</code></td>
     <td>
-      <code>console</code>,<br/>
+      <code>on</code>,<br/>
       <code>off</code><br/>
     </td>
     <td>
       Controls basic profiling functionality that computes the overhead of
       SemanticDB generation relative to regular compilation time
-      (<code>console</code> for dumping profiling information to console,
+      (<code>on</code> for dumping profiling information to console,
       <code>off</code> for disabling profiling).
     </td>
     <td><code>off</code></td>
@@ -265,67 +265,67 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
   <tr>
     <td><code>-P:semanticdb:text:&lt;value&gt;</code></td>
     <td>
-        <code>all</code>,<br/>
-        <code>none</code>
+        <code>on</code>,<br/>
+        <code>off</code>
     </td>
     <td>
       Specifies whether to save source code in
-      <code>TextDocument.text</code> (<code>all</code> for yes,
-      <code>none</code> for no).
+      <code>TextDocument.text</code> (<code>on</code> for yes,
+      <code>off</code> for no).
     </td>
-    <td><code>all</code></td>
+    <td><code>on</code></td>
   </tr>
   <tr>
     <td><code>-P:semanticdb:symbols:&lt;value&gt;</code></td>
     <td>
-      <code>definitions</code>,<br/>
-      <code>none</code><br/>
+        <code>on</code>,<br/>
+        <code>off</code>
     </td>
     <td>
-      Specifies what symbols will appear <code>TextDocument.symbols</code>
-      (<code>none</code> for none,
-      <code>definitions</code> for just symbols defined in the current program).
+      Specifies whether to save symbol information in
+      <code>TextDocument.symbols</code> (<code>on</code> for yes,
+      <code>off</code> for no).
     </td>
-    <td><code>definitions</code></td>
+    <td><code>on</code></td>
   </tr>
   <tr>
     <td><code>-P:semanticdb:occurrences:&lt;value&gt;</code></td>
     <td>
-      <code>all</code>,<br/>
-      <code>none</code><br/>
+        <code>on</code>,<br/>
+        <code>off</code>
     </td>
     <td>
-      Says whether to save symbol occurrences in
-      <code>TextDocument.occurrences</code> (<code>all</code> for yes,
-      <code>none</code> for no).
+      Specifies whether to save symbol occurrences in
+      <code>TextDocument.occurrences</code> (<code>on</code> for yes,
+      <code>off</code> for no).
     </td>
-    <td><code>all</code></td>
+    <td><code>on</code></td>
   </tr>
   <tr>
     <td><code>-P:semanticdb:diagnostics:&lt;value&gt;</code></td>
     <td>
-      <code>all</code>,<br/>
-      <code>none</code><br/>
+        <code>on</code>,<br/>
+        <code>off</code>
     </td>
     <td>
-      Says whether to save compiler messages in
-      <code>TextDocument.diagnostics</code> (<code>all</code> for yes,
-      <code>none</code> for no).
+      Specifies whether to save compiler messages in
+      <code>TextDocument.diagnostics</code> (<code>on</code> for yes,
+      <code>off</code> for no).
     </td>
-    <td><code>all</code></td>
+    <td><code>on</code></td>
   </tr>
   <tr>
     <td><code>-P:semanticdb:synthetics:&lt;value&gt;</code></td>
     <td>
-      <code>all</code>,<br/>
-      <code>none</code><br/>
+        <code>on</code>,<br/>
+        <code>off</code>
     </td>
     <td>
       Specifies whether to save compiler-generated code in the unspecified
-      `Synthetics` section of SemanticDB (<code>all</code> for yes,
-      <code>none</code> for no).
+      <code>TextDocument.synthetics</code> section (<code>on</code> for yes,
+      <code>off</code> for no).
     </td>
-    <td><code>all</code></td>
+    <td><code>on</code></td>
   </tr>
 </table>
 

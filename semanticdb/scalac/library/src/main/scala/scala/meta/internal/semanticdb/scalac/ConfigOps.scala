@@ -8,15 +8,15 @@ import scala.util.matching.Regex
 
 case class SemanticdbConfig(
     crashes: CrashMode,
-    profiling: ProfilingMode,
+    profiling: BinaryMode,
     fileFilter: FileFilter,
     sourceroot: AbsolutePath,
     targetroot: AbsolutePath,
-    text: TextMode,
-    symbols: SymbolMode,
-    occurrences: OccurrenceMode,
-    diagnostics: DiagnosticMode,
-    synthetics: SyntheticMode) {
+    text: BinaryMode,
+    symbols: BinaryMode,
+    occurrences: BinaryMode,
+    diagnostics: BinaryMode,
+    synthetics: BinaryMode) {
   def syntax: String = {
     val p = SemanticdbPlugin.name
     List(
@@ -38,35 +38,37 @@ case class SemanticdbConfig(
 object SemanticdbConfig {
   def default = SemanticdbConfig(
     CrashMode.Warning,
-    ProfilingMode.Off,
+    BinaryMode.Off,
     FileFilter.matchEverything,
     PathIO.workingDirectory,
     PathIO.workingDirectory,
-    TextMode.All,
-    SymbolMode.Definitions,
-    OccurrenceMode.All,
-    DiagnosticMode.All,
-    SyntheticMode.All
+    BinaryMode.On,
+    BinaryMode.On,
+    BinaryMode.On,
+    BinaryMode.On,
+    BinaryMode.On
   )
 
-  private val SetFailures = "failures:(.*)".r
   private val SetCrashes = "crashes:(.*)".r
   private val SetProfiling = "profiling:(.*)".r
   private val SetInclude = "include:(.*)".r
   private val SetExclude = "exclude:(.*)".r
   private val SetSourceroot = "sourceroot:(.*)".r
-  private val SetMode = "mode:(.*)".r
   private val SetText = "text:(.*)".r
-  private val SetDenotations = "denotations:(.*)".r
   private val SetSymbols = "symbols:(.*)".r
-  private val SetSignatures = "signatures:(.*)".r
-  private val SetTypes = "types:(.*)".r
-  private val SetMembers = "members:(.*)".r
-  private val SetOverrides = "overrides:(.*)".r
-  private val SetMessages = "messages:(.*)".r
   private val SetOccurrences = "occurrences:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "synthetics:(.*)".r
+  // ============ COMPATIBILITY WITH 3.X STARTS ============
+  private val SetMode = "mode:(.*)".r
+  private val SetFailures = "failures:(.*)".r
+  private val SetOwners = "owners:(.*)".r
+  private val SetDenotations = "denotations:(.*)".r
+  private val SetSignatures = "signatures:(.*)".r
+  private val SetMembers = "members:(.*)".r
+  private val SetOverrides = "overrides:(.*)".r
+  private val SetMessages = "messages:(.*)".r
+  // ============ COMPATIBILITY WITH 3.X ENDS ============
 
   def parse(
       scalacOptions: List[String],
@@ -88,48 +90,64 @@ object SemanticdbConfig {
     val relevantOptions = scalacOptions.filter(_.startsWith("-P:semanticdb:"))
     val strippedOptions = relevantOptions.map(_.stripPrefix("-P:semanticdb:"))
     strippedOptions.foreach {
-      case option @ SetFailures(CrashMode(crashes)) =>
-        deprecated(option, "crashes:{error,warning,info,ignore}")
-        config = config.copy(crashes = crashes)
       case SetCrashes(CrashMode(crashes)) =>
         config = config.copy(crashes = crashes)
-      case SetProfiling(ProfilingMode(profiling)) =>
-        config = config.copy(profiling = profiling)
+      case SetProfiling(BinaryMode(mode)) =>
+        config = config.copy(profiling = mode)
       case SetInclude(include) =>
         config = config.copy(fileFilter = config.fileFilter.copy(include = include.r))
       case SetExclude(exclude) =>
         config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
       case SetSourceroot(path) =>
         config = config.copy(sourceroot = AbsolutePath(path))
-      case option @ SetMode(TextMode(text)) =>
-        deprecated(option, "text:{all,none}")
-        config = config.copy(text = text)
-      case SetText(TextMode(text)) =>
-        config = config.copy(text = text)
-      case option @ SetDenotations("all") =>
-        unsupported(option)
-      case option @ SetDenotations(SymbolMode(symbols)) =>
-        deprecated(option, "symbols:{all,none}")
-        config = config.copy(symbols = symbols)
-      case SetSymbols(SymbolMode(symbols)) =>
-        config = config.copy(symbols = symbols)
+      case SetText(BinaryMode(mode)) =>
+        config = config.copy(text = mode)
+      case SetSymbols(BinaryMode(mode)) =>
+        config = config.copy(symbols = mode)
+      case SetOccurrences(BinaryMode(mode)) =>
+        config = config.copy(occurrences = mode)
+      case SetDiagnostics(BinaryMode(mode)) =>
+        config = config.copy(diagnostics = mode)
+      case SetSynthetics(BinaryMode(mode)) =>
+        config = config.copy(synthetics = mode)
+      // ============ COMPATIBILITY WITH 3.X STARTS ============
+      case option @ SetMode("fat") =>
+        deprecated(option, "text:on")
+        config = config.copy(text = BinaryMode.On)
+      case option @ SetMode("slim") =>
+        deprecated(option, "text:off")
+        config = config.copy(text = BinaryMode.Off)
+      case option @ SetMode("disabled") =>
+        unsupported(option, "exclude:^$")
+      case option @ SetFailures(CrashMode(crashes)) =>
+        deprecated(option, "crashes:{error,warning,info,ignore}")
+        config = config.copy(crashes = crashes)
+      case option @ SetDenotations(_) =>
+        unsupported(option, "symbols")
       case option @ SetSignatures(_) =>
-        unsupported(option)
-      case option @ SetTypes(_) =>
         unsupported(option)
       case option @ SetMembers(_) =>
         unsupported(option)
       case option @ SetOverrides(_) =>
         unsupported(option)
-      case option @ SetMessages(DiagnosticMode(diagnostics)) =>
-        deprecated(option, "diagnostics:{all,none}")
-        config = config.copy(diagnostics = diagnostics)
-      case SetOccurrences(OccurrenceMode(occurrences)) =>
-        config = config.copy(occurrences = occurrences)
-      case SetDiagnostics(DiagnosticMode(diagnostics)) =>
-        config = config.copy(diagnostics = diagnostics)
-      case SetSynthetics(SyntheticMode(synthetics)) =>
-        config = config.copy(synthetics = synthetics)
+      case option @ SetProfiling("console") =>
+        deprecated(option, "profiling:on")
+        config = config.copy(profiling = BinaryMode.On)
+      case option @ SetMessages("all") =>
+        deprecated(option, "diagnostics:on")
+        config = config.copy(diagnostics = BinaryMode.On)
+      case option @ SetMessages("none") =>
+        deprecated(option, "diagnostics:off")
+        config = config.copy(diagnostics = BinaryMode.Off)
+      case option @ SetSynthetics("all") =>
+        deprecated(option, "synthetics:on")
+        config = config.copy(synthetics = BinaryMode.On)
+      case option @ SetSynthetics("none") =>
+        deprecated(option, "synthetics:off")
+        config = config.copy(synthetics = BinaryMode.Off)
+      case option @ SetOwners(_) =>
+        unsupported(option)
+      // ============ COMPATIBILITY WITH 3.X ENDS ============
       case els =>
         errFn(s"Ignoring unknown option $els")
     }
@@ -149,17 +167,17 @@ object CrashMode {
   case object Ignore extends CrashMode
 }
 
-sealed abstract class ProfilingMode {
+sealed abstract class BinaryMode {
   def name: String = toString.toLowerCase
-  import ProfilingMode._
-  def isConsole: Boolean = this == Console
+  import BinaryMode._
+  def isOn: Boolean = this == On
   def isOff: Boolean = this == Off
 }
-object ProfilingMode {
-  def unapply(arg: String): Option[ProfilingMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(Console, Off)
-  case object Console extends ProfilingMode
-  case object Off extends ProfilingMode
+object BinaryMode {
+  def unapply(arg: String): Option[BinaryMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(On, Off)
+  case object On extends BinaryMode
+  case object Off extends BinaryMode
 }
 
 case class FileFilter(include: Regex, exclude: Regex) {
@@ -171,66 +189,4 @@ object FileFilter {
   def apply(include: String, exclude: String): FileFilter =
     FileFilter(include.r, exclude.r)
   val matchEverything = FileFilter(".*", "$a")
-}
-
-sealed abstract class TextMode {
-  def name: String = toString.toLowerCase
-  import TextMode._
-  def isAll: Boolean = this == All
-  def isNone: Boolean = this == None
-}
-object TextMode {
-  def unapply(arg: String): Option[TextMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, None)
-  case object All extends TextMode
-  case object None extends TextMode
-}
-
-sealed abstract class SymbolMode {
-  def name: String = toString.toLowerCase
-  import SymbolMode._
-  def isDefinitions: Boolean = this == Definitions
-  def isNone: Boolean = this == None
-}
-object SymbolMode {
-  def unapply(arg: String): Option[SymbolMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(Definitions, None)
-  case object Definitions extends SymbolMode
-  case object None extends SymbolMode
-}
-
-sealed abstract class OccurrenceMode {
-  def name: String = toString.toLowerCase
-  import OccurrenceMode._
-  def saveOccurrences: Boolean = this == All
-}
-object OccurrenceMode {
-  def unapply(arg: String): Option[OccurrenceMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, None)
-  case object All extends OccurrenceMode
-  case object None extends OccurrenceMode
-}
-
-sealed abstract class DiagnosticMode {
-  def name: String = toString.toLowerCase
-  import DiagnosticMode._
-  def saveMessages: Boolean = this == All
-}
-object DiagnosticMode {
-  def unapply(arg: String): Option[DiagnosticMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, None)
-  case object All extends DiagnosticMode
-  case object None extends DiagnosticMode
-}
-
-sealed abstract class SyntheticMode {
-  def name: String = toString.toLowerCase
-  import SyntheticMode._
-  def saveSynthetics: Boolean = this == All
-}
-object SyntheticMode {
-  def unapply(arg: String): Option[SyntheticMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, None)
-  case object All extends SyntheticMode
-  case object None extends SyntheticMode
 }

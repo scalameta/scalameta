@@ -16,8 +16,8 @@ import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
 
 abstract class SemanticdbSuite(
-    text: TextMode = TextMode.All,
-    symbols: SymbolMode = SymbolMode.Definitions
+    text: BinaryMode = BinaryMode.On,
+    symbols: BinaryMode = BinaryMode.On
 ) extends FunSuite
     with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {

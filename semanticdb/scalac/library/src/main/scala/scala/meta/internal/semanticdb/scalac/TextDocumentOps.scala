@@ -248,7 +248,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   }
                 }
               }
-              if (mtree.isDefinition && config.symbols.isDefinitions) saveSymbol()
+              if (mtree.isDefinition && config.symbols.isOn) saveSymbol()
 
               def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
                 if (map.contains(mtree)) {
@@ -390,7 +390,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
           }
 
           private def tryFindInferred(gtree: g.Tree): Unit = {
-            if (!config.synthetics.saveSynthetics) return
+            if (!config.synthetics.isOn) return
 
             import scala.meta.internal.semanticdb.scalac.{AttributedSynthetic => S}
             def success(pos: m.Position, f: Inferred => Inferred): Unit = {
@@ -519,7 +519,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
       val finalSymbols = symbols.values.toList
 
       val finalOccurrences = {
-        if (config.occurrences.saveOccurrences) {
+        if (config.occurrences.isOn) {
           occurrences.flatMap {
             case (pos, sym) =>
               flatten(sym).map { flatSym =>

@@ -92,7 +92,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       override def apply(unit: g.CompilationUnit): Unit = {
         if (unit.isIgnored) return
         try {
-          if (config.diagnostics.saveMessages) {
+          if (config.diagnostics.isOn) {
             val diagnostics = unit.reportedDiagnostics(Map.empty)
             if (diagnostics.nonEmpty) {
               val sdoc = s.TextDocument(
@@ -123,7 +123,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
   private var timestampPersistFinished = -1L
 
   private def reportSemanticdbSummary(): Unit = {
-    val createdSemanticdbsMessage = {
+    def createdSemanticdbsMessage = {
       val howMany = g.currentRun.units.length
       val what = if (howMany == 1) "file" else "files"
       var where = config.targetroot.toString
@@ -131,7 +131,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       where = where + "/META-INF/semanticdb"
       s"Created $howMany semanticdb $what in $where"
     }
-    val performanceOverheadMessage = {
+    def performanceOverheadMessage = {
       val computeMs = (timestampComputeFinished - timestampComputeStarted) / 1000000
       val persistMs = (timestampPersistFinished - timestampPersistStarted) / 1000000
       val semanticdbMs = computeMs + persistMs
@@ -140,7 +140,9 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       val pct = Math.floor(1.0 * semanticdbMs / totalMs * 100).toInt
       s"At the cost of $overhead ($pct% of compilation time)"
     }
-    if (config.profiling.isConsole) println(createdSemanticdbsMessage)
-    if (config.profiling.isConsole) println(performanceOverheadMessage)
+    if (config.profiling.isOn) {
+      println(createdSemanticdbsMessage)
+      println(performanceOverheadMessage)
+    }
   }
 }
