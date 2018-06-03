@@ -19,12 +19,14 @@ example.Acc#m1(). => private method m1: : Nothing
 example.Acc#m2(). => private[this] method m2: : Nothing
   Nothing => scala.Nothing#
 example.Acc#m3(). => private[Acc] method m3: : Nothing
+  Acc => example.Acc#
   Nothing => scala.Nothing#
 example.Acc#m4(). => protected method m4: : Nothing
   Nothing => scala.Nothing#
 example.Acc#m5(). => protected[this] method m5: : Nothing
   Nothing => scala.Nothing#
 example.Acc#m6(). => protected[example] method m6: : Nothing
+  example => example.
   Nothing => scala.Nothing#
 example.Acc#m7(). => method m7: : Nothing
   Nothing => scala.Nothing#
@@ -75,10 +77,10 @@ advanced.C#t(). => method t: : T
 advanced.Existential# => class Existential.{+3 decls}
   extends AnyRef
 advanced.Existential#`<init>`(). => primary ctor <init>: ()
-advanced.Existential#e1(). => method e1: : List[local3] forSome { local3: <?> }
+advanced.Existential#e1(). => method e1: : List[local3] forSome { <?> }
   List => scala.package.List#
   local3 => local3
-advanced.Existential#e2(). => method e2: : C[List[local4] forSome { local4: <?> }]
+advanced.Existential#e2(). => method e2: : C[List[local4] forSome { <?> }]
   C => advanced.C#
   List => scala.package.List#
   local4 => local4
@@ -89,7 +91,7 @@ advanced.Structural#s1(). => method s1: : AnyRef { val method x: Int }
   AnyRef => scala.AnyRef#
   x => local0
   Int => scala.Int#
-advanced.Structural#s2(). => method s2: : AnyRef { local1: <?> }
+advanced.Structural#s2(). => method s2: : AnyRef { <?> }
   AnyRef => scala.AnyRef#
   local1 => local1
 advanced.Test. => final object Test.{+11 decls}
@@ -101,7 +103,7 @@ advanced.Test.e1(). => val method e1: : List[Any]
   Any => scala.Any#
 advanced.Test.e1x(). => val method e1x: : Any
   Any => scala.Any#
-advanced.Test.e2(). => val method e2: : C[List[local4] forSome { local4: <?> }]
+advanced.Test.e2(). => val method e2: : C[List[local4] forSome { <?> }]
   C => advanced.C#
   List => scala.package.List#
   local4 => local4
@@ -118,7 +120,7 @@ advanced.Test.s1(). => val method s1: : AnyRef { val method x: Int }
   Int => scala.Int#
 advanced.Test.s1x(). => val method s1x: : Int
   Int => scala.Int#
-advanced.Test.s2(). => val method s2: : AnyRef { local1: <?> }
+advanced.Test.s2(). => val method s2: : AnyRef { <?> }
   AnyRef => scala.AnyRef#
   local1 => local1
 advanced.Test.s2x(). => val method s2x: : Int
@@ -288,7 +290,7 @@ classes.C3#canEqual().(x$1) => param x$1: Any
 classes.C3#copy$default$1(). => method copy$default$1: : Int @uncheckedVariance
   Int => scala.Int#
   uncheckedVariance => scala.annotation.unchecked.uncheckedVariance#
-classes.C3#copy(). => method copy: (x: <?>): C3
+classes.C3#copy(). => method copy: (<?>): C3
   x => classes.C3#copy().(x)
   C3 => classes.C3#
 classes.C3#equals(). => method equals: (x$1: Any): Boolean
@@ -319,7 +321,7 @@ classes.C3#x(). => val method x: : Int
 classes.C3. => final object C3.{+4 decls}
   extends AbstractFunction1[Int, C3]
   extends Serializable
-classes.C3.apply(). => method apply: (x: <?>): C3
+classes.C3.apply(). => method apply: (<?>): C3
   x => classes.C3.apply().(x)
   C3 => classes.C3#
 classes.C3.readResolve(). => private method readResolve: (): Object
@@ -351,7 +353,7 @@ classes.C4#canEqual().(x$1) => param x$1: Any
 classes.C4#copy$default$1(). => method copy$default$1: : Int @uncheckedVariance
   Int => scala.Int#
   uncheckedVariance => scala.annotation.unchecked.uncheckedVariance#
-classes.C4#copy(). => method copy: (x: <?>): C4
+classes.C4#copy(). => method copy: (<?>): C4
   x => classes.C4#copy().(x)
   C4 => classes.C4#
 classes.C4#equals(). => method equals: (x$1: Any): Boolean
@@ -382,7 +384,7 @@ classes.C4#x(). => val method x: : Int
 classes.C4. => final object C4.{+3 decls}
   extends AnyRef
   extends Serializable
-classes.C4.apply(). => method apply: (x: <?>): C4
+classes.C4.apply(). => method apply: (<?>): C4
   x => classes.C4.apply().(x)
   C4 => classes.C4#
 classes.C4.readResolve(). => private method readResolve: (): Object
@@ -412,7 +414,7 @@ classes.C6#canEqual().(x$1) => param x$1: Any
 classes.C6#copy$default$1(). => method copy$default$1: : Int @uncheckedVariance
   Int => scala.Int#
   uncheckedVariance => scala.annotation.unchecked.uncheckedVariance#
-classes.C6#copy(). => method copy: (x: <?>): C6
+classes.C6#copy(). => method copy: (<?>): C6
   x => classes.C6#copy().(x)
   C6 => classes.C6#
 classes.C6#equals(). => method equals: (x$1: Any): Boolean
@@ -441,7 +443,7 @@ classes.C6#toString(). => method toString: (): String
 classes.C6. => final object C6.{+4 decls}
   extends AbstractFunction1[Int, C6]
   extends Serializable
-classes.C6.apply(). => method apply: (x: <?>): C6
+classes.C6.apply(). => method apply: (<?>): C6
   x => classes.C6.apply().(x)
   C6 => classes.C6#
 classes.C6.readResolve(). => private method readResolve: (): Object
@@ -499,12 +501,12 @@ classes.M.C5#`<init>`().(x) => param x: Int
   Int => scala.Int#
 classes.M.C5#x(). => private[this] val method x: : Int
   Int => scala.Int#
-classes.M.C5(). => implicit method C5: (x: <?>): C5
+classes.M.C5(). => implicit method C5: (<?>): C5
   x => classes.M.C5().(x)
   C5 => classes.M.C5#
 classes.N. => final object N.{+2 decls}
   extends AnyRef
-classes.N.anonClass(). => val method anonClass: : C7 { local1: <?> }
+classes.N.anonClass(). => val method anonClass: : C7 { <?> }
   C7 => classes.C7#
   local1 => local1
 classes.N.anonFun(). => val method anonFun: : List[Int]
@@ -802,6 +804,7 @@ flags.p.package.C#z(). => private[this] val method z: : V
 flags.p.package.S# => class S[@specialized T >: Nothing <: Any].{+1 decls}
   extends AnyRef
 flags.p.package.S#[T] => @specialized typeparam T: >: Nothing <: Any
+  specialized => scala.specialized#
   Nothing => scala.Nothing#
   Any => scala.Any#
 flags.p.package.S#`<init>`(). => primary ctor <init>: ()
@@ -1220,11 +1223,11 @@ example.Methods#m13(). => method m13: (x: Int @unchecked): Nothing
 example.Methods#m13().(x) => param x: Int @unchecked
   Int => scala.Int#
   unchecked => scala.unchecked#
-example.Methods#m14(). => method m14: (x: local1 forSome { local1: <?> }): Nothing
+example.Methods#m14(). => method m14: (x: local1 forSome { <?> }): Nothing
   x => example.Methods#m14().(x)
   local1 => local1
   Nothing => scala.Nothing#
-example.Methods#m14().(x) => param x: local1 forSome { local1: <?> }
+example.Methods#m14().(x) => param x: local1 forSome { <?> }
   local1 => local1
 example.Methods#m15(). => method m15: (x: => Int): Nothing
   x => example.Methods#m15().(x)
@@ -1877,7 +1880,7 @@ types.Test.C#RepeatedType#toString(). => method toString: (): String
 types.Test.C#RepeatedType. => final object RepeatedType.{+3 decls}
   extends AbstractFunction1[String*, C.this.RepeatedType]
   extends Serializable
-types.Test.C#RepeatedType.apply(). => method apply: (s: <?>): C.this.RepeatedType
+types.Test.C#RepeatedType.apply(). => method apply: (<?>): C.this.RepeatedType
   s => types.Test.C#RepeatedType.apply().(s)
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
@@ -1913,12 +1916,12 @@ types.Test.C#TypeType.m2(). => method m2: [T2 C] => : Nothing
   Nothing => scala.Nothing#
 types.Test.C#TypeType.m2().[T2] => typeparam T2: C
   C => types.Test.C#
-types.Test.C#TypeType.m3(). => method m3: [M3 [_: <?>] => >: Nothing <: Any] => : Nothing
+types.Test.C#TypeType.m3(). => method m3: [M3 [<?>] => >: Nothing <: Any] => : Nothing
   M3 => types.Test.C#TypeType.m3().[M3]
   _ => types.Test.C#TypeType.m3().[M3][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#TypeType.m3().[M3] => typeparam M3: [_: <?>] => >: Nothing <: Any
+types.Test.C#TypeType.m3().[M3] => typeparam M3: [<?>] => >: Nothing <: Any
   _ => types.Test.C#TypeType.m3().[M3][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1943,19 +1946,19 @@ types.Test.C#compoundType3(). => val method compoundType3: : M with N { method k
   N => types.Test.N#
   k => local1
   Int => scala.Int#
-types.Test.C#compoundType4(). => val method compoundType4: : AnyRef { local3: <?> }
+types.Test.C#compoundType4(). => val method compoundType4: : AnyRef { <?> }
   AnyRef => scala.AnyRef#
   local3 => local3
 types.Test.C#compoundType5(). => val method compoundType5: : M with N {}
   M => types.Test.M#
   N => types.Test.N#
-types.Test.C#compoundType6(). => val method compoundType6: : M with N { local5: <?> }
+types.Test.C#compoundType6(). => val method compoundType6: : M with N { <?> }
   M => types.Test.M#
   N => types.Test.N#
   local5 => local5
-types.Test.C#existentialType1(). => val method existentialType1: : local7 forSome { local7: <?> }
+types.Test.C#existentialType1(). => val method existentialType1: : local7 forSome { <?> }
   local7 => local7
-types.Test.C#existentialType2(). => val method existentialType2: : List[local8] forSome { local8: <?> }
+types.Test.C#existentialType2(). => val method existentialType2: : List[local8] forSome { <?> }
   List => scala.package.List#
   local8 => local8
 types.Test.C#p(). => val method p: : P
@@ -1977,12 +1980,12 @@ types.Test.C#thisType1(). => val method thisType1: : C.this.type
   C => types.Test.C#
 types.Test.C#thisType2(). => val method thisType2: : C.this.type
   C => types.Test.C#
-types.Test.C#typeLambda1(). => method typeLambda1: [M [_: <?>] => >: Nothing <: Any] => : Nothing
+types.Test.C#typeLambda1(). => method typeLambda1: [M [<?>] => >: Nothing <: Any] => : Nothing
   M => types.Test.C#typeLambda1().[M]
   _ => types.Test.C#typeLambda1().[M][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#typeLambda1().[M] => typeparam M: [_: <?>] => >: Nothing <: Any
+types.Test.C#typeLambda1().[M] => typeparam M: [<?>] => >: Nothing <: Any
   _ => types.Test.C#typeLambda1().[M][_]
   Nothing => scala.Nothing#
   Any => scala.Any#

@@ -107,7 +107,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |_empty_.b.add(). => method add: (a: <?>): Int
       |  a => _empty_.b.add().(a)
       |  Int => scala.Int#
-      |_empty_.b.add().(a) => param a<?>
+      |_empty_.b.add().(a) => param a
       |
       |Occurrences:
       |[1:7..1:8): b <= _empty_.b.

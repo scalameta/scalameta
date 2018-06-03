@@ -308,6 +308,7 @@ class TargetedSuite extends SemanticdbSuite {
        |f.T#`f5_=`().(x$1) => param x$1: Nothing
        |  Nothing => scala.Nothing#
        |f.T#`f6_=`(). => protected[f] var method f6_=: (x$1: Nothing): Unit
+       |  f => f.
        |  x$1 => f.T#`f6_=`().(x$1)
        |  Nothing => scala.Nothing#
        |  Unit => scala.Unit#
@@ -318,12 +319,14 @@ class TargetedSuite extends SemanticdbSuite {
        |f.T#f2(). => private[this] val method f2: : Nothing
        |  Nothing => scala.Nothing#
        |f.T#f3(). => private[f] val method f3: : Nothing
+       |  f => f.
        |  Nothing => scala.Nothing#
        |f.T#f4(). => protected var method f4: : Nothing
        |  Nothing => scala.Nothing#
        |f.T#f5(). => protected[this] var method f5: : Nothing
        |  Nothing => scala.Nothing#
        |f.T#f6(). => protected[f] var method f6: : Nothing
+       |  f => f.
        |  Nothing => scala.Nothing#
      """.trim.stripMargin
     )
@@ -669,7 +672,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  extends AnyRef
        |_empty_.ac.x(). => val method x: : Int
        |  Int => scala.Int#
-       |_empty_.ac.y(). => val method y: : Class[local0] forSome { local0: <?> }
+       |_empty_.ac.y(). => val method y: : Class[local0] forSome { <?> }
        |  Class => scala.Predef.Class#
        |  local0 => local0
     """.stripMargin
@@ -703,7 +706,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  Foo => _empty_.ad.Foo#
        |  y => local8
        |  Any => scala.Any#
-       |_empty_.ad.x(). => val method x: : AnyRef with Foo { local5: <?>; local6: <?> }
+       |_empty_.ad.x(). => val method x: : AnyRef with Foo { <?>; <?> }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
        |  local5 => local5
@@ -713,12 +716,12 @@ class TargetedSuite extends SemanticdbSuite {
        |  Foo => _empty_.ad.Foo#
        |  y => local7
        |  Int => scala.Int#
-       |_empty_.ad.zz(). => val method zz: : Bar { local10: <?> }
+       |_empty_.ad.zz(). => val method zz: : Bar { <?> }
        |  Bar => _empty_.ad.Bar#
        |  local10 => local10
        |local0 => val method y: : Int
        |  Int => scala.Int#
-       |local1 => method z: [T >: Nothing <: Any] => (local3: <?>): T
+       |local1 => method z: [T >: Nothing <: Any] => (<?>): T
        |  T => local2
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
