@@ -178,7 +178,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
               todo -= mtree
 
-              occurrences(mtree.pos) = symbol
               if (mtree.isDefinition) {
                 val isToplevel = gsym.owner.hasPackageFlag
                 if (isToplevel) {
@@ -196,49 +195,50 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   }
                 }
                 binders += mtree.pos
+                occurrences(mtree.pos) = symbol
+                if (config.symbols.isOn) {
+                  def add(ms: m.Symbol, gs: g.Symbol): Unit = {
+                    if (gs.isUseful) {
+                      symbols(ms) = gs.toSymbolInformation
+                    }
+                  }
+                  if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
+                    add(symbol, gsym)
+                  }
+                  if (gsym.isClass && !gsym.isTrait) {
+                    val gprim = gsym.primaryConstructor
+                    if (gprim != g.NoSymbol) {
+                      add(gprim.toSemantic, gprim)
+                    }
+                  }
+                  if (gsym.isPrimaryConstructor) {
+                    val gclassParams = gsym.info.paramss.flatten
+                    gclassParams.foreach(gp => add(gp.toSemantic, gp))
+                  }
+                  if (gsym.isGetter) {
+                    val gfield = gsym.accessed
+                    if (gfield != g.NoSymbol) {
+                      add(gfield.toSemantic, gfield)
+                    }
+                    val gsetter = gsym.setterIn(gsym.owner)
+                    if (gsetter != g.NoSymbol) {
+                      add(gsetter.toSemantic, gsetter)
+                      val gsetterParams = gsetter.info.paramss.flatten
+                      gsetterParams.foreach(gp => add(gp.toSemantic, gp))
+                    }
+                  }
+                  if (gsym.isUsefulField && gsym.isMutable) {
+                    val getterInfo = symbols(symbol)
+                    val setterInfos = Synthetics.setterInfos(getterInfo)
+                    setterInfos.foreach { info =>
+                      val msymbol = m.Symbol(info.symbol)
+                      symbols(msymbol) = info
+                    }
+                  }
+                }
+              } else {
+                occurrences(mtree.pos) = symbol
               }
-
-              def saveSymbol(): Unit = {
-                def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  if (gs.isUseful) {
-                    symbols(ms) = gs.toSymbolInformation
-                  }
-                }
-                if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
-                  add(symbol, gsym)
-                }
-                if (gsym.isClass && !gsym.isTrait && mtree.isDefinition) {
-                  val gprim = gsym.primaryConstructor
-                  if (gprim != g.NoSymbol) {
-                    add(gprim.toSemantic, gprim)
-                  }
-                }
-                if (gsym.isPrimaryConstructor) {
-                  val gclassParams = gsym.info.paramss.flatten
-                  gclassParams.foreach(gp => add(gp.toSemantic, gp))
-                }
-                if (gsym.isGetter) {
-                  val gfield = gsym.accessed
-                  if (gfield != g.NoSymbol) {
-                    add(gfield.toSemantic, gfield)
-                  }
-                  val gsetter = gsym.setterIn(gsym.owner)
-                  if (gsetter != g.NoSymbol) {
-                    add(gsetter.toSemantic, gsetter)
-                    val gsetterParams = gsetter.info.paramss.flatten
-                    gsetterParams.foreach(gp => add(gp.toSemantic, gp))
-                  }
-                }
-                if (gsym.isUsefulField && gsym.isMutable) {
-                  val getterInfo = symbols(symbol)
-                  val setterInfos = Synthetics.setterInfos(getterInfo)
-                  setterInfos.foreach { info =>
-                    val msymbol = m.Symbol(info.symbol)
-                    symbols(msymbol) = info
-                  }
-                }
-              }
-              if (mtree.isDefinition && config.symbols.isOn) saveSymbol()
 
               def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
                 if (map.contains(mtree)) {
