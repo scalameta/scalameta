@@ -454,8 +454,6 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
     exposePaths("tests", Test),
-    compile.in(Test) :=
-      compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
     fullClasspath.in(Test) := {
       val semanticdbScalacJar =
         Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
@@ -485,7 +483,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
     )
   )
-  .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp))
+  .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp, semanticdbIntegration))
   .nativeSettings(
     nativeSettings,
     // FIXME: https://github.com/scalatest/scalatest/issues/1112
