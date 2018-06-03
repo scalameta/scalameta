@@ -17,7 +17,8 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
     test(logger.revealWhitespace(original)) {
       val options = List("-P:semanticdb:experimental:synthetics:on")
       val document = toTextDocument(compiler, original, options)
-      val syntax = Print.document(document)
+      val format = scala.meta.metap.Format.Detailed
+      val syntax = Print.document(format, document)
       assertNoDiff(syntax, expected)
     }
   }

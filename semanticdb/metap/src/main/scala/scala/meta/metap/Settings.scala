@@ -9,7 +9,7 @@ final class Settings private (
     val paths: List[Path]
 ) {
   private def this() = {
-    this(format = Format.Pretty, paths = Nil)
+    this(format = Format.Compact, paths = Nil)
   }
 
   def withFormat(format: Format): Settings = {
@@ -31,8 +31,10 @@ object Settings {
       args match {
         case "--" +: rest =>
           loop(settings, false, args)
-        case "-pretty" +: rest if allowOptions =>
-          loop(settings.copy(format = Format.Pretty), allowOptions = true, rest)
+        case "-compact" +: rest if allowOptions =>
+          loop(settings.copy(format = Format.Compact), allowOptions = true, rest)
+        case ("-detailed" | "-pretty") +: rest if allowOptions =>
+          loop(settings.copy(format = Format.Detailed), allowOptions = true, rest)
         case "-proto" +: rest if allowOptions =>
           loop(settings.copy(format = Format.Proto), allowOptions = true, rest)
         case flag +: rest if allowOptions && flag.startsWith("-") =>

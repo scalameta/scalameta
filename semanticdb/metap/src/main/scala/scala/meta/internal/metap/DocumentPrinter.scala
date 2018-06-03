@@ -1,11 +1,12 @@
 package scala.meta.internal.metap
 
-import java.io._
+import scala.meta.cli._
 import scala.meta.internal.semanticdb3._
 import scala.meta.internal.semanticdb3.Language._
+import scala.meta.metap._
 
-class DocumentPrinter(out: PrintStream, doc: TextDocument)
-    extends BasePrinter(out, doc)
+class DocumentPrinter(settings: Settings, reporter: Reporter, doc: TextDocument)
+    extends BasePrinter(settings, reporter, doc)
     with SymbolPrinter
     with OccurrencePrinter
     with DiagnosticPrinter

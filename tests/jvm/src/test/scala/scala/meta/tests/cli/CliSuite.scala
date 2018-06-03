@@ -43,7 +43,8 @@ class CliSuite extends FunSuite with DiffAssertions {
 
   test("metap " + helloWorldSemanticdb) {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
-      val settings = scala.meta.metap.Settings().withPaths(List(helloWorldSemanticdb))
+      val format = scala.meta.metap.Format.Detailed
+      val settings = scala.meta.metap.Settings().withFormat(format).withPaths(List(helloWorldSemanticdb))
       val reporter = Reporter().withOut(out).withErr(err)
       Metap.process(settings, reporter)
     }

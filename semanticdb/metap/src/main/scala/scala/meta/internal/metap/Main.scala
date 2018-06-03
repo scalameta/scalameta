@@ -21,7 +21,7 @@ class Main(settings: Settings, reporter: Reporter) {
           reporter.out.println(payload.toProtoString)
         } else {
           payload.documents.foreach { document =>
-            val printer = new DocumentPrinter(reporter.out, document)
+            val printer = new DocumentPrinter(settings, reporter, document)
             printer.print()
           }
         }

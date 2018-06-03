@@ -27,15 +27,17 @@ trait SymbolPrinter extends BasePrinter {
     infoPrinter.pprint(info)
     out.println()
 
-    if (info.isTemplate || info.isMember) {
-      val printed = mutable.Set[String]()
-      infoNotes.visited.tail.foreach { info =>
-        if (!printed(info.symbol)) {
-          printed += info.symbol
-          out.print("  ")
-          out.print(info.name)
-          out.print(" => ")
-          out.println(info.symbol)
+    if (settings.format.isDetailed) {
+      if (info.isTemplate || info.isMember) {
+        val printed = mutable.Set[String]()
+        infoNotes.visited.tail.foreach { info =>
+          if (!printed(info.symbol)) {
+            printed += info.symbol
+            out.print("  ")
+            out.print(info.name)
+            out.print(" => ")
+            out.println(info.symbol)
+          }
         }
       }
     }

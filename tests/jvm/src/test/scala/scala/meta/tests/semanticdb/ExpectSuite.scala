@@ -112,7 +112,8 @@ trait ExpectHelpers extends FunSuiteLike {
 
   protected def metap(dirOrJar: Path): String = {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
-      val settings = scala.meta.metap.Settings().withPaths(List(dirOrJar))
+      import scala.meta.metap.Format._
+      val settings = scala.meta.metap.Settings().withFormat(Detailed).withPaths(List(dirOrJar))
       val reporter = Reporter().withOut(out).withErr(err)
       Metap.process(settings, reporter)
     }

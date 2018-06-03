@@ -1,9 +1,15 @@
 package scala.meta.internal.metap
 
 import java.io._
+import scala.meta.cli._
 import scala.meta.internal.semanticdb3._
+import scala.meta.metap._
 
-abstract class BasePrinter(val out: PrintStream, val doc: TextDocument) {
+abstract class BasePrinter(val settings: Settings, val reporter: Reporter, val doc: TextDocument) {
+  def out: PrintStream = {
+    reporter.out
+  }
+
   def rep[T](pre: String, xs: Seq[T], sep: String, suf: String)(f: T => Unit): Unit = {
     if (xs.nonEmpty) {
       out.print(pre)
