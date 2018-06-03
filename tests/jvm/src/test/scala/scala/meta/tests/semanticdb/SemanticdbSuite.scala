@@ -16,7 +16,7 @@ import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
 
 abstract class SemanticdbSuite(
-    mode: SemanticdbMode = SemanticdbMode.Fat,
+    text: TextMode = TextMode.All,
     symbols: SymbolMode = SymbolMode.Definitions,
     types: TypeMode = TypeMode.All
 ) extends FunSuite
@@ -50,8 +50,8 @@ abstract class SemanticdbSuite(
   }
   import databaseOps._
   config = config.copy(
-    mode = mode,
-    failures = FailureMode.Error,
+    crashes = CrashMode.Error,
+    text = text,
     symbols = symbols,
     types = types
   )

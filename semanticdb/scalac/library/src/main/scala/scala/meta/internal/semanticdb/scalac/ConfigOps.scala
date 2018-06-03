@@ -10,7 +10,7 @@ case class SemanticdbConfig(
     crashes: CrashMode,
     sourceroot: AbsolutePath,
     targetroot: AbsolutePath,
-    mode: SemanticdbMode,
+    text: TextMode,
     symbols: SymbolMode,
     types: TypeMode,
     profiling: ProfilingMode,
@@ -23,7 +23,7 @@ case class SemanticdbConfig(
       "crashes" -> crashes.name,
       "sourceroot" -> sourceroot,
       "targetroot" -> targetroot,
-      "mode" -> mode.name,
+      "text" -> text.name,
       "types" -> types.name,
       "symbols" -> symbols.name,
       "profiling" -> profiling.name,
@@ -40,7 +40,7 @@ object SemanticdbConfig {
     CrashMode.Warning,
     PathIO.workingDirectory,
     PathIO.workingDirectory,
-    SemanticdbMode.Fat,
+    TextMode.All,
     SymbolMode.Definitions,
     TypeMode.All,
     ProfilingMode.Off,
@@ -53,6 +53,7 @@ object SemanticdbConfig {
   private val SetCrashes = "crashes:(.*)".r
   private val SetSourceroot = "sourceroot:(.*)".r
   private val SetMode = "mode:(.*)".r
+  private val SetText = "text:(.*)".r
   private val SetDenotations = "denotations:(.*)".r
   private val SetSymbolInformation = "symbols:(.*)".r
   private val SetSignatures = "signatures:(.*)".r
@@ -71,43 +72,48 @@ object SemanticdbConfig {
       errFn: String => Unit,
       reporter: Reporter
   ): SemanticdbConfig = {
+    def deprecated(option: String, instead: String): Unit = {
+      reporter.warning(
+        NoPosition,
+        s"-P:semanticdb:$option is deprecated. Use -P:semanticdb:$instead instead.")
+    }
+    def unsupported(option: String, instead: String = ""): Unit = {
+      val buf = new StringBuilder
+      buf.append(s"-P:semanticdb:$option is no longer supported.")
+      if (instead.nonEmpty) buf.append(s" . Use -P:semanticdb:$instead instead.")
+      errFn(buf.toString)
+    }
     var config = default
     val relevantOptions = scalacOptions.filter(_.startsWith("-P:semanticdb:"))
     val strippedOptions = relevantOptions.map(_.stripPrefix("-P:semanticdb:"))
     strippedOptions.foreach {
       case option @ SetFailures(CrashMode(crashes)) =>
-        reporter.warning(
-          NoPosition,
-          s"-P:semanticdb:$option is deprecated. " +
-            s"Use -P:semanticdb:crashes:{error,warning,info,ignore} instead.")
+        deprecated(option, "crashes:{error,warning,info,ignore}")
         config = config.copy(crashes = crashes)
       case SetCrashes(CrashMode(crashes)) =>
         config = config.copy(crashes = crashes)
       case SetSourceroot(path) =>
         config = config.copy(sourceroot = AbsolutePath(path))
-      case SetMode(SemanticdbMode(mode)) =>
-        config = config.copy(mode = mode)
+      case option @ SetMode(TextMode(text)) =>
+        deprecated(option, "text:{all,none}")
+        config = config.copy(text = text)
+      case SetText(TextMode(text)) =>
+        config = config.copy(text = text)
       case option @ SetDenotations("all") =>
-        errFn(s"$option is no longer supported.")
+        unsupported(option)
       case option @ SetDenotations(SymbolMode(denotations)) =>
-        // TODO(olafur): remove this on next breaking release
-        reporter.warning(
-          NoPosition,
-          s"-P:semanticdb:$option is deprecated. " +
-            s"Use -P:semanticdb:symbols:{definitions,all,none} instead.")
+        deprecated(option, "symbols:{all,none}")
         config = config.copy(symbols = denotations)
       case SetSymbolInformation(SymbolMode(infos)) =>
         config = config.copy(symbols = infos)
       case option @ SetSignatures(_) =>
-        errFn(
-          s"-P:semanticb:$option is no longer supported. " +
-            s"Use -P:semanticdb:types:{all,none} instead.")
+        unsupported(option, "types:{all,none}")
       case SetTypes(TypeMode(types)) =>
         config = config.copy(types = types)
       case option @ SetMembers(_) =>
-        errFn(s"$option is no longer supported.")
+        unsupported(option)
       case option @ SetOverrides(_) =>
-        errFn(s"$option is no longer supported.")
+        unsupported(option)
       case SetProfiling(ProfilingMode(profiling)) =>
         config = config.copy(profiling = profiling)
       case SetInclude(include) =>
@@ -115,10 +121,7 @@ object SemanticdbConfig {
       case SetExclude(exclude) =>
         config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
       case option @ SetMessages(DiagnosticMode(messages)) =>
-        reporter.warning(
-          NoPosition,
-          s"-P:semanticdb:$option is deprecated. " +
-            s"Use -P:semanticdb:diagnostics:{all,none} instead.")
+        deprecated(option, "diagnostics:{all,none}")
         config = config.copy(diagnostics = messages)
       case SetDiagnostics(DiagnosticMode(diagnostics)) =>
         config = config.copy(diagnostics = diagnostics)
@@ -143,19 +146,17 @@ object CrashMode {
   case object Ignore extends CrashMode
 }
 
-sealed abstract class SemanticdbMode {
+sealed abstract class TextMode {
   def name: String = toString.toLowerCase
-  import SemanticdbMode._
-  def isSlim: Boolean = this == Slim
-  def isFat: Boolean = this == Fat
-  def isDisabled: Boolean = this == Disabled
+  import TextMode._
+  def isAll: Boolean = this == All
+  def isNone: Boolean = this == None
 }
-object SemanticdbMode {
-  def unapply(arg: String): Option[SemanticdbMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(Fat, Slim, Disabled)
-  case object Fat extends SemanticdbMode
-  case object Slim extends SemanticdbMode
-  case object Disabled extends SemanticdbMode
+object TextMode {
+  def unapply(arg: String): Option[TextMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, None)
+  case object All extends TextMode
+  case object None extends TextMode
 }
 
 sealed abstract class SymbolMode {

@@ -12,16 +12,17 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
   implicit class XtensionUnit(unit: g.CompilationUnit) {
     def isIgnored: Boolean = {
-      config.mode.isDisabled || {
-        !unit.source.file.name.endsWith(".scala") && !unit.source.file.name.endsWith(".sc")
-      } || {
+      val matchesExtension = {
+        val fileName = unit.source.file.name
+        fileName.endsWith(".scala") || fileName.endsWith(".sc")
+      }
+      val matchesFilter = {
         Option(unit.source.file)
           .flatMap(f => Option(f.file))
-          .map(_.getAbsolutePath)
-          .exists(
-            fullName => !config.fileFilter.matches(fullName)
-          )
+          .map(f => config.fileFilter.matches(f.getAbsolutePath))
+          .getOrElse(true)
       }
+      !matchesExtension || !matchesFilter
     }
   }
 

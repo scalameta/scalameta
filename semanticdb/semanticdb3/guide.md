@@ -237,17 +237,17 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td>Current working directory</td>
   </tr>
   <tr>
-    <td><code>-P:semanticdb:mode:&lt;value&gt;</code></td>
+    <td><code>-P:semanticdb:text:&lt;value&gt;</code></td>
     <td>
-        <code>fat</code>,<br/>
-        <code>slim</code>
+        <code>all</code>,<br/>
+        <code>none</code>
     </td>
     <td>
-      Specifies whether to include source code in
-      <code>TextDocument.text</code> (<code>fat</code> for yes,
-      <code>slim</code> for no).
+      Specifies whether to save source code in
+      <code>TextDocument.text</code> (<code>all</code> for yes,
+      <code>none</code> for no).
     </td>
-    <td><code>fat</code></td>
+    <td><code>all</code></td>
   </tr>
   <tr>
     <td><code>-P:semanticdb:symbols:&lt;value&gt;</code></td>
