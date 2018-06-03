@@ -202,7 +202,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       symbols(ms) = gs.toSymbolInformation
                     }
                   }
-                  if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
+                  if (gsym != g.definitions.RepeatedParamClass) {
                     add(symbol, gsym)
                   }
                   if (gsym.isClass && !gsym.isTrait) {
