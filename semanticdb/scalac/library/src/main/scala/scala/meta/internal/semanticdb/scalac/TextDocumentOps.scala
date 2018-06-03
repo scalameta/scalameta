@@ -202,9 +202,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       symbols(ms) = gs.toSymbolInformation
                     }
                   }
-                  if (gsym != g.definitions.RepeatedParamClass) {
-                    add(symbol, gsym)
-                  }
+                  add(symbol, gsym)
                   if (gsym.isClass && !gsym.isTrait) {
                     val gprim = gsym.primaryConstructor
                     if (gprim != g.NoSymbol) {
