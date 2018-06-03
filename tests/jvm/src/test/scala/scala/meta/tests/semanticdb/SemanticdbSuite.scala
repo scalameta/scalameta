@@ -17,8 +17,7 @@ import scala.meta.testkit.DiffAssertions
 
 abstract class SemanticdbSuite(
     text: TextMode = TextMode.All,
-    symbols: SymbolMode = SymbolMode.Definitions,
-    types: TypeMode = TypeMode.All
+    symbols: SymbolMode = SymbolMode.Definitions
 ) extends FunSuite
     with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
@@ -52,8 +51,7 @@ abstract class SemanticdbSuite(
   config = config.copy(
     crashes = CrashMode.Error,
     text = text,
-    symbols = symbols,
-    types = types
+    symbols = symbols
   )
 
   private def computeDatabaseFromSnippet(code: String): s.TextDocument = {

@@ -14,7 +14,6 @@ case class SemanticdbConfig(
     targetroot: AbsolutePath,
     text: TextMode,
     symbols: SymbolMode,
-    types: TypeMode,
     diagnostics: DiagnosticMode,
     synthetics: SyntheticMode) {
   def syntax: String = {
@@ -27,7 +26,6 @@ case class SemanticdbConfig(
       "sourceroot" -> sourceroot,
       "targetroot" -> targetroot,
       "text" -> text.name,
-      "types" -> types.name,
       "symbols" -> symbols.name,
       "diagnostics" -> diagnostics.name,
       "synthetics" -> synthetics.name
@@ -44,7 +42,6 @@ object SemanticdbConfig {
     PathIO.workingDirectory,
     TextMode.All,
     SymbolMode.Definitions,
-    TypeMode.All,
     DiagnosticMode.All,
     SyntheticMode.All
   )
@@ -58,7 +55,7 @@ object SemanticdbConfig {
   private val SetMode = "mode:(.*)".r
   private val SetText = "text:(.*)".r
   private val SetDenotations = "denotations:(.*)".r
-  private val SetSymbolInformation = "symbols:(.*)".r
+  private val SetSymbols = "symbols:(.*)".r
   private val SetSignatures = "signatures:(.*)".r
   private val SetTypes = "types:(.*)".r
   private val SetMembers = "members:(.*)".r
@@ -107,22 +104,22 @@ object SemanticdbConfig {
         config = config.copy(text = text)
       case option @ SetDenotations("all") =>
         unsupported(option)
-      case option @ SetDenotations(SymbolMode(denotations)) =>
+      case option @ SetDenotations(SymbolMode(symbols)) =>
         deprecated(option, "symbols:{all,none}")
-        config = config.copy(symbols = denotations)
-      case SetSymbolInformation(SymbolMode(infos)) =>
-        config = config.copy(symbols = infos)
+        config = config.copy(symbols = symbols)
+      case SetSymbols(SymbolMode(symbols)) =>
+        config = config.copy(symbols = symbols)
       case option @ SetSignatures(_) =>
-        unsupported(option, "types:{all,none}")
-      case SetTypes(TypeMode(types)) =>
-        config = config.copy(types = types)
+        unsupported(option)
+      case option @ SetTypes(_) =>
+        unsupported(option)
       case option @ SetMembers(_) =>
         unsupported(option)
       case option @ SetOverrides(_) =>
         unsupported(option)
-      case option @ SetMessages(DiagnosticMode(messages)) =>
+      case option @ SetMessages(DiagnosticMode(diagnostics)) =>
         deprecated(option, "diagnostics:{all,none}")
-        config = config.copy(diagnostics = messages)
+        config = config.copy(diagnostics = diagnostics)
       case SetDiagnostics(DiagnosticMode(diagnostics)) =>
         config = config.copy(diagnostics = diagnostics)
       case SetSynthetics(SyntheticMode(synthetics)) =>
@@ -194,19 +191,6 @@ object SymbolMode {
   def all = List(Definitions, None)
   case object Definitions extends SymbolMode
   case object None extends SymbolMode
-}
-
-sealed abstract class TypeMode {
-  def name: String = toString.toLowerCase
-  import TypeMode._
-  def isAll: Boolean = this == All
-  def isNone: Boolean = this == None
-}
-object TypeMode {
-  def unapply(arg: String): Option[TypeMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(All, None)
-  case object None extends TypeMode
-  case object All extends TypeMode
 }
 
 sealed abstract class DiagnosticMode {

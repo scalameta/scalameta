@@ -289,19 +289,6 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td><code>definitions</code></td>
   </tr>
   <tr>
-    <td><code>-P:semanticdb:types:&lt;value&gt;</code></td>
-    <td>
-      <code>all</code>,<br/>
-      <code>none</code><br/>
-    </td>
-    <td>
-      Says whether to save type signatures in
-      <code>SymbolInformation.tpe</code> (<code>all</code> for yes,
-      <code>none</code> for no).
-    </td>
-    <td><code>all</code></td>
-  </tr>
-  <tr>
     <td><code>-P:semanticdb:diagnostics:&lt;value&gt;</code></td>
     <td>
       <code>all</code>,<br/>

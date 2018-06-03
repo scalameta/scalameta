@@ -190,24 +190,18 @@ trait SymbolInformationOps { self: SemanticdbOps =>
 
     def toSymbolInformation(): SymbolInformationResult = {
       val (anns, todoAnns) = this.anns
-      config.types match {
-        case TypeMode.None =>
-          val denot = s.SymbolInformation()
-          SymbolInformationResult(denot, todoAnns)
-        case TypeMode.All =>
-          val (tpe, todoTpe) = this.tpe
-          val denot = s.SymbolInformation(
-            symbol = gsym.toSemantic.syntax,
-            language = language,
-            kind = kind,
-            accessibility = Some(acc),
-            properties = properties,
-            name = name,
-            tpe = tpe,
-            annotations = anns
-          )
-          SymbolInformationResult(denot, todoAnns ++ todoTpe)
-      }
+      val (tpe, todoTpe) = this.tpe
+      val denot = s.SymbolInformation(
+        symbol = gsym.toSemantic.syntax,
+        language = language,
+        kind = kind,
+        accessibility = Some(acc),
+        properties = properties,
+        name = name,
+        tpe = tpe,
+        annotations = anns
+      )
+      SymbolInformationResult(denot, todoAnns ++ todoTpe)
     }
   }
 
