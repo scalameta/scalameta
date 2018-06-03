@@ -63,7 +63,10 @@ trait SymbolOps { self: SemanticdbOps =>
           sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
           (sym.owner.isMethod && !sym.isParameter) ||
           ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter) ||
-          sym.isSelfParameter
+          sym.isSelfParameter ||
+          sym.isRefinementDummy ||
+          sym.isAnonymousClass ||
+          sym.isExistential
       !definitelyGlobal && (definitelyLocal || sym.owner.isSemanticdbLocal)
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
@@ -173,6 +176,9 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSyntheticCaseAccessor: Boolean = {
       sym.isCaseAccessor && sym.name.toString.contains("$")
     }
+    def isRefinementDummy: Boolean = {
+      sym.name == g.tpnme.REFINE_CLASS_NAME
+    }
     def isUseless: Boolean = {
       sym.isAnonymousClass ||
       sym.isSyntheticConstructor ||
@@ -180,7 +186,8 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isLocalChild ||
       sym.isSyntheticValueClassCompanion ||
       sym.isUselessField ||
-      sym.isSyntheticCaseAccessor
+      sym.isSyntheticCaseAccessor ||
+      sym.isRefinementDummy
     }
     def isUseful: Boolean = !sym.isUseless
   }

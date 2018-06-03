@@ -669,14 +669,9 @@ class TargetedSuite extends SemanticdbSuite {
        |  extends AnyRef
        |_empty_.ac.x(). => val method x: : Int
        |  Int => scala.Int#
-       |_empty_.ac.y(). => val method y: : Class[_$1] forSome { type _$1 >: Nothing <: Any }
+       |_empty_.ac.y(). => val method y: : Class[local0] forSome { local0: <?> }
        |  Class => scala.Predef.Class#
-       |  _$1 => _empty_.ac.y._$1#
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
-       |_empty_.ac.y._$1# => abstract type _$1: >: Nothing <: Any
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
+       |  local0 => local0
     """.stripMargin
   )
 
@@ -696,11 +691,8 @@ class TargetedSuite extends SemanticdbSuite {
       |  }
       |}
     """.stripMargin,
-    // Note that _empty_.ab.$anon#y. matches both y: Int and  y: Any.
     """|_empty_.ad. => final object ad.{+6 decls}
        |  extends AnyRef
-       |_empty_.ad.$anon#y(). => abstract val method y: : Any
-       |  Any => scala.Any#
        |_empty_.ad.Bar# => class Bar.{+1 decls}
        |  extends AnyRef
        |_empty_.ad.Bar#`<init>`(). => primary ctor <init>: ()
@@ -709,41 +701,39 @@ class TargetedSuite extends SemanticdbSuite {
        |_empty_.ad.k(). => val method k: : AnyRef with Foo { val method y: Any }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  y => _empty_.ad.$anon#y().
+       |  y => local9
        |  Any => scala.Any#
-       |_empty_.ad.x(). => val method x: : AnyRef with Foo { val method y: Int; method z[T >: Nothing <: Any] => (e: T): T }
+       |_empty_.ad.x(). => val method x: : AnyRef with Foo { local6: <?>; local7: <?> }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  y => _empty_.ad.x.$anon#y().
-       |  Int => scala.Int#
-       |  z => _empty_.ad.x.$anon#z().
-       |  T => _empty_.ad.x.$anon#z().[T]
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
-       |  e => _empty_.ad.x.$anon#z().(e)
-       |_empty_.ad.x.$anon#y(). => val method y: : Int
-       |  Int => scala.Int#
-       |_empty_.ad.x.$anon#z(). => method z: [T >: Nothing <: Any] => (e: T): T
-       |  T => _empty_.ad.x.$anon#z().[T]
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
-       |  e => _empty_.ad.x.$anon#z().(e)
-       |_empty_.ad.x.$anon#z().(e) => param e: T
-       |  T => _empty_.ad.x.$anon#z().[T]
-       |_empty_.ad.x.$anon#z().[T] => typeparam T: >: Nothing <: Any
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
-       |_empty_.ad.z(). => val method z: : AnyRef with Foo { val method y: Any }
+       |  local6 => local6
+       |  local7 => local7
+       |_empty_.ad.z(). => val method z: : AnyRef with Foo { val method y: Int }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  y => _empty_.ad.$anon#y().
-       |  Any => scala.Any#
-       |_empty_.ad.zz(). => val method zz: : Bar { val method y: Int }
+       |  y => local8
+       |  Int => scala.Int#
+       |_empty_.ad.zz(). => val method zz: : Bar { local12: <?> }
        |  Bar => _empty_.ad.Bar#
-       |  y => _empty_.ad.zz.$anon#y().
+       |  local12 => local12
+       |local0 => val method y: : Int
        |  Int => scala.Int#
-       |_empty_.ad.zz.$anon#y(). => val method y: : Int
+       |local10 => val method y: : Int
        |  Int => scala.Int#
+       |local2 => method z: [T >: Nothing <: Any] => (local4: <?>): T
+       |  T => local3
+       |  Nothing => scala.Nothing#
+       |  Any => scala.Any#
+       |  local4 => local4
+       |local3 => typeparam T: >: Nothing <: Any
+       |  Nothing => scala.Nothing#
+       |  Any => scala.Any#
+       |local5 => param e: T
+       |  T => local3
+       |local8 => abstract val method y: : Int
+       |  Int => scala.Int#
+       |local9 => abstract val method y: : Any
+       |  Any => scala.Any#
     """.stripMargin
   )
 
@@ -761,8 +751,8 @@ class TargetedSuite extends SemanticdbSuite {
       |  val z = ae.x.<<z>>(2)
       |}
     """.stripMargin, { (db, y1, z1, y2, z2) =>
-      assert(y1 == y2)
-      assert(z1 == z2)
+      assert(y1 != y2)
+      assert(z1 != z2)
     }
   )
 
