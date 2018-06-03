@@ -58,7 +58,7 @@ commands += Command.command("mima") { s =>
   // s"very mimaReportBinaryIssues" ::
   s
 }
-commands += Command.command("ci-metac") { s =>
+commands += Command.command("ci-slow") { s =>
   val out = file("target/scala-library")
   if (!out.exists()) {
     IO.unzipURL(
@@ -67,10 +67,10 @@ commands += Command.command("ci-metac") { s =>
       filter = s"scala-$LatestScala212/src/library/*"
     )
   }
-  "testsJVM/test:runMain scala.meta.tests.semanticdb.MetacScalaLibrary" :: s
-}
-commands += Command.command("ci-metacp") { s =>
-  "testsJVM/test:runMain scala.meta.tests.metacp.MetacpAllLibraries" :: s
+  s"wow $ciScalaVersion" ::
+    "testsJVM/test:runMain scala.meta.tests.semanticdb.MetacScalaLibrary" ::
+    "testsJVM/slow:test" ::
+    s
 }
 commands += Command.command("save-expect") { s =>
   "metapJVM/compile" ::
@@ -452,6 +452,7 @@ lazy val testkit = project
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
+  .configs(Fast, Slow)
   .settings(
     sharedSettings,
     nonPublishableSettings,
@@ -470,7 +471,12 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     ),
     buildInfoPackage := "scala.meta.tests",
     libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.5" % "test",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test"
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test",
+    testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
+    inConfig(Fast)(Defaults.testTasks),
+    inConfig(Slow)(Defaults.testTasks),
+    testOptions.in(Slow) -= Tests.Argument("-l", "org.scalatest.tags.Slow"),
+    testOptions.in(Slow) += Tests.Argument("-n", "org.scalatest.tags.Slow")
   )
   .jvmSettings(
     // FIXME: https://github.com/scalatest/scalatest/issues/1112

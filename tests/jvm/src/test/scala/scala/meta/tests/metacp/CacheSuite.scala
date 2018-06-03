@@ -5,6 +5,8 @@ import org.scalatest.concurrent.TimeLimitedTests
 import org.scalatest.time.Minute
 import org.scalatest.time.Span
 import org.scalatest.FunSuite
+import org.scalatest.Ignore
+import org.scalatest.tagobjects.Slow
 import scala.meta.cli._
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PlatformFileIO
@@ -12,9 +14,9 @@ import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.metacp.Settings
 import scala.meta.testkit.DiffAssertions
-import scala.meta.tests.BuildInfo
+import scala.meta.tests._
 
-class MetacpCacheSuite extends FunSuite with DiffAssertions with TimeLimitedTests {
+class CacheSuite extends FunSuite with DiffAssertions with TimeLimitedTests {
 
   private val tmp: AbsolutePath = AbsolutePath(Files.createTempDirectory("metacp"))
   tmp.toFile.deleteOnExit()
@@ -32,7 +34,7 @@ class MetacpCacheSuite extends FunSuite with DiffAssertions with TimeLimitedTest
     }
   }
 
-  test("scala-library-synthetics") {
+  test("scala-library-synthetics", Slow) {
     val settings = Settings()
       .withCacheDir(tmp.resolve("scala-library-synthetics"))
       .withScalaLibrarySynthetics(true)
@@ -56,7 +58,7 @@ class MetacpCacheSuite extends FunSuite with DiffAssertions with TimeLimitedTest
     }
   }
 
-  test("scala-library") {
+  test("scala-library", Slow) {
     val settings = Settings()
         .withCacheDir(tmp.resolve("scala-library"))
         .withClasspath(Library.scalaLibrary.classpath())

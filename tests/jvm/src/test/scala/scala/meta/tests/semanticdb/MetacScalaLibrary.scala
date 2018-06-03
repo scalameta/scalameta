@@ -38,7 +38,7 @@ object MetacScalaLibrary {
       out.toString,
       "-classpath",
       classpath,
-      "-P:semanticdb:failures:error"
+      "-P:semanticdb:crashes:error"
     ) ++ files
     val settings = Settings().withScalacArgs(scalacArgs)
     val reporter = Reporter()

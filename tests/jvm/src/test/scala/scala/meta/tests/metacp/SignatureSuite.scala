@@ -6,6 +6,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import org.scalatest.FunSuite
+import org.scalatest.Ignore
+import org.scalatest.tagobjects.Slow
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.meta.internal.io._
@@ -32,7 +34,7 @@ class SignatureSuite extends FunSuite with DiffAssertions {
   // Validates that all signatures of the classfiles in the given
   // library pass assertSignatureRoundtrip
   def checkSignatureRoundtrip(library: Library): Unit = {
-    test(library.name) {
+    test(library.name, Slow) {
       val failingSignatures = ArrayBuffer.empty[String]
       library.classpath().visit { root =>
         new java.nio.file.SimpleFileVisitor[Path] {
