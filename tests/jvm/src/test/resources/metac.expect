@@ -228,8 +228,9 @@ Schema => SemanticDB v3
 Uri => semanticdb/integration/src/main/scala/example/Classes.scala
 Text => non-empty
 Language => Scala
-Symbols => 103 entries
-Occurrences => 44 entries
+Symbols => 109 entries
+Occurrences => 57 entries
+Synthetics => 3 entries
 
 Symbols:
 classes. => package classes
@@ -501,6 +502,20 @@ classes.M.C5#x(). => private[this] val method x: : Int
 classes.M.C5(). => implicit method C5: (x: <?>): C5
   x => classes.M.C5().(x)
   C5 => classes.M.C5#
+classes.N. => final object N.{+2 decls}
+  extends AnyRef
+classes.N.anonClass(). => val method anonClass: : C7 { local1: <?> }
+  C7 => classes.C7#
+  local1 => local1
+classes.N.anonFun(). => val method anonFun: : List[Int]
+  List => scala.collection.immutable.List#
+  Int => scala.Int#
+local0 => val method local: : Nothing
+  Nothing => scala.Nothing#
+local2 => param i: Int
+  Int => scala.Int#
+local3 => val local local: Int
+  Int => scala.Int#
 
 Occurrences:
 [0:8..0:15): classes <= classes.
@@ -547,6 +562,34 @@ Occurrences:
 [22:8..22:8):  <= classes.C9#`<init>`().
 [22:27..22:28): x <= classes.C9#x().
 [22:30..22:33): Int => scala.Int#
+[24:7..24:8): N <= classes.N.
+[25:6..25:15): anonClass <= classes.N.anonClass().
+[25:22..25:24): C7 => classes.C7#
+[25:24..25:24):  => classes.C7#`<init>`().
+[26:8..26:13): local <= local0
+[26:16..26:19): ??? => scala.Predef.`???`().
+[28:6..28:13): anonFun <= classes.N.anonFun().
+[28:16..28:20): List => scala.collection.immutable.List.
+[28:24..28:27): map => scala.collection.immutable.List#map().
+[28:30..28:31): i <= local2
+[29:8..29:13): local <= local3
+[30:4..30:9): local => local3
+[30:10..30:11): + => scala.Int#`+`(+4).
+
+Synthetics:
+[28:20..28:20):  => *.apply[Int]
+  [0:0..0:1): * => _star_.
+  [0:2..0:7): apply => scala.collection.immutable.List.apply().
+  [0:8..0:11): Int => scala.Int#
+[28:27..28:27):  => *[Int, List[Int]]
+  [0:0..0:1): * => _star_.
+  [0:2..0:5): Int => scala.Int#
+  [0:7..0:11): List => scala.collection.immutable.List#
+  [0:12..0:15): Int => scala.Int#
+[31:3..31:3):  => *(scala.collection.immutable.List.canBuildFrom[Int])
+  [0:0..0:1): * => _star_.
+  [0:34..0:46): canBuildFrom => scala.collection.immutable.List.canBuildFrom().
+  [0:47..0:50): Int => scala.Int#
 
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------

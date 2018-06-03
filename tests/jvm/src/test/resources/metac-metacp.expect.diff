@@ -169,6 +169,21 @@ classes.C6#copy$default$1().
 -              symbol: "scala.annotation.unchecked.uncheckedVariance#"
 
 
+======================
+classes.N.anonClass().
+======================
+--- metac
++++ metacp
+     return_type {
+       tag: STRUCTURAL_TYPE
+       structuralType {
+-        declarations: "local1"
++        declarations: "classes.N.anonClass().$anon#local()."
+         tpe {
+           tag: WITH_TYPE
+           withType {
+
+
 ========
 example.
 ========

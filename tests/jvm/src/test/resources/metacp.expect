@@ -590,6 +590,31 @@ classes.M.C5(). => implicit method C5: (x: Int): C5
 classes.M.C5().(x) => param x: Int
   Int => scala.Int#
 
+classes/N.class
+---------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => classes/N.class
+Text => empty
+Language => Scala
+Symbols => 6 entries
+
+Symbols:
+_root_. => package _root_
+classes. => package classes
+classes.N. => final object N.{+2 decls}
+  extends AnyRef
+classes.N.anonClass(). => val method anonClass: : C7 { val method local: Nothing }
+  C7 => classes.C7#
+  local => classes.N.anonClass().$anon#local().
+  Nothing => scala.Nothing#
+classes.N.anonClass().$anon#local(). => val method local: : Nothing
+  Nothing => scala.Nothing#
+classes.N.anonFun(). => val method anonFun: : List[Int]
+  List => scala.collection.immutable.List#
+  Int => scala.Int#
+
 com/javacp/ClassSuffix.class
 ----------------------------
 

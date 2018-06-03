@@ -21,3 +21,13 @@ class C7(x: Int)
 class C8(private[this] val x: Int)
 
 class C9(private[this] var x: Int)
+
+object N {
+  val anonClass = new C7(42) {
+    val local = ???
+  }
+  val anonFun = List(1).map { i =>
+    val local = 2
+    local + 2
+  }
+}

@@ -66,6 +66,7 @@ trait SymbolOps { self: SemanticdbOps =>
           sym.isSelfParameter ||
           sym.isRefinementDummy ||
           sym.isAnonymousClass ||
+          sym.isAnonymousFunction ||
           sym.isExistential
       !definitelyGlobal && (definitelyLocal || sym.owner.isSemanticdbLocal)
     }
