@@ -737,25 +737,6 @@ class TargetedSuite extends SemanticdbSuite {
     """.stripMargin
   )
 
-  targeted(
-    """
-      |object ae {
-      |  trait Foo
-      |  val x = new Foo {
-      |    val <<y>> = 2
-      |    def <<z>>[T](e: T) = e
-      |  }
-      |}
-      |object af {
-      |  val y = ae.x.<<y>>
-      |  val z = ae.x.<<z>>(2)
-      |}
-    """.stripMargin, { (db, y1, z1, y2, z2) =>
-      assert(y1 != y2)
-      assert(z1 != z2)
-    }
-  )
-
   occurrences(
     """
       |object ag {

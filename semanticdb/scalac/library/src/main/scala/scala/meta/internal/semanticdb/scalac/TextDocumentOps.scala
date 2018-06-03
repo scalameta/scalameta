@@ -223,7 +223,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   }
                 }
               } else {
-                occurrences(mtree.pos) = symbol
+                val selectionFromStructuralType = gsym.owner.isRefinementDummy
+                if (!selectionFromStructuralType) occurrences(mtree.pos) = symbol
               }
 
               def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {

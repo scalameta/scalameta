@@ -1408,7 +1408,7 @@ Uri => semanticdb/integration/src/main/scala/example/Selects.scala
 Text => non-empty
 Language => Scala
 Symbols => 28 entries
-Occurrences => 71 entries
+Occurrences => 69 entries
 
 Symbols:
 local0 => abstract val method x: : Int
@@ -1521,14 +1521,12 @@ Occurrences:
 [21:6..21:9): s1x <= selects.Test.s1x().
 [21:12..21:13): s => selects.Test.s().
 [21:14..21:16): s1 => selects.Structural#s1().
-[21:17..21:18): x => local0
 [22:6..22:8): s2 <= selects.Test.s2().
 [22:11..22:12): s => selects.Test.s().
 [22:13..22:15): s2 => selects.Structural#s2().
 [23:6..23:9): s2x <= selects.Test.s2x().
 [23:12..23:13): s => selects.Test.s().
 [23:14..23:16): s2 => selects.Structural#s2().
-[23:17..23:18): x => local1
 [25:6..25:7): e <= selects.Test.e().
 [25:14..25:25): Existential => selects.Existential#
 [25:25..25:25):  => selects.Existential#`<init>`().
@@ -1666,7 +1664,7 @@ Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
 Symbols => 131 entries
-Occurrences => 245 entries
+Occurrences => 244 entries
 
 Symbols:
 local0 => abstract method k: : Int
@@ -2153,7 +2151,6 @@ Occurrences:
 [68:26..68:27): T <= local10
 [68:31..68:35): List => scala.package.List#
 [68:36..68:37): T => local10
-[68:42..68:43): L => local9
 [70:11..70:25): ClassInfoType1 <= types.Test.C#ClassInfoType1.
 [71:10..71:24): ClassInfoType2 <= types.Test.C#ClassInfoType2#
 [71:25..71:25):  <= types.Test.C#ClassInfoType2#`<init>`().
