@@ -465,7 +465,7 @@ class Printer(out: PrintStream, doc: TextDocument) {
   }
 
   private def pprint(diag: Diagnostic): Unit = {
-    opt(diag.range)(pprint)
+    opt(diag.range, " ")(pprint)
     pprint(diag.severity)
     out.println(diag.message)
   }

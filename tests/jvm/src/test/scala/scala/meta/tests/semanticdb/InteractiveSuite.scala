@@ -67,7 +67,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |[4:4..4:5): + => scala.Predef.any2stringadd#`+`().
       |
       |Diagnostics:
-      |[1:24..1:30)[warning] Unused import
+      |[1:24..1:30) [warning] Unused import
       |
       |Synthetics:
       |[3:27..3:27):  => *.apply[Nothing]
@@ -116,7 +116,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |[2:13..2:15): In => _empty_.b.add().(a)`<error: <none>>`#
       |
       |Diagnostics:
-      |[2:13..2:15)[error] not found: type In
+      |[2:13..2:15) [error] not found: type In
     """.stripMargin
   )
 }

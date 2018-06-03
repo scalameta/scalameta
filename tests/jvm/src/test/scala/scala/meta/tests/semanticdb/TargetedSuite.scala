@@ -444,11 +444,11 @@ class TargetedSuite extends SemanticdbSuite {
       |  HashSet.empty[Int]
       |}
     """.stripMargin.trim,
-    """|[1:48..1:51)[warning] Unused import
-       |[1:53..1:56)[warning] Unused import
-       |[2:24..2:25)[warning] Unused import
-       |[2:56..2:62)[warning] Unused import
-       |[3:39..3:46)[warning] Unused import
+    """|[1:48..1:51) [warning] Unused import
+       |[1:53..1:56) [warning] Unused import
+       |[2:24..2:25) [warning] Unused import
+       |[2:56..2:62) [warning] Unused import
+       |[3:39..3:46) [warning] Unused import
     """.stripMargin.trim
   )
 
@@ -536,7 +536,7 @@ class TargetedSuite extends SemanticdbSuite {
     // See https://github.com/scalameta/scalameta/issues/899
     """import scala.io._
       |object t""".stripMargin,
-    "[0:16..0:17)[warning] Unused import"
+    "[0:16..0:17) [warning] Unused import"
   )
 
   targeted(

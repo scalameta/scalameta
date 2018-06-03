@@ -704,7 +704,7 @@ Occurrences:
 [9:33..9:36): Int => scala.Int#
 
 Diagnostics:
-[2:24..2:30)[warning] Unused import
+[2:24..2:30) [warning] Unused import
 
 Synthetics:
 [9:37..9:37):  => *(((ClassTag.Int): ClassTag[Int]))
@@ -723,7 +723,7 @@ Language => Scala
 Diagnostics => 1 entries
 
 Diagnostics:
-[5:6..5:41)[warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
+[5:6..5:41) [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 semanticdb/integration/src/main/scala/example/Flags.scala
 ---------------------------------------------------------
@@ -986,7 +986,7 @@ Occurrences:
 [0:26..0:34): NonFatal => scala.util.control.NonFatal.
 
 Diagnostics:
-[0:26..0:34)[warning] Unused import
+[0:26..0:34) [warning] Unused import
 
 semanticdb/integration/src/main/scala/example/local-file.scala
 --------------------------------------------------------------
