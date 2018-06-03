@@ -8,27 +8,27 @@ import scala.util.matching.Regex
 
 case class SemanticdbConfig(
     crashes: CrashMode,
+    profiling: ProfilingMode,
+    fileFilter: FileFilter,
     sourceroot: AbsolutePath,
     targetroot: AbsolutePath,
     text: TextMode,
     symbols: SymbolMode,
     types: TypeMode,
-    profiling: ProfilingMode,
-    fileFilter: FileFilter,
     diagnostics: DiagnosticMode,
     synthetics: SyntheticMode) {
   def syntax: String = {
     val p = SemanticdbPlugin.name
     List(
       "crashes" -> crashes.name,
+      "profiling" -> profiling.name,
+      "include" -> fileFilter.include,
+      "exclude" -> fileFilter.exclude,
       "sourceroot" -> sourceroot,
       "targetroot" -> targetroot,
       "text" -> text.name,
       "types" -> types.name,
       "symbols" -> symbols.name,
-      "profiling" -> profiling.name,
-      "include" -> fileFilter.include,
-      "exclude" -> fileFilter.exclude,
       "diagnostics" -> diagnostics.name,
       "synthetics" -> synthetics.name
     ).map { case (k, v) => s"-P:$p:$k:$v" }.mkString(" ")
@@ -38,19 +38,22 @@ case class SemanticdbConfig(
 object SemanticdbConfig {
   def default = SemanticdbConfig(
     CrashMode.Warning,
+    ProfilingMode.Off,
+    FileFilter.matchEverything,
     PathIO.workingDirectory,
     PathIO.workingDirectory,
     TextMode.All,
     SymbolMode.Definitions,
     TypeMode.All,
-    ProfilingMode.Off,
-    FileFilter.matchEverything,
     DiagnosticMode.All,
     SyntheticMode.All
   )
 
   private val SetFailures = "failures:(.*)".r
   private val SetCrashes = "crashes:(.*)".r
+  private val SetProfiling = "profiling:(.*)".r
+  private val SetInclude = "include:(.*)".r
+  private val SetExclude = "exclude:(.*)".r
   private val SetSourceroot = "sourceroot:(.*)".r
   private val SetMode = "mode:(.*)".r
   private val SetText = "text:(.*)".r
@@ -60,9 +63,6 @@ object SemanticdbConfig {
   private val SetTypes = "types:(.*)".r
   private val SetMembers = "members:(.*)".r
   private val SetOverrides = "overrides:(.*)".r
-  private val SetProfiling = "profiling:(.*)".r
-  private val SetInclude = "include:(.*)".r
-  private val SetExclude = "exclude:(.*)".r
   private val SetMessages = "messages:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "synthetics:(.*)".r
@@ -92,6 +92,12 @@ object SemanticdbConfig {
         config = config.copy(crashes = crashes)
       case SetCrashes(CrashMode(crashes)) =>
         config = config.copy(crashes = crashes)
+      case SetProfiling(ProfilingMode(profiling)) =>
+        config = config.copy(profiling = profiling)
+      case SetInclude(include) =>
+        config = config.copy(fileFilter = config.fileFilter.copy(include = include.r))
+      case SetExclude(exclude) =>
+        config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
       case SetSourceroot(path) =>
         config = config.copy(sourceroot = AbsolutePath(path))
       case option @ SetMode(TextMode(text)) =>
@@ -114,12 +120,6 @@ object SemanticdbConfig {
         unsupported(option)
       case option @ SetOverrides(_) =>
         unsupported(option)
-      case SetProfiling(ProfilingMode(profiling)) =>
-        config = config.copy(profiling = profiling)
-      case SetInclude(include) =>
-        config = config.copy(fileFilter = config.fileFilter.copy(include = include.r))
-      case SetExclude(exclude) =>
-        config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
       case option @ SetMessages(DiagnosticMode(messages)) =>
         deprecated(option, "diagnostics:{all,none}")
         config = config.copy(diagnostics = messages)
@@ -144,6 +144,30 @@ object CrashMode {
   case object Warning extends CrashMode
   case object Info extends CrashMode
   case object Ignore extends CrashMode
+}
+
+sealed abstract class ProfilingMode {
+  def name: String = toString.toLowerCase
+  import ProfilingMode._
+  def isConsole: Boolean = this == Console
+  def isOff: Boolean = this == Off
+}
+object ProfilingMode {
+  def unapply(arg: String): Option[ProfilingMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(Console, Off)
+  case object Console extends ProfilingMode
+  case object Off extends ProfilingMode
+}
+
+case class FileFilter(include: Regex, exclude: Regex) {
+  def matches(path: String): Boolean =
+    include.findFirstIn(path).isDefined &&
+      exclude.findFirstIn(path).isEmpty
+}
+object FileFilter {
+  def apply(include: String, exclude: String): FileFilter =
+    FileFilter(include.r, exclude.r)
+  val matchEverything = FileFilter(".*", "$a")
 }
 
 sealed abstract class TextMode {
@@ -183,30 +207,6 @@ object TypeMode {
   def all = List(All, None)
   case object None extends TypeMode
   case object All extends TypeMode
-}
-
-sealed abstract class ProfilingMode {
-  def name: String = toString.toLowerCase
-  import ProfilingMode._
-  def isConsole: Boolean = this == Console
-  def isOff: Boolean = this == Off
-}
-object ProfilingMode {
-  def unapply(arg: String): Option[ProfilingMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(Console, Off)
-  case object Console extends ProfilingMode
-  case object Off extends ProfilingMode
-}
-
-case class FileFilter(include: Regex, exclude: Regex) {
-  def matches(path: String): Boolean =
-    include.findFirstIn(path).isDefined &&
-      exclude.findFirstIn(path).isEmpty
-}
-object FileFilter {
-  def apply(include: String, exclude: String): FileFilter =
-    FileFilter(include.r, exclude.r)
-  val matchEverything = FileFilter(".*", "$a")
 }
 
 sealed abstract class DiagnosticMode {

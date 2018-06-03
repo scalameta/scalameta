@@ -228,6 +228,32 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td><code>warning</code></td>
   </tr>
   <tr>
+    <td><code>-P:semanticdb:profiling:&lt;value&gt;</code></td>
+    <td>
+      <code>console</code>,<br/>
+      <code>off</code><br/>
+    </td>
+    <td>
+      Controls basic profiling functionality that computes the overhead of
+      SemanticDB generation relative to regular compilation time
+      (<code>console</code> for dumping profiling information to console,
+      <code>off</code> for disabling profiling).
+    </td>
+    <td><code>off</code></td>
+  </tr>
+  <tr>
+    <td><code>-P:semanticdb:include:&lt;value&gt;</code></td>
+    <td>Java regex</td>
+    <td>Which source files to include in SemanticDB generation?</td>
+    <td><code>.*</code></td>
+  </tr>
+  <tr>
+    <td><code>-P:semanticdb:exclude:&lt;value&gt;</code></td>
+    <td>Java regex</td>
+    <td>Which source files to exclude from SemanticDB generation?</td>
+    <td><code>^$</code></td>
+  </tr>
+  <tr>
     <td><code>-P:semanticdb:sourceroot:&lt;value&gt;</code></td>
     <td>Absolute or relative path</td>
     <td>
@@ -274,32 +300,6 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
       <code>none</code> for no).
     </td>
     <td><code>all</code></td>
-  </tr>
-  <tr>
-    <td><code>-P:semanticdb:profiling:&lt;value&gt;</code></td>
-    <td>
-      <code>console</code>,<br/>
-      <code>off</code><br/>
-    </td>
-    <td>
-      Controls basic profiling functionality that computes the overhead of
-      SemanticDB generation relative to regular compilation time
-      (<code>console</code> for dumping profiling information to console,
-      <code>off</code> for disabling profiling).
-    </td>
-    <td><code>off</code></td>
-  </tr>
-  <tr>
-    <td><code>-P:semanticdb:include:&lt;value&gt;</code></td>
-    <td>Java regex</td>
-    <td>Which source files to include in SemanticDB generation?</td>
-    <td><code>.*</code></td>
-  </tr>
-  <tr>
-    <td><code>-P:semanticdb:exclude:&lt;value&gt;</code></td>
-    <td>Java regex</td>
-    <td>Which source files to exclude from SemanticDB generation?</td>
-    <td><code>^$</code></td>
   </tr>
   <tr>
     <td><code>-P:semanticdb:diagnostics:&lt;value&gt;</code></td>
