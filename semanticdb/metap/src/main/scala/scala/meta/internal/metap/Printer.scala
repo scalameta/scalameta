@@ -1,7 +1,6 @@
 package scala.meta.internal.metap
 
 import java.io._
-import java.util.HashMap
 import scala.collection.mutable
 import scala.math.Ordering
 import scala.meta.internal.semanticdb3._
@@ -61,13 +60,12 @@ class Printer(out: PrintStream, doc: TextDocument) {
     }
   }
 
-  private val lineToOffsetCache = new HashMap[TextDocument, Array[Int]]
+  private val lineToOffsetCache = new mutable.HashMap[TextDocument, Array[Int]]
   implicit class DocumentOps(doc: TextDocument) {
     def substring(range: Option[Range]): Option[String] = {
       range.flatMap { range =>
         if (doc.text.nonEmpty) {
-          var lineToOffset = lineToOffsetCache.get(doc)
-          if (lineToOffset == null) {
+          val lineToOffset = lineToOffsetCache.getOrElseUpdate(doc, {
             val chars = doc.text.toArray
             val buf = new mutable.ArrayBuffer[Int]
             buf += 0
@@ -77,9 +75,8 @@ class Printer(out: PrintStream, doc: TextDocument) {
               i += 1
             }
             if (buf.last != chars.length) buf += chars.length
-            lineToOffset = buf.toArray
-            lineToOffsetCache.put(doc, lineToOffset)
-          }
+            buf.toArray
+          })
           val startOffset = lineToOffset(range.startLine) + range.startCharacter
           val endOffset = lineToOffset(range.endLine) + range.endCharacter
           Some(doc.text.substring(startOffset, endOffset))
