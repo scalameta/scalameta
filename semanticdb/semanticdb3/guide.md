@@ -39,9 +39,9 @@ Make sure you are using the latest coursier version (1.1.0-M4 or newer).
 2. Add the following aliases to your shell:
 
 ```bash
-alias metac="coursier launch org.scalameta:metac_2.11:3.7.4 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.11.12)"
-alias metacp="coursier launch org.scalameta:metacp_2.11:3.7.4 --"
-alias metap="coursier launch org.scalameta:metap_2.11:3.7.4 --"
+alias metac="coursier launch org.scalameta:metac_2.11:4.0.0 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.11.12)"
+alias metacp="coursier launch org.scalameta:metacp_2.11:4.0.0 --"
+alias metap="coursier launch org.scalameta:metap_2.11:4.0.0 --"
 ```
 
 (Optional) Instead of running `metap` on the JVM, you can build a native binary
@@ -54,7 +54,7 @@ and 10 ms on native).
 2. Link a native `metap` binary.
 
 ```bash
-coursier bootstrap org.scalameta:metap_native0.3_2.11:3.7.4 -o metap -f --native --main scala.meta.cli.Metap
+coursier bootstrap org.scalameta:metap_native0.3_2.11:4.0.0 -o metap -f --native --main scala.meta.cli.Metap
 ```
 
 ## Example
@@ -131,16 +131,9 @@ Symbols => 3 entries
 Occurrences => 7 entries
 
 Symbols:
-_empty_.Test. => final object Test.{+1 decls}
-  extends AnyRef
+_empty_.Test. => final object Test extends AnyRef { +1 decls }
 _empty_.Test.main(). => method main: (args: Array[String]): Unit
-  args => _empty_.Test.main().(args)
-  Array => scala.Array#
-  String => scala.Predef.String#
-  Unit => scala.Unit#
 _empty_.Test.main().(args) => param args: Array[String]
-  Array => scala.Array#
-  String => scala.Predef.String#
 
 Occurrences:
 [0:7..0:11): Test <= _empty_.Test.
@@ -162,8 +155,6 @@ important parts:
 
     For example, `_empty_.Test.main(). => method main: (args: Array[String]): Unit`
     says that `main` is a method with one parameter of type `Array[String]`.
-    Further lines of the printout establish that `Array` in that type
-    refers to `scala.Array#`, etc.
   * `Occurrences` contains a list of identifiers from the source file with
     their line/column-based positions and unique identifiers pointing to
     corresponding definitions resolved by the compiler.
@@ -573,16 +564,17 @@ metap [options] <classpath>
     <td></td>
   </tr>
   <tr>
-    <td><code>--pretty</code>,<br/><code>--proto</code></td>
+    <td><code>--compact</code>,<br/><code>--detailed</code>,<br/><code>--proto</code></td>
     <td></td>
     <td>
-      Specifies prettyprinting format, which can be either <code>--pretty</code>
-      (prints the most important parts of the payload in a condensed fashion)
-      or <code>--proto</code> (prints the same output as <code>protoc</code>
-      would print, <a href="#protoc">see above</a>).
+      Specifies prettyprinting format, which can be either <code>--compact</code>
+      (prints the most important parts of the payload in a condensed fashion),
+      <code>--detailed</code> (more detailed than --compact, but still pretty
+      condensed), or <code>--proto</code> (prints the same output as
+      <code>protoc</code> would print, <a href="#protoc">see below</a>).
     </td>
     <td>
-      <code>--pretty</code>
+      <code>--compact</code>
     </td>
   </tr>
 </table>
