@@ -48,8 +48,8 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |
       |Symbols:
       |b. => package b
-      |b.a. => final object a.{+1 decls}
-      |  extends AnyRef
+      |b.a. => final object a extends AnyRef { +1 decls }
+      |  AnyRef => scala.AnyRef#
       |b.a.x(). => val method x: : List[Nothing]
       |  List => scala.collection.immutable.List#
       |  Nothing => scala.Nothing#
@@ -102,8 +102,8 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Diagnostics => 1 entries
       |
       |Symbols:
-      |_empty_.b. => final object b.{+1 decls}
-      |  extends AnyRef
+      |_empty_.b. => final object b extends AnyRef { +1 decls }
+      |  AnyRef => scala.AnyRef#
       |_empty_.b.add(). => method add: (a: <?>): Int
       |  a => _empty_.b.add().(a)
       |  Int => scala.Int#

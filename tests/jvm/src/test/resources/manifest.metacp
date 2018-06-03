@@ -10,8 +10,8 @@ Symbols => 5 entries
 
 Symbols:
 _empty_. => package _empty_
-_empty_.Test. => final object Test.{+1 decls}
-  extends AnyRef
+_empty_.Test. => final object Test extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 _empty_.Test.main(). => method main: (args: Array[String]): Unit
   args => _empty_.Test.main().(args)
   Array => scala.Array#

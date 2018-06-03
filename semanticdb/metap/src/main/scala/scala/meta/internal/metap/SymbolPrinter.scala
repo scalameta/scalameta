@@ -27,18 +27,7 @@ trait SymbolPrinter extends BasePrinter {
     infoPrinter.pprint(info)
     out.println()
 
-    if (info.isTemplate) {
-      info.tpe.flatMap(_.classInfoType) match {
-        case Some(ClassInfoType(_, parents, _)) =>
-          parents.foreach { tpe =>
-            out.print("  extends ")
-            infoPrinter.pprint(tpe)
-            out.println("")
-          }
-        case None =>
-          ()
-      }
-    } else if (info.isMember) {
+    if (info.isTemplate || info.isMember) {
       val printed = mutable.Set[String]()
       infoNotes.visited.tail.foreach { info =>
         if (!printed(info.symbol)) {
@@ -226,10 +215,8 @@ trait SymbolPrinter extends BasePrinter {
           case CLASS_INFO_TYPE =>
             val Some(ClassInfoType(tparams, parents, decls)) = tpe.classInfoType
             rep("[", tparams, ", ", "]")(defn)
-            if (decls.nonEmpty) out.print(s".{+${decls.length} decls}")
-            // NOTE: We're not doing this to avoid spamming the output.
-            // rep(parents, " with ")(normal)
-            // rep(" { ", decls, "; ", " }")(defn)
+            rep(" extends ", parents, " with ")(normal)
+            if (decls.nonEmpty) out.print(s" { +${decls.length} decls }")
           case METHOD_TYPE =>
             val Some(MethodType(tparams, paramss, res)) = tpe.methodType
             rep("[", tparams, ", ", "] => ")(defn)

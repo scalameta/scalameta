@@ -11,8 +11,8 @@ Occurrences => 19 entries
 
 Symbols:
 example. => package example
-example.Acc# => class Acc.{+8 decls}
-  extends AnyRef
+example.Acc# => class Acc extends AnyRef { +8 decls }
+  AnyRef => scala.AnyRef#
 example.Acc#`<init>`(). => primary ctor <init>: ()
 example.Acc#m1(). => private method m1: : Nothing
   Nothing => scala.Nothing#
@@ -66,16 +66,19 @@ Synthetics => 1 entries
 
 Symbols:
 advanced. => package advanced
-advanced.C# => class C[T >: Nothing <: Any].{+2 decls}
-  extends AnyRef
+advanced.C# => class C[T >: Nothing <: Any] extends AnyRef { +2 decls }
+  T => advanced.C#[T]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+  AnyRef => scala.AnyRef#
 advanced.C#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
 advanced.C#`<init>`(). => primary ctor <init>: ()
 advanced.C#t(). => method t: : T
   T => advanced.C#[T]
-advanced.Existential# => class Existential.{+3 decls}
-  extends AnyRef
+advanced.Existential# => class Existential extends AnyRef { +3 decls }
+  AnyRef => scala.AnyRef#
 advanced.Existential#`<init>`(). => primary ctor <init>: ()
 advanced.Existential#e1(). => method e1: : List[local3] forSome { <?> }
   List => scala.package.List#
@@ -84,8 +87,8 @@ advanced.Existential#e2(). => method e2: : C[List[local4] forSome { <?> }]
   C => advanced.C#
   List => scala.package.List#
   local4 => local4
-advanced.Structural# => class Structural.{+3 decls}
-  extends AnyRef
+advanced.Structural# => class Structural extends AnyRef { +3 decls }
+  AnyRef => scala.AnyRef#
 advanced.Structural#`<init>`(). => primary ctor <init>: ()
 advanced.Structural#s1(). => method s1: : AnyRef { val method x: Int }
   AnyRef => scala.AnyRef#
@@ -94,8 +97,8 @@ advanced.Structural#s1(). => method s1: : AnyRef { val method x: Int }
 advanced.Structural#s2(). => method s2: : AnyRef { <?> }
   AnyRef => scala.AnyRef#
   local1 => local1
-advanced.Test. => final object Test.{+11 decls}
-  extends AnyRef
+advanced.Test. => final object Test extends AnyRef { +11 decls }
+  AnyRef => scala.AnyRef#
 advanced.Test.e(). => val method e: : Existential
   Existential => advanced.Existential#
 advanced.Test.e1(). => val method e1: : List[Any]
@@ -236,8 +239,8 @@ Synthetics => 3 entries
 
 Symbols:
 classes. => package classes
-classes.C1# => final class C1.{+4 decls}
-  extends AnyVal
+classes.C1# => final class C1 extends AnyVal { +4 decls }
+  AnyVal => scala.AnyVal#
 classes.C1#`<init>`(). => primary ctor <init>: (val x1: Int)
   x1 => classes.C1#`<init>`().(x1)
   Int => scala.Int#
@@ -253,8 +256,8 @@ classes.C1#hashCode(). => method hashCode: (): Int
   Int => scala.Int#
 classes.C1#x1(). => val method x1: : Int
   Int => scala.Int#
-classes.C2# => final class C2.{+4 decls}
-  extends AnyVal
+classes.C2# => final class C2 extends AnyVal { +4 decls }
+  AnyVal => scala.AnyVal#
 classes.C2#`<init>`(). => primary ctor <init>: (val x2: Int)
   x2 => classes.C2#`<init>`().(x2)
   Int => scala.Int#
@@ -270,12 +273,12 @@ classes.C2#hashCode(). => method hashCode: (): Int
   Int => scala.Int#
 classes.C2#x2(). => val method x2: : Int
   Int => scala.Int#
-classes.C2. => final object C2
-  extends AnyRef
-classes.C3# => case class C3.{+12 decls}
-  extends AnyRef
-  extends Product
-  extends Serializable
+classes.C2. => final object C2 extends AnyRef
+  AnyRef => scala.AnyRef#
+classes.C3# => case class C3 extends AnyRef with Product with Serializable { +12 decls }
+  AnyRef => scala.AnyRef#
+  Product => scala.Product#
+  Serializable => scala.Serializable#
 classes.C3#`<init>`(). => primary ctor <init>: (val x: Int)
   x => classes.C3#`<init>`().(x)
   Int => scala.Int#
@@ -318,9 +321,11 @@ classes.C3#toString(). => method toString: (): String
   String => java.lang.String#
 classes.C3#x(). => val method x: : Int
   Int => scala.Int#
-classes.C3. => final object C3.{+4 decls}
-  extends AbstractFunction1[Int, C3]
-  extends Serializable
+classes.C3. => final object C3 extends AbstractFunction1[Int, C3] with Serializable { +4 decls }
+  AbstractFunction1 => scala.runtime.AbstractFunction1#
+  Int => scala.Int#
+  C3 => classes.C3#
+  Serializable => scala.Serializable#
 classes.C3.apply(). => method apply: (<?>): C3
   x => classes.C3.apply().(x)
   C3 => classes.C3#
@@ -335,10 +340,10 @@ classes.C3.unapply(). => method unapply: (x$0: C3): Option[Int]
   Int => scala.Int#
 classes.C3.unapply().(x$0) => param x$0: C3
   C3 => classes.C3#
-classes.C4# => case class C4.{+12 decls}
-  extends AnyRef
-  extends Product
-  extends Serializable
+classes.C4# => case class C4 extends AnyRef with Product with Serializable { +12 decls }
+  AnyRef => scala.AnyRef#
+  Product => scala.Product#
+  Serializable => scala.Serializable#
 classes.C4#`<init>`(). => primary ctor <init>: (val x: Int)
   x => classes.C4#`<init>`().(x)
   Int => scala.Int#
@@ -381,9 +386,9 @@ classes.C4#toString(). => method toString: (): String
   String => java.lang.String#
 classes.C4#x(). => val method x: : Int
   Int => scala.Int#
-classes.C4. => final object C4.{+3 decls}
-  extends AnyRef
-  extends Serializable
+classes.C4. => final object C4 extends AnyRef with Serializable { +3 decls }
+  AnyRef => scala.AnyRef#
+  Serializable => scala.Serializable#
 classes.C4.apply(). => method apply: (<?>): C4
   x => classes.C4.apply().(x)
   C4 => classes.C4#
@@ -396,10 +401,10 @@ classes.C4.unapply(). => method unapply: (x$0: C4): Option[Int]
   Int => scala.Int#
 classes.C4.unapply().(x$0) => param x$0: C4
   C4 => classes.C4#
-classes.C6# => case class C6.{+12 decls}
-  extends AnyRef
-  extends Product
-  extends Serializable
+classes.C6# => case class C6 extends AnyRef with Product with Serializable { +12 decls }
+  AnyRef => scala.AnyRef#
+  Product => scala.Product#
+  Serializable => scala.Serializable#
 classes.C6#`<init>`(). => primary ctor <init>: (val x: Int)
   x => classes.C6#`<init>`().(x)
   Int => scala.Int#
@@ -440,9 +445,11 @@ classes.C6#productPrefix(). => method productPrefix: : String
   String => java.lang.String#
 classes.C6#toString(). => method toString: (): String
   String => java.lang.String#
-classes.C6. => final object C6.{+4 decls}
-  extends AbstractFunction1[Int, C6]
-  extends Serializable
+classes.C6. => final object C6 extends AbstractFunction1[Int, C6] with Serializable { +4 decls }
+  AbstractFunction1 => scala.runtime.AbstractFunction1#
+  Int => scala.Int#
+  C6 => classes.C6#
+  Serializable => scala.Serializable#
 classes.C6.apply(). => method apply: (<?>): C6
   x => classes.C6.apply().(x)
   C6 => classes.C6#
@@ -457,8 +464,8 @@ classes.C6.unapply(). => method unapply: (x$0: C6): Option[Int]
   Int => scala.Int#
 classes.C6.unapply().(x$0) => param x$0: C6
   C6 => classes.C6#
-classes.C7# => class C7.{+2 decls}
-  extends AnyRef
+classes.C7# => class C7 extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
 classes.C7#`<init>`(). => primary ctor <init>: (x: Int)
   x => classes.C7#`<init>`().(x)
   Int => scala.Int#
@@ -466,8 +473,8 @@ classes.C7#`<init>`().(x) => param x: Int
   Int => scala.Int#
 classes.C7#x(). => private[this] val method x: : Int
   Int => scala.Int#
-classes.C8# => class C8.{+2 decls}
-  extends AnyRef
+classes.C8# => class C8 extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
 classes.C8#`<init>`(). => primary ctor <init>: (x: Int)
   x => classes.C8#`<init>`().(x)
   Int => scala.Int#
@@ -475,8 +482,8 @@ classes.C8#`<init>`().(x) => param x: Int
   Int => scala.Int#
 classes.C8#x(). => private[this] val method x: : Int
   Int => scala.Int#
-classes.C9# => class C9.{+3 decls}
-  extends AnyRef
+classes.C9# => class C9 extends AnyRef { +3 decls }
+  AnyRef => scala.AnyRef#
 classes.C9#`<init>`(). => primary ctor <init>: (var x: Int)
   x => classes.C9#`<init>`().(x)
   Int => scala.Int#
@@ -490,10 +497,10 @@ classes.C9#`x_=`().(x$1) => param x$1: Int
   Int => scala.Int#
 classes.C9#x(). => private[this] var method x: : Int
   Int => scala.Int#
-classes.M. => final object M.{+2 decls}
-  extends AnyRef
-classes.M.C5# => implicit class C5.{+2 decls}
-  extends AnyRef
+classes.M. => final object M extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
+classes.M.C5# => implicit class C5 extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
 classes.M.C5#`<init>`(). => primary ctor <init>: (x: Int)
   x => classes.M.C5#`<init>`().(x)
   Int => scala.Int#
@@ -504,8 +511,8 @@ classes.M.C5#x(). => private[this] val method x: : Int
 classes.M.C5(). => implicit method C5: (<?>): C5
   x => classes.M.C5().(x)
   C5 => classes.M.C5#
-classes.N. => final object N.{+2 decls}
-  extends AnyRef
+classes.N. => final object N extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
 classes.N.anonClass(). => val method anonClass: : C7 { <?> }
   C7 => classes.C7#
   local1 => local1
@@ -605,13 +612,13 @@ Symbols => 6 entries
 Occurrences => 10 entries
 
 Symbols:
-_empty_.A# => class A.{+2 decls}
-  extends AnyRef
+_empty_.A# => class A extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
 _empty_.A#`<init>`(). => primary ctor <init>: ()
 _empty_.A#b(). => method b: : B
   B => _empty_.B#
-_empty_.B# => class B.{+2 decls}
-  extends AnyRef
+_empty_.B# => class B extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
 _empty_.B#`<init>`(). => primary ctor <init>: ()
 _empty_.B#a(). => method a: : A
   A => _empty_.A#
@@ -641,8 +648,8 @@ Occurrences => 2 entries
 
 Symbols:
 example. => package example
-example.EmptyObject. => final object EmptyObject
-  extends AnyRef
+example.EmptyObject. => final object EmptyObject extends AnyRef
+  AnyRef => scala.AnyRef#
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -663,8 +670,8 @@ Synthetics => 1 entries
 
 Symbols:
 example. => package example
-example.Example. => final object Example.{+2 decls}
-  extends AnyRef
+example.Example. => final object Example extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
 example.Example.main(). => method main: (args: Array[String]): Unit
   args => example.Example.main().(args)
   Array => scala.Array#
@@ -741,10 +748,10 @@ Synthetics => 2 entries
 
 Symbols:
 flags. => package flags
-flags.p.package. => final package object p.{+16 decls}
-  extends AnyRef
-flags.p.package.AA# => class AA.{+5 decls}
-  extends AnyRef
+flags.p.package. => final package object p extends AnyRef { +16 decls }
+  AnyRef => scala.AnyRef#
+flags.p.package.AA# => class AA extends AnyRef { +5 decls }
+  AnyRef => scala.AnyRef#
 flags.p.package.AA#`<init>`(). => primary ctor <init>: (x: Int, val y: Int, var z: Int)
   x => flags.p.package.AA#`<init>`().(x)
   Int => scala.Int#
@@ -768,8 +775,13 @@ flags.p.package.AA#y(). => val method y: : Int
   Int => scala.Int#
 flags.p.package.AA#z(). => var method z: : Int
   Int => scala.Int#
-flags.p.package.C# => abstract class C[+T >: Nothing <: Any, -U >: Nothing <: Any, V >: Nothing <: Any].{+6 decls}
-  extends AnyRef
+flags.p.package.C# => abstract class C[+T >: Nothing <: Any, -U >: Nothing <: Any, V >: Nothing <: Any] extends AnyRef { +6 decls }
+  T => flags.p.package.C#[T]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+  U => flags.p.package.C#[U]
+  V => flags.p.package.C#[V]
+  AnyRef => scala.AnyRef#
 flags.p.package.C#[T] => covariant typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -801,8 +813,12 @@ flags.p.package.C#y(). => private[this] val method y: : U
   U => flags.p.package.C#[U]
 flags.p.package.C#z(). => private[this] val method z: : V
   V => flags.p.package.C#[V]
-flags.p.package.S# => class S[@specialized T >: Nothing <: Any].{+1 decls}
-  extends AnyRef
+flags.p.package.S# => class S[@specialized T >: Nothing <: Any] extends AnyRef { +1 decls }
+  T => flags.p.package.S#[T]
+  specialized => scala.specialized#
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+  AnyRef => scala.AnyRef#
 flags.p.package.S#[T] => @specialized typeparam T: >: Nothing <: Any
   specialized => scala.specialized#
   Nothing => scala.Nothing#
@@ -824,10 +840,10 @@ flags.p.package.U# => abstract type U: >: Nothing <: Int
 flags.p.package.V# => abstract type V: >: Int <: Any
   Int => scala.Int#
   Any => scala.Any#
-flags.p.package.X. => final case object X.{+8 decls}
-  extends AnyRef
-  extends Product
-  extends Serializable
+flags.p.package.X. => final case object X extends AnyRef with Product with Serializable { +8 decls }
+  AnyRef => scala.AnyRef#
+  Product => scala.Product#
+  Serializable => scala.Serializable#
 flags.p.package.X.canEqual(). => method canEqual: (x$1: Any): Boolean
   x$1 => flags.p.package.X.canEqual().(x$1)
   Any => scala.Any#
@@ -853,11 +869,11 @@ flags.p.package.X.readResolve(). => private method readResolve: (): Object
   Object => java.lang.Object#
 flags.p.package.X.toString(). => method toString: (): String
   String => java.lang.String#
-flags.p.package.Y# => final class Y.{+1 decls}
-  extends AnyRef
+flags.p.package.Y# => final class Y extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 flags.p.package.Y#`<init>`(). => primary ctor <init>: ()
-flags.p.package.Z# => sealed trait Z
-  extends AnyRef
+flags.p.package.Z# => sealed trait Z extends AnyRef
+  AnyRef => scala.AnyRef#
 flags.p.package.`y_=`(). => protected var method y_=: (x$1: Int): Unit
   x$1 => flags.p.package.`y_=`().(x$1)
   Int => scala.Int#
@@ -1005,8 +1021,8 @@ Synthetics => 1 entries
 
 Symbols:
 example. => package example
-example.`local-file`# => class local-file.{+1 decls}
-  extends AnyRef
+example.`local-file`# => class local-file extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 example.`local-file`#`<init>`(). => primary ctor <init>: ()
 local0 => val local local: Int
   Int => scala.Int#
@@ -1038,8 +1054,8 @@ Occurrences => 65 entries
 
 Symbols:
 example. => package example
-example.MetacJava# => class MetacJava.{+8 decls}
-  extends AnyRef
+example.MetacJava# => class MetacJava extends AnyRef { +8 decls }
+  AnyRef => scala.AnyRef#
 example.MetacJava#`<init>`(). => primary ctor <init>: ()
 example.MetacJava#coin(). => val method coin: : Coin
   Coin => com.javacp.Coin#
@@ -1143,14 +1159,17 @@ Synthetics => 4 entries
 
 Symbols:
 example. => package example
-example.MethodUsages# => class MethodUsages.{+2 decls}
-  extends AnyRef
+example.MethodUsages# => class MethodUsages extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
 example.MethodUsages#`<init>`(). => primary ctor <init>: ()
 example.MethodUsages#m(). => val method m: : Methods[Int]
   Methods => example.Methods#
   Int => scala.Int#
-example.Methods# => class Methods[T >: Nothing <: Any].{+26 decls}
-  extends AnyRef
+example.Methods# => class Methods[T >: Nothing <: Any] extends AnyRef { +26 decls }
+  T => example.Methods#[T]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+  AnyRef => scala.AnyRef#
 example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.this.List[T]
   T => example.Methods#AList#[T]
   Nothing => scala.Nothing#
@@ -1160,8 +1179,11 @@ example.Methods#AList# => type AList: [T >: Nothing <: Any] => Methods.this.List
 example.Methods#AList#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#List# => class List[T >: Nothing <: Any].{+1 decls}
-  extends AnyRef
+example.Methods#List# => class List[T >: Nothing <: Any] extends AnyRef { +1 decls }
+  T => example.Methods#List#[T]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+  AnyRef => scala.AnyRef#
 example.Methods#List#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1172,8 +1194,8 @@ example.Methods#[T] => typeparam T: >: Nothing <: Any
 example.Methods#`<init>`(). => primary ctor <init>: ()
 example.Methods#`m8().`(). => method m8().: (): Nothing
   Nothing => scala.Nothing#
-example.Methods#`m9().`# => class m9()..{+1 decls}
-  extends AnyRef
+example.Methods#`m9().`# => class m9(). extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 example.Methods#`m9().`#`<init>`(). => primary ctor <init>: ()
 example.Methods#m1(). => method m1: : Nothing
   Nothing => scala.Nothing#
@@ -1569,10 +1591,10 @@ Occurrences => 3 entries
 
 Symbols:
 objects. => package objects
-objects.X. => final object X.{+1 decls}
-  extends AnyRef
-objects.X.Y. => final object Y
-  extends AnyRef
+objects.X. => final object X extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
+objects.X.Y. => final object Y extends AnyRef
+  AnyRef => scala.AnyRef#
 
 Occurrences:
 [0:8..0:15): objects <= objects.
@@ -1592,13 +1614,13 @@ Occurrences => 10 entries
 
 Symbols:
 example. => package example
-example.A# => trait A.{+1 decls}
-  extends AnyRef
+example.A# => trait A extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 example.A#foo(). => abstract method foo: : Int
   Int => scala.Int#
-example.B# => class B.{+2 decls}
-  extends AnyRef
-  extends A
+example.B# => class B extends AnyRef with A { +2 decls }
+  AnyRef => scala.AnyRef#
+  A => example.A#
 example.B#`<init>`(). => primary ctor <init>: ()
 example.B#foo(). => method foo: : Int
   Int => scala.Int#
@@ -1629,8 +1651,8 @@ Synthetics => 6 entries
 
 Symbols:
 example. => package example
-example.Synthetic# => class Synthetic.{+1 decls}
-  extends AnyRef
+example.Synthetic# => class Synthetic extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 example.Synthetic#`<init>`(). => primary ctor <init>: ()
 
 Occurrences:
@@ -1688,21 +1710,21 @@ local0 => selfparam self: V with C {}
   V => traits.V#
   C => traits.C#
 traits. => package traits
-traits.C# => class C.{+1 decls}
-  extends AnyRef
+traits.C# => class C extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 traits.C#`<init>`(). => primary ctor <init>: ()
-traits.T# => trait T.{+1 decls}
-  extends AnyRef
+traits.T# => trait T extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 traits.T#x(). => method x: : Int
   Int => scala.Int#
-traits.U# => sealed trait U
-  extends AnyRef
-traits.U. => final object U.{+1 decls}
-  extends AnyRef
+traits.U# => sealed trait U extends AnyRef
+  AnyRef => scala.AnyRef#
+traits.U. => final object U extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 traits.U.u(). => method u: : U
   U => traits.U#
-traits.V# => trait V
-  extends AnyRef
+traits.V# => trait V extends AnyRef
+  AnyRef => scala.AnyRef#
 
 Occurrences:
 [0:8..0:14): traits <= traits.
@@ -1752,63 +1774,66 @@ local9 => type L: [T >: Nothing <: Any] => List[T]
   Any => scala.Any#
   List => scala.package.List#
 types. => package types
-types.B# => class B.{+1 decls}
-  extends AnyRef
+types.B# => class B extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 types.B#`<init>`(). => primary ctor <init>: ()
-types.C# => class C.{+1 decls}
-  extends AnyRef
+types.C# => class C extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 types.C#`<init>`(). => primary ctor <init>: ()
-types.P# => class P.{+4 decls}
-  extends AnyRef
-types.P#C# => class C.{+1 decls}
-  extends AnyRef
+types.P# => class P extends AnyRef { +4 decls }
+  AnyRef => scala.AnyRef#
+types.P#C# => class C extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 types.P#C#`<init>`(). => primary ctor <init>: ()
-types.P#X# => class X.{+1 decls}
-  extends AnyRef
+types.P#X# => class X extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 types.P#X#`<init>`(). => primary ctor <init>: ()
 types.P#`<init>`(). => primary ctor <init>: ()
 types.P#x(). => val method x: : P.this.X
   P => types.P#
   X => types.P#X#
-types.T# => class T.{+4 decls}
-  extends AnyRef
-types.T#C# => class C.{+1 decls}
-  extends AnyRef
+types.T# => class T extends AnyRef { +4 decls }
+  AnyRef => scala.AnyRef#
+types.T#C# => class C extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 types.T#C#`<init>`(). => primary ctor <init>: ()
-types.T#X# => class X.{+1 decls}
-  extends AnyRef
+types.T#X# => class X extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 types.T#X#`<init>`(). => primary ctor <init>: ()
 types.T#`<init>`(). => primary ctor <init>: ()
 types.T#x(). => val method x: : T.this.X
   T => types.T#
   X => types.T#X#
-types.Test. => final object Test.{+4 decls}
-  extends AnyRef
-types.Test.C# => class C.{+34 decls}
-  extends M
-types.Test.C#ByNameType. => final object ByNameType.{+1 decls}
-  extends AnyRef
+types.Test. => final object Test extends AnyRef { +4 decls }
+  AnyRef => scala.AnyRef#
+types.Test.C# => class C extends M { +34 decls }
+  M => types.Test.M#
+types.Test.C#ByNameType. => final object ByNameType extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 types.Test.C#ByNameType.m1(). => method m1: (x: => Int): Int
   x => types.Test.C#ByNameType.m1().(x)
   Int => scala.Int#
 types.Test.C#ByNameType.m1().(x) => param x: => Int
   Int => scala.Int#
-types.Test.C#ClassInfoType1. => final object ClassInfoType1
-  extends AnyRef
-types.Test.C#ClassInfoType2# => class ClassInfoType2.{+2 decls}
-  extends B
+types.Test.C#ClassInfoType1. => final object ClassInfoType1 extends AnyRef
+  AnyRef => scala.AnyRef#
+types.Test.C#ClassInfoType2# => class ClassInfoType2 extends B { +2 decls }
+  B => types.B#
 types.Test.C#ClassInfoType2#`<init>`(). => primary ctor <init>: ()
 types.Test.C#ClassInfoType2#x(). => method x: : Int
   Int => scala.Int#
-types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any]
-  extends AnyRef
+types.Test.C#ClassInfoType3# => trait ClassInfoType3[T >: Nothing <: Any] extends AnyRef
+  T => types.Test.C#ClassInfoType3#[T]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+  AnyRef => scala.AnyRef#
 types.Test.C#ClassInfoType3#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
 types.Test.C#Either(). => val method Either: : Either.type
   Either => scala.util.Either.
-types.Test.C#MethodType. => final object MethodType.{+6 decls}
-  extends AnyRef
+types.Test.C#MethodType. => final object MethodType extends AnyRef { +6 decls }
+  AnyRef => scala.AnyRef#
 types.Test.C#MethodType.m3(). => method m3: : Int
   Int => scala.Int#
 types.Test.C#MethodType.m4(). => method m4: (): Int
@@ -1832,10 +1857,10 @@ types.Test.C#MethodType.x1(). => method x1: : Int
   Int => scala.Int#
 types.Test.C#MethodType.x2(). => method x2: : Int
   Int => scala.Int#
-types.Test.C#RepeatedType# => case class RepeatedType.{+11 decls}
-  extends AnyRef
-  extends Product
-  extends Serializable
+types.Test.C#RepeatedType# => case class RepeatedType extends AnyRef with Product with Serializable { +11 decls }
+  AnyRef => scala.AnyRef#
+  Product => scala.Product#
+  Serializable => scala.Serializable#
 types.Test.C#RepeatedType#`<init>`(). => primary ctor <init>: (val s: String*)
   s => types.Test.C#RepeatedType#`<init>`().(s)
   String => scala.Predef.String#
@@ -1877,9 +1902,12 @@ types.Test.C#RepeatedType#s(). => val method s: : String*
   String => scala.Predef.String#
 types.Test.C#RepeatedType#toString(). => method toString: (): String
   String => java.lang.String#
-types.Test.C#RepeatedType. => final object RepeatedType.{+3 decls}
-  extends AbstractFunction1[String*, C.this.RepeatedType]
-  extends Serializable
+types.Test.C#RepeatedType. => final object RepeatedType extends AbstractFunction1[String*, C.this.RepeatedType] with Serializable { +3 decls }
+  AbstractFunction1 => scala.runtime.AbstractFunction1#
+  String => scala.Predef.String#
+  C => types.Test.C#
+  RepeatedType => types.Test.C#RepeatedType#
+  Serializable => scala.Serializable#
 types.Test.C#RepeatedType.apply(). => method apply: (<?>): C.this.RepeatedType
   s => types.Test.C#RepeatedType.apply().(s)
   C => types.Test.C#
@@ -1896,8 +1924,8 @@ types.Test.C#RepeatedType.unapplySeq(). => method unapplySeq: (x$0: C.this.Repea
 types.Test.C#RepeatedType.unapplySeq().(x$0) => param x$0: C.this.RepeatedType
   C => types.Test.C#
   RepeatedType => types.Test.C#RepeatedType#
-types.Test.C#TypeType. => final object TypeType.{+5 decls}
-  extends AnyRef
+types.Test.C#TypeType. => final object TypeType extends AnyRef { +5 decls }
+  AnyRef => scala.AnyRef#
 types.Test.C#TypeType.T1# => abstract type T1: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -2005,8 +2033,8 @@ types.Test.C#x(). => val method x: : C.this.p.X
   C => types.Test.C#
   p => types.Test.C#p().
   X => types.P#X#
-types.Test.Literal. => final object Literal.{+11 decls}
-  extends AnyRef
+types.Test.Literal. => final object Literal extends AnyRef { +11 decls }
+  AnyRef => scala.AnyRef#
 types.Test.Literal.bool(). => final val method bool: : true
 types.Test.Literal.char(). => final val method char: : 'a'
 types.Test.Literal.clazzOf(). => final val method clazzOf: : Class[Option[Int]]
@@ -2023,18 +2051,21 @@ types.Test.Literal.nil(). => final val method nil: : null
 types.Test.Literal.string(). => final val method string: : "a"
 types.Test.Literal.unit(). => final val method unit: : Unit
   Unit => scala.Unit#
-types.Test.M# => class M.{+2 decls}
-  extends AnyRef
+types.Test.M# => class M extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
 types.Test.M#`<init>`(). => primary ctor <init>: ()
 types.Test.M#m(). => method m: : Int
   Int => scala.Int#
-types.Test.N# => trait N.{+1 decls}
-  extends AnyRef
+types.Test.N# => trait N extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 types.Test.N#n(). => method n: : Int
   Int => scala.Int#
-types.ann# => class ann[T >: Nothing <: Any].{+2 decls}
-  extends Annotation
-  extends StaticAnnotation
+types.ann# => class ann[T >: Nothing <: Any] extends Annotation with StaticAnnotation { +2 decls }
+  T => types.ann#[T]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+  Annotation => scala.annotation.Annotation#
+  StaticAnnotation => scala.annotation.StaticAnnotation#
 types.ann#[T] => typeparam T: >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -2045,13 +2076,13 @@ types.ann#`<init>`().(x) => param x: T
   T => types.ann#[T]
 types.ann#x(). => private[this] val method x: : T
   T => types.ann#[T]
-types.ann1# => class ann1.{+1 decls}
-  extends Annotation
-  extends StaticAnnotation
+types.ann1# => class ann1 extends Annotation with StaticAnnotation { +1 decls }
+  Annotation => scala.annotation.Annotation#
+  StaticAnnotation => scala.annotation.StaticAnnotation#
 types.ann1#`<init>`(). => primary ctor <init>: ()
-types.ann2# => class ann2.{+1 decls}
-  extends Annotation
-  extends StaticAnnotation
+types.ann2# => class ann2 extends Annotation with StaticAnnotation { +1 decls }
+  Annotation => scala.annotation.Annotation#
+  StaticAnnotation => scala.annotation.StaticAnnotation#
 types.ann2#`<init>`(). => primary ctor <init>: ()
 
 Occurrences:
@@ -2313,12 +2344,12 @@ Occurrences => 117 entries
 
 Symbols:
 example. => package example
-example.ValUsages. => final object ValUsages.{+1 decls}
-  extends AnyRef
+example.ValUsages. => final object ValUsages extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
 example.ValUsages.v(). => val method v: : Vals
   Vals => example.Vals#
-example.Vals# => abstract class Vals.{+23 decls}
-  extends AnyRef
+example.Vals# => abstract class Vals extends AnyRef { +23 decls }
+  AnyRef => scala.AnyRef#
 example.Vals#`<init>`(). => primary ctor <init>: (p: Int, val xp: Int, var yp: Int)
   p => example.Vals#`<init>`().(p)
   Int => scala.Int#
