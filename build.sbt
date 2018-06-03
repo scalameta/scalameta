@@ -417,14 +417,12 @@ lazy val semanticdbIntegration = project
       val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
       Seq(
         s"-Xplugin:$pluginJar",
+        s"-Xplugin-require:semanticdb",
         s"-Ywarn-unused-import",
         s"-Yrangepos",
-        s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
-        s"-P:semanticdb:failures:error", // fail fast during development.
+        s"-P:semanticdb:crashes:error", // fail fast during development.
         s"-P:semanticdb:exclude:Exclude.scala",
-        s"-P:semanticdb:symbols:definitions",
-        s"-P:semanticdb:types:all",
-        s"-Xplugin-require:semanticdb"
+        s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}"
       )
     },
     javacOptions += "-parameters"
