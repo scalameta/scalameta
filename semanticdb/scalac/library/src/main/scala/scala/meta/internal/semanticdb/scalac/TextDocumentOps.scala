@@ -206,16 +206,12 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   if (gsym.isClass && !gsym.isTrait) {
                     val gprim = gsym.primaryConstructor
                     saveSymbol(gprim)
-                  }
-                  if (gsym.isPrimaryConstructor) {
-                    val gclassParams = gsym.info.paramss.flatten
-                    gclassParams.foreach(saveSymbol)
+                    gprim.info.paramss.flatten.foreach(saveSymbol)
                   }
                   if (gsym.isGetter) {
                     val gsetter = gsym.setterIn(gsym.owner)
                     saveSymbol(gsetter)
-                    val gsetterParams = gsetter.info.paramss.flatten
-                    gsetterParams.foreach(saveSymbol)
+                    gsetter.info.paramss.flatten.foreach(saveSymbol)
                   }
                   if (gsym.isUsefulField && gsym.isMutable) {
                     val getterInfo = symbols(symbol)
