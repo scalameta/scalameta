@@ -9,8 +9,6 @@ import scala.meta.internal.semanticdb3.SingletonType.Tag._
 import scala.meta.internal.semanticdb3.SymbolInformation._
 import scala.meta.internal.semanticdb3.SymbolInformation.Kind._
 import scala.meta.internal.semanticdb3.SymbolInformation.Property._
-import scala.meta.internal.semanticdb3.SymbolOccurrence._
-import scala.meta.internal.semanticdb3.SymbolOccurrence.Role._
 import scala.meta.internal.semanticdb3.Type.Tag._
 
 trait SymbolPrinter extends BasePrinter {
@@ -28,16 +26,14 @@ trait SymbolPrinter extends BasePrinter {
     out.println()
 
     if (settings.format.isDetailed) {
-      if (info.isTemplate || info.isMember) {
-        val printed = mutable.Set[String]()
-        infoNotes.visited.tail.foreach { info =>
-          if (!printed(info.symbol)) {
-            printed += info.symbol
-            out.print("  ")
-            out.print(info.name)
-            out.print(" => ")
-            out.println(info.symbol)
-          }
+      val printed = mutable.Set[String]()
+      infoNotes.visited.tail.foreach { info =>
+        if (!printed(info.symbol)) {
+          printed += info.symbol
+          out.print("  ")
+          out.print(info.name)
+          out.print(" => ")
+          out.println(info.symbol)
         }
       }
     }
@@ -63,8 +59,8 @@ trait SymbolPrinter extends BasePrinter {
       if (has(PRIMARY)) out.print("primary ")
       if (has(ENUM)) out.print("enum ")
       info.kind match {
-        case FIELD => out.print("field ")
         case LOCAL => out.print("local ")
+        case FIELD => out.print("field ")
         case METHOD => out.print("method ")
         case CONSTRUCTOR => out.print("ctor ")
         case MACRO => out.print("macro ")
@@ -78,16 +74,10 @@ trait SymbolPrinter extends BasePrinter {
         case CLASS => out.print("class ")
         case TRAIT => out.print("trait ")
         case INTERFACE => out.print("interface ")
-        case UNKNOWN_KIND | Kind.Unrecognized(_) => ()
+        case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
       }
       pprint(info.name)
-      if (info.isTemplate) {
-        opt("", info.tpe)(pprint)
-      } else if (info.isMember) {
-        opt(": ", info.tpe)(pprint)
-      } else {
-        ()
-      }
+      opt(info.prefixBeforeTpe, info.tpe)(pprint)
     }
 
     private def pprint(ann: Annotation): Unit = {
@@ -111,7 +101,7 @@ trait SymbolPrinter extends BasePrinter {
           out.print("private[this] ")
         case PRIVATE_WITHIN =>
           out.print("private[")
-          pprint(acc.symbol, REFERENCE)
+          pprint(acc.symbol, Reference)
           out.print("] ")
         case PROTECTED =>
           out.print("protected ")
@@ -119,7 +109,7 @@ trait SymbolPrinter extends BasePrinter {
           out.print("protected[this] ")
         case PROTECTED_WITHIN =>
           out.print("protected[")
-          pprint(acc.symbol, REFERENCE)
+          pprint(acc.symbol, Reference)
           out.print("] ")
         case UNKNOWN_ACCESSIBILITY | Accessibility.Tag.Unrecognized(_) =>
           out.print("<?>")
@@ -128,10 +118,10 @@ trait SymbolPrinter extends BasePrinter {
 
     def pprint(tpe: Type): Unit = {
       def ref(sym: String): Unit = {
-        pprint(sym, REFERENCE)
+        pprint(sym, Reference)
       }
       def defn(sym: String): Unit = {
-        pprint(sym, DEFINITION)
+        pprint(sym, Definition)
       }
       def prefix(tpe: Type): Unit = {
         tpe.tag match {
@@ -223,7 +213,7 @@ trait SymbolPrinter extends BasePrinter {
             val Some(MethodType(tparams, paramss, res)) = tpe.methodType
             rep("[", tparams, ", ", "] => ")(defn)
             rep("(", paramss, ")(", ")")(params => rep(params.symbols, ", ")(defn))
-            opt(": ", res, "")(normal)
+            opt(": ", res)(normal)
           case BY_NAME_TYPE =>
             val Some(ByNameType(utpe)) = tpe.byNameType
             out.print("=> ")
@@ -236,12 +226,11 @@ trait SymbolPrinter extends BasePrinter {
             val Some(TypeType(tparams, lo, hi)) = tpe.typeType
             rep("[", tparams, ", ", "] => ")(defn)
             if (lo != hi) {
-              opt(">: ", lo, "")(normal)
-              lo.foreach(_ => out.print(" "))
-              opt("<: ", hi, "")(normal)
+              opt(" >: ", lo)(normal)
+              opt(" <: ", hi)(normal)
             } else {
               val alias = lo
-              opt("", alias, "")(normal)
+              opt(" = ", alias)(normal)
             }
           case UNKNOWN_TYPE | Type.Tag.Unrecognized(_) =>
             out.print("<?>")
@@ -265,49 +254,73 @@ trait SymbolPrinter extends BasePrinter {
       normal(tpe)
     }
 
-    private def pprint(sym: String, role: Role): Unit = {
+    private sealed trait SymbolStyle
+    private case object Reference extends SymbolStyle
+    private case object Definition extends SymbolStyle
+
+    private def pprint(sym: String, style: SymbolStyle): Unit = {
       val info = notes.visit(sym)
-      if (role == REFERENCE) {
-        pprint(info.name)
-      } else if (role == DEFINITION) {
-        // NOTE: This mode is only used to print symbols that are part
-        // of complex types, so we don't need to fully support all symbols here.
-        rep(info.annotations, " ", " ")(pprint)
-        opt(info.accessibility)(pprint)
-        if ((info.properties & COVARIANT.value) != 0) out.print("+")
-        if ((info.properties & CONTRAVARIANT.value) != 0) out.print("-")
-        if ((info.properties & VAL.value) != 0) out.print("val ")
-        if ((info.properties & VAR.value) != 0) out.print("var ")
-        info.kind match {
-          case METHOD =>
-            out.print("method ")
-            out.print(info.name)
-          case TYPE =>
-            out.print("type ")
-            out.print(info.name)
-            out.print(" ")
-          case PARAMETER =>
-            out.print(info.name)
-            out.print(": ")
-          case TYPE_PARAMETER =>
-            out.print(info.name)
-            out.print(" ")
-          case _ =>
-            out.print("<?>")
-            return
-        }
-        info.tpe match {
-          case Some(tpe) => pprint(tpe)
-          case None => out.print("<?>")
-        }
-      } else {
-        ()
+      style match {
+        case Reference =>
+          pprint(info.name)
+        case Definition =>
+          // NOTE: I am aware of some degree of duplication with pprint(info).
+          // However, deduplicating these two methods leads to very involved code,
+          // since there are subtle differences in behavior.
+          rep(info.annotations, " ", " ")(pprint)
+          opt(info.accessibility)(pprint)
+          def has(prop: Property) = (info.properties & prop.value) != 0
+          if (has(ABSTRACT)) out.print("abstract ")
+          if (has(FINAL)) out.print("final ")
+          if (has(SEALED)) out.print("sealed ")
+          if (has(IMPLICIT)) out.print("implicit ")
+          if (has(LAZY)) out.print("lazy ")
+          if (has(CASE)) out.print("case ")
+          if (has(COVARIANT)) out.print("+")
+          if (has(CONTRAVARIANT)) out.print("-")
+          if (has(VAL)) out.print("val ")
+          if (has(VAR)) out.print("var ")
+          if (has(STATIC)) out.print("static ")
+          if (has(PRIMARY)) out.print("")
+          if (has(ENUM)) out.print("enum ")
+          info.kind match {
+            case LOCAL => out.print("")
+            case FIELD => out.print("")
+            case METHOD => out.print("def ")
+            case CONSTRUCTOR => out.print("def ")
+            case MACRO => out.print("macro ")
+            case TYPE => out.print("type ")
+            case PARAMETER => out.print("")
+            case SELF_PARAMETER => out.print("")
+            case TYPE_PARAMETER => out.print("")
+            case OBJECT => out.print("object ")
+            case PACKAGE => out.print("package ")
+            case PACKAGE_OBJECT => out.print("package object ")
+            case CLASS => out.print("class ")
+            case TRAIT => out.print("trait ")
+            case INTERFACE => out.print("interface ")
+            case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
+          }
+          pprint(info.name)
+          opt(info.prefixBeforeTpe, info.tpe)(pprint)
       }
     }
 
     private def pprint(name: String): Unit = {
       if (name.nonEmpty) out.print(name)
       else out.print("<?>")
+    }
+
+    private implicit class InfoOps(info: SymbolInformation) {
+      def prefixBeforeTpe: String = {
+        info.kind match {
+          case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | UNKNOWN_KIND | Kind.Unrecognized(_) =>
+            ": "
+          case METHOD | CONSTRUCTOR | MACRO | TYPE | TYPE_PARAMETER | OBJECT | PACKAGE |
+              PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
+            ""
+        }
+      }
     }
   }
 
@@ -329,33 +342,6 @@ trait SymbolPrinter extends BasePrinter {
 
     def visited: List[SymbolInformation] = {
       buf.toList
-    }
-  }
-
-  private implicit class InfoOps(info: SymbolInformation) {
-    def isPackage: Boolean = {
-      info.kind == PACKAGE
-    }
-    def isTemplate: Boolean = {
-      info.kind == OBJECT ||
-      info.kind == PACKAGE_OBJECT ||
-      info.kind == CLASS ||
-      info.kind == TRAIT ||
-      info.kind == INTERFACE
-    }
-    def isMember: Boolean = {
-      info.kind == LOCAL ||
-      info.kind == FIELD ||
-      info.kind == METHOD ||
-      info.kind == CONSTRUCTOR ||
-      info.kind == MACRO ||
-      info.kind == TYPE ||
-      info.kind == PARAMETER ||
-      info.kind == SELF_PARAMETER ||
-      info.kind == TYPE_PARAMETER
-    }
-    def isUnknown: Boolean = {
-      !isPackage && !isTemplate && !isMember
     }
   }
 

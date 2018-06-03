@@ -132,7 +132,7 @@ Occurrences => 7 entries
 
 Symbols:
 _empty_.Test. => final object Test extends AnyRef { +1 decls }
-_empty_.Test.main(). => method main: (args: Array[String]): Unit
+_empty_.Test.main(). => method main(args: Array[String]): Unit
 _empty_.Test.main().(args) => param args: Array[String]
 
 Occurrences:
