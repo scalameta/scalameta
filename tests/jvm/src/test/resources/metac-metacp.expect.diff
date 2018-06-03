@@ -249,9 +249,9 @@ selects.Existential#e1().
              type_arguments {
                tag: TYPE_REF
                typeRef {
--                symbol: "local4"
+-                symbol: "local3"
 +                symbol: "selects.Existential#e1()._$1#"
--        type_parameters: "local4"
+-        type_parameters: "local3"
 +        type_parameters: "selects.Existential#e1()._$1#"
 
 
@@ -263,9 +263,9 @@ selects.Existential#e2().
                  type_arguments {
                    tag: TYPE_REF
                    typeRef {
--                    symbol: "local5"
+-                    symbol: "local4"
 +                    symbol: "selects.Existential#e2().T#"
--            type_parameters: "local5"
+-            type_parameters: "local4"
 +            type_parameters: "selects.Existential#e2().T#"
 
 
@@ -307,9 +307,9 @@ selects.Test.e2().
                  type_arguments {
                    tag: TYPE_REF
                    typeRef {
--                    symbol: "local5"
+-                    symbol: "local4"
 +                    symbol: "selects.Test.T#"
--            type_parameters: "local5"
+-            type_parameters: "local4"
 +            type_parameters: "selects.Test.T#"
 
 

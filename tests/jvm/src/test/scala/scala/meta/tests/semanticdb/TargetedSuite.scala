@@ -701,39 +701,39 @@ class TargetedSuite extends SemanticdbSuite {
        |_empty_.ad.k(). => val method k: : AnyRef with Foo { val method y: Any }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  y => local9
+       |  y => local8
        |  Any => scala.Any#
-       |_empty_.ad.x(). => val method x: : AnyRef with Foo { local6: <?>; local7: <?> }
+       |_empty_.ad.x(). => val method x: : AnyRef with Foo { local5: <?>; local6: <?> }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
+       |  local5 => local5
        |  local6 => local6
-       |  local7 => local7
        |_empty_.ad.z(). => val method z: : AnyRef with Foo { val method y: Int }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  y => local8
+       |  y => local7
        |  Int => scala.Int#
-       |_empty_.ad.zz(). => val method zz: : Bar { local12: <?> }
+       |_empty_.ad.zz(). => val method zz: : Bar { local10: <?> }
        |  Bar => _empty_.ad.Bar#
-       |  local12 => local12
+       |  local10 => local10
        |local0 => val method y: : Int
        |  Int => scala.Int#
-       |local10 => val method y: : Int
-       |  Int => scala.Int#
-       |local2 => method z: [T >: Nothing <: Any] => (local4: <?>): T
-       |  T => local3
+       |local1 => method z: [T >: Nothing <: Any] => (local3: <?>): T
+       |  T => local2
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
-       |  local4 => local4
-       |local3 => typeparam T: >: Nothing <: Any
+       |  local3 => local3
+       |local2 => typeparam T: >: Nothing <: Any
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
-       |local5 => param e: T
-       |  T => local3
-       |local8 => abstract val method y: : Int
+       |local4 => param e: T
+       |  T => local2
+       |local7 => abstract val method y: : Int
        |  Int => scala.Int#
-       |local9 => abstract val method y: : Any
+       |local8 => abstract val method y: : Any
        |  Any => scala.Any#
+       |local9 => val method y: : Int
+       |  Int => scala.Int#
     """.stripMargin
   )
 
