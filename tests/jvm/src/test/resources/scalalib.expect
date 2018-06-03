@@ -18,8 +18,7 @@ scala.Any#`!=`().(that) => param that: Any
   Any => scala.Any#
 scala.Any#`##`(). => final method ##(): Int
   Int => scala.Int#
-scala.Any#`<init>`(). => primary ctor <init>(): Any
-  Any => scala.Any#
+scala.Any#`<init>`(). => primary ctor <init>()
 scala.Any#`==`(). => final method ==(that: Any): Boolean
   that => scala.Any#`==`().(that)
   Any => scala.Any#
@@ -58,8 +57,7 @@ Symbols => 9 entries
 Symbols:
 scala.AnyRef# => class AnyRef extends Any { +4 decls }
   Any => scala.Any#
-scala.AnyRef#`<init>`(). => primary ctor <init>(): AnyRef
-  AnyRef => scala.AnyRef#
+scala.AnyRef#`<init>`(). => primary ctor <init>()
 scala.AnyRef#eq(). => final method eq(that: AnyRef): Boolean
   that => scala.AnyRef#eq().(that)
   AnyRef => scala.AnyRef#
@@ -92,8 +90,7 @@ Symbols => 2 entries
 Symbols:
 scala.AnyVal# => abstract class AnyVal extends Any { +1 decls }
   Any => scala.Any#
-scala.AnyVal#`<init>`(). => primary ctor <init>(): AnyVal
-  AnyVal => scala.AnyVal#
+scala.AnyVal#`<init>`(). => primary ctor <init>()
 
 scala/Nothing.class
 -------------------
@@ -108,8 +105,7 @@ Symbols => 2 entries
 Symbols:
 scala.Nothing# => abstract final class Nothing extends Any { +1 decls }
   Any => scala.Any#
-scala.Nothing#`<init>`(). => primary ctor <init>(): Nothing
-  Nothing => scala.Nothing#
+scala.Nothing#`<init>`(). => primary ctor <init>()
 
 scala/Null.class
 ----------------
@@ -124,8 +120,7 @@ Symbols => 2 entries
 Symbols:
 scala.Null# => abstract final class Null extends AnyRef { +1 decls }
   AnyRef => scala.AnyRef#
-scala.Null#`<init>`(). => primary ctor <init>(): Null
-  Null => scala.Null#
+scala.Null#`<init>`(). => primary ctor <init>()
 
 scala/Singleton.class
 ---------------------

@@ -62,7 +62,7 @@ object Scalalib {
     }
     val symbol = "scala." + name + "#"
     val builtinTpe = s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, symbol, Nil)))
-    val ctorSig = s.MethodType(Nil, List(s.MethodType.ParameterList(Nil)), Some(builtinTpe))
+    val ctorSig = s.MethodType(Nil, List(s.MethodType.ParameterList(Nil)), None)
     val ctor = s.SymbolInformation(
       symbol = symbol + "`<init>`().",
       language = l.SCALA,
