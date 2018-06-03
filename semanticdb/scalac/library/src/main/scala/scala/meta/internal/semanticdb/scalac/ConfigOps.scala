@@ -14,6 +14,7 @@ case class SemanticdbConfig(
     targetroot: AbsolutePath,
     text: TextMode,
     symbols: SymbolMode,
+    occurrences: OccurrenceMode,
     diagnostics: DiagnosticMode,
     synthetics: SyntheticMode) {
   def syntax: String = {
@@ -27,6 +28,7 @@ case class SemanticdbConfig(
       "targetroot" -> targetroot,
       "text" -> text.name,
       "symbols" -> symbols.name,
+      "occurrences" -> occurrences.name,
       "diagnostics" -> diagnostics.name,
       "synthetics" -> synthetics.name
     ).map { case (k, v) => s"-P:$p:$k:$v" }.mkString(" ")
@@ -42,6 +44,7 @@ object SemanticdbConfig {
     PathIO.workingDirectory,
     TextMode.All,
     SymbolMode.Definitions,
+    OccurrenceMode.All,
     DiagnosticMode.All,
     SyntheticMode.All
   )
@@ -61,6 +64,7 @@ object SemanticdbConfig {
   private val SetMembers = "members:(.*)".r
   private val SetOverrides = "overrides:(.*)".r
   private val SetMessages = "messages:(.*)".r
+  private val SetOccurrences = "occurrences:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "synthetics:(.*)".r
 
@@ -120,6 +124,8 @@ object SemanticdbConfig {
       case option @ SetMessages(DiagnosticMode(diagnostics)) =>
         deprecated(option, "diagnostics:{all,none}")
         config = config.copy(diagnostics = diagnostics)
+      case SetOccurrences(OccurrenceMode(occurrences)) =>
+        config = config.copy(occurrences = occurrences)
       case SetDiagnostics(DiagnosticMode(diagnostics)) =>
         config = config.copy(diagnostics = diagnostics)
       case SetSynthetics(SyntheticMode(synthetics)) =>
@@ -191,6 +197,18 @@ object SymbolMode {
   def all = List(Definitions, None)
   case object Definitions extends SymbolMode
   case object None extends SymbolMode
+}
+
+sealed abstract class OccurrenceMode {
+  def name: String = toString.toLowerCase
+  import OccurrenceMode._
+  def saveOccurrences: Boolean = this == All
+}
+object OccurrenceMode {
+  def unapply(arg: String): Option[OccurrenceMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(All, None)
+  case object All extends OccurrenceMode
+  case object None extends OccurrenceMode
 }
 
 sealed abstract class DiagnosticMode {

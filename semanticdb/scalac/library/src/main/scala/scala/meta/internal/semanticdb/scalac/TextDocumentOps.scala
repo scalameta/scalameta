@@ -518,15 +518,21 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
       val finalSymbols = symbols.values.toList
 
-      val finalOccurrences = occurrences.flatMap {
-        case (pos, sym) =>
-          flatten(sym).map { flatSym =>
-            val role =
-              if (binders.contains(pos)) s.SymbolOccurrence.Role.DEFINITION
-              else s.SymbolOccurrence.Role.REFERENCE
-            s.SymbolOccurrence(Some(pos.toRange), flatSym.syntax, role)
-          }
-      }.toList
+      val finalOccurrences = {
+        if (config.occurrences.saveOccurrences) {
+          occurrences.flatMap {
+            case (pos, sym) =>
+              flatten(sym).map { flatSym =>
+                val role =
+                  if (binders.contains(pos)) s.SymbolOccurrence.Role.DEFINITION
+                  else s.SymbolOccurrence.Role.REFERENCE
+                s.SymbolOccurrence(Some(pos.toRange), flatSym.syntax, role)
+              }
+          }.toList
+        } else {
+          Nil
+        }
+      }
 
       val diagnostics = unit.reportedDiagnostics(mstarts)
 
