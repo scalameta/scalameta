@@ -219,7 +219,7 @@ advanced.Structural#s1().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "advanced.Structural#$anon#x()."
++          symlinks: "advanced.Structural#`<refinement>`#x()."
 
 
 =========================
@@ -244,7 +244,7 @@ advanced.Structural#s2().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "advanced.Structural#s2().$anon#x()."
++          symlinks: "advanced.Structural#s2().`<refinement>`#x()."
 
 
 =========================
@@ -283,7 +283,7 @@ advanced.Structural#s3().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "advanced.Structural#s3().$anon#m()."
++          symlinks: "advanced.Structural#s3().`<refinement>`#m()."
 
 
 ===================
@@ -342,7 +342,7 @@ advanced.Test.s1().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "advanced.Test.$anon#x()."
++          symlinks: "advanced.Test.`<refinement>`#x()."
 
 
 ===================
@@ -367,7 +367,7 @@ advanced.Test.s2().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "advanced.Test.$anon#x()."
++          symlinks: "advanced.Test.`<refinement>`#x()."
 
 
 ===================
@@ -406,7 +406,7 @@ advanced.Test.s3().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "advanced.Test.$anon#m()."
++          symlinks: "advanced.Test.`<refinement>`#m()."
 
 
 ========
@@ -429,8 +429,7 @@ classes.C3#copy$default$1().
 ============================
 --- metac
 +++ metacp
-             symbol: "scala.Int#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
@@ -442,8 +441,7 @@ classes.C4#copy$default$1().
 ============================
 --- metac
 +++ metacp
-             symbol: "scala.Int#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
@@ -455,8 +453,7 @@ classes.C6#copy$default$1().
 ============================
 --- metac
 +++ metacp
-             symbol: "scala.Int#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
@@ -485,7 +482,7 @@ classes.N.anonClass().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "classes.N.anonClass().$anon#local()."
++          symlinks: "classes.N.anonClass().`<refinement>`#local()."
 
 
 ========
@@ -563,7 +560,7 @@ example.Methods#m12b().(x)
 -          tag: PUBLIC
 -          symbol: ""
 -        language: SCALA
-+      symlinks: "example.Methods#$anon#x()."
++      symlinks: "example.Methods#`<refinement>`#x()."
 
 
 =========================
@@ -725,8 +722,7 @@ types.Test.C#annType1().
 ========================
 --- metac
 +++ metacp
-             symbol: "types.T#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
@@ -742,13 +738,12 @@ types.Test.C#annType2().
 ========================
 --- metac
 +++ metacp
-             symbol: "types.T#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
 -              symbol: "types.ann1#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
@@ -777,7 +772,7 @@ types.Test.C#compoundType1().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "types.Test.C#$anon#k()."
++          symlinks: "types.Test.C#`<refinement>`#k()."
 
 
 =============================
@@ -802,7 +797,7 @@ types.Test.C#compoundType3().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "types.Test.C#$anon#k()."
++          symlinks: "types.Test.C#`<refinement>`#k()."
 
 
 =============================
@@ -827,7 +822,7 @@ types.Test.C#compoundType4().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "types.Test.C#compoundType4().$anon#k()."
++          symlinks: "types.Test.C#compoundType4().`<refinement>`#k()."
 
 
 =============================
@@ -852,7 +847,7 @@ types.Test.C#compoundType6().
 -              tag: PUBLIC
 -              symbol: ""
 -            language: SCALA
-+          symlinks: "types.Test.C#compoundType6().$anon#k()."
++          symlinks: "types.Test.C#compoundType6().`<refinement>`#k()."
 
 
 ================================

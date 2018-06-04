@@ -85,9 +85,6 @@ trait SymbolOps { self: SemanticdbOps =>
       }
       "(" + suffix + ")"
     }
-    def isSelfParameter: Boolean = {
-      sym != g.NoSymbol && sym.owner.thisSym == sym
-    }
     def semanticdbDecls: SemanticdbDecls = {
       if (sym.hasPackageFlag) {
         SemanticdbDecls(Nil)
@@ -172,6 +169,9 @@ trait SymbolOps { self: SemanticdbOps =>
 
   implicit class XtensionGSymbol(sym: g.Symbol) {
     def ssym: String = sym.toSemantic.syntax
+    def isSelfParameter: Boolean = {
+      sym != g.NoSymbol && sym.owner.thisSym == sym
+    }
     def isJavaClass: Boolean =
       sym.isJavaDefined &&
         !sym.hasPackageFlag &&

@@ -5,6 +5,7 @@ import scala.reflect.internal.{Flags => gf}
 import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
@@ -20,23 +21,21 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       else gsym0
     }
 
+    private def language: s.Language = {
+      if (gsym.hasPackageFlag) l.SCALA
+      else if (gsym.hasFlag(gf.JAVA)) l.JAVA
+      else l.SCALA
+    }
+
     private def kind: s.SymbolInformation.Kind = {
       gsym match {
         case _ if gsym.isSelfParameter =>
           k.SELF_PARAMETER
         case gsym: MethodSymbol =>
-          if (gsym.isConstructor) {
-            k.CONSTRUCTOR
-          } else {
-            if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
-              if (gsym.isLocalToBlock) k.LOCAL
-              else k.METHOD
-            } else if (gsym.isMacro) {
-              k.MACRO
-            } else {
-              k.METHOD
-            }
-          }
+          if (gsym.isConstructor) k.CONSTRUCTOR
+          else if (gsym.isMacro) k.MACRO
+          else if (gsym.isGetter && gsym.isLazy && gsym.isLocalToBlock) k.LOCAL
+          else k.METHOD
         case gsym: ModuleSymbol =>
           if (gsym.hasPackageFlag) k.PACKAGE
           else if (gsym.isPackageObject) k.PACKAGE_OBJECT
@@ -60,16 +59,10 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    def language: s.Language =
-      if (gsym.hasPackageFlag) s.Language.SCALA
-      else if (gsym.hasFlag(gf.JAVA)) s.Language.JAVA
-      else s.Language.SCALA
-
     private[meta] def properties: Int = {
       val kind = this.kind
       var flags = 0
-      def flip(prop: s.SymbolInformation.Property): Unit =
-        flags |= prop.value
+      def flip(prop: s.SymbolInformation.Property): Unit = flags |= prop.value
       def isAbstractClass =
         gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
@@ -93,8 +86,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flip(p.COVARIANT)
         if (kind.isLocal || gsym.isUsefulField) {
           if (gsym.isMutable) flip(p.VAR)
-          else if (gsym.isVal) flip(p.VAL)
-          else ()
+          else flip(p.VAL)
         }
         if (gsym.isGetter || gsym.isSetter) {
           if (gsym.isStable) flip(p.VAL)
@@ -123,7 +115,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       if (gsym.hasPackageFlag) {
         None
       } else {
-        val ginfo = {
+        val gtpe = {
           if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
             gsym.info.widen
           } else if (gsym.isAliasType) {
@@ -140,16 +132,16 @@ trait SymbolInformationOps { self: SemanticdbOps =>
             gsym.info
           }
         }
-        val sinfo = ginfo.toSemantic(linkMode)
+        val stpe = gtpe.toSemantic(linkMode)
         if (gsym.isConstructor) {
-          sinfo.map(_.update(_.methodType.optionalReturnType := None))
+          stpe.map(_.update(_.methodType.optionalReturnType := None))
         } else if (gsym.isScalacField) {
           val stag = t.METHOD_TYPE
           val sparamss = Nil
-          val sret = sinfo
+          val sret = stpe
           Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, sparamss, sret))))
         } else {
-          sinfo
+          stpe
         }
       }
     }
@@ -187,11 +179,11 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         symbol = gsym.ssym,
         language = language,
         kind = kind,
-        accessibility = accessibility,
         properties = properties,
         name = name,
         tpe = tpe(linkMode),
-        annotations = annotations
+        annotations = annotations,
+        accessibility = accessibility
       )
     }
   }

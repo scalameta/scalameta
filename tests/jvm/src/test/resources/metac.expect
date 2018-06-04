@@ -299,8 +299,7 @@ Uri => semanticdb/integration/src/main/scala/example/Anonymous.scala
 Text => non-empty
 Language => Scala
 Symbols => 6 entries
-Occurrences => 18 entries
-Diagnostics => 1 entries
+Occurrences => 21 entries
 Synthetics => 2 entries
 
 Symbols:
@@ -329,38 +328,33 @@ local2 => val local x: Function1[Int, Int]
   Int => scala.Int#
 
 Occurrences:
-[0:6..0:7): C <= _empty_.C#
-[0:8..0:8):  <= _empty_.C#`<init>`().
-[1:8..1:9): C => _empty_.C#
-[3:6..3:8): m1 <= _empty_.C#m1().
-[3:9..3:10): T <= _empty_.C#m1().[T]
-[3:20..3:23): ??? => scala.Predef.`???`().
-[4:6..4:8): m2 <= _empty_.C#m2().
-[4:10..4:13): Map => scala.Predef.Map#
-[4:17..4:21): List => scala.package.List#
-[4:28..4:31): ??? => scala.Predef.`???`().
-[5:2..5:9): locally => scala.Predef.locally().
-[6:4..6:7): ??? => scala.Predef.`???`().
-[6:24..6:28): List => scala.package.List#
-[8:2..8:9): locally => scala.Predef.locally().
-[9:8..9:9): x <= local2
-[9:11..9:14): Int => scala.Int#
-[9:18..9:21): Int => scala.Int#
-[9:29..9:32): ??? => scala.Predef.`???`().
-
-Diagnostics:
-[3:9..3:13) [warning] higher-kinded type should be enabled
-by making the implicit value scala.language.higherKinds visible.
-This can be achieved by adding the import clause 'import scala.language.higherKinds'
-or by setting the compiler option -language:higherKinds.
-See the Scaladoc for value scala.language.higherKinds for a discussion
-why the feature should be explicitly enabled.
+[0:7..0:12): scala => scala.
+[0:13..0:21): language => scala.language.
+[0:22..0:33): higherKinds => scala.language.higherKinds().
+[2:6..2:7): C <= _empty_.C#
+[2:8..2:8):  <= _empty_.C#`<init>`().
+[3:8..3:9): C => _empty_.C#
+[5:6..5:8): m1 <= _empty_.C#m1().
+[5:9..5:10): T <= _empty_.C#m1().[T]
+[5:20..5:23): ??? => scala.Predef.`???`().
+[6:6..6:8): m2 <= _empty_.C#m2().
+[6:10..6:13): Map => scala.Predef.Map#
+[6:17..6:21): List => scala.package.List#
+[6:28..6:31): ??? => scala.Predef.`???`().
+[7:2..7:9): locally => scala.Predef.locally().
+[8:4..8:7): ??? => scala.Predef.`???`().
+[8:24..8:28): List => scala.package.List#
+[10:2..10:9): locally => scala.Predef.locally().
+[11:8..11:9): x <= local2
+[11:11..11:14): Int => scala.Int#
+[11:18..11:21): Int => scala.Int#
+[11:29..11:32): ??? => scala.Predef.`???`().
 
 Synthetics:
-[5:9..5:9):  => *[Unit]
+[7:9..7:9):  => *[Unit]
   [0:0..0:1): * => _star_.
   [0:2..0:6): Unit => scala.Unit#
-[8:9..8:9):  => *[Unit]
+[10:9..10:9):  => *[Unit]
   [0:0..0:1): * => _star_.
   [0:2..0:6): Unit => scala.Unit#
 
