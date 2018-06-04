@@ -15,49 +15,27 @@ _empty_.C#m2().
 -                        symbol: "local1"
 +                        symbol: "_empty_.C#m2()._$2#"
                  declarations {
--                  hardlinks {
+                   hardlinks {
 -                    symbol: "local1"
--                    kind: TYPE
--                    properties: 4
++                    symbol: "_empty_.C#m2()._$2#"
+                     kind: TYPE
+                     properties: 4
 -                    name: "_"
--                    tpe {
--                      tag: TYPE_TYPE
--                      typeType {
--                        lower_bound {
--                          tag: TYPE_REF
--                          typeRef {
--                            symbol: "scala.Nothing#"
--                        upper_bound {
--                          tag: TYPE_REF
--                          typeRef {
--                            symbol: "scala.Any#"
--                    accessibility {
--                      tag: PUBLIC
--                      symbol: ""
--                    language: SCALA
-+                  symlinks: "_empty_.C#m2()._$2#"
++                    name: "_$2"
+                     tpe {
+                       tag: TYPE_TYPE
+                       typeType {
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local0"
--            kind: TYPE
--            properties: 4
++            symbol: "_empty_.C#m2()._$1#"
+             kind: TYPE
+             properties: 4
 -            name: "_"
--            tpe {
--              tag: TYPE_TYPE
--              typeType {
--                lower_bound {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Nothing#"
--                upper_bound {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Any#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "_empty_.C#m2()._$1#"
++            name: "_$1"
+             tpe {
+               tag: TYPE_TYPE
+               typeType {
 
 
 =========
@@ -86,27 +64,16 @@ advanced.Existential#e1().
 -                symbol: "local7"
 +                symbol: "advanced.Existential#e1()._$1#"
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local7"
--            kind: TYPE
--            properties: 4
++            symbol: "advanced.Existential#e1()._$1#"
+             kind: TYPE
+             properties: 4
 -            name: "_"
--            tpe {
--              tag: TYPE_TYPE
--              typeType {
--                lower_bound {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Nothing#"
--                upper_bound {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Any#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "advanced.Existential#e1()._$1#"
++            name: "_$1"
+             tpe {
+               tag: TYPE_TYPE
+               typeType {
 
 
 ==========================
@@ -120,27 +87,12 @@ advanced.Existential#e2().
 -                    symbol: "local8"
 +                    symbol: "advanced.Existential#e2().T#"
              declarations {
--              hardlinks {
+               hardlinks {
 -                symbol: "local8"
--                kind: TYPE
--                properties: 4
--                name: "T"
--                tpe {
--                  tag: TYPE_TYPE
--                  typeType {
--                    lower_bound {
--                      tag: TYPE_REF
--                      typeRef {
--                        symbol: "scala.Nothing#"
--                    upper_bound {
--                      tag: TYPE_REF
--                      typeRef {
--                        symbol: "scala.Any#"
--                accessibility {
--                  tag: PUBLIC
--                  symbol: ""
--                language: SCALA
-+              symlinks: "advanced.Existential#e2().T#"
++                symbol: "advanced.Existential#e2().T#"
+                 kind: TYPE
+                 properties: 4
+                 name: "T"
 
 
 ==========================
@@ -157,44 +109,19 @@ advanced.Existential#e4().
                tag: TYPE_REF
                typeRef {
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local10"
--            kind: TYPE
--            properties: 4
--            name: "U"
--            tpe {
--              tag: UNIVERSAL_TYPE
--              universalType {
--                tpe {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Any#"
--                type_parameters {
--                  hardlinks {
++            symbol: "advanced.Existential#e4().U#"
+             kind: TYPE
+             properties: 4
+             name: "U"
+                 type_parameters {
+                   hardlinks {
 -                    symbol: "local11"
--                    kind: TYPE_PARAMETER
--                    properties: 0
--                    name: "T"
--                    tpe {
--                      tag: TYPE_TYPE
--                      typeType {
--                        lower_bound {
--                          tag: TYPE_REF
--                          typeRef {
--                            symbol: "scala.Nothing#"
--                        upper_bound {
--                          tag: TYPE_REF
--                          typeRef {
--                            symbol: "scala.Int#"
--                    accessibility {
--                      tag: PUBLIC
--                      symbol: ""
--                    language: SCALA
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "advanced.Existential#e4().U#"
++                    symbol: "advanced.Existential#e4().U#[T]"
+                     kind: TYPE_PARAMETER
+                     properties: 0
+                     name: "T"
 
 
 =========================
@@ -203,23 +130,12 @@ advanced.Structural#s1().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local0"
--            kind: METHOD
--            properties: 1028
--            name: "x"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Int#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "advanced.Structural#`<refinement>`#x()."
++            symbol: "advanced.Structural#`<refinement>`#x()."
+             kind: METHOD
+             properties: 1028
+             name: "x"
 
 
 =========================
@@ -228,23 +144,12 @@ advanced.Structural#s2().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local1"
--            kind: METHOD
--            properties: 1024
--            name: "x"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Int#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "advanced.Structural#s2().`<refinement>`#x()."
++            symbol: "advanced.Structural#s2().`<refinement>`#x()."
+             kind: METHOD
+             properties: 1024
+             name: "x"
 
 
 =========================
@@ -253,37 +158,19 @@ advanced.Structural#s3().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local3"
--            kind: METHOD
--            properties: 0
--            name: "m"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Int#"
--                parameterLists {
--                  hardlinks {
++            symbol: "advanced.Structural#s3().`<refinement>`#m()."
+             kind: METHOD
+             properties: 0
+             name: "m"
+                 parameterLists {
+                   hardlinks {
 -                    symbol: "local4"
--                    kind: PARAMETER
--                    properties: 0
--                    name: "x"
--                    tpe {
--                      tag: TYPE_REF
--                      typeRef {
--                        symbol: "scala.Int#"
--                    accessibility {
--                      tag: PUBLIC
--                      symbol: ""
--                    language: SCALA
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "advanced.Structural#s3().`<refinement>`#m()."
++                    symbol: "advanced.Structural#s3().`<refinement>`#m().(x)"
+                     kind: PARAMETER
+                     properties: 0
+                     name: "x"
 
 
 ===================
@@ -297,27 +184,12 @@ advanced.Test.e2().
 -                    symbol: "local8"
 +                    symbol: "advanced.Test.T#"
              declarations {
--              hardlinks {
+               hardlinks {
 -                symbol: "local8"
--                kind: TYPE
--                properties: 4
--                name: "T"
--                tpe {
--                  tag: TYPE_TYPE
--                  typeType {
--                    lower_bound {
--                      tag: TYPE_REF
--                      typeRef {
--                        symbol: "scala.Nothing#"
--                    upper_bound {
--                      tag: TYPE_REF
--                      typeRef {
--                        symbol: "scala.Any#"
--                accessibility {
--                  tag: PUBLIC
--                  symbol: ""
--                language: SCALA
-+              symlinks: "advanced.Test.T#"
++                symbol: "advanced.Test.T#"
+                 kind: TYPE
+                 properties: 4
+                 name: "T"
 
 
 ===================
@@ -326,23 +198,12 @@ advanced.Test.s1().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local0"
--            kind: METHOD
--            properties: 1028
--            name: "x"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Int#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "advanced.Test.`<refinement>`#x()."
++            symbol: "advanced.Test.`<refinement>`#x()."
+             kind: METHOD
+             properties: 1028
+             name: "x"
 
 
 ===================
@@ -351,23 +212,12 @@ advanced.Test.s2().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local1"
--            kind: METHOD
--            properties: 1024
--            name: "x"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Int#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "advanced.Test.`<refinement>`#x()."
++            symbol: "advanced.Test.`<refinement>`#x()."
+             kind: METHOD
+             properties: 1024
+             name: "x"
 
 
 ===================
@@ -376,37 +226,19 @@ advanced.Test.s3().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local3"
--            kind: METHOD
--            properties: 0
--            name: "m"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Int#"
--                parameterLists {
--                  hardlinks {
++            symbol: "advanced.Test.`<refinement>`#m()."
+             kind: METHOD
+             properties: 0
+             name: "m"
+                 parameterLists {
+                   hardlinks {
 -                    symbol: "local4"
--                    kind: PARAMETER
--                    properties: 0
--                    name: "x"
--                    tpe {
--                      tag: TYPE_REF
--                      typeRef {
--                        symbol: "scala.Int#"
--                    accessibility {
--                      tag: PUBLIC
--                      symbol: ""
--                    language: SCALA
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "advanced.Test.`<refinement>`#m()."
++                    symbol: "advanced.Test.`<refinement>`#m().(x)"
+                     kind: PARAMETER
+                     properties: 0
+                     name: "x"
 
 
 ========
@@ -466,23 +298,12 @@ classes.N.anonClass().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local1"
--            kind: METHOD
--            properties: 1024
--            name: "local"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Nothing#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "classes.N.anonClass().`<refinement>`#local()."
++            symbol: "classes.N.anonClass().`<refinement>`#local()."
+             kind: METHOD
+             properties: 1024
+             name: "local"
 
 
 ========
@@ -544,23 +365,12 @@ example.Methods#m12b().(x)
 --- metac
 +++ metacp
      declarations {
--      hardlinks {
+       hardlinks {
 -        symbol: "local0"
--        kind: METHOD
--        properties: 1028
--        name: "x"
--        tpe {
--          tag: METHOD_TYPE
--          methodType {
--            return_type {
--              tag: TYPE_REF
--              typeRef {
--                symbol: "scala.Int#"
--        accessibility {
--          tag: PUBLIC
--          symbol: ""
--        language: SCALA
-+      symlinks: "example.Methods#`<refinement>`#x()."
++        symbol: "example.Methods#`<refinement>`#x()."
+         kind: METHOD
+         properties: 1028
+         name: "x"
 
 
 =========================
@@ -599,27 +409,12 @@ example.Methods#m14().(x)
 -        symbol: "local1"
 +        symbol: "example.Methods#m14().(x)T#"
      declarations {
--      hardlinks {
+       hardlinks {
 -        symbol: "local1"
--        kind: TYPE
--        properties: 4
--        name: "T"
--        tpe {
--          tag: TYPE_TYPE
--          typeType {
--            lower_bound {
--              tag: TYPE_REF
--              typeRef {
--                symbol: "scala.Nothing#"
--            upper_bound {
--              tag: TYPE_REF
--              typeRef {
--                symbol: "scala.Any#"
--        accessibility {
--          tag: PUBLIC
--          symbol: ""
--        language: SCALA
-+      symlinks: "example.Methods#m14().(x)T#"
++        symbol: "example.Methods#m14().(x)T#"
+         kind: TYPE
+         properties: 4
+         name: "T"
 
 
 ======
@@ -756,23 +551,12 @@ types.Test.C#compoundType1().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local0"
--            kind: METHOD
--            properties: 4
--            name: "k"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Int#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "types.Test.C#`<refinement>`#k()."
++            symbol: "types.Test.C#`<refinement>`#k()."
+             kind: METHOD
+             properties: 4
+             name: "k"
 
 
 =============================
@@ -781,23 +565,12 @@ types.Test.C#compoundType3().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local1"
--            kind: METHOD
--            properties: 4
--            name: "k"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Int#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "types.Test.C#`<refinement>`#k()."
++            symbol: "types.Test.C#`<refinement>`#k()."
+             kind: METHOD
+             properties: 4
+             name: "k"
 
 
 =============================
@@ -806,23 +579,12 @@ types.Test.C#compoundType4().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local3"
--            kind: METHOD
--            properties: 0
--            name: "k"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Int#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "types.Test.C#compoundType4().`<refinement>`#k()."
++            symbol: "types.Test.C#compoundType4().`<refinement>`#k()."
+             kind: METHOD
+             properties: 0
+             name: "k"
 
 
 =============================
@@ -831,23 +593,12 @@ types.Test.C#compoundType6().
 --- metac
 +++ metacp
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local5"
--            kind: METHOD
--            properties: 0
--            name: "k"
--            tpe {
--              tag: METHOD_TYPE
--              methodType {
--                return_type {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Int#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "types.Test.C#compoundType6().`<refinement>`#k()."
++            symbol: "types.Test.C#compoundType6().`<refinement>`#k()."
+             kind: METHOD
+             properties: 0
+             name: "k"
 
 
 ================================
@@ -861,27 +612,12 @@ types.Test.C#existentialType1().
 -            symbol: "local7"
 +            symbol: "types.Test.C#existentialType1().T#"
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local7"
--            kind: TYPE
--            properties: 4
--            name: "T"
--            tpe {
--              tag: TYPE_TYPE
--              typeType {
--                lower_bound {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Nothing#"
--                upper_bound {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Any#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "types.Test.C#existentialType1().T#"
++            symbol: "types.Test.C#existentialType1().T#"
+             kind: TYPE
+             properties: 4
+             name: "T"
 
 
 ================================
@@ -895,27 +631,16 @@ types.Test.C#existentialType2().
 -                symbol: "local8"
 +                symbol: "types.Test.C#existentialType2()._$1#"
          declarations {
--          hardlinks {
+           hardlinks {
 -            symbol: "local8"
--            kind: TYPE
--            properties: 4
++            symbol: "types.Test.C#existentialType2()._$1#"
+             kind: TYPE
+             properties: 4
 -            name: "_"
--            tpe {
--              tag: TYPE_TYPE
--              typeType {
--                lower_bound {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Nothing#"
--                upper_bound {
--                  tag: TYPE_REF
--                  typeRef {
--                    symbol: "scala.Any#"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
--            language: SCALA
-+          symlinks: "types.Test.C#existentialType2()._$1#"
++            name: "_$1"
+             tpe {
+               tag: TYPE_TYPE
+               typeType {
 
 
 ===========================

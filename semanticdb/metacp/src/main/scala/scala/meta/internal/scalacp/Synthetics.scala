@@ -11,7 +11,6 @@ import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
 object Synthetics {
   def setterInfos(getterInfo: s.SymbolInformation, linkMode: LinkMode): List[s.SymbolInformation] = {
-    // TODO: Respect linkMode.
     val getterSym = getterInfo.symbol
     val setterSym = {
       if (getterSym.isGlobal) {

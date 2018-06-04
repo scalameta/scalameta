@@ -72,25 +72,41 @@ trait SymbolOps { self: Scalacp =>
     }
 
     def sscope(linkMode: LinkMode): s.Scope = {
-      // TODO: Respect linkMode.
-      s.Scope(symlinks = syms.map(_.ssym))
+      linkMode match {
+        case SymlinkChildren =>
+          s.Scope(symlinks = syms.map(_.ssym))
+        case HardlinkChildren =>
+          s.Scope(hardlinks = syms.map(_.toSymbolInformation(HardlinkChildren)))
+      }
     }
   }
 
   case class SemanticdbDecls(syms: Seq[Symbol]) {
     def sscope(linkMode: LinkMode): s.Scope = {
-      // TODO: Respect linkMode.
-      val sbuf = List.newBuilder[String]
-      syms.foreach { sym =>
-        val ssym = sym.ssym
-        sbuf += ssym
-        if (sym.isUsefulField && sym.isMutable) {
-          val setterName = ssym.desc.name + "_="
-          val setterSym = Symbols.Global(ssym.owner, d.Method(setterName, "()"))
-          sbuf += setterSym
-        }
+      linkMode match {
+        case SymlinkChildren =>
+          val sbuf = List.newBuilder[String]
+          syms.foreach { sym =>
+            val ssym = sym.ssym
+            sbuf += ssym
+            if (sym.isUsefulField && sym.isMutable) {
+              val setterName = ssym.desc.name + "_="
+              val setterSym = Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+              sbuf += setterSym
+            }
+          }
+          s.Scope(sbuf.result)
+        case HardlinkChildren =>
+          val sbuf = List.newBuilder[s.SymbolInformation]
+          syms.foreach { sym =>
+            val sinfo = sym.toSymbolInformation(HardlinkChildren)
+            sbuf += sinfo
+            if (sym.isUsefulField && sym.isMutable) {
+              Synthetics.setterInfos(sinfo, HardlinkChildren).foreach(sbuf.+=)
+            }
+          }
+          s.Scope(hardlinks = sbuf.result)
       }
-      s.Scope(sbuf.result)
     }
   }
 
