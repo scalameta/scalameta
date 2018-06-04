@@ -39,65 +39,8 @@ trait Scalameta {
     settings.Yrangepos.value = true
     settings.plugin.value ::= bs.semanticdbScalacJar
     settings.require.value ::= "semanticdb"
+    settings.pluginOptions.value ::= s"semanticdb:crashes:error"
     settings.pluginOptions.value ::= s"semanticdb:sourceroot:${bs.scalapDir}"
-    settings.pluginOptions.value ::= s"semanticdb:failures:error"
-    settings
-  }
-}
-
-@BenchmarkMode(Array(SampleTime))
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Warmup(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class QuickScalametaFullSynthetics extends Scalameta {
-  @Benchmark
-  def run(bs: BenchmarkState): Unit = {
-    runImpl(bs)
-  }
-  override def mkSettings(bs: BenchmarkState): Settings = {
-    val settings = super.mkSettings(bs)
-    settings.pluginOptions.value ::= "semanticdb:synthetics:all"
-    settings.pluginOptions.value ::= "semanticdb:symbols:all"
-    settings.pluginOptions.value ::= "semanticdb:mode:fat"
-    settings
-  }
-}
-
-@BenchmarkMode(Array(SampleTime))
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Warmup(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class QuickScalametaFullSymbols extends Scalameta {
-  @Benchmark
-  def run(bs: BenchmarkState): Unit = {
-    runImpl(bs)
-  }
-  override def mkSettings(bs: BenchmarkState): Settings = {
-    val settings = super.mkSettings(bs)
-    settings.pluginOptions.value ::= "semanticdb:synthetics:none"
-    settings.pluginOptions.value ::= "semanticdb:symbols:all"
-    settings.pluginOptions.value ::= "semanticdb:mode:fat"
-    settings
-  }
-}
-
-@BenchmarkMode(Array(SampleTime))
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Warmup(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class QuickScalametaFullContents extends Scalameta {
-  @Benchmark
-  def run(bs: BenchmarkState): Unit = {
-    runImpl(bs)
-  }
-  override def mkSettings(bs: BenchmarkState): Settings = {
-    val settings = super.mkSettings(bs)
-    settings.pluginOptions.value ::= "semanticdb:synthetics:none"
-    settings.pluginOptions.value ::= "semanticdb:symbols:definitions"
-    settings.pluginOptions.value ::= "semanticdb:mode:fat"
     settings
   }
 }
@@ -114,9 +57,32 @@ class QuickScalametaBaseline extends Scalameta {
   }
   override def mkSettings(bs: BenchmarkState): Settings = {
     val settings = super.mkSettings(bs)
-    settings.pluginOptions.value ::= "semanticdb:synthetics:none"
-    settings.pluginOptions.value ::= "semanticdb:symbols:definitions"
-    settings.pluginOptions.value ::= "semanticdb:mode:slim"
+    settings.pluginOptions.value ::= s"semanticdb:text:off"
+    settings.pluginOptions.value ::= s"semanticdb:symbols:on"
+    settings.pluginOptions.value ::= s"semanticdb:occurrences:on"
+    settings.pluginOptions.value ::= s"semanticdb:diagnostics:on"
+    settings.pluginOptions.value ::= s"semanticdb:experimental:synthetics:off"
+    settings
+  }
+}
+
+@BenchmarkMode(Array(SampleTime))
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@Warmup(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
+@Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
+class QuickScalametaFullText extends Scalameta {
+  @Benchmark
+  def run(bs: BenchmarkState): Unit = {
+    runImpl(bs)
+  }
+  override def mkSettings(bs: BenchmarkState): Settings = {
+    val settings = super.mkSettings(bs)
+    settings.pluginOptions.value ::= s"semanticdb:text:on"
+    settings.pluginOptions.value ::= s"semanticdb:symbols:on"
+    settings.pluginOptions.value ::= s"semanticdb:occurrences:on"
+    settings.pluginOptions.value ::= s"semanticdb:diagnostics:on"
+    settings.pluginOptions.value ::= s"semanticdb:experimental:synthetics:off"
     settings
   }
 }
