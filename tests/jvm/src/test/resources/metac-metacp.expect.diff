@@ -1,26 +1,3 @@
-===============
-_empty_.C#m2().
-===============
---- metac
-+++ metacp
-                     symbol: "local1"
-                     kind: TYPE
-                     properties: 4
--                    name: "_"
-+                    name: "_$2"
-                     tpe {
-                       tag: TYPE_TYPE
-                       typeType {
-             symbol: "local0"
-             kind: TYPE
-             properties: 4
--            name: "_"
-+            name: "_$1"
-             tpe {
-               tag: TYPE_TYPE
-               typeType {
-
-
 =========
 advanced.
 =========
@@ -52,11 +29,7 @@ advanced.Existential#e1().
 +            symbol: "local0"
              kind: TYPE
              properties: 4
--            name: "_"
-+            name: "_$1"
-             tpe {
-               tag: TYPE_TYPE
-               typeType {
+             name: "_"
 
 
 ==========================
@@ -537,18 +510,14 @@ types.Test.C#existentialType2().
                tag: TYPE_REF
                typeRef {
 -                symbol: "local8"
-+                symbol: "types.Test.C#existentialType2()._$1#"
++                symbol: "types.Test.C#existentialType2()._#"
          declarations {
            hardlinks {
 -            symbol: "local8"
-+            symbol: "types.Test.C#existentialType2()._$1#"
++            symbol: "types.Test.C#existentialType2()._#"
              kind: TYPE
              properties: 4
--            name: "_"
-+            name: "_$1"
-             tpe {
-               tag: TYPE_TYPE
-               typeType {
+             name: "_"
 
 
 ===========================

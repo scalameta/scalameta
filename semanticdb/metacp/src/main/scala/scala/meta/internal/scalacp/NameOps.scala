@@ -12,6 +12,7 @@ trait NameOps { self: Scalacp =>
       else if (name == "<root>") n.RootPackage
       else if (name == "<empty>") n.EmptyPackage
       else if (name == "<init>") n.Constructor
+      else if (name.startsWith("_$")) n.Anonymous
       else NameTransformer.decode(name).stripSuffix(" ")
     }
   }
