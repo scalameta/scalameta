@@ -677,9 +677,11 @@ class TargetedSuite extends SemanticdbSuite {
        |  AnyRef => scala.AnyRef#
        |_empty_.ac.x(). => val method x: Int
        |  Int => scala.Int#
-       |_empty_.ac.y(). => val method y: Class[local0] forSome { unknown local0 }
+       |_empty_.ac.y(). => val method y: Class[_$1] forSome { abstract type _$1 >: Nothing <: Any }
        |  Class => scala.Predef.Class#
-       |  local0 => local0
+       |  _$1 => local0
+       |  Nothing => scala.Nothing#
+       |  Any => scala.Any#
     """.stripMargin
   )
 
@@ -709,21 +711,27 @@ class TargetedSuite extends SemanticdbSuite {
        |_empty_.ad.k(). => val method k: AnyRef with Foo { abstract val def y: Any }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  y => local8
+       |  y => local10
        |  Any => scala.Any#
-       |_empty_.ad.x(). => val method x: AnyRef with Foo { unknown local5; unknown local6 }
+       |_empty_.ad.x(). => val method x: AnyRef with Foo { val def y: Int; def z[T >: Nothing <: Any](e: T): T }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  local5 => local5
-       |  local6 => local6
+       |  y => local5
+       |  Int => scala.Int#
+       |  z => local6
+       |  T => local8
+       |  Nothing => scala.Nothing#
+       |  Any => scala.Any#
+       |  e => local7
        |_empty_.ad.z(). => val method z: AnyRef with Foo { abstract val def y: Int }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  y => local7
+       |  y => local9
        |  Int => scala.Int#
-       |_empty_.ad.zz(). => val method zz: Bar { unknown local10 }
+       |_empty_.ad.zz(). => val method zz: Bar { val def y: Int }
        |  Bar => _empty_.ad.Bar#
-       |  local10 => local10
+       |  y => local12
+       |  Int => scala.Int#
        |local0 => val method y: Int
        |  Int => scala.Int#
        |local1 => method z[T >: Nothing <: Any](unknown local2): T
@@ -731,16 +739,16 @@ class TargetedSuite extends SemanticdbSuite {
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
        |  local2 => local2
+       |local10 => abstract val method y: Any
+       |  Any => scala.Any#
+       |local11 => val method y: Int
+       |  Int => scala.Int#
        |local3 => typeparam T >: Nothing <: Any
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
        |local4 => param e: T
        |  T => local3
-       |local7 => abstract val method y: Int
-       |  Int => scala.Int#
-       |local8 => abstract val method y: Any
-       |  Any => scala.Any#
-       |local9 => val method y: Int
+       |local9 => abstract val method y: Int
        |  Int => scala.Int#
     """.stripMargin
   )
