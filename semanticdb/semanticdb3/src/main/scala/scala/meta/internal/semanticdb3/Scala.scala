@@ -45,7 +45,13 @@ object Scala {
         Symbols.None
       }
     }
-    def desc: Descriptor = DescriptorParser(symbol)._1
+    def desc: Descriptor = {
+      if (isGlobal) {
+        DescriptorParser(symbol)._1
+      } else {
+        d.None
+      }
+    }
   }
 
   sealed trait Descriptor {
