@@ -244,6 +244,14 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.metap.Format.Compact.toString") {
+    // n/a
+  }
+
+  test("scala.meta.metap.Format.Detailed.toString") {
+    // n/a
+  }
+
   test("scala.meta.metap.Format.Proto.toString") {
     // n/a
   }
