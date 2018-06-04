@@ -65,24 +65,3 @@ class QuickScalametaBaseline extends Scalameta {
     settings
   }
 }
-
-@BenchmarkMode(Array(SampleTime))
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Warmup(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class QuickScalametaFullText extends Scalameta {
-  @Benchmark
-  def run(bs: BenchmarkState): Unit = {
-    runImpl(bs)
-  }
-  override def mkSettings(bs: BenchmarkState): Settings = {
-    val settings = super.mkSettings(bs)
-    settings.pluginOptions.value ::= s"semanticdb:text:on"
-    settings.pluginOptions.value ::= s"semanticdb:symbols:on"
-    settings.pluginOptions.value ::= s"semanticdb:occurrences:on"
-    settings.pluginOptions.value ::= s"semanticdb:diagnostics:on"
-    settings.pluginOptions.value ::= s"semanticdb:experimental:synthetics:off"
-    settings
-  }
-}

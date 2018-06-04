@@ -37,14 +37,6 @@ and that's what matters now.
     <td><code>on</code></td>
     <td><code>off</code></td>
   </tr>
-  <tr>
-    <td><code>ScalametaFullText</code></td>
-    <td><code>on</code></td>
-    <td><code>on</code></td>
-    <td><code>on</code></td>
-    <td><code>on</code></td>
-    <td><code>off</code></td>
-  </tr>
 </table>
 
 ## Results
@@ -59,7 +51,6 @@ Benchmark              Mode    Cnt Score
 QuickScalacBaseline    sample  51  1006.982 ± 13.579 ms/op
 QuickScalacRangepos    sample  50  1061.746 ± 10.769 ms/op (+6%)
 QuickScalametaBaseline sample  40  1365.613 ± 18.792 ms/op (+35%)
-QuickScalametaFullText sample  39  1386.165 ± 14.795 ms/op (+37%)
 
 Benchmark               Mode    Cnt Score
 QuickMetacpScalaLibrary sample  9   3387.600 ± 50.458  ms/op
