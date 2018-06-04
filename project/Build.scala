@@ -21,6 +21,12 @@ object Build extends AutoPlugin {
         "wow " + Versions.LatestScala212
       )
 
+      def metacpBenches: List[String]
+      def metacpCommands: List[String] = {
+        if (metacpBenches.isEmpty) Nil
+        else List("bench/jmh:run " + metacpBenches.mkString(" "))
+      }
+
       def scalacBenches: List[String]
       def scalacCommands: List[String] = {
         if (scalacBenches.isEmpty) Nil
@@ -34,22 +40,25 @@ object Build extends AutoPlugin {
       }
 
       final def command: String = {
-        val benchCommands = scalacCommands ++ scalametaCommands
+        val benchCommands = metacpCommands ++ scalacCommands ++ scalametaCommands
         (initCommands ++ benchCommands).map(c => s";$c ").mkString("")
       }
     }
 
     object benchLSP extends BenchSuite {
+      def metacpBenches = List("QuickMetacp")
       def scalacBenches = List("QuickScalacBaseline")
       def scalametaBenches = List("QuickScalametaBaseline")
     }
 
     object benchAll extends BenchSuite {
+      def metacpBenches = List("QuickMetacp")
       def scalacBenches = List("QuickScalac")
       def scalametaBenches = List("QuickScalameta")
     }
 
     object benchQuick extends BenchSuite {
+      def metacpBenches = List("QuickMetacp")
       def scalacBenches = Nil
       def scalametaBenches = List("QuickScalametaBaseline")
     }
