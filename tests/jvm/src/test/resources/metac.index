@@ -3,6 +3,7 @@ Packages:
 _empty_.
   _empty_.A#
   _empty_.B#
+  _empty_.C#
 _root_.
   _empty_.
   advanced.
@@ -69,6 +70,7 @@ Toplevels:
 ==========
 _empty_.A# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_.B# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
+_empty_.C# => semanticdb/integration/src/main/scala/example/Anonymous.scala.semanticdb
 advanced. => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced.C# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced.Existential# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb

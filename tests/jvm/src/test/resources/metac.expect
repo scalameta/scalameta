@@ -290,6 +290,80 @@ Synthetics:
   [0:0..0:1): * => _star_.
   [0:2..0:6): Unit => scala.Unit#
 
+semanticdb/integration/src/main/scala/example/Anonymous.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => semanticdb/integration/src/main/scala/example/Anonymous.scala
+Text => non-empty
+Language => Scala
+Symbols => 6 entries
+Occurrences => 18 entries
+Diagnostics => 1 entries
+Synthetics => 2 entries
+
+Symbols:
+_empty_.C# => class C extends AnyRef { +3 decls }
+  AnyRef => scala.AnyRef#
+_empty_.C#`<init>`(). => primary ctor <init>()
+_empty_.C#m1(). => method m1[T[unknown _] >: Nothing <: Any, unknown _]: Nothing
+  T => _empty_.C#m1().[T]
+  _ => _empty_.C#m1().[T][_]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+  _ => _empty_.C#m1().[_]
+_empty_.C#m1().[T] => typeparam T[unknown _] >: Nothing <: Any
+  _ => _empty_.C#m1().[T][_]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+_empty_.C#m2(). => method m2: Map[_, List[_] forSome { abstract type _ >: Nothing <: Any }] forSome { abstract type _ >: Nothing <: Any }
+  Map => scala.Predef.Map#
+  _ => local0
+  List => scala.package.List#
+  _ => local1
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+local2 => val local x: Function1[Int, Int]
+  Function1 => scala.Function1#
+  Int => scala.Int#
+
+Occurrences:
+[0:6..0:7): C <= _empty_.C#
+[0:8..0:8):  <= _empty_.C#`<init>`().
+[1:8..1:9): C => _empty_.C#
+[3:6..3:8): m1 <= _empty_.C#m1().
+[3:9..3:10): T <= _empty_.C#m1().[T]
+[3:20..3:23): ??? => scala.Predef.`???`().
+[4:6..4:8): m2 <= _empty_.C#m2().
+[4:10..4:13): Map => scala.Predef.Map#
+[4:17..4:21): List => scala.package.List#
+[4:28..4:31): ??? => scala.Predef.`???`().
+[5:2..5:9): locally => scala.Predef.locally().
+[6:4..6:7): ??? => scala.Predef.`???`().
+[6:24..6:28): List => scala.package.List#
+[8:2..8:9): locally => scala.Predef.locally().
+[9:8..9:9): x <= local2
+[9:11..9:14): Int => scala.Int#
+[9:18..9:21): Int => scala.Int#
+[9:29..9:32): ??? => scala.Predef.`???`().
+
+Diagnostics:
+[3:9..3:13) [warning] higher-kinded type should be enabled
+by making the implicit value scala.language.higherKinds visible.
+This can be achieved by adding the import clause 'import scala.language.higherKinds'
+or by setting the compiler option -language:higherKinds.
+See the Scaladoc for value scala.language.higherKinds for a discussion
+why the feature should be explicitly enabled.
+
+Synthetics:
+[5:9..5:9):  => *[Unit]
+  [0:0..0:1): * => _star_.
+  [0:2..0:6): Unit => scala.Unit#
+[8:9..8:9):  => *[Unit]
+  [0:0..0:1): * => _star_.
+  [0:2..0:6): Unit => scala.Unit#
+
 semanticdb/integration/src/main/scala/example/Classes.scala
 -----------------------------------------------------------
 

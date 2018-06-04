@@ -215,6 +215,52 @@ _empty_.B#a(). => method a: A
   A => _empty_.A#
 _root_. => package _root_
 
+C.class
+-------
+
+Summary:
+Schema => SemanticDB v3
+Uri => C.class
+Text => empty
+Language => Scala
+Symbols => 11 entries
+
+Symbols:
+_empty_. => package _empty_
+_empty_.C# => class C extends AnyRef { +3 decls }
+  AnyRef => scala.AnyRef#
+_empty_.C#`<init>`(). => primary ctor <init>()
+_empty_.C#m1(). => method m1[T[_ >: Nothing <: Any] >: Nothing <: Any, _ >: Nothing <: Any]: Nothing
+  T => _empty_.C#m1().[T]
+  _ => _empty_.C#m1().[T][_]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+  _ => _empty_.C#m1().[_]
+_empty_.C#m1().[T] => typeparam T[_ >: Nothing <: Any] >: Nothing <: Any
+  _ => _empty_.C#m1().[T][_]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+_empty_.C#m1().[T][_] => typeparam _ >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+_empty_.C#m1().[_] => typeparam _ >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+_empty_.C#m2(). => method m2: Map[_$1, List[_$2] forSome { abstract type _$2 >: Nothing <: Any }] forSome { abstract type _$1 >: Nothing <: Any }
+  Map => scala.Predef.Map#
+  _$1 => _empty_.C#m2()._$1#
+  List => scala.package.List#
+  _$2 => _empty_.C#m2()._$2#
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+_empty_.C#m2()._$1# => abstract type _$1 >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+_empty_.C#m2()._$2# => abstract type _$2 >: Nothing <: Any
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+_root_. => package _root_
+
 classes/C1.class
 ----------------
 

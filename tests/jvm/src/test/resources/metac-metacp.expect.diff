@@ -1,3 +1,65 @@
+===============
+_empty_.C#m2().
+===============
+--- metac
++++ metacp
+             type_arguments {
+               tag: TYPE_REF
+               typeRef {
+-                symbol: "local0"
++                symbol: "_empty_.C#m2()._$1#"
+             type_arguments {
+                     type_arguments {
+                       tag: TYPE_REF
+                       typeRef {
+-                        symbol: "local1"
++                        symbol: "_empty_.C#m2()._$2#"
+                 declarations {
+-                  hardlinks {
+-                    symbol: "local1"
+-                    kind: TYPE
+-                    properties: 4
+-                    name: "_"
+-                    tpe {
+-                      tag: TYPE_TYPE
+-                      typeType {
+-                        lower_bound {
+-                          tag: TYPE_REF
+-                          typeRef {
+-                            symbol: "scala.Nothing#"
+-                        upper_bound {
+-                          tag: TYPE_REF
+-                          typeRef {
+-                            symbol: "scala.Any#"
+-                    accessibility {
+-                      tag: PUBLIC
+-                      symbol: ""
+-                    language: SCALA
++                  symlinks: "_empty_.C#m2()._$2#"
+         declarations {
+-          hardlinks {
+-            symbol: "local0"
+-            kind: TYPE
+-            properties: 4
+-            name: "_"
+-            tpe {
+-              tag: TYPE_TYPE
+-              typeType {
+-                lower_bound {
+-                  tag: TYPE_REF
+-                  typeRef {
+-                    symbol: "scala.Nothing#"
+-                upper_bound {
+-                  tag: TYPE_REF
+-                  typeRef {
+-                    symbol: "scala.Any#"
+-            accessibility {
+-              tag: PUBLIC
+-              symbol: ""
+-            language: SCALA
++          symlinks: "_empty_.C#m2()._$1#"
+
+
 =========
 advanced.
 =========

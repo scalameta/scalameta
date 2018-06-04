@@ -3,6 +3,7 @@ Packages:
 _empty_.
   _empty_.A#
   _empty_.B#
+  _empty_.C#
 _root_.
   _empty_.
   advanced.
@@ -86,6 +87,7 @@ Toplevels:
 ==========
 _empty_.A# => A.class.semanticdb
 _empty_.B# => B.class.semanticdb
+_empty_.C# => C.class.semanticdb
 advanced.C# => advanced/C.class.semanticdb
 advanced.Existential# => advanced/Existential.class.semanticdb
 advanced.Structural# => advanced/Structural.class.semanticdb
