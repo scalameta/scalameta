@@ -1,4 +1,4 @@
-package org.scalameta.bench
+package scala.meta.internal.bench
 
 import java.nio.file._
 import java.util.concurrent.TimeUnit
@@ -6,9 +6,9 @@ import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.annotations.Mode._
 import scala.meta.cli._
 import scala.meta.io._
+import scala.meta.internal.bench.Metacp._
 import scala.meta.metacp._
 import scala.meta.tests.metacp._
-import org.scalameta.bench.Metacp._
 
 object Metacp {
   @State(Scope.Benchmark)

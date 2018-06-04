@@ -1,4 +1,4 @@
-package org.scalameta.bench
+package scala.meta.internal.bench
 
 import java.nio.file._
 import scala.collection.JavaConverters._

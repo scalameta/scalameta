@@ -520,7 +520,7 @@ lazy val bench = project
     buildInfoKeys := Seq[BuildInfoKey](
       "sourceroot" -> (baseDirectory in ThisBuild).value
     ),
-    buildInfoPackage := "org.scalameta.bench",
+    buildInfoPackage := "scala.meta.internal.bench",
     run.in(Jmh) := (Def.inputTaskDyn {
       val args = spaceDelimited("<arg>").parsed
       val semanticdbScalacJar =
