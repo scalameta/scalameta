@@ -20,6 +20,8 @@ class Existential {
   def e4: U[Int] forSome { type U[T <: Int] } = ???
 }
 
+class D[CC[_]] extends C[CC[_]]
+
 object Test {
   val s = new Structural
   val s1 = s.s1

@@ -15,6 +15,7 @@ _root_.
   types.
 advanced.
   advanced.C#
+  advanced.D#
   advanced.Existential#
   advanced.Structural#
   advanced.Test.
@@ -73,6 +74,7 @@ _empty_.B# => semanticdb/integration/src/main/scala/example/Empty.scala.semantic
 _empty_.C# => semanticdb/integration/src/main/scala/example/Anonymous.scala.semanticdb
 advanced. => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced.C# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+advanced.D# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced.Existential# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced.Structural# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced.Test. => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb

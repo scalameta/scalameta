@@ -17,6 +17,7 @@ _root_.
   types.
 advanced.
   advanced.C#
+  advanced.D#
   advanced.Existential#
   advanced.Structural#
   advanced.Test.
@@ -89,6 +90,7 @@ _empty_.A# => A.class.semanticdb
 _empty_.B# => B.class.semanticdb
 _empty_.C# => C.class.semanticdb
 advanced.C# => advanced/C.class.semanticdb
+advanced.D# => advanced/D.class.semanticdb
 advanced.Existential# => advanced/Existential.class.semanticdb
 advanced.Structural# => advanced/Structural.class.semanticdb
 advanced.Test. => advanced/Test.class.semanticdb

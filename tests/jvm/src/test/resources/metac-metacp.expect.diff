@@ -1,3 +1,26 @@
+===========
+advanced.D#
+===========
+--- metac
++++ metacp
+                 type_arguments {
+                   tag: TYPE_REF
+                   typeRef {
+-                    symbol: "local14"
++                    symbol: "advanced.D#_#"
+             declarations {
+               hardlinks {
+-                symbol: "local14"
++                symbol: "advanced.D#_#"
+                 kind: TYPE
+                 properties: 4
+                 name: "_"
+       symlinks: "advanced.D#[CC]"
+     declarations {
++      symlinks: "advanced.D#_#"
+       symlinks: "advanced.D#`<init>`()."
+
+
 ==========================
 advanced.Existential#e1().
 ==========================

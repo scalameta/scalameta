@@ -38,6 +38,30 @@ advanced.C#`<init>`(). => primary ctor <init>()
 advanced.C#t(). => method t: T
   T => advanced.C#[T]
 
+advanced/D.class
+----------------
+
+Summary:
+Schema => SemanticDB v3
+Uri => advanced/D.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+_root_. => package _root_
+advanced. => package advanced
+advanced.D# => class D[CC[_]] extends C[CC[_] forSome { type _ }] { +2 decls }
+  CC => advanced.D#[CC]
+  _ => advanced.D#[CC][_]
+  C => advanced.C#
+  _ => advanced.D#_#
+advanced.D#[CC] => typeparam CC[_]
+  _ => advanced.D#[CC][_]
+advanced.D#[CC][_] => typeparam _
+advanced.D#_# => abstract type _
+advanced.D#`<init>`(). => primary ctor <init>()
+
 advanced/Existential.class
 --------------------------
 
