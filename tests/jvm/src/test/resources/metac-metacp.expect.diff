@@ -3,21 +3,7 @@ _empty_.C#m2().
 ===============
 --- metac
 +++ metacp
-             type_arguments {
-               tag: TYPE_REF
-               typeRef {
--                symbol: "local0"
-+                symbol: "_empty_.C#m2()._$1#"
-             type_arguments {
-                     type_arguments {
-                       tag: TYPE_REF
-                       typeRef {
--                        symbol: "local1"
-+                        symbol: "_empty_.C#m2()._$2#"
-                 declarations {
-                   hardlinks {
--                    symbol: "local1"
-+                    symbol: "_empty_.C#m2()._$2#"
+                     symbol: "local1"
                      kind: TYPE
                      properties: 4
 -                    name: "_"
@@ -25,10 +11,7 @@ _empty_.C#m2().
                      tpe {
                        tag: TYPE_TYPE
                        typeType {
-         declarations {
-           hardlinks {
--            symbol: "local0"
-+            symbol: "_empty_.C#m2()._$1#"
+             symbol: "local0"
              kind: TYPE
              properties: 4
 -            name: "_"
@@ -62,11 +45,11 @@ advanced.Existential#e1().
                tag: TYPE_REF
                typeRef {
 -                symbol: "local7"
-+                symbol: "advanced.Existential#e1()._$1#"
++                symbol: "local0"
          declarations {
            hardlinks {
 -            symbol: "local7"
-+            symbol: "advanced.Existential#e1()._$1#"
++            symbol: "local0"
              kind: TYPE
              properties: 4
 -            name: "_"
@@ -85,11 +68,11 @@ advanced.Existential#e2().
                    tag: TYPE_REF
                    typeRef {
 -                    symbol: "local8"
-+                    symbol: "advanced.Existential#e2().T#"
++                    symbol: "local1"
              declarations {
                hardlinks {
 -                symbol: "local8"
-+                symbol: "advanced.Existential#e2().T#"
++                symbol: "local1"
                  kind: TYPE
                  properties: 4
                  name: "T"
@@ -104,52 +87,24 @@ advanced.Existential#e4().
            tag: TYPE_REF
            typeRef {
 -            symbol: "local10"
-+            symbol: "advanced.Existential#e4().U#"
++            symbol: "local2"
              type_arguments {
                tag: TYPE_REF
                typeRef {
          declarations {
            hardlinks {
 -            symbol: "local10"
-+            symbol: "advanced.Existential#e4().U#"
++            symbol: "local2"
              kind: TYPE
              properties: 4
              name: "U"
                  type_parameters {
                    hardlinks {
 -                    symbol: "local11"
-+                    symbol: "advanced.Existential#e4().U#[T]"
++                    symbol: "local3"
                      kind: TYPE_PARAMETER
                      properties: 0
                      name: "T"
-
-
-=========================
-advanced.Structural#s1().
-=========================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local0"
-+            symbol: "advanced.Structural#`<refinement>`#x()."
-             kind: METHOD
-             properties: 1028
-             name: "x"
-
-
-=========================
-advanced.Structural#s2().
-=========================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local1"
-+            symbol: "advanced.Structural#s2().`<refinement>`#x()."
-             kind: METHOD
-             properties: 1024
-             name: "x"
 
 
 =========================
@@ -160,14 +115,14 @@ advanced.Structural#s3().
          declarations {
            hardlinks {
 -            symbol: "local3"
-+            symbol: "advanced.Structural#s3().`<refinement>`#m()."
++            symbol: "local2"
              kind: METHOD
              properties: 0
              name: "m"
                  parameterLists {
                    hardlinks {
 -                    symbol: "local4"
-+                    symbol: "advanced.Structural#s3().`<refinement>`#m().(x)"
++                    symbol: "local3"
                      kind: PARAMETER
                      properties: 0
                      name: "x"
@@ -193,34 +148,6 @@ advanced.Test.e2().
 
 
 ===================
-advanced.Test.s1().
-===================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local0"
-+            symbol: "advanced.Test.`<refinement>`#x()."
-             kind: METHOD
-             properties: 1028
-             name: "x"
-
-
-===================
-advanced.Test.s2().
-===================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local1"
-+            symbol: "advanced.Test.`<refinement>`#x()."
-             kind: METHOD
-             properties: 1024
-             name: "x"
-
-
-===================
 advanced.Test.s3().
 ===================
 --- metac
@@ -228,14 +155,14 @@ advanced.Test.s3().
          declarations {
            hardlinks {
 -            symbol: "local3"
-+            symbol: "advanced.Test.`<refinement>`#m()."
++            symbol: "local2"
              kind: METHOD
              properties: 0
              name: "m"
                  parameterLists {
                    hardlinks {
 -                    symbol: "local4"
-+                    symbol: "advanced.Test.`<refinement>`#m().(x)"
++                    symbol: "local3"
                      kind: PARAMETER
                      properties: 0
                      name: "x"
@@ -300,7 +227,7 @@ classes.N.anonClass().
          declarations {
            hardlinks {
 -            symbol: "local1"
-+            symbol: "classes.N.anonClass().`<refinement>`#local()."
++            symbol: "local0"
              kind: METHOD
              properties: 1024
              name: "local"
@@ -359,20 +286,6 @@ example.MetacJava#staticInner().
 +        symbol: "com.javacp.MetacJava.StaticInner#"
 
 
-==========================
-example.Methods#m12b().(x)
-==========================
---- metac
-+++ metacp
-     declarations {
-       hardlinks {
--        symbol: "local0"
-+        symbol: "example.Methods#`<refinement>`#x()."
-         kind: METHOD
-         properties: 1028
-         name: "x"
-
-
 =========================
 example.Methods#m13().(x)
 =========================
@@ -417,6 +330,23 @@ example.Methods#m14().(x)
          name: "T"
 
 
+=============
+example.Vals#
+=============
+--- metac
++++ metacp
+       symlinks: "example.Vals#xm()."
+       symlinks: "example.Vals#xam()."
+       symlinks: "example.Vals#xlm()."
+-      symlinks: "example.Vals#xzm()."
+-      symlinks: "example.Vals#xzlm()."
++      symlinks: "local0"
++      symlinks: "local1"
+       symlinks: "example.Vals#xfm()."
+       symlinks: "example.Vals#xim()."
+       symlinks: "example.Vals#ym()."
+
+
 ======
 flags.
 ======
@@ -437,6 +367,12 @@ flags.p.package.
 ================
 --- metac
 +++ metacp
+     declarations {
+-      symlinks: "flags.p.package.x()."
++      symlinks: "local0"
+       symlinks: "flags.p.package.y()."
+       symlinks: "flags.p.package.`y_=`()."
+       symlinks: "flags.p.package.z()."
        symlinks: "flags.p.package.C#"
        symlinks: "flags.p.package.T1#"
        symlinks: "flags.p.package.T2#"
@@ -546,34 +482,6 @@ types.Test.C#annType2().
 
 
 =============================
-types.Test.C#compoundType1().
-=============================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local0"
-+            symbol: "types.Test.C#`<refinement>`#k()."
-             kind: METHOD
-             properties: 4
-             name: "k"
-
-
-=============================
-types.Test.C#compoundType3().
-=============================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local1"
-+            symbol: "types.Test.C#`<refinement>`#k()."
-             kind: METHOD
-             properties: 4
-             name: "k"
-
-
-=============================
 types.Test.C#compoundType4().
 =============================
 --- metac
@@ -581,7 +489,7 @@ types.Test.C#compoundType4().
          declarations {
            hardlinks {
 -            symbol: "local3"
-+            symbol: "types.Test.C#compoundType4().`<refinement>`#k()."
++            symbol: "local2"
              kind: METHOD
              properties: 0
              name: "k"
@@ -595,7 +503,7 @@ types.Test.C#compoundType6().
          declarations {
            hardlinks {
 -            symbol: "local5"
-+            symbol: "types.Test.C#compoundType6().`<refinement>`#k()."
++            symbol: "local3"
              kind: METHOD
              properties: 0
              name: "k"

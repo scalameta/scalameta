@@ -1,5 +1,6 @@
 package scala.meta.internal.scalacp
 
+import java.util.HashMap
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
@@ -8,13 +9,43 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolOps { self: Scalacp =>
+  lazy val symbolCache = new HashMap[Symbol, String]
   implicit class XtensionSymbolSSymbol(sym: Symbol) {
     def toSemantic: String = {
-      Symbols.Global(sym.owner, sym.descriptor)
+      def uncached(sym: Symbol): String = {
+        if (sym.isSemanticdbGlobal) Symbols.Global(sym.owner, sym.descriptor)
+        else freshSymbol()
+      }
+      val ssym = symbolCache.get(sym)
+      if (ssym != null) {
+        ssym
+      } else {
+        val ssym = uncached(sym)
+        symbolCache.put(sym, ssym)
+        ssym
+      }
     }
   }
 
   implicit class XtensionSymbolSSpec(sym: Symbol) {
+    def isSemanticdbGlobal: Boolean = !isSemanticdbLocal
+    def isSemanticdbLocal: Boolean = {
+      val owner = sym.parent.getOrElse(NoSymbol)
+      def definitelyGlobal = sym.isPackage
+      def definitelyLocal =
+        sym == NoSymbol ||
+          (owner.isMethod && !sym.isParam) ||
+          ((owner.isAlias || (owner.isType && owner.isDeferred)) && !sym.isParam) ||
+          // NOTE: Scalap doesn't expose locals.
+          // sym.isSelfParameter ||
+          // sym.isLocalDummy ||
+          sym.isRefinementClass ||
+          sym.isAnonymousClass ||
+          sym.isAnonymousFunction ||
+          sym.isExistential
+      def ownerLocal = sym.parent.map(_.isSemanticdbLocal).getOrElse(false)
+      !definitelyGlobal && (definitelyLocal || ownerLocal)
+    }
     def owner: String = {
       if (sym.isRootPackage) Symbols.None
       else if (sym.isEmptyPackage) Symbols.RootPackage
@@ -134,6 +165,7 @@ trait SymbolOps { self: Scalacp =>
     def isPackageObject: Boolean = sym.name == "package"
     def isTypeParam = sym.isType && sym.isParam
     def isAnonymousClass = sym.name.contains("$anon")
+    def isAnonymousFunction = sym.name.contains("$anonfun")
     def isSyntheticConstructor = sym match {
       case sym: SymbolInfoSymbol =>
         val owner = sym.symbolInfo.owner
@@ -178,7 +210,7 @@ trait SymbolOps { self: Scalacp =>
     def isSyntheticCaseAccessor: Boolean = {
       sym.isCaseAccessor && sym.name.contains("$")
     }
-    def isRefinementDummy: Boolean = {
+    def isRefinementClass: Boolean = {
       sym.name == "<refinement>"
     }
     def isUseless: Boolean = {
@@ -191,8 +223,15 @@ trait SymbolOps { self: Scalacp =>
       sym.isSyntheticValueClassCompanion ||
       sym.isUselessField ||
       sym.isSyntheticCaseAccessor ||
-      sym.isRefinementDummy
+      sym.isRefinementClass
     }
     def isUseful: Boolean = !sym.isUseless
+  }
+
+  private var nextId = 0
+  private def freshSymbol(): String = {
+    val result = Symbols.Local(nextId)
+    nextId += 1
+    result
   }
 }

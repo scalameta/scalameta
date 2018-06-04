@@ -43,7 +43,7 @@ class Scalacp private (classfile: ToplevelClassfile)
   }
 
   private def sinfos(sym: SymbolInfoSymbol): List[s.SymbolInformation] = {
-    if (sym.parent.get == NoSymbol) return Nil
+    if (sym.isSemanticdbLocal) return Nil
     if (sym.isUseless) return Nil
     val ssym = sym.ssym
     if (ssym.contains("$extension")) return Nil

@@ -61,15 +61,16 @@ trait SymbolOps { self: SemanticdbOps =>
       def definitelyGlobal = sym.hasPackageFlag
       def definitelyLocal =
         sym == g.NoSymbol ||
-          sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
           (sym.owner.isMethod && !sym.isParameter) ||
           ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter) ||
           sym.isSelfParameter ||
-          sym.isRefinementDummy ||
+          sym.isLocalDummy ||
+          sym.isRefinementClass ||
           sym.isAnonymousClass ||
           sym.isAnonymousFunction ||
           sym.isExistential
-      !definitelyGlobal && (definitelyLocal || sym.owner.isSemanticdbLocal)
+      def ownerLocal = sym.owner.isSemanticdbLocal
+      !definitelyGlobal && (definitelyLocal || ownerLocal)
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
     def disambiguator: String = {
@@ -210,9 +211,6 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSyntheticCaseAccessor: Boolean = {
       sym.isCaseAccessor && sym.name.toString.contains("$")
     }
-    def isRefinementDummy: Boolean = {
-      sym.name == g.tpnme.REFINE_CLASS_NAME
-    }
     def isUseless: Boolean = {
       sym == g.NoSymbol ||
       sym.isAnonymousClass ||
@@ -222,7 +220,7 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isSyntheticValueClassCompanion ||
       sym.isUselessField ||
       sym.isSyntheticCaseAccessor ||
-      sym.isRefinementDummy
+      sym.isRefinementClass
     }
     def isUseful: Boolean = !sym.isUseless
   }

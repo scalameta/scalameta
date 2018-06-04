@@ -223,7 +223,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   }
                 }
               } else {
-                val selectionFromStructuralType = gsym.owner.isRefinementDummy
+                val selectionFromStructuralType = gsym.owner.isRefinementClass
                 if (!selectionFromStructuralType) occurrences(mtree.pos) = symbol
               }
 
