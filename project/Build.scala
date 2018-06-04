@@ -46,21 +46,21 @@ object Build extends AutoPlugin {
     }
 
     object benchLSP extends BenchSuite {
-      def metacpBenches = List("QuickMetacp")
-      def scalacBenches = List("QuickScalacBaseline")
-      def scalametaBenches = List("QuickScalametaBaseline")
+      def metacpBenches = List("Metacp")
+      def scalacBenches = List("ScalacBaseline")
+      def scalametaBenches = List("ScalametaBaseline")
     }
 
     object benchAll extends BenchSuite {
-      def metacpBenches = List("QuickMetacp")
-      def scalacBenches = List("QuickScalac")
-      def scalametaBenches = List("QuickScalameta")
+      def metacpBenches = List("Metacp")
+      def scalacBenches = List("Scalac")
+      def scalametaBenches = List("Scalameta")
     }
 
     object benchQuick extends BenchSuite {
-      def metacpBenches = List("QuickMetacp")
+      def metacpBenches = List("Metacp")
       def scalacBenches = Nil
-      def scalametaBenches = List("QuickScalametaBaseline")
+      def scalametaBenches = List("ScalametaBaseline")
     }
 
     // https://stackoverflow.com/questions/41229451/how-to-disable-slow-tagged-scalatests-by-default-allow-execution-with-option

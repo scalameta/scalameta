@@ -50,7 +50,7 @@ trait Scalameta {
 @Warmup(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class QuickScalametaBaseline extends Scalameta {
+class ScalametaBaseline extends Scalameta {
   @Benchmark
   def run(bs: BenchmarkState): Unit = {
     runImpl(bs)

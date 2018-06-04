@@ -47,12 +47,12 @@ with i7 4980HQ, 16 GB RAM and 256 GB SSD running macOS Sierra 10.12.6.
 time/operation (ms/op) = lower score is better
 
 ```
-Benchmark              Mode    Cnt Score
-QuickScalacBaseline    sample  51  1006.982 ± 13.579 ms/op
-QuickScalacRangepos    sample  50  1061.746 ± 10.769 ms/op (+6%)
-QuickScalametaBaseline sample  40  1365.613 ± 18.792 ms/op (+35%)
+Benchmark         Mode    Cnt Score
+ScalacBaseline    sample  51  1006.982 ± 13.579 ms/op
+ScalacRangepos    sample  50  1061.746 ± 10.769 ms/op (+6%)
+ScalametaBaseline sample  40  1365.613 ± 18.792 ms/op (+35%)
 
-Benchmark               Mode    Cnt Score
-QuickMetacpScalaLibrary sample  9   3387.600 ± 50.458  ms/op
-QuickMetacpJDK          sample  12  2961.528 ± 36.541  ms/op
+Benchmark          Mode    Cnt Score
+MetacpScalaLibrary sample  9   3387.600 ± 50.458  ms/op
+MetacpJDK          sample  12  2961.528 ± 36.541  ms/op
 ```

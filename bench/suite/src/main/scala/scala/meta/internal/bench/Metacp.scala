@@ -38,7 +38,7 @@ trait Metacp {
 @Warmup(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class QuickMetacpJDK extends Metacp {
+class MetacpJDK extends Metacp {
   @Benchmark
   def run(bs: BenchmarkState): Unit = {
     runImpl(bs.jdk)
@@ -50,7 +50,7 @@ class QuickMetacpJDK extends Metacp {
 @Warmup(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class QuickMetacpScalaLibrary extends Metacp {
+class MetacpScalaLibrary extends Metacp {
   @Benchmark
   def run(bs: BenchmarkState): Unit = {
     runImpl(bs.scalaLibrary)
