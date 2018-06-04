@@ -3,6 +3,7 @@ package scala.meta.internal.semanticdb.scalac
 import java.util.HashMap
 import scala.{meta => m}
 import scala.meta.internal.inputs._
+import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
@@ -118,14 +119,22 @@ trait SymbolOps { self: SemanticdbOps =>
     }
   }
 
-  implicit class XtensionScope(scope: g.Scope) {
+  implicit class XtensionGScopeMSpec(scope: g.Scope) {
     def semanticdbDecls: SemanticdbDecls = {
       SemanticdbDecls(scope.sorted.filter(_.isUseful))
     }
   }
 
+  implicit class XtensionGSymbolsMSpec(syms: List[g.Symbol]) {
+    def sscope(linkMode: LinkMode): s.Scope = {
+      // TODO: Respect linkMode.
+      s.Scope(symlinks = syms.map(_.ssym))
+    }
+  }
+
   case class SemanticdbDecls(gsyms: List[g.Symbol]) {
-    lazy val sscope: s.Scope = {
+    def sscope(linkMode: LinkMode): s.Scope = {
+      // TODO: Respect linkMode.
       val sbuf = List.newBuilder[String]
       gsyms.foreach { gsym =>
         val ssym = gsym.ssym
@@ -141,7 +150,7 @@ trait SymbolOps { self: SemanticdbOps =>
           }
         }
       }
-      s.Scope(sbuf.result)
+      s.Scope(symlinks = sbuf.result)
     }
   }
 

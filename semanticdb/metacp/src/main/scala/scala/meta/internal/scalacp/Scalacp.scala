@@ -63,7 +63,7 @@ object Scalacp {
       accessibility = Some(sacc(sym))
     )
     if (sym.isUsefulField && sym.isMutable) {
-      List(sinfo) ++ Synthetics.setterInfos(sinfo)
+      List(sinfo) ++ Synthetics.setterInfos(sinfo, SymlinkChildren)
     } else {
       List(sinfo)
     }

@@ -1,5 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
+import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
@@ -8,7 +9,7 @@ import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps { self: SemanticdbOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
-    def toSemantic: Option[s.Type] = {
+    def toSemantic(linkMode: LinkMode): Option[s.Type] = {
       def loop(gtpe: g.Type): Option[s.Type] = {
         gtpe match {
           case ByNameType(gtpe) =>
@@ -83,7 +84,7 @@ trait TypeOps { self: SemanticdbOps =>
               val sparents = gparents.flatMap(loop)
               Some(s.Type(tag = t.WITH_TYPE, withType = Some(s.WithType(sparents))))
             }
-            val sdecls = Some(gdecls.semanticdbDecls.sscope)
+            val sdecls = Some(gdecls.semanticdbDecls.sscope(HardlinkChildren))
             Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
           case g.AnnotatedType(ganns, gtpe) =>
             val stag = t.ANNOTATED_TYPE
@@ -93,12 +94,12 @@ trait TypeOps { self: SemanticdbOps =>
           case g.ExistentialType(gtparams, gtpe) =>
             val stag = t.EXISTENTIAL_TYPE
             val stpe = loop(gtpe)
-            val sdecls = Some(s.Scope(gtparams.map(_.ssym)))
+            val sdecls = Some(gtparams.sscope(HardlinkChildren))
             Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stpe, sdecls))))
           case g.ClassInfoType(gparents, _, gclass) =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
-            val sdecls = Some(gclass.semanticdbDecls.sscope)
+            val sdecls = Some(gclass.semanticdbDecls.sscope(linkMode))
             Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(None, sparents, sdecls))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE
@@ -116,7 +117,7 @@ trait TypeOps { self: SemanticdbOps =>
             }
             val (gparamss, gret) = flatten(gtpe)
             val stag = t.METHOD_TYPE
-            val sparamss = gparamss.map(gparams => s.Scope(gparams.map(_.ssym)))
+            val sparamss = gparamss.map(_.sscope(linkMode))
             val sret = loop(gret)
             Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, sparamss, sret))))
           case g.TypeBounds(glo, ghi) =>
@@ -125,17 +126,20 @@ trait TypeOps { self: SemanticdbOps =>
             val shi = loop(ghi)
             Some(s.Type(tag = stag, typeType = Some(s.TypeType(None, slo, shi))))
           case g.PolyType(gtparams, gtpe) =>
-            val stparams = s.Scope(gtparams.map(_.ssym))
             val stpe = loop(gtpe)
             stpe.map { stpe =>
               if (stpe.tag == t.CLASS_INFO_TYPE) {
+                val stparams = gtparams.sscope(linkMode)
                 stpe.update(_.classInfoType.typeParameters := stparams)
               } else if (stpe.tag == t.METHOD_TYPE) {
+                val stparams = gtparams.sscope(linkMode)
                 stpe.update(_.methodType.typeParameters := stparams)
               } else if (stpe.tag == t.TYPE_TYPE) {
+                val stparams = gtparams.sscope(linkMode)
                 stpe.update(_.typeType.typeParameters := stparams)
               } else {
                 val stag = t.UNIVERSAL_TYPE
+                val stparams = gtparams.sscope(HardlinkChildren)
                 s.Type(
                   tag = stag,
                   universalType = Some(s.UniversalType(Some(stparams), Some(stpe))))

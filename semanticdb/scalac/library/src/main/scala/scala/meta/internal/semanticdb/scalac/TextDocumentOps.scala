@@ -199,7 +199,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 if (config.symbols.isOn) {
                   def saveSymbol(gs: g.Symbol): Unit = {
                     if (gs.isUseful) {
-                      symbols(gs.toSemantic) = gs.toSymbolInformation
+                      symbols(gs.toSemantic) = gs.toSymbolInformation(SymlinkChildren)
                     }
                   }
                   saveSymbol(gsym)
@@ -215,7 +215,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   }
                   if (gsym.isUsefulField && gsym.isMutable) {
                     val getterInfo = symbols(symbol)
-                    val setterInfos = Synthetics.setterInfos(getterInfo)
+                    val setterInfos = Synthetics.setterInfos(getterInfo, SymlinkChildren)
                     setterInfos.foreach { info =>
                       val msymbol = m.Symbol(info.symbol)
                       symbols(msymbol) = info
@@ -305,7 +305,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
                 if (!gsym.isSemanticdbLocal && !gsym.isUseless) {
-                  symbols(gsym.toSemantic) = gsym.toSymbolInformation
+                  symbols(gsym.toSemantic) = gsym.toSymbolInformation(SymlinkChildren)
                 }
               case gtree: g.PackageDef =>
                 // NOTE: capture PackageDef.pid instead

@@ -10,7 +10,8 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
 object Synthetics {
-  def setterInfos(getterInfo: s.SymbolInformation): List[s.SymbolInformation] = {
+  def setterInfos(getterInfo: s.SymbolInformation, linkMode: LinkMode): List[s.SymbolInformation] = {
+    // TODO: Respect linkMode.
     val getterSym = getterInfo.symbol
     val setterSym = {
       if (getterSym.isGlobal) {
@@ -39,7 +40,7 @@ object Synthetics {
     val setterTpe = {
       val unitTpe = s.TypeRef(None, "scala.Unit#", Nil)
       val unit = s.Type(tag = t.TYPE_REF, typeRef = Some(unitTpe))
-      val setterParamss = List(s.Scope(List(paramInfo.symbol)))
+      val setterParamss = List(s.Scope(symlinks = List(paramInfo.symbol)))
       val setterTpe = s.MethodType(None, setterParamss, Some(unit))
       s.Type(tag = t.METHOD_TYPE, methodType = Some(setterTpe))
     }

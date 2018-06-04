@@ -2,6 +2,7 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.{meta => m}
 import scala.reflect.internal.{Flags => gf}
+import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
@@ -118,7 +119,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    private def tpe: Option[s.Type] = {
+    private def tpe(linkMode: LinkMode): Option[s.Type] = {
       if (gsym.hasPackageFlag) {
         None
       } else {
@@ -139,15 +140,16 @@ trait SymbolInformationOps { self: SemanticdbOps =>
             gsym.info
           }
         }
+        val sinfo = ginfo.toSemantic(linkMode)
         if (gsym.isConstructor) {
-          ginfo.toSemantic.map(_.update(_.methodType.optionalReturnType := None))
+          sinfo.map(_.update(_.methodType.optionalReturnType := None))
         } else if (gsym.isScalacField) {
           val stag = t.METHOD_TYPE
           val sparamss = Nil
-          val sret = ginfo.toSemantic
+          val sret = sinfo
           Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, sparamss, sret))))
         } else {
-          ginfo.toSemantic
+          sinfo
         }
       }
     }
@@ -180,7 +182,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    def toSymbolInformation: s.SymbolInformation = {
+    def toSymbolInformation(linkMode: LinkMode): s.SymbolInformation = {
       s.SymbolInformation(
         symbol = gsym.ssym,
         language = language,
@@ -188,7 +190,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         accessibility = accessibility,
         properties = properties,
         name = name,
-        tpe = tpe,
+        tpe = tpe(linkMode),
         annotations = annotations
       )
     }
