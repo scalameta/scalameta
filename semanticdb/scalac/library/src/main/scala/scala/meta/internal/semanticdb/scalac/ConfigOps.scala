@@ -14,7 +14,6 @@ case class SemanticdbConfig(
     targetroot: AbsolutePath,
     text: BinaryMode,
     symbols: BinaryMode,
-    occurrences: BinaryMode,
     diagnostics: BinaryMode,
     synthetics: BinaryMode) {
   def syntax: String = {
@@ -28,7 +27,6 @@ case class SemanticdbConfig(
       "targetroot" -> targetroot,
       "text" -> text.name,
       "symbols" -> symbols.name,
-      "occurrences" -> occurrences.name,
       "diagnostics" -> diagnostics.name,
       "synthetics" -> synthetics.name
     ).map { case (k, v) => s"-P:$p:$k:$v" }.mkString(" ")
@@ -44,7 +42,6 @@ object SemanticdbConfig {
     targetroot = PathIO.workingDirectory,
     text = BinaryMode.On,
     symbols = BinaryMode.On,
-    occurrences = BinaryMode.On,
     diagnostics = BinaryMode.On,
     synthetics = BinaryMode.Off
   )
@@ -56,7 +53,6 @@ object SemanticdbConfig {
   private val SetSourceroot = "sourceroot:(.*)".r
   private val SetText = "text:(.*)".r
   private val SetSymbols = "symbols:(.*)".r
-  private val SetOccurrences = "occurrences:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "experimental:synthetics:(.*)".r
   // ============ COMPATIBILITY WITH 3.X STARTS ============
@@ -104,8 +100,6 @@ object SemanticdbConfig {
         config = config.copy(text = mode)
       case SetSymbols(BinaryMode(mode)) =>
         config = config.copy(symbols = mode)
-      case SetOccurrences(BinaryMode(mode)) =>
-        config = config.copy(occurrences = mode)
       case SetDiagnostics(BinaryMode(mode)) =>
         config = config.copy(diagnostics = mode)
       case SetSynthetics(BinaryMode(mode)) =>

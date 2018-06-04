@@ -280,19 +280,6 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td><code>on</code></td>
   </tr>
   <tr>
-    <td><code>-P:semanticdb:occurrences:&lt;value&gt;</code></td>
-    <td>
-        <code>on</code>,<br/>
-        <code>off</code>
-    </td>
-    <td>
-      Specifies whether to save symbol occurrences in
-      <code>TextDocument.occurrences</code> (<code>on</code> for yes,
-      <code>off</code> for no).
-    </td>
-    <td><code>on</code></td>
-  </tr>
-  <tr>
     <td><code>-P:semanticdb:diagnostics:&lt;value&gt;</code></td>
     <td>
         <code>on</code>,<br/>
