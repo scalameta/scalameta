@@ -264,35 +264,11 @@ example.Methods#m13().(x)
  accessibility {
 
 
-=============
-example.Vals#
-=============
---- metac
-+++ metacp
-       symlinks: "example.Vals#xm()."
-       symlinks: "example.Vals#xam()."
-       symlinks: "example.Vals#xlm()."
--      symlinks: "example.Vals#xzm()."
--      symlinks: "example.Vals#xzlm()."
-+      symlinks: "local0"
-+      symlinks: "local1"
-       symlinks: "example.Vals#xfm()."
-       symlinks: "example.Vals#xim()."
-       symlinks: "example.Vals#ym()."
-
-
 ================
 flags.p.package.
 ================
 --- metac
 +++ metacp
-     type_parameters {
-     declarations {
--      symlinks: "flags.p.package.x()."
-+      symlinks: "local0"
-       symlinks: "flags.p.package.y()."
-       symlinks: "flags.p.package.`y_=`()."
-       symlinks: "flags.p.package.z()."
        symlinks: "flags.p.package.C#"
        symlinks: "flags.p.package.T1#"
        symlinks: "flags.p.package.T2#"

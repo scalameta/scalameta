@@ -42,7 +42,7 @@ trait SymbolOps { self: Scalacp =>
           sym.isRefinementClass ||
           sym.isAnonymousClass ||
           sym.isAnonymousFunction ||
-          sym.isExistential
+          (sym.isInstanceOf[TypeSymbol] && sym.isExistential)
       def ownerLocal = sym.parent.map(_.isSemanticdbLocal).getOrElse(false)
       !definitelyGlobal && (definitelyLocal || ownerLocal)
     }

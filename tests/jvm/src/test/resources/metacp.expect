@@ -1596,7 +1596,7 @@ Schema => SemanticDB v3
 Uri => example/Vals.class
 Text => empty
 Language => Scala
-Symbols => 33 entries
+Symbols => 35 entries
 
 Symbols:
 _root_. => package _root_
@@ -1666,6 +1666,10 @@ example.Vals#xm(). => val method xm: Int
   Int => scala.Int#
 example.Vals#xp(). => val method xp: Int
   Int => scala.Int#
+example.Vals#xzlm(). => private[this] lazy val method xzlm: Int
+  Int => scala.Int#
+example.Vals#xzm(). => lazy val method xzm: Int
+  Int => scala.Int#
 example.Vals#yam(). => abstract var method yam: Int
   Int => scala.Int#
 example.Vals#yfm(). => final var method yfm: Int
@@ -1722,7 +1726,7 @@ Schema => SemanticDB v3
 Uri => flags/p/package.class
 Text => empty
 Language => Scala
-Symbols => 57 entries
+Symbols => 58 entries
 
 Symbols:
 _root_. => package _root_
@@ -1844,6 +1848,8 @@ flags.p.package.m(). => macro m[TT]: Nothing
   TT => flags.p.package.m().[TT]
   Nothing => scala.Nothing#
 flags.p.package.m().[TT] => typeparam TT
+flags.p.package.x(). => private lazy val method x: Int
+  Int => scala.Int#
 flags.p.package.xs1(). => val method xs1: Nothing
   Nothing => scala.Nothing#
 flags.p.package.y(). => protected implicit var method y: Int
