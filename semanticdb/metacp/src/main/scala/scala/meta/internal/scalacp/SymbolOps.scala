@@ -34,7 +34,7 @@ trait SymbolOps { self: Scalacp =>
       def definitelyGlobal = sym.isPackage
       def definitelyLocal =
         sym == NoSymbol ||
-          (owner.isMethod && !sym.isParam) ||
+          (owner.isInstanceOf[MethodSymbol] && !sym.isParam) ||
           ((owner.isAlias || (owner.isType && owner.isDeferred)) && !sym.isParam) ||
           // NOTE: Scalap doesn't expose locals.
           // sym.isSelfParameter ||

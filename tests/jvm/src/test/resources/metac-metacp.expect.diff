@@ -239,25 +239,6 @@ example.Methods#m13().(x)
  accessibility {
 
 
-=========================
-example.Methods#m14().(x)
-=========================
---- metac
-+++ metacp
-     tpe {
-       tag: TYPE_REF
-       typeRef {
--        symbol: "local1"
-+        symbol: "example.Methods#m14().(x)T#"
-     declarations {
-       hardlinks {
--        symbol: "local1"
-+        symbol: "example.Methods#m14().(x)T#"
-         kind: TYPE
-         properties: 4
-         name: "T"
-
-
 =============
 example.Vals#
 =============
@@ -386,11 +367,11 @@ types.Test.C#existentialType1().
            tag: TYPE_REF
            typeRef {
 -            symbol: "local7"
-+            symbol: "types.Test.C#existentialType1().T#"
++            symbol: "local4"
          declarations {
            hardlinks {
 -            symbol: "local7"
-+            symbol: "types.Test.C#existentialType1().T#"
++            symbol: "local4"
              kind: TYPE
              properties: 4
              name: "T"
@@ -405,11 +386,11 @@ types.Test.C#existentialType2().
                tag: TYPE_REF
                typeRef {
 -                symbol: "local8"
-+                symbol: "types.Test.C#existentialType2()._#"
++                symbol: "local5"
          declarations {
            hardlinks {
 -            symbol: "local8"
-+            symbol: "types.Test.C#existentialType2()._#"
++            symbol: "local5"
              kind: TYPE
              properties: 4
              name: "_"

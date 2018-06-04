@@ -1361,7 +1361,7 @@ Schema => SemanticDB v3
 Uri => example/Methods.class
 Text => empty
 Language => Scala
-Symbols => 60 entries
+Symbols => 59 entries
 
 Symbols:
 _root_. => package _root_
@@ -1446,14 +1446,11 @@ example.Methods#m13().(x) => param x: Int
   Int => scala.Int#
 example.Methods#m14(). => method m14(x: T forSome { type T >: Nothing <: Any }): Nothing
   x => example.Methods#m14().(x)
-  T => example.Methods#m14().(x)T#
+  T => local1
   Nothing => scala.Nothing#
   Any => scala.Any#
 example.Methods#m14().(x) => param x: T forSome { type T >: Nothing <: Any }
-  T => example.Methods#m14().(x)T#
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-example.Methods#m14().(x)T# => abstract type T >: Nothing <: Any
+  T => local1
   Nothing => scala.Nothing#
   Any => scala.Any#
 example.Methods#m15(). => method m15(x: => Int): Nothing
@@ -2148,7 +2145,7 @@ Schema => SemanticDB v3
 Uri => types/Test.class
 Text => empty
 Language => Scala
-Symbols => 103 entries
+Symbols => 101 entries
 
 Symbols:
 _root_. => package _root_
@@ -2338,18 +2335,12 @@ types.Test.C#compoundType6(). => val method compoundType6: M with N { def k: Int
   k => local3
   Int => scala.Int#
 types.Test.C#existentialType1(). => val method existentialType1: T forSome { type T >: Nothing <: Any }
-  T => types.Test.C#existentialType1().T#
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-types.Test.C#existentialType1().T# => abstract type T >: Nothing <: Any
+  T => local4
   Nothing => scala.Nothing#
   Any => scala.Any#
 types.Test.C#existentialType2(). => val method existentialType2: List[_] forSome { type _ >: Nothing <: Any }
   List => scala.package.List#
-  _ => types.Test.C#existentialType2()._#
-  Nothing => scala.Nothing#
-  Any => scala.Any#
-types.Test.C#existentialType2()._# => abstract type _ >: Nothing <: Any
+  _ => local5
   Nothing => scala.Nothing#
   Any => scala.Any#
 types.Test.C#p(). => val method p: P
