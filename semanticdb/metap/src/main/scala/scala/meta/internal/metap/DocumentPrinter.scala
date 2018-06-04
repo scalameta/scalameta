@@ -7,7 +7,7 @@ import scala.meta.metap._
 
 class DocumentPrinter(settings: Settings, reporter: Reporter, doc: TextDocument)
     extends BasePrinter(settings, reporter, doc)
-    with SymbolPrinter
+    with SymbolInformationPrinter
     with OccurrencePrinter
     with DiagnosticPrinter
     with SyntheticPrinter {

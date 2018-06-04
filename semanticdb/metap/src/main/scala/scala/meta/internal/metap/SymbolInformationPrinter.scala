@@ -11,7 +11,7 @@ import scala.meta.internal.semanticdb3.SymbolInformation.Kind._
 import scala.meta.internal.semanticdb3.SymbolInformation.Property._
 import scala.meta.internal.semanticdb3.Type.Tag._
 
-trait SymbolPrinter extends BasePrinter {
+trait SymbolInformationPrinter extends BasePrinter {
   def pprint(info: SymbolInformation): Unit = {
     out.print(info.symbol)
     out.print(" => ")
