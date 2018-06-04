@@ -83,7 +83,7 @@ trait TypeOps { self: SemanticdbOps =>
               val sparents = gparents.flatMap(loop)
               Some(s.Type(tag = t.WITH_TYPE, withType = Some(s.WithType(sparents))))
             }
-            val sdecls = gdecls.sorted.map(gsym => s.SymbolInformation(symbol = gsym.ssym))
+            val sdecls = Some(s.Scope(gdecls.sorted.map(_.ssym)))
             Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
           case g.AnnotatedType(ganns, gtpe) =>
             val stag = t.ANNOTATED_TYPE
@@ -93,17 +93,17 @@ trait TypeOps { self: SemanticdbOps =>
           case g.ExistentialType(gtparams, gtpe) =>
             val stag = t.EXISTENTIAL_TYPE
             val stpe = loop(gtpe)
-            val sdecls = gtparams.map(gsym => s.SymbolInformation(symbol = gsym.ssym))
+            val sdecls = Some(s.Scope(gtparams.map(_.ssym)))
             Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stpe, sdecls))))
           case g.ClassInfoType(gparents, _, gclass) =>
             val stag = t.CLASS_INFO_TYPE
             val sparents = gparents.flatMap(loop)
-            val sdecls = gclass.semanticdbDecls.sinfos
-            Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
+            val sdecls = Some(gclass.semanticdbDecls.sscope)
+            Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(None, sparents, sdecls))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE
             val stpe = loop(gtpe)
-            Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, Nil, stpe))))
+            Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, Nil, stpe))))
           case gtpe: g.MethodType =>
             def flatten(gtpe: g.Type): (List[List[g.Symbol]], g.Type) = {
               gtpe match {
@@ -116,19 +116,16 @@ trait TypeOps { self: SemanticdbOps =>
             }
             val (gparamss, gret) = flatten(gtpe)
             val stag = t.METHOD_TYPE
-            val sparamss = gparamss.map { gparams =>
-              val sparams = gparams.map(gsym => s.SymbolInformation(symbol = gsym.ssym))
-              s.MethodType.ParameterList(sparams)
-            }
+            val sparamss = gparamss.map(gparams => s.Scope(gparams.map(_.ssym)))
             val sret = loop(gret)
-            Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
+            Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, sparamss, sret))))
           case g.TypeBounds(glo, ghi) =>
             val stag = t.TYPE_TYPE
             val slo = loop(glo)
             val shi = loop(ghi)
-            Some(s.Type(tag = stag, typeType = Some(s.TypeType(Nil, slo, shi))))
+            Some(s.Type(tag = stag, typeType = Some(s.TypeType(None, slo, shi))))
           case g.PolyType(gtparams, gtpe) =>
-            val stparams = gtparams.map(gsym => s.SymbolInformation(symbol = gsym.ssym))
+            val stparams = s.Scope(gtparams.map(_.ssym))
             val stpe = loop(gtpe)
             stpe.map { stpe =>
               if (stpe.tag == t.CLASS_INFO_TYPE) {
@@ -139,7 +136,9 @@ trait TypeOps { self: SemanticdbOps =>
                 stpe.update(_.typeType.typeParameters := stparams)
               } else {
                 val stag = t.UNIVERSAL_TYPE
-                s.Type(tag = stag, universalType = Some(s.UniversalType(stparams, Some(stpe))))
+                s.Type(
+                  tag = stag,
+                  universalType = Some(s.UniversalType(Some(stparams), Some(stpe))))
               }
             }
           case g.NoType =>

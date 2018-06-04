@@ -119,23 +119,23 @@ trait SymbolOps { self: SemanticdbOps =>
   }
 
   case class SemanticdbDecls(gsyms: List[g.Symbol]) {
-    lazy val sinfos: List[s.SymbolInformation] = {
-      val sbuf = List.newBuilder[s.SymbolInformation]
+    lazy val sscope: s.Scope = {
+      val sbuf = List.newBuilder[String]
       gsyms.foreach { gsym =>
         val ssym = gsym.ssym
-        sbuf += s.SymbolInformation(symbol = ssym)
+        sbuf += ssym
         if (gsym.isUsefulField && gsym.isMutable) {
           if (ssym.isGlobal) {
             val setterName = ssym.desc.name + "_="
             val setterSym = Symbols.Global(ssym.owner, d.Method(setterName, "()"))
-            sbuf += s.SymbolInformation(symbol = setterSym)
+            sbuf += setterSym
           } else {
             val setterSym = ssym + "+1"
-            sbuf += s.SymbolInformation(symbol = setterSym)
+            sbuf += setterSym
           }
         }
       }
-      sbuf.result
+      s.Scope(sbuf.result)
     }
   }
 

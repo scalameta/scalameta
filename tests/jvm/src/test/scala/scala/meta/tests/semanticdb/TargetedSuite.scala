@@ -828,10 +828,10 @@ class TargetedSuite extends SemanticdbSuite {
       val classDenot = db.symbols.find(_.symbol == fooType.syntax).get
       assert(classDenot.kind.isClass)
       assert(classDenot.has(p.CASE))
-      val decls = classDenot.tpe.get.classInfoType.get.declarations
+      val decls = classDenot.tpe.get.classInfoType.get.declarations.get.symbols
       assert(decls.nonEmpty)
       decls.foreach { decl =>
-        val declDenot = db.symbols.find(_.symbol == decl.symbol)
+        val declDenot = db.symbols.find(_.symbol == decl)
         assert(declDenot.isDefined, decl)
       }
     }

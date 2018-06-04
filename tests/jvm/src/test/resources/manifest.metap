@@ -12,7 +12,7 @@ Occurrences => 7 entries
 Symbols:
 _empty_.Test. => final object TestTest
   Test => _empty_.Test.
-_empty_.Test.main(Array). => method main(): Unit
+_empty_.Test.main(Array). => method main: Unit
   Unit => scala.Unit#
 _empty_.Test.main(Array).(args) => param args: Array[String]
   Array => scala.Array#

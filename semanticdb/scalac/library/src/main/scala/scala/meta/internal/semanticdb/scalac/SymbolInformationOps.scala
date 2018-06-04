@@ -145,7 +145,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           val stag = t.METHOD_TYPE
           val sparamss = Nil
           val sret = ginfo.toSemantic
-          Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
+          Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, sparamss, sret))))
         } else {
           ginfo.toSemantic
         }

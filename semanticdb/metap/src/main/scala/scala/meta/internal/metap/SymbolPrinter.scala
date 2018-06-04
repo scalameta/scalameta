@@ -185,7 +185,7 @@ trait SymbolPrinter extends BasePrinter {
           case STRUCTURAL_TYPE =>
             val Some(StructuralType(utpe, decls)) = tpe.structuralType
             utpe.foreach(normal)
-            if (decls.nonEmpty) rep(" { ", decls, "; ", " }")(defn)
+            if (decls.infos.nonEmpty) rep(" { ", decls.infos, "; ", " }")(defn)
             else out.print(" {}")
           case ANNOTATED_TYPE =>
             val Some(AnnotatedType(anns, utpe)) = tpe.annotatedType
@@ -195,20 +195,20 @@ trait SymbolPrinter extends BasePrinter {
           case EXISTENTIAL_TYPE =>
             val Some(ExistentialType(utpe, decls)) = tpe.existentialType
             utpe.foreach(normal)
-            rep(" forSome { ", decls, "; ", " }")(defn)
+            rep(" forSome { ", decls.infos, "; ", " }")(defn)
           case UNIVERSAL_TYPE =>
             val Some(UniversalType(tparams, utpe)) = tpe.universalType
-            rep("[", tparams, ", ", "] => ")(defn)
+            rep("[", tparams.infos, ", ", "] => ")(defn)
             utpe.foreach(normal)
           case CLASS_INFO_TYPE =>
             val Some(ClassInfoType(tparams, parents, decls)) = tpe.classInfoType
-            rep("[", tparams, ", ", "]")(defn)
+            rep("[", tparams.infos, ", ", "]")(defn)
             rep(" extends ", parents, " with ")(normal)
-            if (decls.nonEmpty) out.print(s" { +${decls.length} decls }")
+            if (decls.infos.nonEmpty) out.print(s" { +${decls.infos.length} decls }")
           case METHOD_TYPE =>
             val Some(MethodType(tparams, paramss, res)) = tpe.methodType
-            rep("[", tparams, ", ", "] => ")(defn)
-            rep("(", paramss, ")(", ")")(params => rep(params.symbols, ", ")(defn))
+            rep("[", tparams.infos, ", ", "] => ")(defn)
+            rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(defn))
             opt(": ", res)(normal)
           case BY_NAME_TYPE =>
             val Some(ByNameType(utpe)) = tpe.byNameType
@@ -220,7 +220,7 @@ trait SymbolPrinter extends BasePrinter {
             out.print("*")
           case TYPE_TYPE =>
             val Some(TypeType(tparams, lo, hi)) = tpe.typeType
-            rep("[", tparams, ", ", "] => ")(defn)
+            rep("[", tparams.infos, ", ", "] => ")(defn)
             if (lo != hi) {
               opt(" >: ", lo)(normal)
               opt(" <: ", hi)(normal)

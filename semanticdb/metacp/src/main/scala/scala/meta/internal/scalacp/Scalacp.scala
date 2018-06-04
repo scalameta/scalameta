@@ -249,7 +249,7 @@ object Scalacp {
             val sparents = parents.flatMap(loop)
             Some(s.Type(tag = t.WITH_TYPE, withType = Some(s.WithType(sparents))))
           }
-          val sdecls = sym.children.map(sym => s.SymbolInformation(symbol = ssymbol(sym)))
+          val sdecls = Some(s.Scope(sym.children.map(ssymbol)))
           Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
         case AnnotatedType(tpe, anns) =>
           val stag = t.ANNOTATED_TYPE
@@ -260,28 +260,25 @@ object Scalacp {
         case ExistentialType(tpe, tparams) =>
           val stag = t.EXISTENTIAL_TYPE
           val stpe = loop(tpe)
-          val sdecls = tparams.map(sym => s.SymbolInformation(symbol = ssymbol(sym)))
+          val sdecls = Some(s.Scope(tparams.map(ssymbol)))
           Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stpe, sdecls))))
         case ClassInfoType(sym, parents) =>
           val stag = t.CLASS_INFO_TYPE
           val sparents = parents.flatMap(loop)
-          val sdecls = sym.semanticdbDecls.sinfos
-          Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, sdecls))))
+          val sdecls = Some(sym.semanticdbDecls.sscope)
+          Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(None, sparents, sdecls))))
         case _: NullaryMethodType | _: MethodType =>
           val stag = t.METHOD_TYPE
-          val sparamss = tpe.paramss.map { params =>
-            val sparams = params.map(sym => s.SymbolInformation(symbol = ssymbol(sym)))
-            s.MethodType.ParameterList(sparams)
-          }
+          val sparamss = tpe.paramss.map(params => s.Scope(params.map(ssymbol)))
           val sret = loop(tpe.ret)
-          Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
+          Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, sparamss, sret))))
         case TypeBoundsType(lo, hi) =>
           val stag = t.TYPE_TYPE
           val slo = loop(lo)
           val shi = loop(hi)
-          Some(s.Type(tag = stag, typeType = Some(s.TypeType(Nil, slo, shi))))
+          Some(s.Type(tag = stag, typeType = Some(s.TypeType(None, slo, shi))))
         case PolyType(tpe, tparams) =>
-          val stparams = tparams.map(sym => s.SymbolInformation(symbol = ssymbol(sym)))
+          val stparams = s.Scope(tparams.map(ssymbol))
           loop(tpe).map { stpe =>
             if (stpe.tag == t.CLASS_INFO_TYPE) {
               stpe.update(_.classInfoType.typeParameters := stparams)
@@ -291,7 +288,7 @@ object Scalacp {
               stpe.update(_.typeType.typeParameters := stparams)
             } else {
               val stag = t.UNIVERSAL_TYPE
-              s.Type(tag = stag, universalType = Some(s.UniversalType(stparams, Some(stpe))))
+              s.Type(tag = stag, universalType = Some(s.UniversalType(Some(stparams), Some(stpe))))
             }
           }
         case NoType =>
@@ -326,7 +323,7 @@ object Scalacp {
         val stag = t.METHOD_TYPE
         val sparamss = Nil
         val sret = loop(sym.infoType)
-        Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
+        Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, sparamss, sret))))
       } else {
         loop(sym.infoType)
       }
@@ -520,18 +517,18 @@ object Scalacp {
   }
 
   case class SemanticdbDecls(syms: List[Symbol]) {
-    lazy val sinfos: List[s.SymbolInformation] = {
-      val sbuf = List.newBuilder[s.SymbolInformation]
+    lazy val sscope: s.Scope = {
+      val sbuf = List.newBuilder[String]
       syms.foreach { sym =>
         val ssym = ssymbol(sym)
-        sbuf += s.SymbolInformation(symbol = ssym)
+        sbuf += ssym
         if (sym.isUsefulField && sym.isMutable) {
           val setterName = ssym.desc.name + "_="
           val setterSym = Symbols.Global(ssym.owner, d.Method(setterName, "()"))
-          sbuf += s.SymbolInformation(symbol = setterSym)
+          sbuf += setterSym
         }
       }
-      sbuf.result
+      s.Scope(sbuf.result)
     }
   }
 

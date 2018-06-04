@@ -24,11 +24,8 @@ advanced.Existential#e1().
 -                symbol: "local3"
 +                symbol: "advanced.Existential#e1()._$1#"
          declarations {
--          symbol: "local3"
-+          symbol: "advanced.Existential#e1()._$1#"
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local3"
++          symlinks: "advanced.Existential#e1()._$1#"
 
 
 ==========================
@@ -42,11 +39,8 @@ advanced.Existential#e2().
 -                    symbol: "local4"
 +                    symbol: "advanced.Existential#e2().T#"
              declarations {
--              symbol: "local4"
-+              symbol: "advanced.Existential#e2().T#"
-               kind: UNKNOWN_KIND
-               properties: 0
-               name: ""
+-              symlinks: "local4"
++              symlinks: "advanced.Existential#e2().T#"
 
 
 =========================
@@ -55,11 +49,8 @@ advanced.Structural#s1().
 --- metac
 +++ metacp
          declarations {
--          symbol: "local0"
-+          symbol: "advanced.Structural#$anon#x()."
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local0"
++          symlinks: "advanced.Structural#$anon#x()."
 
 
 =========================
@@ -68,11 +59,8 @@ advanced.Structural#s2().
 --- metac
 +++ metacp
          declarations {
--          symbol: "local1"
-+          symbol: "advanced.Structural#s2().$anon#x()."
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local1"
++          symlinks: "advanced.Structural#s2().$anon#x()."
 
 
 ===================
@@ -86,11 +74,8 @@ advanced.Test.e2().
 -                    symbol: "local4"
 +                    symbol: "advanced.Test.T#"
              declarations {
--              symbol: "local4"
-+              symbol: "advanced.Test.T#"
-               kind: UNKNOWN_KIND
-               properties: 0
-               name: ""
+-              symlinks: "local4"
++              symlinks: "advanced.Test.T#"
 
 
 ===================
@@ -99,11 +84,8 @@ advanced.Test.s1().
 --- metac
 +++ metacp
          declarations {
--          symbol: "local0"
-+          symbol: "advanced.Test.$anon#x()."
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local0"
++          symlinks: "advanced.Test.$anon#x()."
 
 
 ===================
@@ -112,11 +94,8 @@ advanced.Test.s2().
 --- metac
 +++ metacp
          declarations {
--          symbol: "local1"
-+          symbol: "advanced.Test.$anon#x()."
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local1"
++          symlinks: "advanced.Test.$anon#x()."
 
 
 ========
@@ -179,11 +158,8 @@ classes.N.anonClass().
 --- metac
 +++ metacp
          declarations {
--          symbol: "local1"
-+          symbol: "classes.N.anonClass().$anon#local()."
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local1"
++          symlinks: "classes.N.anonClass().$anon#local()."
 
 
 ========
@@ -206,41 +182,15 @@ example.Acc#
 ============
 --- metac
 +++ metacp
-       language: UNKNOWN_LANGUAGE
-     declarations {
--      symbol: "example.Acc#m3()."
-+      symbol: "example.Acc#m4()."
-       kind: UNKNOWN_KIND
-       properties: 0
-       name: ""
-       language: UNKNOWN_LANGUAGE
-     declarations {
--      symbol: "example.Acc#m4()."
-+      symbol: "example.Acc#m5()."
-       kind: UNKNOWN_KIND
-       properties: 0
-       name: ""
-       language: UNKNOWN_LANGUAGE
-     declarations {
--      symbol: "example.Acc#m5()."
-+      symbol: "example.Acc#m6()."
-       kind: UNKNOWN_KIND
-       properties: 0
-       name: ""
-       language: UNKNOWN_LANGUAGE
-     declarations {
--      symbol: "example.Acc#m6()."
-+      symbol: "example.Acc#m7()."
-       kind: UNKNOWN_KIND
-       properties: 0
-       name: ""
-       language: UNKNOWN_LANGUAGE
-     declarations {
--      symbol: "example.Acc#m7()."
-+      symbol: "example.Acc#m3()."
-       kind: UNKNOWN_KIND
-       properties: 0
-       name: ""
+       symlinks: "example.Acc#`<init>`()."
+       symlinks: "example.Acc#m1()."
+       symlinks: "example.Acc#m2()."
+-      symlinks: "example.Acc#m3()."
+       symlinks: "example.Acc#m4()."
+       symlinks: "example.Acc#m5()."
+       symlinks: "example.Acc#m6()."
+       symlinks: "example.Acc#m7()."
++      symlinks: "example.Acc#m3()."
 
 
 ==============================
@@ -271,11 +221,8 @@ example.Methods#m12b().(x)
 --- metac
 +++ metacp
      declarations {
--      symbol: "local0"
-+      symbol: "example.Methods#$anon#x()."
-       kind: UNKNOWN_KIND
-       properties: 0
-       name: ""
+-      symlinks: "local0"
++      symlinks: "example.Methods#$anon#x()."
 
 
 =========================
@@ -314,11 +261,8 @@ example.Methods#m14().(x)
 -        symbol: "local1"
 +        symbol: "example.Methods#m14().(x)T#"
      declarations {
--      symbol: "local1"
-+      symbol: "example.Methods#m14().(x)T#"
-       kind: UNKNOWN_KIND
-       properties: 0
-       name: ""
+-      symlinks: "local1"
++      symlinks: "example.Methods#m14().(x)T#"
 
 
 ======
@@ -341,28 +285,18 @@ flags.p.package.
 ================
 --- metac
 +++ metacp
-       language: UNKNOWN_LANGUAGE
-     declarations {
-+      symbol: "flags.p.package.S#"
-+      kind: UNKNOWN_KIND
-+      properties: 0
-+      name: ""
-+      language: UNKNOWN_LANGUAGE
-+    declarations {
-       symbol: "flags.p.package.U#"
-       kind: UNKNOWN_KIND
-       properties: 0
-       language: UNKNOWN_LANGUAGE
-     declarations {
--      symbol: "flags.p.package.S#"
--      kind: UNKNOWN_KIND
--      properties: 0
--      name: ""
--      language: UNKNOWN_LANGUAGE
--    declarations {
-       symbol: "flags.p.package.xs1()."
-       kind: UNKNOWN_KIND
-       properties: 0
+       symlinks: "flags.p.package.C#"
+       symlinks: "flags.p.package.T1#"
+       symlinks: "flags.p.package.T2#"
++      symlinks: "flags.p.package.S#"
+       symlinks: "flags.p.package.U#"
+       symlinks: "flags.p.package.V#"
+       symlinks: "flags.p.package.X."
+       symlinks: "flags.p.package.Y#"
+       symlinks: "flags.p.package.Z#"
+       symlinks: "flags.p.package.AA#"
+-      symlinks: "flags.p.package.S#"
+       symlinks: "flags.p.package.xs1()."
 
 
 =====================
@@ -467,11 +401,8 @@ types.Test.C#compoundType1().
 --- metac
 +++ metacp
          declarations {
--          symbol: "local0"
-+          symbol: "types.Test.C#$anon#k()."
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local0"
++          symlinks: "types.Test.C#$anon#k()."
 
 
 =============================
@@ -480,11 +411,8 @@ types.Test.C#compoundType3().
 --- metac
 +++ metacp
          declarations {
--          symbol: "local1"
-+          symbol: "types.Test.C#$anon#k()."
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local1"
++          symlinks: "types.Test.C#$anon#k()."
 
 
 =============================
@@ -493,11 +421,8 @@ types.Test.C#compoundType4().
 --- metac
 +++ metacp
          declarations {
--          symbol: "local3"
-+          symbol: "types.Test.C#compoundType4().$anon#k()."
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local3"
++          symlinks: "types.Test.C#compoundType4().$anon#k()."
 
 
 =============================
@@ -506,11 +431,8 @@ types.Test.C#compoundType6().
 --- metac
 +++ metacp
          declarations {
--          symbol: "local5"
-+          symbol: "types.Test.C#compoundType6().$anon#k()."
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local5"
++          symlinks: "types.Test.C#compoundType6().$anon#k()."
 
 
 ================================
@@ -524,11 +446,8 @@ types.Test.C#existentialType1().
 -            symbol: "local7"
 +            symbol: "types.Test.C#existentialType1().T#"
          declarations {
--          symbol: "local7"
-+          symbol: "types.Test.C#existentialType1().T#"
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local7"
++          symlinks: "types.Test.C#existentialType1().T#"
 
 
 ================================
@@ -542,11 +461,8 @@ types.Test.C#existentialType2().
 -                symbol: "local8"
 +                symbol: "types.Test.C#existentialType2()._$1#"
          declarations {
--          symbol: "local8"
-+          symbol: "types.Test.C#existentialType2()._$1#"
-           kind: UNKNOWN_KIND
-           properties: 0
-           name: ""
+-          symlinks: "local8"
++          symlinks: "types.Test.C#existentialType2()._$1#"
 
 
 ===========================

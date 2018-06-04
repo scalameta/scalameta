@@ -37,7 +37,7 @@ object Javacp {
       scope: Scope): Seq[s.SymbolInformation] = {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
-    val decls = ListBuffer.empty[s.SymbolInformation]
+    val decls = ListBuffer.empty[String]
 
     def addInfo(
         symbol: String,
@@ -125,7 +125,7 @@ object Javacp {
           field.access
         )
 
-        decls += fieldInfo.strip
+        decls += fieldInfo.symbol
       }
     }
 
@@ -202,7 +202,7 @@ object Javacp {
               paramName,
               Some(paramTpe),
               o.ACC_PUBLIC
-            ).strip
+            )
         }
 
         val returnType = {
@@ -216,8 +216,8 @@ object Javacp {
           tag = s.Type.Tag.METHOD_TYPE,
           methodType = Some(
             s.MethodType(
-              typeParameters = methodTypeParameters.map(_.strip),
-              parameters = s.MethodType.ParameterList(parameters) :: Nil,
+              typeParameters = Some(s.Scope(methodTypeParameters.map(_.symbol))),
+              parameterLists = List(s.Scope(parameters.map(_.symbol))),
               returnType = returnType
             )
           )
@@ -231,14 +231,14 @@ object Javacp {
           method.node.access
         )
 
-        decls += methodInfo.strip
+        decls += methodInfo.symbol
     }
 
     // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
     val directInnerClasses = node.innerClasses.asScala.filter(_.outerName == node.name)
     directInnerClasses.foreach { ic =>
       val innerClassSymbol = ssym(ic.name)
-      decls += s.SymbolInformation(symbol = innerClassSymbol)
+      decls += innerClassSymbol
       val innerPath = asmNameToPath(ic.name, toplevel.base)
       val innerClassNode = innerPath.toClassNode
       buf ++= sinfos(toplevel, innerClassNode, ic.access, classScope)
@@ -248,9 +248,9 @@ object Javacp {
       tag = s.Type.Tag.CLASS_INFO_TYPE,
       classInfoType = Some(
         s.ClassInfoType(
-          typeParameters = classTypeParameters.map(_.strip),
+          typeParameters = Some(s.Scope(classTypeParameters.map(_.symbol))),
           parents = classParents,
-          declarations = decls
+          declarations = Some(s.Scope(decls))
         )
       )
     )

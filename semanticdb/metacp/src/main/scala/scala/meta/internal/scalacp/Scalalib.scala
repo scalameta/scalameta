@@ -62,7 +62,7 @@ object Scalalib {
     }
     val symbol = "scala." + name + "#"
     val builtinTpe = s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, symbol, Nil)))
-    val ctorSig = s.MethodType(Nil, List(s.MethodType.ParameterList(Nil)), None)
+    val ctorSig = s.MethodType(None, List(s.Scope(Nil)), None)
     val ctor = s.SymbolInformation(
       symbol = symbol + "`<init>`().",
       language = l.SCALA,
@@ -75,7 +75,7 @@ object Scalalib {
     val builtinSig = {
       val decls = symbols.filter(_.kind.isMethod)
       val declarations = if (kind.isClass) ctor +: decls else decls
-      val tpe = s.ClassInfoType(Nil, parents, declarations.map(_.strip))
+      val tpe = s.ClassInfoType(None, parents, Some(s.Scope(declarations.map(_.symbol))))
       s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))
     }
     val builtin = s.SymbolInformation(
@@ -132,7 +132,7 @@ object Scalalib {
     }
     val methodSig = {
       val returnType = s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, retTpeSymbol, Nil)))
-      val methodType = s.MethodType(Nil, List(s.MethodType.ParameterList(params.map(_.strip))), Some(returnType))
+      val methodType = s.MethodType(None, List(s.Scope(params.map(_.symbol))), Some(returnType))
       s.Type(tag = t.METHOD_TYPE, methodType = Some(methodType))
     }
     val method = s.SymbolInformation(
