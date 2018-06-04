@@ -3,6 +3,7 @@ package scala.meta.internal.scalacp
 import java.nio.file._
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.Scala._
@@ -38,7 +39,8 @@ class Scalacp private (classfile: ToplevelClassfile)
         symbol = enclosingPackage,
         language = l.SCALA,
         kind = k.PACKAGE,
-        name = enclosingPackage.desc.name)
+        name = enclosingPackage.desc.name,
+        accessibility = Some(s.Accessibility(a.PUBLIC)))
     }
   }
 

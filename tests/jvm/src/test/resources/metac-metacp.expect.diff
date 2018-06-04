@@ -1,18 +1,3 @@
-=========
-advanced.
-=========
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "advanced"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
-
-
 ==========================
 advanced.Existential#e1().
 ==========================
@@ -141,21 +126,6 @@ advanced.Test.s3().
                      name: "x"
 
 
-========
-classes.
-========
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "classes"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
-
-
 ============================
 classes.C3#copy$default$1().
 ============================
@@ -204,21 +174,6 @@ classes.N.anonClass().
              kind: METHOD
              properties: 1024
              name: "local"
-
-
-========
-example.
-========
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "example"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
 
 
 ============
@@ -320,21 +275,6 @@ example.Vals#
        symlinks: "example.Vals#ym()."
 
 
-======
-flags.
-======
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "flags"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
-
-
 ================
 flags.p.package.
 ================
@@ -374,51 +314,6 @@ flags.p.package.S#[T]
  accessibility {
    tag: PUBLIC
    symbol: ""
-
-
-========
-objects.
-========
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "objects"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
-
-
-=======
-traits.
-=======
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "traits"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
-
-
-======
-types.
-======
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "types"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
 
 
 ========================
