@@ -1,3 +1,5 @@
+import scala.language.higherKinds
+
 class C {
   this: C =>
 
