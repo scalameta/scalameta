@@ -21,10 +21,10 @@ advanced.Existential#e1().
              type_arguments {
                tag: TYPE_REF
                typeRef {
--                symbol: "local3"
+-                symbol: "local6"
 +                symbol: "advanced.Existential#e1()._$1#"
          declarations {
--          symlinks: "local3"
+-          symlinks: "local6"
 +          symlinks: "advanced.Existential#e1()._$1#"
 
 
@@ -36,11 +36,29 @@ advanced.Existential#e2().
                  type_arguments {
                    tag: TYPE_REF
                    typeRef {
--                    symbol: "local4"
+-                    symbol: "local7"
 +                    symbol: "advanced.Existential#e2().T#"
              declarations {
--              symlinks: "local4"
+-              symlinks: "local7"
 +              symlinks: "advanced.Existential#e2().T#"
+
+
+==========================
+advanced.Existential#e4().
+==========================
+--- metac
++++ metacp
+         tpe {
+           tag: TYPE_REF
+           typeRef {
+-            symbol: "local9"
++            symbol: "advanced.Existential#e4().U#"
+             type_arguments {
+               tag: TYPE_REF
+               typeRef {
+         declarations {
+-          symlinks: "local9"
++          symlinks: "advanced.Existential#e4().U#"
 
 
 =========================
@@ -63,6 +81,16 @@ advanced.Structural#s2().
 +          symlinks: "advanced.Structural#s2().$anon#x()."
 
 
+=========================
+advanced.Structural#s3().
+=========================
+--- metac
++++ metacp
+         declarations {
+-          symlinks: "local3"
++          symlinks: "advanced.Structural#s3().$anon#m()."
+
+
 ===================
 advanced.Test.e2().
 ===================
@@ -71,10 +99,10 @@ advanced.Test.e2().
                  type_arguments {
                    tag: TYPE_REF
                    typeRef {
--                    symbol: "local4"
+-                    symbol: "local7"
 +                    symbol: "advanced.Test.T#"
              declarations {
--              symlinks: "local4"
+-              symlinks: "local7"
 +              symlinks: "advanced.Test.T#"
 
 
@@ -96,6 +124,16 @@ advanced.Test.s2().
          declarations {
 -          symlinks: "local1"
 +          symlinks: "advanced.Test.$anon#x()."
+
+
+===================
+advanced.Test.s3().
+===================
+--- metac
++++ metacp
+         declarations {
+-          symlinks: "local3"
++          symlinks: "advanced.Test.$anon#m()."
 
 
 ========

@@ -50,12 +50,12 @@ Schema => SemanticDB v3
 Uri => advanced/Existential.class
 Text => empty
 Language => Scala
-Symbols => 8 entries
+Symbols => 11 entries
 
 Symbols:
 _root_. => package _root_
 advanced. => package advanced
-advanced.Existential# => class Existential extends AnyRef { +3 decls }
+advanced.Existential# => class Existential extends AnyRef { +4 decls }
   AnyRef => scala.AnyRef#
 advanced.Existential#`<init>`(). => primary ctor <init>()
 advanced.Existential#e1(). => method e1: List[_$1] forSome { abstract type _$1 >: Nothing <: Any }
@@ -75,6 +75,20 @@ advanced.Existential#e2(). => method e2: C[List[T] forSome { abstract type T >: 
 advanced.Existential#e2().T# => abstract type T >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
+advanced.Existential#e4(). => method e4: U[Int] forSome { abstract type U[T >: Nothing <: Int] => Any }
+  U => advanced.Existential#e4().U#
+  Int => scala.Int#
+  T => advanced.Existential#e4().U#[T]
+  Nothing => scala.Nothing#
+  Any => scala.Any#
+advanced.Existential#e4().U# => abstract type U[T >: Nothing <: Int] => Any
+  T => advanced.Existential#e4().U#[T]
+  Nothing => scala.Nothing#
+  Int => scala.Int#
+  Any => scala.Any#
+advanced.Existential#e4().U#[T] => typeparam T >: Nothing <: Int
+  Nothing => scala.Nothing#
+  Int => scala.Int#
 
 advanced/Structural.class
 -------------------------
@@ -84,12 +98,12 @@ Schema => SemanticDB v3
 Uri => advanced/Structural.class
 Text => empty
 Language => Scala
-Symbols => 8 entries
+Symbols => 11 entries
 
 Symbols:
 _root_. => package _root_
 advanced. => package advanced
-advanced.Structural# => class Structural extends AnyRef { +3 decls }
+advanced.Structural# => class Structural extends AnyRef { +4 decls }
   AnyRef => scala.AnyRef#
 advanced.Structural#$anon#x(). => abstract val method x: Int
   Int => scala.Int#
@@ -104,6 +118,16 @@ advanced.Structural#s2(). => method s2: AnyRef { val def x: Int }
   Int => scala.Int#
 advanced.Structural#s2().$anon#x(). => val method x: Int
   Int => scala.Int#
+advanced.Structural#s3(). => method s3: AnyRef { def m(x: Int): Int }
+  AnyRef => scala.AnyRef#
+  m => advanced.Structural#s3().$anon#m().
+  x => advanced.Structural#s3().$anon#m().(x)
+  Int => scala.Int#
+advanced.Structural#s3().$anon#m(). => method m(x: Int): Int
+  x => advanced.Structural#s3().$anon#m().(x)
+  Int => scala.Int#
+advanced.Structural#s3().$anon#m().(x) => param x: Int
+  Int => scala.Int#
 
 advanced/Test.class
 -------------------
@@ -113,13 +137,18 @@ Schema => SemanticDB v3
 Uri => advanced/Test.class
 Text => empty
 Language => Scala
-Symbols => 17 entries
+Symbols => 21 entries
 
 Symbols:
 _root_. => package _root_
 advanced. => package advanced
-advanced.Test. => final object Test extends AnyRef { +11 decls }
+advanced.Test. => final object Test extends AnyRef { +13 decls }
   AnyRef => scala.AnyRef#
+advanced.Test.$anon#m(). => method m(x: Int): Int
+  x => advanced.Test.$anon#m().(x)
+  Int => scala.Int#
+advanced.Test.$anon#m().(x) => param x: Int
+  Int => scala.Int#
 advanced.Test.$anon#x(). => abstract val method x: Int
   Int => scala.Int#
 advanced.Test.$anon#x(). => val method x: Int
@@ -158,6 +187,13 @@ advanced.Test.s2(). => val method s2: AnyRef { val def x: Int }
   x => advanced.Test.$anon#x().
   Int => scala.Int#
 advanced.Test.s2x(). => val method s2x: Int
+  Int => scala.Int#
+advanced.Test.s3(). => val method s3: AnyRef { def m(x: Int): Int }
+  AnyRef => scala.AnyRef#
+  m => advanced.Test.$anon#m().
+  x => advanced.Test.$anon#m().(x)
+  Int => scala.Int#
+advanced.Test.s3x(). => val method s3x: Int
   Int => scala.Int#
 
 B.class

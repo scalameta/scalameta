@@ -1,5 +1,7 @@
 package advanced
 
+import scala.language.existentials
+import scala.language.higherKinds
 import scala.language.reflectiveCalls
 
 class C[T] {
@@ -9,11 +11,13 @@ class C[T] {
 class Structural {
   def s1: { val x: Int } = ???
   def s2 = new { val x: Int = ??? }
+  def s3 = new { def m(x: Int): Int = ??? }
 }
 
 class Existential {
   def e1: List[_] = ???
   def e2: C[List[T] forSome { type T }] = ???
+  def e4: U[Int] forSome { type U[T <: Int] } = ???
 }
 
 object Test {
@@ -22,6 +26,8 @@ object Test {
   val s1x = s.s1.x
   val s2 = s.s2
   val s2x = s.s2.x
+  val s3 = s.s3
+  val s3x = s.s3.m(???)
 
   val e = new Existential
   val e1 = e.e1
