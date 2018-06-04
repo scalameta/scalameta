@@ -11,6 +11,8 @@ bin/bench
 Benchmarks involve running `bin/bench` on my laptop, which includes:
   * Compiling scalap with Scala 2.12
   * Compiling scalap with Scala 2.12 and semanticdb-scalac
+  * Converting JDK into SemanticDB with Metacp
+  * Converting Scala Library into SemanticDB with Metacp
 
 The numbers are probably not stable enough (because laptop)
 and not precise enough (because 5/10/1). However, I can rerun these benchmarks
@@ -47,6 +49,9 @@ and that's what matters now.
 
 ## Results
 
+These results were obtained on Eugene's MacBook Pro (Retina, 15-inch, Mid 2015)
+with i7 4980HQ, 16 GB RAM and 256 GB SSD running macOS Sierra 10.12.6.
+
 time/operation (ms/op) = lower score is better
 
 ```
@@ -55,4 +60,8 @@ QuickScalacBaseline    sample  51  1006.982 ± 13.579 ms/op
 QuickScalacRangepos    sample  50  1061.746 ± 10.769 ms/op (+6%)
 QuickScalametaBaseline sample  40  1354.603 ± 20.615 ms/op (+35%)
 QuickScalametaFullText sample  39  1409.716 ± 27.101 ms/op (+40%)
+
+Benchmark               Mode    Cnt Score
+QuickMetacpScalaLibrary sample  12  3274.004 ± 25.760  ms/op
+QuickMetacpJDK          sample  12  2921.333 ± 47.585  ms/op
 ```

@@ -533,7 +533,7 @@ lazy val bench = project
       runMain.in(Jmh).toTask(s"  ${buf.result.mkString(" ")}")
     }).evaluated
   )
-  .dependsOn(semanticdbScalacPlugin)
+  .dependsOn(testsJVM)
 
 // ==========================================
 // Settings
