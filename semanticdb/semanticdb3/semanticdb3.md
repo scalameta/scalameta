@@ -8,6 +8,7 @@
   * [Range](#range)
   * [Location](#location)
   * [Symbol](#symbol)
+  * [Scope](#scope)
   * [Type](#type)
   * [SymbolInformation](#symbolinformation)
   * [Annotation](#annotation)
@@ -248,6 +249,48 @@ but we haven't yet found a way to do that without sacrificing performance
 and payload size. In the meanwhile, when global uniqueness is required,
 tool authors are advised to accompany local symbols with `TextDocument.uri`.
 
+### Scope
+
+```protobuf
+message Scope {
+  repeated string symlinks = 1;
+  repeated SymbolInformation hardlinks = 2;
+}
+```
+
+`Scope` represents a container for definitions such as type parameters,
+parameters or class declarations. Depending on the [Language](#language)
+and the implementation, scopes specify their members as follows:
+  * Via symbolic links to members, i.e. using [Symbol](#symbol).
+  * Or via direct embedding of member metadata, i.e. using
+    [SymbolInformation](#symbolinformation).
+
+Hardlinking comes in handy in situations when an advanced type such
+as `StructuralType`, `ExistentialType` or `UniversalType` ends up being
+part of the type signature of a global symbol. For example, in the following
+Scala program, method `m` has a structural type `AnyRef { def x: Int }`:
+
+```scala
+class C {
+  def m = new { def x: Int = ??? }
+}
+```
+
+At the time of writing, we haven't found a way to model the method `x`,
+which constitutes a logical part of this structural type, as a global symbol.
+Therefore, this method has to be modelled as a local symbol.
+
+However, turning `x` into a local symbol that is part of the
+["Symbols"](#symbolinformation) section presents certain difficulties.
+In that case, in order to analyze public signatures of the containing
+[TextDocument](#textdocument), SemanticDB consumers have to load the entire
+"Symbols" section, which has adverse performance characteristics.
+
+Hardlinking solves this conundrum by storing symbol metadata related to advanced types
+directly inside the payloads representing these types. Thanks to hardlinking,
+we don't need to invent global symbols to remain convenient to SemanticDB
+consumers.
+
 ### Type
 
 ```protobuf
@@ -367,15 +410,14 @@ Unlike intersection types, compound types are not commutative.
 
 ```protobuf
 message StructuralType {
-  reserved 1, 2;
+  reserved 1, 2, 3;
   Type tpe = 4;
-  repeated string declarations = 3;
+  Scope declarations = 5;
 }
 ```
 
 `StructuralType` represents a structural type specified by its base type `tpe`
-and `declarations`. Declarations are modelled as [Symbols](#symbol)
-whose metadata must be provided via [SymbolInformation](#symbolinformation).
+and `declarations`. Declarations are modelled by a [Scope](#scope).
 
 ```protobuf
 message AnnotatedType {
@@ -390,53 +432,52 @@ message AnnotatedType {
 
 ```protobuf
 message ExistentialType {
-  repeated string type_parameters = 2;
+  reserved 2;
   Type tpe = 1;
+  Scope declarations = 3;
 }
 ```
 
 `ExistentialType` represents a type `tpe` existentially quantified
-over `type_parameters`. Type parameters are modelled as [Symbols](#symbol) whose
-metadata must be provided via [SymbolInformation](#symbolinformation).
+over `declarations`. Declarations are modelled by a [Scope](#scope).
 
 ```protobuf
 message UniversalType {
-  repeated string type_parameters = 1;
+  reserved 1;
+  Scope type_parameters = 3;
   Type tpe = 2;
 }
 ```
 
 `UniversalType` represents a type `tpe` universally quantified
-over `type_parameters`. Type parameters are modelled as [Symbols](#symbol) whose
-metadata must be provided via [SymbolInformation](#symbolinformation).
+over `type_parameters`. Type parameters are modelled by a [Scope](#scope).
 
 ```protobuf
 message ClassInfoType {
-  repeated string type_parameters = 1;
+  reserved 1, 3;
+  Scope type_parameters = 4;
   repeated Type parents = 2;
-  repeated string declarations = 3;
+  Scope declarations = 5;
 }
 ```
 
 `ClassInfoType` represents a signature of a class, a trait or the like.
+Both type parameters and declarations are modelled by a [Scope](#scope).
 
 ```protobuf
 message MethodType {
-  message ParameterList {
-    repeated string symbols = 1;
-  }
-  repeated string type_parameters = 1;
-  repeated ParameterList parameters = 2;
+  reserved 1, 2;
+  Scope type_parameters = 4;
+  repeated Scope parameterLists = 5;
   Type return_type = 3;
 }
 ```
 
 `MethodType` represents a signature of a method, a constructor or the like.
-It features `type_parameters`, `parameters` and a `return_type`. Both type
-parameters and paramteres are modelled as [Symbols](#symbol) whose
-metadata must be provided via [SymbolInformation](#symbolinformation).
+It features `type_parameters`, `parameterLists` and a `return_type`. Both type
+parameters and parameters are modelled by [Scopes](#scope).
 Moreover, in order to support multiple parameter lists in Scala methods,
-`parameters` is a list of lists.
+`parameterLists` is a list of lists.
 
 ```protobuf
 message ByNameType {
@@ -456,7 +497,8 @@ message RepeatedType {
 
 ```protobuf
 message TypeType {
-  repeated string type_parameters = 1;
+  reserved 1;
+  Scope type_parameters = 4;
   Type lower_bound = 2;
   Type upper_bound = 3;
 }
@@ -464,8 +506,7 @@ message TypeType {
 
 `TypeType` represents a signature of a type parameter or a type member.
 It features `type_parameters` as well as `lower_bound` and `upper_bound`.
-Type parameters are modelled as [Symbols](#symbol) whose metadata must be
-provided via [SymbolInformation](#symbolinformation).
+Type parameters are modelled by a [Scope](#scope).
 
 ### SymbolInformation
 

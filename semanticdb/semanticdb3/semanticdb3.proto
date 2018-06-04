@@ -41,6 +41,11 @@ message Location {
   Range range = 2;
 }
 
+message Scope {
+  repeated string symlinks = 1;
+  repeated SymbolInformation hardlinks = 2;
+}
+
 message Type {
   enum Tag {
     // reserved 2, 3, 4, 5;
@@ -172,11 +177,6 @@ message TypeType {
   Scope type_parameters = 4;
   Type lower_bound = 2;
   Type upper_bound = 3;
-}
-
-message Scope {
-  repeated string symlinks = 1;
-  repeated SymbolInformation hardlinks = 2;
 }
 
 message SymbolInformation {
