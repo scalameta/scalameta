@@ -28,7 +28,8 @@ class Scalacp private (classfile: ToplevelClassfile)
       }
       val stoplevels = toplevels.flatMap(sinfos)
       val sothers = toplevels.flatMap(spackages).distinct ++ others.flatMap(sinfos)
-      ToplevelInfos(classfile, stoplevels, sothers)
+      val snonlocalOthers = sothers.filter(sinfo => !hardlinks.contains(sinfo.symbol))
+      ToplevelInfos(classfile, stoplevels, snonlocalOthers)
     }
   }
 

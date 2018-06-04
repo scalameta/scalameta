@@ -1,6 +1,6 @@
 package scala.meta.internal.scalacp
 
-import java.util.HashMap
+import java.util.{HashMap, HashSet}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
@@ -107,6 +107,7 @@ trait SymbolOps { self: Scalacp =>
         case SymlinkChildren =>
           s.Scope(symlinks = syms.map(_.ssym))
         case HardlinkChildren =>
+          syms.map(registerHardlink)
           s.Scope(hardlinks = syms.map(_.toSymbolInformation(HardlinkChildren)))
       }
     }
@@ -130,6 +131,7 @@ trait SymbolOps { self: Scalacp =>
         case HardlinkChildren =>
           val sbuf = List.newBuilder[s.SymbolInformation]
           syms.foreach { sym =>
+            registerHardlink(sym)
             val sinfo = sym.toSymbolInformation(HardlinkChildren)
             sbuf += sinfo
             if (sym.isUsefulField && sym.isMutable) {
@@ -233,5 +235,10 @@ trait SymbolOps { self: Scalacp =>
     val result = Symbols.Local(nextId)
     nextId += 1
     result
+  }
+
+  lazy val hardlinks = new HashSet[String]
+  private def registerHardlink(sym: Symbol): Unit = {
+    hardlinks.add(sym.ssym)
   }
 }

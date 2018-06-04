@@ -46,7 +46,7 @@ Schema => SemanticDB v3
 Uri => advanced/D.class
 Text => empty
 Language => Scala
-Symbols => 7 entries
+Symbols => 6 entries
 
 Symbols:
 _root_. => package _root_
@@ -59,7 +59,6 @@ advanced.D# => class D[CC[_]] extends C[CC[_] forSome { type _ }] { +2 decls }
 advanced.D#[CC] => typeparam CC[_]
   _ => advanced.D#[CC][_]
 advanced.D#[CC][_] => typeparam _
-advanced.D#_# => abstract type _
 advanced.D#`<init>`(). => primary ctor <init>()
 
 advanced/Existential.class
@@ -129,14 +128,13 @@ Schema => SemanticDB v3
 Uri => advanced/Test.class
 Text => empty
 Language => Scala
-Symbols => 17 entries
+Symbols => 16 entries
 
 Symbols:
 _root_. => package _root_
 advanced. => package advanced
 advanced.Test. => final object Test extends AnyRef { +13 decls }
   AnyRef => scala.AnyRef#
-advanced.Test.T# => abstract type T
 advanced.Test.e(). => val method e: Existential
   Existential => advanced.Existential#
 advanced.Test.e1(). => val method e1: List[Any]
