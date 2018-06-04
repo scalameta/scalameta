@@ -127,30 +127,46 @@ trait SymbolOps { self: SemanticdbOps =>
 
   implicit class XtensionGSymbolsMSpec(syms: List[g.Symbol]) {
     def sscope(linkMode: LinkMode): s.Scope = {
-      // TODO: Respect linkMode.
-      s.Scope(symlinks = syms.map(_.ssym))
+      linkMode match {
+        case SymlinkChildren =>
+          s.Scope(symlinks = syms.map(_.ssym))
+        case HardlinkChildren =>
+          s.Scope(hardlinks = syms.map(_.toSymbolInformation(HardlinkChildren)))
+      }
     }
   }
 
   case class SemanticdbDecls(gsyms: List[g.Symbol]) {
     def sscope(linkMode: LinkMode): s.Scope = {
-      // TODO: Respect linkMode.
-      val sbuf = List.newBuilder[String]
-      gsyms.foreach { gsym =>
-        val ssym = gsym.ssym
-        sbuf += ssym
-        if (gsym.isUsefulField && gsym.isMutable) {
-          if (ssym.isGlobal) {
-            val setterName = ssym.desc.name + "_="
-            val setterSym = Symbols.Global(ssym.owner, d.Method(setterName, "()"))
-            sbuf += setterSym
-          } else {
-            val setterSym = ssym + "+1"
-            sbuf += setterSym
+      linkMode match {
+        case SymlinkChildren =>
+          val sbuf = List.newBuilder[String]
+          gsyms.foreach { gsym =>
+            val ssym = gsym.ssym
+            sbuf += ssym
+            if (gsym.isUsefulField && gsym.isMutable) {
+              if (ssym.isGlobal) {
+                val setterName = ssym.desc.name + "_="
+                val setterSym = Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+                sbuf += setterSym
+              } else {
+                val setterSym = ssym + "+1"
+                sbuf += setterSym
+              }
+            }
           }
-        }
+          s.Scope(symlinks = sbuf.result)
+        case HardlinkChildren =>
+          val sbuf = List.newBuilder[s.SymbolInformation]
+          gsyms.foreach { gsym =>
+            val sinfo = gsym.toSymbolInformation(HardlinkChildren)
+            sbuf += sinfo
+            if (gsym.isUsefulField && gsym.isMutable) {
+              Synthetics.setterInfos(sinfo, HardlinkChildren).foreach(sbuf.+=)
+            }
+          }
+          s.Scope(hardlinks = sbuf.result)
       }
-      s.Scope(symlinks = sbuf.result)
     }
   }
 

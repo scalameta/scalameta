@@ -40,7 +40,12 @@ object Synthetics {
     val setterTpe = {
       val unitTpe = s.TypeRef(None, "scala.Unit#", Nil)
       val unit = s.Type(tag = t.TYPE_REF, typeRef = Some(unitTpe))
-      val setterParamss = List(s.Scope(symlinks = List(paramInfo.symbol)))
+      val setterParamss = {
+        linkMode match {
+          case SymlinkChildren => List(s.Scope(symlinks = List(paramInfo.symbol)))
+          case HardlinkChildren => List(s.Scope(hardlinks = List(paramInfo)))
+        }
+      }
       val setterTpe = s.MethodType(None, setterParamss, Some(unit))
       s.Type(tag = t.METHOD_TYPE, methodType = Some(setterTpe))
     }
@@ -54,6 +59,9 @@ object Synthetics {
       annotations = getterInfo.annotations,
       accessibility = getterInfo.accessibility)
 
-    List(paramInfo, setterInfo)
+    linkMode match {
+      case SymlinkChildren => List(paramInfo, setterInfo)
+      case HardlinkChildren => List(setterInfo)
+    }
   }
 }
