@@ -187,9 +187,10 @@ trait SymbolInformationOps { self: Scalacp =>
                 stpe.map(_.update(_.methodType.optionalReturnType := None))
               } else if (sym.isScalacField) {
                 val stag = t.METHOD_TYPE
+                val stparams = Some(s.Scope())
                 val sparamss = Nil
                 val sret = stpe
-                Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, sparamss, sret))))
+                Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, sparamss, sret))))
               } else {
                 stpe
               }

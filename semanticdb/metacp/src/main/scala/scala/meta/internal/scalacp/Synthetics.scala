@@ -45,7 +45,7 @@ object Synthetics {
           case HardlinkChildren => List(s.Scope(hardlinks = List(paramInfo)))
         }
       }
-      val setterTpe = s.MethodType(None, setterParamss, Some(unit))
+      val setterTpe = s.MethodType(Some(s.Scope()), setterParamss, Some(unit))
       s.Type(tag = t.METHOD_TYPE, methodType = Some(setterTpe))
     }
     val setterInfo = s.SymbolInformation(

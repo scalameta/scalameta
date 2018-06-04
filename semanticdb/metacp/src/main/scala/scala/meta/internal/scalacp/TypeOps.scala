@@ -108,19 +108,23 @@ trait TypeOps { self: Scalacp =>
             Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stpe, sdecls))))
           case ClassInfoType(sym, parents) =>
             val stag = t.CLASS_INFO_TYPE
+            val stparams = Some(s.Scope())
             val sparents = parents.flatMap(loop)
             val sdecls = Some(sym.semanticdbDecls.sscope(linkMode))
-            Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(None, sparents, sdecls))))
+            Some(
+              s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(stparams, sparents, sdecls))))
           case _: NullaryMethodType | _: MethodType =>
             val stag = t.METHOD_TYPE
+            val stparams = Some(s.Scope())
             val sparamss = tpe.paramss.map(_.sscope(linkMode))
             val sret = loop(tpe.ret)
-            Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, sparamss, sret))))
+            Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, sparamss, sret))))
           case TypeBoundsType(lo, hi) =>
             val stag = t.TYPE_TYPE
+            val stparams = Some(s.Scope())
             val slo = loop(lo)
             val shi = loop(hi)
-            Some(s.Type(tag = stag, typeType = Some(s.TypeType(None, slo, shi))))
+            Some(s.Type(tag = stag, typeType = Some(s.TypeType(stparams, slo, shi))))
           case PolyType(tpe, tparams) =>
             val stpe = loop(tpe)
             stpe.map { stpe =>

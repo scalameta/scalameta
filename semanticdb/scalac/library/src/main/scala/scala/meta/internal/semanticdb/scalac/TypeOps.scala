@@ -98,13 +98,16 @@ trait TypeOps { self: SemanticdbOps =>
             Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stpe, sdecls))))
           case g.ClassInfoType(gparents, _, gclass) =>
             val stag = t.CLASS_INFO_TYPE
+            val stparams = Some(s.Scope())
             val sparents = gparents.flatMap(loop)
             val sdecls = Some(gclass.semanticdbDecls.sscope(linkMode))
-            Some(s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(None, sparents, sdecls))))
+            Some(
+              s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(stparams, sparents, sdecls))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE
+            val stparams = Some(s.Scope())
             val stpe = loop(gtpe)
-            Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, Nil, stpe))))
+            Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, Nil, stpe))))
           case gtpe: g.MethodType =>
             def flatten(gtpe: g.Type): (List[List[g.Symbol]], g.Type) = {
               gtpe match {
@@ -117,14 +120,16 @@ trait TypeOps { self: SemanticdbOps =>
             }
             val (gparamss, gret) = flatten(gtpe)
             val stag = t.METHOD_TYPE
+            val stparams = Some(s.Scope())
             val sparamss = gparamss.map(_.sscope(linkMode))
             val sret = loop(gret)
-            Some(s.Type(tag = stag, methodType = Some(s.MethodType(None, sparamss, sret))))
+            Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, sparamss, sret))))
           case g.TypeBounds(glo, ghi) =>
             val stag = t.TYPE_TYPE
+            val stparams = Some(s.Scope())
             val slo = loop(glo)
             val shi = loop(ghi)
-            Some(s.Type(tag = stag, typeType = Some(s.TypeType(None, slo, shi))))
+            Some(s.Type(tag = stag, typeType = Some(s.TypeType(stparams, slo, shi))))
           case g.PolyType(gtparams, gtpe) =>
             val stpe = loop(gtpe)
             stpe.map { stpe =>
