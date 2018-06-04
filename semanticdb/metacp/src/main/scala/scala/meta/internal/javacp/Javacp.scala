@@ -176,7 +176,7 @@ object Javacp {
             method.signature.params
           }
 
-        val parameters = params.zipWithIndex.map {
+        val parameters: List[s.SymbolInformation] = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
             val paramName = {
               if (method.node.parameters == null) "param" + i
