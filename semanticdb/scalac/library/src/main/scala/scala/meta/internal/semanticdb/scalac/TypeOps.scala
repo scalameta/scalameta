@@ -83,7 +83,7 @@ trait TypeOps { self: SemanticdbOps =>
               val sparents = gparents.flatMap(loop)
               Some(s.Type(tag = t.WITH_TYPE, withType = Some(s.WithType(sparents))))
             }
-            val sdecls = Some(s.Scope(gdecls.sorted.map(_.ssym)))
+            val sdecls = Some(gdecls.semanticdbDecls.sscope)
             Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
           case g.AnnotatedType(ganns, gtpe) =>
             val stag = t.ANNOTATED_TYPE

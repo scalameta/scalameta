@@ -118,6 +118,12 @@ trait SymbolOps { self: SemanticdbOps =>
     }
   }
 
+  implicit class XtensionScope(scope: g.Scope) {
+    def semanticdbDecls: SemanticdbDecls = {
+      SemanticdbDecls(scope.sorted.filter(_.isUseful))
+    }
+  }
+
   case class SemanticdbDecls(gsyms: List[g.Symbol]) {
     lazy val sscope: s.Scope = {
       val sbuf = List.newBuilder[String]
