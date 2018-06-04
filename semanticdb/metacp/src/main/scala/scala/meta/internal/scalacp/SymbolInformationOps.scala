@@ -113,15 +113,21 @@ trait SymbolInformationOps { self: Scalacp =>
               else flip(p.VAR)
             }
             if (sym.isParam) {
-              val methodSym = sym.parent.get.asInstanceOf[SymbolInfoSymbol]
-              if ((methodSym.properties & p.PRIMARY.value) != 0) {
-                val classMembers = methodSym.parent.get.children
-                val accessor = classMembers.find(m => m.isParamAccessor && m.name == sym.name)
-                accessor.foreach { accessor =>
-                  val isStable = if (accessor.isMethod) accessor.isStable else !accessor.isMutable
-                  if (!isStable) flip(p.VAR)
-                  else if (accessor.isMethod) flip(p.VAL)
-                  else ()
+              sym.parent.foreach { parent =>
+                if ((parent.properties & p.PRIMARY.value) != 0) {
+                  parent.parent.foreach { grandParent =>
+                    val classMembers = grandParent.children
+                    val accessor = classMembers.find(m => m.isParamAccessor && m.name == sym.name)
+                    accessor.foreach { accessor =>
+                      val isStable = {
+                        if (accessor.isMethod) accessor.isStable
+                        else !accessor.isMutable
+                      }
+                      if (!isStable) flip(p.VAR)
+                      else if (accessor.isMethod) flip(p.VAL)
+                      else ()
+                    }
+                  }
                 }
               }
             }
