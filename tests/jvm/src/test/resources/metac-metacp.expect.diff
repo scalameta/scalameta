@@ -28,7 +28,7 @@ advanced.Existential#e1().
 -            symbol: "local7"
 -            kind: TYPE
 -            properties: 4
--            name: "_$1"
+-            name: "_"
 -            tpe {
 -              tag: TYPE_TYPE
 -              typeType {
@@ -842,7 +842,7 @@ types.Test.C#existentialType2().
 -            symbol: "local8"
 -            kind: TYPE
 -            properties: 4
--            name: "_$1"
+-            name: "_"
 -            tpe {
 -              tag: TYPE_TYPE
 -              typeType {

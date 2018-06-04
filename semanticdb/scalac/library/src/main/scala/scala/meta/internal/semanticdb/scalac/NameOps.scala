@@ -13,6 +13,8 @@ trait NameOps { self: SemanticdbOps =>
         n.EmptyPackage
       } else if (gname == g.nme.CONSTRUCTOR) {
         n.Constructor
+      } else if (gname.startsWith("_$")) {
+        n.Anonymous
       } else {
         gname.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
       }

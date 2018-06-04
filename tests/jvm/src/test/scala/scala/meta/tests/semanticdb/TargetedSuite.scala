@@ -677,9 +677,9 @@ class TargetedSuite extends SemanticdbSuite {
        |  AnyRef => scala.AnyRef#
        |_empty_.ac.x(). => val method x: Int
        |  Int => scala.Int#
-       |_empty_.ac.y(). => val method y: Class[_$1] forSome { abstract type _$1 >: Nothing <: Any }
+       |_empty_.ac.y(). => val method y: Class[_] forSome { abstract type _ >: Nothing <: Any }
        |  Class => scala.Predef.Class#
-       |  _$1 => local0
+       |  _ => local0
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
     """.stripMargin
