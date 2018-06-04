@@ -54,7 +54,7 @@ object SemanticdbConfig {
   private val SetText = "text:(.*)".r
   private val SetSymbols = "symbols:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
-  private val SetSynthetics = "experimental:synthetics:(.*)".r
+  private val SetSynthetics = "synthetics:(.*)".r
   // ============ COMPATIBILITY WITH 3.X STARTS ============
   private val SetMode = "mode:(.*)".r
   private val SetFailures = "failures:(.*)".r
@@ -134,10 +134,10 @@ object SemanticdbConfig {
         deprecated(option, "diagnostics:off")
         config = config.copy(diagnostics = BinaryMode.Off)
       case option @ "synthetics:all" =>
-        deprecated(option, "experimental:synthetics:on")
+        deprecated(option, "synthetics:on")
         config = config.copy(synthetics = BinaryMode.On)
       case option @ "synthetics:none" =>
-        deprecated(option, "experimental:synthetics:off")
+        deprecated(option, "synthetics:off")
         config = config.copy(synthetics = BinaryMode.Off)
       case option @ SetOwners(_) =>
         unsupported(option)

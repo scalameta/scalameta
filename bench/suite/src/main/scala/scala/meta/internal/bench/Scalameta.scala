@@ -61,7 +61,7 @@ class ScalametaBaseline extends Scalameta {
     settings.pluginOptions.value ::= s"semanticdb:symbols:on"
     settings.pluginOptions.value ::= s"semanticdb:occurrences:on"
     settings.pluginOptions.value ::= s"semanticdb:diagnostics:on"
-    settings.pluginOptions.value ::= s"semanticdb:experimental:synthetics:off"
+    settings.pluginOptions.value ::= s"semanticdb:synthetics:off"
     settings
   }
 }

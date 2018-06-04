@@ -27,7 +27,7 @@ and that's what matters now.
     <td><code>symbols</code></td>
     <td><code>occurrences</code></td>
     <td><code>diagnostics</code></td>
-    <td><code>experimental:synthetics</code></td>
+    <td><code>synthetics</code></td>
   </th>
   <tr>
     <td><code>ScalametaBaseline</code></td>

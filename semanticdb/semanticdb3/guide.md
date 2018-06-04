@@ -293,14 +293,14 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td><code>on</code></td>
   </tr>
   <tr>
-    <td><code>-P:semanticdb:experimental:synthetics:&lt;value&gt;</code></td>
+    <td><code>-P:semanticdb:synthetics:&lt;value&gt;</code></td>
     <td>
         <code>on</code>,<br/>
         <code>off</code>
     </td>
     <td>
       Specifies whether to save some of the compiler-synthesized code in
-      the experimental and currently unspecified <code>TextDocument.synthetics</code>
+      the currently unspecified <code>TextDocument.synthetics</code>
       section (<code>on</code> for yes, <code>off</code> for no).
     </td>
     <td><code>on</code></td>

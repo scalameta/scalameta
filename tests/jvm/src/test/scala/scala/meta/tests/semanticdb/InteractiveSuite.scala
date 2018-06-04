@@ -15,7 +15,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       expected: String
   ): Unit = {
     test(logger.revealWhitespace(original)) {
-      val options = List("-P:semanticdb:experimental:synthetics:on")
+      val options = List("-P:semanticdb:synthetics:on")
       val document = toTextDocument(compiler, original, options)
       val format = scala.meta.metap.Format.Detailed
       val syntax = Print.document(format, document)
