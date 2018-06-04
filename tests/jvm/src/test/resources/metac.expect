@@ -826,7 +826,7 @@ flags.p.package.S#[T] => @specialized typeparam T >: Nothing <: Any
 flags.p.package.S#`<init>`(). => primary ctor <init>()
 flags.p.package.T1# => type T1 = Int
   Int => scala.Int#
-flags.p.package.T2# => type T2[T >: Nothing <: Any] =>  = S[T]
+flags.p.package.T2# => type T2[T >: Nothing <: Any] = S[T]
   T => flags.p.package.T2#[T]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -880,7 +880,7 @@ flags.p.package.`y_=`(). => protected var method y_=(x$1: Int): Unit
   Unit => scala.Unit#
 flags.p.package.`y_=`().(x$1) => param x$1: Int
   Int => scala.Int#
-flags.p.package.m(). => macro m[TT >: Nothing <: Any] => : Nothing
+flags.p.package.m(). => macro m[TT >: Nothing <: Any]: Nothing
   TT => flags.p.package.m().[TT]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1170,7 +1170,7 @@ example.Methods# => class Methods[T >: Nothing <: Any] extends AnyRef { +26 decl
   Nothing => scala.Nothing#
   Any => scala.Any#
   AnyRef => scala.AnyRef#
-example.Methods#AList# => type AList[T >: Nothing <: Any] =>  = Methods.this.List[T]
+example.Methods#AList# => type AList[T >: Nothing <: Any] = Methods.this.List[T]
   T => example.Methods#AList#[T]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1316,7 +1316,7 @@ example.Methods#m6(+2). => method m6(x: List[T]): Nothing
 example.Methods#m6(+2).(x) => param x: List[T]
   List => scala.package.List#
   T => example.Methods#[T]
-example.Methods#m7a(). => method m7a[U >: Nothing <: Any] => (c: Methods[T], l: Methods.this.List[U])(implicit evidence$1: Ordering[U]): Nothing
+example.Methods#m7a(). => method m7a[U >: Nothing <: Any](c: Methods[T], l: Methods.this.List[U])(implicit evidence$1: Ordering[U]): Nothing
   U => example.Methods#m7a().[U]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1340,7 +1340,7 @@ example.Methods#m7a().(l) => param l: Methods.this.List[U]
 example.Methods#m7a().[U] => typeparam U >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-example.Methods#m7b(). => method m7b[U >: Nothing <: Any] => (l: Methods.this.List[U])(implicit evidence$2: Function1[U, T]): Nothing
+example.Methods#m7b(). => method m7b[U >: Nothing <: Any](l: Methods.this.List[U])(implicit evidence$2: Function1[U, T]): Nothing
   U => example.Methods#m7b().[U]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1768,7 +1768,7 @@ local4 => method k: Int
 local6 => abstract type T >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-local9 => type L[T >: Nothing <: Any] =>  = List[T]
+local9 => type L[T >: Nothing <: Any] = List[T]
   T => local10
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1843,7 +1843,7 @@ types.Test.C#MethodType.m5(). => method m5(x: Int): Int
   Int => scala.Int#
 types.Test.C#MethodType.m5().(x) => param x: Int
   Int => scala.Int#
-types.Test.C#MethodType.m6(). => method m6[T >: Nothing <: Any] => (x: T): T
+types.Test.C#MethodType.m6(). => method m6[T >: Nothing <: Any](x: T): T
   T => types.Test.C#MethodType.m6().[T]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -1931,25 +1931,25 @@ types.Test.C#TypeType.T1# => abstract type T1 >: Nothing <: Any
   Any => scala.Any#
 types.Test.C#TypeType.T4# => type T4 = C
   C => types.Test.C#
-types.Test.C#TypeType.T5# => type T5[U >: Nothing <: Any] =>  = U
+types.Test.C#TypeType.T5# => type T5[U >: Nothing <: Any] = U
   U => types.Test.C#TypeType.T5#[U]
   Nothing => scala.Nothing#
   Any => scala.Any#
 types.Test.C#TypeType.T5#[U] => typeparam U >: Nothing <: Any
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#TypeType.m2(). => method m2[T2 = C] => : Nothing
+types.Test.C#TypeType.m2(). => method m2[T2 = C]: Nothing
   T2 => types.Test.C#TypeType.m2().[T2]
   C => types.Test.C#
   Nothing => scala.Nothing#
 types.Test.C#TypeType.m2().[T2] => typeparam T2 = C
   C => types.Test.C#
-types.Test.C#TypeType.m3(). => method m3[M3[unknown _] =>  >: Nothing <: Any] => : Nothing
+types.Test.C#TypeType.m3(). => method m3[M3[unknown _] >: Nothing <: Any]: Nothing
   M3 => types.Test.C#TypeType.m3().[M3]
   _ => types.Test.C#TypeType.m3().[M3][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#TypeType.m3().[M3] => typeparam M3[unknown _] =>  >: Nothing <: Any
+types.Test.C#TypeType.m3().[M3] => typeparam M3[unknown _] >: Nothing <: Any
   _ => types.Test.C#TypeType.m3().[M3][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
@@ -2008,12 +2008,12 @@ types.Test.C#thisType1(). => val method thisType1: C.this.type
   C => types.Test.C#
 types.Test.C#thisType2(). => val method thisType2: C.this.type
   C => types.Test.C#
-types.Test.C#typeLambda1(). => method typeLambda1[M[unknown _] =>  >: Nothing <: Any] => : Nothing
+types.Test.C#typeLambda1(). => method typeLambda1[M[unknown _] >: Nothing <: Any]: Nothing
   M => types.Test.C#typeLambda1().[M]
   _ => types.Test.C#typeLambda1().[M][_]
   Nothing => scala.Nothing#
   Any => scala.Any#
-types.Test.C#typeLambda1().[M] => typeparam M[unknown _] =>  >: Nothing <: Any
+types.Test.C#typeLambda1().[M] => typeparam M[unknown _] >: Nothing <: Any
   _ => types.Test.C#typeLambda1().[M][_]
   Nothing => scala.Nothing#
   Any => scala.Any#

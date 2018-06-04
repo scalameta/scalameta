@@ -194,7 +194,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  Nothing => scala.Nothing#
        |f.C1#f2(). => var method f2: Nothing
        |  Nothing => scala.Nothing#
-       |f.C1#m1(). => method m1[T >: Nothing <: Any] => (x: Int): Int
+       |f.C1#m1(). => method m1[T >: Nothing <: Any](x: Int): Int
        |  T => f.C1#m1().[T]
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
@@ -726,7 +726,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  local10 => local10
        |local0 => val method y: Int
        |  Int => scala.Int#
-       |local1 => method z[T >: Nothing <: Any] => (unknown local3): T
+       |local1 => method z[T >: Nothing <: Any](unknown local3): T
        |  T => local2
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#

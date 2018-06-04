@@ -207,7 +207,7 @@ trait SymbolPrinter extends BasePrinter {
             if (decls.infos.nonEmpty) out.print(s" { +${decls.infos.length} decls }")
           case METHOD_TYPE =>
             val Some(MethodType(tparams, paramss, res)) = tpe.methodType
-            rep("[", tparams.infos, ", ", "] => ")(defn)
+            rep("[", tparams.infos, ", ", "]")(defn)
             rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(defn))
             opt(": ", res)(normal)
           case BY_NAME_TYPE =>
@@ -220,7 +220,7 @@ trait SymbolPrinter extends BasePrinter {
             out.print("*")
           case TYPE_TYPE =>
             val Some(TypeType(tparams, lo, hi)) = tpe.typeType
-            rep("[", tparams.infos, ", ", "] => ")(defn)
+            rep("[", tparams.infos, ", ", "]")(defn)
             if (lo != hi) {
               opt(" >: ", lo)(normal)
               opt(" <: ", hi)(normal)
