@@ -677,7 +677,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  AnyRef => scala.AnyRef#
        |_empty_.ac.x(). => val method x: Int
        |  Int => scala.Int#
-       |_empty_.ac.y(). => val method y: Class[_] forSome { abstract type _ >: Nothing <: Any }
+       |_empty_.ac.y(). => val method y: Class[_] forSome { type _ >: Nothing <: Any }
        |  Class => scala.Predef.Class#
        |  _ => local0
        |  Nothing => scala.Nothing#
@@ -708,7 +708,7 @@ class TargetedSuite extends SemanticdbSuite {
        |_empty_.ad.Bar#`<init>`(). => primary ctor <init>()
        |_empty_.ad.Foo# => trait Foo extends AnyRef
        |  AnyRef => scala.AnyRef#
-       |_empty_.ad.k(). => val method k: AnyRef with Foo { abstract val def y: Any }
+       |_empty_.ad.k(). => val method k: AnyRef with Foo { val def y: Any }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
        |  y => local10
@@ -723,7 +723,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  Nothing => scala.Nothing#
        |  Any => scala.Any#
        |  e => local7
-       |_empty_.ad.z(). => val method z: AnyRef with Foo { abstract val def y: Int }
+       |_empty_.ad.z(). => val method z: AnyRef with Foo { val def y: Int }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
        |  y => local9

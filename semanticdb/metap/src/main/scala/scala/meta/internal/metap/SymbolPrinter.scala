@@ -268,8 +268,8 @@ trait SymbolPrinter extends BasePrinter {
           // since there are subtle differences in behavior.
           rep(info.annotations, " ", " ")(pprint)
           opt(info.accessibility)(pprint)
-          if (info.has(ABSTRACT)) out.print("abstract ")
-          if (info.has(FINAL)) out.print("final ")
+          if (info.has(ABSTRACT) && info.kind == CLASS) out.print("abstract ")
+          if (info.has(FINAL) && info.kind != OBJECT) out.print("final ")
           if (info.has(SEALED)) out.print("sealed ")
           if (info.has(IMPLICIT)) out.print("implicit ")
           if (info.has(LAZY)) out.print("lazy ")
