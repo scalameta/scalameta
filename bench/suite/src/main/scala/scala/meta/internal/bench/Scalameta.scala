@@ -39,7 +39,7 @@ trait Scalameta {
     settings.Yrangepos.value = true
     settings.plugin.value ::= bs.semanticdbScalacJar
     settings.require.value ::= "semanticdb"
-    settings.pluginOptions.value ::= s"semanticdb:crashes:error"
+    settings.pluginOptions.value ::= s"semanticdb:failures:error"
     settings.pluginOptions.value ::= s"semanticdb:sourceroot:${bs.scalapDir}"
     settings
   }

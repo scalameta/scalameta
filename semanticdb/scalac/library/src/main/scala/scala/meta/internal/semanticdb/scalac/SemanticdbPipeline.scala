@@ -33,8 +33,8 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       writer.write(s"failed to generate semanticdb for $path:$EOL")
       ex.printStackTrace(new PrintWriter(writer))
       val msg = writer.toString
-      import scala.meta.internal.semanticdb.scalac.CrashMode._
-      config.crashes match {
+      import scala.meta.internal.semanticdb.scalac.FailureMode._
+      config.failures match {
         case Error => global.reporter.error(g.NoPosition, msg)
         case Warning => global.reporter.warning(g.NoPosition, msg)
         case Info => global.reporter.info(g.NoPosition, msg, force = true)

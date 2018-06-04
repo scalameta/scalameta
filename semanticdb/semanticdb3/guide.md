@@ -206,7 +206,7 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td>Default</td>
   </tr>
   <tr>
-    <td><code>-P:semanticdb:crashes:&lt;value&gt;</code></td>
+    <td><code>-P:semanticdb:failures:&lt;value&gt;</code></td>
     <td>
       <code>error</code>,<br/>
       <code>warning</code>,<br/>

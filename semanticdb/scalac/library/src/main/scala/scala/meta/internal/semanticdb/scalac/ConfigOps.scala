@@ -7,7 +7,7 @@ import scala.tools.nsc.reporters.Reporter
 import scala.util.matching.Regex
 
 case class SemanticdbConfig(
-    crashes: CrashMode,
+    failures: FailureMode,
     profiling: BinaryMode,
     fileFilter: FileFilter,
     sourceroot: AbsolutePath,
@@ -19,7 +19,7 @@ case class SemanticdbConfig(
   def syntax: String = {
     val p = SemanticdbPlugin.name
     List(
-      "crashes" -> crashes.name,
+      "failures" -> failures.name,
       "profiling" -> profiling.name,
       "include" -> fileFilter.include,
       "exclude" -> fileFilter.exclude,
@@ -35,7 +35,7 @@ case class SemanticdbConfig(
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
-    crashes = CrashMode.Warning,
+    failures = FailureMode.Warning,
     profiling = BinaryMode.Off,
     fileFilter = FileFilter.matchEverything,
     sourceroot = PathIO.workingDirectory,
@@ -46,7 +46,7 @@ object SemanticdbConfig {
     synthetics = BinaryMode.Off
   )
 
-  private val SetCrashes = "crashes:(.*)".r
+  private val SetFailures = "failures:(.*)".r
   private val SetProfiling = "profiling:(.*)".r
   private val SetInclude = "include:(.*)".r
   private val SetExclude = "exclude:(.*)".r
@@ -57,7 +57,6 @@ object SemanticdbConfig {
   private val SetSynthetics = "synthetics:(.*)".r
   // ============ COMPATIBILITY WITH 3.X STARTS ============
   private val SetMode = "mode:(.*)".r
-  private val SetFailures = "failures:(.*)".r
   private val SetOwners = "owners:(.*)".r
   private val SetDenotations = "denotations:(.*)".r
   private val SetSignatures = "signatures:(.*)".r
@@ -86,8 +85,8 @@ object SemanticdbConfig {
     val relevantOptions = scalacOptions.filter(_.startsWith("-P:semanticdb:"))
     val strippedOptions = relevantOptions.map(_.stripPrefix("-P:semanticdb:"))
     strippedOptions.foreach {
-      case SetCrashes(CrashMode(crashes)) =>
-        config = config.copy(crashes = crashes)
+      case SetFailures(FailureMode(failures)) =>
+        config = config.copy(failures = failures)
       case SetProfiling(BinaryMode(mode)) =>
         config = config.copy(profiling = mode)
       case SetInclude(include) =>
@@ -113,9 +112,6 @@ object SemanticdbConfig {
         config = config.copy(text = BinaryMode.Off)
       case option @ SetMode("disabled") =>
         unsupported(option, "exclude:^$")
-      case option @ SetFailures(CrashMode(crashes)) =>
-        deprecated(option, "crashes:{error,warning,info,ignore}")
-        config = config.copy(crashes = crashes)
       case option @ SetDenotations(_) =>
         unsupported(option, "symbols")
       case option @ SetSignatures(_) =>
@@ -149,16 +145,16 @@ object SemanticdbConfig {
   }
 }
 
-sealed abstract class CrashMode {
+sealed abstract class FailureMode {
   def name: String = toString.toLowerCase
 }
-object CrashMode {
-  def unapply(arg: String): Option[CrashMode] = all.find(_.toString.equalsIgnoreCase(arg))
+object FailureMode {
+  def unapply(arg: String): Option[FailureMode] = all.find(_.toString.equalsIgnoreCase(arg))
   def all = List(Error, Warning, Info, Ignore)
-  case object Error extends CrashMode
-  case object Warning extends CrashMode
-  case object Info extends CrashMode
-  case object Ignore extends CrashMode
+  case object Error extends FailureMode
+  case object Warning extends FailureMode
+  case object Info extends FailureMode
+  case object Ignore extends FailureMode
 }
 
 sealed abstract class BinaryMode {
