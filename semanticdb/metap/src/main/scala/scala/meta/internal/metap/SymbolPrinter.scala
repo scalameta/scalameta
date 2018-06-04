@@ -184,6 +184,7 @@ trait SymbolPrinter extends BasePrinter {
             rep(types, " with ")(normal)
           case STRUCTURAL_TYPE =>
             val Some(StructuralType(utpe, decls)) = tpe.structuralType
+            decls.infos.foreach(notes.discover)
             utpe.foreach(normal)
             if (decls.infos.nonEmpty) rep(" { ", decls.infos, "; ", " }")(defn)
             else out.print(" {}")
@@ -194,10 +195,12 @@ trait SymbolPrinter extends BasePrinter {
             rep(anns, " ", "")(pprint)
           case EXISTENTIAL_TYPE =>
             val Some(ExistentialType(utpe, decls)) = tpe.existentialType
+            decls.infos.foreach(notes.discover)
             utpe.foreach(normal)
             rep(" forSome { ", decls.infos, "; ", " }")(defn)
           case UNIVERSAL_TYPE =>
             val Some(UniversalType(tparams, utpe)) = tpe.universalType
+            tparams.infos.foreach(notes.discover)
             rep("[", tparams.infos, ", ", "] => ")(defn)
             utpe.foreach(normal)
           case CLASS_INFO_TYPE =>
