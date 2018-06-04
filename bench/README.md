@@ -58,10 +58,10 @@ time/operation (ms/op) = lower score is better
 Benchmark              Mode    Cnt Score
 QuickScalacBaseline    sample  51  1006.982 ± 13.579 ms/op
 QuickScalacRangepos    sample  50  1061.746 ± 10.769 ms/op (+6%)
-QuickScalametaBaseline sample  40  1354.603 ± 20.615 ms/op (+35%)
-QuickScalametaFullText sample  39  1409.716 ± 27.101 ms/op (+40%)
+QuickScalametaBaseline sample  40  1365.613 ± 18.792 ms/op (+35%)
+QuickScalametaFullText sample  39  1386.165 ± 14.795 ms/op (+37%)
 
 Benchmark               Mode    Cnt Score
-QuickMetacpScalaLibrary sample  12  3274.004 ± 25.760  ms/op
-QuickMetacpJDK          sample  12  2921.333 ± 47.585  ms/op
+QuickMetacpScalaLibrary sample  9   3387.600 ± 50.458  ms/op
+QuickMetacpJDK          sample  12  2961.528 ± 36.541  ms/op
 ```
