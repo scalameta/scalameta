@@ -671,8 +671,9 @@ languages map onto these properties.
 </table>
 
 `name`. Display name of the definition. Usually, it's the same as the name
-of the corresponding [Symbol](#symbol), except for package objects whose
-display name is their name in source code and symbol name is `package`.
+of the corresponding [Symbol](#symbol), except for language-specific situations.
+See [Languages](#languages) for more information on which definitions have
+which names in supported languages.
 
 `tpe`. [Type](#type) that represents the definition signature.
 See [Languages](#languages) for more information on which definitions have
@@ -948,8 +949,6 @@ which Scala definitions, what their metadata is, etc). See
   * For empty package, `_empty_`.
   * For package object, `package`.
   * For constructor, `<init>`.
-  * For anonymous parameter, self parameter or type parameter,
-    an underscore (`_`).
   * For other definition, the name of the binding introduced by the definition
     [\[70\]][70].
 
@@ -1536,6 +1535,8 @@ Notes:
   for type variables, so that they can be distinguished from
   local type definitions.
 * Type variable symbols are always `ABSTRACT`.
+* Type variables may be anonymous (via `_` syntax). In that case, their `name`
+  must be modelled as `_`, whereas the symbol name is implementation-dependent.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
   represent the signature of `t` as `TypeType(List(), <Nothing>, <Any>)`.
@@ -1578,6 +1579,9 @@ Notes:
 * Self parameters cannot be referenced outside the document where they are
   located, which means that they are represented by local symbols.
 * Self parameter symbols don't support any properties.
+* Self parameters may be anonymous (via `_: T =>`, `this: T =>` or corresponding
+  typeless syntaxes). In that case, their `name` must be modelled as `_`,
+  whereas the symbol name is implementation-dependent.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
   represent the signature of `self2` as
@@ -1632,6 +1636,8 @@ Notes:
   * `CONTRAVARIANT`: set for contravariant type parameters.
 * If present, (higher-order) type parameters of type parameters are
   represented as described here in order of their appearance in source code.
+* Type parameters may be anonymous (via `_` syntax). In that case, their `name`
+  must be modelled as `_`, whereas the symbol name is implementation-dependent.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
   represent the signature of `T1` as `TypeType(List(), <Nothing>, <Any>)`.
@@ -1725,6 +1731,8 @@ Notes:
   and `class C(private[this] val x: Int)`. As a result, due to implementation
   restrictions `private[this] val` parameters currently don't have the `VAL`
   property.
+* Parameters may be anonymous (via `_` syntax). In that case, their `name`
+  must be modelled as `_`, whereas the symbol name is implementation-dependent.
 * Unlike some other metaprogramming systems for Scala, we do not
   distinguish regular parameters from parameters with default arguments
   [\[45\]][45]. However, we do create method symbols for synthetic methods
@@ -2033,6 +2041,8 @@ similarly to object definitions (see above). Concretely, the differences
 between package object symbols and object symbols are:
 * Package object symbols are always `FINAL`.
 * Apart from `FINAL`, package object symbols don't support any properties.
+* Package objects `name` must be modelled as their name in source code.
+  This is different from their symbol name that must be modelled as `package`.
 * Package objects don't have annotations.
 * Package objects don't support any accessibilities.
 
@@ -2042,7 +2052,7 @@ the only non-empty fields must be:
   * `symbol` (as described in [Symbol](#scala-symbol)).
   * `language` (`SCALA`).
   * `kind` (`PACKAGE`).
-  * `name` (as described in [Symbol](#scala-symbol)).
+  * `name` (as described in [SymbolInformation](#symbolinformation)).
 
 <a name="scala-annotation"></a>
 #### Annotation
