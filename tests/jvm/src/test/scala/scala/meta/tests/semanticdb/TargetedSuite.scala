@@ -157,8 +157,7 @@ class TargetedSuite extends SemanticdbSuite {
        |f. => package f
        |f.C1# => class C1 extends AnyRef { +13 decls }
        |  AnyRef => scala.AnyRef#
-       |f.C1#T1# => abstract type T1 >: Nothing <: Int
-       |  Nothing => scala.Nothing#
+       |f.C1#T1# => abstract type T1 <: Int
        |  Int => scala.Int#
        |f.C1#T2# => type T2 = Int
        |  Int => scala.Int#
@@ -194,17 +193,13 @@ class TargetedSuite extends SemanticdbSuite {
        |  Nothing => scala.Nothing#
        |f.C1#f2(). => var method f2: Nothing
        |  Nothing => scala.Nothing#
-       |f.C1#m1(). => method m1[T >: Nothing <: Any](x: Int): Int
+       |f.C1#m1(). => method m1[T](x: Int): Int
        |  T => f.C1#m1().[T]
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
        |  x => f.C1#m1().(x)
        |  Int => scala.Int#
        |f.C1#m1().(x) => param x: Int
        |  Int => scala.Int#
-       |f.C1#m1().[T] => typeparam T >: Nothing <: Any
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
+       |f.C1#m1().[T] => typeparam T
        |f.C1#m2(). => macro m2: Nothing
        |  Nothing => scala.Nothing#
        |f.C1#p1(). => private[this] val method p1: Int
@@ -281,18 +276,12 @@ class TargetedSuite extends SemanticdbSuite {
        |  Boolean => scala.Boolean#
        |f.M.C1.unapply().(x$0) => param x$0: C1
        |  C1 => f.M.C1#
-       |f.M.C2# => class C2[+T >: Nothing <: Any, -U >: Nothing <: Any] extends AnyRef { +1 decls }
+       |f.M.C2# => class C2[+T, -U] extends AnyRef { +1 decls }
        |  T => f.M.C2#[T]
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
        |  U => f.M.C2#[U]
        |  AnyRef => scala.AnyRef#
-       |f.M.C2#[T] => covariant typeparam T >: Nothing <: Any
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
-       |f.M.C2#[U] => contravariant typeparam U >: Nothing <: Any
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
+       |f.M.C2#[T] => covariant typeparam T
+       |f.M.C2#[U] => contravariant typeparam U
        |f.M.C2#`<init>`(). => primary ctor <init>()
        |f.M.i1(). => implicit method i1: Nothing
        |  Nothing => scala.Nothing#
@@ -366,9 +355,7 @@ class TargetedSuite extends SemanticdbSuite {
     """|i. => package i
        |i.B# => trait B extends AnyRef { +2 decls }
        |  AnyRef => scala.AnyRef#
-       |i.B#X# => abstract type X >: Nothing <: Any
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
+       |i.B#X# => abstract type X
        |i.B#x(). => abstract method x: B.this.X
        |  B => i.B#
        |  X => i.B#X#
@@ -677,11 +664,9 @@ class TargetedSuite extends SemanticdbSuite {
        |  AnyRef => scala.AnyRef#
        |_empty_.ac.x(). => val method x: Int
        |  Int => scala.Int#
-       |_empty_.ac.y(). => val method y: Class[_] forSome { type _ >: Nothing <: Any }
+       |_empty_.ac.y(). => val method y: Class[_] forSome { type _ }
        |  Class => scala.Predef.Class#
        |  _ => local0
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
     """.stripMargin
   )
 
@@ -713,15 +698,13 @@ class TargetedSuite extends SemanticdbSuite {
        |  Foo => _empty_.ad.Foo#
        |  y => local10
        |  Any => scala.Any#
-       |_empty_.ad.x(). => val method x: AnyRef with Foo { val def y: Int; def z[T >: Nothing <: Any](e: T): T }
+       |_empty_.ad.x(). => val method x: AnyRef with Foo { val def y: Int; def z[T](e: T): T }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
        |  y => local5
        |  Int => scala.Int#
        |  z => local6
        |  T => local8
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
        |  e => local7
        |_empty_.ad.z(). => val method z: AnyRef with Foo { val def y: Int }
        |  AnyRef => scala.AnyRef#
@@ -734,18 +717,14 @@ class TargetedSuite extends SemanticdbSuite {
        |  Int => scala.Int#
        |local0 => val method y: Int
        |  Int => scala.Int#
-       |local1 => method z[T >: Nothing <: Any](unknown local2): T
+       |local1 => method z[T](unknown local2): T
        |  T => local3
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
        |  local2 => local2
        |local10 => abstract val method y: Any
        |  Any => scala.Any#
        |local11 => val method y: Int
        |  Int => scala.Int#
-       |local3 => typeparam T >: Nothing <: Any
-       |  Nothing => scala.Nothing#
-       |  Any => scala.Any#
+       |local3 => typeparam T
        |local4 => param e: T
        |  T => local3
        |local9 => abstract val method y: Int

@@ -225,8 +225,14 @@ trait SymbolInformationPrinter extends BasePrinter {
             val Some(TypeType(tparams, lo, hi)) = tpe.typeType
             rep("[", tparams.infos, ", ", "]")(defn)
             if (lo != hi) {
-              opt(" >: ", lo)(normal)
-              opt(" <: ", hi)(normal)
+              lo match {
+                case Some(NothingTpe()) => ()
+                case lo => opt(" >: ", lo)(normal)
+              }
+              hi match {
+                case Some(AnyTpe()) => ()
+                case hi => opt(" <: ", hi)(normal)
+              }
             } else {
               val alias = lo
               opt(" = ", alias)(normal)
@@ -318,6 +324,20 @@ trait SymbolInformationPrinter extends BasePrinter {
               PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
             ""
         }
+      }
+    }
+
+    private object NothingTpe {
+      def unapply(tpe: Type): Boolean = tpe.typeRef match {
+        case Some(TypeRef(None, "scala.Nothing#", Nil)) => true
+        case _ => false
+      }
+    }
+
+    private object AnyTpe {
+      def unapply(tpe: Type): Boolean = tpe.typeRef match {
+        case Some(TypeRef(None, "scala.Any#", Nil)) => true
+        case _ => false
       }
     }
   }
