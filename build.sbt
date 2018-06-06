@@ -89,7 +89,8 @@ test := {
     """Welcome to the scalameta build! This is a big project with lots of tests :)
       |Running "test" may take a really long time. Here are some other useful commands
       |that give a tighter edit/run/debug cycle.
-      |- testsJVM/testQuick # Bread and butter tests
+      |- testsJVM/test      # Bread and butter tests
+      |- testsJVM/slow:test # More thorough tests that take much longer to run
       |- testsJS/testQuick  # Ensure crosscompilability
       |- testkit/test       # Ensure additional reliability thanks to property tests
       |""".stripMargin
@@ -452,7 +453,7 @@ lazy val testkit = project
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
-  .configs(Fast, Slow)
+  .configs(Slow)
   .settings(
     sharedSettings,
     nonPublishableSettings,
@@ -473,7 +474,6 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.5" % "test",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test",
     testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
-    inConfig(Fast)(Defaults.testTasks),
     inConfig(Slow)(Defaults.testTasks),
     testOptions.in(Slow) -= Tests.Argument("-l", "org.scalatest.tags.Slow"),
     testOptions.in(Slow) += Tests.Argument("-n", "org.scalatest.tags.Slow")
