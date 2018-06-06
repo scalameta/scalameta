@@ -3,14 +3,22 @@ Packages:
 _empty_.
   _empty_.A#
   _empty_.B#
+  _empty_.C#
 _root_.
   _empty_.
+  advanced.
   classes.
   example.
   flags.
   objects.
   traits.
   types.
+advanced.
+  advanced.C#
+  advanced.D#
+  advanced.Existential#
+  advanced.Structural#
+  advanced.Test.
 classes.
   classes.C1#
   classes.C2#
@@ -18,6 +26,12 @@ classes.
   classes.C3#
   classes.C4#
   classes.C4.
+  classes.C6#
+  classes.C7#
+  classes.C8#
+  classes.C9#
+  classes.M.
+  classes.N.
 example.
   example.A#
   example.Acc#
@@ -57,6 +71,13 @@ Toplevels:
 ==========
 _empty_.A# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_.B# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
+_empty_.C# => semanticdb/integration/src/main/scala/example/Anonymous.scala.semanticdb
+advanced. => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+advanced.C# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+advanced.D# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+advanced.Existential# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+advanced.Structural# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+advanced.Test. => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 classes. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C1# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C2# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
@@ -64,6 +85,12 @@ classes.C2. => semanticdb/integration/src/main/scala/example/Classes.scala.seman
 classes.C3# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C4# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C4. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C6# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C7# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C8# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C9# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.M. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.N. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 example. => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 example.A# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 example.Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scala.semanticdb

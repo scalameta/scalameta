@@ -164,10 +164,9 @@ trait TextDocumentOps { self: SemanticdbOps =>
               // https://github.com/scalameta/scalameta/issues/665
               // Instead of crashing with "unsupported file", we ignore these cases.
               if (gsym0 == null) return
-              if (gsym0.isAnonymousClass) return
               if (gsym0.isUseless) return
               if (mtree.pos == m.Position.None) return
-              if (occurrences.contains(mtree.pos)) return // NOTE: in the future, we may decide to preempt preexisting db entries
+              if (occurrences.contains(mtree.pos)) return
 
               val gsym = {
                 def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
@@ -179,7 +178,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
               todo -= mtree
 
-              occurrences(mtree.pos) = symbol
               if (mtree.isDefinition) {
                 val isToplevel = gsym.owner.hasPackageFlag
                 if (isToplevel) {
@@ -197,59 +195,37 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   }
                 }
                 binders += mtree.pos
-              }
-
-              def saveSymbol(): Unit = {
-                def add(ms: m.Symbol, gs: g.Symbol): Unit = {
-                  if (gs.isUseful) {
-                    val SymbolInformationResult(denot, todoTpe1) = gs.toSymbolInformation()
-                    symbols(ms) = denot
-                    todoTpe1.foreach { tgs =>
-                      if (tgs.isSemanticdbLocal) {
-                        val tms = tgs.toSemantic
-                        if (tms != m.Symbol.None && !symbols.contains(tms)) {
-                          add(tms, tgs)
-                        }
-                      }
+                occurrences(mtree.pos) = symbol
+                if (config.symbols.isOn) {
+                  def saveSymbol(gs: g.Symbol): Unit = {
+                    if (gs.isUseful) {
+                      symbols(gs.toSemantic) = gs.toSymbolInformation(SymlinkChildren)
+                    }
+                  }
+                  saveSymbol(gsym)
+                  if (gsym.isClass && !gsym.isTrait) {
+                    val gprim = gsym.primaryConstructor
+                    saveSymbol(gprim)
+                    gprim.info.paramss.flatten.foreach(saveSymbol)
+                  }
+                  if (gsym.isGetter) {
+                    val gsetter = gsym.setterIn(gsym.owner)
+                    saveSymbol(gsetter)
+                    gsetter.info.paramss.flatten.foreach(saveSymbol)
+                  }
+                  if (gsym.isUsefulField && gsym.isMutable) {
+                    val getterInfo = symbols(symbol)
+                    val setterInfos = Synthetics.setterInfos(getterInfo, SymlinkChildren)
+                    setterInfos.foreach { info =>
+                      val msymbol = m.Symbol(info.symbol)
+                      symbols(msymbol) = info
                     }
                   }
                 }
-                if (!gsym.isOverloaded && gsym != g.definitions.RepeatedParamClass) {
-                  add(symbol, gsym)
-                }
-                if (gsym.isClass && !gsym.isTrait && mtree.isDefinition) {
-                  val gprim = gsym.primaryConstructor
-                  if (gprim != g.NoSymbol) {
-                    add(gprim.toSemantic, gprim)
-                  }
-                }
-                if (gsym.isPrimaryConstructor) {
-                  val gclassParams = gsym.info.paramss.flatten
-                  gclassParams.foreach(gp => add(gp.toSemantic, gp))
-                }
-                if (gsym.isGetter) {
-                  val gfield = gsym.accessed
-                  if (gfield != g.NoSymbol) {
-                    add(gfield.toSemantic, gfield)
-                  }
-                  val gsetter = gsym.setterIn(gsym.owner)
-                  if (gsetter != g.NoSymbol) {
-                    add(gsetter.toSemantic, gsetter)
-                    val gsetterParams = gsetter.info.paramss.flatten
-                    gsetterParams.foreach(gp => add(gp.toSemantic, gp))
-                  }
-                }
-                if (gsym.isUsefulField && gsym.isMutable) {
-                  val getterInfo = symbols(symbol)
-                  val setterInfos = Synthetics.setterInfos(getterInfo)
-                  setterInfos.foreach { info =>
-                    val msymbol = m.Symbol(info.symbol)
-                    symbols(msymbol) = info
-                  }
-                }
+              } else {
+                val selectionFromStructuralType = gsym.owner.isRefinementClass
+                if (!selectionFromStructuralType) occurrences(mtree.pos) = symbol
               }
-              if (mtree.isDefinition && config.symbols.saveDefinitions) saveSymbol()
-              if (mtree.isReference && config.symbols.saveReferences) saveSymbol()
 
               def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
                 if (map.contains(mtree)) {
@@ -329,7 +305,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
                 if (!gsym.isSemanticdbLocal && !gsym.isUseless) {
-                  symbols(gsym.toSemantic) = gsym.toSymbolInformation().denot
+                  symbols(gsym.toSemantic) = gsym.toSymbolInformation(SymlinkChildren)
                 }
               case gtree: g.PackageDef =>
                 // NOTE: capture PackageDef.pid instead
@@ -391,7 +367,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
           }
 
           private def tryFindInferred(gtree: g.Tree): Unit = {
-            if (!config.synthetics.saveSynthetics) return
+            if (!config.synthetics.isOn) return
 
             import scala.meta.internal.semanticdb.scalac.{AttributedSynthetic => S}
             def success(pos: m.Position, f: Inferred => Inferred): Unit = {
@@ -519,15 +495,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
       val finalSymbols = symbols.values.toList
 
-      val finalOccurrences = occurrences.flatMap {
-        case (pos, sym) =>
-          flatten(sym).map { flatSym =>
-            val role =
-              if (binders.contains(pos)) s.SymbolOccurrence.Role.DEFINITION
-              else s.SymbolOccurrence.Role.REFERENCE
-            s.SymbolOccurrence(Some(pos.toRange), flatSym.syntax, role)
-          }
-      }.toList
+      val finalOccurrences = {
+        occurrences.flatMap {
+          case (pos, sym) =>
+            flatten(sym).map { flatSym =>
+              val role =
+                if (binders.contains(pos)) s.SymbolOccurrence.Role.DEFINITION
+                else s.SymbolOccurrence.Role.REFERENCE
+              s.SymbolOccurrence(Some(pos.toRange), flatSym.syntax, role)
+            }
+        }.toList
+      }
 
       val diagnostics = unit.reportedDiagnostics(mstarts)
 

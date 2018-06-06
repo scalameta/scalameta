@@ -3,9 +3,12 @@ package scala.meta.tests.cli
 import java.io._
 import java.nio.charset.StandardCharsets._
 import java.nio.file._
+import org.scalatest._
 import scala.meta.cli._
+import scala.meta.testkit._
+import scala.meta.tests.metacp._
 
-class CliSuite extends BaseCliSuite {
+class CliSuite extends FunSuite with DiffAssertions {
   val sourceroot = Files.createTempDirectory("sourceroot_")
   val helloWorldScala = sourceroot.resolve("HelloWorld.scala")
   Files.write(
@@ -24,7 +27,7 @@ class CliSuite extends BaseCliSuite {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
       val scalacArgs = List(
         "-cp",
-        scalaLibraryJar,
+        Library.scalaLibrary.classpath().syntax,
         "-P:semanticdb:sourceroot:" + sourceroot.toString,
         "-d",
         target.toString,
@@ -40,7 +43,8 @@ class CliSuite extends BaseCliSuite {
 
   test("metap " + helloWorldSemanticdb) {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
-      val settings = scala.meta.metap.Settings().withPaths(List(helloWorldSemanticdb))
+      val format = scala.meta.metap.Format.Detailed
+      val settings = scala.meta.metap.Settings().withFormat(format).withPaths(List(helloWorldSemanticdb))
       val reporter = Reporter().withOut(out).withErr(err)
       Metap.process(settings, reporter)
     }
@@ -60,9 +64,9 @@ class CliSuite extends BaseCliSuite {
       |Occurrences => 7 entries
       |
       |Symbols:
-      |_empty_.HelloWorld. => final object HelloWorld.{+1 decls}
-      |  extends AnyRef
-      |_empty_.HelloWorld.main(). => method main: (args: Array[String]): Unit
+      |_empty_.HelloWorld. => final object HelloWorld extends AnyRef { +1 decls }
+      |  AnyRef => scala.AnyRef#
+      |_empty_.HelloWorld.main(). => method main(args: Array[String]): Unit
       |  args => _empty_.HelloWorld.main().(args)
       |  Array => scala.Array#
       |  String => scala.Predef.String#

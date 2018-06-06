@@ -1,13 +1,13 @@
 package scala.meta.internal.semanticdb.scalac
 
+import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb3 => s}
 
 trait AnnotationOps { self: SemanticdbOps =>
 
   implicit class XtensionAnnotationInfo(gann: g.AnnotationInfo) {
-    def toSemantic: (s.Annotation, List[g.Symbol]) = {
-      val (stpe, todo) = gann.atp.toSemantic
-      (s.Annotation(stpe), todo)
+    def toSemantic: s.Annotation = {
+      s.Annotation(gann.atp.toSemantic(SymlinkChildren))
     }
   }
 }

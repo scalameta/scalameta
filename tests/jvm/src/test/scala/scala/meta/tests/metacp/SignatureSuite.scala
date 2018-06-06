@@ -5,6 +5,9 @@ import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
+import org.scalatest.FunSuite
+import org.scalatest.Ignore
+import org.scalatest.tagobjects.Slow
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.meta.internal.io._
@@ -12,12 +15,13 @@ import scala.meta.internal.javacp._
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
 import scala.meta.io.AbsolutePath
+import scala.meta.testkit._
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.MethodNode
 import scala.util.control.NonFatal
 
-class SignatureSuite extends BaseMetacpSuite {
+class SignatureSuite extends FunSuite with DiffAssertions {
 
   // Validates that pretty(parse(signature) == signature
   def assertSignatureRoundtrip(
@@ -30,7 +34,7 @@ class SignatureSuite extends BaseMetacpSuite {
   // Validates that all signatures of the classfiles in the given
   // library pass assertSignatureRoundtrip
   def checkSignatureRoundtrip(library: Library): Unit = {
-    test(library.name) {
+    test(library.name, Slow) {
       val failingSignatures = ArrayBuffer.empty[String]
       library.classpath().visit { root =>
         new java.nio.file.SimpleFileVisitor[Path] {
@@ -94,6 +98,6 @@ class SignatureSuite extends BaseMetacpSuite {
     checkFields(node) ::: checkMethods(node) ::: checkClass(node)
   }
 
-  allLibraries.foreach(checkSignatureRoundtrip)
+  Libraries.suite.foreach(checkSignatureRoundtrip)
 
 }

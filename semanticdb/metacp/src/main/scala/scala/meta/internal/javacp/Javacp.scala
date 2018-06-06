@@ -44,8 +44,8 @@ object Javacp {
         kind: s.SymbolInformation.Kind,
         name: String,
         tpe: Option[s.Type],
-        access: Int): Unit = {
-      buf += s.SymbolInformation(
+        access: Int): s.SymbolInformation = {
+      val info = s.SymbolInformation(
         symbol = symbol,
         language = l.JAVA,
         kind = kind,
@@ -55,6 +55,8 @@ object Javacp {
         annotations = sannotations(access),
         accessibility = saccessibility(access, symbol)
       )
+      buf += info
+      info
     }
 
     if (isAnonymousClass(node)) return Nil
@@ -115,7 +117,7 @@ object Javacp {
           if (field.signature == null) field.desc else field.signature,
           new FieldSignatureVisitor
         )
-        addInfo(
+        val fieldInfo = addInfo(
           fieldSymbol,
           k.FIELD,
           field.name,
@@ -123,7 +125,7 @@ object Javacp {
           field.access
         )
 
-        decls += fieldSymbol
+        decls += fieldInfo.symbol
       }
     }
 
@@ -146,10 +148,10 @@ object Javacp {
       case method: MethodInfo =>
         val isConstructor = method.node.name == "<init>"
         val methodDisambiguator = {
-          val synonyms = methodSignatures.filter(_.node.name == method.node.name)
-          if (synonyms.lengthCompare(1) == 0) "()"
+          val overloads = methodSignatures.filter(_.node.name == method.node.name)
+          if (overloads.lengthCompare(1) == 0) "()"
           else {
-            val index = synonyms.indexWhere(_.signature eq method.signature)
+            val index = overloads.indexWhere(_.signature eq method.signature)
             if (index == 0) "()"
             else s"(+${index})"
           }
@@ -174,7 +176,7 @@ object Javacp {
             method.signature.params
           }
 
-        val parameterSymbols: List[String] = params.zipWithIndex.map {
+        val parameters: List[s.SymbolInformation] = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
             val paramName = {
               if (method.node.parameters == null) "param" + i
@@ -201,7 +203,6 @@ object Javacp {
               Some(paramTpe),
               o.ACC_PUBLIC
             )
-            paramSymbol
         }
 
         val returnType = {
@@ -215,14 +216,14 @@ object Javacp {
           tag = s.Type.Tag.METHOD_TYPE,
           methodType = Some(
             s.MethodType(
-              typeParameters = methodTypeParameters.map(_.symbol),
-              parameters = s.MethodType.ParameterList(parameterSymbols) :: Nil,
+              typeParameters = Some(s.Scope(methodTypeParameters.map(_.symbol))),
+              parameterLists = List(s.Scope(parameters.map(_.symbol))),
               returnType = returnType
             )
           )
         )
 
-        addInfo(
+        val methodInfo = addInfo(
           methodSymbol,
           methodKind,
           method.node.name,
@@ -230,7 +231,7 @@ object Javacp {
           method.node.access
         )
 
-        decls += methodSymbol
+        decls += methodInfo.symbol
     }
 
     // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
@@ -247,9 +248,9 @@ object Javacp {
       tag = s.Type.Tag.CLASS_INFO_TYPE,
       classInfoType = Some(
         s.ClassInfoType(
-          typeParameters = classTypeParameters.map(_.symbol),
+          typeParameters = Some(s.Scope(classTypeParameters.map(_.symbol))),
           parents = classParents,
-          declarations = decls
+          declarations = Some(s.Scope(decls))
         )
       )
     )

@@ -62,7 +62,7 @@ object Scalalib {
     }
     val symbol = "scala." + name + "#"
     val builtinTpe = s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, symbol, Nil)))
-    val ctorSig = s.MethodType(Nil, List(s.MethodType.ParameterList(Nil)), Some(builtinTpe))
+    val ctorSig = s.MethodType(Some(s.Scope(Nil)), List(s.Scope(Nil)), None)
     val ctor = s.SymbolInformation(
       symbol = symbol + "`<init>`().",
       language = l.SCALA,
@@ -73,10 +73,10 @@ object Scalalib {
       accessibility = Some(s.Accessibility(a.PUBLIC))
     )
     val builtinSig = {
+      val tparams = Some(s.Scope(Nil))
       val decls = symbols.filter(_.kind.isMethod)
-      val declSymbols = decls.map(_.symbol)
-      val declarations = if (kind.isClass) ctor.symbol +: declSymbols else declSymbols
-      val tpe = s.ClassInfoType(Nil, parents, declarations)
+      val declarations = if (kind.isClass) ctor +: decls else decls
+      val tpe = s.ClassInfoType(tparams, parents, Some(s.Scope(declarations.map(_.symbol))))
       s.Type(tag = t.CLASS_INFO_TYPE, classInfoType = Some(tpe))
     }
     val builtin = s.SymbolInformation(
@@ -106,17 +106,7 @@ object Scalalib {
       if (Character.isJavaIdentifierStart(methodName.head)) methodName
       else "`" + methodName + "`"
     }
-    val disambiguator = {
-      val paramTypeDescriptors = paramDsls.map(_._2).map { symbol =>
-        // FIXME: https://github.com/scalameta/scalameta/issues/1550
-        val _ :+ last = symbol.split("[\\.|#]").toList
-        val last1 = last.stripPrefix("(").stripPrefix("[")
-        val last2 = last1.stripSuffix(")").stripSuffix("]").stripSuffix("#")
-        last2.stripPrefix("`").stripSuffix("`")
-      }
-      paramTypeDescriptors.mkString(",")
-    }
-    val methodSymbol = classSymbol + encodedMethodName + "(" + disambiguator + ")."
+    val methodSymbol = classSymbol + encodedMethodName + "()."
     val tparams = tparamDsls.map { tparamName =>
       val tparamSymbol = methodSymbol + "[" + tparamName + "]"
       val tparamSig = s.Type(tag = t.TYPE_TYPE, typeType = Some(s.TypeType()))
@@ -142,9 +132,9 @@ object Scalalib {
           tpe = Some(paramSig))
     }
     val methodSig = {
-      val paramSymbols = params.map(_.symbol)
+      val tps = Some(s.Scope(tparams.map(_.symbol)))
       val returnType = s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, retTpeSymbol, Nil)))
-      val methodType = s.MethodType(Nil, List(s.MethodType.ParameterList(paramSymbols)), Some(returnType))
+      val methodType = s.MethodType(tps, List(s.Scope(params.map(_.symbol))), Some(returnType))
       s.Type(tag = t.METHOD_TYPE, methodType = Some(methodType))
     }
     val method = s.SymbolInformation(

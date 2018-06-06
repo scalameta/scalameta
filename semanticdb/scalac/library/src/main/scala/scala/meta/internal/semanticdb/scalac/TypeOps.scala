@@ -1,5 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
+import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
@@ -8,12 +9,7 @@ import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps { self: SemanticdbOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
-    def toSemantic: (Option[s.Type], List[g.Symbol]) = {
-      val buf = List.newBuilder[g.Symbol]
-      def todo(gsym: g.Symbol): String = {
-        buf += gsym
-        gsym.toSemantic.syntax
-      }
+    def toSemantic(linkMode: LinkMode): Option[s.Type] = {
       def loop(gtpe: g.Type): Option[s.Type] = {
         gtpe match {
           case ByNameType(gtpe) =>
@@ -27,7 +23,7 @@ trait TypeOps { self: SemanticdbOps =>
           case g.TypeRef(gpre, gsym, gargs) =>
             val stag = t.TYPE_REF
             val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else None
-            val ssym = todo(gsym)
+            val ssym = gsym.ssym
             val sargs = gargs.flatMap(loop)
             Some(s.Type(tag = stag, typeRef = Some(s.TypeRef(spre, ssym, sargs))))
           case g.SingleType(gpre, gsym) =>
@@ -35,7 +31,7 @@ trait TypeOps { self: SemanticdbOps =>
             val stpe = {
               val stag = st.SYMBOL
               val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else None
-              val ssym = todo(gsym)
+              val ssym = gsym.ssym
               s.SingletonType(stag, spre, ssym, 0, "")
             }
             Some(s.Type(tag = stag, singletonType = Some(stpe)))
@@ -43,7 +39,7 @@ trait TypeOps { self: SemanticdbOps =>
             val stag = t.SINGLETON_TYPE
             val stpe = {
               val stag = st.THIS
-              val ssym = todo(gsym)
+              val ssym = gsym.ssym
               s.SingletonType(stag, None, ssym, 0, "")
             }
             Some(s.Type(tag = stag, singletonType = Some(stpe)))
@@ -52,7 +48,7 @@ trait TypeOps { self: SemanticdbOps =>
             val stpe = {
               val stag = st.SUPER
               val spre = loop(gpre.typeSymbol.tpe)
-              val ssym = todo(gmix.typeSymbol)
+              val ssym = gmix.typeSymbol.ssym
               s.SingletonType(stag, spre, ssym, 0, "")
             }
             Some(s.Type(tag = stag, singletonType = Some(stpe)))
@@ -88,35 +84,30 @@ trait TypeOps { self: SemanticdbOps =>
               val sparents = gparents.flatMap(loop)
               Some(s.Type(tag = t.WITH_TYPE, withType = Some(s.WithType(sparents))))
             }
-            val sdecls = gdecls.sorted.map(todo)
+            val sdecls = Some(gdecls.semanticdbDecls.sscope(HardlinkChildren))
             Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
           case g.AnnotatedType(ganns, gtpe) =>
             val stag = t.ANNOTATED_TYPE
-            val sanns = {
-              ganns.reverse.map { gann =>
-                val (sann, todo) = gann.toSemantic
-                todo.foreach(buf.+=)
-                sann
-              }
-            }
+            val sanns = ganns.reverse.map(_.toSemantic)
             val stpe = loop(gtpe)
             Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(sanns, stpe))))
           case g.ExistentialType(gtparams, gtpe) =>
             val stag = t.EXISTENTIAL_TYPE
-            val stparams = gtparams.map(todo)
             val stpe = loop(gtpe)
-            Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stparams, stpe))))
+            val sdecls = Some(gtparams.sscope(HardlinkChildren))
+            Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stpe, sdecls))))
           case g.ClassInfoType(gparents, _, gclass) =>
             val stag = t.CLASS_INFO_TYPE
+            val stparams = Some(s.Scope())
             val sparents = gparents.flatMap(loop)
-            val decls = gclass.semanticdbDecls
-            decls.gsyms.foreach(buf.+=)
+            val sdecls = Some(gclass.semanticdbDecls.sscope(linkMode))
             Some(
-              s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(Nil, sparents, decls.ssyms))))
+              s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(stparams, sparents, sdecls))))
           case g.NullaryMethodType(gtpe) =>
             val stag = t.METHOD_TYPE
+            val stparams = Some(s.Scope())
             val stpe = loop(gtpe)
-            Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, Nil, stpe))))
+            Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, Nil, stpe))))
           case gtpe: g.MethodType =>
             def flatten(gtpe: g.Type): (List[List[g.Symbol]], g.Type) = {
               gtpe match {
@@ -129,30 +120,34 @@ trait TypeOps { self: SemanticdbOps =>
             }
             val (gparamss, gret) = flatten(gtpe)
             val stag = t.METHOD_TYPE
-            val sparamss = gparamss.map { gparams =>
-              val sparams = gparams.map(todo)
-              s.MethodType.ParameterList(sparams)
-            }
+            val stparams = Some(s.Scope())
+            val sparamss = gparamss.map(_.sscope(linkMode))
             val sret = loop(gret)
-            Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
+            Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, sparamss, sret))))
           case g.TypeBounds(glo, ghi) =>
             val stag = t.TYPE_TYPE
+            val stparams = Some(s.Scope())
             val slo = loop(glo)
             val shi = loop(ghi)
-            Some(s.Type(tag = stag, typeType = Some(s.TypeType(Nil, slo, shi))))
+            Some(s.Type(tag = stag, typeType = Some(s.TypeType(stparams, slo, shi))))
           case g.PolyType(gtparams, gtpe) =>
-            val stparams = gtparams.map(todo)
             val stpe = loop(gtpe)
             stpe.map { stpe =>
               if (stpe.tag == t.CLASS_INFO_TYPE) {
+                val stparams = gtparams.sscope(linkMode)
                 stpe.update(_.classInfoType.typeParameters := stparams)
               } else if (stpe.tag == t.METHOD_TYPE) {
+                val stparams = gtparams.sscope(linkMode)
                 stpe.update(_.methodType.typeParameters := stparams)
               } else if (stpe.tag == t.TYPE_TYPE) {
+                val stparams = gtparams.sscope(linkMode)
                 stpe.update(_.typeType.typeParameters := stparams)
               } else {
                 val stag = t.UNIVERSAL_TYPE
-                s.Type(tag = stag, universalType = Some(s.UniversalType(stparams, Some(stpe))))
+                val stparams = gtparams.sscope(HardlinkChildren)
+                s.Type(
+                  tag = stag,
+                  universalType = Some(s.UniversalType(Some(stparams), Some(stpe))))
               }
             }
           case g.NoType =>
@@ -165,7 +160,7 @@ trait TypeOps { self: SemanticdbOps =>
             sys.error(s"unsupported type ${gother}: ${g.showRaw(gother)}")
         }
       }
-      (loop(gtpe), buf.result)
+      loop(gtpe)
     }
   }
 

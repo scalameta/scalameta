@@ -10,7 +10,7 @@ import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
 object Synthetics {
-  def setterInfos(getterInfo: s.SymbolInformation): List[s.SymbolInformation] = {
+  def setterInfos(getterInfo: s.SymbolInformation, linkMode: LinkMode): List[s.SymbolInformation] = {
     val getterSym = getterInfo.symbol
     val setterSym = {
       if (getterSym.isGlobal) {
@@ -39,8 +39,13 @@ object Synthetics {
     val setterTpe = {
       val unitTpe = s.TypeRef(None, "scala.Unit#", Nil)
       val unit = s.Type(tag = t.TYPE_REF, typeRef = Some(unitTpe))
-      val setterParams = s.MethodType.ParameterList(List(paramSym))
-      val setterTpe = s.MethodType(Nil, List(setterParams), Some(unit))
+      val setterParamss = {
+        linkMode match {
+          case SymlinkChildren => List(s.Scope(symlinks = List(paramInfo.symbol)))
+          case HardlinkChildren => List(s.Scope(hardlinks = List(paramInfo)))
+        }
+      }
+      val setterTpe = s.MethodType(Some(s.Scope()), setterParamss, Some(unit))
       s.Type(tag = t.METHOD_TYPE, methodType = Some(setterTpe))
     }
     val setterInfo = s.SymbolInformation(
@@ -53,6 +58,9 @@ object Synthetics {
       annotations = getterInfo.annotations,
       accessibility = getterInfo.accessibility)
 
-    List(paramInfo, setterInfo)
+    linkMode match {
+      case SymlinkChildren => List(paramInfo, setterInfo)
+      case HardlinkChildren => List(setterInfo)
+    }
   }
 }

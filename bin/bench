@@ -7,6 +7,7 @@ def fail():
   print "Supported bench suites:"
   print "  * All: Reproduces bench/README.md"
   print "  * Quick: Lightweight subset of All that should be used for development"
+  print "  * LSP: Another subset of All that can used for development"
   sys.exit(1)
 if len(sys.argv) != 2: fail()
 suite = sys.argv[1]

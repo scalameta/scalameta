@@ -8,6 +8,7 @@
   * [Range](#range)
   * [Location](#location)
   * [Symbol](#symbol)
+  * [Scope](#scope)
   * [Type](#type)
   * [SymbolInformation](#symbolinformation)
   * [Annotation](#annotation)
@@ -248,6 +249,48 @@ but we haven't yet found a way to do that without sacrificing performance
 and payload size. In the meanwhile, when global uniqueness is required,
 tool authors are advised to accompany local symbols with `TextDocument.uri`.
 
+### Scope
+
+```protobuf
+message Scope {
+  repeated string symlinks = 1;
+  repeated SymbolInformation hardlinks = 2;
+}
+```
+
+`Scope` represents a container for definitions such as type parameters,
+parameters or class declarations. Depending on the [Language](#language)
+and the implementation, scopes specify their members as follows:
+  * Via symbolic links to members, i.e. using [Symbol](#symbol).
+  * Or via direct embedding of member metadata, i.e. using
+    [SymbolInformation](#symbolinformation).
+
+Hardlinking comes in handy in situations when an advanced type such
+as `StructuralType`, `ExistentialType` or `UniversalType` ends up being
+part of the type signature of a global symbol. For example, in the following
+Scala program, method `m` has a structural type `AnyRef { def x: Int }`:
+
+```scala
+class C {
+  def m = new { def x: Int = ??? }
+}
+```
+
+At the time of writing, we haven't found a way to model the method `x`,
+which constitutes a logical part of this structural type, as a global symbol.
+Therefore, this method has to be modelled as a local symbol.
+
+However, turning `x` into a local symbol that is part of the
+["Symbols"](#symbolinformation) section presents certain difficulties.
+In that case, in order to analyze public signatures of the containing
+[TextDocument](#textdocument), SemanticDB consumers have to load the entire
+"Symbols" section, which has adverse performance characteristics.
+
+Hardlinking solves this conundrum by storing symbol metadata related to advanced types
+directly inside the payloads representing these types. Thanks to hardlinking,
+we don't need to invent global symbols to remain convenient to SemanticDB
+consumers.
+
 ### Type
 
 ```protobuf
@@ -367,15 +410,14 @@ Unlike intersection types, compound types are not commutative.
 
 ```protobuf
 message StructuralType {
-  reserved 1, 2;
+  reserved 1, 2, 3;
   Type tpe = 4;
-  repeated string declarations = 3;
+  Scope declarations = 5;
 }
 ```
 
 `StructuralType` represents a structural type specified by its base type `tpe`
-and `declarations`. Declarations are modelled as [Symbols](#symbol)
-whose metadata must be provided via [SymbolInformation](#symbolinformation).
+and `declarations`. Declarations are modelled by a [Scope](#scope).
 
 ```protobuf
 message AnnotatedType {
@@ -390,53 +432,52 @@ message AnnotatedType {
 
 ```protobuf
 message ExistentialType {
-  repeated string type_parameters = 2;
+  reserved 2;
   Type tpe = 1;
+  Scope declarations = 3;
 }
 ```
 
 `ExistentialType` represents a type `tpe` existentially quantified
-over `type_parameters`. Type parameters are modelled as [Symbols](#symbol) whose
-metadata must be provided via [SymbolInformation](#symbolinformation).
+over `declarations`. Declarations are modelled by a [Scope](#scope).
 
 ```protobuf
 message UniversalType {
-  repeated string type_parameters = 1;
+  reserved 1;
+  Scope type_parameters = 3;
   Type tpe = 2;
 }
 ```
 
 `UniversalType` represents a type `tpe` universally quantified
-over `type_parameters`. Type parameters are modelled as [Symbols](#symbol) whose
-metadata must be provided via [SymbolInformation](#symbolinformation).
+over `type_parameters`. Type parameters are modelled by a [Scope](#scope).
 
 ```protobuf
 message ClassInfoType {
-  repeated string type_parameters = 1;
+  reserved 1, 3;
+  Scope type_parameters = 4;
   repeated Type parents = 2;
-  repeated string declarations = 3;
+  Scope declarations = 5;
 }
 ```
 
 `ClassInfoType` represents a signature of a class, a trait or the like.
+Both type parameters and declarations are modelled by a [Scope](#scope).
 
 ```protobuf
 message MethodType {
-  message ParameterList {
-    repeated string symbols = 1;
-  }
-  repeated string type_parameters = 1;
-  repeated ParameterList parameters = 2;
+  reserved 1, 2;
+  Scope type_parameters = 4;
+  repeated Scope parameterLists = 5;
   Type return_type = 3;
 }
 ```
 
 `MethodType` represents a signature of a method, a constructor or the like.
-It features `type_parameters`, `parameters` and a `return_type`. Both type
-parameters and paramteres are modelled as [Symbols](#symbol) whose
-metadata must be provided via [SymbolInformation](#symbolinformation).
+It features `type_parameters`, `parameterLists` and a `return_type`. Both type
+parameters and parameters are modelled by [Scopes](#scope).
 Moreover, in order to support multiple parameter lists in Scala methods,
-`parameters` is a list of lists.
+`parameterLists` is a list of lists.
 
 ```protobuf
 message ByNameType {
@@ -456,7 +497,8 @@ message RepeatedType {
 
 ```protobuf
 message TypeType {
-  repeated string type_parameters = 1;
+  reserved 1;
+  Scope type_parameters = 4;
   Type lower_bound = 2;
   Type upper_bound = 3;
 }
@@ -464,8 +506,7 @@ message TypeType {
 
 `TypeType` represents a signature of a type parameter or a type member.
 It features `type_parameters` as well as `lower_bound` and `upper_bound`.
-Type parameters are modelled as [Symbols](#symbol) whose metadata must be
-provided via [SymbolInformation](#symbolinformation).
+Type parameters are modelled by a [Scope](#scope).
 
 ### SymbolInformation
 
@@ -671,8 +712,9 @@ languages map onto these properties.
 </table>
 
 `name`. Display name of the definition. Usually, it's the same as the name
-of the corresponding [Symbol](#symbol), except for package objects whose
-display name is their name in source code and symbol name is `package`.
+of the corresponding [Symbol](#symbol), except for language-specific situations.
+See [Languages](#languages) for more information on which definitions have
+which names in supported languages.
 
 `tpe`. [Type](#type) that represents the definition signature.
 See [Languages](#languages) for more information on which definitions have
@@ -948,8 +990,6 @@ which Scala definitions, what their metadata is, etc). See
   * For empty package, `_empty_`.
   * For package object, `package`.
   * For constructor, `<init>`.
-  * For anonymous parameter, self parameter or type parameter,
-    an underscore (`_`).
   * For other definition, the name of the binding introduced by the definition
     [\[70\]][70].
 
@@ -1536,6 +1576,8 @@ Notes:
   for type variables, so that they can be distinguished from
   local type definitions.
 * Type variable symbols are always `ABSTRACT`.
+* Type variables may be anonymous (via `_` syntax). In that case, their `name`
+  must be modelled as `_`, whereas the symbol name is implementation-dependent.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
   represent the signature of `t` as `TypeType(List(), <Nothing>, <Any>)`.
@@ -1578,6 +1620,9 @@ Notes:
 * Self parameters cannot be referenced outside the document where they are
   located, which means that they are represented by local symbols.
 * Self parameter symbols don't support any properties.
+* Self parameters may be anonymous (via `_: T =>`, `this: T =>` or corresponding
+  typeless syntaxes). In that case, their `name` must be modelled as `_`,
+  whereas the symbol name is implementation-dependent.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
   represent the signature of `self2` as
@@ -1632,6 +1677,8 @@ Notes:
   * `CONTRAVARIANT`: set for contravariant type parameters.
 * If present, (higher-order) type parameters of type parameters are
   represented as described here in order of their appearance in source code.
+* Type parameters may be anonymous (via `_` syntax). In that case, their `name`
+  must be modelled as `_`, whereas the symbol name is implementation-dependent.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
   represent the signature of `T1` as `TypeType(List(), <Nothing>, <Any>)`.
@@ -1640,8 +1687,9 @@ Notes:
   into parameters of the enclosing definition as described in [\[44\]][44] and
   are represented with corresponding `PARAMETER` symbols.
 
-**Parameters** are represented with `PARAMETER` symbols. (There is no section in SLS dedicated to parameters, so we aggregate information about parameters
-from multiple sections).
+**Parameters** are represented with `PARAMETER` symbols.
+(There is no section in SLS dedicated to parameters, so we aggregate information
+about parameters from multiple sections).
 
 ```scala
 class C(p1: Int) {
@@ -1720,6 +1768,12 @@ Notes:
     bounds and view bounds (see above).
   * `VAL`: set for `val` parameters of primary constructors.
   * `VAR`: set for `var` parameters of primary constructors.
+* Scalac semantic model does not distinguish parameters in `class C(x: Int)`
+  and `class C(private[this] val x: Int)`. As a result, due to implementation
+  restrictions `private[this] val` parameters currently don't have the `VAL`
+  property.
+* Parameters may be anonymous (via `_` syntax). In that case, their `name`
+  must be modelled as `_`, whereas the symbol name is implementation-dependent.
 * Unlike some other metaprogramming systems for Scala, we do not
   distinguish regular parameters from parameters with default arguments
   [\[45\]][45]. However, we do create method symbols for synthetic methods
@@ -2028,6 +2082,8 @@ similarly to object definitions (see above). Concretely, the differences
 between package object symbols and object symbols are:
 * Package object symbols are always `FINAL`.
 * Apart from `FINAL`, package object symbols don't support any properties.
+* Package objects `name` must be modelled as their name in source code.
+  This is different from their symbol name that must be modelled as `package`.
 * Package objects don't have annotations.
 * Package objects don't support any accessibilities.
 
@@ -2037,7 +2093,7 @@ the only non-empty fields must be:
   * `symbol` (as described in [Symbol](#scala-symbol)).
   * `language` (`SCALA`).
   * `kind` (`PACKAGE`).
-  * `name` (as described in [Symbol](#scala-symbol)).
+  * `name` (as described in [SymbolInformation](#symbolinformation)).
 
 <a name="scala-annotation"></a>
 #### Annotation

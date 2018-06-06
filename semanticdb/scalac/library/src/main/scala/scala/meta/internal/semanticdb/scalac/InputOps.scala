@@ -33,18 +33,14 @@ trait InputOps { self: SemanticdbOps =>
       gSourceFileInputCache.getOrElseUpdate(gsource, {
         gsource.file match {
           case gfile: GPlainFile =>
-            import SemanticdbMode._
-            config.mode match {
-              case Slim =>
-                m.Input.File(gfile.file)
-              case Fat =>
-                val path = m.AbsolutePath(gfile.file)
-                val label = config.sourceroot.toURI.relativize(path.toURI).toString
-                // NOTE: Can't use gsource.content because it's preprocessed by scalac.
-                val contents = FileIO.slurp(path, UTF_8)
-                m.Input.VirtualFile(label, contents)
-              case Disabled =>
-                m.Input.None
+            if (config.text.isOn) {
+              val path = m.AbsolutePath(gfile.file)
+              val label = config.sourceroot.toURI.relativize(path.toURI).toString
+              // NOTE: Can't use gsource.content because it's preprocessed by scalac.
+              val contents = FileIO.slurp(path, UTF_8)
+              m.Input.VirtualFile(label, contents)
+            } else {
+              m.Input.File(gfile.file)
             }
           case gfile: VirtualFile =>
             val uri = URLEncoder.encode(gfile.path, UTF_8.name)

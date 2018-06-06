@@ -21,6 +21,12 @@ object Build extends AutoPlugin {
         "wow " + Versions.LatestScala212
       )
 
+      def metacpBenches: List[String]
+      def metacpCommands: List[String] = {
+        if (metacpBenches.isEmpty) Nil
+        else List("bench/jmh:run " + metacpBenches.mkString(" "))
+      }
+
       def scalacBenches: List[String]
       def scalacCommands: List[String] = {
         if (scalacBenches.isEmpty) Nil
@@ -34,24 +40,31 @@ object Build extends AutoPlugin {
       }
 
       final def command: String = {
-        val benchCommands = scalacCommands ++ scalametaCommands
+        val benchCommands = metacpCommands ++ scalacCommands ++ scalametaCommands
         (initCommands ++ benchCommands).map(c => s";$c ").mkString("")
       }
     }
 
     object benchLSP extends BenchSuite {
-      def scalacBenches = List("QuickScalacBaseline")
-      def scalametaBenches = List("QuickScalametaBaseline")
+      def metacpBenches = List("Metacp")
+      def scalacBenches = List("ScalacBaseline")
+      def scalametaBenches = List("ScalametaBaseline")
     }
 
     object benchAll extends BenchSuite {
-      def scalacBenches = List("QuickScalac")
-      def scalametaBenches = List("QuickScalameta")
+      def metacpBenches = List("Metacp")
+      def scalacBenches = List("Scalac")
+      def scalametaBenches = List("Scalameta")
     }
 
     object benchQuick extends BenchSuite {
+      def metacpBenches = List("Metacp")
       def scalacBenches = Nil
-      def scalametaBenches = List("QuickScalametaBaseline")
+      def scalametaBenches = List("ScalametaBaseline")
     }
+
+    // https://stackoverflow.com/questions/41229451/how-to-disable-slow-tagged-scalatests-by-default-allow-execution-with-option
+    lazy val Fast = config("fast").extend(Test)
+    lazy val Slow = config("slow").extend(Test)
   }
 }

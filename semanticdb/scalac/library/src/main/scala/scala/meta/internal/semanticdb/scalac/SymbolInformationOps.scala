@@ -2,8 +2,10 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.{meta => m}
 import scala.reflect.internal.{Flags => gf}
+import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.Type.{Tag => t}
@@ -19,23 +21,21 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       else gsym0
     }
 
+    private def language: s.Language = {
+      if (gsym.hasPackageFlag) l.SCALA
+      else if (gsym.hasFlag(gf.JAVA)) l.JAVA
+      else l.SCALA
+    }
+
     private def kind: s.SymbolInformation.Kind = {
       gsym match {
-        case _ if gsym.isSelfParameter => k.SELF_PARAMETER
-        case _ if gsym.isSemanticdbLocal => k.LOCAL
+        case _ if gsym.isSelfParameter =>
+          k.SELF_PARAMETER
         case gsym: MethodSymbol =>
-          if (gsym.isConstructor) {
-            k.CONSTRUCTOR
-          } else {
-            if (gsym.isGetter && gsym.isLazy && !gsym.isClass) {
-              if (gsym.isLocalToBlock) k.LOCAL
-              else k.METHOD
-            } else if (gsym.isMacro) {
-              k.MACRO
-            } else {
-              k.METHOD
-            }
-          }
+          if (gsym.isConstructor) k.CONSTRUCTOR
+          else if (gsym.isMacro) k.MACRO
+          else if (gsym.isGetter && gsym.isLazy && gsym.isLocalToBlock) k.LOCAL
+          else k.METHOD
         case gsym: ModuleSymbol =>
           if (gsym.hasPackageFlag) k.PACKAGE
           else if (gsym.isPackageObject) k.PACKAGE_OBJECT
@@ -59,16 +59,10 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    def language: s.Language =
-      if (gsym.hasPackageFlag) s.Language.SCALA
-      else if (gsym.hasFlag(gf.JAVA)) s.Language.JAVA
-      else s.Language.SCALA
-
     private[meta] def properties: Int = {
       val kind = this.kind
       var flags = 0
-      def flip(prop: s.SymbolInformation.Property): Unit =
-        flags |= prop.value
+      def flip(prop: s.SymbolInformation.Property): Unit = flags |= prop.value
       def isAbstractClass =
         gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
@@ -92,20 +86,16 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flip(p.COVARIANT)
         if (kind.isLocal || gsym.isUsefulField) {
           if (gsym.isMutable) flip(p.VAR)
-          else if (gsym.isVal) flip(p.VAL)
-          else {
-            // NOTE(olafur): this branch is for local symbols that are not val/var. To make things more intuitive,
-            // Kind.LOCAL should be a property, see https://github.com/scalameta/scalameta/issues/1503
-          }
+          else flip(p.VAL)
         }
         if (gsym.isGetter || gsym.isSetter) {
           if (gsym.isStable) flip(p.VAL)
           else flip(p.VAR)
         }
         if (gsym.isParameter && gsym.owner.isPrimaryConstructor) {
-          val ggetter = gsym.getterIn(gsym.owner.owner)
-          if (ggetter != g.NoSymbol && !ggetter.isStable) flip(p.VAR)
-          else if (ggetter != g.NoSymbol) flip(p.VAL)
+          val gaccessor = gsym.owner.owner.info.decl(gsym.name)
+          if (gaccessor != g.NoSymbol && !gaccessor.isStable) flip(p.VAR)
+          else if (gaccessor != g.NoSymbol && gaccessor.isMethod) flip(p.VAL)
           else ()
         }
         if (gsym.isPrimaryConstructor) flip(p.PRIMARY)
@@ -121,10 +111,11 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    private def tpe: (Option[s.Type], List[g.Symbol]) = {
-      if (gsym.hasPackageFlag) (None, Nil)
-      else {
-        val ginfo = {
+    private def tpe(linkMode: LinkMode): Option[s.Type] = {
+      if (gsym.hasPackageFlag) {
+        None
+      } else {
+        val gtpe = {
           if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
             gsym.info.widen
           } else if (gsym.isAliasType) {
@@ -141,79 +132,60 @@ trait SymbolInformationOps { self: SemanticdbOps =>
             gsym.info
           }
         }
+        val stpe = gtpe.toSemantic(linkMode)
         if (gsym.isConstructor) {
-          val (tpe, todo) = ginfo.toSemantic
-          val tpeWithoutReturnType = tpe.map(_.update(_.methodType.optionalReturnType := None))
-          (tpeWithoutReturnType, todo)
+          stpe.map(_.update(_.methodType.optionalReturnType := None))
         } else if (gsym.isScalacField) {
           val stag = t.METHOD_TYPE
+          val stparams = Some(s.Scope())
           val sparamss = Nil
-          val (sret, todo) = ginfo.toSemantic
-          val tpe = Some(s.Type(tag = stag, methodType = Some(s.MethodType(Nil, sparamss, sret))))
-          (tpe, todo)
+          val sret = stpe
+          Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, sparamss, sret))))
         } else {
-          ginfo.toSemantic
+          stpe
         }
       }
     }
 
-    private def anns: (List[s.Annotation], List[g.Symbol]) = {
-      val buf = List.newBuilder[g.Symbol]
+    private def annotations: List[s.Annotation] = {
       val ganns = gsym.annotations.filter { gann =>
         gann.atp.typeSymbol != definitions.MacroImplAnnotation
       }
-      val sanns = ganns.map { gann =>
-        val (sann, todo) = gann.toSemantic
-        todo.foreach(buf.+=)
-        sann
-      }
-      (sanns, buf.result)
+      ganns.map(_.toSemantic)
     }
 
     // FIXME: https://github.com/scalameta/scalameta/issues/1325
-    private def acc: s.Accessibility = {
+    private def accessibility: Option[s.Accessibility] = {
       if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
         // NOTE: some sick artifact vals produced by mkPatDef can be
         // private to method (whatever that means), so here we just ignore them.
-        s.Accessibility(a.PUBLIC)
+        Some(s.Accessibility(a.PUBLIC))
       } else {
         if (gsym.privateWithin == NoSymbol) {
-          if (gsym.isPrivateThis) s.Accessibility(a.PRIVATE_THIS)
-          else if (gsym.isPrivate) s.Accessibility(a.PRIVATE)
-          else if (gsym.isProtectedThis) s.Accessibility(a.PROTECTED_THIS)
-          else if (gsym.isProtected) s.Accessibility(a.PROTECTED)
-          else s.Accessibility(a.PUBLIC)
+          if (gsym.isPrivateThis) Some(s.Accessibility(a.PRIVATE_THIS))
+          else if (gsym.isPrivate) Some(s.Accessibility(a.PRIVATE))
+          else if (gsym.isProtectedThis) Some(s.Accessibility(a.PROTECTED_THIS))
+          else if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED))
+          else Some(s.Accessibility(a.PUBLIC))
         } else {
-          val ssym = gsym.privateWithin.toSemantic.syntax
-          if (gsym.isProtected) s.Accessibility(a.PROTECTED_WITHIN, ssym)
-          else s.Accessibility(a.PRIVATE_WITHIN, ssym)
+          val ssym = gsym.privateWithin.ssym
+          if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
+          else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
         }
       }
     }
 
-    def toSymbolInformation(): SymbolInformationResult = {
-      val (anns, todoAnns) = this.anns
-      config.types match {
-        case TypeMode.None =>
-          val denot = s.SymbolInformation()
-          SymbolInformationResult(denot, todoAnns)
-        case TypeMode.All =>
-          val (tpe, todoTpe) = this.tpe
-          val denot = s.SymbolInformation(
-            symbol = gsym.toSemantic.syntax,
-            language = language,
-            kind = kind,
-            accessibility = Some(acc),
-            properties = properties,
-            name = name,
-            tpe = tpe,
-            annotations = anns
-          )
-          SymbolInformationResult(denot, todoAnns ++ todoTpe)
-      }
+    def toSymbolInformation(linkMode: LinkMode): s.SymbolInformation = {
+      s.SymbolInformation(
+        symbol = gsym.ssym,
+        language = language,
+        kind = kind,
+        properties = properties,
+        name = name,
+        tpe = tpe(linkMode),
+        annotations = annotations,
+        accessibility = accessibility
+      )
     }
   }
-
-  // NOTE: Holds a symbol information along with todo lists of symbols to persist.
-  case class SymbolInformationResult(denot: s.SymbolInformation, todoTpe: List[g.Symbol])
 }

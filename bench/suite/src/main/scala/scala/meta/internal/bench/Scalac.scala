@@ -1,12 +1,12 @@
-package org.scalameta.bench
+package scala.meta.internal.bench
 
 import java.nio.file._
 import java.util.concurrent.TimeUnit
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.annotations.Mode._
+import scala.meta.internal.bench.Scalac._
 import scala.tools.nsc._
 import scala.tools.nsc.reporters._
-import org.scalameta.bench.Scalac._
 
 object Scalac {
   @State(Scope.Benchmark)
@@ -38,7 +38,7 @@ trait Scalac {
 @Warmup(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class QuickScalacBaseline extends Scalac {
+class ScalacBaseline extends Scalac {
   @Benchmark
   def run(bs: BenchmarkState): Unit = {
     runImpl(bs)
@@ -50,7 +50,7 @@ class QuickScalacBaseline extends Scalac {
 @Warmup(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class QuickScalacRangepos extends Scalac {
+class ScalacRangepos extends Scalac {
   @Benchmark
   def run(bs: BenchmarkState): Unit = {
     runImpl(bs)

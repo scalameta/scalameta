@@ -15,11 +15,7 @@ import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
 
-abstract class SemanticdbSuite(
-    mode: SemanticdbMode = SemanticdbMode.Fat,
-    symbols: SymbolMode = SymbolMode.All,
-    types: TypeMode = TypeMode.All
-) extends FunSuite
+abstract class SemanticdbSuite extends FunSuite
     with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
@@ -47,14 +43,11 @@ abstract class SemanticdbSuite(
   }
   private lazy val databaseOps: SemanticdbOps { val global: self.g.type } = new SemanticdbOps {
     val global: self.g.type = self.g
+    config = config.copy(failures = FailureMode.Error)
+    config = customizeConfig(config)
   }
+  def customizeConfig(config: SemanticdbConfig): SemanticdbConfig = config
   import databaseOps._
-  config = config.copy(
-    mode = mode,
-    failures = FailureMode.Error,
-    symbols = symbols,
-    types = types
-  )
 
   private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
     val javaFile = File.createTempFile("paradise", ".scala")
@@ -95,7 +88,8 @@ abstract class SemanticdbSuite(
 
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
     val document = computeDatabaseFromSnippet(code)
-    val payload = s.Print.document(document).toString.split(EOL)
+    val format = scala.meta.metap.Format.Detailed
+    val payload = s.Print.document(format, document).toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
     section.mkString(EOL)
   }

@@ -7,22 +7,11 @@ trait NameOps { self: SemanticdbOps =>
 
   implicit class XtensionName(gname: g.Name) {
     def toSemantic: String = {
-      if (gname == g.nme.ROOTPKG) {
-        n.RootPackage
-      } else if (gname == g.nme.EMPTY_PACKAGE_NAME) {
-        n.EmptyPackage
-      } else if (gname == g.nme.CONSTRUCTOR) {
-        n.Constructor
-      } else if (gname == g.tpnme.REFINE_CLASS_NAME) {
-        // See https://github.com/scalameta/scalameta/pull/1109#discussion_r137194314
-        // for a motivation why <refinement> symbols should have $anon as names.
-        // This may be the wrong encoding of the symbol, but with the current
-        // implementation it makes the use-site symbols of this refinement
-        // decl match with the definition-site of the refinement decl.
-        g.nme.ANON_CLASS_NAME.decoded
-      } else {
-        gname.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
-      }
+      if (gname == g.nme.ROOTPKG) n.RootPackage
+      else if (gname == g.nme.EMPTY_PACKAGE_NAME) n.EmptyPackage
+      else if (gname == g.nme.CONSTRUCTOR) n.Constructor
+      else if (gname.startsWith("_$")) n.Anonymous
+      else gname.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
     }
   }
 }

@@ -12,20 +12,21 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
   implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
   implicit class XtensionUnit(unit: g.CompilationUnit) {
     def isIgnored: Boolean = {
-      config.mode.isDisabled || {
-        !unit.source.file.name.endsWith(".scala") && !unit.source.file.name.endsWith(".sc")
-      } || {
+      val matchesExtension = {
+        val fileName = unit.source.file.name
+        fileName.endsWith(".scala") || fileName.endsWith(".sc")
+      }
+      val matchesFilter = {
         Option(unit.source.file)
           .flatMap(f => Option(f.file))
-          .map(_.getAbsolutePath)
-          .exists(
-            fullName => !config.fileFilter.matches(fullName)
-          )
+          .map(f => config.fileFilter.matches(f.getAbsolutePath))
+          .getOrElse(true)
       }
+      !matchesExtension || !matchesFilter
     }
   }
 
-  def handleError(unit: g.CompilationUnit): PartialFunction[Throwable, Unit] = {
+  def handleCrash(unit: g.CompilationUnit): PartialFunction[Throwable, Unit] = {
     case NonFatal(ex) =>
       val writer = new StringWriter()
       val path = unit.source.file.path
@@ -55,7 +56,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
           validateCompilerState()
           val sdoc = unit.toTextDocument
           sdoc.save(config.targetroot)
-        } catch handleError(unit)
+        } catch handleCrash(unit)
       }
 
       private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
@@ -91,7 +92,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       override def apply(unit: g.CompilationUnit): Unit = {
         if (unit.isIgnored) return
         try {
-          if (config.diagnostics.saveMessages) {
+          if (config.diagnostics.isOn) {
             val diagnostics = unit.reportedDiagnostics(Map.empty)
             if (diagnostics.nonEmpty) {
               val sdoc = s.TextDocument(
@@ -103,7 +104,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
               sdoc.append(config.targetroot)
             }
           }
-        } catch handleError(unit)
+        } catch handleCrash(unit)
       }
 
       override def run(): Unit = {
@@ -122,7 +123,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
   private var timestampPersistFinished = -1L
 
   private def reportSemanticdbSummary(): Unit = {
-    val createdSemanticdbsMessage = {
+    def createdSemanticdbsMessage = {
       val howMany = g.currentRun.units.length
       val what = if (howMany == 1) "file" else "files"
       var where = config.targetroot.toString
@@ -130,7 +131,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       where = where + "/META-INF/semanticdb"
       s"Created $howMany semanticdb $what in $where"
     }
-    val performanceOverheadMessage = {
+    def performanceOverheadMessage = {
       val computeMs = (timestampComputeFinished - timestampComputeStarted) / 1000000
       val persistMs = (timestampPersistFinished - timestampPersistStarted) / 1000000
       val semanticdbMs = computeMs + persistMs
@@ -139,7 +140,9 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       val pct = Math.floor(1.0 * semanticdbMs / totalMs * 100).toInt
       s"At the cost of $overhead ($pct% of compilation time)"
     }
-    if (config.profiling.isConsole) println(createdSemanticdbsMessage)
-    if (config.profiling.isConsole) println(performanceOverheadMessage)
+    if (config.profiling.isOn) {
+      println(createdSemanticdbsMessage)
+      println(performanceOverheadMessage)
+    }
   }
 }

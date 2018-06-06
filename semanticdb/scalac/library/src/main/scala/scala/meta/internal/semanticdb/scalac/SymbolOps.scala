@@ -3,6 +3,7 @@ package scala.meta.internal.semanticdb.scalac
 import java.util.HashMap
 import scala.{meta => m}
 import scala.meta.internal.inputs._
+import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
@@ -60,27 +61,30 @@ trait SymbolOps { self: SemanticdbOps =>
       def definitelyGlobal = sym.hasPackageFlag
       def definitelyLocal =
         sym == g.NoSymbol ||
-          sym.name.decoded.startsWith(g.nme.LOCALDUMMY_PREFIX) ||
           (sym.owner.isMethod && !sym.isParameter) ||
           ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter) ||
-          sym.isSelfParameter
-      !definitelyGlobal && (definitelyLocal || sym.owner.isSemanticdbLocal)
+          sym.isSelfParameter ||
+          sym.isLocalDummy ||
+          sym.isRefinementClass ||
+          sym.isAnonymousClass ||
+          sym.isAnonymousFunction ||
+          sym.isExistential
+      def ownerLocal = sym.owner.isSemanticdbLocal
+      !definitelyGlobal && (definitelyLocal || ownerLocal)
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
     def disambiguator: String = {
-      val synonyms = sym.owner.semanticdbDecls.gsyms.filter(_.name == sym.name)
+      val peers = sym.owner.semanticdbDecls.gsyms
+      val overloads = peers.filter(_.name == sym.name)
       val suffix = {
-        if (synonyms.lengthCompare(1) == 0) ""
+        if (overloads.lengthCompare(1) == 0) ""
         else {
-          val index = synonyms.indexOf(sym)
+          val index = overloads.indexOf(sym)
           if (index <= 0) ""
           else "+" + index
         }
       }
       "(" + suffix + ")"
-    }
-    def isSelfParameter: Boolean = {
-      sym != g.NoSymbol && sym.owner.thisSym == sym
     }
     def semanticdbDecls: SemanticdbDecls = {
       if (sym.hasPackageFlag) {
@@ -113,26 +117,62 @@ trait SymbolOps { self: SemanticdbOps =>
     }
   }
 
-  case class SemanticdbDecls(gsyms: List[g.Symbol]) {
-    lazy val ssyms: List[String] = {
-      val sbuf = List.newBuilder[String]
-      gsyms.foreach { gsym =>
-        val ssym = gsym.toSemantic.syntax
-        sbuf += ssym
-        if (gsym.isUsefulField && gsym.isMutable) {
-          if (ssym.isGlobal) {
-            val setterName = ssym.desc.name + "_="
-            sbuf += Symbols.Global(ssym.owner, d.Method(setterName, "()"))
-          } else {
-            sbuf += (ssym + "+1")
-          }
-        }
+  implicit class XtensionGScopeMSpec(scope: g.Scope) {
+    def semanticdbDecls: SemanticdbDecls = {
+      SemanticdbDecls(scope.sorted.filter(_.isUseful))
+    }
+  }
+
+  implicit class XtensionGSymbolsMSpec(syms: List[g.Symbol]) {
+    def sscope(linkMode: LinkMode): s.Scope = {
+      linkMode match {
+        case SymlinkChildren =>
+          s.Scope(symlinks = syms.map(_.ssym))
+        case HardlinkChildren =>
+          s.Scope(hardlinks = syms.map(_.toSymbolInformation(HardlinkChildren)))
       }
-      sbuf.result
+    }
+  }
+
+  case class SemanticdbDecls(gsyms: List[g.Symbol]) {
+    def sscope(linkMode: LinkMode): s.Scope = {
+      linkMode match {
+        case SymlinkChildren =>
+          val sbuf = List.newBuilder[String]
+          gsyms.foreach { gsym =>
+            val ssym = gsym.ssym
+            sbuf += ssym
+            if (gsym.isUsefulField && gsym.isMutable) {
+              if (ssym.isGlobal) {
+                val setterName = ssym.desc.name + "_="
+                val setterSym = Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+                sbuf += setterSym
+              } else {
+                val setterSym = ssym + "+1"
+                sbuf += setterSym
+              }
+            }
+          }
+          s.Scope(symlinks = sbuf.result)
+        case HardlinkChildren =>
+          val sbuf = List.newBuilder[s.SymbolInformation]
+          gsyms.foreach { gsym =>
+            val sinfo = gsym.toSymbolInformation(HardlinkChildren)
+            sbuf += sinfo
+            if (gsym.isUsefulField && gsym.isMutable) {
+              Synthetics.setterInfos(sinfo, HardlinkChildren).foreach(sbuf.+=)
+            }
+          }
+          s.Scope(hardlinks = sbuf.result)
+      }
     }
   }
 
   implicit class XtensionGSymbol(sym: g.Symbol) {
+    def ssym: String = sym.toSemantic.syntax
+    def isSelfParameter: Boolean = {
+      sym != g.NoSymbol && sym.owner.thisSym == sym
+    }
     def isJavaClass: Boolean =
       sym.isJavaDefined &&
         !sym.hasPackageFlag &&
@@ -168,12 +208,19 @@ trait SymbolOps { self: SemanticdbOps =>
     def isUsefulField: Boolean = {
       sym.isScalacField && !sym.isUselessField
     }
+    def isSyntheticCaseAccessor: Boolean = {
+      sym.isCaseAccessor && sym.name.toString.contains("$")
+    }
     def isUseless: Boolean = {
+      sym == g.NoSymbol ||
+      sym.isAnonymousClass ||
       sym.isSyntheticConstructor ||
       sym.isStaticConstructor ||
       sym.isLocalChild ||
       sym.isSyntheticValueClassCompanion ||
-      sym.isUselessField
+      sym.isUselessField ||
+      sym.isSyntheticCaseAccessor ||
+      sym.isRefinementClass
     }
     def isUseful: Boolean = !sym.isUseless
   }

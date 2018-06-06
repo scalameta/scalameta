@@ -1,16 +1,152 @@
-========
-classes.
-========
+===========
+advanced.D#
+===========
 --- metac
 +++ metacp
- kind: PACKAGE
- properties: 0
- name: "classes"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
+                 type_arguments {
+                   tag: TYPE_REF
+                   typeRef {
+-                    symbol: "local14"
++                    symbol: "advanced.D#_#"
+             declarations {
+               hardlinks {
+-                symbol: "local14"
++                symbol: "advanced.D#_#"
+                 kind: TYPE
+                 properties: 4
+                 name: "_"
+       symlinks: "advanced.D#[CC]"
+     declarations {
++      symlinks: "advanced.D#_#"
+       symlinks: "advanced.D#`<init>`()."
+
+
+==========================
+advanced.Existential#e1().
+==========================
+--- metac
++++ metacp
+             type_arguments {
+               tag: TYPE_REF
+               typeRef {
+-                symbol: "local7"
++                symbol: "local0"
+         declarations {
+           hardlinks {
+-            symbol: "local7"
++            symbol: "local0"
+             kind: TYPE
+             properties: 4
+             name: "_"
+
+
+==========================
+advanced.Existential#e2().
+==========================
+--- metac
++++ metacp
+                 type_arguments {
+                   tag: TYPE_REF
+                   typeRef {
+-                    symbol: "local8"
++                    symbol: "local1"
+             declarations {
+               hardlinks {
+-                symbol: "local8"
++                symbol: "local1"
+                 kind: TYPE
+                 properties: 4
+                 name: "T"
+
+
+==========================
+advanced.Existential#e4().
+==========================
+--- metac
++++ metacp
+         tpe {
+           tag: TYPE_REF
+           typeRef {
+-            symbol: "local10"
++            symbol: "local2"
+             type_arguments {
+               tag: TYPE_REF
+               typeRef {
+         declarations {
+           hardlinks {
+-            symbol: "local10"
++            symbol: "local2"
+             kind: TYPE
+             properties: 4
+             name: "U"
+                 type_parameters {
+                   hardlinks {
+-                    symbol: "local11"
++                    symbol: "local3"
+                     kind: TYPE_PARAMETER
+                     properties: 0
+                     name: "T"
+
+
+=========================
+advanced.Structural#s3().
+=========================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local3"
++            symbol: "local2"
+             kind: METHOD
+             properties: 0
+             name: "m"
+                 parameterLists {
+                   hardlinks {
+-                    symbol: "local4"
++                    symbol: "local3"
+                     kind: PARAMETER
+                     properties: 0
+                     name: "x"
+
+
+===================
+advanced.Test.e2().
+===================
+--- metac
++++ metacp
+                 type_arguments {
+                   tag: TYPE_REF
+                   typeRef {
+-                    symbol: "local8"
++                    symbol: "advanced.Test.T#"
+             declarations {
+               hardlinks {
+-                symbol: "local8"
++                symbol: "advanced.Test.T#"
+                 kind: TYPE
+                 properties: 4
+                 name: "T"
+
+
+===================
+advanced.Test.s3().
+===================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local3"
++            symbol: "local2"
+             kind: METHOD
+             properties: 0
+             name: "m"
+                 parameterLists {
+                   hardlinks {
+-                    symbol: "local4"
++                    symbol: "local3"
+                     kind: PARAMETER
+                     properties: 0
+                     name: "x"
 
 
 ============================
@@ -18,8 +154,7 @@ classes.C3#copy$default$1().
 ============================
 --- metac
 +++ metacp
-             symbol: "scala.Int#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
@@ -31,139 +166,37 @@ classes.C4#copy$default$1().
 ============================
 --- metac
 +++ metacp
-             symbol: "scala.Int#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
 -              symbol: "scala.annotation.unchecked.uncheckedVariance#"
 
 
-====
-com.
-====
+============================
+classes.C6#copy$default$1().
+============================
 --- metac
 +++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
+         annotations {
+-          tpe {
+-            tag: TYPE_REF
+-            typeRef {
+-              symbol: "scala.annotation.unchecked.uncheckedVariance#"
 
 
-===========
-com.javacp.
-===========
+======================
+classes.N.anonClass().
+======================
 --- metac
 +++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
-
-
-================
-com.javacp.Coin#
-================
---- metac
-+++ metacp
--    declarations: "com.javacp.Coin#value."
--    declarations: "com.javacp.Coin#value(+1)."
-     declarations: "com.javacp.Coin#PENNY."
-     declarations: "com.javacp.Coin#NICKEL."
-     declarations: "com.javacp.Coin#DIME."
-     declarations: "com.javacp.Coin#QUARTER."
-+    declarations: "com.javacp.Coin#value."
-+    declarations: "com.javacp.Coin#$VALUES."
-+    declarations: "com.javacp.Coin#`<init>`()."
-+    declarations: "com.javacp.Coin#value()."
-     declarations: "com.javacp.Coin#values()."
-     declarations: "com.javacp.Coin#valueOf()."
-
-
-=====================
-com.javacp.MetacJava#
-=====================
---- metac
-+++ metacp
-     declarations: "com.javacp.MetacJava#`<init>`()."
--    declarations: "com.javacp.MetacJava#Overload1#"
--    declarations: "com.javacp.MetacJava#Overload1#"
--    declarations: "com.javacp.MetacJava#Overload2#"
--    declarations: "com.javacp.MetacJava#Overload2#"
-     declarations: "com.javacp.MetacJava#overload()."
-     declarations: "com.javacp.MetacJava#overload(+1)."
--    declarations: "com.javacp.MetacJava#StaticInner#"
--    declarations: "com.javacp.MetacJava#StaticInner#"
--    declarations: "com.javacp.MetacJava#Overload3#"
--    declarations: "com.javacp.MetacJava#Overload3#"
-     declarations: "com.javacp.MetacJava#overload(+2)."
-+    declarations: "com.javacp.MetacJava#Overload2#"
-+    declarations: "com.javacp.MetacJava#Overload3#"
-+    declarations: "com.javacp.MetacJava#Overload1#"
-+    declarations: "com.javacp.MetacJava#StaticInner#"
- accessibility {
-
-
-===============================
-com.javacp.MetacJava#Overload1#
-===============================
---- metac
-+++ metacp
-     declarations: "com.javacp.MetacJava#Overload1#`<init>`()."
-     declarations: "com.javacp.MetacJava#Overload1#A#"
--    declarations: "com.javacp.MetacJava#Overload1#A#"
- accessibility {
-
-
-===============================
-com.javacp.MetacJava#Overload2#
-===============================
---- metac
-+++ metacp
-     declarations: "com.javacp.MetacJava#Overload2#`<init>`()."
-     declarations: "com.javacp.MetacJava#Overload2#A#"
--    declarations: "com.javacp.MetacJava#Overload2#A#"
- accessibility {
-
-
-===============================
-com.javacp.MetacJava#Overload3#
-===============================
---- metac
-+++ metacp
-     declarations: "com.javacp.MetacJava#Overload3#`<init>`()."
-     declarations: "com.javacp.MetacJava#Overload3#A#"
--    declarations: "com.javacp.MetacJava#Overload3#A#"
- accessibility {
-
-
-=================================
-com.javacp.MetacJava#StaticInner#
-=================================
---- metac
-+++ metacp
-     declarations: "com.javacp.MetacJava#StaticInner#`<init>`()."
-     declarations: "com.javacp.MetacJava#StaticInner#isNotStatic()."
--    declarations: "com.javacp.MetacJava#StaticInner#NonStatic#"
--    declarations: "com.javacp.MetacJava#StaticInner#NonStatic#"
-     declarations: "com.javacp.MetacJava#StaticInner#isStatic()."
-+    declarations: "com.javacp.MetacJava#StaticInner#NonStatic#"
- accessibility {
-
-
-========
-example.
-========
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "example"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
+         declarations {
+           hardlinks {
+-            symbol: "local1"
++            symbol: "local0"
+             kind: METHOD
+             properties: 1024
+             name: "local"
 
 
 ============
@@ -171,16 +204,15 @@ example.Acc#
 ============
 --- metac
 +++ metacp
-     declarations: "example.Acc#`<init>`()."
-     declarations: "example.Acc#m1()."
-     declarations: "example.Acc#m2()."
--    declarations: "example.Acc#m3()."
-     declarations: "example.Acc#m4()."
-     declarations: "example.Acc#m5()."
-     declarations: "example.Acc#m6()."
-     declarations: "example.Acc#m7()."
-+    declarations: "example.Acc#m3()."
- accessibility {
+       symlinks: "example.Acc#`<init>`()."
+       symlinks: "example.Acc#m1()."
+       symlinks: "example.Acc#m2()."
+-      symlinks: "example.Acc#m3()."
+       symlinks: "example.Acc#m4()."
+       symlinks: "example.Acc#m5()."
+       symlinks: "example.Acc#m6()."
+       symlinks: "example.Acc#m7()."
++      symlinks: "example.Acc#m3()."
 
 
 ==============================
@@ -191,6 +223,7 @@ example.MetacJava#nonStatic().
              string: ""
 -        symbol: "com.javacp.MetacJava#StaticInner#NonStatic#"
 +        symbol: "com.javacp.MetacJava.StaticInner#NonStatic#"
+     type_parameters {
 
 
 ================================
@@ -203,22 +236,7 @@ example.MetacJava#staticInner().
        typeRef {
 -        symbol: "com.javacp.MetacJava#StaticInner#"
 +        symbol: "com.javacp.MetacJava.StaticInner#"
-
-
-================
-example.Methods#
-================
---- metac
-+++ metacp
-     declarations: "example.Methods#m11()."
-     declarations: "example.Methods#m11(+1)."
-     declarations: "example.Methods#m12a()."
-+    declarations: "example.Methods#$anon#"
-     declarations: "example.Methods#m12b()."
-+    declarations: "example.Methods#$anon#"
-     declarations: "example.Methods#m13()."
-     declarations: "example.Methods#m14()."
-     declarations: "example.Methods#m15()."
+     type_parameters {
 
 
 =========================
@@ -246,38 +264,23 @@ example.Methods#m13().(x)
  accessibility {
 
 
-======
-flags.
-======
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "flags"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
-
-
 ================
 flags.p.package.
 ================
 --- metac
 +++ metacp
-     declarations: "flags.p.package.C#"
-     declarations: "flags.p.package.T1#"
-     declarations: "flags.p.package.T2#"
-+    declarations: "flags.p.package.S#"
-     declarations: "flags.p.package.U#"
-     declarations: "flags.p.package.V#"
-     declarations: "flags.p.package.X."
-     declarations: "flags.p.package.Y#"
-     declarations: "flags.p.package.Z#"
-     declarations: "flags.p.package.AA#"
--    declarations: "flags.p.package.S#"
-     declarations: "flags.p.package.xs1()."
+       symlinks: "flags.p.package.C#"
+       symlinks: "flags.p.package.T1#"
+       symlinks: "flags.p.package.T2#"
++      symlinks: "flags.p.package.S#"
+       symlinks: "flags.p.package.U#"
+       symlinks: "flags.p.package.V#"
+       symlinks: "flags.p.package.X."
+       symlinks: "flags.p.package.Y#"
+       symlinks: "flags.p.package.Z#"
+       symlinks: "flags.p.package.AA#"
+-      symlinks: "flags.p.package.S#"
+       symlinks: "flags.p.package.xs1()."
 
 
 =====================
@@ -296,86 +299,12 @@ flags.p.package.S#[T]
    symbol: ""
 
 
-========
-objects.
-========
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "objects"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
-
-
-=======
-traits.
-=======
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "traits"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
-
-
-=========
-traits.V#
-=========
---- metac
-+++ metacp
-         symbol: "scala.AnyRef#"
-+    declarations: "traits.V#$anon#"
- accessibility {
-
-
-======
-types.
-======
---- metac
-+++ metacp
- kind: PACKAGE
- properties: 0
- name: "types"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: SCALA
-
-
-=============
-types.Test.C#
-=============
---- metac
-+++ metacp
-     declarations: "types.Test.C#superType2()."
-     declarations: "types.Test.C#superType3()."
-     declarations: "types.Test.C#compoundType1()."
-+    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#compoundType2()."
-+    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#compoundType3()."
-+    declarations: "types.Test.C#$anon#"
-     declarations: "types.Test.C#annType1()."
-     declarations: "types.Test.C#annType2()."
-     declarations: "types.Test.C#existentialType1()."
-
-
 ========================
 types.Test.C#annType1().
 ========================
 --- metac
 +++ metacp
-             symbol: "types.T#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
@@ -391,17 +320,44 @@ types.Test.C#annType2().
 ========================
 --- metac
 +++ metacp
-             symbol: "types.T#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
 -              symbol: "types.ann1#"
--        annotations {
+         annotations {
 -          tpe {
 -            tag: TYPE_REF
 -            typeRef {
 -              symbol: "types.ann2#"
+
+
+=============================
+types.Test.C#compoundType4().
+=============================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local3"
++            symbol: "local2"
+             kind: METHOD
+             properties: 0
+             name: "k"
+
+
+=============================
+types.Test.C#compoundType6().
+=============================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local5"
++            symbol: "local3"
+             kind: METHOD
+             properties: 0
+             name: "k"
 
 
 ================================
@@ -412,10 +368,34 @@ types.Test.C#existentialType1().
          tpe {
            tag: TYPE_REF
            typeRef {
--            symbol: "types.Test.C#existentialType1.T#"
-+            symbol: "types.Test.C#existentialType1().T#"
--        type_parameters: "types.Test.C#existentialType1.T#"
-+        type_parameters: "types.Test.C#existentialType1().T#"
+-            symbol: "local7"
++            symbol: "local4"
+         declarations {
+           hardlinks {
+-            symbol: "local7"
++            symbol: "local4"
+             kind: TYPE
+             properties: 4
+             name: "T"
+
+
+================================
+types.Test.C#existentialType2().
+================================
+--- metac
++++ metacp
+             type_arguments {
+               tag: TYPE_REF
+               typeRef {
+-                symbol: "local8"
++                symbol: "local5"
+         declarations {
+           hardlinks {
+-            symbol: "local8"
++            symbol: "local5"
+             kind: TYPE
+             properties: 4
+             name: "_"
 
 
 ===========================
@@ -448,6 +428,7 @@ types.Test.Literal.javaEnum().
 -        symbol: "java.nio.file.LinkOption#NOFOLLOW_LINKS."
 -        primitive: 0
 -        string: ""
+-    type_parameters {
 -}
  accessibility {
    tag: PUBLIC

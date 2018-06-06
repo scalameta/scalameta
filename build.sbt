@@ -58,7 +58,7 @@ commands += Command.command("mima") { s =>
   // s"very mimaReportBinaryIssues" ::
   s
 }
-commands += Command.command("ci-metac") { s =>
+commands += Command.command("ci-slow") { s =>
   val out = file("target/scala-library")
   if (!out.exists()) {
     IO.unzipURL(
@@ -67,7 +67,10 @@ commands += Command.command("ci-metac") { s =>
       filter = s"scala-$LatestScala212/src/library/*"
     )
   }
-  "testsJVM/test:runMain scala.meta.tests.semanticdb.MetacScalaLibrary" :: s
+  s"wow $ciScalaVersion" ::
+    "testsJVM/test:runMain scala.meta.tests.semanticdb.MetacScalaLibrary" ::
+    "testsJVM/slow:test" ::
+    s
 }
 commands += Command.command("save-expect") { s =>
   "metapJVM/compile" ::
@@ -86,7 +89,8 @@ test := {
     """Welcome to the scalameta build! This is a big project with lots of tests :)
       |Running "test" may take a really long time. Here are some other useful commands
       |that give a tighter edit/run/debug cycle.
-      |- testsJVM/testQuick # Bread and butter tests
+      |- testsJVM/test      # Bread and butter tests
+      |- testsJVM/slow:test # More thorough tests that take much longer to run
       |- testsJS/testQuick  # Ensure crosscompilability
       |- testkit/test       # Ensure additional reliability thanks to property tests
       |""".stripMargin
@@ -417,14 +421,13 @@ lazy val semanticdbIntegration = project
       val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
       Seq(
         s"-Xplugin:$pluginJar",
+        s"-Xplugin-require:semanticdb",
         s"-Ywarn-unused-import",
         s"-Yrangepos",
-        s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
         s"-P:semanticdb:failures:error", // fail fast during development.
         s"-P:semanticdb:exclude:Exclude.scala",
-        s"-P:semanticdb:symbols:all",
-        s"-P:semanticdb:types:all",
-        s"-Xplugin-require:semanticdb"
+        s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
+        s"-P:semanticdb:synthetics:on"
       )
     },
     javacOptions += "-parameters"
@@ -450,13 +453,12 @@ lazy val testkit = project
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
+  .configs(Slow)
   .settings(
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
     exposePaths("tests", Test),
-    compile.in(Test) :=
-      compile.in(Test).dependsOn(compile.in(semanticdbIntegration, Compile)).value,
     fullClasspath.in(Test) := {
       val semanticdbScalacJar =
         Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
@@ -470,7 +472,11 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     ),
     buildInfoPackage := "scala.meta.tests",
     libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.5" % "test",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test"
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test",
+    testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
+    inConfig(Slow)(Defaults.testTasks),
+    testOptions.in(Slow) -= Tests.Argument("-l", "org.scalatest.tags.Slow"),
+    testOptions.in(Slow) += Tests.Argument("-n", "org.scalatest.tags.Slow")
   )
   .jvmSettings(
     // FIXME: https://github.com/scalatest/scalatest/issues/1112
@@ -486,7 +492,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
     )
   )
-  .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp))
+  .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp, semanticdbIntegration))
   .nativeSettings(
     nativeSettings,
     // FIXME: https://github.com/scalatest/scalatest/issues/1112
@@ -514,7 +520,7 @@ lazy val bench = project
     buildInfoKeys := Seq[BuildInfoKey](
       "sourceroot" -> (baseDirectory in ThisBuild).value
     ),
-    buildInfoPackage := "org.scalameta.bench",
+    buildInfoPackage := "scala.meta.internal.bench",
     run.in(Jmh) := (Def.inputTaskDyn {
       val args = spaceDelimited("<arg>").parsed
       val semanticdbScalacJar =
@@ -527,7 +533,7 @@ lazy val bench = project
       runMain.in(Jmh).toTask(s"  ${buf.result.mkString(" ")}")
     }).evaluated
   )
-  .dependsOn(semanticdbScalacPlugin)
+  .dependsOn(testsJVM)
 
 // ==========================================
 // Settings
@@ -821,9 +827,6 @@ def exposePaths(projectName: String, config: Configuration) = {
     fullClasspath.in(config) := {
       val defaultValue = fullClasspath.in(config).value
       val classpath = defaultValue.files.map(_.getAbsolutePath)
-      val scalaLibrary =
-        classpath.map(_.toString).find(_.contains("scala-library")).get
-      System.setProperty("sbt.paths.scalalibrary.classes", scalaLibrary)
       System.setProperty(prefix + "classes", classpath.mkString(java.io.File.pathSeparator))
       defaultValue
     }

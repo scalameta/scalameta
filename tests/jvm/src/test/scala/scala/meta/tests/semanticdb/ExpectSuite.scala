@@ -41,8 +41,8 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("index.expect") {
-        import IndexExpect._
+      test("metac.index") {
+        import MetacIndexExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
       test("metac-metacp.expect.diff") {
@@ -112,7 +112,8 @@ trait ExpectHelpers extends FunSuiteLike {
 
   protected def metap(dirOrJar: Path): String = {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
-      val settings = scala.meta.metap.Settings().withPaths(List(dirOrJar))
+      import scala.meta.metap.Format._
+      val settings = scala.meta.metap.Settings().withFormat(Detailed).withPaths(List(dirOrJar))
       val reporter = Reporter().withOut(out).withErr(err)
       Metap.process(settings, reporter)
     }
@@ -206,8 +207,8 @@ object MetacExpect extends ExpectHelpers {
   def loadObtained: String = metap(Paths.get(BuildInfo.databaseClasspath))
 }
 
-object IndexExpect extends ExpectHelpers {
-  def filename: String = "index.expect"
+object MetacIndexExpect extends ExpectHelpers {
+  def filename: String = "metac.index"
   def loadObtained: String = index(Paths.get(BuildInfo.databaseClasspath))
 }
 
@@ -274,7 +275,7 @@ object SaveExpectTest {
     MetacpExpect.saveExpected(MetacpExpect.loadObtained)
     MetacpIndexExpect.saveExpected(MetacpIndexExpect.loadObtained)
     MetacExpect.saveExpected(MetacExpect.loadObtained)
-    IndexExpect.saveExpected(IndexExpect.loadObtained)
+    MetacIndexExpect.saveExpected(MetacIndexExpect.loadObtained)
     MetacMetacpExpectDiffExpect.saveExpected(MetacMetacpExpectDiffExpect.loadObtained)
     ManifestMetap.saveExpected(ManifestMetap.loadObtained)
     ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)

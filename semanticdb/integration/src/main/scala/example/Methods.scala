@@ -1,6 +1,7 @@
 package example
 
 import scala.math.Ordering
+import scala.language.existentials
 
 class Methods[T] {
   class List[T]

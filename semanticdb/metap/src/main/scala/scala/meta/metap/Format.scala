@@ -1,11 +1,13 @@
 package scala.meta.metap
 
 sealed trait Format {
-  def isPretty: Boolean = this == Format.Pretty
+  def isCompact: Boolean = this == Format.Compact
+  def isDetailed: Boolean = this == Format.Detailed
   def isProto: Boolean = this == Format.Proto
 }
 
 object Format {
-  case object Pretty extends Format
+  case object Compact extends Format
+  case object Detailed extends Format
   case object Proto extends Format
 }

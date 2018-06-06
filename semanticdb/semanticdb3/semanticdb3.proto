@@ -41,6 +41,11 @@ message Location {
   Range range = 2;
 }
 
+message Scope {
+  repeated string symlinks = 1;
+  repeated SymbolInformation hardlinks = 2;
+}
+
 message Type {
   enum Tag {
     // reserved 2, 3, 4, 5;
@@ -122,9 +127,9 @@ message WithType {
 }
 
 message StructuralType {
-  reserved 1, 2;
+  reserved 1, 2, 3;
   Type tpe = 4;
-  repeated string declarations = 3;
+  Scope declarations = 5;
 }
 
 message AnnotatedType {
@@ -134,27 +139,28 @@ message AnnotatedType {
 }
 
 message ExistentialType {
-  repeated string type_parameters = 2;
+  reserved 2;
   Type tpe = 1;
+  Scope declarations = 3;
 }
 
 message UniversalType {
-  repeated string type_parameters = 1;
+  reserved 1;
+  Scope type_parameters = 3;
   Type tpe = 2;
 }
 
 message ClassInfoType {
-  repeated string type_parameters = 1;
+  reserved 1, 3;
+  Scope type_parameters = 4;
   repeated Type parents = 2;
-  repeated string declarations = 3;
+  Scope declarations = 5;
 }
 
 message MethodType {
-  message ParameterList {
-    repeated string symbols = 1;
-  }
-  repeated string type_parameters = 1;
-  repeated ParameterList parameters = 2;
+  reserved 1, 2;
+  Scope type_parameters = 4;
+  repeated Scope parameterLists = 5;
   Type return_type = 3;
 }
 
@@ -167,7 +173,8 @@ message RepeatedType {
 }
 
 message TypeType {
-  repeated string type_parameters = 1;
+  reserved 1;
+  Scope type_parameters = 4;
   Type lower_bound = 2;
   Type upper_bound = 3;
 }
