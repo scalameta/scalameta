@@ -12,14 +12,19 @@ import scala.meta.io.AbsolutePath
 object RemoveOrphanSemanticdbFiles {
 
   /** Removes *.semanticdb files that have no corresponding *.scala file. */
-  def process(sourceroot: AbsolutePath, targetroot: AbsolutePath): Unit = {
+  def process(config: SemanticdbConfig): Unit = {
+    val sourceroot = config.sourceroot
+    val targetroot = config.targetroot
+    val semanticdbroot = targetroot.resolve(SemanticdbPaths.semanticdbPrefix).toNIO
+    if (!Files.exists(semanticdbroot)) return
+
     Files.walkFileTree(
-      targetroot.resolve(SemanticdbPaths.semanticdbPrefix).toNIO,
+      semanticdbroot,
       new SimpleFileVisitor[Path] {
         override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
           if (PathIO.extension(file.getFileName) == SemanticdbPaths.semanticdbExtension) {
             val scalafile = SemanticdbPaths.toScala(AbsolutePath(file), sourceroot, targetroot)
-            if (!scalafile.isFile) {
+            if (!scalafile.isFile || !config.fileFilter.matches(scalafile.toString)) {
               Files.delete(file)
             }
           }
@@ -37,5 +42,4 @@ object RemoveOrphanSemanticdbFiles {
       }
     )
   }
-
 }
