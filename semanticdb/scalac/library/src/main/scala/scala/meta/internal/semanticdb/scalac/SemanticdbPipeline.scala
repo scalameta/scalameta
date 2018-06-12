@@ -26,11 +26,11 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
     }
   }
 
-  def handleCrash(unit: g.CompilationUnit): PartialFunction[Throwable, Unit] = {
+  def handleCrash(unit: Option[g.CompilationUnit]): PartialFunction[Throwable, Unit] = {
     case NonFatal(ex) =>
       val writer = new StringWriter()
-      val path = unit.source.file.path
-      writer.write(s"failed to generate semanticdb for $path:$EOL")
+      val culprit = unit.map(unit => " for " + unit.source.file.path).getOrElse("")
+      writer.write(s"failed to generate semanticdb$culprit:$EOL")
       ex.printStackTrace(new PrintWriter(writer))
       val msg = writer.toString
       import scala.meta.internal.semanticdb.scalac.FailureMode._
@@ -56,7 +56,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
           validateCompilerState()
           val sdoc = unit.toTextDocument
           sdoc.save(config.targetroot)
-        } catch handleCrash(unit)
+        } catch handleCrash(Some(unit))
       }
 
       private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
@@ -69,13 +69,15 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       }
 
       override def run(): Unit = {
-        timestampComputeStarted = System.nanoTime()
-        super.run()
-        synchronizeSourcesAndSemanticdbFiles()
-        synchronizeSourcesAndSemanticdbIndex()
-        timestampComputeFinished = System.nanoTime()
-        idCache.clear()
-        symbolCache.clear()
+        try {
+          timestampComputeStarted = System.nanoTime()
+          super.run()
+          synchronizeSourcesAndSemanticdbFiles()
+          synchronizeSourcesAndSemanticdbIndex()
+          timestampComputeFinished = System.nanoTime()
+          idCache.clear()
+          symbolCache.clear()
+        } catch handleCrash(None)
       }
     }
   }
@@ -104,14 +106,16 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
               sdoc.append(config.targetroot)
             }
           }
-        } catch handleCrash(unit)
+        } catch handleCrash(Some(unit))
       }
 
       override def run(): Unit = {
-        timestampPersistStarted = System.nanoTime()
-        super.run()
-        timestampPersistFinished = System.nanoTime()
-        reportSemanticdbSummary()
+        try {
+          timestampPersistStarted = System.nanoTime()
+          super.run()
+          timestampPersistFinished = System.nanoTime()
+          reportSemanticdbSummary()
+        } catch handleCrash(None)
       }
     }
   }
