@@ -60,7 +60,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       }
 
       private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
-        RemoveOrphanSemanticdbFiles.process(config.sourceroot, config.targetroot)
+        RemoveOrphanSemanticdbFiles.process(config)
       }
 
       private def synchronizeSourcesAndSemanticdbIndex(): Unit = {
