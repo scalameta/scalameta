@@ -1,6 +1,7 @@
 package scala.meta.internal
 
 package object semanticdb3 {
+  val NoType = Type.Empty
 
   implicit class XtensionSemanticdb3SymbolInformation(info: SymbolInformation) {
     def has(

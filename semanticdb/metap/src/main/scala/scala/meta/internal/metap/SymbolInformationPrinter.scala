@@ -71,13 +71,13 @@ trait SymbolInformationPrinter extends BasePrinter {
         case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
       }
       pprint(info.name)
-      opt(info.prefixBeforeTpe, info.tpe.toOption)(pprint)
+      opt(info.prefixBeforeTpe, info.tpe)(pprint)
     }
 
     private def pprint(ann: Annotation): Unit = {
       out.print("@")
       ann.tpe match {
-        case Type.Empty =>
+        case NoType =>
           out.print("<?>")
         case tpe =>
           pprint(tpe)
@@ -124,7 +124,7 @@ trait SymbolInformationPrinter extends BasePrinter {
               case s: SingletonType =>
                 prefix(pre)
                 out.print(".")
-              case Type.Empty =>
+              case NoType =>
                 ()
               case pre =>
                 prefix(pre)
@@ -135,13 +135,13 @@ trait SymbolInformationPrinter extends BasePrinter {
           case SingletonType(tag, pre, sym, x, s) =>
             tag match {
               case SYMBOL =>
-                opt(pre.toOption, ".")(prefix)
+                opt(pre, ".")(prefix)
                 ref(sym)
               case THIS =>
                 opt(sym, ".")(ref)
                 out.print("this")
               case SUPER =>
-                opt(pre.toOption, ".")(prefix)
+                opt(pre, ".")(prefix)
                 out.print("super")
                 opt("[", sym, "]")(ref)
               case UNIT =>
@@ -177,21 +177,21 @@ trait SymbolInformationPrinter extends BasePrinter {
             rep(types, " with ")(normal)
           case StructuralType(utpe, decls) =>
             decls.infos.foreach(notes.discover)
-            utpe.toOption.foreach(normal)
+            opt(utpe)(normal)
             if (decls.infos.nonEmpty) rep(" { ", decls.infos, "; ", " }")(defn)
             else out.print(" {}")
           case AnnotatedType(anns, utpe) =>
-            utpe.toOption.foreach(normal)
+            opt(utpe)(normal)
             out.print(" ")
             rep(anns, " ", "")(pprint)
           case ExistentialType(utpe, decls) =>
             decls.infos.foreach(notes.discover)
-            utpe.toOption.foreach(normal)
+            opt(utpe)(normal)
             rep(" forSome { ", decls.infos, "; ", " }")(defn)
           case UniversalType(tparams, utpe) =>
             tparams.infos.foreach(notes.discover)
             rep("[", tparams.infos, ", ", "] => ")(defn)
-            utpe.toOption.foreach(normal)
+            opt(utpe)(normal)
           case ClassInfoType(tparams, parents, decls) =>
             rep("[", tparams.infos, ", ", "]")(defn)
             rep(" extends ", parents, " with ")(normal)
@@ -199,29 +199,29 @@ trait SymbolInformationPrinter extends BasePrinter {
           case MethodType(tparams, paramss, res) =>
             rep("[", tparams.infos, ", ", "]")(defn)
             rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(defn))
-            opt(": ", res.toOption)(normal)
+            opt(": ", res)(normal)
           case ByNameType(utpe) =>
             out.print("=> ")
-            utpe.toOption.foreach(normal)
+            opt(utpe)(normal)
           case RepeatedType(utpe) =>
-            utpe.toOption.foreach(normal)
+            opt(utpe)(normal)
             out.print("*")
           case TypeType(tparams, lo, hi) =>
             rep("[", tparams.infos, ", ", "]")(defn)
             if (lo != hi) {
               lo match {
                 case NothingTpe() => ()
-                case lo => opt(" >: ", lo.toOption)(normal)
+                case lo => opt(" >: ", lo)(normal)
               }
               hi match {
                 case AnyTpe() => ()
-                case hi => opt(" <: ", hi.toOption)(normal)
+                case hi => opt(" <: ", hi)(normal)
               }
             } else {
               val alias = lo
-              opt(" = ", alias.toOption)(normal)
+              opt(" = ", alias)(normal)
             }
-          case Type.Empty =>
+          case NoType =>
             out.print("<?>")
         }
       }
@@ -289,7 +289,7 @@ trait SymbolInformationPrinter extends BasePrinter {
             case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
           }
           pprint(info.name)
-          opt(info.prefixBeforeTpe, info.tpe.toOption)(pprint)
+          opt(info.prefixBeforeTpe, info.tpe)(pprint)
       }
     }
 
@@ -298,11 +298,6 @@ trait SymbolInformationPrinter extends BasePrinter {
       else out.print("<?>")
     }
 
-    private implicit class TpeOps(tpe: Type) {
-      def toOption: Option[Type] =
-        if (tpe.isDefined) Some(tpe)
-        else None
-    }
     private implicit class InfoOps(info: SymbolInformation) {
       def prefixBeforeTpe: String = {
         info.kind match {
@@ -317,14 +312,14 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     private object NothingTpe {
       def unapply(tpe: Type): Boolean = tpe match {
-        case TypeRef(Type.Empty, "scala.Nothing#", Nil) => true
+        case TypeRef(NoType, "scala.Nothing#", Nil) => true
         case _ => false
       }
     }
 
     private object AnyTpe {
       def unapply(tpe: Type): Boolean = tpe match {
-        case TypeRef(Type.Empty, "scala.Any#", Nil) => true
+        case TypeRef(NoType, "scala.Any#", Nil) => true
         case _ => false
       }
     }
