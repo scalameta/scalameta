@@ -633,9 +633,9 @@ lazy val mergeSettings = Def.settings(
 lazy val protobufSettings = Def.settings(
   sharedSettings,
   PB.targets.in(Compile) := Seq(
-    scalapb.gen(
-      flatPackage = true // Don't append filename to package
-    ) -> sourceManaged.in(Compile).value
+    // scalapb.gen(
+    //   flatPackage = true // Don't append filename to package
+    // ) -> sourceManaged.in(Compile).value
   ),
   PB.runProtoc in Compile := {
     val isNixOS = sys.props.get("java.home").map(_.startsWith("/nix/store")).getOrElse(false)
