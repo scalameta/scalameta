@@ -7,15 +7,18 @@ package scala.meta.internal.semanticdb3
 
 @SerialVersionUID(0L)
 final case class Annotation(
-    tpe: _root_.scala.Option[scala.meta.internal.semanticdb3.Type] = None
+    tpe: scala.meta.internal.semanticdb3.Type = scala.meta.internal.semanticdb3.Annotation._typemapper_tpe.toCustom(scala.meta.internal.semanticdb3.TypeMessage.defaultInstance)
     ) extends scalapb.GeneratedMessage with scalapb.Message[Annotation] with scalapb.lenses.Updatable[Annotation] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-      if (tpe.isDefined) {
-        val __value = tpe.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
+      
+      {
+        val __value = scala.meta.internal.semanticdb3.Annotation._typemapper_tpe.toBase(tpe)
+        if (__value != scala.meta.internal.semanticdb3.TypeMessage.defaultInstance) {
+          __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
+        }
       };
       __size
     }
@@ -28,11 +31,13 @@ final case class Annotation(
       read
     }
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
-      tpe.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(1, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
+      {
+        val __v = scala.meta.internal.semanticdb3.Annotation._typemapper_tpe.toBase(tpe)
+        if (__v != scala.meta.internal.semanticdb3.TypeMessage.defaultInstance) {
+          _output__.writeTag(1, 2)
+          _output__.writeUInt32NoTag(__v.serializedSize)
+          __v.writeTo(_output__)
+        }
       };
     }
     def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb3.Annotation = {
@@ -43,7 +48,7 @@ final case class Annotation(
         _tag__ match {
           case 0 => _done__ = true
           case 10 =>
-            __tpe = Option(_root_.scalapb.LiteParser.readMessage(_input__, __tpe.getOrElse(scala.meta.internal.semanticdb3.Type.defaultInstance)))
+            __tpe = scala.meta.internal.semanticdb3.Annotation._typemapper_tpe.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb3.Annotation._typemapper_tpe.toBase(__tpe)))
           case tag => _input__.skipField(tag)
         }
       }
@@ -51,18 +56,19 @@ final case class Annotation(
           tpe = __tpe
       )
     }
-    def getTpe: scala.meta.internal.semanticdb3.Type = tpe.getOrElse(scala.meta.internal.semanticdb3.Type.defaultInstance)
-    def clearTpe: Annotation = copy(tpe = None)
-    def withTpe(__v: scala.meta.internal.semanticdb3.Type): Annotation = copy(tpe = Option(__v))
+    def withTpe(__v: scala.meta.internal.semanticdb3.Type): Annotation = copy(tpe = __v)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
-        case 1 => tpe.orNull
+        case 1 => {
+          val __t = scala.meta.internal.semanticdb3.Annotation._typemapper_tpe.toBase(tpe)
+          if (__t != scala.meta.internal.semanticdb3.TypeMessage.defaultInstance) __t else null
+        }
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
       require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
-        case 1 => tpe.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 1 => scala.meta.internal.semanticdb3.Annotation._typemapper_tpe.toBase(tpe).toPMessage
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
@@ -75,14 +81,14 @@ object Annotation extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
     require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb3.Annotation(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb3.Type]]
+      scala.meta.internal.semanticdb3.Annotation._typemapper_tpe.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb3.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb3.TypeMessage])
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb3.Annotation] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb3.Annotation(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb3.Type]])
+        scala.meta.internal.semanticdb3.Annotation._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb3.TypeMessage]).getOrElse(scala.meta.internal.semanticdb3.TypeMessage.defaultInstance))
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
@@ -91,7 +97,7 @@ object Annotation extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
-      case 1 => __out = scala.meta.internal.semanticdb3.Type
+      case 1 => __out = scala.meta.internal.semanticdb3.TypeMessage
     }
     __out
   }
@@ -100,8 +106,9 @@ object Annotation extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
   lazy val defaultInstance = scala.meta.internal.semanticdb3.Annotation(
   )
   implicit class AnnotationLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Annotation]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb3.Annotation](_l) {
-    def tpe: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Type] = field(_.getTpe)((c_, f_) => c_.copy(tpe = Option(f_)))
-    def optionalTpe: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb3.Type]] = field(_.tpe)((c_, f_) => c_.copy(tpe = f_))
+    def tpe: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Type] = field(_.tpe)((c_, f_) => c_.copy(tpe = f_))
   }
   final val TPE_FIELD_NUMBER = 1
+  @transient
+  private val _typemapper_tpe: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb3.TypeMessage, scala.meta.internal.semanticdb3.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb3.TypeMessage, scala.meta.internal.semanticdb3.Type]]
 }
