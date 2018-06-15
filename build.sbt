@@ -796,6 +796,7 @@ lazy val hasLargeIntegrationTests = Seq(
 )
 
 lazy val nativeSettings = Seq(
+  SettingKey[Boolean]("ide-skip-project") := true,
   scalaVersion := LatestScala211,
   crossScalaVersions := List(LatestScala211),
   scalacOptions -= "-Xfatal-warnings",
