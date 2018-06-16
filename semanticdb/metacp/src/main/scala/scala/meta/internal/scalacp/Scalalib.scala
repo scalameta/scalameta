@@ -7,7 +7,6 @@ import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
-import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
 object Scalalib {
   def anyClass: ToplevelInfos = {
@@ -58,7 +57,7 @@ object Scalalib {
       bases: List[String],
       symbols: List[s.SymbolInformation]): ToplevelInfos = {
     val parents = bases.map { base =>
-      s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, base, Nil)))
+      s.TypeRef(s.NoType, base, Nil)
     }
     val symbol = "scala." + name + "#"
     val builtinTpe = s.Type(tag = t.TYPE_REF, typeRef = Some(s.TypeRef(None, symbol, Nil)))

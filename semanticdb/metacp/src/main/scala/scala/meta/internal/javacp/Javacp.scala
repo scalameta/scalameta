@@ -10,7 +10,6 @@ import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb3.Scala.{Names => n}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.io.AbsolutePath
@@ -43,7 +42,7 @@ object Javacp {
         symbol: String,
         kind: s.SymbolInformation.Kind,
         name: String,
-        tpe: Option[s.Type],
+        tpe: s.Type,
         access: Int): s.SymbolInformation = {
       val info = s.SymbolInformation(
         symbol = symbol,
@@ -73,7 +72,7 @@ object Javacp {
           enclosingPackage,
           k.PACKAGE,
           enclosingPackage.desc.name,
-          None,
+          s.NoType,
           o.ACC_PUBLIC
         )
       }
@@ -121,7 +120,7 @@ object Javacp {
           fieldSymbol,
           k.FIELD,
           field.name,
-          Some(fieldSignature.toType(classScope)),
+          fieldSignature.toType(classScope),
           field.access
         )
 
@@ -186,48 +185,42 @@ object Javacp {
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
               if (isRepeatedType) {
-                val tpe = param.toType(methodScope)
-                require(
-                  tpe.typeRef.isDefined && tpe.typeRef.get.symbol == "scala.Array#",
-                  s"expected $paramName to be a scala.Array#, found $tpe"
-                )
-                s.Type(
-                  tag = t.REPEATED_TYPE,
-                  repeatedType = Some(s.RepeatedType(Some(tpe.typeRef.get.typeArguments.head)))
-                )
-              } else param.toType(methodScope)
+                param.toType(methodScope) match {
+                  case s.TypeRef(s.NoType, "scala.Array#", targ :: Nil) =>
+                    s.RepeatedType(targ)
+                  case tpe =>
+                    sys.error(s"expected $paramName to be a scala.Array#, found $tpe")
+                }
+              } else {
+                param.toType(methodScope)
+              }
             addInfo(
               paramSymbol,
               k.PARAMETER,
               paramName,
-              Some(paramTpe),
+              paramTpe,
               o.ACC_PUBLIC
             )
         }
 
         val returnType = {
-          if (isConstructor) None
-          else Some(method.signature.result.toType(methodScope))
+          if (isConstructor) s.NoType
+          else method.signature.result.toType(methodScope)
         }
 
         val methodKind = if (isConstructor) k.CONSTRUCTOR else k.METHOD
 
-        val methodType = s.Type(
-          tag = s.Type.Tag.METHOD_TYPE,
-          methodType = Some(
-            s.MethodType(
-              typeParameters = Some(s.Scope(methodTypeParameters.map(_.symbol))),
-              parameterLists = List(s.Scope(parameters.map(_.symbol))),
-              returnType = returnType
-            )
-          )
+        val methodType = s.MethodType(
+          typeParameters = Some(s.Scope(methodTypeParameters.map(_.symbol))),
+          parameterLists = List(s.Scope(parameters.map(_.symbol))),
+          returnType = returnType
         )
 
         val methodInfo = addInfo(
           methodSymbol,
           methodKind,
           method.node.name,
-          Some(methodType),
+          methodType,
           method.node.access
         )
 
@@ -244,22 +237,17 @@ object Javacp {
       buf ++= sinfos(toplevel, innerClassNode, ic.access, classScope)
     }
 
-    val classTpe = s.Type(
-      tag = s.Type.Tag.CLASS_INFO_TYPE,
-      classInfoType = Some(
-        s.ClassInfoType(
-          typeParameters = Some(s.Scope(classTypeParameters.map(_.symbol))),
-          parents = classParents,
-          declarations = Some(s.Scope(decls))
-        )
-      )
+    val classTpe = s.ClassInfoType(
+      typeParameters = Some(s.Scope(classTypeParameters.map(_.symbol))),
+      parents = classParents,
+      declarations = Some(s.Scope(decls))
     )
 
     addInfo(
       classSymbol,
       classKind,
       className,
-      Some(classTpe),
+      classTpe,
       classAccess
     )
     buf.result()
@@ -288,7 +276,7 @@ object Javacp {
         suffix.foldLeft(prefix) {
           case (accum, s: ClassTypeSignatureSuffix) =>
             styperef(
-              prefix = Some(accum),
+              prefix = accum,
               symbol = ssym(s.simpleClassTypeSignature.identifier),
               args = s.simpleClassTypeSignature.typeArguments.toType(scope)
             )
@@ -329,22 +317,16 @@ object Javacp {
       case upperBound :: Nil =>
         upperBound
       case _ =>
-        s.Type(
-          tag = s.Type.Tag.INTERSECTION_TYPE,
-          intersectionType = Some(s.IntersectionType(types = typeParameters))
-        )
+          s.IntersectionType(types = typeParameters)
     }
-    val tpe = s.Type(
-      tag = s.Type.Tag.TYPE_TYPE,
-      typeType = Some(s.TypeType(upperBound = Some(upperBounds)))
-    )
+    val tpe = s.TypeType(upperBound = upperBounds)
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,
       language = l.JAVA,
       kind = k.TYPE_PARAMETER,
       name = typeParameter.value.identifier,
-      tpe = Some(tpe)
+      tpe = tpe
     )
   }
 
@@ -417,7 +399,7 @@ object Javacp {
     val buf = List.newBuilder[s.Annotation]
 
     def push(symbol: String): Unit =
-      buf += s.Annotation(Some(styperef(symbol)))
+      buf += s.Annotation(styperef(symbol))
 
     if (access.hasFlag(o.ACC_STRICT)) push("scala.annotation.strictfp#")
 
@@ -441,11 +423,8 @@ object Javacp {
   private def styperef(
       symbol: String,
       args: List[s.Type] = Nil,
-      prefix: Option[s.Type] = None): s.Type = {
-    s.Type(
-      tag = s.Type.Tag.TYPE_REF,
-      typeRef = Some(s.TypeRef(prefix, symbol, args))
-    )
+      prefix: s.Type = s.NoType): s.Type = {
+      s.TypeRef(prefix, symbol, args)
   }
 
   private implicit class XtensionTypeArgument(self: TypeArgument) {
