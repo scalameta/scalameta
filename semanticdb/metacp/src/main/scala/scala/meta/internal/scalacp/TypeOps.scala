@@ -59,26 +59,39 @@ trait TypeOps { self: Scalacp =>
             def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
             def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
             const match {
-              case () => s.SingletonType(st.UNIT, s.NoType, Symbols.None, 0, "")
-              case false => s.SingletonType(st.BOOLEAN, s.NoType, Symbols.None, 0, "")
-              case true => s.SingletonType(st.BOOLEAN, s.NoType, Symbols.None, 1, "")
-              case x: Byte => s.SingletonType(st.BYTE, s.NoType, Symbols.None, x.toLong, "")
-              case x: Short => s.SingletonType(st.SHORT, s.NoType, Symbols.None, x.toLong, "")
-              case x: Char => s.SingletonType(st.CHAR, s.NoType, Symbols.None, x.toLong, "")
-              case x: Int => s.SingletonType(st.INT, s.NoType, Symbols.None, x.toLong, "")
-              case x: Long => s.SingletonType(st.LONG, s.NoType, Symbols.None, x, "")
-              case x: Float => s.SingletonType(st.FLOAT, s.NoType, Symbols.None, floatBits(x), "")
-              case x: Double => s.SingletonType(st.DOUBLE, s.NoType, Symbols.None, doubleBits(x), "")
-              case x: String => s.SingletonType(st.STRING, s.NoType, Symbols.None, 0, x)
-              case null => s.SingletonType(st.NULL, s.NoType, Symbols.None, 0, "")
-              case other => sys.error(s"unsupported const $other")
+              case () =>
+                s.SingletonType(st.UNIT, s.NoType, Symbols.None, 0, "")
+              case false =>
+                s.SingletonType(st.BOOLEAN, s.NoType, Symbols.None, 0, "")
+              case true =>
+                s.SingletonType(st.BOOLEAN, s.NoType, Symbols.None, 1, "")
+              case x: Byte =>
+                s.SingletonType(st.BYTE, s.NoType, Symbols.None, x.toLong, "")
+              case x: Short =>
+                s.SingletonType(st.SHORT, s.NoType, Symbols.None, x.toLong, "")
+              case x: Char =>
+                s.SingletonType(st.CHAR, s.NoType, Symbols.None, x.toLong, "")
+              case x: Int =>
+                s.SingletonType(st.INT, s.NoType, Symbols.None, x.toLong, "")
+              case x: Long =>
+                s.SingletonType(st.LONG, s.NoType, Symbols.None, x, "")
+              case x: Float =>
+                s.SingletonType(st.FLOAT, s.NoType, Symbols.None, floatBits(x), "")
+              case x: Double =>
+                s.SingletonType(st.DOUBLE, s.NoType, Symbols.None, doubleBits(x), "")
+              case x: String =>
+                s.SingletonType(st.STRING, s.NoType, Symbols.None, 0, x)
+              case null =>
+                s.SingletonType(st.NULL, s.NoType, Symbols.None, 0, "")
+              case other =>
+                sys.error(s"unsupported const $other")
             }
           case RefinedType(sym, parents) =>
             val sparents = parents.map(loop).filter(_.isDefined)
             val stpe = s.WithType(sparents)
             val sdecls = Some(sym.children.sscope(HardlinkChildren))
             s.StructuralType(stpe, sdecls)
-         case AnnotatedType(tpe, anns) =>
+          case AnnotatedType(tpe, anns) =>
             val sanns = anns.reverse.map(_.toSemantic)
             val stpe = loop(tpe)
             s.AnnotatedType(sanns, stpe)
@@ -104,13 +117,13 @@ trait TypeOps { self: Scalacp =>
           case PolyType(tpe, tparams) =>
             loop(tpe) match {
               case s.NoType => s.NoType
-              case t: s.ClassInfoType=>
+              case t: s.ClassInfoType =>
                 val stparams = tparams.sscope(linkMode)
                 t.copy(typeParameters = Some(stparams))
-              case t: s.MethodType=>
+              case t: s.MethodType =>
                 val stparams = tparams.sscope(linkMode)
                 t.copy(typeParameters = Some(stparams))
-              case t: s.TypeType=>
+              case t: s.TypeType =>
                 val stparams = tparams.sscope(linkMode)
                 t.copy(typeParameters = Some(stparams))
               case stpe =>

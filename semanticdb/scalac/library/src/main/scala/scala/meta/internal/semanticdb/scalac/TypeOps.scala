@@ -44,19 +44,32 @@ trait TypeOps { self: SemanticdbOps =>
             def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
             def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
             gconst.value match {
-              case () => s.SingletonType(st.UNIT, s.NoType, "", 0, "")
-              case false => s.SingletonType(st.BOOLEAN, s.NoType, "", 0, "")
-              case true => s.SingletonType(st.BOOLEAN, s.NoType, "", 1, "")
-              case x: Byte => s.SingletonType(st.BYTE, s.NoType, "", x.toLong, "")
-              case x: Short => s.SingletonType(st.SHORT, s.NoType, "", x.toLong, "")
-              case x: Char => s.SingletonType(st.CHAR, s.NoType, "", x.toLong, "")
-              case x: Int => s.SingletonType(st.INT, s.NoType, "", x.toLong, "")
-              case x: Long => s.SingletonType(st.LONG, s.NoType, "", x, "")
-              case x: Float => s.SingletonType(st.FLOAT, s.NoType, "", floatBits(x), "")
-              case x: Double => s.SingletonType(st.DOUBLE, s.NoType, "", doubleBits(x), "")
-              case x: String => s.SingletonType(st.STRING, s.NoType, "", 0, x)
-              case null => s.SingletonType(st.NULL, s.NoType, "", 0, "")
-              case _ => sys.error(s"unsupported const ${gconst}: ${g.showRaw(gconst)}")
+              case () =>
+                s.SingletonType(st.UNIT, s.NoType, "", 0, "")
+              case false =>
+                s.SingletonType(st.BOOLEAN, s.NoType, "", 0, "")
+              case true =>
+                s.SingletonType(st.BOOLEAN, s.NoType, "", 1, "")
+              case x: Byte =>
+                s.SingletonType(st.BYTE, s.NoType, "", x.toLong, "")
+              case x: Short =>
+                s.SingletonType(st.SHORT, s.NoType, "", x.toLong, "")
+              case x: Char =>
+                s.SingletonType(st.CHAR, s.NoType, "", x.toLong, "")
+              case x: Int =>
+                s.SingletonType(st.INT, s.NoType, "", x.toLong, "")
+              case x: Long =>
+                s.SingletonType(st.LONG, s.NoType, "", x, "")
+              case x: Float =>
+                s.SingletonType(st.FLOAT, s.NoType, "", floatBits(x), "")
+              case x: Double =>
+                s.SingletonType(st.DOUBLE, s.NoType, "", doubleBits(x), "")
+              case x: String =>
+                s.SingletonType(st.STRING, s.NoType, "", 0, x)
+              case null =>
+                s.SingletonType(st.NULL, s.NoType, "", 0, "")
+              case _ =>
+                sys.error(s"unsupported const ${gconst}: ${g.showRaw(gconst)}")
             }
           case g.RefinedType(gparents, gdecls) =>
             val sparents = gparents.map(loop).filter(_.isDefined)

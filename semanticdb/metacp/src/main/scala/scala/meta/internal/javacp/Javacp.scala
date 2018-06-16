@@ -317,7 +317,7 @@ object Javacp {
       case upperBound :: Nil =>
         upperBound
       case _ =>
-          s.IntersectionType(types = typeParameters)
+        s.IntersectionType(types = typeParameters)
     }
     val tpe = s.TypeType(upperBound = upperBounds)
 
@@ -424,7 +424,7 @@ object Javacp {
       symbol: String,
       args: List[s.Type] = Nil,
       prefix: s.Type = s.NoType): s.Type = {
-      s.TypeRef(prefix, symbol, args)
+    s.TypeRef(prefix, symbol, args)
   }
 
   private implicit class XtensionTypeArgument(self: TypeArgument) {
