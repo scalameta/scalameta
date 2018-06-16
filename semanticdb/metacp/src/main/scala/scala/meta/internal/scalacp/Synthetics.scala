@@ -6,8 +6,6 @@ import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
-import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
 object Synthetics {
   def setterInfos(getterInfo: s.SymbolInformation, linkMode: LinkMode): List[s.SymbolInformation] = {
@@ -25,7 +23,10 @@ object Synthetics {
       if (getterSym.isGlobal) Symbols.Global(setterSym, d.Parameter("x$1"))
       else getterSym + "+2"
     }
-    val paramTpe = getterInfo.tpe.flatMap(_.methodType.flatMap(_.returnType))
+    val paramTpe = getterInfo.tpe match {
+      case s.MethodType(_, _, sret) => sret
+      case _ => s.NoType
+    }
     val paramInfo = s.SymbolInformation(
       symbol = paramSym,
       language = l.SCALA,
@@ -37,16 +38,14 @@ object Synthetics {
       accessibility = Some(s.Accessibility(a.PUBLIC)))
 
     val setterTpe = {
-      val unitTpe = s.TypeRef(None, "scala.Unit#", Nil)
-      val unit = s.Type(tag = t.TYPE_REF, typeRef = Some(unitTpe))
+      val unit = s.TypeRef(s.NoType, "scala.Unit#", Nil)
       val setterParamss = {
         linkMode match {
           case SymlinkChildren => List(s.Scope(symlinks = List(paramInfo.symbol)))
           case HardlinkChildren => List(s.Scope(hardlinks = List(paramInfo)))
         }
       }
-      val setterTpe = s.MethodType(Some(s.Scope()), setterParamss, Some(unit))
-      s.Type(tag = t.METHOD_TYPE, methodType = Some(setterTpe))
+      s.MethodType(Some(s.Scope()), setterParamss, unit)
     }
     val setterInfo = s.SymbolInformation(
       symbol = setterSym,
@@ -54,7 +53,7 @@ object Synthetics {
       kind = k.METHOD,
       properties = getterInfo.properties,
       name = getterInfo.name + "_=",
-      tpe = Some(setterTpe),
+      tpe = setterTpe,
       annotations = getterInfo.annotations,
       accessibility = getterInfo.accessibility)
 
