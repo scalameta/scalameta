@@ -3,9 +3,8 @@ advanced.D#
 ===========
 --- metac
 +++ metacp
-                 type_arguments {
-                   tag: TYPE_REF
                    typeRef {
+                     prefix {
 -                    symbol: "local14"
 +                    symbol: "advanced.D#_#"
              declarations {
@@ -26,9 +25,8 @@ advanced.Existential#e1().
 ==========================
 --- metac
 +++ metacp
-             type_arguments {
-               tag: TYPE_REF
                typeRef {
+                 prefix {
 -                symbol: "local7"
 +                symbol: "local0"
          declarations {
@@ -45,9 +43,8 @@ advanced.Existential#e2().
 ==========================
 --- metac
 +++ metacp
-                 type_arguments {
-                   tag: TYPE_REF
                    typeRef {
+                     prefix {
 -                    symbol: "local8"
 +                    symbol: "local1"
              declarations {
@@ -64,14 +61,13 @@ advanced.Existential#e4().
 ==========================
 --- metac
 +++ metacp
-         tpe {
-           tag: TYPE_REF
            typeRef {
+             prefix {
 -            symbol: "local10"
 +            symbol: "local2"
              type_arguments {
-               tag: TYPE_REF
                typeRef {
+                 prefix {
          declarations {
            hardlinks {
 -            symbol: "local10"
@@ -114,9 +110,8 @@ advanced.Test.e2().
 ===================
 --- metac
 +++ metacp
-                 type_arguments {
-                   tag: TYPE_REF
                    typeRef {
+                     prefix {
 -                    symbol: "local8"
 +                    symbol: "advanced.Test.T#"
              declarations {
@@ -155,9 +150,9 @@ classes.C3#copy$default$1().
 --- metac
 +++ metacp
          annotations {
--          tpe {
--            tag: TYPE_REF
+           tpe {
 -            typeRef {
+-              prefix {
 -              symbol: "scala.annotation.unchecked.uncheckedVariance#"
 
 
@@ -167,9 +162,9 @@ classes.C4#copy$default$1().
 --- metac
 +++ metacp
          annotations {
--          tpe {
--            tag: TYPE_REF
+           tpe {
 -            typeRef {
+-              prefix {
 -              symbol: "scala.annotation.unchecked.uncheckedVariance#"
 
 
@@ -179,9 +174,9 @@ classes.C6#copy$default$1().
 --- metac
 +++ metacp
          annotations {
--          tpe {
--            tag: TYPE_REF
+           tpe {
 -            typeRef {
+-              prefix {
 -              symbol: "scala.annotation.unchecked.uncheckedVariance#"
 
 
@@ -231,9 +226,8 @@ example.MetacJava#staticInner().
 ================================
 --- metac
 +++ metacp
-     return_type {
-       tag: TYPE_REF
        typeRef {
+         prefix {
 -        symbol: "com.javacp.MetacJava#StaticInner#"
 +        symbol: "com.javacp.MetacJava.StaticInner#"
      type_parameters {
@@ -247,19 +241,18 @@ example.Methods#m13().(x)
  properties: 0
  name: "x"
  tpe {
--  tag: ANNOTATED_TYPE
 -  annotatedType {
 -    tpe {
--      tag: TYPE_REF
 -      typeRef {
+-        prefix {
 -        symbol: "scala.Int#"
++  typeRef {
++    prefix {
 -    annotations {
 -      tpe {
--        tag: TYPE_REF
 -        typeRef {
+-          prefix {
 -          symbol: "scala.unchecked#"
-+  tag: TYPE_REF
-+  typeRef {
 +    symbol: "scala.Int#"
  accessibility {
 
@@ -290,8 +283,8 @@ flags.p.package.S#[T]
 +++ metacp
 -annotations {
 -  tpe {
--    tag: TYPE_REF
 -    typeRef {
+-      prefix {
 -      symbol: "scala.specialized#"
 -}
  accessibility {
@@ -305,13 +298,13 @@ types.Test.C#annType1().
 --- metac
 +++ metacp
          annotations {
--          tpe {
--            tag: TYPE_REF
+           tpe {
 -            typeRef {
+-              prefix {
 -              symbol: "types.ann#"
 -              type_arguments {
--                tag: TYPE_REF
 -                typeRef {
+-                  prefix {
 -                  symbol: "scala.Int#"
 
 
@@ -321,14 +314,14 @@ types.Test.C#annType2().
 --- metac
 +++ metacp
          annotations {
--          tpe {
--            tag: TYPE_REF
+           tpe {
 -            typeRef {
+-              prefix {
 -              symbol: "types.ann1#"
          annotations {
--          tpe {
--            tag: TYPE_REF
+           tpe {
 -            typeRef {
+-              prefix {
 -              symbol: "types.ann2#"
 
 
@@ -365,9 +358,8 @@ types.Test.C#existentialType1().
 ================================
 --- metac
 +++ metacp
-         tpe {
-           tag: TYPE_REF
            typeRef {
+             prefix {
 -            symbol: "local7"
 +            symbol: "local4"
          declarations {
@@ -384,9 +376,8 @@ types.Test.C#existentialType2().
 ================================
 --- metac
 +++ metacp
-             type_arguments {
-               tag: TYPE_REF
                typeRef {
+                 prefix {
 -                symbol: "local8"
 +                symbol: "local5"
          declarations {
@@ -415,23 +406,19 @@ types.Test.Literal.javaEnum().
 ==============================
 --- metac
 +++ metacp
- kind: METHOD
  properties: 1032
  name: "javaEnum"
--tpe {
--  tag: METHOD_TYPE
+ tpe {
 -  methodType {
 -    return_type {
--      tag: SINGLETON_TYPE
 -      singletonType {
 -        tag: SYMBOL
+-        prefix {
 -        symbol: "java.nio.file.LinkOption#NOFOLLOW_LINKS."
 -        primitive: 0
 -        string: ""
 -    type_parameters {
--}
  accessibility {
    tag: PUBLIC
-   symbol: ""
 
 
