@@ -9,7 +9,6 @@ import scala.meta.internal.semanticdb3.SingletonType.Tag._
 import scala.meta.internal.semanticdb3.SymbolInformation._
 import scala.meta.internal.semanticdb3.SymbolInformation.Kind._
 import scala.meta.internal.semanticdb3.SymbolInformation.Property._
-import scala.meta.internal.semanticdb3.Type.Tag._
 
 trait SymbolInformationPrinter extends BasePrinter {
   def pprint(info: SymbolInformation): Unit = {
@@ -78,11 +77,10 @@ trait SymbolInformationPrinter extends BasePrinter {
     private def pprint(ann: Annotation): Unit = {
       out.print("@")
       ann.tpe match {
-        case Some(tpe) =>
-          pprint(tpe)
-        case None =>
+        case NoType =>
           out.print("<?>")
-          Nil
+        case tpe =>
+          pprint(tpe)
       }
     }
 
@@ -120,23 +118,21 @@ trait SymbolInformationPrinter extends BasePrinter {
         pprint(info.symbol, Definition)
       }
       def prefix(tpe: Type): Unit = {
-        tpe.tag match {
-          case TYPE_REF =>
-            val Some(TypeRef(pre, sym, args)) = tpe.typeRef
+        tpe match {
+          case TypeRef(pre, sym, args) =>
             pre match {
-              case Some(pre) if pre.tag.isSingletonType =>
+              case _: SingletonType =>
                 prefix(pre)
                 out.print(".")
-              case Some(pre) =>
+              case NoType =>
+                ()
+              case _ =>
                 prefix(pre)
                 out.print("#")
-              case _ =>
-                ()
             }
             ref(sym)
             rep("[", args, ", ", "]")(normal)
-          case SINGLETON_TYPE =>
-            val Some(SingletonType(tag, pre, sym, x, s)) = tpe.singletonType
+          case SingletonType(tag, pre, sym, x, s) =>
             tag match {
               case SYMBOL =>
                 opt(pre, ".")(prefix)
@@ -173,78 +169,65 @@ trait SymbolInformationPrinter extends BasePrinter {
               case UNKNOWN_SINGLETON | SingletonType.Tag.Unrecognized(_) =>
                 out.print("<?>")
             }
-          case INTERSECTION_TYPE =>
-            val Some(IntersectionType(types)) = tpe.intersectionType
+          case IntersectionType(types) =>
             rep(types, " & ")(normal)
-          case UNION_TYPE =>
-            val Some(UnionType(types)) = tpe.unionType
+          case UnionType(types) =>
             rep(types, " | ")(normal)
-          case WITH_TYPE =>
-            val Some(WithType(types)) = tpe.withType
+          case WithType(types) =>
             rep(types, " with ")(normal)
-          case STRUCTURAL_TYPE =>
-            val Some(StructuralType(utpe, decls)) = tpe.structuralType
+          case StructuralType(utpe, decls) =>
             decls.infos.foreach(notes.discover)
-            utpe.foreach(normal)
+            opt(utpe)(normal)
             if (decls.infos.nonEmpty) rep(" { ", decls.infos, "; ", " }")(defn)
             else out.print(" {}")
-          case ANNOTATED_TYPE =>
-            val Some(AnnotatedType(anns, utpe)) = tpe.annotatedType
-            utpe.foreach(normal)
+          case AnnotatedType(anns, utpe) =>
+            opt(utpe)(normal)
             out.print(" ")
             rep(anns, " ", "")(pprint)
-          case EXISTENTIAL_TYPE =>
-            val Some(ExistentialType(utpe, decls)) = tpe.existentialType
+          case ExistentialType(utpe, decls) =>
             decls.infos.foreach(notes.discover)
-            utpe.foreach(normal)
+            opt(utpe)(normal)
             rep(" forSome { ", decls.infos, "; ", " }")(defn)
-          case UNIVERSAL_TYPE =>
-            val Some(UniversalType(tparams, utpe)) = tpe.universalType
+          case UniversalType(tparams, utpe) =>
             tparams.infos.foreach(notes.discover)
             rep("[", tparams.infos, ", ", "] => ")(defn)
-            utpe.foreach(normal)
-          case CLASS_INFO_TYPE =>
-            val Some(ClassInfoType(tparams, parents, decls)) = tpe.classInfoType
+            opt(utpe)(normal)
+          case ClassInfoType(tparams, parents, decls) =>
             rep("[", tparams.infos, ", ", "]")(defn)
             rep(" extends ", parents, " with ")(normal)
             if (decls.infos.nonEmpty) out.print(s" { +${decls.infos.length} decls }")
-          case METHOD_TYPE =>
-            val Some(MethodType(tparams, paramss, res)) = tpe.methodType
+          case MethodType(tparams, paramss, res) =>
             rep("[", tparams.infos, ", ", "]")(defn)
             rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(defn))
             opt(": ", res)(normal)
-          case BY_NAME_TYPE =>
-            val Some(ByNameType(utpe)) = tpe.byNameType
+          case ByNameType(utpe) =>
             out.print("=> ")
-            utpe.foreach(normal)
-          case REPEATED_TYPE =>
-            val Some(RepeatedType(utpe)) = tpe.repeatedType
-            utpe.foreach(normal)
+            opt(utpe)(normal)
+          case RepeatedType(utpe) =>
+            opt(utpe)(normal)
             out.print("*")
-          case TYPE_TYPE =>
-            val Some(TypeType(tparams, lo, hi)) = tpe.typeType
+          case TypeType(tparams, lo, hi) =>
             rep("[", tparams.infos, ", ", "]")(defn)
             if (lo != hi) {
               lo match {
-                case Some(NothingTpe()) => ()
+                case NothingTpe() => ()
                 case lo => opt(" >: ", lo)(normal)
               }
               hi match {
-                case Some(AnyTpe()) => ()
+                case AnyTpe() => ()
                 case hi => opt(" <: ", hi)(normal)
               }
             } else {
               val alias = lo
               opt(" = ", alias)(normal)
             }
-          case UNKNOWN_TYPE | Type.Tag.Unrecognized(_) =>
+          case NoType =>
             out.print("<?>")
         }
       }
       def normal(tpe: Type): Unit = {
-        tpe.tag match {
-          case SINGLETON_TYPE =>
-            val Some(SingletonType(tag, _, _, _, _)) = tpe.singletonType
+        tpe match {
+          case SingletonType(tag, _, _, _, _) =>
             tag match {
               case SYMBOL | THIS | SUPER =>
                 prefix(tpe)
@@ -328,15 +311,15 @@ trait SymbolInformationPrinter extends BasePrinter {
     }
 
     private object NothingTpe {
-      def unapply(tpe: Type): Boolean = tpe.typeRef match {
-        case Some(TypeRef(None, "scala.Nothing#", Nil)) => true
+      def unapply(tpe: Type): Boolean = tpe match {
+        case TypeRef(NoType, "scala.Nothing#", Nil) => true
         case _ => false
       }
     }
 
     private object AnyTpe {
-      def unapply(tpe: Type): Boolean = tpe.typeRef match {
-        case Some(TypeRef(None, "scala.Any#", Nil)) => true
+      def unapply(tpe: Type): Boolean = tpe match {
+        case TypeRef(NoType, "scala.Any#", Nil) => true
         case _ => false
       }
     }

@@ -7,7 +7,6 @@ import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
-import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.tools.scalap.scalax.rules.ScalaSigParserError
 import scala.tools.scalap.scalax.rules.scalasig._
 
@@ -151,12 +150,12 @@ trait SymbolInformationOps { self: Scalacp =>
       }
     }
 
-    private def tpe(linkMode: LinkMode): Option[s.Type] = {
+    private def tpe(linkMode: LinkMode): s.Type = {
       sym match {
         case sym: SymbolInfoSymbol =>
           try {
             if (sym.isPackage) {
-              None
+              s.NoType
             } else {
               val tpe = {
                 // NOTE: Scalap doesn't expose JAVA_ENUM.
@@ -184,13 +183,15 @@ trait SymbolInformationOps { self: Scalacp =>
               }
               val stpe = tpe.toSemantic(linkMode)
               if (sym.isConstructor) {
-                stpe.map(_.update(_.methodType.optionalReturnType := None))
+                stpe match {
+                  case t: s.MethodType => t.copy(returnType = s.NoType)
+                  case _ => stpe
+                }
               } else if (sym.isScalacField) {
-                val stag = t.METHOD_TYPE
                 val stparams = Some(s.Scope())
                 val sparamss = Nil
                 val sret = stpe
-                Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, sparamss, sret))))
+                s.MethodType(stparams, sparamss, sret)
               } else {
                 stpe
               }
@@ -198,10 +199,10 @@ trait SymbolInformationOps { self: Scalacp =>
           } catch {
             case ScalaSigParserError("Unexpected failure") =>
               // FIXME: https://github.com/scalameta/scalameta/issues/1494
-              None
+              s.NoType
           }
         case _ =>
-          None
+          s.NoType
       }
     }
 

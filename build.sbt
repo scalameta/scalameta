@@ -107,6 +107,8 @@ lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(
     publishableSettings,
     protobufSettings,
+    unmanagedSourceDirectories.in(Compile) +=
+      baseDirectory.value.getParentFile / "src" / "main" / "generated",
     PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3"))
   )
   .nativeSettings(nativeSettings)
@@ -630,23 +632,16 @@ lazy val mergeSettings = Def.settings(
   }
 )
 
+// To run ScalaPB generation manually:
+//   git clone https://github.com/scalapb/scalapb
+//   Make sure to use the latest commit from the branch in https://github.com/scalapb/ScalaPB/pull/458
+//   cd scalapb
+//   sbt scalapbc/assembly
+//   cd ../scalameta
+//   export SCALAPBC=/Users/ollie/dev/ScalaPB/scalapbc/target/scala-2.10/scalapbc-assembly-0.7.5-SNAPSHOT.jar
+//   java -jar $SCALAPBC  --scala_out=flat_package:semanticdb/semanticdb3/src/main/generated semanticdb/semanticdb3/*.proto
 lazy val protobufSettings = Def.settings(
   sharedSettings,
-  PB.targets.in(Compile) := Seq(
-    scalapb.gen(
-      flatPackage = true // Don't append filename to package
-    ) -> sourceManaged.in(Compile).value
-  ),
-  PB.runProtoc in Compile := {
-    val isNixOS = sys.props.get("java.home").map(_.startsWith("/nix/store")).getOrElse(false)
-    if (isNixOS) {
-      // must have protoc installed
-      // nix-env -i protobuf-3.3.0
-      (args => Process("protoc", args) !)
-    } else {
-      (PB.runProtoc in Compile).value
-    }
-  },
   libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
 )
 
@@ -796,6 +791,7 @@ lazy val hasLargeIntegrationTests = Seq(
 )
 
 lazy val nativeSettings = Seq(
+  SettingKey[Boolean]("ide-skip-project") := true,
   scalaVersion := LatestScala211,
   crossScalaVersions := List(LatestScala211),
   scalacOptions -= "-Xfatal-warnings",

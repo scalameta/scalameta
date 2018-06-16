@@ -8,7 +8,6 @@ import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb3.{Language => l}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.Type.{Tag => t}
 
 trait SymbolInformationOps { self: SemanticdbOps =>
   import g._
@@ -111,9 +110,9 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    private def tpe(linkMode: LinkMode): Option[s.Type] = {
+    private def tpe(linkMode: LinkMode): s.Type = {
       if (gsym.hasPackageFlag) {
-        None
+        s.NoType
       } else {
         val gtpe = {
           if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
@@ -134,13 +133,15 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         }
         val stpe = gtpe.toSemantic(linkMode)
         if (gsym.isConstructor) {
-          stpe.map(_.update(_.methodType.optionalReturnType := None))
+          stpe match {
+            case m: s.MethodType => m.copy(returnType = s.NoType)
+            case m => m
+          }
         } else if (gsym.isScalacField) {
-          val stag = t.METHOD_TYPE
           val stparams = Some(s.Scope())
           val sparamss = Nil
           val sret = stpe
-          Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, sparamss, sret))))
+          s.MethodType(stparams, sparamss, sret)
         } else {
           stpe
         }
