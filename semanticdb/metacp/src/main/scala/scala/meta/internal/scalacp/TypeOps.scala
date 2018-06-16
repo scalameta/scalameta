@@ -104,15 +104,15 @@ trait TypeOps { self: Scalacp =>
           case PolyType(tpe, tparams) =>
             loop(tpe) match {
               case s.NoType => s.NoType
-              case s.ClassInfoType(_, sparents, sdecls) =>
+              case t: s.ClassInfoType=>
                 val stparams = tparams.sscope(linkMode)
-                s.ClassInfoType(Some(stparams), sparents, sdecls)
-              case s.MethodType(_, sparams, sret) =>
+                t.copy(typeParameters = Some(stparams))
+              case t: s.MethodType=>
                 val stparams = tparams.sscope(linkMode)
-                s.MethodType(Some(stparams), sparams, sret)
-              case s.TypeType(_, lo, hi) =>
+                t.copy(typeParameters = Some(stparams))
+              case t: s.TypeType=>
                 val stparams = tparams.sscope(linkMode)
-                s.TypeType(Some(stparams), lo, hi)
+                t.copy(typeParameters = Some(stparams))
               case stpe =>
                 val stparams = tparams.sscope(HardlinkChildren)
                 s.UniversalType(Some(stparams), stpe)

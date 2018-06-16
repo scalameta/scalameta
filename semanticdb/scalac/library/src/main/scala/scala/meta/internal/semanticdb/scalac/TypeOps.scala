@@ -4,110 +4,82 @@ import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
-import scala.meta.internal.semanticdb3.Type.{Tag => t}
 import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps { self: SemanticdbOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
-    def toSemantic(linkMode: LinkMode): Option[s.Type] = {
-      def loop(gtpe: g.Type): Option[s.Type] = {
+    def toSemantic(linkMode: LinkMode): s.Type = {
+      def loop(gtpe: g.Type): s.Type = {
         gtpe match {
           case ByNameType(gtpe) =>
-            val stag = t.BY_NAME_TYPE
             val stpe = loop(gtpe)
-            Some(s.Type(tag = stag, byNameType = Some(s.ByNameType(stpe))))
+            s.ByNameType(stpe)
           case RepeatedType(gtpe) =>
-            val stag = t.REPEATED_TYPE
             val stpe = loop(gtpe)
-            Some(s.Type(tag = stag, repeatedType = Some(s.RepeatedType(stpe))))
+            s.RepeatedType(stpe)
           case g.TypeRef(gpre, gsym, gargs) =>
-            val stag = t.TYPE_REF
-            val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else None
+            val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else s.NoType
             val ssym = gsym.ssym
-            val sargs = gargs.flatMap(loop)
-            Some(s.Type(tag = stag, typeRef = Some(s.TypeRef(spre, ssym, sargs))))
+            val sargs = gargs.map(loop).filter(_.isDefined)
+            s.TypeRef(spre, ssym, sargs)
           case g.SingleType(gpre, gsym) =>
-            val stag = t.SINGLETON_TYPE
-            val stpe = {
-              val stag = st.SYMBOL
-              val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else None
-              val ssym = gsym.ssym
-              s.SingletonType(stag, spre, ssym, 0, "")
-            }
-            Some(s.Type(tag = stag, singletonType = Some(stpe)))
+            val stag = st.SYMBOL
+            val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else s.NoType
+            val ssym = gsym.ssym
+            s.SingletonType(stag, spre, ssym, 0, "")
           case g.ThisType(gsym) =>
-            val stag = t.SINGLETON_TYPE
-            val stpe = {
-              val stag = st.THIS
-              val ssym = gsym.ssym
-              s.SingletonType(stag, None, ssym, 0, "")
-            }
-            Some(s.Type(tag = stag, singletonType = Some(stpe)))
+            val stag = st.THIS
+            val ssym = gsym.ssym
+            s.SingletonType(stag, s.NoType, ssym, 0, "")
           case g.SuperType(gpre, gmix) =>
-            val stag = t.SINGLETON_TYPE
-            val stpe = {
-              val stag = st.SUPER
-              val spre = loop(gpre.typeSymbol.tpe)
-              val ssym = gmix.typeSymbol.ssym
-              s.SingletonType(stag, spre, ssym, 0, "")
-            }
-            Some(s.Type(tag = stag, singletonType = Some(stpe)))
+            val stag = st.SUPER
+            val spre = loop(gpre.typeSymbol.tpe)
+            val ssym = gmix.typeSymbol.ssym
+            s.SingletonType(stag, spre, ssym, 0, "")
           case g.ConstantType(g.Constant(sym: g.TermSymbol)) if sym.hasFlag(gf.JAVA_ENUM) =>
             loop(g.SingleType(sym.owner.thisPrefix, sym))
           case g.ConstantType(g.Constant(_: g.Type)) =>
             loop(gtpe.widen)
           case g.ConstantType(gconst) =>
-            val stag = t.SINGLETON_TYPE
-            val stpe = {
-              def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
-              def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
-              gconst.value match {
-                case () => s.SingletonType(st.UNIT, None, "", 0, "")
-                case false => s.SingletonType(st.BOOLEAN, None, "", 0, "")
-                case true => s.SingletonType(st.BOOLEAN, None, "", 1, "")
-                case x: Byte => s.SingletonType(st.BYTE, None, "", x.toLong, "")
-                case x: Short => s.SingletonType(st.SHORT, None, "", x.toLong, "")
-                case x: Char => s.SingletonType(st.CHAR, None, "", x.toLong, "")
-                case x: Int => s.SingletonType(st.INT, None, "", x.toLong, "")
-                case x: Long => s.SingletonType(st.LONG, None, "", x, "")
-                case x: Float => s.SingletonType(st.FLOAT, None, "", floatBits(x), "")
-                case x: Double => s.SingletonType(st.DOUBLE, None, "", doubleBits(x), "")
-                case x: String => s.SingletonType(st.STRING, None, "", 0, x)
-                case null => s.SingletonType(st.NULL, None, "", 0, "")
-                case _ => sys.error(s"unsupported const ${gconst}: ${g.showRaw(gconst)}")
-              }
+            def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
+            def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
+            gconst.value match {
+              case () => s.SingletonType(st.UNIT, s.NoType, "", 0, "")
+              case false => s.SingletonType(st.BOOLEAN, s.NoType, "", 0, "")
+              case true => s.SingletonType(st.BOOLEAN, s.NoType, "", 1, "")
+              case x: Byte => s.SingletonType(st.BYTE, s.NoType, "", x.toLong, "")
+              case x: Short => s.SingletonType(st.SHORT, s.NoType, "", x.toLong, "")
+              case x: Char => s.SingletonType(st.CHAR, s.NoType, "", x.toLong, "")
+              case x: Int => s.SingletonType(st.INT, s.NoType, "", x.toLong, "")
+              case x: Long => s.SingletonType(st.LONG, s.NoType, "", x, "")
+              case x: Float => s.SingletonType(st.FLOAT, s.NoType, "", floatBits(x), "")
+              case x: Double => s.SingletonType(st.DOUBLE, s.NoType, "", doubleBits(x), "")
+              case x: String => s.SingletonType(st.STRING, s.NoType, "", 0, x)
+              case null => s.SingletonType(st.NULL, s.NoType, "", 0, "")
+              case _ => sys.error(s"unsupported const ${gconst}: ${g.showRaw(gconst)}")
             }
-            Some(s.Type(tag = stag, singletonType = Some(stpe)))
           case g.RefinedType(gparents, gdecls) =>
-            val stag = t.STRUCTURAL_TYPE
-            val stpe = {
-              val sparents = gparents.flatMap(loop)
-              Some(s.Type(tag = t.WITH_TYPE, withType = Some(s.WithType(sparents))))
-            }
+            val sparents = gparents.map(loop).filter(_.isDefined)
+            val stpe = s.WithType(sparents)
             val sdecls = Some(gdecls.semanticdbDecls.sscope(HardlinkChildren))
-            Some(s.Type(tag = stag, structuralType = Some(s.StructuralType(stpe, sdecls))))
+            s.StructuralType(stpe, sdecls)
           case g.AnnotatedType(ganns, gtpe) =>
-            val stag = t.ANNOTATED_TYPE
             val sanns = ganns.reverse.map(_.toSemantic)
             val stpe = loop(gtpe)
-            Some(s.Type(tag = stag, annotatedType = Some(s.AnnotatedType(sanns, stpe))))
+            s.AnnotatedType(sanns, stpe)
           case g.ExistentialType(gtparams, gtpe) =>
-            val stag = t.EXISTENTIAL_TYPE
             val stpe = loop(gtpe)
             val sdecls = Some(gtparams.sscope(HardlinkChildren))
-            Some(s.Type(tag = stag, existentialType = Some(s.ExistentialType(stpe, sdecls))))
+            s.ExistentialType(stpe, sdecls)
           case g.ClassInfoType(gparents, _, gclass) =>
-            val stag = t.CLASS_INFO_TYPE
             val stparams = Some(s.Scope())
-            val sparents = gparents.flatMap(loop)
+            val sparents = gparents.map(loop).filter(_.isDefined)
             val sdecls = Some(gclass.semanticdbDecls.sscope(linkMode))
-            Some(
-              s.Type(tag = stag, classInfoType = Some(s.ClassInfoType(stparams, sparents, sdecls))))
+            s.ClassInfoType(stparams, sparents, sdecls)
           case g.NullaryMethodType(gtpe) =>
-            val stag = t.METHOD_TYPE
             val stparams = Some(s.Scope())
             val stpe = loop(gtpe)
-            Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, Nil, stpe))))
+            s.MethodType(stparams, Nil, stpe)
           case gtpe: g.MethodType =>
             def flatten(gtpe: g.Type): (List[List[g.Symbol]], g.Type) = {
               gtpe match {
@@ -119,43 +91,37 @@ trait TypeOps { self: SemanticdbOps =>
               }
             }
             val (gparamss, gret) = flatten(gtpe)
-            val stag = t.METHOD_TYPE
             val stparams = Some(s.Scope())
             val sparamss = gparamss.map(_.sscope(linkMode))
             val sret = loop(gret)
-            Some(s.Type(tag = stag, methodType = Some(s.MethodType(stparams, sparamss, sret))))
+            s.MethodType(stparams, sparamss, sret)
           case g.TypeBounds(glo, ghi) =>
-            val stag = t.TYPE_TYPE
             val stparams = Some(s.Scope())
             val slo = loop(glo)
             val shi = loop(ghi)
-            Some(s.Type(tag = stag, typeType = Some(s.TypeType(stparams, slo, shi))))
+            s.TypeType(stparams, slo, shi)
           case g.PolyType(gtparams, gtpe) =>
-            val stpe = loop(gtpe)
-            stpe.map { stpe =>
-              if (stpe.tag == t.CLASS_INFO_TYPE) {
+            loop(gtpe) match {
+              case s.NoType => s.NoType
+              case t: s.ClassInfoType =>
                 val stparams = gtparams.sscope(linkMode)
-                stpe.update(_.classInfoType.typeParameters := stparams)
-              } else if (stpe.tag == t.METHOD_TYPE) {
+                t.copy(typeParameters = Some(stparams))
+              case t: s.MethodType =>
                 val stparams = gtparams.sscope(linkMode)
-                stpe.update(_.methodType.typeParameters := stparams)
-              } else if (stpe.tag == t.TYPE_TYPE) {
+                t.copy(typeParameters = Some(stparams))
+              case t: s.TypeType =>
                 val stparams = gtparams.sscope(linkMode)
-                stpe.update(_.typeType.typeParameters := stparams)
-              } else {
-                val stag = t.UNIVERSAL_TYPE
+                t.copy(typeParameters = Some(stparams))
+              case stpe =>
                 val stparams = gtparams.sscope(HardlinkChildren)
-                s.Type(
-                  tag = stag,
-                  universalType = Some(s.UniversalType(Some(stparams), Some(stpe))))
-              }
+                s.UniversalType(Some(stparams), stpe)
             }
           case g.NoType =>
-            None
+            s.NoType
           case g.NoPrefix =>
-            None
+            s.NoType
           case g.ErrorType =>
-            None
+            s.NoType
           case gother =>
             sys.error(s"unsupported type ${gother}: ${g.showRaw(gother)}")
         }
