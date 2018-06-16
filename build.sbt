@@ -634,6 +634,7 @@ lazy val mergeSettings = Def.settings(
 
 // To run ScalaPB generation manually:
 //   git clone https://github.com/scalapb/scalapb
+//   Make sure to use the latest commit from the branch in https://github.com/scalapb/ScalaPB/pull/458
 //   cd scalapb
 //   sbt scalapbc/assembly
 //   cd ../scalameta

@@ -121,12 +121,12 @@ trait SymbolInformationPrinter extends BasePrinter {
         tpe match {
           case TypeRef(pre, sym, args) =>
             pre match {
-              case s: SingletonType =>
+              case _: SingletonType =>
                 prefix(pre)
                 out.print(".")
               case NoType =>
                 ()
-              case pre =>
+              case _ =>
                 prefix(pre)
                 out.print("#")
             }
