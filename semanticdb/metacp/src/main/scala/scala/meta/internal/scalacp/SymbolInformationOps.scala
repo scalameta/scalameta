@@ -184,8 +184,7 @@ trait SymbolInformationOps { self: Scalacp =>
               val stpe = tpe.toSemantic(linkMode)
               if (sym.isConstructor) {
                 stpe match {
-                  case s.MethodType(stparams, sparams, _) =>
-                    s.MethodType(stparams, sparams, s.NoType)
+                  case t: s.MethodType => t.copy(returnType = s.NoType)
                   case _ => stpe
                 }
               } else if (sym.isScalacField) {

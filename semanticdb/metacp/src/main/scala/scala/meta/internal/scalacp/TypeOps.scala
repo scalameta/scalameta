@@ -20,7 +20,7 @@ trait TypeOps { self: Scalacp =>
           case TypeRefType(pre, sym, args) =>
             val spre = if (tpe.hasNontrivialPrefix) loop(pre) else s.NoType
             val ssym = sym.ssym
-            val sargs = args.map(loop).filter(_.isDefined)
+            val sargs = args.map(loop)
             s.TypeRef(spre, ssym, sargs)
           case SingleType(pre, sym) =>
             val stag = st.SYMBOL
@@ -87,7 +87,7 @@ trait TypeOps { self: Scalacp =>
                 sys.error(s"unsupported const $other")
             }
           case RefinedType(sym, parents) =>
-            val sparents = parents.map(loop).filter(_.isDefined)
+            val sparents = parents.map(loop)
             val stpe = s.WithType(sparents)
             val sdecls = Some(sym.children.sscope(HardlinkChildren))
             s.StructuralType(stpe, sdecls)
@@ -101,7 +101,7 @@ trait TypeOps { self: Scalacp =>
             s.ExistentialType(stpe, sdecls)
           case ClassInfoType(sym, parents) =>
             val stparams = Some(s.Scope())
-            val sparents = parents.map(loop).filter(_.isDefined)
+            val sparents = parents.map(loop)
             val sdecls = Some(sym.semanticdbDecls.sscope(linkMode))
             s.ClassInfoType(stparams, sparents, sdecls)
           case _: NullaryMethodType | _: MethodType =>

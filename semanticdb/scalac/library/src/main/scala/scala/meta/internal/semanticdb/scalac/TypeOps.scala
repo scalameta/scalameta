@@ -20,7 +20,7 @@ trait TypeOps { self: SemanticdbOps =>
           case g.TypeRef(gpre, gsym, gargs) =>
             val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else s.NoType
             val ssym = gsym.ssym
-            val sargs = gargs.map(loop).filter(_.isDefined)
+            val sargs = gargs.map(loop)
             s.TypeRef(spre, ssym, sargs)
           case g.SingleType(gpre, gsym) =>
             val stag = st.SYMBOL
@@ -72,7 +72,7 @@ trait TypeOps { self: SemanticdbOps =>
                 sys.error(s"unsupported const ${gconst}: ${g.showRaw(gconst)}")
             }
           case g.RefinedType(gparents, gdecls) =>
-            val sparents = gparents.map(loop).filter(_.isDefined)
+            val sparents = gparents.map(loop)
             val stpe = s.WithType(sparents)
             val sdecls = Some(gdecls.semanticdbDecls.sscope(HardlinkChildren))
             s.StructuralType(stpe, sdecls)
@@ -86,7 +86,7 @@ trait TypeOps { self: SemanticdbOps =>
             s.ExistentialType(stpe, sdecls)
           case g.ClassInfoType(gparents, _, gclass) =>
             val stparams = Some(s.Scope())
-            val sparents = gparents.map(loop).filter(_.isDefined)
+            val sparents = gparents.map(loop)
             val sdecls = Some(gclass.semanticdbDecls.sscope(linkMode))
             s.ClassInfoType(stparams, sparents, sdecls)
           case g.NullaryMethodType(gtpe) =>
