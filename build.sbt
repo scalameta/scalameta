@@ -364,18 +364,6 @@ lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
 lazy val treesNative = trees.native
 
-lazy val semanticdb = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/semanticdb"))
-  .settings(
-    publishableSettings,
-    description := "Scalameta semantic database APIs"
-  )
-  .nativeSettings(nativeSettings)
-  .dependsOn(common)
-lazy val semanticdbJVM = semanticdb.jvm
-lazy val semanticdbJS = semanticdb.js
-lazy val semanticdbNative = semanticdb.native
-
 lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/scalameta"))
   .settings(
@@ -392,8 +380,7 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     transversers,
     trees,
     inputs,
-    io,
-    semanticdb
+    io
   )
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
