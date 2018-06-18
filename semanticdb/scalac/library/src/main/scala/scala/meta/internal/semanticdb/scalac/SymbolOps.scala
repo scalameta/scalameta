@@ -8,15 +8,16 @@ import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.util.control.NonFatal
+import scala.meta.internal.semanticdb3.Scala._
 
 trait SymbolOps { self: SemanticdbOps =>
 
-  lazy val symbolCache = new HashMap[g.Symbol, m.Symbol]
+  lazy val symbolCache = new HashMap[g.Symbol, String]
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
-    def toSemantic: m.Symbol = {
-      def uncached(sym: g.Symbol): m.Symbol = {
-        if (sym == null || sym == g.NoSymbol) return m.Symbol.None
-        if (sym.isOverloaded) return m.Symbol.Multi(sym.alternatives.map(_.toSemantic))
+    def toSemantic: String = {
+      def uncached(sym: g.Symbol): String = {
+        if (sym == null || sym == g.NoSymbol) return Symbols.None
+        if (sym.isOverloaded) return Symbols.Multi(sym.alternatives.map(_.toSemantic))
         if (sym.isModuleClass) return sym.asClass.module.toSemantic
         if (sym.isTypeSkolem) return sym.deSkolemize.toSemantic
         if (sym.isSemanticdbLocal) return freshSymbol(sym.pos.toMeta.input)
@@ -24,18 +25,18 @@ trait SymbolOps { self: SemanticdbOps =>
         val owner = sym.owner.toSemantic
         val signature = {
           if (sym.isMethod || sym.isUsefulField) {
-            m.Signature.Method(sym.name.toSemantic, sym.disambiguator)
+            Descriptor.Method(sym.name.toSemantic, sym.disambiguator)
           } else if (sym.isTypeParameter) {
-            m.Signature.TypeParameter(sym.name.toSemantic)
+            Descriptor.TypeParameter(sym.name.toSemantic)
           } else if (sym.isValueParameter) {
-            m.Signature.TermParameter(sym.name.toSemantic)
+            Descriptor.Parameter(sym.name.toSemantic)
           } else if (sym.isType || sym.isJavaClass) {
-            m.Signature.Type(sym.name.toSemantic)
+            Descriptor.Type(sym.name.toSemantic)
           } else {
-            m.Signature.Term(sym.name.toSemantic)
+            Descriptor.Term(sym.name.toSemantic)
           }
         }
-        m.Symbol.Global(owner, signature)
+        Symbols.Global(owner, signature)
       }
       val msym = symbolCache.get(sym)
       if (msym != null) {
@@ -47,7 +48,7 @@ trait SymbolOps { self: SemanticdbOps =>
           case NonFatal(e) if isInteractiveCompiler =>
             // happens regularly for broken code with the pc, see
             // https://github.com/scalameta/scalameta/issues/1194
-            m.Symbol.None
+            Symbols.None
         }
         symbolCache.put(sym, msym)
         msym
@@ -169,7 +170,7 @@ trait SymbolOps { self: SemanticdbOps =>
   }
 
   implicit class XtensionGSymbol(sym: g.Symbol) {
-    def ssym: String = sym.toSemantic.syntax
+    def ssym: String = sym.toSemantic
     def isSelfParameter: Boolean = {
       sym != g.NoSymbol && sym.owner.thisSym == sym
     }
@@ -226,12 +227,12 @@ trait SymbolOps { self: SemanticdbOps =>
   }
 
   lazy val idCache = new HashMap[String, Int]
-  private def freshSymbol(minput: m.Input): m.Symbol = {
-    if (minput == m.Input.None) m.Symbol.None
+  private def freshSymbol(minput: m.Input): String = {
+    if (minput == m.Input.None) Symbols.None
     else {
       val id = idCache.get(minput.syntax)
       idCache.put(minput.syntax, id + 1)
-      m.Symbol.Local("local" + id.toString)
+      Symbols.Local("local" + id.toString)
     }
   }
 }

@@ -1,6 +1,5 @@
 package scala.meta.internal.semanticdb3
 
-import scala.annotation.tailrec
 import scala.compat.Platform.EOL
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb3.Scala.{Names => n}
@@ -14,6 +13,8 @@ object Scala {
     def Global(owner: String, desc: String) = if (owner != RootPackage) owner + desc else desc
     def Local(id: Int): String = Local("local" + id.toString)
     def Local(symbol: String): String = symbol
+    def Multi(symbols: List[String]): String = symbols.mkString(";", "\t", "")
+    def parse(symbol: String): (String, Descriptor) = DescriptorParser(symbol).swap
   }
 
   implicit class ScalaSymbolOps(symbol: String) {
@@ -22,6 +23,11 @@ object Scala {
     def isEmptyPackage: Boolean = symbol == Symbols.EmptyPackage
     def isGlobal: Boolean = !isNone && Descriptor.descriptorLasts.contains(symbol.last)
     def isLocal: Boolean = !isNone && !isGlobal
+    def isMulti: Boolean = symbol.startsWith(";")
+    def flattenMulti: List[String] = {
+      if (isMulti) symbol.substring(1).split("\t").toList
+      else symbol :: Nil
+    }
     def ownerChain: List[String] = {
       val buf = List.newBuilder[String]
       def loop(symbol: String): Unit = {
