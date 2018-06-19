@@ -807,7 +807,7 @@ class TargetedSuite extends SemanticdbSuite {
       |package am
       |case class <<Foo>>(b: Foo)
     """.stripMargin, { (db, fooType) =>
-      val (qual, Descriptor.Type(foo)) = Symbols.parse(fooType)
+      val (Descriptor.Type(foo), qual) = DescriptorParser(fooType)
       val companion = Symbols.Global(qual, Descriptor.Term(foo))
       val objectDenot = db.symbols.find(_.symbol == companion).get
       assert(objectDenot.kind.isObject)

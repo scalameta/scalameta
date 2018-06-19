@@ -9,12 +9,13 @@ object Scala {
     val None: String = ""
     val RootPackage: String = "_root_."
     val EmptyPackage: String = "_empty_."
-    def Global(owner: String, desc: Descriptor): String = Global(owner, desc.toString)
-    def Global(owner: String, desc: String) = if (owner != RootPackage) owner + desc else desc
-    def Local(id: Int): String = Local("local" + id.toString)
-    def Local(symbol: String): String = symbol
-    def Multi(symbols: List[String]): String = symbols.mkString(";", ";", "")
-    def parse(symbol: String): (String, Descriptor) = DescriptorParser(symbol).swap
+    def Global(owner: String, desc: Descriptor): String =
+      if (owner != RootPackage) owner + desc.toString
+      else desc.toString
+    def Local(id: Int): String =
+      "local" + id.toString
+    def Multi(symbols: List[String]): String =
+      symbols.mkString(";", ";", "")
   }
 
   implicit class ScalaSymbolOps(symbol: String) {
@@ -226,7 +227,7 @@ object Scala {
     }
   }
 
-  private object DescriptorParser {
+  private[meta] object DescriptorParser {
     def apply(symbol: String): (Descriptor, String) = {
       val parser = new DescriptorParser(symbol)
       parser.entryPoint()

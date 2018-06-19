@@ -8,7 +8,6 @@ import scala.meta.internal.{semanticdb3 => s}
 import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.util.control.NonFatal
-import scala.meta.internal.semanticdb3.Scala._
 
 trait SymbolOps { self: SemanticdbOps =>
 
@@ -25,15 +24,15 @@ trait SymbolOps { self: SemanticdbOps =>
         val owner = sym.owner.toSemantic
         val signature = {
           if (sym.isMethod || sym.isUsefulField) {
-            Descriptor.Method(sym.name.toSemantic, sym.disambiguator)
+            d.Method(sym.name.toSemantic, sym.disambiguator)
           } else if (sym.isTypeParameter) {
-            Descriptor.TypeParameter(sym.name.toSemantic)
+            d.TypeParameter(sym.name.toSemantic)
           } else if (sym.isValueParameter) {
-            Descriptor.Parameter(sym.name.toSemantic)
+            d.Parameter(sym.name.toSemantic)
           } else if (sym.isType || sym.isJavaClass) {
-            Descriptor.Type(sym.name.toSemantic)
+            d.Type(sym.name.toSemantic)
           } else {
-            Descriptor.Term(sym.name.toSemantic)
+            d.Term(sym.name.toSemantic)
           }
         }
         Symbols.Global(owner, signature)
@@ -232,7 +231,7 @@ trait SymbolOps { self: SemanticdbOps =>
     else {
       val id = idCache.get(minput.syntax)
       idCache.put(minput.syntax, id + 1)
-      Symbols.Local("local" + id.toString)
+      Symbols.Local(id)
     }
   }
 }
