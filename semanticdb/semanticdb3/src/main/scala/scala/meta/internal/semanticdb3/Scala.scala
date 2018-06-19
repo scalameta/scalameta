@@ -13,7 +13,7 @@ object Scala {
     def Global(owner: String, desc: String) = if (owner != RootPackage) owner + desc else desc
     def Local(id: Int): String = Local("local" + id.toString)
     def Local(symbol: String): String = symbol
-    def Multi(symbols: List[String]): String = symbols.mkString(";", "\t", "")
+    def Multi(symbols: List[String]): String = symbols.mkString(";", ";", "")
     def parse(symbol: String): (String, Descriptor) = DescriptorParser(symbol).swap
   }
 
@@ -25,8 +25,28 @@ object Scala {
     def isLocal: Boolean = !isNone && !isGlobal
     def isMulti: Boolean = symbol.startsWith(";")
     def flattenMulti: List[String] = {
-      if (isMulti) symbol.substring(1).split("\t").toList
-      else symbol :: Nil
+      if (!isMulti) symbol :: Nil
+      else {
+        val buf = List.newBuilder[String]
+        def loop(begin: Int, i: Int): Unit =
+          if (i >= symbol.length) {
+            buf += symbol.substring(begin, symbol.length)
+          } else {
+            symbol.charAt(i) match {
+              case ';' =>
+                buf += symbol.substring(begin, i)
+                loop(i + 1, i + 1)
+              case '`' =>
+                var j = i + 1
+                while (symbol.charAt(j) != '`') j += 1
+                loop(begin, j + 1)
+              case _ =>
+                loop(begin, i + 1)
+            }
+          }
+        loop(1, 1)
+        buf.result()
+      }
     }
     def ownerChain: List[String] = {
       val buf = List.newBuilder[String]
