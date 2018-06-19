@@ -460,8 +460,10 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "databaseClasspath" -> classDirectory.in(semanticdbIntegration, Compile).value.getAbsolutePath
     ),
     buildInfoPackage := "scala.meta.tests",
-    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.5" % "test",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test",
+    libraryDependencies ++= List(
+      "com.lihaoyi" %%% "fansi" % "0.2.5" % "test",
+      "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test"
+    ),
     testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
     inConfig(Slow)(Defaults.testTasks),
     testOptions.in(Slow) -= Tests.Argument("-l", "org.scalatest.tags.Slow"),
@@ -475,11 +477,12 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     // [trace] Stack trace suppressed: run last testsJVM/test:executeTests for the full output.
     // [error] (testsJVM/test:executeTests) java.lang.NoClassDefFoundError: org/scalacheck/Test$TestCallback
     // [error] Total time: 19 s, completed Feb 1, 2018 3:12:34 PM
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.5",
     libraryDependencies ++= List(
+      "org.scalacheck" %% "scalacheck" % "1.13.5",
       "io.get-coursier" %% "coursier" % coursier.util.Properties.version,
       "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
-    )
+    ),
+    bloopSettings
   )
   .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp, semanticdbIntegration))
   .nativeSettings(
@@ -846,6 +849,23 @@ def CiCommand(name: String)(commands: List[String]): Command = Command.command(n
 def ci(command: String) = s"plz $ciScalaVersion $command"
 def customVersion = sys.props.get("scalameta.version")
 
+val bloopSettings: Setting[_] = libraryDependencies ++= {
+  if (scalaBinaryVersion.value != "2.12") Nil
+  else {
+    // Zinc is only published for 2.12 since sbt 1 only supports 2.12.
+    val bloop = ("ch.epfl.scala" %% "bloop-frontend" % "1.0.0-M11").excludeAll(
+      ExclusionRule(
+        organization = "com.trueaccord.scalapb",
+        name = s"scalapb-runtime_${scalaBinaryVersion.value}"
+      ),
+      ExclusionRule(
+        organization = "com.lihaoyi",
+        name = s"fastparse_${scalaBinaryVersion.value}"
+      )
+    )
+    bloop :: Nil
+  }
+}
 // Defining these here so it's only defined once and for all projects (including root)
 inScope(Global)(
   Seq(

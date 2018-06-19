@@ -154,24 +154,29 @@ trait ExpectHelpers extends FunSuiteLike {
     val semanticdbSemanticidx = path.resolve("META-INF/semanticdb.semanticidx")
     if (Files.exists(semanticdbSemanticidx)) {
       val index = FileIO.readIndex(AbsolutePath(semanticdbSemanticidx))
-      val buf = new StringBuilder
-      buf.append("Packages:" + EOL)
-      buf.append("=========" + EOL)
-      index.packages.sortBy(_.symbol).foreach { entry =>
-        buf.append(entry.symbol + EOL)
-        entry.members.sorted.foreach(member => buf.append("  " + member + EOL))
-      }
-      buf.append(EOL)
-      buf.append("Toplevels:" + EOL)
-      buf.append("==========" + EOL)
-      index.toplevels.sortBy(_.symbol).foreach { entry =>
-        buf.append(s"${entry.symbol} => ${entry.uri}" + EOL)
-      }
-      buf.toString
+      printIndex(index)
     } else {
       ""
     }
   }
+
+  def printIndex(index: s.Index): String = {
+    val buf = new StringBuilder
+    buf.append("Packages:" + EOL)
+    buf.append("=========" + EOL)
+    index.packages.sortBy(_.symbol).foreach { entry =>
+      buf.append(entry.symbol + EOL)
+      entry.members.sorted.foreach(member => buf.append("  " + member + EOL))
+    }
+    buf.append(EOL)
+    buf.append("Toplevels:" + EOL)
+    buf.append("==========" + EOL)
+    index.toplevels.sortBy(_.symbol).foreach { entry =>
+      buf.append(s"${entry.symbol} => ${entry.uri}" + EOL)
+    }
+    buf.toString
+  }
+
 }
 
 object ScalalibExpect extends ExpectHelpers {
