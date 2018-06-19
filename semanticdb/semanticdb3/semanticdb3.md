@@ -98,6 +98,7 @@ message TextDocument {
   Schema schema = 1;
   string uri = 2;
   string text = 3;
+  string md5 = 11;
   Language language = 10;
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
@@ -130,9 +131,12 @@ SemanticDB payloads must include the version of the SemanticDB model in the
   </tr>
 </table>
 
-Code snippets referenced in `TextDocument` can be defined
-in one of three ways: 1) via a [URI](#uri) provided in `uri`,
-2) via a string provided in `text`, 3) via a combination of both.
+Code snippets referenced in `TextDocument` can be defined as any combination of
+the following three fields: 
+
+1. `uri` encoded as a [URI](#uri) relativized by the project sourceroot
+2. `text` encoded as a string of the source file contents
+3. `md5` encoded as a string of the hexadecimal formatted MD5 fingerprint of the source file contents
 
 `language` defines the [Language](#language) in which the code snippet
 is written. See [Languages](#languages) for the list of supported programming
