@@ -1,8 +1,11 @@
 package scala.meta.tests.metacp
 
+import coursier._
+import coursier.util.Gather
+import coursier.util.Task
 import java.io.OutputStreamWriter
 import java.io.PrintStream
-import coursier._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.meta.AbsolutePath
 
 case class ModuleID(organization: String, name: String, version: String) {
@@ -49,9 +52,9 @@ object Jars  {
     val term =
       new TermDisplay(new OutputStreamWriter(out), fallbackMode = true)
     term.init()
-    val fetch = Fetch.from(repositories, Cache.fetch(logger = Some(term)))
-    val resolution = res.process.run(fetch).unsafePerformSync
-    val errors = resolution.metadataErrors
+    val fetch = Fetch.from(repositories, Cache.fetch[Task](logger = Some(term)))
+    val resolution = res.process.run(fetch).unsafeRun()
+    val errors = resolution.errors
     if (errors.nonEmpty) {
       sys.error(errors.mkString("\n"))
     }
@@ -61,12 +64,11 @@ object Jars  {
           .dependencyClassifiersArtifacts(classifier)
           .map(_._2)
       } else resolution.artifacts
-    val localArtifacts = scalaz.concurrent.Task
-      .gatherUnordered(
-        artifacts.map(artifact => Cache.file(artifact).run)
+    val localArtifacts = Gather[Task]
+      .gather(
+        artifacts.map(artifact => Cache.file[Task](artifact).run)
       )
-      .unsafePerformSync
-      .map(_.toEither)
+      .unsafeRun()
     val jars = localArtifacts.flatMap {
       case Left(e) =>
         if (fetchSourceJars) {
@@ -81,6 +83,6 @@ object Jars  {
       case _ => Nil
     }
     term.stop()
-    jars
+    jars.toList
   }
 }

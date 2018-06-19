@@ -82,7 +82,8 @@ object Settings {
   }
 
   def defaultCacheDir: AbsolutePath = {
-    val cacheRoot = AbsolutePath(ProjectDirectories.fromProjectName("semanticdb").projectCacheDir)
+    val projectDirectories = ProjectDirectories.from("org.scalameta", "", "SemanticDB")
+    val cacheRoot = AbsolutePath(projectDirectories.cacheDir)
     cacheRoot.resolve(BuildInfo.version)
   }
 

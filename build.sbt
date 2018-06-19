@@ -191,7 +191,7 @@ lazy val metacp = project
     description := "Scala 2.x classpath to SemanticDB converter",
     libraryDependencies ++= List(
       "org.scala-lang" % "scalap" % scalaVersion.value,
-      "io.github.soc" % "directories" % "5"
+      "io.github.soc" % "directories" % "10"
     ),
     mainClass := Some("scala.meta.cli.Metacp"),
     buildInfoKeys := Seq[BuildInfoKey](version),
