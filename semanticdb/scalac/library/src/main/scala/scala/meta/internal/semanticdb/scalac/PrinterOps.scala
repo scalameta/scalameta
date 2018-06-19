@@ -5,6 +5,7 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.io.Writer
 import scala.collection.mutable
+import scala.meta.internal.semanticdb3.Scala.Symbols
 import scala.reflect.internal.ModifierFlags._
 
 trait PrinterOps { self: SemanticdbOps =>
@@ -41,12 +42,12 @@ trait PrinterOps { self: SemanticdbOps =>
   private class SyntheticCodePrinter(out: LengthWriter) extends TreePrinter(new PrintWriter(out)) {
 
     // + scalac deviation
-    case class ResolvedName(syntax: String, symbol: m.Symbol)
+    case class ResolvedName(syntax: String, symbol: String)
     object ResolvedName {
       def apply(sym: g.Symbol): ResolvedName =
         ResolvedName(printedName(sym.name), sym.toSemantic)
     }
-    val occurrences = mutable.HashMap.empty[(Int, Int), m.Symbol]
+    val occurrences = mutable.HashMap.empty[(Int, Int), String]
     def printWithTrailingSpace(string: String): Unit =
       if (string.isEmpty) ()
       else {
@@ -58,7 +59,7 @@ trait PrinterOps { self: SemanticdbOps =>
         val start = out.length
         super.print(syntax)
         val end = out.length
-        if (symbol != m.Symbol.None) {
+        if (symbol != Symbols.None) {
           occurrences(start -> end) = symbol
         }
       case els => super.print(els)

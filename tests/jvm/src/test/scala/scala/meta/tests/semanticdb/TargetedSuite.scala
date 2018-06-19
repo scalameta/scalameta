@@ -5,6 +5,7 @@ import scala.meta._
 import scala.meta.internal.semanticdb._
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.semanticdb3._
+import scala.meta.internal.semanticdb3.Scala._
 import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
 import scala.util.Properties.{versionNumberString => scalaVersion}
@@ -805,14 +806,13 @@ class TargetedSuite extends SemanticdbSuite {
     """
       |package am
       |case class <<Foo>>(b: Foo)
-    """.stripMargin, { (db, FooTypeString) =>
-      val fooType = Symbol(FooTypeString)
-      val Symbol.Global(qual, Signature.Type(foo)) = fooType
-      val companion = Symbol.Global(qual, Signature.Term(foo)).syntax
+    """.stripMargin, { (db, fooType) =>
+      val (Descriptor.Type(foo), qual) = DescriptorParser(fooType)
+      val companion = Symbols.Global(qual, Descriptor.Term(foo))
       val objectDenot = db.symbols.find(_.symbol == companion).get
       assert(objectDenot.kind.isObject)
       assert(!objectDenot.has(p.CASE))
-      val classDenot = db.symbols.find(_.symbol == fooType.syntax).get
+      val classDenot = db.symbols.find(_.symbol == fooType).get
       assert(classDenot.kind.isClass)
       assert(classDenot.has(p.CASE))
       val decls = classDenot.tpe.asInstanceOf[ClassInfoType].declarations.get.symbols

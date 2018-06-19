@@ -11,6 +11,7 @@ import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.reflect.io.{PlainFile => GPlainFile}
 import scala.{meta => m}
+import scala.meta.internal.semanticdb3.Scala._
 
 trait TextDocumentOps { self: SemanticdbOps =>
   def validateCompilerState(): Unit = {
@@ -47,8 +48,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toTextDocument: s.TextDocument = {
       val binders = mutable.Set[m.Position]()
-      val occurrences = mutable.Map[m.Position, m.Symbol]()
-      val symbols = mutable.Map[m.Symbol, s.SymbolInformation]()
+      val occurrences = mutable.Map[m.Position, String]()
+      val symbols = mutable.Map[String, s.SymbolInformation]()
       val synthetics = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
       val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
       val todo = mutable.Set[m.Name]() // names to map to global trees
@@ -174,7 +175,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 else gsym0
               }
               val symbol = gsym.toSemantic
-              if (symbol == m.Symbol.None) return
+              if (symbol == Symbols.None) return
 
               todo -= mtree
 
@@ -187,7 +188,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       val scalaRelPath = m.AbsolutePath(gfile.file).toRelative(config.sourceroot)
                       val semanticdbRelPath = scalaRelPath + ".semanticdb"
                       val suri = PathIO.toUnix(semanticdbRelPath.toString)
-                      val ssymbol = symbol.syntax
+                      val ssymbol = symbol
                       val sinfo = s.SymbolInformation(symbol = ssymbol)
                       index.append(suri, List(sinfo))
                     case _ =>
@@ -217,7 +218,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     val getterInfo = symbols(symbol)
                     val setterInfos = Synthetics.setterInfos(getterInfo, SymlinkChildren)
                     setterInfos.foreach { info =>
-                      val msymbol = m.Symbol(info.symbol)
+                      val msymbol = info.symbol
                       symbols(msymbol) = info
                     }
                   }
@@ -498,11 +499,11 @@ trait TextDocumentOps { self: SemanticdbOps =>
       val finalOccurrences = {
         occurrences.flatMap {
           case (pos, sym) =>
-            flatten(sym).map { flatSym =>
+            sym.asMulti.map { flatSym =>
               val role =
                 if (binders.contains(pos)) s.SymbolOccurrence.Role.DEFINITION
                 else s.SymbolOccurrence.Role.REFERENCE
-              s.SymbolOccurrence(Some(pos.toRange), flatSym.syntax, role)
+              s.SymbolOccurrence(Some(pos.toRange), flatSym, role)
             }
         }.toList
       }
@@ -565,10 +566,4 @@ trait TextDocumentOps { self: SemanticdbOps =>
     }
   }
 
-  private def flatten(msym: m.Symbol): List[m.Symbol] = {
-    msym match {
-      case m.Symbol.Multi(msyms) => msyms.flatMap(flatten)
-      case mother => List(mother)
-    }
-  }
 }

@@ -1,27 +1,52 @@
 package scala.meta.tests.semanticdb
 
-import scala.meta.semanticdb.Symbol
-import scala.meta.semanticdb.Signature
 import org.scalatest.FunSuite
+import scala.meta.internal.semanticdb3.Scala._
 
 class SymbolSuite extends FunSuite {
-  def check(original: String, expected: Symbol): Unit = {
-    test(original) {
-      val obtained = Symbol(original)
-      assert(obtained == expected)
+
+  def checkMultiRoundtrip(symbols: List[String]): Unit = {
+    test("  multi: " + Symbols.Multi(symbols)) {
+      val symbol = Symbols.Multi(symbols)
+      val expected = symbol.asMulti
+      assert(symbol.asMulti == expected)
     }
   }
-  val root = Symbol.Global(Symbol.None, Signature.Term("_root_"))
-  val a = Symbol.Global(root, Signature.Term("a"))
 
-  check("_root_.", root)
-  check("_root_.a.", a)
-  check("a.", a)
-  check("_root_._root_.a.", Symbol.Global(Symbol.Global(root, Signature.Term("_root_")), Signature.Term("a")))
-
-  test("multi symbol are unsupported") {
-    val e = intercept[IllegalArgumentException](Symbol("_root_.a.;_root_.b."))
-    assert(e.getMessage.contains("multi"))
+  def checkGlobal(symbol: String): Unit = {
+    test(" global: " + symbol) { assert(symbol.isGlobal) }
   }
+
+  def checkNotGlobal(symbol: String): Unit = {
+    test("!global: " + symbol) { assert(!symbol.isGlobal) }
+  }
+
+  def checkLocal(symbol: String): Unit = {
+    test("  local: " + symbol) { assert(symbol.isLocal) }
+  }
+
+  def checkNotLocal(symbol: String): Unit = {
+    test(" !local: " + symbol) { assert(!symbol.isLocal) }
+  }
+
+  checkMultiRoundtrip("com.Bar#" :: Nil)
+  checkMultiRoundtrip("com.Bar#" :: "com.Bar." :: Nil)
+  checkMultiRoundtrip("com.`; ;`#" :: "com.`; ;`." :: Nil)
+  checkMultiRoundtrip("a" :: "b" :: "" :: Nil)
+
+  checkGlobal("com.Bar#")
+  checkGlobal(";com.Bar#;com.Bar.")
+  checkGlobal(Symbols.RootPackage)
+  checkGlobal(Symbols.EmptyPackage)
+  checkNotGlobal("local1")
+  checkNotGlobal(Symbols.None)
+
+  checkLocal("local1")
+  checkLocal(";local1;local2")
+  checkNotLocal("com.Bar#")
+  checkNotLocal(";com.Bar#;com.Bar.")
+  checkNotLocal(Symbols.None)
+  checkNotLocal(Symbols.RootPackage)
+  checkNotLocal(Symbols.EmptyPackage)
 
 }

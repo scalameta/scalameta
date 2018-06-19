@@ -1,6 +1,5 @@
 package scala.meta.internal.semanticdb3
 
-import scala.annotation.tailrec
 import scala.compat.Platform.EOL
 import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb3.Scala.{Names => n}
@@ -10,18 +9,50 @@ object Scala {
     val None: String = ""
     val RootPackage: String = "_root_."
     val EmptyPackage: String = "_empty_."
-    def Global(owner: String, desc: Descriptor): String = Global(owner, desc.toString)
-    def Global(owner: String, desc: String) = if (owner != RootPackage) owner + desc else desc
-    def Local(id: Int): String = Local("local" + id.toString)
-    def Local(symbol: String): String = symbol
+    def Global(owner: String, desc: Descriptor): String =
+      if (owner != RootPackage) owner + desc.toString
+      else desc.toString
+    def Local(id: Int): String =
+      "local" + id.toString
+    def Multi(symbols: List[String]): String =
+      symbols.mkString(";", ";", "")
   }
 
   implicit class ScalaSymbolOps(symbol: String) {
     def isNone: Boolean = symbol == Symbols.None
     def isRootPackage: Boolean = symbol == Symbols.RootPackage
     def isEmptyPackage: Boolean = symbol == Symbols.EmptyPackage
-    def isGlobal: Boolean = !isNone && Descriptor.descriptorLasts.contains(symbol.last)
-    def isLocal: Boolean = !isNone && !isGlobal
+    def isGlobal: Boolean =
+      if (isMulti) asMulti.exists(_.isGlobal)
+      else !isNone && Descriptor.descriptorLasts.contains(symbol.last)
+    def isLocal: Boolean =
+      if (isMulti) asMulti.exists(_.isLocal)
+      else !isNone && !isGlobal
+    def isMulti: Boolean = symbol.startsWith(";")
+    def asMulti: List[String] = {
+      if (!isMulti) symbol :: Nil
+      else {
+        val buf = List.newBuilder[String]
+        def loop(begin: Int, i: Int): Unit =
+          if (i >= symbol.length) {
+            buf += symbol.substring(begin, symbol.length)
+          } else {
+            symbol.charAt(i) match {
+              case ';' =>
+                buf += symbol.substring(begin, i)
+                loop(i + 1, i + 1)
+              case '`' =>
+                var j = i + 1
+                while (symbol.charAt(j) != '`') j += 1
+                loop(begin, j + 1)
+              case _ =>
+                loop(begin, i + 1)
+            }
+          }
+        loop(1, 1)
+        buf.result()
+      }
+    }
     def ownerChain: List[String] = {
       val buf = List.newBuilder[String]
       def loop(symbol: String): Unit = {
@@ -194,7 +225,7 @@ object Scala {
     }
   }
 
-  private object DescriptorParser {
+  private[meta] object DescriptorParser {
     def apply(symbol: String): (Descriptor, String) = {
       val parser = new DescriptorParser(symbol)
       parser.entryPoint()

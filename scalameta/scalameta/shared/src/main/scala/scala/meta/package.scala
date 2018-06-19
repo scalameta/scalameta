@@ -7,7 +7,6 @@ package object meta extends classifiers.Api with classifiers.Aliases
                        with quasiquotes.Api with quasiquotes.Aliases
                        with io.Api with io.Aliases
                        with inputs.Api with inputs.Aliases
-                       with semanticdb.Api with semanticdb.Aliases
                        with tokenizers.Api with tokenizers.Aliases
                        with tokens.Api with tokens.Aliases
                        with transversers.Api with transversers.Aliases
