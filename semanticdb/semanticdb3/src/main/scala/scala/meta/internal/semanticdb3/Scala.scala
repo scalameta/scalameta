@@ -21,10 +21,16 @@ object Scala {
     def isNone: Boolean = symbol == Symbols.None
     def isRootPackage: Boolean = symbol == Symbols.RootPackage
     def isEmptyPackage: Boolean = symbol == Symbols.EmptyPackage
-    def isGlobal: Boolean = !isNone && Descriptor.descriptorLasts.contains(symbol.last)
-    def isLocal: Boolean = !isNone && !isGlobal
+    def isGlobal: Boolean =
+      !isNone &&
+        Descriptor.descriptorLasts.contains(symbol.last) &&
+        (!isMulti || asMulti.exists(_.isGlobal))
+    def isLocal: Boolean =
+      !isNone &&
+        !isGlobal &&
+        (!isMulti || asMulti.exists(_.isLocal))
     def isMulti: Boolean = symbol.startsWith(";")
-    def flattenMulti: List[String] = {
+    def asMulti: List[String] = {
       if (!isMulti) symbol :: Nil
       else {
         val buf = List.newBuilder[String]

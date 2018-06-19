@@ -499,7 +499,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
       val finalOccurrences = {
         occurrences.flatMap {
           case (pos, sym) =>
-            sym.flattenMulti.map { flatSym =>
+            sym.asMulti.map { flatSym =>
               val role =
                 if (binders.contains(pos)) s.SymbolOccurrence.Role.DEFINITION
                 else s.SymbolOccurrence.Role.REFERENCE
