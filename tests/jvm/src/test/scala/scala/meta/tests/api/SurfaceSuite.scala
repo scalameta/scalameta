@@ -24,11 +24,19 @@ class SurfaceSuite extends FunSuite {
     all.filter(_.sym.isPublic).map(_.sym.fullName).sorted
   }
   lazy val wildcardImportStatics = explore.wildcardImportStatics("scala.meta")
-  lazy val allStatics = explore.allStatics("scala.meta")
+  def lsp4s(symbol: String): Boolean = {
+    val fullName = symbol.stripPrefix("* ")
+    // We ignore the symbols from scalameta/lsp4s that are transitively brought
+    // in via the bloop-frontend dependency in testsJVM.
+    fullName.startsWith("monix") ||
+    fullName.startsWith("scala.meta.lsp") ||
+    fullName.startsWith("scala.meta.jsonrpc")
+  }
+  lazy val allStatics = explore.allStatics("scala.meta").filterNot(lsp4s)
   lazy val trees = wildcardImportStatics.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
   lazy val tokens = reflectedTokens
   lazy val core = allStatics.diff(trees).diff(tokens).map(fullName => (fullName, wildcardImportStatics.contains(fullName))).toMap
-  lazy val allSurface = explore.allSurface("scala.meta")
+  lazy val allSurface = explore.allSurface("scala.meta").filterNot(lsp4s)
   lazy val coreSurface = allSurface.filter(entry => !(tokens ++ trees).exists(noncore => entry.startsWith(noncore)))
 
   test("statics (core)") {
