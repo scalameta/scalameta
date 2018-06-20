@@ -41,7 +41,7 @@ object SemanticdbConfig {
     fileFilter = FileFilter.matchEverything,
     sourceroot = PathIO.workingDirectory,
     targetroot = PathIO.workingDirectory,
-    text = BinaryMode.On,
+    text = BinaryMode.Off,
     md5 = BinaryMode.On,
     symbols = BinaryMode.On,
     diagnostics = BinaryMode.On,
