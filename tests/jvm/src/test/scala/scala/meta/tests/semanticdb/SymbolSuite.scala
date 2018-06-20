@@ -5,8 +5,15 @@ import scala.meta.internal.semanticdb3.Scala._
 
 class SymbolSuite extends FunSuite {
 
+  def checkMultiSyntax(symbols: List[String], expected: String): Unit = {
+    test(" syntax: " + symbols.toString()) {
+      val obtained = Symbols.Multi(symbols)
+      assert(obtained == expected)
+    }
+  }
+
   def checkMultiRoundtrip(symbols: List[String]): Unit = {
-    test("  multi: " + Symbols.Multi(symbols)) {
+    test("  multi: " + symbols.toString) {
       val symbol = Symbols.Multi(symbols)
       val expected = symbol.asMulti
       assert(symbol.asMulti == expected)
@@ -29,20 +36,28 @@ class SymbolSuite extends FunSuite {
     test(" !local: " + symbol) { assert(!symbol.isLocal) }
   }
 
+  checkMultiSyntax(Nil, "")
+  checkMultiSyntax(List(Symbols.Multi("a." :: "b." :: Nil), "c."), ";a.;b.;c.")
+
+  checkMultiRoundtrip(Nil)
   checkMultiRoundtrip("com.Bar#" :: Nil)
   checkMultiRoundtrip("com.Bar#" :: "com.Bar." :: Nil)
   checkMultiRoundtrip("com.`; ;`#" :: "com.`; ;`." :: Nil)
   checkMultiRoundtrip("a" :: "b" :: "" :: Nil)
+  checkMultiRoundtrip(";_root_.;_empty_." :: "_star_." :: Nil)
 
   checkGlobal("com.Bar#")
-  checkGlobal(";com.Bar#;com.Bar.")
+  checkGlobal("com.Bar.")
+  checkGlobal("com.Bar.(a)")
+  checkGlobal("com.Bar.[a]")
   checkGlobal(Symbols.RootPackage)
   checkGlobal(Symbols.EmptyPackage)
+  checkNotGlobal(";com.Bar#;com.Bar.")
   checkNotGlobal("local1")
   checkNotGlobal(Symbols.None)
 
   checkLocal("local1")
-  checkLocal(";local1;local2")
+  checkNotLocal(";local1;local2")
   checkNotLocal("com.Bar#")
   checkNotLocal(";com.Bar#;com.Bar.")
   checkNotLocal(Symbols.None)

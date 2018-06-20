@@ -14,21 +14,30 @@ object Scala {
       else desc.toString
     def Local(id: Int): String =
       "local" + id.toString
-    def Multi(symbols: List[String]): String =
-      symbols.mkString(";", ";", "")
+    def Multi(symbols: List[String]): String = symbols match {
+      case Nil => None
+      case head :: _ =>
+        if (head.isMulti) symbols.mkString(";")
+        else symbols.mkString(";", ";", "")
+    }
   }
 
   implicit class ScalaSymbolOps(symbol: String) {
-    def isNone: Boolean = symbol == Symbols.None
-    def isRootPackage: Boolean = symbol == Symbols.RootPackage
-    def isEmptyPackage: Boolean = symbol == Symbols.EmptyPackage
+    def isNone: Boolean =
+      symbol == Symbols.None
+    def isRootPackage: Boolean =
+      symbol == Symbols.RootPackage
+    def isEmptyPackage: Boolean =
+      symbol == Symbols.EmptyPackage
     def isGlobal: Boolean =
-      if (isMulti) asMulti.exists(_.isGlobal)
-      else !isNone && Descriptor.descriptorLasts.contains(symbol.last)
+      !isNone && !isMulti && (symbol.last match {
+        case '.' | '#' | ')' | ']' => true
+        case _ => false
+      })
     def isLocal: Boolean =
-      if (isMulti) asMulti.exists(_.isLocal)
-      else !isNone && !isGlobal
-    def isMulti: Boolean = symbol.startsWith(";")
+      symbol.startsWith("local")
+    def isMulti: Boolean =
+      symbol.startsWith(";")
     def asMulti: List[String] = {
       if (!isMulti) symbol :: Nil
       else {
@@ -111,7 +120,6 @@ object Scala {
     final case class Type(name: String) extends Descriptor
     final case class Parameter(name: String) extends Descriptor
     final case class TypeParameter(name: String) extends Descriptor
-    private[semanticdb3] val descriptorLasts = Set('.', '#', ')', ']')
   }
 
   implicit class ScalaNameOps(name: String) {
