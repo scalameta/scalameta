@@ -630,7 +630,7 @@ lazy val mergeSettings = Def.settings(
 //   sbt scalapbc/assembly
 //   cd ../scalameta
 //   export SCALAPBC=/Users/ollie/dev/ScalaPB/scalapbc/target/scala-2.10/scalapbc-assembly-0.7.5-SNAPSHOT.jar
-//   java -jar $SCALAPBC  --scala_out=flat_package:semanticdb/semanticdb3/src/main/generated semanticdb/semanticdb3/*.proto
+//   java -jar $SCALAPBC --scala_out=flat_package:semanticdb/semanticdb3/src/main/generated semanticdb/semanticdb3/*.proto
 lazy val protobufSettings = Def.settings(
   sharedSettings,
   libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
