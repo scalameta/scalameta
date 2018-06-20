@@ -103,13 +103,13 @@ console := console.in(scalametaJVM, Compile).value
 /** ======================== SEMANTICDB ======================== **/
 lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
-  .in(file("semanticdb/semanticdb3"))
+  .in(file("semanticdb/semanticdb"))
   .settings(
     publishableSettings,
     protobufSettings,
     unmanagedSourceDirectories.in(Compile) +=
       baseDirectory.value.getParentFile / "src" / "main" / "generated",
-    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb3"))
+    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb"))
   )
   .nativeSettings(nativeSettings)
   .jvmSettings(
@@ -630,7 +630,7 @@ lazy val mergeSettings = Def.settings(
 //   sbt scalapbc/assembly
 //   cd ../scalameta
 //   export SCALAPBC=/Users/ollie/dev/ScalaPB/scalapbc/target/scala-2.10/scalapbc-assembly-0.7.5-SNAPSHOT.jar
-//   java -jar $SCALAPBC --scala_out=flat_package:semanticdb/semanticdb3/src/main/generated semanticdb/semanticdb3/*.proto
+//   java -jar $SCALAPBC --scala_out=flat_package:semanticdb/semanticdb/src/main/generated semanticdb/semanticdb/*.proto
 lazy val protobufSettings = Def.settings(
   sharedSettings,
   libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
