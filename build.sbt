@@ -101,7 +101,7 @@ unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
 
 /** ======================== SEMANTICDB ======================== **/
-lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val semanticdb = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("semanticdb/semanticdb"))
   .settings(
@@ -118,9 +118,9 @@ lazy val semanticdb3 = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jsSettings(
     crossScalaVersions := List(LatestScala211, LatestScala212)
   )
-lazy val semanticdb3JVM = semanticdb3.jvm
-lazy val semanticdb3JS = semanticdb3.js
-lazy val semanticdb3Native = semanticdb3.native
+lazy val semanticdbJVM = semanticdb.jvm
+lazy val semanticdbJS = semanticdb.js
+lazy val semanticdbNative = semanticdb.native
 
 lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
@@ -200,7 +200,7 @@ lazy val metacp = project
   .enablePlugins(BuildInfoPlugin)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdb3JVM, cliJVM, ioJVM)
+  .dependsOn(semanticdbJVM, cliJVM, ioJVM)
 
 lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -213,7 +213,7 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .nativeSettings(nativeSettings)
   // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdb3, cli)
+  .dependsOn(semanticdb, cli)
 lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
 lazy val metapNative = metap.native
@@ -228,7 +228,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableMacros
   )
   .nativeSettings(nativeSettings)
-  .dependsOn(semanticdb3)
+  .dependsOn(semanticdb)
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
 lazy val commonNative = common.native
