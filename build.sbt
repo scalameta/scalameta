@@ -106,10 +106,7 @@ lazy val semanticdb = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("semanticdb/semanticdb"))
   .settings(
     publishableSettings,
-    protobufSettings,
-    unmanagedSourceDirectories.in(Compile) +=
-      baseDirectory.value.getParentFile / "src" / "main" / "generated",
-    PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb"))
+    protobufSettings
   )
   .nativeSettings(nativeSettings)
   .jvmSettings(
@@ -633,7 +630,9 @@ lazy val mergeSettings = Def.settings(
 //   java -jar $SCALAPBC --scala_out=flat_package:semanticdb/semanticdb/src/main/generated semanticdb/semanticdb/*.proto
 lazy val protobufSettings = Def.settings(
   sharedSettings,
-  libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
+  libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
+  unmanagedSourceDirectories.in(Compile) +=
+    baseDirectory.value.getParentFile / "src" / "main" / "generated"
 )
 
 lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
