@@ -166,7 +166,7 @@ message TypeType {
 
 message SymbolInformation {
   enum Kind {
-    // reserved 1, 2, 4, 5, 15, 16;
+    reserved 1, 2, 4, 5, 15, 16;
     UNKNOWN_KIND = 0;
     LOCAL = 19;
     FIELD = 20;
@@ -186,8 +186,8 @@ message SymbolInformation {
   }
   enum Property {
     UNKNOWN_PROPERTY = 0;
-    // reserved 0x1;
-    // reserved 0x2;
+    reserved 0x1;
+    reserved 0x2;
     ABSTRACT = 0x4;
     FINAL = 0x8;
     SEALED = 0x10;
