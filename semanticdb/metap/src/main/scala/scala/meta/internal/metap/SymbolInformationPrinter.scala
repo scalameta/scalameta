@@ -2,13 +2,13 @@ package scala.meta.internal.metap
 
 import scala.collection.mutable
 import scala.math.Ordering
-import scala.meta.internal.semanticdb3._
-import scala.meta.internal.semanticdb3.Accessibility.Tag._
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.SingletonType.Tag._
-import scala.meta.internal.semanticdb3.SymbolInformation._
-import scala.meta.internal.semanticdb3.SymbolInformation.Kind._
-import scala.meta.internal.semanticdb3.SymbolInformation.Property._
+import scala.meta.internal.semanticdb._
+import scala.meta.internal.semanticdb.Accessibility.Tag._
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.SingletonType.Tag._
+import scala.meta.internal.semanticdb.SymbolInformation._
+import scala.meta.internal.semanticdb.SymbolInformation.Kind._
+import scala.meta.internal.semanticdb.SymbolInformation.Property._
 
 trait SymbolInformationPrinter extends BasePrinter {
   def pprint(info: SymbolInformation): Unit = {

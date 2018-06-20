@@ -5,7 +5,7 @@ import org.scalameta.logger
 import org.scalatest.FunSuite
 import scala.meta.interactive.InteractiveSemanticdb._
 import scala.meta.testkit.DiffAssertions
-import scala.meta.internal.semanticdb3.Print
+import scala.meta.internal.semanticdb.Print
 import scala.tools.nsc.interactive.Global
 
 class InteractiveSuite extends FunSuite with DiffAssertions {

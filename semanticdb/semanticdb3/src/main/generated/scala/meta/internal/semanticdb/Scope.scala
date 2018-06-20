@@ -3,12 +3,12 @@
 //
 // Protofile syntax: PROTO3
 
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 @SerialVersionUID(0L)
 final case class Scope(
     symlinks: _root_.scala.collection.Seq[_root_.scala.Predef.String] = _root_.scala.collection.Seq.empty,
-    hardlinks: _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolInformation] = _root_.scala.collection.Seq.empty
+    hardlinks: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolInformation] = _root_.scala.collection.Seq.empty
     ) extends scalapb.GeneratedMessage with scalapb.Message[Scope] with scalapb.lenses.Updatable[Scope] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
@@ -44,9 +44,9 @@ final case class Scope(
         __m.writeTo(_output__)
       };
     }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb3.Scope = {
+    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.Scope = {
       val __symlinks = (_root_.scala.collection.immutable.Vector.newBuilder[_root_.scala.Predef.String] ++= this.symlinks)
-      val __hardlinks = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb3.SymbolInformation] ++= this.hardlinks)
+      val __hardlinks = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.SymbolInformation] ++= this.hardlinks)
       var _done__ = false
       while (!_done__) {
         val _tag__ = _input__.readTag()
@@ -55,11 +55,11 @@ final case class Scope(
           case 10 =>
             __symlinks += _input__.readString()
           case 18 =>
-            __hardlinks += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb3.SymbolInformation.defaultInstance)
+            __hardlinks += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.SymbolInformation.defaultInstance)
           case tag => _input__.skipField(tag)
         }
       }
-      scala.meta.internal.semanticdb3.Scope(
+      scala.meta.internal.semanticdb.Scope(
           symlinks = __symlinks.result(),
           hardlinks = __hardlinks.result()
       )
@@ -69,9 +69,9 @@ final case class Scope(
     def addAllSymlinks(__vs: TraversableOnce[_root_.scala.Predef.String]): Scope = copy(symlinks = symlinks ++ __vs)
     def withSymlinks(__v: _root_.scala.collection.Seq[_root_.scala.Predef.String]): Scope = copy(symlinks = __v)
     def clearHardlinks = copy(hardlinks = _root_.scala.collection.Seq.empty)
-    def addHardlinks(__vs: scala.meta.internal.semanticdb3.SymbolInformation*): Scope = addAllHardlinks(__vs)
-    def addAllHardlinks(__vs: TraversableOnce[scala.meta.internal.semanticdb3.SymbolInformation]): Scope = copy(hardlinks = hardlinks ++ __vs)
-    def withHardlinks(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolInformation]): Scope = copy(hardlinks = __v)
+    def addHardlinks(__vs: scala.meta.internal.semanticdb.SymbolInformation*): Scope = addAllHardlinks(__vs)
+    def addAllHardlinks(__vs: TraversableOnce[scala.meta.internal.semanticdb.SymbolInformation]): Scope = copy(hardlinks = hardlinks ++ __vs)
+    def withHardlinks(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolInformation]): Scope = copy(hardlinks = __v)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => symlinks
@@ -86,25 +86,25 @@ final case class Scope(
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb3.Scope
+    def companion = scala.meta.internal.semanticdb.Scope
 }
 
-object Scope extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.Scope] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.Scope] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb3.Scope = {
+object Scope extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.Scope] {
+  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.Scope] = this
+  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.Scope = {
     require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb3.Scope(
+    scala.meta.internal.semanticdb.Scope(
       __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.collection.Seq[_root_.scala.Predef.String]],
-      __fieldsMap.getOrElse(__fields.get(1), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolInformation]]
+      __fieldsMap.getOrElse(__fields.get(1), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolInformation]]
     )
   }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb3.Scope] = _root_.scalapb.descriptors.Reads{
+  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.Scope] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb3.Scope(
+      scala.meta.internal.semanticdb.Scope(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.collection.Seq[_root_.scala.Predef.String]]).getOrElse(_root_.scala.collection.Seq.empty),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolInformation]]).getOrElse(_root_.scala.collection.Seq.empty)
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolInformation]]).getOrElse(_root_.scala.collection.Seq.empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
@@ -113,17 +113,17 @@ object Scope extends scalapb.GeneratedMessageCompanion[scala.meta.internal.seman
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
-      case 2 => __out = scala.meta.internal.semanticdb3.SymbolInformation
+      case 2 => __out = scala.meta.internal.semanticdb.SymbolInformation
     }
     __out
   }
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
   def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
-  lazy val defaultInstance = scala.meta.internal.semanticdb3.Scope(
+  lazy val defaultInstance = scala.meta.internal.semanticdb.Scope(
   )
-  implicit class ScopeLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Scope]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb3.Scope](_l) {
+  implicit class ScopeLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Scope]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.Scope](_l) {
     def symlinks: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[_root_.scala.Predef.String]] = field(_.symlinks)((c_, f_) => c_.copy(symlinks = f_))
-    def hardlinks: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolInformation]] = field(_.hardlinks)((c_, f_) => c_.copy(hardlinks = f_))
+    def hardlinks: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolInformation]] = field(_.hardlinks)((c_, f_) => c_.copy(hardlinks = f_))
   }
   final val SYMLINKS_FIELD_NUMBER = 1
   final val HARDLINKS_FIELD_NUMBER = 2

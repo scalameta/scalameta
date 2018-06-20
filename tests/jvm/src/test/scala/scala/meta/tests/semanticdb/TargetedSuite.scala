@@ -4,10 +4,10 @@ package semanticdb
 import scala.meta._
 import scala.meta.internal.semanticdb._
 import scala.meta.internal.semanticdb.scalac._
-import scala.meta.internal.semanticdb3._
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
+import scala.meta.internal.semanticdb._
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.util.Properties.{versionNumberString => scalaVersion}
 import Compat._
 

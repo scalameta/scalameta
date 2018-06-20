@@ -3,15 +3,15 @@
 //
 // Protofile syntax: PROTO3
 
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 object Semanticidx3Proto extends _root_.scalapb.GeneratedFileObject {
   lazy val dependencies: Seq[_root_.scalapb.GeneratedFileObject] = Seq(
   )
   lazy val messagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq(
-    scala.meta.internal.semanticdb3.Index,
-    scala.meta.internal.semanticdb3.PackageEntry,
-    scala.meta.internal.semanticdb3.ToplevelEntry
+    scala.meta.internal.semanticdb.Index,
+    scala.meta.internal.semanticdb.PackageEntry,
+    scala.meta.internal.semanticdb.ToplevelEntry
   )
   private lazy val ProtoBytes: Array[Byte] =
       scalapb.Encoding.fromBase64(scala.collection.Seq(

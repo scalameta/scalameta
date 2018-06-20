@@ -3,62 +3,62 @@
 //
 // Protofile syntax: PROTO3
 
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 @SerialVersionUID(0L)
 final case class SymbolInformation(
     symbol: _root_.scala.Predef.String = "",
-    language: scala.meta.internal.semanticdb3.Language = scala.meta.internal.semanticdb3.Language.UNKNOWN_LANGUAGE,
-    kind: scala.meta.internal.semanticdb3.SymbolInformation.Kind = scala.meta.internal.semanticdb3.SymbolInformation.Kind.UNKNOWN_KIND,
+    language: scala.meta.internal.semanticdb.Language = scala.meta.internal.semanticdb.Language.UNKNOWN_LANGUAGE,
+    kind: scala.meta.internal.semanticdb.SymbolInformation.Kind = scala.meta.internal.semanticdb.SymbolInformation.Kind.UNKNOWN_KIND,
     properties: _root_.scala.Int = 0,
     name: _root_.scala.Predef.String = "",
-    tpe: scala.meta.internal.semanticdb3.Type = scala.meta.internal.semanticdb3.SymbolInformation._typemapper_tpe.toCustom(scala.meta.internal.semanticdb3.TypeMessage.defaultInstance),
-    annotations: _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.Annotation] = _root_.scala.collection.Seq.empty,
-    accessibility: _root_.scala.Option[scala.meta.internal.semanticdb3.Accessibility] = None
+    tpe: scala.meta.internal.semanticdb.Type = scala.meta.internal.semanticdb.SymbolInformation._typemapper_tpe.toCustom(scala.meta.internal.semanticdb.TypeMessage.defaultInstance),
+    annotations: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Annotation] = _root_.scala.collection.Seq.empty,
+    accessibility: _root_.scala.Option[scala.meta.internal.semanticdb.Accessibility] = None
     ) extends scalapb.GeneratedMessage with scalapb.Message[SymbolInformation] with scalapb.lenses.Updatable[SymbolInformation] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-      
+
       {
         val __value = symbol
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(1, __value)
         }
       };
-      
+
       {
         val __value = language
-        if (__value != scala.meta.internal.semanticdb3.Language.UNKNOWN_LANGUAGE) {
+        if (__value != scala.meta.internal.semanticdb.Language.UNKNOWN_LANGUAGE) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(16, __value.value)
         }
       };
-      
+
       {
         val __value = kind
-        if (__value != scala.meta.internal.semanticdb3.SymbolInformation.Kind.UNKNOWN_KIND) {
+        if (__value != scala.meta.internal.semanticdb.SymbolInformation.Kind.UNKNOWN_KIND) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(3, __value.value)
         }
       };
-      
+
       {
         val __value = properties
         if (__value != 0) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt32Size(4, __value)
         }
       };
-      
+
       {
         val __value = name
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(5, __value)
         }
       };
-      
+
       {
-        val __value = scala.meta.internal.semanticdb3.SymbolInformation._typemapper_tpe.toBase(tpe)
-        if (__value != scala.meta.internal.semanticdb3.TypeMessage.defaultInstance) {
+        val __value = scala.meta.internal.semanticdb.SymbolInformation._typemapper_tpe.toBase(tpe)
+        if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
           __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
         }
       };
@@ -89,7 +89,7 @@ final case class SymbolInformation(
       };
       {
         val __v = kind
-        if (__v != scala.meta.internal.semanticdb3.SymbolInformation.Kind.UNKNOWN_KIND) {
+        if (__v != scala.meta.internal.semanticdb.SymbolInformation.Kind.UNKNOWN_KIND) {
           _output__.writeEnum(3, __v.value)
         }
       };
@@ -106,8 +106,8 @@ final case class SymbolInformation(
         }
       };
       {
-        val __v = scala.meta.internal.semanticdb3.SymbolInformation._typemapper_tpe.toBase(tpe)
-        if (__v != scala.meta.internal.semanticdb3.TypeMessage.defaultInstance) {
+        val __v = scala.meta.internal.semanticdb.SymbolInformation._typemapper_tpe.toBase(tpe)
+        if (__v != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
           _output__.writeTag(11, 2)
           _output__.writeUInt32NoTag(__v.serializedSize)
           __v.writeTo(_output__)
@@ -127,19 +127,19 @@ final case class SymbolInformation(
       };
       {
         val __v = language
-        if (__v != scala.meta.internal.semanticdb3.Language.UNKNOWN_LANGUAGE) {
+        if (__v != scala.meta.internal.semanticdb.Language.UNKNOWN_LANGUAGE) {
           _output__.writeEnum(16, __v.value)
         }
       };
     }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb3.SymbolInformation = {
+    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.SymbolInformation = {
       var __symbol = this.symbol
       var __language = this.language
       var __kind = this.kind
       var __properties = this.properties
       var __name = this.name
       var __tpe = this.tpe
-      val __annotations = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb3.Annotation] ++= this.annotations)
+      val __annotations = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.Annotation] ++= this.annotations)
       var __accessibility = this.accessibility
       var _done__ = false
       while (!_done__) {
@@ -149,23 +149,23 @@ final case class SymbolInformation(
           case 10 =>
             __symbol = _input__.readString()
           case 128 =>
-            __language = scala.meta.internal.semanticdb3.Language.fromValue(_input__.readEnum())
+            __language = scala.meta.internal.semanticdb.Language.fromValue(_input__.readEnum())
           case 24 =>
-            __kind = scala.meta.internal.semanticdb3.SymbolInformation.Kind.fromValue(_input__.readEnum())
+            __kind = scala.meta.internal.semanticdb.SymbolInformation.Kind.fromValue(_input__.readEnum())
           case 32 =>
             __properties = _input__.readInt32()
           case 42 =>
             __name = _input__.readString()
           case 90 =>
-            __tpe = scala.meta.internal.semanticdb3.SymbolInformation._typemapper_tpe.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb3.SymbolInformation._typemapper_tpe.toBase(__tpe)))
+            __tpe = scala.meta.internal.semanticdb.SymbolInformation._typemapper_tpe.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.SymbolInformation._typemapper_tpe.toBase(__tpe)))
           case 106 =>
-            __annotations += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb3.Annotation.defaultInstance)
+            __annotations += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.Annotation.defaultInstance)
           case 114 =>
-            __accessibility = Option(_root_.scalapb.LiteParser.readMessage(_input__, __accessibility.getOrElse(scala.meta.internal.semanticdb3.Accessibility.defaultInstance)))
+            __accessibility = Option(_root_.scalapb.LiteParser.readMessage(_input__, __accessibility.getOrElse(scala.meta.internal.semanticdb.Accessibility.defaultInstance)))
           case tag => _input__.skipField(tag)
         }
       }
-      scala.meta.internal.semanticdb3.SymbolInformation(
+      scala.meta.internal.semanticdb.SymbolInformation(
           symbol = __symbol,
           language = __language,
           kind = __kind,
@@ -177,18 +177,18 @@ final case class SymbolInformation(
       )
     }
     def withSymbol(__v: _root_.scala.Predef.String): SymbolInformation = copy(symbol = __v)
-    def withLanguage(__v: scala.meta.internal.semanticdb3.Language): SymbolInformation = copy(language = __v)
-    def withKind(__v: scala.meta.internal.semanticdb3.SymbolInformation.Kind): SymbolInformation = copy(kind = __v)
+    def withLanguage(__v: scala.meta.internal.semanticdb.Language): SymbolInformation = copy(language = __v)
+    def withKind(__v: scala.meta.internal.semanticdb.SymbolInformation.Kind): SymbolInformation = copy(kind = __v)
     def withProperties(__v: _root_.scala.Int): SymbolInformation = copy(properties = __v)
     def withName(__v: _root_.scala.Predef.String): SymbolInformation = copy(name = __v)
-    def withTpe(__v: scala.meta.internal.semanticdb3.Type): SymbolInformation = copy(tpe = __v)
+    def withTpe(__v: scala.meta.internal.semanticdb.Type): SymbolInformation = copy(tpe = __v)
     def clearAnnotations = copy(annotations = _root_.scala.collection.Seq.empty)
-    def addAnnotations(__vs: scala.meta.internal.semanticdb3.Annotation*): SymbolInformation = addAllAnnotations(__vs)
-    def addAllAnnotations(__vs: TraversableOnce[scala.meta.internal.semanticdb3.Annotation]): SymbolInformation = copy(annotations = annotations ++ __vs)
-    def withAnnotations(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.Annotation]): SymbolInformation = copy(annotations = __v)
-    def getAccessibility: scala.meta.internal.semanticdb3.Accessibility = accessibility.getOrElse(scala.meta.internal.semanticdb3.Accessibility.defaultInstance)
+    def addAnnotations(__vs: scala.meta.internal.semanticdb.Annotation*): SymbolInformation = addAllAnnotations(__vs)
+    def addAllAnnotations(__vs: TraversableOnce[scala.meta.internal.semanticdb.Annotation]): SymbolInformation = copy(annotations = annotations ++ __vs)
+    def withAnnotations(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Annotation]): SymbolInformation = copy(annotations = __v)
+    def getAccessibility: scala.meta.internal.semanticdb.Accessibility = accessibility.getOrElse(scala.meta.internal.semanticdb.Accessibility.defaultInstance)
     def clearAccessibility: SymbolInformation = copy(accessibility = None)
-    def withAccessibility(__v: scala.meta.internal.semanticdb3.Accessibility): SymbolInformation = copy(accessibility = Option(__v))
+    def withAccessibility(__v: scala.meta.internal.semanticdb.Accessibility): SymbolInformation = copy(accessibility = Option(__v))
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -212,8 +212,8 @@ final case class SymbolInformation(
           if (__t != "") __t else null
         }
         case 11 => {
-          val __t = scala.meta.internal.semanticdb3.SymbolInformation._typemapper_tpe.toBase(tpe)
-          if (__t != scala.meta.internal.semanticdb3.TypeMessage.defaultInstance) __t else null
+          val __t = scala.meta.internal.semanticdb.SymbolInformation._typemapper_tpe.toBase(tpe)
+          if (__t != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) __t else null
         }
         case 13 => annotations
         case 14 => accessibility.orNull
@@ -227,43 +227,43 @@ final case class SymbolInformation(
         case 3 => _root_.scalapb.descriptors.PEnum(kind.scalaValueDescriptor)
         case 4 => _root_.scalapb.descriptors.PInt(properties)
         case 5 => _root_.scalapb.descriptors.PString(name)
-        case 11 => scala.meta.internal.semanticdb3.SymbolInformation._typemapper_tpe.toBase(tpe).toPMessage
+        case 11 => scala.meta.internal.semanticdb.SymbolInformation._typemapper_tpe.toBase(tpe).toPMessage
         case 13 => _root_.scalapb.descriptors.PRepeated(annotations.map(_.toPMessage)(_root_.scala.collection.breakOut))
         case 14 => accessibility.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb3.SymbolInformation
+    def companion = scala.meta.internal.semanticdb.SymbolInformation
 }
 
-object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.SymbolInformation] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.SymbolInformation] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb3.SymbolInformation = {
+object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.SymbolInformation] {
+  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.SymbolInformation] = this
+  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.SymbolInformation = {
     require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb3.SymbolInformation(
+    scala.meta.internal.semanticdb.SymbolInformation(
       __fieldsMap.getOrElse(__fields.get(0), "").asInstanceOf[_root_.scala.Predef.String],
-      scala.meta.internal.semanticdb3.Language.fromValue(__fieldsMap.getOrElse(__fields.get(1), scala.meta.internal.semanticdb3.Language.UNKNOWN_LANGUAGE.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
-      scala.meta.internal.semanticdb3.SymbolInformation.Kind.fromValue(__fieldsMap.getOrElse(__fields.get(2), scala.meta.internal.semanticdb3.SymbolInformation.Kind.UNKNOWN_KIND.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
+      scala.meta.internal.semanticdb.Language.fromValue(__fieldsMap.getOrElse(__fields.get(1), scala.meta.internal.semanticdb.Language.UNKNOWN_LANGUAGE.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
+      scala.meta.internal.semanticdb.SymbolInformation.Kind.fromValue(__fieldsMap.getOrElse(__fields.get(2), scala.meta.internal.semanticdb.SymbolInformation.Kind.UNKNOWN_KIND.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
       __fieldsMap.getOrElse(__fields.get(3), 0).asInstanceOf[_root_.scala.Int],
       __fieldsMap.getOrElse(__fields.get(4), "").asInstanceOf[_root_.scala.Predef.String],
-      scala.meta.internal.semanticdb3.SymbolInformation._typemapper_tpe.toCustom(__fieldsMap.getOrElse(__fields.get(5), scala.meta.internal.semanticdb3.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb3.TypeMessage]),
-      __fieldsMap.getOrElse(__fields.get(6), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.Annotation]],
-      __fieldsMap.get(__fields.get(7)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb3.Accessibility]]
+      scala.meta.internal.semanticdb.SymbolInformation._typemapper_tpe.toCustom(__fieldsMap.getOrElse(__fields.get(5), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage]),
+      __fieldsMap.getOrElse(__fields.get(6), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Annotation]],
+      __fieldsMap.get(__fields.get(7)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Accessibility]]
     )
   }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb3.SymbolInformation] = _root_.scalapb.descriptors.Reads{
+  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.SymbolInformation] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb3.SymbolInformation(
+      scala.meta.internal.semanticdb.SymbolInformation(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
-        scala.meta.internal.semanticdb3.Language.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(16).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(scala.meta.internal.semanticdb3.Language.UNKNOWN_LANGUAGE.scalaValueDescriptor).number),
-        scala.meta.internal.semanticdb3.SymbolInformation.Kind.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(scala.meta.internal.semanticdb3.SymbolInformation.Kind.UNKNOWN_KIND.scalaValueDescriptor).number),
+        scala.meta.internal.semanticdb.Language.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(16).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(scala.meta.internal.semanticdb.Language.UNKNOWN_LANGUAGE.scalaValueDescriptor).number),
+        scala.meta.internal.semanticdb.SymbolInformation.Kind.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(scala.meta.internal.semanticdb.SymbolInformation.Kind.UNKNOWN_KIND.scalaValueDescriptor).number),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[_root_.scala.Int]).getOrElse(0),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
-        scala.meta.internal.semanticdb3.SymbolInformation._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(11).get).map(_.as[scala.meta.internal.semanticdb3.TypeMessage]).getOrElse(scala.meta.internal.semanticdb3.TypeMessage.defaultInstance)),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(13).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.Annotation]]).getOrElse(_root_.scala.collection.Seq.empty),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(14).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb3.Accessibility]])
+        scala.meta.internal.semanticdb.SymbolInformation._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(11).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)),
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(13).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Annotation]]).getOrElse(_root_.scala.collection.Seq.empty),
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(14).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Accessibility]])
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
@@ -272,20 +272,20 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
-      case 11 => __out = scala.meta.internal.semanticdb3.TypeMessage
-      case 13 => __out = scala.meta.internal.semanticdb3.Annotation
-      case 14 => __out = scala.meta.internal.semanticdb3.Accessibility
+      case 11 => __out = scala.meta.internal.semanticdb.TypeMessage
+      case 13 => __out = scala.meta.internal.semanticdb.Annotation
+      case 14 => __out = scala.meta.internal.semanticdb.Accessibility
     }
     __out
   }
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
   def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = {
     (__fieldNumber: @_root_.scala.unchecked) match {
-      case 16 => scala.meta.internal.semanticdb3.Language
-      case 3 => scala.meta.internal.semanticdb3.SymbolInformation.Kind
+      case 16 => scala.meta.internal.semanticdb.Language
+      case 3 => scala.meta.internal.semanticdb.SymbolInformation.Kind
     }
   }
-  lazy val defaultInstance = scala.meta.internal.semanticdb3.SymbolInformation(
+  lazy val defaultInstance = scala.meta.internal.semanticdb.SymbolInformation(
   )
   sealed trait Kind extends _root_.scalapb.GeneratedEnum {
     type EnumType = Kind
@@ -305,9 +305,9 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
     def isClass: _root_.scala.Boolean = false
     def isTrait: _root_.scala.Boolean = false
     def isInterface: _root_.scala.Boolean = false
-    def companion: _root_.scalapb.GeneratedEnumCompanion[Kind] = scala.meta.internal.semanticdb3.SymbolInformation.Kind
+    def companion: _root_.scalapb.GeneratedEnumCompanion[Kind] = scala.meta.internal.semanticdb.SymbolInformation.Kind
   }
-  
+
   object Kind extends _root_.scalapb.GeneratedEnumCompanion[Kind] {
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[Kind] = this
     @SerialVersionUID(0L)
@@ -317,7 +317,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "UNKNOWN_KIND"
       override def isUnknownKind: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object LOCAL extends Kind {
       val value = 19
@@ -325,7 +325,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "LOCAL"
       override def isLocal: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object FIELD extends Kind {
       val value = 20
@@ -333,7 +333,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "FIELD"
       override def isField: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object METHOD extends Kind {
       val value = 3
@@ -341,7 +341,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "METHOD"
       override def isMethod: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object CONSTRUCTOR extends Kind {
       val value = 21
@@ -349,7 +349,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "CONSTRUCTOR"
       override def isConstructor: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object MACRO extends Kind {
       val value = 6
@@ -357,7 +357,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "MACRO"
       override def isMacro: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object TYPE extends Kind {
       val value = 7
@@ -365,7 +365,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "TYPE"
       override def isType: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object PARAMETER extends Kind {
       val value = 8
@@ -373,7 +373,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "PARAMETER"
       override def isParameter: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object SELF_PARAMETER extends Kind {
       val value = 17
@@ -381,7 +381,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "SELF_PARAMETER"
       override def isSelfParameter: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object TYPE_PARAMETER extends Kind {
       val value = 9
@@ -389,7 +389,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "TYPE_PARAMETER"
       override def isTypeParameter: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object OBJECT extends Kind {
       val value = 10
@@ -397,7 +397,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "OBJECT"
       override def isObject: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object PACKAGE extends Kind {
       val value = 11
@@ -405,7 +405,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "PACKAGE"
       override def isPackage: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object PACKAGE_OBJECT extends Kind {
       val value = 12
@@ -413,7 +413,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "PACKAGE_OBJECT"
       override def isPackageObject: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object CLASS extends Kind {
       val value = 13
@@ -421,7 +421,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "CLASS"
       override def isClass: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object TRAIT extends Kind {
       val value = 14
@@ -429,7 +429,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "TRAIT"
       override def isTrait: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object INTERFACE extends Kind {
       val value = 18
@@ -437,10 +437,10 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "INTERFACE"
       override def isInterface: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     final case class Unrecognized(value: _root_.scala.Int) extends Kind with _root_.scalapb.UnrecognizedEnum
-    
+
     lazy val values = scala.collection.Seq(UNKNOWN_KIND, LOCAL, FIELD, METHOD, CONSTRUCTOR, MACRO, TYPE, PARAMETER, SELF_PARAMETER, TYPE_PARAMETER, OBJECT, PACKAGE, PACKAGE_OBJECT, CLASS, TRAIT, INTERFACE)
     def fromValue(value: _root_.scala.Int): Kind = value match {
       case 0 => UNKNOWN_KIND
@@ -461,8 +461,8 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       case 21 => CONSTRUCTOR
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = scala.meta.internal.semanticdb3.SymbolInformation.javaDescriptor.getEnumTypes.get(0)
-    def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = scala.meta.internal.semanticdb3.SymbolInformation.scalaDescriptor.enums(0)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = scala.meta.internal.semanticdb.SymbolInformation.javaDescriptor.getEnumTypes.get(0)
+    def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = scala.meta.internal.semanticdb.SymbolInformation.scalaDescriptor.enums(0)
   }
   sealed trait Property extends _root_.scalapb.GeneratedEnum {
     type EnumType = Property
@@ -480,9 +480,9 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
     def isStatic: _root_.scala.Boolean = false
     def isPrimary: _root_.scala.Boolean = false
     def isEnum: _root_.scala.Boolean = false
-    def companion: _root_.scalapb.GeneratedEnumCompanion[Property] = scala.meta.internal.semanticdb3.SymbolInformation.Property
+    def companion: _root_.scalapb.GeneratedEnumCompanion[Property] = scala.meta.internal.semanticdb.SymbolInformation.Property
   }
-  
+
   object Property extends _root_.scalapb.GeneratedEnumCompanion[Property] {
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[Property] = this
     @SerialVersionUID(0L)
@@ -492,7 +492,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "UNKNOWN_PROPERTY"
       override def isUnknownProperty: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object ABSTRACT extends Property {
       val value = 4
@@ -500,7 +500,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "ABSTRACT"
       override def isAbstract: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object FINAL extends Property {
       val value = 8
@@ -508,7 +508,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "FINAL"
       override def isFinal: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object SEALED extends Property {
       val value = 16
@@ -516,7 +516,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "SEALED"
       override def isSealed: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object IMPLICIT extends Property {
       val value = 32
@@ -524,7 +524,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "IMPLICIT"
       override def isImplicit: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object LAZY extends Property {
       val value = 64
@@ -532,7 +532,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "LAZY"
       override def isLazy: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object CASE extends Property {
       val value = 128
@@ -540,7 +540,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "CASE"
       override def isCase: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object COVARIANT extends Property {
       val value = 256
@@ -548,7 +548,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "COVARIANT"
       override def isCovariant: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object CONTRAVARIANT extends Property {
       val value = 512
@@ -556,7 +556,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "CONTRAVARIANT"
       override def isContravariant: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object VAL extends Property {
       val value = 1024
@@ -564,7 +564,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "VAL"
       override def isVal: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object VAR extends Property {
       val value = 2048
@@ -572,7 +572,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "VAR"
       override def isVar: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object STATIC extends Property {
       val value = 4096
@@ -580,7 +580,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "STATIC"
       override def isStatic: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object PRIMARY extends Property {
       val value = 8192
@@ -588,7 +588,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "PRIMARY"
       override def isPrimary: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object ENUM extends Property {
       val value = 16384
@@ -596,10 +596,10 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "ENUM"
       override def isEnum: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     final case class Unrecognized(value: _root_.scala.Int) extends Property with _root_.scalapb.UnrecognizedEnum
-    
+
     lazy val values = scala.collection.Seq(UNKNOWN_PROPERTY, ABSTRACT, FINAL, SEALED, IMPLICIT, LAZY, CASE, COVARIANT, CONTRAVARIANT, VAL, VAR, STATIC, PRIMARY, ENUM)
     def fromValue(value: _root_.scala.Int): Property = value match {
       case 0 => UNKNOWN_PROPERTY
@@ -618,19 +618,19 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       case 16384 => ENUM
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = scala.meta.internal.semanticdb3.SymbolInformation.javaDescriptor.getEnumTypes.get(1)
-    def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = scala.meta.internal.semanticdb3.SymbolInformation.scalaDescriptor.enums(1)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = scala.meta.internal.semanticdb.SymbolInformation.javaDescriptor.getEnumTypes.get(1)
+    def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = scala.meta.internal.semanticdb.SymbolInformation.scalaDescriptor.enums(1)
   }
-  implicit class SymbolInformationLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.SymbolInformation]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb3.SymbolInformation](_l) {
+  implicit class SymbolInformationLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.SymbolInformation]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.SymbolInformation](_l) {
     def symbol: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Predef.String] = field(_.symbol)((c_, f_) => c_.copy(symbol = f_))
-    def language: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Language] = field(_.language)((c_, f_) => c_.copy(language = f_))
-    def kind: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.SymbolInformation.Kind] = field(_.kind)((c_, f_) => c_.copy(kind = f_))
+    def language: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Language] = field(_.language)((c_, f_) => c_.copy(language = f_))
+    def kind: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.SymbolInformation.Kind] = field(_.kind)((c_, f_) => c_.copy(kind = f_))
     def properties: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Int] = field(_.properties)((c_, f_) => c_.copy(properties = f_))
     def name: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Predef.String] = field(_.name)((c_, f_) => c_.copy(name = f_))
-    def tpe: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Type] = field(_.tpe)((c_, f_) => c_.copy(tpe = f_))
-    def annotations: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.Annotation]] = field(_.annotations)((c_, f_) => c_.copy(annotations = f_))
-    def accessibility: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Accessibility] = field(_.getAccessibility)((c_, f_) => c_.copy(accessibility = Option(f_)))
-    def optionalAccessibility: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb3.Accessibility]] = field(_.accessibility)((c_, f_) => c_.copy(accessibility = f_))
+    def tpe: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Type] = field(_.tpe)((c_, f_) => c_.copy(tpe = f_))
+    def annotations: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Annotation]] = field(_.annotations)((c_, f_) => c_.copy(annotations = f_))
+    def accessibility: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Accessibility] = field(_.getAccessibility)((c_, f_) => c_.copy(accessibility = Option(f_)))
+    def optionalAccessibility: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.Accessibility]] = field(_.accessibility)((c_, f_) => c_.copy(accessibility = f_))
   }
   final val SYMBOL_FIELD_NUMBER = 1
   final val LANGUAGE_FIELD_NUMBER = 16
@@ -641,5 +641,5 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
   final val ANNOTATIONS_FIELD_NUMBER = 13
   final val ACCESSIBILITY_FIELD_NUMBER = 14
   @transient
-  private val _typemapper_tpe: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb3.TypeMessage, scala.meta.internal.semanticdb3.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb3.TypeMessage, scala.meta.internal.semanticdb3.Type]]
+  private val _typemapper_tpe: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type]]
 }

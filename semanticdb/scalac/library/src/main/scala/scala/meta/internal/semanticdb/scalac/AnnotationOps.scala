@@ -1,7 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.scalacp._
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb => s}
 
 trait AnnotationOps { self: SemanticdbOps =>
 

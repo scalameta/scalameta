@@ -3,13 +3,13 @@
 //
 // Protofile syntax: PROTO3
 
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 sealed trait Schema extends _root_.scalapb.GeneratedEnum {
   type EnumType = Schema
   def isLegacy: _root_.scala.Boolean = false
   def isSemanticdb3: _root_.scala.Boolean = false
-  def companion: _root_.scalapb.GeneratedEnumCompanion[Schema] = scala.meta.internal.semanticdb3.Schema
+  def companion: _root_.scalapb.GeneratedEnumCompanion[Schema] = scala.meta.internal.semanticdb.Schema
 }
 
 object Schema extends _root_.scalapb.GeneratedEnumCompanion[Schema] {
@@ -21,7 +21,7 @@ object Schema extends _root_.scalapb.GeneratedEnumCompanion[Schema] {
     val name = "LEGACY"
     override def isLegacy: _root_.scala.Boolean = true
   }
-  
+
   @SerialVersionUID(0L)
   case object SEMANTICDB3 extends Schema {
     val value = 3
@@ -29,10 +29,10 @@ object Schema extends _root_.scalapb.GeneratedEnumCompanion[Schema] {
     val name = "SEMANTICDB3"
     override def isSemanticdb3: _root_.scala.Boolean = true
   }
-  
+
   @SerialVersionUID(0L)
   final case class Unrecognized(value: _root_.scala.Int) extends Schema with _root_.scalapb.UnrecognizedEnum
-  
+
   lazy val values = scala.collection.Seq(LEGACY, SEMANTICDB3)
   def fromValue(value: _root_.scala.Int): Schema = value match {
     case 0 => LEGACY

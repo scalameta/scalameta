@@ -3,12 +3,12 @@
 //
 // Protofile syntax: PROTO3
 
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 @SerialVersionUID(0L)
 final case class Diagnostic(
-    range: _root_.scala.Option[scala.meta.internal.semanticdb3.Range] = None,
-    severity: scala.meta.internal.semanticdb3.Diagnostic.Severity = scala.meta.internal.semanticdb3.Diagnostic.Severity.UNKNOWN_SEVERITY,
+    range: _root_.scala.Option[scala.meta.internal.semanticdb.Range] = None,
+    severity: scala.meta.internal.semanticdb.Diagnostic.Severity = scala.meta.internal.semanticdb.Diagnostic.Severity.UNKNOWN_SEVERITY,
     message: _root_.scala.Predef.String = ""
     ) extends scalapb.GeneratedMessage with scalapb.Message[Diagnostic] with scalapb.lenses.Updatable[Diagnostic] {
     @transient
@@ -19,14 +19,14 @@ final case class Diagnostic(
         val __value = range.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-      
+
       {
         val __value = severity
-        if (__value != scala.meta.internal.semanticdb3.Diagnostic.Severity.UNKNOWN_SEVERITY) {
+        if (__value != scala.meta.internal.semanticdb.Diagnostic.Severity.UNKNOWN_SEVERITY) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(2, __value.value)
         }
       };
-      
+
       {
         val __value = message
         if (__value != "") {
@@ -52,7 +52,7 @@ final case class Diagnostic(
       };
       {
         val __v = severity
-        if (__v != scala.meta.internal.semanticdb3.Diagnostic.Severity.UNKNOWN_SEVERITY) {
+        if (__v != scala.meta.internal.semanticdb.Diagnostic.Severity.UNKNOWN_SEVERITY) {
           _output__.writeEnum(2, __v.value)
         }
       };
@@ -63,7 +63,7 @@ final case class Diagnostic(
         }
       };
     }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb3.Diagnostic = {
+    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.Diagnostic = {
       var __range = this.range
       var __severity = this.severity
       var __message = this.message
@@ -73,24 +73,24 @@ final case class Diagnostic(
         _tag__ match {
           case 0 => _done__ = true
           case 10 =>
-            __range = Option(_root_.scalapb.LiteParser.readMessage(_input__, __range.getOrElse(scala.meta.internal.semanticdb3.Range.defaultInstance)))
+            __range = Option(_root_.scalapb.LiteParser.readMessage(_input__, __range.getOrElse(scala.meta.internal.semanticdb.Range.defaultInstance)))
           case 16 =>
-            __severity = scala.meta.internal.semanticdb3.Diagnostic.Severity.fromValue(_input__.readEnum())
+            __severity = scala.meta.internal.semanticdb.Diagnostic.Severity.fromValue(_input__.readEnum())
           case 26 =>
             __message = _input__.readString()
           case tag => _input__.skipField(tag)
         }
       }
-      scala.meta.internal.semanticdb3.Diagnostic(
+      scala.meta.internal.semanticdb.Diagnostic(
           range = __range,
           severity = __severity,
           message = __message
       )
     }
-    def getRange: scala.meta.internal.semanticdb3.Range = range.getOrElse(scala.meta.internal.semanticdb3.Range.defaultInstance)
+    def getRange: scala.meta.internal.semanticdb.Range = range.getOrElse(scala.meta.internal.semanticdb.Range.defaultInstance)
     def clearRange: Diagnostic = copy(range = None)
-    def withRange(__v: scala.meta.internal.semanticdb3.Range): Diagnostic = copy(range = Option(__v))
-    def withSeverity(__v: scala.meta.internal.semanticdb3.Diagnostic.Severity): Diagnostic = copy(severity = __v)
+    def withRange(__v: scala.meta.internal.semanticdb.Range): Diagnostic = copy(range = Option(__v))
+    def withSeverity(__v: scala.meta.internal.semanticdb.Diagnostic.Severity): Diagnostic = copy(severity = __v)
     def withMessage(__v: _root_.scala.Predef.String): Diagnostic = copy(message = __v)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
@@ -114,26 +114,26 @@ final case class Diagnostic(
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb3.Diagnostic
+    def companion = scala.meta.internal.semanticdb.Diagnostic
 }
 
-object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.Diagnostic] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.Diagnostic] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb3.Diagnostic = {
+object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.Diagnostic] {
+  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.Diagnostic] = this
+  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.Diagnostic = {
     require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb3.Diagnostic(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb3.Range]],
-      scala.meta.internal.semanticdb3.Diagnostic.Severity.fromValue(__fieldsMap.getOrElse(__fields.get(1), scala.meta.internal.semanticdb3.Diagnostic.Severity.UNKNOWN_SEVERITY.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
+    scala.meta.internal.semanticdb.Diagnostic(
+      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Range]],
+      scala.meta.internal.semanticdb.Diagnostic.Severity.fromValue(__fieldsMap.getOrElse(__fields.get(1), scala.meta.internal.semanticdb.Diagnostic.Severity.UNKNOWN_SEVERITY.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
       __fieldsMap.getOrElse(__fields.get(2), "").asInstanceOf[_root_.scala.Predef.String]
     )
   }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb3.Diagnostic] = _root_.scalapb.descriptors.Reads{
+  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.Diagnostic] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb3.Diagnostic(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb3.Range]]),
-        scala.meta.internal.semanticdb3.Diagnostic.Severity.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(scala.meta.internal.semanticdb3.Diagnostic.Severity.UNKNOWN_SEVERITY.scalaValueDescriptor).number),
+      scala.meta.internal.semanticdb.Diagnostic(
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Range]]),
+        scala.meta.internal.semanticdb.Diagnostic.Severity.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(scala.meta.internal.semanticdb.Diagnostic.Severity.UNKNOWN_SEVERITY.scalaValueDescriptor).number),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
       )
     case _ => throw new RuntimeException("Expected PMessage")
@@ -143,17 +143,17 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
-      case 1 => __out = scala.meta.internal.semanticdb3.Range
+      case 1 => __out = scala.meta.internal.semanticdb.Range
     }
     __out
   }
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
   def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = {
     (__fieldNumber: @_root_.scala.unchecked) match {
-      case 2 => scala.meta.internal.semanticdb3.Diagnostic.Severity
+      case 2 => scala.meta.internal.semanticdb.Diagnostic.Severity
     }
   }
-  lazy val defaultInstance = scala.meta.internal.semanticdb3.Diagnostic(
+  lazy val defaultInstance = scala.meta.internal.semanticdb.Diagnostic(
   )
   sealed trait Severity extends _root_.scalapb.GeneratedEnum {
     type EnumType = Severity
@@ -162,9 +162,9 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
     def isWarning: _root_.scala.Boolean = false
     def isInformation: _root_.scala.Boolean = false
     def isHint: _root_.scala.Boolean = false
-    def companion: _root_.scalapb.GeneratedEnumCompanion[Severity] = scala.meta.internal.semanticdb3.Diagnostic.Severity
+    def companion: _root_.scalapb.GeneratedEnumCompanion[Severity] = scala.meta.internal.semanticdb.Diagnostic.Severity
   }
-  
+
   object Severity extends _root_.scalapb.GeneratedEnumCompanion[Severity] {
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[Severity] = this
     @SerialVersionUID(0L)
@@ -174,7 +174,7 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       val name = "UNKNOWN_SEVERITY"
       override def isUnknownSeverity: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object ERROR extends Severity {
       val value = 1
@@ -182,7 +182,7 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       val name = "ERROR"
       override def isError: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object WARNING extends Severity {
       val value = 2
@@ -190,7 +190,7 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       val name = "WARNING"
       override def isWarning: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object INFORMATION extends Severity {
       val value = 3
@@ -198,7 +198,7 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       val name = "INFORMATION"
       override def isInformation: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     case object HINT extends Severity {
       val value = 4
@@ -206,10 +206,10 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       val name = "HINT"
       override def isHint: _root_.scala.Boolean = true
     }
-    
+
     @SerialVersionUID(0L)
     final case class Unrecognized(value: _root_.scala.Int) extends Severity with _root_.scalapb.UnrecognizedEnum
-    
+
     lazy val values = scala.collection.Seq(UNKNOWN_SEVERITY, ERROR, WARNING, INFORMATION, HINT)
     def fromValue(value: _root_.scala.Int): Severity = value match {
       case 0 => UNKNOWN_SEVERITY
@@ -219,13 +219,13 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       case 4 => HINT
       case __other => Unrecognized(__other)
     }
-    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = scala.meta.internal.semanticdb3.Diagnostic.javaDescriptor.getEnumTypes.get(0)
-    def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = scala.meta.internal.semanticdb3.Diagnostic.scalaDescriptor.enums(0)
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = scala.meta.internal.semanticdb.Diagnostic.javaDescriptor.getEnumTypes.get(0)
+    def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = scala.meta.internal.semanticdb.Diagnostic.scalaDescriptor.enums(0)
   }
-  implicit class DiagnosticLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Diagnostic]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb3.Diagnostic](_l) {
-    def range: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Range] = field(_.getRange)((c_, f_) => c_.copy(range = Option(f_)))
-    def optionalRange: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb3.Range]] = field(_.range)((c_, f_) => c_.copy(range = f_))
-    def severity: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Diagnostic.Severity] = field(_.severity)((c_, f_) => c_.copy(severity = f_))
+  implicit class DiagnosticLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Diagnostic]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.Diagnostic](_l) {
+    def range: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Range] = field(_.getRange)((c_, f_) => c_.copy(range = Option(f_)))
+    def optionalRange: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.Range]] = field(_.range)((c_, f_) => c_.copy(range = f_))
+    def severity: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Diagnostic.Severity] = field(_.severity)((c_, f_) => c_.copy(severity = f_))
     def message: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Predef.String] = field(_.message)((c_, f_) => c_.copy(message = f_))
   }
   final val RANGE_FIELD_NUMBER = 1

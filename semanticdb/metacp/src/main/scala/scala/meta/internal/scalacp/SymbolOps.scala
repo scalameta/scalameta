@@ -1,11 +1,11 @@
 package scala.meta.internal.scalacp
 
 import java.util.{HashMap, HashSet}
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb3.Scala.{Names => n}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolOps { self: Scalacp =>

@@ -3,7 +3,7 @@
 //
 // Protofile syntax: PROTO3
 
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 @SerialVersionUID(0L)
 final case class Range(
@@ -16,28 +16,28 @@ final case class Range(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-      
+
       {
         val __value = startLine
         if (__value != 0) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt32Size(1, __value)
         }
       };
-      
+
       {
         val __value = startCharacter
         if (__value != 0) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt32Size(2, __value)
         }
       };
-      
+
       {
         val __value = endLine
         if (__value != 0) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt32Size(3, __value)
         }
       };
-      
+
       {
         val __value = endCharacter
         if (__value != 0) {
@@ -80,7 +80,7 @@ final case class Range(
         }
       };
     }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb3.Range = {
+    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.Range = {
       var __startLine = this.startLine
       var __startCharacter = this.startCharacter
       var __endLine = this.endLine
@@ -101,7 +101,7 @@ final case class Range(
           case tag => _input__.skipField(tag)
         }
       }
-      scala.meta.internal.semanticdb3.Range(
+      scala.meta.internal.semanticdb.Range(
           startLine = __startLine,
           startCharacter = __startCharacter,
           endLine = __endLine,
@@ -142,25 +142,25 @@ final case class Range(
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb3.Range
+    def companion = scala.meta.internal.semanticdb.Range
 }
 
-object Range extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.Range] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.Range] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb3.Range = {
+object Range extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.Range] {
+  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.Range] = this
+  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.Range = {
     require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb3.Range(
+    scala.meta.internal.semanticdb.Range(
       __fieldsMap.getOrElse(__fields.get(0), 0).asInstanceOf[_root_.scala.Int],
       __fieldsMap.getOrElse(__fields.get(1), 0).asInstanceOf[_root_.scala.Int],
       __fieldsMap.getOrElse(__fields.get(2), 0).asInstanceOf[_root_.scala.Int],
       __fieldsMap.getOrElse(__fields.get(3), 0).asInstanceOf[_root_.scala.Int]
     )
   }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb3.Range] = _root_.scalapb.descriptors.Reads{
+  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.Range] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb3.Range(
+      scala.meta.internal.semanticdb.Range(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Int]).getOrElse(0),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Int]).getOrElse(0),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Int]).getOrElse(0),
@@ -173,9 +173,9 @@ object Range extends scalapb.GeneratedMessageCompanion[scala.meta.internal.seman
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
   def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
-  lazy val defaultInstance = scala.meta.internal.semanticdb3.Range(
+  lazy val defaultInstance = scala.meta.internal.semanticdb.Range(
   )
-  implicit class RangeLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Range]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb3.Range](_l) {
+  implicit class RangeLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Range]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.Range](_l) {
     def startLine: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Int] = field(_.startLine)((c_, f_) => c_.copy(startLine = f_))
     def startCharacter: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Int] = field(_.startCharacter)((c_, f_) => c_.copy(startCharacter = f_))
     def endLine: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Int] = field(_.endLine)((c_, f_) => c_.copy(endLine = f_))

@@ -6,12 +6,12 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb3.Scala.{Names => n}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.{Language => l}
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode

@@ -1,11 +1,11 @@
 package scala.meta.internal.scalacp
 
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
-import scala.meta.internal.semanticdb3.{Language => l}
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 
 object Synthetics {
   def setterInfos(getterInfo: s.SymbolInformation, linkMode: LinkMode): List[s.SymbolInformation] = {

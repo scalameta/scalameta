@@ -1,4 +1,4 @@
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream

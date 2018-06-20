@@ -1,4 +1,4 @@
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 import java.nio.file._
 import java.util.jar._

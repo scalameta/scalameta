@@ -5,8 +5,8 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import scala.collection.mutable
 import scala.meta.internal.io._
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Scala._
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Scala._
 import scala.meta.io._
 
 class Index {

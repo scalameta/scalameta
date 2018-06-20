@@ -4,9 +4,9 @@ import java.util.HashMap
 import scala.{meta => m}
 import scala.meta.internal.inputs._
 import scala.meta.internal.scalacp._
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.util.control.NonFatal
 
 trait SymbolOps { self: SemanticdbOps =>

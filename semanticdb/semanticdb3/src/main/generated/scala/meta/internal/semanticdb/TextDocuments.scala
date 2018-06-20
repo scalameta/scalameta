@@ -3,11 +3,11 @@
 //
 // Protofile syntax: PROTO3
 
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 @SerialVersionUID(0L)
 final case class TextDocuments(
-    documents: _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.TextDocument] = _root_.scala.collection.Seq.empty
+    documents: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.TextDocument] = _root_.scala.collection.Seq.empty
     ) extends scalapb.GeneratedMessage with scalapb.Message[TextDocuments] with scalapb.lenses.Updatable[TextDocuments] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
@@ -35,26 +35,26 @@ final case class TextDocuments(
         __m.writeTo(_output__)
       };
     }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb3.TextDocuments = {
-      val __documents = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb3.TextDocument] ++= this.documents)
+    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.TextDocuments = {
+      val __documents = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.TextDocument] ++= this.documents)
       var _done__ = false
       while (!_done__) {
         val _tag__ = _input__.readTag()
         _tag__ match {
           case 0 => _done__ = true
           case 10 =>
-            __documents += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb3.TextDocument.defaultInstance)
+            __documents += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.TextDocument.defaultInstance)
           case tag => _input__.skipField(tag)
         }
       }
-      scala.meta.internal.semanticdb3.TextDocuments(
+      scala.meta.internal.semanticdb.TextDocuments(
           documents = __documents.result()
       )
     }
     def clearDocuments = copy(documents = _root_.scala.collection.Seq.empty)
-    def addDocuments(__vs: scala.meta.internal.semanticdb3.TextDocument*): TextDocuments = addAllDocuments(__vs)
-    def addAllDocuments(__vs: TraversableOnce[scala.meta.internal.semanticdb3.TextDocument]): TextDocuments = copy(documents = documents ++ __vs)
-    def withDocuments(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.TextDocument]): TextDocuments = copy(documents = __v)
+    def addDocuments(__vs: scala.meta.internal.semanticdb.TextDocument*): TextDocuments = addAllDocuments(__vs)
+    def addAllDocuments(__vs: TraversableOnce[scala.meta.internal.semanticdb.TextDocument]): TextDocuments = copy(documents = documents ++ __vs)
+    def withDocuments(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.TextDocument]): TextDocuments = copy(documents = __v)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => documents
@@ -67,23 +67,23 @@ final case class TextDocuments(
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb3.TextDocuments
+    def companion = scala.meta.internal.semanticdb.TextDocuments
 }
 
-object TextDocuments extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.TextDocuments] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.TextDocuments] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb3.TextDocuments = {
+object TextDocuments extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TextDocuments] {
+  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TextDocuments] = this
+  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.TextDocuments = {
     require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb3.TextDocuments(
-      __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.TextDocument]]
+    scala.meta.internal.semanticdb.TextDocuments(
+      __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TextDocument]]
     )
   }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb3.TextDocuments] = _root_.scalapb.descriptors.Reads{
+  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.TextDocuments] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb3.TextDocuments(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.TextDocument]]).getOrElse(_root_.scala.collection.Seq.empty)
+      scala.meta.internal.semanticdb.TextDocuments(
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TextDocument]]).getOrElse(_root_.scala.collection.Seq.empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
@@ -92,16 +92,16 @@ object TextDocuments extends scalapb.GeneratedMessageCompanion[scala.meta.intern
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
-      case 1 => __out = scala.meta.internal.semanticdb3.TextDocument
+      case 1 => __out = scala.meta.internal.semanticdb.TextDocument
     }
     __out
   }
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
   def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
-  lazy val defaultInstance = scala.meta.internal.semanticdb3.TextDocuments(
+  lazy val defaultInstance = scala.meta.internal.semanticdb.TextDocuments(
   )
-  implicit class TextDocumentsLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.TextDocuments]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb3.TextDocuments](_l) {
-    def documents: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.TextDocument]] = field(_.documents)((c_, f_) => c_.copy(documents = f_))
+  implicit class TextDocumentsLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.TextDocuments]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.TextDocuments](_l) {
+    def documents: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.TextDocument]] = field(_.documents)((c_, f_) => c_.copy(documents = f_))
   }
   final val DOCUMENTS_FIELD_NUMBER = 1
 }

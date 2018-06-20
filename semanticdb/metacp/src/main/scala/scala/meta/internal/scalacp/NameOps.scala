@@ -1,7 +1,7 @@
 package scala.meta.internal.scalacp
 
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Scala.{Names => n}
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.reflect.NameTransformer
 
 trait NameOps { self: Scalacp =>

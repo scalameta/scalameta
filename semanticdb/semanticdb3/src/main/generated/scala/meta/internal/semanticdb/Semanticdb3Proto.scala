@@ -3,38 +3,38 @@
 //
 // Protofile syntax: PROTO3
 
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 object Semanticdb3Proto extends _root_.scalapb.GeneratedFileObject {
   lazy val dependencies: Seq[_root_.scalapb.GeneratedFileObject] = Seq(
   )
   lazy val messagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq(
-    scala.meta.internal.semanticdb3.TextDocuments,
-    scala.meta.internal.semanticdb3.TextDocument,
-    scala.meta.internal.semanticdb3.Range,
-    scala.meta.internal.semanticdb3.Location,
-    scala.meta.internal.semanticdb3.Scope,
-    scala.meta.internal.semanticdb3.TypeMessage,
-    scala.meta.internal.semanticdb3.TypeRef,
-    scala.meta.internal.semanticdb3.SingletonType,
-    scala.meta.internal.semanticdb3.IntersectionType,
-    scala.meta.internal.semanticdb3.UnionType,
-    scala.meta.internal.semanticdb3.WithType,
-    scala.meta.internal.semanticdb3.StructuralType,
-    scala.meta.internal.semanticdb3.AnnotatedType,
-    scala.meta.internal.semanticdb3.ExistentialType,
-    scala.meta.internal.semanticdb3.UniversalType,
-    scala.meta.internal.semanticdb3.ClassInfoType,
-    scala.meta.internal.semanticdb3.MethodType,
-    scala.meta.internal.semanticdb3.ByNameType,
-    scala.meta.internal.semanticdb3.RepeatedType,
-    scala.meta.internal.semanticdb3.TypeType,
-    scala.meta.internal.semanticdb3.SymbolInformation,
-    scala.meta.internal.semanticdb3.Annotation,
-    scala.meta.internal.semanticdb3.Accessibility,
-    scala.meta.internal.semanticdb3.SymbolOccurrence,
-    scala.meta.internal.semanticdb3.Diagnostic,
-    scala.meta.internal.semanticdb3.Synthetic
+    scala.meta.internal.semanticdb.TextDocuments,
+    scala.meta.internal.semanticdb.TextDocument,
+    scala.meta.internal.semanticdb.Range,
+    scala.meta.internal.semanticdb.Location,
+    scala.meta.internal.semanticdb.Scope,
+    scala.meta.internal.semanticdb.TypeMessage,
+    scala.meta.internal.semanticdb.TypeRef,
+    scala.meta.internal.semanticdb.SingletonType,
+    scala.meta.internal.semanticdb.IntersectionType,
+    scala.meta.internal.semanticdb.UnionType,
+    scala.meta.internal.semanticdb.WithType,
+    scala.meta.internal.semanticdb.StructuralType,
+    scala.meta.internal.semanticdb.AnnotatedType,
+    scala.meta.internal.semanticdb.ExistentialType,
+    scala.meta.internal.semanticdb.UniversalType,
+    scala.meta.internal.semanticdb.ClassInfoType,
+    scala.meta.internal.semanticdb.MethodType,
+    scala.meta.internal.semanticdb.ByNameType,
+    scala.meta.internal.semanticdb.RepeatedType,
+    scala.meta.internal.semanticdb.TypeType,
+    scala.meta.internal.semanticdb.SymbolInformation,
+    scala.meta.internal.semanticdb.Annotation,
+    scala.meta.internal.semanticdb.Accessibility,
+    scala.meta.internal.semanticdb.SymbolOccurrence,
+    scala.meta.internal.semanticdb.Diagnostic,
+    scala.meta.internal.semanticdb.Synthetic
   )
   private lazy val ProtoBytes: Array[Byte] =
       scalapb.Encoding.fromBase64(scala.collection.Seq(

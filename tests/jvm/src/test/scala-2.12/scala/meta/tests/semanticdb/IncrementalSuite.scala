@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 import org.scalatest.tagobjects.Slow
 import org.scalatest.BeforeAndAfterEach
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
-import scala.meta.internal.semanticdb3.Index
+import scala.meta.internal.semanticdb.Index
 import scala.meta.io.RelativePath
 import scala.meta.testkit.DiffAssertions._
 

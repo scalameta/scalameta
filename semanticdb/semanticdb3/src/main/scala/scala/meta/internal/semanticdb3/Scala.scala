@@ -1,8 +1,8 @@
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 import scala.compat.Platform.EOL
-import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb3.Scala.{Names => n}
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
 
 object Scala {
   object Symbols {

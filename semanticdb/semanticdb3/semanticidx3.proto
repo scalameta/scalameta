@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package scala.meta.internal.semanticdb3;
+package scala.meta.internal.semanticdb;
 
 message Index {
   repeated PackageEntry packages = 1;

@@ -10,7 +10,7 @@ import java.nio.file.Path
 import java.util
 import java.util.stream.Collectors
 import scalapb.GeneratedMessage
-import scala.meta.internal.semanticdb3._
+import scala.meta.internal.semanticdb._
 import scala.meta.io._
 
 object PlatformFileIO {

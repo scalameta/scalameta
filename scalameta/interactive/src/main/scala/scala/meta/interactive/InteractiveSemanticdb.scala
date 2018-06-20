@@ -8,7 +8,7 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.reporters.StoreReporter
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb => s}
 
 object InteractiveSemanticdb {
 

@@ -2,11 +2,11 @@ package scala.meta.internal.scalacp
 
 import java.nio.file._
 import scala.meta.internal.metacp._
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
-import scala.meta.internal.semanticdb3.{Language => l}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.Scala._
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb.Scala._
 import scala.tools.scalap.scalax.rules.scalasig._
 
 class Scalacp private (classfile: ToplevelClassfile)

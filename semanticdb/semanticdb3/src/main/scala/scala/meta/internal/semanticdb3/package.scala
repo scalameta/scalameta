@@ -1,10 +1,10 @@
 package scala.meta.internal
 
-package object semanticdb3 {
+package object semanticdb {
 
   val NoType = Type.Empty
 
-  implicit class XtensionSemanticdb3SymbolInformation(info: SymbolInformation) {
+  implicit class XtensionSemanticdbSymbolInformation(info: SymbolInformation) {
     def has(
         prop: SymbolInformation.Property,
         prop2: SymbolInformation.Property,
@@ -14,7 +14,7 @@ package object semanticdb3 {
       (info.properties & prop.value) != 0
   }
 
-  implicit class XtensionSemanticdb3Scope(scope: Scope) {
+  implicit class XtensionSemanticdbScope(scope: Scope) {
     def symbols: List[String] = {
       if (scope.symlinks.nonEmpty) scope.symlinks.toList
       else scope.hardlinks.map(_.symbol).toList
@@ -28,17 +28,17 @@ package object semanticdb3 {
     }
   }
 
-  implicit class XtensionSemanticdb3ScopeOpt(scopeOpt: Option[Scope]) {
+  implicit class XtensionSemanticdbScopeOpt(scopeOpt: Option[Scope]) {
     def symbols: List[String] = scopeOpt.map(_.symbols).getOrElse(Nil)
     def infos: List[SymbolInformation] = scopeOpt.map(_.infos).getOrElse(Nil)
   }
 
-  implicit class XtensionSemanticdb3Scopes(scopes: Seq[Scope]) {
+  implicit class XtensionSemanticdbScopes(scopes: Seq[Scope]) {
     def symbols: List[List[String]] = scopes.map(_.symbols).toList
     def infos: List[List[SymbolInformation]] = scopes.map(_.infos).toList
   }
 
-  implicit class XtensionSemanticdb3Type(tpe: Type) {
+  implicit class XtensionSemanticdbType(tpe: Type) {
     def nonEmpty: Boolean = tpe.isDefined
   }
 }

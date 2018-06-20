@@ -1,8 +1,8 @@
 package scala.meta.internal.io
 
-import scala.meta.internal.semanticdb3.TextDocument
-import scala.meta.internal.semanticdb3.TextDocuments
-import scala.meta.internal.semanticdb3.Index
+import scala.meta.internal.semanticdb.TextDocument
+import scala.meta.internal.semanticdb.TextDocuments
+import scala.meta.internal.semanticdb.Index
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Files

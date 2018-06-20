@@ -3,7 +3,7 @@
 //
 // Protofile syntax: PROTO3
 
-package scala.meta.internal.semanticdb3
+package scala.meta.internal.semanticdb
 
 @SerialVersionUID(0L)
 final case class ToplevelEntry(
@@ -14,14 +14,14 @@ final case class ToplevelEntry(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-      
+
       {
         val __value = symbol
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(1, __value)
         }
       };
-      
+
       {
         val __value = uri
         if (__value != "") {
@@ -52,7 +52,7 @@ final case class ToplevelEntry(
         }
       };
     }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb3.ToplevelEntry = {
+    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.ToplevelEntry = {
       var __symbol = this.symbol
       var __uri = this.uri
       var _done__ = false
@@ -67,7 +67,7 @@ final case class ToplevelEntry(
           case tag => _input__.skipField(tag)
         }
       }
-      scala.meta.internal.semanticdb3.ToplevelEntry(
+      scala.meta.internal.semanticdb.ToplevelEntry(
           symbol = __symbol,
           uri = __uri
       )
@@ -94,23 +94,23 @@ final case class ToplevelEntry(
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb3.ToplevelEntry
+    def companion = scala.meta.internal.semanticdb.ToplevelEntry
 }
 
-object ToplevelEntry extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.ToplevelEntry] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb3.ToplevelEntry] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb3.ToplevelEntry = {
+object ToplevelEntry extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ToplevelEntry] {
+  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ToplevelEntry] = this
+  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ToplevelEntry = {
     require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb3.ToplevelEntry(
+    scala.meta.internal.semanticdb.ToplevelEntry(
       __fieldsMap.getOrElse(__fields.get(0), "").asInstanceOf[_root_.scala.Predef.String],
       __fieldsMap.getOrElse(__fields.get(1), "").asInstanceOf[_root_.scala.Predef.String]
     )
   }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb3.ToplevelEntry] = _root_.scalapb.descriptors.Reads{
+  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ToplevelEntry] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb3.ToplevelEntry(
+      scala.meta.internal.semanticdb.ToplevelEntry(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
       )
@@ -121,9 +121,9 @@ object ToplevelEntry extends scalapb.GeneratedMessageCompanion[scala.meta.intern
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
   def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
-  lazy val defaultInstance = scala.meta.internal.semanticdb3.ToplevelEntry(
+  lazy val defaultInstance = scala.meta.internal.semanticdb.ToplevelEntry(
   )
-  implicit class ToplevelEntryLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.ToplevelEntry]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb3.ToplevelEntry](_l) {
+  implicit class ToplevelEntryLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.ToplevelEntry]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.ToplevelEntry](_l) {
     def symbol: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Predef.String] = field(_.symbol)((c_, f_) => c_.copy(symbol = f_))
     def uri: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Predef.String] = field(_.uri)((c_, f_) => c_.copy(uri = f_))
   }

@@ -8,7 +8,7 @@ import java.nio.charset.Charset
 import java.nio.file.Paths
 import scala.scalajs.js.JSConverters._
 import scalapb.GeneratedMessage
-import scala.meta.internal.semanticdb3._
+import scala.meta.internal.semanticdb._
 import scala.meta.internal.io._
 import scala.meta.io._
 

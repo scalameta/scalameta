@@ -24,7 +24,7 @@ e.g. `scala.meta.Tree` or `scala.meta.inputs.Position`:
 
 "Internal API" means all definitions in the artifacts under the `org.scalameta`
 Maven groupId that don't qualify as public API (see above),
-e.g. `scala.meta.internal.semanticdb3`, `scala.meta.contrib.Extract` or
+e.g. `scala.meta.internal.semanticdb`, `scala.meta.contrib.Extract` or
 `scala.meta.Tree.privatePrototype`:
   * Any version doesn't have to be compatible with any version in any way.
 

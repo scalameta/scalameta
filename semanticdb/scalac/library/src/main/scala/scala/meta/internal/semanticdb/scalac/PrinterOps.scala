@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.io.Writer
 import scala.collection.mutable
-import scala.meta.internal.semanticdb3.Scala.Symbols
+import scala.meta.internal.semanticdb.Scala.Symbols
 import scala.reflect.internal.ModifierFlags._
 
 trait PrinterOps { self: SemanticdbOps =>

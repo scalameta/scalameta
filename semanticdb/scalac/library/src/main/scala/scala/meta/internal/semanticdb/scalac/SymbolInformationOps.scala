@@ -3,11 +3,11 @@ package scala.meta.internal.semanticdb.scalac
 import scala.{meta => m}
 import scala.reflect.internal.{Flags => gf}
 import scala.meta.internal.scalacp._
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
-import scala.meta.internal.semanticdb3.{Language => l}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 
 trait SymbolInformationOps { self: SemanticdbOps =>
   import g._

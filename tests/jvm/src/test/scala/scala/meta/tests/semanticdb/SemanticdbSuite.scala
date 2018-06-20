@@ -11,7 +11,7 @@ import scala.compat.Platform.EOL
 import scala.{meta => m}
 import scala.meta.internal.inputs._
 import scala.meta.internal.semanticdb.scalac._
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
 

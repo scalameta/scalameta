@@ -1,7 +1,7 @@
 package scala.meta.internal.metap
 
 import scala.math.Ordering
-import scala.meta.internal.semanticdb3._
+import scala.meta.internal.semanticdb._
 
 trait SyntheticPrinter extends BasePrinter with OccurrencePrinter {
   def pprint(synth: Synthetic): Unit = {

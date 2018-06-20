@@ -2,11 +2,11 @@ package scala.meta.internal.scalacp
 
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.metacp._
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
-import scala.meta.internal.semanticdb3.{Language => l}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 
 object Scalalib {
   def anyClass: ToplevelInfos = {

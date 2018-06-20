@@ -1,9 +1,9 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.scalacp._
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.SingletonType.{Tag => st}
 import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps { self: SemanticdbOps =>
