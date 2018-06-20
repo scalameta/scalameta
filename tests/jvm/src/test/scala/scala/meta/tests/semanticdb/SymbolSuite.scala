@@ -37,7 +37,8 @@ class SymbolSuite extends FunSuite {
   }
 
   checkMultiSyntax(Nil, "")
-  checkMultiSyntax(List(Symbols.Multi("a." :: "b." :: Nil), "c."), ";a.;b.;c.")
+  checkMultiSyntax("a.":: "b." :: Nil, ";a.;b.")
+  checkMultiSyntax(";a.;b.":: ";c.;d." :: Nil, ";a.;b.;c.;d.")
 
   checkMultiRoundtrip(Nil)
   checkMultiRoundtrip("com.Bar#" :: Nil)
