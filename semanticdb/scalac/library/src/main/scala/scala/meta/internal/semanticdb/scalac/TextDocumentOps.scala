@@ -518,6 +518,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
         schema = s.Schema.SEMANTICDB3,
         uri = unit.source.toUri,
         text = unit.source.toText,
+        md5 = unit.source.toMD5,
         language = s.Language.SCALA,
         symbols = finalSymbols,
         occurrences = finalOccurrences,

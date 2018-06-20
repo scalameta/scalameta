@@ -13,6 +13,7 @@ case class SemanticdbConfig(
     sourceroot: AbsolutePath,
     targetroot: AbsolutePath,
     text: BinaryMode,
+    md5: BinaryMode,
     symbols: BinaryMode,
     diagnostics: BinaryMode,
     synthetics: BinaryMode) {
@@ -40,7 +41,8 @@ object SemanticdbConfig {
     fileFilter = FileFilter.matchEverything,
     sourceroot = PathIO.workingDirectory,
     targetroot = PathIO.workingDirectory,
-    text = BinaryMode.On,
+    text = BinaryMode.Off,
+    md5 = BinaryMode.On,
     symbols = BinaryMode.On,
     diagnostics = BinaryMode.On,
     synthetics = BinaryMode.Off
@@ -52,6 +54,7 @@ object SemanticdbConfig {
   private val SetExclude = "exclude:(.*)".r
   private val SetSourceroot = "sourceroot:(.*)".r
   private val SetText = "text:(.*)".r
+  private val SetMd5 = "text:(.*)".r
   private val SetSymbols = "symbols:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "synthetics:(.*)".r
@@ -97,6 +100,8 @@ object SemanticdbConfig {
         config = config.copy(sourceroot = AbsolutePath(path))
       case SetText(BinaryMode(mode)) =>
         config = config.copy(text = mode)
+      case SetMd5(BinaryMode(mode)) =>
+        config = config.copy(md5 = mode)
       case SetSymbols(BinaryMode(mode)) =>
         config = config.copy(symbols = mode)
       case SetDiagnostics(BinaryMode(mode)) =>

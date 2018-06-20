@@ -16,6 +16,7 @@ message TextDocument {
   Schema schema = 1;
   string uri = 2;
   string text = 3;
+  string md5 = 11;
   Language language = 10;
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;

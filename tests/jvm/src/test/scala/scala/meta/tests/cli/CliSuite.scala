@@ -29,6 +29,7 @@ class CliSuite extends FunSuite with DiffAssertions {
         "-cp",
         Library.scalaLibrary.classpath().syntax,
         "-P:semanticdb:sourceroot:" + sourceroot.toString,
+        "-P:semanticdb:text:on",
         "-d",
         target.toString,
         helloWorldScala.toString)

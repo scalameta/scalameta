@@ -264,6 +264,19 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
       <code>TextDocument.text</code> (<code>on</code> for yes,
       <code>off</code> for no).
     </td>
+    <td><code>off</code></td>
+  </tr>
+  <tr>
+    <td><code>-P:semanticdb:md5:&lt;value&gt;</code></td>
+    <td>
+        <code>on</code>,<br/>
+        <code>off</code>
+    </td>
+    <td>
+      Specifies whether to save a hexadecimal formatted MD5 fingerprint of the source
+      file contents in <code>TextDocument.md5</code> (<code>on</code> for yes,
+      <code>off</code> for no).
+    </td>
     <td><code>on</code></td>
   </tr>
   <tr>

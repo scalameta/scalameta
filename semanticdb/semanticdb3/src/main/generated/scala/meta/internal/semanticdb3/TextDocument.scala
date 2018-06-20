@@ -10,6 +10,7 @@ final case class TextDocument(
     schema: scala.meta.internal.semanticdb3.Schema = scala.meta.internal.semanticdb3.Schema.LEGACY,
     uri: _root_.scala.Predef.String = "",
     text: _root_.scala.Predef.String = "",
+    md5: _root_.scala.Predef.String = "",
     language: scala.meta.internal.semanticdb3.Language = scala.meta.internal.semanticdb3.Language.UNKNOWN_LANGUAGE,
     symbols: _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolInformation] = _root_.scala.collection.Seq.empty,
     occurrences: _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolOccurrence] = _root_.scala.collection.Seq.empty,
@@ -39,6 +40,13 @@ final case class TextDocument(
         val __value = text
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(3, __value)
+        }
+      };
+      
+      {
+        val __value = md5
+        if (__value != "") {
+          __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(11, __value)
         }
       };
       
@@ -123,11 +131,18 @@ final case class TextDocument(
           _output__.writeEnum(10, __v.value)
         }
       };
+      {
+        val __v = md5
+        if (__v != "") {
+          _output__.writeString(11, __v)
+        }
+      };
     }
     def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb3.TextDocument = {
       var __schema = this.schema
       var __uri = this.uri
       var __text = this.text
+      var __md5 = this.md5
       var __language = this.language
       val __symbols = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb3.SymbolInformation] ++= this.symbols)
       val __occurrences = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb3.SymbolOccurrence] ++= this.occurrences)
@@ -144,6 +159,8 @@ final case class TextDocument(
             __uri = _input__.readString()
           case 26 =>
             __text = _input__.readString()
+          case 90 =>
+            __md5 = _input__.readString()
           case 80 =>
             __language = scala.meta.internal.semanticdb3.Language.fromValue(_input__.readEnum())
           case 42 =>
@@ -161,6 +178,7 @@ final case class TextDocument(
           schema = __schema,
           uri = __uri,
           text = __text,
+          md5 = __md5,
           language = __language,
           symbols = __symbols.result(),
           occurrences = __occurrences.result(),
@@ -171,6 +189,7 @@ final case class TextDocument(
     def withSchema(__v: scala.meta.internal.semanticdb3.Schema): TextDocument = copy(schema = __v)
     def withUri(__v: _root_.scala.Predef.String): TextDocument = copy(uri = __v)
     def withText(__v: _root_.scala.Predef.String): TextDocument = copy(text = __v)
+    def withMd5(__v: _root_.scala.Predef.String): TextDocument = copy(md5 = __v)
     def withLanguage(__v: scala.meta.internal.semanticdb3.Language): TextDocument = copy(language = __v)
     def clearSymbols = copy(symbols = _root_.scala.collection.Seq.empty)
     def addSymbols(__vs: scala.meta.internal.semanticdb3.SymbolInformation*): TextDocument = addAllSymbols(__vs)
@@ -202,6 +221,10 @@ final case class TextDocument(
           val __t = text
           if (__t != "") __t else null
         }
+        case 11 => {
+          val __t = md5
+          if (__t != "") __t else null
+        }
         case 10 => {
           val __t = language.javaValueDescriptor
           if (__t.getNumber() != 0) __t else null
@@ -218,6 +241,7 @@ final case class TextDocument(
         case 1 => _root_.scalapb.descriptors.PEnum(schema.scalaValueDescriptor)
         case 2 => _root_.scalapb.descriptors.PString(uri)
         case 3 => _root_.scalapb.descriptors.PString(text)
+        case 11 => _root_.scalapb.descriptors.PString(md5)
         case 10 => _root_.scalapb.descriptors.PEnum(language.scalaValueDescriptor)
         case 5 => _root_.scalapb.descriptors.PRepeated(symbols.map(_.toPMessage)(_root_.scala.collection.breakOut))
         case 6 => _root_.scalapb.descriptors.PRepeated(occurrences.map(_.toPMessage)(_root_.scala.collection.breakOut))
@@ -238,11 +262,12 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
       scala.meta.internal.semanticdb3.Schema.fromValue(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb3.Schema.LEGACY.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
       __fieldsMap.getOrElse(__fields.get(1), "").asInstanceOf[_root_.scala.Predef.String],
       __fieldsMap.getOrElse(__fields.get(2), "").asInstanceOf[_root_.scala.Predef.String],
-      scala.meta.internal.semanticdb3.Language.fromValue(__fieldsMap.getOrElse(__fields.get(3), scala.meta.internal.semanticdb3.Language.UNKNOWN_LANGUAGE.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
-      __fieldsMap.getOrElse(__fields.get(4), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolInformation]],
-      __fieldsMap.getOrElse(__fields.get(5), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolOccurrence]],
-      __fieldsMap.getOrElse(__fields.get(6), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.Diagnostic]],
-      __fieldsMap.getOrElse(__fields.get(7), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.Synthetic]]
+      __fieldsMap.getOrElse(__fields.get(3), "").asInstanceOf[_root_.scala.Predef.String],
+      scala.meta.internal.semanticdb3.Language.fromValue(__fieldsMap.getOrElse(__fields.get(4), scala.meta.internal.semanticdb3.Language.UNKNOWN_LANGUAGE.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
+      __fieldsMap.getOrElse(__fields.get(5), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolInformation]],
+      __fieldsMap.getOrElse(__fields.get(6), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolOccurrence]],
+      __fieldsMap.getOrElse(__fields.get(7), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.Diagnostic]],
+      __fieldsMap.getOrElse(__fields.get(8), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.Synthetic]]
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb3.TextDocument] = _root_.scalapb.descriptors.Reads{
@@ -252,6 +277,7 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
         scala.meta.internal.semanticdb3.Schema.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(scala.meta.internal.semanticdb3.Schema.LEGACY.scalaValueDescriptor).number),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(11).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
         scala.meta.internal.semanticdb3.Language.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(10).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(scala.meta.internal.semanticdb3.Language.UNKNOWN_LANGUAGE.scalaValueDescriptor).number),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolInformation]]).getOrElse(_root_.scala.collection.Seq.empty),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolOccurrence]]).getOrElse(_root_.scala.collection.Seq.empty),
@@ -285,6 +311,7 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
     def schema: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Schema] = field(_.schema)((c_, f_) => c_.copy(schema = f_))
     def uri: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Predef.String] = field(_.uri)((c_, f_) => c_.copy(uri = f_))
     def text: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Predef.String] = field(_.text)((c_, f_) => c_.copy(text = f_))
+    def md5: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Predef.String] = field(_.md5)((c_, f_) => c_.copy(md5 = f_))
     def language: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb3.Language] = field(_.language)((c_, f_) => c_.copy(language = f_))
     def symbols: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolInformation]] = field(_.symbols)((c_, f_) => c_.copy(symbols = f_))
     def occurrences: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb3.SymbolOccurrence]] = field(_.occurrences)((c_, f_) => c_.copy(occurrences = f_))
@@ -294,6 +321,7 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   final val SCHEMA_FIELD_NUMBER = 1
   final val URI_FIELD_NUMBER = 2
   final val TEXT_FIELD_NUMBER = 3
+  final val MD5_FIELD_NUMBER = 11
   final val LANGUAGE_FIELD_NUMBER = 10
   final val SYMBOLS_FIELD_NUMBER = 5
   final val OCCURRENCES_FIELD_NUMBER = 6
