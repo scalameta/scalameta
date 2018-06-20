@@ -49,6 +49,6 @@ object Language extends _root_.scalapb.GeneratedEnumCompanion[Language] {
     case 2 => JAVA
     case __other => Unrecognized(__other)
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = Semanticdb3Proto.javaDescriptor.getEnumTypes.get(1)
-  def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = Semanticdb3Proto.scalaDescriptor.enums(1)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = SemanticdbProto.javaDescriptor.getEnumTypes.get(1)
+  def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = SemanticdbProto.scalaDescriptor.enums(1)
 }

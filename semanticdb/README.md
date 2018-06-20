@@ -5,7 +5,7 @@ about programs in Scala and other languages. SemanticDB decouples production
 and consumption of semantic information, establishing documented means for
 communication between tools.
 
-[Protobuf schema](semanticdb/semanticdb3.proto)
+[Protobuf schema](semanticdb/semanticdb.proto)
 
 [Specification](semanticdb/specification.md)
 

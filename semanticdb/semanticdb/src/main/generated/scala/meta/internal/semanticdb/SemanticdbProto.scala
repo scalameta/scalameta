@@ -5,7 +5,7 @@
 
 package scala.meta.internal.semanticdb
 
-object Semanticdb3Proto extends _root_.scalapb.GeneratedFileObject {
+object SemanticdbProto extends _root_.scalapb.GeneratedFileObject {
   lazy val dependencies: Seq[_root_.scalapb.GeneratedFileObject] = Seq(
   )
   lazy val messagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq(

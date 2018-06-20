@@ -61,7 +61,7 @@ coursier bootstrap org.scalameta:metap_native0.3_2.11:4.0.0 -o metap -f --native
 
 Let's generate SemanticDB for a simple Scala program. (At the moment,
 our SemanticDB producers provide full Scala support and partial Java support.
-Theoretically, [the SemanticDB protobuf schema](semanticdb3.proto)
+Theoretically, [the SemanticDB protobuf schema](semanticdb.proto)
 can accommodate other languages as well, but we haven't attempted to do that yet).
 
 ```scala
@@ -498,7 +498,7 @@ _root_. => package _root_
 ### Scala bindings
 
 The `semanticdb3` library contains [ScalaPB](https://scalapb.github.io/)
-bindings to [the SemanticDB protobuf schema](semanticdb3.proto). Using this
+bindings to [the SemanticDB protobuf schema](semanticdb.proto). Using this
 library, one can model SemanticDB entities as Scala case classes and
 serialize/deserialize them into bytes and streams.
 
@@ -585,7 +585,7 @@ For an example of using Metap, check out [Example](#example).
 
 The Protocol Compiler tool (`protoc`) can inspect protobuf payloads in
 `--decode` (takes a schema) and `--decode_raw` (doesn't need a schema) modes.
-For the reference, here's [the SemanticDB protobuf schema](semanticdb3.proto).
+For the reference, here's [the SemanticDB protobuf schema](semanticdb.proto).
 
 ```
 $ tree
@@ -597,7 +597,7 @@ $ tree
 
 $ protoc --proto_path <directory with the .proto file>\
 --decode scala.meta.internal.semanticdb.TextDocuments\
-semanticdb3.proto < META-INF/semanticdb/Test.scala.semanticdb
+semanticdb.proto < META-INF/semanticdb/Test.scala.semanticdb
 
 documents {
   schema: SEMANTICDB3

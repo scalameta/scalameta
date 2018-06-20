@@ -39,6 +39,6 @@ object Schema extends _root_.scalapb.GeneratedEnumCompanion[Schema] {
     case 3 => SEMANTICDB3
     case __other => Unrecognized(__other)
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = Semanticdb3Proto.javaDescriptor.getEnumTypes.get(0)
-  def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = Semanticdb3Proto.scalaDescriptor.enums(0)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = SemanticdbProto.javaDescriptor.getEnumTypes.get(0)
+  def scalaDescriptor: _root_.scalapb.descriptors.EnumDescriptor = SemanticdbProto.scalaDescriptor.enums(0)
 }

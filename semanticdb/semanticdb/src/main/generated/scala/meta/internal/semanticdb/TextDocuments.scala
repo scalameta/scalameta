@@ -87,8 +87,8 @@ object TextDocuments extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = Semanticdb3Proto.javaDescriptor.getMessageTypes.get(0)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = Semanticdb3Proto.scalaDescriptor.messages(0)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(0)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(0)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
