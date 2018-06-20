@@ -22,7 +22,7 @@ object Language extends _root_.scalapb.GeneratedEnumCompanion[Language] {
     val name = "UNKNOWN_LANGUAGE"
     override def isUnknownLanguage: _root_.scala.Boolean = true
   }
-
+  
   @SerialVersionUID(0L)
   case object SCALA extends Language {
     val value = 1
@@ -30,7 +30,7 @@ object Language extends _root_.scalapb.GeneratedEnumCompanion[Language] {
     val name = "SCALA"
     override def isScala: _root_.scala.Boolean = true
   }
-
+  
   @SerialVersionUID(0L)
   case object JAVA extends Language {
     val value = 2
@@ -38,10 +38,10 @@ object Language extends _root_.scalapb.GeneratedEnumCompanion[Language] {
     val name = "JAVA"
     override def isJava: _root_.scala.Boolean = true
   }
-
+  
   @SerialVersionUID(0L)
   final case class Unrecognized(value: _root_.scala.Int) extends Language with _root_.scalapb.UnrecognizedEnum
-
+  
   lazy val values = scala.collection.Seq(UNKNOWN_LANGUAGE, SCALA, JAVA)
   def fromValue(value: _root_.scala.Int): Language = value match {
     case 0 => UNKNOWN_LANGUAGE

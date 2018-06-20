@@ -14,7 +14,7 @@ final case class Location(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = uri
         if (__value != "") {

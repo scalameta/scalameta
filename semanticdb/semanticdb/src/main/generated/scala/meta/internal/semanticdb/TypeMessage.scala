@@ -436,7 +436,7 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
       override def number: _root_.scala.Int = 0
       override def value: _root_.scala.Nothing = throw new java.util.NoSuchElementException("Empty.value")
     }
-
+  
     @SerialVersionUID(0L)
     final case class TypeRef(value: scala.meta.internal.semanticdb.TypeRef) extends scala.meta.internal.semanticdb.TypeMessage.SealedValue {
       type ValueType = scala.meta.internal.semanticdb.TypeRef
@@ -579,14 +579,14 @@ final case class TypeRef(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = scala.meta.internal.semanticdb.TypeRef._typemapper_prefix.toBase(prefix)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
           __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
         }
       };
-
+      
       {
         val __value = symbol
         if (__value != "") {
@@ -745,35 +745,35 @@ final case class SingletonType(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = tag
         if (__value != scala.meta.internal.semanticdb.SingletonType.Tag.UNKNOWN_SINGLETON) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value.value)
         }
       };
-
+      
       {
         val __value = scala.meta.internal.semanticdb.SingletonType._typemapper_prefix.toBase(prefix)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
           __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
         }
       };
-
+      
       {
         val __value = symbol
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(3, __value)
         }
       };
-
+      
       {
         val __value = primitive
         if (__value != 0L) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt64Size(4, __value)
         }
       };
-
+      
       {
         val __value = string
         if (__value != "") {
@@ -960,7 +960,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
     def isNull: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[Tag] = scala.meta.internal.semanticdb.SingletonType.Tag
   }
-
+  
   object Tag extends _root_.scalapb.GeneratedEnumCompanion[Tag] {
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[Tag] = this
     @SerialVersionUID(0L)
@@ -970,7 +970,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "UNKNOWN_SINGLETON"
       override def isUnknownSingleton: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object SYMBOL extends Tag {
       val value = 1
@@ -978,7 +978,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "SYMBOL"
       override def isSymbol: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object THIS extends Tag {
       val value = 2
@@ -986,7 +986,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "THIS"
       override def isThis: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object SUPER extends Tag {
       val value = 3
@@ -994,7 +994,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "SUPER"
       override def isSuper: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object UNIT extends Tag {
       val value = 4
@@ -1002,7 +1002,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "UNIT"
       override def isUnit: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object BOOLEAN extends Tag {
       val value = 5
@@ -1010,7 +1010,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "BOOLEAN"
       override def isBoolean: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object BYTE extends Tag {
       val value = 6
@@ -1018,7 +1018,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "BYTE"
       override def isByte: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object SHORT extends Tag {
       val value = 7
@@ -1026,7 +1026,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "SHORT"
       override def isShort: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object CHAR extends Tag {
       val value = 8
@@ -1034,7 +1034,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "CHAR"
       override def isChar: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object INT extends Tag {
       val value = 9
@@ -1042,7 +1042,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "INT"
       override def isInt: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object LONG extends Tag {
       val value = 10
@@ -1050,7 +1050,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "LONG"
       override def isLong: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object FLOAT extends Tag {
       val value = 11
@@ -1058,7 +1058,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "FLOAT"
       override def isFloat: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object DOUBLE extends Tag {
       val value = 12
@@ -1066,7 +1066,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "DOUBLE"
       override def isDouble: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object STRING extends Tag {
       val value = 13
@@ -1074,7 +1074,7 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "STRING"
       override def isString: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object NULL extends Tag {
       val value = 14
@@ -1082,10 +1082,10 @@ object SingletonType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "NULL"
       override def isNull: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     final case class Unrecognized(value: _root_.scala.Int) extends Tag with _root_.scalapb.UnrecognizedEnum
-
+    
     lazy val values = scala.collection.Seq(UNKNOWN_SINGLETON, SYMBOL, THIS, SUPER, UNIT, BOOLEAN, BYTE, SHORT, CHAR, INT, LONG, FLOAT, DOUBLE, STRING, NULL)
     def fromValue(value: _root_.scala.Int): Tag = value match {
       case 0 => UNKNOWN_SINGLETON
@@ -1442,7 +1442,7 @@ final case class StructuralType(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = scala.meta.internal.semanticdb.StructuralType._typemapper_tpe.toBase(tpe)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
@@ -1580,7 +1580,7 @@ final case class AnnotatedType(
         val __value = __item
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       }
-
+      
       {
         val __value = scala.meta.internal.semanticdb.AnnotatedType._typemapper_tpe.toBase(tpe)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
@@ -1710,7 +1710,7 @@ final case class ExistentialType(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = scala.meta.internal.semanticdb.ExistentialType._typemapper_tpe.toBase(tpe)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
@@ -1848,7 +1848,7 @@ final case class UniversalType(
         val __value = typeParameters.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-
+      
       {
         val __value = scala.meta.internal.semanticdb.UniversalType._typemapper_tpe.toBase(tpe)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
@@ -2142,7 +2142,7 @@ final case class MethodType(
         val __value = __item
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       }
-
+      
       {
         val __value = scala.meta.internal.semanticdb.MethodType._typemapper_returnType.toBase(returnType)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
@@ -2292,7 +2292,7 @@ final case class ByNameType(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = scala.meta.internal.semanticdb.ByNameType._typemapper_tpe.toBase(tpe)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
@@ -2400,7 +2400,7 @@ final case class RepeatedType(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = scala.meta.internal.semanticdb.RepeatedType._typemapper_tpe.toBase(tpe)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
@@ -2514,14 +2514,14 @@ final case class TypeType(
         val __value = typeParameters.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-
+      
       {
         val __value = scala.meta.internal.semanticdb.TypeType._typemapper_lowerBound.toBase(lowerBound)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
           __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
         }
       };
-
+      
       {
         val __value = scala.meta.internal.semanticdb.TypeType._typemapper_upperBound.toBase(upperBound)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {

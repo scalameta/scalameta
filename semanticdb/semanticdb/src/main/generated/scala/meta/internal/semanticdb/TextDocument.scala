@@ -21,35 +21,35 @@ final case class TextDocument(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = schema
         if (__value != scala.meta.internal.semanticdb.Schema.LEGACY) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value.value)
         }
       };
-
+      
       {
         val __value = uri
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(2, __value)
         }
       };
-
+      
       {
         val __value = text
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(3, __value)
         }
       };
-
+      
       {
         val __value = md5
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(11, __value)
         }
       };
-
+      
       {
         val __value = language
         if (__value != scala.meta.internal.semanticdb.Language.UNKNOWN_LANGUAGE) {

@@ -14,14 +14,14 @@ final case class Accessibility(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = tag
         if (__value != scala.meta.internal.semanticdb.Accessibility.Tag.UNKNOWN_ACCESSIBILITY) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(1, __value.value)
         }
       };
-
+      
       {
         val __value = symbol
         if (__value != "") {
@@ -139,7 +139,7 @@ object Accessibility extends scalapb.GeneratedMessageCompanion[scala.meta.intern
     def isPublic: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[Tag] = scala.meta.internal.semanticdb.Accessibility.Tag
   }
-
+  
   object Tag extends _root_.scalapb.GeneratedEnumCompanion[Tag] {
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[Tag] = this
     @SerialVersionUID(0L)
@@ -149,7 +149,7 @@ object Accessibility extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "UNKNOWN_ACCESSIBILITY"
       override def isUnknownAccessibility: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PRIVATE extends Tag {
       val value = 1
@@ -157,7 +157,7 @@ object Accessibility extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "PRIVATE"
       override def isPrivate: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PRIVATE_THIS extends Tag {
       val value = 2
@@ -165,7 +165,7 @@ object Accessibility extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "PRIVATE_THIS"
       override def isPrivateThis: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PRIVATE_WITHIN extends Tag {
       val value = 3
@@ -173,7 +173,7 @@ object Accessibility extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "PRIVATE_WITHIN"
       override def isPrivateWithin: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PROTECTED extends Tag {
       val value = 4
@@ -181,7 +181,7 @@ object Accessibility extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "PROTECTED"
       override def isProtected: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PROTECTED_THIS extends Tag {
       val value = 5
@@ -189,7 +189,7 @@ object Accessibility extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "PROTECTED_THIS"
       override def isProtectedThis: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PROTECTED_WITHIN extends Tag {
       val value = 6
@@ -197,7 +197,7 @@ object Accessibility extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "PROTECTED_WITHIN"
       override def isProtectedWithin: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PUBLIC extends Tag {
       val value = 7
@@ -205,10 +205,10 @@ object Accessibility extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       val name = "PUBLIC"
       override def isPublic: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     final case class Unrecognized(value: _root_.scala.Int) extends Tag with _root_.scalapb.UnrecognizedEnum
-
+    
     lazy val values = scala.collection.Seq(UNKNOWN_ACCESSIBILITY, PRIVATE, PRIVATE_THIS, PRIVATE_WITHIN, PROTECTED, PROTECTED_THIS, PROTECTED_WITHIN, PUBLIC)
     def fromValue(value: _root_.scala.Int): Tag = value match {
       case 0 => UNKNOWN_ACCESSIBILITY

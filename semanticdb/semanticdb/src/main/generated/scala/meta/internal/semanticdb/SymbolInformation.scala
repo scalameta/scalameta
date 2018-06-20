@@ -20,42 +20,42 @@ final case class SymbolInformation(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = symbol
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(1, __value)
         }
       };
-
+      
       {
         val __value = language
         if (__value != scala.meta.internal.semanticdb.Language.UNKNOWN_LANGUAGE) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(16, __value.value)
         }
       };
-
+      
       {
         val __value = kind
         if (__value != scala.meta.internal.semanticdb.SymbolInformation.Kind.UNKNOWN_KIND) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(3, __value.value)
         }
       };
-
+      
       {
         val __value = properties
         if (__value != 0) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt32Size(4, __value)
         }
       };
-
+      
       {
         val __value = name
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(5, __value)
         }
       };
-
+      
       {
         val __value = scala.meta.internal.semanticdb.SymbolInformation._typemapper_tpe.toBase(tpe)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
@@ -307,7 +307,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
     def isInterface: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[Kind] = scala.meta.internal.semanticdb.SymbolInformation.Kind
   }
-
+  
   object Kind extends _root_.scalapb.GeneratedEnumCompanion[Kind] {
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[Kind] = this
     @SerialVersionUID(0L)
@@ -317,7 +317,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "UNKNOWN_KIND"
       override def isUnknownKind: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object LOCAL extends Kind {
       val value = 19
@@ -325,7 +325,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "LOCAL"
       override def isLocal: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object FIELD extends Kind {
       val value = 20
@@ -333,7 +333,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "FIELD"
       override def isField: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object METHOD extends Kind {
       val value = 3
@@ -341,7 +341,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "METHOD"
       override def isMethod: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object CONSTRUCTOR extends Kind {
       val value = 21
@@ -349,7 +349,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "CONSTRUCTOR"
       override def isConstructor: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object MACRO extends Kind {
       val value = 6
@@ -357,7 +357,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "MACRO"
       override def isMacro: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object TYPE extends Kind {
       val value = 7
@@ -365,7 +365,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "TYPE"
       override def isType: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PARAMETER extends Kind {
       val value = 8
@@ -373,7 +373,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "PARAMETER"
       override def isParameter: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object SELF_PARAMETER extends Kind {
       val value = 17
@@ -381,7 +381,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "SELF_PARAMETER"
       override def isSelfParameter: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object TYPE_PARAMETER extends Kind {
       val value = 9
@@ -389,7 +389,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "TYPE_PARAMETER"
       override def isTypeParameter: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object OBJECT extends Kind {
       val value = 10
@@ -397,7 +397,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "OBJECT"
       override def isObject: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PACKAGE extends Kind {
       val value = 11
@@ -405,7 +405,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "PACKAGE"
       override def isPackage: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PACKAGE_OBJECT extends Kind {
       val value = 12
@@ -413,7 +413,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "PACKAGE_OBJECT"
       override def isPackageObject: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object CLASS extends Kind {
       val value = 13
@@ -421,7 +421,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "CLASS"
       override def isClass: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object TRAIT extends Kind {
       val value = 14
@@ -429,7 +429,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "TRAIT"
       override def isTrait: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object INTERFACE extends Kind {
       val value = 18
@@ -437,10 +437,10 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "INTERFACE"
       override def isInterface: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     final case class Unrecognized(value: _root_.scala.Int) extends Kind with _root_.scalapb.UnrecognizedEnum
-
+    
     lazy val values = scala.collection.Seq(UNKNOWN_KIND, LOCAL, FIELD, METHOD, CONSTRUCTOR, MACRO, TYPE, PARAMETER, SELF_PARAMETER, TYPE_PARAMETER, OBJECT, PACKAGE, PACKAGE_OBJECT, CLASS, TRAIT, INTERFACE)
     def fromValue(value: _root_.scala.Int): Kind = value match {
       case 0 => UNKNOWN_KIND
@@ -482,7 +482,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
     def isEnum: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[Property] = scala.meta.internal.semanticdb.SymbolInformation.Property
   }
-
+  
   object Property extends _root_.scalapb.GeneratedEnumCompanion[Property] {
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[Property] = this
     @SerialVersionUID(0L)
@@ -492,7 +492,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "UNKNOWN_PROPERTY"
       override def isUnknownProperty: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object ABSTRACT extends Property {
       val value = 4
@@ -500,7 +500,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "ABSTRACT"
       override def isAbstract: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object FINAL extends Property {
       val value = 8
@@ -508,7 +508,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "FINAL"
       override def isFinal: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object SEALED extends Property {
       val value = 16
@@ -516,7 +516,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "SEALED"
       override def isSealed: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object IMPLICIT extends Property {
       val value = 32
@@ -524,7 +524,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "IMPLICIT"
       override def isImplicit: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object LAZY extends Property {
       val value = 64
@@ -532,7 +532,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "LAZY"
       override def isLazy: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object CASE extends Property {
       val value = 128
@@ -540,7 +540,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "CASE"
       override def isCase: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object COVARIANT extends Property {
       val value = 256
@@ -548,7 +548,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "COVARIANT"
       override def isCovariant: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object CONTRAVARIANT extends Property {
       val value = 512
@@ -556,7 +556,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "CONTRAVARIANT"
       override def isContravariant: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object VAL extends Property {
       val value = 1024
@@ -564,7 +564,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "VAL"
       override def isVal: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object VAR extends Property {
       val value = 2048
@@ -572,7 +572,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "VAR"
       override def isVar: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object STATIC extends Property {
       val value = 4096
@@ -580,7 +580,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "STATIC"
       override def isStatic: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object PRIMARY extends Property {
       val value = 8192
@@ -588,7 +588,7 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "PRIMARY"
       override def isPrimary: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object ENUM extends Property {
       val value = 16384
@@ -596,10 +596,10 @@ object SymbolInformation extends scalapb.GeneratedMessageCompanion[scala.meta.in
       val name = "ENUM"
       override def isEnum: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     final case class Unrecognized(value: _root_.scala.Int) extends Property with _root_.scalapb.UnrecognizedEnum
-
+    
     lazy val values = scala.collection.Seq(UNKNOWN_PROPERTY, ABSTRACT, FINAL, SEALED, IMPLICIT, LAZY, CASE, COVARIANT, CONTRAVARIANT, VAL, VAR, STATIC, PRIMARY, ENUM)
     def fromValue(value: _root_.scala.Int): Property = value match {
       case 0 => UNKNOWN_PROPERTY

@@ -19,14 +19,14 @@ final case class Diagnostic(
         val __value = range.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-
+      
       {
         val __value = severity
         if (__value != scala.meta.internal.semanticdb.Diagnostic.Severity.UNKNOWN_SEVERITY) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeEnumSize(2, __value.value)
         }
       };
-
+      
       {
         val __value = message
         if (__value != "") {
@@ -164,7 +164,7 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
     def isHint: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[Severity] = scala.meta.internal.semanticdb.Diagnostic.Severity
   }
-
+  
   object Severity extends _root_.scalapb.GeneratedEnumCompanion[Severity] {
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[Severity] = this
     @SerialVersionUID(0L)
@@ -174,7 +174,7 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       val name = "UNKNOWN_SEVERITY"
       override def isUnknownSeverity: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object ERROR extends Severity {
       val value = 1
@@ -182,7 +182,7 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       val name = "ERROR"
       override def isError: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object WARNING extends Severity {
       val value = 2
@@ -190,7 +190,7 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       val name = "WARNING"
       override def isWarning: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object INFORMATION extends Severity {
       val value = 3
@@ -198,7 +198,7 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       val name = "INFORMATION"
       override def isInformation: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object HINT extends Severity {
       val value = 4
@@ -206,10 +206,10 @@ object Diagnostic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       val name = "HINT"
       override def isHint: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     final case class Unrecognized(value: _root_.scala.Int) extends Severity with _root_.scalapb.UnrecognizedEnum
-
+    
     lazy val values = scala.collection.Seq(UNKNOWN_SEVERITY, ERROR, WARNING, INFORMATION, HINT)
     def fromValue(value: _root_.scala.Int): Severity = value match {
       case 0 => UNKNOWN_SEVERITY

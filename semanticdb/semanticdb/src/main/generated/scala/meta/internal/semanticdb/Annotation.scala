@@ -13,7 +13,7 @@ final case class Annotation(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = scala.meta.internal.semanticdb.Annotation._typemapper_tpe.toBase(tpe)
         if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {

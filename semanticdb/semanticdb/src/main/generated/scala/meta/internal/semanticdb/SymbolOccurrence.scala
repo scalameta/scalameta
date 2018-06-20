@@ -19,14 +19,14 @@ final case class SymbolOccurrence(
         val __value = range.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-
+      
       {
         val __value = symbol
         if (__value != "") {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(2, __value)
         }
       };
-
+      
       {
         val __value = role
         if (__value != scala.meta.internal.semanticdb.SymbolOccurrence.Role.UNKNOWN_ROLE) {
@@ -162,7 +162,7 @@ object SymbolOccurrence extends scalapb.GeneratedMessageCompanion[scala.meta.int
     def isDefinition: _root_.scala.Boolean = false
     def companion: _root_.scalapb.GeneratedEnumCompanion[Role] = scala.meta.internal.semanticdb.SymbolOccurrence.Role
   }
-
+  
   object Role extends _root_.scalapb.GeneratedEnumCompanion[Role] {
     implicit def enumCompanion: _root_.scalapb.GeneratedEnumCompanion[Role] = this
     @SerialVersionUID(0L)
@@ -172,7 +172,7 @@ object SymbolOccurrence extends scalapb.GeneratedMessageCompanion[scala.meta.int
       val name = "UNKNOWN_ROLE"
       override def isUnknownRole: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object REFERENCE extends Role {
       val value = 1
@@ -180,7 +180,7 @@ object SymbolOccurrence extends scalapb.GeneratedMessageCompanion[scala.meta.int
       val name = "REFERENCE"
       override def isReference: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     case object DEFINITION extends Role {
       val value = 2
@@ -188,10 +188,10 @@ object SymbolOccurrence extends scalapb.GeneratedMessageCompanion[scala.meta.int
       val name = "DEFINITION"
       override def isDefinition: _root_.scala.Boolean = true
     }
-
+    
     @SerialVersionUID(0L)
     final case class Unrecognized(value: _root_.scala.Int) extends Role with _root_.scalapb.UnrecognizedEnum
-
+    
     lazy val values = scala.collection.Seq(UNKNOWN_ROLE, REFERENCE, DEFINITION)
     def fromValue(value: _root_.scala.Int): Role = value match {
       case 0 => UNKNOWN_ROLE

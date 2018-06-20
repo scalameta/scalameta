@@ -22,7 +22,7 @@ object Schema extends _root_.scalapb.GeneratedEnumCompanion[Schema] {
     val name = "LEGACY"
     override def isLegacy: _root_.scala.Boolean = true
   }
-
+  
   @SerialVersionUID(0L)
   case object SEMANTICDB3 extends Schema {
     val value = 3
@@ -30,18 +30,18 @@ object Schema extends _root_.scalapb.GeneratedEnumCompanion[Schema] {
     val name = "SEMANTICDB3"
     override def isSemanticdb3: _root_.scala.Boolean = true
   }
-
+  
   @SerialVersionUID(0L)
   case object SEMANTICDB4 extends Schema {
     val value = 4
-    val index = 1
+    val index = 2
     val name = "SEMANTICDB4"
     override def isSemanticdb4: _root_.scala.Boolean = true
   }
-
+  
   @SerialVersionUID(0L)
   final case class Unrecognized(value: _root_.scala.Int) extends Schema with _root_.scalapb.UnrecognizedEnum
-
+  
   lazy val values = scala.collection.Seq(LEGACY, SEMANTICDB3, SEMANTICDB4)
   def fromValue(value: _root_.scala.Int): Schema = value match {
     case 0 => LEGACY

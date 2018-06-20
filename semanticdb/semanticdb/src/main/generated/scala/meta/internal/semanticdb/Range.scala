@@ -16,28 +16,28 @@ final case class Range(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-
+      
       {
         val __value = startLine
         if (__value != 0) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt32Size(1, __value)
         }
       };
-
+      
       {
         val __value = startCharacter
         if (__value != 0) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt32Size(2, __value)
         }
       };
-
+      
       {
         val __value = endLine
         if (__value != 0) {
           __size += _root_.com.google.protobuf.CodedOutputStream.computeInt32Size(3, __value)
         }
       };
-
+      
       {
         val __value = endCharacter
         if (__value != 0) {
