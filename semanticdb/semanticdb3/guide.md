@@ -264,7 +264,7 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
       <code>TextDocument.text</code> (<code>on</code> for yes,
       <code>off</code> for no).
     </td>
-    <td><code>on</code></td>
+    <td><code>off</code></td>
   </tr>
   <tr>
     <td><code>-P:semanticdb:md5:&lt;value&gt;</code></td>

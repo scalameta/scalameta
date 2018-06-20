@@ -131,12 +131,17 @@ SemanticDB payloads must include the version of the SemanticDB model in the
   </tr>
 </table>
 
-Code snippets referenced in `TextDocument` can be defined as any combination of
-the following three fields: 
+`uri` defines the relative URI encoded path to the text document. The path is
+relativized by the project sourceroot, which by convention is the root directory
+of the project's workspace.
 
-1. `uri` encoded as a [URI](#uri) relativized by the project sourceroot
-2. `text` encoded as a string of the source file contents
-3. `md5` encoded as a string of the hexadecimal formatted MD5 fingerprint of the source file contents
+`text` optionally defines the full string contents of the text document. When `text`
+is empty, the combination of the `uri` field and a sourceroot enables tools to
+retrieve the text document contents from disk.
+
+`md5` defines the hexadecimal formatted MD5 fingerprint of the source file contents.
+When `text` is empty, the MD5 fingerprint can be used to ensure a SemanticDB payload
+is up-to-date with the file contents on disk.
 
 `language` defines the [Language](#language) in which the code snippet
 is written. See [Languages](#languages) for the list of supported programming
