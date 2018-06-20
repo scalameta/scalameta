@@ -13,7 +13,7 @@ final case class ToplevelInfos(
     assert(toplevels.nonEmpty)
     val semanticdbAbspath = out.resolve("META-INF").resolve("semanticdb").resolve(uri)
     val semanticdbDocument = s.TextDocument(
-      schema = s.Schema.SEMANTICDB3,
+      schema = s.Schema.SEMANTICDB4,
       uri = classfile.uri,
       language = toplevels.head.language,
       symbols = toplevels ++ others)

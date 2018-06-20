@@ -127,7 +127,12 @@ SemanticDB payloads must include the version of the SemanticDB model in the
   <tr>
     <td><code>SEMANTICDB3</code></td>
     <td>SemanticDB v3 payloads</td>
-    <td><a href="https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb/semanticdb.proto">semanticdb.proto</a> (described in this document)</td>
+    <td><a href="https://github.com/scalameta/scalameta/blob/v3.7.4/semanticdb/semanticdb3/semanticdb3.proto">semanticdb3.proto</a></td>
+  </tr>
+  <tr>
+    <td><code>SEMANTICDB4</code></td>
+    <td>SemanticDB v4 payloads</td>
+    <td><a href="https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb/semanticdb.proto">semanticdb.proto</a></td> (described in this document)
   </tr>
 </table>
 
@@ -3089,7 +3094,6 @@ the Java language.
 At this moment, there is no tool that supports SymbolOccurrences for
 the Java language. We intend to improve on this in the future.
 
-[semanticdb2.proto]: https://github.com/scalameta/scalameta/blob/v3.0.0/semanticdb/semanticdb2/semanticdb2.proto
 [semanticdb.proto]: semanticdb.proto
 [1]: https://semver.org/
 [2]: https://microsoft.github.io/language-server-protocol/

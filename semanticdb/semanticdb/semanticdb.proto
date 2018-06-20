@@ -5,6 +5,7 @@ package scala.meta.internal.semanticdb;
 enum Schema {
   LEGACY = 0;
   SEMANTICDB3 = 3;
+  SEMANTICDB4 = 4;
 }
 
 message TextDocuments {

@@ -515,7 +515,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
       }.toList
 
       s.TextDocument(
-        schema = s.Schema.SEMANTICDB3,
+        schema = s.Schema.SEMANTICDB4,
         uri = unit.source.toUri,
         text = unit.source.toText,
         md5 = unit.source.toMD5,

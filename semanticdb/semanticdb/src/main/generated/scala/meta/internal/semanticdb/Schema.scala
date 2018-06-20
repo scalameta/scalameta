@@ -9,6 +9,7 @@ sealed trait Schema extends _root_.scalapb.GeneratedEnum {
   type EnumType = Schema
   def isLegacy: _root_.scala.Boolean = false
   def isSemanticdb3: _root_.scala.Boolean = false
+  def isSemanticdb4: _root_.scala.Boolean = false
   def companion: _root_.scalapb.GeneratedEnumCompanion[Schema] = scala.meta.internal.semanticdb.Schema
 }
 
@@ -31,12 +32,21 @@ object Schema extends _root_.scalapb.GeneratedEnumCompanion[Schema] {
   }
 
   @SerialVersionUID(0L)
+  case object SEMANTICDB4 extends Schema {
+    val value = 4
+    val index = 1
+    val name = "SEMANTICDB4"
+    override def isSemanticdb4: _root_.scala.Boolean = true
+  }
+
+  @SerialVersionUID(0L)
   final case class Unrecognized(value: _root_.scala.Int) extends Schema with _root_.scalapb.UnrecognizedEnum
 
-  lazy val values = scala.collection.Seq(LEGACY, SEMANTICDB3)
+  lazy val values = scala.collection.Seq(LEGACY, SEMANTICDB3, SEMANTICDB4)
   def fromValue(value: _root_.scala.Int): Schema = value match {
     case 0 => LEGACY
     case 3 => SEMANTICDB3
+    case 4 => SEMANTICDB4
     case __other => Unrecognized(__other)
   }
   def javaDescriptor: _root_.com.google.protobuf.Descriptors.EnumDescriptor = SemanticdbProto.javaDescriptor.getEnumTypes.get(0)

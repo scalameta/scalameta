@@ -2,7 +2,7 @@ A.class
 -------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => A.class
 Text => empty
 Language => Scala
@@ -21,7 +21,7 @@ advanced/C.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => advanced/C.class
 Text => empty
 Language => Scala
@@ -42,7 +42,7 @@ advanced/D.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => advanced/D.class
 Text => empty
 Language => Scala
@@ -65,7 +65,7 @@ advanced/Existential.class
 --------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => advanced/Existential.class
 Text => empty
 Language => Scala
@@ -94,7 +94,7 @@ advanced/Structural.class
 -------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => advanced/Structural.class
 Text => empty
 Language => Scala
@@ -124,7 +124,7 @@ advanced/Test.class
 -------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => advanced/Test.class
 Text => empty
 Language => Scala
@@ -177,7 +177,7 @@ B.class
 -------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => B.class
 Text => empty
 Language => Scala
@@ -196,7 +196,7 @@ C.class
 -------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => C.class
 Text => empty
 Language => Scala
@@ -227,7 +227,7 @@ classes/C1.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => classes/C1.class
 Text => empty
 Language => Scala
@@ -258,7 +258,7 @@ classes/C2.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => classes/C2.class
 Text => empty
 Language => Scala
@@ -291,7 +291,7 @@ classes/C3.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => classes/C3.class
 Text => empty
 Language => Scala
@@ -375,7 +375,7 @@ classes/C4.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => classes/C4.class
 Text => empty
 Language => Scala
@@ -455,7 +455,7 @@ classes/C6.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => classes/C6.class
 Text => empty
 Language => Scala
@@ -539,7 +539,7 @@ classes/C7.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => classes/C7.class
 Text => empty
 Language => Scala
@@ -562,7 +562,7 @@ classes/C8.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => classes/C8.class
 Text => empty
 Language => Scala
@@ -585,7 +585,7 @@ classes/C9.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => classes/C9.class
 Text => empty
 Language => Scala
@@ -614,7 +614,7 @@ classes/M.class
 ---------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => classes/M.class
 Text => empty
 Language => Scala
@@ -645,7 +645,7 @@ classes/N.class
 ---------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => classes/N.class
 Text => empty
 Language => Scala
@@ -668,7 +668,7 @@ com/javacp/ClassSuffix.class
 ----------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => com/javacp/ClassSuffix.class
 Text => empty
 Language => Java
@@ -713,7 +713,7 @@ com/javacp/Coin.class
 ---------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => com/javacp/Coin.class
 Text => empty
 Language => Java
@@ -760,7 +760,7 @@ com/javacp/Interface.class
 --------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => com/javacp/Interface.class
 Text => empty
 Language => Java
@@ -777,7 +777,7 @@ com/javacp/Logger.class
 -----------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => com/javacp/Logger.class
 Text => empty
 Language => Java
@@ -795,7 +795,7 @@ com/javacp/MetacJava.class
 --------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => com/javacp/MetacJava.class
 Text => empty
 Language => Java
@@ -865,7 +865,7 @@ com/javacp/NonGeneric.class
 ---------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => com/javacp/NonGeneric.class
 Text => empty
 Language => Java
@@ -887,7 +887,7 @@ com/javacp/Recursive.class
 --------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => com/javacp/Recursive.class
 Text => empty
 Language => Java
@@ -950,7 +950,7 @@ com/javacp/Test.class
 ---------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => com/javacp/Test.class
 Text => empty
 Language => Java
@@ -1189,7 +1189,7 @@ example/A.class
 ---------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/A.class
 Text => empty
 Language => Scala
@@ -1207,7 +1207,7 @@ example/Acc.class
 -----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/Acc.class
 Text => empty
 Language => Scala
@@ -1240,7 +1240,7 @@ example/B.class
 ---------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/B.class
 Text => empty
 Language => Scala
@@ -1260,7 +1260,7 @@ example/EmptyObject.class
 -------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/EmptyObject.class
 Text => empty
 Language => Scala
@@ -1276,7 +1276,7 @@ example/Example.class
 ---------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/Example.class
 Text => empty
 Language => Scala
@@ -1303,7 +1303,7 @@ example/local$minusfile.class
 -----------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/local$minusfile.class
 Text => empty
 Language => Scala
@@ -1320,7 +1320,7 @@ example/MetacJava.class
 -----------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/MetacJava.class
 Text => empty
 Language => Scala
@@ -1357,7 +1357,7 @@ example/Methods.class
 ---------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/Methods.class
 Text => empty
 Language => Scala
@@ -1555,7 +1555,7 @@ example/MethodUsages.class
 --------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/MethodUsages.class
 Text => empty
 Language => Scala
@@ -1575,7 +1575,7 @@ example/Synthetic.class
 -----------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/Synthetic.class
 Text => empty
 Language => Scala
@@ -1592,7 +1592,7 @@ example/Vals.class
 ------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/Vals.class
 Text => empty
 Language => Scala
@@ -1687,7 +1687,7 @@ example/ValUsages.class
 -----------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => example/ValUsages.class
 Text => empty
 Language => Scala
@@ -1705,7 +1705,7 @@ exclude/Exclude.class
 ---------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => exclude/Exclude.class
 Text => empty
 Language => Scala
@@ -1722,7 +1722,7 @@ flags/p/package.class
 ---------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => flags/p/package.class
 Text => empty
 Language => Scala
@@ -1864,7 +1864,7 @@ objects/X.class
 ---------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => objects/X.class
 Text => empty
 Language => Scala
@@ -1882,7 +1882,7 @@ traits/C.class
 --------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => traits/C.class
 Text => empty
 Language => Scala
@@ -1899,7 +1899,7 @@ traits/T.class
 --------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => traits/T.class
 Text => empty
 Language => Scala
@@ -1917,7 +1917,7 @@ traits/U.class
 --------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => traits/U.class
 Text => empty
 Language => Scala
@@ -1937,7 +1937,7 @@ traits/V.class
 --------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => traits/V.class
 Text => empty
 Language => Scala
@@ -1953,7 +1953,7 @@ types/ann.class
 ---------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => types/ann.class
 Text => empty
 Language => Scala
@@ -1979,7 +1979,7 @@ types/ann1.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => types/ann1.class
 Text => empty
 Language => Scala
@@ -1997,7 +1997,7 @@ types/ann2.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => types/ann2.class
 Text => empty
 Language => Scala
@@ -2015,7 +2015,7 @@ types/B.class
 -------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => types/B.class
 Text => empty
 Language => Scala
@@ -2032,7 +2032,7 @@ types/C.class
 -------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => types/C.class
 Text => empty
 Language => Scala
@@ -2049,7 +2049,7 @@ types/P.class
 -------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => types/P.class
 Text => empty
 Language => Scala
@@ -2075,7 +2075,7 @@ types/T.class
 -------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => types/T.class
 Text => empty
 Language => Scala
@@ -2101,7 +2101,7 @@ types/Test.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => types/Test.class
 Text => empty
 Language => Scala

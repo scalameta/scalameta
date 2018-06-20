@@ -97,7 +97,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
             val diagnostics = unit.reportedDiagnostics(Map.empty)
             if (diagnostics.nonEmpty) {
               val sdoc = s.TextDocument(
-                schema = s.Schema.SEMANTICDB3,
+                schema = s.Schema.SEMANTICDB4,
                 uri = unit.source.toUri,
                 language = s.Language.SCALA,
                 diagnostics = diagnostics

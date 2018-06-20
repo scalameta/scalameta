@@ -123,7 +123,7 @@ Test.scala
 ----------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => Test.scala
 Text => non-empty
 Language => Scala
@@ -472,7 +472,7 @@ Test.class
 ----------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => Test.class
 Text => empty
 Language => Scala
@@ -600,7 +600,7 @@ $ protoc --proto_path <directory with the .proto file>\
 semanticdb.proto < META-INF/semanticdb/Test.scala.semanticdb
 
 documents {
-  schema: SEMANTICDB3
+  schema: SEMANTICDB4
   uri: "Test.scala"
   text: "object Test {\n  def main(args: Array[String]): Unit = {\n    println(\"hello world\")\n  }\n}\n"
   symbols {

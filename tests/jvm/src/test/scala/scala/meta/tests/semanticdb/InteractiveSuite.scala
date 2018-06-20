@@ -38,7 +38,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |-----------------
       |
       |Summary:
-      |Schema => SemanticDB v3
+      |Schema => SemanticDB v4
       |Uri => interactive.scala
       |Text => non-empty
       |Language => Scala
@@ -94,7 +94,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |-----------------
       |
       |Summary:
-      |Schema => SemanticDB v3
+      |Schema => SemanticDB v4
       |Uri => interactive.scala
       |Text => non-empty
       |Language => Scala
