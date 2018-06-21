@@ -810,7 +810,7 @@ example.Example.main().(args) => param args: Array[String]
 example.Example.x(). => val method x: ClassTag[Int]
   ClassTag => scala.reflect.ClassTag#
   Int => scala.Int#
-local0 => selfparam self: <?>
+local0 => selfparam self
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -1814,7 +1814,7 @@ Symbols => 18 entries
 Occurrences => 34 entries
 
 Symbols:
-local0 => selfparam self: <?>
+local0 => selfparam self
 local1 => selfparam self: B
   B => selfs.B#
 local2 => selfparam self: B with Int {}

@@ -70,7 +70,10 @@ trait SymbolInformationPrinter extends BasePrinter {
         case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
       }
       pprint(info.name)
-      opt(info.prefixBeforeTpe, info.signature)(pprint)
+      info.signature match {
+        case NoSignature if info.kind == SELF_PARAMETER => ()
+        case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
+      }
     }
 
     private def pprint(ann: Annotation): Unit = {
@@ -282,7 +285,10 @@ trait SymbolInformationPrinter extends BasePrinter {
             case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
           }
           pprint(info.name)
-          opt(info.prefixBeforeTpe, info.signature)(pprint)
+          info.signature match {
+            case NoSignature if info.kind == SELF_PARAMETER => ()
+            case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
+          }
       }
     }
 

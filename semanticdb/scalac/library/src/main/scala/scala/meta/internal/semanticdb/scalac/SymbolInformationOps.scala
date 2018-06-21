@@ -148,7 +148,10 @@ trait SymbolInformationOps { self: SemanticdbOps =>
               sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
           }
         } else if (gsym.isSelfParameter) {
-          s.ValueSignature(gsym.owner.self.toSemanticTpe)
+          gsym.owner.self.toSemanticTpe match {
+            case s.NoType => s.NoSignature
+            case stpe => s.ValueSignature(stpe)
+          }
         } else {
           ssig
         }
