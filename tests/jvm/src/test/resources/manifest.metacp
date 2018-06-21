@@ -2,7 +2,7 @@ Test.class
 ----------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => Test.class
 Text => empty
 Language => Scala

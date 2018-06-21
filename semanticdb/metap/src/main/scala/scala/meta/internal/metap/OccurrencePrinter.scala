@@ -1,9 +1,9 @@
 package scala.meta.internal.metap
 
 import scala.math.Ordering
-import scala.meta.internal.semanticdb3._
-import scala.meta.internal.semanticdb3.SymbolOccurrence._
-import scala.meta.internal.semanticdb3.SymbolOccurrence.Role._
+import scala.meta.internal.semanticdb._
+import scala.meta.internal.semanticdb.SymbolOccurrence._
+import scala.meta.internal.semanticdb.SymbolOccurrence.Role._
 
 trait OccurrencePrinter extends BasePrinter with RangePrinter {
   def pprint(occ: SymbolOccurrence): Unit = {

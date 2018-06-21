@@ -1,18 +1,1 @@
-syntax = "proto3";
-
-package scala.meta.internal.semanticdb3;
-
-message Index {
-  repeated PackageEntry packages = 1;
-  repeated ToplevelEntry toplevels = 2;
-}
-
-message PackageEntry {
-  string symbol = 1;
-  repeated string members = 2;
-}
-
-message ToplevelEntry {
-  string symbol = 1;
-  string uri = 2;
-}
+// Moved to semanticdb/semanticdb/semanticidx.proto

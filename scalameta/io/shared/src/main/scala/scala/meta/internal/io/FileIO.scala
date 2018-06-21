@@ -3,7 +3,7 @@ package scala.meta.internal.io
 import java.net.URI
 import java.nio.charset.Charset
 import scalapb.GeneratedMessage
-import scala.meta.internal.semanticdb3._
+import scala.meta.internal.semanticdb._
 import scala.meta.io._
 
 object FileIO {

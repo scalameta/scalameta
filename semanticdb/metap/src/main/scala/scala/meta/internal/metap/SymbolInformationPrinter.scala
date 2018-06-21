@@ -2,13 +2,12 @@ package scala.meta.internal.metap
 
 import scala.collection.mutable
 import scala.math.Ordering
-import scala.meta.internal.semanticdb3._
-import scala.meta.internal.semanticdb3.Accessibility.Tag._
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.SingletonType.Tag._
-import scala.meta.internal.semanticdb3.SymbolInformation._
-import scala.meta.internal.semanticdb3.SymbolInformation.Kind._
-import scala.meta.internal.semanticdb3.SymbolInformation.Property._
+import scala.meta.internal.semanticdb._
+import scala.meta.internal.semanticdb.Accessibility.Tag._
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.SymbolInformation._
+import scala.meta.internal.semanticdb.SymbolInformation.Kind._
+import scala.meta.internal.semanticdb.SymbolInformation.Property._
 
 trait SymbolInformationPrinter extends BasePrinter {
   def pprint(info: SymbolInformation): Unit = {
@@ -71,7 +70,7 @@ trait SymbolInformationPrinter extends BasePrinter {
         case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
       }
       pprint(info.name)
-      opt(info.prefixBeforeTpe, info.tpe)(pprint)
+      opt(info.prefixBeforeTpe, info.signature)(pprint)
     }
 
     private def pprint(ann: Annotation): Unit = {
@@ -109,19 +108,44 @@ trait SymbolInformationPrinter extends BasePrinter {
       }
     }
 
+    def pprint(sig: Signature): Unit = {
+      sig match {
+        case ClassSignature(tparams, parents, decls) =>
+          rep("[", tparams.infos, ", ", "]")(pprintDefn)
+          rep(" extends ", parents, " with ")(pprint)
+          if (decls.infos.nonEmpty) out.print(s" { +${decls.infos.length} decls }")
+        case MethodSignature(tparams, paramss, res) =>
+          rep("[", tparams.infos, ", ", "]")(pprintDefn)
+          rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
+          opt(": ", res)(pprint)
+        case TypeSignature(tparams, lo, hi) =>
+          rep("[", tparams.infos, ", ", "]")(pprintDefn)
+          if (lo != hi) {
+            lo match {
+              case NothingTpe() => ()
+              case lo => opt(" >: ", lo)(pprint)
+            }
+            hi match {
+              case AnyTpe() => ()
+              case hi => opt(" <: ", hi)(pprint)
+            }
+          } else {
+            val alias = lo
+            opt(" = ", alias)(pprint)
+          }
+        case ValueSignature(tpe) =>
+          pprint(tpe)
+        case NoSignature =>
+          out.print("<?>")
+      }
+    }
+
     def pprint(tpe: Type): Unit = {
-      def ref(sym: String): Unit = {
-        pprint(sym, Reference)
-      }
-      def defn(info: SymbolInformation): Unit = {
-        notes.discover(info)
-        pprint(info.symbol, Definition)
-      }
       def prefix(tpe: Type): Unit = {
         tpe match {
           case TypeRef(pre, sym, args) =>
             pre match {
-              case _: SingletonType =>
+              case _: SingleType | _: ThisType | _: SuperType =>
                 prefix(pre)
                 out.print(".")
               case NoType =>
@@ -130,45 +154,20 @@ trait SymbolInformationPrinter extends BasePrinter {
                 prefix(pre)
                 out.print("#")
             }
-            ref(sym)
+            pprintRef(sym)
             rep("[", args, ", ", "]")(normal)
-          case SingletonType(tag, pre, sym, x, s) =>
-            tag match {
-              case SYMBOL =>
-                opt(pre, ".")(prefix)
-                ref(sym)
-              case THIS =>
-                opt(sym, ".")(ref)
-                out.print("this")
-              case SUPER =>
-                opt(pre, ".")(prefix)
-                out.print("super")
-                opt("[", sym, "]")(ref)
-              case UNIT =>
-                out.print("()")
-              case BOOLEAN =>
-                if (x == 0) out.print("false")
-                else if (x == 1) out.print("true")
-                else out.print("<?>")
-              case BYTE | SHORT =>
-                out.print(x)
-              case CHAR =>
-                out.print("'" + x.toChar + "'")
-              case INT =>
-                out.print(x)
-              case LONG =>
-                out.print(x + "L")
-              case FLOAT =>
-                out.print(java.lang.Float.intBitsToFloat(x.toInt) + "f")
-              case DOUBLE =>
-                out.print(java.lang.Double.longBitsToDouble(x))
-              case STRING =>
-                out.print("\"" + s + "\"")
-              case NULL =>
-                out.print("null")
-              case UNKNOWN_SINGLETON | SingletonType.Tag.Unrecognized(_) =>
-                out.print("<?>")
-            }
+          case SingleType(pre, sym) =>
+            opt(pre, ".")(prefix)
+            pprintRef(sym)
+          case ThisType(sym) =>
+            opt(sym, ".")(pprintRef)
+            out.print("this")
+          case SuperType(pre, sym) =>
+            opt(pre, ".")(prefix)
+            out.print("super")
+            opt("[", sym, "]")(pprintRef)
+          case ConstantType(const) =>
+            pprint(const)
           case IntersectionType(types) =>
             rep(types, " & ")(normal)
           case UnionType(types) =>
@@ -178,7 +177,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           case StructuralType(utpe, decls) =>
             decls.infos.foreach(notes.discover)
             opt(utpe)(normal)
-            if (decls.infos.nonEmpty) rep(" { ", decls.infos, "; ", " }")(defn)
+            if (decls.infos.nonEmpty) rep(" { ", decls.infos, "; ", " }")(pprintDefn)
             else out.print(" {}")
           case AnnotatedType(anns, utpe) =>
             opt(utpe)(normal)
@@ -187,59 +186,40 @@ trait SymbolInformationPrinter extends BasePrinter {
           case ExistentialType(utpe, decls) =>
             decls.infos.foreach(notes.discover)
             opt(utpe)(normal)
-            rep(" forSome { ", decls.infos, "; ", " }")(defn)
+            rep(" forSome { ", decls.infos, "; ", " }")(pprintDefn)
           case UniversalType(tparams, utpe) =>
             tparams.infos.foreach(notes.discover)
-            rep("[", tparams.infos, ", ", "] => ")(defn)
+            rep("[", tparams.infos, ", ", "] => ")(pprintDefn)
             opt(utpe)(normal)
-          case ClassInfoType(tparams, parents, decls) =>
-            rep("[", tparams.infos, ", ", "]")(defn)
-            rep(" extends ", parents, " with ")(normal)
-            if (decls.infos.nonEmpty) out.print(s" { +${decls.infos.length} decls }")
-          case MethodType(tparams, paramss, res) =>
-            rep("[", tparams.infos, ", ", "]")(defn)
-            rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(defn))
-            opt(": ", res)(normal)
           case ByNameType(utpe) =>
             out.print("=> ")
             opt(utpe)(normal)
           case RepeatedType(utpe) =>
             opt(utpe)(normal)
             out.print("*")
-          case TypeType(tparams, lo, hi) =>
-            rep("[", tparams.infos, ", ", "]")(defn)
-            if (lo != hi) {
-              lo match {
-                case NothingTpe() => ()
-                case lo => opt(" >: ", lo)(normal)
-              }
-              hi match {
-                case AnyTpe() => ()
-                case hi => opt(" <: ", hi)(normal)
-              }
-            } else {
-              val alias = lo
-              opt(" = ", alias)(normal)
-            }
           case NoType =>
             out.print("<?>")
         }
       }
       def normal(tpe: Type): Unit = {
         tpe match {
-          case SingletonType(tag, _, _, _, _) =>
-            tag match {
-              case SYMBOL | THIS | SUPER =>
-                prefix(tpe)
-                out.print(".type")
-              case _ =>
-                prefix(tpe)
-            }
+          case _: SingleType | _: ThisType | _: SuperType =>
+            prefix(tpe)
+            out.print(".type")
           case _ =>
             prefix(tpe)
         }
       }
       normal(tpe)
+    }
+
+    private def pprintRef(sym: String): Unit = {
+      pprint(sym, Reference)
+    }
+
+    private def pprintDefn(info: SymbolInformation): Unit = {
+      notes.discover(info)
+      pprint(info.symbol, Definition)
     }
 
     private sealed trait SymbolStyle
@@ -289,13 +269,44 @@ trait SymbolInformationPrinter extends BasePrinter {
             case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
           }
           pprint(info.name)
-          opt(info.prefixBeforeTpe, info.tpe)(pprint)
+          opt(info.prefixBeforeTpe, info.signature)(pprint)
       }
     }
 
     private def pprint(name: String): Unit = {
       if (name.nonEmpty) out.print(name)
       else out.print("<?>")
+    }
+
+    private def pprint(const: Constant): Unit = {
+      const match {
+        case NoConstant =>
+          out.print("<?>")
+        case UnitConstant() =>
+          out.print("()")
+        case BooleanConstant(true) =>
+          out.print(true)
+        case BooleanConstant(false) =>
+          out.print(false)
+        case ByteConstant(value) =>
+          out.print(value.toByte)
+        case ShortConstant(value) =>
+          out.print(value.toShort)
+        case CharConstant(value) =>
+          out.print("'" + value.toChar + "'")
+        case IntConstant(value) =>
+          out.print(value)
+        case LongConstant(value) =>
+          out.print(value + "L")
+        case FloatConstant(value) =>
+          out.print(value + "f")
+        case DoubleConstant(value) =>
+          out.print(value)
+        case StringConstant(value) =>
+          out.print("\"" + value + "\"")
+        case NullConstant() =>
+          out.print("null")
+      }
     }
 
     private implicit class InfoOps(info: SymbolInformation) {

@@ -3,7 +3,7 @@ package scala.meta.internal.semanticdb.scalac
 import org.scalameta.unreachable
 import scala.{meta => m}
 import scala.meta.internal.inputs._
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb => s}
 
 trait DiagnosticOps { self: SemanticdbOps =>
   implicit class XtensionCompilationUnitDiagnostics(unit: g.CompilationUnit) {

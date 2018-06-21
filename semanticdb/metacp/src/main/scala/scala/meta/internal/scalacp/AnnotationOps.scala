@@ -1,6 +1,6 @@
 package scala.meta.internal.scalacp
 
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb => s}
 
 trait AnnotationOps { self: Scalacp =>
   implicit class XtensionAnnotation(ann: Int) {

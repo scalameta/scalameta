@@ -1,7 +1,7 @@
 package scala.meta.internal.metacp
 
 import scala.meta.internal.io._
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
 
 final case class ToplevelInfos(
@@ -13,7 +13,7 @@ final case class ToplevelInfos(
     assert(toplevels.nonEmpty)
     val semanticdbAbspath = out.resolve("META-INF").resolve("semanticdb").resolve(uri)
     val semanticdbDocument = s.TextDocument(
-      schema = s.Schema.SEMANTICDB3,
+      schema = s.Schema.SEMANTICDB4,
       uri = classfile.uri,
       language = toplevels.head.language,
       symbols = toplevels ++ others)

@@ -4,10 +4,10 @@ package semanticdb
 import scala.meta._
 import scala.meta.internal.semanticdb._
 import scala.meta.internal.semanticdb.scalac._
-import scala.meta.internal.semanticdb3._
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
+import scala.meta.internal.semanticdb._
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.util.Properties.{versionNumberString => scalaVersion}
 import Compat._
 
@@ -815,7 +815,7 @@ class TargetedSuite extends SemanticdbSuite {
       val classDenot = db.symbols.find(_.symbol == fooType).get
       assert(classDenot.kind.isClass)
       assert(classDenot.has(p.CASE))
-      val decls = classDenot.tpe.asInstanceOf[ClassInfoType].declarations.get.symbols
+      val decls = classDenot.signature.asInstanceOf[ClassSignature].declarations.get.symbols
       assert(decls.nonEmpty)
       decls.foreach { decl =>
         val declDenot = db.symbols.find(_.symbol == decl)

@@ -1,7 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.io.PathIO
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 import scala.meta.io.RelativePath
 

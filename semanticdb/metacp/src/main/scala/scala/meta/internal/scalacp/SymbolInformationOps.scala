@@ -1,12 +1,12 @@
 package scala.meta.internal.scalacp
 
 import scala.collection.mutable
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
-import scala.meta.internal.semanticdb3.{Language => l}
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Property => p}
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.tools.scalap.scalax.rules.ScalaSigParserError
 import scala.tools.scalap.scalax.rules.scalasig._
 
@@ -150,14 +150,14 @@ trait SymbolInformationOps { self: Scalacp =>
       }
     }
 
-    private def tpe(linkMode: LinkMode): s.Type = {
+    private def sig(linkMode: LinkMode): s.Signature = {
       sym match {
         case sym: SymbolInfoSymbol =>
           try {
             if (sym.isPackage) {
-              s.NoType
+              s.NoSignature
             } else {
-              val tpe = {
+              val sig = {
                 // NOTE: Scalap doesn't expose JAVA_ENUM.
                 // if (sym.isJavaEnum && gsym.isStatic) {
                 //   ???
@@ -181,28 +181,35 @@ trait SymbolInformationOps { self: Scalacp =>
                   sym.infoType
                 }
               }
-              val stpe = tpe.toSemantic(linkMode)
+              val ssig = sig.toSemanticSig(linkMode)
               if (sym.isConstructor) {
-                stpe match {
-                  case t: s.MethodType => t.copy(returnType = s.NoType)
-                  case _ => stpe
+                ssig match {
+                  case ssig: s.MethodSignature => ssig.copy(returnType = s.NoType)
+                  case _ => ssig
                 }
               } else if (sym.isScalacField) {
-                val stparams = Some(s.Scope())
-                val sparamss = Nil
-                val sret = stpe
-                s.MethodType(stparams, sparamss, sret)
+                ssig match {
+                  case ssig: s.ValueSignature =>
+                    val stparams = Some(s.Scope())
+                    val sparamss = Nil
+                    val sret = ssig.tpe
+                    s.MethodSignature(stparams, sparamss, sret)
+                  case s.NoSignature =>
+                    s.NoSignature
+                  case _ =>
+                    sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+                }
               } else {
-                stpe
+                ssig
               }
             }
           } catch {
             case ScalaSigParserError("Unexpected failure") =>
               // FIXME: https://github.com/scalameta/scalameta/issues/1494
-              s.NoType
+              s.NoSignature
           }
         case _ =>
-          s.NoType
+          s.NoSignature
       }
     }
 
@@ -241,7 +248,7 @@ trait SymbolInformationOps { self: Scalacp =>
         kind = kind,
         properties = properties,
         name = name,
-        tpe = tpe(linkMode),
+        signature = sig(linkMode),
         annotations = annotations,
         accessibility = accessibility
       )

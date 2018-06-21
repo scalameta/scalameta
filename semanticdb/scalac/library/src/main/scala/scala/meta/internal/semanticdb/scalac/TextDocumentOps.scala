@@ -5,13 +5,13 @@ import scala.meta.internal.inputs._
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb._
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb => s}
 import scala.reflect.internal._
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.reflect.io.{PlainFile => GPlainFile}
 import scala.{meta => m}
-import scala.meta.internal.semanticdb3.Scala._
+import scala.meta.internal.semanticdb.Scala._
 
 trait TextDocumentOps { self: SemanticdbOps =>
   def validateCompilerState(): Unit = {
@@ -515,7 +515,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
       }.toList
 
       s.TextDocument(
-        schema = s.Schema.SEMANTICDB3,
+        schema = s.Schema.SEMANTICDB4,
         uri = unit.source.toUri,
         text = unit.source.toText,
         md5 = unit.source.toMD5,

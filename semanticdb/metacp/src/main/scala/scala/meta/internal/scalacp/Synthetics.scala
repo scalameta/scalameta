@@ -1,11 +1,11 @@
 package scala.meta.internal.scalacp
 
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Accessibility.{Tag => a}
-import scala.meta.internal.semanticdb3.{Language => l}
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 
 object Synthetics {
   def setterInfos(getterInfo: s.SymbolInformation, linkMode: LinkMode): List[s.SymbolInformation] = {
@@ -23,9 +23,9 @@ object Synthetics {
       if (getterSym.isGlobal) Symbols.Global(setterSym, d.Parameter("x$1"))
       else getterSym + "+2"
     }
-    val paramTpe = getterInfo.tpe match {
-      case s.MethodType(_, _, sret) => sret
-      case _ => s.NoType
+    val paramSig = getterInfo.signature match {
+      case s.MethodSignature(_, _, sret) => s.ValueSignature(sret)
+      case _ => s.NoSignature
     }
     val paramInfo = s.SymbolInformation(
       symbol = paramSym,
@@ -33,11 +33,11 @@ object Synthetics {
       kind = k.PARAMETER,
       properties = 0,
       name = "x$1",
-      tpe = paramTpe,
+      signature = paramSig,
       annotations = Nil,
       accessibility = Some(s.Accessibility(a.PUBLIC)))
 
-    val setterTpe = {
+    val setterSig = {
       val unit = s.TypeRef(s.NoType, "scala.Unit#", Nil)
       val setterParamss = {
         linkMode match {
@@ -45,7 +45,7 @@ object Synthetics {
           case HardlinkChildren => List(s.Scope(hardlinks = List(paramInfo)))
         }
       }
-      s.MethodType(Some(s.Scope()), setterParamss, unit)
+      s.MethodSignature(Some(s.Scope()), setterParamss, unit)
     }
     val setterInfo = s.SymbolInformation(
       symbol = setterSym,
@@ -53,7 +53,7 @@ object Synthetics {
       kind = k.METHOD,
       properties = getterInfo.properties,
       name = getterInfo.name + "_=",
-      tpe = setterTpe,
+      signature = setterSig,
       annotations = getterInfo.annotations,
       accessibility = getterInfo.accessibility)
 

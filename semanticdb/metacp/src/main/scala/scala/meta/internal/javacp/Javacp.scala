@@ -6,12 +6,12 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb3.Scala.{Names => n}
-import scala.meta.internal.semanticdb3.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb3.{Language => l}
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
@@ -42,7 +42,7 @@ object Javacp {
         symbol: String,
         kind: s.SymbolInformation.Kind,
         name: String,
-        tpe: s.Type,
+        sig: s.Signature,
         access: Int): s.SymbolInformation = {
       val info = s.SymbolInformation(
         symbol = symbol,
@@ -50,7 +50,7 @@ object Javacp {
         kind = kind,
         properties = sproperties(access),
         name = name,
-        tpe = tpe,
+        signature = sig,
         annotations = sannotations(access),
         accessibility = saccessibility(access, symbol)
       )
@@ -72,7 +72,7 @@ object Javacp {
           enclosingPackage,
           k.PACKAGE,
           enclosingPackage.desc.name,
-          s.NoType,
+          s.NoSignature,
           o.ACC_PUBLIC
         )
       }
@@ -104,7 +104,7 @@ object Javacp {
 
     val classParents =
       if (isJavaLangObject) Nil
-      else classSignature.parents.map(_.toType(classScope))
+      else classSignature.parents.map(_.toSemanticTpe(classScope))
 
     node.fields.asScala.foreach { field: FieldNode =>
       if (isOuterClassReference(field)) {
@@ -120,7 +120,7 @@ object Javacp {
           fieldSymbol,
           k.FIELD,
           field.name,
-          fieldSignature.toType(classScope),
+          s.ValueSignature(fieldSignature.toSemanticTpe(classScope)),
           field.access
         )
 
@@ -185,32 +185,32 @@ object Javacp {
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
               if (isRepeatedType) {
-                param.toType(methodScope) match {
+                param.toSemanticTpe(methodScope) match {
                   case s.TypeRef(s.NoType, "scala.Array#", targ :: Nil) =>
                     s.RepeatedType(targ)
                   case tpe =>
                     sys.error(s"expected $paramName to be a scala.Array#, found $tpe")
                 }
               } else {
-                param.toType(methodScope)
+                param.toSemanticTpe(methodScope)
               }
             addInfo(
               paramSymbol,
               k.PARAMETER,
               paramName,
-              paramTpe,
+              s.ValueSignature(paramTpe),
               o.ACC_PUBLIC
             )
         }
 
         val returnType = {
           if (isConstructor) s.NoType
-          else method.signature.result.toType(methodScope)
+          else method.signature.result.toSemanticTpe(methodScope)
         }
 
         val methodKind = if (isConstructor) k.CONSTRUCTOR else k.METHOD
 
-        val methodType = s.MethodType(
+        val methodSig = s.MethodSignature(
           typeParameters = Some(s.Scope(methodTypeParameters.map(_.symbol))),
           parameterLists = List(s.Scope(parameters.map(_.symbol))),
           returnType = returnType
@@ -220,7 +220,7 @@ object Javacp {
           methodSymbol,
           methodKind,
           method.node.name,
-          methodType,
+          methodSig,
           method.node.access
         )
 
@@ -237,7 +237,7 @@ object Javacp {
       buf ++= sinfos(toplevel, innerClassNode, ic.access, classScope)
     }
 
-    val classTpe = s.ClassInfoType(
+    val classSig = s.ClassSignature(
       typeParameters = Some(s.Scope(classTypeParameters.map(_.symbol))),
       parents = classParents,
       declarations = Some(s.Scope(decls))
@@ -247,7 +247,7 @@ object Javacp {
       classSymbol,
       classKind,
       className,
-      classTpe,
+      classSig,
       classAccess
     )
     buf.result()
@@ -272,13 +272,13 @@ object Javacp {
     sig match {
       case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
         require(identifier != null, sig.toString)
-        val prefix = styperef(ssym(identifier), targs.toType(scope))
+        val prefix = styperef(ssym(identifier), targs.toSemanticTpe(scope))
         suffix.foldLeft(prefix) {
           case (accum, s: ClassTypeSignatureSuffix) =>
             styperef(
               prefix = accum,
               symbol = ssym(s.simpleClassTypeSignature.identifier),
-              args = s.simpleClassTypeSignature.typeArguments.toType(scope)
+              args = s.simpleClassTypeSignature.typeArguments.toSemanticTpe(scope)
             )
         }
       case TypeVariableSignature(name) =>
@@ -286,7 +286,7 @@ object Javacp {
       case t: BaseType =>
         styperef("scala." + t.name + "#")
       case ArrayTypeSignature(tpe) =>
-        sarray(tpe.toType(scope))
+        sarray(tpe.toSemanticTpe(scope))
     }
 
   private case class TypeParameterInfo(value: TypeParameter, symbol: String)
@@ -319,14 +319,14 @@ object Javacp {
       case _ =>
         s.IntersectionType(types = typeParameters)
     }
-    val tpe = s.TypeType(upperBound = upperBounds)
+    val sig = s.TypeSignature(upperBound = upperBounds)
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,
       language = l.JAVA,
       kind = k.TYPE_PARAMETER,
       name = typeParameter.value.identifier,
-      tpe = tpe
+      signature = sig
     )
   }
 
@@ -429,22 +429,22 @@ object Javacp {
 
   private implicit class XtensionTypeArgument(self: TypeArgument) {
     // FIXME: https://github.com/scalameta/scalameta/issues/1563
-    def toType(scope: Scope): s.Type = self match {
+    def toSemanticTpe(scope: Scope): s.Type = self match {
       case ReferenceTypeArgument(_, referenceTypeSignature) =>
-        referenceTypeSignature.toType(scope)
+        referenceTypeSignature.toSemanticTpe(scope)
       case WildcardTypeArgument =>
         styperef("local_wildcard")
     }
   }
 
   private implicit class XtensionJavaTypeSignature(self: JavaTypeSignature) {
-    def toType(scope: Scope): s.Type =
+    def toSemanticTpe(scope: Scope): s.Type =
       fromJavaTypeSignature(self, scope)
   }
 
   private implicit class XtensionTypeArgumentsOption(self: Option[TypeArguments]) {
-    def toType(scope: Scope): List[s.Type] = self match {
-      case Some(targs: TypeArguments) => targs.all.map(_.toType(scope))
+    def toSemanticTpe(scope: Scope): List[s.Type] = self match {
+      case Some(targs: TypeArguments) => targs.all.map(_.toSemanticTpe(scope))
       case _ => Nil
     }
   }

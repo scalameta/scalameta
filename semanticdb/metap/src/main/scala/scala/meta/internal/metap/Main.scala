@@ -1,6 +1,6 @@
 package scala.meta.internal.metap
 
-import scala.meta.internal.semanticdb3._
+import scala.meta.internal.semanticdb._
 import scala.meta.cli._
 import scala.meta.metap._
 import scala.util.control.NonFatal

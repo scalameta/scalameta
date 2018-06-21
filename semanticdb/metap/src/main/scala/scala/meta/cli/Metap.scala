@@ -3,7 +3,7 @@ package scala.meta.cli
 import java.io._
 import scala.meta.internal.metap._
 import scala.meta.metap._
-import scala.meta.internal.semanticdb3.TextDocument
+import scala.meta.internal.semanticdb.TextDocument
 
 object Metap {
   def main(args: Array[String]): Unit = {

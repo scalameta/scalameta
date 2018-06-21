@@ -14,7 +14,7 @@ import scala.meta.io.AbsolutePath
 import scala.meta.testkit.StringFS
 import bloop.config.{Config => C}
 import scala.meta.internal.io.FileIO
-import scala.meta.internal.semanticdb3.Index
+import scala.meta.internal.semanticdb.Index
 
 /**
   * Utility class to reproduce incremental compilation with Zinc via Bloop.

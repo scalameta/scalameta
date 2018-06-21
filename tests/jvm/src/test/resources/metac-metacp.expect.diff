@@ -14,7 +14,6 @@ advanced.D#
                  kind: TYPE
                  properties: 4
                  name: "_"
-       symlinks: "advanced.D#[CC]"
      declarations {
 +      symlinks: "advanced.D#_#"
        symlinks: "advanced.D#`<init>`()."
@@ -75,13 +74,13 @@ advanced.Existential#e4().
              kind: TYPE
              properties: 4
              name: "U"
-                 type_parameters {
-                   hardlinks {
--                    symbol: "local11"
-+                    symbol: "local3"
-                     kind: TYPE_PARAMETER
-                     properties: 0
-                     name: "T"
+                     type_parameters {
+                       hardlinks {
+-                        symbol: "local11"
++                        symbol: "local3"
+                         kind: TYPE_PARAMETER
+                         properties: 0
+                         name: "T"
 
 
 =========================
@@ -215,10 +214,9 @@ example.MetacJava#nonStatic().
 ==============================
 --- metac
 +++ metacp
-             string: ""
+             symbol: "example.MetacJava#staticInner()."
 -        symbol: "com.javacp.MetacJava#StaticInner#NonStatic#"
 +        symbol: "com.javacp.MetacJava.StaticInner#NonStatic#"
-     type_parameters {
 
 
 ================================
@@ -230,7 +228,6 @@ example.MetacJava#staticInner().
          prefix {
 -        symbol: "com.javacp.MetacJava#StaticInner#"
 +        symbol: "com.javacp.MetacJava.StaticInner#"
-     type_parameters {
 
 
 =========================
@@ -238,23 +235,22 @@ example.Methods#m13().(x)
 =========================
 --- metac
 +++ metacp
- properties: 0
- name: "x"
- tpe {
--  annotatedType {
--    tpe {
--      typeRef {
--        prefix {
--        symbol: "scala.Int#"
-+  typeRef {
-+    prefix {
--    annotations {
--      tpe {
--        typeRef {
--          prefix {
--          symbol: "scala.unchecked#"
-+    symbol: "scala.Int#"
- accessibility {
+ signature {
+   valueSignature {
+     tpe {
+-      annotatedType {
+-        tpe {
+-          typeRef {
+-            prefix {
+-            symbol: "scala.Int#"
++      typeRef {
++        prefix {
+-        annotations {
+-          tpe {
+-            typeRef {
+-              prefix {
+-              symbol: "scala.unchecked#"
++        symbol: "scala.Int#"
 
 
 ================
@@ -281,6 +277,9 @@ flags.p.package.S#[T]
 =====================
 --- metac
 +++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "T"
 -annotations {
 -  tpe {
 -    typeRef {
@@ -394,11 +393,9 @@ types.Test.C#singleType2().
 ===========================
 --- metac
 +++ metacp
-             string: ""
+             symbol: "types.Test.C#p()."
 -        symbol: "types.P#x()."
 +        symbol: "types.P#x."
-         primitive: 0
-         string: ""
 
 
 ==============================
@@ -406,19 +403,13 @@ types.Test.Literal.javaEnum().
 ==============================
 --- metac
 +++ metacp
- properties: 1032
- name: "javaEnum"
- tpe {
--  methodType {
+ language: SCALA
+ signature {
+-  methodSignature {
+-    type_parameters {
 -    return_type {
--      singletonType {
--        tag: SYMBOL
+-      singleType {
 -        prefix {
 -        symbol: "java.nio.file.LinkOption#NOFOLLOW_LINKS."
--        primitive: 0
--        string: ""
--    type_parameters {
- accessibility {
-   tag: PUBLIC
 
 

@@ -2,7 +2,7 @@ semanticdb/integration/src/main/scala/example/Accessibility.scala
 -----------------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Accessibility.scala
 Text => non-empty
 Language => Scala
@@ -56,7 +56,7 @@ semanticdb/integration/src/main/scala/example/Advanced.scala
 ------------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Advanced.scala
 Text => non-empty
 Language => Scala
@@ -292,7 +292,7 @@ semanticdb/integration/src/main/scala/example/Anonymous.scala
 -------------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Anonymous.scala
 Text => non-empty
 Language => Scala
@@ -355,7 +355,7 @@ semanticdb/integration/src/main/scala/example/Classes.scala
 -----------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Classes.scala
 Text => non-empty
 Language => Scala
@@ -731,7 +731,7 @@ semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Empty.scala
 Text => non-empty
 Language => Scala
@@ -766,7 +766,7 @@ semanticdb/integration/src/main/scala/example/EmptyObject.scala
 ---------------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/EmptyObject.scala
 Text => non-empty
 Language => Scala
@@ -786,7 +786,7 @@ semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Example.scala
 Text => non-empty
 Language => Scala
@@ -852,7 +852,7 @@ semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Example.scala
 Text => empty
 Language => Scala
@@ -865,7 +865,7 @@ semanticdb/integration/src/main/scala/example/Flags.scala
 ---------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Flags.scala
 Text => non-empty
 Language => Scala
@@ -1095,7 +1095,7 @@ semanticdb/integration/src/main/scala/example/Imports.scala
 -----------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Imports.scala
 Text => non-empty
 Language => Scala
@@ -1115,7 +1115,7 @@ semanticdb/integration/src/main/scala/example/local-file.scala
 --------------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/local-file.scala
 Text => non-empty
 Language => Scala
@@ -1149,7 +1149,7 @@ semanticdb/integration/src/main/scala/example/MetacJava.scala
 -------------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/MetacJava.scala
 Text => non-empty
 Language => Scala
@@ -1253,7 +1253,7 @@ semanticdb/integration/src/main/scala/example/Methods.scala
 -----------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Methods.scala
 Text => non-empty
 Language => Scala
@@ -1666,7 +1666,7 @@ semanticdb/integration/src/main/scala/example/Objects.scala
 -----------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Objects.scala
 Text => non-empty
 Language => Scala
@@ -1689,7 +1689,7 @@ semanticdb/integration/src/main/scala/example/Overrides.scala
 -------------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Overrides.scala
 Text => non-empty
 Language => Scala
@@ -1725,7 +1725,7 @@ semanticdb/integration/src/main/scala/example/Synthetic.scala
 -------------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Synthetic.scala
 Text => non-empty
 Language => Scala
@@ -1782,7 +1782,7 @@ semanticdb/integration/src/main/scala/example/Traits.scala
 ----------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Traits.scala
 Text => non-empty
 Language => Scala
@@ -1830,7 +1830,7 @@ semanticdb/integration/src/main/scala/example/Types.scala
 ---------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
@@ -2391,7 +2391,7 @@ semanticdb/integration/src/main/scala/example/Vals.scala
 --------------------------------------------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Vals.scala
 Text => non-empty
 Language => Scala

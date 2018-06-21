@@ -1,7 +1,7 @@
 package scala.meta.tests
 package semanticdb
 
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb => s}
 import java.nio.file._
 import java.nio.charset.StandardCharsets._
 import scala.collection.JavaConverters._

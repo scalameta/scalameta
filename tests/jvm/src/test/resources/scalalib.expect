@@ -2,7 +2,7 @@ scala/Any.class
 ---------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => scala/Any.class
 Text => empty
 Language => Scala
@@ -50,7 +50,7 @@ scala/AnyRef.class
 ------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => scala/AnyRef.class
 Text => empty
 Language => Scala
@@ -84,7 +84,7 @@ scala/AnyVal.class
 ------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => scala/AnyVal.class
 Text => empty
 Language => Scala
@@ -99,7 +99,7 @@ scala/Nothing.class
 -------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => scala/Nothing.class
 Text => empty
 Language => Scala
@@ -114,7 +114,7 @@ scala/Null.class
 ----------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => scala/Null.class
 Text => empty
 Language => Scala
@@ -129,7 +129,7 @@ scala/Singleton.class
 ---------------------
 
 Summary:
-Schema => SemanticDB v3
+Schema => SemanticDB v4
 Uri => scala/Singleton.class
 Text => empty
 Language => Scala

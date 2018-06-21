@@ -1,14 +1,13 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.scalacp._
-import scala.meta.internal.{semanticdb3 => s}
-import scala.meta.internal.semanticdb3.Scala._
-import scala.meta.internal.semanticdb3.SingletonType.{Tag => st}
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Scala._
 import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps { self: SemanticdbOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
-    def toSemantic(linkMode: LinkMode): s.Type = {
+    def toSemanticTpe: s.Type = {
       def loop(gtpe: g.Type): s.Type = {
         gtpe match {
           case ByNameType(gtpe) =>
@@ -23,54 +22,23 @@ trait TypeOps { self: SemanticdbOps =>
             val sargs = gargs.map(loop)
             s.TypeRef(spre, ssym, sargs)
           case g.SingleType(gpre, gsym) =>
-            val stag = st.SYMBOL
             val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else s.NoType
             val ssym = gsym.ssym
-            s.SingletonType(stag, spre, ssym, 0, "")
+            s.SingleType(spre, ssym)
           case g.ThisType(gsym) =>
-            val stag = st.THIS
             val ssym = gsym.ssym
-            s.SingletonType(stag, s.NoType, ssym, 0, "")
+            s.ThisType(ssym)
           case g.SuperType(gpre, gmix) =>
-            val stag = st.SUPER
             val spre = loop(gpre.typeSymbol.tpe)
             val ssym = gmix.typeSymbol.ssym
-            s.SingletonType(stag, spre, ssym, 0, "")
+            s.SuperType(spre, ssym)
           case g.ConstantType(g.Constant(sym: g.TermSymbol)) if sym.hasFlag(gf.JAVA_ENUM) =>
             loop(g.SingleType(sym.owner.thisPrefix, sym))
           case g.ConstantType(g.Constant(_: g.Type)) =>
             loop(gtpe.widen)
           case g.ConstantType(gconst) =>
-            def floatBits(x: Float) = java.lang.Float.floatToRawIntBits(x).toLong
-            def doubleBits(x: Double) = java.lang.Double.doubleToRawLongBits(x)
-            gconst.value match {
-              case () =>
-                s.SingletonType(st.UNIT, s.NoType, "", 0, "")
-              case false =>
-                s.SingletonType(st.BOOLEAN, s.NoType, "", 0, "")
-              case true =>
-                s.SingletonType(st.BOOLEAN, s.NoType, "", 1, "")
-              case x: Byte =>
-                s.SingletonType(st.BYTE, s.NoType, "", x.toLong, "")
-              case x: Short =>
-                s.SingletonType(st.SHORT, s.NoType, "", x.toLong, "")
-              case x: Char =>
-                s.SingletonType(st.CHAR, s.NoType, "", x.toLong, "")
-              case x: Int =>
-                s.SingletonType(st.INT, s.NoType, "", x.toLong, "")
-              case x: Long =>
-                s.SingletonType(st.LONG, s.NoType, "", x, "")
-              case x: Float =>
-                s.SingletonType(st.FLOAT, s.NoType, "", floatBits(x), "")
-              case x: Double =>
-                s.SingletonType(st.DOUBLE, s.NoType, "", doubleBits(x), "")
-              case x: String =>
-                s.SingletonType(st.STRING, s.NoType, "", 0, x)
-              case null =>
-                s.SingletonType(st.NULL, s.NoType, "", 0, "")
-              case _ =>
-                sys.error(s"unsupported const ${gconst}: ${g.showRaw(gconst)}")
-            }
+            val sconst = s.Constant(gconst.value)
+            s.ConstantType(sconst)
           case g.RefinedType(gparents, gdecls) =>
             val sparents = gparents.map(loop)
             val stpe = s.WithType(sparents)
@@ -84,15 +52,38 @@ trait TypeOps { self: SemanticdbOps =>
             val stpe = loop(gtpe)
             val sdecls = Some(gtparams.sscope(HardlinkChildren))
             s.ExistentialType(stpe, sdecls)
+          case g.PolyType(gtparams, gtpe) =>
+            loop(gtpe) match {
+              case s.NoType =>
+                s.NoType
+              case stpe =>
+                val stparams = gtparams.sscope(HardlinkChildren)
+                s.UniversalType(Some(stparams), stpe)
+            }
+          case g.NoType =>
+            s.NoType
+          case g.NoPrefix =>
+            s.NoType
+          case g.ErrorType =>
+            s.NoType
+          case gother =>
+            sys.error(s"unsupported type ${gother}: ${g.showRaw(gother)}")
+        }
+      }
+      loop(gtpe)
+    }
+    def toSemanticSig(linkMode: LinkMode): s.Signature = {
+      def loop(gtpe: g.Type): s.Signature = {
+        gtpe match {
           case g.ClassInfoType(gparents, _, gclass) =>
             val stparams = Some(s.Scope())
-            val sparents = gparents.map(loop)
+            val sparents = gparents.map(_.toSemanticTpe)
             val sdecls = Some(gclass.semanticdbDecls.sscope(linkMode))
-            s.ClassInfoType(stparams, sparents, sdecls)
+            s.ClassSignature(stparams, sparents, sdecls)
           case g.NullaryMethodType(gtpe) =>
             val stparams = Some(s.Scope())
-            val stpe = loop(gtpe)
-            s.MethodType(stparams, Nil, stpe)
+            val stpe = gtpe.toSemanticTpe
+            s.MethodSignature(stparams, Nil, stpe)
           case gtpe: g.MethodType =>
             def flatten(gtpe: g.Type): (List[List[g.Symbol]], g.Type) = {
               gtpe match {
@@ -106,37 +97,37 @@ trait TypeOps { self: SemanticdbOps =>
             val (gparamss, gret) = flatten(gtpe)
             val stparams = Some(s.Scope())
             val sparamss = gparamss.map(_.sscope(linkMode))
-            val sret = loop(gret)
-            s.MethodType(stparams, sparamss, sret)
+            val sret = gret.toSemanticTpe
+            s.MethodSignature(stparams, sparamss, sret)
           case g.TypeBounds(glo, ghi) =>
             val stparams = Some(s.Scope())
-            val slo = loop(glo)
-            val shi = loop(ghi)
-            s.TypeType(stparams, slo, shi)
+            val slo = glo.toSemanticTpe
+            val shi = ghi.toSemanticTpe
+            s.TypeSignature(stparams, slo, shi)
           case g.PolyType(gtparams, gtpe) =>
             loop(gtpe) match {
-              case s.NoType => s.NoType
-              case t: s.ClassInfoType =>
+              case s.NoSignature =>
+                s.NoSignature
+              case t: s.ClassSignature =>
                 val stparams = gtparams.sscope(linkMode)
                 t.copy(typeParameters = Some(stparams))
-              case t: s.MethodType =>
+              case t: s.MethodSignature =>
                 val stparams = gtparams.sscope(linkMode)
                 t.copy(typeParameters = Some(stparams))
-              case t: s.TypeType =>
+              case t: s.TypeSignature =>
                 val stparams = gtparams.sscope(linkMode)
                 t.copy(typeParameters = Some(stparams))
-              case stpe =>
+              case t: s.ValueSignature =>
                 val stparams = gtparams.sscope(HardlinkChildren)
-                s.UniversalType(Some(stparams), stpe)
+                val stpe = t.tpe
+                s.ValueSignature(s.UniversalType(Some(stparams), stpe))
             }
           case g.NoType =>
-            s.NoType
-          case g.NoPrefix =>
-            s.NoType
+            s.NoSignature
           case g.ErrorType =>
-            s.NoType
+            s.NoSignature
           case gother =>
-            sys.error(s"unsupported type ${gother}: ${g.showRaw(gother)}")
+            s.ValueSignature(gother.toSemanticTpe)
         }
       }
       loop(gtpe)

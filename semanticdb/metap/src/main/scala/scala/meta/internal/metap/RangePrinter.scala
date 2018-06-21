@@ -2,7 +2,7 @@ package scala.meta.internal.metap
 
 import scala.collection.mutable
 import scala.math.Ordering
-import scala.meta.internal.semanticdb3._
+import scala.meta.internal.semanticdb._
 
 trait RangePrinter extends BasePrinter {
   def pprint(range: Range): Unit = {

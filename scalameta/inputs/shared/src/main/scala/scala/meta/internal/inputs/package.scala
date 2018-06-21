@@ -2,7 +2,7 @@ package scala.meta.internal
 
 import scala.compat.Platform.EOL
 import scala.meta.inputs._
-import scala.meta.internal.{semanticdb3 => s}
+import scala.meta.internal.{semanticdb => s}
 
 package object inputs {
   implicit class XtensionPositionFormatMessage(pos: Position) {

@@ -9,7 +9,7 @@ import javax.xml.bind.DatatypeConverter
 import org.scalatest.FunSuite
 import org.scalatest.tagobjects.Slow
 import scala.collection.mutable
-import scala.meta.internal.semanticdb3.Locator
+import scala.meta.internal.semanticdb.Locator
 import scala.meta.io.AbsolutePath
 import scala.meta.tests.BuildInfo
 
