@@ -1810,8 +1810,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Selfs.scala
 Text => non-empty
 Language => Scala
-Symbols => 12 entries
-Occurrences => 20 entries
+Symbols => 18 entries
+Occurrences => 34 entries
 
 Symbols:
 local0 => selfparam self: <?>
@@ -1834,6 +1834,15 @@ selfs.C3# => class C3 extends B { self: B with Int {} => +1 decls }
   B => selfs.B#
   Int => scala.Int#
 selfs.C3#`<init>`(). => primary ctor <init>()
+selfs.C4# => class C4 extends B { +1 decls }
+  B => selfs.B#
+selfs.C4#`<init>`(). => primary ctor <init>()
+selfs.C5# => class C5 extends B { self: B => +1 decls }
+  B => selfs.B#
+selfs.C5#`<init>`(). => primary ctor <init>()
+selfs.C6# => class C6 extends B { self: B => +1 decls }
+  B => selfs.B#
+selfs.C6#`<init>`(). => primary ctor <init>()
 
 Occurrences:
 [0:8..0:13): selfs <= selfs.
@@ -1856,6 +1865,20 @@ Occurrences:
 [10:21..10:25): self <= local2
 [10:27..10:28): B => selfs.B#
 [10:34..10:37): Int => scala.Int#
+[13:6..13:8): C4 <= selfs.C4#
+[13:9..13:9):  <= selfs.C4#`<init>`().
+[13:17..13:18): B => selfs.B#
+[13:19..13:19):  => selfs.B#`<init>`().
+[16:6..16:8): C5 <= selfs.C5#
+[16:9..16:9):  <= selfs.C5#`<init>`().
+[16:17..16:18): B => selfs.B#
+[16:19..16:19):  => selfs.B#`<init>`().
+[16:24..16:25): B => selfs.B#
+[19:6..19:8): C6 <= selfs.C6#
+[19:9..19:9):  <= selfs.C6#`<init>`().
+[19:17..19:18): B => selfs.B#
+[19:19..19:19):  => selfs.B#`<init>`().
+[19:27..19:28): B => selfs.B#
 
 semanticdb/integration/src/main/scala/example/Synthetic.scala
 -------------------------------------------------------------

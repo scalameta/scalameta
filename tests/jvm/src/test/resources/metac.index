@@ -62,6 +62,9 @@ selfs.
   selfs.C1#
   selfs.C2#
   selfs.C3#
+  selfs.C4#
+  selfs.C5#
+  selfs.C6#
 traits.
   traits.C#
   traits.T#
@@ -128,6 +131,9 @@ selfs.B# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 selfs.C1# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 selfs.C2# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 selfs.C3# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
+selfs.C4# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
+selfs.C5# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
+selfs.C6# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 traits. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.C# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb

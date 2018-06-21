@@ -79,6 +79,9 @@ selfs.
   selfs.C1#
   selfs.C2#
   selfs.C3#
+  selfs.C4#
+  selfs.C5#
+  selfs.C6#
 traits.
   traits.C#
   traits.T#
@@ -149,6 +152,9 @@ selfs.B# => selfs/B.class.semanticdb
 selfs.C1# => selfs/C1.class.semanticdb
 selfs.C2# => selfs/C2.class.semanticdb
 selfs.C3# => selfs/C3.class.semanticdb
+selfs.C4# => selfs/C4.class.semanticdb
+selfs.C5# => selfs/C5.class.semanticdb
+selfs.C6# => selfs/C6.class.semanticdb
 traits.C# => traits/C.class.semanticdb
 traits.T# => traits/T.class.semanticdb
 traits.U# => traits/U.class.semanticdb
