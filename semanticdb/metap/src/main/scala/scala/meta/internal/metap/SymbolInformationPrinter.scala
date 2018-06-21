@@ -5,7 +5,6 @@ import scala.math.Ordering
 import scala.meta.internal.semanticdb._
 import scala.meta.internal.semanticdb.Accessibility.Tag._
 import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.SingletonType.Tag._
 import scala.meta.internal.semanticdb.SymbolInformation._
 import scala.meta.internal.semanticdb.SymbolInformation.Kind._
 import scala.meta.internal.semanticdb.SymbolInformation.Property._
@@ -146,7 +145,7 @@ trait SymbolInformationPrinter extends BasePrinter {
         tpe match {
           case TypeRef(pre, sym, args) =>
             pre match {
-              case _: SingletonType =>
+              case _: SingleType | _: ThisType | _: SuperType =>
                 prefix(pre)
                 out.print(".")
               case NoType =>
@@ -157,43 +156,18 @@ trait SymbolInformationPrinter extends BasePrinter {
             }
             pprintRef(sym)
             rep("[", args, ", ", "]")(normal)
-          case SingletonType(tag, pre, sym, x, s) =>
-            tag match {
-              case SYMBOL =>
-                opt(pre, ".")(prefix)
-                pprintRef(sym)
-              case THIS =>
-                opt(sym, ".")(pprintRef)
-                out.print("this")
-              case SUPER =>
-                opt(pre, ".")(prefix)
-                out.print("super")
-                opt("[", sym, "]")(pprintRef)
-              case UNIT =>
-                out.print("()")
-              case BOOLEAN =>
-                if (x == 0) out.print("false")
-                else if (x == 1) out.print("true")
-                else out.print("<?>")
-              case BYTE | SHORT =>
-                out.print(x)
-              case CHAR =>
-                out.print("'" + x.toChar + "'")
-              case INT =>
-                out.print(x)
-              case LONG =>
-                out.print(x + "L")
-              case FLOAT =>
-                out.print(java.lang.Float.intBitsToFloat(x.toInt) + "f")
-              case DOUBLE =>
-                out.print(java.lang.Double.longBitsToDouble(x))
-              case STRING =>
-                out.print("\"" + s + "\"")
-              case NULL =>
-                out.print("null")
-              case UNKNOWN_SINGLETON | SingletonType.Tag.Unrecognized(_) =>
-                out.print("<?>")
-            }
+          case SingleType(pre, sym) =>
+            opt(pre, ".")(prefix)
+            pprintRef(sym)
+          case ThisType(sym) =>
+            opt(sym, ".")(pprintRef)
+            out.print("this")
+          case SuperType(pre, sym) =>
+            opt(pre, ".")(prefix)
+            out.print("super")
+            opt("[", sym, "]")(pprintRef)
+          case ConstantType(const) =>
+            pprint(const)
           case IntersectionType(types) =>
             rep(types, " & ")(normal)
           case UnionType(types) =>
@@ -229,14 +203,9 @@ trait SymbolInformationPrinter extends BasePrinter {
       }
       def normal(tpe: Type): Unit = {
         tpe match {
-          case SingletonType(tag, _, _, _, _) =>
-            tag match {
-              case SYMBOL | THIS | SUPER =>
-                prefix(tpe)
-                out.print(".type")
-              case _ =>
-                prefix(tpe)
-            }
+          case _: SingleType | _: ThisType | _: SuperType =>
+            prefix(tpe)
+            out.print(".type")
           case _ =>
             prefix(tpe)
         }
@@ -307,6 +276,37 @@ trait SymbolInformationPrinter extends BasePrinter {
     private def pprint(name: String): Unit = {
       if (name.nonEmpty) out.print(name)
       else out.print("<?>")
+    }
+
+    private def pprint(const: Constant): Unit = {
+      const match {
+        case NoConstant =>
+          out.print("<?>")
+        case UnitConstant() =>
+          out.print("()")
+        case BooleanConstant(true) =>
+          out.print(true)
+        case BooleanConstant(false) =>
+          out.print(false)
+        case ByteConstant(value) =>
+          out.print(value.toByte)
+        case ShortConstant(value) =>
+          out.print(value.toShort)
+        case CharConstant(value) =>
+          out.print("'" + value.toChar + "'")
+        case IntConstant(value) =>
+          out.print(value)
+        case LongConstant(value) =>
+          out.print(value + "L")
+        case FloatConstant(value) =>
+          out.print(value + "f")
+        case DoubleConstant(value) =>
+          out.print(value)
+        case StringConstant(value) =>
+          out.print("\"" + value + "\"")
+        case NullConstant() =>
+          out.print("null")
+      }
     }
 
     private implicit class InfoOps(info: SymbolInformation) {

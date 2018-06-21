@@ -3,6 +3,7 @@ package scala.meta.internal
 package object semanticdb {
 
   val NoType = Type.Empty
+  val NoConstant = Constant.Empty
   val NoSignature = Signature.Empty
 
   implicit class XtensionSemanticdbSymbolInformation(info: SymbolInformation) {
@@ -45,5 +46,43 @@ package object semanticdb {
 
   implicit class XtensionSemanticdbSignature(sig: Signature) {
     def nonEmpty: Boolean = sig.isDefined
+  }
+
+  implicit class XtensionSemanticdbConstant(const: Constant) {
+    def value: Option[Any] = {
+      const match {
+        case NoConstant => None
+        case UnitConstant() => Some(())
+        case BooleanConstant(value) => Some(value)
+        case ByteConstant(value) => Some(value.toByte)
+        case ShortConstant(value) => Some(value.toShort)
+        case CharConstant(value) => Some(value.toChar)
+        case IntConstant(value) => Some(value)
+        case LongConstant(value) => Some(value)
+        case FloatConstant(value) => Some(value)
+        case DoubleConstant(value) => Some(value)
+        case StringConstant(value) => Some(value)
+        case NullConstant() => Some(null)
+      }
+    }
+  }
+
+  implicit class XtensionSemanticdbConstantCompanion(const: Constant.type) {
+    def apply(value: Any): Constant = {
+      value match {
+        case () => UnitConstant()
+        case value: Boolean => BooleanConstant(value)
+        case value: Byte => ByteConstant(value.toInt)
+        case value: Short => ShortConstant(value.toInt)
+        case value: Char => CharConstant(value.toInt)
+        case value: Int => IntConstant(value)
+        case value: Long => LongConstant(value)
+        case value: Float => FloatConstant(value)
+        case value: Double => DoubleConstant(value)
+        case value: String => StringConstant(value)
+        case null => NullConstant()
+        case _ => sys.error("unsupported value ${value.getClass} $value")
+      }
+    }
   }
 }

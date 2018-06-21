@@ -49,10 +49,13 @@ message Scope {
 }
 
 message Type {
-  reserved 1, 3, 4, 5, 6, 11, 12, 15;
+  reserved 1, 3, 4, 5, 6, 11, 12, 15, 16;
   oneof sealed_value {
     TypeRef typeRef = 2;
-    SingletonType singletonType = 16;
+    SingleType singleType = 20;
+    ThisType thisType = 21;
+    SuperType superType = 22;
+    ConstantType constantType = 23;
     IntersectionType intersectionType = 17;
     UnionType unionType = 18;
     WithType withType = 19;
@@ -71,29 +74,22 @@ message TypeRef {
   repeated Type type_arguments = 3;
 }
 
-message SingletonType {
-  enum Tag {
-    UNKNOWN_SINGLETON = 0;
-    SYMBOL = 1;
-    THIS = 2;
-    SUPER = 3;
-    UNIT = 4;
-    BOOLEAN = 5;
-    BYTE = 6;
-    SHORT = 7;
-    CHAR = 8;
-    INT = 9;
-    LONG = 10;
-    FLOAT = 11;
-    DOUBLE = 12;
-    STRING = 13;
-    NULL = 14;
-  }
-  Tag tag = 1;
-  Type prefix = 2;
-  string symbol = 3;
-  int64 primitive = 4;
-  string string = 5;
+message SingleType {
+  Type prefix = 1;
+  string symbol = 2;
+}
+
+message ThisType {
+  string symbol = 1;
+}
+
+message SuperType {
+  Type prefix = 1;
+  string symbol = 2;
+}
+
+message ConstantType {
+  Constant constant = 1;
 }
 
 message IntersectionType {
@@ -138,6 +134,64 @@ message ByNameType {
 
 message RepeatedType {
   Type tpe = 1;
+}
+
+message Constant {
+  oneof sealed_value {
+    UnitConstant unitConstant = 1;
+    BooleanConstant booleanConstant = 2;
+    ByteConstant byteConstant = 3;
+    ShortConstant shortConstant = 4;
+    CharConstant charConstant = 5;
+    IntConstant intConstant = 6;
+    LongConstant longConstant = 7;
+    FloatConstant floatConstant = 8;
+    DoubleConstant doubleConstant = 9;
+    StringConstant stringConstant = 10;
+    NullConstant nullConstant = 11;
+  }
+}
+
+message UnitConstant {
+}
+
+message BooleanConstant {
+  bool value = 1;
+}
+
+message ByteConstant {
+  int32 value = 1;
+}
+
+message ShortConstant {
+  int32 value = 1;
+}
+
+message CharConstant {
+  int32 value = 1;
+}
+
+message IntConstant {
+  int32 value = 1;
+}
+
+message LongConstant {
+  int64 value = 1;
+}
+
+message FloatConstant {
+  float value = 1;
+}
+
+message DoubleConstant {
+  double value = 1;
+}
+
+message StringConstant {
+  string value = 1;
+}
+
+message NullConstant {
 }
 
 message Signature {
