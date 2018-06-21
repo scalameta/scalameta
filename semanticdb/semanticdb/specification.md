@@ -1191,7 +1191,7 @@ Notes:
   * By a trivial prefix, we mean either empty prefix (for definitions that
     aren't members of any other definition, e.g. parameters or type parameters)
     or `ThisType` of the enclosing class, trait, interface, object, package object
-    or package (for all other definitions).
+    or package (for all other definitions), as well as types equivalent to them.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. Some producers may transform
   types in unspecified ways (e.g. Scalac transforms all `this.type` types

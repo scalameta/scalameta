@@ -67,17 +67,13 @@ class CliSuite extends FunSuite with DiffAssertions {
       |Symbols:
       |_empty_.HelloWorld. => final object HelloWorld extends AnyRef { +1 decls }
       |  AnyRef => scala.AnyRef#
-      |_empty_.HelloWorld.main(). => method main(args: Array[scala.Predef.String]): Unit
+      |_empty_.HelloWorld.main(). => method main(args: Array[String]): Unit
       |  args => _empty_.HelloWorld.main().(args)
       |  Array => scala.Array#
-      |  scala => scala.
-      |  Predef => scala.Predef.
       |  String => scala.Predef.String#
       |  Unit => scala.Unit#
-      |_empty_.HelloWorld.main().(args) => param args: Array[scala.Predef.String]
+      |_empty_.HelloWorld.main().(args) => param args: Array[String]
       |  Array => scala.Array#
-      |  scala => scala.
-      |  Predef => scala.Predef.
       |  String => scala.Predef.String#
       |
       |Occurrences:
