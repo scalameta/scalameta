@@ -135,22 +135,11 @@ trait TypeOps { self: SemanticdbOps =>
   }
 
   implicit class XtensionGType(gtpe: g.Type) {
-    // FIXME: https://github.com/scalameta/scalameta/issues/1343
     def hasNontrivialPrefix: Boolean = {
-      val (gpre, gsym) = {
-        gtpe match {
-          case g.TypeRef(gpre, gsym, _) => (gpre, gsym)
-          case g.SingleType(gpre, gsym) => (gpre, gsym)
-          case _ => return true
-        }
-      }
-      gpre match {
-        case g.SingleType(_, gpresym) =>
-          gpresym.isTerm && !gpresym.isModule
-        case g.ThisType(gpresym) =>
-          !gpresym.hasPackageFlag && !gpresym.isModuleOrModuleClass && !gpresym.isConstructor
-        case _ =>
-          true
+      gtpe match {
+        case g.TypeRef(gpre, gsym, _) => gpre != gsym.owner.thisPrefix
+        case g.SingleType(gpre, gsym) => gpre != gsym.owner.thisPrefix
+        case _ => false
       }
     }
   }

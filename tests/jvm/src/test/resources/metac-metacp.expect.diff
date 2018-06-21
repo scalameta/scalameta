@@ -224,8 +224,9 @@ example.MetacJava#staticInner().
 ================================
 --- metac
 +++ metacp
-       typeRef {
-         prefix {
+                 symbol: "com.javacp."
+-            symbol: "com.javacp.MetacJava#"
++            symbol: "com.javacp.MetacJava."
 -        symbol: "com.javacp.MetacJava#StaticInner#"
 +        symbol: "com.javacp.MetacJava.StaticInner#"
 

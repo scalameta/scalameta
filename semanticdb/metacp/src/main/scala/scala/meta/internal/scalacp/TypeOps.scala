@@ -133,25 +133,14 @@ trait TypeOps { self: Scalacp =>
   }
 
   implicit class XtensionType(tpe: Type) {
-    def prefix: Type = {
-      tpe match {
-        case TypeRefType(pre, _, _) => pre
-        case SingleType(pre, _) => pre
-        case _ => NoType
-      }
-    }
-    def symbol: Symbol = {
-      tpe match {
-        case TypeRefType(_, sym, _) => sym
-        case SingleType(_, sym) => sym
-        case ThisType(sym) => sym
-        case _ => NoSymbol
-      }
-    }
-    // FIXME: https://github.com/scalameta/scalameta/issues/1343
     def hasNontrivialPrefix: Boolean = {
-      val kind = tpe.prefix.symbol.kind
-      kind != k.OBJECT && kind != k.PACKAGE && kind != k.PACKAGE_OBJECT
+      tpe match {
+        case TypeRefType(_: ThisType, _, _) => false
+        case TypeRefType(NoPrefixType, _, _) => false
+        case SingleType(_: ThisType, _) => false
+        case SingleType(NoPrefixType, _) => false
+        case _ => true
+      }
     }
     def paramss: List[List[SymbolInfoSymbol]] = {
       tpe match {
