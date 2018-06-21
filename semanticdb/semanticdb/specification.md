@@ -1020,25 +1020,6 @@ which Scala definitions, what their metadata is, etc). See
   * For other definition, the name of the binding introduced by the definition
     [\[70\]][70].
 
-**Type descriptor** is:
-
-  * For `TYPE_REF`, encoded name of `symbol`.
-  * For `SINGLETON_TYPE`, `.type`.
-  * For `STRUCTURAL_TYPE`, `{}`.
-  * For `WITH_TYPE`, `{}`.
-  * For `ANNOTATED_TYPE`, type descriptor of `tpe`.
-  * For `EXISTENTIAL_TYPE`, type descriptor of `tpe`.
-  * For `UNIVERSAL_TYPE`, type descriptor of `tpe`.
-  * For `METHOD_TYPE`, concatenation of type descriptors of
-    its parameter types interspersed with a comma (`,`).
-  * For `BY_NAME_TYPE`, concatenation of the arrow sign (`=>`) and
-    the type descriptor of `tpe`.
-  * For `REPEATED_TYPE`, concatenation of type descriptor of `tpe`
-    and a star (`*`).
-  * For other type, `?`.
-  * See [Type](#scala-type) for details on
-    which Scala types are modelled by which `Type` entities.
-
 For example, this is how some of the definitions from the Scala standard library
 must be modelled:
 
@@ -2336,16 +2317,6 @@ In this section, we describe the Java symbol format.
   * For unnamed package, `_empty_`.
   * For constructor, `<init>`.
   * For other definition, its simple name [\[98\]][98].
-
-**Type descriptor** is:
-  * For `TYPE_REF`, name of `symbol`.
-  * For `EXISTENTIAL_TYPE`, type descriptor of `tpe`.
-  * For `METHOD_TYPE`, concatenation of type descriptor of its formal parameter
-    types interspered with a comma (`,`).
-  * For `REPEATED_TYPE`, concatenation of type descriptor of `tpe`
-    and a star (`*`).
-  * See [Type](#java-type) for details on which Java types are modelled by which
-    `Type` entities.
 
 For example, this is how some of the definitions from the Java standard library
 must be modelled:
