@@ -438,7 +438,7 @@ following scheme:
     The default cache location depends on the OS and is computed using
     [directories-jvm](https://github.com/soc/directories-jvm).
     For example, on macOS the location for scala-library would be
-    `$HOME/Library/Caches/semanticdb/3.7.4/scala-library-FINGERPRINT.jar`.
+    `$HOME/Library/Caches/org.scalameta.SemanticDB/3.7.4/scala-library-FINGERPRINT.jar`.
   * Class directories. Never cached to avoid overflowing the cache with
     transient results.
 
