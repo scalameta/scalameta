@@ -78,8 +78,9 @@ trait TypeOps { self: SemanticdbOps =>
           case g.ClassInfoType(gparents, _, gclass) =>
             val stparams = Some(s.Scope())
             val sparents = gparents.map(_.toSemanticTpe)
+            val sself = gclass.self.toSemanticTpe
             val sdecls = Some(gclass.semanticdbDecls.sscope(linkMode))
-            s.ClassSignature(stparams, sparents, sdecls)
+            s.ClassSignature(stparams, sparents, sself, sdecls)
           case g.NullaryMethodType(gtpe) =>
             val stparams = Some(s.Scope())
             val stpe = gtpe.toSemanticTpe

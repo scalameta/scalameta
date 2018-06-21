@@ -492,11 +492,13 @@ message ClassSignature {
   Scope type_parameters = 1;
   repeated Type parents = 2;
   Scope declarations = 3;
+  Type self = 4;
 }
 ```
 
 `ClassSignature` represents a signature of a class, a trait or the like.
 Both type parameters and declarations are modelled by a [Scope](#scope).
+`self` represents an optional self-type [\[99\]][99].
 
 ```protobuf
 message MethodSignature {
@@ -1600,11 +1602,6 @@ Notes:
 * Self parameters may be anonymous (via `_: T =>`, `this: T =>` or corresponding
   typeless syntaxes). In that case, their `name` must be modelled as `_`,
   whereas the symbol name is implementation-dependent.
-* We leave the mapping between type syntax written in source code and
-  `Type` entities deliberately unspecified. For example, a producer may
-  represent the signature of `self2` as
-  `StructuralType(List(), List(<C2>, <T>), List())`.
-  See [Types](#scala-type) for more information.
 * Self parameter symbols don't support any accessibilities.
 
 **Type parameters** [\[43\]][43] are represented with `TYPE_PARAMETER` symbols.
@@ -1922,7 +1919,7 @@ Notes:
 **Class definitions** [\[54\]][54] are represented with `CLASS` symbols.
 
 ```scala
-class C[T](x: T, val y: T, var z: T) extends B with X {
+class C[T](x: T, val y: T, var z: T) extends B with X { self: Y =>
   def m: Int = ???
 }
 ```
@@ -1938,7 +1935,7 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
     <td><code>C</code></td>
     <td><code>_empty_.C#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(&lt;T&gt;), List(&lt;B&gt;, &lt;X&gt;), List(&lt;x&gt;, &lt;y&gt;, &lt;y&gt;, &lt;z&gt;, &lt;z&gt;, &lt;z_=&gt;, &lt;&lt;init&gt;&gt;, &lt;m&gt;))</code></td>
+    <td><code>ClassSignature(List(&lt;T&gt;), List(&lt;B&gt;, &lt;X&gt;), &lt;Y&gt;, List(&lt;x&gt;, &lt;y&gt;, &lt;y&gt;, &lt;z&gt;, &lt;z&gt;, &lt;z_=&gt;, &lt;&lt;init&gt;&gt;, &lt;m&gt;))</code></td>
   </tr>
   <tr>
     <td><code>T</code></td>
@@ -2532,7 +2529,7 @@ class C extends S1 implements I {
     <td><code>C</code></td>
     <td><code>a.C#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(), List(&lt;S1&gt;, &lt;I&gt;), List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3(Overload)&gt;, &lt;m3(Overload+1)&gt;, &lt;m3(Overload+2)&gt;, &lt;D1&gt;, &lt;D2&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(&lt;S1&gt;, &lt;I&gt;), None, List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3(Overload)&gt;, &lt;m3(Overload+1)&gt;, &lt;m3(Overload+2)&gt;, &lt;D1&gt;, &lt;D2&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m1</code></td>
@@ -2598,13 +2595,13 @@ class C extends S1 implements I {
     <td><code>D1</code></td>
     <td><code>a.C#D1#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(&lt;T6&gt;, &lt;T7&gt;), List(&lt;java.lang.Object#&gt;), List())</code></td>
+    <td><code>ClassSignature(List(&lt;T6&gt;, &lt;T7&gt;), List(&lt;java.lang.Object#&gt;), None, List())</code></td>
   </tr>
   <tr>
     <td><code>D2</code></td>
     <td><code>a.C#D2#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(), List(), List())</code></td>
+    <td><code>ClassSignature(List(), List(), None, List())</code></td>
   </tr>
 </table>
 
@@ -2650,7 +2647,7 @@ public enum Coin {
     <td><code>Coin</code></td>
     <td><code>a.Coin#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(), List(&lt;Enum&lt;Coin&gt;&gt;), List(&lt;PENNY&gt;, &lt;NICKEL&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(&lt;Enum&lt;Coin&gt;&gt;), None, List(&lt;PENNY&gt;, &lt;NICKEL&gt;))</code></td>
   </tr>
   <tr>
     <td><code>PENNY</code></td>
@@ -2718,7 +2715,7 @@ public interface List<T> extends I {
     <td><code>List</code></td>
     <td><code>a.List#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(&lt;T&gt;), List(&lt;I&gt;), List(&lt;head&gt;))</code></td>
+    <td><code>ClassSignature(List(&lt;T&gt;), List(&lt;I&gt;), None, List(&lt;head&gt;))</code></td>
   </tr>
   <tr>
     <td><code>head</code></td>
@@ -2762,7 +2759,7 @@ class A {
     <td><code>A</code></td>
     <td><code>a.A#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(), List(), List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(), None, List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m1</code></td>
@@ -2839,7 +2836,7 @@ class A {
     <td><code>A</code></td>
     <td><code>a.A#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(), List(), List(&lt;field&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(), None, List(&lt;field&gt;))</code></td>
   </tr>
   <tr>
     <td><code>field</code></td>
@@ -2881,7 +2878,7 @@ class Outer {
     <td><code>Outer</code></td>
     <td><code>a.Outer#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(), List(), List(&lt;a.Outer#&lt;init&gt;, &lt;Inner&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(), None, List(&lt;a.Outer#&lt;init&gt;, &lt;Inner&gt;))</code></td>
   </tr>
   <tr>
     <td>Constructor of <code>Outer</code></td>
@@ -2893,7 +2890,7 @@ class Outer {
     <td><code>Inner</code></td>
     <td><code>a.Outer#Inner#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(), List(), List(&lt;a.Outer#Inner#&lt;init&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(), None, List(&lt;a.Outer#Inner#&lt;init&gt;))</code></td>
   </tr>
   <tr>
     <td>Constructor of <code>Inner</code></td>
@@ -3132,3 +3129,4 @@ the Java language. We intend to improve on this in the future.
 [96]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.3
 [97]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-7.html#jls-7.4.2
 [98]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.2
+[99]: https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#templates

@@ -145,6 +145,17 @@ trait SymbolOps { self: Scalacp =>
 
   implicit class XtensionSymbol(sym: Symbol) {
     def ssym: String = sym.toSemantic
+    def self: Type = sym match {
+      case sym: ClassSymbol =>
+        sym.selfType
+          .map {
+            case RefinedType(_, List(_, self)) => self
+            case _ => NoType
+          }
+          .getOrElse(NoType)
+      case _ =>
+        NoType
+    }
     def isRootPackage: Boolean = sym.path == "<root>"
     def isEmptyPackage: Boolean = sym.path == "<empty>"
     def isToplevelPackage: Boolean = sym.parent.isEmpty

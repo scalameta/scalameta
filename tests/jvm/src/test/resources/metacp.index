@@ -14,6 +14,7 @@ _root_.
   flags.
   objects.
   prefixes.
+  selfs.
   traits.
   types.
 advanced.
@@ -73,6 +74,11 @@ prefixes.
   prefixes.C#
   prefixes.M.
   prefixes.Test.
+selfs.
+  selfs.B#
+  selfs.C1#
+  selfs.C2#
+  selfs.C3#
 traits.
   traits.C#
   traits.T#
@@ -139,6 +145,10 @@ objects.X. => objects/X.class.semanticdb
 prefixes.C# => prefixes/C.class.semanticdb
 prefixes.M. => prefixes/M.class.semanticdb
 prefixes.Test. => prefixes/Test.class.semanticdb
+selfs.B# => selfs/B.class.semanticdb
+selfs.C1# => selfs/C1.class.semanticdb
+selfs.C2# => selfs/C2.class.semanticdb
+selfs.C3# => selfs/C3.class.semanticdb
 traits.C# => traits/C.class.semanticdb
 traits.T# => traits/T.class.semanticdb
 traits.U# => traits/U.class.semanticdb

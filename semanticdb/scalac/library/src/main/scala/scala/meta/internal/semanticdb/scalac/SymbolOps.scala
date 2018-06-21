@@ -170,6 +170,12 @@ trait SymbolOps { self: SemanticdbOps =>
 
   implicit class XtensionGSymbol(sym: g.Symbol) {
     def ssym: String = sym.toSemantic
+    def self: g.Type = {
+      sym.thisSym.info match {
+        case g.RefinedType(List(_, self), _) if sym.thisSym != sym => self
+        case _ => g.NoType
+      }
+    }
     def isSelfParameter: Boolean = {
       sym != g.NoSymbol && sym.owner.thisSym == sym
     }

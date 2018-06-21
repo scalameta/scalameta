@@ -240,6 +240,7 @@ object Javacp {
     val classSig = s.ClassSignature(
       typeParameters = Some(s.Scope(classTypeParameters.map(_.symbol))),
       parents = classParents,
+      self = s.NoType,
       declarations = Some(s.Scope(decls))
     )
 

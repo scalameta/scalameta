@@ -74,7 +74,7 @@ object Scalalib {
       val tparams = Some(s.Scope(Nil))
       val decls = symbols.filter(_.kind.isMethod)
       val declarations = if (kind.isClass) ctor +: decls else decls
-      s.ClassSignature(tparams, parents, Some(s.Scope(declarations.map(_.symbol))))
+      s.ClassSignature(tparams, parents, s.NoType, Some(s.Scope(declarations.map(_.symbol))))
     }
     val builtin = s.SymbolInformation(
       symbol = symbol,

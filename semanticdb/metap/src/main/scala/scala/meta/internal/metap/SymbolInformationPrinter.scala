@@ -110,10 +110,23 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     def pprint(sig: Signature): Unit = {
       sig match {
-        case ClassSignature(tparams, parents, decls) =>
+        case ClassSignature(tparams, parents, self, decls) =>
           rep("[", tparams.infos, ", ", "]")(pprintDefn)
           rep(" extends ", parents, " with ")(pprint)
-          if (decls.infos.nonEmpty) out.print(s" { +${decls.infos.length} decls }")
+          if (self.nonEmpty || decls.infos.nonEmpty) {
+            out.print(" { ")
+          }
+          if (self.nonEmpty) {
+            out.print("self: ")
+            pprint(self)
+            out.print(" => ")
+          }
+          if (decls.infos.nonEmpty) {
+            out.print(s"+${decls.infos.length} decls")
+          }
+          if (self.nonEmpty || decls.infos.nonEmpty) {
+            out.print(" }")
+          }
         case MethodSignature(tparams, paramss, res) =>
           rep("[", tparams.infos, ", ", "]")(pprintDefn)
           rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))

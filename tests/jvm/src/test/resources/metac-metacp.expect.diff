@@ -14,6 +14,7 @@ advanced.D#
                  kind: TYPE
                  properties: 4
                  name: "_"
+     self {
      declarations {
 +      symlinks: "advanced.D#_#"
        symlinks: "advanced.D#`<init>`()."

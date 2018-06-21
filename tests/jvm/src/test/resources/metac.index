@@ -12,6 +12,7 @@ _root_.
   flags.
   objects.
   prefixes.
+  selfs.
   traits.
   types.
 advanced.
@@ -56,6 +57,11 @@ prefixes.
   prefixes.C#
   prefixes.M.
   prefixes.Test.
+selfs.
+  selfs.B#
+  selfs.C1#
+  selfs.C2#
+  selfs.C3#
 traits.
   traits.C#
   traits.T#
@@ -117,6 +123,11 @@ prefixes. => semanticdb/integration/src/main/scala/example/Prefixes.scala.semant
 prefixes.C# => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
 prefixes.M. => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
 prefixes.Test. => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
+selfs. => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
+selfs.B# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
+selfs.C1# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
+selfs.C2# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
+selfs.C3# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 traits. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.C# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits.T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
