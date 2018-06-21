@@ -26,10 +26,10 @@ object MetacpGlobalCache {
     *   supported by the file system.
     *
     * @param cacheTarget The path to store the cached results.
-    * @param computeFunction The expensive compute function that writes it's results into
-    *                        the callback argument path. The argument is a path to a non-existing
-    *                        temporary file. Once the compute function has completed, the temporary
-    *                        file is moved to the final cache location.
+    * @param computeFunction The expensive compute function that writes its results into the
+    *                        callback argument path, which points to a non-existing temporary file.
+    *                        Once the compute function has completed, the temporary file is moved
+    *                        to the target cache location.
     */
   def computeIfAbsent(cacheTarget: Path)(computeFunction: Path => Unit): Unit = {
     val lock = cacheTargetLocks.computeIfAbsent(cacheTarget, new function.Function[Path, Object] {
@@ -37,14 +37,9 @@ object MetacpGlobalCache {
     })
     lock.synchronized {
       if (!Files.exists(cacheTarget)) {
-        val tmpdir = Files.createTempDirectory("metacp")
-        val tmp = tmpdir.resolve(cacheTarget.getFileName)
+        val tmp = Files.createTempDirectory("metacp").resolve(cacheTarget.getFileName)
         computeFunction(tmp)
-        if (Files.exists(cacheTarget)) {
-          () // In case for example another JVM-process completed before us.
-        } else {
-          tryAtomicMove(tmp, cacheTarget)
-        }
+        tryAtomicMove(tmp, cacheTarget)
       }
     }
   }
@@ -59,12 +54,12 @@ object MetacpGlobalCache {
     try {
       try Files.move(source, target, StandardCopyOption.ATOMIC_MOVE)
       catch {
-        // If atomic moves are not supported we must do our best with non-atomic moves.
+        // If atomic moves are not supported we try with a regular move and hope for the best.
         case _: AtomicMoveNotSupportedException =>
           Files.move(source, target)
         // See https://github.com/scalameta/scalameta/issues/1499
-        // AccessDeniedException seems to be thrown on Windows when ATOMIC_MOVE is provided
-        // and the target file is already in use.
+        // AccessDeniedException is thrown on Windows when ATOMIC_MOVE is provided
+        // and the target file already exists.
         case WindowsOnly(_: AccessDeniedException) =>
           ()
         // See https://github.com/scalameta/scalameta/issues/1521
@@ -73,7 +68,8 @@ object MetacpGlobalCache {
           ()
       }
     } catch {
-      // If the target file already exists, do nothing.
+      // If the target file already exists, do nothing. Can for example happen when racing
+      // with another JVM-process doing the same processing.
       case _: FileAlreadyExistsException =>
         ()
     }
