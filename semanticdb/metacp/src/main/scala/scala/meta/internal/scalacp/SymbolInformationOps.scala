@@ -194,6 +194,8 @@ trait SymbolInformationOps { self: Scalacp =>
                     val sparamss = Nil
                     val sret = ssig.tpe
                     s.MethodSignature(stparams, sparamss, sret)
+                  case s.NoSignature =>
+                    s.NoSignature
                   case _ =>
                     sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
                 }
